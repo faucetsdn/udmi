@@ -34,8 +34,17 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     return Optional.ofNullable(configSpace).orElse(DEFAULT_NAMESPACE);
   }
 
+  private void drainQueue(BlockingQueue<String> queue, Future<Void> queueFuture) {
+    try {
+      queue.put(LOOP_EXIT_MARK);
+      queueFuture.get();
+    } catch (Exception e) {
+      throw new RuntimeException("While draining queue", e);
+    }
+  }
+
   @SuppressWarnings("unchecked")
-  protected Future<Void> handleQueue(BlockingQueue<String> queue) {
+  private Future<Void> handleQueue(BlockingQueue<String> queue) {
     return (Future<Void>) executor.submit(() -> messageLoop(queue));
   }
 
@@ -46,44 +55,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     return bundle;
   }
 
-  @Override
-  public void activate(Consumer<Bundle> messageDispatcher) {
-    dispatcher = messageDispatcher;
-    checkState(sourceFuture == null, "pipe already activated");
-    if (sourceQueue == null) {
-      sourceQueue = new LinkedBlockingDeque<>();
-    }
-    sourceFuture = handleQueue(sourceQueue);
-  }
-
-  @TestOnly
-  public abstract List<Bundle> drainOutput();
-
-  @TestOnly
-  public void drainSource() {
-    drainQueue(sourceQueue, sourceFuture);
-  }
-
-  @Override
-  public boolean isActive() {
-    return sourceFuture != null && !sourceFuture.isDone();
-  }
-
-  public abstract void publish(Bundle bundle);
-
-  public void resetForTest() {
-  }
-
-  /**
-   * Simple wrapper for a message bundle, including envelope and message.
-   */
-  public static class Bundle {
-
-    public Envelope envelope;
-    public Object message;
-  }
-
-  void messageLoop(BlockingQueue<String> queue) {
+  private void messageLoop(BlockingQueue<String> queue) {
     try {
       while (true) {
         try {
@@ -104,16 +76,45 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     }
   }
 
-  Bundle extractBundle(String bundleString) {
-    return fromString(Bundle.class, bundleString);
+  @Override
+  public void activate(Consumer<Bundle> messageDispatcher) {
+    dispatcher = messageDispatcher;
+    checkState(sourceFuture == null, "pipe already activated");
+    if (sourceQueue == null) {
+      sourceQueue = new LinkedBlockingDeque<>();
+    }
+    sourceFuture = handleQueue(sourceQueue);
   }
 
-  void drainQueue(BlockingQueue<String> queue, Future<Void> queueFuture) {
-    try {
-      queue.put(LOOP_EXIT_MARK);
-      queueFuture.get();
-    } catch (Exception e) {
-      throw new RuntimeException("While draining queue", e);
-    }
+  @Override
+  public boolean isActive() {
+    return sourceFuture != null && !sourceFuture.isDone();
+  }
+
+  public abstract void publish(Bundle bundle);
+
+  /**
+   * Simple wrapper for a message bundle, including envelope and message.
+   */
+  public static class Bundle {
+
+    public Envelope envelope;
+    public Object message;
+  }
+
+  @TestOnly
+  abstract List<Bundle> drainOutput();
+
+  @TestOnly
+  void drainSource() {
+    drainQueue(sourceQueue, sourceFuture);
+  }
+
+  @TestOnly
+  void resetForTest() {
+  }
+
+  Bundle extractBundle(String bundleString) {
+    return fromString(Bundle.class, bundleString);
   }
 }

@@ -5,9 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.bos.udmi.service.messaging.MessageDispatcher;
-import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.bos.udmi.service.messaging.MessageDispatcher.HandlerSpecification;
-import com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl;
+import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Optional;
@@ -30,12 +29,12 @@ public abstract class MessageTestBase {
   protected static final String TEST_VERSION = "1.32";
   private static final long RECEIVE_TIMEOUT_MS = 1000;
   protected static AtomicInteger instanceCount = new AtomicInteger();
-  private MessageDispatcherImpl dispatcher;
   protected final AtomicReference<Object> receivedMessage = new AtomicReference<>();
   protected final List<HandlerSpecification> messageHandlers = ImmutableList.of(
       messageHandlerFor(Object.class, this::defaultHandler),
       messageHandlerFor(Exception.class, this::messageHandler),
       messageHandlerFor(LocalnetModel.class, this::messageHandler));
+  private MessageDispatcherImpl dispatcher;
 
   protected List<Bundle> drainPipes() {
     getTestDispatcher().drainSource();
@@ -51,22 +50,13 @@ public abstract class MessageTestBase {
     return getTestDispatcher(true);
   }
 
-  protected void setTestDispatcher(MessageDispatcher dispatcher) {
-    this.dispatcher = (MessageDispatcherImpl) dispatcher;
-  }
-
   protected MessageDispatcherImpl getTestDispatcher() {
     dispatcher = Optional.ofNullable(dispatcher).orElseGet(() -> getTestDispatcher(false));
     return dispatcher;
   }
 
-  private MessageDispatcherImpl getTestDispatcher(boolean reversed) {
-    MessageDispatcher dispatcher = getTestDispatcherCore(reversed);
-    if (!reversed && !dispatcher.isActive()) {
-      dispatcher.registerHandlers(messageHandlers);
-      dispatcher.activate();
-    }
-    return (MessageDispatcherImpl) dispatcher;
+  protected void setTestDispatcher(MessageDispatcher dispatcher) {
+    this.dispatcher = (MessageDispatcherImpl) dispatcher;
   }
 
   /**
@@ -90,6 +80,15 @@ public abstract class MessageTestBase {
     messageHandler(new AtomicReference<>(message));
   }
 
+  private MessageDispatcherImpl getTestDispatcher(boolean reversed) {
+    MessageDispatcher dispatcher = getTestDispatcherCore(reversed);
+    if (!reversed && !dispatcher.isActive()) {
+      dispatcher.registerHandlers(messageHandlers);
+      dispatcher.activate();
+    }
+    return (MessageDispatcherImpl) dispatcher;
+  }
+
   private <T> void messageHandler(T message) {
     synchronized (this) {
       Object previous = receivedMessage.getAndSet(message);
@@ -105,7 +104,7 @@ public abstract class MessageTestBase {
   }
 
   @AfterEach
-  void resetPipe() {
+  void resetForTest() {
     if (dispatcher != null) {
       dispatcher.resetForTest();
       dispatcher = null;

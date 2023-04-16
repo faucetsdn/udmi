@@ -76,19 +76,6 @@ public class SimpleMqttPipe extends MessageBase {
     }
   }
 
-  private MqttMessage getMqttMessage(Bundle bundle) {
-    MqttMessage message = new MqttMessage();
-    message.setPayload(stringify(bundle).getBytes());
-    return message;
-  }
-
-  private String getMqttTopic(Bundle bundle) {
-    Envelope envelope = bundle.envelope;
-    return envelope == null
-        ? String.format(TOPIC_FORMAT, namespace, EXCEPTION_TYPE, EXCEPTION_TYPE)
-        : String.format(TOPIC_FORMAT, namespace, envelope.subType, envelope.subFolder);
-  }
-
   private String makeBrokerUrl(EndpointConfiguration endpoint) {
     Transport transport = Optional.ofNullable(endpoint.transport).orElse(Transport.SSL);
     return String.format(BROKER_URL_FORMAT, transport, endpoint.hostname, endpoint.port);
@@ -96,6 +83,19 @@ public class SimpleMqttPipe extends MessageBase {
 
   private String makeClientId() {
     return "client-" + System.currentTimeMillis();
+  }
+
+  private MqttMessage makeMqttMessage(Bundle bundle) {
+    MqttMessage message = new MqttMessage();
+    message.setPayload(stringify(bundle).getBytes());
+    return message;
+  }
+
+  private String makeMqttTopic(Bundle bundle) {
+    Envelope envelope = bundle.envelope;
+    return envelope == null
+        ? String.format(TOPIC_FORMAT, namespace, EXCEPTION_TYPE, EXCEPTION_TYPE)
+        : String.format(TOPIC_FORMAT, namespace, envelope.subType, envelope.subFolder);
   }
 
   @Override
@@ -109,14 +109,9 @@ public class SimpleMqttPipe extends MessageBase {
   }
 
   @Override
-  public List<Bundle> drainOutput() {
-    throw new NotImplementedException("Drain output not implemented");
-  }
-
-  @Override
   public void publish(Bundle bundle) {
     try {
-      mqttClient.publish(getMqttTopic(bundle), getMqttMessage(bundle));
+      mqttClient.publish(makeMqttTopic(bundle), makeMqttMessage(bundle));
     } catch (Exception e) {
       throw new RuntimeException("While publishing to mqtt client", e);
     }
@@ -138,5 +133,10 @@ public class SimpleMqttPipe extends MessageBase {
     public void messageArrived(String topic, MqttMessage message) {
       sourceQueue.add(message.toString());
     }
+  }
+
+  @Override
+  List<Bundle> drainOutput() {
+    throw new NotImplementedException("Drain output not implemented");
   }
 }
