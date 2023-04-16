@@ -18,7 +18,7 @@ public interface MessageDispatcher {
   /**
    * Static factory method for creating handler specifications.
    */
-  static <T> HandlerSpecification messageHandlerFor(Class<T> clazz, MessageHandler<T> consumer) {
+  static <T> HandlerSpecification messageHandlerFor(Class<T> clazz, Consumer<T> consumer) {
     return new HandlerSpecification(clazz, consumer);
   }
 
@@ -32,7 +32,7 @@ public interface MessageDispatcher {
    */
   void publish(Object message);
 
-  <T> void registerHandler(Class<T> targetClass, MessageHandler<T> handler);
+  <T> void registerHandler(Class<T> targetClass, Consumer<T> handler);
 
   /**
    * Convenience function to register an entire collection of handler specifications.
@@ -42,25 +42,18 @@ public interface MessageDispatcher {
   }
 
   /**
-   * Represent a type-happy consumer into a more generic functional specification.
-   */
-  interface MessageHandler<T> extends Consumer<T> {
-
-  }
-
-  /**
    * Represent a type-happy consumer into a more generic specification. No actual logic, just makes
    * calling code cleaner and less cluttered with java-type crazyness.
    */
-  class HandlerSpecification extends SimpleEntry<Class<?>, MessageHandler<?>> {
+  class HandlerSpecification extends SimpleEntry<Class<?>, Consumer<?>> {
 
-    public <T> HandlerSpecification(Class<T> clazz, MessageHandler<T> handler) {
+    public <T> HandlerSpecification(Class<T> clazz, Consumer<T> handler) {
       super(clazz, handler);
     }
 
     @SuppressWarnings("unchecked")
     public <T> void registerWith(MessageDispatcher dispatcher) {
-      dispatcher.registerHandler((Class<T>) getKey(), (MessageHandler<T>) getValue());
+      dispatcher.registerHandler((Class<T>) getKey(), (Consumer<T>) getValue());
     }
   }
 }

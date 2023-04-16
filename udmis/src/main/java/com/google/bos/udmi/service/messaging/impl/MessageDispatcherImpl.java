@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.TestOnly;
 import udmi.schema.Envelope;
@@ -50,7 +51,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
 
   private final MessagePipe messagePipe;
   private final Map<Object, Envelope> messageEnvelopes = new ConcurrentHashMap<>();
-  private final Map<String, MessageHandler<Object>> handlers = new HashMap<>();
+  private final Map<String, Consumer<Object>> handlers = new HashMap<>();
 
   public MessageDispatcherImpl(MessagePipe messagePipe) {
     this.messagePipe = messagePipe;
@@ -144,9 +145,9 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
 
   @Override
   @SuppressWarnings("unchecked")
-  public <T> void registerHandler(Class<T> clazz, MessageHandler<T> handler) {
+  public <T> void registerHandler(Class<T> clazz, Consumer<T> handler) {
     String mapKey = SPECIAL_CLASSES.getOrDefault(clazz, TYPE_CLASSES.inverse().get(clazz));
-    if (handlers.put(mapKey, (MessageHandler<Object>) handler) != null) {
+    if (handlers.put(mapKey, (Consumer<Object>) handler) != null) {
       throw new RuntimeException("Type handler already defined for " + mapKey);
     }
   }
