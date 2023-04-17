@@ -29,10 +29,11 @@ By design, this schema is intended to be:
 RPC mechanism.
 
 The following documents give a high level overview of UDMI:
-- [Tech Primer](./tech_primer.md)
-- [Technology stack](./specs/tech_stack.md)
-- [UDMI compliance](./specs/compliance.md)
-- [Validation Workflow](./guides/workflow.md)
+- [Tech Primer](tech_primer.md)
+- [Technology stack](specs/tech_stack.md)
+- [UDMI compliance](specs/compliance.md)
+- [Validation Workflow](guides/workflow.md)
+- [UDMIS architecture](udmis/readme.md)
 
 ## Use Cases
 

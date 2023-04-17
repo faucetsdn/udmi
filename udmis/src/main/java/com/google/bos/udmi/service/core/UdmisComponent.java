@@ -7,6 +7,7 @@ import com.google.bos.udmi.service.messaging.MessageDispatcher.HandlerSpecificat
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.Common;
+import java.util.Collection;
 import java.util.function.Consumer;
 import org.jetbrains.annotations.TestOnly;
 import udmi.schema.MessageConfiguration;
@@ -32,7 +33,7 @@ public abstract class UdmisComponent extends ContainerBase {
   }
 
   protected void activate() {
-    dispatcher.registerHandlers(BASE_HANDLERS);
+    registerHandlers(BASE_HANDLERS);
     registerHandlers();
     dispatcher.activate();
   }
@@ -48,12 +49,16 @@ public abstract class UdmisComponent extends ContainerBase {
     e.printStackTrace();
   }
 
-  <T> void registerHandler(Class<T> targetClass, Consumer<T> handler) {
-    dispatcher.registerHandler(targetClass, handler);
+  protected void registerHandlers(Collection<HandlerSpecification> messageHandlers) {
+    dispatcher.registerHandlers(messageHandlers);
   }
 
-  public int getMessageCount(Class<?> exceptionClass) {
-    return dispatcher.getHandlerCount(exceptionClass);
+  <T> void registerHandler(Class<T> clazz, Consumer<T> handler) {
+    dispatcher.registerHandler(clazz, handler);
+  }
+
+  public int getMessageCount(Class<?> clazz) {
+    return dispatcher.getHandlerCount(clazz);
   }
 
   void publish(Object message) {

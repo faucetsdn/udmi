@@ -21,16 +21,16 @@ public class StateHandler extends UdmisComponent {
       Arrays.stream(SubFolder.values()).map(SubFolder::value).collect(Collectors.toSet());
 
   @Override
-  protected void defaultHandler(Object defaultedMessage) {
-    stateHandler(convertTo(State.class, defaultedMessage));
-  }
-
-  @Override
   protected void registerHandlers() {
     registerHandler(StateUpdate.class, this::stateHandler);
   }
 
-  private void stateHandler(State message) {
+  @Override
+  protected void defaultHandler(Object defaultedMessage) {
+    stateHandler(convertTo(StateUpdate.class, defaultedMessage));
+  }
+
+  private void stateHandler(StateUpdate message) {
     info("Sharding state message to pipeline out as incremental updates");
     Arrays.stream(State.class.getFields()).forEach(field -> {
       try {
