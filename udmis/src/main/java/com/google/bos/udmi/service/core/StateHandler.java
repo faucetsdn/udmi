@@ -4,19 +4,15 @@ import static com.google.bos.udmi.service.messaging.MessageDispatcher.messageHan
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.convertTo;
 
-import com.google.bos.udmi.service.messaging.MessageDispatcher;
 import com.google.bos.udmi.service.messaging.MessageDispatcher.HandlerSpecification;
 import com.google.bos.udmi.service.messaging.StateUpdate;
-import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.Common;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.jetbrains.annotations.TestOnly;
 import udmi.schema.Envelope.SubFolder;
-import udmi.schema.MessageConfiguration;
 import udmi.schema.State;
 
 /**
@@ -24,33 +20,13 @@ import udmi.schema.State;
  * the system. Involves tagging the envelope with the appropriate designators, and splitting up the
  * monolithic block into constituent parts.
  */
-public class StateHandler extends ContainerBase {
+public class StateHandler extends UdmisComponent {
 
   private static final Set<String> STATE_SUB_FOLDERS =
       Arrays.stream(SubFolder.values()).map(SubFolder::value).collect(Collectors.toSet());
 
-  private final MessageDispatcher dispatcher;
   int exceptionCount;
   int defaultCount;
-  private final List<HandlerSpecification> messageHandlers = ImmutableList.of(
-      messageHandlerFor(Exception.class, this::exceptionHandler),
-      messageHandlerFor(Object.class, this::defaultHandler),
-      messageHandlerFor(StateUpdate.class, this::stateHandler)
-  );
-
-  public StateHandler(MessageDispatcher dispatcher) {
-    this.dispatcher = dispatcher;
-  }
-
-  public static StateHandler forConfig(MessageConfiguration configuration) {
-    return new StateHandler(MessageDispatcher.from(configuration)).activate();
-  }
-
-  private StateHandler activate() {
-    dispatcher.registerHandlers(messageHandlers);
-    dispatcher.activate();
-    return this;
-  }
 
   private void defaultHandler(Object defaultedMessage) {
     defaultCount++;
@@ -68,7 +44,7 @@ public class StateHandler extends ContainerBase {
     Arrays.stream(State.class.getFields()).forEach(field -> {
       try {
         if (STATE_SUB_FOLDERS.contains(field.getName())) {
-          ifNotNullThen(field.get(message), dispatcher::publish);
+          ifNotNullThen(field.get(message), this::publish);
         }
       } catch (Exception e) {
         throw new RuntimeException("While extracting field " + field.getName(), e);
@@ -76,8 +52,11 @@ public class StateHandler extends ContainerBase {
     });
   }
 
-  @TestOnly
-  MessageDispatcher getDispatcher() {
-    return dispatcher;
+  protected List<HandlerSpecification> getMessageHandlers() {
+    return ImmutableList.of(
+        messageHandlerFor(Exception.class, this::exceptionHandler),
+        messageHandlerFor(Object.class, this::defaultHandler),
+        messageHandlerFor(StateUpdate.class, this::stateHandler)
+    );
   }
 }

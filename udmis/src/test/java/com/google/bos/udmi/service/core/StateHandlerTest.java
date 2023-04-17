@@ -62,7 +62,7 @@ public class StateHandlerTest extends LocalMessagePipeTest {
     config.namespace = TEST_NAMESPACE;
     config.source = TEST_SOURCE;
     config.destination = TEST_DESTINATION;
-    stateHandler = StateHandler.forConfig(config);
+    stateHandler = UdmisComponent.create(StateHandler.class, config);
     setTestDispatcher(stateHandler.getDispatcher());
   }
 
