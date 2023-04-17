@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.TestOnly;
@@ -33,17 +34,17 @@ import udmi.schema.SystemState;
  */
 public class MessageDispatcherImpl extends ContainerBase implements MessageDispatcher {
 
-  private static final Map<Class<?>, String> SPECIAL_CLASSES;
-  private static final Map<Class<?>, SimpleEntry<SubType, SubFolder>> CLASS_TYPES = new HashMap<>();
-  private static final BiMap<String, Class<?>> TYPE_CLASSES = HashBiMap.create();
   private static final String DEFAULT_HANDLER = "event/null";
   private static final String EXCEPTION_KEY = "exception_handler";
+  private static final Map<String, Class<?>> SPECIAL_CLASSES = ImmutableMap.of(
+      DEFAULT_HANDLER, Object.class,
+      EXCEPTION_KEY, Exception.class
+  );
+  private static final Map<Class<?>, SimpleEntry<SubType, SubFolder>> CLASS_TYPES = new HashMap<>();
+  private static final BiMap<String, Class<?>> TYPE_CLASSES = HashBiMap.create();
+  private static final Class<Object> DEFAULT_TYPE = Object.class;
 
   static {
-    SPECIAL_CLASSES = ImmutableMap.of(
-        Object.class, DEFAULT_HANDLER,
-        Exception.class, EXCEPTION_KEY
-    );
     Arrays.stream(SubType.values()).forEach(type -> Arrays.stream(SubFolder.values())
         .forEach(folder -> registerHandlerType(type, folder)));
     registerMessageClass(SubType.STATE, SubFolder.UPDATE, StateUpdate.class);
@@ -51,7 +52,8 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
 
   private final MessagePipe messagePipe;
   private final Map<Object, Envelope> messageEnvelopes = new ConcurrentHashMap<>();
-  private final Map<String, Consumer<Object>> handlers = new HashMap<>();
+  private final Map<Class<?>, Consumer<Object>> handlers = new HashMap<>();
+  private final Map<Class<?>, AtomicInteger> handlerCounts = new ConcurrentHashMap<>();
 
   public MessageDispatcherImpl(MessagePipe messagePipe) {
     this.messagePipe = messagePipe;
@@ -113,6 +115,16 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   private void ignoreMessage(Object message) {
   }
 
+  private void processMessage(Envelope envelope, Class<?> handlerType, Object messageObject) {
+    try {
+      messageEnvelopes.put(messageObject, envelope);
+      handlerCounts.computeIfAbsent(handlerType, key -> new AtomicInteger()).incrementAndGet();
+      handlers.get(handlerType).accept(messageObject);
+    } finally {
+      messageEnvelopes.remove(messageObject);
+    }
+  }
+
   @Override
   public void activate() {
     messagePipe.activate(this::processMessage);
@@ -126,6 +138,11 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   @TestOnly
   public void drainSource() {
     ((MessageBase) messagePipe).drainSource();
+  }
+
+  @Override
+  public int getHandlerCount(Class<?> clazz) {
+    return handlerCounts.computeIfAbsent(clazz, key -> new AtomicInteger()).get();
   }
 
   @Override
@@ -146,24 +163,14 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   @Override
   @SuppressWarnings("unchecked")
   public <T> void registerHandler(Class<T> clazz, Consumer<T> handler) {
-    String mapKey = SPECIAL_CLASSES.getOrDefault(clazz, TYPE_CLASSES.inverse().get(clazz));
-    if (handlers.put(mapKey, (Consumer<Object>) handler) != null) {
-      throw new RuntimeException("Type handler already defined for " + mapKey);
+    if (handlers.put(clazz, (Consumer<Object>) handler) != null) {
+      throw new RuntimeException("Type handler already defined for " + clazz.getName());
     }
   }
 
   @TestOnly
   public void resetForTest() {
     ((MessageBase) messagePipe).resetForTest();
-  }
-
-  void processMessage(Envelope envelope, String mapKey, Object messageObject) {
-    try {
-      messageEnvelopes.put(messageObject, envelope);
-      handlers.get(mapKey).accept(messageObject);
-    } finally {
-      messageEnvelopes.remove(messageObject);
-    }
   }
 
   /**
@@ -173,14 +180,15 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     Envelope envelope = Preconditions.checkNotNull(bundle.envelope, "bundle envelope is null");
     boolean isException = bundle.message instanceof Exception;
     String mapKey = isException ? EXCEPTION_KEY : getMapKey(envelope.subType, envelope.subFolder);
+    Class<?> handlerType =
+        TYPE_CLASSES.getOrDefault(mapKey, SPECIAL_CLASSES.getOrDefault(mapKey, DEFAULT_TYPE));
     try {
-      handlers.computeIfAbsent(mapKey, key -> {
-        info("Defaulting messages of type/folder " + mapKey);
-        return handlers.getOrDefault(DEFAULT_HANDLER, this::ignoreMessage);
+      handlers.computeIfAbsent(handlerType, key -> {
+        info("Defaulting messages of type/folder " + handlerType.getName());
+        return handlers.getOrDefault(DEFAULT_TYPE, this::ignoreMessage);
       });
-      Class<?> handlerType = TYPE_CLASSES.getOrDefault(mapKey, Object.class);
       Object messageObject = isException ? bundle.message : convertTo(handlerType, bundle.message);
-      processMessage(envelope, mapKey, messageObject);
+      processMessage(envelope, handlerType, messageObject);
     } catch (Exception e) {
       throw new RuntimeException("While processing message key " + mapKey, e);
     }

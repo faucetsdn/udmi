@@ -1,13 +1,22 @@
 package com.google.bos.udmi.service.core;
 
+import static com.google.bos.udmi.service.messaging.MessageDispatcher.messageHandlerFor;
+
 import com.google.bos.udmi.service.messaging.MessageDispatcher;
 import com.google.bos.udmi.service.messaging.MessageDispatcher.HandlerSpecification;
 import com.google.bos.udmi.service.pod.ContainerBase;
-import java.util.List;
+import com.google.common.collect.ImmutableList;
+import com.google.udmi.util.Common;
+import java.util.function.Consumer;
 import org.jetbrains.annotations.TestOnly;
 import udmi.schema.MessageConfiguration;
 
 public abstract class UdmisComponent extends ContainerBase {
+
+  private final ImmutableList<HandlerSpecification> BASE_HANDLERS = ImmutableList.of(
+      messageHandlerFor(Object.class, this::defaultHandler),
+      messageHandlerFor(Exception.class, this::exceptionHandler)
+  );
 
   protected MessageDispatcher dispatcher;
 
@@ -22,15 +31,33 @@ public abstract class UdmisComponent extends ContainerBase {
     }
   }
 
-  void publish(Object message) {
-    dispatcher.publish(message);
+  protected void activate() {
+    dispatcher.registerHandlers(BASE_HANDLERS);
+    registerHandlers();
+    dispatcher.activate();
   }
 
-  protected abstract List<HandlerSpecification> getMessageHandlers();
+  protected void registerHandlers() {
+  }
 
-  protected void activate() {
-    dispatcher.registerHandlers(getMessageHandlers());
-    dispatcher.activate();
+  protected void defaultHandler(Object defaultedMessage) {
+  }
+
+  protected void exceptionHandler(Exception e) {
+    info("Received processing exception: " + Common.getExceptionMessage(e));
+    e.printStackTrace();
+  }
+
+  <T> void registerHandler(Class<T> targetClass, Consumer<T> handler) {
+    dispatcher.registerHandler(targetClass, handler);
+  }
+
+  public int getMessageCount(Class<?> exceptionClass) {
+    return dispatcher.getHandlerCount(exceptionClass);
+  }
+
+  void publish(Object message) {
+    dispatcher.publish(message);
   }
 
   @TestOnly

@@ -27,11 +27,11 @@ public class StateHandlerTest extends LocalMessagePipeTest {
   private StateHandler stateHandler;
 
   private int getDefaultCount() {
-    return stateHandler.defaultCount;
+    return stateHandler.getMessageCount(Object.class);
   }
 
   private int getExceptionCount() {
-    return stateHandler.exceptionCount;
+    return stateHandler.getMessageCount(Exception.class);
   }
 
   private Bundle getTestStateBundle(boolean includeGateway) {

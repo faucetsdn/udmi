@@ -16,7 +16,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "udmis_flow"
+    "state_flow",
+    "target_flow"
 })
 @Generated("jsonschema2pojo")
 public class PodConfiguration {
@@ -27,14 +28,24 @@ public class PodConfiguration {
      * Parameters for configuring a message in/out pipeline
      * 
      */
-    @JsonProperty("udmis_flow")
+    @JsonProperty("state_flow")
     @JsonPropertyDescription("Parameters for configuring a message in/out pipeline")
-    public MessageConfiguration udmis_flow;
+    public MessageConfiguration state_flow;
+    /**
+     * Message Configuration
+     * <p>
+     * Parameters for configuring a message in/out pipeline
+     * 
+     */
+    @JsonProperty("target_flow")
+    @JsonPropertyDescription("Parameters for configuring a message in/out pipeline")
+    public MessageConfiguration target_flow;
 
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.udmis_flow == null)? 0 :this.udmis_flow.hashCode()));
+        result = ((result* 31)+((this.state_flow == null)? 0 :this.state_flow.hashCode()));
+        result = ((result* 31)+((this.target_flow == null)? 0 :this.target_flow.hashCode()));
         return result;
     }
 
@@ -47,7 +58,7 @@ public class PodConfiguration {
             return false;
         }
         PodConfiguration rhs = ((PodConfiguration) other);
-        return ((this.udmis_flow == rhs.udmis_flow)||((this.udmis_flow!= null)&&this.udmis_flow.equals(rhs.udmis_flow)));
+        return (((this.state_flow == rhs.state_flow)||((this.state_flow!= null)&&this.state_flow.equals(rhs.state_flow)))&&((this.target_flow == rhs.target_flow)||((this.target_flow!= null)&&this.target_flow.equals(rhs.target_flow))));
     }
 
 }

@@ -1,5 +1,7 @@
 package com.google.bos.udmi.service.messaging;
 
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+
 import com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Collection;
@@ -32,13 +34,22 @@ public interface MessageDispatcher {
    */
   void publish(Object message);
 
+  /**
+   * Return a count of the number of times the handler for the indicated class has been called.
+   */
+  int getHandlerCount(Class<?> clazz);
+
+  /**
+   * Register a class message handler with the dispatcher.
+   */
   <T> void registerHandler(Class<T> targetClass, Consumer<T> handler);
 
   /**
    * Convenience function to register an entire collection of handler specifications.
    */
   default void registerHandlers(Collection<HandlerSpecification> messageHandlers) {
-    messageHandlers.forEach(handler -> handler.registerWith(this));
+    ifNotNullThen(messageHandlers,
+        () -> messageHandlers.forEach(handler -> handler.registerWith(this)));
   }
 
   /**

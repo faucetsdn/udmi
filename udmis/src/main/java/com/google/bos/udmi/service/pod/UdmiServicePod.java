@@ -29,8 +29,8 @@ public class UdmiServicePod {
 
     podConfiguration = JsonUtil.loadFileRequired(PodConfiguration.class, args[0]);
 
-    stateHandler = createComponent(StateHandler.class, podConfiguration.udmis_flow);
-    targetHandler = createComponent(TargetHandler.class, podConfiguration.udmis_flow);
+    stateHandler = createComponent(StateHandler.class, podConfiguration.state_flow);
+    targetHandler = createComponent(TargetHandler.class, podConfiguration.target_flow);
   }
 
   private <T extends UdmisComponent> T createComponent(Class<T> clazz, MessageConfiguration config) {
