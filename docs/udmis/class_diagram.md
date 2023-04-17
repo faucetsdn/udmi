@@ -1,6 +1,6 @@
 [**UDMI**](../../../) / [**Docs**](../../) / [UDMIS](../) / [Class Diagram](#)
 
-```
+```mermaid
 classDiagram
 direction BT
 class ContainerBase
