@@ -1,4 +1,4 @@
-[**UDMI**](../../../) / [**Docs**](../../) / [UDMIS](../) / [Class Diagram](#)
+[**UDMI**](../../) / [**Docs**](../) / [UDMIS](.) / [Class Diagram](#)
 
 ```mermaid
 classDiagram
