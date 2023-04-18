@@ -131,6 +131,7 @@ stateStatus
 subblock
 subblocks
 subcomponent
+subcomponents
 subdirectory
 subflows
 subFolder
