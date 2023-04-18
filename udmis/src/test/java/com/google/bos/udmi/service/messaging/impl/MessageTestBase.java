@@ -50,13 +50,22 @@ public abstract class MessageTestBase {
     return getTestDispatcher(true);
   }
 
+  protected void setTestDispatcher(MessageDispatcher dispatcher) {
+    this.dispatcher = (MessageDispatcherImpl) dispatcher;
+  }
+
   protected MessageDispatcherImpl getTestDispatcher() {
     dispatcher = Optional.ofNullable(dispatcher).orElseGet(() -> getTestDispatcher(false));
     return dispatcher;
   }
 
-  protected void setTestDispatcher(MessageDispatcher dispatcher) {
-    this.dispatcher = (MessageDispatcherImpl) dispatcher;
+  protected MessageDispatcherImpl getTestDispatcher(boolean reversed) {
+    MessageDispatcher dispatcher = getTestDispatcherCore(reversed);
+    if (!reversed && !dispatcher.isActive()) {
+      dispatcher.registerHandlers(messageHandlers);
+      dispatcher.activate();
+    }
+    return (MessageDispatcherImpl) dispatcher;
   }
 
   /**
@@ -78,15 +87,6 @@ public abstract class MessageTestBase {
   private <T> void defaultHandler(T message) {
     // Wrap the message in an AtomicReference as a signal that this was the default handler.
     messageHandler(new AtomicReference<>(message));
-  }
-
-  private MessageDispatcherImpl getTestDispatcher(boolean reversed) {
-    MessageDispatcher dispatcher = getTestDispatcherCore(reversed);
-    if (!reversed && !dispatcher.isActive()) {
-      dispatcher.registerHandlers(messageHandlers);
-      dispatcher.activate();
-    }
-    return (MessageDispatcherImpl) dispatcher;
   }
 
   private <T> void messageHandler(T message) {

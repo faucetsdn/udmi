@@ -115,7 +115,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   private void ignoreMessage(Object message) {
   }
 
-  private void processMessage(Envelope envelope, Class<?> handlerType, Object messageObject) {
+  private void processHandler(Envelope envelope, Class<?> handlerType, Object messageObject) {
     try {
       messageEnvelopes.put(messageObject, envelope);
       handlerCounts.computeIfAbsent(handlerType, key -> new AtomicInteger()).incrementAndGet();
@@ -188,7 +188,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
         return handlers.getOrDefault(DEFAULT_TYPE, this::ignoreMessage);
       });
       Object messageObject = isException ? bundle.message : convertTo(handlerType, bundle.message);
-      processMessage(envelope, handlerType, messageObject);
+      processHandler(envelope, handlerType, messageObject);
     } catch (Exception e) {
       throw new RuntimeException("While processing message key " + mapKey, e);
     }
