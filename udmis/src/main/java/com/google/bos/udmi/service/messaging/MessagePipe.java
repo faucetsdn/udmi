@@ -2,8 +2,8 @@ package com.google.bos.udmi.service.messaging;
 
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.bos.udmi.service.messaging.impl.LocalMessagePipe;
+import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.bos.udmi.service.messaging.impl.SimpleMqttPipe;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;

@@ -2,12 +2,10 @@ package com.google.bos.udmi.service.pod;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
-import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 
 import com.google.bos.udmi.service.core.StateHandler;
 import com.google.bos.udmi.service.core.TargetHandler;
 import com.google.bos.udmi.service.core.UdmisComponent;
-import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import udmi.schema.MessageConfiguration;
 import udmi.schema.PodConfiguration;
@@ -33,11 +31,12 @@ public class UdmiServicePod {
     targetHandler = createComponent(TargetHandler.class, podConfiguration.target_flow);
   }
 
-  private <T extends UdmisComponent> T createComponent(Class<T> clazz, MessageConfiguration config) {
-    return ifNotNullGet(config, () -> UdmisComponent.create(clazz, config));
-  }
-
   public static void main(String[] args) {
     new UdmiServicePod(args);
+  }
+
+  private <T extends UdmisComponent> T createComponent(Class<T> clazz,
+      MessageConfiguration config) {
+    return ifNotNullGet(config, () -> UdmisComponent.create(clazz, config));
   }
 }

@@ -12,15 +12,21 @@ import java.util.function.Consumer;
 import org.jetbrains.annotations.TestOnly;
 import udmi.schema.MessageConfiguration;
 
+/**
+ * Base class for UDMIS components.
+ */
 public abstract class UdmisComponent extends ContainerBase {
 
-  private final ImmutableList<HandlerSpecification> BASE_HANDLERS = ImmutableList.of(
+  private final ImmutableList<HandlerSpecification> baseHandlers = ImmutableList.of(
       messageHandlerFor(Object.class, this::defaultHandler),
       messageHandlerFor(Exception.class, this::exceptionHandler)
   );
 
   protected MessageDispatcher dispatcher;
 
+  /**
+   * Create a new instance of the given target class with the provided configuration.
+   */
   public static <T extends UdmisComponent> T create(Class<T> clazz, MessageConfiguration config) {
     try {
       T object = clazz.getDeclaredConstructor().newInstance();
@@ -33,32 +39,46 @@ public abstract class UdmisComponent extends ContainerBase {
   }
 
   protected void activate() {
-    registerHandlers(BASE_HANDLERS);
+    registerHandlers(baseHandlers);
     registerHandlers();
     dispatcher.activate();
   }
 
-  protected void registerHandlers() {
-  }
-
+  /**
+   * The default message handler. Defaults to ignore unexpected message types, but can be overridden
+   * to provide component-specific behavior.
+   */
   protected void defaultHandler(Object defaultedMessage) {
   }
 
+  /**
+   * The default exception handler. Defaults to simply print out exceptions, but can be overridden
+   * to provide component-specific behavior.
+   */
   protected void exceptionHandler(Exception e) {
     info("Received processing exception: " + Common.getExceptionMessage(e));
     e.printStackTrace();
   }
 
+  /**
+   * Register default component handlers. Can be overridden to change underlying behavior.
+   */
   protected void registerHandlers(Collection<HandlerSpecification> messageHandlers) {
     dispatcher.registerHandlers(messageHandlers);
   }
 
-  <T> void registerHandler(Class<T> clazz, Consumer<T> handler) {
-    dispatcher.registerHandler(clazz, handler);
+  /**
+   * Register component specific handlers. Should be overridden by subclass to change behaviors.
+   */
+  protected void registerHandlers() {
   }
 
   public int getMessageCount(Class<?> clazz) {
     return dispatcher.getHandlerCount(clazz);
+  }
+
+  <T> void registerHandler(Class<T> clazz, Consumer<T> handler) {
+    dispatcher.registerHandler(clazz, handler);
   }
 
   void publish(Object message) {
