@@ -1,5 +1,12 @@
 [**UDMI**](../../) / [**Docs**](../) / [UDMIS](.) / [Class Diagram](#)
 
+## UDMIS Class Architecture
+
+The class structure of the UDMIS subsystem layers a set of business-logic (i.e. the UDMIS part) on top of
+common foundations for message handling and basic system facilities. This structure is not about the
+_functionality_ (e.g. what the system does from the outside), but rather the underlying foundation of how
+things are structures to provide testability, monitoring, diagnostics, etc...
+
 ```mermaid
 classDiagram
 direction BT
@@ -37,8 +44,6 @@ UdmisComponent  -->  ContainerBase
 UdmisComponent "1" *--> "dispatcher 1" MessageDispatcher 
 ```
 
-The class structure of the UDMIS subsystem layers a set of business-logic (i.e. the UDMIS part) on top of
-common foundations for message handling and basic system facilities:
 * `ContainerBase`: Abstract class that provides system-wide common functionality for generic components, e.g. logging.
 * `MessagePipe`: Interface for other components that require a message pipe of some kind.
   * `MessageBase`: Abstract class providing common functionality for all message pipe implementations.
