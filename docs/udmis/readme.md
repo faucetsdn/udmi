@@ -1,4 +1,4 @@
 [**UDMI**](../../) / [**Docs**](../) / [UDMIS](#)
 
-* [Class Diagram](class_diagram.md)
+* [Class Overview](class_overview.md)
 
