@@ -44,7 +44,7 @@ common foundations for message handling and basic system facilities:
   * `MessageBase`: Abstract class providing common functionality for all message pipe implementations.
     * `LocalMessagePipe`: Simple in-process pipe implementation primarily designed for testing.
     * `SimpleMqttPipe`: Message pipe implementation that uses a local MQTT broker for communication.
-    * (`CloudMqttPipe`: A more involved version of the simple pipe that works with cloud endpoing. Might be the same as the simple version.)
+    * (`CloudMqttPipe`: A more involved version of the simple pipe that works with cloud endpoint. Might be the same as the simple version.)
     * (`PubSubPipe`: Eventually, there will also be a PubSub pipe available for GCP deployments.)
 * `MessageDispatcher`: Interface for type-savy message handling, rather than handling raw strings or JSON messages.
   * `MessageDispatcherImpl`: Implementation of the message dispatcher interface.
