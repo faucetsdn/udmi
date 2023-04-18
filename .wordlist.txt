@@ -130,6 +130,7 @@ Stackdriver
 stateStatus
 subblock
 subblocks
+subcomponent
 subdirectory
 subflows
 subFolder

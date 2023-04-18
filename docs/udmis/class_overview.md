@@ -51,9 +51,9 @@ UdmisComponent "1" *--> "dispatcher 1" MessageDispatcher
     * `SimpleMqttPipe`: Message pipe implementation that uses a local MQTT broker for communication.
     * (`CloudMqttPipe`: A more involved version of the simple pipe that works with cloud endpoint. Might be the same as the simple version.)
     * (`PubSubPipe`: Eventually, there will also be a PubSub pipe available for GCP deployments.)
-* `MessageDispatcher`: Interface for type-savy message handling, rather than handling raw strings or JSON messages.
+* `MessageDispatcher`: Interface for type-savvy message handling, rather than handling raw strings or JSON messages.
   * `MessageDispatcherImpl`: Implementation of the message dispatcher interface.
 * `UdmisComponent`: Base class for common functionality implementing higher-level functions.
   * `StateHandler`: Specific handler for dealing with UDMIS _state_ message updates (business logic).
   * `TargetHandler`: Specific handler for dealing with UDMIS _target_ messages (business logic).
-* `UdmiServicePod`: Container main class that instantiates subcomponents according to configuraiton parameters.
+* `UdmiServicePod`: Container main class that instantiates subcomponents according to configuration parameters.
