@@ -13,6 +13,16 @@ import udmi.schema.MessageConfiguration;
  */
 public interface MessageDispatcher {
 
+  /**
+   * Marker class to indicate a defaulted unknown message type.
+   */
+  Class<?> DEFAULT_CLASS = Object.class;
+
+  /**
+   * Marker class to use for exception handling.
+   */
+  Class<?> EXCEPTION_CLASS = Exception.class;
+
   static MessageDispatcher from(MessageConfiguration configuration) {
     return new MessageDispatcherImpl(MessagePipe.from(configuration));
   }

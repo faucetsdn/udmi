@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.TestOnly;
+import org.jetbrains.annotations.VisibleForTesting;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
@@ -37,12 +38,11 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   private static final String DEFAULT_HANDLER = "event/null";
   private static final String EXCEPTION_KEY = "exception_handler";
   private static final Map<String, Class<?>> SPECIAL_CLASSES = ImmutableMap.of(
-      DEFAULT_HANDLER, Object.class,
-      EXCEPTION_KEY, Exception.class
+      DEFAULT_HANDLER, DEFAULT_CLASS,
+      EXCEPTION_KEY, EXCEPTION_CLASS
   );
   private static final Map<Class<?>, SimpleEntry<SubType, SubFolder>> CLASS_TYPES = new HashMap<>();
   private static final BiMap<String, Class<?>> TYPE_CLASSES = HashBiMap.create();
-  private static final Class<Object> DEFAULT_TYPE = Object.class;
 
   static {
     Arrays.stream(SubType.values()).forEach(type -> Arrays.stream(SubFolder.values())
@@ -112,9 +112,6 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     }
   }
 
-  private void ignoreMessage(Object message) {
-  }
-
   private void processHandler(Envelope envelope, Class<?> handlerType, Object messageObject) {
     try {
       messageEnvelopes.put(messageObject, envelope);
@@ -142,7 +139,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
 
   @Override
   public int getHandlerCount(Class<?> clazz) {
-    return handlerCounts.computeIfAbsent(clazz, key -> new AtomicInteger()).get();
+    return handlerCounts.getOrDefault(clazz, new AtomicInteger(-1)).get();
   }
 
   @Override
@@ -173,6 +170,10 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     ((MessageBase) messagePipe).resetForTest();
   }
 
+  @VisibleForTesting
+  protected void devNullHandler(Object message) {
+  }
+
   /**
    * Process a received message bundle.
    */
@@ -181,11 +182,11 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     boolean isException = bundle.message instanceof Exception;
     String mapKey = isException ? EXCEPTION_KEY : getMapKey(envelope.subType, envelope.subFolder);
     Class<?> handlerType =
-        TYPE_CLASSES.getOrDefault(mapKey, SPECIAL_CLASSES.getOrDefault(mapKey, DEFAULT_TYPE));
+        TYPE_CLASSES.getOrDefault(mapKey, SPECIAL_CLASSES.getOrDefault(mapKey, DEFAULT_CLASS));
     try {
       handlers.computeIfAbsent(handlerType, key -> {
         info("Defaulting messages of type/folder " + handlerType.getName());
-        return handlers.getOrDefault(DEFAULT_TYPE, this::ignoreMessage);
+        return handlers.getOrDefault(DEFAULT_CLASS, this::devNullHandler);
       });
       Object messageObject = isException ? bundle.message : convertTo(handlerType, bundle.message);
       processHandler(envelope, handlerType, messageObject);
