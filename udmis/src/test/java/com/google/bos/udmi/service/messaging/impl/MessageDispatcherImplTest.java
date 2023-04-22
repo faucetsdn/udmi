@@ -15,17 +15,21 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
+import udmi.schema.DiscoveryConfig;
 import udmi.schema.GatewayConfig;
 import udmi.schema.LocalnetModel;
 import udmi.schema.MessageConfiguration;
 import udmi.schema.MessageConfiguration.Transport;
 import udmi.schema.PointsetEvent;
 
+/**
+ * Basic unit tests for the message dispatcher.
+ */
 public class MessageDispatcherImplTest {
 
   public static final long GET_TIMEOUT_SEC = 1;
 
-  List<Object> nullHandlerCapture = new ArrayList<>();
+  List<Object> devNullCapture = new ArrayList<>();
 
   private MessageConfiguration getConfiguration(boolean reversed) {
     MessageConfiguration messageConfiguration = new MessageConfiguration();
@@ -54,18 +58,20 @@ public class MessageDispatcherImplTest {
     MessageDispatcher dispatcher = new TestingDispatcher();
     CompletableFuture<GatewayConfig> future = new CompletableFuture<>();
     dispatcher.registerHandler(GatewayConfig.class, future::complete);
+    dispatcher.registerHandler(DiscoveryConfig.class, message -> {
+    });
     getReversedDispatcher().publish(new PointsetEvent());
     getReversedDispatcher().publish(new LocalnetModel());
     getReversedDispatcher().publish(new GatewayConfig());
-    assertEquals(0, nullHandlerCapture.size());
+    assertEquals(0, devNullCapture.size());
     assertThrows(TimeoutException.class, () -> future.get(GET_TIMEOUT_SEC, TimeUnit.SECONDS));
-    assertEquals(-1, dispatcher.getHandlerCount(LocalnetModel.class),
-        "expected no processed messages");
+    assertEquals(0, dispatcher.getHandlerCount(LocalnetModel.class), "processed LocalnetModel");
     dispatcher.activate();
     assertNotNull(future.get(GET_TIMEOUT_SEC, TimeUnit.SECONDS));
-    assertEquals(1, dispatcher.getHandlerCount(LocalnetModel.class),
-        "expected one processed message");
-    assertEquals(2, nullHandlerCapture.size());
+    assertEquals(1, dispatcher.getHandlerCount(LocalnetModel.class), "processed LocalnetModel");
+    assertEquals(1, dispatcher.getHandlerCount(GatewayConfig.class), "processed GatewayConfig");
+    assertEquals(0, dispatcher.getHandlerCount(DiscoveryConfig.class), "processed DiscoveryConfig");
+    assertEquals(2, devNullCapture.size());
   }
 
   class TestingDispatcher extends MessageDispatcherImpl {
@@ -76,7 +82,7 @@ public class MessageDispatcherImplTest {
 
     @Override
     protected void devNullHandler(Object message) {
-      nullHandlerCapture.add(message);
+      devNullCapture.add(message);
     }
   }
 }
