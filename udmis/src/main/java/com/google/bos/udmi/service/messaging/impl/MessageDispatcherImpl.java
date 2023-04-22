@@ -163,7 +163,6 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     if (handlers.put(clazz, (Consumer<Object>) handler) != null) {
       throw new RuntimeException("Type handler already defined for " + clazz.getName());
     }
-    handlerCounts.put(clazz, new AtomicInteger());
   }
 
   @TestOnly
