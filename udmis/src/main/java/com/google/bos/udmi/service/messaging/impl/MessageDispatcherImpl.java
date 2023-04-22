@@ -22,7 +22,6 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
-import org.checkerframework.checker.units.qual.A;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.TestOnly;
 import org.jetbrains.annotations.VisibleForTesting;
@@ -140,7 +139,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
 
   @Override
   public int getHandlerCount(Class<?> clazz) {
-    return handlerCounts.getOrDefault(clazz, new AtomicInteger(0)).get();
+    return handlerCounts.computeIfAbsent(clazz, key -> new AtomicInteger()).get();
   }
 
   @Override
