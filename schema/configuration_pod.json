@@ -7,11 +7,14 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "properties": {
-    "state_flow": {
-      "$ref": "file:configuration_message.json"
+    "flow_defaults": {
+      "$ref": "file:configuration_endpoint.json"
     },
     "target_flow": {
-      "$ref": "file:configuration_message.json"
+      "$ref": "file:configuration_endpoint.json"
+    },
+    "state_flow": {
+      "$ref": "file:configuration_endpoint.json"
     }
   }
 }

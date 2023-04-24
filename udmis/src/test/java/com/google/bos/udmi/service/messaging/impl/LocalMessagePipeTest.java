@@ -1,43 +1,33 @@
 package com.google.bos.udmi.service.messaging.impl;
 
-import static com.google.common.base.Preconditions.checkState;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.google.bos.udmi.service.messaging.MessageDispatcher;
 import com.google.bos.udmi.service.messaging.StateUpdate;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.udmi.util.JsonUtil;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
-import udmi.schema.MessageConfiguration;
-import udmi.schema.MessageConfiguration.Transport;
+import udmi.schema.EndpointConfiguration;
+import udmi.schema.EndpointConfiguration.Protocol;
+import udmi.schema.EndpointConfiguration.Transport;
 
 /**
  * Tests for LocalMessagePipe.
  */
 public class LocalMessagePipeTest extends MessageTestBase {
 
-  private MessageConfiguration getConfiguration(boolean reversed) {
-    MessageConfiguration messageConfiguration = new MessageConfiguration();
-    messageConfiguration.transport = Transport.LOCAL;
-    messageConfiguration.namespace = TEST_NAMESPACE;
-    messageConfiguration.source = reversed ? TEST_DESTINATION : TEST_SOURCE;
-    messageConfiguration.destination = reversed ? TEST_SOURCE : TEST_DESTINATION;
-    return messageConfiguration;
-  }
-
   private Map<String, Object> testSend(Object message) {
     getTestDispatcher().publish(message);
-    List<Bundle> bundles = getTestDispatcher().drainOutput();
-    checkState(bundles.size() == 1, "expected 1 drained message, found " + bundles.size());
+    List<Bundle> bundles = getReverseDispatcher().drain();
+    assertEquals(1, bundles.size(), "unexpected received bundle");
     return JsonUtil.asMap(bundles.get(0));
   }
 
-  public MessageDispatcher getTestDispatcherCore(boolean reversed) {
-    return MessageDispatcher.from(getConfiguration(reversed));
+  public void augmentConfig(EndpointConfiguration config) {
+    config.protocol = Protocol.LOCAL;
   }
 
   private static class BespokeObject {

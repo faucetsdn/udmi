@@ -27,7 +27,7 @@ public class TestBase {
     configuration.projectId = MqttDevice.TEST_PROJECT;
     configuration.deviceId = TEST_DEVICE;
     configuration.endpoint = new EndpointConfiguration();
-    configuration.endpoint.topic_prefix = TEST_PREFIX;
+    configuration.endpoint.msg_prefix = TEST_PREFIX;
     configuration.options = new PubberOptions();
     return configuration;
   }

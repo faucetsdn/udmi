@@ -5,10 +5,8 @@ import static com.google.udmi.util.JsonUtil.stringify;
 
 import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.udmi.util.Common;
-import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
-import org.apache.commons.lang3.NotImplementedException;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttClient;
@@ -19,7 +17,6 @@ import udmi.schema.Basic;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.EndpointConfiguration.Transport;
 import udmi.schema.Envelope;
-import udmi.schema.MessageConfiguration;
 
 /**
  * Simple pipe implementation that uses an mqtt broker.
@@ -39,13 +36,13 @@ public class SimpleMqttPipe extends MessageBase {
   /**
    * Create new pipe instance for the given config.
    */
-  public SimpleMqttPipe(MessageConfiguration config) {
+  public SimpleMqttPipe(EndpointConfiguration config) {
     clientId = makeClientId();
-    namespace = config.namespace;
-    mqttClient = connectMqttClient(config.endpoint);
+    namespace = config.hostname;
+    mqttClient = connectMqttClient(config);
   }
 
-  public static MessagePipe fromConfig(MessageConfiguration config) {
+  public static MessagePipe fromConfig(EndpointConfiguration config) {
     return new SimpleMqttPipe(config);
   }
 
@@ -135,8 +132,4 @@ public class SimpleMqttPipe extends MessageBase {
     }
   }
 
-  @Override
-  List<Bundle> drainOutput() {
-    throw new NotImplementedException("Drain output not implemented");
-  }
 }

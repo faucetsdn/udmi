@@ -13,13 +13,14 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import udmi.schema.DiscoveryConfig;
+import udmi.schema.EndpointConfiguration;
+import udmi.schema.EndpointConfiguration.Protocol;
 import udmi.schema.GatewayConfig;
 import udmi.schema.LocalnetModel;
-import udmi.schema.MessageConfiguration;
-import udmi.schema.MessageConfiguration.Transport;
 import udmi.schema.PointsetEvent;
 
 /**
@@ -31,13 +32,13 @@ public class MessageDispatcherImplTest {
 
   List<Object> devNullCapture = new ArrayList<>();
 
-  private MessageConfiguration getConfiguration(boolean reversed) {
-    MessageConfiguration messageConfiguration = new MessageConfiguration();
-    messageConfiguration.transport = Transport.LOCAL;
-    messageConfiguration.namespace = TEST_NAMESPACE;
-    messageConfiguration.source = reversed ? TEST_DESTINATION : TEST_SOURCE;
-    messageConfiguration.destination = reversed ? TEST_SOURCE : TEST_DESTINATION;
-    return messageConfiguration;
+  private EndpointConfiguration getConfiguration(boolean reversed) {
+    EndpointConfiguration config = new EndpointConfiguration();
+    config.protocol = Protocol.LOCAL;
+    config.hostname = TEST_NAMESPACE;
+    config.recv_id = reversed ? TEST_DESTINATION : TEST_SOURCE;
+    config.send_id = reversed ? TEST_SOURCE : TEST_DESTINATION;
+    return config;
   }
 
   private MessageDispatcher getReversedDispatcher() {
@@ -84,5 +85,10 @@ public class MessageDispatcherImplTest {
     protected void devNullHandler(Object message) {
       devNullCapture.add(message);
     }
+  }
+
+  @AfterEach
+  void resetForTest() {
+    LocalMessagePipe.resetForTestStatic();
   }
 }

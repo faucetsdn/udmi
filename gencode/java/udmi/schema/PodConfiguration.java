@@ -16,36 +16,47 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "state_flow",
-    "target_flow"
+    "flow_defaults",
+    "target_flow",
+    "state_flow"
 })
 @Generated("jsonschema2pojo")
 public class PodConfiguration {
 
     /**
-     * Message Configuration
+     * Endpoint Configuration
      * <p>
-     * Parameters for configuring a message in/out pipeline
+     * Parameters to define an MQTT endpoint
      * 
      */
-    @JsonProperty("state_flow")
-    @JsonPropertyDescription("Parameters for configuring a message in/out pipeline")
-    public MessageConfiguration state_flow;
+    @JsonProperty("flow_defaults")
+    @JsonPropertyDescription("Parameters to define an MQTT endpoint")
+    public EndpointConfiguration flow_defaults;
     /**
-     * Message Configuration
+     * Endpoint Configuration
      * <p>
-     * Parameters for configuring a message in/out pipeline
+     * Parameters to define an MQTT endpoint
      * 
      */
     @JsonProperty("target_flow")
-    @JsonPropertyDescription("Parameters for configuring a message in/out pipeline")
-    public MessageConfiguration target_flow;
+    @JsonPropertyDescription("Parameters to define an MQTT endpoint")
+    public EndpointConfiguration target_flow;
+    /**
+     * Endpoint Configuration
+     * <p>
+     * Parameters to define an MQTT endpoint
+     * 
+     */
+    @JsonProperty("state_flow")
+    @JsonPropertyDescription("Parameters to define an MQTT endpoint")
+    public EndpointConfiguration state_flow;
 
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.state_flow == null)? 0 :this.state_flow.hashCode()));
+        result = ((result* 31)+((this.flow_defaults == null)? 0 :this.flow_defaults.hashCode()));
         result = ((result* 31)+((this.target_flow == null)? 0 :this.target_flow.hashCode()));
+        result = ((result* 31)+((this.state_flow == null)? 0 :this.state_flow.hashCode()));
         return result;
     }
 
@@ -58,7 +69,7 @@ public class PodConfiguration {
             return false;
         }
         PodConfiguration rhs = ((PodConfiguration) other);
-        return (((this.state_flow == rhs.state_flow)||((this.state_flow!= null)&&this.state_flow.equals(rhs.state_flow)))&&((this.target_flow == rhs.target_flow)||((this.target_flow!= null)&&this.target_flow.equals(rhs.target_flow))));
+        return ((((this.flow_defaults == rhs.flow_defaults)||((this.flow_defaults!= null)&&this.flow_defaults.equals(rhs.flow_defaults)))&&((this.target_flow == rhs.target_flow)||((this.target_flow!= null)&&this.target_flow.equals(rhs.target_flow))))&&((this.state_flow == rhs.state_flow)||((this.state_flow!= null)&&this.state_flow.equals(rhs.state_flow))));
     }
 
 }

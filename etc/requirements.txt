@@ -1,4 +1,5 @@
 astroid==2.12.13
+avro==1.11.1
 cachetools==5.0.0
 certifi==2022.12.7
 charset-normalizer==2.0.11

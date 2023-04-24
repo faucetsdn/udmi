@@ -6,7 +6,12 @@ cd $ROOT
 echo Checking for properly configured mosquitto...
 fgrep -q scrumptus /etc/mosquitto/test_mosquitto.passwd || (echo mosquitto not configured; false)
 
-# This is the local address of the previously configured server
+# This is the local address of the previously configured MQTT broker
 export MQTT_TEST_BROKER=tcp://localhost:1883
+echo Using MQTT broker at $MQTT_TEST_BROKER
+
+# This is the local address for PubSub emulation, created by bin/start_pubsub
+source out/pubsub.env
+echo Using PubSub emulator at $PUBSUB_EMULATOR_HOST
 
 udmis/bin/build check

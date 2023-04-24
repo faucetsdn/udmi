@@ -12,9 +12,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
+import udmi.schema.EndpointConfiguration;
 import udmi.schema.LocalnetModel;
 import udmi.schema.LocalnetState;
 
@@ -23,7 +25,7 @@ import udmi.schema.LocalnetState;
  */
 public abstract class MessageTestBase {
 
-  protected static final String TEST_NAMESPACE = "test_namespace";
+  protected static final String TEST_NAMESPACE = "test-namespace";
   protected static final String TEST_SOURCE = "message_from";
   protected static final String TEST_DESTINATION = "message_to";
   protected static final String TEST_VERSION = "1.32";
@@ -35,19 +37,32 @@ public abstract class MessageTestBase {
       messageHandlerFor(Exception.class, this::messageHandler),
       messageHandlerFor(LocalnetModel.class, this::messageHandler));
   private MessageDispatcherImpl dispatcher;
+  private MessageDispatcherImpl reverse;
 
-  protected List<Bundle> drainPipes() {
-    getTestDispatcher().drainSource();
-    return getTestDispatcher().drainOutput();
+  @NotNull
+  public static MessageDispatcherImpl getDispatcherFor(EndpointConfiguration reversedTarget) {
+    return (MessageDispatcherImpl) MessageDispatcher.from(reversedTarget);
   }
+
+  protected abstract void augmentConfig(EndpointConfiguration configuration);
 
   protected boolean environmentIsEnabled() {
     return true;
   }
 
+  protected EndpointConfiguration getMessageConfig(boolean reversed) {
+    EndpointConfiguration config = new EndpointConfiguration();
+    config.hostname = TEST_NAMESPACE;
+    config.recv_id = reversed ? TEST_DESTINATION : TEST_SOURCE;
+    config.send_id = reversed ? TEST_SOURCE : TEST_DESTINATION;
+    augmentConfig(config);
+    return config;
+  }
+
   protected MessageDispatcherImpl getReverseDispatcher() {
     getTestDispatcher();  // Ensure that the main pipe exists before doing the reverse.
-    return getTestDispatcher(true);
+    reverse = Optional.ofNullable(reverse).orElseGet(() -> getTestDispatcher(true));
+    return reverse;
   }
 
   protected void setTestDispatcher(MessageDispatcher dispatcher) {
@@ -60,18 +75,15 @@ public abstract class MessageTestBase {
   }
 
   protected MessageDispatcherImpl getTestDispatcher(boolean reversed) {
-    MessageDispatcher dispatcher = getTestDispatcherCore(reversed);
+    EndpointConfiguration configuration = getMessageConfig(reversed);
+    MessageDispatcher dispatcher = MessageDispatcher.from(configuration);
+    // Don't activate reversed dispatchers b/c the caller might have special things they want to do!
     if (!reversed && !dispatcher.isActive()) {
       dispatcher.registerHandlers(messageHandlers);
       dispatcher.activate();
     }
     return (MessageDispatcherImpl) dispatcher;
   }
-
-  /**
-   * Get a message pipe as defined by the appropriate pipe type subclass.
-   */
-  protected abstract MessageDispatcher getTestDispatcherCore(boolean reversed);
 
   protected Object synchronizedReceive() throws InterruptedException {
     synchronized (this) {
@@ -103,11 +115,19 @@ public abstract class MessageTestBase {
     return synchronizedReceive();
   }
 
+  protected void debug(String message) {
+    System.err.println(message);
+  }
+
   @AfterEach
   void resetForTest() {
     if (dispatcher != null) {
       dispatcher.resetForTest();
       dispatcher = null;
+    }
+    if (reverse != null) {
+      reverse.resetForTest();
+      reverse = null;
     }
   }
 

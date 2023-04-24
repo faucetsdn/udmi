@@ -1,21 +1,19 @@
 package com.google.bos.udmi.service.core;
 
-import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static udmi.schema.Envelope.SubFolder.SYSTEM;
-import static udmi.schema.Envelope.SubType.STATE;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.bos.udmi.service.messaging.impl.LocalMessagePipeTest;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
+import com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl;
+import java.util.ArrayList;
 import java.util.List;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
+import udmi.schema.EndpointConfiguration;
+import udmi.schema.EndpointConfiguration.Protocol;
 import udmi.schema.Envelope;
 import udmi.schema.GatewayState;
-import udmi.schema.MessageConfiguration;
-import udmi.schema.MessageConfiguration.Transport;
 import udmi.schema.State;
 import udmi.schema.SystemState;
 
@@ -25,6 +23,7 @@ import udmi.schema.SystemState;
 public class StateHandlerTest extends LocalMessagePipeTest {
 
   private StateHandler stateHandler;
+  private final List<Object> captured = new ArrayList<>();
 
   private int getDefaultCount() {
     return stateHandler.getMessageCount(Object.class);
@@ -57,13 +56,27 @@ public class StateHandlerTest extends LocalMessagePipeTest {
 
   private void initializeTestInstance() {
     instanceCount.incrementAndGet();
-    MessageConfiguration config = new MessageConfiguration();
-    config.transport = Transport.LOCAL;
-    config.namespace = TEST_NAMESPACE;
-    config.source = TEST_SOURCE;
-    config.destination = TEST_DESTINATION;
+    EndpointConfiguration config = new EndpointConfiguration();
+    config.protocol = Protocol.LOCAL;
+    config.hostname = TEST_NAMESPACE;
+    config.recv_id = TEST_SOURCE;
+    config.send_id = TEST_DESTINATION;
     stateHandler = UdmisComponent.create(StateHandler.class, config);
     setTestDispatcher(stateHandler.getDispatcher());
+    MessageDispatcherImpl reverseDispatcher = getReverseDispatcher();
+    reverseDispatcher.registerHandler(Object.class, this::resultHandler);
+    reverseDispatcher.activate();
+  }
+
+  private void resultHandler(Object message) {
+    captured.add(message);
+  }
+
+  private void terminateAndWait() {
+    getReverseDispatcher().terminate();
+    getTestDispatcher().awaitShutdown();
+    getTestDispatcher().terminate();
+    getReverseDispatcher().awaitShutdown();
   }
 
   /**
@@ -72,18 +85,14 @@ public class StateHandlerTest extends LocalMessagePipeTest {
   @Test
   public void multiExpansion() {
     initializeTestInstance();
+    getReverseDispatcher().publish(getTestStateBundle(true));
+    terminateAndWait();
 
-    Bundle testStateBundle = getTestStateBundle(true);
-
-    getReverseDispatcher().publish(testStateBundle);
-
-    List<Bundle> bundles = drainPipes();
-
-    Bundle targetBundle = bundles.remove(0);
-
-    assertEquals(STATE, targetBundle.envelope.subType, "received message subType mismatch");
-    assertNotNull(targetBundle.envelope.subFolder, "received message subFolder is null");
-    assertEquals(1, bundles.size(), "unexpected remaining message count");
+    assertEquals(2, captured.size(), "unexpected received message count");
+    assertTrue(captured.stream().anyMatch(message -> message instanceof SystemState),
+        "has SystemState");
+    assertTrue(captured.stream().anyMatch(message -> message instanceof GatewayState),
+        "has GatewayState");
     assertEquals(0, getExceptionCount(), "exception count");
     assertEquals(1, getDefaultCount(), "default handler count");
   }
@@ -94,20 +103,12 @@ public class StateHandlerTest extends LocalMessagePipeTest {
   @Test
   public void singleExpansion() {
     initializeTestInstance();
+    getReverseDispatcher().publish(getTestStateBundle(false));
+    terminateAndWait();
 
-    Bundle testStateBundle = getTestStateBundle(false);
-    Bundle originalBundle = deepCopy(testStateBundle);
-
-    getReverseDispatcher().publish(testStateBundle);
-
-    List<Bundle> bundles = drainPipes();
-    Bundle targetBundle = bundles.remove(0);
-
-    assertNull(originalBundle.envelope.subType, "original envelope was not null");
-    assertEquals(STATE, targetBundle.envelope.subType, "received message subType mismatch");
-    assertEquals(SYSTEM, targetBundle.envelope.subFolder, "received message subType mismatch");
-    assertNull(testStateBundle.envelope.subType, "original subType was mutated");
-    assertEquals(0, bundles.size(), "unexpected published message count");
+    assertEquals(1, captured.size(), "unexpected received message count");
+    Object received = captured.get(0);
+    assertTrue(received instanceof SystemState, "expected SystemState message");
     assertEquals(0, getExceptionCount(), "exception count");
     assertEquals(1, getDefaultCount(), "default handler count");
   }
@@ -119,11 +120,10 @@ public class StateHandlerTest extends LocalMessagePipeTest {
   @Test
   public void stateException() {
     initializeTestInstance();
-
     getReverseDispatcher().publish(null);
+    terminateAndWait();
 
-    drainPipes();
-
+    assertEquals(0, captured.size(), "unexpected received message count");
     assertEquals(1, getExceptionCount(), "exception count");
     assertEquals(0, getDefaultCount(), "default handler count");
   }

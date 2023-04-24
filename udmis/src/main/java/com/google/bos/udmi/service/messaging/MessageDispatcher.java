@@ -6,7 +6,7 @@ import com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Collection;
 import java.util.function.Consumer;
-import udmi.schema.MessageConfiguration;
+import udmi.schema.EndpointConfiguration;
 
 /**
  * Strongly typed interface for working with message pipes.
@@ -23,7 +23,7 @@ public interface MessageDispatcher {
    */
   Class<?> EXCEPTION_CLASS = Exception.class;
 
-  static MessageDispatcher from(MessageConfiguration configuration) {
+  static MessageDispatcher from(EndpointConfiguration configuration) {
     return new MessageDispatcherImpl(MessagePipe.from(configuration));
   }
 
@@ -43,6 +43,9 @@ public interface MessageDispatcher {
    * extracted at runtime and used to properly reconstruct on the receiving end.
    */
   void publish(Object message);
+
+
+  void shutdown();
 
   /**
    * Return a count of the number of times the handler for the indicated class has been called.

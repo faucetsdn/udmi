@@ -1,5 +1,6 @@
 package com.google.bos.udmi.service.pod;
 
+import static com.google.bos.udmi.service.messaging.impl.MessageBase.combineConfig;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 
@@ -7,7 +8,7 @@ import com.google.bos.udmi.service.core.StateHandler;
 import com.google.bos.udmi.service.core.TargetHandler;
 import com.google.bos.udmi.service.core.UdmisComponent;
 import com.google.udmi.util.JsonUtil;
-import udmi.schema.MessageConfiguration;
+import udmi.schema.EndpointConfiguration;
 import udmi.schema.PodConfiguration;
 
 /**
@@ -23,12 +24,12 @@ public class UdmiServicePod {
    * Core pod to instantiate all the other components as necessary based on configuration.
    */
   public UdmiServicePod(String[] args) {
-    checkState(args.length == 1, "expected exactly one argument: configuration");
+    checkState(args.length == 1, "expected exactly one argument: configuration_file");
 
     podConfiguration = JsonUtil.loadFileRequired(PodConfiguration.class, args[0]);
 
-    stateHandler = createComponent(StateHandler.class, podConfiguration.state_flow);
-    targetHandler = createComponent(TargetHandler.class, podConfiguration.target_flow);
+    targetHandler = createComponent(TargetHandler.class, makeConfig(podConfiguration.target_flow));
+    stateHandler = createComponent(StateHandler.class, makeConfig(podConfiguration.state_flow));
   }
 
   public static void main(String[] args) {
@@ -36,7 +37,15 @@ public class UdmiServicePod {
   }
 
   private <T extends UdmisComponent> T createComponent(Class<T> clazz,
-      MessageConfiguration config) {
+      EndpointConfiguration config) {
     return ifNotNullGet(config, () -> UdmisComponent.create(clazz, config));
+  }
+
+  private EndpointConfiguration makeConfig(EndpointConfiguration defined) {
+    return combineConfig(podConfiguration.flow_defaults, defined);
+  }
+
+  public PodConfiguration getPodConfiguration() {
+    return podConfiguration;
   }
 }

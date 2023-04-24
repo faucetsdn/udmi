@@ -10,7 +10,7 @@ import com.google.udmi.util.Common;
 import java.util.Collection;
 import java.util.function.Consumer;
 import org.jetbrains.annotations.TestOnly;
-import udmi.schema.MessageConfiguration;
+import udmi.schema.EndpointConfiguration;
 
 /**
  * Base class for UDMIS components.
@@ -27,14 +27,14 @@ public abstract class UdmisComponent extends ContainerBase {
   /**
    * Create a new instance of the given target class with the provided configuration.
    */
-  public static <T extends UdmisComponent> T create(Class<T> clazz, MessageConfiguration config) {
+  public static <T extends UdmisComponent> T create(Class<T> clazz, EndpointConfiguration config) {
     try {
       T object = clazz.getDeclaredConstructor().newInstance();
       object.dispatcher = MessageDispatcher.from(config);
       object.activate();
       return object;
     } catch (Exception e) {
-      throw new RuntimeException("While instantiating class " + clazz.getName());
+      throw new RuntimeException("While instantiating class " + clazz.getName(), e);
     }
   }
 

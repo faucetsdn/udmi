@@ -22,8 +22,8 @@ public class MqttDevice {
   MqttDevice(PubberConfiguration configuration, Consumer<Exception> onError) {
     deviceId = configuration.deviceId;
     publisher = getPublisher(configuration, onError);
-    if (configuration.endpoint.topic_prefix != null) {
-      publisher.setDeviceTopicPrefix(deviceId, configuration.endpoint.topic_prefix);
+    if (configuration.endpoint.msg_prefix != null) {
+      publisher.setDeviceTopicPrefix(deviceId, configuration.endpoint.msg_prefix);
     }
   }
 

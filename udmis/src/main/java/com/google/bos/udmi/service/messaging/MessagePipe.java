@@ -4,13 +4,14 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.bos.udmi.service.messaging.impl.LocalMessagePipe;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
+import com.google.bos.udmi.service.messaging.impl.PubSubPipe;
 import com.google.bos.udmi.service.messaging.impl.SimpleMqttPipe;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import udmi.schema.MessageConfiguration;
-import udmi.schema.MessageConfiguration.Transport;
+import udmi.schema.EndpointConfiguration;
+import udmi.schema.EndpointConfiguration.Protocol;
 
 /**
  * Basic message pipe interface that logically supports an in-source and out-destination. The pipe
@@ -20,17 +21,18 @@ import udmi.schema.MessageConfiguration.Transport;
  */
 public interface MessagePipe {
 
-  Map<Transport, Function<MessageConfiguration, MessagePipe>> IMPLEMENTATIONS = ImmutableMap.of(
-      Transport.LOCAL, LocalMessagePipe::fromConfig,
-      Transport.MQTT, SimpleMqttPipe::fromConfig);
+  Map<Protocol, Function<EndpointConfiguration, MessagePipe>> IMPLEMENTATIONS = ImmutableMap.of(
+      Protocol.LOCAL, LocalMessagePipe::fromConfig,
+      Protocol.PUBSUB, PubSubPipe::fromConfig,
+      Protocol.MQTT, SimpleMqttPipe::fromConfig);
 
   /**
    * MessagePipe factory given a message configuration blob.
    */
-  static MessagePipe from(MessageConfiguration config) {
-    checkState(IMPLEMENTATIONS.containsKey(config.transport),
-        "unknown message transport type " + config.transport);
-    return IMPLEMENTATIONS.get(config.transport).apply(config);
+  static MessagePipe from(EndpointConfiguration config) {
+    checkState(IMPLEMENTATIONS.containsKey(config.protocol),
+        "unknown message transport type " + config.protocol);
+    return IMPLEMENTATIONS.get(config.protocol).apply(config);
   }
 
   /**
@@ -43,5 +45,13 @@ public interface MessagePipe {
    */
   boolean isActive();
 
+  /**
+   * Publish an outgoing message bundle.
+   */
   void publish(Bundle bundle);
+
+  /**
+   * Shutdown an active pipe so that it no longer processes received messages.
+   */
+  void shutdown();
 }

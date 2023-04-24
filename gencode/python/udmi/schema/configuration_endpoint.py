@@ -53,9 +53,9 @@ class EndpointConfiguration:
     self.port = None
     self.config_sync_sec = None
     self.client_id = None
-    self.topic_prefix = None
-    self.sub_topic = None
-    self.send_topic = None
+    self.msg_prefix = None
+    self.recv_id = None
+    self.send_id = None
     self.auth_provider = None
     self.generation = None
 
@@ -71,9 +71,9 @@ class EndpointConfiguration:
     result.port = source.get('port')
     result.config_sync_sec = source.get('config_sync_sec')
     result.client_id = source.get('client_id')
-    result.topic_prefix = source.get('topic_prefix')
-    result.sub_topic = source.get('sub_topic')
-    result.send_topic = source.get('send_topic')
+    result.msg_prefix = source.get('msg_prefix')
+    result.recv_id = source.get('recv_id')
+    result.send_id = source.get('send_id')
     result.auth_provider = ObjectA90DCC28.from_dict(source.get('auth_provider'))
     result.generation = source.get('generation')
     return result
@@ -110,12 +110,12 @@ class EndpointConfiguration:
       result['config_sync_sec'] = self.config_sync_sec # 5
     if self.client_id:
       result['client_id'] = self.client_id # 5
-    if self.topic_prefix:
-      result['topic_prefix'] = self.topic_prefix # 5
-    if self.sub_topic:
-      result['sub_topic'] = self.sub_topic # 5
-    if self.send_topic:
-      result['send_topic'] = self.send_topic # 5
+    if self.msg_prefix:
+      result['msg_prefix'] = self.msg_prefix # 5
+    if self.recv_id:
+      result['recv_id'] = self.recv_id # 5
+    if self.send_id:
+      result['send_id'] = self.send_id # 5
     if self.auth_provider:
       result['auth_provider'] = self.auth_provider.to_dict() # 4
     if self.generation:

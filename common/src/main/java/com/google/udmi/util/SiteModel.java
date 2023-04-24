@@ -108,8 +108,6 @@ public class SiteModel {
 
   public static List<String> listDevices(File devicesDir) {
     if (!devicesDir.exists()) {
-      System.err.println(
-          "Directory not found, assuming no devices: " + devicesDir.getAbsolutePath());
       return ImmutableList.of();
     }
     String[] devices = requireNonNull(devicesDir.list());
