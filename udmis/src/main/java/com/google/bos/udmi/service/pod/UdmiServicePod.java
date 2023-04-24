@@ -4,12 +4,17 @@ import static com.google.bos.udmi.service.messaging.impl.MessageBase.combineConf
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 
+import com.google.bos.udmi.service.core.BridgeHandler;
 import com.google.bos.udmi.service.core.StateHandler;
 import com.google.bos.udmi.service.core.TargetHandler;
 import com.google.bos.udmi.service.core.UdmisComponent;
+import com.google.common.collect.ImmutableMap;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
+import java.util.HashMap;
+import udmi.schema.BridgePodConfiguration;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.PodConfiguration;
 
@@ -31,10 +36,13 @@ public class UdmiServicePod {
 
       podConfiguration = JsonUtil.loadFileRequired(PodConfiguration.class, args[0]);
 
-      targetHandler =
-          createComponent(TargetHandler.class, makeConfig(podConfiguration.flows.get("target")));
-      stateHandler =
-          createComponent(StateHandler.class, makeConfig(podConfiguration.flows.get("state")));
+      HashMap<String, EndpointConfiguration> flows = podConfiguration.flows;
+      targetHandler = createComponent(TargetHandler.class, makeConfig(flows.get("target")));
+      stateHandler = createComponent(StateHandler.class, makeConfig(flows.get("state")));
+
+      ifNotNullGet(podConfiguration.bridges, foo -> ImmutableMap.of()).forEach((key, value) -> {
+        createComponent(BridgeHandler.class, (BridgePodConfiguration) value);
+      });
     } catch (Exception e) {
       throw new RuntimeException("While instantiating pod " + CSV_JOINER.join(args), e);
     }
@@ -47,6 +55,13 @@ public class UdmiServicePod {
   private <T extends UdmisComponent> T createComponent(Class<T> clazz,
       EndpointConfiguration config) {
     return ifNotNullGet(config, () -> UdmisComponent.create(clazz, config));
+  }
+
+  private <T extends UdmisComponent> T createComponent(Class<T> clazz,
+      BridgePodConfiguration config) {
+    EndpointConfiguration from = makeConfig(config.from);
+    EndpointConfiguration to = makeConfig(config.to);
+    return ifNotNullGet(config, () -> UdmisComponent.create(clazz, from, to));
   }
 
   private EndpointConfiguration makeConfig(EndpointConfiguration defined) {

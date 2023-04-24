@@ -38,6 +38,21 @@ public abstract class UdmisComponent extends ContainerBase {
     }
   }
 
+  /**
+   * Create a new instance of the given target class with the provided configurations.
+   */
+  public static <T extends UdmisComponent> T create(Class<T> clazz,
+      EndpointConfiguration from, EndpointConfiguration to) {
+    try {
+      T object = clazz.getDeclaredConstructor().newInstance();
+      object.dispatcher = MessageDispatcher.from(from, to);
+      object.activate();
+      return object;
+    } catch (Exception e) {
+      throw new RuntimeException("While instantiating class " + clazz.getName(), e);
+    }
+  }
+
   protected void activate() {
     registerHandlers(baseHandlers);
     registerHandlers();

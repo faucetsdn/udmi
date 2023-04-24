@@ -27,6 +27,10 @@ public interface MessageDispatcher {
     return new MessageDispatcherImpl(MessagePipe.from(configuration));
   }
 
+  static MessageDispatcher from(EndpointConfiguration from, EndpointConfiguration to) {
+    throw new IllegalStateException("Not yet implemented");
+  }
+
   /**
    * Static factory method for creating handler specifications.
    */

@@ -2,6 +2,7 @@ package com.google.bos.udmi.service.pod;
 
 import static com.google.bos.udmi.service.messaging.impl.MessageBase.combineConfig;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.udmi.util.GeneralUtils.asArray;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -9,7 +10,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.google.bos.udmi.service.messaging.StateUpdate;
 import com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl;
 import com.google.bos.udmi.service.messaging.impl.MessageTestBase;
-import com.google.common.collect.ImmutableList;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -27,6 +27,7 @@ import udmi.schema.PointsetState;
 public class UdmiServicePodTest {
 
   private static final String CONFIG_FILE = "src/test/configs/base_pod.json";
+  private static final String BRIDGE_FILE = "src/test/configs/bridge_pod.json";
   private static final long RECEIVE_TIMEOUT_SEC = 2;
 
   private EndpointConfiguration reverseFlow(EndpointConfiguration flow) {
@@ -39,11 +40,15 @@ public class UdmiServicePodTest {
   }
 
   @Test
-  public void basicPodTest() throws Exception {
-    UdmiServicePod udmiServicePod =
-        new UdmiServicePod(ImmutableList.of(CONFIG_FILE).toArray(new String[0]));
+  public void bridgeTest() throws Exception {
+    UdmiServicePod pod = new UdmiServicePod(asArray(BRIDGE_FILE));
+  }
 
-    PodConfiguration podConfig = udmiServicePod.getPodConfiguration();
+  @Test
+  public void basicPodTest() throws Exception {
+    UdmiServicePod pod = new UdmiServicePod(asArray(CONFIG_FILE));
+
+    PodConfiguration podConfig = pod.getPodConfiguration();
 
     EndpointConfiguration reversedState =
         combineConfig(podConfig.flow_defaults, reverseFlow(podConfig.flows.get("state")));
@@ -72,4 +77,5 @@ public class UdmiServicePodTest {
 
     Assertions.assertNull(defaulted.poll(RECEIVE_TIMEOUT_SEC, TimeUnit.SECONDS));
   }
+
 }

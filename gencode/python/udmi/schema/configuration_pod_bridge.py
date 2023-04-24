@@ -7,16 +7,16 @@ class BridgePodConfiguration:
   """Generated schema class"""
 
   def __init__(self):
-    self.yin = None
-    self.yang = None
+    self.from = None
+    self.to = None
 
   @staticmethod
   def from_dict(source):
     if not source:
       return None
     result = BridgePodConfiguration()
-    result.yin = EndpointConfiguration.from_dict(source.get('yin'))
-    result.yang = EndpointConfiguration.from_dict(source.get('yang'))
+    result.from = EndpointConfiguration.from_dict(source.get('from'))
+    result.to = EndpointConfiguration.from_dict(source.get('to'))
     return result
 
   @staticmethod
@@ -37,8 +37,8 @@ class BridgePodConfiguration:
 
   def to_dict(self):
     result = {}
-    if self.yin:
-      result['yin'] = self.yin.to_dict() # 4
-    if self.yang:
-      result['yang'] = self.yang.to_dict() # 4
+    if self.from:
+      result['from'] = self.from.to_dict() # 4
+    if self.to:
+      result['to'] = self.to.to_dict() # 4
     return result

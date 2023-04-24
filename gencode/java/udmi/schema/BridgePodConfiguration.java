@@ -16,8 +16,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "yin",
-    "yang"
+    "from",
+    "to"
 })
 @Generated("jsonschema2pojo")
 public class BridgePodConfiguration {
@@ -28,24 +28,24 @@ public class BridgePodConfiguration {
      * Parameters to define an MQTT endpoint
      * 
      */
-    @JsonProperty("yin")
+    @JsonProperty("from")
     @JsonPropertyDescription("Parameters to define an MQTT endpoint")
-    public EndpointConfiguration yin;
+    public EndpointConfiguration from;
     /**
      * Endpoint Configuration
      * <p>
      * Parameters to define an MQTT endpoint
      * 
      */
-    @JsonProperty("yang")
+    @JsonProperty("to")
     @JsonPropertyDescription("Parameters to define an MQTT endpoint")
-    public EndpointConfiguration yang;
+    public EndpointConfiguration to;
 
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.yang == null)? 0 :this.yang.hashCode()));
-        result = ((result* 31)+((this.yin == null)? 0 :this.yin.hashCode()));
+        result = ((result* 31)+((this.from == null)? 0 :this.from.hashCode()));
+        result = ((result* 31)+((this.to == null)? 0 :this.to.hashCode()));
         return result;
     }
 
@@ -58,7 +58,7 @@ public class BridgePodConfiguration {
             return false;
         }
         BridgePodConfiguration rhs = ((BridgePodConfiguration) other);
-        return (((this.yang == rhs.yang)||((this.yang!= null)&&this.yang.equals(rhs.yang)))&&((this.yin == rhs.yin)||((this.yin!= null)&&this.yin.equals(rhs.yin))));
+        return (((this.from == rhs.from)||((this.from!= null)&&this.from.equals(rhs.from)))&&((this.to == rhs.to)||((this.to!= null)&&this.to.equals(rhs.to))));
     }
 
 }
