@@ -46,11 +46,11 @@ public class UdmiServicePodTest {
     PodConfiguration podConfig = udmiServicePod.getPodConfiguration();
 
     EndpointConfiguration reversedState =
-        combineConfig(podConfig.flow_defaults, reverseFlow(podConfig.state_flow));
+        combineConfig(podConfig.flow_defaults, reverseFlow(podConfig.flows.get("state")));
     final MessageDispatcherImpl stateDispatcher = MessageTestBase.getDispatcherFor(reversedState);
 
     EndpointConfiguration reversedTarget =
-        combineConfig(podConfig.flow_defaults, reverseFlow(podConfig.target_flow));
+        combineConfig(podConfig.flow_defaults, reverseFlow(podConfig.flows.get("target")));
     final MessageDispatcherImpl targetDispatcher = MessageTestBase.getDispatcherFor(reversedTarget);
 
     CompletableFuture<DiscoveryState> received = new CompletableFuture<>();

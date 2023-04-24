@@ -2,12 +2,14 @@
   "flow_defaults": {
     "protocol": "local"
   },
-  "target_flow": {
-    "recv_id": "udmi_target",
-    "send_id": "udmi_tap"
-  },
-  "state_flow": {
-    "recv_id": "udmi_state",
-    "send_id": "udmi_target"
+  "flows": {
+    "target": {
+      "recv_id": "udmi_target",
+      "send_id": "udmi_tap"
+    },
+    "state": {
+      "recv_id": "udmi_state",
+      "send_id": "udmi_target"
+    }
   }
 }
