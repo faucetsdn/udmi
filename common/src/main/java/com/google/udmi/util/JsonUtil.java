@@ -135,6 +135,18 @@ public abstract class JsonUtil {
   }
 
   /**
+   * Convert the string to a mapped representation.
+   *
+   * @param message input string to convert
+   * @return object-as-map
+   */
+  public static Map<String, Object> toMap(String message) {
+    @SuppressWarnings("unchecked")
+    Map<String, Object> map = fromString(TreeMap.class, message);
+    return map;
+  }
+
+  /**
    * Convert the given input file to a mapped representation.
    *
    * @param inputFile input file to convert to a map

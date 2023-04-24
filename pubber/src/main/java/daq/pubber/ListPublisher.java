@@ -21,7 +21,7 @@ public class ListPublisher implements Publisher {
 
   public ListPublisher(PubberConfiguration configuration, Consumer<Exception> onError) {
     this.configuration = configuration;
-    usePrefix = configuration.endpoint.topic_prefix;
+    usePrefix = configuration.endpoint.msg_prefix;
   }
 
   /**

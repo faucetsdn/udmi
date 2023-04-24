@@ -221,7 +221,7 @@ public class MqttPublisher implements Publisher {
   }
 
   private String getSendTopic(String deviceId, String topicSuffix) {
-    return Objects.requireNonNullElseGet(configuration.endpoint.send_topic,
+    return Objects.requireNonNullElseGet(configuration.endpoint.send_id,
         () -> getMessageTopic(deviceId, topicSuffix));
   }
 
@@ -410,11 +410,11 @@ public class MqttPublisher implements Publisher {
     boolean noConfigAck = (configuration.options.noConfigAck != null
         && configuration.options.noConfigAck);
     int configQos = noConfigAck ? QOS_AT_MOST_ONCE : QOS_AT_LEAST_ONCE;
-    if (configuration.endpoint.sub_topic == null) {
+    if (configuration.endpoint.recv_id == null) {
       subscribeTopic(client, getMessageTopic(deviceId, MqttDevice.CONFIG_TOPIC), configQos);
       subscribeTopic(client, getMessageTopic(deviceId, MqttDevice.ERRORS_TOPIC), QOS_AT_MOST_ONCE);
     } else {
-      subscribeTopic(client, configuration.endpoint.sub_topic, configQos);
+      subscribeTopic(client, configuration.endpoint.recv_id, configQos);
     }
 
     info("Updates subscribed");

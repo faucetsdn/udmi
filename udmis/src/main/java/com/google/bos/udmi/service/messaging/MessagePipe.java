@@ -2,14 +2,16 @@ package com.google.bos.udmi.service.messaging;
 
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.bos.udmi.service.messaging.impl.LocalMessagePipe;
+import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
+import com.google.bos.udmi.service.messaging.impl.PubSubPipe;
+import com.google.bos.udmi.service.messaging.impl.SimpleMqttPipe;
 import com.google.common.collect.ImmutableMap;
-import java.util.AbstractMap.SimpleEntry;
-import java.util.Collection;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import udmi.schema.MessageConfiguration;
-import udmi.schema.MessageConfiguration.Transport;
+import udmi.schema.EndpointConfiguration;
+import udmi.schema.EndpointConfiguration.Protocol;
 
 /**
  * Basic message pipe interface that logically supports an in-source and out-destination. The pipe
@@ -19,30 +21,24 @@ import udmi.schema.MessageConfiguration.Transport;
  */
 public interface MessagePipe {
 
-  Map<Transport, Function<MessageConfiguration, MessagePipe>> IMPLEMENTATIONS = ImmutableMap.of(
-      Transport.LOCAL, LocalMessagePipe::from,
-      Transport.MQTT, SimpleMqttPipe::from);
+  Map<Protocol, Function<EndpointConfiguration, MessagePipe>> IMPLEMENTATIONS = ImmutableMap.of(
+      Protocol.LOCAL, LocalMessagePipe::fromConfig,
+      Protocol.PUBSUB, PubSubPipe::fromConfig,
+      Protocol.MQTT, SimpleMqttPipe::fromConfig);
 
   /**
    * MessagePipe factory given a message configuration blob.
    */
-  static MessagePipe from(MessageConfiguration config) {
-    checkState(IMPLEMENTATIONS.containsKey(config.transport),
-        "unknown message transport type " + config.transport);
-    return IMPLEMENTATIONS.get(config.transport).apply(config);
-  }
-
-  /**
-   * Static factory method for creating handler specifications.
-   */
-  static <T> HandlerSpecification messageHandlerFor(Class<T> clazz, MessageHandler<T> consumer) {
-    return new HandlerSpecification(clazz, consumer);
+  static MessagePipe from(EndpointConfiguration config) {
+    checkState(IMPLEMENTATIONS.containsKey(config.protocol),
+        "unknown message transport type " + config.protocol);
+    return IMPLEMENTATIONS.get(config.protocol).apply(config);
   }
 
   /**
    * Activate the receive loop of the message handler. Usually after handlers are registered!
    */
-  void activate();
+  void activate(Consumer<Bundle> callback);
 
   /**
    * Check if this pipe has been activated (and is still active).
@@ -50,39 +46,12 @@ public interface MessagePipe {
   boolean isActive();
 
   /**
-   * Publish a message to the outgoing channel of this pipe.
+   * Publish an outgoing message bundle.
    */
-  void publish(Object message);
-
-  <T> void registerHandler(Class<T> targetClass, MessageHandler<T> handler);
+  void publish(Bundle bundle);
 
   /**
-   * Convenience function to register an entire collection of handler specifications.
+   * Shutdown an active pipe so that it no longer processes received messages.
    */
-  default void registerHandlers(Collection<HandlerSpecification> messageHandlers) {
-    messageHandlers.forEach(handler -> handler.registerWith(this));
-  }
-
-  /**
-   * Represent a type-happy consumer into a more generic functional specification.
-   */
-  interface MessageHandler<T> extends Consumer<T> {
-
-  }
-
-  /**
-   * Represent a type-happy consumer into a more generic specification. No actual logic, just makes
-   * calling code cleaner and less cluttered with java-type crazyness.
-   */
-  class HandlerSpecification extends SimpleEntry<Class<?>, MessageHandler<?>> {
-
-    public <T> HandlerSpecification(Class<T> clazz, MessageHandler<T> handler) {
-      super(clazz, handler);
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T> void registerWith(MessagePipe pipe) {
-      pipe.registerHandler((Class<T>) getKey(), (MessageHandler<T>) getValue());
-    }
-  }
+  void shutdown();
 }

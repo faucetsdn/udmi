@@ -92,7 +92,7 @@
     <a href="#endpoint_protocol" onclick="anchorLink('endpoint_protocol')">protocol</a></div><span class="badge badge-dark value-type">Type: enum (of string)</span><br/>
 <div class="enum-value" id="endpoint_protocol_enum">
                 <h4>Must be one of:</h4>
-                <ul class="list-group"><li class="list-group-item enum-item">"mqtt"</li></ul>
+                <ul class="list-group"><li class="list-group-item enum-item">"local"</li><li class="list-group-item enum-item">"pubsub"</li><li class="list-group-item enum-item">"trace"</li><li class="list-group-item enum-item">"mqtt"</li></ul>
                 </div>
             
 
@@ -349,18 +349,18 @@
         </div>
     </div>
 </div>
-<div class="accordion" id="accordionendpoint_topic_prefix">
+<div class="accordion" id="accordionendpoint_msg_prefix">
     <div class="card">
-        <div class="card-header" id="headingendpoint_topic_prefix">
+        <div class="card-header" id="headingendpoint_msg_prefix">
             <h2 class="mb-0">
-                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#endpoint_topic_prefix"
-                        aria-expanded="" aria-controls="endpoint_topic_prefix" onclick="setAnchor('#endpoint_topic_prefix')"><span class="property-name">topic_prefix</span></button>
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#endpoint_msg_prefix"
+                        aria-expanded="" aria-controls="endpoint_msg_prefix" onclick="setAnchor('#endpoint_msg_prefix')"><span class="property-name">msg_prefix</span></button>
             </h2>
         </div>
 
-        <div id="endpoint_topic_prefix"
-             class="collapse property-definition-div" aria-labelledby="headingendpoint_topic_prefix"
-             data-parent="#accordionendpoint_topic_prefix">
+        <div id="endpoint_msg_prefix"
+             class="collapse property-definition-div" aria-labelledby="headingendpoint_msg_prefix"
+             data-parent="#accordionendpoint_msg_prefix">
             <div class="card-body pl-5">
 
     <div class="breadcrumbs">root
@@ -377,9 +377,9 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#endpoint_topic_prefix" onclick="anchorLink('endpoint_topic_prefix')">topic_prefix</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
-<span class="description"><p>Prefix for message topics</p>
-</span><span class="pattern-value" id="endpoint_topic_prefix_pattern">Must match regular expression: <code>^[-_/a-zA-Z0-9]+$</code></span>
+    <a href="#endpoint_msg_prefix" onclick="anchorLink('endpoint_msg_prefix')">msg_prefix</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>Prefix for message topics/addresses</p>
+</span><span class="pattern-value" id="endpoint_msg_prefix_pattern">Must match regular expression: <code>^[-_/a-zA-Z0-9]+$</code></span>
             
 
             
@@ -390,18 +390,18 @@
         </div>
     </div>
 </div>
-<div class="accordion" id="accordionendpoint_sub_topic">
+<div class="accordion" id="accordionendpoint_recv_id">
     <div class="card">
-        <div class="card-header" id="headingendpoint_sub_topic">
+        <div class="card-header" id="headingendpoint_recv_id">
             <h2 class="mb-0">
-                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#endpoint_sub_topic"
-                        aria-expanded="" aria-controls="endpoint_sub_topic" onclick="setAnchor('#endpoint_sub_topic')"><span class="property-name">sub_topic</span></button>
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#endpoint_recv_id"
+                        aria-expanded="" aria-controls="endpoint_recv_id" onclick="setAnchor('#endpoint_recv_id')"><span class="property-name">recv_id</span></button>
             </h2>
         </div>
 
-        <div id="endpoint_sub_topic"
-             class="collapse property-definition-div" aria-labelledby="headingendpoint_sub_topic"
-             data-parent="#accordionendpoint_sub_topic">
+        <div id="endpoint_recv_id"
+             class="collapse property-definition-div" aria-labelledby="headingendpoint_recv_id"
+             data-parent="#accordionendpoint_recv_id">
             <div class="card-body pl-5">
 
     <div class="breadcrumbs">root
@@ -418,9 +418,9 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#endpoint_sub_topic" onclick="anchorLink('endpoint_sub_topic')">sub_topic</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
-<span class="description"><p>Topic for message subscriptions</p>
-</span><span class="pattern-value" id="endpoint_sub_topic_pattern">Must match regular expression: <code>^[-_/a-zA-Z0-9#]+$</code></span>
+    <a href="#endpoint_recv_id" onclick="anchorLink('endpoint_recv_id')">recv_id</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>Id for the receiving message channel</p>
+</span><span class="pattern-value" id="endpoint_recv_id_pattern">Must match regular expression: <code>^[-_/a-zA-Z0-9#]+$</code></span>
             
 
             
@@ -431,18 +431,18 @@
         </div>
     </div>
 </div>
-<div class="accordion" id="accordionendpoint_send_topic">
+<div class="accordion" id="accordionendpoint_send_id">
     <div class="card">
-        <div class="card-header" id="headingendpoint_send_topic">
+        <div class="card-header" id="headingendpoint_send_id">
             <h2 class="mb-0">
-                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#endpoint_send_topic"
-                        aria-expanded="" aria-controls="endpoint_send_topic" onclick="setAnchor('#endpoint_send_topic')"><span class="property-name">send_topic</span></button>
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#endpoint_send_id"
+                        aria-expanded="" aria-controls="endpoint_send_id" onclick="setAnchor('#endpoint_send_id')"><span class="property-name">send_id</span></button>
             </h2>
         </div>
 
-        <div id="endpoint_send_topic"
-             class="collapse property-definition-div" aria-labelledby="headingendpoint_send_topic"
-             data-parent="#accordionendpoint_send_topic">
+        <div id="endpoint_send_id"
+             class="collapse property-definition-div" aria-labelledby="headingendpoint_send_id"
+             data-parent="#accordionendpoint_send_id">
             <div class="card-body pl-5">
 
     <div class="breadcrumbs">root
@@ -459,9 +459,9 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#endpoint_send_topic" onclick="anchorLink('endpoint_send_topic')">send_topic</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
-<span class="description"><p>Topic for sending messages</p>
-</span><span class="pattern-value" id="endpoint_send_topic_pattern">Must match regular expression: <code>^[-_/a-zA-Z0-9#]+$</code></span>
+    <a href="#endpoint_send_id" onclick="anchorLink('endpoint_send_id')">send_id</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>Id for the sending messages channel</p>
+</span><span class="pattern-value" id="endpoint_send_id_pattern">Must match regular expression: <code>^[-_/a-zA-Z0-9#]+$</code></span>
             
 
             

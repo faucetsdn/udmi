@@ -1,12 +1,12 @@
-package com.google.bos.udmi.service.messaging;
+package com.google.bos.udmi.service.messaging.impl;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.udmi.util.JsonUtil.stringify;
 
+import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.udmi.util.Common;
-import java.util.List;
 import java.util.Optional;
-import org.apache.commons.lang3.NotImplementedException;
+import java.util.function.Consumer;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttClient;
@@ -17,7 +17,6 @@ import udmi.schema.Basic;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.EndpointConfiguration.Transport;
 import udmi.schema.Envelope;
-import udmi.schema.MessageConfiguration;
 
 /**
  * Simple pipe implementation that uses an mqtt broker.
@@ -37,22 +36,14 @@ public class SimpleMqttPipe extends MessageBase {
   /**
    * Create new pipe instance for the given config.
    */
-  public SimpleMqttPipe(MessageConfiguration config) {
+  public SimpleMqttPipe(EndpointConfiguration config) {
     clientId = makeClientId();
-    namespace = config.namespace;
-    mqttClient = connectMqttClient(config.endpoint);
+    namespace = config.hostname;
+    mqttClient = connectMqttClient(config);
   }
 
-  static MessagePipe from(MessageConfiguration config) {
+  public static MessagePipe fromConfig(EndpointConfiguration config) {
     return new SimpleMqttPipe(config);
-  }
-
-  protected void publishBundle(Bundle bundle) {
-    try {
-      mqttClient.publish(getMqttTopic(bundle), getMqttMessage(bundle));
-    } catch (Exception e) {
-      throw new RuntimeException("While publishing to mqtt client", e);
-    }
   }
 
   private MqttClient connectMqttClient(EndpointConfiguration endpoint) {
@@ -82,19 +73,6 @@ public class SimpleMqttPipe extends MessageBase {
     }
   }
 
-  private MqttMessage getMqttMessage(Bundle bundle) {
-    MqttMessage message = new MqttMessage();
-    message.setPayload(stringify(bundle).getBytes());
-    return message;
-  }
-
-  private String getMqttTopic(Bundle bundle) {
-    Envelope envelope = bundle.envelope;
-    return envelope == null
-        ? String.format(TOPIC_FORMAT, namespace, EXCEPTION_TYPE, EXCEPTION_TYPE)
-        : String.format(TOPIC_FORMAT, namespace, envelope.subType, envelope.subFolder);
-  }
-
   private String makeBrokerUrl(EndpointConfiguration endpoint) {
     Transport transport = Optional.ofNullable(endpoint.transport).orElse(Transport.SSL);
     return String.format(BROKER_URL_FORMAT, transport, endpoint.hostname, endpoint.port);
@@ -104,9 +82,22 @@ public class SimpleMqttPipe extends MessageBase {
     return "client-" + System.currentTimeMillis();
   }
 
+  private MqttMessage makeMqttMessage(Bundle bundle) {
+    MqttMessage message = new MqttMessage();
+    message.setPayload(stringify(bundle).getBytes());
+    return message;
+  }
+
+  private String makeMqttTopic(Bundle bundle) {
+    Envelope envelope = bundle.envelope;
+    return envelope == null
+        ? String.format(TOPIC_FORMAT, namespace, EXCEPTION_TYPE, EXCEPTION_TYPE)
+        : String.format(TOPIC_FORMAT, namespace, envelope.subType, envelope.subFolder);
+  }
+
   @Override
-  public void activate() {
-    super.activate();
+  public void activate(Consumer<Bundle> callback) {
+    super.activate(callback);
     try {
       mqttClient.subscribe(String.format(TOPIC_FORMAT, namespace, TOPIC_WILDCARD, TOPIC_WILDCARD));
     } catch (Exception e) {
@@ -115,8 +106,12 @@ public class SimpleMqttPipe extends MessageBase {
   }
 
   @Override
-  public List<Bundle> drainOutput() {
-    throw new NotImplementedException("Drain output not implemented");
+  public void publish(Bundle bundle) {
+    try {
+      mqttClient.publish(makeMqttTopic(bundle), makeMqttMessage(bundle));
+    } catch (Exception e) {
+      throw new RuntimeException("While publishing to mqtt client", e);
+    }
   }
 
   private class MqttCallbackHandler implements MqttCallback {
@@ -136,4 +131,5 @@ public class SimpleMqttPipe extends MessageBase {
       sourceQueue.add(message.toString());
     }
   }
+
 }

@@ -28,9 +28,9 @@ import com.fasterxml.jackson.annotation.JsonValue;
     "port",
     "config_sync_sec",
     "client_id",
-    "topic_prefix",
-    "sub_topic",
-    "send_topic",
+    "msg_prefix",
+    "recv_id",
+    "send_id",
     "auth_provider",
     "generation"
 })
@@ -77,26 +77,26 @@ public class EndpointConfiguration {
     @JsonProperty("client_id")
     public String client_id;
     /**
-     * Prefix for message topics
+     * Prefix for message topics/addresses
      * 
      */
-    @JsonProperty("topic_prefix")
-    @JsonPropertyDescription("Prefix for message topics")
-    public String topic_prefix;
+    @JsonProperty("msg_prefix")
+    @JsonPropertyDescription("Prefix for message topics/addresses")
+    public String msg_prefix;
     /**
-     * Topic for message subscriptions
+     * Id for the receiving message channel
      * 
      */
-    @JsonProperty("sub_topic")
-    @JsonPropertyDescription("Topic for message subscriptions")
-    public String sub_topic;
+    @JsonProperty("recv_id")
+    @JsonPropertyDescription("Id for the receiving message channel")
+    public String recv_id;
     /**
-     * Topic for sending messages
+     * Id for the sending messages channel
      * 
      */
-    @JsonProperty("send_topic")
-    @JsonPropertyDescription("Topic for sending messages")
-    public String send_topic;
+    @JsonProperty("send_id")
+    @JsonPropertyDescription("Id for the sending messages channel")
+    public String send_id;
     @JsonProperty("auth_provider")
     public Auth_provider auth_provider;
     /**
@@ -114,13 +114,13 @@ public class EndpointConfiguration {
         result = ((result* 31)+((this.transport == null)? 0 :this.transport.hashCode()));
         result = ((result* 31)+((this.error == null)? 0 :this.error.hashCode()));
         result = ((result* 31)+((this.config_sync_sec == null)? 0 :this.config_sync_sec.hashCode()));
-        result = ((result* 31)+((this.sub_topic == null)? 0 :this.sub_topic.hashCode()));
         result = ((result* 31)+((this.client_id == null)? 0 :this.client_id.hashCode()));
+        result = ((result* 31)+((this.msg_prefix == null)? 0 :this.msg_prefix.hashCode()));
+        result = ((result* 31)+((this.send_id == null)? 0 :this.send_id.hashCode()));
         result = ((result* 31)+((this.protocol == null)? 0 :this.protocol.hashCode()));
         result = ((result* 31)+((this.hostname == null)? 0 :this.hostname.hashCode()));
         result = ((result* 31)+((this.port == null)? 0 :this.port.hashCode()));
-        result = ((result* 31)+((this.topic_prefix == null)? 0 :this.topic_prefix.hashCode()));
-        result = ((result* 31)+((this.send_topic == null)? 0 :this.send_topic.hashCode()));
+        result = ((result* 31)+((this.recv_id == null)? 0 :this.recv_id.hashCode()));
         result = ((result* 31)+((this.auth_provider == null)? 0 :this.auth_provider.hashCode()));
         return result;
     }
@@ -134,12 +134,15 @@ public class EndpointConfiguration {
             return false;
         }
         EndpointConfiguration rhs = ((EndpointConfiguration) other);
-        return (((((((((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.transport == rhs.transport)||((this.transport!= null)&&this.transport.equals(rhs.transport))))&&((this.error == rhs.error)||((this.error!= null)&&this.error.equals(rhs.error))))&&((this.config_sync_sec == rhs.config_sync_sec)||((this.config_sync_sec!= null)&&this.config_sync_sec.equals(rhs.config_sync_sec))))&&((this.sub_topic == rhs.sub_topic)||((this.sub_topic!= null)&&this.sub_topic.equals(rhs.sub_topic))))&&((this.client_id == rhs.client_id)||((this.client_id!= null)&&this.client_id.equals(rhs.client_id))))&&((this.protocol == rhs.protocol)||((this.protocol!= null)&&this.protocol.equals(rhs.protocol))))&&((this.hostname == rhs.hostname)||((this.hostname!= null)&&this.hostname.equals(rhs.hostname))))&&((this.port == rhs.port)||((this.port!= null)&&this.port.equals(rhs.port))))&&((this.topic_prefix == rhs.topic_prefix)||((this.topic_prefix!= null)&&this.topic_prefix.equals(rhs.topic_prefix))))&&((this.send_topic == rhs.send_topic)||((this.send_topic!= null)&&this.send_topic.equals(rhs.send_topic))))&&((this.auth_provider == rhs.auth_provider)||((this.auth_provider!= null)&&this.auth_provider.equals(rhs.auth_provider))));
+        return (((((((((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.transport == rhs.transport)||((this.transport!= null)&&this.transport.equals(rhs.transport))))&&((this.error == rhs.error)||((this.error!= null)&&this.error.equals(rhs.error))))&&((this.config_sync_sec == rhs.config_sync_sec)||((this.config_sync_sec!= null)&&this.config_sync_sec.equals(rhs.config_sync_sec))))&&((this.client_id == rhs.client_id)||((this.client_id!= null)&&this.client_id.equals(rhs.client_id))))&&((this.msg_prefix == rhs.msg_prefix)||((this.msg_prefix!= null)&&this.msg_prefix.equals(rhs.msg_prefix))))&&((this.send_id == rhs.send_id)||((this.send_id!= null)&&this.send_id.equals(rhs.send_id))))&&((this.protocol == rhs.protocol)||((this.protocol!= null)&&this.protocol.equals(rhs.protocol))))&&((this.hostname == rhs.hostname)||((this.hostname!= null)&&this.hostname.equals(rhs.hostname))))&&((this.port == rhs.port)||((this.port!= null)&&this.port.equals(rhs.port))))&&((this.recv_id == rhs.recv_id)||((this.recv_id!= null)&&this.recv_id.equals(rhs.recv_id))))&&((this.auth_provider == rhs.auth_provider)||((this.auth_provider!= null)&&this.auth_provider.equals(rhs.auth_provider))));
     }
 
     @Generated("jsonschema2pojo")
     public enum Protocol {
 
+        LOCAL("local"),
+        PUBSUB("pubsub"),
+        TRACE("trace"),
         MQTT("mqtt");
         private final String value;
         private final static Map<String, EndpointConfiguration.Protocol> CONSTANTS = new HashMap<String, EndpointConfiguration.Protocol>();

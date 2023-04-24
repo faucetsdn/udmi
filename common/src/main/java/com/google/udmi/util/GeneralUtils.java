@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class GeneralUtils {
@@ -59,12 +60,20 @@ public class GeneralUtils {
     return String.join(" ", options);
   }
 
-  public static <T> void ifNotNull(T value, Consumer<T> consumer) {
+  public static <T> void ifNotNullThen(T value, Consumer<T> consumer) {
     Optional.ofNullable(value).ifPresent(consumer);
+  }
+
+  public static <T> void ifNotNullThen(T value, Runnable action) {
+    Optional.ofNullable(value).ifPresent(derp -> action.run());
   }
 
   public static <T, V> V ifNotNullGet(T value, Function<T, V> converter) {
     return value == null ? null : converter.apply(value);
+  }
+
+  public static <T, V> V ifNotNullGet(T value, Supplier<V> converter) {
+    return value == null ? null : converter.get();
   }
 
   public static <T> T fromJsonFile(File path, Class<T> valueType) {

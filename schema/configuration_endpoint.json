@@ -9,6 +9,9 @@
   "properties": {
     "protocol": {
       "enum": [
+        "local",
+        "pubsub",
+        "trace",
         "mqtt"
       ]
     },
@@ -36,18 +39,18 @@
     "client_id": {
       "type": "string"
     },
-    "topic_prefix": {
-      "description": "Prefix for message topics",
+    "msg_prefix": {
+      "description": "Prefix for message topics/addresses",
       "type": "string",
       "pattern": "^[-_/a-zA-Z0-9]+$"
     },
-    "sub_topic": {
-      "description": "Topic for message subscriptions",
+    "recv_id": {
+      "description": "Id for the receiving message channel",
       "type": "string",
       "pattern": "^[-_/a-zA-Z0-9#]+$"
     },
-    "send_topic": {
-      "description": "Topic for sending messages",
+    "send_id": {
+      "description": "Id for the sending messages channel",
       "type": "string",
       "pattern": "^[-_/a-zA-Z0-9#]+$"
     },
