@@ -1,6 +1,6 @@
 package com.google.bos.udmi.service.messaging.impl;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Objects.requireNonNull;
 import static java.util.Spliterator.DISTINCT;
 import static java.util.Spliterator.IMMUTABLE;
 import static java.util.Spliterator.NONNULL;
@@ -14,6 +14,9 @@ import java.util.Iterator;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+/**
+ * Traverse a directory structure and iterate (in order) over the actual files.
+ */
 public class DirectoryTraverser implements Iterator<File> {
 
   final File[] files;
@@ -21,9 +24,12 @@ public class DirectoryTraverser implements Iterator<File> {
   int nextIndex;
   DirectoryTraverser delegate;
 
+  /**
+   * New instance for the given directory path.
+   */
   public DirectoryTraverser(String path) {
     File file = new File(path);
-    files = checkNotNull(file.listFiles(), "missing directory " + file.getAbsolutePath());
+    files = requireNonNull(file.listFiles(), "missing directory " + file.getAbsolutePath());
     Arrays.sort(files);
     nextIndex = 0;
     next = prefetchNext();
@@ -36,7 +42,7 @@ public class DirectoryTraverser implements Iterator<File> {
 
   @Override
   public File next() {
-    File value = checkNotNull(next, "no more files available");
+    File value = requireNonNull(next, "no more files available");
     next = prefetchNext();
     return value;
   }

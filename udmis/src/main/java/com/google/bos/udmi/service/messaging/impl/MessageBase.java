@@ -2,7 +2,6 @@ package com.google.bos.udmi.service.messaging.impl;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
-import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.mergeObject;
 import static com.google.udmi.util.JsonUtil.fromString;
@@ -12,7 +11,6 @@ import static java.lang.String.format;
 import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.udmi.util.Common;
-import com.google.udmi.util.GeneralUtils;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
@@ -74,7 +72,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     if (!HANDLED_QUEUES.add(System.identityHashCode(sourceQueue))) {
       throw new IllegalStateException("Source queue handled multiple times!");
     }
-    return (Future<Void>) executor.submit(() -> messageLoop());
+    return (Future<Void>) executor.submit(this::messageLoop);
   }
 
   protected Bundle makeExceptionBundle(Exception e) {

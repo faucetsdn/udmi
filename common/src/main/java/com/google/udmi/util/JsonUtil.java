@@ -228,8 +228,12 @@ public abstract class JsonUtil {
    * @param <T>   type of result
    * @return converted object
    */
-  public static <T> T loadStrict(Class<T> clazz, File file) throws IOException {
-    return file.exists() ? STRICT_MAPPER.readValue(file, clazz) : null;
+  public static <T> T loadStrict(Class<T> clazz, File file) {
+    try {
+      return file.exists() ? STRICT_MAPPER.readValue(file, clazz) : null;
+    } catch (Exception e) {
+      throw new RuntimeException("While loading " + file.getAbsolutePath(), e);
+    }
   }
 
   /**
