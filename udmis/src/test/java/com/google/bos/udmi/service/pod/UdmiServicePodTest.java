@@ -2,7 +2,7 @@ package com.google.bos.udmi.service.pod;
 
 import static com.google.bos.udmi.service.messaging.impl.MessageBase.combineConfig;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.udmi.util.GeneralUtils.asArray;
+import static com.google.udmi.util.GeneralUtils.arrayOf;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -42,7 +42,7 @@ public class UdmiServicePodTest {
 
   @Test
   public void bridgeTest() throws Exception {
-    UdmiServicePod pod = new UdmiServicePod(asArray(BRIDGE_FILE));
+    UdmiServicePod pod = new UdmiServicePod(arrayOf(BRIDGE_FILE));
 
     PodConfiguration podConfig = pod.getPodConfiguration();
 
@@ -75,7 +75,7 @@ public class UdmiServicePodTest {
 
   @Test
   public void basicPodTest() throws Exception {
-    UdmiServicePod pod = new UdmiServicePod(asArray(CONFIG_FILE));
+    UdmiServicePod pod = new UdmiServicePod(arrayOf(CONFIG_FILE));
 
     PodConfiguration podConfig = pod.getPodConfiguration();
 

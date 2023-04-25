@@ -24,7 +24,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import org.jetbrains.annotations.NotNull;
 
 public class GeneralUtils {
 
@@ -36,8 +35,7 @@ public class GeneralUtils {
   private static final Joiner INDENTED_LINES = Joiner.on(SEPARATOR);
   public static final Joiner CSV_JOINER = Joiner.on(", ");
 
-  @NotNull
-  public static String[] asArray(String... args) {
+  public static String[] arrayOf(String... args) {
     return args;
   }
 
