@@ -48,10 +48,7 @@ class BridgeProcessorTest extends MessageTestCore {
   }
 
   private Bundle getTestBundle(String id) {
-    Bundle bundle = new Bundle();
-    bundle.envelope = new Envelope();
-    bundle.message = id;
-    return bundle;
+    return new Bundle(id);
   }
 
   private EndpointConfiguration getConfiguration(boolean reversed, String name) {

@@ -128,7 +128,7 @@ public class SimpleMqttPipe extends MessageBase {
 
     @Override
     public void messageArrived(String topic, MqttMessage message) {
-      sourceQueue.add(message.toString());
+      receiveBundle(message.toString());
     }
   }
 

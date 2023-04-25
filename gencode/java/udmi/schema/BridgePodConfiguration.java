@@ -25,20 +25,20 @@ public class BridgePodConfiguration {
     /**
      * Endpoint Configuration
      * <p>
-     * Parameters to define an MQTT endpoint
+     * Parameters to define a message endpoint
      * 
      */
     @JsonProperty("from")
-    @JsonPropertyDescription("Parameters to define an MQTT endpoint")
+    @JsonPropertyDescription("Parameters to define a message endpoint")
     public EndpointConfiguration from;
     /**
      * Endpoint Configuration
      * <p>
-     * Parameters to define an MQTT endpoint
+     * Parameters to define a message endpoint
      * 
      */
     @JsonProperty("to")
-    @JsonPropertyDescription("Parameters to define an MQTT endpoint")
+    @JsonPropertyDescription("Parameters to define a message endpoint")
     public EndpointConfiguration to;
 
     @Override

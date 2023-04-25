@@ -17,7 +17,7 @@
 * [**metadata**](metadata.html) - [Metadata](../../docs/specs/metadata.md) is a description about the device: a specification about how the device should be configured and expectations about what the device should be doing. Defined by `metadata.json`
 
 ## Blobs
-* [**configuration_endpoint**](configuration_endpoint.html) - Parameters to define an MQTT endpoint
+* [**configuration_endpoint**](configuration_endpoint.html) - Parameters to define a message endpoint
 
 ## Other
 * [**command_discovery**](command_discovery.html) - [Discovery command](../../docs/specs/discovery.md) for provisioning

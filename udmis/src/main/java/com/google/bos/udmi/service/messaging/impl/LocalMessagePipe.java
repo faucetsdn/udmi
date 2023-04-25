@@ -13,7 +13,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.function.Function;
 import org.jetbrains.annotations.NotNull;
 import udmi.schema.EndpointConfiguration;
-import udmi.schema.Envelope;
 
 /**
  * A MessagePipe implementation that only uses local resources (in-process). Useful for testing or
@@ -36,7 +35,7 @@ public class LocalMessagePipe extends MessageBase {
   public LocalMessagePipe(EndpointConfiguration config) {
     namespace = normalizeNamespace(config.hostname);
     sourceName = config.recv_id;
-    sourceQueue = getQueueForScope(sourceName);
+    setSourceQueue(getQueueForScope(sourceName));
     destinationName = config.send_id;
     destinationQueue = getQueueForScope(destinationName);
     info(
@@ -45,14 +44,6 @@ public class LocalMessagePipe extends MessageBase {
 
   public static MessagePipe fromConfig(EndpointConfiguration config) {
     return new LocalMessagePipe(config);
-  }
-
-  @Override
-  protected void terminateHandler() {
-    Bundle bundle = new Bundle();
-    bundle.envelope = new Envelope();
-    bundle.message = TERMINATE_MARKER;
-    sourceQueue.add(stringify(bundle));
   }
 
   private BlockingQueue<String> getQueueForScope(String name) {
@@ -94,7 +85,7 @@ public class LocalMessagePipe extends MessageBase {
   @Override
   public String toString() {
     String activeString = isActive() ? "*" : "O";
-    return format("MessagePipe %08x >-%s-> %08x", Objects.hash(sourceQueue), activeString,
+    return format("%s >-%s-> %08x", super.toString(), activeString,
         Objects.hash(destinationQueue));
   }
 }

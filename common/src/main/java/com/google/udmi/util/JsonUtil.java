@@ -29,6 +29,7 @@ public abstract class JsonUtil {
   public static final ObjectMapper OBJECT_MAPPER = STRICT_MAPPER.copy()
       .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
+  public static final String JSON_EXT = "json";
   public static final String JSON_SUFFIX = ".json";
 
   /**

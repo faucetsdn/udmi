@@ -34,10 +34,7 @@ public class StateProcessorTest extends LocalMessagePipeTest {
   }
 
   private Bundle getTestStateBundle(boolean includeGateway) {
-    Bundle bundle = new Bundle();
-    bundle.envelope = getTestStateEnvelope();
-    bundle.message = getTestStateMessage(includeGateway);
-    return bundle;
+    return new Bundle(getTestStateEnvelope(), getTestStateMessage(includeGateway));
   }
 
   @NotNull

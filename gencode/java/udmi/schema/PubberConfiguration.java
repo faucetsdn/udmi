@@ -34,11 +34,11 @@ public class PubberConfiguration {
     /**
      * Endpoint Configuration
      * <p>
-     * Parameters to define an MQTT endpoint
+     * Parameters to define a message endpoint
      * 
      */
     @JsonProperty("endpoint")
-    @JsonPropertyDescription("Parameters to define an MQTT endpoint")
+    @JsonPropertyDescription("Parameters to define a message endpoint")
     public EndpointConfiguration endpoint;
     @JsonProperty("projectId")
     public String projectId;

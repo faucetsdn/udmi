@@ -91,9 +91,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     if (message instanceof Bundle || message == null) {
       return (Bundle) message;
     }
-    Bundle bundle = new Bundle();
-    bundle.message = message;
-    bundle.envelope = new Envelope();
+    Bundle bundle = new Bundle(message);
     SimpleEntry<SubType, SubFolder> messageType =
         MessageDispatcherImpl.CLASS_TYPES.get(message.getClass());
     checkNotNull(messageType, "type entry not found for " + message.getClass());

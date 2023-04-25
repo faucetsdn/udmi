@@ -11,6 +11,7 @@
       "enum": [
         "local",
         "pubsub",
+        "file",
         "trace",
         "mqtt"
       ]

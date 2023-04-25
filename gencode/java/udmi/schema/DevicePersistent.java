@@ -25,11 +25,11 @@ public class DevicePersistent {
     /**
      * Endpoint Configuration
      * <p>
-     * Parameters to define an MQTT endpoint
+     * Parameters to define a message endpoint
      * 
      */
     @JsonProperty("endpoint")
-    @JsonPropertyDescription("Parameters to define an MQTT endpoint")
+    @JsonPropertyDescription("Parameters to define a message endpoint")
     public EndpointConfiguration endpoint;
     @JsonProperty("restart_count")
     public Integer restart_count;

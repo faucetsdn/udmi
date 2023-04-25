@@ -16,7 +16,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 /**
  * Endpoint Configuration
  * <p>
- * Parameters to define an MQTT endpoint
+ * Parameters to define a message endpoint
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -142,6 +142,7 @@ public class EndpointConfiguration {
 
         LOCAL("local"),
         PUBSUB("pubsub"),
+        FILE("file"),
         TRACE("trace"),
         MQTT("mqtt");
         private final String value;

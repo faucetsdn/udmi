@@ -27,11 +27,11 @@ public class PodConfiguration {
     /**
      * Endpoint Configuration
      * <p>
-     * Parameters to define an MQTT endpoint
+     * Parameters to define a message endpoint
      * 
      */
     @JsonProperty("flow_defaults")
-    @JsonPropertyDescription("Parameters to define an MQTT endpoint")
+    @JsonPropertyDescription("Parameters to define a message endpoint")
     public EndpointConfiguration flow_defaults;
     @JsonProperty("flows")
     public HashMap<String, EndpointConfiguration> flows;
