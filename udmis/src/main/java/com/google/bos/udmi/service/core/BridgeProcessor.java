@@ -5,11 +5,19 @@ import udmi.schema.EndpointConfiguration;
 
 public class BridgeProcessor extends UdmisComponent {
 
-  private final MessagePipe pipeA;
-  private final MessagePipe pipeB;
+  final MessagePipe pipeA;
+  final MessagePipe pipeB;
 
   public BridgeProcessor(EndpointConfiguration from, EndpointConfiguration to) {
     this.pipeA = MessagePipe.from(from);
     this.pipeB = MessagePipe.from(to);
+
+    pipeA.activate(pipeB::publish);
+    pipeB.activate(pipeA::publish);
+  }
+
+  public void shutdown() {
+    pipeA.shutdown();
+    pipeB.shutdown();
   }
 }

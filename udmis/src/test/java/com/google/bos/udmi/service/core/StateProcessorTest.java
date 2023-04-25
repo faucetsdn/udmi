@@ -55,7 +55,6 @@ public class StateProcessorTest extends LocalMessagePipeTest {
   }
 
   private void initializeTestInstance() {
-    instanceCount.incrementAndGet();
     EndpointConfiguration config = new EndpointConfiguration();
     config.protocol = Protocol.LOCAL;
     config.hostname = TEST_NAMESPACE;

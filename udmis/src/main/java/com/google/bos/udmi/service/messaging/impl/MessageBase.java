@@ -102,13 +102,13 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   }
 
   @Override
-  public void activate(Consumer<Bundle> messageDispatcher) {
-    dispatcher = messageDispatcher;
+  public void activate(Consumer<Bundle> bundleConsumer) {
+    dispatcher = bundleConsumer;
     checkState(sourceFuture == null, "pipe already activated");
     if (sourceQueue == null) {
       sourceQueue = new LinkedBlockingDeque<>();
     }
-    debug("Handling %s to %08x", this, Objects.hash(messageDispatcher));
+    debug("Handling %s to %08x", this, Objects.hash(bundleConsumer));
     sourceFuture = handleQueue(sourceQueue);
   }
 

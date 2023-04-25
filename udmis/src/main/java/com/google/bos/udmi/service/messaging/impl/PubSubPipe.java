@@ -57,8 +57,8 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
   }
 
   @Override
-  public void activate(Consumer<Bundle> messageDispatcher) {
-    super.activate(messageDispatcher);
+  public void activate(Consumer<Bundle> bundleConsumer) {
+    super.activate(bundleConsumer);
     subscriber.startAsync();
   }
 
