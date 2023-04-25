@@ -20,17 +20,17 @@ import udmi.schema.SystemState;
 /**
  * Tests for the StateHandler class, used by UDMIS to process device state updates.
  */
-public class StateHandlerTest extends LocalMessagePipeTest {
+public class StateProcessorTest extends LocalMessagePipeTest {
 
-  private StateHandler stateHandler;
+  private StateProcessor stateProcessor;
   private final List<Object> captured = new ArrayList<>();
 
   private int getDefaultCount() {
-    return stateHandler.getMessageCount(Object.class);
+    return stateProcessor.getMessageCount(Object.class);
   }
 
   private int getExceptionCount() {
-    return stateHandler.getMessageCount(Exception.class);
+    return stateProcessor.getMessageCount(Exception.class);
   }
 
   private Bundle getTestStateBundle(boolean includeGateway) {
@@ -61,8 +61,8 @@ public class StateHandlerTest extends LocalMessagePipeTest {
     config.hostname = TEST_NAMESPACE;
     config.recv_id = TEST_SOURCE;
     config.send_id = TEST_DESTINATION;
-    stateHandler = UdmisComponent.create(StateHandler.class, config);
-    setTestDispatcher(stateHandler.getDispatcher());
+    stateProcessor = UdmisComponent.create(StateProcessor.class, config);
+    setTestDispatcher(stateProcessor.getDispatcher());
     MessageDispatcherImpl reverseDispatcher = getReverseDispatcher();
     reverseDispatcher.registerHandler(Object.class, this::resultHandler);
     reverseDispatcher.activate();

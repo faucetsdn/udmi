@@ -15,7 +15,7 @@ import udmi.schema.State;
  * the system. Involves tagging the envelope with the appropriate designators, and splitting up the
  * monolithic block into constituent parts.
  */
-public class StateHandler extends UdmisComponent {
+public class StateProcessor extends UdmisComponent {
 
   private static final Set<String> STATE_SUB_FOLDERS =
       Arrays.stream(SubFolder.values()).map(SubFolder::value).collect(Collectors.toSet());

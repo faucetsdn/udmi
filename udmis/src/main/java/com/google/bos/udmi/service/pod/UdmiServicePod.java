@@ -4,16 +4,20 @@ import static com.google.bos.udmi.service.messaging.impl.MessageBase.combineConf
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
-import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 
-import com.google.bos.udmi.service.core.BridgeHandler;
-import com.google.bos.udmi.service.core.StateHandler;
-import com.google.bos.udmi.service.core.TargetHandler;
+import com.google.bos.udmi.service.core.BridgeProcessor;
+import com.google.bos.udmi.service.core.StateProcessor;
+import com.google.bos.udmi.service.core.TargetProcessor;
 import com.google.bos.udmi.service.core.UdmisComponent;
 import com.google.common.collect.ImmutableMap;
-import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import udmi.schema.BridgePodConfiguration;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.PodConfiguration;
@@ -24,8 +28,9 @@ import udmi.schema.PodConfiguration;
 public class UdmiServicePod {
 
   private final PodConfiguration podConfiguration;
-  private final StateHandler stateHandler;
-  private final TargetHandler targetHandler;
+  private final StateProcessor stateProcessor;
+  private final TargetProcessor targetProcessor;
+  private final List<BridgeProcessor> bridges;
 
   /**
    * Core pod to instantiate all the other components as necessary based on configuration.
@@ -36,13 +41,21 @@ public class UdmiServicePod {
 
       podConfiguration = JsonUtil.loadFileRequired(PodConfiguration.class, args[0]);
 
-      HashMap<String, EndpointConfiguration> flows = podConfiguration.flows;
-      targetHandler = createComponent(TargetHandler.class, makeConfig(flows.get("target")));
-      stateHandler = createComponent(StateHandler.class, makeConfig(flows.get("state")));
+      Supplier<ImmutableMap<String, EndpointConfiguration>> noFlows = ImmutableMap::of;
+      Map<String, EndpointConfiguration> flowEntries = podConfiguration.flows;
+      Map<String, EndpointConfiguration> flows =
+          new HashMap<>(Optional.ofNullable(flowEntries).orElseGet(noFlows));
+      targetProcessor = createComponent(TargetProcessor.class, makeConfig(flows.remove("target")));
+      stateProcessor = createComponent(StateProcessor.class, makeConfig(flows.remove("state")));
+      if (!flows.isEmpty()) {
+        throw new IllegalStateException(
+            "Unrecognized pod flows: " + CSV_JOINER.join(flows.keySet()));
+      }
 
-      ifNotNullGet(podConfiguration.bridges, foo -> ImmutableMap.of()).forEach((key, value) -> {
-        createComponent(BridgeHandler.class, (BridgePodConfiguration) value);
-      });
+      Supplier<ImmutableMap<String, BridgePodConfiguration>> noBridges = ImmutableMap::of;
+      Map<String, BridgePodConfiguration> bridgeEntries = podConfiguration.bridges;
+      bridges = Optional.ofNullable(bridgeEntries).orElseGet(noBridges).entrySet().stream()
+          .map(this::makeBridgeFor).collect(Collectors.toList());
     } catch (Exception e) {
       throw new RuntimeException("While instantiating pod " + CSV_JOINER.join(args), e);
     }
@@ -57,11 +70,14 @@ public class UdmiServicePod {
     return ifNotNullGet(config, () -> UdmisComponent.create(clazz, config));
   }
 
-  private <T extends UdmisComponent> T createComponent(Class<T> clazz,
-      BridgePodConfiguration config) {
-    EndpointConfiguration from = makeConfig(config.from);
-    EndpointConfiguration to = makeConfig(config.to);
-    return ifNotNullGet(config, () -> UdmisComponent.create(clazz, from, to));
+  private BridgeProcessor makeBridgeFor(Entry<String, BridgePodConfiguration> entry) {
+    try {
+      EndpointConfiguration from = makeConfig(entry.getValue().from);
+      EndpointConfiguration to = makeConfig(entry.getValue().to);
+      return new BridgeProcessor(from, to);
+    } catch (Exception e) {
+      throw new RuntimeException("While making bridge " + entry.getKey(), e);
+    }
   }
 
   private EndpointConfiguration makeConfig(EndpointConfiguration defined) {
