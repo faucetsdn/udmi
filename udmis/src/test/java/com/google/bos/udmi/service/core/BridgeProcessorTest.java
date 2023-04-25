@@ -29,6 +29,8 @@ class BridgeProcessorTest extends MessageTestCore {
     reversedFrom.publish(getTestBundle("hello"));
     reversedTo.publish(getTestBundle("monkey"));
     bridgeProcessor.shutdown();
+    reversedFrom.shutdown();
+    reversedTo.shutdown();
     int sum = results.values().stream().map(List::size).mapToInt(Integer::intValue).sum();
     assertEquals(2, sum, "messages received");
     assertEquals("monkey", results.get("from").get(0).message);

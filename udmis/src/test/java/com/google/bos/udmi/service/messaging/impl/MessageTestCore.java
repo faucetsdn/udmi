@@ -2,6 +2,9 @@ package com.google.bos.udmi.service.messaging.impl;
 
 import udmi.schema.EndpointConfiguration;
 
+/**
+ * Core functions and constants for testing anything message related.
+ */
 public abstract class MessageTestCore {
 
   protected static final String TEST_NAMESPACE = "test-namespace";
