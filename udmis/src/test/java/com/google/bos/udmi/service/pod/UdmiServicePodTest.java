@@ -18,6 +18,7 @@ import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
 import udmi.schema.DiscoveryState;
 import udmi.schema.EndpointConfiguration;
+import udmi.schema.LocalnetModel;
 import udmi.schema.PodConfiguration;
 import udmi.schema.PointsetState;
 
@@ -42,6 +43,34 @@ public class UdmiServicePodTest {
   @Test
   public void bridgeTest() throws Exception {
     UdmiServicePod pod = new UdmiServicePod(asArray(BRIDGE_FILE));
+
+    PodConfiguration podConfig = pod.getPodConfiguration();
+
+    EndpointConfiguration reversedFrom =
+        combineConfig(podConfig.flow_defaults, reverseFlow(podConfig.bridges.get("test").from));
+    final MessageDispatcherImpl fromDispatcher = MessageTestBase.getDispatcherFor(reversedFrom);
+    EndpointConfiguration reversedTo =
+        combineConfig(podConfig.flow_defaults, reverseFlow(podConfig.bridges.get("test").to));
+    final MessageDispatcherImpl toDispatcher = MessageTestBase.getDispatcherFor(reversedTo);
+
+    CompletableFuture<LocalnetModel> received = new CompletableFuture<>();
+    fromDispatcher.registerHandler(LocalnetModel.class, received::complete);
+    BlockingQueue<Object> defaulted = new LinkedBlockingQueue<>();
+    toDispatcher.registerHandler(Object.class, defaulted::add);
+
+    fromDispatcher.activate();
+    toDispatcher.activate();
+
+    fromDispatcher.publish(new StateUpdate());
+    toDispatcher.publish(new LocalnetModel());
+
+    Object polled = defaulted.poll(RECEIVE_TIMEOUT_SEC, TimeUnit.SECONDS);
+    assertTrue(polled instanceof StateUpdate, "expected pointset state in default");
+
+    LocalnetModel discoveryState = received.get(RECEIVE_TIMEOUT_SEC, TimeUnit.SECONDS);
+    assertNotNull(discoveryState, "no received message");
+
+    Assertions.assertNull(defaulted.poll(RECEIVE_TIMEOUT_SEC, TimeUnit.SECONDS));
   }
 
   @Test

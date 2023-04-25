@@ -206,7 +206,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   @Override
   @SuppressWarnings("unchecked")
   public <T> void registerHandler(Class<T> clazz, Consumer<T> handler) {
-    debug("Registering handler for %s in %sx", clazz.getName(), this);
+    debug("Registering handler for %s in %s", clazz.getName(), this);
     if (handlers.put(clazz, (Consumer<Object>) handler) != null) {
       throw new RuntimeException("Type handler already defined for " + clazz.getName());
     }
