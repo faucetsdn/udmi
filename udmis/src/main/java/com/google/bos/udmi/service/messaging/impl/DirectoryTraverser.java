@@ -63,10 +63,6 @@ public class DirectoryTraverser implements Iterator<File> {
 
     if (next.isDirectory()) {
       delegate = new DirectoryTraverser(next.getPath());
-      if (delegate.hasNext()) {
-        return delegate.next();
-      }
-      delegate = null;
       return prefetchNext();
     }
 
