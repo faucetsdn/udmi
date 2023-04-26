@@ -9,6 +9,7 @@ import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.writeFile;
 import static java.lang.String.format;
+import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.common.collect.ImmutableMap;
@@ -17,6 +18,7 @@ import com.google.udmi.util.JsonUtil;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -88,7 +90,8 @@ public class TraceMessagePipe extends MessageBase {
       envelope.deviceId = attributes.get("deviceId");
       envelope.projectId = attributes.get("projectId");
       envelope.deviceRegistryId = attributes.get("deviceRegistryId");
-      envelope.publishTime = ifNotNullGet((String) bundle.get("publish_time"), JsonUtil::getDate);
+      envelope.publishTime = ifNotNullGet(ofNullable(attributes.get("publishTime"))
+          .orElse((String) bundle.get("publish_time")), JsonUtil::getDate);
       return envelope;
     } catch (Exception e) {
       throw new RuntimeException("While extracting envelope from bundle", e);
