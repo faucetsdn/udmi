@@ -1,9 +1,9 @@
 package com.google.bos.udmi.service.messaging.impl;
 
-import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
+import static com.google.udmi.util.GeneralUtils.decodeBase64;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
-import static com.google.udmi.util.JsonUtil.JSON_EXT;
-import static com.google.udmi.util.JsonUtil.loadMap;
+import static com.google.udmi.util.JsonUtil.asMap;
 import static java.lang.String.format;
 
 import com.google.bos.udmi.service.messaging.MessagePipe;
@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.jetbrains.annotations.Nullable;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
@@ -25,45 +26,48 @@ import udmi.schema.Envelope.SubType;
  * filename. Not the same as a message "trace" which is a more complete json structure with all
  * attributes and other values.
  */
-public class FileMessagePipe extends MessageBase {
+public class TraceMessagePipe extends MessageBase {
 
-  public static final String DEVICES_DIR_NAME = "devices";
+  private static final String DEVICES_DIR_NAME = "devices";
+  private static final Map<String, String> FOLDER_HACKS = new HashMap<>();
+  static {
+    FOLDER_HACKS.put("discover", "discovery");
+    FOLDER_HACKS.put("", null);
+  }
+
   private final Map<File, AtomicInteger> traceCounts = new HashMap<>();
-  private File outFileRoot;
+  private File traceOutFile;
 
-  public FileMessagePipe(EndpointConfiguration config) {
+  public TraceMessagePipe(EndpointConfiguration config) {
+    FOLDER_HACKS.put("discover", "discovery");
     ifNotNullThen(config.recv_id, this::playbackEngine);
-    ifNotNullThen(config.send_id, this::fileOutHandler);
+    ifNotNullThen(config.send_id, this::traceOutHandler);
   }
 
   public static MessagePipe fromConfig(EndpointConfiguration config) {
-    return new FileMessagePipe(config);
+    return new TraceMessagePipe(config);
   }
 
-  private Envelope makeEnvelope(File file) {
+  private Envelope makeEnvelope(Map<String, Object> bundle) {
     try {
+      @SuppressWarnings("unchecked")
+      Map<String, String> attributes = (Map<String, String>) bundle.get("attributes");
       Envelope envelope = new Envelope();
-      String[] fileParts = file.getAbsolutePath().split(File.separator);
-      envelope.projectId = fileParts[fileParts.length - 5];
-      envelope.deviceRegistryId = fileParts[fileParts.length - 4];
-      String devicesDir = fileParts[fileParts.length - 3];
-      if (!DEVICES_DIR_NAME.equals(devicesDir)) {
-        throw new IllegalStateException("Unexpected path element " + devicesDir);
-      }
-      envelope.deviceId = fileParts[fileParts.length - 2];
-
-      String name = fileParts[fileParts.length - 1];
-      String[] split = name.split("[._]", 4);
-      if (split.length != 4 || !JSON_EXT.equals(split[3])) {
-        throw new IllegalArgumentException("Malformed trace parts: " + CSV_JOINER.join(split));
-      }
-      envelope.subType = SubType.fromValue(split[1]);
-      envelope.subFolder = SubFolder.fromValue(split[2]);
-
+      envelope.subFolder = getBundleSubfolder(attributes);
+      envelope.subType = ifNotNullGet(attributes.get("subType"), SubType::fromValue);
+      envelope.deviceId = attributes.get("deviceId");
+      envelope.projectId = attributes.get("projectId");
+      envelope.deviceRegistryId = attributes.get("deviceRegistryId");
       return envelope;
     } catch (Exception e) {
-      throw new RuntimeException("While extracting envelope from " + file.getAbsolutePath(), e);
+      throw new RuntimeException("While extracting envelope from bundle", e);
     }
+  }
+
+  @Nullable
+  private SubFolder getBundleSubfolder(Map<String, String> attributes) {
+    String subFolder = attributes.get("subFolder");
+    return ifNotNullGet(FOLDER_HACKS.getOrDefault(subFolder, subFolder), SubFolder::fromValue);
   }
 
   private Bundle makeErrorBundle(Envelope envelope, Exception e) {
@@ -73,19 +77,21 @@ public class FileMessagePipe extends MessageBase {
 
   private void playbackEngine(String recvId) {
     debug("Playback trace messages from " + new File(recvId).getAbsolutePath());
-    DirectoryTraverser filesIn = new DirectoryTraverser(recvId);
+    DirectoryTraverser traceIn = new DirectoryTraverser(recvId);
     ExecutorService playback = Executors.newSingleThreadExecutor();
     playback.submit(() -> {
-      filesIn.stream().forEach(this::consumeFile);
+      traceIn.stream().forEach(this::consumeTrace);
       terminateHandler();
     });
   }
 
-  private void consumeFile(File file) {
+  private void consumeTrace(File file) {
     try {
-      Envelope envelope = makeEnvelope(file);
+      Map<String, Object> traceBundle = asMap(file);
+      Envelope envelope = makeEnvelope(traceBundle);
       try {
-        receiveBundle(new Bundle(envelope, loadMap(file)));
+        Object message = asMap(decodeBase64((String) traceBundle.get("data")));
+        receiveBundle(new Bundle(envelope, message));
       } catch (Exception e) {
         receiveBundle(makeErrorBundle(envelope, e));
       }
@@ -94,18 +100,18 @@ public class FileMessagePipe extends MessageBase {
     }
   }
 
-  private void fileOutHandler(String sendId) {
-    outFileRoot = new File(sendId);
-    debug("Writing trace messages to " + outFileRoot.getAbsolutePath());
+  private void traceOutHandler(String sendId) {
+    traceOutFile = new File(sendId);
+    debug("Writing trace messages to " + traceOutFile.getAbsolutePath());
   }
 
   @Override
   public void publish(Bundle bundle) {
-    if (outFileRoot == null) {
+    if (traceOutFile == null) {
       throw new IllegalStateException("trace out file not defined, no send_id");
     }
     Envelope envelope = bundle.envelope;
-    File outDir = new File(outFileRoot,
+    File outDir = new File(traceOutFile,
         format("%s/%s/%s/%s", envelope.projectId, envelope.deviceRegistryId, DEVICES_DIR_NAME,
             envelope.deviceId));
     outDir.mkdirs();

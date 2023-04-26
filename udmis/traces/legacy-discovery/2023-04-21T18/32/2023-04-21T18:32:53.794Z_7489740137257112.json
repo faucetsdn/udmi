@@ -1,0 +1,12 @@
+{
+  "data": "eyJwcm90b2NvbCI6ImJhY25ldCIsImRhdGEiOnsiYW5hbG9nLWlucHV0XzEiOnsidW5pdHMiOiJjdWJpYy1mZWV0LXBlci1taW51dGUiLCJwcmVzZW50LXZhbHVlIjo0NS4wfSwiYW5hbG9nLXZhbHVlXzciOnsidW5pdHMiOiJkZWdyZWVzLWZhaHJlbmhlaXQiLCJwcmVzZW50LXZhbHVlIjo3NC4wfSwiYW5hbG9nLXZhbHVlXzgiOnsidW5pdHMiOiJkZWdyZWVzLWZhaHJlbmhlaXQiLCJwcmVzZW50LXZhbHVlIjo3MC4wfSwiYW5hbG9nLXZhbHVlXzEzIjp7InVuaXRzIjoicGVyY2VudCIsInByZXNlbnQtdmFsdWUiOjIyLjk5MjI4N30sImFuYWxvZy1pbnB1dF8yIjp7InVuaXRzIjoiZGVncmVlcy1mYWhyZW5oZWl0IiwicHJlc2VudC12YWx1ZSI6NzMuNH0sImFuYWxvZy12YWx1ZV8xMSI6eyJ1bml0cyI6ImN1YmljLWZlZXQtcGVyLW1pbnV0ZSIsInByZXNlbnQtdmFsdWUiOjQwLjB9fSwiaWQiOiIzMTA0NjA2IiwidmVyc2lvbiI6MSwidGltZXN0YW1wIjoiMjAyMy0wNC0yMVQxODozMjo1My43NTAzODdaIn0=",
+  "publish_time": "2023-04-21T18:32:53.794Z",
+  "attributes": {
+    "deviceNumId": "2615834569721166",
+    "deviceRegistryId": "US-SVL-TC3",
+    "projectId": "essential-keep-197822",
+    "subFolder": "",
+    "deviceRegistryLocation": "us-central1",
+    "deviceId": "bacnet-3104606"
+  }
+}

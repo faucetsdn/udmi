@@ -1,0 +1,12 @@
+{
+  "data": "eyJwcm90b2NvbCI6ImJhY25ldCIsImRhdGEiOnsiYW5hbG9nLWlucHV0XzEiOnsidW5pdHMiOiJkZWdyZWVzLWZhaHJlbmhlaXQiLCJwcmVzZW50LXZhbHVlIjo4NC43fSwiYmluYXJ5LWlucHV0XzEiOnsicHJlc2VudC12YWx1ZSI6ImluYWN0aXZlIn0sImFuYWxvZy12YWx1ZV83Ijp7InVuaXRzIjoiZGVncmVlcy1mYWhyZW5oZWl0IiwicHJlc2VudC12YWx1ZSI6ODUuMH0sImJpbmFyeS1vdXRwdXRfMSI6eyJwcmVzZW50LXZhbHVlIjoiaW5hY3RpdmUifSwiYW5hbG9nLXZhbHVlXzgiOnsidW5pdHMiOiJkZWdyZWVzLWZhaHJlbmhlaXQiLCJwcmVzZW50LXZhbHVlIjo2MC4wfX0sImlkIjoiMzEwNDExMCIsInZlcnNpb24iOjEsInRpbWVzdGFtcCI6IjIwMjMtMDQtMjFUMTg6MzI6MzEuNTI2NzgwWiJ9",
+  "publish_time": "2023-04-21T18:32:31.569Z",
+  "attributes": {
+    "subFolder": "",
+    "deviceRegistryLocation": "us-central1",
+    "deviceId": "bacnet-3104110",
+    "deviceNumId": "2606664899033308",
+    "projectId": "essential-keep-197822",
+    "deviceRegistryId": "US-SVL-TC3"
+  }
+}

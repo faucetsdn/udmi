@@ -275,6 +275,18 @@ public abstract class JsonUtil {
   /**
    * Convert the json object to a generic map object.
    *
+   * @param input input file
+   * @return input as map object
+   */
+  public static Map<String, Object> asMap(File input) {
+    @SuppressWarnings("unchecked")
+    Map<String, Object> map = loadFile(TreeMap.class, input);
+    return map;
+  }
+
+  /**
+   * Convert the json object to a generic map object.
+   *
    * @param input input object
    * @return input as map object
    */

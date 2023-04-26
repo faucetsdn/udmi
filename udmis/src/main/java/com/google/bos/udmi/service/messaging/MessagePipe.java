@@ -7,6 +7,7 @@ import com.google.bos.udmi.service.messaging.impl.LocalMessagePipe;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.bos.udmi.service.messaging.impl.PubSubPipe;
 import com.google.bos.udmi.service.messaging.impl.SimpleMqttPipe;
+import com.google.bos.udmi.service.messaging.impl.TraceMessagePipe;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -26,6 +27,7 @@ public interface MessagePipe {
       Protocol.LOCAL, LocalMessagePipe::fromConfig,
       Protocol.PUBSUB, PubSubPipe::fromConfig,
       Protocol.FILE, FileMessagePipe::fromConfig,
+      Protocol.TRACE, TraceMessagePipe::fromConfig,
       Protocol.MQTT, SimpleMqttPipe::fromConfig);
 
   /**
