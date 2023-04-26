@@ -30,6 +30,7 @@ public class TraceMessagePipe extends MessageBase {
 
   private static final String DEVICES_DIR_NAME = "devices";
   private static final Map<String, String> FOLDER_HACKS = new HashMap<>();
+
   static {
     FOLDER_HACKS.put("discover", "discovery");
     FOLDER_HACKS.put("", null);
@@ -38,6 +39,9 @@ public class TraceMessagePipe extends MessageBase {
   private final Map<File, AtomicInteger> traceCounts = new HashMap<>();
   private File traceOutFile;
 
+  /**
+   * Create a trace replay pipe for the given configuration.
+   */
   public TraceMessagePipe(EndpointConfiguration config) {
     FOLDER_HACKS.put("discover", "discovery");
     ifNotNullThen(config.recv_id, this::playbackEngine);
@@ -46,6 +50,27 @@ public class TraceMessagePipe extends MessageBase {
 
   public static MessagePipe fromConfig(EndpointConfiguration config) {
     return new TraceMessagePipe(config);
+  }
+
+  private void consumeTrace(File file) {
+    try {
+      Map<String, Object> traceBundle = asMap(file);
+      Envelope envelope = makeEnvelope(traceBundle);
+      try {
+        Object message = asMap(decodeBase64((String) traceBundle.get("data")));
+        receiveBundle(new Bundle(envelope, message));
+      } catch (Exception e) {
+        receiveBundle(makeErrorBundle(envelope, e));
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+
+  @Nullable
+  private SubFolder getBundleSubfolder(Map<String, String> attributes) {
+    String subFolder = attributes.get("subFolder");
+    return ifNotNullGet(FOLDER_HACKS.getOrDefault(subFolder, subFolder), SubFolder::fromValue);
   }
 
   private Envelope makeEnvelope(Map<String, Object> bundle) {
@@ -64,12 +89,6 @@ public class TraceMessagePipe extends MessageBase {
     }
   }
 
-  @Nullable
-  private SubFolder getBundleSubfolder(Map<String, String> attributes) {
-    String subFolder = attributes.get("subFolder");
-    return ifNotNullGet(FOLDER_HACKS.getOrDefault(subFolder, subFolder), SubFolder::fromValue);
-  }
-
   private Bundle makeErrorBundle(Envelope envelope, Exception e) {
     envelope.subFolder = SubFolder.ERROR;
     return new Bundle(envelope, GeneralUtils.stackTraceString(e));
@@ -83,21 +102,6 @@ public class TraceMessagePipe extends MessageBase {
       traceIn.stream().forEach(this::consumeTrace);
       terminateHandler();
     });
-  }
-
-  private void consumeTrace(File file) {
-    try {
-      Map<String, Object> traceBundle = asMap(file);
-      Envelope envelope = makeEnvelope(traceBundle);
-      try {
-        Object message = asMap(decodeBase64((String) traceBundle.get("data")));
-        receiveBundle(new Bundle(envelope, message));
-      } catch (Exception e) {
-        receiveBundle(makeErrorBundle(envelope, e));
-      }
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
   }
 
   private void traceOutHandler(String sendId) {
