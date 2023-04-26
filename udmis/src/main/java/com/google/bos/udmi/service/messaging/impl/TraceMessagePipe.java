@@ -32,6 +32,7 @@ public class TraceMessagePipe extends MessageBase {
   private static final Map<String, String> FOLDER_HACKS = new HashMap<>();
 
   static {
+    // Some egregious hacks for dealing with legacy corner-cases data streams.
     FOLDER_HACKS.put("discover", "discovery");
     FOLDER_HACKS.put("", null);
   }
@@ -43,7 +44,6 @@ public class TraceMessagePipe extends MessageBase {
    * Create a trace replay pipe for the given configuration.
    */
   public TraceMessagePipe(EndpointConfiguration config) {
-    FOLDER_HACKS.put("discover", "discovery");
     ifNotNullThen(config.recv_id, this::playbackEngine);
     ifNotNullThen(config.send_id, this::traceOutHandler);
   }
