@@ -58,6 +58,7 @@ public class StateProcessorTest extends LocalMessagePipeTest {
     config.recv_id = TEST_SOURCE;
     config.send_id = TEST_DESTINATION;
     stateProcessor = UdmisComponent.create(StateProcessor.class, config);
+    stateProcessor.activate();
     setTestDispatcher(stateProcessor.getDispatcher());
     MessageDispatcherImpl reverseDispatcher = getReverseDispatcher();
     reverseDispatcher.registerHandler(Object.class, this::resultHandler);

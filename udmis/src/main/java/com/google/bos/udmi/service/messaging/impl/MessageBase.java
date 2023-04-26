@@ -85,9 +85,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     try {
       while (true) {
         try {
-          final String bundleString;
-          bundleString = sourceQueue.take();
-          Bundle bundle = extractBundle(bundleString);
+          Bundle bundle = extractBundle(sourceQueue.take());
           if (bundle.message.equals(TERMINATE_MARKER)) {
             debug("Exiting %s", this);
             info("Message loop terminated");
@@ -122,8 +120,11 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
    * Await the shutdown of the input handler.
    */
   public void awaitShutdown() {
+    debug("Awaiting shutdown of %s", this);
+    if (sourceFuture == null) {
+      return;
+    }
     try {
-      debug("Awaiting shutdown of %s", this);
       sourceFuture.get(AWAIT_TERMINATION_SEC, TimeUnit.SECONDS);
     } catch (Exception e) {
       throw new RuntimeException("While awaiting termination", e);

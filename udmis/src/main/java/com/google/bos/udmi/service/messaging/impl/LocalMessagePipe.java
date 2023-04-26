@@ -78,7 +78,7 @@ public class LocalMessagePipe extends MessageBase {
     resetForTestStatic();
   }
 
-  static void resetForTestStatic() {
+  public static void resetForTestStatic() {
     NAMESPACES.clear();
   }
 

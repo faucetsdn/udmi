@@ -1,0 +1,25 @@
+{
+  "flow_defaults": {
+    "protocol": "local"
+  },
+  "flows": {
+    "target": {
+      "type": "target",
+      "recv_id": "mend",
+      "send_id": "mark"
+    }
+  },
+  "bridges": {
+    "trace": {
+      "from": {
+        "protocol": "file",
+        "recv_id": "../tests/simple.trace/devices",
+        "send_id": "out/simple.trace"
+      },
+      "to": {
+        "recv_id": "mark",
+        "send_id": "mend"
+      }
+    }
+  }
+}

@@ -91,12 +91,21 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     if (message instanceof Bundle || message == null) {
       return (Bundle) message;
     }
+
     Bundle bundle = new Bundle(message);
+
+    if (message instanceof Exception || message instanceof String) {
+      bundle.envelope.subType = SubType.EVENT;
+      bundle.envelope.subFolder = SubFolder.ERROR;
+      return bundle;
+    }
+
     SimpleEntry<SubType, SubFolder> messageType =
         MessageDispatcherImpl.CLASS_TYPES.get(message.getClass());
     checkNotNull(messageType, "type entry not found for " + message.getClass());
     bundle.envelope.subType = messageType.getKey();
     bundle.envelope.subFolder = messageType.getValue();
+    // TODO: Supply attributes for deviceId, projectId, registryId, etc...
     return bundle;
   }
 

@@ -4,6 +4,7 @@ import static com.google.bos.udmi.service.messaging.impl.MessageBase.combineConf
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 
 import com.google.bos.udmi.service.core.BridgeProcessor;
 import com.google.bos.udmi.service.core.StateProcessor;
@@ -27,10 +28,12 @@ import udmi.schema.PodConfiguration;
  */
 public class UdmiServicePod {
 
+  public static final Supplier<ImmutableMap<String, BridgePodConfiguration>> NO_BRIDGES =
+      ImmutableMap::of;
   private final PodConfiguration podConfiguration;
   private final StateProcessor stateProcessor;
   private final TargetProcessor targetProcessor;
-  private final List<BridgeProcessor> bridges;
+  final List<BridgeProcessor> bridges;
 
   /**
    * Core pod to instantiate all the other components as necessary based on configuration.
@@ -52,9 +55,8 @@ public class UdmiServicePod {
             "Unrecognized pod flows: " + CSV_JOINER.join(flows.keySet()));
       }
 
-      Supplier<ImmutableMap<String, BridgePodConfiguration>> noBridges = ImmutableMap::of;
       Map<String, BridgePodConfiguration> bridgeEntries = podConfiguration.bridges;
-      bridges = Optional.ofNullable(bridgeEntries).orElseGet(noBridges).entrySet().stream()
+      bridges = Optional.ofNullable(bridgeEntries).orElseGet(NO_BRIDGES).entrySet().stream()
           .map(this::makeBridgeFor).collect(Collectors.toList());
     } catch (Exception e) {
       throw new RuntimeException("While instantiating pod " + CSV_JOINER.join(args), e);
@@ -86,5 +88,23 @@ public class UdmiServicePod {
 
   public PodConfiguration getPodConfiguration() {
     return podConfiguration;
+  }
+
+  /**
+   * Activate all processors and components in the pod.
+   */
+  public void activate() {
+    ifNotNullThen(targetProcessor, UdmisComponent::activate);
+    ifNotNullThen(stateProcessor, UdmisComponent::activate);
+    bridges.forEach(BridgeProcessor::activate);
+  }
+
+  /**
+   * Shutdown all processors and bridges in the pod.
+   */
+  public void shutdown() {
+    ifNotNullThen(targetProcessor, UdmisComponent::shutdown);
+    ifNotNullThen(stateProcessor, UdmisComponent::shutdown);
+    bridges.forEach(BridgeProcessor::shutdown);
   }
 }

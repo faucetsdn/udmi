@@ -13,7 +13,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.junit.jupiter.api.Test;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.EndpointConfiguration.Protocol;
-import udmi.schema.Envelope;
 
 class BridgeProcessorTest extends MessageTestCore {
 
@@ -24,6 +23,7 @@ class BridgeProcessorTest extends MessageTestCore {
     EndpointConfiguration from = getConfiguration(false, "from");
     EndpointConfiguration to = getConfiguration(false, "to");
     BridgeProcessor bridgeProcessor = new BridgeProcessor(from, to);
+    bridgeProcessor.activate();
     MessagePipe reversedFrom = getReversePipe("from");
     MessagePipe reversedTo = getReversePipe("to");
     reversedFrom.publish(getTestBundle("hello"));

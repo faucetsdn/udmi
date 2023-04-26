@@ -62,7 +62,7 @@ public class FileMessagePipe extends MessageBase {
 
       return envelope;
     } catch (Exception e) {
-      throw new RuntimeException("While extracting envelope from " + file.getAbsolutePath());
+      throw new RuntimeException("While extracting envelope from " + file.getAbsolutePath(), e);
     }
   }
 
@@ -72,6 +72,7 @@ public class FileMessagePipe extends MessageBase {
   }
 
   private void playbackEngine(String recvId) {
+    debug("Playback trace messages from " + new File(recvId).getAbsolutePath());
     DirectoryTraverser traceIn = new DirectoryTraverser(recvId);
     ExecutorService playback = Executors.newSingleThreadExecutor();
     playback.submit(() -> {
@@ -95,6 +96,7 @@ public class FileMessagePipe extends MessageBase {
 
   private void traceOutHandler(String sendId) {
     traceOutFile = new File(sendId);
+    debug("Writing trace messages to " + traceOutFile.getAbsolutePath());
   }
 
   @Override

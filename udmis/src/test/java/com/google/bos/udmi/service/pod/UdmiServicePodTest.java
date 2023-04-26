@@ -4,16 +4,21 @@ import static com.google.bos.udmi.service.messaging.impl.MessageBase.combineConf
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.udmi.util.GeneralUtils.arrayOf;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
+import static org.apache.commons.io.FileUtils.deleteDirectory;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.bos.udmi.service.messaging.StateUpdate;
+import com.google.bos.udmi.service.messaging.impl.LocalMessagePipe;
 import com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl;
 import com.google.bos.udmi.service.messaging.impl.MessageTestBase;
+import java.io.File;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import udmi.schema.DiscoveryState;
@@ -29,7 +34,10 @@ public class UdmiServicePodTest {
 
   private static final String CONFIG_FILE = "src/test/configs/base_pod.json";
   private static final String BRIDGE_FILE = "src/test/configs/bridge_pod.json";
+  private static final String TRACE_FILE = "src/test/configs/trace_pod.json";
+  private static final String TARGET_FILE = "null/null/devices/null/001_event_pointset.json";
   private static final long RECEIVE_TIMEOUT_SEC = 2;
+  private static final long RECEIVE_TIMEOUT_MS = RECEIVE_TIMEOUT_SEC * 1000;
 
   private EndpointConfiguration reverseFlow(EndpointConfiguration flow) {
     checkNotNull(flow, "message flow not defined");
@@ -38,6 +46,11 @@ public class UdmiServicePodTest {
     reversed.recv_id = reversed.send_id;
     reversed.send_id = source;
     return reversed;
+  }
+
+  @AfterEach
+  public void resetForTest() {
+    LocalMessagePipe.resetForTestStatic();
   }
 
   @Test
@@ -58,6 +71,7 @@ public class UdmiServicePodTest {
     BlockingQueue<Object> defaulted = new LinkedBlockingQueue<>();
     toDispatcher.registerHandler(Object.class, defaulted::add);
 
+    pod.activate();
     fromDispatcher.activate();
     toDispatcher.activate();
 
@@ -87,6 +101,8 @@ public class UdmiServicePodTest {
         combineConfig(podConfig.flow_defaults, reverseFlow(podConfig.flows.get("target")));
     final MessageDispatcherImpl targetDispatcher = MessageTestBase.getDispatcherFor(reversedTarget);
 
+    pod.activate();
+
     CompletableFuture<DiscoveryState> received = new CompletableFuture<>();
     targetDispatcher.registerHandler(DiscoveryState.class, received::complete);
     BlockingQueue<Object> defaulted = new LinkedBlockingQueue<>();
@@ -107,4 +123,18 @@ public class UdmiServicePodTest {
     Assertions.assertNull(defaulted.poll(RECEIVE_TIMEOUT_SEC, TimeUnit.SECONDS));
   }
 
+  @Test
+  public void podTraceTest() throws Exception {
+    UdmiServicePod pod = new UdmiServicePod(arrayOf(TRACE_FILE));
+    PodConfiguration podConfiguration = pod.getPodConfiguration();
+    File outDir = new File(podConfiguration.bridges.get("trace").from.send_id);
+    deleteDirectory(outDir);
+    File targetFile = new File(outDir, TARGET_FILE);
+    System.err.println("Target out " + targetFile.getAbsolutePath());
+    assertFalse(targetFile.exists(), "target file exists and should not");
+    pod.activate();
+    Thread.sleep(RECEIVE_TIMEOUT_MS);
+    pod.shutdown();
+    assertTrue(targetFile.exists(), "missing target output file");
+  }
 }
