@@ -1,12 +1,17 @@
 package com.google.bos.udmi.service.messaging.impl;
 
 import static com.google.udmi.util.GeneralUtils.decodeBase64;
+import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.asMap;
+import static com.google.udmi.util.JsonUtil.getTimestamp;
+import static com.google.udmi.util.JsonUtil.stringify;
+import static com.google.udmi.util.JsonUtil.writeFile;
 import static java.lang.String.format;
 
 import com.google.bos.udmi.service.messaging.MessagePipe;
+import com.google.common.collect.ImmutableMap;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import java.io.File;
@@ -83,6 +88,7 @@ public class TraceMessagePipe extends MessageBase {
       envelope.deviceId = attributes.get("deviceId");
       envelope.projectId = attributes.get("projectId");
       envelope.deviceRegistryId = attributes.get("deviceRegistryId");
+      envelope.publishTime = ifNotNullGet((String) bundle.get("publish_time"), JsonUtil::getDate);
       return envelope;
     } catch (Exception e) {
       throw new RuntimeException("While extracting envelope from bundle", e);
@@ -115,14 +121,20 @@ public class TraceMessagePipe extends MessageBase {
       throw new IllegalStateException("trace out file not defined, no send_id");
     }
     Envelope envelope = bundle.envelope;
-    File outDir = new File(traceOutFile,
-        format("%s/%s/%s/%s", envelope.projectId, envelope.deviceRegistryId, DEVICES_DIR_NAME,
-            envelope.deviceId));
+    String publishTime =
+        envelope.publishTime == null ? getTimestamp() : getTimestamp(envelope.publishTime);
+    int endMark = publishTime.lastIndexOf(".");
+    String useTime = publishTime.substring(0, endMark >= 0 ? endMark : publishTime.length());
+    String timePath = useTime.replaceAll("[T:Z]", "/");
+    File outDir = new File(traceOutFile, timePath);
     outDir.mkdirs();
     int messageCount =
         traceCounts.computeIfAbsent(outDir, key -> new AtomicInteger()).incrementAndGet();
-    File outFile = new File(outDir,
-        format("%03d_%s_%s.json", messageCount, envelope.subType, envelope.subFolder));
-    JsonUtil.writeFile(bundle.message, outFile);
+    File outFile = new File(outDir, format("%s_%06d.json", publishTime, messageCount));
+    Map<String, Object> outputMap = ImmutableMap.of(
+        "data", encodeBase64(stringify(bundle.message)),
+        "attributes", envelope
+    );
+    writeFile(outputMap, outFile);
   }
 }
