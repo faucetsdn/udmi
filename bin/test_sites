@@ -11,7 +11,6 @@ force=n
 
 schemadir=schema
 testdir=tests
-testname=downgrade.site
 
 while getopts "d:" opt; do
     case $opt in
@@ -32,6 +31,7 @@ subsets=$(cd $testdir; ls -d *.site)
 function redact_files {
     for file in $@; do
         sed -E -i \
+            -e 's-While loading.*udmi/tests/-REDACTED/-' \
             -e '/at .*\(.*\.java:[0-9]+\)/d' \
             -e '/\.\.\. [0-9]+ more/d' \
             $file
@@ -49,19 +49,16 @@ for subset in $subsets; do
     bin/registrar $testdir/$subset
     
     for device in $devices; do
-        redact_files $devicesdir/$device/out/*
+        redact_files $devicesdir/$device/out/* $testdir/$subset/registration_summary.json
         diff -r $devicesdir/$device/out $devicesdir/$device/expected
     done
 done
 
 echo
 echo Testing simple mock sequencer...
-tmpdir=/tmp/$testname
-rm -rf $tmpdir
-cp -a $testdir/$testname /tmp
-bin/sequencer /tmp/downgrade.site/ -- DWN-2 54321 system_mode_restart
+bin/sequencer tests/downgrade.site/ -- DWN-2 54321 system_mode_restart
 
-RESULTLOG=/tmp/downgrade.site/out/devices/DWN-2/RESULT.log
+RESULTLOG=tests/downgrade.site/out/devices/DWN-2/RESULT.log
 fgrep "RESULT fail system.mode system_mode_restart ALPHA 5 null" $RESULTLOG || bin/fail unexpected output from $RESULTLOG
 
 echo

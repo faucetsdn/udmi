@@ -1,6 +1,6 @@
 {
   "Converting" : {
-    "DWN-2" : "While loading /tmp/downgrade.site/devices/DWN-2/metadata.json"
+    "DWN-2" : "REDACTED/downgrade.site/devices/DWN-2/metadata.json"
   },
   "Credential" : {
     "DWN-1" : "While loading credentials for local device DWN-1",
@@ -11,6 +11,6 @@
     "DWN-2" : "devices/DWN-2"
   },
   "Version" : {
-    "main" : "1.4.1-52-g932786c56"
+    "main" : "1.4.1-54-gaca0af588"
   }
 }
