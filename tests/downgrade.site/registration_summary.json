@@ -1,6 +1,6 @@
 {
   "Converting" : {
-    "DWN-2" : "While loading /home/peringknife/udmi/tests/downgrade.site/devices/DWN-2/metadata.json"
+    "DWN-2" : "While loading /tmp/downgrade.site/devices/DWN-2/metadata.json"
   },
   "Credential" : {
     "DWN-1" : "While loading credentials for local device DWN-1",
