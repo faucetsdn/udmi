@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Setup Reflector Config
+ * Setup Udmi Config
  * <p>
  * 
  * 
@@ -25,7 +25,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "deployed_by"
 })
 @Generated("jsonschema2pojo")
-public class SetupReflectorConfig {
+public class SetupUdmiConfig {
 
     @JsonProperty("functions_min")
     public Integer functions_min;
@@ -60,10 +60,10 @@ public class SetupReflectorConfig {
         if (other == this) {
             return true;
         }
-        if ((other instanceof SetupReflectorConfig) == false) {
+        if ((other instanceof SetupUdmiConfig) == false) {
             return false;
         }
-        SetupReflectorConfig rhs = ((SetupReflectorConfig) other);
+        SetupUdmiConfig rhs = ((SetupUdmiConfig) other);
         return ((((((((this.last_state == rhs.last_state)||((this.last_state!= null)&&this.last_state.equals(rhs.last_state)))&&((this.udmi_version == rhs.udmi_version)||((this.udmi_version!= null)&&this.udmi_version.equals(rhs.udmi_version))))&&((this.functions_min == rhs.functions_min)||((this.functions_min!= null)&&this.functions_min.equals(rhs.functions_min))))&&((this.deployed_at == rhs.deployed_at)||((this.deployed_at!= null)&&this.deployed_at.equals(rhs.deployed_at))))&&((this.functions_max == rhs.functions_max)||((this.functions_max!= null)&&this.functions_max.equals(rhs.functions_max))))&&((this.udmi_functions == rhs.udmi_functions)||((this.udmi_functions!= null)&&this.udmi_functions.equals(rhs.udmi_functions))))&&((this.deployed_by == rhs.deployed_by)||((this.deployed_by!= null)&&this.deployed_by.equals(rhs.deployed_by))));
     }
 

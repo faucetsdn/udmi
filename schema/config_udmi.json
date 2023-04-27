@@ -1,7 +1,7 @@
 {
   "$udmi_version": "1.4.1",
-  "title": "Reflector Config",
-  "description": "Config for a reflector client",
+  "title": "Udmi Config",
+  "description": "Config for a UDMI reflector client",
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
@@ -16,8 +16,8 @@
       "description": "Version of the UDMI schema",
       "type": "string"
     },
-    "udmis": {
-      "title": "Setup Reflector Config",
+    "udmi": {
+      "title": "Setup Udmi Config",
       "type": "object",
       "properties": {
         "functions_min": {

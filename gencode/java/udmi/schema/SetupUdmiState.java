@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Setup Reflector State
+ * Setup Udmi State
  * <p>
  * 
  * 
@@ -18,7 +18,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "user"
 })
 @Generated("jsonschema2pojo")
-public class SetupReflectorState {
+public class SetupUdmiState {
 
     @JsonProperty("user")
     public String user;
@@ -35,10 +35,10 @@ public class SetupReflectorState {
         if (other == this) {
             return true;
         }
-        if ((other instanceof SetupReflectorState) == false) {
+        if ((other instanceof SetupUdmiState) == false) {
             return false;
         }
-        SetupReflectorState rhs = ((SetupReflectorState) other);
+        SetupUdmiState rhs = ((SetupUdmiState) other);
         return ((this.user == rhs.user)||((this.user!= null)&&this.user.equals(rhs.user)));
     }
 

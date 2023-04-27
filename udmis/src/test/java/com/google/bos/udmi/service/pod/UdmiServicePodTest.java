@@ -7,8 +7,10 @@ import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static org.apache.commons.io.FileUtils.deleteDirectory;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.google.bos.udmi.service.core.ProcessorTestBase;
 import com.google.bos.udmi.service.messaging.StateUpdate;
 import com.google.bos.udmi.service.messaging.impl.LocalMessagePipe;
 import com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl;
@@ -19,13 +21,14 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import udmi.schema.DiscoveryState;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.LocalnetModel;
 import udmi.schema.PodConfiguration;
 import udmi.schema.PointsetState;
+import udmi.schema.UdmiConfig;
+import udmi.schema.UdmiState;
 
 /**
  * Unit tests for a service pod.
@@ -48,9 +51,41 @@ public class UdmiServicePodTest {
     return reversed;
   }
 
-  @AfterEach
-  public void resetForTest() {
-    LocalMessagePipe.resetForTestStatic();
+  @Test
+  public void basicPodTest() throws Exception {
+    ProcessorTestBase.writeVersionDeployFile();
+    UdmiServicePod pod = new UdmiServicePod(arrayOf(CONFIG_FILE));
+
+    PodConfiguration podConfig = pod.getPodConfiguration();
+
+    EndpointConfiguration reversedState =
+        combineConfig(podConfig.flow_defaults, reverseFlow(podConfig.flows.get("state")));
+    final MessageDispatcherImpl stateDispatcher = MessageTestBase.getDispatcherFor(reversedState);
+
+    EndpointConfiguration reversedTarget =
+        combineConfig(podConfig.flow_defaults, reverseFlow(podConfig.flows.get("target")));
+    final MessageDispatcherImpl targetDispatcher = MessageTestBase.getDispatcherFor(reversedTarget);
+
+    pod.activate();
+
+    CompletableFuture<DiscoveryState> received = new CompletableFuture<>();
+    targetDispatcher.registerHandler(DiscoveryState.class, received::complete);
+    BlockingQueue<Object> defaulted = new LinkedBlockingQueue<>();
+    targetDispatcher.registerHandler(Object.class, defaulted::add);
+    targetDispatcher.activate();
+
+    StateUpdate stateUpdate = new StateUpdate();
+    stateUpdate.discovery = new DiscoveryState();
+    stateUpdate.pointset = new PointsetState();
+    stateDispatcher.publish(stateUpdate);
+
+    DiscoveryState discoveryState = received.get(RECEIVE_TIMEOUT_SEC, TimeUnit.SECONDS);
+    assertNotNull(discoveryState, "no received message");
+
+    Object polled = defaulted.poll(RECEIVE_TIMEOUT_SEC, TimeUnit.SECONDS);
+    assertTrue(polled instanceof PointsetState, "expected pointset state in default");
+
+    assertNull(defaulted.poll(RECEIVE_TIMEOUT_SEC, TimeUnit.SECONDS));
   }
 
   @Test
@@ -84,43 +119,7 @@ public class UdmiServicePodTest {
     LocalnetModel discoveryState = received.get(RECEIVE_TIMEOUT_SEC, TimeUnit.SECONDS);
     assertNotNull(discoveryState, "no received message");
 
-    Assertions.assertNull(defaulted.poll(RECEIVE_TIMEOUT_SEC, TimeUnit.SECONDS));
-  }
-
-  @Test
-  public void basicPodTest() throws Exception {
-    UdmiServicePod pod = new UdmiServicePod(arrayOf(CONFIG_FILE));
-
-    PodConfiguration podConfig = pod.getPodConfiguration();
-
-    EndpointConfiguration reversedState =
-        combineConfig(podConfig.flow_defaults, reverseFlow(podConfig.flows.get("state")));
-    final MessageDispatcherImpl stateDispatcher = MessageTestBase.getDispatcherFor(reversedState);
-
-    EndpointConfiguration reversedTarget =
-        combineConfig(podConfig.flow_defaults, reverseFlow(podConfig.flows.get("target")));
-    final MessageDispatcherImpl targetDispatcher = MessageTestBase.getDispatcherFor(reversedTarget);
-
-    pod.activate();
-
-    CompletableFuture<DiscoveryState> received = new CompletableFuture<>();
-    targetDispatcher.registerHandler(DiscoveryState.class, received::complete);
-    BlockingQueue<Object> defaulted = new LinkedBlockingQueue<>();
-    targetDispatcher.registerHandler(Object.class, defaulted::add);
-    targetDispatcher.activate();
-
-    StateUpdate stateUpdate = new StateUpdate();
-    stateUpdate.discovery = new DiscoveryState();
-    stateUpdate.pointset = new PointsetState();
-    stateDispatcher.publish(stateUpdate);
-
-    DiscoveryState discoveryState = received.get(RECEIVE_TIMEOUT_SEC, TimeUnit.SECONDS);
-    assertNotNull(discoveryState, "no received message");
-
-    Object polled = defaulted.poll(RECEIVE_TIMEOUT_SEC, TimeUnit.SECONDS);
-    assertTrue(polled instanceof PointsetState, "expected pointset state in default");
-
-    Assertions.assertNull(defaulted.poll(RECEIVE_TIMEOUT_SEC, TimeUnit.SECONDS));
+    assertNull(defaulted.poll(RECEIVE_TIMEOUT_SEC, TimeUnit.SECONDS));
   }
 
   @Test
@@ -136,5 +135,45 @@ public class UdmiServicePodTest {
     Thread.sleep(RECEIVE_TIMEOUT_MS);
     pod.shutdown();
     assertTrue(targetFile.exists(), "missing target output file");
+  }
+
+  @Test
+  public void reflectPodTest() throws Exception {
+    ProcessorTestBase.writeVersionDeployFile();
+    UdmiServicePod pod = new UdmiServicePod(arrayOf(CONFIG_FILE));
+
+    PodConfiguration podConfig = pod.getPodConfiguration();
+    EndpointConfiguration reversedTarget =
+        combineConfig(podConfig.flow_defaults, reverseFlow(podConfig.flows.get("target")));
+    final MessageDispatcherImpl targetDispatcher = MessageTestBase.getDispatcherFor(reversedTarget);
+
+    EndpointConfiguration reversedReflect =
+        combineConfig(podConfig.flow_defaults, reverseFlow(podConfig.flows.get("reflect")));
+    final MessageDispatcherImpl reflectDispatcher =
+        MessageTestBase.getDispatcherFor(reversedReflect);
+
+    pod.activate();
+
+    BlockingQueue<Object> defaulted = new LinkedBlockingQueue<>();
+    targetDispatcher.registerHandler(Object.class, defaulted::add);
+    targetDispatcher.activate();
+
+    UdmiState stateUpdate = new UdmiState();
+    reflectDispatcher.publish(stateUpdate);
+
+    pod.shutdown();
+    targetDispatcher.shutdown();
+    reflectDispatcher.shutdown();
+
+    Object polled = defaulted.poll(RECEIVE_TIMEOUT_SEC, TimeUnit.SECONDS);
+    assertTrue(polled instanceof UdmiConfig, "expected one UdmiConfig message");
+
+    assertNull(defaulted.poll(RECEIVE_TIMEOUT_SEC, TimeUnit.SECONDS),
+        "expected no other messages");
+  }
+
+  @AfterEach
+  public void resetForTest() {
+    LocalMessagePipe.resetForTestStatic();
   }
 }

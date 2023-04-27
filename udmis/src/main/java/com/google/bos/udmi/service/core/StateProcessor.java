@@ -2,6 +2,7 @@ package com.google.bos.udmi.service.core;
 
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.convertTo;
+import static com.google.udmi.util.JsonUtil.convertToStrict;
 
 import com.google.bos.udmi.service.messaging.StateUpdate;
 import java.util.Arrays;
@@ -27,7 +28,7 @@ public class StateProcessor extends UdmisComponent {
 
   @Override
   protected void defaultHandler(Object defaultedMessage) {
-    stateHandler(convertTo(StateUpdate.class, defaultedMessage));
+    stateHandler(convertToStrict(StateUpdate.class, defaultedMessage));
   }
 
   private void stateHandler(StateUpdate message) {

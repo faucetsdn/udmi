@@ -10,19 +10,19 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Reflector State
+ * Udmi Config
  * <p>
- * State of a reflector client
+ * Config for a UDMI reflector client
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "timestamp",
     "version",
-    "setup"
+    "udmi"
 })
 @Generated("jsonschema2pojo")
-public class ReflectorState {
+public class UdmiConfig {
 
     /**
      * RFC 3339 Timestamp the state payload was generated
@@ -39,19 +39,19 @@ public class ReflectorState {
     @JsonPropertyDescription("Version of the UDMI schema")
     public String version;
     /**
-     * Setup Reflector State
+     * Setup Udmi Config
      * <p>
      * 
      * 
      */
-    @JsonProperty("setup")
-    public SetupReflectorState setup;
+    @JsonProperty("udmi")
+    public SetupUdmiConfig udmi;
 
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.setup == null)? 0 :this.setup.hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
+        result = ((result* 31)+((this.udmi == null)? 0 :this.udmi.hashCode()));
         result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
         return result;
     }
@@ -61,11 +61,11 @@ public class ReflectorState {
         if (other == this) {
             return true;
         }
-        if ((other instanceof ReflectorState) == false) {
+        if ((other instanceof UdmiConfig) == false) {
             return false;
         }
-        ReflectorState rhs = ((ReflectorState) other);
-        return ((((this.setup == rhs.setup)||((this.setup!= null)&&this.setup.equals(rhs.setup)))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
+        UdmiConfig rhs = ((UdmiConfig) other);
+        return ((((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version)))&&((this.udmi == rhs.udmi)||((this.udmi!= null)&&this.udmi.equals(rhs.udmi))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
     }
 
 }

@@ -1,7 +1,7 @@
-"""Generated class for reflect_state.json"""
+"""Generated class for state_udmi.json"""
 
 
-class SetupReflectorState:
+class SetupUdmiState:
   """Generated schema class"""
 
   def __init__(self):
@@ -11,7 +11,7 @@ class SetupReflectorState:
   def from_dict(source):
     if not source:
       return None
-    result = SetupReflectorState()
+    result = SetupUdmiState()
     result.user = source.get('user')
     return result
 
@@ -21,7 +21,7 @@ class SetupReflectorState:
       return None
     result = {}
     for key in source:
-      result[key] = SetupReflectorState.from_dict(source[key])
+      result[key] = SetupUdmiState.from_dict(source[key])
     return result
 
   @staticmethod
@@ -38,7 +38,7 @@ class SetupReflectorState:
     return result
 
 
-class ReflectorState:
+class UdmiState:
   """Generated schema class"""
 
   def __init__(self):
@@ -50,10 +50,10 @@ class ReflectorState:
   def from_dict(source):
     if not source:
       return None
-    result = ReflectorState()
+    result = UdmiState()
     result.timestamp = source.get('timestamp')
     result.version = source.get('version')
-    result.setup = SetupReflectorState.from_dict(source.get('setup'))
+    result.setup = SetupUdmiState.from_dict(source.get('setup'))
     return result
 
   @staticmethod
@@ -62,7 +62,7 @@ class ReflectorState:
       return None
     result = {}
     for key in source:
-      result[key] = ReflectorState.from_dict(source[key])
+      result[key] = UdmiState.from_dict(source[key])
     return result
 
   @staticmethod

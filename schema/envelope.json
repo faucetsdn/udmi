@@ -37,6 +37,7 @@
     },
     "subFolder": {
       "enum": [
+        "udmi",
         "update",
         "error",
         "cloud",

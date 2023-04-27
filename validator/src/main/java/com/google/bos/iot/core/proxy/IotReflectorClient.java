@@ -33,10 +33,10 @@ import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
 import udmi.schema.ExecutionConfiguration;
-import udmi.schema.ReflectorConfig;
-import udmi.schema.ReflectorState;
-import udmi.schema.SetupReflectorConfig;
-import udmi.schema.SetupReflectorState;
+import udmi.schema.SetupUdmiConfig;
+import udmi.schema.SetupUdmiState;
+import udmi.schema.UdmiConfig;
+import udmi.schema.UdmiState;
 
 /**
  * Publish messages using the iot core reflector.
@@ -102,7 +102,7 @@ public class IotReflectorClient implements MessagePublisher {
     }
 
     try {
-      System.err.println("Starting initial UDMIS setup process");
+      System.err.println("Starting initial UDMI setup process");
       if (!initialConfigReceived.await(CONFIG_TIMEOUT_SEC, TimeUnit.SECONDS)) {
         System.err.println("Ignoring initial config received timeout (config likely empty)");
       }
@@ -110,7 +110,7 @@ public class IotReflectorClient implements MessagePublisher {
       initializedStateSent.countDown();
       if (!validConfigReceived.await(CONFIG_TIMEOUT_SEC, TimeUnit.SECONDS)) {
         throw new RuntimeException(
-            "Config sync timeout expired. Investigate UDMIS cloud functions install.");
+            "Config sync timeout expired. Investigate UDMI cloud functions install.");
       }
 
       active = true;
@@ -121,10 +121,10 @@ public class IotReflectorClient implements MessagePublisher {
   }
 
   private void initializeReflectorState() {
-    ReflectorState reflectorState = new ReflectorState();
+    UdmiState reflectorState = new UdmiState();
     reflectorState.timestamp = REFLECTOR_STATE_TIMESTAMP;
     reflectorState.version = udmiVersion;
-    reflectorState.setup = new SetupReflectorState();
+    reflectorState.setup = new SetupUdmiState();
     reflectorState.setup.user = System.getenv("USER");
     try {
       System.err.printf("Setting state version %s timestamp %s%n",
@@ -204,41 +204,41 @@ public class IotReflectorClient implements MessagePublisher {
         return false;
       }
 
-      ReflectorConfig reflectorConfig = convertTo(ReflectorConfig.class, message);
-      System.err.println("UDMIS received reflectorConfig: " + stringify(reflectorConfig));
-      SetupReflectorConfig udmisInfo = reflectorConfig.udmis;
-      Date lastState = udmisInfo == null ? null : udmisInfo.last_state;
-      System.err.println("UDMIS matching against expected state timestamp " + getTimestamp(
+      UdmiConfig reflectorConfig = convertTo(UdmiConfig.class, message);
+      System.err.println("UDMI received reflectorConfig: " + stringify(reflectorConfig));
+      SetupUdmiConfig udmiInfo = reflectorConfig.udmi;
+      Date lastState = udmiInfo == null ? null : udmiInfo.last_state;
+      System.err.println("UDMI matching against expected state timestamp " + getTimestamp(
           REFLECTOR_STATE_TIMESTAMP));
       boolean configMatch = dateEquals(lastState, REFLECTOR_STATE_TIMESTAMP);
       if (configMatch) {
-        System.err.println("UDMIS version " + reflectorConfig.version);
+        System.err.println("UDMI version " + reflectorConfig.version);
         if (!udmiVersion.equals(reflectorConfig.version)) {
-          System.err.println("UDMIS version mismatch: " + udmiVersion);
+          System.err.println("UDMI version mismatch: " + udmiVersion);
         }
 
-        System.err.println("UDMIS deployed by " + udmisInfo.deployed_by + " at " + getTimestamp(
-            udmisInfo.deployed_at));
+        System.err.println("UDMI deployed by " + udmiInfo.deployed_by + " at " + getTimestamp(
+            udmiInfo.deployed_at));
 
-        System.err.printf("UDMIS functions support versions %s:%s (required %s)%n",
-            udmisInfo.functions_min, udmisInfo.functions_max, requiredVersion);
-        String baseError = String.format("UDMIS required functions version %d not allowed",
+        System.err.printf("UDMI functions support versions %s:%s (required %s)%n",
+            udmiInfo.functions_min, udmiInfo.functions_max, requiredVersion);
+        String baseError = String.format("UDMI required functions version %d not allowed",
             requiredVersion);
-        if (requiredVersion < udmisInfo.functions_min) {
+        if (requiredVersion < udmiInfo.functions_min) {
           throw new RuntimeException(
               String.format("%s: min supported %s. Please update local UDMI install.", baseError,
-                  udmisInfo.functions_min));
+                  udmiInfo.functions_min));
         }
-        if (requiredVersion > udmisInfo.functions_max) {
+        if (requiredVersion > udmiInfo.functions_max) {
           throw new RuntimeException(
-              String.format("%s: max supported %s. Please update cloud UDMIS install.",
-                  baseError, udmisInfo.functions_max));
+              String.format("%s: max supported %s. Please update cloud UDMI install.",
+                  baseError, udmiInfo.functions_max));
         }
         isInstallValid = true;
         validConfigReceived.countDown();
       } else {
         System.err.println(
-            "UDMIS ignoring mismatching config timestamp " + getTimestamp(lastState));
+            "UDMI ignoring mismatching config timestamp " + getTimestamp(lastState));
       }
     } catch (Exception e) {
       throw new RuntimeException("While waiting for initial config synchronization", e);

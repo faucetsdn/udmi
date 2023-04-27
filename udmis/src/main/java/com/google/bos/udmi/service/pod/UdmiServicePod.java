@@ -4,20 +4,18 @@ import static com.google.bos.udmi.service.messaging.impl.MessageBase.combineConf
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
-import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.core.BridgeProcessor;
+import com.google.bos.udmi.service.core.ReflectProcessor;
 import com.google.bos.udmi.service.core.StateProcessor;
 import com.google.bos.udmi.service.core.TargetProcessor;
 import com.google.bos.udmi.service.core.UdmisComponent;
 import com.google.common.collect.ImmutableMap;
 import com.google.udmi.util.JsonUtil;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import udmi.schema.BridgePodConfiguration;
 import udmi.schema.EndpointConfiguration;
@@ -28,12 +26,17 @@ import udmi.schema.PodConfiguration;
  */
 public class UdmiServicePod {
 
-  public static final Supplier<ImmutableMap<String, BridgePodConfiguration>> NO_BRIDGES =
-      ImmutableMap::of;
+  private static final Map<String, BridgePodConfiguration> NO_BRIDGES = ImmutableMap.of();
+  private static final Map<String, EndpointConfiguration> NO_FLOWS = ImmutableMap.of();
+  private static final Map<String, Class<? extends UdmisComponent>> PROCESSORS = ImmutableMap.of(
+      "target", TargetProcessor.class,
+      "state", StateProcessor.class,
+      "reflect", ReflectProcessor.class
+  );
+
   private final PodConfiguration podConfiguration;
-  private final StateProcessor stateProcessor;
-  private final TargetProcessor targetProcessor;
-  final List<BridgeProcessor> bridges;
+  private final List<UdmisComponent> components;
+  private final List<BridgeProcessor> bridges;
 
   /**
    * Core pod to instantiate all the other components as necessary based on configuration.
@@ -44,19 +47,12 @@ public class UdmiServicePod {
 
       podConfiguration = JsonUtil.loadFileRequired(PodConfiguration.class, args[0]);
 
-      Supplier<ImmutableMap<String, EndpointConfiguration>> noFlows = ImmutableMap::of;
       Map<String, EndpointConfiguration> flowEntries = podConfiguration.flows;
-      Map<String, EndpointConfiguration> flows =
-          new HashMap<>(Optional.ofNullable(flowEntries).orElseGet(noFlows));
-      targetProcessor = createComponent(TargetProcessor.class, makeConfig(flows.remove("target")));
-      stateProcessor = createComponent(StateProcessor.class, makeConfig(flows.remove("state")));
-      if (!flows.isEmpty()) {
-        throw new IllegalStateException(
-            "Unrecognized pod flows: " + CSV_JOINER.join(flows.keySet()));
-      }
+      components = ofNullable(flowEntries).orElse(NO_FLOWS).entrySet().stream()
+          .map(this::makeComponentFor).collect(Collectors.toList());
 
       Map<String, BridgePodConfiguration> bridgeEntries = podConfiguration.bridges;
-      bridges = Optional.ofNullable(bridgeEntries).orElseGet(NO_BRIDGES).entrySet().stream()
+      bridges = ofNullable(bridgeEntries).orElse(NO_BRIDGES).entrySet().stream()
           .map(this::makeBridgeFor).collect(Collectors.toList());
     } catch (Exception e) {
       throw new RuntimeException("While instantiating pod " + CSV_JOINER.join(args), e);
@@ -82,8 +78,21 @@ public class UdmiServicePod {
     }
   }
 
+  private UdmisComponent makeComponentFor(Entry<String, EndpointConfiguration> entry) {
+    checkState(PROCESSORS.containsKey(entry.getKey()), "registered flow key " + entry.getKey());
+    return createComponent(PROCESSORS.get(entry.getKey()), makeConfig(entry.getValue()));
+  }
+
   private EndpointConfiguration makeConfig(EndpointConfiguration defined) {
     return combineConfig(podConfiguration.flow_defaults, defined);
+  }
+
+  /**
+   * Activate all processors and components in the pod.
+   */
+  public void activate() {
+    components.forEach(UdmisComponent::activate);
+    bridges.forEach(BridgeProcessor::activate);
   }
 
   public PodConfiguration getPodConfiguration() {
@@ -91,20 +100,10 @@ public class UdmiServicePod {
   }
 
   /**
-   * Activate all processors and components in the pod.
-   */
-  public void activate() {
-    ifNotNullThen(targetProcessor, UdmisComponent::activate);
-    ifNotNullThen(stateProcessor, UdmisComponent::activate);
-    bridges.forEach(BridgeProcessor::activate);
-  }
-
-  /**
    * Shutdown all processors and bridges in the pod.
    */
   public void shutdown() {
-    ifNotNullThen(targetProcessor, UdmisComponent::shutdown);
-    ifNotNullThen(stateProcessor, UdmisComponent::shutdown);
+    components.forEach(UdmisComponent::shutdown);
     bridges.forEach(BridgeProcessor::shutdown);
   }
 }
