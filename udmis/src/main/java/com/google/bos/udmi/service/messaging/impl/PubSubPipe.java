@@ -1,12 +1,12 @@
 package com.google.bos.udmi.service.messaging.impl;
 
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static java.lang.String.format;
 
 import com.google.api.core.ApiFuture;
-import com.google.api.gax.core.CredentialsProvider;
 import com.google.api.gax.core.NoCredentialsProvider;
 import com.google.api.gax.grpc.GrpcTransportChannel;
 import com.google.api.gax.rpc.FixedTransportChannelProvider;
@@ -24,9 +24,11 @@ import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import org.jetbrains.annotations.NotNull;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
 
@@ -45,6 +47,7 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
    */
   public PubSubPipe(EndpointConfiguration configuration) {
     try {
+      Objects.requireNonNull(configuration.hostname, "no project id defined in configuration as 'hostname'");
       publisher = getPublisher(configuration.hostname, configuration.send_id);
       subscriber = getSubscriber(configuration.hostname, configuration.recv_id);
     } catch (Exception e) {
@@ -56,16 +59,27 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
     return new PubSubPipe(configuration);
   }
 
-  private String getFormattedHost() {
+  private String getEmulatorHost() {
+    if (EMULATOR_HOST == null) {
+      return null;
+    }
     int lastIndex = EMULATOR_HOST.lastIndexOf(":");
     String useHost;
     if (lastIndex < 0) {
       useHost = EMULATOR_HOST;
     } else {
-      String hostname = EMULATOR_HOST.substring(0, lastIndex);
       useHost = String.format("%s:%s", "localhost", EMULATOR_HOST.substring(lastIndex + 1));
     }
     return useHost;
+  }
+
+  @NotNull
+  private TransportChannelProvider getTransportChannelProvider(String useHost) {
+    info(format("Using pubsub emulator host %s", useHost));
+    ManagedChannel channel = ManagedChannelBuilder.forTarget(useHost).usePlaintext().build();
+    TransportChannelProvider channelProvider =
+        FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel));
+    return channelProvider;
   }
 
   @Override
@@ -102,42 +116,27 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
   }
 
   Publisher getPublisher(String projectId, String topicName) {
-    info(format("Creating publisher for emulator host %s %s/%s", EMULATOR_HOST, projectId,
-        topicName));
-    String useHost = getFormattedHost();
-    ManagedChannel channel = ManagedChannelBuilder.forTarget(useHost).usePlaintext().build();
     try {
-      TransportChannelProvider channelProvider =
-          FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel));
-      CredentialsProvider credentialsProvider = NoCredentialsProvider.create();
-
-      return Publisher.newBuilder(ProjectTopicName.of(projectId, topicName))
-          .setChannelProvider(channelProvider)
-          .setCredentialsProvider(credentialsProvider)
-          .build();
+      Publisher.Builder builder = Publisher.newBuilder(ProjectTopicName.of(projectId, topicName));
+      String emu = getEmulatorHost();
+      ifNotNullThen(emu, host -> builder.setChannelProvider(getTransportChannelProvider(host)));
+      ifNotNullThen(emu, host -> builder.setCredentialsProvider(NoCredentialsProvider.create()));
+      return builder.build();
     } catch (Exception e) {
       throw new RuntimeException("While creating emulator publisher", e);
     }
   }
 
   Subscriber getSubscriber(String projectId, String subName) {
-    String emulator = System.getenv("PUBSUB_EMULATOR_HOST");
-    String useHost = getFormattedHost();
-    ManagedChannel channel = ManagedChannelBuilder.forTarget(useHost).usePlaintext().build();
-    info(format("Creating subscription for emulator host %s %s/%s", emulator, projectId, subName));
     try {
-      TransportChannelProvider channelProvider =
-          FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel));
-      CredentialsProvider credentialsProvider = NoCredentialsProvider.create();
-
-      Subscriber subscriber =
-          Subscriber.newBuilder(ProjectSubscriptionName.of(projectId, subName), this)
-              .setChannelProvider(channelProvider)
-              .setCredentialsProvider(credentialsProvider)
-              .build();
-      return subscriber;
+      ProjectSubscriptionName subscription = ProjectSubscriptionName.of(projectId, subName);
+      Subscriber.Builder builder = Subscriber.newBuilder(subscription, this);
+      String emu = getEmulatorHost();
+      ifNotNullThen(emu, host -> builder.setChannelProvider(getTransportChannelProvider(host)));
+      ifNotNullThen(emu, host -> builder.setCredentialsProvider(NoCredentialsProvider.create()));
+      return builder.build();
     } catch (Exception e) {
-      throw new RuntimeException("While creating emulator publisher", e);
+      throw new RuntimeException("While creating emulator subscriber", e);
     }
   }
 

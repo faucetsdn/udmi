@@ -4,6 +4,7 @@ import static com.google.bos.udmi.service.messaging.impl.MessageBase.combineConf
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static com.google.udmi.util.JsonUtil.loadFileStrictRequired;
 import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.core.BridgeProcessor;
@@ -45,7 +46,7 @@ public class UdmiServicePod {
     try {
       checkState(args.length == 1, "expected exactly one argument: configuration_file");
 
-      podConfiguration = JsonUtil.loadFileRequired(PodConfiguration.class, args[0]);
+      podConfiguration = loadFileStrictRequired(PodConfiguration.class, args[0]);
 
       Map<String, EndpointConfiguration> flowEntries = podConfiguration.flows;
       components = ofNullable(flowEntries).orElse(NO_FLOWS).entrySet().stream()
@@ -60,7 +61,8 @@ public class UdmiServicePod {
   }
 
   public static void main(String[] args) {
-    new UdmiServicePod(args);
+    UdmiServicePod udmiServicePod = new UdmiServicePod(args);
+    udmiServicePod.activate();
   }
 
   private <T extends UdmisComponent> T createComponent(Class<T> clazz,
