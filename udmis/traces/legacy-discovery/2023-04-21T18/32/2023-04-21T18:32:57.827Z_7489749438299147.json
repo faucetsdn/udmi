@@ -1,0 +1,12 @@
+{
+  "data": "eyJwcm90b2NvbCI6ImJhY25ldCIsImRhdGEiOnsiYW5hbG9nLW91dHB1dF8xIjp7InVuaXRzIjoicGVyY2VudCIsInByZXNlbnQtdmFsdWUiOjAuMH0sImFuYWxvZy1pbnB1dF8xIjp7InVuaXRzIjoiY3ViaWMtZmVldC1wZXItbWludXRlIiwicHJlc2VudC12YWx1ZSI6MjgyLjB9LCJhbmFsb2ctdmFsdWVfMjgiOnsidW5pdHMiOiJkZWdyZWVzLWZhaHJlbmhlaXQiLCJwcmVzZW50LXZhbHVlIjo3Mi44fSwiYW5hbG9nLXZhbHVlXzciOnsidW5pdHMiOiJkZWdyZWVzLWZhaHJlbmhlaXQiLCJwcmVzZW50LXZhbHVlIjo3NC4wfSwiYW5hbG9nLXZhbHVlXzgiOnsidW5pdHMiOiJkZWdyZWVzLWZhaHJlbmhlaXQiLCJwcmVzZW50LXZhbHVlIjo3MC4wfSwiYW5hbG9nLXZhbHVlXzEzIjp7InVuaXRzIjoicGVyY2VudCIsInByZXNlbnQtdmFsdWUiOjM4LjUyNTc2fSwiYW5hbG9nLWlucHV0XzMiOnsidW5pdHMiOiJkZWdyZWVzLWZhaHJlbmhlaXQiLCJwcmVzZW50LXZhbHVlIjo3MS4yfSwiYW5hbG9nLWlucHV0XzIiOnsidW5pdHMiOiJkZWdyZWVzLWZhaHJlbmhlaXQiLCJwcmVzZW50LXZhbHVlIjo2My44fSwiYW5hbG9nLXZhbHVlXzExIjp7InVuaXRzIjoiY3ViaWMtZmVldC1wZXItbWludXRlIiwicHJlc2VudC12YWx1ZSI6Mjc1LjB9fSwiaWQiOiIzMTA0NjAzIiwidmVyc2lvbiI6MSwidGltZXN0YW1wIjoiMjAyMy0wNC0yMVQxODozMjo1Ny43OTIxNDhaIn0=",
+  "publish_time": "2023-04-21T18:32:57.827Z",
+  "attributes": {
+    "deviceRegistryLocation": "us-central1",
+    "subFolder": "",
+    "deviceNumId": "2577988114023679",
+    "deviceRegistryId": "US-SVL-TC3",
+    "projectId": "essential-keep-197822",
+    "deviceId": "bacnet-3104603"
+  }
+}

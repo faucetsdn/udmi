@@ -33,6 +33,11 @@ public class GeneralUtils {
       .setSerializationInclusion(JsonInclude.Include.NON_NULL);
   private static final String SEPARATOR = "\n  ";
   private static final Joiner INDENTED_LINES = Joiner.on(SEPARATOR);
+  public static final Joiner CSV_JOINER = Joiner.on(", ");
+
+  public static String[] arrayOf(String... args) {
+    return args;
+  }
 
   /**
    * Returns a string of enabled options and values.

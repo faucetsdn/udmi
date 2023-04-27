@@ -1,7 +1,7 @@
 """Generated class for configuration_pod.json"""
 from .configuration_endpoint import EndpointConfiguration
 from .configuration_endpoint import EndpointConfiguration
-from .configuration_endpoint import EndpointConfiguration
+from .configuration_pod_bridge import BridgePodConfiguration
 
 
 class PodConfiguration:
@@ -9,8 +9,8 @@ class PodConfiguration:
 
   def __init__(self):
     self.flow_defaults = None
-    self.target_flow = None
-    self.state_flow = None
+    self.flows = None
+    self.bridges = None
 
   @staticmethod
   def from_dict(source):
@@ -18,8 +18,8 @@ class PodConfiguration:
       return None
     result = PodConfiguration()
     result.flow_defaults = EndpointConfiguration.from_dict(source.get('flow_defaults'))
-    result.target_flow = EndpointConfiguration.from_dict(source.get('target_flow'))
-    result.state_flow = EndpointConfiguration.from_dict(source.get('state_flow'))
+    result.flows = EndpointConfiguration.map_from(source.get('flows'))
+    result.bridges = BridgePodConfiguration.map_from(source.get('bridges'))
     return result
 
   @staticmethod
@@ -42,8 +42,8 @@ class PodConfiguration:
     result = {}
     if self.flow_defaults:
       result['flow_defaults'] = self.flow_defaults.to_dict() # 4
-    if self.target_flow:
-      result['target_flow'] = self.target_flow.to_dict() # 4
-    if self.state_flow:
-      result['state_flow'] = self.state_flow.to_dict() # 4
+    if self.flows:
+      result['flows'] = EndpointConfiguration.expand_dict(self.flows) # 2
+    if self.bridges:
+      result['bridges'] = BridgePodConfiguration.expand_dict(self.bridges) # 2
     return result

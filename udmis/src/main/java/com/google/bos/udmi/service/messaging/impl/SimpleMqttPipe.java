@@ -96,8 +96,8 @@ public class SimpleMqttPipe extends MessageBase {
   }
 
   @Override
-  public void activate(Consumer<Bundle> callback) {
-    super.activate(callback);
+  public void activate(Consumer<Bundle> bundleConsumer) {
+    super.activate(bundleConsumer);
     try {
       mqttClient.subscribe(String.format(TOPIC_FORMAT, namespace, TOPIC_WILDCARD, TOPIC_WILDCARD));
     } catch (Exception e) {
@@ -128,7 +128,7 @@ public class SimpleMqttPipe extends MessageBase {
 
     @Override
     public void messageArrived(String topic, MqttMessage message) {
-      sourceQueue.add(message.toString());
+      receiveBundle(message.toString());
     }
   }
 

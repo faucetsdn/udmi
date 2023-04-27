@@ -31,14 +31,16 @@ public abstract class UdmisComponent extends ContainerBase {
     try {
       T object = clazz.getDeclaredConstructor().newInstance();
       object.dispatcher = MessageDispatcher.from(config);
-      object.activate();
       return object;
     } catch (Exception e) {
       throw new RuntimeException("While instantiating class " + clazz.getName(), e);
     }
   }
 
-  protected void activate() {
+  /**
+   * Activate this component.
+   */
+  public void activate() {
     registerHandlers(baseHandlers);
     registerHandlers();
     dispatcher.activate();
@@ -75,6 +77,10 @@ public abstract class UdmisComponent extends ContainerBase {
 
   public int getMessageCount(Class<?> clazz) {
     return dispatcher.getHandlerCount(clazz);
+  }
+
+  public void shutdown() {
+    dispatcher.shutdown();
   }
 
   <T> void registerHandler(Class<T> clazz, Consumer<T> handler) {

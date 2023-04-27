@@ -91,14 +91,21 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     if (message instanceof Bundle || message == null) {
       return (Bundle) message;
     }
-    Bundle bundle = new Bundle();
-    bundle.message = message;
-    bundle.envelope = new Envelope();
+
+    Bundle bundle = new Bundle(message);
+
+    if (message instanceof Exception || message instanceof String) {
+      bundle.envelope.subType = SubType.EVENT;
+      bundle.envelope.subFolder = SubFolder.ERROR;
+      return bundle;
+    }
+
     SimpleEntry<SubType, SubFolder> messageType =
         MessageDispatcherImpl.CLASS_TYPES.get(message.getClass());
     checkNotNull(messageType, "type entry not found for " + message.getClass());
     bundle.envelope.subType = messageType.getKey();
     bundle.envelope.subFolder = messageType.getValue();
+    // TODO: Supply attributes for deviceId, projectId, registryId, etc...
     return bundle;
   }
 
@@ -206,7 +213,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   @Override
   @SuppressWarnings("unchecked")
   public <T> void registerHandler(Class<T> clazz, Consumer<T> handler) {
-    debug("Registering handler for %s in %sx", clazz.getName(), this);
+    debug("Registering handler for %s in %s", clazz.getName(), this);
     if (handlers.put(clazz, (Consumer<Object>) handler) != null) {
       throw new RuntimeException("Type handler already defined for " + clazz.getName());
     }

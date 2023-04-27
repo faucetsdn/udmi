@@ -1,0 +1,16 @@
+{
+  "$udmi_version": "1.4.1",
+  "title": "Bridge Pod Configuration",
+  "description": "Parameters to define a bridge between message domains",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "from": {
+      "$ref": "file:configuration_endpoint.json"
+    },
+    "to": {
+      "$ref": "file:configuration_endpoint.json"
+    }
+  }
+}

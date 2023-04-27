@@ -31,6 +31,10 @@
     "transactionId": {
       "type": "string"
     },
+    "publishTime": {
+      "type": "string",
+      "format": "date-time"
+    },
     "subFolder": {
       "enum": [
         "update",

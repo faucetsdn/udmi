@@ -23,14 +23,10 @@ import udmi.schema.LocalnetState;
 /**
  * Common classes and functions for working with UDMIS unit tests.
  */
-public abstract class MessageTestBase {
+public abstract class MessageTestBase extends MessageTestCore {
 
-  protected static final String TEST_NAMESPACE = "test-namespace";
-  protected static final String TEST_SOURCE = "message_from";
-  protected static final String TEST_DESTINATION = "message_to";
   protected static final String TEST_VERSION = "1.32";
   private static final long RECEIVE_TIMEOUT_MS = 1000;
-  protected static AtomicInteger instanceCount = new AtomicInteger();
   protected final AtomicReference<Object> receivedMessage = new AtomicReference<>();
   protected final List<HandlerSpecification> messageHandlers = ImmutableList.of(
       messageHandlerFor(Object.class, this::defaultHandler),
@@ -44,19 +40,8 @@ public abstract class MessageTestBase {
     return (MessageDispatcherImpl) MessageDispatcher.from(reversedTarget);
   }
 
-  protected abstract void augmentConfig(EndpointConfiguration configuration);
-
   protected boolean environmentIsEnabled() {
     return true;
-  }
-
-  protected EndpointConfiguration getMessageConfig(boolean reversed) {
-    EndpointConfiguration config = new EndpointConfiguration();
-    config.hostname = TEST_NAMESPACE;
-    config.recv_id = reversed ? TEST_DESTINATION : TEST_SOURCE;
-    config.send_id = reversed ? TEST_SOURCE : TEST_DESTINATION;
-    augmentConfig(config);
-    return config;
   }
 
   protected MessageDispatcherImpl getReverseDispatcher() {
@@ -113,10 +98,6 @@ public abstract class MessageTestBase {
     assertNull(receivedMessage.get(), "expected null pre-receive message");
     getReverseDispatcher().publishBundle(bundle);
     return synchronizedReceive();
-  }
-
-  protected void debug(String message) {
-    System.err.println(message);
   }
 
   @AfterEach

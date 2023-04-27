@@ -10,12 +10,21 @@
     "flow_defaults": {
       "$ref": "file:configuration_endpoint.json"
     },
-    "target_flow": {
-      "$ref": "file:configuration_endpoint.json"
+    "flows": {
+      "existingJavaType": "java.util.HashMap<String, EndpointConfiguration>",
+      "patternProperties": {
+        "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
+          "$ref": "file:configuration_endpoint.json"
+        }
+      }
     },
-    "state_flow": {
-      "$ref": "file:configuration_endpoint.json"
+    "bridges": {
+      "existingJavaType": "java.util.HashMap<String, BridgePodConfiguration>",
+      "patternProperties": {
+        "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
+          "$ref": "file:configuration_pod_bridge.json"
+        }
+      }
     }
   }
 }
-

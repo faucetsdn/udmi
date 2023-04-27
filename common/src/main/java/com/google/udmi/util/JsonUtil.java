@@ -29,6 +29,7 @@ public abstract class JsonUtil {
   public static final ObjectMapper OBJECT_MAPPER = STRICT_MAPPER.copy()
       .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
+  public static final String JSON_EXT = "json";
   public static final String JSON_SUFFIX = ".json";
 
   /**
@@ -227,8 +228,12 @@ public abstract class JsonUtil {
    * @param <T>   type of result
    * @return converted object
    */
-  public static <T> T loadStrict(Class<T> clazz, File file) throws IOException {
-    return file.exists() ? STRICT_MAPPER.readValue(file, clazz) : null;
+  public static <T> T loadStrict(Class<T> clazz, File file) {
+    try {
+      return file.exists() ? STRICT_MAPPER.readValue(file, clazz) : null;
+    } catch (Exception e) {
+      throw new RuntimeException("While loading " + file.getAbsolutePath(), e);
+    }
   }
 
   /**
@@ -264,6 +269,18 @@ public abstract class JsonUtil {
   public static Map<String, Object> asMap(String input) {
     @SuppressWarnings("unchecked")
     Map<String, Object> map = fromString(TreeMap.class, input);
+    return map;
+  }
+
+  /**
+   * Convert the json object to a generic map object.
+   *
+   * @param input input file
+   * @return input as map object
+   */
+  public static Map<String, Object> asMap(File input) {
+    @SuppressWarnings("unchecked")
+    Map<String, Object> map = loadFile(TreeMap.class, input);
     return map;
   }
 

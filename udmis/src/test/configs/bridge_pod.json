@@ -1,0 +1,17 @@
+{
+  "flow_defaults": {
+    "protocol": "local"
+  },
+  "bridges": {
+    "test": {
+      "from": {
+        "recv_id": "from",
+        "send_id": "to"
+      },
+      "to": {
+        "recv_id": "mark",
+        "send_id": "mend"
+      }
+    }
+  }
+}

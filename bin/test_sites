@@ -31,6 +31,7 @@ subsets=$(cd $testdir; ls -d *.site)
 function redact_files {
     for file in $@; do
         sed -E -i \
+            -e 's-While loading.*udmi/tests/-REDACTED/-' \
             -e '/at .*\(.*\.java:[0-9]+\)/d' \
             -e '/\.\.\. [0-9]+ more/d' \
             $file
@@ -48,7 +49,7 @@ for subset in $subsets; do
     bin/registrar $testdir/$subset
     
     for device in $devices; do
-        redact_files $devicesdir/$device/out/*
+        redact_files $devicesdir/$device/out/* $testdir/$subset/registration_summary.json
         diff -r $devicesdir/$device/out $devicesdir/$device/expected
     done
 done
