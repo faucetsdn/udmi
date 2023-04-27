@@ -2,6 +2,7 @@ package com.google.bos.udmi.service.core;
 
 import static com.google.bos.udmi.service.messaging.MessageDispatcher.messageHandlerFor;
 
+import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.MessageDispatcher;
 import com.google.bos.udmi.service.messaging.MessageDispatcher.HandlerSpecification;
 import com.google.bos.udmi.service.pod.ContainerBase;
@@ -17,7 +18,11 @@ import udmi.schema.EndpointConfiguration;
  */
 public abstract class UdmisComponent extends ContainerBase {
 
-  private final ImmutableList<HandlerSpecification> baseHandlers = ImmutableList.of(
+  public static final Integer FUNCTIONS_VERSION_MIN = 7;
+  public static final Integer FUNCTIONS_VERSION_MAX = 7;
+  public static final String UDMI_VERSION = "1.4.2";
+
+  private final ImmutableList<HandlerSpecification> BASE_HANDLERS = ImmutableList.of(
       messageHandlerFor(Object.class, this::defaultHandler),
       messageHandlerFor(Exception.class, this::exceptionHandler)
   );
@@ -35,15 +40,6 @@ public abstract class UdmisComponent extends ContainerBase {
     } catch (Exception e) {
       throw new RuntimeException("While instantiating class " + clazz.getName(), e);
     }
-  }
-
-  /**
-   * Activate this component.
-   */
-  public void activate() {
-    registerHandlers(baseHandlers);
-    registerHandlers();
-    dispatcher.activate();
   }
 
   /**
@@ -75,6 +71,15 @@ public abstract class UdmisComponent extends ContainerBase {
   protected void registerHandlers() {
   }
 
+  /**
+   * Activate this component.
+   */
+  public void activate() {
+    registerHandlers(BASE_HANDLERS);
+    registerHandlers();
+    dispatcher.activate();
+  }
+
   public int getMessageCount(Class<?> clazz) {
     return dispatcher.getHandlerCount(clazz);
   }
@@ -89,6 +94,10 @@ public abstract class UdmisComponent extends ContainerBase {
 
   void publish(Object message) {
     dispatcher.publish(message);
+  }
+
+  MessageContinuation getContinuation(Object message) {
+    return dispatcher.getContinuation(message);
   }
 
   @TestOnly

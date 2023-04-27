@@ -9,7 +9,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import java.io.File;
-import java.io.IOException;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Map;
@@ -221,16 +220,35 @@ public abstract class JsonUtil {
   }
 
   /**
-   * Load file with strict(er) error checking, and return an exception, if any.
+   * Load file with strict(er) error checking, and throw an exception if necessary.
    *
    * @param clazz class of result
    * @param file  file to load
    * @param <T>   type of result
    * @return converted object
    */
-  public static <T> T loadStrict(Class<T> clazz, File file) {
+  public static <T> T loadFileStrict(Class<T> clazz, File file) {
     try {
       return file.exists() ? STRICT_MAPPER.readValue(file, clazz) : null;
+    } catch (Exception e) {
+      throw new RuntimeException("While loading " + file.getAbsolutePath(), e);
+    }
+  }
+
+  /**
+   * Load file with strict(er) error checking and required-to-exist file.
+   *
+   * @param clazz class of result
+   * @param file  file to load
+   * @param <T>   type of result
+   * @return converted object
+   */
+  public static <T> T loadFileStrictRequired(Class<T> clazz, File file) {
+    if (!file.exists()) {
+      throw new RuntimeException("Required file not found: " + file.getAbsolutePath());
+    }
+    try {
+      return STRICT_MAPPER.readValue(file, clazz);
     } catch (Exception e) {
       throw new RuntimeException("While loading " + file.getAbsolutePath(), e);
     }

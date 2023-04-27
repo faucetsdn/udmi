@@ -3,7 +3,9 @@ package com.google.bos.udmi.service.messaging.impl;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 
+import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.MessageDispatcher;
 import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.bos.udmi.service.messaging.StateUpdate;
@@ -100,8 +102,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
       return bundle;
     }
 
-    SimpleEntry<SubType, SubFolder> messageType =
-        MessageDispatcherImpl.CLASS_TYPES.get(message.getClass());
+    SimpleEntry<SubType, SubFolder> messageType = CLASS_TYPES.get(message.getClass());
     checkNotNull(messageType, "type entry not found for " + message.getClass());
     bundle.envelope.subType = messageType.getKey();
     bundle.envelope.subFolder = messageType.getValue();
@@ -164,6 +165,11 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     Consumer<Bundle> processMessage = this::processMessage;
     debug("Handling dispatcher %s with %08x", this, Objects.hash(processMessage));
     messagePipe.activate(processMessage);
+  }
+
+  @Override
+  public MessageContinuation getContinuation(Object message) {
+    return () -> requireNonNull(messageEnvelopes.get(message), "missing envelope");
   }
 
   @TestOnly

@@ -106,6 +106,7 @@ public class Envelope {
     @Generated("jsonschema2pojo")
     public enum SubFolder {
 
+        UDMI("udmi"),
         UPDATE("update"),
         ERROR("error"),
         CLOUD("cloud"),

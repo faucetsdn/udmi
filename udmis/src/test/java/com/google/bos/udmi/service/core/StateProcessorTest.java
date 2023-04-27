@@ -3,15 +3,9 @@ package com.google.bos.udmi.service.core;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.google.bos.udmi.service.messaging.impl.LocalMessagePipeTest;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
-import com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl;
-import java.util.ArrayList;
-import java.util.List;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
-import udmi.schema.EndpointConfiguration;
-import udmi.schema.EndpointConfiguration.Protocol;
 import udmi.schema.Envelope;
 import udmi.schema.GatewayState;
 import udmi.schema.State;
@@ -20,17 +14,11 @@ import udmi.schema.SystemState;
 /**
  * Tests for the StateHandler class, used by UDMIS to process device state updates.
  */
-public class StateProcessorTest extends LocalMessagePipeTest {
+public class StateProcessorTest extends ProcessorTestBase {
 
-  private StateProcessor stateProcessor;
-  private final List<Object> captured = new ArrayList<>();
-
-  private int getDefaultCount() {
-    return stateProcessor.getMessageCount(Object.class);
-  }
-
-  private int getExceptionCount() {
-    return stateProcessor.getMessageCount(Exception.class);
+  @NotNull
+  protected Class<? extends UdmisComponent> getProcessorClass() {
+    return StateProcessor.class;
   }
 
   private Bundle getTestStateBundle(boolean includeGateway) {
@@ -49,31 +37,6 @@ public class StateProcessorTest extends LocalMessagePipeTest {
     stateMessage.system = new SystemState();
     stateMessage.gateway = includeGateway ? new GatewayState() : null;
     return stateMessage;
-  }
-
-  private void initializeTestInstance() {
-    EndpointConfiguration config = new EndpointConfiguration();
-    config.protocol = Protocol.LOCAL;
-    config.hostname = TEST_NAMESPACE;
-    config.recv_id = TEST_SOURCE;
-    config.send_id = TEST_DESTINATION;
-    stateProcessor = UdmisComponent.create(StateProcessor.class, config);
-    stateProcessor.activate();
-    setTestDispatcher(stateProcessor.getDispatcher());
-    MessageDispatcherImpl reverseDispatcher = getReverseDispatcher();
-    reverseDispatcher.registerHandler(Object.class, this::resultHandler);
-    reverseDispatcher.activate();
-  }
-
-  private void resultHandler(Object message) {
-    captured.add(message);
-  }
-
-  private void terminateAndWait() {
-    getReverseDispatcher().terminate();
-    getTestDispatcher().awaitShutdown();
-    getTestDispatcher().terminate();
-    getReverseDispatcher().awaitShutdown();
   }
 
   /**

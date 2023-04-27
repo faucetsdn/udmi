@@ -1,7 +1,7 @@
-"""Generated class for reflect_config.json"""
+"""Generated class for config_udmi.json"""
 
 
-class SetupReflectorConfig:
+class SetupUdmiConfig:
   """Generated schema class"""
 
   def __init__(self):
@@ -17,7 +17,7 @@ class SetupReflectorConfig:
   def from_dict(source):
     if not source:
       return None
-    result = SetupReflectorConfig()
+    result = SetupUdmiConfig()
     result.functions_min = source.get('functions_min')
     result.functions_max = source.get('functions_max')
     result.udmi_version = source.get('udmi_version')
@@ -33,7 +33,7 @@ class SetupReflectorConfig:
       return None
     result = {}
     for key in source:
-      result[key] = SetupReflectorConfig.from_dict(source[key])
+      result[key] = SetupUdmiConfig.from_dict(source[key])
     return result
 
   @staticmethod
@@ -62,22 +62,22 @@ class SetupReflectorConfig:
     return result
 
 
-class ReflectorConfig:
+class UdmiConfig:
   """Generated schema class"""
 
   def __init__(self):
     self.timestamp = None
     self.version = None
-    self.udmis = None
+    self.udmi = None
 
   @staticmethod
   def from_dict(source):
     if not source:
       return None
-    result = ReflectorConfig()
+    result = UdmiConfig()
     result.timestamp = source.get('timestamp')
     result.version = source.get('version')
-    result.udmis = SetupReflectorConfig.from_dict(source.get('udmis'))
+    result.udmi = SetupUdmiConfig.from_dict(source.get('udmi'))
     return result
 
   @staticmethod
@@ -86,7 +86,7 @@ class ReflectorConfig:
       return None
     result = {}
     for key in source:
-      result[key] = ReflectorConfig.from_dict(source[key])
+      result[key] = UdmiConfig.from_dict(source[key])
     return result
 
   @staticmethod
@@ -102,6 +102,6 @@ class ReflectorConfig:
       result['timestamp'] = self.timestamp # 5
     if self.version:
       result['version'] = self.version # 5
-    if self.udmis:
-      result['udmis'] = self.udmis.to_dict() # 4
+    if self.udmi:
+      result['udmi'] = self.udmi.to_dict() # 4
     return result

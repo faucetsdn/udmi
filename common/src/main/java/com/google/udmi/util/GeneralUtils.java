@@ -15,6 +15,7 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.security.spec.ECField;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -213,12 +214,15 @@ public class GeneralUtils {
    * @param to   target object
    * @param <T>  type of object
    */
-  public static <T> void copyFields(T from, T to) {
-    Field[] fields = to.getClass().getDeclaredFields();
+  public static <T> void copyFields(T from, T to, boolean includeNull) {
+    Field[] fields = from.getClass().getDeclaredFields();
     for (Field field : fields) {
       if (!Modifier.isStatic(field.getModifiers())) {
         try {
-          field.set(to, field.get(from));
+          Object value = field.get(from);
+          if (includeNull || value != null ) {
+            field.set(to, value);
+          }
         } catch (Exception e) {
           throw new RuntimeException("While copying field " + field.getName(), e);
         }
