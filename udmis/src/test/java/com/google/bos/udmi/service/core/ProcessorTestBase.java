@@ -59,7 +59,7 @@ public abstract class ProcessorTestBase extends LocalMessagePipeTest {
     setTestDispatcher(processor.getDispatcher());
   }
 
-  private void writeVersionDeployFile() throws IOException {
+  public static void writeVersionDeployFile() throws IOException {
     File deployFile = new File(ReflectProcessor.DEPLOY_FILE);
     deleteDirectory(deployFile.getParentFile());
     deployFile.getParentFile().mkdirs();

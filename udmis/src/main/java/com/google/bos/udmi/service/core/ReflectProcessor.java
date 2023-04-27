@@ -8,10 +8,14 @@ import static com.google.udmi.util.JsonUtil.stringify;
 import java.io.File;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
+import udmi.schema.Envelope.SubType;
 import udmi.schema.SetupUdmiConfig;
 import udmi.schema.UdmiConfig;
 import udmi.schema.UdmiState;
 
+/**
+ * Handle the reflector processor stream for UDMI utility tool clients.
+ */
 public class ReflectProcessor extends UdmisComponent {
 
   static final String DEPLOY_FILE = "var/deployed_version.json";
@@ -21,7 +25,8 @@ public class ReflectProcessor extends UdmisComponent {
   @Override
   protected void defaultHandler(Object message) {
     Envelope envelope = getContinuation(message).getEnvelope();
-    if (envelope.subFolder == null) {
+    if (envelope.subFolder == null
+        || (envelope.subFolder == SubFolder.UDMI && envelope.subType == SubType.STATE)) {
       stateHandler(envelope, convertToStrict(UdmiState.class, message));
     } else if (envelope.subFolder != SubFolder.UDMI) {
       throw new IllegalStateException("Unexpected reflect subfolder " + envelope.subFolder);
@@ -31,8 +36,9 @@ public class ReflectProcessor extends UdmisComponent {
   }
 
   private void stateHandler(Envelope envelope, UdmiState toolState) {
-    String registryId = envelope.deviceRegistryId;
-    String deviceId = envelope.deviceId;
+    final String registryId = envelope.deviceRegistryId;
+    final String deviceId = envelope.deviceId;
+
     UdmiConfig config = new UdmiConfig();
     config.udmi = new SetupUdmiConfig();
     copyFields(deployed, config.udmi, false);
@@ -40,9 +46,11 @@ public class ReflectProcessor extends UdmisComponent {
     config.udmi.last_state = toolState.timestamp;
     config.udmi.functions_min = FUNCTIONS_VERSION_MIN;
     config.udmi.functions_max = FUNCTIONS_VERSION_MAX;
+
     debug("Setting reflector state %s %s %s", registryId, deviceId, stringify(config));
     // startTime = currentTimestamp();
-    // return modify_device_config(registryId, deviceId, UDMIS_FOLDER, subContents, startTime, null);
+    // return modify_device_config(registryId, deviceId,
+    // UDMIS_FOLDER, subContents, startTime, null);
     publish(config);
   }
 }
