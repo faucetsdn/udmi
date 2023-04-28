@@ -16,7 +16,7 @@
       "description": "Version of the UDMI schema",
       "type": "string"
     },
-    "udmi": {
+    "setup": {
       "title": "Setup Udmi Config",
       "type": "object",
       "properties": {

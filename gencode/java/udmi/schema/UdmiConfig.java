@@ -19,7 +19,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder({
     "timestamp",
     "version",
-    "udmi"
+    "setup"
 })
 @Generated("jsonschema2pojo")
 public class UdmiConfig {
@@ -44,14 +44,14 @@ public class UdmiConfig {
      * 
      * 
      */
-    @JsonProperty("udmi")
-    public SetupUdmiConfig udmi;
+    @JsonProperty("setup")
+    public SetupUdmiConfig setup;
 
     @Override
     public int hashCode() {
         int result = 1;
+        result = ((result* 31)+((this.setup == null)? 0 :this.setup.hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
-        result = ((result* 31)+((this.udmi == null)? 0 :this.udmi.hashCode()));
         result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
         return result;
     }
@@ -65,7 +65,7 @@ public class UdmiConfig {
             return false;
         }
         UdmiConfig rhs = ((UdmiConfig) other);
-        return ((((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version)))&&((this.udmi == rhs.udmi)||((this.udmi!= null)&&this.udmi.equals(rhs.udmi))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
+        return ((((this.setup == rhs.setup)||((this.setup!= null)&&this.setup.equals(rhs.setup)))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
     }
 
 }

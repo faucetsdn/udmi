@@ -7,8 +7,10 @@ import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static java.lang.String.format;
 
 import com.google.api.client.util.Base64;
+import com.google.common.base.Preconditions;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.validator.Validator;
 import com.google.daq.mqtt.validator.Validator.ErrorContainer;
@@ -21,6 +23,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
@@ -43,6 +46,7 @@ import udmi.schema.UdmiState;
  */
 public class IotReflectorClient implements MessagePublisher {
 
+  private static final int MIN_REQUIRED_VERSION = 8;
   private static final String IOT_KEY_ALGORITHM = "RS256";
   private static final String UDMS_REFLECT = "UDMS-REFLECT";
   private static final String MOCK_DEVICE_NUM_ID = "123456789101112";
@@ -58,14 +62,12 @@ public class IotReflectorClient implements MessagePublisher {
   private final CountDownLatch initializedStateSent = new CountDownLatch(1);
   private final CountDownLatch validConfigReceived = new CountDownLatch(1);
   private final int requiredVersion;
-  private boolean isInstallValid;
-
   private final BlockingQueue<Validator.MessageBundle> messages = new LinkedBlockingQueue<>();
-
   private final MqttPublisher mqttPublisher;
   private final String subscriptionId;
   private final String registryId;
   private final String projectId;
+  private boolean isInstallValid;
   private boolean active;
   private String prevTransactionId;
 
@@ -85,6 +87,9 @@ public class IotReflectorClient implements MessagePublisher {
           "While loading key file " + new File(iotConfig.key_file).getAbsolutePath(), e);
     }
 
+    Preconditions.checkState(requiredVersion >= MIN_REQUIRED_VERSION,
+        format("Min required version %s not satisfied by tools version %s", MIN_REQUIRED_VERSION,
+            requiredVersion));
     this.requiredVersion = requiredVersion;
     registryId = SiteModel.getRegistryActual(iotConfig);
     projectId = iotConfig.project_id;
@@ -92,7 +97,7 @@ public class IotReflectorClient implements MessagePublisher {
     String cloudRegion =
         iotConfig.reflect_region == null ? iotConfig.cloud_region : iotConfig.reflect_region;
     subscriptionId =
-        String.format("%s/%s/%s/%s", projectId, cloudRegion, UDMS_REFLECT, registryId);
+        format("%s/%s/%s/%s", projectId, cloudRegion, UDMS_REFLECT, registryId);
 
     try {
       mqttPublisher = new MqttPublisher(projectId, cloudRegion, UDMS_REFLECT,
@@ -121,18 +126,24 @@ public class IotReflectorClient implements MessagePublisher {
   }
 
   private void initializeReflectorState() {
-    UdmiState reflectorState = new UdmiState();
-    reflectorState.timestamp = REFLECTOR_STATE_TIMESTAMP;
-    reflectorState.version = udmiVersion;
-    reflectorState.setup = new SetupUdmiState();
-    reflectorState.setup.user = System.getenv("USER");
+    UdmiState udmiState = new UdmiState();
+    udmiState.timestamp = REFLECTOR_STATE_TIMESTAMP;
+    udmiState.version = udmiVersion;
+    udmiState.setup = new SetupUdmiState();
+    udmiState.setup.user = System.getenv("USER");
     try {
       System.err.printf("Setting state version %s timestamp %s%n",
           udmiVersion, getTimestamp(REFLECTOR_STATE_TIMESTAMP));
-      setReflectorState(stringify(reflectorState));
+      setReflectorState(udmiState);
     } catch (Exception e) {
       throw new RuntimeException("Could not set reflector state", e);
     }
+  }
+
+  private void setReflectorState(UdmiState udmiState) {
+    Map<String, Object> map = new HashMap<>();
+    map.put(SubFolder.UDMI.value(), udmiState);
+    mqttPublisher.publish(registryId, SubType.STATE.toString(), stringify(map));
   }
 
   private void messageHandler(String topic, String payload) {
@@ -204,9 +215,9 @@ public class IotReflectorClient implements MessagePublisher {
         return false;
       }
 
-      UdmiConfig reflectorConfig = convertTo(UdmiConfig.class, message);
+      UdmiConfig reflectorConfig = convertTo(UdmiConfig.class, message.get(SubFolder.UDMI.value()));
       System.err.println("UDMI received reflectorConfig: " + stringify(reflectorConfig));
-      SetupUdmiConfig udmiInfo = reflectorConfig.udmi;
+      SetupUdmiConfig udmiInfo = reflectorConfig.setup;
       Date lastState = udmiInfo == null ? null : udmiInfo.last_state;
       System.err.println("UDMI matching against expected state timestamp " + getTimestamp(
           REFLECTOR_STATE_TIMESTAMP));
@@ -222,16 +233,16 @@ public class IotReflectorClient implements MessagePublisher {
 
         System.err.printf("UDMI functions support versions %s:%s (required %s)%n",
             udmiInfo.functions_min, udmiInfo.functions_max, requiredVersion);
-        String baseError = String.format("UDMI required functions version %d not allowed",
+        String baseError = format("UDMI required functions version %d not allowed",
             requiredVersion);
         if (requiredVersion < udmiInfo.functions_min) {
           throw new RuntimeException(
-              String.format("%s: min supported %s. Please update local UDMI install.", baseError,
+              format("%s: min supported %s. Please update local UDMI install.", baseError,
                   udmiInfo.functions_min));
         }
         if (requiredVersion > udmiInfo.functions_max) {
           throw new RuntimeException(
-              String.format("%s: max supported %s. Please update cloud UDMI install.",
+              format("%s: max supported %s. Please update cloud UDMI install.",
                   baseError, udmiInfo.functions_max));
         }
         isInstallValid = true;
@@ -325,10 +336,6 @@ public class IotReflectorClient implements MessagePublisher {
   public void close() {
     active = false;
     mqttPublisher.close();
-  }
-
-  public void setReflectorState(String stateData) {
-    mqttPublisher.publish(registryId, "state", stateData);
   }
 
   static class MessageBundle {

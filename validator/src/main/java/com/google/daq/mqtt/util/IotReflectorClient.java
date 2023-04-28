@@ -24,7 +24,7 @@ import udmi.schema.ExecutionConfiguration;
 public class IotReflectorClient implements IotProvider {
 
   // Requires functions that support cloud device manager support.
-  private static final int REQUIRED_FUNCTION_VER = 7;
+  private static final int REQUIRED_FUNCTION_VER = 8;
 
   public static final String CLOUD_QUERY_TOPIC = "cloud/query";
   public static final String CLOUD_MODEL_TOPIC = "cloud/model";

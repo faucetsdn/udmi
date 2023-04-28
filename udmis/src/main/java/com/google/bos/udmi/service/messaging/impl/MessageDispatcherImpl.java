@@ -163,7 +163,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   @Override
   public void activate() {
     Consumer<Bundle> processMessage = this::processMessage;
-    debug("Handling dispatcher %s with %08x", this, Objects.hash(processMessage));
+    info(format("%s activating %s with %08x", this, messagePipe, Objects.hash(processMessage)));
     messagePipe.activate(processMessage);
   }
 

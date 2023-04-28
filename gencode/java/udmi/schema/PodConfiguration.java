@@ -19,7 +19,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder({
     "flow_defaults",
     "flows",
-    "bridges"
+    "bridges",
+    "iot_access"
 })
 @Generated("jsonschema2pojo")
 public class PodConfiguration {
@@ -37,6 +38,14 @@ public class PodConfiguration {
     public HashMap<String, EndpointConfiguration> flows;
     @JsonProperty("bridges")
     public HashMap<String, BridgePodConfiguration> bridges;
+    /**
+     * Iot Access
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("iot_access")
+    public IotAccess iot_access;
 
     @Override
     public int hashCode() {
@@ -44,6 +53,7 @@ public class PodConfiguration {
         result = ((result* 31)+((this.bridges == null)? 0 :this.bridges.hashCode()));
         result = ((result* 31)+((this.flow_defaults == null)? 0 :this.flow_defaults.hashCode()));
         result = ((result* 31)+((this.flows == null)? 0 :this.flows.hashCode()));
+        result = ((result* 31)+((this.iot_access == null)? 0 :this.iot_access.hashCode()));
         return result;
     }
 
@@ -56,7 +66,7 @@ public class PodConfiguration {
             return false;
         }
         PodConfiguration rhs = ((PodConfiguration) other);
-        return ((((this.bridges == rhs.bridges)||((this.bridges!= null)&&this.bridges.equals(rhs.bridges)))&&((this.flow_defaults == rhs.flow_defaults)||((this.flow_defaults!= null)&&this.flow_defaults.equals(rhs.flow_defaults))))&&((this.flows == rhs.flows)||((this.flows!= null)&&this.flows.equals(rhs.flows))));
+        return (((((this.bridges == rhs.bridges)||((this.bridges!= null)&&this.bridges.equals(rhs.bridges)))&&((this.flow_defaults == rhs.flow_defaults)||((this.flow_defaults!= null)&&this.flow_defaults.equals(rhs.flow_defaults))))&&((this.flows == rhs.flows)||((this.flows!= null)&&this.flows.equals(rhs.flows))))&&((this.iot_access == rhs.iot_access)||((this.iot_access!= null)&&this.iot_access.equals(rhs.iot_access))));
     }
 
 }

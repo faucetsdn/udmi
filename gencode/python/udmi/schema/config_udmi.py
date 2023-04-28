@@ -68,7 +68,7 @@ class UdmiConfig:
   def __init__(self):
     self.timestamp = None
     self.version = None
-    self.udmi = None
+    self.setup = None
 
   @staticmethod
   def from_dict(source):
@@ -77,7 +77,7 @@ class UdmiConfig:
     result = UdmiConfig()
     result.timestamp = source.get('timestamp')
     result.version = source.get('version')
-    result.udmi = SetupUdmiConfig.from_dict(source.get('udmi'))
+    result.setup = SetupUdmiConfig.from_dict(source.get('setup'))
     return result
 
   @staticmethod
@@ -102,6 +102,6 @@ class UdmiConfig:
       result['timestamp'] = self.timestamp # 5
     if self.version:
       result['version'] = self.version # 5
-    if self.udmi:
-      result['udmi'] = self.udmi.to_dict() # 4
+    if self.setup:
+      result['setup'] = self.setup.to_dict() # 4
     return result

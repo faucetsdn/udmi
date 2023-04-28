@@ -25,6 +25,21 @@
           "$ref": "file:configuration_pod_bridge.json"
         }
       }
+    },
+    "iot_access": {
+      "type": "obect",
+      "title": "Iot Access",
+      "additionalProperties": false,
+      "properties": {
+        "provider": {
+          "enum": [
+            "gcp_iot_core"
+          ]
+        },
+        "project_id": {
+          "type": "string"
+        }
+      }
     }
   }
 }
