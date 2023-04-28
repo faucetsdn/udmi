@@ -10,9 +10,10 @@
  * LEVEL 5: Baseline version using an explicit reflector envelope for type/folder.
  * LEVEL 6: Support for capture and reporting of errors in the pipeline for validating bad device messages.
  * LEVEL 7: Support for reflector-based GCP IoT Core provider APIs.
+ * LEVEL 8: Different schema for reflector-based communications.
  */
-const FUNCTIONS_VERSION_MIN = 5;
-const FUNCTIONS_VERSION_MAX = 7;
+const FUNCTIONS_VERSION_MIN = 8;
+const FUNCTIONS_VERSION_MAX = 8;
 
 // Hacky stuff to work with "maybe have firestore enabled"
 const PROJECT_ID = process.env.GCP_PROJECT || process.env.GCLOUD_PROJECT;

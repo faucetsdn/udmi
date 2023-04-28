@@ -104,7 +104,7 @@ import udmi.schema.ValidationState;
 public class SequenceBase {
 
   private static final int FUNCTIONS_VERSION_BETA = Validator.REQUIRED_FUNCTION_VER;
-  private static final int FUNCTIONS_VERSION_ALPHA = 6; // Version required for alpha execution.
+  private static final int FUNCTIONS_VERSION_ALPHA = 8; // Version required for alpha execution.
   private static final long CONFIG_BARRIER_MS = 1000;
   private static final String START_END_MARKER = "################################";
 
