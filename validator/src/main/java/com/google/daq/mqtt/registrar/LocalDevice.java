@@ -167,7 +167,8 @@ class LocalDevice {
           EXPECTED_DIR,
           OUT_DIR);
   private static final Set<String> OUT_FILES =
-      ImmutableSet.of(GENERATED_CONFIG_JSON, DEVICE_ERRORS_JSON, NORMALIZED_JSON);
+      ImmutableSet.of(GENERATED_CONFIG_JSON, DEVICE_ERRORS_JSON, NORMALIZED_JSON,
+          EXCEPTION_LOG_FILE);
   private static final Set<String> ALL_KEY_FILES =
       ImmutableSet.of(
           RSA_PUBLIC_PEM,
