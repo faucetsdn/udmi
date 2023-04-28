@@ -3,6 +3,8 @@ package com.google.bos.iot.core.proxy;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
+import static com.google.udmi.util.Common.TIMESTAMP_KEY;
+import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
@@ -127,8 +129,6 @@ public class IotReflectorClient implements MessagePublisher {
 
   private void initializeReflectorState() {
     UdmiState udmiState = new UdmiState();
-    udmiState.timestamp = REFLECTOR_STATE_TIMESTAMP;
-    udmiState.version = udmiVersion;
     udmiState.setup = new SetupUdmiState();
     udmiState.setup.user = System.getenv("USER");
     try {
@@ -142,6 +142,8 @@ public class IotReflectorClient implements MessagePublisher {
 
   private void setReflectorState(UdmiState udmiState) {
     Map<String, Object> map = new HashMap<>();
+    map.put(TIMESTAMP_KEY, REFLECTOR_STATE_TIMESTAMP);
+    map.put(VERSION_KEY, udmiVersion);
     map.put(SubFolder.UDMI.value(), udmiState);
     mqttPublisher.publish(registryId, SubType.STATE.toString(), stringify(map));
   }
@@ -215,19 +217,20 @@ public class IotReflectorClient implements MessagePublisher {
         return false;
       }
 
-      UdmiConfig reflectorConfig = convertTo(UdmiConfig.class, message.get(SubFolder.UDMI.value()));
+      UdmiConfig reflectorConfig = Optional.ofNullable(convertTo(UdmiConfig.class, message.get(SubFolder.UDMI.value()))).orElseGet(UdmiConfig::new);
       System.err.println("UDMI received reflectorConfig: " + stringify(reflectorConfig));
-      SetupUdmiConfig udmiInfo = reflectorConfig.setup;
-      Date lastState = udmiInfo == null ? null : udmiInfo.last_state;
+      Date lastState = reflectorConfig.last_state;
       System.err.println("UDMI matching against expected state timestamp " + getTimestamp(
           REFLECTOR_STATE_TIMESTAMP));
       boolean configMatch = dateEquals(lastState, REFLECTOR_STATE_TIMESTAMP);
       if (configMatch) {
-        System.err.println("UDMI version " + reflectorConfig.version);
-        if (!udmiVersion.equals(reflectorConfig.version)) {
+        String deployedVersion = reflectorConfig.setup.udmi_version;
+        System.err.println("UDMI deployed version: " + deployedVersion);
+        if (!udmiVersion.equals(deployedVersion)) {
           System.err.println("UDMI version mismatch: " + udmiVersion);
         }
 
+        SetupUdmiConfig udmiInfo = reflectorConfig.setup;
         System.err.println("UDMI deployed by " + udmiInfo.deployed_by + " at " + getTimestamp(
             udmiInfo.deployed_at));
 

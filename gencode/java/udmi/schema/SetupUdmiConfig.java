@@ -20,7 +20,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "functions_max",
     "udmi_version",
     "udmi_functions",
-    "last_state",
     "deployed_at",
     "deployed_by"
 })
@@ -35,8 +34,6 @@ public class SetupUdmiConfig {
     public String udmi_version;
     @JsonProperty("udmi_functions")
     public String udmi_functions;
-    @JsonProperty("last_state")
-    public Date last_state;
     @JsonProperty("deployed_at")
     public Date deployed_at;
     @JsonProperty("deployed_by")
@@ -45,7 +42,6 @@ public class SetupUdmiConfig {
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.last_state == null)? 0 :this.last_state.hashCode()));
         result = ((result* 31)+((this.udmi_version == null)? 0 :this.udmi_version.hashCode()));
         result = ((result* 31)+((this.functions_min == null)? 0 :this.functions_min.hashCode()));
         result = ((result* 31)+((this.deployed_at == null)? 0 :this.deployed_at.hashCode()));
@@ -64,7 +60,7 @@ public class SetupUdmiConfig {
             return false;
         }
         SetupUdmiConfig rhs = ((SetupUdmiConfig) other);
-        return ((((((((this.last_state == rhs.last_state)||((this.last_state!= null)&&this.last_state.equals(rhs.last_state)))&&((this.udmi_version == rhs.udmi_version)||((this.udmi_version!= null)&&this.udmi_version.equals(rhs.udmi_version))))&&((this.functions_min == rhs.functions_min)||((this.functions_min!= null)&&this.functions_min.equals(rhs.functions_min))))&&((this.deployed_at == rhs.deployed_at)||((this.deployed_at!= null)&&this.deployed_at.equals(rhs.deployed_at))))&&((this.functions_max == rhs.functions_max)||((this.functions_max!= null)&&this.functions_max.equals(rhs.functions_max))))&&((this.udmi_functions == rhs.udmi_functions)||((this.udmi_functions!= null)&&this.udmi_functions.equals(rhs.udmi_functions))))&&((this.deployed_by == rhs.deployed_by)||((this.deployed_by!= null)&&this.deployed_by.equals(rhs.deployed_by))));
+        return (((((((this.udmi_version == rhs.udmi_version)||((this.udmi_version!= null)&&this.udmi_version.equals(rhs.udmi_version)))&&((this.functions_min == rhs.functions_min)||((this.functions_min!= null)&&this.functions_min.equals(rhs.functions_min))))&&((this.deployed_at == rhs.deployed_at)||((this.deployed_at!= null)&&this.deployed_at.equals(rhs.deployed_at))))&&((this.functions_max == rhs.functions_max)||((this.functions_max!= null)&&this.functions_max.equals(rhs.functions_max))))&&((this.udmi_functions == rhs.udmi_functions)||((this.udmi_functions!= null)&&this.udmi_functions.equals(rhs.udmi_functions))))&&((this.deployed_by == rhs.deployed_by)||((this.deployed_by!= null)&&this.deployed_by.equals(rhs.deployed_by))));
     }
 
 }

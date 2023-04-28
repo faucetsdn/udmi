@@ -9,7 +9,6 @@ class SetupUdmiConfig:
     self.functions_max = None
     self.udmi_version = None
     self.udmi_functions = None
-    self.last_state = None
     self.deployed_at = None
     self.deployed_by = None
 
@@ -22,7 +21,6 @@ class SetupUdmiConfig:
     result.functions_max = source.get('functions_max')
     result.udmi_version = source.get('udmi_version')
     result.udmi_functions = source.get('udmi_functions')
-    result.last_state = source.get('last_state')
     result.deployed_at = source.get('deployed_at')
     result.deployed_by = source.get('deployed_by')
     return result
@@ -53,8 +51,6 @@ class SetupUdmiConfig:
       result['udmi_version'] = self.udmi_version # 5
     if self.udmi_functions:
       result['udmi_functions'] = self.udmi_functions # 5
-    if self.last_state:
-      result['last_state'] = self.last_state # 5
     if self.deployed_at:
       result['deployed_at'] = self.deployed_at # 5
     if self.deployed_by:
@@ -66,8 +62,7 @@ class UdmiConfig:
   """Generated schema class"""
 
   def __init__(self):
-    self.timestamp = None
-    self.version = None
+    self.last_state = None
     self.setup = None
 
   @staticmethod
@@ -75,8 +70,7 @@ class UdmiConfig:
     if not source:
       return None
     result = UdmiConfig()
-    result.timestamp = source.get('timestamp')
-    result.version = source.get('version')
+    result.last_state = source.get('last_state')
     result.setup = SetupUdmiConfig.from_dict(source.get('setup'))
     return result
 
@@ -98,10 +92,8 @@ class UdmiConfig:
 
   def to_dict(self):
     result = {}
-    if self.timestamp:
-      result['timestamp'] = self.timestamp # 5
-    if self.version:
-      result['version'] = self.version # 5
+    if self.last_state:
+      result['last_state'] = self.last_state # 5
     if self.setup:
       result['setup'] = self.setup.to_dict() # 4
     return result

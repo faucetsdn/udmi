@@ -6,15 +6,9 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "properties": {
-    "timestamp": {
-      "description": "RFC 3339 Timestamp the state payload was generated",
+    "last_state": {
       "type": "string",
-      "format": "date-time",
-      "examples": ["2019-01-17T14:02:29.364Z"]
-    },
-    "version": {
-      "description": "Version of the UDMI schema",
-      "type": "string"
+      "format": "date-time"
     },
     "setup": {
       "title": "Setup Udmi Config",
@@ -31,10 +25,6 @@
         },
         "udmi_functions": {
           "type": "string"
-        },
-        "last_state": {
-          "type": "string",
-          "format": "date-time"
         },
         "deployed_at": {
           "type": "string",

@@ -7,10 +7,7 @@
  * of client code. Clients (e.g. sqeuencer) can query this value and check that it's within range. Values
  * indicate the MIN/MAX versions supported, while the client determines what is required.
  *
- * LEVEL 5: Baseline version using an explicit reflector envelope for type/folder.
- * LEVEL 6: Support for capture and reporting of errors in the pipeline for validating bad device messages.
- * LEVEL 7: Support for reflector-based GCP IoT Core provider APIs.
- * LEVEL 8: Different schema for reflector-based communications.
+ * LEVEL 8: Schema refactoring for UDMIS container compatability.
  */
 const FUNCTIONS_VERSION_MIN = 8;
 const FUNCTIONS_VERSION_MAX = 8;
@@ -42,7 +39,7 @@ const MODEL_TYPE = 'model';
 
 const UPDATE_FOLDER = 'update';
 const CLOUD_FOLDER = 'cloud';
-const UDMIS_FOLDER = 'udmis';
+const UDMI_FOLDER = 'udmi';
 const ERROR_FOLDER = 'error';
 
 const ALL_REGIONS = ['us-central1', 'europe-west1', 'asia-east1'];
@@ -248,13 +245,23 @@ async function udmi_process_reflector_state(attributes, msgObject) {
   await registry_promise;
   const registryId = attributes.deviceRegistryId;
   const deviceId = attributes.deviceId;
-  const subContents = Object.assign({}, version);
-  subContents.last_state = msgObject.timestamp;
-  subContents.functions_min = FUNCTIONS_VERSION_MIN;
-  subContents.functions_max = FUNCTIONS_VERSION_MAX;
-  console.log('Setting reflector state', registryId, deviceId, JSON.stringify(subContents));
+
+  console.log('Configuring in response to state', registryId, deviceId, JSON.stringify(msgObject));
+
+  const setup = Object.assign({}, version);
+  setup.functions_min = FUNCTIONS_VERSION_MIN;
+  setup.functions_max = FUNCTIONS_VERSION_MAX;
+
+  const udmiConfig = {};
+  udmiConfig.setup = setup;
+  udmiConfig.last_state = msgObject.timestamp;
+
+  const deviceConfig = {};
+  deviceConfig[UDMI_FOLDER] = udmiConfig;
+
+  console.log('Setting reflector config', registryId, deviceId, JSON.stringify(deviceConfig));
   const startTime = currentTimestamp();
-  return modify_device_config(registryId, deviceId, UDMIS_FOLDER, subContents, startTime, null);
+  return modify_device_config(registryId, deviceId, UPDATE_FOLDER, deviceConfig, startTime, null);
 }
 
 function udmi_model(attributes, msgObject) {
@@ -818,7 +825,7 @@ async function modify_device_config(registryId, deviceId, subFolder, subContents
     if (!newConfig || !update_last_start(newConfig, subContents)) {
       return;
     }
-  } else if (subFolder == 'update') {
+  } else if (subFolder == UPDATE_FOLDER) {
     console.log('Config replace version', deviceId, version, startTime, transactionId);
     newConfig = subContents;
     newConfig.timestamp = startTime;
