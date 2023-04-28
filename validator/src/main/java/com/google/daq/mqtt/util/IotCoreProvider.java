@@ -34,6 +34,7 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import udmi.schema.CloudModel;
@@ -84,10 +85,11 @@ class IotCoreProvider implements IotProvider {
   @Override
   public void updateConfig(String deviceId, String config) {
     try {
+      String useConfig = Optional.ofNullable(config).orElse("");
       registries.devices().modifyCloudToDeviceConfig(
           getDevicePath(deviceId),
           new ModifyCloudToDeviceConfigRequest().setBinaryData(
-              Base64.getEncoder().encodeToString(config.getBytes()))).execute();
+              Base64.getEncoder().encodeToString(useConfig.getBytes()))).execute();
     } catch (Exception e) {
       throw new RuntimeException("While modifying device config", e);
     }
