@@ -33,6 +33,7 @@
       "properties": {
         "provider": {
           "enum": [
+            "mock_iot_core",
             "gcp_iot_core"
           ]
         },

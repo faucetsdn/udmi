@@ -24,7 +24,7 @@ public interface MessageDispatcher {
   Class<?> EXCEPTION_CLASS = Exception.class;
 
   static MessageDispatcher from(EndpointConfiguration configuration) {
-    return new MessageDispatcherImpl(MessagePipe.from(configuration));
+    return new MessageDispatcherImpl(configuration);
   }
 
   static MessageDispatcher from(EndpointConfiguration from, EndpointConfiguration to) {

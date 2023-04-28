@@ -26,6 +26,9 @@ import udmi.schema.Credential.Key_format;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.IotAccess;
 
+/**
+ * IoT access provider for (deprecated) GCP IoT Core.
+ */
 public class GcpIotAccessProvider implements IotAccessProvider {
 
   private static final String PROJECT_PATH_FORMAT = "projects/%s";
@@ -96,6 +99,7 @@ public class GcpIotAccessProvider implements IotAccessProvider {
     }
   }
 
+  @Override
   public void updateConfig(String registryId, String deviceId, String config) {
     try {
       String useConfig = ofNullable(config).orElse("");

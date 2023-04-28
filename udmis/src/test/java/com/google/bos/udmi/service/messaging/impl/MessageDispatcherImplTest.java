@@ -42,7 +42,7 @@ public class MessageDispatcherImplTest {
   }
 
   private MessageDispatcher getReversedDispatcher() {
-    return new MessageDispatcherImpl(new LocalMessagePipe(getConfiguration(true)));
+    return new MessageDispatcherImpl(getConfiguration(true));
   }
 
   @Test
@@ -78,7 +78,7 @@ public class MessageDispatcherImplTest {
   class TestingDispatcher extends MessageDispatcherImpl {
 
     public TestingDispatcher() {
-      super(new LocalMessagePipe(getConfiguration(false)));
+      super(getConfiguration(false));
     }
 
     @Override

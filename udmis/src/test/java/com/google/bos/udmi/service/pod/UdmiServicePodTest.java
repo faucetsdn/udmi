@@ -5,17 +5,20 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.udmi.util.GeneralUtils.arrayOf;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static org.apache.commons.io.FileUtils.deleteDirectory;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.google.bos.udmi.service.access.MockIotAccessProvider;
 import com.google.bos.udmi.service.core.ProcessorTestBase;
 import com.google.bos.udmi.service.messaging.StateUpdate;
 import com.google.bos.udmi.service.messaging.impl.LocalMessagePipe;
 import com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl;
 import com.google.bos.udmi.service.messaging.impl.MessageTestBase;
 import java.io.File;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -143,9 +146,6 @@ public class UdmiServicePodTest {
     UdmiServicePod pod = new UdmiServicePod(arrayOf(CONFIG_FILE));
 
     PodConfiguration podConfig = pod.getPodConfiguration();
-    EndpointConfiguration reversedTarget =
-        combineConfig(podConfig.flow_defaults, reverseFlow(podConfig.flows.get("target")));
-    final MessageDispatcherImpl targetDispatcher = MessageTestBase.getDispatcherFor(reversedTarget);
 
     EndpointConfiguration reversedReflect =
         combineConfig(podConfig.flow_defaults, reverseFlow(podConfig.flows.get("reflect")));
@@ -154,22 +154,15 @@ public class UdmiServicePodTest {
 
     pod.activate();
 
-    BlockingQueue<Object> defaulted = new LinkedBlockingQueue<>();
-    targetDispatcher.registerHandler(Object.class, defaulted::add);
-    targetDispatcher.activate();
-
-    UdmiState stateUpdate = new UdmiState();
-    reflectDispatcher.publish(stateUpdate);
+    UdmiState udmiState = new UdmiState();
+    reflectDispatcher.publish(udmiState);
 
     pod.shutdown();
-    targetDispatcher.shutdown();
-    reflectDispatcher.shutdown();
 
-    Object polled = defaulted.poll(RECEIVE_TIMEOUT_SEC, TimeUnit.SECONDS);
-    assertTrue(polled instanceof UdmiConfig, "expected one UdmiConfig message");
-
-    assertNull(defaulted.poll(RECEIVE_TIMEOUT_SEC, TimeUnit.SECONDS),
-        "expected no other messages");
+    MockIotAccessProvider iotAccessProvider = (MockIotAccessProvider) pod.iotAccessProvider;
+    List<Object> captured = iotAccessProvider.captured;
+    assertEquals(1, captured.size(), "only expected one message");
+    assertTrue(captured.get(0) instanceof UdmiConfig, "expected UDMI config object");
   }
 
   @AfterEach

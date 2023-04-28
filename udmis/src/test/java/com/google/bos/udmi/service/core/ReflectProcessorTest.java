@@ -5,14 +5,19 @@ import static com.google.bos.udmi.service.core.UdmisComponent.FUNCTIONS_VERSION_
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
+import com.google.common.collect.ImmutableMap;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
+import udmi.schema.Envelope.SubType;
 import udmi.schema.SetupUdmiState;
 import udmi.schema.UdmiConfig;
 import udmi.schema.UdmiState;
 
+/**
+ * Tests for the reflect processor function.
+ */
 public class ReflectProcessorTest extends ProcessorTestBase {
 
   @Override
@@ -20,47 +25,59 @@ public class ReflectProcessorTest extends ProcessorTestBase {
     return ReflectProcessor.class;
   }
 
-  private Bundle getTestReflectBundle(boolean stateMessage) {
-    return new Bundle(getTestReflectEnvelope(stateMessage), getTestReflectMessage());
+  private Bundle getTestReflectBundle(SubType subType, SubFolder subFolder) {
+    return new Bundle(getTestReflectEnvelope(subType, subFolder),
+        getTestReflectMessage(subType, subFolder));
   }
 
   @NotNull
-  private Envelope getTestReflectEnvelope(boolean stateMessage) {
+  private Envelope getTestReflectEnvelope(SubType subType, SubFolder subFolder) {
     Envelope envelope = new Envelope();
-    envelope.subFolder = stateMessage ? null : SubFolder.UDMI;
+    envelope.subType = subType;
+    envelope.subFolder = subFolder;
     envelope.projectId = TEST_NAMESPACE;
     return envelope;
   }
 
   @NotNull
-  private UdmiState getTestReflectMessage() {
+  private Object getTestReflectMessage(SubType subType, SubFolder subFolder) {
     UdmiState udmiState = new UdmiState();
     udmiState.setup = new SetupUdmiState();
     udmiState.setup.user = TEST_USER;
     udmiState.timestamp = TEST_TIMESTAMP;
-    return udmiState;
+    return subFolder == null ? ImmutableMap.of(SubFolder.UDMI, udmiState) : udmiState;
+  }
+
+  private void validateUdmiConfig(UdmiConfig config) {
+    assertEquals(FUNCTIONS_VERSION_MIN, config.setup.functions_min, "min func version");
+    assertEquals(FUNCTIONS_VERSION_MAX, config.setup.functions_max, "min func version");
+    assertEquals(TEST_USER, config.setup.deployed_by, "deployed by user");
+    assertEquals(TEST_TIMESTAMP, config.setup.deployed_at, "deployed at time");
   }
 
   /**
-   * Test that the basic udmi-reflect state/config handshake works. When a client connects
-   * it updates the state of the device entry, which then should trigger the underlying logic
-   * to output an updated config message.
+   * Test that the basic udmi-reflect state/config handshake works. When a client connects it
+   * updates the state of the device entry, which then should trigger the underlying logic to output
+   * an updated config message.
    */
   @Test
   public void stateConfigExchange() {
     initializeTestInstance();
-    getReverseDispatcher().publish(getTestReflectBundle(true));
+
+    Bundle rawBundle = getTestReflectBundle(null, null);
+    getReverseDispatcher().publish(rawBundle);
+    Bundle subBundle = getTestReflectBundle(SubType.STATE, SubFolder.UDMI);
+    getReverseDispatcher().publish(subBundle);
+
     terminateAndWait();
 
     assertEquals(0, getExceptionCount(), "exception count");
     assertEquals(1, getDefaultCount(), "default handler count");
-    assertEquals(1, captured.size(), "unexpected received message count");
+    assertEquals(1, getMessageCount(UdmiState.class), "udmi state processed count");
+    assertEquals(2, captured.size(), "unexpected received message count");
 
-    UdmiConfig config = (UdmiConfig) captured.get(0);
-    assertEquals(FUNCTIONS_VERSION_MIN, config.udmi.functions_min, "min func version");
-    assertEquals(FUNCTIONS_VERSION_MAX, config.udmi.functions_max, "min func version");
-    assertEquals(TEST_USER, config.udmi.deployed_by, "deployed by user");
-    assertEquals(TEST_TIMESTAMP, config.udmi.deployed_at, "deployed at time");
+    validateUdmiConfig((UdmiConfig) captured.get(0));
+    validateUdmiConfig((UdmiConfig) captured.get(1));
   }
 
 }

@@ -5,12 +5,19 @@ import java.util.Map;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.IotAccess;
 
+/**
+ * Generic interface for accessing iot device management.
+ */
 public interface IotAccessProvider {
 
   Map<IotAccess.Provider, Class<? extends IotAccessProvider>> PROVIDERS = ImmutableMap.of(
+      IotAccess.Provider.MOCK_IOT_CORE, MockIotAccessProvider.class,
       IotAccess.Provider.GCP_IOT_CORE, GcpIotAccessProvider.class
   );
 
+  /**
+   * Factory constructor for new instances.
+   */
   static IotAccessProvider from(IotAccess iotAccess) {
     try {
       return PROVIDERS.get(iotAccess.provider).getDeclaredConstructor(IotAccess.class)

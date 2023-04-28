@@ -39,7 +39,7 @@ public class UdmiServicePod {
   private final PodConfiguration podConfiguration;
   private final Map<Class<?>, UdmisComponent> components;
   private final List<BridgeProcessor> bridges;
-  private final IotAccessProvider iotAccessProvider;
+  final IotAccessProvider iotAccessProvider;
 
   /**
    * Core pod to instantiate all the other components as necessary based on configuration.

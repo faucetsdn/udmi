@@ -15,5 +15,9 @@
       "recv_id": "udmi_reflect",
       "send_id": "udmi_target"
     }
+  },
+  "iot_access": {
+    "provider": "mock_iot_core",
+    "project_id": "testing-project"
   }
 }

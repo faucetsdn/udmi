@@ -23,7 +23,7 @@ public abstract class UdmisComponent extends ContainerBase {
   public static final Integer FUNCTIONS_VERSION_MAX = 8;
   public static final String UDMI_VERSION = "1.4.1";
 
-  private final ImmutableList<HandlerSpecification> BASE_HANDLERS = ImmutableList.of(
+  private final ImmutableList<HandlerSpecification> baseHandlers = ImmutableList.of(
       messageHandlerFor(Object.class, this::defaultHandler),
       messageHandlerFor(Exception.class, this::exceptionHandler)
   );
@@ -77,7 +77,7 @@ public abstract class UdmisComponent extends ContainerBase {
    * Activate this component.
    */
   public void activate() {
-    registerHandlers(BASE_HANDLERS);
+    registerHandlers(baseHandlers);
     registerHandlers();
     dispatcher.activate();
   }

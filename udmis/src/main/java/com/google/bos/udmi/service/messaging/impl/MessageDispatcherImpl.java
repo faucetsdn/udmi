@@ -2,6 +2,7 @@ package com.google.bos.udmi.service.messaging.impl;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.udmi.util.JsonUtil.convertTo;
+import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
@@ -30,6 +31,7 @@ import java.util.function.Consumer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.TestOnly;
 import org.jetbrains.annotations.VisibleForTesting;
+import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
@@ -59,9 +61,11 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   private final Map<Object, Envelope> messageEnvelopes = new ConcurrentHashMap<>();
   private final Map<Class<?>, Consumer<Object>> handlers = new HashMap<>();
   private final Map<Class<?>, AtomicInteger> handlerCounts = new ConcurrentHashMap<>();
+  private final String projectId;
 
-  public MessageDispatcherImpl(MessagePipe messagePipe) {
-    this.messagePipe = messagePipe;
+  public MessageDispatcherImpl(EndpointConfiguration configuration) {
+    messagePipe = MessagePipe.from(configuration);
+    projectId = configuration.hostname;
   }
 
   private static String getMapKey(SubType subType, SubFolder subFolder) {
@@ -89,7 +93,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
    * Make a new message bundle for the given object, inferring the type and folder from the class
    * itself (using the predefined lookup map).
    */
-  public static Bundle makeMessageBundle(Object message) {
+  public Bundle makeMessageBundle(Object message) {
     if (message instanceof Bundle || message == null) {
       return (Bundle) message;
     }
@@ -106,7 +110,8 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     checkNotNull(messageType, "type entry not found for " + message.getClass());
     bundle.envelope.subType = messageType.getKey();
     bundle.envelope.subFolder = messageType.getValue();
-    // TODO: Supply attributes for deviceId, projectId, registryId, etc...
+    bundle.envelope.projectId = projectId;
+    // TODO: Supply attributes for deviceId, registryId, etc...
     return bundle;
   }
 

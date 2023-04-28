@@ -9,7 +9,6 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 import com.google.api.core.ApiFuture;
-import com.google.api.core.ApiService;
 import com.google.api.core.ApiService.Listener;
 import com.google.api.core.ApiService.State;
 import com.google.api.gax.core.NoCredentialsProvider;
@@ -54,7 +53,8 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
    */
   public PubSubPipe(EndpointConfiguration configuration) {
     try {
-      projectId = requireNonNull(configuration.hostname, "no project id defined in configuration as 'hostname'");
+      projectId = requireNonNull(configuration.hostname,
+          "no project id defined in configuration as 'hostname'");
       publisher = ifNotNullGet(configuration.send_id, this::getPublisher);
       subscriber = ifNotNullGet(configuration.recv_id, this::getSubscriber);
     } catch (Exception e) {
@@ -94,11 +94,6 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
   }
 
   @Override
-  public String toString() {
-    return String.format("PubSub %s -> %s", subscriber.getSubscriptionNameString(), publisher.getTopicNameString());
-  }
-
-  @Override
   public void publish(Bundle bundle) {
     try {
       Envelope envelope = Optional.ofNullable(bundle.envelope).orElse(new Envelope());
@@ -123,6 +118,12 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
     info(format("Received %s/%s", bundle.envelope.subType, bundle.envelope.subFolder));
     receiveBundle(bundle);
     reply.ack();
+  }
+
+  @Override
+  public String toString() {
+    return String.format("PubSub %s -> %s", subscriber.getSubscriptionNameString(),
+        publisher.getTopicNameString());
   }
 
   Publisher getPublisher(String topicName) {
