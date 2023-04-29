@@ -50,10 +50,10 @@ public class ReflectProcessor extends UdmisComponent {
     final String deviceId = envelope.deviceId;
 
     UdmiConfig udmiConfig = new UdmiConfig();
+    udmiConfig.last_state = toolState.timestamp;
     udmiConfig.setup = new SetupUdmiConfig();
     copyFields(deployed, udmiConfig.setup, false);
     udmiConfig.setup.udmi_version = UDMI_VERSION;
-    udmiConfig.setup.last_state = toolState.timestamp;
     udmiConfig.setup.functions_min = FUNCTIONS_VERSION_MIN;
     udmiConfig.setup.functions_max = FUNCTIONS_VERSION_MAX;
 
