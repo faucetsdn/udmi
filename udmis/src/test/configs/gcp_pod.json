@@ -12,5 +12,9 @@
       "recv_id": "udmi_reflect",
       "send_id": "udmi_target"
     }
+  },
+  "iot_access": {
+    "provider": "gcp_iot_core",
+    "project_id": "bos-peringknife-dev"
   }
 }
