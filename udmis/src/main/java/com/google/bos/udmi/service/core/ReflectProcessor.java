@@ -3,6 +3,7 @@ package com.google.bos.udmi.service.core;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.GeneralUtils.copyFields;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.loadFileStrictRequired;
 import static com.google.udmi.util.JsonUtil.stringify;
@@ -18,8 +19,10 @@ import java.util.Map;
 import udmi.schema.CloudModel;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
+import udmi.schema.Envelope.SubType;
 import udmi.schema.SetupUdmiConfig;
 import udmi.schema.UdmiConfig;
+import udmi.schema.UdmiReply;
 import udmi.schema.UdmiState;
 
 /**
@@ -38,13 +41,19 @@ public class ReflectProcessor extends UdmisComponent {
     try {
       requireNonNull(provider, "iot access provider not set");
       Envelope envelope = continuation.getEnvelope();
+      final CloudModel reply;
       if (envelope.subFolder == null) {
-        stateHandler(envelope, extractUdmiState(message));
+        reply = stateHandler(envelope, extractUdmiState(message));
       } else if (envelope.subFolder != SubFolder.UDMI) {
         throw new IllegalStateException("Unexpected reflect subfolder " + envelope.subFolder);
       } else {
         Envelope attributes = extractReflectEnvelope(envelope.projectId, message);
-        processReflection(attributes, extractMessagePayload(message));
+        reply = processReflection(attributes, extractMessagePayload(message));
+      }
+      if (reply != null) {
+        UdmiReply replyMessage = new UdmiReply();
+        replyMessage.cloud_model = reply;
+        continuation.publish(replyMessage);
       }
     } catch (Exception e) {
       throw new RuntimeException("While processing reflect handler", e);
@@ -117,7 +126,7 @@ public class ReflectProcessor extends UdmisComponent {
     throw new RuntimeException("Not yet implemented");
   }
 
-  private void stateHandler(Envelope envelope, UdmiState toolState) {
+  private CloudModel stateHandler(Envelope envelope, UdmiState toolState) {
     final String registryId = envelope.deviceRegistryId;
     final String deviceId = envelope.deviceId;
 
@@ -134,5 +143,6 @@ public class ReflectProcessor extends UdmisComponent {
     String contents = stringify(configMap);
     debug("Setting reflector state %s %s %s", registryId, deviceId, contents);
     provider.updateConfig(registryId, deviceId, contents);
+    return null;
   }
 }

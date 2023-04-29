@@ -1,8 +1,8 @@
 package com.google.bos.udmi.service.messaging.impl;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.JsonUtil.convertTo;
-import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
@@ -62,10 +62,12 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   private final Map<Class<?>, Consumer<Object>> handlers = new HashMap<>();
   private final Map<Class<?>, AtomicInteger> handlerCounts = new ConcurrentHashMap<>();
   private final String projectId;
+  private final Envelope prototypeEnvelope = new Envelope();
 
   public MessageDispatcherImpl(EndpointConfiguration configuration) {
     messagePipe = MessagePipe.from(configuration);
     projectId = configuration.hostname;
+    prototypeEnvelope.projectId = projectId;
   }
 
   private static String getMapKey(SubType subType, SubFolder subFolder) {
@@ -87,32 +89,6 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   private static SimpleEntry<SubType, SubFolder> getTypeFolderEntry(SubType type,
       SubFolder folder) {
     return new SimpleEntry<>(type, folder);
-  }
-
-  /**
-   * Make a new message bundle for the given object, inferring the type and folder from the class
-   * itself (using the predefined lookup map).
-   */
-  public Bundle makeMessageBundle(Object message) {
-    if (message instanceof Bundle || message == null) {
-      return (Bundle) message;
-    }
-
-    Bundle bundle = new Bundle(message);
-
-    if (message instanceof Exception || message instanceof String) {
-      bundle.envelope.subType = SubType.EVENT;
-      bundle.envelope.subFolder = SubFolder.ERROR;
-      return bundle;
-    }
-
-    SimpleEntry<SubType, SubFolder> messageType = CLASS_TYPES.get(message.getClass());
-    checkNotNull(messageType, "type entry not found for " + message.getClass());
-    bundle.envelope.subType = messageType.getKey();
-    bundle.envelope.subFolder = messageType.getValue();
-    bundle.envelope.projectId = projectId;
-    // TODO: Supply attributes for deviceId, registryId, etc...
-    return bundle;
   }
 
   private static void registerHandlerType(SubType type, SubFolder folder) {
@@ -172,11 +148,6 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     messagePipe.activate(processMessage);
   }
 
-  @Override
-  public MessageContinuation getContinuation(Object message) {
-    return () -> requireNonNull(messageEnvelopes.get(message), "missing envelope");
-  }
-
   @TestOnly
   public void awaitShutdown() {
     ((MessageBase) messagePipe).awaitShutdown();
@@ -202,6 +173,23 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   }
 
   @Override
+  public MessageContinuation getContinuation(Object message) {
+    final Envelope continuationEnvelope =
+        requireNonNull(deepCopy(messageEnvelopes.get(message)), "missing envelope");
+    return new MessageContinuation() {
+      @Override
+      public Envelope getEnvelope() {
+        return continuationEnvelope;
+      }
+
+      @Override
+      public void publish(Object message) {
+        publishBundle(makeMessageBundle(continuationEnvelope, message));
+      }
+    }
+  }
+
+  @Override
   public int getHandlerCount(Class<?> clazz) {
     return handlerCounts.computeIfAbsent(clazz, key -> new AtomicInteger()).get();
   }
@@ -211,12 +199,36 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     return messagePipe.isActive();
   }
 
-  @Override
-  public void publish(Object message) {
-    messagePipe.publish(makeMessageBundle(message));
+  /**
+   * Make a new message bundle for the given object, inferring the type and folder from the class
+   * itself (using the predefined lookup map).
+   */
+  public Bundle makeMessageBundle(Envelope prototype, Object message) {
+    if (message instanceof Bundle || message == null) {
+      return (Bundle) message;
+    }
+
+    Bundle bundle = new Bundle(deepCopy(prototype), message);
+
+    if (message instanceof Exception || message instanceof String) {
+      bundle.envelope.subType = SubType.EVENT;
+      bundle.envelope.subFolder = SubFolder.ERROR;
+      return bundle;
+    }
+
+    SimpleEntry<SubType, SubFolder> messageType = CLASS_TYPES.get(message.getClass());
+    checkNotNull(messageType, "type entry not found for " + message.getClass());
+    bundle.envelope.subType = messageType.getKey();
+    bundle.envelope.subFolder = messageType.getValue();
+    return bundle;
   }
 
-  @TestOnly
+  @Override
+  public void publish(Object message) {
+    publishBundle(makeMessageBundle(prototypeEnvelope, message));
+  }
+
+  @VisibleForTesting
   public void publishBundle(Bundle bundle) {
     messagePipe.publish(bundle);
   }
