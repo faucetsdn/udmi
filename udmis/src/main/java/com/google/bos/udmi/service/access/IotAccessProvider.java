@@ -2,6 +2,7 @@ package com.google.bos.udmi.service.access;
 
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
+import udmi.schema.CloudModel;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.IotAccess;
 
@@ -29,9 +30,11 @@ public interface IotAccessProvider {
 
   void activate();
 
+  void shutdown();
+
   void modifyConfig(String registryId, String deviceId, SubFolder udmi, String contents);
 
   void updateConfig(String registryId, String deviceId, String config);
 
-  void shutdown();
+  CloudModel listRegistryDevices(String deviceRegistryId);
 }

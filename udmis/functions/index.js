@@ -203,7 +203,7 @@ exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) 
     return udmi_process_reflector_state(attributes, msgObject);
   }
 
-  if (attributes.subFolder != 'udmi') {
+  if (attributes.subFolder !== 'udmi') {
     console.error('Unexpected subFolder', attributes.subFolder);
     return;
   }
@@ -228,13 +228,13 @@ exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) 
       console.error('No cloud region found for target registry', envelope.deviceRegistryId);
       return null;
     }
-    if (envelope.subType == QUERY_TYPE) {
-      return udmi_query(envelope, payload);
+    if (envelope.subType === QUERY_TYPE) {
+      return udmi_query(envelope);
     }
-    if (envelope.subType == MODEL_TYPE) {
+    if (envelope.subType === MODEL_TYPE) {
       return udmi_model(envelope, payload);
     }
-    const targetFunction = envelope.subType == 'event' ? 'target' : envelope.subType;
+    const targetFunction = envelope.subType === 'event' ? 'target' : envelope.subType;
     target = 'udmi_' + targetFunction;
     return publishPubsubMessage(target, envelope, payload);
   }).catch(e => reflectError(envelope, base64, e));
@@ -453,18 +453,18 @@ async function unbind_device(attributes, proxyId) {
   return iotClient.unbindDeviceFromGateway(request);
 }
 
-function udmi_query(attributes, msgObject) {
+function udmi_query(attributes) {
   const subFolder = attributes.subFolder;
   if (subFolder === UPDATE_FOLDER) {
-    return udmi_query_state(attributes, msgObject);
+    return udmi_query_state(attributes);
   } else if (subFolder === CLOUD_FOLDER) {
-    return udmi_query_cloud(attributes, msgObject);
+    return udmi_query_cloud(attributes);
   } else {
     throw 'Unknown query folder ' + subFolder;
   }
 }
 
-function udmi_query_state(attributes, msgObject) {
+function udmi_query_state(attributes) {
   const transactionId = attributes.transactionId;
   const projectId = attributes.projectId;
   const registryId = attributes.deviceRegistryId;
@@ -501,13 +501,13 @@ function udmi_query_state(attributes, msgObject) {
   });
 }
 
-function udmi_query_cloud(attributes, msgObject) {
+function udmi_query_cloud(attributes) {
   return attributes.deviceId ?
-    udmi_query_cloud_device(attributes, msgObject) :
-    udmi_query_cloud_registry(attributes, msgObject);
+    udmi_query_cloud_device(attributes) :
+    udmi_query_cloud_registry(attributes);
 }
 
-async function udmi_query_cloud_registry(attributes, msgObject) {
+async function udmi_query_cloud_registry(attributes) {
   const devices = await fetch_cloud_registry(attributes);
 
   const message = {'device_ids': {}};

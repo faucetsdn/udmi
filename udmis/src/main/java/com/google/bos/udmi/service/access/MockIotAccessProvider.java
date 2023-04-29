@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import udmi.schema.CloudModel;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.IotAccess;
 import udmi.schema.UdmiConfig;
@@ -46,5 +47,10 @@ public class MockIotAccessProvider implements IotAccessProvider {
 
   @Override
   public void shutdown() {
+  }
+
+  @Override
+  public CloudModel listRegistryDevices(String deviceRegistryId) {
+    throw new RuntimeException("Not yet implemented");
   }
 }

@@ -236,4 +236,8 @@ public class GeneralUtils {
     String header = String.format("Changed %d fields%s%s", changes.size(), terminator, SEPARATOR);
     return (header + INDENTED_LINES.join(changes)).trim();
   }
+
+  public static <U> U mapReplace(U previous, U added) {
+    return added;
+  }
 }

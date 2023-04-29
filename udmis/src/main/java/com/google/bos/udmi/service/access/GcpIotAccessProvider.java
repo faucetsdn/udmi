@@ -1,5 +1,6 @@
 package com.google.bos.udmi.service.access;
 
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static java.lang.String.format;
@@ -11,10 +12,13 @@ import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.cloudiot.v1.CloudIot;
+import com.google.api.services.cloudiot.v1.CloudIot.Projects.Locations.Registries.Devices;
 import com.google.api.services.cloudiot.v1.CloudIotScopes;
+import com.google.api.services.cloudiot.v1.model.Device;
 import com.google.api.services.cloudiot.v1.model.DeviceConfig;
 import com.google.api.services.cloudiot.v1.model.DeviceRegistry;
 import com.google.api.services.cloudiot.v1.model.ListDeviceRegistriesResponse;
+import com.google.api.services.cloudiot.v1.model.ListDevicesResponse;
 import com.google.api.services.cloudiot.v1.model.ModifyCloudToDeviceConfigRequest;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
@@ -23,13 +27,17 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.udmi.util.GeneralUtils;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
+import udmi.schema.CloudModel;
 import udmi.schema.Credential.Key_format;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.IotAccess;
@@ -66,6 +74,12 @@ public class GcpIotAccessProvider extends UdmisComponent implements IotAccessPro
     projectId = requireNonNull(iotAccess.project_id, "gcp project id not specified");
     cloudIotService = createCloudIotService();
     registryCloudRegions = fetchRegistryCloudRegions();
+  }
+
+  private static Entry<String, CloudModel> convert(Device device) {
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.num_id = device.getNumId().toString();
+    return new SimpleEntry<>(device.getId(), cloudModel);
   }
 
   @NotNull
@@ -143,6 +157,27 @@ public class GcpIotAccessProvider extends UdmisComponent implements IotAccessPro
       registries = cloudIotService.projects().locations().registries();
     } catch (Exception e) {
       throw new RuntimeException("While activating", e);
+    }
+  }
+
+  @Override
+  public CloudModel listRegistryDevices(String deviceRegistryId) {
+    return listRegistryDevices(deviceRegistryId, null);
+  }
+
+  private CloudModel listRegistryDevices(String deviceRegistryId, String gatewayId) {
+    String registryPath = getRegistryPath(deviceRegistryId);
+    try {
+      Devices.List request = registries.devices().list(registryPath);
+      ifNotNullThen(gatewayId, request::setGatewayListOptionsAssociationsGatewayId);
+      ListDevicesResponse response = request.execute();
+      CloudModel cloudModel = new CloudModel();
+      cloudModel.device_ids = response.getDevices().stream().map(GcpIotAccessProvider::convert)
+          .collect(Collectors.toMap(Entry::getKey, Entry::getValue, GeneralUtils::mapReplace,
+              HashMap::new));
+      return cloudModel;
+    } catch (Exception e) {
+      throw new RuntimeException("While listing devices for " + registryPath, e);
     }
   }
 
