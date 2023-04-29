@@ -112,12 +112,14 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
 
   @Override
   public void receiveMessage(PubsubMessage message, AckReplyConsumer reply) {
+    // Ack first to prevent failure if there is an error processing the message. Might result
+    // in things getting lost, but better than the infinite-loop of messages never getting flushed!
+    reply.ack();
     Bundle bundle = new Bundle(
         convertToStrict(Envelope.class, message.getAttributesMap()),
         toMap(message.getData().toStringUtf8()));
     info(format("Received %s/%s", bundle.envelope.subType, bundle.envelope.subFolder));
     receiveBundle(bundle);
-    reply.ack();
   }
 
   @Override

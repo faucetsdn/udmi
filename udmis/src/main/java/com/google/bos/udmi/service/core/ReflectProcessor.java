@@ -1,5 +1,6 @@
 package com.google.bos.udmi.service.core;
 
+import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.GeneralUtils.copyFields;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.loadFileStrictRequired;
@@ -8,6 +9,7 @@ import static java.util.Objects.requireNonNull;
 
 import com.google.udmi.util.JsonUtil;
 import java.io.File;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import udmi.schema.Envelope;
@@ -31,7 +33,7 @@ public class ReflectProcessor extends UdmisComponent {
     requireNonNull(provider, "iot access provider not set");
     Envelope envelope = getContinuation(message).getEnvelope();
     if (envelope.subFolder == null) {
-      stateHandler(envelope, convertToStrict(UdmiState.class, extractUdmiState(message)));
+      stateHandler(envelope, extractUdmiState(message));
     } else if (envelope.subFolder == SubFolder.UDMI && envelope.subType == SubType.STATE) {
       stateHandler(envelope, convertToStrict(UdmiState.class, message));
     } else if (envelope.subFolder != SubFolder.UDMI) {
@@ -41,8 +43,12 @@ public class ReflectProcessor extends UdmisComponent {
     }
   }
 
-  private Object extractUdmiState(Object message) {
-    return JsonUtil.asMap(message).get(SubFolder.UDMI.value());
+  private UdmiState extractUdmiState(Object message) {
+    Map<String, Object> stringObjectMap = JsonUtil.asMap(message);
+    UdmiState udmiState =
+        convertToStrict(UdmiState.class, stringObjectMap.get(SubFolder.UDMI.value()));
+    udmiState.timestamp = JsonUtil.getDate((String) stringObjectMap.get(TIMESTAMP_KEY));
+    return udmiState;
   }
 
   private void stateHandler(Envelope envelope, UdmiState toolState) {
