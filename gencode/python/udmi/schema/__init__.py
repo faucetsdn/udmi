@@ -54,7 +54,6 @@ from .model_testing_target import TargetTestingModel
 from .options_pubber import PubberOptions
 from .persistent_device import DevicePersistent
 from .properties import Properties
-from .reply_udmi import UdmiReply
 from .state import State
 from .state_blobset import BlobsetState
 from .state_blobset_blob import BlobBlobsetState

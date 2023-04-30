@@ -240,6 +240,8 @@ exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) 
   }).catch(e => reflectError(envelope, base64, e));
 });
 
+const legacyudmis = LEGACY_UDMIS;
+
 async function udmi_process_reflector_state(attributes, msgObject) {
   // Although not strictly needed for this function, wait for registries to be resolved to avoid startup errors.
   await registry_promise;
@@ -258,6 +260,7 @@ async function udmi_process_reflector_state(attributes, msgObject) {
 
   const deviceConfig = {};
   deviceConfig[UDMI_FOLDER] = udmiConfig;
+  deviceConfig[legacyudmis] = udmiConfig;
 
   console.log('Setting reflector config', registryId, deviceId, JSON.stringify(deviceConfig));
   const startTime = currentTimestamp();

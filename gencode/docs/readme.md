@@ -32,7 +32,6 @@
 * [**event_validation**](event_validation.html) - Validation device result
 * [**persistent_device**](persistent_device.html) - Device persistent data
 * [**properties**](properties.html)
-* [**reply_udmi**](reply_udmi.html) - Reply for a UDMI reflector message
 * [**state_mapping**](state_mapping.html) - State for [mapping](../../docs/specs/mapping.md)
 * [**state_udmi**](state_udmi.html) - State of a UDMI reflector client
 * [**state_validation**](state_validation.html) - Validation state summary

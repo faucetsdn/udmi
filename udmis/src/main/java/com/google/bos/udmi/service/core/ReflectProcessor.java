@@ -11,6 +11,7 @@ import static com.google.udmi.util.JsonUtil.toMap;
 import static java.util.Objects.requireNonNull;
 
 import com.google.bos.udmi.service.messaging.MessageContinuation;
+import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import java.io.File;
@@ -37,9 +38,9 @@ public class ReflectProcessor extends UdmisComponent {
   @Override
   protected void defaultHandler(Object message) {
     MessageContinuation continuation = getContinuation(message);
+    requireNonNull(provider, "iot access provider not set");
+    Envelope envelope = continuation.getEnvelope();
     try {
-      requireNonNull(provider, "iot access provider not set");
-      Envelope envelope = continuation.getEnvelope();
       final CloudModel reply;
       if (envelope.subFolder == null) {
         stateHandler(envelope, extractUdmiState(message));
@@ -52,7 +53,7 @@ public class ReflectProcessor extends UdmisComponent {
         processReflection(envelope, encapsulated, payload);
       }
     } catch (Exception e) {
-      throw new RuntimeException("While processing reflect handler", e);
+      processException(envelope, e);
     }
   }
 
@@ -88,7 +89,17 @@ public class ReflectProcessor extends UdmisComponent {
     }
   }
 
-  private void processReflection(Envelope reflection, Envelope attributes, Map<String, Object> payload) {
+  private void processException(Envelope envelope, Exception e) {
+    provider.sendCommand(envelope.deviceRegistryId, envelope.deviceId, SubFolder.UDMI,
+        stringify(makeErrorBundle(e)));
+  }
+
+  private Bundle makeErrorBundle(Exception e) {
+    return new Bundle();
+  }
+
+  private void processReflection(Envelope reflection, Envelope attributes,
+      Map<String, Object> payload) {
     CloudModel result = getReflectionResult(attributes, payload);
     Envelope envelope = deepCopy(attributes);
     envelope.subType = SubType.REPLY;
