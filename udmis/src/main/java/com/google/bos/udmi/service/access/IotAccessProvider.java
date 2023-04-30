@@ -32,7 +32,12 @@ public interface IotAccessProvider {
 
   void shutdown();
 
-  void modifyConfig(String registryId, String deviceId, SubFolder udmi, String contents);
+  /**
+   * Send a command to a device.
+   */
+  void sendCommand(String registryId, String deviceId, SubFolder folder, String message);
+
+  void modifyConfig(String registryId, String deviceId, SubFolder folder, String contents);
 
   void updateConfig(String registryId, String deviceId, String config);
 

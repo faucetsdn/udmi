@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import udmi.schema.CloudModel;
+import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.IotAccess;
 import udmi.schema.UdmiConfig;
@@ -34,6 +35,10 @@ public class MockIotAccessProvider implements IotAccessProvider {
   }
 
   @Override
+  public void shutdown() {
+  }
+
+  @Override
   public void modifyConfig(String registryId, String deviceId, SubFolder udmi, String contents) {
     throw new RuntimeException("Not implemented");
   }
@@ -46,11 +51,12 @@ public class MockIotAccessProvider implements IotAccessProvider {
   }
 
   @Override
-  public void shutdown() {
+  public CloudModel listRegistryDevices(String deviceRegistryId) {
+    throw new RuntimeException("Not yet implemented");
   }
 
   @Override
-  public CloudModel listRegistryDevices(String deviceRegistryId) {
+  public void sendCommand(String registryId, String deviceId, SubFolder folder, String message) {
     throw new RuntimeException("Not yet implemented");
   }
 }

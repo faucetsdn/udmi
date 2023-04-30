@@ -3,7 +3,7 @@ package com.google.bos.udmi.service.core;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.GeneralUtils.copyFields;
-import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.loadFileStrictRequired;
 import static com.google.udmi.util.JsonUtil.stringify;
@@ -22,7 +22,6 @@ import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
 import udmi.schema.SetupUdmiConfig;
 import udmi.schema.UdmiConfig;
-import udmi.schema.UdmiReply;
 import udmi.schema.UdmiState;
 
 /**
@@ -43,33 +42,27 @@ public class ReflectProcessor extends UdmisComponent {
       Envelope envelope = continuation.getEnvelope();
       final CloudModel reply;
       if (envelope.subFolder == null) {
-        reply = stateHandler(envelope, extractUdmiState(message));
+        stateHandler(envelope, extractUdmiState(message));
       } else if (envelope.subFolder != SubFolder.UDMI) {
         throw new IllegalStateException("Unexpected reflect subfolder " + envelope.subFolder);
       } else {
-        Envelope attributes = extractReflectEnvelope(envelope.projectId, message);
-        reply = processReflection(attributes, extractMessagePayload(message));
-      }
-      if (reply != null) {
-        UdmiReply replyMessage = new UdmiReply();
-        replyMessage.cloud_model = reply;
-        continuation.publish(replyMessage);
+        Map<String, Object> stringObjectMap = toMap(message);
+        Map<String, Object> payload = extractMessagePayload(stringObjectMap);
+        Envelope encapsulated = extractMessageEnvelope(stringObjectMap);
+        processReflection(envelope, encapsulated, payload);
       }
     } catch (Exception e) {
       throw new RuntimeException("While processing reflect handler", e);
     }
   }
 
-  private Map<String, Object> extractMessagePayload(Object message) {
-    String payload = (String) toMap(message).remove(PAYLOAD_KEY);
-    return toMap(GeneralUtils.decodeBase64(payload));
+  private Envelope extractMessageEnvelope(Object message) {
+    return convertToStrict(Envelope.class, message);
   }
 
-  private Envelope extractReflectEnvelope(String projectId, Object message) {
-    Envelope envelope = convertToStrict(Envelope.class, message);
-    envelope.projectId = projectId;
-    envelope.payload = null; // Remove here before payload is handled separately.
-    return envelope;
+  private Map<String, Object> extractMessagePayload(Map<String, Object> message) {
+    String payload = (String) message.remove(PAYLOAD_KEY);
+    return toMap(GeneralUtils.decodeBase64(payload));
   }
 
   private UdmiState extractUdmiState(Object message) {
@@ -80,11 +73,7 @@ public class ReflectProcessor extends UdmisComponent {
     return udmiState;
   }
 
-  private CloudModel reflectModel(Envelope attributes) {
-    throw new RuntimeException("Not yet implemented");
-  }
-
-  private CloudModel processReflection(Envelope attributes, Map<String, Object> payload) {
+  private CloudModel getReflectionResult(Envelope attributes, Map<String, Object> payload) {
     try {
       switch (attributes.subType) {
         case QUERY:
@@ -97,6 +86,31 @@ public class ReflectProcessor extends UdmisComponent {
     } catch (Exception e) {
       throw new RuntimeException("While processing reflect message type " + attributes.subType, e);
     }
+  }
+
+  private void processReflection(Envelope reflection, Envelope attributes, Map<String, Object> payload) {
+    CloudModel result = getReflectionResult(attributes, payload);
+    Envelope envelope = deepCopy(attributes);
+    envelope.subType = SubType.REPLY;
+    envelope.payload = GeneralUtils.encodeBase64(stringify(result));
+    provider.sendCommand(reflection.deviceRegistryId, reflection.deviceId, SubFolder.UDMI,
+        stringify(envelope));
+  }
+
+  private CloudModel queryCloudDevice(Envelope attributes) {
+    throw new RuntimeException("Not yet implemented");
+  }
+
+  private CloudModel queryCloudRegistry(Envelope attributes) {
+    return provider.listRegistryDevices(attributes.deviceRegistryId);
+  }
+
+  private CloudModel reflectModel(Envelope attributes) {
+    throw new RuntimeException("Not yet implemented");
+  }
+
+  private CloudModel reflectPropagate(Envelope attributes) {
+    throw new RuntimeException("Not yet implemented");
   }
 
   private CloudModel reflectQuery(Envelope attributes, Map<String, Object> payload) {
@@ -114,19 +128,7 @@ public class ReflectProcessor extends UdmisComponent {
         ? queryCloudDevice(attributes) : queryCloudRegistry(attributes);
   }
 
-  private CloudModel queryCloudRegistry(Envelope attributes) {
-    return provider.listRegistryDevices(attributes.deviceRegistryId);
-  }
-
-  private CloudModel queryCloudDevice(Envelope attributes) {
-    throw new RuntimeException("Not yet implemented");
-  }
-
-  private CloudModel reflectPropagate(Envelope attributes) {
-    throw new RuntimeException("Not yet implemented");
-  }
-
-  private CloudModel stateHandler(Envelope envelope, UdmiState toolState) {
+  private void stateHandler(Envelope envelope, UdmiState toolState) {
     final String registryId = envelope.deviceRegistryId;
     final String deviceId = envelope.deviceId;
 
@@ -143,6 +145,5 @@ public class ReflectProcessor extends UdmisComponent {
     String contents = stringify(configMap);
     debug("Setting reflector state %s %s %s", registryId, deviceId, contents);
     provider.updateConfig(registryId, deviceId, contents);
-    return null;
   }
 }

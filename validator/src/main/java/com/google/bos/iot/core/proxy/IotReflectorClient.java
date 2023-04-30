@@ -21,11 +21,15 @@ import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
+import java.lang.reflect.Array;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
@@ -161,7 +165,8 @@ public class IotReflectorClient implements MessagePublisher {
     Map<String, Object> messageMap = asMap(
         new String(base64 ? Base64.decodeBase64(rawData) : rawData));
     try {
-      String category = parseMessageTopic(topic);
+      List<String> parts = parseMessageTopic(topic);
+      String category = parts.get(0);
 
       if (CONFIG_CATEGORY.equals(category)) {
         ensureCloudSync(messageMap);
@@ -264,11 +269,12 @@ public class IotReflectorClient implements MessagePublisher {
     return false;
   }
 
-  private String parseMessageTopic(String topic) {
-    String[] parts = topic.substring(1).split("/", 3);
-    checkState("devices".equals(parts[0]), "unknown parsed path field");
-    checkState(registryId.equals(parts[1]), "unexpected parsed registry id");
-    return parts[2];
+  private List<String> parseMessageTopic(String topic) {
+    List<String> parts = new ArrayList<>(Arrays.asList(topic.substring(1).split("/")));
+    checkState("devices".equals(parts.remove(0)), "unknown parsed path field");
+    // Next field is registry, not device, since the reflector device holds the site registry.
+    checkState(registryId.equals(parts.remove(0)), "unexpected parsed registry id");
+    return parts;
   }
 
   private void errorHandler(MqttPublisher mqttPublisher, Throwable throwable) {

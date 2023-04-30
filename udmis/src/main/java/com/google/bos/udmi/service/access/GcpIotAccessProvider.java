@@ -1,5 +1,6 @@
 package com.google.bos.udmi.service.access;
 
+import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
@@ -20,6 +21,7 @@ import com.google.api.services.cloudiot.v1.model.DeviceRegistry;
 import com.google.api.services.cloudiot.v1.model.ListDeviceRegistriesResponse;
 import com.google.api.services.cloudiot.v1.model.ListDevicesResponse;
 import com.google.api.services.cloudiot.v1.model.ModifyCloudToDeviceConfigRequest;
+import com.google.api.services.cloudiot.v1.model.SendCommandToDeviceRequest;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.bos.udmi.service.core.UdmisComponent;
@@ -27,6 +29,7 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.protobuf.ByteString;
 import com.google.udmi.util.GeneralUtils;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Base64;
@@ -151,20 +154,6 @@ public class GcpIotAccessProvider extends UdmisComponent implements IotAccessPro
     return format(REGISTRY_PATH_FORMAT, getLocationPath(region), registryId);
   }
 
-  @Override
-  public void activate() {
-    try {
-      registries = cloudIotService.projects().locations().registries();
-    } catch (Exception e) {
-      throw new RuntimeException("While activating", e);
-    }
-  }
-
-  @Override
-  public CloudModel listRegistryDevices(String deviceRegistryId) {
-    return listRegistryDevices(deviceRegistryId, null);
-  }
-
   private CloudModel listRegistryDevices(String deviceRegistryId, String gatewayId) {
     String registryPath = getRegistryPath(deviceRegistryId);
     try {
@@ -182,6 +171,20 @@ public class GcpIotAccessProvider extends UdmisComponent implements IotAccessPro
   }
 
   @Override
+  public void activate() {
+    try {
+      registries = cloudIotService.projects().locations().registries();
+    } catch (Exception e) {
+      throw new RuntimeException("While activating", e);
+    }
+  }
+
+  @Override
+  public CloudModel listRegistryDevices(String deviceRegistryId) {
+    return listRegistryDevices(deviceRegistryId, null);
+  }
+
+  @Override
   public void modifyConfig(String registryId, String deviceId, SubFolder subFolder,
       String contents) {
     // TODO: Need to implement checking of config version for concurrent operations.
@@ -189,6 +192,22 @@ public class GcpIotAccessProvider extends UdmisComponent implements IotAccessPro
     Map<String, Object> configMap = toMap(configString);
     configMap.put(subFolder.toString(), contents);
     updateConfig(registryId, deviceId, stringify(configMap));
+  }
+
+  @Override
+  public void sendCommand(String registryId, String deviceId, SubFolder folder, String message) {
+    try {
+      requireNonNull(registryId, "registry not defined");
+      requireNonNull(deviceId, "device not defined");
+      String subFolder = requireNonNull(folder, "subfolder not defined").value();
+      SendCommandToDeviceRequest request =
+          new SendCommandToDeviceRequest().setBinaryData(encodeBase64(message)).setSubfolder(subFolder);
+      registries.devices().sendCommandToDevice(getDevicePath(registryId, deviceId), request)
+          .execute();
+    } catch (Exception e) {
+      throw new RuntimeException(
+          format("While sending %s command to %s/%s", folder, registryId, deviceId), e);
+    }
   }
 
   @Override

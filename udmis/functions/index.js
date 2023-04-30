@@ -97,7 +97,7 @@ function reflectError(attributes, base64, error) {
 }
 
 function sendEnvelope(registryId, deviceId, subType, subFolder, message, transactionId) {
-  if (registryId == REFLECT_REGISTRY) {
+  if (registryId === REFLECT_REGISTRY) {
     console.log('sendEnvelope squash for', registryId);
     return;
   }

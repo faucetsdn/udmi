@@ -186,7 +186,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
       public void publish(Object message) {
         publishBundle(makeMessageBundle(continuationEnvelope, message));
       }
-    }
+    };
   }
 
   @Override
