@@ -1,12 +1,16 @@
 package com.google.daq.mqtt.util;
 
 import static com.google.daq.mqtt.validator.Validator.EMPTY_MESSAGE;
+import static com.google.udmi.util.Common.ERROR_KEY;
+import static com.google.udmi.util.Common.EXCEPTION_KEY;
+import static com.google.udmi.util.Common.TRANSACTION_KEY;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static udmi.schema.CloudModel.Operation.BIND;
 
 import com.google.common.base.Preconditions;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
+import com.google.udmi.util.Common;
 import com.google.udmi.util.SiteModel;
 import java.util.HashMap;
 import java.util.List;
@@ -129,12 +133,17 @@ public class IotReflectorClient implements IotProvider {
     while (messageClient.isActive()) {
       MessageBundle messageBundle = messageClient.takeNextMessage(true);
       if (messageBundle == null) {
-        System.err.println("Timeout waiting for reply to " + sentId);
-        return null;
+        throw new RuntimeException("UDMIS reflector transaction timeout " + sentId);
       }
-      String transactionId = messageBundle.attributes.get("transactionId");
+      Exception exception = (Exception) messageBundle.message.get(EXCEPTION_KEY);
+      if (exception != null) {
+        exception.printStackTrace();
+        throw new RuntimeException("UDMIS processing exception", exception);
+      }
+      String transactionId = messageBundle.attributes.get(TRANSACTION_KEY);
       if (sentId.equals(transactionId)) {
-        String error = (String) messageBundle.message.get("error");
+        System.err.println(stringify(messageBundle));
+        String error = (String) messageBundle.message.get(ERROR_KEY);
         if (error != null) {
           throw new RuntimeException("UDMIS error: " + error);
         }

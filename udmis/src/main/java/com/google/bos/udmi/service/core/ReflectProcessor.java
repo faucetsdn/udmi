@@ -1,9 +1,12 @@
 package com.google.bos.udmi.service.core;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.udmi.util.Common.ERROR_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.GeneralUtils.copyFields;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
+import static com.google.udmi.util.GeneralUtils.encodeBase64;
+import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.loadFileStrictRequired;
 import static com.google.udmi.util.JsonUtil.stringify;
@@ -74,7 +77,7 @@ public class ReflectProcessor extends UdmisComponent {
     return udmiState;
   }
 
-  private CloudModel getReflectionResult(Envelope attributes, Map<String, Object> payload) {
+  private CloudModel  getReflectionResult(Envelope attributes, Map<String, Object> payload) {
     try {
       switch (attributes.subType) {
         case QUERY:
@@ -91,11 +94,16 @@ public class ReflectProcessor extends UdmisComponent {
 
   private void processException(Envelope envelope, Exception e) {
     provider.sendCommand(envelope.deviceRegistryId, envelope.deviceId, SubFolder.UDMI,
-        stringify(makeErrorBundle(e)));
+        stringify(makeErrorMessage(envelope, e)));
   }
 
-  private Bundle makeErrorBundle(Exception e) {
-    return new Bundle();
+  private Envelope makeErrorMessage(Envelope envelope, Exception e) {
+    Envelope reply = deepCopy(envelope);
+    reply.subFolder = SubFolder.ERROR;
+    Map<String, Object> message = new HashMap<>();
+    message.put(ERROR_KEY, stackTraceString(e));
+    reply.payload = encodeBase64(stringify(message));
+    return reply;
   }
 
   private void processReflection(Envelope reflection, Envelope attributes,
@@ -103,7 +111,7 @@ public class ReflectProcessor extends UdmisComponent {
     CloudModel result = getReflectionResult(attributes, payload);
     Envelope envelope = deepCopy(attributes);
     envelope.subType = SubType.REPLY;
-    envelope.payload = GeneralUtils.encodeBase64(stringify(result));
+    envelope.payload = encodeBase64(stringify(result));
     provider.sendCommand(reflection.deviceRegistryId, reflection.deviceId, SubFolder.UDMI,
         stringify(envelope));
   }
@@ -128,13 +136,13 @@ public class ReflectProcessor extends UdmisComponent {
     checkState(payload.size() == 0, "unexpected non-empty message payload");
     switch (attributes.subFolder) {
       case CLOUD:
-        return reflectQueryCLoud(attributes);
+        return reflectQueryCloud(attributes);
       default:
         throw new RuntimeException("Unknown query folder: " + attributes.subFolder);
     }
   }
 
-  private CloudModel reflectQueryCLoud(Envelope attributes) {
+  private CloudModel reflectQueryCloud(Envelope attributes) {
     return attributes.deviceId != null
         ? queryCloudDevice(attributes) : queryCloudRegistry(attributes);
   }

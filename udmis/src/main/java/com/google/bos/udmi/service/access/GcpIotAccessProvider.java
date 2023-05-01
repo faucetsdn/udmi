@@ -197,6 +197,7 @@ public class GcpIotAccessProvider extends UdmisComponent implements IotAccessPro
   @Override
   public void sendCommand(String registryId, String deviceId, SubFolder folder, String message) {
     try {
+      System.err.println("Sending " + folder.value() + ": " + message);
       requireNonNull(registryId, "registry not defined");
       requireNonNull(deviceId, "device not defined");
       String subFolder = requireNonNull(folder, "subfolder not defined").value();

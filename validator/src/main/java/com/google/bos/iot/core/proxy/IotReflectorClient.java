@@ -190,8 +190,10 @@ public class IotReflectorClient implements MessagePublisher {
       return;
     }
     Map<String, String> attributes = extractAttributes(messageMap);
-    String payload = GeneralUtils.decodeBase64((String) messageMap.get("payload"));
-    handleReceivedMessage(attributes, asMap(payload));
+    String payload = (String) messageMap.remove("payload");
+    String decoded = GeneralUtils.decodeBase64(payload);
+    Map<String, Object> message = asMap(decoded);
+    handleReceivedMessage(attributes, message);
   }
 
   @NotNull

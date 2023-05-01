@@ -118,7 +118,8 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
     Bundle bundle = new Bundle(
         convertToStrict(Envelope.class, message.getAttributesMap()),
         toMap(message.getData().toStringUtf8()));
-    info(format("Received %s/%s", bundle.envelope.subType, bundle.envelope.subFolder));
+    info(format("Received %s/%s %s", bundle.envelope.subType, bundle.envelope.subFolder,
+        bundle.envelope.transactionId));
     receiveBundle(bundle);
   }
 

@@ -8,7 +8,6 @@ import static com.google.udmi.util.JsonUtil.fromString;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static java.lang.String.format;
 
-import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.udmi.util.Common;
@@ -190,6 +189,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   public static class Bundle {
 
     public Bundle() {
+      this.envelope = new Envelope();
     }
 
     public Bundle(Object message) {
