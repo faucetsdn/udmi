@@ -177,7 +177,7 @@ public class CloudIotManager {
   }
 
   private CloudModel makeDevice(CloudDeviceSettings settings, CloudModel oldDevice) {
-    HashMap<String, String> metadataMap = oldDevice == null ? null : oldDevice.metadata;
+    Map<String, String> metadataMap = oldDevice == null ? null : oldDevice.metadata;
     if (metadataMap == null) {
       metadataMap = new HashMap<>();
     }

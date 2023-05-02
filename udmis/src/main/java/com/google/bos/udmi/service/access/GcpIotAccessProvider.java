@@ -1,7 +1,9 @@
 package com.google.bos.udmi.service.access;
 
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.JsonUtil.getDate;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static java.lang.String.format;
@@ -15,13 +17,18 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.cloudiot.v1.CloudIot;
 import com.google.api.services.cloudiot.v1.CloudIot.Projects.Locations.Registries.Devices;
 import com.google.api.services.cloudiot.v1.CloudIotScopes;
+import com.google.api.services.cloudiot.v1.model.BindDeviceToGatewayRequest;
 import com.google.api.services.cloudiot.v1.model.Device;
 import com.google.api.services.cloudiot.v1.model.DeviceConfig;
+import com.google.api.services.cloudiot.v1.model.DeviceCredential;
 import com.google.api.services.cloudiot.v1.model.DeviceRegistry;
+import com.google.api.services.cloudiot.v1.model.Empty;
 import com.google.api.services.cloudiot.v1.model.ListDeviceRegistriesResponse;
 import com.google.api.services.cloudiot.v1.model.ListDevicesResponse;
 import com.google.api.services.cloudiot.v1.model.ModifyCloudToDeviceConfigRequest;
+import com.google.api.services.cloudiot.v1.model.PublicKeyCredential;
 import com.google.api.services.cloudiot.v1.model.SendCommandToDeviceRequest;
+import com.google.api.services.cloudiot.v1.model.UnbindDeviceFromGatewayRequest;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.bos.udmi.service.core.UdmisComponent;
@@ -29,7 +36,6 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.protobuf.ByteString;
 import com.google.udmi.util.GeneralUtils;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Base64;
@@ -41,6 +47,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import udmi.schema.CloudModel;
+import udmi.schema.CloudModel.Operation;
+import udmi.schema.Credential;
 import udmi.schema.Credential.Key_format;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.IotAccess;
@@ -50,6 +58,8 @@ import udmi.schema.IotAccess;
  */
 public class GcpIotAccessProvider extends UdmisComponent implements IotAccessProvider {
 
+  public static final String GATEWAY_TYPE = "GATEWAY";
+  public static final String EMPTY_CONFIG = "";
   private static final String EMPTY_JSON = "{}";
   private static final String PROJECT_PATH_FORMAT = "projects/%s";
   private static final String LOCATIONS_PATH_FORMAT = "%s/locations/%s";
@@ -68,6 +78,8 @@ public class GcpIotAccessProvider extends UdmisComponent implements IotAccessPro
           Key_format.RS_256_X_509, RSA_CERT_FORMAT,
           Key_format.ES_256, ES_KEY_FORMAT,
           Key_format.ES_256_X_509, ES_CERT_FILE);
+  private static final String UPDATE_FIELD_MASK = "blocked,credentials,metadata";
+  private static final String EMPTY_RETURN_RECEIPT = "-1";
   private final String projectId;
   private final Map<String, String> registryCloudRegions;
   private final CloudIot cloudIotService;
@@ -79,10 +91,75 @@ public class GcpIotAccessProvider extends UdmisComponent implements IotAccessPro
     registryCloudRegions = fetchRegistryCloudRegions();
   }
 
-  private static Entry<String, CloudModel> convert(Device device) {
+  private static CloudModel convert(Device device, Operation operation) {
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.num_id = device.getNumId().toString();
+    cloudModel.blocked = device.getBlocked();
+    cloudModel.metadata = device.getMetadata();
+    cloudModel.last_event_time = getDate(device.getLastEventTime());
+    cloudModel.is_gateway = ifNotNullGet(device.getGatewayConfig(),
+        config -> GATEWAY_TYPE.equals(config.getGatewayType()));
+    cloudModel.credentials = convertIot(device.getCredentials());
+    cloudModel.operation = operation;
+    return cloudModel;
+  }
+
+  private static List<Credential> convertIot(List<DeviceCredential> credentials) {
+    return ifNotNullGet(credentials,
+        list -> list.stream().map(GcpIotAccessProvider::convertIot).collect(Collectors.toList()));
+  }
+
+  private static Credential convertIot(DeviceCredential device) {
+    Credential credential = new Credential();
+    credential.key_data = device.getPublicKey().getKey();
+    credential.key_format = AUTH_TYPE_MAP.inverse().get(device.getPublicKey().getFormat());
+    return credential;
+  }
+
+  private static Entry<String, CloudModel> convertToEntry(Device device) {
     CloudModel cloudModel = new CloudModel();
     cloudModel.num_id = device.getNumId().toString();
     return new SimpleEntry<>(device.getId(), cloudModel);
+  }
+
+  private static DeviceCredential convertUdmi(Credential credential) {
+    return new DeviceCredential().setPublicKey(new PublicKeyCredential().setKey(credential.key_data)
+        .setFormat(AUTH_TYPE_MAP.get(credential.key_format)));
+  }
+
+  private CloudModel bindDeviceToGateway(String registryId, String gatewayId,
+      CloudModel cloudModel) {
+    CloudModel reply = new CloudModel();
+    reply.device_ids = new HashMap<>();
+    cloudModel.device_ids.keySet().forEach(id -> {
+      try {
+        BindDeviceToGatewayRequest request =
+            new BindDeviceToGatewayRequest().setDeviceId(id).setGatewayId(gatewayId);
+        registries.bindDeviceToGateway(getRegistryPath(registryId), request).execute();
+      } catch (Exception e) {
+        throw new RuntimeException(format("While binding %s to gateway %s", id, gatewayId), e);
+      }
+    });
+    return reply;
+  }
+
+  private Device convert(CloudModel cloudModel) {
+    return new Device()
+        .setBlocked(cloudModel.blocked)
+        .setCredentials(convertUdmi(cloudModel.credentials))
+        .setMetadata(cloudModel.metadata);
+  }
+
+  private CloudModel convert(Empty execute, Operation operation) {
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.operation = operation;
+    cloudModel.num_id = EMPTY_RETURN_RECEIPT;
+    return cloudModel;
+  }
+
+  private List<DeviceCredential> convertUdmi(List<Credential> credentials) {
+    return ifNotNullGet(credentials,
+        list -> list.stream().map(GcpIotAccessProvider::convertUdmi).collect(Collectors.toList()));
   }
 
   @NotNull
@@ -105,7 +182,8 @@ public class GcpIotAccessProvider extends UdmisComponent implements IotAccessPro
       List<DeviceConfig> deviceConfigs = registries.devices().configVersions()
           .list(getDevicePath(registryId, deviceId)).execute().getDeviceConfigs();
       if (deviceConfigs.size() > 0) {
-        return new String(Base64.getDecoder().decode(deviceConfigs.get(0).getBinaryData()));
+        return ifNotNullGet(deviceConfigs.get(0).getBinaryData(),
+            binaryData -> new String(Base64.getDecoder().decode(binaryData)));
       }
       return null;
     } catch (Exception e) {
@@ -160,14 +238,35 @@ public class GcpIotAccessProvider extends UdmisComponent implements IotAccessPro
       Devices.List request = registries.devices().list(registryPath);
       ifNotNullThen(gatewayId, request::setGatewayListOptionsAssociationsGatewayId);
       ListDevicesResponse response = request.execute();
+      List<Device> devices =
+          ofNullable(response.getDevices()).orElseGet(ImmutableList::of);
       CloudModel cloudModel = new CloudModel();
-      cloudModel.device_ids = response.getDevices().stream().map(GcpIotAccessProvider::convert)
-          .collect(Collectors.toMap(Entry::getKey, Entry::getValue, GeneralUtils::mapReplace,
-              HashMap::new));
+      cloudModel.device_ids =
+          devices.stream().map(GcpIotAccessProvider::convertToEntry)
+              .collect(Collectors.toMap(Entry::getKey, Entry::getValue, GeneralUtils::mapReplace,
+                  HashMap::new));
       return cloudModel;
     } catch (Exception e) {
       throw new RuntimeException("While listing devices for " + registryPath, e);
     }
+  }
+
+  private void unbindDevice(String registryId, String gatewayId, String proxyId) {
+    try {
+      registries.unbindDeviceFromGateway(getRegistryPath(registryId),
+              new UnbindDeviceFromGatewayRequest()
+                  .setDeviceId(proxyId)
+                  .setGatewayId(gatewayId))
+          .execute();
+    } catch (Exception e) {
+      throw new RuntimeException("While unbinding " + proxyId + " from " + gatewayId, e);
+    }
+  }
+
+  private void unbindGatewayDevices(String registryId, String deviceId) {
+    CloudModel cloudModel = listRegistryDevices(registryId, deviceId);
+    ifNotNullThen(cloudModel.device_ids, ids -> ids.keySet()
+        .forEach(id -> unbindDevice(registryId, deviceId, id)));
   }
 
   @Override
@@ -180,14 +279,57 @@ public class GcpIotAccessProvider extends UdmisComponent implements IotAccessPro
   }
 
   @Override
-  public CloudModel listRegistryDevices(String deviceRegistryId) {
+  public CloudModel fetchDevice(String deviceRegistryId, String deviceId) {
+    String devicePath = getDevicePath(deviceRegistryId, deviceId);
+    try {
+      CloudModel convert = convert(registries.devices().get(devicePath).execute(), Operation.FETCH);
+      convert.device_ids = listRegistryDevices(deviceRegistryId, deviceId).device_ids;
+      return convert;
+    } catch (Exception e) {
+      throw new RuntimeException("While fetching device " + devicePath, e);
+    }
+
+  }
+
+  @Override
+  public CloudModel listDevices(String deviceRegistryId) {
     return listRegistryDevices(deviceRegistryId, null);
+  }
+
+  @Override
+  public CloudModel modelDevice(String registryId, String deviceId, CloudModel cloudModel) {
+    String devicePath = getDevicePath(registryId, deviceId);
+    Operation operation = cloudModel.operation;
+    try {
+      Device device = convert(cloudModel);
+      Devices registryDevices = registries.devices();
+      switch (operation) {
+        case CREATE:
+          Device createDevice = device.setId(deviceId);
+          return convert(
+              registryDevices.create(getRegistryPath(registryId), createDevice).execute(),
+              operation);
+        case UPDATE:
+          return convert(
+              registryDevices.patch(devicePath, device.setNumId(null))
+                  .setUpdateMask(UPDATE_FIELD_MASK).execute(), operation);
+        case DELETE:
+          unbindGatewayDevices(registryId, deviceId);
+          return convert(registryDevices.delete(devicePath).execute(), operation);
+        case BIND:
+          return bindDeviceToGateway(registryId, deviceId, cloudModel);
+        default:
+          throw new RuntimeException("Unknown operation " + operation);
+      }
+    } catch (Exception e) {
+      throw new RuntimeException("While " + operation + "ing " + devicePath, e);
+    }
   }
 
   @Override
   public void modifyConfig(String registryId, String deviceId, SubFolder subFolder,
       String contents) {
-    // TODO: Need to implement checking of config version for concurrent operations.
+    // TODO: Need to implement checking-and-retry of config version for concurrent operations.
     String configString = ofNullable(fetchConfig(registryId, deviceId)).orElse(EMPTY_JSON);
     Map<String, Object> configMap = toMap(configString);
     configMap.put(subFolder.toString(), contents);
@@ -202,7 +344,8 @@ public class GcpIotAccessProvider extends UdmisComponent implements IotAccessPro
       requireNonNull(deviceId, "device not defined");
       String subFolder = requireNonNull(folder, "subfolder not defined").value();
       SendCommandToDeviceRequest request =
-          new SendCommandToDeviceRequest().setBinaryData(encodeBase64(message)).setSubfolder(subFolder);
+          new SendCommandToDeviceRequest().setBinaryData(encodeBase64(message))
+              .setSubfolder(subFolder);
       registries.devices().sendCommandToDevice(getDevicePath(registryId, deviceId), request)
           .execute();
     } catch (Exception e) {

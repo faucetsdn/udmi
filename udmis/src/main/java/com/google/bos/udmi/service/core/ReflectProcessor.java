@@ -7,7 +7,6 @@ import static com.google.udmi.util.GeneralUtils.copyFields;
 import static com.google.udmi.util.GeneralUtils.decodeBase64;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
-import static com.google.udmi.util.GeneralUtils.mergeObject;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.loadFileStrictRequired;
@@ -20,6 +19,7 @@ import com.google.udmi.util.JsonUtil;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import org.checkerframework.checker.units.qual.C;
 import udmi.schema.CloudModel;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
@@ -78,15 +78,15 @@ public class ReflectProcessor extends UdmisComponent {
     return udmiState;
   }
 
-  private CloudModel  getReflectionResult(Envelope attributes, Map<String, Object> payload) {
+  private CloudModel getReflectionResult(Envelope attributes, Map<String, Object> payload) {
     try {
       switch (attributes.subType) {
         case QUERY:
           return reflectQuery(attributes, payload);
         case MODEL:
-          return reflectModel(attributes);
+          return reflectModel(attributes, convertToStrict(CloudModel.class, payload));
         default:
-          return reflectPropagate(attributes);
+          return reflectPropagate(attributes, payload);
       }
     } catch (Exception e) {
       throw new RuntimeException("While processing reflect message type " + attributes.subType, e);
@@ -109,42 +109,49 @@ public class ReflectProcessor extends UdmisComponent {
     sendReflectCommand(reflection, envelope, result);
   }
 
-  private void sendReflectCommand(Envelope reflection, Envelope message, Object payload) {
-    String reflectRegistry = reflection.deviceRegistryId;
-    String deviceRegistry = reflection.deviceId;
-    message.payload = encodeBase64(stringify(payload));
-    provider.sendCommand(reflectRegistry, deviceRegistry, SubFolder.UDMI, stringify(message));
-  }
-
   private CloudModel queryCloudDevice(Envelope attributes) {
-    throw new RuntimeException("Not yet implemented");
+    return provider.fetchDevice(attributes.deviceRegistryId, attributes.deviceId);
   }
 
   private CloudModel queryCloudRegistry(Envelope attributes) {
-    return provider.listRegistryDevices(attributes.deviceRegistryId);
+    return provider.listDevices(attributes.deviceRegistryId);
   }
 
-  private CloudModel reflectModel(Envelope attributes) {
-    throw new RuntimeException("Not yet implemented");
+  private CloudModel reflectModel(Envelope attributes, CloudModel request) {
+    return requireNonNull(
+        provider.modelDevice(attributes.deviceRegistryId, attributes.deviceId, request),
+        "missing reflect model response");
   }
 
-  private CloudModel reflectPropagate(Envelope attributes) {
-    throw new RuntimeException("Not yet implemented");
+  private CloudModel reflectPropagate(Envelope attributes, Map<String, Object> payload) {
+    switch (attributes.subType) {
+      case CONFIG:
+        provider.modifyConfig(attributes.deviceRegistryId, attributes.deviceId, SubFolder.UPDATE,
+            stringify(payload));
+        return new CloudModel();
+      default:
+        throw new RuntimeException("Unknown propagate subType " + attributes.subType);
+    }
   }
 
   private CloudModel reflectQuery(Envelope attributes, Map<String, Object> payload) {
     checkState(payload.size() == 0, "unexpected non-empty message payload");
-    switch (attributes.subFolder) {
-      case CLOUD:
-        return reflectQueryCloud(attributes);
-      default:
-        throw new RuntimeException("Unknown query folder: " + attributes.subFolder);
+    if (requireNonNull(attributes.subFolder) == SubFolder.CLOUD) {
+      return reflectQueryCloud(attributes);
     }
+    throw new RuntimeException("Unknown query folder: " + attributes.subFolder);
   }
 
   private CloudModel reflectQueryCloud(Envelope attributes) {
     return attributes.deviceId != null
         ? queryCloudDevice(attributes) : queryCloudRegistry(attributes);
+  }
+
+  private void sendReflectCommand(Envelope reflection, Envelope message, Object payload) {
+    String reflectRegistry = reflection.deviceRegistryId;
+    String deviceRegistry = reflection.deviceId;
+    message.payload = encodeBase64(stringify(payload));
+    provider.sendCommand(reflectRegistry, deviceRegistry, SubFolder.UDMI, stringify(message));
   }
 
   private void stateHandler(Envelope envelope, UdmiState toolState) {

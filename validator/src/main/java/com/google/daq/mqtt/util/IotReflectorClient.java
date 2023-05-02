@@ -6,11 +6,13 @@ import static com.google.udmi.util.Common.EXCEPTION_KEY;
 import static com.google.udmi.util.Common.TRANSACTION_KEY;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static java.util.Optional.ofNullable;
 import static udmi.schema.CloudModel.Operation.BIND;
 
 import com.google.common.base.Preconditions;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
 import com.google.udmi.util.Common;
+import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.SiteModel;
 import java.util.HashMap;
 import java.util.List;
@@ -107,7 +109,7 @@ public class IotReflectorClient implements IotProvider {
 
   @Override
   public Set<String> fetchDeviceIds(String forGatewayId) {
-    return Optional.ofNullable(fetchCloudModel(forGatewayId))
+    return ofNullable(fetchCloudModel(forGatewayId))
         .map(model -> model.device_ids.keySet()).orElse(null);
   }
 

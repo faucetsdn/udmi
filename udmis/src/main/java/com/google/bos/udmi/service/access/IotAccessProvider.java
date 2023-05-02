@@ -41,5 +41,9 @@ public interface IotAccessProvider {
 
   void updateConfig(String registryId, String deviceId, String config);
 
-  CloudModel listRegistryDevices(String deviceRegistryId);
+  CloudModel listDevices(String deviceRegistryId);
+
+  CloudModel fetchDevice(String deviceRegistryId, String deviceId);
+
+  CloudModel modelDevice(String deviceRegistryId, String deviceId, CloudModel cloudModel);
 }
