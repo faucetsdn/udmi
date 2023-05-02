@@ -4,8 +4,10 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.Common.ERROR_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.GeneralUtils.copyFields;
-import static com.google.udmi.util.GeneralUtils.deepCopy;
+import static com.google.udmi.util.GeneralUtils.decodeBase64;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static com.google.udmi.util.GeneralUtils.mergeObject;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.loadFileStrictRequired;
@@ -14,8 +16,6 @@ import static com.google.udmi.util.JsonUtil.toMap;
 import static java.util.Objects.requireNonNull;
 
 import com.google.bos.udmi.service.messaging.MessageContinuation;
-import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
-import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import java.io.File;
 import java.util.HashMap;
@@ -42,21 +42,22 @@ public class ReflectProcessor extends UdmisComponent {
   protected void defaultHandler(Object message) {
     MessageContinuation continuation = getContinuation(message);
     requireNonNull(provider, "iot access provider not set");
-    Envelope envelope = continuation.getEnvelope();
+    Envelope reflection = continuation.getEnvelope();
     try {
       final CloudModel reply;
-      if (envelope.subFolder == null) {
-        stateHandler(envelope, extractUdmiState(message));
-      } else if (envelope.subFolder != SubFolder.UDMI) {
-        throw new IllegalStateException("Unexpected reflect subfolder " + envelope.subFolder);
+      if (reflection.subFolder == null) {
+        stateHandler(reflection, extractUdmiState(message));
+      } else if (reflection.subFolder != SubFolder.UDMI) {
+        throw new IllegalStateException("Unexpected reflect subfolder " + reflection.subFolder);
       } else {
         Map<String, Object> stringObjectMap = toMap(message);
         Map<String, Object> payload = extractMessagePayload(stringObjectMap);
-        Envelope encapsulated = extractMessageEnvelope(stringObjectMap);
-        processReflection(envelope, encapsulated, payload);
+        Envelope envelope = extractMessageEnvelope(stringObjectMap);
+        reflection.transactionId = envelope.transactionId;
+        processReflection(reflection, envelope, payload);
       }
     } catch (Exception e) {
-      processException(envelope, e);
+      processException(reflection, e);
     }
   }
 
@@ -66,7 +67,7 @@ public class ReflectProcessor extends UdmisComponent {
 
   private Map<String, Object> extractMessagePayload(Map<String, Object> message) {
     String payload = (String) message.remove(PAYLOAD_KEY);
-    return toMap(GeneralUtils.decodeBase64(payload));
+    return ifNotNullGet(payload, data -> toMap(decodeBase64(data)));
   }
 
   private UdmiState extractUdmiState(Object message) {
@@ -92,28 +93,27 @@ public class ReflectProcessor extends UdmisComponent {
     }
   }
 
-  private void processException(Envelope envelope, Exception e) {
-    provider.sendCommand(envelope.deviceRegistryId, envelope.deviceId, SubFolder.UDMI,
-        stringify(makeErrorMessage(envelope, e)));
-  }
-
-  private Envelope makeErrorMessage(Envelope envelope, Exception e) {
-    Envelope reply = deepCopy(envelope);
-    reply.subFolder = SubFolder.ERROR;
+  private void processException(Envelope reflection, Exception e) {
     Map<String, Object> message = new HashMap<>();
     message.put(ERROR_KEY, stackTraceString(e));
-    reply.payload = encodeBase64(stringify(message));
-    return reply;
+    Envelope envelope = new Envelope();
+    envelope.subFolder = SubFolder.ERROR;
+    envelope.transactionId = reflection.transactionId;
+    sendReflectCommand(reflection, envelope, message);
   }
 
-  private void processReflection(Envelope reflection, Envelope attributes,
+  private void processReflection(Envelope reflection, Envelope envelope,
       Map<String, Object> payload) {
-    CloudModel result = getReflectionResult(attributes, payload);
-    Envelope envelope = deepCopy(attributes);
+    CloudModel result = getReflectionResult(envelope, payload);
     envelope.subType = SubType.REPLY;
-    envelope.payload = encodeBase64(stringify(result));
-    provider.sendCommand(reflection.deviceRegistryId, reflection.deviceId, SubFolder.UDMI,
-        stringify(envelope));
+    sendReflectCommand(reflection, envelope, result);
+  }
+
+  private void sendReflectCommand(Envelope reflection, Envelope message, Object payload) {
+    String reflectRegistry = reflection.deviceRegistryId;
+    String deviceRegistry = reflection.deviceId;
+    message.payload = encodeBase64(stringify(payload));
+    provider.sendCommand(reflectRegistry, deviceRegistry, SubFolder.UDMI, stringify(message));
   }
 
   private CloudModel queryCloudDevice(Envelope attributes) {
