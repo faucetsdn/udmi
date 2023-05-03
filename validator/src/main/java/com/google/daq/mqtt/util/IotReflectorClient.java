@@ -6,18 +6,16 @@ import static com.google.udmi.util.Common.EXCEPTION_KEY;
 import static com.google.udmi.util.Common.TRANSACTION_KEY;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static udmi.schema.CloudModel.Operation.BIND;
 
 import com.google.common.base.Preconditions;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
-import com.google.udmi.util.Common;
-import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.SiteModel;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import org.jetbrains.annotations.Nullable;
 import udmi.schema.CloudModel;
@@ -29,11 +27,10 @@ import udmi.schema.ExecutionConfiguration;
  */
 public class IotReflectorClient implements IotProvider {
 
-  // Requires functions that support cloud device manager support.
-  private static final int REQUIRED_FUNCTION_VER = 8;
-
   public static final String CLOUD_QUERY_TOPIC = "cloud/query";
   public static final String CLOUD_MODEL_TOPIC = "cloud/model";
+  // Requires functions that support cloud device manager support.
+  private static final int REQUIRED_FUNCTION_VER = 8;
   private static final String UPDATE_CONFIG_TOPIC = "update/config";
   private final com.google.bos.iot.core.proxy.IotReflectorClient messageClient;
 
@@ -88,7 +85,8 @@ public class IotReflectorClient implements IotProvider {
     Map<String, Object> message = transaction(deviceId, topic, stringify(model));
     CloudModel cloudModel = convertToStrict(CloudModel.class, message);
     if (cloudModel == null || cloudModel.num_id == null || cloudModel.operation != operation) {
-      throw new RuntimeException("Invalid return receipt for " + operation + " on " + deviceId);
+      throw new RuntimeException(format("Invalid return receipt %s for request %s",
+          stringify(cloudModel), stringify(model)));
     }
     return cloudModel;
   }

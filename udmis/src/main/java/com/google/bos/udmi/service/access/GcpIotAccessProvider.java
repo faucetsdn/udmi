@@ -6,6 +6,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.getDate;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
+import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
@@ -23,6 +24,7 @@ import com.google.api.services.cloudiot.v1.model.DeviceConfig;
 import com.google.api.services.cloudiot.v1.model.DeviceCredential;
 import com.google.api.services.cloudiot.v1.model.DeviceRegistry;
 import com.google.api.services.cloudiot.v1.model.Empty;
+import com.google.api.services.cloudiot.v1.model.GatewayConfig;
 import com.google.api.services.cloudiot.v1.model.ListDeviceRegistriesResponse;
 import com.google.api.services.cloudiot.v1.model.ListDevicesResponse;
 import com.google.api.services.cloudiot.v1.model.ModifyCloudToDeviceConfigRequest;
@@ -80,6 +82,9 @@ public class GcpIotAccessProvider extends UdmisComponent implements IotAccessPro
           Key_format.ES_256_X_509, ES_CERT_FILE);
   private static final String UPDATE_FIELD_MASK = "blocked,credentials,metadata";
   private static final String EMPTY_RETURN_RECEIPT = "-1";
+  private static final String ASSOCIATION_ONLY = "ASSOCIATION_ONLY";
+  private static final GatewayConfig GATEWAY_CONFIG =
+      new GatewayConfig().setGatewayType(GATEWAY_TYPE).setGatewayAuthMethod(ASSOCIATION_ONLY);
   private final String projectId;
   private final Map<String, String> registryCloudRegions;
   private final CloudIot cloudIotService;
@@ -131,7 +136,10 @@ public class GcpIotAccessProvider extends UdmisComponent implements IotAccessPro
       CloudModel cloudModel) {
     CloudModel reply = new CloudModel();
     reply.device_ids = new HashMap<>();
-    cloudModel.device_ids.keySet().forEach(id -> {
+    Set<String> deviceIds = cloudModel.device_ids.keySet();
+    reply.num_id = deviceIds.size() > 0 ? EMPTY_RETURN_RECEIPT : null;
+    reply.operation = cloudModel.operation;
+    deviceIds.forEach(id -> {
       try {
         BindDeviceToGatewayRequest request =
             new BindDeviceToGatewayRequest().setDeviceId(id).setGatewayId(gatewayId);
@@ -147,6 +155,7 @@ public class GcpIotAccessProvider extends UdmisComponent implements IotAccessPro
     return new Device()
         .setBlocked(cloudModel.blocked)
         .setCredentials(convertUdmi(cloudModel.credentials))
+        .setGatewayConfig(TRUE.equals(cloudModel.is_gateway) ? GATEWAY_CONFIG : null)
         .setMetadata(cloudModel.metadata);
   }
 
@@ -330,16 +339,19 @@ public class GcpIotAccessProvider extends UdmisComponent implements IotAccessPro
   public void modifyConfig(String registryId, String deviceId, SubFolder subFolder,
       String contents) {
     // TODO: Need to implement checking-and-retry of config version for concurrent operations.
-    String configString = ofNullable(fetchConfig(registryId, deviceId)).orElse(EMPTY_JSON);
-    Map<String, Object> configMap = toMap(configString);
-    configMap.put(subFolder.toString(), contents);
-    updateConfig(registryId, deviceId, stringify(configMap));
+    if (subFolder == SubFolder.UPDATE) {
+      updateConfig(registryId, deviceId, contents);
+    } else {
+      String configString = ofNullable(fetchConfig(registryId, deviceId)).orElse(EMPTY_JSON);
+      Map<String, Object> configMap = toMap(configString);
+      configMap.put(subFolder.toString(), contents);
+      updateConfig(registryId, deviceId, stringify(configMap));
+    }
   }
 
   @Override
   public void sendCommand(String registryId, String deviceId, SubFolder folder, String message) {
     try {
-      System.err.println("Sending " + folder.value() + ": " + message);
       requireNonNull(registryId, "registry not defined");
       requireNonNull(deviceId, "device not defined");
       String subFolder = requireNonNull(folder, "subfolder not defined").value();

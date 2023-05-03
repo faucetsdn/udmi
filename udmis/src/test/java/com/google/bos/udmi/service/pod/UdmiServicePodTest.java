@@ -132,7 +132,6 @@ public class UdmiServicePodTest {
     File outDir = new File(podConfiguration.bridges.get("trace").from.send_id);
     deleteDirectory(outDir);
     File targetFile = new File(outDir, TARGET_FILE);
-    System.err.println("Target out " + targetFile.getAbsolutePath());
     assertFalse(targetFile.exists(), "target file exists and should not");
     pod.activate();
     Thread.sleep(RECEIVE_TIMEOUT_MS);
