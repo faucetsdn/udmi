@@ -623,7 +623,7 @@ function iotCoreToUdmiDevice(core) {
     blocked: core.blocked,
     metadata: core.metadata,
     last_event_time: lastEventTime,
-    is_gateway: core.gatewayConfig && core.gatewayConfig.gatewayType == 'GATEWAY',
+    is_gateway: core.gatewayConfig && core.gatewayConfig.gatewayType === 'GATEWAY',
     credentials: iotCoreToUdmiCredentials(core.credentials),
   };
 }
@@ -769,7 +769,7 @@ exports.udmi_config = functions.pubsub.topic('udmi_config').onPublish((event) =>
   }
 
   attributes.subType = CONFIG_TYPE;
-  const partialUpdate = subFolder != UPDATE_FOLDER;
+  const partialUpdate = subFolder !== UPDATE_FOLDER;
 
   return modify_device_config(registryId, deviceId, subFolder, msgObject, currentTimestamp(), transactionId).
     then(() => partialUpdate && reflectMessage(attributes, msgObject)).
@@ -826,17 +826,17 @@ async function modify_device_config(registryId, deviceId, subFolder, subContents
   const [oldConfig, version] = await get_device_config(registryId, deviceId);
   var newConfig;
 
-  if (subFolder == 'last_start') {
+  if (subFolder === 'last_start') {
     newConfig = parse_old_config(oldConfig, false, deviceId);
     if (!newConfig || !update_last_start(newConfig, subContents)) {
       return;
     }
-  } else if (subFolder == UPDATE_FOLDER) {
+  } else if (subFolder === UPDATE_FOLDER) {
     console.log('Config replace version', deviceId, version, startTime, transactionId);
     newConfig = subContents;
     newConfig.timestamp = startTime;
   } else {
-    const resetConfig = subFolder == 'system' && subContents && subContents.extra_field == 'reset_config';
+    const resetConfig = subFolder === 'system' && subContents && subContents.extra_field === 'reset_config';
     newConfig = parse_old_config(oldConfig, resetConfig, deviceId);
     if (newConfig === null) {
       return;
@@ -942,7 +942,7 @@ function consolidate_config(registryId, deviceId, subFolder) {
   const dev_doc = reg_doc.collection('devices').doc(deviceId);
   const configs = dev_doc.collection(CONFIG_TYPE);
 
-  if (subFolder == UPDATE_FOLDER) {
+  if (subFolder === UPDATE_FOLDER) {
     return;
   }
 

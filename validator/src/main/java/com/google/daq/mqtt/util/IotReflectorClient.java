@@ -142,7 +142,6 @@ public class IotReflectorClient implements IotProvider {
       }
       String transactionId = messageBundle.attributes.get(TRANSACTION_KEY);
       if (sentId.equals(transactionId)) {
-        System.err.println(stringify(messageBundle));
         String error = (String) messageBundle.message.get(ERROR_KEY);
         if (error != null) {
           throw new RuntimeException("UDMIS error: " + error);

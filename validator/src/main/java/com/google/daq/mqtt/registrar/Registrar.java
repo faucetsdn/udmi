@@ -1,7 +1,9 @@
 package com.google.daq.mqtt.registrar;
 
+import static com.google.common.collect.Sets.intersection;
 import static com.google.udmi.util.Common.NO_SITE;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
+import static java.util.Optional.ofNullable;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.fge.jsonschema.core.load.configuration.LoadingConfiguration;
@@ -58,6 +60,7 @@ import udmi.schema.Metadata;
 public class Registrar {
 
   public static final String SCHEMA_BASE_PATH = "schema";
+  public static final Joiner JOIN_CSV = Joiner.on(", ");
   static final String METADATA_JSON = "metadata.json";
   static final String ENVELOPE_JSON = "envelope.json";
   static final String NORMALIZED_JSON = "metadata_norm.json";
@@ -77,7 +80,6 @@ public class Registrar {
   private static final String CONFIG_SUB_TYPE = "config";
   private static final String MODEL_SUB_TYPE = "model";
   private static final boolean DEFAULT_BLOCK_UNKNOWN = true;
-  public static final Joiner JOIN_CSV = Joiner.on(", ");
   private final Map<String, JsonSchema> schemas = new HashMap<>();
   private final String generation = getGenerationString();
   private CloudIotManager cloudIotManager;
@@ -315,7 +317,7 @@ public class Registrar {
     if (cloudIotManager.getUpdateTopic() != null) {
       updatePusher = new PubSubPusher(projectId, cloudIotManager.getUpdateTopic());
     }
-    blockUnknown = Optional.ofNullable(blockUnknown)
+    blockUnknown = ofNullable(blockUnknown)
         .orElse(Objects.requireNonNullElse(cloudIotManager.executionConfiguration.block_unknown,
             DEFAULT_BLOCK_UNKNOWN));
   }
@@ -335,13 +337,13 @@ public class Registrar {
     AtomicInteger updatedCount = new AtomicInteger();
     AtomicInteger processedCount = new AtomicInteger();
     try {
+      localDevices = loadLocalDevices(deviceSet);
       cloudDevices = fetchCloudDevices();
       if (deleteDevices) {
-        deleteCloudDevices();
+        deleteCloudDevices(deviceSet);
         return;
       }
 
-      localDevices = loadLocalDevices(deviceSet);
 
       if (deviceSet != null) {
         Set<String> unknowns = Sets.difference(deviceSet, localDevices.keySet());
@@ -371,19 +373,30 @@ public class Registrar {
     }
   }
 
-  private void deleteCloudDevices() {
+  private void deleteCloudDevices(Set<String> deviceSet) {
     if (cloudDevices.isEmpty()) {
       System.err.println("No devices to delete, our work here is done!");
       return;
     }
-    for (String deviceId : cloudDevices) {
-      System.err.println("Removing " + deviceId + " from registry...");
-      cloudIotManager.deleteDevice(deviceId);
-    }
+    Set<String> union = intersection(cloudDevices, ofNullable(deviceSet).orElse(cloudDevices));
+    Set<String> gateways = union.stream().filter(id -> localDevices.get(id).isGateway()).collect(
+        Collectors.toSet());
+    Set<String> others = Sets.difference(union, gateways);
+
+    // Delete gateways first so that they aren't holding the other devices hostage.
+    gateways.forEach(this::deleteDevice);
+    others.forEach(this::deleteDevice);
+
     Set<String> deviceIds = fetchCloudDevices();
-    if (!deviceIds.isEmpty()) {
+    Set<String> remaining = intersection(deviceIds, ofNullable(deviceSet).orElse(deviceIds));
+    if (!remaining.isEmpty()) {
       throw new RuntimeException("Did not delete all devices!");
     }
+  }
+
+  private void deleteDevice(String deviceId) {
+    System.err.println("Removing " + deviceId + " from registry...");
+    cloudIotManager.deleteDevice(deviceId);
   }
 
   private void processLocalDevices(AtomicInteger updatedCount, AtomicInteger processedCount)
