@@ -148,11 +148,11 @@ public class UdmiServicePodTest {
     File outDir = new File(podConfiguration.bridges.get("trace").from.send_id);
     deleteDirectory(outDir);
     File targetFile = new File(outDir, TARGET_FILE);
-    assertFalse(targetFile.exists(), "target file exists and should not");
+    assertFalse(targetFile.exists(), "file should not exist " + targetFile.getAbsolutePath());
     pod.activate();
     Thread.sleep(RECEIVE_TIMEOUT_MS);
     pod.shutdown();
-    assertTrue(targetFile.exists(), "missing target output file");
+    assertTrue(targetFile.exists(), "missing target output file " + targetFile.getAbsolutePath());
   }
 
   @Test
