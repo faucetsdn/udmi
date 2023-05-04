@@ -1,32 +1,46 @@
 package com.google.bos.udmi.service.pod;
 
 import static com.google.bos.udmi.service.messaging.impl.MessageBase.combineConfig;
+import static com.google.bos.udmi.service.messaging.impl.TraceMessagePipeTest.TEST_DEVICE;
+import static com.google.bos.udmi.service.messaging.impl.TraceMessagePipeTest.TEST_REGISTRY;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.udmi.util.GeneralUtils.arrayOf;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
+import static com.google.udmi.util.JsonUtil.convertToStrict;
+import static com.google.udmi.util.JsonUtil.getTimestamp;
+import static com.google.udmi.util.JsonUtil.toMap;
 import static org.apache.commons.io.FileUtils.deleteDirectory;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
-import com.google.bos.udmi.service.access.MockIotAccessProvider;
+import com.google.bos.udmi.service.access.IotAccessProvider;
 import com.google.bos.udmi.service.core.ProcessorTestBase;
+import com.google.bos.udmi.service.core.ReflectProcessorTest;
 import com.google.bos.udmi.service.messaging.StateUpdate;
 import com.google.bos.udmi.service.messaging.impl.LocalMessagePipe;
+import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl;
 import com.google.bos.udmi.service.messaging.impl.MessageTestBase;
 import java.io.File;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 import udmi.schema.DiscoveryState;
 import udmi.schema.EndpointConfiguration;
+import udmi.schema.Envelope.SubFolder;
 import udmi.schema.LocalnetModel;
 import udmi.schema.PodConfiguration;
 import udmi.schema.PointsetState;
@@ -44,6 +58,16 @@ public class UdmiServicePodTest {
   private static final String TARGET_FILE = "null/null/devices/null/001_event_pointset.json";
   private static final long RECEIVE_TIMEOUT_SEC = 2;
   private static final long RECEIVE_TIMEOUT_MS = RECEIVE_TIMEOUT_SEC * 1000;
+
+  private Bundle getReflectorStateBundle() {
+    HashMap<Object, Object> messageMap = new HashMap<>();
+    UdmiState state = new UdmiState();
+    messageMap.put(SubFolder.UDMI.value(), state);
+    Bundle bundle = new Bundle(messageMap);
+    bundle.envelope.deviceRegistryId = TEST_REGISTRY;
+    bundle.envelope.deviceId = TEST_DEVICE;
+    return bundle;
+  }
 
   private EndpointConfiguration reverseFlow(EndpointConfiguration flow) {
     checkNotNull(flow, "message flow not defined");
@@ -144,6 +168,9 @@ public class UdmiServicePodTest {
     ProcessorTestBase.writeVersionDeployFile();
     UdmiServicePod pod = new UdmiServicePod(arrayOf(CONFIG_FILE));
 
+    IotAccessProvider iotAccessProvider = Mockito.mock(IotAccessProvider.class);
+    pod.setIotAccessProvider(iotAccessProvider);
+
     PodConfiguration podConfig = pod.getPodConfiguration();
 
     EndpointConfiguration reversedReflect =
@@ -152,16 +179,23 @@ public class UdmiServicePodTest {
         MessageTestBase.getDispatcherFor(reversedReflect);
 
     pod.activate();
+    verify(iotAccessProvider, times(1)).activate();
+    verify(iotAccessProvider, times(0)).shutdown();
 
-    UdmiState udmiState = new UdmiState();
-    reflectDispatcher.publish(udmiState);
+    reflectDispatcher.publishBundle(getReflectorStateBundle());
 
     pod.shutdown();
+    verify(iotAccessProvider, times(1)).shutdown();
+    verify(iotAccessProvider, times(1)).activate();
 
-    MockIotAccessProvider iotAccessProvider = (MockIotAccessProvider) pod.iotAccessProvider;
-    List<Object> captured = iotAccessProvider.captured;
-    assertEquals(1, captured.size(), "only expected one message");
-    assertTrue(captured.get(0) instanceof UdmiConfig, "expected UDMI config object");
+    ArgumentCaptor<String> configCaptor = ArgumentCaptor.forClass(String.class);
+    verify(iotAccessProvider, times(1)).updateConfig(eq(TEST_REGISTRY), eq(TEST_DEVICE),
+        configCaptor.capture());
+    Map<String, Object> stringObjectMap = toMap(configCaptor.getValue());
+    UdmiConfig udmi =
+        convertToStrict(UdmiConfig.class, stringObjectMap.get(SubFolder.UDMI.value()));
+    assertEquals(getTimestamp(ReflectProcessorTest.TEST_TIMESTAMP),
+        getTimestamp(udmi.setup.deployed_at), "unexpected deploy timestamp");
   }
 
   @AfterEach

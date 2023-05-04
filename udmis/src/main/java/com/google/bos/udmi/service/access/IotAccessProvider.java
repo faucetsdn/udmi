@@ -12,7 +12,6 @@ import udmi.schema.IotAccess;
 public interface IotAccessProvider {
 
   Map<IotAccess.Provider, Class<? extends IotAccessProvider>> PROVIDERS = ImmutableMap.of(
-      IotAccess.Provider.MOCK_IOT_CORE, MockIotAccessProvider.class,
       IotAccess.Provider.GCP_IOT_CORE, GcpIotAccessProvider.class
   );
 

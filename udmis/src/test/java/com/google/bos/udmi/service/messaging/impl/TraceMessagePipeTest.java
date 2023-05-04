@@ -26,12 +26,12 @@ import udmi.schema.Envelope.SubType;
 import udmi.schema.PointPointsetEvent;
 import udmi.schema.PointsetEvent;
 
-class TraceMessagePipeTest {
+public class TraceMessagePipeTest {
 
   public static final String TEST_DEVICE = "bacnet-3104810";
   private static final String SIMPLE_TRACE = "traces/legacy-discovery";
   private static final String TRACE_OUT = "out/trace_pipe/";
-  private static final String TEST_REGISTRY = "TEST_REGISTRY";
+  public static final String TEST_REGISTRY = "TEST_REGISTRY";
   private static final String TEST_PROJECT = "TEST_PROJECT";
   private static final String DEVICE_ONE = "one";
   private static final String DEVICE_TWO = "two";

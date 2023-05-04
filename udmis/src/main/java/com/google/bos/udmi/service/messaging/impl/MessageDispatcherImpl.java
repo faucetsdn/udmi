@@ -64,6 +64,9 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   private final String projectId;
   private final Envelope prototypeEnvelope = new Envelope();
 
+  /**
+   * Create a new instance of the message dispatcher.
+   */
   public MessageDispatcherImpl(EndpointConfiguration configuration) {
     messagePipe = MessagePipe.from(configuration);
     projectId = configuration.hostname;

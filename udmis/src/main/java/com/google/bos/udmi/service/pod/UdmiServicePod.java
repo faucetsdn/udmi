@@ -36,10 +36,10 @@ public class UdmiServicePod {
       "reflect", ReflectProcessor.class
   );
 
+  private IotAccessProvider iotAccessProvider;
   private final PodConfiguration podConfiguration;
   private final Map<Class<?>, UdmisComponent> components;
   private final List<BridgeProcessor> bridges;
-  final IotAccessProvider iotAccessProvider;
 
   /**
    * Core pod to instantiate all the other components as necessary based on configuration.
@@ -50,19 +50,17 @@ public class UdmiServicePod {
 
       podConfiguration = loadFileStrictRequired(PodConfiguration.class, args[0]);
 
-      iotAccessProvider = ifNotNullGet(podConfiguration.iot_access, IotAccessProvider::from);
-
       Map<String, EndpointConfiguration> flowEntries = podConfiguration.flows;
       components = ofNullable(flowEntries).orElse(NO_FLOWS).entrySet().stream()
           .map(this::makeComponentFor).collect(Collectors.toMap(UdmisComponent::getClass,
               thing -> thing));
 
-      ifNotNullThen(iotAccessProvider, () -> components.values()
-          .forEach(target -> target.setIotAccessProvider(iotAccessProvider)));
-
       Map<String, BridgePodConfiguration> bridgeEntries = podConfiguration.bridges;
       bridges = ofNullable(bridgeEntries).orElse(NO_BRIDGES).entrySet().stream()
           .map(this::makeBridgeFor).collect(Collectors.toList());
+
+      setIotAccessProvider(ifNotNullGet(podConfiguration.iot_access, IotAccessProvider::from));
+
     } catch (Exception e) {
       throw new RuntimeException("While instantiating pod " + CSV_JOINER.join(args), e);
     }
@@ -73,11 +71,14 @@ public class UdmiServicePod {
     udmiServicePod.activate();
   }
 
+  public void setIotAccessProvider(IotAccessProvider iotAccessProvider) {
+    this.iotAccessProvider = iotAccessProvider;
+    components.values().forEach(target -> target.setIotAccessProvider(iotAccessProvider));
+  }
+
   private <T extends UdmisComponent> T createComponent(Class<T> clazz,
       EndpointConfiguration config) {
-    return ifNotNullGet(config, () -> {
-      return UdmisComponent.create(clazz, config);
-    });
+    return ifNotNullGet(config, () -> UdmisComponent.create(clazz, config));
   }
 
   private BridgeProcessor makeBridgeFor(Entry<String, BridgePodConfiguration> entry) {

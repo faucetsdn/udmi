@@ -1,29 +1,22 @@
 package com.google.bos.udmi.service.core;
 
-import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.writeFile;
 import static org.apache.commons.io.FileUtils.deleteDirectory;
 
 import com.google.bos.udmi.service.access.IotAccessProvider;
-import com.google.bos.udmi.service.access.MockIotAccessProvider;
 import com.google.bos.udmi.service.messaging.impl.LocalMessagePipeTest;
 import com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl;
 import com.google.udmi.util.CleanDateFormat;
-import com.google.udmi.util.JsonUtil;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import org.jetbrains.annotations.NotNull;
-import org.junit.jupiter.api.Assertions;
+import org.mockito.Mockito;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.EndpointConfiguration.Protocol;
-import udmi.schema.Envelope.SubFolder;
-import udmi.schema.IotAccess;
 import udmi.schema.SetupUdmiConfig;
-import udmi.schema.UdmiConfig;
 
 /**
  * Base class for functional processor tests.
@@ -35,7 +28,7 @@ public abstract class ProcessorTestBase extends LocalMessagePipeTest {
   public static final String TEST_FUNCTIONS = "functions-version";
   protected final List<Object> captured = new ArrayList<>();
   private UdmisComponent processor;
-  private MockIotAccessProvider provider;
+  private IotAccessProvider provider;
 
   protected int getDefaultCount() {
     return processor.getMessageCount(Object.class);
@@ -72,7 +65,7 @@ public abstract class ProcessorTestBase extends LocalMessagePipeTest {
     config.recv_id = TEST_SOURCE;
     config.send_id = TEST_DESTINATION;
     processor = UdmisComponent.create(getProcessorClass(), config);
-    provider = new MockIotAccessProvider(captured::add);
+    provider = Mockito.mock(IotAccessProvider.class);
     processor.setIotAccessProvider(provider);
     processor.activate();
     setTestDispatcher(processor.getDispatcher());

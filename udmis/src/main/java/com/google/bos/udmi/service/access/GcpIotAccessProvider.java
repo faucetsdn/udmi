@@ -60,8 +60,7 @@ import udmi.schema.IotAccess;
  */
 public class GcpIotAccessProvider extends UdmisComponent implements IotAccessProvider {
 
-  public static final String GATEWAY_TYPE = "GATEWAY";
-  public static final String EMPTY_CONFIG = "";
+  private static final String GATEWAY_TYPE = "GATEWAY";
   private static final String EMPTY_JSON = "{}";
   private static final String PROJECT_PATH_FORMAT = "projects/%s";
   private static final String LOCATIONS_PATH_FORMAT = "%s/locations/%s";
@@ -90,6 +89,9 @@ public class GcpIotAccessProvider extends UdmisComponent implements IotAccessPro
   private final CloudIot cloudIotService;
   private CloudIot.Projects.Locations.Registries registries;
 
+  /**
+   * Create a new instance for interfacing with GCP IoT Core.
+   */
   public GcpIotAccessProvider(IotAccess iotAccess) {
     projectId = requireNonNull(iotAccess.project_id, "gcp project id not specified");
     cloudIotService = createCloudIotService();
@@ -106,6 +108,21 @@ public class GcpIotAccessProvider extends UdmisComponent implements IotAccessPro
         config -> GATEWAY_TYPE.equals(config.getGatewayType()));
     cloudModel.credentials = convertIot(device.getCredentials());
     cloudModel.operation = operation;
+    return cloudModel;
+  }
+
+  private Device convert(CloudModel cloudModel) {
+    return new Device()
+        .setBlocked(cloudModel.blocked)
+        .setCredentials(convertUdmi(cloudModel.credentials))
+        .setGatewayConfig(TRUE.equals(cloudModel.is_gateway) ? GATEWAY_CONFIG : null)
+        .setMetadata(cloudModel.metadata);
+  }
+
+  private CloudModel convert(Empty execute, Operation operation) {
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.operation = operation;
+    cloudModel.num_id = EMPTY_RETURN_RECEIPT;
     return cloudModel;
   }
 
@@ -132,6 +149,11 @@ public class GcpIotAccessProvider extends UdmisComponent implements IotAccessPro
         .setFormat(AUTH_TYPE_MAP.get(credential.key_format)));
   }
 
+  private List<DeviceCredential> convertUdmi(List<Credential> credentials) {
+    return ifNotNullGet(credentials,
+        list -> list.stream().map(GcpIotAccessProvider::convertUdmi).collect(Collectors.toList()));
+  }
+
   private CloudModel bindDeviceToGateway(String registryId, String gatewayId,
       CloudModel cloudModel) {
     CloudModel reply = new CloudModel();
@@ -149,26 +171,6 @@ public class GcpIotAccessProvider extends UdmisComponent implements IotAccessPro
       }
     });
     return reply;
-  }
-
-  private Device convert(CloudModel cloudModel) {
-    return new Device()
-        .setBlocked(cloudModel.blocked)
-        .setCredentials(convertUdmi(cloudModel.credentials))
-        .setGatewayConfig(TRUE.equals(cloudModel.is_gateway) ? GATEWAY_CONFIG : null)
-        .setMetadata(cloudModel.metadata);
-  }
-
-  private CloudModel convert(Empty execute, Operation operation) {
-    CloudModel cloudModel = new CloudModel();
-    cloudModel.operation = operation;
-    cloudModel.num_id = EMPTY_RETURN_RECEIPT;
-    return cloudModel;
-  }
-
-  private List<DeviceCredential> convertUdmi(List<Credential> credentials) {
-    return ifNotNullGet(credentials,
-        list -> list.stream().map(GcpIotAccessProvider::convertUdmi).collect(Collectors.toList()));
   }
 
   @NotNull
