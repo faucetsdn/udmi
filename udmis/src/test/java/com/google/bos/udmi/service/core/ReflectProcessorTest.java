@@ -12,9 +12,11 @@ import static com.google.udmi.util.JsonUtil.toMap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.notNull;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.common.collect.ImmutableMap;
@@ -23,9 +25,11 @@ import java.util.List;
 import java.util.Map;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import udmi.schema.CloudModel;
+import udmi.schema.CloudModel.Operation;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
@@ -38,13 +42,19 @@ import udmi.schema.UdmiState;
  */
 public class ReflectProcessorTest extends ProcessorTestBase {
 
+  public final String TRANSACTION_ID = Long.toString(System.currentTimeMillis());
+
   @Override
   protected @NotNull Class<? extends UdmisComponent> getProcessorClass() {
     return ReflectProcessor.class;
   }
 
-  private void activeTestInstance(Runnable action) {
+  @BeforeEach
+  public void initializeInstance() {
     initializeTestInstance();
+  }
+
+  private void activeTestInstance(Runnable action) {
     verify(provider, times(1)).activate();
     verify(provider, times(0)).shutdown();
     action.run();
@@ -65,9 +75,13 @@ public class ReflectProcessorTest extends ProcessorTestBase {
   }
 
   private Bundle makeModelBundle(CloudModel model) {
-    Envelope envelope = new Envelope();
-    envelope.payload = encodeBase64(stringify(model));
-    return new Bundle(makeEnvelope(SubType.MODEL, SubFolder.UDMI), envelope);
+    Envelope reflect = new Envelope();
+    reflect.deviceId = TEST_DEVICE;
+    reflect.deviceRegistryId = TEST_REGISTRY;
+    reflect.transactionId = TRANSACTION_ID;
+    reflect.subType = SubType.MODEL;
+    reflect.payload = encodeBase64(stringify(model));
+    return new Bundle(makeEnvelope(SubType.MODEL, SubFolder.UDMI), reflect);
   }
 
   private Bundle makeUdmiStateBundle(boolean asError) {
@@ -90,27 +104,21 @@ public class ReflectProcessorTest extends ProcessorTestBase {
     assertEquals(TEST_TIMESTAMP, config.setup.deployed_at, "deployed at time");
   }
 
-  /**
-   * Test reflector initial state/config exchange sequence with an invalid bundle.
-   */
   @Test
-  public void invalidConfigExchange() {
-    // This bundle is invalid because the envelope has no payload, so expect an error.
-    activeTestInstance(() -> getReverseDispatcher().publish(makeUdmiStateBundle(true)));
+  public void modelDevice() {
+    CloudModel returnModel = new CloudModel();
+    returnModel.operation = Operation.CREATE;
+    when(provider.modelDevice(anyString(), anyString(), notNull())).thenReturn(returnModel);
+    CloudModel requestModel = new CloudModel();
+    requestModel.operation = Operation.BIND;
+    activeTestInstance(() -> getReverseDispatcher().publish(makeModelBundle(requestModel)));
+    verify(provider, times(1)).modelDevice(eq(TEST_REGISTRY), eq(TEST_DEVICE), eq(requestModel));
 
     ArgumentCaptor<String> commandCaptor = ArgumentCaptor.forClass(String.class);
-    verify(provider, times(1)).sendCommand(anyString(), anyString(), eq(SubFolder.UDMI),
+    verify(provider, times(1)).sendCommand(eq(TEST_REGISTRY), eq(TEST_DEVICE), eq(SubFolder.UDMI),
         commandCaptor.capture());
-    List<String> allValues = commandCaptor.getAllValues();
-    assertEquals(1, allValues.size(), "Expected one sent commands");
-    Envelope errorEnvelope = JsonUtil.fromStringStrict(Envelope.class, allValues.get(0));
-    assertEquals(SubFolder.ERROR, errorEnvelope.subFolder, "expected error response");
-  }
-
-  @Test
-  public void reflectConfigUpdate() {
-    CloudModel model = new CloudModel();
-    activeTestInstance(() -> getReverseDispatcher().publish(makeModelBundle(model)));
+    Envelope envelope = JsonUtil.fromStringStrict(Envelope.class, commandCaptor.getValue());
+    assertEquals(TRANSACTION_ID, envelope.transactionId);
   }
 
   /**
@@ -119,7 +127,7 @@ public class ReflectProcessorTest extends ProcessorTestBase {
    * an updated config message.
    */
   @Test
-  public void stateConfigExchange() {
+  public void initialInitExchange() {
     activeTestInstance(() -> getReverseDispatcher().publish(makeUdmiStateBundle(false)));
 
     assertEquals(0, getExceptionCount(), "exception count");
@@ -132,6 +140,23 @@ public class ReflectProcessorTest extends ProcessorTestBase {
     UdmiConfig udmi =
         convertToStrict(UdmiConfig.class, stringObjectMap.get(SubFolder.UDMI.value()));
     validateUdmiConfig(udmi);
+  }
+
+  /**
+   * Test reflector initial state/config exchange sequence with an invalid bundle.
+   */
+  @Test
+  public void invalidInitExchange() {
+    // This bundle is invalid because the envelope has no payload, so expect an error.
+    activeTestInstance(() -> getReverseDispatcher().publish(makeUdmiStateBundle(true)));
+
+    ArgumentCaptor<String> commandCaptor = ArgumentCaptor.forClass(String.class);
+    verify(provider, times(1)).sendCommand(anyString(), anyString(), eq(SubFolder.UDMI),
+        commandCaptor.capture());
+    List<String> allValues = commandCaptor.getAllValues();
+    assertEquals(1, allValues.size(), "Expected one sent commands");
+    Envelope errorEnvelope = JsonUtil.fromStringStrict(Envelope.class, allValues.get(0));
+    assertEquals(SubFolder.ERROR, errorEnvelope.subFolder, "expected error response");
   }
 
   @AfterEach

@@ -10,6 +10,7 @@ public abstract class MessageTestCore {
   protected static final String TEST_NAMESPACE = "test-namespace";
   protected static final String TEST_SOURCE = "message_from";
   protected static final String TEST_DESTINATION = "message_to";
+  protected static final String TEST_VERSION = "1.32";
 
   protected abstract void augmentConfig(EndpointConfiguration configuration);
 

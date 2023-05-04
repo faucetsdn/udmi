@@ -10,7 +10,6 @@ import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
@@ -25,7 +24,6 @@ import udmi.schema.LocalnetState;
  */
 public abstract class MessageTestBase extends MessageTestCore {
 
-  protected static final String TEST_VERSION = "1.32";
   private static final long RECEIVE_TIMEOUT_MS = 1000;
   protected final AtomicReference<Object> receivedMessage = new AtomicReference<>();
   protected final List<HandlerSpecification> messageHandlers = ImmutableList.of(
