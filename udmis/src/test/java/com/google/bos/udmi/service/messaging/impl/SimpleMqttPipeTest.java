@@ -10,7 +10,7 @@ import udmi.schema.Basic;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.EndpointConfiguration.Protocol;
 
-class SimpleMqttPipeTest extends MessageTestBase {
+class SimpleMqttPipeTest extends MessagePipeTestBase {
 
   public static final String TEST_BROKER_ENV = "MQTT_TEST_BROKER";
   public static final int MESSAGE_SYNC_DELAY_MS = 10000;

@@ -21,7 +21,7 @@ import com.google.bos.udmi.service.messaging.StateUpdate;
 import com.google.bos.udmi.service.messaging.impl.LocalMessagePipe;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl;
-import com.google.bos.udmi.service.messaging.impl.MessageTestBase;
+import com.google.bos.udmi.service.messaging.impl.MessagePipeTestBase;
 import java.io.File;
 import java.util.HashMap;
 import java.util.concurrent.BlockingQueue;
@@ -79,11 +79,11 @@ public class UdmiServicePodTest {
 
     EndpointConfiguration reversedState =
         combineConfig(podConfig.flow_defaults, reverseFlow(podConfig.flows.get("state")));
-    final MessageDispatcherImpl stateDispatcher = MessageTestBase.getDispatcherFor(reversedState);
+    final MessageDispatcherImpl stateDispatcher = MessagePipeTestBase.getDispatcherFor(reversedState);
 
     EndpointConfiguration reversedTarget =
         combineConfig(podConfig.flow_defaults, reverseFlow(podConfig.flows.get("target")));
-    final MessageDispatcherImpl targetDispatcher = MessageTestBase.getDispatcherFor(reversedTarget);
+    final MessageDispatcherImpl targetDispatcher = MessagePipeTestBase.getDispatcherFor(reversedTarget);
 
     pod.activate();
 
@@ -115,10 +115,10 @@ public class UdmiServicePodTest {
 
     EndpointConfiguration reversedFrom =
         combineConfig(podConfig.flow_defaults, reverseFlow(podConfig.bridges.get("test").from));
-    final MessageDispatcherImpl fromDispatcher = MessageTestBase.getDispatcherFor(reversedFrom);
+    final MessageDispatcherImpl fromDispatcher = MessagePipeTestBase.getDispatcherFor(reversedFrom);
     EndpointConfiguration reversedTo =
         combineConfig(podConfig.flow_defaults, reverseFlow(podConfig.bridges.get("test").to));
-    final MessageDispatcherImpl toDispatcher = MessageTestBase.getDispatcherFor(reversedTo);
+    final MessageDispatcherImpl toDispatcher = MessagePipeTestBase.getDispatcherFor(reversedTo);
 
     CompletableFuture<LocalnetModel> received = new CompletableFuture<>();
     fromDispatcher.registerHandler(LocalnetModel.class, received::complete);
@@ -168,7 +168,7 @@ public class UdmiServicePodTest {
     EndpointConfiguration reversedReflect =
         combineConfig(podConfig.flow_defaults, reverseFlow(podConfig.flows.get("reflect")));
     final MessageDispatcherImpl reflectDispatcher =
-        MessageTestBase.getDispatcherFor(reversedReflect);
+        MessagePipeTestBase.getDispatcherFor(reversedReflect);
 
     pod.activate();
     reflectDispatcher.publishBundle(getReflectorStateBundle());
