@@ -95,6 +95,8 @@ public abstract class ProcessorTestBase extends LocalMessagePipeTest {
     getTestDispatcher().awaitShutdown();
     getTestDispatcher().terminate();
     getReverseDispatcher().awaitShutdown();
+    provider.shutdown();
+    processor.shutdown();
   }
 
   private void resultHandler(Object message) {

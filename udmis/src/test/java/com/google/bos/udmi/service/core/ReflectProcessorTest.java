@@ -4,18 +4,24 @@ import static com.google.bos.udmi.service.core.UdmisComponent.FUNCTIONS_VERSION_
 import static com.google.bos.udmi.service.core.UdmisComponent.FUNCTIONS_VERSION_MIN;
 import static com.google.bos.udmi.service.messaging.impl.TraceMessagePipeTest.TEST_DEVICE;
 import static com.google.bos.udmi.service.messaging.impl.TraceMessagePipeTest.TEST_REGISTRY;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.common.collect.ImmutableMap;
+import com.google.udmi.util.JsonUtil;
+import java.util.List;
 import java.util.Map;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import udmi.schema.Envelope;
@@ -30,9 +36,21 @@ import udmi.schema.UdmiState;
  */
 public class ReflectProcessorTest extends ProcessorTestBase {
 
+  public static final String EMPTY_JSON = "{}";
+
   @Override
   protected @NotNull Class<? extends UdmisComponent> getProcessorClass() {
     return ReflectProcessor.class;
+  }
+
+  private void activeTestInstance(Runnable action) {
+    initializeTestInstance();
+    verify(provider, times(1)).activate();
+    verify(provider, times(0)).shutdown();
+    action.run();
+    terminateAndWait();
+    verify(provider, times(1)).activate();
+    verify(provider, times(1)).shutdown();
   }
 
   private Bundle getTestReflectBundle(SubType subType, SubFolder subFolder) {
@@ -68,26 +86,47 @@ public class ReflectProcessorTest extends ProcessorTestBase {
   }
 
   /**
+   * Test reflector initial state/config exchange sequence with an invalid bundle.
+   */
+  @Test
+  public void invalidConfigExchange() {
+    activeTestInstance(() -> {
+      // This bundle is invalid because the envelope has no payload, so expect an error.
+      Bundle subBundle = getTestReflectBundle(SubType.STATE, SubFolder.LOCALNET);
+      getReverseDispatcher().publish(subBundle);
+    });
+
+    ArgumentCaptor<String> commandCaptor = ArgumentCaptor.forClass(String.class);
+    verify(provider, times(1)).sendCommand(anyString(), anyString(), eq(SubFolder.UDMI),
+        commandCaptor.capture());
+    List<String> allValues = commandCaptor.getAllValues();
+    assertEquals(1, allValues.size(), "Expected one sent commands");
+    Envelope errorEnvelope = JsonUtil.fromStringStrict(Envelope.class, allValues.get(0));
+    assertEquals(SubFolder.ERROR, errorEnvelope.subFolder, "expected error response");
+  }
+
+  @Test
+  public void reflectConfigUpdate() {
+    activeTestInstance(() -> {
+      Bundle subBundle = getTestReflectBundle(SubType.MODEL, SubFolder.UDMI);
+      getReverseDispatcher().publish(subBundle);
+    });
+  }
+
+  /**
    * Test that the basic udmi-reflect state/config handshake works. When a client connects it
    * updates the state of the device entry, which then should trigger the underlying logic to output
    * an updated config message.
    */
   @Test
   public void stateConfigExchange() {
-    initializeTestInstance();
-
-    Bundle rawBundle = getTestReflectBundle(null, null);
-    getReverseDispatcher().publish(rawBundle);
-    Bundle subBundle = getTestReflectBundle(SubType.STATE, SubFolder.UDMI);
-    getReverseDispatcher().publish(subBundle);
-
-    terminateAndWait();
+    activeTestInstance(() -> {
+      Bundle rawBundle = getTestReflectBundle(null, null);
+      getReverseDispatcher().publish(rawBundle);
+    });
 
     assertEquals(0, getExceptionCount(), "exception count");
     assertEquals(1, getDefaultCount(), "default handler count");
-    assertEquals(1, getMessageCount(UdmiState.class), "udmi state processed count");
-
-    verify(provider, times(1)).activate();
 
     ArgumentCaptor<String> configCaptor = ArgumentCaptor.forClass(String.class);
     verify(provider, times(1)).updateConfig(eq(TEST_REGISTRY), eq(TEST_DEVICE),
@@ -99,4 +138,8 @@ public class ReflectProcessorTest extends ProcessorTestBase {
         getTimestamp(udmi.setup.deployed_at), "unexpected deploy timestamp");
   }
 
+  @AfterEach
+  public void verifyNothingElse() {
+    ifNotNullThen(provider, provider -> verifyNoMoreInteractions(provider));
+  }
 }

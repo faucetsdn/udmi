@@ -97,7 +97,7 @@ public abstract class JsonUtil {
     }
   }
 
-  private static <T> T fromStringStrict(Class<T> targetClass, String messageString) {
+  public static <T> T fromStringStrict(Class<T> targetClass, String messageString) {
     try {
       return STRICT_MAPPER.readValue(messageString, checkNotNull(targetClass, "target class"));
     } catch (Exception e) {
