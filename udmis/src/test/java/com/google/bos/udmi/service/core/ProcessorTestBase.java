@@ -28,7 +28,7 @@ public abstract class ProcessorTestBase extends LocalMessagePipeTest {
   public static final String TEST_FUNCTIONS = "functions-version";
   protected final List<Object> captured = new ArrayList<>();
   private UdmisComponent processor;
-  private IotAccessProvider provider;
+  protected IotAccessProvider provider;
 
   protected int getDefaultCount() {
     return processor.getMessageCount(Object.class);
@@ -68,6 +68,7 @@ public abstract class ProcessorTestBase extends LocalMessagePipeTest {
     provider = Mockito.mock(IotAccessProvider.class);
     processor.setIotAccessProvider(provider);
     processor.activate();
+    provider.activate();
     setTestDispatcher(processor.getDispatcher());
   }
 

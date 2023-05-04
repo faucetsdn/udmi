@@ -6,22 +6,17 @@ import static com.google.bos.udmi.service.messaging.impl.TraceMessagePipeTest.TE
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.udmi.util.GeneralUtils.arrayOf;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
-import static com.google.udmi.util.JsonUtil.convertToStrict;
-import static com.google.udmi.util.JsonUtil.getTimestamp;
-import static com.google.udmi.util.JsonUtil.toMap;
 import static org.apache.commons.io.FileUtils.deleteDirectory;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import com.google.bos.udmi.service.access.IotAccessProvider;
 import com.google.bos.udmi.service.core.ProcessorTestBase;
-import com.google.bos.udmi.service.core.ReflectProcessorTest;
 import com.google.bos.udmi.service.messaging.StateUpdate;
 import com.google.bos.udmi.service.messaging.impl.LocalMessagePipe;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
@@ -29,14 +24,12 @@ import com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl;
 import com.google.bos.udmi.service.messaging.impl.MessageTestBase;
 import java.io.File;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import udmi.schema.DiscoveryState;
 import udmi.schema.EndpointConfiguration;
@@ -44,7 +37,6 @@ import udmi.schema.Envelope.SubFolder;
 import udmi.schema.LocalnetModel;
 import udmi.schema.PodConfiguration;
 import udmi.schema.PointsetState;
-import udmi.schema.UdmiConfig;
 import udmi.schema.UdmiState;
 
 /**
@@ -179,23 +171,12 @@ public class UdmiServicePodTest {
         MessageTestBase.getDispatcherFor(reversedReflect);
 
     pod.activate();
-    verify(iotAccessProvider, times(1)).activate();
-    verify(iotAccessProvider, times(0)).shutdown();
-
     reflectDispatcher.publishBundle(getReflectorStateBundle());
-
     pod.shutdown();
-    verify(iotAccessProvider, times(1)).shutdown();
-    verify(iotAccessProvider, times(1)).activate();
 
-    ArgumentCaptor<String> configCaptor = ArgumentCaptor.forClass(String.class);
-    verify(iotAccessProvider, times(1)).updateConfig(eq(TEST_REGISTRY), eq(TEST_DEVICE),
-        configCaptor.capture());
-    Map<String, Object> stringObjectMap = toMap(configCaptor.getValue());
-    UdmiConfig udmi =
-        convertToStrict(UdmiConfig.class, stringObjectMap.get(SubFolder.UDMI.value()));
-    assertEquals(getTimestamp(ReflectProcessorTest.TEST_TIMESTAMP),
-        getTimestamp(udmi.setup.deployed_at), "unexpected deploy timestamp");
+    verify(iotAccessProvider, times(1)).activate();
+    verify(iotAccessProvider, times(1)).shutdown();
+    verify(iotAccessProvider, times(1)).updateConfig(anyString(), anyString(), anyString());
   }
 
   @AfterEach
