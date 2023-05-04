@@ -4,6 +4,7 @@ import static com.google.udmi.util.JsonUtil.writeFile;
 import static org.apache.commons.io.FileUtils.deleteDirectory;
 
 import com.google.bos.udmi.service.access.IotAccessProvider;
+import com.google.bos.udmi.service.messaging.impl.LocalMessagePipeTest;
 import com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl;
 import com.google.bos.udmi.service.messaging.impl.MessageTestCore;
 import com.google.udmi.util.CleanDateFormat;
@@ -21,7 +22,7 @@ import udmi.schema.SetupUdmiConfig;
 /**
  * Base class for functional processor tests.
  */
-public abstract class ProcessorTestBase extends MessageTestCore {
+public abstract class ProcessorTestBase extends LocalMessagePipeTest {
 
   public static final String TEST_USER = "giraffe@safari.com";
   public static final Date TEST_TIMESTAMP = CleanDateFormat.cleanDate();
