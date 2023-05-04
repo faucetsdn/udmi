@@ -37,7 +37,7 @@ import udmi.schema.UdmiState;
  * Tests for the reflect processor function.
  */
 public class ReflectProcessorTest extends ProcessorTestBase {
-  
+
   @Override
   protected @NotNull Class<? extends UdmisComponent> getProcessorClass() {
     return ReflectProcessor.class;
