@@ -4,9 +4,10 @@ import static com.google.bos.udmi.service.core.UdmisComponent.FUNCTIONS_VERSION_
 import static com.google.bos.udmi.service.core.UdmisComponent.FUNCTIONS_VERSION_MIN;
 import static com.google.bos.udmi.service.messaging.impl.TraceMessagePipeTest.TEST_DEVICE;
 import static com.google.bos.udmi.service.messaging.impl.TraceMessagePipeTest.TEST_REGISTRY;
+import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
-import static com.google.udmi.util.JsonUtil.getTimestamp;
+import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -24,6 +25,7 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import udmi.schema.CloudModel;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
@@ -35,9 +37,7 @@ import udmi.schema.UdmiState;
  * Tests for the reflect processor function.
  */
 public class ReflectProcessorTest extends ProcessorTestBase {
-
-  public static final String EMPTY_JSON = "{}";
-
+  
   @Override
   protected @NotNull Class<? extends UdmisComponent> getProcessorClass() {
     return ReflectProcessor.class;
@@ -53,13 +53,8 @@ public class ReflectProcessorTest extends ProcessorTestBase {
     verify(provider, times(1)).shutdown();
   }
 
-  private Bundle getTestReflectBundle(SubType subType, SubFolder subFolder) {
-    return new Bundle(getTestReflectEnvelope(subType, subFolder),
-        getTestReflectMessage(subType, subFolder));
-  }
-
   @NotNull
-  private Envelope getTestReflectEnvelope(SubType subType, SubFolder subFolder) {
+  private Envelope makeEnvelope(SubType subType, SubFolder subFolder) {
     Envelope envelope = new Envelope();
     envelope.subType = subType;
     envelope.subFolder = subFolder;
@@ -69,13 +64,23 @@ public class ReflectProcessorTest extends ProcessorTestBase {
     return envelope;
   }
 
+  private Bundle makeModelBundle(CloudModel model) {
+    Envelope envelope = new Envelope();
+    envelope.payload = encodeBase64(stringify(model));
+    return new Bundle(makeEnvelope(SubType.MODEL, SubFolder.UDMI), envelope);
+  }
+
+  private Bundle makeUdmiStateBundle(boolean asError) {
+    return new Bundle(makeEnvelope(null, null), makeUdmiStateMessage(asError));
+  }
+
   @NotNull
-  private Object getTestReflectMessage(SubType subType, SubFolder subFolder) {
+  private Object makeUdmiStateMessage(boolean asError) {
     UdmiState udmiState = new UdmiState();
     udmiState.setup = new SetupUdmiState();
     udmiState.setup.user = TEST_USER;
     udmiState.timestamp = TEST_TIMESTAMP;
-    return subFolder == null ? ImmutableMap.of(SubFolder.UDMI, udmiState) : udmiState;
+    return asError ? udmiState : ImmutableMap.of(SubFolder.UDMI, udmiState);
   }
 
   private void validateUdmiConfig(UdmiConfig config) {
@@ -90,11 +95,8 @@ public class ReflectProcessorTest extends ProcessorTestBase {
    */
   @Test
   public void invalidConfigExchange() {
-    activeTestInstance(() -> {
-      // This bundle is invalid because the envelope has no payload, so expect an error.
-      Bundle subBundle = getTestReflectBundle(SubType.STATE, SubFolder.LOCALNET);
-      getReverseDispatcher().publish(subBundle);
-    });
+    // This bundle is invalid because the envelope has no payload, so expect an error.
+    activeTestInstance(() -> getReverseDispatcher().publish(makeUdmiStateBundle(true)));
 
     ArgumentCaptor<String> commandCaptor = ArgumentCaptor.forClass(String.class);
     verify(provider, times(1)).sendCommand(anyString(), anyString(), eq(SubFolder.UDMI),
@@ -107,10 +109,8 @@ public class ReflectProcessorTest extends ProcessorTestBase {
 
   @Test
   public void reflectConfigUpdate() {
-    activeTestInstance(() -> {
-      Bundle subBundle = getTestReflectBundle(SubType.MODEL, SubFolder.UDMI);
-      getReverseDispatcher().publish(subBundle);
-    });
+    CloudModel model = new CloudModel();
+    activeTestInstance(() -> getReverseDispatcher().publish(makeModelBundle(model)));
   }
 
   /**
@@ -120,10 +120,7 @@ public class ReflectProcessorTest extends ProcessorTestBase {
    */
   @Test
   public void stateConfigExchange() {
-    activeTestInstance(() -> {
-      Bundle rawBundle = getTestReflectBundle(null, null);
-      getReverseDispatcher().publish(rawBundle);
-    });
+    activeTestInstance(() -> getReverseDispatcher().publish(makeUdmiStateBundle(false)));
 
     assertEquals(0, getExceptionCount(), "exception count");
     assertEquals(1, getDefaultCount(), "default handler count");
@@ -134,8 +131,7 @@ public class ReflectProcessorTest extends ProcessorTestBase {
     Map<String, Object> stringObjectMap = toMap(configCaptor.getValue());
     UdmiConfig udmi =
         convertToStrict(UdmiConfig.class, stringObjectMap.get(SubFolder.UDMI.value()));
-    assertEquals(getTimestamp(ReflectProcessorTest.TEST_TIMESTAMP),
-        getTimestamp(udmi.setup.deployed_at), "unexpected deploy timestamp");
+    validateUdmiConfig(udmi);
   }
 
   @AfterEach
