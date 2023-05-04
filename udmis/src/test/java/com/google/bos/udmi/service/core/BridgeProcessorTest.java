@@ -56,9 +56,4 @@ class BridgeProcessorTest extends MessageTestCore {
     messageConfig.hostname = name;
     return messageConfig;
   }
-
-  @Override
-  protected void augmentConfig(EndpointConfiguration configuration) {
-    configuration.protocol = Protocol.LOCAL;
-  }
 }

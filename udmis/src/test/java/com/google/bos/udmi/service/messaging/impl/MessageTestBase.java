@@ -9,6 +9,7 @@ import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
+import org.junit.jupiter.api.AfterEach;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.LocalnetModel;
 
@@ -59,5 +60,10 @@ public abstract class MessageTestBase extends MessageTestCore {
       assertNull(previous, "Unexpected previously received message");
       notify();
     }
+  }
+
+  @AfterEach
+  public void resetAfter() {
+    LocalMessagePipe.resetForTestStatic();
   }
 }

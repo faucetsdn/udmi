@@ -1,6 +1,7 @@
 package com.google.bos.udmi.service.messaging.impl;
 
 import udmi.schema.EndpointConfiguration;
+import udmi.schema.EndpointConfiguration.Protocol;
 
 /**
  * Core functions and constants for testing anything message related.
@@ -12,7 +13,9 @@ public abstract class MessageTestCore {
   protected static final String TEST_DESTINATION = "message_to";
   protected static final String TEST_VERSION = "1.32";
 
-  protected abstract void augmentConfig(EndpointConfiguration configuration);
+  protected void augmentConfig(EndpointConfiguration configuration) {
+    configuration.protocol = Protocol.LOCAL;
+  }
 
   protected void debug(String message) {
     System.err.println(message);

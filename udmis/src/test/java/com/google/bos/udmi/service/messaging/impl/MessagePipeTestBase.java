@@ -1,15 +1,10 @@
 package com.google.bos.udmi.service.messaging.impl;
 
-import static com.google.bos.udmi.service.messaging.MessageDispatcher.messageHandlerFor;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.bos.udmi.service.messaging.MessageDispatcher;
-import com.google.bos.udmi.service.messaging.MessageDispatcher.HandlerSpecification;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
-import com.google.common.collect.ImmutableList;
-import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;

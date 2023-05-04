@@ -166,6 +166,7 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
 
   @Override
   void resetForTest() {
+    super.resetForTest();
     try {
       subscriber.stopAsync();
       subscriber.awaitTerminated();
