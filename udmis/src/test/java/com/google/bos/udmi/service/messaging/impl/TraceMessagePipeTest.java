@@ -26,23 +26,23 @@ import udmi.schema.Envelope.SubType;
 import udmi.schema.PointPointsetEvent;
 import udmi.schema.PointsetEvent;
 
+/**
+ * Unit tests for a trace message pipe.
+ */
 public class TraceMessagePipeTest {
 
   public static final String TEST_DEVICE = "bacnet-3104810";
+  public static final String TEST_REGISTRY = "TEST_REGISTRY";
   private static final String SIMPLE_TRACE = "traces/legacy-discovery";
   private static final String TRACE_OUT = "out/trace_pipe/";
-  public static final String TEST_REGISTRY = "TEST_REGISTRY";
   private static final String TEST_PROJECT = "TEST_PROJECT";
   private static final String DEVICE_ONE = "one";
   private static final String DEVICE_TWO = "two";
   private static final String TEST_POINT = "test_point";
   private static final String VALUE_ONE = "value1";
   private static final String VALUE_TWO = "value2";
-  private static final String TEST_FILENAME = "002_event_pointset.json";
   private static final File DEVICES_BASE =
       new File(format("%s/%s/%s/%s", TRACE_OUT, TEST_PROJECT, TEST_REGISTRY, DEVICES_DIR_NAME));
-  public static final File TRACES_TWO = new File(DEVICES_BASE, DEVICE_TWO);
-  public static final File TRACES_ONE = new File(DEVICES_BASE, DEVICE_ONE);
   private final List<Bundle> consumed = new ArrayList<>();
 
   @SuppressWarnings("unchecked")
