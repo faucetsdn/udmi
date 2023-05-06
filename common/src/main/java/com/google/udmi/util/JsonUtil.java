@@ -1,6 +1,5 @@
 package com.google.udmi.util;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -9,7 +8,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import java.io.File;
-import java.io.IOException;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Map;
@@ -20,6 +18,8 @@ import java.util.TreeMap;
  */
 public abstract class JsonUtil {
 
+  public static final String JSON_EXT = "json";
+  public static final String JSON_SUFFIX = ".json";
   private static final ObjectMapper STRICT_MAPPER = new ObjectMapper()
       .enable(Feature.ALLOW_COMMENTS)
       .enable(SerializationFeature.INDENT_OUTPUT)
@@ -29,8 +29,91 @@ public abstract class JsonUtil {
   public static final ObjectMapper OBJECT_MAPPER = STRICT_MAPPER.copy()
       .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
-  public static final String JSON_EXT = "json";
-  public static final String JSON_SUFFIX = ".json";
+  /**
+   * Convert the json string to a generic map object.
+   *
+   * @param input input string
+   * @return input as map object
+   */
+  public static Map<String, Object> asMap(String input) {
+    @SuppressWarnings("unchecked")
+    Map<String, Object> map = fromString(TreeMap.class, input);
+    return map;
+  }
+
+  /**
+   * Convert the json object to a generic map object.
+   *
+   * @param input input file
+   * @return input as map object
+   */
+  public static Map<String, Object> asMap(File input) {
+    @SuppressWarnings("unchecked")
+    Map<String, Object> map = loadFile(TreeMap.class, input);
+    return map;
+  }
+
+  /**
+   * Convert the json object to a generic map object.
+   *
+   * @param input input object
+   * @return input as map object
+   */
+  public static Map<String, Object> asMap(Object input) {
+    @SuppressWarnings("unchecked")
+    Map<String, Object> map = convertTo(TreeMap.class, input);
+    return map;
+  }
+
+  /**
+   * Convert a generic object to a specific class.
+   *
+   * @param targetClass result class
+   * @param message object to convert
+   * @param <T> class parameter
+   * @return converted object
+   */
+  public static <T> T convertTo(Class<T> targetClass, Object message) {
+    return message == null ? null : fromString(targetClass, stringify(message));
+  }
+
+  /**
+   * Convert a generic object to a specific class with strict field mappings.
+   *
+   * @param targetClass result class
+   * @param message object to convert
+   * @param <T> class parameter
+   * @return converted object
+   */
+  public static <T> T convertToStrict(Class<T> targetClass, Object message) {
+    return message == null ? null : fromStringStrict(targetClass, stringify(message));
+  }
+
+  public static <T> T fromString(Class<T> targetClass, String messageString) {
+    try {
+      return OBJECT_MAPPER.readValue(messageString, checkNotNull(targetClass, "target class"));
+    } catch (Exception e) {
+      throw new RuntimeException("While converting message to " + targetClass.getName(), e);
+    }
+  }
+
+  public static <T> T fromStringStrict(Class<T> targetClass, String messageString) {
+    try {
+      return STRICT_MAPPER.readValue(messageString, checkNotNull(targetClass, "target class"));
+    } catch (Exception e) {
+      throw new RuntimeException("While converting message to " + targetClass.getName(), e);
+    }
+  }
+
+  /**
+   * Get a date object parsed from a string representation.
+   *
+   * @param timestamp string representation
+   * @return Date object
+   */
+  public static Date getDate(String timestamp) {
+    return timestamp == null ? null : Date.from(Instant.parse(timestamp));
+  }
 
   /**
    * Get a proper JSON string representation of the given Date.
@@ -71,6 +154,104 @@ public abstract class JsonUtil {
   }
 
   /**
+   * Load a file to given type.
+   *
+   * @param clazz class of result
+   * @param file file to load
+   * @param <T> type of result
+   * @return loaded object
+   */
+  public static <T> T loadFile(Class<T> clazz, File file) {
+    try {
+      return file.exists() ? OBJECT_MAPPER.readValue(file, clazz) : null;
+    } catch (Exception e) {
+      throw new RuntimeException("While loading " + file.getAbsolutePath(), e);
+    }
+  }
+
+  /**
+   * Load a file to given type, requiring that it exists.
+   *
+   * @param clazz class of result
+   * @param file path of file to load
+   * @param <T> type of result
+   * @return loaded object
+   */
+  public static <T> T loadFileRequired(Class<T> clazz, String file) {
+    return loadFileRequired(clazz, new File(file));
+  }
+
+  /**
+   * Load a file to given type, requiring that it exists.
+   *
+   * @param clazz class of result
+   * @param file file to load
+   * @param <T> type of result
+   * @return loaded object
+   */
+  public static <T> T loadFileRequired(Class<T> clazz, File file) {
+    if (!file.exists()) {
+      throw new RuntimeException("Required file not found: " + file.getAbsolutePath());
+    }
+    try {
+      return OBJECT_MAPPER.readValue(file, clazz);
+    } catch (Exception e) {
+      throw new RuntimeException("While loading " + file.getAbsolutePath(), e);
+    }
+  }
+
+  /**
+   * Load file with strict(er) error checking, and throw an exception if necessary.
+   *
+   * @param clazz class of result
+   * @param file file to load
+   * @param <T> type of result
+   * @return converted object
+   */
+  public static <T> T loadFileStrict(Class<T> clazz, File file) {
+    try {
+      return file.exists() ? STRICT_MAPPER.readValue(file, clazz) : null;
+    } catch (Exception e) {
+      throw new RuntimeException("While loading " + file.getAbsolutePath(), e);
+    }
+  }
+
+  public static <T> T loadFileStrictRequired(Class<T> clazz, String file) {
+    return loadFileStrictRequired(clazz, new File(file));
+  }
+
+  /**
+   * Load file with strict(er) error checking and required-to-exist file.
+   *
+   * @param clazz class of result
+   * @param file file to load
+   * @param <T> type of result
+   * @return converted object
+   */
+  public static <T> T loadFileStrictRequired(Class<T> clazz, File file) {
+    if (!file.exists()) {
+      throw new RuntimeException("Required file not found: " + file.getAbsolutePath());
+    }
+    try {
+      return STRICT_MAPPER.readValue(file, clazz);
+    } catch (Exception e) {
+      throw new RuntimeException("While loading " + file.getAbsolutePath(), e);
+    }
+  }
+
+  /**
+   * Convert the given input file to a mapped representation.
+   *
+   * @param inputFile input file to convert to a map
+   * @return object-as-map
+   */
+  public static Map<String, Object> loadMap(File inputFile) {
+    @SuppressWarnings("unchecked")
+    Map<String, Object> map = convertTo(TreeMap.class, loadFile(TreeMap.class, inputFile));
+    return map;
+  }
+
+  /**
    * Sleep and catch-and-rethrow any exceptions.
    *
    * @param sleepTimeMs duration to sleep
@@ -83,44 +264,18 @@ public abstract class JsonUtil {
     }
   }
 
-  public static <T> T fromString(Class<T> targetClass, String messageString) {
-    try {
-      return OBJECT_MAPPER.readValue(messageString, checkNotNull(targetClass, "target class"));
-    } catch (Exception e) {
-      throw new RuntimeException("While converting message to " + targetClass.getName(), e);
-    }
-  }
-
-  private static <T> T fromStringStrict(Class<T> targetClass, String messageString) {
-    try {
-      return STRICT_MAPPER.readValue(messageString, checkNotNull(targetClass, "target class"));
-    } catch (Exception e) {
-      throw new RuntimeException("While converting message to " + targetClass.getName(), e);
-    }
-  }
-
   /**
-   * Convert a generic object to a specific class.
+   * Convert an object to a json string.
    *
-   * @param targetClass result class
-   * @param message     object to convert
-   * @param <T>         class parameter
-   * @return converted object
+   * @param target object to convert
+   * @return json string representation
    */
-  public static <T> T convertTo(Class<T> targetClass, Object message) {
-    return message == null ? null : fromString(targetClass, stringify(message));
-  }
-
-  /**
-   * Convert a generic object to a specific class with strict field mappings.
-   *
-   * @param targetClass result class
-   * @param message     object to convert
-   * @param <T>         class parameter
-   * @return converted object
-   */
-  public static <T> T convertToStrict(Class<T> targetClass, Object message) {
-    return message == null ? null : fromStringStrict(targetClass, stringify(message));
+  public static String stringify(Object target) {
+    try {
+      return OBJECT_MAPPER.writeValueAsString(target);
+    } catch (Exception e) {
+      throw new RuntimeException("While stringifying object", e);
+    }
   }
 
   /**
@@ -148,99 +303,10 @@ public abstract class JsonUtil {
   }
 
   /**
-   * Convert the given input file to a mapped representation.
-   *
-   * @param inputFile input file to convert to a map
-   * @return object-as-map
-   */
-  public static Map<String, Object> loadMap(File inputFile) {
-    @SuppressWarnings("unchecked")
-    Map<String, Object> map = convertTo(TreeMap.class, loadFile(TreeMap.class, inputFile));
-    return map;
-  }
-
-  /**
-   * Convert an object to a json string.
-   *
-   * @param target object to convert
-   * @return json string representation
-   */
-  public static String stringify(Object target) {
-    try {
-      return OBJECT_MAPPER.writeValueAsString(target);
-    } catch (Exception e) {
-      throw new RuntimeException("While stringifying object", e);
-    }
-  }
-
-  /**
-   * Load a file to given type.
-   *
-   * @param clazz class of result
-   * @param file  file to load
-   * @param <T>   type of result
-   * @return loaded object
-   */
-  public static <T> T loadFile(Class<T> clazz, File file) {
-    try {
-      return file.exists() ? OBJECT_MAPPER.readValue(file, clazz) : null;
-    } catch (Exception e) {
-      throw new RuntimeException("While loading " + file.getAbsolutePath(), e);
-    }
-  }
-
-  /**
-   * Load a file to given type, requiring that it exists.
-   *
-   * @param clazz class of result
-   * @param file  path of file to load
-   * @param <T>   type of result
-   * @return loaded object
-   */
-  public static <T> T loadFileRequired(Class<T> clazz, String file) {
-    return loadFileRequired(clazz, new File(file));
-  }
-
-  /**
-   * Load a file to given type, requiring that it exists.
-   *
-   * @param clazz class of result
-   * @param file  file to load
-   * @param <T>   type of result
-   * @return loaded object
-   */
-  public static <T> T loadFileRequired(Class<T> clazz, File file) {
-    if (!file.exists()) {
-      throw new RuntimeException("Required file not found: " + file.getAbsolutePath());
-    }
-    try {
-      return OBJECT_MAPPER.readValue(file, clazz);
-    } catch (Exception e) {
-      throw new RuntimeException("While loading " + file.getAbsolutePath(), e);
-    }
-  }
-
-  /**
-   * Load file with strict(er) error checking, and return an exception, if any.
-   *
-   * @param clazz class of result
-   * @param file  file to load
-   * @param <T>   type of result
-   * @return converted object
-   */
-  public static <T> T loadStrict(Class<T> clazz, File file) {
-    try {
-      return file.exists() ? STRICT_MAPPER.readValue(file, clazz) : null;
-    } catch (Exception e) {
-      throw new RuntimeException("While loading " + file.getAbsolutePath(), e);
-    }
-  }
-
-  /**
    * Write json representation to a file.
    *
    * @param target object to write
-   * @param file   output file
+   * @param file output file
    */
   public static void writeFile(Object target, File file) {
     try {
@@ -248,51 +314,5 @@ public abstract class JsonUtil {
     } catch (Exception e) {
       throw new RuntimeException("While writing " + file.getAbsolutePath(), e);
     }
-  }
-
-  /**
-   * Get a date object parsed from a string representation.
-   *
-   * @param timestamp string representation
-   * @return Date object
-   */
-  public static Date getDate(String timestamp) {
-    return timestamp == null ? null : Date.from(Instant.parse(timestamp));
-  }
-
-  /**
-   * Convert the json string to a generic map object.
-   *
-   * @param input input string
-   * @return input as map object
-   */
-  public static Map<String, Object> asMap(String input) {
-    @SuppressWarnings("unchecked")
-    Map<String, Object> map = fromString(TreeMap.class, input);
-    return map;
-  }
-
-  /**
-   * Convert the json object to a generic map object.
-   *
-   * @param input input file
-   * @return input as map object
-   */
-  public static Map<String, Object> asMap(File input) {
-    @SuppressWarnings("unchecked")
-    Map<String, Object> map = loadFile(TreeMap.class, input);
-    return map;
-  }
-
-  /**
-   * Convert the json object to a generic map object.
-   *
-   * @param input input object
-   * @return input as map object
-   */
-  public static Map<String, Object> asMap(Object input) {
-    @SuppressWarnings("unchecked")
-    Map<String, Object> map = convertTo(TreeMap.class, input);
-    return map;
   }
 }

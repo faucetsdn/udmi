@@ -85,14 +85,14 @@ public class CloudModel {
     @JsonProperty("operation")
     public CloudModel.Operation operation;
     @JsonProperty("metadata")
-    public HashMap<String, String> metadata;
+    public Map<String, String> metadata;
     /**
      * If operating on the entire registry, then this manifests as a map of devices not just one device.
      * 
      */
     @JsonProperty("device_ids")
     @JsonPropertyDescription("If operating on the entire registry, then this manifests as a map of devices not just one device.")
-    public HashMap<String, CloudModel> device_ids;
+    public Map<String, CloudModel> device_ids;
 
     @Override
     public int hashCode() {
@@ -174,6 +174,7 @@ public class CloudModel {
     @Generated("jsonschema2pojo")
     public enum Operation {
 
+        FETCH("FETCH"),
         CREATE("CREATE"),
         UPDATE("UPDATE"),
         DELETE("DELETE"),

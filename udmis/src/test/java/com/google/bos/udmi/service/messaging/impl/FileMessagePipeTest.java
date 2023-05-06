@@ -1,7 +1,7 @@
 package com.google.bos.udmi.service.messaging.impl;
 
 import static com.google.bos.udmi.service.messaging.impl.FileMessagePipe.DEVICES_DIR_NAME;
-import static com.google.udmi.util.JsonUtil.loadStrict;
+import static com.google.udmi.util.JsonUtil.loadFileStrict;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.io.FileUtils.deleteDirectory;
@@ -89,11 +89,11 @@ class FileMessagePipeTest {
 
     assertTrue(new File(TRACES_ONE, TEST_FILENAME).exists());
 
-    List<File> files1 =
+    List<File> files =
         Arrays.stream(requireNonNull(TRACES_ONE.listFiles())).sorted().collect(Collectors.toList());
-    assertEquals(2, files1.size(), "expected device one trace files");
-    assertEquals(TEST_FILENAME, files1.get(1).getName(), "trace output filename");
-    PointsetEvent pointsetEvent = loadStrict(PointsetEvent.class, files1.get(1));
+    assertEquals(2, files.size(), "expected device one trace files");
+    assertEquals(TEST_FILENAME, files.get(1).getName(), "trace output filename");
+    PointsetEvent pointsetEvent = loadFileStrict(PointsetEvent.class, files.get(1));
     assertEquals("value2", pointsetEvent.points.get(TEST_POINT).present_value,
         "point present value");
 

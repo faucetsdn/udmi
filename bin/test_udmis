@@ -11,7 +11,7 @@ export MQTT_TEST_BROKER=tcp://localhost:1883
 echo Using MQTT broker at $MQTT_TEST_BROKER
 
 # This is the local address for PubSub emulation, created by bin/start_pubsub
-source out/pubsub.env
+source out/pubsub.env || true
 echo Using PubSub emulator at $PUBSUB_EMULATOR_HOST
 
 udmis/bin/build check

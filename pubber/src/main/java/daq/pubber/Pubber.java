@@ -1017,7 +1017,7 @@ public class Pubber {
         error("Empty config system block and configured to restart on bad config!");
         systemLifecycle(SystemMode.RESTART);
       }
-      GeneralUtils.copyFields(config, deviceConfig);
+      GeneralUtils.copyFields(config, deviceConfig, true);
       info(String.format("%s received config %s", getTimestamp(), isoConvert(config.timestamp)));
       deviceState.system.last_config = config.timestamp;
       actualInterval = updatePointsetConfig(config.pointset);
