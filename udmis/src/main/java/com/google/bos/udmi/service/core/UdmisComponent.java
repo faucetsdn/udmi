@@ -2,7 +2,6 @@ package com.google.bos.udmi.service.core;
 
 import static com.google.bos.udmi.service.messaging.MessageDispatcher.messageHandlerFor;
 
-import com.google.bos.udmi.service.access.IotAccessProvider;
 import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.MessageDispatcher;
 import com.google.bos.udmi.service.messaging.MessageDispatcher.HandlerSpecification;
@@ -29,7 +28,6 @@ public abstract class UdmisComponent extends ContainerBase {
   );
 
   protected MessageDispatcher dispatcher;
-  protected IotAccessProvider provider;
 
   /**
    * Create a new instance of the given target class with the provided configuration.
@@ -84,10 +82,6 @@ public abstract class UdmisComponent extends ContainerBase {
 
   public int getMessageCount(Class<?> clazz) {
     return dispatcher.getHandlerCount(clazz);
-  }
-
-  public void setIotAccessProvider(IotAccessProvider provider) {
-    this.provider = provider;
   }
 
   public void shutdown() {

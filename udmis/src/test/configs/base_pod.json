@@ -10,10 +10,6 @@
     "state": {
       "recv_id": "udmi_state",
       "send_id": "udmi_target"
-    },
-    "reflect": {
-      "recv_id": "udmi_reflect",
-      "send_id": "udmi_target"
     }
   }
 }

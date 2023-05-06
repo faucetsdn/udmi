@@ -15,7 +15,6 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import com.google.bos.udmi.service.access.IotAccessProvider;
 import com.google.bos.udmi.service.core.ProcessorTestBase;
 import com.google.bos.udmi.service.messaging.StateUpdate;
 import com.google.bos.udmi.service.messaging.impl.LocalMessagePipe;
@@ -51,16 +50,6 @@ public class UdmiServicePodTest {
   private static final long RECEIVE_TIMEOUT_SEC = 2;
   private static final long RECEIVE_TIMEOUT_MS = RECEIVE_TIMEOUT_SEC * 1000;
 
-  private Bundle getReflectorStateBundle() {
-    HashMap<Object, Object> messageMap = new HashMap<>();
-    UdmiState state = new UdmiState();
-    messageMap.put(SubFolder.UDMI.value(), state);
-    Bundle bundle = new Bundle(messageMap);
-    bundle.envelope.deviceRegistryId = TEST_REGISTRY;
-    bundle.envelope.deviceId = TEST_DEVICE;
-    return bundle;
-  }
-
   private EndpointConfiguration reverseFlow(EndpointConfiguration flow) {
     checkNotNull(flow, "message flow not defined");
     EndpointConfiguration reversed = deepCopy(flow);
@@ -72,7 +61,6 @@ public class UdmiServicePodTest {
 
   @Test
   public void basicPodTest() throws Exception {
-    ProcessorTestBase.writeVersionDeployFile();
     UdmiServicePod pod = new UdmiServicePod(arrayOf(BASE_CONFIG));
 
     PodConfiguration podConfig = pod.getPodConfiguration();
@@ -155,30 +143,6 @@ public class UdmiServicePodTest {
     Thread.sleep(RECEIVE_TIMEOUT_MS);
     pod.shutdown();
     assertTrue(targetFile.exists(), "missing target output file " + targetFile.getAbsolutePath());
-  }
-
-  @Test
-  public void reflectPodTest() throws Exception {
-    ProcessorTestBase.writeVersionDeployFile();
-    UdmiServicePod pod = new UdmiServicePod(arrayOf(BASE_CONFIG));
-
-    IotAccessProvider iotAccessProvider = Mockito.mock(IotAccessProvider.class);
-    pod.setIotAccessProvider(iotAccessProvider);
-
-    PodConfiguration podConfig = pod.getPodConfiguration();
-
-    EndpointConfiguration reversedReflect =
-        combineConfig(podConfig.flow_defaults, reverseFlow(podConfig.flows.get("reflect")));
-    final MessageDispatcherImpl reflectDispatcher =
-        MessagePipeTestBase.getDispatcherFor(reversedReflect);
-
-    pod.activate();
-    reflectDispatcher.publishBundle(getReflectorStateBundle());
-    pod.shutdown();
-
-    verify(iotAccessProvider, times(1)).activate();
-    verify(iotAccessProvider, times(1)).shutdown();
-    verify(iotAccessProvider, times(1)).updateConfig(anyString(), anyString(), anyString());
   }
 
   @AfterEach
