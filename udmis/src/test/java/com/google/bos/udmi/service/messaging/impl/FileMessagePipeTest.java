@@ -89,11 +89,11 @@ class FileMessagePipeTest {
 
     assertTrue(new File(TRACES_ONE, TEST_FILENAME).exists());
 
-    List<File> files1 =
+    List<File> files =
         Arrays.stream(requireNonNull(TRACES_ONE.listFiles())).sorted().collect(Collectors.toList());
-    assertEquals(2, files1.size(), "expected device one trace files");
-    assertEquals(TEST_FILENAME, files1.get(1).getName(), "trace output filename");
-    PointsetEvent pointsetEvent = loadFileStrict(PointsetEvent.class, files1.get(1));
+    assertEquals(2, files.size(), "expected device one trace files");
+    assertEquals(TEST_FILENAME, files.get(1).getName(), "trace output filename");
+    PointsetEvent pointsetEvent = loadFileStrict(PointsetEvent.class, files.get(1));
     assertEquals("value2", pointsetEvent.points.get(TEST_POINT).present_value,
         "point present value");
 
