@@ -2,8 +2,6 @@ package com.google.bos.udmi.service.core;
 
 import static com.google.bos.udmi.service.core.UdmisComponent.FUNCTIONS_VERSION_MAX;
 import static com.google.bos.udmi.service.core.UdmisComponent.FUNCTIONS_VERSION_MIN;
-import static com.google.bos.udmi.service.messaging.impl.TraceMessagePipeTest.TEST_DEVICE;
-import static com.google.bos.udmi.service.messaging.impl.TraceMessagePipeTest.TEST_REGISTRY;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
@@ -42,7 +40,7 @@ import udmi.schema.UdmiState;
  */
 public class ReflectProcessorTest extends ProcessorTestBase {
 
-  public final String TRANSACTION_ID = Long.toString(System.currentTimeMillis());
+  public final String transactionId = Long.toString(System.currentTimeMillis());
 
   @Override
   protected @NotNull Class<? extends UdmisComponent> getProcessorClass() {
@@ -78,7 +76,7 @@ public class ReflectProcessorTest extends ProcessorTestBase {
     Envelope reflect = new Envelope();
     reflect.deviceId = TEST_DEVICE;
     reflect.deviceRegistryId = TEST_REGISTRY;
-    reflect.transactionId = TRANSACTION_ID;
+    reflect.transactionId = transactionId;
     reflect.subType = SubType.MODEL;
     reflect.payload = encodeBase64(stringify(model));
     return new Bundle(makeEnvelope(SubType.MODEL, SubFolder.UDMI), reflect);
@@ -118,7 +116,7 @@ public class ReflectProcessorTest extends ProcessorTestBase {
     verify(provider, times(1)).sendCommand(eq(TEST_REGISTRY), eq(TEST_DEVICE), eq(SubFolder.UDMI),
         commandCaptor.capture());
     Envelope envelope = JsonUtil.fromStringStrict(Envelope.class, commandCaptor.getValue());
-    assertEquals(TRANSACTION_ID, envelope.transactionId);
+    assertEquals(transactionId, envelope.transactionId);
   }
 
   /**

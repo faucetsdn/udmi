@@ -1,8 +1,8 @@
 package com.google.bos.udmi.service.pod;
 
 import static com.google.bos.udmi.service.messaging.impl.MessageBase.combineConfig;
-import static com.google.bos.udmi.service.messaging.impl.TraceMessagePipeTest.TEST_DEVICE;
-import static com.google.bos.udmi.service.messaging.impl.TraceMessagePipeTest.TEST_REGISTRY;
+import static com.google.bos.udmi.service.messaging.impl.MessageTestCore.TEST_DEVICE;
+import static com.google.bos.udmi.service.messaging.impl.MessageTestCore.TEST_REGISTRY;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.udmi.util.GeneralUtils.arrayOf;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
@@ -44,9 +44,9 @@ import udmi.schema.UdmiState;
  */
 public class UdmiServicePodTest {
 
-  private static final String CONFIG_FILE = "src/test/configs/base_pod.json";
-  private static final String BRIDGE_FILE = "src/test/configs/bridge_pod.json";
-  private static final String TRACE_FILE = "src/test/configs/trace_pod.json";
+  private static final String BASE_CONFIG = "src/test/configs/base_pod.json";
+  private static final String BRIDGE_CONFIG = "src/test/configs/bridge_pod.json";
+  private static final String FILE_CONFIG = "src/test/configs/trace_pod.json";
   private static final String TARGET_FILE = "null/null/devices/null/001_event_pointset.json";
   private static final long RECEIVE_TIMEOUT_SEC = 2;
   private static final long RECEIVE_TIMEOUT_MS = RECEIVE_TIMEOUT_SEC * 1000;
@@ -73,17 +73,19 @@ public class UdmiServicePodTest {
   @Test
   public void basicPodTest() throws Exception {
     ProcessorTestBase.writeVersionDeployFile();
-    UdmiServicePod pod = new UdmiServicePod(arrayOf(CONFIG_FILE));
+    UdmiServicePod pod = new UdmiServicePod(arrayOf(BASE_CONFIG));
 
     PodConfiguration podConfig = pod.getPodConfiguration();
 
     EndpointConfiguration reversedState =
         combineConfig(podConfig.flow_defaults, reverseFlow(podConfig.flows.get("state")));
-    final MessageDispatcherImpl stateDispatcher = MessagePipeTestBase.getDispatcherFor(reversedState);
+    final MessageDispatcherImpl stateDispatcher =
+        MessagePipeTestBase.getDispatcherFor(reversedState);
 
     EndpointConfiguration reversedTarget =
         combineConfig(podConfig.flow_defaults, reverseFlow(podConfig.flows.get("target")));
-    final MessageDispatcherImpl targetDispatcher = MessagePipeTestBase.getDispatcherFor(reversedTarget);
+    final MessageDispatcherImpl targetDispatcher =
+        MessagePipeTestBase.getDispatcherFor(reversedTarget);
 
     pod.activate();
 
@@ -109,7 +111,7 @@ public class UdmiServicePodTest {
 
   @Test
   public void bridgeTest() throws Exception {
-    UdmiServicePod pod = new UdmiServicePod(arrayOf(BRIDGE_FILE));
+    UdmiServicePod pod = new UdmiServicePod(arrayOf(BRIDGE_CONFIG));
 
     PodConfiguration podConfig = pod.getPodConfiguration();
 
@@ -142,8 +144,8 @@ public class UdmiServicePodTest {
   }
 
   @Test
-  public void podTraceTest() throws Exception {
-    UdmiServicePod pod = new UdmiServicePod(arrayOf(TRACE_FILE));
+  public void podFileTest() throws Exception {
+    UdmiServicePod pod = new UdmiServicePod(arrayOf(FILE_CONFIG));
     PodConfiguration podConfiguration = pod.getPodConfiguration();
     File outDir = new File(podConfiguration.bridges.get("trace").from.send_id);
     deleteDirectory(outDir);
@@ -158,7 +160,7 @@ public class UdmiServicePodTest {
   @Test
   public void reflectPodTest() throws Exception {
     ProcessorTestBase.writeVersionDeployFile();
-    UdmiServicePod pod = new UdmiServicePod(arrayOf(CONFIG_FILE));
+    UdmiServicePod pod = new UdmiServicePod(arrayOf(BASE_CONFIG));
 
     IotAccessProvider iotAccessProvider = Mockito.mock(IotAccessProvider.class);
     pod.setIotAccessProvider(iotAccessProvider);

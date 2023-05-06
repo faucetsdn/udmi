@@ -13,6 +13,9 @@ import org.junit.jupiter.api.AfterEach;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.LocalnetModel;
 
+/**
+ * Simple base class for many kinds of message-base tests.
+ */
 public abstract class MessageTestBase extends MessageTestCore {
 
   protected final AtomicReference<Object> receivedMessage = new AtomicReference<>();

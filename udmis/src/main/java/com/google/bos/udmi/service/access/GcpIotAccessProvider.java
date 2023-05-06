@@ -16,6 +16,7 @@ import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.cloudiot.v1.CloudIot;
+import com.google.api.services.cloudiot.v1.CloudIot.Projects;
 import com.google.api.services.cloudiot.v1.CloudIot.Projects.Locations.Registries.Devices;
 import com.google.api.services.cloudiot.v1.CloudIotScopes;
 import com.google.api.services.cloudiot.v1.model.BindDeviceToGatewayRequest;
@@ -34,6 +35,7 @@ import com.google.api.services.cloudiot.v1.model.UnbindDeviceFromGatewayRequest;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.bos.udmi.service.core.UdmisComponent;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
@@ -66,7 +68,7 @@ public class GcpIotAccessProvider extends UdmisComponent implements IotAccessPro
   private static final String LOCATIONS_PATH_FORMAT = "%s/locations/%s";
   private static final String REGISTRY_PATH_FORMAT = "%s/registries/%s";
   private static final String DEVICE_PATH_FORMAT = "%s/devices/%s";
-  private static final Set<String> CLOUD_REGIONS =
+  static final Set<String> CLOUD_REGIONS =
       ImmutableSet.of("us-central1", "europe-west1", "asia-east1");
   private static final String APPLICATION_NAME = "com.google.iot.bos";
   private static final String RSA_KEY_FORMAT = "RSA_PEM";
@@ -174,7 +176,8 @@ public class GcpIotAccessProvider extends UdmisComponent implements IotAccessPro
   }
 
   @NotNull
-  private CloudIot createCloudIotService() {
+  @VisibleForTesting
+  protected CloudIot createCloudIotService() {
     try {
       GoogleCredentials credential = GoogleCredentials.getApplicationDefault()
           .createScoped(CloudIotScopes.all());
@@ -226,8 +229,12 @@ public class GcpIotAccessProvider extends UdmisComponent implements IotAccessPro
   private Map<String, String> getRegistriesForRegion(String region) {
     try {
       debug("Fetching registries for " + region);
-      ListDeviceRegistriesResponse response = cloudIotService.projects().locations().registries()
-          .list(getLocationPath(region)).execute();
+      ListDeviceRegistriesResponse response = cloudIotService
+          .projects()
+          .locations()
+          .registries()
+          .list(getLocationPath(region))
+          .execute();
       List<DeviceRegistry> deviceRegistries = response.getDeviceRegistries();
       return ofNullable(deviceRegistries).orElseGet(ImmutableList::of).stream()
           .map(DeviceRegistry::getId)

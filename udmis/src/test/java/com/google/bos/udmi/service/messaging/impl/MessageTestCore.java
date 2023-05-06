@@ -8,6 +8,11 @@ import udmi.schema.EndpointConfiguration.Protocol;
  */
 public abstract class MessageTestCore {
 
+  public static final String TEST_DEVICE = "bacnet-3104810";
+  public static final String TEST_REGISTRY = "TEST_REGISTRY";
+  public static final String TEST_PROJECT = "TEST_PROJECT";
+  public static final String TEST_POINT = "test_point";
+  public static final String TEST_NUMID = "7239821792187321";
   protected static final String TEST_NAMESPACE = "test-namespace";
   protected static final String TEST_SOURCE = "message_from";
   protected static final String TEST_DESTINATION = "message_to";
