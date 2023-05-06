@@ -17,6 +17,7 @@ from .config_pointset import PointsetConfig
 from .config_pointset_point import PointPointsetConfig
 from .config_system import SystemConfig
 from .config_system_testing import TestingSystemConfig
+from .config_udmi import UdmiConfig
 from .configuration_endpoint import EndpointConfiguration
 from .configuration_execution import ExecutionConfiguration
 from .configuration_pod import PodConfiguration
@@ -70,6 +71,7 @@ from .state_pointset_point import PointPointsetState
 from .state_system import SystemState
 from .state_system_hardware import StateSystemHardware
 from .state_system_operation import StateSystemOperation
+from .state_udmi import UdmiState
 from .state_validation import ValidationState
 from .state_validation_feature import FeatureValidationState
 from .state_validation_sequence import SequenceValidationState

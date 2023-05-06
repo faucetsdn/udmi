@@ -1,4 +1,5 @@
 *~
+\#*
 
 udmi_site_model/
 gcp_reflect_key.pkcs8
@@ -19,6 +20,7 @@ credentials.json
 /validator/.idea/libraries/
 /udmis/build/
 /udmis/out/
+/udmis/var/
 /udmis/.idea/libraries/
 /pubber/build/
 /pubber/out/

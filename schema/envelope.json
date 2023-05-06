@@ -28,6 +28,10 @@
     "payload": {
       "type": "string"
     },
+    "gatewayId": {
+      "type": "string",
+      "pattern": "^[A-Z]{2,6}-[0-9]{1,6}$"
+    },
     "transactionId": {
       "type": "string"
     },
@@ -37,6 +41,7 @@
     },
     "subFolder": {
       "enum": [
+        "udmi",
         "update",
         "error",
         "cloud",

@@ -11,6 +11,7 @@ class PodConfiguration:
     self.flow_defaults = None
     self.flows = None
     self.bridges = None
+    self.iot_access = None
 
   @staticmethod
   def from_dict(source):
@@ -20,6 +21,7 @@ class PodConfiguration:
     result.flow_defaults = EndpointConfiguration.from_dict(source.get('flow_defaults'))
     result.flows = EndpointConfiguration.map_from(source.get('flows'))
     result.bridges = BridgePodConfiguration.map_from(source.get('bridges'))
+    result.iot_access = source.get('iot_access')
     return result
 
   @staticmethod
@@ -46,4 +48,6 @@ class PodConfiguration:
       result['flows'] = EndpointConfiguration.expand_dict(self.flows) # 2
     if self.bridges:
       result['bridges'] = BridgePodConfiguration.expand_dict(self.bridges) # 2
+    if self.iot_access:
+      result['iot_access'] = self.iot_access # 5
     return result
