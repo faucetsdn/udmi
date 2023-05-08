@@ -32,14 +32,13 @@ public class UdmiServicePod {
   private static final Map<String, EndpointConfiguration> NO_FLOWS = ImmutableMap.of();
   private static final Map<String, Class<? extends UdmisComponent>> PROCESSORS = ImmutableMap.of(
       "target", TargetProcessor.class,
-      "state", StateProcessor.class,
-      "reflect", ReflectProcessor.class
+      "reflect", ReflectProcessor.class,
+      "state", StateProcessor.class
   );
-
-  private IotAccessProvider iotAccessProvider;
   private final PodConfiguration podConfiguration;
   private final Map<Class<?>, UdmisComponent> components;
   private final List<BridgeProcessor> bridges;
+  private IotAccessProvider iotAccessProvider;
 
   /**
    * Core pod to instantiate all the other components as necessary based on configuration.
@@ -60,7 +59,6 @@ public class UdmiServicePod {
           .map(this::makeBridgeFor).collect(Collectors.toList());
 
       setIotAccessProvider(ifNotNullGet(podConfiguration.iot_access, IotAccessProvider::from));
-
     } catch (Exception e) {
       throw new RuntimeException("While instantiating pod " + CSV_JOINER.join(args), e);
     }
@@ -69,11 +67,6 @@ public class UdmiServicePod {
   public static void main(String[] args) {
     UdmiServicePod udmiServicePod = new UdmiServicePod(args);
     udmiServicePod.activate();
-  }
-
-  public void setIotAccessProvider(IotAccessProvider iotAccessProvider) {
-    this.iotAccessProvider = iotAccessProvider;
-    components.values().forEach(target -> target.setIotAccessProvider(iotAccessProvider));
   }
 
   private <T extends UdmisComponent> T createComponent(Class<T> clazz,
@@ -111,6 +104,11 @@ public class UdmiServicePod {
 
   public PodConfiguration getPodConfiguration() {
     return podConfiguration;
+  }
+
+  public void setIotAccessProvider(IotAccessProvider iotAccessProvider) {
+    this.iotAccessProvider = iotAccessProvider;
+    components.values().forEach(target -> target.setIotAccessProvider(iotAccessProvider));
   }
 
   /**

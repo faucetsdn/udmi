@@ -2,6 +2,7 @@ package com.google.bos.udmi.service.core;
 
 import static com.google.udmi.util.JsonUtil.writeFile;
 import static org.apache.commons.io.FileUtils.deleteDirectory;
+import static org.mockito.Mockito.mock;
 
 import com.google.bos.udmi.service.access.IotAccessProvider;
 import com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl;
@@ -13,7 +14,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import org.jetbrains.annotations.NotNull;
-import org.mockito.Mockito;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.EndpointConfiguration.Protocol;
 import udmi.schema.SetupUdmiConfig;
@@ -65,11 +65,11 @@ public abstract class ProcessorTestBase extends MessageTestBase {
     config.recv_id = TEST_SOURCE;
     config.send_id = TEST_DESTINATION;
     processor = UdmisComponent.create(getProcessorClass(), config);
-    provider = Mockito.mock(IotAccessProvider.class);
+    setTestDispatcher(processor.getDispatcher());
+    provider = mock(IotAccessProvider.class);
     processor.setIotAccessProvider(provider);
     processor.activate();
     provider.activate();
-    setTestDispatcher(processor.getDispatcher());
   }
 
   /**
