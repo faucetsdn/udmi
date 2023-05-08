@@ -1,8 +1,13 @@
 package com.google.daq.mqtt.util;
 
 import static com.google.daq.mqtt.validator.Validator.EMPTY_MESSAGE;
+import static com.google.udmi.util.Common.ERROR_KEY;
+import static com.google.udmi.util.Common.EXCEPTION_KEY;
+import static com.google.udmi.util.Common.TRANSACTION_KEY;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static java.lang.String.format;
+import static java.util.Optional.ofNullable;
 import static udmi.schema.CloudModel.Operation.BIND;
 
 import com.google.common.base.Preconditions;
@@ -11,7 +16,6 @@ import com.google.udmi.util.SiteModel;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import org.jetbrains.annotations.Nullable;
 import udmi.schema.CloudModel;
@@ -23,11 +27,10 @@ import udmi.schema.ExecutionConfiguration;
  */
 public class IotReflectorClient implements IotProvider {
 
-  // Requires functions that support cloud device manager support.
-  private static final int REQUIRED_FUNCTION_VER = 7;
-
   public static final String CLOUD_QUERY_TOPIC = "cloud/query";
   public static final String CLOUD_MODEL_TOPIC = "cloud/model";
+  // Requires functions that support cloud device manager support.
+  private static final int REQUIRED_FUNCTION_VER = 8;
   private static final String UPDATE_CONFIG_TOPIC = "update/config";
   private final com.google.bos.iot.core.proxy.IotReflectorClient messageClient;
 
@@ -82,7 +85,8 @@ public class IotReflectorClient implements IotProvider {
     Map<String, Object> message = transaction(deviceId, topic, stringify(model));
     CloudModel cloudModel = convertToStrict(CloudModel.class, message);
     if (cloudModel == null || cloudModel.num_id == null || cloudModel.operation != operation) {
-      throw new RuntimeException("Invalid return receipt for " + operation + " on " + deviceId);
+      throw new RuntimeException(format("Invalid return receipt %s for request %s",
+          stringify(cloudModel), stringify(model)));
     }
     return cloudModel;
   }
@@ -103,7 +107,7 @@ public class IotReflectorClient implements IotProvider {
 
   @Override
   public Set<String> fetchDeviceIds(String forGatewayId) {
-    return Optional.ofNullable(fetchCloudModel(forGatewayId))
+    return ofNullable(fetchCloudModel(forGatewayId))
         .map(model -> model.device_ids.keySet()).orElse(null);
   }
 
@@ -129,12 +133,16 @@ public class IotReflectorClient implements IotProvider {
     while (messageClient.isActive()) {
       MessageBundle messageBundle = messageClient.takeNextMessage(true);
       if (messageBundle == null) {
-        System.err.println("Timeout waiting for reply to " + sentId);
-        return null;
+        throw new RuntimeException("UDMIS reflector transaction timeout " + sentId);
       }
-      String transactionId = messageBundle.attributes.get("transactionId");
+      Exception exception = (Exception) messageBundle.message.get(EXCEPTION_KEY);
+      if (exception != null) {
+        exception.printStackTrace();
+        throw new RuntimeException("UDMIS processing exception", exception);
+      }
+      String transactionId = messageBundle.attributes.get(TRANSACTION_KEY);
       if (sentId.equals(transactionId)) {
-        String error = (String) messageBundle.message.get("error");
+        String error = (String) messageBundle.message.get(ERROR_KEY);
         if (error != null) {
           throw new RuntimeException("UDMIS error: " + error);
         }

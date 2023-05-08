@@ -7,7 +7,7 @@ import udmi.schema.EndpointConfiguration.Protocol;
 /**
  * Tests for PubSub message pipe.
  */
-public class PubSubPipeTest extends MessageTestBase {
+public class PubSubPipeTest extends MessagePipeTestBase {
 
   @Override
   protected void augmentConfig(EndpointConfiguration configuration) {

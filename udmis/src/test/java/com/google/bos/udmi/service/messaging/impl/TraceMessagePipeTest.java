@@ -1,10 +1,12 @@
 package com.google.bos.udmi.service.messaging.impl;
 
-import static com.google.bos.udmi.service.messaging.impl.FileMessagePipe.DEVICES_DIR_NAME;
+import static com.google.bos.udmi.service.messaging.impl.MessageTestCore.TEST_DEVICE;
+import static com.google.bos.udmi.service.messaging.impl.MessageTestCore.TEST_POINT;
+import static com.google.bos.udmi.service.messaging.impl.MessageTestCore.TEST_PROJECT;
+import static com.google.bos.udmi.service.messaging.impl.MessageTestCore.TEST_REGISTRY;
 import static com.google.udmi.util.GeneralUtils.decodeBase64;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.fromString;
-import static java.lang.String.format;
 import static org.apache.commons.io.FileUtils.deleteDirectory;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -26,32 +28,22 @@ import udmi.schema.Envelope.SubType;
 import udmi.schema.PointPointsetEvent;
 import udmi.schema.PointsetEvent;
 
-class TraceMessagePipeTest {
+/**
+ * Unit tests for a trace message pipe.
+ */
+public class TraceMessagePipeTest {
 
-  public static final String TEST_DEVICE = "bacnet-3104810";
   private static final String SIMPLE_TRACE = "traces/legacy-discovery";
   private static final String TRACE_OUT = "out/trace_pipe/";
-  private static final String TEST_REGISTRY = "TEST_REGISTRY";
-  private static final String TEST_PROJECT = "TEST_PROJECT";
   private static final String DEVICE_ONE = "one";
   private static final String DEVICE_TWO = "two";
-  private static final String TEST_POINT = "test_point";
   private static final String VALUE_ONE = "value1";
   private static final String VALUE_TWO = "value2";
-  private static final String TEST_FILENAME = "002_event_pointset.json";
-  private static final File DEVICES_BASE =
-      new File(format("%s/%s/%s/%s", TRACE_OUT, TEST_PROJECT, TEST_REGISTRY, DEVICES_DIR_NAME));
-  public static final File TRACES_TWO = new File(DEVICES_BASE, DEVICE_TWO);
-  public static final File TRACES_ONE = new File(DEVICES_BASE, DEVICE_ONE);
   private final List<Bundle> consumed = new ArrayList<>();
 
   @SuppressWarnings("unchecked")
   private Map<String, String> extractMessage(Bundle bundle) {
     return (Map<String, String>) bundle.message;
-  }
-
-  private Object getBundleMessage(Bundle bundle) {
-    return bundle.message;
   }
 
   private EndpointConfiguration getTraceInConfig() {

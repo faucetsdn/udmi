@@ -1,12 +1,16 @@
 package com.google.bos.udmi.service.messaging.impl;
 
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 
 import com.google.api.core.ApiFuture;
-import com.google.api.gax.core.CredentialsProvider;
+import com.google.api.core.ApiService.Listener;
+import com.google.api.core.ApiService.State;
 import com.google.api.gax.core.NoCredentialsProvider;
 import com.google.api.gax.grpc.GrpcTransportChannel;
 import com.google.api.gax.rpc.FixedTransportChannelProvider;
@@ -20,13 +24,16 @@ import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.ProjectSubscriptionName;
 import com.google.pubsub.v1.ProjectTopicName;
 import com.google.pubsub.v1.PubsubMessage;
+import com.google.udmi.util.GeneralUtils;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import org.jetbrains.annotations.NotNull;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
 
@@ -39,14 +46,17 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
   public static final String EMULATOR_HOST = System.getenv(EMULATOR_HOST_ENV);
   private final Subscriber subscriber;
   private final Publisher publisher;
+  private final String projectId;
 
   /**
    * Create a new instance based off the configuration.
    */
   public PubSubPipe(EndpointConfiguration configuration) {
     try {
-      publisher = getPublisher(configuration.hostname, configuration.send_id);
-      subscriber = getSubscriber(configuration.hostname, configuration.recv_id);
+      projectId = requireNonNull(configuration.hostname,
+          "no project id defined in configuration as 'hostname'");
+      publisher = ifNotNullGet(configuration.send_id, this::getPublisher);
+      subscriber = ifNotNullGet(configuration.recv_id, this::getSubscriber);
     } catch (Exception e) {
       throw new RuntimeException("While creating PubSub pipe", e);
     }
@@ -56,16 +66,25 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
     return new PubSubPipe(configuration);
   }
 
-  private String getFormattedHost() {
+  private String getEmulatorHost() {
+    if (EMULATOR_HOST == null) {
+      return null;
+    }
     int lastIndex = EMULATOR_HOST.lastIndexOf(":");
     String useHost;
     if (lastIndex < 0) {
       useHost = EMULATOR_HOST;
     } else {
-      String hostname = EMULATOR_HOST.substring(0, lastIndex);
       useHost = String.format("%s:%s", "localhost", EMULATOR_HOST.substring(lastIndex + 1));
     }
     return useHost;
+  }
+
+  @NotNull
+  private TransportChannelProvider getTransportChannelProvider(String useHost) {
+    info(format("Using pubsub emulator host %s", useHost));
+    ManagedChannel channel = ManagedChannelBuilder.forTarget(useHost).usePlaintext().build();
+    return FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel));
   }
 
   @Override
@@ -93,56 +112,61 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
 
   @Override
   public void receiveMessage(PubsubMessage message, AckReplyConsumer reply) {
+    // Ack first to prevent failure if there is an error processing the message. Might result
+    // in things getting lost, but better than the infinite-loop of messages never getting flushed!
+    reply.ack();
     Bundle bundle = new Bundle(
         convertToStrict(Envelope.class, message.getAttributesMap()),
         toMap(message.getData().toStringUtf8()));
-    info(format("Received %s/%s", bundle.envelope.subType, bundle.envelope.subFolder));
+    info(format("Received %s/%s %s", bundle.envelope.subType, bundle.envelope.subFolder,
+        bundle.envelope.transactionId));
     receiveBundle(bundle);
-    reply.ack();
   }
 
-  Publisher getPublisher(String projectId, String topicName) {
-    info(format("Creating publisher for emulator host %s %s/%s", EMULATOR_HOST, projectId,
-        topicName));
-    String useHost = getFormattedHost();
-    ManagedChannel channel = ManagedChannelBuilder.forTarget(useHost).usePlaintext().build();
-    try {
-      TransportChannelProvider channelProvider =
-          FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel));
-      CredentialsProvider credentialsProvider = NoCredentialsProvider.create();
+  @Override
+  public String toString() {
+    return String.format("PubSub %s -> %s", subscriber.getSubscriptionNameString(),
+        publisher.getTopicNameString());
+  }
 
-      return Publisher.newBuilder(ProjectTopicName.of(projectId, topicName))
-          .setChannelProvider(channelProvider)
-          .setCredentialsProvider(credentialsProvider)
-          .build();
+  Publisher getPublisher(String topicName) {
+    try {
+      ProjectTopicName projectTopicName = ProjectTopicName.of(projectId, topicName);
+      Publisher.Builder builder = Publisher.newBuilder(projectTopicName);
+      String emu = getEmulatorHost();
+      ifNotNullThen(emu, host -> builder.setChannelProvider(getTransportChannelProvider(host)));
+      ifNotNullThen(emu, host -> builder.setCredentialsProvider(NoCredentialsProvider.create()));
+      info(format("Publisher %s:%s", emu, projectTopicName));
+      return builder.build();
     } catch (Exception e) {
       throw new RuntimeException("While creating emulator publisher", e);
     }
   }
 
-  Subscriber getSubscriber(String projectId, String subName) {
-    String emulator = System.getenv("PUBSUB_EMULATOR_HOST");
-    String useHost = getFormattedHost();
-    ManagedChannel channel = ManagedChannelBuilder.forTarget(useHost).usePlaintext().build();
-    info(format("Creating subscription for emulator host %s %s/%s", emulator, projectId, subName));
+  Subscriber getSubscriber(String subName) {
     try {
-      TransportChannelProvider channelProvider =
-          FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel));
-      CredentialsProvider credentialsProvider = NoCredentialsProvider.create();
-
-      Subscriber subscriber =
-          Subscriber.newBuilder(ProjectSubscriptionName.of(projectId, subName), this)
-              .setChannelProvider(channelProvider)
-              .setCredentialsProvider(credentialsProvider)
-              .build();
-      return subscriber;
+      ProjectSubscriptionName subscription = ProjectSubscriptionName.of(projectId, subName);
+      Subscriber.Builder builder = Subscriber.newBuilder(subscription, this);
+      String emu = getEmulatorHost();
+      ifNotNullThen(emu, host -> builder.setChannelProvider(getTransportChannelProvider(host)));
+      ifNotNullThen(emu, host -> builder.setCredentialsProvider(NoCredentialsProvider.create()));
+      info(format("Subscriber %s:%s", emu, subscription));
+      Subscriber built = builder.build();
+      built.addListener(new Listener() {
+        @Override
+        public void failed(State from, Throwable failure) {
+          debug(format("Subscriber state %s: %s", from, GeneralUtils.stackTraceString(failure)));
+        }
+      }, Executors.newSingleThreadExecutor());
+      return built;
     } catch (Exception e) {
-      throw new RuntimeException("While creating emulator publisher", e);
+      throw new RuntimeException("While creating emulator subscriber", e);
     }
   }
 
   @Override
   void resetForTest() {
+    super.resetForTest();
     try {
       subscriber.stopAsync();
       subscriber.awaitTerminated();

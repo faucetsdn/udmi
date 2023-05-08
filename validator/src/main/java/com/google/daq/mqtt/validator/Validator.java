@@ -96,7 +96,7 @@ import udmi.schema.ValidationSummary;
  */
 public class Validator {
 
-  public static final int REQUIRED_FUNCTION_VER = 6;
+  public static final int REQUIRED_FUNCTION_VER = 8;
 
   private static final String ERROR_FORMAT_INDENT = "  ";
   private static final String SCHEMA_VALIDATION_FORMAT = "Validating %d schemas";

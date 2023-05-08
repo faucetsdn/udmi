@@ -189,6 +189,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   public static class Bundle {
 
     public Bundle() {
+      this.envelope = new Envelope();
     }
 
     public Bundle(Object message) {

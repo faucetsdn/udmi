@@ -4,7 +4,6 @@
   },
   "flows": {
     "target": {
-      "type": "target",
       "recv_id": "mend",
       "send_id": "mark"
     }
