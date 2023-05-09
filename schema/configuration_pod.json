@@ -33,7 +33,8 @@
       "properties": {
         "provider": {
           "enum": [
-            "gcp_iot_core"
+            "gcp_iot_core",
+            "clearblade_iot_core"
           ]
         },
         "project_id": {

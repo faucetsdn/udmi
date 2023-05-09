@@ -12,6 +12,7 @@ import udmi.schema.IotAccess;
 public interface IotAccessProvider {
 
   Map<IotAccess.Provider, Class<? extends IotAccessProvider>> PROVIDERS = ImmutableMap.of(
+      IotAccess.Provider.CLEARBLADE_IOT_CORE, ClearBladeIotAccessProvider.class,
       IotAccess.Provider.GCP_IOT_CORE, GcpIotAccessProvider.class
   );
 

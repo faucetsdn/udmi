@@ -15,6 +15,7 @@ import static com.google.udmi.util.JsonUtil.toMap;
 import static java.util.Objects.requireNonNull;
 
 import com.google.bos.udmi.service.messaging.MessageContinuation;
+import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import java.io.File;
 import java.util.HashMap;
@@ -93,6 +94,7 @@ public class ReflectProcessor extends UdmisComponent {
   }
 
   private void processException(Envelope reflection, Exception e) {
+    debug("Processing exception: " + GeneralUtils.stackTraceString(e));
     Map<String, Object> message = new HashMap<>();
     message.put(ERROR_KEY, stackTraceString(e));
     Envelope envelope = new Envelope();

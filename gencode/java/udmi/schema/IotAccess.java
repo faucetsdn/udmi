@@ -53,7 +53,8 @@ public class IotAccess {
     @Generated("jsonschema2pojo")
     public enum Provider {
 
-        GCP_IOT_CORE("gcp_iot_core");
+        GCP_IOT_CORE("gcp_iot_core"),
+        CLEARBLADE_IOT_CORE("clearblade_iot_core");
         private final String value;
         private final static Map<String, IotAccess.Provider> CONSTANTS = new HashMap<String, IotAccess.Provider>();
 
