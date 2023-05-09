@@ -386,7 +386,11 @@ class MqttPublisher implements MessagePublisher {
 
     @Override
     public void messageArrived(String topic, MqttMessage message) {
-      onMessage.accept(topic, message.toString());
+      try {
+        onMessage.accept(topic, message.toString());
+      } catch (Exception e) {
+        onError.accept(MqttPublisher.this, e);
+      }
     }
   }
 }
