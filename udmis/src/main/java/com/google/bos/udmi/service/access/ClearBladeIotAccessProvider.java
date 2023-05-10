@@ -249,6 +249,7 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
           .setParent(LocationName.of(projectId, region).getLocationFullName())
           .build();
       ListDeviceRegistriesResponse response = deviceManagerClient.listDeviceRegistries(request);
+      requireNonNull(response, "get registries response is null");
       List<DeviceRegistry> deviceRegistries = response.getDeviceRegistriesList();
       return ofNullable(deviceRegistries).orElseGet(ImmutableList::of).stream()
            .map(registry -> registry.toBuilder().getId())
@@ -413,6 +414,7 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
           .setName(DeviceName.of(project, location, registry, device).toString())
           .setBinaryData(binaryData).setVersionToUpdate(updateVersion).build();
       DeviceConfig response = deviceManagerClient.modifyCloudToDeviceConfig(request);
+      System.err.println("Config modified version " + response.getVersion());
     } catch (Exception e) {
       throw new RuntimeException("While modifying device config", e);
     }

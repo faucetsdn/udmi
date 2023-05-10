@@ -170,7 +170,7 @@ public class ReflectProcessor extends UdmisComponent {
     Map<String, Object> configMap = new HashMap<>();
     configMap.put(SubFolder.UDMI.value(), udmiConfig);
     String contents = stringify(configMap);
-    debug("Setting reflector state %s %s %s", registryId, deviceId, contents);
+    debug("Setting reflector config %s %s %s", registryId, deviceId, contents);
     provider.updateConfig(registryId, deviceId, contents);
   }
 }
