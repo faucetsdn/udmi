@@ -15,7 +15,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import udmi.schema.FamilyDiscoveryEvent;
 import udmi.schema.FamilyLocalnetState;
-import udmi.schema.LocalnetModel;
 import udmi.schema.LocalnetState;
 
 /**
@@ -23,18 +22,17 @@ import udmi.schema.LocalnetState;
  */
 public class LocalnetManager {
 
+  public static final int DEFAULT_METRIC = 0;
   private static final List<Pattern> familyPatterns = ImmutableList.of(
       Pattern.compile(" +(inet) ([.\\d]+)/.+"),
       Pattern.compile(" +(inet6) ([:\\da-f]+)/.+"),
       Pattern.compile(" +link/(ether) ([:\\da-f]+) .+")
   );
-
   private static final Map<String, String> ifaceMap = ImmutableMap.of(
       "ether", "ether",
       "inet", "ipv4",
       "inet6", "ipv6"
   );
-
   private final Pubber parent;
 
   /**
@@ -45,7 +43,11 @@ public class LocalnetManager {
   public LocalnetManager(Pubber parent) {
     this.parent = parent;
     parent.deviceState.localnet = new LocalnetState();
-    populateInterfaceAddresses();
+    try {
+      populateInterfaceAddresses();
+    } catch (Exception e) {
+      throw new RuntimeException("While populating interface addresses", e);
+    }
   }
 
   /**
@@ -92,13 +94,17 @@ public class LocalnetManager {
     AtomicReference<String> currentInterface = new AtomicReference<>();
     AtomicInteger currentMaxMetric = new AtomicInteger(Integer.MAX_VALUE);
     routeLines.forEach(line -> {
-      String[] parts = line.split(" ", 12);
-      if (parts[0].equals("default")) {
-        int metric = Integer.parseInt(parts[10]);
-        if (metric < currentMaxMetric.get()) {
-          currentMaxMetric.set(metric);
-          currentInterface.set(parts[4]);
+      try {
+        String[] parts = line.split(" ", 12);
+        if (parts[0].equals("default")) {
+          int metric = parts.length < 11 ? DEFAULT_METRIC : Integer.parseInt(parts[10]);
+          if (metric < currentMaxMetric.get()) {
+            currentMaxMetric.set(metric);
+            currentInterface.set(parts[4]);
+          }
         }
+      } catch (Exception e) {
+        throw new RuntimeException("While processing ip route line: " + line, e);
       }
     });
     return currentInterface.get();
