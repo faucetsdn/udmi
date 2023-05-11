@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: syslog
+  name: syslog
+  namespace: default
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: syslog
+  template:
+    metadata:
+      labels:
+        app: syslog
+    spec:
+      containers:
+        - name: syslog
+          image: gcr.io/@GCP_PROJECT_ID@/syslog@sha256:657498ede1ca4c75d80bb84af14b3618f82cef1f803817511ec2c549792f1160
+          ports:
+            - containerPort: 514
+              name: syslog-svc
+              protocol: UDP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: syslog
+spec:
+  selector:
+    app: syslog
+  ports:
+  - name: nsyslog-svc
+    protocol: UDP
+    port: 514
+    targetPort: syslog-svc

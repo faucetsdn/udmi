@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: haproxy-multi
+  annotations:
+    cloud.google.com/l4-rbs: "enabled"
+spec:
+  type: LoadBalancer
+  externalTrafficPolicy: Cluster
+  selector:
+    app: proxy2
+  ports:
+  - name: tcp-port1
+    protocol: TCP
+    port: 8881
+    targetPort: 8881
+  - name: tcp-port2
+    protocol: TCP
+    port: 8882
+    targetPort: 8882
+  - name: tcp-port3
+    protocol: TCP
+    port: 8883
+    targetPort: 8883
+  - name: tcp-port4
+    protocol: TCP
+    port: 8884
+    targetPort: 8884
