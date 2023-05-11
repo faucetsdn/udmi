@@ -3,6 +3,7 @@ package daq.pubber;
 import static com.google.udmi.util.GeneralUtils.runtimeExec;
 import static java.util.stream.Collectors.toMap;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.HashMap;
@@ -90,7 +91,11 @@ public class LocalnetManager {
   }
 
   private String getDefaultInterface() {
-    List<String> routeLines = runtimeExec("ip", "route");
+    return getDefaultInterface(runtimeExec("ip", "route"));
+  }
+
+  @VisibleForTesting
+  static String getDefaultInterface(List<String> routeLines) {
     AtomicReference<String> currentInterface = new AtomicReference<>();
     AtomicInteger currentMaxMetric = new AtomicInteger(Integer.MAX_VALUE);
     routeLines.forEach(line -> {
@@ -111,7 +116,11 @@ public class LocalnetManager {
   }
 
   private Map<String, String> getInterfaceAddresses(String defaultInterface) {
-    List<String> strings = runtimeExec("ip", "addr", "show", "dev", defaultInterface);
+    return getInterfaceAddresses(runtimeExec("ip", "addr", "show", "dev", defaultInterface));
+  }
+
+  @VisibleForTesting
+  static Map<String, String> getInterfaceAddresses(List<String> strings) {
     Map<String, String> interfaceMap = new HashMap<>();
     strings.forEach(line -> {
       for (Pattern pattern : familyPatterns) {
