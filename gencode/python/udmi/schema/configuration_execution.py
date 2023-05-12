@@ -14,6 +14,7 @@ class ExecutionConfiguration:
     self.site_model = None
     self.registry_suffix = None
     self.device_id = None
+    self.iot_provider = None
     self.project_id = None
     self.key_file = None
     self.serial_no = None
@@ -39,6 +40,7 @@ class ExecutionConfiguration:
     result.site_model = source.get('site_model')
     result.registry_suffix = source.get('registry_suffix')
     result.device_id = source.get('device_id')
+    result.iot_provider = source.get('iot_provider')
     result.project_id = source.get('project_id')
     result.key_file = source.get('key_file')
     result.serial_no = source.get('serial_no')
@@ -87,6 +89,8 @@ class ExecutionConfiguration:
       result['registry_suffix'] = self.registry_suffix # 5
     if self.device_id:
       result['device_id'] = self.device_id # 5
+    if self.iot_provider:
+      result['iot_provider'] = self.iot_provider # 5
     if self.project_id:
       result['project_id'] = self.project_id # 5
     if self.key_file:

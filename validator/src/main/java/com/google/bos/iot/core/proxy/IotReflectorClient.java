@@ -7,7 +7,6 @@ import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.convertTo;
-import static com.google.udmi.util.JsonUtil.fromString;
 import static com.google.udmi.util.JsonUtil.getDate;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.stringify;
@@ -57,6 +56,7 @@ public class IotReflectorClient implements MessagePublisher {
   private static final int MIN_REQUIRED_VERSION = 8;
   private static final String IOT_KEY_ALGORITHM = "RS256";
   private static final String UDMS_REFLECT = "UDMS-REFLECT";
+  private static final String UDMS_REGION = "us-central1";
   private static final String MOCK_DEVICE_NUM_ID = "123456789101112";
   private static final String UDMI_FOLDER = "udmi";
   private static final String UDMI_TOPIC = "events/" + UDMI_FOLDER;
@@ -106,11 +106,12 @@ public class IotReflectorClient implements MessagePublisher {
     String cloudRegion =
         iotConfig.reflect_region == null ? iotConfig.cloud_region : iotConfig.reflect_region;
     subscriptionId =
-        format("%s/%s/%s/%s", projectId, cloudRegion, UDMS_REFLECT, registryId);
+        format("%s/%s/%s/%s", projectId, UDMS_REGION, UDMS_REFLECT, registryId);
 
     try {
-      mqttPublisher = new MqttPublisher(projectId, cloudRegion, UDMS_REFLECT,
-          registryId, keyBytes, IOT_KEY_ALGORITHM, this::messageHandler, this::errorHandler);
+      mqttPublisher = new MqttPublisher(makeReflectConfiguration(iotConfig), keyBytes, IOT_KEY_ALGORITHM,
+          this::messageHandler, this::errorHandler
+      );
     } catch (Exception e) {
       throw new RuntimeException("While connecting MQTT endpoint " + subscriptionId, e);
     }
@@ -132,6 +133,16 @@ public class IotReflectorClient implements MessagePublisher {
       mqttPublisher.close();
       throw new RuntimeException("Waiting for initial config", e);
     }
+  }
+
+  private static ExecutionConfiguration makeReflectConfiguration(ExecutionConfiguration iotConfig) {
+    ExecutionConfiguration reflectConfiguration = GeneralUtils.deepCopy(iotConfig);
+    // The reflect registry uses slightly different mappings, where the registry ID and region are
+    // fixed, while the device in said registry is the registry proper of the site itself.
+    reflectConfiguration.device_id = iotConfig.registry_id;
+    reflectConfiguration.registry_id = UDMS_REFLECT;
+    reflectConfiguration.cloud_region = UDMS_REGION;
+    return reflectConfiguration;
   }
 
   private void initializeReflectorState() {

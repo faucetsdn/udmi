@@ -34,6 +34,13 @@
     "device_id": {
       "type": "string"
     },
+    "iot_provider": {
+      "enum": [
+        "gcp_native",
+        "gcp",
+        "clearblade"
+      ]
+    },
     "project_id": {
       "type": "string"
     },

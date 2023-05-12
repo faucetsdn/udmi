@@ -40,7 +40,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
@@ -52,6 +51,7 @@ import udmi.schema.CloudModel;
 import udmi.schema.Credential;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.ExecutionConfiguration;
+import udmi.schema.ExecutionConfiguration.Iot_provider;
 import udmi.schema.Metadata;
 
 /**
@@ -103,7 +103,7 @@ public class Registrar {
   private boolean useAltRegistry;
   private String altRegistry;
   private boolean deleteDevices;
-  private boolean useReflectorMessages;
+  private Iot_provider iotProvider;
 
   /**
    * Main entry point for registrar.
@@ -150,9 +150,6 @@ public class Registrar {
         case "-d":
           setDeleteDevices(true);
           break;
-        case "-m":
-          setUseReflectorMessages(true);
-          break;
         case "--":
           setDeviceList(argList);
           return this;
@@ -169,10 +166,6 @@ public class Registrar {
     return this;
   }
 
-  private void setUseReflectorMessages(boolean useReflectorMessages) {
-    this.useReflectorMessages = useReflectorMessages;
-  }
-
   private void setDeleteDevices(boolean deleteDevices) {
     Preconditions.checkNotNull(projectId, "delete devices specified with no target project");
     this.deleteDevices = deleteDevices;
@@ -183,12 +176,14 @@ public class Registrar {
   }
 
   private void processProfile(File profilePath) {
+    System.err.println("Reading registrar configuration from " + profilePath.getAbsolutePath());
     processProfile(ConfigUtil.readExecutionConfiguration(profilePath));
   }
 
   Registrar processProfile(ExecutionConfiguration config) {
     setSitePath(config.site_model);
     altRegistry = config.alt_registry;
+    iotProvider = config.iot_provider;
     setProjectId(config.project_id, config.registry_suffix);
     setValidateMetadata(true);
     if (config.project_id != null) {
@@ -307,7 +302,7 @@ public class Registrar {
     }
     String useRegistry = useAltRegistry ? altRegistry : null;
     cloudIotManager = new CloudIotManager(projectId, siteDir, useRegistry, registrySuffix,
-        useReflectorMessages);
+        iotProvider);
     System.err.printf(
         "Working with project %s registry %s/%s%n",
         cloudIotManager.getProjectId(),
@@ -343,7 +338,6 @@ public class Registrar {
         deleteCloudDevices(deviceSet);
         return;
       }
-
 
       if (deviceSet != null) {
         Set<String> unknowns = Sets.difference(deviceSet, localDevices.keySet());

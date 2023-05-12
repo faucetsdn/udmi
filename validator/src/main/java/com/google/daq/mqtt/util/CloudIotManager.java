@@ -18,6 +18,7 @@ import udmi.schema.CloudModel;
 import udmi.schema.Credential;
 import udmi.schema.Credential.Key_format;
 import udmi.schema.ExecutionConfiguration;
+import udmi.schema.ExecutionConfiguration.Iot_provider;
 
 /**
  * Encapsulation of all Cloud IoT interaction functions.
@@ -52,15 +53,16 @@ public class CloudIotManager {
    * @param useReflectorClient indicates which iot client to use
    */
   public CloudIotManager(String projectId, File siteDir, String altRegistry,
-      String registrySuffix, boolean useReflectorClient) {
+      String registrySuffix, Iot_provider iotProvider) {
     checkNotNull(projectId, "project id undefined");
     this.siteDir = checkNotNull(siteDir, "site directory undefined");
-    this.useReflectClient = useReflectorClient;
+    this.useReflectClient = iotProvider != Iot_provider.GCP_NATIVE;
     this.projectId = projectId;
     File cloudConfig = new File(siteDir, CLOUD_IOT_CONFIG_JSON);
     try {
       System.err.println("Reading cloud config from " + cloudConfig.getAbsolutePath());
       executionConfiguration = validate(readExecutionConfiguration(cloudConfig), this.projectId);
+      executionConfiguration.iot_provider = iotProvider;
       executionConfiguration.site_model = siteDir.getPath();
       executionConfiguration.registry_suffix = registrySuffix;
       String targetRegistry = Optional.ofNullable(altRegistry)
