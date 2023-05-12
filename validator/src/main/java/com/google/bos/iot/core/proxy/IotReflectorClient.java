@@ -109,9 +109,8 @@ public class IotReflectorClient implements MessagePublisher {
         format("%s/%s/%s/%s", projectId, UDMS_REGION, UDMS_REFLECT, registryId);
 
     try {
-      mqttPublisher = new MqttPublisher(makeReflectConfiguration(iotConfig), keyBytes, IOT_KEY_ALGORITHM,
-          this::messageHandler, this::errorHandler
-      );
+      mqttPublisher = new MqttPublisher(makeReflectConfiguration(iotConfig), keyBytes,
+          IOT_KEY_ALGORITHM, this::messageHandler, this::errorHandler);
     } catch (Exception e) {
       throw new RuntimeException("While connecting MQTT endpoint " + subscriptionId, e);
     }

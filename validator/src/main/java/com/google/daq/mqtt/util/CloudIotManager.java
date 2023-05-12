@@ -46,11 +46,11 @@ public class CloudIotManager {
   /**
    * Create a new CloudIoTManager.
    *
-   * @param projectId          project id
-   * @param siteDir            site model directory
-   * @param altRegistry        alternate registry to use (instead of site registry)
-   * @param registrySuffix     suffix to append to model registry id
-   * @param useReflectorClient indicates which iot client to use
+   * @param projectId      project id
+   * @param siteDir        site model directory
+   * @param altRegistry    alternate registry to use (instead of site registry)
+   * @param registrySuffix suffix to append to model registry id
+   * @param iotProvider    indicates which iot provider type
    */
   public CloudIotManager(String projectId, File siteDir, String altRegistry,
       String registrySuffix, Iot_provider iotProvider) {
