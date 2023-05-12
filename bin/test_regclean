@@ -17,9 +17,9 @@ shift
 target_project=//gcp/$project_id
 
 [[ -n $GITHUB_RUN_NUMBER ]] && echo "Workflow run number $GITHUB_RUN_NUMBER" || true
-echo 'Using target project:' $target_project
-echo 'Using UDMI_REGISTRY_SUFFIX:' $UDMI_REGISTRY_SUFFIX
-echo 'Using UDMI_ALT_REGISTRY:' $UDMI_ALT_REGISTRY
+echo "Using target project=$target_project"
+echo "Using UDMI_REGISTRY_SUFFIX=$UDMI_REGISTRY_SUFFIX"
+echo "Using UDMI_ALT_REGISTRY=$UDMI_ALT_REGISTRY"
 
 site_path=sites/udmi_site_model
 
