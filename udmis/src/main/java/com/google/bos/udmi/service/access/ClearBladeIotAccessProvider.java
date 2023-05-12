@@ -1,5 +1,6 @@
 package com.google.bos.udmi.service.access;
 
+import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.stringify;
@@ -20,12 +21,14 @@ import com.clearblade.cloud.iot.v1.modifycloudtodeviceconfig.ModifyCloudToDevice
 import com.clearblade.cloud.iot.v1.registrytypes.DeviceRegistry;
 import com.clearblade.cloud.iot.v1.registrytypes.LocationName;
 import com.clearblade.cloud.iot.v1.utils.ByteString;
+import com.clearblade.cloud.iot.v1.utils.ConfigParameters;
 import com.google.bos.udmi.service.core.UdmisComponent;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.udmi.util.GeneralUtils;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -408,16 +411,22 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
       String location = registryCloudRegions.get(registryId);
       String registry = registryId;
       String device = deviceId;
-      ByteString binaryData = new ByteString(config);
+      ByteString binaryData = new ByteString(encodeBase64(config));
       String updateVersion = null;
       ModifyCloudToDeviceConfigRequest request = ModifyCloudToDeviceConfigRequest.Builder.newBuilder()
           .setName(DeviceName.of(project, location, registry, device).toString())
           .setBinaryData(binaryData).setVersionToUpdate(updateVersion).build();
+      hackClearBladeRegistryRegion(location, registry);
       DeviceConfig response = deviceManagerClient.modifyCloudToDeviceConfig(request);
       System.err.println("Config modified version " + response.getVersion());
     } catch (Exception e) {
       throw new RuntimeException("While modifying device config", e);
     }
+  }
+
+  private static void hackClearBladeRegistryRegion(String location, String registry) {
+    ConfigParameters.getInstance().setRegion(location);
+    ConfigParameters.getInstance().setRegistry(registry);
   }
 }
 
