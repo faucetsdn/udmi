@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Pubber" type="Application" factoryName="Application">
+  <configuration default="false" name="Pubber Config" type="Application" factoryName="Application">
     <option name="MAIN_CLASS_NAME" value="daq.pubber.Pubber" />
     <module name="pubber" />
     <option name="PROGRAM_PARAMETERS" value="/tmp/pubber_config.json" />
