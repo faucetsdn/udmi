@@ -3,6 +3,7 @@ package com.google.bos.udmi.service.access;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.getDate;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
@@ -117,7 +118,7 @@ public class GcpIotAccessProvider extends UdmisComponent implements IotAccessPro
     return new Device()
         .setBlocked(cloudModel.blocked)
         .setCredentials(convertUdmi(cloudModel.credentials))
-        .setGatewayConfig(TRUE.equals(cloudModel.is_gateway) ? GATEWAY_CONFIG : null)
+        .setGatewayConfig(isTrue(cloudModel.is_gateway) ? GATEWAY_CONFIG : null)
         .setMetadata(cloudModel.metadata);
   }
 

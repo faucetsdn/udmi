@@ -54,7 +54,7 @@ public class GeneralUtils {
           continue;
         }
 
-        if (field.get(target) != null && Boolean.TRUE.equals(field.get(target))) {
+        if (field.get(target) != null && isTrue(field.get(target))) {
           options.add(field.getName());
         } else if (field.get(target) != null) {
           options.add(field.getName() + "=" + field.get(target));
@@ -64,6 +64,10 @@ public class GeneralUtils {
       }
     }
     return String.join(" ", options);
+  }
+
+  public static boolean isTrue(Object value) {
+    return Boolean.TRUE.equals(value);
   }
 
   public static <T> void ifNotNullThen(T value, Consumer<T> consumer) {
@@ -195,7 +199,7 @@ public class GeneralUtils {
   public static String friendlyStackTrace(Throwable e) {
     List<String> messages = new ArrayList<>();
     while (e != null) {
-      messages.add(e.getMessage());
+      messages.add(Optional.ofNullable(e.getMessage()).orElseGet(e::toString));
       e = e.getCause();
     }
     return CSV_JOINER.join(messages);
