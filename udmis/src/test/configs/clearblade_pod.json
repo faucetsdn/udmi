@@ -1,7 +1,7 @@
 {
   "flow_defaults": {
     "protocol": "pubsub",
-    "hostname": "bos-peringknife-dev"
+    "hostname": "udmi-external"
   },
   "flows": {
     "state": {
@@ -15,6 +15,6 @@
   },
   "iot_access": {
     "provider": "clearblade_iot_core",
-    "project_id": "bos-platform-dev"
+    "project_id": "udmi-external"
   }
 }

@@ -1,7 +1,7 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="UdmiServicePod configured" type="Application" factoryName="Application">
     <envs>
-      <env name="CLEARBLADE_CONFIGURATION" value="$USER_HOME$/creds/bos-peringknife-dev-credentials.json" />
+      <env name="CLEARBLADE_CONFIGURATION" value="$USER_HOME$/creds/udmi-external-credentials.json" />
     </envs>
     <option name="MAIN_CLASS_NAME" value="com.google.bos.udmi.service.pod.UdmiServicePod" />
     <module name="udmis" />

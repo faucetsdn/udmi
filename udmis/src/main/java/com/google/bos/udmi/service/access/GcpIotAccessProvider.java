@@ -210,6 +210,9 @@ public class GcpIotAccessProvider extends UdmisComponent implements IotAccessPro
         .flatMap(map -> map.entrySet().stream())
         .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
     debug(format("Fetched %s registry regions", regionMap.size()));
+    if (regionMap.isEmpty()) {
+      throw new RuntimeException("Region map is empty, assuming project misconfiguration.");
+    }
     return regionMap;
   }
 

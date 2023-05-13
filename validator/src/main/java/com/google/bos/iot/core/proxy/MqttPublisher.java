@@ -248,7 +248,7 @@ class MqttPublisher implements MessagePublisher {
     LOG.info(deviceId + " creating new jwt");
     mqttConnectOptions.setPassword(createJwt());
     mqttTokenSetTimeMs = System.currentTimeMillis();
-    LOG.info(deviceId + " connecting to mqtt server");
+    LOG.info(deviceId + " connecting to mqtt server " + getBrokerUrl());
     mqttClient.connect(mqttConnectOptions);
     attachedClients.clear();
     attachedClients.add(deviceId);

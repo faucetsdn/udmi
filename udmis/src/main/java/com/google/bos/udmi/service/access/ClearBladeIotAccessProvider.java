@@ -82,6 +82,7 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
    */
   public ClearBladeIotAccessProvider(IotAccess iotAccess) {
     projectId = requireNonNull(iotAccess.project_id, "gcp project id not specified");
+    debug("Initializing ClearBlade access provider for project " + projectId);
     cloudIotService = createCloudIotService();
     registryCloudRegions = fetchRegistryCloudRegions();
   }
@@ -238,11 +239,14 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
       ListDeviceRegistriesResponse response = deviceManagerClient.listDeviceRegistries(request);
       requireNonNull(response, "get registries response is null");
       List<DeviceRegistry> deviceRegistries = response.getDeviceRegistriesList();
-      return ofNullable(deviceRegistries).orElseGet(ImmutableList::of).stream()
-          .map(registry -> registry.toBuilder().getId())
-          .collect(Collectors.toMap(item -> item, item -> region));
+      Map<String, String> registries =
+          ofNullable(deviceRegistries).orElseGet(ImmutableList::of).stream()
+              .map(registry -> registry.toBuilder().getId())
+              .collect(Collectors.toMap(item -> item, item -> region));
+      debug("Fetched " + registries.size() + " registries for region " + region);
+      return registries;
     } catch (Exception e) {
-      throw new RuntimeException("While fetching registry cloud regions", e);
+      throw new RuntimeException("While fetching registries for region " + region, e);
     }
   }
 

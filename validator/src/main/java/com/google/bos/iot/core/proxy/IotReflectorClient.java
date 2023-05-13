@@ -137,6 +137,7 @@ public class IotReflectorClient implements MessagePublisher {
   private static ExecutionConfiguration makeReflectConfiguration(ExecutionConfiguration iotConfig,
       String registryId) {
     ExecutionConfiguration reflectConfiguration = new ExecutionConfiguration();
+    reflectConfiguration.iot_provider = iotConfig.iot_provider;
     reflectConfiguration.project_id = iotConfig.project_id;
     reflectConfiguration.cloud_region = Optional.ofNullable(iotConfig.reflect_region)
         .orElse(iotConfig.cloud_region);
