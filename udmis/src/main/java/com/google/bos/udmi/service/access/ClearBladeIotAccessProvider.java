@@ -20,6 +20,8 @@ import com.clearblade.cloud.iot.v1.listdeviceregistries.ListDeviceRegistriesResp
 import com.clearblade.cloud.iot.v1.modifycloudtodeviceconfig.ModifyCloudToDeviceConfigRequest;
 import com.clearblade.cloud.iot.v1.registrytypes.DeviceRegistry;
 import com.clearblade.cloud.iot.v1.registrytypes.LocationName;
+import com.clearblade.cloud.iot.v1.sendcommandtodevice.SendCommandToDeviceRequest;
+import com.clearblade.cloud.iot.v1.sendcommandtodevice.SendCommandToDeviceResponse;
 import com.clearblade.cloud.iot.v1.utils.ByteString;
 import com.clearblade.cloud.iot.v1.utils.ConfigParameters;
 import com.google.bos.udmi.service.core.UdmisComponent;
@@ -370,20 +372,24 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
   }
 
   @Override
-  public void sendCommand(String registryId, String deviceId, SubFolder folder, String message) {
+  public void sendCommand(String registryId, String deviceId, SubFolder subFolder, String message) {
     try {
-      // requireNonNull(registryId, "registry not defined");
-      // requireNonNull(deviceId, "device not defined");
-      // String subFolder = requireNonNull(folder, "subfolder not defined").value();
-      // SendCommandToDeviceRequest request =
-      //     new SendCommandToDeviceRequest().setBinaryData(encodeBase64(message))
-      //         .setSubfolder(subFolder);
-      // registries.devices().sendCommandToDevice(getDevicePath(registryId, deviceId), request)
-      //     .execute();
-      throw new RuntimeException("Not yet implemented");
+      String location = registryCloudRegions.get(registryId);
+      ByteString binaryData = new ByteString(encodeBase64(message));
+      hackClearBladeRegistryRegion(location, registryId);
+      DeviceManagerClient deviceManagerClient = new DeviceManagerClient();
+      String deviceName = DeviceName.of(projectId, location, registryId, deviceId).toString();
+      SendCommandToDeviceRequest request = SendCommandToDeviceRequest.Builder.newBuilder()
+          .setName(deviceName)
+          .setBinaryData(binaryData).setSubfolder(subFolder.value()).build();
+      SendCommandToDeviceResponse response = deviceManagerClient.sendCommandToDevice(request);
+      if(response == null) {
+        throw new RuntimeException("SendCommandToDevice execution failed for " + deviceName);
+      }
+      debug("Sent command to " + deviceName);
     } catch (Exception e) {
       throw new RuntimeException(
-          format("While sending %s command to %s/%s", folder, registryId, deviceId), e);
+          format("While sending %s command to %s/%s", subFolder, registryId, deviceId), e);
     }
   }
 
@@ -396,17 +402,14 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
   public void updateConfig(String registryId, String deviceId, String config) {
     try {
       DeviceManagerClient deviceManagerClient = new DeviceManagerClient();
-      String project = projectId;
       String location = registryCloudRegions.get(registryId);
-      String registry = registryId;
-      String device = deviceId;
       ByteString binaryData = new ByteString(encodeBase64(config));
       String updateVersion = null;
       ModifyCloudToDeviceConfigRequest request =
           ModifyCloudToDeviceConfigRequest.Builder.newBuilder()
-              .setName(DeviceName.of(project, location, registry, device).toString())
+              .setName(DeviceName.of(projectId, location, registryId, deviceId).toString())
               .setBinaryData(binaryData).setVersionToUpdate(updateVersion).build();
-      hackClearBladeRegistryRegion(location, registry);
+      hackClearBladeRegistryRegion(location, registryId);
       DeviceConfig response = deviceManagerClient.modifyCloudToDeviceConfig(request);
       System.err.println("Config modified version " + response.getVersion());
     } catch (Exception e) {
