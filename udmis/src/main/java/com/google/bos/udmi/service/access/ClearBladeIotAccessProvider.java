@@ -37,12 +37,12 @@ import com.clearblade.cloud.iot.v1.utils.ByteString;
 import com.clearblade.cloud.iot.v1.utils.ConfigParameters;
 import com.google.bos.udmi.service.core.UdmisComponent;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Strings;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.udmi.util.GeneralUtils;
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Date;
@@ -124,7 +124,7 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
 
   @Nullable
   private static Date getSafeDate(String lastEventTime) {
-    return getDate("".equals(lastEventTime) ? null : lastEventTime);
+    return getDate(Strings.isNullOrEmpty(lastEventTime) ? null : lastEventTime);
   }
 
   private static CloudModel convertDevice(Device device, Operation operation) {
