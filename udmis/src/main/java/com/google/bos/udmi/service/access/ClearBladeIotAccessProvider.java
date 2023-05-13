@@ -1,8 +1,10 @@
 package com.google.bos.udmi.service.access;
 
+import static com.clearblade.cloud.iot.v1.devicetypes.GatewayType.NON_GATEWAY;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.JsonUtil.getDate;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static java.lang.String.format;
@@ -10,18 +12,27 @@ import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
 import com.clearblade.cloud.iot.v1.DeviceManagerClient;
+import com.clearblade.cloud.iot.v1.deviceslist.DevicesListRequest;
+import com.clearblade.cloud.iot.v1.deviceslist.DevicesListResponse;
+import com.clearblade.cloud.iot.v1.devicetypes.Device;
 import com.clearblade.cloud.iot.v1.devicetypes.DeviceConfig;
+import com.clearblade.cloud.iot.v1.devicetypes.DeviceCredential;
 import com.clearblade.cloud.iot.v1.devicetypes.DeviceName;
+import com.clearblade.cloud.iot.v1.devicetypes.FieldMask;
 import com.clearblade.cloud.iot.v1.devicetypes.GatewayAuthMethod;
 import com.clearblade.cloud.iot.v1.devicetypes.GatewayConfig;
+import com.clearblade.cloud.iot.v1.devicetypes.GatewayListOptions;
 import com.clearblade.cloud.iot.v1.devicetypes.GatewayType;
+import com.clearblade.cloud.iot.v1.getdevice.GetDeviceRequest;
 import com.clearblade.cloud.iot.v1.listdeviceregistries.ListDeviceRegistriesRequest;
 import com.clearblade.cloud.iot.v1.listdeviceregistries.ListDeviceRegistriesResponse;
 import com.clearblade.cloud.iot.v1.modifycloudtodeviceconfig.ModifyCloudToDeviceConfigRequest;
 import com.clearblade.cloud.iot.v1.registrytypes.DeviceRegistry;
 import com.clearblade.cloud.iot.v1.registrytypes.LocationName;
+import com.clearblade.cloud.iot.v1.registrytypes.RegistryName;
 import com.clearblade.cloud.iot.v1.sendcommandtodevice.SendCommandToDeviceRequest;
 import com.clearblade.cloud.iot.v1.sendcommandtodevice.SendCommandToDeviceResponse;
+import com.clearblade.cloud.iot.v1.utils.AuthParams;
 import com.clearblade.cloud.iot.v1.utils.ByteString;
 import com.clearblade.cloud.iot.v1.utils.ConfigParameters;
 import com.google.bos.udmi.service.core.UdmisComponent;
@@ -30,13 +41,20 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.udmi.util.GeneralUtils;
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.util.AbstractMap.SimpleEntry;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
 import udmi.schema.Credential;
@@ -68,6 +86,7 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
           Key_format.ES_256_X_509, ES_CERT_FILE);
   private static final String EMPTY_RETURN_RECEIPT = "-1";
   private static final GatewayConfig GATEWAY_CONFIG = new GatewayConfig();
+  public static final String USER_SYSTEM_KEY_FIELD = "userSystemKey";
 
   static {
     GATEWAY_CONFIG.setGatewayType(GatewayType.GATEWAY);
@@ -89,6 +108,25 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
     registryCloudRegions = fetchRegistryCloudRegions();
   }
 
+  private static CloudModel convert(Device deviceRaw, Operation operation) {
+    Device.Builder device = deviceRaw.toBuilder();
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.num_id = extractNumId(deviceRaw);
+    cloudModel.blocked = device.isBlocked();
+    cloudModel.metadata = device.getMetadata();
+    cloudModel.last_event_time = getSafeDate(device.getLastEventTime());
+    cloudModel.is_gateway = ifNotNullGet(device.getGatewayConfig(),
+        config -> GatewayType.GATEWAY == config.getGatewayType());
+    cloudModel.credentials = convertIot(device.getCredentials());
+    cloudModel.operation = operation;
+    return cloudModel;
+  }
+
+  @Nullable
+  private static Date getSafeDate(String lastEventTime) {
+    return getDate("".equals(lastEventTime) ? null : lastEventTime);
+  }
+
   private static CloudModel convertDevice(Device device, Operation operation) {
     // CloudModel cloudModel = new CloudModel();
     // cloudModel.num_id = device.getNumId().toString();
@@ -103,12 +141,6 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
     throw new RuntimeException("Not yet implemented");
   }
 
-  private static List<Credential> convertIot(List<DeviceCredential> credentials) {
-    return ifNotNullGet(credentials,
-        list -> list.stream().map(ClearBladeIotAccessProvider::convertIot)
-            .collect(Collectors.toList()));
-  }
-
   private static Credential convertIot(DeviceCredential device) {
     // Credential credential = new Credential();
     // credential.key_data = device.getPublicKey().getKey();
@@ -117,16 +149,47 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
     throw new RuntimeException("Not yet implemented");
   }
 
+  private static List<Credential> convertIot(List<DeviceCredential> credentials) {
+    return ifNotNullGet(credentials,
+        list -> list.stream().map(ClearBladeIotAccessProvider::convertIot)
+            .collect(Collectors.toList()));
+  }
+
   private static Entry<String, CloudModel> convertToEntry(Device device) {
-    // CloudModel cloudModel = new CloudModel();
-    // cloudModel.num_id = device.getNumId().toString();
-    // return new SimpleEntry<>(device.getId(), cloudModel);
+    CloudModel cloudModel = new CloudModel();
+    Device.Builder deviceBuilder = device.toBuilder();
+    cloudModel.num_id = extractNumId(device);
+    return new SimpleEntry<>(deviceBuilder.getId(), cloudModel);
+  }
+
+  private static DeviceCredential convertUdmi(Credential credential) {
+    // return new DeviceCredential()
+    // .setPublicKey(new PublicKeyCredential().setKey(credential.key_data)
+    //     .setFormat(AUTH_TYPE_MAP.get(credential.key_format)));
     throw new RuntimeException("Not yet implemented");
   }
 
+  private static String extractNumId(Device device) {
+    return format("%d", Math.abs(Objects.hash(device.toBuilder().getName())));
+  }
+
+  /**
+   * Work around issues with the Java version of the ClearBlade API. Specifically, the "registry"
+   * parameter is assumed to be static, either by static configuration or environment variable,
+   * so the registry parameter of the API call is ignored. Additionally, the auth result caches
+   * the value so it can't be easily changed between calls.
+   */
   private static void hackClearBladeRegistryRegion(String location, String registry) {
     ConfigParameters.getInstance().setRegion(location);
     ConfigParameters.getInstance().setRegistry(registry);
+    try {
+      // Force clear the cached value so it recalculates for each API call.
+      Field userSystemKey = AuthParams.class.getDeclaredField(USER_SYSTEM_KEY_FIELD);
+      userSystemKey.setAccessible(true);
+      userSystemKey.set(null, null);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
   }
 
   @NotNull
@@ -182,13 +245,6 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
     cloudModel.operation = operation;
     cloudModel.num_id = EMPTY_RETURN_RECEIPT;
     return cloudModel;
-  }
-
-  private static DeviceCredential convertUdmi(Credential credential) {
-    // return new DeviceCredential()
-    // .setPublicKey(new PublicKeyCredential().setKey(credential.key_data)
-    //     .setFormat(AUTH_TYPE_MAP.get(credential.key_format)));
-    throw new RuntimeException("Not yet implemented");
   }
 
   private List<DeviceCredential> convertUdmi(List<Credential> credentials) {
@@ -261,18 +317,25 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
   private CloudModel listRegistryDevices(String deviceRegistryId, String gatewayId) {
     String registryPath = getRegistryPath(deviceRegistryId);
     try {
-      // Devices.List request = registries.devices().list(registryPath);
-      // ifNotNullThen(gatewayId, request::setGatewayListOptionsAssociationsGatewayId);
-      // ListDevicesResponse response = request.execute();
-      // List<Device> devices =
-      //     ofNullable(response.getDevices()).orElseGet(ImmutableList::of);
-      // CloudModel cloudModel = new CloudModel();
-      // cloudModel.device_ids =
-      //     devices.stream().map(ClearBladeIotAccessProvider::convertToEntry)
-      //         .collect(Collectors.toMap(Entry::getKey, Entry::getValue, GeneralUtils::mapReplace,
-      //             HashMap::new));
-      // return cloudModel;
-      throw new RuntimeException("Not yet implemented");
+      String location = registryCloudRegions.get(deviceRegistryId);
+      hackClearBladeRegistryRegion(location, deviceRegistryId);
+      DeviceManagerClient deviceManagerClient = new DeviceManagerClient();
+      GatewayListOptions gatewayListOptions =
+          GatewayListOptions.newBuilder().setGatewayType(NON_GATEWAY).build();
+      String registryFullName =
+          RegistryName.of(projectId, location, deviceRegistryId).getRegistryFullName();
+      DevicesListRequest request = DevicesListRequest.Builder.newBuilder().setParent(
+              registryFullName)
+          .setGatewayListOptions(gatewayListOptions)
+          .build();
+      DevicesListResponse response = deviceManagerClient.listDevices(request);
+      requireNonNull(response, "DeviceRegistriesList fetch failed");
+      CloudModel cloudModel = new CloudModel();
+      cloudModel.device_ids =
+          response.getDevicesList().stream().map(ClearBladeIotAccessProvider::convertToEntry)
+              .collect(Collectors.toMap(Entry::getKey, Entry::getValue, GeneralUtils::mapReplace,
+                  HashMap::new));
+      return cloudModel;
     } catch (Exception e) {
       throw new RuntimeException("While listing devices for " + registryPath, e);
     }
@@ -310,11 +373,19 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
   public CloudModel fetchDevice(String deviceRegistryId, String deviceId) {
     String devicePath = getDevicePath(deviceRegistryId, deviceId);
     try {
-      // CloudModel convert
-      // = convert(registries.devices().get(devicePath).execute(), Operation.FETCH);
-      // convert.device_ids = listRegistryDevices(deviceRegistryId, deviceId).device_ids;
-      // return convert;
-      throw new RuntimeException("Not yet implemented");
+      String location = registryCloudRegions.get(deviceRegistryId);
+      hackClearBladeRegistryRegion(location, deviceRegistryId);
+      DeviceManagerClient deviceManagerClient = new DeviceManagerClient();
+      DeviceName name = DeviceName.of(projectId, location, deviceRegistryId, deviceId);
+      GetDeviceRequest request = GetDeviceRequest.Builder.newBuilder().setName(name)
+          .setFieldMask(FieldMask.newBuilder().build()).build();
+      Device device = deviceManagerClient.getDevice(request);
+      requireNonNull(device, "GetDeviceRequest failed");
+      // cloudModel.device_ids =
+      //      response.getDeviceRegistriesList().stream().map(ClearBladeIotAccessProvider::convertToEntry)
+      //          .collect(Collectors.toMap(Entry::getKey, Entry::getValue, GeneralUtils::mapReplace,
+      //              HashMap::new));
+      return convert(device, Operation.FETCH);
     } catch (Exception e) {
       throw new RuntimeException("While fetching device " + devicePath, e);
     }
@@ -383,7 +454,7 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
           .setName(deviceName)
           .setBinaryData(binaryData).setSubfolder(subFolder.value()).build();
       SendCommandToDeviceResponse response = deviceManagerClient.sendCommandToDevice(request);
-      if(response == null) {
+      if (response == null) {
         throw new RuntimeException("SendCommandToDevice execution failed for " + deviceName);
       }
       debug("Sent command to " + deviceName);
@@ -417,10 +488,6 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
     }
   }
 
-  class Device {
-    // Temp hacky class
-  }
-
   class Projects {
 
     class Locations {
@@ -432,10 +499,6 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
   }
 
   class Empty {
-    // Temp hacky class
-  }
-
-  class DeviceCredential {
     // Temp hacky class
   }
 

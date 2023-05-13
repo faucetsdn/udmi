@@ -189,6 +189,18 @@ public class GeneralUtils {
     return outputStream.toString();
   }
 
+  /**
+   * Get a "friendly" (cause messages only) stack trace string.
+   */
+  public static String friendlyStackTrace(Throwable e) {
+    List<String> messages = new ArrayList<>();
+    while (e != null) {
+      messages.add(e.getMessage());
+      e = e.getCause();
+    }
+    return CSV_JOINER.join(messages);
+  }
+
   public static List<String> runtimeExec(String... command) {
     ProcessBuilder processBuilder = new ProcessBuilder().command(command);
     try {

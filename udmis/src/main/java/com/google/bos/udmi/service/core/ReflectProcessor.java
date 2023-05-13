@@ -94,7 +94,7 @@ public class ReflectProcessor extends UdmisComponent {
   }
 
   private void processException(Envelope reflection, Exception e) {
-    debug("Processing exception: " + GeneralUtils.stackTraceString(e));
+    debug("Processing exception: " + GeneralUtils.friendlyStackTrace(e));
     Map<String, Object> message = new HashMap<>();
     message.put(ERROR_KEY, stackTraceString(e));
     Envelope envelope = new Envelope();
