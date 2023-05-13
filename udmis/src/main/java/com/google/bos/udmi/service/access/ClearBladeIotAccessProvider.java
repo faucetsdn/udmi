@@ -8,7 +8,6 @@ import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.getDate;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
-import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
@@ -37,6 +36,7 @@ import com.clearblade.cloud.iot.v1.registrytypes.PublicKeyFormat;
 import com.clearblade.cloud.iot.v1.registrytypes.RegistryName;
 import com.clearblade.cloud.iot.v1.sendcommandtodevice.SendCommandToDeviceRequest;
 import com.clearblade.cloud.iot.v1.sendcommandtodevice.SendCommandToDeviceResponse;
+import com.clearblade.cloud.iot.v1.updatedevice.UpdateDeviceRequest;
 import com.clearblade.cloud.iot.v1.utils.AuthParams;
 import com.clearblade.cloud.iot.v1.utils.ByteString;
 import com.clearblade.cloud.iot.v1.utils.ConfigParameters;
@@ -88,6 +88,7 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
   );
   private static final String EMPTY_RETURN_RECEIPT = "-1";
   private static final GatewayConfig GATEWAY_CONFIG = new GatewayConfig();
+  private static final String UPDATE_FIELD_MASK = "blocked,credentials,metadata";
 
   static {
     // GatewayConfig builder implementation is incomplete, so do it the old-fashioned way.
@@ -259,6 +260,7 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
   private CloudModel createDevice(String registryId, Device device) {
     DeviceManagerClient deviceManagerClient = new DeviceManagerClient();
     String location = registryCloudRegions.get(registryId);
+    hackClearBladeRegistryRegion(registryId, location);
     RegistryName parent = RegistryName.of(projectId, location, registryId);
     CreateDeviceRequest request =
         CreateDeviceRequest.Builder.newBuilder().setParent(parent).setDevice(device)
@@ -377,6 +379,21 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
         .forEach(id -> unbindDevice(registryId, deviceId, id)));
   }
 
+  private CloudModel updateDevice(String registryId, Device device) {
+    DeviceManagerClient deviceManagerClient = new DeviceManagerClient();
+    String location = registryCloudRegions.get(registryId);
+    hackClearBladeRegistryRegion(registryId, location);
+    String name =
+        DeviceName.of(projectId, location, registryId, device.toBuilder().getId()).getDevice();
+    UpdateDeviceRequest request =
+        UpdateDeviceRequest.Builder.newBuilder().setDevice(device).setName(name)
+            .setUpdateMask(UPDATE_FIELD_MASK).build();
+    requireNonNull(deviceManagerClient.updateDevice(request), "Error updating device " + name);
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.operation = Operation.UPDATE;
+    return cloudModel;
+  }
+
   @Override
   public void activate() {
     try {
@@ -424,10 +441,8 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
         case CREATE:
           Device newDevice = device.toBuilder().setId(deviceId).build();
           return createDevice(registryId, newDevice);
-        // case UPDATE:
-        //   return convert(
-        //       registryDevices.patch(devicePath, device.setNumId(null))
-        //           .setUpdateMask(UPDATE_FIELD_MASK).execute(), operation);
+        case UPDATE:
+          return updateDevice(registryId, device);
         // case DELETE:
         //   unbindGatewayDevices(registryId, deviceId);
         //   return convert(registryDevices.delete(devicePath).execute(), operation);
