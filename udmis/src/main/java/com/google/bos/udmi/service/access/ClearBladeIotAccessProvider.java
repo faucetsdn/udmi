@@ -15,7 +15,6 @@ import static java.util.Optional.ofNullable;
 
 import com.clearblade.cloud.iot.v1.DeviceManagerClient;
 import com.clearblade.cloud.iot.v1.binddevicetogateway.BindDeviceToGatewayRequest;
-import com.clearblade.cloud.iot.v1.binddevicetogateway.BindDeviceToGatewayResponse;
 import com.clearblade.cloud.iot.v1.createdevice.CreateDeviceRequest;
 import com.clearblade.cloud.iot.v1.deviceslist.DevicesListRequest;
 import com.clearblade.cloud.iot.v1.deviceslist.DevicesListResponse;
@@ -97,14 +96,13 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
   private static final GatewayConfig GATEWAY_CONFIG = new GatewayConfig();
 
   static {
-    // GatewayConfig builder implementation is incomplete, so do it the old-fashioned way.
+    // TODO: GatewayConfig builder implementation is incomplete, so do it the old-fashioned way.
     GATEWAY_CONFIG.setGatewayType(GatewayType.GATEWAY);
     GATEWAY_CONFIG.setGatewayAuthMethod(GatewayAuthMethod.ASSOCIATION_ONLY);
   }
 
   private final String projectId;
   private final Map<String, String> registryCloudRegions;
-  private final CloudIot cloudIotService;
 
   /**
    * Create a new instance for interfacing with GCP IoT Core.
@@ -112,7 +110,6 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
   public ClearBladeIotAccessProvider(IotAccess iotAccess) {
     projectId = requireNonNull(iotAccess.project_id, "gcp project id not specified");
     debug("Initializing ClearBlade access provider for project " + projectId);
-    cloudIotService = createCloudIotService();
     registryCloudRegions = fetchRegistryCloudRegions();
   }
 
@@ -195,12 +192,17 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
    * parameter is assumed to be static, either by static configuration or environment variable, so
    * the registry parameter of the API call is ignored. Additionally, the auth result caches the
    * value so it can't be easily changed between calls.
+   * TODO: Fix this so the hack function isn't necessary.
    */
   private static void hackClearBladeRegistryRegion(String location, String registry) {
     Preconditions.checkArgument(CLOUD_REGIONS.contains(location),
         "unknown cloud region " + location);
-    ConfigParameters.getInstance().setRegion(location);
-    ConfigParameters.getInstance().setRegistry(registry);
+    ConfigParameters instance = ConfigParameters.getInstance();
+    if (registry.equals(instance.getRegistry())) {
+      return;
+    }
+    instance.setRegion(location);
+    instance.setRegistry(registry);
     try {
       // Force clear the cached value to recalculate for each API call.
       Field userSystemKey = AuthParams.class.getDeclaredField(USER_SYSTEM_KEY_FIELD);
@@ -208,25 +210,6 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
       userSystemKey.set(null, null);
     } catch (Exception e) {
       throw new RuntimeException(e);
-    }
-  }
-
-  @NotNull
-  @VisibleForTesting
-  protected CloudIot createCloudIotService() {
-    try {
-      // GoogleCredentials credential = GoogleCredentials.getApplicationDefault()
-      //     .createScoped(CloudIotScopes.all());
-      // JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
-      // HttpRequestInitializer init
-      // = new HttpCredentialsAdapter(credential);
-      // CloudIot cloudIotService
-      // = new CloudIot.Builder(GoogleNetHttpTransport.newTrustedTransport(),
-      //     jsonFactory, init).setApplicationName(APPLICATION_NAME).build();
-      // return cloudIotService;
-      return new CloudIot();
-    } catch (Exception e) {
-      throw new RuntimeException("While creating GCP IoT Core service", e);
     }
   }
 
@@ -244,12 +227,13 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
         RegistryName parent = RegistryName.of(projectId, location, registryId);
         BindDeviceToGatewayRequest request =
             BindDeviceToGatewayRequest.Builder.newBuilder()
-                .setParent(parent.getRegistryFullName())
+                .setParent(parent.getRegistryFullName()) // TODO: Call is inconsistent with others.
                 .setDevice(id)
                 .setGateway(gatewayId)
                 .build();
         DeviceManagerClient deviceManagerClient = new DeviceManagerClient();
-        requireNonNull(deviceManagerClient.bindDeviceToGateway(request), "binding device to gateway");
+        requireNonNull(deviceManagerClient.bindDeviceToGateway(request),
+            "binding device to gateway");
       } catch (Exception e) {
         throw new RuntimeException(format("While binding %s to gateway %s", id, gatewayId), e);
       }
@@ -352,6 +336,8 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
   }
 
   private String getRegistryPath(String registryId) {
+    // TODO: ClearBlade implementation of DeviceName.toString() is incomplete/inconsistent.
+    // TODO: ClearBlade implementation of RegistryName.toString() is incomplete/inconsistent.
     String region = requireNonNull(registryCloudRegions.get(registryId),
         "unknown region for registry " + registryId);
     return format(REGISTRY_PATH_FORMAT, getLocationPath(region), registryId);
@@ -556,10 +542,6 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
 
   class Empty {
     // Temp hacky class
-  }
-
-  class CloudIot {
-    // Hacky class for transitions
   }
 }
 
