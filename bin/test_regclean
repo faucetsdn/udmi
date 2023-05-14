@@ -14,7 +14,7 @@ fi
 project_id=$1
 shift
 
-target_project=//gcp/$project_id
+target_project=$project_id
 
 [[ -n $GITHUB_RUN_NUMBER ]] && echo "Workflow run number $GITHUB_RUN_NUMBER" || true
 echo "Using target project=$target_project"
