@@ -22,7 +22,9 @@ git fetch $MODEL_REPO $MODEL_VER
 git checkout $MODEL_VER
 git log -n 1
 
-if [[ ! -f devices/AHU-1/rsa_private.pkcs8 ]]; then
+if [[ -f validator/rsa_private.pkcs8 ]]; then
+    echo Validator key file already exists for validator/rsa_private.pkcs8
+else
     mkdir -p validator
     echo Creating validator key file from devices/AHU-1/rsa_private.pkcs8
     echo devices/AHU-1/rsa_private.pkcs8 > validator/rsa_private.SOURCE
