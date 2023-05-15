@@ -374,11 +374,6 @@ class MqttPublisher implements MessagePublisher {
     }
   }
 
-  enum ReflectorTarget {
-    gcp,
-    clearblade
-  }
-
   private class MqttCallbackHandler implements MqttCallback {
 
     MqttCallbackHandler() {

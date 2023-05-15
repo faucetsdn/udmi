@@ -103,17 +103,14 @@ import udmi.schema.ValidationState;
  */
 public class SequenceBase {
 
+  public static final String EMPTY_MESSAGE = "{}";
+  public static final String SERIAL_NO_MISSING = "//";
+  public static final String VALIDATION_STATE_TOPIC = "validation/state";
+  static final FeatureStage DEFAULT_MIN_STAGE = FeatureStage.BETA;
   private static final int FUNCTIONS_VERSION_BETA = Validator.REQUIRED_FUNCTION_VER;
   private static final int FUNCTIONS_VERSION_ALPHA = 8; // Version required for alpha execution.
   private static final long CONFIG_BARRIER_MS = 1000;
   private static final String START_END_MARKER = "################################";
-
-  static {
-    // Sanity check to make sure ALPHA version is increased if forced by increased BETA.
-    checkState(FUNCTIONS_VERSION_ALPHA >= FUNCTIONS_VERSION_BETA,
-        "ALPHA functions version should not be > BETA");
-  }
-
   private static final String RESULT_FORMAT = "RESULT %s %s %s %s %s %s";
   private static final String TESTS_OUT_DIR = "tests";
   private static final String SEQUENCER_CATEGORY = "validation.feature.sequence";
@@ -121,7 +118,6 @@ public class SequenceBase {
   private static final String SYSTEM_EVENT_MESSAGE_BASE = "event_system";
   private static final int CONFIG_UPDATE_DELAY_MS = 8 * 1000;
   private static final int NORM_TIMEOUT_MS = 300 * 1000;
-  private static final String EMPTY_MESSAGE = "{}";
   private static final String RESULT_LOG_FILE = "RESULT.log";
   private static final String DEVICE_MODDATA = "%s/out/devices/%s/metadata_mod.json";
   private static final String DEVICE_METADATA = "%s/devices/%s/metadata.json";
@@ -158,23 +154,21 @@ public class SequenceBase {
       SequenceResult.PASS, Level.WARNING,
       SequenceResult.FAIL, Level.ERROR
   );
-  static final FeatureStage DEFAULT_MIN_STAGE = FeatureStage.BETA;
   private static final Map<SubFolder, String> sentConfig = new HashMap<>();
   private static final ObjectDiffEngine SENT_CONFIG_DIFFERNATOR = new ObjectDiffEngine();
   private static final ObjectDiffEngine RECV_CONFIG_DIFFERNATOR = new ObjectDiffEngine();
   private static final ObjectDiffEngine RECV_STATE_DIFFERNATOR = new ObjectDiffEngine();
   private static final Set<String> configTransactions = new ConcurrentSkipListSet<>();
-  public static final String SERIAL_NO_MISSING = "//";
-  public static final String VALIDATION_STATE_TOPIC = "validation/state";
   private static final String VALIDATION_STATE_FILE = "sequencer_state.json";
-  private static ValidationState validationState;
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
   protected static String registryId;
   protected static String altRegistry;
   protected static Config deviceConfig;
+  protected static MessagePublisher altClient;
   static ExecutionConfiguration validatorConfig;
+  private static ValidationState validationState;
   private static String udmiVersion;
   private static String siteModel;
   private static String serialNo;
@@ -182,10 +176,16 @@ public class SequenceBase {
   private static File deviceOutputDir;
   private static File resultSummary;
   private static MessagePublisher client;
-  protected static MessagePublisher altClient;
   private static SequenceBase activeInstance;
   private static MessageBundle stashedBundle;
   private static boolean resetRequired = true;
+
+  static {
+    // Sanity check to make sure ALPHA version is increased if forced by increased BETA.
+    checkState(FUNCTIONS_VERSION_ALPHA >= FUNCTIONS_VERSION_BETA,
+        "ALPHA functions version should not be > BETA");
+  }
+
   private final Map<SubFolder, String> receivedState = new HashMap<>();
   private final Map<SubFolder, List<Map<String, Object>>> receivedEvents = new HashMap<>();
   private final Map<String, Object> receivedUpdates = new HashMap<>();
@@ -373,6 +373,38 @@ public class SequenceBase {
   protected static void setDeviceId(String deviceId) {
     if (validatorConfig != null) {
       validatorConfig.device_id = deviceId;
+    }
+  }
+
+  private static boolean debugLogLevel() {
+    return logLevel <= Level.DEBUG.value();
+  }
+
+  private static boolean traceLogLevel() {
+    return logLevel <= Level.TRACE.value();
+  }
+
+  private static void updateValidationState() {
+    validationState.timestamp = new Date();
+    JsonUtil.writeFile(validationState, getSequencerStateFile());
+    String validationString = stringify(validationState);
+    client.publish(getDeviceId(), VALIDATION_STATE_TOPIC, validationString);
+  }
+
+  static File getSequencerStateFile() {
+    return new File(deviceOutputDir, VALIDATION_STATE_FILE);
+  }
+
+  static void processComplete(Exception e) {
+    boolean wasError = e != null;
+    Entry statusEntry = new Entry();
+    statusEntry.level = wasError ? Level.ERROR.value() : Level.NOTICE.value();
+    statusEntry.timestamp = new Date();
+    statusEntry.message = wasError ? Common.getExceptionMessage(e) : "Run completed";
+    statusEntry.category = SEQUENCER_CATEGORY;
+    if (validationState != null) {
+      validationState.status = statusEntry;
+      updateValidationState();
     }
   }
 
@@ -676,14 +708,6 @@ public class SequenceBase {
   private String entryMessage(Entry logEntry) {
     return String.format("%s %s %s: %s", getTimestamp(logEntry.timestamp),
         Level.fromValue(logEntry.level).name(), logEntry.category, logEntry.message);
-  }
-
-  private static boolean debugLogLevel() {
-    return logLevel <= Level.DEBUG.value();
-  }
-
-  private static boolean traceLogLevel() {
-    return logLevel <= Level.TRACE.value();
   }
 
   private void writeSystemLogs(SystemEvent message) {
@@ -1379,6 +1403,40 @@ public class SequenceBase {
     until.accept("interesting system status", this::hasInterestingSystemStatus);
   }
 
+  private void putSequencerResult(Description description, SequenceResult result) {
+    String resultId = getDeviceId() + "/" + description.getMethodName();
+    SequenceRunner.getAllTests().put(resultId, result);
+  }
+
+  private void startSequenceStatus(Description description) {
+    Entry entry = new Entry();
+    entry.message = "Starting test";
+    entry.category = SEQUENCER_CATEGORY;
+    SequenceResult startResult = SequenceResult.START;
+    entry.level = RESULT_LEVEL_MAP.get(startResult).value();
+    entry.timestamp = new Date();
+    setSequenceStatus(description, startResult, entry);
+  }
+
+  private void setSequenceStatus(Description description, SequenceResult result, Entry logEntry) {
+    String bucket = getBucket(description).value();
+    String name = description.getMethodName();
+    SequenceValidationState sequenceValidationState = validationState.features.computeIfAbsent(
+        bucket, key -> newFeatureValidationState()).sequences.computeIfAbsent(
+        name, key -> new SequenceValidationState());
+    sequenceValidationState.status = logEntry;
+    sequenceValidationState.result = result;
+    sequenceValidationState.summary = getTestSummary(description);
+    sequenceValidationState.stage = getTestStage(description);
+    updateValidationState();
+  }
+
+  private FeatureValidationState newFeatureValidationState() {
+    FeatureValidationState featureValidationState = new FeatureValidationState();
+    featureValidationState.sequences = new HashMap<>();
+    return featureValidationState;
+  }
+
   /**
    * Add a summary of a test, with a simple description of what it's testing.
    */
@@ -1508,64 +1566,6 @@ public class SequenceBase {
       writeSequencerLog(logEntry);
       writeSystemLog(logEntry);
       setSequenceStatus(description, result, logEntry);
-    }
-  }
-
-  private void putSequencerResult(Description description, SequenceResult result) {
-    String resultId = getDeviceId() + "/" + description.getMethodName();
-    SequenceRunner.getAllTests().put(resultId, result);
-  }
-
-  private void startSequenceStatus(Description description) {
-    Entry entry = new Entry();
-    entry.message = "Starting test";
-    entry.category = SEQUENCER_CATEGORY;
-    SequenceResult startResult = SequenceResult.START;
-    entry.level = RESULT_LEVEL_MAP.get(startResult).value();
-    entry.timestamp = new Date();
-    setSequenceStatus(description, startResult, entry);
-  }
-
-  private void setSequenceStatus(Description description, SequenceResult result, Entry logEntry) {
-    String bucket = getBucket(description).value();
-    String name = description.getMethodName();
-    SequenceValidationState sequenceValidationState = validationState.features.computeIfAbsent(
-        bucket, key -> newFeatureValidationState()).sequences.computeIfAbsent(
-        name, key -> new SequenceValidationState());
-    sequenceValidationState.status = logEntry;
-    sequenceValidationState.result = result;
-    sequenceValidationState.summary = getTestSummary(description);
-    sequenceValidationState.stage = getTestStage(description);
-    updateValidationState();
-  }
-
-  private FeatureValidationState newFeatureValidationState() {
-    FeatureValidationState featureValidationState = new FeatureValidationState();
-    featureValidationState.sequences = new HashMap<>();
-    return featureValidationState;
-  }
-
-  private static void updateValidationState() {
-    validationState.timestamp = new Date();
-    JsonUtil.writeFile(validationState, getSequencerStateFile());
-    String validationString = stringify(validationState);
-    client.publish(getDeviceId(), VALIDATION_STATE_TOPIC, validationString);
-  }
-
-  static File getSequencerStateFile() {
-    return new File(deviceOutputDir, VALIDATION_STATE_FILE);
-  }
-
-  static void processComplete(Exception e) {
-    boolean wasError = e != null;
-    Entry statusEntry = new Entry();
-    statusEntry.level = wasError ? Level.ERROR.value() : Level.NOTICE.value();
-    statusEntry.timestamp = new Date();
-    statusEntry.message = wasError ? Common.getExceptionMessage(e) : "Run completed";
-    statusEntry.category = SEQUENCER_CATEGORY;
-    if (validationState != null) {
-      validationState.status = statusEntry;
-      updateValidationState();
     }
   }
 }
