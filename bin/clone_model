@@ -9,7 +9,10 @@ MODEL_VER=1.10
 TEST_SITE_GIT=https://github.com/faucetsdn/$MODEL_DIR.git
 MODEL_REPO=origin
 
-if [[ ! -d $MODEL_DIR ]]; then
+echo Cloning model as $PWD/$MODEL_DIR
+if [[ -d $MODEL_DIR ]]; then
+    echo Model directory already exists, skipping.
+else
     git clone $TEST_SITE_GIT
 fi
 
