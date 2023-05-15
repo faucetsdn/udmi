@@ -90,6 +90,7 @@ public class IotReflectorClient implements MessagePublisher {
     final byte[] keyBytes;
     checkNotNull(iotConfig.key_file, "missing key file in config");
     try {
+      System.err.println("Loading key bytes from " + iotConfig.key_file);
       keyBytes = getFileBytes(iotConfig.key_file);
     } catch (Exception e) {
       throw new RuntimeException(
