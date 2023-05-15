@@ -19,5 +19,9 @@ git fetch $MODEL_REPO $MODEL_VER
 git checkout $MODEL_VER
 git log -n 1
 
-mkdir -p validator
-cp devices/AHU-1/rsa_private.pkcs8 validator/
+if [[ ! -f devices/AHU-1/rsa_private.pkcs8 ]]; then
+    mkdir -p validator
+    echo Creating validator key file from devices/AHU-1/rsa_private.pkcs8
+    echo devices/AHU-1/rsa_private.pkcs8 > validator/rsa_private.SOURCE
+    cp devices/AHU-1/rsa_private.pkcs8 validator/
+fi

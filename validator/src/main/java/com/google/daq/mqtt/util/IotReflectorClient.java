@@ -1,6 +1,6 @@
 package com.google.daq.mqtt.util;
 
-import static com.google.daq.mqtt.validator.Validator.EMPTY_MESSAGE;
+import static com.google.daq.mqtt.sequencer.SequenceBase.EMPTY_MESSAGE;
 import static com.google.udmi.util.Common.ERROR_KEY;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
 import static com.google.udmi.util.Common.TRANSACTION_KEY;
