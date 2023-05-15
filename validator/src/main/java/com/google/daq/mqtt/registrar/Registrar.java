@@ -51,7 +51,7 @@ import udmi.schema.CloudModel;
 import udmi.schema.Credential;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.ExecutionConfiguration;
-import udmi.schema.ExecutionConfiguration.Iot_provider;
+import udmi.schema.ExecutionConfiguration.IotProvider;
 import udmi.schema.Metadata;
 
 /**
@@ -103,7 +103,7 @@ public class Registrar {
   private boolean useAltRegistry;
   private String altRegistry;
   private boolean deleteDevices;
-  private Iot_provider iotProvider;
+  private IotProvider iotProvider;
 
   /**
    * Main entry point for registrar.

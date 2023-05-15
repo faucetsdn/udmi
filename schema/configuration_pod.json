@@ -27,15 +27,12 @@
       }
     },
     "iot_access": {
-      "type": "obect",
+      "type": "object",
       "title": "Iot Access",
       "additionalProperties": false,
       "properties": {
         "provider": {
-          "enum": [
-            "gcp_iot_core",
-            "clearblade_iot_core"
-          ]
+          "$ref": "file:common.json#/definitions/provider"
         },
         "project_id": {
           "type": "string"

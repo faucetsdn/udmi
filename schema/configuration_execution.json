@@ -35,11 +35,7 @@
       "type": "string"
     },
     "iot_provider": {
-      "enum": [
-        "gcp_native",
-        "gcp",
-        "clearblade"
-      ]
+      "$ref": "file:common.json#/definitions/provider"
     },
     "project_id": {
       "type": "string"

@@ -1,7 +1,7 @@
 package com.google.bos.iot.core.proxy;
 
 import static com.google.bos.iot.core.proxy.ProxyTarget.STATE_TOPIC;
-import static udmi.schema.ExecutionConfiguration.Iot_provider.CLEARBLADE;
+import static udmi.schema.ExecutionConfiguration.IotProvider.CLEARBLADE;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
@@ -33,7 +33,7 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import udmi.schema.ExecutionConfiguration;
-import udmi.schema.ExecutionConfiguration.Iot_provider;
+import udmi.schema.ExecutionConfiguration.IotProvider;
 
 /**
  * Handle publishing sensor data to a Cloud IoT MQTT endpoint.
@@ -76,7 +76,7 @@ class MqttPublisher implements MessagePublisher {
   private final String registryId;
   private final String projectId;
   private final String cloudRegion;
-  private final Iot_provider iotProvider;
+  private final IotProvider iotProvider;
   private MqttConnectOptions mqttConnectOptions;
   private long mqttTokenSetTimeMs;
 

@@ -18,7 +18,6 @@ import udmi.schema.CloudModel;
 import udmi.schema.Credential;
 import udmi.schema.Credential.Key_format;
 import udmi.schema.ExecutionConfiguration;
-import udmi.schema.ExecutionConfiguration.Iot_provider;
 
 /**
  * Encapsulation of all Cloud IoT interaction functions.
@@ -53,10 +52,10 @@ public class CloudIotManager {
    * @param iotProvider    indicates which iot provider type
    */
   public CloudIotManager(String projectId, File siteDir, String altRegistry,
-      String registrySuffix, Iot_provider iotProvider) {
+      String registrySuffix, ExecutionConfiguration.IotProvider iotProvider) {
     checkNotNull(projectId, "project id undefined");
     this.siteDir = checkNotNull(siteDir, "site directory undefined");
-    this.useReflectClient = iotProvider != Iot_provider.GCP_NATIVE;
+    this.useReflectClient = iotProvider != ExecutionConfiguration.IotProvider.GCP_NATIVE;
     this.projectId = projectId;
     File cloudConfig = new File(siteDir, CLOUD_IOT_CONFIG_JSON);
     try {

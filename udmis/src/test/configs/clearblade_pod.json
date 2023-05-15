@@ -14,7 +14,7 @@
     }
   },
   "iot_access": {
-    "provider": "clearblade_iot_core",
+    "provider": "clearblade",
     "project_id": "udmi-external"
   }
 }

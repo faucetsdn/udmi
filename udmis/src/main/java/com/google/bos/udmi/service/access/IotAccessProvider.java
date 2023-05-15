@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 import udmi.schema.CloudModel;
 import udmi.schema.Envelope.SubFolder;
+import udmi.schema.ExecutionConfiguration.IotProvider;
 import udmi.schema.IotAccess;
 
 /**
@@ -11,9 +12,9 @@ import udmi.schema.IotAccess;
  */
 public interface IotAccessProvider {
 
-  Map<IotAccess.Provider, Class<? extends IotAccessProvider>> PROVIDERS = ImmutableMap.of(
-      IotAccess.Provider.CLEARBLADE_IOT_CORE, ClearBladeIotAccessProvider.class,
-      IotAccess.Provider.GCP_IOT_CORE, GcpIotAccessProvider.class
+  Map<IotProvider, Class<? extends IotAccessProvider>> PROVIDERS = ImmutableMap.of(
+      IotProvider.CLEARBLADE, ClearBladeIotAccessProvider.class,
+      IotProvider.GCP, GcpIotAccessProvider.class
   );
 
   /**

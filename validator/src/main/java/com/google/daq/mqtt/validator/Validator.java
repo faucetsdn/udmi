@@ -82,7 +82,7 @@ import udmi.schema.DeviceValidationEvent;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
 import udmi.schema.ExecutionConfiguration;
-import udmi.schema.ExecutionConfiguration.Iot_provider;
+import udmi.schema.ExecutionConfiguration.IotProvider;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.PointsetEvent;
@@ -242,7 +242,7 @@ public class Validator {
 
   private void validatePubSub(String instName) {
     CloudIotManager cloudIotManager = new CloudIotManager(config.project_id,
-        new File(config.site_model), null, config.registry_suffix, Iot_provider.GCP_NATIVE);
+        new File(config.site_model), null, config.registry_suffix, IotProvider.GCP_NATIVE);
     String registryId = getRegistryId();
     String updateTopic = cloudIotManager.getUpdateTopic();
     client = new PubSubClient(config.project_id, registryId, instName, updateTopic);
