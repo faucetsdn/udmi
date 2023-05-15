@@ -114,20 +114,6 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
     registryCloudRegions = fetchRegistryCloudRegions();
   }
 
-  private static CloudModel convert(Device deviceRaw, Operation operation) {
-    Device.Builder device = deviceRaw.toBuilder();
-    CloudModel cloudModel = new CloudModel();
-    cloudModel.num_id = extractNumId(deviceRaw);
-    cloudModel.blocked = device.isBlocked();
-    cloudModel.metadata = device.getMetadata();
-    cloudModel.last_event_time = getSafeDate(device.getLastEventTime());
-    cloudModel.is_gateway = ifNotNullGet(device.getGatewayConfig(),
-        config -> GatewayType.GATEWAY == config.getGatewayType());
-    cloudModel.credentials = convertIot(device.getCredentials());
-    cloudModel.operation = operation;
-    return cloudModel;
-  }
-
   private static CloudModel convertDevice(Device device, Operation operation) {
     // CloudModel cloudModel = new CloudModel();
     // cloudModel.num_id = device.getNumId().toString();
@@ -161,15 +147,6 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
     Device.Builder deviceBuilder = device.toBuilder();
     cloudModel.num_id = extractNumId(device);
     return new SimpleEntry<>(deviceBuilder.getId(), cloudModel);
-  }
-
-  private static DeviceCredential convertUdmi(Credential credential) {
-    return DeviceCredential.newBuilder()
-        .setPublicKey(PublicKeyCredential.newBuilder()
-            .setKey(credential.key_data)
-            .setFormat(AUTH_TYPE_MAP.get(credential.key_format))
-            .build())
-        .build();
   }
 
   private static String extractNumId(Device device) {
@@ -208,6 +185,20 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
     return reply;
   }
 
+  private CloudModel convert(Device deviceRaw, Operation operation) {
+    Device.Builder device = deviceRaw.toBuilder();
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.num_id = extractNumId(deviceRaw);
+    cloudModel.blocked = device.isBlocked();
+    cloudModel.metadata = device.getMetadata();
+    cloudModel.last_event_time = getSafeDate(device.getLastEventTime());
+    cloudModel.is_gateway = ifNotNullGet(device.getGatewayConfig(),
+        config -> GatewayType.GATEWAY == config.getGatewayType());
+    cloudModel.credentials = convertIot(device.getCredentials());
+    cloudModel.operation = operation;
+    return cloudModel;
+  }
+
   private Device convert(CloudModel cloudModel, String deviceId) {
     return Device.newBuilder()
         .setBlocked(isTrue(cloudModel.blocked))
@@ -226,10 +217,18 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
     return cloudModel;
   }
 
+  private DeviceCredential convertUdmi(Credential credential) {
+    return DeviceCredential.newBuilder()
+        .setPublicKey(PublicKeyCredential.newBuilder()
+            .setKey(credential.key_data)
+            .setFormat(AUTH_TYPE_MAP.get(credential.key_format))
+            .build())
+        .build();
+  }
+
   private List<DeviceCredential> convertUdmi(List<Credential> credentials) {
     return ifNotNullGet(credentials,
-        list -> list.stream().map(ClearBladeIotAccessProvider::convertUdmi)
-            .collect(Collectors.toList()));
+        list -> list.stream().map(this::convertUdmi).collect(Collectors.toList()));
   }
 
   private CloudModel createDevice(String registryId, Device device) {
