@@ -47,6 +47,7 @@ import com.clearblade.cloud.iot.v1.utils.ByteString;
 import com.clearblade.cloud.iot.v1.utils.ConfigParameters;
 import com.clearblade.cloud.iot.v1.utils.LogLevel;
 import com.google.bos.udmi.service.core.UdmisComponent;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
@@ -175,7 +176,7 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
                 .setDevice(id)
                 .setGateway(gatewayId)
                 .build();
-        DeviceManagerClient deviceManagerClient = new DeviceManagerClient();
+        DeviceManagerClient deviceManagerClient = getDeviceManagerClient();
         requireNonNull(deviceManagerClient.bindDeviceToGateway(request),
             "binding device to gateway");
       } catch (Exception e) {
@@ -232,7 +233,7 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
   }
 
   private CloudModel createDevice(String registryId, Device device) {
-    DeviceManagerClient deviceManagerClient = new DeviceManagerClient();
+    DeviceManagerClient deviceManagerClient = getDeviceManagerClient();
     String location = registryCloudRegions.get(registryId);
     hackClearBladeRegistryRegion(registryId);
     RegistryName parent = RegistryName.of(projectId, location, registryId);
@@ -249,7 +250,7 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
   private CloudModel deleteDevice(String registryId, Device device) {
     String deviceId = requireNonNull(device.toBuilder().getId(), "unspecified device id");
     try {
-      DeviceManagerClient deviceManagerClient = new DeviceManagerClient();
+      DeviceManagerClient deviceManagerClient = getDeviceManagerClient();
       String location = hackClearBladeRegistryRegion(registryId);
       DeviceName deviceName = DeviceName.of(projectId, location, registryId, deviceId);
       DeleteDeviceRequest request =
@@ -279,7 +280,8 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
     }
   }
 
-  private Map<String, String> fetchRegistryCloudRegions() {
+  @VisibleForTesting
+  protected Map<String, String> fetchRegistryCloudRegions() {
     Map<String, String> regionMap = CLOUD_REGIONS.stream().map(this::getRegistriesForRegion)
         .flatMap(map -> map.entrySet().stream())
         .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
@@ -310,7 +312,7 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
   @NotNull
   private Map<String, String> getRegistriesForRegion(String region) {
     try {
-      DeviceManagerClient deviceManagerClient = new DeviceManagerClient();
+      DeviceManagerClient deviceManagerClient = getDeviceManagerClient();
       ListDeviceRegistriesRequest request = ListDeviceRegistriesRequest.Builder.newBuilder()
           .setParent(LocationName.of(projectId, region).getLocationFullName())
           .build();
@@ -326,6 +328,11 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
     } catch (Exception e) {
       throw new RuntimeException("While fetching registries for region " + region, e);
     }
+  }
+
+  @VisibleForTesting
+  protected DeviceManagerClient getDeviceManagerClient() {
+    return new DeviceManagerClient();
   }
 
   private String getRegistryPath(String registryId) {
@@ -369,7 +376,7 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
     try {
       String location = registryCloudRegions.get(deviceRegistryId);
       hackClearBladeRegistryRegion(deviceRegistryId);
-      DeviceManagerClient deviceManagerClient = new DeviceManagerClient();
+      DeviceManagerClient deviceManagerClient = getDeviceManagerClient();
       GatewayListOptions gatewayListOptions = ifNotNullGet(gatewayId, this::getGatewayListOptions);
       String registryFullName =
           RegistryName.of(projectId, location, deviceRegistryId).getRegistryFullName();
@@ -395,7 +402,7 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
   private void unbindDevice(String registryId, String gatewayId, String proxyId) {
     try {
       debug(format("Unbind %s: %s from %s", registryId, proxyId, gatewayId));
-      DeviceManagerClient deviceManagerClient = new DeviceManagerClient();
+      DeviceManagerClient deviceManagerClient = getDeviceManagerClient();
       String location = registryCloudRegions.get(registryId);
       hackClearBladeRegistryRegion(registryId);
       UnbindDeviceFromGatewayRequest request = UnbindDeviceFromGatewayRequest.Builder.newBuilder()
@@ -417,7 +424,7 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
   }
 
   private CloudModel updateDevice(String registryId, Device device) {
-    DeviceManagerClient deviceManagerClient = new DeviceManagerClient();
+    DeviceManagerClient deviceManagerClient = getDeviceManagerClient();
     String location = registryCloudRegions.get(registryId);
     hackClearBladeRegistryRegion(registryId);
     String deviceId = device.toBuilder().getId();
@@ -438,21 +445,12 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
   }
 
   @Override
-  public void activate() {
-    try {
-      // registries = cloudIotService.projects().locations().registries();
-    } catch (Exception e) {
-      throw new RuntimeException("While activating", e);
-    }
-  }
-
-  @Override
   public CloudModel fetchDevice(String deviceRegistryId, String deviceId) {
     String devicePath = getDevicePath(deviceRegistryId, deviceId);
     try {
       String location = registryCloudRegions.get(deviceRegistryId);
       hackClearBladeRegistryRegion(deviceRegistryId);
-      DeviceManagerClient deviceManagerClient = new DeviceManagerClient();
+      DeviceManagerClient deviceManagerClient = getDeviceManagerClient();
       DeviceName name = DeviceName.of(projectId, location, deviceRegistryId, deviceId);
       GetDeviceRequest request = GetDeviceRequest.Builder.newBuilder().setName(name)
           .setFieldMask(FieldMask.newBuilder().build()).build();
@@ -517,7 +515,7 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
       String location = registryCloudRegions.get(registryId);
       ByteString binaryData = new ByteString(encodeBase64(message));
       hackClearBladeRegistryRegion(registryId);
-      DeviceManagerClient deviceManagerClient = new DeviceManagerClient();
+      DeviceManagerClient deviceManagerClient = getDeviceManagerClient();
       String deviceName = DeviceName.of(projectId, location, registryId, deviceId).toString();
       SendCommandToDeviceRequest request = SendCommandToDeviceRequest.Builder.newBuilder()
           .setName(deviceName)
@@ -534,13 +532,9 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
   }
 
   @Override
-  public void shutdown() {
-  }
-
-  @Override
   public void updateConfig(String registryId, String deviceId, String config) {
     try {
-      DeviceManagerClient deviceManagerClient = new DeviceManagerClient();
+      DeviceManagerClient deviceManagerClient = getDeviceManagerClient();
       String location = registryCloudRegions.get(registryId);
       ByteString binaryData = new ByteString(encodeBase64(config));
       String updateVersion = null;
