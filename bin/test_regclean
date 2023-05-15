@@ -14,10 +14,8 @@ fi
 project_id=$1
 shift
 
-target_project=$project_id
-
 [[ -n $GITHUB_RUN_NUMBER ]] && echo "Workflow run number $GITHUB_RUN_NUMBER" || true
-echo "Using target project=$target_project"
+echo "Using target project=$project_id"
 echo "Using UDMI_REGISTRY_SUFFIX=$UDMI_REGISTRY_SUFFIX"
 echo "Using UDMI_ALT_REGISTRY=$UDMI_ALT_REGISTRY"
 
@@ -27,17 +25,17 @@ echo Clean site out/ director...
 rm -rf $site_path/out
 
 echo Clean out the registry to make sure devices get removed...
-bin/registrar $site_path $target_project -d
+bin/registrar $site_path $project_id -d
 
 echo Check for failure in running pubber...
 RESULT=0
-bin/pubber $site_path $target_project AHU-1 54321 smokeCheck || RESULT=$?
+bin/pubber $site_path $project_id AHU-1 54321 smokeCheck || RESULT=$?
 [[ $RESULT != 0 ]]
 
 echo Now recreate the registry from scratch!
-bin/registrar $site_path $target_project
+bin/registrar $site_path $project_id
 
 echo And check again, but this time with success...
-bin/pubber $site_path $target_project AHU-1 54321 smokeCheck
+bin/pubber $site_path $project_id AHU-1 54321 smokeCheck
 
 echo Successful pubber check passed on clean registry.
