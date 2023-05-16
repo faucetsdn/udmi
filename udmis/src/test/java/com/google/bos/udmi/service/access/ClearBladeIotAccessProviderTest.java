@@ -53,13 +53,6 @@ class ClearBladeIotAccessProviderTest {
     }
   }
 
-  @AfterEach
-  public void testPostConditions() {
-    // TODO: These assertions aren't required after fixing ClearBlade APIs.
-    ConfigParameters instance = ConfigParameters.getInstance();
-    assertEquals(TEST_REGISTRY, instance.getRegistry(), "configured registry");
-  }
-
   @Test
   void fetchDevice() {
     ClearBladeIotAccessProvider provider = getProvider();
