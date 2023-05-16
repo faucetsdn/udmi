@@ -9,6 +9,7 @@ import com.google.bos.udmi.service.messaging.MessageDispatcher.HandlerSpecificat
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.Common;
+import com.google.udmi.util.GeneralUtils;
 import java.util.Collection;
 import java.util.function.Consumer;
 import org.jetbrains.annotations.TestOnly;
@@ -77,9 +78,11 @@ public abstract class UdmisComponent extends ContainerBase {
    * Activate this component.
    */
   public void activate() {
-    registerHandlers(baseHandlers);
-    registerHandlers();
-    dispatcher.activate();
+    if (dispatcher != null) {
+      registerHandlers(baseHandlers);
+      registerHandlers();
+      dispatcher.activate();
+    }
   }
 
   public int getMessageCount(Class<?> clazz) {
@@ -91,7 +94,9 @@ public abstract class UdmisComponent extends ContainerBase {
   }
 
   public void shutdown() {
-    dispatcher.shutdown();
+    if (dispatcher != null) {
+      dispatcher.shutdown();
+    }
   }
 
   <T> void registerHandler(Class<T> clazz, Consumer<T> handler) {

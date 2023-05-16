@@ -94,6 +94,7 @@ public class GcpIotAccessProvider extends UdmisComponent implements IotAccessPro
 
   /**
    * Create a new instance for interfacing with GCP IoT Core.
+   * TODO: Need to implement page tokens for all requisite API calls.
    */
   public GcpIotAccessProvider(IotAccess iotAccess) {
     projectId = requireNonNull(iotAccess.project_id, "gcp project id not specified");
