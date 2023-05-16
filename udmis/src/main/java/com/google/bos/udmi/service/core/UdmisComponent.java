@@ -9,7 +9,6 @@ import com.google.bos.udmi.service.messaging.MessageDispatcher.HandlerSpecificat
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.Common;
-import com.google.udmi.util.GeneralUtils;
 import java.util.Collection;
 import java.util.function.Consumer;
 import org.jetbrains.annotations.TestOnly;
@@ -93,6 +92,9 @@ public abstract class UdmisComponent extends ContainerBase {
     this.provider = provider;
   }
 
+  /**
+   * Shutdown the component.
+   */
   public void shutdown() {
     if (dispatcher != null) {
       dispatcher.shutdown();

@@ -286,7 +286,8 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
   }
 
   private String getDeviceName(String registryId, String deviceId) {
-    return DeviceName.of(projectId, getRegistryLocation(registryId), registryId, deviceId).toString();
+    return DeviceName.of(projectId, getRegistryLocation(registryId), registryId, deviceId)
+        .toString();
   }
 
   private GatewayListOptions getGatewayListOptions(String gatewayId) {
