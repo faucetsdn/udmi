@@ -919,6 +919,7 @@ public class Pubber {
         }
       }
       terminate();
+      systemLifecycle(SystemMode.TERMINATE);
     } else {
       error("Unknown exception type " + toReport.getClass(), toReport);
     }
