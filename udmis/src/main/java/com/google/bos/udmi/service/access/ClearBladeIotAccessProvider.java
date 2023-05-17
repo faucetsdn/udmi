@@ -253,6 +253,7 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
         "create device failed for " + parent.getRegistryFullName());
     CloudModel cloudModel = new CloudModel();
     cloudModel.operation = Operation.CREATE;
+    cloudModel.num_id = extractNumId(device);
     return cloudModel;
   }
 
