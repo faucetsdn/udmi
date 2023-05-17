@@ -89,6 +89,9 @@ jobs:
         run: bin/run_tests install_dependencies
       - name: bin/test_regclean //clearblade/$CLEARBLADE_PROJECT
         run: bin/test_regclean //clearblade/$CLEARBLADE_PROJECT
+      - name: Config outputs
+        if: ${{ always() }}
+        run: cat /tmp/registrar_config.json
 
   udmif:
     name: UDMIF unit tests
