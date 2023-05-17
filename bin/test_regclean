@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash -ex
 
 # Force consistent sort order
 export LC_ALL=C
@@ -21,7 +21,7 @@ echo "Using UDMI_ALT_REGISTRY=$UDMI_ALT_REGISTRY"
 
 site_path=sites/udmi_site_model
 
-echo Clean site out/ director...
+echo Clean site out/ directory...
 rm -rf $site_path/out
 
 echo Clean out the registry to make sure devices get removed...
