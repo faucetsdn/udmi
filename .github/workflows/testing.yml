@@ -91,7 +91,7 @@ jobs:
         run: bin/test_regclean //clearblade/$CLEARBLADE_PROJECT
       - name: Config outputs
         if: ${{ always() }}
-        run: cat /tmp/registrar_config.json
+        run: more /tmp/pubber_config.json /tmp/registrar_config.json | cat
 
   udmif:
     name: UDMIF unit tests
