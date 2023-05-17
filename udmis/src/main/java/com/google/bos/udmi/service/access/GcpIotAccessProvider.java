@@ -7,7 +7,6 @@ import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.getDate;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
-import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
@@ -17,7 +16,6 @@ import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.cloudiot.v1.CloudIot;
-import com.google.api.services.cloudiot.v1.CloudIot.Projects;
 import com.google.api.services.cloudiot.v1.CloudIot.Projects.Locations.Registries.Devices;
 import com.google.api.services.cloudiot.v1.CloudIotScopes;
 import com.google.api.services.cloudiot.v1.model.BindDeviceToGatewayRequest;
@@ -63,14 +61,15 @@ import udmi.schema.IotAccess;
  */
 public class GcpIotAccessProvider extends UdmisComponent implements IotAccessProvider {
 
+  static final Set<String> CLOUD_REGIONS =
+      ImmutableSet.of("us-central1", "europe-west1", "asia-east1");
   private static final String GATEWAY_TYPE = "GATEWAY";
   private static final String EMPTY_JSON = "{}";
+  private static final String EMPTY_VERSION = "0";
   private static final String PROJECT_PATH_FORMAT = "projects/%s";
   private static final String LOCATIONS_PATH_FORMAT = "%s/locations/%s";
   private static final String REGISTRY_PATH_FORMAT = "%s/registries/%s";
   private static final String DEVICE_PATH_FORMAT = "%s/devices/%s";
-  static final Set<String> CLOUD_REGIONS =
-      ImmutableSet.of("us-central1", "europe-west1", "asia-east1");
   private static final String APPLICATION_NAME = "com.google.iot.bos";
   private static final String RSA_KEY_FORMAT = "RSA_PEM";
   private static final String RSA_CERT_FORMAT = "RSA_X509_PEM";
@@ -102,7 +101,42 @@ public class GcpIotAccessProvider extends UdmisComponent implements IotAccessPro
     registryCloudRegions = fetchRegistryCloudRegions();
   }
 
-  private static CloudModel convert(Device device, Operation operation) {
+  @NotNull
+  @VisibleForTesting
+  protected CloudIot createCloudIotService() {
+    try {
+      GoogleCredentials credential = GoogleCredentials.getApplicationDefault()
+          .createScoped(CloudIotScopes.all());
+      JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
+      HttpRequestInitializer init = new HttpCredentialsAdapter(credential);
+      CloudIot cloudIotService = new CloudIot.Builder(GoogleNetHttpTransport.newTrustedTransport(),
+          jsonFactory, init).setApplicationName(APPLICATION_NAME).build();
+      return cloudIotService;
+    } catch (Exception e) {
+      throw new RuntimeException("While creating GCP IoT Core service", e);
+    }
+  }
+
+  private CloudModel bindDeviceToGateway(String registryId, String gatewayId,
+      CloudModel cloudModel) {
+    CloudModel reply = new CloudModel();
+    reply.device_ids = new HashMap<>();
+    Set<String> deviceIds = cloudModel.device_ids.keySet();
+    reply.num_id = deviceIds.size() > 0 ? EMPTY_RETURN_RECEIPT : null;
+    reply.operation = cloudModel.operation;
+    deviceIds.forEach(id -> {
+      try {
+        BindDeviceToGatewayRequest request =
+            new BindDeviceToGatewayRequest().setDeviceId(id).setGatewayId(gatewayId);
+        registries.bindDeviceToGateway(getRegistryPath(registryId), request).execute();
+      } catch (Exception e) {
+        throw new RuntimeException(format("While binding %s to gateway %s", id, gatewayId), e);
+      }
+    });
+    return reply;
+  }
+
+  private CloudModel convert(Device device, Operation operation) {
     CloudModel cloudModel = new CloudModel();
     cloudModel.num_id = device.getNumId().toString();
     cloudModel.blocked = device.getBlocked();
@@ -130,81 +164,32 @@ public class GcpIotAccessProvider extends UdmisComponent implements IotAccessPro
     return cloudModel;
   }
 
-  private static List<Credential> convertIot(List<DeviceCredential> credentials) {
+  private List<Credential> convertIot(List<DeviceCredential> credentials) {
     return ifNotNullGet(credentials,
-        list -> list.stream().map(GcpIotAccessProvider::convertIot).collect(Collectors.toList()));
+        list -> list.stream().map(this::convertIot).collect(Collectors.toList()));
   }
 
-  private static Credential convertIot(DeviceCredential device) {
+  private Credential convertIot(DeviceCredential device) {
     Credential credential = new Credential();
     credential.key_data = device.getPublicKey().getKey();
     credential.key_format = AUTH_TYPE_MAP.inverse().get(device.getPublicKey().getFormat());
     return credential;
   }
 
-  private static Entry<String, CloudModel> convertToEntry(Device device) {
+  private Entry<String, CloudModel> convertToEntry(Device device) {
     CloudModel cloudModel = new CloudModel();
     cloudModel.num_id = device.getNumId().toString();
     return new SimpleEntry<>(device.getId(), cloudModel);
   }
 
-  private static DeviceCredential convertUdmi(Credential credential) {
+  private DeviceCredential convertUdmi(Credential credential) {
     return new DeviceCredential().setPublicKey(new PublicKeyCredential().setKey(credential.key_data)
         .setFormat(AUTH_TYPE_MAP.get(credential.key_format)));
   }
 
   private List<DeviceCredential> convertUdmi(List<Credential> credentials) {
     return ifNotNullGet(credentials,
-        list -> list.stream().map(GcpIotAccessProvider::convertUdmi).collect(Collectors.toList()));
-  }
-
-  private CloudModel bindDeviceToGateway(String registryId, String gatewayId,
-      CloudModel cloudModel) {
-    CloudModel reply = new CloudModel();
-    reply.device_ids = new HashMap<>();
-    Set<String> deviceIds = cloudModel.device_ids.keySet();
-    reply.num_id = deviceIds.size() > 0 ? EMPTY_RETURN_RECEIPT : null;
-    reply.operation = cloudModel.operation;
-    deviceIds.forEach(id -> {
-      try {
-        BindDeviceToGatewayRequest request =
-            new BindDeviceToGatewayRequest().setDeviceId(id).setGatewayId(gatewayId);
-        registries.bindDeviceToGateway(getRegistryPath(registryId), request).execute();
-      } catch (Exception e) {
-        throw new RuntimeException(format("While binding %s to gateway %s", id, gatewayId), e);
-      }
-    });
-    return reply;
-  }
-
-  @NotNull
-  @VisibleForTesting
-  protected CloudIot createCloudIotService() {
-    try {
-      GoogleCredentials credential = GoogleCredentials.getApplicationDefault()
-          .createScoped(CloudIotScopes.all());
-      JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
-      HttpRequestInitializer init = new HttpCredentialsAdapter(credential);
-      CloudIot cloudIotService = new CloudIot.Builder(GoogleNetHttpTransport.newTrustedTransport(),
-          jsonFactory, init).setApplicationName(APPLICATION_NAME).build();
-      return cloudIotService;
-    } catch (Exception e) {
-      throw new RuntimeException("While creating GCP IoT Core service", e);
-    }
-  }
-
-  private String fetchConfig(String registryId, String deviceId) {
-    try {
-      List<DeviceConfig> deviceConfigs = registries.devices().configVersions()
-          .list(getDevicePath(registryId, deviceId)).execute().getDeviceConfigs();
-      if (deviceConfigs.size() > 0) {
-        return ifNotNullGet(deviceConfigs.get(0).getBinaryData(),
-            binaryData -> new String(Base64.getDecoder().decode(binaryData)));
-      }
-      return null;
-    } catch (Exception e) {
-      throw new RuntimeException("While fetching device configurations for " + deviceId, e);
-    }
+        list -> list.stream().map(this::convertUdmi).collect(Collectors.toList()));
   }
 
   private Map<String, String> fetchRegistryCloudRegions() {
@@ -265,7 +250,7 @@ public class GcpIotAccessProvider extends UdmisComponent implements IotAccessPro
           ofNullable(response.getDevices()).orElseGet(ImmutableList::of);
       CloudModel cloudModel = new CloudModel();
       cloudModel.device_ids =
-          devices.stream().map(GcpIotAccessProvider::convertToEntry)
+          devices.stream().map(this::convertToEntry)
               .collect(Collectors.toMap(Entry::getKey, Entry::getValue, GeneralUtils::mapReplace,
                   HashMap::new));
       return cloudModel;
@@ -298,6 +283,23 @@ public class GcpIotAccessProvider extends UdmisComponent implements IotAccessPro
       registries = cloudIotService.projects().locations().registries();
     } catch (Exception e) {
       throw new RuntimeException("While activating", e);
+    }
+  }
+
+  @Override
+  public Entry<String, String> fetchConfig(String registryId, String deviceId) {
+    try {
+      List<DeviceConfig> deviceConfigs = registries.devices().configVersions()
+          .list(getDevicePath(registryId, deviceId)).execute().getDeviceConfigs();
+      if (deviceConfigs.isEmpty()) {
+        return new SimpleEntry<>(EMPTY_VERSION, EMPTY_JSON);
+      }
+      DeviceConfig deviceConfig = deviceConfigs.get(0);
+      String config = ifNotNullGet(deviceConfig.getBinaryData(),
+          binaryData -> new String(Base64.getDecoder().decode(binaryData)));
+      return new SimpleEntry<>(Long.toString(deviceConfig.getVersion()), config);
+    } catch (Exception e) {
+      throw new RuntimeException("While fetching device configurations for " + deviceId, e);
     }
   }
 
@@ -356,7 +358,8 @@ public class GcpIotAccessProvider extends UdmisComponent implements IotAccessPro
     if (subFolder == SubFolder.UPDATE) {
       updateConfig(registryId, deviceId, contents);
     } else {
-      String configString = ofNullable(fetchConfig(registryId, deviceId)).orElse(EMPTY_JSON);
+      String configString =
+          ofNullable(fetchConfig(registryId, deviceId).getValue()).orElse(EMPTY_JSON);
       Map<String, Object> configMap = toMap(configString);
       configMap.put(subFolder.toString(), contents);
       updateConfig(registryId, deviceId, stringify(configMap));

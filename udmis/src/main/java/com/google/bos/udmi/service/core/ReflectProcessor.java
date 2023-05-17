@@ -44,7 +44,6 @@ public class ReflectProcessor extends UdmisComponent {
     requireNonNull(provider, "iot access provider not set");
     Envelope reflection = continuation.getEnvelope();
     try {
-      final CloudModel reply;
       if (reflection.subFolder == null) {
         stateHandler(reflection, extractUdmiState(message));
       } else if (reflection.subFolder != SubFolder.UDMI) {

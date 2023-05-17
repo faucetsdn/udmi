@@ -1,13 +1,23 @@
 package com.google.bos.udmi.service.core;
 
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
-import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
+import static com.google.udmi.util.JsonUtil.fromString;
+import static com.google.udmi.util.JsonUtil.fromStringStrict;
+import static com.google.udmi.util.JsonUtil.getTimestamp;
+import static com.google.udmi.util.JsonUtil.stringify;
+import static java.util.Objects.requireNonNull;
 
+import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.StateUpdate;
+import com.google.udmi.util.GeneralUtils;
+import com.google.udmi.util.JsonUtil;
 import java.util.Arrays;
+import java.util.Date;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
+import udmi.schema.Config;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.State;
 
@@ -22,13 +32,18 @@ public class StateProcessor extends UdmisComponent {
       Arrays.stream(SubFolder.values()).map(SubFolder::value).collect(Collectors.toSet());
 
   @Override
-  protected void registerHandlers() {
-    registerHandler(StateUpdate.class, this::stateHandler);
+  protected void defaultHandler(Object defaultedMessage) {
+    MessageContinuation continuation = getContinuation(defaultedMessage);
+    String registryId = continuation.getEnvelope().deviceRegistryId;
+    String deviceId = continuation.getEnvelope().deviceId;
+    StateUpdate stateMessage = convertToStrict(StateUpdate.class, defaultedMessage);
+    updateLastStart(stateMessage, registryId, deviceId);
+    stateHandler(stateMessage);
   }
 
   @Override
-  protected void defaultHandler(Object defaultedMessage) {
-    stateHandler(convertToStrict(StateUpdate.class, defaultedMessage));
+  protected void registerHandlers() {
+    registerHandler(StateUpdate.class, this::stateHandler);
   }
 
   private void stateHandler(StateUpdate message) {
@@ -42,6 +57,30 @@ public class StateProcessor extends UdmisComponent {
         throw new RuntimeException("While extracting field " + field.getName(), e);
       }
     });
+  }
+
+  private void updateLastStart(StateUpdate message, String registryId, String deviceId) {
+    if (message == null || message.system == null || message.system.operation == null
+        || message.system.operation.last_start == null) {
+      return;
+    }
+    try {
+      requireNonNull(provider, "iot access provider not set");
+      Date newLastStart = message.system.operation.last_start;
+      Entry<String, String> configEntry = provider.fetchConfig(registryId, deviceId);
+      Config configMessage = fromStringStrict(Config.class, configEntry.getValue());
+      Date oldLastStart = configMessage.system.operation.last_start;
+      boolean shouldUpdate = oldLastStart == null || oldLastStart.before(newLastStart);
+      debug("Last start was %s, now %s, updating %s", getTimestamp(oldLastStart),
+          getTimestamp(newLastStart), shouldUpdate);
+      if (shouldUpdate) {
+        configMessage.system.operation.last_start = newLastStart;
+        provider.updateConfig(registryId, deviceId, stringify(configMessage));
+      }
+    } catch (Exception e) {
+      debug("Could not process config last_state update, skipping: "
+          + GeneralUtils.friendlyStackTrace(e));
+    }
   }
 
 }

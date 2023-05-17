@@ -28,6 +28,8 @@ import com.clearblade.cloud.iot.v1.devicetypes.GatewayConfig;
 import com.clearblade.cloud.iot.v1.devicetypes.GatewayListOptions;
 import com.clearblade.cloud.iot.v1.devicetypes.GatewayType;
 import com.clearblade.cloud.iot.v1.getdevice.GetDeviceRequest;
+import com.clearblade.cloud.iot.v1.listdeviceconfigversions.ListDeviceConfigVersionsRequest;
+import com.clearblade.cloud.iot.v1.listdeviceconfigversions.ListDeviceConfigVersionsResponse;
 import com.clearblade.cloud.iot.v1.listdeviceregistries.ListDeviceRegistriesRequest;
 import com.clearblade.cloud.iot.v1.listdeviceregistries.ListDeviceRegistriesResponse;
 import com.clearblade.cloud.iot.v1.modifycloudtodeviceconfig.ModifyCloudToDeviceConfigRequest;
@@ -51,6 +53,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.udmi.util.GeneralUtils;
 import java.util.AbstractMap.SimpleEntry;
+import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -76,6 +79,7 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
 
   static final Set<String> CLOUD_REGIONS =
       ImmutableSet.of("us-central1", "europe-west1", "asia-east1");
+  private static final String EMPTY_VERSION = "0";
   private static final String EMPTY_JSON = "{}";
   private static final BiMap<Key_format, PublicKeyFormat> AUTH_TYPE_MAP = ImmutableBiMap.of(
       Key_format.RS_256, PublicKeyFormat.RSA_PEM,
@@ -271,15 +275,24 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
     }
   }
 
-  private String fetchConfig(String registryId, String deviceId) {
+  @Override
+  public Entry<String, String> fetchConfig(String registryId, String deviceId) {
     try {
-      // List<DeviceConfig> deviceConfigs = registries.devices().configVersions()
-      //     .list(getDeviceName(registryId, deviceId)).execute().getDeviceConfigs();
-      // if (deviceConfigs.size() > 0) {
-      //   return ifNotNullGet(deviceConfigs.get(0).getBinaryData(),
-      //       binaryData -> new String(Base64.getDecoder().decode(binaryData)));
-      // }
-      throw new RuntimeException("Not yet implemented");
+      DeviceManagerClient deviceManagerClient = new DeviceManagerClient();
+      String location = getRegistryLocation(registryId);
+      ListDeviceConfigVersionsRequest request = ListDeviceConfigVersionsRequest.Builder.newBuilder()
+          .setName(DeviceName.of(projectId, location, registryId, deviceId)
+              .toString()).setNumVersions(1).build();
+      ListDeviceConfigVersionsResponse listDeviceConfigVersionsResponse =
+          deviceManagerClient.listDeviceConfigVersions(request);
+      List<DeviceConfig> deviceConfigs = listDeviceConfigVersionsResponse.getDeviceConfigList();
+      if (deviceConfigs.isEmpty()) {
+        return new SimpleEntry<>(EMPTY_VERSION, EMPTY_JSON);
+      }
+      DeviceConfig deviceConfig = deviceConfigs.get(0);
+      String config = ifNotNullGet((String) deviceConfig.getBinaryData(),
+          binaryData -> new String(Base64.getDecoder().decode(binaryData)));
+      return new SimpleEntry<>(deviceConfig.getVersion(), config);
     } catch (Exception e) {
       throw new RuntimeException("While fetching device configurations for " + deviceId, e);
     }
@@ -452,7 +465,7 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
     if (subFolder == SubFolder.UPDATE) {
       updateConfig(registryId, deviceId, contents);
     } else {
-      String configString = ofNullable(fetchConfig(registryId, deviceId)).orElse(EMPTY_JSON);
+      String configString = fetchConfig(registryId, deviceId).getValue();
       Map<String, Object> configMap = toMap(configString);
       configMap.put(subFolder.toString(), contents);
       updateConfig(registryId, deviceId, stringify(configMap));
@@ -495,19 +508,6 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
       System.err.println("Config modified version " + response.getVersion());
     } catch (Exception e) {
       throw new RuntimeException("While modifying device config", e);
-    }
-  }
-
-  class Projects {
-
-    class Locations {
-
-      class Registries {
-
-        class Devices {
-
-        }
-      }
     }
   }
 
