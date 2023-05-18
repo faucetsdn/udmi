@@ -1,5 +1,5 @@
 #!/bin/bash -e
-PLAN_FILE=etc/planned.txt
+PLAN_FILE=etc/sequencer_plan.txt
 SEQUENCER_OUT=etc/sequencer.out
 
 while read -u 7 line; do
@@ -9,8 +9,8 @@ while read -u 7 line; do
         echo $planned_test 
         exit=1
     fi 
-done 7< etc/planned.txt
+done 7< $PLAN_FILE
 
-[[ -n $exit ]] && echo The above are now implemented. Remove from $PLAN_FILE
+[[ -n $exit ]] && echo The above tests are implemented. Remove from $PLAN_FILE
 
 exit $exit

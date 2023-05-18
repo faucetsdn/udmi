@@ -96,4 +96,8 @@ diff -u out/generated.md docs/specs/sequences/generated.md || (
     false
     )
 
+echo Checking tests in out/sequencer.out and etc/sequencer_planning.txt 
+echo for duplication
+bin/test_sequencer_plan
+
 echo Done with base test_sequencer run.
