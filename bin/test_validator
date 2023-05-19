@@ -31,10 +31,6 @@ ps ax | fgrep validator | fgrep java | awk '{print $1}' | xargs -r kill || true
 
 rm -rf $site_path/out/devices
 
-# Prepare auth key used by reflector
-mkdir -p $site_path/validator
-cp $site_path/devices/AHU-1/rsa_private.pkcs8 $site_path/validator/rsa_private.pkcs8
-
 # Run explicitly so that it's not done in the background when the program is launched.
 validator/bin/build
 pubber/bin/build

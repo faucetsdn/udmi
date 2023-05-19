@@ -45,22 +45,23 @@ public class CloudIotManager {
   /**
    * Create a new CloudIoTManager.
    *
-   * @param projectId          project id
-   * @param siteDir            site model directory
-   * @param altRegistry        alternate registry to use (instead of site registry)
-   * @param registrySuffix     suffix to append to model registry id
-   * @param useReflectorClient indicates which iot client to use
+   * @param projectId      project id
+   * @param siteDir        site model directory
+   * @param altRegistry    alternate registry to use (instead of site registry)
+   * @param registrySuffix suffix to append to model registry id
+   * @param iotProvider    indicates which iot provider type
    */
   public CloudIotManager(String projectId, File siteDir, String altRegistry,
-      String registrySuffix, boolean useReflectorClient) {
+      String registrySuffix, ExecutionConfiguration.IotProvider iotProvider) {
     checkNotNull(projectId, "project id undefined");
     this.siteDir = checkNotNull(siteDir, "site directory undefined");
-    this.useReflectClient = useReflectorClient;
+    this.useReflectClient = iotProvider != ExecutionConfiguration.IotProvider.GCP_NATIVE;
     this.projectId = projectId;
     File cloudConfig = new File(siteDir, CLOUD_IOT_CONFIG_JSON);
     try {
       System.err.println("Reading cloud config from " + cloudConfig.getAbsolutePath());
       executionConfiguration = validate(readExecutionConfiguration(cloudConfig), this.projectId);
+      executionConfiguration.iot_provider = iotProvider;
       executionConfiguration.site_model = siteDir.getPath();
       executionConfiguration.registry_suffix = registrySuffix;
       String targetRegistry = Optional.ofNullable(altRegistry)

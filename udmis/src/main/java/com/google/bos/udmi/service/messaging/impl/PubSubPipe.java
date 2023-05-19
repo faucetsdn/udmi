@@ -44,6 +44,7 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
 
   public static final String EMULATOR_HOST_ENV = "PUBSUB_EMULATOR_HOST";
   public static final String EMULATOR_HOST = System.getenv(EMULATOR_HOST_ENV);
+  public static final String GCP_HOST = "gcp";
   private final Subscriber subscriber;
   private final Publisher publisher;
   private final String projectId;
@@ -112,15 +113,18 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
 
   @Override
   public void receiveMessage(PubsubMessage message, AckReplyConsumer reply) {
-    // Ack first to prevent failure if there is an error processing the message. Might result
-    // in things getting lost, but better than the infinite-loop of messages never getting flushed!
-    reply.ack();
-    Bundle bundle = new Bundle(
-        convertToStrict(Envelope.class, message.getAttributesMap()),
-        toMap(message.getData().toStringUtf8()));
-    info(format("Received %s/%s %s", bundle.envelope.subType, bundle.envelope.subFolder,
-        bundle.envelope.transactionId));
-    receiveBundle(bundle);
+    try {
+      // Ack first to prevent a recurring loop of processing a faulty message.
+      reply.ack();
+      Bundle bundle = new Bundle(
+          convertToStrict(Envelope.class, message.getAttributesMap()),
+          toMap(message.getData().toStringUtf8()));
+      info(format("Received %s/%s %s", bundle.envelope.subType, bundle.envelope.subFolder,
+          bundle.envelope.transactionId));
+      receiveBundle(bundle);
+    } catch (Exception e) {
+      receiveBundle(makeExceptionBundle(e));
+    }
   }
 
   @Override
@@ -136,7 +140,7 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
       String emu = getEmulatorHost();
       ifNotNullThen(emu, host -> builder.setChannelProvider(getTransportChannelProvider(host)));
       ifNotNullThen(emu, host -> builder.setCredentialsProvider(NoCredentialsProvider.create()));
-      info(format("Publisher %s:%s", emu, projectTopicName));
+      info(format("Publisher %s:%s", Optional.ofNullable(emu).orElse(GCP_HOST), projectTopicName));
       return builder.build();
     } catch (Exception e) {
       throw new RuntimeException("While creating emulator publisher", e);
@@ -150,7 +154,7 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
       String emu = getEmulatorHost();
       ifNotNullThen(emu, host -> builder.setChannelProvider(getTransportChannelProvider(host)));
       ifNotNullThen(emu, host -> builder.setCredentialsProvider(NoCredentialsProvider.create()));
-      info(format("Subscriber %s:%s", emu, subscription));
+      info(format("Subscriber %s:%s", Optional.ofNullable(emu).orElse(GCP_HOST), subscription));
       Subscriber built = builder.build();
       built.addListener(new Listener() {
         @Override

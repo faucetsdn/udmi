@@ -88,6 +88,8 @@ dependencies {
       exclude group: 'com.google.guava', module: 'guava-jdk5'
     }
 
+    implementation 'io.github.clearblade:clearblade-cloud-iot:1.0.0-rc.2'
+
     implementation 'com.google.cloud:google-cloud-pubsub:1.66.0'
     implementation 'org.jetbrains:annotations:20.1.0'
     

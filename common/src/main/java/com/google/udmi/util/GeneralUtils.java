@@ -54,16 +54,21 @@ public class GeneralUtils {
           continue;
         }
 
-        if (field.get(target) != null && Boolean.TRUE.equals(field.get(target))) {
+        Object fieldValue = field.get(target);
+        if ((fieldValue instanceof Boolean) && isTrue(fieldValue)) {
           options.add(field.getName());
-        } else if (field.get(target) != null) {
-          options.add(field.getName() + "=" + field.get(target));
+        } else if (fieldValue != null) {
+          options.add(field.getName() + "=" + fieldValue);
         }
       } catch (IllegalAccessException e) {
         throw new RuntimeException("While accessing field " + field.getName(), e);
       }
     }
     return String.join(" ", options);
+  }
+
+  public static boolean isTrue(Object value) {
+    return Boolean.TRUE.equals(value);
   }
 
   public static <T> void ifNotNullThen(T value, Consumer<T> consumer) {
@@ -187,6 +192,18 @@ public class GeneralUtils {
       e.printStackTrace(ps);
     }
     return outputStream.toString();
+  }
+
+  /**
+   * Get a "friendly" (cause messages only) stack trace string.
+   */
+  public static String friendlyStackTrace(Throwable e) {
+    List<String> messages = new ArrayList<>();
+    while (e != null) {
+      messages.add(Optional.ofNullable(e.getMessage()).orElseGet(e::toString));
+      e = e.getCause();
+    }
+    return CSV_JOINER.join(messages);
   }
 
   public static List<String> runtimeExec(String... command) {

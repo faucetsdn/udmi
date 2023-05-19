@@ -9,6 +9,7 @@ import udmi.schema.EndpointConfiguration.Protocol;
 public abstract class MessageTestCore {
 
   public static final String TEST_DEVICE = "bacnet-3104810";
+  public static final String TEST_REGION = "us-central1";
   public static final String TEST_REGISTRY = "TEST_REGISTRY";
   public static final String TEST_PROJECT = "TEST_PROJECT";
   public static final String TEST_POINT = "test_point";

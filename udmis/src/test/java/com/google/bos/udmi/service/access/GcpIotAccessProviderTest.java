@@ -4,14 +4,11 @@ import static com.google.bos.udmi.service.messaging.impl.MessageTestCore.TEST_DE
 import static com.google.bos.udmi.service.messaging.impl.MessageTestCore.TEST_NUMID;
 import static com.google.bos.udmi.service.messaging.impl.MessageTestCore.TEST_PROJECT;
 import static com.google.bos.udmi.service.messaging.impl.MessageTestCore.TEST_REGISTRY;
-import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.google.api.services.cloudiot.v1.CloudIot;
@@ -31,9 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.jetbrains.annotations.NotNull;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import udmi.schema.CloudModel;
 import udmi.schema.IotAccess;
 

@@ -11,6 +11,7 @@ class Envelope:
     self.deviceRegistryLocation = None
     self.projectId = None
     self.payload = None
+    self.source = None
     self.gatewayId = None
     self.transactionId = None
     self.publishTime = None
@@ -28,6 +29,7 @@ class Envelope:
     result.deviceRegistryLocation = source.get('deviceRegistryLocation')
     result.projectId = source.get('projectId')
     result.payload = source.get('payload')
+    result.source = source.get('source')
     result.gatewayId = source.get('gatewayId')
     result.transactionId = source.get('transactionId')
     result.publishTime = source.get('publishTime')
@@ -65,6 +67,8 @@ class Envelope:
       result['projectId'] = self.projectId # 5
     if self.payload:
       result['payload'] = self.payload # 5
+    if self.source:
+      result['source'] = self.source # 5
     if self.gatewayId:
       result['gatewayId'] = self.gatewayId # 5
     if self.transactionId:

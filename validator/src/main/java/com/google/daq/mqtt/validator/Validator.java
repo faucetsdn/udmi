@@ -1,6 +1,7 @@
 package com.google.daq.mqtt.validator;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.daq.mqtt.sequencer.SequenceBase.EMPTY_MESSAGE;
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_TOOLS;
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_VERSION;
 import static com.google.daq.mqtt.util.ConfigUtil.readExecutionConfiguration;
@@ -82,6 +83,7 @@ import udmi.schema.DeviceValidationEvent;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
 import udmi.schema.ExecutionConfiguration;
+import udmi.schema.ExecutionConfiguration.IotProvider;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.PointsetEvent;
@@ -97,7 +99,6 @@ import udmi.schema.ValidationSummary;
 public class Validator {
 
   public static final int REQUIRED_FUNCTION_VER = 8;
-
   private static final String ERROR_FORMAT_INDENT = "  ";
   private static final String SCHEMA_VALIDATION_FORMAT = "Validating %d schemas";
   private static final String TARGET_VALIDATION_FORMAT = "Validating %d files against %s";
@@ -111,7 +112,6 @@ public class Validator {
   private static final String UNKNOWN_FOLDER_DEFAULT = "unknown";
   private static final String EVENT_POINTSET = "event_pointset";
   private static final String STATE_POINTSET = "state_pointset";
-  public static final String EMPTY_MESSAGE = "{}";
   private static final String CONFIG_PREFIX = "config_";
   private static final String STATE_PREFIX = "state_";
   private static final String UNKNOWN_TYPE_DEFAULT = "event";
@@ -242,7 +242,7 @@ public class Validator {
 
   private void validatePubSub(String instName) {
     CloudIotManager cloudIotManager = new CloudIotManager(config.project_id,
-        new File(config.site_model), null, config.registry_suffix, false);
+        new File(config.site_model), null, config.registry_suffix, IotProvider.GCP_NATIVE);
     String registryId = getRegistryId();
     String updateTopic = cloudIotManager.getUpdateTopic();
     client = new PubSubClient(config.project_id, registryId, instName, updateTopic);

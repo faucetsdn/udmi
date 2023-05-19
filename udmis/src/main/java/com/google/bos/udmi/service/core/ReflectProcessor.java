@@ -15,6 +15,7 @@ import static com.google.udmi.util.JsonUtil.toMap;
 import static java.util.Objects.requireNonNull;
 
 import com.google.bos.udmi.service.messaging.MessageContinuation;
+import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import java.io.File;
 import java.util.HashMap;
@@ -43,7 +44,6 @@ public class ReflectProcessor extends UdmisComponent {
     requireNonNull(provider, "iot access provider not set");
     Envelope reflection = continuation.getEnvelope();
     try {
-      final CloudModel reply;
       if (reflection.subFolder == null) {
         stateHandler(reflection, extractUdmiState(message));
       } else if (reflection.subFolder != SubFolder.UDMI) {
@@ -93,6 +93,7 @@ public class ReflectProcessor extends UdmisComponent {
   }
 
   private void processException(Envelope reflection, Exception e) {
+    debug("Processing exception: " + GeneralUtils.friendlyStackTrace(e));
     Map<String, Object> message = new HashMap<>();
     message.put(ERROR_KEY, stackTraceString(e));
     Envelope envelope = new Envelope();
@@ -168,7 +169,7 @@ public class ReflectProcessor extends UdmisComponent {
     Map<String, Object> configMap = new HashMap<>();
     configMap.put(SubFolder.UDMI.value(), udmiConfig);
     String contents = stringify(configMap);
-    debug("Setting reflector state %s %s %s", registryId, deviceId, contents);
+    debug("Setting reflector config %s %s %s", registryId, deviceId, contents);
     provider.updateConfig(registryId, deviceId, contents);
   }
 }

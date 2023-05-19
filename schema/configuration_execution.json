@@ -34,6 +34,9 @@
     "device_id": {
       "type": "string"
     },
+    "iot_provider": {
+      "$ref": "file:common.json#/definitions/provider"
+    },
     "project_id": {
       "type": "string"
     },
