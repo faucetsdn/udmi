@@ -54,10 +54,11 @@ public class GeneralUtils {
           continue;
         }
 
-        if (field.get(target) != null && isTrue(field.get(target))) {
+        Object fieldValue = field.get(target);
+        if ((fieldValue instanceof Boolean) && isTrue(fieldValue)) {
           options.add(field.getName());
-        } else if (field.get(target) != null) {
-          options.add(field.getName() + "=" + field.get(target));
+        } else if (fieldValue != null) {
+          options.add(field.getName() + "=" + fieldValue);
         }
       } catch (IllegalAccessException e) {
         throw new RuntimeException("While accessing field " + field.getName(), e);

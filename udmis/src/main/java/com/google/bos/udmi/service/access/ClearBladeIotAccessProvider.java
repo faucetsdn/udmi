@@ -142,6 +142,11 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
     return new SimpleEntry<>(deviceBuilder.getId(), cloudModel);
   }
 
+  /**
+   * Get a numerical ID for ths device. This field is a legacy from the deprecated GCP IoT Core
+   * system, and so this provides a stable replacement value based off a hash of the device name
+   * (including project and registry) for systems that require it to exist.
+   */
   private static String extractNumId(Device device) {
     return format("%d", Math.abs(Objects.hash(device.toBuilder().getName())));
   }
@@ -273,29 +278,6 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
     }
   }
 
-  @Override
-  public Entry<String, String> fetchConfig(String registryId, String deviceId) {
-    try {
-      DeviceManagerClient deviceManagerClient = new DeviceManagerClient();
-      String location = getRegistryLocation(registryId);
-      ListDeviceConfigVersionsRequest request = ListDeviceConfigVersionsRequest.Builder.newBuilder()
-          .setName(DeviceName.of(projectId, location, registryId, deviceId)
-              .toString()).setNumVersions(1).build();
-      ListDeviceConfigVersionsResponse listDeviceConfigVersionsResponse =
-          deviceManagerClient.listDeviceConfigVersions(request);
-      List<DeviceConfig> deviceConfigs = listDeviceConfigVersionsResponse.getDeviceConfigList();
-      if (deviceConfigs.isEmpty()) {
-        return new SimpleEntry<>(EMPTY_VERSION, EMPTY_JSON);
-      }
-      DeviceConfig deviceConfig = deviceConfigs.get(0);
-      String config = ifNotNullGet((String) deviceConfig.getBinaryData(),
-          binaryData -> new String(Base64.getDecoder().decode(binaryData)));
-      return new SimpleEntry<>(deviceConfig.getVersion(), config);
-    } catch (Exception e) {
-      throw new RuntimeException("While fetching device configurations for " + deviceId, e);
-    }
-  }
-
   private String getDeviceName(String registryId, String deviceId) {
     return DeviceName.of(projectId, getRegistryLocation(registryId), registryId, deviceId)
         .toString();
@@ -403,6 +385,29 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
       return cloudModel;
     } catch (Exception e) {
       throw new RuntimeException("While updating " + deviceId, e);
+    }
+  }
+
+  @Override
+  public Entry<String, String> fetchConfig(String registryId, String deviceId) {
+    try {
+      DeviceManagerClient deviceManagerClient = new DeviceManagerClient();
+      String location = getRegistryLocation(registryId);
+      ListDeviceConfigVersionsRequest request = ListDeviceConfigVersionsRequest.Builder.newBuilder()
+          .setName(DeviceName.of(projectId, location, registryId, deviceId)
+              .toString()).setNumVersions(1).build();
+      ListDeviceConfigVersionsResponse listDeviceConfigVersionsResponse =
+          deviceManagerClient.listDeviceConfigVersions(request);
+      List<DeviceConfig> deviceConfigs = listDeviceConfigVersionsResponse.getDeviceConfigList();
+      if (deviceConfigs.isEmpty()) {
+        return new SimpleEntry<>(EMPTY_VERSION, EMPTY_JSON);
+      }
+      DeviceConfig deviceConfig = deviceConfigs.get(0);
+      String config = ifNotNullGet((String) deviceConfig.getBinaryData(),
+          binaryData -> new String(Base64.getDecoder().decode(binaryData)));
+      return new SimpleEntry<>(deviceConfig.getVersion(), config);
+    } catch (Exception e) {
+      throw new RuntimeException("While fetching device configurations for " + deviceId, e);
     }
   }
 
