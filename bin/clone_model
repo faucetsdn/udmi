@@ -8,8 +8,12 @@ MODEL_DIR=udmi_site_model
 MODEL_VER=1.10
 TEST_SITE_GIT=https://github.com/faucetsdn/$MODEL_DIR.git
 MODEL_REPO=origin
+KEY_DIR=validator
 
-if [[ ! -d $MODEL_DIR ]]; then
+echo Cloning model as $PWD/$MODEL_DIR
+if [[ -d $MODEL_DIR ]]; then
+    echo Model directory already exists, skipping.
+else
     git clone $TEST_SITE_GIT
 fi
 
@@ -19,5 +23,11 @@ git fetch $MODEL_REPO $MODEL_VER
 git checkout $MODEL_VER
 git log -n 1
 
-mkdir -p validator
-cp devices/AHU-1/rsa_private.pkcs8 validator/
+if [[ -f $KEY_DIR/rsa_private.pkcs8 ]]; then
+    echo Validator key file already exists for $KEY_DIR/rsa_private.pkcs8
+else
+    mkdir -p validator
+    echo Creating validator key file from devices/AHU-1/rsa_private.pkcs8
+    echo Copied from devices/AHU-1/rsa_private.pkcs8 > $KEY_DIR/rsa_private.SOURCE
+    cp devices/AHU-1/rsa_private.pkcs8 $KEY_DIR/
+fi

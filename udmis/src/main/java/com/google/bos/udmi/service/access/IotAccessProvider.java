@@ -2,8 +2,10 @@ package com.google.bos.udmi.service.access;
 
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import udmi.schema.CloudModel;
 import udmi.schema.Envelope.SubFolder;
+import udmi.schema.ExecutionConfiguration.IotProvider;
 import udmi.schema.IotAccess;
 
 /**
@@ -11,8 +13,9 @@ import udmi.schema.IotAccess;
  */
 public interface IotAccessProvider {
 
-  Map<IotAccess.Provider, Class<? extends IotAccessProvider>> PROVIDERS = ImmutableMap.of(
-      IotAccess.Provider.GCP_IOT_CORE, GcpIotAccessProvider.class
+  Map<IotProvider, Class<? extends IotAccessProvider>> PROVIDERS = ImmutableMap.of(
+      IotProvider.CLEARBLADE, ClearBladeIotAccessProvider.class,
+      IotProvider.GCP, GcpIotAccessProvider.class
   );
 
   /**
@@ -28,6 +31,8 @@ public interface IotAccessProvider {
   }
 
   void activate();
+
+  Entry<String, String> fetchConfig(String registryId, String deviceId);
 
   void shutdown();
 

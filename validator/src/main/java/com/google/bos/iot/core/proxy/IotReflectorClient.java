@@ -7,7 +7,6 @@ import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.convertTo;
-import static com.google.udmi.util.JsonUtil.fromString;
 import static com.google.udmi.util.JsonUtil.getDate;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.stringify;
@@ -57,6 +56,7 @@ public class IotReflectorClient implements MessagePublisher {
   private static final int MIN_REQUIRED_VERSION = 8;
   private static final String IOT_KEY_ALGORITHM = "RS256";
   private static final String UDMS_REFLECT = "UDMS-REFLECT";
+  private static final String UDMS_REGION = "us-central1";
   private static final String MOCK_DEVICE_NUM_ID = "123456789101112";
   private static final String UDMI_FOLDER = "udmi";
   private static final String UDMI_TOPIC = "events/" + UDMI_FOLDER;
@@ -90,6 +90,7 @@ public class IotReflectorClient implements MessagePublisher {
     final byte[] keyBytes;
     checkNotNull(iotConfig.key_file, "missing key file in config");
     try {
+      System.err.println("Loading key bytes from " + iotConfig.key_file);
       keyBytes = getFileBytes(iotConfig.key_file);
     } catch (Exception e) {
       throw new RuntimeException(
@@ -103,14 +104,14 @@ public class IotReflectorClient implements MessagePublisher {
     registryId = SiteModel.getRegistryActual(iotConfig);
     projectId = iotConfig.project_id;
     udmiVersion = Optional.ofNullable(iotConfig.udmi_version).orElseGet(Common::getUdmiVersion);
-    String cloudRegion =
-        iotConfig.reflect_region == null ? iotConfig.cloud_region : iotConfig.reflect_region;
+    String cloudRegion = Optional.ofNullable(iotConfig.reflect_region)
+        .orElse(iotConfig.cloud_region);
     subscriptionId =
         format("%s/%s/%s/%s", projectId, cloudRegion, UDMS_REFLECT, registryId);
 
     try {
-      mqttPublisher = new MqttPublisher(projectId, cloudRegion, UDMS_REFLECT,
-          registryId, keyBytes, IOT_KEY_ALGORITHM, this::messageHandler, this::errorHandler);
+      mqttPublisher = new MqttPublisher(makeReflectConfiguration(iotConfig, registryId), keyBytes,
+          IOT_KEY_ALGORITHM, this::messageHandler, this::errorHandler);
     } catch (Exception e) {
       throw new RuntimeException("While connecting MQTT endpoint " + subscriptionId, e);
     }
@@ -132,6 +133,20 @@ public class IotReflectorClient implements MessagePublisher {
       mqttPublisher.close();
       throw new RuntimeException("Waiting for initial config", e);
     }
+  }
+
+  private static ExecutionConfiguration makeReflectConfiguration(ExecutionConfiguration iotConfig,
+      String registryId) {
+    ExecutionConfiguration reflectConfiguration = new ExecutionConfiguration();
+    reflectConfiguration.iot_provider = iotConfig.iot_provider;
+    reflectConfiguration.project_id = iotConfig.project_id;
+    reflectConfiguration.cloud_region = Optional.ofNullable(iotConfig.reflect_region)
+        .orElse(iotConfig.cloud_region);
+    reflectConfiguration.registry_id = UDMS_REFLECT;
+
+    // Intentionally map registry -> device because of reflection registry semantics.
+    reflectConfiguration.device_id = registryId;
+    return reflectConfiguration;
   }
 
   private void initializeReflectorState() {
@@ -292,9 +307,9 @@ public class IotReflectorClient implements MessagePublisher {
 
   private List<String> parseMessageTopic(String topic) {
     List<String> parts = new ArrayList<>(Arrays.asList(topic.substring(1).split("/")));
-    checkState("devices".equals(parts.remove(0)), "unknown parsed path field");
+    checkState("devices".equals(parts.remove(0)), "unknown parsed path field: " + topic);
     // Next field is registry, not device, since the reflector device holds the site registry.
-    checkState(registryId.equals(parts.remove(0)), "unexpected parsed registry id");
+    checkState(registryId.equals(parts.remove(0)), "unexpected parsed registry id: " + topic);
     return parts;
   }
 
@@ -367,7 +382,9 @@ public class IotReflectorClient implements MessagePublisher {
   @Override
   public void close() {
     active = false;
-    mqttPublisher.close();
+    if (mqttPublisher != null) {
+      mqttPublisher.close();
+    }
   }
 
   static class MessageBundle {

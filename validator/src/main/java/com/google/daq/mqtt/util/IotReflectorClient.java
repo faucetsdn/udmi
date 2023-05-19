@@ -1,9 +1,10 @@
 package com.google.daq.mqtt.util;
 
-import static com.google.daq.mqtt.validator.Validator.EMPTY_MESSAGE;
+import static com.google.daq.mqtt.sequencer.SequenceBase.EMPTY_MESSAGE;
 import static com.google.udmi.util.Common.ERROR_KEY;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
 import static com.google.udmi.util.Common.TRANSACTION_KEY;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static java.lang.String.format;
@@ -84,9 +85,11 @@ public class IotReflectorClient implements IotProvider {
     Operation operation = Preconditions.checkNotNull(model.operation, "no operation");
     Map<String, Object> message = transaction(deviceId, topic, stringify(model));
     CloudModel cloudModel = convertToStrict(CloudModel.class, message);
-    if (cloudModel == null || cloudModel.num_id == null || cloudModel.operation != operation) {
-      throw new RuntimeException(format("Invalid return receipt %s for request %s",
-          stringify(cloudModel), stringify(model)));
+    String cloudNumId = ifNotNullGet(cloudModel, result -> result.num_id);
+    Operation cloudOperation = ifNotNullGet(cloudModel, result -> result.operation);
+    if (cloudModel == null || cloudNumId == null || cloudOperation != operation) {
+      throw new RuntimeException(
+          format("Invalid return receipt: %s / %s", cloudOperation, cloudNumId));
     }
     return cloudModel;
   }

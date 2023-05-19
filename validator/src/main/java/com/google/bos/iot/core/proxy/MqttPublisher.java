@@ -1,6 +1,7 @@
 package com.google.bos.iot.core.proxy;
 
 import static com.google.bos.iot.core.proxy.ProxyTarget.STATE_TOPIC;
+import static udmi.schema.ExecutionConfiguration.IotProvider.CLEARBLADE;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
@@ -31,13 +32,16 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import udmi.schema.ExecutionConfiguration;
+import udmi.schema.ExecutionConfiguration.IotProvider;
 
 /**
  * Handle publishing sensor data to a Cloud IoT MQTT endpoint.
  */
 class MqttPublisher implements MessagePublisher {
 
-  static final String BRIDGE_HOSTNAME = "mqtt.googleapis.com";
+  static final String GCP_BRIDGE_HOSTNAME = "mqtt.googleapis.com";
+  static final String CLEARBLADE_BRIDGE_HOSTNAME = "us-central1-mqtt.clearblade.com";
   static final String BRIDGE_PORT = "8883";
   private static final Logger LOG = LoggerFactory.getLogger(MqttPublisher.class);
   private static final boolean MQTT_SHOULD_RETAIN = false;
@@ -54,7 +58,7 @@ class MqttPublisher implements MessagePublisher {
   private static final String ID_FORMAT = "projects/%s/locations/%s/registries/%s/devices/%s";
   private static final int PUBLISH_THREAD_COUNT = 10;
   private static final String ATTACH_MESSAGE_FORMAT = "/devices/%s/attach";
-  private static final int TOKEN_EXPIRATION_SEC = 60 * 60 * 1;
+  private static final int TOKEN_EXPIRATION_SEC = 60 * 60;
   private static final int TOKEN_EXPIRATION_MS = TOKEN_EXPIRATION_SEC * 1000;
   private final ExecutorService publisherExecutor =
       Executors.newFixedThreadPool(PUBLISH_THREAD_COUNT);
@@ -72,20 +76,21 @@ class MqttPublisher implements MessagePublisher {
   private final String registryId;
   private final String projectId;
   private final String cloudRegion;
+  private final IotProvider iotProvider;
   private MqttConnectOptions mqttConnectOptions;
   private long mqttTokenSetTimeMs;
 
-  MqttPublisher(String projectId, String cloudRegion, String registryId,
-      String deviceId, byte[] keyBytes, String algorithm, BiConsumer<String, String> onMessage,
-      BiConsumer<MqttPublisher, Throwable> onError) {
+  MqttPublisher(ExecutionConfiguration executionConfiguration, byte[] keyBytes, String algorithm,
+      BiConsumer<String, String> onMessage, BiConsumer<MqttPublisher, Throwable> onError) {
     this.onMessage = onMessage;
     this.onError = onError;
-    this.projectId = projectId;
-    this.cloudRegion = cloudRegion;
-    this.registryId = registryId;
-    this.deviceId = deviceId;
+    this.projectId = executionConfiguration.project_id;
+    this.cloudRegion = executionConfiguration.cloud_region;
+    this.registryId = executionConfiguration.registry_id;
+    this.deviceId = executionConfiguration.device_id;
     this.algorithm = algorithm;
     this.keyBytes = keyBytes;
+    this.iotProvider = executionConfiguration.iot_provider;
     LOG.info(deviceId + " token expiration sec " + TOKEN_EXPIRATION_SEC);
     mqttClient = newMqttClient(deviceId);
     connectMqttClient(deviceId);
@@ -243,7 +248,7 @@ class MqttPublisher implements MessagePublisher {
     LOG.info(deviceId + " creating new jwt");
     mqttConnectOptions.setPassword(createJwt());
     mqttTokenSetTimeMs = System.currentTimeMillis();
-    LOG.info(deviceId + " connecting to mqtt server");
+    LOG.info(deviceId + " connecting to mqtt server " + getBrokerUrl());
     mqttClient.connect(mqttConnectOptions);
     attachedClients.clear();
     attachedClients.add(deviceId);
@@ -281,7 +286,8 @@ class MqttPublisher implements MessagePublisher {
   private String getBrokerUrl() {
     // Build the connection string for Google's Cloud IoT MQTT server. Only SSL connections are
     // accepted. For server authentication, the JVM's root certificates are used.
-    return String.format(BROKER_URL_FORMAT, BRIDGE_HOSTNAME, BRIDGE_PORT);
+    String hostname = iotProvider == CLEARBLADE ? CLEARBLADE_BRIDGE_HOSTNAME : GCP_BRIDGE_HOSTNAME;
+    return String.format(BROKER_URL_FORMAT, hostname, BRIDGE_PORT);
   }
 
   private String getMessageTopic(String deviceId, String topic) {

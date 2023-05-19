@@ -77,9 +77,11 @@ public abstract class UdmisComponent extends ContainerBase {
    * Activate this component.
    */
   public void activate() {
-    registerHandlers(baseHandlers);
-    registerHandlers();
-    dispatcher.activate();
+    if (dispatcher != null) {
+      registerHandlers(baseHandlers);
+      registerHandlers();
+      dispatcher.activate();
+    }
   }
 
   public int getMessageCount(Class<?> clazz) {
@@ -90,8 +92,13 @@ public abstract class UdmisComponent extends ContainerBase {
     this.provider = provider;
   }
 
+  /**
+   * Shutdown the component.
+   */
   public void shutdown() {
-    dispatcher.shutdown();
+    if (dispatcher != null) {
+      dispatcher.shutdown();
+    }
   }
 
   <T> void registerHandler(Class<T> clazz, Consumer<T> handler) {
