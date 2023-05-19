@@ -1,0 +1,16 @@
+#!/bin/bash -e
+
+if [[ $# != 1 ]]; then
+    echo Usage: $0 pod_config
+    false
+fi
+
+POD_CONFIG=$(realpath $1)
+shift
+
+ROOT=$(dirname $0)/..
+cd $ROOT
+
+POD_JAR=build/libs/udmis-1.0-SNAPSHOT-all.jar
+
+java -jar $POD_JAR $POD_CONFIG
