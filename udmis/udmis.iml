@@ -32,7 +32,7 @@
     <orderEntry type="library" name="Gradle: com.fasterxml.jackson.core:jackson-databind:2.12.4" level="project" />
     <orderEntry type="library" name="Gradle: commons-io:commons-io:2.5" level="project" />
     <orderEntry type="library" name="Gradle: com.google.cloud:google-cloud-logging:2.3.2" level="project" />
-    <orderEntry type="library" name="Gradle: io.github.clearblade:clearblade-cloud-iot:1.0.0-rc.1" level="project" />
+    <orderEntry type="library" name="Gradle: io.github.clearblade:clearblade-cloud-iot:1.0.0-rc.2" level="project" />
     <orderEntry type="library" name="Gradle: com.google.cloud:google-cloud-pubsub:1.66.0" level="project" />
     <orderEntry type="library" name="Gradle: com.google.api.grpc:grpc-google-cloud-pubsub-v1:1.48.0" level="project" />
     <orderEntry type="library" name="Gradle: com.google.cloud:google-cloud-core-grpc:1.95.4" level="project" />

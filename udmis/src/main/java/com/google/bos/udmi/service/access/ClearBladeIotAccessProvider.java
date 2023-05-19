@@ -90,13 +90,10 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
   private static final String EMPTY_RETURN_RECEIPT = "-1";
   private static final String UPDATE_FIELD_MASK = "blocked,credentials,metadata";
   private static final GatewayConfig NON_GATEWAY_CONFIG = new GatewayConfig();
-  private static final GatewayConfig GATEWAY_CONFIG = new GatewayConfig();
-
-  static {
-    // TODO: GatewayConfig builder implementation is incomplete, reported as DESK-2315.
-    GATEWAY_CONFIG.setGatewayType(GatewayType.GATEWAY);
-    GATEWAY_CONFIG.setGatewayAuthMethod(GatewayAuthMethod.ASSOCIATION_ONLY);
-  }
+  private static final GatewayConfig GATEWAY_CONFIG = GatewayConfig.newBuilder()
+      .setGatewayType(GatewayType.GATEWAY)
+      .setGatewayAuthMethod(GatewayAuthMethod.ASSOCIATION_ONLY)
+      .build();
 
   private final String projectId;
   private final Map<String, String> registryCloudRegions;
