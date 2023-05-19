@@ -17,10 +17,10 @@
   "pointset": {
     "state_etag": "74f298bcf04fae2a37dbcae7b382fd92",
     "points": {
-      "output_voltage_sensor": {
+      "output_voltage_capator": {
         "units": "Volts"
       },
-      "power_sensor": {
+      "globulating_globar": {
         "units": "Megawatts"
       }
     }
