@@ -27,6 +27,19 @@ public class ReportingPointset {
     this.metadata = metadata;
   }
 
+  MetadataDiff validateMessage(State message) {
+    if (message.pointset != null) {
+      return validateMessage(message.pointset);
+    }
+
+    if (metadata.pointset == null) {
+      return null;
+    }
+
+    // Return with internal fields null, to indicate that entire subsection is missing.
+    return new MetadataDiff();
+  }
+
   MetadataDiff validateMessage(PointsetEvent message) {
     MetadataDiff metadataDiff = validateMessage(getPoints(message).keySet());
     if (TRUE.equals(message.partial_update)) {
@@ -63,18 +76,5 @@ public class ReportingPointset {
       return ImmutableMap.of();
     }
     return metadata.pointset.points;
-  }
-
-  public MetadataDiff validateMessage(State message) {
-    if (message.pointset != null) {
-      return validateMessage(message.pointset);
-    }
-
-    if (metadata.pointset == null) {
-      return null;
-    }
-
-    // Return with internal fields null, to indicate that entire subsection is missing.
-    return new MetadataDiff();
   }
 }
