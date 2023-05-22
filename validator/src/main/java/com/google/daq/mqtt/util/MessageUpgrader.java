@@ -1,12 +1,20 @@
 package com.google.daq.mqtt.util;
 
 import static com.google.udmi.util.Common.VERSION_KEY;
+import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.udmi.util.GeneralUtils;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 /**
  * Container class for upgrading UDMI messages from older versions.
@@ -176,10 +184,21 @@ public class MessageUpgrader {
       JsonNode version = ((ObjectNode) firmware).remove(VERSION_KEY);
       if (version != null && !system.has("software")) {
         ObjectNode softwareNode = new ObjectNode(NODE_FACTORY);
-        softwareNode.set("firmware", version);
+        softwareNode.set("firmware", sanitizeFirmwareVersion(version));
         system.set("software", softwareNode);
       }
     }
+  }
+
+  private TextNode sanitizeFirmwareVersion(JsonNode version) {
+    if (version.isArray()) {
+      List<String> values = new ArrayList<>();
+      Iterator<JsonNode> elements = ((ArrayNode) version).elements();
+      elements.forEachRemaining(item -> values.add(((TextNode) item).asText()));
+      String collect = values.stream().collect(Collectors.joining(", "));
+      return new TextNode(collect);
+    }
+    return (TextNode) version;
   }
 
   private void upgradeMakeModel(ObjectNode system) {

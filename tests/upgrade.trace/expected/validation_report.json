@@ -4,17 +4,17 @@
   "tools" : "test_trace",
   "start_time" : "1999-10-20T01:02:03Z",
   "summary" : {
-    "correct_devices" : [ "SNS-4" ],
+    "correct_devices" : [ ],
     "extra_devices" : [ "NON-1", "NON-2" ],
     "missing_devices" : [ "GAT-123" ],
-    "error_devices" : [ "AHU-1", "AHU-22" ]
+    "error_devices" : [ "AHU-1", "AHU-22", "SNS-4" ]
   },
   "devices" : {
     "AHU-1" : {
       "last_seen" : "1999-10-20T01:02:03Z",
       "status" : {
         "message" : "Multiple validation errors",
-        "detail" : "While converting to json node: 2 schema violations found; While converting to json node: 2 schema violations found",
+        "detail" : "While converting to json node: 1 schema violations found; missing pointset subblock; While converting to json node: 1 schema violations found",
         "category" : "validation.device.multiple",
         "timestamp" : "1999-10-20T01:02:03Z",
         "level" : 500
@@ -23,9 +23,9 @@
     "AHU-22" : {
       "last_seen" : "1999-10-20T01:02:03Z",
       "status" : {
-        "message" : "While converting to json node: 1 schema violations found",
-        "detail" : "state_update: While converting to json node: 1 schema violations found @Validator.validateMessage(redacted); 1 schema violations found; /system: object has missing required properties ([\"serial_no\"])",
-        "category" : "validation.device.schema",
+        "message" : "Multiple validation errors",
+        "detail" : "While converting to json node: 1 schema violations found; missing pointset subblock",
+        "category" : "validation.device.multiple",
         "timestamp" : "1999-10-20T01:02:03Z",
         "level" : 500
       }
@@ -33,8 +33,8 @@
     "NON-1" : {
       "last_seen" : "1999-10-20T01:02:03Z",
       "status" : {
-        "message" : "While converting to json node: 2 schema violations found",
-        "detail" : "state_update: While converting to json node: 2 schema violations found @Validator.validateMessage(redacted); 2 schema violations found; /system: object has missing required properties ([\"serial_no\"]); /system/software/firmware: instance type (array) does not match any allowed primitive type (allowed: [\"string\"])",
+        "message" : "While converting to json node: 1 schema violations found",
+        "detail" : "state_update: While converting to json node: 1 schema violations found @Validator.validateMessage(redacted); 1 schema violations found; /system: object has missing required properties ([\"serial_no\"])",
         "category" : "validation.device.extra",
         "timestamp" : "1999-10-20T01:02:03Z",
         "level" : 400
@@ -52,10 +52,11 @@
     "SNS-4" : {
       "last_seen" : "1999-10-20T01:02:03Z",
       "status" : {
-        "message" : "Successful validation",
-        "category" : "validation.device.receive",
+        "message" : "missing pointset subblock",
+        "detail" : "state_update: missing pointset subblock",
+        "category" : "validation.device.schema",
         "timestamp" : "1999-10-20T01:02:03Z",
-        "level" : 200
+        "level" : 500
       }
     }
   }

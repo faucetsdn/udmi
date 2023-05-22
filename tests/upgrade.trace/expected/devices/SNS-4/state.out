@@ -4,10 +4,17 @@
   "sub_folder" : "update",
   "sub_type" : "state",
   "status" : {
-    "message" : "Successful validation",
-    "category" : "validation.device.receive",
+    "message" : "missing pointset subblock",
+    "detail" : "state_update: missing pointset subblock",
+    "category" : "validation.device.schema",
     "timestamp" : "1999-10-20T01:02:03Z",
-    "level" : 200
+    "level" : 500
   },
-  "errors" : [ ]
+  "errors" : [ {
+    "message" : "missing pointset subblock",
+    "detail" : "state_update: missing pointset subblock",
+    "category" : "validation.device.schema",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  } ]
 }
