@@ -3,6 +3,7 @@ package com.google.daq.mqtt.validator;
 import static java.lang.Boolean.TRUE;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.validator.ReportingDevice.MetadataDiff;
 import java.util.Map;
 import java.util.Set;
@@ -13,6 +14,7 @@ import udmi.schema.PointPointsetModel;
 import udmi.schema.PointPointsetState;
 import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetState;
+import udmi.schema.State;
 
 /**
  * Manage pointset validation.
@@ -28,7 +30,7 @@ public class ReportingPointset {
   MetadataDiff validateMessage(PointsetEvent message) {
     MetadataDiff metadataDiff = validateMessage(getPoints(message).keySet());
     if (TRUE.equals(message.partial_update)) {
-      metadataDiff.missingPoints = null;
+      metadataDiff.missingPoints = ImmutableSet.of();
     }
     return metadataDiff;
   }
@@ -61,5 +63,18 @@ public class ReportingPointset {
       return ImmutableMap.of();
     }
     return metadata.pointset.points;
+  }
+
+  public MetadataDiff validateMessage(State message) {
+    if (message.pointset != null) {
+      return validateMessage(message.pointset);
+    }
+
+    if (metadata.pointset == null) {
+      return null;
+    }
+
+    // Return with internal fields null, to indicate that entire subsection is missing.
+    return new MetadataDiff();
   }
 }

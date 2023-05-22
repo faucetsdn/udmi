@@ -33,7 +33,7 @@
       "last_seen" : "1999-10-20T01:02:03Z",
       "status" : {
         "message" : "Multiple validation errors",
-        "detail" : "Device has extra points: output_voltage_capator; operation key in older version",
+        "detail" : "missing pointset subblock; operation key in older version",
         "category" : "validation.device.multiple",
         "timestamp" : "1999-10-20T01:02:03Z",
         "level" : 500

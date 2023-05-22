@@ -1,9 +1,0 @@
-{
-  "deviceNumId" : "00000528111775",
-  "subFolder" : "pointset",
-  "deviceRegistryId" : "ZZ-TRI-FECTA",
-  "subType" : "state",
-  "msgSource" : "003_state_pointset.json",
-  "deviceId" : "GAT-123",
-  "projectId" : "playback-project"
-}
