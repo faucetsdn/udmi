@@ -268,7 +268,6 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
       DeleteDeviceRequest request =
           DeleteDeviceRequest.Builder.newBuilder().setName(deviceName).build();
       deviceManagerClient.deleteDevice(request);
-      // TODO: Delete device has no return value so can't to check for error, reported as DESK-2317.
       CloudModel cloudModel = new CloudModel();
       cloudModel.operation = Operation.DELETE;
       cloudModel.num_id = extractNumId(device);
