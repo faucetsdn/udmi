@@ -42,6 +42,7 @@ from .metadata import Metadata
 from .model_cloud import CloudModel
 from .model_discovery import DiscoveryModel
 from .model_discovery_family import FamilyDiscoveryTestingModel
+from .model_features import TestingModel
 from .model_gateway import GatewayModel
 from .model_localnet import LocalnetModel
 from .model_localnet_family import FamilyLocalnetModel

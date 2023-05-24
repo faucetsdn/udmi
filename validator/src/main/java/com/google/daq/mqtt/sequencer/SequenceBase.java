@@ -9,6 +9,7 @@ import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.GeneralUtils.changedLines;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.safeSleep;
@@ -72,7 +73,6 @@ import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
 import org.junit.After;
-import org.junit.Assume;
 import org.junit.AssumptionViolatedException;
 import org.junit.Before;
 import org.junit.Rule;
@@ -510,7 +510,7 @@ public class SequenceBase {
       throw new RuntimeException("Active sequencer instance not setup, aborting");
     }
 
-    assumeTrue("Feature bucket not enabled", testBucket == SYSTEM);
+    assumeTrue("Feature bucket not enabled", isBucketEnabled(testBucket));
 
     waitingCondition.push("starting test wrapper");
     checkState(reflector().isActive(), "Reflector is not currently active");
@@ -536,6 +536,11 @@ public class SequenceBase {
     recordSequence = true;
     waitingCondition.push("executing test");
     debug(String.format("stage begin %s at %s", waitingCondition.peek(), timeSinceStart()));
+  }
+
+  private boolean isBucketEnabled(Bucket bucket) {
+    return ifNotNullGet(deviceMetadata.features, features -> features.containsKey(bucket.value()),
+        true);
   }
 
   protected void resetConfig() {
