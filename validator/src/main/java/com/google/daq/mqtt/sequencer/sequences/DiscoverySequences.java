@@ -14,7 +14,6 @@ import static udmi.schema.FeatureEnumeration.FeatureStage.ALPHA;
 
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
-import com.google.daq.mqtt.sequencer.SkipTest;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
 import com.google.udmi.util.CleanDateFormat;
 import com.google.udmi.util.JsonUtil;
@@ -28,6 +27,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import org.junit.AssumptionViolatedException;
 import org.junit.Test;
 import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvent;
@@ -115,7 +115,7 @@ public class DiscoverySequences extends SequenceBase {
   @Feature(bucket = ENUMERATION_POINTSET, stage = ALPHA)
   public void pointset_enumeration() {
     if (!catchToFalse(() -> deviceMetadata.pointset.points != null)) {
-      throw new SkipTest("No metadata pointset points defined");
+      throw new AssumptionViolatedException("No metadata pointset points defined");
     }
     Enumerate enumerate = new Enumerate();
     enumerate.uniqs = true;
@@ -217,7 +217,7 @@ public class DiscoverySequences extends SequenceBase {
   private void initializeDiscovery() {
     families = catchToNull(() -> deviceMetadata.discovery.families.keySet());
     if (families == null || families.isEmpty()) {
-      throw new SkipTest("No discovery families configured");
+      throw new AssumptionViolatedException("No discovery families configured");
     }
     deviceConfig.discovery = new DiscoveryConfig();
     deviceConfig.discovery.families = new HashMap<>();

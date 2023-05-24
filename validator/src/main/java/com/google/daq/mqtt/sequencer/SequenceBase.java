@@ -71,6 +71,8 @@ import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
 import org.junit.After;
+import org.junit.Assume;
+import org.junit.AssumptionViolatedException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -502,36 +504,36 @@ public class SequenceBase {
    */
   @Before
   public void setUp() {
-    throw new SkipTest("forced skip");
-//
-//    if (activeInstance == null) {
-//      throw new RuntimeException("Active sequencer instance not setup, aborting");
-//    }
-//    waitingCondition.clear();
-//    waitingCondition.push("starting test wrapper");
-//    checkState(reflector().isActive(), "Reflector is not currently active");
-//
-//    // Old messages can sometimes take a while to clear out, so need some delay for stability.
-//    // TODO: Minimize time, or better yet find deterministic way to flush messages.
-//    safeSleep(CONFIG_UPDATE_DELAY_MS);
-//
-//    configAcked = false;
-//    receivedState.clear();
-//    receivedEvents.clear();
-//    enforceSerial = false;
-//    recordMessages = true;
-//    recordSequence = false;
-//
-//    queryState();
-//
-//    resetConfig(resetRequired);
-//
-//    updateConfig("setUp");
-//
-//    untilTrue("device state update", () -> deviceState != null);
-//    recordSequence = true;
-//    waitingCondition.push("executing test");
-//    debug(String.format("stage begin %s at %s", waitingCondition.peek(), timeSinceStart()));
+    Assume.assumeFalse("forced skip", true);
+
+    if (activeInstance == null) {
+      throw new RuntimeException("Active sequencer instance not setup, aborting");
+    }
+    waitingCondition.clear();
+    waitingCondition.push("starting test wrapper");
+    checkState(reflector().isActive(), "Reflector is not currently active");
+
+    // Old messages can sometimes take a while to clear out, so need some delay for stability.
+    // TODO: Minimize time, or better yet find deterministic way to flush messages.
+    safeSleep(CONFIG_UPDATE_DELAY_MS);
+
+    configAcked = false;
+    receivedState.clear();
+    receivedEvents.clear();
+    enforceSerial = false;
+    recordMessages = true;
+    recordSequence = false;
+
+    queryState();
+
+    resetConfig(resetRequired);
+
+    updateConfig("setUp");
+
+    untilTrue("device state update", () -> deviceState != null);
+    recordSequence = true;
+    waitingCondition.push("executing test");
+    debug(String.format("stage begin %s at %s", waitingCondition.peek(), timeSinceStart()));
   }
 
   protected void resetConfig() {
@@ -572,7 +574,7 @@ public class SequenceBase {
   @Feature(stage = ALPHA, bucket = SYSTEM)
   public void valid_serial_no() {
     if (serialNo == null) {
-      throw new SkipTest("No test serial number provided");
+      throw new AssumptionViolatedException("No test serial number provided");
     }
     untilTrue("received serial number matches", () -> serialNo.equals(lastSerialNo));
   }
@@ -750,7 +752,8 @@ public class SequenceBase {
     if (activeInstance == null) {
       return;
     }
-    debug(String.format("stage done %s at %s", waitingCondition.peek(), timeSinceStart()));
+    String condition = waitingCondition.isEmpty() ? "initialize" : waitingCondition.peek();
+    debug(String.format("stage done %s at %s", condition, timeSinceStart()));
     recordMessages = false;
     recordSequence = false;
     configAcked = false;
@@ -1524,6 +1527,11 @@ public class SequenceBase {
     }
 
     @Override
+    protected void skipped(AssumptionViolatedException e, Description description) {
+      failed(e, description);
+    }
+
+    @Override
     protected void failed(Throwable e, Description description) {
       if (activeInstance == null) {
         return;
@@ -1535,7 +1543,7 @@ public class SequenceBase {
         error(String.format("stage timeout %s at %s", waitingCondition.peek(), timeSinceStart()));
         message = "timeout " + waitingCondition.peek();
         failureType = SequenceResult.FAIL;
-      } else if (e instanceof SkipTest) {
+      } else if (e instanceof AssumptionViolatedException) {
         message = e.getMessage();
         failureType = SequenceResult.SKIP;
       } else {
