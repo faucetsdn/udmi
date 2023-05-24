@@ -161,7 +161,7 @@ jobs:
           bin/test_regclean $GCP_TARGET_PROJECT
       - name: sequence tests
         run: |
-          bin/test_sequencer $GCP_TARGET_PROJECT
+          bin/test_sequencer clean $GCP_TARGET_PROJECT
       - name: generated files
         if: ${{ always() }}
         run: |
@@ -201,7 +201,7 @@ jobs:
           bin/test_regclean $GCP_TARGET_PROJECT
       - name: sequence tests
         run: |
-          bin/test_sequencer $GCP_TARGET_PROJECT
+          bin/test_sequencer clean $GCP_TARGET_PROJECT
       - name: generated files
         if: ${{ always() }}
         run: |
