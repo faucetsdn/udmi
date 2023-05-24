@@ -5,14 +5,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static udmi.schema.Bucket.DISCOVERY;
 import static udmi.schema.Bucket.DISCOVERY_SCAN;
 import static udmi.schema.Bucket.ENUMERATION;
 import static udmi.schema.Bucket.ENUMERATION_FAMILIES;
 import static udmi.schema.Bucket.ENUMERATION_FEATURES;
 import static udmi.schema.Bucket.ENUMERATION_POINTSET;
-import static udmi.schema.SequenceValidationState.FeatureStage.ALPHA;
-import static udmi.schema.SequenceValidationState.FeatureStage.BETA;
+import static udmi.schema.FeatureEnumeration.FeatureStage.ALPHA;
 
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
@@ -31,14 +29,12 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import org.junit.Test;
-import udmi.schema.Bucket;
 import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvent;
 import udmi.schema.Enumerate;
 import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyDiscoveryState;
-import udmi.schema.FeatureEnumerationEvent;
-import udmi.schema.SequenceValidationState.FeatureStage;
+import udmi.schema.FeatureEnumeration.FeatureStage;
 
 /**
  * Validation tests for discovery scan and enumeration capabilities.
@@ -88,9 +84,8 @@ public class DiscoverySequences extends SequenceBase {
     }
 
     if (isTrue(enumerate.features)) {
-      Map<Bucket, FeatureStage> bucketStageMap = flattenFeatureEnumeration("", event.features);
       checkThat("feature enumeration feature is stable",
-          () -> bucketStageMap.get(ENUMERATION_FEATURES) == FeatureStage.STABLE);
+          () -> event.features.get(ENUMERATION_FEATURES.value()).stage == FeatureStage.STABLE);
     } else {
       checkThat("no feature enumeration", () -> event.features == null);
     }
@@ -102,20 +97,6 @@ public class DiscoverySequences extends SequenceBase {
     } else {
       checkThat("no point enumeration", () -> event.uniqs == null);
     }
-  }
-
-  private Map<Bucket, FeatureStage> flattenFeatureEnumeration(String prefix,
-      Map<String, FeatureEnumerationEvent> eventFeatures) {
-    Map<Bucket, FeatureStage> buckets = new HashMap<>();
-    eventFeatures.forEach((key, value) -> {
-      String fullBucket = prefix + "." + key;
-      Bucket bucket = Bucket.fromValue(fullBucket.substring(1));
-      buckets.put(bucket, FeatureStage.valueOf(value.stage.value().toUpperCase()));
-      if (value.features != null) {
-        buckets.putAll(flattenFeatureEnumeration(fullBucket, value.features));
-      }
-    });
-    return buckets;
   }
 
   private boolean isTrue(Boolean condition) {

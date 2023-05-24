@@ -24,8 +24,8 @@ import org.junit.runner.JUnitCore;
 import org.junit.runner.Request;
 import org.junit.runner.Result;
 import udmi.schema.ExecutionConfiguration;
+import udmi.schema.FeatureEnumeration.FeatureStage;
 import udmi.schema.Level;
-import udmi.schema.SequenceValidationState.FeatureStage;
 import udmi.schema.SequenceValidationState.SequenceResult;
 
 /**

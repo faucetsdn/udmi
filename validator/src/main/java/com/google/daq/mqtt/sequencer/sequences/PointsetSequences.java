@@ -2,7 +2,7 @@ package com.google.daq.mqtt.sequencer.sequences;
 
 import static com.google.daq.mqtt.util.TimePeriodConstants.THREE_MINUTES_MS;
 import static udmi.schema.Bucket.POINTSET;
-import static udmi.schema.SequenceValidationState.FeatureStage.ALPHA;
+import static udmi.schema.FeatureEnumeration.FeatureStage.ALPHA;
 
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;

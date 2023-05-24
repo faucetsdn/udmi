@@ -23,12 +23,12 @@ from .configuration_execution import ExecutionConfiguration
 from .configuration_pod import PodConfiguration
 from .configuration_pod_bridge import BridgePodConfiguration
 from .configuration_pubber import PubberConfiguration
+from .enumeration_feature import FeatureEnumeration
 from .envelope import Envelope
 from .equipment_translation import BuildingConfig
 from .event import Event
 from .event_discovery import DiscoveryEvent
 from .event_discovery_family import FamilyDiscoveryEvent
-from .event_discovery_feature import FeatureEnumerationEvent
 from .event_discovery_point import PointEnumerationEvent
 from .event_mapping import MappingEvent
 from .event_mapping_entities import MappingEventEntities

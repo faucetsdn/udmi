@@ -13,38 +13,32 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 
 /**
- * Feature Enumeration Event
+ * Feature Enumeration
  * <p>
  * Object representation for for a single feature enumeration
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "stage",
-    "features"
+    "stage"
 })
 @Generated("jsonschema2pojo")
-public class FeatureEnumerationEvent {
+public class FeatureEnumeration {
 
     /**
-     * Feature implementation stage
+     * FeatureStage
+     * <p>
+     * Stage of a feature implemenation
      * 
      */
     @JsonProperty("stage")
-    @JsonPropertyDescription("Feature implementation stage")
-    public FeatureEnumerationEvent.Stage stage;
-    /**
-     * Make Java happy because the json_for_humans generation doesn't handle recursion
-     * 
-     */
-    @JsonProperty("features")
-    public Map<String, FeatureEnumerationEvent> features;
+    @JsonPropertyDescription("Stage of a feature implemenation")
+    public FeatureEnumeration.FeatureStage stage;
 
     @Override
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.stage == null)? 0 :this.stage.hashCode()));
-        result = ((result* 31)+((this.features == null)? 0 :this.features.hashCode()));
         return result;
     }
 
@@ -53,51 +47,53 @@ public class FeatureEnumerationEvent {
         if (other == this) {
             return true;
         }
-        if ((other instanceof FeatureEnumerationEvent) == false) {
+        if ((other instanceof FeatureEnumeration) == false) {
             return false;
         }
-        FeatureEnumerationEvent rhs = ((FeatureEnumerationEvent) other);
-        return (((this.stage == rhs.stage)||((this.stage!= null)&&this.stage.equals(rhs.stage)))&&((this.features == rhs.features)||((this.features!= null)&&this.features.equals(rhs.features))));
+        FeatureEnumeration rhs = ((FeatureEnumeration) other);
+        return ((this.stage == rhs.stage)||((this.stage!= null)&&this.stage.equals(rhs.stage)));
     }
 
 
     /**
-     * Feature implementation stage
+     * FeatureStage
+     * <p>
+     * Stage of a feature implemenation
      * 
      */
     @Generated("jsonschema2pojo")
-    public enum Stage {
+    public enum FeatureStage {
 
-        MISSING("missing"),
+        DISABLED("disabled"),
         ALPHA("alpha"),
         BETA("beta"),
         STABLE("stable");
-        private final java.lang.String value;
-        private final static Map<java.lang.String, FeatureEnumerationEvent.Stage> CONSTANTS = new HashMap<java.lang.String, FeatureEnumerationEvent.Stage>();
+        private final String value;
+        private final static Map<String, FeatureEnumeration.FeatureStage> CONSTANTS = new HashMap<String, FeatureEnumeration.FeatureStage>();
 
         static {
-            for (FeatureEnumerationEvent.Stage c: values()) {
+            for (FeatureEnumeration.FeatureStage c: values()) {
                 CONSTANTS.put(c.value, c);
             }
         }
 
-        Stage(java.lang.String value) {
+        FeatureStage(String value) {
             this.value = value;
         }
 
         @Override
-        public java.lang.String toString() {
+        public String toString() {
             return this.value;
         }
 
         @JsonValue
-        public java.lang.String value() {
+        public String value() {
             return this.value;
         }
 
         @JsonCreator
-        public static FeatureEnumerationEvent.Stage fromValue(java.lang.String value) {
-            FeatureEnumerationEvent.Stage constant = CONSTANTS.get(value);
+        public static FeatureEnumeration.FeatureStage fromValue(String value) {
+            FeatureEnumeration.FeatureStage constant = CONSTANTS.get(value);
             if (constant == null) {
                 throw new IllegalArgumentException(value);
             } else {

@@ -60,6 +60,7 @@ class Common:
 
   SystemMode = SystemMode
   IotProvider = IotProvider
+  FeatureStage = FeatureStage
   BlobPhase = BlobPhase
   SystemBlobsets = SystemBlobsets
   Entry = Entry

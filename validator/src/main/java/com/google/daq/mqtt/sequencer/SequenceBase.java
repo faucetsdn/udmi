@@ -17,7 +17,8 @@ import static java.nio.file.Files.newOutputStream;
 import static java.util.Optional.ofNullable;
 import static udmi.schema.Bucket.SYSTEM;
 import static udmi.schema.Bucket.UNKNOWN_DEFAULT;
-import static udmi.schema.SequenceValidationState.FeatureStage.ALPHA;
+import static udmi.schema.FeatureEnumeration.FeatureStage.ALPHA;
+import static udmi.schema.FeatureEnumeration.FeatureStage.BETA;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
@@ -84,13 +85,13 @@ import udmi.schema.Entry;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
 import udmi.schema.ExecutionConfiguration;
+import udmi.schema.FeatureEnumeration.FeatureStage;
 import udmi.schema.FeatureValidationState;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.Operation;
 import udmi.schema.PointsetEvent;
 import udmi.schema.SequenceValidationState;
-import udmi.schema.SequenceValidationState.FeatureStage;
 import udmi.schema.SequenceValidationState.SequenceResult;
 import udmi.schema.State;
 import udmi.schema.SystemConfig;
@@ -106,7 +107,7 @@ public class SequenceBase {
   public static final String EMPTY_MESSAGE = "{}";
   public static final String SERIAL_NO_MISSING = "//";
   public static final String VALIDATION_STATE_TOPIC = "validation/state";
-  static final FeatureStage DEFAULT_MIN_STAGE = FeatureStage.BETA;
+  static final FeatureStage DEFAULT_MIN_STAGE = BETA;
   private static final int FUNCTIONS_VERSION_BETA = Validator.REQUIRED_FUNCTION_VER;
   private static final int FUNCTIONS_VERSION_ALPHA = 8; // Version required for alpha execution.
   private static final long CONFIG_BARRIER_MS = 1000;
@@ -341,7 +342,7 @@ public class SequenceBase {
   private static int getRequiredFunctionsVersion() {
     FeatureStage minStage = isNullOrEmpty(validatorConfig.min_stage) ? DEFAULT_MIN_STAGE
         : FeatureStage.valueOf(validatorConfig.min_stage);
-    return SequenceRunner.processGiven(FeatureStage.ALPHA, minStage) ? FUNCTIONS_VERSION_ALPHA
+    return SequenceRunner.processGiven(ALPHA, minStage) ? FUNCTIONS_VERSION_ALPHA
         : FUNCTIONS_VERSION_BETA;
   }
 

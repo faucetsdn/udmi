@@ -8,8 +8,8 @@ import static org.junit.Assert.assertNotEquals;
 import static udmi.schema.Bucket.ENDPOINT;
 import static udmi.schema.Bucket.SYSTEM_MODE;
 import static udmi.schema.Category.BLOBSET_BLOB_APPLY;
-import static udmi.schema.SequenceValidationState.FeatureStage.ALPHA;
-import static udmi.schema.SequenceValidationState.FeatureStage.DISABLED;
+import static udmi.schema.FeatureEnumeration.FeatureStage.ALPHA;
+import static udmi.schema.FeatureEnumeration.FeatureStage.DISABLED;
 
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;

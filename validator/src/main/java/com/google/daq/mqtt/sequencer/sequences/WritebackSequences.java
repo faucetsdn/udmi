@@ -3,8 +3,7 @@ package com.google.daq.mqtt.sequencer.sequences;
 import static com.google.daq.mqtt.util.TimePeriodConstants.NINETY_SECONDS_MS;
 import static udmi.schema.Bucket.SYSTEM;
 import static udmi.schema.Bucket.WRITEBACK;
-import static udmi.schema.SequenceValidationState.FeatureStage.ALPHA;
-import static udmi.schema.SequenceValidationState.FeatureStage.BETA;
+import static udmi.schema.FeatureEnumeration.FeatureStage.ALPHA;
 
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.PointsetBase;
