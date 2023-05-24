@@ -504,8 +504,6 @@ public class SequenceBase {
    */
   @Before
   public void setUp() {
-    Assume.assumeFalse("forced skip", true);
-
     if (activeInstance == null) {
       throw new RuntimeException("Active sequencer instance not setup, aborting");
     }
