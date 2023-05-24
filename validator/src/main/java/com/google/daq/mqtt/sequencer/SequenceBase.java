@@ -15,6 +15,7 @@ import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static java.nio.file.Files.newOutputStream;
 import static java.util.Optional.ofNullable;
+import static org.junit.Assume.assumeTrue;
 import static udmi.schema.Bucket.SYSTEM;
 import static udmi.schema.Bucket.UNKNOWN_DEFAULT;
 import static udmi.schema.FeatureEnumeration.FeatureStage.ALPHA;
@@ -1474,6 +1475,9 @@ public class SequenceBase {
         setupSequencer();
         putSequencerResult(description, SequenceResult.START);
         checkState(reflector().isActive(), "Reflector is not currently active");
+
+        Bucket bucket = getBucket(description);
+        assumeTrue("Feature bucket not enabled", bucket == SYSTEM);
 
         testName = description.getMethodName();
         testDescription = getTestSummary(description);
