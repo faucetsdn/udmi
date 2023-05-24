@@ -206,6 +206,7 @@ public class SequenceBase {
   private boolean enforceSerial;
   private String testName;
   private String testDescription;
+  private Bucket testBucket;
   private FeatureStage testStage;
   private long testStartTimeMs;
   private File testDir;
@@ -508,7 +509,9 @@ public class SequenceBase {
     if (activeInstance == null) {
       throw new RuntimeException("Active sequencer instance not setup, aborting");
     }
-    waitingCondition.clear();
+
+    assumeTrue("Feature bucket not enabled", testBucket == SYSTEM);
+
     waitingCondition.push("starting test wrapper");
     checkState(reflector().isActive(), "Reflector is not currently active");
 
@@ -1476,12 +1479,10 @@ public class SequenceBase {
         putSequencerResult(description, SequenceResult.START);
         checkState(reflector().isActive(), "Reflector is not currently active");
 
-        Bucket bucket = getBucket(description);
-        assumeTrue("Feature bucket not enabled", bucket == SYSTEM);
-
         testName = description.getMethodName();
         testDescription = getTestSummary(description);
         testStage = getTestStage(description);
+        testBucket = getBucket(description);
 
         testStartTimeMs = System.currentTimeMillis();
 
