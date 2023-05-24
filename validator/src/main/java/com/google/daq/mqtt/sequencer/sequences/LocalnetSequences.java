@@ -1,8 +1,8 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
 import com.google.daq.mqtt.sequencer.SequenceBase;
-import org.junit.Test;
 import org.junit.AssumptionViolatedException;
+import org.junit.Test;
 
 /**
  * Validate localnet related functionality.
@@ -12,7 +12,8 @@ public class LocalnetSequences extends SequenceBase {
   private void familyAddr(String family) {
     String expected = catchToNull(() -> deviceMetadata.localnet.families.get(family).addr);
     if (expected == null) {
-      throw new AssumptionViolatedException(String.format("No %S address defined in metadata", family));
+      throw new AssumptionViolatedException(
+          String.format("No %S address defined in metadata", family));
     }
     untilTrue("localnet families available", () -> deviceState.localnet.families.size() > 0);
     String actual = catchToNull(() -> deviceState.localnet.families.get(family).addr);

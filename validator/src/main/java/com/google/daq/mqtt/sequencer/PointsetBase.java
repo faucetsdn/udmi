@@ -44,7 +44,8 @@ public abstract class PointsetBase extends SequenceBase {
     if (deviceMetadata.testing == null
         || deviceMetadata.testing.targets == null
         || !deviceMetadata.testing.targets.containsKey(target)) {
-      throw new AssumptionViolatedException(String.format("Missing '%s' target specification", target));
+      throw new AssumptionViolatedException(
+          String.format("Missing '%s' target specification", target));
     }
     TargetTestingModel testingMetadata = deviceMetadata.testing.targets.get(target);
     if (deviceMetadata.pointset == null || deviceMetadata.pointset.points == null) {
