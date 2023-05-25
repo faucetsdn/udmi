@@ -11,6 +11,6 @@
     * Remove `discovery.generation`
 1. Wait for cleared enumeration generation
 1. Check that no family enumeration
-1. Check that Feature enumeration matches metadata: missing {  }, extra {  }
-1. Check that ALl enumerated features are official {  }
+1. Check that feature enumeration matches metadata
+1. Check that all enumerated features are official buckets
 1. Check that no point enumeration

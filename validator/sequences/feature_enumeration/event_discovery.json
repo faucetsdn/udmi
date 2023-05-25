@@ -1,21 +1,13 @@
 {
   "features" : {
+    "enumeration.features" : {
+      "stage" : "beta"
+    },
     "enumeration" : {
-      "stage" : "stable",
-      "features" : {
-        "features" : {
-          "stage" : "stable"
-        },
-        "pointset" : {
-          "stage" : "beta"
-        },
-        "families" : {
-          "stage" : "alpha"
-        }
-      }
+      "stage" : "beta"
     }
   },
-  "generation" : "2023-03-07T16:41:59Z",
-  "timestamp" : "2023-03-07T16:41:59.003Z",
+  "generation" : "2023-05-25T16:59:25Z",
+  "timestamp" : "2023-05-25T16:59:27.003Z",
   "version" : "1.4.1"
 }
