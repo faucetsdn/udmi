@@ -1,8 +1,6 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
-import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
-import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -13,6 +11,7 @@ import static udmi.schema.Bucket.ENUMERATION_FAMILIES;
 import static udmi.schema.Bucket.ENUMERATION_FEATURES;
 import static udmi.schema.Bucket.ENUMERATION_POINTSET;
 import static udmi.schema.FeatureEnumeration.FeatureStage.ALPHA;
+import static udmi.schema.FeatureEnumeration.FeatureStage.BETA;
 
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
@@ -33,6 +32,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import org.junit.AssumptionViolatedException;
 import org.junit.Test;
+import udmi.schema.Bucket;
 import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvent;
 import udmi.schema.Enumerate;
@@ -94,7 +94,7 @@ public class DiscoverySequences extends SequenceBase {
     if (isTrue(enumerate.uniqs)) {
       int expectedSize = Optional.ofNullable(deviceMetadata.pointset.points).map(HashMap::size)
           .orElse(0);
-      checkThat("points enumerated " + expectedSize, () -> event.uniqs.size() == expectedSize);
+      checkThat("enumerated point count matches", () -> event.uniqs.size() == expectedSize);
     } else {
       checkThat("no point enumeration", () -> event.uniqs == null);
     }
@@ -105,9 +105,11 @@ public class DiscoverySequences extends SequenceBase {
     Set<String> enabledFeatures = deviceMetadata.features.keySet();
     SetView<String> extraFeatures = Sets.difference(enumeratedFeatures, enabledFeatures);
     SetView<String> missingFeatures = Sets.difference(enabledFeatures, enumeratedFeatures);
-    assertTrue(format("Feature enumeration mismatch: missing { %s }, extra { %s }",
-            CSV_JOINER.join(missingFeatures), CSV_JOINER.join(extraFeatures)),
-        extraFeatures.isEmpty() && missingFeatures.isEmpty());
+    checkThat("feature enumeration matches metadata",
+        () -> extraFeatures.isEmpty() && missingFeatures.isEmpty());
+    Set<String> officialFeatures = enumeratedFeatures.stream().filter(Bucket::contains).collect(Collectors.toSet());
+    SetView<String> unofficial = Sets.difference(enabledFeatures, officialFeatures);
+    checkThat("all enumerated features are official buckets", unofficial::isEmpty);
   }
 
   private boolean isTrue(Boolean condition) {
@@ -115,7 +117,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   @Test
-  @Feature(bucket = ENUMERATION, stage = ALPHA)
+  @Feature(bucket = ENUMERATION, stage = BETA)
   public void empty_enumeration() {
     Enumerate enumerate = new Enumerate();
     DiscoveryEvent event = runEnumeration(enumerate);
@@ -135,7 +137,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   @Test
-  @Feature(bucket = ENUMERATION_FEATURES, stage = ALPHA)
+  @Feature(bucket = ENUMERATION_FEATURES, stage = BETA)
   public void feature_enumeration() {
     Enumerate enumerate = new Enumerate();
     enumerate.features = true;
