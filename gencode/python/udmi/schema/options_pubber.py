@@ -20,6 +20,7 @@ class PubberOptions:
     self.redirectRegistry = None
     self.smokeCheck = None
     self.noPointState = None
+    self.featureEnableSwap = None
     self.disableWriteback = None
     self.noWriteback = None
 
@@ -43,6 +44,7 @@ class PubberOptions:
     result.redirectRegistry = source.get('redirectRegistry')
     result.smokeCheck = source.get('smokeCheck')
     result.noPointState = source.get('noPointState')
+    result.featureEnableSwap = source.get('featureEnableSwap')
     result.disableWriteback = source.get('disableWriteback')
     result.noWriteback = source.get('noWriteback')
     return result
@@ -95,6 +97,8 @@ class PubberOptions:
       result['smokeCheck'] = self.smokeCheck # 5
     if self.noPointState:
       result['noPointState'] = self.noPointState # 5
+    if self.featureEnableSwap:
+      result['featureEnableSwap'] = self.featureEnableSwap # 5
     if self.disableWriteback:
       result['disableWriteback'] = self.disableWriteback # 5
     if self.noWriteback:

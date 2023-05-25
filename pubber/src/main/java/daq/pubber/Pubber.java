@@ -403,6 +403,7 @@ public class Pubber {
   }
 
   private void initializeDevice() {
+    SupportedFeatures.setFeatureSwap(configuration.options.featureEnableSwap);
     deviceState.system = new SystemState();
     deviceState.system.operation = new StateSystemOperation();
     if (!TRUE.equals(configuration.options.noLastStart)) {

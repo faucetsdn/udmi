@@ -1,9 +1,12 @@
 package daq.pubber;
 
+import static com.google.udmi.util.GeneralUtils.isTrue;
 import static udmi.schema.Bucket.ENUMERATION;
 import static udmi.schema.Bucket.ENUMERATION_FEATURES;
+import static udmi.schema.Bucket.UNKNOWN_DEFAULT;
 import static udmi.schema.FeatureEnumeration.FeatureStage.BETA;
 
+import com.google.udmi.util.GeneralUtils;
 import java.util.HashMap;
 import java.util.Map;
 import udmi.schema.Bucket;
@@ -30,5 +33,12 @@ public abstract class SupportedFeatures {
 
   public static Map<String, FeatureEnumeration> getFeatures() {
     return FEATURES_MAP;
+  }
+
+  public static void setFeatureSwap(Boolean option) {
+    if (isTrue(option)) {
+      add(UNKNOWN_DEFAULT, BETA);
+      FEATURES_MAP.remove(ENUMERATION.value());
+    }
   }
 }
