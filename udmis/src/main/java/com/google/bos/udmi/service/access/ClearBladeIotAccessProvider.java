@@ -1,5 +1,6 @@
 package com.google.bos.udmi.service.access;
 
+import static com.clearblade.cloud.iot.v1.devicetypes.GatewayType.NON_GATEWAY;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -183,7 +184,6 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
         RegistryName parent = RegistryName.of(projectId, location, registryId);
         BindDeviceToGatewayRequest request =
             BindDeviceToGatewayRequest.Builder.newBuilder()
-                // TODO: Inconsistent call parameters, reported as DESK-2316.
                 .setParent(parent.getRegistryFullName())
                 .setDevice(id)
                 .setGateway(gatewayId)
@@ -247,12 +247,12 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
   private CloudModel createDevice(String registryId, Device device) {
     DeviceManagerClient deviceManagerClient = getDeviceManagerClient();
     String location = getRegistryLocation(registryId);
-    RegistryName parent = RegistryName.of(projectId, location, registryId);
+    String parent = RegistryName.of(projectId, location, registryId).toString();
     CreateDeviceRequest request =
         CreateDeviceRequest.Builder.newBuilder().setParent(parent).setDevice(device)
             .build();
     requireNonNull(deviceManagerClient.createDevice(request),
-        "create device failed for " + parent.getRegistryFullName());
+        "create device failed for " + parent);
     CloudModel cloudModel = new CloudModel();
     cloudModel.operation = Operation.CREATE;
     cloudModel.num_id = extractNumId(device);
@@ -284,8 +284,7 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
 
   private GatewayListOptions getGatewayListOptions(String gatewayId) {
     return GatewayListOptions.newBuilder()
-        // TODO: Setting .setGatewayType blocks associations parameter, reported as DESK-2318.
-        //.setGatewayType(NON_GATEWAY)
+        .setGatewayType(NON_GATEWAY)
         .setAssociationsGatewayId(requireNonNull(gatewayId, "gateway undefined"))
         .build();
   }
