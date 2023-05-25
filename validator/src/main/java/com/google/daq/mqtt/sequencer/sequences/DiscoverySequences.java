@@ -105,10 +105,10 @@ public class DiscoverySequences extends SequenceBase {
     Set<String> enabledFeatures = deviceMetadata.features.keySet();
     SetView<String> extraFeatures = Sets.difference(enumeratedFeatures, enabledFeatures);
     SetView<String> missingFeatures = Sets.difference(enabledFeatures, enumeratedFeatures);
-    checkThat("feature enumeration matches metadata",
-        () -> extraFeatures.isEmpty() && missingFeatures.isEmpty());
-    Set<String> officialFeatures = enumeratedFeatures.stream().filter(Bucket::contains).collect(Collectors.toSet());
-    SetView<String> unofficial = Sets.difference(enabledFeatures, officialFeatures);
+    SetView<String> difference = Sets.union(extraFeatures, missingFeatures);
+    checkThat("feature enumeration matches metadata", difference::isEmpty);
+    Set<String> unofficial = enumeratedFeatures.stream()
+        .filter(feature -> !Bucket.contains(feature)).collect(Collectors.toSet());
     checkThat("all enumerated features are official buckets", unofficial::isEmpty);
   }
 
@@ -175,15 +175,14 @@ public class DiscoverySequences extends SequenceBase {
     scheduleScan(startTime, null, shouldEnumerate);
     untilTrue("scheduled scan start",
         () -> families.stream().anyMatch(familyScanActivated(startTime))
-            || families.stream()
-            .anyMatch(family -> !stateGenerationSame(family, previousGenerations))
+            || families.stream().anyMatch(this::stateGenerationMismatch)
             || !deviceState.timestamp.before(startTime));
     if (deviceState.timestamp.before(startTime)) {
       warning("scan started before activation: " + deviceState.timestamp + " < " + startTime);
       assertFalse("premature activation",
           families.stream().anyMatch(familyScanActivated(startTime)));
       assertFalse("premature generation",
-          families.stream().anyMatch(family -> !stateGenerationSame(family, previousGenerations)));
+          families.stream().anyMatch(this::stateGenerationMismatch));
       fail("unknown reason");
     }
     untilTrue("scan activation", () -> families.stream().allMatch(familyScanActivated(startTime)));
@@ -258,8 +257,8 @@ public class DiscoverySequences extends SequenceBase {
     return catchToNull(() -> getStateFamily(family).generation);
   }
 
-  private boolean stateGenerationSame(String family, Map<String, Date> previousGenerations) {
-    return Objects.equals(previousGenerations.get(family), getStateFamilyGeneration(family));
+  private boolean stateGenerationMismatch(String family) {
+    return !Objects.equals(previousGenerations.get(family), getStateFamilyGeneration(family));
   }
 
   private FamilyDiscoveryState getStateFamily(String family) {
