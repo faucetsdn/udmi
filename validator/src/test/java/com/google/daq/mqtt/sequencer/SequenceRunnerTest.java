@@ -1,5 +1,6 @@
 package com.google.daq.mqtt.sequencer;
 
+import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -17,14 +18,20 @@ import udmi.schema.ExecutionConfiguration;
 public class SequenceRunnerTest {
 
   private static final String TEST_DEVICE = "AHU-1";
+  // TODO: Dynamically pull this count form the udmi_site_model/devices/ directory.
   private static final int MODEL_DEVICE_COUNT = 4;
 
-  // Minimum number of tests expected. This is a "low-water mark" to be increased as appropriate.
-  // Only tracks tests marked as non-ALPHA.
-  private static final int TEST_COUNT_MIN = 2;
-  private static final int TEST_COUNT_MAX = TEST_COUNT_MIN * 2;
-  private static final int SITE_COUNT_MAX = TEST_COUNT_MAX * MODEL_DEVICE_COUNT;
+  // Minimum number of tests expected. This is a "low-water mark" to be increased as appropriate
+  // when new tests are added. Only tracks tests marked as non-ALPHA.
+  // TODO: Dynamically pull this count from the etc/sequencer.out file.
+  private static final int TEST_COUNT_MIN = 4;
   private static final int SITE_COUNT_MIN = TEST_COUNT_MIN * MODEL_DEVICE_COUNT;
+
+  private static void assertTestCount(int runCount, int countMin) {
+    int countMax = countMin * 2;
+    String message = format("%d executions between %d and %d", runCount, countMin, countMax);
+    assertTrue(message, runCount >= countMin && runCount < countMax);
+  }
 
   @Test
   public void processSite() {
@@ -35,7 +42,7 @@ public class SequenceRunnerTest {
 
     // TODO: SequenceRunner is not properly mocked, so everything fails.
     assertEquals("site execution failures", runCount, failures);
-    assertTrue("site executions", runCount >= SITE_COUNT_MIN && runCount < SITE_COUNT_MAX);
+    assertTestCount(runCount, SITE_COUNT_MIN);
   }
 
   @Test
@@ -48,7 +55,7 @@ public class SequenceRunnerTest {
 
     // TODO: SequenceRunner is not properly mocked, so everything fails.
     assertEquals("site execution failures", runCount, failures);
-    assertTrue("device executions", runCount >= TEST_COUNT_MIN && runCount < TEST_COUNT_MAX);
+    assertTestCount(runCount, TEST_COUNT_MIN);
   }
 
   private Map<String, String> makeParams(ExecutionConfiguration config) {
