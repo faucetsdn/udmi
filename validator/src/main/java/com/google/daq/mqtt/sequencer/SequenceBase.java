@@ -539,8 +539,9 @@ public class SequenceBase {
   }
 
   protected boolean isBucketEnabled(Bucket bucket) {
-    return ifNotNullGet(deviceMetadata.features, features -> features.containsKey(bucket.value()),
-        true);
+    boolean allTests = (SequenceRunner.getFeatureMinStage().compareTo(ALPHA)) <= 0;
+    return allTests || ifNotNullGet(deviceMetadata.features,
+        features -> features.containsKey(bucket.value()), true);
   }
 
   protected void resetConfig() {
