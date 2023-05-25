@@ -183,6 +183,7 @@ public class SequenceBase {
   private static SequenceBase activeInstance;
   private static MessageBundle stashedBundle;
   private static boolean resetRequired = true;
+  private static boolean enableAllTargets;
 
   static {
     // Sanity check to make sure ALPHA version is increased if forced by increased BETA.
@@ -538,9 +539,12 @@ public class SequenceBase {
     debug(String.format("stage begin %s at %s", waitingCondition.peek(), timeSinceStart()));
   }
 
+  static void enableAllBuckets(boolean enabled) {
+    enableAllTargets = enabled;
+  }
+
   protected boolean isBucketEnabled(Bucket bucket) {
-    boolean allTests = (SequenceRunner.getFeatureMinStage().compareTo(ALPHA)) <= 0;
-    return allTests || ifNotNullGet(deviceMetadata.features,
+    return enableAllTargets || ifNotNullGet(deviceMetadata.features,
         features -> features.containsKey(bucket.value()), true);
   }
 

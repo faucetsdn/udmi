@@ -1,6 +1,7 @@
 package com.google.daq.mqtt.sequencer;
 
 import static joptsimple.internal.Strings.isNullOrEmpty;
+import static udmi.schema.FeatureEnumeration.FeatureStage.ALPHA;
 
 import com.google.common.base.Joiner;
 import com.google.daq.mqtt.WebServerRunner;
@@ -142,6 +143,8 @@ public class SequenceRunner {
     }
     System.err.println("Target sequence classes:\n  " + Joiner.on("\n  ").join(sequenceClasses));
     SequenceBase.ensureValidatorConfig();
+    boolean enableAllBuckets = shouldExecuteAll() || !targets.isEmpty();
+    SequenceBase.enableAllBuckets(enableAllBuckets);
     String deviceId = SequenceBase.validatorConfig.device_id;
     Set<String> remainingMethods = new HashSet<>(targets);
     int runCount = 0;
@@ -187,7 +190,11 @@ public class SequenceRunner {
   }
 
   private boolean isTargetMethod(String methodName) {
-    return targets.isEmpty() || targets.contains(methodName);
+    return shouldExecuteAll() || targets.isEmpty() || targets.contains(methodName);
+  }
+
+  private boolean shouldExecuteAll() {
+    return (getFeatureMinStage().compareTo(ALPHA)) <= 0;
   }
 
   private boolean shouldProcessMethod(Method method) {

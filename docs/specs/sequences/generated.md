@@ -27,3 +27,33 @@ Some caveats:
 -->
 
 <!-- START GENERATED, do not edit anything after this line! -->
+* [extra_config](#extra_config): Check that the device correctly handles an extra out-of-schema field
+* [system_last_update](#system_last_update): Check that last_update state is correctly set in response to a config update.
+
+## extra_config (BETA)
+
+Check that the device correctly handles an extra out-of-schema field
+
+1. Update config before last_config not null:
+    * Set `system.min_loglevel` = `100`
+1. Wait for last_config not null
+1. Wait for system operational
+1. Check that no interesting system status
+1. Wait for log category `system.config.receive` level `DEBUG` was logged
+1. Wait for last_config updated
+1. Wait for system operational
+1. Check that no interesting system status
+1. Wait for log category `system.config.parse` level `DEBUG` was logged
+1. Wait for log category `system.config.apply` level `NOTICE` was logged
+1. Wait for log category `system.config.receive` level `DEBUG` was logged
+1. Wait for last_config updated again
+1. Wait for system operational
+1. Check that no interesting system status
+1. Wait for log category `system.config.parse` level `DEBUG` was logged
+1. Wait for log category `system.config.apply` level `NOTICE` was logged
+
+## system_last_update (STABLE)
+
+Check that last_update state is correctly set in response to a config update.
+
+1. Wait for state last_config matches config timestamp
