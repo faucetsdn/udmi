@@ -1,6 +1,8 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
+import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
+import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -12,6 +14,8 @@ import static udmi.schema.Bucket.ENUMERATION_FEATURES;
 import static udmi.schema.Bucket.ENUMERATION_POINTSET;
 import static udmi.schema.FeatureEnumeration.FeatureStage.ALPHA;
 
+import com.google.common.collect.Sets;
+import com.google.common.collect.Sets.SetView;
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
@@ -34,7 +38,7 @@ import udmi.schema.DiscoveryEvent;
 import udmi.schema.Enumerate;
 import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyDiscoveryState;
-import udmi.schema.FeatureEnumeration.FeatureStage;
+import udmi.schema.FeatureEnumeration;
 
 /**
  * Validation tests for discovery scan and enumeration capabilities.
@@ -76,16 +80,13 @@ public class DiscoverySequences extends SequenceBase {
       Set<String> models = Optional.ofNullable(deviceMetadata.localnet)
           .map(localnet -> localnet.families.keySet()).orElse(null);
       Set<String> events = Optional.ofNullable(event.families).map(Map::keySet).orElse(null);
-      System.err.println("TAP models " + JsonUtil.stringify(models));
-      System.err.println("TAP events " + JsonUtil.stringify(events));
       checkThat("family enumeration matches", () -> models.size() == events.size());
     } else {
       checkThat("no family enumeration", () -> event.families == null);
     }
 
     if (isTrue(enumerate.features)) {
-      checkThat("feature enumeration feature is stable",
-          () -> event.features.get(ENUMERATION_FEATURES.value()).stage == FeatureStage.STABLE);
+      checkFeatureEnumeration(event.features);
     } else {
       checkThat("no feature enumeration", () -> event.features == null);
     }
@@ -97,6 +98,16 @@ public class DiscoverySequences extends SequenceBase {
     } else {
       checkThat("no point enumeration", () -> event.uniqs == null);
     }
+  }
+
+  private void checkFeatureEnumeration(Map<String, FeatureEnumeration> features) {
+    Set<String> enumeratedFeatures = features.keySet();
+    Set<String> enabledFeatures = deviceMetadata.features.keySet();
+    SetView<String> extraFeatures = Sets.difference(enumeratedFeatures, enabledFeatures);
+    SetView<String> missingFeatures = Sets.difference(enabledFeatures, enumeratedFeatures);
+    assertTrue(format("Feature enumeration mismatch: missing { %s }, extra { %s }",
+            CSV_JOINER.join(missingFeatures), CSV_JOINER.join(extraFeatures)),
+        extraFeatures.isEmpty() && missingFeatures.isEmpty());
   }
 
   private boolean isTrue(Boolean condition) {
@@ -145,9 +156,9 @@ public class DiscoverySequences extends SequenceBase {
   @Feature(bucket = ENUMERATION, stage = ALPHA)
   public void multi_enumeration() {
     Enumerate enumerate = new Enumerate();
-    enumerate.families = true;
-    enumerate.features = true;
-    enumerate.uniqs = true;
+    enumerate.families = isBucketEnabled(ENUMERATION_FAMILIES);
+    enumerate.features = isBucketEnabled(ENUMERATION_FEATURES);
+    enumerate.uniqs = isBucketEnabled(ENUMERATION_POINTSET);
     DiscoveryEvent event = runEnumeration(enumerate);
     checkSelfEnumeration(event, enumerate);
   }

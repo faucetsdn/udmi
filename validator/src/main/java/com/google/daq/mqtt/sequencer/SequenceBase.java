@@ -538,7 +538,7 @@ public class SequenceBase {
     debug(String.format("stage begin %s at %s", waitingCondition.peek(), timeSinceStart()));
   }
 
-  private boolean isBucketEnabled(Bucket bucket) {
+  protected boolean isBucketEnabled(Bucket bucket) {
     return ifNotNullGet(deviceMetadata.features, features -> features.containsKey(bucket.value()),
         true);
   }
