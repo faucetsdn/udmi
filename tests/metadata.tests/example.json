@@ -57,5 +57,10 @@
         "target_value": -20
       }
     }
+  },
+  "features": {
+    "system": { },
+    "enumeration": { "stage": "beta" },
+    "enumeration.pointset": { "stage": "alpha" }
   }
 }
