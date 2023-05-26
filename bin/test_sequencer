@@ -7,15 +7,14 @@ ROOT_DIR=$(dirname $0)/..
 cd $ROOT_DIR
 
 if [[ $1 == 'clean' ]]; then
-    clean_cache=y
     shift
+    clean_cache=y
 fi
 
 if [[ $1 == 'alpha' ]]; then
-    # TODO: Make mode where it only runs tests that don't have results.
-    validate_out=y
-    seq_opts=-a
     shift
+    # TODO: Make mode where it only runs tests that don't have results.
+    seq_opts=-a
 fi
 
 if [[ $# -lt 1 ]]; then
@@ -101,21 +100,20 @@ fi
 if [[ -n $clean_cache ]]; then
     echo Cleaning sequencer result cache...
     rm -rf validator/sequences
-fi
-
-if [[ -n $validate_out ]]; then
+else
     bin/sequencer_cache
+
     echo Comparing diff out/sequencer.out etc/sequencer.out
     diff -u out/sequencer.out etc/sequencer.out
-
-    cp docs/specs/sequences/generated.md out/  # Save for test/comparison later
-    bin/gencode_seq
-
-    echo Comparing diff out/generated.md docs/specs/sequences/generated.md
-    diff -u out/generated.md docs/specs/sequences/generated.md || (
-        echo Run bin/gencode_seq to regenerate output, if necessary.
-        false
-    )
 fi
+
+cp docs/specs/sequences/generated.md out/  # Save for test/comparison later
+bin/gencode_seq
+
+echo Comparing diff out/generated.md docs/specs/sequences/generated.md
+diff -u out/generated.md docs/specs/sequences/generated.md || (
+    echo Run bin/gencode_seq to regenerate output, if necessary.
+    false
+)
 
 echo Done with base test_sequencer run.
