@@ -1021,7 +1021,7 @@ public class SequenceBase {
 
   private void processMessage() {
     MessageBundle bundle = nextMessageBundle();
-    processCommand(bundle.message, bundle.attributes);
+    processMessage(bundle.message, bundle.attributes);
   }
 
   /**
@@ -1054,19 +1054,24 @@ public class SequenceBase {
     }
   }
 
-  private void processCommand(Map<String, Object> message, Map<String, String> attributes) {
+  private void processMessage(Map<String, Object> message, Map<String, String> attributes) {
     String deviceId = attributes.get("deviceId");
     String subFolderRaw = attributes.get("subFolder");
     String subTypeRaw = attributes.get("subType");
     String transactionId = attributes.get("transactionId");
+
     if (CONFIG_SUBTYPE.equals(subTypeRaw)) {
       String attributeMark = String.format("%s/%s/%s", deviceId, subTypeRaw, subFolderRaw);
       trace("received command " + attributeMark);
     }
+
     if (!SequenceBase.getDeviceId().equals(deviceId)) {
       return;
     }
+
     recordRawMessage(message, attributes);
+
+    validateMessage(subTypeRaw, subFolderRaw, message);
 
     if (SubFolder.ERROR.value().equals(subFolderRaw)) {
       handlePipelineError(subTypeRaw, message);
@@ -1075,6 +1080,10 @@ public class SequenceBase {
     } else {
       handleDeviceMessage(message, subFolderRaw, subTypeRaw, transactionId);
     }
+  }
+
+  private void validateMessage(String subTypeRaw, String subFolderRaw, Map<String, Object> message) {
+
   }
 
   private void handlePipelineError(String subTypeRaw, Map<String, Object> message) {
