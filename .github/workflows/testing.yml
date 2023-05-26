@@ -158,7 +158,7 @@ jobs:
         run: bin/run_tests install_dependencies
       - name: registrar clean
         run: |
-          bin/test_regclean $GCP_TARGET_PROJECT
+          bin/test_regclean //gcp/$GCP_TARGET_PROJECT
       - name: sequence tests
         run: |
           bin/test_sequencer $GCP_TARGET_PROJECT
@@ -198,7 +198,7 @@ jobs:
         run: bin/run_tests install_dependencies
       - name: registrar clean
         run: |
-          bin/test_regclean $GCP_TARGET_PROJECT
+          bin/test_regclean //gcp/$GCP_TARGET_PROJECT
       - name: sequence tests
         run: |
           bin/test_sequencer $GCP_TARGET_PROJECT
@@ -237,7 +237,7 @@ jobs:
         run: bin/run_tests install_dependencies
       - name: registrar clean
         run: |
-          bin/test_regclean $GCP_TARGET_PROJECT
+          bin/test_regclean //gcp/$GCP_TARGET_PROJECT
       - name: telemetry validator
         run: |
           bin/test_validator $GCP_TARGET_PROJECT
