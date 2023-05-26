@@ -140,7 +140,7 @@ public class Validator {
   private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
   private final Map<String, AtomicInteger> deviceMessageIndex = new HashMap<>();
   private final List<MessagePublisher> dataSinks = new ArrayList<>();
-  private final List<String> targetDevices;
+  private final Set<String> targetDevices;
   private ImmutableSet<String> expectedDevices;
   private File outBaseDir;
   private File schemaRoot;
@@ -152,6 +152,15 @@ public class Validator {
   private boolean simulatedMessages;
   private Instant mockNow = null;
   private boolean forceUpgrade;
+
+  /**
+   * Create a simplistic validator for encapsulated use.
+   */
+  public Validator() {
+    setSchemaSpec("schema");
+    client = new NullPublisher();
+    targetDevices = ImmutableSet.of();
+  }
 
   /**
    * Create validator with the given args.
@@ -168,7 +177,7 @@ public class Validator {
     if (client == null) {
       validateReflector();
     }
-    targetDevices = listCopy;
+    targetDevices = Set.copyOf(listCopy);
   }
 
   /**
@@ -488,7 +497,8 @@ public class Validator {
         base64Devices.add(deviceId);
       }
 
-      validateCore(device, message, attributes);
+      prepareDeviceOutDir(message, attributes, deviceId, schemaName);
+      validateDeviceMessage(device, message, attributes);
 
       if (!device.hasErrors()) {
         System.err.printf("Validation complete %s/%s%n", deviceId, schemaName);
@@ -500,9 +510,8 @@ public class Validator {
     return device;
   }
 
-  private void validateCore(ReportingDevice device, Map<String, Object> message,
-      Map<String, String> attributes)
-      throws IOException {
+  public void validateDeviceMessage(ReportingDevice device, Map<String, Object> message,
+      Map<String, String> attributes) {
     String deviceId = attributes.get("deviceId");
     device.clearMessageEntries();
     String schemaName = messageSchema(attributes);
@@ -526,7 +535,6 @@ public class Validator {
 
     upgradeMessage(schemaName, message);
     sanitizeMessage(schemaName, message);
-    prepareDeviceOutDir(message, attributes, deviceId, schemaName);
 
     String timeString = (String) message.get(TIMESTAMP_KEY);
     String subTypeRaw = Optional.ofNullable(attributes.get(SUBTYPE_PROPERTY_KEY))
@@ -577,7 +585,6 @@ public class Validator {
     } else {
       extraDevices.add(deviceId);
     }
-    return;
   }
 
   private void sendValidationResult(Map<String, String> origAttributes,

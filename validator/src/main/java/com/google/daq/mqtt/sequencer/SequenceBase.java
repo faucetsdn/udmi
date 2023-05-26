@@ -32,6 +32,7 @@ import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.util.ObjectDiffEngine;
 import com.google.daq.mqtt.validator.AugmentedState;
 import com.google.daq.mqtt.validator.AugmentedSystemConfig;
+import com.google.daq.mqtt.validator.ReportingDevice;
 import com.google.daq.mqtt.validator.Validator;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
 import com.google.udmi.util.CleanDateFormat;
@@ -160,6 +161,7 @@ public class SequenceBase {
   private static final ObjectDiffEngine RECV_STATE_DIFFERNATOR = new ObjectDiffEngine();
   private static final Set<String> configTransactions = new ConcurrentSkipListSet<>();
   private static final String VALIDATION_STATE_FILE = "sequencer_state.json";
+  private static final Validator MESSAGE_VALIDATOR = new Validator();
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -1071,7 +1073,7 @@ public class SequenceBase {
 
     recordRawMessage(message, attributes);
 
-    validateMessage(subTypeRaw, subFolderRaw, message);
+    validateMessage(attributes, message);
 
     if (SubFolder.ERROR.value().equals(subFolderRaw)) {
       handlePipelineError(subTypeRaw, message);
@@ -1082,8 +1084,10 @@ public class SequenceBase {
     }
   }
 
-  private void validateMessage(String subTypeRaw, String subFolderRaw, Map<String, Object> message) {
-
+  private void validateMessage(Map<String, String> attributes, Map<String, Object> message) {
+    String deviceId = attributes.get("deviceId");
+    ReportingDevice reportingDevice = new ReportingDevice(deviceId);
+    MESSAGE_VALIDATOR.validateDeviceMessage(reportingDevice, message, attributes);
   }
 
   private void handlePipelineError(String subTypeRaw, Map<String, Object> message) {
