@@ -1,11 +1,19 @@
 package daq.pubber;
 
 import static com.google.udmi.util.GeneralUtils.isTrue;
+import static com.google.udmi.util.JsonUtil.writeFile;
 import static udmi.schema.Bucket.ENUMERATION;
+import static udmi.schema.Bucket.ENUMERATION_FAMILIES;
 import static udmi.schema.Bucket.ENUMERATION_FEATURES;
+import static udmi.schema.Bucket.ENUMERATION_POINTSET;
 import static udmi.schema.Bucket.UNKNOWN_DEFAULT;
+import static udmi.schema.FeatureEnumeration.FeatureStage.ALPHA;
 import static udmi.schema.FeatureEnumeration.FeatureStage.BETA;
+import static udmi.schema.FeatureEnumeration.FeatureStage.PREVIEW;
+import static udmi.schema.FeatureEnumeration.FeatureStage.STABLE;
 
+import com.google.udmi.util.JsonUtil;
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import udmi.schema.Bucket;
@@ -19,9 +27,14 @@ public abstract class SupportedFeatures {
 
   private static final Map<String, FeatureEnumeration> FEATURES_MAP = new HashMap<>();
 
+  private static final String PUBBER_FEATURES_JSON = "out/pubber_features.json";
+
   static {
-    add(ENUMERATION, BETA);
+    add(ENUMERATION, STABLE);
     add(ENUMERATION_FEATURES, BETA);
+    add(ENUMERATION_FAMILIES, PREVIEW);
+    add(ENUMERATION_POINTSET, ALPHA);
+    writeFile(FEATURES_MAP, new File(PUBBER_FEATURES_JSON));
   }
 
   private static void add(Bucket featureBucket, FeatureStage stage) {
