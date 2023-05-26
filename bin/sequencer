@@ -11,23 +11,22 @@ alt_registry=${UDMI_ALT_REGISTRY:-ZZ-REDIRECT-NA}
 min_stage=BETA
 export UDMI_VERSION=`cd $ROOT; git describe`
 
-if [[ $1 == '-a' ]]; then
-    min_stage=ALPHA
+while [[ $1 =~ ^- ]]; do
+    if [[ $1 == '-a' ]]; then
+        min_stage=ALPHA
+    elif [[ $1 == '-v' ]]; then
+        log_level=DEBUG
+    elif [[ $1 == '-vv' ]]; then
+        log_level=TRACE
+    else
+        echo Unknown option $1
+        false
+    fi
     shift
-fi
-
-if [[ $1 == '-v' ]]; then
-    log_level=DEBUG
-    shift
-fi
-
-if [[ $1 == '-v' || $1 == '-vv' ]]; then
-    log_level=TRACE
-    shift
-fi
+done
 
 if [[ $# < 3 ]]; then
-    echo Usage: $0 SITE_PATH PROJECT_ID DEVICE_ID [SERIAL_NO] [TEST_NAMES...]
+    echo Usage: $0 [-v] [-vv] [-a] SITE_PATH PROJECT_ID DEVICE_ID [SERIAL_NO] [TEST_NAMES...]
     false
 fi
 
