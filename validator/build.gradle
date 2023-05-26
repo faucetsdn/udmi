@@ -21,7 +21,7 @@ plugins {
 group 'daq-validator'
 version '1.0-SNAPSHOT'
 
-sourceCompatibility = 1.9
+sourceCompatibility = 1.10
 
 sourceSets {
     main {
