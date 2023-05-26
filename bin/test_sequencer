@@ -12,6 +12,7 @@ if [[ $1 == 'clean' ]]; then
 fi
 
 if [[ $1 == 'alpha' ]]; then
+    # TODO: Make mode where it only runs tests that don't have results.
     validate_out=y
     seq_opts=-a
     shift
