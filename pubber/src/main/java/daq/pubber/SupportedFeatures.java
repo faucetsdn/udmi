@@ -26,20 +26,21 @@ public abstract class SupportedFeatures {
 
   private static final Map<String, FeatureEnumeration> FEATURES_MAP = new HashMap<>();
 
-  private static final String PUBBER_FEATURES_JSON = "out/pubber_features.json";
-
   static {
     add(ENUMERATION, STABLE);
     add(ENUMERATION_FEATURES, BETA);
     add(ENUMERATION_FAMILIES, PREVIEW);
     add(ENUMERATION_POINTSET, ALPHA);
-    writeFile(FEATURES_MAP, new File(PUBBER_FEATURES_JSON));
   }
 
   private static void add(Bucket featureBucket, FeatureStage stage) {
     FeatureEnumeration featureEnumeration = new FeatureEnumeration();
     featureEnumeration.stage = stage;
     FEATURES_MAP.put(featureBucket.value(), featureEnumeration);
+  }
+
+  public static void writeFeatureFile(String pubberFeaturesJson) {
+    writeFile(FEATURES_MAP, new File(pubberFeaturesJson));
   }
 
   public static Map<String, FeatureEnumeration> getFeatures() {
