@@ -157,31 +157,23 @@ jobs:
       - name: base setup
         run: bin/run_tests install_dependencies
       - name: registrar clean
-        run: |
-          bin/test_regclean $GCP_TARGET_PROJECT
+        run: bin/test_regclean $GCP_TARGET_PROJECT
       - name: sequence tests clean
-        run: |
-          bin/test_sequencer clean $GCP_TARGET_PROJECT
+        run: bin/test_sequencer clean $GCP_TARGET_PROJECT
       - name: sequence tests alpha
-        run: |
-          bin/test_sequencer alpha $GCP_TARGET_PROJECT
+        run: bin/test_sequencer alpha $GCP_TARGET_PROJECT
       - name: generated files
         if: ${{ always() }}
-        run: |
-          more /tmp/sequencer.out /tmp/generated.md || true
+        run: more out/sequencer.out out/generated.md || true
       - name: sequencer end state
         if: ${{ always() }}
-        run: |
-          cat sites/udmi_site_model/out/devices/AHU-1/sequencer_state.json || true
+        run: cat sites/udmi_site_model/out/devices/AHU-1/sequencer_state.json || true
       - name: pubber logs
         if: ${{ always() }}
-        run: |
-          more pubber.out* out/pubber.out* || true
-          more pubber/out/*/*.json
+        run: more pubber.out* out/pubber.out* pubber/out/*/*.json || true
       - name: output logs
         if: ${{ always() }}
-        run: |
-          cd sites/udmi_site_model/out && more `find . -type f` || true
+        run: cd sites/udmi_site_model/out && more `find . -type f` || true
 
   sequencer_dep:
     name: Sequencer Suite
@@ -200,28 +192,23 @@ jobs:
       - name: base setup
         run: bin/run_tests install_dependencies
       - name: registrar clean
-        run: |
-          bin/test_regclean $GCP_TARGET_PROJECT
-      - name: sequence tests
-        run: |
-          bin/test_sequencer clean $GCP_TARGET_PROJECT
+        run: bin/test_regclean $GCP_TARGET_PROJECT
+      - name: sequence tests clean
+        run: bin/test_sequencer clean $GCP_TARGET_PROJECT
+      - name: sequence tests alpha
+        run: bin/test_sequencer alpha $GCP_TARGET_PROJECT
       - name: generated files
         if: ${{ always() }}
-        run: |
-          more /tmp/sequencer.out /tmp/generated.md || true
+        run: more out/sequencer.out out/generated.md || true
       - name: sequencer end state
         if: ${{ always() }}
-        run: |
-          cat sites/udmi_site_model/out/devices/AHU-1/sequencer_state.json || true
+        run: cat sites/udmi_site_model/out/devices/AHU-1/sequencer_state.json || true
       - name: pubber logs
         if: ${{ always() }}
-        run: |
-          more pubber.out* out/pubber.out* || true
-          more pubber/out/*/*.json
+        run: more pubber.out* out/pubber.out* pubber/out/*/*.json || true
       - name: output logs
         if: ${{ always() }}
-        run: |
-          cd sites/udmi_site_model/out && more `find . -type f` || true
+        run: cd sites/udmi_site_model/out && more `find . -type f` || true
 
   comprehensive:
     name: Comprehensive Suite
