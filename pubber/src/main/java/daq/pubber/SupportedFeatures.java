@@ -12,7 +12,6 @@ import static udmi.schema.FeatureEnumeration.FeatureStage.BETA;
 import static udmi.schema.FeatureEnumeration.FeatureStage.PREVIEW;
 import static udmi.schema.FeatureEnumeration.FeatureStage.STABLE;
 
-import com.google.udmi.util.JsonUtil;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
