@@ -32,7 +32,7 @@ Some caveats:
 * [feature_enumeration](#feature_enumeration)
 * [system_last_update](#system_last_update): Check that last_update state is correctly set in response to a config update.
 
-## empty_enumeration (BETA)
+## empty_enumeration (PREVIEW)
 
 1. Update config before enumeration not active:
     * Add `discovery` = { "enumerate": {  } }
@@ -69,7 +69,7 @@ Check that the device correctly handles an extra out-of-schema field
 1. Wait for log category `system.config.parse` level `DEBUG` was logged
 1. Wait for log category `system.config.apply` level `NOTICE` was logged
 
-## feature_enumeration (BETA)
+## feature_enumeration (PREVIEW)
 
 1. Update config before enumeration not active:
     * Add `discovery` = { "enumerate": { "features": `true` } }
