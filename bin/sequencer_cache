@@ -17,7 +17,7 @@
 ROOT_DIR=$(realpath $(dirname $0)/..)
 cd $ROOT_DIR
 TEST_LIST=out/sequencer_tests.txt
-TEST_OUT=etc/sequencer.out
+TEST_OUT=out/sequencer.out
 CACHE_ROOT=validator/sequences
 TEST_ROOT=sites/udmi_site_model/out/devices/AHU-1
 
@@ -27,8 +27,8 @@ export LC_ALL=C
 mkdir -p $CACHE_ROOT
 find $CACHE_ROOT/ -name sequencer.log | xargs fgrep -H RESULT | awk '{print $7}' > $TEST_LIST
 find $TEST_ROOT/ -name sequencer.log | xargs fgrep -H RESULT | awk '{print $7}'>> $TEST_LIST
-cat $TEST_LIST | sort | uniq > $TEST_LIST.sorted
-all_tests=$(cat $TEST_LIST.sorted)
+sort < $TEST_LIST | uniq | sponge $TEST_LIST
+all_tests=$(cat $TEST_LIST)
 rm -f $TEST_OUT
 
 for test in $all_tests; do
@@ -46,9 +46,7 @@ for test in $all_tests; do
     fgrep RESULT $cache_dir/sequencer.log | sed -e 's/.*sequence RESULT/RESULT/' >> $TEST_OUT
 done
 
-mv $TEST_OUT $TEST_OUT.bak
-sort -k 3 < $TEST_OUT.bak | fgrep -v " DISABLED " > $TEST_OUT
-rm $TEST_OUT.bak
+sort -k 3 < $TEST_OUT | fgrep -v " DISABLED " | sponge $TEST_OUT
 
 echo
 echo Resulting $TEST_OUT:

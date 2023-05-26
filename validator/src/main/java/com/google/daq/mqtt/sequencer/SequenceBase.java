@@ -544,7 +544,7 @@ public class SequenceBase {
   }
 
   protected boolean isBucketEnabled(Bucket bucket) {
-    return enableAllTargets || ifNotNullGet(deviceMetadata.features,
+    return bucket == SYSTEM || enableAllTargets || ifNotNullGet(deviceMetadata.features,
         features -> features.containsKey(bucket.value()), true);
   }
 

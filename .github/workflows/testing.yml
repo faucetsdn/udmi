@@ -159,9 +159,12 @@ jobs:
       - name: registrar clean
         run: |
           bin/test_regclean $GCP_TARGET_PROJECT
-      - name: sequence tests
+      - name: sequence tests clean
         run: |
           bin/test_sequencer clean $GCP_TARGET_PROJECT
+      - name: sequence tests alpha
+        run: |
+          bin/test_sequencer alpha $GCP_TARGET_PROJECT
       - name: generated files
         if: ${{ always() }}
         run: |

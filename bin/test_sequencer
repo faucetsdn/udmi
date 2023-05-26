@@ -11,8 +11,14 @@ if [[ $1 == 'clean' ]]; then
     shift
 fi
 
+if [[ $1 == 'alpha' ]]; then
+    validate_out=y
+    seq_opts=-a
+    shift
+fi
+
 if [[ $# -lt 1 ]]; then
-    echo Usage: $0 [clean] PROJECT_ID [tests...]
+    echo Usage: $0 [clean] [alpha] PROJECT_ID [tests...]
     false
 fi
 
@@ -73,8 +79,8 @@ if [[ $i -eq $WAITING ]]; then
     false
 fi
 
-# Run all tests as part of the suite, in debug mode for fail-fast when things go wrong!
-bin/sequencer -a -v $site_path $project_id $device_id $serial_no $targets 2>&1 | tee sequencer.out
+# Run in debug mode for fail-fast when things go wrong!
+bin/sequencer -v $seq_opts $site_path $project_id $device_id $serial_no $targets 2>&1 | tee out/sequencer.log
 echo Completed execution of sequencer test run.
 
 pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
@@ -86,15 +92,16 @@ else
     false
 fi
 
-cp etc/sequencer.out out/  # Sace for later test/comparison
 if [[ -n $clean_cache ]]; then
     echo Cleaning sequencer result cache...
     rm -rf validator/sequences
 fi
-bin/sequencer_cache
 
-echo Comparing diff out/sequencer.out etc/sequencer.out
-diff -u out/sequencer.out etc/sequencer.out
+if [[ -n $validate_out ]]; then
+    bin/sequencer_cache
+    echo Comparing diff out/sequencer.out etc/sequencer.out
+    diff -u out/sequencer.out etc/sequencer.out
+fi
 
 cp docs/specs/sequences/generated.md out/  # Save for test/comparison later
 bin/gencode_seq
