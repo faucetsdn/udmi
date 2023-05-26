@@ -12,6 +12,7 @@ import static udmi.schema.Bucket.ENUMERATION_FEATURES;
 import static udmi.schema.Bucket.ENUMERATION_POINTSET;
 import static udmi.schema.FeatureEnumeration.FeatureStage.ALPHA;
 import static udmi.schema.FeatureEnumeration.FeatureStage.BETA;
+import static udmi.schema.FeatureEnumeration.FeatureStage.PREVIEW;
 
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
@@ -117,7 +118,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   @Test
-  @Feature(bucket = ENUMERATION, stage = BETA)
+  @Feature(bucket = ENUMERATION, stage = PREVIEW)
   public void empty_enumeration() {
     Enumerate enumerate = new Enumerate();
     DiscoveryEvent event = runEnumeration(enumerate);
@@ -137,7 +138,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   @Test
-  @Feature(bucket = ENUMERATION_FEATURES, stage = BETA)
+  @Feature(bucket = ENUMERATION_FEATURES, stage = PREVIEW)
   public void feature_enumeration() {
     Enumerate enumerate = new Enumerate();
     enumerate.features = true;

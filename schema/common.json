@@ -28,6 +28,7 @@
       "enum": [
         "disabled",
         "alpha",
+        "preview",
         "beta",
         "stable"
       ]

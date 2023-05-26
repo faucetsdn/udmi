@@ -66,6 +66,7 @@ public class FeatureEnumeration {
 
         DISABLED("disabled"),
         ALPHA("alpha"),
+        PREVIEW("preview"),
         BETA("beta"),
         STABLE("stable");
         private final String value;
