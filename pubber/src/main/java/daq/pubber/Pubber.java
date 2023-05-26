@@ -770,7 +770,9 @@ public class Pubber {
 
   void terminate() {
     warn("Terminating");
-    deviceState.system.operation.mode = SystemMode.SHUTDOWN;
+    if (deviceState.system != null && deviceState.system.operation != null) {
+      deviceState.system.operation.mode = SystemMode.SHUTDOWN;
+    }
     captureExceptions("publishing shutdown state", this::publishSynchronousState);
     stop();
     captureExceptions("executor flush", this::stopExecutor);
