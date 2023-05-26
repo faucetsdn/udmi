@@ -102,15 +102,15 @@ if [[ -n $validate_out ]]; then
     bin/sequencer_cache
     echo Comparing diff out/sequencer.out etc/sequencer.out
     diff -u out/sequencer.out etc/sequencer.out
-fi
 
-cp docs/specs/sequences/generated.md out/  # Save for test/comparison later
-bin/gencode_seq
+    cp docs/specs/sequences/generated.md out/  # Save for test/comparison later
+    bin/gencode_seq
 
-echo Comparing diff out/generated.md docs/specs/sequences/generated.md
-diff -u out/generated.md docs/specs/sequences/generated.md || (
-    echo Run bin/gencode_seq to regenerate output, if necessary.
-    false
+    echo Comparing diff out/generated.md docs/specs/sequences/generated.md
+    diff -u out/generated.md docs/specs/sequences/generated.md || (
+        echo Run bin/gencode_seq to regenerate output, if necessary.
+        false
     )
+fi
 
 echo Done with base test_sequencer run.
