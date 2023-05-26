@@ -119,7 +119,6 @@ public class Pubber {
   static final String UDMI_VERSION = "1.4.1";
   private static final Logger LOG = LoggerFactory.getLogger(Pubber.class);
   private static final String HOSTNAME = System.getenv("HOSTNAME");
-  private static final String PUBBER_FEATURES_JSON = "out/pubber_features.json";
   private static final int MIN_REPORT_MS = 200;
   private static final int DEFAULT_REPORT_SEC = 10;
   private static final int WAIT_TIME_SEC = 10;
@@ -405,7 +404,7 @@ public class Pubber {
 
   private void initializeDevice() {
     SupportedFeatures.setFeatureSwap(configuration.options.featureEnableSwap);
-    SupportedFeatures.writeFeatureFile(PUBBER_FEATURES_JSON);
+    SupportedFeatures.writeFeatureFile();
 
     deviceState.system = new SystemState();
     deviceState.system.operation = new StateSystemOperation();
