@@ -2,15 +2,16 @@
 PLAN_FILE=etc/sequencer_plan.txt
 SEQUENCER_OUT=etc/sequencer.out
 
+exit=0
 while read -u 7 line; do
     [[ ${line::1} == "#" ]] && continue
     planned_test=$(echo $line | cut -d " " -f4)
-    if [[ -n $(cat $SEQUENCER_OUT | cut -d " " -f4 | grep $planned_test) ]]; then
+    if [[ -n $(cat $SEQUENCER_OUT | cut -d " " -f4 | grep " $planned_test ") ]]; then
         echo $planned_test 
         exit=1
     fi 
 done 7< $PLAN_FILE
 
-[[ -n $exit ]] && echo The above tests are implemented. Remove from $PLAN_FILE
+[[ $exit -ne 0 ]] && echo The above tests are implemented. Remove from $PLAN_FILE
 
 exit $exit
