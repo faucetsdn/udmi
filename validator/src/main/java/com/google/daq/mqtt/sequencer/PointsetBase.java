@@ -3,6 +3,7 @@ package com.google.daq.mqtt.sequencer;
 import com.google.daq.mqtt.sequencer.sequences.WritebackSequences;
 import java.util.HashMap;
 import java.util.Optional;
+import org.junit.AssumptionViolatedException;
 import org.junit.Before;
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointsetConfig;
@@ -25,7 +26,7 @@ public abstract class PointsetBase extends SequenceBase {
       ensurePointConfig(WritebackSequences.INVALID_STATE);
       ensurePointConfig(WritebackSequences.FAILURE_STATE);
       ensurePointConfig(WritebackSequences.APPLIED_STATE);
-    } catch (SkipTest skipTest) {
+    } catch (AssumptionViolatedException skipTest) {
       info("Not setting config points: " + skipTest.getMessage());
     }
   }
@@ -43,7 +44,8 @@ public abstract class PointsetBase extends SequenceBase {
     if (deviceMetadata.testing == null
         || deviceMetadata.testing.targets == null
         || !deviceMetadata.testing.targets.containsKey(target)) {
-      throw new SkipTest(String.format("Missing '%s' target specification", target));
+      throw new AssumptionViolatedException(
+          String.format("Missing '%s' target specification", target));
     }
     TargetTestingModel testingMetadata = deviceMetadata.testing.targets.get(target);
     if (deviceMetadata.pointset == null || deviceMetadata.pointset.points == null) {

@@ -80,7 +80,11 @@ public class GeneralUtils {
   }
 
   public static <T, V> V ifNotNullGet(T value, Function<T, V> converter) {
-    return value == null ? null : converter.apply(value);
+    return ifNotNullGet(value, converter, null);
+  }
+
+  public static <T, V> V ifNotNullGet(T value, Function<T, V> converter, V elseResult) {
+    return value == null ? elseResult : converter.apply(value);
   }
 
   public static <T, V> V ifNotNullGet(T value, Supplier<V> converter) {

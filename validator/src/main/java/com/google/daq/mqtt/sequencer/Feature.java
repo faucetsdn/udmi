@@ -5,7 +5,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import udmi.schema.Bucket;
-import udmi.schema.SequenceValidationState.FeatureStage;
+import udmi.schema.FeatureEnumeration.FeatureStage;
 
 /**
  * Feature designation for line-item tests.

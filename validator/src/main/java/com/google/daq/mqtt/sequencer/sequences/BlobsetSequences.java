@@ -8,16 +8,16 @@ import static org.junit.Assert.assertNotEquals;
 import static udmi.schema.Bucket.ENDPOINT;
 import static udmi.schema.Bucket.SYSTEM_MODE;
 import static udmi.schema.Category.BLOBSET_BLOB_APPLY;
-import static udmi.schema.SequenceValidationState.FeatureStage.ALPHA;
-import static udmi.schema.SequenceValidationState.FeatureStage.DISABLED;
+import static udmi.schema.FeatureEnumeration.FeatureStage.ALPHA;
+import static udmi.schema.FeatureEnumeration.FeatureStage.DISABLED;
 
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
-import com.google.daq.mqtt.sequencer.SkipTest;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
 import java.util.Date;
 import java.util.HashMap;
+import org.junit.AssumptionViolatedException;
 import org.junit.Test;
 import udmi.schema.BlobBlobsetConfig;
 import udmi.schema.BlobBlobsetConfig.BlobPhase;
@@ -202,7 +202,7 @@ public class BlobsetSequences extends SequenceBase {
 
   private void check_endpoint_connection_success(boolean doRestart) {
     if (altClient == null) {
-      throw new SkipTest("No functional alternate registry defined");
+      throw new AssumptionViolatedException("No functional alternate registry defined");
     }
 
     // Phase one: initiate connection to alternate registry.
