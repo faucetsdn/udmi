@@ -12,4 +12,4 @@
 1. Wait for cleared enumeration generation
 1. Check that no family enumeration
 1. Check that no feature enumeration
-1. Check that points enumerated 3
+1. Check that enumerated point count matches

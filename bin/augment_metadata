@@ -18,9 +18,11 @@ device_id=$2
 shift 2
 
 device_dir=$site_dir/devices/$device_id
-mkdir -p $device_dir/out
 metadata_file=$device_dir/metadata.json
-metadata_out=$site_dir/out/devices/$device_id/metadata_mod.json
+
+out_dir=$site_dir/out/devices/$device_id
+mkdir -p $out_dir
+metadata_out=$out_dir/metadata_mod.json
 # TODO: Implement some mechanism to auto-detect if _norm.json already exists and is up-to-date, and use that.
 
 # Get the interface with the lowest default route metric.
@@ -39,5 +41,9 @@ echo Setting $metadata_out ipv6 addr to $ipv6_addr
 jq ".localnet.families.ether.addr = \"$ether_addr\"" $metadata_file |
     jq ".localnet.families.ipv4.addr = \"$ipv4_addr\"" |
     jq ".localnet.families.ipv6.addr = \"$ipv6_addr\"" > $metadata_out
+
+# Dynamically update the site model based off of dynamic pubber output.
+pubber_features=$(< out/pubber_features.json)
+jq --argjson features "$pubber_features" '.features = $features' $metadata_out | sponge $metadata_out
 
 ls -l $metadata_file $metadata_out

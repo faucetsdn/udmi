@@ -23,12 +23,12 @@ from .configuration_execution import ExecutionConfiguration
 from .configuration_pod import PodConfiguration
 from .configuration_pod_bridge import BridgePodConfiguration
 from .configuration_pubber import PubberConfiguration
+from .enumeration_feature import FeatureEnumeration
 from .envelope import Envelope
 from .equipment_translation import BuildingConfig
 from .event import Event
 from .event_discovery import DiscoveryEvent
 from .event_discovery_family import FamilyDiscoveryEvent
-from .event_discovery_feature import FeatureEnumerationEvent
 from .event_discovery_point import PointEnumerationEvent
 from .event_mapping import MappingEvent
 from .event_mapping_entities import MappingEventEntities
@@ -42,6 +42,7 @@ from .metadata import Metadata
 from .model_cloud import CloudModel
 from .model_discovery import DiscoveryModel
 from .model_discovery_family import FamilyDiscoveryTestingModel
+from .model_features import TestingModel
 from .model_gateway import GatewayModel
 from .model_localnet import LocalnetModel
 from .model_localnet_family import FamilyLocalnetModel

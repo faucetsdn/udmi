@@ -1,5 +1,5 @@
 
-## feature_enumeration (ALPHA)
+## feature_enumeration (PREVIEW)
 
 1. Update config before enumeration not active:
     * Add `discovery` = { "enumerate": { "features": `true` } }
@@ -11,5 +11,6 @@
     * Remove `discovery.generation`
 1. Wait for cleared enumeration generation
 1. Check that no family enumeration
-1. Check that feature enumeration feature is stable
+1. Check that feature enumeration matches metadata
+1. Check that all enumerated features are official buckets
 1. Check that no point enumeration

@@ -64,6 +64,8 @@ while read -u 7 action test_name remainder; do
         false
     fi
 
+    bin/augment_metadata $SITE_PATH $DEVICE_ID
+
     bin/sequencer $SITE_PATH $PROJECT_ID $DEVICE_ID $serial_no $test_name 2>&1 | tee $SEQUENCER_OUT
 
     kill $(ps ax | fgrep pubber | fgrep java | awk '{print $1}') || true
