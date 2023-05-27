@@ -60,7 +60,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
 import java.util.Stack;
@@ -915,13 +914,14 @@ public class SequenceBase {
   }
 
   protected void checkThat(String description, Supplier<Boolean> condition) {
-    checkThat(description, condition, "");
+    checkThat(description, condition, null);
   }
 
   protected void checkThat(String description, Supplier<Boolean> condition, String details) {
     if (!catchToFalse(condition)) {
       warning("Failed check that " + description);
-      throw new IllegalStateException("Failed check that " + description + "; " + details);
+      String suffix = ifNotNullGet(details, base -> "; " + base, "");
+      throw new IllegalStateException("Failed check that " + description + suffix);
     }
     recordSequence("Check that " + description);
   }
