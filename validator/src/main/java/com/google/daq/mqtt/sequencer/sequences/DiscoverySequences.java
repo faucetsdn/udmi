@@ -15,6 +15,7 @@ import static udmi.schema.Bucket.ENUMERATION_POINTSET;
 import static udmi.schema.FeatureEnumeration.FeatureStage.ALPHA;
 import static udmi.schema.FeatureEnumeration.FeatureStage.BETA;
 import static udmi.schema.FeatureEnumeration.FeatureStage.PREVIEW;
+import static udmi.schema.FeatureEnumeration.FeatureStage.STABLE;
 
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
@@ -22,13 +23,13 @@ import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
 import com.google.udmi.util.CleanDateFormat;
-import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -53,6 +54,10 @@ public class DiscoverySequences extends SequenceBase {
   private static final int SCAN_ITERATIONS = 2;
   private HashMap<String, Date> previousGenerations;
   private Set<String> families;
+
+  private static boolean isActive(Entry<String, FeatureEnumeration> entry) {
+    return Optional.ofNullable(entry.getValue().stage).orElse(STABLE).compareTo(BETA) >= 0;
+  }
 
   private DiscoveryEvent runEnumeration(Enumerate enumerate) {
     deviceConfig.discovery = new DiscoveryConfig();
@@ -105,8 +110,10 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   private void checkFeatureEnumeration(Map<String, FeatureEnumeration> features) {
-    Set<String> enumeratedFeatures = features.keySet();
-    Set<String> enabledFeatures = deviceMetadata.features.keySet();
+    Set<String> enumeratedFeatures = features.entrySet().stream()
+        .filter(DiscoverySequences::isActive).map(Entry::getKey).collect(Collectors.toSet());
+    Set<String> enabledFeatures = deviceMetadata.features.entrySet().stream()
+        .filter(DiscoverySequences::isActive).map(Entry::getKey).collect(Collectors.toSet());
     SetView<String> extraFeatures = Sets.difference(enumeratedFeatures, enabledFeatures);
     SetView<String> missingFeatures = Sets.difference(enabledFeatures, enumeratedFeatures);
     SetView<String> difference = Sets.union(extraFeatures, missingFeatures);
@@ -115,7 +122,8 @@ public class DiscoverySequences extends SequenceBase {
     checkThat("feature enumeration matches metadata", difference::isEmpty, details);
     Set<String> unofficial = enumeratedFeatures.stream()
         .filter(feature -> !Bucket.contains(feature)).collect(Collectors.toSet());
-    checkThat("all enumerated features are official buckets", unofficial::isEmpty);
+    String format = format("unrecognized { %s }", CSV_JOINER.join(unofficial));
+    checkThat("all enumerated features are official buckets", unofficial::isEmpty, format);
   }
 
   private boolean isTrue(Boolean condition) {
