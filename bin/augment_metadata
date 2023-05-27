@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash -ex
 #
 # Modify the indicated device metadata.json file with bits for testing. Only really useful in controlled
 # situations where, e.g., the MAC address of the pubber system needs to be dynamically extracted by
