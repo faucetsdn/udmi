@@ -3,7 +3,7 @@
 
 1. Wait for initial last_config matches config timestamp
 1. Update config mirroring config false:
-    * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `endpoint url` } } }
+    * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `endpoint data` } } }
 1. Wait for blobset phase is apply and stateStatus is null
 1. Check that no interesting system status
 1. Wait for blobset phase is final and stateStatus is null
@@ -28,7 +28,7 @@
 1. Wait for last_config is newer than previous last_config after abort
 1. Wait for last_start is newer than previous last_start
 1. Update config mirroring config true:
-    * Add `blobset.blobs._iot_endpoint_config` = { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `endpoint url` }
+    * Add `blobset.blobs._iot_endpoint_config` = { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `endpoint data` }
 1. Wait for blobset phase is apply and stateStatus is null
 1. Check that no interesting system status
 1. Wait for blobset phase is final and stateStatus is null

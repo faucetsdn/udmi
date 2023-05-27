@@ -22,6 +22,17 @@
         "clearblade"
       ]
     },
+    "stage": {
+      "title": "FeatureStage",
+      "description": "Stage of a feature implemenation",
+      "enum": [
+        "disabled",
+        "alpha",
+        "preview",
+        "beta",
+        "stable"
+      ]
+    },
     "phase": {
       "title": "BlobPhase",
       "description": "Phase for the management of a configuration blob.",

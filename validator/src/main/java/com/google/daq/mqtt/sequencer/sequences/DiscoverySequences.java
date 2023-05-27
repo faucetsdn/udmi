@@ -1,22 +1,27 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
+import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
+import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static udmi.schema.Bucket.DISCOVERY;
 import static udmi.schema.Bucket.DISCOVERY_SCAN;
 import static udmi.schema.Bucket.ENUMERATION;
 import static udmi.schema.Bucket.ENUMERATION_FAMILIES;
 import static udmi.schema.Bucket.ENUMERATION_FEATURES;
 import static udmi.schema.Bucket.ENUMERATION_POINTSET;
-import static udmi.schema.SequenceValidationState.FeatureStage.ALPHA;
-import static udmi.schema.SequenceValidationState.FeatureStage.BETA;
+import static udmi.schema.FeatureEnumeration.FeatureStage.ALPHA;
+import static udmi.schema.FeatureEnumeration.FeatureStage.BETA;
+import static udmi.schema.FeatureEnumeration.FeatureStage.PREVIEW;
+import static udmi.schema.FeatureEnumeration.FeatureStage.STABLE;
 
+import com.google.common.collect.Sets;
+import com.google.common.collect.Sets.SetView;
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
-import com.google.daq.mqtt.sequencer.SkipTest;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
 import com.google.udmi.util.CleanDateFormat;
 import com.google.udmi.util.JsonUtil;
@@ -25,11 +30,13 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import org.junit.AssumptionViolatedException;
 import org.junit.Test;
 import udmi.schema.Bucket;
 import udmi.schema.DiscoveryConfig;
@@ -37,8 +44,7 @@ import udmi.schema.DiscoveryEvent;
 import udmi.schema.Enumerate;
 import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyDiscoveryState;
-import udmi.schema.FeatureEnumerationEvent;
-import udmi.schema.SequenceValidationState.FeatureStage;
+import udmi.schema.FeatureEnumeration;
 
 /**
  * Validation tests for discovery scan and enumeration capabilities.
@@ -49,6 +55,10 @@ public class DiscoverySequences extends SequenceBase {
   private static final int SCAN_ITERATIONS = 2;
   private HashMap<String, Date> previousGenerations;
   private Set<String> families;
+
+  private static boolean isActive(Entry<String, FeatureEnumeration> entry) {
+    return Optional.ofNullable(entry.getValue().stage).orElse(STABLE).compareTo(BETA) >= 0;
+  }
 
   private DiscoveryEvent runEnumeration(Enumerate enumerate) {
     deviceConfig.discovery = new DiscoveryConfig();
@@ -80,17 +90,13 @@ public class DiscoverySequences extends SequenceBase {
       Set<String> models = Optional.ofNullable(deviceMetadata.localnet)
           .map(localnet -> localnet.families.keySet()).orElse(null);
       Set<String> events = Optional.ofNullable(event.families).map(Map::keySet).orElse(null);
-      System.err.println("TAP models " + JsonUtil.stringify(models));
-      System.err.println("TAP events " + JsonUtil.stringify(events));
       checkThat("family enumeration matches", () -> models.size() == events.size());
     } else {
       checkThat("no family enumeration", () -> event.families == null);
     }
 
     if (isTrue(enumerate.features)) {
-      Map<Bucket, FeatureStage> bucketStageMap = flattenFeatureEnumeration("", event.features);
-      checkThat("feature enumeration feature is stable",
-          () -> bucketStageMap.get(ENUMERATION_FEATURES) == FeatureStage.STABLE);
+      checkFeatureEnumeration(event.features);
     } else {
       checkThat("no feature enumeration", () -> event.features == null);
     }
@@ -98,24 +104,28 @@ public class DiscoverySequences extends SequenceBase {
     if (isTrue(enumerate.uniqs)) {
       int expectedSize = Optional.ofNullable(deviceMetadata.pointset.points).map(HashMap::size)
           .orElse(0);
-      checkThat("points enumerated " + expectedSize, () -> event.uniqs.size() == expectedSize);
+      checkThat("enumerated point count matches", () -> event.uniqs.size() == expectedSize);
     } else {
       checkThat("no point enumeration", () -> event.uniqs == null);
     }
   }
 
-  private Map<Bucket, FeatureStage> flattenFeatureEnumeration(String prefix,
-      Map<String, FeatureEnumerationEvent> eventFeatures) {
-    Map<Bucket, FeatureStage> buckets = new HashMap<>();
-    eventFeatures.forEach((key, value) -> {
-      String fullBucket = prefix + "." + key;
-      Bucket bucket = Bucket.fromValue(fullBucket.substring(1));
-      buckets.put(bucket, FeatureStage.valueOf(value.stage.value().toUpperCase()));
-      if (value.features != null) {
-        buckets.putAll(flattenFeatureEnumeration(fullBucket, value.features));
-      }
-    });
-    return buckets;
+  private void checkFeatureEnumeration(Map<String, FeatureEnumeration> features) {
+    Set<String> enumeratedFeatures = features.entrySet().stream()
+        .filter(DiscoverySequences::isActive).map(Entry::getKey).collect(Collectors.toSet());
+    requireNonNull(deviceMetadata.features, "device metadata features missing");
+    Set<String> enabledFeatures = deviceMetadata.features.entrySet().stream()
+        .filter(DiscoverySequences::isActive).map(Entry::getKey).collect(Collectors.toSet());
+    SetView<String> extraFeatures = Sets.difference(enumeratedFeatures, enabledFeatures);
+    SetView<String> missingFeatures = Sets.difference(enabledFeatures, enumeratedFeatures);
+    SetView<String> difference = Sets.union(extraFeatures, missingFeatures);
+    String details = format("missing { %s }, extra { %s }", CSV_JOINER.join(missingFeatures),
+        CSV_JOINER.join(extraFeatures));
+    checkThat("feature enumeration matches metadata", difference::isEmpty, details);
+    Set<String> unofficial = enumeratedFeatures.stream()
+        .filter(feature -> !Bucket.contains(feature)).collect(Collectors.toSet());
+    String format = format("unrecognized { %s }", CSV_JOINER.join(unofficial));
+    checkThat("all enumerated features are official buckets", unofficial::isEmpty, format);
   }
 
   private boolean isTrue(Boolean condition) {
@@ -123,7 +133,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   @Test
-  @Feature(bucket = ENUMERATION, stage = ALPHA)
+  @Feature(bucket = ENUMERATION, stage = PREVIEW)
   public void empty_enumeration() {
     Enumerate enumerate = new Enumerate();
     DiscoveryEvent event = runEnumeration(enumerate);
@@ -134,7 +144,7 @@ public class DiscoverySequences extends SequenceBase {
   @Feature(bucket = ENUMERATION_POINTSET, stage = ALPHA)
   public void pointset_enumeration() {
     if (!catchToFalse(() -> deviceMetadata.pointset.points != null)) {
-      throw new SkipTest("No metadata pointset points defined");
+      throw new AssumptionViolatedException("No metadata pointset points defined");
     }
     Enumerate enumerate = new Enumerate();
     enumerate.uniqs = true;
@@ -143,7 +153,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   @Test
-  @Feature(bucket = ENUMERATION_FEATURES, stage = ALPHA)
+  @Feature(bucket = ENUMERATION_FEATURES, stage = PREVIEW)
   public void feature_enumeration() {
     Enumerate enumerate = new Enumerate();
     enumerate.features = true;
@@ -164,9 +174,9 @@ public class DiscoverySequences extends SequenceBase {
   @Feature(bucket = ENUMERATION, stage = ALPHA)
   public void multi_enumeration() {
     Enumerate enumerate = new Enumerate();
-    enumerate.families = true;
-    enumerate.features = true;
-    enumerate.uniqs = true;
+    enumerate.families = isBucketEnabled(ENUMERATION_FAMILIES);
+    enumerate.features = isBucketEnabled(ENUMERATION_FEATURES);
+    enumerate.uniqs = isBucketEnabled(ENUMERATION_POINTSET);
     DiscoveryEvent event = runEnumeration(enumerate);
     checkSelfEnumeration(event, enumerate);
   }
@@ -181,15 +191,14 @@ public class DiscoverySequences extends SequenceBase {
     scheduleScan(startTime, null, shouldEnumerate);
     untilTrue("scheduled scan start",
         () -> families.stream().anyMatch(familyScanActivated(startTime))
-            || families.stream()
-            .anyMatch(family -> !stateGenerationSame(family, previousGenerations))
+            || families.stream().anyMatch(this::stateGenerationMismatch)
             || !deviceState.timestamp.before(startTime));
     if (deviceState.timestamp.before(startTime)) {
       warning("scan started before activation: " + deviceState.timestamp + " < " + startTime);
       assertFalse("premature activation",
           families.stream().anyMatch(familyScanActivated(startTime)));
       assertFalse("premature generation",
-          families.stream().anyMatch(family -> !stateGenerationSame(family, previousGenerations)));
+          families.stream().anyMatch(this::stateGenerationMismatch));
       fail("unknown reason");
     }
     untilTrue("scan activation", () -> families.stream().allMatch(familyScanActivated(startTime)));
@@ -236,7 +245,7 @@ public class DiscoverySequences extends SequenceBase {
   private void initializeDiscovery() {
     families = catchToNull(() -> deviceMetadata.discovery.families.keySet());
     if (families == null || families.isEmpty()) {
-      throw new SkipTest("No discovery families configured");
+      throw new AssumptionViolatedException("No discovery families configured");
     }
     deviceConfig.discovery = new DiscoveryConfig();
     deviceConfig.discovery.families = new HashMap<>();
@@ -264,8 +273,8 @@ public class DiscoverySequences extends SequenceBase {
     return catchToNull(() -> getStateFamily(family).generation);
   }
 
-  private boolean stateGenerationSame(String family, Map<String, Date> previousGenerations) {
-    return Objects.equals(previousGenerations.get(family), getStateFamilyGeneration(family));
+  private boolean stateGenerationMismatch(String family) {
+    return !Objects.equals(previousGenerations.get(family), getStateFamilyGeneration(family));
   }
 
   private FamilyDiscoveryState getStateFamily(String family) {

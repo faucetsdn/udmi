@@ -9,15 +9,21 @@ import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.GeneralUtils.changedLines;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
+import static com.google.udmi.util.JsonUtil.loadFileRequired;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static java.nio.file.Files.newOutputStream;
 import static java.util.Optional.ofNullable;
+import static org.junit.Assume.assumeTrue;
 import static udmi.schema.Bucket.SYSTEM;
 import static udmi.schema.Bucket.UNKNOWN_DEFAULT;
-import static udmi.schema.SequenceValidationState.FeatureStage.ALPHA;
+import static udmi.schema.FeatureEnumeration.FeatureStage.ALPHA;
+import static udmi.schema.FeatureEnumeration.FeatureStage.BETA;
+import static udmi.schema.FeatureEnumeration.FeatureStage.PREVIEW;
+import static udmi.schema.FeatureEnumeration.FeatureStage.STABLE;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
@@ -55,7 +61,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
 import java.util.Stack;
@@ -70,6 +75,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
 import org.junit.After;
+import org.junit.AssumptionViolatedException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -84,13 +90,14 @@ import udmi.schema.Entry;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
 import udmi.schema.ExecutionConfiguration;
+import udmi.schema.FeatureEnumeration;
+import udmi.schema.FeatureEnumeration.FeatureStage;
 import udmi.schema.FeatureValidationState;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.Operation;
 import udmi.schema.PointsetEvent;
 import udmi.schema.SequenceValidationState;
-import udmi.schema.SequenceValidationState.FeatureStage;
 import udmi.schema.SequenceValidationState.SequenceResult;
 import udmi.schema.State;
 import udmi.schema.SystemConfig;
@@ -106,7 +113,7 @@ public class SequenceBase {
   public static final String EMPTY_MESSAGE = "{}";
   public static final String SERIAL_NO_MISSING = "//";
   public static final String VALIDATION_STATE_TOPIC = "validation/state";
-  static final FeatureStage DEFAULT_MIN_STAGE = FeatureStage.BETA;
+  static final FeatureStage DEFAULT_MIN_STAGE = BETA;
   private static final int FUNCTIONS_VERSION_BETA = Validator.REQUIRED_FUNCTION_VER;
   private static final int FUNCTIONS_VERSION_ALPHA = 8; // Version required for alpha execution.
   private static final long CONFIG_BARRIER_MS = 1000;
@@ -179,6 +186,7 @@ public class SequenceBase {
   private static SequenceBase activeInstance;
   private static MessageBundle stashedBundle;
   private static boolean resetRequired = true;
+  private static boolean enableAllTargets;
 
   static {
     // Sanity check to make sure ALPHA version is increased if forced by increased BETA.
@@ -202,6 +210,7 @@ public class SequenceBase {
   private boolean enforceSerial;
   private String testName;
   private String testDescription;
+  private Bucket testBucket;
   private FeatureStage testStage;
   private long testStartTimeMs;
   private File testDir;
@@ -232,11 +241,11 @@ public class SequenceBase {
         SiteModel model = new SiteModel(validatorConfig.site_model);
         model.initialize();
         reportLoadingErrors(model);
-        validatorConfig.cloud_region = Optional.ofNullable(validatorConfig.cloud_region)
+        validatorConfig.cloud_region = ofNullable(validatorConfig.cloud_region)
             .orElse(model.getCloudRegion());
-        validatorConfig.registry_id = Optional.ofNullable(validatorConfig.registry_id)
+        validatorConfig.registry_id = ofNullable(validatorConfig.registry_id)
             .orElse(model.getRegistryId());
-        validatorConfig.reflect_region = Optional.ofNullable(validatorConfig.reflect_region)
+        validatorConfig.reflect_region = ofNullable(validatorConfig.reflect_region)
             .orElse(model.getReflectRegion());
       } catch (Exception e) {
         throw new RuntimeException("While loading " + configFile, e);
@@ -316,7 +325,7 @@ public class SequenceBase {
   }
 
   static MockPublisher getMockClient(boolean failFast) {
-    return Optional.ofNullable((MockPublisher) client).orElseGet(() -> new MockPublisher(failFast));
+    return ofNullable((MockPublisher) client).orElseGet(() -> new MockPublisher(failFast));
   }
 
   private static MessagePublisher getAlternateClient() {
@@ -341,7 +350,7 @@ public class SequenceBase {
   private static int getRequiredFunctionsVersion() {
     FeatureStage minStage = isNullOrEmpty(validatorConfig.min_stage) ? DEFAULT_MIN_STAGE
         : FeatureStage.valueOf(validatorConfig.min_stage);
-    return SequenceRunner.processGiven(FeatureStage.ALPHA, minStage) ? FUNCTIONS_VERSION_ALPHA
+    return SequenceRunner.processGiven(ALPHA, minStage) ? FUNCTIONS_VERSION_ALPHA
         : FUNCTIONS_VERSION_BETA;
   }
 
@@ -357,13 +366,10 @@ public class SequenceBase {
   private static Metadata readDeviceMetadata() {
     File moddataFile = new File(String.format(DEVICE_MODDATA, siteModel, getDeviceId()));
     File metadataFile = new File(String.format(DEVICE_METADATA, siteModel, getDeviceId()));
+    System.err.println("Checking for modified metadata file " + moddataFile.getAbsolutePath());
     File useFile = moddataFile.exists() ? moddataFile : metadataFile;
-    try {
-      System.err.println("Reading device metadata file " + useFile.getPath());
-      return JsonUtil.OBJECT_MAPPER.readValue(useFile, Metadata.class);
-    } catch (Exception e) {
-      throw new RuntimeException("While loading " + useFile.getAbsolutePath(), e);
-    }
+    System.err.println("Reading device metadata file " + useFile.getPath());
+    return loadFileRequired(Metadata.class, useFile);
   }
 
   protected static String getDeviceId() {
@@ -504,7 +510,9 @@ public class SequenceBase {
     if (activeInstance == null) {
       throw new RuntimeException("Active sequencer instance not setup, aborting");
     }
-    waitingCondition.clear();
+
+    assumeTrue("Feature bucket not enabled", isBucketEnabled(testBucket));
+
     waitingCondition.push("starting test wrapper");
     checkState(reflector().isActive(), "Reflector is not currently active");
 
@@ -529,6 +537,21 @@ public class SequenceBase {
     recordSequence = true;
     waitingCondition.push("executing test");
     debug(String.format("stage begin %s at %s", waitingCondition.peek(), timeSinceStart()));
+  }
+
+  static void enableAllBuckets(boolean enabled) {
+    enableAllTargets = enabled;
+  }
+
+  protected boolean isBucketEnabled(Bucket bucket) {
+    if (bucket == SYSTEM || enableAllTargets || deviceMetadata.features == null) {
+      return true;
+    }
+    FeatureEnumeration metadata = deviceMetadata.features.get(bucket.value());
+    if (metadata == null) {
+      return false;
+    }
+    return ofNullable(metadata.stage).orElse(STABLE).compareTo(PREVIEW) >= 0;
   }
 
   protected void resetConfig() {
@@ -569,7 +592,7 @@ public class SequenceBase {
   @Feature(stage = ALPHA, bucket = SYSTEM)
   public void valid_serial_no() {
     if (serialNo == null) {
-      throw new SkipTest("No test serial number provided");
+      throw new AssumptionViolatedException("No test serial number provided");
     }
     untilTrue("received serial number matches", () -> serialNo.equals(lastSerialNo));
   }
@@ -747,7 +770,8 @@ public class SequenceBase {
     if (activeInstance == null) {
       return;
     }
-    debug(String.format("stage done %s at %s", waitingCondition.peek(), timeSinceStart()));
+    String condition = waitingCondition.isEmpty() ? "initialize" : waitingCondition.peek();
+    debug(String.format("stage done %s at %s", condition, timeSinceStart()));
     recordMessages = false;
     recordSequence = false;
     configAcked = false;
@@ -888,9 +912,14 @@ public class SequenceBase {
   }
 
   protected void checkThat(String description, Supplier<Boolean> condition) {
+    checkThat(description, condition, null);
+  }
+
+  protected void checkThat(String description, Supplier<Boolean> condition, String details) {
     if (!catchToFalse(condition)) {
       warning("Failed check that " + description);
-      throw new IllegalStateException("Failed check that " + description);
+      String suffix = ifNotNullGet(details, base -> "; " + base, "");
+      throw new IllegalStateException("Failed check that " + description + suffix);
     }
     recordSequence("Check that " + description);
   }
@@ -942,7 +971,7 @@ public class SequenceBase {
   private void processLogMessages() {
     List<SystemEvent> receivedEvents = popReceivedEvents(SystemEvent.class);
     receivedEvents.forEach(systemEvent -> {
-      int eventCount = Optional.ofNullable(systemEvent.event_count).orElse(previousEventCount + 1);
+      int eventCount = ofNullable(systemEvent.event_count).orElse(previousEventCount + 1);
       if (eventCount != previousEventCount + 1) {
         debug("Missing system events " + previousEventCount + " -> " + eventCount);
       }
@@ -1474,6 +1503,7 @@ public class SequenceBase {
         testName = description.getMethodName();
         testDescription = getTestSummary(description);
         testStage = getTestStage(description);
+        testBucket = getBucket(description);
 
         testStartTimeMs = System.currentTimeMillis();
 
@@ -1521,6 +1551,11 @@ public class SequenceBase {
     }
 
     @Override
+    protected void skipped(AssumptionViolatedException e, Description description) {
+      failed(e, description);
+    }
+
+    @Override
     protected void failed(Throwable e, Description description) {
       if (activeInstance == null) {
         return;
@@ -1532,7 +1567,7 @@ public class SequenceBase {
         error(String.format("stage timeout %s at %s", waitingCondition.peek(), timeSinceStart()));
         message = "timeout " + waitingCondition.peek();
         failureType = SequenceResult.FAIL;
-      } else if (e instanceof SkipTest) {
+      } else if (e instanceof AssumptionViolatedException) {
         message = e.getMessage();
         failureType = SequenceResult.SKIP;
       } else {

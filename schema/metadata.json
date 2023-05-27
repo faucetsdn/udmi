@@ -54,6 +54,9 @@
     "testing": {
       "$ref": "file:model_testing.json#"
     },
+    "features": {
+      "$ref": "file:model_features.json#"
+    },
     "pointset": {
       "$ref": "file:model_pointset.json#"
     }

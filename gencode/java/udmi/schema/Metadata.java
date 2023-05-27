@@ -2,6 +2,7 @@
 package udmi.schema;
 
 import java.util.Date;
+import java.util.Map;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -28,6 +29,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "discovery",
     "localnet",
     "testing",
+    "features",
     "pointset"
 })
 @Generated("jsonschema2pojo")
@@ -48,21 +50,21 @@ public class Metadata {
      */
     @JsonProperty("version")
     @JsonPropertyDescription("Version of the UDMI schema")
-    public String version;
+    public java.lang.String version;
     /**
      * Generic human-readable text describing the device
      * 
      */
     @JsonProperty("description")
     @JsonPropertyDescription("Generic human-readable text describing the device")
-    public String description;
+    public java.lang.String description;
     /**
      * Automatically generated field that contains the hash of file contents.
      * 
      */
     @JsonProperty("hash")
     @JsonPropertyDescription("Automatically generated field that contains the hash of file contents.")
-    public String hash;
+    public java.lang.String hash;
     /**
      * Exception captured during processing or conversion.
      * 
@@ -126,6 +128,15 @@ public class Metadata {
     @JsonPropertyDescription("Testing target parameters")
     public TestingModel testing;
     /**
+     * Testing Model
+     * <p>
+     * Model of supported features
+     * 
+     */
+    @JsonProperty("features")
+    @JsonPropertyDescription("Model of supported features")
+    public Map<String, FeatureEnumeration> features;
+    /**
      * Pointset Model
      * <p>
      * Pointset representing the abstract system expectation for what the device should be doing, and how it should be configured and operated. This block specifies the expected points that a device holds
@@ -143,6 +154,7 @@ public class Metadata {
         result = ((result* 31)+((this.description == null)? 0 :this.description.hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
         result = ((result* 31)+((this.cloud == null)? 0 :this.cloud.hashCode()));
+        result = ((result* 31)+((this.features == null)? 0 :this.features.hashCode()));
         result = ((result* 31)+((this.system == null)? 0 :this.system.hashCode()));
         result = ((result* 31)+((this.discovery == null)? 0 :this.discovery.hashCode()));
         result = ((result* 31)+((this.pointset == null)? 0 :this.pointset.hashCode()));
@@ -162,7 +174,7 @@ public class Metadata {
             return false;
         }
         Metadata rhs = ((Metadata) other);
-        return (((((((((((((this.exception == rhs.exception)||((this.exception!= null)&&this.exception.equals(rhs.exception)))&&((this.testing == rhs.testing)||((this.testing!= null)&&this.testing.equals(rhs.testing))))&&((this.description == rhs.description)||((this.description!= null)&&this.description.equals(rhs.description))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.cloud == rhs.cloud)||((this.cloud!= null)&&this.cloud.equals(rhs.cloud))))&&((this.system == rhs.system)||((this.system!= null)&&this.system.equals(rhs.system))))&&((this.discovery == rhs.discovery)||((this.discovery!= null)&&this.discovery.equals(rhs.discovery))))&&((this.pointset == rhs.pointset)||((this.pointset!= null)&&this.pointset.equals(rhs.pointset))))&&((this.hash == rhs.hash)||((this.hash!= null)&&this.hash.equals(rhs.hash))))&&((this.gateway == rhs.gateway)||((this.gateway!= null)&&this.gateway.equals(rhs.gateway))))&&((this.localnet == rhs.localnet)||((this.localnet!= null)&&this.localnet.equals(rhs.localnet))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
+        return ((((((((((((((this.exception == rhs.exception)||((this.exception!= null)&&this.exception.equals(rhs.exception)))&&((this.testing == rhs.testing)||((this.testing!= null)&&this.testing.equals(rhs.testing))))&&((this.description == rhs.description)||((this.description!= null)&&this.description.equals(rhs.description))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.cloud == rhs.cloud)||((this.cloud!= null)&&this.cloud.equals(rhs.cloud))))&&((this.features == rhs.features)||((this.features!= null)&&this.features.equals(rhs.features))))&&((this.system == rhs.system)||((this.system!= null)&&this.system.equals(rhs.system))))&&((this.discovery == rhs.discovery)||((this.discovery!= null)&&this.discovery.equals(rhs.discovery))))&&((this.pointset == rhs.pointset)||((this.pointset!= null)&&this.pointset.equals(rhs.pointset))))&&((this.hash == rhs.hash)||((this.hash!= null)&&this.hash.equals(rhs.hash))))&&((this.gateway == rhs.gateway)||((this.gateway!= null)&&this.gateway.equals(rhs.gateway))))&&((this.localnet == rhs.localnet)||((this.localnet!= null)&&this.localnet.equals(rhs.localnet))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
     }
 
 }
