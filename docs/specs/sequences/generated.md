@@ -81,9 +81,7 @@ Check that the device correctly handles an extra out-of-schema field
     * Remove `discovery.generation`
 1. Wait for cleared enumeration generation
 1. Check that no family enumeration
-1. Check that feature enumeration matches metadata
-1. Check that all enumerated features are official buckets
-1. Check that no point enumeration
+1. Test failed: device metadata features missing
 
 ## system_last_update (STABLE)
 

@@ -1,5 +1,5 @@
 
-## empty_enumeration (BETA)
+## empty_enumeration (PREVIEW)
 
 1. Update config before enumeration not active:
     * Add `discovery` = { "enumerate": {  } }
