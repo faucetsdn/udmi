@@ -14,17 +14,6 @@
       "make": "Tridium"
     }
   },
-  "pointset": {
-    "state_etag": "74f298bcf04fae2a37dbcae7b382fd92",
-    "points": {
-      "output_voltage_sensor": {
-        "units": "Volts"
-      },
-      "power_sensor": {
-        "units": "Megawatts"
-      }
-    }
-  },
   "version": "1.4.1",
   "gateway": {
     "devices": {

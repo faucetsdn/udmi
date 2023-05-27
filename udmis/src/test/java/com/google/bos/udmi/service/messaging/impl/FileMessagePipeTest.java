@@ -107,7 +107,7 @@ class FileMessagePipeTest {
     fileMessagePipe.activate(consumed::add);
     fileMessagePipe.awaitShutdown();
 
-    assertEquals(12, consumed.size(), "playback messages");
+    assertEquals(13, consumed.size(), "playback messages");
 
     List<String> errors =
         consumed.stream().filter(bundle -> bundle.envelope.subFolder == SubFolder.ERROR)
