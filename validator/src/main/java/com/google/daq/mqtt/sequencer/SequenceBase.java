@@ -21,6 +21,8 @@ import static udmi.schema.Bucket.SYSTEM;
 import static udmi.schema.Bucket.UNKNOWN_DEFAULT;
 import static udmi.schema.FeatureEnumeration.FeatureStage.ALPHA;
 import static udmi.schema.FeatureEnumeration.FeatureStage.BETA;
+import static udmi.schema.FeatureEnumeration.FeatureStage.PREVIEW;
+import static udmi.schema.FeatureEnumeration.FeatureStage.STABLE;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
@@ -88,6 +90,7 @@ import udmi.schema.Entry;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
 import udmi.schema.ExecutionConfiguration;
+import udmi.schema.FeatureEnumeration;
 import udmi.schema.FeatureEnumeration.FeatureStage;
 import udmi.schema.FeatureValidationState;
 import udmi.schema.Level;
@@ -238,11 +241,11 @@ public class SequenceBase {
         SiteModel model = new SiteModel(validatorConfig.site_model);
         model.initialize();
         reportLoadingErrors(model);
-        validatorConfig.cloud_region = Optional.ofNullable(validatorConfig.cloud_region)
+        validatorConfig.cloud_region = ofNullable(validatorConfig.cloud_region)
             .orElse(model.getCloudRegion());
-        validatorConfig.registry_id = Optional.ofNullable(validatorConfig.registry_id)
+        validatorConfig.registry_id = ofNullable(validatorConfig.registry_id)
             .orElse(model.getRegistryId());
-        validatorConfig.reflect_region = Optional.ofNullable(validatorConfig.reflect_region)
+        validatorConfig.reflect_region = ofNullable(validatorConfig.reflect_region)
             .orElse(model.getReflectRegion());
       } catch (Exception e) {
         throw new RuntimeException("While loading " + configFile, e);
@@ -322,7 +325,7 @@ public class SequenceBase {
   }
 
   static MockPublisher getMockClient(boolean failFast) {
-    return Optional.ofNullable((MockPublisher) client).orElseGet(() -> new MockPublisher(failFast));
+    return ofNullable((MockPublisher) client).orElseGet(() -> new MockPublisher(failFast));
   }
 
   private static MessagePublisher getAlternateClient() {
@@ -544,8 +547,14 @@ public class SequenceBase {
   }
 
   protected boolean isBucketEnabled(Bucket bucket) {
-    return bucket == SYSTEM || enableAllTargets || ifNotNullGet(deviceMetadata.features,
-        features -> features.containsKey(bucket.value()), true);
+    if (bucket == SYSTEM || enableAllTargets || deviceMetadata.features == null) {
+      return true;
+    }
+    FeatureEnumeration metadata = deviceMetadata.features.get(bucket.value());
+    if (metadata == null) {
+      return false;
+    }
+    return ofNullable(metadata.stage).orElse(STABLE).compareTo(PREVIEW) >= 0;
   }
 
   protected void resetConfig() {
@@ -960,7 +969,7 @@ public class SequenceBase {
   private void processLogMessages() {
     List<SystemEvent> receivedEvents = popReceivedEvents(SystemEvent.class);
     receivedEvents.forEach(systemEvent -> {
-      int eventCount = Optional.ofNullable(systemEvent.event_count).orElse(previousEventCount + 1);
+      int eventCount = ofNullable(systemEvent.event_count).orElse(previousEventCount + 1);
       if (eventCount != previousEventCount + 1) {
         debug("Missing system events " + previousEventCount + " -> " + eventCount);
       }
