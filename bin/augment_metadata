@@ -1,4 +1,4 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 #
 # Modify the indicated device metadata.json file with bits for testing. Only really useful in controlled
 # situations where, e.g., the MAC address of the pubber system needs to be dynamically extracted by
@@ -20,7 +20,7 @@ shift 2
 device_dir=$site_dir/devices/$device_id
 metadata_file=$device_dir/metadata.json
 
-out_dir=$device_dir/out/devices/$device_id
+out_dir=$site_dir/out/devices/$device_id
 mkdir -p $out_dir
 metadata_out=$out_dir/metadata_mod.json
 # TODO: Implement some mechanism to auto-detect if _norm.json already exists and is up-to-date, and use that.
