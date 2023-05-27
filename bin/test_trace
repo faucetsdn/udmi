@@ -5,6 +5,8 @@ if [[ $# != 1 ]]; then
     false
 fi
 
+echo '################' Running $0 $*
+
 trace_name=$1
 shift
 

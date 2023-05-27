@@ -11,6 +11,7 @@
     "level" : 500
   },
   "pointset" : {
+    "missing" : [ ],
     "extra" : [ "rocket_count", "triangulating_axis_y" ]
   },
   "errors" : [ {

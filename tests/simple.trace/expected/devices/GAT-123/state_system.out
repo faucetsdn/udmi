@@ -1,18 +1,18 @@
 {
   "timestamp" : "1999-10-20T01:02:03Z",
   "version" : "1.4.1",
-  "sub_folder" : "update",
+  "sub_folder" : "system",
   "sub_type" : "state",
   "status" : {
-    "message" : "missing pointset subblock",
-    "detail" : "state_update: missing pointset subblock",
+    "message" : "operation key in older version",
+    "detail" : "state_system: operation key in older version @Validator.upgradeMessage(redacted)",
     "category" : "validation.device.schema",
     "timestamp" : "1999-10-20T01:02:03Z",
     "level" : 500
   },
   "errors" : [ {
-    "message" : "missing pointset subblock",
-    "detail" : "state_update: missing pointset subblock",
+    "message" : "operation key in older version",
+    "detail" : "state_system: operation key in older version @Validator.upgradeMessage(redacted)",
     "category" : "validation.device.schema",
     "timestamp" : "1999-10-20T01:02:03Z",
     "level" : 500

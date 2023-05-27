@@ -4,10 +4,10 @@
   "tools" : "test_trace",
   "start_time" : "1999-10-20T01:02:03Z",
   "summary" : {
-    "correct_devices" : [ "AHU-1", "GAT-123" ],
+    "correct_devices" : [ "AHU-1" ],
     "extra_devices" : [ ],
     "missing_devices" : [ ],
-    "error_devices" : [ "AHU-22", "SNS-4" ]
+    "error_devices" : [ "AHU-22", "GAT-123", "SNS-4" ]
   },
   "devices" : {
     "AHU-1" : {
@@ -32,10 +32,11 @@
     "GAT-123" : {
       "last_seen" : "1999-10-20T01:02:03Z",
       "status" : {
-        "message" : "Successful validation",
-        "category" : "validation.device.receive",
+        "message" : "Multiple validation errors",
+        "detail" : "missing pointset subblock; operation key in older version",
+        "category" : "validation.device.multiple",
         "timestamp" : "1999-10-20T01:02:03Z",
-        "level" : 200
+        "level" : 500
       }
     },
     "SNS-4" : {
