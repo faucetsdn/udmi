@@ -12,6 +12,7 @@ import static com.google.udmi.util.GeneralUtils.changedLines;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
+import static com.google.udmi.util.JsonUtil.loadFileRequired;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static java.nio.file.Files.newOutputStream;
@@ -365,13 +366,10 @@ public class SequenceBase {
   private static Metadata readDeviceMetadata() {
     File moddataFile = new File(String.format(DEVICE_MODDATA, siteModel, getDeviceId()));
     File metadataFile = new File(String.format(DEVICE_METADATA, siteModel, getDeviceId()));
+    System.err.println("Checking for modified metadata file " + moddataFile.getAbsolutePath());
     File useFile = moddataFile.exists() ? moddataFile : metadataFile;
-    try {
-      System.err.println("Reading device metadata file " + useFile.getPath());
-      return JsonUtil.OBJECT_MAPPER.readValue(useFile, Metadata.class);
-    } catch (Exception e) {
-      throw new RuntimeException("While loading " + useFile.getAbsolutePath(), e);
-    }
+    System.err.println("Reading device metadata file " + useFile.getPath());
+    return loadFileRequired(Metadata.class, useFile);
   }
 
   protected static String getDeviceId() {
