@@ -3,6 +3,7 @@ package com.google.daq.mqtt.sequencer.sequences;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -112,6 +113,7 @@ public class DiscoverySequences extends SequenceBase {
   private void checkFeatureEnumeration(Map<String, FeatureEnumeration> features) {
     Set<String> enumeratedFeatures = features.entrySet().stream()
         .filter(DiscoverySequences::isActive).map(Entry::getKey).collect(Collectors.toSet());
+    requireNonNull(deviceMetadata.features, "device metadata features missing");
     Set<String> enabledFeatures = deviceMetadata.features.entrySet().stream()
         .filter(DiscoverySequences::isActive).map(Entry::getKey).collect(Collectors.toSet());
     SetView<String> extraFeatures = Sets.difference(enumeratedFeatures, enabledFeatures);

@@ -51,8 +51,6 @@ fi
 
 bin/clone_model # Clone, and check that version is correct.
 
-bin/augment_metadata $site_path $device_id
-
 bin/reset_config $site_path $project_id $device_id
 
 # Clean out the persistant data store to ensure a clean state each time.
@@ -79,10 +77,8 @@ if [[ $i -eq $WAITING ]]; then
     false
 fi
 
-# Dynamically update the site model based off of dynamic pubber output.
-device_metadata=$site_path/devices/$device_id/metadata.json
-pubber_features=$(< out/pubber_features.json)
-jq --argjson features "$pubber_features" '.features = $features' $device_metadata | sponge $device_metadata
+# Augment the device metadata to that tests know what to expect...
+bin/augment_metadata $site_path $device_id
 
 # Run in debug mode for fail-fast when things go wrong!
 bin/sequencer -v $seq_opts $site_path $project_id $device_id $serial_no $targets 2>&1 | tee out/sequencer.log
