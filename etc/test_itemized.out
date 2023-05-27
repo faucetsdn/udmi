@@ -1,4 +1,4 @@
-TEST feature_enumeration featureEnableSwap RESULT fail enumeration.features feature_enumeration PREVIEW 5 Failed check that feature enumeration matches metadata
+TEST feature_enumeration featureEnableSwap RESULT fail enumeration.features feature_enumeration PREVIEW 5 Failed check that feature enumeration matches metadata; missing { enumeration }, extra { unknown }
 TEST broken_config configStateDelay RESULT pass system broken_config ALPHA 5 Sequence complete
 TEST endpoint_failure_and_restart RESULT fail endpoint endpoint_failure_and_restart DISABLED 5 timeout waiting for system mode is INITIAL
 TEST valid_serial_no noLastStart RESULT pass system valid_serial_no ALPHA 5 Sequence complete
