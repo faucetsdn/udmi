@@ -49,6 +49,9 @@
     "noPointState": {
       "type": "boolean"
     },
+    "featureEnableSwap": {
+      "type": "boolean"
+    },
     "disableWriteback": {
       "type": "boolean",
       "description": "Disable writeback, equivelant to marking all points as unwriteable"

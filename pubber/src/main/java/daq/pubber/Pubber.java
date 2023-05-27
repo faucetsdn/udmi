@@ -403,6 +403,9 @@ public class Pubber {
   }
 
   private void initializeDevice() {
+    SupportedFeatures.writeFeatureFile();
+    SupportedFeatures.setFeatureSwap(configuration.options.featureEnableSwap);
+
     deviceState.system = new SystemState();
     deviceState.system.operation = new StateSystemOperation();
     if (!TRUE.equals(configuration.options.noLastStart)) {
@@ -766,7 +769,9 @@ public class Pubber {
 
   void terminate() {
     warn("Terminating");
-    deviceState.system.operation.mode = SystemMode.SHUTDOWN;
+    if (deviceState.system != null && deviceState.system.operation != null) {
+      deviceState.system.operation.mode = SystemMode.SHUTDOWN;
+    }
     captureExceptions("publishing shutdown state", this::publishSynchronousState);
     stop();
     captureExceptions("executor flush", this::stopExecutor);

@@ -6,8 +6,19 @@ export LC_ALL=C
 ROOT_DIR=$(dirname $0)/..
 cd $ROOT_DIR
 
+if [[ $1 == 'clean' ]]; then
+    shift
+    clean_cache=y
+fi
+
+if [[ $1 == 'alpha' ]]; then
+    shift
+    # TODO: Make mode where it only runs tests that don't have results.
+    seq_opts=-a
+fi
+
 if [[ $# -lt 1 ]]; then
-    echo Usage: $0 PROJECT_ID [tests...]
+    echo Usage: $0 [clean] [alpha] PROJECT_ID [tests...]
     false
 fi
 
@@ -40,12 +51,10 @@ fi
 
 bin/clone_model # Clone, and check that version is correct.
 
-bin/augment_metadata $site_path $device_id
-
 bin/reset_config $site_path $project_id $device_id
 
 # Clean out the persistant data store to ensure a clean state each time.
-rm -rf sites/udmi_site_model/out/devices/AHU-1/persistent_data.json
+rm -rf $site_path/out/devices/AHU-1/persistent_data.json
 
 pubber/bin/build
 
@@ -68,8 +77,11 @@ if [[ $i -eq $WAITING ]]; then
     false
 fi
 
-# Run all tests as part of the suite, in debug mode for fail-fast when things go wrong!
-bin/sequencer -a -v $site_path $project_id $device_id $serial_no $targets 2>&1 | tee sequencer.out
+# Augment the device metadata to that tests know what to expect...
+bin/augment_metadata $site_path $device_id
+
+# Run in debug mode for fail-fast when things go wrong!
+bin/sequencer -v $seq_opts $site_path $project_id $device_id $serial_no $targets 2>&1 | tee out/sequencer.log
 echo Completed execution of sequencer test run.
 
 pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
@@ -81,11 +93,15 @@ else
     false
 fi
 
-cp etc/sequencer.out out/  # Sace for later test/comparison
-bin/sequencer_cache
+if [[ -n $clean_cache ]]; then
+    echo Cleaning sequencer result cache...
+    rm -rf validator/sequences
+else
+    bin/sequencer_cache
 
-echo Comparing diff out/sequencer.out etc/sequencer.out
-diff -u out/sequencer.out etc/sequencer.out
+    echo Comparing diff out/sequencer.out etc/sequencer.out
+    diff -u out/sequencer.out etc/sequencer.out
+fi
 
 cp docs/specs/sequences/generated.md out/  # Save for test/comparison later
 bin/gencode_seq
@@ -94,6 +110,6 @@ echo Comparing diff out/generated.md docs/specs/sequences/generated.md
 diff -u out/generated.md docs/specs/sequences/generated.md || (
     echo Run bin/gencode_seq to regenerate output, if necessary.
     false
-    )
+)
 
 echo Done with base test_sequencer run.
