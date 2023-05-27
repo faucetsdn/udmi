@@ -915,9 +915,13 @@ public class SequenceBase {
   }
 
   protected void checkThat(String description, Supplier<Boolean> condition) {
+    checkThat(description, condition, "");
+  }
+
+  protected void checkThat(String description, Supplier<Boolean> condition, String details) {
     if (!catchToFalse(condition)) {
       warning("Failed check that " + description);
-      throw new IllegalStateException("Failed check that " + description);
+      throw new IllegalStateException("Failed check that " + description + "; " + details);
     }
     recordSequence("Check that " + description);
   }

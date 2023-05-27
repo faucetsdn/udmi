@@ -1,6 +1,8 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
+import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
+import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -20,6 +22,7 @@ import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
 import com.google.udmi.util.CleanDateFormat;
+import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import java.time.Instant;
 import java.util.Date;
@@ -107,7 +110,9 @@ public class DiscoverySequences extends SequenceBase {
     SetView<String> extraFeatures = Sets.difference(enumeratedFeatures, enabledFeatures);
     SetView<String> missingFeatures = Sets.difference(enabledFeatures, enumeratedFeatures);
     SetView<String> difference = Sets.union(extraFeatures, missingFeatures);
-    checkThat("feature enumeration matches metadata", difference::isEmpty);
+    String details = format("missing { %s }, extra { %s }", CSV_JOINER.join(missingFeatures),
+        CSV_JOINER.join(extraFeatures));
+    checkThat("feature enumeration matches metadata", difference::isEmpty, details);
     Set<String> unofficial = enumeratedFeatures.stream()
         .filter(feature -> !Bucket.contains(feature)).collect(Collectors.toSet());
     checkThat("all enumerated features are official buckets", unofficial::isEmpty);
