@@ -1,10 +1,10 @@
 {
-  "timestamp" : "2023-05-06T15:31:53Z",
-  "start_time" : "2023-05-06T15:31:44Z",
+  "timestamp" : "2023-05-28T16:48:48Z",
+  "start_time" : "2023-05-28T16:48:39Z",
   "status" : {
     "message" : "Run completed",
     "category" : "validation.feature.sequence",
-    "timestamp" : "2023-05-06T15:31:53Z",
+    "timestamp" : "2023-05-28T16:48:48Z",
     "level" : 300
   },
   "features" : {
@@ -16,7 +16,7 @@
           "result" : "fail",
           "status" : {
             "category" : "validation.feature.sequence",
-            "timestamp" : "2023-05-06T15:31:53Z",
+            "timestamp" : "2023-05-28T16:48:48Z",
             "level" : 500
           }
         }

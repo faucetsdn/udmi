@@ -28,7 +28,7 @@ The primary use of the site_model will be through the [registrar](../tools/regis
 ## `cloud_iot_config.json`
 
 The [cloud_iot_config.json](../../schema/configuration_execution.json) schema specifies some cloud-centric
-configuration parameters ([example](../../tests/configuration_execution.tests/cloud_iot_config.json)).
+configuration parameters ([example](../../tests/schemas/configuration_execution/cloud_iot_config.json)).
 
 ## `devices/`
 

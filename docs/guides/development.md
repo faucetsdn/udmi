@@ -36,7 +36,7 @@ The `bin/upgrade_version` tool updates :
 
 File in the `tests` directory must be listed in `etc/upversion.txt`. Only files
 which are preceded by a `y` in `upversion.txt` will have their version upgraded. Comments are supported after the file path, e.g.
-`y tests/state.tests/makemodel_upgrade.json tests message upgrade from v1`
+`y tests/schemas/state/makemodel_upgrade.json tests message upgrade from v1`
 
 `bin/upgrade_version` carries out several checks on files which must be cleared before an update.
 

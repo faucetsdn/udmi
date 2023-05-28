@@ -15,5 +15,5 @@ follow the same structure.
 ## Example
 
 The working examples below demonstrate `status` and `logentries` fields in different message types:
-- `state`(../../tests/state.tests/example.json)
-- `event_system`(../../tests/event_system.tests/example.json)
+- `state`(../../tests/schemas/state/example.json)
+- `event_system`(../../tests/schemas/event_system/example.json)
