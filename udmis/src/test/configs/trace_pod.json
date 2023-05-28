@@ -12,7 +12,7 @@
     "trace": {
       "from": {
         "protocol": "file",
-        "recv_id": "../tests/simple.trace/devices",
+        "recv_id": "../tests/traces/simple/devices",
         "send_id": "out/simple.trace"
       },
       "to": {

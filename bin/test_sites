@@ -10,7 +10,7 @@ build=y
 force=n
 
 schemadir=schema
-testdir=tests
+testdir=tests/
 
 while getopts "d:" opt; do
     case $opt in
@@ -56,9 +56,9 @@ done
 
 echo
 echo Testing simple mock sequencer...
-bin/sequencer tests/downgrade.site/ -- DWN-2 54321 system_mode_restart
+bin/sequencer tests/sites/downgrade/ -- DWN-2 54321 system_mode_restart
 
-RESULTLOG=tests/downgrade.site/out/devices/DWN-2/RESULT.log
+RESULTLOG=tests/sites/downgrade/out/devices/DWN-2/RESULT.log
 fgrep "RESULT fail system.mode system_mode_restart ALPHA 5 null" $RESULTLOG || bin/fail unexpected output from $RESULTLOG
 
 echo

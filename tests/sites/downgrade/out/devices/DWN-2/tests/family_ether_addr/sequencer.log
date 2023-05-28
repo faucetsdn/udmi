@@ -1,0 +1,39 @@
+2023-03-02T03:14:21Z NOTICE sequencer starting test family_ether_addr
+2023-03-02T03:14:29Z DEBUG sequencer Starting reset_config full reset true
+2023-03-02T03:14:29Z DEBUG sequencer extraFieldChanged false because extra_field null
+2023-03-02T03:14:29Z DEBUG sequencer lastStartChanged true, last_start 1970-01-01T00:00:00Z
+2023-03-02T03:14:29Z DEBUG sequencer extraFieldChanged true because extra_field reset_config
+2023-03-02T03:14:29Z DEBUG sequencer system config extra field reset_config
+2023-03-02T03:14:29Z TRACE sequencer updated check config_system: null
+2023-03-02T03:14:29Z DEBUG sequencer update config_system, id null
+2023-03-02T03:14:29Z DEBUG sequencer local local_system: 
+2023-03-02T03:14:38Z DEBUG sequencer stage done starting test wrapper at 17s
+2023-03-02T03:14:38Z DEBUG sequencer ending stack trace: java.lang.NullPointerException
+	at java.base/java.util.concurrent.ConcurrentSkipListMap.doPut(ConcurrentSkipListMap.java:597)
+	at java.base/java.util.concurrent.ConcurrentSkipListMap.putIfAbsent(ConcurrentSkipListMap.java:1786)
+	at java.base/java.util.concurrent.ConcurrentSkipListSet.add(ConcurrentSkipListSet.java:242)
+	at com.google.daq.mqtt.sequencer.SequenceBase.updateConfig(SequenceBase.java:701)
+	at com.google.daq.mqtt.sequencer.SequenceBase.updateConfig(SequenceBase.java:672)
+	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$resetConfig$2(SequenceBase.java:462)
+	at com.google.daq.mqtt.sequencer.SequenceBase.withRecordSequence(SequenceBase.java:352)
+	at com.google.daq.mqtt.sequencer.SequenceBase.resetConfig(SequenceBase.java:454)
+	at com.google.daq.mqtt.sequencer.SequenceBase.setUp(SequenceBase.java:438)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:566)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)
+	at org.junit.internal.runners.statements.RunBefores.invokeMethod(RunBefores.java:33)
+	at org.junit.internal.runners.statements.RunBefores.evaluate(RunBefores.java:24)
+	at org.junit.internal.runners.statements.RunAfters.evaluate(RunAfters.java:27)
+	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:299)
+	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:293)
+	at java.base/java.util.concurrent.FutureTask.run$$$capture(FutureTask.java:264)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java)
+	at java.base/java.lang.Thread.run(Thread.java:829)
+
+2023-03-02T03:14:38Z NOTICE sequencer RESULT fail unknown family_ether_addr ALPHA 5 null
+2023-03-02T03:14:38Z ERROR sequencer null
+2023-03-02T03:14:38Z NOTICE sequencer ending test family_ether_addr after 17s

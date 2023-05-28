@@ -31,7 +31,7 @@ import udmi.schema.SystemEvent;
 
 class FileMessagePipeTest {
 
-  private static final String SIMPLE_TRACE = "../tests/simple.trace/devices";
+  private static final String SIMPLE_TRACE = "../tests/traces/simple/devices";
   private static final String TRACE_OUT = "out/test.trace/";
   private static final String TEST_REGISTRY = "TEST_REGISTRY";
   private static final String TEST_PROJECT = "TEST_PROJECT";

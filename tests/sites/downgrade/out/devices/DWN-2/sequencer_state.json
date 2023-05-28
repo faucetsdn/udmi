@@ -1,0 +1,26 @@
+{
+  "timestamp" : "2023-05-06T15:31:53Z",
+  "start_time" : "2023-05-06T15:31:44Z",
+  "status" : {
+    "message" : "Run completed",
+    "category" : "validation.feature.sequence",
+    "timestamp" : "2023-05-06T15:31:53Z",
+    "level" : 300
+  },
+  "features" : {
+    "system.mode" : {
+      "sequences" : {
+        "system_mode_restart" : {
+          "summary" : "Restart and connect to same endpoint and expect it returns.",
+          "stage" : "alpha",
+          "result" : "fail",
+          "status" : {
+            "category" : "validation.feature.sequence",
+            "timestamp" : "2023-05-06T15:31:53Z",
+            "level" : 500
+          }
+        }
+      }
+    }
+  }
+}

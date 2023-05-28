@@ -74,7 +74,7 @@ if [[ -n $(git status --untracked-files=no --porcelain) ]]; then
 fi
 
 # Check test files exist in the upversion list  
-for test_file in tests/*.tests/*.json; do
+for test_file in tests/schemas/*/*.json; do
     if [[ $(grep -P -c "^[^#] $test_file" $UPVERSION_LIST) != 1 ]]; then
         echo $test_file
         err_upversion_list=1

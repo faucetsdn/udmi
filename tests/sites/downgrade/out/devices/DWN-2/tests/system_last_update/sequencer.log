@@ -1,0 +1,39 @@
+2023-03-12T05:10:40Z NOTICE validation.feature.sequence starting test system_last_update
+2023-03-12T05:10:48Z DEBUG validation.feature.sequence Starting reset_config full reset true
+2023-03-12T05:10:48Z DEBUG validation.feature.sequence extraFieldChanged false because extra_field null
+2023-03-12T05:10:48Z DEBUG validation.feature.sequence lastStartChanged true, last_start 1970-01-01T00:00:00Z
+2023-03-12T05:10:48Z DEBUG validation.feature.sequence extraFieldChanged true because extra_field reset_config
+2023-03-12T05:10:48Z DEBUG validation.feature.sequence system config extra field reset_config
+2023-03-12T05:10:48Z TRACE validation.feature.sequence updated check config_system: null
+2023-03-12T05:10:48Z DEBUG validation.feature.sequence update config_system, id null
+2023-03-12T05:10:48Z DEBUG validation.feature.sequence local local_system: 
+2023-03-12T05:10:48Z DEBUG validation.feature.sequence stage done starting test wrapper at 8s
+2023-03-12T05:10:48Z DEBUG validation.feature.sequence ending stack trace: java.lang.NullPointerException
+	at java.base/java.util.concurrent.ConcurrentSkipListMap.doPut(ConcurrentSkipListMap.java:597)
+	at java.base/java.util.concurrent.ConcurrentSkipListMap.putIfAbsent(ConcurrentSkipListMap.java:1786)
+	at java.base/java.util.concurrent.ConcurrentSkipListSet.add(ConcurrentSkipListSet.java:242)
+	at com.google.daq.mqtt.sequencer.SequenceBase.updateConfig(SequenceBase.java:755)
+	at com.google.daq.mqtt.sequencer.SequenceBase.updateConfig(SequenceBase.java:726)
+	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$resetConfig$2(SequenceBase.java:513)
+	at com.google.daq.mqtt.sequencer.SequenceBase.withRecordSequence(SequenceBase.java:403)
+	at com.google.daq.mqtt.sequencer.SequenceBase.resetConfig(SequenceBase.java:505)
+	at com.google.daq.mqtt.sequencer.SequenceBase.setUp(SequenceBase.java:489)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:566)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)
+	at org.junit.internal.runners.statements.RunBefores.invokeMethod(RunBefores.java:33)
+	at org.junit.internal.runners.statements.RunBefores.evaluate(RunBefores.java:24)
+	at org.junit.internal.runners.statements.RunAfters.evaluate(RunAfters.java:27)
+	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:299)
+	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:293)
+	at java.base/java.util.concurrent.FutureTask.run$$$capture(FutureTask.java:264)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java)
+	at java.base/java.lang.Thread.run(Thread.java:829)
+
+2023-03-12T05:10:48Z NOTICE validation.feature.sequence RESULT fail system system_last_update STABLE 5 null
+2023-03-12T05:10:48Z ERROR validation.feature.sequence null
+2023-03-12T05:10:48Z NOTICE validation.feature.sequence ending test system_last_update after 8s
