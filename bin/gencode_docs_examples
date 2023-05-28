@@ -17,7 +17,7 @@ def parse_command_line_args():
   parser = argparse.ArgumentParser()
 
   parser.add_argument('check', nargs='?', default=False,
-            help='Check in-line examples match examples in tests/schemas/ directory')
+            help='Check in-line examples match with tests/schemas/ directory')
 
   return parser.parse_args()
 
