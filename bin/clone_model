@@ -32,5 +32,5 @@ else
     cp devices/AHU-1/rsa_private.pkcs8 $KEY_DIR/
 fi
 
-echo Tweaking for testing b/284628433
-cat devices/AHU-22/metadata.json | jq 'del(.pointset)' | sponge devices/AHU-22/metadata.json
+#echo Tweaking for testing b/284628433
+#cat devices/AHU-22/metadata.json | jq 'del(.pointset)' | sponge devices/AHU-22/metadata.json
