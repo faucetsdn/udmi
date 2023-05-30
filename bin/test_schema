@@ -13,7 +13,7 @@ force=n
 upgrade=
 
 schemadir=schema
-testdir=tests
+testdir=tests/schemas/
 
 while getopts "d:s:fnu" opt; do
     case $opt in
@@ -49,15 +49,15 @@ fi
 jarfile=$(realpath validator/build/libs/validator-1.0-SNAPSHOT-all.jar)
 
 if [[ -z $subsets ]]; then
-    subsets=$(cd $testdir; ls -d *.tests)
+    subsets=$(cd $testdir; ls -d *)
 fi
 if [[ -z $subsets ]]; then
-    echo Schema $schema has no X.tests dirs.
+    echo No tests found in $testdir
     false
 fi
 echo Testing against $subsets
 for subset in $subsets; do
-    schemaname=${subset%.tests}.json
+    schemaname=${subset}.json
     testfiles=$(cd $testdir/$subset; ls *.json || true)
     testbase=$testdir/$subset
 
@@ -76,7 +76,7 @@ for subset in $subsets; do
         testbase=$testdir/$subset
         testpath=$testbase/$testfile
         expected=$testbase/$outfile
-        outdir=$outroot/${testbase#${schema_root}/}
+        outdir=$outroot/${testbase}
         mkdir -p $outdir
         output=$outdir/$outfile
 

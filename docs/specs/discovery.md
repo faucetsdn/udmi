@@ -16,7 +16,7 @@ information about how the device is indexed in the world around it.
 information intrinsic to a device and the capabilities it provides.
 
 Backend services will receive a streaming set of
-[_discovery enumeration messages_](../../tests/event_discovery.tests/enumeration.json) that
+[_discovery enumeration messages_](../../tests/schemas/event_discovery/enumeration.json) that
 follow the appropriate [_discovery event schema_](../../gencode/docs/event_discovery.html).
 
 ## Sequence Diagram

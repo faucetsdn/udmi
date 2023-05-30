@@ -42,5 +42,5 @@ installations, respectively.
 
 ## Example
 
-This [working example](../../tests/metadata.tests/example.json) shows how a typical `metadata` file
+This [working example](../../tests/schemas/metadata/example.json) shows how a typical `metadata` file
 is constructed.

@@ -57,6 +57,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URL;
+import java.nio.file.Files;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -890,7 +891,7 @@ public class Validator {
   }
 
   private JsonSchema getSchema(File schemaFile) {
-    try (InputStream schemaStream = new FileInputStream(schemaFile)) {
+    try (InputStream schemaStream = Files.newInputStream(schemaFile.toPath())) {
       return JsonSchemaFactory.newBuilder()
           .setLoadingConfiguration(
               LoadingConfiguration.newBuilder()
@@ -929,10 +930,10 @@ public class Validator {
 
   private void validateFile(
       String prefix, String targetFile, String schemaName, JsonSchema schema) {
-    final File targetOut = getTargetPath(prefix, targetFile.replace(".json", ".out"));
-    File outputFile = getTargetPath(prefix, targetFile);
-    try (OutputStream outputStream = new FileOutputStream(outputFile)) {
-      File inputFile = getFullPath(prefix, new File(targetFile));
+    final File targetOut = getOutputPath(prefix, targetFile.replace(".json", ".out"));
+    File outputFile = getOutputPath(prefix, targetFile);
+    File inputFile = new File(targetFile);
+    try (OutputStream outputStream = Files.newOutputStream(outputFile.toPath())) {
       copyFileHeader(inputFile, outputStream);
       Map<String, Object> message = JsonUtil.loadMap(inputFile);
       sanitizeMessage(schemaName, message);
@@ -967,7 +968,7 @@ public class Validator {
   }
 
   private void writeExceptionOutput(File targetOut, Exception e) {
-    try (OutputStream outputStream = new FileOutputStream(targetOut)) {
+    try (OutputStream outputStream = Files.newOutputStream(targetOut.toPath())) {
       if (e != null) {
         ExceptionMap.format(e, ERROR_FORMAT_INDENT).write(outputStream);
       }
@@ -976,9 +977,10 @@ public class Validator {
     }
   }
 
-  private File getTargetPath(String baseFile, String addedFile) {
+  private File getOutputPath(String baseFile, String addedFile) {
     File prefix = new File(baseFile);
-    File outBase = new File(prefix.getParentFile(), "out/tests");
+    File rootDir = prefix.getParentFile().getParentFile();
+    File outBase = new File(rootDir, "out/tests");
     File full = new File(outBase, addedFile);
     full.getParentFile().mkdirs();
     return full;

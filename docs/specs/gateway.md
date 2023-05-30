@@ -20,10 +20,10 @@ and have device-level UDMI data, but they have fundamentally different roles.
 
 ## Gateway Operation
 
-There are two modes for gateway operation: _implicit_ and _explicit_. 
+There are two modes for gateway operation: _implicit_ and _explicit_.
 
 In the _explicit_ mode, the gateway functionality is configured dynamically through
-gateway _config_ messages, which tell it the local devices it should proxy for. 
+gateway _config_ messages, which tell it the local devices it should proxy for.
 
 In the _implicit_ gateway configuration, the gateway will be directly
 configured to proxy a set of devices, essentially ignoring any gateway
@@ -44,7 +44,7 @@ native (e.g. BACnet) communications and UDMI-based messages.
 
 ### config
 
-[_Gateway Config Full Example_](../../tests/config.tests/gateway.json)
+[_Gateway Config Full Example_](../../tests/schemas/config/gateway.json)
 
 The [🧬gateway block](../../gencode/docs/config.html#gateway) in the [config](../messages/config.md)
 simply specifies the list of target proxy devices. On a config update, the gateway is responsible
@@ -54,7 +54,7 @@ are a large number of devices.
 
 ### state
 
-[_Gateway State Full Example_](../../tests/state.tests/gateway.json)
+[_Gateway State Full Example_](../../tests/schemas/state/gateway.json)
 
 Any attach errors, e.g. the gateway can not successfully attach to the target
 device, should be reported in the [`gateway` _block_](../../gencode/docs/state.html#gateway) of the [state](../messages/state.md) message
@@ -72,7 +72,7 @@ attaching, then there should be appropriate logging to help diagnose the problem
 
 ### metadata
 
-[_Gateway Metadata Full Example_](../../tests/metadata.tests/gateway.json) 
+[_Gateway Metadata Full Example_](../../tests/schemas/metadata/gateway.json)
 
 The [🧬`gateway` block](../../gencode/docs/metadata.html#gateway) within the [metadata](metadata.md)
 specifies any information necessary either for the initial (manual) configuration of the device or
@@ -88,7 +88,7 @@ cloud connection.
 
 ### config
 
-[_Proxy Device Full Config Example_](../../tests/config.tests/proxy.json) 
+[_Proxy Device Full Config Example_](../../tests/schemas/config/proxy.json)
 
 Proxy device [_config_](../messages/config.md) contain a special
 [🧬`localnet` block](../../gencode/docs/config.html#localnet) section that
@@ -99,7 +99,7 @@ all other messages.
 
 Additionally, the gateway is responsible for proxying all other supported operations of the config
 bundle. E.g., if a [_pointset_](../messages/pointset.md) has a
-[🧬`set_value`](../../gencode/docs/config.html#pointset_points_pattern1_set_value) 
+[🧬`set_value`](../../gencode/docs/config.html#pointset_points_pattern1_set_value)
 parameter specified, the gateway would need to convert that into the local protocol
 and trigger the required functionality.
 
@@ -115,14 +115,13 @@ message.
 
 [Telemetry](../messages/pointset.md#telemetry) is handled similarly, with the gateway responsible for
 proxying data from local devices through to UDMI. In many cases, this would be translating specific
-device points into a [_pointset_ message](../../tests/event_pointset.tests/example.json).
+device points into a [_pointset_ message](../../tests/schemas/event_pointset/example.json).
 
 ### metadata
 
-[_Proxy Device Full Metadata Example_](../../tests/metadata.tests/proxy.json)
+[_Proxy Device Full Metadata Example_](../../tests/schemas/metadata/proxy.json)
 
 The [🧬`localnet` block](../../gencode/docs/metadata.html#localnet) within the [metadata](metadata.md)
 describes the presence of the device on a local network. This can/should be used for initial
 programming and configuration of the device, or to validate proper device configuration. The gateway
 implementation itself would not directly deal with this block.
-

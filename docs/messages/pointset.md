@@ -20,7 +20,7 @@ Pointset is represented in four locations
 
 - **Schema Definition:** [model_pointset.json](../../schema/model_pointset.json)
  ([_🧬View_](../../gencode/docs/metadata.html#pointset))
-- [Working `metadata` Example](../../tests/metadata.tests/example.json)
+- [Working `metadata` Example](../../tests/schemas/metadata/example.json)
 
 The `metadata.pointset` subblock represents the abstract system expectation for what the device
 _should_ be doing, and how it _should_ be configured and operated. This block specifies the
@@ -36,7 +36,7 @@ The general structure of a `pointset` block exists inside of a complete metadata
 
 - **Schema Definition:** [event_pointset.json](../../schema/event_pointset.json)
  ([_🧬View_](../../gencode/docs/event_pointset.html#points))
-- [Working `event_pointset` Example](../../tests/event_pointset.tests/example.json)
+- [Working `event_pointset` Example](../../tests/schemas/event_pointset/example.json)
 
 A basic `pointset` event message contains
 the point data sent from a device. The message contains just the top-level `points` designator,
@@ -66,7 +66,7 @@ included, without this flag, is considered a validation error.
 
 - **Schema Definition:** [state_pointset.json](../../schema/state_pointset.json)
  ([_🧬View interactive_](../../gencode/docs/state.html#pointset))
-- [Working `state` Example](../../tests/state.tests/example.json)
+- [Working `state` Example](../../tests/schemas/state/example.json)
 
 The [state](state.md) message from a device contains a `pointset` block with the following
 structure:
@@ -84,7 +84,7 @@ reason for an _invalid_ or _failure_ `value_state`).
 ## Config
 
 - [🧬Schema](../../gencode/docs/config.html#pointset)
-- [Working `config` Example](../../tests/config.tests/writeback.json)
+- [Working `config` Example](../../tests/schemas/config/writeback.json)
 
 The [config](config.md) message for a device contains a `pointset`
 block with the following structure:e

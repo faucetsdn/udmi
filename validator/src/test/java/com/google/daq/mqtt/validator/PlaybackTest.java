@@ -23,7 +23,7 @@ import udmi.schema.ValidationState;
  */
 public class PlaybackTest extends TestBase {
 
-  public static final String SIMPLE_TRACE_DIR = "../tests/simple.trace";
+  public static final String SIMPLE_TRACE_DIR = "../tests/traces/simple";
   private static final List<String> TRACE_DEVICES = List.of("--", "AHU-22", "SNS-4", "XXX", "YYY");
 
   @Test

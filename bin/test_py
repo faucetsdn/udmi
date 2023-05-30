@@ -6,7 +6,7 @@ from udmi.schema import *
 
 for base in [ Config, Metadata, State ]:
   path = base.__name__.lower()
-  example = 'tests/%s.tests/example.json' % path
+  example = 'tests/schemas/%s/example.json' % path
   print('Processing %s' % example)
   with open(example) as fd:
     input = json.load(fd)
