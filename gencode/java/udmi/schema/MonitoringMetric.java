@@ -2,10 +2,14 @@
 package udmi.schema;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import javax.annotation.processing.Generated;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.annotation.JsonValue;
 
 
 /**
@@ -31,7 +35,7 @@ public class MonitoringMetric {
     @JsonProperty("timestamp")
     public Date timestamp;
     @JsonProperty("severity")
-    public String severity;
+    public MonitoringMetric.Severity severity;
     @JsonProperty("project")
     public String project;
     @JsonProperty("location")
@@ -69,6 +73,46 @@ public class MonitoringMetric {
         }
         MonitoringMetric rhs = ((MonitoringMetric) other);
         return (((((((((this.severity == rhs.severity)||((this.severity!= null)&&this.severity.equals(rhs.severity)))&&((this.status_message == rhs.status_message)||((this.status_message!= null)&&this.status_message.equals(rhs.status_message))))&&((this.registry == rhs.registry)||((this.registry!= null)&&this.registry.equals(rhs.registry))))&&((this.device_id == rhs.device_id)||((this.device_id!= null)&&this.device_id.equals(rhs.device_id))))&&((this.project == rhs.project)||((this.project!= null)&&this.project.equals(rhs.project))))&&((this.device_num == rhs.device_num)||((this.device_num!= null)&&this.device_num.equals(rhs.device_num))))&&((this.location == rhs.location)||((this.location!= null)&&this.location.equals(rhs.location))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
+    }
+
+    @Generated("jsonschema2pojo")
+    public enum Severity {
+
+        ERROR("ERROR"),
+        NONE("NONE");
+        private final String value;
+        private final static Map<String, MonitoringMetric.Severity> CONSTANTS = new HashMap<String, MonitoringMetric.Severity>();
+
+        static {
+            for (MonitoringMetric.Severity c: values()) {
+                CONSTANTS.put(c.value, c);
+            }
+        }
+
+        Severity(String value) {
+            this.value = value;
+        }
+
+        @Override
+        public String toString() {
+            return this.value;
+        }
+
+        @JsonValue
+        public String value() {
+            return this.value;
+        }
+
+        @JsonCreator
+        public static MonitoringMetric.Severity fromValue(String value) {
+            MonitoringMetric.Severity constant = CONSTANTS.get(value);
+            if (constant == null) {
+                throw new IllegalArgumentException(value);
+            } else {
+                return constant;
+            }
+        }
+
     }
 
 }

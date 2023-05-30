@@ -13,34 +13,66 @@ import com.google.cloud.logging.Severity;
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.time.Instant;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.apache.commons.cli.ParseException;
 import udmi.schema.Monitoring;
 import udmi.schema.MonitoringMetric;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.HelpFormatter;
 
-public class LogTail {
+public class LogTail extends LogTailBase {
 
-  private String projectId;
+  private String projectName;
   private LogTimeSeries logsTimeSeries;
   private String LOG_FILTER =
       "(resource.labels.function_name=\"udmi_target\") OR " +
           "(resource.labels.function_name=\"udmi_state\") OR " +
           "(resource.labels.function_name=\"udmi_config\") OR " +
           "(severity=ERROR AND protoPayload.serviceName=\"cloudiot.googleapis.com\")";
+  private boolean outputJson = false;
+  private LogTailOutput output;
 
-  public LogTail(String projectId) {
-    this.projectId = projectId;
+  public LogTail(String projectName) {
+    this.projectName = projectName;
     this.logsTimeSeries = new LogTimeSeries();
+    this.outputJson = true;
   }
 
-  public static void main(String[] args) {
-    String projectId = "essential-keep-197822";
-    LogTail lt = new LogTail(projectId);
-    lt.tailLogs();
+  public static void main(String[] args) throws ParseException {
+    CommandLine commandLine = parseArgs(args);
+    String projectId = commandLine.getOptionValue("p"); // TODO:(rm)NOTES: "essential-keep-197822"
+    LogTail logTail = new LogTail(projectId);
+    logTail.tailLogs();
+  }
+
+  private static CommandLine parseArgs(String[] args) throws ParseException {
+    Options options = new Options();
+    options.addOption("h", "help", false, "Print usage info.");
+    options.addOption("p", "project", true, "Cloud project name (required)");
+
+    CommandLineParser parser = new DefaultParser();
+    CommandLine commandLine = parser.parse(options, args);
+
+    if (commandLine.hasOption("h")) {
+      HelpFormatter formatter = new HelpFormatter();
+      formatter.printHelp("Example", options);
+      System.exit(0);
+    }
+
+    if (!commandLine.hasOption("p")) {
+      HelpFormatter formatter = new HelpFormatter();
+      formatter.printHelp("Required: project name", options);
+      System.exit(1);
+    }
+
+    return commandLine;
   }
 
   private LogEntryServerStream getCloudLogStream(String filter) {
@@ -48,9 +80,9 @@ public class LogTail {
     Logging logging = options.getService();
     LogEntryServerStream stream;
     if (filter == null) {
-      stream = logging.tailLogEntries();
+      stream = logging.tailLogEntries(TailOption.project(projectName));
     } else {
-      stream = logging.tailLogEntries(TailOption.filter(filter));
+      stream = logging.tailLogEntries(TailOption.project(projectName), TailOption.filter(filter));
     }
     return stream;
   }
@@ -74,10 +106,10 @@ public class LogTail {
    * Top level processor of incoming GCP log entries of ERROR type.
    */
   private void processLogEntryError(LogEntry log) {
-    // Be careful in here. Unwrapping this is a careful sequence.
+    // Be careful in here. Unwrapping the audit payload is a careful sequence.
     Payload.ProtoPayload payload = log.getPayload();
     if (!payload.getData().getTypeUrl().equals("type.googleapis.com/google.cloud.audit.AuditLog")) {
-      System.err.println("Not AuditLog");
+      error("Log payload is not AuditLog");
       return;
     }
     try {
@@ -91,11 +123,11 @@ public class LogTail {
       entry.statusMessage = auditLog.getStatus().getMessage();
       entry.severity = log.getSeverity();
       logsTimeSeries.add(entry);
-      logsTimeSeries.maybeEmitMetrics();
+      logsTimeSeries.maybeEmitMetrics(output);
     } catch (InvalidProtocolBufferException e) {
-      System.err.println(e.toString());
+      error("Log payload AuditLog deserialize error: " + e.toString());
     } catch (IOException e) {
-      System.err.println(e.toString());
+      error(e.toString());
     }
   }
 
@@ -107,147 +139,9 @@ public class LogTail {
 
   public void tailLogs() {
     LogEntryServerStream stream = getCloudLogStream(LOG_FILTER);
+    if (outputJson) {
+      this.output = new LogTailJsonOutput();
+    }
     processLogStream(stream);
   }
-
-  /*
-   * Fields from GCP Logging stored in a neutral class.
-   */
-  protected class LogTailEntry {
-
-    Instant timestamp;
-    String methodName;
-    String serviceName;
-    String resourceName;
-    int statusCode;
-    String statusMessage;
-    Severity severity;
-    int value = 1;
-  }
-
-  /*
-   * Linked list of LogTailEntry.
-   */
-  protected class LogTailEntryList extends LinkedList<LogTailEntry> {
-
-  }
-
-  /*
-   * All the LogTail items currently processing.
-   * Hold the log entries in buckets for upstream processing in chunks.
-   */
-  protected class LogTimeSeries extends TreeMap<Long, LogTailEntryList> {
-
-    int numberOfLogs = 0;
-    int LOG_ENTRIES_BUCKET_SECONDS = 10;
-    int LOG_ENTRIES_PER_SUBMIT = 100;
-
-    private void emitJsonTimeSeries(PrintStream output) throws JsonProcessingException {
-      ObjectMapper objectMapper = new ObjectMapper();
-      for (long k : keySet()) {
-        for (LogTailEntry log : this.get(k)) {
-          Monitoring monitoring = new Monitoring();
-          monitoring.metric = new MonitoringMetric();
-          loadMetricFields(monitoring.metric, log);
-          output.println(objectMapper.writeValueAsString(monitoring));
-        }
-      }
-    }
-
-    private int findSameLog(long k, LogTailEntry log) {
-      // TODO: Revise when output storage requirements are known.
-      LogTailEntryList logs = this.get(k);
-      for (int i = 0; i < logs.size(); i++) {
-        if (log.severity.equals(Severity.ERROR) && logs.get(i).serviceName.equals(log.severity)) {
-          if (logs.get(i).statusMessage.equals(log.statusMessage)) {
-            return i;
-          }
-        }
-      }
-      return -1;
-    }
-
-    /*
-     * Generate the bucket key for a LogTailEntry.
-     */
-    private long keyFor(LogTailEntry log) {
-      long t = log.timestamp.toEpochMilli();
-      t = t - (t % (LOG_ENTRIES_BUCKET_SECONDS * 1000));
-      return t;
-    }
-
-    private void loadMetricFields(MonitoringMetric metric, LogTailEntry log) {
-      metric.timestamp = Date.from(log.timestamp);
-      metric.severity = log.severity.toString();
-
-      if (!log.resourceName.isEmpty()) {
-        loadMetricFieldsFromResourceName(metric, log);
-      }
-
-      if (!log.statusMessage.isEmpty()) {
-        metric.status_message = log.statusMessage.toString();
-        if (log.severity.toString().equals("ERROR")) {
-          Pattern pattern = Pattern.compile("Device [`'](\\d+)[`'] is ");
-          Matcher matcher = pattern.matcher(log.statusMessage);
-          if (matcher.find()) {
-            metric.device_num = matcher.group(1);
-          }
-        }
-      }
-    }
-
-    private void loadMetricFieldsFromResourceName(MonitoringMetric metric, LogTailEntry log) {
-      // Example:
-      // projects/essential-keep-197822/locations/us-central1/registries/UDMS-REFLECT/devices/IN-HYD-SAR2
-      Pattern pattern = Pattern.compile(
-          "projects/(?<project>[^/]+)/locations/(?<location>[^/]+)/registries/(?<registry>[^/]+)/devices/(?<device>[^/]+)");
-      Matcher matcher = pattern.matcher(log.resourceName);
-      if (matcher.find()) {
-        metric.project = matcher.group("project");
-        metric.location = matcher.group("location");
-        metric.registry = matcher.group("registry");
-        metric.device_id = matcher.group("device");
-      } else {
-        metric.device_id = log.resourceName.toString();
-      }
-    }
-
-    private boolean shouldSubmit() {
-      return (this.numberOfLogs > LOG_ENTRIES_PER_SUBMIT);
-    }
-
-    public synchronized boolean add(LogTailEntry log) {
-      // TODO: Again, based on output requirements, update performance and/or grouping.
-      long k = keyFor(log);
-      LogTailEntryList reInsert = this.getOrDefault(k, new LogTailEntryList());
-      if (reInsert.size() > 0) {
-        int i = findSameLog(k, log);
-        if (i >= 0) {
-          reInsert.get(i).value++;
-        } else {
-          reInsert.add(log);
-        }
-      } else {
-        reInsert.add(log);
-      }
-      this.put(k, reInsert);
-      numberOfLogs++;
-      return true;
-    }
-
-    @Override
-    public void clear() {
-      super.clear();
-      numberOfLogs = 0;
-    }
-
-    public void maybeEmitMetrics() throws IOException {
-      if (shouldSubmit()) {
-        emitJsonTimeSeries(System.out);
-        clear();
-      }
-    }
-  }
-
-
 }

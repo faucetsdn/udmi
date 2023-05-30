@@ -11,8 +11,10 @@
         "format": "date-time"
       },
       "severity": {
-        "type": "string",
-        "examples": ["ERROR"]
+        "enum": [
+          "ERROR",
+          "NONE"
+        ]
       },
       "project": {
         "type": "string"
