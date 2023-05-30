@@ -24,21 +24,21 @@ different sources:
   static set of files somewhere.
 * **Event**: Streaming telemetry. This is essentially a raw feed from the device itself,
   and will always be segmented by subblock (e.g. for a
-  [pointset event](../../tests/event_pointset.tests/example.json)). Streaming telemetry
+  [pointset event](../../tests/schemas/event_pointset/example.json)). Streaming telemetry
   is sent from the device, so will be _received by_ a client app.
 * **State**: Device state for this subblock. Unlike a
-  [comprehensive device state message](../../tests/state.tests/example.json)
+  [comprehensive device state message](../../tests/schemas/state/example.json)
   this message contains information _only_ for a single subblock. Used for reporting any 'sticky'
   state from a device, so will be _received by_ a client app.
 * **Config**: Device config for this subblock. Unlike a
-  [comprehensive device config message](../../tests/config.tests/example.json)
+  [comprehensive device config message](../../tests/schemas/config/example.json)
   this message contains information _only_ for a single subblock. Used for writing configuration
   changes to a device, so will be _sent from_ a client app.
 * **Commands**: Streaming commands from cloud to the device. Generally not used because a model-based
   approach using device state is preferred.
 
 In all cases, the _Subblock API_ messages encode the relevant subblock ID { pointset, discovery, ... }
-in the [message envelope's](../../tests/envelope.tests/example.json) _subFolder_ field.
+in the [message envelope's](../../tests/schemas/envelope/example.json) _subFolder_ field.
 The _subType_ field encodes the relevant type { _event_, _config_, _state_, _model_ }.
 
 ## System
@@ -54,13 +54,13 @@ A _pointset_ covers the structures necessary to model a device _point_ with asso
 This is typically what is thought of as 'device telemetry' and represents the expected end value of
 the device-to-cloud connection.
 
-* [**Model**](../../tests/model_pointset.tests/example.json): Expected model for what the device should
+* [**Model**](../../tests/schemas/model_pointset/example.json): Expected model for what the device should
   be reporting.
-* [**Event**](../../tests/event_pointset.tests/example.json): Streaming telemetry events from the device
+* [**Event**](../../tests/schemas/event_pointset/example.json): Streaming telemetry events from the device
   containing the actual data points.
-* [**State**](../../tests/state_pointset.tests/example.json): State of the device points, indicating any
+* [**State**](../../tests/schemas/state_pointset/example.json): State of the device points, indicating any
   sticky errors or status of any cloud-to-device config.
-* [**Config**](../../tests/config_pointset.tests/example.json): Configuration of the device points,
+* [**Config**](../../tests/schemas/config_pointset/example.json): Configuration of the device points,
   indicating the expected points, cloud-to-device control, etc...
 
 ## Discovery

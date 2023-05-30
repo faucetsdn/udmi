@@ -10,12 +10,12 @@ build=y
 force=n
 
 schemadir=schema
-testdir=tests
+sitesdir=tests/sites/
 
 while getopts "d:" opt; do
     case $opt in
         d)
-            testdir=${OPTARG}
+            sitesdir=${OPTARG}
             ;;
         \?)
             echo "Usage: $0 [-d TEST_DATA_DIR]"
@@ -25,8 +25,6 @@ while getopts "d:" opt; do
 done
 
 shift $((OPTIND-1))
-
-subsets=$(cd $testdir; ls -d *.site)
 
 function redact_files {
     for file in $@; do
@@ -38,27 +36,27 @@ function redact_files {
     done
 }
 
-echo
+
+subsets=$(cd $sitesdir; ls -d *)
 echo Testing against $subsets
 for subset in $subsets; do
     echo Testing site $subset
-    devicesdir=$testdir/$subset/devices
+    devicesdir=$sitesdir/$subset/devices
     rm -rf $devicesdir/*/out
     devices=$(cd $devicesdir; ls -d *)
     
-    bin/registrar $testdir/$subset
+    bin/registrar $sitesdir/$subset
     
     for device in $devices; do
-        redact_files $devicesdir/$device/out/* $testdir/$subset/registration_summary.json
+        redact_files $devicesdir/$device/out/* $sitesdir/$subset/registration_summary.json
         diff -r $devicesdir/$device/out $devicesdir/$device/expected
     done
 done
 
-echo
 echo Testing simple mock sequencer...
-bin/sequencer tests/downgrade.site/ -- DWN-2 54321 system_mode_restart
+bin/sequencer tests/sites/downgrade/ -- DWN-2 54321 system_mode_restart
 
-RESULTLOG=tests/downgrade.site/out/devices/DWN-2/RESULT.log
+RESULTLOG=tests/sites/downgrade/out/devices/DWN-2/RESULT.log
 fgrep "RESULT fail system.mode system_mode_restart ALPHA 5 null" $RESULTLOG || bin/fail unexpected output from $RESULTLOG
 
 echo

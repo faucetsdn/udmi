@@ -13,5 +13,5 @@ _state_ updates from a device in under a second they should be coalesced into on
 parsed `config` message (not the timestamp the message was received/processed).
 * The state message are sent as a part of [sequences](../specs/sequences/)
 
-This [working example](../../tests/state.tests/example.json) shows how a typical `state` message
+This [working example](../../tests/schemas/state/example.json) shows how a typical `state` message
 is constructed.

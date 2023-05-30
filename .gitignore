@@ -34,8 +34,8 @@ credentials.json
 pubber.out*
 /sequencer.out
 __pycache__/
-/tests/downgrade.site/out/
-/tests/downgrade.site/devices/*/out/
+/tests/sites/*/out/
+/tests/sites/*/devices/*/out/
 /udmi_*.log
 
 .vscode

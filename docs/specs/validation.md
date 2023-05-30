@@ -18,8 +18,8 @@ and
 [validation state schema](../../schema/state_validation.json)([_🧬View_](../../gencode/docs/state_validation.html)).
 schema, and are instantiated in two flavors:
 
-* _result_: Validation results for an individual device [example](../../tests/event_validation.tests/simple_ok.json).
-* _report_: Validation report for an entire site [example](../../tests/state_validation.tests/report.json).
+* _result_: Validation results for an individual device [example](../../tests/schemas/event_validation/simple_ok.json).
+* _report_: Validation report for an entire site [example](../../tests/schemas/state_validation/report.json).
 
 ## Message Channel
 
