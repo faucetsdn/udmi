@@ -17,14 +17,18 @@ public class ContainerBase {
   }
 
   public void debug(String message) {
-    System.out.println(getSimpleName() + " D: " + message);
+    System.err.println(getSimpleName() + " D: " + message);
   }
 
   public void debug(String format, Object... args) {
-    System.out.println(getSimpleName() + " D: " + format(format, args));
+    System.err.println(getSimpleName() + " D: " + format(format, args));
+  }
+
+  public void error(String message) {
+    System.err.println(getSimpleName() + " E: " + message);
   }
 
   public void info(String message) {
-    System.out.println(getSimpleName() + " I: " + message);
+    System.err.println(getSimpleName() + " I: " + message);
   }
 }
