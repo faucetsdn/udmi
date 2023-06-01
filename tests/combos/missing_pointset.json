@@ -2,6 +2,6 @@
   "site_model": "tests/sites/missing",
   "traces": "tests/traces/simple",
   "validator": {
-    "check": "! fgrep null tests/sites/missing/out/devices/GAT-123/state.out"
+    "check": "! fgrep -i null tests/sites/missing/out/devices/GAT-123/state.out"
   }
 }
