@@ -1,0 +1,12 @@
+{
+    "endpoint": {
+      "protocol": "mqtt",
+      "client_id": "projects/bos-udmi-dev/locations/us-central1/registries/ZZ-TRI-FECTA/devices/AHU-1",
+      "hostname": "mqtt.googleapis.com"
+    },
+    "sitePath": "sites/udmi_site_model/",
+    "deviceId": "AHU-1",
+    "projectId": "bos-peringknife-dev",
+    "serialNo": "127643",
+    "options": {}
+}
