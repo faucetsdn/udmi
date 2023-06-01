@@ -30,6 +30,7 @@ function redact_files {
     for file in $@; do
         sed -E -i \
             -e 's-While loading.*udmi/tests/-REDACTED/-' \
+            -e 's/at .*main\(.*\.java:[0-9]+\)/REDACTED/' \
             -e '/at .*\(.*\.java:[0-9]+\)/d' \
             -e '/\.\.\. [0-9]+ more/d' \
             $file

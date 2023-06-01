@@ -1,0 +1,30 @@
+{
+  "pointset": {
+    "points": {
+      "triangulating_axis": {
+        "units": "Degrees-phase"
+      },
+      "split_threshold": {
+        "units": "Imperial-gallons-per-minute"
+      }
+    }
+  },
+  "system": {
+    "location": {
+      "section": "2-3N8C"
+    },
+    "physical_tag": {
+      "asset": {
+        "guid": "drw://TBA",
+        "site": "ZZ-TRI-FECTA",
+        "name": "SNS-4"
+      }
+    }
+  },
+  "gateway": {
+    "gateway_id": "GAT-123"
+  },
+  "version": 1,
+  "timestamp": "2020-05-01T13:39:07Z",
+  "hash": "6073d78f"
+}
