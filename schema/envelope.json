@@ -44,7 +44,8 @@
         "localnet",
         "pointset",
         "validation",
-        "blobset"
+        "blobset",
+        "monitoring"
       ]
     },
     "subType": {

@@ -112,7 +112,8 @@ public class Envelope {
         LOCALNET("localnet"),
         POINTSET("pointset"),
         VALIDATION("validation"),
-        BLOBSET("blobset");
+        BLOBSET("blobset"),
+        MONITORING("monitoring");
         private final String value;
         private final static Map<String, Envelope.SubFolder> CONSTANTS = new HashMap<String, Envelope.SubFolder>();
 

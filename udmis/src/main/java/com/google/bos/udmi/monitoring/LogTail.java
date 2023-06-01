@@ -2,6 +2,7 @@ package com.google.bos.udmi.monitoring;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.cloud.audit.AuditLog;
 import com.google.cloud.logging.LogEntry;
 import com.google.cloud.logging.LogEntryServerStream;
@@ -11,6 +12,7 @@ import com.google.cloud.logging.LoggingOptions;
 import com.google.cloud.logging.Payload;
 import com.google.cloud.logging.Severity;
 import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.udmi.util.JsonUtil;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Date;
@@ -96,8 +98,11 @@ public class LogTail extends LogTailBase {
     } else {
       String function_name = log.getResource().getLabels().getOrDefault("function_name", null);
       if (function_name.equals("udmi_target")) {
+        processLogEntryUdmiTarget(log);
       } else if (function_name.equals("udmi_state")) {
+        processLogEntryUdmiState(log);
       } else if (function_name.equals("udmi_config")) {
+        processLogEntryUdmiConfig(log);
       }
     }
   }
@@ -129,6 +134,25 @@ public class LogTail extends LogTailBase {
     } catch (IOException e) {
       error(e.toString());
     }
+  }
+
+  private void processLogEntryUdmiConfig(LogEntry log) {
+
+  }
+
+  private void processLogEntryUdmiState(LogEntry log) {
+    Payload.StringPayload payload = log.getPayload();
+    String data = payload.getData().toString();
+    debug("udmi_state: %s", data);
+
+  }
+
+  private void processLogEntryUdmiTarget(LogEntry log) {
+
+    Payload.StringPayload payload = log.getPayload();
+    String data = payload.getData().toString();
+    debug("udmi_target: %s", data);
+
   }
 
   private void processLogStream(LogEntryServerStream stream) {

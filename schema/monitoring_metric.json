@@ -6,36 +6,11 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
     "additionalProperties": false,
     "properties": {
-      "timestamp": {
-        "type": "string",
-        "format": "date-time"
+      "entry": {
+        "$ref": "file:entry.json"
       },
-      "severity": {
-        "enum": [
-          "ERROR",
-          "NONE"
-        ]
-      },
-      "project": {
-        "type": "string"
-      },
-      "location": {
-        "type": "string"
-      },
-      "registry": {
-        "type": "string"
-      },
-      "device_id": {
-        "type": "string",
-        "examples": ["AHU-1"]
-      },
-      "device_num": {
-        "type": "string",
-        "examples": ["12345"],
-        "pattern": "^[0-9]+$"
-      },
-      "status_message": {
-        "type": "string"
+      "envelope": {
+        "$ref": "file:envelope.json"
       }
     }
 }
