@@ -12,7 +12,6 @@ import java.util.regex.Pattern;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Monitoring;
 import udmi.schema.MonitoringMetric;
-import udmi.schema.Entry;
 import udmi.schema.Envelope;
 
 
@@ -134,7 +133,7 @@ public class LogTimeSeries extends TreeMap<Long, LinkedList<LogTailEntry>> {
     }
   }
 
-  private boolean shouldSubmit() {
+  private boolean shouldEmitNow() {
     return (this.numberOfLogs > LOG_ENTRIES_PER_SUBMIT);
   }
 
@@ -168,7 +167,7 @@ public class LogTimeSeries extends TreeMap<Long, LinkedList<LogTailEntry>> {
   }
 
   public void maybeEmitMetrics(LogTailOutput output) throws IOException {
-    if (shouldSubmit()) {
+    if (shouldEmitNow()) {
       emitMetrics(output);
       clear();
     }
