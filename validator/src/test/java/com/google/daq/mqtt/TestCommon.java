@@ -46,6 +46,7 @@ public class TestCommon {
     validatorConfig.serial_no = SERIAL_NO_MISSING;
     validatorConfig.key_file = KEY_FILE;
     validatorConfig.udmi_version = UDMI_VERSION;
+    validatorConfig.udmi_root = TOOL_ROOT;
     return validatorConfig;
   }
 }

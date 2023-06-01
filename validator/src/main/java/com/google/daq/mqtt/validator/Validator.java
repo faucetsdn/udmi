@@ -49,8 +49,6 @@ import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -102,6 +100,8 @@ import udmi.schema.ValidationSummary;
 public class Validator {
 
   public static final int REQUIRED_FUNCTION_VER = 8;
+  public static final String CONFIG_PREFIX = "config_";
+  public static final String STATE_PREFIX = "state_";
   private static final String ERROR_FORMAT_INDENT = "  ";
   private static final String SCHEMA_VALIDATION_FORMAT = "Validating %d schemas";
   private static final String TARGET_VALIDATION_FORMAT = "Validating %d files against %s";
@@ -116,8 +116,6 @@ public class Validator {
   private static final String STATE_UPDATE_SCHEMA = "state";
   private static final String EVENT_POINTSET_SCHEMA = "event_pointset";
   private static final String STATE_POINTSET_SCHEMA = "state_pointset";
-  public static final String CONFIG_PREFIX = "config_";
-  public static final String STATE_PREFIX = "state_";
   private static final String UNKNOWN_TYPE_DEFAULT = "event";
   private static final String CONFIG_CATEGORY = "config";
   private static final Set<String> INTERESTING_TYPES = ImmutableSet.of(
@@ -367,7 +365,8 @@ public class Validator {
       schemaRoot = schemaFile;
       schemaSpec = null;
     } else {
-      throw new RuntimeException("Schema directory/file not found: " + schemaFile.getAbsolutePath());
+      throw new RuntimeException(
+          "Schema directory/file not found: " + schemaFile.getAbsolutePath());
     }
     schemaMap = getSchemaMap();
   }
@@ -516,6 +515,9 @@ public class Validator {
     return device;
   }
 
+  /**
+   * Validate a device message against the core schema.
+   */
   public void validateDeviceMessage(ReportingDevice device, Map<String, Object> message,
       Map<String, String> attributes) {
     String deviceId = attributes.get("deviceId");

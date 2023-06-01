@@ -75,6 +75,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
@@ -638,24 +639,28 @@ public class SequenceBase {
   }
 
   private void recordSchemaValidations(Description description) {
-    Set<String> details = new HashSet<>();
-    Map<String, List<Entry>> messages = validationResults.entrySet().stream()
-        .filter(entry -> {
+    validationResults.entrySet().stream()
+        .filter(isInterestingValidation())
+        .forEach(entry -> {
           String schemaName = entry.getKey();
-          return !schemaName.startsWith(CONFIG_PREFIX) &&
-              (!schemaName.startsWith(STATE_PREFIX) || schemaName.equals(
-                  STATE_UPDATE_MESSAGE_TYPE));
-        }).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+          List<Entry> values = entry.getValue();
+          if (values.isEmpty()) {
+            emitSchemaResult(description, schemaName, SequenceResult.PASS, SCHEMA_PASS_DETAIL);
+          } else {
+            Set<String> duplicates = new HashSet<>();
+            values.stream().filter(item -> duplicates.add(uniqueKey(item))).forEach(result ->
+                emitSchemaResult(description, schemaName, SequenceResult.FAIL, result.detail));
+          }
+        });
+  }
 
-    messages.forEach((schemaName, results) -> {
-      if (results.isEmpty()) {
-        emitSchemaResult(description, schemaName, SequenceResult.PASS, SCHEMA_PASS_DETAIL);
-      } else {
-        Set<String> duplicates = new HashSet<>();
-        results.stream().filter(entry -> duplicates.add(uniqueKey(entry))).forEach(result ->
-            emitSchemaResult(description, schemaName, SequenceResult.FAIL, result.detail));
-      }
-    });
+  @NotNull
+  private static Predicate<Map.Entry<String, List<Entry>>> isInterestingValidation() {
+    return entry -> {
+      String schemaName = entry.getKey();
+      return schemaName.startsWith(CONFIG_PREFIX)
+          && (!schemaName.startsWith(STATE_PREFIX) || schemaName.equals(STATE_UPDATE_MESSAGE_TYPE));
+    };
   }
 
   private String uniqueKey(Entry entry) {
@@ -1099,11 +1104,6 @@ public class SequenceBase {
     untilLoop(() -> catchToFalse(evaluator), description);
   }
 
-  private void processMessage() {
-    MessageBundle bundle = nextMessageBundle();
-    processMessage(bundle.attributes, bundle.message);
-  }
-
   /**
    * Thread-safe way to get a message. Tests are run in different threads, and if one blocks it
    * might end up trying to take a message while another thread is still looping. This prevents that
@@ -1132,6 +1132,11 @@ public class SequenceBase {
       }
       return bundle;
     }
+  }
+
+  private void processMessage() {
+    MessageBundle bundle = nextMessageBundle();
+    processMessage(bundle.attributes, bundle.message);
   }
 
   private void processMessage(Map<String, String> attributes, Map<String, Object> message) {
@@ -1567,12 +1572,12 @@ public class SequenceBase {
 
     @Override
     protected void starting(@NotNull Description description) {
+      testName = description.getMethodName();
       try {
         setupSequencer();
         putSequencerResult(description, SequenceResult.START);
         checkState(reflector().isActive(), "Reflector is not currently active");
 
-        testName = description.getMethodName();
         testDescription = getTestSummary(description);
         testStage = getTestStage(description);
         testBucket = getBucket(description);
@@ -1593,7 +1598,7 @@ public class SequenceBase {
         activeInstance = SequenceBase.this;
       } catch (Exception e) {
         e.printStackTrace();
-        throw new RuntimeException("While preparing " + deviceOutputDir.getAbsolutePath(), e);
+        throw new RuntimeException("While starting " + testName, e);
       }
     }
 
