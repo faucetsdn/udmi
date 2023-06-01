@@ -5,6 +5,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
+import static com.google.daq.mqtt.validator.Validator.CONFIG_PREFIX;
+import static com.google.daq.mqtt.validator.Validator.STATE_PREFIX;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
@@ -33,6 +35,7 @@ import com.google.bos.iot.core.proxy.MockPublisher;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
 import com.google.daq.mqtt.util.ConfigUtil;
@@ -171,6 +174,7 @@ public class SequenceBase {
   private static final ObjectDiffEngine RECV_STATE_DIFFERNATOR = new ObjectDiffEngine();
   private static final Set<String> configTransactions = new ConcurrentSkipListSet<>();
   private static final String VALIDATION_STATE_FILE = "sequencer_state.json";
+  public static final String STATE_UPDATE_MESSAGE_TYPE = "state_update";
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -634,7 +638,15 @@ public class SequenceBase {
   }
 
   private void recordSchemaValidations(Description description) {
-    validationResults.forEach((schemaName, results) -> {
+    Map<String, List<Entry>> messages = validationResults.entrySet().stream()
+        .filter(entry -> {
+          String schemaName = entry.getKey();
+          return !schemaName.startsWith(CONFIG_PREFIX) &&
+              (!schemaName.startsWith(STATE_PREFIX) || schemaName.equals(
+                  STATE_UPDATE_MESSAGE_TYPE));
+        }).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+    messages.forEach((schemaName, results) -> {
       if (results.isEmpty()) {
         emitSchemaResult(description, schemaName, SequenceResult.PASS, SCHEMA_PASS_DETAIL);
       } else {

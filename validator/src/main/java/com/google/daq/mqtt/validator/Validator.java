@@ -116,8 +116,8 @@ public class Validator {
   private static final String STATE_UPDATE_SCHEMA = "state";
   private static final String EVENT_POINTSET_SCHEMA = "event_pointset";
   private static final String STATE_POINTSET_SCHEMA = "state_pointset";
-  private static final String CONFIG_PREFIX = "config_";
-  private static final String STATE_PREFIX = "state_";
+  public static final String CONFIG_PREFIX = "config_";
+  public static final String STATE_PREFIX = "state_";
   private static final String UNKNOWN_TYPE_DEFAULT = "event";
   private static final String CONFIG_CATEGORY = "config";
   private static final Set<String> INTERESTING_TYPES = ImmutableSet.of(

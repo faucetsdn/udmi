@@ -26,6 +26,8 @@ fi
 
 export JAVA_HOME=$JAVA_HOME_11_X64
 
+java --version
+
 echo Building validator in $PWD
 
 rm -rf build
