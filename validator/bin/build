@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash -ex
 
 while [[ $# -gt 0 ]]; do
   if [[ "$1" == "check" ]]; then
@@ -26,7 +26,7 @@ fi
 
 export JAVA_HOME=$JAVA_HOME_11_X64
 
-java --version
+echo Java version $(java --version)
 
 echo Building validator in $PWD
 
