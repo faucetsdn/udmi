@@ -17,6 +17,8 @@ import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.Common.removeNextArg;
+import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.JSON_SUFFIX;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
@@ -502,7 +504,7 @@ public class Validator {
         base64Devices.add(deviceId);
       }
 
-      prepareDeviceOutDir(message, attributes, deviceId, schemaName);
+      writeDeviceOutDir(message, attributes, deviceId, schemaName);
       validateDeviceMessage(device, message, attributes);
 
       if (!device.hasErrors()) {
@@ -524,11 +526,10 @@ public class Validator {
     device.clearMessageEntries();
     String schemaName = messageSchema(attributes);
 
-    if (message.containsKey(EXCEPTION_KEY)) {
-      Exception error = (Exception) message.get(EXCEPTION_KEY);
+    if (message.get(EXCEPTION_KEY) instanceof Exception exception) {
       System.err.println(
-          "Pipeline exception " + deviceId + ": " + Common.getExceptionMessage(error));
-      device.addError(error, attributes, Category.VALIDATION_DEVICE_RECEIVE);
+          "Pipeline exception " + deviceId + ": " + Common.getExceptionMessage(exception));
+      device.addError(exception, attributes, Category.VALIDATION_DEVICE_RECEIVE);
       return;
     }
 
@@ -684,7 +685,7 @@ public class Validator {
     return !CONFIG_CATEGORY.equals(category) && isInteresting;
   }
 
-  private void prepareDeviceOutDir(
+  private void writeDeviceOutDir(
       Map<String, Object> message,
       Map<String, String> attributes,
       String deviceId,
@@ -694,10 +695,21 @@ public class Validator {
     File deviceDir = makeDeviceDir(deviceId);
 
     File messageFile = new File(deviceDir, String.format(MESSAGE_FILE_FORMAT, schemaName));
+
+    // OBJECT_MAPPER can't handle an Exception class object, so do a swap-and-restore.
+    Exception saved = (Exception) message.get(EXCEPTION_KEY);
+    message.put(EXCEPTION_KEY, ifNotNullGet(saved, GeneralUtils::friendlyStackTrace));
     OBJECT_MAPPER.writeValue(messageFile, message);
+    message.put(EXCEPTION_KEY, saved);
 
     File attributesFile = new File(deviceDir, String.format(ATTRIBUTE_FILE_FORMAT, schemaName));
     OBJECT_MAPPER.writeValue(attributesFile, attributes);
+  }
+
+  private static void sanitizeMessageException(Map<String, Object> message) {
+    if (message.get(EXCEPTION_KEY) instanceof Exception exception) {
+      message.put(EXCEPTION_KEY, friendlyStackTrace(exception));
+    }
   }
 
   private File makeDeviceDir(String deviceId) {
