@@ -1,4 +1,4 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 
 while [[ $# -gt 0 ]]; do
   if [[ "$1" == "check" ]]; then
@@ -23,8 +23,6 @@ if [[ -z $check && -z $covg && -f $jarfile && $jarfile -nt $newest ]]; then
     echo $jarfile up-to-date, skipping build.
     exit 0
 fi
-
-#export JAVA_HOME=$JAVA_HOME_11_X64
 
 echo Java version $(java --version)
 
