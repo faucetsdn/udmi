@@ -143,8 +143,8 @@ public class SequenceBase {
       DiscoveryEvent.class, SubFolder.DISCOVERY
   );
   private static final Map<String, Class<?>> expectedUpdates = ImmutableMap.of(
-      "config", Config.class,
-      "state", State.class
+      SubType.CONFIG.value(), Config.class,
+      SubType.STATE.value(), State.class
   );
   private static final Map<String, AtomicInteger> UPDATE_COUNTS = new HashMap<>();
   private static final String LOCAL_PREFIX = "local_";
@@ -1149,6 +1149,10 @@ public class SequenceBase {
   }
 
   private void validateMessage(Map<String, String> attributes, Map<String, Object> message) {
+    if (SubType.CONFIG.value().equals(attributes.get("subType"))) {
+      return;
+    }
+
     String deviceId = attributes.get("deviceId");
     ReportingDevice reportingDevice = new ReportingDevice(deviceId);
     messageValidator.validateDeviceMessage(reportingDevice, message, attributes);
