@@ -35,7 +35,6 @@ import com.google.bos.iot.core.proxy.MockPublisher;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
 import com.google.daq.mqtt.util.ConfigUtil;
@@ -63,6 +62,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -119,6 +119,7 @@ public class SequenceBase {
   public static final String SERIAL_NO_MISSING = "//";
   public static final String VALIDATION_STATE_TOPIC = "validation/state";
   public static final String SCHEMA_PASS_DETAIL = "No schema violations found";
+  public static final String STATE_UPDATE_MESSAGE_TYPE = "state_update";
   static final FeatureStage DEFAULT_MIN_STAGE = BETA;
   private static final int FUNCTIONS_VERSION_BETA = Validator.REQUIRED_FUNCTION_VER;
   private static final int FUNCTIONS_VERSION_ALPHA = 8; // Version required for alpha execution.
@@ -174,7 +175,6 @@ public class SequenceBase {
   private static final ObjectDiffEngine RECV_STATE_DIFFERNATOR = new ObjectDiffEngine();
   private static final Set<String> configTransactions = new ConcurrentSkipListSet<>();
   private static final String VALIDATION_STATE_FILE = "sequencer_state.json";
-  public static final String STATE_UPDATE_MESSAGE_TYPE = "state_update";
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -208,13 +208,13 @@ public class SequenceBase {
   private final Map<String, Object> receivedUpdates = new HashMap<>();
   private final Queue<Entry> logEntryQueue = new LinkedBlockingDeque<>();
   private final Stack<String> waitingCondition = new Stack<>();
+  private final Map<String, List<Entry>> validationResults = new HashMap<>();
   @Rule
   public Timeout globalTimeout = new Timeout(NORM_TIMEOUT_MS, TimeUnit.MILLISECONDS);
   @Rule
   public SequenceTestWatcher testWatcher = new SequenceTestWatcher();
   protected State deviceState;
   protected boolean configAcked;
-  private final Map<String, List<Entry>> validationResults = new HashMap<>();
   private String extraField;
   private Instant lastConfigUpdate;
   private boolean enforceSerial;
@@ -638,6 +638,7 @@ public class SequenceBase {
   }
 
   private void recordSchemaValidations(Description description) {
+    Set<String> details = new HashSet<>();
     Map<String, List<Entry>> messages = validationResults.entrySet().stream()
         .filter(entry -> {
           String schemaName = entry.getKey();
@@ -650,11 +651,15 @@ public class SequenceBase {
       if (results.isEmpty()) {
         emitSchemaResult(description, schemaName, SequenceResult.PASS, SCHEMA_PASS_DETAIL);
       } else {
-        results.forEach(result -> {
-          emitSchemaResult(description, schemaName, SequenceResult.FAIL, result.detail);
-        });
+        Set<String> duplicates = new HashSet<>();
+        results.stream().filter(entry -> duplicates.add(uniqueKey(entry))).forEach(result ->
+            emitSchemaResult(description, schemaName, SequenceResult.FAIL, result.detail));
       }
     });
+  }
+
+  private String uniqueKey(Entry entry) {
+    return format("%s_%s_%s", entry.category, entry.message, entry.detail);
   }
 
   private void emitSchemaResult(Description description, String schemaName, SequenceResult result,
@@ -663,7 +668,6 @@ public class SequenceBase {
     Feature feature = description.getAnnotation(Feature.class);
     Bucket bucket = getBucket(feature);
     String stage = (feature == null ? Feature.DEFAULT_STAGE : feature.stage()).name();
-    int score = (feature == null ? Feature.DEFAULT_SCORE : feature.score());
     emitResultString(
         format(SCHEMA_FORMAT, result, bucket.value(), methodName, stage, schemaName, detail));
   }

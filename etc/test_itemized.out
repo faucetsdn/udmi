@@ -7,3 +7,5 @@ TEST writeback_success noPointState RESULT fail writeback writeback_success ALPH
 TEST pointset_sample_rate fixedSampleRate=10 RESULT fail pointset pointset_sample_rate ALPHA 5 Failed check that time period between successive pointset events is between 1 and 5 seconds
 TEST system_mode_restart noPersist RESULT fail system.mode system_mode_restart ALPHA 5 Failed check that restart count increased by one
 TEST broken_config barfConfig RESULT fail system broken_config ALPHA 5 timeout waiting for log category `system.config.receive` level `DEBUG` was logged
+TEST system_last_update extraField=fnooz RESULT pass system system_last_update ALPHA 5 Sequence complete
+
