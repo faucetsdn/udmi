@@ -16,20 +16,21 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "entry",
+    "event_system",
     "envelope"
 })
 @Generated("jsonschema2pojo")
 public class MonitoringMetric {
 
     /**
-     * Entry
+     * System Event
      * <p>
-     * 
+     * Used for system events such as logging. [System Event Documentation](../docs/messages/system.md#event)
      * 
      */
-    @JsonProperty("entry")
-    public Entry entry;
+    @JsonProperty("event_system")
+    @JsonPropertyDescription("Used for system events such as logging. [System Event Documentation](../docs/messages/system.md#event)")
+    public SystemEvent event_system;
     /**
      * Envelope
      * <p>
@@ -43,7 +44,7 @@ public class MonitoringMetric {
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.entry == null)? 0 :this.entry.hashCode()));
+        result = ((result* 31)+((this.event_system == null)? 0 :this.event_system.hashCode()));
         result = ((result* 31)+((this.envelope == null)? 0 :this.envelope.hashCode()));
         return result;
     }
@@ -57,7 +58,7 @@ public class MonitoringMetric {
             return false;
         }
         MonitoringMetric rhs = ((MonitoringMetric) other);
-        return (((this.entry == rhs.entry)||((this.entry!= null)&&this.entry.equals(rhs.entry)))&&((this.envelope == rhs.envelope)||((this.envelope!= null)&&this.envelope.equals(rhs.envelope))));
+        return (((this.event_system == rhs.event_system)||((this.event_system!= null)&&this.event_system.equals(rhs.event_system)))&&((this.envelope == rhs.envelope)||((this.envelope!= null)&&this.envelope.equals(rhs.envelope))));
     }
 
 }

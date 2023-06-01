@@ -3,6 +3,7 @@ package com.google.bos.udmi.monitoring;
 import com.google.cloud.logging.Severity;
 import com.google.logging.type.LogSeverity;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.TreeMap;
@@ -32,7 +33,8 @@ public class LogTimeSeries extends TreeMap<Long, LinkedList<LogTailEntry>> {
         for (LogTailEntry log : this.get(k)) {
           Monitoring monitoring = new Monitoring();
           monitoring.metric = new MonitoringMetric();
-          monitoring.metric.entry = new udmi.schema.Entry();
+          monitoring.metric.event_system = new udmi.schema.SystemEvent();
+          monitoring.metric.event_system.logentries = new ArrayList<Entry>();
           monitoring.metric.envelope = new Envelope();
           loadMetricFields(monitoring.metric, log);
           output.emitMetric(monitoring);
@@ -45,7 +47,8 @@ public class LogTimeSeries extends TreeMap<Long, LinkedList<LogTailEntry>> {
     // TODO: Revise when output storage requirements are known.
     LinkedList<LogTailEntry> logs = this.get(k);
     for (int i = 0; i < logs.size(); i++) {
-      if (log.severity.equals(Severity.ERROR) && logs.get(i).serviceName.equals(log.severity.toString())) {
+      if (log.severity.equals(Severity.ERROR) && logs.get(i).serviceName.equals(
+          log.severity.toString())) {
         if (logs.get(i).statusMessage.equals(log.statusMessage)) {
           return i;
         }
@@ -64,16 +67,19 @@ public class LogTimeSeries extends TreeMap<Long, LinkedList<LogTailEntry>> {
   }
 
   private void loadMetricFields(MonitoringMetric metric, LogTailEntry log) throws IOException {
-    metric.entry.timestamp = Date.from(log.timestamp);
-    metric.entry.level = severityToLogSeverity(log.severity).getNumber();
-    metric.entry.message = log.statusMessage;
+    metric.event_system.timestamp = Date.from(log.timestamp);
+    metric.event_system.version = "1.4.1"; // TODO: Where to get this value
+
+    Entry entry = new Entry();
+    entry.level = severityToLogSeverity(log.severity).getNumber();
+    entry.message = log.statusMessage;
 
     if (!log.resourceName.isEmpty()) {
       loadMetricFieldsFromResourceName(metric, log);
     }
 
     if (!log.statusMessage.isEmpty()) {
-      metric.entry.message = log.statusMessage;
+      entry.message = log.statusMessage;
       if (log.severity.toString().equals("ERROR")) {
         Pattern pattern = Pattern.compile("Device [`'](\\d+)[`'] is ");
         Matcher matcher = pattern.matcher(log.statusMessage);
@@ -82,6 +88,23 @@ public class LogTimeSeries extends TreeMap<Long, LinkedList<LogTailEntry>> {
         }
       }
     }
+
+    metric.event_system.logentries.add(entry);
+  }
+
+  private void loadMetricFieldsFromResourceName(MonitoringMetric metric, LogTailEntry log) {
+    // Example:
+    // projects/essential-keep-197822/locations/us-central1/registries/UDMS-REFLECT/devices/IN-HYD-SAR2
+    Pattern pattern = Pattern.compile(
+        "projects/(?<project>[^/]+)/locations/(?<location>[^/]+)/registries/(?<registry>[^/]+)/devices/(?<device>[^/]+)");
+    Matcher matcher = pattern.matcher(log.resourceName);
+    if (matcher.find()) {
+      metric.envelope.projectId = matcher.group("project");
+      metric.envelope.deviceRegistryLocation = matcher.group("location");
+      metric.envelope.deviceRegistryId = matcher.group("registry");
+      metric.envelope.deviceId = matcher.group("device");
+      metric.envelope.subFolder = SubFolder.MONITORING;
+    } // else do something?
   }
 
   private LogSeverity severityToLogSeverity(Severity severity) throws IOException {
@@ -107,25 +130,8 @@ public class LogTimeSeries extends TreeMap<Long, LinkedList<LogTailEntry>> {
         return LogSeverity.DEFAULT;
       case NONE:
       default:
-        throw new IOException("Unknown com.google.cloud.logging.Severity: " + severity.toString());
+        throw new IOException("Unknown com.google.cloud.logging.Severity: " + severity);
     }
-  }
-
-
-
-  private void loadMetricFieldsFromResourceName(MonitoringMetric metric, LogTailEntry log) {
-    // Example:
-    // projects/essential-keep-197822/locations/us-central1/registries/UDMS-REFLECT/devices/IN-HYD-SAR2
-    Pattern pattern = Pattern.compile(
-        "projects/(?<project>[^/]+)/locations/(?<location>[^/]+)/registries/(?<registry>[^/]+)/devices/(?<device>[^/]+)");
-    Matcher matcher = pattern.matcher(log.resourceName);
-    if (matcher.find()) {
-      metric.envelope.projectId = matcher.group("project");
-      metric.envelope.deviceRegistryLocation = matcher.group("location");
-      metric.envelope.deviceRegistryId = matcher.group("registry");
-      metric.envelope.deviceId = matcher.group("device");
-      metric.envelope.subFolder = SubFolder.MONITORING;
-    } // else do something?
   }
 
   private boolean shouldSubmit() {
