@@ -38,7 +38,6 @@ import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
 import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.util.ObjectDiffEngine;
-import com.google.daq.mqtt.validator.AugmentedState;
 import com.google.daq.mqtt.validator.AugmentedSystemConfig;
 import com.google.daq.mqtt.validator.ReportingDevice;
 import com.google.daq.mqtt.validator.Validator;
@@ -145,7 +144,7 @@ public class SequenceBase {
   );
   private static final Map<String, Class<?>> expectedUpdates = ImmutableMap.of(
       "config", Config.class,
-      "state", AugmentedState.class
+      "state", State.class
   );
   private static final Map<String, AtomicInteger> UPDATE_COUNTS = new HashMap<>();
   private static final String LOCAL_PREFIX = "local_";
@@ -676,7 +675,7 @@ public class SequenceBase {
     return implicit == UNKNOWN_DEFAULT ? explicit : implicit;
   }
 
-  private void recordRawMessage(Map<String, Object> message, Map<String, String> attributes) {
+  private void recordRawMessage(Map<String, String> attributes, Map<String, Object> message) {
     if (testName == null) {
       return;
     }
@@ -1086,7 +1085,7 @@ public class SequenceBase {
 
   private void processMessage() {
     MessageBundle bundle = nextMessageBundle();
-    processMessage(bundle.message, bundle.attributes);
+    processMessage(bundle.attributes, bundle.message);
   }
 
   /**
@@ -1119,7 +1118,7 @@ public class SequenceBase {
     }
   }
 
-  private void processMessage(Map<String, Object> message, Map<String, String> attributes) {
+  private void processMessage(Map<String, String> attributes, Map<String, Object> message) {
     String deviceId = attributes.get("deviceId");
     String subFolderRaw = attributes.get("subFolder");
     String subTypeRaw = attributes.get("subType");
@@ -1134,7 +1133,9 @@ public class SequenceBase {
       return;
     }
 
-    recordRawMessage(message, attributes);
+    recordRawMessage(attributes, message);
+
+    preprocessMessage(attributes, message);
 
     validateMessage(attributes, message);
 
@@ -1214,8 +1215,7 @@ public class SequenceBase {
         } else {
           info(format("Updated config #%03d", updateCount), changedLines(changes));
         }
-      } else if (converted instanceof AugmentedState) {
-        State convertedState = (State) converted;
+      } else if (converted instanceof State convertedState) {
         if (deviceState != null && convertedState.timestamp.before(deviceState.timestamp)) {
           warning("Ignoring out-of-order state update " + convertedState);
           return;
@@ -1227,7 +1227,6 @@ public class SequenceBase {
           info(format("Updated state #%03d", updateCount), changedLines(stateChanges));
         }
         deviceState = convertedState;
-        updateConfigAcked((AugmentedState) converted);
         validSerialNo();
         debug("Updated state has last_config " + getTimestamp(deviceState.system.last_config));
       } else {
@@ -1253,6 +1252,12 @@ public class SequenceBase {
     return RECV_CONFIG_DIFFERNATOR.computeChanges(deviceConfig);
   }
 
+  private void preprocessMessage(Map<String, String> attributes, Map<String, Object> message) {
+    if (SubType.STATE.value().equals(attributes.get(Common.SUBTYPE_PROPERTY_KEY))) {
+      updateConfigAcked(message);
+    }
+  }
+
   /**
    * Check/remember the configAcked field of a state update. This field is only populated by the
    * supporting cloud functions in response to an explicit state query, and checks that the device
@@ -1260,10 +1265,8 @@ public class SequenceBase {
    *
    * @param converted received message to pull the ack from
    */
-  private void updateConfigAcked(AugmentedState converted) {
-    if (converted.configAcked != null) {
-      configAcked = "true".equals(converted.configAcked);
-    }
+  private void updateConfigAcked(Map<String, Object> converted) {
+    configAcked = "true".equals(converted.remove("configAcked"));
   }
 
   private String getExtraField(Map<String, Object> message) {
