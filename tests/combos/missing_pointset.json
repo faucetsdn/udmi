@@ -1,4 +1,5 @@
 {
+  "description": "Test that missing pointset metadata doesn't cause a NPE in validator",
   "site_model": "tests/sites/missing",
   "traces": "tests/traces/simple",
   "validator": {
