@@ -161,7 +161,8 @@ public class Validator {
   /**
    * Create a simplistic validator for encapsulated use.
    */
-  public Validator() {
+  public Validator(ExecutionConfiguration validatorConfig) {
+    config = validatorConfig;
     setSchemaSpec("schema");
     client = new NullPublisher();
     targetDevices = ImmutableSet.of();
@@ -366,7 +367,7 @@ public class Validator {
       schemaRoot = schemaFile;
       schemaSpec = null;
     } else {
-      throw new RuntimeException("Schema directory/file not found: " + schemaFile);
+      throw new RuntimeException("Schema directory/file not found: " + schemaFile.getAbsolutePath());
     }
     schemaMap = getSchemaMap();
   }
@@ -503,59 +504,10 @@ public class Validator {
       }
 
       prepareDeviceOutDir(message, attributes, deviceId, schemaName);
-      // TODO: Reinstate this.
-      //validateDeviceMessage(device, message, attributes);
-      String timeString = (String) message.get(TIMESTAMP_KEY);
-      String subTypeRaw = Optional.ofNullable(attributes.get(SUBTYPE_PROPERTY_KEY))
-          .orElse(UNKNOWN_TYPE_DEFAULT);
-      if (timeString != null && LAST_SEEN_SUBTYPES.contains(SubType.fromValue(subTypeRaw))) {
-        device.updateLastSeen(Date.from(Instant.parse(timeString)));
-      }
-
-      try {
-        if (!schemaMap.containsKey(schemaName)) {
-          throw new IllegalArgumentException(
-              String.format(SCHEMA_SKIP_FORMAT, schemaName, deviceId));
-        }
-      } catch (Exception e) {
-        System.err.println("Missing schema entry " + schemaName);
-        device.addError(e, attributes, Category.VALIDATION_DEVICE_RECEIVE);
-      }
-
-      try {
-        validateMessage(schemaMap.get(ENVELOPE_SCHEMA_ID), attributes);
-      } catch (Exception e) {
-        System.err.println("Error validating attributes: " + e);
-        device.addError(e, attributes, Category.VALIDATION_DEVICE_RECEIVE);
-      }
-
-      if (schemaMap.containsKey(schemaName)) {
-        try {
-          validateMessage(schemaMap.get(schemaName), message);
-        } catch (Exception e) {
-          System.err.printf("Error validating schema %s: %s%n", schemaName, e.getMessage());
-          device.addError(e, attributes, Category.VALIDATION_DEVICE_SCHEMA);
-        }
-      }
-
-      if (expectedDevices.isEmpty()) {
-        // No devices configured, so don't consider check metadata or consider extra.
-      } else if (expectedDevices.contains(deviceId)) {
-        try {
-          ifNotNullThen(CONTENT_VALIDATORS.get(schemaName), targetClass -> {
-            Object messageObject = OBJECT_MAPPER.convertValue(message, targetClass);
-            device.validateMessageType(messageObject, JsonUtil.getDate(timeString), attributes);
-          });
-        } catch (Exception e) {
-          System.err.println("Error validating contents: " + e.getMessage());
-          device.addError(e, attributes, Category.VALIDATION_DEVICE_CONTENT);
-        }
-      } else {
-        extraDevices.add(deviceId);
-      }
+      validateDeviceMessage(device, message, attributes);
 
       if (!device.hasErrors()) {
-        System.err.printf("Validation complete %s/%s%n", deviceId, schemaName);
+        System.err.printf("Validation clean %s/%s%n", deviceId, schemaName);
       }
     } catch (Exception e) {
       System.err.println("Generic device error " + deviceId);
@@ -623,15 +575,14 @@ public class Validator {
       }
     }
 
-    if (expectedDevices.isEmpty()) {
+    if (expectedDevices == null || expectedDevices.isEmpty()) {
       // No devices configured, so don't consider check metadata or consider extra.
     } else if (expectedDevices.contains(deviceId)) {
       try {
-        if (CONTENT_VALIDATORS.containsKey(schemaName)) {
-          Class<?> targetClass = CONTENT_VALIDATORS.get(schemaName);
+        ifNotNullThen(CONTENT_VALIDATORS.get(schemaName), targetClass -> {
           Object messageObject = OBJECT_MAPPER.convertValue(message, targetClass);
           device.validateMessageType(messageObject, JsonUtil.getDate(timeString), attributes);
-        }
+        });
       } catch (Exception e) {
         System.err.println("Error validating contents: " + e.getMessage());
         device.addError(e, attributes, Category.VALIDATION_DEVICE_CONTENT);
