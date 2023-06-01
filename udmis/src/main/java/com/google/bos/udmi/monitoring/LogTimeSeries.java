@@ -34,7 +34,7 @@ public class LogTimeSeries extends TreeMap<Long, LinkedList<LogTailEntry>> {
           Monitoring monitoring = new Monitoring();
           monitoring.metric = new MonitoringMetric();
           monitoring.metric.event_system = new udmi.schema.SystemEvent();
-          monitoring.metric.event_system.logentries = new ArrayList<Entry>();
+          monitoring.metric.event_system.logentries = new ArrayList<udmi.schema.Entry>();
           monitoring.metric.envelope = new Envelope();
           loadMetricFields(monitoring.metric, log);
           output.emitMetric(monitoring);
@@ -70,7 +70,7 @@ public class LogTimeSeries extends TreeMap<Long, LinkedList<LogTailEntry>> {
     metric.event_system.timestamp = Date.from(log.timestamp);
     metric.event_system.version = "1.4.1"; // TODO: Where to get this value
 
-    Entry entry = new Entry();
+    udmi.schema.Entry entry = new udmi.schema.Entry();
     entry.level = severityToLogSeverity(log.severity).getNumber();
     entry.message = log.statusMessage;
 
