@@ -187,9 +187,9 @@ public class ReportingDevice {
       throw new RuntimeException("Unknown message type " + message.getClass().getName());
     }
 
-    //    if (metadataDiff == null) {
-    //      return;
-    //    }
+    if (metadataDiff == null) {
+      return;
+    }
 
     missingPoints = metadataDiff.missingPoints;
     if (missingPoints == null) {
