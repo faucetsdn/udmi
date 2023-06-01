@@ -34,7 +34,10 @@ public class LogTimeSeries extends TreeMap<Long, LinkedList<LogTailEntry>> {
           monitoring.metric = new MonitoringMetric();
           monitoring.metric.event_system = new udmi.schema.SystemEvent();
           monitoring.metric.event_system.logentries = new ArrayList<udmi.schema.Entry>();
+          // TODO: Refactor the contents of Envelope to put the relevant fields somewhere not
+          // associated with a Message body, which is how it is used elsewhere.
           monitoring.metric.envelope = new Envelope();
+          monitoring.metric.envelope.subFolder = SubFolder.MONITORING;
           loadMetricFields(monitoring.metric, log);
           output.emitMetric(monitoring);
         }
@@ -102,7 +105,6 @@ public class LogTimeSeries extends TreeMap<Long, LinkedList<LogTailEntry>> {
       metric.envelope.deviceRegistryLocation = matcher.group("location");
       metric.envelope.deviceRegistryId = matcher.group("registry");
       metric.envelope.deviceId = matcher.group("device");
-      metric.envelope.subFolder = SubFolder.MONITORING;
     } // else do something?
   }
 
