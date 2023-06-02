@@ -1,5 +1,13 @@
 {
+  "Clean" : {
+    "AHU-22" : "2020-05-01T13:39:07Z",
+    "GAT-123" : "2020-05-01T13:39:07Z",
+    "SNS-4" : "2020-05-01T13:39:07Z"
+  },
+  "Validating" : {
+    "AHU-1" : "1 schema violations found"
+  },
   "Version" : {
-    "main" : "1.4.1-58-g3e18c5f85"
+    "main" : "1.4.1-59-gda6d47267"
   }
 }
