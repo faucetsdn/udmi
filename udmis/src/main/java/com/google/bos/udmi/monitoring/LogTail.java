@@ -15,6 +15,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.udmi.util.JsonUtil;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.TreeMap;
@@ -33,13 +34,13 @@ public class LogTail extends LogTailBase {
 
   private String projectName;
   private LogTimeSeries logsTimeSeries;
-  private String LOG_FILTER =
+  protected String LOG_FILTER =
       "(resource.labels.function_name=\"udmi_target\") OR " +
           "(resource.labels.function_name=\"udmi_state\") OR " +
           "(resource.labels.function_name=\"udmi_config\") OR " +
           "(severity=ERROR AND protoPayload.serviceName=\"cloudiot.googleapis.com\")";
-  private boolean outputJson = false;
-  private LogTailOutput output;
+  protected boolean outputJson = false;
+  protected LogTailOutput output;
 
   public LogTail(String projectName) {
     this.projectName = projectName;
@@ -49,8 +50,20 @@ public class LogTail extends LogTailBase {
 
   public static void main(String[] args) throws ParseException {
     CommandLine commandLine = parseArgs(args);
+    if (commandLine == null) {
+      throw new RuntimeException("Exiting");
+    }
     String projectId = commandLine.getOptionValue("p"); // TODO:(rm)NOTES: "essential-keep-197822"
     LogTail logTail = new LogTail(projectId);
+    logTail.tailLogs();
+  }
+
+  public static void mainUnderTest(String[] args, LogTail logTail) throws ParseException {
+    CommandLine commandLine = parseArgs(args);
+    if (commandLine == null) {
+      throw new RuntimeException("Exiting");
+    }
+    String projectId = commandLine.getOptionValue("p"); // TODO:(rm)NOTES: "essential-keep-197822"
     logTail.tailLogs();
   }
 
@@ -65,19 +78,19 @@ public class LogTail extends LogTailBase {
     if (commandLine.hasOption("h")) {
       HelpFormatter formatter = new HelpFormatter();
       formatter.printHelp("Example", options);
-      System.exit(0);
+      return (null);
     }
 
     if (!commandLine.hasOption("p")) {
       HelpFormatter formatter = new HelpFormatter();
       formatter.printHelp("Required: project name", options);
-      System.exit(1);
+      return (null);
     }
 
     return commandLine;
   }
 
-  private LogEntryServerStream getCloudLogStream(String filter) {
+  protected LogEntryServerStream getCloudLogStream(String filter) {
     LoggingOptions options = LoggingOptions.getDefaultInstance();
     Logging logging = options.getService();
     LogEntryServerStream stream;
@@ -92,7 +105,7 @@ public class LogTail extends LogTailBase {
   /*
    * Top level processor of incoming GCP log entries.
    */
-  private void processLogEntry(LogEntry log) {
+  protected void processLogEntry(LogEntry log) {
     if (log.getSeverity().equals(Severity.ERROR)) {
       processLogEntryError(log);
     } else {
@@ -110,7 +123,7 @@ public class LogTail extends LogTailBase {
   /*
    * Top level processor of incoming GCP log entries of ERROR type.
    */
-  private void processLogEntryError(LogEntry log) {
+  protected void processLogEntryError(LogEntry log) {
     // Be careful in here. Unwrapping the audit payload is a careful sequence.
     Payload.ProtoPayload payload = log.getPayload();
     if (!payload.getData().getTypeUrl().equals("type.googleapis.com/google.cloud.audit.AuditLog")) {
@@ -136,18 +149,20 @@ public class LogTail extends LogTailBase {
     }
   }
 
-  private void processLogEntryUdmiConfig(LogEntry log) {
-
+  protected void processLogEntryUdmiConfig(LogEntry log) {
+    Payload.StringPayload payload = log.getPayload();
+    String data = payload.getData().toString();
+    debug("udmi_config: %s", data);
   }
 
-  private void processLogEntryUdmiState(LogEntry log) {
+  protected void processLogEntryUdmiState(LogEntry log) {
     Payload.StringPayload payload = log.getPayload();
     String data = payload.getData().toString();
     debug("udmi_state: %s", data);
 
   }
 
-  private void processLogEntryUdmiTarget(LogEntry log) {
+  protected void processLogEntryUdmiTarget(LogEntry log) {
 
     Payload.StringPayload payload = log.getPayload();
     String data = payload.getData().toString();
@@ -155,7 +170,7 @@ public class LogTail extends LogTailBase {
 
   }
 
-  private void processLogStream(LogEntryServerStream stream) {
+  protected void processLogStream(LogEntryServerStream stream) {
     for (LogEntry log : stream) {
       processLogEntry(log);
     }
