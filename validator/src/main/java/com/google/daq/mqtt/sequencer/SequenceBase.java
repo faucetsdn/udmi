@@ -1287,11 +1287,11 @@ public class SequenceBase {
    * Check/remember the configAcked field of a state update. This field is only populated by the
    * supporting cloud functions in response to an explicit state query, and checks that the device
    * has acked (in an MQTT sense) a previously sent config.
-   *
-   * @param converted received message to pull the ack from
    */
   private void updateConfigAcked(Map<String, Object> converted) {
-    configAcked = "true".equals(converted.remove("configAcked"));
+    if ("true".equals(converted.remove("configAcked"))) {
+      configAcked = true;
+    }
   }
 
   private String getExtraField(Map<String, Object> message) {
