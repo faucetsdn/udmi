@@ -1,27 +1,15 @@
 package com.google.bos.udmi.monitoring;
 
-import com.google.api.gax.rpc.InvalidArgumentException;
-import com.google.bos.udmi.monitoring.LogTail;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import com.google.cloud.MonitoredResource;
 import com.google.cloud.logging.LogEntry;
 import com.google.cloud.logging.LogEntryServerStream;
-import com.google.cloud.logging.Logging;
-import com.google.cloud.logging.Logging.TailOption;
-import com.google.cloud.logging.LoggingOptions;
 import com.google.cloud.logging.Severity;
-import com.google.cloud.logging.v2.LoggingSettings;
-import java.util.ArrayList;
-import java.util.HashMap;
-import org.apache.commons.cli.ParseException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 
@@ -35,8 +23,7 @@ public class LogTailTest {
 
   private LogTail getLogTailMock() {
     LogTail logTail = new LogTail(TEST_PROJECT_NAME);
-    LogTail logTailMock = spy(logTail);
-    return logTailMock;
+    return (LogTail) spy(logTail);
   }
 
   @Before
@@ -50,11 +37,6 @@ public class LogTailTest {
   }
 
   @Test
-  public void testInstantiate() {
-    LogTail logTail = new LogTail(TEST_PROJECT_NAME);
-  }
-
-  @Test
   public void testMain() throws org.apache.commons.cli.ParseException {
     LogTail logTailMock = getLogTailMock();
     doNothing().when(logTailMock).tailLogs();
@@ -62,7 +44,7 @@ public class LogTailTest {
   }
 
   @Test
-  public void testMainNoProject() throws org.apache.commons.cli.ParseException {
+  public void testMainNoProject() {
     String[] args = {};
     assertThrows(RuntimeException.class, () -> LogTail.main(args));
   }
@@ -129,6 +111,6 @@ public class LogTailTest {
     doNothing().when(logTailMock).processLogStream(logEntryServerStreamMock);
     assertTrue(logTailMock.outputJson);
     logTailMock.tailLogs();
-    assertTrue(logTailMock.output.getClass().equals(LogTailJsonOutput.class));
+    assertEquals(logTailMock.output.getClass(), LogTailJsonOutput.class);
   }
 }
