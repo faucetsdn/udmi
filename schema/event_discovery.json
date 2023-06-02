@@ -24,7 +24,7 @@
       "examples": ["2019-01-17T14:02:29.364Z"]
     },
     "status": {
-      "$ref": "file:common.json#/definitions/entry"
+      "$ref": "file:entry.json"
     },
     "scan_family": {
       "description": "The primary scan discovery address family",

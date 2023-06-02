@@ -25,7 +25,7 @@
       "type": "number"
     },
     "status": {
-      "$ref": "file:common.json#/definitions/entry"
+      "$ref": "file:entry.json"
     },
     "translation": {
       "$ref": "file:equipment_translation.json"
