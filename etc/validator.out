@@ -8,11 +8,14 @@ sites/udmi_site_model/out/devices/AHU-1/state_pointset.json
 sites/udmi_site_model/out/devices/AHU-1/state_system.json
 sites/udmi_site_model/out/devices/AHU-22/config.json
 sites/udmi_site_model/out/devices/AHU-22/event_emptyjson.json
+sites/udmi_site_model/out/devices/AHU-22/event_error.json
 sites/udmi_site_model/out/devices/AHU-22/event_invalid.json
 sites/udmi_site_model/out/devices/AHU-22/event_pointset.json
+sites/udmi_site_model/out/devices/AHU-22/event_string.json
 sites/udmi_site_model/out/devices/AHU-22/event_system.json
 sites/udmi_site_model/out/devices/AHU-22/persistent_data.json
 sites/udmi_site_model/out/devices/AHU-22/state.json
+sites/udmi_site_model/out/devices/AHU-22/state_error.json
 sites/udmi_site_model/out/devices/AHU-22/state_localnet.json
 sites/udmi_site_model/out/devices/AHU-22/state_pointset.json
 sites/udmi_site_model/out/devices/AHU-22/state_system.json
@@ -176,7 +179,7 @@ sites/udmi_site_model/out/devices/AHU-22/event_emptyjson.out
   },
   "errors" : [ {
     "message" : "Unknown schema subFolder 'event_emptyjson' for AHU-22",
-    "detail" : "event_emptyjson: Unknown schema subFolder 'event_emptyjson' for AHU-22 @Validator.validateMessageCore(redacted)",
+    "detail" : "event_emptyjson: Unknown schema subFolder 'event_emptyjson' for AHU-22 @Validator.validateDeviceMessage(redacted)",
     "category" : "validation.device.schema",
     "timestamp" : "1999-10-20T01:02:03Z",
     "level" : 500
@@ -198,14 +201,14 @@ sites/udmi_site_model/out/devices/AHU-22/event_error.out
   "sub_type" : "event",
   "status" : {
     "message" : "Error in message pipeline: SyntaxError: Unexpected token N in JSON at position 2 for subFolder badjson",
-    "detail" : "event_error: Error in message pipeline: SyntaxError: Unexpected token N in JSON at position 2 for subFolder badjson @Validator.validateMessageCore(redacted)",
+    "detail" : "event_error: Error in message pipeline: SyntaxError: Unexpected token N in JSON at position 2 for subFolder badjson @Validator.validateDeviceMessage(redacted)",
     "category" : "validation.device.schema",
     "timestamp" : "1999-10-20T01:02:03Z",
     "level" : 500
   },
   "errors" : [ {
     "message" : "Error in message pipeline: SyntaxError: Unexpected token N in JSON at position 2 for subFolder badjson",
-    "detail" : "event_error: Error in message pipeline: SyntaxError: Unexpected token N in JSON at position 2 for subFolder badjson @Validator.validateMessageCore(redacted)",
+    "detail" : "event_error: Error in message pipeline: SyntaxError: Unexpected token N in JSON at position 2 for subFolder badjson @Validator.validateDeviceMessage(redacted)",
     "category" : "validation.device.schema",
     "timestamp" : "1999-10-20T01:02:03Z",
     "level" : 500
@@ -228,7 +231,7 @@ sites/udmi_site_model/out/devices/AHU-22/event_invalid.out
   },
   "errors" : [ {
     "message" : "Unknown schema subFolder 'event_invalid' for AHU-22",
-    "detail" : "event_invalid: Unknown schema subFolder 'event_invalid' for AHU-22 @Validator.validateMessageCore(redacted)",
+    "detail" : "event_invalid: Unknown schema subFolder 'event_invalid' for AHU-22 @Validator.validateDeviceMessage(redacted)",
     "category" : "validation.device.schema",
     "timestamp" : "1999-10-20T01:02:03Z",
     "level" : 500
@@ -325,14 +328,14 @@ sites/udmi_site_model/out/devices/AHU-22/state_error.out
   "sub_type" : "state",
   "status" : {
     "message" : "Error in message pipeline: SyntaxError: Unexpected token ! in JSON at position 0 for subFolder undefined",
-    "detail" : "state_error: Error in message pipeline: SyntaxError: Unexpected token ! in JSON at position 0 for subFolder undefined @Validator.validateMessageCore(redacted)",
+    "detail" : "state_error: Error in message pipeline: SyntaxError: Unexpected token ! in JSON at position 0 for subFolder undefined @Validator.validateDeviceMessage(redacted)",
     "category" : "validation.device.schema",
     "timestamp" : "1999-10-20T01:02:03Z",
     "level" : 500
   },
   "errors" : [ {
     "message" : "Error in message pipeline: SyntaxError: Unexpected token ! in JSON at position 0 for subFolder undefined",
-    "detail" : "state_error: Error in message pipeline: SyntaxError: Unexpected token ! in JSON at position 0 for subFolder undefined @Validator.validateMessageCore(redacted)",
+    "detail" : "state_error: Error in message pipeline: SyntaxError: Unexpected token ! in JSON at position 0 for subFolder undefined @Validator.validateDeviceMessage(redacted)",
     "category" : "validation.device.schema",
     "timestamp" : "1999-10-20T01:02:03Z",
     "level" : 500
