@@ -1,0 +1,7 @@
+Credential
+java.lang.RuntimeException: While loading credentials for local device GAT-123
+	REDACTED
+Caused by: java.lang.RuntimeException: Found 0 credentials
+Files
+com.google.daq.mqtt.util.ExceptionMap: devices/GAT-123
+	REDACTED
