@@ -658,7 +658,7 @@ public class SequenceBase {
   private static Predicate<Map.Entry<String, List<Entry>>> isInterestingValidation() {
     return entry -> {
       String schemaName = entry.getKey();
-      return schemaName.startsWith(CONFIG_PREFIX)
+      return !schemaName.startsWith(CONFIG_PREFIX)
           && (!schemaName.startsWith(STATE_PREFIX) || schemaName.equals(STATE_UPDATE_MESSAGE_TYPE));
     };
   }
