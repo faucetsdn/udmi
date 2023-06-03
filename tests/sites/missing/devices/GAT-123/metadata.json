@@ -1,11 +1,5 @@
 {
-  "pointset": {
-    "points": {
-      "globulating_globar": {
-        "units": "Bars"
-      }
-    }
-  },
+  // No "pointset" here to test the tools against NPEs.
   "system": {
     "location": {
       "section": "2-3N8C"

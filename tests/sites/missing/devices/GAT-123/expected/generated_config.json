@@ -7,12 +7,5 @@
   },
   "gateway" : {
     "proxy_ids" : [ "SNS-4", "AHU-22" ]
-  },
-  "pointset" : {
-    "points" : {
-      "globulating_globar" : {
-        "units" : "Bars"
-      }
-    }
   }
 }

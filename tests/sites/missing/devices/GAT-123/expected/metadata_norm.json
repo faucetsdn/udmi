@@ -1,7 +1,7 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.4.1",
-  "hash": "7e0e2dbf",
+  "hash": "6d5f8e9d",
   "cloud": {
     "auth_type": "ES256"
   },
@@ -21,12 +21,5 @@
   },
   "gateway": {
     "proxy_ids": [ "SNS-4", "AHU-22" ]
-  },
-  "pointset": {
-    "points": {
-      "globulating_globar": {
-        "units": "Bars"
-      }
-    }
   }
 }

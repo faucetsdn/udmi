@@ -511,7 +511,7 @@ public class Validator {
         System.err.printf("Validation clean %s/%s%n", deviceId, schemaName);
       }
     } catch (Exception e) {
-      System.err.println("Generic device error " + deviceId);
+      System.err.printf("Error processing %s: %s%n", deviceId, friendlyStackTrace(e));
       device.addError(e, attributes, Category.VALIDATION_DEVICE_RECEIVE);
     }
     return device;
