@@ -423,8 +423,8 @@ public class Validator {
     }
   }
 
-  protected void validateMessage(MessageBundle bundle) {
-    validateMessage(bundle.message, bundle.attributes);
+  protected synchronized void validateMessage(MessageBundle nullable) {
+    ifNotNullThen(nullable, bundle -> validateMessage(bundle.message, bundle.attributes));
   }
 
   private void validateMessage(
@@ -706,7 +706,15 @@ public class Validator {
     return typeFolderPairKey(subType, subFolder);
   }
 
-  private void processValidationReport() {
+  private synchronized void processValidationReport() {
+    try {
+      processValidationReportRaw();
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+
+  private void processValidationReportRaw() {
     ValidationSummary summary = new ValidationSummary();
     summary.extra_devices = new ArrayList<>(extraDevices);
 
