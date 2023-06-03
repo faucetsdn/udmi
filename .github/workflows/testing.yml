@@ -170,7 +170,11 @@ jobs:
         run: cat sites/udmi_site_model/out/devices/AHU-1/sequencer_state.json || true
       - name: schema validation output
         if: ${{ always() }}
-        run: find sites/udmi_site_model/out/devices/ -name RESULT.log | xargs fgrep SCHEMA
+        run: |
+          echo ==================================
+          cat out/schema_validation.out
+          echo ==================================
+          find sites/udmi_site_model/out/devices/ -name RESULT.log | xargs fgrep SCHEMA
       - name: pubber logs
         if: ${{ always() }}
         run: more pubber.out* out/pubber.out* pubber/out/*/*.json || true
