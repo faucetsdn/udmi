@@ -1,0 +1,8 @@
+{
+  "description": "Test that missing pointset metadata doesn't cause a NPE in validator",
+  "site_model": "tests/sites/missing",
+  "traces": "tests/traces/simple",
+  "validator": {
+    "check": "! fgrep -i null tests/sites/missing/out/devices/GAT-123/state.out"
+  }
+}

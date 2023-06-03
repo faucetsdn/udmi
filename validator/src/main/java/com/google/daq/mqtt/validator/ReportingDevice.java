@@ -187,6 +187,10 @@ public class ReportingDevice {
       throw new RuntimeException("Unknown message type " + message.getClass().getName());
     }
 
+    if (metadataDiff == null) {
+      return;
+    }
+
     missingPoints = metadataDiff.missingPoints;
     if (missingPoints == null) {
       addError(new ValidationException("missing pointset subblock"), attributes,

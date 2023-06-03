@@ -17,6 +17,7 @@ import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.Common.removeNextArg;
+import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.JSON_SUFFIX;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
@@ -543,7 +544,7 @@ public class Validator {
         try {
           validateMessage(schemaMap.get(schemaName), message);
         } catch (Exception e) {
-          System.err.printf("Error validating schema %s: %s%n", schemaName, e.getMessage());
+          System.err.printf("Error validating schema %s: %s%n", schemaName, friendlyStackTrace(e));
           device.addError(e, attributes, Category.VALIDATION_DEVICE_SCHEMA);
         }
       }
@@ -557,7 +558,7 @@ public class Validator {
             device.validateMessageType(messageObject, JsonUtil.getDate(timeString), attributes);
           });
         } catch (Exception e) {
-          System.err.println("Error validating contents: " + e.getMessage());
+          System.err.println("Error validating contents: " + friendlyStackTrace(e));
           device.addError(e, attributes, Category.VALIDATION_DEVICE_CONTENT);
         }
       } else {
@@ -568,7 +569,7 @@ public class Validator {
         System.err.printf("Validation complete %s/%s%n", deviceId, schemaName);
       }
     } catch (Exception e) {
-      System.err.println("Generic device error " + deviceId);
+      System.err.printf("Error processing %s: %s%n", deviceId, friendlyStackTrace(e));
       device.addError(e, attributes, Category.VALIDATION_DEVICE_RECEIVE);
     }
     return device;

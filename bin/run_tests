@@ -39,6 +39,7 @@ case "$1" in
   trace_tests)
     bin/test_trace simple
     bin/test_trace upgrade
+    bin/test_combos
     ;;
   registrar_tests)
     bin/test_registrar
