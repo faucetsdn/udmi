@@ -26,16 +26,6 @@ public class LogTailTest {
     return (LogTail) spy(logTail);
   }
 
-  @Before
-  public void openMocks() {
-    closeable = MockitoAnnotations.openMocks(this);
-  }
-
-  @After
-  public void releaseMocks() throws Exception {
-    closeable.close();
-  }
-
   @Test
   public void testMain() throws org.apache.commons.cli.ParseException {
     LogTail logTailMock = getLogTailMock();
