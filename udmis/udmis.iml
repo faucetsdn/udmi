@@ -94,8 +94,12 @@
     <orderEntry type="library" scope="RUNTIME" name="Gradle: io.perfmark:perfmark-api:0.26.0" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: org.junit.platform:junit-platform-commons:1.9.2" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: org.junit.jupiter:junit-jupiter-api:5.9.2" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: org.mockito:mockito-core:3.11.2" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: org.opentest4j:opentest4j:1.2.0" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: org.apiguardian:apiguardian-api:1.1.2" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: net.bytebuddy:byte-buddy:1.11.3" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: net.bytebuddy:byte-buddy-agent:1.11.3" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: org.objenesis:objenesis:3.2" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: io.grpc:grpc-googleapis:1.54.0" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: io.grpc:grpc-xds:1.54.0" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: io.opencensus:opencensus-proto:0.2.0" level="project" />
