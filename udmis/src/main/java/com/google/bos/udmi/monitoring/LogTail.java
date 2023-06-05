@@ -34,7 +34,7 @@ public class LogTail extends LogTailBase {
 
   private String projectName;
   private LogTimeSeries logsTimeSeries;
-  protected String LOG_FILTER =
+  protected static final String LOG_FILTER =
       "(resource.labels.function_name=\"udmi_target\") OR " +
           "(resource.labels.function_name=\"udmi_state\") OR " +
           "(resource.labels.function_name=\"udmi_config\") OR " +

@@ -9,10 +9,10 @@ import java.util.LinkedList;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Monitoring;
 import udmi.schema.MonitoringMetric;
-import udmi.schema.Envelope;
 
 
 /*
@@ -20,10 +20,9 @@ import udmi.schema.Envelope;
  * Hold the log entries in buckets for upstream processing in chunks.
  */
 public class LogTimeSeries extends TreeMap<Long, LinkedList<LogTailEntry>> {
-
-  final int LOG_ENTRIES_BUCKET_SECONDS = 10;
-  final int LOG_ENTRIES_PER_SUBMIT = 100;
-  private final Object timeSeriesLock = new Object();
+  private static final int LOG_ENTRIES_BUCKET_SECONDS = 10;
+  private static final int LOG_ENTRIES_PER_SUBMIT = 100;
+  private static final Object timeSeriesLock = new Object();
   int numberOfLogs = 0;
 
   private void emitMetrics(LogTailOutput output) throws IOException {
@@ -96,9 +95,11 @@ public class LogTimeSeries extends TreeMap<Long, LinkedList<LogTailEntry>> {
 
   private void loadMetricFieldsFromResourceName(MonitoringMetric metric, LogTailEntry log) {
     // Example:
-    // projects/essential-keep-197822/locations/us-central1/registries/UDMS-REFLECT/devices/IN-HYD-SAR2
+    // projects/essential-keep-197822/locations/us-central1/...
+    // registries/UDMS-REFLECT/devices/IN-HYD-SAR2
     Pattern pattern = Pattern.compile(
-        "projects/(?<project>[^/]+)/locations/(?<location>[^/]+)/registries/(?<registry>[^/]+)/devices/(?<device>[^/]+)");
+        "projects/(?<project>[^/]+)/locations/(?<location>[^/]+)"
+            + "/registries/(?<registry>[^/]+)/devices/(?<device>[^/]+)");
     Matcher matcher = pattern.matcher(log.resourceName);
     if (matcher.find()) {
       metric.envelope.projectId = matcher.group("project");
