@@ -1,0 +1,16 @@
+{
+  "Converting" : {
+    "DWN-2" : "REDACTED/sites/downgrade/devices/DWN-2/metadata.json"
+  },
+  "Credential" : {
+    "DWN-1" : "While loading credentials for local device DWN-1",
+    "DWN-2" : "While loading credentials for local device DWN-2"
+  },
+  "Files" : {
+    "DWN-1" : "devices/DWN-1",
+    "DWN-2" : "devices/DWN-2"
+  },
+  "Version" : {
+    "main" : "1.4.1-38-g46f2b644b"
+  }
+}

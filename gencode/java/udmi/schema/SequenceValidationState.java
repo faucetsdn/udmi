@@ -7,6 +7,7 @@ import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonValue;
 
@@ -30,13 +31,14 @@ public class SequenceValidationState {
     @JsonProperty("summary")
     public String summary;
     /**
-     * Feature Stage
+     * FeatureStage
      * <p>
-     * 
+     * Stage of a feature implemenation
      * 
      */
     @JsonProperty("stage")
-    public SequenceValidationState.FeatureStage stage;
+    @JsonPropertyDescription("Stage of a feature implemenation")
+    public udmi.schema.FeatureEnumeration.FeatureStage stage;
     /**
      * Sequence Result
      * <p>
@@ -74,55 +76,6 @@ public class SequenceValidationState {
         }
         SequenceValidationState rhs = ((SequenceValidationState) other);
         return (((((this.summary == rhs.summary)||((this.summary!= null)&&this.summary.equals(rhs.summary)))&&((this.result == rhs.result)||((this.result!= null)&&this.result.equals(rhs.result))))&&((this.stage == rhs.stage)||((this.stage!= null)&&this.stage.equals(rhs.stage))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
-    }
-
-
-    /**
-     * Feature Stage
-     * <p>
-     * 
-     * 
-     */
-    @Generated("jsonschema2pojo")
-    public enum FeatureStage {
-
-        DISABLED("disabled"),
-        ALPHA("alpha"),
-        BETA("beta"),
-        STABLE("stable");
-        private final String value;
-        private final static Map<String, SequenceValidationState.FeatureStage> CONSTANTS = new HashMap<String, SequenceValidationState.FeatureStage>();
-
-        static {
-            for (SequenceValidationState.FeatureStage c: values()) {
-                CONSTANTS.put(c.value, c);
-            }
-        }
-
-        FeatureStage(String value) {
-            this.value = value;
-        }
-
-        @Override
-        public String toString() {
-            return this.value;
-        }
-
-        @JsonValue
-        public String value() {
-            return this.value;
-        }
-
-        @JsonCreator
-        public static SequenceValidationState.FeatureStage fromValue(String value) {
-            SequenceValidationState.FeatureStage constant = CONSTANTS.get(value);
-            if (constant == null) {
-                throw new IllegalArgumentException(value);
-            } else {
-                return constant;
-            }
-        }
-
     }
 
 

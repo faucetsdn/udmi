@@ -1,0 +1,21 @@
+#!/bin/bash -e
+#
+# Test combinations of traces with test site models
+#
+
+tests=tests/combos/*.json
+
+for test in $tests; do
+    echo '################' Running combo test $test
+    traces=$(jq -r .traces $test)
+    site_model=$(jq -r .site_model $test)
+    validator_config=$(jq -r .validator $test)
+    if [[ $validator_config != null ]]; then
+        validator/bin/validate -- schema trace $traces $site_model
+        check=$(echo $validator_config | jq -r .check)
+        echo $check
+        eval $check
+    fi
+done
+
+echo All combo tests passed.

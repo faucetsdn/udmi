@@ -14,7 +14,7 @@ config message is always considered present.
 
 It is composed of specific sub-entries for each sub-system { _system_, _pointset_, _gateway_, etc... }.
 
-This [working example](../../tests/config.tests/example.json) shows how a typical `config` message
+This [working example](../../tests/schemas/config/example.json) shows how a typical `config` message
 is constructed.
 
 ## Config Parameters

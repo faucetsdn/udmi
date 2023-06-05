@@ -2,7 +2,6 @@ package daq.pubber;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.fromJsonFile;
 import static com.google.udmi.util.GeneralUtils.fromJsonString;
@@ -173,10 +172,11 @@ public class Pubber {
   private static final String CORRUPT_STATE_MESSAGE = "!&*@(!*&@!";
   private static final long INJECT_MESSAGE_DELAY_MS = 2000; // Delay to make sure testing is stable.
   private static final int FORCED_STATE_TIME_MS = 10000;
+  protected final PubberConfiguration configuration;
   final State deviceState = new State();
+  final Config deviceConfig = new Config();
   private final File outDir;
   private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
-  protected final PubberConfiguration configuration;
   private final AtomicInteger messageDelayMs = new AtomicInteger(DEFAULT_REPORT_SEC * 1000);
   private final CountDownLatch configLatch = new CountDownLatch(1);
   private final ExtraPointsetEvent devicePoints = new ExtraPointsetEvent();
@@ -185,7 +185,7 @@ public class Pubber {
   private final Semaphore stateLock = new Semaphore(1);
   private final String deviceId;
   private final List<Entry> logentries = new ArrayList<>();
-  final Config deviceConfig = new Config();
+  protected DevicePersistent persistentData;
   private int deviceUpdateCount = -1;
   private MqttDevice deviceTarget;
   private ScheduledFuture<?> periodicSender;
@@ -198,7 +198,6 @@ public class Pubber {
   private EndpointConfiguration extractedEndpoint;
   private SiteModel siteModel;
   private PrintStream logPrintWriter;
-  protected DevicePersistent persistentData;
   private MqttDevice gatewayTarget;
   private int systemEventCount;
   private LocalnetManager localnetManager;
@@ -404,6 +403,9 @@ public class Pubber {
   }
 
   private void initializeDevice() {
+    SupportedFeatures.writeFeatureFile();
+    SupportedFeatures.setFeatureSwap(configuration.options.featureEnableSwap);
+
     deviceState.system = new SystemState();
     deviceState.system.operation = new StateSystemOperation();
     if (!TRUE.equals(configuration.options.noLastStart)) {
@@ -767,7 +769,9 @@ public class Pubber {
 
   void terminate() {
     warn("Terminating");
-    deviceState.system.operation.mode = SystemMode.SHUTDOWN;
+    if (deviceState.system != null && deviceState.system.operation != null) {
+      deviceState.system.operation.mode = SystemMode.SHUTDOWN;
+    }
     captureExceptions("publishing shutdown state", this::publishSynchronousState);
     stop();
     captureExceptions("executor flush", this::stopExecutor);
@@ -919,6 +923,7 @@ public class Pubber {
         }
       }
       terminate();
+      systemLifecycle(SystemMode.TERMINATE);
     } else {
       error("Unknown exception type " + toReport.getClass(), toReport);
     }
@@ -946,9 +951,9 @@ public class Pubber {
   }
 
   /**
-   * Issue a state update in response to a received config message. This will optionally
-   * add a synthetic delay in so that testing infrastructure can test that related sequence
-   * tests handle this case appropriately.
+   * Issue a state update in response to a received config message. This will optionally add a
+   * synthetic delay in so that testing infrastructure can test that related sequence tests handle
+   * this case appropriately.
    */
   private void publishConfigStateUpdate() {
     if (TRUE.equals(configuration.options.configStateDelay)) {
@@ -1017,7 +1022,7 @@ public class Pubber {
         error("Empty config system block and configured to restart on bad config!");
         systemLifecycle(SystemMode.RESTART);
       }
-      GeneralUtils.copyFields(config, deviceConfig);
+      GeneralUtils.copyFields(config, deviceConfig, true);
       info(String.format("%s received config %s", getTimestamp(), isoConvert(config.timestamp)));
       deviceState.system.last_config = config.timestamp;
       actualInterval = updatePointsetConfig(config.pointset);
@@ -1644,7 +1649,7 @@ public class Pubber {
   }
 
   private String getTestingTag(Config config) {
-    return config.system == null || config.system.testing == null
+    return config == null || config.system == null || config.system.testing == null
         || config.system.testing.sequence_name == null ? ""
         : String.format(" (%s)", config.system.testing.sequence_name);
   }

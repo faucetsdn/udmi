@@ -56,7 +56,14 @@
       }
     },
     "features": {
-      "$ref": "file:event_discovery_feature.json#/$defs/features"
+      "description": "Enumeration of features supported by this device.",
+      "additionalProperties": false,
+      "existingJavaType": "java.util.Map<String, FeatureEnumeration>",
+      "patternProperties": {
+        "^[._a-zA-Z]+$": {
+          "$ref": "file:enumeration_feature.json"
+        }
+      }
     },
     "system": {
       "title": "System Discovery Event",

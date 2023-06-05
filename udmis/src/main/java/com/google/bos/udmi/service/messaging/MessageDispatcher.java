@@ -24,7 +24,11 @@ public interface MessageDispatcher {
   Class<?> EXCEPTION_CLASS = Exception.class;
 
   static MessageDispatcher from(EndpointConfiguration configuration) {
-    return new MessageDispatcherImpl(MessagePipe.from(configuration));
+    return new MessageDispatcherImpl(configuration);
+  }
+
+  static MessageDispatcher from(EndpointConfiguration from, EndpointConfiguration to) {
+    throw new IllegalStateException("Not yet implemented");
   }
 
   /**
@@ -36,6 +40,11 @@ public interface MessageDispatcher {
 
   void activate();
 
+  /**
+   * Get a message continuation for the received message.
+   */
+  MessageContinuation getContinuation(Object message);
+
   boolean isActive();
 
   /**
@@ -43,7 +52,6 @@ public interface MessageDispatcher {
    * extracted at runtime and used to properly reconstruct on the receiving end.
    */
   void publish(Object message);
-
 
   void shutdown();
 

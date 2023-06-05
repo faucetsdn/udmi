@@ -1,0 +1,17 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Pubber Config" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="daq.pubber.Pubber" />
+    <module name="pubber" />
+    <option name="PROGRAM_PARAMETERS" value="/tmp/pubber_config.json" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/.." />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="daq.pubber.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

@@ -1,10 +1,20 @@
 package com.google.daq.mqtt.util;
 
 import static com.google.udmi.util.Common.VERSION_KEY;
+import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
+import com.google.udmi.util.GeneralUtils;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 /**
  * Container class for upgrading UDMI messages from older versions.
@@ -13,7 +23,7 @@ public class MessageUpgrader {
 
   public static final JsonNodeFactory NODE_FACTORY = JsonNodeFactory.instance;
   public static final String STATE_SCHEMA = "state";
-  public static final String STATE_SCHEMA_PREFIX = "state_";
+  public static final String STATE_SYSTEM_SCHEMA = "state_system";
   public static final String METADATA_SCHEMA = "metadata";
   private static final String TARGET_FORMAT = "%d.%d.%d";
   private final ObjectNode message;
@@ -100,8 +110,11 @@ public class MessageUpgrader {
   }
 
   private void upgrade_1_3_14() {
-    if (STATE_SCHEMA.equals(schemaName) || schemaName.startsWith(STATE_SCHEMA_PREFIX)) {
+    if (STATE_SCHEMA.equals(schemaName)) {
       upgrade_1_3_14_state();
+    }
+    if (STATE_SYSTEM_SCHEMA.equals(schemaName)) {
+      upgrade_1_3_14_state_system(message);
     }
     if (METADATA_SCHEMA.equals(schemaName)) {
       upgrade_1_3_14_metadata();
@@ -109,12 +122,13 @@ public class MessageUpgrader {
   }
 
   private void upgrade_1_3_14_state() {
-    ObjectNode system = getStateSystemNode();
-    if (system != null) {
-      upgradeMakeModel(system);
-      upgradeFirmware(system);
-      upgradeStatuses(system);
-    }
+    ifNotNullThen((ObjectNode) message.get("system"), this::upgrade_1_3_14_state_system);
+  }
+
+  private void upgrade_1_3_14_state_system(ObjectNode system) {
+    upgradeMakeModel(system);
+    upgradeFirmware(system);
+    upgradeStatuses(system);
   }
 
   private void upgrade_1_3_14_metadata() {
@@ -129,26 +143,26 @@ public class MessageUpgrader {
   }
 
   private void upgrade_1_4_1() {
-    if (STATE_SCHEMA.equals(schemaName) || schemaName.startsWith(STATE_SCHEMA_PREFIX)) {
+    if (STATE_SCHEMA.equals(schemaName)) {
       upgrade_1_4_1_state();
+    }
+    if (STATE_SYSTEM_SCHEMA.equals(schemaName)) {
+      upgrade_1_4_1_state_system(message);
     }
   }
 
   private void upgrade_1_4_1_state() {
-    ObjectNode system = getStateSystemNode();
-    if (system != null) {
-      assertFalse("operation key in older version", system.has("operation"));
-      JsonNode operational = system.remove("operational");
-      if (operational != null) {
-        ObjectNode operation = new ObjectNode(NODE_FACTORY);
-        system.set("operation", operation);
-        operation.set("operational", operational);
-      }
-    }
+    ifNotNullThen((ObjectNode) message.get("system"), this::upgrade_1_4_1_state_system);
   }
 
-  private ObjectNode getStateSystemNode() {
-    return schemaName.equals(STATE_SCHEMA) ? ((ObjectNode) message.get("system")) : message;
+  private void upgrade_1_4_1_state_system(ObjectNode system) {
+    assertFalse("operation key in older version", system.has("operation"));
+    JsonNode operational = system.remove("operational");
+    if (operational != null) {
+      ObjectNode operation = new ObjectNode(NODE_FACTORY);
+      system.set("operation", operation);
+      operation.set("operational", operational);
+    }
   }
 
   private void assertFalse(String message, boolean value) {
@@ -170,10 +184,21 @@ public class MessageUpgrader {
       JsonNode version = ((ObjectNode) firmware).remove(VERSION_KEY);
       if (version != null && !system.has("software")) {
         ObjectNode softwareNode = new ObjectNode(NODE_FACTORY);
-        softwareNode.set("firmware", version);
+        softwareNode.set("firmware", sanitizeFirmwareVersion(version));
         system.set("software", softwareNode);
       }
     }
+  }
+
+  private TextNode sanitizeFirmwareVersion(JsonNode version) {
+    if (version.isArray()) {
+      List<String> values = new ArrayList<>();
+      Iterator<JsonNode> elements = ((ArrayNode) version).elements();
+      elements.forEachRemaining(item -> values.add(((TextNode) item).asText()));
+      String collect = values.stream().collect(Collectors.joining(", "));
+      return new TextNode(collect);
+    }
+    return (TextNode) version;
   }
 
   private void upgradeMakeModel(ObjectNode system) {

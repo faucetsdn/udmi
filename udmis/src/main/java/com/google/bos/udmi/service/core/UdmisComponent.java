@@ -2,6 +2,8 @@ package com.google.bos.udmi.service.core;
 
 import static com.google.bos.udmi.service.messaging.MessageDispatcher.messageHandlerFor;
 
+import com.google.bos.udmi.service.access.IotAccessProvider;
+import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.MessageDispatcher;
 import com.google.bos.udmi.service.messaging.MessageDispatcher.HandlerSpecification;
 import com.google.bos.udmi.service.pod.ContainerBase;
@@ -17,12 +19,17 @@ import udmi.schema.EndpointConfiguration;
  */
 public abstract class UdmisComponent extends ContainerBase {
 
+  public static final Integer FUNCTIONS_VERSION_MIN = 8;
+  public static final Integer FUNCTIONS_VERSION_MAX = 8;
+  public static final String UDMI_VERSION = "1.4.1";
+
   private final ImmutableList<HandlerSpecification> baseHandlers = ImmutableList.of(
       messageHandlerFor(Object.class, this::defaultHandler),
       messageHandlerFor(Exception.class, this::exceptionHandler)
   );
 
   protected MessageDispatcher dispatcher;
+  protected IotAccessProvider provider;
 
   /**
    * Create a new instance of the given target class with the provided configuration.
@@ -31,17 +38,10 @@ public abstract class UdmisComponent extends ContainerBase {
     try {
       T object = clazz.getDeclaredConstructor().newInstance();
       object.dispatcher = MessageDispatcher.from(config);
-      object.activate();
       return object;
     } catch (Exception e) {
       throw new RuntimeException("While instantiating class " + clazz.getName(), e);
     }
-  }
-
-  protected void activate() {
-    registerHandlers(baseHandlers);
-    registerHandlers();
-    dispatcher.activate();
   }
 
   /**
@@ -73,8 +73,32 @@ public abstract class UdmisComponent extends ContainerBase {
   protected void registerHandlers() {
   }
 
+  /**
+   * Activate this component.
+   */
+  public void activate() {
+    if (dispatcher != null) {
+      registerHandlers(baseHandlers);
+      registerHandlers();
+      dispatcher.activate();
+    }
+  }
+
   public int getMessageCount(Class<?> clazz) {
     return dispatcher.getHandlerCount(clazz);
+  }
+
+  public void setIotAccessProvider(IotAccessProvider provider) {
+    this.provider = provider;
+  }
+
+  /**
+   * Shutdown the component.
+   */
+  public void shutdown() {
+    if (dispatcher != null) {
+      dispatcher.shutdown();
+    }
   }
 
   <T> void registerHandler(Class<T> clazz, Consumer<T> handler) {
@@ -83,6 +107,10 @@ public abstract class UdmisComponent extends ContainerBase {
 
   void publish(Object message) {
     dispatcher.publish(message);
+  }
+
+  MessageContinuation getContinuation(Object message) {
+    return dispatcher.getContinuation(message);
   }
 
   @TestOnly

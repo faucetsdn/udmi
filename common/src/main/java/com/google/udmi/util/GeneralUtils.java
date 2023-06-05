@@ -15,6 +15,7 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.security.spec.ECField;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -33,6 +34,11 @@ public class GeneralUtils {
       .setSerializationInclusion(JsonInclude.Include.NON_NULL);
   private static final String SEPARATOR = "\n  ";
   private static final Joiner INDENTED_LINES = Joiner.on(SEPARATOR);
+  public static final Joiner CSV_JOINER = Joiner.on(", ");
+
+  public static String[] arrayOf(String... args) {
+    return args;
+  }
 
   /**
    * Returns a string of enabled options and values.
@@ -48,16 +54,21 @@ public class GeneralUtils {
           continue;
         }
 
-        if (field.get(target) != null && Boolean.TRUE.equals(field.get(target))) {
+        Object fieldValue = field.get(target);
+        if ((fieldValue instanceof Boolean) && isTrue(fieldValue)) {
           options.add(field.getName());
-        } else if (field.get(target) != null) {
-          options.add(field.getName() + "=" + field.get(target));
+        } else if (fieldValue != null) {
+          options.add(field.getName() + "=" + fieldValue);
         }
       } catch (IllegalAccessException e) {
         throw new RuntimeException("While accessing field " + field.getName(), e);
       }
     }
     return String.join(" ", options);
+  }
+
+  public static boolean isTrue(Object value) {
+    return Boolean.TRUE.equals(value);
   }
 
   public static <T> void ifNotNullThen(T value, Consumer<T> consumer) {
@@ -69,7 +80,11 @@ public class GeneralUtils {
   }
 
   public static <T, V> V ifNotNullGet(T value, Function<T, V> converter) {
-    return value == null ? null : converter.apply(value);
+    return ifNotNullGet(value, converter, null);
+  }
+
+  public static <T, V> V ifNotNullGet(T value, Function<T, V> converter, V elseResult) {
+    return value == null ? elseResult : converter.apply(value);
   }
 
   public static <T, V> V ifNotNullGet(T value, Supplier<V> converter) {
@@ -183,6 +198,18 @@ public class GeneralUtils {
     return outputStream.toString();
   }
 
+  /**
+   * Get a "friendly" (cause messages only) stack trace string.
+   */
+  public static String friendlyStackTrace(Throwable e) {
+    List<String> messages = new ArrayList<>();
+    while (e != null) {
+      messages.add(Optional.ofNullable(e.getMessage()).orElseGet(e::toString));
+      e = e.getCause();
+    }
+    return CSV_JOINER.join(messages);
+  }
+
   public static List<String> runtimeExec(String... command) {
     ProcessBuilder processBuilder = new ProcessBuilder().command(command);
     try {
@@ -208,12 +235,15 @@ public class GeneralUtils {
    * @param to   target object
    * @param <T>  type of object
    */
-  public static <T> void copyFields(T from, T to) {
-    Field[] fields = to.getClass().getDeclaredFields();
+  public static <T> void copyFields(T from, T to, boolean includeNull) {
+    Field[] fields = from.getClass().getDeclaredFields();
     for (Field field : fields) {
       if (!Modifier.isStatic(field.getModifiers())) {
         try {
-          field.set(to, field.get(from));
+          Object value = field.get(from);
+          if (includeNull || value != null ) {
+            field.set(to, value);
+          }
         } catch (Exception e) {
           throw new RuntimeException("While copying field " + field.getName(), e);
         }
@@ -226,5 +256,9 @@ public class GeneralUtils {
     String terminator = changes.size() == 0 ? "." : ":";
     String header = String.format("Changed %d fields%s%s", changes.size(), terminator, SEPARATOR);
     return (header + INDENTED_LINES.join(changes)).trim();
+  }
+
+  public static <U> U mapReplace(U previous, U added) {
+    return added;
   }
 }

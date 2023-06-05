@@ -1,6 +1,7 @@
 
 package udmi.schema;
 
+import java.util.HashMap;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -17,8 +18,9 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "flow_defaults",
-    "target_flow",
-    "state_flow"
+    "flows",
+    "bridges",
+    "iot_access"
 })
 @Generated("jsonschema2pojo")
 public class PodConfiguration {
@@ -26,37 +28,32 @@ public class PodConfiguration {
     /**
      * Endpoint Configuration
      * <p>
-     * Parameters to define an MQTT endpoint
+     * Parameters to define a message endpoint
      * 
      */
     @JsonProperty("flow_defaults")
-    @JsonPropertyDescription("Parameters to define an MQTT endpoint")
+    @JsonPropertyDescription("Parameters to define a message endpoint")
     public EndpointConfiguration flow_defaults;
+    @JsonProperty("flows")
+    public HashMap<String, EndpointConfiguration> flows;
+    @JsonProperty("bridges")
+    public HashMap<String, BridgePodConfiguration> bridges;
     /**
-     * Endpoint Configuration
+     * Iot Access
      * <p>
-     * Parameters to define an MQTT endpoint
+     * 
      * 
      */
-    @JsonProperty("target_flow")
-    @JsonPropertyDescription("Parameters to define an MQTT endpoint")
-    public EndpointConfiguration target_flow;
-    /**
-     * Endpoint Configuration
-     * <p>
-     * Parameters to define an MQTT endpoint
-     * 
-     */
-    @JsonProperty("state_flow")
-    @JsonPropertyDescription("Parameters to define an MQTT endpoint")
-    public EndpointConfiguration state_flow;
+    @JsonProperty("iot_access")
+    public IotAccess iot_access;
 
     @Override
     public int hashCode() {
         int result = 1;
+        result = ((result* 31)+((this.bridges == null)? 0 :this.bridges.hashCode()));
         result = ((result* 31)+((this.flow_defaults == null)? 0 :this.flow_defaults.hashCode()));
-        result = ((result* 31)+((this.target_flow == null)? 0 :this.target_flow.hashCode()));
-        result = ((result* 31)+((this.state_flow == null)? 0 :this.state_flow.hashCode()));
+        result = ((result* 31)+((this.flows == null)? 0 :this.flows.hashCode()));
+        result = ((result* 31)+((this.iot_access == null)? 0 :this.iot_access.hashCode()));
         return result;
     }
 
@@ -69,7 +66,7 @@ public class PodConfiguration {
             return false;
         }
         PodConfiguration rhs = ((PodConfiguration) other);
-        return ((((this.flow_defaults == rhs.flow_defaults)||((this.flow_defaults!= null)&&this.flow_defaults.equals(rhs.flow_defaults)))&&((this.target_flow == rhs.target_flow)||((this.target_flow!= null)&&this.target_flow.equals(rhs.target_flow))))&&((this.state_flow == rhs.state_flow)||((this.state_flow!= null)&&this.state_flow.equals(rhs.state_flow))));
+        return (((((this.bridges == rhs.bridges)||((this.bridges!= null)&&this.bridges.equals(rhs.bridges)))&&((this.flow_defaults == rhs.flow_defaults)||((this.flow_defaults!= null)&&this.flow_defaults.equals(rhs.flow_defaults))))&&((this.flows == rhs.flows)||((this.flows!= null)&&this.flows.equals(rhs.flows))))&&((this.iot_access == rhs.iot_access)||((this.iot_access!= null)&&this.iot_access.equals(rhs.iot_access))));
     }
 
 }

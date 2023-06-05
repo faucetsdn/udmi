@@ -64,6 +64,7 @@
     },
     "operation": {
       "enum": [
+        "FETCH",
         "CREATE",
         "UPDATE",
         "DELETE",
@@ -73,7 +74,7 @@
     },
     "metadata": {
       "type": "object",
-      "existingJavaType": "java.util.HashMap<String, String>",
+      "existingJavaType": "java.util.Map<String, String>",
       "patternProperties": {
         "^[-_a-zA-Z0-9]+$": {
           "additionalProperties": false,
@@ -83,7 +84,7 @@
     },
     "device_ids": {
       "description": "If operating on the entire registry, then this manifests as a map of devices not just one device.",
-      "existingJavaType": "java.util.HashMap<String, CloudModel>",
+      "existingJavaType": "java.util.Map<String, CloudModel>",
       "patternProperties": {
         "^[-_a-zA-Z0-9]+$": {
           "additionalProperties": false,

@@ -21,6 +21,7 @@ public abstract class Common {
   public static final String STATE_QUERY_TOPIC = "update/query";
   public static final String EXCEPTION_KEY = "exception";
   public static final String ERROR_KEY = "error";
+  public static final String TRANSACTION_KEY = "transactionId";
   public static final String MESSAGE_KEY = "message";
   public static final String TIMESTAMP_KEY = "timestamp";
   public static final String VERSION_KEY = "version";

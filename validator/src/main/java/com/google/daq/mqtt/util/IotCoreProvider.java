@@ -21,19 +21,18 @@ import com.google.api.services.cloudiot.v1.model.ListDevicesResponse;
 import com.google.api.services.cloudiot.v1.model.ModifyCloudToDeviceConfigRequest;
 import com.google.api.services.cloudiot.v1.model.PublicKeyCredential;
 import com.google.api.services.cloudiot.v1.model.UnbindDeviceFromGatewayRequest;
-import com.google.api.services.cloudiot.v1.model.UnbindDeviceFromGatewayResponse;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.JsonUtil;
-import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import udmi.schema.CloudModel;
@@ -84,10 +83,11 @@ class IotCoreProvider implements IotProvider {
   @Override
   public void updateConfig(String deviceId, String config) {
     try {
+      String useConfig = Optional.ofNullable(config).orElse("");
       registries.devices().modifyCloudToDeviceConfig(
           getDevicePath(deviceId),
           new ModifyCloudToDeviceConfigRequest().setBinaryData(
-              Base64.getEncoder().encodeToString(config.getBytes()))).execute();
+              Base64.getEncoder().encodeToString(useConfig.getBytes()))).execute();
     } catch (Exception e) {
       throw new RuntimeException("While modifying device config", e);
     }

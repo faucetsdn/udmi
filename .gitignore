@@ -1,4 +1,5 @@
 *~
+\#*
 
 udmi_site_model/
 gcp_reflect_key.pkcs8
@@ -19,6 +20,7 @@ credentials.json
 /validator/.idea/libraries/
 /udmis/build/
 /udmis/out/
+/udmis/var/
 /udmis/.idea/libraries/
 /pubber/build/
 /pubber/out/
@@ -32,8 +34,8 @@ credentials.json
 pubber.out*
 /sequencer.out
 __pycache__/
-/tests/downgrade.site/out/
-/tests/downgrade.site/devices/*/out/
+/tests/sites/*/out/
+/tests/sites/*/devices/*/out/
 /udmi_*.log
 
 .vscode

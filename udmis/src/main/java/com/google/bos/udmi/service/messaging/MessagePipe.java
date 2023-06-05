@@ -2,10 +2,12 @@ package com.google.bos.udmi.service.messaging;
 
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.bos.udmi.service.messaging.impl.FileMessagePipe;
 import com.google.bos.udmi.service.messaging.impl.LocalMessagePipe;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.bos.udmi.service.messaging.impl.PubSubPipe;
 import com.google.bos.udmi.service.messaging.impl.SimpleMqttPipe;
+import com.google.bos.udmi.service.messaging.impl.TraceMessagePipe;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -24,6 +26,8 @@ public interface MessagePipe {
   Map<Protocol, Function<EndpointConfiguration, MessagePipe>> IMPLEMENTATIONS = ImmutableMap.of(
       Protocol.LOCAL, LocalMessagePipe::fromConfig,
       Protocol.PUBSUB, PubSubPipe::fromConfig,
+      Protocol.FILE, FileMessagePipe::fromConfig,
+      Protocol.TRACE, TraceMessagePipe::fromConfig,
       Protocol.MQTT, SimpleMqttPipe::fromConfig);
 
   /**

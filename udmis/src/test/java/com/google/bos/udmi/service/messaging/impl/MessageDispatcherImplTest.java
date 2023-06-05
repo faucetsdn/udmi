@@ -1,8 +1,8 @@
 package com.google.bos.udmi.service.messaging.impl;
 
-import static com.google.bos.udmi.service.messaging.impl.MessageTestBase.TEST_DESTINATION;
-import static com.google.bos.udmi.service.messaging.impl.MessageTestBase.TEST_NAMESPACE;
-import static com.google.bos.udmi.service.messaging.impl.MessageTestBase.TEST_SOURCE;
+import static com.google.bos.udmi.service.messaging.impl.MessagePipeTestBase.TEST_DESTINATION;
+import static com.google.bos.udmi.service.messaging.impl.MessagePipeTestBase.TEST_NAMESPACE;
+import static com.google.bos.udmi.service.messaging.impl.MessagePipeTestBase.TEST_SOURCE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -42,7 +42,7 @@ public class MessageDispatcherImplTest {
   }
 
   private MessageDispatcher getReversedDispatcher() {
-    return new MessageDispatcherImpl(new LocalMessagePipe(getConfiguration(true)));
+    return new MessageDispatcherImpl(getConfiguration(true));
   }
 
   @Test
@@ -78,7 +78,7 @@ public class MessageDispatcherImplTest {
   class TestingDispatcher extends MessageDispatcherImpl {
 
     public TestingDispatcher() {
-      super(new LocalMessagePipe(getConfiguration(false)));
+      super(getConfiguration(false));
     }
 
     @Override

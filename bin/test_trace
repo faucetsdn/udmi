@@ -5,6 +5,8 @@ if [[ $# != 1 ]]; then
     false
 fi
 
+echo '################' Running $0 $*
+
 trace_name=$1
 shift
 
@@ -17,7 +19,7 @@ function redact() {
 }
 
 
-trace_in=tests/${trace_name}.trace
+trace_in=tests/traces/${trace_name}
 trace_out=$trace_in/expected/
 site_model=sites/udmi_site_model
 site_out=$site_model/out

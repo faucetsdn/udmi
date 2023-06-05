@@ -10,13 +10,7 @@
       "type": "string"
     },
     "stage": {
-      "title": "Feature Stage",
-      "enum": [
-        "disabled",
-        "alpha",
-        "beta",
-        "stable"
-      ]
+      "$ref": "file:common.json#/definitions/stage"
     },
     "result": {
       "title": "Sequence Result",

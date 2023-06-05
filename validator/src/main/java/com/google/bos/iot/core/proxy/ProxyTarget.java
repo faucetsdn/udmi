@@ -146,9 +146,17 @@ class ProxyTarget {
     String keyAlgorithm = metadata.get("key_algorithm");
     String keyBytesRaw = metadata.get("key_bytes");
     byte[] keyBytes = Base64.getDecoder().decode(keyBytesRaw);
-    return new MqttPublisher(proxyConfig.dstProjectId, proxyConfig.dstCloudRegion,
-        proxyConfig.dstRegistryId, deviceId, keyBytes, keyAlgorithm,
+    return new MqttPublisher(makeExecutionConfiguration(deviceId), keyBytes, keyAlgorithm,
         this::messageHandler, this::errorHandler);
+  }
+
+  private ExecutionConfiguration makeExecutionConfiguration(String deviceId) {
+    ExecutionConfiguration executionConfiguration = new ExecutionConfiguration();
+    executionConfiguration.project_id = proxyConfig.dstProjectId;
+    executionConfiguration.cloud_region = proxyConfig.dstCloudRegion;
+    executionConfiguration.registry_id = proxyConfig.dstRegistryId;
+    executionConfiguration.device_id = deviceId;
+    return executionConfiguration;
   }
 
   private String extractGateway(Metadata udmi) {

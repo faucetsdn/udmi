@@ -30,20 +30,32 @@ $ROOT_DIR/validator/bin/build > /dev/null
 
 echo Running tools version `(cd $ROOT_DIR; git describe)`
 
+# Format of cmdline project_id is {//PROVIDER/}PROJECT (optional PROVIDER)
+# e.g. bos-testing-dev or //gcp/bos-testing-dev
+
 if [[ -n $project_id ]]; then
-    quoted_id=\"$project_id\"
+    quoted_id=\"${project_id##*/}\"
 else
     quoted_id=null
+fi
+
+if [[ $project_id =~ ^// ]]; then
+    no_project=${project_id%/*}
+    iot_provider=\"${no_project#//}\"
+else
+    iot_provider=null
 fi
 
 echo Writing config to $REGISTRAR_CONFIG
 cat <<EOF > $REGISTRAR_CONFIG
 {
+  "iot_provider": $iot_provider,
   "project_id": $quoted_id,
   "site_model": "$site_path",
   "registry_suffix": $registry_suffix
 }
 EOF
+
 $ROOT_DIR/validator/bin/registrar $REGISTRAR_CONFIG $* 2>&1
 
 bin/check_version

@@ -7,12 +7,10 @@
  * of client code. Clients (e.g. sqeuencer) can query this value and check that it's within range. Values
  * indicate the MIN/MAX versions supported, while the client determines what is required.
  *
- * LEVEL 5: Baseline version using an explicit reflector envelope for type/folder.
- * LEVEL 6: Support for capture and reporting of errors in the pipeline for validating bad device messages.
- * LEVEL 7: Support for reflector-based GCP IoT Core provider APIs.
+ * LEVEL 8: Schema refactoring for UDMIS container compatability.
  */
-const FUNCTIONS_VERSION_MIN = 5;
-const FUNCTIONS_VERSION_MAX = 7;
+const FUNCTIONS_VERSION_MIN = 8;
+const FUNCTIONS_VERSION_MAX = 8;
 
 // Hacky stuff to work with "maybe have firestore enabled"
 const PROJECT_ID = process.env.GCP_PROJECT || process.env.GCLOUD_PROJECT;
@@ -41,7 +39,7 @@ const MODEL_TYPE = 'model';
 
 const UPDATE_FOLDER = 'update';
 const CLOUD_FOLDER = 'cloud';
-const UDMIS_FOLDER = 'udmis';
+const UDMI_FOLDER = 'udmi';
 const ERROR_FOLDER = 'error';
 
 const ALL_REGIONS = ['us-central1', 'europe-west1', 'asia-east1'];
@@ -99,7 +97,7 @@ function reflectError(attributes, base64, error) {
 }
 
 function sendEnvelope(registryId, deviceId, subType, subFolder, message, transactionId) {
-  if (registryId == REFLECT_REGISTRY) {
+  if (registryId === REFLECT_REGISTRY) {
     console.log('sendEnvelope squash for', registryId);
     return;
   }
@@ -205,7 +203,7 @@ exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) 
     return udmi_process_reflector_state(attributes, msgObject);
   }
 
-  if (attributes.subFolder != 'udmi') {
+  if (attributes.subFolder !== 'udmi') {
     console.error('Unexpected subFolder', attributes.subFolder);
     return;
   }
@@ -230,13 +228,13 @@ exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) 
       console.error('No cloud region found for target registry', envelope.deviceRegistryId);
       return null;
     }
-    if (envelope.subType == QUERY_TYPE) {
-      return udmi_query(envelope, payload);
+    if (envelope.subType === QUERY_TYPE) {
+      return udmi_query(envelope);
     }
-    if (envelope.subType == MODEL_TYPE) {
+    if (envelope.subType === MODEL_TYPE) {
       return udmi_model(envelope, payload);
     }
-    const targetFunction = envelope.subType == 'event' ? 'target' : envelope.subType;
+    const targetFunction = envelope.subType === 'event' ? 'target' : envelope.subType;
     target = 'udmi_' + targetFunction;
     return publishPubsubMessage(target, envelope, payload);
   }).catch(e => reflectError(envelope, base64, e));
@@ -247,13 +245,29 @@ async function udmi_process_reflector_state(attributes, msgObject) {
   await registry_promise;
   const registryId = attributes.deviceRegistryId;
   const deviceId = attributes.deviceId;
-  const subContents = Object.assign({}, version);
-  subContents.last_state = msgObject.timestamp;
-  subContents.functions_min = FUNCTIONS_VERSION_MIN;
-  subContents.functions_max = FUNCTIONS_VERSION_MAX;
-  console.log('Setting reflector state', registryId, deviceId, JSON.stringify(subContents));
+
+  console.log('Configuring in response to state', registryId, deviceId, JSON.stringify(msgObject));
+
+  const setup = Object.assign({}, version);
+  setup.functions_min = FUNCTIONS_VERSION_MIN;
+  setup.functions_max = FUNCTIONS_VERSION_MAX;
+
+  const udmiConfig = {};
+  udmiConfig.setup = setup;
+  udmiConfig.last_state = msgObject.timestamp;
+
+  const deviceConfig = {};
+  deviceConfig[UDMI_FOLDER] = udmiConfig;
+
+  {
+    // Legacy support for older tools so they get the right info to indicate 'upgrade'!
+    deviceConfig['udmis'] = setup;
+    setup.last_state = msgObject.timestamp;
+  }
+
+  console.log('Setting reflector config', registryId, deviceId, JSON.stringify(deviceConfig));
   const startTime = currentTimestamp();
-  return modify_device_config(registryId, deviceId, UDMIS_FOLDER, subContents, startTime, null);
+  return modify_device_config(registryId, deviceId, UPDATE_FOLDER, deviceConfig, startTime, null);
 }
 
 function udmi_model(attributes, msgObject) {
@@ -445,18 +459,18 @@ async function unbind_device(attributes, proxyId) {
   return iotClient.unbindDeviceFromGateway(request);
 }
 
-function udmi_query(attributes, msgObject) {
+function udmi_query(attributes) {
   const subFolder = attributes.subFolder;
   if (subFolder === UPDATE_FOLDER) {
-    return udmi_query_state(attributes, msgObject);
+    return udmi_query_state(attributes);
   } else if (subFolder === CLOUD_FOLDER) {
-    return udmi_query_cloud(attributes, msgObject);
+    return udmi_query_cloud(attributes);
   } else {
     throw 'Unknown query folder ' + subFolder;
   }
 }
 
-function udmi_query_state(attributes, msgObject) {
+function udmi_query_state(attributes) {
   const transactionId = attributes.transactionId;
   const projectId = attributes.projectId;
   const registryId = attributes.deviceRegistryId;
@@ -493,13 +507,13 @@ function udmi_query_state(attributes, msgObject) {
   });
 }
 
-function udmi_query_cloud(attributes, msgObject) {
+function udmi_query_cloud(attributes) {
   return attributes.deviceId ?
-    udmi_query_cloud_device(attributes, msgObject) :
-    udmi_query_cloud_registry(attributes, msgObject);
+    udmi_query_cloud_device(attributes) :
+    udmi_query_cloud_registry(attributes);
 }
 
-async function udmi_query_cloud_registry(attributes, msgObject) {
+async function udmi_query_cloud_registry(attributes) {
   const devices = await fetch_cloud_registry(attributes);
 
   const message = {'device_ids': {}};
@@ -609,7 +623,7 @@ function iotCoreToUdmiDevice(core) {
     blocked: core.blocked,
     metadata: core.metadata,
     last_event_time: lastEventTime,
-    is_gateway: core.gatewayConfig && core.gatewayConfig.gatewayType == 'GATEWAY',
+    is_gateway: core.gatewayConfig && core.gatewayConfig.gatewayType === 'GATEWAY',
     credentials: iotCoreToUdmiCredentials(core.credentials),
   };
 }
@@ -755,7 +769,7 @@ exports.udmi_config = functions.pubsub.topic('udmi_config').onPublish((event) =>
   }
 
   attributes.subType = CONFIG_TYPE;
-  const partialUpdate = subFolder != UPDATE_FOLDER;
+  const partialUpdate = subFolder !== UPDATE_FOLDER;
 
   return modify_device_config(registryId, deviceId, subFolder, msgObject, currentTimestamp(), transactionId).
     then(() => partialUpdate && reflectMessage(attributes, msgObject)).
@@ -812,17 +826,17 @@ async function modify_device_config(registryId, deviceId, subFolder, subContents
   const [oldConfig, version] = await get_device_config(registryId, deviceId);
   var newConfig;
 
-  if (subFolder == 'last_start') {
+  if (subFolder === 'last_start') {
     newConfig = parse_old_config(oldConfig, false, deviceId);
     if (!newConfig || !update_last_start(newConfig, subContents)) {
       return;
     }
-  } else if (subFolder == 'update') {
+  } else if (subFolder === UPDATE_FOLDER) {
     console.log('Config replace version', deviceId, version, startTime, transactionId);
     newConfig = subContents;
     newConfig.timestamp = startTime;
   } else {
-    const resetConfig = subFolder == 'system' && subContents && subContents.extra_field == 'reset_config';
+    const resetConfig = subFolder === 'system' && subContents && subContents.extra_field === 'reset_config';
     newConfig = parse_old_config(oldConfig, resetConfig, deviceId);
     if (newConfig === null) {
       return;
@@ -928,7 +942,7 @@ function consolidate_config(registryId, deviceId, subFolder) {
   const dev_doc = reg_doc.collection('devices').doc(deviceId);
   const configs = dev_doc.collection(CONFIG_TYPE);
 
-  if (subFolder == UPDATE_FOLDER) {
+  if (subFolder === UPDATE_FOLDER) {
     return;
   }
 

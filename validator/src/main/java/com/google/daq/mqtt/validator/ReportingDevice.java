@@ -21,6 +21,7 @@ import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetState;
+import udmi.schema.State;
 
 /**
  * Encapsulation of device data for a basic reporting device.
@@ -176,7 +177,9 @@ public class ReportingDevice {
       return;
     }
     final MetadataDiff metadataDiff;
-    if (message instanceof PointsetEvent) {
+    if (message instanceof State) {
+      metadataDiff = reportingPointset.validateMessage((State) message);
+    } else if (message instanceof PointsetEvent) {
       metadataDiff = reportingPointset.validateMessage((PointsetEvent) message);
     } else if (message instanceof PointsetState) {
       metadataDiff = reportingPointset.validateMessage((PointsetState) message);
@@ -184,14 +187,21 @@ public class ReportingDevice {
       throw new RuntimeException("Unknown message type " + message.getClass().getName());
     }
 
+    if (metadataDiff == null) {
+      return;
+    }
+
     missingPoints = metadataDiff.missingPoints;
-    if (missingPoints != null && !missingPoints.isEmpty()) {
+    if (missingPoints == null) {
+      addError(new ValidationException("missing pointset subblock"), attributes,
+          Category.VALIDATION_DEVICE_CONTENT);
+    } else if (!missingPoints.isEmpty()) {
       addError(pointValidationError("missing points", missingPoints), attributes,
           Category.VALIDATION_DEVICE_CONTENT);
     }
 
     extraPoints = metadataDiff.extraPoints;
-    if (!extraPoints.isEmpty()) {
+    if (extraPoints != null && !extraPoints.isEmpty()) {
       addError(pointValidationError("extra points", extraPoints), attributes,
           Category.VALIDATION_DEVICE_CONTENT);
     }
