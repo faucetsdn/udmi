@@ -50,8 +50,6 @@ import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -92,6 +90,7 @@ import udmi.schema.Metadata;
 import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetState;
 import udmi.schema.PointsetSummary;
+import udmi.schema.SetupUdmiConfig;
 import udmi.schema.State;
 import udmi.schema.ValidationEvent;
 import udmi.schema.ValidationState;
@@ -774,9 +773,14 @@ public class Validator {
     report.timestamp = new Date();
     report.summary = summary;
     report.devices = devices;
-    report.tools = UDMI_TOOLS;
+    report.cloud_version = getUdmiVersion();
+    report.udmi_version = Common.getUdmiVersion();
     report.start_time = START_TIME;
     return report;
+  }
+
+  private SetupUdmiConfig getUdmiVersion() {
+    return client.getVersionInformation();
   }
 
   private <T> ArrayList<T> arrayIfNotNull(Set<T> items) {

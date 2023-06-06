@@ -25,6 +25,7 @@ public abstract class Common {
   public static final String MESSAGE_KEY = "message";
   public static final String TIMESTAMP_KEY = "timestamp";
   public static final String VERSION_KEY = "version";
+  public static final String CLOUD_VERSION_KEY = "cloud_version";
   public static final String UDMI_VERSION_KEY = "udmi_version";
   public static final String SUBTYPE_PROPERTY_KEY = "subType";
   public static final String SUBFOLDER_PROPERTY_KEY = "subFolder";

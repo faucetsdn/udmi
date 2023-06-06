@@ -20,7 +20,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder({
     "timestamp",
     "version",
-    "tools",
+    "cloud_version",
+    "udmi_version",
     "last_updated",
     "start_time",
     "status",
@@ -46,12 +47,20 @@ public class ValidationState {
     @JsonPropertyDescription("Version of the UDMI schema")
     public java.lang.String version;
     /**
-     * Version of the tools for this run
+     * Setup Udmi Config
+     * <p>
+     * 
      * 
      */
-    @JsonProperty("tools")
-    @JsonPropertyDescription("Version of the tools for this run")
-    public java.lang.String tools;
+    @JsonProperty("cloud_version")
+    public SetupUdmiConfig cloud_version;
+    /**
+     * Version of the local udmi tools
+     * 
+     */
+    @JsonProperty("udmi_version")
+    @JsonPropertyDescription("Version of the local udmi tools")
+    public java.lang.String udmi_version;
     /**
      * Last time this validation report was updated
      * 
@@ -94,9 +103,10 @@ public class ValidationState {
         result = ((result* 31)+((this.start_time == null)? 0 :this.start_time.hashCode()));
         result = ((result* 31)+((this.features == null)? 0 :this.features.hashCode()));
         result = ((result* 31)+((this.last_updated == null)? 0 :this.last_updated.hashCode()));
+        result = ((result* 31)+((this.udmi_version == null)? 0 :this.udmi_version.hashCode()));
         result = ((result* 31)+((this.devices == null)? 0 :this.devices.hashCode()));
+        result = ((result* 31)+((this.cloud_version == null)? 0 :this.cloud_version.hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
-        result = ((result* 31)+((this.tools == null)? 0 :this.tools.hashCode()));
         result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
         result = ((result* 31)+((this.status == null)? 0 :this.status.hashCode()));
         return result;
@@ -111,7 +121,7 @@ public class ValidationState {
             return false;
         }
         ValidationState rhs = ((ValidationState) other);
-        return ((((((((((this.summary == rhs.summary)||((this.summary!= null)&&this.summary.equals(rhs.summary)))&&((this.start_time == rhs.start_time)||((this.start_time!= null)&&this.start_time.equals(rhs.start_time))))&&((this.features == rhs.features)||((this.features!= null)&&this.features.equals(rhs.features))))&&((this.last_updated == rhs.last_updated)||((this.last_updated!= null)&&this.last_updated.equals(rhs.last_updated))))&&((this.devices == rhs.devices)||((this.devices!= null)&&this.devices.equals(rhs.devices))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.tools == rhs.tools)||((this.tools!= null)&&this.tools.equals(rhs.tools))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
+        return (((((((((((this.summary == rhs.summary)||((this.summary!= null)&&this.summary.equals(rhs.summary)))&&((this.start_time == rhs.start_time)||((this.start_time!= null)&&this.start_time.equals(rhs.start_time))))&&((this.features == rhs.features)||((this.features!= null)&&this.features.equals(rhs.features))))&&((this.last_updated == rhs.last_updated)||((this.last_updated!= null)&&this.last_updated.equals(rhs.last_updated))))&&((this.udmi_version == rhs.udmi_version)||((this.udmi_version!= null)&&this.udmi_version.equals(rhs.udmi_version))))&&((this.devices == rhs.devices)||((this.devices!= null)&&this.devices.equals(rhs.devices))))&&((this.cloud_version == rhs.cloud_version)||((this.cloud_version!= null)&&this.cloud_version.equals(rhs.cloud_version))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
     }
 
 }

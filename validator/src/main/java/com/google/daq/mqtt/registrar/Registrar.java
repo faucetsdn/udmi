@@ -2,6 +2,7 @@ package com.google.daq.mqtt.registrar;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Sets.intersection;
+import static com.google.udmi.util.Common.CLOUD_VERSION_KEY;
 import static com.google.udmi.util.Common.NO_SITE;
 import static com.google.udmi.util.Common.UDMI_VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -24,6 +25,7 @@ import com.google.daq.mqtt.util.DeviceExceptionManager;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.PubSubPusher;
+import com.google.udmi.util.Common;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
 import java.io.FileInputStream;
@@ -295,15 +297,15 @@ public class Registrar {
     errorSummary.forEach((key, value) -> System.err.println(
             "  Device " + key + ": " + getErrorSummaryDetail(value)));
     System.err.println("Out of " + localDevices.size() + " total.");
-    errorSummary.put(UDMI_VERSION_KEY, versionInformation());
+    errorSummary.put(CLOUD_VERSION_KEY, getCloudVersionInfo());
+    errorSummary.put(UDMI_VERSION_KEY, Common.getUdmiVersion());
     OBJECT_MAPPER.writeValue(summaryFile, errorSummary);
     lastErrorSummary = errorSummary;
     System.err.println("Registration summary available in " + summaryFile.getAbsolutePath());
   }
 
-  private SetupUdmiConfig versionInformation() {
-    return ifNotNullGet(cloudIotManager, CloudIotManager::getVersionInformation,
-        CloudIotManager.getDefaultVersion());
+  private SetupUdmiConfig getCloudVersionInfo() {
+    return ifNotNullGet(cloudIotManager, CloudIotManager::getVersionInformation);
   }
 
   protected void setSitePath(String sitePath) {
