@@ -10,6 +10,7 @@ import com.google.cloud.logging.Severity;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 
@@ -17,19 +18,27 @@ public class LogTailTest {
 
   final static String TEST_PROJECT_NAME = "XXXtestXXXCantBeARealProject";
   final static String[] TEST_MAIN_ARGS = {"-p", TEST_PROJECT_NAME};
-
-
   private AutoCloseable closeable;
+
+  @Before
+  public void openMocks() {
+    closeable = MockitoAnnotations.openMocks(this);
+  }
+
+  @After
+  public void releaseMocks() throws Exception {
+    closeable.close();
+  }
 
   private LogTail getLogTailMock() {
     LogTail logTail = new LogTail(TEST_PROJECT_NAME);
-    return (LogTail) spy(logTail);
+    return (LogTail) Mockito.spy(logTail);
   }
 
   @Test
   public void testMain() throws org.apache.commons.cli.ParseException {
     LogTail logTailMock = getLogTailMock();
-    doNothing().when(logTailMock).tailLogs();
+    Mockito.doNothing().when(logTailMock).tailLogs();
     LogTail.mainUnderTest(TEST_MAIN_ARGS, logTailMock);
   }
 
@@ -42,13 +51,13 @@ public class LogTailTest {
   @Test
   public void testProcessLogEntryWhenFunctionUdmiConfig() {
     LogTail logTailMock = getLogTailMock();
-    LogEntry logEntryMock = mock(LogEntry.class);
+    LogEntry logEntryMock = Mockito.mock(LogEntry.class);
     MonitoredResource monitoredResource = MonitoredResource.newBuilder("global")
         .addLabel("function_name", "udmi_config").build();
-    when(logEntryMock.getSeverity()).thenReturn(Severity.INFO);
-    when(logEntryMock.getResource()).thenReturn(monitoredResource);
-    doNothing().when(logTailMock).processLogEntryError(logEntryMock);
-    doNothing().when(logTailMock).processLogEntryUdmiConfig(logEntryMock);
+    Mockito.when(logEntryMock.getSeverity()).thenReturn(Severity.INFO);
+    Mockito.when(logEntryMock.getResource()).thenReturn(monitoredResource);
+    Mockito.doNothing().when(logTailMock).processLogEntryError(logEntryMock);
+    Mockito.doNothing().when(logTailMock).processLogEntryUdmiConfig(logEntryMock);
     // Go
     logTailMock.processLogEntry(logEntryMock);
   }
@@ -56,13 +65,13 @@ public class LogTailTest {
   @Test
   public void testProcessLogEntryWhenFunctionUdmiState() {
     LogTail logTailMock = getLogTailMock();
-    LogEntry logEntryMock = mock(LogEntry.class);
+    LogEntry logEntryMock = Mockito.mock(LogEntry.class);
     MonitoredResource monitoredResource = MonitoredResource.newBuilder("global")
         .addLabel("function_name", "udmi_state").build();
-    when(logEntryMock.getSeverity()).thenReturn(Severity.INFO);
-    when(logEntryMock.getResource()).thenReturn(monitoredResource);
-    doNothing().when(logTailMock).processLogEntryError(logEntryMock);
-    doNothing().when(logTailMock).processLogEntryUdmiState(logEntryMock);
+    Mockito.when(logEntryMock.getSeverity()).thenReturn(Severity.INFO);
+    Mockito.when(logEntryMock.getResource()).thenReturn(monitoredResource);
+    Mockito.doNothing().when(logTailMock).processLogEntryError(logEntryMock);
+    Mockito.doNothing().when(logTailMock).processLogEntryUdmiState(logEntryMock);
     // Go
     logTailMock.processLogEntry(logEntryMock);
   }
@@ -71,13 +80,13 @@ public class LogTailTest {
   @Test
   public void testProcessLogEntryWhenFunctionUdmiTarget() {
     LogTail logTailMock = getLogTailMock();
-    LogEntry logEntryMock = mock(LogEntry.class);
+    LogEntry logEntryMock = Mockito.mock(LogEntry.class);
     MonitoredResource monitoredResource = MonitoredResource.newBuilder("global")
         .addLabel("function_name", "udmi_target").build();
-    when(logEntryMock.getSeverity()).thenReturn(Severity.INFO);
-    when(logEntryMock.getResource()).thenReturn(monitoredResource);
-    doNothing().when(logTailMock).processLogEntryError(logEntryMock);
-    doNothing().when(logTailMock).processLogEntryUdmiTarget(logEntryMock);
+    Mockito.when(logEntryMock.getSeverity()).thenReturn(Severity.INFO);
+    Mockito.when(logEntryMock.getResource()).thenReturn(monitoredResource);
+    Mockito.doNothing().when(logTailMock).processLogEntryError(logEntryMock);
+    Mockito.doNothing().when(logTailMock).processLogEntryUdmiTarget(logEntryMock);
     // Go
     logTailMock.processLogEntry(logEntryMock);
   }
@@ -85,9 +94,9 @@ public class LogTailTest {
   @Test
   public void testProcessLogEntryWhenLogSeverityError() {
     LogTail logTailMock = getLogTailMock();
-    LogEntry logEntryMock = mock(LogEntry.class);
-    when(logEntryMock.getSeverity()).thenReturn(Severity.ERROR);
-    doNothing().when(logTailMock).processLogEntryError(logEntryMock);
+    LogEntry logEntryMock = Mockito.mock(LogEntry.class);
+    Mockito.when(logEntryMock.getSeverity()).thenReturn(Severity.ERROR);
+    Mockito.doNothing().when(logTailMock).processLogEntryError(logEntryMock);
     // Go
     logTailMock.processLogEntry(logEntryMock);
   }
@@ -95,10 +104,10 @@ public class LogTailTest {
   @Test
   public void testTailLogs() {
     LogTail logTailMock = getLogTailMock();
-    LogEntryServerStream logEntryServerStreamMock = mock(LogEntryServerStream.class);
-    when(logTailMock.getCloudLogStream(logTailMock.LOG_FILTER)).thenReturn(
+    LogEntryServerStream logEntryServerStreamMock = Mockito.mock(LogEntryServerStream.class);
+    Mockito.when(logTailMock.getCloudLogStream(logTailMock.LOG_FILTER)).thenReturn(
         logEntryServerStreamMock);
-    doNothing().when(logTailMock).processLogStream(logEntryServerStreamMock);
+    Mockito.doNothing().when(logTailMock).processLogStream(logEntryServerStreamMock);
     assertTrue(logTailMock.outputJson);
     logTailMock.tailLogs();
     assertEquals(logTailMock.output.getClass(), LogTailJsonOutput.class);

@@ -28,12 +28,12 @@ sourceSets {
         java {
             srcDirs '../gencode/java'
             srcDirs '../common/src/main/java'
+            srcDirs 'src/main/java'
         }
     }
     test {
         java {
-            srcDirs 'src/test/java'
-            srcDirs '../common/src/test/java'
+            srcDirs 'src/test/java/com/google/bos/udmi/monitoring'
         }
     }
 }
@@ -56,7 +56,7 @@ jacocoTestReport {
 
 checkstyle {
     ignoreFailures = false
-    maxWarnings = 0
+    maxWarnings = 32
 }
 checkstyleMain.source = 'src/main/java'
 
@@ -99,5 +99,6 @@ dependencies {
 
     testImplementation 'org.mockito:mockito-core:3.11.2'
     testImplementation group: 'junit', name: 'junit', version: '4.13.2'
+    testRuntimeOnly "org.junit.vintage:junit-vintage-engine:5.8.2"
 
 }

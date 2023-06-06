@@ -21,33 +21,46 @@ import java.util.LinkedList;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import udmi.schema.Monitoring;
 import udmi.schema.MonitoringMetric;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.HelpFormatter;
 
+/**
+ * Read the tail of GCP logs and generate metrics.
+ *
+ */
 public class LogTail extends LogTailBase {
 
-  private String projectName;
-  private LogTimeSeries logsTimeSeries;
   protected static final String LOG_FILTER =
-      "(resource.labels.function_name=\"udmi_target\") OR " +
-          "(resource.labels.function_name=\"udmi_state\") OR " +
-          "(resource.labels.function_name=\"udmi_config\") OR " +
-          "(severity=ERROR AND protoPayload.serviceName=\"cloudiot.googleapis.com\")";
+      "(resource.labels.function_name=\"udmi_target\") OR "
+          + "(resource.labels.function_name=\"udmi_state\") OR "
+          + "(resource.labels.function_name=\"udmi_config\") OR "
+          + "(severity=ERROR AND protoPayload.serviceName=\"cloudiot.googleapis.com\")";
   protected boolean outputJson = false;
   protected LogTailOutput output;
+  private String projectName;
+  private LogTimeSeries logsTimeSeries;
 
+  /**
+   * Constructor for LogTail.
+   */
   public LogTail(String projectName) {
     this.projectName = projectName;
     this.logsTimeSeries = new LogTimeSeries();
     this.outputJson = true;
   }
 
+  /**
+   * Main function.
+
+   * @param args Command line arguments.
+   *
+   */
   public static void main(String[] args) throws ParseException {
     CommandLine commandLine = parseArgs(args);
     if (commandLine == null) {
@@ -58,6 +71,12 @@ public class LogTail extends LogTailBase {
     logTail.tailLogs();
   }
 
+  /**
+   * Additional main function used during testing.
+
+   * @param args Command line arguments.
+   * @param logTail Instantiated LogTail object.
+   */
   public static void mainUnderTest(String[] args, LogTail logTail) throws ParseException {
     CommandLine commandLine = parseArgs(args);
     if (commandLine == null) {
@@ -109,12 +128,12 @@ public class LogTail extends LogTailBase {
     if (log.getSeverity().equals(Severity.ERROR)) {
       processLogEntryError(log);
     } else {
-      String function_name = log.getResource().getLabels().getOrDefault("function_name", null);
-      if (function_name.equals("udmi_target")) {
+      String functionName = log.getResource().getLabels().getOrDefault("function_name", null);
+      if (functionName.equals("udmi_target")) {
         processLogEntryUdmiTarget(log);
-      } else if (function_name.equals("udmi_state")) {
+      } else if (functionName.equals("udmi_state")) {
         processLogEntryUdmiState(log);
-      } else if (function_name.equals("udmi_config")) {
+      } else if (functionName.equals("udmi_config")) {
         processLogEntryUdmiConfig(log);
       }
     }
@@ -176,6 +195,10 @@ public class LogTail extends LogTailBase {
     }
   }
 
+  /**
+   * Begin tailing logs from GCP.
+   *
+   */
   public void tailLogs() {
     LogEntryServerStream stream = getCloudLogStream(LOG_FILTER);
     if (outputJson) {
