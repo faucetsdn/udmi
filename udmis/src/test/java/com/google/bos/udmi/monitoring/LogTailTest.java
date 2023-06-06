@@ -18,17 +18,6 @@ public class LogTailTest {
 
   final static String TEST_PROJECT_NAME = "XXXtestXXXCantBeARealProject";
   final static String[] TEST_MAIN_ARGS = {"-p", TEST_PROJECT_NAME};
-  private AutoCloseable closeable;
-
-  @Before
-  public void openMocks() {
-    closeable = MockitoAnnotations.openMocks(this);
-  }
-
-  @After
-  public void releaseMocks() throws Exception {
-    closeable.close();
-  }
 
   private LogTail getLogTailMock() {
     LogTail logTail = new LogTail(TEST_PROJECT_NAME);
