@@ -12,6 +12,7 @@ import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 
 import com.google.api.client.util.Base64;
 import com.google.common.base.Preconditions;
@@ -79,6 +80,7 @@ public class IotReflectorClient implements MessagePublisher {
   private boolean active;
   private String prevTransactionId;
   private Exception syncFailure;
+  private SetupUdmiConfig udmiInfo;
 
   /**
    * Create a new reflector instance.
@@ -273,7 +275,7 @@ public class IotReflectorClient implements MessagePublisher {
           System.err.println("UDMI version mismatch: " + udmiVersion);
         }
 
-        SetupUdmiConfig udmiInfo = reflectorConfig.setup;
+        udmiInfo = reflectorConfig.setup;
         System.err.println("UDMI deployed by " + udmiInfo.deployed_by + " at " + getTimestamp(
             udmiInfo.deployed_at));
 
@@ -385,6 +387,11 @@ public class IotReflectorClient implements MessagePublisher {
     if (mqttPublisher != null) {
       mqttPublisher.close();
     }
+  }
+
+  @Override
+  public SetupUdmiConfig getVersionInformation() {
+    return requireNonNull(udmiInfo, "udmi version information not available");
   }
 
   static class MessageBundle {

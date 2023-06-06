@@ -225,9 +225,7 @@ public class CloudIotManager {
   }
 
   public SetupUdmiConfig getVersionInformation() {
-    SetupUdmiConfig setupUdmiConfig = getDefaultVersion();
-    setupUdmiConfig.deployed_at = new Date();
-    return setupUdmiConfig;
+    return iotProvider.getVersionInformation();
   }
 
   /**

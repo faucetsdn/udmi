@@ -8,6 +8,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import udmi.schema.CloudModel;
+import udmi.schema.SetupUdmiConfig;
 
 /**
  * Mocked IoT provider for unit testing.
