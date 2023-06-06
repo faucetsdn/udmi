@@ -3,6 +3,7 @@ package com.google.daq.mqtt.registrar;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Sets.intersection;
 import static com.google.udmi.util.Common.NO_SITE;
+import static com.google.udmi.util.Common.UDMI_VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
 import static java.util.Optional.ofNullable;
@@ -71,8 +72,6 @@ public class Registrar {
   static final String GENERATED_CONFIG_JSON = "generated_config.json";
   private static final String DEVICES_DIR = "devices";
   private static final String ERROR_FORMAT_INDENT = "  ";
-  private static final String VERSION_KEY = "Version";
-  private static final String VERSION_MAIN_KEY = "main";
   private static final String SCHEMA_SUFFIX = ".json";
   private static final String REGISTRATION_SUMMARY_JSON = "out/registration_summary.json";
   private static final String SCHEMA_NAME = "UDMI";
@@ -296,7 +295,7 @@ public class Registrar {
     errorSummary.forEach((key, value) -> System.err.println(
             "  Device " + key + ": " + getErrorSummaryDetail(value)));
     System.err.println("Out of " + localDevices.size() + " total.");
-    errorSummary.put(VERSION_KEY, versionInformation());
+    errorSummary.put(UDMI_VERSION_KEY, versionInformation());
     OBJECT_MAPPER.writeValue(summaryFile, errorSummary);
     lastErrorSummary = errorSummary;
     System.err.println("Registration summary available in " + summaryFile.getAbsolutePath());
