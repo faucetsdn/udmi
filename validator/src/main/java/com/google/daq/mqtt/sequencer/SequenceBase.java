@@ -166,7 +166,7 @@ public class SequenceBase {
   private static final ObjectDiffEngine RECV_CONFIG_DIFFERNATOR = new ObjectDiffEngine();
   private static final ObjectDiffEngine RECV_STATE_DIFFERNATOR = new ObjectDiffEngine();
   private static final Set<String> configTransactions = new ConcurrentSkipListSet<>();
-  private static final String VALIDATION_STATE_FILE = "sequencer_state.json";
+  private static final String SUMMARY_OUTPUT_FORMAT = "out/sequencer_%s.json";
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -309,6 +309,8 @@ public class SequenceBase {
     validationState = new ValidationState();
     validationState.features = new HashMap<>();
     validationState.start_time = new Date();
+    validationState.udmi_version = Common.getUdmiVersion();
+    validationState.cloud_version = client.getVersionInformation();
     Entry statusEntry = new Entry();
     statusEntry.category = SEQUENCER_CATEGORY;
     statusEntry.message = "Starting sequence run for device " + getDeviceId();
@@ -398,7 +400,7 @@ public class SequenceBase {
   }
 
   static File getSequencerStateFile() {
-    return new File(deviceOutputDir, VALIDATION_STATE_FILE);
+    return new File(String.format(SUMMARY_OUTPUT_FORMAT, getDeviceId()));
   }
 
   static void processComplete(Exception e) {
