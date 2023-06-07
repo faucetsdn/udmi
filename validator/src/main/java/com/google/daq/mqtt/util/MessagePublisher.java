@@ -18,7 +18,12 @@ public interface MessagePublisher {
 
   MessageBundle takeNextMessage(boolean enableTimeout);
 
+  /**
+   * Get a version structure describing the cloud-side deployment info.
+   */
   default SetupUdmiConfig getVersionInformation() {
-    throw new RuntimeException("Not implemented for " + this.getClass());
+    SetupUdmiConfig setupUdmiConfig = new SetupUdmiConfig();
+    setupUdmiConfig.deployed_by = "Default implementation for " + this.getClass();
+    return setupUdmiConfig;
   }
 }
