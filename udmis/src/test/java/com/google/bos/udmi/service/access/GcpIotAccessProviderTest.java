@@ -120,4 +120,17 @@ class GcpIotAccessProviderTest {
     assertEquals(1, strings.size(), "expected number of devices");
     assertTrue(strings.contains(TEST_DEVICE), "result contains expected device");
   }
+
+  public static class FinalClassToMock {
+    public String hello() {
+      return "world";
+    }
+  }
+
+  @Test
+  public void mockFinal() {
+    FinalClassToMock mock = mock(FinalClassToMock.class);
+    when(mock.hello()).thenReturn("rabbit");
+    assertEquals("rabbit", mock.hello());
+  }
 }
