@@ -35,9 +35,14 @@ public class RegistrarTest {
 
   public static final String REGISTRY_SUFFIX = "%X";
 
+  @SuppressWarnings("unchecked")
+  private static double getValidatingSize(Map<String, Object> summary) {
+    return ((Map<String, Object>) summary.get("Validating")).size();
+  }
+
   private void assertErrorSummaryValidateSuccess(Map<String, Object> summary) {
     if ((summary == null) || (summary.get("Validating") == null)
-        || (summary.get("Validating").size() == 0)) {
+        || (getValidatingSize(summary) == 0)) {
       return;
     }
     fail(summary.get("Validating").toString());
@@ -47,7 +52,7 @@ public class RegistrarTest {
     if ((summary == null) || (summary.get("Validating") == null)) {
       fail("Error summary for Validating key is null");
     }
-    if (summary.get("Validating").size() == 0) {
+    if (getValidatingSize(summary) == 0) {
       fail("Error summary for Validating key is size 0");
     }
   }

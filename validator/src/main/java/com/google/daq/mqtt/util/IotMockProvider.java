@@ -110,6 +110,11 @@ public class IotMockProvider implements IotProvider {
     return savedActions;
   }
 
+  @Override
+  public SetupUdmiConfig getVersionInformation() {
+    return new SetupUdmiConfig();
+  }
+
   /**
    * Holder class for mocked actions.
    */

@@ -121,12 +121,6 @@ public class CloudIotManager {
     return deviceCredential;
   }
 
-  public static SetupUdmiConfig getDefaultVersion() {
-    SetupUdmiConfig setupUdmiConfig = new SetupUdmiConfig();
-    setupUdmiConfig.udmi_version = Common.getUdmiVersion();
-    return setupUdmiConfig;
-  }
-
   private void initializeIotProvider() {
     try {
       iotProvider = makeIotProvider();
