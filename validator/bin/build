@@ -24,8 +24,6 @@ if [[ -z $check && -z $covg && -f $jarfile && $jarfile -nt $newest ]]; then
     exit 0
 fi
 
-java -version
-
 echo Building validator in $PWD
 
 rm -rf build

@@ -12,7 +12,7 @@ bin/registrar ${TEST_SITE}
 
 output_file=${TEST_SITE}/out/registration_summary.json
 
-clean_devices=$(fgrep 'Z"' $output_file | wc -l)
+clean_devices=$(jq -r .Clean[] $output_file | wc -l)
 EXPECTED_CLEAN=3  # AHU-1 has a bad site location, so does not match as clean.
 exit_status=clean
 

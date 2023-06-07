@@ -17,6 +17,7 @@ shift
 echo 'Using target project:' $project_id
 
 site_path=sites/udmi_site_model
+output_file=$site_path/out/validation_report.json
 device_id=AHU-1
 proxy_id=AHU-22
 mkdir -p out
@@ -60,6 +61,9 @@ if [[ $i -eq $WAITING ]]; then
     cat $VALIDATOR_OUT
     false
 fi
+
+echo Checking reported cloud version info
+jq .cloud_version.udmi_functions $output_file
 
 function pubber_bg {
     did=$1
