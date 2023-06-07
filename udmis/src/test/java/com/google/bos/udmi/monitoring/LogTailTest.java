@@ -6,12 +6,17 @@ import static org.mockito.Mockito.*;
 import com.google.cloud.MonitoredResource;
 import com.google.cloud.logging.LogEntry;
 import com.google.cloud.logging.LogEntryServerStream;
+import com.google.cloud.logging.Logging;
+import com.google.cloud.logging.Logging.TailOption;
+import com.google.cloud.logging.LoggingOptions;
+import com.google.cloud.logging.Payload;
+import com.google.cloud.logging.Payload.ProtoPayload;
 import com.google.cloud.logging.Severity;
-import org.junit.After;
-import org.junit.Before;
+import com.google.protobuf.Any;
+import java.util.ArrayList;
+import java.util.Iterator;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
 
 
 public class LogTailTest {
@@ -22,6 +27,30 @@ public class LogTailTest {
   private LogTail getLogTailMock() {
     LogTail logTail = new LogTail(TEST_PROJECT_NAME);
     return (LogTail) Mockito.spy(logTail);
+  }
+
+  @Test
+  public void testGetCloudLogStreamWhenFilter() {
+    LogTail logTailMock = getLogTailMock();
+    LoggingOptions loggingOptionsMock = Mockito.mock(LoggingOptions.class);
+    Logging loggingMock = Mockito.mock(Logging.class);
+    LogEntryServerStream streamMock = Mockito.mock(LogEntryServerStream.class);
+    Mockito.when(logTailMock.getLoggingOptionsDefaultInstance()).thenReturn(loggingOptionsMock);
+    Mockito.when(loggingOptionsMock.getService()).thenReturn(loggingMock);
+    Mockito.when(loggingMock.tailLogEntries(any(TailOption.class), any(TailOption.class))).thenReturn(streamMock);
+    assertEquals(streamMock, logTailMock.getCloudLogStream("meaningless filter"));
+  }
+
+  @Test
+  public void testGetCloudLogStreamWhenNoFilter() {
+    LogTail logTailMock = getLogTailMock();
+    LoggingOptions loggingOptionsMock = Mockito.mock(LoggingOptions.class);
+    Logging loggingMock = Mockito.mock(Logging.class);
+    LogEntryServerStream streamMock = Mockito.mock(LogEntryServerStream.class);
+    Mockito.when(logTailMock.getLoggingOptionsDefaultInstance()).thenReturn(loggingOptionsMock);
+    Mockito.when(loggingOptionsMock.getService()).thenReturn(loggingMock);
+    Mockito.when(loggingMock.tailLogEntries(any(TailOption.class))).thenReturn(streamMock);
+    assertEquals(streamMock, logTailMock.getCloudLogStream(null));
   }
 
   @Test
@@ -36,6 +65,26 @@ public class LogTailTest {
     String[] args = {};
     assertThrows(RuntimeException.class, () -> LogTail.main(args));
   }
+
+  /*
+
+  This test does not work yet.
+  The mock of ProtoPayload is unique because it's a final class.
+
+
+  @Test
+  public void testProcessLogEntryError() {
+    LogTail logTailMock = getLogTailMock();
+    LogEntry logEntryMock = Mockito.mock(LogEntry.class);
+    ProtoPayload payloadMock = Mockito.mock(ProtoPayload.class);
+    Payload<Any> dataMock = Mockito.mock(Payload.class);
+    Mockito.when(logEntryMock.getPayload()).thenReturn(payloadMock);
+    Mockito.when(payloadMock.getData()).thenReturn(dataMock.getData());
+    logTailMock.processLogEntryError(logEntryMock);
+  }
+
+
+   */
 
   @Test
   public void testProcessLogEntryWhenFunctionUdmiConfig() {
@@ -88,6 +137,19 @@ public class LogTailTest {
     Mockito.doNothing().when(logTailMock).processLogEntryError(logEntryMock);
     // Go
     logTailMock.processLogEntry(logEntryMock);
+  }
+
+  @Test
+  public void testProcessLogStream() {
+    LogTail logTailMock = getLogTailMock();
+    LogEntryServerStream streamMock = Mockito.mock(LogEntryServerStream.class);
+    Iterator iteratorMock = Mockito.mock(Iterator.class);
+    LogEntry logEntryMock = Mockito.mock(LogEntry.class);
+    Mockito.when(streamMock.iterator()).thenReturn(iteratorMock);
+    Mockito.when(iteratorMock.hasNext()).thenReturn(true, false);
+    Mockito.when(iteratorMock.next()).thenReturn(logEntryMock);
+    Mockito.doNothing().when(logTailMock).processLogEntry(logEntryMock);
+    logTailMock.processLogStream(streamMock);
   }
 
   @Test

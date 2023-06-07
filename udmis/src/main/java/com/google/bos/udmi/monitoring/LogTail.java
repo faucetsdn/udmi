@@ -32,7 +32,6 @@ import udmi.schema.MonitoringMetric;
 
 /**
  * Read the tail of GCP logs and generate metrics.
- *
  */
 public class LogTail extends LogTailBase {
 
@@ -57,9 +56,8 @@ public class LogTail extends LogTailBase {
 
   /**
    * Main function.
-
-   * @param args Command line arguments.
    *
+   * @param args Command line arguments.
    */
   public static void main(String[] args) throws ParseException {
     CommandLine commandLine = parseArgs(args);
@@ -73,7 +71,7 @@ public class LogTail extends LogTailBase {
 
   /**
    * Additional main function used during testing.
-
+   *
    * @param args Command line arguments.
    * @param logTail Instantiated LogTail object.
    */
@@ -110,7 +108,7 @@ public class LogTail extends LogTailBase {
   }
 
   protected LogEntryServerStream getCloudLogStream(String filter) {
-    LoggingOptions options = LoggingOptions.getDefaultInstance();
+    LoggingOptions options = getLoggingOptionsDefaultInstance();
     Logging logging = options.getService();
     LogEntryServerStream stream;
     if (filter == null) {
@@ -119,6 +117,10 @@ public class LogTail extends LogTailBase {
       stream = logging.tailLogEntries(TailOption.project(projectName), TailOption.filter(filter));
     }
     return stream;
+  }
+
+  protected LoggingOptions getLoggingOptionsDefaultInstance() {
+    return LoggingOptions.getDefaultInstance();
   }
 
   /*
@@ -197,7 +199,6 @@ public class LogTail extends LogTailBase {
 
   /**
    * Begin tailing logs from GCP.
-   *
    */
   public void tailLogs() {
     LogEntryServerStream stream = getCloudLogStream(LOG_FILTER);
