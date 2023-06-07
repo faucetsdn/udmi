@@ -121,7 +121,7 @@ class GcpIotAccessProviderTest {
     assertTrue(strings.contains(TEST_DEVICE), "result contains expected device");
   }
 
-  public static class FinalClassToMock {
+  public static final class FinalClassToMock {
     public String hello() {
       return "world";
     }
