@@ -401,7 +401,7 @@ public class SequenceBase {
   }
 
   static File getSequencerStateFile() {
-    return new File(format(siteModel, SUMMARY_OUTPUT_FORMAT, getDeviceId()));
+    return new File(format(SUMMARY_OUTPUT_FORMAT, siteModel, getDeviceId()));
   }
 
   static void processComplete(Exception e) {
