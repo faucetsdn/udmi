@@ -69,8 +69,7 @@ public class LogTailTest {
   /*
 
   This test does not work yet.
-  The mock of ProtoPayload is unique because it's a final class.
-
+  The mock of ProtoPayload is not working because it's a final class.
 
   @Test
   public void testProcessLogEntryError() {
