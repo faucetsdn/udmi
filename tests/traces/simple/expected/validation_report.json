@@ -1,7 +1,10 @@
 {
   "timestamp" : "1999-10-20T01:02:03Z",
   "version" : "1.4.1",
-  "tools" : "test_trace",
+  "cloud_version" : {
+    "deployed_by" : "Default implementation for class com.google.daq.mqtt.validator.MessageReadingClient"
+  },
+  "udmi_version" : "1.4.1-55-g94facb0c3",
   "start_time" : "1999-10-20T01:02:03Z",
   "summary" : {
     "correct_devices" : [ "AHU-1" ],
