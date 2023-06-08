@@ -43,7 +43,7 @@ public class LogTail extends LogTailBase {
   protected boolean outputJson = false;
   protected LogTailOutput output;
   private String projectName;
-  private LogTimeSeries logsTimeSeries;
+  protected LogTimeSeries logsTimeSeries;
 
   /**
    * Constructor for LogTail.
@@ -152,7 +152,9 @@ public class LogTail extends LogTailBase {
       return;
     }
     try {
+      System.err.println("Test XXXXXXXXXXXXXXXXXXXX");
       AuditLog auditLog = AuditLog.parseFrom(payload.getData().getValue().toByteArray());
+      System.err.println("Test " + auditLog.toString());
       LogTailEntry entry = new LogTailEntry();
       entry.timestamp = log.getInstantTimestamp();
       entry.methodName = auditLog.getMethodName();
