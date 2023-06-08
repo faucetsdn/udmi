@@ -88,7 +88,10 @@ dependencies {
       exclude group: 'com.google.guava', module: 'guava-jdk5'
     }
 
-    implementation 'io.github.clearblade:clearblade-cloud-iot:1.0.0-rc.3'
+    implementation ('io.github.clearblade:clearblade-cloud-iot:1.0.0') {
+      // Exclude transitive dependency causing problems with running unit tests in the IDE.
+      exclude group: 'org.junit.jupiter', module: 'junit-jupiter-api'
+    }
 
     implementation 'com.google.cloud:google-cloud-pubsub:1.66.0'
     implementation 'org.jetbrains:annotations:20.1.0'
