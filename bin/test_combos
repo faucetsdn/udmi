@@ -5,6 +5,9 @@
 
 tests=tests/combos/*.json
 
+validator/bin/build
+
+failures=
 for test in $tests; do
     echo '################' Running combo test $test
     traces=$(jq -r .traces $test)
@@ -14,8 +17,19 @@ for test in $tests; do
         validator/bin/validate -- schema trace $traces $site_model
         check=$(echo $validator_config | jq -r .check)
         echo $check
-        eval $check
+        code=0
+        result=$(eval $check) || code=$?
+        if [[ $code != 0 ]]; then
+            failures+="$test "
+            echo Test failure:
+            echo $result
+        fi
     fi
 done
 
-echo All combo tests passed.
+echo '################'
+if [[ -n $failures ]]; then
+    echo Test failures detected: $failures
+else
+    echo All combo tests passed.
+fi
