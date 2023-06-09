@@ -316,20 +316,14 @@ public class LogTailTest {
 
   @Test
   public void testTailLogs() {
-    System.err.println("==== A");
     LogTail logTailMock = getLogTailMock();
-    System.err.println("==== B");
     LogEntryServerStream streamMock = Mockito.mock(LogEntryServerStream.class);
-    System.err.println("==== C");
     Mockito.doReturn(streamMock).when(logTailMock)
         .getCloudLogStream(eq(logTailMock.LOG_FILTER));
-    System.err.println("==== D");
     Mockito.doNothing().when(logTailMock).processLogStream(streamMock);
-    System.err.println("==== E");
     assertTrue(logTailMock.outputJson);
-    System.err.println("==== F");
     logTailMock.tailLogs();
-    System.err.println("==== G");
+    Mockito.verify(logTailMock).processLogStream(streamMock);
     assertEquals(logTailMock.output.getClass(), LogTailJsonOutput.class);
   }
 }
