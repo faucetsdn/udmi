@@ -37,10 +37,12 @@ public class LogTailTest {
     LoggingOptions loggingOptionsMock = Mockito.mock(LoggingOptions.class);
     Logging loggingMock = Mockito.mock(Logging.class);
     LogEntryServerStream streamMock = Mockito.mock(LogEntryServerStream.class);
+
     Mockito.when(logTailMock.getLoggingOptionsDefaultInstance()).thenReturn(loggingOptionsMock);
     Mockito.when(loggingOptionsMock.getService()).thenReturn(loggingMock);
     Mockito.when(loggingMock.tailLogEntries(any(TailOption.class), any(TailOption.class)))
         .thenReturn(streamMock);
+
     assertEquals(streamMock, logTailMock.getCloudLogStream("meaningless filter"));
   }
 
