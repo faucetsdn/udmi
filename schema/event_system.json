@@ -26,7 +26,7 @@
     "logentries": {
       "type": "array",
       "items": {
-        "$ref": "file:entry.json"
+        "$ref": "file:common.json#/definitions/entry"
       }
     },
     "event_count": {
