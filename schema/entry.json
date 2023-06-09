@@ -38,5 +38,11 @@
         600
       ]
     }
-  }
+  },
+  "required": [
+    "message",
+    "category",
+    "timestamp",
+    "level"
+  ]
 }
