@@ -14,5 +14,15 @@ public class LogTailEntry {
   Severity severity;
   int value = 1;
 
+  public boolean equals(LogTailEntry other) {
+    return other.timestamp.equals(timestamp) &&
+        other.methodName.equals(methodName) &&
+        other.serviceName.equals(serviceName) &&
+        other.resourceName.equals(resourceName) &&
+        other.statusCode == statusCode &&
+        other.statusMessage.equals(statusMessage) &&
+        other.severity.equals(severity) &&
+        other.value == this.value;
+  }
 
 }

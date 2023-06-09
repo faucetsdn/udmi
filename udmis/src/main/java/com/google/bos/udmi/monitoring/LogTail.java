@@ -42,8 +42,8 @@ public class LogTail extends LogTailBase {
           + "(severity=ERROR AND protoPayload.serviceName=\"cloudiot.googleapis.com\")";
   protected boolean outputJson = false;
   protected LogTailOutput output;
-  private String projectName;
   protected LogTimeSeries logsTimeSeries;
+  private String projectName;
 
   /**
    * Constructor for LogTail.
@@ -107,6 +107,10 @@ public class LogTail extends LogTailBase {
     return commandLine;
   }
 
+  protected AuditLog getAuditLogParseFrom(byte[] bytes) throws InvalidProtocolBufferException {
+    return AuditLog.parseFrom(bytes);
+  }
+
   protected LogEntryServerStream getCloudLogStream(String filter) {
     LoggingOptions options = getLoggingOptionsDefaultInstance();
     Logging logging = options.getService();
@@ -152,9 +156,7 @@ public class LogTail extends LogTailBase {
       return;
     }
     try {
-      System.err.println("Test XXXXXXXXXXXXXXXXXXXX");
-      AuditLog auditLog = AuditLog.parseFrom(payload.getData().getValue().toByteArray());
-      System.err.println("Test " + auditLog.toString());
+      AuditLog auditLog = getAuditLogParseFrom(payload.getData().getValue().toByteArray());
       LogTailEntry entry = new LogTailEntry();
       entry.timestamp = log.getInstantTimestamp();
       entry.methodName = auditLog.getMethodName();

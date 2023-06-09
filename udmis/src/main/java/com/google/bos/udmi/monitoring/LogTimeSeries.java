@@ -140,7 +140,7 @@ public class LogTimeSeries extends TreeMap<Long, LinkedList<LogTailEntry>> {
     return (this.numberOfLogs > LOG_ENTRIES_PER_SUBMIT);
   }
 
-  public boolean add(LogTailEntry log) {
+  public void add(LogTailEntry log) {
     // TODO: Again, based on output requirements, update performance and/or grouping.
     synchronized (timeSeriesLock) {
       long k = keyFor(log);
@@ -158,7 +158,7 @@ public class LogTimeSeries extends TreeMap<Long, LinkedList<LogTailEntry>> {
       this.put(k, reInsert);
       numberOfLogs++;
     }
-    return true;
+    // return true;
   }
 
   @Override
