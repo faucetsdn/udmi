@@ -310,8 +310,8 @@ public class LogTailTest {
   public void testTailLogs() {
     LogTail logTailMock = getLogTailMock();
     LogEntryServerStream logEntryServerStreamMock = Mockito.mock(LogEntryServerStream.class);
-    Mockito.when(logTailMock.getCloudLogStream(logTailMock.LOG_FILTER)).thenReturn(
-        logEntryServerStreamMock);
+    Mockito.doReturn(logEntryServerStreamMock).when(logTailMock)
+        .getCloudLogStream(logTailMock.LOG_FILTER);
     Mockito.doNothing().when(logTailMock).processLogStream(logEntryServerStreamMock);
     assertTrue(logTailMock.outputJson);
     logTailMock.tailLogs();
