@@ -29,6 +29,15 @@ import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 
 
+/**
+ * Unit tests for LogTail class.
+ *
+ * It may be beneficial to clear local gcloud set up so that tests run in the IDE
+ * the same way they run on Github CI.
+ *   gcloud auth revoke
+ *   gcloud config unset project
+ *
+ */
 public class LogTailTest {
 
   final static String TEST_PROJECT_NAME = "XXXtestXXXCantBeARealProject";
@@ -289,7 +298,6 @@ public class LogTailTest {
     LogEntry logEntryMock = Mockito.mock(LogEntry.class);
     Mockito.when(logEntryMock.getSeverity()).thenReturn(Severity.ERROR);
     Mockito.doNothing().when(logTailMock).processLogEntryError(logEntryMock);
-    // Go
     logTailMock.processLogEntry(logEntryMock);
   }
 
@@ -299,22 +307,29 @@ public class LogTailTest {
     LogEntryServerStream streamMock = Mockito.mock(LogEntryServerStream.class);
     Iterator iteratorMock = Mockito.mock(Iterator.class);
     LogEntry logEntryMock = Mockito.mock(LogEntry.class);
-    Mockito.when(streamMock.iterator()).thenReturn(iteratorMock);
-    Mockito.when(iteratorMock.hasNext()).thenReturn(true, false);
-    Mockito.when(iteratorMock.next()).thenReturn(logEntryMock);
+    Mockito.doReturn(iteratorMock).when(streamMock).iterator();
+    Mockito.doReturn(true, false).when(iteratorMock).hasNext();
+    Mockito.doReturn(logEntryMock).when(iteratorMock).next();
     Mockito.doNothing().when(logTailMock).processLogEntry(logEntryMock);
     logTailMock.processLogStream(streamMock);
   }
 
   @Test
   public void testTailLogs() {
+    System.err.println("==== A");
     LogTail logTailMock = getLogTailMock();
-    LogEntryServerStream logEntryServerStreamMock = Mockito.mock(LogEntryServerStream.class);
-    Mockito.doReturn(logEntryServerStreamMock).when(logTailMock)
+    System.err.println("==== B");
+    LogEntryServerStream streamMock = Mockito.mock(LogEntryServerStream.class);
+    System.err.println("==== C");
+    Mockito.doReturn(streamMock).when(logTailMock)
         .getCloudLogStream(eq(logTailMock.LOG_FILTER));
-    Mockito.doNothing().when(logTailMock).processLogStream(logEntryServerStreamMock);
+    System.err.println("==== D");
+    Mockito.doNothing().when(logTailMock).processLogStream(streamMock);
+    System.err.println("==== E");
     assertTrue(logTailMock.outputJson);
+    System.err.println("==== F");
     logTailMock.tailLogs();
+    System.err.println("==== G");
     assertEquals(logTailMock.output.getClass(), LogTailJsonOutput.class);
   }
 }

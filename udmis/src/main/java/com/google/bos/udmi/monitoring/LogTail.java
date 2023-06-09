@@ -112,6 +112,7 @@ public class LogTail extends LogTailBase {
   }
 
   protected LogEntryServerStream getCloudLogStream(String filter) {
+    System.err.println("==== AA");
     LoggingOptions options = getLoggingOptionsDefaultInstance();
     Logging logging = options.getService();
     LogEntryServerStream stream;
@@ -205,10 +206,13 @@ public class LogTail extends LogTailBase {
    * Begin tailing logs from GCP.
    */
   public void tailLogs() {
+    System.err.println("==== AAA");
     LogEntryServerStream stream = getCloudLogStream(LOG_FILTER);
+    System.err.println("==== BBB");
     if (outputJson) {
       this.output = new LogTailJsonOutput();
     }
+    System.err.println("==== CCC");
     processLogStream(stream);
   }
 }
