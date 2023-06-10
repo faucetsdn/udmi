@@ -30,16 +30,7 @@ public class IotMockProvider implements IotProvider {
   private final SiteModel siteModel;
   private final String client;
   private List<MockAction> mockActions = new ArrayList<>();
-  private Map<String, CloudModel> cloudDevices = new HashMap<>();
-
-  public enum ActionType {
-    BLOCK_DEVICE_ACTION,
-    UPDATE_DEVICE_ACTION,
-    DELETE_DEVICE_ACTION,
-    BIND_DEVICE_ACTION,
-    CONFIG_DEVICE_ACTION,
-    CREATE_DEVICE_ACTION;
-  }
+  private final Map<String, CloudModel> cloudDevices = new HashMap<>();
 
   IotMockProvider(String projectId, String registryId, String cloudRegion) {
     siteModel = new SiteModel("../sites/udmi_site_model");
@@ -64,7 +55,7 @@ public class IotMockProvider implements IotProvider {
 
   @Override
   public void updateConfig(String deviceId, String config) {
-    checkArgument(cloudDevices.containsKey(deviceId),"missing device");
+    checkArgument(cloudDevices.containsKey(deviceId), "missing device");
     mockAction(CONFIG_DEVICE_ACTION, deviceId, config);
   }
 
@@ -75,14 +66,14 @@ public class IotMockProvider implements IotProvider {
 
   @Override
   public void updateDevice(String deviceId, CloudModel device) {
-    checkArgument(cloudDevices.containsKey(deviceId),"missing device");
+    checkArgument(cloudDevices.containsKey(deviceId), "missing device");
     device.num_id = populateCloudModel(deviceId).num_id;
     mockAction(UPDATE_DEVICE_ACTION, deviceId, device);
   }
 
   @Override
   public void createDevice(String deviceId, CloudModel device) {
-    checkArgument(!cloudDevices.containsKey(deviceId),"device already exists");
+    checkArgument(!cloudDevices.containsKey(deviceId), "device already exists");
     CloudModel cloudModel = populateCloudModel(deviceId);
     device.num_id = cloudModel.num_id;
     cloudModel.is_gateway = device.is_gateway;
@@ -91,7 +82,7 @@ public class IotMockProvider implements IotProvider {
 
   @Override
   public void deleteDevice(String deviceId) {
-    checkArgument(cloudDevices.containsKey(deviceId),"missing device");
+    checkArgument(cloudDevices.containsKey(deviceId), "missing device");
     cloudDevices.remove(deviceId);
     mockAction(DELETE_DEVICE_ACTION, deviceId, null);
   }
@@ -112,8 +103,8 @@ public class IotMockProvider implements IotProvider {
 
   @Override
   public void bindDeviceToGateway(String proxyDeviceId, String gatewayDeviceId) {
-    checkArgument(cloudDevices.containsKey(proxyDeviceId),"missing proxy device");
-    checkArgument(cloudDevices.containsKey(gatewayDeviceId),"missing gateway device");
+    checkArgument(cloudDevices.containsKey(proxyDeviceId), "missing proxy device");
+    checkArgument(cloudDevices.containsKey(gatewayDeviceId), "missing gateway device");
     checkArgument(isTrue(populateCloudModel(gatewayDeviceId).is_gateway), "gateway is not gateway");
     mockAction(BIND_DEVICE_ACTION, proxyDeviceId, gatewayDeviceId);
   }
@@ -147,9 +138,22 @@ public class IotMockProvider implements IotProvider {
   }
 
   /**
+   * The various actions that are mocked out.
+   */
+  public enum ActionType {
+    BLOCK_DEVICE_ACTION,
+    UPDATE_DEVICE_ACTION,
+    DELETE_DEVICE_ACTION,
+    BIND_DEVICE_ACTION,
+    CONFIG_DEVICE_ACTION,
+    CREATE_DEVICE_ACTION
+  }
+
+  /**
    * Holder class for mocked actions.
    */
   public static class MockAction {
+
     public String client;
     public ActionType action;
     public String deviceId;
