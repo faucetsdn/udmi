@@ -1,8 +1,5 @@
 package com.google.bos.udmi.monitoring;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.cloud.audit.AuditLog;
 import com.google.cloud.logging.LogEntry;
 import com.google.cloud.logging.LogEntryServerStream;
@@ -12,23 +9,13 @@ import com.google.cloud.logging.LoggingOptions;
 import com.google.cloud.logging.Payload;
 import com.google.cloud.logging.Severity;
 import com.google.protobuf.InvalidProtocolBufferException;
-import com.google.udmi.util.JsonUtil;
 import java.io.IOException;
-import java.io.PrintStream;
-import java.lang.reflect.InvocationTargetException;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.TreeMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import udmi.schema.Monitoring;
-import udmi.schema.MonitoringMetric;
 
 /**
  * Read the tail of GCP logs and generate metrics.
@@ -42,7 +29,7 @@ public class LogTail extends LogTailBase {
           + "(severity=ERROR AND protoPayload.serviceName=\"cloudiot.googleapis.com\")";
   protected boolean outputJson = false;
   protected LogTailOutput output;
-  protected LogTimeSeries logsTimeSeries;
+  protected LogTimeSeries logTimeSeries;
   private String projectName;
 
   /**
@@ -50,7 +37,7 @@ public class LogTail extends LogTailBase {
    */
   public LogTail(String projectName) {
     this.projectName = projectName;
-    this.logsTimeSeries = new LogTimeSeries();
+    this.logTimeSeries = new LogTimeSeries();
     this.outputJson = true;
   }
 
@@ -165,8 +152,8 @@ public class LogTail extends LogTailBase {
       entry.statusCode = auditLog.getStatus().getCode();
       entry.statusMessage = auditLog.getStatus().getMessage();
       entry.severity = log.getSeverity();
-      logsTimeSeries.add(entry);
-      logsTimeSeries.maybeEmitMetrics(output);
+      logTimeSeries.add(entry);
+      logTimeSeries.maybeEmitMetrics(output);
     } catch (InvalidProtocolBufferException e) {
       error("Log payload AuditLog deserialize error: " + e.toString());
     } catch (IOException e) {
