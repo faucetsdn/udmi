@@ -7,6 +7,7 @@ import java.time.Instant;
  * A data class to hold one or more equivalent log tail entries that occurred at or after one
  * timestamp, up to another point with another timestamp (i.e. a window). The window is defined by
  * the user of this data class, not this class.
+ * TODO(any): Consider replacing with a Java record class.
  */
 public class LogTailEntry {
 
