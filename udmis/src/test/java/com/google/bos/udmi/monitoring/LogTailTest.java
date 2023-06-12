@@ -6,7 +6,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
 
 import com.google.cloud.MonitoredResource;
 import com.google.cloud.audit.AuditLog;
@@ -66,9 +71,9 @@ public class LogTailTest {
     Logging loggingMock = Mockito.mock(Logging.class);
     LogEntryServerStream streamMock = Mockito.mock(LogEntryServerStream.class);
 
-    Mockito.doReturn(loggingOptionsMock).when(logTailMock).getLoggingOptionsDefaultInstance();
-    Mockito.doReturn(loggingMock).when(loggingOptionsMock).getService();
-    Mockito.doReturn(streamMock).when(loggingMock)
+    doReturn(loggingOptionsMock).when(logTailMock).getLoggingOptionsDefaultInstance();
+    doReturn(loggingMock).when(loggingOptionsMock).getService();
+    doReturn(streamMock).when(loggingMock)
         .tailLogEntries(any(TailOption.class), any(TailOption.class));
 
     assertEquals(streamMock, logTailMock.getCloudLogStream("meaningless filter"));
@@ -81,9 +86,9 @@ public class LogTailTest {
     Logging loggingMock = Mockito.mock(Logging.class);
     LogEntryServerStream streamMock = Mockito.mock(LogEntryServerStream.class);
 
-    Mockito.doReturn(loggingOptionsMock).when(logTailMock).getLoggingOptionsDefaultInstance();
-    Mockito.doReturn(loggingMock).when(loggingOptionsMock).getService();
-    Mockito.doReturn(streamMock).when(loggingMock).tailLogEntries(any(TailOption.class));
+    doReturn(loggingOptionsMock).when(logTailMock).getLoggingOptionsDefaultInstance();
+    doReturn(loggingMock).when(loggingOptionsMock).getService();
+    doReturn(streamMock).when(loggingMock).tailLogEntries(any(TailOption.class));
 
     assertEquals(streamMock, logTailMock.getCloudLogStream(null));
   }
@@ -91,7 +96,7 @@ public class LogTailTest {
   @Test
   public void testMain() throws org.apache.commons.cli.ParseException {
     LogTail logTailMock = getLogTailMock();
-    Mockito.doNothing().when(logTailMock).tailLogs();
+    doNothing().when(logTailMock).tailLogs();
     LogTail.mainUnderTest(TEST_MAIN_ARGS, logTailMock);
   }
 
@@ -111,36 +116,36 @@ public class LogTailTest {
     ByteString byteStringMock = Mockito.mock(ByteString.class);
     byte[] byteArray = {0};
 
-    Mockito.when(logEntryMock.getPayload()).thenReturn(payloadMock);
-    Mockito.when(payloadMock.getData()).thenReturn(dataMock);
-    Mockito.when(dataMock.getTypeUrl())
+    when(logEntryMock.getPayload()).thenReturn(payloadMock);
+    when(payloadMock.getData()).thenReturn(dataMock);
+    when(dataMock.getTypeUrl())
         .thenReturn("type.googleapis.com/google.cloud.audit.AuditLog");
-    Mockito.when(dataMock.getValue()).thenReturn(byteStringMock);
-    Mockito.when(byteStringMock.toByteArray()).thenReturn(byteArray);
+    when(dataMock.getValue()).thenReturn(byteStringMock);
+    when(byteStringMock.toByteArray()).thenReturn(byteArray);
 
     AuditLog auditLogMock = Mockito.mock(AuditLog.class);
     try {
-      Mockito.doReturn(auditLogMock).when(logTailMock).getAuditLogParseFrom(any(byte[].class));
+      doReturn(auditLogMock).when(logTailMock).getAuditLogParseFrom(any(byte[].class));
     } catch (InvalidProtocolBufferException e) {
       fail(e);
     }
 
     LogTailEntry entryTest = getLogTailEntryTest();
-    Mockito.doReturn(entryTest.timestamp).when(logEntryMock).getInstantTimestamp();
-    Mockito.doReturn(entryTest.methodName).when(auditLogMock).getMethodName();
-    Mockito.doReturn(entryTest.serviceName).when(auditLogMock).getServiceName();
-    Mockito.doReturn(entryTest.resourceName).when(auditLogMock).getResourceName();
+    doReturn(entryTest.timestamp).when(logEntryMock).getInstantTimestamp();
+    doReturn(entryTest.methodName).when(auditLogMock).getMethodName();
+    doReturn(entryTest.serviceName).when(auditLogMock).getServiceName();
+    doReturn(entryTest.resourceName).when(auditLogMock).getResourceName();
     Status statusMock = Mockito.mock(Status.class);
-    Mockito.doReturn(statusMock).when(auditLogMock).getStatus();
-    Mockito.doReturn(entryTest.statusCode).when(statusMock).getCode();
-    Mockito.doReturn(entryTest.statusMessage).when(statusMock).getMessage();
-    Mockito.doReturn(entryTest.severity).when(logEntryMock).getSeverity();
+    doReturn(statusMock).when(auditLogMock).getStatus();
+    doReturn(entryTest.statusCode).when(statusMock).getCode();
+    doReturn(entryTest.statusMessage).when(statusMock).getMessage();
+    doReturn(entryTest.severity).when(logEntryMock).getSeverity();
 
     logTailMock.logsTimeSeries = Mockito.mock(LogTimeSeries.class);
     ArgumentCaptor<LogTailEntry> argumentCaptor = ArgumentCaptor.forClass(LogTailEntry.class);
-    Mockito.doNothing().when(logTailMock.logsTimeSeries).add(argumentCaptor.capture());
+    doNothing().when(logTailMock.logsTimeSeries).add(argumentCaptor.capture());
     try {
-      Mockito.doNothing().when(logTailMock.logsTimeSeries)
+      doNothing().when(logTailMock.logsTimeSeries)
           .maybeEmitMetrics(any(LogTailOutput.class));
     } catch (IOException e) {
       fail(e);
@@ -215,22 +220,22 @@ public class LogTailTest {
     ByteString byteStringMock = Mockito.mock(ByteString.class);
     byte[] byteArray = {0};
 
-    Mockito.when(logEntryMock.getPayload()).thenReturn(payloadMock);
-    Mockito.when(payloadMock.getData()).thenReturn(dataMock);
-    Mockito.when(dataMock.getTypeUrl())
+    when(logEntryMock.getPayload()).thenReturn(payloadMock);
+    when(payloadMock.getData()).thenReturn(dataMock);
+    when(dataMock.getTypeUrl())
         .thenReturn("type.googleapis.com/google.cloud.audit.AuditLog");
-    Mockito.when(dataMock.getValue()).thenReturn(byteStringMock);
-    Mockito.when(byteStringMock.toByteArray()).thenReturn(byteArray);
+    when(dataMock.getValue()).thenReturn(byteStringMock);
+    when(byteStringMock.toByteArray()).thenReturn(byteArray);
 
     try {
-      Mockito.doThrow(InvalidProtocolBufferException.class).when(logTailMock)
+      doThrow(InvalidProtocolBufferException.class).when(logTailMock)
           .getAuditLogParseFrom(any(byte[].class));
     } catch (InvalidProtocolBufferException e) {
       fail(e);
     }
 
     logTailMock.processLogEntryError(logEntryMock);
-    Mockito.verify(logTailMock).error(anyString());
+    verify(logTailMock).error(anyString());
 
   }
 
@@ -240,11 +245,11 @@ public class LogTailTest {
     LogEntry logEntryMock = Mockito.mock(LogEntry.class);
     ProtoPayload payloadMock = Mockito.mock(ProtoPayload.class);
     Any dataMock = Mockito.mock(Any.class);
-    Mockito.when(logEntryMock.getPayload()).thenReturn(payloadMock);
-    Mockito.when(payloadMock.getData()).thenReturn(dataMock);
-    Mockito.when(dataMock.getTypeUrl())
+    when(logEntryMock.getPayload()).thenReturn(payloadMock);
+    when(payloadMock.getData()).thenReturn(dataMock);
+    when(dataMock.getTypeUrl())
         .thenReturn("type.googleapis.com/google.cloud.audit.AuditLog_INVALID");
-    Mockito.doNothing().when(logTailMock).error("Log payload is not AuditLog");
+    doNothing().when(logTailMock).error("Log payload is not AuditLog");
     logTailMock.processLogEntryError(logEntryMock);
   }
 
@@ -254,10 +259,10 @@ public class LogTailTest {
     LogEntry logEntryMock = Mockito.mock(LogEntry.class);
     MonitoredResource monitoredResource = MonitoredResource.newBuilder("global")
         .addLabel("function_name", "udmi_config").build();
-    Mockito.when(logEntryMock.getSeverity()).thenReturn(Severity.INFO);
-    Mockito.when(logEntryMock.getResource()).thenReturn(monitoredResource);
-    Mockito.doNothing().when(logTailMock).processLogEntryError(logEntryMock);
-    Mockito.doNothing().when(logTailMock).processLogEntryUdmiConfig(logEntryMock);
+    when(logEntryMock.getSeverity()).thenReturn(Severity.INFO);
+    when(logEntryMock.getResource()).thenReturn(monitoredResource);
+    doNothing().when(logTailMock).processLogEntryError(logEntryMock);
+    doNothing().when(logTailMock).processLogEntryUdmiConfig(logEntryMock);
     // Go
     logTailMock.processLogEntry(logEntryMock);
   }
@@ -268,10 +273,10 @@ public class LogTailTest {
     LogEntry logEntryMock = Mockito.mock(LogEntry.class);
     MonitoredResource monitoredResource = MonitoredResource.newBuilder("global")
         .addLabel("function_name", "udmi_state").build();
-    Mockito.when(logEntryMock.getSeverity()).thenReturn(Severity.INFO);
-    Mockito.when(logEntryMock.getResource()).thenReturn(monitoredResource);
-    Mockito.doNothing().when(logTailMock).processLogEntryError(logEntryMock);
-    Mockito.doNothing().when(logTailMock).processLogEntryUdmiState(logEntryMock);
+    when(logEntryMock.getSeverity()).thenReturn(Severity.INFO);
+    when(logEntryMock.getResource()).thenReturn(monitoredResource);
+    doNothing().when(logTailMock).processLogEntryError(logEntryMock);
+    doNothing().when(logTailMock).processLogEntryUdmiState(logEntryMock);
     // Go
     logTailMock.processLogEntry(logEntryMock);
   }
@@ -283,10 +288,10 @@ public class LogTailTest {
     LogEntry logEntryMock = Mockito.mock(LogEntry.class);
     MonitoredResource monitoredResource = MonitoredResource.newBuilder("global")
         .addLabel("function_name", "udmi_target").build();
-    Mockito.when(logEntryMock.getSeverity()).thenReturn(Severity.INFO);
-    Mockito.when(logEntryMock.getResource()).thenReturn(monitoredResource);
-    Mockito.doNothing().when(logTailMock).processLogEntryError(logEntryMock);
-    Mockito.doNothing().when(logTailMock).processLogEntryUdmiTarget(logEntryMock);
+    when(logEntryMock.getSeverity()).thenReturn(Severity.INFO);
+    when(logEntryMock.getResource()).thenReturn(monitoredResource);
+    doNothing().when(logTailMock).processLogEntryError(logEntryMock);
+    doNothing().when(logTailMock).processLogEntryUdmiTarget(logEntryMock);
     // Go
     logTailMock.processLogEntry(logEntryMock);
   }
@@ -295,8 +300,8 @@ public class LogTailTest {
   public void testProcessLogEntryWhenLogSeverityError() {
     LogTail logTailMock = getLogTailMock();
     LogEntry logEntryMock = Mockito.mock(LogEntry.class);
-    Mockito.when(logEntryMock.getSeverity()).thenReturn(Severity.ERROR);
-    Mockito.doNothing().when(logTailMock).processLogEntryError(logEntryMock);
+    when(logEntryMock.getSeverity()).thenReturn(Severity.ERROR);
+    doNothing().when(logTailMock).processLogEntryError(logEntryMock);
     logTailMock.processLogEntry(logEntryMock);
   }
 
@@ -306,10 +311,10 @@ public class LogTailTest {
     LogEntryServerStream streamMock = Mockito.mock(LogEntryServerStream.class);
     Iterator iteratorMock = Mockito.mock(Iterator.class);
     LogEntry logEntryMock = Mockito.mock(LogEntry.class);
-    Mockito.doReturn(iteratorMock).when(streamMock).iterator();
-    Mockito.doReturn(true, false).when(iteratorMock).hasNext();
-    Mockito.doReturn(logEntryMock).when(iteratorMock).next();
-    Mockito.doNothing().when(logTailMock).processLogEntry(logEntryMock);
+    doReturn(iteratorMock).when(streamMock).iterator();
+    doReturn(true, false).when(iteratorMock).hasNext();
+    doReturn(logEntryMock).when(iteratorMock).next();
+    doNothing().when(logTailMock).processLogEntry(logEntryMock);
     logTailMock.processLogStream(streamMock);
   }
 
@@ -317,12 +322,12 @@ public class LogTailTest {
   public void testTailLogs() {
     LogTail logTailMock = getLogTailMock();
     LogEntryServerStream streamMock = Mockito.mock(LogEntryServerStream.class);
-    Mockito.doReturn(streamMock).when(logTailMock)
+    doReturn(streamMock).when(logTailMock)
         .getCloudLogStream(eq(logTailMock.LOG_FILTER));
-    Mockito.doNothing().when(logTailMock).processLogStream(streamMock);
+    doNothing().when(logTailMock).processLogStream(streamMock);
     assertTrue(logTailMock.outputJson);
     logTailMock.tailLogs();
-    Mockito.verify(logTailMock).processLogStream(streamMock);
+    verify(logTailMock).processLogStream(streamMock);
     assertEquals(logTailMock.output.getClass(), LogTailJsonOutput.class);
   }
 }
