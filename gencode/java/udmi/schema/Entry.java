@@ -28,6 +28,7 @@ public class Entry {
 
     /**
      * A human-readable one-line description of the entry
+     * (Required)
      * 
      */
     @JsonProperty("message")
@@ -44,12 +45,14 @@ public class Entry {
      * Category
      * <p>
      * Auto-generated category mappings from bin/gencode_categories.
+     * (Required)
      * 
      */
     @JsonProperty("category")
     public String category;
     /**
      * Timestamp the condition was triggered, or most recently updated
+     * (Required)
      * 
      */
     @JsonProperty("timestamp")
@@ -57,6 +60,7 @@ public class Entry {
     public Date timestamp;
     /**
      * The status `level` should conform to the numerical [Stackdriver LogEntry](https://cloud.google.com/logging/docs/reference/v2/rest/v2/LogEntry#logseverity) levels. The `DEFAULT` value of 0 is not allowed (lowest value is 100, maximum 800).https://cloud.google.com/logging/docs/reference/v2/rest/v2/LogEntry#logseverity
+     * (Required)
      * 
      */
     @JsonProperty("level")

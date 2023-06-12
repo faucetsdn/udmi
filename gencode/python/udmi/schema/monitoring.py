@@ -1,25 +1,19 @@
-"""Generated class for common.json"""
-from .entry import Entry
+"""Generated class for monitoring.json"""
+from .monitoring_metric import Monitoringmetric
 
 
-class Common:
+class Monitoring:
   """Generated schema class"""
 
-
-  SystemMode = SystemMode
-  IotProvider = IotProvider
-  FeatureStage = FeatureStage
-  BlobPhase = BlobPhase
-  SystemBlobsets = SystemBlobsets
-
   def __init__(self):
-    pass
+    self.metric = None
 
   @staticmethod
   def from_dict(source):
     if not source:
       return None
-    result = Common()
+    result = Monitoring()
+    result.metric = Monitoringmetric.from_dict(source.get('metric'))
     return result
 
   @staticmethod
@@ -28,7 +22,7 @@ class Common:
       return None
     result = {}
     for key in source:
-      result[key] = Common.from_dict(source[key])
+      result[key] = Monitoring.from_dict(source[key])
     return result
 
   @staticmethod
@@ -40,4 +34,6 @@ class Common:
 
   def to_dict(self):
     result = {}
+    if self.metric:
+      result['metric'] = self.metric.to_dict() # 4
     return result

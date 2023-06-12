@@ -1,5 +1,5 @@
 """Generated class for event_discovery_point.json"""
-from .common import Entry
+from .entry import Entry
 from .ancillary_properties import AncillaryProperties
 
 

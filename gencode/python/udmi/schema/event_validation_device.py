@@ -1,5 +1,5 @@
 """Generated class for event_validation_device.json"""
-from .common import Entry
+from .entry import Entry
 
 
 class DeviceValidationEvent:

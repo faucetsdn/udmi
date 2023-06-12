@@ -1,5 +1,5 @@
 """Generated class for event_discovery.json"""
-from .common import Entry
+from .entry import Entry
 from .event_discovery_family import FamilyDiscoveryEvent
 from .event_discovery_point import PointEnumerationEvent
 from .enumeration_feature import FeatureEnumeration
