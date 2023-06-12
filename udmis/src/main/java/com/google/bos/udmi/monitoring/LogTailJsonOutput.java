@@ -1,9 +1,12 @@
 package com.google.bos.udmi.monitoring;
 
 import com.google.udmi.util.JsonUtil;
-import udmi.schema.Monitoring;
 import java.io.PrintStream;
+import udmi.schema.Monitoring;
 
+/**
+ * Class which can output metrics in a JSON format to a Java print stream.
+ */
 public class LogTailJsonOutput implements LogTailOutput {
 
   PrintStream printStream;

@@ -15,7 +15,7 @@ import udmi.schema.Monitoring;
 import udmi.schema.MonitoringMetric;
 
 
-/*
+/**
  * All the LogTail items currently processing.
  * Hold the log entries in buckets for upstream processing in chunks.
  */
@@ -140,6 +140,11 @@ public class LogTimeSeries extends TreeMap<Long, LinkedList<LogTailEntry>> {
     return (this.numberOfLogs > LOG_ENTRIES_PER_SUBMIT);
   }
 
+  /**
+   * Add one LogTailEntry to the time series.
+   *
+   * @param log LogTailEntry object to add.
+   */
   public void add(LogTailEntry log) {
     // TODO: Again, based on output requirements, update performance and/or grouping.
     synchronized (timeSeriesLock) {
@@ -158,7 +163,6 @@ public class LogTimeSeries extends TreeMap<Long, LinkedList<LogTailEntry>> {
       this.put(k, reInsert);
       numberOfLogs++;
     }
-    // return true;
   }
 
   @Override
@@ -169,6 +173,14 @@ public class LogTimeSeries extends TreeMap<Long, LinkedList<LogTailEntry>> {
     }
   }
 
+  /**
+   * Per the requirements/limitations of both the internal time series structure,
+   * and the properties of the LogTailOutput,
+   * maybe emit the metrics currently in the time series. This may or may not produce output.
+   *
+   * @param output LogTailOutput instance to send output to.
+   * @throws IOException If output fails.
+   */
   public void maybeEmitMetrics(LogTailOutput output) throws IOException {
     if (shouldEmitNow()) {
       emitMetrics(output);

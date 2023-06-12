@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/docs.iml" filepath="$PROJECT_DIR$/.idea/docs.iml" />
       <module fileurl="file://$PROJECT_DIR$/../gencode/gencode.iml" filepath="$PROJECT_DIR$/../gencode/gencode.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/johnrandolph.udmi.udmis.iml" filepath="$PROJECT_DIR$/.idea/modules/johnrandolph.udmi.udmis.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/schema.iml" filepath="$PROJECT_DIR$/.idea/schema.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/udmi.udmis.iml" filepath="$PROJECT_DIR$/.idea/modules/udmi.udmis.iml" />
       <module fileurl="file://$PROJECT_DIR$/udmis.iml" filepath="$PROJECT_DIR$/udmis.iml" />

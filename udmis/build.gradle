@@ -28,14 +28,11 @@ sourceSets {
         java {
             srcDirs '../gencode/java'
             srcDirs '../common/src/main/java'
-            srcDirs 'src/main/java'
         }
     }
     test {
         java {
-            srcDirs 'src/test/java'
             srcDirs '../common/src/test/java'
-            srcDirs 'src/test/java/com/google/bos/udmi/monitoring'
         }
     }
 }
@@ -58,7 +55,7 @@ jacocoTestReport {
 
 checkstyle {
     ignoreFailures = false
-    maxWarnings = 32
+    maxWarnings = 0
 }
 checkstyleMain.source = 'src/main/java'
 
@@ -102,7 +99,6 @@ dependencies {
     
     implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5'
 
-    // implementation group: 'junit', name: 'junit', version: '4.13.2'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.2'
     testImplementation 'org.mockito:mockito-core:5.3.1'
