@@ -165,7 +165,7 @@ public class LogTailTest {
    * Does not actually program the method to return an exception.
    */
   @Test
-  public void testProcessLogEntryErrorWhenIOException() {
+  public void testProcessLogEntryErrorWhenIoException() {
     LogTail logTailMock = getLogTailMock();
 
     LogEntry logEntryMock = Mockito.mock(LogEntry.class);
