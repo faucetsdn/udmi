@@ -1,7 +1,12 @@
 package com.google.bos.udmi.monitoring;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.eq;
 
 import com.google.cloud.MonitoredResource;
 import com.google.cloud.audit.AuditLog;
@@ -10,7 +15,6 @@ import com.google.cloud.logging.LogEntryServerStream;
 import com.google.cloud.logging.Logging;
 import com.google.cloud.logging.Logging.TailOption;
 import com.google.cloud.logging.LoggingOptions;
-import com.google.cloud.logging.Payload;
 import com.google.cloud.logging.Payload.ProtoPayload;
 import com.google.cloud.logging.Severity;
 import com.google.protobuf.Any;
@@ -18,20 +22,15 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.rpc.Status;
 import java.io.IOException;
-import java.text.ParseException;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Base64;
 import java.util.Iterator;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 
 
 /**
  * Unit tests for LogTail class.
- *
  * It may be beneficial to clear local gcloud set up so that tests run in the IDE
  * the same way they run on Github CI.
  *   gcloud auth revoke
@@ -40,8 +39,8 @@ import org.mockito.Mockito;
  */
 public class LogTailTest {
 
-  final static String TEST_PROJECT_NAME = "XXXtestXXXCantBeARealProject";
-  final static String[] TEST_MAIN_ARGS = {"-p", TEST_PROJECT_NAME};
+  static final String TEST_PROJECT_NAME = "XXXtestXXXCantBeARealProject";
+  static final String[] TEST_MAIN_ARGS = {"-p", TEST_PROJECT_NAME};
 
   private LogTailEntry getLogTailEntryTest() {
     LogTailEntry entry = new LogTailEntry();
