@@ -72,13 +72,13 @@ public class GeneralUtils {
     return Boolean.TRUE.equals(value);
   }
 
-  public static <T> void ifTrueThen(Object conditional, Runnable action) {
+  public static <T> void ifTrueThen(Boolean conditional, Runnable action) {
     if (isTrue(conditional)) {
       action.run();
     }
   }
 
-  public static <T> void ifNotTrueThen(Object conditional, Runnable action) {
+  public static <T> void ifNotTrueThen(Boolean conditional, Runnable action) {
     if (!isTrue(conditional)) {
       action.run();
     }

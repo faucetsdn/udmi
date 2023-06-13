@@ -37,6 +37,7 @@ public class SequenceRunner {
 
   private static final int EXIT_STATUS_SUCCESS = 0;
   private static final int EXIST_STATUS_FAILURE = 1;
+  private static final String TOOL_ROOT = "..";
   static ExecutionConfiguration executionConfiguration;
   private static final Set<String> failures = new TreeSet<>();
   private static final Map<String, SequenceResult> allTestResults = new TreeMap<>();
@@ -96,6 +97,7 @@ public class SequenceRunner {
     config.serial_no = Optional.ofNullable(serialNo).orElse(SequenceBase.SERIAL_NO_MISSING);
     config.log_level = Level.INFO.name();
     config.udmi_version = Common.getUdmiVersion();
+    config.udmi_root = TOOL_ROOT;
     config.alt_project = testMode; // Sekrit hack for enabling mock components.
 
     failures.clear();

@@ -106,7 +106,7 @@ public class MessageReadingClient implements MessagePublisher {
       Map<String, Object> treeMap = OBJECT_MAPPER.readValue(msgFile, TreeMap.class);
       return treeMap;
     } catch (Exception e) {
-      return new ErrorContainer(e, "Reading from " + msgFile.getAbsolutePath(), lastValidTimestamp);
+      return new ErrorContainer(e, "Reading from " + msgFile, lastValidTimestamp);
     }
   }
 

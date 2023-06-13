@@ -18,6 +18,7 @@ import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.Common.removeNextArg;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.JSON_SUFFIX;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
@@ -103,6 +104,8 @@ import udmi.schema.ValidationSummary;
 public class Validator {
 
   public static final int REQUIRED_FUNCTION_VER = 8;
+  public static final String CONFIG_PREFIX = "config_";
+  public static final String STATE_PREFIX = "state_";
   private static final String ERROR_FORMAT_INDENT = "  ";
   private static final String SCHEMA_VALIDATION_FORMAT = "Validating %d schemas";
   private static final String TARGET_VALIDATION_FORMAT = "Validating %d files against %s";
@@ -117,8 +120,6 @@ public class Validator {
   private static final String STATE_UPDATE_SCHEMA = "state";
   private static final String EVENT_POINTSET_SCHEMA = "event_pointset";
   private static final String STATE_POINTSET_SCHEMA = "state_pointset";
-  private static final String CONFIG_PREFIX = "config_";
-  private static final String STATE_PREFIX = "state_";
   private static final String UNKNOWN_TYPE_DEFAULT = "event";
   private static final String CONFIG_CATEGORY = "config";
   private static final Set<String> INTERESTING_TYPES = ImmutableSet.of(
@@ -146,7 +147,7 @@ public class Validator {
   private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
   private final Map<String, AtomicInteger> deviceMessageIndex = new HashMap<>();
   private final List<MessagePublisher> dataSinks = new ArrayList<>();
-  private final List<String> targetDevices;
+  private final Set<String> targetDevices;
   private ImmutableSet<String> expectedDevices;
   private File outBaseDir;
   private File schemaRoot;
@@ -158,6 +159,16 @@ public class Validator {
   private boolean simulatedMessages;
   private Instant mockNow = null;
   private boolean forceUpgrade;
+
+  /**
+   * Create a simplistic validator for encapsulated use.
+   */
+  public Validator(ExecutionConfiguration validatorConfig) {
+    config = validatorConfig;
+    setSchemaSpec("schema");
+    client = new NullPublisher();
+    targetDevices = ImmutableSet.of();
+  }
 
   /**
    * Create validator with the given args.
@@ -174,7 +185,7 @@ public class Validator {
     if (client == null) {
       validateReflector();
     }
-    targetDevices = listCopy;
+    targetDevices = Set.copyOf(listCopy);
   }
 
   /**
@@ -363,7 +374,8 @@ public class Validator {
       schemaRoot = schemaFile;
       schemaSpec = null;
     } else {
-      throw new RuntimeException("Schema directory/file not found: " + schemaFile);
+      throw new RuntimeException(
+          "Schema directory/file not found: " + schemaFile.getAbsolutePath());
     }
     schemaMap = getSchemaMap();
   }
@@ -484,7 +496,6 @@ public class Validator {
 
     String deviceId = attributes.get("deviceId");
     ReportingDevice device = reportingDevices.computeIfAbsent(deviceId, ReportingDevice::new);
-    device.clearMessageEntries();
 
     try {
       String schemaName = messageSchema(attributes);
@@ -500,84 +511,95 @@ public class Validator {
         base64Devices.add(deviceId);
       }
 
-      if (message.containsKey(EXCEPTION_KEY)) {
-        Exception error = (Exception) message.get(EXCEPTION_KEY);
-        System.err.println(
-            "Pipeline exception " + deviceId + ": " + Common.getExceptionMessage(error));
-        device.addError(error, attributes, Category.VALIDATION_DEVICE_RECEIVE);
-        return device;
-      }
-
-      if (message.containsKey(ERROR_KEY)) {
-        String error = (String) message.get(ERROR_KEY);
-        System.err.println("Pipeline error " + deviceId + ": " + error);
-        IllegalArgumentException exception = new IllegalArgumentException(
-            "Error in message pipeline: " + error);
-        device.addError(exception, attributes, Category.VALIDATION_DEVICE_RECEIVE);
-        return device;
-      }
-
-      upgradeMessage(schemaName, message);
-      sanitizeMessage(schemaName, message);
-      prepareDeviceOutDir(message, attributes, deviceId, schemaName);
-
-      String timeString = (String) message.get(TIMESTAMP_KEY);
-      String subTypeRaw = Optional.ofNullable(attributes.get(SUBTYPE_PROPERTY_KEY))
-          .orElse(UNKNOWN_TYPE_DEFAULT);
-      if (timeString != null && LAST_SEEN_SUBTYPES.contains(SubType.fromValue(subTypeRaw))) {
-        device.updateLastSeen(Date.from(Instant.parse(timeString)));
-      }
-
-      try {
-        if (!schemaMap.containsKey(schemaName)) {
-          throw new IllegalArgumentException(
-              String.format(SCHEMA_SKIP_FORMAT, schemaName, deviceId));
-        }
-      } catch (Exception e) {
-        System.err.println("Missing schema entry " + schemaName);
-        device.addError(e, attributes, Category.VALIDATION_DEVICE_RECEIVE);
-      }
-
-      try {
-        validateMessage(schemaMap.get(ENVELOPE_SCHEMA_ID), attributes);
-      } catch (Exception e) {
-        System.err.println("Error validating attributes: " + e);
-        device.addError(e, attributes, Category.VALIDATION_DEVICE_RECEIVE);
-      }
-
-      if (schemaMap.containsKey(schemaName)) {
-        try {
-          validateMessage(schemaMap.get(schemaName), message);
-        } catch (Exception e) {
-          System.err.printf("Error validating schema %s: %s%n", schemaName, friendlyStackTrace(e));
-          device.addError(e, attributes, Category.VALIDATION_DEVICE_SCHEMA);
-        }
-      }
-
-      if (expectedDevices.isEmpty()) {
-        // No devices configured, so don't consider check metadata or consider extra.
-      } else if (expectedDevices.contains(deviceId)) {
-        try {
-          ifNotNullThen(CONTENT_VALIDATORS.get(schemaName), targetClass -> {
-            Object messageObject = OBJECT_MAPPER.convertValue(message, targetClass);
-            device.validateMessageType(messageObject, JsonUtil.getDate(timeString), attributes);
-          });
-        } catch (Exception e) {
-          System.err.println("Error validating contents: " + friendlyStackTrace(e));
-          device.addError(e, attributes, Category.VALIDATION_DEVICE_CONTENT);
-        }
-      } else {
-        extraDevices.add(deviceId);
-      }
+      writeDeviceOutDir(message, attributes, deviceId, schemaName);
+      validateDeviceMessage(device, message, attributes);
 
       if (!device.hasErrors()) {
-        System.err.printf("Validation complete %s/%s%n", deviceId, schemaName);
+        System.err.printf("Validation clean %s/%s%n", deviceId, schemaName);
       }
     } catch (Exception e) {
       System.err.printf("Error processing %s: %s%n", deviceId, friendlyStackTrace(e));
       device.addError(e, attributes, Category.VALIDATION_DEVICE_RECEIVE);
     }
     return device;
+  }
+
+  /**
+   * Validate a device message against the core schema.
+   */
+  public void validateDeviceMessage(ReportingDevice device, Map<String, Object> message,
+      Map<String, String> attributes) {
+    String deviceId = attributes.get("deviceId");
+    device.clearMessageEntries();
+    String schemaName = messageSchema(attributes);
+
+    if (message.get(EXCEPTION_KEY) instanceof Exception exception) {
+      System.err.println(
+          "Pipeline exception " + deviceId + ": " + Common.getExceptionMessage(exception));
+      device.addError(exception, attributes, Category.VALIDATION_DEVICE_RECEIVE);
+      return;
+    }
+
+    if (message.containsKey(ERROR_KEY)) {
+      String error = (String) message.get(ERROR_KEY);
+      System.err.println("Pipeline error " + deviceId + ": " + error);
+      IllegalArgumentException exception = new IllegalArgumentException(
+          "Error in message pipeline: " + error);
+      device.addError(exception, attributes, Category.VALIDATION_DEVICE_RECEIVE);
+      return;
+    }
+
+    upgradeMessage(schemaName, message);
+    sanitizeMessage(schemaName, message);
+
+    String timeString = (String) message.get(TIMESTAMP_KEY);
+    String subTypeRaw = Optional.ofNullable(attributes.get(SUBTYPE_PROPERTY_KEY))
+        .orElse(UNKNOWN_TYPE_DEFAULT);
+    if (timeString != null && LAST_SEEN_SUBTYPES.contains(SubType.fromValue(subTypeRaw))) {
+      device.updateLastSeen(Date.from(Instant.parse(timeString)));
+    }
+
+    try {
+      if (!schemaMap.containsKey(schemaName)) {
+        throw new IllegalArgumentException(
+            String.format(SCHEMA_SKIP_FORMAT, schemaName, deviceId));
+      }
+    } catch (Exception e) {
+      System.err.println("Missing schema entry " + schemaName);
+      device.addError(e, attributes, Category.VALIDATION_DEVICE_RECEIVE);
+    }
+
+    try {
+      validateMessage(schemaMap.get(ENVELOPE_SCHEMA_ID), attributes);
+    } catch (Exception e) {
+      System.err.println("Error validating attributes: " + e);
+      device.addError(e, attributes, Category.VALIDATION_DEVICE_RECEIVE);
+    }
+
+    if (schemaMap.containsKey(schemaName)) {
+      try {
+        validateMessage(schemaMap.get(schemaName), message);
+      } catch (Exception e) {
+        System.err.printf("Error validating schema %s: %s%n", schemaName, e.getMessage());
+        device.addError(e, attributes, Category.VALIDATION_DEVICE_SCHEMA);
+      }
+    }
+
+    if (expectedDevices == null || expectedDevices.isEmpty()) {
+      // No devices configured, so don't consider check metadata or consider extra.
+    } else if (expectedDevices.contains(deviceId)) {
+      try {
+        ifNotNullThen(CONTENT_VALIDATORS.get(schemaName), targetClass -> {
+          Object messageObject = OBJECT_MAPPER.convertValue(message, targetClass);
+          device.validateMessageType(messageObject, JsonUtil.getDate(timeString), attributes);
+        });
+      } catch (Exception e) {
+        System.err.println("Error validating contents: " + e.getMessage());
+        device.addError(e, attributes, Category.VALIDATION_DEVICE_CONTENT);
+      }
+    } else {
+      extraDevices.add(deviceId);
+    }
   }
 
   private void sendValidationResult(Map<String, String> origAttributes,
@@ -670,7 +692,7 @@ public class Validator {
     return !CONFIG_CATEGORY.equals(category) && isInteresting;
   }
 
-  private void prepareDeviceOutDir(
+  private void writeDeviceOutDir(
       Map<String, Object> message,
       Map<String, String> attributes,
       String deviceId,
@@ -680,10 +702,21 @@ public class Validator {
     File deviceDir = makeDeviceDir(deviceId);
 
     File messageFile = new File(deviceDir, String.format(MESSAGE_FILE_FORMAT, schemaName));
+
+    // OBJECT_MAPPER can't handle an Exception class object, so do a swap-and-restore.
+    Exception saved = (Exception) message.get(EXCEPTION_KEY);
+    message.put(EXCEPTION_KEY, ifNotNullGet(saved, GeneralUtils::friendlyStackTrace));
     OBJECT_MAPPER.writeValue(messageFile, message);
+    message.put(EXCEPTION_KEY, saved);
 
     File attributesFile = new File(deviceDir, String.format(ATTRIBUTE_FILE_FORMAT, schemaName));
     OBJECT_MAPPER.writeValue(attributesFile, attributes);
+  }
+
+  private static void sanitizeMessageException(Map<String, Object> message) {
+    if (message.get(EXCEPTION_KEY) instanceof Exception exception) {
+      message.put(EXCEPTION_KEY, friendlyStackTrace(exception));
+    }
   }
 
   private File makeDeviceDir(String deviceId) {

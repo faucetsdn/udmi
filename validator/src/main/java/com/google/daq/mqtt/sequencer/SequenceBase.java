@@ -5,10 +5,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
+import static com.google.daq.mqtt.validator.Validator.CONFIG_PREFIX;
+import static com.google.daq.mqtt.validator.Validator.STATE_PREFIX;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.GeneralUtils.changedLines;
+import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
@@ -37,8 +40,8 @@ import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
 import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.util.ObjectDiffEngine;
-import com.google.daq.mqtt.validator.AugmentedState;
 import com.google.daq.mqtt.validator.AugmentedSystemConfig;
+import com.google.daq.mqtt.validator.ReportingDevice;
 import com.google.daq.mqtt.validator.Validator;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
 import com.google.udmi.util.CleanDateFormat;
@@ -59,6 +62,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -71,6 +75,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
@@ -114,12 +119,15 @@ public class SequenceBase {
   public static final String EMPTY_MESSAGE = "{}";
   public static final String SERIAL_NO_MISSING = "//";
   public static final String VALIDATION_STATE_TOPIC = "validation/state";
+  public static final String SCHEMA_PASS_DETAIL = "No schema violations found";
+  public static final String STATE_UPDATE_MESSAGE_TYPE = "state_update";
   static final FeatureStage DEFAULT_MIN_STAGE = BETA;
   private static final int FUNCTIONS_VERSION_BETA = Validator.REQUIRED_FUNCTION_VER;
   private static final int FUNCTIONS_VERSION_ALPHA = 8; // Version required for alpha execution.
   private static final long CONFIG_BARRIER_MS = 1000;
   private static final String START_END_MARKER = "################################";
   private static final String RESULT_FORMAT = "RESULT %s %s %s %s %s %s";
+  private static final String SCHEMA_FORMAT = "SCHEMA %s %s %s %s %s %s";
   private static final String TESTS_OUT_DIR = "tests";
   private static final String SEQUENCER_CATEGORY = "validation.feature.sequence";
   private static final String EVENT_PREFIX = "event_";
@@ -141,8 +149,8 @@ public class SequenceBase {
       DiscoveryEvent.class, SubFolder.DISCOVERY
   );
   private static final Map<String, Class<?>> expectedUpdates = ImmutableMap.of(
-      "config", Config.class,
-      "state", AugmentedState.class
+      SubType.CONFIG.value(), Config.class,
+      SubType.STATE.value(), State.class
   );
   private static final Map<String, AtomicInteger> UPDATE_COUNTS = new HashMap<>();
   private static final String LOCAL_PREFIX = "local_";
@@ -176,6 +184,7 @@ public class SequenceBase {
   protected static Config deviceConfig;
   protected static MessagePublisher altClient;
   static ExecutionConfiguration validatorConfig;
+  private static Validator messageValidator;
   private static ValidationState validationState;
   private static String udmiVersion;
   private static String siteModel;
@@ -200,6 +209,7 @@ public class SequenceBase {
   private final Map<String, Object> receivedUpdates = new HashMap<>();
   private final Queue<Entry> logEntryQueue = new LinkedBlockingDeque<>();
   private final Stack<String> waitingCondition = new Stack<>();
+  private final Map<String, List<Entry>> validationResults = new HashMap<>();
   @Rule
   public Timeout globalTimeout = new Timeout(NORM_TIMEOUT_MS, TimeUnit.MILLISECONDS);
   @Rule
@@ -271,6 +281,7 @@ public class SequenceBase {
     }
     final String key_file;
     try {
+      messageValidator = new Validator(validatorConfig);
       siteModel = checkNotNull(validatorConfig.site_model, "site_model not defined");
       projectId = checkNotNull(validatorConfig.project_id, "project_id not defined");
       udmiVersion = checkNotNull(validatorConfig.udmi_version, "udmi_version not defined");
@@ -417,6 +428,17 @@ public class SequenceBase {
     }
   }
 
+  static void enableAllBuckets(boolean enabled) {
+    enableAllTargets = enabled;
+  }
+
+  private static String makeMessageBase(Map<String, String> attributes) {
+    String subType = attributes.get("subType");
+    String subFolder = attributes.get("subFolder");
+    String messageBase = format("%s_%s", subType, subFolder);
+    return messageBase;
+  }
+
   /**
    * Set the extra field test capability for device config. Used for change tracking.
    *
@@ -526,6 +548,7 @@ public class SequenceBase {
     configAcked = false;
     receivedState.clear();
     receivedEvents.clear();
+    validationResults.clear();
     enforceSerial = false;
     recordMessages = true;
     recordSequence = false;
@@ -540,10 +563,13 @@ public class SequenceBase {
     recordSequence = true;
     waitingCondition.push("executing test");
     debug(format("stage begin %s at %s", waitingCondition.peek(), timeSinceStart()));
+<<<<<<< HEAD
   }
 
   static void enableAllBuckets(boolean enabled) {
     enableAllTargets = enabled;
+=======
+>>>>>>> master
   }
 
   protected boolean isBucketEnabled(Bucket bucket) {
@@ -607,8 +633,11 @@ public class SequenceBase {
     Bucket bucket = getBucket(feature);
     String stage = (feature == null ? Feature.DEFAULT_STAGE : feature.stage()).name();
     int score = (feature == null ? Feature.DEFAULT_SCORE : feature.score());
-    String resultString = format(RESULT_FORMAT, result, bucket.value(), methodName, stage,
-        score, message);
+    emitResultString(format(RESULT_FORMAT, result, bucket.value(), methodName, stage,
+        score, message));
+  }
+
+  private void emitResultString(String resultString) {
     notice(resultString);
     try (PrintWriter log = new PrintWriter(new FileOutputStream(resultSummary, true))) {
       log.println(resultString);
@@ -618,8 +647,43 @@ public class SequenceBase {
     }
   }
 
-  private String getResultId(Description description) {
-    return getDeviceId() + "/" + description.getMethodName();
+  private void recordSchemaValidations(Description description) {
+    validationResults.entrySet().stream()
+        .filter(isInterestingValidation())
+        .forEach(entry -> {
+          String schemaName = entry.getKey();
+          List<Entry> values = entry.getValue();
+          if (values.isEmpty()) {
+            emitSchemaResult(description, schemaName, SequenceResult.PASS, SCHEMA_PASS_DETAIL);
+          } else {
+            Set<String> duplicates = new HashSet<>();
+            values.stream().filter(item -> duplicates.add(uniqueKey(item))).forEach(result ->
+                emitSchemaResult(description, schemaName, SequenceResult.FAIL, result.detail));
+          }
+        });
+  }
+
+  @NotNull
+  private static Predicate<Map.Entry<String, List<Entry>>> isInterestingValidation() {
+    return entry -> {
+      String schemaName = entry.getKey();
+      return !schemaName.startsWith(CONFIG_PREFIX)
+          && (!schemaName.startsWith(STATE_PREFIX) || schemaName.equals(STATE_UPDATE_MESSAGE_TYPE));
+    };
+  }
+
+  private String uniqueKey(Entry entry) {
+    return format("%s_%s_%s", entry.category, entry.message, entry.detail);
+  }
+
+  private void emitSchemaResult(Description description, String schemaName, SequenceResult result,
+      String detail) {
+    String methodName = description.getMethodName();
+    Feature feature = description.getAnnotation(Feature.class);
+    Bucket bucket = getBucket(feature);
+    String stage = (feature == null ? Feature.DEFAULT_STAGE : feature.stage()).name();
+    emitResultString(
+        format(SCHEMA_FORMAT, result, bucket.value(), methodName, stage, schemaName, detail));
   }
 
   private Bucket getBucket(Description description) {
@@ -641,14 +705,12 @@ public class SequenceBase {
     return implicit == UNKNOWN_DEFAULT ? explicit : implicit;
   }
 
-  private void recordRawMessage(Map<String, Object> message, Map<String, String> attributes) {
+  private void recordRawMessage(Map<String, String> attributes, Map<String, Object> message) {
     if (testName == null) {
       return;
     }
-    String subType = attributes.get("subType");
-    String subFolder = attributes.get("subFolder");
+    String messageBase = makeMessageBase(attributes);
     String timestamp = message == null ? getTimestamp() : (String) message.get("timestamp");
-    String messageBase = format("%s_%s", subType, subFolder);
     if (traceLogLevel()) {
       messageBase = messageBase + "_" + timestamp;
     }
@@ -1051,11 +1113,6 @@ public class SequenceBase {
     untilLoop(() -> catchToFalse(evaluator), description);
   }
 
-  private void processMessage() {
-    MessageBundle bundle = nextMessageBundle();
-    processCommand(bundle.message, bundle.attributes);
-  }
-
   /**
    * Thread-safe way to get a message. Tests are run in different threads, and if one blocks it
    * might end up trying to take a message while another thread is still looping. This prevents that
@@ -1086,19 +1143,31 @@ public class SequenceBase {
     }
   }
 
-  private void processCommand(Map<String, Object> message, Map<String, String> attributes) {
+  private void processMessage() {
+    MessageBundle bundle = nextMessageBundle();
+    processMessage(bundle.attributes, bundle.message);
+  }
+
+  private void processMessage(Map<String, String> attributes, Map<String, Object> message) {
     String deviceId = attributes.get("deviceId");
     String subFolderRaw = attributes.get("subFolder");
     String subTypeRaw = attributes.get("subType");
     String transactionId = attributes.get("transactionId");
+
     if (CONFIG_SUBTYPE.equals(subTypeRaw)) {
       String attributeMark = format("%s/%s/%s", deviceId, subTypeRaw, subFolderRaw);
       trace("received command " + attributeMark);
     }
+
     if (!SequenceBase.getDeviceId().equals(deviceId)) {
       return;
     }
-    recordRawMessage(message, attributes);
+
+    recordRawMessage(attributes, message);
+
+    preprocessMessage(attributes, message);
+
+    validateMessage(attributes, message);
 
     if (SubFolder.ERROR.value().equals(subFolderRaw)) {
       handlePipelineError(subTypeRaw, message);
@@ -1107,6 +1176,19 @@ public class SequenceBase {
     } else {
       handleDeviceMessage(message, subFolderRaw, subTypeRaw, transactionId);
     }
+  }
+
+  private void validateMessage(Map<String, String> attributes, Map<String, Object> message) {
+    if (SubType.CONFIG.value().equals(attributes.get("subType"))) {
+      return;
+    }
+
+    String deviceId = attributes.get("deviceId");
+    ReportingDevice reportingDevice = new ReportingDevice(deviceId);
+    messageValidator.validateDeviceMessage(reportingDevice, message, attributes);
+    String messageBase = makeMessageBase(attributes);
+    validationResults.computeIfAbsent(messageBase, key -> new ArrayList<>())
+        .addAll(reportingDevice.getMessageEntries());
   }
 
   private void handlePipelineError(String subTypeRaw, Map<String, Object> message) {
@@ -1120,8 +1202,8 @@ public class SequenceBase {
     SubType subType = SubType.fromValue(subTypeRaw);
     switch (subType) {
       case CONFIG:
-        debug("Received confirmation of individual config id " + transactionId);
         // These are echos of sent config messages, so do nothing.
+        debug("Received confirmation of individual config id " + transactionId);
         break;
       case STATE:
         // State updates are handled as a monolithic block with a state reflector update.
@@ -1152,7 +1234,7 @@ public class SequenceBase {
       receivedUpdates.put(subTypeRaw, converted);
       int updateCount = UPDATE_COUNTS.computeIfAbsent(subTypeRaw, key -> new AtomicInteger())
           .incrementAndGet();
-      if (converted instanceof Config) {
+      if (converted instanceof Config config) {
         String extraField = getExtraField(message);
         if ("reset_config".equals(extraField)) {
           debug("Update with config reset");
@@ -1160,7 +1242,6 @@ public class SequenceBase {
           error("Shouldn't be seeing this!");
           return;
         }
-        Config config = (Config) converted;
         debug(format("Updated config %s, id %s", getTimestamp(config.timestamp), txnId));
         List<String> changes = updateDeviceConfig(config);
         if (updateCount == 1) {
@@ -1168,8 +1249,7 @@ public class SequenceBase {
         } else {
           info(format("Updated config #%03d", updateCount), changedLines(changes));
         }
-      } else if (converted instanceof AugmentedState) {
-        State convertedState = (State) converted;
+      } else if (converted instanceof State convertedState) {
         if (deviceState != null && convertedState.timestamp.before(deviceState.timestamp)) {
           warning("Ignoring out-of-order state update " + convertedState);
           return;
@@ -1181,7 +1261,6 @@ public class SequenceBase {
           info(format("Updated state #%03d", updateCount), changedLines(stateChanges));
         }
         deviceState = convertedState;
-        updateConfigAcked((AugmentedState) converted);
         validSerialNo();
         debug("Updated state has last_config " + getTimestamp(deviceState.system.last_config));
       } else {
@@ -1207,16 +1286,20 @@ public class SequenceBase {
     return RECV_CONFIG_DIFFERNATOR.computeChanges(deviceConfig);
   }
 
+  private void preprocessMessage(Map<String, String> attributes, Map<String, Object> message) {
+    if (SubType.STATE.value().equals(attributes.get(Common.SUBTYPE_PROPERTY_KEY))) {
+      updateConfigAcked(message);
+    }
+  }
+
   /**
    * Check/remember the configAcked field of a state update. This field is only populated by the
    * supporting cloud functions in response to an explicit state query, and checks that the device
    * has acked (in an MQTT sense) a previously sent config.
-   *
-   * @param converted received message to pull the ack from
    */
-  private void updateConfigAcked(AugmentedState converted) {
-    if (converted.configAcked != null) {
-      configAcked = "true".equals(converted.configAcked);
+  private void updateConfigAcked(Map<String, Object> converted) {
+    if ("true".equals(converted.remove("configAcked"))) {
+      configAcked = true;
     }
   }
 
@@ -1498,12 +1581,12 @@ public class SequenceBase {
 
     @Override
     protected void starting(@NotNull Description description) {
+      testName = description.getMethodName();
       try {
         setupSequencer();
         putSequencerResult(description, SequenceResult.START);
         checkState(reflector().isActive(), "Reflector is not currently active");
 
-        testName = description.getMethodName();
         testDescription = getTestSummary(description);
         testStage = getTestStage(description);
         testBucket = getBucket(description);
@@ -1524,7 +1607,7 @@ public class SequenceBase {
         activeInstance = SequenceBase.this;
       } catch (Exception e) {
         e.printStackTrace();
-        throw new RuntimeException("While preparing " + deviceOutputDir.getAbsolutePath(), e);
+        throw new RuntimeException("While starting " + testName, e);
       }
     }
 
@@ -1577,7 +1660,7 @@ public class SequenceBase {
         while (e.getCause() != null) {
           e = e.getCause();
         }
-        message = e.getMessage();
+        message = friendlyStackTrace(e);
         failureType = SequenceResult.FAIL;
       }
       debug("exception message: " + Common.getExceptionMessage(e));
@@ -1604,6 +1687,8 @@ public class SequenceBase {
       writeSequencerLog(logEntry);
       writeSystemLog(logEntry);
       setSequenceStatus(description, result, logEntry);
+
+      recordSchemaValidations(description);
     }
   }
 }
