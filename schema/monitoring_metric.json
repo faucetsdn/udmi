@@ -1,0 +1,16 @@
+{
+    "$udmi_version": "1.4.1",
+    "title": "Monitoring metric",
+    "description": "One metric",
+    "type": "object",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "additionalProperties": false,
+    "properties": {
+      "event_system": {
+        "$ref": "file:event_system.json"
+      },
+      "envelope": {
+        "$ref": "file:envelope.json"
+      }
+    }
+}

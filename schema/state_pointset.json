@@ -23,7 +23,7 @@
     },
     "status": {
       "description": "Optional status information about pointset",
-      "$ref": "file:common.json#/definitions/entry"
+      "$ref": "file:entry.json"
     },
     "points": {
       "description": "Collection of point names, defining the representative point set for this device.",

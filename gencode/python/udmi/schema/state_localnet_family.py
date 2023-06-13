@@ -1,5 +1,5 @@
 """Generated class for state_localnet_family.json"""
-from .common import Entry
+from .entry import Entry
 
 
 class FamilyLocalnetState:

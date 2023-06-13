@@ -17,7 +17,7 @@
       "type": "string"
     },
     "status": {
-      "$ref": "file:common.json#/definitions/entry"
+      "$ref": "file:entry.json"
     },
     "entities": {
       "$ref": "file:event_mapping_entities.json"

@@ -23,6 +23,7 @@ from .configuration_execution import ExecutionConfiguration
 from .configuration_pod import PodConfiguration
 from .configuration_pod_bridge import BridgePodConfiguration
 from .configuration_pubber import PubberConfiguration
+from .entry import Entry
 from .enumeration_feature import FeatureEnumeration
 from .envelope import Envelope
 from .equipment_translation import BuildingConfig
@@ -52,6 +53,8 @@ from .model_system import SystemModel
 from .model_system_hardware import SystemHardware
 from .model_testing import TestingModel
 from .model_testing_target import TargetTestingModel
+from .monitoring import Monitoring
+from .monitoring_metric import Monitoringmetric
 from .options_pubber import PubberOptions
 from .persistent_device import DevicePersistent
 from .properties import Properties

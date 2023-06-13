@@ -20,6 +20,8 @@ cd $ROOT
 
 pubber/bin/build covg
 validator/bin/build covg
+udmis/bin/build covg
 
 emit_file_url pubber pubber/build/jacocoHtml/index.html
 emit_file_url validator validator/build/jacocoHtml/index.html 
+emit_file_url udmis udmis/build/jacocoHtml/index.html

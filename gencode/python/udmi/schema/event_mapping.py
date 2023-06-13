@@ -1,5 +1,5 @@
 """Generated class for event_mapping.json"""
-from .common import Entry
+from .entry import Entry
 from .event_mapping_entities import MappingEventEntities
 
 

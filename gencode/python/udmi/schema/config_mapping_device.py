@@ -1,5 +1,5 @@
 """Generated class for config_mapping_device.json"""
-from .common import Entry
+from .entry import Entry
 
 
 class DeviceMappingConfig:
