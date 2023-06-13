@@ -1,6 +1,6 @@
 """Generated class for state_validation.json"""
 from .config_udmi import SetupUdmiConfig
-from .common import Entry
+from .entry import Entry
 from .state_validation_feature import FeatureValidationState
 
 

@@ -1,5 +1,5 @@
 """Generated class for state_validation_sequence.json"""
-from .common import Entry
+from .entry import Entry
 
 
 class SequenceValidationState:

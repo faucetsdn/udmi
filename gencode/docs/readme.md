@@ -7,7 +7,6 @@
 
 ## Messages
 * [**config**](config.html) - The config block controls a device's intended behavior. [Config Documentation](../../docs/messages/config.md)
-* [**envelope**](envelope.html) - The UDMI `envelope` is not a message itself, per se, but the attributes and other information that is delivered along with a message. [Message Envelope Documentation](../../docs/messages/envelope.md)
 * [**event_discovery**](event_discovery.html) - [Discovery result](../../docs/specs/discovery.md) with implicit enumeration
 * [**event_pointset**](event_pointset.html) - A set of points reporting telemetry data. [Pointset Event Documentation](../../docs/messages/pointset.md#telemetry)
 * [**event_system**](event_system.html) - Used for system events such as logging. [System Event Documentation](../../docs/messages/system.md#event)
@@ -29,6 +28,7 @@
 * [**event**](event.html) - Container object for all event schemas, not directly used.
 * [**event_mapping**](event_mapping.html) - [Mapping result](../../docs/specs/mapping.md) with implicit enumeration
 * [**event_validation**](event_validation.html) - Validation device result
+* [**monitoring**](monitoring.html) - Output from UDMIS monitoring
 * [**persistent_device**](persistent_device.html) - Device persistent data
 * [**properties**](properties.html)
 * [**state_mapping**](state_mapping.html) - State for [mapping](../../docs/specs/mapping.md)

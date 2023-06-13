@@ -1,5 +1,5 @@
 """Generated class for state_pointset.json"""
-from .common import Entry
+from .entry import Entry
 from .state_pointset_point import PointPointsetState
 
 

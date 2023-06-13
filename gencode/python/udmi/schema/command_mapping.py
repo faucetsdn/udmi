@@ -1,5 +1,5 @@
 """Generated class for command_mapping.json"""
-from .common import Entry
+from .entry import Entry
 from .equipment_translation import BuildingConfig
 
 

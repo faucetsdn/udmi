@@ -48,7 +48,7 @@ cd $ROOT_DIR
 # Generate code coverage
 banner "Code Coverage"
 reset_needs 
-for project in pubber validator; do
+for project in pubber validator udmis; do
   needs_covg_update "${project}" && add_needs
 done
 

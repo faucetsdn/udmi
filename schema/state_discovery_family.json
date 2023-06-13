@@ -17,7 +17,7 @@
     },
     "status": {
       "description": "Status information about the discovery operation",
-      "$ref": "file:common.json#/definitions/entry"
+      "$ref": "file:entry.json"
     }
   }
 }

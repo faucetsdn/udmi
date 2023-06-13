@@ -1,7 +1,7 @@
 """Generated class for state_system.json"""
 from .state_system_operation import StateSystemOperation
 from .state_system_hardware import StateSystemHardware
-from .common import Entry
+from .entry import Entry
 
 
 class SystemState:

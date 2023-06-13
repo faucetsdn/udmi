@@ -35,7 +35,7 @@
       "type": "string"
     },
     "status": {
-      "$ref": "file:common.json#/definitions/entry"
+      "$ref": "file:entry.json"
     },
     "features": {
       "type": "object",

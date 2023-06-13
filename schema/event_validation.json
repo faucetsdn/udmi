@@ -25,7 +25,7 @@
       "type": "string"
     },
     "status": {
-      "$ref": "file:common.json#/definitions/entry"
+      "$ref": "file:entry.json"
     },
     "pointset": {
       "title": "Pointset Summary",
@@ -53,7 +53,7 @@
       "description": "List of errors encountered while validating a device",
       "type": "array",
       "items": {
-        "$ref": "file:common.json#/definitions/entry"
+        "$ref": "file:entry.json"
       }
     }
   },
