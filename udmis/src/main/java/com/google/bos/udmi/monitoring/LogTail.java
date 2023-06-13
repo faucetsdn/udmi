@@ -1,5 +1,6 @@
 package com.google.bos.udmi.monitoring;
 
+import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.audit.AuditLog;
 import com.google.cloud.logging.LogEntry;
 import com.google.cloud.logging.LogEntryServerStream;
@@ -9,7 +10,10 @@ import com.google.cloud.logging.LoggingOptions;
 import com.google.cloud.logging.Payload;
 import com.google.cloud.logging.Severity;
 import com.google.protobuf.InvalidProtocolBufferException;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -31,12 +35,15 @@ public class LogTail extends LogTailBase {
   protected LogTailOutput output;
   protected LogTimeSeries logTimeSeries;
   private String projectName;
+  private String keyFilename;
 
   /**
    * Constructor for LogTail.
+   * TODO: Build an options class when >N arguments are passed.
    */
-  public LogTail(String projectName) {
+  public LogTail(String projectName, String keyFilename) {
     this.projectName = projectName;
+    this.keyFilename = keyFilename;
     this.logTimeSeries = new LogTimeSeries();
     this.outputJson = true;
   }
@@ -51,8 +58,9 @@ public class LogTail extends LogTailBase {
     if (commandLine == null) {
       throw new RuntimeException("Exiting");
     }
-    String projectId = commandLine.getOptionValue("p"); // TODO:(rm)NOTES: "essential-keep-197822"
-    LogTail logTail = new LogTail(projectId);
+    String projectId = commandLine.getOptionValue("p");
+    String keyFilename = commandLine.getOptionValue("k");
+    LogTail logTail = new LogTail(projectId, keyFilename);
     logTail.tailLogs();
   }
 
@@ -67,7 +75,6 @@ public class LogTail extends LogTailBase {
     if (commandLine == null) {
       throw new RuntimeException("Exiting");
     }
-    String projectId = commandLine.getOptionValue("p"); // TODO:(rm)NOTES: "essential-keep-197822"
     logTail.tailLogs();
   }
 
@@ -75,6 +82,7 @@ public class LogTail extends LogTailBase {
     Options options = new Options();
     options.addOption("h", "help", false, "Print usage info.");
     options.addOption("p", "project", true, "Cloud project name (required)");
+    options.addOption("k", "key-file", true, "File containing cloud application credentials");
 
     CommandLineParser parser = new DefaultParser();
     CommandLine commandLine = parser.parse(options, args);
@@ -91,6 +99,12 @@ public class LogTail extends LogTailBase {
       return (null);
     }
 
+    if (!commandLine.hasOption("k")) {
+      HelpFormatter formatter = new HelpFormatter();
+      formatter.printHelp("Required: key file", options);
+      return (null);
+    }
+
     return commandLine;
   }
 
@@ -98,9 +112,18 @@ public class LogTail extends LogTailBase {
     return AuditLog.parseFrom(bytes);
   }
 
+  protected InputStream getCredentialsStream(String filename) throws IllegalArgumentException {
+    final FileInputStream fileInputStream;
+    try {
+      fileInputStream = new FileInputStream(filename);
+    } catch (FileNotFoundException e) {
+      throw new IllegalArgumentException(e);
+    }
+    return fileInputStream;
+  }
+
   protected LogEntryServerStream getCloudLogStream(String filter) {
-    LoggingOptions options = getLoggingOptionsDefaultInstance();
-    Logging logging = options.getService();
+    Logging logging = getLoggingService(projectName, getCredentialsStream(keyFilename));
     LogEntryServerStream stream;
     if (filter == null) {
       stream = logging.tailLogEntries(TailOption.project(projectName));
@@ -110,8 +133,25 @@ public class LogTail extends LogTailBase {
     return stream;
   }
 
-  protected LoggingOptions getLoggingOptionsDefaultInstance() {
-    return LoggingOptions.getDefaultInstance();
+  protected LoggingOptions.Builder getLoggingOptionsBuilder() {
+    return LoggingOptions.newBuilder();
+  }
+
+  protected ServiceAccountCredentials getServiceAccountCredentialsFromStream(
+      InputStream inputStream) throws IOException {
+    return ServiceAccountCredentials.fromStream(inputStream);
+  }
+
+  protected Logging getLoggingService(String projectName, InputStream credentialsStream) {
+    try {
+      LoggingOptions loggingOptions = getLoggingOptionsBuilder()
+          .setCredentials(getServiceAccountCredentialsFromStream(credentialsStream))
+          .setProjectId(projectName)
+          .build();
+      return loggingOptions.getService();
+    } catch (IOException e) {
+      throw new IllegalArgumentException(e);
+    }
   }
 
   /*
