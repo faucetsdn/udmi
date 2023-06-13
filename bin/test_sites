@@ -41,24 +41,31 @@ function redact_files {
 subsets=$(cd $sitesdir; ls -d *)
 echo Testing against $subsets
 for subset in $subsets; do
-    echo Testing site $subset
+    echo '##########################################' Testing site $subset
     devicesdir=$sitesdir/$subset/devices
     rm -rf $devicesdir/*/out
+    mkdir -p $devicesdir
     devices=$(cd $devicesdir; ls -d *)
     
     bin/registrar $sitesdir/$subset
     
     for device in $devices; do
-        redact_files $devicesdir/$device/out/* $sitesdir/$subset/registration_summary.json
-        diff -r $devicesdir/$device/out $devicesdir/$device/expected
+        if [[ -d $devicesdir/$device/out ]]; then
+            redact_files $devicesdir/$device/out/* $sitesdir/$subset/registration_summary.json
+            diff -r $devicesdir/$device/out $devicesdir/$device/expected
+        elif [[ -d $devicesdir/$device/expected ]]; then
+            echo Missing output directory $devicesdir/$device/out
+            false
+        fi
     done
 done
 
-echo Testing simple mock sequencer...
+echo '#########################################' Testing simple mock sequencer...
 bin/sequencer tests/sites/downgrade/ -- DWN-2 54321 system_mode_restart
 
 RESULTLOG=tests/sites/downgrade/out/devices/DWN-2/RESULT.log
-fgrep "RESULT fail system.mode system_mode_restart ALPHA 5 null" $RESULTLOG || bin/fail unexpected output from $RESULTLOG
+fgrep "RESULT fail system.mode system_mode_restart ALPHA 5 java.lang.NullPointerException" $RESULTLOG ||
+    bin/fail unexpected output from $RESULTLOG
 
 echo
-echo Done with site tests
+echo '#########################################' Done with site tests

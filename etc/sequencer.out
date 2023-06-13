@@ -26,3 +26,6 @@ RESULT pass unknown family_ipv6_addr ALPHA 5 Sequence complete
 RESULT pass writeback writeback_failure ALPHA 5 Sequence complete
 RESULT pass writeback writeback_invalid ALPHA 5 Sequence complete
 RESULT pass writeback writeback_success ALPHA 5 Sequence complete
+RESULT fail schemas schema_alpha ALPHA 5 Failing schema validations in out/schema_validation.out
+RESULT pass schemas schema_beta BETA 5 All messages passed validation in out/schema_validation.out
+RESULT pass schemas schema_stable STABLE 5 All messages passed validation in out/schema_validation.out

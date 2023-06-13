@@ -77,6 +77,7 @@ cat <<EOF > $VALIDATOR_CONFIG
   "log_level": "$log_level",
   "min_stage": "$min_stage",
   "udmi_version": "$udmi_version",
+  "udmi_root": "$ROOT_DIR",
   "key_file": "$site_path/validator/rsa_private.pkcs8"
 }
 EOF

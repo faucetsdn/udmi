@@ -24,7 +24,7 @@ if [[ -z $check && -z $covg && -f $jarfile && $jarfile -nt $newest ]]; then
     exit 0
 fi
 
-export JAVA_HOME=$JAVA_HOME_11_X64
+echo Java version $(java --version)
 
 echo Building validator in $PWD
 
