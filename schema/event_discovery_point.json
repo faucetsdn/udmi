@@ -38,7 +38,7 @@
       "type": "string"
     },
     "status": {
-      "$ref": "file:common.json#/definitions/entry"
+      "$ref": "file:entry.json"
     },
     "ancillary": {
       "$ref": "file:ancillary_properties.json"

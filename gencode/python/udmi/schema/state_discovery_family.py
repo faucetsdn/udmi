@@ -1,5 +1,5 @@
 """Generated class for state_discovery_family.json"""
-from .common import Entry
+from .entry import Entry
 
 
 class FamilyDiscoveryState:

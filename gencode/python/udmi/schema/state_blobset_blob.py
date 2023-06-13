@@ -1,5 +1,5 @@
 """Generated class for state_blobset_blob.json"""
-from .common import Entry
+from .entry import Entry
 
 
 class BlobBlobsetState:
