@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-ROOT_DIR=$(realpath $(dirname $0)/..)
+ROOT_DIR=$(realpath $(dirname $0)/../..)
 JAR="${ROOT_DIR}/udmis/build/libs/udmis-1.0-SNAPSHOT-all.jar"
 
 function die() {
@@ -9,7 +9,7 @@ function die() {
 }
 
 function usage() {
-  die "Usage:\n$0 -p project -k keyfile"
+  die "Usage: $0 -p project -k keyfile"
 }
 
 # Get opts
