@@ -1,0 +1,22 @@
+#!/bin/bash -e
+
+ROOT=$(dirname $0)/..
+cd $ROOT
+DROOT=.
+
+if [[ $# != 1 ]]; then
+    echo Usage: $0 { build, run }
+    false
+fi
+
+cmd=$1
+shift
+
+if [[ $cmd == build ]]; then
+    docker build -f Dockerfile.udmis -t udmis:latest $DROOT
+elif [[ $cmd == run ]]; then
+    docker run -v $PWD/etc:/udmi -v $HOME/.config:/root/.config udmis
+else
+    echo Unknown command $cmd
+    false
+fi

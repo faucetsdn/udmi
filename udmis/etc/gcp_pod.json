@@ -14,7 +14,7 @@
     }
   },
   "iot_access": {
-    "provider": "gcp_iot_core",
+    "provider": "gcp",
     "project_id": "bos-peringknife-dev"
   }
 }

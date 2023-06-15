@@ -1,9 +1,0 @@
-#!/bin/bash -e
-
-ROOT=$(dirname $0)/..
-cd $ROOT
-
-DROOT=.
-
-docker build -f Dockerfile.udmis -t udmis:latest $DROOT
-
