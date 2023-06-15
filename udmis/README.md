@@ -3,9 +3,11 @@
 # Create a GKE cluster
 
 * Use GCP console
+* Do not use "autopilot", instead use "standard" mode (not default)
+* Create node-pool with cloud scopes to "Enable all Cloud APIs"
+  * There's an option when you're creating it to set the node-pool security options
+  * Can't update an existing node-pool, but can create a new one and delete old one
 * Add permissions to default service account
-* Create node-pool with cloud scopes
-  * Can't edit an existing node-pool, but can create a new pool within a cluster
 
 # Misc commands
 
