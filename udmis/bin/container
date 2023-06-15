@@ -3,26 +3,58 @@
 ROOT=$(dirname $0)/..
 cd $ROOT
 DROOT=.
-#PROJECT=mqttproxy-arup1
-PROJECT=bos-peringknife-dev
-REPOSITORY=gcr.io/$PROJECT
-IMAGE=udmis
 
-if [[ $# != 1 ]]; then
-    echo Usage: $0 { build, run, deploy }
-    false
-fi
+function usage {
+    echo Error: $*
+    echo Usage: $0 { build, run, bash, push, deploy } [project_id]
+    exit 1
+}
 
 cmd=$1
-shift
+shift || usage missing command
+
+if [[ $cmd == push ]]; then
+    project_id=$1
+    shift || usage missing project_id
+fi
+
+deployed_by=$USER@$HOSTNAME
+deployed_at=`date --utc --iso=seconds`
+version=`git describe --dirty`
+funchash=`git log -n 1 --oneline -- src/ | awk '{print $1}'`
+funccount=`git diff --name-only -- src/ | wc -l`
+if [[ $funccount != 0 ]]; then
+    funcdirty=-dirty
+fi
+funcver=`git describe $funchash`$funcdirty
+
+REPOSITORY=gcr.io/$project_id
+IMAGE=udmis
 
 if [[ $cmd == build ]]; then
+    rm -rf var
+    mkdir -p var
+    cat <<EOF > var/deployed_version.json
+{
+  "udmi_version": "$version",
+  "udmi_functions": "$funcver",
+  "deployed_at": "$deployed_at",
+  "deployed_by": "$deployed_by"
+}
+EOF
+    cat var/deployed_version.json
     docker build -f Dockerfile.udmis -t $IMAGE $DROOT
 elif [[ $cmd == run ]]; then
     docker run -v $PWD/etc:/udmi -v $HOME/.config:/root/.config udmis
-elif [[ $cmd == deploy ]]; then
+elif [[ $cmd == bash ]]; then
+    docker run -ti -v $PWD/etc:/udmi -v $HOME/.config:/root/.config udmis bash
+elif [[ $cmd == push ]]; then
     docker tag $IMAGE $REPOSITORY/$IMAGE
     docker push $REPOSITORY/$IMAGE
+    sed -e 's/${PROJECT}/$project_id/' < k8s_pod.yaml > var/k8s_pod.yaml
+    echo Updated var/k8s_pod.yaml for deployment.
+elif [[ $cmd == deploy ]]; then
+    kubectl apply -f k8s_pod.yaml
 else
     echo Unknown command $cmd
     false
