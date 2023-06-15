@@ -1,0 +1,30 @@
+#!/bin/bash -e
+
+JAR=validator/build/libs/validator-1.0-SNAPSHOT-all.jar
+
+if [ $# != 1 ]; then
+    echo $0 [project_id]
+    false
+fi
+
+project=$1
+shift
+
+rundir=$(dirname $0)
+cd $rundir/../..
+
+echo Running in $PWD
+
+validator/bin/build
+
+ls -l $JAR
+
+docker build -f proxy/Dockerfile.proxy . -t iot-core-proxy
+docker tag iot-core-proxy:latest eu.gcr.io/${project}/iot-core-proxy:latest
+docker push eu.gcr.io/${project}/iot-core-proxy:latest
+
+echo kubectl config get-contexts
+kubectl config get-contexts
+echo
+echo Deploy instance: kubectl apply -f k8s_deployment.yaml
+echo Modify/restart : kubectl edit deployments/iot-core-proxy
