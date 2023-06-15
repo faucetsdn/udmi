@@ -1,0 +1,29 @@
+#!/bin/bash -e
+
+ROOT=$(dirname $0)/..
+cd $ROOT
+DROOT=.
+#PROJECT=mqttproxy-arup1
+PROJECT=bos-peringknife-dev
+REPOSITORY=gcr.io/$PROJECT
+IMAGE=udmis
+
+if [[ $# != 1 ]]; then
+    echo Usage: $0 { build, run, deploy }
+    false
+fi
+
+cmd=$1
+shift
+
+if [[ $cmd == build ]]; then
+    docker build -f Dockerfile.udmis -t $IMAGE $DROOT
+elif [[ $cmd == run ]]; then
+    docker run -v $PWD/etc:/udmi -v $HOME/.config:/root/.config udmis
+elif [[ $cmd == deploy ]]; then
+    docker tag $IMAGE $REPOSITORY/$IMAGE
+    docker push $REPOSITORY/$IMAGE
+else
+    echo Unknown command $cmd
+    false
+fi

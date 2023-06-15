@@ -13,6 +13,7 @@ import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.MonitoredResource;
 import com.google.cloud.audit.AuditLog;
 import com.google.cloud.logging.LogEntry;
@@ -27,6 +28,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.rpc.Status;
 import java.io.IOException;
+import java.io.InputStream;
 import java.time.Instant;
 import java.util.Iterator;
 import org.junit.jupiter.api.Test;
@@ -35,17 +37,14 @@ import org.mockito.Mockito;
 
 
 /**
- * Unit tests for LogTail class.
- * It may be beneficial to clear local gcloud set up so that tests run in the IDE
- * the same way they run on Github CI.
- *   gcloud auth revoke
- *   gcloud config unset project
- *
+ * Unit tests for LogTail class. It may be beneficial to clear local gcloud set up so that tests run
+ * in the IDE the same way they run on Github CI. gcloud auth revoke gcloud config unset project
  */
 public class LogTailTest {
 
   static final String TEST_PROJECT_NAME = "XXXtestXXXCantBeARealProject";
-  static final String[] TEST_MAIN_ARGS = {"-p", TEST_PROJECT_NAME};
+  static final String TEST_KEY_FILENAME = "/tmp/thisKeyFileDoesNotExistXXX";
+  static final String[] TEST_MAIN_ARGS = {"-p", TEST_PROJECT_NAME, "-k", TEST_KEY_FILENAME};
 
   private LogTailEntry getLogTailEntryTest() {
     LogTailEntry entry = new LogTailEntry();
@@ -60,37 +59,93 @@ public class LogTailTest {
   }
 
   private LogTail getLogTailMock() {
-    LogTail logTail = new LogTail(TEST_PROJECT_NAME);
+    LogTail logTail = new LogTail(TEST_PROJECT_NAME, TEST_KEY_FILENAME);
     return (LogTail) Mockito.spy(logTail);
+  }
+
+  @Test
+  public void testGetLoggingServiceWhenCredentialsStreamIoException() {
+    LogTail logTailMock = getLogTailMock();
+    final LoggingOptions.Builder loggingOptionsBuilderMock = Mockito.mock(
+        LoggingOptions.Builder.class);
+    final LoggingOptions loggingOptionsMock = Mockito.mock(LoggingOptions.class);
+    final Logging loggingMock = Mockito.mock(Logging.class);
+    final InputStream credentialsStreamMock = Mockito.mock(InputStream.class);
+    final ServiceAccountCredentials serviceAccountCredentialsMock = Mockito.mock(
+        ServiceAccountCredentials.class);
+
+    doReturn(loggingOptionsBuilderMock).when(logTailMock).getLoggingOptionsBuilder();
+    try {
+      doThrow(IOException.class).when(
+          logTailMock).getServiceAccountCredentialsFromStream(credentialsStreamMock);
+    } catch (IOException e) {
+      fail(e);
+    }
+
+    assertThrows(IllegalArgumentException.class, () ->
+        logTailMock.getLoggingService(TEST_PROJECT_NAME, credentialsStreamMock));
+  }
+
+  @Test
+  public void testGetLoggingService() {
+    LogTail logTailMock = getLogTailMock();
+    final LoggingOptions.Builder loggingOptionsBuilderMock = Mockito.mock(
+        LoggingOptions.Builder.class);
+    final LoggingOptions loggingOptionsMock = Mockito.mock(LoggingOptions.class);
+    final Logging loggingMock = Mockito.mock(Logging.class);
+    final InputStream credentialsStreamMock = Mockito.mock(InputStream.class);
+    final ServiceAccountCredentials serviceAccountCredentialsMock = Mockito.mock(
+        ServiceAccountCredentials.class);
+
+    doReturn(loggingOptionsBuilderMock).when(logTailMock).getLoggingOptionsBuilder();
+    try {
+      doReturn(serviceAccountCredentialsMock).when(
+          logTailMock).getServiceAccountCredentialsFromStream(credentialsStreamMock);
+    } catch (IOException e) {
+      fail(e);
+    }
+    doReturn(loggingOptionsBuilderMock).when(loggingOptionsBuilderMock).setCredentials(any(
+        ServiceAccountCredentials.class));
+    doReturn(loggingOptionsBuilderMock).when(loggingOptionsBuilderMock)
+        .setProjectId(eq(TEST_PROJECT_NAME));
+    doReturn(loggingOptionsMock).when(loggingOptionsBuilderMock).build();
+    doReturn(loggingMock).when(loggingOptionsMock).getService();
+
+    assertEquals(loggingMock,
+        logTailMock.getLoggingService(TEST_PROJECT_NAME, credentialsStreamMock));
   }
 
   @Test
   public void testGetCloudLogStreamWhenFilter() {
     LogTail logTailMock = getLogTailMock();
-    LoggingOptions loggingOptionsMock = Mockito.mock(LoggingOptions.class);
     Logging loggingMock = Mockito.mock(Logging.class);
-    LogEntryServerStream streamMock = Mockito.mock(LogEntryServerStream.class);
+    InputStream streamMock = Mockito.mock(InputStream.class);
+    LogEntryServerStream logEntryServerStreamMock = Mockito.mock(LogEntryServerStream.class);
 
-    doReturn(loggingOptionsMock).when(logTailMock).getLoggingOptionsDefaultInstance();
-    doReturn(loggingMock).when(loggingOptionsMock).getService();
-    doReturn(streamMock).when(loggingMock)
+    doReturn(streamMock).when(logTailMock).getCredentialsStream(eq(TEST_KEY_FILENAME));
+    doReturn(loggingMock).when(logTailMock)
+        .getLoggingService(eq(TEST_PROJECT_NAME), eq(streamMock));
+
+    doReturn(logEntryServerStreamMock).when(loggingMock)
         .tailLogEntries(any(TailOption.class), any(TailOption.class));
 
-    assertEquals(streamMock, logTailMock.getCloudLogStream("meaningless filter"));
+    assertEquals(logEntryServerStreamMock, logTailMock.getCloudLogStream("meaningless filter"));
   }
 
   @Test
   public void testGetCloudLogStreamWhenNoFilter() {
     LogTail logTailMock = getLogTailMock();
-    LoggingOptions loggingOptionsMock = Mockito.mock(LoggingOptions.class);
     Logging loggingMock = Mockito.mock(Logging.class);
-    LogEntryServerStream streamMock = Mockito.mock(LogEntryServerStream.class);
+    InputStream streamMock = Mockito.mock(InputStream.class);
+    LogEntryServerStream logEntryServerStreamMock = Mockito.mock(LogEntryServerStream.class);
 
-    doReturn(loggingOptionsMock).when(logTailMock).getLoggingOptionsDefaultInstance();
-    doReturn(loggingMock).when(loggingOptionsMock).getService();
-    doReturn(streamMock).when(loggingMock).tailLogEntries(any(TailOption.class));
+    doReturn(streamMock).when(logTailMock).getCredentialsStream(eq(TEST_KEY_FILENAME));
+    doReturn(loggingMock).when(logTailMock)
+        .getLoggingService(eq(TEST_PROJECT_NAME), eq(streamMock));
 
-    assertEquals(streamMock, logTailMock.getCloudLogStream(null));
+    doReturn(logEntryServerStreamMock).when(loggingMock).tailLogEntries(any(TailOption.class));
+
+    assertEquals(logEntryServerStreamMock, logTailMock.getCloudLogStream(null));
   }
 
   @Test
@@ -98,6 +153,12 @@ public class LogTailTest {
     LogTail logTailMock = getLogTailMock();
     doNothing().when(logTailMock).tailLogs();
     LogTail.mainUnderTest(TEST_MAIN_ARGS, logTailMock);
+  }
+
+  @Test
+  public void testMainNoKeyFilename() {
+    String[] args = {"-p", TEST_PROJECT_NAME};
+    assertThrows(RuntimeException.class, () -> LogTail.main(args));
   }
 
   @Test
@@ -152,6 +213,34 @@ public class LogTailTest {
 
     logTailMock.processLogEntryError(logEntryMock);
     assertTrue(argumentCaptor.getValue().equals(entryTest));
+  }
+
+  @Test
+  public void testProcessLogEntryErrorWhenInvalidProtocolBufferException() {
+    LogTail logTailMock = getLogTailMock();
+
+    LogEntry logEntryMock = Mockito.mock(LogEntry.class);
+    ProtoPayload payloadMock = Mockito.mock(ProtoPayload.class);
+    Any dataMock = Mockito.mock(Any.class);
+    ByteString byteStringMock = Mockito.mock(ByteString.class);
+    byte[] byteArray = {0};
+
+    when(logEntryMock.getPayload()).thenReturn(payloadMock);
+    when(payloadMock.getData()).thenReturn(dataMock);
+    when(dataMock.getTypeUrl())
+        .thenReturn("type.googleapis.com/google.cloud.audit.AuditLog");
+    when(dataMock.getValue()).thenReturn(byteStringMock);
+    when(byteStringMock.toByteArray()).thenReturn(byteArray);
+
+    try {
+      doThrow(InvalidProtocolBufferException.class).when(logTailMock)
+          .getAuditLogParseFrom(any(byte[].class));
+    } catch (InvalidProtocolBufferException e) {
+      fail(e);
+    }
+
+    logTailMock.processLogEntryError(logEntryMock);
+    verify(logTailMock).error(anyString());
   }
 
   /*
@@ -209,35 +298,6 @@ public class LogTailTest {
     }
     doNothing().when(logTailMock).error(anyString());
     logTailMock.processLogEntryError(logEntryMock);
-  }
-
-
-  @Test
-  public void testProcessLogEntryErrorWhenInvalidProtocolBufferException() {
-    LogTail logTailMock = getLogTailMock();
-
-    LogEntry logEntryMock = Mockito.mock(LogEntry.class);
-    ProtoPayload payloadMock = Mockito.mock(ProtoPayload.class);
-    Any dataMock = Mockito.mock(Any.class);
-    ByteString byteStringMock = Mockito.mock(ByteString.class);
-    byte[] byteArray = {0};
-
-    when(logEntryMock.getPayload()).thenReturn(payloadMock);
-    when(payloadMock.getData()).thenReturn(dataMock);
-    when(dataMock.getTypeUrl())
-        .thenReturn("type.googleapis.com/google.cloud.audit.AuditLog");
-    when(dataMock.getValue()).thenReturn(byteStringMock);
-    when(byteStringMock.toByteArray()).thenReturn(byteArray);
-
-    try {
-      doThrow(InvalidProtocolBufferException.class).when(logTailMock)
-          .getAuditLogParseFrom(any(byte[].class));
-    } catch (InvalidProtocolBufferException e) {
-      fail(e);
-    }
-
-    logTailMock.processLogEntryError(logEntryMock);
-    verify(logTailMock).error(anyString());
   }
 
   @Test
