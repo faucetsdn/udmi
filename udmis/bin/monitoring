@@ -1,0 +1,32 @@
+#!/bin/bash -e
+
+ROOT_DIR=$(realpath $(dirname $0)/../..)
+JAR="${ROOT_DIR}/udmis/build/libs/udmis-1.0-SNAPSHOT-all.jar"
+
+function die() {
+  >&2 echo "$*"
+  exit 1
+}
+
+function usage() {
+  die "Usage: $0 -p project -k keyfile"
+}
+
+# Get opts
+while getopts "p:k:" opt; do
+  case "$opt" in
+    p)
+      project="$OPTARG"
+      ;;
+    k)
+      keyfile="$OPTARG"
+      ;;
+  esac
+done
+
+[[ -z "$project" ]] && usage
+[[ -z "$keyfile" ]] && usage
+
+# Run
+set -x
+java -cp "$JAR" com.google.bos.udmi.monitoring.LogTail -p "$project" -k "$keyfile"
