@@ -1,0 +1,13 @@
+FROM alpine:3.18
+
+WORKDIR /root
+
+RUN apk add openjdk17
+RUN apk add bash
+
+ADD bin/ bin/
+ADD etc/ etc/
+ADD var/ var/
+ADD build/libs/udmis-1.0-SNAPSHOT-all.jar build/libs/udmis-1.0-SNAPSHOT-all.jar
+
+CMD ["/root/bin/run", "/udmi/gcp_pod.json"]
