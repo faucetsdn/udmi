@@ -22,7 +22,7 @@ if [[ $cmd == build ]]; then
     docker build -f Dockerfile.udmis -t $IMAGE $DROOT
 elif [[ $cmd == run ]]; then
     docker run -v $PWD/etc:/udmi -v $HOME/.config:/root/.config --tmpfs /tmp udmis
-elif [[ $cmd -eq "shell" ]]; then
+elif [[ $cmd == shell ]]; then
     docker run -v $PWD/etc:/udmi -v $HOME/.config:/root/.config --rm -i -t --tmpfs /tmp udmis /bin/sh --login
 elif [[ $cmd == deploy ]]; then
     docker tag $IMAGE $REPOSITORY/$IMAGE
