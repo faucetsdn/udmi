@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: udmis-pod
+spec:
+  selector:
+    matchLabels:
+      app: udmis
+      role: master
+      tier: backend
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: udmis
+        role: master
+        tier: backend
+    spec:
+      containers:
+      - name: master
+        image: gcr.io/bos-peringknife-dev/udmis@sha256:30eda97dd6163920d3e4a802f50771b2c2a2e5753b989de2e9ab0b2ea896c08d
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
