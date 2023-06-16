@@ -6,7 +6,7 @@ DROOT=.
 
 function usage {
     echo Error: $*
-    echo Usage: $0 { build, shell, run, push, deploy }
+    echo Usage: $0 { build, shell, run, push, deploy, status, logs, stop }
     echo Project: $PROJECT
     exit 1
 }
@@ -18,7 +18,7 @@ IMAGE=udmis
 cmd=$1
 shift || usage missing command
 
-deployed_by=$USER@$HOSTNAME
+current_user=$USER@$HOSTNAME
 current_time=`date --utc --iso=seconds`
 version=`git describe --dirty`
 funchash=`git log -n 1 --oneline -- src/ | awk '{print $1}'`
@@ -38,7 +38,7 @@ if [[ $cmd == build ]]; then
   "udmi_version": "$version",
   "udmi_functions": "$funcver",
   "built_at": "$current_time",
-  "deployed_by": "$deployed_by"
+  "built_by": "$current_user"
 }
 EOF
     cat var/deployed_version.json
@@ -53,8 +53,14 @@ elif [[ $cmd == push ]]; then
     sed -e 's/${PROJECT}/$project_id/' < k8s_pod.yaml > var/k8s_pod.yaml
     echo Updated var/k8s_pod.yaml for deployment.
 elif [[ $cmd == deploy ]]; then
-    kubectl create secret generic deployement.json --from-file=var/deployed_version.json
+    kubectl delete pod/udmi-test-pod || true
     kubectl apply -f k8s_pod.yaml
+elif [[ $cmd == status ]]; then
+    kubectl describe pods udmi-test-pod
+elif [[ $cmd == logs ]]; then
+    kubectl logs udmi-test-pod
+elif [[ $cmd == stop ]]; then
+    kubectl delete pod/udmi-test-pod
 else
     echo Unknown command $cmd
     false

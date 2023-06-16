@@ -16,8 +16,14 @@ spec:
         - name: secret-volume
           mountPath: /udmi
           readOnly: true
+        - name: tmpfs
+          mountPath: /tmp
   # The secret data is exposed to Containers in the Pod through a Volume.
   volumes:
     - name: secret-volume
       secret:
         secretName: pod-config.json
+    - name: tmpfs
+      emptyDir:
+        medium: Memory
+        mountOptions: noexec
