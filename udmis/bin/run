@@ -13,7 +13,6 @@ cd $ROOT
 
 POD_JAR=build/libs/udmis-1.0-SNAPSHOT-all.jar
 
-#java -jar $POD_JAR $POD_CONFIG
+java -jar $POD_JAR $POD_CONFIG
 
-echo Blocking process exit
-tail -f /dev/null
+echo Process exited with return code $?

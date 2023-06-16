@@ -1,8 +1,20 @@
-FROM alpine:3.18
+# There's some bad interaction between alpine and netty with java, which
+# causes the JVM to segfault. Not fun. None of the suggested fixes on the
+# internetz seemed to work completely. For now, switching to ubuntu fixes this,
+# but isn't the right long term solution b/c alpine is better in terms of
+# security vunerability handling.
+#
+# See https://www.couchbase.com/forums/t/java-sdk-crashes-the-jvm-on-alpine-docker-image/32603/4
+# for a discussion of a fix (tmpfs) that works with Docker but NOT with GKE.
+#
+# TODO: Convert this to use alpine base image and make sure it works.
+#
+FROM ubuntu:latest
 
 WORKDIR /root
 
-RUN apk add openjdk17 bash
+#RUN apk add openjdk17 bash
+RUN apt update && apt-get install -y openjdk-17-jre bash
 
 ADD bin/ bin/
 ADD var/ var/
