@@ -5,14 +5,14 @@
   "sub_type" : "event",
   "status" : {
     "message" : "While converting to json node: 1 schema violations found",
-    "detail" : "event_system: While converting to json node: 1 schema violations found @Validator.validateMessage(redacted); 1 schema violations found; /logentries/0/category: instance entry category not recognized",
+    "detail" : "event_system: While converting to json node: 1 schema violations found @Validator.validateMessage(REDACTED); 1 schema violations found; /logentries/0/category: instance entry category not recognized",
     "category" : "validation.device.schema",
     "timestamp" : "1999-10-20T01:02:03Z",
     "level" : 500
   },
   "errors" : [ {
     "message" : "While converting to json node: 1 schema violations found",
-    "detail" : "event_system: While converting to json node: 1 schema violations found @Validator.validateMessage(redacted); 1 schema violations found; /logentries/0/category: instance entry category not recognized",
+    "detail" : "event_system: While converting to json node: 1 schema violations found @Validator.validateMessage(REDACTED); 1 schema violations found; /logentries/0/category: instance entry category not recognized",
     "category" : "validation.device.schema",
     "timestamp" : "1999-10-20T01:02:03Z",
     "level" : 500
