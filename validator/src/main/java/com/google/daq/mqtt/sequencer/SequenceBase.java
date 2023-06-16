@@ -439,6 +439,15 @@ public class SequenceBase {
     return messageBase;
   }
 
+  @NotNull
+  private static Predicate<Map.Entry<String, List<Entry>>> isInterestingValidation() {
+    return entry -> {
+      String schemaName = entry.getKey();
+      return !schemaName.startsWith(CONFIG_PREFIX)
+          && (!schemaName.startsWith(STATE_PREFIX) || schemaName.equals(STATE_UPDATE_MESSAGE_TYPE));
+    };
+  }
+
   /**
    * Set the extra field test capability for device config. Used for change tracking.
    *
@@ -563,13 +572,6 @@ public class SequenceBase {
     recordSequence = true;
     waitingCondition.push("executing test");
     debug(format("stage begin %s at %s", waitingCondition.peek(), timeSinceStart()));
-<<<<<<< HEAD
-  }
-
-  static void enableAllBuckets(boolean enabled) {
-    enableAllTargets = enabled;
-=======
->>>>>>> master
   }
 
   protected boolean isBucketEnabled(Bucket bucket) {
@@ -661,15 +663,6 @@ public class SequenceBase {
                 emitSchemaResult(description, schemaName, SequenceResult.FAIL, result.detail));
           }
         });
-  }
-
-  @NotNull
-  private static Predicate<Map.Entry<String, List<Entry>>> isInterestingValidation() {
-    return entry -> {
-      String schemaName = entry.getKey();
-      return !schemaName.startsWith(CONFIG_PREFIX)
-          && (!schemaName.startsWith(STATE_PREFIX) || schemaName.equals(STATE_UPDATE_MESSAGE_TYPE));
-    };
   }
 
   private String uniqueKey(Entry entry) {
