@@ -2,6 +2,8 @@ package com.google.daq.mqtt.registrar;
 
 import static com.google.common.collect.Sets.intersection;
 import static com.google.udmi.util.Common.NO_SITE;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
 import static java.util.Optional.ofNullable;
 
@@ -497,11 +499,23 @@ public class Registrar {
     String localName = localDevice.getDeviceId();
     fetchDevice(localName);
     CloudDeviceSettings localDeviceSettings = localDevice.getSettings();
+    if (preDeleteDevice(localName)) {
+      System.err.println("Deleting to incite recreation " + localName);
+      cloudIotManager.deleteDevice(localName);
+    }
     if (cloudIotManager.registerDevice(localName, localDeviceSettings)) {
       System.err.println("Created new device entry " + localName);
     } else {
       System.err.println("Updated device entry " + localName);
     }
+  }
+
+  private boolean preDeleteDevice(String localName) {
+    if (!localDevices.get(localName).isGateway()) {
+      return false;
+    }
+    CloudModel registeredDevice = cloudIotManager.getRegisteredDevice(localName);
+    return ifNotNullGet(registeredDevice, device -> !isTrue(device.is_gateway), false);
   }
 
   private Set<String> calculateDevices() {
@@ -594,7 +608,7 @@ public class Registrar {
 
   private void bindGatewayDevices(Map<String, LocalDevice> localDevices, Set<String> deviceSet) {
     localDevices.values().stream()
-        .filter(localDevice -> localDevice.getSettings().proxyDevices != null)
+        .filter(LocalDevice::isGateway)
         .forEach(localDevice -> bindGatewayDevice(localDevices, deviceSet, localDevice));
   }
 
