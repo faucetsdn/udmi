@@ -39,6 +39,12 @@ public class ReflectProcessor extends UdmisComponent {
       loadFileStrictRequired(SetupUdmiConfig.class, new File(DEPLOY_FILE));
 
   @Override
+  public void activate() {
+    debug(stringify(deployed));
+    super.activate();
+  }
+
+  @Override
   protected void defaultHandler(Object message) {
     MessageContinuation continuation = getContinuation(message);
     requireNonNull(provider, "iot access provider not set");

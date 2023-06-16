@@ -5,7 +5,7 @@ metadata:
 spec:
   containers:
     - name: test-pod
-      image: gcr.io/bos-peringknife-dev/udmis@sha256:30eda97dd6163920d3e4a802f50771b2c2a2e5753b989de2e9ab0b2ea896c08d
+      image: gcr.io/bos-peringknife-dev/udmis
       imagePullPolicy: Always
       resources:
         requests:
