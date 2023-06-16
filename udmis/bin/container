@@ -6,20 +6,20 @@ DROOT=.
 
 function usage {
     echo Error: $*
-    echo Usage: $0 { build, run, bash, push, deploy } [project_id]
+    echo Usage: $0 { build, shell, run, push, deploy }
+    echo Project: $PROJECT
     exit 1
 }
+
+PROJECT=$(gcloud config get project)
+REPOSITORY=gcr.io/$PROJECT
+IMAGE=udmis
 
 cmd=$1
 shift || usage missing command
 
-if [[ $cmd == push ]]; then
-    project_id=$1
-    shift || usage missing project_id
-fi
-
 deployed_by=$USER@$HOSTNAME
-deployed_at=`date --utc --iso=seconds`
+current_time=`date --utc --iso=seconds`
 version=`git describe --dirty`
 funchash=`git log -n 1 --oneline -- src/ | awk '{print $1}'`
 funccount=`git diff --name-only -- src/ | wc -l`
@@ -28,8 +28,7 @@ if [[ $funccount != 0 ]]; then
 fi
 funcver=`git describe $funchash`$funcdirty
 
-REPOSITORY=gcr.io/$project_id
-IMAGE=udmis
+RUNARGS="--rm -ti -v $PWD/etc:/udmi -v $HOME/.config:/root/.config --tmpfs /tmp"
 
 if [[ $cmd == build ]]; then
     rm -rf var
@@ -38,22 +37,23 @@ if [[ $cmd == build ]]; then
 {
   "udmi_version": "$version",
   "udmi_functions": "$funcver",
-  "deployed_at": "$deployed_at",
+  "built_at": "$current_time",
   "deployed_by": "$deployed_by"
 }
 EOF
     cat var/deployed_version.json
     docker build -f Dockerfile.udmis -t $IMAGE $DROOT
 elif [[ $cmd == run ]]; then
-    docker run -v $PWD/etc:/udmi -v $HOME/.config:/root/.config udmis
-elif [[ $cmd == bash ]]; then
-    docker run -ti -v $PWD/etc:/udmi -v $HOME/.config:/root/.config udmis bash
+    docker run $RUNARGS udmis
+elif [[ $cmd == shell ]]; then
+    docker run $RUNARGS $IMAGE bash
 elif [[ $cmd == push ]]; then
     docker tag $IMAGE $REPOSITORY/$IMAGE
     docker push $REPOSITORY/$IMAGE
     sed -e 's/${PROJECT}/$project_id/' < k8s_pod.yaml > var/k8s_pod.yaml
     echo Updated var/k8s_pod.yaml for deployment.
 elif [[ $cmd == deploy ]]; then
+    kubectl create secret generic deployement.json --from-file=var/deployed_version.json
     kubectl apply -f k8s_pod.yaml
 else
     echo Unknown command $cmd

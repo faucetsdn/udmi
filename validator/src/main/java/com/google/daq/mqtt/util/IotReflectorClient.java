@@ -71,7 +71,8 @@ public class IotReflectorClient implements IotProvider {
   @Override
   public void createDevice(String deviceId, CloudModel makeDevice) {
     makeDevice.operation = Operation.CREATE;
-    cloudModelTransaction(deviceId, CLOUD_MODEL_TOPIC, makeDevice);
+    CloudModel created = cloudModelTransaction(deviceId, CLOUD_MODEL_TOPIC, makeDevice);
+    makeDevice.num_id = created.num_id;
   }
 
   @Override

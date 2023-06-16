@@ -1,17 +1,8 @@
-# There's some bad interaction between alpine and netty with java, which
-# causes the JVM to segfault. Not fun. None of the suggested fixes on the
-# internetz seemed to work. For now, switching to ubuntu fixes this, but
-# isn't the right long term solution b/c alpine is better in terms of
-# security vunerability handling.
-#
-# TODO: Convert this to use alpine base image and make sure it works.
-#
-FROM ubuntu:latest
+FROM alpine:3.18
 
 WORKDIR /root
 
-#RUN apk add openjdk17 bash
-RUN apt update && apt-get install -y openjdk-17-jre bash
+RUN apk add openjdk17 bash
 
 ADD bin/ bin/
 ADD var/ var/

@@ -12,7 +12,6 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import org.jetbrains.annotations.NotNull;
@@ -149,19 +148,22 @@ public class CloudIotManager {
    */
   public boolean registerDevice(String deviceId, CloudDeviceSettings settings) {
     try {
-      checkNotNull(deviceMap, "deviceMap not initialized");
-      CloudModel device = deviceMap.get(deviceId);
-      boolean isNewDevice = device == null;
-      if (isNewDevice) {
+      CloudModel device = getRegisteredDevice(deviceId);
+      if (device == null) {
         createDevice(deviceId, settings);
       } else {
         updateDevice(deviceId, settings, device);
       }
       writeDeviceConfig(deviceId, settings.config);
-      return isNewDevice;
+      return device == null;
     } catch (Exception e) {
       throw new RuntimeException("While registering device " + deviceId, e);
     }
+  }
+
+  public CloudModel getRegisteredDevice(String deviceId) {
+    checkNotNull(deviceMap, "deviceMap not initialized");
+    return deviceMap.get(deviceId);
   }
 
   private void writeDeviceConfig(String deviceId, String config) {
@@ -207,7 +209,9 @@ public class CloudIotManager {
   }
 
   private void createDevice(String deviceId, CloudDeviceSettings settings) {
-    iotProvider.createDevice(deviceId, makeDevice(settings, null));
+    CloudModel newDevice = makeDevice(settings, null);
+    iotProvider.createDevice(deviceId, newDevice);
+    deviceMap.put(deviceId, newDevice);
   }
 
   private void updateDevice(String deviceId, CloudDeviceSettings settings, CloudModel oldDevice) {
