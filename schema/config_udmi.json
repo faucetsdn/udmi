@@ -26,6 +26,13 @@
         "udmi_functions": {
           "type": "string"
         },
+        "built_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "built_by": {
+          "type": "string"
+        },
         "deployed_at": {
           "type": "string",
           "format": "date-time"
