@@ -22,6 +22,7 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import udmi.schema.SetupUdmiConfig;
 
 /**
  * Client to read messages from a directory of captured messages.

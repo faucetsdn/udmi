@@ -1,7 +1,10 @@
 {
   "timestamp" : "1999-10-20T01:02:03Z",
   "version" : "1.4.1",
-  "tools" : "test_trace",
+  "cloud_version" : {
+    "deployed_by" : "Default implementation for class com.google.daq.mqtt.validator.MessageReadingClient"
+  },
+  REDACTED,
   "start_time" : "1999-10-20T01:02:03Z",
   "summary" : {
     "correct_devices" : [ ],
@@ -34,7 +37,7 @@
       "last_seen" : "1999-10-20T01:02:03Z",
       "status" : {
         "message" : "While converting to json node: 1 schema violations found",
-        "detail" : "state_update: While converting to json node: 1 schema violations found @Validator.validateMessage(redacted); 1 schema violations found; /system: object has missing required properties ([\"serial_no\"])",
+        "detail" : "state_update: While converting to json node: 1 schema violations found @Validator.validateMessage(REDACTED); 1 schema violations found; /system: object has missing required properties ([\"serial_no\"])",
         "category" : "validation.device.extra",
         "timestamp" : "1999-10-20T01:02:03Z",
         "level" : 400

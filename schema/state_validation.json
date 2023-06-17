@@ -16,8 +16,12 @@
       "description": "Version of the UDMI schema",
       "type": "string"
     },
-    "tools": {
-      "description": "Version of the tools for this run",
+    "cloud_version": {
+      "description": "Version of the udmi cloud install",
+      "$ref": "file:config_udmi.json#/properties/setup"
+    },
+    "udmi_version": {
+      "description": "Version of the local udmi tools",
       "type": "string"
     },
     "last_updated": {

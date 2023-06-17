@@ -1,12 +1,12 @@
 #!/bin/bash -e
 
-project_id=$1
-shift
-
-if [[ -z $project_id ]]; then
-   echo $0 [project_id]
+if [[ $# != 1 ]]; then
+   echo $0 project_id
    false
 fi
+
+project_id=$1
+shift
 
 mkdir -p out
 

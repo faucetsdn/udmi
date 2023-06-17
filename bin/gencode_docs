@@ -7,10 +7,6 @@
 # <unspecified> (default)
 #   Generate HTML documentation from JSON schema. Stored in gencode/docs
 #
-# check_links
-#   Checks that all inline markdown links in all markdownfiles and within the 
-#   schema are valid
-#
 # gen_bucket [input_file] [output_file]
 #   Takes a tab delimited text file containing the list of feature buckets
 #   as copied from Google Sheets and convert into an MD list
@@ -51,33 +47,6 @@ if [ "$OP" == gen_bucket ]; then
     rm $tmp_file
     exit 0
 fi
-
-
-if [ "$OP" == check_links ]; then
-    if [ -d venv ]; then
-        source venv/bin/activate
-    fi
-
-    bin/check_links > check_links.out
-    if [ -s check_links.out ]; then
-        cat check_links.out
-        exit 1
-    fi
-
-    missing=
-    echo Checking references to externally linked files...
-    while read file comment; do
-        if [[ -n $file && ! -f $file ]]; then
-            echo "Reference to missing file '$file': $comment"
-            missing=y
-        fi
-    done < <( fgrep -v \# etc/external_refs.txt )
-
-    if [[ -n $missing ]]; then
-        exit 1
-    fi
-    exit 0
-fi 
 
 
 # Generate schema documentation (default)

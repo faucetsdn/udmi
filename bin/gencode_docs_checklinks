@@ -110,10 +110,13 @@ def check_links(file_path):
 
 def main():
   check_paths = ['*.md', 'docs/**/*.md', 'schema/*.json', 'udmif/**/*.md']
+  exclusions = [ '/node_modules/' ]
   error = False
   for check_path in check_paths:
     file_paths = glob.glob(check_path, recursive=True)
     for file_path in file_paths:
+      if any(exclude in file_path for exclude in exclusions):
+        continue
       invalid_tuples = check_links(file_path)
       if invalid_tuples:
         error = True

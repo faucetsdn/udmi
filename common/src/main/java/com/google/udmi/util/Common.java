@@ -25,11 +25,13 @@ public abstract class Common {
   public static final String MESSAGE_KEY = "message";
   public static final String TIMESTAMP_KEY = "timestamp";
   public static final String VERSION_KEY = "version";
+  public static final String CLOUD_VERSION_KEY = "cloud_version";
+  public static final String UDMI_VERSION_KEY = "udmi_version";
   public static final String SUBTYPE_PROPERTY_KEY = "subType";
   public static final String SUBFOLDER_PROPERTY_KEY = "subFolder";
   public static final String NO_SITE = "--";
   public static final String GCP_REFLECT_KEY_PKCS8 = "validator/rsa_private.pkcs8";
-  private static final String UDMI_VERSION_KEY = "UDMI_VERSION";
+  private static final String UDMI_VERSION_ENV = "UDMI_VERSION";
   public static final char DETAIL_SEPARATOR_CHAR = ';';
   public static final String DETAIL_SEPARATOR = DETAIL_SEPARATOR_CHAR + " ";
   public static final Joiner DETAIL_JOINER = Joiner.on(DETAIL_SEPARATOR);
@@ -76,7 +78,7 @@ public abstract class Common {
   }
 
   public static String getUdmiVersion() {
-    return Optional.ofNullable(System.getenv(UDMI_VERSION_KEY)).orElse("unknown");
+    return Optional.ofNullable(System.getenv(UDMI_VERSION_ENV)).orElse("unknown");
   }
 
   /**

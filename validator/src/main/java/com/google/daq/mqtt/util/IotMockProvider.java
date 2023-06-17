@@ -19,6 +19,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import udmi.schema.CloudModel;
+import udmi.schema.SetupUdmiConfig;
 
 /**
  * Mocked IoT provider for unit testing.
@@ -135,6 +136,11 @@ public class IotMockProvider implements IotProvider {
         .collect(Collectors.toList());
     mockActions = new ArrayList<>();
     return savedActions;
+  }
+
+  @Override
+  public SetupUdmiConfig getVersionInformation() {
+    return new SetupUdmiConfig();
   }
 
   /**
