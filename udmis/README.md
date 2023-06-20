@@ -23,4 +23,6 @@ kubectl logs udmi-test-pod
 kubectl describe pods
 kubectl describe pods udmi-test-pod
 kubectl config get-contexts
+kubectl config use-context XXXXXXXXXXXXX
+kubectl exec -ti udmi-test-pod -- bash
 ```
