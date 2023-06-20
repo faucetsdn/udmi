@@ -460,20 +460,6 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
   }
 
   @Override
-  public void modifyConfig(String registryId, String deviceId, SubFolder subFolder,
-      String contents) {
-    // TODO: Need to implement checking-and-retry of config version for concurrent operations.
-    if (subFolder == SubFolder.UPDATE) {
-      updateConfig(registryId, deviceId, contents);
-    } else {
-      String configString = fetchConfig(registryId, deviceId).getValue();
-      Map<String, Object> configMap = toMap(configString);
-      configMap.put(subFolder.toString(), contents);
-      updateConfig(registryId, deviceId, stringify(configMap));
-    }
-  }
-
-  @Override
   public void sendCommand(String registryId, String deviceId, SubFolder subFolder, String message) {
     try {
       ByteString binaryData = new ByteString(encodeBase64(message));
@@ -495,7 +481,20 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
   }
 
   @Override
-  public void updateConfig(String registryId, String deviceId, String config) {
+  public void modifyConfig(String registryId, String deviceId, SubFolder subFolder,
+      String contents) {
+    if (subFolder == SubFolder.UPDATE) {
+      updateConfig(registryId, deviceId, contents);
+    } else {
+      // TODO: Need to implement checking-and-retry of config version for concurrent operations.
+      String configString = fetchConfig(registryId, deviceId).getValue();
+      Map<String, Object> configMap = toMap(configString);
+      configMap.put(subFolder.toString(), contents);
+      updateConfig(registryId, deviceId, stringify(configMap));
+    }
+  }
+
+  private void updateConfig(String registryId, String deviceId, String config) {
     try {
       DeviceManagerClient deviceManagerClient = getDeviceManagerClient();
       ByteString binaryData = new ByteString(encodeBase64(config));

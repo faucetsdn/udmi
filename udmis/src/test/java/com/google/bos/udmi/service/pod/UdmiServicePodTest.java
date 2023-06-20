@@ -12,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -178,7 +179,8 @@ public class UdmiServicePodTest {
 
     verify(iotAccessProvider, times(1)).activate();
     verify(iotAccessProvider, times(1)).shutdown();
-    verify(iotAccessProvider, times(1)).updateConfig(anyString(), anyString(), anyString());
+    verify(iotAccessProvider, times(1)).modifyConfig(anyString(), anyString(), eq(SubFolder.UPDATE),
+        anyString());
   }
 
   @AfterEach

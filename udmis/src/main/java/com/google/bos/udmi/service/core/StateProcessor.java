@@ -2,16 +2,15 @@ package com.google.bos.udmi.service.core;
 
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
-import static com.google.udmi.util.JsonUtil.fromString;
 import static com.google.udmi.util.JsonUtil.fromStringStrict;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static java.util.Objects.requireNonNull;
+import static udmi.schema.Envelope.SubFolder.UPDATE;
 
 import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.StateUpdate;
 import com.google.udmi.util.GeneralUtils;
-import com.google.udmi.util.JsonUtil;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Map.Entry;
@@ -65,9 +64,9 @@ public class StateProcessor extends UdmisComponent {
       return;
     }
     try {
-      requireNonNull(provider, "iot access provider not set");
+      requireNonNull(iotAccess, "iot access provider not set");
       Date newLastStart = message.system.operation.last_start;
-      Entry<String, String> configEntry = provider.fetchConfig(registryId, deviceId);
+      Entry<String, String> configEntry = iotAccess.fetchConfig(registryId, deviceId);
       Config configMessage = fromStringStrict(Config.class, configEntry.getValue());
       Date oldLastStart = configMessage.system.operation.last_start;
       boolean shouldUpdate = oldLastStart == null || oldLastStart.before(newLastStart);
@@ -75,7 +74,7 @@ public class StateProcessor extends UdmisComponent {
           getTimestamp(newLastStart), shouldUpdate);
       if (shouldUpdate) {
         configMessage.system.operation.last_start = newLastStart;
-        provider.updateConfig(registryId, deviceId, stringify(configMessage));
+        iotAccess.modifyConfig(registryId, deviceId, UPDATE, stringify(configMessage));
       }
     } catch (Exception e) {
       debug("Could not process config last_state update, skipping: "

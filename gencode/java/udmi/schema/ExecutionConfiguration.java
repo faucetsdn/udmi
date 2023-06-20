@@ -138,8 +138,10 @@ public class ExecutionConfiguration {
     @Generated("jsonschema2pojo")
     public enum IotProvider {
 
+        DYNAMIC("dynamic"),
         GCP_NATIVE("gcp_native"),
         GCP("gcp"),
+        CLEARBLADE_NATIVE("clearblade_native"),
         CLEARBLADE("clearblade");
         private final String value;
         private final static Map<String, ExecutionConfiguration.IotProvider> CONSTANTS = new HashMap<String, ExecutionConfiguration.IotProvider>();

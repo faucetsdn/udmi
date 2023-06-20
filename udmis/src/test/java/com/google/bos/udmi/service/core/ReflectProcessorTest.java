@@ -132,8 +132,8 @@ public class ReflectProcessorTest extends ProcessorTestBase {
     assertEquals(1, getDefaultCount(), "default handler count");
 
     ArgumentCaptor<String> configCaptor = ArgumentCaptor.forClass(String.class);
-    verify(provider, times(1)).updateConfig(eq(TEST_REGISTRY), eq(TEST_DEVICE),
-        configCaptor.capture());
+    verify(provider, times(1)).modifyConfig(eq(TEST_REGISTRY), eq(TEST_DEVICE),
+        eq(SubFolder.UPDATE), configCaptor.capture());
     Map<String, Object> stringObjectMap = toMap(configCaptor.getValue());
     UdmiConfig udmi =
         convertToStrict(UdmiConfig.class, stringObjectMap.get(SubFolder.UDMI.value()));

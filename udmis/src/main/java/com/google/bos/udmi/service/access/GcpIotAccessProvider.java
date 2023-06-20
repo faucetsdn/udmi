@@ -388,8 +388,7 @@ public class GcpIotAccessProvider extends UdmisComponent implements IotAccessPro
     registries = null;
   }
 
-  @Override
-  public void updateConfig(String registryId, String deviceId, String config) {
+  private void updateConfig(String registryId, String deviceId, String config) {
     try {
       String useConfig = ofNullable(config).orElse("");
       registries.devices().modifyCloudToDeviceConfig(

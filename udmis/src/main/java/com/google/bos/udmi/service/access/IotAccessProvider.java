@@ -14,6 +14,7 @@ import udmi.schema.IotAccess;
 public interface IotAccessProvider {
 
   Map<IotProvider, Class<? extends IotAccessProvider>> PROVIDERS = ImmutableMap.of(
+      IotProvider.DYNAMIC, DynamicIotAccessProvider.class,
       IotProvider.CLEARBLADE, ClearBladeIotAccessProvider.class,
       IotProvider.GCP, GcpIotAccessProvider.class
   );
@@ -42,8 +43,6 @@ public interface IotAccessProvider {
   void sendCommand(String registryId, String deviceId, SubFolder folder, String message);
 
   void modifyConfig(String registryId, String deviceId, SubFolder folder, String contents);
-
-  void updateConfig(String registryId, String deviceId, String config);
 
   CloudModel listDevices(String deviceRegistryId);
 
