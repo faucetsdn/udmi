@@ -1,3 +1,4 @@
+from .access_iot import IotAccess
 from .ancillary_properties import AncillaryProperties
 from .building_translation import BuildingTranslation
 from .category import Category

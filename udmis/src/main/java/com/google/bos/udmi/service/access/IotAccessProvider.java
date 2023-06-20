@@ -1,12 +1,14 @@
 package com.google.bos.udmi.service.access;
 
+import static java.lang.String.format;
+
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import udmi.schema.CloudModel;
 import udmi.schema.Envelope.SubFolder;
-import udmi.schema.ExecutionConfiguration.IotProvider;
 import udmi.schema.IotAccess;
+import udmi.schema.IotAccess.IotProvider;
 
 /**
  * Generic interface for accessing iot device management.
@@ -22,31 +24,37 @@ public interface IotAccessProvider {
   /**
    * Factory constructor for new instances.
    */
-  static IotAccessProvider from(IotAccess iotAccess) {
+  static IotAccessProvider from(Entry<String, IotAccess> iotAccessEntry) {
+    String entryName = iotAccessEntry.getKey();
+    IotAccess iotAccess = iotAccessEntry.getValue();
     try {
       return PROVIDERS.get(iotAccess.provider).getDeclaredConstructor(IotAccess.class)
           .newInstance(iotAccess);
     } catch (Exception e) {
-      throw new RuntimeException("While instantiating access provider " + iotAccess.provider, e);
+      throw new RuntimeException(
+          format("While instantiating access provider %s as %s", entryName, iotAccess.provider), e);
     }
   }
 
   void activate();
 
+  default void addProviders(Map<String, IotAccessProvider> allProviders) {
+  }
+
   Entry<String, String> fetchConfig(String registryId, String deviceId);
 
-  void shutdown();
+  CloudModel fetchDevice(String deviceRegistryId, String deviceId);
+
+  CloudModel listDevices(String deviceRegistryId);
+
+  CloudModel modelDevice(String deviceRegistryId, String deviceId, CloudModel cloudModel);
+
+  void modifyConfig(String registryId, String deviceId, SubFolder folder, String contents);
 
   /**
    * Send a command to a device.
    */
   void sendCommand(String registryId, String deviceId, SubFolder folder, String message);
 
-  void modifyConfig(String registryId, String deviceId, SubFolder folder, String contents);
-
-  CloudModel listDevices(String deviceRegistryId);
-
-  CloudModel fetchDevice(String deviceRegistryId, String deviceId);
-
-  CloudModel modelDevice(String deviceRegistryId, String deviceId, CloudModel cloudModel);
+  void shutdown();
 }

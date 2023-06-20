@@ -1,14 +1,23 @@
 package com.google.bos.udmi.service.access;
 
+import static java.util.Objects.requireNonNull;
+
 import java.util.Map.Entry;
 import udmi.schema.CloudModel;
 import udmi.schema.Envelope.SubFolder;
+import udmi.schema.IotAccess;
 
 public class DynamicIotAccessProvider implements IotAccessProvider {
 
+  /**
+   * Create a new instance for interfacing with multiple providers.
+   */
+  public DynamicIotAccessProvider(IotAccess iotAccess) {
+  }
+
+
   @Override
   public void activate() {
-    throw new RuntimeException("Not yet implemented " + this.getClass());
   }
 
   @Override

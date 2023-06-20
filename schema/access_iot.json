@@ -1,0 +1,13 @@
+{
+  "type": "object",
+  "title": "Iot Access",
+  "additionalProperties": false,
+  "properties": {
+    "provider": {
+      "$ref": "file:common.json#/definitions/provider"
+    },
+    "project_id": {
+      "type": "string"
+    }
+  }
+}

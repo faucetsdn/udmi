@@ -3959,18 +3959,61 @@
             
 
             
-<div class="accordion" id="accordioniot_access_provider">
+<div class="accordion" id="accordioniot_access_pattern1">
     <div class="card">
-        <div class="card-header" id="headingiot_access_provider">
+        <div class="card-header" id="headingiot_access_pattern1">
             <h2 class="mb-0">
-                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#iot_access_provider"
-                        aria-expanded="" aria-controls="iot_access_provider" onclick="setAnchor('#iot_access_provider')"><span class="property-name">provider</span></button>
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#iot_access_pattern1"
+                        aria-expanded="" aria-controls="iot_access_pattern1" onclick="setAnchor('#iot_access_pattern1')"><span class="property-name">^[a-z]+$</span> <span class="badge badge-info pattern-property">Pattern Property</span></button>
             </h2>
         </div>
 
-        <div id="iot_access_provider"
-             class="collapse property-definition-div" aria-labelledby="headingiot_access_provider"
-             data-parent="#accordioniot_access_provider">
+        <div id="iot_access_pattern1"
+             class="collapse property-definition-div" aria-labelledby="headingiot_access_pattern1"
+             data-parent="#accordioniot_access_pattern1">
+            <div class="card-body pl-5"><h2 class="handle">
+                        <label>Pattern Property</label>
+                    </h2>
+                    <p>All property whose name matches the following regular expression must respect the following conditions</p>
+                    <span class="pattern-value">Property name regular expression: <code>^[a-z]+$</code></span>
+                    <br/>
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#iot_access" onclick="anchorLink('iot_access')">iot_access</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#iot_access_pattern1" onclick="anchorLink('iot_access_pattern1')">access_iot.json</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+
+
+     <span class="badge badge-info no-additional">No Additional Properties</span>
+            
+
+            
+            
+
+            
+<div class="accordion" id="accordioniot_access_pattern1_provider">
+    <div class="card">
+        <div class="card-header" id="headingiot_access_pattern1_provider">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#iot_access_pattern1_provider"
+                        aria-expanded="" aria-controls="iot_access_pattern1_provider" onclick="setAnchor('#iot_access_pattern1_provider')"><span class="property-name">provider</span></button>
+            </h2>
+        </div>
+
+        <div id="iot_access_pattern1_provider"
+             class="collapse property-definition-div" aria-labelledby="headingiot_access_pattern1_provider"
+             data-parent="#accordioniot_access_pattern1_provider">
             <div class="card-body pl-5">
 
     <div class="breadcrumbs">root
@@ -3987,10 +4030,17 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#iot_access_provider" onclick="anchorLink('iot_access_provider')">provider</a></div><span class="badge badge-dark value-type">Type: enum (of string)</span><br/>
+    <a href="#iot_access_pattern1" onclick="anchorLink('iot_access_pattern1')">Iot Access</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#iot_access_pattern1_provider" onclick="anchorLink('iot_access_pattern1_provider')">provider</a></div><span class="badge badge-dark value-type">Type: enum (of string)</span><br/>
 
 
-    <div class="enum-value" id="iot_access_provider_enum">
+    <div class="enum-value" id="iot_access_pattern1_provider_enum">
                 <h4>Must be one of:</h4>
                 <ul class="list-group"><li class="list-group-item enum-item">"dynamic"</li><li class="list-group-item enum-item">"gcp_native"</li><li class="list-group-item enum-item">"gcp"</li><li class="list-group-item enum-item">"clearblade_native"</li><li class="list-group-item enum-item">"clearblade"</li></ul>
                 </div>
@@ -4004,18 +4054,18 @@
         </div>
     </div>
 </div>
-<div class="accordion" id="accordioniot_access_project_id">
+<div class="accordion" id="accordioniot_access_pattern1_project_id">
     <div class="card">
-        <div class="card-header" id="headingiot_access_project_id">
+        <div class="card-header" id="headingiot_access_pattern1_project_id">
             <h2 class="mb-0">
-                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#iot_access_project_id"
-                        aria-expanded="" aria-controls="iot_access_project_id" onclick="setAnchor('#iot_access_project_id')"><span class="property-name">project_id</span></button>
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#iot_access_pattern1_project_id"
+                        aria-expanded="" aria-controls="iot_access_pattern1_project_id" onclick="setAnchor('#iot_access_pattern1_project_id')"><span class="property-name">project_id</span></button>
             </h2>
         </div>
 
-        <div id="iot_access_project_id"
-             class="collapse property-definition-div" aria-labelledby="headingiot_access_project_id"
-             data-parent="#accordioniot_access_project_id">
+        <div id="iot_access_pattern1_project_id"
+             class="collapse property-definition-div" aria-labelledby="headingiot_access_pattern1_project_id"
+             data-parent="#accordioniot_access_pattern1_project_id">
             <div class="card-body pl-5">
 
     <div class="breadcrumbs">root
@@ -4032,7 +4082,14 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#iot_access_project_id" onclick="anchorLink('iot_access_project_id')">project_id</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+    <a href="#iot_access_pattern1" onclick="anchorLink('iot_access_pattern1')">Iot Access</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#iot_access_pattern1_project_id" onclick="anchorLink('iot_access_pattern1_project_id')">project_id</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 
             
 
@@ -4040,6 +4097,10 @@
             
 
             
+            </div>
+        </div>
+    </div>
+</div>
             </div>
         </div>
     </div>

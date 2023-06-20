@@ -15,8 +15,16 @@
   },
   "iot_access": {
     "default": {
+      "provider": "dynamic",
+      "project_id": "gcp,clearblade"
+    },
+    "clearblade": {
       "provider": "clearblade",
       "project_id": "udmi-external"
+    },
+    "gcp": {
+      "provider": "gcp",
+      "project_id": "bos-peringknife-dev"
     }
   }
 }
