@@ -21,7 +21,11 @@ plugins {
 group 'udmis'
 version '1.0-SNAPSHOT'
 
-sourceCompatibility = 1.9
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
 
 sourceSets {
     main {
