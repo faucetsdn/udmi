@@ -38,8 +38,11 @@ public interface IotAccessProvider {
 
   void activate();
 
-  default void addProviders(Map<String, IotAccessProvider> allProviders) {
+
+  default void setProviders(Map<String, IotAccessProvider> allProviders) {
   }
+
+  String fetchRegistryMetadata(String registryId, String metadataKey);
 
   Entry<String, String> fetchConfig(String registryId, String deviceId);
 

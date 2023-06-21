@@ -6,7 +6,6 @@ import static com.google.udmi.util.Common.CLOUD_VERSION_KEY;
 import static com.google.udmi.util.Common.NO_SITE;
 import static com.google.udmi.util.Common.UDMI_VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
-import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
 import static java.util.Optional.ofNullable;
@@ -58,7 +57,7 @@ import udmi.schema.CloudModel;
 import udmi.schema.Credential;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.ExecutionConfiguration;
-import udmi.schema.ExecutionConfiguration.IotProvider;
+import udmi.schema.IotAccess.IotProvider;
 import udmi.schema.Metadata;
 import udmi.schema.SetupUdmiConfig;
 

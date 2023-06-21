@@ -9,13 +9,13 @@
 #
 # TODO: Convert this to use alpine base image and make sure it works.
 #
-FROM alpine:latest
-#FROM ubuntu:latest
+#FROM alpine:latest
+FROM ubuntu:latest
 
 WORKDIR /root
 
-RUN apk add openjdk17 bash
-#RUN apt update && apt-get install -y openjdk-17-jre bash
+#RUN apk add openjdk17 bash
+RUN apt update && apt-get install -y openjdk-17-jre bash
 
 ADD bin/ bin/
 ADD var/ var/

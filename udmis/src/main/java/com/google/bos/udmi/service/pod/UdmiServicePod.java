@@ -16,7 +16,6 @@ import com.google.bos.udmi.service.core.StateProcessor;
 import com.google.bos.udmi.service.core.TargetProcessor;
 import com.google.bos.udmi.service.core.UdmisComponent;
 import com.google.common.collect.ImmutableMap;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -65,7 +64,7 @@ public class UdmiServicePod {
           podConfiguration.iot_access.entrySet().stream()
               .collect(Collectors.toMap(Entry::getKey, IotAccessProvider::from));
       IotAccessProvider provider = providerMap.get(DEFAULT_PROVIDER_KEY);
-      provider.addProviders(providerMap);
+      provider.setProviders(providerMap);
       setIotAccessProvider(provider);
     } catch (Exception e) {
       throw new RuntimeException("While instantiating pod " + CSV_JOINER.join(args), e);
