@@ -12,10 +12,11 @@ shift
 
 function redact() {
     sed -E -i $file \
-        -e "s/[0-9-]{10}T[0-9:]{8}Z/1999-10-20T01:02:03Z/" \
-        -e "s/Validator.java:[0-9]+/redacted/" \
-        -e 's/\\t.*\.java:[0-9]+\)/\\tredacted\\n/g' \
-        -e 's/\\n.*\.java:[0-9]+\)/\\tredacted\\n/g'
+        -e 's/[0-9-]{10}T[0-9:]{8}Z/1999-10-20T01:02:03Z/' \
+        -e 's/"udmi_version" : ".*"/REDACTED/' \
+        -e 's/Validator.java:[0-9]+/REDACTED/' \
+        -e 's/\\t.*\.java:[0-9]+\)/\\tREDACTED\\n/g' \
+        -e 's/\\n.*\.java:[0-9]+\)/\\tREDACTED\\n/g'
 }
 
 

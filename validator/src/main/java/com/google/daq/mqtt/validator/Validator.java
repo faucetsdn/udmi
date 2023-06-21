@@ -33,6 +33,7 @@ import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
 import com.google.bos.iot.core.proxy.NullPublisher;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -91,6 +92,7 @@ import udmi.schema.Metadata;
 import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetState;
 import udmi.schema.PointsetSummary;
+import udmi.schema.SetupUdmiConfig;
 import udmi.schema.State;
 import udmi.schema.ValidationEvent;
 import udmi.schema.ValidationState;
@@ -255,13 +257,18 @@ public class Validator {
     return argList;
   }
 
-  private void validatePubSub(String instName) {
+  private void validatePubSub(String pubSubCombo) {
+    String[] parts = pubSubCombo.split("/");
+    Preconditions.checkArgument(parts.length <= 2, "Too many parts in pubsub path " + pubSubCombo);
+    String instName = parts[0];
     CloudIotManager cloudIotManager = new CloudIotManager(config.project_id,
         new File(config.site_model), null, config.registry_suffix, IotProvider.GCP_NATIVE);
     String registryId = getRegistryId();
-    String updateTopic = cloudIotManager.getUpdateTopic();
+    String updateTopic = parts.length > 1 ? parts[1] : cloudIotManager.getUpdateTopic();
     client = new PubSubClient(config.project_id, registryId, instName, updateTopic);
-    if (updateTopic != null) {
+    if (updateTopic == null) {
+      System.err.println("Not sending to update topic because PubSub update_topic not defined");
+    } else {
       dataSinks.add(client);
     }
   }
@@ -805,9 +812,14 @@ public class Validator {
     report.timestamp = new Date();
     report.summary = summary;
     report.devices = devices;
-    report.tools = UDMI_TOOLS;
+    report.cloud_version = getUdmiVersion();
+    report.udmi_version = Common.getUdmiVersion();
     report.start_time = START_TIME;
     return report;
+  }
+
+  private SetupUdmiConfig getUdmiVersion() {
+    return client.getVersionInformation();
   }
 
   private <T> ArrayList<T> arrayIfNotNull(Set<T> items) {

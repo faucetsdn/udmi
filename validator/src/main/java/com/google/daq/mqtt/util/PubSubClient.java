@@ -1,5 +1,10 @@
 package com.google.daq.mqtt.util;
 
+import static com.google.api.client.util.Preconditions.checkNotNull;
+import static com.google.bos.iot.core.proxy.IotReflectorClient.UDMI_FOLDER;
+import static com.google.udmi.util.GeneralUtils.encodeBase64;
+import static com.google.udmi.util.JsonUtil.stringify;
+
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -8,6 +13,7 @@ import com.google.api.client.util.Base64;
 import com.google.api.client.util.Preconditions;
 import com.google.api.core.ApiFuture;
 import com.google.api.gax.rpc.NotFoundException;
+import com.google.bos.iot.core.proxy.IotReflectorClient;
 import com.google.cloud.pubsub.v1.AckReplyConsumer;
 import com.google.cloud.pubsub.v1.MessageReceiver;
 import com.google.cloud.pubsub.v1.Publisher;
@@ -25,6 +31,7 @@ import com.google.pubsub.v1.ProjectTopicName;
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.pubsub.v1.SeekRequest;
 import com.google.udmi.util.Common;
+import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Arrays;
@@ -38,6 +45,7 @@ import java.util.function.BiConsumer;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
+import udmi.schema.SetupUdmiConfig;
 import udmi.schema.SystemState;
 
 /**
@@ -104,7 +112,7 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
   public PubSubClient(String projectId, String registryId, String subscription, String updateTopic,
       boolean reset) {
     try {
-      this.projectId = Preconditions.checkNotNull(projectId, "project id not defined");
+      this.projectId = checkNotNull(projectId, "project id not defined");
       this.registryId = registryId;
       ProjectSubscriptionName subscriptionName = ProjectSubscriptionName.of(projectId,
           subscription);
@@ -233,7 +241,7 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
   public void publishMessage(String deviceId, Object message) {
     SimpleEntry<SubType, SubFolder> typePair = classTypes.get(message.getClass());
     String mqttTopic = getMapKey(typePair.getKey(), typePair.getValue());
-    publish(deviceId, mqttTopic, JsonUtil.stringify(message));
+    publish(deviceId, mqttTopic, stringify(message));
   }
 
   @Override
@@ -279,24 +287,34 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
         System.err.printf("Refusing to publish to %s due to unspecified device%n", topic);
         return null;
       }
-      String subFolder = String.format("events/%s/%s", deviceId, topic);
-      Preconditions.checkNotNull(registryId, "registry id not defined");
       Map<String, String> attributesMap = Map.of(
           "projectId", projectId,
-          "subFolder", subFolder,
-          "deviceId", registryId // intentional b/c of udmi_reflect function
+          "subFolder", UDMI_FOLDER
       );
+      Envelope envelopedData = makeReflectorMessage(deviceId, topic, data);
       PubsubMessage message = PubsubMessage.newBuilder()
-          .setData(ByteString.copyFromUtf8(data))
+          .setData(ByteString.copyFromUtf8(stringify(envelopedData)))
           .putAllAttributes(attributesMap)
           .build();
       ApiFuture<String> publish = publisher.publish(message);
       publish.get(); // Wait for publish to complete.
-      System.err.printf("Published to %s/%s%n", registryId, subFolder);
+      System.err.printf("Published to %s/%s/%s%n", registryId, deviceId, topic);
       return null;
     } catch (Exception e) {
       throw new RuntimeException("While publishing message", e);
     }
+  }
+
+  private Envelope makeReflectorMessage(String deviceId, String topic, String data) {
+    Envelope envelope = new Envelope();
+    envelope.deviceRegistryId = checkNotNull(registryId, "registry id not defined");
+    envelope.deviceId = deviceId;
+    envelope.payload = encodeBase64(data);
+    String[] parts = topic.split("/");
+    envelope.subFolder = SubFolder.fromValue(parts[0]);
+    envelope.subType = SubType.fromValue(parts[1]);
+    envelope.transactionId = IotReflectorClient.getNextTransactionId();
+    return envelope;
   }
 
   @Override
@@ -322,6 +340,13 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
       throw new RuntimeException(
           String.format(SUBSCRIPTION_ERROR_FORMAT, subscriptionName), e);
     }
+  }
+
+  @Override
+  public SetupUdmiConfig getVersionInformation() {
+    SetupUdmiConfig setupUdmiConfig = new SetupUdmiConfig();
+    setupUdmiConfig.udmi_functions = "PubSub";
+    return setupUdmiConfig;
   }
 
   private class MessageProcessor implements MessageReceiver {

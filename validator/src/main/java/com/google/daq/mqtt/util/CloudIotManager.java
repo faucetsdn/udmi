@@ -6,13 +6,14 @@ import static java.util.Optional.ofNullable;
 import static udmi.schema.ExecutionConfiguration.IotProvider.GCP_NATIVE;
 
 import com.google.common.collect.ImmutableList;
+import com.google.udmi.util.Common;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
 import java.util.Base64;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import org.jetbrains.annotations.NotNull;
@@ -20,6 +21,8 @@ import udmi.schema.CloudModel;
 import udmi.schema.Credential;
 import udmi.schema.Credential.Key_format;
 import udmi.schema.ExecutionConfiguration;
+import udmi.schema.SetupUdmiConfig;
+import udmi.schema.SetupUdmiState;
 
 /**
  * Encapsulation of all Cloud IoT interaction functions.
@@ -149,19 +152,22 @@ public class CloudIotManager {
    */
   public boolean registerDevice(String deviceId, CloudDeviceSettings settings) {
     try {
-      checkNotNull(deviceMap, "deviceMap not initialized");
-      CloudModel device = deviceMap.get(deviceId);
-      boolean isNewDevice = device == null;
-      if (isNewDevice) {
+      CloudModel device = getRegisteredDevice(deviceId);
+      if (device == null) {
         createDevice(deviceId, settings);
       } else {
         updateDevice(deviceId, settings, device);
       }
       writeDeviceConfig(deviceId, settings.config);
-      return isNewDevice;
+      return device == null;
     } catch (Exception e) {
       throw new RuntimeException("While registering device " + deviceId, e);
     }
+  }
+
+  public CloudModel getRegisteredDevice(String deviceId) {
+    checkNotNull(deviceMap, "deviceMap not initialized");
+    return deviceMap.get(deviceId);
   }
 
   private void writeDeviceConfig(String deviceId, String config) {
@@ -207,11 +213,17 @@ public class CloudIotManager {
   }
 
   private void createDevice(String deviceId, CloudDeviceSettings settings) {
-    iotProvider.createDevice(deviceId, makeDevice(settings, null));
+    CloudModel newDevice = makeDevice(settings, null);
+    iotProvider.createDevice(deviceId, newDevice);
+    deviceMap.put(deviceId, newDevice);
   }
 
   private void updateDevice(String deviceId, CloudDeviceSettings settings, CloudModel oldDevice) {
     iotProvider.updateDevice(deviceId, makeDevice(settings, oldDevice));
+  }
+
+  public SetupUdmiConfig getVersionInformation() {
+    return iotProvider.getVersionInformation();
   }
 
   /**
@@ -301,4 +313,5 @@ public class CloudIotManager {
     iotProvider.deleteDevice(deviceId);
     deviceMap.remove(deviceId);
   }
+
 }

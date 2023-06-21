@@ -1,5 +1,6 @@
 package com.google.daq.mqtt.sequencer;
 
+import static com.google.daq.mqtt.sequencer.SequenceBase.getSequencerStateFile;
 import static joptsimple.internal.Strings.isNullOrEmpty;
 import static udmi.schema.FeatureEnumeration.FeatureStage.ALPHA;
 
@@ -182,8 +183,8 @@ public class SequenceRunner {
         .collect(Collectors.groupingBy(Entry::getValue, Collectors.counting()));
     resultCounts.forEach(
         (key, value) -> System.err.println("Sequencer result count " + key.name() + " = " + value));
-    String stateAbsolutePath = SequenceBase.getSequencerStateFile().getAbsolutePath();
-    System.err.println("Sequencer validation state summary in " + stateAbsolutePath);
+    String stateAbsolutePath = getSequencerStateFile().getAbsolutePath();
+    System.err.println("Sequencer state summary in " + stateAbsolutePath);
   }
 
   private List<String> getRunMethods(Class<?> clazz) {

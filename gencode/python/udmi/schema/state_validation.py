@@ -1,4 +1,5 @@
 """Generated class for state_validation.json"""
+from .config_udmi import SetupUdmiConfig
 from .entry import Entry
 from .state_validation_feature import FeatureValidationState
 
@@ -59,7 +60,8 @@ class ValidationState:
   def __init__(self):
     self.timestamp = None
     self.version = None
-    self.tools = None
+    self.cloud_version = None
+    self.udmi_version = None
     self.last_updated = None
     self.start_time = None
     self.status = None
@@ -74,7 +76,8 @@ class ValidationState:
     result = ValidationState()
     result.timestamp = source.get('timestamp')
     result.version = source.get('version')
-    result.tools = source.get('tools')
+    result.cloud_version = SetupUdmiConfig.from_dict(source.get('cloud_version'))
+    result.udmi_version = source.get('udmi_version')
     result.last_updated = source.get('last_updated')
     result.start_time = source.get('start_time')
     result.status = Entry.from_dict(source.get('status'))
@@ -105,8 +108,10 @@ class ValidationState:
       result['timestamp'] = self.timestamp # 5
     if self.version:
       result['version'] = self.version # 5
-    if self.tools:
-      result['tools'] = self.tools # 5
+    if self.cloud_version:
+      result['cloud_version'] = self.cloud_version.to_dict() # 4
+    if self.udmi_version:
+      result['udmi_version'] = self.udmi_version # 5
     if self.last_updated:
       result['last_updated'] = self.last_updated # 5
     if self.start_time:

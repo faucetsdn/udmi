@@ -1,7 +1,10 @@
 {
   "timestamp" : "1999-10-20T01:02:03Z",
   "version" : "1.4.1",
-  "tools" : "test_trace",
+  "cloud_version" : {
+    "deployed_by" : "Default implementation for class com.google.daq.mqtt.validator.MessageReadingClient"
+  },
+  REDACTED,
   "start_time" : "1999-10-20T01:02:03Z",
   "summary" : {
     "correct_devices" : [ "AHU-1" ],
@@ -23,7 +26,7 @@
       "last_seen" : "1999-10-20T01:02:03Z",
       "status" : {
         "message" : "While converting to json node: 2 schema violations found",
-        "detail" : "event_pointset: While converting to json node: 2 schema violations found @Validator.validateMessage(redacted); 2 schema violations found; object instance has properties which are not allowed by the schema: [\"yesvalue\"]; object has missing required properties ([\"version\"])",
+        "detail" : "event_pointset: While converting to json node: 2 schema violations found @Validator.validateMessage(REDACTED); 2 schema violations found; object instance has properties which are not allowed by the schema: [\"yesvalue\"]; object has missing required properties ([\"version\"])",
         "category" : "validation.device.schema",
         "timestamp" : "1999-10-20T01:02:03Z",
         "level" : 500

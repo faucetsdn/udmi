@@ -138,6 +138,7 @@ public class SequenceBase {
   private static final String DEVICE_MODDATA = "%s/out/devices/%s/metadata_mod.json";
   private static final String DEVICE_METADATA = "%s/devices/%s/metadata.json";
   private static final String DEVICE_CONFIG_FORMAT = "%s/devices/%s/out/generated_config.json";
+  private static final String SUMMARY_OUTPUT_FORMAT = "%s/out/sequencer_%s.json";
   private static final String CONFIG_ENV = "VALIDATOR_CONFIG";
   private static final String DEFAULT_CONFIG = "/tmp/validator_config.json";
   private static final String CONFIG_PATH =
@@ -175,7 +176,6 @@ public class SequenceBase {
   private static final ObjectDiffEngine RECV_CONFIG_DIFFERNATOR = new ObjectDiffEngine();
   private static final ObjectDiffEngine RECV_STATE_DIFFERNATOR = new ObjectDiffEngine();
   private static final Set<String> configTransactions = new ConcurrentSkipListSet<>();
-  private static final String VALIDATION_STATE_FILE = "sequencer_state.json";
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -321,6 +321,8 @@ public class SequenceBase {
     validationState = new ValidationState();
     validationState.features = new HashMap<>();
     validationState.start_time = new Date();
+    validationState.udmi_version = Common.getUdmiVersion();
+    validationState.cloud_version = client.getVersionInformation();
     Entry statusEntry = new Entry();
     statusEntry.category = SEQUENCER_CATEGORY;
     statusEntry.message = "Starting sequence run for device " + getDeviceId();
@@ -410,7 +412,7 @@ public class SequenceBase {
   }
 
   static File getSequencerStateFile() {
-    return new File(deviceOutputDir, VALIDATION_STATE_FILE);
+    return new File(format(SUMMARY_OUTPUT_FORMAT, siteModel, getDeviceId()));
   }
 
   static void processComplete(Exception e) {
@@ -435,6 +437,15 @@ public class SequenceBase {
     String subFolder = attributes.get("subFolder");
     String messageBase = format("%s_%s", subType, subFolder);
     return messageBase;
+  }
+
+  @NotNull
+  private static Predicate<Map.Entry<String, List<Entry>>> isInterestingValidation() {
+    return entry -> {
+      String schemaName = entry.getKey();
+      return !schemaName.startsWith(CONFIG_PREFIX)
+          && (!schemaName.startsWith(STATE_PREFIX) || schemaName.equals(STATE_UPDATE_MESSAGE_TYPE));
+    };
   }
 
   /**
@@ -652,15 +663,6 @@ public class SequenceBase {
                 emitSchemaResult(description, schemaName, SequenceResult.FAIL, result.detail));
           }
         });
-  }
-
-  @NotNull
-  private static Predicate<Map.Entry<String, List<Entry>>> isInterestingValidation() {
-    return entry -> {
-      String schemaName = entry.getKey();
-      return !schemaName.startsWith(CONFIG_PREFIX)
-          && (!schemaName.startsWith(STATE_PREFIX) || schemaName.equals(STATE_UPDATE_MESSAGE_TYPE));
-    };
   }
 
   private String uniqueKey(Entry entry) {

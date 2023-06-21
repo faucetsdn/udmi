@@ -22,6 +22,7 @@ import org.jetbrains.annotations.Nullable;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
 import udmi.schema.ExecutionConfiguration;
+import udmi.schema.SetupUdmiConfig;
 
 /**
  * IoT provider client that uses the MQTT reflector messaging interface.
@@ -71,7 +72,8 @@ public class IotReflectorClient implements IotProvider {
   @Override
   public void createDevice(String deviceId, CloudModel makeDevice) {
     makeDevice.operation = Operation.CREATE;
-    cloudModelTransaction(deviceId, CLOUD_MODEL_TOPIC, makeDevice);
+    CloudModel created = cloudModelTransaction(deviceId, CLOUD_MODEL_TOPIC, makeDevice);
+    makeDevice.num_id = created.num_id;
   }
 
   @Override
@@ -164,5 +166,10 @@ public class IotReflectorClient implements IotProvider {
   @Override
   public List<Object> getMockActions() {
     throw new IllegalStateException("Not yet implemented");
+  }
+
+  @Override
+  public SetupUdmiConfig getVersionInformation() {
+    return messageClient.getVersionInformation();
   }
 }

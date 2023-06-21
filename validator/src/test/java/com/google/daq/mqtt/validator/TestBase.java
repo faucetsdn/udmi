@@ -1,5 +1,7 @@
 package com.google.daq.mqtt.validator;
 
+import static com.google.daq.mqtt.util.FileDataSink.REPORT_JSON_FILENAME;
+
 import com.google.daq.mqtt.TestCommon;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
 import com.google.udmi.util.SiteModel;
@@ -27,7 +29,7 @@ public class TestBase {
   static final String FILTER_DIFFERENTIAL_PRESSURE_SENSOR =
       "filter_differential_pressure_sensor";
   private static final File REPORT_BASE = new File(TestCommon.SITE_DIR, "/out");
-  private static final File REPORT_FILE = new File(REPORT_BASE, "validation_report.json");
+  private static final File REPORT_FILE = new File(REPORT_BASE, REPORT_JSON_FILENAME);
 
   protected PointsetEvent basePointsetEvent() {
     PointsetEvent pointsetEvent = new PointsetEvent();

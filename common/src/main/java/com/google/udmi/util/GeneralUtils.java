@@ -25,6 +25,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 
 public class GeneralUtils {
 
@@ -55,8 +56,8 @@ public class GeneralUtils {
         }
 
         Object fieldValue = field.get(target);
-        if ((fieldValue instanceof Boolean) && isTrue(fieldValue)) {
-          options.add(field.getName());
+        if (fieldValue instanceof Boolean) {
+          ifTrueThen(fieldValue, () -> options.add(field.getName()));
         } else if (fieldValue != null) {
           options.add(field.getName() + "=" + fieldValue);
         }
@@ -71,13 +72,13 @@ public class GeneralUtils {
     return Boolean.TRUE.equals(value);
   }
 
-  public static <T> void ifTrueThen(Boolean conditional, Runnable action) {
+  public static <T> void ifTrueThen(Object conditional, Runnable action) {
     if (isTrue(conditional)) {
       action.run();
     }
   }
 
-  public static <T> void ifNotTrueThen(Boolean conditional, Runnable action) {
+  public static <T> void ifNotTrueThen(Object conditional, Runnable action) {
     if (!isTrue(conditional)) {
       action.run();
     }

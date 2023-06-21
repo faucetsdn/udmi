@@ -1,7 +1,13 @@
 package com.google.daq.mqtt.registrar;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Sets.intersection;
+import static com.google.udmi.util.Common.CLOUD_VERSION_KEY;
 import static com.google.udmi.util.Common.NO_SITE;
+import static com.google.udmi.util.Common.UDMI_VERSION_KEY;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
 import static java.util.Optional.ofNullable;
 
@@ -47,12 +53,14 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import org.jetbrains.annotations.NotNull;
 import udmi.schema.CloudModel;
 import udmi.schema.Credential;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.ExecutionConfiguration;
 import udmi.schema.ExecutionConfiguration.IotProvider;
 import udmi.schema.Metadata;
+import udmi.schema.SetupUdmiConfig;
 
 /**
  * Validate devices' static metadata and register them in the cloud.
@@ -68,10 +76,8 @@ public class Registrar {
   static final String GENERATED_CONFIG_JSON = "generated_config.json";
   private static final String DEVICES_DIR = "devices";
   private static final String ERROR_FORMAT_INDENT = "  ";
-  private static final String VERSION_KEY = "Version";
-  private static final String VERSION_MAIN_KEY = "main";
   private static final String SCHEMA_SUFFIX = ".json";
-  private static final String REGISTRATION_SUMMARY_JSON = "registration_summary.json";
+  private static final String REGISTRATION_SUMMARY_JSON = "out/registration_summary.json";
   private static final String SCHEMA_NAME = "UDMI";
   private static final String SITE_METADATA_JSON = "site_metadata.json";
   private static final String SWARM_SUBFOLDER = "swarm";
@@ -94,7 +100,7 @@ public class Registrar {
   private Duration idleLimit;
   private Set<String> cloudDevices;
   private Metadata siteMetadata;
-  private Map<String, Map<String, String>> lastErrorSummary;
+  private Map<String, Object> lastErrorSummary;
   private boolean validateMetadata = false;
   private List<String> deviceList;
   private Boolean blockUnknown;
@@ -113,6 +119,18 @@ public class Registrar {
   public static void main(String[] args) {
     ArrayList<String> argList = new ArrayList<>(List.of(args));
     new Registrar().processArgs(argList).execute();
+  }
+
+  @SuppressWarnings("unchecked")
+  @NotNull
+  private static Map<String, String> getErrorKeyMap(Map<String, Object> resultMap,
+      String errorKey) {
+    return (Map<String, String>) resultMap.computeIfAbsent(errorKey, cat -> new TreeMap<>());
+  }
+
+  @SuppressWarnings("unchecked")
+  private static int getErrorSummaryDetail(Object value) {
+    return ((Map<String, Object>) value).size();
   }
 
   Registrar processArgs(List<String> argListRaw) {
@@ -167,7 +185,7 @@ public class Registrar {
   }
 
   private void setDeleteDevices(boolean deleteDevices) {
-    Preconditions.checkNotNull(projectId, "delete devices specified with no target project");
+    checkNotNull(projectId, "delete devices specified with no target project");
     this.deleteDevices = deleteDevices;
   }
 
@@ -241,7 +259,7 @@ public class Registrar {
     }
   }
 
-  protected Map<String, Map<String, String>> getLastErrorSummary() {
+  protected Map<String, Object> getLastErrorSummary() {
     return lastErrorSummary;
   }
 
@@ -250,7 +268,7 @@ public class Registrar {
       return;
     }
 
-    Map<String, Map<String, String>> errorSummary = new TreeMap<>();
+    Map<String, Object> errorSummary = new TreeMap<>();
     DeviceExceptionManager dem = new DeviceExceptionManager(siteDir);
     localDevices
         .values()
@@ -261,16 +279,14 @@ public class Registrar {
             device -> {
               Set<Entry<String, ErrorTree>> entries =
                   device.getTreeChildren(dem.forDevice(device.getDeviceId()));
-              entries
-                  .forEach(
-                      error ->
-                          errorSummary
-                              .computeIfAbsent(error.getKey(), cat -> new TreeMap<>())
-                              .put(device.getDeviceId(), error.getValue().message));
               if (entries.isEmpty()) {
-                errorSummary
-                    .computeIfAbsent("Clean", cat -> new TreeMap<>())
+                getErrorKeyMap(errorSummary, "Clean")
                     .put(device.getDeviceId(), device.getNormalizedTimestamp());
+              } else {
+                entries
+                    .forEach(
+                        error -> getErrorKeyMap(errorSummary, error.getKey())
+                            .put(device.getDeviceId(), error.getValue().message));
               }
             });
     if (blockErrors != null && !blockErrors.isEmpty()) {
@@ -280,19 +296,28 @@ public class Registrar {
               .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().toString())));
     }
     System.err.println("\nSummary:");
-    errorSummary.forEach(
-        (key, value) -> System.err.println("  Device " + key + ": " + value.size()));
+    errorSummary.forEach((key, value) -> System.err.println(
+            "  Device " + key + ": " + getErrorSummaryDetail(value)));
     System.err.println("Out of " + localDevices.size() + " total.");
-    String version = Common.getUdmiVersion();
-    errorSummary.put(VERSION_KEY, Map.of(VERSION_MAIN_KEY, version));
+    errorSummary.put(CLOUD_VERSION_KEY, getCloudVersionInfo());
+    errorSummary.put(UDMI_VERSION_KEY, Common.getUdmiVersion());
     OBJECT_MAPPER.writeValue(summaryFile, errorSummary);
     lastErrorSummary = errorSummary;
+    System.err.println("Registration summary available in " + summaryFile.getAbsolutePath());
+  }
+
+  private SetupUdmiConfig getCloudVersionInfo() {
+    return ifNotNullGet(cloudIotManager, CloudIotManager::getVersionInformation);
   }
 
   protected void setSitePath(String sitePath) {
-    Preconditions.checkNotNull(SCHEMA_NAME, "schemaName not set yet");
+    checkNotNull(SCHEMA_NAME, "schemaName not set yet");
     siteDir = new File(sitePath);
     summaryFile = new File(siteDir, REGISTRATION_SUMMARY_JSON);
+    File parentFile = summaryFile.getParentFile();
+    if (!parentFile.isDirectory() && !parentFile.mkdirs()) {
+      throw new IllegalStateException("Could not create directory " + parentFile.getAbsolutePath());
+    }
     summaryFile.delete();
   }
 
@@ -486,9 +511,9 @@ public class Registrar {
 
     updateCloudIoT(localDevice);
     CloudModel device =
-        Preconditions.checkNotNull(fetchDevice(localName), "missing device " + localName);
+        checkNotNull(fetchDevice(localName), "missing device " + localName);
     String numId =
-        Preconditions.checkNotNull(
+        checkNotNull(
             device.num_id, "missing deviceNumId for " + localName);
     localDevice.setDeviceNumId(numId);
   }
@@ -497,11 +522,23 @@ public class Registrar {
     String localName = localDevice.getDeviceId();
     fetchDevice(localName);
     CloudDeviceSettings localDeviceSettings = localDevice.getSettings();
+    if (preDeleteDevice(localName)) {
+      System.err.println("Deleting to incite recreation " + localName);
+      cloudIotManager.deleteDevice(localName);
+    }
     if (cloudIotManager.registerDevice(localName, localDeviceSettings)) {
       System.err.println("Created new device entry " + localName);
     } else {
       System.err.println("Updated device entry " + localName);
     }
+  }
+
+  private boolean preDeleteDevice(String localName) {
+    if (!localDevices.get(localName).isGateway()) {
+      return false;
+    }
+    CloudModel registeredDevice = cloudIotManager.getRegisteredDevice(localName);
+    return ifNotNullGet(registeredDevice, device -> !isTrue(device.is_gateway), false);
   }
 
   private Set<String> calculateDevices() {
@@ -594,7 +631,7 @@ public class Registrar {
 
   private void bindGatewayDevices(Map<String, LocalDevice> localDevices, Set<String> deviceSet) {
     localDevices.values().stream()
-        .filter(localDevice -> localDevice.getSettings().proxyDevices != null)
+        .filter(LocalDevice::isGateway)
         .forEach(localDevice -> bindGatewayDevice(localDevices, deviceSet, localDevice));
   }
 
@@ -649,7 +686,7 @@ public class Registrar {
   }
 
   private Map<String, LocalDevice> loadLocalDevices(Set<String> specifiedDevices) {
-    Preconditions.checkNotNull(siteDir, "site directory");
+    checkNotNull(siteDir, "site directory");
     File devicesDir = new File(siteDir, DEVICES_DIR);
     if (!devicesDir.isDirectory()) {
       throw new RuntimeException("Not a valid directory: " + devicesDir.getAbsolutePath());

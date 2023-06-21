@@ -19,6 +19,7 @@ public class FileDataSink implements MessagePublisher {
 
   public static final String VALIDATION_SUFFIX = "out";
   public static final String JSON_SUFFIX = "json";
+  public static final String REPORT_JSON_FILENAME = "validation_report.json";
   private static final ObjectMapper OBJECT_MAPPER =
       new ObjectMapper()
           .enable(Feature.ALLOW_COMMENTS)
@@ -26,7 +27,6 @@ public class FileDataSink implements MessagePublisher {
           .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
           .setDateFormat(new ISO8601DateFormat())
           .setSerializationInclusion(Include.NON_NULL);
-  private static final String REPORT_JSON_FILENAME = "validation_report.json";
   private final File reportFile;
   private final File outBaseDir;
 

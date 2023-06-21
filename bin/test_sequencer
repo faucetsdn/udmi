@@ -33,6 +33,7 @@ echo "Using UDMI_ALT_REGISTRY=$UDMI_ALT_REGISTRY"
 
 site_path=sites/udmi_site_model
 device_id=AHU-1
+output_file=$site_path/out/sequencer_$device_id.json
 device_out_base=$site_path/out/devices/$device_id
 test_out_base=$device_out_base/tests
 rm -rf $test_out_base
@@ -83,6 +84,9 @@ bin/augment_metadata $site_path $device_id
 # Run in debug mode for fail-fast when things go wrong!
 bin/sequencer -v $seq_opts $site_path $project_id $device_id $serial_no $targets 2>&1 | tee out/sequencer.log
 echo Completed execution of sequencer test run.
+
+echo Checking reported cloud version info
+jq .cloud_version.udmi_functions $output_file
 
 pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
 if [[ -n $pids ]]; then

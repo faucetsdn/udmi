@@ -3,6 +3,7 @@ package com.google.daq.mqtt.util;
 import java.util.List;
 import java.util.Set;
 import udmi.schema.CloudModel;
+import udmi.schema.SetupUdmiConfig;
 
 /**
  * Abstraction for a cloud-based IoT provider. Provides methods for all the different operations
@@ -94,4 +95,11 @@ public interface IotProvider {
    * @return list of mocked objects
    */
   List<Object> getMockActions();
+
+  /**
+   * Get the version information about this provider.
+   */
+  default SetupUdmiConfig getVersionInformation() {
+    throw new IllegalStateException("Not yet implemented for " + this.getClass());
+  }
 }

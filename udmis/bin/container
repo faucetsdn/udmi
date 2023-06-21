@@ -1,0 +1,67 @@
+#!/bin/bash -e
+
+ROOT=$(dirname $0)/..
+cd $ROOT
+DROOT=.
+
+function usage {
+    echo Error: $*
+    echo Usage: $0 { build, shell, run, push, deploy, status, logs, stop }
+    echo Project: $PROJECT
+    exit 1
+}
+
+PROJECT=$(gcloud config get project)
+REPOSITORY=gcr.io/$PROJECT
+IMAGE=udmis
+
+cmd=$1
+shift || usage missing command
+
+current_user=$USER@$HOSTNAME
+current_time=`date --utc --iso=seconds`
+version=`git describe --dirty`
+funchash=`git log -n 1 --oneline -- src/ | awk '{print $1}'`
+funccount=`git diff --name-only -- src/ | wc -l`
+if [[ $funccount != 0 ]]; then
+    funcdirty=-dirty
+fi
+funcver=`git describe $funchash`$funcdirty
+
+RUNARGS="--rm -ti -v $PWD/etc:/udmi -v $HOME/.config:/root/.config --tmpfs /tmp"
+
+if [[ $cmd == build ]]; then
+    rm -rf var
+    mkdir -p var
+    cat <<EOF > var/deployed_version.json
+{
+  "udmi_version": "$version",
+  "udmi_functions": "$funcver",
+  "built_at": "$current_time",
+  "built_by": "$current_user"
+}
+EOF
+    cat var/deployed_version.json
+    docker build -f Dockerfile.udmis -t $IMAGE $DROOT
+elif [[ $cmd == run ]]; then
+    docker run $RUNARGS udmis
+elif [[ $cmd == shell ]]; then
+    docker run $RUNARGS $IMAGE bash
+elif [[ $cmd == push ]]; then
+    docker tag $IMAGE $REPOSITORY/$IMAGE
+    docker push $REPOSITORY/$IMAGE
+    sed -e "s/@PROJECT@/$PROJECT/" < k8s_pod.yaml > var/k8s_pod.yaml
+    echo Updated var/k8s_pod.yaml for deployment.
+elif [[ $cmd == deploy ]]; then
+    kubectl delete pod/udmi-test-pod || true
+    kubectl apply -f var/k8s_pod.yaml
+elif [[ $cmd == status ]]; then
+    kubectl describe pods udmi-test-pod
+elif [[ $cmd == logs ]]; then
+    kubectl logs udmi-test-pod
+elif [[ $cmd == stop ]]; then
+    kubectl delete pod/udmi-test-pod
+else
+    echo Unknown command $cmd
+    false
+fi

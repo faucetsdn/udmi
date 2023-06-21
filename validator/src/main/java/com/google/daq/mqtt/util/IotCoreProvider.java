@@ -26,6 +26,7 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
+import com.google.udmi.util.Common;
 import com.google.udmi.util.JsonUtil;
 import java.math.BigInteger;
 import java.util.Base64;
@@ -38,6 +39,7 @@ import java.util.stream.Collectors;
 import udmi.schema.CloudModel;
 import udmi.schema.Credential;
 import udmi.schema.Credential.Key_format;
+import udmi.schema.SetupUdmiConfig;
 
 class IotCoreProvider implements IotProvider {
 
@@ -53,6 +55,7 @@ class IotCoreProvider implements IotProvider {
           Key_format.RS_256_X_509, RSA_CERT_FORMAT,
           Key_format.ES_256, ES_KEY_FORMAT,
           Key_format.ES_256_X_509, ES_CERT_FILE);
+  public static final String FUNCTIONS_VERSION_STRING = "GCP IoT Core Direct";
   private final CloudIot.Projects.Locations.Registries registries;
   private final String projectId;
   private final String cloudRegion;
@@ -121,7 +124,9 @@ class IotCoreProvider implements IotProvider {
   @Override
   public void createDevice(String deviceId, CloudModel iotDevice) {
     try {
-      registries.devices().create(getRegistryPath(), convert(iotDevice).setId(deviceId)).execute();
+      Device execute = registries.devices()
+          .create(getRegistryPath(), convert(iotDevice).setId(deviceId)).execute();
+      iotDevice.num_id = execute.getNumId().toString();
     } catch (Exception e) {
       throw new RuntimeException("Error creating device " + deviceId, e);
     }
@@ -283,6 +288,14 @@ class IotCoreProvider implements IotProvider {
 
   private String getDevicePath(String deviceId) {
     return getRegistryPath() + "/devices/" + deviceId;
+  }
+
+  @Override
+  public SetupUdmiConfig getVersionInformation() {
+    SetupUdmiConfig setupUdmiConfig = new SetupUdmiConfig();
+    setupUdmiConfig.udmi_version = Common.getUdmiVersion();
+    setupUdmiConfig.udmi_functions = FUNCTIONS_VERSION_STRING;
+    return setupUdmiConfig;
   }
 
   @Override

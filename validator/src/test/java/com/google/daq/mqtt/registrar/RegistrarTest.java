@@ -5,10 +5,12 @@ import static com.google.daq.mqtt.TestCommon.REGISTRY_ID;
 import static com.google.daq.mqtt.TestCommon.SITE_DIR;
 import static com.google.daq.mqtt.TestCommon.SITE_REGION;
 import static com.google.daq.mqtt.TestCommon.TOOL_ROOT;
-import static com.google.daq.mqtt.util.IotMockProvider.BIND_DEVICE_ACTION;
-import static com.google.daq.mqtt.util.IotMockProvider.BLOCK_DEVICE_ACTION;
+import static com.google.daq.mqtt.util.IotMockProvider.ActionType.BIND_DEVICE_ACTION;
+import static com.google.daq.mqtt.util.IotMockProvider.ActionType.BLOCK_DEVICE_ACTION;
+import static com.google.daq.mqtt.util.IotMockProvider.ActionType.CREATE_DEVICE_ACTION;
+import static com.google.daq.mqtt.util.IotMockProvider.ActionType.DELETE_DEVICE_ACTION;
+import static com.google.daq.mqtt.util.IotMockProvider.ActionType.UPDATE_DEVICE_ACTION;
 import static com.google.daq.mqtt.util.IotMockProvider.MOCK_DEVICE_ID;
-import static com.google.daq.mqtt.util.IotMockProvider.UPDATE_DEVICE_ACTION;
 import static com.google.udmi.util.SiteModel.MOCK_PROJECT;
 import static java.lang.Boolean.TRUE;
 import static org.junit.Assert.assertEquals;
@@ -18,6 +20,7 @@ import static org.junit.Assert.fail;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.IotMockProvider;
+import com.google.daq.mqtt.util.IotMockProvider.ActionType;
 import com.google.daq.mqtt.util.IotMockProvider.MockAction;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,19 +38,24 @@ public class RegistrarTest {
 
   public static final String REGISTRY_SUFFIX = "%X";
 
-  private void assertErrorSummaryValidateSuccess(Map<String, Map<String, String>> summary) {
+  @SuppressWarnings("unchecked")
+  private static double getValidatingSize(Map<String, Object> summary) {
+    return ((Map<String, Object>) summary.get("Validating")).size();
+  }
+
+  private void assertErrorSummaryValidateSuccess(Map<String, Object> summary) {
     if ((summary == null) || (summary.get("Validating") == null)
-        || (summary.get("Validating").size() == 0)) {
+        || (getValidatingSize(summary) == 0)) {
       return;
     }
     fail(summary.get("Validating").toString());
   }
 
-  private void assertErrorSummaryValidateFailure(Map<String, Map<String, String>> summary) {
+  private void assertErrorSummaryValidateFailure(Map<String, Object> summary) {
     if ((summary == null) || (summary.get("Validating") == null)) {
       fail("Error summary for Validating key is null");
     }
-    if (summary.get("Validating").size() == 0) {
+    if (getValidatingSize(summary) == 0) {
       fail("Error summary for Validating key is size 0");
     }
   }
@@ -135,8 +143,16 @@ public class RegistrarTest {
             Collectors.toSet()).size());
     blockActions.forEach(action -> assertEquals("device blocked " + action.deviceId,
         action.deviceId.equals(MOCK_DEVICE_ID), action.data));
+
+    List<MockAction> createActions = filterActions(mockActions, CREATE_DEVICE_ACTION);
+    assertEquals("Devices created", 1, createActions.size());
+
+    List<MockAction> deleteActions = filterActions(mockActions, DELETE_DEVICE_ACTION);
+    assertEquals("Devices deleted", 1, deleteActions.size());
+
     List<MockAction> updateActions = filterActions(mockActions, UPDATE_DEVICE_ACTION);
-    assertEquals("Devices updated", 4, updateActions.size());
+    assertEquals("Devices updated", 3, updateActions.size());
+
     assertTrue("all devices not blocked", updateActions.stream().allMatch(this::isNotBlocking));
     List<MockAction> bindActions = filterActions(mockActions, BIND_DEVICE_ACTION);
     assertEquals("bind actions", 1, bindActions.size());
@@ -151,7 +167,7 @@ public class RegistrarTest {
     return !TRUE.equals(((CloudModel) action.data).blocked);
   }
 
-  private List<MockAction> filterActions(List<MockAction> mockActions, String actionKey) {
+  private List<MockAction> filterActions(List<MockAction> mockActions, ActionType actionKey) {
     return mockActions.stream()
         .filter(action -> action.action.equals(actionKey))
         .collect(Collectors.toList());

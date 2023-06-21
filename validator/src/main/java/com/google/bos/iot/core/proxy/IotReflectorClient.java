@@ -12,6 +12,7 @@ import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 
 import com.google.api.client.util.Base64;
 import com.google.common.base.Preconditions;
@@ -53,18 +54,19 @@ import udmi.schema.UdmiState;
  */
 public class IotReflectorClient implements MessagePublisher {
 
+  public static final String UDMI_FOLDER = "udmi";
   private static final int MIN_REQUIRED_VERSION = 8;
   private static final String IOT_KEY_ALGORITHM = "RS256";
   private static final String UDMS_REFLECT = "UDMS-REFLECT";
   private static final String UDMS_REGION = "us-central1";
   private static final String MOCK_DEVICE_NUM_ID = "123456789101112";
-  private static final String UDMI_FOLDER = "udmi";
   private static final String UDMI_TOPIC = "events/" + UDMI_FOLDER;
   private static final Date REFLECTOR_STATE_TIMESTAMP = new Date();
   private static final String CONFIG_CATEGORY = "config";
   private static final String COMMANDS_CATEGORY = "commands";
   private static final long CONFIG_TIMEOUT_SEC = 10;
   private static final long MESSAGE_POLL_TIME_SEC = 10;
+  private static String prevTransactionId;
   private final String udmiVersion;
   private final CountDownLatch initialConfigReceived = new CountDownLatch(1);
   private final CountDownLatch initializedStateSent = new CountDownLatch(1);
@@ -77,8 +79,8 @@ public class IotReflectorClient implements MessagePublisher {
   private final String projectId;
   private boolean isInstallValid;
   private boolean active;
-  private String prevTransactionId;
   private Exception syncFailure;
+  private SetupUdmiConfig udmiInfo;
 
   /**
    * Create a new reflector instance.
@@ -147,6 +149,20 @@ public class IotReflectorClient implements MessagePublisher {
     // Intentionally map registry -> device because of reflection registry semantics.
     reflectConfiguration.device_id = registryId;
     return reflectConfiguration;
+  }
+
+  /**
+   * Get a new unique (not the same as previous one) transaction id.
+   *
+   * @return new unique transaction id
+   */
+  public static synchronized String getNextTransactionId() {
+    String transactionId;
+    do {
+      transactionId = Long.toString(System.currentTimeMillis());
+    } while (transactionId.equals(prevTransactionId));
+    prevTransactionId = transactionId;
+    return transactionId;
   }
 
   private void initializeReflectorState() {
@@ -273,7 +289,7 @@ public class IotReflectorClient implements MessagePublisher {
           System.err.println("UDMI version mismatch: " + udmiVersion);
         }
 
-        SetupUdmiConfig udmiInfo = reflectorConfig.setup;
+        udmiInfo = reflectorConfig.setup;
         System.err.println("UDMI deployed by " + udmiInfo.deployed_by + " at " + getTimestamp(
             udmiInfo.deployed_at));
 
@@ -365,26 +381,17 @@ public class IotReflectorClient implements MessagePublisher {
     return transactionId;
   }
 
-  /**
-   * Get a new unique (not the same as previous one) transaction id.
-   *
-   * @return new unique transaction id
-   */
-  private String getNextTransactionId() {
-    String transactionId;
-    do {
-      transactionId = Long.toString(System.currentTimeMillis());
-    } while (transactionId.equals(prevTransactionId));
-    prevTransactionId = transactionId;
-    return transactionId;
-  }
-
   @Override
   public void close() {
     active = false;
     if (mqttPublisher != null) {
       mqttPublisher.close();
     }
+  }
+
+  @Override
+  public SetupUdmiConfig getVersionInformation() {
+    return requireNonNull(udmiInfo, "udmi version information not available");
   }
 
   static class MessageBundle {

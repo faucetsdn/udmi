@@ -9,6 +9,8 @@ class SetupUdmiConfig:
     self.functions_max = None
     self.udmi_version = None
     self.udmi_functions = None
+    self.built_at = None
+    self.built_by = None
     self.deployed_at = None
     self.deployed_by = None
 
@@ -21,6 +23,8 @@ class SetupUdmiConfig:
     result.functions_max = source.get('functions_max')
     result.udmi_version = source.get('udmi_version')
     result.udmi_functions = source.get('udmi_functions')
+    result.built_at = source.get('built_at')
+    result.built_by = source.get('built_by')
     result.deployed_at = source.get('deployed_at')
     result.deployed_by = source.get('deployed_by')
     return result
@@ -51,6 +55,10 @@ class SetupUdmiConfig:
       result['udmi_version'] = self.udmi_version # 5
     if self.udmi_functions:
       result['udmi_functions'] = self.udmi_functions # 5
+    if self.built_at:
+      result['built_at'] = self.built_at # 5
+    if self.built_by:
+      result['built_by'] = self.built_by # 5
     if self.deployed_at:
       result['deployed_at'] = self.deployed_at # 5
     if self.deployed_by:
