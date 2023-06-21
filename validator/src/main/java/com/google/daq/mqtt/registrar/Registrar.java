@@ -5,6 +5,7 @@ import static com.google.common.collect.Sets.intersection;
 import static com.google.udmi.util.Common.CLOUD_VERSION_KEY;
 import static com.google.udmi.util.Common.NO_SITE;
 import static com.google.udmi.util.Common.UDMI_VERSION_KEY;
+import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.isTrue;
@@ -28,6 +29,7 @@ import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.PubSubPusher;
 import com.google.udmi.util.Common;
+import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
 import java.io.FileInputStream;
@@ -393,29 +395,37 @@ public class Registrar {
   }
 
   private void deleteCloudDevices(Set<String> deviceSet) {
-    if (cloudDevices.isEmpty()) {
-      System.err.println("No devices to delete, our work here is done!");
-      return;
-    }
-    Set<String> union = intersection(cloudDevices, ofNullable(deviceSet).orElse(cloudDevices));
-    Set<String> gateways = union.stream().filter(id -> localDevices.get(id).isGateway()).collect(
-        Collectors.toSet());
-    Set<String> others = Sets.difference(union, gateways);
+    try {
+      if (cloudDevices.isEmpty()) {
+        System.err.println("No devices to delete, our work here is done!");
+        return;
+      }
+      Set<String> union = intersection(cloudDevices, ofNullable(deviceSet).orElse(cloudDevices));
+      Set<String> gateways = union.stream().filter(id -> ifNotNullGet(localDevices.get(id),
+          LocalDevice::isGateway, false)).collect(Collectors.toSet());
+      Set<String> others = Sets.difference(union, gateways);
 
-    // Delete gateways first so that they aren't holding the other devices hostage.
-    gateways.forEach(this::deleteDevice);
-    others.forEach(this::deleteDevice);
+      // Delete gateways first so that they aren't holding the other devices hostage.
+      gateways.forEach(this::deleteDevice);
+      others.forEach(this::deleteDevice);
 
-    Set<String> deviceIds = fetchCloudDevices();
-    Set<String> remaining = intersection(deviceIds, ofNullable(deviceSet).orElse(deviceIds));
-    if (!remaining.isEmpty()) {
-      throw new RuntimeException("Did not delete all devices!");
+      Set<String> deviceIds = fetchCloudDevices();
+      Set<String> remaining = intersection(deviceIds, ofNullable(deviceSet).orElse(deviceIds));
+      if (!remaining.isEmpty()) {
+        throw new RuntimeException("Did not delete all devices! " + CSV_JOINER.join(remaining));
+      }
+    } catch (Exception e) {
+      throw new RuntimeException("While deleting cloud devices", e);
     }
   }
 
   private void deleteDevice(String deviceId) {
-    System.err.println("Removing " + deviceId + " from registry...");
-    cloudIotManager.deleteDevice(deviceId);
+    try {
+      System.err.println("Removing " + deviceId + " from registry...");
+      cloudIotManager.deleteDevice(deviceId);
+    } catch (Exception e) {
+      throw new RuntimeException("While deleting device " + deviceId, e);
+    }
   }
 
   private void processLocalDevices(AtomicInteger updatedCount, AtomicInteger processedCount)
