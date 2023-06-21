@@ -60,12 +60,14 @@ public class UdmiServicePod {
       bridges = ofNullable(bridgeEntries).orElse(NO_BRIDGES).entrySet().stream()
           .map(this::makeBridgeFor).collect(Collectors.toList());
 
-      Map<String, IotAccessProvider> providerMap =
-          podConfiguration.iot_access.entrySet().stream()
-              .collect(Collectors.toMap(Entry::getKey, IotAccessProvider::from));
-      IotAccessProvider provider = providerMap.get(DEFAULT_PROVIDER_KEY);
-      provider.setProviders(providerMap);
-      setIotAccessProvider(provider);
+      if (podConfiguration.iot_access != null) {
+        Map<String, IotAccessProvider> providerMap =
+            podConfiguration.iot_access.entrySet().stream()
+                .collect(Collectors.toMap(Entry::getKey, IotAccessProvider::from));
+        IotAccessProvider provider = providerMap.get(DEFAULT_PROVIDER_KEY);
+        provider.setProviders(providerMap);
+        setIotAccessProvider(provider);
+      }
     } catch (Exception e) {
       throw new RuntimeException("While instantiating pod " + CSV_JOINER.join(args), e);
     }

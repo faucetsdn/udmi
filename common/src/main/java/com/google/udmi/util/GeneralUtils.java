@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
-import com.google.bos.udmi.service.access.IotAccessProvider;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.Hashing;
@@ -16,7 +15,6 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.security.spec.ECField;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -29,7 +27,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
-import javax.annotation.Nullable;
 
 public class GeneralUtils {
 
@@ -127,8 +124,8 @@ public class GeneralUtils {
     }
   }
 
-  public static Collector<Entry<String, IotAccessProvider>, ?, TreeMap<String, String>> sortedMapCollector(
-      Function<Entry<String, IotAccessProvider>, String> prioritizer) {
+  public static <T> Collector<Entry<String, T>, ?, TreeMap<String, String>> sortedMapCollector(
+      Function<Entry<String, T>, String> prioritizer) {
     return Collectors.toMap(prioritizer, Entry::getKey, GeneralUtils::mapReplace, TreeMap::new);
   }
 

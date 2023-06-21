@@ -16,9 +16,9 @@
   "iot_access": {
     "default": {
       "provider": "dynamic",
-      "project_id": "gcp,clearblade"
+      "project_id": "gcp,clearblade-iot-core"
     },
-    "clearblade": {
+    "clearblade-iot-core": {
       "provider": "clearblade",
       "project_id": "udmi-external"
     },

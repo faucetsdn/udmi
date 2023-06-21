@@ -42,6 +42,9 @@ public interface IotAccessProvider {
   default void setProviders(Map<String, IotAccessProvider> allProviders) {
   }
 
+  default void setProviderAffinity(String registryId, String deviceId, String providerId) {
+  }
+
   String fetchRegistryMetadata(String registryId, String metadataKey);
 
   Entry<String, String> fetchConfig(String registryId, String deviceId);

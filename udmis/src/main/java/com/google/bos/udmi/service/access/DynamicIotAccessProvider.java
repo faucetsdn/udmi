@@ -17,6 +17,9 @@ import udmi.schema.CloudModel;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.IotAccess;
 
+/**
+ * An IoT Access Provider that dynamically switches between other providers.
+ */
 public class DynamicIotAccessProvider extends UdmisComponent implements IotAccessProvider {
 
   private final Map<String, String> registryProviders = new HashMap<>();
@@ -57,38 +60,49 @@ public class DynamicIotAccessProvider extends UdmisComponent implements IotAcces
   }
 
   @Override
-  public String fetchRegistryMetadata(String registryId, String metadataKey) {
-    return getProviderFor(registryId).fetchRegistryMetadata(registryId, metadataKey);
-  }
-
-  @Override
   public Entry<String, String> fetchConfig(String registryId, String deviceId) {
     return getProviderFor(registryId).fetchConfig(registryId, deviceId);
   }
 
   @Override
   public CloudModel fetchDevice(String deviceRegistryId, String deviceId) {
-    throw new RuntimeException("Not yet implemented " + this.getClass());
+    return getProviderFor(deviceRegistryId).fetchDevice(deviceRegistryId, deviceId);
+  }
+
+  @Override
+  public String fetchRegistryMetadata(String registryId, String metadataKey) {
+    return getProviderFor(registryId).fetchRegistryMetadata(registryId, metadataKey);
   }
 
   @Override
   public CloudModel listDevices(String deviceRegistryId) {
-    throw new RuntimeException("Not yet implemented " + this.getClass());
+    return getProviderFor(deviceRegistryId).listDevices(deviceRegistryId);
   }
 
   @Override
   public CloudModel modelDevice(String deviceRegistryId, String deviceId, CloudModel cloudModel) {
-    throw new RuntimeException("Not yet implemented " + this.getClass());
+    return getProviderFor(deviceRegistryId).modelDevice(deviceRegistryId, deviceId, cloudModel);
   }
 
   @Override
   public void modifyConfig(String registryId, String deviceId, SubFolder folder, String contents) {
-    throw new RuntimeException("Not yet implemented " + this.getClass());
+    getProviderFor(registryId).modifyConfig(registryId, deviceId, folder, contents);
   }
 
   @Override
   public void sendCommand(String registryId, String deviceId, SubFolder folder, String message) {
     getProviderFor(registryId).sendCommand(registryId, deviceId, folder, message);
+  }
+
+  @Override
+  public void setProviderAffinity(String registryId, String deviceId, String providerId) {
+    if (providerId != null) {
+      String previous = registryProviders.put(registryId, providerId);
+      if (!providerId.equals(previous)) {
+        debug(format("Switching registry affinity for %s from %s -> %s", registryId, previous,
+            providerId));
+      }
+    }
   }
 
   @Override

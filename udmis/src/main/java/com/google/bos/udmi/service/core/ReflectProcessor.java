@@ -40,12 +40,6 @@ public class ReflectProcessor extends UdmisComponent {
       loadFileStrictRequired(SetupUdmiConfig.class, new File(DEPLOY_FILE));
 
   @Override
-  public void activate() {
-    debug(stringify(deployed));
-    super.activate();
-  }
-
-  @Override
   protected void defaultHandler(Object message) {
     MessageContinuation continuation = getContinuation(message);
     requireNonNull(iotAccess, "iot access provider not set");
@@ -111,6 +105,7 @@ public class ReflectProcessor extends UdmisComponent {
 
   private void processReflection(Envelope reflection, Envelope envelope,
       Map<String, Object> payload) {
+    iotAccess.setProviderAffinity(envelope.deviceRegistryId, envelope.deviceId, reflection.source);
     CloudModel result = getReflectionResult(envelope, payload);
     envelope.subType = SubType.REPLY;
     sendReflectCommand(reflection, envelope, result);
@@ -131,14 +126,12 @@ public class ReflectProcessor extends UdmisComponent {
   }
 
   private CloudModel reflectPropagate(Envelope attributes, Map<String, Object> payload) {
-    switch (attributes.subType) {
-      case CONFIG:
-        iotAccess.modifyConfig(attributes.deviceRegistryId, attributes.deviceId, UPDATE,
-            stringify(payload));
-        return new CloudModel();
-      default:
-        throw new RuntimeException("Unknown propagate subType " + attributes.subType);
+    if (requireNonNull(attributes.subType) == SubType.CONFIG) {
+      iotAccess.modifyConfig(attributes.deviceRegistryId, attributes.deviceId, UPDATE,
+          stringify(payload));
+      return new CloudModel();
     }
+    throw new RuntimeException("Unknown propagate subType " + attributes.subType);
   }
 
   private CloudModel reflectQuery(Envelope attributes, Map<String, Object> payload) {
@@ -177,6 +170,13 @@ public class ReflectProcessor extends UdmisComponent {
     configMap.put(SubFolder.UDMI.value(), udmiConfig);
     String contents = stringify(configMap);
     debug("Setting reflector config %s %s %s", registryId, deviceId, contents);
+    iotAccess.setProviderAffinity(registryId, deviceId, envelope.source);
     iotAccess.modifyConfig(registryId, deviceId, UPDATE, contents);
+  }
+
+  @Override
+  public void activate() {
+    debug(stringify(deployed));
+    super.activate();
   }
 }
