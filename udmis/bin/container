@@ -6,7 +6,7 @@ DROOT=.
 
 function usage {
     echo Error: $*
-    echo Usage: $0 { build, shell, run, push, deploy, status, logs, stop }
+    echo Usage: $0 { build, shell, run, push, deploy, update, status, logs, stop }
     echo Project: $PROJECT
     exit 1
 }
@@ -51,10 +51,13 @@ elif [[ $cmd == push ]]; then
     docker tag $IMAGE $REPOSITORY/$IMAGE
     docker push $REPOSITORY/$IMAGE
     sed -e "s/@PROJECT@/$PROJECT/" < k8s_pod.yaml > var/k8s_pod.yaml
+    sed -e "s/@PROJECT@/$PROJECT/" < k8s_deployment.yaml > var/k8s_deployment.yaml
     echo Updated var/k8s_pod.yaml for deployment.
 elif [[ $cmd == deploy ]]; then
     kubectl delete pod/udmi-test-pod || true
     kubectl apply -f var/k8s_pod.yaml
+elif [[ $cmd == update ]]; then
+    kubectl apply -f var/k8s_deployment.yaml
 elif [[ $cmd == status ]]; then
     kubectl describe pods udmi-test-pod
 elif [[ $cmd == logs ]]; then
