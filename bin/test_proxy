@@ -37,6 +37,8 @@ rm -f $PUBBER_OUT.*
 validator/bin/build
 pubber/bin/build
 
+bin/registrar $site_path
+
 echo Killing running pubber instances...
 ps ax | fgrep pubber | fgrep java | awk '{print $1}' | xargs kill || true
 
