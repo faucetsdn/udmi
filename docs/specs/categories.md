@@ -66,5 +66,6 @@ could be used with a **WARNING** level for a warning case during normal operatio
     * _report_: (**INFO**) The validation summary report.
   * _feature_: Results of feature sequence testing.
     * _sequence_: (**INFO**) An individual line-item sequence test.
+    * _schema_: (**INFO**) Feature message schema validations.
 * _device_: Device specific messages (ignored by UDMI system)
   * _???_: (**INFO**) Special wildcard category, anything prefixed by 'device.' lands here!

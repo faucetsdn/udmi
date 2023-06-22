@@ -174,4 +174,9 @@ public class Category {
     public static final String VALIDATION_FEATURE_SEQUENCE = "validation.feature.sequence";
     public static final Level VALIDATION_FEATURE_SEQUENCE_LEVEL = INFO;
     static { LEVEL.put(VALIDATION_FEATURE_SEQUENCE, INFO); }
+
+    // Feature message schema validations.
+    public static final String VALIDATION_FEATURE_SCHEMA = "validation.feature.schema";
+    public static final Level VALIDATION_FEATURE_SCHEMA_LEVEL = INFO;
+    static { LEVEL.put(VALIDATION_FEATURE_SCHEMA, INFO); }
 }
