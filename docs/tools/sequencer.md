@@ -6,14 +6,14 @@ The UDMI _sequencer_ tool monitors a sequence of messages from a device's stream
 validates that the composition of sequential messages is compliant with the UDMI Schema
 
 1.  Ensure you have [deployed the necessary cloud functions](../cloud/gcp/udmis.md) to your GCP project
-2.  Add a new GCP IoT Core registry with a registry ID of `UDMS-REFLECT`.
+2.  Add a new GCP IoT Core registry with a registry ID of `UDMIS-REFLECT`.
     *   Use `udmi_reflect` as the Pub/Sub topic for both the  **device telemetry and **device state**
     *   This serves as a _reflector_ of the MAIN IoT registry combining all messages
         published into a single stream.
 3.  Create credentials for a reflector 'device' (there is no actual, physical device):
     *   On your local machine, run `mkdir validator` in the intended _site_model_ directory.
     *   Run `bin/keygen RS256 validator` to create a public and private key.
-3.  Add a new device to the `UDMS-REFLECT` registry with the following configuration:
+3.  Add a new device to the `UDMIS-REFLECT` registry with the following configuration:
     *   device_id: Use the `<Registry ID>` as defined in Site Model for the devices to be tested.
     *   auth_key: Use the public key you just created from `validator/rsa_public.pem`
 
@@ -109,7 +109,7 @@ JUnit version 4.13.1
 Writing results to /home/username/udmi/out/devices/FAUX-01/RESULT.log
 Validating device FAUX-01 serial sequencer-29581
 [main] INFO com.google.bos.iot.core.proxy.MqttPublisher - proto-dev token expiration sec 3600
-[main] INFO com.google.bos.iot.core.proxy.MqttPublisher - proto-dev creating client projects/bos-udmi-proto/locations/us-central1/registries/UDMS-REFLECT/devices/proto-dev on ssl://mqtt.googleapis.com:8883
+[main] INFO com.google.bos.iot.core.proxy.MqttPublisher - proto-dev creating client projects/bos-udmi-proto/locations/us-central1/registries/UDMIS-REFLECT/devices/proto-dev on ssl://mqtt.googleapis.com:8883
 [main] INFO com.google.bos.iot.core.proxy.MqttPublisher - proto-dev creating new jwt
 [main] INFO com.google.bos.iot.core.proxy.MqttPublisher - proto-dev connecting to mqtt server
 [main] INFO com.google.bos.iot.core.proxy.MqttPublisher - proto-dev adding subscriptions

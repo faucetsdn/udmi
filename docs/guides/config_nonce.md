@@ -85,9 +85,9 @@ The same logic can be applied to the _udmi\_config_ function, but there's a lot 
 ```
 ~/udmi$ gcloud --project=$project_id functions logs read udmi_config --sort-by=time_utc --limit=1000 --end-time=2022-10-05T21:31:57.004 | fgrep 1665005451790
          udmi_config  u1az18rg4bh8  2022-10-05 21:30:58.072  Config message ZZ-TRI-FECTA AHU-1 system 1665005451790 {"min_loglevel":200,"metrics_rate_sec":600,"testing":{"sequence_name":"reset_config"},"extra_field":"reset_config","debug_config_nonce":1665005451790}
-         udmi_config  u1az18rg4bh8  2022-10-05 21:30:58.073  command devices/AHU-1/config/system 1665005451790 projects/bos-testing-ci/locations/us-central1/registries/UDMS-REFLECT/devices/ZZ-TRI-FECTA
+         udmi_config  u1az18rg4bh8  2022-10-05 21:30:58.073  command devices/AHU-1/config/system 1665005451790 projects/bos-testing-ci/locations/us-central1/registries/UDMIS-REFLECT/devices/ZZ-TRI-FECTA
          udmi_config  u1az18rg4bh8  2022-10-05 21:30:58.133  Config modify system 86490 2022-10-05T21:30:58.073Z 1665005451790
-         udmi_config  u1az18rg4bh8  2022-10-05 21:30:58.189  command devices/AHU-1/config/update 1665005451790 projects/bos-testing-ci/locations/us-central1/registries/UDMS-REFLECT/devices/ZZ-TRI-FECTA
+         udmi_config  u1az18rg4bh8  2022-10-05 21:30:58.189  command devices/AHU-1/config/update 1665005451790 projects/bos-testing-ci/locations/us-central1/registries/UDMIS-REFLECT/devices/ZZ-TRI-FECTA
          udmi_config  u1az18rg4bh8  2022-10-05 21:30:58.218  Config accepted system 86490 2022-10-05T21:30:58.073Z 1665005451790
 ```
 

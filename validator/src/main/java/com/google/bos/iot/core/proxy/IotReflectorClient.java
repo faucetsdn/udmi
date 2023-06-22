@@ -57,8 +57,7 @@ public class IotReflectorClient implements MessagePublisher {
   public static final String UDMI_FOLDER = "udmi";
   private static final int MIN_REQUIRED_VERSION = 8;
   private static final String IOT_KEY_ALGORITHM = "RS256";
-  private static final String UDMS_REFLECT = "UDMS-REFLECT";
-  private static final String UDMS_REGION = "us-central1";
+  private static final String UDMIS_REFLECT = "UDMIS-REFLECT";
   private static final String MOCK_DEVICE_NUM_ID = "123456789101112";
   private static final String UDMI_TOPIC = "events/" + UDMI_FOLDER;
   private static final Date REFLECTOR_STATE_TIMESTAMP = new Date();
@@ -109,7 +108,7 @@ public class IotReflectorClient implements MessagePublisher {
     String cloudRegion = Optional.ofNullable(iotConfig.reflect_region)
         .orElse(iotConfig.cloud_region);
     subscriptionId =
-        format("%s/%s/%s/%s", projectId, cloudRegion, UDMS_REFLECT, registryId);
+        format("%s/%s/%s/%s", projectId, cloudRegion, UDMIS_REFLECT, registryId);
 
     try {
       mqttPublisher = new MqttPublisher(makeReflectConfiguration(iotConfig, registryId), keyBytes,
@@ -144,7 +143,7 @@ public class IotReflectorClient implements MessagePublisher {
     reflectConfiguration.project_id = iotConfig.project_id;
     reflectConfiguration.cloud_region = Optional.ofNullable(iotConfig.reflect_region)
         .orElse(iotConfig.cloud_region);
-    reflectConfiguration.registry_id = UDMS_REFLECT;
+    reflectConfiguration.registry_id = UDMIS_REFLECT;
 
     // Intentionally map registry -> device because of reflection registry semantics.
     reflectConfiguration.device_id = registryId;

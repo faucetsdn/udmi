@@ -8,9 +8,10 @@
  * indicate the MIN/MAX versions supported, while the client determines what is required.
  *
  * LEVEL 8: Schema refactoring for UDMIS container compatability.
+ * LEVEL 9: Renaming for UDMS to UDMIS for reflector registry.
  */
 const FUNCTIONS_VERSION_MIN = 8;
-const FUNCTIONS_VERSION_MAX = 8;
+const FUNCTIONS_VERSION_MAX = 9;
 
 // Hacky stuff to work with "maybe have firestore enabled"
 const PROJECT_ID = process.env.GCP_PROJECT || process.env.GCLOUD_PROJECT;
@@ -27,7 +28,7 @@ const { PubSub } = require('@google-cloud/pubsub');
 const pubsub = new PubSub();
 const iot = require('@google-cloud/iot');
 
-const REFLECT_REGISTRY = 'UDMS-REFLECT';
+const REFLECT_REGISTRY = 'UDMIS-REFLECT';
 const UDMI_VERSION = version.udmi_version;
 
 const EVENT_TYPE = 'event';
