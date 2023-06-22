@@ -177,7 +177,7 @@ jobs:
           find sites/udmi_site_model/out/devices/ -name RESULT.log | xargs fgrep SCHEMA
       - name: pubber logs
         if: ${{ always() }}
-        run: more pubber.out* out/pubber.out* pubber/out/*/*.json || true
+        run: more out/pubber.out* pubber/out/*/*.json || true
       - name: output logs
         if: ${{ always() }}
         run: cd sites/udmi_site_model/out && more `find . -type f` || true
@@ -212,7 +212,7 @@ jobs:
         run: cat sites/udmi_site_model/out/devices/AHU-1/sequencer_state.json || true
       - name: pubber logs
         if: ${{ always() }}
-        run: more pubber.out* out/pubber.out* pubber/out/*/*.json || true
+        run: more out/pubber.out* pubber/out/*/*.json || true
       - name: output logs
         if: ${{ always() }}
         run: cd sites/udmi_site_model/out && more `find . -type f` || true
@@ -253,8 +253,7 @@ jobs:
       - name: pubber logs
         if: ${{ always() }}
         run: |
-          more pubber.out* out/pubber.out* || true
-          more pubber/out/*/*.json
+          more out/pubber.out* pubber/out/*/*.json || true
 
   redirect:
     name: Endpoint Redirection
@@ -283,8 +282,8 @@ jobs:
       - name: pubber.out.1
         run: |
           echo ::::::: pubber.out.1
-          cat pubber.out.1
+          cat out/pubber.out.1
       - name: pubber.out.2
         run: |
           echo ::::::: pubber.out.2
-          cat pubber.out.2
+          cat out/pubber.out.2

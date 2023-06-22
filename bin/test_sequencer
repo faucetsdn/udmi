@@ -42,7 +42,7 @@ mkdir -p $test_out_base out/
 serial_no=sequencer-$RANDOM
 echo Using pubber with serial $serial_no
 
-PUBBER_OUT=pubber.out
+PUBBER_OUT=out/pubber.out
 
 pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
 if [[ -n $pids ]]; then

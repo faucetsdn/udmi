@@ -7,7 +7,6 @@ workspace.xml
 codegen/
 .DS_Store
 tmp/
-check_links.out
 .gradle/
 .firebase/
 udmis/functions/node_modules/
@@ -31,8 +30,6 @@ credentials.json
 /venv/
 /local/
 .pubber.pid
-pubber.out*
-/sequencer.out
 __pycache__/
 /tests/sites/*/out/
 /tests/sites/*/devices/*/out/
