@@ -24,7 +24,7 @@ cat <<EOF > $CONFIG_FILE
   "udmi_root": "$UDMI_ROOT",
   "feed_name": "$udmi_feed",
   "udmi_version": "$udmi_version",
-  "key_file": "$site_path/validator/rsa_private.pkcs8"
+  "key_file": "$site_path/reflector/rsa_private.pkcs8"
 }
 EOF
 

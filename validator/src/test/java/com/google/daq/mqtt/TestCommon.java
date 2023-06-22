@@ -31,7 +31,7 @@ public class TestCommon {
   public static final String SITE_REGION = "us-central1";
   public static final String ALT_REGISTRY = "ZZ-ALT-REG";
   public static final String LOG_LEVEL = Level.DEBUG.name();
-  public static final String KEY_FILE = SITE_DIR + "/validator/rsa_private.pkcs8";
+  public static final String KEY_FILE = SITE_DIR + "/reflector/rsa_private.pkcs8";
 
   /**
    * Create a standard test configuration.

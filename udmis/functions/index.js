@@ -10,7 +10,7 @@
  * LEVEL 8: Schema refactoring for UDMIS container compatability.
  * LEVEL 9: Renaming for UDMS to UDMIS for reflector registry.
  */
-const FUNCTIONS_VERSION_MIN = 8;
+const FUNCTIONS_VERSION_MIN = 9;
 const FUNCTIONS_VERSION_MAX = 9;
 
 // Hacky stuff to work with "maybe have firestore enabled"
