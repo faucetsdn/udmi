@@ -458,6 +458,67 @@ public class SequenceBase {
     };
   }
 
+  private static void emitSequenceResult(SequenceResult result, String bucket, String methodName,
+      String stage,
+      int score, String message) {
+    emitSequencerOut(format(RESULT_FORMAT, result, bucket, methodName, stage, score, message));
+  }
+
+  private static void emitSequencerOut(String resultString) {
+    if (activeInstance != null) {
+      activeInstance.notice(resultString);
+    } else {
+      System.err.println(resultString);
+    }
+    try (PrintWriter log = new PrintWriter(new FileOutputStream(resultSummary, true))) {
+      log.println(resultString);
+    } catch (Exception e) {
+      throw new RuntimeException("While writing report summary " + resultSummary.getAbsolutePath(),
+          e);
+    }
+  }
+
+  private static void summarizeSchemaStages() {
+    validationState.schemas.forEach((schema, schemaResult) -> {
+      Map<FeatureStage, List<SequenceValidationState>> schemaStages = new HashMap<>();
+      schemaResult.sequences.forEach((sequence, sequenceResult) -> {
+        schemaStages.computeIfAbsent(sequenceResult.stage, stage -> new ArrayList<>())
+            .add(sequenceResult);
+      });
+      schemaResult.stages = schemaStages.entrySet().stream().collect(Collectors.toMap(
+          Map.Entry::getKey, SequenceBase::summarizeSchemaResults));
+      schemaResult.stages.forEach((stage, entry) -> {
+        SequenceResult result = RESULT_LEVEL_MAP.inverse().get(Level.fromValue(entry.level));
+        String stageValue = stage.value();
+        String schemaStage = schema + "_" + stageValue;
+        emitSequenceResult(result, "schemas", schemaStage, stageValue.toUpperCase(), 5,
+            entry.message);
+      });
+    });
+  }
+
+  private static Entry summarizeSchemaResults(
+      Map.Entry<FeatureStage, List<SequenceValidationState>> entry) {
+    List<SequenceValidationState> values = entry.getValue();
+    Set<SequenceValidationState> failures = values.stream()
+        .filter(state -> state.result != SequenceResult.PASS).collect(Collectors.toSet());
+
+    Entry logEntry = new Entry();
+    logEntry.category = VALIDATION_FEATURE_SCHEMA;
+    logEntry.timestamp = cleanDate();
+    if (values.isEmpty()) {
+      logEntry.message = "No messages validated";
+      logEntry.level = WARNING.value();
+    } else if (failures.isEmpty()) {
+      logEntry.message = "All schema validations passed";
+      logEntry.level = NOTICE.value();
+    } else {
+      logEntry.message = "Schema violations found";
+      logEntry.level = ERROR.value();
+    }
+    return logEntry;
+  }
+
   /**
    * Set the extra field test capability for device config. Used for change tracking.
    *
@@ -648,26 +709,6 @@ public class SequenceBase {
     emitSequenceResult(result, bucket.value(), methodName, stage, score, message);
   }
 
-  private static void emitSequenceResult(SequenceResult result, String bucket, String methodName,
-      String stage,
-      int score, String message) {
-    emitSequencerOut(format(RESULT_FORMAT, result, bucket, methodName, stage, score, message));
-  }
-
-  private static void emitSequencerOut(String resultString) {
-    if (activeInstance != null) {
-      activeInstance.notice(resultString);
-    } else {
-      System.err.println(resultString);
-    }
-    try (PrintWriter log = new PrintWriter(new FileOutputStream(resultSummary, true))) {
-      log.println(resultString);
-    } catch (Exception e) {
-      throw new RuntimeException("While writing report summary " + resultSummary.getAbsolutePath(),
-          e);
-    }
-  }
-
   private void recordSchemaValidations(Description description) {
     validationResults.entrySet().stream()
         .filter(isInterestingValidation())
@@ -721,46 +762,6 @@ public class SequenceBase {
   private void emitSchemaResult(String schemaName, SequenceResult result, String detail,
       String sequence, String bucket, String stage) {
     emitSequencerOut(format(SCHEMA_FORMAT, result, bucket, sequence, stage, schemaName, detail));
-  }
-
-  private static void summarizeSchemaStages() {
-    validationState.schemas.forEach((schema, schemaResult) -> {
-      Map<FeatureStage, List<SequenceValidationState>> schemaStages = new HashMap<>();
-      schemaResult.sequences.forEach((sequence, sequenceResult) -> {
-        schemaStages.computeIfAbsent(sequenceResult.stage, stage -> new ArrayList<>())
-            .add(sequenceResult);
-      });
-      schemaResult.stages = schemaStages.entrySet().stream().collect(Collectors.toMap(
-          Map.Entry::getKey, SequenceBase::summarizeSchemaResults));
-      schemaResult.stages.forEach((stage, entry) -> {
-        SequenceResult result = RESULT_LEVEL_MAP.inverse().get(Level.fromValue(entry.level));
-        String stageValue = stage.value();
-        String schemaStage = schema + "_" + stageValue;
-        emitSequenceResult(result, "schemas", schemaStage, stageValue.toUpperCase(), 5, entry.message);
-      });
-    });
-  }
-
-  private static Entry summarizeSchemaResults(
-      Map.Entry<FeatureStage, List<SequenceValidationState>> entry) {
-    List<SequenceValidationState> values = entry.getValue();
-    Set<SequenceValidationState> failures = values.stream()
-        .filter(state -> state.result != SequenceResult.PASS).collect(Collectors.toSet());
-
-    Entry logEntry = new Entry();
-    logEntry.category = VALIDATION_FEATURE_SCHEMA;
-    logEntry.timestamp = cleanDate();
-    if (values.isEmpty()) {
-      logEntry.message = "No messages validated";
-      logEntry.level = WARNING.value();
-    } else if (failures.isEmpty()) {
-      logEntry.message = "All schema validations passed";
-      logEntry.level = NOTICE.value();
-    } else {
-      logEntry.message = "Schema validations found";
-      logEntry.level = ERROR.value();
-    }
-    return logEntry;
   }
 
   private SchemaValidationState newSchemaValidationState(String key) {
