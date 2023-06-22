@@ -132,7 +132,7 @@ public class SequenceBase {
   public static final String STATE_UPDATE_MESSAGE_TYPE = "state_update";
   static final FeatureStage DEFAULT_MIN_STAGE = BETA;
   private static final int FUNCTIONS_VERSION_BETA = Validator.REQUIRED_FUNCTION_VER;
-  private static final int FUNCTIONS_VERSION_ALPHA = 8; // Version required for alpha execution.
+  private static final int FUNCTIONS_VERSION_ALPHA = 9; // Version required for alpha execution.
   private static final long CONFIG_BARRIER_MS = 1000;
   private static final String START_END_MARKER = "################################";
   private static final String RESULT_FORMAT = "RESULT %s %s %s %s %s %s";
