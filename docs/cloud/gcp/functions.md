@@ -55,8 +55,8 @@ to an _agent_ connected over PubSub, but has a different authentication/connecti
 a PubSub connection will rely on a GCP-based IAM auth to provide access to PubSub resources,
 while a _reflector_ connection relies on a device-specific credential and connects over MQTT.
 
-Utilities connect to the `UDMIS-REFLECT` IoT Core registry, backed by the _udmi__reflect_ topic/function.
-The 'device' within the `UDMIS-REFLECT` registry is actually the _site\_name_ of the site (so not
+Utilities connect to the `UDMI-REFLECT` IoT Core registry, backed by the _udmi__reflect_ topic/function.
+The 'device' within the `UDMI-REFLECT` registry is actually the _site\_name_ of the site (so not
 an actual device), corresponding to the IoT Core _registry_ containing the actual device connections. The
 (undocumented) reflector API allows for all the basic device-oriented operations { _config_, _state_, _events_,
 _commands } as well as some meta-functions like querying the version of running UDMIS functions.

@@ -28,7 +28,7 @@ const { PubSub } = require('@google-cloud/pubsub');
 const pubsub = new PubSub();
 const iot = require('@google-cloud/iot');
 
-const REFLECT_REGISTRY = 'UDMIS-REFLECT';
+const REFLECT_REGISTRY = 'UDMI-REFLECT';
 const UDMI_VERSION = version.udmi_version;
 
 const EVENT_TYPE = 'event';
