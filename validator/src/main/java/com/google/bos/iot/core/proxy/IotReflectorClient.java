@@ -55,7 +55,7 @@ import udmi.schema.UdmiState;
 public class IotReflectorClient implements MessagePublisher {
 
   public static final String UDMI_FOLDER = "udmi";
-  private static final int MIN_REQUIRED_VERSION = 8;
+  private static final int MIN_REQUIRED_VERSION = 9;
   private static final String IOT_KEY_ALGORITHM = "RS256";
   private static final String UDMIS_REFLECT = "UDMIS-REFLECT";
   private static final String MOCK_DEVICE_NUM_ID = "123456789101112";
