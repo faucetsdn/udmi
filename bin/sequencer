@@ -5,11 +5,14 @@
 #
 
 ROOT_DIR=$(realpath $(dirname $0)/..)
-TEST_LOG=out/sequencer.out
+TEST_LOG=$ROOT_DIR/out/sequencer.out
+SCHEMA_OUT=$ROOT_DIR/out/schemas.out
 log_level=INFO
 alt_registry=${UDMI_ALT_REGISTRY:-ZZ-REDIRECT-NA}
 min_stage=PREVIEW
-export UDMI_VERSION=`cd $ROOT; git describe`
+export UDMI_VERSION=`cd $ROOT_DIR; git describe`
+
+rm -f $TEST_LOG $SCHEMA_OUT
 
 while [[ $1 =~ ^- ]]; do
     if [[ $1 == '-a' ]]; then
@@ -99,6 +102,6 @@ if [[ $(wc -l < out/sequencer.res) -eq 0 ]]; then
     exit 1
 fi
 
-fgrep RESULT $site_model/out/devices/$device_id/RESULT.log | fgrep ' schemas ' | tee out/schemas.out
+fgrep RESULT $site_model/out/devices/$device_id/RESULT.log | fgrep ' schemas ' | tee $SCHEMA_OUT
 
 bin/check_version
