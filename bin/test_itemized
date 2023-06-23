@@ -75,7 +75,7 @@ while read -u 7 action test_name remainder; do
     result=$(grep -E -m 1 "RESULT [a-z]+ [a-z.]+ $test_name " $SEQUENCER_OUT)
     echo ${result/*sequence RESULT/RESULT} >> $RESULTS_OUT
 
-    echo =========== $test_name
+    echo =========== $test_name >> $SCHEMAS_OUT
     cat out/schemas.out >> $SCHEMAS_OUT
 
     sleep 2
