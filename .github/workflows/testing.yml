@@ -249,7 +249,7 @@ jobs:
       - name: itemized sequencer tests
         run: |
           bin/test_itemized $GCP_TARGET_PROJECT
-          more out/test_itemized.out
+          more out/test_itemized.out out/schemas_itemized.out | cat
       - name: pubber logs
         if: ${{ always() }}
         run: |
