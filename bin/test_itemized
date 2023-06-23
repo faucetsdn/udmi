@@ -1,4 +1,4 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 
 ROOT_DIR=$(dirname $0)/..
 cd $ROOT_DIR
@@ -75,6 +75,7 @@ while read -u 7 action test_name remainder; do
     result=$(grep -E -m 1 "RESULT [a-z]+ [a-z.]+ $test_name " $SEQUENCER_OUT)
     echo ${result/*sequence RESULT/RESULT} >> $RESULTS_OUT
 
+    echo =========== $test_name
     cat out/schemas.out >> $SCHEMAS_OUT
 
     sleep 2

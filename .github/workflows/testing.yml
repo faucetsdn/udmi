@@ -247,13 +247,13 @@ jobs:
         run: |
           cd sites/udmi_site_model/out && more `find . -type f` || true
       - name: itemized sequencer tests
-        run: |
-          bin/test_itemized $GCP_TARGET_PROJECT
-          more out/test_itemized.out out/schemas_itemized.out | cat
-      - name: pubber logs
         if: ${{ always() }}
         run: |
-          more out/pubber.out* pubber/out/*/*.json || true
+          bin/test_itemized $GCP_TARGET_PROJECT
+      - name: itemized output logs
+        if: ${{ always() }}
+        run: |
+          more out/test_itemized.out out/schemas_itemized.out | cat
 
   redirect:
     name: Endpoint Redirection
