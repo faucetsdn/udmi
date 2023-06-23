@@ -12,6 +12,9 @@ alt_registry=${UDMI_ALT_REGISTRY:-ZZ-REDIRECT-NA}
 min_stage=PREVIEW
 export UDMI_VERSION=`cd $ROOT_DIR; git describe`
 
+# For cross-env sort stability
+export LC_ALL=C
+
 rm -f $TEST_LOG $SCHEMA_OUT
 
 while [[ $1 =~ ^- ]]; do
@@ -102,6 +105,8 @@ if [[ $(wc -l < out/sequencer.res) -eq 0 ]]; then
     exit 1
 fi
 
-fgrep RESULT $site_model/out/devices/$device_id/RESULT.log | fgrep ' schemas ' | tee $SCHEMA_OUT
+# Sort by test name (4th field)
+fgrep RESULT $site_model/out/devices/$device_id/RESULT.log | \
+    fgrep ' schemas ' | sort -k 3 | tee $SCHEMA_OUT
 
 bin/check_version
