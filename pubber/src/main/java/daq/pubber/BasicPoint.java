@@ -24,10 +24,12 @@ public abstract class BasicPoint implements AbstractPoint {
    *
    * @param name     Point name
    * @param writable True if writable
+   * @param units    Units for the point
    */
-  public BasicPoint(String name, boolean writable) {
+  public BasicPoint(String name, boolean writable, String units) {
     this.name = name;
     this.writable = writable;
+    state.units = units;
     dirty = true;
   }
 
