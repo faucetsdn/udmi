@@ -171,6 +171,7 @@ jobs:
       - name: schema validation output
         if: ${{ always() }}
         run: |
+          cat out/schemas.out || true
           find sites/udmi_site_model/out/devices/ -name RESULT.log | xargs fgrep -i schema
       - name: pubber logs
         if: ${{ always() }}
