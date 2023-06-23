@@ -1,31 +1,41 @@
+=========== feature_enumeration
 RESULT pass schemas event_discovery_preview PREVIEW 5 All schema validations passed
 RESULT pass schemas event_pointset_preview PREVIEW 5 All schema validations passed
 RESULT pass schemas event_system_preview PREVIEW 5 All schema validations passed
 RESULT pass schemas state_update_preview PREVIEW 5 All schema validations passed
+=========== broken_config
 RESULT pass schemas event_pointset_alpha ALPHA 5 All schema validations passed
 RESULT pass schemas event_system_alpha ALPHA 5 All schema validations passed
 RESULT pass schemas state_update_alpha ALPHA 5 All schema validations passed
+=========== endpoint_failure_and_restart
 RESULT pass schemas event_pointset_disabled DISABLED 5 All schema validations passed
 RESULT pass schemas event_system_disabled DISABLED 5 All schema validations passed
 RESULT fail schemas state_update_disabled DISABLED 5 Schema violations found
+=========== valid_serial_no
 RESULT pass schemas event_pointset_alpha ALPHA 5 All schema validations passed
 RESULT pass schemas event_system_alpha ALPHA 5 All schema validations passed
 RESULT pass schemas state_update_alpha ALPHA 5 All schema validations passed
+=========== writeback_success
 RESULT pass schemas event_pointset_alpha ALPHA 5 All schema validations passed
 RESULT pass schemas event_system_alpha ALPHA 5 All schema validations passed
 RESULT pass schemas state_update_alpha ALPHA 5 All schema validations passed
+=========== writeback_success
 RESULT pass schemas event_pointset_alpha ALPHA 5 All schema validations passed
 RESULT pass schemas event_system_alpha ALPHA 5 All schema validations passed
 RESULT pass schemas state_update_alpha ALPHA 5 All schema validations passed
+=========== pointset_sample_rate
 RESULT pass schemas event_pointset_alpha ALPHA 5 All schema validations passed
 RESULT pass schemas event_system_alpha ALPHA 5 All schema validations passed
 RESULT pass schemas state_update_alpha ALPHA 5 All schema validations passed
+=========== system_mode_restart
 RESULT pass schemas event_pointset_alpha ALPHA 5 All schema validations passed
 RESULT pass schemas event_system_alpha ALPHA 5 All schema validations passed
 RESULT pass schemas state_update_alpha ALPHA 5 All schema validations passed
+=========== broken_config
 RESULT pass schemas event_pointset_alpha ALPHA 5 All schema validations passed
 RESULT pass schemas event_system_alpha ALPHA 5 All schema validations passed
 RESULT pass schemas state_update_alpha ALPHA 5 All schema validations passed
+=========== system_last_update
 RESULT fail schemas event_pointset_stable STABLE 5 Schema violations found
 RESULT pass schemas event_system_stable STABLE 5 All schema validations passed
 RESULT pass schemas state_update_stable STABLE 5 All schema validations passed
