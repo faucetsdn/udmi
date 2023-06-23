@@ -1152,6 +1152,11 @@ public class SequenceBase {
       trace("received command " + attributeMark);
     }
 
+    if (SubFolder.ERROR.value().equals(subFolderRaw)) {
+      handlePipelineError(subTypeRaw, message);
+      return;
+    }
+
     if (!SequenceBase.getDeviceId().equals(deviceId)) {
       return;
     }
@@ -1162,9 +1167,7 @@ public class SequenceBase {
 
     validateMessage(attributes, message);
 
-    if (SubFolder.ERROR.value().equals(subFolderRaw)) {
-      handlePipelineError(subTypeRaw, message);
-    } else if (SubFolder.UPDATE.value().equals(subFolderRaw)) {
+    if (SubFolder.UPDATE.value().equals(subFolderRaw)) {
       handleReflectorMessage(subTypeRaw, message, transactionId);
     } else {
       handleDeviceMessage(message, subFolderRaw, subTypeRaw, transactionId);

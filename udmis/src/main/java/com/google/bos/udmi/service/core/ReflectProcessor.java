@@ -1,5 +1,6 @@
 package com.google.bos.udmi.service.core;
 
+import static com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl.getMessageClassFor;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.Common.ERROR_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
@@ -130,22 +131,27 @@ public class ReflectProcessor extends UdmisComponent {
   }
 
   private CloudModel reflectPropagate(Envelope attributes, Map<String, Object> payload) {
-    switch (attributes.subType) {
-      case CONFIG:
-        provider.modifyConfig(attributes.deviceRegistryId, attributes.deviceId, SubFolder.UPDATE,
-            stringify(payload));
-        return new CloudModel();
-      default:
-        throw new RuntimeException("Unknown propagate subType " + attributes.subType);
+    // TODO: Replace this with published config message for a ConfigProcessor handler.
+    if (requireNonNull(attributes.subType) == SubType.CONFIG) {
+      provider.modifyConfig(attributes.deviceRegistryId, attributes.deviceId, SubFolder.UPDATE,
+          stringify(payload));
+      return new CloudModel();
     }
+    Class<?> messageClass = getMessageClassFor(attributes);
+    publish(convertToStrict(messageClass, payload));
+    return new CloudModel();
   }
 
   private CloudModel reflectQuery(Envelope attributes, Map<String, Object> payload) {
     checkState(payload.size() == 0, "unexpected non-empty message payload");
-    if (requireNonNull(attributes.subFolder) == SubFolder.CLOUD) {
-      return reflectQueryCloud(attributes);
+    switch (requireNonNull(attributes.subFolder)) {
+      case UPDATE:
+        return queryCloudDevice(attributes);
+      case CLOUD:
+        return reflectQueryCloud(attributes);
+      default:
+        throw new RuntimeException("Unknown query folder: " + attributes.subFolder);
     }
-    throw new RuntimeException("Unknown query folder: " + attributes.subFolder);
   }
 
   private CloudModel reflectQueryCloud(Envelope attributes) {
