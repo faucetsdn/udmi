@@ -18,10 +18,12 @@ PUBBER_OUT=out/pubber.out
 SEQUENCER_OUT=out/sequencer.out
 RESULTS_OUT=out/test_itemized.out
 GOLDEN_FILE=etc/test_itemized.out
+SCHEMAS_OUT=out/schemas_itemized.out
+GOLDEN_SCHEMAS=etc/schemas_itemized.out
 
-rm -f $RESULTS_OUT $SEQUENCER_OUT $PUBBER_OUT
+rm -f $RESULTS_OUT $SEQUENCER_OUT $PUBBER_OUT $SCHEMAS_OUT
 mkdir -p out
-touch $RESULTS_OUT $SEQUENCER_OUT $PUBBER_OUT
+touch $RESULTS_OUT $SEQUENCER_OUT $PUBBER_OUT $SCHEMAS_OUT
 
 cat <<EOF > $udmi_profile
 {
@@ -73,9 +75,14 @@ while read -u 7 action test_name remainder; do
     result=$(grep -E -m 1 "RESULT [a-z]+ [a-z.]+ $test_name " $SEQUENCER_OUT)
     echo ${result/*sequence RESULT/RESULT} >> $RESULTS_OUT
 
+    cat out/schemas.out >> $SCHEMAS_OUT
+
     sleep 2
 
 done 7< $GOLDEN_FILE
 
 echo Comparing diff $RESULTS_OUT $GOLDEN_FILE
-diff -u out/test_itemized.out etc/test_itemized.out
+diff -u $RESULTS_OUT $GOLDEN_FILE
+
+echo Comparing diff $SCHEMAS_OUT $GOLDEN_SCHEMAS
+diff -u $SCHEMAS_OUT $GOLDEN_SCHEMAS
