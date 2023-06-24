@@ -17,8 +17,10 @@
     "provider": {
       "title": "Iot Provider",
       "enum": [
+        "dynamic",
         "gcp_native",
         "gcp",
+        "clearblade_native",
         "clearblade"
       ]
     },

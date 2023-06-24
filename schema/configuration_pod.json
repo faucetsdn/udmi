@@ -28,14 +28,12 @@
     },
     "iot_access": {
       "type": "object",
-      "title": "Iot Access",
+      "title": "Iot Access Providers",
       "additionalProperties": false,
-      "properties": {
-        "provider": {
-          "$ref": "file:common.json#/definitions/provider"
-        },
-        "project_id": {
-          "type": "string"
+      "existingJavaType": "java.util.HashMap<String, IotAccess>",
+      "patternProperties": {
+        "^[a-z]+$": {
+          "$ref": "file:access_iot.json"
         }
       }
     }

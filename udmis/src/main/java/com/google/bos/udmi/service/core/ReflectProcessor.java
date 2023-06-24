@@ -15,6 +15,7 @@ import static com.google.udmi.util.JsonUtil.loadFileStrictRequired;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static java.util.Objects.requireNonNull;
+import static udmi.schema.Envelope.SubFolder.UPDATE;
 
 import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.StateUpdate;
@@ -43,15 +44,9 @@ public class ReflectProcessor extends UdmisComponent {
       loadFileStrictRequired(SetupUdmiConfig.class, new File(DEPLOY_FILE));
 
   @Override
-  public void activate() {
-    debug(stringify(deployed));
-    super.activate();
-  }
-
-  @Override
   protected void defaultHandler(Object message) {
     MessageContinuation continuation = getContinuation(message);
-    requireNonNull(provider, "iot access provider not set");
+    requireNonNull(iotAccess, "iot access provider not set");
     Envelope reflection = continuation.getEnvelope();
     try {
       if (reflection.subFolder == null) {
@@ -114,17 +109,18 @@ public class ReflectProcessor extends UdmisComponent {
 
   private void processReflection(Envelope reflection, Envelope envelope,
       Map<String, Object> payload) {
+    iotAccess.setProviderAffinity(envelope.deviceRegistryId, envelope.deviceId, reflection.source);
     CloudModel result = getReflectionResult(envelope, payload);
     envelope.subType = SubType.REPLY;
     sendReflectCommand(reflection, envelope, result);
   }
 
   private CloudModel queryCloudDevice(Envelope attributes) {
-    return provider.fetchDevice(attributes.deviceRegistryId, attributes.deviceId);
+    return iotAccess.fetchDevice(attributes.deviceRegistryId, attributes.deviceId);
   }
 
   private CloudModel queryCloudRegistry(Envelope attributes) {
-    return provider.listDevices(attributes.deviceRegistryId);
+    return iotAccess.listDevices(attributes.deviceRegistryId);
   }
 
   private CloudModel queryDeviceState(Envelope attributes) {
@@ -141,14 +137,14 @@ public class ReflectProcessor extends UdmisComponent {
 
   private CloudModel reflectModel(Envelope attributes, CloudModel request) {
     return requireNonNull(
-        provider.modelDevice(attributes.deviceRegistryId, attributes.deviceId, request),
+        iotAccess.modelDevice(attributes.deviceRegistryId, attributes.deviceId, request),
         "missing reflect model response");
   }
 
   private CloudModel reflectPropagate(Envelope attributes, Map<String, Object> payload) {
     // TODO: Replace this with published config message for a ConfigProcessor handler.
     if (requireNonNull(attributes.subType) == SubType.CONFIG) {
-      provider.modifyConfig(attributes.deviceRegistryId, attributes.deviceId, SubFolder.UPDATE,
+      iotAccess.modifyConfig(attributes.deviceRegistryId, attributes.deviceId, SubFolder.UPDATE,
           stringify(payload));
       return new CloudModel();
     }
@@ -178,7 +174,7 @@ public class ReflectProcessor extends UdmisComponent {
     String reflectRegistry = reflection.deviceRegistryId;
     String deviceRegistry = reflection.deviceId;
     message.payload = encodeBase64(stringify(payload));
-    provider.sendCommand(reflectRegistry, deviceRegistry, SubFolder.UDMI, stringify(message));
+    iotAccess.sendCommand(reflectRegistry, deviceRegistry, SubFolder.UDMI, stringify(message));
   }
 
   private void stateHandler(Envelope envelope, UdmiState toolState) {
@@ -197,6 +193,13 @@ public class ReflectProcessor extends UdmisComponent {
     configMap.put(SubFolder.UDMI.value(), udmiConfig);
     String contents = stringify(configMap);
     debug("Setting reflector config %s %s %s", registryId, deviceId, contents);
-    provider.updateConfig(registryId, deviceId, contents);
+    iotAccess.setProviderAffinity(registryId, deviceId, envelope.source);
+    iotAccess.modifyConfig(registryId, deviceId, UPDATE, contents);
+  }
+
+  @Override
+  public void activate() {
+    debug(stringify(deployed));
+    super.activate();
   }
 }

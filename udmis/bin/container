@@ -6,7 +6,7 @@ DROOT=.
 
 function usage {
     echo Error: $*
-    echo Usage: $0 { build, shell, run, push, deploy, status, logs, stop }
+    echo Usage: $0 { build, shell, run, push, deploy, update, status, logs, stop }
     echo Project: $PROJECT
     exit 1
 }
@@ -33,6 +33,7 @@ RUNARGS="--rm -ti -v $PWD/etc:/udmi -v $HOME/.config:/root/.config --tmpfs /tmp"
 if [[ $cmd == build ]]; then
     rm -rf var
     mkdir -p var
+    bin/build
     cat <<EOF > var/deployed_version.json
 {
   "udmi_version": "$version",
@@ -51,10 +52,13 @@ elif [[ $cmd == push ]]; then
     docker tag $IMAGE $REPOSITORY/$IMAGE
     docker push $REPOSITORY/$IMAGE
     sed -e "s/@PROJECT@/$PROJECT/" < k8s_pod.yaml > var/k8s_pod.yaml
+    sed -e "s/@PROJECT@/$PROJECT/" < k8s_deployment.yaml > var/k8s_deployment.yaml
     echo Updated var/k8s_pod.yaml for deployment.
 elif [[ $cmd == deploy ]]; then
     kubectl delete pod/udmi-test-pod || true
     kubectl apply -f var/k8s_pod.yaml
+elif [[ $cmd == update ]]; then
+    kubectl apply -f var/k8s_deployment.yaml
 elif [[ $cmd == status ]]; then
     kubectl describe pods udmi-test-pod
 elif [[ $cmd == logs ]]; then
