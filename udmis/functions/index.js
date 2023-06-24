@@ -156,6 +156,10 @@ function sendCommandSafe(registryId, deviceId, subFolder, messageStr, transactio
 exports.udmi_target = functions.pubsub.topic('udmi_target').onPublish((event) => {
   const attributes = event.attributes;
   setReflectRegistry(attributes.deviceRegistryId, attributes.reflectRegistry);
+  if (!attributes.deviceId) {
+    console.log('Ignoring update with missing deviceId', attributes.deviceRegistryId);
+    return null;
+  }
 
   const subType = attributes.subType || EVENT_TYPE;
   if (subType != EVENT_TYPE) {
@@ -296,8 +300,9 @@ function propagateReflectConfig(origAttributes, deviceConfig) {
   attributes.reflectRegistry = reflectRegistries[origAttributes.deviceId];
   attributes.subFolder = UPDATE_FOLDER;
   attributes.subType = STATE_TYPE;
-  console.log('Propagating config to udmi_target', attributes);
-  return publishPubsubMessage('udmi_target', attributes, deviceConfig);
+  console.log('Propagating config to udmi_target & udmi_state', attributes);
+  return publishPubsubMessage('udmi_target', attributes, deviceConfig).
+    then(() => publishPubsubMessage('udmi_state', attributes, deviceConfig));
 }
 
 function udmi_model(attributes, msgObject) {
@@ -727,11 +732,16 @@ function udmiToIotCoreKeyFormat(udmi) {
 
 exports.udmi_state = functions.pubsub.topic('udmi_state').onPublish((event) => {
   const attributes = event.attributes;
+  setReflectRegistry(attributes.deviceRegistryId, attributes.reflectRegistry);
+  if (!attributes.deviceId) {
+    console.log('Ignoring update with missing deviceId', attributes.deviceRegistryId);
+    return null;
+  }
   const base64 = event.data;
   const msgString = Buffer.from(base64, 'base64').toString();
   try {
     const msgObject = JSON.parse(msgString);
-    if (attributes.subFolder) {
+    if (attributes.subFolder && attributes.subFolder != UPDATE_FOLDER) {
       attributes.subType = STATE_TYPE;
       return process_state_block(attributes, msgObject);
     } else {
