@@ -8,9 +8,9 @@
  * indicate the MIN/MAX versions supported, while the client determines what is required.
  *
  * LEVEL 8: Schema refactoring for UDMIS container compatability.
- * LEVEL 9: Dynamic determination of reflect registry.
+ * LEVEL 9: Use UDMI-REFLECT as reflect registry.
  */
-const FUNCTIONS_VERSION_MIN = 8;
+const FUNCTIONS_VERSION_MIN = 9;
 const FUNCTIONS_VERSION_MAX = 9;
 
 // Hacky stuff to work with "maybe have firestore enabled"
@@ -42,7 +42,7 @@ const CLOUD_FOLDER = 'cloud';
 const UDMI_FOLDER = 'udmi';
 const ERROR_FOLDER = 'error';
 
-const reflectRegistries = {};
+const REFLECT_REGISTRY = 'UDMI-REFLECT';
 
 const ALL_REGIONS = ['us-central1', 'europe-west1', 'asia-east1'];
 let registryRegions = null;
@@ -99,13 +99,6 @@ function reflectError(attributes, base64, error) {
 }
 
 function sendEnvelope(registryId, deviceId, subType, subFolder, message, transactionId) {
-  const reflectRegistry = reflectRegistries[registryId];
-  console.log('using reflect registry', registryId, reflectRegistry);
-  if (!reflectRegistry) {
-    console.warn('reflection registry missing for', registryId);
-    return Promise.resolve();
-  }
-
   console.log('sendEnvelope', registryId, deviceId, subType, subFolder, transactionId);
 
   const messageStr = (typeof message === 'string') ? message : JSON.stringify(message);
@@ -119,7 +112,7 @@ function sendEnvelope(registryId, deviceId, subType, subFolder, message, transac
     transactionId: transactionId,
     payload: base64
   };
-  return sendCommand(reflectRegistry, registryId, null, envelope, transactionId);
+  return sendCommand(REFLECT_REGISTRY, registryId, null, envelope, transactionId);
 }
 
 function sendCommand(registryId, deviceId, subFolder, message, transactionId) {
@@ -153,7 +146,6 @@ function sendCommandSafe(registryId, deviceId, subFolder, messageStr, transactio
 
 exports.udmi_target = functions.pubsub.topic('udmi_target').onPublish((event) => {
   const attributes = event.attributes;
-  setReflectRegistry(attributes.deviceRegistryId, attributes.reflectRegistry);
   if (!attributes.deviceId) {
     console.log('Ignoring update with missing deviceId', attributes.deviceRegistryId);
     return Promise.resolve();
@@ -201,13 +193,6 @@ function getRegistryRegions() {
   }).catch(console.error);
 }
 
-function setReflectRegistry(reflectDevice, reflectRegistry) {
-  if (reflectRegistry && reflectRegistries[reflectDevice] != reflectRegistry) {
-    console.log('Setting reflect registry', reflectDevice, reflectRegistry);
-    reflectRegistries[reflectDevice] = reflectRegistry;
-  }
-}
-
 exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) => {
   const attributes = event.attributes;
   const base64 = event.data;
@@ -222,10 +207,6 @@ exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) 
     console.error('Unexpected subFolder', attributes.subFolder);
     return;
   }
-
-  const reflectRegistry = attributes.deviceRegistryId;
-  const reflectDevice = attributes.deviceId;
-  setReflectRegistry(reflectDevice, reflectRegistry);
 
   const envelope = {};
   envelope.projectId = attributes.projectId;
@@ -255,7 +236,6 @@ exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) 
     }
     const targetFunction = envelope.subType === 'event' ? 'target' : envelope.subType;
     target = 'udmi_' + targetFunction;
-    envelope.reflectRegistry = reflectRegistry;
     return publishPubsubMessage(target, envelope, payload);
   }).catch(e => reflectError(envelope, base64, e));
 });
@@ -285,26 +265,8 @@ async function udmi_process_reflector_state(attributes, msgObject) {
     setup.last_state = msgObject.timestamp;
   }
 
-  console.log('Setting reflector config', registryId, deviceId, JSON.stringify(deviceConfig));
   const startTime = currentTimestamp();
-  return modify_device_config(registryId, deviceId, UPDATE_FOLDER, deviceConfig, startTime, null).
-    then(() => propagateReflectConfig(attributes, deviceConfig));
-}
-
-function propagateReflectConfig(origAttributes, deviceConfig) {
-  const attributes = {};
-  attributes.reflectRegistry = reflectRegistries[origAttributes.deviceId];
-  if (!attributes.reflectRegistry) {
-    console.warn('No config reflect registry defined', origAttributes.deviceId);
-    return Promise.resolve();
-  }
-  attributes.projectId = origAttributes.projectId;
-  attributes.deviceRegistryId = origAttributes.deviceId;
-  attributes.subFolder = UPDATE_FOLDER;
-  attributes.subType = STATE_TYPE;
-  console.log('Propagating config to udmi_target & udmi_state', attributes);
-  return publishPubsubMessage('udmi_target', attributes, deviceConfig).
-    then(() => publishPubsubMessage('udmi_state', attributes, deviceConfig));
+  return modify_device_config(registryId, deviceId, UPDATE_FOLDER, deviceConfig, startTime, null);
 }
 
 function udmi_model(attributes, msgObject) {
@@ -734,7 +696,6 @@ function udmiToIotCoreKeyFormat(udmi) {
 
 exports.udmi_state = functions.pubsub.topic('udmi_state').onPublish((event) => {
   const attributes = event.attributes;
-  setReflectRegistry(attributes.deviceRegistryId, attributes.reflectRegistry);
   if (!attributes.deviceId) {
     console.log('Ignoring update with missing deviceId', attributes.deviceRegistryId);
     return Promise.resolve();
@@ -766,7 +727,6 @@ function process_state_update(attributes, msgObject) {
 
   attributes.subFolder = UPDATE_FOLDER;
   attributes.subType = STATE_TYPE;
-  attributes.reflectRegistry = reflectRegistries[registryId];
   promises.push(publishPubsubMessage('udmi_target', attributes, msgObject));
 
   const system = msgObject.system;
@@ -805,8 +765,6 @@ exports.udmi_config = functions.pubsub.topic('udmi_config').onPublish((event) =>
   const msgString = Buffer.from(base64, 'base64').toString();
 
   const msgObject = JSON.parse(msgString);
-
-  setReflectRegistry(registryId, attributes.reflectRegistry);
 
   console.log('Config message', registryId, deviceId, subFolder, transactionId);
   if (!msgString) {
