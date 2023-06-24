@@ -155,13 +155,14 @@ function sendCommandSafe(registryId, deviceId, subFolder, messageStr, transactio
 
 exports.udmi_target = functions.pubsub.topic('udmi_target').onPublish((event) => {
   const attributes = event.attributes;
+  setReflectRegistry(attributes.deviceRegistryId, attributes.reflectRegistry);
+
   const subType = attributes.subType || EVENT_TYPE;
   if (subType != EVENT_TYPE) {
     return null;
   }
   const base64 = event.data;
 
-  setReflectRegistry(attributes.registryId, attributes.reflectRegistry);
 
   try {
     const msgString = Buffer.from(base64, 'base64').toString();
