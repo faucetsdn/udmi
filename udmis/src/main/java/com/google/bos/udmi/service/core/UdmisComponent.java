@@ -29,7 +29,7 @@ public abstract class UdmisComponent extends ContainerBase {
   );
 
   protected MessageDispatcher dispatcher;
-  protected IotAccessProvider provider;
+  protected IotAccessProvider iotAccess;
 
   /**
    * Create a new instance of the given target class with the provided configuration.
@@ -88,8 +88,8 @@ public abstract class UdmisComponent extends ContainerBase {
     return dispatcher.getHandlerCount(clazz);
   }
 
-  public void setIotAccessProvider(IotAccessProvider provider) {
-    this.provider = provider;
+  public void setIotAccessProvider(IotAccessProvider iotAccess) {
+    this.iotAccess = iotAccess;
   }
 
   /**

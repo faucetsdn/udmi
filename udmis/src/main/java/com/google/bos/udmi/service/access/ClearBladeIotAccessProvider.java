@@ -78,6 +78,7 @@ import udmi.schema.IotAccess;
  */
 public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAccessProvider {
 
+  private static final String UDMIS_REGISTRY = "UDMS-REFLECT";
   static final Set<String> CLOUD_REGIONS =
       ImmutableSet.of("us-central1", "europe-west1", "asia-east1");
   private static final String EMPTY_VERSION = "0";
@@ -97,15 +98,13 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
       .build();
 
   private final String projectId;
-  private final Map<String, String> registryCloudRegions;
+  private Map<String, String> registryCloudRegions;
 
   /**
    * Create a new instance for interfacing with GCP IoT Core.
    */
   public ClearBladeIotAccessProvider(IotAccess iotAccess) {
     projectId = requireNonNull(iotAccess.project_id, "gcp project id not specified");
-    debug("Initializing ClearBlade access provider for project " + projectId);
-    registryCloudRegions = fetchRegistryCloudRegions();
   }
 
   private static CloudModel convertDevice(Device device, Operation operation) {
@@ -367,6 +366,23 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
         .forEach(id -> unbindDevice(registryId, gatewayId, id)));
   }
 
+  private void updateConfig(String registryId, String deviceId, String config) {
+    try {
+      DeviceManagerClient deviceManagerClient = getDeviceManagerClient();
+      ByteString binaryData = new ByteString(encodeBase64(config));
+      String updateVersion = null;
+      String location = getRegistryLocation(registryId);
+      ModifyCloudToDeviceConfigRequest request =
+          ModifyCloudToDeviceConfigRequest.Builder.newBuilder()
+              .setName(DeviceName.of(projectId, location, registryId, deviceId).toString())
+              .setBinaryData(binaryData).setVersionToUpdate(updateVersion).build();
+      DeviceConfig response = deviceManagerClient.modifyCloudToDeviceConfig(request);
+      System.err.println("Config modified version " + response.getVersion());
+    } catch (Exception e) {
+      throw new RuntimeException("While modifying device config", e);
+    }
+  }
+
   private CloudModel updateDevice(String registryId, Device device) {
     DeviceManagerClient deviceManagerClient = getDeviceManagerClient();
     String deviceId = device.toBuilder().getId();
@@ -383,6 +399,24 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
       return cloudModel;
     } catch (Exception e) {
       throw new RuntimeException("While updating " + deviceId, e);
+    }
+  }
+
+  @Override
+  public void activate() {
+    super.activate();
+    debug("Initializing ClearBlade access provider for project " + projectId);
+    registryCloudRegions = fetchRegistryCloudRegions();
+  }
+
+  @Override
+  public String fetchRegistryMetadata(String registryId, String metadataKey) {
+    try {
+      CloudModel cloudModel = fetchDevice(UDMIS_REGISTRY, registryId);
+      return cloudModel.metadata.get(metadataKey);
+    } catch (Exception e) {
+      debug(format("No device entry for %s/%s", UDMIS_REGISTRY, registryId));
+      return null;
     }
   }
 
@@ -462,10 +496,10 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
   @Override
   public void modifyConfig(String registryId, String deviceId, SubFolder subFolder,
       String contents) {
-    // TODO: Need to implement checking-and-retry of config version for concurrent operations.
     if (subFolder == SubFolder.UPDATE) {
       updateConfig(registryId, deviceId, contents);
     } else {
+      // TODO: Need to implement checking-and-retry of config version for concurrent operations.
       String configString = fetchConfig(registryId, deviceId).getValue();
       Map<String, Object> configMap = toMap(configString);
       configMap.put(subFolder.toString(), contents);
@@ -491,24 +525,6 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
     } catch (Exception e) {
       throw new RuntimeException(
           format("While sending %s command to %s/%s", subFolder, registryId, deviceId), e);
-    }
-  }
-
-  @Override
-  public void updateConfig(String registryId, String deviceId, String config) {
-    try {
-      DeviceManagerClient deviceManagerClient = getDeviceManagerClient();
-      ByteString binaryData = new ByteString(encodeBase64(config));
-      String updateVersion = null;
-      String location = getRegistryLocation(registryId);
-      ModifyCloudToDeviceConfigRequest request =
-          ModifyCloudToDeviceConfigRequest.Builder.newBuilder()
-              .setName(DeviceName.of(projectId, location, registryId, deviceId).toString())
-              .setBinaryData(binaryData).setVersionToUpdate(updateVersion).build();
-      DeviceConfig response = deviceManagerClient.modifyCloudToDeviceConfig(request);
-      System.err.println("Config modified version " + response.getVersion());
-    } catch (Exception e) {
-      throw new RuntimeException("While modifying device config", e);
     }
   }
 

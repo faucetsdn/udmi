@@ -104,7 +104,7 @@ class GcpIotAccessProviderTest {
 
   @Test
   void listDevices() throws IOException {
-    IotAccessProvider provider = new MockedGcpIotAccessProvider();
+    IotAccessProvider provider = getProvider();
     provider.activate();
 
     Devices devices = cloudIot.projects().locations().registries().devices();
@@ -119,5 +119,12 @@ class GcpIotAccessProviderTest {
     Set<String> strings = cloudModel.device_ids.keySet();
     assertEquals(1, strings.size(), "expected number of devices");
     assertTrue(strings.contains(TEST_DEVICE), "result contains expected device");
+  }
+
+  @NotNull
+  private MockedGcpIotAccessProvider getProvider() {
+    MockedGcpIotAccessProvider mockedGcpIotAccessProvider = new MockedGcpIotAccessProvider();
+    mockedGcpIotAccessProvider.activate();
+    return mockedGcpIotAccessProvider;
   }
 }

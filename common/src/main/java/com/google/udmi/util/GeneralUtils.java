@@ -15,17 +15,18 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.security.spec.ECField;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.TreeMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
-import javax.annotation.Nullable;
 
 public class GeneralUtils {
 
@@ -121,6 +122,11 @@ public class GeneralUtils {
     } catch (Exception e) {
       throw new RuntimeException("While loading json string", e);
     }
+  }
+
+  public static <T> Collector<Entry<String, T>, ?, TreeMap<String, String>> sortedMapCollector(
+      Function<Entry<String, T>, String> prioritizer) {
+    return Collectors.toMap(prioritizer, Entry::getKey, GeneralUtils::mapReplace, TreeMap::new);
   }
 
   public static String toJsonString(Object object) {

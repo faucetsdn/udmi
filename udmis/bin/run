@@ -13,7 +13,7 @@ cd $ROOT
 
 POD_JAR=build/libs/udmis-1.0-SNAPSHOT-all.jar
 
-java -jar $POD_JAR $POD_CONFIG || true
+java -jar $POD_JAR $POD_CONFIG
 
-tail -f /dev/null
+echo $?
 

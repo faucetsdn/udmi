@@ -75,6 +75,7 @@ public class GcpIotAccessProvider extends UdmisComponent implements IotAccessPro
   private static final String RSA_CERT_FORMAT = "RSA_X509_PEM";
   private static final String ES_KEY_FORMAT = "ES256_PEM";
   private static final String ES_CERT_FILE = "ES256_X509_PEM";
+  private static final String UDMIS_REGISTRY = "UDMS-REFLECT";
   private static final BiMap<Key_format, String> AUTH_TYPE_MAP =
       ImmutableBiMap.of(
           Key_format.RS_256, RSA_KEY_FORMAT,
@@ -87,8 +88,8 @@ public class GcpIotAccessProvider extends UdmisComponent implements IotAccessPro
   private static final GatewayConfig GATEWAY_CONFIG =
       new GatewayConfig().setGatewayType(GATEWAY_TYPE).setGatewayAuthMethod(ASSOCIATION_ONLY);
   private final String projectId;
-  private final Map<String, String> registryCloudRegions;
   private final CloudIot cloudIotService;
+  private Map<String, String> registryCloudRegions;
   private CloudIot.Projects.Locations.Registries registries;
 
   /**
@@ -98,7 +99,6 @@ public class GcpIotAccessProvider extends UdmisComponent implements IotAccessPro
   public GcpIotAccessProvider(IotAccess iotAccess) {
     projectId = requireNonNull(iotAccess.project_id, "gcp project id not specified");
     cloudIotService = createCloudIotService();
-    registryCloudRegions = fetchRegistryCloudRegions();
   }
 
   @NotNull
@@ -277,12 +277,38 @@ public class GcpIotAccessProvider extends UdmisComponent implements IotAccessPro
         .forEach(id -> unbindDevice(registryId, deviceId, id)));
   }
 
+  private void updateConfig(String registryId, String deviceId, String config) {
+    try {
+      String useConfig = ofNullable(config).orElse("");
+      registries.devices().modifyCloudToDeviceConfig(
+          getDevicePath(registryId, deviceId),
+          new ModifyCloudToDeviceConfigRequest().setBinaryData(
+              Base64.getEncoder().encodeToString(useConfig.getBytes()))).execute();
+    } catch (Exception e) {
+      throw new RuntimeException("While modifying device config", e);
+    }
+  }
+
   @Override
   public void activate() {
+    super.activate();
     try {
+      debug("Initializing GCP access provider for project " + projectId);
+      registryCloudRegions = fetchRegistryCloudRegions();
       registries = cloudIotService.projects().locations().registries();
     } catch (Exception e) {
       throw new RuntimeException("While activating", e);
+    }
+  }
+
+  @Override
+  public String fetchRegistryMetadata(String registryId, String metadataKey) {
+    try {
+      CloudModel cloudModel = fetchDevice(UDMIS_REGISTRY, registryId);
+      return cloudModel.metadata.get(metadataKey);
+    } catch (Exception e) {
+      debug(format("No device entry for %s/%s", UDMIS_REGISTRY, registryId));
+      return null;
     }
   }
 
@@ -386,19 +412,7 @@ public class GcpIotAccessProvider extends UdmisComponent implements IotAccessPro
   @Override
   public void shutdown() {
     registries = null;
-  }
-
-  @Override
-  public void updateConfig(String registryId, String deviceId, String config) {
-    try {
-      String useConfig = ofNullable(config).orElse("");
-      registries.devices().modifyCloudToDeviceConfig(
-          getDevicePath(registryId, deviceId),
-          new ModifyCloudToDeviceConfigRequest().setBinaryData(
-              Base64.getEncoder().encodeToString(useConfig.getBytes()))).execute();
-    } catch (Exception e) {
-      throw new RuntimeException("While modifying device config", e);
-    }
+    super.shutdown();
   }
 }
 

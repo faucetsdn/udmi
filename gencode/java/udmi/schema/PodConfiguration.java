@@ -39,13 +39,13 @@ public class PodConfiguration {
     @JsonProperty("bridges")
     public HashMap<String, BridgePodConfiguration> bridges;
     /**
-     * Iot Access
+     * Iot Access Providers
      * <p>
      * 
      * 
      */
     @JsonProperty("iot_access")
-    public IotAccess iot_access;
+    public HashMap<String, IotAccess> iot_access;
 
     @Override
     public int hashCode() {
