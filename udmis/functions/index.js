@@ -95,15 +95,15 @@ function reflectError(attributes, base64, error) {
     data: base64
   }
   attributes.subFolder = ERROR_FOLDER;
-  reflectMessage(attributes, message);
+  return reflectMessage(attributes, message);
 }
 
 function sendEnvelope(registryId, deviceId, subType, subFolder, message, transactionId) {
   const reflectRegistry = reflectRegistries[registryId];
   console.log('using reflect registry', registryId, reflectRegistry);
   if (!reflectRegistry) {
-    console.log('reflection registry missing for', registryId);
-    return;
+    console.warn('reflection registry missing for', registryId);
+    return Promise.resolve();
   }
 
   console.log('sendEnvelope', registryId, deviceId, subType, subFolder, transactionId);
@@ -127,9 +127,7 @@ function sendCommand(registryId, deviceId, subFolder, message, transactionId) {
 }
 
 function sendCommandStr(registryId, deviceId, subFolder, messageStr, transactionId) {
-  return registry_promise.then(() => {
-    return sendCommandSafe(registryId, deviceId, subFolder, messageStr, transactionId);
-  });
+  return registry_promise.then(() => sendCommandSafe(registryId, deviceId, subFolder, messageStr, transactionId));
 }
 
 function sendCommandSafe(registryId, deviceId, subFolder, messageStr, transactionId) {
@@ -158,22 +156,22 @@ exports.udmi_target = functions.pubsub.topic('udmi_target').onPublish((event) =>
   setReflectRegistry(attributes.deviceRegistryId, attributes.reflectRegistry);
   if (!attributes.deviceId) {
     console.log('Ignoring update with missing deviceId', attributes.deviceRegistryId);
-    return null;
+    return Promise.resolve();
   }
 
   const subType = attributes.subType || EVENT_TYPE;
   if (subType != EVENT_TYPE) {
-    return null;
+    return Promise.resolve();
   }
   const base64 = event.data;
 
-
+  const msgString = Buffer.from(base64, 'base64').toString();
   try {
-    const msgString = Buffer.from(base64, 'base64').toString();
     const msgObject = JSON.parse(msgString);
 
     return reflectMessage(attributes, msgObject);
   } catch (e) {
+    console.log('Error processing TAP2', JSON.stringify(attributes), msgString);
     return reflectError(attributes, base64, e);
   }
 });
@@ -247,7 +245,7 @@ exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) 
     envelope.cloudRegion = registryRegions[envelope.deviceRegistryId];
     if (!envelope.cloudRegion) {
       console.error('No cloud region found for target registry', envelope.deviceRegistryId);
-      return null;
+      return Promise.resolve();
     }
     if (envelope.subType === QUERY_TYPE) {
       return udmi_query(envelope);
@@ -295,9 +293,13 @@ async function udmi_process_reflector_state(attributes, msgObject) {
 
 function propagateReflectConfig(origAttributes, deviceConfig) {
   const attributes = {};
+  attributes.reflectRegistry = reflectRegistries[origAttributes.deviceId];
+  if (!attributes.reflectRegistry) {
+    console.warn('No config reflect registry defined', origAttributes.deviceId);
+    return Promise.resolve();
+  }
   attributes.projectId = origAttributes.projectId;
   attributes.deviceRegistryId = origAttributes.deviceId;
-  attributes.reflectRegistry = reflectRegistries[origAttributes.deviceId];
   attributes.subFolder = UPDATE_FOLDER;
   attributes.subType = STATE_TYPE;
   console.log('Propagating config to udmi_target & udmi_state', attributes);
@@ -735,7 +737,7 @@ exports.udmi_state = functions.pubsub.topic('udmi_state').onPublish((event) => {
   setReflectRegistry(attributes.deviceRegistryId, attributes.reflectRegistry);
   if (!attributes.deviceId) {
     console.log('Ignoring update with missing deviceId', attributes.deviceRegistryId);
-    return null;
+    return Promise.resolve();
   }
   const base64 = event.data;
   const msgString = Buffer.from(base64, 'base64').toString();
@@ -748,6 +750,7 @@ exports.udmi_state = functions.pubsub.topic('udmi_state').onPublish((event) => {
       return process_state_update(attributes, msgObject);
     }
   } catch (e) {
+    console.log('Error processing TAP1', JSON.stringify(attributes), msgString);
     attributes.subType = STATE_TYPE;
     return reflectError(attributes, base64, e);
   }
@@ -808,7 +811,7 @@ exports.udmi_config = functions.pubsub.topic('udmi_config').onPublish((event) =>
   console.log('Config message', registryId, deviceId, subFolder, transactionId);
   if (!msgString) {
     console.warn('Config abort', registryId, deviceId, subFolder, transactionId);
-    return null;
+    return Promise.resolve();
   }
 
   attributes.subType = CONFIG_TYPE;
