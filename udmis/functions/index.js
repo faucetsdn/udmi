@@ -284,7 +284,19 @@ async function udmi_process_reflector_state(attributes, msgObject) {
 
   console.log('Setting reflector config', registryId, deviceId, JSON.stringify(deviceConfig));
   const startTime = currentTimestamp();
-  return modify_device_config(registryId, deviceId, UPDATE_FOLDER, deviceConfig, startTime, null);
+  return modify_device_config(registryId, deviceId, UPDATE_FOLDER, deviceConfig, startTime, null).
+    then(() => propagateReflectConfig(attributes, deviceConfig));
+}
+
+function propagateReflectConfig(origAttributes, deviceConfig) {
+  const attributes = {};
+  attributes.projectId = origAttributes.projectId;
+  attributes.deviceRegistryId = origAttributes.deviceId;
+  attributes.reflectRegistry = reflectRegistries[origAttributes.deviceId];
+  attributes.subFolder = UPDATE_FOLDER;
+  attributes.subType = STATE_TYPE;
+  console.log('Propagating config to udmi_target', attributes);
+  return publishPubsubMessage('udmi_target', attributes, deviceConfig);
 }
 
 function udmi_model(attributes, msgObject) {
