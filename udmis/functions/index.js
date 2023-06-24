@@ -742,7 +742,7 @@ function process_state_update(attributes, msgObject) {
   }
 
   return Promise.all(promises);
-};
+}
 
 function process_state_block(attributes, subMsg) {
   console.log('Publishing udmi_target', attributes.subType, attributes.subFolder);

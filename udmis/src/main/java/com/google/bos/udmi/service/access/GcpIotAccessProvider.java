@@ -1,5 +1,6 @@
 package com.google.bos.udmi.service.access;
 
+import static com.google.udmi.util.GeneralUtils.decodeBase64;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
@@ -23,6 +24,7 @@ import com.google.api.services.cloudiot.v1.model.Device;
 import com.google.api.services.cloudiot.v1.model.DeviceConfig;
 import com.google.api.services.cloudiot.v1.model.DeviceCredential;
 import com.google.api.services.cloudiot.v1.model.DeviceRegistry;
+import com.google.api.services.cloudiot.v1.model.DeviceState;
 import com.google.api.services.cloudiot.v1.model.Empty;
 import com.google.api.services.cloudiot.v1.model.GatewayConfig;
 import com.google.api.services.cloudiot.v1.model.ListDeviceRegistriesResponse;
@@ -314,6 +316,21 @@ public class GcpIotAccessProvider extends UdmisComponent implements IotAccessPro
       throw new RuntimeException("While fetching device " + devicePath, e);
     }
 
+  }
+
+  @Override
+  public String fetchState(String deviceRegistryId, String deviceId) {
+    String devicePath = getDevicePath(deviceRegistryId, deviceId);
+    try {
+      List<DeviceState> deviceStates =
+          registries.devices().states().list(devicePath).execute().getDeviceStates();
+      if (deviceStates == null || deviceStates.isEmpty()) {
+        return null;
+      }
+      return decodeBase64(deviceStates.get(0).getBinaryData());
+    } catch (Exception e) {
+      throw new RuntimeException("While fetching state " + devicePath, e);
+    }
   }
 
   @Override

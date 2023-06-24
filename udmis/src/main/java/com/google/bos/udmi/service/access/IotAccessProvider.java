@@ -49,5 +49,7 @@ public interface IotAccessProvider {
 
   CloudModel fetchDevice(String deviceRegistryId, String deviceId);
 
+  String fetchState(String deviceRegistryId, String deviceId);
+
   CloudModel modelDevice(String deviceRegistryId, String deviceId, CloudModel cloudModel);
 }

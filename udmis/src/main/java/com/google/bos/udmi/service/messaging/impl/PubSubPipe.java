@@ -129,8 +129,9 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
 
   @Override
   public String toString() {
-    return String.format("PubSub %s -> %s", subscriber.getSubscriptionNameString(),
-        publisher.getTopicNameString());
+    String subscriptionName = ifNotNullGet(subscriber, Subscriber::getSubscriptionNameString);
+    String topicName = ifNotNullGet(publisher, Publisher::getTopicNameString);
+    return format("PubSub %s -> %s", subscriptionName, topicName);
   }
 
   Publisher getPublisher(String topicName) {

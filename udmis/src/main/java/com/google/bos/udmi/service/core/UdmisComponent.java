@@ -77,6 +77,7 @@ public abstract class UdmisComponent extends ContainerBase {
    * Activate this component.
    */
   public void activate() {
+    info("Activating " + this.getSimpleName());
     if (dispatcher != null) {
       registerHandlers(baseHandlers);
       registerHandlers();

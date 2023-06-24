@@ -10,18 +10,21 @@ import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
+import static com.google.udmi.util.JsonUtil.fromStringStrict;
 import static com.google.udmi.util.JsonUtil.loadFileStrictRequired;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static java.util.Objects.requireNonNull;
 
 import com.google.bos.udmi.service.messaging.MessageContinuation;
+import com.google.bos.udmi.service.messaging.StateUpdate;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import udmi.schema.CloudModel;
+import udmi.schema.CloudModel.Operation;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
@@ -124,6 +127,18 @@ public class ReflectProcessor extends UdmisComponent {
     return provider.listDevices(attributes.deviceRegistryId);
   }
 
+  private CloudModel queryDeviceState(Envelope attributes) {
+    try {
+      String state = provider.fetchState(attributes.deviceRegistryId, attributes.deviceId);
+      publish(fromStringStrict(StateUpdate.class, state));
+      CloudModel cloudModel = new CloudModel();
+      cloudModel.operation = Operation.FETCH;
+      return cloudModel;
+    } catch (Exception e) {
+      throw new RuntimeException("While querying device state " + attributes.deviceId, e);
+    }
+  }
+
   private CloudModel reflectModel(Envelope attributes, CloudModel request) {
     return requireNonNull(
         provider.modelDevice(attributes.deviceRegistryId, attributes.deviceId, request),
@@ -144,9 +159,9 @@ public class ReflectProcessor extends UdmisComponent {
 
   private CloudModel reflectQuery(Envelope attributes, Map<String, Object> payload) {
     checkState(payload.size() == 0, "unexpected non-empty message payload");
-    switch (requireNonNull(attributes.subFolder)) {
+    switch (attributes.subFolder) {
       case UPDATE:
-        return queryCloudDevice(attributes);
+        return queryDeviceState(attributes);
       case CLOUD:
         return reflectQueryCloud(attributes);
       default:

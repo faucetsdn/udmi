@@ -157,6 +157,7 @@ public class SequenceBase {
   private static final String UPDATE_SUBFOLDER = SubFolder.UPDATE.value();
   private static final String STATE_SUBTYPE = SubType.STATE.value();
   private static final String CONFIG_SUBTYPE = SubType.CONFIG.value();
+  private static final String REPLY_SUBTYPE = SubType.REPLY.value();
   private static final String LOCAL_CONFIG_UPDATE = LOCAL_PREFIX + UPDATE_SUBFOLDER;
   private static final String SEQUENCER_LOG = "sequencer.log";
   private static final String SYSTEM_LOG = "system.log";

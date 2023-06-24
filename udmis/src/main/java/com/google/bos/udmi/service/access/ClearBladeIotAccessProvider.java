@@ -430,6 +430,11 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
   }
 
   @Override
+  public String fetchState(String deviceRegistryId, String deviceId) {
+    throw new RuntimeException("Not yet implemented " + this.getClass());
+  }
+
+  @Override
   public CloudModel listDevices(String deviceRegistryId) {
     return listRegistryDevices(deviceRegistryId, null);
   }
