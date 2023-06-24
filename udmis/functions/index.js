@@ -100,6 +100,7 @@ function reflectError(attributes, base64, error) {
 
 function sendEnvelope(registryId, deviceId, subType, subFolder, message, transactionId) {
   const reflectRegistry = reflectRegistries[registryId];
+  console.log('using reflect registry', registryId, reflectRegistry);
   if (!reflectRegistry) {
     console.log('reflection registry missing for', registryId);
     return;
@@ -195,6 +196,13 @@ function getRegistryRegions() {
   }).catch(console.error);
 }
 
+function setReflectRegistry(reflectDevice, reflectRegistry) {
+  if (reflectRegistry && reflectRegistries[reflectDevice] != reflectRegistry) {
+    console.log('Setting reflect registry', reflectDevice, reflectRegistry);
+    reflectRegistries[reflectDevice] = reflectRegistry;
+  }
+}
+
 exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) => {
   const attributes = event.attributes;
   const base64 = event.data;
@@ -212,11 +220,8 @@ exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) 
 
   const reflectRegistry = attributes.deviceRegistryId;
   const reflectDevice = attributes.deviceId;
-  if (reflectRegistries[reflectDevice] != reflectRegistry) {
-    console.log('Setting reflect registry', reflectDevice, reflectRegistry);
-    reflectRegistries[reflectDevice] = reflectRegistry;
-  }
-  
+  setReflectRegistry(reflectDevice, reflectRegistry);
+
   const envelope = {};
   envelope.projectId = attributes.projectId;
   envelope.deviceRegistryId = msgObject.deviceRegistryId;
@@ -245,6 +250,7 @@ exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) 
     }
     const targetFunction = envelope.subType === 'event' ? 'target' : envelope.subType;
     target = 'udmi_' + targetFunction;
+    envelope.reflectRegistry = reflectRegistry;
     return publishPubsubMessage(target, envelope, payload);
   }).catch(e => reflectError(envelope, base64, e));
 });
@@ -770,6 +776,8 @@ exports.udmi_config = functions.pubsub.topic('udmi_config').onPublish((event) =>
   const msgString = Buffer.from(base64, 'base64').toString();
 
   const msgObject = JSON.parse(msgString);
+
+  setReflectRegistry(registryId, attributes.reflectRegistry);
 
   console.log('Config message', registryId, deviceId, subFolder, transactionId);
   if (!msgString) {
