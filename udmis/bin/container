@@ -33,6 +33,7 @@ RUNARGS="--rm -ti -v $PWD/etc:/udmi -v $HOME/.config:/root/.config --tmpfs /tmp"
 if [[ $cmd == build ]]; then
     rm -rf var
     mkdir -p var
+    bin/build
     cat <<EOF > var/deployed_version.json
 {
   "udmi_version": "$version",
