@@ -161,6 +161,8 @@ exports.udmi_target = functions.pubsub.topic('udmi_target').onPublish((event) =>
   }
   const base64 = event.data;
 
+  setReflectRegistry(attributes.registryId, attributes.reflectRegistry);
+
   try {
     const msgString = Buffer.from(base64, 'base64').toString();
     const msgObject = JSON.parse(msgString);
@@ -738,6 +740,7 @@ function process_state_update(attributes, msgObject) {
 
   attributes.subFolder = UPDATE_FOLDER;
   attributes.subType = STATE_TYPE;
+  attributes.reflectRegistry = reflectRegistries[registryId];
   promises.push(publishPubsubMessage('udmi_target', attributes, msgObject));
 
   const system = msgObject.system;
