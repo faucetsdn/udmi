@@ -12,12 +12,14 @@ spec:
           cpu: 100m
           memory: 100Mi
       volumeMounts:
-      # name must match the volume name below
       - name: secret-volume
         mountPath: /udmi
         readOnly: true
-  # The secret data is exposed to Containers in the Pod through a Volume.
   volumes:
     - name: secret-volume
-      secret:
-        secretName: pod-config.json
+      projected:
+        sources:
+        - secret:
+            name: pod_config.json
+        - secret:
+            name: clearblade.json
