@@ -18,9 +18,18 @@ spec:
     spec:
       containers:
       - name: master
-        image: gcr.io/bos-peringknife-dev/udmis@sha256:30eda97dd6163920d3e4a802f50771b2c2a2e5753b989de2e9ab0b2ea896c08d
+        image: gcr.io/@PROJECT@/udmis
         imagePullPolicy: Always
         resources:
           requests:
             cpu: 100m
             memory: 100Mi
+        volumeMounts:
+        # name must match the volume name below
+        - name: secret-volume
+          mountPath: /udmi
+          readOnly: true
+      volumes:
+      - name: secret-volume
+        secret:
+          secretName: pod-config.json

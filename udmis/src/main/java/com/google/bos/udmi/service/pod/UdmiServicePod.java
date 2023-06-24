@@ -6,6 +6,7 @@ import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.loadFileStrictRequired;
+import static com.google.udmi.util.JsonUtil.toMap;
 import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.access.IotAccessProvider;
@@ -28,6 +29,7 @@ import udmi.schema.PodConfiguration;
  */
 public class UdmiServicePod {
 
+  public static final String DEFAULT_PROVIDER_KEY = "default";
   private static final Map<String, BridgePodConfiguration> NO_BRIDGES = ImmutableMap.of();
   private static final Map<String, EndpointConfiguration> NO_FLOWS = ImmutableMap.of();
   private static final Map<String, Class<? extends UdmisComponent>> PROCESSORS = ImmutableMap.of(
@@ -58,7 +60,14 @@ public class UdmiServicePod {
       bridges = ofNullable(bridgeEntries).orElse(NO_BRIDGES).entrySet().stream()
           .map(this::makeBridgeFor).collect(Collectors.toList());
 
-      setIotAccessProvider(ifNotNullGet(podConfiguration.iot_access, IotAccessProvider::from));
+      if (podConfiguration.iot_access != null) {
+        Map<String, IotAccessProvider> providerMap =
+            podConfiguration.iot_access.entrySet().stream()
+                .collect(Collectors.toMap(Entry::getKey, IotAccessProvider::from));
+        IotAccessProvider provider = providerMap.get(DEFAULT_PROVIDER_KEY);
+        provider.setProviders(providerMap);
+        setIotAccessProvider(provider);
+      }
     } catch (Exception e) {
       throw new RuntimeException("While instantiating pod " + CSV_JOINER.join(args), e);
     }
