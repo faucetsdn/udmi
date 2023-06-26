@@ -27,10 +27,19 @@ Some caveats:
 -->
 
 <!-- START GENERATED, do not edit anything after this line! -->
+* [device_config_acked](#device_config_acked): Check that the device MQTT-acknowledges a sent config.
 * [empty_enumeration](#empty_enumeration)
 * [extra_config](#extra_config): Check that the device correctly handles an extra out-of-schema field
 * [feature_enumeration](#feature_enumeration)
+* [pointset_publish_interval](#pointset_publish_interval): test sample rate and sample limit sec
+* [pointset_sample_rate](#pointset_sample_rate): device publishes pointset events at a rate of no more than config sample_rate_sec
 * [system_last_update](#system_last_update): Check that last_update state is correctly set in response to a config update.
+
+## device_config_acked (BETA)
+
+Check that the device MQTT-acknowledges a sent config.
+
+1. Wait for config acked
 
 ## empty_enumeration (PREVIEW)
 
@@ -84,6 +93,18 @@ Check that the device correctly handles an extra out-of-schema field
 1. Check that feature enumeration matches metadata
 1. Check that all enumerated features are official buckets
 1. Check that no point enumeration
+
+## pointset_publish_interval (BETA)
+
+test sample rate and sample limit sec
+
+1. Test skipped: Feature bucket not enabled
+
+## pointset_sample_rate (BETA)
+
+device publishes pointset events at a rate of no more than config sample_rate_sec
+
+1. Test skipped: Feature bucket not enabled
 
 ## system_last_update (STABLE)
 
