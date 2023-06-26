@@ -32,7 +32,7 @@ public class IotReflectorClient implements IotProvider {
   public static final String CLOUD_QUERY_TOPIC = "cloud/query";
   public static final String CLOUD_MODEL_TOPIC = "cloud/model";
   // Requires functions that support cloud device manager support.
-  private static final int REQUIRED_FUNCTION_VER = 8;
+  private static final int REQUIRED_FUNCTION_VER = 9;
   private static final String UPDATE_CONFIG_TOPIC = "update/config";
   private final com.google.bos.iot.core.proxy.IotReflectorClient messageClient;
 

@@ -5,11 +5,17 @@
 #
 
 ROOT_DIR=$(realpath $(dirname $0)/..)
-TEST_LOG=/tmp/test_log.txt
+TEST_LOG=$ROOT_DIR/out/sequencer.out
+SCHEMA_OUT=$ROOT_DIR/out/schemas.out
 log_level=INFO
 alt_registry=${UDMI_ALT_REGISTRY:-ZZ-REDIRECT-NA}
 min_stage=PREVIEW
-export UDMI_VERSION=`cd $ROOT; git describe`
+export UDMI_VERSION=`cd $ROOT_DIR; git describe`
+
+# For cross-env sort stability
+export LC_ALL=C
+
+rm -f $TEST_LOG $SCHEMA_OUT
 
 while [[ $1 =~ ^- ]]; do
     if [[ $1 == '-a' ]]; then
@@ -26,11 +32,11 @@ while [[ $1 =~ ^- ]]; do
 done
 
 if [[ $# < 3 ]]; then
-    echo Usage: $0 [-v] [-vv] [-a] SITE_PATH PROJECT_ID DEVICE_ID [SERIAL_NO] [TEST_NAMES...]
+    echo Usage: $0 [-v] [-vv] [-a] SITE_MODEL PROJECT_ID DEVICE_ID [SERIAL_NO] [TEST_NAMES...]
     false
 fi
 
-site_path=$(realpath $1)
+site_model=$(realpath $1)
 project_id=$2
 device_id=$3
 shift 3
@@ -56,8 +62,8 @@ udmi_version=`git describe --always --dirty`
 
 cd $ROOT_DIR
 
-if [[ ! -d $site_path ]]; then
-    echo Site model $site_path not found.
+if [[ ! -d $site_model ]]; then
+    echo Site model $site_model not found.
     false
 fi
 
@@ -69,7 +75,7 @@ echo Writing config to $VALIDATOR_CONFIG:
 cat <<EOF > $VALIDATOR_CONFIG
 {
   "project_id": "$project_id",
-  "site_model": "$site_path",
+  "site_model": "$site_model",
   "device_id": "$device_id",
   "alt_registry": "$alt_registry",
   "registry_suffix": $registry_suffix,
@@ -78,7 +84,7 @@ cat <<EOF > $VALIDATOR_CONFIG
   "min_stage": "$min_stage",
   "udmi_version": "$udmi_version",
   "udmi_root": "$ROOT_DIR",
-  "key_file": "$site_path/validator/rsa_private.pkcs8"
+  "key_file": "$site_model/reflector/rsa_private.pkcs8"
 }
 EOF
 
@@ -92,11 +98,15 @@ $JAVA_CMD $test_names 2>&1 | tee $TEST_LOG
 
 echo
 # Sort by test name (6th field)
-fgrep 'RESULT ' $TEST_LOG | sort -k 6 | tee /tmp/sequencer.out
+fgrep 'RESULT ' $TEST_LOG | fgrep NOTICE | sort -k 6 | tee out/sequencer.res
 
-if [[ `wc -l < /tmp/sequencer.out` -eq 0 ]]; then
+if [[ $(wc -l < out/sequencer.res) -eq 0 ]]; then
     echo No test results found.
     exit 1
 fi
+
+# Sort by test name (4th field)
+fgrep RESULT $site_model/out/devices/$device_id/RESULT.log | \
+    fgrep ' schemas ' | sort -k 3 | tee $SCHEMA_OUT
 
 bin/check_version

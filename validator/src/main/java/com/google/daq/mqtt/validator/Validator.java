@@ -103,7 +103,7 @@ import udmi.schema.ValidationSummary;
  */
 public class Validator {
 
-  public static final int REQUIRED_FUNCTION_VER = 8;
+  public static final int REQUIRED_FUNCTION_VER = 9;
   public static final String CONFIG_PREFIX = "config_";
   public static final String STATE_PREFIX = "state_";
   private static final String ERROR_FORMAT_INDENT = "  ";

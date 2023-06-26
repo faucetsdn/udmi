@@ -26,6 +26,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "start_time",
     "status",
     "features",
+    "schemas",
     "summary",
     "devices"
 })
@@ -85,6 +86,8 @@ public class ValidationState {
     public Entry status;
     @JsonProperty("features")
     public Map<String, FeatureValidationState> features;
+    @JsonProperty("schemas")
+    public Map<String, SchemaValidationState> schemas;
     /**
      * Validation Summary
      * <p>
@@ -105,6 +108,7 @@ public class ValidationState {
         result = ((result* 31)+((this.last_updated == null)? 0 :this.last_updated.hashCode()));
         result = ((result* 31)+((this.udmi_version == null)? 0 :this.udmi_version.hashCode()));
         result = ((result* 31)+((this.devices == null)? 0 :this.devices.hashCode()));
+        result = ((result* 31)+((this.schemas == null)? 0 :this.schemas.hashCode()));
         result = ((result* 31)+((this.cloud_version == null)? 0 :this.cloud_version.hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
         result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
@@ -121,7 +125,7 @@ public class ValidationState {
             return false;
         }
         ValidationState rhs = ((ValidationState) other);
-        return (((((((((((this.summary == rhs.summary)||((this.summary!= null)&&this.summary.equals(rhs.summary)))&&((this.start_time == rhs.start_time)||((this.start_time!= null)&&this.start_time.equals(rhs.start_time))))&&((this.features == rhs.features)||((this.features!= null)&&this.features.equals(rhs.features))))&&((this.last_updated == rhs.last_updated)||((this.last_updated!= null)&&this.last_updated.equals(rhs.last_updated))))&&((this.udmi_version == rhs.udmi_version)||((this.udmi_version!= null)&&this.udmi_version.equals(rhs.udmi_version))))&&((this.devices == rhs.devices)||((this.devices!= null)&&this.devices.equals(rhs.devices))))&&((this.cloud_version == rhs.cloud_version)||((this.cloud_version!= null)&&this.cloud_version.equals(rhs.cloud_version))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
+        return ((((((((((((this.summary == rhs.summary)||((this.summary!= null)&&this.summary.equals(rhs.summary)))&&((this.start_time == rhs.start_time)||((this.start_time!= null)&&this.start_time.equals(rhs.start_time))))&&((this.features == rhs.features)||((this.features!= null)&&this.features.equals(rhs.features))))&&((this.last_updated == rhs.last_updated)||((this.last_updated!= null)&&this.last_updated.equals(rhs.last_updated))))&&((this.udmi_version == rhs.udmi_version)||((this.udmi_version!= null)&&this.udmi_version.equals(rhs.udmi_version))))&&((this.devices == rhs.devices)||((this.devices!= null)&&this.devices.equals(rhs.devices))))&&((this.schemas == rhs.schemas)||((this.schemas!= null)&&this.schemas.equals(rhs.schemas))))&&((this.cloud_version == rhs.cloud_version)||((this.cloud_version!= null)&&this.cloud_version.equals(rhs.cloud_version))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
     }
 
 }

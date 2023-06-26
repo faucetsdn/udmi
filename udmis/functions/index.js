@@ -8,9 +8,10 @@
  * indicate the MIN/MAX versions supported, while the client determines what is required.
  *
  * LEVEL 8: Schema refactoring for UDMIS container compatability.
+ * LEVEL 9: Use UDMI-REFLECT as reflect registry.
  */
-const FUNCTIONS_VERSION_MIN = 8;
-const FUNCTIONS_VERSION_MAX = 8;
+const FUNCTIONS_VERSION_MIN = 9;
+const FUNCTIONS_VERSION_MAX = 9;
 
 // Hacky stuff to work with "maybe have firestore enabled"
 const PROJECT_ID = process.env.GCP_PROJECT || process.env.GCLOUD_PROJECT;
@@ -27,7 +28,6 @@ const { PubSub } = require('@google-cloud/pubsub');
 const pubsub = new PubSub();
 const iot = require('@google-cloud/iot');
 
-const REFLECT_REGISTRY = 'UDMS-REFLECT';
 const UDMI_VERSION = version.udmi_version;
 
 const EVENT_TYPE = 'event';
@@ -42,8 +42,10 @@ const CLOUD_FOLDER = 'cloud';
 const UDMI_FOLDER = 'udmi';
 const ERROR_FOLDER = 'error';
 
+const REFLECT_REGISTRY = 'UDMI-REFLECT';
+
 const ALL_REGIONS = ['us-central1', 'europe-west1', 'asia-east1'];
-let registry_regions = null;
+let registryRegions = null;
 
 console.log(`UDMI version ${UDMI_VERSION}, functions ${FUNCTIONS_VERSION_MIN}:${FUNCTIONS_VERSION_MAX}`);
 console.log(`Deployed by ${version.deployed_by} at ${version.deployed_at}`);
@@ -93,15 +95,10 @@ function reflectError(attributes, base64, error) {
     data: base64
   }
   attributes.subFolder = ERROR_FOLDER;
-  reflectMessage(attributes, message);
+  return reflectMessage(attributes, message);
 }
 
 function sendEnvelope(registryId, deviceId, subType, subFolder, message, transactionId) {
-  if (registryId === REFLECT_REGISTRY) {
-    console.log('sendEnvelope squash for', registryId);
-    return;
-  }
-
   console.log('sendEnvelope', registryId, deviceId, subType, subFolder, transactionId);
 
   const messageStr = (typeof message === 'string') ? message : JSON.stringify(message);
@@ -115,7 +112,6 @@ function sendEnvelope(registryId, deviceId, subType, subFolder, message, transac
     transactionId: transactionId,
     payload: base64
   };
-
   return sendCommand(REFLECT_REGISTRY, registryId, null, envelope, transactionId);
 }
 
@@ -124,13 +120,11 @@ function sendCommand(registryId, deviceId, subFolder, message, transactionId) {
 }
 
 function sendCommandStr(registryId, deviceId, subFolder, messageStr, transactionId) {
-  return registry_promise.then(() => {
-    return sendCommandSafe(registryId, deviceId, subFolder, messageStr, transactionId);
-  });
+  return registry_promise.then(() => sendCommandSafe(registryId, deviceId, subFolder, messageStr, transactionId));
 }
 
 function sendCommandSafe(registryId, deviceId, subFolder, messageStr, transactionId) {
-  const cloudRegion = registry_regions[registryId];
+  const cloudRegion = registryRegions[registryId];
 
   const formattedName =
         iotClient.devicePath(PROJECT_ID, cloudRegion, registryId, deviceId);
@@ -152,18 +146,24 @@ function sendCommandSafe(registryId, deviceId, subFolder, messageStr, transactio
 
 exports.udmi_target = functions.pubsub.topic('udmi_target').onPublish((event) => {
   const attributes = event.attributes;
+  if (!attributes.deviceId) {
+    console.log('Ignoring update with missing deviceId', attributes.deviceRegistryId);
+    return Promise.resolve();
+  }
+
   const subType = attributes.subType || EVENT_TYPE;
   if (subType != EVENT_TYPE) {
-    return null;
+    return Promise.resolve();
   }
   const base64 = event.data;
 
+  const msgString = Buffer.from(base64, 'base64').toString();
   try {
-    const msgString = Buffer.from(base64, 'base64').toString();
     const msgObject = JSON.parse(msgString);
 
     return reflectMessage(attributes, msgObject);
   } catch (e) {
+    console.log('Error processing TAP2', JSON.stringify(attributes), msgString);
     return reflectError(attributes, base64, e);
   }
 });
@@ -177,19 +177,19 @@ function getRegistries(region) {
     const registries = result[0];
     console.log('Processing results for ' + region);
     registries.forEach(registry => {
-      registry_regions[registry.id] = region;
+      registryRegions[registry.id] = region;
     });
   });
 }
 
 function getRegistryRegions() {
-  registry_regions = {};
+  registryRegions = {};
   promises = [];
   ALL_REGIONS.forEach(region => {
     promises.push(getRegistries(region));
   });
   return Promise.all(promises).then(() => {
-    console.log('Fetched ' + Object.keys(registry_regions).length + ' registry regions');
+    console.log('Fetched ' + Object.keys(registryRegions).length + ' registry regions');
   }).catch(console.error);
 }
 
@@ -223,10 +223,10 @@ exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) 
               envelope.subFolder, envelope.transactionId);
 
   return registry_promise.then(() => {
-    envelope.cloudRegion = registry_regions[envelope.deviceRegistryId];
+    envelope.cloudRegion = registryRegions[envelope.deviceRegistryId];
     if (!envelope.cloudRegion) {
       console.error('No cloud region found for target registry', envelope.deviceRegistryId);
-      return null;
+      return Promise.resolve();
     }
     if (envelope.subType === QUERY_TYPE) {
       return udmi_query(envelope);
@@ -265,7 +265,6 @@ async function udmi_process_reflector_state(attributes, msgObject) {
     setup.last_state = msgObject.timestamp;
   }
 
-  console.log('Setting reflector config', registryId, deviceId, JSON.stringify(deviceConfig));
   const startTime = currentTimestamp();
   return modify_device_config(registryId, deviceId, UPDATE_FOLDER, deviceConfig, startTime, null);
 }
@@ -290,7 +289,7 @@ async function udmi_model_create(attributes, msgObject) {
   await registry_promise;
   const projectId = attributes.projectId;
   const registryId = attributes.deviceRegistryId;
-  const cloudRegion = registry_regions[registryId];
+  const cloudRegion = registryRegions[registryId];
   const deviceId = attributes.deviceId;
 
   const registryPath = iotClient.registryPath(
@@ -321,7 +320,7 @@ async function udmi_model_bind(attributes, msgObject) {
   await registry_promise;
   const projectId = attributes.projectId;
   const registryId = attributes.deviceRegistryId;
-  const cloudRegion = registry_regions[registryId];
+  const cloudRegion = registryRegions[registryId];
   const deviceId = attributes.deviceId;
 
   const registryPath = iotClient.registryPath(
@@ -360,7 +359,7 @@ async function udmi_model_update(attributes, msgObject) {
   await registry_promise;
   const projectId = attributes.projectId;
   const registryId = attributes.deviceRegistryId;
-  const cloudRegion = registry_regions[registryId];
+  const cloudRegion = registryRegions[registryId];
   const deviceId = attributes.deviceId;
 
   const devicePath = iotClient.devicePath(
@@ -399,7 +398,7 @@ async function udmi_model_delete(attributes) {
   await registry_promise;
   const projectId = attributes.projectId;
   const registryId = attributes.deviceRegistryId;
-  const cloudRegion = registry_regions[registryId];
+  const cloudRegion = registryRegions[registryId];
   const deviceId = attributes.deviceId;
 
   const devicePath = iotClient.devicePath(
@@ -439,7 +438,7 @@ async function unbind_device(attributes, proxyId) {
   await registry_promise;
   const projectId = attributes.projectId;
   const registryId = attributes.deviceRegistryId;
-  const cloudRegion = registry_regions[registryId];
+  const cloudRegion = registryRegions[registryId];
   const deviceId = attributes.deviceId;
 
   const registryPath = iotClient.registryPath(
@@ -529,7 +528,7 @@ async function fetch_cloud_registry(attributes, gatewayId) {
   await registry_promise;
   const projectId = attributes.projectId;
   const registryId = attributes.deviceRegistryId;
-  const cloudRegion = registry_regions[registryId];
+  const cloudRegion = registryRegions[registryId];
 
   const parentName = iotClient.registryPath(
       projectId,
@@ -557,7 +556,7 @@ async function fetch_cloud_device(attributes) {
   await registry_promise;
   const projectId = attributes.projectId;
   const registryId = attributes.deviceRegistryId;
-  const cloudRegion = registry_regions[registryId];
+  const cloudRegion = registryRegions[registryId];
   const deviceId = attributes.deviceId;
 
   const devicePath = iotClient.devicePath(
@@ -697,17 +696,22 @@ function udmiToIotCoreKeyFormat(udmi) {
 
 exports.udmi_state = functions.pubsub.topic('udmi_state').onPublish((event) => {
   const attributes = event.attributes;
+  if (!attributes.deviceId) {
+    console.log('Ignoring update with missing deviceId', attributes.deviceRegistryId);
+    return Promise.resolve();
+  }
   const base64 = event.data;
   const msgString = Buffer.from(base64, 'base64').toString();
   try {
     const msgObject = JSON.parse(msgString);
-    if (attributes.subFolder) {
+    if (attributes.subFolder && attributes.subFolder != UPDATE_FOLDER) {
       attributes.subType = STATE_TYPE;
       return process_state_block(attributes, msgObject);
     } else {
       return process_state_update(attributes, msgObject);
     }
   } catch (e) {
+    console.log('Error processing TAP1', JSON.stringify(attributes), msgString);
     attributes.subType = STATE_TYPE;
     return reflectError(attributes, base64, e);
   }
@@ -765,7 +769,7 @@ exports.udmi_config = functions.pubsub.topic('udmi_config').onPublish((event) =>
   console.log('Config message', registryId, deviceId, subFolder, transactionId);
   if (!msgString) {
     console.warn('Config abort', registryId, deviceId, subFolder, transactionId);
-    return null;
+    return Promise.resolve();
   }
 
   attributes.subType = CONFIG_TYPE;
@@ -861,7 +865,7 @@ async function modify_device_config(registryId, deviceId, subFolder, subContents
 
   const attributes = {
     projectId: PROJECT_ID,
-    cloudRegion: registry_regions[registryId],
+    cloudRegion: registryRegions[registryId],
     deviceId: deviceId,
     transactionId: transactionId,
     deviceRegistryId: registryId
@@ -878,7 +882,7 @@ async function modify_device_config(registryId, deviceId, subFolder, subContents
 
 async function get_device_config(registryId, deviceId) {
   await registry_promise;
-  const cloudRegion = registry_regions[registryId];
+  const cloudRegion = registryRegions[registryId];
 
   const devicePath = iotClient.devicePath(
     PROJECT_ID,
@@ -937,7 +941,7 @@ function update_device_config(message, attributes, preVersion) {
 }
 
 function consolidate_config(registryId, deviceId, subFolder) {
-  const cloudRegion = registry_regions[registryId];
+  const cloudRegion = registryRegions[registryId];
   const reg_doc = firestore.collection('registries').doc(registryId);
   const dev_doc = reg_doc.collection('devices').doc(deviceId);
   const configs = dev_doc.collection(CONFIG_TYPE);

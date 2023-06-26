@@ -96,7 +96,7 @@ public class LogTimeSeries extends TreeMap<Long, LinkedList<LogTailEntry>> {
   private void loadMetricFieldsFromResourceName(MonitoringMetric metric, LogTailEntry log) {
     // Example:
     // projects/essential-keep-197822/locations/us-central1/...
-    // registries/UDMS-REFLECT/devices/IN-HYD-SAR2
+    // registries/UDMI-REFLECT/devices/IN-HYD-SAR2
     Pattern pattern = Pattern.compile(
         "projects/(?<project>[^/]+)/locations/(?<location>[^/]+)"
             + "/registries/(?<registry>[^/]+)/devices/(?<device>[^/]+)");
