@@ -8,7 +8,7 @@ import udmi.schema.PointEnumerationEvent;
 public class RandomBoolean extends BasicPoint implements AbstractPoint {
 
   public RandomBoolean(String name, boolean writable) {
-    super(name, writable);
+    super(name, writable, null);
   }
 
   Object getValue() {

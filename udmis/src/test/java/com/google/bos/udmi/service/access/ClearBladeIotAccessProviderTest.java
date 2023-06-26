@@ -31,7 +31,9 @@ class ClearBladeIotAccessProviderTest {
   private ClearBladeIotAccessProvider getProvider() {
     IotAccess iotAccess = new IotAccess();
     iotAccess.project_id = TEST_PROJECT;
-    return new ClearBladeIotAccessProviderMock(iotAccess);
+    ClearBladeIotAccessProviderMock providerMock = new ClearBladeIotAccessProviderMock(iotAccess);
+    providerMock.activate();
+    return providerMock;
   }
 
   private class ClearBladeIotAccessProviderMock extends ClearBladeIotAccessProvider {

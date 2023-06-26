@@ -5,7 +5,7 @@
     </envs>
     <option name="MAIN_CLASS_NAME" value="com.google.bos.udmi.service.pod.UdmiServicePod" />
     <module name="udmis" />
-    <option name="PROGRAM_PARAMETERS" value="src/test/configs/clearblade_pod.json" />
+    <option name="PROGRAM_PARAMETERS" value="src/test/configs/dynamic_pod.json" />
     <extension name="coverage">
       <pattern>
         <option name="PATTERN" value="com.google.bos.udmi.service.pod.*" />

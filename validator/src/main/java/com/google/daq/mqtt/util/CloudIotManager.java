@@ -3,14 +3,12 @@ package com.google.daq.mqtt.util;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.daq.mqtt.util.ConfigUtil.readExecutionConfiguration;
 import static java.util.Optional.ofNullable;
-import static udmi.schema.ExecutionConfiguration.IotProvider.GCP_NATIVE;
+import static udmi.schema.IotAccess.IotProvider.GCP_NATIVE;
 
 import com.google.common.collect.ImmutableList;
-import com.google.udmi.util.Common;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
 import java.util.Base64;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,8 +19,8 @@ import udmi.schema.CloudModel;
 import udmi.schema.Credential;
 import udmi.schema.Credential.Key_format;
 import udmi.schema.ExecutionConfiguration;
+import udmi.schema.IotAccess;
 import udmi.schema.SetupUdmiConfig;
-import udmi.schema.SetupUdmiState;
 
 /**
  * Encapsulation of all Cloud IoT interaction functions.
@@ -57,7 +55,7 @@ public class CloudIotManager {
    * @param iotProvider    indicates which iot provider type
    */
   public CloudIotManager(String projectId, File siteDir, String altRegistry,
-      String registrySuffix, ExecutionConfiguration.IotProvider iotProvider) {
+      String registrySuffix, IotAccess.IotProvider iotProvider) {
     checkNotNull(projectId, "project id undefined");
     this.siteDir = checkNotNull(siteDir, "site directory undefined");
     this.useReflectClient = ofNullable(iotProvider).orElse(GCP_NATIVE) != GCP_NATIVE;

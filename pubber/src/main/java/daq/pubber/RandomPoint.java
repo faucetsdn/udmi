@@ -22,7 +22,7 @@ public class RandomPoint extends BasicPoint implements AbstractPoint {
    * @param units    units of generated point
    */
   public RandomPoint(String name, boolean writable, double min, double max, String units) {
-    super(name, writable);
+    super(name, writable, units);
     this.name = name;
     this.min = min;
     this.max = max;
