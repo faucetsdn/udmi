@@ -47,6 +47,16 @@
         }
       }
     },
+    "schemas": {
+      "type": "object",
+      "existingJavaType": "java.util.Map<String, SchemaValidationState>",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[.a-z]+$": {
+          "$ref": "file:state_validation_schema.json"
+        }
+      }
+    },
     "summary": {
       "title": "Validation Summary",
       "type": "object",

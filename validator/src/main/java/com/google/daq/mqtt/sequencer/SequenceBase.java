@@ -7,6 +7,7 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
 import static com.google.daq.mqtt.validator.Validator.CONFIG_PREFIX;
 import static com.google.daq.mqtt.validator.Validator.STATE_PREFIX;
+import static com.google.udmi.util.CleanDateFormat.cleanDate;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
@@ -24,15 +25,22 @@ import static java.util.Optional.ofNullable;
 import static org.junit.Assume.assumeTrue;
 import static udmi.schema.Bucket.SYSTEM;
 import static udmi.schema.Bucket.UNKNOWN_DEFAULT;
+import static udmi.schema.Category.VALIDATION_FEATURE_SCHEMA;
+import static udmi.schema.Category.VALIDATION_FEATURE_SEQUENCE;
 import static udmi.schema.FeatureEnumeration.FeatureStage.ALPHA;
 import static udmi.schema.FeatureEnumeration.FeatureStage.BETA;
 import static udmi.schema.FeatureEnumeration.FeatureStage.PREVIEW;
 import static udmi.schema.FeatureEnumeration.FeatureStage.STABLE;
+import static udmi.schema.Level.ERROR;
+import static udmi.schema.Level.NOTICE;
+import static udmi.schema.Level.WARNING;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
 import com.google.bos.iot.core.proxy.MockPublisher;
 import com.google.common.base.Joiner;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
@@ -103,6 +111,7 @@ import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.Operation;
 import udmi.schema.PointsetEvent;
+import udmi.schema.SchemaValidationState;
 import udmi.schema.SequenceValidationState;
 import udmi.schema.SequenceValidationState.SequenceResult;
 import udmi.schema.State;
@@ -123,13 +132,12 @@ public class SequenceBase {
   public static final String STATE_UPDATE_MESSAGE_TYPE = "state_update";
   static final FeatureStage DEFAULT_MIN_STAGE = BETA;
   private static final int FUNCTIONS_VERSION_BETA = Validator.REQUIRED_FUNCTION_VER;
-  private static final int FUNCTIONS_VERSION_ALPHA = 8; // Version required for alpha execution.
+  private static final int FUNCTIONS_VERSION_ALPHA = 9; // Version required for alpha execution.
   private static final long CONFIG_BARRIER_MS = 1000;
   private static final String START_END_MARKER = "################################";
   private static final String RESULT_FORMAT = "RESULT %s %s %s %s %s %s";
   private static final String SCHEMA_FORMAT = "SCHEMA %s %s %s %s %s %s";
   private static final String TESTS_OUT_DIR = "tests";
-  private static final String SEQUENCER_CATEGORY = "validation.feature.sequence";
   private static final String EVENT_PREFIX = "event_";
   private static final String SYSTEM_EVENT_MESSAGE_BASE = "event_system";
   private static final int CONFIG_UPDATE_DELAY_MS = 8 * 1000;
@@ -166,11 +174,11 @@ public class SequenceBase {
   private static final long ONE_SECOND_MS = 1000;
   private static final int EXIT_CODE_PRESERVE = -9;
   private static final String SYSTEM_TESTING_MARKER = " `system.testing";
-  private static final Map<SequenceResult, Level> RESULT_LEVEL_MAP = ImmutableMap.of(
+  private static final BiMap<SequenceResult, Level> RESULT_LEVEL_MAP = ImmutableBiMap.of(
       SequenceResult.START, Level.INFO,
       SequenceResult.SKIP, Level.WARNING,
-      SequenceResult.PASS, Level.WARNING,
-      SequenceResult.FAIL, Level.ERROR
+      SequenceResult.PASS, Level.NOTICE,
+      SequenceResult.FAIL, ERROR
   );
   private static final Map<SubFolder, String> sentConfig = new HashMap<>();
   private static final ObjectDiffEngine SENT_CONFIG_DIFFERNATOR = new ObjectDiffEngine();
@@ -321,11 +329,12 @@ public class SequenceBase {
   private static void initializeValidationState() {
     validationState = new ValidationState();
     validationState.features = new HashMap<>();
+    validationState.schemas = new HashMap<>();
     validationState.start_time = new Date();
     validationState.udmi_version = Common.getUdmiVersion();
     validationState.cloud_version = client.getVersionInformation();
     Entry statusEntry = new Entry();
-    statusEntry.category = SEQUENCER_CATEGORY;
+    statusEntry.category = VALIDATION_FEATURE_SEQUENCE;
     statusEntry.message = "Starting sequence run for device " + getDeviceId();
     statusEntry.level = Level.NOTICE.value();
     statusEntry.timestamp = new Date();
@@ -406,7 +415,7 @@ public class SequenceBase {
   }
 
   private static void updateValidationState() {
-    validationState.timestamp = new Date();
+    validationState.timestamp = cleanDate();
     JsonUtil.writeFile(validationState, getSequencerStateFile());
     String validationString = stringify(validationState);
     client.publish(getDeviceId(), VALIDATION_STATE_TOPIC, validationString);
@@ -419,12 +428,13 @@ public class SequenceBase {
   static void processComplete(Exception e) {
     boolean wasError = e != null;
     Entry statusEntry = new Entry();
-    statusEntry.level = wasError ? Level.ERROR.value() : Level.NOTICE.value();
-    statusEntry.timestamp = new Date();
+    statusEntry.level = wasError ? ERROR.value() : Level.NOTICE.value();
+    statusEntry.timestamp = cleanDate();
     statusEntry.message = wasError ? Common.getExceptionMessage(e) : "Run completed";
-    statusEntry.category = SEQUENCER_CATEGORY;
+    statusEntry.category = VALIDATION_FEATURE_SEQUENCE;
     if (validationState != null) {
       validationState.status = statusEntry;
+      summarizeSchemaStages();
       updateValidationState();
     }
   }
@@ -447,6 +457,67 @@ public class SequenceBase {
       return !schemaName.startsWith(CONFIG_PREFIX)
           && (!schemaName.startsWith(STATE_PREFIX) || schemaName.equals(STATE_UPDATE_MESSAGE_TYPE));
     };
+  }
+
+  private static void emitSequenceResult(SequenceResult result, String bucket, String methodName,
+      String stage,
+      int score, String message) {
+    emitSequencerOut(format(RESULT_FORMAT, result, bucket, methodName, stage, score, message));
+  }
+
+  private static void emitSequencerOut(String resultString) {
+    if (activeInstance != null) {
+      activeInstance.notice(resultString);
+    } else {
+      System.err.println(resultString);
+    }
+    try (PrintWriter log = new PrintWriter(new FileOutputStream(resultSummary, true))) {
+      log.println(resultString);
+    } catch (Exception e) {
+      throw new RuntimeException("While writing report summary " + resultSummary.getAbsolutePath(),
+          e);
+    }
+  }
+
+  private static void summarizeSchemaStages() {
+    validationState.schemas.forEach((schema, schemaResult) -> {
+      Map<FeatureStage, List<SequenceValidationState>> schemaStages = new HashMap<>();
+      schemaResult.sequences.forEach((sequence, sequenceResult) -> {
+        schemaStages.computeIfAbsent(sequenceResult.stage, stage -> new ArrayList<>())
+            .add(sequenceResult);
+      });
+      schemaResult.stages = schemaStages.entrySet().stream().collect(Collectors.toMap(
+          Map.Entry::getKey, SequenceBase::summarizeSchemaResults));
+      schemaResult.stages.forEach((stage, entry) -> {
+        SequenceResult result = RESULT_LEVEL_MAP.inverse().get(Level.fromValue(entry.level));
+        String stageValue = stage.value();
+        String schemaStage = schema + "_" + stageValue;
+        emitSequenceResult(result, "schemas", schemaStage, stageValue.toUpperCase(), 5,
+            entry.message);
+      });
+    });
+  }
+
+  private static Entry summarizeSchemaResults(
+      Map.Entry<FeatureStage, List<SequenceValidationState>> entry) {
+    List<SequenceValidationState> values = entry.getValue();
+    Set<SequenceValidationState> failures = values.stream()
+        .filter(state -> state.result != SequenceResult.PASS).collect(Collectors.toSet());
+
+    Entry logEntry = new Entry();
+    logEntry.category = VALIDATION_FEATURE_SCHEMA;
+    logEntry.timestamp = cleanDate();
+    if (values.isEmpty()) {
+      logEntry.message = "No messages validated";
+      logEntry.level = WARNING.value();
+    } else if (failures.isEmpty()) {
+      logEntry.message = "All schema validations passed";
+      logEntry.level = NOTICE.value();
+    } else {
+      logEntry.message = "Schema violations found";
+      logEntry.level = ERROR.value();
+    }
+    return logEntry;
   }
 
   /**
@@ -636,18 +707,7 @@ public class SequenceBase {
     Bucket bucket = getBucket(feature);
     String stage = (feature == null ? Feature.DEFAULT_STAGE : feature.stage()).name();
     int score = (feature == null ? Feature.DEFAULT_SCORE : feature.score());
-    emitResultString(format(RESULT_FORMAT, result, bucket.value(), methodName, stage,
-        score, message));
-  }
-
-  private void emitResultString(String resultString) {
-    notice(resultString);
-    try (PrintWriter log = new PrintWriter(new FileOutputStream(resultSummary, true))) {
-      log.println(resultString);
-    } catch (Exception e) {
-      throw new RuntimeException("While writing report summary " + resultSummary.getAbsolutePath(),
-          e);
-    }
+    emitSequenceResult(result, bucket.value(), methodName, stage, score, message);
   }
 
   private void recordSchemaValidations(Description description) {
@@ -657,11 +717,11 @@ public class SequenceBase {
           String schemaName = entry.getKey();
           List<Entry> values = entry.getValue();
           if (values.isEmpty()) {
-            emitSchemaResult(description, schemaName, SequenceResult.PASS, SCHEMA_PASS_DETAIL);
+            collectSchemaResult(description, schemaName, SequenceResult.PASS, SCHEMA_PASS_DETAIL);
           } else {
             Set<String> duplicates = new HashSet<>();
             values.stream().filter(item -> duplicates.add(uniqueKey(item))).forEach(result ->
-                emitSchemaResult(description, schemaName, SequenceResult.FAIL, result.detail));
+                collectSchemaResult(description, schemaName, SequenceResult.FAIL, result.detail));
           }
         });
   }
@@ -670,14 +730,45 @@ public class SequenceBase {
     return format("%s_%s_%s", entry.category, entry.message, entry.detail);
   }
 
-  private void emitSchemaResult(Description description, String schemaName, SequenceResult result,
+  private void collectSchemaResult(Description description, String schemaName,
+      SequenceResult result,
       String detail) {
-    String methodName = description.getMethodName();
+    String sequence = description.getMethodName();
     Feature feature = description.getAnnotation(Feature.class);
-    Bucket bucket = getBucket(feature);
+    String bucket = getBucket(feature).value();
     String stage = (feature == null ? Feature.DEFAULT_STAGE : feature.stage()).name();
-    emitResultString(
-        format(SCHEMA_FORMAT, result, bucket.value(), methodName, stage, schemaName, detail));
+    emitSchemaResult(schemaName, result, detail, sequence, bucket, stage);
+
+    SchemaValidationState schemaValidationState = validationState.schemas.computeIfAbsent(
+        schemaName, this::newSchemaValidationState);
+
+    SequenceValidationState state = schemaValidationState.sequences.computeIfAbsent(
+        sequence, key -> new SequenceValidationState());
+
+    state.result = result;
+    state.stage = getTestStage(description);
+
+    if (!result.equals(SequenceResult.PASS)) {
+      Entry logEntry = new Entry();
+      logEntry.category = VALIDATION_FEATURE_SEQUENCE;
+      logEntry.message = detail;
+      logEntry.level = RESULT_LEVEL_MAP.get(result).value();
+      logEntry.timestamp = cleanDate();
+      state.status = logEntry;
+    }
+
+    updateValidationState();
+  }
+
+  private void emitSchemaResult(String schemaName, SequenceResult result, String detail,
+      String sequence, String bucket, String stage) {
+    emitSequencerOut(format(SCHEMA_FORMAT, result, bucket, sequence, stage, schemaName, detail));
+  }
+
+  private SchemaValidationState newSchemaValidationState(String key) {
+    SchemaValidationState schemaValidationState = new SchemaValidationState();
+    schemaValidationState.sequences = new HashMap<>();
+    return schemaValidationState;
   }
 
   private Bucket getBucket(Description description) {
@@ -1376,7 +1467,7 @@ public class SequenceBase {
   }
 
   protected void error(String message) {
-    log(message, Level.ERROR);
+    log(message, ERROR);
   }
 
   private void log(String message, Level level, String parts) {
@@ -1385,10 +1476,10 @@ public class SequenceBase {
 
   private void log(String message, Level level) {
     Entry logEntry = new Entry();
-    logEntry.timestamp = CleanDateFormat.cleanDate();
+    logEntry.timestamp = cleanDate();
     logEntry.level = level.value();
     logEntry.message = message;
-    logEntry.category = SEQUENCER_CATEGORY;
+    logEntry.category = VALIDATION_FEATURE_SEQUENCE;
     writeSequencerLog(logEntry);
   }
 
@@ -1523,7 +1614,7 @@ public class SequenceBase {
   private void startSequenceStatus(Description description) {
     Entry entry = new Entry();
     entry.message = "Starting test";
-    entry.category = SEQUENCER_CATEGORY;
+    entry.category = VALIDATION_FEATURE_SEQUENCE;
     SequenceResult startResult = SequenceResult.START;
     entry.level = RESULT_LEVEL_MAP.get(startResult).value();
     entry.timestamp = new Date();
@@ -1532,10 +1623,10 @@ public class SequenceBase {
 
   private void setSequenceStatus(Description description, SequenceResult result, Entry logEntry) {
     String bucket = getBucket(description).value();
-    String name = description.getMethodName();
+    String sequence = description.getMethodName();
     SequenceValidationState sequenceValidationState = validationState.features.computeIfAbsent(
-        bucket, key -> newFeatureValidationState()).sequences.computeIfAbsent(
-        name, key -> new SequenceValidationState());
+        bucket, this::newFeatureValidationState).sequences.computeIfAbsent(
+        sequence, key -> new SequenceValidationState());
     sequenceValidationState.status = logEntry;
     sequenceValidationState.result = result;
     sequenceValidationState.summary = getTestSummary(description);
@@ -1543,7 +1634,7 @@ public class SequenceBase {
     updateValidationState();
   }
 
-  private FeatureValidationState newFeatureValidationState() {
+  private FeatureValidationState newFeatureValidationState(String key) {
     FeatureValidationState featureValidationState = new FeatureValidationState();
     featureValidationState.sequences = new HashMap<>();
     return featureValidationState;
@@ -1675,17 +1766,22 @@ public class SequenceBase {
     }
 
     private void recordCompletion(SequenceResult result, Description description, String message) {
-      recordResult(result, description, message);
-      Entry logEntry = new Entry();
-      logEntry.category = SEQUENCER_CATEGORY;
-      logEntry.message = message;
-      logEntry.level = RESULT_LEVEL_MAP.get(result).value();
-      logEntry.timestamp = CleanDateFormat.cleanDate();
-      writeSequencerLog(logEntry);
-      writeSystemLog(logEntry);
-      setSequenceStatus(description, result, logEntry);
+      try {
+        recordResult(result, description, message);
+        Entry logEntry = new Entry();
+        logEntry.category = VALIDATION_FEATURE_SEQUENCE;
+        logEntry.message = message;
+        logEntry.level = RESULT_LEVEL_MAP.get(result).value();
+        logEntry.timestamp = cleanDate();
+        writeSequencerLog(logEntry);
+        writeSystemLog(logEntry);
+        setSequenceStatus(description, result, logEntry);
 
-      recordSchemaValidations(description);
+        recordSchemaValidations(description);
+      } catch (Exception e) {
+        error("Error while recording completion: " + friendlyStackTrace(e));
+        e.printStackTrace();
+      }
     }
   }
 }

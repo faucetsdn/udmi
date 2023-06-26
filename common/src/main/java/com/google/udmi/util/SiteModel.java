@@ -296,7 +296,7 @@ public class SiteModel {
   }
 
   public String validatorKey() {
-    return sitePath + "/validator/rsa_private.pkcs8";
+    return sitePath + "/reflector/rsa_private.pkcs8";
   }
 
   public File getDeviceWorkingDir(String deviceId) {

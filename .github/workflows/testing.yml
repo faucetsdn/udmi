@@ -171,13 +171,13 @@ jobs:
       - name: schema validation output
         if: ${{ always() }}
         run: |
-          echo ==================================
-          cat out/schema_validation.out
-          echo ==================================
-          find sites/udmi_site_model/out/devices/ -name RESULT.log | xargs fgrep SCHEMA
+          echo ============ out/schemas.out
+          cat out/schemas.out || true
+          echo ============ find RESULT.log
+          find sites/udmi_site_model/out/devices/ -name RESULT.log | xargs fgrep -i schema
       - name: pubber logs
         if: ${{ always() }}
-        run: more pubber.out* out/pubber.out* pubber/out/*/*.json || true
+        run: more out/pubber.out* pubber/out/*/*.json || true
       - name: output logs
         if: ${{ always() }}
         run: cd sites/udmi_site_model/out && more `find . -type f` || true
@@ -212,7 +212,7 @@ jobs:
         run: cat sites/udmi_site_model/out/devices/AHU-1/sequencer_state.json || true
       - name: pubber logs
         if: ${{ always() }}
-        run: more pubber.out* out/pubber.out* pubber/out/*/*.json || true
+        run: more out/pubber.out* pubber/out/*/*.json || true
       - name: output logs
         if: ${{ always() }}
         run: cd sites/udmi_site_model/out && more `find . -type f` || true
@@ -247,14 +247,13 @@ jobs:
         run: |
           cd sites/udmi_site_model/out && more `find . -type f` || true
       - name: itemized sequencer tests
-        run: |
-          bin/test_itemized $GCP_TARGET_PROJECT
-          more out/test_itemized.out
-      - name: pubber logs
         if: ${{ always() }}
         run: |
-          more pubber.out* out/pubber.out* || true
-          more pubber/out/*/*.json
+          bin/test_itemized $GCP_TARGET_PROJECT
+      - name: itemized output logs
+        if: ${{ always() }}
+        run: |
+          more out/test_itemized.out out/schemas_itemized.out | cat
 
   redirect:
     name: Endpoint Redirection
@@ -283,8 +282,8 @@ jobs:
       - name: pubber.out.1
         run: |
           echo ::::::: pubber.out.1
-          cat pubber.out.1
+          cat out/pubber.out.1
       - name: pubber.out.2
         run: |
           echo ::::::: pubber.out.2
-          cat pubber.out.2
+          cat out/pubber.out.2

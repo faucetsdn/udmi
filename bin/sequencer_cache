@@ -18,7 +18,6 @@ ROOT_DIR=$(realpath $(dirname $0)/..)
 cd $ROOT_DIR
 TEST_LIST=out/sequencer_tests.txt
 RESULT_OUT=out/sequencer.out
-SCHEMA_OUT=out/schema_validation.out
 CACHE_ROOT=validator/sequences
 TEST_ROOT=sites/udmi_site_model/out/devices/AHU-1
 
@@ -30,7 +29,7 @@ find $CACHE_ROOT/ -name sequencer.log | xargs fgrep -H RESULT | awk '{print $7}'
 find $TEST_ROOT/ -name sequencer.log | xargs fgrep -H RESULT | awk '{print $7}'>> $TEST_LIST
 sort < $TEST_LIST | uniq | sponge $TEST_LIST
 all_tests=$(cat $TEST_LIST)
-rm -f $RESULT_OUT $SCHEMA_OUT
+rm -f $RESULT_OUT
 
 for test in $all_tests; do
     src_dir=$TEST_ROOT/tests/$test
@@ -48,33 +47,9 @@ for test in $all_tests; do
     fi
 
     fgrep RESULT $cache_dir/sequencer.log | sed -e 's/.*sequence RESULT/RESULT/' >> $RESULT_OUT
-    fgrep SCHEMA $cache_dir/sequencer.log | sed -e 's/.*sequence SCHEMA/SCHEMA/' >> $SCHEMA_OUT
 done
 
 sort -k 3 < $RESULT_OUT | fgrep -v " DISABLED " | sponge $RESULT_OUT
-sort -k 3 < $SCHEMA_OUT | fgrep -v " DISABLED " | sponge $SCHEMA_OUT
-
-function check_schemas {
-    stage=$1
-    STAGE=${stage^^}
-    pass=$(fgrep "SCHEMA pass " $SCHEMA_OUT | fgrep " $STAGE " | awk '{ print $6 }')
-    fail=$(fgrep -v "SCHEMA pass " $SCHEMA_OUT | fgrep " $STAGE " | awk '{ print $6 }')
-    if [[ -n $fail ]]; then
-        result=fail
-        message="Failing schema validations"
-    elif [[ -n $pass ]]; then
-        result=pass
-        message="All messages passed validation"
-    else
-        result=skip
-        message="No matching schema results found"
-    fi
-    echo RESULT $result schemas schema_$stage $STAGE 5 $message in $SCHEMA_OUT >> $RESULT_OUT
-}
-
-check_schemas alpha
-check_schemas beta
-check_schemas stable
 
 echo
 echo Resulting $RESULT_OUT:

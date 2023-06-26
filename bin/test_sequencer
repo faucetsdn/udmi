@@ -15,6 +15,7 @@ if [[ $1 == 'alpha' ]]; then
     shift
     # TODO: Make mode where it only runs tests that don't have results.
     seq_opts=-a
+    alpha_mode=y
 fi
 
 if [[ $# -lt 1 ]]; then
@@ -42,7 +43,7 @@ mkdir -p $test_out_base out/
 serial_no=sequencer-$RANDOM
 echo Using pubber with serial $serial_no
 
-PUBBER_OUT=pubber.out
+PUBBER_OUT=out/pubber.out
 
 pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
 if [[ -n $pids ]]; then
@@ -105,6 +106,11 @@ else
 
     echo Comparing diff out/sequencer.out etc/sequencer.out
     diff -u out/sequencer.out etc/sequencer.out
+fi
+
+if [[ -n $alpha_mode ]]; then
+    echo Comparing diff out/schemas.out etc/schemas.out
+    diff -u out/schemas.out etc/schemas.out
 fi
 
 cp docs/specs/sequences/generated.md out/  # Save for test/comparison later

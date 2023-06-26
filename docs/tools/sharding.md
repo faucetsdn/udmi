@@ -16,11 +16,11 @@ up from the `UDMI_REGISTRY_SUFFIX` env variable, and if it's not set then it wil
 E.g., on tool startup, instead of the normal MQTT client connection message:
 
 ```
-[main] INFO com.google.bos.iot.core.proxy.MqttPublisher - ZZ-REDIRECT-NA creating client projects/bos-peringknife-dev/locations/us-central1/registries/UDMS-REFLECT/devices/ZZ-REDIRECT-NA on ssl://mqtt.googleapis.com:8883
+[main] INFO com.google.bos.iot.core.proxy.MqttPublisher - ZZ-REDIRECT-NA creating client projects/bos-peringknife-dev/locations/us-central1/registries/UDMI-REFLECT/devices/ZZ-REDIRECT-NA on ssl://mqtt.googleapis.com:8883
 ```
 a system with a registry suffix setting of `_A` would show:
 ```
-[main] INFO com.google.bos.iot.core.proxy.MqttPublisher - ZZ-REDIRECT-NA_A creating client projects/bos-peringknife-dev/locations/us-central1/registries/UDMS-REFLECT/devices/ZZ-REDIRECT-NA_A on ssl://mqtt.googleapis.com:8883
+[main] INFO com.google.bos.iot.core.proxy.MqttPublisher - ZZ-REDIRECT-NA_A creating client projects/bos-peringknife-dev/locations/us-central1/registries/UDMI-REFLECT/devices/ZZ-REDIRECT-NA_A on ssl://mqtt.googleapis.com:8883
 ```
 
 ## Setup
@@ -28,9 +28,9 @@ a system with a registry suffix setting of `_A` would show:
 - Manual creation of GCP IoT Core registries:
   - Create shadow site_model registry (e.g. registry `ZZ-TRI-FECTA_A`).
   - Create shadow alternate registry (e.g. registry `ZZ-REDIRECT-NA_A`).
-  - Create shadow reflector device entry (e.g. device `ZZ-TRI-FECTA_A` in the `UDMS-REFLECT` registry).
+  - Create shadow reflector device entry (e.g. device `ZZ-TRI-FECTA_A` in the `UDMI-REFLECT` registry).
     - Should use the same public/private keys as the base device (no `_A`).
-  - Create device `ZZ-REDIRECT-NA_A` in registry `UDMS-REFLECT` if necessary for endpoint connection testing.
+  - Create device `ZZ-REDIRECT-NA_A` in registry `UDMI-REFLECT` if necessary for endpoint connection testing.
 - Semi-automated population of registry entries:
   - Define `UDMI_REGISTRY_SUFFIX` env variable: either locally or through a GitHub Actions variable.
   - `bin/test_sequencer $PROJECT_ID no_valid_test` to attempt a test run -- this will fail.
