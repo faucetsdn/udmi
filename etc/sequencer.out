@@ -11,10 +11,10 @@ RESULT pass enumeration multi_enumeration ALPHA 5 Sequence complete
 RESULT pass enumeration.families family_enumeration ALPHA 5 Sequence complete
 RESULT pass enumeration.features feature_enumeration PREVIEW 5 Sequence complete
 RESULT pass enumeration.pointset pointset_enumeration ALPHA 5 Sequence complete
-RESULT pass pointset pointset_publish_interval ALPHA 5 Sequence complete
-RESULT pass pointset pointset_sample_rate ALPHA 5 Sequence complete
+RESULT pass pointset pointset_publish_interval BETA 5 Sequence complete
+RESULT pass pointset pointset_sample_rate BETA 5 Sequence complete
 RESULT pass system broken_config ALPHA 5 Sequence complete
-RESULT pass system device_config_acked ALPHA 5 Sequence complete
+RESULT pass system device_config_acked BETA 5 Sequence complete
 RESULT pass system extra_config BETA 5 Sequence complete
 RESULT pass system system_last_update STABLE 5 Sequence complete
 RESULT pass system system_min_loglevel ALPHA 5 Sequence complete

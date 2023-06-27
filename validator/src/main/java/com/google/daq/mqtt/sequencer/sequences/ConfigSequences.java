@@ -71,7 +71,7 @@ public class ConfigSequences extends SequenceBase {
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Feature(stage = ALPHA, bucket = SYSTEM)
+  @Feature(stage = BETA, bucket = SYSTEM)
   @Summary("Check that the device MQTT-acknowledges a sent config.")
   public void device_config_acked() {
     untilTrue("config acked", () -> configAcked);
