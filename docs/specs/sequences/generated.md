@@ -108,7 +108,7 @@ test sample rate and sample limit sec
     * Set `pointset.sample_limit_sec` = `15`
 1. Wait for receive at least 4 pointset events
 1. Check that time period between successive pointset events is between 15 and 18 seconds
- 
+
 ## pointset_sample_rate (BETA)
 
 device publishes pointset events at a rate of no more than config sample_rate_sec
