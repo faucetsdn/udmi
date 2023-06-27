@@ -98,13 +98,27 @@ Check that the device correctly handles an extra out-of-schema field
 
 test sample rate and sample limit sec
 
-1. Test skipped: Feature bucket not enabled
-
+1. Update config before receive at least 4 pointset events:
+    * Add `pointset.sample_rate_sec` = `8`
+    * Add `pointset.sample_limit_sec` = `5`
+1. Wait for receive at least 4 pointset events
+1. Check that time period between successive pointset events is between 5 and 8 seconds
+1. Update config before receive at least 4 pointset events:
+    * Set `pointset.sample_rate_sec` = `18`
+    * Set `pointset.sample_limit_sec` = `15`
+1. Wait for receive at least 4 pointset events
+1. Check that time period between successive pointset events is between 15 and 18 seconds
+ 
 ## pointset_sample_rate (BETA)
 
 device publishes pointset events at a rate of no more than config sample_rate_sec
 
-1. Test skipped: Feature bucket not enabled
+1. Wait for measure initial sample rate
+1. Update config before receive at least 5 pointset events:
+    * Add `pointset.sample_rate_sec` = `5`
+    * Add `pointset.sample_limit_sec` = `1`
+1. Wait for receive at least 5 pointset events
+1. Check that time period between successive pointset events is between 1 and 5 seconds
 
 ## system_last_update (STABLE)
 
