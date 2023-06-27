@@ -184,6 +184,7 @@ public class SequenceBase {
   private static final ObjectDiffEngine RECV_CONFIG_DIFFERNATOR = new ObjectDiffEngine();
   private static final ObjectDiffEngine RECV_STATE_DIFFERNATOR = new ObjectDiffEngine();
   private static final Set<String> configTransactions = new ConcurrentSkipListSet<>();
+  private static final int MINIMUM_TEST_SEC = 30;
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -921,9 +922,16 @@ public class SequenceBase {
     }
     String condition = waitingCondition.isEmpty() ? "initialize" : waitingCondition.peek();
     debug(format("stage done %s at %s", condition, timeSinceStart()));
-    recordMessages = false;
     recordSequence = false;
+
+    untilTrue(format("minimum test duration of %ss", MINIMUM_TEST_SEC), this::beenLongEnough);
+
+    recordMessages = false;
     configAcked = false;
+  }
+
+  private boolean beenLongEnough() {
+    return secSinceStart() >= MINIMUM_TEST_SEC;
   }
 
   private void assertConfigIsNotPending() {
@@ -1182,7 +1190,11 @@ public class SequenceBase {
   }
 
   private String timeSinceStart() {
-    return (System.currentTimeMillis() - testStartTimeMs) / 1000 + "s";
+    return secSinceStart() + "s";
+  }
+
+  private long secSinceStart() {
+    return (System.currentTimeMillis() - testStartTimeMs) / 1000;
   }
 
   protected void untilTrue(String description, Supplier<Boolean> evaluator) {
@@ -1703,8 +1715,7 @@ public class SequenceBase {
       if (!testName.equals(description.getMethodName())) {
         throw new IllegalStateException("Unexpected test method name");
       }
-      long testTimeSec = (System.currentTimeMillis() - testStartTimeMs) / 1000;
-      notice("ending test " + testName + " after " + testTimeSec + "s " + START_END_MARKER);
+      notice("ending test " + testName + " after " + timeSinceStart() + " " + START_END_MARKER);
       testName = null;
       if (deviceConfig != null) {
         deviceConfig.system.testing = null;
