@@ -19,7 +19,8 @@ public abstract class IotAccessBase extends ContainerBase {
   private static final Map<IotProvider, Class<? extends IotAccessBase>> PROVIDERS = ImmutableMap.of(
       IotProvider.DYNAMIC, DynamicIotAccessProvider.class,
       IotProvider.CLEARBLADE, ClearBladeIotAccessProvider.class,
-      IotProvider.GCP, GcpIotAccessProvider.class
+      IotProvider.GCP, GcpIotAccessProvider.class,
+      IotProvider.LOCAL, LocalIotAccessProvider.class
   );
 
   /**

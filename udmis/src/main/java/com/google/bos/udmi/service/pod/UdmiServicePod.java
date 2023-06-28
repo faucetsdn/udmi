@@ -5,6 +5,8 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.loadFileStrictRequired;
+import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 
 import com.google.bos.udmi.service.access.IotAccessBase;
 import com.google.bos.udmi.service.core.BridgeProcessor;
@@ -14,6 +16,8 @@ import com.google.bos.udmi.service.core.StateProcessor;
 import com.google.bos.udmi.service.core.TargetProcessor;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import udmi.schema.BridgePodConfiguration;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.IotAccess;
@@ -24,6 +28,7 @@ import udmi.schema.PodConfiguration;
  */
 public class UdmiServicePod {
 
+  private static final Map<String, ContainerBase> COMPONENT_MAP = new ConcurrentHashMap<>();
   public static final String DEFAULT_PROVIDER_KEY = "default";
   private static final Map<String, BridgePodConfiguration> NO_BRIDGES = ImmutableMap.of();
   private static final Map<String, EndpointConfiguration> NO_FLOWS = ImmutableMap.of();
@@ -60,21 +65,21 @@ public class UdmiServicePod {
   private void createFlow(String name, EndpointConfiguration config) {
     checkState(PROCESSORS.containsKey(name), "registered flow key " + name);
     Class<? extends ProcessorBase> clazz = PROCESSORS.get(name);
-    ProcessorBase.create(clazz, makeConfig(config)).putComponent(name);
+    putComponent(name, ProcessorBase.create(clazz, makeConfig(config)));
   }
 
   private void createBridge(String name, BridgePodConfiguration config) {
     try {
       EndpointConfiguration from = makeConfig(config.from);
       EndpointConfiguration to = makeConfig(config.to);
-      new BridgeProcessor(from, to).putComponent(name);
+      putComponent(name, new BridgeProcessor(from, to));
     } catch (Exception e) {
       throw new RuntimeException("While making bridge " + name, e);
     }
   }
 
   private void createAccess(String name, IotAccess config) {
-    IotAccessBase.from(config).putComponent(name);
+    putComponent(name, IotAccessBase.from(config));
   }
 
   private EndpointConfiguration makeConfig(EndpointConfiguration defined) {
@@ -85,7 +90,7 @@ public class UdmiServicePod {
    * Activate all processors and components in the pod.
    */
   public void activate() {
-    ContainerBase.forAllComponents(ContainerBase::activate);
+    forAllComponents(ContainerBase::activate);
   }
 
   public PodConfiguration getPodConfiguration() {
@@ -96,6 +101,36 @@ public class UdmiServicePod {
    * Shutdown all processors and bridges in the pod.
    */
   public void shutdown() {
-    ContainerBase.forAllComponents(ContainerBase::shutdown);
+    forAllComponents(ContainerBase::shutdown);
+  }
+
+  public static void resetForTest() {
+    COMPONENT_MAP.clear();
+  }
+
+  @SuppressWarnings("unchecked")
+  public static <T> T getComponent(String name) {
+    return (T) requireNonNull(COMPONENT_MAP.get(name), "missing component " + name);
+  }
+
+  @SuppressWarnings("unchecked")
+  public static <T> T getComponent(String name, Class<T> clazz) {
+    return (T) requireNonNull(COMPONENT_MAP.get(name), "missing component " + name);
+  }
+
+  /**
+   * Put this component into the central component registry.
+   */
+  public static void putComponent(String componentName, ContainerBase component) {
+    ifNotNullThen(COMPONENT_MAP.put(componentName, component),
+        replaced -> {
+          throw new IllegalStateException(
+              format("Conflicting objects for component %s: %s replacing %s",
+                  componentName, component.getClass(), replaced.getClass()));
+        });
+  }
+
+  public static void forAllComponents(Consumer<ContainerBase> action) {
+    COMPONENT_MAP.values().forEach(action);
   }
 }

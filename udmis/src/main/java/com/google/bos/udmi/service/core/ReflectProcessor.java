@@ -1,5 +1,6 @@
 package com.google.bos.udmi.service.core;
 
+import static com.google.bos.udmi.service.core.StateProcessor.IOT_ACCESS_COMPONENT_NAME;
 import static com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl.getMessageClassFor;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.Common.ERROR_KEY;
@@ -20,6 +21,7 @@ import static udmi.schema.Envelope.SubFolder.UPDATE;
 import com.google.bos.udmi.service.access.IotAccessBase;
 import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.StateUpdate;
+import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import java.io.File;
@@ -202,7 +204,7 @@ public class ReflectProcessor extends ProcessorBase {
   @Override
   public void activate() {
     debug(stringify(deployed));
-    iotAccess = getComponent("iot_access");
+    iotAccess = UdmiServicePod.getComponent(IOT_ACCESS_COMPONENT_NAME);
     super.activate();
   }
 }

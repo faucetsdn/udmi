@@ -15,5 +15,10 @@
       "recv_id": "udmi_reflect",
       "send_id": "udmi_target"
     }
+  },
+  "iot_access": {
+    "iot_access": {
+      "provider": "local"
+    }
   }
 }

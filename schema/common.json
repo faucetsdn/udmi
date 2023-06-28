@@ -17,6 +17,7 @@
     "provider": {
       "title": "Iot Provider",
       "enum": [
+        "local",
         "dynamic",
         "gcp_native",
         "gcp",

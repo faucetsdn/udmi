@@ -1,5 +1,6 @@
 package com.google.bos.udmi.service.pod;
 
+import static com.google.bos.udmi.service.core.StateProcessor.IOT_ACCESS_COMPONENT_NAME;
 import static com.google.bos.udmi.service.messaging.impl.MessageBase.combineConfig;
 import static com.google.bos.udmi.service.messaging.impl.MessageTestCore.TEST_DEVICE;
 import static com.google.bos.udmi.service.messaging.impl.MessageTestCore.TEST_REGISTRY;
@@ -13,6 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -31,7 +33,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import udmi.schema.DiscoveryState;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope.SubFolder;
@@ -163,8 +164,8 @@ public class UdmiServicePodTest {
     ProcessorTestBase.writeVersionDeployFile();
     UdmiServicePod pod = new UdmiServicePod(arrayOf(BASE_CONFIG));
 
-    IotAccessBase iotAccessProvider = Mockito.mock(IotAccessBase.class);
-    iotAccessProvider.putComponent("iot_access");
+    IotAccessBase iotAccessProvider =
+        spy(UdmiServicePod.getComponent(IOT_ACCESS_COMPONENT_NAME, IotAccessBase.class));
 
     PodConfiguration podConfig = pod.getPodConfiguration();
 
@@ -183,8 +184,12 @@ public class UdmiServicePodTest {
         anyString());
   }
 
+  /**
+   * Reset everything to a clean slate for unit tests.
+   */
   @AfterEach
   public void resetForTest() {
+    UdmiServicePod.resetForTest();
     LocalMessagePipe.resetForTestStatic();
   }
 }

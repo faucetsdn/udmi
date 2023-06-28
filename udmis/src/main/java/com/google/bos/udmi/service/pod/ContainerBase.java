@@ -16,12 +16,6 @@ import org.jetbrains.annotations.NotNull;
  */
 public abstract class ContainerBase {
 
-  private static final Map<String, ContainerBase> COMPONENT_MAP = new ConcurrentHashMap<>();
-
-  public static void forAllComponents(Consumer<ContainerBase> action) {
-    COMPONENT_MAP.values().forEach(action);
-  }
-
   @NotNull
   protected String getSimpleName() {
     return getClass().getSimpleName();
@@ -42,25 +36,8 @@ public abstract class ContainerBase {
     System.err.println(getSimpleName() + " E: " + message);
   }
 
-  @SuppressWarnings("unchecked")
-  public <T> T getComponent(String name) {
-    return (T) requireNonNull(COMPONENT_MAP.get(name), "missing component " + name);
-  }
-
   public void info(String message) {
     System.err.println(getSimpleName() + " I: " + message);
-  }
-
-  /**
-   * Put this component into the central component registry.
-   */
-  public void putComponent(String componentName) {
-    ifNotNullThen(COMPONENT_MAP.put(componentName, this),
-        replaced -> {
-          throw new IllegalStateException(
-              format("Conflicting objects for component %s: %s replacing %s",
-                  componentName, this.getClass(), replaced.getClass()));
-        });
   }
 
   public void shutdown() {
