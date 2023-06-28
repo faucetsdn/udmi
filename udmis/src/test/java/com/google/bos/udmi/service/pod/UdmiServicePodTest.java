@@ -1,6 +1,6 @@
 package com.google.bos.udmi.service.pod;
 
-import static com.google.bos.udmi.service.core.StateProcessor.IOT_ACCESS_COMPONENT_NAME;
+import static com.google.bos.udmi.service.core.StateProcessor.IOT_ACCESS_COMPONENT;
 import static com.google.bos.udmi.service.messaging.impl.MessageBase.combineConfig;
 import static com.google.bos.udmi.service.messaging.impl.MessageTestCore.TEST_DEVICE;
 import static com.google.bos.udmi.service.messaging.impl.MessageTestCore.TEST_REGISTRY;
@@ -8,17 +8,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.udmi.util.GeneralUtils.arrayOf;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static org.apache.commons.io.FileUtils.deleteDirectory;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
-import com.google.bos.udmi.service.access.IotAccessBase;
+import com.google.bos.udmi.service.access.LocalIotAccessProvider;
 import com.google.bos.udmi.service.core.ProcessorTestBase;
 import com.google.bos.udmi.service.messaging.StateUpdate;
 import com.google.bos.udmi.service.messaging.impl.LocalMessagePipe;
@@ -27,6 +23,7 @@ import com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl;
 import com.google.bos.udmi.service.messaging.impl.MessagePipeTestBase;
 import java.io.File;
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -164,8 +161,6 @@ public class UdmiServicePodTest {
     ProcessorTestBase.writeVersionDeployFile();
     UdmiServicePod pod = new UdmiServicePod(arrayOf(BASE_CONFIG));
 
-    IotAccessBase iotAccessProvider =
-        spy(UdmiServicePod.getComponent(IOT_ACCESS_COMPONENT_NAME, IotAccessBase.class));
 
     PodConfiguration podConfig = pod.getPodConfiguration();
 
@@ -178,10 +173,9 @@ public class UdmiServicePodTest {
     reflectDispatcher.publishBundle(getReflectorStateBundle());
     pod.shutdown();
 
-    verify(iotAccessProvider, times(1)).activate();
-    verify(iotAccessProvider, times(1)).shutdown();
-    verify(iotAccessProvider, times(1)).modifyConfig(anyString(), anyString(), eq(SubFolder.UPDATE),
-        anyString());
+    LocalIotAccessProvider iotAccessProvider = UdmiServicePod.getComponent(IOT_ACCESS_COMPONENT);
+    List<String> commands = iotAccessProvider.getCommands();
+    assertEquals(1, commands.size(), "expected sent device commands");
   }
 
   /**

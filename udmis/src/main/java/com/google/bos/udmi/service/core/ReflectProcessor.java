@@ -1,6 +1,6 @@
 package com.google.bos.udmi.service.core;
 
-import static com.google.bos.udmi.service.core.StateProcessor.IOT_ACCESS_COMPONENT_NAME;
+import static com.google.bos.udmi.service.core.StateProcessor.IOT_ACCESS_COMPONENT;
 import static com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl.getMessageClassFor;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.Common.ERROR_KEY;
@@ -204,7 +204,7 @@ public class ReflectProcessor extends ProcessorBase {
   @Override
   public void activate() {
     debug(stringify(deployed));
-    iotAccess = UdmiServicePod.getComponent(IOT_ACCESS_COMPONENT_NAME);
+    iotAccess = UdmiServicePod.getComponent(IOT_ACCESS_COMPONENT);
     super.activate();
   }
 }

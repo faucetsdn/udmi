@@ -31,7 +31,7 @@ public class StateProcessor extends ProcessorBase {
 
   private static final Set<String> STATE_SUB_FOLDERS =
       Arrays.stream(SubFolder.values()).map(SubFolder::value).collect(Collectors.toSet());
-  public static final String IOT_ACCESS_COMPONENT_NAME = "iot_access";
+  public static final String IOT_ACCESS_COMPONENT = "iot_access";
 
   @Override
   protected void defaultHandler(Object defaultedMessage) {
@@ -67,7 +67,7 @@ public class StateProcessor extends ProcessorBase {
       return;
     }
     try {
-      IotAccessBase iotAccess = UdmiServicePod.getComponent(IOT_ACCESS_COMPONENT_NAME);
+      IotAccessBase iotAccess = UdmiServicePod.getComponent(IOT_ACCESS_COMPONENT);
       Date newLastStart = message.system.operation.last_start;
       Entry<String, String> configEntry = iotAccess.fetchConfig(registryId, deviceId);
       Config configMessage = fromStringStrict(Config.class, configEntry.getValue());

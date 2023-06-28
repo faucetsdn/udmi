@@ -113,11 +113,6 @@ public class UdmiServicePod {
     return (T) requireNonNull(COMPONENT_MAP.get(name), "missing component " + name);
   }
 
-  @SuppressWarnings("unchecked")
-  public static <T> T getComponent(String name, Class<T> clazz) {
-    return (T) requireNonNull(COMPONENT_MAP.get(name), "missing component " + name);
-  }
-
   /**
    * Put this component into the central component registry.
    */
