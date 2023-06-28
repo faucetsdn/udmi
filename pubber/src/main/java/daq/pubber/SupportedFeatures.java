@@ -6,6 +6,8 @@ import static udmi.schema.Bucket.ENUMERATION;
 import static udmi.schema.Bucket.ENUMERATION_FAMILIES;
 import static udmi.schema.Bucket.ENUMERATION_FEATURES;
 import static udmi.schema.Bucket.ENUMERATION_POINTSET;
+import static udmi.schema.Bucket.POINTSET;
+import static udmi.schema.Bucket.SYSTEM;
 import static udmi.schema.Bucket.UNKNOWN_DEFAULT;
 import static udmi.schema.FeatureEnumeration.FeatureStage.ALPHA;
 import static udmi.schema.FeatureEnumeration.FeatureStage.BETA;
@@ -33,6 +35,8 @@ public abstract class SupportedFeatures {
     add(ENUMERATION_FEATURES, BETA);
     add(ENUMERATION_FAMILIES, PREVIEW);
     add(ENUMERATION_POINTSET, ALPHA);
+    add(POINTSET, BETA);
+    add(SYSTEM, BETA);
   }
 
   private static void add(Bucket featureBucket, FeatureStage stage) {
