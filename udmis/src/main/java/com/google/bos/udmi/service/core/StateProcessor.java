@@ -8,6 +8,7 @@ import static com.google.udmi.util.JsonUtil.stringify;
 import static java.util.Objects.requireNonNull;
 import static udmi.schema.Envelope.SubFolder.UPDATE;
 
+import com.google.bos.udmi.service.access.IotAccessBase;
 import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.StateUpdate;
 import com.google.udmi.util.GeneralUtils;
@@ -25,7 +26,7 @@ import udmi.schema.State;
  * the system. Involves tagging the envelope with the appropriate designators, and splitting up the
  * monolithic block into constituent parts.
  */
-public class StateProcessor extends UdmisComponent {
+public class StateProcessor extends ProcessorBase {
 
   private static final Set<String> STATE_SUB_FOLDERS =
       Arrays.stream(SubFolder.values()).map(SubFolder::value).collect(Collectors.toSet());
@@ -64,7 +65,7 @@ public class StateProcessor extends UdmisComponent {
       return;
     }
     try {
-      requireNonNull(iotAccess, "iot access provider not set");
+      IotAccessBase iotAccess = getComponent("iot_access");
       Date newLastStart = message.system.operation.last_start;
       Entry<String, String> configEntry = iotAccess.fetchConfig(registryId, deviceId);
       Config configMessage = fromStringStrict(Config.class, configEntry.getValue());

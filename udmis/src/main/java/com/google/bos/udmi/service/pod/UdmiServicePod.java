@@ -3,25 +3,20 @@ package com.google.bos.udmi.service.pod;
 import static com.google.bos.udmi.service.messaging.impl.MessageBase.combineConfig;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
-import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.loadFileStrictRequired;
-import static com.google.udmi.util.JsonUtil.toMap;
-import static java.util.Optional.ofNullable;
 
-import com.google.bos.udmi.service.access.IotAccessProvider;
+import com.google.bos.udmi.service.access.IotAccessBase;
 import com.google.bos.udmi.service.core.BridgeProcessor;
+import com.google.bos.udmi.service.core.ProcessorBase;
 import com.google.bos.udmi.service.core.ReflectProcessor;
 import com.google.bos.udmi.service.core.StateProcessor;
 import com.google.bos.udmi.service.core.TargetProcessor;
-import com.google.bos.udmi.service.core.UdmisComponent;
 import com.google.common.collect.ImmutableMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.stream.Collectors;
 import udmi.schema.BridgePodConfiguration;
 import udmi.schema.EndpointConfiguration;
+import udmi.schema.IotAccess;
 import udmi.schema.PodConfiguration;
 
 /**
@@ -32,15 +27,13 @@ public class UdmiServicePod {
   public static final String DEFAULT_PROVIDER_KEY = "default";
   private static final Map<String, BridgePodConfiguration> NO_BRIDGES = ImmutableMap.of();
   private static final Map<String, EndpointConfiguration> NO_FLOWS = ImmutableMap.of();
-  private static final Map<String, Class<? extends UdmisComponent>> PROCESSORS = ImmutableMap.of(
+  private static final Map<String, IotAccess> NO_ACCESS = ImmutableMap.of();
+  private static final Map<String, Class<? extends ProcessorBase>> PROCESSORS = ImmutableMap.of(
       "target", TargetProcessor.class,
       "reflect", ReflectProcessor.class,
       "state", StateProcessor.class
   );
   private final PodConfiguration podConfiguration;
-  private final Map<Class<?>, UdmisComponent> components;
-  private final List<BridgeProcessor> bridges;
-  private IotAccessProvider iotAccessProvider;
 
   /**
    * Core pod to instantiate all the other components as necessary based on configuration.
@@ -51,23 +44,9 @@ public class UdmiServicePod {
 
       podConfiguration = loadFileStrictRequired(PodConfiguration.class, args[0]);
 
-      Map<String, EndpointConfiguration> flowEntries = podConfiguration.flows;
-      components = ofNullable(flowEntries).orElse(NO_FLOWS).entrySet().stream()
-          .map(this::makeComponentFor).collect(Collectors.toMap(UdmisComponent::getClass,
-              thing -> thing));
-
-      Map<String, BridgePodConfiguration> bridgeEntries = podConfiguration.bridges;
-      bridges = ofNullable(bridgeEntries).orElse(NO_BRIDGES).entrySet().stream()
-          .map(this::makeBridgeFor).collect(Collectors.toList());
-
-      if (podConfiguration.iot_access != null) {
-        Map<String, IotAccessProvider> providerMap =
-            podConfiguration.iot_access.entrySet().stream()
-                .collect(Collectors.toMap(Entry::getKey, IotAccessProvider::from));
-        IotAccessProvider provider = providerMap.get(DEFAULT_PROVIDER_KEY);
-        provider.setProviders(providerMap);
-        setIotAccessProvider(provider);
-      }
+      ifNotNullThen(podConfiguration.flows, components -> components.forEach(this::createComponent));
+      ifNotNullThen(podConfiguration.bridges, bridges -> bridges.forEach(this::createBridge));
+      ifNotNullThen(podConfiguration.iot_access, access -> access.forEach(this::createAccess));
     } catch (Exception e) {
       throw new RuntimeException("While instantiating pod " + CSV_JOINER.join(args), e);
     }
@@ -78,24 +57,24 @@ public class UdmiServicePod {
     udmiServicePod.activate();
   }
 
-  private <T extends UdmisComponent> T createComponent(Class<T> clazz,
-      EndpointConfiguration config) {
-    return ifNotNullGet(config, () -> UdmisComponent.create(clazz, config));
+  private void createComponent(String name, EndpointConfiguration config) {
+    checkState(PROCESSORS.containsKey(name), "registered flow key " + name);
+    Class<? extends ProcessorBase> clazz = PROCESSORS.get(name);
+    ProcessorBase.create(clazz, makeConfig(config)).putComponent(name);
   }
 
-  private BridgeProcessor makeBridgeFor(Entry<String, BridgePodConfiguration> entry) {
+  private void createBridge(String name, BridgePodConfiguration config) {
     try {
-      EndpointConfiguration from = makeConfig(entry.getValue().from);
-      EndpointConfiguration to = makeConfig(entry.getValue().to);
-      return new BridgeProcessor(from, to);
+      EndpointConfiguration from = makeConfig(config.from);
+      EndpointConfiguration to = makeConfig(config.to);
+      new BridgeProcessor(from, to).putComponent(name);
     } catch (Exception e) {
-      throw new RuntimeException("While making bridge " + entry.getKey(), e);
+      throw new RuntimeException("While making bridge " + name, e);
     }
   }
 
-  private UdmisComponent makeComponentFor(Entry<String, EndpointConfiguration> entry) {
-    checkState(PROCESSORS.containsKey(entry.getKey()), "registered flow key " + entry.getKey());
-    return createComponent(PROCESSORS.get(entry.getKey()), makeConfig(entry.getValue()));
+  private IotAccessBase createAccess(String name, IotAccess config) {
+    IotAccessBase.from(config).putComponent(name);
   }
 
   private EndpointConfiguration makeConfig(EndpointConfiguration defined) {
@@ -106,26 +85,17 @@ public class UdmiServicePod {
    * Activate all processors and components in the pod.
    */
   public void activate() {
-    ifNotNullThen(iotAccessProvider, IotAccessProvider::activate);
-    components.values().forEach(UdmisComponent::activate);
-    bridges.forEach(BridgeProcessor::activate);
+    ContainerBase.forAllComponents(ContainerBase::activate);
   }
 
   public PodConfiguration getPodConfiguration() {
     return podConfiguration;
   }
 
-  public void setIotAccessProvider(IotAccessProvider iotAccessProvider) {
-    this.iotAccessProvider = iotAccessProvider;
-    components.values().forEach(target -> target.setIotAccessProvider(iotAccessProvider));
-  }
-
   /**
    * Shutdown all processors and bridges in the pod.
    */
   public void shutdown() {
-    bridges.forEach(BridgeProcessor::shutdown);
-    components.values().forEach(UdmisComponent::shutdown);
-    ifNotNullThen(iotAccessProvider, IotAccessProvider::shutdown);
+    ContainerBase.forAllComponents(ContainerBase::shutdown);
   }
 }

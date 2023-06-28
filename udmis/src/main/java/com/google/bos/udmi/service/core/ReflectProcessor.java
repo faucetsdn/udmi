@@ -17,6 +17,7 @@ import static com.google.udmi.util.JsonUtil.toMap;
 import static java.util.Objects.requireNonNull;
 import static udmi.schema.Envelope.SubFolder.UPDATE;
 
+import com.google.bos.udmi.service.access.IotAccessBase;
 import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.StateUpdate;
 import com.google.udmi.util.GeneralUtils;
@@ -36,17 +37,18 @@ import udmi.schema.UdmiState;
 /**
  * Handle the reflector processor stream for UDMI utility tool clients.
  */
-public class ReflectProcessor extends UdmisComponent {
+public class ReflectProcessor extends ProcessorBase {
 
   public static final String PAYLOAD_KEY = "payload";
   static final String DEPLOY_FILE = "var/deployed_version.json";
   private final SetupUdmiConfig deployed =
       loadFileStrictRequired(SetupUdmiConfig.class, new File(DEPLOY_FILE));
 
+  private IotAccessBase iotAccess;
+
   @Override
   protected void defaultHandler(Object message) {
     MessageContinuation continuation = getContinuation(message);
-    requireNonNull(iotAccess, "iot access provider not set");
     Envelope reflection = continuation.getEnvelope();
     try {
       if (reflection.subFolder == null) {
@@ -125,7 +127,7 @@ public class ReflectProcessor extends UdmisComponent {
 
   private CloudModel queryDeviceState(Envelope attributes) {
     try {
-      String state = provider.fetchState(attributes.deviceRegistryId, attributes.deviceId);
+      String state = iotAccess.fetchState(attributes.deviceRegistryId, attributes.deviceId);
       publish(fromStringStrict(StateUpdate.class, state));
       CloudModel cloudModel = new CloudModel();
       cloudModel.operation = Operation.FETCH;
@@ -200,6 +202,7 @@ public class ReflectProcessor extends UdmisComponent {
   @Override
   public void activate() {
     debug(stringify(deployed));
+    iotAccess = getComponent("iot_access");
     super.activate();
   }
 }

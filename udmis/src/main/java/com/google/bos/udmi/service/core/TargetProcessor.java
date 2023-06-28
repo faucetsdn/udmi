@@ -11,7 +11,7 @@ import udmi.schema.Envelope.SubFolder;
  * this is just a simple pass-through with no logic or functionality. It's essentially a TAP point
  * for all events flowing through the system.
  */
-public class TargetProcessor extends UdmisComponent {
+public class TargetProcessor extends ProcessorBase {
 
   @Override
   protected void defaultHandler(Object defaultedMessage) {

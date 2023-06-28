@@ -2,7 +2,6 @@ package com.google.bos.udmi.service.core;
 
 import static com.google.bos.udmi.service.messaging.MessageDispatcher.messageHandlerFor;
 
-import com.google.bos.udmi.service.access.IotAccessProvider;
 import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.MessageDispatcher;
 import com.google.bos.udmi.service.messaging.MessageDispatcher.HandlerSpecification;
@@ -17,7 +16,7 @@ import udmi.schema.EndpointConfiguration;
 /**
  * Base class for UDMIS components.
  */
-public abstract class UdmisComponent extends ContainerBase {
+public abstract class ProcessorBase extends ContainerBase {
 
   public static final Integer FUNCTIONS_VERSION_MIN = 8;
   public static final Integer FUNCTIONS_VERSION_MAX = 8;
@@ -29,12 +28,11 @@ public abstract class UdmisComponent extends ContainerBase {
   );
 
   protected MessageDispatcher dispatcher;
-  protected IotAccessProvider iotAccess;
 
   /**
    * Create a new instance of the given target class with the provided configuration.
    */
-  public static <T extends UdmisComponent> T create(Class<T> clazz, EndpointConfiguration config) {
+  public static <T extends ProcessorBase> T create(Class<T> clazz, EndpointConfiguration config) {
     try {
       T object = clazz.getDeclaredConstructor().newInstance();
       object.dispatcher = MessageDispatcher.from(config);
@@ -87,10 +85,6 @@ public abstract class UdmisComponent extends ContainerBase {
 
   public int getMessageCount(Class<?> clazz) {
     return dispatcher.getHandlerCount(clazz);
-  }
-
-  public void setIotAccessProvider(IotAccessProvider iotAccess) {
-    this.iotAccess = iotAccess;
   }
 
   /**

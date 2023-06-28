@@ -4,6 +4,7 @@ import static com.google.udmi.util.JsonUtil.writeFile;
 import static org.apache.commons.io.FileUtils.deleteDirectory;
 import static org.mockito.Mockito.mock;
 
+import com.google.bos.udmi.service.access.IotAccessBase;
 import com.google.bos.udmi.service.access.IotAccessProvider;
 import com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl;
 import com.google.bos.udmi.service.messaging.impl.MessageTestBase;
@@ -27,8 +28,8 @@ public abstract class ProcessorTestBase extends MessageTestBase {
   public static final Date TEST_TIMESTAMP = CleanDateFormat.cleanDate();
   public static final String TEST_FUNCTIONS = "functions-version";
   protected final List<Object> captured = new ArrayList<>();
-  private UdmisComponent processor;
-  protected IotAccessProvider provider;
+  private ProcessorBase processor;
+  protected IotAccessBase provider;
 
   protected int getDefaultCount() {
     return processor.getMessageCount(Object.class);
@@ -64,7 +65,7 @@ public abstract class ProcessorTestBase extends MessageTestBase {
     config.hostname = TEST_NAMESPACE;
     config.recv_id = TEST_SOURCE;
     config.send_id = TEST_DESTINATION;
-    processor = UdmisComponent.create(getProcessorClass(), config);
+    processor = ProcessorBase.create(getProcessorClass(), config);
     setTestDispatcher(processor.getDispatcher());
     provider = mock(IotAccessProvider.class);
     processor.setIotAccessProvider(provider);
@@ -88,7 +89,7 @@ public abstract class ProcessorTestBase extends MessageTestBase {
   }
 
   @NotNull
-  protected abstract Class<? extends UdmisComponent> getProcessorClass();
+  protected abstract Class<? extends ProcessorBase> getProcessorClass();
 
   protected void terminateAndWait() {
     getReverseDispatcher().terminate();

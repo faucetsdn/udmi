@@ -1,7 +1,7 @@
 package com.google.bos.udmi.service.core;
 
-import static com.google.bos.udmi.service.core.UdmisComponent.FUNCTIONS_VERSION_MAX;
-import static com.google.bos.udmi.service.core.UdmisComponent.FUNCTIONS_VERSION_MIN;
+import static com.google.bos.udmi.service.core.ProcessorBase.FUNCTIONS_VERSION_MAX;
+import static com.google.bos.udmi.service.core.ProcessorBase.FUNCTIONS_VERSION_MIN;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.stringify;
@@ -10,7 +10,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.notNull;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -41,7 +40,7 @@ public class ReflectProcessorTest extends ProcessorTestBase {
   public final String transactionId = Long.toString(System.currentTimeMillis());
 
   @Override
-  protected @NotNull Class<? extends UdmisComponent> getProcessorClass() {
+  protected @NotNull Class<? extends ProcessorBase> getProcessorClass() {
     return ReflectProcessor.class;
   }
 

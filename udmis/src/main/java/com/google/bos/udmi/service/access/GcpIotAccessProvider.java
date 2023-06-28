@@ -35,7 +35,7 @@ import com.google.api.services.cloudiot.v1.model.SendCommandToDeviceRequest;
 import com.google.api.services.cloudiot.v1.model.UnbindDeviceFromGatewayRequest;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
-import com.google.bos.udmi.service.core.UdmisComponent;
+import com.google.bos.udmi.service.core.ProcessorBase;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
@@ -61,7 +61,7 @@ import udmi.schema.IotAccess;
 /**
  * IoT access provider for (deprecated) GCP IoT Core.
  */
-public class GcpIotAccessProvider extends UdmisComponent implements IotAccessProvider {
+public class GcpIotAccessProvider extends IotAccessBase {
 
   static final Set<String> CLOUD_REGIONS =
       ImmutableSet.of("us-central1", "europe-west1", "asia-east1");
