@@ -243,6 +243,7 @@ public class SequenceBase {
   private int previousEventCount;
   private String configExceptionTimestamp;
   private boolean useAlternateClient;
+  private SequenceResult testResult;
 
   static void ensureValidatorConfig() {
     if (validatorConfig != null) {
@@ -626,6 +627,7 @@ public class SequenceBase {
     // TODO: Minimize time, or better yet find deterministic way to flush messages.
     safeSleep(CONFIG_UPDATE_DELAY_MS);
 
+    testResult = SequenceResult.START;
     configAcked = false;
     receivedState.clear();
     receivedEvents.clear();
@@ -924,7 +926,9 @@ public class SequenceBase {
     debug(format("stage done %s at %s", condition, timeSinceStart()));
     recordSequence = false;
 
-    untilTrue(format("minimum test duration of %ss", MINIMUM_TEST_SEC), this::beenLongEnough);
+    if (testResult == SequenceResult.PASS) {
+      untilTrue(format("minimum test duration of %ss", MINIMUM_TEST_SEC), this::beenLongEnough);
+    }
 
     recordMessages = false;
     configAcked = false;
@@ -1776,6 +1780,7 @@ public class SequenceBase {
 
     private void recordCompletion(SequenceResult result, Description description, String message) {
       try {
+        testResult = result;
         recordResult(result, description, message);
         Entry logEntry = new Entry();
         logEntry.category = VALIDATION_FEATURE_SEQUENCE;
