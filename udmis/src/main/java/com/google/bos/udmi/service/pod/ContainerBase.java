@@ -14,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
  * convenience and abstraction to keep the main component code more clear.
  * TODO: Implement facilities for other loggers, including structured-to-cloud.
  */
-abstract public class ContainerBase {
+public abstract class ContainerBase {
 
   private static final Map<String, ContainerBase> COMPONENT_MAP = new ConcurrentHashMap<>();
 
@@ -51,6 +51,9 @@ abstract public class ContainerBase {
     System.err.println(getSimpleName() + " I: " + message);
   }
 
+  /**
+   * Put this component into the central component registry.
+   */
   public void putComponent(String componentName) {
     ifNotNullThen(COMPONENT_MAP.put(componentName, this),
         replaced -> {

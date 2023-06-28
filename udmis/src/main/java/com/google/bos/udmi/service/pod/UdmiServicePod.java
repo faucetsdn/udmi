@@ -44,7 +44,7 @@ public class UdmiServicePod {
 
       podConfiguration = loadFileStrictRequired(PodConfiguration.class, args[0]);
 
-      ifNotNullThen(podConfiguration.flows, components -> components.forEach(this::createComponent));
+      ifNotNullThen(podConfiguration.flows, flows -> flows.forEach(this::createFlow));
       ifNotNullThen(podConfiguration.bridges, bridges -> bridges.forEach(this::createBridge));
       ifNotNullThen(podConfiguration.iot_access, access -> access.forEach(this::createAccess));
     } catch (Exception e) {
@@ -57,7 +57,7 @@ public class UdmiServicePod {
     udmiServicePod.activate();
   }
 
-  private void createComponent(String name, EndpointConfiguration config) {
+  private void createFlow(String name, EndpointConfiguration config) {
     checkState(PROCESSORS.containsKey(name), "registered flow key " + name);
     Class<? extends ProcessorBase> clazz = PROCESSORS.get(name);
     ProcessorBase.create(clazz, makeConfig(config)).putComponent(name);

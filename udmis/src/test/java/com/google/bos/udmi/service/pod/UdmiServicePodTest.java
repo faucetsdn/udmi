@@ -164,6 +164,7 @@ public class UdmiServicePodTest {
     UdmiServicePod pod = new UdmiServicePod(arrayOf(BASE_CONFIG));
 
     IotAccessBase iotAccessProvider = Mockito.mock(IotAccessBase.class);
+    iotAccessProvider.putComponent("iot_access");
 
     PodConfiguration podConfig = pod.getPodConfiguration();
 
