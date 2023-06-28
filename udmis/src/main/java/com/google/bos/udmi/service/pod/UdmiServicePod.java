@@ -108,9 +108,13 @@ public class UdmiServicePod {
     COMPONENT_MAP.clear();
   }
 
-  @SuppressWarnings("unchecked")
   public static <T> T getComponent(String name) {
-    return (T) requireNonNull(COMPONENT_MAP.get(name), "missing component " + name);
+    return requireNonNull(maybeGetComponent(name), "missing component " + name);
+  }
+
+  @SuppressWarnings("unchecked")
+  public static <T> T maybeGetComponent(String name) {
+    return (T) COMPONENT_MAP.get(name);
   }
 
   /**

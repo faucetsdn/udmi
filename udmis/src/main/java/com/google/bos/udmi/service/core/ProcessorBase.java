@@ -3,6 +3,7 @@ package com.google.bos.udmi.service.core;
 import static com.google.bos.udmi.service.core.StateProcessor.IOT_ACCESS_COMPONENT;
 import static com.google.bos.udmi.service.messaging.MessageDispatcher.messageHandlerFor;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.stringify;
 
 import com.google.bos.udmi.service.access.IotAccessBase;
@@ -66,9 +67,10 @@ public abstract class ProcessorBase extends ContainerBase {
   }
 
   protected void reflectMessage(Envelope envelope, String message) {
-    IotAccessBase iotAccess = UdmiServicePod.getComponent(IOT_ACCESS_COMPONENT);
     envelope.payload = encodeBase64(message);
-    iotAccess.sendCommand(REFLECT_REGISTRY, envelope.deviceRegistryId, null, stringify(envelope));
+    ifNotNullThen(UdmiServicePod.<IotAccessBase>maybeGetComponent(IOT_ACCESS_COMPONENT),
+        iotAccess -> iotAccess.sendCommand(REFLECT_REGISTRY, envelope.deviceRegistryId, null,
+            stringify(envelope)));
   }
 
   /**

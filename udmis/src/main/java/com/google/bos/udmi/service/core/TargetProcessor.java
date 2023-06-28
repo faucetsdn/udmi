@@ -1,6 +1,5 @@
 package com.google.bos.udmi.service.core;
 
-import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static java.lang.String.format;
 
@@ -39,7 +38,8 @@ public class TargetProcessor extends ProcessorBase {
     SubFolder subFolder = envelope.subFolder;
 
     String message = stringify(defaultedMessage);
-    debug(format("Reflecting %s %s %s %s %s %s", deviceRegistryId, deviceId, subType, subFolder, message, transactionId));
+    debug(format("Reflecting %s %s %s %s %s %s", deviceRegistryId, deviceId, subType, subFolder,
+        message, transactionId));
     reflectMessage(envelope, message);
   }
 }
