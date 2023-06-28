@@ -5,7 +5,7 @@
   "flows": {
     "target": {
       "recv_id": "udmi_target",
-      "send_id": "udmi_tap"
+      "send_id": "iot_access"
     },
     "state": {
       "recv_id": "udmi_state",

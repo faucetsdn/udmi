@@ -19,6 +19,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 import udmi.schema.Config;
+import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.State;
 
@@ -36,11 +37,13 @@ public class StateProcessor extends ProcessorBase {
   @Override
   protected void defaultHandler(Object defaultedMessage) {
     MessageContinuation continuation = getContinuation(defaultedMessage);
-    String registryId = continuation.getEnvelope().deviceRegistryId;
-    String deviceId = continuation.getEnvelope().deviceId;
+    Envelope envelope = continuation.getEnvelope();
+    String registryId = envelope.deviceRegistryId;
+    String deviceId = envelope.deviceId;
     StateUpdate stateMessage = convertToStrict(StateUpdate.class, defaultedMessage);
     updateLastStart(stateMessage, registryId, deviceId);
     stateHandler(stateMessage);
+    reflectMessage(envelope, stringify(defaultedMessage));
   }
 
   @Override

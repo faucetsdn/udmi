@@ -14,6 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.google.bos.udmi.service.access.IotAccessBase;
 import com.google.bos.udmi.service.access.LocalIotAccessProvider;
 import com.google.bos.udmi.service.core.ProcessorTestBase;
 import com.google.bos.udmi.service.messaging.StateUpdate;
@@ -81,31 +82,18 @@ public class UdmiServicePodTest {
     final MessageDispatcherImpl stateDispatcher =
         MessagePipeTestBase.getDispatcherFor(reversedState);
 
-    EndpointConfiguration reversedTarget =
-        combineConfig(podConfig.flow_defaults, reverseFlow(podConfig.flows.get("target")));
-    final MessageDispatcherImpl targetDispatcher =
-        MessagePipeTestBase.getDispatcherFor(reversedTarget);
-
     pod.activate();
-
-    CompletableFuture<DiscoveryState> received = new CompletableFuture<>();
-    targetDispatcher.registerHandler(DiscoveryState.class, received::complete);
-    BlockingQueue<Object> defaulted = new LinkedBlockingQueue<>();
-    targetDispatcher.registerHandler(Object.class, defaulted::add);
-    targetDispatcher.activate();
 
     StateUpdate stateUpdate = new StateUpdate();
     stateUpdate.discovery = new DiscoveryState();
     stateUpdate.pointset = new PointsetState();
     stateDispatcher.publish(stateUpdate);
 
-    DiscoveryState discoveryState = received.get(RECEIVE_TIMEOUT_SEC, TimeUnit.SECONDS);
-    assertNotNull(discoveryState, "no received message");
+    pod.shutdown();
 
-    Object polled = defaulted.poll(RECEIVE_TIMEOUT_SEC, TimeUnit.SECONDS);
-    assertTrue(polled instanceof PointsetState, "expected pointset state in default");
-
-    assertNull(defaulted.poll(RECEIVE_TIMEOUT_SEC, TimeUnit.SECONDS));
+    LocalIotAccessProvider iotAccess = UdmiServicePod.getComponent(IOT_ACCESS_COMPONENT);
+    List<String> commands = iotAccess.getCommands();
+    assertEquals(2, commands.size(), "sent commands");
   }
 
   @Test

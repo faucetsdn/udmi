@@ -1,17 +1,23 @@
 package com.google.bos.udmi.service.core;
 
+import static com.google.bos.udmi.service.core.StateProcessor.IOT_ACCESS_COMPONENT;
 import static com.google.bos.udmi.service.messaging.MessageDispatcher.messageHandlerFor;
+import static com.google.udmi.util.GeneralUtils.encodeBase64;
+import static com.google.udmi.util.JsonUtil.stringify;
 
+import com.google.bos.udmi.service.access.IotAccessBase;
 import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.MessageDispatcher;
 import com.google.bos.udmi.service.messaging.MessageDispatcher.HandlerSpecification;
 import com.google.bos.udmi.service.pod.ContainerBase;
+import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.Common;
 import java.util.Collection;
 import java.util.function.Consumer;
 import org.jetbrains.annotations.TestOnly;
 import udmi.schema.EndpointConfiguration;
+import udmi.schema.Envelope;
 
 /**
  * Base class for UDMIS components.
@@ -21,6 +27,7 @@ public abstract class ProcessorBase extends ContainerBase {
   public static final Integer FUNCTIONS_VERSION_MIN = 8;
   public static final Integer FUNCTIONS_VERSION_MAX = 8;
   public static final String UDMI_VERSION = "1.4.1";
+  private static final String REFLECT_REGISTRY = "UDMI-REFLECT";
 
   private final ImmutableList<HandlerSpecification> baseHandlers = ImmutableList.of(
       messageHandlerFor(Object.class, this::defaultHandler),
@@ -56,6 +63,12 @@ public abstract class ProcessorBase extends ContainerBase {
   protected void exceptionHandler(Exception e) {
     info("Received processing exception: " + Common.getExceptionMessage(e));
     e.printStackTrace();
+  }
+
+  protected void reflectMessage(Envelope envelope, String message) {
+    IotAccessBase iotAccess = UdmiServicePod.getComponent(IOT_ACCESS_COMPONENT);
+    envelope.payload = encodeBase64(message);
+    iotAccess.sendCommand(REFLECT_REGISTRY, envelope.deviceRegistryId, null, stringify(envelope));
   }
 
   /**
