@@ -5,7 +5,6 @@ import static org.apache.commons.io.FileUtils.deleteDirectory;
 import static org.mockito.Mockito.mock;
 
 import com.google.bos.udmi.service.access.IotAccessBase;
-import com.google.bos.udmi.service.access.IotAccessProvider;
 import com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl;
 import com.google.bos.udmi.service.messaging.impl.MessageTestBase;
 import com.google.udmi.util.CleanDateFormat;
@@ -67,8 +66,8 @@ public abstract class ProcessorTestBase extends MessageTestBase {
     config.send_id = TEST_DESTINATION;
     processor = ProcessorBase.create(getProcessorClass(), config);
     setTestDispatcher(processor.getDispatcher());
-    provider = mock(IotAccessProvider.class);
-    processor.setIotAccessProvider(provider);
+    provider = mock(IotAccessBase.class);
+
     processor.activate();
     provider.activate();
   }

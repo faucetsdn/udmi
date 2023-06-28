@@ -104,7 +104,7 @@ class GcpIotAccessProviderTest {
 
   @Test
   void listDevices() throws IOException {
-    IotAccessProvider provider = getProvider();
+    IotAccessBase provider = getProvider();
     provider.activate();
 
     Devices devices = cloudIot.projects().locations().registries().devices();

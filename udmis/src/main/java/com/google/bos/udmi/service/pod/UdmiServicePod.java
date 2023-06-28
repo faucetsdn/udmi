@@ -73,7 +73,7 @@ public class UdmiServicePod {
     }
   }
 
-  private IotAccessBase createAccess(String name, IotAccess config) {
+  private void createAccess(String name, IotAccess config) {
     IotAccessBase.from(config).putComponent(name);
   }
 

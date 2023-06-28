@@ -16,10 +16,10 @@ public class TargetProcessor extends ProcessorBase {
   @Override
   protected void defaultHandler(Object defaultedMessage) {
     // private void sendReflectCommand(Envelope reflection, Envelope message, Object payload) {
-    String reflectRegistry = reflection.deviceRegistryId;
-    String deviceRegistry = reflection.deviceId;
-    Envelope message = new Envelope();
-    message.payload = encodeBase64(stringify(defaultedMessage));
-    provider.sendCommand(reflectRegistry, deviceRegistry, SubFolder.UDMI, stringify(message));
+    // String reflectRegistry = reflection.deviceRegistryId;
+    // String deviceRegistry = reflection.deviceId;
+    // Envelope message = new Envelope();
+    // message.payload = encodeBase64(stringify(defaultedMessage));
+    // provider.sendCommand(reflectRegistry, deviceRegistry, SubFolder.UDMI, stringify(message));
   }
 }

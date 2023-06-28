@@ -16,7 +16,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import com.google.bos.udmi.service.access.IotAccessProvider;
+import com.google.bos.udmi.service.access.IotAccessBase;
 import com.google.bos.udmi.service.core.ProcessorTestBase;
 import com.google.bos.udmi.service.messaging.StateUpdate;
 import com.google.bos.udmi.service.messaging.impl.LocalMessagePipe;
@@ -163,8 +163,7 @@ public class UdmiServicePodTest {
     ProcessorTestBase.writeVersionDeployFile();
     UdmiServicePod pod = new UdmiServicePod(arrayOf(BASE_CONFIG));
 
-    IotAccessProvider iotAccessProvider = Mockito.mock(IotAccessProvider.class);
-    pod.setIotAccessProvider(iotAccessProvider);
+    IotAccessBase iotAccessProvider = Mockito.mock(IotAccessBase.class);
 
     PodConfiguration podConfig = pod.getPodConfiguration();
 
