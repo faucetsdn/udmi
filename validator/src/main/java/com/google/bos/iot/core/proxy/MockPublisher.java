@@ -1,5 +1,7 @@
 package com.google.bos.iot.core.proxy;
 
+import static com.google.bos.iot.core.proxy.IotReflectorClient.MESSAGE_POLL_TIME_SEC;
+
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.validator.Validator;
 import com.google.udmi.util.JsonUtil;
@@ -7,6 +9,7 @@ import com.google.udmi.util.SiteModel;
 import java.util.HashMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Message publisher used for testing.
@@ -52,7 +55,11 @@ public class MockPublisher implements MessagePublisher {
   @Override
   public Validator.MessageBundle takeNextMessage(boolean enableTimeout) {
     try {
-      return messages.take();
+      if (enableTimeout) {
+        return messages.poll(MESSAGE_POLL_TIME_SEC, TimeUnit.SECONDS);
+      } else {
+        return messages.take();
+      }
     } catch (Exception e) {
       throw new RuntimeException("While taking next message", e);
     }

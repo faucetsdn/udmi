@@ -1171,7 +1171,7 @@ public class SequenceBase {
 
   private void messageEvaluateLoop(Supplier<Boolean> evaluator) {
     while (evaluator.get()) {
-      processMessage();
+      processNextMessage();
     }
   }
 
@@ -1228,7 +1228,7 @@ public class SequenceBase {
       if (!reflector().isActive()) {
         throw new RuntimeException("Trying to receive message from inactive client");
       }
-      MessageBundle bundle = reflector().takeNextMessage(false);
+      MessageBundle bundle = reflector().takeNextMessage(true);
       if (activeInstance != this) {
         debug("stashing interrupted message bundle");
         checkState(stashedBundle == null, "stashed bundle is not null");
@@ -1239,9 +1239,11 @@ public class SequenceBase {
     }
   }
 
-  private void processMessage() {
+  private void processNextMessage() {
     MessageBundle bundle = nextMessageBundle();
-    processMessage(bundle.attributes, bundle.message);
+    if (bundle != null) {
+      processMessage(bundle.attributes, bundle.message);
+    }
   }
 
   private void processMessage(Map<String, String> attributes, Map<String, Object> message) {
