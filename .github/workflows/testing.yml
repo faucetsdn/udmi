@@ -143,7 +143,7 @@ jobs:
   sequencer:
     name: Sequencer Suite
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 35
     if: vars.GCP_TARGET_PROJECT != '' && vars.UDMI_REGISTRY_SUFFIX != ''
     env:
       GCP_TARGET_PROJECT: ${{ vars.GCP_TARGET_PROJECT }}
@@ -220,7 +220,7 @@ jobs:
   comprehensive:
     name: Comprehensive Suite
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
     if: vars.GCP_TARGET_PROJECT != ''
     env:
       GCP_TARGET_PROJECT: ${{ vars.GCP_TARGET_PROJECT }}
@@ -254,6 +254,7 @@ jobs:
         if: ${{ always() }}
         run: |
           more out/test_itemized.out out/schemas_itemized.out | cat
+          more sites/udmi_site_model/out/devices/AHU-1/tests/*/sequencer.log | cat
 
   redirect:
     name: Endpoint Redirection
