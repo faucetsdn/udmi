@@ -22,6 +22,8 @@ public class TargetProcessor extends ProcessorBase {
     Envelope envelope = continuation.getEnvelope();
     String deviceId = envelope.deviceId;
 
+    publish(defaultedMessage);
+
     if (deviceId == null) {
       debug("Dropping message with no deviceId");
       return;

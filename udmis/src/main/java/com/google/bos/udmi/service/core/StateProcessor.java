@@ -43,7 +43,6 @@ public class StateProcessor extends ProcessorBase {
     StateUpdate stateMessage = convertToStrict(StateUpdate.class, defaultedMessage);
     updateLastStart(stateMessage, registryId, deviceId);
     stateHandler(stateMessage);
-    reflectMessage(envelope, stringify(defaultedMessage));
   }
 
   @Override
@@ -53,10 +52,16 @@ public class StateProcessor extends ProcessorBase {
 
   private void stateHandler(StateUpdate message) {
     info("Sharding state message to pipeline out as incremental updates");
+    MessageContinuation continuation = getContinuation(message);
+    Envelope envelope = continuation.getEnvelope();
     Arrays.stream(State.class.getFields()).forEach(field -> {
       try {
         if (STATE_SUB_FOLDERS.contains(field.getName())) {
-          ifNotNullThen(field.get(message), this::publish);
+          ifNotNullThen(field.get(message), fieldMessage -> {
+            envelope.subFolder = SubFolder.fromValue(field.getName());
+            reflectMessage(envelope, stringify(message));
+            continuation.publish(fieldMessage);
+          });
         }
       } catch (Exception e) {
         throw new RuntimeException("While extracting field " + field.getName(), e);

@@ -63,7 +63,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   private final Map<Class<?>, Consumer<Object>> handlers = new HashMap<>();
   private final Map<Class<?>, AtomicInteger> handlerCounts = new ConcurrentHashMap<>();
   private final String projectId;
-  private final Envelope prototypeEnvelope = new Envelope();
+  public final Envelope prototypeEnvelope = new Envelope();
 
   /**
    * Create a new instance of the message dispatcher.

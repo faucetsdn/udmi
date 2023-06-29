@@ -14,7 +14,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.google.bos.udmi.service.access.IotAccessBase;
 import com.google.bos.udmi.service.access.LocalIotAccessProvider;
 import com.google.bos.udmi.service.core.ProcessorTestBase;
 import com.google.bos.udmi.service.messaging.StateUpdate;
@@ -81,6 +80,7 @@ public class UdmiServicePodTest {
         combineConfig(podConfig.flow_defaults, reverseFlow(podConfig.flows.get("state")));
     final MessageDispatcherImpl stateDispatcher =
         MessagePipeTestBase.getDispatcherFor(reversedState);
+    stateDispatcher.prototypeEnvelope.deviceId = TEST_DEVICE;
 
     pod.activate();
 
@@ -148,7 +148,6 @@ public class UdmiServicePodTest {
   public void reflectPodTest() throws Exception {
     ProcessorTestBase.writeVersionDeployFile();
     UdmiServicePod pod = new UdmiServicePod(arrayOf(BASE_CONFIG));
-
 
     PodConfiguration podConfig = pod.getPodConfiguration();
 
