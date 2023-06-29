@@ -185,6 +185,7 @@ public class SequenceBase {
   private static final ObjectDiffEngine RECV_CONFIG_DIFFERNATOR = new ObjectDiffEngine();
   private static final ObjectDiffEngine RECV_STATE_DIFFERNATOR = new ObjectDiffEngine();
   private static final Set<String> configTransactions = new ConcurrentSkipListSet<>();
+  private static final int MINIMUM_TEST_SEC = 30;
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -243,6 +244,7 @@ public class SequenceBase {
   private int previousEventCount;
   private String configExceptionTimestamp;
   private boolean useAlternateClient;
+  private SequenceResult testResult;
 
   static void ensureValidatorConfig() {
     if (validatorConfig != null) {
@@ -626,6 +628,7 @@ public class SequenceBase {
     // TODO: Minimize time, or better yet find deterministic way to flush messages.
     safeSleep(CONFIG_UPDATE_DELAY_MS);
 
+    testResult = SequenceResult.START;
     configAcked = false;
     receivedState.clear();
     receivedEvents.clear();
@@ -922,9 +925,18 @@ public class SequenceBase {
     }
     String condition = waitingCondition.isEmpty() ? "initialize" : waitingCondition.peek();
     debug(format("stage done %s at %s", condition, timeSinceStart()));
-    recordMessages = false;
     recordSequence = false;
+
+    if (testResult == SequenceResult.PASS) {
+      untilTrue(format("minimum test duration of %ss", MINIMUM_TEST_SEC), this::beenLongEnough);
+    }
+
+    recordMessages = false;
     configAcked = false;
+  }
+
+  private boolean beenLongEnough() {
+    return secSinceStart() >= MINIMUM_TEST_SEC;
   }
 
   private void assertConfigIsNotPending() {
@@ -1164,7 +1176,7 @@ public class SequenceBase {
 
   private void messageEvaluateLoop(Supplier<Boolean> evaluator) {
     while (evaluator.get()) {
-      processMessage();
+      processNextMessage();
     }
   }
 
@@ -1183,7 +1195,11 @@ public class SequenceBase {
   }
 
   private String timeSinceStart() {
-    return (System.currentTimeMillis() - testStartTimeMs) / 1000 + "s";
+    return secSinceStart() + "s";
+  }
+
+  private long secSinceStart() {
+    return (System.currentTimeMillis() - testStartTimeMs) / 1000;
   }
 
   protected void untilTrue(String description, Supplier<Boolean> evaluator) {
@@ -1217,7 +1233,7 @@ public class SequenceBase {
       if (!reflector().isActive()) {
         throw new RuntimeException("Trying to receive message from inactive client");
       }
-      MessageBundle bundle = reflector().takeNextMessage(false);
+      MessageBundle bundle = reflector().takeNextMessage(true);
       if (activeInstance != this) {
         debug("stashing interrupted message bundle");
         checkState(stashedBundle == null, "stashed bundle is not null");
@@ -1228,9 +1244,11 @@ public class SequenceBase {
     }
   }
 
-  private void processMessage() {
+  private void processNextMessage() {
     MessageBundle bundle = nextMessageBundle();
-    processMessage(bundle.attributes, bundle.message);
+    if (bundle != null) {
+      processMessage(bundle.attributes, bundle.message);
+    }
   }
 
   private void processMessage(Map<String, String> attributes, Map<String, Object> message) {
@@ -1707,8 +1725,7 @@ public class SequenceBase {
       if (!testName.equals(description.getMethodName())) {
         throw new IllegalStateException("Unexpected test method name");
       }
-      long testTimeSec = (System.currentTimeMillis() - testStartTimeMs) / 1000;
-      notice("ending test " + testName + " after " + testTimeSec + "s " + START_END_MARKER);
+      notice("ending test " + testName + " after " + timeSinceStart() + " " + START_END_MARKER);
       testName = null;
       if (deviceConfig != null) {
         deviceConfig.system.testing = null;
@@ -1767,6 +1784,7 @@ public class SequenceBase {
 
     private void recordCompletion(SequenceResult result, Description description, String message) {
       try {
+        testResult = result;
         recordResult(result, description, message);
         Entry logEntry = new Entry();
         logEntry.category = VALIDATION_FEATURE_SEQUENCE;

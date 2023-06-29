@@ -24,9 +24,9 @@ RESULT pass schemas event_pointset_alpha ALPHA 5 All schema validations passed
 RESULT pass schemas event_system_alpha ALPHA 5 All schema validations passed
 RESULT pass schemas state_update_alpha ALPHA 5 All schema validations passed
 =========== pointset_sample_rate
-RESULT pass schemas event_pointset_alpha ALPHA 5 All schema validations passed
-RESULT pass schemas event_system_alpha ALPHA 5 All schema validations passed
-RESULT pass schemas state_update_alpha ALPHA 5 All schema validations passed
+RESULT pass schemas event_pointset_beta BETA 5 All schema validations passed
+RESULT pass schemas event_system_beta BETA 5 All schema validations passed
+RESULT pass schemas state_update_beta BETA 5 All schema validations passed
 =========== system_mode_restart
 RESULT pass schemas event_pointset_alpha ALPHA 5 All schema validations passed
 RESULT pass schemas event_system_alpha ALPHA 5 All schema validations passed

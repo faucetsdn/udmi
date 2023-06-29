@@ -6,7 +6,7 @@
 
 ROOT_DIR=$(realpath $(dirname $0)/..)
 TEST_LOG=$ROOT_DIR/out/sequencer.out
-SCHEMA_OUT=$ROOT_DIR/out/schemas.out
+SCHEMA_OUT=$ROOT_DIR/out/schema.out
 log_level=INFO
 alt_registry=${UDMI_ALT_REGISTRY:-ZZ-REDIRECT-NA}
 min_stage=PREVIEW

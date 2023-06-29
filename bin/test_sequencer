@@ -109,8 +109,8 @@ else
 fi
 
 if [[ -n $alpha_mode ]]; then
-    echo Comparing diff out/schemas.out etc/schemas.out
-    diff -u out/schemas.out etc/schemas.out
+    echo Comparing diff out/schema.out etc/schema.out
+    diff -u out/schema.out etc/schema.out
 fi
 
 cp docs/specs/sequences/generated.md out/  # Save for test/comparison later
