@@ -1,5 +1,6 @@
 package com.google.bos.udmi.service.core;
 
+import static com.google.bos.udmi.service.core.StateProcessor.IOT_ACCESS_COMPONENT;
 import static com.google.udmi.util.JsonUtil.writeFile;
 import static org.apache.commons.io.FileUtils.deleteDirectory;
 import static org.mockito.Mockito.mock;
@@ -7,6 +8,7 @@ import static org.mockito.Mockito.mock;
 import com.google.bos.udmi.service.access.IotAccessBase;
 import com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl;
 import com.google.bos.udmi.service.messaging.impl.MessageTestBase;
+import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.udmi.util.CleanDateFormat;
 import java.io.File;
 import java.io.IOException;
@@ -44,6 +46,7 @@ public abstract class ProcessorTestBase extends MessageTestBase {
 
   protected void initializeTestInstance() {
     try {
+      UdmiServicePod.resetForTest();
       writeVersionDeployFile();
       createProcessorInstance();
       activateReverseProcessor();
@@ -67,7 +70,7 @@ public abstract class ProcessorTestBase extends MessageTestBase {
     processor = ProcessorBase.create(getProcessorClass(), config);
     setTestDispatcher(processor.getDispatcher());
     provider = mock(IotAccessBase.class);
-
+    UdmiServicePod.putComponent(IOT_ACCESS_COMPONENT, provider);
     processor.activate();
     provider.activate();
   }
