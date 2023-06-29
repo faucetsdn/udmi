@@ -42,7 +42,7 @@ public class StateProcessor extends ProcessorBase {
     String deviceId = envelope.deviceId;
     StateUpdate stateMessage = convertToStrict(StateUpdate.class, defaultedMessage);
     updateLastStart(stateMessage, registryId, deviceId);
-    stateHandler(stateMessage);
+    shardStateUpdate(stateMessage, continuation);
   }
 
   @Override
@@ -51,8 +51,12 @@ public class StateProcessor extends ProcessorBase {
   }
 
   private void stateHandler(StateUpdate message) {
-    info("Sharding state message to pipeline out as incremental updates");
     MessageContinuation continuation = getContinuation(message);
+    shardStateUpdate(message, continuation);
+  }
+
+  private void shardStateUpdate(StateUpdate message, MessageContinuation continuation) {
+    info("Sharding state message to pipeline out as incremental updates");
     Envelope envelope = continuation.getEnvelope();
     Arrays.stream(State.class.getFields()).forEach(field -> {
       try {

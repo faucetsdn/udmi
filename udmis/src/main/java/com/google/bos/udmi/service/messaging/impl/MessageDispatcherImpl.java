@@ -183,7 +183,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   @Override
   public MessageContinuation getContinuation(Object message) {
     final Envelope continuationEnvelope =
-        requireNonNull(deepCopy(messageEnvelopes.get(message)), "missing envelope");
+        requireNonNull(deepCopy(messageEnvelopes.get(message)), "missing message envelope");
     return new MessageContinuation() {
       @Override
       public Envelope getEnvelope() {

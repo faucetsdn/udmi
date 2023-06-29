@@ -149,6 +149,9 @@ public class GeneralUtils {
   }
 
   public static <T> T deepCopy(T object) {
+    if (object == null) {
+      return null;
+    }
     Class<?> targetClass = object.getClass();
     try {
       @SuppressWarnings("unchecked")
