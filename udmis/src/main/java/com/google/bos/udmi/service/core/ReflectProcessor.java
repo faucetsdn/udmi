@@ -27,6 +27,7 @@ import com.google.udmi.util.JsonUtil;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
 import udmi.schema.Envelope;
@@ -129,7 +130,8 @@ public class ReflectProcessor extends ProcessorBase {
 
   private CloudModel queryDeviceState(Envelope attributes) {
     try {
-      String state = iotAccess.fetchState(attributes.deviceRegistryId, attributes.deviceId);
+      String state = Optional.ofNullable(
+          iotAccess.fetchState(attributes.deviceRegistryId, attributes.deviceId)).orElse("{}");
       publish(fromStringStrict(StateUpdate.class, state));
       CloudModel cloudModel = new CloudModel();
       cloudModel.operation = Operation.FETCH;
