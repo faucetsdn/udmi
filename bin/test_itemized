@@ -36,8 +36,6 @@ EOF
 pubber/bin/build
 validator/bin/build
 
-bin/reset_config $SITE_PATH $PROJECT_ID $DEVICE_ID
-
 while read -u 7 action test_name remainder; do
     if [[ $action != TEST ]]; then
         continue;
@@ -49,6 +47,8 @@ while read -u 7 action test_name remainder; do
 
     # Clean out the persistant data store to ensure a clean state each time.
     rm -rf sites/udmi_site_model/out/devices/AHU-1/persistent_data.json
+
+    bin/reset_config $SITE_PATH $PROJECT_ID $DEVICE_ID
 
     serial_no=sequencer-$RANDOM
     udmi pubber $udmi_profile -x $serial_no $pubber_opts > $PUBBER_OUT 2>&1 &

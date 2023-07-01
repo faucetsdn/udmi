@@ -944,10 +944,6 @@ public class Pubber {
     // TODO: Replace this with a heap so only the highest-priority status is reported.
     deviceState.system.status = shouldLogLevel(report.level) ? report : null;
     publishConfigStateUpdate();
-    if (cause != null && configLatch.getCount() > 0) {
-      configLatch.countDown();
-      warn("Released startup latch because reported error");
-    }
   }
 
   /**
