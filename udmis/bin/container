@@ -19,6 +19,16 @@ IMAGE=udmis
 cmd=$1
 shift || usage missing command
 
+echo Using GCP project $PROJECT
+
+CONTEXT=`kubectl config current-context`
+CONTEXT_ARGS=(${CONTEXT//_/ })
+KPROJECT=${CONTEXT_ARGS[1]}
+if [[ $KPROJECT != $PROJECT ]]; then
+    echo Kubernetes context $CONTEXT does not match gcloud project $PROJECT
+    false
+fi
+
 current_user=$USER@$HOSTNAME
 current_time=`date --utc --iso=seconds`
 version=`git describe --dirty`
