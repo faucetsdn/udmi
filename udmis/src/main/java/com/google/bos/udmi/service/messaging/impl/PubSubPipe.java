@@ -1,5 +1,7 @@
 package com.google.bos.udmi.service.messaging.impl;
 
+import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
+import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
@@ -24,6 +26,7 @@ import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.ProjectSubscriptionName;
 import com.google.pubsub.v1.ProjectTopicName;
 import com.google.pubsub.v1.PubsubMessage;
+import com.google.udmi.util.Common;
 import com.google.udmi.util.GeneralUtils;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -110,8 +113,8 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
           .build();
       ApiFuture<String> publish = publisher.publish(message);
       String publishedId = publish.get();
-      debug(format("Published PubSub %s/%s to %s as %s", stringMap.get("subType"), stringMap.get("subFolder"),
-          publisher.getTopicNameString(), publishedId));
+      debug(format("Published PubSub %s/%s to %s as %s", stringMap.get(SUBTYPE_PROPERTY_KEY),
+          stringMap.get(SUBFOLDER_PROPERTY_KEY), publisher.getTopicNameString(), publishedId));
     } catch (Exception e) {
       throw new RuntimeException("While publishing pubsub bundle", e);
     }

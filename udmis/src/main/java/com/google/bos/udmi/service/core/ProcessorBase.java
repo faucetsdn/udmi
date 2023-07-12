@@ -2,7 +2,7 @@ package com.google.bos.udmi.service.core;
 
 import static com.google.bos.udmi.service.core.StateProcessor.IOT_ACCESS_COMPONENT;
 import static com.google.bos.udmi.service.messaging.MessageDispatcher.messageHandlerFor;
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.stringify;
@@ -13,7 +13,6 @@ import com.google.bos.udmi.service.messaging.MessageDispatcher;
 import com.google.bos.udmi.service.messaging.MessageDispatcher.HandlerSpecification;
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.Common;
 import java.util.Collection;
