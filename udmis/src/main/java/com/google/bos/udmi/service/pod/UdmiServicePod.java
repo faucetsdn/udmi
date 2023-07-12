@@ -10,7 +10,6 @@ import static java.util.Objects.requireNonNull;
 
 import com.google.bos.udmi.service.access.IotAccessBase;
 import com.google.bos.udmi.service.core.BridgeProcessor;
-import com.google.bos.udmi.service.core.ConfigProcessor;
 import com.google.bos.udmi.service.core.ProcessorBase;
 import com.google.bos.udmi.service.core.ReflectProcessor;
 import com.google.bos.udmi.service.core.StateProcessor;
@@ -30,15 +29,10 @@ import udmi.schema.PodConfiguration;
 public class UdmiServicePod {
 
   private static final Map<String, ContainerBase> COMPONENT_MAP = new ConcurrentHashMap<>();
-  public static final String DEFAULT_PROVIDER_KEY = "default";
-  private static final Map<String, BridgePodConfiguration> NO_BRIDGES = ImmutableMap.of();
-  private static final Map<String, EndpointConfiguration> NO_FLOWS = ImmutableMap.of();
-  private static final Map<String, IotAccess> NO_ACCESS = ImmutableMap.of();
   private static final Map<String, Class<? extends ProcessorBase>> PROCESSORS = ImmutableMap.of(
       "target", TargetProcessor.class,
       "reflect", ReflectProcessor.class,
-      "state", StateProcessor.class,
-      "config", ConfigProcessor.class
+      "state", StateProcessor.class
   );
   private final PodConfiguration podConfiguration;
 

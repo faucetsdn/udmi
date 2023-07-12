@@ -40,9 +40,6 @@ pubber/bin/build
 bin/reset_config $site_path $project_id $device_id
 bin/reset_config $site_path $project_id $proxy_id
 
-echo Delay to let config updates clear...
-sleep 10
-
 echo Starting validator, output in $VALIDATOR_OUT
 udmi validate -s $site_path -p $project_id > $VALIDATOR_OUT 2>&1 &
 vpid=$!

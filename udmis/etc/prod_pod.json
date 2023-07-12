@@ -11,10 +11,6 @@
       "recv_id": "udmi_state-udmis",
       "send_id": "udmi_target"
     },
-    "config": {
-      "recv_id": "udmi_config-udmis",
-      "send_id": "udmi_target"
-    },
     "reflect": {
       "recv_id": "udmi_reflect-udmis",
       "send_id": "udmi_target"
