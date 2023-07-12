@@ -45,7 +45,7 @@ import com.clearblade.cloud.iot.v1.unbinddevicefromgateway.UnbindDeviceFromGatew
 import com.clearblade.cloud.iot.v1.updatedevice.UpdateDeviceRequest;
 import com.clearblade.cloud.iot.v1.utils.ByteString;
 import com.clearblade.cloud.iot.v1.utils.LogLevel;
-import com.google.bos.udmi.service.core.UdmisComponent;
+import com.google.bos.udmi.service.core.ProcessorBase;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.collect.BiMap;
@@ -76,7 +76,7 @@ import udmi.schema.IotAccess;
  * IoT access provider for (deprecated) GCP IoT Core.
  * TODO: Need to implement page tokens for all requisite API calls.
  */
-public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAccessProvider {
+public class ClearBladeIotAccessProvider extends IotAccessBase {
 
   private static final String UDMIS_REGISTRY = "UDMS-REFLECT";
   static final Set<String> CLOUD_REGIONS =
@@ -461,6 +461,11 @@ public class ClearBladeIotAccessProvider extends UdmisComponent implements IotAc
       throw new RuntimeException("While fetching device " + devicePath, e);
     }
 
+  }
+
+  @Override
+  public String fetchState(String deviceRegistryId, String deviceId) {
+    throw new RuntimeException("Not yet implemented " + this.getClass());
   }
 
   @Override

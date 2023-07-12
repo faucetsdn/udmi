@@ -3,6 +3,7 @@ package com.google.bos.udmi.service.messaging.impl;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.JsonUtil.convertTo;
+import static com.google.udmi.util.JsonUtil.stringify;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
@@ -62,7 +63,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   private final Map<Class<?>, Consumer<Object>> handlers = new HashMap<>();
   private final Map<Class<?>, AtomicInteger> handlerCounts = new ConcurrentHashMap<>();
   private final String projectId;
-  private final Envelope prototypeEnvelope = new Envelope();
+  public final Envelope prototypeEnvelope = new Envelope();
 
   /**
    * Create a new instance of the message dispatcher.
@@ -126,22 +127,26 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
    */
   private void processMessage(Bundle bundle) {
     Envelope envelope = Preconditions.checkNotNull(bundle.envelope, "bundle envelope is null");
-    boolean isException = bundle.message instanceof Exception;
-    String mapKey = isException ? EXCEPTION_KEY : getMapKey(envelope.subType, envelope.subFolder);
-    Class<?> handlerType =
-        TYPE_CLASSES.getOrDefault(mapKey, SPECIAL_CLASSES.getOrDefault(mapKey, DEFAULT_CLASS));
+    Object message = bundle.message;
+    boolean isException = message instanceof Exception;
+    Class<?> handlerType = isException ? EXCEPTION_CLASS : getMessageClassFor(envelope);
     try {
       handlers.computeIfAbsent(handlerType, key -> {
         info("Defaulting messages of type/folder " + handlerType.getName());
         return handlers.getOrDefault(DEFAULT_CLASS, this::devNullHandler);
       });
-      Object messageObject = isException ? bundle.message : convertTo(handlerType, bundle.message);
+      Object messageObject = isException ? message : convertTo(handlerType, message);
       info("Processing " + handlerType);
       debug("Processing %s from %s in %s", handlerType.getSimpleName(), messagePipe, this);
       processHandler(envelope, handlerType, messageObject);
     } catch (Exception e) {
-      throw new RuntimeException("While processing message key " + mapKey, e);
+      throw new RuntimeException("While processing message envelope " + stringify(envelope), e);
     }
+  }
+
+  public static Class<?> getMessageClassFor(Envelope envelope) {
+    String mapKey = getMapKey(envelope.subType, envelope.subFolder);
+    return TYPE_CLASSES.getOrDefault(mapKey, SPECIAL_CLASSES.getOrDefault(mapKey, DEFAULT_CLASS));
   }
 
   @Override
@@ -178,7 +183,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   @Override
   public MessageContinuation getContinuation(Object message) {
     final Envelope continuationEnvelope =
-        requireNonNull(deepCopy(messageEnvelopes.get(message)), "missing envelope");
+        requireNonNull(deepCopy(messageEnvelopes.get(message)), "missing message envelope");
     return new MessageContinuation() {
       @Override
       public Envelope getEnvelope() {

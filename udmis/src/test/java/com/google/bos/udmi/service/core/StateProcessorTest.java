@@ -17,7 +17,7 @@ import udmi.schema.SystemState;
 public class StateProcessorTest extends ProcessorTestBase {
 
   @NotNull
-  protected Class<? extends UdmisComponent> getProcessorClass() {
+  protected Class<? extends ProcessorBase> getProcessorClass() {
     return StateProcessor.class;
   }
 

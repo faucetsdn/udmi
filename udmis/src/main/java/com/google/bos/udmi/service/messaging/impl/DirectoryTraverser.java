@@ -1,5 +1,6 @@
 package com.google.bos.udmi.service.messaging.impl;
 
+import static com.google.udmi.util.JsonUtil.JSON_SUFFIX;
 import static java.util.Objects.requireNonNull;
 import static java.util.Spliterator.DISTINCT;
 import static java.util.Spliterator.IMMUTABLE;
@@ -11,6 +12,8 @@ import static java.util.Spliterators.spliteratorUnknownSize;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -19,7 +22,7 @@ import java.util.stream.StreamSupport;
  */
 public class DirectoryTraverser implements Iterator<File> {
 
-  final File[] files;
+  final List<File> files;
   File next;
   int nextIndex;
   DirectoryTraverser delegate;
@@ -28,11 +31,42 @@ public class DirectoryTraverser implements Iterator<File> {
    * New instance for the given directory path.
    */
   public DirectoryTraverser(String path) {
-    File file = new File(path);
-    files = requireNonNull(file.listFiles(), "missing directory " + file.getAbsolutePath());
-    Arrays.sort(files);
+    File dir = new File(path);
+    File[] listing = requireNonNull(dir.listFiles(), "missing directory " + dir.getAbsolutePath());
+    Arrays.sort(listing);
+    files =
+        Arrays.stream(listing).filter(DirectoryTraverser::fileFilter).collect(Collectors.toList());
+    if (files.isEmpty()) {
+      throw new RuntimeException("No trace files found in " + dir.getAbsolutePath());
+    }
     nextIndex = 0;
     next = prefetchNext();
+  }
+
+  private static boolean fileFilter(File file) {
+    return file.isDirectory() || file.getName().endsWith(JSON_SUFFIX);
+  }
+
+  private File prefetchNext() {
+    if (delegate != null) {
+      if (delegate.hasNext()) {
+        return delegate.next();
+      }
+      delegate = null;
+    }
+
+    if (nextIndex >= files.size()) {
+      return null;
+    }
+
+    File next = files.get(nextIndex++);
+
+    if (next.isDirectory()) {
+      delegate = new DirectoryTraverser(next.getPath());
+      return prefetchNext();
+    }
+
+    return next;
   }
 
   @Override
@@ -45,28 +79,6 @@ public class DirectoryTraverser implements Iterator<File> {
     File value = requireNonNull(next, "no more files available");
     next = prefetchNext();
     return value;
-  }
-
-  private File prefetchNext() {
-    if (delegate != null) {
-      if (delegate.hasNext()) {
-        return delegate.next();
-      }
-      delegate = null;
-    }
-
-    if (nextIndex >= files.length) {
-      return null;
-    }
-
-    File next = files[nextIndex++];
-
-    if (next.isDirectory()) {
-      delegate = new DirectoryTraverser(next.getPath());
-      return prefetchNext();
-    }
-
-    return next;
   }
 
   public Stream<File> stream() {

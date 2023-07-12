@@ -1,5 +1,7 @@
 package com.google.bos.udmi.service.messaging.impl;
 
+import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
+import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
@@ -24,6 +26,7 @@ import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.ProjectSubscriptionName;
 import com.google.pubsub.v1.ProjectTopicName;
 import com.google.pubsub.v1.PubsubMessage;
+import com.google.udmi.util.Common;
 import com.google.udmi.util.GeneralUtils;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -97,6 +100,10 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
   @Override
   public void publish(Bundle bundle) {
     try {
+      if (publisher == null) {
+        debug("Dropping message because publisher is null");
+        return;
+      }
       Envelope envelope = Optional.ofNullable(bundle.envelope).orElse(new Envelope());
       Map<String, String> stringMap = toMap(envelope).entrySet().stream()
           .collect(Collectors.toMap(Entry::getKey, entry -> (String) entry.getValue()));
@@ -105,7 +112,9 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
           .setData(ByteString.copyFromUtf8(stringify(bundle.message)))
           .build();
       ApiFuture<String> publish = publisher.publish(message);
-      info("Published PubSub " + publish.get());
+      String publishedId = publish.get();
+      debug(format("Published PubSub %s/%s to %s as %s", stringMap.get(SUBTYPE_PROPERTY_KEY),
+          stringMap.get(SUBFOLDER_PROPERTY_KEY), publisher.getTopicNameString(), publishedId));
     } catch (Exception e) {
       throw new RuntimeException("While publishing pubsub bundle", e);
     }
@@ -129,8 +138,9 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
 
   @Override
   public String toString() {
-    return String.format("PubSub %s -> %s", subscriber.getSubscriptionNameString(),
-        publisher.getTopicNameString());
+    String subscriptionName = ifNotNullGet(subscriber, Subscriber::getSubscriptionNameString);
+    String topicName = ifNotNullGet(publisher, Publisher::getTopicNameString);
+    return format("PubSub %s -> %s", subscriptionName, topicName);
   }
 
   Publisher getPublisher(String topicName) {

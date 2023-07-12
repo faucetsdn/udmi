@@ -20,6 +20,7 @@ spec:
       projected:
         sources:
         - secret:
-            name: pod_config.json
+            name: pod-config.json
         - secret:
             name: clearblade.json
+            optional: true

@@ -1,27 +1,35 @@
 package com.google.bos.udmi.service.core;
 
+import static com.google.bos.udmi.service.core.StateProcessor.IOT_ACCESS_COMPONENT;
 import static com.google.bos.udmi.service.messaging.MessageDispatcher.messageHandlerFor;
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.udmi.util.GeneralUtils.encodeBase64;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.JsonUtil.stringify;
 
-import com.google.bos.udmi.service.access.IotAccessProvider;
+import com.google.bos.udmi.service.access.IotAccessBase;
 import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.MessageDispatcher;
 import com.google.bos.udmi.service.messaging.MessageDispatcher.HandlerSpecification;
 import com.google.bos.udmi.service.pod.ContainerBase;
+import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.Common;
 import java.util.Collection;
 import java.util.function.Consumer;
 import org.jetbrains.annotations.TestOnly;
 import udmi.schema.EndpointConfiguration;
+import udmi.schema.Envelope;
 
 /**
  * Base class for UDMIS components.
  */
-public abstract class UdmisComponent extends ContainerBase {
+public abstract class ProcessorBase extends ContainerBase {
 
-  public static final Integer FUNCTIONS_VERSION_MIN = 8;
-  public static final Integer FUNCTIONS_VERSION_MAX = 8;
+  public static final Integer FUNCTIONS_VERSION_MIN = 9;
+  public static final Integer FUNCTIONS_VERSION_MAX = 9;
   public static final String UDMI_VERSION = "1.4.1";
+  private static final String REFLECT_REGISTRY = "UDMI-REFLECT";
 
   private final ImmutableList<HandlerSpecification> baseHandlers = ImmutableList.of(
       messageHandlerFor(Object.class, this::defaultHandler),
@@ -29,12 +37,11 @@ public abstract class UdmisComponent extends ContainerBase {
   );
 
   protected MessageDispatcher dispatcher;
-  protected IotAccessProvider iotAccess;
 
   /**
    * Create a new instance of the given target class with the provided configuration.
    */
-  public static <T extends UdmisComponent> T create(Class<T> clazz, EndpointConfiguration config) {
+  public static <T extends ProcessorBase> T create(Class<T> clazz, EndpointConfiguration config) {
     try {
       T object = clazz.getDeclaredConstructor().newInstance();
       object.dispatcher = MessageDispatcher.from(config);
@@ -60,6 +67,18 @@ public abstract class UdmisComponent extends ContainerBase {
     e.printStackTrace();
   }
 
+  protected void reflectMessage(Envelope envelope, String message) {
+    try {
+      checkState(envelope.payload == null, "envelope payload is not null");
+      envelope.payload = encodeBase64(message);
+      ifNotNullThen(UdmiServicePod.<IotAccessBase>maybeGetComponent(IOT_ACCESS_COMPONENT),
+          iotAccess -> iotAccess.sendCommand(REFLECT_REGISTRY, envelope.deviceRegistryId, null,
+              stringify(envelope)));
+    } finally {
+      envelope.payload = null;
+    }
+  }
+
   /**
    * Register default component handlers. Can be overridden to change underlying behavior.
    */
@@ -77,6 +96,7 @@ public abstract class UdmisComponent extends ContainerBase {
    * Activate this component.
    */
   public void activate() {
+    info("Activating " + this.getSimpleName());
     if (dispatcher != null) {
       registerHandlers(baseHandlers);
       registerHandlers();
@@ -86,10 +106,6 @@ public abstract class UdmisComponent extends ContainerBase {
 
   public int getMessageCount(Class<?> clazz) {
     return dispatcher.getHandlerCount(clazz);
-  }
-
-  public void setIotAccessProvider(IotAccessProvider iotAccess) {
-    this.iotAccess = iotAccess;
   }
 
   /**

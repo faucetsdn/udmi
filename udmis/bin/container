@@ -8,6 +8,7 @@ function usage {
     echo Error: $*
     echo Usage: $0 { build, shell, run, push, deploy, update, status, logs, stop }
     echo Project: $PROJECT
+    echo Try starting with: bin/container build
     exit 1
 }
 
@@ -42,8 +43,10 @@ if [[ $cmd == build ]]; then
   "built_by": "$current_user"
 }
 EOF
-    cat var/deployed_version.json
+    sed -e "s/@PROJECT@/$PROJECT/" < etc/prod_pod.json > var/prod_pod.json
+    more var/deployed_version.json var/prod_pod.json | cat
     docker build -f Dockerfile.udmis -t $IMAGE $DROOT
+    echo Next try: bin/container push
 elif [[ $cmd == run ]]; then
     docker run $RUNARGS udmis
 elif [[ $cmd == shell ]]; then
@@ -54,13 +57,16 @@ elif [[ $cmd == push ]]; then
     sed -e "s/@PROJECT@/$PROJECT/" < k8s_pod.yaml > var/k8s_pod.yaml
     sed -e "s/@PROJECT@/$PROJECT/" < k8s_deployment.yaml > var/k8s_deployment.yaml
     echo Updated var/k8s_pod.yaml for deployment.
+    echo Next try: bin/container deploy
 elif [[ $cmd == deploy ]]; then
     kubectl delete pod/udmi-test-pod || true
     kubectl apply -f var/k8s_pod.yaml
+    echo Next try: bin/container status
 elif [[ $cmd == update ]]; then
     kubectl apply -f var/k8s_deployment.yaml
 elif [[ $cmd == status ]]; then
     kubectl describe pods udmi-test-pod
+    echo Next try: bin/container logs
 elif [[ $cmd == logs ]]; then
     kubectl logs udmi-test-pod
 elif [[ $cmd == stop ]]; then

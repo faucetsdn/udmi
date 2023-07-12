@@ -1,5 +1,7 @@
 package com.google.bos.udmi.service.core;
 
+import static com.google.bos.udmi.service.core.StateProcessor.IOT_ACCESS_COMPONENT;
+import static com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl.getMessageClassFor;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.Common.ERROR_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
@@ -9,19 +11,25 @@ import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
+import static com.google.udmi.util.JsonUtil.fromStringStrict;
 import static com.google.udmi.util.JsonUtil.loadFileStrictRequired;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static java.util.Objects.requireNonNull;
 import static udmi.schema.Envelope.SubFolder.UPDATE;
 
+import com.google.bos.udmi.service.access.IotAccessBase;
 import com.google.bos.udmi.service.messaging.MessageContinuation;
+import com.google.bos.udmi.service.messaging.StateUpdate;
+import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import udmi.schema.CloudModel;
+import udmi.schema.CloudModel.Operation;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
@@ -32,17 +40,18 @@ import udmi.schema.UdmiState;
 /**
  * Handle the reflector processor stream for UDMI utility tool clients.
  */
-public class ReflectProcessor extends UdmisComponent {
+public class ReflectProcessor extends ProcessorBase {
 
   public static final String PAYLOAD_KEY = "payload";
   static final String DEPLOY_FILE = "var/deployed_version.json";
   private final SetupUdmiConfig deployed =
       loadFileStrictRequired(SetupUdmiConfig.class, new File(DEPLOY_FILE));
 
+  private IotAccessBase iotAccess;
+
   @Override
   protected void defaultHandler(Object message) {
     MessageContinuation continuation = getContinuation(message);
-    requireNonNull(iotAccess, "iot access provider not set");
     Envelope reflection = continuation.getEnvelope();
     try {
       if (reflection.subFolder == null) {
@@ -119,6 +128,19 @@ public class ReflectProcessor extends UdmisComponent {
     return iotAccess.listDevices(attributes.deviceRegistryId);
   }
 
+  private CloudModel queryDeviceState(Envelope attributes) {
+    try {
+      String state = Optional.ofNullable(
+          iotAccess.fetchState(attributes.deviceRegistryId, attributes.deviceId)).orElse("{}");
+      publish(fromStringStrict(StateUpdate.class, state));
+      CloudModel cloudModel = new CloudModel();
+      cloudModel.operation = Operation.FETCH;
+      return cloudModel;
+    } catch (Exception e) {
+      throw new RuntimeException("While querying device state " + attributes.deviceId, e);
+    }
+  }
+
   private CloudModel reflectModel(Envelope attributes, CloudModel request) {
     return requireNonNull(
         iotAccess.modelDevice(attributes.deviceRegistryId, attributes.deviceId, request),
@@ -126,20 +148,27 @@ public class ReflectProcessor extends UdmisComponent {
   }
 
   private CloudModel reflectPropagate(Envelope attributes, Map<String, Object> payload) {
+    // TODO: Replace this with published config message for a ConfigProcessor handler.
     if (requireNonNull(attributes.subType) == SubType.CONFIG) {
-      iotAccess.modifyConfig(attributes.deviceRegistryId, attributes.deviceId, UPDATE,
+      iotAccess.modifyConfig(attributes.deviceRegistryId, attributes.deviceId, SubFolder.UPDATE,
           stringify(payload));
       return new CloudModel();
     }
-    throw new RuntimeException("Unknown propagate subType " + attributes.subType);
+    Class<?> messageClass = getMessageClassFor(attributes);
+    publish(convertToStrict(messageClass, payload));
+    return new CloudModel();
   }
 
   private CloudModel reflectQuery(Envelope attributes, Map<String, Object> payload) {
     checkState(payload.size() == 0, "unexpected non-empty message payload");
-    if (requireNonNull(attributes.subFolder) == SubFolder.CLOUD) {
-      return reflectQueryCloud(attributes);
+    switch (attributes.subFolder) {
+      case UPDATE:
+        return queryDeviceState(attributes);
+      case CLOUD:
+        return reflectQueryCloud(attributes);
+      default:
+        throw new RuntimeException("Unknown query folder: " + attributes.subFolder);
     }
-    throw new RuntimeException("Unknown query folder: " + attributes.subFolder);
   }
 
   private CloudModel reflectQueryCloud(Envelope attributes) {
@@ -177,6 +206,7 @@ public class ReflectProcessor extends UdmisComponent {
   @Override
   public void activate() {
     debug(stringify(deployed));
+    iotAccess = UdmiServicePod.getComponent(IOT_ACCESS_COMPONENT);
     super.activate();
   }
 }

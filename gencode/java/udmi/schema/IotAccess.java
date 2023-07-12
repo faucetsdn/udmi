@@ -66,6 +66,7 @@ public class IotAccess {
     @Generated("jsonschema2pojo")
     public enum IotProvider {
 
+        LOCAL("local"),
         DYNAMIC("dynamic"),
         GCP_NATIVE("gcp_native"),
         GCP("gcp"),

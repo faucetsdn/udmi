@@ -149,6 +149,9 @@ public class GeneralUtils {
   }
 
   public static <T> T deepCopy(T object) {
+    if (object == null) {
+      return null;
+    }
     Class<?> targetClass = object.getClass();
     try {
       @SuppressWarnings("unchecked")
@@ -251,8 +254,8 @@ public class GeneralUtils {
    * the target class is "final" but the fields themselves need to be updated.
    *
    * @param from source object
-   * @param to   target object
-   * @param <T>  type of object
+   * @param to target object
+   * @param <T> type of object
    */
   public static <T> void copyFields(T from, T to, boolean includeNull) {
     Field[] fields = from.getClass().getDeclaredFields();
@@ -260,7 +263,7 @@ public class GeneralUtils {
       if (!Modifier.isStatic(field.getModifiers())) {
         try {
           Object value = field.get(from);
-          if (includeNull || value != null ) {
+          if (includeNull || value != null) {
             field.set(to, value);
           }
         } catch (Exception e) {
@@ -279,5 +282,10 @@ public class GeneralUtils {
 
   public static <U> U mapReplace(U previous, U added) {
     return added;
+  }
+
+  public static <T> T using(T variable, Consumer<T> consumer) {
+    consumer.accept(variable);
+    return variable;
   }
 }

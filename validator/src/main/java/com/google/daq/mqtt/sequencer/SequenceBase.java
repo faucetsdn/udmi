@@ -165,6 +165,7 @@ public class SequenceBase {
   private static final String UPDATE_SUBFOLDER = SubFolder.UPDATE.value();
   private static final String STATE_SUBTYPE = SubType.STATE.value();
   private static final String CONFIG_SUBTYPE = SubType.CONFIG.value();
+  private static final String REPLY_SUBTYPE = SubType.REPLY.value();
   private static final String LOCAL_CONFIG_UPDATE = LOCAL_PREFIX + UPDATE_SUBFOLDER;
   private static final String SEQUENCER_LOG = "sequencer.log";
   private static final String SYSTEM_LOG = "system.log";
@@ -1261,6 +1262,11 @@ public class SequenceBase {
       trace("received command " + attributeMark);
     }
 
+    if (SubFolder.ERROR.value().equals(subFolderRaw)) {
+      handlePipelineError(subTypeRaw, message);
+      return;
+    }
+
     if (!SequenceBase.getDeviceId().equals(deviceId)) {
       return;
     }
@@ -1271,9 +1277,7 @@ public class SequenceBase {
 
     validateMessage(attributes, message);
 
-    if (SubFolder.ERROR.value().equals(subFolderRaw)) {
-      handlePipelineError(subTypeRaw, message);
-    } else if (SubFolder.UPDATE.value().equals(subFolderRaw)) {
+    if (SubFolder.UPDATE.value().equals(subFolderRaw)) {
       handleReflectorMessage(subTypeRaw, message, transactionId);
     } else {
       handleDeviceMessage(message, subFolderRaw, subTypeRaw, transactionId);

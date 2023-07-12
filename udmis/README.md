@@ -13,8 +13,8 @@
 
 Things I typed into my command line to get things going (once the cluster was created). In no particular order.
 ```
-gcloud container clusters get-credentials udmis-baseline --region us-central1 --project bos-peringknife-dev
-kubectl create secret generic pod-config.json --from-file=etc/gcp_pod.json
+gcloud container clusters get-credentials udmis-baseline --region us-central1 --project bos-test-dev
+kubectl create secret generic pod-config.json --from-file=var/prod_pod.json
 kubectl get pods
 kubectl apply -f k8s_pod.yaml
 kubectl edit pod/udmi-test-pod
