@@ -6,18 +6,26 @@ DROOT=.
 
 function usage {
     echo Error: $*
-    echo Usage: $0 { build, shell, run, push, deploy, update, status, logs, stop }
+    echo Usage: $0 { build, shell, run, push, deploy, update, status, logs, stop } [repo]
     echo Project: $PROJECT
     echo Try starting with: bin/container build
     exit 1
 }
 
-PROJECT=$(gcloud config get project)
-REPOSITORY=gcr.io/$PROJECT
-IMAGE=udmis
-
 cmd=$1
 shift || usage missing command
+repo=$1
+
+PROJECT=$(gcloud config get project)
+
+if [[ -z $repo ]]; then
+    REPOSITORY=gcr.io/$PROJECT
+else
+    REPOSITORY=$repo
+fi
+
+IMAGE=udmis
+
 
 current_user=$USER@$HOSTNAME
 current_time=`date --utc --iso=seconds`
