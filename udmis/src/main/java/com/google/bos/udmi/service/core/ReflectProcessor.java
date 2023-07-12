@@ -91,6 +91,7 @@ public class ReflectProcessor extends ProcessorBase {
     try {
       switch (attributes.subType) {
         case QUERY:
+          attributes.subType = SubType.REPLY;
           return reflectQuery(attributes, payload);
         case MODEL:
           return reflectModel(attributes, convertToStrict(CloudModel.class, payload));
@@ -116,7 +117,6 @@ public class ReflectProcessor extends ProcessorBase {
       Map<String, Object> payload) {
     iotAccess.setProviderAffinity(envelope.deviceRegistryId, envelope.deviceId, reflection.source);
     CloudModel result = getReflectionResult(envelope, payload);
-    envelope.subType = SubType.REPLY;
     sendReflectCommand(reflection, envelope, result);
   }
 
@@ -148,11 +148,9 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private CloudModel reflectPropagate(Envelope attributes, Map<String, Object> payload) {
-    // TODO: Replace this with published config message for a ConfigProcessor handler.
     if (requireNonNull(attributes.subType) == SubType.CONFIG) {
       iotAccess.modifyConfig(attributes.deviceRegistryId, attributes.deviceId, SubFolder.UPDATE,
           stringify(payload));
-      return new CloudModel();
     }
     Class<?> messageClass = getMessageClassFor(attributes);
     publish(convertToStrict(messageClass, payload));

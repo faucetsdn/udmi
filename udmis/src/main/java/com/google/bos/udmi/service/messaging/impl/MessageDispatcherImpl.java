@@ -7,6 +7,7 @@ import static com.google.udmi.util.JsonUtil.stringify;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
+import com.google.bos.udmi.service.messaging.ConfigUpdate;
 import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.MessageDispatcher;
 import com.google.bos.udmi.service.messaging.MessagePipe;
@@ -56,6 +57,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     Arrays.stream(SubType.values()).forEach(type -> Arrays.stream(SubFolder.values())
         .forEach(folder -> registerHandlerType(type, folder)));
     registerMessageClass(SubType.STATE, SubFolder.UPDATE, StateUpdate.class);
+    registerMessageClass(SubType.CONFIG, SubFolder.UPDATE, ConfigUpdate.class);
   }
 
   private final MessagePipe messagePipe;
@@ -225,9 +227,12 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     }
 
     SimpleEntry<SubType, SubFolder> messageType = CLASS_TYPES.get(message.getClass());
-    checkNotNull(messageType, "type entry not found for " + message.getClass());
-    bundle.envelope.subType = messageType.getKey();
-    bundle.envelope.subFolder = messageType.getValue();
+    if (messageType != null) {
+      bundle.envelope.subType = messageType.getKey();
+      bundle.envelope.subFolder = messageType.getValue();
+    } else {
+      bundle.envelope.subFolder = SubFolder.ERROR;
+    }
     return bundle;
   }
 

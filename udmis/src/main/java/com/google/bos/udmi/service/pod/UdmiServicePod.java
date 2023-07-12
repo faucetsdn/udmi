@@ -10,6 +10,7 @@ import static java.util.Objects.requireNonNull;
 
 import com.google.bos.udmi.service.access.IotAccessBase;
 import com.google.bos.udmi.service.core.BridgeProcessor;
+import com.google.bos.udmi.service.core.ConfigProcessor;
 import com.google.bos.udmi.service.core.ProcessorBase;
 import com.google.bos.udmi.service.core.ReflectProcessor;
 import com.google.bos.udmi.service.core.StateProcessor;
@@ -36,7 +37,8 @@ public class UdmiServicePod {
   private static final Map<String, Class<? extends ProcessorBase>> PROCESSORS = ImmutableMap.of(
       "target", TargetProcessor.class,
       "reflect", ReflectProcessor.class,
-      "state", StateProcessor.class
+      "state", StateProcessor.class,
+      "config", ConfigProcessor.class
   );
   private final PodConfiguration podConfiguration;
 
@@ -63,7 +65,7 @@ public class UdmiServicePod {
   }
 
   private void createFlow(String name, EndpointConfiguration config) {
-    checkState(PROCESSORS.containsKey(name), "registered flow key " + name);
+    checkState(PROCESSORS.containsKey(name), "unknown flow key " + name);
     Class<? extends ProcessorBase> clazz = PROCESSORS.get(name);
     putComponent(name, ProcessorBase.create(clazz, makeConfig(config)));
   }

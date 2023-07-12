@@ -40,12 +40,15 @@ pubber/bin/build
 bin/reset_config $site_path $project_id $device_id
 bin/reset_config $site_path $project_id $proxy_id
 
+echo Delay to let config updates clear...
+sleep 10
+
 echo Starting validator, output in $VALIDATOR_OUT
 udmi validate -s $site_path -p $project_id > $VALIDATOR_OUT 2>&1 &
 vpid=$!
 echo Started validator pid $vpid
 
-# Just give it a head-start, actual waiting check is the loop below
+echo Waiting for validator to startup...
 sleep 10
 
 for i in `seq 1 $WAITING`; do
