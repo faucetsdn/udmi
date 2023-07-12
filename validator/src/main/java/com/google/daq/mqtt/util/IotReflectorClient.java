@@ -152,8 +152,9 @@ public class IotReflectorClient implements IotProvider {
           throw new RuntimeException("UDMIS error: " + error);
         }
         return messageBundle.message;
+      } else if (transactionId != null) {
+        System.err.println("Received unexpected reply message " + transactionId);
       }
-      System.err.println("Received unexpected reply message " + transactionId);
     }
     throw new RuntimeException("Unexpected termination of message loop");
   }

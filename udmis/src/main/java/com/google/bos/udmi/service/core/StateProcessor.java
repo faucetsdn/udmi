@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 import udmi.schema.Config;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
+import udmi.schema.Envelope.SubType;
 import udmi.schema.State;
 
 /**
@@ -58,6 +59,7 @@ public class StateProcessor extends ProcessorBase {
   private void shardStateUpdate(StateUpdate message, MessageContinuation continuation) {
     info("Sharding state message to pipeline out as incremental updates");
     Envelope envelope = continuation.getEnvelope();
+    envelope.subType = SubType.STATE;
     Arrays.stream(State.class.getFields()).forEach(field -> {
       try {
         if (STATE_SUB_FOLDERS.contains(field.getName())) {

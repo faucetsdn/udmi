@@ -109,7 +109,9 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
           .setData(ByteString.copyFromUtf8(stringify(bundle.message)))
           .build();
       ApiFuture<String> publish = publisher.publish(message);
-      info("Published PubSub " + publish.get());
+      String publishedId = publish.get();
+      debug(format("Published PubSub %s/%s to %s as %s", stringMap.get("subType"), stringMap.get("subFolder"),
+          publisher.getTopicNameString(), publishedId));
     } catch (Exception e) {
       throw new RuntimeException("While publishing pubsub bundle", e);
     }
