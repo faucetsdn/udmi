@@ -36,7 +36,7 @@ class ProxyTarget {
   private static final String DEVICE_TOPIC_PREFIX = "/devices/";
   private static final String STATE_SUBFOLDER = "state";
   private static final long DEVICE_REFRESH_SEC = 10 * 60;
-  private static final long CONFIG_UPDATE_LIMIT_MS = 2000; // 1sec limit, but allow for jitter.
+  private static final long CONFIG_UPDATE_LIMIT_MS = 2000; /// 1sec limit, but allow for jitter.
 
   private final Map<String, MessagePublisher> messagePublishers = new ConcurrentHashMap<>();
   private final Map<String, String> configMap;

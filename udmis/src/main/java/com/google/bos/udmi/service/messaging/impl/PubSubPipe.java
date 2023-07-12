@@ -97,6 +97,10 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
   @Override
   public void publish(Bundle bundle) {
     try {
+      if (publisher == null) {
+        debug("Dropping message because publisher is null");
+        return;
+      }
       Envelope envelope = Optional.ofNullable(bundle.envelope).orElse(new Envelope());
       Map<String, String> stringMap = toMap(envelope).entrySet().stream()
           .collect(Collectors.toMap(Entry::getKey, entry -> (String) entry.getValue()));

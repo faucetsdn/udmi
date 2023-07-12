@@ -2,6 +2,7 @@ package com.google.bos.udmi.service.core;
 
 import static com.google.bos.udmi.service.core.StateProcessor.IOT_ACCESS_COMPONENT;
 import static com.google.bos.udmi.service.messaging.MessageDispatcher.messageHandlerFor;
+import static com.google.common.base.Preconditions.*;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.stringify;
@@ -12,6 +13,7 @@ import com.google.bos.udmi.service.messaging.MessageDispatcher;
 import com.google.bos.udmi.service.messaging.MessageDispatcher.HandlerSpecification;
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.Common;
 import java.util.Collection;
@@ -67,10 +69,15 @@ public abstract class ProcessorBase extends ContainerBase {
   }
 
   protected void reflectMessage(Envelope envelope, String message) {
-    envelope.payload = encodeBase64(message);
-    ifNotNullThen(UdmiServicePod.<IotAccessBase>maybeGetComponent(IOT_ACCESS_COMPONENT),
-        iotAccess -> iotAccess.sendCommand(REFLECT_REGISTRY, envelope.deviceRegistryId, null,
-            stringify(envelope)));
+    try {
+      checkState(envelope.payload == null, "envelope payload is not null");
+      envelope.payload = encodeBase64(message);
+      ifNotNullThen(UdmiServicePod.<IotAccessBase>maybeGetComponent(IOT_ACCESS_COMPONENT),
+          iotAccess -> iotAccess.sendCommand(REFLECT_REGISTRY, envelope.deviceRegistryId, null,
+              stringify(envelope)));
+    } finally {
+      envelope.payload = null;
+    }
   }
 
   /**

@@ -293,11 +293,11 @@ public class GcpIotAccessProvider extends IotAccessBase {
 
   @Override
   public void activate() {
-    super.activate();
     try {
       debug("Initializing GCP access provider for project " + projectId);
       registryCloudRegions = fetchRegistryCloudRegions();
       registries = cloudIotService.projects().locations().registries();
+      super.activate();
     } catch (Exception e) {
       throw new RuntimeException("While activating", e);
     }
@@ -414,10 +414,11 @@ public class GcpIotAccessProvider extends IotAccessBase {
     try {
       requireNonNull(registryId, "registry not defined");
       requireNonNull(deviceId, "device not defined");
-      String subFolder = requireNonNull(folder, "subfolder not defined").value();
+      String subFolder = ifNotNullGet(folder, SubFolder::value);
       SendCommandToDeviceRequest request =
           new SendCommandToDeviceRequest().setBinaryData(encodeBase64(message))
               .setSubfolder(subFolder);
+      debug(format("Sending iot command to %s/%s/%s", registryId, deviceId, subFolder));
       registries.devices().sendCommandToDevice(getDevicePath(registryId, deviceId), request)
           .execute();
     } catch (Exception e) {

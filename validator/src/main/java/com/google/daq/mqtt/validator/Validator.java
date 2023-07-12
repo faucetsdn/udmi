@@ -139,6 +139,7 @@ public class Validator {
   private static final String VALIDATION_STATE_TOPIC = "validation/state";
   private static final String POINTSET_SUBFOLDER = "pointset";
   private static final Date START_TIME = new Date();
+  public static final String PROJECT_PROVIDER_PREFIX = "//";
   private final Map<String, ReportingDevice> reportingDevices = new TreeMap<>();
   private final Set<String> extraDevices = new TreeSet<>();
   private final Set<String> processedDevices = new TreeSet<>();
@@ -218,7 +219,7 @@ public class Validator {
       try {
         switch (option) {
           case "-p":
-            config.project_id = removeNextArg(argList);
+            setProjectId(removeNextArg(argList));
             break;
           case "-s":
             setSiteDir(removeNextArg(argList));
@@ -255,6 +256,16 @@ public class Validator {
       }
     }
     return argList;
+  }
+
+  private void setProjectId(String projectId) {
+    if (!projectId.startsWith(PROJECT_PROVIDER_PREFIX)) {
+      config.project_id = projectId;
+      return;
+    }
+    String[] parts = projectId.substring(PROJECT_PROVIDER_PREFIX.length()).split("/",2);
+    config.iot_provider = IotProvider.fromValue(parts[0]);
+    config.project_id = parts[1];
   }
 
   private void validatePubSub(String pubSubCombo) {
@@ -942,7 +953,7 @@ public class Validator {
     try (Scanner scanner = new Scanner(inputFile)) {
       while (scanner.hasNextLine()) {
         String line = scanner.nextLine();
-        if (!line.trim().startsWith("//")) {
+        if (!line.trim().startsWith(PROJECT_PROVIDER_PREFIX)) {
           break;
         }
         outputFile.write((line + "\n").getBytes());

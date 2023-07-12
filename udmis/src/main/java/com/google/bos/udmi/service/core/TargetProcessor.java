@@ -42,6 +42,10 @@ public class TargetProcessor extends ProcessorBase {
     String message = stringify(defaultedMessage);
     debug(format("Reflecting %s %s %s %s %s %s", deviceRegistryId, deviceId, subType, subFolder,
         message, transactionId));
-    reflectMessage(envelope, message);
+    try {
+      reflectMessage(envelope, message);
+    } catch (Exception e) {
+      debug("Exception reflecting message: " + e.getMessage());
+    }
   }
 }

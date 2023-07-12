@@ -63,6 +63,7 @@ public class StateProcessor extends ProcessorBase {
         if (STATE_SUB_FOLDERS.contains(field.getName())) {
           ifNotNullThen(field.get(message), fieldMessage -> {
             envelope.subFolder = SubFolder.fromValue(field.getName());
+            debug("Sharding state " + envelope.subFolder);
             reflectMessage(envelope, stringify(message));
             continuation.publish(fieldMessage);
           });

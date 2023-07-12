@@ -4,12 +4,15 @@
     "hostname": "bos-peringknife-dev"
   },
   "flows": {
+    "target": {
+      "recv_id": "udmi_target-udmis"
+    },
     "state": {
-      "recv_id": "udmi_state",
+      "recv_id": "udmi_state-udmis",
       "send_id": "udmi_target"
     },
     "reflect": {
-      "recv_id": "udmi_reflect",
+      "recv_id": "udmi_reflect-udmis",
       "send_id": "udmi_target"
     }
   },
