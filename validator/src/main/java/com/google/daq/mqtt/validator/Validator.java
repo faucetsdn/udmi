@@ -955,7 +955,7 @@ public class Validator {
     try (Scanner scanner = new Scanner(inputFile)) {
       while (scanner.hasNextLine()) {
         String line = scanner.nextLine();
-        if (!line.trim().startsWith(PROJECT_PROVIDER_PREFIX)) {
+        if (!line.trim().startsWith("//")) {
           break;
         }
         outputFile.write((line + "\n").getBytes());
