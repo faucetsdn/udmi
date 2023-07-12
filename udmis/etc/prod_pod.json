@@ -1,7 +1,7 @@
 {
   "flow_defaults": {
     "protocol": "pubsub",
-    "hostname": "bos-peringknife-dev"
+    "hostname": "@PROJECT@"
   },
   "flows": {
     "target": {
@@ -19,7 +19,7 @@
   "iot_access": {
     "iot_access": {
       "provider": "gcp",
-      "project_id": "bos-peringknife-dev"
+      "project_id": "@PROJECT@"
     }
   }
 }
