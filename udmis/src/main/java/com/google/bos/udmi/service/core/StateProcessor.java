@@ -45,6 +45,13 @@ public class StateProcessor extends ProcessorBase {
   }
 
   @Override
+  protected void exceptionHandler(Exception e) {
+    MessageContinuation continuation = getContinuation(e);
+    Envelope envelope = continuation.getEnvelope();
+    debug("Processing state exception " + e.getMessage());
+  }
+
+  @Override
   protected void registerHandlers() {
     registerHandler(StateUpdate.class, this::stateHandler);
   }

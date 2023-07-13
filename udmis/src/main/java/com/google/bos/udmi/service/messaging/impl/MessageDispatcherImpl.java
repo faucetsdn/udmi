@@ -1,6 +1,5 @@
 package com.google.bos.udmi.service.messaging.impl;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.stringify;
@@ -130,6 +129,9 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   private void processMessage(Bundle bundle) {
     Envelope envelope = Preconditions.checkNotNull(bundle.envelope, "bundle envelope is null");
     Object message = bundle.message;
+    if (message instanceof String stringMessage) {
+      message = new RuntimeException(stringMessage);
+    }
     boolean isException = message instanceof Exception;
     Class<?> handlerType = isException ? EXCEPTION_CLASS : getMessageClassFor(envelope);
     try {

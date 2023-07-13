@@ -86,7 +86,11 @@ public abstract class JsonUtil {
    * @return converted object
    */
   public static <T> T convertToStrict(Class<T> targetClass, Object message) {
-    return message == null ? null : fromStringStrict(targetClass, stringify(message));
+    try {
+      return message == null ? null : fromStringStrict(targetClass, stringify(message));
+    } catch (Exception e) {
+      throw new RuntimeException("While converting message to " + targetClass.getName());
+    }
   }
 
   public static <T> T fromString(Class<T> targetClass, String messageString) {

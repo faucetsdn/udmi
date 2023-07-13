@@ -2,6 +2,7 @@ package com.google.bos.udmi.service.messaging.impl;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
+import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.mergeObject;
 import static com.google.udmi.util.JsonUtil.fromString;
@@ -11,6 +12,7 @@ import static java.lang.String.format;
 import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.udmi.util.Common;
+import com.google.udmi.util.GeneralUtils;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
@@ -25,7 +27,6 @@ import java.util.function.Consumer;
 import org.jetbrains.annotations.TestOnly;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
-import udmi.schema.Envelope.SubFolder;
 
 /**
  * Base class for supporting a variety of messaging interfaces.
@@ -76,9 +77,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   }
 
   protected Bundle makeExceptionBundle(Exception e) {
-    Bundle bundle = new Bundle(e);
-    bundle.envelope.subFolder = SubFolder.ERROR;
-    return bundle;
+    return new Bundle(e);
   }
 
   private void messageLoop() {
@@ -207,6 +206,9 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   }
 
   protected void receiveBundle(Bundle bundle) {
+    if (bundle.message instanceof Exception exception) {
+      bundle.message = friendlyStackTrace(exception);
+    }
     receiveBundle(stringify(bundle));
   }
 

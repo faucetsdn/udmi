@@ -67,6 +67,10 @@ public abstract class ProcessorBase extends ContainerBase {
     e.printStackTrace();
   }
 
+  protected void reflectError(Envelope envelope, String stringMessage) {
+    reflectMessage(envelope, stringMessage);
+  }
+
   protected void reflectMessage(Envelope envelope, String message) {
     try {
       checkState(envelope.payload == null, "envelope payload is not null");
