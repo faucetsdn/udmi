@@ -233,8 +233,6 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     if (messageType != null) {
       bundle.envelope.subType = messageType.getKey();
       bundle.envelope.subFolder = messageType.getValue();
-    } else {
-      bundle.envelope.subFolder = SubFolder.ERROR;
     }
     return bundle;
   }

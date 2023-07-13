@@ -517,6 +517,7 @@ public class Validator {
 
     try {
       String schemaName = messageSchema(attributes);
+      System.err.println("Validating schema " + schemaName);
       if (!device.markMessageType(schemaName, getNow())) {
         return null;
       }

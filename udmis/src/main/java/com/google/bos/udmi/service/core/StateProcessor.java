@@ -7,6 +7,7 @@ import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.fromStringStrict;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static com.google.udmi.util.JsonUtil.toMap;
 import static java.util.Objects.requireNonNull;
 import static udmi.schema.Envelope.SubFolder.UPDATE;
 
@@ -19,6 +20,7 @@ import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.udmi.util.GeneralUtils;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -68,7 +70,7 @@ public class StateProcessor extends ProcessorBase {
 
   private void shardStateUpdate(StateUpdate message, MessageContinuation continuation) {
     info("Sharding state message to pipeline out as incremental updates");
-    Envelope envelope = deepCopy(continuation.getEnvelope());
+    Envelope envelope = continuation.getEnvelope();
     envelope.subType = SubType.STATE;
     envelope.subFolder = UPDATE;
     reflectMessage(envelope, stringify(message));
@@ -76,10 +78,13 @@ public class StateProcessor extends ProcessorBase {
       try {
         if (STATE_SUB_FOLDERS.contains(field.getName())) {
           ifNotNullThen(field.get(message), fieldMessage -> {
+            Map<String, Object> stringObjectMap = toMap(fieldMessage);
+            stringObjectMap.put("version", message.version);
+            stringObjectMap.put("timestamp", message.timestamp);
             envelope.subFolder = SubFolder.fromValue(field.getName());
             debug("Sharding state " + envelope.subFolder);
-            reflectMessage(envelope, stringify(fieldMessage));
-            continuation.publish(fieldMessage);
+            reflectMessage(envelope, stringify(stringObjectMap));
+            continuation.publish(stringObjectMap);
           });
         }
       } catch (Exception e) {
