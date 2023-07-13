@@ -4,9 +4,11 @@ import static com.google.bos.udmi.service.core.StateProcessor.IOT_ACCESS_COMPONE
 import static com.google.bos.udmi.service.messaging.MessageDispatcher.messageHandlerFor;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
-import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static com.google.udmi.util.JsonUtil.toMap;
+import static java.lang.String.format;
 
 import com.google.bos.udmi.service.access.IotAccessBase;
 import com.google.bos.udmi.service.messaging.MessageContinuation;
@@ -17,7 +19,6 @@ import com.google.bos.udmi.service.messaging.impl.MessageBase.BundleException;
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.common.collect.ImmutableList;
-import com.google.udmi.util.Common;
 import java.util.Collection;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -69,33 +70,37 @@ public abstract class ProcessorBase extends ContainerBase {
    * to provide component-specific behavior.
    */
   protected void exceptionHandler(Exception e) {
-    error("Received processing exception: " + Common.getExceptionMessage(e));
+    error("Received processing exception: " + friendlyStackTrace(e));
     e.printStackTrace();
   }
 
   protected void reflectError(SubType subType, BundleException bundleException) {
-    Envelope envelope = new Envelope();
     Bundle bundle = bundleException.bundle;
-    Map<String, String> attributesMap = bundle.attributesMap;
-    envelope.subFolder = SubFolder.ERROR;
-    envelope.subType = subType;
-    envelope.deviceId = attributesMap.get("deviceId");
-    envelope.projectId = attributesMap.get("projectId");
-    envelope.deviceRegistryId = attributesMap.get("deviceRegistryId");
-    envelope.deviceId = attributesMap.get("deviceId");
-    reflectMessage(envelope, bundle.payload);
+    Map<String, String> errorMap = bundle.attributesMap;
+    errorMap.put("subType", subType.value());
+    errorMap.computeIfAbsent("subFolder", k -> SubFolder.ERROR.value());
+    ErrorMessage errorMessage = new ErrorMessage();
+    errorMessage.error = (String) bundle.message;
+    errorMessage.data = bundle.payload;
+    errorMap.put("payload", encodeBase64(stringify(errorMessage)));
+    error(format("Reflecting error %s/%s", errorMap.get("subType"), errorMap.get("subFolder")));
+    reflectString(errorMap.get("deviceRegistryId"), stringify(errorMap));
   }
 
   protected void reflectMessage(Envelope envelope, String message) {
     try {
       checkState(envelope.payload == null, "envelope payload is not null");
       envelope.payload = encodeBase64(message);
-      ifNotNullThen(UdmiServicePod.<IotAccessBase>maybeGetComponent(IOT_ACCESS_COMPONENT),
-          iotAccess -> iotAccess.sendCommand(REFLECT_REGISTRY, envelope.deviceRegistryId, null,
-              stringify(envelope)));
+      reflectString(envelope.deviceRegistryId, stringify(envelope));
     } finally {
       envelope.payload = null;
     }
+  }
+
+  private static void reflectString(String deviceRegistryId, String stringify) {
+    ifNotNullThen(UdmiServicePod.<IotAccessBase>maybeGetComponent(IOT_ACCESS_COMPONENT),
+        iotAccess -> iotAccess.sendCommand(REFLECT_REGISTRY, deviceRegistryId, null,
+            stringify));
   }
 
   /**
@@ -134,6 +139,12 @@ public abstract class ProcessorBase extends ContainerBase {
     if (dispatcher != null) {
       dispatcher.shutdown();
     }
+  }
+
+  static class ErrorMessage {
+
+    public String error;
+    public String data;
   }
 
   <T> void registerHandler(Class<T> clazz, Consumer<T> handler) {

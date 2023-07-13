@@ -1,9 +1,11 @@
 package com.google.bos.udmi.service.core;
 
+import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static java.lang.String.format;
 
 import com.google.bos.udmi.service.messaging.MessageContinuation;
+import com.google.bos.udmi.service.messaging.impl.MessageBase.BundleException;
 import java.util.Optional;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
@@ -46,6 +48,15 @@ public class TargetProcessor extends ProcessorBase {
       reflectMessage(envelope, message);
     } catch (Exception e) {
       debug("Exception reflecting message: " + e.getMessage());
+    }
+  }
+
+  @Override
+  protected void exceptionHandler(Exception e) {
+    if (e instanceof BundleException bundleException) {
+      reflectError(SubType.EVENT, bundleException);
+    } else {
+      super.exceptionHandler(e);
     }
   }
 }

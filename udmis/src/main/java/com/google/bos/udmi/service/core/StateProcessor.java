@@ -52,7 +52,7 @@ public class StateProcessor extends ProcessorBase {
     if (e instanceof BundleException bundleException) {
       reflectError(SubType.STATE, bundleException);
     } else {
-      error("Unknown state exception " + friendlyStackTrace(e));
+      super.exceptionHandler(e);
     }
   }
 
