@@ -4,6 +4,7 @@ import static com.google.bos.udmi.service.core.StateProcessor.IOT_ACCESS_COMPONE
 import static com.google.bos.udmi.service.messaging.MessageDispatcher.messageHandlerFor;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.stringify;
 
@@ -11,15 +12,20 @@ import com.google.bos.udmi.service.access.IotAccessBase;
 import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.MessageDispatcher;
 import com.google.bos.udmi.service.messaging.MessageDispatcher.HandlerSpecification;
+import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
+import com.google.bos.udmi.service.messaging.impl.MessageBase.BundleException;
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.Common;
 import java.util.Collection;
+import java.util.Map;
 import java.util.function.Consumer;
 import org.jetbrains.annotations.TestOnly;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
+import udmi.schema.Envelope.SubFolder;
+import udmi.schema.Envelope.SubType;
 
 /**
  * Base class for UDMIS components.
@@ -63,12 +69,21 @@ public abstract class ProcessorBase extends ContainerBase {
    * to provide component-specific behavior.
    */
   protected void exceptionHandler(Exception e) {
-    info("Received processing exception: " + Common.getExceptionMessage(e));
+    error("Received processing exception: " + Common.getExceptionMessage(e));
     e.printStackTrace();
   }
 
-  protected void reflectError(Envelope envelope, String stringMessage) {
-    reflectMessage(envelope, stringMessage);
+  protected void reflectError(SubType subType, BundleException bundleException) {
+    Envelope envelope = new Envelope();
+    Bundle bundle = bundleException.bundle;
+    Map<String, String> attributesMap = bundle.attributesMap;
+    envelope.subFolder = SubFolder.ERROR;
+    envelope.subType = subType;
+    envelope.deviceId = attributesMap.get("deviceId");
+    envelope.projectId = attributesMap.get("projectId");
+    envelope.deviceRegistryId = attributesMap.get("deviceRegistryId");
+    envelope.deviceId = attributesMap.get("deviceId");
+    reflectMessage(envelope, bundle.payload);
   }
 
   protected void reflectMessage(Envelope envelope, String message) {

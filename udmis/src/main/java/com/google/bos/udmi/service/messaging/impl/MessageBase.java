@@ -12,8 +12,8 @@ import static java.lang.String.format;
 import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.udmi.util.Common;
-import com.google.udmi.util.GeneralUtils;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -203,12 +203,30 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
 
     public Envelope envelope;
     public Object message;
+    public Map<String, String> attributesMap;
+    public String payload;
+  }
+
+  public static class BundleException extends Exception {
+    public Bundle bundle = new Bundle();
+
+    public BundleException(String stringMessage, Map<String, String> attributesMap,
+        String payload) {
+      bundle.message = stringMessage;
+      bundle.attributesMap = attributesMap;
+      bundle.payload = payload;
+    }
+  }
+
+  protected void receiveException(Map<String, String> attributesMap, String messageString, Exception e) {
+    Bundle bundle = new Bundle();
+    bundle.message = friendlyStackTrace(e);
+    bundle.payload = messageString;
+    bundle.attributesMap = attributesMap;
+    receiveBundle(stringify(bundle));
   }
 
   protected void receiveBundle(Bundle bundle) {
-    if (bundle.message instanceof Exception exception) {
-      bundle.message = friendlyStackTrace(exception);
-    }
     receiveBundle(stringify(bundle));
   }
 

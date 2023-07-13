@@ -1,6 +1,7 @@
 package com.google.bos.udmi.service.core;
 
 import static com.google.udmi.util.GeneralUtils.deepCopy;
+import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.fromStringStrict;
@@ -12,6 +13,8 @@ import static udmi.schema.Envelope.SubFolder.UPDATE;
 import com.google.bos.udmi.service.access.IotAccessBase;
 import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.StateUpdate;
+import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
+import com.google.bos.udmi.service.messaging.impl.MessageBase.BundleException;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.udmi.util.GeneralUtils;
 import java.util.Arrays;
@@ -46,9 +49,11 @@ public class StateProcessor extends ProcessorBase {
 
   @Override
   protected void exceptionHandler(Exception e) {
-    MessageContinuation continuation = getContinuation(e);
-    Envelope envelope = continuation.getEnvelope();
-    debug("Processing state exception " + e.getMessage());
+    if (e instanceof BundleException bundleException) {
+      reflectError(SubType.STATE, bundleException);
+    } else {
+      error("Unknown state exception " + friendlyStackTrace(e));
+    }
   }
 
   @Override

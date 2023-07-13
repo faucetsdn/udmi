@@ -12,6 +12,7 @@ import com.google.bos.udmi.service.messaging.MessageDispatcher;
 import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.bos.udmi.service.messaging.StateUpdate;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
+import com.google.bos.udmi.service.messaging.impl.MessageBase.BundleException;
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
@@ -130,7 +131,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     Envelope envelope = Preconditions.checkNotNull(bundle.envelope, "bundle envelope is null");
     Object message = bundle.message;
     if (message instanceof String stringMessage) {
-      message = new RuntimeException(stringMessage);
+      message = new BundleException(stringMessage, bundle.attributesMap, bundle.payload);
     }
     boolean isException = message instanceof Exception;
     Class<?> handlerType = isException ? EXCEPTION_CLASS : getMessageClassFor(envelope);

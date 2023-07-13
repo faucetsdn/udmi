@@ -131,7 +131,7 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
           bundle.envelope.transactionId));
       receiveBundle(bundle);
     } catch (Exception e) {
-      receiveBundle(makeExceptionBundle(e));
+      receiveException(attributesMap, messageString, e);
     }
   }
 
