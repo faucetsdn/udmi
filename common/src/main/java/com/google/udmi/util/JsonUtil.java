@@ -89,7 +89,7 @@ public abstract class JsonUtil {
     try {
       return message == null ? null : fromStringStrict(targetClass, stringify(message));
     } catch (Exception e) {
-      throw new RuntimeException("While converting message to " + targetClass.getName());
+      throw new RuntimeException("While converting to " + targetClass.getName(), e);
     }
   }
 
@@ -97,7 +97,7 @@ public abstract class JsonUtil {
     try {
       return OBJECT_MAPPER.readValue(messageString, checkNotNull(targetClass, "target class"));
     } catch (Exception e) {
-      throw new RuntimeException("While converting message to " + targetClass.getName(), e);
+      throw new RuntimeException("While converting to " + targetClass.getName(), e);
     }
   }
 
@@ -105,7 +105,7 @@ public abstract class JsonUtil {
     try {
       return STRICT_MAPPER.readValue(messageString, checkNotNull(targetClass, "target class"));
     } catch (Exception e) {
-      throw new RuntimeException("While converting message to " + targetClass.getName(), e);
+      throw new RuntimeException("While converting to " + targetClass.getName(), e);
     }
   }
 

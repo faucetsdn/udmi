@@ -24,6 +24,7 @@ mkdir -p out
 
 PUBBER_OUT=out/pubber.out
 VALIDATOR_OUT=out/validator.out
+TRACE_DIR=out/validator_trace
 WAITING=10
 
 echo Killing running pubber/validator instances...
@@ -41,7 +42,8 @@ bin/reset_config $site_path $project_id $device_id
 bin/reset_config $site_path $project_id $proxy_id
 
 echo Starting validator, output in $VALIDATOR_OUT
-udmi validate -s $site_path -p $project_id > $VALIDATOR_OUT 2>&1 &
+rm -rf $TRACE_DIR
+udmi validate -s $site_path -p $project_id -- -w $TRACE_DIR > $VALIDATOR_OUT 2>&1 &
 vpid=$!
 echo Started validator pid $vpid
 

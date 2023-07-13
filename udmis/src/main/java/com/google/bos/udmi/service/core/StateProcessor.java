@@ -1,20 +1,17 @@
 package com.google.bos.udmi.service.core;
 
 import static com.google.udmi.util.GeneralUtils.deepCopy;
-import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.fromStringStrict;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
-import static java.util.Objects.requireNonNull;
 import static udmi.schema.Envelope.SubFolder.UPDATE;
 
 import com.google.bos.udmi.service.access.IotAccessBase;
 import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.StateUpdate;
-import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.BundleException;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.udmi.util.GeneralUtils;
@@ -45,8 +42,8 @@ public class StateProcessor extends ProcessorBase {
   protected void defaultHandler(Object defaultedMessage) {
     MessageContinuation continuation = getContinuation(defaultedMessage);
     StateUpdate stateMessage = convertToStrict(StateUpdate.class, defaultedMessage);
-    updateLastStart(stateMessage, continuation);
     shardStateUpdate(stateMessage, continuation);
+    updateLastStart(stateMessage, continuation);
   }
 
   @Override

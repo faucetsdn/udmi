@@ -3,11 +3,17 @@ package com.google.bos.udmi.service.core;
 import static com.google.bos.udmi.service.core.StateProcessor.IOT_ACCESS_COMPONENT;
 import static com.google.bos.udmi.service.messaging.MessageDispatcher.messageHandlerFor;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.udmi.util.Common.DEVICE_ID_PROPERTY_KEY;
+import static com.google.udmi.util.Common.REGISTRY_ID_PROPERTY_KEY;
+import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
+import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
+import static com.google.udmi.util.Common.TIMESTAMP_KEY;
+import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.stringify;
-import static com.google.udmi.util.JsonUtil.toMap;
 import static java.lang.String.format;
 
 import com.google.bos.udmi.service.access.IotAccessBase;
@@ -58,6 +64,12 @@ public abstract class ProcessorBase extends ContainerBase {
     }
   }
 
+  private static void reflectString(String deviceRegistryId, String stringify) {
+    ifNotNullThen(UdmiServicePod.<IotAccessBase>maybeGetComponent(IOT_ACCESS_COMPONENT),
+        iotAccess -> iotAccess.sendCommand(REFLECT_REGISTRY, deviceRegistryId, null,
+            stringify));
+  }
+
   /**
    * The default message handler. Defaults to ignore unexpected message types, but can be overridden
    * to provide component-specific behavior.
@@ -77,14 +89,18 @@ public abstract class ProcessorBase extends ContainerBase {
   protected void reflectError(SubType subType, BundleException bundleException) {
     Bundle bundle = bundleException.bundle;
     Map<String, String> errorMap = bundle.attributesMap;
-    errorMap.put("subType", subType.value());
-    errorMap.computeIfAbsent("subFolder", k -> SubFolder.ERROR.value());
+    errorMap.put(SUBTYPE_PROPERTY_KEY, subType.value());
+    errorMap.computeIfAbsent(SUBFOLDER_PROPERTY_KEY, k -> SubFolder.ERROR.value());
     ErrorMessage errorMessage = new ErrorMessage();
     errorMessage.error = (String) bundle.message;
-    errorMessage.data = bundle.payload;
+    errorMessage.data = encodeBase64(bundle.payload);
+    errorMessage.version = UDMI_VERSION;
+    errorMessage.timestamp = getTimestamp();
     errorMap.put("payload", encodeBase64(stringify(errorMessage)));
-    error(format("Reflecting error %s/%s", errorMap.get("subType"), errorMap.get("subFolder")));
-    reflectString(errorMap.get("deviceRegistryId"), stringify(errorMap));
+    error(format("Reflecting error %s/%s for %s", errorMap.get(SUBTYPE_PROPERTY_KEY),
+        errorMap.get(SUBFOLDER_PROPERTY_KEY),
+        errorMap.get(DEVICE_ID_PROPERTY_KEY)));
+    reflectString(errorMap.get(REGISTRY_ID_PROPERTY_KEY), stringify(errorMap));
   }
 
   protected void reflectMessage(Envelope envelope, String message) {
@@ -95,12 +111,6 @@ public abstract class ProcessorBase extends ContainerBase {
     } finally {
       envelope.payload = null;
     }
-  }
-
-  private static void reflectString(String deviceRegistryId, String stringify) {
-    ifNotNullThen(UdmiServicePod.<IotAccessBase>maybeGetComponent(IOT_ACCESS_COMPONENT),
-        iotAccess -> iotAccess.sendCommand(REFLECT_REGISTRY, deviceRegistryId, null,
-            stringify));
   }
 
   /**
@@ -141,8 +151,11 @@ public abstract class ProcessorBase extends ContainerBase {
     }
   }
 
+  // TODO: This really should be encapsulated in a proper JSON-schema structure.
   static class ErrorMessage {
 
+    public String timestamp;
+    public String version;
     public String error;
     public String data;
   }

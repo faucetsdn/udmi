@@ -2,6 +2,7 @@ package com.google.daq.mqtt.validator;
 
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
+import static java.util.Optional.ofNullable;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.base.Joiner;
@@ -13,10 +14,12 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import udmi.schema.Category;
 import udmi.schema.Entry;
+import udmi.schema.Envelope.SubType;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.PointsetEvent;
@@ -249,7 +252,7 @@ public class ReportingDevice {
   }
 
   public static String typeFolderPairKey(String subType, String subFolder) {
-    return String.format("%s_%s", subType, subFolder);
+    return String.format("%s_%s", ofNullable(subType).orElse(SubType.EVENT.value()), subFolder);
   }
 
   /**

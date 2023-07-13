@@ -18,7 +18,7 @@
   },
   "iot_access": {
     "iot_access": {
-      "provider": "clearblade",
+      "provider": "gcp",
       "project_id": "@PROJECT@"
     }
   }
