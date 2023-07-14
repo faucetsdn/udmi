@@ -2,6 +2,7 @@ package com.google.bos.udmi.service.messaging.impl;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
+import static com.google.udmi.util.Common.getExceptionMessage;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -17,7 +18,6 @@ import static java.util.Objects.requireNonNull;
 
 import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.bos.udmi.service.pod.ContainerBase;
-import com.google.udmi.util.Common;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -76,8 +76,9 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   }
 
   protected Bundle makeExceptionBundle(Envelope envelope, Exception exception) {
-    envelope.subFolder = SubFolder.ERROR;
-    return new Bundle(envelope, exception);
+    Bundle bundle = new Bundle(envelope, exception);
+    bundle.envelope.subFolder = SubFolder.ERROR;
+    return bundle;
   }
 
   private void receiveBundle(Bundle bundle) {
@@ -146,7 +147,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
         }
       }
     } catch (Exception loopException) {
-      info("Message loop exception: " + Common.getExceptionMessage(loopException));
+      error("Message loop exception: " + getExceptionMessage(loopException));
     }
   }
 
@@ -278,7 +279,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     }
 
     public Bundle(Envelope envelope, Object message) {
-      this.envelope = envelope;
+      this.envelope = Optional.ofNullable(envelope).orElseGet(Envelope::new);
       this.message = message;
     }
   }
