@@ -1,7 +1,6 @@
 package com.google.bos.udmi.service.messaging.impl;
 
 import static com.google.udmi.util.GeneralUtils.deepCopy;
-import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static java.lang.String.format;

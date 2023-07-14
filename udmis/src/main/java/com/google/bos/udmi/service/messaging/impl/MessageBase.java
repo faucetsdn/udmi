@@ -11,7 +11,6 @@ import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.fromString;
 import static com.google.udmi.util.JsonUtil.parseJson;
 import static com.google.udmi.util.JsonUtil.stringify;
-import static com.google.udmi.util.JsonUtil.toMap;
 import static com.google.udmi.util.JsonUtil.toStringMap;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -76,8 +75,9 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     return DEFAULT_POLL_TIME_SEC;
   }
 
-  protected Bundle makeExceptionBundle(Exception e) {
-    return new Bundle(e);
+  protected Bundle makeExceptionBundle(Envelope envelope, Exception exception) {
+    envelope.subFolder = SubFolder.ERROR;
+    return new Bundle(envelope, exception);
   }
 
   private void receiveBundle(Bundle bundle) {
@@ -131,6 +131,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   private void messageLoop() {
     try {
       while (true) {
+        Envelope envelope = null;
         try {
           Bundle bundle = extractBundle(sourceQueue.take());
           if (bundle.message.equals(TERMINATE_MARKER)) {
@@ -138,9 +139,10 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
             info("Message loop terminated");
             return;
           }
+          envelope = bundle.envelope;
           dispatcher.accept(bundle);
         } catch (Exception e) {
-          dispatcher.accept(makeExceptionBundle(e));
+          dispatcher.accept(makeExceptionBundle(envelope, e));
         }
       }
     } catch (Exception loopException) {

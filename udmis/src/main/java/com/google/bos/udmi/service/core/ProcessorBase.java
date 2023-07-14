@@ -12,6 +12,7 @@ import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static com.google.udmi.util.JsonUtil.toStringMap;
 import static java.lang.String.format;
 
 import com.google.bos.udmi.service.access.IotAccessBase;
@@ -32,6 +33,7 @@ import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
+import udmi.schema.PointsetEvent;
 
 /**
  * Base class for UDMIS components.
@@ -83,8 +85,12 @@ public abstract class ProcessorBase extends ContainerBase {
       reflectError(getExceptionSubType(), bundleException);
       return;
     }
-    error("Received processing exception: " + friendlyStackTrace(e));
-    e.printStackTrace();
+    Envelope envelope = getContinuation(e).getEnvelope();
+    String message = e.getMessage();
+    error(format("Received message exception: %s", message));
+    String payload = friendlyStackTrace(e);
+    BundleException bundleException = new BundleException(message, toStringMap(envelope), payload);
+    reflectError(SubType.EVENT, bundleException);
   }
 
   protected SubType getExceptionSubType() {
