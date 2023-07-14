@@ -107,6 +107,14 @@ pubber_bg AHU-22 emptyMissing
 echo Waiting for system to run for a bit...
 cat $VALIDATOR_OUT && timeout 60s tail -f $VALIDATOR_OUT || true
 
+# TOTAL HACK. The JS and Java cloud functions behave slightly different.
+# During the transition perioud, don't check these output files to that
+# tests will pass in both situations. After everything has migrated to the
+# Java-versions of the system, the old (event_pointset) part can be removed.
+rm -f sites/udmi_site_model/out/devices/AHU-1/event_pointset.* # js version (old)
+rm -f sites/udmi_site_model/out/devices/AHU-1/event_error.* # Java version (new)
+# END HACK
+
 echo Killing running pubber/validator instances...
 ps ax | fgrep pubber | fgrep java | awk '{print $1}' | xargs kill || true
 ps ax | fgrep validator | fgrep java | awk '{print $1}' | xargs kill || true
@@ -115,13 +123,6 @@ TMP_VALIDATOR=/tmp/validator.out
 
 find $site_path/out/devices -name \*.json | sort > $TMP_VALIDATOR
 echo Found `wc -l $TMP_VALIDATOR` json output files.
-
-# TOTAL HACK. The JS and Java cloud functions behave slightly different.
-# During the transition perioud, don't check these output files to that
-# tests will pass in both situations. After everything has migrated to the
-# Java-versions of the system, the old (event_pointset) part can be removed.
-rm -f sites/udmi_site_model/out/devices/AHU-1/event_pointset.* # js version (old)
-rm -f sites/udmi_site_model/out/devices/AHU-1/event_error.* # Java version (new)
 
 echo Out files for AHU-1:
 (cd $site_path/out/devices/AHU-1; ls -lrt *.out)
