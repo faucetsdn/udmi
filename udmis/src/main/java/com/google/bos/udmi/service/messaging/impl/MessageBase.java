@@ -14,7 +14,6 @@ import static java.lang.String.format;
 import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.udmi.util.Common;
-import com.google.udmi.util.GeneralUtils;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -38,9 +37,8 @@ import udmi.schema.Envelope.SubFolder;
  */
 public abstract class MessageBase extends ContainerBase implements MessagePipe {
 
-  private static final String DEFAULT_NAMESPACE = "default-namespace";
   static final String TERMINATE_MARKER = "terminate";
-
+  private static final String DEFAULT_NAMESPACE = "default-namespace";
   private static final Set<Object> HANDLED_QUEUES = new HashSet<>();
   private static final long DEFAULT_POLL_TIME_SEC = 1;
   private static final long AWAIT_TERMINATION_SEC = 10;
@@ -72,6 +70,49 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     return DEFAULT_POLL_TIME_SEC;
   }
 
+  protected Bundle makeExceptionBundle(Exception e) {
+    return new Bundle(e);
+  }
+
+  protected void receiveBundle(Bundle bundle) {
+    receiveBundle(stringify(bundle));
+  }
+
+  protected void receiveBundle(String stringBundle) {
+    try {
+      ensureSourceQueue();
+      sourceQueue.put(stringBundle);
+    } catch (Exception e) {
+      throw new RuntimeException("While receiving bundle", e);
+    }
+  }
+
+  protected void receiveException(Map<String, String> attributesMap, String messageString,
+      Exception e, SubFolder forceFolder) {
+    Bundle bundle = new Bundle();
+    bundle.message = friendlyStackTrace(e);
+    bundle.payload = messageString;
+    HashMap<String, String> mutableMap = new HashMap<>(attributesMap);
+    bundle.attributesMap = mutableMap;
+    ifNotNullThen(forceFolder, folder -> mutableMap.put(SUBFOLDER_PROPERTY_KEY, folder.value()));
+    receiveBundle(stringify(bundle));
+  }
+
+  protected void setSourceQueue(BlockingQueue<String> queueForScope) {
+    sourceQueue = queueForScope;
+  }
+
+  protected void terminateHandler() {
+    debug("Terminating " + this);
+    receiveBundle(new Bundle(TERMINATE_MARKER));
+  }
+
+  private void ensureSourceQueue() {
+    if (sourceQueue == null) {
+      sourceQueue = new LinkedBlockingDeque<>();
+    }
+  }
+
   @SuppressWarnings("unchecked")
   private Future<Void> handleQueue() {
     // Keep track of used queues to make sure there's no shenanigans during testing.
@@ -79,10 +120,6 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
       throw new IllegalStateException("Source queue handled multiple times!");
     }
     return (Future<Void>) executor.submit(this::messageLoop);
-  }
-
-  protected Bundle makeExceptionBundle(Exception e) {
-    return new Bundle(e);
   }
 
   private void messageLoop() {
@@ -112,12 +149,6 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     ensureSourceQueue();
     debug("Handling %s to %08x", this, Objects.hash(bundleConsumer));
     sourceFuture = handleQueue();
-  }
-
-  private void ensureSourceQueue() {
-    if (sourceQueue == null) {
-      sourceQueue = new LinkedBlockingDeque<>();
-    }
   }
 
   /**
@@ -158,24 +189,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     }
   }
 
-  protected void terminateHandler() {
-    debug("Terminating " + this);
-    receiveBundle(new Bundle(TERMINATE_MARKER));
-  }
-
-  protected void setSourceQueue(BlockingQueue<String> queueForScope) {
-    sourceQueue = queueForScope;
-  }
-
   public abstract void publish(Bundle bundle);
-
-  /**
-   * Terminate the output path.
-   */
-  public void terminate() {
-    debug("Terminating %s", this);
-    publish(new Bundle(TERMINATE_MARKER));
-  }
 
   @Override
   public void shutdown() {
@@ -188,9 +202,27 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   }
 
   /**
+   * Terminate the output path.
+   */
+  public void terminate() {
+    debug("Terminating %s", this);
+    publish(new Bundle(TERMINATE_MARKER));
+  }
+
+  @Override
+  public String toString() {
+    return format("MessagePipe %08x", Objects.hash(sourceQueue));
+  }
+
+  /**
    * Simple wrapper for a message bundle, including envelope and message.
    */
   public static class Bundle {
+
+    public Envelope envelope;
+    public Object message;
+    public Map<String, String> attributesMap;
+    public String payload;
 
     public Bundle() {
       this.envelope = new Envelope();
@@ -205,50 +237,24 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
       this.envelope = envelope;
       this.message = message;
     }
-
-    public Envelope envelope;
-    public Object message;
-    public Map<String, String> attributesMap;
-    public String payload;
   }
 
+  /**
+   * Exception used for internal bundle handling.
+   */
   public static class BundleException extends Exception {
+
     public Bundle bundle = new Bundle();
 
+    /**
+     * New instance.
+     */
     public BundleException(String stringMessage, Map<String, String> attributesMap,
         String payload) {
       bundle.message = stringMessage;
       bundle.attributesMap = attributesMap;
       bundle.payload = payload;
     }
-  }
-
-  protected void receiveException(Map<String, String> attributesMap, String messageString, Exception e, SubFolder forceFolder) {
-    Bundle bundle = new Bundle();
-    bundle.message = friendlyStackTrace(e);
-    bundle.payload = messageString;
-    HashMap<String, String> mutableMap = new HashMap<>(attributesMap);
-    bundle.attributesMap = mutableMap;
-    ifNotNullThen(forceFolder, folder -> mutableMap.put(SUBFOLDER_PROPERTY_KEY, folder.value()));
-    receiveBundle(stringify(bundle));
-  }
-
-  protected void receiveBundle(Bundle bundle) {
-    receiveBundle(stringify(bundle));
-  }
-
-  protected void receiveBundle(String stringBundle) {
-    try {
-      ensureSourceQueue();
-      sourceQueue.put(stringBundle);
-    } catch (Exception e) {
-      throw new RuntimeException("While receiving bundle", e);
-    }
-  }
-
-  @Override
-  public String toString() {
-    return format("MessagePipe %08x", Objects.hash(sourceQueue));
   }
 
   @TestOnly

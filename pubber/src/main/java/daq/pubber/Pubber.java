@@ -149,7 +149,7 @@ public class Pubber {
           .build();
   private static final Map<String, String> INVALID_REPLACEMENTS = ImmutableMap.of(
       "events/blobset", "\"\"",
-      "events/swarm", "{}",
+      "events/discovery", "{}",
       "events/mapping", "{ NOT VALID JSON!"
   );
   public static final List<String> INVALID_KEYS = new ArrayList<>(INVALID_REPLACEMENTS.keySet());

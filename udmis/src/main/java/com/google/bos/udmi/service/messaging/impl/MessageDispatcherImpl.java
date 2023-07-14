@@ -242,8 +242,13 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     publishBundle(makeMessageBundle(prototypeEnvelope, message));
   }
 
+  /**
+   * Publish the given bundle to the outgoing message pipe.
+   */
   @VisibleForTesting
   public void publishBundle(Bundle bundle) {
+    requireNonNull(bundle.envelope.subFolder, "null bundle subFolder");
+    requireNonNull(bundle.envelope.subType, "null bundle subType");
     messagePipe.publish(bundle);
   }
 

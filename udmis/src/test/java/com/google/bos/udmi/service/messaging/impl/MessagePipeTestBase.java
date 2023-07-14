@@ -11,6 +11,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import udmi.schema.EndpointConfiguration;
+import udmi.schema.Envelope.SubFolder;
+import udmi.schema.Envelope.SubType;
 import udmi.schema.LocalnetModel;
 import udmi.schema.LocalnetState;
 
@@ -65,8 +67,16 @@ public abstract class MessagePipeTestBase extends MessageTestBase {
   @Test
   void receiveException() throws InterruptedException {
     Assumptions.assumeTrue(environmentIsEnabled(), "environment is not enabled");
-    Object received = publishAndReceive(new Bundle());
+    Object received = publishAndReceive(makeExceptionBundle());
     assertTrue(received instanceof Exception, "Expected received exception");
+  }
+
+  @NotNull
+  private static Bundle makeExceptionBundle() {
+    Bundle bundle = new Bundle();
+    bundle.envelope.subType = SubType.EVENT;
+    bundle.envelope.subFolder = SubFolder.ERROR;
+    return bundle;
   }
 
   /**
