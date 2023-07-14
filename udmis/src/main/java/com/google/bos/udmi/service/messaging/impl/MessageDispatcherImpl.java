@@ -3,6 +3,7 @@ package com.google.bos.udmi.service.messaging.impl;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static com.google.udmi.util.JsonUtil.toMap;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
@@ -31,6 +32,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.TestOnly;
 import org.jetbrains.annotations.VisibleForTesting;
 import udmi.schema.EndpointConfiguration;
@@ -137,15 +139,26 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     Class<?> handlerType = isException ? EXCEPTION_CLASS : getMessageClassFor(envelope);
     try {
       handlers.computeIfAbsent(handlerType, key -> {
-        info("Defaulting messages of type/folder " + handlerType.getName());
+        info("Defaulting messages of type/folder " + key.getName());
         return handlers.getOrDefault(DEFAULT_CLASS, this::devNullHandler);
       });
-      Object messageObject = isException ? message : convertToStrict(handlerType, message);
-      info("Processing " + handlerType);
+      Object messageObject = isException ? message : convertStrictOrObject(handlerType, message);
+      if (messageObject instanceof Map) {
+        handlerType = Object.class;
+      }
       debug("Processing %s from %s in %s", handlerType.getSimpleName(), messagePipe, this);
       processHandler(envelope, handlerType, messageObject);
     } catch (Exception e) {
       throw new RuntimeException("While processing message " + stringify(envelope), e);
+    }
+  }
+
+  @Nullable
+  private static Object convertStrictOrObject(Class<?> handlerType, Object message) {
+    try {
+      return convertToStrict(handlerType, message);
+    } catch (Exception e) {
+      return toMap(message);
     }
   }
 

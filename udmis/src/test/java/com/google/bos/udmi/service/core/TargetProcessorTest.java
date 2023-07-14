@@ -2,12 +2,12 @@ package com.google.bos.udmi.service.core;
 
 import static com.google.udmi.util.JsonUtil.toMap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import com.google.udmi.util.GeneralUtils;
 import java.util.Map;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
@@ -18,10 +18,16 @@ import udmi.schema.PointsetEvent;
 
 class TargetProcessorTest extends ProcessorTestBase {
 
-  private static void verifyCommand(ArgumentCaptor<String> commandCaptor, SubFolder subFolder) {
+  public static final String MONGOOSE = "mongoose";
+  public static final String EXTRA_FIELD_KEY = "extraField";
+
+  private static void verifyCommand(ArgumentCaptor<String> commandCaptor, String extraField) {
     Map<String, Object> command = toMap(commandCaptor.getValue());
-    assertNotNull(command.remove("payload"), "message payload");
-    assertEquals(subFolder.value(), command.remove("subFolder"), "subFolder field");
+    String payload = (String) command.remove("payload");
+    String payloadString = GeneralUtils.decodeBase64(payload);
+    Map<String, Object> payloadMap = toMap(payloadString);
+    assertEquals(extraField, payloadMap.get(EXTRA_FIELD_KEY), "message " + EXTRA_FIELD_KEY);
+    assertEquals(SubFolder.POINTSET.value(), command.remove("subFolder"), "subFolder field");
     assertEquals("event", command.remove("subType"), "subType field");
     assertEquals(TEST_DEVICE, command.remove("deviceId"));
     assertEquals(TEST_NAMESPACE, command.remove("projectId"));
@@ -46,7 +52,7 @@ class TargetProcessorTest extends ProcessorTestBase {
 
   private Object makeErrorMessage() {
     Map<String, Object> stringObjectMap = toMap(new PointsetEvent());
-    stringObjectMap.put("extraField", "mongoose");
+    stringObjectMap.put(EXTRA_FIELD_KEY, MONGOOSE);
     // Specify these explicitly since the sent object is a (generic) map.
     getReverseDispatcher().prototypeEnvelope.subType = SubType.EVENT;
     getReverseDispatcher().prototypeEnvelope.subFolder = SubFolder.POINTSET;
@@ -62,15 +68,15 @@ class TargetProcessorTest extends ProcessorTestBase {
     getReverseDispatcher().publish(getTestMessage(true));
     terminateAndWait();
 
-    assertEquals(0, captured.size(), "unexpected received message count");
-    assertEquals(1, getExceptionCount(), "exception count");
-    assertEquals(0, getDefaultCount(), "default handler count");
+    assertEquals(1, captured.size(), "unexpected received message count");
+    assertEquals(0, getExceptionCount(), "exception count");
+    assertEquals(1, getDefaultCount(), "default handler count");
     assertEquals(0, getMessageCount(PointsetEvent.class), "pointset handler count");
 
     ArgumentCaptor<String> commandCaptor = ArgumentCaptor.forClass(String.class);
     verify(provider, times(1)).sendCommand(anyString(), isNull(), isNull(),
         commandCaptor.capture());
-    verifyCommand(commandCaptor, SubFolder.ERROR);
+    verifyCommand(commandCaptor, MONGOOSE);
   }
 
   /**
@@ -90,7 +96,7 @@ class TargetProcessorTest extends ProcessorTestBase {
     ArgumentCaptor<String> commandCaptor = ArgumentCaptor.forClass(String.class);
     verify(provider, times(1)).sendCommand(anyString(), isNull(), isNull(),
         commandCaptor.capture());
-    verifyCommand(commandCaptor, SubFolder.POINTSET);
+    verifyCommand(commandCaptor, null);
   }
 
 }
