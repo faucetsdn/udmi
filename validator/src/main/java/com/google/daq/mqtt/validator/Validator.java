@@ -680,7 +680,7 @@ public class Validator {
       System.out.printf("Capture %s at %s for %s%n", filename, timestamp, deviceId);
       OBJECT_MAPPER.writeValue(messageFile, message);
     } catch (Exception e) {
-      throw new RuntimeException("While writing message file " + messageFile.getAbsolutePath());
+      throw new RuntimeException("While writing message file " + messageFile.getAbsolutePath(), e);
     }
   }
 

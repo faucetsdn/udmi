@@ -130,8 +130,8 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   private void processMessage(Bundle bundle) {
     Envelope envelope = Preconditions.checkNotNull(bundle.envelope, "bundle envelope is null");
     Object message = bundle.message;
-    if (message instanceof String stringMessage) {
-      message = new BundleException(stringMessage, bundle.attributesMap, bundle.payload);
+    if (bundle.payload != null) {
+      message = new BundleException((String) message, bundle.attributesMap, bundle.payload);
     }
     boolean isException = message instanceof Exception;
     Class<?> handlerType = isException ? EXCEPTION_CLASS : getMessageClassFor(envelope);

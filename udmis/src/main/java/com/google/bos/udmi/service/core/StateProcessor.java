@@ -47,15 +47,6 @@ public class StateProcessor extends ProcessorBase {
   }
 
   @Override
-  protected void exceptionHandler(Exception e) {
-    if (e instanceof BundleException bundleException) {
-      reflectError(SubType.STATE, bundleException);
-    } else {
-      super.exceptionHandler(e);
-    }
-  }
-
-  @Override
   protected void registerHandlers() {
     registerHandler(StateUpdate.class, this::stateHandler);
   }
@@ -63,6 +54,11 @@ public class StateProcessor extends ProcessorBase {
   private void stateHandler(StateUpdate message) {
     MessageContinuation continuation = getContinuation(message);
     shardStateUpdate(message, continuation);
+  }
+
+  @Override
+  protected SubType getExceptionSubType() {
+    return SubType.STATE;
   }
 
   private void shardStateUpdate(StateUpdate message, MessageContinuation continuation) {

@@ -5,6 +5,7 @@ import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
+import static com.google.udmi.util.JsonUtil.parseJson;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static java.lang.String.format;
@@ -29,6 +30,7 @@ import com.google.pubsub.v1.PubsubMessage;
 import com.google.udmi.util.GeneralUtils;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -38,6 +40,7 @@ import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
+import udmi.schema.Envelope.SubFolder;
 
 /**
  * Message pipe using GCP PubSub messages.
@@ -47,6 +50,7 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
   public static final String EMULATOR_HOST_ENV = "PUBSUB_EMULATOR_HOST";
   public static final String EMULATOR_HOST = System.getenv(EMULATOR_HOST_ENV);
   public static final String GCP_HOST = "gcp";
+  public static final String INVALID_ENVELOPE_KEY = "invalid";
   private final Subscriber subscriber;
   private final Publisher publisher;
   private final String projectId;
@@ -121,17 +125,35 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
 
   @Override
   public void receiveMessage(PubsubMessage message, AckReplyConsumer reply) {
-    Map<String, String> attributesMap = message.getAttributesMap();
+    Map<String, String> attributesMap = new HashMap<>(message.getAttributesMap());
     String messageString = message.getData().toStringUtf8();
+    final Object messageObject;
+
     try {
       // Ack first to prevent a recurring loop of processing a faulty message.
       reply.ack();
-      Bundle bundle = new Bundle(convertToStrict(Envelope.class, attributesMap), toMap(messageString));
+      messageObject = parseJson(messageString);
+    } catch (Exception e) {
+      receiveException(attributesMap, messageString, e, SubFolder.ERROR);
+      return;
+    }
+    final Envelope envelope;
+
+    try {
+      envelope = convertToStrict(Envelope.class, attributesMap);
+    } catch (Exception e) {
+      attributesMap.put(INVALID_ENVELOPE_KEY, "true");
+      receiveException(attributesMap, messageString, e, null);
+      return;
+    }
+
+    try {
+      Bundle bundle = new Bundle(envelope, messageObject);
       info(format("Received %s/%s %s", bundle.envelope.subType, bundle.envelope.subFolder,
           bundle.envelope.transactionId));
       receiveBundle(bundle);
     } catch (Exception e) {
-      receiveException(attributesMap, messageString, e);
+      receiveException(attributesMap, messageString, e, null);
     }
   }
 

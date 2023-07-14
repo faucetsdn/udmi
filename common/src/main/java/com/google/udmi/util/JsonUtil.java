@@ -283,6 +283,17 @@ public abstract class JsonUtil {
   }
 
   /**
+   * Parse and get as any Java object from json.
+   */
+  public static Object parseJson(String message) {
+    try {
+      return OBJECT_MAPPER.readTree(message);
+    } catch (Exception e) {
+      throw new RuntimeException("While parsing json object", e);
+    }
+  }
+
+  /**
    * Convert the pojo to a mapped representation.
    *
    * @param message input object to convert

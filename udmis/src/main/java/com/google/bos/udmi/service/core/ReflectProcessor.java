@@ -44,8 +44,9 @@ public class ReflectProcessor extends ProcessorBase {
 
   public static final String PAYLOAD_KEY = "payload";
   static final String DEPLOY_FILE = "var/deployed_version.json";
-  private final SetupUdmiConfig deployed =
+  static final SetupUdmiConfig DEPLOYED_CONFIG =
       loadFileStrictRequired(SetupUdmiConfig.class, new File(DEPLOY_FILE));
+  static final String UDMI_VERSION = requireNonNull(DEPLOYED_CONFIG.udmi_functions);
 
   private IotAccessBase iotAccess;
 
@@ -188,7 +189,7 @@ public class ReflectProcessor extends ProcessorBase {
     UdmiConfig udmiConfig = new UdmiConfig();
     udmiConfig.last_state = toolState.timestamp;
     udmiConfig.setup = new SetupUdmiConfig();
-    copyFields(deployed, udmiConfig.setup, false);
+    copyFields(DEPLOYED_CONFIG, udmiConfig.setup, false);
     udmiConfig.setup.udmi_version = UDMI_VERSION;
     udmiConfig.setup.functions_min = FUNCTIONS_VERSION_MIN;
     udmiConfig.setup.functions_max = FUNCTIONS_VERSION_MAX;
@@ -203,7 +204,7 @@ public class ReflectProcessor extends ProcessorBase {
 
   @Override
   public void activate() {
-    debug(stringify(deployed));
+    debug(stringify(DEPLOYED_CONFIG));
     iotAccess = UdmiServicePod.getComponent(IOT_ACCESS_COMPONENT);
     super.activate();
   }

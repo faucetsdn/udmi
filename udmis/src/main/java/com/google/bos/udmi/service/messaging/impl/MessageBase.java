@@ -5,6 +5,7 @@ import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.mergeObject;
 import static com.google.udmi.util.JsonUtil.fromString;
 import static com.google.udmi.util.JsonUtil.stringify;
@@ -13,6 +14,7 @@ import static java.lang.String.format;
 import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.udmi.util.Common;
+import com.google.udmi.util.GeneralUtils;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -221,12 +223,13 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     }
   }
 
-  protected void receiveException(Map<String, String> attributesMap, String messageString, Exception e) {
+  protected void receiveException(Map<String, String> attributesMap, String messageString, Exception e, SubFolder forceFolder) {
     Bundle bundle = new Bundle();
     bundle.message = friendlyStackTrace(e);
     bundle.payload = messageString;
-    bundle.attributesMap = new HashMap<>(attributesMap);
-    bundle.attributesMap.put(SUBFOLDER_PROPERTY_KEY, SubFolder.ERROR.value());
+    HashMap<String, String> mutableMap = new HashMap<>(attributesMap);
+    bundle.attributesMap = mutableMap;
+    ifNotNullThen(forceFolder, folder -> mutableMap.put(SUBFOLDER_PROPERTY_KEY, folder.value()));
     receiveBundle(stringify(bundle));
   }
 

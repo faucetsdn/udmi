@@ -7,8 +7,6 @@ import static com.google.udmi.util.Common.DEVICE_ID_PROPERTY_KEY;
 import static com.google.udmi.util.Common.REGISTRY_ID_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
-import static com.google.udmi.util.Common.TIMESTAMP_KEY;
-import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
@@ -22,6 +20,7 @@ import com.google.bos.udmi.service.messaging.MessageDispatcher;
 import com.google.bos.udmi.service.messaging.MessageDispatcher.HandlerSpecification;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.BundleException;
+import com.google.bos.udmi.service.messaging.impl.PubSubPipe;
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.common.collect.ImmutableList;
@@ -41,7 +40,6 @@ public abstract class ProcessorBase extends ContainerBase {
 
   public static final Integer FUNCTIONS_VERSION_MIN = 9;
   public static final Integer FUNCTIONS_VERSION_MAX = 9;
-  public static final String UDMI_VERSION = "1.4.1";
   private static final String REFLECT_REGISTRY = "UDMI-REFLECT";
 
   private final ImmutableList<HandlerSpecification> baseHandlers = ImmutableList.of(
@@ -78,29 +76,52 @@ public abstract class ProcessorBase extends ContainerBase {
   }
 
   /**
-   * The default exception handler. Defaults to simply print out exceptions, but can be overridden
-   * to provide component-specific behavior.
+   * Processing exception handler.
    */
   protected void exceptionHandler(Exception e) {
+    if (e instanceof BundleException bundleException) {
+      reflectError(getExceptionSubType(), bundleException);
+      return;
+    }
     error("Received processing exception: " + friendlyStackTrace(e));
     e.printStackTrace();
+  }
+
+  protected SubType getExceptionSubType() {
+    return null;
   }
 
   protected void reflectError(SubType subType, BundleException bundleException) {
     Bundle bundle = bundleException.bundle;
     Map<String, String> errorMap = bundle.attributesMap;
+
+    if (errorMap.containsKey(PubSubPipe.INVALID_ENVELOPE_KEY)) {
+      reflectInvalidEnvelope(bundleException);
+      return;
+    }
+
     errorMap.put(SUBTYPE_PROPERTY_KEY, subType.value());
     errorMap.computeIfAbsent(SUBFOLDER_PROPERTY_KEY, k -> SubFolder.ERROR.value());
     ErrorMessage errorMessage = new ErrorMessage();
     errorMessage.error = (String) bundle.message;
     errorMessage.data = encodeBase64(bundle.payload);
-    errorMessage.version = UDMI_VERSION;
+    errorMessage.version = ReflectProcessor.DEPLOYED_CONFIG.udmi_functions;
     errorMessage.timestamp = getTimestamp();
     errorMap.put("payload", encodeBase64(stringify(errorMessage)));
     error(format("Reflecting error %s/%s for %s", errorMap.get(SUBTYPE_PROPERTY_KEY),
         errorMap.get(SUBFOLDER_PROPERTY_KEY),
         errorMap.get(DEVICE_ID_PROPERTY_KEY)));
     reflectString(errorMap.get(REGISTRY_ID_PROPERTY_KEY), stringify(errorMap));
+  }
+
+  private void reflectInvalidEnvelope(BundleException bundleException) {
+    Map<String, String> envelopeMap = bundleException.bundle.attributesMap;
+    error(format("Reflecting invalid %s/%s for %s", envelopeMap.get(SUBTYPE_PROPERTY_KEY),
+        envelopeMap.get(SUBFOLDER_PROPERTY_KEY),
+        envelopeMap.get(DEVICE_ID_PROPERTY_KEY)));
+    String deviceRegistryId = envelopeMap.get(REGISTRY_ID_PROPERTY_KEY);
+    envelopeMap.put("payload", encodeBase64(bundleException.bundle.payload));
+    reflectString(deviceRegistryId, stringify(envelopeMap));
   }
 
   protected void reflectMessage(Envelope envelope, String message) {
