@@ -18,9 +18,9 @@ import com.google.bos.udmi.service.access.IotAccessBase;
 import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.MessageDispatcher;
 import com.google.bos.udmi.service.messaging.MessageDispatcher.HandlerSpecification;
+import com.google.bos.udmi.service.messaging.impl.MessageBase;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.BundleException;
-import com.google.bos.udmi.service.messaging.impl.PubSubPipe;
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.common.collect.ImmutableList;
@@ -95,7 +95,7 @@ public abstract class ProcessorBase extends ContainerBase {
     Bundle bundle = bundleException.bundle;
     Map<String, String> errorMap = bundle.attributesMap;
 
-    if (errorMap.containsKey(PubSubPipe.INVALID_ENVELOPE_KEY)) {
+    if (errorMap.containsKey(MessageBase.INVALID_ENVELOPE_KEY)) {
       reflectInvalidEnvelope(bundleException);
       return;
     }

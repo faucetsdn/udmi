@@ -7,8 +7,12 @@ import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.mergeObject;
+import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.fromString;
+import static com.google.udmi.util.JsonUtil.parseJson;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static com.google.udmi.util.JsonUtil.toMap;
+import static com.google.udmi.util.JsonUtil.toStringMap;
 import static java.lang.String.format;
 
 import com.google.bos.udmi.service.messaging.MessagePipe;
@@ -37,6 +41,7 @@ import udmi.schema.Envelope.SubFolder;
  */
 public abstract class MessageBase extends ContainerBase implements MessagePipe {
 
+  public static final String INVALID_ENVELOPE_KEY = "invalid";
   static final String TERMINATE_MARKER = "terminate";
   private static final String DEFAULT_NAMESPACE = "default-namespace";
   private static final Set<Object> HANDLED_QUEUES = new HashSet<>();
@@ -74,11 +79,11 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     return new Bundle(e);
   }
 
-  protected void receiveBundle(Bundle bundle) {
+  private void receiveBundle(Bundle bundle) {
     receiveBundle(stringify(bundle));
   }
 
-  protected void receiveBundle(String stringBundle) {
+  private void receiveBundle(String stringBundle) {
     try {
       ensureSourceQueue();
       sourceQueue.put(stringBundle);
@@ -87,7 +92,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     }
   }
 
-  protected void receiveException(Map<String, String> attributesMap, String messageString,
+  private void receiveException(Map<String, String> attributesMap, String messageString,
       Exception e, SubFolder forceFolder) {
     Bundle bundle = new Bundle();
     bundle.message = friendlyStackTrace(e);
@@ -207,6 +212,42 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   public void terminate() {
     debug("Terminating %s", this);
     publish(new Bundle(TERMINATE_MARKER));
+  }
+
+  protected void receiveMessage(Envelope envelope, Map<?, ?> messageMap) {
+    receiveMessage(toStringMap(envelope), stringify(messageMap));
+  }
+
+  protected void receiveMessage(Map<String, String> envelopeMap, Map<?, ?> messageMap) {
+    receiveMessage(envelopeMap, stringify(messageMap));
+  }
+
+  protected void receiveMessage(Map<String, String> attributesMap, String messageString) {
+    final Object messageObject;
+    try {
+      messageObject = parseJson(messageString);
+    } catch (Exception e) {
+      receiveException(attributesMap, messageString, e, SubFolder.ERROR);
+      return;
+    }
+    final Envelope envelope;
+
+    try {
+      envelope = convertToStrict(Envelope.class, attributesMap);
+    } catch (Exception e) {
+      attributesMap.put(INVALID_ENVELOPE_KEY, "true");
+      receiveException(attributesMap, messageString, e, null);
+      return;
+    }
+
+    try {
+      Bundle bundle = new Bundle(envelope, messageObject);
+      info(format("Received %s/%s %s", bundle.envelope.subType, bundle.envelope.subFolder,
+          bundle.envelope.transactionId));
+      receiveBundle(bundle);
+    } catch (Exception e) {
+      receiveException(attributesMap, messageString, e, null);
+    }
   }
 
   @Override
