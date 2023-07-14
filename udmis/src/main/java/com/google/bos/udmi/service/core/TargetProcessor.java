@@ -1,9 +1,15 @@
 package com.google.bos.udmi.service.core;
 
+import static com.google.bos.udmi.service.core.ReflectProcessor.UDMI_VERSION;
+import static com.google.udmi.util.Common.TIMESTAMP_KEY;
+import static com.google.udmi.util.Common.VERSION_KEY;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static java.lang.String.format;
 
 import com.google.bos.udmi.service.messaging.MessageContinuation;
+import java.util.Date;
+import java.util.Map;
 import java.util.Optional;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
@@ -20,7 +26,12 @@ public class TargetProcessor extends ProcessorBase {
   protected void defaultHandler(Object defaultedMessage) {
     MessageContinuation continuation = getContinuation(defaultedMessage);
     Envelope envelope = continuation.getEnvelope();
-    String deviceId = envelope.deviceId;
+    final String deviceRegistryId = envelope.deviceRegistryId;
+    final String transactionId = envelope.transactionId;
+    final SubFolder subFolder = envelope.subFolder;
+    final String deviceId = envelope.deviceId;
+
+    defaultFields(defaultedMessage);
 
     publish(defaultedMessage);
 
@@ -35,17 +46,50 @@ public class TargetProcessor extends ProcessorBase {
       return;
     }
 
-    String deviceRegistryId = envelope.deviceRegistryId;
-    String transactionId = envelope.transactionId;
-    SubFolder subFolder = envelope.subFolder;
-
     String message = stringify(defaultedMessage);
-    debug(format("Reflecting %s %s %s %s %s %s", deviceRegistryId, deviceId, subType, subFolder,
-        message, transactionId));
+    debug(format("Reflecting message %s %s %s %s %s %s", deviceRegistryId, deviceId, subType,
+        subFolder, transactionId, defaultedMessage.getClass().getSimpleName()));
     try {
       reflectMessage(envelope, message);
     } catch (Exception e) {
       debug("Exception reflecting message: " + e.getMessage());
+    }
+  }
+
+  @Override
+  protected SubType getExceptionSubType() {
+    return SubType.EVENT;
+  }
+
+  private void defaultFields(Object defaultedMessage) {
+    maybeDefaultField(defaultedMessage, TIMESTAMP_KEY, getDefaultDate());
+    maybeDefaultField(defaultedMessage, VERSION_KEY, UDMI_VERSION);
+  }
+
+  private Date getDefaultDate() {
+    return new Date();
+  }
+
+  private <V> void maybeDefaultField(Object defaultedMessage, String fieldName, V defaultValue) {
+    //noinspection rawtypes
+    if (defaultedMessage instanceof Map messageMap) {
+      //noinspection unchecked
+      messageMap.computeIfAbsent(fieldName, k -> defaultValue);
+      return;
+    }
+
+    try {
+      ifNotNullThen(defaultedMessage.getClass().getField(fieldName), field -> {
+        try {
+          if (field.get(defaultedMessage) == null) {
+            field.set(defaultedMessage, defaultValue);
+          }
+        } catch (IllegalAccessException iae) {
+          debug("No timestamp field access for " + defaultedMessage.getClass().getName());
+        }
+      });
+    } catch (NoSuchFieldException nfe) {
+      debug(format("Skipping default timestamp for " + defaultedMessage.getClass().getName()));
     }
   }
 }

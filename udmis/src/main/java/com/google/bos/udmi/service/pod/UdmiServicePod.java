@@ -29,10 +29,6 @@ import udmi.schema.PodConfiguration;
 public class UdmiServicePod {
 
   private static final Map<String, ContainerBase> COMPONENT_MAP = new ConcurrentHashMap<>();
-  public static final String DEFAULT_PROVIDER_KEY = "default";
-  private static final Map<String, BridgePodConfiguration> NO_BRIDGES = ImmutableMap.of();
-  private static final Map<String, EndpointConfiguration> NO_FLOWS = ImmutableMap.of();
-  private static final Map<String, IotAccess> NO_ACCESS = ImmutableMap.of();
   private static final Map<String, Class<? extends ProcessorBase>> PROCESSORS = ImmutableMap.of(
       "target", TargetProcessor.class,
       "reflect", ReflectProcessor.class,
@@ -63,7 +59,7 @@ public class UdmiServicePod {
   }
 
   private void createFlow(String name, EndpointConfiguration config) {
-    checkState(PROCESSORS.containsKey(name), "registered flow key " + name);
+    checkState(PROCESSORS.containsKey(name), "unknown flow key " + name);
     Class<? extends ProcessorBase> clazz = PROCESSORS.get(name);
     putComponent(name, ProcessorBase.create(clazz, makeConfig(config)));
   }

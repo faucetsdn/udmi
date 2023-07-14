@@ -1,20 +1,23 @@
 package com.google.bos.udmi.service.core;
 
+import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.fromStringStrict;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.stringify;
-import static java.util.Objects.requireNonNull;
+import static com.google.udmi.util.JsonUtil.toMap;
 import static udmi.schema.Envelope.SubFolder.UPDATE;
 
 import com.google.bos.udmi.service.access.IotAccessBase;
 import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.StateUpdate;
+import com.google.bos.udmi.service.messaging.impl.MessageBase.BundleException;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.udmi.util.GeneralUtils;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -38,12 +41,9 @@ public class StateProcessor extends ProcessorBase {
   @Override
   protected void defaultHandler(Object defaultedMessage) {
     MessageContinuation continuation = getContinuation(defaultedMessage);
-    Envelope envelope = continuation.getEnvelope();
-    String registryId = envelope.deviceRegistryId;
-    String deviceId = envelope.deviceId;
     StateUpdate stateMessage = convertToStrict(StateUpdate.class, defaultedMessage);
-    updateLastStart(stateMessage, registryId, deviceId);
     shardStateUpdate(stateMessage, continuation);
+    updateLastStart(stateMessage, continuation);
   }
 
   @Override
@@ -56,18 +56,28 @@ public class StateProcessor extends ProcessorBase {
     shardStateUpdate(message, continuation);
   }
 
+  @Override
+  protected SubType getExceptionSubType() {
+    return SubType.STATE;
+  }
+
   private void shardStateUpdate(StateUpdate message, MessageContinuation continuation) {
     info("Sharding state message to pipeline out as incremental updates");
     Envelope envelope = continuation.getEnvelope();
     envelope.subType = SubType.STATE;
+    envelope.subFolder = UPDATE;
+    reflectMessage(envelope, stringify(message));
     Arrays.stream(State.class.getFields()).forEach(field -> {
       try {
         if (STATE_SUB_FOLDERS.contains(field.getName())) {
           ifNotNullThen(field.get(message), fieldMessage -> {
+            Map<String, Object> stringObjectMap = toMap(fieldMessage);
+            stringObjectMap.put("version", message.version);
+            stringObjectMap.put("timestamp", message.timestamp);
             envelope.subFolder = SubFolder.fromValue(field.getName());
             debug("Sharding state " + envelope.subFolder);
-            reflectMessage(envelope, stringify(message));
-            continuation.publish(fieldMessage);
+            reflectMessage(envelope, stringify(stringObjectMap));
+            continuation.publish(stringObjectMap);
           });
         }
       } catch (Exception e) {
@@ -76,11 +86,14 @@ public class StateProcessor extends ProcessorBase {
     });
   }
 
-  private void updateLastStart(StateUpdate message, String registryId, String deviceId) {
+  private void updateLastStart(StateUpdate message, MessageContinuation continuation) {
     if (message == null || message.system == null || message.system.operation == null
         || message.system.operation.last_start == null) {
       return;
     }
+    Envelope envelope = deepCopy(continuation.getEnvelope());
+    String registryId = envelope.deviceRegistryId;
+    String deviceId = envelope.deviceId;
     try {
       IotAccessBase iotAccess = UdmiServicePod.getComponent(IOT_ACCESS_COMPONENT);
       Date newLastStart = message.system.operation.last_start;
@@ -92,7 +105,11 @@ public class StateProcessor extends ProcessorBase {
           getTimestamp(newLastStart), shouldUpdate);
       if (shouldUpdate) {
         configMessage.system.operation.last_start = newLastStart;
-        iotAccess.modifyConfig(registryId, deviceId, UPDATE, stringify(configMessage));
+        String configMessageStr = stringify(configMessage);
+        iotAccess.modifyConfig(registryId, deviceId, UPDATE, configMessageStr);
+        envelope.subFolder = UPDATE;
+        envelope.subType = SubType.CONFIG;
+        reflectMessage(envelope, configMessageStr);
       }
     } catch (Exception e) {
       debug("Could not process config last_state update, skipping: "

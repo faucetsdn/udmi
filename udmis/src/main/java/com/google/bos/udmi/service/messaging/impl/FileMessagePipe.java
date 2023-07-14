@@ -3,7 +3,10 @@ package com.google.bos.udmi.service.messaging.impl;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.JSON_EXT;
+import static com.google.udmi.util.JsonUtil.loadFileString;
 import static com.google.udmi.util.JsonUtil.loadMap;
+import static com.google.udmi.util.JsonUtil.toMap;
+import static com.google.udmi.util.JsonUtil.toStringMap;
 import static java.lang.String.format;
 
 import com.google.bos.udmi.service.messaging.MessagePipe;
@@ -66,11 +69,6 @@ public class FileMessagePipe extends MessageBase {
     }
   }
 
-  private Bundle makeErrorBundle(Envelope envelope, Exception e) {
-    envelope.subFolder = SubFolder.ERROR;
-    return new Bundle(envelope, GeneralUtils.stackTraceString(e));
-  }
-
   private void playbackEngine(String recvId) {
     debug("Playback trace messages from " + new File(recvId).getAbsolutePath());
     DirectoryTraverser filesIn = new DirectoryTraverser(recvId);
@@ -84,11 +82,7 @@ public class FileMessagePipe extends MessageBase {
   private void consumeFile(File file) {
     try {
       Envelope envelope = makeEnvelope(file);
-      try {
-        receiveBundle(new Bundle(envelope, loadMap(file)));
-      } catch (Exception e) {
-        receiveBundle(makeErrorBundle(envelope, e));
-      }
+      receiveMessage(toStringMap(envelope), loadFileString(file));
     } catch (Exception e) {
       e.printStackTrace();
     }

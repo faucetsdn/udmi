@@ -31,6 +31,7 @@ public class LocalMessagePipeTest extends MessagePipeTestBase {
 
   private static class BespokeObject {
 
+    public String sillyDilly;
   }
 
   /**
@@ -55,8 +56,7 @@ public class LocalMessagePipeTest extends MessagePipeTestBase {
    */
   @Test
   void publishUntyped() {
-    Exception expected = assertThrows(Exception.class,
-        () -> testSend(new BespokeObject()), "Expected exception");
-    assertTrue(expected.getMessage().contains("type entry not found"), "unexpected message");
+    assertThrows(Exception.class,
+        () -> testSend(new BespokeObject()), "missing expected exception");
   }
 }

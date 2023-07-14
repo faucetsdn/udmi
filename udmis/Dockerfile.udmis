@@ -21,4 +21,6 @@ ADD bin/ bin/
 ADD var/ var/
 ADD build/libs/udmis-1.0-SNAPSHOT-all.jar build/libs/udmis-1.0-SNAPSHOT-all.jar
 
+ENV CLEARBLADE_CONFIGURATION=/udmi/clearblade.json
+
 CMD ["/root/bin/run", "/udmi/prod_pod.json"]

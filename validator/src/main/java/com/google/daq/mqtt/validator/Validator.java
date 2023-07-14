@@ -347,6 +347,7 @@ public class Validator {
 
   private void setMessageTraceDir(String writeDirArg) {
     traceDir = new File(writeDirArg);
+    System.err.println("Tracing message capture to " + traceDir.getAbsolutePath());
     if (traceDir.exists()) {
       throw new RuntimeException("Trace directory already exists " + traceDir.getAbsolutePath());
     }
@@ -676,10 +677,10 @@ public class Validator {
     try {
       deviceDir.mkdir();
       String timestamp = (String) message.get(TIMESTAMP_KEY);
-      System.out.printf("Capture %s for %s%n", timestamp, deviceId);
+      System.out.printf("Capture %s at %s for %s%n", filename, timestamp, deviceId);
       OBJECT_MAPPER.writeValue(messageFile, message);
     } catch (Exception e) {
-      throw new RuntimeException("While writing message file " + messageFile.getAbsolutePath());
+      throw new RuntimeException("While writing message file " + messageFile.getAbsolutePath(), e);
     }
   }
 

@@ -110,13 +110,13 @@ class FileMessagePipeTest {
     assertEquals(13, consumed.size(), "playback messages");
 
     List<String> errors =
-        consumed.stream().filter(bundle -> bundle.envelope.subFolder == SubFolder.ERROR)
-            .map(bundle -> (String) bundle.message)
-            .collect(Collectors.toList());
+        consumed.stream().filter(bundle -> bundle.message instanceof String)
+            .map(bundle -> (String) bundle.message).toList();
     assertEquals(1, errors.size(), "expected message errors");
 
     Set<String> devices =
-        consumed.stream().map(bundle -> bundle.envelope.deviceId).collect(Collectors.toSet());
+        consumed.stream().filter(bundle -> bundle.envelope.deviceId != null)
+            .map(bundle -> bundle.envelope.deviceId).collect(Collectors.toSet());
     assertEquals(4, devices.size(), "expected devices in trace");
 
     SystemEvent systemEvent = JsonUtil.convertTo(SystemEvent.class, consumed.get(1).message);

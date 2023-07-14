@@ -63,12 +63,8 @@ public class TraceMessagePipe extends MessageBase {
     try {
       Map<String, Object> traceBundle = asMap(file);
       Envelope envelope = makeEnvelope(traceBundle);
-      try {
-        Object message = asMap(decodeBase64((String) traceBundle.get("data")));
-        receiveBundle(new Bundle(envelope, message));
-      } catch (Exception e) {
-        receiveBundle(makeErrorBundle(envelope, e));
-      }
+      Map<String, Object> message = asMap(decodeBase64((String) traceBundle.get("data")));
+      receiveMessage(envelope, message);
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -96,11 +92,6 @@ public class TraceMessagePipe extends MessageBase {
     } catch (Exception e) {
       throw new RuntimeException("While extracting envelope from bundle", e);
     }
-  }
-
-  private Bundle makeErrorBundle(Envelope envelope, Exception e) {
-    envelope.subFolder = SubFolder.ERROR;
-    return new Bundle(envelope, GeneralUtils.stackTraceString(e));
   }
 
   private void playbackEngine(String recvId) {

@@ -6,6 +6,8 @@ class LocalnetState:
   """Generated schema class"""
 
   def __init__(self):
+    self.timestamp = None
+    self.version = None
     self.families = None
 
   @staticmethod
@@ -13,6 +15,8 @@ class LocalnetState:
     if not source:
       return None
     result = LocalnetState()
+    result.timestamp = source.get('timestamp')
+    result.version = source.get('version')
     result.families = FamilyLocalnetState.map_from(source.get('families'))
     return result
 
@@ -34,6 +38,10 @@ class LocalnetState:
 
   def to_dict(self):
     result = {}
+    if self.timestamp:
+      result['timestamp'] = self.timestamp # 5
+    if self.version:
+      result['version'] = self.version # 5
     if self.families:
       result['families'] = FamilyLocalnetState.expand_dict(self.families) # 2
     return result

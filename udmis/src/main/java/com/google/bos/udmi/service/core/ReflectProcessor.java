@@ -44,8 +44,9 @@ public class ReflectProcessor extends ProcessorBase {
 
   public static final String PAYLOAD_KEY = "payload";
   static final String DEPLOY_FILE = "var/deployed_version.json";
-  private final SetupUdmiConfig deployed =
+  static final SetupUdmiConfig DEPLOYED_CONFIG =
       loadFileStrictRequired(SetupUdmiConfig.class, new File(DEPLOY_FILE));
+  static final String UDMI_VERSION = requireNonNull(DEPLOYED_CONFIG.udmi_functions);
 
   private IotAccessBase iotAccess;
 
@@ -83,6 +84,7 @@ public class ReflectProcessor extends ProcessorBase {
     Map<String, Object> stringObjectMap = JsonUtil.asMap(message);
     UdmiState udmiState =
         convertToStrict(UdmiState.class, stringObjectMap.get(SubFolder.UDMI.value()));
+    requireNonNull(udmiState, "missing udmi subfolder");
     udmiState.timestamp = JsonUtil.getDate((String) stringObjectMap.get(TIMESTAMP_KEY));
     return udmiState;
   }
@@ -91,6 +93,7 @@ public class ReflectProcessor extends ProcessorBase {
     try {
       switch (attributes.subType) {
         case QUERY:
+          attributes.subType = SubType.REPLY;
           return reflectQuery(attributes, payload);
         case MODEL:
           return reflectModel(attributes, convertToStrict(CloudModel.class, payload));
@@ -116,7 +119,6 @@ public class ReflectProcessor extends ProcessorBase {
       Map<String, Object> payload) {
     iotAccess.setProviderAffinity(envelope.deviceRegistryId, envelope.deviceId, reflection.source);
     CloudModel result = getReflectionResult(envelope, payload);
-    envelope.subType = SubType.REPLY;
     sendReflectCommand(reflection, envelope, result);
   }
 
@@ -148,11 +150,9 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private CloudModel reflectPropagate(Envelope attributes, Map<String, Object> payload) {
-    // TODO: Replace this with published config message for a ConfigProcessor handler.
     if (requireNonNull(attributes.subType) == SubType.CONFIG) {
       iotAccess.modifyConfig(attributes.deviceRegistryId, attributes.deviceId, SubFolder.UPDATE,
           stringify(payload));
-      return new CloudModel();
     }
     Class<?> messageClass = getMessageClassFor(attributes);
     publish(convertToStrict(messageClass, payload));
@@ -190,7 +190,7 @@ public class ReflectProcessor extends ProcessorBase {
     UdmiConfig udmiConfig = new UdmiConfig();
     udmiConfig.last_state = toolState.timestamp;
     udmiConfig.setup = new SetupUdmiConfig();
-    copyFields(deployed, udmiConfig.setup, false);
+    copyFields(DEPLOYED_CONFIG, udmiConfig.setup, false);
     udmiConfig.setup.udmi_version = UDMI_VERSION;
     udmiConfig.setup.functions_min = FUNCTIONS_VERSION_MIN;
     udmiConfig.setup.functions_max = FUNCTIONS_VERSION_MAX;
@@ -205,7 +205,7 @@ public class ReflectProcessor extends ProcessorBase {
 
   @Override
   public void activate() {
-    debug(stringify(deployed));
+    debug(stringify(DEPLOYED_CONFIG));
     iotAccess = UdmiServicePod.getComponent(IOT_ACCESS_COMPONENT);
     super.activate();
   }

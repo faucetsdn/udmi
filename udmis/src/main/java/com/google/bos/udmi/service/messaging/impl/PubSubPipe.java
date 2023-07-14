@@ -4,7 +4,6 @@ import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
-import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static java.lang.String.format;
@@ -26,10 +25,10 @@ import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.ProjectSubscriptionName;
 import com.google.pubsub.v1.ProjectTopicName;
 import com.google.pubsub.v1.PubsubMessage;
-import com.google.udmi.util.Common;
 import com.google.udmi.util.GeneralUtils;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -122,18 +121,12 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
 
   @Override
   public void receiveMessage(PubsubMessage message, AckReplyConsumer reply) {
-    try {
-      // Ack first to prevent a recurring loop of processing a faulty message.
-      reply.ack();
-      Bundle bundle = new Bundle(
-          convertToStrict(Envelope.class, message.getAttributesMap()),
-          toMap(message.getData().toStringUtf8()));
-      info(format("Received %s/%s %s", bundle.envelope.subType, bundle.envelope.subFolder,
-          bundle.envelope.transactionId));
-      receiveBundle(bundle);
-    } catch (Exception e) {
-      receiveBundle(makeExceptionBundle(e));
-    }
+    Map<String, String> attributesMap = new HashMap<>(message.getAttributesMap());
+    String messageString = message.getData().toStringUtf8();
+    // Ack first to prevent a recurring loop of processing a faulty message.
+    reply.ack();
+
+    receiveMessage(attributesMap, messageString);
   }
 
   @Override

@@ -148,9 +148,9 @@ public class Pubber {
           .put(Level.ERROR, LOG::error)
           .build();
   private static final Map<String, String> INVALID_REPLACEMENTS = ImmutableMap.of(
-      "events/string", "\"\"",
-      "events/emptyjson", "{}",
-      "events/badjson", "{ NOT VALID JSON!"
+      "events/blobset", "\"\"",
+      "events/discovery", "{}",
+      "events/mapping", "{ NOT VALID JSON!"
   );
   public static final List<String> INVALID_KEYS = new ArrayList<>(INVALID_REPLACEMENTS.keySet());
   private static final Map<String, PointPointsetModel> DEFAULT_POINTS = ImmutableMap.of(
@@ -660,6 +660,7 @@ public class Pubber {
       publishStateMessage(invalidState);
     } else if (phase == 1) {
       InjectedMessage invalidEvent = new InjectedMessage();
+      invalidEvent.field = "bunny";
       warn("Sending badly formatted message type");
       publishDeviceMessage(invalidEvent);
     } else {
