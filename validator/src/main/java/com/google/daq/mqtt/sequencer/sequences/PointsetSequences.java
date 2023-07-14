@@ -24,6 +24,24 @@ public class PointsetSequences extends SequenceBase {
 
   private static String NO_POINTSET_CONFIG = "no pointset declared in config";
 
+
+  /**
+   * Simple check that device publishes pointset events
+   */
+  @Test(timeout = THREE_MINUTES_MS)
+  @Feature(stage = BETA, bucket = POINTSET)
+  @Summary("device publishes pointset events")
+  public void pointset_publish() {
+    if (deviceConfig.pointset == null) {
+      throw new AssumptionViolatedException(NO_POINTSET_CONFIG);
+    }
+
+    untilTrue("recieve a pointset event",
+        () -> (countReceivedEvents(PointsetEvent.class) > 1
+    ));
+  }
+
+
   /**
    * Tests sample_rate_min by measuring the initial interval between the last two messages received,
    * then setting the config.pointset.sample_rate_min to match half the initial interval
