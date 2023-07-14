@@ -2,6 +2,7 @@ package com.google.bos.udmi.service.messaging.impl;
 
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.JsonUtil.convertTo;
+import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -140,12 +141,12 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
         info("Defaulting messages of type/folder " + handlerType.getName());
         return handlers.getOrDefault(DEFAULT_CLASS, this::devNullHandler);
       });
-      Object messageObject = isException ? message : convertTo(handlerType, message);
+      Object messageObject = isException ? message : convertToStrict(handlerType, message);
       info("Processing " + handlerType);
       debug("Processing %s from %s in %s", handlerType.getSimpleName(), messagePipe, this);
       processHandler(envelope, handlerType, messageObject);
     } catch (Exception e) {
-      throw new RuntimeException("While processing message envelope " + stringify(envelope), e);
+      throw new RuntimeException("While processing message " + stringify(envelope), e);
     }
   }
 

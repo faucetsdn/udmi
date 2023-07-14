@@ -14,6 +14,7 @@ import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static com.google.udmi.util.JsonUtil.toStringMap;
 import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 
 import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.bos.udmi.service.pod.ContainerBase;
@@ -86,7 +87,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   private void receiveBundle(String stringBundle) {
     try {
       ensureSourceQueue();
-      sourceQueue.put(stringBundle);
+      sourceQueue.put(requireNonNull(stringBundle));
     } catch (Exception e) {
       throw new RuntimeException("While receiving bundle", e);
     }
