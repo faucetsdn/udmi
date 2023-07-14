@@ -36,33 +36,6 @@ sites/udmi_site_model/out/devices/AHU-1/config.out
   "errors" : [ ]
 }
 ::::::::::::::
-sites/udmi_site_model/out/devices/AHU-1/event_pointset.out
-::::::::::::::
-{
-  "timestamp" : "1999-10-20T01:02:03Z",
-  "version" : "1.4.1",
-  "sub_folder" : "pointset",
-  "sub_type" : "event",
-  "status" : {
-    "message" REDACTED
-    "detail" REDACTED
-    "category" : "validation.device.schema",
-    "timestamp" : "1999-10-20T01:02:03Z",
-    "level" : 500
-  },
-  "pointset" : {
-    "missing" : [ ],
-    "extra" : [ ]
-  },
-  "errors" : [ {
-    "message" REDACTED
-    "detail" REDACTED
-    "category" : "validation.device.schema",
-    "timestamp" : "1999-10-20T01:02:03Z",
-    "level" : 500
-  } ]
-}
-::::::::::::::
 sites/udmi_site_model/out/devices/AHU-1/event_system.out
 ::::::::::::::
 {
