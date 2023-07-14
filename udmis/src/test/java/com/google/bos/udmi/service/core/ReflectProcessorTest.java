@@ -86,7 +86,7 @@ public class ReflectProcessorTest extends ProcessorTestBase {
     udmiState.setup = new SetupUdmiState();
     udmiState.setup.user = TEST_USER;
     udmiState.timestamp = TEST_TIMESTAMP;
-    return asError ? udmiState : ImmutableMap.of(SubFolder.UDMI, udmiState);
+    return asError ? udmiState : ImmutableMap.of(SubFolder.UDMI.value(), udmiState);
   }
 
   private void validateUdmiConfig(UdmiConfig config) {

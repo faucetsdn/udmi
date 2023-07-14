@@ -33,11 +33,11 @@ public abstract class ProcessorTestBase extends MessageTestBase {
   protected IotAccessBase provider;
 
   protected int getDefaultCount() {
-    return processor.getMessageCount(Object.class);
+    return getMessageCount(Object.class);
   }
 
   protected int getExceptionCount() {
-    return processor.getMessageCount(Exception.class);
+    return getMessageCount(Exception.class);
   }
 
   protected int getMessageCount(Class<?> clazz) {

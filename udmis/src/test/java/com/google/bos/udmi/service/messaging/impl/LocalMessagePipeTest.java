@@ -56,8 +56,7 @@ public class LocalMessagePipeTest extends MessagePipeTestBase {
    */
   @Test
   void publishUntyped() {
-    Exception expected = assertThrows(Exception.class,
+    assertThrows(Exception.class,
         () -> testSend(new BespokeObject()), "missing expected exception");
-    assertTrue(expected.getMessage().contains("null bundle sub"), "unexpected exception message");
   }
 }

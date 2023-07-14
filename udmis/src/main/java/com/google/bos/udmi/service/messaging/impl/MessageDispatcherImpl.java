@@ -229,8 +229,9 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
       return bundle;
     }
 
-    SimpleEntry<SubType, SubFolder> messageType = CLASS_TYPES.get(message.getClass());
-    if (messageType != null) {
+    if (!(message instanceof Map)) {
+      SimpleEntry<SubType, SubFolder> messageType = CLASS_TYPES.get(message.getClass());
+      requireNonNull(messageType, "unknown message type for " + message.getClass());
       bundle.envelope.subType = messageType.getKey();
       bundle.envelope.subFolder = messageType.getValue();
     }
@@ -247,8 +248,6 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
    */
   @VisibleForTesting
   public void publishBundle(Bundle bundle) {
-    requireNonNull(bundle.envelope.subFolder, "null bundle subFolder");
-    requireNonNull(bundle.envelope.subType, "null bundle subType");
     messagePipe.publish(bundle);
   }
 

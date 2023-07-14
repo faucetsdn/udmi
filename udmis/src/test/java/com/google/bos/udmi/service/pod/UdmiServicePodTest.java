@@ -33,6 +33,7 @@ import org.junit.jupiter.api.Test;
 import udmi.schema.DiscoveryState;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope.SubFolder;
+import udmi.schema.Envelope.SubType;
 import udmi.schema.LocalnetModel;
 import udmi.schema.PodConfiguration;
 import udmi.schema.PointsetState;
@@ -46,7 +47,7 @@ public class UdmiServicePodTest {
   private static final String BASE_CONFIG = "src/test/configs/base_pod.json";
   private static final String BRIDGE_CONFIG = "src/test/configs/bridge_pod.json";
   private static final String FILE_CONFIG = "src/test/configs/trace_pod.json";
-  private static final String TARGET_FILE = "null/null/devices/null/001_event_pointset.json";
+  private static final String TARGET_FILE = "null/null/devices/null/003_event_pointset.json";
   private static final long RECEIVE_TIMEOUT_SEC = 2;
   private static final long RECEIVE_TIMEOUT_MS = RECEIVE_TIMEOUT_SEC * 1000;
 
@@ -81,6 +82,7 @@ public class UdmiServicePodTest {
     final MessageDispatcherImpl stateDispatcher =
         MessagePipeTestBase.getDispatcherFor(reversedState);
     stateDispatcher.prototypeEnvelope.deviceId = TEST_DEVICE;
+    stateDispatcher.prototypeEnvelope.deviceRegistryId = TEST_REGISTRY;
 
     pod.activate();
 
@@ -93,7 +95,7 @@ public class UdmiServicePodTest {
 
     LocalIotAccessProvider iotAccess = UdmiServicePod.getComponent(IOT_ACCESS_COMPONENT);
     List<String> commands = iotAccess.getCommands();
-    assertEquals(2, commands.size(), "sent commands");
+    assertEquals(3, commands.size(), "sent commands");
   }
 
   @Test
