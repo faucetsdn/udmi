@@ -7,6 +7,7 @@ import static com.google.udmi.util.Common.DEVICE_ID_PROPERTY_KEY;
 import static com.google.udmi.util.Common.REGISTRY_ID_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
+import static com.google.udmi.util.Common.getExceptionMessage;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
@@ -25,6 +26,7 @@ import com.google.bos.udmi.service.messaging.impl.MessageBase.BundleException;
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.common.collect.ImmutableList;
+import com.google.udmi.util.GeneralUtils;
 import java.util.Collection;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -135,6 +137,8 @@ public abstract class ProcessorBase extends ContainerBase {
       checkState(envelope.payload == null, "envelope payload is not null");
       envelope.payload = encodeBase64(message);
       reflectString(envelope.deviceRegistryId, stringify(envelope));
+    } catch (Exception e) {
+      error(format("Error reflecting message: %s", getExceptionMessage(e)));
     } finally {
       envelope.payload = null;
     }
@@ -157,7 +161,7 @@ public abstract class ProcessorBase extends ContainerBase {
    * Activate this component.
    */
   public void activate() {
-    info("Activating " + this.getSimpleName());
+    info("Activating");
     if (dispatcher != null) {
       registerHandlers(baseHandlers);
       registerHandlers();

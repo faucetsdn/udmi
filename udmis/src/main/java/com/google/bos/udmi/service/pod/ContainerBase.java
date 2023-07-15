@@ -1,13 +1,11 @@
 package com.google.bos.udmi.service.pod;
 
-import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static java.lang.String.format;
-import static java.util.Objects.requireNonNull;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Consumer;
+import com.google.udmi.util.JsonUtil;
+import java.io.PrintStream;
 import org.jetbrains.annotations.NotNull;
+import udmi.schema.Level;
 
 /**
  * Baseline functions that are useful for any other component. No real functionally, rather
@@ -17,27 +15,34 @@ import org.jetbrains.annotations.NotNull;
 public abstract class ContainerBase {
 
   @NotNull
-  protected String getSimpleName() {
+  private String getSimpleName() {
     return getClass().getSimpleName();
   }
 
   public void activate() {
   }
 
+  private void output(Level level, String message) {
+    PrintStream printStream = level.value() >= Level.WARNING.value() ? System.err : System.out;
+    printStream.printf("%s %s: %s %s%n", JsonUtil.getTimestamp(), level.name().charAt(0),
+        getSimpleName(), message);
+    printStream.flush();
+  }
+
   public void debug(String format, Object... args) {
-    System.err.println(getSimpleName() + " D: " + format(format, args));
+    debug(format(format, args));
   }
 
   public void debug(String message) {
-    System.err.println(getSimpleName() + " D: " + message);
+    output(Level.DEBUG, message);
   }
 
   public void error(String message) {
-    System.err.println(getSimpleName() + " E: " + message);
+    output(Level.ERROR, message);
   }
 
   public void info(String message) {
-    System.err.println(getSimpleName() + " I: " + message);
+    output(Level.INFO, message);
   }
 
   public void shutdown() {
