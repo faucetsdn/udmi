@@ -10,6 +10,7 @@ import static com.google.udmi.util.GeneralUtils.decodeBase64;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
@@ -146,7 +147,7 @@ public class ReflectProcessor extends ProcessorBase {
       Map<String, Object> payload) {
     iotAccess.setProviderAffinity(envelope.deviceRegistryId, envelope.deviceId, reflection.source);
     CloudModel result = getReflectionResult(envelope, payload);
-    sendReflectCommand(reflection, envelope, result);
+    ifNotNullThen(result, v -> sendReflectCommand(reflection, envelope, result));
   }
 
   private CloudModel queryCloudDevice(Envelope attributes) {
@@ -191,7 +192,7 @@ public class ReflectProcessor extends ProcessorBase {
     }
     Class<?> messageClass = getMessageClassFor(attributes);
     publish(convertTo(messageClass, payload));
-    return new CloudModel();
+    return null;
   }
 
   private CloudModel reflectQuery(Envelope attributes, Map<String, Object> payload) {

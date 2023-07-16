@@ -66,7 +66,6 @@ public class GcpIotAccessProvider extends IotAccessBase {
   static final Set<String> CLOUD_REGIONS =
       ImmutableSet.of("us-central1", "europe-west1", "asia-east1");
   private static final String GATEWAY_TYPE = "GATEWAY";
-  private static final String EMPTY_JSON = "{}";
   private static final String PROJECT_PATH_FORMAT = "projects/%s";
   private static final String LOCATIONS_PATH_FORMAT = "%s/locations/%s";
   private static final String REGISTRY_PATH_FORMAT = "%s/registries/%s";
@@ -88,8 +87,6 @@ public class GcpIotAccessProvider extends IotAccessBase {
   private static final String ASSOCIATION_ONLY = "ASSOCIATION_ONLY";
   private static final GatewayConfig GATEWAY_CONFIG =
       new GatewayConfig().setGatewayType(GATEWAY_TYPE).setGatewayAuthMethod(ASSOCIATION_ONLY);
-  private static final long CONFIG_UPDATE_BACKOFF_MS = 1000;
-  private static final int CONFIG_UPDATE_MAX_RETRIES = 10;
   private final String projectId;
   private final CloudIot cloudIotService;
   private Map<String, String> registryCloudRegions;
@@ -280,7 +277,7 @@ public class GcpIotAccessProvider extends IotAccessBase {
         .forEach(id -> unbindDevice(registryId, deviceId, id)));
   }
 
-  private String updateConfig(String registryId, String deviceId, String config, Long version) {
+  protected String updateConfig(String registryId, String deviceId, String config, Long version) {
     try {
       String useConfig = ofNullable(config).orElse("");
       registries.devices().modifyCloudToDeviceConfig(
@@ -396,32 +393,6 @@ public class GcpIotAccessProvider extends IotAccessBase {
     } catch (Exception e) {
       throw new RuntimeException("While " + operation + "ing " + devicePath, e);
     }
-  }
-
-  @Override
-  public String modifyConfig(String registryId, String deviceId, SubFolder subFolder,
-      String contents) {
-    int retryCount = CONFIG_UPDATE_MAX_RETRIES;
-    while (retryCount > 0) {
-      try {
-        if (subFolder == SubFolder.UPDATE) {
-          return updateConfig(registryId, deviceId, contents, null);
-        } else {
-          Entry<Long, String> configPair = fetchConfig(registryId, deviceId);
-          String configString = ofNullable(configPair.getValue()).orElse(EMPTY_JSON);
-          Map<String, Object> configMap = toMap(configString);
-          configMap.put(subFolder.toString(), toMap(contents));
-          return updateConfig(registryId, deviceId, stringify(configMap), configPair.getKey());
-        }
-      } catch (Exception e) {
-        warn(
-            format("Error updating config for %s/%s, remaining retries %d...", registryId, deviceId,
-                --retryCount));
-        safeSleep(CONFIG_UPDATE_BACKOFF_MS);
-      }
-    }
-    throw new RuntimeException(
-        format("Maximum config retry count exceeded for %s/%s, giving up.", registryId, deviceId));
   }
 
   @Override

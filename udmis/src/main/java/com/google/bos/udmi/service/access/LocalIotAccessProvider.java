@@ -60,7 +60,7 @@ public class LocalIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public String modifyConfig(String registryId, String deviceId, SubFolder folder, String contents) {
+  protected String updateConfig(String registryId, String deviceId, String config, Long version) {
     throw new RuntimeException("Not yet implemented");
   }
 

@@ -88,6 +88,11 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   @Override
+  protected String updateConfig(String registryId, String deviceId, String config, Long version) {
+    throw new RuntimeException("Shouldn't be called for dynamic provider");
+  }
+
+  @Override
   public String modifyConfig(String registryId, String deviceId, SubFolder folder, String contents) {
     return getProviderFor(registryId).modifyConfig(registryId, deviceId, folder, contents);
   }

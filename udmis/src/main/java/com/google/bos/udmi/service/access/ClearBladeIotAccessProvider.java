@@ -364,11 +364,11 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
         .forEach(id -> unbindDevice(registryId, gatewayId, id)));
   }
 
-  private String updateConfig(String registryId, String deviceId, String config) {
+  protected String updateConfig(String registryId, String deviceId, String config, Long version) {
     try {
       DeviceManagerClient deviceManagerClient = getDeviceManagerClient();
       ByteString binaryData = new ByteString(encodeBase64(config));
-      String updateVersion = null;
+      String updateVersion = ifNotNullGet(version, v -> Long.toString(version));
       String location = getRegistryLocation(registryId);
       ModifyCloudToDeviceConfigRequest request =
           ModifyCloudToDeviceConfigRequest.Builder.newBuilder()
@@ -494,20 +494,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       }
     } catch (Exception e) {
       throw new RuntimeException("While " + operation + "ing " + devicePath, e);
-    }
-  }
-
-  @Override
-  public String modifyConfig(String registryId, String deviceId, SubFolder subFolder,
-      String contents) {
-    if (subFolder == SubFolder.UPDATE) {
-      return updateConfig(registryId, deviceId, contents);
-    } else {
-      // TODO: Need to implement checking-and-retry of config version for concurrent operations.
-      String configString = fetchConfig(registryId, deviceId).getValue();
-      Map<String, Object> configMap = toMap(configString);
-      configMap.put(subFolder.toString(), contents);
-      return updateConfig(registryId, deviceId, stringify(configMap));
     }
   }
 
