@@ -165,14 +165,35 @@ public class ReflectProcessor extends ProcessorBase {
       String state = Optional.ofNullable(
           iotAccess.fetchState(attributes.deviceRegistryId, attributes.deviceId)).orElse("{}");
       debug(format("Processing device %s state query", attributes.deviceId));
-      publish(fromStringStrict(StateUpdate.class, state));
-      reflectStateUpdate(attributes, state);
+      StateUpdate stateUpdate = fromStringStrict(StateUpdate.class, state);
+      stateUpdate.configAcked = checkConfigAckTime(attributes, state);
+      publish(stateUpdate);
+      reflectStateUpdate(attributes, stringify(stateUpdate));
       CloudModel cloudModel = new CloudModel();
       cloudModel.operation = Operation.FETCH;
       return cloudModel;
     } catch (Exception e) {
       throw new RuntimeException("While querying device state " + attributes.deviceId, e);
     }
+  }
+
+  private boolean checkConfigAckTime(Envelope attributes, String state) {
+    // const queries = [
+    // iotClient.getDevice(request),
+    //     iotClient.listDeviceConfigVersions(request)
+    //   ];
+    //
+    // return Promise.all(queries).then(([device, config]) =>{
+    // const stateBinaryData = device[0].state && device[0].state.binaryData;
+    // const stateString = stateBinaryData && stateBinaryData.toString();
+    // const msgObject = JSON.parse(stateString) || {};
+    // const lastConfig = config[0].deviceConfigs[0];
+    // const cloudUpdateTime = lastConfig.cloudUpdateTime.seconds;
+    // const deviceAckTime = lastConfig.deviceAckTime && lastConfig.deviceAckTime.seconds;
+    //   msgObject.configAcked = String(deviceAckTime >= cloudUpdateTime);
+    //   return process_state_update(attributes, msgObject);
+    // });
+    return true;
   }
 
   private void reflectStateUpdate(Envelope attributes, String state) {
