@@ -12,7 +12,6 @@ import static udmi.schema.Envelope.SubFolder.UPDATE;
 import com.google.bos.udmi.service.access.IotAccessBase;
 import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.StateUpdate;
-import com.google.bos.udmi.service.messaging.impl.MessageBase.BundleException;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.udmi.util.GeneralUtils;
 import java.util.Arrays;

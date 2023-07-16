@@ -1308,6 +1308,7 @@ public class SequenceBase {
 
   private void handleDeviceMessage(Map<String, Object> message, String subFolderRaw,
       String subTypeRaw, String transactionId) {
+    debug(format("Handling device message %s/%s", subTypeRaw, subFolderRaw));
     SubFolder subFolder = SubFolder.fromValue(subFolderRaw);
     SubType subType = SubType.fromValue(subTypeRaw);
     switch (subType) {
@@ -1364,7 +1365,8 @@ public class SequenceBase {
           info(format("Updated config #%03d", updateCount), changedLines(changes));
         }
       } else if (converted instanceof State convertedState) {
-        if (deviceState != null && convertedState.timestamp.before(deviceState.timestamp)) {
+        if (deviceState != null && convertedState.timestamp != null
+            && convertedState.timestamp.before(deviceState.timestamp)) {
           warning("Ignoring out-of-order state update " + convertedState);
           return;
         }
@@ -1376,7 +1378,9 @@ public class SequenceBase {
         }
         deviceState = convertedState;
         validSerialNo();
-        debug("Updated state has last_config " + getTimestamp(deviceState.system.last_config));
+        debug(format("Updated state has last_config %s (expecting %s)",
+            getTimestamp(deviceState.system.last_config),
+            getTimestamp(deviceConfig.timestamp)));
       } else {
         error("Unknown update type " + converted.getClass().getSimpleName());
       }

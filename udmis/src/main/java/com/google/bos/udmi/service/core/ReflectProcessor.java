@@ -7,12 +7,14 @@ import static com.google.udmi.util.Common.ERROR_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.GeneralUtils.copyFields;
 import static com.google.udmi.util.GeneralUtils.decodeBase64;
+import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.fromStringStrict;
+import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.loadFileStrictRequired;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
@@ -119,7 +121,9 @@ public class ReflectProcessor extends ProcessorBase {
       payload.put(subFolder.value(), oldPayload);
       subFolder = UPDATE;
       attributes.subFolder = UPDATE;
+      payload.put("version", UDMI_VERSION);
     }
+    payload.put("timestamp", getTimestamp());
     String configUpdate = iotAccess.modifyConfig(attributes.deviceRegistryId, attributes.deviceId,
         subFolder, stringify(payload));
     if (subFolder != UPDATE || resetConfig) {
@@ -156,13 +160,22 @@ public class ReflectProcessor extends ProcessorBase {
     try {
       String state = Optional.ofNullable(
           iotAccess.fetchState(attributes.deviceRegistryId, attributes.deviceId)).orElse("{}");
+      debug(format("Processing device %s state query", attributes.deviceId));
       publish(fromStringStrict(StateUpdate.class, state));
+      reflectStateUpdate(attributes, state);
       CloudModel cloudModel = new CloudModel();
       cloudModel.operation = Operation.FETCH;
       return cloudModel;
     } catch (Exception e) {
       throw new RuntimeException("While querying device state " + attributes.deviceId, e);
     }
+  }
+
+  private void reflectStateUpdate(Envelope attributes, String state) {
+    Envelope envelope = deepCopy(attributes);
+    envelope.subType = SubType.STATE;
+    envelope.subFolder = UPDATE;
+    reflectMessage(envelope, state);
   }
 
   private CloudModel reflectModel(Envelope attributes, CloudModel request) {

@@ -10,7 +10,6 @@ import static java.lang.String.format;
 import com.google.bos.udmi.service.messaging.MessageContinuation;
 import java.util.Date;
 import java.util.Map;
-import java.util.Optional;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
@@ -40,7 +39,10 @@ public class TargetProcessor extends ProcessorBase {
       return;
     }
 
-    SubType subType = Optional.ofNullable(envelope.subType).orElse(SubType.EVENT);
+    if (envelope.subType == null) {
+      envelope.subType = SubType.EVENT;
+    }
+    SubType subType = envelope.subType;
     if (subType != SubType.EVENT) {
       debug("Dropping non-event type " + subType);
       return;
