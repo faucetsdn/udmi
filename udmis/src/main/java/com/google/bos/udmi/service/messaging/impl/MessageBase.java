@@ -141,15 +141,24 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
             return;
           }
           envelope = bundle.envelope;
-          debug(format("Processing %s/%s %s %s --> %s", bundle.envelope.subType, bundle.envelope.subFolder,
-              bundle.envelope.transactionId, sourceQueue, dispatcher));
+          debug(format("Processing %s/%s %s %s -> %s", bundle.envelope.subType, bundle.envelope.subFolder,
+              bundle.envelope.transactionId, queueIdentifier(), dispatcher));
           dispatcher.accept(bundle);
         } catch (Exception e) {
-          dispatcher.accept(makeExceptionBundle(envelope, e));
+          handleDispatchException(envelope, e);
         }
       }
     } catch (Exception loopException) {
-      error("Message loop exception: " + getExceptionMessage(loopException));
+      error("Message loop exception: " + friendlyStackTrace(loopException));
+    }
+  }
+
+  private void handleDispatchException(Envelope envelope, Exception e) {
+    try {
+      error(format("Dispatch exception: " + friendlyStackTrace(e)));
+      dispatcher.accept(makeExceptionBundle(envelope, e));
+    } catch (Exception e2) {
+      error(format("Exception dispatch: " + friendlyStackTrace(e2)));
     }
   }
 
@@ -249,7 +258,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     try {
       Bundle bundle = new Bundle(envelope, messageObject);
       debug(format("Received %s/%s %s -> %s", bundle.envelope.subType, bundle.envelope.subFolder,
-          bundle.envelope.transactionId, sourceQueue));
+          bundle.envelope.transactionId, queueIdentifier()));
       receiveBundle(bundle);
     } catch (Exception e) {
       receiveException(attributesMap, messageString, e, null);
@@ -258,7 +267,11 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
 
   @Override
   public String toString() {
-    return format("MessagePipe %08x", Objects.hash(sourceQueue));
+    return format("MessagePipe %s", queueIdentifier());
+  }
+
+  private String queueIdentifier() {
+    return format("%08x", Objects.hash(sourceQueue));
   }
 
   /**

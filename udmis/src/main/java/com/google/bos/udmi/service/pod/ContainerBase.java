@@ -24,9 +24,13 @@ public abstract class ContainerBase {
 
   private void output(Level level, String message) {
     PrintStream printStream = level.value() >= Level.WARNING.value() ? System.err : System.out;
-    printStream.printf("%s %s: %s %s%n", JsonUtil.getTimestamp(), level.name().charAt(0),
+    printStream.printf("%s %s %s: %s %s%n", getThreadId(), JsonUtil.getTimestamp(), level.name().charAt(0),
         getSimpleName(), message);
     printStream.flush();
+  }
+
+  private String getThreadId() {
+    return format("%08x", Thread.currentThread().hashCode());
   }
 
   public void debug(String format, Object... args) {
@@ -35,6 +39,10 @@ public abstract class ContainerBase {
 
   public void debug(String message) {
     output(Level.DEBUG, message);
+  }
+
+  public void warn(String message) {
+    output(Level.WARNING, message);
   }
 
   public void error(String message) {

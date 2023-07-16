@@ -45,7 +45,6 @@ import com.clearblade.cloud.iot.v1.unbinddevicefromgateway.UnbindDeviceFromGatew
 import com.clearblade.cloud.iot.v1.updatedevice.UpdateDeviceRequest;
 import com.clearblade.cloud.iot.v1.utils.ByteString;
 import com.clearblade.cloud.iot.v1.utils.LogLevel;
-import com.google.bos.udmi.service.core.ProcessorBase;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.collect.BiMap;
@@ -78,9 +77,9 @@ import udmi.schema.IotAccess;
  */
 public class ClearBladeIotAccessProvider extends IotAccessBase {
 
-  private static final String UDMIS_REGISTRY = "UDMS-REFLECT";
   static final Set<String> CLOUD_REGIONS =
       ImmutableSet.of("us-central1", "europe-west1", "asia-east1");
+  private static final String UDMIS_REGISTRY = "UDMS-REFLECT";
   private static final String EMPTY_VERSION = "0";
   private static final String EMPTY_JSON = "{}";
   private static final BiMap<Key_format, PublicKeyFormat> AUTH_TYPE_MAP = ImmutableBiMap.of(
@@ -366,7 +365,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
         .forEach(id -> unbindDevice(registryId, gatewayId, id)));
   }
 
-  private void updateConfig(String registryId, String deviceId, String config) {
+  private String updateConfig(String registryId, String deviceId, String config) {
     try {
       DeviceManagerClient deviceManagerClient = getDeviceManagerClient();
       ByteString binaryData = new ByteString(encodeBase64(config));
@@ -378,6 +377,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
               .setBinaryData(binaryData).setVersionToUpdate(updateVersion).build();
       DeviceConfig response = deviceManagerClient.modifyCloudToDeviceConfig(request);
       System.err.println("Config modified version " + response.getVersion());
+      return config;
     } catch (Exception e) {
       throw new RuntimeException("While modifying device config", e);
     }
@@ -407,17 +407,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     super.activate();
     debug("Initializing ClearBlade access provider for project " + projectId);
     registryCloudRegions = fetchRegistryCloudRegions();
-  }
-
-  @Override
-  public String fetchRegistryMetadata(String registryId, String metadataKey) {
-    try {
-      CloudModel cloudModel = fetchDevice(UDMIS_REGISTRY, registryId);
-      return cloudModel.metadata.get(metadataKey);
-    } catch (Exception e) {
-      debug(format("No device entry for %s/%s", UDMIS_REGISTRY, registryId));
-      return null;
-    }
   }
 
   @Override
@@ -464,6 +453,17 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   }
 
   @Override
+  public String fetchRegistryMetadata(String registryId, String metadataKey) {
+    try {
+      CloudModel cloudModel = fetchDevice(UDMIS_REGISTRY, registryId);
+      return cloudModel.metadata.get(metadataKey);
+    } catch (Exception e) {
+      debug(format("No device entry for %s/%s", UDMIS_REGISTRY, registryId));
+      return null;
+    }
+  }
+
+  @Override
   public String fetchState(String deviceRegistryId, String deviceId) {
     throw new RuntimeException("Not yet implemented " + this.getClass());
   }
@@ -499,16 +499,16 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public void modifyConfig(String registryId, String deviceId, SubFolder subFolder,
+  public String modifyConfig(String registryId, String deviceId, SubFolder subFolder,
       String contents) {
     if (subFolder == SubFolder.UPDATE) {
-      updateConfig(registryId, deviceId, contents);
+      return updateConfig(registryId, deviceId, contents);
     } else {
       // TODO: Need to implement checking-and-retry of config version for concurrent operations.
       String configString = fetchConfig(registryId, deviceId).getValue();
       Map<String, Object> configMap = toMap(configString);
       configMap.put(subFolder.toString(), contents);
-      updateConfig(registryId, deviceId, stringify(configMap));
+      return updateConfig(registryId, deviceId, stringify(configMap));
     }
   }
 
@@ -528,8 +528,8 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       }
       debug("Sent command to " + deviceName);
     } catch (Exception e) {
-      throw new RuntimeException(
-          format("While sending %s command to %s/%s", subFolder, registryId, deviceId), e);
+      throw new RuntimeException(format("While sending command to ClearBlade %s/%s/%s",
+          registryId, deviceId, subFolder), e);
     }
   }
 

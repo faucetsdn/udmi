@@ -26,6 +26,7 @@ import com.google.bos.udmi.service.messaging.impl.MessageBase.BundleException;
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.common.collect.ImmutableList;
+import com.google.udmi.util.Common;
 import com.google.udmi.util.GeneralUtils;
 import java.util.Collection;
 import java.util.Map;
@@ -88,9 +89,9 @@ public abstract class ProcessorBase extends ContainerBase {
       return;
     }
     Envelope envelope = getContinuation(e).getEnvelope();
-    String message = e.getMessage();
-    error(format("Received message exception: %s", message));
+    String message = Common.getExceptionMessage(e);
     String payload = friendlyStackTrace(e);
+    error(format("Received message exception: %s", payload));
     BundleException bundleException = new BundleException(message, toStringMap(envelope), payload);
     reflectError(SubType.EVENT, bundleException);
   }
@@ -106,6 +107,13 @@ public abstract class ProcessorBase extends ContainerBase {
     if (errorMap.containsKey(MessageBase.INVALID_ENVELOPE_KEY)) {
       reflectInvalidEnvelope(bundleException);
       return;
+    }
+
+    // If the error comes from the reflect registry, then don't use the registry as the device,
+    // so revert the default behavior (otherwise the message goes nowhere!).
+    if (errorMap.get(REGISTRY_ID_PROPERTY_KEY).equals(REFLECT_REGISTRY)) {
+      errorMap.put(REGISTRY_ID_PROPERTY_KEY, errorMap.get(DEVICE_ID_PROPERTY_KEY));
+      errorMap.put(DEVICE_ID_PROPERTY_KEY, null);
     }
 
     errorMap.put(SUBTYPE_PROPERTY_KEY, subType.value());

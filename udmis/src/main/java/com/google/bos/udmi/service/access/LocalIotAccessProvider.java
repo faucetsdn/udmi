@@ -3,7 +3,6 @@ package com.google.bos.udmi.service.access;
 import static com.google.udmi.util.GeneralUtils.using;
 import static java.lang.String.format;
 
-import com.google.udmi.util.GeneralUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
@@ -61,7 +60,7 @@ public class LocalIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public void modifyConfig(String registryId, String deviceId, SubFolder folder, String contents) {
+  public String modifyConfig(String registryId, String deviceId, SubFolder folder, String contents) {
     throw new RuntimeException("Not yet implemented");
   }
 

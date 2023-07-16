@@ -35,7 +35,6 @@ import com.google.api.services.cloudiot.v1.model.SendCommandToDeviceRequest;
 import com.google.api.services.cloudiot.v1.model.UnbindDeviceFromGatewayRequest;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
-import com.google.bos.udmi.service.core.ProcessorBase;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
@@ -279,13 +278,14 @@ public class GcpIotAccessProvider extends IotAccessBase {
         .forEach(id -> unbindDevice(registryId, deviceId, id)));
   }
 
-  private void updateConfig(String registryId, String deviceId, String config) {
+  private String updateConfig(String registryId, String deviceId, String config) {
     try {
       String useConfig = ofNullable(config).orElse("");
       registries.devices().modifyCloudToDeviceConfig(
           getDevicePath(registryId, deviceId),
           new ModifyCloudToDeviceConfigRequest().setBinaryData(
               Base64.getEncoder().encodeToString(useConfig.getBytes()))).execute();
+      return useConfig;
     } catch (Exception e) {
       throw new RuntimeException("While modifying device config", e);
     }
@@ -395,23 +395,28 @@ public class GcpIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public void modifyConfig(String registryId, String deviceId, SubFolder subFolder,
+  public String modifyConfig(String registryId, String deviceId, SubFolder subFolder,
       String contents) {
     // TODO: Need to implement checking-and-retry of config version for concurrent operations.
     if (subFolder == SubFolder.UPDATE) {
-      updateConfig(registryId, deviceId, contents);
+      return updateConfig(registryId, deviceId, contents);
     } else {
       String configString =
           ofNullable(fetchConfig(registryId, deviceId).getValue()).orElse(EMPTY_JSON);
       Map<String, Object> configMap = toMap(configString);
       configMap.put(subFolder.toString(), contents);
-      updateConfig(registryId, deviceId, stringify(configMap));
+      return updateConfig(registryId, deviceId, stringify(configMap));
     }
   }
 
   @Override
   public void sendCommand(String registryId, String deviceId, SubFolder folder, String message) {
     try {
+      Map<String, Object> messageMap = toMap(message);
+      Object payloadSubType = messageMap.get("subType");
+      Object payloadSubFolder = messageMap.get("subFolder");
+      debug("Sending command containing %s/%s: %s", payloadSubType,
+          payloadSubFolder, decodeBase64((String) messageMap.get("payload")));
       requireNonNull(registryId, "registry not defined");
       requireNonNull(deviceId, "device not defined");
       String subFolder = ifNotNullGet(folder, SubFolder::value);
@@ -422,8 +427,8 @@ public class GcpIotAccessProvider extends IotAccessBase {
       registries.devices().sendCommandToDevice(getDevicePath(registryId, deviceId), request)
           .execute();
     } catch (Exception e) {
-      throw new RuntimeException(
-          format("While sending %s command to %s/%s", folder, registryId, deviceId), e);
+      throw new RuntimeException(format("While sending command to GCP %s/%s/%s",
+          registryId, deviceId, folder), e);
     }
   }
 

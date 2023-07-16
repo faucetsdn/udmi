@@ -4,9 +4,7 @@ import static com.google.udmi.util.GeneralUtils.sortedMapCollector;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static java.lang.String.format;
 
-import com.google.bos.udmi.service.core.ProcessorBase;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -90,8 +88,8 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public void modifyConfig(String registryId, String deviceId, SubFolder folder, String contents) {
-    getProviderFor(registryId).modifyConfig(registryId, deviceId, folder, contents);
+  public String modifyConfig(String registryId, String deviceId, SubFolder folder, String contents) {
+    return getProviderFor(registryId).modifyConfig(registryId, deviceId, folder, contents);
   }
 
   @Override

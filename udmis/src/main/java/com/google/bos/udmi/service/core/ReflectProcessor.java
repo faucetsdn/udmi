@@ -10,11 +10,13 @@ import static com.google.udmi.util.GeneralUtils.decodeBase64;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
+import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.fromStringStrict;
 import static com.google.udmi.util.JsonUtil.loadFileStrictRequired;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
+import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static udmi.schema.Envelope.SubFolder.UPDATE;
 
@@ -47,6 +49,8 @@ public class ReflectProcessor extends ProcessorBase {
   static final SetupUdmiConfig DEPLOYED_CONFIG =
       loadFileStrictRequired(SetupUdmiConfig.class, new File(DEPLOY_FILE));
   static final String UDMI_VERSION = requireNonNull(DEPLOYED_CONFIG.udmi_functions);
+  public static final String RESET_CONFIG_VALUE = "reset_config";
+  public static final String EXTRA_FIELD_KEY = "extra_field";
 
   private IotAccessBase iotAccess;
 
@@ -93,7 +97,6 @@ public class ReflectProcessor extends ProcessorBase {
     try {
       switch (attributes.subType) {
         case QUERY:
-          attributes.subType = SubType.REPLY;
           return reflectQuery(attributes, payload);
         case MODEL:
           return reflectModel(attributes, convertToStrict(CloudModel.class, payload));
@@ -102,6 +105,25 @@ public class ReflectProcessor extends ProcessorBase {
       }
     } catch (Exception e) {
       throw new RuntimeException("While processing reflect message type " + attributes.subType, e);
+    }
+  }
+
+  private void processConfigChange(Envelope attributes, Map<String, Object> payload) {
+    SubFolder subFolder = attributes.subFolder;
+    debug(format("Modifying device config %s/%s/%s", attributes.deviceRegistryId,
+        attributes.deviceId, subFolder));
+    boolean resetConfig = RESET_CONFIG_VALUE.equals(payload.get(EXTRA_FIELD_KEY));
+    if (resetConfig) {
+      Map<String, Object> oldPayload = payload;
+      payload = new HashMap<>();
+      payload.put(subFolder.value(), oldPayload);
+      subFolder = UPDATE;
+      attributes.subFolder = UPDATE;
+    }
+    String configUpdate = iotAccess.modifyConfig(attributes.deviceRegistryId, attributes.deviceId,
+        subFolder, stringify(payload));
+    if (subFolder != UPDATE || resetConfig) {
+      reflectMessage(attributes, configUpdate);
     }
   }
 
@@ -151,16 +173,16 @@ public class ReflectProcessor extends ProcessorBase {
 
   private CloudModel reflectPropagate(Envelope attributes, Map<String, Object> payload) {
     if (requireNonNull(attributes.subType) == SubType.CONFIG) {
-      iotAccess.modifyConfig(attributes.deviceRegistryId, attributes.deviceId, SubFolder.UPDATE,
-          stringify(payload));
+      processConfigChange(attributes, payload);
     }
     Class<?> messageClass = getMessageClassFor(attributes);
-    publish(convertToStrict(messageClass, payload));
+    publish(convertTo(messageClass, payload));
     return new CloudModel();
   }
 
   private CloudModel reflectQuery(Envelope attributes, Map<String, Object> payload) {
     checkState(payload.size() == 0, "unexpected non-empty message payload");
+    attributes.subType = SubType.REPLY;
     switch (attributes.subFolder) {
       case UPDATE:
         return queryDeviceState(attributes);

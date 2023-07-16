@@ -47,7 +47,7 @@ public abstract class IotAccessBase extends ContainerBase {
 
   public abstract CloudModel fetchDevice(String deviceRegistryId, String deviceId);
 
-  public abstract void modifyConfig(String registryId, String deviceId, SubFolder folder,
+  public abstract String modifyConfig(String registryId, String deviceId, SubFolder folder,
       String contents);
 
   /**

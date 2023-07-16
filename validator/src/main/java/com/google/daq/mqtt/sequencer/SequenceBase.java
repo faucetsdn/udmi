@@ -10,6 +10,8 @@ import static com.google.daq.mqtt.validator.Validator.STATE_PREFIX;
 import static com.google.udmi.util.CleanDateFormat.cleanDate;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
+import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
+import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.GeneralUtils.changedLines;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
@@ -156,7 +158,7 @@ public class SequenceBase {
       PointsetEvent.class, SubFolder.POINTSET,
       DiscoveryEvent.class, SubFolder.DISCOVERY
   );
-  private static final Map<String, Class<?>> expectedUpdates = ImmutableMap.of(
+  private static final Map<String, Class<?>> EXPECTED_UPDATES = ImmutableMap.of(
       SubType.CONFIG.value(), Config.class,
       SubType.STATE.value(), State.class
   );
@@ -1257,9 +1259,11 @@ public class SequenceBase {
     String subTypeRaw = attributes.get("subType");
     String transactionId = attributes.get("transactionId");
 
-    if (CONFIG_SUBTYPE.equals(subTypeRaw)) {
-      String attributeMark = format("%s/%s/%s", deviceId, subTypeRaw, subFolderRaw);
-      trace("received command " + attributeMark);
+    String commandSignature = format("%s/%s/%s", deviceId, subTypeRaw, subFolderRaw);
+    trace("received command " + commandSignature);
+
+    if (SubType.REPLY.value().equals(subTypeRaw)) {
+      return;
     }
 
     if (SubFolder.ERROR.value().equals(subFolderRaw)) {
@@ -1336,7 +1340,11 @@ public class SequenceBase {
         return;
       }
       configExceptionTimestamp = null;
-      Object converted = JsonUtil.convertTo(expectedUpdates.get(subTypeRaw), message);
+      if (!EXPECTED_UPDATES.containsKey(subTypeRaw)) {
+        debug("Ignoring unexpected update type " + subTypeRaw);
+        return;
+      }
+      Object converted = JsonUtil.convertTo(EXPECTED_UPDATES.get(subTypeRaw), message);
       receivedUpdates.put(subTypeRaw, converted);
       int updateCount = UPDATE_COUNTS.computeIfAbsent(subTypeRaw, key -> new AtomicInteger())
           .incrementAndGet();
