@@ -61,7 +61,8 @@ public class LocalIotAccessProvider extends IotAccessBase {
 
   @Override
   protected String updateConfig(String registryId, String deviceId, String config, Long version) {
-    throw new RuntimeException("Not yet implemented");
+    sentCommands.add(format("%s/%s/%s:%s", registryId, deviceId, "config", "update"));
+    return config;
   }
 
   @Override

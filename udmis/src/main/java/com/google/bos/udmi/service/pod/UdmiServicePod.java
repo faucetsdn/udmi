@@ -126,6 +126,12 @@ public class UdmiServicePod {
   }
 
   public static void forAllComponents(Consumer<ContainerBase> action) {
-    COMPONENT_MAP.values().forEach(action);
+    COMPONENT_MAP.forEach((key, value) -> {
+      try {
+        action.accept(value);
+      } catch (Exception e) {
+        throw new RuntimeException("While processing component " + key, e);
+      }
+    });
   }
 }
