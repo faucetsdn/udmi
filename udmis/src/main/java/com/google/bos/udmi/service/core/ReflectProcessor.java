@@ -177,7 +177,7 @@ public class ReflectProcessor extends ProcessorBase {
     }
   }
 
-  private boolean checkConfigAckTime(Envelope attributes, String state) {
+  private Boolean checkConfigAckTime(Envelope attributes, String state) {
     // const queries = [
     // iotClient.getDevice(request),
     //     iotClient.listDeviceConfigVersions(request)

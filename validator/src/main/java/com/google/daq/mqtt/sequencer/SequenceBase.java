@@ -16,6 +16,7 @@ import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.GeneralUtils.changedLines;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.loadFileRequired;
@@ -1419,9 +1420,9 @@ public class SequenceBase {
    * has acked (in an MQTT sense) a previously sent config.
    */
   private void updateConfigAcked(Map<String, Object> converted) {
-    if ("true".equals(converted.remove("configAcked"))) {
-      configAcked = true;
-    }
+    Object ackedResult = converted.remove("configAcked");
+    boolean wasAcked = "true".equals(ackedResult) || Boolean.TRUE.equals(ackedResult);
+    ifNotTrueThen(wasAcked, () -> configAcked = true);
   }
 
   private String getExtraField(Map<String, Object> message) {
