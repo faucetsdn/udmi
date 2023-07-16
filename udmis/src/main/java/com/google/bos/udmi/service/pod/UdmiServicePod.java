@@ -125,6 +125,9 @@ public class UdmiServicePod {
         });
   }
 
+  /**
+   * Loop through all the registered components and apply the given action.
+   */
   public static void forAllComponents(Consumer<ContainerBase> action) {
     COMPONENT_MAP.forEach((key, value) -> {
       try {
