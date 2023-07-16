@@ -41,7 +41,7 @@ public abstract class IotAccessBase extends ContainerBase {
 
   abstract String fetchRegistryMetadata(String registryId, String metadataKey);
 
-  public abstract Entry<String, String> fetchConfig(String registryId, String deviceId);
+  public abstract Entry<Long, String> fetchConfig(String registryId, String deviceId);
 
   public abstract CloudModel listDevices(String deviceRegistryId);
 

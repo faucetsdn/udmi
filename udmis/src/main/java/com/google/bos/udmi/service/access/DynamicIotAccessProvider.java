@@ -58,7 +58,7 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public Entry<String, String> fetchConfig(String registryId, String deviceId) {
+  public Entry<Long, String> fetchConfig(String registryId, String deviceId) {
     return getProviderFor(registryId).fetchConfig(registryId, deviceId);
   }
 

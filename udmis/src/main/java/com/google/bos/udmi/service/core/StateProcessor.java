@@ -3,6 +3,7 @@ package com.google.bos.udmi.service.core;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
+import static com.google.udmi.util.JsonUtil.fromString;
 import static com.google.udmi.util.JsonUtil.fromStringStrict;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.stringify;
@@ -96,8 +97,8 @@ public class StateProcessor extends ProcessorBase {
     try {
       IotAccessBase iotAccess = UdmiServicePod.getComponent(IOT_ACCESS_COMPONENT);
       Date newLastStart = message.system.operation.last_start;
-      Entry<String, String> configEntry = iotAccess.fetchConfig(registryId, deviceId);
-      Config configMessage = fromStringStrict(Config.class, configEntry.getValue());
+      Entry<Long, String> configEntry = iotAccess.fetchConfig(registryId, deviceId);
+      Config configMessage = fromString(Config.class, configEntry.getValue());
       Date oldLastStart = configMessage.system.operation.last_start;
       boolean shouldUpdate = oldLastStart == null || oldLastStart.before(newLastStart);
       debug("Last start was %s, now %s, updating %s", getTimestamp(oldLastStart),

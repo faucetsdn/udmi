@@ -45,7 +45,7 @@ public class LocalIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public Entry<String, String> fetchConfig(String registryId, String deviceId) {
+  public Entry<Long, String> fetchConfig(String registryId, String deviceId) {
     throw new RuntimeException("Not yet implemented");
   }
 

@@ -80,7 +80,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   static final Set<String> CLOUD_REGIONS =
       ImmutableSet.of("us-central1", "europe-west1", "asia-east1");
   private static final String UDMIS_REGISTRY = "UDMS-REFLECT";
-  private static final String EMPTY_VERSION = "0";
   private static final String EMPTY_JSON = "{}";
   private static final BiMap<Key_format, PublicKeyFormat> AUTH_TYPE_MAP = ImmutableBiMap.of(
       Key_format.RS_256, PublicKeyFormat.RSA_PEM,
@@ -410,7 +409,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public Entry<String, String> fetchConfig(String registryId, String deviceId) {
+  public Entry<Long, String> fetchConfig(String registryId, String deviceId) {
     try {
       DeviceManagerClient deviceManagerClient = new DeviceManagerClient();
       String location = getRegistryLocation(registryId);
@@ -421,12 +420,12 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
           deviceManagerClient.listDeviceConfigVersions(request);
       List<DeviceConfig> deviceConfigs = listDeviceConfigVersionsResponse.getDeviceConfigList();
       if (deviceConfigs.isEmpty()) {
-        return new SimpleEntry<>(EMPTY_VERSION, EMPTY_JSON);
+        return new SimpleEntry<>(null, EMPTY_JSON);
       }
       DeviceConfig deviceConfig = deviceConfigs.get(0);
       String config = ifNotNullGet((String) deviceConfig.getBinaryData(),
           binaryData -> new String(Base64.getDecoder().decode(binaryData)));
-      return new SimpleEntry<>(deviceConfig.getVersion(), config);
+      return new SimpleEntry<>(Long.parseLong(deviceConfig.getVersion()), config);
     } catch (Exception e) {
       throw new RuntimeException("While fetching device configurations for " + deviceId, e);
     }
