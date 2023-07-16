@@ -141,8 +141,8 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
             return;
           }
           envelope = bundle.envelope;
-          debug(format("Processing %s/%s %s %s -> %s", bundle.envelope.subType, bundle.envelope.subFolder,
-              bundle.envelope.transactionId, queueIdentifier(), dispatcher));
+          debug(format("Processing %s/%s %s %s -> %s", envelope.subType, envelope.subFolder,
+              envelope.transactionId, queueIdentifier(), dispatcher));
           dispatcher.accept(bundle);
         } catch (Exception e) {
           handleDispatchException(envelope, e);

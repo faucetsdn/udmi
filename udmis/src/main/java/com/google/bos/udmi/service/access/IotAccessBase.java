@@ -57,18 +57,21 @@ public abstract class IotAccessBase extends ContainerBase {
   public abstract CloudModel modelDevice(String deviceRegistryId, String deviceId,
       CloudModel cloudModel);
 
+  /**
+   * Modify a device configuration. Return the full/complete update that was actually written.
+   */
   public String modifyConfig(String registryId, String deviceId, SubFolder subFolder,
-      String contents) {
+      String config) {
     int retryCount = CONFIG_UPDATE_MAX_RETRIES;
     while (retryCount > 0) {
       try {
         if (subFolder == SubFolder.UPDATE) {
-          return updateConfig(registryId, deviceId, contents, null);
+          return updateConfig(registryId, deviceId, config, null);
         } else {
           Entry<Long, String> configPair = fetchConfig(registryId, deviceId);
           String configString = ofNullable(configPair.getValue()).orElse(EMPTY_JSON);
           Map<String, Object> configMap = toMap(configString);
-          configMap.put(subFolder.toString(), toMap(contents));
+          configMap.put(subFolder.toString(), toMap(config));
           return updateConfig(registryId, deviceId, stringify(configMap), configPair.getKey());
         }
       } catch (Exception e) {

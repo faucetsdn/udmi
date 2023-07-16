@@ -93,8 +93,8 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public String modifyConfig(String registryId, String deviceId, SubFolder folder, String contents) {
-    return getProviderFor(registryId).modifyConfig(registryId, deviceId, folder, contents);
+  public String modifyConfig(String registryId, String deviceId, SubFolder folder, String config) {
+    return getProviderFor(registryId).modifyConfig(registryId, deviceId, folder, config);
   }
 
   @Override
