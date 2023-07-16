@@ -52,8 +52,10 @@ public class ReflectProcessor extends ProcessorBase {
   static final SetupUdmiConfig DEPLOYED_CONFIG =
       loadFileStrictRequired(SetupUdmiConfig.class, new File(DEPLOY_FILE));
   static final String UDMI_VERSION = requireNonNull(DEPLOYED_CONFIG.udmi_functions);
-  public static final String RESET_CONFIG_VALUE = "reset_config";
-  public static final String EXTRA_FIELD_KEY = "extra_field";
+  private static final String RESET_CONFIG_VALUE = "reset_config";
+  private static final String BREAK_CONFIG_VALUE = "break_config";
+  private static final String EXTRA_FIELD_KEY = "extra_field";
+  private static final String BROKEN_CONFIG_JSON = "{ broken by extra_field indication!";
 
   private IotAccessBase iotAccess;
 
@@ -116,6 +118,7 @@ public class ReflectProcessor extends ProcessorBase {
     debug(format("Modifying device config %s/%s/%s %s", attributes.deviceRegistryId,
         attributes.deviceId, subFolder, attributes.transactionId));
     boolean resetConfig = RESET_CONFIG_VALUE.equals(payload.get(EXTRA_FIELD_KEY));
+    boolean breakConfig = BREAK_CONFIG_VALUE.equals(payload.get(EXTRA_FIELD_KEY));
     if (resetConfig) {
       Map<String, Object> oldPayload = payload;
       attributes = deepCopy(attributes);
@@ -126,8 +129,9 @@ public class ReflectProcessor extends ProcessorBase {
       payload.put("version", UDMI_VERSION);
     }
     payload.put("timestamp", getTimestamp());
+    String stringPayload = breakConfig ? BROKEN_CONFIG_JSON : stringify(payload);
     String configUpdate = iotAccess.modifyConfig(attributes.deviceRegistryId, attributes.deviceId,
-        subFolder, stringify(payload));
+        subFolder, stringPayload);
 
     Envelope envelope = deepCopy(attributes);
     debug("Acknowledging config/%s %s", subFolder, envelope.transactionId);

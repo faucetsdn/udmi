@@ -47,7 +47,7 @@ if [[ $funccount != 0 ]]; then
 fi
 funcver=`git describe $funchash`$funcdirty
 
-RUNARGS="--rm -ti -v $PWD/etc:/udmi -v $HOME/.config:/root/.config --tmpfs /tmp"
+RUNARGS="--rm -ti -v $PWD/var:/udmi -v $HOME/.config:/root/.config --tmpfs /tmp"
 
 if [[ $cmd == build ]]; then
     rm -rf var
