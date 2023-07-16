@@ -113,8 +113,8 @@ public class ReflectProcessor extends ProcessorBase {
 
   private void processConfigChange(Envelope attributes, Map<String, Object> payload) {
     SubFolder subFolder = attributes.subFolder;
-    debug(format("Modifying device config %s/%s/%s", attributes.deviceRegistryId,
-        attributes.deviceId, subFolder));
+    debug(format("Modifying device config %s/%s/%s %s", attributes.deviceRegistryId,
+        attributes.deviceId, subFolder, attributes.transactionId));
     boolean resetConfig = RESET_CONFIG_VALUE.equals(payload.get(EXTRA_FIELD_KEY));
     if (resetConfig) {
       Map<String, Object> oldPayload = payload;
@@ -128,9 +128,11 @@ public class ReflectProcessor extends ProcessorBase {
     payload.put("timestamp", getTimestamp());
     String configUpdate = iotAccess.modifyConfig(attributes.deviceRegistryId, attributes.deviceId,
         subFolder, stringify(payload));
-    if (subFolder != UPDATE || resetConfig) {
-      reflectMessage(attributes, configUpdate);
-    }
+
+    Envelope envelope = deepCopy(attributes);
+    debug("Acknowledging config/%s %s", subFolder, envelope.transactionId);
+    envelope.subFolder = UPDATE;
+    reflectMessage(envelope, configUpdate);
   }
 
   private void processException(Envelope reflection, Exception e) {

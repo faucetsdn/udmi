@@ -675,6 +675,7 @@ public class SequenceBase {
         setExtraField("reset_config");
         deviceConfig.system.testing.sequence_name = extraField;
         sentConfig.clear();
+        debug("configTransactions clear");
         configTransactions.clear();
         SENT_CONFIG_DIFFERNATOR.resetState(deviceConfig);
         updateConfig("full reset");
@@ -981,6 +982,7 @@ public class SequenceBase {
         debug(format("update %s_%s, id %s", CONFIG_SUBTYPE, subBlock, transactionId));
         recordRawMessage(data, LOCAL_PREFIX + subBlock.value());
         sentConfig.put(subBlock, messageData);
+        debug(format("configTransactions add " + transactionId));
         configTransactions.add(transactionId);
       } else {
         trace("unchanged config_" + subBlock + ": " + messageData);
@@ -1313,8 +1315,8 @@ public class SequenceBase {
     SubType subType = SubType.fromValue(subTypeRaw);
     switch (subType) {
       case CONFIG:
-        // These are echos of sent config messages, so do nothing.
-        debug("Received confirmation of individual config id " + transactionId);
+        // These are echos of sent partial config messages, so do nothing.
+        debug("Ignoring echo configTransaction " + transactionId);
         break;
       case STATE:
         // State updates are handled as a monolithic block with a state reflector update.
@@ -1333,6 +1335,7 @@ public class SequenceBase {
     try {
       // Do this first to handle all cases of a Config payload, including exceptions.
       if (CONFIG_SUBTYPE.equals(subTypeRaw) && txnId != null) {
+        debug("Removing configTransaction " + txnId);
         configTransactions.remove(txnId);
       }
       if (message.containsKey(EXCEPTION_KEY)) {
@@ -1445,7 +1448,7 @@ public class SequenceBase {
     Date configLast = catchToNull(() -> deviceConfig.system.operation.last_start);
     boolean lastStartSynchronized = stateLast == null || stateLast.equals(configLast);
     if (debugOut) {
-      debug(format("lastStartSynchronized %s, pending transactions: %s",
+      debug(format("lastStartSynchronized %s, pending configTransactions: %s",
           lastStartSynchronized, configTransactionsListString()));
     }
     return !(lastStartSynchronized && configTransactions.isEmpty());
