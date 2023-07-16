@@ -11,6 +11,7 @@ import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
@@ -53,9 +54,10 @@ public class ReflectProcessor extends ProcessorBase {
       loadFileStrictRequired(SetupUdmiConfig.class, new File(DEPLOY_FILE));
   static final String UDMI_VERSION = requireNonNull(DEPLOYED_CONFIG.udmi_functions);
   private static final String RESET_CONFIG_VALUE = "reset_config";
-  private static final String BREAK_CONFIG_VALUE = "break_config";
+  private static final String BREAK_CONFIG_VALUE = "break_json";
   private static final String EXTRA_FIELD_KEY = "extra_field";
-  private static final String BROKEN_CONFIG_JSON = "{ broken by extra_field indication!";
+  private static final String BROKEN_CONFIG_JSON =
+      format("{ broken by %s == %s", EXTRA_FIELD_KEY, BREAK_CONFIG_VALUE);
 
   private IotAccessBase iotAccess;
 
@@ -78,6 +80,25 @@ public class ReflectProcessor extends ProcessorBase {
     } catch (Exception e) {
       processException(reflection, e);
     }
+  }
+
+  private Boolean checkConfigAckTime(Envelope attributes, String state) {
+    // const queries = [
+    // iotClient.getDevice(request),
+    //     iotClient.listDeviceConfigVersions(request)
+    //   ];
+    //
+    // return Promise.all(queries).then(([device, config]) =>{
+    // const stateBinaryData = device[0].state && device[0].state.binaryData;
+    // const stateString = stateBinaryData && stateBinaryData.toString();
+    // const msgObject = JSON.parse(stateString) || {};
+    // const lastConfig = config[0].deviceConfigs[0];
+    // const cloudUpdateTime = lastConfig.cloudUpdateTime.seconds;
+    // const deviceAckTime = lastConfig.deviceAckTime && lastConfig.deviceAckTime.seconds;
+    //   msgObject.configAcked = String(deviceAckTime >= cloudUpdateTime);
+    //   return process_state_update(attributes, msgObject);
+    // });
+    return true;
   }
 
   private Envelope extractMessageEnvelope(Object message) {
@@ -117,9 +138,11 @@ public class ReflectProcessor extends ProcessorBase {
     SubFolder subFolder = attributes.subFolder;
     debug(format("Modifying device config %s/%s/%s %s", attributes.deviceRegistryId,
         attributes.deviceId, subFolder, attributes.transactionId));
-    boolean resetConfig = RESET_CONFIG_VALUE.equals(payload.get(EXTRA_FIELD_KEY));
-    boolean breakConfig = BREAK_CONFIG_VALUE.equals(payload.get(EXTRA_FIELD_KEY));
+    Object extraField = payload.get(EXTRA_FIELD_KEY);
+    boolean resetConfig = RESET_CONFIG_VALUE.equals(extraField);
+    boolean breakConfig = BREAK_CONFIG_VALUE.equals(extraField);
     if (resetConfig) {
+      debug("Resetting config due to %s setting %s", EXTRA_FIELD_KEY, RESET_CONFIG_VALUE);
       Map<String, Object> oldPayload = payload;
       attributes = deepCopy(attributes);
       payload = new HashMap<>();
@@ -127,6 +150,11 @@ public class ReflectProcessor extends ProcessorBase {
       subFolder = UPDATE;
       attributes.subFolder = UPDATE;
       payload.put("version", UDMI_VERSION);
+    } else if (breakConfig) {
+      debug("Breaking config due to %s setting %s", EXTRA_FIELD_KEY, BREAK_CONFIG_VALUE);
+      subFolder = UPDATE;
+    } else {
+      warn(format("Ignoring unknown %s value %s", EXTRA_FIELD_KEY, extraField));
     }
     payload.put("timestamp", getTimestamp());
     String stringPayload = breakConfig ? BROKEN_CONFIG_JSON : stringify(payload);
@@ -181,32 +209,6 @@ public class ReflectProcessor extends ProcessorBase {
     }
   }
 
-  private Boolean checkConfigAckTime(Envelope attributes, String state) {
-    // const queries = [
-    // iotClient.getDevice(request),
-    //     iotClient.listDeviceConfigVersions(request)
-    //   ];
-    //
-    // return Promise.all(queries).then(([device, config]) =>{
-    // const stateBinaryData = device[0].state && device[0].state.binaryData;
-    // const stateString = stateBinaryData && stateBinaryData.toString();
-    // const msgObject = JSON.parse(stateString) || {};
-    // const lastConfig = config[0].deviceConfigs[0];
-    // const cloudUpdateTime = lastConfig.cloudUpdateTime.seconds;
-    // const deviceAckTime = lastConfig.deviceAckTime && lastConfig.deviceAckTime.seconds;
-    //   msgObject.configAcked = String(deviceAckTime >= cloudUpdateTime);
-    //   return process_state_update(attributes, msgObject);
-    // });
-    return true;
-  }
-
-  private void reflectStateUpdate(Envelope attributes, String state) {
-    Envelope envelope = deepCopy(attributes);
-    envelope.subType = SubType.STATE;
-    envelope.subFolder = UPDATE;
-    reflectMessage(envelope, state);
-  }
-
   private CloudModel reflectModel(Envelope attributes, CloudModel request) {
     return requireNonNull(
         iotAccess.modelDevice(attributes.deviceRegistryId, attributes.deviceId, request),
@@ -240,13 +242,6 @@ public class ReflectProcessor extends ProcessorBase {
         ? queryCloudDevice(attributes) : queryCloudRegistry(attributes);
   }
 
-  private void sendReflectCommand(Envelope reflection, Envelope message, Object payload) {
-    String reflectRegistry = reflection.deviceRegistryId;
-    String deviceRegistry = reflection.deviceId;
-    message.payload = encodeBase64(stringify(payload));
-    iotAccess.sendCommand(reflectRegistry, deviceRegistry, SubFolder.UDMI, stringify(message));
-  }
-
   private void reflectStateHandler(Envelope envelope, UdmiState toolState) {
     final String registryId = envelope.deviceRegistryId;
     final String deviceId = envelope.deviceId;
@@ -265,6 +260,20 @@ public class ReflectProcessor extends ProcessorBase {
     debug("Setting reflector config %s %s %s", registryId, deviceId, contents);
     iotAccess.setProviderAffinity(registryId, deviceId, envelope.source);
     iotAccess.modifyConfig(registryId, deviceId, UPDATE, contents);
+  }
+
+  private void reflectStateUpdate(Envelope attributes, String state) {
+    Envelope envelope = deepCopy(attributes);
+    envelope.subType = SubType.STATE;
+    envelope.subFolder = UPDATE;
+    reflectMessage(envelope, state);
+  }
+
+  private void sendReflectCommand(Envelope reflection, Envelope message, Object payload) {
+    String reflectRegistry = reflection.deviceRegistryId;
+    String deviceRegistry = reflection.deviceId;
+    message.payload = encodeBase64(stringify(payload));
+    iotAccess.sendCommand(reflectRegistry, deviceRegistry, SubFolder.UDMI, stringify(message));
   }
 
   @Override

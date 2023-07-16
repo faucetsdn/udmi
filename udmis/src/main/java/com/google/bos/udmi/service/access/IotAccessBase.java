@@ -63,26 +63,34 @@ public abstract class IotAccessBase extends ContainerBase {
   public String modifyConfig(String registryId, String deviceId, SubFolder subFolder,
       String config) {
     int retryCount = CONFIG_UPDATE_MAX_RETRIES;
-    while (retryCount > 0) {
-      try {
-        if (subFolder == SubFolder.UPDATE) {
-          return updateConfig(registryId, deviceId, config, null);
-        } else {
-          Entry<Long, String> configPair = fetchConfig(registryId, deviceId);
-          String configString = ofNullable(configPair.getValue()).orElse(EMPTY_JSON);
-          Map<String, Object> configMap = toMap(configString);
-          configMap.put(subFolder.toString(), toMap(config));
-          return updateConfig(registryId, deviceId, stringify(configMap), configPair.getKey());
+    try {
+      while (true) {
+        try {
+          if (subFolder == SubFolder.UPDATE) {
+            return updateConfig(registryId, deviceId, config, null);
+          } else {
+            Entry<Long, String> configPair = fetchConfig(registryId, deviceId);
+            String configString = ofNullable(configPair.getValue()).orElse(EMPTY_JSON);
+            Map<String, Object> configMap = toMap(configString);
+            configMap.put(subFolder.toString(), toMap(config));
+            return updateConfig(registryId, deviceId, stringify(configMap), configPair.getKey());
+          }
+        } catch (Exception e) {
+          warn(
+              format("Error updating config for %s/%s, remaining retries %d...", registryId,
+                  deviceId,
+                  --retryCount));
+          safeSleep(CONFIG_UPDATE_BACKOFF_MS);
+          if (retryCount <= 0) {
+            throw e;
+          }
         }
-      } catch (Exception e) {
-        warn(
-            format("Error updating config for %s/%s, remaining retries %d...", registryId, deviceId,
-                --retryCount));
-        safeSleep(CONFIG_UPDATE_BACKOFF_MS);
       }
+    } catch (Exception e) {
+      throw new RuntimeException(
+          format("Maximum config retry count exceeded for %s/%s, giving up.", registryId,
+              deviceId), e);
     }
-    throw new RuntimeException(
-        format("Maximum config retry count exceeded for %s/%s, giving up.", registryId, deviceId));
   }
 
   /**
