@@ -62,7 +62,7 @@ public class ReflectProcessor extends ProcessorBase {
     Envelope reflection = continuation.getEnvelope();
     try {
       if (reflection.subFolder == null) {
-        stateHandler(reflection, extractUdmiState(message));
+        reflectStateHandler(reflection, extractUdmiState(message));
       } else if (reflection.subFolder != SubFolder.UDMI) {
         throw new IllegalStateException("Unexpected reflect subfolder " + reflection.subFolder);
       } else {
@@ -117,6 +117,7 @@ public class ReflectProcessor extends ProcessorBase {
     boolean resetConfig = RESET_CONFIG_VALUE.equals(payload.get(EXTRA_FIELD_KEY));
     if (resetConfig) {
       Map<String, Object> oldPayload = payload;
+      attributes = deepCopy(attributes);
       payload = new HashMap<>();
       payload.put(subFolder.value(), oldPayload);
       subFolder = UPDATE;
@@ -218,7 +219,7 @@ public class ReflectProcessor extends ProcessorBase {
     iotAccess.sendCommand(reflectRegistry, deviceRegistry, SubFolder.UDMI, stringify(message));
   }
 
-  private void stateHandler(Envelope envelope, UdmiState toolState) {
+  private void reflectStateHandler(Envelope envelope, UdmiState toolState) {
     final String registryId = envelope.deviceRegistryId;
     final String deviceId = envelope.deviceId;
 
