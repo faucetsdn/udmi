@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.function.Function;
 import udmi.schema.CloudModel;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.IotAccess;
@@ -93,8 +94,8 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public String modifyConfig(String registryId, String deviceId, SubFolder folder, String config) {
-    return getProviderFor(registryId).modifyConfig(registryId, deviceId, folder, config);
+  public String modifyConfig(String registryId, String deviceId, Function<String, String> munger) {
+    return getProviderFor(registryId).modifyConfig(registryId, deviceId, munger);
   }
 
   @Override

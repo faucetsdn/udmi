@@ -11,7 +11,6 @@ import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
-import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
@@ -142,7 +141,7 @@ public class ReflectProcessor extends ProcessorBase {
     boolean resetConfig = RESET_CONFIG_VALUE.equals(extraField);
     boolean breakConfig = BREAK_CONFIG_VALUE.equals(extraField);
     if (resetConfig) {
-      debug("Resetting config due to %s setting %s", EXTRA_FIELD_KEY, RESET_CONFIG_VALUE);
+      debug("Resetting config due to %s value %s", EXTRA_FIELD_KEY, RESET_CONFIG_VALUE);
       Map<String, Object> oldPayload = payload;
       attributes = deepCopy(attributes);
       payload = new HashMap<>();
@@ -151,15 +150,16 @@ public class ReflectProcessor extends ProcessorBase {
       attributes.subFolder = UPDATE;
       payload.put("version", UDMI_VERSION);
     } else if (breakConfig) {
-      debug("Breaking config due to %s setting %s", EXTRA_FIELD_KEY, BREAK_CONFIG_VALUE);
+      debug("Breaking config due to %s value %s", EXTRA_FIELD_KEY, BREAK_CONFIG_VALUE);
+      attributes = deepCopy(attributes);
       subFolder = UPDATE;
-    } else {
+      attributes.subFolder = UPDATE;
+    } else if (extraField != null) {
       warn(format("Ignoring unknown %s value %s", EXTRA_FIELD_KEY, extraField));
     }
-    payload.put("timestamp", getTimestamp());
     String stringPayload = breakConfig ? BROKEN_CONFIG_JSON : stringify(payload);
     String configUpdate = iotAccess.modifyConfig(attributes.deviceRegistryId, attributes.deviceId,
-        subFolder, stringPayload);
+        null);
 
     Envelope envelope = deepCopy(attributes);
     debug("Acknowledging config/%s %s", subFolder, envelope.transactionId);
@@ -259,7 +259,7 @@ public class ReflectProcessor extends ProcessorBase {
     String contents = stringify(configMap);
     debug("Setting reflector config %s %s %s", registryId, deviceId, contents);
     iotAccess.setProviderAffinity(registryId, deviceId, envelope.source);
-    iotAccess.modifyConfig(registryId, deviceId, UPDATE, contents);
+    iotAccess.modifyConfig(registryId, deviceId, previous -> contents);
   }
 
   private void reflectStateUpdate(Envelope attributes, String state) {

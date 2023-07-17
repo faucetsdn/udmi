@@ -4,7 +4,6 @@ import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.fromString;
-import static com.google.udmi.util.JsonUtil.fromStringStrict;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
@@ -19,6 +18,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import udmi.schema.Config;
@@ -97,20 +97,25 @@ public class StateProcessor extends ProcessorBase {
     try {
       IotAccessBase iotAccess = UdmiServicePod.getComponent(IOT_ACCESS_COMPONENT);
       Date newLastStart = message.system.operation.last_start;
-      Entry<Long, String> configEntry = iotAccess.fetchConfig(registryId, deviceId);
-      Config configMessage = fromString(Config.class, configEntry.getValue());
-      Date oldLastStart = configMessage.system.operation.last_start;
-      boolean shouldUpdate = oldLastStart == null || oldLastStart.before(newLastStart);
-      debug("Last start was %s, now %s, updating %s", getTimestamp(oldLastStart),
-          getTimestamp(newLastStart), shouldUpdate);
-      if (shouldUpdate) {
-        configMessage.system.operation.last_start = newLastStart;
-        String configMessageStr = stringify(configMessage);
-        iotAccess.modifyConfig(registryId, deviceId, UPDATE, configMessageStr);
+      iotAccess.modifyConfig(registryId, deviceId, previous -> {
+        Config oldConfig = fromString(Config.class, Optional.ofNullable(previous).orElse("{}"));
+        if (oldConfig == null || oldConfig.system == null || oldConfig.system.operation == null) {
+          return null;
+        }
+        Date oldLastStart = oldConfig.system.operation.last_start;
+        boolean shouldUpdate = oldLastStart == null || oldLastStart.before(newLastStart);
+        debug("Last start was %s, now %s, updating %s", getTimestamp(oldLastStart),
+            getTimestamp(newLastStart), shouldUpdate);
+        if (!shouldUpdate) {
+          return null;
+        }
+        oldConfig.system.operation.last_start = newLastStart;
+        String modifiedConfig = stringify(oldConfig);
         envelope.subFolder = UPDATE;
         envelope.subType = SubType.CONFIG;
-        reflectMessage(envelope, configMessageStr);
-      }
+        reflectMessage(envelope, modifiedConfig);
+        return modifiedConfig;
+      });
     } catch (Exception e) {
       debug("Could not process config last_state update, skipping: "
           + GeneralUtils.friendlyStackTrace(e));

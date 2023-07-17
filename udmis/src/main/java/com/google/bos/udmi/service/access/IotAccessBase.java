@@ -1,15 +1,16 @@
 package com.google.bos.udmi.service.access;
 
+import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.safeSleep;
-import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static java.lang.String.format;
-import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.common.collect.ImmutableMap;
+import com.google.udmi.util.GeneralUtils;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.Function;
 import udmi.schema.CloudModel;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.IotAccess;
@@ -46,7 +47,7 @@ public abstract class IotAccessBase extends ContainerBase {
   protected abstract String updateConfig(String registryId, String deviceId, String config,
       Long version);
 
-  public abstract Entry<Long, String> fetchConfig(String registryId, String deviceId);
+  protected abstract Entry<Long, String> fetchConfig(String registryId, String deviceId);
 
   public abstract CloudModel fetchDevice(String deviceRegistryId, String deviceId);
 
@@ -60,21 +61,15 @@ public abstract class IotAccessBase extends ContainerBase {
   /**
    * Modify a device configuration. Return the full/complete update that was actually written.
    */
-  public String modifyConfig(String registryId, String deviceId, SubFolder subFolder,
-      String config) {
+  public String modifyConfig(String registryId, String deviceId, Function<String, String> munger) {
     int retryCount = CONFIG_UPDATE_MAX_RETRIES;
     try {
       while (true) {
         try {
-          if (subFolder == SubFolder.UPDATE) {
-            return updateConfig(registryId, deviceId, config, null);
-          } else {
-            Entry<Long, String> configPair = fetchConfig(registryId, deviceId);
-            String configString = ofNullable(configPair.getValue()).orElse(EMPTY_JSON);
-            Map<String, Object> configMap = toMap(configString);
-            configMap.put(subFolder.toString(), toMap(config));
-            return updateConfig(registryId, deviceId, stringify(configMap), configPair.getKey());
-          }
+          Entry<Long, String> configPair = fetchConfig(registryId, deviceId);
+          String updated = munger.apply(configPair.getValue());
+          return updated == null ? null
+              : updateConfig(registryId, deviceId, updated, configPair.getKey());
         } catch (Exception e) {
           warn(
               format("Error updating config for %s/%s, remaining retries %d...", registryId,

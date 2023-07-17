@@ -45,7 +45,7 @@ public abstract class ProcessorBase extends ContainerBase {
 
   public static final Integer FUNCTIONS_VERSION_MIN = 9;
   public static final Integer FUNCTIONS_VERSION_MAX = 9;
-  private static final String REFLECT_REGISTRY = "UDMI-REFLECT";
+  static final String REFLECT_REGISTRY = "UDMI-REFLECT";
 
   private final ImmutableList<HandlerSpecification> baseHandlers = ImmutableList.of(
       messageHandlerFor(Object.class, this::defaultHandler),
