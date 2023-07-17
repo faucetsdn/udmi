@@ -39,7 +39,7 @@ fi
 
 current_user=$USER@$HOSTNAME
 current_time=`date --utc --iso=seconds`
-version=`git describe`
+version=`git describe --abbrev=0`
 srcver=`git describe --dirty`
 funchash=`git log -n 1 --oneline -- src/ | awk '{print $1}'`
 funccount=`git diff --name-only -- src/ | wc -l`
