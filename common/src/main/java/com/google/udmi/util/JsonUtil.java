@@ -32,6 +32,8 @@ public abstract class JsonUtil {
       .setSerializationInclusion(Include.NON_NULL);
   public static final ObjectMapper OBJECT_MAPPER = STRICT_MAPPER.copy()
       .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+  public static final ObjectMapper TERSE_MAPPER = OBJECT_MAPPER.copy()
+      .disable(SerializationFeature.INDENT_OUTPUT);
 
   /**
    * Convert the json string to a generic map object.
@@ -293,6 +295,20 @@ public abstract class JsonUtil {
   public static String stringify(Object target) {
     try {
       return OBJECT_MAPPER.writeValueAsString(target);
+    } catch (Exception e) {
+      throw new RuntimeException("While stringifying object", e);
+    }
+  }
+
+  /**
+   * Convert an object to a terse (no indent) json string.
+   *
+   * @param target object to convert
+   * @return json string representation
+   */
+  public static String stringifyTerse(Object target) {
+    try {
+      return TERSE_MAPPER.writeValueAsString(target);
     } catch (Exception e) {
       throw new RuntimeException("While stringifying object", e);
     }

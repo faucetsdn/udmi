@@ -63,7 +63,7 @@ public class ReflectProcessor extends ProcessorBase {
         Map<String, Object> payload = extractMessagePayload(stringObjectMap);
         Envelope envelope = extractMessageEnvelope(stringObjectMap);
         reflection.transactionId = envelope.transactionId;
-        processReflection(reflection, envelope, payload);
+        ifNotNullThen(payload, p -> processReflection(reflection, envelope, payload));
       }
     } catch (Exception e) {
       processException(reflection, e);

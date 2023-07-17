@@ -4,6 +4,7 @@ import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static java.lang.String.format;
 
 import com.google.bos.udmi.service.messaging.MessageContinuation;
@@ -34,7 +35,7 @@ public class TargetProcessor extends ProcessorBase {
     publish(defaultedMessage);
 
     if (deviceId == null) {
-      notice("Dropping message with no deviceId: " + stringify(envelope));
+      notice("Dropping message with no deviceId: " + stringifyTerse(envelope));
       return;
     }
 
