@@ -24,6 +24,7 @@ import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toStringMap;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
+import static java.util.Optional.ofNullable;
 import static udmi.schema.Envelope.SubFolder.UDMI;
 import static udmi.schema.Envelope.SubFolder.UPDATE;
 
@@ -40,7 +41,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.Common;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
 import org.jetbrains.annotations.TestOnly;
 import udmi.schema.EndpointConfiguration;
@@ -123,8 +126,10 @@ public abstract class ProcessorBase extends ContainerBase {
     debug(format("Modifying device config %s/%s/%s %s", envelope.deviceRegistryId,
         envelope.deviceId, subFolder, envelope.transactionId));
 
-    payload.put("timestamp", getTimestamp());
-    payload.put("version", UDMI_VERSION);
+    if (payload != null) {
+      payload.put("timestamp", getTimestamp());
+      payload.put("version", UDMI_VERSION);
+    }
 
     String configUpdate = iotAccess.modifyConfig(envelope.deviceRegistryId,
         envelope.deviceId, previous -> updateConfig(previous, envelope, payload, newLastStart));
@@ -207,8 +212,8 @@ public abstract class ProcessorBase extends ContainerBase {
   }
 
   private String updateConfig(String previous, Envelope attributes, Map<String, Object> updatePayload, Date newLastStart) {
-    Map<String, Object> payload = asMap(previous);
-    Object extraField = updatePayload.remove(EXTRA_FIELD_KEY);
+    Map<String, Object> payload = ofNullable(asMap(previous)).orElseGet(HashMap::new);
+    Object extraField = ifNotNullGet(updatePayload, p -> p.remove(EXTRA_FIELD_KEY));
     boolean resetConfig = RESET_CONFIG_VALUE.equals(extraField);
     boolean breakConfig = BREAK_CONFIG_VALUE.equals(extraField);
     if (resetConfig) {
