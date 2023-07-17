@@ -39,7 +39,8 @@ fi
 
 current_user=$USER@$HOSTNAME
 current_time=`date --utc --iso=seconds`
-version=`git describe --dirty`
+version=`git describe`
+srcver=`git describe --dirty`
 funchash=`git log -n 1 --oneline -- src/ | awk '{print $1}'`
 funccount=`git diff --name-only -- src/ | wc -l`
 if [[ $funccount != 0 ]]; then
@@ -56,6 +57,7 @@ if [[ $cmd == build ]]; then
     cat <<EOF > var/deployed_version.json
 {
   "udmi_version": "$version",
+  "udmi_source": "$srcver",
   "udmi_functions": "$funcver",
   "built_at": "$current_time",
   "built_by": "$current_user"

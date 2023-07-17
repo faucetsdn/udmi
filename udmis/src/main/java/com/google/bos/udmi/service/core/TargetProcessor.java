@@ -1,6 +1,5 @@
 package com.google.bos.udmi.service.core;
 
-import static com.google.bos.udmi.service.core.ReflectProcessor.UDMI_VERSION;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;

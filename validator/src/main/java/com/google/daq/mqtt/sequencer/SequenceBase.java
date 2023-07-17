@@ -10,13 +10,12 @@ import static com.google.daq.mqtt.validator.Validator.STATE_PREFIX;
 import static com.google.udmi.util.CleanDateFormat.cleanDate;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
-import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
-import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.GeneralUtils.changedLines;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.loadFileRequired;
@@ -537,15 +536,14 @@ public class SequenceBase {
   }
 
   /**
-   * Set the last_start field. Used for change tracking..
+   * Set the last_start field. Used for change tracking.
    *
-   * @param lastStart last start value to use
+   * @param use last start value to use
    */
-  public void setLastStart(Date lastStart) {
-    boolean lastStartChanged = !stringify(deviceConfig.system.operation.last_start).equals(
-        stringify(lastStart));
-    debug("lastStartChanged " + lastStartChanged + ", last_start " + getTimestamp(lastStart));
-    deviceConfig.system.operation.last_start = lastStart;
+  public void setLastStart(Date use) {
+    boolean changed = !stringify(deviceConfig.system.operation.last_start).equals(stringify(use));
+    debug("last_start changed " + changed + ", last_start " + getTimestamp(use));
+    deviceConfig.system.operation.last_start = use;
   }
 
   private void withRecordSequence(boolean value, Runnable operation) {
@@ -624,7 +622,7 @@ public class SequenceBase {
 
     assumeTrue("Feature bucket not enabled", isBucketEnabled(testBucket));
 
-    waitingCondition.push("starting test wrapper");
+    waitingConditionPush("starting test wrapper");
     checkState(reflector().isActive(), "Reflector is not currently active");
 
     // Old messages can sometimes take a while to clear out, so need some delay for stability.
@@ -648,8 +646,8 @@ public class SequenceBase {
 
     untilTrue("device state update", () -> deviceState != null);
     recordSequence = true;
-    waitingCondition.push("executing test");
-    debug(format("stage begin %s at %s", waitingCondition.peek(), timeSinceStart()));
+    waitingConditionPush("executing test");
+    debug(format("stage begin %s at %s", waitingConditionPeek(), timeSinceStart()));
   }
 
   protected boolean isBucketEnabled(Bucket bucket) {
@@ -690,11 +688,11 @@ public class SequenceBase {
 
   private void waitForConfigSync() {
     try {
-      messageEvaluateLoop(this::configIsPending);
+      whileDoing("config sync", () -> messageEvaluateLoop(this::configIsPending));
       Duration between = Duration.between(lastConfigUpdate, CleanDateFormat.clean(Instant.now()));
       debug(format("Configuration sync took %ss", between.getSeconds()));
     } finally {
-      debug("wait for config sync result " + configIsPending(true));
+      debug("wait for config sync pending " + configIsPending(true));
     }
   }
 
@@ -916,6 +914,7 @@ public class SequenceBase {
   }
 
   protected void queryState() {
+    debug("Sending device state query");
     reflector().publish(getDeviceId(), Common.STATE_QUERY_TOPIC, EMPTY_MESSAGE);
   }
 
@@ -927,7 +926,7 @@ public class SequenceBase {
     if (activeInstance == null) {
       return;
     }
-    String condition = waitingCondition.isEmpty() ? "initialize" : waitingCondition.peek();
+    String condition = waitingCondition.isEmpty() ? "initialize" : waitingConditionPeek();
     debug(format("stage done %s at %s", condition, timeSinceStart()));
     recordSequence = false;
 
@@ -1062,7 +1061,7 @@ public class SequenceBase {
       return evaluator.get();
     } catch (AbortMessageLoop e) {
       error(
-          "Aborting message loop while " + waitingCondition.peek() + " because " + e.getMessage());
+          "Aborting message loop while " + waitingConditionPeek() + " because " + e.getMessage());
       throw e;
     } catch (Exception e) {
       if (traceLogLevel()) {
@@ -1158,17 +1157,31 @@ public class SequenceBase {
   protected void whileDoing(String condition, Runnable action) {
     final Instant startTime = Instant.now();
 
-    trace(format("stage suspend %s at %s", waitingCondition.peek(), timeSinceStart()));
-    waitingCondition.push("waiting for " + condition);
-    info(format("stage start %s at %s", waitingCondition.peek(), timeSinceStart()));
+    waitingConditionPush(condition);
 
     action.run();
 
+    waitingConditionPop(startTime);
+  }
+
+  private void waitingConditionPop(Instant startTime) {
     Duration between = Duration.between(startTime, Instant.now());
-    debug(format("stage finished %s at %s after %ss", waitingCondition.peek(),
+    debug(format("stage finished %s at %s after %ss", waitingConditionPeek(),
         timeSinceStart(), between.toSeconds()));
     waitingCondition.pop();
-    trace(format("stage resume %s at %s", waitingCondition.peek(), timeSinceStart()));
+    ifTrueThen(!waitingCondition.isEmpty(),
+        () -> trace(format("stage resume %s at %s", waitingConditionPeek(), timeSinceStart())));
+  }
+
+  private void waitingConditionPush(String condition) {
+    ifTrueThen(!waitingCondition.isEmpty(),
+        () -> trace(format("stage suspend %s at %s", waitingConditionPeek(), timeSinceStart())));
+    waitingCondition.push("waiting for " + condition);
+    info(format("stage start %s at %s", waitingConditionPeek(), timeSinceStart()));
+  }
+
+  private String waitingConditionPeek() {
+    return waitingCondition.peek();
   }
 
   private void untilLoop(Supplier<Boolean> evaluator, String description) {
@@ -1447,12 +1460,13 @@ public class SequenceBase {
   private boolean configIsPending(boolean debugOut) {
     Date stateLast = catchToNull(() -> deviceState.system.operation.last_start);
     Date configLast = catchToNull(() -> deviceConfig.system.operation.last_start);
-    boolean lastStartSynchronized = stateLast == null || stateLast.equals(configLast);
+    boolean synced = stateLast == null || stateLast.equals(configLast);
     if (debugOut) {
-      debug(format("lastStartSynchronized %s, pending configTransactions: %s",
-          lastStartSynchronized, configTransactionsListString()));
+      debug(format("last_start synchronized %s: state/%s =? config/%s", synced, getTimestamp(stateLast),
+          getTimestamp(configLast)));
+      debug(format("pending configTransactions: %s", configTransactionsListString()));
     }
-    return !(lastStartSynchronized && configTransactions.isEmpty());
+    return !(synced && configTransactions.isEmpty());
   }
 
   @NotNull
@@ -1771,8 +1785,8 @@ public class SequenceBase {
       final SequenceResult failureType;
       if (e instanceof TestTimedOutException) {
         waitingCondition.forEach(condition -> warning("while " + condition));
-        error(format("stage timeout %s at %s", waitingCondition.peek(), timeSinceStart()));
-        message = "timeout " + waitingCondition.peek();
+        error(format("stage timeout %s at %s", waitingConditionPeek(), timeSinceStart()));
+        message = "timeout " + waitingConditionPeek();
         failureType = SequenceResult.FAIL;
       } else if (e instanceof AssumptionViolatedException) {
         message = e.getMessage();

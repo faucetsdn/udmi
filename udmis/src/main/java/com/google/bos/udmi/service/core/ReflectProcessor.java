@@ -1,6 +1,5 @@
 package com.google.bos.udmi.service.core;
 
-import static com.google.bos.udmi.service.core.StateProcessor.IOT_ACCESS_COMPONENT;
 import static com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl.getMessageClassFor;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.Common.ERROR_KEY;
@@ -23,10 +22,8 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static udmi.schema.Envelope.SubFolder.UPDATE;
 
-import com.google.bos.udmi.service.access.IotAccessBase;
 import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.StateUpdate;
-import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import java.io.File;
@@ -51,14 +48,6 @@ public class ReflectProcessor extends ProcessorBase {
   static final String DEPLOY_FILE = "var/deployed_version.json";
   static final SetupUdmiConfig DEPLOYED_CONFIG =
       loadFileStrictRequired(SetupUdmiConfig.class, new File(DEPLOY_FILE));
-  static final String UDMI_VERSION = requireNonNull(DEPLOYED_CONFIG.udmi_functions);
-  private static final String RESET_CONFIG_VALUE = "reset_config";
-  private static final String BREAK_CONFIG_VALUE = "break_json";
-  private static final String EXTRA_FIELD_KEY = "extra_field";
-  private static final String BROKEN_CONFIG_JSON =
-      format("{ broken by %s == %s", EXTRA_FIELD_KEY, BREAK_CONFIG_VALUE);
-
-  private IotAccessBase iotAccess;
 
   @Override
   protected void defaultHandler(Object message) {
@@ -133,40 +122,6 @@ public class ReflectProcessor extends ProcessorBase {
     }
   }
 
-  private void processConfigChange(Envelope attributes, Map<String, Object> payload) {
-    SubFolder subFolder = attributes.subFolder;
-    debug(format("Modifying device config %s/%s/%s %s", attributes.deviceRegistryId,
-        attributes.deviceId, subFolder, attributes.transactionId));
-    Object extraField = payload.get(EXTRA_FIELD_KEY);
-    boolean resetConfig = RESET_CONFIG_VALUE.equals(extraField);
-    boolean breakConfig = BREAK_CONFIG_VALUE.equals(extraField);
-    if (resetConfig) {
-      debug("Resetting config due to %s value %s", EXTRA_FIELD_KEY, RESET_CONFIG_VALUE);
-      Map<String, Object> oldPayload = payload;
-      attributes = deepCopy(attributes);
-      payload = new HashMap<>();
-      payload.put(subFolder.value(), oldPayload);
-      subFolder = UPDATE;
-      attributes.subFolder = UPDATE;
-      payload.put("version", UDMI_VERSION);
-    } else if (breakConfig) {
-      debug("Breaking config due to %s value %s", EXTRA_FIELD_KEY, BREAK_CONFIG_VALUE);
-      attributes = deepCopy(attributes);
-      subFolder = UPDATE;
-      attributes.subFolder = UPDATE;
-    } else if (extraField != null) {
-      warn(format("Ignoring unknown %s value %s", EXTRA_FIELD_KEY, extraField));
-    }
-    String stringPayload = breakConfig ? BROKEN_CONFIG_JSON : stringify(payload);
-    String configUpdate = iotAccess.modifyConfig(attributes.deviceRegistryId, attributes.deviceId,
-        previous -> stringPayload);
-
-    Envelope envelope = deepCopy(attributes);
-    debug("Acknowledging config/%s %s", subFolder, envelope.transactionId);
-    envelope.subFolder = UPDATE;
-    reflectMessage(envelope, configUpdate);
-  }
-
   private void processException(Envelope reflection, Exception e) {
     debug("Processing exception: " + GeneralUtils.friendlyStackTrace(e));
     Map<String, Object> message = new HashMap<>();
@@ -217,7 +172,7 @@ public class ReflectProcessor extends ProcessorBase {
 
   private CloudModel reflectPropagate(Envelope attributes, Map<String, Object> payload) {
     if (requireNonNull(attributes.subType) == SubType.CONFIG) {
-      processConfigChange(attributes, payload);
+      processConfigChange(attributes, payload, null);
     }
     Class<?> messageClass = getMessageClassFor(attributes);
     publish(convertTo(messageClass, payload));
@@ -279,7 +234,6 @@ public class ReflectProcessor extends ProcessorBase {
   @Override
   public void activate() {
     debug(stringify(DEPLOYED_CONFIG));
-    iotAccess = UdmiServicePod.getComponent(IOT_ACCESS_COMPONENT);
     super.activate();
   }
 }

@@ -1,27 +1,20 @@
 package com.google.bos.udmi.service.core;
 
-import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
-import static com.google.udmi.util.JsonUtil.fromString;
-import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static udmi.schema.Envelope.SubFolder.UPDATE;
 
-import com.google.bos.udmi.service.access.IotAccessBase;
 import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.StateUpdate;
-import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.udmi.util.GeneralUtils;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import udmi.schema.Config;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
@@ -34,9 +27,9 @@ import udmi.schema.State;
  */
 public class StateProcessor extends ProcessorBase {
 
+  public static final String IOT_ACCESS_COMPONENT = "iot_access";
   private static final Set<String> STATE_SUB_FOLDERS =
       Arrays.stream(SubFolder.values()).map(SubFolder::value).collect(Collectors.toSet());
-  public static final String IOT_ACCESS_COMPONENT = "iot_access";
 
   @Override
   protected void defaultHandler(Object defaultedMessage) {
@@ -47,18 +40,13 @@ public class StateProcessor extends ProcessorBase {
   }
 
   @Override
-  protected void registerHandlers() {
-    registerHandler(StateUpdate.class, this::stateHandler);
-  }
-
-  private void stateHandler(StateUpdate message) {
-    MessageContinuation continuation = getContinuation(message);
-    shardStateUpdate(message, continuation);
+  protected SubType getExceptionSubType() {
+    return SubType.STATE;
   }
 
   @Override
-  protected SubType getExceptionSubType() {
-    return SubType.STATE;
+  protected void registerHandlers() {
+    registerHandler(StateUpdate.class, this::stateHandler);
   }
 
   private void shardStateUpdate(StateUpdate message, MessageContinuation continuation) {
@@ -67,6 +55,7 @@ public class StateProcessor extends ProcessorBase {
     envelope.subType = SubType.STATE;
     envelope.subFolder = UPDATE;
     reflectMessage(envelope, stringify(message));
+
     Arrays.stream(State.class.getFields()).forEach(field -> {
       try {
         if (STATE_SUB_FOLDERS.contains(field.getName())) {
@@ -84,6 +73,12 @@ public class StateProcessor extends ProcessorBase {
         throw new RuntimeException("While extracting field " + field.getName(), e);
       }
     });
+    envelope.subFolder = UPDATE;
+  }
+
+  private void stateHandler(StateUpdate message) {
+    MessageContinuation continuation = getContinuation(message);
+    shardStateUpdate(message, continuation);
   }
 
   private void updateLastStart(StateUpdate message, MessageContinuation continuation) {
@@ -91,31 +86,11 @@ public class StateProcessor extends ProcessorBase {
         || message.system.operation.last_start == null) {
       return;
     }
-    Envelope envelope = deepCopy(continuation.getEnvelope());
-    String registryId = envelope.deviceRegistryId;
-    String deviceId = envelope.deviceId;
+
     try {
-      IotAccessBase iotAccess = UdmiServicePod.getComponent(IOT_ACCESS_COMPONENT);
       Date newLastStart = message.system.operation.last_start;
-      iotAccess.modifyConfig(registryId, deviceId, previous -> {
-        Config oldConfig = fromString(Config.class, Optional.ofNullable(previous).orElse("{}"));
-        if (oldConfig == null || oldConfig.system == null || oldConfig.system.operation == null) {
-          return null;
-        }
-        Date oldLastStart = oldConfig.system.operation.last_start;
-        boolean shouldUpdate = oldLastStart == null || oldLastStart.before(newLastStart);
-        debug("Last start was %s, now %s, updating %s", getTimestamp(oldLastStart),
-            getTimestamp(newLastStart), shouldUpdate);
-        if (!shouldUpdate) {
-          return null;
-        }
-        oldConfig.system.operation.last_start = newLastStart;
-        String modifiedConfig = stringify(oldConfig);
-        envelope.subFolder = UPDATE;
-        envelope.subType = SubType.CONFIG;
-        reflectMessage(envelope, modifiedConfig);
-        return modifiedConfig;
-      });
+      Envelope envelope = continuation.getEnvelope();
+      processConfigChange(envelope, new HashMap<>(), newLastStart);
     } catch (Exception e) {
       debug("Could not process config last_state update, skipping: "
           + GeneralUtils.friendlyStackTrace(e));
