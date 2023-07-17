@@ -126,11 +126,6 @@ public abstract class ProcessorBase extends ContainerBase {
     debug(format("Modifying device config %s/%s/%s %s", envelope.deviceRegistryId,
         envelope.deviceId, subFolder, envelope.transactionId));
 
-    if (payload != null) {
-      payload.put("timestamp", getTimestamp());
-      payload.put("version", UDMI_VERSION);
-    }
-
     String configUpdate = iotAccess.modifyConfig(envelope.deviceRegistryId,
         envelope.deviceId, previous -> updateConfig(previous, envelope, payload, newLastStart));
 
@@ -231,8 +226,8 @@ public abstract class ProcessorBase extends ContainerBase {
     } else if (attributes.subFolder == UPDATE) {
       payload = updatePayload;
     } else {
-      updatePayload.remove(TIMESTAMP_KEY);
-      updatePayload.remove(VERSION_KEY);
+      ifNotNullThen(updatePayload, p -> updatePayload.remove(TIMESTAMP_KEY));
+      ifNotNullThen(updatePayload, p -> updatePayload.remove(VERSION_KEY));
       payload.put(attributes.subFolder.value(), updatePayload);
     }
 
