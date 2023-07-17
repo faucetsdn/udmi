@@ -74,9 +74,6 @@ public class SystemSequences extends SequenceBase {
             state_software.entrySet().containsAll(metadata_software.entrySet()
         )
     );
-
-
-
   }
 
 }
