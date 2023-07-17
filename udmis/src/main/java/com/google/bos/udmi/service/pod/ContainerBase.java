@@ -41,6 +41,10 @@ public abstract class ContainerBase {
     output(Level.DEBUG, message);
   }
 
+  public void notice(String message) {
+    output(Level.NOTICE, message);
+  }
+
   public void warn(String message) {
     output(Level.WARNING, message);
   }

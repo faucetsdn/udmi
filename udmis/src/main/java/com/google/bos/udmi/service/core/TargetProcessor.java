@@ -35,7 +35,7 @@ public class TargetProcessor extends ProcessorBase {
     publish(defaultedMessage);
 
     if (deviceId == null) {
-      warn("Dropping message with no deviceId: " + stringify(envelope));
+      notice("Dropping message with no deviceId: " + stringify(envelope));
       return;
     }
 
