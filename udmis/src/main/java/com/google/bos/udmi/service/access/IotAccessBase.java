@@ -1,5 +1,6 @@
 package com.google.bos.udmi.service.access;
 
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.toMap;
@@ -67,9 +68,9 @@ public abstract class IotAccessBase extends ContainerBase {
       while (true) {
         try {
           Entry<Long, String> configPair = fetchConfig(registryId, deviceId);
-          String updated = munger.apply(configPair.getValue());
-          return updated == null ? null
-              : updateConfig(registryId, deviceId, updated, configPair.getKey());
+          String updated = munger.apply(ifNotNullGet(configPair, Entry::getValue));
+          Long version = ifNotNullGet(configPair, Entry::getKey);
+          return updated == null ? null : updateConfig(registryId, deviceId, updated, version);
         } catch (Exception e) {
           warn(
               format("Error updating config for %s/%s, remaining retries %d...", registryId,
