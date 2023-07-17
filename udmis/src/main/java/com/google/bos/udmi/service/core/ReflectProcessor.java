@@ -159,10 +159,7 @@ public class ReflectProcessor extends ProcessorBase {
     }
     String stringPayload = breakConfig ? BROKEN_CONFIG_JSON : stringify(payload);
     String configUpdate = iotAccess.modifyConfig(attributes.deviceRegistryId, attributes.deviceId,
-        previous -> {
-          return previous;
-        }
-    );
+        previous -> stringPayload);
 
     Envelope envelope = deepCopy(attributes);
     debug("Acknowledging config/%s %s", subFolder, envelope.transactionId);
