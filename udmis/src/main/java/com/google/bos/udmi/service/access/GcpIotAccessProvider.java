@@ -6,7 +6,6 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.getDate;
-import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -35,7 +34,6 @@ import com.google.api.services.cloudiot.v1.model.SendCommandToDeviceRequest;
 import com.google.api.services.cloudiot.v1.model.UnbindDeviceFromGatewayRequest;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
-import com.google.bos.udmi.service.core.ProcessorBase;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
@@ -66,8 +64,6 @@ public class GcpIotAccessProvider extends IotAccessBase {
   static final Set<String> CLOUD_REGIONS =
       ImmutableSet.of("us-central1", "europe-west1", "asia-east1");
   private static final String GATEWAY_TYPE = "GATEWAY";
-  private static final String EMPTY_JSON = "{}";
-  private static final String EMPTY_VERSION = "0";
   private static final String PROJECT_PATH_FORMAT = "projects/%s";
   private static final String LOCATIONS_PATH_FORMAT = "%s/locations/%s";
   private static final String REGISTRY_PATH_FORMAT = "%s/registries/%s";
@@ -116,6 +112,21 @@ public class GcpIotAccessProvider extends IotAccessBase {
       return cloudIotService;
     } catch (Exception e) {
       throw new RuntimeException("While creating GCP IoT Core service", e);
+    }
+  }
+
+  protected String updateConfig(String registryId, String deviceId, String config, Long version) {
+    try {
+      String useConfig = ofNullable(config).orElse("");
+      registries.devices().modifyCloudToDeviceConfig(
+          getDevicePath(registryId, deviceId),
+          new ModifyCloudToDeviceConfigRequest()
+              .setVersionToUpdate(version)
+              .setBinaryData(Base64.getEncoder().encodeToString(useConfig.getBytes()))
+      ).execute();
+      return useConfig;
+    } catch (Exception e) {
+      throw new RuntimeException("While modifying device config", e);
     }
   }
 
@@ -279,18 +290,6 @@ public class GcpIotAccessProvider extends IotAccessBase {
         .forEach(id -> unbindDevice(registryId, deviceId, id)));
   }
 
-  private void updateConfig(String registryId, String deviceId, String config) {
-    try {
-      String useConfig = ofNullable(config).orElse("");
-      registries.devices().modifyCloudToDeviceConfig(
-          getDevicePath(registryId, deviceId),
-          new ModifyCloudToDeviceConfigRequest().setBinaryData(
-              Base64.getEncoder().encodeToString(useConfig.getBytes()))).execute();
-    } catch (Exception e) {
-      throw new RuntimeException("While modifying device config", e);
-    }
-  }
-
   @Override
   public void activate() {
     try {
@@ -304,28 +303,17 @@ public class GcpIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public String fetchRegistryMetadata(String registryId, String metadataKey) {
-    try {
-      CloudModel cloudModel = fetchDevice(UDMIS_REGISTRY, registryId);
-      return cloudModel.metadata.get(metadataKey);
-    } catch (Exception e) {
-      debug(format("No device entry for %s/%s", UDMIS_REGISTRY, registryId));
-      return null;
-    }
-  }
-
-  @Override
-  public Entry<String, String> fetchConfig(String registryId, String deviceId) {
+  public Entry<Long, String> fetchConfig(String registryId, String deviceId) {
     try {
       List<DeviceConfig> deviceConfigs = registries.devices().configVersions()
           .list(getDevicePath(registryId, deviceId)).execute().getDeviceConfigs();
       if (deviceConfigs.isEmpty()) {
-        return new SimpleEntry<>(EMPTY_VERSION, EMPTY_JSON);
+        return new SimpleEntry<>(null, EMPTY_JSON);
       }
       DeviceConfig deviceConfig = deviceConfigs.get(0);
       String config = ifNotNullGet(deviceConfig.getBinaryData(),
           binaryData -> new String(Base64.getDecoder().decode(binaryData)));
-      return new SimpleEntry<>(Long.toString(deviceConfig.getVersion()), config);
+      return new SimpleEntry<>(deviceConfig.getVersion(), config);
     } catch (Exception e) {
       throw new RuntimeException("While fetching device configurations for " + deviceId, e);
     }
@@ -342,6 +330,17 @@ public class GcpIotAccessProvider extends IotAccessBase {
       throw new RuntimeException("While fetching device " + devicePath, e);
     }
 
+  }
+
+  @Override
+  public String fetchRegistryMetadata(String registryId, String metadataKey) {
+    try {
+      CloudModel cloudModel = fetchDevice(UDMIS_REGISTRY, registryId);
+      return cloudModel.metadata.get(metadataKey);
+    } catch (Exception e) {
+      debug(format("No device entry for %s/%s", UDMIS_REGISTRY, registryId));
+      return null;
+    }
   }
 
   @Override
@@ -395,35 +394,25 @@ public class GcpIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public void modifyConfig(String registryId, String deviceId, SubFolder subFolder,
-      String contents) {
-    // TODO: Need to implement checking-and-retry of config version for concurrent operations.
-    if (subFolder == SubFolder.UPDATE) {
-      updateConfig(registryId, deviceId, contents);
-    } else {
-      String configString =
-          ofNullable(fetchConfig(registryId, deviceId).getValue()).orElse(EMPTY_JSON);
-      Map<String, Object> configMap = toMap(configString);
-      configMap.put(subFolder.toString(), contents);
-      updateConfig(registryId, deviceId, stringify(configMap));
-    }
-  }
-
-  @Override
   public void sendCommand(String registryId, String deviceId, SubFolder folder, String message) {
     try {
+      Map<String, Object> messageMap = toMap(message);
+      Object payloadSubType = messageMap.get("subType");
+      Object payloadSubFolder = messageMap.get("subFolder");
+      String payload = decodeBase64((String) messageMap.get("payload"));
+      trace("Sending command containing %s/%s: %s", payloadSubType, payloadSubFolder, payload);
       requireNonNull(registryId, "registry not defined");
       requireNonNull(deviceId, "device not defined");
       String subFolder = ifNotNullGet(folder, SubFolder::value);
       SendCommandToDeviceRequest request =
           new SendCommandToDeviceRequest().setBinaryData(encodeBase64(message))
               .setSubfolder(subFolder);
-      debug(format("Sending iot command to %s/%s/%s", registryId, deviceId, subFolder));
+      debug("Sending iot command to %s/%s/%s", registryId, deviceId, subFolder);
       registries.devices().sendCommandToDevice(getDevicePath(registryId, deviceId), request)
           .execute();
     } catch (Exception e) {
-      throw new RuntimeException(
-          format("While sending %s command to %s/%s", folder, registryId, deviceId), e);
+      throw new RuntimeException(format("While sending command to GCP %s/%s/%s",
+          registryId, deviceId, folder), e);
     }
   }
 

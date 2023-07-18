@@ -139,14 +139,14 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     Class<?> handlerType = isException ? EXCEPTION_CLASS : getMessageClassFor(envelope);
     try {
       handlers.computeIfAbsent(handlerType, key -> {
-        info("Defaulting messages of type/folder " + key.getName());
+        notice("Defaulting messages of type/folder " + key.getName());
         return handlers.getOrDefault(DEFAULT_CLASS, this::devNullHandler);
       });
       Object messageObject = isException ? message : convertStrictOrObject(handlerType, message);
       if (messageObject instanceof Map) {
         handlerType = Object.class;
       }
-      debug("Processing %s from %s in %s", handlerType.getSimpleName(), messagePipe, this);
+      trace("Processing %s from %s in %s", handlerType.getSimpleName(), messagePipe, this);
       processHandler(envelope, handlerType, messageObject);
     } catch (Exception e) {
       throw new RuntimeException("While processing message " + stringify(envelope), e);

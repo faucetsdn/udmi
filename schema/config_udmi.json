@@ -23,6 +23,9 @@
         "udmi_version": {
           "type": "string"
         },
+        "udmi_source": {
+          "type": "string"
+        },
         "udmi_functions": {
           "type": "string"
         },

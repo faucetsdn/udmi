@@ -3,10 +3,13 @@ package com.google.bos.udmi.service.access;
 import static com.google.udmi.util.GeneralUtils.using;
 import static java.lang.String.format;
 
-import com.google.udmi.util.GeneralUtils;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import udmi.schema.CloudModel;
@@ -18,6 +21,7 @@ import udmi.schema.IotAccess;
  */
 public class LocalIotAccessProvider extends IotAccessBase {
 
+  private static final Map<String, Entry<Long, String>> DEVICE_CONFIGS = new HashMap<>();
   BlockingQueue<String> sentCommands = new LinkedBlockingQueue<>();
 
   /**
@@ -27,32 +31,24 @@ public class LocalIotAccessProvider extends IotAccessBase {
   }
 
   @Override
+  protected String updateConfig(String registryId, String deviceId, String config, Long version) {
+    Entry<Long, String> entry = DEVICE_CONFIGS.get(deviceId);
+    if (version != null && !entry.getKey().equals(version)) {
+      throw new IllegalStateException("Config version mismatch");
+    }
+    Long previous = Optional.ofNullable(entry).orElse(new SimpleEntry<>(0L, "")).getKey();
+    DEVICE_CONFIGS.put(deviceId, new SimpleEntry<>(previous + 1, config));
+    return config;
+  }
+
+  @Override
   public void activate() {
     debug("activate");
   }
 
-  public List<String> getCommands() {
-    return using(new ArrayList<>(), sentCommands::drainTo);
-  }
-
   @Override
-  public void shutdown() {
-    debug("shutdown");
-  }
-
-  @Override
-  String fetchRegistryMetadata(String registryId, String metadataKey) {
-    throw new RuntimeException("Not yet implemented");
-  }
-
-  @Override
-  public Entry<String, String> fetchConfig(String registryId, String deviceId) {
-    throw new RuntimeException("Not yet implemented");
-  }
-
-  @Override
-  public CloudModel listDevices(String deviceRegistryId) {
-    throw new RuntimeException("Not yet implemented");
+  public Entry<Long, String> fetchConfig(String registryId, String deviceId) {
+    return DEVICE_CONFIGS.get(deviceId);
   }
 
   @Override
@@ -61,7 +57,21 @@ public class LocalIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public void modifyConfig(String registryId, String deviceId, SubFolder folder, String contents) {
+  public String fetchState(String deviceRegistryId, String deviceId) {
+    throw new RuntimeException("Not yet implemented");
+  }
+
+  public List<String> getCommands() {
+    return using(new ArrayList<>(), sentCommands::drainTo);
+  }
+
+  @Override
+  public CloudModel listDevices(String deviceRegistryId) {
+    throw new RuntimeException("Not yet implemented");
+  }
+
+  @Override
+  public CloudModel modelDevice(String deviceRegistryId, String deviceId, CloudModel cloudModel) {
     throw new RuntimeException("Not yet implemented");
   }
 
@@ -71,12 +81,12 @@ public class LocalIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public String fetchState(String deviceRegistryId, String deviceId) {
-    throw new RuntimeException("Not yet implemented");
+  public void shutdown() {
+    debug("shutdown");
   }
 
   @Override
-  public CloudModel modelDevice(String deviceRegistryId, String deviceId, CloudModel cloudModel) {
+  String fetchRegistryMetadata(String registryId, String metadataKey) {
     throw new RuntimeException("Not yet implemented");
   }
 }
