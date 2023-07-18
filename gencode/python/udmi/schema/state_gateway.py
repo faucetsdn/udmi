@@ -5,6 +5,8 @@ class GatewayState:
   """Generated schema class"""
 
   def __init__(self):
+    self.timestamp = None
+    self.version = None
     self.devices = None
 
   @staticmethod
@@ -12,6 +14,8 @@ class GatewayState:
     if not source:
       return None
     result = GatewayState()
+    result.timestamp = source.get('timestamp')
+    result.version = source.get('version')
     result.devices = source.get('devices')
     return result
 
@@ -33,6 +37,10 @@ class GatewayState:
 
   def to_dict(self):
     result = {}
+    if self.timestamp:
+      result['timestamp'] = self.timestamp # 5
+    if self.version:
+      result['version'] = self.version # 5
     if self.devices:
       result['devices'] = self.devices # 5
     return result

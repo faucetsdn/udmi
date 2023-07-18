@@ -30,7 +30,7 @@ EOF
 
 JAVA_CMD="java -cp $UDMI_JAR com.google.daq.mqtt.validator.Validator"
 
-cmd="$JAVA_CMD $CONFIG_FILE"
+cmd="$JAVA_CMD $CONFIG_FILE $*"
 if [[ $udmi_runsec != null ]]; then
     cmd="timeout ${udmi_runsec}s $cmd"
 fi

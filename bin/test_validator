@@ -24,6 +24,7 @@ mkdir -p out
 
 PUBBER_OUT=out/pubber.out
 VALIDATOR_OUT=out/validator.out
+TRACE_DIR=out/validator_trace
 WAITING=10
 
 echo Killing running pubber/validator instances...
@@ -41,11 +42,12 @@ bin/reset_config $site_path $project_id $device_id
 bin/reset_config $site_path $project_id $proxy_id
 
 echo Starting validator, output in $VALIDATOR_OUT
-udmi validate -s $site_path -p $project_id > $VALIDATOR_OUT 2>&1 &
+rm -rf $TRACE_DIR
+udmi validate -s $site_path -p $project_id -- -w $TRACE_DIR > $VALIDATOR_OUT 2>&1 &
 vpid=$!
 echo Started validator pid $vpid
 
-# Just give it a head-start, actual waiting check is the loop below
+echo Waiting for validator to startup...
 sleep 10
 
 for i in `seq 1 $WAITING`; do
@@ -125,9 +127,11 @@ if [[ -z $outfiles ]]; then
 fi
 
 more $outfiles | sed -E >> $TMP_VALIDATOR \
-        -e "s/[0-9-]{10}T[0-9:]{8}Z/1999-10-20T01:02:03Z/" \
-        -e "s/Validator.java:[0-9]+/redacted/" \
-        -e 's/\\t[a-zA-Z .()$0-9]+\.java:[0-9]+\)\\n/\\tredacted\\n/g'
+                     -e "s/[0-9-]{10}T[0-9:]{8}Z/1999-10-20T01:02:03Z/" \
+                     -e 's/"message" .*/"message" REDACTED/' \
+                     -e 's/"detail" .*/"detail" REDACTED/' \
+                     -e "s/Validator.java:[0-9]+/REDACTED/" \
+                     -e 's/\\t[a-zA-Z .()$0-9]+\.java:[0-9]+\)\\n/\\tREDACTED\\n/g'
 
 echo diff -u $TMP_VALIDATOR etc/validator.out
 diff -u $TMP_VALIDATOR etc/validator.out && echo No mismatch from golden file.

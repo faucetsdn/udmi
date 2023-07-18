@@ -1,14 +1,12 @@
 package com.google.bos.udmi.service.core;
 
 import com.google.bos.udmi.service.messaging.MessagePipe;
-import com.google.bos.udmi.service.messaging.impl.MessageBase;
-import org.jetbrains.annotations.TestOnly;
 import udmi.schema.EndpointConfiguration;
 
 /**
  * Component that moves messages between two separate pipes.
  */
-public class BridgeProcessor extends UdmisComponent {
+public class BridgeProcessor extends ProcessorBase {
 
   final MessagePipe pipeA;
   final MessagePipe pipeB;

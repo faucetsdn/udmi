@@ -40,8 +40,8 @@ else
 fi
 
 if [[ $project_id =~ ^// ]]; then
-    no_project=${project_id%/*}
-    iot_provider=\"${no_project#//}\"
+    sans_project=${project_id%/*}
+    iot_provider=\"${sans_project#//}\"
 else
     iot_provider=null
 fi

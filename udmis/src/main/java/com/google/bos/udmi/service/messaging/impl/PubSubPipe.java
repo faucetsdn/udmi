@@ -1,8 +1,9 @@
 package com.google.bos.udmi.service.messaging.impl;
 
+import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
+import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
-import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static java.lang.String.format;
@@ -27,6 +28,7 @@ import com.google.pubsub.v1.PubsubMessage;
 import com.google.udmi.util.GeneralUtils;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -97,6 +99,10 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
   @Override
   public void publish(Bundle bundle) {
     try {
+      if (publisher == null) {
+        debug("Dropping message because publisher is null");
+        return;
+      }
       Envelope envelope = Optional.ofNullable(bundle.envelope).orElse(new Envelope());
       Map<String, String> stringMap = toMap(envelope).entrySet().stream()
           .collect(Collectors.toMap(Entry::getKey, entry -> (String) entry.getValue()));
@@ -105,7 +111,9 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
           .setData(ByteString.copyFromUtf8(stringify(bundle.message)))
           .build();
       ApiFuture<String> publish = publisher.publish(message);
-      info("Published PubSub " + publish.get());
+      String publishedId = publish.get();
+      debug(format("Published PubSub %s/%s to %s as %s", stringMap.get(SUBTYPE_PROPERTY_KEY),
+          stringMap.get(SUBFOLDER_PROPERTY_KEY), publisher.getTopicNameString(), publishedId));
     } catch (Exception e) {
       throw new RuntimeException("While publishing pubsub bundle", e);
     }
@@ -113,24 +121,19 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
 
   @Override
   public void receiveMessage(PubsubMessage message, AckReplyConsumer reply) {
-    try {
-      // Ack first to prevent a recurring loop of processing a faulty message.
-      reply.ack();
-      Bundle bundle = new Bundle(
-          convertToStrict(Envelope.class, message.getAttributesMap()),
-          toMap(message.getData().toStringUtf8()));
-      info(format("Received %s/%s %s", bundle.envelope.subType, bundle.envelope.subFolder,
-          bundle.envelope.transactionId));
-      receiveBundle(bundle);
-    } catch (Exception e) {
-      receiveBundle(makeExceptionBundle(e));
-    }
+    Map<String, String> attributesMap = new HashMap<>(message.getAttributesMap());
+    String messageString = message.getData().toStringUtf8();
+    // Ack first to prevent a recurring loop of processing a faulty message.
+    reply.ack();
+
+    receiveMessage(attributesMap, messageString);
   }
 
   @Override
   public String toString() {
-    return String.format("PubSub %s -> %s", subscriber.getSubscriptionNameString(),
-        publisher.getTopicNameString());
+    String subscriptionName = ifNotNullGet(subscriber, Subscriber::getSubscriptionNameString);
+    String topicName = ifNotNullGet(publisher, Publisher::getTopicNameString);
+    return format("PubSub %s -> %s", subscriptionName, topicName);
   }
 
   Publisher getPublisher(String topicName) {

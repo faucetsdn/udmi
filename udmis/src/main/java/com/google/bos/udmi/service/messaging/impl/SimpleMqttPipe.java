@@ -1,10 +1,16 @@
 package com.google.bos.udmi.service.messaging.impl;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.udmi.util.GeneralUtils.decodeBase64;
+import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static com.google.udmi.util.JsonUtil.toMap;
+import static com.google.udmi.util.JsonUtil.toStringMap;
 
 import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.udmi.util.Common;
+import com.google.udmi.util.GeneralUtils;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
@@ -128,7 +134,15 @@ public class SimpleMqttPipe extends MessageBase {
 
     @Override
     public void messageArrived(String topic, MqttMessage message) {
-      receiveBundle(message.toString());
+      try {
+        String mqttPayload = new String(message.getPayload());
+        Map<String, Object> stringObjectMap = toMap(mqttPayload);
+        Map<String, String> envelopeMap = toStringMap(stringObjectMap.get("envelope"));
+        Map<String, Object> messageMap = toMap(stringObjectMap.get("message"));
+        receiveMessage(envelopeMap, messageMap);
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
     }
   }
 

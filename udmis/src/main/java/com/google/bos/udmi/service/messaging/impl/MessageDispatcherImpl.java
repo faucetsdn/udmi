@@ -1,16 +1,19 @@
 package com.google.bos.udmi.service.messaging.impl;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
-import static com.google.udmi.util.JsonUtil.convertTo;
+import static com.google.udmi.util.JsonUtil.convertToStrict;
+import static com.google.udmi.util.JsonUtil.stringify;
+import static com.google.udmi.util.JsonUtil.toMap;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
+import com.google.bos.udmi.service.messaging.ConfigUpdate;
 import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.MessageDispatcher;
 import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.bos.udmi.service.messaging.StateUpdate;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
+import com.google.bos.udmi.service.messaging.impl.MessageBase.BundleException;
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
@@ -29,6 +32,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.TestOnly;
 import org.jetbrains.annotations.VisibleForTesting;
 import udmi.schema.EndpointConfiguration;
@@ -55,6 +59,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     Arrays.stream(SubType.values()).forEach(type -> Arrays.stream(SubFolder.values())
         .forEach(folder -> registerHandlerType(type, folder)));
     registerMessageClass(SubType.STATE, SubFolder.UPDATE, StateUpdate.class);
+    registerMessageClass(SubType.CONFIG, SubFolder.UPDATE, ConfigUpdate.class);
   }
 
   private final MessagePipe messagePipe;
@@ -62,7 +67,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   private final Map<Class<?>, Consumer<Object>> handlers = new HashMap<>();
   private final Map<Class<?>, AtomicInteger> handlerCounts = new ConcurrentHashMap<>();
   private final String projectId;
-  private final Envelope prototypeEnvelope = new Envelope();
+  public final Envelope prototypeEnvelope = new Envelope();
 
   /**
    * Create a new instance of the message dispatcher.
@@ -126,22 +131,40 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
    */
   private void processMessage(Bundle bundle) {
     Envelope envelope = Preconditions.checkNotNull(bundle.envelope, "bundle envelope is null");
-    boolean isException = bundle.message instanceof Exception;
-    String mapKey = isException ? EXCEPTION_KEY : getMapKey(envelope.subType, envelope.subFolder);
-    Class<?> handlerType =
-        TYPE_CLASSES.getOrDefault(mapKey, SPECIAL_CLASSES.getOrDefault(mapKey, DEFAULT_CLASS));
+    Object message = bundle.message;
+    if (bundle.payload != null) {
+      message = new BundleException((String) message, bundle.attributesMap, bundle.payload);
+    }
+    boolean isException = message instanceof Exception;
+    Class<?> handlerType = isException ? EXCEPTION_CLASS : getMessageClassFor(envelope);
     try {
       handlers.computeIfAbsent(handlerType, key -> {
-        info("Defaulting messages of type/folder " + handlerType.getName());
+        info("Defaulting messages of type/folder " + key.getName());
         return handlers.getOrDefault(DEFAULT_CLASS, this::devNullHandler);
       });
-      Object messageObject = isException ? bundle.message : convertTo(handlerType, bundle.message);
-      info("Processing " + handlerType);
+      Object messageObject = isException ? message : convertStrictOrObject(handlerType, message);
+      if (messageObject instanceof Map) {
+        handlerType = Object.class;
+      }
       debug("Processing %s from %s in %s", handlerType.getSimpleName(), messagePipe, this);
       processHandler(envelope, handlerType, messageObject);
     } catch (Exception e) {
-      throw new RuntimeException("While processing message key " + mapKey, e);
+      throw new RuntimeException("While processing message " + stringify(envelope), e);
     }
+  }
+
+  @Nullable
+  private static Object convertStrictOrObject(Class<?> handlerType, Object message) {
+    try {
+      return convertToStrict(handlerType, message);
+    } catch (Exception e) {
+      return toMap(message);
+    }
+  }
+
+  public static Class<?> getMessageClassFor(Envelope envelope) {
+    String mapKey = getMapKey(envelope.subType, envelope.subFolder);
+    return TYPE_CLASSES.getOrDefault(mapKey, SPECIAL_CLASSES.getOrDefault(mapKey, DEFAULT_CLASS));
   }
 
   @Override
@@ -178,7 +201,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   @Override
   public MessageContinuation getContinuation(Object message) {
     final Envelope continuationEnvelope =
-        requireNonNull(deepCopy(messageEnvelopes.get(message)), "missing envelope");
+        requireNonNull(deepCopy(messageEnvelopes.get(message)), "missing message envelope");
     return new MessageContinuation() {
       @Override
       public Envelope getEnvelope() {
@@ -219,10 +242,12 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
       return bundle;
     }
 
-    SimpleEntry<SubType, SubFolder> messageType = CLASS_TYPES.get(message.getClass());
-    checkNotNull(messageType, "type entry not found for " + message.getClass());
-    bundle.envelope.subType = messageType.getKey();
-    bundle.envelope.subFolder = messageType.getValue();
+    if (!(message instanceof Map)) {
+      SimpleEntry<SubType, SubFolder> messageType = CLASS_TYPES.get(message.getClass());
+      requireNonNull(messageType, "unknown message type for " + message.getClass());
+      bundle.envelope.subType = messageType.getKey();
+      bundle.envelope.subFolder = messageType.getValue();
+    }
     return bundle;
   }
 
@@ -231,6 +256,9 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     publishBundle(makeMessageBundle(prototypeEnvelope, message));
   }
 
+  /**
+   * Publish the given bundle to the outgoing message pipe.
+   */
   @VisibleForTesting
   public void publishBundle(Bundle bundle) {
     messagePipe.publish(bundle);

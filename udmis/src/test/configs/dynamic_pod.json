@@ -14,7 +14,7 @@
     }
   },
   "iot_access": {
-    "default": {
+    "iot-access": {
       "provider": "dynamic",
       "project_id": "gcp,clearblade-iot-core"
     },

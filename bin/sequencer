@@ -69,12 +69,29 @@ fi
 
 validator/bin/build
 
+# Format of cmdline project_id is {//PROVIDER/}PROJECT (optional PROVIDER)
+# e.g. bos-testing-dev or //gcp/bos-testing-dev
+
+if [[ -n $project_id ]]; then
+    quoted_id=\"${project_id##*/}\"
+else
+    quoted_id=null
+fi
+
+if [[ $project_id =~ ^// ]]; then
+    sans_project=${project_id%/*}
+    iot_provider=\"${sans_project#//}\"
+else
+    iot_provider=null
+fi
+
 export VALIDATOR_CONFIG=/tmp/validator_config.json
 
 echo Writing config to $VALIDATOR_CONFIG:
 cat <<EOF > $VALIDATOR_CONFIG
 {
-  "project_id": "$project_id",
+  "iot_provider": $iot_provider,
+  "project_id": $quoted_id,
   "site_model": "$site_model",
   "device_id": "$device_id",
   "alt_registry": "$alt_registry",

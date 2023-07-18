@@ -22,6 +22,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.JSON_SUFFIX;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
+import static java.util.Optional.ofNullable;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -106,6 +107,7 @@ public class Validator {
   public static final int REQUIRED_FUNCTION_VER = 9;
   public static final String CONFIG_PREFIX = "config_";
   public static final String STATE_PREFIX = "state_";
+  public static final String PROJECT_PROVIDER_PREFIX = "//";
   private static final String ERROR_FORMAT_INDENT = "  ";
   private static final String SCHEMA_VALIDATION_FORMAT = "Validating %d schemas";
   private static final String TARGET_VALIDATION_FORMAT = "Validating %d files against %s";
@@ -207,6 +209,12 @@ public class Validator {
     System.exit(0);
   }
 
+  private static void sanitizeMessageException(Map<String, Object> message) {
+    if (message.get(EXCEPTION_KEY) instanceof Exception exception) {
+      message.put(EXCEPTION_KEY, friendlyStackTrace(exception));
+    }
+  }
+
   private List<String> parseArgs(List<String> argList) {
     if (!argList.isEmpty() && !argList.get(0).startsWith("-")) {
       processProfile(new File(argList.remove(0)));
@@ -218,7 +226,7 @@ public class Validator {
       try {
         switch (option) {
           case "-p":
-            config.project_id = removeNextArg(argList);
+            setProjectId(removeNextArg(argList));
             break;
           case "-s":
             setSiteDir(removeNextArg(argList));
@@ -255,6 +263,16 @@ public class Validator {
       }
     }
     return argList;
+  }
+
+  private void setProjectId(String projectId) {
+    if (!projectId.startsWith(PROJECT_PROVIDER_PREFIX)) {
+      config.project_id = projectId;
+      return;
+    }
+    String[] parts = projectId.substring(PROJECT_PROVIDER_PREFIX.length()).split("/", 2);
+    config.iot_provider = IotProvider.fromValue(parts[0]);
+    config.project_id = parts[1];
   }
 
   private void validatePubSub(String pubSubCombo) {
@@ -329,6 +347,7 @@ public class Validator {
 
   private void setMessageTraceDir(String writeDirArg) {
     traceDir = new File(writeDirArg);
+    System.err.println("Tracing message capture to " + traceDir.getAbsolutePath());
     if (traceDir.exists()) {
       throw new RuntimeException("Trace directory already exists " + traceDir.getAbsolutePath());
     }
@@ -368,7 +387,7 @@ public class Validator {
     boolean rawPath = schemaPart.isAbsolute() || Strings.isNullOrEmpty(config.udmi_root);
     File schemaFile = rawPath ? schemaPart : new File(new File(config.udmi_root), schemaPath);
     if (schemaFile.isFile()) {
-      schemaRoot = Optional.ofNullable(schemaFile.getParentFile()).orElse(new File("."));
+      schemaRoot = ofNullable(schemaFile.getParentFile()).orElse(new File("."));
       schemaSpec = schemaFile.getName();
     } else if (schemaFile.isDirectory()) {
       schemaRoot = schemaFile;
@@ -553,7 +572,7 @@ public class Validator {
     sanitizeMessage(schemaName, message);
 
     String timeString = (String) message.get(TIMESTAMP_KEY);
-    String subTypeRaw = Optional.ofNullable(attributes.get(SUBTYPE_PROPERTY_KEY))
+    String subTypeRaw = ofNullable(attributes.get(SUBTYPE_PROPERTY_KEY))
         .orElse(UNKNOWN_TYPE_DEFAULT);
     if (timeString != null && LAST_SEEN_SUBTYPES.contains(SubType.fromValue(subTypeRaw))) {
       device.updateLastSeen(Date.from(Instant.parse(timeString)));
@@ -610,7 +629,8 @@ public class Validator {
       event.timestamp = new Date();
       String subFolder = origAttributes.get(SUBFOLDER_PROPERTY_KEY);
       event.sub_folder = subFolder;
-      event.sub_type = origAttributes.getOrDefault(SUBTYPE_PROPERTY_KEY, UNKNOWN_TYPE_DEFAULT);
+      event.sub_type = ofNullable(origAttributes.get(SUBTYPE_PROPERTY_KEY))
+          .orElse(UNKNOWN_TYPE_DEFAULT);
       event.status = ReportingDevice.getSummaryEntry(reportingDevice.getMessageEntries());
       String prefix = String.format("%s:",
           typeFolderPairKey(origAttributes.get(SUBTYPE_PROPERTY_KEY), subFolder));
@@ -657,10 +677,10 @@ public class Validator {
     try {
       deviceDir.mkdir();
       String timestamp = (String) message.get(TIMESTAMP_KEY);
-      System.out.printf("Capture %s for %s%n", timestamp, deviceId);
+      System.out.printf("Capture %s at %s for %s%n", filename, timestamp, deviceId);
       OBJECT_MAPPER.writeValue(messageFile, message);
     } catch (Exception e) {
-      throw new RuntimeException("While writing message file " + messageFile.getAbsolutePath());
+      throw new RuntimeException("While writing message file " + messageFile.getAbsolutePath(), e);
     }
   }
 
@@ -711,12 +731,6 @@ public class Validator {
 
     File attributesFile = new File(deviceDir, String.format(ATTRIBUTE_FILE_FORMAT, schemaName));
     OBJECT_MAPPER.writeValue(attributesFile, attributes);
-  }
-
-  private static void sanitizeMessageException(Map<String, Object> message) {
-    if (message.get(EXCEPTION_KEY) instanceof Exception exception) {
-      message.put(EXCEPTION_KEY, friendlyStackTrace(exception));
-    }
   }
 
   private File makeDeviceDir(String deviceId) {

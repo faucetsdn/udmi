@@ -1,14 +1,95 @@
 package com.google.bos.udmi.service.core;
 
+import static com.google.bos.udmi.service.core.ReflectProcessor.UDMI_VERSION;
+import static com.google.udmi.util.Common.TIMESTAMP_KEY;
+import static com.google.udmi.util.Common.VERSION_KEY;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.JsonUtil.stringify;
+import static java.lang.String.format;
+
+import com.google.bos.udmi.service.messaging.MessageContinuation;
+import java.util.Date;
+import java.util.Map;
+import java.util.Optional;
+import udmi.schema.Envelope;
+import udmi.schema.Envelope.SubFolder;
+import udmi.schema.Envelope.SubType;
+
 /**
  * Handle and process messages from the "target" message channel (e.g. PubSub topic). Currently,
  * this is just a simple pass-through with no logic or functionality. It's essentially a TAP point
  * for all events flowing through the system.
  */
-public class TargetProcessor extends UdmisComponent {
+public class TargetProcessor extends ProcessorBase {
 
   @Override
   protected void defaultHandler(Object defaultedMessage) {
+    MessageContinuation continuation = getContinuation(defaultedMessage);
+    Envelope envelope = continuation.getEnvelope();
+    final String deviceRegistryId = envelope.deviceRegistryId;
+    final String transactionId = envelope.transactionId;
+    final SubFolder subFolder = envelope.subFolder;
+    final String deviceId = envelope.deviceId;
+
+    defaultFields(defaultedMessage);
+
     publish(defaultedMessage);
+
+    if (deviceId == null) {
+      debug("Dropping message with no deviceId");
+      return;
+    }
+
+    SubType subType = Optional.ofNullable(envelope.subType).orElse(SubType.EVENT);
+    if (subType != SubType.EVENT) {
+      debug("Dropping non-event type " + subType);
+      return;
+    }
+
+    String message = stringify(defaultedMessage);
+    debug(format("Reflecting message %s %s %s %s %s %s", deviceRegistryId, deviceId, subType,
+        subFolder, transactionId, defaultedMessage.getClass().getSimpleName()));
+    try {
+      reflectMessage(envelope, message);
+    } catch (Exception e) {
+      debug("Exception reflecting message: " + e.getMessage());
+    }
+  }
+
+  @Override
+  protected SubType getExceptionSubType() {
+    return SubType.EVENT;
+  }
+
+  private void defaultFields(Object defaultedMessage) {
+    maybeDefaultField(defaultedMessage, TIMESTAMP_KEY, getDefaultDate());
+    maybeDefaultField(defaultedMessage, VERSION_KEY, UDMI_VERSION);
+  }
+
+  private Date getDefaultDate() {
+    return new Date();
+  }
+
+  private <V> void maybeDefaultField(Object defaultedMessage, String fieldName, V defaultValue) {
+    //noinspection rawtypes
+    if (defaultedMessage instanceof Map messageMap) {
+      //noinspection unchecked
+      messageMap.computeIfAbsent(fieldName, k -> defaultValue);
+      return;
+    }
+
+    try {
+      ifNotNullThen(defaultedMessage.getClass().getField(fieldName), field -> {
+        try {
+          if (field.get(defaultedMessage) == null) {
+            field.set(defaultedMessage, defaultValue);
+          }
+        } catch (IllegalAccessException iae) {
+          debug("No timestamp field access for " + defaultedMessage.getClass().getName());
+        }
+      });
+    } catch (NoSuchFieldException nfe) {
+      debug(format("Skipping default timestamp for " + defaultedMessage.getClass().getName()));
+    }
   }
 }

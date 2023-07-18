@@ -1,17 +1,26 @@
 package com.google.bos.udmi.service.messaging.impl;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
+import static com.google.udmi.util.Common.getExceptionMessage;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
+import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.mergeObject;
+import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.fromString;
+import static com.google.udmi.util.JsonUtil.parseJson;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static com.google.udmi.util.JsonUtil.toStringMap;
 import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 
 import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.bos.udmi.service.pod.ContainerBase;
-import com.google.udmi.util.Common;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -32,9 +41,9 @@ import udmi.schema.Envelope.SubFolder;
  */
 public abstract class MessageBase extends ContainerBase implements MessagePipe {
 
-  private static final String DEFAULT_NAMESPACE = "default-namespace";
+  public static final String INVALID_ENVELOPE_KEY = "invalid";
   static final String TERMINATE_MARKER = "terminate";
-
+  private static final String DEFAULT_NAMESPACE = "default-namespace";
   private static final Set<Object> HANDLED_QUEUES = new HashSet<>();
   private static final long DEFAULT_POLL_TIME_SEC = 1;
   private static final long AWAIT_TERMINATION_SEC = 10;
@@ -66,6 +75,51 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     return DEFAULT_POLL_TIME_SEC;
   }
 
+  protected Bundle makeExceptionBundle(Envelope envelope, Exception exception) {
+    Bundle bundle = new Bundle(envelope, exception);
+    bundle.envelope.subFolder = SubFolder.ERROR;
+    return bundle;
+  }
+
+  private void receiveBundle(Bundle bundle) {
+    receiveBundle(stringify(bundle));
+  }
+
+  private void receiveBundle(String stringBundle) {
+    try {
+      ensureSourceQueue();
+      sourceQueue.put(requireNonNull(stringBundle));
+    } catch (Exception e) {
+      throw new RuntimeException("While receiving bundle", e);
+    }
+  }
+
+  private void receiveException(Map<String, String> attributesMap, String messageString,
+      Exception e, SubFolder forceFolder) {
+    Bundle bundle = new Bundle();
+    bundle.message = friendlyStackTrace(e);
+    bundle.payload = messageString;
+    HashMap<String, String> mutableMap = new HashMap<>(attributesMap);
+    bundle.attributesMap = mutableMap;
+    ifNotNullThen(forceFolder, folder -> mutableMap.put(SUBFOLDER_PROPERTY_KEY, folder.value()));
+    receiveBundle(stringify(bundle));
+  }
+
+  protected void setSourceQueue(BlockingQueue<String> queueForScope) {
+    sourceQueue = queueForScope;
+  }
+
+  protected void terminateHandler() {
+    debug("Terminating " + this);
+    receiveBundle(new Bundle(TERMINATE_MARKER));
+  }
+
+  private void ensureSourceQueue() {
+    if (sourceQueue == null) {
+      sourceQueue = new LinkedBlockingDeque<>();
+    }
+  }
+
   @SuppressWarnings("unchecked")
   private Future<Void> handleQueue() {
     // Keep track of used queues to make sure there's no shenanigans during testing.
@@ -75,15 +129,10 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     return (Future<Void>) executor.submit(this::messageLoop);
   }
 
-  protected Bundle makeExceptionBundle(Exception e) {
-    Bundle bundle = new Bundle(e);
-    bundle.envelope.subFolder = SubFolder.ERROR;
-    return bundle;
-  }
-
   private void messageLoop() {
     try {
       while (true) {
+        Envelope envelope = null;
         try {
           Bundle bundle = extractBundle(sourceQueue.take());
           if (bundle.message.equals(TERMINATE_MARKER)) {
@@ -91,13 +140,14 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
             info("Message loop terminated");
             return;
           }
+          envelope = bundle.envelope;
           dispatcher.accept(bundle);
         } catch (Exception e) {
-          dispatcher.accept(makeExceptionBundle(e));
+          dispatcher.accept(makeExceptionBundle(envelope, e));
         }
       }
     } catch (Exception loopException) {
-      info("Message loop exception: " + Common.getExceptionMessage(loopException));
+      error("Message loop exception: " + getExceptionMessage(loopException));
     }
   }
 
@@ -108,12 +158,6 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     ensureSourceQueue();
     debug("Handling %s to %08x", this, Objects.hash(bundleConsumer));
     sourceFuture = handleQueue();
-  }
-
-  private void ensureSourceQueue() {
-    if (sourceQueue == null) {
-      sourceQueue = new LinkedBlockingDeque<>();
-    }
   }
 
   /**
@@ -154,24 +198,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     }
   }
 
-  protected void terminateHandler() {
-    debug("Terminating " + this);
-    receiveBundle(new Bundle(TERMINATE_MARKER));
-  }
-
-  protected void setSourceQueue(BlockingQueue<String> queueForScope) {
-    sourceQueue = queueForScope;
-  }
-
   public abstract void publish(Bundle bundle);
-
-  /**
-   * Terminate the output path.
-   */
-  public void terminate() {
-    debug("Terminating %s", this);
-    publish(new Bundle(TERMINATE_MARKER));
-  }
 
   @Override
   public void shutdown() {
@@ -184,9 +211,63 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   }
 
   /**
+   * Terminate the output path.
+   */
+  public void terminate() {
+    debug("Terminating %s", this);
+    publish(new Bundle(TERMINATE_MARKER));
+  }
+
+  protected void receiveMessage(Envelope envelope, Map<?, ?> messageMap) {
+    receiveMessage(toStringMap(envelope), stringify(messageMap));
+  }
+
+  protected void receiveMessage(Map<String, String> envelopeMap, Map<?, ?> messageMap) {
+    receiveMessage(envelopeMap, stringify(messageMap));
+  }
+
+  protected void receiveMessage(Map<String, String> attributesMap, String messageString) {
+    final Object messageObject;
+    try {
+      messageObject = parseJson(messageString);
+    } catch (Exception e) {
+      receiveException(attributesMap, messageString, e, SubFolder.ERROR);
+      return;
+    }
+    final Envelope envelope;
+
+    try {
+      envelope = convertToStrict(Envelope.class, attributesMap);
+    } catch (Exception e) {
+      attributesMap.put(INVALID_ENVELOPE_KEY, "true");
+      receiveException(attributesMap, messageString, e, null);
+      return;
+    }
+
+    try {
+      Bundle bundle = new Bundle(envelope, messageObject);
+      info(format("Received %s/%s %s", bundle.envelope.subType, bundle.envelope.subFolder,
+          bundle.envelope.transactionId));
+      receiveBundle(bundle);
+    } catch (Exception e) {
+      receiveException(attributesMap, messageString, e, null);
+    }
+  }
+
+  @Override
+  public String toString() {
+    return format("MessagePipe %08x", Objects.hash(sourceQueue));
+  }
+
+  /**
    * Simple wrapper for a message bundle, including envelope and message.
    */
   public static class Bundle {
+
+    public Envelope envelope;
+    public Object message;
+    public Map<String, String> attributesMap;
+    public String payload;
 
     public Bundle() {
       this.envelope = new Envelope();
@@ -198,30 +279,27 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     }
 
     public Bundle(Envelope envelope, Object message) {
-      this.envelope = envelope;
+      this.envelope = Optional.ofNullable(envelope).orElseGet(Envelope::new);
       this.message = message;
     }
-
-    public Envelope envelope;
-    public Object message;
   }
 
-  protected void receiveBundle(Bundle bundle) {
-    receiveBundle(stringify(bundle));
-  }
+  /**
+   * Exception used for internal bundle handling.
+   */
+  public static class BundleException extends Exception {
 
-  protected void receiveBundle(String stringBundle) {
-    try {
-      ensureSourceQueue();
-      sourceQueue.put(stringBundle);
-    } catch (Exception e) {
-      throw new RuntimeException("While receiving bundle", e);
+    public Bundle bundle = new Bundle();
+
+    /**
+     * New instance.
+     */
+    public BundleException(String stringMessage, Map<String, String> attributesMap,
+        String payload) {
+      bundle.message = stringMessage;
+      bundle.attributesMap = attributesMap;
+      bundle.payload = payload;
     }
-  }
-
-  @Override
-  public String toString() {
-    return format("MessagePipe %08x", Objects.hash(sourceQueue));
   }
 
   @TestOnly

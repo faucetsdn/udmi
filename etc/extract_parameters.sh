@@ -38,6 +38,9 @@ while getopts "p:d:x:l:s:k:f:" opt; do
         f)
             udmi_feed=${OPTARG}
             ;;
+        --)
+            break
+            ;;
         \?)
             echo "Usage: [-p project] [-s site] [-d device] [-x serial] [-l length] [-k key_file] [-f feed_name]"
             false

@@ -8,6 +8,8 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Map;
@@ -86,14 +88,18 @@ public abstract class JsonUtil {
    * @return converted object
    */
   public static <T> T convertToStrict(Class<T> targetClass, Object message) {
-    return message == null ? null : fromStringStrict(targetClass, stringify(message));
+    try {
+      return message == null ? null : fromStringStrict(targetClass, stringify(message));
+    } catch (Exception e) {
+      throw new RuntimeException("While converting to " + targetClass.getName(), e);
+    }
   }
 
   public static <T> T fromString(Class<T> targetClass, String messageString) {
     try {
       return OBJECT_MAPPER.readValue(messageString, checkNotNull(targetClass, "target class"));
     } catch (Exception e) {
-      throw new RuntimeException("While converting message to " + targetClass.getName(), e);
+      throw new RuntimeException("While converting to " + targetClass.getName(), e);
     }
   }
 
@@ -101,7 +107,7 @@ public abstract class JsonUtil {
     try {
       return STRICT_MAPPER.readValue(messageString, checkNotNull(targetClass, "target class"));
     } catch (Exception e) {
-      throw new RuntimeException("While converting message to " + targetClass.getName(), e);
+      throw new RuntimeException("While converting to " + targetClass.getName(), e);
     }
   }
 
@@ -239,6 +245,14 @@ public abstract class JsonUtil {
     }
   }
 
+  public static String loadFileString(File file) {
+    try {
+      return new String(Files.readAllBytes(file.toPath()));
+    } catch (Exception e) {
+      throw new RuntimeException("While loading file " + file.getAbsolutePath(), e);
+    }
+  }
+
   /**
    * Convert the given input file to a mapped representation.
    *
@@ -276,6 +290,29 @@ public abstract class JsonUtil {
     } catch (Exception e) {
       throw new RuntimeException("While stringifying object", e);
     }
+  }
+
+  /**
+   * Parse and get as any Java object from json.
+   */
+  public static Object parseJson(String message) {
+    try {
+      return OBJECT_MAPPER.readTree(message);
+    } catch (Exception e) {
+      throw new RuntimeException("While parsing json object", e);
+    }
+  }
+
+  /**
+   * Convert the pojo to a mapped representation of strings only.
+   *
+   * @param message input object to convert
+   * @return object-as-map
+   */
+  public static Map<String, String> toStringMap(Object message) {
+    @SuppressWarnings("unchecked")
+    Map<String, String> map = convertTo(TreeMap.class, message);
+    return map;
   }
 
   /**

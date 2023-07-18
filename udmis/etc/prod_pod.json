@@ -1,22 +1,25 @@
 {
   "flow_defaults": {
     "protocol": "pubsub",
-    "hostname": "bos-peringknife-dev"
+    "hostname": "@PROJECT@"
   },
   "flows": {
+    "target": {
+      "recv_id": "udmi_target-udmis"
+    },
     "state": {
-      "recv_id": "udmi_state",
+      "recv_id": "udmi_state-udmis",
       "send_id": "udmi_target"
     },
     "reflect": {
-      "recv_id": "udmi_reflect",
+      "recv_id": "udmi_reflect-udmis",
       "send_id": "udmi_target"
     }
   },
   "iot_access": {
-    "default": {
+    "iot_access": {
       "provider": "gcp",
-      "project_id": "bos-peringknife-dev"
+      "project_id": "@PROJECT@"
     }
   }
 }

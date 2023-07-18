@@ -1,5 +1,6 @@
 package com.google.bos.udmi.service.access;
 
+import static com.google.udmi.util.GeneralUtils.decodeBase64;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
@@ -23,6 +24,7 @@ import com.google.api.services.cloudiot.v1.model.Device;
 import com.google.api.services.cloudiot.v1.model.DeviceConfig;
 import com.google.api.services.cloudiot.v1.model.DeviceCredential;
 import com.google.api.services.cloudiot.v1.model.DeviceRegistry;
+import com.google.api.services.cloudiot.v1.model.DeviceState;
 import com.google.api.services.cloudiot.v1.model.Empty;
 import com.google.api.services.cloudiot.v1.model.GatewayConfig;
 import com.google.api.services.cloudiot.v1.model.ListDeviceRegistriesResponse;
@@ -33,7 +35,7 @@ import com.google.api.services.cloudiot.v1.model.SendCommandToDeviceRequest;
 import com.google.api.services.cloudiot.v1.model.UnbindDeviceFromGatewayRequest;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
-import com.google.bos.udmi.service.core.UdmisComponent;
+import com.google.bos.udmi.service.core.ProcessorBase;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
@@ -59,7 +61,7 @@ import udmi.schema.IotAccess;
 /**
  * IoT access provider for (deprecated) GCP IoT Core.
  */
-public class GcpIotAccessProvider extends UdmisComponent implements IotAccessProvider {
+public class GcpIotAccessProvider extends IotAccessBase {
 
   static final Set<String> CLOUD_REGIONS =
       ImmutableSet.of("us-central1", "europe-west1", "asia-east1");
@@ -291,11 +293,11 @@ public class GcpIotAccessProvider extends UdmisComponent implements IotAccessPro
 
   @Override
   public void activate() {
-    super.activate();
     try {
       debug("Initializing GCP access provider for project " + projectId);
       registryCloudRegions = fetchRegistryCloudRegions();
       registries = cloudIotService.projects().locations().registries();
+      super.activate();
     } catch (Exception e) {
       throw new RuntimeException("While activating", e);
     }
@@ -340,6 +342,21 @@ public class GcpIotAccessProvider extends UdmisComponent implements IotAccessPro
       throw new RuntimeException("While fetching device " + devicePath, e);
     }
 
+  }
+
+  @Override
+  public String fetchState(String deviceRegistryId, String deviceId) {
+    String devicePath = getDevicePath(deviceRegistryId, deviceId);
+    try {
+      List<DeviceState> deviceStates =
+          registries.devices().states().list(devicePath).execute().getDeviceStates();
+      if (deviceStates == null || deviceStates.isEmpty()) {
+        return null;
+      }
+      return decodeBase64(deviceStates.get(0).getBinaryData());
+    } catch (Exception e) {
+      throw new RuntimeException("While fetching state " + devicePath, e);
+    }
   }
 
   @Override
@@ -397,10 +414,11 @@ public class GcpIotAccessProvider extends UdmisComponent implements IotAccessPro
     try {
       requireNonNull(registryId, "registry not defined");
       requireNonNull(deviceId, "device not defined");
-      String subFolder = requireNonNull(folder, "subfolder not defined").value();
+      String subFolder = ifNotNullGet(folder, SubFolder::value);
       SendCommandToDeviceRequest request =
           new SendCommandToDeviceRequest().setBinaryData(encodeBase64(message))
               .setSubfolder(subFolder);
+      debug(format("Sending iot command to %s/%s/%s", registryId, deviceId, subFolder));
       registries.devices().sendCommandToDevice(getDevicePath(registryId, deviceId), request)
           .execute();
     } catch (Exception e) {

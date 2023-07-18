@@ -1,5 +1,6 @@
 package com.google.bos.udmi.service.pod;
 
+import static com.google.bos.udmi.service.core.StateProcessor.IOT_ACCESS_COMPONENT;
 import static com.google.bos.udmi.service.messaging.impl.MessageBase.combineConfig;
 import static com.google.bos.udmi.service.messaging.impl.MessageTestCore.TEST_DEVICE;
 import static com.google.bos.udmi.service.messaging.impl.MessageTestCore.TEST_REGISTRY;
@@ -7,16 +8,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.udmi.util.GeneralUtils.arrayOf;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static org.apache.commons.io.FileUtils.deleteDirectory;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
-import com.google.bos.udmi.service.access.IotAccessProvider;
+import com.google.bos.udmi.service.access.LocalIotAccessProvider;
 import com.google.bos.udmi.service.core.ProcessorTestBase;
 import com.google.bos.udmi.service.messaging.StateUpdate;
 import com.google.bos.udmi.service.messaging.impl.LocalMessagePipe;
@@ -25,16 +23,17 @@ import com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl;
 import com.google.bos.udmi.service.messaging.impl.MessagePipeTestBase;
 import java.io.File;
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import udmi.schema.DiscoveryState;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope.SubFolder;
+import udmi.schema.Envelope.SubType;
 import udmi.schema.LocalnetModel;
 import udmi.schema.PodConfiguration;
 import udmi.schema.PointsetState;
@@ -48,7 +47,7 @@ public class UdmiServicePodTest {
   private static final String BASE_CONFIG = "src/test/configs/base_pod.json";
   private static final String BRIDGE_CONFIG = "src/test/configs/bridge_pod.json";
   private static final String FILE_CONFIG = "src/test/configs/trace_pod.json";
-  private static final String TARGET_FILE = "null/null/devices/null/001_event_pointset.json";
+  private static final String TARGET_FILE = "null/null/devices/null/003_event_pointset.json";
   private static final long RECEIVE_TIMEOUT_SEC = 2;
   private static final long RECEIVE_TIMEOUT_MS = RECEIVE_TIMEOUT_SEC * 1000;
 
@@ -82,32 +81,21 @@ public class UdmiServicePodTest {
         combineConfig(podConfig.flow_defaults, reverseFlow(podConfig.flows.get("state")));
     final MessageDispatcherImpl stateDispatcher =
         MessagePipeTestBase.getDispatcherFor(reversedState);
-
-    EndpointConfiguration reversedTarget =
-        combineConfig(podConfig.flow_defaults, reverseFlow(podConfig.flows.get("target")));
-    final MessageDispatcherImpl targetDispatcher =
-        MessagePipeTestBase.getDispatcherFor(reversedTarget);
+    stateDispatcher.prototypeEnvelope.deviceId = TEST_DEVICE;
+    stateDispatcher.prototypeEnvelope.deviceRegistryId = TEST_REGISTRY;
 
     pod.activate();
-
-    CompletableFuture<DiscoveryState> received = new CompletableFuture<>();
-    targetDispatcher.registerHandler(DiscoveryState.class, received::complete);
-    BlockingQueue<Object> defaulted = new LinkedBlockingQueue<>();
-    targetDispatcher.registerHandler(Object.class, defaulted::add);
-    targetDispatcher.activate();
 
     StateUpdate stateUpdate = new StateUpdate();
     stateUpdate.discovery = new DiscoveryState();
     stateUpdate.pointset = new PointsetState();
     stateDispatcher.publish(stateUpdate);
 
-    DiscoveryState discoveryState = received.get(RECEIVE_TIMEOUT_SEC, TimeUnit.SECONDS);
-    assertNotNull(discoveryState, "no received message");
+    pod.shutdown();
 
-    Object polled = defaulted.poll(RECEIVE_TIMEOUT_SEC, TimeUnit.SECONDS);
-    assertTrue(polled instanceof PointsetState, "expected pointset state in default");
-
-    assertNull(defaulted.poll(RECEIVE_TIMEOUT_SEC, TimeUnit.SECONDS));
+    LocalIotAccessProvider iotAccess = UdmiServicePod.getComponent(IOT_ACCESS_COMPONENT);
+    List<String> commands = iotAccess.getCommands();
+    assertEquals(3, commands.size(), "sent commands");
   }
 
   @Test
@@ -163,9 +151,6 @@ public class UdmiServicePodTest {
     ProcessorTestBase.writeVersionDeployFile();
     UdmiServicePod pod = new UdmiServicePod(arrayOf(BASE_CONFIG));
 
-    IotAccessProvider iotAccessProvider = Mockito.mock(IotAccessProvider.class);
-    pod.setIotAccessProvider(iotAccessProvider);
-
     PodConfiguration podConfig = pod.getPodConfiguration();
 
     EndpointConfiguration reversedReflect =
@@ -177,14 +162,17 @@ public class UdmiServicePodTest {
     reflectDispatcher.publishBundle(getReflectorStateBundle());
     pod.shutdown();
 
-    verify(iotAccessProvider, times(1)).activate();
-    verify(iotAccessProvider, times(1)).shutdown();
-    verify(iotAccessProvider, times(1)).modifyConfig(anyString(), anyString(), eq(SubFolder.UPDATE),
-        anyString());
+    LocalIotAccessProvider iotAccessProvider = UdmiServicePod.getComponent(IOT_ACCESS_COMPONENT);
+    List<String> commands = iotAccessProvider.getCommands();
+    assertEquals(1, commands.size(), "expected sent device commands");
   }
 
+  /**
+   * Reset everything to a clean slate for unit tests.
+   */
   @AfterEach
   public void resetForTest() {
+    UdmiServicePod.resetForTest();
     LocalMessagePipe.resetForTestStatic();
   }
 }

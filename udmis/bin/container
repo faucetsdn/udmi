@@ -6,17 +6,36 @@ DROOT=.
 
 function usage {
     echo Error: $*
-    echo Usage: $0 { build, shell, run, push, deploy, update, status, logs, stop }
+    echo Usage: $0 { build, shell, run, push, deploy, update, status, logs, stop } [repo]
     echo Project: $PROJECT
+    echo Try starting with: $0 build
     exit 1
 }
 
-PROJECT=$(gcloud config get project)
-REPOSITORY=gcr.io/$PROJECT
-IMAGE=udmis
-
 cmd=$1
 shift || usage missing command
+repo=$1
+
+PROJECT=$(gcloud config get project)
+
+if [[ -z $repo ]]; then
+    REPOSITORY=gcr.io/$PROJECT
+else
+    REPOSITORY=$repo
+fi
+
+IMAGE=udmis
+
+
+echo Using GCP project $PROJECT
+
+CONTEXT=`kubectl config current-context`
+CONTEXT_ARGS=(${CONTEXT//_/ })
+KPROJECT=${CONTEXT_ARGS[1]}
+if [[ $KPROJECT != $PROJECT ]]; then
+    echo Kubernetes context $CONTEXT does not match gcloud project $PROJECT
+    false
+fi
 
 current_user=$USER@$HOSTNAME
 current_time=`date --utc --iso=seconds`
@@ -42,8 +61,10 @@ if [[ $cmd == build ]]; then
   "built_by": "$current_user"
 }
 EOF
-    cat var/deployed_version.json
+    sed -e "s/@PROJECT@/$PROJECT/" < etc/prod_pod.json > var/prod_pod.json
+    more var/deployed_version.json var/prod_pod.json | cat
     docker build -f Dockerfile.udmis -t $IMAGE $DROOT
+    echo Next try: $0 push
 elif [[ $cmd == run ]]; then
     docker run $RUNARGS udmis
 elif [[ $cmd == shell ]]; then
@@ -54,13 +75,16 @@ elif [[ $cmd == push ]]; then
     sed -e "s/@PROJECT@/$PROJECT/" < k8s_pod.yaml > var/k8s_pod.yaml
     sed -e "s/@PROJECT@/$PROJECT/" < k8s_deployment.yaml > var/k8s_deployment.yaml
     echo Updated var/k8s_pod.yaml for deployment.
+    echo Next try: $0 deploy
 elif [[ $cmd == deploy ]]; then
     kubectl delete pod/udmi-test-pod || true
     kubectl apply -f var/k8s_pod.yaml
+    echo Next try: $0 status
 elif [[ $cmd == update ]]; then
     kubectl apply -f var/k8s_deployment.yaml
 elif [[ $cmd == status ]]; then
     kubectl describe pods udmi-test-pod
+    echo Next try: $0 logs
 elif [[ $cmd == logs ]]; then
     kubectl logs udmi-test-pod
 elif [[ $cmd == stop ]]; then

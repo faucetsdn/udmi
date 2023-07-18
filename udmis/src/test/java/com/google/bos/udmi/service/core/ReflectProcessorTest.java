@@ -1,7 +1,7 @@
 package com.google.bos.udmi.service.core;
 
-import static com.google.bos.udmi.service.core.UdmisComponent.FUNCTIONS_VERSION_MAX;
-import static com.google.bos.udmi.service.core.UdmisComponent.FUNCTIONS_VERSION_MIN;
+import static com.google.bos.udmi.service.core.ProcessorBase.FUNCTIONS_VERSION_MAX;
+import static com.google.bos.udmi.service.core.ProcessorBase.FUNCTIONS_VERSION_MIN;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.stringify;
@@ -10,17 +10,18 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.notNull;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
+import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.common.collect.ImmutableMap;
 import com.google.udmi.util.JsonUtil;
 import java.util.List;
 import java.util.Map;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -41,7 +42,7 @@ public class ReflectProcessorTest extends ProcessorTestBase {
   public final String transactionId = Long.toString(System.currentTimeMillis());
 
   @Override
-  protected @NotNull Class<? extends UdmisComponent> getProcessorClass() {
+  protected @NotNull Class<? extends ProcessorBase> getProcessorClass() {
     return ReflectProcessor.class;
   }
 
@@ -85,7 +86,7 @@ public class ReflectProcessorTest extends ProcessorTestBase {
     udmiState.setup = new SetupUdmiState();
     udmiState.setup.user = TEST_USER;
     udmiState.timestamp = TEST_TIMESTAMP;
-    return asError ? udmiState : ImmutableMap.of(SubFolder.UDMI, udmiState);
+    return asError ? udmiState : ImmutableMap.of(SubFolder.UDMI.value(), udmiState);
   }
 
   private void validateUdmiConfig(UdmiConfig config) {
