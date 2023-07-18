@@ -10,7 +10,6 @@ import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.Common.VERSION_KEY;
-import static com.google.udmi.util.Common.getExceptionMessage;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
@@ -204,27 +203,32 @@ public abstract class ProcessorBase extends ContainerBase {
 
   private String updateConfig(String previous, Envelope attributes,
       Map<String, Object> updatePayload, Date newLastStart) {
-    Map<String, Object> payload = ofNullable(asMap(previous)).orElseGet(HashMap::new);
     Object extraField = ifNotNullGet(updatePayload, p -> p.remove(EXTRA_FIELD_KEY));
     boolean resetConfig = RESET_CONFIG_VALUE.equals(extraField);
     boolean breakConfig = BREAK_CONFIG_VALUE.equals(extraField);
+    final Map<String, Object> payload;
+
     if (resetConfig) {
       debug("Resetting config due to %s value %s", EXTRA_FIELD_KEY, extraField);
-      payload.clear();
+      payload = new HashMap<>();
     } else if (breakConfig) {
       debug("Breaking config due to %s value %s", EXTRA_FIELD_KEY, extraField);
       return BROKEN_CONFIG_JSON;
-    } else if (extraField != null) {
-      warn(format("Ignoring unknown %s value %s", EXTRA_FIELD_KEY, extraField));
-    }
-
-    if (newLastStart != null) {
+    } else if (newLastStart != null) {
+      payload = asMap(ofNullable(previous).orElse(EMPTY_JSON));
       return updateWithLastStart(payload, newLastStart);
     } else if (attributes.subFolder == UPDATE) {
-      payload = updatePayload;
+      payload = new HashMap<>(updatePayload);
     } else {
-      ifNotNullThen(updatePayload, p -> updatePayload.remove(TIMESTAMP_KEY));
-      ifNotNullThen(updatePayload, p -> updatePayload.remove(VERSION_KEY));
+      ifNotNullThen(extraField,
+          field -> warn(format("Ignoring unknown %s value %s", EXTRA_FIELD_KEY, extraField)));
+      payload = asMap(ofNullable(previous).orElse(EMPTY_JSON));
+    }
+
+    ifNotNullThen(updatePayload, p -> updatePayload.remove(TIMESTAMP_KEY));
+    ifNotNullThen(updatePayload, p -> updatePayload.remove(VERSION_KEY));
+
+    if (attributes.subFolder != UPDATE) {
       payload.put(attributes.subFolder.value(), updatePayload);
     }
 
