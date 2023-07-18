@@ -15,17 +15,16 @@ import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.fromStringStrict;
-import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.loadFileStrictRequired;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
+import static java.util.Optional.ofNullable;
 import static udmi.schema.Envelope.SubFolder.UPDATE;
 
 import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.StateUpdate;
-import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import java.io.File;
 import java.util.HashMap;
@@ -65,7 +64,7 @@ public class ReflectProcessor extends ProcessorBase {
         Map<String, Object> payload = extractMessagePayload(stringObjectMap);
         Envelope envelope = extractMessageEnvelope(stringObjectMap);
         reflection.transactionId = envelope.transactionId;
-        ifNotNullThen(payload, p -> processReflection(reflection, envelope, payload));
+        processReflection(reflection, envelope, payload);
       }
     } catch (Exception e) {
       processException(reflection, e);
@@ -117,7 +116,7 @@ public class ReflectProcessor extends ProcessorBase {
         case MODEL:
           return reflectModel(attributes, convertToStrict(CloudModel.class, payload));
         default:
-          return reflectPropagate(attributes, payload);
+          return reflectPropagate(attributes, ofNullable(payload).orElseGet(HashMap::new));
       }
     } catch (Exception e) {
       throw new RuntimeException("While processing reflect message type " + attributes.subType, e);
@@ -125,7 +124,7 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private void processException(Envelope reflection, Exception e) {
-    debug("Processing exception: " + friendlyStackTrace(e));
+    debug("Processing exception %s: %s", reflection.transactionId, friendlyStackTrace(e));
     Map<String, Object> message = new HashMap<>();
     message.put(ERROR_KEY, stackTraceString(e));
     Envelope envelope = new Envelope();
@@ -136,8 +135,12 @@ public class ReflectProcessor extends ProcessorBase {
 
   private void processReflection(Envelope reflection, Envelope envelope,
       Map<String, Object> payload) {
+    debug("Processing reflection %s/%s %s", envelope.subType, envelope.subFolder,
+        envelope.transactionId);
     iotAccess.setProviderAffinity(envelope.deviceRegistryId, envelope.deviceId, reflection.source);
     CloudModel result = getReflectionResult(envelope, payload);
+    ifNotNullThen(result,
+        v -> debug("Reflection result %s: %s", envelope.transactionId, envelope.subType));
     ifNotNullThen(result, v -> sendReflectCommand(reflection, envelope, result));
   }
 
@@ -151,7 +154,7 @@ public class ReflectProcessor extends ProcessorBase {
 
   private CloudModel queryDeviceState(Envelope attributes) {
     try {
-      String state = Optional.ofNullable(
+      String state = ofNullable(
           iotAccess.fetchState(attributes.deviceRegistryId, attributes.deviceId)).orElse("{}");
       debug(format("Processing device %s state query", attributes.deviceId));
       StateUpdate stateUpdate = fromStringStrict(StateUpdate.class, state);
@@ -177,6 +180,7 @@ public class ReflectProcessor extends ProcessorBase {
       processConfigChange(attributes, payload, null);
     }
     Class<?> messageClass = getMessageClassFor(attributes);
+    debug("Propagating message %s: %s", attributes.transactionId, messageClass.getSimpleName());
     publish(convertTo(messageClass, payload));
     return null;
   }
