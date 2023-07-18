@@ -8,6 +8,7 @@ import static com.google.udmi.util.GeneralUtils.copyFields;
 import static com.google.udmi.util.GeneralUtils.decodeBase64;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
+import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
@@ -124,7 +125,7 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private void processException(Envelope reflection, Exception e) {
-    debug("Processing exception: " + GeneralUtils.friendlyStackTrace(e));
+    debug("Processing exception: " + friendlyStackTrace(e));
     Map<String, Object> message = new HashMap<>();
     message.put(ERROR_KEY, stackTraceString(e));
     Envelope envelope = new Envelope();

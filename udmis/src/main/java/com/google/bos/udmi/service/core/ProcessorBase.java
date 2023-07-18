@@ -173,7 +173,7 @@ public abstract class ProcessorBase extends ContainerBase {
       envelope.payload = encodeBase64(message);
       reflectString(envelope.deviceRegistryId, stringify(envelope));
     } catch (Exception e) {
-      error(format("Error reflecting message: %s", getExceptionMessage(e)));
+      error(format("Error reflecting message: %s", friendlyStackTrace(e)));
     } finally {
       envelope.payload = null;
     }

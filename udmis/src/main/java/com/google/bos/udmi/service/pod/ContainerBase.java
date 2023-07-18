@@ -57,6 +57,10 @@ public abstract class ContainerBase {
     output(Level.INFO, message);
   }
 
+  public void trace(String message) {
+    // TODO: Make this dynamic and/or structured logging.
+  }
+
   public void shutdown() {
   }
 }
