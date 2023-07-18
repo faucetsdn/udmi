@@ -167,7 +167,7 @@ jobs:
         run: more out/sequencer.out out/generated.md || true
       - name: sequencer end state
         if: ${{ always() }}
-        run: cat sites/udmi_site_model/out/devices/AHU-1/sequencer_state.json || true
+        run: cat sites/udmi_site_model/out/sequencer_AHU-1.json || true
       - name: schema validation output
         if: ${{ always() }}
         run: |
@@ -209,7 +209,14 @@ jobs:
         run: more out/sequencer.out out/generated.md || true
       - name: sequencer end state
         if: ${{ always() }}
-        run: cat sites/udmi_site_model/out/devices/AHU-1/sequencer_state.json || true
+        run: cat sites/udmi_site_model/out/sequencer_AHU-1.json || true
+      - name: schema validation output
+        if: ${{ always() }}
+        run: |
+          echo ============ out/schemas.out
+          cat out/schemas.out || true
+          echo ============ find RESULT.log
+          find sites/udmi_site_model/out/devices/ -name RESULT.log | xargs fgrep -i schema
       - name: pubber logs
         if: ${{ always() }}
         run: more out/pubber.out* pubber/out/*/*.json || true

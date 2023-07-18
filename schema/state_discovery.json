@@ -16,7 +16,7 @@
       "additionalProperties": false,
       "existingJavaType": "java.util.HashMap<String, FamilyDiscoveryState>",
       "patternProperties": {
-        "^iot|bacnet|ipv4|ipv6|ethmac$": {
+        "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
           "$ref": "file:state_discovery_family.json"
         }
       }
