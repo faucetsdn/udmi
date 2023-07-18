@@ -1,5 +1,6 @@
 package com.google.bos.udmi.service.core;
 
+import static com.google.bos.udmi.service.core.ReflectProcessor.UDMI_VERSION;
 import static com.google.bos.udmi.service.core.StateProcessor.IOT_ACCESS_COMPONENT;
 import static com.google.bos.udmi.service.messaging.MessageDispatcher.messageHandlerFor;
 import static com.google.common.base.Preconditions.checkState;
@@ -23,9 +24,7 @@ import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toStringMap;
 import static java.lang.String.format;
-import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
-import static udmi.schema.Envelope.SubFolder.UDMI;
 import static udmi.schema.Envelope.SubFolder.UPDATE;
 
 import com.google.bos.udmi.service.access.IotAccessBase;
@@ -43,7 +42,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Consumer;
 import org.jetbrains.annotations.TestOnly;
 import udmi.schema.EndpointConfiguration;
@@ -58,15 +56,13 @@ public abstract class ProcessorBase extends ContainerBase {
 
   public static final Integer FUNCTIONS_VERSION_MIN = 9;
   public static final Integer FUNCTIONS_VERSION_MAX = 9;
+  public static final String EMPTY_JSON = "{}";
   static final String REFLECT_REGISTRY = "UDMI-REFLECT";
-  static final String UDMI_VERSION =
-      requireNonNull(ReflectProcessor.DEPLOYED_CONFIG.udmi_functions);
   private static final String RESET_CONFIG_VALUE = "reset_config";
   private static final String BREAK_CONFIG_VALUE = "break_json";
   private static final String EXTRA_FIELD_KEY = "extra_field";
   private static final String BROKEN_CONFIG_JSON =
       format("{ broken by %s == %s", EXTRA_FIELD_KEY, BREAK_CONFIG_VALUE);
-  public static final String EMPTY_JSON = "{}";
   protected MessageDispatcher dispatcher;
   private final ImmutableList<HandlerSpecification> baseHandlers = ImmutableList.of(
       messageHandlerFor(Object.class, this::defaultHandler),
@@ -206,7 +202,8 @@ public abstract class ProcessorBase extends ContainerBase {
     reflectString(deviceRegistryId, stringify(envelopeMap));
   }
 
-  private String updateConfig(String previous, Envelope attributes, Map<String, Object> updatePayload, Date newLastStart) {
+  private String updateConfig(String previous, Envelope attributes,
+      Map<String, Object> updatePayload, Date newLastStart) {
     Map<String, Object> payload = ofNullable(asMap(previous)).orElseGet(HashMap::new);
     Object extraField = ifNotNullGet(updatePayload, p -> p.remove(EXTRA_FIELD_KEY));
     boolean resetConfig = RESET_CONFIG_VALUE.equals(extraField);

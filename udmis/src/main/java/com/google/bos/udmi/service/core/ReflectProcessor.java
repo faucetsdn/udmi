@@ -48,6 +48,7 @@ public class ReflectProcessor extends ProcessorBase {
   static final String DEPLOY_FILE = "var/deployed_version.json";
   static final SetupUdmiConfig DEPLOYED_CONFIG =
       loadFileStrictRequired(SetupUdmiConfig.class, new File(DEPLOY_FILE));
+  static final String UDMI_VERSION = requireNonNull(ReflectProcessor.DEPLOYED_CONFIG.udmi_version);
 
   @Override
   protected void defaultHandler(Object message) {
