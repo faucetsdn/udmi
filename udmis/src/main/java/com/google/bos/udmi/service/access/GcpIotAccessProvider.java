@@ -6,8 +6,6 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.getDate;
-import static com.google.udmi.util.JsonUtil.safeSleep;
-import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -114,6 +112,21 @@ public class GcpIotAccessProvider extends IotAccessBase {
       return cloudIotService;
     } catch (Exception e) {
       throw new RuntimeException("While creating GCP IoT Core service", e);
+    }
+  }
+
+  protected String updateConfig(String registryId, String deviceId, String config, Long version) {
+    try {
+      String useConfig = ofNullable(config).orElse("");
+      registries.devices().modifyCloudToDeviceConfig(
+          getDevicePath(registryId, deviceId),
+          new ModifyCloudToDeviceConfigRequest()
+              .setVersionToUpdate(version)
+              .setBinaryData(Base64.getEncoder().encodeToString(useConfig.getBytes()))
+      ).execute();
+      return useConfig;
+    } catch (Exception e) {
+      throw new RuntimeException("While modifying device config", e);
     }
   }
 
@@ -277,21 +290,6 @@ public class GcpIotAccessProvider extends IotAccessBase {
         .forEach(id -> unbindDevice(registryId, deviceId, id)));
   }
 
-  protected String updateConfig(String registryId, String deviceId, String config, Long version) {
-    try {
-      String useConfig = ofNullable(config).orElse("");
-      registries.devices().modifyCloudToDeviceConfig(
-          getDevicePath(registryId, deviceId),
-          new ModifyCloudToDeviceConfigRequest()
-              .setVersionToUpdate(version)
-              .setBinaryData(Base64.getEncoder().encodeToString(useConfig.getBytes()))
-      ).execute();
-      return useConfig;
-    } catch (Exception e) {
-      throw new RuntimeException("While modifying device config", e);
-    }
-  }
-
   @Override
   public void activate() {
     try {
@@ -401,15 +399,15 @@ public class GcpIotAccessProvider extends IotAccessBase {
       Map<String, Object> messageMap = toMap(message);
       Object payloadSubType = messageMap.get("subType");
       Object payloadSubFolder = messageMap.get("subFolder");
-      debug("Sending command containing %s/%s: %s", payloadSubType,
-          payloadSubFolder, decodeBase64((String) messageMap.get("payload")));
+      String payload = decodeBase64((String) messageMap.get("payload")).replace('\n', ' ');
+      debug("Sending command containing %s/%s: %s", payloadSubType, payloadSubFolder, payload);
       requireNonNull(registryId, "registry not defined");
       requireNonNull(deviceId, "device not defined");
       String subFolder = ifNotNullGet(folder, SubFolder::value);
       SendCommandToDeviceRequest request =
           new SendCommandToDeviceRequest().setBinaryData(encodeBase64(message))
               .setSubfolder(subFolder);
-      debug(format("Sending iot command to %s/%s/%s", registryId, deviceId, subFolder));
+      debug("Sending iot command to %s/%s/%s", registryId, deviceId, subFolder);
       registries.devices().sendCommandToDevice(getDevicePath(registryId, deviceId), request)
           .execute();
     } catch (Exception e) {
