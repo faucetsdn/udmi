@@ -13,14 +13,15 @@
 FROM ubuntu:latest
 
 WORKDIR /root
+ENV CLEARBLADE_CONFIGURATION=/udmi/clearblade.json
 
 #RUN apk add openjdk17 bash
 RUN apt update && apt-get install -y openjdk-17-jre bash
 
-ADD bin/ bin/
-ADD var/ var/
 ADD build/libs/udmis-1.0-SNAPSHOT-all.jar build/libs/udmis-1.0-SNAPSHOT-all.jar
 
-ENV CLEARBLADE_CONFIGURATION=/udmi/clearblade.json
+ADD bin/ bin/
+
+ADD var/ var/
 
 CMD ["/root/bin/run", "/udmi/prod_pod.json"]

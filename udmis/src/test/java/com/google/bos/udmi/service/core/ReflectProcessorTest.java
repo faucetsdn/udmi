@@ -15,13 +15,12 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
-import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.common.collect.ImmutableMap;
 import com.google.udmi.util.JsonUtil;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import org.jetbrains.annotations.NotNull;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -108,10 +107,17 @@ public class ReflectProcessorTest extends ProcessorTestBase {
     assertEquals(0, getExceptionCount(), "exception count");
     assertEquals(1, getDefaultCount(), "default handler count");
 
-    ArgumentCaptor<String> configCaptor = ArgumentCaptor.forClass(String.class);
+    @SuppressWarnings("rawtypes")
+    ArgumentCaptor<Function> configCaptor = ArgumentCaptor.forClass(Function.class);
+
+    //noinspection unchecked
     verify(provider, times(1)).modifyConfig(eq(TEST_REGISTRY), eq(TEST_DEVICE),
-        eq(SubFolder.UPDATE), configCaptor.capture());
-    Map<String, Object> stringObjectMap = toMap(configCaptor.getValue());
+        (Function<String, String>) configCaptor.capture());
+
+    @SuppressWarnings("unchecked")
+    String newConfig = (String) configCaptor.getValue().apply(null);
+
+    Map<String, Object> stringObjectMap = toMap(newConfig);
     UdmiConfig udmi =
         convertToStrict(UdmiConfig.class, stringObjectMap.get(SubFolder.UDMI.value()));
     validateUdmiConfig(udmi);

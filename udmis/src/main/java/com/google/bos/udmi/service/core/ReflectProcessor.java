@@ -1,28 +1,30 @@
 package com.google.bos.udmi.service.core;
 
-import static com.google.bos.udmi.service.core.StateProcessor.IOT_ACCESS_COMPONENT;
 import static com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl.getMessageClassFor;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.Common.ERROR_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.GeneralUtils.copyFields;
 import static com.google.udmi.util.GeneralUtils.decodeBase64;
+import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
+import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
+import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.fromStringStrict;
 import static com.google.udmi.util.JsonUtil.loadFileStrictRequired;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
+import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
+import static java.util.Optional.ofNullable;
 import static udmi.schema.Envelope.SubFolder.UPDATE;
 
-import com.google.bos.udmi.service.access.IotAccessBase;
 import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.StateUpdate;
-import com.google.bos.udmi.service.pod.UdmiServicePod;
-import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import java.io.File;
 import java.util.HashMap;
@@ -46,9 +48,7 @@ public class ReflectProcessor extends ProcessorBase {
   static final String DEPLOY_FILE = "var/deployed_version.json";
   static final SetupUdmiConfig DEPLOYED_CONFIG =
       loadFileStrictRequired(SetupUdmiConfig.class, new File(DEPLOY_FILE));
-  static final String UDMI_VERSION = requireNonNull(DEPLOYED_CONFIG.udmi_functions);
-
-  private IotAccessBase iotAccess;
+  static final String UDMI_VERSION = requireNonNull(ReflectProcessor.DEPLOYED_CONFIG.udmi_version);
 
   @Override
   protected void defaultHandler(Object message) {
@@ -56,7 +56,7 @@ public class ReflectProcessor extends ProcessorBase {
     Envelope reflection = continuation.getEnvelope();
     try {
       if (reflection.subFolder == null) {
-        stateHandler(reflection, extractUdmiState(message));
+        reflectStateHandler(reflection, extractUdmiState(message));
       } else if (reflection.subFolder != SubFolder.UDMI) {
         throw new IllegalStateException("Unexpected reflect subfolder " + reflection.subFolder);
       } else {
@@ -69,6 +69,25 @@ public class ReflectProcessor extends ProcessorBase {
     } catch (Exception e) {
       processException(reflection, e);
     }
+  }
+
+  private Boolean checkConfigAckTime(Envelope attributes, String state) {
+    // const queries = [
+    // iotClient.getDevice(request),
+    //     iotClient.listDeviceConfigVersions(request)
+    //   ];
+    //
+    // return Promise.all(queries).then(([device, config]) =>{
+    // const stateBinaryData = device[0].state && device[0].state.binaryData;
+    // const stateString = stateBinaryData && stateBinaryData.toString();
+    // const msgObject = JSON.parse(stateString) || {};
+    // const lastConfig = config[0].deviceConfigs[0];
+    // const cloudUpdateTime = lastConfig.cloudUpdateTime.seconds;
+    // const deviceAckTime = lastConfig.deviceAckTime && lastConfig.deviceAckTime.seconds;
+    //   msgObject.configAcked = String(deviceAckTime >= cloudUpdateTime);
+    //   return process_state_update(attributes, msgObject);
+    // });
+    return true;
   }
 
   private Envelope extractMessageEnvelope(Object message) {
@@ -93,12 +112,11 @@ public class ReflectProcessor extends ProcessorBase {
     try {
       switch (attributes.subType) {
         case QUERY:
-          attributes.subType = SubType.REPLY;
           return reflectQuery(attributes, payload);
         case MODEL:
           return reflectModel(attributes, convertToStrict(CloudModel.class, payload));
         default:
-          return reflectPropagate(attributes, payload);
+          return reflectPropagate(attributes, ofNullable(payload).orElseGet(HashMap::new));
       }
     } catch (Exception e) {
       throw new RuntimeException("While processing reflect message type " + attributes.subType, e);
@@ -106,7 +124,7 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private void processException(Envelope reflection, Exception e) {
-    debug("Processing exception: " + GeneralUtils.friendlyStackTrace(e));
+    debug("Processing exception %s: %s", reflection.transactionId, friendlyStackTrace(e));
     Map<String, Object> message = new HashMap<>();
     message.put(ERROR_KEY, stackTraceString(e));
     Envelope envelope = new Envelope();
@@ -117,9 +135,13 @@ public class ReflectProcessor extends ProcessorBase {
 
   private void processReflection(Envelope reflection, Envelope envelope,
       Map<String, Object> payload) {
+    debug("Processing reflection %s/%s %s", envelope.subType, envelope.subFolder,
+        envelope.transactionId);
     iotAccess.setProviderAffinity(envelope.deviceRegistryId, envelope.deviceId, reflection.source);
     CloudModel result = getReflectionResult(envelope, payload);
-    sendReflectCommand(reflection, envelope, result);
+    ifNotNullThen(result,
+        v -> debug("Reflection result %s: %s", envelope.transactionId, envelope.subType));
+    ifNotNullThen(result, v -> sendReflectCommand(reflection, envelope, result));
   }
 
   private CloudModel queryCloudDevice(Envelope attributes) {
@@ -132,9 +154,13 @@ public class ReflectProcessor extends ProcessorBase {
 
   private CloudModel queryDeviceState(Envelope attributes) {
     try {
-      String state = Optional.ofNullable(
+      String state = ofNullable(
           iotAccess.fetchState(attributes.deviceRegistryId, attributes.deviceId)).orElse("{}");
-      publish(fromStringStrict(StateUpdate.class, state));
+      debug(format("Processing device %s state query", attributes.deviceId));
+      StateUpdate stateUpdate = fromStringStrict(StateUpdate.class, state);
+      stateUpdate.configAcked = checkConfigAckTime(attributes, state);
+      publish(stateUpdate);
+      reflectStateUpdate(attributes, stringify(stateUpdate));
       CloudModel cloudModel = new CloudModel();
       cloudModel.operation = Operation.FETCH;
       return cloudModel;
@@ -151,16 +177,17 @@ public class ReflectProcessor extends ProcessorBase {
 
   private CloudModel reflectPropagate(Envelope attributes, Map<String, Object> payload) {
     if (requireNonNull(attributes.subType) == SubType.CONFIG) {
-      iotAccess.modifyConfig(attributes.deviceRegistryId, attributes.deviceId, SubFolder.UPDATE,
-          stringify(payload));
+      processConfigChange(attributes, payload, null);
     }
     Class<?> messageClass = getMessageClassFor(attributes);
-    publish(convertToStrict(messageClass, payload));
-    return new CloudModel();
+    debug("Propagating message %s: %s", attributes.transactionId, messageClass.getSimpleName());
+    publish(convertTo(messageClass, payload));
+    return null;
   }
 
   private CloudModel reflectQuery(Envelope attributes, Map<String, Object> payload) {
     checkState(payload.size() == 0, "unexpected non-empty message payload");
+    attributes.subType = SubType.REPLY;
     switch (attributes.subFolder) {
       case UPDATE:
         return queryDeviceState(attributes);
@@ -176,14 +203,7 @@ public class ReflectProcessor extends ProcessorBase {
         ? queryCloudDevice(attributes) : queryCloudRegistry(attributes);
   }
 
-  private void sendReflectCommand(Envelope reflection, Envelope message, Object payload) {
-    String reflectRegistry = reflection.deviceRegistryId;
-    String deviceRegistry = reflection.deviceId;
-    message.payload = encodeBase64(stringify(payload));
-    iotAccess.sendCommand(reflectRegistry, deviceRegistry, SubFolder.UDMI, stringify(message));
-  }
-
-  private void stateHandler(Envelope envelope, UdmiState toolState) {
+  private void reflectStateHandler(Envelope envelope, UdmiState toolState) {
     final String registryId = envelope.deviceRegistryId;
     final String deviceId = envelope.deviceId;
 
@@ -200,13 +220,26 @@ public class ReflectProcessor extends ProcessorBase {
     String contents = stringify(configMap);
     debug("Setting reflector config %s %s %s", registryId, deviceId, contents);
     iotAccess.setProviderAffinity(registryId, deviceId, envelope.source);
-    iotAccess.modifyConfig(registryId, deviceId, UPDATE, contents);
+    iotAccess.modifyConfig(registryId, deviceId, previous -> contents);
+  }
+
+  private void reflectStateUpdate(Envelope attributes, String state) {
+    Envelope envelope = deepCopy(attributes);
+    envelope.subType = SubType.STATE;
+    envelope.subFolder = UPDATE;
+    reflectMessage(envelope, state);
+  }
+
+  private void sendReflectCommand(Envelope reflection, Envelope message, Object payload) {
+    String reflectRegistry = reflection.deviceRegistryId;
+    String deviceRegistry = reflection.deviceId;
+    message.payload = encodeBase64(stringify(payload));
+    iotAccess.sendCommand(reflectRegistry, deviceRegistry, SubFolder.UDMI, stringify(message));
   }
 
   @Override
   public void activate() {
     debug(stringify(DEPLOYED_CONFIG));
-    iotAccess = UdmiServicePod.getComponent(IOT_ACCESS_COMPONENT);
     super.activate();
   }
 }

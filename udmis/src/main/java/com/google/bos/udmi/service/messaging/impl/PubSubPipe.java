@@ -100,7 +100,7 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
   public void publish(Bundle bundle) {
     try {
       if (publisher == null) {
-        debug("Dropping message because publisher is null");
+        trace("Dropping message because publisher is null");
         return;
       }
       Envelope envelope = Optional.ofNullable(bundle.envelope).orElse(new Envelope());
@@ -162,7 +162,7 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
       built.addListener(new Listener() {
         @Override
         public void failed(State from, Throwable failure) {
-          debug(format("Subscriber state %s: %s", from, GeneralUtils.stackTraceString(failure)));
+          debug("Subscriber state %s: %s", from, GeneralUtils.stackTraceString(failure));
         }
       }, Executors.newSingleThreadExecutor());
       return built;

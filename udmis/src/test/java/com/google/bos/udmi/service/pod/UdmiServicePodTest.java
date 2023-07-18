@@ -10,10 +10,12 @@ import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static org.apache.commons.io.FileUtils.deleteDirectory;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.google.bos.udmi.service.access.IotAccessBase;
 import com.google.bos.udmi.service.access.LocalIotAccessProvider;
 import com.google.bos.udmi.service.core.ProcessorTestBase;
 import com.google.bos.udmi.service.messaging.StateUpdate;
@@ -33,7 +35,6 @@ import org.junit.jupiter.api.Test;
 import udmi.schema.DiscoveryState;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope.SubFolder;
-import udmi.schema.Envelope.SubType;
 import udmi.schema.LocalnetModel;
 import udmi.schema.PodConfiguration;
 import udmi.schema.PointsetState;
@@ -50,6 +51,7 @@ public class UdmiServicePodTest {
   private static final String TARGET_FILE = "null/null/devices/null/003_event_pointset.json";
   private static final long RECEIVE_TIMEOUT_SEC = 2;
   private static final long RECEIVE_TIMEOUT_MS = RECEIVE_TIMEOUT_SEC * 1000;
+  public static final String EMPTY_CONFIG = "{}";
 
   private Bundle getReflectorStateBundle() {
     HashMap<Object, Object> messageMap = new HashMap<>();
@@ -151,6 +153,9 @@ public class UdmiServicePodTest {
     ProcessorTestBase.writeVersionDeployFile();
     UdmiServicePod pod = new UdmiServicePod(arrayOf(BASE_CONFIG));
 
+    IotAccessBase iotAccess = UdmiServicePod.getComponent(IOT_ACCESS_COMPONENT);
+    iotAccess.modifyConfig(TEST_REGISTRY, TEST_DEVICE, oldConfig -> EMPTY_CONFIG);
+
     PodConfiguration podConfig = pod.getPodConfiguration();
 
     EndpointConfiguration reversedReflect =
@@ -164,7 +169,13 @@ public class UdmiServicePodTest {
 
     LocalIotAccessProvider iotAccessProvider = UdmiServicePod.getComponent(IOT_ACCESS_COMPONENT);
     List<String> commands = iotAccessProvider.getCommands();
-    assertEquals(1, commands.size(), "expected sent device commands");
+    assertEquals(0, commands.size(), "expected sent device commands");
+
+    iotAccess.modifyConfig(TEST_REGISTRY, TEST_DEVICE, oldConfig -> {
+      // TODO: Check that this conforms to the actual expected reflector config bundle.
+      assertNotEquals(EMPTY_CONFIG, oldConfig, "updated device config");
+      return null;
+    });
   }
 
   /**

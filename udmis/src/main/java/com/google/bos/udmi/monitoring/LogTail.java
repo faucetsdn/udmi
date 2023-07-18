@@ -211,15 +211,12 @@ public class LogTail extends LogTailBase {
     Payload.StringPayload payload = log.getPayload();
     String data = payload.getData().toString();
     debug("udmi_state: %s", data);
-
   }
 
   protected void processLogEntryUdmiTarget(LogEntry log) {
-
     Payload.StringPayload payload = log.getPayload();
     String data = payload.getData().toString();
     debug("udmi_target: %s", data);
-
   }
 
   protected void processLogStream(LogEntryServerStream stream) {
