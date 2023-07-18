@@ -79,13 +79,13 @@ public abstract class BasicPoint implements AbstractPoint {
       return;
     }
 
-    if (!writable) {
-      state.status = notWritableStatus();
-      state.value_state = Value_state.FAILURE;
-      dirty = true;
-    } else if (!validateValue(config.set_value)) {
+    if (!validateValue(config.set_value)) {
       state.status = invalidValueStatus();
       state.value_state = Value_state.INVALID;
+      dirty = true;
+    } else if (!writable) {
+      state.status = notWritableStatus();
+      state.value_state = Value_state.FAILURE;
       dirty = true;
     } else {
       state.value_state = Value_state.APPLIED;
