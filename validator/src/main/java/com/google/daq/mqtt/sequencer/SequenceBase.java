@@ -1462,8 +1462,8 @@ public class SequenceBase {
     Date configLast = catchToNull(() -> deviceConfig.system.operation.last_start);
     boolean synced = stateLast == null || stateLast.equals(configLast);
     if (debugOut) {
-      debug(format("last_start synchronized %s: state/%s =? config/%s", synced, getTimestamp(stateLast),
-          getTimestamp(configLast)));
+      debug(format("last_start synchronized %s: state/%s =? config/%s", synced,
+          getTimestamp(stateLast), getTimestamp(configLast)));
       debug(format("pending configTransactions: %s", configTransactionsListString()));
     }
     return !(synced && configTransactions.isEmpty());
