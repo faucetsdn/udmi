@@ -13,7 +13,7 @@ topics is assumed throughout the UDMI documentation.
 As a minimum, to run or deploy the included tools, the following software will need 
 to be installed on your development system if it's not already there.
 
-*   _JDK v11_
+*   _JDK v17_
 *   `coreutils`
 *   `jq`
 
