@@ -61,6 +61,10 @@ public abstract class ContainerBase {
     // TODO: Make this dynamic and/or structured logging.
   }
 
+  public void trace(String message, Object... args) {
+    trace(format(message, args));
+  }
+
   public void shutdown() {
   }
 }
