@@ -15,6 +15,7 @@ DEVICE_PREFIX = 'device'
 JAVA_DESCRIPTION = '\n%s// %s\n'
 JAVA_TARGET = '%spublic static final String %s = "%s";\n'
 JAVA_LEVEL = '%spublic static final Level %s_LEVEL = %s;\n'
+JAVA_VALUE = '%spublic static final int %s_VALUE = %s.value();\n'
 JAVA_MAP_ADD = '%sstatic { LEVEL.put(%s, %s); }\n'
 
 doc_in = os.path.join('docs/specs/categories.md')
@@ -97,6 +98,7 @@ def write_java_categories(out, indent, categories):
     out.write(JAVA_DESCRIPTION % (indent, desc))
     out.write(JAVA_TARGET % (indent, const, target))
     out.write(JAVA_LEVEL % (indent, const, level))
+    out.write(JAVA_VALUE % (indent, const, level))
     out.write(JAVA_MAP_ADD % (indent, const, level))
 
 
