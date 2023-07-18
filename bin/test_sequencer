@@ -6,6 +6,11 @@ export LC_ALL=C
 ROOT_DIR=$(dirname $0)/..
 cd $ROOT_DIR
 
+debug_opts=-v
+seq_opts=
+alpha_mode=
+clean_cache=
+
 if [[ $1 == 'clean' ]]; then
     shift
     clean_cache=y
@@ -18,8 +23,13 @@ if [[ $1 == 'alpha' ]]; then
     alpha_mode=y
 fi
 
+if [[ $1 == 'full' ]]; then
+    shift
+    debug_opts=
+fi
+
 if [[ $# -lt 1 ]]; then
-    echo Usage: $0 [clean] [alpha] PROJECT_ID [tests...]
+    echo Usage: $0 [clean] [alpha] [full] PROJECT_ID [tests...]
     false
 fi
 
@@ -83,7 +93,7 @@ fi
 bin/augment_metadata $site_path $device_id
 
 # Run in debug mode for fail-fast when things go wrong!
-bin/sequencer -v $seq_opts $site_path $project_id $device_id $serial_no $targets 2>&1 | tee out/sequencer.log
+bin/sequencer $debug_opts $seq_opts $site_path $project_id $device_id $serial_no $targets 2>&1 | tee out/sequencer.log
 echo Completed execution of sequencer test run.
 
 echo Checking reported cloud version info
