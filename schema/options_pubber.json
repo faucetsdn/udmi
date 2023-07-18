@@ -59,6 +59,9 @@
     "noWriteback": {
       "type": "boolean",
       "description": "Removes writeback functionality, mimicking a device without Writeback support" 
+    },
+    "fixedLogLevel": {
+      "type": "integer"
     }
   }
 }

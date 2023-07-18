@@ -966,6 +966,10 @@ public class Pubber {
   }
 
   private boolean shouldLogLevel(int level) {
+    if (configuration.options.fixedLogLevel != null){
+      return level >= configuration.options.fixedLogLevel;
+    }
+
     Integer minLoglevel = deviceConfig.system == null ? null : deviceConfig.system.min_loglevel;
     return level >= (minLoglevel == null ? Level.INFO.value() : minLoglevel);
   }
