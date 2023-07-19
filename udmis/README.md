@@ -26,10 +26,10 @@ kubectl config use-context XXX_bos-test-dev_XXX
 kubectl create secret generic pod-config.json --from-file=var/prod_pod.json
 kubectl get pods
 kubectl apply -f k8s_pod.yaml
-kubectl edit pod/udmi-test-pod
-kubectl delete pod/udmi-test-pod
-kubectl logs udmi-test-pod
+kubectl edit pod/udmis-test-pod
+kubectl delete pod/udmis-test-pod
+kubectl logs udmis-test-pod
 kubectl describe pods
-kubectl describe pods udmi-test-pod
-kubectl exec -ti udmi-test-pod -- bash
+kubectl describe pods udmis-test-pod
+kubectl exec -ti udmis-test-pod -- bash
 ```

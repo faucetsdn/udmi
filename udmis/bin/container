@@ -87,12 +87,12 @@ elif [[ $cmd == deploy ]]; then
     kubectl apply -f var/k8s_pod.yaml
     echo Next try: $0 status
 elif [[ $cmd == status ]]; then
-    kubectl describe pods udmi-test-pod
+    kubectl describe pods udmis-test-pod
     echo Next try: $0 logs
 elif [[ $cmd == logs ]]; then
-    kubectl logs udmi-test-pod
+    kubectl logs udmis-test-pod
 elif [[ $cmd == stop ]]; then
-    kubectl delete pod/udmi-test-pod
+    kubectl delete pod/udmis-test-pod
 elif [[ $cmd == update ]]; then
     kubectl apply -f var/k8s_deployment.yaml
 elif [[ $cmd == remove ]]; then
