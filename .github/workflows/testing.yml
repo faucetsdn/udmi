@@ -262,6 +262,10 @@ jobs:
         run: |
           more out/test_itemized.out out/schemas_itemized.out | cat
           more sites/udmi_site_model/out/devices/AHU-1/tests/*/sequencer.log | cat
+      - name: pubber output logs
+        if: ${{ always() }}
+        run: |
+          more out/pubber.out* | cat
 
   redirect:
     name: Endpoint Redirection
