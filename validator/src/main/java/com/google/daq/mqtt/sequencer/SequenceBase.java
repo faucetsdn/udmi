@@ -719,6 +719,9 @@ public class SequenceBase {
   }
 
   private void recordSchemaValidations(Description description) {
+    // Ensure that enough time has passed to capture event messages for schema validation.
+    untilTrue(format("minimum test duration of %ss", MINIMUM_TEST_SEC), this::beenLongEnough);
+
     validationResults.entrySet().stream()
         .filter(isInterestingValidation())
         .forEach(entry -> {
@@ -1766,6 +1769,9 @@ public class SequenceBase {
       if (!testName.equals(description.getMethodName())) {
         throw new IllegalStateException("Unexpected test method name");
       }
+
+      recordSchemaValidations(description);
+
       notice("ending test " + testName + " after " + timeSinceStart() + " " + START_END_MARKER);
       testName = null;
       if (deviceConfig != null) {
@@ -1783,9 +1789,6 @@ public class SequenceBase {
 
     @Override
     protected void succeeded(Description description) {
-      // Ensure that enough time has passed to capture event messages for schema validation.
-      untilTrue(format("minimum test duration of %ss", MINIMUM_TEST_SEC), this::beenLongEnough);
-
       recordCompletion(SequenceResult.PASS, description, "Sequence complete");
     }
 
@@ -1842,8 +1845,6 @@ public class SequenceBase {
         writeSequencerLog(logEntry);
         writeSystemLog(logEntry);
         setSequenceStatus(description, result, logEntry);
-
-        recordSchemaValidations(description);
       } catch (Exception e) {
         error("Error while recording completion: " + friendlyStackTrace(e));
         e.printStackTrace();
