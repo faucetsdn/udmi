@@ -63,7 +63,7 @@ public class IotReflectorClient implements MessagePublisher {
   private static final Date REFLECTOR_STATE_TIMESTAMP = new Date();
   private static final String CONFIG_CATEGORY = "config";
   private static final String COMMANDS_CATEGORY = "commands";
-  private static final long CONFIG_TIMEOUT_SEC = 10;
+  private static final long CONFIG_TIMEOUT_SEC = 30;
   static final long MESSAGE_POLL_TIME_SEC = 10;
   private static String prevTransactionId;
   private final String udmiVersion;
