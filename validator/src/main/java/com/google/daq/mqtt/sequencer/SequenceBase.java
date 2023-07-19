@@ -720,7 +720,8 @@ public class SequenceBase {
 
   private void recordSchemaValidations(Description description) {
     // Ensure that enough time has passed to capture event messages for schema validation.
-    untilTrue(format("minimum test duration of %ss", MINIMUM_TEST_SEC), this::beenLongEnough);
+    whileDoing(format("minimum test time of %ss", MINIMUM_TEST_SEC),
+        () -> messageEvaluateLoop(this::waitUntilMinimumTime));
 
     validationResults.entrySet().stream()
         .filter(isInterestingValidation())
@@ -1208,8 +1209,8 @@ public class SequenceBase {
     }
   }
 
-  private boolean beenLongEnough() {
-    return secSinceStart() >= MINIMUM_TEST_SEC;
+  private boolean waitUntilMinimumTime() {
+    return secSinceStart() < MINIMUM_TEST_SEC;
   }
 
   private String timeSinceStart() {
@@ -1779,10 +1780,6 @@ public class SequenceBase {
       sequencerLog.close();
       sequenceMd.close();
       activeInstance = null;
-    }
-
-    private boolean beenLongEnough() {
-      return secSinceStart() >= MINIMUM_TEST_SEC;
     }
 
     @Override
