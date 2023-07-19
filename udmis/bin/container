@@ -76,19 +76,16 @@ elif [[ $cmd == push ]]; then
     IMAGENAME=$REPOSITORY/$IMAGE
     docker tag $IMAGE $IMAGENAME
     docker push $IMAGENAME
-    digest=$(docker images --digests $IMAGENAME | fgrep latest | awk '{print $3}')
-    image_digest=$IMAGENAME@$digest
+    hash=$(docker images --digests $IMAGENAME | fgrep latest | awk '{print $3}')
+    image=$IMAGENAME@$hash
     for file in $TEMPLATES; do
-        sed < $file > var/$file -e "s^@IMAGE@^$image_digest^"
-        echo Updated var/$file with image $image_digest
+        sed < $file > var/$file -e "s^@IMAGE@^$image^"
+        echo Updated var/$file with image $image
     done
     echo Next try: $0 deploy
 elif [[ $cmd == deploy ]]; then
-    kubectl delete pod/udmi-test-pod || true
     kubectl apply -f var/k8s_pod.yaml
     echo Next try: $0 status
-elif [[ $cmd == update ]]; then
-    kubectl apply -f var/k8s_deployment.yaml
 elif [[ $cmd == status ]]; then
     kubectl describe pods udmi-test-pod
     echo Next try: $0 logs
@@ -96,6 +93,10 @@ elif [[ $cmd == logs ]]; then
     kubectl logs udmi-test-pod
 elif [[ $cmd == stop ]]; then
     kubectl delete pod/udmi-test-pod
+elif [[ $cmd == update ]]; then
+    kubectl apply -f var/k8s_deployment.yaml
+elif [[ $cmd == remove ]]; then
+    kubectl delete deployment/udmis-pods
 else
     echo Unknown command $cmd
     false
