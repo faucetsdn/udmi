@@ -27,7 +27,7 @@ public abstract class ContainerBase {
 
   private String getExecutionContext() {
     if (executionContext.get() == null) {
-      setExecutionContext(INITIAL_EXECUTION_CONTEXT);
+      executionContext.set(INITIAL_EXECUTION_CONTEXT);
     }
     return executionContext.get();
   }
