@@ -17,7 +17,7 @@ spec:
         tier: backend
     spec:
       containers:
-      - name: maser
+      - name: udmis-core
         image: @IMAGE@
         imagePullPolicy: Always
         resources:
