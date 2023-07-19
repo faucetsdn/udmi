@@ -1691,7 +1691,8 @@ public class SequenceBase {
     deviceConfig.system.testing.sequence_name = FINALIZE_TEST;
     updateConfig("test finalization");
 
-    untilTrue("received at least one state update", this::receivedAtLeastOneState);
+    withRecordSequence(false,
+        () -> untilTrue("received at least one state update", this::receivedAtLeastOneState));
   }
 
   /**
