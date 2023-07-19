@@ -188,6 +188,7 @@ public class SequenceBase {
   private static final ObjectDiffEngine RECV_STATE_DIFFERNATOR = new ObjectDiffEngine();
   private static final Set<String> configTransactions = new ConcurrentSkipListSet<>();
   private static final int MINIMUM_TEST_SEC = 30;
+  public static final String RESET_CONFIG_MARKER = "reset_config";
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -216,7 +217,6 @@ public class SequenceBase {
         "ALPHA functions version should not be > BETA");
   }
 
-  private final Map<SubFolder, String> receivedState = new HashMap<>();
   private final Map<SubFolder, List<Map<String, Object>>> receivedEvents = new HashMap<>();
   private final Map<String, Object> receivedUpdates = new HashMap<>();
   private final Queue<Entry> logEntryQueue = new LinkedBlockingDeque<>();
@@ -247,6 +247,7 @@ public class SequenceBase {
   private String configExceptionTimestamp;
   private boolean useAlternateClient;
   private SequenceResult testResult;
+  private int stateStartCount;
 
   static void ensureValidatorConfig() {
     if (validatorConfig != null) {
@@ -639,16 +640,17 @@ public class SequenceBase {
 
     resetConfig(resetRequired);
 
-    updateConfig("setUp");
+    updateConfig("initial setup");
 
     untilTrue("device state update", () -> deviceState != null);
-    recordSequence = true;
-    waitingConditionPush("executing test");
 
     // Do this late in the sequence to make sure any state is cleared out from previous test.
-    receivedState.clear();
+    stateStartCount = getUpdateCount(SubType.STATE.value()).get();
     receivedEvents.clear();
     validationResults.clear();
+
+    recordSequence = true;
+    waitingConditionPush("executing test");
 
     debug(format("stage begin %s at %s", waitingConditionPeek(), timeSinceStart()));
   }
@@ -674,8 +676,8 @@ public class SequenceBase {
       debug("Starting reset_config full reset " + fullReset);
       if (fullReset) {
         resetDeviceConfig(true);
-        setExtraField("reset_config");
-        deviceConfig.system.testing.sequence_name = extraField;
+        setExtraField(RESET_CONFIG_MARKER);
+        deviceConfig.system.testing.sequence_name = RESET_CONFIG_MARKER;
         sentConfig.clear();
         debug("configTransactions clear");
         configTransactions.clear();
@@ -933,16 +935,8 @@ public class SequenceBase {
     debug(format("stage done %s at %s", condition, timeSinceStart()));
     recordSequence = false;
 
-    if (testResult == SequenceResult.PASS) {
-      untilTrue(format("minimum test duration of %ss", MINIMUM_TEST_SEC), this::beenLongEnough);
-    }
-
     recordMessages = false;
     configAcked = false;
-  }
-
-  private boolean beenLongEnough() {
-    return secSinceStart() >= MINIMUM_TEST_SEC;
   }
 
   private void assertConfigIsNotPending() {
@@ -1367,11 +1361,10 @@ public class SequenceBase {
       }
       Object converted = JsonUtil.convertTo(EXPECTED_UPDATES.get(subTypeRaw), message);
       receivedUpdates.put(subTypeRaw, converted);
-      int updateCount = UPDATE_COUNTS.computeIfAbsent(subTypeRaw, key -> new AtomicInteger())
-          .incrementAndGet();
+      int updateCount = getUpdateCount(subTypeRaw).incrementAndGet();
       if (converted instanceof Config config) {
         String extraField = getExtraField(message);
-        if ("reset_config".equals(extraField)) {
+        if (RESET_CONFIG_MARKER.equals(extraField)) {
           debug("Update with config reset");
         } else if ("break_json".equals(extraField)) {
           error("Shouldn't be seeing this!");
@@ -1407,6 +1400,11 @@ public class SequenceBase {
     } catch (Exception e) {
       throw new RuntimeException("While handling reflector message", e);
     }
+  }
+
+  @NotNull
+  private static AtomicInteger getUpdateCount(String subTypeRaw) {
+    return UPDATE_COUNTS.computeIfAbsent(subTypeRaw, key -> new AtomicInteger());
   }
 
   private List<String> updateDeviceConfig(Config config) {
@@ -1770,8 +1768,20 @@ public class SequenceBase {
       activeInstance = null;
     }
 
+    private boolean beenLongEnough() {
+      return secSinceStart() >= MINIMUM_TEST_SEC;
+    }
+
+    private boolean receivedUpdatedState() {
+      return getUpdateCount(SubType.STATE.value()).get() > stateStartCount;
+    }
+
     @Override
     protected void succeeded(Description description) {
+      // Add some additional checks to make sure enough stuff is ready for schema validation.
+      untilTrue("received at least one state update", this::receivedUpdatedState);
+      untilTrue(format("minimum test duration of %ss", MINIMUM_TEST_SEC), this::beenLongEnough);
+
       recordCompletion(SequenceResult.PASS, description, "Sequence complete");
     }
 
