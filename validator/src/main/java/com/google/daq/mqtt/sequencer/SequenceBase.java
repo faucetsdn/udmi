@@ -132,6 +132,7 @@ public class SequenceBase {
   public static final String SCHEMA_PASS_DETAIL = "No schema violations found";
   public static final String STATE_UPDATE_MESSAGE_TYPE = "state_update";
   public static final String RESET_CONFIG_MARKER = "reset_config";
+  public static final String FINALIZE_TEST = "finalize_test";
   static final FeatureStage DEFAULT_MIN_STAGE = BETA;
   private static final int FUNCTIONS_VERSION_BETA = Validator.REQUIRED_FUNCTION_VER;
   private static final int FUNCTIONS_VERSION_ALPHA = 9; // Version required for alpha execution.
@@ -1680,6 +1681,18 @@ public class SequenceBase {
     return featureValidationState;
   }
 
+  private boolean receivedAtLeastOneState() {
+    return getUpdateCount(SubType.STATE.value()).get() > stateStartCount;
+  }
+
+  protected void ensureTestCapture() {
+    // Add some additional checks to make sure enough stuff is ready for schema validation.
+    deviceConfig.system.testing.sequence_name = FINALIZE_TEST;
+    updateConfig("test finalization");
+
+    untilTrue("received at least one state update", this::receivedAtLeastOneState);
+  }
+
   /**
    * Add a summary of a test, with a simple description of what it's testing.
    */
@@ -1719,8 +1732,6 @@ public class SequenceBase {
         testStage = getTestStage(description);
         testBucket = getBucket(description);
 
-        testStartTimeMs = System.currentTimeMillis();
-
         testDir = new File(new File(deviceOutputDir, TESTS_OUT_DIR), testName);
         FileUtils.deleteDirectory(testDir);
         testDir.mkdirs();
@@ -1732,6 +1743,8 @@ public class SequenceBase {
         startSequenceStatus(description);
 
         notice("starting test " + testName + " " + START_END_MARKER);
+        testStartTimeMs = System.currentTimeMillis();
+
         activeInstance = SequenceBase.this;
       } catch (Exception e) {
         e.printStackTrace();
@@ -1762,14 +1775,9 @@ public class SequenceBase {
       return secSinceStart() >= MINIMUM_TEST_SEC;
     }
 
-    private boolean receivedUpdatedState() {
-      return getUpdateCount(SubType.STATE.value()).get() > stateStartCount;
-    }
-
     @Override
     protected void succeeded(Description description) {
-      // Add some additional checks to make sure enough stuff is ready for schema validation.
-      untilTrue("received at least one state update", this::receivedUpdatedState);
+      // Ensure that enough time has passed to capture event messages for schema validation.
       untilTrue(format("minimum test duration of %ss", MINIMUM_TEST_SEC), this::beenLongEnough);
 
       recordCompletion(SequenceResult.PASS, description, "Sequence complete");

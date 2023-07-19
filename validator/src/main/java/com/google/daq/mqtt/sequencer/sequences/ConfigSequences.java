@@ -43,6 +43,7 @@ public class ConfigSequences extends SequenceBase {
   @Summary("Check that last_update state is correctly set in response to a config update.")
   public void system_last_update() {
     untilTrue("state last_config matches config timestamp", this::stateMatchesConfigTimestamp);
+    ensureTestCapture();
   }
 
   @Test
@@ -52,6 +53,7 @@ public class ConfigSequences extends SequenceBase {
       throw new AssumptionViolatedException("No test serial number provided");
     }
     untilTrue("received serial number matches", () -> serialNo.equals(lastSerialNo));
+    ensureTestCapture();
   }
 
   @Test(timeout = TWO_MINUTES_MS)
