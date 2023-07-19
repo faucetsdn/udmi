@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import com.google.udmi.util.JsonUtil;
 import java.io.PrintStream;
+import java.util.Objects;
 import org.jetbrains.annotations.NotNull;
 import udmi.schema.Level;
 
@@ -14,23 +15,41 @@ import udmi.schema.Level;
  */
 public abstract class ContainerBase {
 
+  public static final String INITIAL_EXECUTION_CONTEXT = "xxxxxxxx";
+  private static final ThreadLocal<String> executionContext = new ThreadLocal<>();
+
+  protected String grabExecutionContext() {
+    String previous = getExecutionContext();
+    String context = format("%08x", Objects.hash(this, Long.toString(System.currentTimeMillis())));
+    setExecutionContext(context);
+    return previous;
+  }
+
+  private String getExecutionContext() {
+    if (executionContext.get() == null) {
+      setExecutionContext(INITIAL_EXECUTION_CONTEXT);
+    }
+    return executionContext.get();
+  }
+
+  protected void setExecutionContext(String newContext) {
+    debug("Setting execution context %s", newContext);
+    executionContext.set(newContext);
+  }
+
   @NotNull
   private String getSimpleName() {
     return getClass().getSimpleName();
   }
 
-  public void activate() {
-  }
-
   private void output(Level level, String message) {
     PrintStream printStream = level.value() >= Level.WARNING.value() ? System.err : System.out;
-    printStream.printf("%s %s %s: %s %s%n", getThreadId(), JsonUtil.getTimestamp(),
+    printStream.printf("%s %s %s: %s %s%n", getExecutionContext(), JsonUtil.getTimestamp(),
         level.name().charAt(0), getSimpleName(), message);
     printStream.flush();
   }
 
-  private String getThreadId() {
-    return format("%08x", Thread.currentThread().hashCode());
+  public void activate() {
   }
 
   public void debug(String format, Object... args) {
@@ -41,20 +60,19 @@ public abstract class ContainerBase {
     output(Level.DEBUG, message);
   }
 
-  public void notice(String message) {
-    output(Level.NOTICE, message);
-  }
-
-  public void warn(String message) {
-    output(Level.WARNING, message);
-  }
-
   public void error(String message) {
     output(Level.ERROR, message);
   }
 
   public void info(String message) {
     output(Level.INFO, message);
+  }
+
+  public void notice(String message) {
+    output(Level.NOTICE, message);
+  }
+
+  public void shutdown() {
   }
 
   public void trace(String message) {
@@ -65,6 +83,7 @@ public abstract class ContainerBase {
     trace(format(message, args));
   }
 
-  public void shutdown() {
+  public void warn(String message) {
+    output(Level.WARNING, message);
   }
 }
