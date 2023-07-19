@@ -79,7 +79,7 @@ elif [[ $cmd == push ]]; then
     hash=$(docker images --digests $IMAGENAME | fgrep latest | awk '{print $3}')
     image=$IMAGENAME@$hash
     for file in $TEMPLATES; do
-        sed < $file > var/$file -e "s^@IMAGE@^$image^"
+        sed < etc/$file > var/$file -e "s^@IMAGE@^$image^"
         echo Updated var/$file with image $image
     done
     echo Next try: $0 deploy
