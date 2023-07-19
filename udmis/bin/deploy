@@ -11,12 +11,7 @@ shift
 ROOT=$(dirname $0)/..
 cd $ROOT
 
-echo Deploying to GCP project $project_id...
-gcloud config set project $project_id
-
-kcontext=$(kubectl config get-contexts | fgrep $project_id | tr '*' ' ' | awk '{ print $1 }')
-echo Using k8s context $kcontext
-kubectl config use-context $kcontext
+bin/setup $project_id
 
 bin/container build
 bin/container push

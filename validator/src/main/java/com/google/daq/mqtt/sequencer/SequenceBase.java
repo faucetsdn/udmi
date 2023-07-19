@@ -94,7 +94,6 @@ import org.junit.After;
 import org.junit.AssumptionViolatedException;
 import org.junit.Before;
 import org.junit.Rule;
-import org.junit.Test;
 import org.junit.rules.TestWatcher;
 import org.junit.rules.Timeout;
 import org.junit.runner.Description;
@@ -132,6 +131,8 @@ public class SequenceBase {
   public static final String VALIDATION_STATE_TOPIC = "validation/state";
   public static final String SCHEMA_PASS_DETAIL = "No schema violations found";
   public static final String STATE_UPDATE_MESSAGE_TYPE = "state_update";
+  public static final String RESET_CONFIG_MARKER = "reset_config";
+  public static final String FINALIZE_TEST = "finalize_test";
   static final FeatureStage DEFAULT_MIN_STAGE = BETA;
   private static final int FUNCTIONS_VERSION_BETA = Validator.REQUIRED_FUNCTION_VER;
   private static final int FUNCTIONS_VERSION_ALPHA = 9; // Version required for alpha execution.
@@ -195,12 +196,12 @@ public class SequenceBase {
   protected static String altRegistry;
   protected static Config deviceConfig;
   protected static MessagePublisher altClient;
+  protected static String serialNo;
   static ExecutionConfiguration validatorConfig;
   private static Validator messageValidator;
   private static ValidationState validationState;
   private static String udmiVersion;
   private static String siteModel;
-  private static String serialNo;
   private static int logLevel;
   private static File deviceOutputDir;
   private static File resultSummary;
@@ -216,7 +217,6 @@ public class SequenceBase {
         "ALPHA functions version should not be > BETA");
   }
 
-  private final Map<SubFolder, String> receivedState = new HashMap<>();
   private final Map<SubFolder, List<Map<String, Object>>> receivedEvents = new HashMap<>();
   private final Map<String, Object> receivedUpdates = new HashMap<>();
   private final Queue<Entry> logEntryQueue = new LinkedBlockingDeque<>();
@@ -228,6 +228,7 @@ public class SequenceBase {
   public SequenceTestWatcher testWatcher = new SequenceTestWatcher();
   protected State deviceState;
   protected boolean configAcked;
+  protected String lastSerialNo;
   private String extraField;
   private Instant lastConfigUpdate;
   private boolean enforceSerial;
@@ -235,18 +236,18 @@ public class SequenceBase {
   private String testDescription;
   private Bucket testBucket;
   private FeatureStage testStage;
-  private long testStartTimeMs;
+  private long startCaptureTime;
   private File testDir;
   private PrintWriter sequencerLog;
   private PrintWriter sequenceMd;
   private PrintWriter systemLog;
-  private String lastSerialNo;
   private boolean recordMessages;
   private boolean recordSequence;
   private int previousEventCount;
   private String configExceptionTimestamp;
   private boolean useAlternateClient;
   private SequenceResult testResult;
+  private int startStateCount;
 
   static void ensureValidatorConfig() {
     if (validatorConfig != null) {
@@ -524,6 +525,11 @@ public class SequenceBase {
     return logEntry;
   }
 
+  @NotNull
+  private static AtomicInteger getUpdateCount(String subTypeRaw) {
+    return UPDATE_COUNTS.computeIfAbsent(subTypeRaw, key -> new AtomicInteger());
+  }
+
   /**
    * Set the extra field test capability for device config. Used for change tracking.
    *
@@ -631,9 +637,6 @@ public class SequenceBase {
 
     testResult = SequenceResult.START;
     configAcked = false;
-    receivedState.clear();
-    receivedEvents.clear();
-    validationResults.clear();
     enforceSerial = false;
     recordMessages = true;
     recordSequence = false;
@@ -642,11 +645,19 @@ public class SequenceBase {
 
     resetConfig(resetRequired);
 
-    updateConfig("setUp");
+    updateConfig("initial setup");
 
     untilTrue("device state update", () -> deviceState != null);
+
+    // Do this late in the sequence to make sure any state is cleared out from previous test.
+    startStateCount = getUpdateCount(SubType.STATE.value()).get();
+    startCaptureTime = System.currentTimeMillis();
+    receivedEvents.clear();
+    validationResults.clear();
+
     recordSequence = true;
     waitingConditionPush("executing test");
+
     debug(format("stage begin %s at %s", waitingConditionPeek(), timeSinceStart()));
   }
 
@@ -671,8 +682,8 @@ public class SequenceBase {
       debug("Starting reset_config full reset " + fullReset);
       if (fullReset) {
         resetDeviceConfig(true);
-        setExtraField("reset_config");
-        deviceConfig.system.testing.sequence_name = extraField;
+        setExtraField(RESET_CONFIG_MARKER);
+        deviceConfig.system.testing.sequence_name = RESET_CONFIG_MARKER;
         sentConfig.clear();
         debug("configTransactions clear");
         configTransactions.clear();
@@ -694,15 +705,6 @@ public class SequenceBase {
     } finally {
       debug("wait for config sync pending " + configIsPending(true));
     }
-  }
-
-  @Test
-  @Feature(stage = ALPHA, bucket = SYSTEM)
-  public void valid_serial_no() {
-    if (serialNo == null) {
-      throw new AssumptionViolatedException("No test serial number provided");
-    }
-    untilTrue("received serial number matches", () -> serialNo.equals(lastSerialNo));
   }
 
   private void recordResult(SequenceResult result, Description description, String message) {
@@ -930,16 +932,8 @@ public class SequenceBase {
     debug(format("stage done %s at %s", condition, timeSinceStart()));
     recordSequence = false;
 
-    if (testResult == SequenceResult.PASS) {
-      untilTrue(format("minimum test duration of %ss", MINIMUM_TEST_SEC), this::beenLongEnough);
-    }
-
     recordMessages = false;
     configAcked = false;
-  }
-
-  private boolean beenLongEnough() {
-    return secSinceStart() >= MINIMUM_TEST_SEC;
   }
 
   private void assertConfigIsNotPending() {
@@ -1217,7 +1211,7 @@ public class SequenceBase {
   }
 
   private long secSinceStart() {
-    return (System.currentTimeMillis() - testStartTimeMs) / 1000;
+    return (System.currentTimeMillis() - startCaptureTime) / 1000;
   }
 
   protected void untilTrue(String description, Supplier<Boolean> evaluator) {
@@ -1364,11 +1358,10 @@ public class SequenceBase {
       }
       Object converted = JsonUtil.convertTo(EXPECTED_UPDATES.get(subTypeRaw), message);
       receivedUpdates.put(subTypeRaw, converted);
-      int updateCount = UPDATE_COUNTS.computeIfAbsent(subTypeRaw, key -> new AtomicInteger())
-          .incrementAndGet();
+      int updateCount = getUpdateCount(subTypeRaw).incrementAndGet();
       if (converted instanceof Config config) {
         String extraField = getExtraField(message);
-        if ("reset_config".equals(extraField)) {
+        if (RESET_CONFIG_MARKER.equals(extraField)) {
           debug("Update with config reset");
         } else if ("break_json".equals(extraField)) {
           error("Shouldn't be seeing this!");
@@ -1689,6 +1682,19 @@ public class SequenceBase {
     return featureValidationState;
   }
 
+  private boolean receivedAtLeastOneState() {
+    return getUpdateCount(SubType.STATE.value()).get() > startStateCount;
+  }
+
+  protected void ensureTestCapture() {
+    // Add some additional checks to make sure enough stuff is ready for schema validation.
+    deviceConfig.system.testing.sequence_name = FINALIZE_TEST;
+    updateConfig("test finalization");
+
+    withRecordSequence(false,
+        () -> untilTrue("received at least one state update", this::receivedAtLeastOneState));
+  }
+
   /**
    * Add a summary of a test, with a simple description of what it's testing.
    */
@@ -1728,8 +1734,6 @@ public class SequenceBase {
         testStage = getTestStage(description);
         testBucket = getBucket(description);
 
-        testStartTimeMs = System.currentTimeMillis();
-
         testDir = new File(new File(deviceOutputDir, TESTS_OUT_DIR), testName);
         FileUtils.deleteDirectory(testDir);
         testDir.mkdirs();
@@ -1741,6 +1745,7 @@ public class SequenceBase {
         startSequenceStatus(description);
 
         notice("starting test " + testName + " " + START_END_MARKER);
+
         activeInstance = SequenceBase.this;
       } catch (Exception e) {
         e.printStackTrace();
@@ -1767,8 +1772,15 @@ public class SequenceBase {
       activeInstance = null;
     }
 
+    private boolean beenLongEnough() {
+      return secSinceStart() >= MINIMUM_TEST_SEC;
+    }
+
     @Override
     protected void succeeded(Description description) {
+      // Ensure that enough time has passed to capture event messages for schema validation.
+      untilTrue(format("minimum test duration of %ss", MINIMUM_TEST_SEC), this::beenLongEnough);
+
       recordCompletion(SequenceResult.PASS, description, "Sequence complete");
     }
 

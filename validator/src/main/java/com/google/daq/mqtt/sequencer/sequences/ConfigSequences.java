@@ -23,6 +23,7 @@ import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import java.time.Instant;
 import java.util.Date;
+import org.junit.AssumptionViolatedException;
 import org.junit.Test;
 import udmi.schema.Entry;
 import udmi.schema.Level;
@@ -42,6 +43,17 @@ public class ConfigSequences extends SequenceBase {
   @Summary("Check that last_update state is correctly set in response to a config update.")
   public void system_last_update() {
     untilTrue("state last_config matches config timestamp", this::stateMatchesConfigTimestamp);
+    ensureTestCapture();
+  }
+
+  @Test
+  @Feature(stage = ALPHA, bucket = SYSTEM)
+  public void valid_serial_no() {
+    if (serialNo == null) {
+      throw new AssumptionViolatedException("No test serial number provided");
+    }
+    untilTrue("received serial number matches", () -> serialNo.equals(lastSerialNo));
+    ensureTestCapture();
   }
 
   @Test(timeout = TWO_MINUTES_MS)

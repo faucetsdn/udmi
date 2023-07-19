@@ -1,0 +1,19 @@
+#!/bin/bash -e
+
+if [[ $# != 1 ]]; then
+    echo Usage: $0 project_id
+    false
+fi
+
+project_id=$1
+shift
+
+ROOT=$(dirname $0)/..
+cd $ROOT
+
+echo Configuring for GCP project $project_id...
+gcloud config set project $project_id
+
+kcontext=$(kubectl config get-contexts | fgrep $project_id | tr '*' ' ' | awk '{ print $1 }')
+echo Using k8s context $kcontext
+kubectl config use-context $kcontext
