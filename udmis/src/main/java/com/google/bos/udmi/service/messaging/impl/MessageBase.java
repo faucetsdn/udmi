@@ -2,7 +2,6 @@ package com.google.bos.udmi.service.messaging.impl;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
-import static com.google.udmi.util.Common.getExceptionMessage;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -31,6 +30,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.TestOnly;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
@@ -49,7 +49,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   private static final long AWAIT_TERMINATION_SEC = 10;
 
   private final ExecutorService executor = Executors.newSingleThreadExecutor();
-  private BlockingQueue<String> sourceQueue;
+  private BlockingQueue<QueueEntry> sourceQueue;
   private Future<Void> sourceFuture;
   private Consumer<Bundle> dispatcher;
 
@@ -86,11 +86,17 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   }
 
   private void receiveBundle(String stringBundle) {
+    ensureSourceQueue();
+    BlockingQueue<QueueEntry> queue = sourceQueue;
+    pushQueueEntry(queue, stringBundle);
+  }
+
+  protected void pushQueueEntry(BlockingQueue<QueueEntry> queue, String stringBundle) {
     try {
-      ensureSourceQueue();
-      sourceQueue.put(requireNonNull(stringBundle));
+      QueueEntry queueEntry = new QueueEntry(grabExecutionContext(), stringBundle);
+      queue.put(requireNonNull(queueEntry));
     } catch (Exception e) {
-      throw new RuntimeException("While receiving bundle", e);
+      throw new RuntimeException("While pushing queue entry", e);
     }
   }
 
@@ -105,7 +111,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     receiveBundle(stringify(bundle));
   }
 
-  protected void setSourceQueue(BlockingQueue<String> queueForScope) {
+  protected void setSourceQueue(BlockingQueue<QueueEntry> queueForScope) {
     sourceQueue = queueForScope;
   }
 
@@ -130,11 +136,12 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   }
 
   private void messageLoop() {
+    grabExecutionContext();
     try {
       while (true) {
         Envelope envelope = null;
         try {
-          Bundle bundle = extractBundle(sourceQueue.take());
+          Bundle bundle = extractBundle(getFromSourceQueue(true));
           if (bundle.message.equals(TERMINATE_MARKER)) {
             debug("Exiting %s", this);
             info("Message loop terminated");
@@ -202,11 +209,22 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
         throw new RuntimeException("Drain on active pipe");
       }
       debug("Polling on %s", this);
-      return ifNotNullGet(sourceQueue.poll(getPollTimeSec(), TimeUnit.SECONDS),
-          MessageBase::extractBundle);
+      return ifNotNullGet(getFromSourceQueue(false), MessageBase::extractBundle);
     } catch (Exception e) {
       throw new RuntimeException("While polling queue", e);
     }
+  }
+
+  @Nullable
+  private String getFromSourceQueue(boolean take) throws InterruptedException {
+    QueueEntry poll = take
+        ? sourceQueue.take()
+        : sourceQueue.poll(getPollTimeSec(), TimeUnit.SECONDS);
+    if (poll == null) {
+      return null;
+    }
+    setExecutionContext(poll.context);
+    return poll.message;
   }
 
   public abstract void publish(Bundle bundle);
@@ -238,6 +256,8 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   }
 
   protected void receiveMessage(Map<String, String> attributesMap, String messageString) {
+    grabExecutionContext();
+
     final Object messageObject;
     try {
       messageObject = parseJson(messageString);
@@ -320,5 +340,9 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   @TestOnly
   void resetForTest() {
     debug("Resetting %s", this);
+  }
+
+  record QueueEntry(String context, String message) {
+
   }
 }
