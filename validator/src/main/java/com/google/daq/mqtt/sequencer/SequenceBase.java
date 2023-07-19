@@ -94,7 +94,6 @@ import org.junit.After;
 import org.junit.AssumptionViolatedException;
 import org.junit.Before;
 import org.junit.Rule;
-import org.junit.Test;
 import org.junit.rules.TestWatcher;
 import org.junit.rules.Timeout;
 import org.junit.runner.Description;
@@ -132,6 +131,7 @@ public class SequenceBase {
   public static final String VALIDATION_STATE_TOPIC = "validation/state";
   public static final String SCHEMA_PASS_DETAIL = "No schema violations found";
   public static final String STATE_UPDATE_MESSAGE_TYPE = "state_update";
+  public static final String RESET_CONFIG_MARKER = "reset_config";
   static final FeatureStage DEFAULT_MIN_STAGE = BETA;
   private static final int FUNCTIONS_VERSION_BETA = Validator.REQUIRED_FUNCTION_VER;
   private static final int FUNCTIONS_VERSION_ALPHA = 9; // Version required for alpha execution.
@@ -188,7 +188,6 @@ public class SequenceBase {
   private static final ObjectDiffEngine RECV_STATE_DIFFERNATOR = new ObjectDiffEngine();
   private static final Set<String> configTransactions = new ConcurrentSkipListSet<>();
   private static final int MINIMUM_TEST_SEC = 30;
-  public static final String RESET_CONFIG_MARKER = "reset_config";
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -196,12 +195,12 @@ public class SequenceBase {
   protected static String altRegistry;
   protected static Config deviceConfig;
   protected static MessagePublisher altClient;
+  protected static String serialNo;
   static ExecutionConfiguration validatorConfig;
   private static Validator messageValidator;
   private static ValidationState validationState;
   private static String udmiVersion;
   private static String siteModel;
-  private static String serialNo;
   private static int logLevel;
   private static File deviceOutputDir;
   private static File resultSummary;
@@ -228,6 +227,7 @@ public class SequenceBase {
   public SequenceTestWatcher testWatcher = new SequenceTestWatcher();
   protected State deviceState;
   protected boolean configAcked;
+  protected String lastSerialNo;
   private String extraField;
   private Instant lastConfigUpdate;
   private boolean enforceSerial;
@@ -240,7 +240,6 @@ public class SequenceBase {
   private PrintWriter sequencerLog;
   private PrintWriter sequenceMd;
   private PrintWriter systemLog;
-  private String lastSerialNo;
   private boolean recordMessages;
   private boolean recordSequence;
   private int previousEventCount;
@@ -525,6 +524,11 @@ public class SequenceBase {
     return logEntry;
   }
 
+  @NotNull
+  private static AtomicInteger getUpdateCount(String subTypeRaw) {
+    return UPDATE_COUNTS.computeIfAbsent(subTypeRaw, key -> new AtomicInteger());
+  }
+
   /**
    * Set the extra field test capability for device config. Used for change tracking.
    *
@@ -699,15 +703,6 @@ public class SequenceBase {
     } finally {
       debug("wait for config sync pending " + configIsPending(true));
     }
-  }
-
-  @Test
-  @Feature(stage = ALPHA, bucket = SYSTEM)
-  public void valid_serial_no() {
-    if (serialNo == null) {
-      throw new AssumptionViolatedException("No test serial number provided");
-    }
-    untilTrue("received serial number matches", () -> serialNo.equals(lastSerialNo));
   }
 
   private void recordResult(SequenceResult result, Description description, String message) {
@@ -1400,11 +1395,6 @@ public class SequenceBase {
     } catch (Exception e) {
       throw new RuntimeException("While handling reflector message", e);
     }
-  }
-
-  @NotNull
-  private static AtomicInteger getUpdateCount(String subTypeRaw) {
-    return UPDATE_COUNTS.computeIfAbsent(subTypeRaw, key -> new AtomicInteger());
   }
 
   private List<String> updateDeviceConfig(Config config) {
