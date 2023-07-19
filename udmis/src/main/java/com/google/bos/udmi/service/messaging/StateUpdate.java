@@ -8,4 +8,10 @@ import udmi.schema.State;
  */
 public class StateUpdate extends State {
 
+  /**
+   * Special internal value used to check if a config-to-device was properly acknowledged by
+   * the device (relates to MQTT QOS settings).
+   */
+  public Boolean configAcked;
+
 }

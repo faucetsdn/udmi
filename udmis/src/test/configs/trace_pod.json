@@ -20,5 +20,10 @@
         "send_id": "mend"
       }
     }
+  },
+  "iot_access": {
+    "iot_access": {
+      "provider": "local"
+    }
   }
 }

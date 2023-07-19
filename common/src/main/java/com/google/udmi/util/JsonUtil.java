@@ -1,6 +1,7 @@
 package com.google.udmi.util;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Objects.requireNonNull;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonParser.Feature;
@@ -13,6 +14,7 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
 
 /**
@@ -30,6 +32,8 @@ public abstract class JsonUtil {
       .setSerializationInclusion(Include.NON_NULL);
   public static final ObjectMapper OBJECT_MAPPER = STRICT_MAPPER.copy()
       .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+  public static final ObjectMapper TERSE_MAPPER = OBJECT_MAPPER.copy()
+      .disable(SerializationFeature.INDENT_OUTPUT);
 
   /**
    * Convert the json string to a generic map object.
@@ -76,6 +80,7 @@ public abstract class JsonUtil {
    * @return converted object
    */
   public static <T> T convertTo(Class<T> targetClass, Object message) {
+    requireNonNull(targetClass, "target class is null");
     return message == null ? null : fromString(targetClass, stringify(message));
   }
 
@@ -88,6 +93,7 @@ public abstract class JsonUtil {
    * @return converted object
    */
   public static <T> T convertToStrict(Class<T> targetClass, Object message) {
+    requireNonNull(targetClass, "target class is null");
     try {
       return message == null ? null : fromStringStrict(targetClass, stringify(message));
     } catch (Exception e) {
@@ -96,6 +102,7 @@ public abstract class JsonUtil {
   }
 
   public static <T> T fromString(Class<T> targetClass, String messageString) {
+    requireNonNull(targetClass, "target class is null");
     try {
       return OBJECT_MAPPER.readValue(messageString, checkNotNull(targetClass, "target class"));
     } catch (Exception e) {
@@ -104,6 +111,7 @@ public abstract class JsonUtil {
   }
 
   public static <T> T fromStringStrict(Class<T> targetClass, String messageString) {
+    requireNonNull(targetClass, "target class is null");
     try {
       return STRICT_MAPPER.readValue(messageString, checkNotNull(targetClass, "target class"));
     } catch (Exception e) {
@@ -287,6 +295,20 @@ public abstract class JsonUtil {
   public static String stringify(Object target) {
     try {
       return OBJECT_MAPPER.writeValueAsString(target);
+    } catch (Exception e) {
+      throw new RuntimeException("While stringifying object", e);
+    }
+  }
+
+  /**
+   * Convert an object to a terse (no indent) json string.
+   *
+   * @param target object to convert
+   * @return json string representation
+   */
+  public static String stringifyTerse(Object target) {
+    try {
+      return TERSE_MAPPER.writeValueAsString(target);
     } catch (Exception e) {
       throw new RuntimeException("While stringifying object", e);
     }

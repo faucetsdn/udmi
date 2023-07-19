@@ -4,15 +4,14 @@ import static com.google.udmi.util.GeneralUtils.sortedMapCollector;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static java.lang.String.format;
 
-import com.google.bos.udmi.service.core.ProcessorBase;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.function.Function;
 import udmi.schema.CloudModel;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.IotAccess;
@@ -60,7 +59,7 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public Entry<String, String> fetchConfig(String registryId, String deviceId) {
+  public Entry<Long, String> fetchConfig(String registryId, String deviceId) {
     return getProviderFor(registryId).fetchConfig(registryId, deviceId);
   }
 
@@ -90,8 +89,13 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public void modifyConfig(String registryId, String deviceId, SubFolder folder, String contents) {
-    getProviderFor(registryId).modifyConfig(registryId, deviceId, folder, contents);
+  protected String updateConfig(String registryId, String deviceId, String config, Long version) {
+    throw new RuntimeException("Shouldn't be called for dynamic provider");
+  }
+
+  @Override
+  public String modifyConfig(String registryId, String deviceId, Function<String, String> munger) {
+    return getProviderFor(registryId).modifyConfig(registryId, deviceId, munger);
   }
 
   @Override

@@ -1,5 +1,9 @@
 package daq.pubber;
 
+import com.google.udmi.util.JsonUtil;
+import java.util.Date;
+import org.checkerframework.checker.units.qual.C;
+import udmi.schema.Category;
 import udmi.schema.Entry;
 import udmi.schema.PointEnumerationEvent;
 import udmi.schema.PointPointsetConfig;
@@ -65,39 +69,57 @@ public abstract class BasicPoint implements AbstractPoint {
    * @param config Configuration to set
    */
   public void setConfig(PointPointsetConfig config) {
+
+    state.status = null;
+
     if (config == null || config.set_value == null) {
       written = false;
-      state.status = null;
       state.value_state = null;
       updateData();
-    } else {
-      if (!validateValue(config.set_value)) {
-        state.status = invalidValueStatus();
-        state.value_state = Value_state.INVALID;
-        dirty = true;
-      } else if (!writable) {
-        state.status = notWritableStatus();
-        state.value_state = Value_state.FAILURE;
-        dirty = true;
-      } else {
-        state.value_state = Value_state.APPLIED;
-        written = true;
-        data.present_value = config.set_value;
-      }
+      return;
     }
-  }
 
-  private Entry invalidValueStatus() {
-    Entry entry = new Entry();
-    entry.message = "Written value is not valid";
-    return entry;
+    if (!validateValue(config.set_value)) {
+      state.status = invalidValueStatus();
+      state.value_state = Value_state.INVALID;
+      dirty = true;
+    } else if (!writable) {
+      state.status = notWritableStatus();
+      state.value_state = Value_state.FAILURE;
+      dirty = true;
+    } else {
+      state.value_state = Value_state.APPLIED;
+      written = true;
+      data.present_value = config.set_value;
+    }
   }
 
   protected abstract boolean validateValue(Object setValue);
 
-  private Entry notWritableStatus() {
+  private Entry getEntry() {
     Entry entry = new Entry();
+    entry.detail = getPointDetail();
+    entry.timestamp = new Date();
+    return entry;
+  }
+
+  private String getPointDetail() {
+    return String.format("Point %s (writable %s)", name, writable);
+  }
+
+  private Entry invalidValueStatus() {
+    Entry entry = getEntry();
+    entry.message = "Written value is not valid";
+    entry.category = Category.POINTSET_POINT_INVALID;
+    entry.level = Category.POINTSET_POINT_INVALID_VALUE;
+    return entry;
+  }
+
+  private Entry notWritableStatus() {
+    Entry entry = getEntry();
     entry.message = "Point is not writable";
+    entry.category = Category.POINTSET_POINT_FAILURE;
+    entry.level = Category.POINTSET_POINT_FAILURE_VALUE;
     return entry;
   }
 

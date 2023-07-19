@@ -40,7 +40,7 @@
       "additionalProperties": false,
       "existingJavaType": "java.util.Map<String, FamilyDiscoveryEvent>",
       "patternProperties": {
-        "^iot|bacnet|ipv4|ipv6|ethmac$": {
+        "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
           "$ref": "file:event_discovery_family.json"
         }
       }
