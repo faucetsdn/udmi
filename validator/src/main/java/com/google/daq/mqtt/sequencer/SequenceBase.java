@@ -911,8 +911,8 @@ public class SequenceBase {
     if (logEntry.timestamp == null) {
       throw new RuntimeException("log entry timestamp is null");
     }
-    String messageStr = format("%s %s %s %s", getTimestamp(logEntry.timestamp),
-        Level.fromValue(logEntry.level), logEntry.category, logEntry.message);
+    String messageStr = format("%s %s %s", getTimestamp(logEntry.timestamp),
+        Level.fromValue(logEntry.level), logEntry.message);
 
     printWriter.println(messageStr);
     printWriter.flush();
@@ -972,7 +972,7 @@ public class SequenceBase {
       String messageData = stringify(data);
       String sentBlockConfig = sentConfig.computeIfAbsent(subBlock, key -> "null");
       boolean updated = !messageData.equals(sentBlockConfig);
-      trace("updated check config_" + subBlock, sentBlockConfig);
+      trace("updated check config_" + subBlock + " " + updated, sentBlockConfig);
       if (updated) {
         String augmentedMessage = actualize(stringify(data));
         String topic = subBlock + "/config";
@@ -982,8 +982,6 @@ public class SequenceBase {
         sentConfig.put(subBlock, messageData);
         debug(format("configTransactions add " + transactionId));
         configTransactions.add(transactionId);
-      } else {
-        trace("unchanged config_" + subBlock + ": " + messageData);
       }
       return updated;
     } catch (Exception e) {
@@ -1385,7 +1383,7 @@ public class SequenceBase {
       } else if (converted instanceof State convertedState) {
         if (deviceState != null && convertedState.timestamp != null
             && convertedState.timestamp.before(deviceState.timestamp)) {
-          warning("Ignoring out-of-order state update " + convertedState);
+          warning("Ignoring out-of-order state update " + getTimestamp(convertedState.timestamp));
           return;
         }
         if (updateCount == 1) {
