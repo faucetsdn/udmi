@@ -631,9 +631,6 @@ public class SequenceBase {
 
     testResult = SequenceResult.START;
     configAcked = false;
-    receivedState.clear();
-    receivedEvents.clear();
-    validationResults.clear();
     enforceSerial = false;
     recordMessages = true;
     recordSequence = false;
@@ -647,6 +644,12 @@ public class SequenceBase {
     untilTrue("device state update", () -> deviceState != null);
     recordSequence = true;
     waitingConditionPush("executing test");
+
+    // Do this late in the sequence to make sure any state is cleared out from previous test.
+    receivedState.clear();
+    receivedEvents.clear();
+    validationResults.clear();
+
     debug(format("stage begin %s at %s", waitingConditionPeek(), timeSinceStart()));
   }
 
