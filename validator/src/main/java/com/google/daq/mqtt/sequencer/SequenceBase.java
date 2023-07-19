@@ -622,6 +622,7 @@ public class SequenceBase {
    */
   @Before
   public void setUp() {
+    startCaptureTime = 0;
     if (activeInstance == null) {
       throw new RuntimeException("Active sequencer instance not setup, aborting");
     }
@@ -1206,8 +1207,12 @@ public class SequenceBase {
     }
   }
 
+  private boolean beenLongEnough() {
+    return secSinceStart() >= MINIMUM_TEST_SEC;
+  }
+
   private String timeSinceStart() {
-    return secSinceStart() + "s";
+    return startCaptureTime > 0 ? (secSinceStart() + "s") : "pretest";
   }
 
   private long secSinceStart() {
