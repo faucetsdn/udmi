@@ -1383,7 +1383,7 @@ public class SequenceBase {
       } else if (converted instanceof State convertedState) {
         if (deviceState != null && convertedState.timestamp != null
             && convertedState.timestamp.before(deviceState.timestamp)) {
-          warning("Ignoring out-of-order state update " + convertedState);
+          warning("Ignoring out-of-order state update " + getTimestamp(convertedState.timestamp));
           return;
         }
         if (updateCount == 1) {
