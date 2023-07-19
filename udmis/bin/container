@@ -49,6 +49,7 @@ fi
 funcver=`git describe $funchash`$funcdirty
 
 RUNARGS="--rm -ti -v $PWD/var:/udmi -v $HOME/.config:/root/.config --tmpfs /tmp"
+TEMPLATES="k8s_pod.yaml k8s_deployment.yaml"
 
 if [[ $cmd == build ]]; then
     rm -rf var
@@ -72,11 +73,15 @@ elif [[ $cmd == run ]]; then
 elif [[ $cmd == shell ]]; then
     docker run $RUNARGS $IMAGE bash
 elif [[ $cmd == push ]]; then
-    docker tag $IMAGE $REPOSITORY/$IMAGE
-    docker push $REPOSITORY/$IMAGE
-    sed -e "s/@PROJECT@/$PROJECT/" < k8s_pod.yaml > var/k8s_pod.yaml
-    sed -e "s/@PROJECT@/$PROJECT/" < k8s_deployment.yaml > var/k8s_deployment.yaml
-    echo Updated var/k8s_pod.yaml for deployment.
+    IMAGENAME=$REPOSITORY/$IMAGE
+    docker tag $IMAGE $IMAGENAME
+    docker push $IMAGENAME
+    digest=$(docker images --digests $IMAGENAME | fgrep latest | awk '{print $3}')
+    image_digest=$IMAGENAME@$digest
+    for file in $TEMPLATES; do
+        sed < $file > var/$file -e "s^@IMAGE@^$image_digest^"
+        echo Updated var/$file with image $image_digest
+    done
     echo Next try: $0 deploy
 elif [[ $cmd == deploy ]]; then
     kubectl delete pod/udmi-test-pod || true
