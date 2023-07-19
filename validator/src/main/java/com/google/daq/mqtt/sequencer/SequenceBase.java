@@ -236,7 +236,7 @@ public class SequenceBase {
   private String testDescription;
   private Bucket testBucket;
   private FeatureStage testStage;
-  private long testStartTimeMs;
+  private long startCaptureTime;
   private File testDir;
   private PrintWriter sequencerLog;
   private PrintWriter sequenceMd;
@@ -247,7 +247,7 @@ public class SequenceBase {
   private String configExceptionTimestamp;
   private boolean useAlternateClient;
   private SequenceResult testResult;
-  private int stateStartCount;
+  private int startStateCount;
 
   static void ensureValidatorConfig() {
     if (validatorConfig != null) {
@@ -650,7 +650,8 @@ public class SequenceBase {
     untilTrue("device state update", () -> deviceState != null);
 
     // Do this late in the sequence to make sure any state is cleared out from previous test.
-    stateStartCount = getUpdateCount(SubType.STATE.value()).get();
+    startStateCount = getUpdateCount(SubType.STATE.value()).get();
+    startCaptureTime = System.currentTimeMillis();
     receivedEvents.clear();
     validationResults.clear();
 
@@ -1210,7 +1211,7 @@ public class SequenceBase {
   }
 
   private long secSinceStart() {
-    return (System.currentTimeMillis() - testStartTimeMs) / 1000;
+    return (System.currentTimeMillis() - startCaptureTime) / 1000;
   }
 
   protected void untilTrue(String description, Supplier<Boolean> evaluator) {
@@ -1682,7 +1683,7 @@ public class SequenceBase {
   }
 
   private boolean receivedAtLeastOneState() {
-    return getUpdateCount(SubType.STATE.value()).get() > stateStartCount;
+    return getUpdateCount(SubType.STATE.value()).get() > startStateCount;
   }
 
   protected void ensureTestCapture() {
@@ -1743,7 +1744,6 @@ public class SequenceBase {
         startSequenceStatus(description);
 
         notice("starting test " + testName + " " + START_END_MARKER);
-        testStartTimeMs = System.currentTimeMillis();
 
         activeInstance = SequenceBase.this;
       } catch (Exception e) {
