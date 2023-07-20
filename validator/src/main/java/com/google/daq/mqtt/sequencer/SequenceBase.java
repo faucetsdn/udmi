@@ -721,8 +721,8 @@ public class SequenceBase {
   private void recordSchemaValidations(Description description) {
     // Ensure that enough time has passed to capture event messages for schema validation.
     if (waitTimeRemainingSec() > 0) {
-      debug(format("waiting %ds for more messages...", waitTimeRemainingSec()));
-      whileDoing(format("minimum test time of %ss", MINIMUM_TEST_SEC),
+      info(format("waiting %ds for more messages...", waitTimeRemainingSec()));
+      whileDoing(format("minimum test time", MINIMUM_TEST_SEC),
           () -> messageEvaluateLoop(() -> waitTimeRemainingSec() > 0));
     }
 
@@ -1213,7 +1213,7 @@ public class SequenceBase {
   }
 
   private long waitTimeRemainingSec() {
-    return (System.currentTimeMillis() - startCaptureTime) / 1000 - MINIMUM_TEST_SEC;
+    return MINIMUM_TEST_SEC - (System.currentTimeMillis() - startCaptureTime) / 1000;
   }
 
   private String timeSinceStart() {
