@@ -236,6 +236,7 @@ public class SequenceBase {
   private String testDescription;
   private Bucket testBucket;
   private FeatureStage testStage;
+  private long startTestTimeMs;
   private long startCaptureTime;
   private File testDir;
   private PrintWriter sequencerLog;
@@ -622,7 +623,6 @@ public class SequenceBase {
    */
   @Before
   public void setUp() {
-    startCaptureTime = 0;
     if (activeInstance == null) {
       throw new RuntimeException("Active sequencer instance not setup, aborting");
     }
@@ -720,8 +720,11 @@ public class SequenceBase {
 
   private void recordSchemaValidations(Description description) {
     // Ensure that enough time has passed to capture event messages for schema validation.
-    whileDoing(format("minimum test time of %ss", MINIMUM_TEST_SEC),
-        () -> messageEvaluateLoop(this::waitUntilMinimumTime));
+    if (waitTimeRemainingSec() > 0) {
+      debug("waiting %ss for more messages...", Long.toString(waitTimeRemainingSec()));
+      whileDoing(format("minimum test time of %ss", MINIMUM_TEST_SEC),
+          () -> messageEvaluateLoop(() -> waitTimeRemainingSec() > 0));
+    }
 
     validationResults.entrySet().stream()
         .filter(isInterestingValidation())
@@ -1209,16 +1212,12 @@ public class SequenceBase {
     }
   }
 
-  private boolean waitUntilMinimumTime() {
-    return secSinceStart() < MINIMUM_TEST_SEC;
+  private long waitTimeRemainingSec() {
+    return (System.currentTimeMillis() - startCaptureTime) / 1000;
   }
 
   private String timeSinceStart() {
-    return startCaptureTime > 0 ? (secSinceStart() + "s") : "pretest";
-  }
-
-  private long secSinceStart() {
-    return (System.currentTimeMillis() - startCaptureTime) / 1000;
+    return (System.currentTimeMillis() - startTestTimeMs) / 1000 + "s";
   }
 
   protected void untilTrue(String description, Supplier<Boolean> evaluator) {
@@ -1752,6 +1751,8 @@ public class SequenceBase {
 
         startSequenceStatus(description);
 
+        startCaptureTime = 0;
+        startTestTimeMs = System.currentTimeMillis();
         notice("starting test " + testName + " " + START_END_MARKER);
 
         activeInstance = SequenceBase.this;
