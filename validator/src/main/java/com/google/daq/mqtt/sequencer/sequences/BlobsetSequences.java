@@ -192,7 +192,7 @@ public class BlobsetSequences extends SequenceBase {
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Feature(stage = DISABLED, bucket = ENDPOINT)
+  @Feature(stage = ALPHA, bucket = ENDPOINT)
   public void endpoint_failure_and_restart() {
     setDeviceConfigEndpointBlob(BOGUS_ENDPOINT_HOSTNAME, registryId, false);
     untilErrorReported();
