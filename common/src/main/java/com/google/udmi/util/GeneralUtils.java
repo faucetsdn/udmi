@@ -154,6 +154,12 @@ public class GeneralUtils {
     return value == null ? null : converter.get();
   }
 
+  public static void ifNullThen(Object serialNo, Runnable action) {
+    if (serialNo == null) {
+      action.run();
+    }
+  }
+
   public static <T> void ifNotNullThen(T value, Consumer<T> consumer) {
     Optional.ofNullable(value).ifPresent(consumer);
   }
