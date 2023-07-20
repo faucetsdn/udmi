@@ -16,7 +16,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
-import org.checkerframework.checker.units.qual.A;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
@@ -34,10 +33,10 @@ public class StateProcessor extends ProcessorBase {
       Arrays.stream(SubFolder.values()).map(SubFolder::value).collect(Collectors.toSet());
 
   @Override
-  protected void defaultHandler(Object defaultedMessage) {
-    StateUpdate stateMessage = convertToStrict(StateUpdate.class, defaultedMessage);
-    shardStateUpdate(stateMessage, defaultedMessage);
-    updateLastStart(stateMessage, defaultedMessage);
+  protected void defaultHandler(Object originalMessage) {
+    StateUpdate stateMessage = convertToStrict(StateUpdate.class, originalMessage);
+    shardStateUpdate(stateMessage, originalMessage);
+    updateLastStart(stateMessage, originalMessage);
   }
 
   @Override
@@ -80,7 +79,7 @@ public class StateProcessor extends ProcessorBase {
   }
 
   private void stateHandler(StateUpdate message) {
-    shardStateUpdate(message, getContinuation(message));
+    shardStateUpdate(message, message);
   }
 
   private void updateLastStart(StateUpdate message, Object baseMessage) {
