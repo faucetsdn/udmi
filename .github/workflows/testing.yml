@@ -143,7 +143,7 @@ jobs:
   sequencer:
     name: Sequencer Suite
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 45
     if: vars.GCP_TARGET_PROJECT != '' && vars.UDMI_REGISTRY_SUFFIX != ''
     env:
       GCP_TARGET_PROJECT: ${{ vars.GCP_TARGET_PROJECT }}
@@ -185,7 +185,7 @@ jobs:
   sequencer_dep:
     name: Sequencer Suite
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     needs: redirect
     if: vars.GCP_TARGET_PROJECT != '' && vars.UDMI_REGISTRY_SUFFIX == ''
     env:
