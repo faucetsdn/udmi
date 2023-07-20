@@ -14,7 +14,9 @@ import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.GeneralUtils.changedLines;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
+import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
@@ -62,10 +64,6 @@ import com.google.udmi.util.SiteModel;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -188,7 +186,8 @@ public class SequenceBase {
   private static final ObjectDiffEngine RECV_CONFIG_DIFFERNATOR = new ObjectDiffEngine();
   private static final ObjectDiffEngine RECV_STATE_DIFFERNATOR = new ObjectDiffEngine();
   private static final Set<String> configTransactions = new ConcurrentSkipListSet<>();
-  private static final int MINIMUM_TEST_SEC = 30;
+  private static final int MINIMUM_TEST_SEC = 15;
+  private static final String FORCE_UPDATE_CONFIG_KEY = "null";
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -949,6 +948,10 @@ public class SequenceBase {
   }
 
   protected void updateConfig(String reason) {
+    updateConfig(reason, false);
+  }
+
+  private void updateConfig(String reason, boolean force) {
     assertConfigIsNotPending();
     // Add a forced sleep to make sure second-quantized timestamps are unique.
     safeSleep(CONFIG_BARRIER_MS);
@@ -958,6 +961,11 @@ public class SequenceBase {
     updateConfig(SubFolder.LOCALNET, deviceConfig.localnet);
     updateConfig(SubFolder.BLOBSET, deviceConfig.blobset);
     updateConfig(SubFolder.DISCOVERY, deviceConfig.discovery);
+    if (!configIsPending() && force) {
+      debug("Forcing config update");
+      sentConfig.remove(FORCE_UPDATE_CONFIG_KEY);
+      updateConfig(null, null);
+    }
     if (configIsPending()) {
       lastConfigUpdate = CleanDateFormat.clean(Instant.now());
       String debugReason = reason == null ? "" : (", because " + reason);
@@ -971,7 +979,7 @@ public class SequenceBase {
   private boolean updateConfig(SubFolder subBlock, Object data) {
     try {
       String messageData = stringify(data);
-      String sentBlockConfig = sentConfig.computeIfAbsent(subBlock, key -> "null");
+      String sentBlockConfig = sentConfig.computeIfAbsent(subBlock, key -> FORCE_UPDATE_CONFIG_KEY);
       boolean updated = !messageData.equals(sentBlockConfig);
       trace("updated check config_" + subBlock + " " + updated, sentBlockConfig);
       if (updated) {
@@ -1690,28 +1698,19 @@ public class SequenceBase {
     return getUpdateCount(SubType.STATE.value()).get() > startStateCount;
   }
 
-  protected void ensureTestCapture() {
-    // Add some additional checks to make sure enough stuff is ready for schema validation.
-    deviceConfig.system.testing.sequence_name = FINALIZE_TEST;
-    updateConfig("test finalization");
-
+  protected void ensureStateUpdate() {
+    updateConfig("state update", true);
     withRecordSequence(false,
         () -> untilTrue("received at least one state update", this::receivedAtLeastOneState));
   }
 
-  /**
-   * Add a summary of a test, with a simple description of what it's testing.
-   */
-  @Retention(RetentionPolicy.RUNTIME)
-  @Target({ElementType.METHOD})
-  public @interface Summary {
+  protected void skipTest(String reason) {
+    throw new AssumptionViolatedException(reason);
+  }
 
-    /**
-     * Summary description of the test.
-     *
-     * @return test summary description
-     */
-    String value();
+  protected <T> T ifNullSkipTest(T testable, String reason) {
+    ifNullThen(testable, () -> skipTest(reason));
+    return testable;
   }
 
   /**
@@ -1768,7 +1767,8 @@ public class SequenceBase {
         throw new IllegalStateException("Unexpected test method name");
       }
 
-      recordSchemaValidations(description);
+      ValidateSchema annotation = description.getAnnotation(ValidateSchema.class);
+      ifNotNullThen(annotation, a -> recordSchemaValidations(description));
 
       notice("ending test " + testName + " after " + timeSinceStart() + " " + START_END_MARKER);
       testName = null;
