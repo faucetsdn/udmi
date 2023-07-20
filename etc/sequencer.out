@@ -6,6 +6,7 @@ RESULT pass endpoint endpoint_connection_retry ALPHA 5 Sequence complete
 RESULT pass endpoint endpoint_connection_success_alternate ALPHA 5 Sequence complete
 RESULT pass endpoint endpoint_connection_success_reconnect ALPHA 5 Sequence complete
 RESULT pass endpoint endpoint_redirect_and_restart ALPHA 5 Sequence complete
+RESULT pass endpoint endpoint_failure_and_restart ALPHA 5 Sequence complete
 RESULT pass enumeration empty_enumeration PREVIEW 5 Sequence complete
 RESULT pass enumeration multi_enumeration ALPHA 5 Sequence complete
 RESULT pass enumeration.families family_enumeration ALPHA 5 Sequence complete

@@ -7,10 +7,6 @@ RESULT pass schemas state_update_preview PREVIEW 5 All schema validations passed
 RESULT pass schemas event_pointset_alpha ALPHA 5 All schema validations passed
 RESULT pass schemas event_system_alpha ALPHA 5 All schema validations passed
 RESULT pass schemas state_update_alpha ALPHA 5 All schema validations passed
-=========== endpoint_failure_and_restart
-RESULT pass schemas event_pointset_disabled DISABLED 5 All schema validations passed
-RESULT pass schemas event_system_disabled DISABLED 5 All schema validations passed
-RESULT fail schemas state_update_disabled DISABLED 5 Schema violations found
 =========== valid_serial_no
 RESULT pass schemas event_pointset_alpha ALPHA 5 All schema validations passed
 RESULT pass schemas event_system_alpha ALPHA 5 All schema validations passed

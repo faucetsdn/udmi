@@ -1130,6 +1130,7 @@ public class Pubber {
   }
 
   private void persistEndpoint(EndpointConfiguration endpoint) {
+    notice("Persisting connection endpoint");
     persistentData.endpoint = endpoint;
     writePersistentStore();
   }
