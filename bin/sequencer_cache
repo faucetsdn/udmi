@@ -25,8 +25,8 @@ TEST_ROOT=sites/udmi_site_model/out/devices/AHU-1
 export LC_ALL=C
 
 mkdir -p $CACHE_ROOT
-find $CACHE_ROOT/ -name sequencer.log | xargs fgrep -H RESULT | awk '{print $7}' > $TEST_LIST
-find $TEST_ROOT/ -name sequencer.log | xargs fgrep -H RESULT | awk '{print $7}'>> $TEST_LIST
+find $CACHE_ROOT/ -name sequencer.log | xargs fgrep -H RESULT | awk '{print $6}' > $TEST_LIST
+find $TEST_ROOT/ -name sequencer.log | xargs fgrep -H RESULT | awk '{print $6}'>> $TEST_LIST
 sort < $TEST_LIST | uniq | sponge $TEST_LIST
 all_tests=$(cat $TEST_LIST)
 rm -f $RESULT_OUT
