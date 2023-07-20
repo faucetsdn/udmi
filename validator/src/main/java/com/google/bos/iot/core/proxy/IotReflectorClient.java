@@ -158,7 +158,7 @@ public class IotReflectorClient implements MessagePublisher {
   public static synchronized String getNextTransactionId() {
     String transactionId;
     do {
-      transactionId = Long.toString(System.currentTimeMillis());
+      transactionId = "RC:" + Long.toString(System.currentTimeMillis());
     } while (transactionId.equals(prevTransactionId));
     prevTransactionId = transactionId;
     return transactionId;

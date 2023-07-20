@@ -25,6 +25,7 @@ import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.ProjectSubscriptionName;
 import com.google.pubsub.v1.ProjectTopicName;
 import com.google.pubsub.v1.PubsubMessage;
+import com.google.udmi.util.Common;
 import com.google.udmi.util.GeneralUtils;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -125,7 +126,8 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
     String messageString = message.getData().toStringUtf8();
     // Ack first to prevent a recurring loop of processing a faulty message.
     reply.ack();
-
+    String messageId = message.getMessageId();
+    attributesMap.put(Common.TRANSACTION_KEY, "PS:" + messageId);
     receiveMessage(attributesMap, messageString);
   }
 
