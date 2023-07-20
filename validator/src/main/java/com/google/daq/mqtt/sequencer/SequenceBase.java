@@ -720,11 +720,8 @@ public class SequenceBase {
 
   private void recordSchemaValidations(Description description) {
     // Ensure that enough time has passed to capture event messages for schema validation.
-    if (waitTimeRemainingSec() > 0) {
-      info(format("waiting %ds for more messages...", waitTimeRemainingSec()));
-      whileDoing(format("minimum test time", MINIMUM_TEST_SEC),
-          () -> messageEvaluateLoop(() -> waitTimeRemainingSec() > 0));
-    }
+    info(format("waiting %ds for more messages...", waitTimeRemainingSec()));
+    whileDoing("minimum test time", () -> messageEvaluateLoop(() -> waitTimeRemainingSec() > 0));
 
     validationResults.entrySet().stream()
         .filter(isInterestingValidation())
@@ -1213,7 +1210,7 @@ public class SequenceBase {
   }
 
   private long waitTimeRemainingSec() {
-    return MINIMUM_TEST_SEC - (System.currentTimeMillis() - startCaptureTime) / 1000;
+    return Math.max(0, MINIMUM_TEST_SEC - (System.currentTimeMillis() - startCaptureTime) / 1000);
   }
 
   private String timeSinceStart() {
