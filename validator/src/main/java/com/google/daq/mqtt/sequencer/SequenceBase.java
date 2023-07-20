@@ -978,10 +978,10 @@ public class SequenceBase {
         String augmentedMessage = actualize(stringify(data));
         String topic = subBlock + "/config";
         final String transactionId = reflector().publish(getDeviceId(), topic, augmentedMessage);
-        debug(format("update %s_%s, id %s", CONFIG_SUBTYPE, subBlock, transactionId));
+        debug(
+            format("update %s_%s, configTransaction %s", CONFIG_SUBTYPE, subBlock, transactionId));
         recordRawMessage(data, LOCAL_PREFIX + subBlock.value());
         sentConfig.put(subBlock, messageData);
-        debug(format("configTransactions add " + transactionId));
         configTransactions.add(transactionId);
       }
       return updated;
@@ -1325,13 +1325,13 @@ public class SequenceBase {
 
   private void handleDeviceMessage(Map<String, Object> message, String subFolderRaw,
       String subTypeRaw, String transactionId) {
-    debug(format("Handling device message %s/%s", subTypeRaw, subFolderRaw));
+    debug(format("Handling device message %s/%s %s", subTypeRaw, subFolderRaw, transactionId));
     SubFolder subFolder = SubFolder.fromValue(subFolderRaw);
     SubType subType = SubType.fromValue(subTypeRaw);
     switch (subType) {
       case CONFIG:
         // These are echos of sent partial config messages, so do nothing.
-        debug("Ignoring echo configTransaction " + transactionId);
+        trace("Ignoring echo configTransaction " + transactionId);
         break;
       case STATE:
         // State updates are handled as a monolithic block with a state reflector update.
@@ -1374,8 +1374,8 @@ public class SequenceBase {
           error("Shouldn't be seeing this!");
           return;
         }
-        debug(format("Updated config %s, id %s", getTimestamp(config.timestamp), txnId));
         List<String> changes = updateDeviceConfig(config);
+        debug(format("Updated config %s %s", getTimestamp(config.timestamp), txnId));
         if (updateCount == 1) {
           info(format("Initial config #%03d", updateCount), stringify(deviceConfig));
         } else {
@@ -1387,10 +1387,11 @@ public class SequenceBase {
           warning("Ignoring out-of-order state update " + getTimestamp(convertedState.timestamp));
           return;
         }
+        List<String> stateChanges = RECV_STATE_DIFFERNATOR.computeChanges(converted);
+        debug(format("Updated state %s %s", getTimestamp(convertedState.timestamp), txnId));
         if (updateCount == 1) {
           info(format("Initial state #%03d", updateCount), stringify(converted));
         } else {
-          List<String> stateChanges = RECV_STATE_DIFFERNATOR.computeChanges(converted);
           info(format("Updated state #%03d", updateCount), changedLines(stateChanges));
         }
         deviceState = convertedState;
