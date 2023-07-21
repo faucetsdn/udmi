@@ -144,6 +144,7 @@ public class IotReflectorClient implements MessagePublisher {
     reflectConfiguration.cloud_region = Optional.ofNullable(iotConfig.reflect_region)
         .orElse(iotConfig.cloud_region);
     reflectConfiguration.registry_id = UDMI_REFLECT;
+    reflectConfiguration.reflector_endpoint = iotConfig.reflector_endpoint;
 
     // Intentionally map registry -> device because of reflection registry semantics.
     reflectConfiguration.device_id = registryId;

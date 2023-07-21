@@ -7,6 +7,7 @@ import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.mergeObject;
+import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.fromString;
 import static com.google.udmi.util.JsonUtil.parseJson;
@@ -17,6 +18,7 @@ import static java.util.Objects.requireNonNull;
 
 import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.bos.udmi.service.pod.ContainerBase;
+import com.google.udmi.util.GeneralUtils;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -174,9 +176,9 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   }
 
   private void messageLoop() {
-    grabExecutionContext();
-    try {
-      while (true) {
+    while (true) {
+      try {
+        grabExecutionContext();
         Envelope envelope = null;
         try {
           Bundle bundle = extractBundle(getFromSourceQueue(true));
@@ -190,11 +192,13 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
               envelope.transactionId, queueIdentifier(), dispatcher);
           dispatcher.accept(bundle);
         } catch (Exception e) {
+          warn("Handling dispatch exception: " + friendlyStackTrace(e));
           handleDispatchException(envelope, e);
         }
+      } catch (Exception loopException) {
+        error("Message loop exception: " + friendlyStackTrace(loopException));
+        error(stackTraceString(loopException));
       }
-    } catch (Exception loopException) {
-      error("Message loop exception: " + friendlyStackTrace(loopException));
     }
   }
 

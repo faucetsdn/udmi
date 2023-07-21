@@ -99,7 +99,7 @@ public class CloudIotManager {
       executionConfiguration.project_id = projectId;
     }
     checkNotNull(executionConfiguration.registry_id, "registry_id not defined");
-    checkNotNull(executionConfiguration.cloud_region, "cloud_region not defined");
+    //checkNotNull(executionConfiguration.cloud_region, "cloud_region not defined");
     checkNotNull(executionConfiguration.site_name, "site_name not defined");
     return executionConfiguration;
   }

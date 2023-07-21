@@ -68,6 +68,7 @@ public class IotAccess {
 
         LOCAL("local"),
         DYNAMIC("dynamic"),
+        IMPLICIT("implicit"),
         GCP_NATIVE("gcp_native"),
         GCP("gcp"),
         CLEARBLADE_NATIVE("clearblade_native"),

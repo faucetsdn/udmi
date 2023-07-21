@@ -10,11 +10,17 @@ fi
 
 site_path=$1
 shift
-project_id=$1
-shift || true
+if [[ -z $1 || $1 =~ ^- ]]; then
+    echo No project ID supplied.
+else
+    project_id=$1
+    shift
+    echo Registering to project $project_id
+fi
 
-if [ ! -f $site_path/cloud_iot_config.json ]; then
-    echo cloud_iot_config.json not found at $site_path
+iot_config=$site_path/cloud_iot_config.json
+if [[ ! -f $iot_config ]]; then
+    echo Config file not found: $iot_config
     false
 fi
 

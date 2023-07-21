@@ -15,5 +15,12 @@ echo Configuring for GCP project $project_id...
 gcloud config set project $project_id
 
 kcontext=$(kubectl config get-contexts | fgrep $project_id | tr '*' ' ' | awk '{ print $1 }')
+
+if [[ -z $kcontext ]]; then
+    echo No kubectl context defined for project $project_id
+    echo "  kubectl config get-contexts | fgrep $project_id"
+    false
+fi
+
 echo Using k8s context $kcontext
 kubectl config use-context $kcontext

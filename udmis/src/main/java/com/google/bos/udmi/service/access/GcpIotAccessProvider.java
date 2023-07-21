@@ -404,9 +404,9 @@ public class GcpIotAccessProvider extends IotAccessBase {
       requireNonNull(registryId, "registry not defined");
       requireNonNull(deviceId, "device not defined");
       String subFolder = ifNotNullGet(folder, SubFolder::value);
-      SendCommandToDeviceRequest request =
-          new SendCommandToDeviceRequest().setBinaryData(encodeBase64(message))
-              .setSubfolder(subFolder);
+      SendCommandToDeviceRequest request = new SendCommandToDeviceRequest()
+          .setBinaryData(encodeBase64(message))
+          .setSubfolder(subFolder);
       debug("Sending iot command to %s/%s/%s", registryId, deviceId, subFolder);
       registries.devices().sendCommandToDevice(getDevicePath(registryId, deviceId), request)
           .execute();
