@@ -109,7 +109,7 @@ public class GeneralUtils {
       messages.add(Optional.ofNullable(e.getMessage()).orElseGet(e::toString));
       e = e.getCause();
     }
-    return CSV_JOINER.join(messages);
+    return CSV_JOINER.join(messages).replace('\n', ' ');
   }
 
   public static <T> T fromJsonFile(File path, Class<T> valueType) {
