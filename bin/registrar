@@ -10,11 +10,12 @@ fi
 
 site_path=$1
 shift
-if [[ $1 =~ ^- ]]; then
-    echo No project ID supplied.
-else
+if [[ $1 =~ ^[a-z] ]]; then
     project_id=$1
     shift
+    echo Registering to project $project_id
+else
+    echo No project ID supplied.
 fi
 
 iot_config=$site_path/cloud_iot_config.json
