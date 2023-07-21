@@ -164,7 +164,7 @@ jobs:
         run: bin/test_sequencer alpha $GCP_TARGET_PROJECT
       - name: sequence test timing
         if: ${{ always() }}
-        run: fgrep 'ending test' out/sequencer.log
+        run: fgrep ' ending test ' out/sequencer.log
       - name: generated files
         if: ${{ always() }}
         run: more out/sequencer.out out/generated.md || true
