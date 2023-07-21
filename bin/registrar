@@ -10,8 +10,12 @@ fi
 
 site_path=$1
 shift
-project_id=$1
-shift || true
+if [[ $1 =~ ^- ]]; then
+    echo No project ID supplied.
+else
+    project_id=$1
+    shift
+fi
 
 iot_config=$site_path/cloud_iot_config.json
 if [[ ! -f $iot_config ]]; then

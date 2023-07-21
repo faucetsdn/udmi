@@ -499,12 +499,12 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
 
   @Override
   public void sendCommand(String registryId, String deviceId, SubFolder folder, String message) {
+    String subFolder = ifNotNullGet(folder, SubFolder::value);
     try {
       ByteString binaryData = new ByteString(encodeBase64(message));
       String location = getRegistryLocation(registryId);
       DeviceManagerClient deviceManagerClient = getDeviceManagerClient();
       String deviceName = DeviceName.of(projectId, location, registryId, deviceId).toString();
-      String subFolder = ifNotNullGet(folder, SubFolder::value);
       SendCommandToDeviceRequest request = SendCommandToDeviceRequest.Builder.newBuilder()
           .setName(deviceName)
           .setBinaryData(binaryData)

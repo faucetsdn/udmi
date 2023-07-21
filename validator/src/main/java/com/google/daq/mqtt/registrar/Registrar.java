@@ -9,6 +9,7 @@ import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
+import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -185,8 +186,9 @@ public class Registrar {
   }
 
   private void setDeleteDevices(boolean deleteDevices) {
+    this.deleteDevices = ensureProjectId(deleteDevices);
     checkNotNull(projectId, "delete devices specified with no target project");
-    this.deleteDevices = deleteDevices;
+    this.updateCloudIoT = true;
   }
 
   private void setUseAltRegistry(boolean useAltRegistry) {
@@ -238,7 +240,19 @@ public class Registrar {
   }
 
   private void setUpdateFlag(boolean update) {
-    updateCloudIoT = update;
+    updateCloudIoT = ensureProjectId(update);
+  }
+
+  private boolean ensureProjectId(boolean update) {
+    if (update && projectId == null) {
+      requireNonNull(siteDir, "no site_model defined for loading endpoint");
+      SiteModel siteModel = new SiteModel(siteDir.getAbsolutePath());
+      ExecutionConfiguration conf = requireNonNull(siteModel.getExecutionConfiguration(),
+          "no execution configuration defined from site model");
+      projectId = requireNonNull(conf.project_id, "no project_id defined");
+      iotProvider = IotProvider.IMPLICIT;
+    }
+    return update;
   }
 
   private void setValidateMetadata(boolean validateMetadata) {
@@ -297,7 +311,7 @@ public class Registrar {
     }
     System.err.println("\nSummary:");
     errorSummary.forEach((key, value) -> System.err.println(
-            "  Device " + key + ": " + getErrorSummaryDetail(value)));
+        "  Device " + key + ": " + getErrorSummaryDetail(value)));
     System.err.println("Out of " + localDevices.size() + " total.");
     errorSummary.put(CLOUD_VERSION_KEY, getCloudVersionInfo());
     errorSummary.put(UDMI_VERSION_KEY, Common.getUdmiVersion());
@@ -322,10 +336,8 @@ public class Registrar {
   }
 
   private void initializeCloudProject() {
-    if (useAltRegistry && altRegistry == null) {
-      throw new IllegalStateException("No alt_registry supplied with useAltRegistry true");
-    }
-    String useRegistry = useAltRegistry ? altRegistry : null;
+    String useRegistry = !useAltRegistry ? null
+        : requireNonNull(altRegistry, "No alt_registry supplied with useAltRegistry true");
     cloudIotManager = new CloudIotManager(projectId, siteDir, useRegistry, registrySuffix,
         iotProvider);
     System.err.printf(
@@ -822,7 +834,7 @@ public class Registrar {
   protected void setToolRoot(String toolRoot) {
     schemaBase = new File(toolRoot, SCHEMA_BASE_PATH);
     File[] schemaFiles = schemaBase.listFiles(file -> file.getName().endsWith(SCHEMA_SUFFIX));
-    for (File schemaFile : Objects.requireNonNull(schemaFiles)) {
+    for (File schemaFile : requireNonNull(schemaFiles)) {
       loadSchema(schemaFile.getName());
     }
     if (schemas.isEmpty()) {

@@ -19,6 +19,7 @@
       "enum": [
         "local",
         "dynamic",
+        "implicit",
         "gcp_native",
         "gcp",
         "clearblade_native",
