@@ -1,12 +1,14 @@
 package com.google.bos.iot.core.proxy;
 
 import static com.google.bos.iot.core.proxy.ProxyTarget.STATE_TOPIC;
+import static com.google.udmi.util.GeneralUtils.catchOrElse;
 import static udmi.schema.IotAccess.IotProvider.CLEARBLADE;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.validator.Validator;
+import com.google.udmi.util.GeneralUtils;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -93,8 +95,8 @@ class MqttPublisher implements MessagePublisher {
     this.algorithm = algorithm;
     this.keyBytes = keyBytes;
     this.iotProvider = executionConfiguration.iot_provider;
-    this.providerHostname = Optional.ofNullable(executionConfiguration.provider_host)
-        .orElse(iotProvider == CLEARBLADE ? DEFAULT_CLEARBLADE_HOSTNAME : GCP_BRIDGE_HOSTNAME);
+    this.providerHostname = catchOrElse(() -> executionConfiguration.reflector_endpoint.hostname,
+            () -> iotProvider == CLEARBLADE ? DEFAULT_CLEARBLADE_HOSTNAME : GCP_BRIDGE_HOSTNAME);
     LOG.info(deviceId + " token expiration sec " + TOKEN_EXPIRATION_SEC);
     mqttClient = newMqttClient(deviceId);
     connectMqttClient(deviceId);

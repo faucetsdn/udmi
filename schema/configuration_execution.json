@@ -37,8 +37,8 @@
     "iot_provider": {
       "$ref": "file:common.json#/definitions/provider"
     },
-    "provider_host": {
-      "type": "string"
+    "reflector_endpoint": {
+      "$ref": "file:configuration_endpoint.json"
     },
     "project_id": {
       "type": "string"
