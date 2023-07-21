@@ -1035,10 +1035,10 @@ public class Pubber {
     maybeRestartExecutor(useInterval);
   }
 
-  // TODO(x): Consider refactoring this to either return or change an instance variable, not both.
+  // TODO: Consider refactoring this to either return or change an instance variable, not both.
   EndpointConfiguration extractEndpointBlobConfig() {
+    extractedEndpoint = null;
     if (deviceConfig.blobset == null) {
-      extractedEndpoint = null;
       return null;
     }
     try {
@@ -1048,8 +1048,6 @@ public class Pubber {
         if (deviceConfig.blobset.blobs.containsKey(IOT_ENDPOINT_CONFIG.value())) {
           BlobBlobsetConfig config = deviceConfig.blobset.blobs.get(IOT_ENDPOINT_CONFIG.value());
           extractedEndpoint.generation = config.generation;
-          persistentData.endpoint = extractedEndpoint;
-          writePersistentStore();
         }
       }
     } catch (Exception e) {
@@ -1114,6 +1112,7 @@ public class Pubber {
       endpointState.phase = BlobPhase.APPLY;
       publishSynchronousState();
       resetConnection(extractedSignature);
+      persistEndpoint(extractedEndpoint);
       endpointState.phase = BlobPhase.FINAL;
     } catch (Exception e) {
       try {
@@ -1128,6 +1127,12 @@ public class Pubber {
       }
       error("While redirecting connection endpoint", e);
     }
+  }
+
+  private void persistEndpoint(EndpointConfiguration endpoint) {
+    notice("Persisting connection endpoint");
+    persistentData.endpoint = endpoint;
+    writePersistentStore();
   }
 
   private String redirectedEndpoint(String redirectRegistry) {

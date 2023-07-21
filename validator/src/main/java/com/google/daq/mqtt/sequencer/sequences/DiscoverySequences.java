@@ -144,7 +144,7 @@ public class DiscoverySequences extends SequenceBase {
   @Feature(bucket = ENUMERATION_POINTSET, stage = ALPHA)
   public void pointset_enumeration() {
     if (!catchToFalse(() -> deviceMetadata.pointset.points != null)) {
-      throw new AssumptionViolatedException("No metadata pointset points defined");
+      skipTest("No metadata pointset points defined");
     }
     Enumerate enumerate = new Enumerate();
     enumerate.uniqs = true;
@@ -245,7 +245,7 @@ public class DiscoverySequences extends SequenceBase {
   private void initializeDiscovery() {
     families = catchToNull(() -> deviceMetadata.discovery.families.keySet());
     if (families == null || families.isEmpty()) {
-      throw new AssumptionViolatedException("No discovery families configured");
+      skipTest("No discovery families configured");
     }
     deviceConfig.discovery = new DiscoveryConfig();
     deviceConfig.discovery.families = new HashMap<>();

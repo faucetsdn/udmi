@@ -37,8 +37,9 @@ if [[ $KPROJECT != $PROJECT ]]; then
     false
 fi
 
+LIBFILE=build/libs/udmis-1.0-SNAPSHOT-all.jar
+
 current_user=$USER@$HOSTNAME
-current_time=`date --utc --iso=seconds`
 version=`git describe --abbrev=0`
 srcver=`git describe --dirty`
 funchash=`git log -n 1 --oneline -- src/ | awk '{print $1}'`
@@ -49,17 +50,19 @@ fi
 funcver=`git describe $funchash`$funcdirty
 
 RUNARGS="--rm -ti -v $PWD/var:/udmi -v $HOME/.config:/root/.config --tmpfs /tmp"
+TEMPLATES="k8s_pod.yaml k8s_deployment.yaml"
 
 if [[ $cmd == build ]]; then
     rm -rf var
     mkdir -p var
     bin/build
+    build_time=`date --utc --iso=seconds -r $LIBFILE`
     cat <<EOF > var/deployed_version.json
 {
   "udmi_version": "$version",
   "udmi_source": "$srcver",
   "udmi_functions": "$funcver",
-  "built_at": "$current_time",
+  "built_at": "$build_time",
   "built_by": "$current_user"
 }
 EOF
@@ -72,25 +75,30 @@ elif [[ $cmd == run ]]; then
 elif [[ $cmd == shell ]]; then
     docker run $RUNARGS $IMAGE bash
 elif [[ $cmd == push ]]; then
-    docker tag $IMAGE $REPOSITORY/$IMAGE
-    docker push $REPOSITORY/$IMAGE
-    sed -e "s/@PROJECT@/$PROJECT/" < k8s_pod.yaml > var/k8s_pod.yaml
-    sed -e "s/@PROJECT@/$PROJECT/" < k8s_deployment.yaml > var/k8s_deployment.yaml
-    echo Updated var/k8s_pod.yaml for deployment.
+    IMAGENAME=$REPOSITORY/$IMAGE
+    docker tag $IMAGE $IMAGENAME
+    docker push $IMAGENAME
+    hash=$(docker images --digests $IMAGENAME | fgrep latest | awk '{print $3}')
+    image=$IMAGENAME@$hash
+    for file in $TEMPLATES; do
+        sed < etc/$file > var/$file -e "s^@IMAGE@^$image^"
+        echo Updated var/$file with image $image
+    done
     echo Next try: $0 deploy
 elif [[ $cmd == deploy ]]; then
-    kubectl delete pod/udmi-test-pod || true
     kubectl apply -f var/k8s_pod.yaml
     echo Next try: $0 status
-elif [[ $cmd == update ]]; then
-    kubectl apply -f var/k8s_deployment.yaml
 elif [[ $cmd == status ]]; then
-    kubectl describe pods udmi-test-pod
+    kubectl describe pods udmis-test-pod
     echo Next try: $0 logs
 elif [[ $cmd == logs ]]; then
-    kubectl logs udmi-test-pod
+    kubectl logs udmis-test-pod
 elif [[ $cmd == stop ]]; then
-    kubectl delete pod/udmi-test-pod
+    kubectl delete pod/udmis-test-pod
+elif [[ $cmd == update ]]; then
+    kubectl apply -f var/k8s_deployment.yaml
+elif [[ $cmd == remove ]]; then
+    kubectl delete deployment/udmis-pods
 else
     echo Unknown command $cmd
     false

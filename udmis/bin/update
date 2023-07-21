@@ -15,6 +15,6 @@ bin/setup $project_id
 
 bin/container build
 bin/container push
-bin/container deploy
+bin/container update
 sleep 10
 kubectl get pods

@@ -228,7 +228,7 @@ public abstract class ProcessorBase extends ContainerBase {
     ifNotNullThen(updatePayload, p -> updatePayload.remove(TIMESTAMP_KEY));
     ifNotNullThen(updatePayload, p -> updatePayload.remove(VERSION_KEY));
 
-    if (attributes.subFolder != UPDATE) {
+    if (attributes.subFolder != null && attributes.subFolder != UPDATE) {
       payload.put(attributes.subFolder.value(), updatePayload);
     }
 

@@ -143,7 +143,7 @@ jobs:
   sequencer:
     name: Sequencer Suite
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 45
     if: vars.GCP_TARGET_PROJECT != '' && vars.UDMI_REGISTRY_SUFFIX != ''
     env:
       GCP_TARGET_PROJECT: ${{ vars.GCP_TARGET_PROJECT }}
@@ -162,6 +162,9 @@ jobs:
         run: bin/test_sequencer clean $GCP_TARGET_PROJECT
       - name: sequence tests alpha
         run: bin/test_sequencer alpha $GCP_TARGET_PROJECT
+      - name: sequence test timing
+        if: ${{ always() }}
+        run: fgrep ' ending test ' out/sequencer.log
       - name: generated files
         if: ${{ always() }}
         run: more out/sequencer.out out/generated.md || true
@@ -185,7 +188,7 @@ jobs:
   sequencer_dep:
     name: Sequencer Suite
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     needs: redirect
     if: vars.GCP_TARGET_PROJECT != '' && vars.UDMI_REGISTRY_SUFFIX == ''
     env:
@@ -204,6 +207,9 @@ jobs:
         run: bin/test_sequencer clean $GCP_TARGET_PROJECT
       - name: sequence tests alpha
         run: bin/test_sequencer alpha $GCP_TARGET_PROJECT
+      - name: sequence test timing
+        if: ${{ always() }}
+        run: fgrep 'ending test' out/sequencer.log
       - name: generated files
         if: ${{ always() }}
         run: more out/sequencer.out out/generated.md || true
@@ -262,6 +268,10 @@ jobs:
         run: |
           more out/test_itemized.out out/schemas_itemized.out | cat
           more sites/udmi_site_model/out/devices/AHU-1/tests/*/sequencer.log | cat
+      - name: pubber output logs
+        if: ${{ always() }}
+        run: |
+          more out/pubber.out* | cat
 
   redirect:
     name: Endpoint Redirection

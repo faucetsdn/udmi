@@ -9,15 +9,14 @@ import static udmi.schema.Bucket.ENDPOINT;
 import static udmi.schema.Bucket.SYSTEM_MODE;
 import static udmi.schema.Category.BLOBSET_BLOB_APPLY;
 import static udmi.schema.FeatureEnumeration.FeatureStage.ALPHA;
-import static udmi.schema.FeatureEnumeration.FeatureStage.DISABLED;
 
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
+import com.google.daq.mqtt.sequencer.Summary;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
 import java.util.Date;
 import java.util.HashMap;
-import org.junit.AssumptionViolatedException;
 import org.junit.Test;
 import udmi.schema.BlobBlobsetConfig;
 import udmi.schema.BlobBlobsetConfig.BlobPhase;
@@ -192,7 +191,7 @@ public class BlobsetSequences extends SequenceBase {
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Feature(stage = DISABLED, bucket = ENDPOINT)
+  @Feature(stage = ALPHA, bucket = ENDPOINT)
   public void endpoint_failure_and_restart() {
     setDeviceConfigEndpointBlob(BOGUS_ENDPOINT_HOSTNAME, registryId, false);
     untilErrorReported();
@@ -201,9 +200,7 @@ public class BlobsetSequences extends SequenceBase {
   }
 
   private void check_endpoint_connection_success(boolean doRestart) {
-    if (altClient == null) {
-      throw new AssumptionViolatedException("No functional alternate registry defined");
-    }
+    ifNullSkipTest(altClient, "No functional alternate registry defined");
 
     // Phase one: initiate connection to alternate registry.
     untilTrue("initial last_config matches config timestamp", this::stateMatchesConfigTimestamp);
