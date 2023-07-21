@@ -13,8 +13,9 @@ shift
 project_id=$1
 shift || true
 
-if [ ! -f $site_path/cloud_iot_config.json ]; then
-    echo cloud_iot_config.json not found at $site_path
+iot_config=$site_path/cloud_iot_config.json
+if [[ ! -f $iot_config ]]; then
+    echo Config file not found: $iot_config
     false
 fi
 

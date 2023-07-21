@@ -37,6 +37,9 @@
     "iot_provider": {
       "$ref": "file:common.json#/definitions/provider"
     },
+    "provider_host": {
+      "type": "string"
+    },
     "project_id": {
       "type": "string"
     },

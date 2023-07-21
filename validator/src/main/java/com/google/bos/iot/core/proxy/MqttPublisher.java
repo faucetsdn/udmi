@@ -14,6 +14,7 @@ import java.security.KeyFactory;
 import java.security.PrivateKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ExecutorService;
@@ -41,7 +42,7 @@ import udmi.schema.IotAccess.IotProvider;
 class MqttPublisher implements MessagePublisher {
 
   static final String GCP_BRIDGE_HOSTNAME = "mqtt.googleapis.com";
-  static final String CLEARBLADE_BRIDGE_HOSTNAME = "us-central1-mqtt.clearblade.com";
+  static final String DEFAULT_CLEARBLADE_HOSTNAME = "us-central1-mqtt.clearblade.com";
   static final String BRIDGE_PORT = "8883";
   private static final Logger LOG = LoggerFactory.getLogger(MqttPublisher.class);
   private static final boolean MQTT_SHOULD_RETAIN = false;
@@ -77,6 +78,7 @@ class MqttPublisher implements MessagePublisher {
   private final String projectId;
   private final String cloudRegion;
   private final IotProvider iotProvider;
+  private final String providerHostname;
   private MqttConnectOptions mqttConnectOptions;
   private long mqttTokenSetTimeMs;
 
@@ -91,6 +93,8 @@ class MqttPublisher implements MessagePublisher {
     this.algorithm = algorithm;
     this.keyBytes = keyBytes;
     this.iotProvider = executionConfiguration.iot_provider;
+    this.providerHostname = Optional.ofNullable(executionConfiguration.provider_host)
+        .orElse(iotProvider == CLEARBLADE ? DEFAULT_CLEARBLADE_HOSTNAME : GCP_BRIDGE_HOSTNAME);
     LOG.info(deviceId + " token expiration sec " + TOKEN_EXPIRATION_SEC);
     mqttClient = newMqttClient(deviceId);
     connectMqttClient(deviceId);
@@ -278,16 +282,11 @@ class MqttPublisher implements MessagePublisher {
   }
 
   String getClientId(String deviceId) {
-    // Create our MQTT client. The mqttClientId is a unique string that identifies this device. For
-    // Google Cloud IoT, it must be in the format below.
     return String.format(ID_FORMAT, projectId, cloudRegion, registryId, deviceId);
   }
 
   private String getBrokerUrl() {
-    // Build the connection string for Google's Cloud IoT MQTT server. Only SSL connections are
-    // accepted. For server authentication, the JVM's root certificates are used.
-    String hostname = iotProvider == CLEARBLADE ? CLEARBLADE_BRIDGE_HOSTNAME : GCP_BRIDGE_HOSTNAME;
-    return String.format(BROKER_URL_FORMAT, hostname, BRIDGE_PORT);
+    return String.format(BROKER_URL_FORMAT, providerHostname, BRIDGE_PORT);
   }
 
   private String getMessageTopic(String deviceId, String topic) {
