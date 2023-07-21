@@ -196,6 +196,14 @@ public class GeneralUtils {
     return alternate.get();
   }
 
+  public static <T> T catchToNull(Supplier<T> provider) {
+    try {
+      return provider.get();
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
   public static <U> U mapReplace(U previous, U added) {
     return added;
   }
