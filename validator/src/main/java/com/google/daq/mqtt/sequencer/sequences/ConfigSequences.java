@@ -98,7 +98,8 @@ public class ConfigSequences extends SequenceBase {
     updateConfig("starting broken_config");
     Date stableConfig = deviceConfig.timestamp;
     info("initial stable_config " + getTimestamp(stableConfig));
-    untilTrue("state synchronized", () -> dateEquals(stableConfig, deviceState.system.last_config));
+    untilTrue("initial state synchronized",
+        () -> dateEquals(stableConfig, deviceState.system.last_config));
     info("initial last_config " + getTimestamp(deviceState.system.last_config));
     checkThat("initial stable_config matches last_config",
         () -> dateEquals(stableConfig, deviceState.system.last_config));
@@ -125,6 +126,8 @@ public class ConfigSequences extends SequenceBase {
     // Will restore min_loglevel to the default of INFO.
     resetConfig(); // clears extra_field
     untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
+    untilTrue("restored state synchronized",
+        () -> dateEquals(deviceConfig.timestamp, deviceState.system.last_config));
 
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
     checkThatHasInterestingSystemStatus(false);
