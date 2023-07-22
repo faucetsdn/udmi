@@ -188,6 +188,7 @@ public class SequenceBase {
   private static final Set<String> configTransactions = new ConcurrentSkipListSet<>();
   private static final int MINIMUM_TEST_SEC = 15;
   private static final String FORCE_UPDATE_CONFIG_KEY = "null";
+  private static final Date RESET_LAST_START = new Date(73642);
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -582,8 +583,11 @@ public class SequenceBase {
     deviceConfig = clean ? new Config() : readGeneratedConfig();
     sanitizeConfig(deviceConfig);
     deviceConfig.system.min_loglevel = Level.INFO.value();
+    Date resetDate = ofNullable(catchToNull(() -> deviceState.system.operation.last_start))
+        .orElse(RESET_LAST_START);
+    debug("Configuring device last_start to be " + getTimestamp(resetDate));
+    setLastStart(SemanticDate.describe("device reported", resetDate));
     setExtraField(null);
-    setLastStart(SemanticDate.describe("device reported", new Date(1)));
   }
 
   private Config sanitizeConfig(Config config) {
