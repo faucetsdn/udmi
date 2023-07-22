@@ -24,5 +24,5 @@ while [[ $result -eq 192 ]]; do
     wait $PUB_PID || result=$?
 done
 
-echo Done with pubber run, exit code $result
+echo Done with pubber run, exit code $result at `date -u +%FT%TZ`
 exit $result
