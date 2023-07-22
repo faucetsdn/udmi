@@ -581,6 +581,7 @@ public class SequenceBase {
 
   private void resetDeviceConfig(boolean clean) {
     deviceConfig = clean ? new Config() : readGeneratedConfig();
+    deviceConfig.timestamp = null;
     sanitizeConfig(deviceConfig);
     deviceConfig.system.min_loglevel = Level.INFO.value();
     Date resetDate = ofNullable(catchToNull(() -> deviceState.system.operation.last_start))
