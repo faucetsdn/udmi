@@ -1393,7 +1393,8 @@ public class SequenceBase {
       } else if (converted instanceof State convertedState) {
         if (deviceState != null && convertedState.timestamp != null
             && convertedState.timestamp.before(deviceState.timestamp)) {
-          warning("Ignoring out-of-order state update " + getTimestamp(convertedState.timestamp));
+          warning(format("Ignoring out-of-order state update %s %s",
+              getTimestamp(convertedState.timestamp), txnId));
           return;
         }
         List<String> stateChanges = RECV_STATE_DIFFERNATOR.computeChanges(converted);
