@@ -1391,14 +1391,16 @@ public class SequenceBase {
           info(format("Updated config #%03d", updateCount), changedLines(changes));
         }
       } else if (converted instanceof State convertedState) {
+        String timestamp = getTimestamp(convertedState.timestamp);
         if (deviceState != null && convertedState.timestamp != null
             && convertedState.timestamp.before(deviceState.timestamp)) {
-          warning(format("Ignoring out-of-order state update %s %s",
-              getTimestamp(convertedState.timestamp), txnId));
+          warning(format("Ignoring out-of-order state update %s %s", timestamp, txnId));
           return;
         }
         List<String> stateChanges = RECV_STATE_DIFFERNATOR.computeChanges(converted);
-        debug(format("Updated state %s %s", getTimestamp(convertedState.timestamp), txnId));
+        Instant start = ofNullable(convertedState.timestamp).orElseGet(Date::new).toInstant();
+        long delta = Duration.between(start, Instant.now()).getSeconds();
+        debug(format("Updated state after %ds %s %s", delta, timestamp, txnId));
         if (updateCount == 1) {
           info(format("Initial state #%03d", updateCount), stringify(converted));
         } else {
