@@ -1,14 +1,12 @@
 package com.google.bos.udmi.service.access;
 
+import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
-import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.safeSleep;
-import static com.google.udmi.util.JsonUtil.toMap;
 import static java.lang.String.format;
 
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.common.collect.ImmutableMap;
-import com.google.udmi.util.GeneralUtils;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Function;
@@ -45,10 +43,19 @@ public abstract class IotAccessBase extends ContainerBase {
     }
   }
 
-  protected abstract String updateConfig(String registryId, String deviceId, String config,
-      Long version);
+  private String safeMunge(Function<String, String> munger, Entry<Long, String> configPair) {
+    try {
+      return munger.apply(ifNotNullGet(configPair, Entry::getValue));
+    } catch (Exception e) {
+      error("Exception munging config: " + friendlyStackTrace(e));
+      return null;
+    }
+  }
 
   protected abstract Entry<Long, String> fetchConfig(String registryId, String deviceId);
+
+  protected abstract String updateConfig(String registryId, String deviceId, String config,
+      Long version);
 
   public abstract CloudModel fetchDevice(String deviceRegistryId, String deviceId);
 
@@ -68,9 +75,9 @@ public abstract class IotAccessBase extends ContainerBase {
       while (true) {
         try {
           Entry<Long, String> configPair = fetchConfig(registryId, deviceId);
-          String updated = munger.apply(ifNotNullGet(configPair, Entry::getValue));
           Long version = ifNotNullGet(configPair, Entry::getKey);
-          return updated == null ? null : updateConfig(registryId, deviceId, updated, version);
+          return ifNotNullGet(safeMunge(munger, configPair),
+              updated -> updateConfig(registryId, deviceId, updated, version));
         } catch (Exception e) {
           warn(
               format("Error updating config for %s/%s, remaining retries %d...", registryId,
