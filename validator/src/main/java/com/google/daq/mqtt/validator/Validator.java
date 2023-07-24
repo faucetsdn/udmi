@@ -4,7 +4,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.daq.mqtt.sequencer.SequenceBase.EMPTY_MESSAGE;
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_TOOLS;
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_VERSION;
-import static com.google.daq.mqtt.util.ConfigUtil.readExecutionConfiguration;
+import static com.google.daq.mqtt.util.ConfigUtil.readExeConfig;
 import static com.google.daq.mqtt.validator.ReportingDevice.typeFolderPairKey;
 import static com.google.udmi.util.Common.ERROR_KEY;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
@@ -70,7 +70,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.MissingFormatArgumentException;
-import java.util.Optional;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.TreeMap;
@@ -292,7 +291,7 @@ public class Validator {
   }
 
   private void processProfile(File profilePath) {
-    config = ConfigUtil.readExecutionConfiguration(profilePath);
+    config = ConfigUtil.readExeConfig(profilePath);
     setSiteDir(config.site_model);
     if (!Strings.isNullOrEmpty(config.feed_name)) {
       validatePubSub(config.feed_name);
@@ -338,10 +337,10 @@ public class Validator {
   private ExecutionConfiguration resolveSiteConfig(ExecutionConfiguration config, String siteDir) {
     File cloudConfig = new File(siteDir, "cloud_iot_config.json");
     if (config == null) {
-      return readExecutionConfiguration(cloudConfig);
+      return readExeConfig(cloudConfig);
     }
     checkArgument(siteDir.equals(config.site_model), "siteDir mismatch");
-    ExecutionConfiguration siteConfig = readExecutionConfiguration(cloudConfig);
+    ExecutionConfiguration siteConfig = readExeConfig(cloudConfig);
     return GeneralUtils.mergeObject(siteConfig, config);
   }
 

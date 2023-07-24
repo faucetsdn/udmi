@@ -4,6 +4,7 @@ package udmi.schema;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
@@ -25,6 +26,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "registry_suffix",
     "device_id",
     "iot_provider",
+    "reflector_endpoint",
     "project_id",
     "key_file",
     "serial_no",
@@ -65,6 +67,15 @@ public class ExecutionConfiguration {
      */
     @JsonProperty("iot_provider")
     public udmi.schema.IotAccess.IotProvider iot_provider;
+    /**
+     * Endpoint Configuration
+     * <p>
+     * Parameters to define a message endpoint
+     * 
+     */
+    @JsonProperty("reflector_endpoint")
+    @JsonPropertyDescription("Parameters to define a message endpoint")
+    public EndpointConfiguration reflector_endpoint;
     @JsonProperty("project_id")
     public String project_id;
     @JsonProperty("key_file")
@@ -98,6 +109,7 @@ public class ExecutionConfiguration {
         result = ((result* 31)+((this.udmi_version == null)? 0 :this.udmi_version.hashCode()));
         result = ((result* 31)+((this.alt_project == null)? 0 :this.alt_project.hashCode()));
         result = ((result* 31)+((this.log_level == null)? 0 :this.log_level.hashCode()));
+        result = ((result* 31)+((this.reflector_endpoint == null)? 0 :this.reflector_endpoint.hashCode()));
         result = ((result* 31)+((this.site_model == null)? 0 :this.site_model.hashCode()));
         result = ((result* 31)+((this.registry_id == null)? 0 :this.registry_id.hashCode()));
         result = ((result* 31)+((this.feed_name == null)? 0 :this.feed_name.hashCode()));
@@ -121,7 +133,7 @@ public class ExecutionConfiguration {
             return false;
         }
         ExecutionConfiguration rhs = ((ExecutionConfiguration) other);
-        return (((((((((((((((((((((this.alt_registry == rhs.alt_registry)||((this.alt_registry!= null)&&this.alt_registry.equals(rhs.alt_registry)))&&((this.min_stage == rhs.min_stage)||((this.min_stage!= null)&&this.min_stage.equals(rhs.min_stage))))&&((this.block_unknown == rhs.block_unknown)||((this.block_unknown!= null)&&this.block_unknown.equals(rhs.block_unknown))))&&((this.cloud_region == rhs.cloud_region)||((this.cloud_region!= null)&&this.cloud_region.equals(rhs.cloud_region))))&&((this.device_id == rhs.device_id)||((this.device_id!= null)&&this.device_id.equals(rhs.device_id))))&&((this.key_file == rhs.key_file)||((this.key_file!= null)&&this.key_file.equals(rhs.key_file))))&&((this.udmi_version == rhs.udmi_version)||((this.udmi_version!= null)&&this.udmi_version.equals(rhs.udmi_version))))&&((this.alt_project == rhs.alt_project)||((this.alt_project!= null)&&this.alt_project.equals(rhs.alt_project))))&&((this.log_level == rhs.log_level)||((this.log_level!= null)&&this.log_level.equals(rhs.log_level))))&&((this.site_model == rhs.site_model)||((this.site_model!= null)&&this.site_model.equals(rhs.site_model))))&&((this.registry_id == rhs.registry_id)||((this.registry_id!= null)&&this.registry_id.equals(rhs.registry_id))))&&((this.feed_name == rhs.feed_name)||((this.feed_name!= null)&&this.feed_name.equals(rhs.feed_name))))&&((this.site_name == rhs.site_name)||((this.site_name!= null)&&this.site_name.equals(rhs.site_name))))&&((this.registry_suffix == rhs.registry_suffix)||((this.registry_suffix!= null)&&this.registry_suffix.equals(rhs.registry_suffix))))&&((this.update_topic == rhs.update_topic)||((this.update_topic!= null)&&this.update_topic.equals(rhs.update_topic))))&&((this.iot_provider == rhs.iot_provider)||((this.iot_provider!= null)&&this.iot_provider.equals(rhs.iot_provider))))&&((this.project_id == rhs.project_id)||((this.project_id!= null)&&this.project_id.equals(rhs.project_id))))&&((this.udmi_root == rhs.udmi_root)||((this.udmi_root!= null)&&this.udmi_root.equals(rhs.udmi_root))))&&((this.serial_no == rhs.serial_no)||((this.serial_no!= null)&&this.serial_no.equals(rhs.serial_no))))&&((this.reflect_region == rhs.reflect_region)||((this.reflect_region!= null)&&this.reflect_region.equals(rhs.reflect_region))));
+        return ((((((((((((((((((((((this.alt_registry == rhs.alt_registry)||((this.alt_registry!= null)&&this.alt_registry.equals(rhs.alt_registry)))&&((this.min_stage == rhs.min_stage)||((this.min_stage!= null)&&this.min_stage.equals(rhs.min_stage))))&&((this.block_unknown == rhs.block_unknown)||((this.block_unknown!= null)&&this.block_unknown.equals(rhs.block_unknown))))&&((this.cloud_region == rhs.cloud_region)||((this.cloud_region!= null)&&this.cloud_region.equals(rhs.cloud_region))))&&((this.device_id == rhs.device_id)||((this.device_id!= null)&&this.device_id.equals(rhs.device_id))))&&((this.key_file == rhs.key_file)||((this.key_file!= null)&&this.key_file.equals(rhs.key_file))))&&((this.udmi_version == rhs.udmi_version)||((this.udmi_version!= null)&&this.udmi_version.equals(rhs.udmi_version))))&&((this.alt_project == rhs.alt_project)||((this.alt_project!= null)&&this.alt_project.equals(rhs.alt_project))))&&((this.log_level == rhs.log_level)||((this.log_level!= null)&&this.log_level.equals(rhs.log_level))))&&((this.reflector_endpoint == rhs.reflector_endpoint)||((this.reflector_endpoint!= null)&&this.reflector_endpoint.equals(rhs.reflector_endpoint))))&&((this.site_model == rhs.site_model)||((this.site_model!= null)&&this.site_model.equals(rhs.site_model))))&&((this.registry_id == rhs.registry_id)||((this.registry_id!= null)&&this.registry_id.equals(rhs.registry_id))))&&((this.feed_name == rhs.feed_name)||((this.feed_name!= null)&&this.feed_name.equals(rhs.feed_name))))&&((this.site_name == rhs.site_name)||((this.site_name!= null)&&this.site_name.equals(rhs.site_name))))&&((this.registry_suffix == rhs.registry_suffix)||((this.registry_suffix!= null)&&this.registry_suffix.equals(rhs.registry_suffix))))&&((this.update_topic == rhs.update_topic)||((this.update_topic!= null)&&this.update_topic.equals(rhs.update_topic))))&&((this.iot_provider == rhs.iot_provider)||((this.iot_provider!= null)&&this.iot_provider.equals(rhs.iot_provider))))&&((this.project_id == rhs.project_id)||((this.project_id!= null)&&this.project_id.equals(rhs.project_id))))&&((this.udmi_root == rhs.udmi_root)||((this.udmi_root!= null)&&this.udmi_root.equals(rhs.udmi_root))))&&((this.serial_no == rhs.serial_no)||((this.serial_no!= null)&&this.serial_no.equals(rhs.serial_no))))&&((this.reflect_region == rhs.reflect_region)||((this.reflect_region!= null)&&this.reflect_region.equals(rhs.reflect_region))));
     }
 
 }

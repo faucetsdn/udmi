@@ -143,7 +143,7 @@ public class Reflector {
   }
 
   private void processProfile(File profilePath) {
-    ExecutionConfiguration config = ConfigUtil.readExecutionConfiguration(profilePath);
+    ExecutionConfiguration config = ConfigUtil.readExeConfig(profilePath);
     projectId = config.project_id;
     deviceId = config.device_id;
     registrySuffix = config.registry_suffix;
@@ -164,7 +164,7 @@ public class Reflector {
       baseDir = new File(siteDir);
       File cloudConfig = new File(siteDir, "cloud_iot_config.json");
       executionConfiguration = CloudIotManager.validate(
-          ConfigUtil.readExecutionConfiguration(cloudConfig),
+          ConfigUtil.readExeConfig(cloudConfig),
           projectId);
     }
   }

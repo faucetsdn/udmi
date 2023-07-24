@@ -79,6 +79,8 @@ jobs:
     if: vars.CLEARBLADE_PROJECT != ''
     env:
       CLEARBLADE_PROJECT: ${{ vars.CLEARBLADE_PROJECT }}
+      UDMI_REFLECTOR_ENDPOINT: ${{ vars.UDMI_REFLECTOR_ENDPOINT }}
+      UDMI_PUBBER_ENDPOINT: ${{ vars.UDMI_PUBBER_ENDPOINT }}
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v3
@@ -87,11 +89,12 @@ jobs:
           java-version: '17'
       - name: bin/run_tests install_dependencies
         run: bin/run_tests install_dependencies
-      - name: bin/test_regclean //clearblade/$CLEARBLADE_PROJECT
-        run: bin/test_regclean //clearblade/$CLEARBLADE_PROJECT
+      - name: bin/test_regclean $CLEARBLADE_PROJECT
+        run: bin/test_regclean $CLEARBLADE_PROJECT
       - name: Config outputs
         if: ${{ always() }}
-        run: more /tmp/pubber_config.json /tmp/registrar_config.json | cat
+        run: |
+          more /tmp/pubber_config.json out/cloud_iot_config-reflect.json | cat
 
   udmif:
     name: UDMIF unit tests
@@ -188,7 +191,7 @@ jobs:
   sequencer_dep:
     name: Sequencer Suite
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 35
     needs: redirect
     if: vars.GCP_TARGET_PROJECT != '' && vars.UDMI_REGISTRY_SUFFIX == ''
     env:

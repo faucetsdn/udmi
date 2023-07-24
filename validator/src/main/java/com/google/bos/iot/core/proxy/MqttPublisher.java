@@ -1,12 +1,17 @@
 package com.google.bos.iot.core.proxy;
 
 import static com.google.bos.iot.core.proxy.ProxyTarget.STATE_TOPIC;
+import static com.google.udmi.util.GeneralUtils.catchOrElse;
+import static com.google.udmi.util.GeneralUtils.catchToNull;
+import static java.lang.String.format;
+import static java.util.Optional.ofNullable;
 import static udmi.schema.IotAccess.IotProvider.CLEARBLADE;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.validator.Validator;
+import com.google.udmi.util.GeneralUtils;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -14,6 +19,7 @@ import java.security.KeyFactory;
 import java.security.PrivateKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ExecutorService;
@@ -41,7 +47,7 @@ import udmi.schema.IotAccess.IotProvider;
 class MqttPublisher implements MessagePublisher {
 
   static final String GCP_BRIDGE_HOSTNAME = "mqtt.googleapis.com";
-  static final String CLEARBLADE_BRIDGE_HOSTNAME = "us-central1-mqtt.clearblade.com";
+  static final String DEFAULT_CLEARBLADE_HOSTNAME = "us-central1-mqtt.clearblade.com";
   static final String BRIDGE_PORT = "8883";
   private static final Logger LOG = LoggerFactory.getLogger(MqttPublisher.class);
   private static final boolean MQTT_SHOULD_RETAIN = false;
@@ -76,7 +82,8 @@ class MqttPublisher implements MessagePublisher {
   private final String registryId;
   private final String projectId;
   private final String cloudRegion;
-  private final IotProvider iotProvider;
+  private final String providerHostname;
+  private final String clientId;
   private MqttConnectOptions mqttConnectOptions;
   private long mqttTokenSetTimeMs;
 
@@ -90,7 +97,10 @@ class MqttPublisher implements MessagePublisher {
     this.deviceId = executionConfiguration.device_id;
     this.algorithm = algorithm;
     this.keyBytes = keyBytes;
-    this.iotProvider = executionConfiguration.iot_provider;
+    IotProvider iotProvider = executionConfiguration.iot_provider;
+    this.providerHostname = catchOrElse(() -> executionConfiguration.reflector_endpoint.hostname,
+            () -> iotProvider == CLEARBLADE ? DEFAULT_CLEARBLADE_HOSTNAME : GCP_BRIDGE_HOSTNAME);
+    this.clientId = catchToNull(() -> executionConfiguration.reflector_endpoint.client_id);
     LOG.info(deviceId + " token expiration sec " + TOKEN_EXPIRATION_SEC);
     mqttClient = newMqttClient(deviceId);
     connectMqttClient(deviceId);
@@ -132,7 +142,7 @@ class MqttPublisher implements MessagePublisher {
       LOG.debug(this.deviceId + " publishing complete " + registryId + "/" + deviceId);
     } catch (Exception e) {
       errorCounter.incrementAndGet();
-      throw new RuntimeException(String.format("Publish failed for %s: %s", deviceId, e), e);
+      throw new RuntimeException(format("Publish failed for %s: %s", deviceId, e), e);
     } finally {
       connectWait.release();
     }
@@ -166,7 +176,7 @@ class MqttPublisher implements MessagePublisher {
   @Override
   public void close() {
     try {
-      LOG.debug(String.format("Shutting down executor %x", publisherExecutor.hashCode()));
+      LOG.debug(format("Shutting down executor %x", publisherExecutor.hashCode()));
       publisherExecutor.shutdownNow();
       if (!publisherExecutor.awaitTermination(INITIALIZE_TIME_MS, TimeUnit.MILLISECONDS)) {
         LOG.error("Executor tasks still remaining");
@@ -198,11 +208,11 @@ class MqttPublisher implements MessagePublisher {
   private void attachClient(String deviceId) {
     try {
       LOG.info(this.deviceId + " attaching " + deviceId);
-      String topic = String.format(ATTACH_MESSAGE_FORMAT, deviceId);
+      String topic = format(ATTACH_MESSAGE_FORMAT, deviceId);
       String payload = "";
       sendMessage(topic, payload.getBytes());
     } catch (Exception e) {
-      LOG.error(this.deviceId + String.format(" error while binding client %s: %s", deviceId,
+      LOG.error(this.deviceId + format(" error while binding client %s: %s", deviceId,
           e));
     }
   }
@@ -278,24 +288,20 @@ class MqttPublisher implements MessagePublisher {
   }
 
   String getClientId(String deviceId) {
-    // Create our MQTT client. The mqttClientId is a unique string that identifies this device. For
-    // Google Cloud IoT, it must be in the format below.
-    return String.format(ID_FORMAT, projectId, cloudRegion, registryId, deviceId);
+    return ofNullable(clientId).orElse(
+        format(ID_FORMAT, projectId, cloudRegion, registryId, deviceId));
   }
 
   private String getBrokerUrl() {
-    // Build the connection string for Google's Cloud IoT MQTT server. Only SSL connections are
-    // accepted. For server authentication, the JVM's root certificates are used.
-    String hostname = iotProvider == CLEARBLADE ? CLEARBLADE_BRIDGE_HOSTNAME : GCP_BRIDGE_HOSTNAME;
-    return String.format(BROKER_URL_FORMAT, hostname, BRIDGE_PORT);
+    return format(BROKER_URL_FORMAT, providerHostname, BRIDGE_PORT);
   }
 
   private String getMessageTopic(String deviceId, String topic) {
-    return String.format(MESSAGE_TOPIC_FORMAT, deviceId, topic);
+    return format(MESSAGE_TOPIC_FORMAT, deviceId, topic);
   }
 
   private void subscribeToUpdates(String deviceId) {
-    String updateTopic = String.format(CONFIG_UPDATE_TOPIC_FMT, deviceId);
+    String updateTopic = format(CONFIG_UPDATE_TOPIC_FMT, deviceId);
     try {
       mqttClient.subscribe(updateTopic);
     } catch (MqttException e) {
@@ -304,7 +310,7 @@ class MqttPublisher implements MessagePublisher {
   }
 
   private void subscribeToErrors(String deviceId) {
-    String updateTopic = String.format(ERROR_TOPIC_FMT, deviceId);
+    String updateTopic = format(ERROR_TOPIC_FMT, deviceId);
     try {
       mqttClient.subscribe(updateTopic);
     } catch (MqttException e) {
@@ -313,7 +319,7 @@ class MqttPublisher implements MessagePublisher {
   }
 
   private void subscribeToCommands(String deviceId) {
-    String updateTopic = String.format(COMMAND_TOPIC_FMT, deviceId);
+    String updateTopic = format(COMMAND_TOPIC_FMT, deviceId);
     try {
       mqttClient.subscribe(updateTopic, COMMANDS_QOS);
     } catch (MqttException e) {

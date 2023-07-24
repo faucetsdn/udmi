@@ -109,6 +109,8 @@ public class IotReflectorClient implements MessagePublisher {
         .orElse(iotConfig.cloud_region);
     subscriptionId =
         format("%s/%s/%s/%s", projectId, cloudRegion, UDMI_REFLECT, registryId);
+    System.err.println("Using client subscription " + subscriptionId);
+
 
     try {
       mqttPublisher = new MqttPublisher(makeReflectConfiguration(iotConfig, registryId), keyBytes,
@@ -144,6 +146,7 @@ public class IotReflectorClient implements MessagePublisher {
     reflectConfiguration.cloud_region = Optional.ofNullable(iotConfig.reflect_region)
         .orElse(iotConfig.cloud_region);
     reflectConfiguration.registry_id = UDMI_REFLECT;
+    reflectConfiguration.reflector_endpoint = iotConfig.reflector_endpoint;
 
     // Intentionally map registry -> device because of reflection registry semantics.
     reflectConfiguration.device_id = registryId;
@@ -158,7 +161,7 @@ public class IotReflectorClient implements MessagePublisher {
   public static synchronized String getNextTransactionId() {
     String transactionId;
     do {
-      transactionId = "RC:" + Long.toString(System.currentTimeMillis());
+      transactionId = "RC:" + System.currentTimeMillis();
     } while (transactionId.equals(prevTransactionId));
     prevTransactionId = transactionId;
     return transactionId;

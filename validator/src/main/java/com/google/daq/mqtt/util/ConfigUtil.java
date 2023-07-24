@@ -29,7 +29,7 @@ public abstract class ConfigUtil {
    * @param configFile file ot parse
    * @return cloud configuration information
    */
-  public static ExecutionConfiguration readExecutionConfiguration(File configFile) {
+  public static ExecutionConfiguration readExeConfig(File configFile) {
     try {
       return OBJECT_MAPPER.readValue(configFile, ExecutionConfiguration.class);
     } catch (Exception e) {

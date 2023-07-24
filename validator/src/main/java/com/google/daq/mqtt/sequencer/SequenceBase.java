@@ -188,6 +188,7 @@ public class SequenceBase {
   private static final Set<String> configTransactions = new ConcurrentSkipListSet<>();
   private static final int MINIMUM_TEST_SEC = 15;
   private static final String FORCE_UPDATE_CONFIG_KEY = "null";
+  private static final Date RESET_LAST_START = new Date(73642);
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -580,10 +581,14 @@ public class SequenceBase {
 
   private void resetDeviceConfig(boolean clean) {
     deviceConfig = clean ? new Config() : readGeneratedConfig();
+    deviceConfig.timestamp = null;
     sanitizeConfig(deviceConfig);
     deviceConfig.system.min_loglevel = Level.INFO.value();
+    Date resetDate = ofNullable(catchToNull(() -> deviceState.system.operation.last_start))
+        .orElse(RESET_LAST_START);
+    debug("Configuring device last_start to be " + getTimestamp(resetDate));
+    setLastStart(SemanticDate.describe("device reported", resetDate));
     setExtraField(null);
-    setLastStart(SemanticDate.describe("device reported", new Date(1)));
   }
 
   private Config sanitizeConfig(Config config) {
@@ -1386,13 +1391,16 @@ public class SequenceBase {
           info(format("Updated config #%03d", updateCount), changedLines(changes));
         }
       } else if (converted instanceof State convertedState) {
+        String timestamp = getTimestamp(convertedState.timestamp);
         if (deviceState != null && convertedState.timestamp != null
             && convertedState.timestamp.before(deviceState.timestamp)) {
-          warning("Ignoring out-of-order state update " + getTimestamp(convertedState.timestamp));
+          warning(format("Ignoring out-of-order state update %s %s", timestamp, txnId));
           return;
         }
         List<String> stateChanges = RECV_STATE_DIFFERNATOR.computeChanges(converted);
-        debug(format("Updated state %s %s", getTimestamp(convertedState.timestamp), txnId));
+        Instant start = ofNullable(convertedState.timestamp).orElseGet(Date::new).toInstant();
+        long delta = Duration.between(start, Instant.now()).getSeconds();
+        debug(format("Updated state after %ds %s %s", delta, timestamp, txnId));
         if (updateCount == 1) {
           info(format("Initial state #%03d", updateCount), stringify(converted));
         } else {

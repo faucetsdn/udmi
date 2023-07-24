@@ -1,6 +1,7 @@
 package com.google.udmi.util;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toMap;
 
@@ -309,6 +310,11 @@ public class SiteModel {
           "Device working dir is not a valid directory: " + file.getAbsolutePath());
     }
     return file;
+  }
+
+  public ExecutionConfiguration getExecutionConfiguration() {
+    ifNullThen(executionConfiguration, this::loadSiteConfig);
+    return executionConfiguration;
   }
 
   public static class ClientInfo {

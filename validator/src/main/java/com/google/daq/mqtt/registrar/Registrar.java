@@ -2,6 +2,7 @@ package com.google.daq.mqtt.registrar;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Sets.intersection;
+import static com.google.daq.mqtt.util.ConfigUtil.readExeConfig;
 import static com.google.udmi.util.Common.CLOUD_VERSION_KEY;
 import static com.google.udmi.util.Common.NO_SITE;
 import static com.google.udmi.util.Common.UDMI_VERSION_KEY;
@@ -9,6 +10,7 @@ import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
+import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -22,7 +24,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.daq.mqtt.util.CloudDeviceSettings;
 import com.google.daq.mqtt.util.CloudIotManager;
-import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.util.DeviceExceptionManager;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
@@ -110,6 +111,7 @@ public class Registrar {
   private String altRegistry;
   private boolean deleteDevices;
   private IotProvider iotProvider;
+  private File profile;
 
   /**
    * Main entry point for registrar.
@@ -185,8 +187,9 @@ public class Registrar {
   }
 
   private void setDeleteDevices(boolean deleteDevices) {
-    checkNotNull(projectId, "delete devices specified with no target project");
     this.deleteDevices = deleteDevices;
+    checkNotNull(projectId, "delete devices specified with no target project");
+    this.updateCloudIoT = deleteDevices;
   }
 
   private void setUseAltRegistry(boolean useAltRegistry) {
@@ -195,7 +198,10 @@ public class Registrar {
 
   private void processProfile(File profilePath) {
     System.err.println("Reading registrar configuration from " + profilePath.getAbsolutePath());
-    processProfile(ConfigUtil.readExecutionConfiguration(profilePath));
+    if (profilePath.isFile()) {
+      profile = profilePath;
+    }
+    processProfile(readExeConfig(profilePath));
   }
 
   Registrar processProfile(ExecutionConfiguration config) {
@@ -297,7 +303,7 @@ public class Registrar {
     }
     System.err.println("\nSummary:");
     errorSummary.forEach((key, value) -> System.err.println(
-            "  Device " + key + ": " + getErrorSummaryDetail(value)));
+        "  Device " + key + ": " + getErrorSummaryDetail(value)));
     System.err.println("Out of " + localDevices.size() + " total.");
     errorSummary.put(CLOUD_VERSION_KEY, getCloudVersionInfo());
     errorSummary.put(UDMI_VERSION_KEY, Common.getUdmiVersion());
@@ -322,12 +328,14 @@ public class Registrar {
   }
 
   private void initializeCloudProject() {
-    if (useAltRegistry && altRegistry == null) {
-      throw new IllegalStateException("No alt_registry supplied with useAltRegistry true");
+    String useRegistry = !useAltRegistry ? null
+        : requireNonNull(altRegistry, "No alt_registry supplied with useAltRegistry true");
+    if (profile != null) {
+      cloudIotManager = new CloudIotManager(profile);
+    } else {
+      cloudIotManager = new CloudIotManager(projectId, siteDir, useRegistry, registrySuffix,
+          iotProvider);
     }
-    String useRegistry = useAltRegistry ? altRegistry : null;
-    cloudIotManager = new CloudIotManager(projectId, siteDir, useRegistry, registrySuffix,
-        iotProvider);
     System.err.printf(
         "Working with project %s registry %s/%s%n",
         cloudIotManager.getProjectId(),
@@ -822,7 +830,7 @@ public class Registrar {
   protected void setToolRoot(String toolRoot) {
     schemaBase = new File(toolRoot, SCHEMA_BASE_PATH);
     File[] schemaFiles = schemaBase.listFiles(file -> file.getName().endsWith(SCHEMA_SUFFIX));
-    for (File schemaFile : Objects.requireNonNull(schemaFiles)) {
+    for (File schemaFile : requireNonNull(schemaFiles)) {
       loadSchema(schemaFile.getName());
     }
     if (schemas.isEmpty()) {

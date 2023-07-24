@@ -109,7 +109,7 @@ public class GeneralUtils {
       messages.add(Optional.ofNullable(e.getMessage()).orElseGet(e::toString));
       e = e.getCause();
     }
-    return CSV_JOINER.join(messages);
+    return CSV_JOINER.join(messages).replace('\n', ' ');
   }
 
   public static <T> T fromJsonFile(File path, Class<T> valueType) {
@@ -154,8 +154,8 @@ public class GeneralUtils {
     return value == null ? null : converter.get();
   }
 
-  public static void ifNullThen(Object serialNo, Runnable action) {
-    if (serialNo == null) {
+  public static void ifNullThen(Object value, Runnable action) {
+    if (value == null) {
       action.run();
     }
   }
@@ -182,6 +182,26 @@ public class GeneralUtils {
 
   public static boolean isTrue(Object value) {
     return Boolean.TRUE.equals(value);
+  }
+
+  public static <T> T catchOrElse(Supplier<T> provider, Supplier<T> alternate) {
+    try {
+      T t = provider.get();
+      if (t != null) {
+        return t;
+      }
+    } catch (Exception e) {
+      // Silently ignore by design.
+    }
+    return alternate.get();
+  }
+
+  public static <T> T catchToNull(Supplier<T> provider) {
+    try {
+      return provider.get();
+    } catch (Exception e) {
+      return null;
+    }
   }
 
   public static <U> U mapReplace(U previous, U added) {
