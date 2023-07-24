@@ -87,8 +87,8 @@ jobs:
           java-version: '17'
       - name: bin/run_tests install_dependencies
         run: bin/run_tests install_dependencies
-      - name: bin/test_regclean //clearblade/$CLEARBLADE_PROJECT
-        run: bin/test_regclean //clearblade/$CLEARBLADE_PROJECT
+      - name: bin/test_regclean $CLEARBLADE_PROJECT
+        run: bin/test_regclean $CLEARBLADE_PROJECT
       - name: Config outputs
         if: ${{ always() }}
         run: more /tmp/pubber_config.json /tmp/registrar_config.json | cat
