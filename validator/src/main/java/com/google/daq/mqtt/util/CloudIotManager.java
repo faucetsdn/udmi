@@ -3,6 +3,7 @@ package com.google.daq.mqtt.util;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.daq.mqtt.util.ConfigUtil.readExecutionConfiguration;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static com.google.udmi.util.GeneralUtils.mergeObject;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
@@ -91,11 +92,13 @@ public class CloudIotManager {
       this.projectId = requireNonNull(config.project_id, "no project_id defined");
       this.useReflectClient = true;
       this.siteDir = ifNotNullGet(config.site_model, File::new, siteConfig.getParentFile());
-      executionConfiguration = validate(config, this.projectId);
+      File baseConfig = new File(siteDir, CLOUD_IOT_CONFIG_JSON);
+      ExecutionConfiguration newConfig = mergeObject(readExecutionConfiguration(baseConfig), config);
+      executionConfiguration = validate(newConfig, this.projectId);
       executionConfiguration.iot_provider = IMPLICIT;
       executionConfiguration.site_model = siteDir.getPath();
-      String targetRegistry = ofNullable(config.alt_registry).orElse(config.registry_id);
-      registryId = SiteModel.getRegistryActual(targetRegistry, config.registry_suffix);
+      String targetRegistry = ofNullable(newConfig.alt_registry).orElse(newConfig.registry_id);
+      registryId = SiteModel.getRegistryActual(targetRegistry, newConfig.registry_suffix);
       cloudRegion = executionConfiguration.cloud_region;
       initializeIotProvider();
     } catch (Exception e) {
