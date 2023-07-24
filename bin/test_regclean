@@ -34,6 +34,13 @@ echo Clean site out/ directory...
 rm -rf $site_path/out
 mkdir -p out
 
+if [[ -n $UDMI_REGISTRY_SUFFIX ]]; then
+    echo Using registry suffix $UDMI_REGISTRY_SUFFIX
+    registry_suffix=$UDMI_REGISTRY_SUFFIX
+else
+    registry_suffix=
+fi
+
 if [[ -n $UDMI_REFLECTOR_ENDPOINT ]]; then
     endpoint=$(tr -d ' \n\r' <<< $UDMI_REFLECTOR_ENDPOINT | base64 --decode)
     echo $endpoint
@@ -50,8 +57,16 @@ else
     registrar_project=$project_id
 fi
 
+broker_hostname=mqtt.googleapis.com
+registry_id=`jq -r .registry_id $site_path/cloud_iot_config.json`
+cloud_region=`jq -r .cloud_region $site_path/cloud_iot_config.json`
 cat <<EOF > $pubber_config
 {
+    "endpoint": {
+      "protocol": "mqtt",
+      "client_id": "projects/$project_id/locations/$cloud_region/registries/$registry_id$registry_suffix/devices/$device_id",
+      "hostname": "$broker_hostname"
+    },
     "sitePath": "$site_path",
     "deviceId": "$device_id",
     "projectId": "$project_id",
