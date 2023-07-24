@@ -81,6 +81,9 @@ public class CloudIotManager {
     }
   }
 
+  /**
+   * Create a new iot manager using a full configuration file.
+   */
   public CloudIotManager(File siteConfig) {
     try {
       System.err.println("Reading cloud config from " + siteConfig.getAbsolutePath());
