@@ -19,6 +19,7 @@ echo "Using target project=$project_id"
 echo "Using UDMI_REGISTRY_SUFFIX=$UDMI_REGISTRY_SUFFIX"
 echo "Using UDMI_ALT_REGISTRY=$UDMI_ALT_REGISTRY"
 echo "Using UDMI_REFLECTOR_ENDPOINT=$UDMI_REFLECTOR_ENDPOINT"
+echo "Using UDMI_PUBBER_ENDPOINT=$UDMI_PUBBER_ENDPOINT"
 
 site_path=sites/udmi_site_model
 output_file=$site_path/out/registration_summary.json
@@ -37,6 +38,7 @@ if [[ -n $UDMI_REFLECTOR_ENDPOINT ]]; then
        $site_path/cloud_iot_config.json > $site_arg
     jq ".project_id = \"$project_id\"" $site_arg | sponge $site_arg
     jq ".site_model = \"$site_path\"" $site_arg | sponge $site_arg
+    echo $site_arg:
     cat $site_arg
     registrar_project=
 else
@@ -55,6 +57,16 @@ cat <<EOF > $pubber_config
     }
 }
 EOF
+
+if [[ -n $UDMI_PUBBER_ENDPOINT ]]; then
+    endpoint=$(base64 --decode <<< $UDMI_PUBBER_ENDPOINT)
+    echo $endpoint
+    jq --argjson endpoint "$endpoint" '.endpoint = $endpoint' \
+       $pubber_config | sponge $pubber_config
+fi
+
+echo $pubber_config:
+cat $pubber_config
 
 echo Clean out the registry to make sure devices get removed...
 bin/registrar $site_arg $registrar_project -d
