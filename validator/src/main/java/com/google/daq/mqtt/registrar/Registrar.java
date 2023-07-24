@@ -2,6 +2,7 @@ package com.google.daq.mqtt.registrar;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Sets.intersection;
+import static com.google.daq.mqtt.util.ConfigUtil.readExeConfig;
 import static com.google.udmi.util.Common.CLOUD_VERSION_KEY;
 import static com.google.udmi.util.Common.NO_SITE;
 import static com.google.udmi.util.Common.UDMI_VERSION_KEY;
@@ -23,7 +24,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.daq.mqtt.util.CloudDeviceSettings;
 import com.google.daq.mqtt.util.CloudIotManager;
-import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.util.DeviceExceptionManager;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
@@ -111,6 +111,7 @@ public class Registrar {
   private String altRegistry;
   private boolean deleteDevices;
   private IotProvider iotProvider;
+  private File profile;
 
   /**
    * Main entry point for registrar.
@@ -186,9 +187,9 @@ public class Registrar {
   }
 
   private void setDeleteDevices(boolean deleteDevices) {
-    this.deleteDevices = ensureProjectId(deleteDevices);
+    this.deleteDevices = deleteDevices;
     checkNotNull(projectId, "delete devices specified with no target project");
-    this.updateCloudIoT = true;
+    this.updateCloudIoT = deleteDevices;
   }
 
   private void setUseAltRegistry(boolean useAltRegistry) {
@@ -197,7 +198,10 @@ public class Registrar {
 
   private void processProfile(File profilePath) {
     System.err.println("Reading registrar configuration from " + profilePath.getAbsolutePath());
-    processProfile(ConfigUtil.readExecutionConfiguration(profilePath));
+    if (profilePath.isFile()) {
+      profile = profilePath;
+    }
+    processProfile(readExeConfig(profilePath));
   }
 
   Registrar processProfile(ExecutionConfiguration config) {
@@ -240,19 +244,7 @@ public class Registrar {
   }
 
   private void setUpdateFlag(boolean update) {
-    updateCloudIoT = ensureProjectId(update);
-  }
-
-  private boolean ensureProjectId(boolean update) {
-    if (update && projectId == null) {
-      requireNonNull(siteDir, "no site_model defined for loading endpoint");
-      SiteModel siteModel = new SiteModel(siteDir.getAbsolutePath());
-      ExecutionConfiguration conf = requireNonNull(siteModel.getExecutionConfiguration(),
-          "no execution configuration defined from site model");
-      projectId = requireNonNull(conf.project_id, "no project_id defined");
-      iotProvider = IotProvider.IMPLICIT;
-    }
-    return update;
+    updateCloudIoT = update;
   }
 
   private void setValidateMetadata(boolean validateMetadata) {
@@ -338,8 +330,12 @@ public class Registrar {
   private void initializeCloudProject() {
     String useRegistry = !useAltRegistry ? null
         : requireNonNull(altRegistry, "No alt_registry supplied with useAltRegistry true");
-    cloudIotManager = new CloudIotManager(projectId, siteDir, useRegistry, registrySuffix,
-        iotProvider);
+    if (profile != null) {
+      cloudIotManager = new CloudIotManager(profile);
+    } else {
+      cloudIotManager = new CloudIotManager(projectId, siteDir, useRegistry, registrySuffix,
+          iotProvider);
+    }
     System.err.printf(
         "Working with project %s registry %s/%s%n",
         cloudIotManager.getProjectId(),
