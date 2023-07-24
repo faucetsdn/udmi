@@ -2,8 +2,12 @@ package com.google.daq.mqtt.util;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.daq.mqtt.util.ConfigUtil.readExecutionConfiguration;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static udmi.schema.IotAccess.IotProvider.GCP_NATIVE;
+import static udmi.schema.IotAccess.IotProvider.IMPLICIT;
 
 import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.SiteModel;
@@ -72,9 +76,28 @@ public class CloudIotManager {
       cloudRegion = executionConfiguration.cloud_region;
       initializeIotProvider();
     } catch (Exception e) {
+      throw new RuntimeException(format("While initializing project %s from file %s",
+          this.projectId, cloudConfig.getAbsolutePath()), e);
+    }
+  }
+
+  public CloudIotManager(File siteConfig) {
+    try {
+      System.err.println("Reading cloud config from " + siteConfig.getAbsolutePath());
+      ExecutionConfiguration config = readExecutionConfiguration(siteConfig);
+      this.projectId = requireNonNull(config.project_id, "no project_id defined");
+      this.useReflectClient = true;
+      this.siteDir = ifNotNullGet(config.site_model, File::new, siteConfig.getParentFile());
+      executionConfiguration = validate(config, this.projectId);
+      executionConfiguration.iot_provider = IMPLICIT;
+      executionConfiguration.site_model = siteDir.getPath();
+      String targetRegistry = ofNullable(config.alt_registry).orElse(config.registry_id);
+      registryId = SiteModel.getRegistryActual(targetRegistry, config.registry_suffix);
+      cloudRegion = executionConfiguration.cloud_region;
+      initializeIotProvider();
+    } catch (Exception e) {
       throw new RuntimeException(
-          String.format("While initializing project %s from file %s", this.projectId,
-              cloudConfig.getAbsolutePath()), e);
+          format("While initializing project from file %s", siteConfig.getAbsolutePath()), e);
     }
   }
 
