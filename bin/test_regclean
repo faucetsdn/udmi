@@ -1,4 +1,4 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 
 # Force consistent sort order
 export LC_ALL=C
@@ -31,8 +31,6 @@ echo Clean site out/ directory...
 rm -rf $site_path/out
 
 if [[ -n $UDMI_REFLECTOR_ENDPOINT ]]; then
-    foo=$(tr -d ' \n\r' <<< $UDMI_REFLECTOR_ENDPOINT)
-    echo $foo
     endpoint=$(tr -d ' \n\r' <<< $UDMI_REFLECTOR_ENDPOINT | base64 --decode)
     echo $endpoint
     site_arg=out/cloud_iot_config-reflect.json
