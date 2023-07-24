@@ -93,7 +93,8 @@ jobs:
         run: bin/test_regclean $CLEARBLADE_PROJECT
       - name: Config outputs
         if: ${{ always() }}
-        run: more /tmp/pubber_config.json /tmp/registrar_config.json | cat
+        run: more /tmp/pubber_config.json /tmp/registrar_config.json \
+          out/cloud_iot_config-reflect.json | cat
 
   udmif:
     name: UDMIF unit tests

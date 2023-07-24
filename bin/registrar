@@ -67,6 +67,10 @@ else
 EOF
 fi
 
+echo $config_file:
+cat $config_file
+echo
+
 $ROOT_DIR/validator/bin/registrar $config_file $* 2>&1
 
 bin/check_version
