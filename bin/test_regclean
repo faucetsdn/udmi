@@ -83,7 +83,7 @@ RESULT=0
 pubber/bin/run $pubber_config || RESULT=$?
 
 echo Now recreate the registry from scratch!
-bin/registrar $site_arg $registrar_id -u
+bin/registrar $site_arg $registrar_project -u
 
 echo And check again, but this time with success...
 pubber/bin/run $pubber_config
