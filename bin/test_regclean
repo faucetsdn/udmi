@@ -15,11 +15,11 @@ project_id=$1
 shift
 
 [[ -n $GITHUB_RUN_NUMBER ]] && echo "Workflow run number $GITHUB_RUN_NUMBER" || true
-echo "Using target project=$project_id"
-echo "Using UDMI_REGISTRY_SUFFIX=$UDMI_REGISTRY_SUFFIX"
-echo "Using UDMI_ALT_REGISTRY=$UDMI_ALT_REGISTRY"
-echo "Using UDMI_REFLECTOR_ENDPOINT=$UDMI_REFLECTOR_ENDPOINT"
-echo "Using UDMI_PUBBER_ENDPOINT=$UDMI_PUBBER_ENDPOINT"
+echo "Run as: $0 $project_id"
+echo "export UDMI_REGISTRY_SUFFIX=$UDMI_REGISTRY_SUFFIX"
+echo "export UDMI_ALT_REGISTRY=$UDMI_ALT_REGISTRY"
+echo "export UDMI_REFLECTOR_ENDPOINT='$UDMI_REFLECTOR_ENDPOINT'"
+echo "export UDMI_PUBBER_ENDPOINT='$UDMI_PUBBER_ENDPOINT'"
 
 site_path=sites/udmi_site_model
 output_file=$site_path/out/registration_summary.json
@@ -75,12 +75,12 @@ cat <<EOF > $pubber_config
 {
     "endpoint": {
       "protocol": "mqtt",
-      "client_id": "projects/$project_id/locations/$cloud_region/registries/$registry_id$registry_suffix/devices/$device_id",
+      "client_id": "projects/$project_target/locations/$cloud_region/registries/$registry_id$registry_suffix/devices/$device_id",
       "hostname": "$broker_hostname"
     },
     "sitePath": "$site_path",
     "deviceId": "$device_id",
-    "projectId": "$project_id",
+    "projectId": "$project_target",
     "serialNo": "$serial_no",
     "options": {
       "smokeCheck": true
