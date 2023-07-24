@@ -79,6 +79,8 @@ jobs:
     if: vars.CLEARBLADE_PROJECT != ''
     env:
       CLEARBLADE_PROJECT: ${{ vars.CLEARBLADE_PROJECT }}
+      UDMI_REFLECTOR_ENDPOINT: ${{ vars.UDMI_REFLECTOR_ENDPOINT }}
+      UDMI_PUBBER_ENDPOINT: ${{ vars.UDMI_PUBBER_ENDPOINT }}
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v3
