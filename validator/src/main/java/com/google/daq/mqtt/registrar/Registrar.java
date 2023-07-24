@@ -2,7 +2,7 @@ package com.google.daq.mqtt.registrar;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Sets.intersection;
-import static com.google.daq.mqtt.util.ConfigUtil.readExecutionConfiguration;
+import static com.google.daq.mqtt.util.ConfigUtil.readExeConfig;
 import static com.google.udmi.util.Common.CLOUD_VERSION_KEY;
 import static com.google.udmi.util.Common.NO_SITE;
 import static com.google.udmi.util.Common.UDMI_VERSION_KEY;
@@ -201,7 +201,7 @@ public class Registrar {
     if (profilePath.isFile()) {
       profile = profilePath;
     }
-    processProfile(readExecutionConfiguration(profilePath));
+    processProfile(readExeConfig(profilePath));
   }
 
   Registrar processProfile(ExecutionConfiguration config) {

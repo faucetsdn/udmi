@@ -1,7 +1,7 @@
 package com.google.daq.mqtt.util;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.daq.mqtt.util.ConfigUtil.readExecutionConfiguration;
+import static com.google.daq.mqtt.util.ConfigUtil.readExeConfig;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.mergeObject;
 import static java.lang.String.format;
@@ -68,7 +68,7 @@ public class CloudIotManager {
     File cloudConfig = new File(siteDir, CLOUD_IOT_CONFIG_JSON);
     try {
       System.err.println("Reading cloud config from " + cloudConfig.getAbsolutePath());
-      executionConfiguration = validate(readExecutionConfiguration(cloudConfig), this.projectId);
+      executionConfiguration = validate(readExeConfig(cloudConfig), this.projectId);
       executionConfiguration.iot_provider = iotProvider;
       executionConfiguration.site_model = siteDir.getPath();
       executionConfiguration.registry_suffix = registrySuffix;
@@ -88,12 +88,12 @@ public class CloudIotManager {
   public CloudIotManager(File siteConfig) {
     try {
       System.err.println("Reading cloud config from " + siteConfig.getAbsolutePath());
-      ExecutionConfiguration config = readExecutionConfiguration(siteConfig);
+      ExecutionConfiguration config = readExeConfig(siteConfig);
       this.projectId = requireNonNull(config.project_id, "no project_id defined");
       this.useReflectClient = true;
       this.siteDir = ifNotNullGet(config.site_model, File::new, siteConfig.getParentFile());
       File baseConfig = new File(siteDir, CLOUD_IOT_CONFIG_JSON);
-      ExecutionConfiguration newConfig = mergeObject(readExecutionConfiguration(baseConfig), config);
+      ExecutionConfiguration newConfig = mergeObject(readExeConfig(baseConfig), config);
       executionConfiguration = validate(newConfig, this.projectId);
       executionConfiguration.iot_provider = IMPLICIT;
       executionConfiguration.site_model = siteDir.getPath();
