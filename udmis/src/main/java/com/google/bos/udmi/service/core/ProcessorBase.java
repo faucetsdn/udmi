@@ -173,6 +173,11 @@ public abstract class ProcessorBase extends ContainerBase {
 
   protected void reflectMessage(Envelope envelope, String message) {
     String deviceRegistryId = envelope.deviceRegistryId;
+
+    if (deviceRegistryId == null) {
+      return;
+    }
+
     try {
       if (registryBackoffAllow(deviceRegistryId)) {
         checkState(envelope.payload == null, "envelope payload is not null");
