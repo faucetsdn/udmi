@@ -4,6 +4,5 @@
   "deviceRegistryId" : "ZZ-TRI-FECTA",
   "projectId" : "bos-peringknife-dev",
   "subFolder" : "pointset",
-  "subType" : "event",
-  "transactionId" : "PS:8070007662997768"
+  "subType" : "event"
 }
