@@ -655,7 +655,7 @@ public class SequenceBase {
     untilTrue("device state update", () -> deviceState != null);
 
     // Do this late in the sequence to make sure any state is cleared out from previous test.
-    startStateCount = getUpdateCount(SubType.STATE.value()).get();
+    startStateCount = getStateUpdateCount();
     startCaptureTime = System.currentTimeMillis();
     receivedEvents.clear();
     validationResults.clear();
@@ -1410,7 +1410,7 @@ public class SequenceBase {
         validSerialNo();
         debug(format("Updated state has last_config %s (expecting %s)",
             getTimestamp(deviceState.system.last_config),
-            getTimestamp(deviceConfig.timestamp)));
+            getTimestamp((Date) ifNotNullGet(deviceConfig, config -> config.timestamp))));
       } else {
         error("Unknown update type " + converted.getClass().getSimpleName());
       }
@@ -1703,7 +1703,11 @@ public class SequenceBase {
   }
 
   private boolean receivedAtLeastOneState() {
-    return getUpdateCount(SubType.STATE.value()).get() > startStateCount;
+    return getStateUpdateCount() > startStateCount;
+  }
+
+  private static int getStateUpdateCount() {
+    return getUpdateCount(SubType.STATE.value()).get();
   }
 
   protected void ensureStateUpdate() {

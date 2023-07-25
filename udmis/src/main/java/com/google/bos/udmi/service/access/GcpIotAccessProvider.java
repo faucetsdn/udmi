@@ -394,7 +394,8 @@ public class GcpIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public void sendCommand(String registryId, String deviceId, SubFolder folder, String message) {
+  public void sendCommandBase(String registryId, String deviceId, SubFolder folder,
+      String message) {
     try {
       Map<String, Object> messageMap = toMap(message);
       Object payloadSubType = messageMap.get("subType");
