@@ -2,13 +2,17 @@ package com.google.bos.udmi.service.access;
 
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static java.lang.String.format;
 
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.common.collect.ImmutableMap;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import udmi.schema.CloudModel;
 import udmi.schema.Envelope.SubFolder;
@@ -20,6 +24,8 @@ import udmi.schema.IotAccess.IotProvider;
  */
 public abstract class IotAccessBase extends ContainerBase {
 
+  private static final long REGISTRY_COMMAND_BACKOFF_SEC = 60;
+  private static final Map<String, Instant> BACKOFF_MAP = new ConcurrentHashMap<>();
   protected static final String EMPTY_JSON = "{}";
   private static final long CONFIG_UPDATE_BACKOFF_MS = 1000;
   private static final int CONFIG_UPDATE_MAX_RETRIES = 10;
@@ -99,13 +105,44 @@ public abstract class IotAccessBase extends ContainerBase {
   /**
    * Send a command to a device.
    */
-  public abstract void sendCommand(String registryId, String deviceId, SubFolder folder,
+  public final void sendCommand(String registryId, String deviceId, SubFolder folder,
+      String message) {
+    if (registryBackoffCheck(registryId)) {
+      try {
+        sendCommandBase(registryId, deviceId, folder, message);
+      } catch (Exception e) {
+        registryBackoffInhibit(registryId);
+        debug("Setting registry backoff for %s until %s", registryId,
+            getTimestamp(BACKOFF_MAP.get(registryId)));
+      }
+    } else {
+      debug("Dropping registry backoff for %s", registryId);
+    }
+  }
+
+  protected abstract void sendCommandBase(String registryId, String deviceId, SubFolder folder,
       String message);
 
   public void setProviderAffinity(String registryId, String deviceId, String providerId) {
   }
 
   abstract String fetchRegistryMetadata(String registryId, String metadataKey);
+
+  private boolean registryBackoffCheck(String deviceRegistryId) {
+    return ifNotNullGet(BACKOFF_MAP.get(deviceRegistryId), end -> end.isBefore(Instant.now()),
+        true);
+  }
+
+  private void registryBackoffInhibit(String deviceRegistryId) {
+    Instant until = Instant.now().plus(REGISTRY_COMMAND_BACKOFF_SEC, ChronoUnit.SECONDS);
+    BACKOFF_MAP.put(deviceRegistryId, until);
+  }
+
+  public void registryBackoffClear(String deviceRegistryId) {
+    if (BACKOFF_MAP.remove(deviceRegistryId) != null) {
+      debug("Released registry backoff for " + deviceRegistryId);
+    }
+  }
 
 
 }

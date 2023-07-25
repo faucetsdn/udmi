@@ -99,8 +99,8 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public void sendCommand(String registryId, String deviceId, SubFolder folder, String message) {
-    getProviderFor(registryId).sendCommand(registryId, deviceId, folder, message);
+  public void sendCommandBase(String registryId, String deviceId, SubFolder folder, String message) {
+    getProviderFor(registryId).sendCommandBase(registryId, deviceId, folder, message);
   }
 
   @Override

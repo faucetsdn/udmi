@@ -59,14 +59,12 @@ public abstract class ProcessorBase extends ContainerBase {
   public static final Integer FUNCTIONS_VERSION_MIN = 9;
   public static final Integer FUNCTIONS_VERSION_MAX = 9;
   public static final String EMPTY_JSON = "{}";
-  public static final long REGISTRY_COMMAND_BACKOFF_SEC = 60;
   static final String REFLECT_REGISTRY = "UDMI-REFLECT";
   private static final String RESET_CONFIG_VALUE = "reset_config";
   private static final String BREAK_CONFIG_VALUE = "break_json";
   private static final String EXTRA_FIELD_KEY = "extra_field";
   private static final String BROKEN_CONFIG_JSON =
       format("{ broken by %s == %s", EXTRA_FIELD_KEY, BREAK_CONFIG_VALUE);
-  private static final Map<String, Instant> BACKOFF_MAP = new ConcurrentHashMap<>();
   protected MessageDispatcher dispatcher;
   private final ImmutableList<HandlerSpecification> baseHandlers = ImmutableList.of(
       messageHandlerFor(Object.class, this::defaultHandler),
@@ -179,18 +177,11 @@ public abstract class ProcessorBase extends ContainerBase {
     }
 
     try {
-      if (registryBackoffAllow(deviceRegistryId)) {
-        checkState(envelope.payload == null, "envelope payload is not null");
-        envelope.payload = encodeBase64(message);
-        reflectString(deviceRegistryId, stringify(envelope));
-      } else {
-        debug("Dropping reflector message because backoff until "
-            + getTimestamp(BACKOFF_MAP.get(deviceRegistryId)));
-      }
+      checkState(envelope.payload == null, "envelope payload is not null");
+      envelope.payload = encodeBase64(message);
+      reflectString(deviceRegistryId, stringify(envelope));
     } catch (Exception e) {
-      registryBackoffInhibit(deviceRegistryId);
-      error(format("Message reflection backoff until %s, because %s",
-          getTimestamp(BACKOFF_MAP.get(deviceRegistryId)), friendlyStackTrace(e)));
+      error(format("Message reflection error %s", friendlyStackTrace(e)));
     } finally {
       envelope.payload = null;
     }
@@ -217,16 +208,6 @@ public abstract class ProcessorBase extends ContainerBase {
     String deviceRegistryId = envelopeMap.get(REGISTRY_ID_PROPERTY_KEY);
     envelopeMap.put("payload", encodeBase64(bundleException.bundle.payload));
     reflectString(deviceRegistryId, stringify(envelopeMap));
-  }
-
-  private boolean registryBackoffAllow(String deviceRegistryId) {
-    return ifNotNullGet(BACKOFF_MAP.get(deviceRegistryId), end -> end.isBefore(Instant.now()),
-        true);
-  }
-
-  private void registryBackoffInhibit(String deviceRegistryId) {
-    Instant until = Instant.now().plus(REGISTRY_COMMAND_BACKOFF_SEC, ChronoUnit.SECONDS);
-    BACKOFF_MAP.put(deviceRegistryId, until);
   }
 
   private String updateConfig(String previous, Envelope attributes,
