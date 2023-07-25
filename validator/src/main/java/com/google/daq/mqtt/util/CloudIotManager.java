@@ -90,7 +90,7 @@ public class CloudIotManager {
       System.err.println("Reading cloud config from " + siteConfig.getAbsolutePath());
       ExecutionConfiguration config = readExeConfig(siteConfig);
       this.projectId = requireNonNull(config.project_id, "no project_id defined");
-      this.useReflectClient = true;
+      this.useReflectClient = shouldUseReflectorClient(config);
       this.siteDir = ifNotNullGet(config.site_model, File::new, siteConfig.getParentFile());
       File baseConfig = new File(siteDir, CLOUD_IOT_CONFIG_JSON);
       ExecutionConfiguration newConfig = mergeObject(readExeConfig(baseConfig), config);
@@ -105,6 +105,11 @@ public class CloudIotManager {
       throw new RuntimeException(
           format("While initializing project from file %s", siteConfig.getAbsolutePath()), e);
     }
+  }
+
+  private static boolean shouldUseReflectorClient(ExecutionConfiguration config) {
+    return (config.reflector_endpoint != null)
+        || ofNullable(config.iot_provider).orElse(GCP_NATIVE) != GCP_NATIVE;
   }
 
   /**
