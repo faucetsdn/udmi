@@ -7,8 +7,6 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.getDate;
-import static com.google.udmi.util.JsonUtil.stringify;
-import static com.google.udmi.util.JsonUtil.toMap;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
@@ -166,6 +164,24 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   @VisibleForTesting
   protected DeviceManagerClient getDeviceManagerClient() {
     return new DeviceManagerClient();
+  }
+
+  protected String updateConfig(String registryId, String deviceId, String config, Long version) {
+    try {
+      DeviceManagerClient deviceManagerClient = getDeviceManagerClient();
+      ByteString binaryData = new ByteString(encodeBase64(config));
+      String updateVersion = ifNotNullGet(version, v -> Long.toString(version));
+      String location = getRegistryLocation(registryId);
+      ModifyCloudToDeviceConfigRequest request =
+          ModifyCloudToDeviceConfigRequest.Builder.newBuilder()
+              .setName(DeviceName.of(projectId, location, registryId, deviceId).toString())
+              .setBinaryData(binaryData).setVersionToUpdate(updateVersion).build();
+      DeviceConfig response = deviceManagerClient.modifyCloudToDeviceConfig(request);
+      System.err.println("Config modified version " + response.getVersion());
+      return config;
+    } catch (Exception e) {
+      throw new RuntimeException("While modifying device config", e);
+    }
   }
 
   private CloudModel bindDeviceToGateway(String registryId, String gatewayId,
@@ -364,24 +380,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
         .forEach(id -> unbindDevice(registryId, gatewayId, id)));
   }
 
-  protected String updateConfig(String registryId, String deviceId, String config, Long version) {
-    try {
-      DeviceManagerClient deviceManagerClient = getDeviceManagerClient();
-      ByteString binaryData = new ByteString(encodeBase64(config));
-      String updateVersion = ifNotNullGet(version, v -> Long.toString(version));
-      String location = getRegistryLocation(registryId);
-      ModifyCloudToDeviceConfigRequest request =
-          ModifyCloudToDeviceConfigRequest.Builder.newBuilder()
-              .setName(DeviceName.of(projectId, location, registryId, deviceId).toString())
-              .setBinaryData(binaryData).setVersionToUpdate(updateVersion).build();
-      DeviceConfig response = deviceManagerClient.modifyCloudToDeviceConfig(request);
-      System.err.println("Config modified version " + response.getVersion());
-      return config;
-    } catch (Exception e) {
-      throw new RuntimeException("While modifying device config", e);
-    }
-  }
-
   private CloudModel updateDevice(String registryId, Device device) {
     DeviceManagerClient deviceManagerClient = getDeviceManagerClient();
     String deviceId = device.toBuilder().getId();
@@ -498,7 +496,8 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public void sendCommandBase(String registryId, String deviceId, SubFolder folder, String message) {
+  public void sendCommandBase(String registryId, String deviceId, SubFolder folder,
+      String message) {
     String subFolder = ifNotNullGet(folder, SubFolder::value);
     try {
       ByteString binaryData = new ByteString(encodeBase64(message));

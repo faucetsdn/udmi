@@ -76,7 +76,8 @@ public class LocalIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public void sendCommandBase(String registryId, String deviceId, SubFolder folder, String message) {
+  public void sendCommandBase(String registryId, String deviceId, SubFolder folder,
+      String message) {
     sentCommands.add(format("%s/%s/%s:%s", registryId, deviceId, folder, message));
   }
 

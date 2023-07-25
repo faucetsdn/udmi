@@ -138,6 +138,9 @@ public abstract class IotAccessBase extends ContainerBase {
     BACKOFF_MAP.put(deviceRegistryId, until);
   }
 
+  /**
+   * Clear the backoff for a given registry, allowing commands to be sent.
+   */
   public void registryBackoffClear(String deviceRegistryId) {
     if (BACKOFF_MAP.remove(deviceRegistryId) != null) {
       debug("Released registry backoff for " + deviceRegistryId);
