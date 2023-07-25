@@ -35,7 +35,7 @@ proto-plus==1.22.2
 protobuf==3.19.5
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
-Pygments==2.11.2
+Pygments==2.15.0
 pylint==2.15.9
 pyparsing==3.0.7
 pytz==2021.3
