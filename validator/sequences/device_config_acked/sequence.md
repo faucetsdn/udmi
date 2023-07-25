@@ -1,6 +1,6 @@
 
-## device_config_acked (BETA)
+## device_config_acked (ALPHA)
 
 Check that the device MQTT-acknowledges a sent config.
 
-1. Test failed: timeout waiting for config sync
+1. Wait for config acked
