@@ -55,7 +55,7 @@ public class ReflectProcessor extends ProcessorBase {
     MessageContinuation continuation = getContinuation(message);
     Envelope reflection = continuation.getEnvelope();
     try {
-      iotAccess.registryBackoffClear(reflection.deviceId);
+      iotAccess.registryBackoffClear(reflection.deviceRegistryId, reflection.deviceId);
       if (reflection.subFolder == null) {
         reflectStateHandler(reflection, extractUdmiState(message));
       } else if (reflection.subFolder != SubFolder.UDMI) {
