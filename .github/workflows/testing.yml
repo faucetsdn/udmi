@@ -271,6 +271,10 @@ jobs:
         run: |
           more out/test_itemized.out out/schemas_itemized.out | cat
           more sites/udmi_site_model/out/devices/AHU-1/tests/*/sequencer.log | cat
+      - name: tool output logs
+        if: ${{ always() }}
+        run: |
+          more sites/udmi_site_model/out/*.json | cat
       - name: pubber output logs
         if: ${{ always() }}
         run: |
