@@ -6,7 +6,7 @@ DROOT=.
 
 function usage {
     echo Error: $*
-    echo Usage: $0 { build, shell, run, push, deploy, update, status, logs, stop } [repo]
+    echo Usage: $0 { build, shell, run, push, deploy, update, status, logs, stop } [repo] [--no-check]
     echo Project: $PROJECT
     echo Try starting with: $0 build
     exit 1
@@ -14,27 +14,31 @@ function usage {
 
 cmd=$1
 shift || usage missing command
-repo=$1
 
 PROJECT=$(gcloud config get project)
+REPOSITORY=gcr.io/$PROJECT
 
-if [[ -z $repo ]]; then
-    REPOSITORY=gcr.io/$PROJECT
-else
-    REPOSITORY=$repo
-fi
+for optionalarg in $@; do
+    if [[ $optionalarg == "--no-check" ]]; then
+        NOCHECK=1
+    else
+        REPOSITORY=$optionalarg
+    fi
+done
 
 IMAGE=udmis
 
 
 echo Using GCP project $PROJECT
 
-CONTEXT=`kubectl config current-context`
-CONTEXT_ARGS=(${CONTEXT//_/ })
-KPROJECT=${CONTEXT_ARGS[1]}
-if [[ $KPROJECT != $PROJECT ]]; then
-    echo Kubernetes context $CONTEXT does not match gcloud project $PROJECT
-    false
+if [[ -z $NOCHECK ]]; then
+    CONTEXT=`kubectl config current-context`
+    CONTEXT_ARGS=(${CONTEXT//_/ })
+    KPROJECT=${CONTEXT_ARGS[1]}
+    if [[ $KPROJECT != $PROJECT ]]; then
+        echo Kubernetes context $CONTEXT does not match gcloud project $PROJECT
+        false
+    fi
 fi
 
 LIBFILE=build/libs/udmis-1.0-SNAPSHOT-all.jar
