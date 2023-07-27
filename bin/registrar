@@ -8,8 +8,11 @@ if [ $# == 0 ]; then
     false
 fi
 
-site_path=$1
+site_path=$(realpath $1)
 shift
+
+cd $ROOT_DIR
+
 if [[ -z $1 || $1 =~ ^- ]]; then
     echo No project ID supplied.
 else
@@ -33,9 +36,9 @@ else
 fi
 
 echo Building validator...
-$ROOT_DIR/validator/bin/build > /dev/null
+validator/bin/build > /dev/null
 
-echo Running tools version `(cd $ROOT_DIR; git describe)`
+echo Running tools version `git describe`
 
 # Format of cmdline project_id is {//PROVIDER/}PROJECT (optional PROVIDER)
 # e.g. bos-testing-dev or //gcp/bos-testing-dev
@@ -71,6 +74,6 @@ echo $config_file:
 cat $config_file
 echo
 
-$ROOT_DIR/validator/bin/registrar $config_file $* 2>&1
+validator/bin/registrar $config_file $* 2>&1
 
 bin/check_version
