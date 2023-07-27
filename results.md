@@ -1,16 +1,27 @@
-# {{report.device_id}}
+# AHU-1
 
 ## Device Identification
 
 | Device | AHU-1 |
 |---|---|
-| Site | ZZ-TRI-FECTA |
-| Make | BOS |
-| Model | Pubber |
-| Software | firmware: v1 |
+| Site |  |
+| Make | pubber |
+| Model | one |
+| Software | firmware: 123, os: linux |
 
+## Results
 
+| Bucket | Feature | Stage | Result | Description |
+| --- | --- | --- | --- | --- |
+| enumeration | empty_enumeration | preview | pass | Sequence complete | 
+| enumeration.features | feature_enumeration | preview | fail | device metadata features missing | 
+| pointset | pointset_publish_interval | beta | pass | Sequence complete | 
+| pointset | pointset_sample_rate | beta | pass | Sequence complete | 
+| system | device_config_acked | beta | pass | Sequence complete | 
+| system | extra_config | beta | pass | Sequence complete | 
+| system | system_last_update | stable | pass | Sequence complete | 
 Information about the device from metadata
+
 ## Summary
 
 |  | Feature | Stable | Beta | Alpha |
@@ -40,7 +51,6 @@ Alpha results column included for reporting ONLY WHEN -a option is used
 
 
 List of results, sorted by feature bucket alphabetically
-
 
 
 

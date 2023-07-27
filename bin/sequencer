@@ -127,3 +127,10 @@ fgrep RESULT $site_model/out/devices/$device_id/RESULT.log | \
     fgrep ' schemas ' | sort -k 3 | tee $SCHEMA_OUT
 
 bin/check_version
+
+if bin/which_venv_pip3 then;  
+    echo ERROR could not generate markdown sequencer report file
+    echo please run bin/setup_base and try again
+    false
+fi
+bin/sequencer_report $site_model $device_id
