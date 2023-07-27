@@ -6,6 +6,7 @@
 #
 
 ROOT_DIR=$(dirname $0)/..
+START_DIR=$PWD
 cd $ROOT_DIR
 
 if [[ $# -ne 2 ]]; then
@@ -43,7 +44,7 @@ jq ".localnet.families.ether.addr = \"$ether_addr\"" $metadata_file |
     jq ".localnet.families.ipv6.addr = \"$ipv6_addr\"" > $metadata_out
 
 # Dynamically update the site model based off of dynamic pubber output.
-pubber_features=$(< out/pubber_features.json)
+pubber_features=$(< $START_DIR/out/pubber_features.json)
 jq --argjson features "$pubber_features" '.features = $features' $metadata_out | sponge $metadata_out
 
 ls -l $metadata_file $metadata_out
