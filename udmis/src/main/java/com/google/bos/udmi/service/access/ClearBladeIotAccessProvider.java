@@ -17,6 +17,8 @@ import com.clearblade.cloud.iot.v1.createdevice.CreateDeviceRequest;
 import com.clearblade.cloud.iot.v1.deletedevice.DeleteDeviceRequest;
 import com.clearblade.cloud.iot.v1.deviceslist.DevicesListRequest;
 import com.clearblade.cloud.iot.v1.deviceslist.DevicesListResponse;
+import com.clearblade.cloud.iot.v1.devicestateslist.ListDeviceStatesRequest;
+import com.clearblade.cloud.iot.v1.devicestateslist.ListDeviceStatesResponse;
 import com.clearblade.cloud.iot.v1.devicetypes.Device;
 import com.clearblade.cloud.iot.v1.devicetypes.DeviceConfig;
 import com.clearblade.cloud.iot.v1.devicetypes.DeviceCredential;
@@ -101,20 +103,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
    */
   public ClearBladeIotAccessProvider(IotAccess iotAccess) {
     projectId = requireNonNull(iotAccess.project_id, "gcp project id not specified");
-  }
-
-  private static CloudModel convertDevice(Device device, Operation operation) {
-    // CloudModel cloudModel = new CloudModel();
-    // cloudModel.num_id = device.getNumId().toString();
-    // cloudModel.blocked = device.getBlocked();
-    // cloudModel.metadata = device.getMetadata();
-    // cloudModel.last_event_time = getDate(device.getLastEventTime());
-    // cloudModel.is_gateway = ifNotNullGet(device.getGatewayConfig(),
-    //     config -> GATEWAY_TYPE.equals(config.getGatewayType()));
-    // cloudModel.credentials = convertIot(device.getCredentials());
-    // cloudModel.operation = operation;
-    // return cloudModel;
-    throw new RuntimeException("Not yet implemented");
   }
 
   private static Credential convertIot(DeviceCredential device) {
@@ -462,7 +450,22 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
 
   @Override
   public String fetchState(String deviceRegistryId, String deviceId) {
-    throw new RuntimeException("Not yet implemented " + this.getClass());
+    String devicePath = getDeviceName(deviceRegistryId, deviceId);
+    try {
+      DeviceManagerClient deviceManagerClient = new DeviceManagerClient();
+      String location = getRegistryLocation(deviceRegistryId);
+      DeviceName name = DeviceName.of(projectId, location, deviceRegistryId, deviceId);
+
+      ListDeviceStatesRequest request = ListDeviceStatesRequest.Builder.newBuilder()
+          .setName(name.toString())
+          .setNumStates(1).build();
+      ListDeviceStatesResponse response = requireNonNull(
+          deviceManagerClient.listDeviceStates(request), "Null response returned");
+      String state = (String) response.getDeviceStatesList().get(0).getBinaryData();
+      return state;
+    } catch (Exception e) {
+      throw new RuntimeException("While fetching state for device " + devicePath, e);
+    }
   }
 
   @Override
@@ -520,8 +523,8 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     }
   }
 
-  class Empty {
-    // Temp hacky class
-  }
+class Empty {
+  // Temp hacky class
+}
 }
 
