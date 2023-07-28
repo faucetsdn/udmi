@@ -589,9 +589,6 @@ public class Pubber {
             "missing point not in pointset metadata"));
 
     points.forEach((name, point) -> addPoint(makePoint(name, point)));
-
-    ifNotNullThen(configuration.options.extraPoint, extraPoint -> addPoint(
-        makePoint(extraPoint, makePointPointsetModel(true, 50, 50, "Celsius"))));
   }
 
   private synchronized void maybeRestartExecutor(int intervalMs) {
@@ -1483,6 +1480,9 @@ public class Pubber {
       ifNotNullThen(value.status, status -> registerSystemStatus(status.category, status));
       pointsetEvent.points.put(name, new PointPointsetEvent());
     });
+
+    ifNotNullThen(configuration.options.extraPoint,
+        extraPoint -> pointsetEvent.points.put(extraPoint, new PointPointsetEvent()));
 
     ifTrueThen(missingPoints.isEmpty(), () -> registerSystemStatus(POINTSET_POINT_INVALID, null));
     Set<String> clearPoints = Sets.difference(deviceState.pointset.points.keySet(),
