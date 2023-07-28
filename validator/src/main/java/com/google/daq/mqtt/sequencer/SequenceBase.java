@@ -1665,7 +1665,8 @@ public class SequenceBase {
   protected void untilHasInterestingSystemStatus(boolean isInteresting) {
     BiConsumer<String, Supplier<Boolean>> until =
         isInteresting ? this::untilTrue : this::untilFalse;
-    until.accept("interesting system status", this::hasInterestingSystemStatus);
+    String message = (isInteresting ? "has" : "no") + " interesting system status";
+    until.accept(message, this::hasInterestingSystemStatus);
   }
 
   private void putSequencerResult(Description description, SequenceResult result) {
