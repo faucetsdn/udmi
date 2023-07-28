@@ -91,6 +91,10 @@ jobs:
         run: bin/run_tests install_dependencies
       - name: bin/test_regclean $CLEARBLADE_PROJECT
         run: bin/test_regclean $CLEARBLADE_PROJECT
+      - name: sequencer run
+        run: |
+          bin/sequencer -v out/cloud_iot_config-reflect.json $CLEARBLADE_PROJECT AHU-1 213978213 system_last_update
+          fgrep "RESULT fail system system_last_update" out/sequencer.out
       - name: Config outputs
         if: ${{ always() }}
         run: |
