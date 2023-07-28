@@ -36,7 +36,7 @@ if [[ $# < 3 ]]; then
     false
 fi
 
-site_model=$(realpath $1)
+site_path=$(realpath $1)
 project_id=$2
 device_id=$3
 shift 3
@@ -62,8 +62,15 @@ udmi_version=`git describe --always --dirty`
 
 cd $ROOT_DIR
 
-if [[ ! -d $site_model ]]; then
-    echo Site model $site_model not found.
+if [[ -d $site_path ]]; then
+    echo Using site model directory $site_path
+    site_model=$site_path
+elif [[ -f $site_path ]]; then
+    echo Using site config file $site_path
+    site_model=`jq -r .site_model $site_path`
+    endpoint=`jq .reflector_endpoint $site_path`
+else
+    echo Site model $site_path not found.
     false
 fi
 
@@ -101,6 +108,7 @@ cat <<EOF > $VALIDATOR_CONFIG
   "min_stage": "$min_stage",
   "udmi_version": "$udmi_version",
   "udmi_root": "$ROOT_DIR",
+  "reflector_endpoint": $endpoint,
   "key_file": "$site_model/reflector/rsa_private.pkcs8"
 }
 EOF
