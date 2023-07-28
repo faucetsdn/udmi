@@ -1,0 +1,25 @@
+{
+  "hardware" : {
+    "make" : "BOS",
+    "model" : "pubber"
+  },
+  "last_config" : "2023-07-28T19:51:24Z",
+  "operation" : {
+    "operational" : true,
+    "last_start" : "2023-07-28T19:50:47Z",
+    "restart_count" : 2,
+    "mode" : "active"
+  },
+  "serial_no" : "sequencer-15712",
+  "software" : {
+    "firmware" : "v1"
+  },
+  "status" : {
+    "message" : "success",
+    "category" : "system.config.apply",
+    "timestamp" : "2023-07-28T19:51:24Z",
+    "level" : 300
+  },
+  "timestamp" : "2023-07-28T19:51:26Z",
+  "version" : "1.4.1"
+}

@@ -1,4 +1,9 @@
 {
+  "discovery" : {
+    "families" : {
+      "virtual" : { }
+    }
+  },
   "localnet" : {
     "families" : {
       "ether" : {
@@ -25,14 +30,14 @@
     }
   },
   "system" : {
-    "last_config" : "2023-07-28T16:14:23Z",
+    "last_config" : "2023-07-28T20:03:03Z",
     "operation" : {
       "operational" : true,
-      "last_start" : "2023-07-28T16:13:59Z",
-      "restart_count" : 1,
-      "mode" : "initial"
+      "last_start" : "2023-07-28T19:52:02Z",
+      "restart_count" : 3,
+      "mode" : "active"
     },
-    "serial_no" : "sequencer-16385",
+    "serial_no" : "sequencer-15712",
     "hardware" : {
       "make" : "BOS",
       "model" : "pubber"
@@ -43,10 +48,10 @@
     "status" : {
       "message" : "success",
       "category" : "system.config.apply",
-      "timestamp" : "2023-07-28T16:14:23Z",
+      "timestamp" : "2023-07-28T20:03:03Z",
       "level" : 300
     }
   },
-  "timestamp" : "2023-07-28T16:14:25Z",
+  "timestamp" : "2023-07-28T20:03:03Z",
   "version" : "1.4.1"
 }

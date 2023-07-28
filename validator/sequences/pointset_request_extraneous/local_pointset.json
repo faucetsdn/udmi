@@ -8,7 +8,6 @@
       "units" : "Bars",
       "set_value" : 98
     },
-    "RANDOM_1899d479924" : { },
     "filter_differential_pressure_sensor" : {
       "ref" : "AV12.present_value",
       "units" : "Degrees-Celsius"

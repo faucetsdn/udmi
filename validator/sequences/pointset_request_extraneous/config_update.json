@@ -1,4 +1,5 @@
 {
+  "discovery" : { },
   "localnet" : {
     "families" : {
       "ether" : {
@@ -19,7 +20,6 @@
         "units" : "Bars",
         "set_value" : 98
       },
-      "RANDOM_1899d479924" : { },
       "filter_differential_pressure_sensor" : {
         "ref" : "AV12.present_value",
         "units" : "Degrees-Celsius"
@@ -30,12 +30,12 @@
     "metrics_rate_sec" : 600,
     "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2023-07-28T16:13:59Z"
+      "last_start" : "2023-07-28T19:52:02Z"
     },
     "testing" : {
       "sequence_name" : "pointset_request_extraneous"
     }
   },
-  "timestamp" : "2023-07-28T16:14:23Z",
+  "timestamp" : "2023-07-28T20:03:03Z",
   "version" : "1.4.1"
 }
