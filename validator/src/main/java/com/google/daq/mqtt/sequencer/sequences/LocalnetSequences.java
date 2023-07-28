@@ -4,6 +4,8 @@ import static java.lang.String.format;
 
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import org.junit.Test;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Validate localnet related functionality.
@@ -11,13 +13,17 @@ import org.junit.Test;
 public class LocalnetSequences extends SequenceBase {
 
   private void familyAddr(String family) {
-    String expected = ifNullSkipTest(
-        catchToNull(() -> deviceMetadata.localnet.families.get(family).addr),
-        format("No %s address defined in metadata", family));
-    untilTrue("localnet families available", () -> deviceState.localnet.families.size() > 0);
-    String actual = catchToNull(() -> deviceState.localnet.families.get(family).addr);
-    checkThat(format("device family %s address matches", family),
-        () -> expected.equals(actual));
+    Set<String> expectedFamilies = deviceMetadata.localnet.families.keySet().stream()
+        .filter(f -> f.contains(family)).collect(Collectors.toSet());
+    if (expectedFamilies.isEmpty()) {
+        skipTest(format("No %s address defined in metadata", family));
+    }
+    expectedFamilies.forEach(expectedFamily -> {
+        String expected = catchToNull(() -> deviceMetadata.localnet.families.get(expectedFamily).addr);
+        untilTrue("localnet families available", () -> deviceState.localnet.families.size() > 0);
+        String actual = catchToNull(() -> deviceState.localnet.families.get(expectedFamily).addr);
+        checkThat(format("device family %s address matches", expectedFamily), () -> expected.equals(actual));
+    });
   }
 
   @Test

@@ -245,9 +245,14 @@ public class DiscoverySequences extends SequenceBase {
         families.stream().noneMatch(familyScanComplete(finishTime)));
     List<DiscoveryEvent> receivedEvents = popReceivedEvents(DiscoveryEvent.class);
     checkEnumeration(receivedEvents, shouldEnumerate);
-    int expected = SCAN_ITERATIONS * families.size();
-    int received = receivedEvents.size();
-    assertTrue("number responses received", received >= expected && received <= expected + 1);
+    Set<String> eventFamilies = receivedEvents.stream()
+        .flatMap(event -> event.families.keySet().stream())
+        .collect(Collectors.toSet());
+    assertTrue("all requested families present", eventFamilies.containsAll(families));
+    Map<String, List<DiscoveryEvent>> receivedEventsGrouped = receivedEvents.stream()
+        .collect(Collectors.groupingBy(e -> e.scan_family + "." + e.scan_addr));
+    assertTrue("scan iteration",
+        receivedEventsGrouped.values().stream().allMatch(list -> list.size() == SCAN_ITERATIONS));
   }
 
   private void initializeDiscovery() {
