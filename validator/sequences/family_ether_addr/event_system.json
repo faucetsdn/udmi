@@ -1,51 +1,61 @@
 {
-  "event_count" : 36,
-  "last_config" : "2023-03-07T16:44:19Z",
+  "event_count" : 40,
+  "last_config" : "2023-07-28T20:30:03Z",
   "logentries" : [ {
-    "message" : "update state 2023-03-07T16:44:11Z last_config 2023-03-07T16:44:10Z",
-    "category" : "device.log",
-    "timestamp" : "2023-03-07T16:44:11Z",
-    "level" : 200
-  }, {
-    "message" : "update state 2023-03-07T16:44:19Z last_config 2023-03-07T16:44:10Z",
-    "category" : "device.log",
-    "timestamp" : "2023-03-07T16:44:19Z",
-    "level" : 200
-  }, {
     "message" : "Config handler",
     "category" : "device.log",
-    "timestamp" : "2023-03-07T16:44:19Z",
+    "timestamp" : "2023-07-28T20:30:02Z",
     "level" : 200
   }, {
-    "message" : "2023-03-07T16:44:19Z received config 2023-03-07T16:44:19Z",
+    "message" : "update state 2023-07-28T20:30:02Z last_config 2023-07-28T20:29:35Z",
     "category" : "device.log",
-    "timestamp" : "2023-03-07T16:44:19Z",
+    "timestamp" : "2023-07-28T20:30:02Z",
+    "level" : 200
+  }, {
+    "message" : "2023-07-28T20:30:02Z received config 2023-07-28T20:30:02Z",
+    "category" : "device.log",
+    "timestamp" : "2023-07-28T20:30:02Z",
+    "level" : 200
+  }, {
+    "message" : "Discovery scan generation virtual is 2023-07-28T20:29:43Z",
+    "category" : "device.log",
+    "timestamp" : "2023-07-28T20:30:02Z",
     "level" : 200
   }, {
     "message" : "success",
     "category" : "system.config.apply",
-    "timestamp" : "2023-03-07T16:44:19Z",
+    "timestamp" : "2023-07-28T20:30:02Z",
     "level" : 300
   }, {
     "message" : "Config handler",
     "category" : "device.log",
-    "timestamp" : "2023-03-07T16:44:20Z",
+    "timestamp" : "2023-07-28T20:30:03Z",
     "level" : 200
   }, {
-    "message" : "2023-03-07T16:44:20Z received config 2023-03-07T16:44:19Z",
+    "message" : "2023-07-28T20:30:03Z received config 2023-07-28T20:30:03Z",
     "category" : "device.log",
-    "timestamp" : "2023-03-07T16:44:20Z",
+    "timestamp" : "2023-07-28T20:30:03Z",
+    "level" : 200
+  }, {
+    "message" : "Clearing scheduled discovery family virtual",
+    "category" : "device.log",
+    "timestamp" : "2023-07-28T20:30:03Z",
     "level" : 200
   }, {
     "message" : "success",
     "category" : "system.config.apply",
-    "timestamp" : "2023-03-07T16:44:20Z",
+    "timestamp" : "2023-07-28T20:30:03Z",
     "level" : 300
+  }, {
+    "message" : "2023-07-28T20:30:04Z sending test message #40",
+    "category" : "device.log",
+    "timestamp" : "2023-07-28T20:30:04Z",
+    "level" : 200
   } ],
   "metrics" : {
-    "mem_total_mb" : 252,
-    "mem_free_mb" : 207.39501953125
+    "mem_total_mb" : 250.0,
+    "mem_free_mb" : 198.71246337890625
   },
-  "timestamp" : "2023-03-07T16:44:21.037Z",
+  "timestamp" : "2023-07-28T20:30:04Z",
   "version" : "1.4.1"
 }

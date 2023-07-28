@@ -30,12 +30,12 @@
     "metrics_rate_sec" : 600,
     "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2023-07-28T19:52:02Z"
+      "last_start" : "2023-07-28T20:23:12Z"
     },
     "testing" : {
       "sequence_name" : "pointset_remove_point"
     }
   },
-  "timestamp" : "2023-07-28T20:02:23Z",
+  "timestamp" : "2023-07-28T20:33:32Z",
   "version" : "1.4.1"
 }

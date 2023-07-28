@@ -26,14 +26,14 @@
     }
   },
   "system" : {
-    "last_config" : "2023-07-28T20:15:21Z",
+    "last_config" : "2023-07-28T20:28:02Z",
     "operation" : {
       "operational" : true,
-      "last_start" : "2023-07-28T20:14:33Z",
-      "restart_count" : 1,
-      "mode" : "initial"
+      "last_start" : "2023-07-28T20:23:12Z",
+      "restart_count" : 3,
+      "mode" : "active"
     },
-    "serial_no" : "sequencer-6600",
+    "serial_no" : "sequencer-13214",
     "hardware" : {
       "make" : "BOS",
       "model" : "pubber"
@@ -44,10 +44,10 @@
     "status" : {
       "message" : "success",
       "category" : "system.config.apply",
-      "timestamp" : "2023-07-28T20:15:21Z",
+      "timestamp" : "2023-07-28T20:28:02Z",
       "level" : 300
     }
   },
-  "timestamp" : "2023-07-28T20:15:22Z",
+  "timestamp" : "2023-07-28T20:28:03Z",
   "version" : "1.4.1"
 }

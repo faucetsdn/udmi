@@ -1,6 +1,8 @@
 
 ## pointset_enumeration (ALPHA)
 
+check enumeration of device points
+
 1. Update config before enumeration not active:
     * Add `discovery` = { "enumerate": { "uniqs": `true` } }
 1. Wait for enumeration not active

@@ -1,10 +1,11 @@
 {
+  "discovery" : { },
   "localnet" : {
     "families" : {
       "ether" : {
         "addr" : "00:50:b6:ed:5f:77"
       },
-      "inet" : {
+      "ipv4" : {
         "addr" : "192.168.2.1"
       }
     }
@@ -26,15 +27,15 @@
     }
   },
   "system" : {
-    "min_loglevel" : 200,
     "metrics_rate_sec" : 600,
+    "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2023-03-07T16:38:08Z"
+      "last_start" : "2023-07-28T20:23:12Z"
     },
     "testing" : {
       "sequence_name" : "family_ether_addr"
     }
   },
-  "timestamp" : "2023-03-07T16:44:20.805Z",
-  "version" : "1.4.0-221-g632b879b"
+  "timestamp" : "2023-07-28T20:30:05Z",
+  "version" : "1.4.1"
 }

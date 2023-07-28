@@ -29,12 +29,12 @@
     "metrics_rate_sec" : 600,
     "min_loglevel" : 100,
     "operation" : {
-      "last_start" : "2023-07-28T19:52:02Z"
+      "last_start" : "2023-07-28T20:23:12Z"
     },
     "testing" : {
       "sequence_name" : "broken_config"
     }
   },
-  "timestamp" : "2023-07-28T19:52:55Z",
+  "timestamp" : "2023-07-28T20:24:06Z",
   "version" : "1.4.1"
 }
