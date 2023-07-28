@@ -1,31 +1,66 @@
 {
-  "event_count" : 9,
-  "last_config" : "2023-05-27T07:01:48Z",
+  "event_count" : 3,
+  "last_config" : "2023-07-28T20:15:12Z",
   "logentries" : [ {
-    "message" : "update state 2023-05-27T07:01:48Z last_config 2023-05-27T07:01:38Z",
+    "message" : "update state 2023-07-28T20:15:11Z last_config 2023-07-28T20:15:01Z",
     "category" : "device.log",
-    "timestamp" : "2023-05-27T07:01:48Z",
+    "timestamp" : "2023-07-28T20:15:11Z",
     "level" : 200
   }, {
     "message" : "Config handler",
     "category" : "device.log",
-    "timestamp" : "2023-05-27T07:01:49Z",
+    "timestamp" : "2023-07-28T20:15:11Z",
     "level" : 200
   }, {
-    "message" : "2023-05-27T07:01:49Z received config 2023-05-27T07:01:48Z",
+    "message" : "2023-07-28T20:15:11Z received config 2023-07-28T20:15:11Z",
     "category" : "device.log",
-    "timestamp" : "2023-05-27T07:01:49Z",
+    "timestamp" : "2023-07-28T20:15:11Z",
     "level" : 200
   }, {
     "message" : "success",
     "category" : "system.config.apply",
-    "timestamp" : "2023-05-27T07:01:49Z",
+    "timestamp" : "2023-07-28T20:15:11Z",
+    "level" : 300
+  }, {
+    "message" : "Config handler",
+    "category" : "device.log",
+    "timestamp" : "2023-07-28T20:15:12Z",
+    "level" : 200
+  }, {
+    "message" : "2023-07-28T20:15:12Z received config 2023-07-28T20:15:12Z",
+    "category" : "device.log",
+    "timestamp" : "2023-07-28T20:15:12Z",
+    "level" : 200
+  }, {
+    "message" : "success",
+    "category" : "system.config.apply",
+    "timestamp" : "2023-07-28T20:15:12Z",
+    "level" : 300
+  }, {
+    "message" : "update state 2023-07-28T20:15:13Z last_config 2023-07-28T20:15:12Z",
+    "category" : "device.log",
+    "timestamp" : "2023-07-28T20:15:13Z",
+    "level" : 200
+  }, {
+    "message" : "Config handler",
+    "category" : "device.log",
+    "timestamp" : "2023-07-28T20:15:14Z",
+    "level" : 200
+  }, {
+    "message" : "2023-07-28T20:15:14Z received config 2023-07-28T20:15:12Z",
+    "category" : "device.log",
+    "timestamp" : "2023-07-28T20:15:14Z",
+    "level" : 200
+  }, {
+    "message" : "success",
+    "category" : "system.config.apply",
+    "timestamp" : "2023-07-28T20:15:14Z",
     "level" : 300
   } ],
   "metrics" : {
-    "mem_total_mb" : 250,
-    "mem_free_mb" : 216.4995346069336
+    "mem_total_mb" : 250.0,
+    "mem_free_mb" : 217.75790405273438
   },
-  "timestamp" : "2023-05-27T07:01:49.010Z",
+  "timestamp" : "2023-07-28T20:15:14Z",
   "version" : "1.4.1"
 }

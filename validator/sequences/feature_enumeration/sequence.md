@@ -1,6 +1,8 @@
 
 ## feature_enumeration (PREVIEW)
 
+check enumeration of device features
+
 1. Update config before enumeration not active:
     * Add `discovery` = { "enumerate": { "features": `true` } }
 1. Wait for enumeration not active
