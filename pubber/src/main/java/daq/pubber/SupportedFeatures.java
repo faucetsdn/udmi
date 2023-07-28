@@ -26,7 +26,7 @@ import udmi.schema.FeatureEnumeration.FeatureStage;
  */
 public abstract class SupportedFeatures {
 
-  private static final String PUBBER_FEATURES_JSON = "out/pubber_features.json"
+  private static final String PUBBER_FEATURES_JSON = "out/pubber_features.json";
 
   private static final Map<String, FeatureEnumeration> FEATURES_MAP = new HashMap<>();
 
