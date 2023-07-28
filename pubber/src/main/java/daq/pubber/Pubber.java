@@ -20,6 +20,7 @@ import static java.util.Comparator.comparingInt;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.toSet;
 import static udmi.schema.BlobsetConfig.SystemBlobsets.IOT_ENDPOINT_CONFIG;
 import static udmi.schema.Category.POINTSET_POINT_INVALID;
 import static udmi.schema.Category.POINTSET_POINT_INVALID_VALUE;
@@ -51,11 +52,9 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -100,6 +99,7 @@ import udmi.schema.Operation;
 import udmi.schema.Operation.SystemMode;
 import udmi.schema.PointEnumerationEvent;
 import udmi.schema.PointPointsetConfig;
+import udmi.schema.PointPointsetEvent;
 import udmi.schema.PointPointsetModel;
 import udmi.schema.PointPointsetState;
 import udmi.schema.PointsetConfig;
@@ -189,7 +189,7 @@ public class Pubber {
   private final AtomicInteger messageDelayMs = new AtomicInteger(DEFAULT_REPORT_SEC * 1000);
   private final CountDownLatch configLatch = new CountDownLatch(1);
   private final ExtraPointsetEvent pointsetEvent = new ExtraPointsetEvent();
-  private final Set<AbstractPoint> allPoints = new HashSet<>();
+  private final Map<String, AbstractPoint> managedPoints = new HashMap<>();
   private final AtomicBoolean stateDirty = new AtomicBoolean();
   private final Semaphore stateLock = new Semaphore(1);
   private final String deviceId;
@@ -697,8 +697,8 @@ public class Pubber {
   }
 
   private void maybeRestartSystem() {
-    SystemConfig system = Optional.ofNullable(deviceConfig.system).orElseGet(SystemConfig::new);
-    Operation operation = Optional.ofNullable(system.operation).orElseGet(Operation::new);
+    SystemConfig system = ofNullable(deviceConfig.system).orElseGet(SystemConfig::new);
+    Operation operation = ofNullable(system.operation).orElseGet(Operation::new);
     if (SystemMode.ACTIVE.equals(deviceState.system.operation.mode)
         && SystemMode.RESTART.equals(operation.mode)) {
       systemLifecycle(SystemMode.RESTART);
@@ -741,7 +741,7 @@ public class Pubber {
   }
 
   private void updatePoints() {
-    allPoints.forEach(point -> {
+    managedPoints.values().forEach(point -> {
       point.updateData();
       updateState(point);
     });
@@ -826,7 +826,7 @@ public class Pubber {
       throw new IllegalStateException("Duplicate pointName " + pointName);
     }
     updateState(point);
-    allPoints.add(point);
+    managedPoints.put(pointName, point);
   }
 
   protected void initialize() {
@@ -950,7 +950,7 @@ public class Pubber {
     Entry highestEntry = reportMap.values().stream().max(comparingInt(a -> a.level)).orElse(null);
     deviceState.system.status = ifNotNullGet(highestEntry,
         entry -> ifTrue(shouldLogLevel(entry.level), () -> entry));
-    publishConfigStateUpdate();
+    markStateDirty();
   }
 
   /**
@@ -1464,25 +1464,30 @@ public class Pubber {
   }
 
   private void updatePointsetPointsConfig(PointsetConfig pointsetConfig) {
-    PointsetConfig useConfig = pointsetConfig != null ? pointsetConfig : new PointsetConfig();
-    Map<String, PointPointsetConfig> points =
-        useConfig.points != null ? useConfig.points : new HashMap<>();
-    allPoints.forEach(point ->
-        updatePointConfig(point, points.get(point.getName())));
+    PointsetConfig useConfig = ofNullable(pointsetConfig).orElseGet(PointsetConfig::new);
+    Map<String, PointPointsetConfig> points = ofNullable(useConfig.points).orElseGet(HashMap::new);
+    managedPoints.forEach((name, point) -> updatePointConfig(point, points.get(name)));
     deviceState.pointset.state_etag = useConfig.state_etag;
-    Set<String> pointNames = allPoints.stream().map(AbstractPoint::getName)
-        .collect(Collectors.toSet());
-    Set<String> extraPoints = pointsetConfig.points.keySet().stream()
-        .filter(point -> !pointNames.contains(point)).collect(
-            Collectors.toSet());
-    extraPoints.forEach(point -> {
-      PointPointsetState value = invalidPointState(point);
-      deviceState.pointset.points.put(point, value);
-      registerSystemStatus(value.status.category, value.status);
+
+    if (pointsetConfig == null) {
+      return;
+    }
+
+    Set<String> missingPoints = pointsetConfig.points.keySet().stream()
+        .filter(point -> !deviceState.pointset.points.containsKey(point)).collect(toSet());
+
+    missingPoints.forEach(name -> {
+      PointPointsetState value = ifNotNullGet(managedPoints.get(name),
+          AbstractPoint::getState, invalidPointState(name));
+      deviceState.pointset.points.put(name, value);
+      ifNotNullThen(value.status, status -> registerSystemStatus(status.category, status));
+      pointsetEvent.points.put(name, new PointPointsetEvent());
     });
-    ifTrueThen(extraPoints.isEmpty(), () -> registerSystemStatus(POINTSET_POINT_INVALID, null));
+
+    ifTrueThen(missingPoints.isEmpty(), () -> registerSystemStatus(POINTSET_POINT_INVALID, null));
     Set<String> clearPoints = Sets.difference(deviceState.pointset.points.keySet(),
         pointsetConfig.points.keySet()).immutableCopy();
+    clearPoints.forEach(key -> pointsetEvent.points.remove(key));
     clearPoints.forEach(key -> deviceState.pointset.points.remove(key));
   }
 
