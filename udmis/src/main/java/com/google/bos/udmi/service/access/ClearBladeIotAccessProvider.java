@@ -523,8 +523,8 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     }
   }
 
-class Empty {
-  // Temp hacky class
-}
+  class Empty {
+    // Temp hacky class
+  }
 }
 
