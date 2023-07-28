@@ -69,6 +69,7 @@ elif [[ -f $site_path ]]; then
     echo Using site config file $site_path
     site_model=`jq -r .site_model $site_path`
     endpoint=`jq .reflector_endpoint $site_path`
+    alt_registry=
 else
     echo Site model $site_path not found.
     false
