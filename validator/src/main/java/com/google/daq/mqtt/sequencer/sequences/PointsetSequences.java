@@ -85,22 +85,22 @@ public class PointsetSequences extends PointsetBase {
 
     List<String> candidatePoints = new ArrayList<>(deviceConfig.pointset.points.keySet());
     ifTrueThen(candidatePoints.isEmpty(), () -> skipTest("No points to remove"));
-    String pointName = candidatePoints.get((int) Math.floor(Math.random() * candidatePoints.size()));
+    String name = candidatePoints.get((int) Math.floor(Math.random() * candidatePoints.size()));
 
-    debug("Removing selected test point " + pointName);
-    PointPointsetConfig removed = deviceConfig.pointset.points.remove(pointName);
+    debug("Removing randomly selected test point " + name);
+    PointPointsetConfig removed = deviceConfig.pointset.points.remove(name);
 
     try {
       untilFalse("pointset status does not contain removed point",
-          () -> deviceState.pointset.points.containsKey(pointName));
+          () -> deviceState.pointset.points.containsKey(name));
       untilHasInterestingSystemStatus(false);
       untilPointsetSanity();
     } finally {
-      deviceConfig.pointset.points.put(pointName, removed);
+      deviceConfig.pointset.points.put(name, removed);
     }
 
     untilFalse("pointset status contains removed point",
-        () -> deviceState.pointset.points.containsKey(pointName));
+        () -> deviceState.pointset.points.containsKey(name));
     untilHasInterestingSystemStatus(false);
     untilPointsetSanity();
   }
