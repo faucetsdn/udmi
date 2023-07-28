@@ -65,6 +65,7 @@ cd $ROOT_DIR
 if [[ -d $site_path ]]; then
     echo Using site model directory $site_path
     site_model=$site_path
+    endpoint=null
 elif [[ -f $site_path ]]; then
     echo Using site config file $site_path
     site_model=`jq -r .site_model $site_path`
