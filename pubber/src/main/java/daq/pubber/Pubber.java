@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.fromJsonFile;
 import static com.google.udmi.util.GeneralUtils.fromJsonString;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.optionsString;
 import static com.google.udmi.util.GeneralUtils.toJsonFile;
 import static com.google.udmi.util.GeneralUtils.toJsonString;
@@ -403,7 +404,7 @@ public class Pubber {
   }
 
   private void initializeDevice() {
-    SupportedFeatures.writeFeatureFile();
+    ifNotNullThen(configuration.sitePath, SupportedFeatures::writeFeatureFile);
     SupportedFeatures.setFeatureSwap(configuration.options.featureEnableSwap);
 
     deviceState.system = new SystemState();
