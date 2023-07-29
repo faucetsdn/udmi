@@ -41,6 +41,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 import org.jetbrains.annotations.TestOnly;
 import udmi.schema.EndpointConfiguration;
@@ -217,22 +218,23 @@ public abstract class ProcessorBase extends ContainerBase {
     final String reason;
 
     if (resetConfig) {
-      reason = format("Resetting config %s value %s", EXTRA_FIELD_KEY, extraField);
+      reason = Objects.toString(extraField);
       payload = new HashMap<>();
     } else if (breakConfig) {
-      reason = format("Breaking config %s value %s", EXTRA_FIELD_KEY, extraField);
+      debug("Modify config %s, %s/%s last_config unknown", extraField, attributes.deviceRegistryId,
+          attributes.deviceId);
       return BROKEN_CONFIG_JSON;
     } else if (newLastStart != null) {
       payload = asMap(ofNullable(previous).orElse(EMPTY_JSON));
       return updateWithLastStart(payload, newLastStart);
     } else if (attributes.subFolder == UPDATE) {
-      reason = "Full config update";
+      reason = "update";
       payload = new HashMap<>(updatePayload);
     } else {
       ifNotNullThen(extraField,
           field -> warn(format("Ignoring unknown %s value %s", EXTRA_FIELD_KEY, extraField)));
       payload = asMap(ofNullable(previous).orElse(EMPTY_JSON));
-      reason = "Partial config update " + attributes.subFolder;
+      reason = ifNotNullGet(attributes.subFolder, SubFolder::value, null);
     }
 
     ifNotNullThen(updatePayload, p -> updatePayload.remove(TIMESTAMP_KEY));
@@ -246,8 +248,8 @@ public abstract class ProcessorBase extends ContainerBase {
     payload.put(TIMESTAMP_KEY, updateTimestamp);
     payload.put(VERSION_KEY, UDMI_VERSION);
 
-    debug("%s, %s/%s last_config %s", reason, attributes.deviceRegistryId, attributes.deviceId,
-        updateTimestamp);
+    debug("Modify config %s, %s/%s last_config %s", reason, attributes.deviceRegistryId,
+        attributes.deviceId, updateTimestamp);
     return stringify(payload);
   }
 
