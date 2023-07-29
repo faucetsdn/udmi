@@ -198,6 +198,11 @@ public abstract class ProcessorBase extends ContainerBase {
     dispatcher.registerHandlers(messageHandlers);
   }
 
+  private void mungeConfigDebug(Envelope attributes, Object lastConfig, String reason) {
+    debug("Munge config %s, %s/%s last_config %s %s", reason,
+        attributes.deviceRegistryId, attributes.deviceId, lastConfig, attributes.transactionId);
+  }
+
   private void reflectInvalidEnvelope(BundleException bundleException) {
     Map<String, String> envelopeMap = bundleException.bundle.attributesMap;
     error(format("Reflecting invalid %s/%s for %s", envelopeMap.get(SUBTYPE_PROPERTY_KEY),
@@ -221,12 +226,14 @@ public abstract class ProcessorBase extends ContainerBase {
       reason = Objects.toString(extraField);
       payload = new HashMap<>();
     } else if (breakConfig) {
-      debug("Modify config %s, %s/%s last_config unknown", extraField, attributes.deviceRegistryId,
-          attributes.deviceId);
+      mungeConfigDebug(attributes, "undefined", (String) extraField);
       return BROKEN_CONFIG_JSON;
     } else if (newLastStart != null) {
       payload = asMap(ofNullable(previous).orElse(EMPTY_JSON));
-      return updateWithLastStart(payload, newLastStart);
+      String update = updateWithLastStart(payload, newLastStart);
+      ifNotNullThen(update,
+          () -> mungeConfigDebug(attributes, payload.get(TIMESTAMP_KEY), "last_start"));
+      return update;
     } else if (attributes.subFolder == UPDATE) {
       reason = "update";
       payload = new HashMap<>(updatePayload);
@@ -248,8 +255,7 @@ public abstract class ProcessorBase extends ContainerBase {
     payload.put(TIMESTAMP_KEY, updateTimestamp);
     payload.put(VERSION_KEY, UDMI_VERSION);
 
-    debug("Modify config %s, %s/%s last_config %s", reason, attributes.deviceRegistryId,
-        attributes.deviceId, updateTimestamp);
+    mungeConfigDebug(attributes, updateTimestamp, reason);
     return stringify(payload);
   }
 
