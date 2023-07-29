@@ -1,6 +1,8 @@
 
 ## empty_enumeration (PREVIEW)
 
+check enumeration of nothing at all
+
 1. Update config before enumeration not active:
     * Add `discovery` = { "enumerate": {  } }
 1. Wait for enumeration not active

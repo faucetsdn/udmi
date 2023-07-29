@@ -1,6 +1,8 @@
 
 ## multi_enumeration (ALPHA)
 
+check enumeration of multiple categories
+
 1. Update config before enumeration not active:
     * Add `discovery` = { "enumerate": { "features": `true`, "uniqs": `true`, "families": `true` } }
 1. Wait for enumeration not active

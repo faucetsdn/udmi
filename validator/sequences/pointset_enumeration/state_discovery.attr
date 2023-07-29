@@ -4,5 +4,6 @@
   "deviceRegistryId" : "ZZ-TRI-FECTA",
   "projectId" : "bos-peringknife-dev",
   "subFolder" : "discovery",
-  "subType" : "state"
+  "subType" : "state",
+  "transactionId" : "PS:8733148996526309-1"
 }

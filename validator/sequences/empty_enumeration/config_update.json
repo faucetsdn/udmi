@@ -29,15 +29,15 @@
     }
   },
   "system" : {
-    "min_loglevel" : 200,
     "metrics_rate_sec" : 600,
+    "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2023-05-27T07:00:08Z"
+      "last_start" : "2023-07-28T20:23:12Z"
     },
     "testing" : {
       "sequence_name" : "empty_enumeration"
     }
   },
-  "timestamp" : "2023-05-27T07:01:38.711Z",
-  "version" : "1.4.1-126-g7d0904b5c"
+  "timestamp" : "2023-07-28T20:27:23Z",
+  "version" : "1.4.1"
 }

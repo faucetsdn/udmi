@@ -2,7 +2,7 @@
   "discovery" : {
     "families" : {
       "virtual" : {
-        "generation" : "2023-03-07T16:43:38Z",
+        "generation" : "2023-07-28T20:28:38Z",
         "scan_interval_sec" : 10,
         "enumerate" : true
       }
@@ -13,7 +13,7 @@
       "ether" : {
         "addr" : "00:50:b6:ed:5f:77"
       },
-      "inet" : {
+      "ipv4" : {
         "addr" : "192.168.2.1"
       }
     }
@@ -35,15 +35,15 @@
     }
   },
   "system" : {
-    "min_loglevel" : 200,
     "metrics_rate_sec" : 600,
+    "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2023-03-07T16:38:08Z"
+      "last_start" : "2023-07-28T20:23:12Z"
     },
     "testing" : {
       "sequence_name" : "periodic_scan"
     }
   },
-  "timestamp" : "2023-03-07T16:43:38.466Z",
-  "version" : "1.4.0-221-g632b879b"
+  "timestamp" : "2023-07-28T20:28:39Z",
+  "version" : "1.4.1"
 }

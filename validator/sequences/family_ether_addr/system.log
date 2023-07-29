@@ -1,25 +1,14 @@
-2023-03-07T16:44:04Z INFO device.log Sent 1 discovery events from virtual for Tue Mar 07 08:43:58 PST 2023
-2023-03-07T16:44:07Z INFO device.log update state 2023-03-07T16:44:07Z last_config 2023-03-07T16:43:38Z
-2023-03-07T16:44:07Z INFO device.log Config handler
-2023-03-07T16:44:07Z INFO device.log 2023-03-07T16:44:07Z received config 2023-03-07T16:44:07Z
-2023-03-07T16:44:07Z INFO device.log Discovery scan generation virtual is 2023-03-07T16:43:58Z
-2023-03-07T16:44:07Z NOTICE system.config.apply success
-2023-03-07T16:44:08Z INFO device.log Config handler
-2023-03-07T16:44:08Z INFO device.log 2023-03-07T16:44:08Z received config 2023-03-07T16:44:07Z
-2023-03-07T16:44:08Z NOTICE system.config.apply success
-2023-03-07T16:44:09Z INFO device.log update state 2023-03-07T16:44:09Z last_config 2023-03-07T16:44:07Z
-2023-03-07T16:44:09Z INFO device.log Config handler
-2023-03-07T16:44:09Z INFO device.log 2023-03-07T16:44:09Z received config 2023-03-07T16:44:07Z
-2023-03-07T16:44:09Z NOTICE system.config.apply success
-2023-03-07T16:44:11Z INFO device.log Config handler
-2023-03-07T16:44:11Z INFO device.log 2023-03-07T16:44:11Z received config 2023-03-07T16:44:10Z
-2023-03-07T16:44:11Z NOTICE system.config.apply success
-2023-03-07T16:44:11Z INFO device.log update state 2023-03-07T16:44:11Z last_config 2023-03-07T16:44:10Z
-2023-03-07T16:44:19Z INFO device.log update state 2023-03-07T16:44:19Z last_config 2023-03-07T16:44:10Z
-2023-03-07T16:44:19Z INFO device.log Config handler
-2023-03-07T16:44:19Z INFO device.log 2023-03-07T16:44:19Z received config 2023-03-07T16:44:19Z
-2023-03-07T16:44:19Z NOTICE system.config.apply success
-2023-03-07T16:44:20Z INFO device.log Config handler
-2023-03-07T16:44:20Z INFO device.log 2023-03-07T16:44:20Z received config 2023-03-07T16:44:19Z
-2023-03-07T16:44:20Z NOTICE system.config.apply success
-2023-03-07T16:44:22Z WARNING validation.feature.sequence Sequence complete
+2023-07-28T20:29:48Z INFO Sent 1 discovery events from virtual for Fri Jul 28 13:29:43 PDT 2023
+2023-07-28T20:29:53Z INFO Discovery scan stopping virtual from 2023-07-28T20:29:43Z
+2023-07-28T20:29:53Z INFO update state 2023-07-28T20:29:53Z last_config 2023-07-28T20:29:35Z
+2023-07-28T20:30:02Z INFO Config handler
+2023-07-28T20:30:02Z INFO update state 2023-07-28T20:30:02Z last_config 2023-07-28T20:29:35Z
+2023-07-28T20:30:02Z INFO 2023-07-28T20:30:02Z received config 2023-07-28T20:30:02Z
+2023-07-28T20:30:02Z INFO Discovery scan generation virtual is 2023-07-28T20:29:43Z
+2023-07-28T20:30:02Z NOTICE success
+2023-07-28T20:30:03Z INFO Config handler
+2023-07-28T20:30:03Z INFO 2023-07-28T20:30:03Z received config 2023-07-28T20:30:03Z
+2023-07-28T20:30:03Z INFO Clearing scheduled discovery family virtual
+2023-07-28T20:30:03Z NOTICE success
+2023-07-28T20:30:04Z INFO 2023-07-28T20:30:04Z sending test message #40
+2023-07-28T20:30:07Z NOTICE Sequence complete
