@@ -1,0 +1,67 @@
+{
+  "features" : {
+    "enumeration.features" : {
+      "sequences" : {
+        "feature_enumeration" : {
+          "stage" : "preview",
+          "result" : "start",
+          "status" : {
+            "message" : "Starting test",
+            "category" : "validation.feature.sequence",
+            "timestamp" : "2023-05-27T07:01:39Z",
+            "level" : 200
+          }
+        }
+      }
+    },
+    "system" : {
+      "sequences" : {
+        "system_last_update" : {
+          "summary" : "Check that last_update state is correctly set in response to a config update.",
+          "stage" : "stable",
+          "result" : "pass",
+          "status" : {
+            "message" : "Sequence complete",
+            "category" : "validation.feature.sequence",
+            "timestamp" : "2023-05-27T07:00:37Z",
+            "level" : 400
+          }
+        },
+        "extra_config" : {
+          "summary" : "Check that the device correctly handles an extra out-of-schema field",
+          "stage" : "beta",
+          "result" : "pass",
+          "status" : {
+            "message" : "Sequence complete",
+            "category" : "validation.feature.sequence",
+            "timestamp" : "2023-05-27T07:01:14Z",
+            "level" : 400
+          }
+        }
+      }
+    },
+    "enumeration" : {
+      "sequences" : {
+        "empty_enumeration" : {
+          "stage" : "preview",
+          "result" : "pass",
+          "status" : {
+            "message" : "Sequence complete",
+            "category" : "validation.feature.sequence",
+            "timestamp" : "2023-05-27T07:01:39Z",
+            "level" : 400
+          }
+        }
+      }
+    }
+  },
+  "start_time" : "2023-05-27T07:00:17Z",
+  "status" : {
+    "message" : "Starting sequence run for device AHU-1",
+    "category" : "validation.feature.sequence",
+    "timestamp" : "2023-05-27T07:00:17Z",
+    "level" : 300
+  },
+  "timestamp" : "2023-05-27T07:01:39Z",
+  "version" : "1.4.1-126-g7d0904b5c"
+}

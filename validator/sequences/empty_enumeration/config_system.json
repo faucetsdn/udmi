@@ -1,0 +1,12 @@
+{
+  "metrics_rate_sec" : 600,
+  "min_loglevel" : 200,
+  "operation" : {
+    "last_start" : "2023-05-27T07:00:08Z"
+  },
+  "testing" : {
+    "sequence_name" : "empty_enumeration"
+  },
+  "timestamp" : "2023-05-27T07:01:27.470Z",
+  "version" : "1.4.1-126-g7d0904b5c"
+}

@@ -1,0 +1,9 @@
+{
+  "enumerate" : {
+    "families" : true,
+    "uniqs" : true,
+    "features" : true
+  },
+  "timestamp" : "2023-05-25T17:00:09.374Z",
+  "version" : "1.4.1-126-g7d0904b5c"
+}
