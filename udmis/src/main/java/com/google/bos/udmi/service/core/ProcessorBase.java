@@ -37,13 +37,10 @@ import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.Common;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import org.jetbrains.annotations.TestOnly;
 import udmi.schema.EndpointConfiguration;
@@ -217,21 +214,25 @@ public abstract class ProcessorBase extends ContainerBase {
     boolean breakConfig = BREAK_CONFIG_VALUE.equals(extraField);
     final Map<String, Object> payload;
 
+    final String reason;
+
     if (resetConfig) {
-      debug("Resetting config due to %s value %s", EXTRA_FIELD_KEY, extraField);
+      reason = format("Resetting config %s value %s", EXTRA_FIELD_KEY, extraField);
       payload = new HashMap<>();
     } else if (breakConfig) {
-      debug("Breaking config due to %s value %s", EXTRA_FIELD_KEY, extraField);
+      reason = format("Breaking config %s value %s", EXTRA_FIELD_KEY, extraField);
       return BROKEN_CONFIG_JSON;
     } else if (newLastStart != null) {
       payload = asMap(ofNullable(previous).orElse(EMPTY_JSON));
       return updateWithLastStart(payload, newLastStart);
     } else if (attributes.subFolder == UPDATE) {
+      reason = "Full config update";
       payload = new HashMap<>(updatePayload);
     } else {
       ifNotNullThen(extraField,
           field -> warn(format("Ignoring unknown %s value %s", EXTRA_FIELD_KEY, extraField)));
       payload = asMap(ofNullable(previous).orElse(EMPTY_JSON));
+      reason = "Partial config update " + attributes.subFolder;
     }
 
     ifNotNullThen(updatePayload, p -> updatePayload.remove(TIMESTAMP_KEY));
@@ -241,9 +242,12 @@ public abstract class ProcessorBase extends ContainerBase {
       payload.put(attributes.subFolder.value(), updatePayload);
     }
 
-    payload.put(TIMESTAMP_KEY, getTimestamp());
+    String updateTimestamp = getTimestamp();
+    payload.put(TIMESTAMP_KEY, updateTimestamp);
     payload.put(VERSION_KEY, UDMI_VERSION);
 
+    debug("%s, %s/%s last_config %s", reason, attributes.deviceRegistryId, attributes.deviceId,
+        updateTimestamp);
     return stringify(payload);
   }
 
