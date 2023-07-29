@@ -1,25 +1,24 @@
-2023-03-07T16:47:09Z INFO device.log update state 2023-03-07T16:47:09Z last_config 2023-03-07T16:45:48Z
-2023-03-07T16:47:09Z INFO device.log Config handler
-2023-03-07T16:47:09Z INFO device.log 2023-03-07T16:47:09Z received config 2023-03-07T16:47:09Z
-2023-03-07T16:47:09Z NOTICE system.config.apply success
-2023-03-07T16:47:10Z INFO device.log Config handler
-2023-03-07T16:47:10Z INFO device.log 2023-03-07T16:47:10Z received config 2023-03-07T16:47:09Z
-2023-03-07T16:47:10Z NOTICE system.config.apply success
-2023-03-07T16:47:11Z INFO device.log update state 2023-03-07T16:47:11Z last_config 2023-03-07T16:47:09Z
-2023-03-07T16:47:11Z INFO device.log Config handler
-2023-03-07T16:47:11Z INFO device.log 2023-03-07T16:47:11Z received config 2023-03-07T16:47:10Z
-2023-03-07T16:47:11Z INFO device.log Starting executor with send message delay 10000
-2023-03-07T16:47:11Z NOTICE system.config.apply success
-2023-03-07T16:47:13Z INFO device.log update state 2023-03-07T16:47:13Z last_config 2023-03-07T16:47:10Z
-2023-03-07T16:47:13Z INFO device.log Config handler
-2023-03-07T16:47:13Z INFO device.log 2023-03-07T16:47:13Z received config 2023-03-07T16:47:11Z
-2023-03-07T16:47:13Z NOTICE system.config.apply success
-2023-03-07T16:47:15Z INFO device.log update state 2023-03-07T16:47:15Z last_config 2023-03-07T16:47:11Z
-2023-03-07T16:47:21Z INFO device.log 2023-03-07T16:47:21Z sending test message #50
-2023-03-07T16:47:31Z INFO device.log update state 2023-03-07T16:47:31Z last_config 2023-03-07T16:47:11Z
-2023-03-07T16:47:32Z INFO device.log Config handler
-2023-03-07T16:47:32Z INFO device.log 2023-03-07T16:47:32Z received config 2023-03-07T16:47:31Z
-2023-03-07T16:47:32Z INFO device.log Starting executor with send message delay 5000
-2023-03-07T16:47:32Z NOTICE system.config.apply success
-2023-03-07T16:47:34Z INFO device.log update state 2023-03-07T16:47:34Z last_config 2023-03-07T16:47:31Z
-2023-03-07T16:48:02Z WARNING validation.feature.sequence Sequence complete
+2023-07-28T20:34:12Z INFO update state 2023-07-28T20:34:12Z last_config 2023-07-28T20:34:02Z
+2023-07-28T20:34:12Z INFO Config handler
+2023-07-28T20:34:12Z INFO 2023-07-28T20:34:12Z received config 2023-07-28T20:34:12Z
+2023-07-28T20:34:12Z NOTICE success
+2023-07-28T20:34:14Z INFO update state 2023-07-28T20:34:14Z last_config 2023-07-28T20:34:12Z
+2023-07-28T20:34:30Z INFO update state 2023-07-28T20:34:30Z last_config 2023-07-28T20:34:12Z
+2023-07-28T20:34:30Z INFO Config handler
+2023-07-28T20:34:30Z INFO 2023-07-28T20:34:30Z received config 2023-07-28T20:34:30Z
+2023-07-28T20:34:30Z NOTICE success
+2023-07-28T20:34:31Z INFO Config handler
+2023-07-28T20:34:31Z INFO 2023-07-28T20:34:31Z received config 2023-07-28T20:34:30Z
+2023-07-28T20:34:31Z NOTICE success
+2023-07-28T20:34:32Z INFO update state 2023-07-28T20:34:32Z last_config 2023-07-28T20:34:30Z
+2023-07-28T20:34:32Z INFO Config handler
+2023-07-28T20:34:32Z INFO 2023-07-28T20:34:32Z received config 2023-07-28T20:34:32Z
+2023-07-28T20:34:32Z NOTICE success
+2023-07-28T20:34:34Z INFO update state 2023-07-28T20:34:34Z last_config 2023-07-28T20:34:32Z
+2023-07-28T20:34:52Z INFO update state 2023-07-28T20:34:52Z last_config 2023-07-28T20:34:32Z
+2023-07-28T20:34:52Z INFO Config handler
+2023-07-28T20:34:52Z INFO 2023-07-28T20:34:52Z received config 2023-07-28T20:34:52Z
+2023-07-28T20:34:52Z INFO Starting executor with send message delay 5000
+2023-07-28T20:34:52Z NOTICE success
+2023-07-28T20:34:54Z INFO update state 2023-07-28T20:34:54Z last_config 2023-07-28T20:34:52Z
+2023-07-28T20:35:22Z NOTICE Sequence complete

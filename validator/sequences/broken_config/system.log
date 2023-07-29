@@ -1,103 +1,68 @@
-2023-04-07T13:07:32Z INFO device.log Connection complete.
-2023-04-07T13:07:32Z INFO device.log Config handler
-2023-04-07T13:07:32Z NOTICE system.config.apply success
-2023-04-07T13:07:32Z NOTICE system.config.apply success
-2023-04-07T13:07:49Z INFO device.log 2023-04-07T13:07:49Z received config 2023-04-07T13:07:49Z
-2023-04-07T13:07:49Z NOTICE system.config.apply success
-2023-04-07T13:07:50Z INFO device.log Config handler
-2023-04-07T13:07:50Z INFO device.log 2023-04-07T13:07:50Z received config 2023-04-07T13:07:49Z
-2023-04-07T13:07:50Z NOTICE system.config.apply success
-2023-04-07T13:07:51Z INFO device.log update state 2023-04-07T13:07:51Z last_config 2023-04-07T13:07:49Z
-2023-04-07T13:07:52Z INFO device.log Config handler
-2023-04-07T13:07:52Z INFO device.log 2023-04-07T13:07:52Z received config 2023-04-07T13:07:52Z
-2023-04-07T13:07:52Z NOTICE system.config.apply success
-2023-04-07T13:07:53Z INFO device.log update state 2023-04-07T13:07:53Z last_config 2023-04-07T13:07:52Z
-2023-04-07T13:07:53Z INFO device.log Config handler
-2023-04-07T13:07:53Z INFO device.log 2023-04-07T13:07:53Z received config 2023-04-07T13:07:52Z
-2023-04-07T13:07:53Z NOTICE system.config.apply success
-2023-04-07T13:07:55Z INFO device.log Config handler
-2023-04-07T13:07:55Z INFO device.log 2023-04-07T13:07:55Z received config 2023-04-07T13:07:55Z
-2023-04-07T13:07:55Z NOTICE system.config.apply success
-2023-04-07T13:07:55Z INFO device.log update state 2023-04-07T13:07:55Z last_config 2023-04-07T13:07:55Z
-2023-04-07T13:07:56Z INFO device.log Config handler
-2023-04-07T13:07:56Z INFO device.log 2023-04-07T13:07:56Z received config 2023-04-07T13:07:55Z
-2023-04-07T13:07:56Z NOTICE system.config.apply success
-2023-04-07T13:07:57Z INFO device.log Config handler
-2023-04-07T13:07:57Z INFO device.log 2023-04-07T13:07:57Z received config 2023-04-07T13:07:57Z
-2023-04-07T13:07:57Z NOTICE system.config.apply success
-2023-04-07T13:07:57Z INFO device.log update state 2023-04-07T13:07:57Z last_config 2023-04-07T13:07:57Z
-2023-04-07T13:08:01Z INFO device.log update state 2023-04-07T13:08:01Z last_config 2023-04-07T13:07:57Z
-2023-04-07T13:08:01Z INFO device.log Config handler
-2023-04-07T13:08:01Z INFO device.log 2023-04-07T13:08:01Z received config 2023-04-07T13:08:01Z
-2023-04-07T13:08:01Z NOTICE system.config.apply success
-2023-04-07T13:08:01Z DEBUG device.log State update defer 1998ms
-2023-04-07T13:08:01Z DEBUG device.log State update defer 1997ms
-2023-04-07T13:08:01Z DEBUG system.config.receive success
-2023-04-07T13:08:01Z DEBUG device.log State update defer 1997ms
-2023-04-07T13:08:01Z DEBUG system.config.parse success
-2023-04-07T13:08:01Z DEBUG device.log State update defer 1996ms
-2023-04-07T13:08:01Z INFO device.log Config handler
-2023-04-07T13:08:01Z DEBUG device.log Config update (broken_config)
-2023-04-07T13:08:01Z INFO device.log 2023-04-07T13:08:01Z received config 2023-04-07T13:08:01Z
-2023-04-07T13:08:01Z NOTICE system.config.apply success
-2023-04-07T13:08:01Z DEBUG device.log State update defer 1994ms
-2023-04-07T13:08:01Z DEBUG device.log State update defer 1994ms
-2023-04-07T13:08:02Z DEBUG device.log State update defer 1355ms
-2023-04-07T13:08:03Z DEBUG device.log State update defer 0ms
-2023-04-07T13:08:03Z INFO device.log update state 2023-04-07T13:08:03Z last_config 2023-04-07T13:08:01Z
-2023-04-07T13:08:03Z DEBUG device.log State update (broken_config)
-2023-04-07T13:08:06Z DEBUG system.config.receive success
-2023-04-07T13:08:06Z DEBUG device.log State update defer -600ms
-2023-04-07T13:08:06Z INFO device.log update state 2023-04-07T13:08:06Z last_config 2023-04-07T13:08:01Z
-2023-04-07T13:08:06Z DEBUG device.log State update (broken_config)
-2023-04-07T13:08:06Z ERROR device.log Error receiving message config: Unexpected character ('b' (code 98)): was expecting double-quote to start field name
- at [Source: (String)"{ broken because extra_field == break_json"; line: 1, column: 4]
-2023-04-07T13:08:06Z ERROR system.config.parse Unexpected character ('b' (code 98)): was expecting double-quote to start field name
- at [Source: (String)"{ broken because extra_field == break_json"; line: 1, column: 4]
-2023-04-07T13:08:06Z DEBUG device.log State update defer 1995ms
-2023-04-07T13:08:08Z DEBUG device.log State update defer -1ms
-2023-04-07T13:08:08Z INFO device.log update state 2023-04-07T13:08:08Z last_config 2023-04-07T13:08:01Z
-2023-04-07T13:08:08Z DEBUG device.log State update (broken_config)
-2023-04-07T13:08:17Z DEBUG system.config.receive success
-2023-04-07T13:08:17Z DEBUG device.log State update defer -7753ms
-2023-04-07T13:08:17Z INFO device.log update state 2023-04-07T13:08:17Z last_config 2023-04-07T13:08:01Z
-2023-04-07T13:08:17Z DEBUG device.log State update (broken_config)
-2023-04-07T13:08:18Z DEBUG system.config.parse success
-2023-04-07T13:08:18Z DEBUG device.log State update defer 2000ms
-2023-04-07T13:08:18Z INFO device.log Config handler
-2023-04-07T13:08:18Z DEBUG device.log Config update (reset_config)
-2023-04-07T13:08:18Z INFO device.log 2023-04-07T13:08:18Z received config 2023-04-07T13:08:17Z
-2023-04-07T13:08:18Z NOTICE system.config.apply success
-2023-04-07T13:08:19Z INFO device.log Config handler
-2023-04-07T13:08:19Z INFO device.log 2023-04-07T13:08:19Z received config 2023-04-07T13:08:17Z
-2023-04-07T13:08:19Z NOTICE system.config.apply success
-2023-04-07T13:08:20Z INFO device.log update state 2023-04-07T13:08:20Z last_config 2023-04-07T13:08:17Z
-2023-04-07T13:08:21Z INFO device.log Config handler
-2023-04-07T13:08:21Z INFO device.log 2023-04-07T13:08:21Z received config 2023-04-07T13:08:20Z
-2023-04-07T13:08:21Z NOTICE system.config.apply success
-2023-04-07T13:08:22Z INFO device.log Config handler
-2023-04-07T13:08:22Z INFO device.log 2023-04-07T13:08:22Z received config 2023-04-07T13:08:20Z
-2023-04-07T13:08:22Z NOTICE system.config.apply success
-2023-04-07T13:08:22Z INFO device.log update state 2023-04-07T13:08:22Z last_config 2023-04-07T13:08:20Z
-2023-04-07T13:08:23Z INFO device.log Config handler
-2023-04-07T13:08:23Z INFO device.log 2023-04-07T13:08:23Z received config 2023-04-07T13:08:20Z
-2023-04-07T13:08:23Z NOTICE system.config.apply success
-2023-04-07T13:08:24Z INFO device.log update state 2023-04-07T13:08:24Z last_config 2023-04-07T13:08:20Z
-2023-04-07T13:08:25Z INFO device.log Config handler
-2023-04-07T13:08:25Z INFO device.log 2023-04-07T13:08:25Z received config 2023-04-07T13:08:23Z
-2023-04-07T13:08:25Z NOTICE system.config.apply success
-2023-04-07T13:08:26Z INFO device.log update state 2023-04-07T13:08:26Z last_config 2023-04-07T13:08:23Z
-2023-04-07T13:08:26Z INFO device.log Config handler
-2023-04-07T13:08:26Z INFO device.log 2023-04-07T13:08:26Z received config 2023-04-07T13:08:26Z
-2023-04-07T13:08:26Z NOTICE system.config.apply success
-2023-04-07T13:08:28Z INFO device.log update state 2023-04-07T13:08:28Z last_config 2023-04-07T13:08:26Z
-2023-04-07T13:08:33Z INFO device.log update state 2023-04-07T13:08:33Z last_config 2023-04-07T13:08:26Z
-2023-04-07T13:08:33Z INFO device.log Config handler
-2023-04-07T13:08:33Z INFO device.log 2023-04-07T13:08:33Z received config 2023-04-07T13:08:33Z
-2023-04-07T13:08:33Z NOTICE system.config.apply success
-2023-04-07T13:08:33Z DEBUG device.log State update defer 1998ms
-2023-04-07T13:08:33Z DEBUG device.log State update defer 1998ms
-2023-04-07T13:08:35Z DEBUG device.log State update defer 0ms
-2023-04-07T13:08:35Z INFO device.log update state 2023-04-07T13:08:35Z last_config 2023-04-07T13:08:33Z
-2023-04-07T13:08:35Z DEBUG device.log State update (broken_config)
-2023-04-07T13:08:44Z WARNING validation.feature.sequence Sequence complete
+2023-07-28T20:23:24Z INFO update state 2023-07-28T20:23:24Z last_config 2023-07-28T20:23:16Z
+2023-07-28T20:23:25Z INFO Config handler
+2023-07-28T20:23:25Z INFO 2023-07-28T20:23:25Z received config 2023-07-28T20:23:25Z
+2023-07-28T20:23:25Z NOTICE success
+2023-07-28T20:23:26Z INFO update state 2023-07-28T20:23:26Z last_config 2023-07-28T20:23:25Z
+2023-07-28T20:23:34Z INFO update state 2023-07-28T20:23:34Z last_config 2023-07-28T20:23:25Z
+2023-07-28T20:23:36Z INFO update state 2023-07-28T20:23:36Z last_config 2023-07-28T20:23:25Z
+2023-07-28T20:23:36Z INFO Config handler
+2023-07-28T20:23:36Z INFO 2023-07-28T20:23:36Z received config 2023-07-28T20:23:36Z
+2023-07-28T20:23:36Z NOTICE success
+2023-07-28T20:23:38Z INFO Config handler
+2023-07-28T20:23:38Z INFO 2023-07-28T20:23:38Z received config 2023-07-28T20:23:36Z
+2023-07-28T20:23:38Z NOTICE success
+2023-07-28T20:23:38Z INFO update state 2023-07-28T20:23:38Z last_config 2023-07-28T20:23:36Z
+2023-07-28T20:23:39Z INFO Config handler
+2023-07-28T20:23:39Z INFO 2023-07-28T20:23:39Z received config 2023-07-28T20:23:39Z
+2023-07-28T20:23:39Z NOTICE success
+2023-07-28T20:23:41Z INFO update state 2023-07-28T20:23:41Z last_config 2023-07-28T20:23:39Z
+2023-07-28T20:23:41Z INFO Config handler
+2023-07-28T20:23:41Z INFO 2023-07-28T20:23:41Z received config 2023-07-28T20:23:41Z
+2023-07-28T20:23:41Z DEBUG State update defer 1444ms
+2023-07-28T20:23:41Z NOTICE success
+2023-07-28T20:23:41Z DEBUG State update defer 1442ms
+2023-07-28T20:23:41Z DEBUG State update defer 1441ms
+2023-07-28T20:23:43Z DEBUG State update defer -1ms
+2023-07-28T20:23:43Z INFO update state 2023-07-28T20:23:43Z last_config 2023-07-28T20:23:41Z
+2023-07-28T20:23:43Z DEBUG State update (broken_config)
+2023-07-28T20:23:45Z DEBUG success
+2023-07-28T20:23:45Z DEBUG State update defer -456ms
+2023-07-28T20:23:45Z INFO update state 2023-07-28T20:23:45Z last_config 2023-07-28T20:23:41Z
+2023-07-28T20:23:45Z ERROR Error receiving message config: Unexpected character ('b' (code 98)): was expecting double-quote to start field name
+ at [Source: (String)"{ broken by extra_field == break_json"; line: 1, column: 4]
+2023-07-28T20:23:45Z ERROR Unexpected character ('b' (code 98)): was expecting double-quote to start field name
+ at [Source: (String)"{ broken by extra_field == break_json"; line: 1, column: 4]
+2023-07-28T20:23:45Z DEBUG State update defer 2000ms
+2023-07-28T20:23:47Z DEBUG State update defer -1ms
+2023-07-28T20:23:47Z INFO update state 2023-07-28T20:23:47Z last_config 2023-07-28T20:23:41Z
+2023-07-28T20:23:47Z DEBUG State update (broken_config)
+2023-07-28T20:23:59Z DEBUG success
+2023-07-28T20:23:59Z DEBUG success
+2023-07-28T20:23:59Z DEBUG State update defer -9808ms
+2023-07-28T20:23:59Z INFO Config handler
+2023-07-28T20:23:59Z INFO update state 2023-07-28T20:23:59Z last_config 2023-07-28T20:23:41Z
+2023-07-28T20:23:59Z DEBUG State update (broken_config)
+2023-07-28T20:23:59Z DEBUG Config update (reset_config)
+2023-07-28T20:23:59Z INFO 2023-07-28T20:23:59Z received config 2023-07-28T20:23:59Z
+2023-07-28T20:23:59Z NOTICE success
+2023-07-28T20:24:00Z INFO Config handler
+2023-07-28T20:24:00Z INFO 2023-07-28T20:24:00Z received config 2023-07-28T20:24:00Z
+2023-07-28T20:24:00Z NOTICE success
+2023-07-28T20:24:01Z INFO update state 2023-07-28T20:24:01Z last_config 2023-07-28T20:24:00Z
+2023-07-28T20:24:01Z INFO 2023-07-28T20:24:01Z received config 2023-07-28T20:24:01Z
+2023-07-28T20:24:01Z NOTICE success
+2023-07-28T20:24:03Z INFO Config handler
+2023-07-28T20:24:03Z INFO 2023-07-28T20:24:03Z received config 2023-07-28T20:24:02Z
+2023-07-28T20:24:03Z NOTICE success
+2023-07-28T20:24:03Z INFO update state 2023-07-28T20:24:03Z last_config 2023-07-28T20:24:02Z
+2023-07-28T20:24:06Z INFO update state 2023-07-28T20:24:06Z last_config 2023-07-28T20:24:02Z
+2023-07-28T20:24:06Z INFO Config handler
+2023-07-28T20:24:06Z INFO 2023-07-28T20:24:06Z received config 2023-07-28T20:24:06Z
+2023-07-28T20:24:06Z NOTICE success
+2023-07-28T20:24:06Z DEBUG State update defer 2000ms
+2023-07-28T20:24:06Z DEBUG State update defer 2000ms
+2023-07-28T20:24:06Z DEBUG State update defer 2000ms
+2023-07-28T20:24:08Z DEBUG State update defer 0ms
+2023-07-28T20:24:08Z INFO update state 2023-07-28T20:24:08Z last_config 2023-07-28T20:24:06Z
+2023-07-28T20:24:08Z DEBUG State update (broken_config)
+2023-07-28T20:24:16Z NOTICE Sequence complete

@@ -1,11 +1,11 @@
 {
-  "event_count" : 57,
-  "last_config" : "2023-03-07T16:47:31Z",
+  "event_count" : 69,
+  "last_config" : "2023-07-28T20:34:52Z",
   "logentries" : [ ],
   "metrics" : {
-    "mem_total_mb" : 252,
-    "mem_free_mb" : 200.31583404541016
+    "mem_total_mb" : 250.0,
+    "mem_free_mb" : 191.45263671875
   },
-  "timestamp" : "2023-03-07T16:48:02.058Z",
+  "timestamp" : "2023-07-28T20:35:17Z",
   "version" : "1.4.1"
 }

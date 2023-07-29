@@ -1,7 +1,5 @@
 {
-  "blobset" : {
-    "blobs" : { }
-  },
+  "blobset" : { },
   "localnet" : {
     "families" : {
       "ether" : {
@@ -29,15 +27,15 @@
     }
   },
   "system" : {
-    "min_loglevel" : 200,
     "metrics_rate_sec" : 600,
+    "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2023-03-13T04:49:50Z"
+      "last_start" : "2023-07-28T20:18:04Z"
     },
     "testing" : {
       "sequence_name" : "endpoint_connection_success_alternate"
     }
   },
-  "timestamp" : "2023-03-13T04:50:57.853Z",
-  "version" : "1.4.0-205-g15f9a1f2"
+  "timestamp" : "2023-07-28T20:20:31Z",
+  "version" : "1.4.1"
 }

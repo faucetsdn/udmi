@@ -1,5 +1,5 @@
 
-## pointset_publish_interval (ALPHA)
+## pointset_publish_interval (BETA)
 
 test sample rate and sample limit sec
 

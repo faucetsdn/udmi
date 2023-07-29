@@ -1,15 +1,19 @@
 {
-  "discovery" : { },
+  "discovery" : {
+    "families" : {
+      "virtual" : { }
+    }
+  },
   "localnet" : {
     "families" : {
       "ether" : {
-        "addr" : "8c:8c:aa:50:bc:72"
+        "addr" : "40:1c:83:ca:77:54"
       },
       "ipv4" : {
-        "addr" : "192.168.8.5"
+        "addr" : "10.0.0.142"
       },
       "ipv6" : {
-        "addr" : "fe80::11a9:496f:6596:b455"
+        "addr" : "fe80::134f:c1f5:f225:a441"
       }
     }
   },
@@ -17,20 +21,23 @@
     "points" : {
       "filter_alarm_pressure_status" : { },
       "filter_differential_pressure_setpoint" : {
+        "units" : "Bars",
         "value_state" : "applied"
       },
-      "filter_differential_pressure_sensor" : { }
+      "filter_differential_pressure_sensor" : {
+        "units" : "Degrees-Celsius"
+      }
     }
   },
   "system" : {
-    "last_config" : "2023-05-25T16:59:07Z",
+    "last_config" : "2023-07-28T20:29:18Z",
     "operation" : {
       "operational" : true,
-      "last_start" : "2023-05-25T16:54:25Z",
+      "last_start" : "2023-07-28T20:23:12Z",
       "restart_count" : 3,
       "mode" : "active"
     },
-    "serial_no" : "sequencer-2036",
+    "serial_no" : "sequencer-13214",
     "hardware" : {
       "make" : "BOS",
       "model" : "pubber"
@@ -41,10 +48,10 @@
     "status" : {
       "message" : "success",
       "category" : "system.config.apply",
-      "timestamp" : "2023-05-25T16:59:07Z",
+      "timestamp" : "2023-07-28T20:29:18Z",
       "level" : 300
     }
   },
-  "timestamp" : "2023-05-25T16:59:08Z",
+  "timestamp" : "2023-07-28T20:29:19Z",
   "version" : "1.4.1"
 }

@@ -2,15 +2,13 @@
   "points" : {
     "filter_alarm_pressure_status" : { },
     "filter_differential_pressure_setpoint" : {
+      "units" : "Bars",
       "value_state" : "applied"
     },
     "filter_differential_pressure_sensor" : {
-      "value_state" : "invalid",
-      "status" : {
-        "message" : "Written value is not valid"
-      }
+      "units" : "Degrees-Celsius"
     }
   },
-  "timestamp" : "2023-03-07T16:33:17Z",
+  "timestamp" : "2023-07-28T20:35:56Z",
   "version" : "1.4.1"
 }

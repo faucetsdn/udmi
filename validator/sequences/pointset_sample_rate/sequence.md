@@ -1,5 +1,5 @@
 
-## pointset_sample_rate (ALPHA)
+## pointset_sample_rate (BETA)
 
 device publishes pointset events at a rate of no more than config sample_rate_sec
 
