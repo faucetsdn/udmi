@@ -8,6 +8,7 @@ import static com.google.udmi.util.GeneralUtils.fromJsonFile;
 import static com.google.udmi.util.GeneralUtils.fromJsonString;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.optionsString;
 import static com.google.udmi.util.GeneralUtils.toJsonFile;
@@ -20,7 +21,6 @@ import static java.util.Comparator.comparingInt;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
-import static java.util.stream.Collectors.toSet;
 import static udmi.schema.BlobsetConfig.SystemBlobsets.IOT_ENDPOINT_CONFIG;
 import static udmi.schema.Category.POINTSET_POINT_INVALID;
 import static udmi.schema.Category.POINTSET_POINT_INVALID_VALUE;
@@ -582,7 +582,7 @@ public class Pubber {
     }
 
     Map<String, PointPointsetModel> points =
-        metadata.pointset == null ? DEFAULT_POINTS : metadata.pointset.points;
+        ifNotNullGet(metadata.pointset, data -> data.points, DEFAULT_POINTS);
 
     ifNotNullThen(configuration.options.missingPoint,
         missingPoint -> requireNonNull(points.remove(missingPoint),
@@ -1470,28 +1470,32 @@ public class Pubber {
       return;
     }
 
-    Set<String> missingPoints = pointsetConfig.points.keySet().stream()
-        .filter(point -> !deviceState.pointset.points.containsKey(point)).collect(toSet());
+    Set<String> configuredPoints = pointsetConfig.points.keySet();
+    Set<String> statePoints = deviceState.pointset.points.keySet();
+    Set<String> missingPoints = Sets.difference(configuredPoints, statePoints).immutableCopy();
+    final Set<String> clearPoints = Sets.difference(statePoints, configuredPoints).immutableCopy();
 
     missingPoints.forEach(name -> {
-      PointPointsetState value = ifNotNullGet(managedPoints.get(name),
-          AbstractPoint::getState, invalidPointState(name));
+      AbstractPoint managed = managedPoints.get(name);
+      debug("Restoring mismatched point " + name + ": " + managed);
+      PointPointsetState value = ifNotNullGet(managed, AbstractPoint::getState, invalidPoint(name));
       deviceState.pointset.points.put(name, value);
       ifNotNullThen(value.status, status -> registerSystemStatus(status.category, status));
       pointsetEvent.points.put(name, new PointPointsetEvent());
     });
+    ifTrueThen(missingPoints.isEmpty(), () -> registerSystemStatus(POINTSET_POINT_INVALID, null));
 
     ifNotNullThen(configuration.options.extraPoint,
         extraPoint -> pointsetEvent.points.put(extraPoint, new PointPointsetEvent()));
 
-    ifTrueThen(missingPoints.isEmpty(), () -> registerSystemStatus(POINTSET_POINT_INVALID, null));
-    Set<String> clearPoints = Sets.difference(deviceState.pointset.points.keySet(),
-        pointsetConfig.points.keySet()).immutableCopy();
-    clearPoints.forEach(key -> pointsetEvent.points.remove(key));
-    clearPoints.forEach(key -> deviceState.pointset.points.remove(key));
+    clearPoints.forEach(key -> {
+      debug("Clearing mismatched point " + key);
+      pointsetEvent.points.remove(key);
+      deviceState.pointset.points.remove(key);
+    });
   }
 
-  private PointPointsetState invalidPointState(String pointName) {
+  private PointPointsetState invalidPoint(String pointName) {
     PointPointsetState pointPointsetState = new PointPointsetState();
     pointPointsetState.status = new Entry();
     pointPointsetState.status.category = POINTSET_POINT_INVALID;
@@ -1502,11 +1506,10 @@ public class Pubber {
   }
 
   private void updatePointConfig(AbstractPoint point, PointPointsetConfig pointConfig) {
-    if (configuration.options.noWriteback != null && configuration.options.noWriteback) {
-      return;
-    }
-    point.setConfig(pointConfig);
-    updateState(point);
+    ifNotTrueThen(configuration.options.noWriteback, () -> {
+      point.setConfig(pointConfig);
+      updateState(point);
+    });
   }
 
   private int updatePointsetConfig(PointsetConfig pointsetConfig) {
