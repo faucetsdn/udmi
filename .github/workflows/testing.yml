@@ -38,7 +38,7 @@ jobs:
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
-          name: udmis support bundle
+          name: udmis_support
           path: ${{ github.repository_owner }}_udmi-support_*.tgz
 
   unit:
@@ -180,7 +180,7 @@ jobs:
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
-          name: sequencer support bundle
+          name: sequencer_support
           path: ${{ github.repository_owner }}_udmi-support_*.tgz
 
   sequencer_dep:
@@ -236,7 +236,7 @@ jobs:
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
-          name: sequencer support bundle
+          name: sequencer_support
           path: ${{ github.repository_owner }}_udmi-support_*.tgz
 
   comprehensive:
@@ -294,7 +294,7 @@ jobs:
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
-          name: comprehensive support bundle
+          name: comprehensive_support
           path: '*_udmi-support_*.tgz'
 
   redirect:
