@@ -60,6 +60,10 @@ public abstract class ContainerBase {
     output(Level.DEBUG, message);
   }
 
+  public void error(String format, Object... args) {
+    error(format(format, args));
+  }
+
   public void error(String message) {
     output(Level.ERROR, message);
   }
@@ -85,5 +89,9 @@ public abstract class ContainerBase {
 
   public void warn(String message) {
     output(Level.WARNING, message);
+  }
+
+  public void warn(String format, Object... args) {
+    warn(format(format, args));
   }
 }

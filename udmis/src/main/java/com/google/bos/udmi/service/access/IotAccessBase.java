@@ -110,17 +110,19 @@ public abstract class IotAccessBase extends ContainerBase {
    */
   public final void sendCommand(String registryId, String deviceId, SubFolder folder,
       String message) {
+    String backoffKey = getBackoffKey(registryId, deviceId);
     if (registryBackoffCheck(registryId, deviceId)) {
       try {
         sendCommandBase(registryId, deviceId, folder, message);
       } catch (Exception e) {
+        error("Exception sending command to %s: %s", backoffKey, friendlyStackTrace(e));
         ifNotNullThen(registryBackoffInhibit(registryId, deviceId),
             until -> debug("Setting registry backoff for %s until %s",
-                getBackoffKey(registryId, deviceId), getTimestamp(until)));
+                backoffKey, getTimestamp(until)));
       }
     } else {
       debug("Dropping message because registry backoff for %s",
-          getBackoffKey(registryId, deviceId));
+          backoffKey);
     }
   }
 
