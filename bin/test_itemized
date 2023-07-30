@@ -37,6 +37,7 @@ EOF
 pubber/bin/build
 validator/bin/build
 
+test_index=0
 while read -u 7 action test_name remainder; do
     if [[ $action != TEST ]]; then
         continue;
@@ -76,8 +77,9 @@ while read -u 7 action test_name remainder; do
     result=$(grep -E -m 1 "RESULT [a-z]+ [a-z.]+ $test_name " $SEQUENCER_OUT)
     echo ${result/* NOTICE RESULT/RESULT} >> $RESULTS_OUT
 
-    mv $PUBBER_OUT $PUBBER_OUT-$test_name
-    mv $SEQUENCER_OUT $SEQUENCER_OUT-$test_name
+    ((++test_index))
+    mv $PUBBER_OUT $PUBBER_OUT-$(printf %02d $test_index)
+    mv $SEQUENCER_OUT $SEQUENCER_OUT-$(printf %02d $test_index)
 
     echo =========== $test_name >> $SCHEMA_OUT
     cat out/schema.out >> $SCHEMA_OUT
