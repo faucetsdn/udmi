@@ -124,37 +124,6 @@ jobs:
       - name: api tests
         run: udmif/api/runTests
 
-  sanity:
-    name: GitHub Actions sanity
-    runs-on: ubuntu-latest
-    timeout-minutes: 1
-    env:
-      VARS_GCP_TARGET_PROJECT: ${{ vars.GCP_TARGET_PROJECT }}
-      VARS_UDMI_REGISTRY_SUFFIX: ${{ vars.UDMI_REGISTRY_SUFFIX }}
-      VARS_UDMI_ALT_REGISTRY: ${{ vars.UDMI_ALT_REGISTRY }}
-      SECRETS_GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
-      SECRETS_UDMI_REGISTRY_SUFFIX: ${{ secrets.UDMI_REGISTRY_SUFFIX }}
-      SECRETS_UDMI_ALT_REGISTRY: ${{ secrets.UDMI_ALT_REGISTRY }}
-    steps:
-      - name: check secret-not-var GCP_TARGET_PROJECT
-        run: |
-          echo GCP_TARGET_PROJECT var is $VARS_GCP_TARGET_PROJECT
-          echo GCP_TARGET_PROJECT secret is $SECRETS_GCP_TARGET_PROJECT
-          echo Checking if secret is defined but not var
-          [[ -n $VARS_GCP_TARGET_PROJECT || -z $SECRETS_GCP_TARGET_PROJECT ]]
-      - name: check secret-not-var UDMI_REGISTRY_SUFFIX
-        run: |
-          echo UDMI_REGISTRY_SUFFIX var is $VARS_UDMI_REGISTRY_SUFFIX
-          echo UDMI_REGISTRY_SUFFIX secret is $SECRETS_UDMI_REGISTRY_SUFFIX
-          echo Checking if secret is defined but not var
-          [[ -n $VARS_UDMI_REGISTRY_SUFFIX || -z $SECRETS_UDMI_REGISTRY_SUFFIX ]]
-      - name: check secret-not-var UDMI_ALT_REGISTRY
-        run: |
-          echo UDMI_ALT_REGISTRY var is $VARS_UDMI_ALT_REGISTRY
-          echo UDMI_ALT_REGISTRY secret is $SECRETS_UDMI_ALT_REGISTRY
-          echo Checking if secret is defined but not var
-          [[ -n $VARS_UDMI_ALT_REGISTRY || -z $SECRETS_UDMI_ALT_REGISTRY ]]
-
   sequencer:
     name: Sequencer Suite
     runs-on: ubuntu-latest
