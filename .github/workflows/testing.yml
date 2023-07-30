@@ -38,7 +38,7 @@ jobs:
         if: ${{ always() }}
         with:
           name: udmis support bundle
-          path: *_udmi-support_*.tgz
+          path: ${{ github.repository_owner }}_udmi-support_*.tgz
 
   unit:
     name: Unit Tests
