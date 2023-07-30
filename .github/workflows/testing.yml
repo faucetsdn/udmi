@@ -31,12 +31,14 @@ jobs:
         run: bin/run_tests udmis_tests
       - name: support bundle
         if: ${{ always() }}
-        run: bin/support
+        run: |
+          bin/support
+          mv udmi-support.tgz support_${{ github.repository }}_${{ github.run_id }}_${{ job.container.id }}.tgz
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
           name: udmis support bundle
-          path: udmi-support.tgz
+          path: support_${{ github.repository }}_${{ github.run_id }}_${{ job.container.id }}.tgz
 
   unit:
     name: Unit Tests
