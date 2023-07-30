@@ -1500,7 +1500,7 @@ public class Pubber {
     });
 
     ifNotNullThen(configuration.options.extraPoint,
-        extraPoint -> pointsetEvent.points.put(extraPoint, new PointPointsetEvent()));
+        extraPoint -> pointsetEvent.points.put(extraPoint, extraPointsetEvent()));
 
     AtomicReference<Entry> maxStatus = new AtomicReference<>();
     statePoints.forEach(
@@ -1510,6 +1510,12 @@ public class Pubber {
           }
         }));
     registerSystemStatus(POINTSET_BUCKET, maxStatus.get());
+  }
+
+  private static PointPointsetEvent extraPointsetEvent() {
+    PointPointsetEvent pointPointsetEvent = new PointPointsetEvent();
+    pointPointsetEvent.present_value = 100;
+    return pointPointsetEvent;
   }
 
   private PointPointsetState invalidPoint(String pointName) {
