@@ -98,8 +98,8 @@ function pubber_bg {
     fi
 }
 
-echo Sleeping to wait for validator to be ready...
-sleep 10
+echo Sleep, so that validator will be ready for pubber startup.
+sleep 20
 
 pubber_bg AHU-1 extraField=prlagle
 pubber_bg AHU-22 emptyMissing
