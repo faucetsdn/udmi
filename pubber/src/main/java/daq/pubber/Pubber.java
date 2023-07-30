@@ -829,10 +829,10 @@ public class Pubber {
   }
 
   private void restorePoint(String pointName) {
-    PointPointsetState pointPointsetState = ifNotNullGet(managedPoints.get(pointName),
-        AbstractPoint::getState, invalidPoint(pointName));
-    deviceState.pointset.points.put(pointName, pointPointsetState);
-    pointsetEvent.points.put(pointName, new PointPointsetEvent());
+    deviceState.pointset.points.put(pointName, ifNotNullGet(managedPoints.get(pointName),
+        AbstractPoint::getState, invalidPoint(pointName)));
+    pointsetEvent.points.put(pointName, ifNotNullGet(managedPoints.get(pointName),
+        AbstractPoint::getData, new PointPointsetEvent()));
   }
 
   private void suspendPoint(String pointName) {

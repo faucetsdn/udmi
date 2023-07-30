@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.Test;
@@ -38,10 +39,12 @@ public class PointsetSequences extends PointsetBase {
   private void untilPointsetSanity() {
     untilTrue("pointset state reports same points as defined in config", () ->
         deviceState.pointset.points.keySet().equals(deviceConfig.pointset.points.keySet()));
-    untilTrue("pointset event contains correct points",
+    untilTrue("pointset event contains correct points with present_value",
         () -> {
           List<PointsetEvent> pointsetEvents = popReceivedEvents(PointsetEvent.class);
-          return pointsetEvents.get(pointsetEvents.size() - 1).points.keySet()
+          return pointsetEvents.get(pointsetEvents.size() - 1).points.entrySet().stream()
+              .filter(point -> point.getValue().present_value != null)
+              .map(Entry::getKey).collect(Collectors.toSet())
               .equals(deviceConfig.pointset.points.keySet());
         }
     );
