@@ -16,8 +16,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/setup-java@v1
+      - uses: actions/setup-java@v3
         with:
+          distribution: 'temurin'
           java-version: '17'
       - name: Checkout source
         uses: actions/checkout@v3
@@ -46,8 +47,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/setup-java@v1
+      - uses: actions/setup-java@v3
         with:
+          distribution: 'temurin'
           java-version: '17'
       - uses: actions/setup-python@v4
         with:
@@ -95,8 +97,9 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-java@v1
+      - uses: actions/setup-java@v3
         with:
+          distribution: 'temurin'
           java-version: '17'
       - name: bin/run_tests install_dependencies
         run: bin/run_tests install_dependencies
@@ -138,8 +141,9 @@ jobs:
       UDMI_ALT_REGISTRY: ${{ vars.UDMI_ALT_REGISTRY }}
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-java@v1
+      - uses: actions/setup-java@v3
         with:
+          distribution: 'temurin'
           java-version: '17'
       - name: base setup
         run: bin/run_tests install_dependencies
@@ -194,8 +198,9 @@ jobs:
       UDMI_ALT_REGISTRY: ${{ vars.UDMI_ALT_REGISTRY }}
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-java@v1
+      - uses: actions/setup-java@v3
         with:
+          distribution: 'temurin'
           java-version: '17'
       - name: base setup
         run: bin/run_tests install_dependencies
@@ -249,8 +254,9 @@ jobs:
       UDMI_ALT_REGISTRY: ${{ vars.UDMI_ALT_REGISTRY }}
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-java@v1
+      - uses: actions/setup-java@v3
         with:
+          distribution: 'temurin'
           java-version: '17'
       - name: base setup
         run: bin/run_tests install_dependencies
@@ -309,8 +315,9 @@ jobs:
       MQTT_PROXY_HOST: ${{ vars.MQTT_PROXY_HOST }}
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-java@v1
+      - uses: actions/setup-java@v3
         with:
+          distribution: 'temurin'
           java-version: '17'
       - name: base setup
         run: bin/run_tests install_dependencies
