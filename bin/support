@@ -1,0 +1,15 @@
+#!/bin/bash -e
+
+ROOT_DIR=$(dirname $0)/..
+
+OUTFILE=udmi-support.tgz
+
+CONFIG_FILES="/tmp/validator_config.json /tmp/pubber_config.json"
+
+site_model=`jq -r .site_model /tmp/validator_config.json`
+echo Using site_model $site_model from cached /tmp/validator_config.json
+
+tar -czvf $OUTFILE $CONFIG_FILES $site_model $ROOT_DIR/out
+
+echo Created support package $OUTFILE
+md5sum $OUTFILE
