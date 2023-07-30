@@ -179,7 +179,7 @@ jobs:
         if: ${{ always() }}
         with:
           name: sequencer support bundle
-          path: *_udmi-support_*.tgz
+          path: ${{ github.repository_owner }}_udmi-support_*.tgz
 
   sequencer_dep:
     name: Sequencer Suite
@@ -234,7 +234,7 @@ jobs:
         if: ${{ always() }}
         with:
           name: sequencer support bundle
-          path: *_udmi-support_*.tgz
+          path: ${{ github.repository_owner }}_udmi-support_*.tgz
 
   comprehensive:
     name: Comprehensive Suite
@@ -291,7 +291,7 @@ jobs:
         if: ${{ always() }}
         with:
           name: comprehensive support bundle
-          path: *_udmi-support_*.tgz
+          path: ${{ github.repository_owner }}_udmi-support_*.tgz
 
   redirect:
     name: Endpoint Redirection
