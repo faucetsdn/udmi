@@ -40,7 +40,7 @@ jobs:
         if: ${{ always() }}
         with:
           name: udmis_support
-          path: ${{ github.repository_owner }}_udmi-support_*.tgz
+          path: '*_udmi-support_*.tgz'
 
   unit:
     name: Unit Tests
@@ -185,7 +185,7 @@ jobs:
         if: ${{ always() }}
         with:
           name: sequencer_support
-          path: ${{ github.repository_owner }}_udmi-support_*.tgz
+          path: '*_udmi-support_*.tgz'
 
   sequencer_dep:
     name: Sequencer Suite
@@ -242,7 +242,7 @@ jobs:
         if: ${{ always() }}
         with:
           name: sequencer_support
-          path: ${{ github.repository_owner }}_udmi-support_*.tgz
+          path: '*_udmi-support_*.tgz'
 
   comprehensive:
     name: Comprehensive Suite
