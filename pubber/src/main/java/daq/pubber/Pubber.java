@@ -9,7 +9,6 @@ import static com.google.udmi.util.GeneralUtils.fromJsonString;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
-import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.optionsString;
 import static com.google.udmi.util.GeneralUtils.toJsonFile;
 import static com.google.udmi.util.GeneralUtils.toJsonString;
@@ -64,6 +63,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -125,6 +125,8 @@ public class Pubber {
   public static final String PERSISTENT_TMP_FORMAT = "/tmp/pubber_%s_" + PERSISTENT_STORE_FILE;
   public static final String PUBBER_LOG_CATEGORY = "device.log";
   public static final String DATA_URL_JSON_BASE64 = "data:application/json;base64,";
+  public static final String POINTSET_BUCKET = "pointset_state";
+  public static final String PUBLISHER_BUCKET = "publisher_bucket";
   static final String UDMI_VERSION = "1.4.1";
   private static final Logger LOG = LoggerFactory.getLogger(Pubber.class);
   private static final String HOSTNAME = System.getenv("HOSTNAME");
@@ -826,6 +828,19 @@ public class Pubber {
     managedPoints.put(pointName, point);
   }
 
+  private void restorePoint(String pointName) {
+    PointPointsetState pointPointsetState = ifNotNullGet(managedPoints.get(pointName),
+        AbstractPoint::getState, invalidPoint(pointName));
+    deviceState.pointset.points.put(pointName, pointPointsetState);
+    pointsetEvent.points.put(pointName, new PointPointsetEvent());
+  }
+
+  private void suspendPoint(String pointName) {
+    deviceState.pointset.points.remove(pointName);
+    pointsetEvent.points.remove(pointName);
+  }
+
+
   protected void initialize() {
     try {
       initializeDevice();
@@ -938,12 +953,11 @@ public class Pubber {
     Entry report = entryFromException(category, cause);
     localLog(report);
     publishLogMessage(report);
-    registerSystemStatus(category, report);
+    registerSystemStatus(PUBLISHER_BUCKET, report);
   }
 
-  private void registerSystemStatus(String category, Entry report) {
-    checkState(report == null || category.equals(report.category), "report category mismatch");
-    ifNotNullGet(report, r -> reportMap.put(category, report), reportMap.remove(category));
+  private void registerSystemStatus(String bucket, Entry report) {
+    ifNotNullGet(report, r -> reportMap.put(bucket, report), reportMap.remove(bucket));
     Entry highestEntry = reportMap.values().stream().max(comparingInt(a -> a.level)).orElse(null);
     deviceState.system.status = ifNotNullGet(highestEntry,
         entry -> ifTrue(shouldLogLevel(entry.level), () -> entry));
@@ -1476,23 +1490,26 @@ public class Pubber {
     final Set<String> clearPoints = Sets.difference(statePoints, configuredPoints).immutableCopy();
 
     missingPoints.forEach(name -> {
-      AbstractPoint managed = managedPoints.get(name);
-      debug("Restoring mismatched point " + name + ": " + managed);
-      PointPointsetState value = ifNotNullGet(managed, AbstractPoint::getState, invalidPoint(name));
-      deviceState.pointset.points.put(name, value);
-      ifNotNullThen(value.status, status -> registerSystemStatus(status.category, status));
-      pointsetEvent.points.put(name, new PointPointsetEvent());
+      debug("Restoring mismatched point " + name);
+      restorePoint(name);
     });
-    ifTrueThen(missingPoints.isEmpty(), () -> registerSystemStatus(POINTSET_POINT_INVALID, null));
+
+    clearPoints.forEach(key -> {
+      debug("Clearing mismatched point " + key);
+      suspendPoint(key);
+    });
 
     ifNotNullThen(configuration.options.extraPoint,
         extraPoint -> pointsetEvent.points.put(extraPoint, new PointPointsetEvent()));
 
-    clearPoints.forEach(key -> {
-      debug("Clearing mismatched point " + key);
-      pointsetEvent.points.remove(key);
-      deviceState.pointset.points.remove(key);
-    });
+    AtomicReference<Entry> maxStatus = new AtomicReference<>();
+    statePoints.forEach(
+        name -> ifNotNullThen(deviceState.pointset.points.get(name).status, status -> {
+          if (maxStatus.get() == null || status.level > maxStatus.get().level) {
+            maxStatus.set(status);
+          }
+        }));
+    registerSystemStatus(POINTSET_BUCKET, maxStatus.get());
   }
 
   private PointPointsetState invalidPoint(String pointName) {
