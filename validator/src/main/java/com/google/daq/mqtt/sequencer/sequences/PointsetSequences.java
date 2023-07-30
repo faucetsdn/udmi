@@ -5,6 +5,7 @@ import static com.google.daq.mqtt.util.TimePeriodConstants.THREE_MINUTES_MS;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static java.lang.String.format;
+import static java.util.Optional.ofNullable;
 import static udmi.schema.Bucket.POINTSET;
 import static udmi.schema.Category.POINTSET_POINT_INVALID;
 import static udmi.schema.Category.POINTSET_POINT_INVALID_VALUE;
@@ -37,8 +38,9 @@ public class PointsetSequences extends PointsetBase {
   public static final String EXTRANEOUS_POINT = "extraneous_point";
   private static final int DEFAULT_SAMPLE_RATE_SEC = 10;
 
-  private static boolean isErrorState(PointPointsetState pointState) {
-    return ifNotNullGet(pointState, state -> state.status.level >= Level.ERROR.value(), false);
+  private boolean isErrorState(PointPointsetState pointState) {
+    return ofNullable(catchToNull(() -> pointState.status.level)).orElse(Level.INFO.value())
+        >= Level.ERROR.value();
   }
 
   private void untilPointsetSanity() {
@@ -55,8 +57,8 @@ public class PointsetSequences extends PointsetBase {
   }
 
   private boolean validPointEntry(Entry<String, PointPointsetEvent> point) {
-    return point.getValue().present_value != null
-        || ifNotNullGet(deviceState.pointset.points.get(point.getKey()), PointsetSequences::isErrorState);
+    PointPointsetState pointState = deviceState.pointset.points.get(point.getKey());
+    return point.getValue().present_value != null || isErrorState(pointState);
   }
 
   @Test(timeout = ONE_MINUTE_MS)
