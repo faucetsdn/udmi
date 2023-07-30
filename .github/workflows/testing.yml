@@ -33,12 +33,12 @@ jobs:
         if: ${{ always() }}
         run: |
           bin/support
-          mv udmi-support.tgz support_${{ github.repository }}_${{ github.run_id }}_${{ job.container.id }}.tgz
+          mv udmi-support.tgz udmi_${{ github.repository_owner }}_${{ github.run_id }}_${{ job.container.id }}.tgz
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
           name: udmis support bundle
-          path: support_${{ github.repository }}_${{ github.run_id }}_${{ job.container.id }}.tgz
+          path: udmi_*.tgz
 
   unit:
     name: Unit Tests
@@ -172,12 +172,14 @@ jobs:
         run: cd sites/udmi_site_model/out && more `find . -type f` || true
       - name: support bundle
         if: ${{ always() }}
-        run: bin/support
+        run: |
+          bin/support
+          mv udmi-support.tgz udmi_${{ github.repository_owner }}_${{ github.run_id }}_${{ job.container.id }}.tgz
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
           name: sequencer support bundle
-          path: udmi-support.tgz
+          path: udmi_*.tgz
 
   sequencer_dep:
     name: Sequencer Suite
@@ -225,12 +227,14 @@ jobs:
         run: cd sites/udmi_site_model/out && more `find . -type f` || true
       - name: support bundle
         if: ${{ always() }}
-        run: bin/support
+        run: |
+          bin/support
+          mv udmi-support.tgz udmi_${{ github.repository_owner }}_${{ github.run_id }}_${{ job.container.id }}.tgz
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
           name: sequencer support bundle
-          path: udmi-support.tgz
+          path: udmi_*.tgz
 
   comprehensive:
     name: Comprehensive Suite
@@ -280,12 +284,14 @@ jobs:
           more out/pubber.out* | cat
       - name: support bundle
         if: ${{ always() }}
-        run: bin/support
+        run: |
+          bin/support
+          mv udmi-support.tgz udmi_${{ github.repository_owner }}_${{ github.run_id }}_${{ job.container.id }}.tgz
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
           name: comprehensive support bundle
-          path: udmi-support.tgz
+          path: udmi_*.tgz
 
   redirect:
     name: Endpoint Redirection
