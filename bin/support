@@ -19,7 +19,7 @@ else
     site_model=
 fi
 
-tar -czvf $OUTFILE $site_model $OUT_DIR
+tar --exclude-vcs -czvf $OUTFILE $site_model $OUT_DIR
 
 echo Created support package $(realpath $OUTFILE)
 md5sum $OUTFILE
