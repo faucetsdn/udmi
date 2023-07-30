@@ -33,12 +33,12 @@ jobs:
         if: ${{ always() }}
         run: |
           bin/support
-          mv udmi-support.tgz udmi_${{ github.repository_owner }}_${{ github.run_id }}_${{ job.container.id }}.tgz
+          mv udmi-support_*.tgz ${{ github.repository_owner }}_$(ls udmi-support_*.tgz)
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
           name: udmis support bundle
-          path: udmi_*.tgz
+          path: *_udmi-support_*.tgz
 
   unit:
     name: Unit Tests
@@ -174,12 +174,12 @@ jobs:
         if: ${{ always() }}
         run: |
           bin/support
-          mv udmi-support.tgz udmi_${{ github.repository_owner }}_${{ github.run_id }}_${{ job.container.id }}.tgz
+          mv udmi-support_*.tgz ${{ github.repository_owner }}_$(ls udmi-support_*.tgz)
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
           name: sequencer support bundle
-          path: udmi_*.tgz
+          path: *_udmi-support_*.tgz
 
   sequencer_dep:
     name: Sequencer Suite
@@ -229,12 +229,12 @@ jobs:
         if: ${{ always() }}
         run: |
           bin/support
-          mv udmi-support.tgz udmi_${{ github.repository_owner }}_${{ github.run_id }}_${{ job.container.id }}.tgz
+          mv udmi-support_*.tgz ${{ github.repository_owner }}_$(ls udmi-support_*.tgz)
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
           name: sequencer support bundle
-          path: udmi_*.tgz
+          path: *_udmi-support_*.tgz
 
   comprehensive:
     name: Comprehensive Suite
@@ -286,12 +286,12 @@ jobs:
         if: ${{ always() }}
         run: |
           bin/support
-          mv udmi-support.tgz udmi_${{ github.repository_owner }}_${{ github.run_id }}_${{ job.container.id }}.tgz
+          mv udmi-support_*.tgz ${{ github.repository_owner }}_$(ls udmi-support_*.tgz)
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
           name: comprehensive support bundle
-          path: udmi_*.tgz
+          path: *_udmi-support_*.tgz
 
   redirect:
     name: Endpoint Redirection
