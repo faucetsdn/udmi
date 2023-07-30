@@ -89,13 +89,14 @@ public abstract class IotAccessBase extends ContainerBase {
               updated -> updateConfig(registryId, deviceId, updated, version));
         } catch (Exception e) {
           warn(
-              format("Error updating config for %s/%s, remaining retries %d...", registryId,
+              format("Error modifying config for %s/%s, remaining retries %d...", registryId,
                   deviceId,
                   --retryCount));
-          safeSleep(CONFIG_UPDATE_BACKOFF_MS);
           if (retryCount <= 0) {
             throw e;
           }
+          safeSleep(CONFIG_UPDATE_BACKOFF_MS);
+          debug(format("Restart modifying config for %s/%s", registryId, deviceId));
         }
       }
     } catch (Exception e) {
