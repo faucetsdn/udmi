@@ -21,20 +21,25 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.Test;
+import udmi.schema.Level;
 import udmi.schema.PointPointsetConfig;
+import udmi.schema.PointPointsetEvent;
+import udmi.schema.PointPointsetState;
 import udmi.schema.PointsetEvent;
-import udmi.schema.TargetTestingModel;
 
 /**
  * Validate pointset related functionality.
  */
 public class PointsetSequences extends PointsetBase {
 
-  public static final String POINTSET_REMOVED = "removed";
+  public static final String EXTRANEOUS_POINT = "extraneous_point";
   private static final int DEFAULT_SAMPLE_RATE_SEC = 10;
+
+  private static boolean isErrorState(PointPointsetState pointState) {
+    return ifNotNullGet(pointState, state -> state.status.level >= Level.ERROR.value(), false);
+  }
 
   private void untilPointsetSanity() {
     untilTrue("pointset state reports same points as defined in config", () ->
@@ -43,37 +48,40 @@ public class PointsetSequences extends PointsetBase {
         () -> {
           List<PointsetEvent> pointsetEvents = popReceivedEvents(PointsetEvent.class);
           return pointsetEvents.get(pointsetEvents.size() - 1).points.entrySet().stream()
-              .filter(point -> point.getValue().present_value != null)
-              .map(Entry::getKey).collect(Collectors.toSet())
+              .filter(this::validPointEntry).map(Entry::getKey).collect(Collectors.toSet())
               .equals(deviceConfig.pointset.points.keySet());
         }
     );
+  }
+
+  private boolean validPointEntry(Entry<String, PointPointsetEvent> point) {
+    return point.getValue().present_value != null
+        || ifNotNullGet(deviceState.pointset.points.get(point.getKey()), PointsetSequences::isErrorState);
   }
 
   @Test(timeout = ONE_MINUTE_MS)
   @Summary("pointset configuration contains extraneous point")
   @Feature(stage = ALPHA, bucket = POINTSET)
   public void pointset_request_extraneous() {
-    String pointName = format("random_%08x", System.currentTimeMillis());
 
     untilHasInterestingSystemStatus(false);
     untilPointsetSanity();
 
-    deviceConfig.pointset.points.put(pointName, new PointPointsetConfig());
+    deviceConfig.pointset.points.put(EXTRANEOUS_POINT, new PointPointsetConfig());
 
     try {
       untilTrue("pointset status contains extraneous point error",
-          () -> ifNotNullGet(deviceState.pointset.points.get(pointName),
+          () -> ifNotNullGet(deviceState.pointset.points.get(EXTRANEOUS_POINT),
               state -> state.status.category.equals(POINTSET_POINT_INVALID)
                   && state.status.level.equals(POINTSET_POINT_INVALID_VALUE)));
       untilHasInterestingSystemStatus(true);
       untilPointsetSanity();
     } finally {
-      deviceConfig.pointset.points.remove(pointName);
+      deviceConfig.pointset.points.remove(EXTRANEOUS_POINT);
     }
 
     untilTrue("pointset status removes extraneous point error",
-        () -> !deviceState.pointset.points.containsKey(pointName));
+        () -> !deviceState.pointset.points.containsKey(EXTRANEOUS_POINT));
     untilHasInterestingSystemStatus(false);
     untilPointsetSanity();
   }
