@@ -34,6 +34,7 @@ jobs:
         run: |
           bin/support
           mv udmi-support_*.tgz ${{ github.repository_owner }}_$(ls udmi-support_*.tgz)
+          echo Renamed to `ls *_udmi-support_*.tgz`
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
@@ -175,6 +176,7 @@ jobs:
         run: |
           bin/support
           mv udmi-support_*.tgz ${{ github.repository_owner }}_$(ls udmi-support_*.tgz)
+          echo Renamed to `ls *_udmi-support_*.tgz`
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
@@ -230,6 +232,7 @@ jobs:
         run: |
           bin/support
           mv udmi-support_*.tgz ${{ github.repository_owner }}_$(ls udmi-support_*.tgz)
+          echo Renamed to `ls *_udmi-support_*.tgz`
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
@@ -287,11 +290,12 @@ jobs:
         run: |
           bin/support
           mv udmi-support_*.tgz ${{ github.repository_owner }}_$(ls udmi-support_*.tgz)
+          echo Renamed to `ls *_udmi-support_*.tgz`
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
           name: comprehensive support bundle
-          path: ${{ github.repository_owner }}_udmi-support_*.tgz
+          path: '*_udmi-support_*.tgz'
 
   redirect:
     name: Endpoint Redirection
