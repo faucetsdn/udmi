@@ -30,8 +30,10 @@ jobs:
       - name: bin/run_tests udmis_tests
         run: bin/run_tests udmis_tests
       - name: support bundle
+        if: ${{ always() }}
         run: bin/support
       - uses: actions/upload-artifact@v3
+        if: ${{ always() }}
         with:
           name: udmis support bundle
           path: udmi-support.tgz
@@ -198,8 +200,10 @@ jobs:
         if: ${{ always() }}
         run: cd sites/udmi_site_model/out && more `find . -type f` || true
       - name: support bundle
+        if: ${{ always() }}
         run: bin/support
       - uses: actions/upload-artifact@v3
+        if: ${{ always() }}
         with:
           name: sequencer support bundle
           path: udmi-support.tgz
@@ -249,8 +253,10 @@ jobs:
         if: ${{ always() }}
         run: cd sites/udmi_site_model/out && more `find . -type f` || true
       - name: support bundle
+        if: ${{ always() }}
         run: bin/support
       - uses: actions/upload-artifact@v3
+        if: ${{ always() }}
         with:
           name: sequencer support bundle
           path: udmi-support.tgz
@@ -302,8 +308,10 @@ jobs:
         run: |
           more out/pubber.out* | cat
       - name: support bundle
+        if: ${{ always() }}
         run: bin/support
       - uses: actions/upload-artifact@v3
+        if: ${{ always() }}
         with:
           name: comprehensive support bundle
           path: udmi-support.tgz

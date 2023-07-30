@@ -3,13 +3,23 @@
 ROOT_DIR=$(dirname $0)/..
 
 OUTFILE=udmi-support.tgz
+VALIDATOR_CONFIG=/tmp/validator_config.json
+OUT_DIR=$(realpath $ROOT_DIR/out --relative-to=$PWD)
 
-CONFIG_FILES="/tmp/validator_config.json /tmp/pubber_config.json"
+CONFIG_FILES="$VALIDATOR_CONFIG /tmp/pubber_config.json"
 
-site_model=`jq -r .site_model /tmp/validator_config.json`
-echo Using site_model $site_model from cached /tmp/validator_config.json
+mkdir -p $OUT_DIR
+echo Copying cached config files to $OUT_DIR/
+cp $CONFIG_FILES $OUT_DIR/ || true
 
-tar -czvf $OUTFILE $CONFIG_FILES $site_model $ROOT_DIR/out
+if [[ -f $VALIDATOR_CONFIG ]]; then
+    site_model=`jq -r .site_model $VALIDATOR_CONFIG`
+    echo Using site_model $site_model from cached $VALIDATOR_CONFIG
+else
+    site_model=
+fi
 
-echo Created support package $OUTFILE
+tar -czvf $OUTFILE $site_model $OUT_DIR
+
+echo Created support package $(realpath $OUTFILE)
 md5sum $OUTFILE
