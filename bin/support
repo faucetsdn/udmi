@@ -3,7 +3,7 @@
 ROOT_DIR=$(dirname $0)/..
 
 TIME=`date --utc +%Y%M%d-%H%m%S`
-OUTFILE=udmi-support_$TIME.tgz
+OUTFILE=/tmp/udmi-support_$TIME.tgz
 VALIDATOR_CONFIG=/tmp/validator_config.json
 OUT_DIR=$(realpath $ROOT_DIR/out --relative-to=$PWD)
 

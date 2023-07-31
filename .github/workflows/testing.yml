@@ -168,8 +168,8 @@ jobs:
         if: ${{ always() }}
         run: |
           bin/support
-          mv udmi-support_*.tgz ${{ github.repository_owner }}_${{ github.job }}_$(ls udmi-support_*.tgz)
-          echo Renamed to `ls *_udmi-support_*.tgz`
+          mv /tmp/udmi-support_*.tgz ${{ github.repository_owner }}_${{ github.job }}_$(ls udmi-support_*.tgz)
+          echo Renamed support file to `ls *_udmi-support_*.tgz`
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
@@ -225,8 +225,8 @@ jobs:
         if: ${{ always() }}
         run: |
           bin/support
-          mv udmi-support_*.tgz ${{ github.repository_owner }}_${{ github.job }}_$(ls udmi-support_*.tgz)
-          echo Renamed to `ls *_udmi-support_*.tgz`
+          mv /tmp/udmi-support_*.tgz ${{ github.repository_owner }}_${{ github.job }}_$(ls udmi-support_*.tgz)
+          echo Renamed support file to `ls *_udmi-support_*.tgz`
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
@@ -284,8 +284,8 @@ jobs:
         if: ${{ always() }}
         run: |
           bin/support
-          mv udmi-support_*.tgz ${{ github.repository_owner }}_${{ github.job }}_$(ls udmi-support_*.tgz)
-          echo Renamed to `ls *_udmi-support_*.tgz`
+          mv /tmp/udmi-support_*.tgz ${{ github.repository_owner }}_${{ github.job }}_$(ls udmi-support_*.tgz)
+          echo Renamed support file to `ls *_udmi-support_*.tgz`
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
