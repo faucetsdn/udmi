@@ -2,10 +2,13 @@ package daq.pubber;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.fromJsonFile;
 import static com.google.udmi.util.GeneralUtils.fromJsonString;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.optionsString;
 import static com.google.udmi.util.GeneralUtils.toJsonFile;
 import static com.google.udmi.util.GeneralUtils.toJsonString;
@@ -13,15 +16,19 @@ import static com.google.udmi.util.JsonUtil.safeSleep;
 import static daq.pubber.MqttDevice.CONFIG_TOPIC;
 import static daq.pubber.MqttDevice.ERRORS_TOPIC;
 import static java.lang.Boolean.TRUE;
+import static java.util.Comparator.comparingInt;
+import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
 import static udmi.schema.BlobsetConfig.SystemBlobsets.IOT_ENDPOINT_CONFIG;
+import static udmi.schema.Category.POINTSET_POINT_INVALID;
+import static udmi.schema.Category.POINTSET_POINT_INVALID_VALUE;
 import static udmi.schema.EndpointConfiguration.Protocol.MQTT;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import com.google.daq.mqtt.util.CatchingScheduledThreadPoolExecutor;
 import com.google.udmi.util.CleanDateFormat;
 import com.google.udmi.util.GeneralUtils;
@@ -44,12 +51,11 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -57,6 +63,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -92,6 +99,7 @@ import udmi.schema.Operation;
 import udmi.schema.Operation.SystemMode;
 import udmi.schema.PointEnumerationEvent;
 import udmi.schema.PointPointsetConfig;
+import udmi.schema.PointPointsetEvent;
 import udmi.schema.PointPointsetModel;
 import udmi.schema.PointPointsetState;
 import udmi.schema.PointsetConfig;
@@ -117,6 +125,8 @@ public class Pubber {
   public static final String PERSISTENT_TMP_FORMAT = "/tmp/pubber_%s_" + PERSISTENT_STORE_FILE;
   public static final String PUBBER_LOG_CATEGORY = "device.log";
   public static final String DATA_URL_JSON_BASE64 = "data:application/json;base64,";
+  public static final String POINTSET_BUCKET = "pointset_state";
+  public static final String PUBLISHER_BUCKET = "publisher_bucket";
   static final String UDMI_VERSION = "1.4.1";
   private static final Logger LOG = LoggerFactory.getLogger(Pubber.class);
   private static final String HOSTNAME = System.getenv("HOSTNAME");
@@ -180,12 +190,13 @@ public class Pubber {
   private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
   private final AtomicInteger messageDelayMs = new AtomicInteger(DEFAULT_REPORT_SEC * 1000);
   private final CountDownLatch configLatch = new CountDownLatch(1);
-  private final ExtraPointsetEvent devicePoints = new ExtraPointsetEvent();
-  private final Set<AbstractPoint> allPoints = new HashSet<>();
+  private final ExtraPointsetEvent pointsetEvent = new ExtraPointsetEvent();
+  private final Map<String, AbstractPoint> managedPoints = new HashMap<>();
   private final AtomicBoolean stateDirty = new AtomicBoolean();
   private final Semaphore stateLock = new Semaphore(1);
   private final String deviceId;
   private final List<Entry> logentries = new ArrayList<>();
+  private final Map<String, Entry> reportMap = new ConcurrentHashMap<>();
   protected DevicePersistent persistentData;
   private int deviceUpdateCount = -1;
   private MqttDevice deviceTarget;
@@ -420,7 +431,7 @@ public class Pubber {
     deviceState.system.hardware = new StateSystemHardware();
     deviceState.pointset = new PointsetState();
     deviceState.pointset.points = new HashMap<>();
-    devicePoints.points = new HashMap<>();
+    pointsetEvent.points = new HashMap<>();
 
     if (configuration.sitePath != null) {
       siteModel = new SiteModel(configuration.sitePath);
@@ -452,19 +463,9 @@ public class Pubber {
     deviceState.system.software.put("firmware", "v1");
     deviceState.system.last_config = new Date(0);
 
-    // Pubber runtime options
-    if (configuration.options.extraField != null) {
-      devicePoints.extraField = configuration.options.extraField;
-    }
+    ifNotNullThen(configuration.options.extraField, field -> pointsetEvent.extraField = field);
 
-    if (configuration.options.extraPoint != null) {
-      addPoint(makePoint(configuration.options.extraPoint,
-          makePointPointsetModel(true, 50, 50, "Celsius")));
-    }
-
-    if (TRUE.equals(configuration.options.noHardware)) {
-      deviceState.system.hardware = null;
-    }
+    ifTrue(configuration.options.noHardware, () -> deviceState.system.hardware = null);
 
     localnetManager = new LocalnetManager(this);
     markStateDirty();
@@ -476,7 +477,7 @@ public class Pubber {
   }
 
   protected void initializePersistentStore() {
-    Preconditions.checkState(persistentData == null, "persistent data already loaded");
+    checkState(persistentData == null, "persistent data already loaded");
     File persistentStore = getPersistentStore();
     if (TRUE.equals(configuration.options.noPersist)) {
       info("Resetting persistent store " + persistentStore.getAbsolutePath());
@@ -507,7 +508,7 @@ public class Pubber {
   }
 
   private void writePersistentStore() {
-    Preconditions.checkState(persistentData != null, "persistent data not defined");
+    checkState(persistentData != null, "persistent data not defined");
     toJsonFile(getPersistentStore(), persistentData);
   }
 
@@ -588,15 +589,11 @@ public class Pubber {
     }
 
     Map<String, PointPointsetModel> points =
-        metadata.pointset == null ? DEFAULT_POINTS : metadata.pointset.points;
+        ifNotNullGet(metadata.pointset, data -> data.points, DEFAULT_POINTS);
 
-    if (configuration.options.missingPoint != null) {
-      if (points.containsKey(configuration.options.missingPoint)) {
-        points.remove(configuration.options.missingPoint);
-      } else {
-        throw new RuntimeException("missingPoint not in pointset");
-      }
-    }
+    ifNotNullThen(configuration.options.missingPoint,
+        missingPoint -> requireNonNull(points.remove(missingPoint),
+            "missing point not in pointset metadata"));
 
     points.forEach((name, point) -> addPoint(makePoint(name, point)));
   }
@@ -610,7 +607,7 @@ public class Pubber {
   }
 
   private synchronized void startPeriodicSend() {
-    Preconditions.checkState(periodicSender == null);
+    checkState(periodicSender == null);
     int delay = messageDelayMs.get();
     info("Starting executor with send message delay " + delay);
     periodicSender = executor.scheduleAtFixedRate(this::periodicUpdate, delay, delay,
@@ -704,8 +701,8 @@ public class Pubber {
   }
 
   private void maybeRestartSystem() {
-    SystemConfig system = Optional.ofNullable(deviceConfig.system).orElseGet(SystemConfig::new);
-    Operation operation = Optional.ofNullable(system.operation).orElseGet(Operation::new);
+    SystemConfig system = ofNullable(deviceConfig.system).orElseGet(SystemConfig::new);
+    Operation operation = ofNullable(system.operation).orElseGet(Operation::new);
     if (SystemMode.ACTIVE.equals(deviceState.system.operation.mode)
         && SystemMode.RESTART.equals(operation.mode)) {
       systemLifecycle(SystemMode.RESTART);
@@ -748,7 +745,7 @@ public class Pubber {
   }
 
   private void updatePoints() {
-    allPoints.forEach(point -> {
+    managedPoints.values().forEach(point -> {
       point.updateData();
       updateState(point);
     });
@@ -829,12 +826,25 @@ public class Pubber {
 
   private void addPoint(AbstractPoint point) {
     String pointName = point.getName();
-    if (devicePoints.points.put(pointName, point.getData()) != null) {
+    if (pointsetEvent.points.put(pointName, point.getData()) != null) {
       throw new IllegalStateException("Duplicate pointName " + pointName);
     }
     updateState(point);
-    allPoints.add(point);
+    managedPoints.put(pointName, point);
   }
+
+  private void restorePoint(String pointName) {
+    deviceState.pointset.points.put(pointName, ifNotNullGet(managedPoints.get(pointName),
+        AbstractPoint::getState, invalidPoint(pointName)));
+    pointsetEvent.points.put(pointName, ifNotNullGet(managedPoints.get(pointName),
+        AbstractPoint::getData, new PointPointsetEvent()));
+  }
+
+  private void suspendPoint(String pointName) {
+    deviceState.pointset.points.remove(pointName);
+    pointsetEvent.points.remove(pointName);
+  }
+
 
   protected void initialize() {
     try {
@@ -881,7 +891,7 @@ public class Pubber {
     if (siteModel != null && configuration.keyFile != null) {
       configuration.keyFile = siteModel.getDeviceKeyFile(configuration.deviceId);
     }
-    Preconditions.checkState(deviceTarget == null, "mqttPublisher already defined");
+    checkState(deviceTarget == null, "mqttPublisher already defined");
     ensureKeyBytes();
     deviceTarget = new MqttDevice(configuration, this::publisherException);
     if (configuration.gatewayId != null) {
@@ -948,9 +958,15 @@ public class Pubber {
     Entry report = entryFromException(category, cause);
     localLog(report);
     publishLogMessage(report);
-    // TODO: Replace this with a heap so only the highest-priority status is reported.
-    deviceState.system.status = shouldLogLevel(report.level) ? report : null;
-    publishConfigStateUpdate();
+    registerSystemStatus(PUBLISHER_BUCKET, report);
+  }
+
+  private void registerSystemStatus(String bucket, Entry report) {
+    ifNotNullGet(report, r -> reportMap.put(bucket, report), reportMap.remove(bucket));
+    Entry highestEntry = reportMap.values().stream().max(comparingInt(a -> a.level)).orElse(null);
+    deviceState.system.status = ifNotNullGet(highestEntry,
+        entry -> ifTrue(shouldLogLevel(entry.level), () -> entry));
+    markStateDirty();
   }
 
   /**
@@ -1464,20 +1480,64 @@ public class Pubber {
   }
 
   private void updatePointsetPointsConfig(PointsetConfig pointsetConfig) {
-    PointsetConfig useConfig = pointsetConfig != null ? pointsetConfig : new PointsetConfig();
-    Map<String, PointPointsetConfig> points =
-        useConfig.points != null ? useConfig.points : new HashMap<>();
-    allPoints.forEach(point ->
-        updatePointConfig(point, points.get(point.getName())));
+    PointsetConfig useConfig = ofNullable(pointsetConfig).orElseGet(PointsetConfig::new);
+    Map<String, PointPointsetConfig> points = ofNullable(useConfig.points).orElseGet(HashMap::new);
+    managedPoints.forEach((name, point) -> updatePointConfig(point, points.get(name)));
     deviceState.pointset.state_etag = useConfig.state_etag;
+
+    if (pointsetConfig == null) {
+      return;
+    }
+
+    Set<String> configuredPoints = pointsetConfig.points.keySet();
+    Set<String> statePoints = deviceState.pointset.points.keySet();
+    Set<String> missingPoints = Sets.difference(configuredPoints, statePoints).immutableCopy();
+    final Set<String> clearPoints = Sets.difference(statePoints, configuredPoints).immutableCopy();
+
+    missingPoints.forEach(name -> {
+      debug("Restoring mismatched point " + name);
+      restorePoint(name);
+    });
+
+    clearPoints.forEach(key -> {
+      debug("Clearing mismatched point " + key);
+      suspendPoint(key);
+    });
+
+    ifNotNullThen(configuration.options.extraPoint,
+        extraPoint -> pointsetEvent.points.put(extraPoint, extraPointsetEvent()));
+
+    AtomicReference<Entry> maxStatus = new AtomicReference<>();
+    statePoints.forEach(
+        name -> ifNotNullThen(deviceState.pointset.points.get(name).status, status -> {
+          if (maxStatus.get() == null || status.level > maxStatus.get().level) {
+            maxStatus.set(status);
+          }
+        }));
+    registerSystemStatus(POINTSET_BUCKET, maxStatus.get());
+  }
+
+  private static PointPointsetEvent extraPointsetEvent() {
+    PointPointsetEvent pointPointsetEvent = new PointPointsetEvent();
+    pointPointsetEvent.present_value = 100;
+    return pointPointsetEvent;
+  }
+
+  private PointPointsetState invalidPoint(String pointName) {
+    PointPointsetState pointPointsetState = new PointPointsetState();
+    pointPointsetState.status = new Entry();
+    pointPointsetState.status.category = POINTSET_POINT_INVALID;
+    pointPointsetState.status.level = POINTSET_POINT_INVALID_VALUE;
+    pointPointsetState.status.message = "Unknown configured point " + pointName;
+    pointPointsetState.status.timestamp = getCurrentTimestamp();
+    return pointPointsetState;
   }
 
   private void updatePointConfig(AbstractPoint point, PointPointsetConfig pointConfig) {
-    if (configuration.options.noWriteback != null && configuration.options.noWriteback) {
-      return;
-    }
-    point.setConfig(pointConfig);
-    updateState(point);
+    ifNotTrueThen(configuration.options.noWriteback, () -> {
+      point.setConfig(pointConfig);
+      updateState(point);
+    });
   }
 
   private int updatePointsetConfig(PointsetConfig pointsetConfig) {
@@ -1505,7 +1565,7 @@ public class Pubber {
     if (deviceUpdateCount % MESSAGE_REPORT_INTERVAL == 0) {
       info(String.format("%s sending test message #%d", getTimestamp(), deviceUpdateCount));
     }
-    publishDeviceMessage(devicePoints);
+    publishDeviceMessage(pointsetEvent);
   }
 
   private void pubberLogMessage(String logMessage, Level level, String timestamp,

@@ -360,6 +360,7 @@ public class SequenceBase {
 
   private static MessagePublisher getAlternateClient() {
     if (altRegistry == null) {
+      System.err.println("No alternate registry configured, disabling");
       return null;
     }
     ExecutionConfiguration altConfiguration = GeneralUtils.deepCopy(validatorConfig);
@@ -369,7 +370,8 @@ public class SequenceBase {
     try {
       return new IotReflectorClient(altConfiguration, getRequiredFunctionsVersion());
     } catch (Exception e) {
-      System.err.println("Could not connect to alternate registry, disabling: " + e.getMessage());
+      System.err.println(
+          "Could not connect to alternate registry, disabling: " + friendlyStackTrace(e));
       if (traceLogLevel()) {
         e.printStackTrace();
       }
@@ -529,6 +531,10 @@ public class SequenceBase {
   @NotNull
   private static AtomicInteger getUpdateCount(String subTypeRaw) {
     return UPDATE_COUNTS.computeIfAbsent(subTypeRaw, key -> new AtomicInteger());
+  }
+
+  private static int getStateUpdateCount() {
+    return getUpdateCount(SubType.STATE.value()).get();
   }
 
   /**
@@ -1665,7 +1671,8 @@ public class SequenceBase {
   protected void untilHasInterestingSystemStatus(boolean isInteresting) {
     BiConsumer<String, Supplier<Boolean>> until =
         isInteresting ? this::untilTrue : this::untilFalse;
-    until.accept("interesting system status", this::hasInterestingSystemStatus);
+    String message = (isInteresting ? "has" : "no") + " interesting system status";
+    until.accept(message, this::hasInterestingSystemStatus);
   }
 
   private void putSequencerResult(Description description, SequenceResult result) {
@@ -1704,10 +1711,6 @@ public class SequenceBase {
 
   private boolean receivedAtLeastOneState() {
     return getStateUpdateCount() > startStateCount;
-  }
-
-  private static int getStateUpdateCount() {
-    return getUpdateCount(SubType.STATE.value()).get();
   }
 
   protected void ensureStateUpdate() {

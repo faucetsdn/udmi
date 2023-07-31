@@ -89,13 +89,14 @@ public abstract class IotAccessBase extends ContainerBase {
               updated -> updateConfig(registryId, deviceId, updated, version));
         } catch (Exception e) {
           warn(
-              format("Error updating config for %s/%s, remaining retries %d...", registryId,
+              format("Error modifying config for %s/%s, remaining retries %d...", registryId,
                   deviceId,
                   --retryCount));
-          safeSleep(CONFIG_UPDATE_BACKOFF_MS);
           if (retryCount <= 0) {
             throw e;
           }
+          safeSleep(CONFIG_UPDATE_BACKOFF_MS);
+          debug(format("Restart modifying config for %s/%s", registryId, deviceId));
         }
       }
     } catch (Exception e) {
@@ -110,17 +111,19 @@ public abstract class IotAccessBase extends ContainerBase {
    */
   public final void sendCommand(String registryId, String deviceId, SubFolder folder,
       String message) {
+    String backoffKey = getBackoffKey(registryId, deviceId);
     if (registryBackoffCheck(registryId, deviceId)) {
       try {
         sendCommandBase(registryId, deviceId, folder, message);
       } catch (Exception e) {
+        error("Exception sending command to %s: %s", backoffKey, friendlyStackTrace(e));
         ifNotNullThen(registryBackoffInhibit(registryId, deviceId),
             until -> debug("Setting registry backoff for %s until %s",
-                getBackoffKey(registryId, deviceId), getTimestamp(until)));
+                backoffKey, getTimestamp(until)));
       }
     } else {
       debug("Dropping message because registry backoff for %s",
-          getBackoffKey(registryId, deviceId));
+          backoffKey);
     }
   }
 
