@@ -1,6 +1,7 @@
 *~
 \#*
 
+udmi-support_*.tgz
 udmi_site_model/
 gcp_reflect_key.pkcs8
 workspace.xml
