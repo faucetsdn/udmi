@@ -282,10 +282,11 @@ public class Pubber {
       } else {
         singularPubber(args);
       }
+      LOG.info("Done with main");
     } catch (Exception e) {
       LOG.error("Exception starting pubber: " + GeneralUtils.friendlyStackTrace(e));
+      System.exit(-1);
     }
-    LOG.info("Done with main");
   }
 
   static Pubber singularPubber(String[] args) throws InterruptedException {
