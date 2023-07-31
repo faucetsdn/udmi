@@ -13,6 +13,7 @@ concurrency:
 jobs:
   udmis:
     name: UDMIS Tests
+    id: udmis
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -29,17 +30,18 @@ jobs:
       - name: bin/test_mosquitto
         run: bin/test_mosquitto
       - name: support bundle
+        id: bundle
         if: ${{ always() }}
         run: |
           bin/support
-          mv udmi-support_*.tgz ${{ github.repository_owner }}_$(ls udmi-support_*.tgz)
+          mv udmi-support_*.tgz ${{ github.repository_owner }}_${{ github.job }}_$(ls udmi-support_*.tgz)
           echo Renamed to `ls *_udmi-support_*.tgz`
-          echo support_file=$(ls *_udmis-support_*.tgz) >> $GITHUB_ENV
+          echo file=$(ls *_udmis-support_*.tgz) >> $GITHUB_OUTPUT
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
-          name: ${{ env.support_file }}
-          path: ${{ env.support_file }}
+          name: ${{ steps.bundle.outputs.file }}
+          path: ${{ steps.bundle.outputs.file }}
 
   unit:
     name: Unit Tests
