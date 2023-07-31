@@ -87,7 +87,8 @@ elif [[ $cmd == push ]]; then
     for file in $TEMPLATES; do
         sed < etc/$file > tmp/$file \
             -e "s^@IMAGE@^$image^" \
-            -e "s^@PROJECT@^$GCP_PROJECT^"
+            -e "s^@GCP_PROJECT@^$GCP_PROJECT^" \
+            -e "s^@CLEARBLADE_PROJECT@^$CLEARBLADE_PROJECT^"
         echo Updated tmp/$file with image $image
     done
     echo Next try: $0 deploy
