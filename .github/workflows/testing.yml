@@ -39,8 +39,8 @@ jobs:
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
-          name: ${{ steps.bundle.outputs.file }}
-          path: ${{ steps.bundle.outputs.file }}
+          name: udmis-support_${{ github.run_id }}
+          path: '*_udmis-support_*.tgz'
 
   unit:
     name: Unit Tests
