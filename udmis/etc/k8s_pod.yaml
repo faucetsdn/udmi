@@ -6,6 +6,9 @@ spec:
   containers:
     - name: test-pod
       image: @IMAGE@
+      env:
+      - name: GCP_PROJECT
+        value: @PROJECT@
       resources:
         requests:
           cpu: 100m
@@ -18,8 +21,6 @@ spec:
     - name: secret-volume
       projected:
         sources:
-        - secret:
-            name: pod-config.json
         - secret:
             name: clearblade.json
             optional: true

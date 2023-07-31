@@ -17,7 +17,7 @@ java -version
 
 POD_JAR=build/libs/udmis-1.0-SNAPSHOT-all.jar
 
-gcloud_project=$(gcloud config get project)
+gcloud_project=$(gcloud config get project || true)
 if [[ -n $GCP_PROJECT ]]; then
     echo Using GCP_PROJECT $GCP_PROJECT from env.
 elif [[ -z $gcloud_project ]]; then

@@ -7,7 +7,7 @@ DROOT=.
 function usage {
     echo Error: $*
     echo Usage: $0 { build, shell, run, push, deploy, update, status, logs, stop } [repo] [--no-check]
-    echo Project: $PROJECT
+    echo Project: $GCP_PROJECT
     echo Try starting with: $0 build
     exit 1
 }
@@ -15,8 +15,8 @@ function usage {
 cmd=$1
 shift || usage missing command
 
-PROJECT=$(gcloud config get project)
-REPOSITORY=gcr.io/$PROJECT
+GCP_PROJECT=$(gcloud config get project)
+REPOSITORY=gcr.io/$GCP_PROJECT
 
 mkdir -p tmp
 
@@ -30,15 +30,14 @@ done
 
 IMAGE=udmis
 
-
-echo Using GCP project $PROJECT
+echo Using GCP project $GCP_PROJECT
 
 if [[ -z $NOCHECK ]]; then
     CONTEXT=`kubectl config current-context`
     CONTEXT_ARGS=(${CONTEXT//_/ })
     KPROJECT=${CONTEXT_ARGS[1]}
-    if [[ $KPROJECT != $PROJECT ]]; then
-        echo Kubernetes context $CONTEXT does not match gcloud project $PROJECT
+    if [[ $KPROJECT != $GCP_PROJECT ]]; then
+        echo Kubernetes context $CONTEXT does not match gcloud project $GCP_PROJECT
         false
     fi
 fi
@@ -55,13 +54,14 @@ if [[ $funccount != 0 ]]; then
 fi
 funcver=`git describe $funchash`$funcdirty
 
-RUNARGS="--rm -ti -v $PWD/var:/udmi -v $HOME/.config:/root/.config --tmpfs /tmp"
+RUNARGS="--rm -ti -v $PWD/var:/udmi -v $HOME/.config:/root/.config --tmpfs /tmp --env GCP_PROJECT=$GCP_PROJECT"
 TEMPLATES=$(cd etc; ls k8s_*.yaml)
 
 if [[ $cmd == build ]]; then
     rm -rf var tmp && mkdir -p var
     bin/build
     build_time=`date --utc --iso=seconds -r $LIBFILE`
+    cp etc/prod_pod.json var/
     cat <<EOF > var/deployed_version.json
 {
   "udmi_version": "$version",
@@ -71,12 +71,11 @@ if [[ $cmd == build ]]; then
   "built_by": "$current_user"
 }
 EOF
-    sed -e "s/@PROJECT@/$PROJECT/" < etc/prod_pod.json > var/prod_pod.json
     more var/deployed_version.json var/prod_pod.json | cat
     docker build -f Dockerfile.udmis -t $IMAGE $DROOT
     echo Next try: $0 push
 elif [[ $cmd == run ]]; then
-    docker run $RUNARGS udmis
+    docker run $RUNARGS $IMAGE
 elif [[ $cmd == shell ]]; then
     docker run $RUNARGS $IMAGE bash
 elif [[ $cmd == push ]]; then
@@ -86,7 +85,9 @@ elif [[ $cmd == push ]]; then
     hash=$(docker images --digests $IMAGENAME | fgrep latest | awk '{print $3}')
     image=$IMAGENAME@$hash
     for file in $TEMPLATES; do
-        sed < etc/$file > tmp/$file -e "s^@IMAGE@^$image^"
+        sed < etc/$file > tmp/$file \
+            -e "s^@IMAGE@^$image^" \
+            -e "s^@PROJECT@^$GCP_PROJECT^"
         echo Updated tmp/$file with image $image
     done
     echo Next try: $0 deploy
