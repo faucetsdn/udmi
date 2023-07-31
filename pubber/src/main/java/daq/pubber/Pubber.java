@@ -286,13 +286,18 @@ public class Pubber {
    * @throws Exception When something is wrong...
    */
   public static void main(String[] args) throws Exception {
-    boolean swarm = args.length > 1 && PUBSUB_SITE.equals(args[1]);
-    if (swarm) {
-      swarmPubber(args);
-    } else {
-      singularPubber(args);
+    try {
+      boolean swarm = args.length > 1 && PUBSUB_SITE.equals(args[1]);
+      if (swarm) {
+        swarmPubber(args);
+      } else {
+        singularPubber(args);
+      }
+      LOG.info("Done with main");
+    } catch (Exception e) {
+      LOG.error("Exception starting pubber: " + GeneralUtils.friendlyStackTrace(e));
+      System.exit(-1);
     }
-    LOG.info("Done with main");
   }
 
   static Pubber singularPubber(String[] args) throws InterruptedException {
