@@ -168,7 +168,7 @@ jobs:
         if: ${{ always() }}
         run: |
           bin/support
-          mv /tmp/udmi-support_*.tgz ${{ github.repository_owner }}_${{ github.job }}_$(ls udmi-support_*.tgz)
+          mv /tmp/udmi-support_*.tgz ${{ github.repository_owner }}_${{ github.job }}_$(cd /tmp; ls udmi-support_*.tgz)
           echo Renamed support file to `ls *_udmi-support_*.tgz`
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
@@ -202,7 +202,7 @@ jobs:
         run: bin/test_sequencer alpha $GCP_TARGET_PROJECT
       - name: sequence test timing
         if: ${{ always() }}
-        run: fgrep 'ending test' out/sequencer.log
+        run: fgrep ' ending test ' out/sequencer.log
       - name: generated files
         if: ${{ always() }}
         run: more out/sequencer.out out/generated.md || true
@@ -226,7 +226,7 @@ jobs:
         if: ${{ always() }}
         run: |
           bin/support
-          mv /tmp/udmi-support_*.tgz ${{ github.repository_owner }}_${{ github.job }}_$(ls udmi-support_*.tgz)
+          mv /tmp/udmi-support_*.tgz ${{ github.repository_owner }}_${{ github.job }}_$(cd /tmp; ls udmi-support_*.tgz)
           echo Renamed support file to `ls *_udmi-support_*.tgz`
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
@@ -287,7 +287,7 @@ jobs:
         if: ${{ always() }}
         run: |
           bin/support
-          mv /tmp/udmi-support_*.tgz ${{ github.repository_owner }}_${{ github.job }}_$(ls udmi-support_*.tgz)
+          mv /tmp/udmi-support_*.tgz ${{ github.repository_owner }}_${{ github.job }}_$(cd /tmp; ls udmi-support_*.tgz)
           echo Renamed support file to `ls *_udmi-support_*.tgz`
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
