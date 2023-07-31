@@ -106,12 +106,12 @@ jq .cloud_version.udmi_functions $output_file
 
 echo Check for failure in running pubber...
 RESULT=0
-pubber/bin/run $pubber_config || RESULT=$?
+pubber/bin/run $pubber_config 2>&1 || RESULT=$?
 
 echo Now recreate the registry from scratch!
 bin/registrar $site_arg $registrar_project -u
 
 echo And check again, but this time with success...
-pubber/bin/run $pubber_config
+pubber/bin/run $pubber_config 2>&1
 
 echo Successful pubber check passed on clean registry.
