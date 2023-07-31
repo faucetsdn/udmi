@@ -128,9 +128,9 @@ fgrep RESULT $site_model/out/devices/$device_id/RESULT.log | \
 
 bin/check_version
 
-if bin/which_venv_pip3 then;  
+if ! bin/which_venv_pip3 then;  
     echo ERROR could not generate markdown sequencer report file
     echo please run bin/setup_base and try again
     false
 fi
-bin/sequencer_report $site_model $device_id
+(source venv/bin/activate && bin/sequencer_report $site_model $device_id)
