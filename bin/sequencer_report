@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # pylint: disable=bad-indentation
+# pylint: disable=line-too-long
 """ Generate markdown report from sequencer results """
 import argparse
 import copy
