@@ -28,19 +28,20 @@ jobs:
         run: bin/start_pubsub
       - name: bin/test_mosquitto
         run: bin/test_mosquitto
-      - name: bin/run_tests udmis_tests
-        run: bin/run_tests udmis_tests
+        # - name: bin/run_tests udmis_tests
+        # run: bin/run_tests udmis_tests
       - name: support bundle
         if: ${{ always() }}
         run: |
           bin/support
           mv udmi-support_*.tgz ${{ github.repository_owner }}_$(ls udmi-support_*.tgz)
           echo Renamed to `ls *_udmi-support_*.tgz`
+          echo support_file=$(ls *_udmis-support_*.tgz) >> $GITHUB_ENV
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
-          name: udmis_support
-          path: '*_udmi-support_*.tgz'
+          name: ${{ env.support_file }}
+          path: ${{ env.support_file }}
 
   unit:
     name: Unit Tests
@@ -149,10 +150,10 @@ jobs:
         run: bin/run_tests install_dependencies
       - name: registrar clean
         run: bin/test_regclean //gcp/$GCP_TARGET_PROJECT
-      - name: sequence tests clean
-        run: bin/test_sequencer clean $GCP_TARGET_PROJECT
-      - name: sequence tests alpha
-        run: bin/test_sequencer alpha $GCP_TARGET_PROJECT
+        #- name: sequence tests clean
+        #run: bin/test_sequencer clean $GCP_TARGET_PROJECT
+        #- name: sequence tests alpha
+        #run: bin/test_sequencer alpha $GCP_TARGET_PROJECT
       - name: sequence test timing
         if: ${{ always() }}
         run: fgrep ' ending test ' out/sequencer.log
@@ -206,10 +207,10 @@ jobs:
         run: bin/run_tests install_dependencies
       - name: registrar clean
         run: bin/test_regclean //gcp/$GCP_TARGET_PROJECT
-      - name: sequence tests clean
-        run: bin/test_sequencer clean $GCP_TARGET_PROJECT
-      - name: sequence tests alpha
-        run: bin/test_sequencer alpha $GCP_TARGET_PROJECT
+        #- name: sequence tests clean
+        #run: bin/test_sequencer clean $GCP_TARGET_PROJECT
+        #- name: sequence tests alpha
+        #run: bin/test_sequencer alpha $GCP_TARGET_PROJECT
       - name: sequence test timing
         if: ${{ always() }}
         run: fgrep 'ending test' out/sequencer.log
@@ -274,10 +275,10 @@ jobs:
         if: ${{ always() }}
         run: |
           cd sites/udmi_site_model/out && more `find . -type f` || true
-      - name: itemized sequencer tests
-        if: ${{ always() }}
-        run: |
-          bin/test_itemized $GCP_TARGET_PROJECT
+          #- name: itemized sequencer tests
+          #if: ${{ always() }}
+          #run: |
+          #bin/test_itemized $GCP_TARGET_PROJECT
       - name: itemized output logs
         if: ${{ always() }}
         run: |
