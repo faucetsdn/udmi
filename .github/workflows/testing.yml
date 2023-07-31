@@ -173,6 +173,7 @@ jobs:
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
+          if-no-files-found: error
           name: udmi-support_${{ github.run_id }}
           path: '*_udmi-support_*.tgz'
 
@@ -230,6 +231,7 @@ jobs:
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
+          if-no-files-found: error
           name: udmi-support_${{ github.run_id }}
           path: '*_udmi-support_*.tgz'
 
@@ -289,6 +291,7 @@ jobs:
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
+          if-no-files-found: error
           name: udmi-support_${{ github.run_id }}
           path: '*_udmi-support_*.tgz'
 
