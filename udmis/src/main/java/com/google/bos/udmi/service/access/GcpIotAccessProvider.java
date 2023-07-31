@@ -394,7 +394,8 @@ public class GcpIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public void sendCommand(String registryId, String deviceId, SubFolder folder, String message) {
+  public void sendCommandBase(String registryId, String deviceId, SubFolder folder,
+      String message) {
     try {
       Map<String, Object> messageMap = toMap(message);
       Object payloadSubType = messageMap.get("subType");
@@ -404,9 +405,9 @@ public class GcpIotAccessProvider extends IotAccessBase {
       requireNonNull(registryId, "registry not defined");
       requireNonNull(deviceId, "device not defined");
       String subFolder = ifNotNullGet(folder, SubFolder::value);
-      SendCommandToDeviceRequest request =
-          new SendCommandToDeviceRequest().setBinaryData(encodeBase64(message))
-              .setSubfolder(subFolder);
+      SendCommandToDeviceRequest request = new SendCommandToDeviceRequest()
+          .setBinaryData(encodeBase64(message))
+          .setSubfolder(subFolder);
       debug("Sending iot command to %s/%s/%s", registryId, deviceId, subFolder);
       registries.devices().sendCommandToDevice(getDevicePath(registryId, deviceId), request)
           .execute();

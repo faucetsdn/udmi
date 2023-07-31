@@ -26,7 +26,7 @@ import udmi.schema.FeatureEnumeration.FeatureStage;
  */
 public abstract class SupportedFeatures {
 
-  private static final File PUBBER_FEATURES_JSON = new File("out/pubber_features.json");
+  private static final String PUBBER_FEATURES_JSON = "out/pubber_features.json";
 
   private static final Map<String, FeatureEnumeration> FEATURES_MAP = new HashMap<>();
 
@@ -48,12 +48,13 @@ public abstract class SupportedFeatures {
   /**
    * Write out the current set of supported features for testability.
    */
-  public static void writeFeatureFile() {
+  public static void writeFeatureFile(String sitePath) {
+    File path = new File(sitePath, PUBBER_FEATURES_JSON);
     try {
-      PUBBER_FEATURES_JSON.getParentFile().mkdirs();
-      writeFile(FEATURES_MAP, PUBBER_FEATURES_JSON);
+      path.getParentFile().mkdirs();
+      writeFile(FEATURES_MAP, path);
     } catch (Exception e) {
-      throw new RuntimeException("While making dir for " + PUBBER_FEATURES_JSON.getAbsolutePath());
+      throw new RuntimeException("While making dir for " + path.getAbsolutePath());
     }
   }
 

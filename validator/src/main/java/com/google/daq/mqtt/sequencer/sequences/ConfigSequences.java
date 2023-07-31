@@ -21,6 +21,8 @@ import static udmi.schema.FeatureEnumeration.FeatureStage.STABLE;
 
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
+import com.google.daq.mqtt.sequencer.Summary;
+import com.google.daq.mqtt.sequencer.ValidateSchema;
 import java.time.Instant;
 import java.util.Date;
 import org.junit.Test;
@@ -40,8 +42,19 @@ public class ConfigSequences extends SequenceBase {
   @Test(timeout = ONE_MINUTES_MS)
   @Feature(stage = STABLE, bucket = SYSTEM)
   @Summary("Check that last_update state is correctly set in response to a config update.")
+  @ValidateSchema
   public void system_last_update() {
     untilTrue("state last_config matches config timestamp", this::stateMatchesConfigTimestamp);
+    ensureStateUpdate();
+  }
+
+  @Test
+  @Feature(stage = ALPHA, bucket = SYSTEM)
+  @ValidateSchema
+  public void valid_serial_no() {
+    ifNullSkipTest(serialNo, "No test serial number provided");
+    untilTrue("received serial number matches", () -> serialNo.equals(lastSerialNo));
+    ensureStateUpdate();
   }
 
   @Test(timeout = TWO_MINUTES_MS)
@@ -85,7 +98,8 @@ public class ConfigSequences extends SequenceBase {
     updateConfig("starting broken_config");
     Date stableConfig = deviceConfig.timestamp;
     info("initial stable_config " + getTimestamp(stableConfig));
-    untilTrue("state synchronized", () -> dateEquals(stableConfig, deviceState.system.last_config));
+    untilTrue("initial state synchronized",
+        () -> dateEquals(stableConfig, deviceState.system.last_config));
     info("initial last_config " + getTimestamp(deviceState.system.last_config));
     checkThat("initial stable_config matches last_config",
         () -> dateEquals(stableConfig, deviceState.system.last_config));
@@ -112,6 +126,8 @@ public class ConfigSequences extends SequenceBase {
     // Will restore min_loglevel to the default of INFO.
     resetConfig(); // clears extra_field
     untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
+    untilTrue("restored state synchronized",
+        () -> dateEquals(deviceConfig.timestamp, deviceState.system.last_config));
 
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
     checkThatHasInterestingSystemStatus(false);

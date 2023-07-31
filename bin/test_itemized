@@ -73,7 +73,9 @@ while read -u 7 action test_name remainder; do
     kill $(ps ax | fgrep pubber | fgrep java | awk '{print $1}') || true
 
     result=$(grep -E -m 1 "RESULT [a-z]+ [a-z.]+ $test_name " $SEQUENCER_OUT)
-    echo ${result/*sequence RESULT/RESULT} >> $RESULTS_OUT
+    echo ${result/* NOTICE RESULT/RESULT} >> $RESULTS_OUT
+
+    mv $PUBBER_OUT $PUBBER_OUT-$test_name
 
     echo =========== $test_name >> $SCHEMA_OUT
     cat out/schema.out >> $SCHEMA_OUT

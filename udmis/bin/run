@@ -11,9 +11,12 @@ shift
 ROOT=$(dirname $0)/..
 cd $ROOT
 
+cat /etc/os-release
+
+java -version
+
 POD_JAR=build/libs/udmis-1.0-SNAPSHOT-all.jar
 
 java -jar $POD_JAR $POD_CONFIG
 
 echo $?
-

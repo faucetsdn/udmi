@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.MissingFormatArgumentException;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 /**
@@ -97,7 +98,7 @@ public abstract class Common {
           .filter(info -> info.getPackageName().equals(packageName))
           .map(ClassInfo::getName)
           .collect(Collectors.toSet());
-      return classes;
+      return new TreeSet<>(classes);
     } catch (Exception e) {
       throw new RuntimeException("While loading classes for package " + packageName);
     }

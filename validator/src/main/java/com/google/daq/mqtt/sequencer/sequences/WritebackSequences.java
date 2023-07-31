@@ -6,6 +6,7 @@ import static udmi.schema.FeatureEnumeration.FeatureStage.ALPHA;
 
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.PointsetBase;
+import com.google.daq.mqtt.sequencer.Summary;
 import java.util.List;
 import java.util.Objects;
 import org.junit.Test;

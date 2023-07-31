@@ -1,8 +1,10 @@
 package com.google.bos.udmi.service.core;
 
+import static com.google.bos.udmi.service.core.ProcessorBase.REFLECT_REGISTRY;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -31,7 +33,7 @@ class TargetProcessorTest extends ProcessorTestBase {
     assertEquals("event", command.remove("subType"), "subType field");
     assertEquals(TEST_DEVICE, command.remove("deviceId"));
     assertEquals(TEST_NAMESPACE, command.remove("projectId"));
-    assertEquals(0, command.size(), "remaining fields");
+    assertEquals(TEST_REGISTRY, command.remove("deviceRegistryId"));
   }
 
   @NotNull
@@ -43,6 +45,7 @@ class TargetProcessorTest extends ProcessorTestBase {
   protected void initializeTestInstance() {
     super.initializeTestInstance();
     getReverseDispatcher().prototypeEnvelope.deviceId = TEST_DEVICE;
+    getReverseDispatcher().prototypeEnvelope.deviceRegistryId = TEST_REGISTRY;
   }
 
   @NotNull
@@ -74,8 +77,8 @@ class TargetProcessorTest extends ProcessorTestBase {
     assertEquals(0, getMessageCount(PointsetEvent.class), "pointset handler count");
 
     ArgumentCaptor<String> commandCaptor = ArgumentCaptor.forClass(String.class);
-    verify(provider, times(1)).sendCommand(anyString(), isNull(), isNull(),
-        commandCaptor.capture());
+    verify(provider, times(1)).sendCommand(eq(REFLECT_REGISTRY),
+        eq(TEST_REGISTRY), isNull(), commandCaptor.capture());
     verifyCommand(commandCaptor, MONGOOSE);
   }
 
@@ -94,8 +97,8 @@ class TargetProcessorTest extends ProcessorTestBase {
     assertEquals(1, getMessageCount(PointsetEvent.class), "pointset handler count");
 
     ArgumentCaptor<String> commandCaptor = ArgumentCaptor.forClass(String.class);
-    verify(provider, times(1)).sendCommand(anyString(), isNull(), isNull(),
-        commandCaptor.capture());
+    verify(provider, times(1)).sendCommand(eq(REFLECT_REGISTRY),
+        eq(TEST_REGISTRY), isNull(), commandCaptor.capture());
     verifyCommand(commandCaptor, null);
   }
 

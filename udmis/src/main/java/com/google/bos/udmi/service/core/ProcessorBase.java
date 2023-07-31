@@ -37,10 +37,13 @@ import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.Common;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import org.jetbrains.annotations.TestOnly;
 import udmi.schema.EndpointConfiguration;
@@ -56,7 +59,7 @@ public abstract class ProcessorBase extends ContainerBase {
   public static final Integer FUNCTIONS_VERSION_MIN = 9;
   public static final Integer FUNCTIONS_VERSION_MAX = 9;
   public static final String EMPTY_JSON = "{}";
-  static final String REFLECT_REGISTRY = "UDMI-REFLECT";
+  public static final String REFLECT_REGISTRY = "UDMI-REFLECT";
   private static final String RESET_CONFIG_VALUE = "reset_config";
   private static final String BREAK_CONFIG_VALUE = "break_json";
   private static final String EXTRA_FIELD_KEY = "extra_field";
@@ -167,12 +170,18 @@ public abstract class ProcessorBase extends ContainerBase {
   }
 
   protected void reflectMessage(Envelope envelope, String message) {
+    String deviceRegistryId = envelope.deviceRegistryId;
+
+    if (deviceRegistryId == null) {
+      return;
+    }
+
     try {
       checkState(envelope.payload == null, "envelope payload is not null");
       envelope.payload = encodeBase64(message);
-      reflectString(envelope.deviceRegistryId, stringify(envelope));
+      reflectString(deviceRegistryId, stringify(envelope));
     } catch (Exception e) {
-      error(format("Error reflecting message: %s", friendlyStackTrace(e)));
+      error(format("Message reflection error %s", friendlyStackTrace(e)));
     } finally {
       envelope.payload = null;
     }
@@ -228,7 +237,7 @@ public abstract class ProcessorBase extends ContainerBase {
     ifNotNullThen(updatePayload, p -> updatePayload.remove(TIMESTAMP_KEY));
     ifNotNullThen(updatePayload, p -> updatePayload.remove(VERSION_KEY));
 
-    if (attributes.subFolder != UPDATE) {
+    if (attributes.subFolder != null && attributes.subFolder != UPDATE) {
       payload.put(attributes.subFolder.value(), updatePayload);
     }
 

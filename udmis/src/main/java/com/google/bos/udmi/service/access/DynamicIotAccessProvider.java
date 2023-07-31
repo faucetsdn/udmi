@@ -1,7 +1,6 @@
 package com.google.bos.udmi.service.access;
 
 import static com.google.udmi.util.GeneralUtils.sortedMapCollector;
-import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static java.lang.String.format;
 
 import java.util.Arrays;
@@ -31,6 +30,11 @@ public class DynamicIotAccessProvider extends IotAccessBase {
    */
   public DynamicIotAccessProvider(IotAccess iotAccess) {
     providerList = Arrays.asList(iotAccess.project_id.split(","));
+  }
+
+  @Override
+  protected String updateConfig(String registryId, String deviceId, String config, Long version) {
+    throw new RuntimeException("Shouldn't be called for dynamic provider");
   }
 
   private String determineProvider(String registryId) {
@@ -69,13 +73,13 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public String fetchState(String deviceRegistryId, String deviceId) {
-    throw new RuntimeException("Not yet implemented");
+  public String fetchRegistryMetadata(String registryId, String metadataKey) {
+    return getProviderFor(registryId).fetchRegistryMetadata(registryId, metadataKey);
   }
 
   @Override
-  public String fetchRegistryMetadata(String registryId, String metadataKey) {
-    return getProviderFor(registryId).fetchRegistryMetadata(registryId, metadataKey);
+  public String fetchState(String deviceRegistryId, String deviceId) {
+    throw new RuntimeException("Not yet implemented");
   }
 
   @Override
@@ -89,18 +93,14 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  protected String updateConfig(String registryId, String deviceId, String config, Long version) {
-    throw new RuntimeException("Shouldn't be called for dynamic provider");
-  }
-
-  @Override
   public String modifyConfig(String registryId, String deviceId, Function<String, String> munger) {
     return getProviderFor(registryId).modifyConfig(registryId, deviceId, munger);
   }
 
   @Override
-  public void sendCommand(String registryId, String deviceId, SubFolder folder, String message) {
-    getProviderFor(registryId).sendCommand(registryId, deviceId, folder, message);
+  public void sendCommandBase(String registryId, String deviceId, SubFolder folder,
+      String message) {
+    getProviderFor(registryId).sendCommandBase(registryId, deviceId, folder, message);
   }
 
   @Override

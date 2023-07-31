@@ -1,71 +1,11 @@
 {
-  "event_count" : 2,
-  "last_config" : "2023-03-07T16:38:40Z",
-  "logentries" : [ {
-    "message" : "Config handler",
-    "category" : "device.log",
-    "timestamp" : "2023-03-07T16:38:31Z",
-    "level" : 200
-  }, {
-    "message" : "2023-03-07T16:38:31Z received config 2023-03-07T16:38:30Z",
-    "category" : "device.log",
-    "timestamp" : "2023-03-07T16:38:31Z",
-    "level" : 200
-  }, {
-    "message" : "success",
-    "category" : "system.config.apply",
-    "timestamp" : "2023-03-07T16:38:31Z",
-    "level" : 300
-  }, {
-    "message" : "update state 2023-03-07T16:38:32Z last_config 2023-03-07T16:38:30Z",
-    "category" : "device.log",
-    "timestamp" : "2023-03-07T16:38:32Z",
-    "level" : 200
-  }, {
-    "message" : "Config handler",
-    "category" : "device.log",
-    "timestamp" : "2023-03-07T16:38:32Z",
-    "level" : 200
-  }, {
-    "message" : "2023-03-07T16:38:32Z received config 2023-03-07T16:38:31Z",
-    "category" : "device.log",
-    "timestamp" : "2023-03-07T16:38:32Z",
-    "level" : 200
-  }, {
-    "message" : "success",
-    "category" : "system.config.apply",
-    "timestamp" : "2023-03-07T16:38:32Z",
-    "level" : 300
-  }, {
-    "message" : "update state 2023-03-07T16:38:34Z last_config 2023-03-07T16:38:31Z",
-    "category" : "device.log",
-    "timestamp" : "2023-03-07T16:38:34Z",
-    "level" : 200
-  }, {
-    "message" : "update state 2023-03-07T16:38:40Z last_config 2023-03-07T16:38:31Z",
-    "category" : "device.log",
-    "timestamp" : "2023-03-07T16:38:40Z",
-    "level" : 200
-  }, {
-    "message" : "Config handler",
-    "category" : "device.log",
-    "timestamp" : "2023-03-07T16:38:40Z",
-    "level" : 200
-  }, {
-    "message" : "2023-03-07T16:38:40Z received config 2023-03-07T16:38:40Z",
-    "category" : "device.log",
-    "timestamp" : "2023-03-07T16:38:40Z",
-    "level" : 200
-  }, {
-    "message" : "success",
-    "category" : "system.config.apply",
-    "timestamp" : "2023-03-07T16:38:40Z",
-    "level" : 300
-  } ],
+  "event_count" : 11,
+  "last_config" : "2023-07-28T20:24:59Z",
+  "logentries" : [ ],
   "metrics" : {
-    "mem_total_mb" : 252,
-    "mem_free_mb" : 226.7928924560547
+    "mem_total_mb" : 250.0,
+    "mem_free_mb" : 215.45263671875
   },
-  "timestamp" : "2023-03-07T16:38:41.003Z",
+  "timestamp" : "2023-07-28T20:25:14Z",
   "version" : "1.4.1"
 }

@@ -189,7 +189,7 @@ public class SequenceRunner {
 
   private List<String> getRunMethods(Class<?> clazz) {
     return Arrays.stream(clazz.getMethods()).filter(this::shouldProcessMethod).map(Method::getName)
-        .filter(this::isTargetMethod).collect(Collectors.toList());
+        .filter(this::isTargetMethod).sorted().collect(Collectors.toList());
   }
 
   private boolean isTargetMethod(String methodName) {

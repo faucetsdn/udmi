@@ -1,6 +1,8 @@
 
 ## periodic_scan (ALPHA)
 
+check periodic scan of address families
+
 1. Update config before all scans not active:
     * Add `discovery` = { "families": {  } }
 1. Wait for all scans not active

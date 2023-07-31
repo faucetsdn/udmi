@@ -6,6 +6,7 @@ import static udmi.schema.FeatureEnumeration.FeatureStage.BETA;
 
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
+import com.google.daq.mqtt.sequencer.Summary;
 import com.google.daq.mqtt.util.SamplingRange;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -59,7 +60,7 @@ public class PointsetSequences extends SequenceBase {
     Integer defaultSampleRate = 10;
 
     if (deviceConfig.pointset == null) {
-      throw new AssumptionViolatedException(NO_POINTSET_CONFIG);
+      skipTest(NO_POINTSET_CONFIG);
     }
 
     // Clear received events because this could contain messages from a previous sample rate test
@@ -85,7 +86,7 @@ public class PointsetSequences extends SequenceBase {
       info(String.format("initial sample rate is %d seconds", nominalInterval));
 
       if (nominalInterval < 5) {
-        throw new AssumptionViolatedException("measured sample rate is too low for automated test");
+        skipTest("measured sample rate is too low for automated test");
       }
 
       // Use an interval smaller than the devices last interval
@@ -119,7 +120,7 @@ public class PointsetSequences extends SequenceBase {
   public void pointset_publish_interval() {
     
     if (deviceConfig.pointset == null) {
-      throw new AssumptionViolatedException(NO_POINTSET_CONFIG);
+      skipTest(NO_POINTSET_CONFIG);
     }
 
     // Test two narrow non-intersecting windows

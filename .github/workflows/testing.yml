@@ -79,6 +79,8 @@ jobs:
     if: vars.CLEARBLADE_PROJECT != ''
     env:
       CLEARBLADE_PROJECT: ${{ vars.CLEARBLADE_PROJECT }}
+      UDMI_REFLECTOR_ENDPOINT: ${{ vars.UDMI_REFLECTOR_ENDPOINT }}
+      UDMI_PUBBER_ENDPOINT: ${{ vars.UDMI_PUBBER_ENDPOINT }}
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v3
@@ -87,11 +89,16 @@ jobs:
           java-version: '17'
       - name: bin/run_tests install_dependencies
         run: bin/run_tests install_dependencies
-      - name: bin/test_regclean //clearblade/$CLEARBLADE_PROJECT
-        run: bin/test_regclean //clearblade/$CLEARBLADE_PROJECT
+      - name: bin/test_regclean $CLEARBLADE_PROJECT
+        run: bin/test_regclean $CLEARBLADE_PROJECT
+      - name: sequencer run
+        run: |
+          bin/sequencer -v out/cloud_iot_config-reflect.json $CLEARBLADE_PROJECT AHU-1 213978213 system_last_update
+          fgrep "RESULT fail system system_last_update" out/sequencer.out
       - name: Config outputs
         if: ${{ always() }}
-        run: more /tmp/pubber_config.json /tmp/registrar_config.json | cat
+        run: |
+          more /tmp/pubber_config.json out/cloud_iot_config-reflect.json | cat
 
   udmif:
     name: UDMIF unit tests
@@ -162,6 +169,9 @@ jobs:
         run: bin/test_sequencer clean $GCP_TARGET_PROJECT
       - name: sequence tests alpha
         run: bin/test_sequencer alpha $GCP_TARGET_PROJECT
+      - name: sequence test timing
+        if: ${{ always() }}
+        run: fgrep ' ending test ' out/sequencer.log
       - name: generated files
         if: ${{ always() }}
         run: more out/sequencer.out out/generated.md || true
@@ -185,7 +195,7 @@ jobs:
   sequencer_dep:
     name: Sequencer Suite
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 35
     needs: redirect
     if: vars.GCP_TARGET_PROJECT != '' && vars.UDMI_REGISTRY_SUFFIX == ''
     env:
@@ -204,6 +214,9 @@ jobs:
         run: bin/test_sequencer clean $GCP_TARGET_PROJECT
       - name: sequence tests alpha
         run: bin/test_sequencer alpha $GCP_TARGET_PROJECT
+      - name: sequence test timing
+        if: ${{ always() }}
+        run: fgrep 'ending test' out/sequencer.log
       - name: generated files
         if: ${{ always() }}
         run: more out/sequencer.out out/generated.md || true
@@ -262,6 +275,14 @@ jobs:
         run: |
           more out/test_itemized.out out/schemas_itemized.out | cat
           more sites/udmi_site_model/out/devices/AHU-1/tests/*/sequencer.log | cat
+      - name: tool output logs
+        if: ${{ always() }}
+        run: |
+          more sites/udmi_site_model/out/*.json | cat
+      - name: pubber output logs
+        if: ${{ always() }}
+        run: |
+          more out/pubber.out* | cat
 
   redirect:
     name: Endpoint Redirection

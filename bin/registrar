@@ -1,21 +1,31 @@
 #!/bin/bash -e
 
 ROOT_DIR=$(dirname $0)/..
-REGISTRAR_CONFIG=/tmp/registrar_config.json
+config_file=/tmp/registrar_config.json
 
 if [ $# == 0 ]; then
     echo $0 SITE_PATH [PROJECT_ID] [OPTIONS] [devices...]
     false
 fi
 
-site_path=$1
+site_path=$(realpath $1)
 shift
-project_id=$1
-shift || true
 
-if [ ! -f $site_path/cloud_iot_config.json ]; then
-    echo cloud_iot_config.json not found at $site_path
+cd $ROOT_DIR
+
+if [[ -z $1 || $1 =~ ^- ]]; then
+    echo No project ID supplied.
+else
+    project_id=$1
+    shift
+fi
+
+iot_config=$site_path/cloud_iot_config.json
+if [[ -d $site_path && ! -f $iot_config ]]; then
+    echo Config file not found: $iot_config
     false
+elif [[ -z $project_id ]]; then
+    echo No project defined, dry run only.
 fi
 
 if [[ -n $UDMI_REGISTRY_SUFFIX ]]; then
@@ -26,9 +36,9 @@ else
 fi
 
 echo Building validator...
-$ROOT_DIR/validator/bin/build > /dev/null
+validator/bin/build > /dev/null
 
-echo Running tools version `(cd $ROOT_DIR; git describe)`
+echo Running tools version `git describe`
 
 # Format of cmdline project_id is {//PROVIDER/}PROJECT (optional PROVIDER)
 # e.g. bos-testing-dev or //gcp/bos-testing-dev
@@ -46,8 +56,11 @@ else
     iot_provider=null
 fi
 
-echo Writing config to $REGISTRAR_CONFIG
-cat <<EOF > $REGISTRAR_CONFIG
+if [[ -f $site_path ]]; then
+    config_file=$site_path
+else
+    echo Writing config to $config_file
+    cat <<EOF > $config_file
 {
   "iot_provider": $iot_provider,
   "project_id": $quoted_id,
@@ -55,8 +68,12 @@ cat <<EOF > $REGISTRAR_CONFIG
   "registry_suffix": $registry_suffix
 }
 EOF
+fi
 
-$ROOT_DIR/validator/bin/registrar $REGISTRAR_CONFIG $* 2>&1
+echo $config_file:
+cat $config_file
+echo
+
+validator/bin/registrar $config_file $* 2>&1
 
 bin/check_version
-

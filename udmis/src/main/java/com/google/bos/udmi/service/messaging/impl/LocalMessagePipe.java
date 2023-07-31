@@ -21,13 +21,13 @@ import udmi.schema.EndpointConfiguration;
  */
 public class LocalMessagePipe extends MessageBase {
 
-  private static final Map<String, Map<String, BlockingQueue<String>>> NAMESPACES =
+  private static final Map<String, Map<String, BlockingQueue<QueueEntry>>> NAMESPACES =
       new ConcurrentHashMap<>();
 
   private final String namespace;
   private final String sourceName;
   private final String destinationName;
-  private final BlockingQueue<String> destinationQueue;
+  private final BlockingQueue<QueueEntry> destinationQueue;
 
   /**
    * Create a new local message pipe given a configuration bundle.
@@ -46,19 +46,16 @@ public class LocalMessagePipe extends MessageBase {
     return new LocalMessagePipe(config);
   }
 
-  private BlockingQueue<String> getQueueForScope(String name) {
+  private BlockingQueue<QueueEntry> getQueueForScope(String name) {
     checkNotNull(name, "pipe name is null");
-    Map<String, BlockingQueue<String>> namedQueues =
+    Map<String, BlockingQueue<QueueEntry>> namedQueues =
         NAMESPACES.computeIfAbsent(namespace, key -> new ConcurrentHashMap<>());
     return namedQueues.computeIfAbsent(name, trackedQueue(name));
   }
 
   @NotNull
-  private Function<String, BlockingQueue<String>> trackedQueue(String name) {
-    return key -> {
-      LinkedBlockingQueue<String> createdQueue = new LinkedBlockingQueue<>();
-      return createdQueue;
-    };
+  private Function<String, BlockingQueue<QueueEntry>> trackedQueue(String name) {
+    return key -> new LinkedBlockingQueue<>();
   }
 
   /**
@@ -67,7 +64,7 @@ public class LocalMessagePipe extends MessageBase {
   public void publish(Bundle bundle) {
     try {
       debug("Publishing bundle to %s", this);
-      destinationQueue.add(stringify(bundle));
+      pushQueueEntry(destinationQueue, stringify(bundle));
     } catch (Exception e) {
       throw new RuntimeException("While publishing to destination queue", e);
     }

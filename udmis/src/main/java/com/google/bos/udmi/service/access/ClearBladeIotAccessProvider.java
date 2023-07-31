@@ -7,8 +7,6 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.getDate;
-import static com.google.udmi.util.JsonUtil.stringify;
-import static com.google.udmi.util.JsonUtil.toMap;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
@@ -19,6 +17,8 @@ import com.clearblade.cloud.iot.v1.createdevice.CreateDeviceRequest;
 import com.clearblade.cloud.iot.v1.deletedevice.DeleteDeviceRequest;
 import com.clearblade.cloud.iot.v1.deviceslist.DevicesListRequest;
 import com.clearblade.cloud.iot.v1.deviceslist.DevicesListResponse;
+import com.clearblade.cloud.iot.v1.devicestateslist.ListDeviceStatesRequest;
+import com.clearblade.cloud.iot.v1.devicestateslist.ListDeviceStatesResponse;
 import com.clearblade.cloud.iot.v1.devicetypes.Device;
 import com.clearblade.cloud.iot.v1.devicetypes.DeviceConfig;
 import com.clearblade.cloud.iot.v1.devicetypes.DeviceCredential;
@@ -105,20 +105,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     projectId = requireNonNull(iotAccess.project_id, "gcp project id not specified");
   }
 
-  private static CloudModel convertDevice(Device device, Operation operation) {
-    // CloudModel cloudModel = new CloudModel();
-    // cloudModel.num_id = device.getNumId().toString();
-    // cloudModel.blocked = device.getBlocked();
-    // cloudModel.metadata = device.getMetadata();
-    // cloudModel.last_event_time = getDate(device.getLastEventTime());
-    // cloudModel.is_gateway = ifNotNullGet(device.getGatewayConfig(),
-    //     config -> GATEWAY_TYPE.equals(config.getGatewayType()));
-    // cloudModel.credentials = convertIot(device.getCredentials());
-    // cloudModel.operation = operation;
-    // return cloudModel;
-    throw new RuntimeException("Not yet implemented");
-  }
-
   private static Credential convertIot(DeviceCredential device) {
     // Credential credential = new Credential();
     // credential.key_data = device.getPublicKey().getKey();
@@ -166,6 +152,24 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   @VisibleForTesting
   protected DeviceManagerClient getDeviceManagerClient() {
     return new DeviceManagerClient();
+  }
+
+  protected String updateConfig(String registryId, String deviceId, String config, Long version) {
+    try {
+      DeviceManagerClient deviceManagerClient = getDeviceManagerClient();
+      ByteString binaryData = new ByteString(encodeBase64(config));
+      String updateVersion = ifNotNullGet(version, v -> Long.toString(version));
+      String location = getRegistryLocation(registryId);
+      ModifyCloudToDeviceConfigRequest request =
+          ModifyCloudToDeviceConfigRequest.Builder.newBuilder()
+              .setName(DeviceName.of(projectId, location, registryId, deviceId).toString())
+              .setBinaryData(binaryData).setVersionToUpdate(updateVersion).build();
+      DeviceConfig response = deviceManagerClient.modifyCloudToDeviceConfig(request);
+      System.err.println("Config modified version " + response.getVersion());
+      return config;
+    } catch (Exception e) {
+      throw new RuntimeException("While modifying device config", e);
+    }
   }
 
   private CloudModel bindDeviceToGateway(String registryId, String gatewayId,
@@ -364,24 +368,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
         .forEach(id -> unbindDevice(registryId, gatewayId, id)));
   }
 
-  protected String updateConfig(String registryId, String deviceId, String config, Long version) {
-    try {
-      DeviceManagerClient deviceManagerClient = getDeviceManagerClient();
-      ByteString binaryData = new ByteString(encodeBase64(config));
-      String updateVersion = ifNotNullGet(version, v -> Long.toString(version));
-      String location = getRegistryLocation(registryId);
-      ModifyCloudToDeviceConfigRequest request =
-          ModifyCloudToDeviceConfigRequest.Builder.newBuilder()
-              .setName(DeviceName.of(projectId, location, registryId, deviceId).toString())
-              .setBinaryData(binaryData).setVersionToUpdate(updateVersion).build();
-      DeviceConfig response = deviceManagerClient.modifyCloudToDeviceConfig(request);
-      System.err.println("Config modified version " + response.getVersion());
-      return config;
-    } catch (Exception e) {
-      throw new RuntimeException("While modifying device config", e);
-    }
-  }
-
   private CloudModel updateDevice(String registryId, Device device) {
     DeviceManagerClient deviceManagerClient = getDeviceManagerClient();
     String deviceId = device.toBuilder().getId();
@@ -464,7 +450,22 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
 
   @Override
   public String fetchState(String deviceRegistryId, String deviceId) {
-    throw new RuntimeException("Not yet implemented " + this.getClass());
+    String devicePath = getDeviceName(deviceRegistryId, deviceId);
+    try {
+      DeviceManagerClient deviceManagerClient = new DeviceManagerClient();
+      String location = getRegistryLocation(deviceRegistryId);
+      DeviceName name = DeviceName.of(projectId, location, deviceRegistryId, deviceId);
+
+      ListDeviceStatesRequest request = ListDeviceStatesRequest.Builder.newBuilder()
+          .setName(name.toString())
+          .setNumStates(1).build();
+      ListDeviceStatesResponse response = requireNonNull(
+          deviceManagerClient.listDeviceStates(request), "Null response returned");
+      String state = (String) response.getDeviceStatesList().get(0).getBinaryData();
+      return state;
+    } catch (Exception e) {
+      throw new RuntimeException("While fetching state for device " + devicePath, e);
+    }
   }
 
   @Override
@@ -498,7 +499,9 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public void sendCommand(String registryId, String deviceId, SubFolder subFolder, String message) {
+  public void sendCommandBase(String registryId, String deviceId, SubFolder folder,
+      String message) {
+    String subFolder = ifNotNullGet(folder, SubFolder::value);
     try {
       ByteString binaryData = new ByteString(encodeBase64(message));
       String location = getRegistryLocation(registryId);
@@ -506,7 +509,9 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       String deviceName = DeviceName.of(projectId, location, registryId, deviceId).toString();
       SendCommandToDeviceRequest request = SendCommandToDeviceRequest.Builder.newBuilder()
           .setName(deviceName)
-          .setBinaryData(binaryData).setSubfolder(subFolder.value()).build();
+          .setBinaryData(binaryData)
+          .setSubfolder(subFolder)
+          .build();
       SendCommandToDeviceResponse response = deviceManagerClient.sendCommandToDevice(request);
       if (response == null) {
         throw new RuntimeException("SendCommandToDevice execution failed for " + deviceName);

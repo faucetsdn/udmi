@@ -7,6 +7,7 @@ workspace.xml
 codegen/
 .DS_Store
 tmp/
+var/
 .gradle/
 .firebase/
 udmis/functions/node_modules/

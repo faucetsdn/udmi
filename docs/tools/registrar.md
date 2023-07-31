@@ -36,10 +36,12 @@ The registrar tool can be run locally to just validate the metadata, or with an 
 `project_id` to specify a target GCP project. Additional command-line arguments can
 be used to specific specific device(s) to register (rather than all).
 
-Usage: `bin/registrar site_path [project_id] [devices...]`
+Usage: `bin/registrar site_path [project_id] [options] [devices...]`
 
-* `site_path`: The directory containing the site model.
-* `project_id`: The (optional) GCP project ID that contains the target registry
+* `site_path`: The _directory_ containing the site model, or a model-with-project _file_ directly.
+* `project_id`: The (optional) GCP project ID that contains the target registry. This information
+  can also be included in the specified site model.
+* `options`: Various options to impact behavior. Typically `-u` for _update_ and `-d` for _delete_.
 * `devices`: Multiple device entries for limited registration. Can be just the device name
 (`AHU-12`), or path to device (`site/devices/AHU-12`) for use with file-name glob.
 

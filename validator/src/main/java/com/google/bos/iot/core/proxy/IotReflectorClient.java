@@ -63,7 +63,7 @@ public class IotReflectorClient implements MessagePublisher {
   private static final Date REFLECTOR_STATE_TIMESTAMP = new Date();
   private static final String CONFIG_CATEGORY = "config";
   private static final String COMMANDS_CATEGORY = "commands";
-  private static final long CONFIG_TIMEOUT_SEC = 10;
+  private static final long CONFIG_TIMEOUT_SEC = 30;
   static final long MESSAGE_POLL_TIME_SEC = 10;
   private static String prevTransactionId;
   private final String udmiVersion;
@@ -109,6 +109,8 @@ public class IotReflectorClient implements MessagePublisher {
         .orElse(iotConfig.cloud_region);
     subscriptionId =
         format("%s/%s/%s/%s", projectId, cloudRegion, UDMI_REFLECT, registryId);
+    System.err.println("Using client subscription " + subscriptionId);
+
 
     try {
       mqttPublisher = new MqttPublisher(makeReflectConfiguration(iotConfig, registryId), keyBytes,
@@ -144,6 +146,7 @@ public class IotReflectorClient implements MessagePublisher {
     reflectConfiguration.cloud_region = Optional.ofNullable(iotConfig.reflect_region)
         .orElse(iotConfig.cloud_region);
     reflectConfiguration.registry_id = UDMI_REFLECT;
+    reflectConfiguration.reflector_endpoint = iotConfig.reflector_endpoint;
 
     // Intentionally map registry -> device because of reflection registry semantics.
     reflectConfiguration.device_id = registryId;
@@ -158,7 +161,7 @@ public class IotReflectorClient implements MessagePublisher {
   public static synchronized String getNextTransactionId() {
     String transactionId;
     do {
-      transactionId = Long.toString(System.currentTimeMillis());
+      transactionId = "RC:" + System.currentTimeMillis();
     } while (transactionId.equals(prevTransactionId));
     prevTransactionId = transactionId;
     return transactionId;

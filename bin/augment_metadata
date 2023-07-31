@@ -5,17 +5,17 @@
 # the testing infrastrucure. Not intended for use outside of CI testing.
 #
 
-ROOT_DIR=$(dirname $0)/..
-cd $ROOT_DIR
-
 if [[ $# -ne 2 ]]; then
     echo Usage: $0 SITE_DIR DEVICE_ID
     false
 fi
 
-site_dir=$1
+site_dir=$(realpath $1)
 device_id=$2
 shift 2
+
+ROOT_DIR=$(dirname $0)/..
+cd $ROOT_DIR
 
 device_dir=$site_dir/devices/$device_id
 metadata_file=$device_dir/metadata.json
@@ -43,7 +43,7 @@ jq ".localnet.families.ether.addr = \"$ether_addr\"" $metadata_file |
     jq ".localnet.families.ipv6.addr = \"$ipv6_addr\"" > $metadata_out
 
 # Dynamically update the site model based off of dynamic pubber output.
-pubber_features=$(< out/pubber_features.json)
+pubber_features=$(< $site_dir/out/pubber_features.json)
 jq --argjson features "$pubber_features" '.features = $features' $metadata_out | sponge $metadata_out
 
 ls -l $metadata_file $metadata_out

@@ -14,6 +14,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
@@ -32,11 +33,10 @@ public class StateProcessor extends ProcessorBase {
       Arrays.stream(SubFolder.values()).map(SubFolder::value).collect(Collectors.toSet());
 
   @Override
-  protected void defaultHandler(Object defaultedMessage) {
-    MessageContinuation continuation = getContinuation(defaultedMessage);
-    StateUpdate stateMessage = convertToStrict(StateUpdate.class, defaultedMessage);
-    shardStateUpdate(stateMessage, continuation);
-    updateLastStart(stateMessage, continuation);
+  protected void defaultHandler(Object originalMessage) {
+    StateUpdate stateMessage = convertToStrict(StateUpdate.class, originalMessage);
+    shardStateUpdate(stateMessage, originalMessage);
+    updateLastStart(stateMessage, originalMessage);
   }
 
   @Override
@@ -49,13 +49,15 @@ public class StateProcessor extends ProcessorBase {
     registerHandler(StateUpdate.class, this::stateHandler);
   }
 
-  private void shardStateUpdate(StateUpdate message, MessageContinuation continuation) {
-    info("Sharding state message to pipeline out as incremental updates");
+  private void shardStateUpdate(StateUpdate message, Object baseMessage) {
+    info("Sharding state message to pipeline as incremental updates");
+    MessageContinuation continuation = getContinuation(baseMessage);
     Envelope envelope = continuation.getEnvelope();
     envelope.subType = SubType.STATE;
     envelope.subFolder = UPDATE;
     reflectMessage(envelope, stringify(message));
-
+    String originalTransaction = envelope.transactionId;
+    AtomicInteger txnSuffix = new AtomicInteger();
     Arrays.stream(State.class.getFields()).forEach(field -> {
       try {
         if (STATE_SUB_FOLDERS.contains(field.getName())) {
@@ -64,7 +66,8 @@ public class StateProcessor extends ProcessorBase {
             stringObjectMap.put("version", message.version);
             stringObjectMap.put("timestamp", message.timestamp);
             envelope.subFolder = SubFolder.fromValue(field.getName());
-            debug("Sharding state " + envelope.subFolder);
+            envelope.transactionId = originalTransaction + "-" + txnSuffix.getAndIncrement();
+            debug("Sharding state %s %s", envelope.subFolder, envelope.transactionId);
             reflectMessage(envelope, stringify(stringObjectMap));
             continuation.publish(stringObjectMap);
           });
@@ -73,15 +76,13 @@ public class StateProcessor extends ProcessorBase {
         throw new RuntimeException("While extracting field " + field.getName(), e);
       }
     });
-    envelope.subFolder = UPDATE;
   }
 
   private void stateHandler(StateUpdate message) {
-    MessageContinuation continuation = getContinuation(message);
-    shardStateUpdate(message, continuation);
+    shardStateUpdate(message, message);
   }
 
-  private void updateLastStart(StateUpdate message, MessageContinuation continuation) {
+  private void updateLastStart(StateUpdate message, Object baseMessage) {
     if (message == null || message.system == null || message.system.operation == null
         || message.system.operation.last_start == null) {
       return;
@@ -89,7 +90,7 @@ public class StateProcessor extends ProcessorBase {
 
     try {
       Date newLastStart = message.system.operation.last_start;
-      Envelope envelope = continuation.getEnvelope();
+      Envelope envelope = getContinuation(baseMessage).getEnvelope();
       processConfigChange(envelope, new HashMap<>(), newLastStart);
     } catch (Exception e) {
       debug("Could not process config last_state update, skipping: "

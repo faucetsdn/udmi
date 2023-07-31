@@ -2,12 +2,18 @@
 
 # Create a GKE cluster
 
-* Use GCP console
-* Do not use "autopilot", instead use "standard" mode (not default)
-* Create node-pool with cloud scopes to "Enable all Cloud APIs"
-  * There's an option when you're creating it to set the node-pool security options
-  * Can't update an existing node-pool, but can create a new one and delete old one
-* Add permissions to default service account
+* Go to `Kubernetes Engine` GCP console page
+  * (Enable Kubernetes Engine API)
+* Create a cluster
+  * Start creating a _standard_ cluster, not an _autopilot_ cluster.
+  * Under `node pools`, `default-pool`, `security`, set `Access scopes` to `Allow full access to all Cloud APIs`
+  * Complete creating the cluster
+  * If you didn't set the node pool security policy, you either need to recreate the cluster or the node pool.
+* Wait for the cluster to be created (~15min)
+* Click three-dot menu for the cluster and select `connect`
+  * Copy/paste/execute the Command-line access option on your local dev machine
+* Using GCP console `IAM` page
+  * Add permissions (viewer?) to the `Compute Engine default service account`
 
 # Misc commands
 
@@ -20,10 +26,10 @@ kubectl config use-context XXX_bos-test-dev_XXX
 kubectl create secret generic pod-config.json --from-file=var/prod_pod.json
 kubectl get pods
 kubectl apply -f k8s_pod.yaml
-kubectl edit pod/udmi-test-pod
-kubectl delete pod/udmi-test-pod
-kubectl logs udmi-test-pod
+kubectl edit pod/udmis-test-pod
+kubectl delete pod/udmis-test-pod
+kubectl logs udmis-test-pod
 kubectl describe pods
-kubectl describe pods udmi-test-pod
-kubectl exec -ti udmi-test-pod -- bash
+kubectl describe pods udmis-test-pod
+kubectl exec -ti udmis-test-pod -- bash
 ```

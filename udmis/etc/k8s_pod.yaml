@@ -1,16 +1,15 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: udmi-test-pod
+  name: udmis-test-pod
 spec:
   containers:
     - name: test-pod
-      image: gcr.io/@PROJECT@/udmis
-      imagePullPolicy: Always
+      image: @IMAGE@
       resources:
         requests:
           cpu: 100m
-          memory: 100Mi
+          memory: 300Mi
       volumeMounts:
       - name: secret-volume
         mountPath: /udmi

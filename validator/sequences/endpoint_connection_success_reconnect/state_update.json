@@ -16,20 +16,23 @@
     "points" : {
       "filter_alarm_pressure_status" : { },
       "filter_differential_pressure_setpoint" : {
+        "units" : "Bars",
         "value_state" : "applied"
       },
-      "filter_differential_pressure_sensor" : { }
+      "filter_differential_pressure_sensor" : {
+        "units" : "Degrees-Celsius"
+      }
     }
   },
   "system" : {
-    "last_config" : "2023-03-12T23:25:08Z",
+    "last_config" : "2023-07-28T20:20:53Z",
     "operation" : {
       "operational" : true,
-      "last_start" : "2023-03-12T23:24:33Z",
+      "last_start" : "2023-07-28T20:18:04Z",
       "restart_count" : 1,
       "mode" : "initial"
     },
-    "serial_no" : "sequencer-19806",
+    "serial_no" : "sequencer-13214",
     "hardware" : {
       "make" : "BOS",
       "model" : "pubber"
@@ -40,10 +43,10 @@
     "status" : {
       "message" : "success",
       "category" : "system.config.apply",
-      "timestamp" : "2023-03-12T23:25:08Z",
+      "timestamp" : "2023-07-28T20:20:53Z",
       "level" : 300
     }
   },
-  "timestamp" : "2023-03-12T23:25:15Z",
+  "timestamp" : "2023-07-28T20:20:58Z",
   "version" : "1.4.1"
 }

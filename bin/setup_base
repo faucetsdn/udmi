@@ -1,5 +1,8 @@
 #!/bin/bash -e
 
+ROOT_DIR=$(realpath $(dirname $0)/..)
+cd $ROOT_DIR
+
 sudo apt-get install -y hxtools moreutils expect mosquitto mosquitto-clients
 
 python3 --version

@@ -1,9 +1,14 @@
 package com.google.daq.mqtt.util;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.daq.mqtt.util.ConfigUtil.readExecutionConfiguration;
+import static com.google.daq.mqtt.util.ConfigUtil.readExeConfig;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static com.google.udmi.util.GeneralUtils.mergeObject;
+import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static udmi.schema.IotAccess.IotProvider.GCP_NATIVE;
+import static udmi.schema.IotAccess.IotProvider.IMPLICIT;
 
 import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.SiteModel;
@@ -63,7 +68,7 @@ public class CloudIotManager {
     File cloudConfig = new File(siteDir, CLOUD_IOT_CONFIG_JSON);
     try {
       System.err.println("Reading cloud config from " + cloudConfig.getAbsolutePath());
-      executionConfiguration = validate(readExecutionConfiguration(cloudConfig), this.projectId);
+      executionConfiguration = validate(readExeConfig(cloudConfig), this.projectId);
       executionConfiguration.iot_provider = iotProvider;
       executionConfiguration.site_model = siteDir.getPath();
       executionConfiguration.registry_suffix = registrySuffix;
@@ -72,10 +77,39 @@ public class CloudIotManager {
       cloudRegion = executionConfiguration.cloud_region;
       initializeIotProvider();
     } catch (Exception e) {
-      throw new RuntimeException(
-          String.format("While initializing project %s from file %s", this.projectId,
-              cloudConfig.getAbsolutePath()), e);
+      throw new RuntimeException(format("While initializing project %s from file %s",
+          this.projectId, cloudConfig.getAbsolutePath()), e);
     }
+  }
+
+  /**
+   * Create a new iot manager using a full configuration file.
+   */
+  public CloudIotManager(File siteConfig) {
+    try {
+      System.err.println("Reading cloud config from " + siteConfig.getAbsolutePath());
+      ExecutionConfiguration config = readExeConfig(siteConfig);
+      this.projectId = requireNonNull(config.project_id, "no project_id defined");
+      this.useReflectClient = shouldUseReflectorClient(config);
+      this.siteDir = ifNotNullGet(config.site_model, File::new, siteConfig.getParentFile());
+      File baseConfig = new File(siteDir, CLOUD_IOT_CONFIG_JSON);
+      ExecutionConfiguration newConfig = mergeObject(readExeConfig(baseConfig), config);
+      executionConfiguration = validate(newConfig, this.projectId);
+      executionConfiguration.iot_provider = IMPLICIT;
+      executionConfiguration.site_model = siteDir.getPath();
+      String targetRegistry = ofNullable(newConfig.alt_registry).orElse(newConfig.registry_id);
+      registryId = SiteModel.getRegistryActual(targetRegistry, newConfig.registry_suffix);
+      cloudRegion = executionConfiguration.cloud_region;
+      initializeIotProvider();
+    } catch (Exception e) {
+      throw new RuntimeException(
+          format("While initializing project from file %s", siteConfig.getAbsolutePath()), e);
+    }
+  }
+
+  private static boolean shouldUseReflectorClient(ExecutionConfiguration config) {
+    return (config.reflector_endpoint != null)
+        || ofNullable(config.iot_provider).orElse(GCP_NATIVE) != GCP_NATIVE;
   }
 
   /**
@@ -99,7 +133,6 @@ public class CloudIotManager {
       executionConfiguration.project_id = projectId;
     }
     checkNotNull(executionConfiguration.registry_id, "registry_id not defined");
-    checkNotNull(executionConfiguration.cloud_region, "cloud_region not defined");
     checkNotNull(executionConfiguration.site_name, "site_name not defined");
     return executionConfiguration;
   }

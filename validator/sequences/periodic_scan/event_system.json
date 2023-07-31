@@ -1,26 +1,26 @@
 {
   "event_count" : 33,
-  "last_config" : "2023-03-07T16:43:38Z",
+  "last_config" : "2023-07-28T20:28:39Z",
   "logentries" : [ {
-    "message" : "Sent 1 discovery events from virtual for Tue Mar 07 08:43:38 PST 2023",
+    "message" : "Sent 1 discovery events from virtual for Fri Jul 28 13:28:38 PDT 2023",
     "category" : "device.log",
-    "timestamp" : "2023-03-07T16:43:44Z",
+    "timestamp" : "2023-07-28T20:28:44Z",
     "level" : 200
   }, {
-    "message" : "Discovery scan starting virtual as 2023-03-07T16:43:48Z",
+    "message" : "Discovery scan starting virtual as 2023-07-28T20:28:48Z",
     "category" : "device.log",
-    "timestamp" : "2023-03-07T16:43:49Z",
+    "timestamp" : "2023-07-28T20:28:49Z",
     "level" : 200
   }, {
-    "message" : "update state 2023-03-07T16:43:49Z last_config 2023-03-07T16:43:38Z",
+    "message" : "update state 2023-07-28T20:28:49Z last_config 2023-07-28T20:28:39Z",
     "category" : "device.log",
-    "timestamp" : "2023-03-07T16:43:49Z",
+    "timestamp" : "2023-07-28T20:28:49Z",
     "level" : 200
   } ],
   "metrics" : {
-    "mem_total_mb" : 252,
-    "mem_free_mb" : 208.31591796875
+    "mem_total_mb" : 250.0,
+    "mem_free_mb" : 201.9742202758789
   },
-  "timestamp" : "2023-03-07T16:43:51.034Z",
+  "timestamp" : "2023-07-28T20:28:54Z",
   "version" : "1.4.1"
 }

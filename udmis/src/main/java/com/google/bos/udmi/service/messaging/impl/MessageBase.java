@@ -2,12 +2,12 @@ package com.google.bos.udmi.service.messaging.impl;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
-import static com.google.udmi.util.Common.getExceptionMessage;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.mergeObject;
+import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.fromString;
 import static com.google.udmi.util.JsonUtil.parseJson;
@@ -18,6 +18,7 @@ import static java.util.Objects.requireNonNull;
 
 import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.bos.udmi.service.pod.ContainerBase;
+import com.google.udmi.util.GeneralUtils;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -31,6 +32,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.TestOnly;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
@@ -49,7 +51,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   private static final long AWAIT_TERMINATION_SEC = 10;
 
   private final ExecutorService executor = Executors.newSingleThreadExecutor();
-  private BlockingQueue<String> sourceQueue;
+  private BlockingQueue<QueueEntry> sourceQueue;
   private Future<Void> sourceFuture;
   private Consumer<Bundle> dispatcher;
 
@@ -81,31 +83,54 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     return bundle;
   }
 
-  private void receiveBundle(Bundle bundle) {
-    receiveBundle(stringify(bundle));
-  }
-
-  private void receiveBundle(String stringBundle) {
+  protected void pushQueueEntry(BlockingQueue<QueueEntry> queue, String stringBundle) {
     try {
-      ensureSourceQueue();
-      sourceQueue.put(requireNonNull(stringBundle));
+      QueueEntry queueEntry = new QueueEntry(grabExecutionContext(), stringBundle);
+      queue.put(requireNonNull(queueEntry));
     } catch (Exception e) {
-      throw new RuntimeException("While receiving bundle", e);
+      throw new RuntimeException("While pushing queue entry", e);
     }
   }
 
-  private void receiveException(Map<String, String> attributesMap, String messageString,
-      Exception e, SubFolder forceFolder) {
-    Bundle bundle = new Bundle();
-    bundle.message = friendlyStackTrace(e);
-    bundle.payload = messageString;
-    HashMap<String, String> mutableMap = new HashMap<>(attributesMap);
-    bundle.attributesMap = mutableMap;
-    ifNotNullThen(forceFolder, folder -> mutableMap.put(SUBFOLDER_PROPERTY_KEY, folder.value()));
-    receiveBundle(stringify(bundle));
+  protected void receiveMessage(Envelope envelope, Map<?, ?> messageMap) {
+    receiveMessage(toStringMap(envelope), stringify(messageMap));
   }
 
-  protected void setSourceQueue(BlockingQueue<String> queueForScope) {
+  protected void receiveMessage(Map<String, String> envelopeMap, Map<?, ?> messageMap) {
+    receiveMessage(envelopeMap, stringify(messageMap));
+  }
+
+  protected void receiveMessage(Map<String, String> attributesMap, String messageString) {
+    grabExecutionContext();
+
+    final Object messageObject;
+    try {
+      messageObject = parseJson(messageString);
+    } catch (Exception e) {
+      receiveException(attributesMap, messageString, e, SubFolder.ERROR);
+      return;
+    }
+    final Envelope envelope;
+
+    try {
+      envelope = convertToStrict(Envelope.class, attributesMap);
+    } catch (Exception e) {
+      attributesMap.put(INVALID_ENVELOPE_KEY, "true");
+      receiveException(attributesMap, messageString, e, null);
+      return;
+    }
+
+    try {
+      Bundle bundle = new Bundle(envelope, messageObject);
+      debug("Received %s/%s -> %s %s", bundle.envelope.subType, bundle.envelope.subFolder,
+          queueIdentifier(), bundle.envelope.transactionId);
+      receiveBundle(bundle);
+    } catch (Exception e) {
+      receiveException(attributesMap, messageString, e, null);
+    }
+  }
+
+  protected void setSourceQueue(BlockingQueue<QueueEntry> queueForScope) {
     sourceQueue = queueForScope;
   }
 
@@ -120,6 +145,27 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     }
   }
 
+  @Nullable
+  private String getFromSourceQueue(boolean take) throws InterruptedException {
+    QueueEntry poll = take
+        ? sourceQueue.take()
+        : sourceQueue.poll(getPollTimeSec(), TimeUnit.SECONDS);
+    if (poll == null) {
+      return null;
+    }
+    setExecutionContext(poll.context);
+    return poll.message;
+  }
+
+  private void handleDispatchException(Envelope envelope, Exception e) {
+    try {
+      error(format("Dispatch exception: " + friendlyStackTrace(e)));
+      dispatcher.accept(makeExceptionBundle(envelope, e));
+    } catch (Exception e2) {
+      error(format("Exception dispatch: " + friendlyStackTrace(e2)));
+    }
+  }
+
   @SuppressWarnings("unchecked")
   private Future<Void> handleQueue() {
     // Keep track of used queues to make sure there's no shenanigans during testing.
@@ -130,11 +176,12 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   }
 
   private void messageLoop() {
-    try {
-      while (true) {
+    while (true) {
+      try {
+        grabExecutionContext();
         Envelope envelope = null;
         try {
-          Bundle bundle = extractBundle(sourceQueue.take());
+          Bundle bundle = extractBundle(getFromSourceQueue(true));
           if (bundle.message.equals(TERMINATE_MARKER)) {
             debug("Exiting %s", this);
             info("Message loop terminated");
@@ -145,21 +192,39 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
               envelope.transactionId, queueIdentifier(), dispatcher);
           dispatcher.accept(bundle);
         } catch (Exception e) {
+          warn("Handling dispatch exception: " + friendlyStackTrace(e));
           handleDispatchException(envelope, e);
         }
+      } catch (Exception loopException) {
+        error("Message loop exception: " + friendlyStackTrace(loopException));
+        error(stackTraceString(loopException));
       }
-    } catch (Exception loopException) {
-      error("Message loop exception: " + friendlyStackTrace(loopException));
     }
   }
 
-  private void handleDispatchException(Envelope envelope, Exception e) {
-    try {
-      error(format("Dispatch exception: " + friendlyStackTrace(e)));
-      dispatcher.accept(makeExceptionBundle(envelope, e));
-    } catch (Exception e2) {
-      error(format("Exception dispatch: " + friendlyStackTrace(e2)));
-    }
+  private String queueIdentifier() {
+    return format("%08x", Objects.hash(sourceQueue));
+  }
+
+  private void receiveBundle(Bundle bundle) {
+    receiveBundle(stringify(bundle));
+  }
+
+  private void receiveBundle(String stringBundle) {
+    ensureSourceQueue();
+    BlockingQueue<QueueEntry> queue = sourceQueue;
+    pushQueueEntry(queue, stringBundle);
+  }
+
+  private void receiveException(Map<String, String> attributesMap, String messageString,
+      Exception e, SubFolder forceFolder) {
+    Bundle bundle = new Bundle();
+    bundle.message = friendlyStackTrace(e);
+    bundle.payload = messageString;
+    HashMap<String, String> mutableMap = new HashMap<>(attributesMap);
+    bundle.attributesMap = mutableMap;
+    ifNotNullThen(forceFolder, folder -> mutableMap.put(SUBFOLDER_PROPERTY_KEY, folder.value()));
+    receiveBundle(stringify(bundle));
   }
 
   @Override
@@ -202,8 +267,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
         throw new RuntimeException("Drain on active pipe");
       }
       debug("Polling on %s", this);
-      return ifNotNullGet(sourceQueue.poll(getPollTimeSec(), TimeUnit.SECONDS),
-          MessageBase::extractBundle);
+      return ifNotNullGet(getFromSourceQueue(false), MessageBase::extractBundle);
     } catch (Exception e) {
       throw new RuntimeException("While polling queue", e);
     }
@@ -229,49 +293,9 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     publish(new Bundle(TERMINATE_MARKER));
   }
 
-  protected void receiveMessage(Envelope envelope, Map<?, ?> messageMap) {
-    receiveMessage(toStringMap(envelope), stringify(messageMap));
-  }
-
-  protected void receiveMessage(Map<String, String> envelopeMap, Map<?, ?> messageMap) {
-    receiveMessage(envelopeMap, stringify(messageMap));
-  }
-
-  protected void receiveMessage(Map<String, String> attributesMap, String messageString) {
-    final Object messageObject;
-    try {
-      messageObject = parseJson(messageString);
-    } catch (Exception e) {
-      receiveException(attributesMap, messageString, e, SubFolder.ERROR);
-      return;
-    }
-    final Envelope envelope;
-
-    try {
-      envelope = convertToStrict(Envelope.class, attributesMap);
-    } catch (Exception e) {
-      attributesMap.put(INVALID_ENVELOPE_KEY, "true");
-      receiveException(attributesMap, messageString, e, null);
-      return;
-    }
-
-    try {
-      Bundle bundle = new Bundle(envelope, messageObject);
-      debug("Received %s/%s -> %s", bundle.envelope.subType, bundle.envelope.subFolder,
-          queueIdentifier());
-      receiveBundle(bundle);
-    } catch (Exception e) {
-      receiveException(attributesMap, messageString, e, null);
-    }
-  }
-
   @Override
   public String toString() {
     return format("MessagePipe %s", queueIdentifier());
-  }
-
-  private String queueIdentifier() {
-    return format("%08x", Objects.hash(sourceQueue));
   }
 
   /**
@@ -315,6 +339,10 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
       bundle.attributesMap = attributesMap;
       bundle.payload = payload;
     }
+  }
+
+  record QueueEntry(String context, String message) {
+
   }
 
   @TestOnly

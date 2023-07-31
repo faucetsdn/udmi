@@ -1,51 +1,31 @@
 {
-  "event_count" : 14,
-  "last_config" : "2023-03-13T03:05:14Z",
+  "event_count" : 9,
+  "last_config" : "2023-07-28T20:20:09Z",
   "logentries" : [ {
     "message" : "Config handler",
     "category" : "device.log",
-    "timestamp" : "2023-03-13T03:05:14Z",
+    "timestamp" : "2023-07-28T20:20:09Z",
     "level" : 200
   }, {
-    "message" : "2023-03-13T03:05:14Z received config 2023-03-13T03:04:53Z",
+    "message" : "2023-07-28T20:20:09Z received config 2023-07-28T20:20:09Z",
     "category" : "device.log",
-    "timestamp" : "2023-03-13T03:05:14Z",
-    "level" : 200
-  }, {
-    "message" : "Starting executor with send message delay 10000",
-    "category" : "device.log",
-    "timestamp" : "2023-03-13T03:05:14Z",
+    "timestamp" : "2023-07-28T20:20:09Z",
     "level" : 200
   }, {
     "message" : "success",
     "category" : "system.config.apply",
-    "timestamp" : "2023-03-13T03:05:14Z",
+    "timestamp" : "2023-07-28T20:20:09Z",
     "level" : 300
   }, {
-    "message" : "Config handler",
+    "message" : "update state 2023-07-28T20:20:10Z last_config 2023-07-28T20:20:09Z",
     "category" : "device.log",
-    "timestamp" : "2023-03-13T03:05:14Z",
-    "level" : 200
-  }, {
-    "message" : "2023-03-13T03:05:14Z received config 2023-03-13T03:05:14Z",
-    "category" : "device.log",
-    "timestamp" : "2023-03-13T03:05:14Z",
-    "level" : 200
-  }, {
-    "message" : "success",
-    "category" : "system.config.apply",
-    "timestamp" : "2023-03-13T03:05:14Z",
-    "level" : 300
-  }, {
-    "message" : "update state 2023-03-13T03:05:16Z last_config 2023-03-13T03:05:14Z",
-    "category" : "device.log",
-    "timestamp" : "2023-03-13T03:05:16Z",
+    "timestamp" : "2023-07-28T20:20:10Z",
     "level" : 200
   } ],
   "metrics" : {
-    "mem_total_mb" : 252,
-    "mem_free_mb" : 175.74217224121094
+    "mem_total_mb" : 250.0,
+    "mem_free_mb" : 163.51062774658203
   },
-  "timestamp" : "2023-03-13T03:05:24.015Z",
+  "timestamp" : "2023-07-28T20:20:18Z",
   "version" : "1.4.1"
 }
