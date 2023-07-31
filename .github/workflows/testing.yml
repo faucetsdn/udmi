@@ -35,12 +35,11 @@ jobs:
           bin/support
           mv udmi-support_*.tgz ${{ github.repository_owner }}_${{ github.job }}_$(ls udmi-support_*.tgz)
           echo Renamed to `ls *_udmi-support_*.tgz`
-          echo file=$(ls *_udmis-support_*.tgz) >> $GITHUB_OUTPUT
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
-          name: udmis-support_${{ github.run_id }}
-          path: '*_udmis-support_*.tgz'
+          name: udmi-support
+          path: '*_udmi-support_*.tgz'
 
   unit:
     name: Unit Tests
@@ -175,12 +174,12 @@ jobs:
         if: ${{ always() }}
         run: |
           bin/support
-          mv udmi-support_*.tgz ${{ github.repository_owner }}_$(ls udmi-support_*.tgz)
+          mv udmi-support_*.tgz ${{ github.repository_owner }}_${{ github.job }}_$(ls udmi-support_*.tgz)
           echo Renamed to `ls *_udmi-support_*.tgz`
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
-          name: sequencer_support
+          name: udmi-support
           path: '*_udmi-support_*.tgz'
 
   sequencer_dep:
@@ -227,12 +226,12 @@ jobs:
         if: ${{ always() }}
         run: |
           bin/support
-          mv udmi-support_*.tgz ${{ github.repository_owner }}_$(ls udmi-support_*.tgz)
+          mv udmi-support_*.tgz ${{ github.repository_owner }}_${{ github.job }}_$(ls udmi-support_*.tgz)
           echo Renamed to `ls *_udmi-support_*.tgz`
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
-          name: sequencer_support
+          name: udmi-support
           path: '*_udmi-support_*.tgz'
 
   comprehensive:
@@ -282,11 +281,11 @@ jobs:
         if: ${{ always() }}
         run: |
           bin/support
-          mv udmi-support_*.tgz ${{ github.repository_owner }}_$(ls udmi-support_*.tgz)
+          mv udmi-support_*.tgz ${{ github.repository_owner }}_${{ github.job }}_$(ls udmi-support_*.tgz)
           echo Renamed to `ls *_udmi-support_*.tgz`
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
-          name: comprehensive_support
+          name: udmi-support
           path: '*_udmi-support_*.tgz'
 
