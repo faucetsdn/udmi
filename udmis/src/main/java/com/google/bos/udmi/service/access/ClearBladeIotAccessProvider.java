@@ -102,7 +102,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
    * Create a new instance for interfacing with GCP IoT Core.
    */
   public ClearBladeIotAccessProvider(IotAccess iotAccess) {
-    projectId = requireNonNull(iotAccess.project_id, "gcp project id not specified");
+    projectId = variableSubstitution(iotAccess.project_id, "gcp project id not specified");
   }
 
   private static Credential convertIot(DeviceCredential device) {

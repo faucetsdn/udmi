@@ -57,7 +57,7 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
    */
   public PubSubPipe(EndpointConfiguration configuration) {
     try {
-      projectId = requireNonNull(configuration.hostname,
+      projectId = variableSubstitution(configuration.hostname,
           "no project id defined in configuration as 'hostname'");
       publisher = ifNotNullGet(configuration.send_id, this::getPublisher);
       subscriber = ifNotNullGet(configuration.recv_id, this::getSubscriber);

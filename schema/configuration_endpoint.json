@@ -13,6 +13,7 @@
         "pubsub",
         "file",
         "trace",
+        "iot_access",
         "mqtt"
       ]
     },
@@ -34,7 +35,7 @@
       "default": 8883
     },
     "config_sync_sec": {
-      "description": "Delay waiting for config message on start, <0 to disable",
+      "description": "Delay waiting for config message on start, 0 for default, <0 to disable",
       "type": "integer"
     },
     "client_id": {
@@ -54,6 +55,11 @@
       "description": "Id for the sending messages channel",
       "type": "string",
       "pattern": "^[-_/a-zA-Z0-9#]+$"
+    },
+    "distributor": {
+      "description": "processor designation for a distributor channel",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
     },
     "auth_provider": {
       "type": "object",

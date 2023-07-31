@@ -1,25 +1,34 @@
 {
   "flow_defaults": {
     "protocol": "pubsub",
-    "hostname": "@PROJECT@"
+    "hostname": "${GCP_PROJECT}"
   },
   "flows": {
     "target": {
-      "recv_id": "udmi_target-udmis"
+      "recv_id": "udmi_target-udmis",
+      "distributor": "stately"
     },
     "state": {
       "recv_id": "udmi_state-udmis",
-      "send_id": "udmi_target"
+      "send_id": "udmi_target",
+      "distributor": "stately"
     },
     "reflect": {
       "recv_id": "udmi_reflect-udmis",
-      "send_id": "udmi_target"
+      "send_id": "udmi_target",
+      "distributor": "stately"
     }
   },
   "iot_access": {
     "iot_access": {
       "provider": "gcp",
-      "project_id": "@PROJECT@"
+      "project_id": "${GCP_PROJECT}"
+    }
+  },
+  "distributors": {
+    "stately": {
+      "protocol": "iot_access",
+      "hostname": "iot_access"
     }
   }
 }
