@@ -172,11 +172,7 @@ class SequencerReport:
         self.cloud_iot_config_path = os.path.join(
             self.site_path, "cloud_iot_config.json"
         )
-        try:
-            with open(self.cloud_iot_config_path, encoding="utf-8") as f:
-                self.cloud_iot_config = json.load(f)
-        except Exception as e:
-            raise e
+ 
 
     def has_stage(self, stage: str):
         """ Checks if sequencer report has any tests at given stage """
