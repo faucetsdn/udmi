@@ -3,6 +3,7 @@ package com.google.bos.udmi.service.pod;
 import static com.google.bos.udmi.service.messaging.impl.MessageBase.combineConfig;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.loadFileStrictRequired;
 import static java.lang.String.format;
@@ -110,7 +111,7 @@ public class UdmiServicePod {
 
   @SuppressWarnings("unchecked")
   public static <T> T maybeGetComponent(String name) {
-    return (T) COMPONENT_MAP.get(name);
+    return ifNotNullGet(name, x -> (T) COMPONENT_MAP.get(name));
   }
 
   /**

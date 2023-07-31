@@ -29,7 +29,6 @@ import com.google.udmi.util.JsonUtil;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
 import udmi.schema.Envelope;
@@ -55,7 +54,7 @@ public class ReflectProcessor extends ProcessorBase {
     MessageContinuation continuation = getContinuation(message);
     Envelope reflection = continuation.getEnvelope();
     try {
-      iotAccess.registryBackoffClear(reflection.deviceRegistryId, reflection.deviceId);
+      distributor.registryBackoffClear(reflection.deviceRegistryId, reflection.deviceId);
       if (reflection.subFolder == null) {
         reflectStateHandler(reflection, extractUdmiState(message));
       } else if (reflection.subFolder != SubFolder.UDMI) {
@@ -138,7 +137,7 @@ public class ReflectProcessor extends ProcessorBase {
       Map<String, Object> payload) {
     debug("Processing reflection %s/%s %s", envelope.subType, envelope.subFolder,
         envelope.transactionId);
-    iotAccess.setProviderAffinity(envelope.deviceRegistryId, envelope.deviceId, reflection.source);
+    distributor.setProviderAffinity(envelope.deviceRegistryId, envelope.deviceId, reflection.source);
     CloudModel result = getReflectionResult(envelope, payload);
     ifNotNullThen(result,
         v -> debug("Reflection result %s: %s", envelope.transactionId, envelope.subType));
@@ -220,7 +219,7 @@ public class ReflectProcessor extends ProcessorBase {
     configMap.put(SubFolder.UDMI.value(), udmiConfig);
     String contents = stringify(configMap);
     debug("Setting reflector config %s %s %s", registryId, deviceId, contents);
-    iotAccess.setProviderAffinity(registryId, deviceId, envelope.source);
+    distributor.setProviderAffinity(registryId, deviceId, envelope.source);
     iotAccess.modifyConfig(registryId, deviceId, previous -> contents);
   }
 
@@ -235,7 +234,7 @@ public class ReflectProcessor extends ProcessorBase {
     String reflectRegistry = reflection.deviceRegistryId;
     String deviceRegistry = reflection.deviceId;
     message.payload = encodeBase64(stringify(payload));
-    iotAccess.sendCommand(reflectRegistry, deviceRegistry, SubFolder.UDMI, stringify(message));
+    distributor.sendCommand(reflectRegistry, deviceRegistry, SubFolder.UDMI, stringify(message));
   }
 
   @Override

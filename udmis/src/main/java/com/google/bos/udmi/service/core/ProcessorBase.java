@@ -64,11 +64,13 @@ public abstract class ProcessorBase extends ContainerBase {
   private static final String BROKEN_CONFIG_JSON =
       format("{ broken by %s == %s", EXTRA_FIELD_KEY, BREAK_CONFIG_VALUE);
   protected MessageDispatcher dispatcher;
+  protected IotAccessBase iotAccess;
+  protected Distributor distributor;
   private final ImmutableList<HandlerSpecification> baseHandlers = ImmutableList.of(
       messageHandlerFor(Object.class, this::defaultHandler),
       messageHandlerFor(Exception.class, this::exceptionHandler)
   );
-  protected IotAccessBase iotAccess;
+  String distributorName;
 
   /**
    * Create a new instance of the given target class with the provided configuration.
@@ -77,16 +79,11 @@ public abstract class ProcessorBase extends ContainerBase {
     try {
       T object = clazz.getDeclaredConstructor().newInstance();
       object.dispatcher = MessageDispatcher.from(config);
+      object.distributorName = config.distributor;
       return object;
     } catch (Exception e) {
       throw new RuntimeException("While instantiating class " + clazz.getName(), e);
     }
-  }
-
-  private static void reflectString(String deviceRegistryId, String stringify) {
-    ifNotNullThen(UdmiServicePod.<IotAccessBase>maybeGetComponent(IOT_ACCESS_COMPONENT),
-        iotAccess -> iotAccess.sendCommand(REFLECT_REGISTRY, deviceRegistryId, null,
-            stringify));
   }
 
   /**
@@ -213,6 +210,11 @@ public abstract class ProcessorBase extends ContainerBase {
     reflectString(deviceRegistryId, stringify(envelopeMap));
   }
 
+  private void reflectString(String deviceRegistryId, String commandString) {
+    ifNotNullThen(distributor,
+        () -> distributor.sendCommand(REFLECT_REGISTRY, deviceRegistryId, null, commandString));
+  }
+
   private String updateConfig(String previous, Envelope attributes,
       Map<String, Object> updatePayload, Date newLastStart) {
     Object extraField = ifNotNullGet(updatePayload, p -> p.remove(EXTRA_FIELD_KEY));
@@ -286,6 +288,7 @@ public abstract class ProcessorBase extends ContainerBase {
   public void activate() {
     info("Activating");
     iotAccess = UdmiServicePod.getComponent(IOT_ACCESS_COMPONENT);
+    distributor = UdmiServicePod.maybeGetComponent(distributorName);
     if (dispatcher != null) {
       registerHandlers(baseHandlers);
       registerHandlers();
