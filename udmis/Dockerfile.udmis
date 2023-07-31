@@ -4,7 +4,7 @@ WORKDIR /root
 
 ENV CLEARBLADE_CONFIGURATION=/udmi/clearblade.json
 
-RUN apk add openjdk17 bash gcompat
+RUN apk add openjdk17 bash gcompat mosquitto-clients
 
 # Workaround for https://github.com/grpc/grpc-java/issues/8751
 ENV LD_PRELOAD=/lib/libgcompat.so.0
