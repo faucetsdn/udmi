@@ -16,8 +16,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/setup-java@v1
+      - uses: actions/setup-java@v3
         with:
+          distribution: 'temurin'
           java-version: '17'
       - name: Checkout source
         uses: actions/checkout@v3
@@ -35,8 +36,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/setup-java@v1
+      - uses: actions/setup-java@v3
         with:
+          distribution: 'temurin'
           java-version: '17'
       - uses: actions/setup-python@v4
         with:
@@ -84,8 +86,9 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-java@v1
+      - uses: actions/setup-java@v3
         with:
+          distribution: 'temurin'
           java-version: '17'
       - name: bin/run_tests install_dependencies
         run: bin/run_tests install_dependencies
@@ -106,7 +109,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v3
         with:
           node-version: 16.16.0
       - name: Install Angular CLI
@@ -115,37 +118,6 @@ jobs:
         run: udmif/web/runTests
       - name: api tests
         run: udmif/api/runTests
-
-  sanity:
-    name: GitHub Actions sanity
-    runs-on: ubuntu-latest
-    timeout-minutes: 1
-    env:
-      VARS_GCP_TARGET_PROJECT: ${{ vars.GCP_TARGET_PROJECT }}
-      VARS_UDMI_REGISTRY_SUFFIX: ${{ vars.UDMI_REGISTRY_SUFFIX }}
-      VARS_UDMI_ALT_REGISTRY: ${{ vars.UDMI_ALT_REGISTRY }}
-      SECRETS_GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
-      SECRETS_UDMI_REGISTRY_SUFFIX: ${{ secrets.UDMI_REGISTRY_SUFFIX }}
-      SECRETS_UDMI_ALT_REGISTRY: ${{ secrets.UDMI_ALT_REGISTRY }}
-    steps:
-      - name: check secret-not-var GCP_TARGET_PROJECT
-        run: |
-          echo GCP_TARGET_PROJECT var is $VARS_GCP_TARGET_PROJECT
-          echo GCP_TARGET_PROJECT secret is $SECRETS_GCP_TARGET_PROJECT
-          echo Checking if secret is defined but not var
-          [[ -n $VARS_GCP_TARGET_PROJECT || -z $SECRETS_GCP_TARGET_PROJECT ]]
-      - name: check secret-not-var UDMI_REGISTRY_SUFFIX
-        run: |
-          echo UDMI_REGISTRY_SUFFIX var is $VARS_UDMI_REGISTRY_SUFFIX
-          echo UDMI_REGISTRY_SUFFIX secret is $SECRETS_UDMI_REGISTRY_SUFFIX
-          echo Checking if secret is defined but not var
-          [[ -n $VARS_UDMI_REGISTRY_SUFFIX || -z $SECRETS_UDMI_REGISTRY_SUFFIX ]]
-      - name: check secret-not-var UDMI_ALT_REGISTRY
-        run: |
-          echo UDMI_ALT_REGISTRY var is $VARS_UDMI_ALT_REGISTRY
-          echo UDMI_ALT_REGISTRY secret is $SECRETS_UDMI_ALT_REGISTRY
-          echo Checking if secret is defined but not var
-          [[ -n $VARS_UDMI_ALT_REGISTRY || -z $SECRETS_UDMI_ALT_REGISTRY ]]
 
   sequencer:
     name: Sequencer Suite
@@ -158,8 +130,9 @@ jobs:
       UDMI_ALT_REGISTRY: ${{ vars.UDMI_ALT_REGISTRY }}
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-java@v1
+      - uses: actions/setup-java@v3
         with:
+          distribution: 'temurin'
           java-version: '17'
       - name: base setup
         run: bin/run_tests install_dependencies
@@ -191,6 +164,18 @@ jobs:
       - name: output logs
         if: ${{ always() }}
         run: cd sites/udmi_site_model/out && more `find . -type f` || true
+      - name: support bundle
+        if: ${{ always() }}
+        run: |
+          bin/support
+          mv /tmp/udmi-support_*.tgz ${{ github.repository_owner }}_${{ github.job }}_$(ls udmi-support_*.tgz)
+          echo Renamed support file to `ls *_udmi-support_*.tgz`
+      - uses: actions/upload-artifact@v3
+        if: ${{ always() }}
+        with:
+          if-no-files-found: error
+          name: udmi-support_${{ github.run_id }}
+          path: '*_udmi-support_*.tgz'
 
   sequencer_dep:
     name: Sequencer Suite
@@ -203,8 +188,9 @@ jobs:
       UDMI_ALT_REGISTRY: ${{ vars.UDMI_ALT_REGISTRY }}
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-java@v1
+      - uses: actions/setup-java@v3
         with:
+          distribution: 'temurin'
           java-version: '17'
       - name: base setup
         run: bin/run_tests install_dependencies
@@ -236,6 +222,18 @@ jobs:
       - name: output logs
         if: ${{ always() }}
         run: cd sites/udmi_site_model/out && more `find . -type f` || true
+      - name: support bundle
+        if: ${{ always() }}
+        run: |
+          bin/support
+          mv /tmp/udmi-support_*.tgz ${{ github.repository_owner }}_${{ github.job }}_$(ls udmi-support_*.tgz)
+          echo Renamed support file to `ls *_udmi-support_*.tgz`
+      - uses: actions/upload-artifact@v3
+        if: ${{ always() }}
+        with:
+          if-no-files-found: error
+          name: udmi-support_${{ github.run_id }}
+          path: '*_udmi-support_*.tgz'
 
   comprehensive:
     name: Comprehensive Suite
@@ -247,8 +245,9 @@ jobs:
       UDMI_ALT_REGISTRY: ${{ vars.UDMI_ALT_REGISTRY }}
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-java@v1
+      - uses: actions/setup-java@v3
         with:
+          distribution: 'temurin'
           java-version: '17'
       - name: base setup
         run: bin/run_tests install_dependencies
@@ -283,6 +282,18 @@ jobs:
         if: ${{ always() }}
         run: |
           more out/pubber.out* | cat
+      - name: support bundle
+        if: ${{ always() }}
+        run: |
+          bin/support
+          mv /tmp/udmi-support_*.tgz ${{ github.repository_owner }}_${{ github.job }}_$(ls udmi-support_*.tgz)
+          echo Renamed support file to `ls *_udmi-support_*.tgz`
+      - uses: actions/upload-artifact@v3
+        if: ${{ always() }}
+        with:
+          if-no-files-found: error
+          name: udmi-support_${{ github.run_id }}
+          path: '*_udmi-support_*.tgz'
 
   redirect:
     name: Endpoint Redirection
@@ -296,8 +307,9 @@ jobs:
       MQTT_PROXY_HOST: ${{ vars.MQTT_PROXY_HOST }}
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-java@v1
+      - uses: actions/setup-java@v3
         with:
+          distribution: 'temurin'
           java-version: '17'
       - name: base setup
         run: bin/run_tests install_dependencies
