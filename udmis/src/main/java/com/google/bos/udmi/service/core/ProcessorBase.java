@@ -37,13 +37,11 @@ import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.Common;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Objects;
 import java.util.function.Consumer;
 import org.jetbrains.annotations.TestOnly;
 import udmi.schema.EndpointConfiguration;
@@ -200,6 +198,11 @@ public abstract class ProcessorBase extends ContainerBase {
     dispatcher.registerHandlers(messageHandlers);
   }
 
+  private void mungeConfigDebug(Envelope attributes, Object lastConfig, String reason) {
+    debug("Munge config %s, %s/%s last_config %s %s", reason,
+        attributes.deviceRegistryId, attributes.deviceId, lastConfig, attributes.transactionId);
+  }
+
   private void reflectInvalidEnvelope(BundleException bundleException) {
     Map<String, String> envelopeMap = bundleException.bundle.attributesMap;
     error(format("Reflecting invalid %s/%s for %s", envelopeMap.get(SUBTYPE_PROPERTY_KEY),
@@ -217,21 +220,28 @@ public abstract class ProcessorBase extends ContainerBase {
     boolean breakConfig = BREAK_CONFIG_VALUE.equals(extraField);
     final Map<String, Object> payload;
 
+    final String reason;
+
     if (resetConfig) {
-      debug("Resetting config due to %s value %s", EXTRA_FIELD_KEY, extraField);
+      reason = Objects.toString(extraField);
       payload = new HashMap<>();
     } else if (breakConfig) {
-      debug("Breaking config due to %s value %s", EXTRA_FIELD_KEY, extraField);
+      mungeConfigDebug(attributes, "undefined", (String) extraField);
       return BROKEN_CONFIG_JSON;
     } else if (newLastStart != null) {
       payload = asMap(ofNullable(previous).orElse(EMPTY_JSON));
-      return updateWithLastStart(payload, newLastStart);
+      String update = updateWithLastStart(payload, newLastStart);
+      ifNotNullThen(update,
+          () -> mungeConfigDebug(attributes, payload.get(TIMESTAMP_KEY), "last_start"));
+      return update;
     } else if (attributes.subFolder == UPDATE) {
+      reason = "update";
       payload = new HashMap<>(updatePayload);
     } else {
       ifNotNullThen(extraField,
           field -> warn(format("Ignoring unknown %s value %s", EXTRA_FIELD_KEY, extraField)));
       payload = asMap(ofNullable(previous).orElse(EMPTY_JSON));
+      reason = ifNotNullGet(attributes.subFolder, SubFolder::value, null);
     }
 
     ifNotNullThen(updatePayload, p -> updatePayload.remove(TIMESTAMP_KEY));
@@ -241,9 +251,11 @@ public abstract class ProcessorBase extends ContainerBase {
       payload.put(attributes.subFolder.value(), updatePayload);
     }
 
-    payload.put(TIMESTAMP_KEY, getTimestamp());
+    String updateTimestamp = getTimestamp();
+    payload.put(TIMESTAMP_KEY, updateTimestamp);
     payload.put(VERSION_KEY, UDMI_VERSION);
 
+    mungeConfigDebug(attributes, updateTimestamp, reason);
     return stringify(payload);
   }
 

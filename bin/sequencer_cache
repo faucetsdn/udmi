@@ -38,7 +38,6 @@ for test in $all_tests; do
         echo Missing $src_dir/sequence.md
     elif diff -q $src_dir/sequence.md $cache_dir/sequence.md; then
         echo Unchanged $cache_dir
-        cp $src_dir/sequencer.log $cache_dir/sequencer.log
     else
         echo Updating $cache_dir from $src_dir...
         rm -rf $cache_dir

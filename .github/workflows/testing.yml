@@ -264,7 +264,8 @@ jobs:
       - name: message captures
         if: ${{ always() }}
         run: |
-          cd sites/udmi_site_model/out && more `find . -type f` || true
+          cd sites/udmi_site_model/out
+          find . -type f | sort | xargs more | cat
       - name: itemized sequencer tests
         if: ${{ always() }}
         run: |
@@ -273,7 +274,7 @@ jobs:
         if: ${{ always() }}
         run: |
           more out/test_itemized.out out/schemas_itemized.out | cat
-          more sites/udmi_site_model/out/devices/AHU-1/tests/*/sequencer.log | cat
+          more out/sequencer.out-* out/pubber.out-* | cat
       - name: tool output logs
         if: ${{ always() }}
         run: |

@@ -43,7 +43,7 @@ public abstract class PointsetBase extends SequenceBase {
   protected TargetTestingModel getTarget(String target) {
     TargetTestingModel testingMetadata = ifNullSkipTest(
         catchToNull(() -> deviceMetadata.testing.targets.get(target)),
-        "no testing target defined for " + target);
+        "no testing target defined for '" + target + "'");
     if (deviceMetadata.pointset == null || deviceMetadata.pointset.points == null) {
       info("No metadata pointset points defined, I hope you know what you're doing");
     } else if (!deviceMetadata.pointset.points.containsKey(testingMetadata.target_point)) {
