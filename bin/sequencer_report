@@ -26,7 +26,8 @@ DEFAULT_SCORE = 1
 
 
 class TemplateHelper:
-    """ Collection of helper functions made available within Jinja template """
+    """Collection of helper functions made available within Jinja template"""
+
     @staticmethod
     def pretty_dict(thing: dict):
         """Pretty print dictionary, e.g. key1: value1, key2: value2"""
@@ -73,7 +74,8 @@ class FeatureScore:
 
 @dataclass(unsafe_hash=True, eq=True, order=True)
 class TestResult:
-    """ Container for test result """
+    """Container for test result"""
+
     bucket: str = ""
     name: str = ""
     result: str = ""
@@ -91,7 +93,8 @@ class TestResult:
 
 @dataclass
 class SchemaResult:
-    """ Container for Schema results """
+    """Container for Schema results"""
+
     schema: str = ""
     stage: str = ""
     test_name: str = ""
@@ -111,9 +114,7 @@ class SequencerReport:
     def __init__(self, site_path: str, device_id: str):
         self.site_path = site_path
         self.device_id = device_id
-        self.results_path = os.path.join(
-            site_path, f"out/sequencer_{device_id}.json"
-        )
+        self.results_path = os.path.join(site_path, f"out/sequencer_{device_id}.json")
 
         with open(self.results_path, encoding="utf-8") as f:
             self.results_json = json.load(f)
@@ -126,9 +127,8 @@ class SequencerReport:
         self._load_schema_results()
         self._load_device_metadata()
 
-
     def _load_schema_results(self):
-        """ Loads and processes schema validation results"""
+        """Loads and processes schema validation results"""
         self.schema_results = []
         for schema, value in self.results_json["schemas"].items():
             for test_name, result in value["sequences"].items():
@@ -172,15 +172,14 @@ class SequencerReport:
         self.cloud_iot_config_path = os.path.join(
             self.site_path, "cloud_iot_config.json"
         )
- 
 
     def has_stage(self, stage: str):
-        """ Checks if sequencer report has any tests at given stage """
+        """Checks if sequencer report has any tests at given stage"""
         all_features = [x[stage] for x in self.features.values()]
         return any(x.total > 0 for x in all_features)
 
     def _load_test_results(self):
-        """ Load sequencer test results and features """
+        """Load sequencer test results and features"""
         results = {}
         features = {}
         stages_template = {stage: FeatureScore(stage=stage) for stage in STAGES}
@@ -260,6 +259,7 @@ def main():
         f.write(output)
 
     print(f"Report saved to: {output_file}")
+
 
 if __name__ == "__main__":
     main()
