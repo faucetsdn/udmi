@@ -1,5 +1,6 @@
 package com.google.bos.udmi.service.pod;
 
+import static com.google.bos.udmi.service.core.ProcessorBase.REFLECT_REGISTRY;
 import static com.google.bos.udmi.service.core.StateProcessor.IOT_ACCESS_COMPONENT;
 import static com.google.bos.udmi.service.messaging.impl.MessageBase.combineConfig;
 import static com.google.bos.udmi.service.messaging.impl.MessageTestCore.TEST_DEVICE;
@@ -58,8 +59,8 @@ public class UdmiServicePodTest {
     UdmiState state = new UdmiState();
     messageMap.put(SubFolder.UDMI.value(), state);
     Bundle bundle = new Bundle(messageMap);
-    bundle.envelope.deviceRegistryId = TEST_REGISTRY;
-    bundle.envelope.deviceId = TEST_DEVICE;
+    bundle.envelope.deviceRegistryId = REFLECT_REGISTRY;
+    bundle.envelope.deviceId = TEST_REGISTRY;
     return bundle;
   }
 
@@ -73,7 +74,7 @@ public class UdmiServicePodTest {
   }
 
   @Test
-  public void basicPodTest() throws Exception {
+  public void basicPodTest() {
     ProcessorTestBase.writeVersionDeployFile();
     UdmiServicePod pod = new UdmiServicePod(arrayOf(BASE_CONFIG));
 
@@ -171,11 +172,18 @@ public class UdmiServicePodTest {
     List<String> commands = iotAccessProvider.getCommands();
     assertEquals(0, commands.size(), "expected sent device commands");
 
-    iotAccess.modifyConfig(TEST_REGISTRY, TEST_DEVICE, oldConfig -> {
+    iotAccess.modifyConfig(REFLECT_REGISTRY, TEST_REGISTRY, oldConfig -> {
       // TODO: Check that this conforms to the actual expected reflector config bundle.
       assertNotEquals(EMPTY_CONFIG, oldConfig, "updated device config");
       return null;
     });
+
+    LocalMessagePipe distributor =
+        new LocalMessagePipe(reverseFlow(podConfig.distributors.get("distrib")));
+    Bundle distributedBundle = distributor.poll();
+    assertEquals(REFLECT_REGISTRY, distributedBundle.envelope.deviceRegistryId, "registry id");
+    assertEquals(TEST_REGISTRY, distributedBundle.envelope.deviceId, "site id");
+    assertNull(distributor.poll(), "unexpected distribution message");
   }
 
   /**
