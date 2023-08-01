@@ -27,7 +27,6 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   private final Map<String, String> registryProviders = new HashMap<>();
   private final List<String> providerList;
   private final Map<String, IotAccessBase> providers = new HashMap<>();
-  private final Map<String, String> defaultProvisioned = new HashMap<>();
 
   /**
    * Create a new instance for interfacing with multiple providers.
@@ -96,7 +95,7 @@ public class DynamicIotAccessProvider extends IotAccessBase {
 
   @Override
   public String fetchState(String deviceRegistryId, String deviceId) {
-    throw new RuntimeException("Not yet implemented");
+    return getProviderFor(deviceRegistryId).fetchState(deviceRegistryId, deviceId);
   }
 
   @Override
