@@ -9,12 +9,18 @@ import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
 import udmi.schema.UdmiState;
 
+/**
+ * Simple distributor that uses an underlying message pipe.
+ */
 public class DistributorPipe extends ContainerBase {
 
   private final MessageDispatcherImpl dispatcher;
   private final String clientId = format("distributor-%08x", System.currentTimeMillis());
   private final ReflectProcessor reflectProcessor;
 
+  /**
+   * Create a new distributor given the endpoint configuration.
+   */
   public DistributorPipe(EndpointConfiguration config) {
     dispatcher = new MessageDispatcherImpl(config);
     dispatcher.registerHandler(UdmiState.class, this::handleUdmiState);
@@ -41,6 +47,15 @@ public class DistributorPipe extends ContainerBase {
     dispatcher.activate();
   }
 
+  @Override
+  public void shutdown() {
+    dispatcher.shutdown();
+    super.shutdown();
+  }
+
+  /**
+   * Distribute a message (broadcast).
+   */
   public void distribute(Envelope envelope, UdmiState toolState) {
     debug("Distributing %s for %s %s", toolState.getClass().getSimpleName(),
         envelope.deviceId, envelope.transactionId);
@@ -48,9 +63,4 @@ public class DistributorPipe extends ContainerBase {
     dispatcher.publish(dispatcher.makeMessageBundle(envelope, toolState));
   }
 
-  @Override
-  public void shutdown() {
-    dispatcher.shutdown();
-    super.shutdown();
-  }
 }

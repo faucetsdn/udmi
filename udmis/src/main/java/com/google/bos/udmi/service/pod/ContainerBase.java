@@ -30,6 +30,9 @@ public abstract class ContainerBase {
   private static final ThreadLocal<String> executionContext = new ThreadLocal<>();
   private static final Pattern VARIABLE_PATTERN = Pattern.compile("\\$\\{([A-Z_]+)\\}");
 
+  /**
+   * Get the component name taken from a class annotation.
+   */
   public static String getName(Class<?> clazz) {
     try {
       return requireNonNull(clazz.getAnnotation(ComponentName.class),

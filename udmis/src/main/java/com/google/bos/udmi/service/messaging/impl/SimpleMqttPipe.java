@@ -1,16 +1,13 @@
 package com.google.bos.udmi.service.messaging.impl;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.udmi.util.GeneralUtils.decodeBase64;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
-import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static com.google.udmi.util.JsonUtil.toStringMap;
 
 import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.udmi.util.Common;
-import com.google.udmi.util.GeneralUtils;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -20,7 +17,6 @@ import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
-import udmi.schema.Auth_provider;
 import udmi.schema.Basic;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.EndpointConfiguration.Transport;
@@ -70,11 +66,11 @@ public class SimpleMqttPipe extends MessageBase {
       options.setConnectionTimeout(INITIALIZE_TIME_MS);
 
       ifNotNullThen(endpoint.auth_provider, provider -> {
-            Basic basicAuth = checkNotNull(provider.basic, "basic auth not defined");
-            options.setUserName(checkNotNull(basicAuth.username, "MQTT username not defined"));
-            options.setPassword(
-                checkNotNull(basicAuth.password, "MQTT password not defined").toCharArray());
-          }, () -> warn("No mqtt auth_provider defined"));
+        Basic basicAuth = checkNotNull(provider.basic, "basic auth not defined");
+        options.setUserName(checkNotNull(basicAuth.username, "MQTT username not defined"));
+        options.setPassword(
+            checkNotNull(basicAuth.password, "MQTT password not defined").toCharArray());
+      }, () -> warn("No mqtt auth_provider defined"));
 
       client.connect(options);
       return client;
