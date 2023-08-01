@@ -225,11 +225,6 @@ public class ReflectProcessor extends ProcessorBase {
     iotAccess.modifyConfig(registryId, deviceId, previous -> contents);
   }
 
-  public void updateAwareness(Envelope envelope, UdmiState toolState) {
-    debug("Processing UdmiState %s", stringify(toolState));
-    iotAccess.setProviderAffinity(envelope.deviceRegistryId, envelope.deviceId, envelope.source);
-  }
-
   private void reflectStateUpdate(Envelope attributes, String state) {
     Envelope envelope = deepCopy(attributes);
     envelope.subType = SubType.STATE;
@@ -248,5 +243,11 @@ public class ReflectProcessor extends ProcessorBase {
   public void activate() {
     debug("Deployment configuration: " + stringify(DEPLOYED_CONFIG));
     super.activate();
+  }
+
+  public void updateAwareness(Envelope envelope, UdmiState toolState) {
+    debug("Processing UdmiState for %s/%s %s", envelope.deviceId, envelope.source,
+        stringify(toolState));
+    iotAccess.setProviderAffinity(envelope.deviceRegistryId, envelope.deviceId, envelope.source);
   }
 }
