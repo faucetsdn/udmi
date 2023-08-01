@@ -27,17 +27,15 @@ public class PointsetSequences extends SequenceBase {
 
 
   /**
-   * Simple check that device publishes pointset events
+   * Simple check that device publishes pointset events.
    */
   @Test(timeout = THREE_MINUTES_MS)
   @Feature(stage = BETA, bucket = POINTSET)
   @Summary("device publishes pointset events")
   public void pointset_publish() {
-    if (deviceConfig.pointset == null) {
-      throw new AssumptionViolatedException(NO_POINTSET_CONFIG);
-    }
+    ifNullSkipTest(deviceConfig.pointset == null, NO_POINTSET_CONFIG);
 
-    untilTrue("recieve a pointset event",
+    untilTrue("receive a pointset event",
         () -> (countReceivedEvents(PointsetEvent.class) > 1
     ));
   }
@@ -59,9 +57,7 @@ public class PointsetSequences extends SequenceBase {
   public void pointset_sample_rate() {
     Integer defaultSampleRate = 10;
 
-    if (deviceConfig.pointset == null) {
-      skipTest(NO_POINTSET_CONFIG);
-    }
+    ifNullSkipTest(deviceConfig.pointset == null, NO_POINTSET_CONFIG);
 
     // Clear received events because this could contain messages from a previous sample rate test
     popReceivedEvents(PointsetEvent.class);
@@ -118,10 +114,8 @@ public class PointsetSequences extends SequenceBase {
   @Summary("test sample rate and sample limit sec")
   @Feature(stage = BETA, bucket = POINTSET)
   public void pointset_publish_interval() {
-    
-    if (deviceConfig.pointset == null) {
-      skipTest(NO_POINTSET_CONFIG);
-    }
+
+    ifNullSkipTest(deviceConfig.pointset == null, NO_POINTSET_CONFIG);
 
     // Test two narrow non-intersecting windows
     SamplingRange firstRange = new SamplingRange(5, 8, 1.5);

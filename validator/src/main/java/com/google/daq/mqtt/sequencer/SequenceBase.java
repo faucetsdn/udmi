@@ -1083,6 +1083,8 @@ public class SequenceBase {
     }
   }
 
+
+
   private String getExceptionLine(Exception e) {
     return Common.getExceptionLine(e, SequenceBase.class);
   }
@@ -1716,6 +1718,10 @@ public class SequenceBase {
         () -> untilTrue("received at least one state update", this::receivedAtLeastOneState));
   }
 
+  protected void forceConfigUpdate(String reason) {
+    updateConfig(reason, true);
+  }
+
   protected void skipTest(String reason) {
     throw new AssumptionViolatedException(reason);
   }
@@ -1723,6 +1729,12 @@ public class SequenceBase {
   protected <T> T ifNullSkipTest(T testable, String reason) {
     ifNullThen(testable, () -> skipTest(reason));
     return testable;
+  }
+
+  protected <T> T ifCatchNullSkipTest(Supplier<T> evaluator, String reason) {
+    T evaluatorResult = catchToNull(evaluator);
+    return ifNullSkipTest(evaluatorResult, reason);
+
   }
 
   /**

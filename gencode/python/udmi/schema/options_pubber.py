@@ -23,6 +23,8 @@ class PubberOptions:
     self.featureEnableSwap = None
     self.disableWriteback = None
     self.noWriteback = None
+    self.fixedLogLevel = None
+    self.softwareFirmwareValue = None
 
   @staticmethod
   def from_dict(source):
@@ -47,6 +49,8 @@ class PubberOptions:
     result.featureEnableSwap = source.get('featureEnableSwap')
     result.disableWriteback = source.get('disableWriteback')
     result.noWriteback = source.get('noWriteback')
+    result.fixedLogLevel = source.get('fixedLogLevel')
+    result.softwareFirmwareValue = source.get('softwareFirmwareValue')
     return result
 
   @staticmethod
@@ -103,4 +107,8 @@ class PubberOptions:
       result['disableWriteback'] = self.disableWriteback # 5
     if self.noWriteback:
       result['noWriteback'] = self.noWriteback # 5
+    if self.fixedLogLevel:
+      result['fixedLogLevel'] = self.fixedLogLevel # 5
+    if self.softwareFirmwareValue:
+      result['softwareFirmwareValue'] = self.softwareFirmwareValue # 5
     return result

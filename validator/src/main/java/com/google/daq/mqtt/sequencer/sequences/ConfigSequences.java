@@ -174,15 +174,10 @@ public class ConfigSequences extends SequenceBase {
   @Summary("Check that the device publishes minimum required log entries when receiving config")
   public void config_logging() {
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
-    updateConfig("send device config set loglevel to debug");
-
-    // Wait for device to receive the config
-    // We can untilLogged the system.config.apply event, but following the natural ordering
-    // of receive --> parse --> apply may be more helpful
+    updateConfig("set min_loglevel to debug");
     safeSleep(CONFIG_THRESHOLD_SEC * 2000);
-
-    deviceConfig.system.min_loglevel = Level.TRACE.value(); // Force a new config to be sent
-    updateConfig("device receive config");
+    deviceConfig.system.min_loglevel = Level.TRACE.value();
+    updateConfig("send config");
     untilLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
     untilLogged(SYSTEM_CONFIG_PARSE, SYSTEM_CONFIG_PARSE_LEVEL);
     untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);

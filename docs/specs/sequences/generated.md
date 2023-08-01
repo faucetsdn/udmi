@@ -43,9 +43,9 @@ Some caveats:
 
 Check that the device publishes minimum required log entries when receiving config
 
-1. Update config send device config set loglevel to debug:
+1. Update config set min_loglevel to debug:
     * Set `system.min_loglevel` = `100`
-1. Update config device receive config:
+1. Update config send config:
     * Set `system.min_loglevel` = `50`
 1. Wait for log category `system.config.receive` level `DEBUG` was logged
 1. Wait for log category `system.config.parse` level `DEBUG` was logged
@@ -114,7 +114,7 @@ Check that the device correctly handles an extra out-of-schema field
 
 device publishes pointset events
 
-1. Wait for recieve a pointset event
+1. Wait for receive a pointset event
 
 ## pointset_publish_interval (BETA)
 
@@ -146,13 +146,13 @@ device publishes pointset events at a rate of no more than config sample_rate_se
 
 device publishes correct make and model information in state messages
 
-1. Test skipped: make and model not defined in metadata
+1. Check that make and model in state matches make in metadata
 
 ## state_software (BETA)
 
 device publishes correct software information in state messages
 
-1. Test skipped: software not defined in metadata
+1. Check that software in metadata matches state
 
 ## system_last_update (STABLE)
 
