@@ -183,6 +183,7 @@ public class UdmiServicePodTest {
     Bundle distributedBundle = distributor.poll();
     assertEquals(REFLECT_REGISTRY, distributedBundle.envelope.deviceRegistryId, "registry id");
     assertEquals(TEST_REGISTRY, distributedBundle.envelope.deviceId, "site id");
+    // TODO: Check bundle message to make sure it conforms.
     assertNull(distributor.poll(), "unexpected distribution message");
   }
 
