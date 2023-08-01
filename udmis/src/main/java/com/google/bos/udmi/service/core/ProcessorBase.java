@@ -1,7 +1,6 @@
 package com.google.bos.udmi.service.core;
 
 import static com.google.bos.udmi.service.core.ReflectProcessor.UDMI_VERSION;
-import static com.google.bos.udmi.service.core.StateProcessor.IOT_ACCESS_COMPONENT;
 import static com.google.bos.udmi.service.messaging.MessageDispatcher.messageHandlerFor;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.Common.DEVICE_ID_PROPERTY_KEY;
@@ -58,6 +57,7 @@ public abstract class ProcessorBase extends ContainerBase {
   public static final Integer FUNCTIONS_VERSION_MAX = 9;
   public static final String EMPTY_JSON = "{}";
   public static final String REFLECT_REGISTRY = "UDMI-REFLECT";
+  public static final String IOT_ACCESS_COMPONENT = "iot-access";
   private static final String RESET_CONFIG_VALUE = "reset_config";
   private static final String BREAK_CONFIG_VALUE = "break_json";
   private static final String EXTRA_FIELD_KEY = "extra_field";
@@ -65,7 +65,7 @@ public abstract class ProcessorBase extends ContainerBase {
       format("{ broken by %s == %s", EXTRA_FIELD_KEY, BREAK_CONFIG_VALUE);
   protected MessageDispatcher dispatcher;
   protected IotAccessBase iotAccess;
-  protected Distributor distributor;
+  protected DistributorBase distributor;
   private final ImmutableList<HandlerSpecification> baseHandlers = ImmutableList.of(
       messageHandlerFor(Object.class, this::defaultHandler),
       messageHandlerFor(Exception.class, this::exceptionHandler)

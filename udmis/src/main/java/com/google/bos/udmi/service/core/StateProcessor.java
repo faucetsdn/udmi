@@ -28,7 +28,6 @@ import udmi.schema.State;
  */
 public class StateProcessor extends ProcessorBase {
 
-  public static final String IOT_ACCESS_COMPONENT = "iot_access";
   private static final Set<String> STATE_SUB_FOLDERS =
       Arrays.stream(SubFolder.values()).map(SubFolder::value).collect(Collectors.toSet());
 

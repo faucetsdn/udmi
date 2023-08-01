@@ -70,7 +70,7 @@ public abstract class ProcessorTestBase extends MessageTestBase {
     processor = ProcessorBase.create(getProcessorClass(), config);
     setTestDispatcher(processor.getDispatcher());
     provider = mock(IotAccessBase.class);
-    UdmiServicePod.putComponent(IOT_ACCESS_COMPONENT, provider);
+    UdmiServicePod.putComponent(IOT_ACCESS_COMPONENT, () -> provider);
     processor.activate();
     provider.activate();
   }

@@ -230,20 +230,21 @@ public class GcpIotAccessProvider extends IotAccessBase {
 
   @NotNull
   private Map<String, String> getRegistriesForRegion(String region) {
+    String locationPath = getLocationPath(region);
     try {
-      debug("Fetching registries for " + region);
+      debug("Fetching registries for " + locationPath);
       ListDeviceRegistriesResponse response = cloudIotService
           .projects()
           .locations()
           .registries()
-          .list(getLocationPath(region))
+          .list(locationPath)
           .execute();
       List<DeviceRegistry> deviceRegistries = response.getDeviceRegistries();
       return ofNullable(deviceRegistries).orElseGet(ImmutableList::of).stream()
           .map(DeviceRegistry::getId)
           .collect(Collectors.toMap(item -> item, item -> region));
     } catch (Exception e) {
-      throw new RuntimeException("While fetching registry cloud regions", e);
+      throw new RuntimeException("While fetching registries for " + locationPath, e);
     }
   }
 
@@ -291,8 +292,17 @@ public class GcpIotAccessProvider extends IotAccessBase {
   }
 
   @Override
+  protected boolean isEnabled() {
+    return projectId != null;
+  }
+
+  @Override
   public void activate() {
     try {
+      if (!isEnabled()) {
+        warn("GCP access provider disabled b/c empty project id");
+        return;
+      }
       debug("Initializing GCP access provider for project " + projectId);
       registryCloudRegions = fetchRegistryCloudRegions();
       registries = cloudIotService.projects().locations().registries();

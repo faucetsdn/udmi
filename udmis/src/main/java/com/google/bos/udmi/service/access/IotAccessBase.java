@@ -48,9 +48,11 @@ public abstract class IotAccessBase extends ContainerBase {
           .newInstance(iotAccess);
     } catch (Exception e) {
       throw new RuntimeException(
-          format("While instantiating access provider %s", iotAccess.provider), e);
+          format("While instantiating access provider type %s", iotAccess.provider), e);
     }
   }
+
+  protected abstract boolean isEnabled();
 
   private String safeMunge(Function<String, String> munger, Entry<Long, String> configPair) {
     try {

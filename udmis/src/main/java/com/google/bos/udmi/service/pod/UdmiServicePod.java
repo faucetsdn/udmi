@@ -11,6 +11,7 @@ import static java.util.Objects.requireNonNull;
 
 import com.google.bos.udmi.service.access.IotAccessBase;
 import com.google.bos.udmi.service.core.BridgeProcessor;
+import com.google.bos.udmi.service.core.DistributorBase;
 import com.google.bos.udmi.service.core.ProcessorBase;
 import com.google.bos.udmi.service.core.ReflectProcessor;
 import com.google.bos.udmi.service.core.StateProcessor;
@@ -19,6 +20,7 @@ import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import udmi.schema.BridgePodConfiguration;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.IotAccess;
@@ -49,9 +51,27 @@ public class UdmiServicePod {
       ifNotNullThen(podConfiguration.flows, flows -> flows.forEach(this::createFlow));
       ifNotNullThen(podConfiguration.bridges, bridges -> bridges.forEach(this::createBridge));
       ifNotNullThen(podConfiguration.iot_access, access -> access.forEach(this::createAccess));
+      ifNotNullThen(podConfiguration.distributors, dist -> dist.forEach(this::createDistributor));
     } catch (Exception e) {
       throw new RuntimeException("While instantiating pod " + CSV_JOINER.join(args), e);
     }
+  }
+
+  /**
+   * Loop through all the registered components and apply the given action.
+   */
+  public static void forAllComponents(Consumer<ContainerBase> action) {
+    COMPONENT_MAP.forEach((key, value) -> {
+      try {
+        action.accept(value);
+      } catch (Exception e) {
+        throw new RuntimeException("While processing component " + key, e);
+      }
+    });
+  }
+
+  public static <T> T getComponent(String name) {
+    return requireNonNull(maybeGetComponent(name), "missing component " + name);
   }
 
   public static void main(String[] args) {
@@ -59,24 +79,52 @@ public class UdmiServicePod {
     udmiServicePod.activate();
   }
 
-  private void createFlow(String name, EndpointConfiguration config) {
-    checkState(PROCESSORS.containsKey(name), "unknown flow key " + name);
-    Class<? extends ProcessorBase> clazz = PROCESSORS.get(name);
-    putComponent(name, ProcessorBase.create(clazz, makeConfig(config)));
+  @SuppressWarnings("unchecked")
+  public static <T> T maybeGetComponent(String name) {
+    return ifNotNullGet(name, x -> (T) COMPONENT_MAP.get(name));
   }
 
-  private void createBridge(String name, BridgePodConfiguration config) {
+  /**
+   * Put this component into the central component registry.
+   */
+  public static void putComponent(String componentName, Supplier<ContainerBase> component) {
     try {
-      EndpointConfiguration from = makeConfig(config.from);
-      EndpointConfiguration to = makeConfig(config.to);
-      putComponent(name, new BridgeProcessor(from, to));
+      ContainerBase container = component.get();
+      ifNotNullThen(COMPONENT_MAP.put(componentName, container),
+          replaced -> {
+            throw new IllegalStateException(
+                format("Conflicting objects for component %s: %s replacing %s",
+                    componentName, component.getClass(), replaced.getClass()));
+          });
+      container.debug("Added component %s of type %s", componentName,
+          container.getClass().getSimpleName());
     } catch (Exception e) {
-      throw new RuntimeException("While making bridge " + name, e);
+      throw new RuntimeException("While creating component " + componentName, e);
     }
   }
 
+  public static void resetForTest() {
+    COMPONENT_MAP.clear();
+  }
+
   private void createAccess(String name, IotAccess config) {
-    putComponent(name, IotAccessBase.from(config));
+    putComponent(name, () -> IotAccessBase.from(config));
+  }
+
+  private void createBridge(String name, BridgePodConfiguration config) {
+    EndpointConfiguration from = makeConfig(config.from);
+    EndpointConfiguration to = makeConfig(config.to);
+    putComponent(name, () -> new BridgeProcessor(from, to));
+  }
+
+  private void createDistributor(String name, EndpointConfiguration config) {
+    putComponent(name, () -> DistributorBase.from(config));
+  }
+
+  private void createFlow(String name, EndpointConfiguration config) {
+    checkState(PROCESSORS.containsKey(name), "unknown flow key " + name);
+    Class<? extends ProcessorBase> clazz = PROCESSORS.get(name);
+    putComponent(name, () -> ProcessorBase.create(clazz, makeConfig(config)));
   }
 
   private EndpointConfiguration makeConfig(EndpointConfiguration defined) {
@@ -99,43 +147,5 @@ public class UdmiServicePod {
    */
   public void shutdown() {
     forAllComponents(ContainerBase::shutdown);
-  }
-
-  public static void resetForTest() {
-    COMPONENT_MAP.clear();
-  }
-
-  public static <T> T getComponent(String name) {
-    return requireNonNull(maybeGetComponent(name), "missing component " + name);
-  }
-
-  @SuppressWarnings("unchecked")
-  public static <T> T maybeGetComponent(String name) {
-    return ifNotNullGet(name, x -> (T) COMPONENT_MAP.get(name));
-  }
-
-  /**
-   * Put this component into the central component registry.
-   */
-  public static void putComponent(String componentName, ContainerBase component) {
-    ifNotNullThen(COMPONENT_MAP.put(componentName, component),
-        replaced -> {
-          throw new IllegalStateException(
-              format("Conflicting objects for component %s: %s replacing %s",
-                  componentName, component.getClass(), replaced.getClass()));
-        });
-  }
-
-  /**
-   * Loop through all the registered components and apply the given action.
-   */
-  public static void forAllComponents(Consumer<ContainerBase> action) {
-    COMPONENT_MAP.forEach((key, value) -> {
-      try {
-        action.accept(value);
-      } catch (Exception e) {
-        throw new RuntimeException("While processing component " + key, e);
-      }
-    });
   }
 }

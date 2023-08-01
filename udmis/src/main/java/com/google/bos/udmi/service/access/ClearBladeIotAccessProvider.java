@@ -3,6 +3,7 @@ package com.google.bos.udmi.service.access;
 import static com.clearblade.cloud.iot.v1.devicetypes.GatewayType.NON_GATEWAY;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
+import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
@@ -102,7 +103,17 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
    * Create a new instance for interfacing with GCP IoT Core.
    */
   public ClearBladeIotAccessProvider(IotAccess iotAccess) {
-    projectId = variableSubstitution(iotAccess.project_id, "gcp project id not specified");
+    projectId = getProjectId(iotAccess);
+  }
+
+  @Nullable
+  private String getProjectId(IotAccess iotAccess) {
+    try {
+      return variableSubstitution(iotAccess.project_id, "project id not specified");
+    } catch (IllegalArgumentException e) {
+      warn("Missing variable in substitution, disabling provider: " + friendlyStackTrace(e));
+      return null;
+    }
   }
 
   private static Credential convertIot(DeviceCredential device) {
@@ -388,8 +399,17 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   }
 
   @Override
+  protected boolean isEnabled() {
+    return projectId != null;
+  }
+
+  @Override
   public void activate() {
     super.activate();
+    if (!isEnabled()) {
+      warn("ClearBlade access provider disabled");
+      return;
+    }
     debug("Initializing ClearBlade access provider for project " + projectId);
     registryCloudRegions = fetchRegistryCloudRegions();
   }
