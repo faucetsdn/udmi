@@ -22,7 +22,7 @@
     }
   },
   "iot_access": {
-    "iot_access": {
+    "iot-access": {
       "provider": "local"
     }
   }

@@ -124,7 +124,7 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private void processException(Envelope reflection, Exception e) {
-    debug("Processing exception %s: %s", reflection.transactionId, friendlyStackTrace(e));
+    warn("Processing exception %s: %s", reflection.transactionId, friendlyStackTrace(e));
     Map<String, Object> message = new HashMap<>();
     message.put(ERROR_KEY, stackTraceString(e));
     Envelope envelope = new Envelope();
@@ -207,7 +207,7 @@ public class ReflectProcessor extends ProcessorBase {
     final String registryId = envelope.deviceRegistryId;
     final String deviceId = envelope.deviceId;
 
-    distributor.distribute(envelope, toolState);
+    ifNotNullThen(distributor, d -> d.distribute(envelope, toolState));
     updateAwareness(envelope, toolState);
 
     UdmiConfig udmiConfig = new UdmiConfig();
