@@ -8,7 +8,7 @@ spec:
       image: @IMAGE@
       env:
       - name: GCP_PROJECT
-        value: @PROJECT@
+        value: @GCP_PROJECT@
       resources:
         requests:
           cpu: 100m

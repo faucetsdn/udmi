@@ -226,6 +226,7 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   public void updateAwareness(Envelope envelope, UdmiState toolState) {
+    debug("Processing UdmiState %s", stringify(toolState));
     iotAccess.setProviderAffinity(envelope.deviceRegistryId, envelope.deviceId, envelope.source);
   }
 

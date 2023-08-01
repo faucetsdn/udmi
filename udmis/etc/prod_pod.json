@@ -37,7 +37,8 @@
     "stately": {
       "protocol": "mqtt",
       "transport": "tcp",
-      "hostname": "udmis-broker"
+      "hostname": "udmis-broker",
+      "port": "1883"
     }
   }
 }
