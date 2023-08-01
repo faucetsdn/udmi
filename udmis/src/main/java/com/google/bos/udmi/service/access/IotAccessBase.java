@@ -133,6 +133,7 @@ public abstract class IotAccessBase extends ContainerBase {
       String message);
 
   public void setProviderAffinity(String registryId, String deviceId, String providerId) {
+    registryBackoffClear(registryId, deviceId);
   }
 
   abstract String fetchRegistryMetadata(String registryId, String metadataKey);
@@ -159,10 +160,7 @@ public abstract class IotAccessBase extends ContainerBase {
     return format("%s/%s", registryId, deviceId);
   }
 
-  /**
-   * Clear the backoff for a given registry, allowing commands to be sent.
-   */
-  public void registryBackoffClear(String registryId, String deviceId) {
+  private void registryBackoffClear(String registryId, String deviceId) {
     String backoffKey = getBackoffKey(registryId, deviceId);
     ifNotNullThen(BACKOFF_MAP.remove(backoffKey),
         () -> debug("Released registry backoff for " + backoffKey));

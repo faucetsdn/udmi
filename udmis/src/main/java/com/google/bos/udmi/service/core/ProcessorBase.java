@@ -22,6 +22,7 @@ import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toStringMap;
 import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static udmi.schema.Envelope.SubFolder.UPDATE;
 
@@ -65,7 +66,7 @@ public abstract class ProcessorBase extends ContainerBase {
       format("{ broken by %s == %s", EXTRA_FIELD_KEY, BREAK_CONFIG_VALUE);
   protected MessageDispatcher dispatcher;
   protected IotAccessBase iotAccess;
-  protected DistributorBase distributor;
+  protected DistributorPipe distributor;
   private final ImmutableList<HandlerSpecification> baseHandlers = ImmutableList.of(
       messageHandlerFor(Object.class, this::defaultHandler),
       messageHandlerFor(Exception.class, this::exceptionHandler)
@@ -211,8 +212,8 @@ public abstract class ProcessorBase extends ContainerBase {
   }
 
   private void reflectString(String deviceRegistryId, String commandString) {
-    ifNotNullThen(distributor,
-        () -> distributor.sendCommand(REFLECT_REGISTRY, deviceRegistryId, null, commandString));
+    ifNotNullThen(iotAccess,
+        () -> iotAccess.sendCommand(REFLECT_REGISTRY, deviceRegistryId, null, commandString));
   }
 
   private String updateConfig(String previous, Envelope attributes,

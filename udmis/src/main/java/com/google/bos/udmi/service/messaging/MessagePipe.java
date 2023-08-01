@@ -36,7 +36,11 @@ public interface MessagePipe {
   static MessagePipe from(EndpointConfiguration config) {
     checkState(IMPLEMENTATIONS.containsKey(config.protocol),
         "unknown message transport type " + config.protocol);
-    return IMPLEMENTATIONS.get(config.protocol).apply(config);
+    try {
+      return IMPLEMENTATIONS.get(config.protocol).apply(config);
+    } catch (Exception e) {
+      throw new RuntimeException("While instantiating pipe of type " + config.protocol, e);
+    }
   }
 
   /**

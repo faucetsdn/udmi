@@ -7,7 +7,6 @@ import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 
-import com.google.bos.udmi.service.pod.UdmiServicePod;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -130,5 +129,6 @@ public class DynamicIotAccessProvider extends IotAccessBase {
             providerId));
       }
     }
+    super.setProviderAffinity(registryId, deviceId, providerId);
   }
 }

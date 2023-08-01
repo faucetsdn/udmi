@@ -153,7 +153,6 @@ public class EndpointConfiguration {
         PUBSUB("pubsub"),
         FILE("file"),
         TRACE("trace"),
-        IOT_ACCESS("iot_access"),
         MQTT("mqtt");
         private final String value;
         private final static Map<String, EndpointConfiguration.Protocol> CONSTANTS = new HashMap<String, EndpointConfiguration.Protocol>();

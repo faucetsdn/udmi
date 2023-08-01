@@ -11,16 +11,18 @@ import static java.util.Objects.requireNonNull;
 
 import com.google.bos.udmi.service.access.IotAccessBase;
 import com.google.bos.udmi.service.core.BridgeProcessor;
-import com.google.bos.udmi.service.core.DistributorBase;
+import com.google.bos.udmi.service.core.DistributorPipe;
 import com.google.bos.udmi.service.core.ProcessorBase;
 import com.google.bos.udmi.service.core.ReflectProcessor;
 import com.google.bos.udmi.service.core.StateProcessor;
 import com.google.bos.udmi.service.core.TargetProcessor;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import udmi.schema.BridgePodConfiguration;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.IotAccess;
@@ -32,11 +34,11 @@ import udmi.schema.PodConfiguration;
 public class UdmiServicePod {
 
   private static final Map<String, ContainerBase> COMPONENT_MAP = new ConcurrentHashMap<>();
-  private static final Map<String, Class<? extends ProcessorBase>> PROCESSORS = ImmutableMap.of(
-      "target", TargetProcessor.class,
-      "reflect", ReflectProcessor.class,
-      "state", StateProcessor.class
-  );
+  private static final Set<Class<? extends ProcessorBase>> PROCESSOR_CLASSES = ImmutableSet.of(
+      TargetProcessor.class, ReflectProcessor.class, StateProcessor.class);
+  private static final Map<String, Class<? extends ProcessorBase>> PROCESSORS =
+      PROCESSOR_CLASSES.stream().collect(Collectors.toMap(ContainerBase::getName, clazz -> clazz));
+
   private final PodConfiguration podConfiguration;
 
   /**
@@ -71,6 +73,11 @@ public class UdmiServicePod {
   }
 
   public static <T> T getComponent(String name) {
+    return requireNonNull(maybeGetComponent(name), "missing component " + name);
+  }
+
+  public static <T> T getComponent(Class<T> clazz) {
+    String name = ContainerBase.getName(clazz);
     return requireNonNull(maybeGetComponent(name), "missing component " + name);
   }
 
@@ -118,7 +125,7 @@ public class UdmiServicePod {
   }
 
   private void createDistributor(String name, EndpointConfiguration config) {
-    putComponent(name, () -> DistributorBase.from(config));
+    putComponent(name, () -> DistributorPipe.from(config));
   }
 
   private void createFlow(String name, EndpointConfiguration config) {

@@ -13,7 +13,6 @@
         "pubsub",
         "file",
         "trace",
-        "iot_access",
         "mqtt"
       ]
     },

@@ -35,7 +35,9 @@
   },
   "distributors": {
     "stately": {
-      "protocol": "iot_access"
+      "protocol": "mqtt",
+      "transport": "tcp",
+      "hostname": "udmis-broker"
     }
   }
 }

@@ -26,6 +26,7 @@ import udmi.schema.State;
  * the system. Involves tagging the envelope with the appropriate designators, and splitting up the
  * monolithic block into constituent parts.
  */
+@ComponentName("state")
 public class StateProcessor extends ProcessorBase {
 
   private static final Set<String> STATE_SUB_FOLDERS =

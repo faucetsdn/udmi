@@ -41,6 +41,7 @@ import udmi.schema.UdmiState;
 /**
  * Handle the reflector processor stream for UDMI utility tool clients.
  */
+@ComponentName("reflect")
 public class ReflectProcessor extends ProcessorBase {
 
   public static final String PAYLOAD_KEY = "payload";
@@ -54,7 +55,6 @@ public class ReflectProcessor extends ProcessorBase {
     MessageContinuation continuation = getContinuation(message);
     Envelope reflection = continuation.getEnvelope();
     try {
-      distributor.registryBackoffClear(reflection.deviceRegistryId, reflection.deviceId);
       if (reflection.subFolder == null) {
         reflectStateHandler(reflection, extractUdmiState(message));
       } else if (reflection.subFolder != SubFolder.UDMI) {
@@ -137,7 +137,7 @@ public class ReflectProcessor extends ProcessorBase {
       Map<String, Object> payload) {
     debug("Processing reflection %s/%s %s", envelope.subType, envelope.subFolder,
         envelope.transactionId);
-    distributor.setProviderAffinity(envelope.deviceRegistryId, envelope.deviceId, reflection.source);
+    iotAccess.setProviderAffinity(envelope.deviceRegistryId, envelope.deviceId, reflection.source);
     CloudModel result = getReflectionResult(envelope, payload);
     ifNotNullThen(result,
         v -> debug("Reflection result %s: %s", envelope.transactionId, envelope.subType));
@@ -207,6 +207,9 @@ public class ReflectProcessor extends ProcessorBase {
     final String registryId = envelope.deviceRegistryId;
     final String deviceId = envelope.deviceId;
 
+    distributor.distribute(envelope, toolState);
+    updateAwareness(envelope, toolState);
+
     UdmiConfig udmiConfig = new UdmiConfig();
     udmiConfig.last_state = toolState.timestamp;
     udmiConfig.setup = new SetupUdmiConfig();
@@ -218,9 +221,12 @@ public class ReflectProcessor extends ProcessorBase {
     Map<String, Object> configMap = new HashMap<>();
     configMap.put(SubFolder.UDMI.value(), udmiConfig);
     String contents = stringify(configMap);
-    debug("Setting reflector config %s %s %s", registryId, deviceId, contents);
-    distributor.setProviderAffinity(registryId, deviceId, envelope.source);
+    debug("Setting reflector config %s %s: %s", registryId, deviceId, contents);
     iotAccess.modifyConfig(registryId, deviceId, previous -> contents);
+  }
+
+  public void updateAwareness(Envelope envelope, UdmiState toolState) {
+    iotAccess.setProviderAffinity(envelope.deviceRegistryId, envelope.deviceId, envelope.source);
   }
 
   private void reflectStateUpdate(Envelope attributes, String state) {
@@ -234,12 +240,12 @@ public class ReflectProcessor extends ProcessorBase {
     String reflectRegistry = reflection.deviceRegistryId;
     String deviceRegistry = reflection.deviceId;
     message.payload = encodeBase64(stringify(payload));
-    distributor.sendCommand(reflectRegistry, deviceRegistry, SubFolder.UDMI, stringify(message));
+    iotAccess.sendCommand(reflectRegistry, deviceRegistry, SubFolder.UDMI, stringify(message));
   }
 
   @Override
   public void activate() {
-    debug(stringify(DEPLOYED_CONFIG));
+    debug("Deployment configuration: " + stringify(DEPLOYED_CONFIG));
     super.activate();
   }
 }

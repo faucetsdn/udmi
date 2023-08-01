@@ -6,6 +6,8 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
+import com.google.bos.udmi.service.core.ComponentName;
+import com.google.bos.udmi.service.core.ProcessorBase;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import java.io.PrintStream;
@@ -27,6 +29,15 @@ public abstract class ContainerBase {
   public static final String INITIAL_EXECUTION_CONTEXT = "xxxxxxxx";
   private static final ThreadLocal<String> executionContext = new ThreadLocal<>();
   private static final Pattern VARIABLE_PATTERN = Pattern.compile("\\$\\{([A-Z_]+)\\}");
+
+  public static String getName(Class<?> clazz) {
+    try {
+      return requireNonNull(clazz.getAnnotation(ComponentName.class),
+          "no ComponentName annotation").value();
+    } catch (Exception e) {
+      throw new RuntimeException("While extracting component name for " + clazz.getSimpleName(), e);
+    }
+  }
 
   protected String grabExecutionContext() {
     String previous = getExecutionContext();

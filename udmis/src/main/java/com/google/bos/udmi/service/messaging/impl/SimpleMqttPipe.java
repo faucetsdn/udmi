@@ -2,6 +2,7 @@ package com.google.bos.udmi.service.messaging.impl;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.udmi.util.GeneralUtils.decodeBase64;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
@@ -19,6 +20,7 @@ import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+import udmi.schema.Auth_provider;
 import udmi.schema.Basic;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.EndpointConfiguration.Transport;
@@ -67,10 +69,12 @@ public class SimpleMqttPipe extends MessageBase {
       options.setMaxInflight(PUBLISH_THREAD_COUNT * 2);
       options.setConnectionTimeout(INITIALIZE_TIME_MS);
 
-      Basic basicAuth = checkNotNull(endpoint.auth_provider.basic, "basic auth not defined");
-      options.setUserName(checkNotNull(basicAuth.username, "MQTT username not defined"));
-      options.setPassword(
-          checkNotNull(basicAuth.password, "MQTT password not defined").toCharArray());
+      ifNotNullThen(endpoint.auth_provider, provider -> {
+            Basic basicAuth = checkNotNull(provider.basic, "basic auth not defined");
+            options.setUserName(checkNotNull(basicAuth.username, "MQTT username not defined"));
+            options.setPassword(
+                checkNotNull(basicAuth.password, "MQTT password not defined").toCharArray());
+          }, () -> warn("No mqtt auth_provider defined"));
 
       client.connect(options);
       return client;
@@ -104,10 +108,12 @@ public class SimpleMqttPipe extends MessageBase {
   @Override
   public void activate(Consumer<Bundle> bundleConsumer) {
     super.activate(bundleConsumer);
+    String topic = String.format(TOPIC_FORMAT, namespace, TOPIC_WILDCARD, TOPIC_WILDCARD);
     try {
-      mqttClient.subscribe(String.format(TOPIC_FORMAT, namespace, TOPIC_WILDCARD, TOPIC_WILDCARD));
+      mqttClient.subscribe(topic);
+      debug("Subscribed to mqtt topic " + topic);
     } catch (Exception e) {
-      throw new RuntimeException("While subscribing to mqtt topics", e);
+      throw new RuntimeException("While subscribing to mqtt topic: " + topic, e);
     }
   }
 
