@@ -3,6 +3,7 @@ package com.google.bos.udmi.service.pod;
 import static com.google.bos.udmi.service.messaging.impl.MessageBase.combineConfig;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
+import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.loadFileStrictRequired;
@@ -17,6 +18,7 @@ import com.google.bos.udmi.service.core.ReflectProcessor;
 import com.google.bos.udmi.service.core.StateProcessor;
 import com.google.bos.udmi.service.core.TargetProcessor;
 import com.google.common.collect.ImmutableSet;
+import com.google.udmi.util.GeneralUtils;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -38,6 +40,7 @@ public class UdmiServicePod {
       TargetProcessor.class, ReflectProcessor.class, StateProcessor.class);
   private static final Map<String, Class<? extends ProcessorBase>> PROCESSORS =
       PROCESSOR_CLASSES.stream().collect(Collectors.toMap(ContainerBase::getName, clazz -> clazz));
+  public static final int FATAL_ERROR_CODE = -1;
 
   private final PodConfiguration podConfiguration;
 
@@ -55,7 +58,10 @@ public class UdmiServicePod {
       ifNotNullThen(podConfiguration.iot_access, access -> access.forEach(this::createAccess));
       ifNotNullThen(podConfiguration.distributors, dist -> dist.forEach(this::createDistributor));
     } catch (Exception e) {
-      throw new RuntimeException("While instantiating pod " + CSV_JOINER.join(args), e);
+      System.err.printf("Fatal error instantiating pod %s %s%n", CSV_JOINER.join(args),
+          friendlyStackTrace(e));
+      System.exit(FATAL_ERROR_CODE);
+      throw e;
     }
   }
 
