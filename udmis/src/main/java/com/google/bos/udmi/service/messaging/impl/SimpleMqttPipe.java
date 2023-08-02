@@ -87,14 +87,6 @@ public class SimpleMqttPipe extends MessageBase {
     }
   }
 
-  private void forceDisconnect() {
-    try {
-      mqttClient.disconnectForcibly();
-    } catch (Exception e) {
-      error("Exception during forced disconnect %s: %s", clientId, friendlyStackTrace(e));
-    }
-  }
-
   private MqttClient createMqttClient() {
     String broker = makeBrokerUrl(endpoint);
     info(format("Creating new mqtt client %s to %s", clientId, broker));
@@ -105,6 +97,14 @@ public class SimpleMqttPipe extends MessageBase {
       return client;
     } catch (Exception e) {
       throw new RuntimeException("While creating mqtt client", e);
+    }
+  }
+
+  private void forceDisconnect() {
+    try {
+      mqttClient.disconnectForcibly();
+    } catch (Exception e) {
+      error("Exception during forced disconnect %s: %s", clientId, friendlyStackTrace(e));
     }
   }
 
@@ -129,7 +129,6 @@ public class SimpleMqttPipe extends MessageBase {
   private synchronized void subscribeToMessages() {
     String topic = format(TOPIC_FORMAT, namespace, TOPIC_WILDCARD, TOPIC_WILDCARD);
     try {
-          mqttClient.isConnected());
       if (isActive() && mqttClient.isConnected()) {
         mqttClient.subscribe(topic);
         warn("Subscribed %s to topic %s", clientId, topic);
