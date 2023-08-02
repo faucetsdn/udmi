@@ -38,7 +38,7 @@ public class SimpleMqttPipe extends MessageBase {
   private static final String BROKER_URL_FORMAT = "%s://%s:%s";
   private static final Object EXCEPTION_TYPE = "exception";
   private static final long RECONNECT_SEC = 10;
-  private final String clientId = "client-" + System.currentTimeMillis();
+  private final String clientId = format("mqtt-%08x", System.currentTimeMillis());
   private final String namespace;
   private final EndpointConfiguration endpoint;
   private final MqttClient mqttClient;
@@ -129,7 +129,7 @@ public class SimpleMqttPipe extends MessageBase {
     try {
       if (isActive() && mqttClient.isConnected()) {
         mqttClient.subscribe(topic);
-        warn("Subscribed to mqtt topic " + topic);
+        warn("Subscribed %s to topic %s", clientId, topic);
       }
     } catch (Exception e) {
       throw new RuntimeException("While subscribing to mqtt topic: " + topic, e);
