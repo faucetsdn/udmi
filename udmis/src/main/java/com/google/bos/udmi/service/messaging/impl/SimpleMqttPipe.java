@@ -51,6 +51,7 @@ public class SimpleMqttPipe extends MessageBase {
     namespace = config.hostname;
     endpoint = config;
     mqttClient = createMqttClient();
+    tryConnect();
     scheduledFuture = Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(
         SimpleMqttPipe.this::tryConnect, RECONNECT_SEC, RECONNECT_SEC, TimeUnit.SECONDS);
   }
@@ -129,7 +130,9 @@ public class SimpleMqttPipe extends MessageBase {
   private synchronized void subscribeToMessages() {
     String topic = format(TOPIC_FORMAT, namespace, TOPIC_WILDCARD, TOPIC_WILDCARD);
     try {
-      if (isActive() && mqttClient.isConnected()) {
+      boolean connected = mqttClient.isConnected();
+      trace("Subscribing %s, active=%s connected=%s", clientId, isActive(), connected);
+      if (isActive() && connected) {
         mqttClient.subscribe(topic);
         warn("Subscribed %s to topic %s", clientId, topic);
       }

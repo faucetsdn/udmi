@@ -1,7 +1,8 @@
 {
   "flow_defaults": {
     "protocol": "local",
-    "distributor": "distrib"
+    "distributor": "distrib",
+    "hostname": "foo"
   },
   "flows": {
     "target": {
@@ -26,7 +27,8 @@
     "distrib": {
       "protocol": "local",
       "send_id": "mark",
-      "recv_id": "mend"
+      "recv_id": "mend",
+      "hostname": "foo"
     }
   }
 }

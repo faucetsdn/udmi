@@ -1,6 +1,7 @@
 {
   "flow_defaults": {
-    "protocol": "local"
+    "protocol": "local",
+    "hostname": "foo"
   },
   "flows": {
     "target": {
