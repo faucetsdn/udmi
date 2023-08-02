@@ -43,11 +43,6 @@ project_id=$2
 device_id=$3
 shift 3
 
-if ! bin/which_venv_pip3; then
-    echo ERROR venv pip3 not installed, please run bin/setup_base and try again
-    false
-fi
-
 if [[ -n $UDMI_REGISTRY_SUFFIX ]]; then
     echo Using registry suffix $UDMI_REGISTRY_SUFFIX
     registry_suffix=\"$UDMI_REGISTRY_SUFFIX\"
@@ -69,6 +64,11 @@ udmi_version=`git describe --always --dirty`
 
 cd $ROOT_DIR
 mkdir -p $OUT_DIR
+
+if ! bin/which_venv_pip3; then
+    echo ERROR venv pip3 not installed, please run bin/setup_base and try again
+    false
+fi
 
 if [[ -d $site_path ]]; then
     echo Using site model directory $site_path
