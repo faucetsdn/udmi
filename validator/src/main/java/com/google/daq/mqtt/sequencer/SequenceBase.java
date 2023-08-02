@@ -25,6 +25,7 @@ import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static java.lang.String.format;
 import static java.nio.file.Files.newOutputStream;
+import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static org.junit.Assume.assumeTrue;
 import static udmi.schema.Bucket.SYSTEM;
@@ -996,7 +997,9 @@ public class SequenceBase {
       if (updated) {
         String augmentedMessage = actualize(stringify(data));
         String topic = subBlock + "/config";
-        final String transactionId = reflector().publish(getDeviceId(), topic, augmentedMessage);
+        final String transactionId =
+            requireNonNull(reflector().publish(getDeviceId(), topic, augmentedMessage),
+                "no transactionId returned for publish");
         debug(
             format("update %s_%s, configTransaction %s", CONFIG_SUBTYPE, subBlock, transactionId));
         recordRawMessage(data, LOCAL_PREFIX + subBlock.value());
@@ -1822,9 +1825,6 @@ public class SequenceBase {
         message = e.getMessage();
         failureType = SequenceResult.SKIP;
       } else {
-        while (e.getCause() != null) {
-          e = e.getCause();
-        }
         message = friendlyStackTrace(e);
         failureType = SequenceResult.FAIL;
       }
