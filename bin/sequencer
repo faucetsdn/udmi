@@ -41,6 +41,11 @@ project_id=$2
 device_id=$3
 shift 3
 
+if ! bin/which_venv_pip3; then
+    echo ERROR venv pip3 not installed, please run bin/setup_base and try again
+    false
+fi
+
 if [[ -n $UDMI_REGISTRY_SUFFIX ]]; then
     echo Using registry suffix $UDMI_REGISTRY_SUFFIX
     registry_suffix=\"$UDMI_REGISTRY_SUFFIX\"
@@ -136,11 +141,6 @@ fi
 fgrep RESULT $site_model/out/devices/$device_id/RESULT.log | \
     fgrep ' schemas ' | sort -k 3 | tee $SCHEMA_OUT
 
-bin/check_version
-
-if ! bin/which_venv_pip3; then  
-    echo ERROR could not generate markdown sequencer report file
-    echo please run bin/setup_base and try again
-    false
-fi
 (source venv/bin/activate && bin/sequencer_report $site_model $device_id)
+
+bin/check_version

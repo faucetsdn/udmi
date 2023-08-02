@@ -161,8 +161,8 @@ jobs:
       - name: sequencer markdown report generator
         if: ${{ always() }}
         run: |
-          bin/sequencer_report sites/udmi_site_model AHU-1
           SAMPLE_TEST_ROW="| system | system_last_update | stable | pass | Sequence complete |"
+          echo Checking for entry in generated results.md
           grep "$SAMPLE_TEST_ROW" sites/udmi_site_model/out/devices/AHU-1/results.md
       - name: pubber logs
         if: ${{ always() }}
