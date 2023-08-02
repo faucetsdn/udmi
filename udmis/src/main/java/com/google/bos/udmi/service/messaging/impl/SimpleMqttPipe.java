@@ -59,14 +59,6 @@ public class SimpleMqttPipe extends MessageBase {
     return new SimpleMqttPipe(config);
   }
 
-  private void tryConnect() {
-    try {
-      connect();
-    } catch (Exception e) {
-      error("While attempting scheduled connect for %s: %s", clientId, friendlyStackTrace(e));
-    }
-  }
-
   private synchronized void connect() {
     try {
       if (mqttClient.isConnected()) {
@@ -89,7 +81,17 @@ public class SimpleMqttPipe extends MessageBase {
       info("Connection established to mqtt server as " + clientId);
       subscribeToMessages();
     } catch (Exception e) {
+      // Sometimes a forced disconnect is necessary else the connection attempt gets stuck somehow.
+      forceDisconnect();
       throw new RuntimeException("While connecting mqtt client", e);
+    }
+  }
+
+  private void forceDisconnect() {
+    try {
+      mqttClient.disconnectForcibly();
+    } catch (Exception e) {
+      error("Exception during forced disconnect %s: %s", clientId, friendlyStackTrace(e));
     }
   }
 
@@ -127,6 +129,7 @@ public class SimpleMqttPipe extends MessageBase {
   private synchronized void subscribeToMessages() {
     String topic = format(TOPIC_FORMAT, namespace, TOPIC_WILDCARD, TOPIC_WILDCARD);
     try {
+          mqttClient.isConnected());
       if (isActive() && mqttClient.isConnected()) {
         mqttClient.subscribe(topic);
         warn("Subscribed %s to topic %s", clientId, topic);
@@ -136,16 +139,18 @@ public class SimpleMqttPipe extends MessageBase {
     }
   }
 
+  private void tryConnect() {
+    try {
+      connect();
+    } catch (Exception e) {
+      error("While attempting scheduled connect for %s: %s", clientId, friendlyStackTrace(e));
+    }
+  }
+
   @Override
   public void activate(Consumer<Bundle> bundleConsumer) {
     super.activate(bundleConsumer);
     subscribeToMessages();
-  }
-
-  @Override
-  public void shutdown() {
-    scheduledFuture.cancel(false);
-    super.shutdown();
   }
 
   @Override
@@ -158,6 +163,12 @@ public class SimpleMqttPipe extends MessageBase {
     } catch (Exception e) {
       throw new RuntimeException("While publishing to mqtt client " + clientId, e);
     }
+  }
+
+  @Override
+  public void shutdown() {
+    scheduledFuture.cancel(false);
+    super.shutdown();
   }
 
   private class MqttCallbackHandler implements MqttCallback {

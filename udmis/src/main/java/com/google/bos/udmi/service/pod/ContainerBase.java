@@ -109,6 +109,10 @@ public abstract class ContainerBase {
     output(Level.ERROR, message);
   }
 
+  public void info(String format, Object... args) {
+    info(format(format, args));
+  }
+
   public void info(String message) {
     output(Level.INFO, message);
   }
