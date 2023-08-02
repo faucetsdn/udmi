@@ -74,7 +74,7 @@ public abstract class ContainerBase {
   }
 
   protected void setExecutionContext(String newContext) {
-    debug("Setting execution context %s", newContext);
+    trace("Setting execution context %s", newContext);
     executionContext.set(newContext);
   }
 

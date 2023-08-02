@@ -8,7 +8,6 @@ import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static java.lang.String.format;
 
-import com.google.bos.udmi.service.core.ProcessorBase;
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.common.collect.ImmutableMap;
 import java.time.Instant;
@@ -27,9 +26,10 @@ import udmi.schema.IotAccess.IotProvider;
  */
 public abstract class IotAccessBase extends ContainerBase {
 
+  protected static final String UDMI_REGISTRY = "UDMI-REFLECT";
+  protected static final String EMPTY_JSON = "{}";
   private static final long REGISTRY_COMMAND_BACKOFF_SEC = 60;
   private static final Map<String, Instant> BACKOFF_MAP = new ConcurrentHashMap<>();
-  protected static final String EMPTY_JSON = "{}";
   private static final long CONFIG_UPDATE_BACKOFF_MS = 1000;
   private static final int CONFIG_UPDATE_MAX_RETRIES = 10;
   private static final Map<IotProvider, Class<? extends IotAccessBase>> PROVIDERS = ImmutableMap.of(
@@ -52,7 +52,43 @@ public abstract class IotAccessBase extends ContainerBase {
     }
   }
 
+  private static Instant getBackoff(String registryId, String deviceId) {
+    return BACKOFF_MAP.get(getBackoffKey(registryId, deviceId));
+  }
+
+  private static String getBackoffKey(String registryId, String deviceId) {
+    return format("%s/%s", registryId, deviceId);
+  }
+
+  protected abstract Entry<Long, String> fetchConfig(String registryId, String deviceId);
+
   protected abstract boolean isEnabled();
+
+  protected abstract void sendCommandBase(String registryId, String deviceId, SubFolder folder,
+      String message);
+
+  protected abstract String updateConfig(String registryId, String deviceId, String config,
+      Long version);
+
+  private boolean registryBackoffCheck(String registryId, String deviceId) {
+    return ifNotNullGet(getBackoff(registryId, deviceId), end -> Instant.now().isAfter(end),
+        true);
+  }
+
+  private void registryBackoffClear(String registryId, String deviceId) {
+    String backoffKey = getBackoffKey(registryId, deviceId);
+    ifNotNullThen(BACKOFF_MAP.remove(backoffKey),
+        () -> debug("Released registry backoff for " + backoffKey));
+  }
+
+  private Instant registryBackoffInhibit(String registryId, String deviceId) {
+    if (!REFLECT_REGISTRY.equals(registryId)) {
+      return null;
+    }
+    Instant until = Instant.now().plus(REGISTRY_COMMAND_BACKOFF_SEC, ChronoUnit.SECONDS);
+    BACKOFF_MAP.put(getBackoffKey(registryId, deviceId), until);
+    return until;
+  }
 
   private String safeMunge(Function<String, String> munger, Entry<Long, String> configPair) {
     try {
@@ -62,11 +98,6 @@ public abstract class IotAccessBase extends ContainerBase {
       return null;
     }
   }
-
-  protected abstract Entry<Long, String> fetchConfig(String registryId, String deviceId);
-
-  protected abstract String updateConfig(String registryId, String deviceId, String config,
-      Long version);
 
   public abstract CloudModel fetchDevice(String deviceRegistryId, String deviceId);
 
@@ -90,15 +121,15 @@ public abstract class IotAccessBase extends ContainerBase {
           return ifNotNullGet(safeMunge(munger, configPair),
               updated -> updateConfig(registryId, deviceId, updated, version));
         } catch (Exception e) {
-          warn(
-              format("Error modifying config for %s/%s, remaining retries %d...", registryId,
-                  deviceId,
-                  --retryCount));
           if (retryCount <= 0) {
+            error("Failed modifying config for %s/%s: %s", registryId, deviceId,
+                friendlyStackTrace(e));
             throw e;
           }
+          warn(
+              format("Error modifying config for %s/%s, remaining retries %d...", registryId,
+                  deviceId, --retryCount));
           safeSleep(CONFIG_UPDATE_BACKOFF_MS);
-          debug(format("Restart modifying config for %s/%s", registryId, deviceId));
         }
       }
     } catch (Exception e) {
@@ -129,41 +160,10 @@ public abstract class IotAccessBase extends ContainerBase {
     }
   }
 
-  protected abstract void sendCommandBase(String registryId, String deviceId, SubFolder folder,
-      String message);
-
   public void setProviderAffinity(String registryId, String deviceId, String providerId) {
     registryBackoffClear(registryId, deviceId);
   }
 
   abstract String fetchRegistryMetadata(String registryId, String metadataKey);
-
-  private boolean registryBackoffCheck(String registryId, String deviceId) {
-    return ifNotNullGet(getBackoff(registryId, deviceId), end -> Instant.now().isAfter(end),
-        true);
-  }
-
-  private Instant registryBackoffInhibit(String registryId, String deviceId) {
-    if (!REFLECT_REGISTRY.equals(registryId)) {
-      return null;
-    }
-    Instant until = Instant.now().plus(REGISTRY_COMMAND_BACKOFF_SEC, ChronoUnit.SECONDS);
-    BACKOFF_MAP.put(getBackoffKey(registryId, deviceId), until);
-    return until;
-  }
-
-  private static Instant getBackoff(String registryId, String deviceId) {
-    return BACKOFF_MAP.get(getBackoffKey(registryId, deviceId));
-  }
-
-  private static String getBackoffKey(String registryId, String deviceId) {
-    return format("%s/%s", registryId, deviceId);
-  }
-
-  private void registryBackoffClear(String registryId, String deviceId) {
-    String backoffKey = getBackoffKey(registryId, deviceId);
-    ifNotNullThen(BACKOFF_MAP.remove(backoffKey),
-        () -> debug("Released registry backoff for " + backoffKey));
-  }
 
 }

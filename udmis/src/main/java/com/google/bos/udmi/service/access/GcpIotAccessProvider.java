@@ -47,6 +47,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import udmi.schema.CloudModel;
@@ -73,7 +74,6 @@ public class GcpIotAccessProvider extends IotAccessBase {
   private static final String RSA_CERT_FORMAT = "RSA_X509_PEM";
   private static final String ES_KEY_FORMAT = "ES256_PEM";
   private static final String ES_CERT_FILE = "ES256_X509_PEM";
-  private static final String UDMIS_REGISTRY = "UDMS-REFLECT";
   private static final BiMap<Key_format, String> AUTH_TYPE_MAP =
       ImmutableBiMap.of(
           Key_format.RS_256, RSA_KEY_FORMAT,
@@ -87,8 +87,8 @@ public class GcpIotAccessProvider extends IotAccessBase {
       new GatewayConfig().setGatewayType(GATEWAY_TYPE).setGatewayAuthMethod(ASSOCIATION_ONLY);
   private final String projectId;
   private final CloudIot cloudIotService;
-  private Map<String, String> registryCloudRegions;
-  private CloudIot.Projects.Locations.Registries registries;
+  private final CompletableFuture<Map<String, String>> registryRegions = new CompletableFuture<>();
+  private final CloudIot.Projects.Locations.Registries registries;
 
   /**
    * Create a new instance for interfacing with GCP IoT Core.
@@ -97,6 +97,7 @@ public class GcpIotAccessProvider extends IotAccessBase {
   public GcpIotAccessProvider(IotAccess iotAccess) {
     projectId = variableSubstitution(iotAccess.project_id, "gcp project id not specified");
     cloudIotService = createCloudIotService();
+    registries = cloudIotService.projects().locations().registries();
   }
 
   @NotNull
@@ -249,9 +250,13 @@ public class GcpIotAccessProvider extends IotAccessBase {
   }
 
   private String getRegistryPath(String registryId) {
-    String region = requireNonNull(registryCloudRegions.get(registryId),
-        "unknown region for registry " + registryId);
-    return format(REGISTRY_PATH_FORMAT, getLocationPath(region), registryId);
+    try {
+      String region = requireNonNull(registryRegions.get().get(registryId),
+          "unknown region for registry " + registryId);
+      return format(REGISTRY_PATH_FORMAT, getLocationPath(region), registryId);
+    } catch (Exception e) {
+      throw new RuntimeException("While getting registry path for " + registryId, e);
+    }
   }
 
   private CloudModel listRegistryDevices(String deviceRegistryId, String gatewayId) {
@@ -304,8 +309,7 @@ public class GcpIotAccessProvider extends IotAccessBase {
         return;
       }
       debug("Initializing GCP access provider for project " + projectId);
-      registryCloudRegions = fetchRegistryCloudRegions();
-      registries = cloudIotService.projects().locations().registries();
+      registryRegions.complete(fetchRegistryCloudRegions());
       super.activate();
     } catch (Exception e) {
       throw new RuntimeException("While activating", e);
@@ -345,10 +349,10 @@ public class GcpIotAccessProvider extends IotAccessBase {
   @Override
   public String fetchRegistryMetadata(String registryId, String metadataKey) {
     try {
-      CloudModel cloudModel = fetchDevice(UDMIS_REGISTRY, registryId);
+      CloudModel cloudModel = fetchDevice(UDMI_REGISTRY, registryId);
       return cloudModel.metadata.get(metadataKey);
     } catch (Exception e) {
-      debug(format("No device entry for %s/%s", UDMIS_REGISTRY, registryId));
+      debug(format("No device entry for %s/%s", UDMI_REGISTRY, registryId));
       return null;
     }
   }
@@ -429,7 +433,6 @@ public class GcpIotAccessProvider extends IotAccessBase {
 
   @Override
   public void shutdown() {
-    registries = null;
     super.shutdown();
   }
 }

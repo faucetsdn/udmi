@@ -190,6 +190,14 @@ public class GeneralUtils {
     return Boolean.TRUE.equals(value);
   }
 
+  public static void catchOrElse(Runnable action, Consumer<Exception> caught) {
+    try {
+      action.run();
+    } catch (Exception e) {
+      caught.accept(e);
+    }
+  }
+
   public static <T> T catchOrElse(Supplier<T> provider, Supplier<T> alternate) {
     try {
       T t = provider.get();

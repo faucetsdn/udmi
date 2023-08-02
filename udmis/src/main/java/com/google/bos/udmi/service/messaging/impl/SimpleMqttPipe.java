@@ -1,15 +1,19 @@
 package com.google.bos.udmi.service.messaging.impl;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static com.google.udmi.util.JsonUtil.toStringMap;
+import static java.lang.String.format;
 
 import com.google.bos.udmi.service.messaging.MessagePipe;
-import com.google.udmi.util.Common;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
@@ -33,33 +37,42 @@ public class SimpleMqttPipe extends MessageBase {
   private static final Object TOPIC_WILDCARD = "+";
   private static final String BROKER_URL_FORMAT = "%s://%s:%s";
   private static final Object EXCEPTION_TYPE = "exception";
-  private final MqttClient mqttClient;
-  private final String clientId;
+  private static final long RECONNECT_SEC = 10;
+  private final String clientId = "client-" + System.currentTimeMillis();
   private final String namespace;
+  private final EndpointConfiguration endpoint;
+  private final MqttClient mqttClient;
+  private final ScheduledFuture<?> scheduledFuture;
 
   /**
    * Create new pipe instance for the given config.
    */
   public SimpleMqttPipe(EndpointConfiguration config) {
-    clientId = makeClientId();
     namespace = config.hostname;
-    mqttClient = connectMqttClient(config);
+    endpoint = config;
+    mqttClient = createMqttClient();
+    scheduledFuture = Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(
+        SimpleMqttPipe.this::tryConnect, RECONNECT_SEC, RECONNECT_SEC, TimeUnit.SECONDS);
   }
 
   public static MessagePipe fromConfig(EndpointConfiguration config) {
     return new SimpleMqttPipe(config);
   }
 
-  private MqttClient connectMqttClient(EndpointConfiguration endpoint) {
-    String broker = makeBrokerUrl(endpoint);
-    String message = String.format("Connecting new mqtt client %s on %s", clientId, broker);
+  private void tryConnect() {
     try {
-      info(message);
-      MqttClient client = new MqttClient(broker, clientId, new MemoryPersistence());
+      connect();
+    } catch (Exception e) {
+      error("While attempting scheduled connect for %s: %s", clientId, friendlyStackTrace(e));
+    }
+  }
 
-      client.setCallback(new MqttCallbackHandler());
-      client.setTimeToWait(INITIALIZE_TIME_MS);
-
+  private synchronized void connect() {
+    try {
+      if (mqttClient.isConnected()) {
+        return;
+      }
+      debug("Attempting connection of mqtt client %s", clientId);
       MqttConnectOptions options = new MqttConnectOptions();
       options.setMqttVersion(MqttConnectOptions.MQTT_VERSION_3_1_1);
       options.setMaxInflight(PUBLISH_THREAD_COUNT * 2);
@@ -70,22 +83,32 @@ public class SimpleMqttPipe extends MessageBase {
         options.setUserName(checkNotNull(basicAuth.username, "MQTT username not defined"));
         options.setPassword(
             checkNotNull(basicAuth.password, "MQTT password not defined").toCharArray());
-      }, () -> warn("No mqtt auth_provider defined"));
+      });
 
-      client.connect(options);
+      mqttClient.connect(options);
+      info("Connection established to mqtt server as " + clientId);
+      subscribeToMessages();
+    } catch (Exception e) {
+      throw new RuntimeException("While connecting mqtt client", e);
+    }
+  }
+
+  private MqttClient createMqttClient() {
+    String broker = makeBrokerUrl(endpoint);
+    info(format("Creating new mqtt client %s to %s", clientId, broker));
+    try {
+      MqttClient client = new MqttClient(broker, clientId, new MemoryPersistence());
+      client.setCallback(new MqttCallbackHandler());
+      client.setTimeToWait(INITIALIZE_TIME_MS);
       return client;
     } catch (Exception e) {
-      throw new RuntimeException(message, e);
+      throw new RuntimeException("While creating mqtt client", e);
     }
   }
 
   private String makeBrokerUrl(EndpointConfiguration endpoint) {
     Transport transport = Optional.ofNullable(endpoint.transport).orElse(Transport.SSL);
-    return String.format(BROKER_URL_FORMAT, transport, endpoint.hostname, endpoint.port);
-  }
-
-  private String makeClientId() {
-    return "client-" + System.currentTimeMillis();
+    return format(BROKER_URL_FORMAT, transport, endpoint.hostname, endpoint.port);
   }
 
   private MqttMessage makeMqttMessage(Bundle bundle) {
@@ -97,28 +120,43 @@ public class SimpleMqttPipe extends MessageBase {
   private String makeMqttTopic(Bundle bundle) {
     Envelope envelope = bundle.envelope;
     return envelope == null
-        ? String.format(TOPIC_FORMAT, namespace, EXCEPTION_TYPE, EXCEPTION_TYPE)
-        : String.format(TOPIC_FORMAT, namespace, envelope.subType, envelope.subFolder);
+        ? format(TOPIC_FORMAT, namespace, EXCEPTION_TYPE, EXCEPTION_TYPE)
+        : format(TOPIC_FORMAT, namespace, envelope.subType, envelope.subFolder);
   }
 
-  @Override
-  public void activate(Consumer<Bundle> bundleConsumer) {
-    super.activate(bundleConsumer);
-    String topic = String.format(TOPIC_FORMAT, namespace, TOPIC_WILDCARD, TOPIC_WILDCARD);
+  private synchronized void subscribeToMessages() {
+    String topic = format(TOPIC_FORMAT, namespace, TOPIC_WILDCARD, TOPIC_WILDCARD);
     try {
-      mqttClient.subscribe(topic);
-      debug("Subscribed to mqtt topic " + topic);
+      if (isActive() && mqttClient.isConnected()) {
+        mqttClient.subscribe(topic);
+        warn("Subscribed to mqtt topic " + topic);
+      }
     } catch (Exception e) {
       throw new RuntimeException("While subscribing to mqtt topic: " + topic, e);
     }
   }
 
   @Override
-  public void publish(Bundle bundle) {
+  public void activate(Consumer<Bundle> bundleConsumer) {
+    super.activate(bundleConsumer);
+    subscribeToMessages();
+  }
+
+  @Override
+  public void shutdown() {
+    scheduledFuture.cancel(false);
+    super.shutdown();
+  }
+
+  @Override
+  public synchronized void publish(Bundle bundle) {
     try {
+      if (!mqttClient.isConnected()) {
+        connect();
+      }
       mqttClient.publish(makeMqttTopic(bundle), makeMqttMessage(bundle));
     } catch (Exception e) {
-      throw new RuntimeException("While publishing to mqtt client", e);
+      throw new RuntimeException("While publishing to mqtt client " + clientId, e);
     }
   }
 
@@ -126,12 +164,11 @@ public class SimpleMqttPipe extends MessageBase {
 
     @Override
     public void connectionLost(Throwable cause) {
-      info("Connection lost: " + Common.getExceptionMessage(cause));
+      error("Connection lost for %s: %s", clientId, friendlyStackTrace(cause));
     }
 
     @Override
     public void deliveryComplete(IMqttDeliveryToken token) {
-      info("Delivery complete");
     }
 
     @Override
@@ -143,9 +180,8 @@ public class SimpleMqttPipe extends MessageBase {
         Map<String, Object> messageMap = toMap(stringObjectMap.get("message"));
         receiveMessage(envelopeMap, messageMap);
       } catch (Exception e) {
-        e.printStackTrace();
+        error("Exception receiving message on %s: %s", clientId, friendlyStackTrace(e));
       }
     }
   }
-
 }

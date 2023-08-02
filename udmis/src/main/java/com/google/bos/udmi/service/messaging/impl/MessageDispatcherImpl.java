@@ -62,20 +62,29 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     registerMessageClass(SubType.CONFIG, SubFolder.UPDATE, ConfigUpdate.class);
   }
 
+  public final Envelope prototypeEnvelope = new Envelope();
   private final MessagePipe messagePipe;
   private final Map<Object, Envelope> messageEnvelopes = new ConcurrentHashMap<>();
   private final Map<Class<?>, Consumer<Object>> handlers = new HashMap<>();
   private final Map<Class<?>, AtomicInteger> handlerCounts = new ConcurrentHashMap<>();
   private final String projectId;
-  public final Envelope prototypeEnvelope = new Envelope();
 
   /**
    * Create a new instance of the message dispatcher.
    */
   public MessageDispatcherImpl(EndpointConfiguration configuration) {
     messagePipe = MessagePipe.from(configuration);
-    projectId = configuration.hostname;
+    projectId = variableSubstitution(configuration.hostname, "project_id/hostname not defined");
     prototypeEnvelope.projectId = projectId;
+  }
+
+  @Nullable
+  private static Object convertStrictOrObject(Class<?> handlerType, Object message) {
+    try {
+      return convertToStrict(handlerType, message);
+    } catch (Exception e) {
+      return toMap(message);
+    }
   }
 
   private static String getMapKey(SubType subType, SubFolder subFolder) {
@@ -91,6 +100,11 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     } catch (ClassNotFoundException e) {
       return null;
     }
+  }
+
+  public static Class<?> getMessageClassFor(Envelope envelope) {
+    String mapKey = getMapKey(envelope.subType, envelope.subFolder);
+    return TYPE_CLASSES.getOrDefault(mapKey, SPECIAL_CLASSES.getOrDefault(mapKey, DEFAULT_CLASS));
   }
 
   @NotNull
@@ -151,20 +165,6 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     } catch (Exception e) {
       throw new RuntimeException("While processing message " + stringify(envelope), e);
     }
-  }
-
-  @Nullable
-  private static Object convertStrictOrObject(Class<?> handlerType, Object message) {
-    try {
-      return convertToStrict(handlerType, message);
-    } catch (Exception e) {
-      return toMap(message);
-    }
-  }
-
-  public static Class<?> getMessageClassFor(Envelope envelope) {
-    String mapKey = getMapKey(envelope.subType, envelope.subFolder);
-    return TYPE_CLASSES.getOrDefault(mapKey, SPECIAL_CLASSES.getOrDefault(mapKey, DEFAULT_CLASS));
   }
 
   @Override

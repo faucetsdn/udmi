@@ -1,10 +1,12 @@
 package com.google.bos.udmi.service.core;
 
+import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static java.lang.String.format;
 
 import com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl;
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
+import com.google.udmi.util.GeneralUtils;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
 import udmi.schema.UdmiState;
@@ -57,10 +59,14 @@ public class DistributorPipe extends ContainerBase {
    * Distribute a message (broadcast).
    */
   public void distribute(Envelope envelope, UdmiState toolState) {
-    debug("Distributing %s for %s %s", toolState.getClass().getSimpleName(),
-        envelope.deviceId, envelope.transactionId);
-    envelope.gatewayId = clientId;
-    dispatcher.publish(dispatcher.makeMessageBundle(envelope, toolState));
+    try {
+      debug("Distributing %s for %s %s", toolState.getClass().getSimpleName(),
+          envelope.deviceId, envelope.transactionId);
+      envelope.gatewayId = clientId;
+      dispatcher.publish(dispatcher.makeMessageBundle(envelope, toolState));
+    } catch (Exception e) {
+      error("Error distributing update: " + friendlyStackTrace(e));
+    }
   }
 
 }
