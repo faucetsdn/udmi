@@ -415,7 +415,7 @@ public class GcpIotAccessProvider extends IotAccessBase {
       Object payloadSubType = messageMap.get("subType");
       Object payloadSubFolder = messageMap.get("subFolder");
       String payload = decodeBase64((String) messageMap.get("payload"));
-      trace("Sending command containing %s/%s: %s", payloadSubType, payloadSubFolder, payload);
+      debug("Sending command containing %s/%s: %s", payloadSubType, payloadSubFolder, payload);
       requireNonNull(registryId, "registry not defined");
       requireNonNull(deviceId, "device not defined");
       String subFolder = ifNotNullGet(folder, SubFolder::value);

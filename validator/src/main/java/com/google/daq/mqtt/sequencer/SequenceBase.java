@@ -1310,16 +1310,21 @@ public class SequenceBase {
       return;
     }
 
-    recordRawMessage(attributes, message);
+    try {
+      recordRawMessage(attributes, message);
 
-    preprocessMessage(attributes, message);
+      preprocessMessage(attributes, message);
 
-    validateMessage(attributes, message);
+      validateMessage(attributes, message);
 
-    if (SubFolder.UPDATE.value().equals(subFolderRaw)) {
-      handleReflectorMessage(subTypeRaw, message, transactionId);
-    } else {
-      handleDeviceMessage(message, subFolderRaw, subTypeRaw, transactionId);
+      if (SubFolder.UPDATE.value().equals(subFolderRaw)) {
+        handleReflectorMessage(subTypeRaw, message, transactionId);
+      } else {
+        handleDeviceMessage(message, subTypeRaw, subFolderRaw, transactionId);
+      }
+    } catch (Exception e) {
+      throw new RuntimeException(
+          format("While processing message %s_%s %s", subTypeRaw, subFolderRaw, transactionId), e);
     }
   }
 
@@ -1341,11 +1346,11 @@ public class SequenceBase {
         format("Pipeline type %s error: %s", subTypeRaw, message.get("error")));
   }
 
-  private void handleDeviceMessage(Map<String, Object> message, String subFolderRaw,
-      String subTypeRaw, String transactionId) {
+  private void handleDeviceMessage(Map<String, Object> message, String subTypeRaw,
+      String subFolderRaw, String transactionId) {
     debug(format("Handling device message %s_%s %s", subTypeRaw, subFolderRaw, transactionId));
-    SubFolder subFolder = SubFolder.fromValue(subFolderRaw);
-    SubType subType = SubType.fromValue(subTypeRaw);
+    SubType subType = SubType.fromValue(requireNonNull(subTypeRaw, "missing subType"));
+    SubFolder subFolder = SubFolder.fromValue(requireNonNull(subFolderRaw, "missing subFolder"));
     switch (subType) {
       case CONFIG:
         // These are echos of sent partial config messages, so do nothing.

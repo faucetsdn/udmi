@@ -2,17 +2,13 @@ package com.google.bos.udmi.service.core;
 
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
-import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static udmi.schema.Envelope.SubFolder.UPDATE;
 
 import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.StateUpdate;
-import com.google.udmi.util.GeneralUtils;
 import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -80,23 +76,6 @@ public class StateProcessor extends ProcessorBase {
 
   private void stateHandler(StateUpdate message) {
     shardStateUpdate(getContinuation(message), message);
-  }
-
-  void updateLastStart(Envelope envelope, StateUpdate message) {
-    if (message == null || message.system == null || message.system.operation == null
-        || message.system.operation.last_start == null) {
-      return;
-    }
-
-    try {
-      Date newLastStart = message.system.operation.last_start;
-      debug("Checking config last_start against state last_start %s", getTimestamp(newLastStart));
-      String newConfig = processConfigChange(envelope, new HashMap<>(), newLastStart);
-      ifNotNullThen(newConfig, config -> reflectMessage(envelope, newConfig));
-    } catch (Exception e) {
-      debug("Could not process config last_state update, skipping: "
-          + GeneralUtils.friendlyStackTrace(e));
-    }
   }
 
 }

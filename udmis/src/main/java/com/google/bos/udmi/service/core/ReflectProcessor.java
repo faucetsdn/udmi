@@ -25,7 +25,6 @@ import static udmi.schema.Envelope.SubFolder.UPDATE;
 
 import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.StateUpdate;
-import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.udmi.util.JsonUtil;
 import java.io.File;
 import java.util.HashMap;
@@ -172,8 +171,9 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private void processStateUpdate(Envelope envelope, StateUpdate stateUpdate) {
-    StateProcessor stateProcessor = UdmiServicePod.getComponent(StateProcessor.class);
-    stateProcessor.updateLastStart(envelope, stateUpdate);
+    debug("Updating last_start b/c of device state query %s/%s",
+        envelope.deviceRegistryId, envelope.deviceId);
+    updateLastStart(envelope, stateUpdate);
   }
 
   private CloudModel reflectModel(Envelope attributes, CloudModel request) {

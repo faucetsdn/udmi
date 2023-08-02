@@ -22,7 +22,6 @@ import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toStringMap;
 import static java.lang.String.format;
-import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static udmi.schema.Envelope.SubFolder.UPDATE;
 
@@ -30,6 +29,7 @@ import com.google.bos.udmi.service.access.IotAccessBase;
 import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.MessageDispatcher;
 import com.google.bos.udmi.service.messaging.MessageDispatcher.HandlerSpecification;
+import com.google.bos.udmi.service.messaging.StateUpdate;
 import com.google.bos.udmi.service.messaging.impl.MessageBase;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.BundleException;
@@ -66,11 +66,11 @@ public abstract class ProcessorBase extends ContainerBase {
       format("{ broken by %s == %s", EXTRA_FIELD_KEY, BREAK_CONFIG_VALUE);
   protected MessageDispatcher dispatcher;
   protected IotAccessBase iotAccess;
-  protected DistributorPipe distributor;
   private final ImmutableList<HandlerSpecification> baseHandlers = ImmutableList.of(
       messageHandlerFor(Object.class, this::defaultHandler),
       messageHandlerFor(Exception.class, this::exceptionHandler)
   );
+  protected DistributorPipe distributor;
   String distributorName;
 
   /**
@@ -114,7 +114,7 @@ public abstract class ProcessorBase extends ContainerBase {
     return null;
   }
 
-  protected String processConfigChange(Envelope envelope, Map<String, Object> payload,
+  protected void processConfigChange(Envelope envelope, Map<String, Object> payload,
       Date newLastStart) {
     SubFolder subFolder = envelope.subFolder;
     debug(format("Modifying device config %s/%s/%s %s", envelope.deviceRegistryId,
@@ -124,7 +124,7 @@ public abstract class ProcessorBase extends ContainerBase {
         envelope.deviceId, previous -> updateConfig(previous, envelope, payload, newLastStart));
 
     if (configUpdate == null) {
-      return null;
+      return;
     }
     Envelope useAttributes = deepCopy(envelope);
     ifNotNullThen(newLastStart, start -> useAttributes.subType = SubType.CONFIG);
@@ -133,7 +133,6 @@ public abstract class ProcessorBase extends ContainerBase {
     debug("Acknowledging config/%s %s %s", subFolder, useAttributes.transactionId,
         getTimestamp(newLastStart));
     reflectMessage(useAttributes, configUpdate);
-    return configUpdate;
   }
 
   protected void reflectError(SubType subType, BundleException bundleException) {
@@ -213,8 +212,8 @@ public abstract class ProcessorBase extends ContainerBase {
   }
 
   private void reflectString(String deviceRegistryId, String commandString) {
-    ifNotNullThen(iotAccess,
-        () -> iotAccess.sendCommand(REFLECT_REGISTRY, deviceRegistryId, null, commandString));
+    ifNotNullThen(iotAccess, () ->
+        iotAccess.sendCommand(REFLECT_REGISTRY, deviceRegistryId, SubFolder.UDMI, commandString));
   }
 
   private String updateConfig(String previous, Envelope attributes,
@@ -335,5 +334,21 @@ public abstract class ProcessorBase extends ContainerBase {
   @TestOnly
   MessageDispatcher getDispatcher() {
     return dispatcher;
+  }
+
+  void updateLastStart(Envelope envelope, StateUpdate message) {
+    if (message == null || message.system == null || message.system.operation == null
+        || message.system.operation.last_start == null) {
+      return;
+    }
+
+    try {
+      Date newLastStart = message.system.operation.last_start;
+      debug("Checking config last_start against state last_start %s", getTimestamp(newLastStart));
+      processConfigChange(envelope, new HashMap<>(), newLastStart);
+    } catch (Exception e) {
+      debug("Could not process config last_state update, skipping: "
+          + friendlyStackTrace(e));
+    }
   }
 }
