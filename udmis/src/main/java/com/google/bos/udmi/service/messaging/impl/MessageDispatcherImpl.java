@@ -1,6 +1,9 @@
 package com.google.bos.udmi.service.messaging.impl;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
@@ -202,9 +205,14 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   public MessageContinuation getContinuation(Object message) {
     final Envelope continuationEnvelope =
         requireNonNull(deepCopy(messageEnvelopes.get(message)), "missing message envelope");
+
     return new MessageContinuation() {
+      private boolean available = true;
+
       @Override
       public Envelope getEnvelope() {
+        checkState(available, "message envelope already extracted");
+        available = false;
         return continuationEnvelope;
       }
 

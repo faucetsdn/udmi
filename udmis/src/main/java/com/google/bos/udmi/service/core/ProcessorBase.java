@@ -114,7 +114,7 @@ public abstract class ProcessorBase extends ContainerBase {
     return null;
   }
 
-  protected void processConfigChange(Envelope envelope, Map<String, Object> payload,
+  protected String processConfigChange(Envelope envelope, Map<String, Object> payload,
       Date newLastStart) {
     SubFolder subFolder = envelope.subFolder;
     debug(format("Modifying device config %s/%s/%s %s", envelope.deviceRegistryId,
@@ -124,7 +124,7 @@ public abstract class ProcessorBase extends ContainerBase {
         envelope.deviceId, previous -> updateConfig(previous, envelope, payload, newLastStart));
 
     if (configUpdate == null) {
-      return;
+      return null;
     }
     Envelope useAttributes = deepCopy(envelope);
     ifNotNullThen(newLastStart, start -> useAttributes.subType = SubType.CONFIG);
@@ -133,6 +133,7 @@ public abstract class ProcessorBase extends ContainerBase {
     debug("Acknowledging config/%s %s %s", subFolder, useAttributes.transactionId,
         getTimestamp(newLastStart));
     reflectMessage(useAttributes, configUpdate);
+    return configUpdate;
   }
 
   protected void reflectError(SubType subType, BundleException bundleException) {

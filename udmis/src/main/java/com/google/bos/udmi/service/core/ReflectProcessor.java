@@ -25,6 +25,7 @@ import static udmi.schema.Envelope.SubFolder.UPDATE;
 
 import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.StateUpdate;
+import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.udmi.util.JsonUtil;
 import java.io.File;
 import java.util.HashMap;
@@ -159,6 +160,7 @@ public class ReflectProcessor extends ProcessorBase {
       debug(format("Processing device %s state query", attributes.deviceId));
       StateUpdate stateUpdate = fromStringStrict(StateUpdate.class, state);
       stateUpdate.configAcked = checkConfigAckTime(attributes, state);
+      processStateUpdate(attributes, stateUpdate);
       publish(stateUpdate);
       reflectStateUpdate(attributes, stringify(stateUpdate));
       CloudModel cloudModel = new CloudModel();
@@ -167,6 +169,11 @@ public class ReflectProcessor extends ProcessorBase {
     } catch (Exception e) {
       throw new RuntimeException("While querying device state " + attributes.deviceId, e);
     }
+  }
+
+  private void processStateUpdate(Envelope envelope, StateUpdate stateUpdate) {
+    StateProcessor stateProcessor = UdmiServicePod.getComponent(StateProcessor.class);
+    stateProcessor.updateLastStart(envelope, stateUpdate);
   }
 
   private CloudModel reflectModel(Envelope attributes, CloudModel request) {

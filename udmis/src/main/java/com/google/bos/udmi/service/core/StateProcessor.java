@@ -2,6 +2,7 @@ package com.google.bos.udmi.service.core;
 
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
+import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static udmi.schema.Envelope.SubFolder.UPDATE;
@@ -35,8 +36,8 @@ public class StateProcessor extends ProcessorBase {
   @Override
   protected void defaultHandler(Object originalMessage) {
     StateUpdate stateMessage = convertToStrict(StateUpdate.class, originalMessage);
-    shardStateUpdate(stateMessage, originalMessage);
-    updateLastStart(stateMessage, originalMessage);
+    shardStateUpdate(getContinuation(originalMessage), stateMessage);
+    updateLastStart(getContinuation(originalMessage).getEnvelope(), stateMessage);
   }
 
   @Override
@@ -49,9 +50,8 @@ public class StateProcessor extends ProcessorBase {
     registerHandler(StateUpdate.class, this::stateHandler);
   }
 
-  private void shardStateUpdate(StateUpdate message, Object baseMessage) {
+  private void shardStateUpdate(MessageContinuation continuation, StateUpdate message) {
     info("Sharding state message to pipeline as incremental updates");
-    MessageContinuation continuation = getContinuation(baseMessage);
     Envelope envelope = continuation.getEnvelope();
     envelope.subType = SubType.STATE;
     envelope.subFolder = UPDATE;
@@ -79,10 +79,10 @@ public class StateProcessor extends ProcessorBase {
   }
 
   private void stateHandler(StateUpdate message) {
-    shardStateUpdate(message, message);
+    shardStateUpdate(getContinuation(message), message);
   }
 
-  private void updateLastStart(StateUpdate message, Object baseMessage) {
+  void updateLastStart(Envelope envelope, StateUpdate message) {
     if (message == null || message.system == null || message.system.operation == null
         || message.system.operation.last_start == null) {
       return;
@@ -90,8 +90,9 @@ public class StateProcessor extends ProcessorBase {
 
     try {
       Date newLastStart = message.system.operation.last_start;
-      Envelope envelope = getContinuation(baseMessage).getEnvelope();
-      processConfigChange(envelope, new HashMap<>(), newLastStart);
+      debug("Checking config last_start against state last_start %s", getTimestamp(newLastStart));
+      String newConfig = processConfigChange(envelope, new HashMap<>(), newLastStart);
+      ifNotNullThen(newConfig, config -> reflectMessage(envelope, newConfig));
     } catch (Exception e) {
       debug("Could not process config last_state update, skipping: "
           + GeneralUtils.friendlyStackTrace(e));
