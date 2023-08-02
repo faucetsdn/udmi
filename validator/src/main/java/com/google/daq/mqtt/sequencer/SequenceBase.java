@@ -975,8 +975,8 @@ public class SequenceBase {
     updateConfig(SubFolder.DISCOVERY, deviceConfig.discovery);
     if (!configIsPending() && force) {
       debug("Forcing config update");
-      sentConfig.remove(FORCE_UPDATE_CONFIG_KEY);
-      updateConfig(null, null);
+      sentConfig.remove(SubFolder.UDMI);
+      updateConfig(SubFolder.UPDATE, null);
     }
     if (configIsPending()) {
       lastConfigUpdate = CleanDateFormat.clean(Instant.now());
@@ -991,9 +991,9 @@ public class SequenceBase {
   private boolean updateConfig(SubFolder subBlock, Object data) {
     try {
       String messageData = stringify(data);
-      String sentBlockConfig = sentConfig.computeIfAbsent(subBlock, key -> FORCE_UPDATE_CONFIG_KEY);
+      String sentBlockConfig = sentConfig.get(requireNonNull(subBlock, "subBlock not defined"));
       boolean updated = !messageData.equals(sentBlockConfig);
-      trace("updated check config_" + subBlock + " " + updated, sentBlockConfig);
+      trace(format("updated check %s_%s: %s", CONFIG_SUBTYPE, subBlock, updated));
       if (updated) {
         String augmentedMessage = actualize(stringify(data));
         String topic = subBlock + "/config";
@@ -1343,7 +1343,7 @@ public class SequenceBase {
 
   private void handleDeviceMessage(Map<String, Object> message, String subFolderRaw,
       String subTypeRaw, String transactionId) {
-    debug(format("Handling device message %s/%s %s", subTypeRaw, subFolderRaw, transactionId));
+    debug(format("Handling device message %s_%s %s", subTypeRaw, subFolderRaw, transactionId));
     SubFolder subFolder = SubFolder.fromValue(subFolderRaw);
     SubType subType = SubType.fromValue(subTypeRaw);
     switch (subType) {
@@ -1717,7 +1717,7 @@ public class SequenceBase {
   }
 
   protected void ensureStateUpdate() {
-    updateConfig("state update", true);
+    updateConfig("ensure state update", true);
     withRecordSequence(false,
         () -> untilTrue("received at least one state update", this::receivedAtLeastOneState));
   }
