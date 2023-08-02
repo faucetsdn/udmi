@@ -158,6 +158,12 @@ jobs:
           cat out/schemas.out || true
           echo ============ find RESULT.log
           find sites/udmi_site_model/out/devices/ -name RESULT.log | xargs fgrep -i schema
+      - name: sequencer markdown report generator
+        if: ${{ always() }}
+        run: |
+          SAMPLE_TEST_ROW="| system | system_last_update | stable | pass | Sequence complete |"
+          echo Checking for entry in generated results.md
+          grep "$SAMPLE_TEST_ROW" sites/udmi_site_model/out/devices/AHU-1/results.md
       - name: pubber logs
         if: ${{ always() }}
         run: more out/pubber.out* pubber/out/*/*.json || true
