@@ -189,7 +189,7 @@ class SequencerReport:
     """Load sequencer test results and features"""
     results = {}
     features = {}
-    stages_template = {stage: FeatureStageScore(stage=stage) for stage in STAGES}
+    stages_template = {s: FeatureStageScore(stage=s) for s in STAGES}
     for feature, sequences in self.results_json["features"].items():
       features[feature] = copy.deepcopy(stages_template)
       for name, result in sequences["sequences"].items():
