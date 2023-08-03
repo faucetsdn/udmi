@@ -6,7 +6,9 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.safeSleep;
+import static com.google.udmi.util.JsonUtil.toMap;
 import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.common.collect.ImmutableMap;
@@ -147,6 +149,13 @@ public abstract class IotAccessBase extends ContainerBase {
     String backoffKey = getBackoffKey(registryId, deviceId);
     if (registryBackoffCheck(registryId, deviceId)) {
       try {
+        Map<String, Object> messageMap = toMap(message);
+        Object payloadSubType = messageMap.get("subType");
+        Object payloadSubFolder = messageMap.get("subFolder");
+        debug("Sending command containing %s/%s to %s/%s/%s", payloadSubType, payloadSubFolder,
+            registryId, deviceId, folder);
+        requireNonNull(registryId, "registry not defined");
+        requireNonNull(deviceId, "device not defined");
         sendCommandBase(registryId, deviceId, folder, message);
       } catch (Exception e) {
         error("Exception sending command to %s: %s", backoffKey, friendlyStackTrace(e));

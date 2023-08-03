@@ -541,7 +541,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       if (response == null) {
         throw new RuntimeException("SendCommandToDevice execution failed for " + deviceName);
       }
-      debug("Sent command to " + deviceName);
     } catch (Exception e) {
       throw new RuntimeException(format("While sending command to ClearBlade %s/%s/%s",
           registryId, deviceId, subFolder), e);
