@@ -9,7 +9,7 @@ from dataclasses import dataclass
 
 import jinja2
 
-TEMPLATE_PATH = "etc/sequencer_template.md"
+TEMPLATE_PATH = "etc/sequencer_report.md.template"
 OUT_FILE = "results.md"
 
 # minimum set of schemas (incase device doesn't publish given message typ)
