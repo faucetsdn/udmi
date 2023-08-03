@@ -1,0 +1,32 @@
+#!/bin/bash -e
+#
+# Modify the site metadata structure with the appropriate private key for pubber.
+# This is used by automation scripts to configure pubber without exposing the key,
+# since it can be managed as a secret and handled appropirately.
+#
+
+if [[ $# -ne 3 ]]; then
+    echo Usage: $0 SITE_DIR DEVICE_ID PKCS8_B64
+    false
+fi
+
+site_dir=$(realpath $1)
+device_id=$2
+pkcs8_b64=$3
+shift 3
+
+function fail {
+    echo $*
+    false
+}
+
+pkcs8_file=$site_dir/devices/$device_id/rsa_private.pkcs8
+
+[[ -f $pkcs8_file ]] && fail Key file alreay exists: $pkcs8_file
+
+tmpfile=`mktemp`
+echo $pkcs8_b64 | tr -d ' \n' | base64 --decode > $tmpfile
+
+([[ -s $tmpfile ]] && mv $tmpfile $pkcs8_file) || fail Empty output file.
+
+md5sum $pkcs8_file
