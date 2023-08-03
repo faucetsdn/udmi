@@ -108,7 +108,7 @@ public class GeneralUtils {
   public static String friendlyStackTrace(Throwable e) {
     List<String> messages = new ArrayList<>();
     while (e != null) {
-      messages.add(ofNullable(e.getMessage()).orElseGet(e::toString));
+      messages.add(e.toString());
       e = e.getCause();
     }
     return CSV_JOINER.join(messages).replace('\n', ' ');

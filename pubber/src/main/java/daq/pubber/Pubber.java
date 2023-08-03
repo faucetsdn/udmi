@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
+import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.fromJsonFile;
 import static com.google.udmi.util.GeneralUtils.fromJsonString;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -296,7 +297,7 @@ public class Pubber {
       }
       LOG.info("Done with main");
     } catch (Exception e) {
-      LOG.error("Exception starting pubber: " + GeneralUtils.friendlyStackTrace(e));
+      LOG.error("Exception starting pubber: " + friendlyStackTrace(e));
       System.exit(-1);
     }
   }
