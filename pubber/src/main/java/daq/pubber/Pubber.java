@@ -3,7 +3,7 @@ package daq.pubber;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.udmi.util.GeneralUtils.catchOrElse;
+import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.fromJsonFile;
 import static com.google.udmi.util.GeneralUtils.fromJsonString;
@@ -575,9 +575,7 @@ public class Pubber {
 
   private void processDeviceMetadata(Metadata metadata) {
     if (metadata.cloud != null) {
-      configuration.algorithm = catchOrElse(() -> metadata.cloud.auth_type.value(),
-          Auth_type.RS_256::value);
-      info("Configuring with key type " + configuration.algorithm);
+      configuration.algorithm = catchToNull(() -> metadata.cloud.auth_type.value());
     }
 
     if (metadata.gateway != null) {
@@ -589,6 +587,8 @@ public class Pubber {
         }
       }
     }
+
+    info("Configured with auth_type " + configuration.algorithm);
 
     Map<String, PointPointsetModel> points =
         ifNotNullGet(metadata.pointset, data -> data.points, DEFAULT_POINTS);
