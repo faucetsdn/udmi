@@ -3,6 +3,7 @@ package daq.pubber;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.udmi.util.GeneralUtils.catchOrElse;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.fromJsonFile;
 import static com.google.udmi.util.GeneralUtils.fromJsonString;
@@ -574,7 +575,8 @@ public class Pubber {
 
   private void processDeviceMetadata(Metadata metadata) {
     if (metadata.cloud != null) {
-      configuration.algorithm = metadata.cloud.auth_type.value();
+      configuration.algorithm = catchOrElse(() -> metadata.cloud.auth_type.value(),
+          Auth_type.RS_256::value);
       info("Configuring with key type " + configuration.algorithm);
     }
 
