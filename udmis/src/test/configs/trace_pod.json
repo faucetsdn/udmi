@@ -1,6 +1,7 @@
 {
   "flow_defaults": {
-    "protocol": "local"
+    "protocol": "local",
+    "hostname": "foo"
   },
   "flows": {
     "target": {
@@ -22,7 +23,7 @@
     }
   },
   "iot_access": {
-    "iot_access": {
+    "iot-access": {
       "provider": "local"
     }
   }

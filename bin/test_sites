@@ -64,7 +64,7 @@ echo '#########################################' Testing simple mock sequencer..
 bin/sequencer tests/sites/downgrade/ -- DWN-2 54321 system_mode_restart
 
 RESULTLOG=tests/sites/downgrade/out/devices/DWN-2/RESULT.log
-fgrep "RESULT fail system.mode system_mode_restart ALPHA 5 java.lang.NullPointerException" $RESULTLOG ||
+fgrep "RESULT fail system.mode system_mode_restart ALPHA 5" $RESULTLOG ||
     bin/fail unexpected output from $RESULTLOG
 
 echo

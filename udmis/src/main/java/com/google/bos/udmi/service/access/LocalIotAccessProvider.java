@@ -42,6 +42,11 @@ public class LocalIotAccessProvider extends IotAccessBase {
   }
 
   @Override
+  protected boolean isEnabled() {
+    return true;
+  }
+
+  @Override
   public void activate() {
     debug("activate");
   }

@@ -3,6 +3,7 @@ package com.google.bos.udmi.service.access;
 import static com.clearblade.cloud.iot.v1.devicetypes.GatewayType.NON_GATEWAY;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
+import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
@@ -61,6 +62,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -79,7 +81,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
 
   static final Set<String> CLOUD_REGIONS =
       ImmutableSet.of("us-central1", "europe-west1", "asia-east1");
-  private static final String UDMIS_REGISTRY = "UDMS-REFLECT";
   private static final String EMPTY_JSON = "{}";
   private static final BiMap<Key_format, PublicKeyFormat> AUTH_TYPE_MAP = ImmutableBiMap.of(
       Key_format.RS_256, PublicKeyFormat.RSA_PEM,
@@ -96,13 +97,13 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       .build();
 
   private final String projectId;
-  private Map<String, String> registryCloudRegions;
+  private final CompletableFuture<Map<String, String>> registryRegions = new CompletableFuture<>();
 
   /**
    * Create a new instance for interfacing with GCP IoT Core.
    */
   public ClearBladeIotAccessProvider(IotAccess iotAccess) {
-    projectId = requireNonNull(iotAccess.project_id, "gcp project id not specified");
+    projectId = getProjectId(iotAccess);
   }
 
   private static Credential convertIot(DeviceCredential device) {
@@ -152,6 +153,11 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   @VisibleForTesting
   protected DeviceManagerClient getDeviceManagerClient() {
     return new DeviceManagerClient();
+  }
+
+  @Override
+  protected boolean isEnabled() {
+    return projectId != null;
   }
 
   protected String updateConfig(String registryId, String deviceId, String config, Long version) {
@@ -290,6 +296,16 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
         .build();
   }
 
+  @Nullable
+  private String getProjectId(IotAccess iotAccess) {
+    try {
+      return variableSubstitution(iotAccess.project_id, "project id not specified");
+    } catch (IllegalArgumentException e) {
+      warn("Missing variable in substitution, disabling provider: " + friendlyStackTrace(e));
+      return null;
+    }
+  }
+
   @NotNull
   private Map<String, String> getRegistriesForRegion(String region) {
     try {
@@ -312,7 +328,12 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   }
 
   private String getRegistryLocation(String registry) {
-    return requireNonNull(registryCloudRegions.get(registry), "region for registry " + registry);
+    try {
+      return requireNonNull(registryRegions.get().get(registry),
+          "unknown region for registry " + registry);
+    } catch (Exception e) {
+      throw new RuntimeException("While getting registry path for " + registry, e);
+    }
   }
 
   private String getRegistryName(String registryId) {
@@ -390,8 +411,12 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   @Override
   public void activate() {
     super.activate();
+    if (!isEnabled()) {
+      warn("ClearBlade access provider disabled");
+      return;
+    }
     debug("Initializing ClearBlade access provider for project " + projectId);
-    registryCloudRegions = fetchRegistryCloudRegions();
+    registryRegions.complete(fetchRegistryCloudRegions());
   }
 
   @Override
@@ -440,10 +465,10 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   @Override
   public String fetchRegistryMetadata(String registryId, String metadataKey) {
     try {
-      CloudModel cloudModel = fetchDevice(UDMIS_REGISTRY, registryId);
+      CloudModel cloudModel = fetchDevice(UDMI_REGISTRY, registryId);
       return cloudModel.metadata.get(metadataKey);
     } catch (Exception e) {
-      debug(format("No device entry for %s/%s", UDMIS_REGISTRY, registryId));
+      debug(format("No device entry for %s/%s", UDMI_REGISTRY, registryId));
       return null;
     }
   }
@@ -516,7 +541,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       if (response == null) {
         throw new RuntimeException("SendCommandToDevice execution failed for " + deviceName);
       }
-      debug("Sent command to " + deviceName);
     } catch (Exception e) {
       throw new RuntimeException(format("While sending command to ClearBlade %s/%s/%s",
           registryId, deviceId, subFolder), e);

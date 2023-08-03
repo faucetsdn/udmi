@@ -29,7 +29,6 @@ import com.google.udmi.util.JsonUtil;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
 import udmi.schema.Envelope;
@@ -42,6 +41,7 @@ import udmi.schema.UdmiState;
 /**
  * Handle the reflector processor stream for UDMI utility tool clients.
  */
+@ComponentName("reflect")
 public class ReflectProcessor extends ProcessorBase {
 
   public static final String PAYLOAD_KEY = "payload";
@@ -55,7 +55,6 @@ public class ReflectProcessor extends ProcessorBase {
     MessageContinuation continuation = getContinuation(message);
     Envelope reflection = continuation.getEnvelope();
     try {
-      iotAccess.registryBackoffClear(reflection.deviceRegistryId, reflection.deviceId);
       if (reflection.subFolder == null) {
         reflectStateHandler(reflection, extractUdmiState(message));
       } else if (reflection.subFolder != SubFolder.UDMI) {
@@ -125,7 +124,7 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private void processException(Envelope reflection, Exception e) {
-    debug("Processing exception %s: %s", reflection.transactionId, friendlyStackTrace(e));
+    warn("Processing exception %s: %s", reflection.transactionId, friendlyStackTrace(e));
     Map<String, Object> message = new HashMap<>();
     message.put(ERROR_KEY, stackTraceString(e));
     Envelope envelope = new Envelope();
@@ -160,6 +159,7 @@ public class ReflectProcessor extends ProcessorBase {
       debug(format("Processing device %s state query", attributes.deviceId));
       StateUpdate stateUpdate = fromStringStrict(StateUpdate.class, state);
       stateUpdate.configAcked = checkConfigAckTime(attributes, state);
+      processStateUpdate(attributes, stateUpdate);
       publish(stateUpdate);
       reflectStateUpdate(attributes, stringify(stateUpdate));
       CloudModel cloudModel = new CloudModel();
@@ -168,6 +168,12 @@ public class ReflectProcessor extends ProcessorBase {
     } catch (Exception e) {
       throw new RuntimeException("While querying device state " + attributes.deviceId, e);
     }
+  }
+
+  private void processStateUpdate(Envelope envelope, StateUpdate stateUpdate) {
+    debug("Updating last_start b/c of device state query %s/%s",
+        envelope.deviceRegistryId, envelope.deviceId);
+    updateLastStart(envelope, stateUpdate);
   }
 
   private CloudModel reflectModel(Envelope attributes, CloudModel request) {
@@ -208,6 +214,9 @@ public class ReflectProcessor extends ProcessorBase {
     final String registryId = envelope.deviceRegistryId;
     final String deviceId = envelope.deviceId;
 
+    ifNotNullThen(distributor, d -> d.distribute(envelope, toolState));
+    updateAwareness(envelope, toolState);
+
     UdmiConfig udmiConfig = new UdmiConfig();
     udmiConfig.last_state = toolState.timestamp;
     udmiConfig.setup = new SetupUdmiConfig();
@@ -219,8 +228,7 @@ public class ReflectProcessor extends ProcessorBase {
     Map<String, Object> configMap = new HashMap<>();
     configMap.put(SubFolder.UDMI.value(), udmiConfig);
     String contents = stringify(configMap);
-    debug("Setting reflector config %s %s %s", registryId, deviceId, contents);
-    iotAccess.setProviderAffinity(registryId, deviceId, envelope.source);
+    debug("Setting reflector config %s %s: %s", registryId, deviceId, contents);
     iotAccess.modifyConfig(registryId, deviceId, previous -> contents);
   }
 
@@ -240,7 +248,13 @@ public class ReflectProcessor extends ProcessorBase {
 
   @Override
   public void activate() {
-    debug(stringify(DEPLOYED_CONFIG));
+    debug("Deployment configuration: " + stringify(DEPLOYED_CONFIG));
     super.activate();
+  }
+
+  void updateAwareness(Envelope envelope, UdmiState toolState) {
+    debug("Processing UdmiState for %s/%s %s", envelope.deviceId, envelope.source,
+        stringify(toolState));
+    iotAccess.setProviderAffinity(envelope.deviceRegistryId, envelope.deviceId, envelope.source);
   }
 }

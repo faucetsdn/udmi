@@ -11,11 +11,22 @@ shift
 ROOT=$(dirname $0)/..
 cd $ROOT
 
-cat /etc/os-release
+more /etc/os-release $POD_CONFIG | cat
 
 java -version
 
 POD_JAR=build/libs/udmis-1.0-SNAPSHOT-all.jar
+
+gcloud_project=$(gcloud config get project || true)
+if [[ -n $GCP_PROJECT ]]; then
+    echo Using GCP_PROJECT $GCP_PROJECT from env.
+elif [[ -z $gcloud_project ]]; then
+    echo No GCP_PROJECT or gcloud project defined.
+    false
+else
+    echo Using GCP_PROJECT $gcloud_project from gcloud config.
+    export GCP_PROJECT=$gcloud_project
+fi
 
 java -jar $POD_JAR $POD_CONFIG
 

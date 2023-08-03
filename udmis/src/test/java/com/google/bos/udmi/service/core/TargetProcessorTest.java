@@ -78,7 +78,7 @@ class TargetProcessorTest extends ProcessorTestBase {
 
     ArgumentCaptor<String> commandCaptor = ArgumentCaptor.forClass(String.class);
     verify(provider, times(1)).sendCommand(eq(REFLECT_REGISTRY),
-        eq(TEST_REGISTRY), isNull(), commandCaptor.capture());
+        eq(TEST_REGISTRY), eq(SubFolder.UDMI), commandCaptor.capture());
     verifyCommand(commandCaptor, MONGOOSE);
   }
 
@@ -98,7 +98,7 @@ class TargetProcessorTest extends ProcessorTestBase {
 
     ArgumentCaptor<String> commandCaptor = ArgumentCaptor.forClass(String.class);
     verify(provider, times(1)).sendCommand(eq(REFLECT_REGISTRY),
-        eq(TEST_REGISTRY), isNull(), commandCaptor.capture());
+        eq(TEST_REGISTRY), eq(SubFolder.UDMI), commandCaptor.capture());
     verifyCommand(commandCaptor, null);
   }
 

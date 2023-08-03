@@ -12,6 +12,7 @@ import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.udmi.util.CleanDateFormat;
 import java.io.File;
 import java.io.IOException;
+import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -70,7 +71,7 @@ public abstract class ProcessorTestBase extends MessageTestBase {
     processor = ProcessorBase.create(getProcessorClass(), config);
     setTestDispatcher(processor.getDispatcher());
     provider = mock(IotAccessBase.class);
-    UdmiServicePod.putComponent(IOT_ACCESS_COMPONENT, provider);
+    UdmiServicePod.putComponent(IOT_ACCESS_COMPONENT, () -> provider);
     processor.activate();
     provider.activate();
   }
@@ -78,16 +79,20 @@ public abstract class ProcessorTestBase extends MessageTestBase {
   /**
    * Write a deployment file for testing.
    */
-  public static void writeVersionDeployFile() throws IOException {
+  public static void writeVersionDeployFile() {
     File deployFile = new File(ReflectProcessor.DEPLOY_FILE);
-    deleteDirectory(deployFile.getParentFile());
-    deployFile.getParentFile().mkdirs();
-    SetupUdmiConfig deployedVersion = new SetupUdmiConfig();
-    deployedVersion.deployed_at = TEST_TIMESTAMP;
-    deployedVersion.deployed_by = TEST_USER;
-    deployedVersion.udmi_functions = TEST_FUNCTIONS;
-    deployedVersion.udmi_version = TEST_VERSION;
-    writeFile(deployedVersion, deployFile);
+    try {
+      deleteDirectory(deployFile.getParentFile());
+      deployFile.getParentFile().mkdirs();
+      SetupUdmiConfig deployedVersion = new SetupUdmiConfig();
+      deployedVersion.deployed_at = TEST_TIMESTAMP;
+      deployedVersion.deployed_by = TEST_USER;
+      deployedVersion.udmi_functions = TEST_FUNCTIONS;
+      deployedVersion.udmi_version = TEST_VERSION;
+      writeFile(deployedVersion, deployFile);
+    } catch (Exception e) {
+      throw new RuntimeException("While writing deploy file " + deployFile.getAbsolutePath(), e);
+    }
   }
 
   @NotNull

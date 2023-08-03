@@ -36,6 +36,17 @@
           "$ref": "file:access_iot.json"
         }
       }
+    },
+    "distributors": {
+      "type": "object",
+      "title": "Distributed state managers",
+      "additionalProperties": false,
+      "existingJavaType": "java.util.HashMap<String, EndpointConfiguration>",
+      "patternProperties": {
+        "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
+          "$ref": "file:configuration_endpoint.json"
+        }
+      }
     }
   }
 }

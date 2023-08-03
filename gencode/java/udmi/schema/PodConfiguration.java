@@ -20,7 +20,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "flow_defaults",
     "flows",
     "bridges",
-    "iot_access"
+    "iot_access",
+    "distributors"
 })
 @Generated("jsonschema2pojo")
 public class PodConfiguration {
@@ -46,12 +47,21 @@ public class PodConfiguration {
      */
     @JsonProperty("iot_access")
     public HashMap<String, IotAccess> iot_access;
+    /**
+     * Distributed state managers
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("distributors")
+    public HashMap<String, EndpointConfiguration> distributors;
 
     @Override
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.bridges == null)? 0 :this.bridges.hashCode()));
         result = ((result* 31)+((this.flow_defaults == null)? 0 :this.flow_defaults.hashCode()));
+        result = ((result* 31)+((this.distributors == null)? 0 :this.distributors.hashCode()));
         result = ((result* 31)+((this.flows == null)? 0 :this.flows.hashCode()));
         result = ((result* 31)+((this.iot_access == null)? 0 :this.iot_access.hashCode()));
         return result;
@@ -66,7 +76,7 @@ public class PodConfiguration {
             return false;
         }
         PodConfiguration rhs = ((PodConfiguration) other);
-        return (((((this.bridges == rhs.bridges)||((this.bridges!= null)&&this.bridges.equals(rhs.bridges)))&&((this.flow_defaults == rhs.flow_defaults)||((this.flow_defaults!= null)&&this.flow_defaults.equals(rhs.flow_defaults))))&&((this.flows == rhs.flows)||((this.flows!= null)&&this.flows.equals(rhs.flows))))&&((this.iot_access == rhs.iot_access)||((this.iot_access!= null)&&this.iot_access.equals(rhs.iot_access))));
+        return ((((((this.bridges == rhs.bridges)||((this.bridges!= null)&&this.bridges.equals(rhs.bridges)))&&((this.flow_defaults == rhs.flow_defaults)||((this.flow_defaults!= null)&&this.flow_defaults.equals(rhs.flow_defaults))))&&((this.distributors == rhs.distributors)||((this.distributors!= null)&&this.distributors.equals(rhs.distributors))))&&((this.flows == rhs.flows)||((this.flows!= null)&&this.flows.equals(rhs.flows))))&&((this.iot_access == rhs.iot_access)||((this.iot_access!= null)&&this.iot_access.equals(rhs.iot_access))));
     }
 
 }
