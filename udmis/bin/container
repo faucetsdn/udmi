@@ -94,6 +94,7 @@ elif [[ $cmd == push ]]; then
     echo Next try: $0 deploy
 elif [[ $cmd == deploy ]]; then
     kubectl apply -f tmp/k8s_pod.yaml
+    kubectl apply -f tmp/k8s_broker.yaml
     echo Next try: $0 status
 elif [[ $cmd == status ]]; then
     kubectl describe pods udmis-test-pod
