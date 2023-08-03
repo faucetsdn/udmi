@@ -126,7 +126,7 @@ public class PointsetSequences extends PointsetBase {
   @Feature(stage = BETA, bucket = POINTSET)
   @Summary("device publishes pointset events")
   public void pointset_publish() {
-    ifNullSkipTest(deviceConfig.pointset == null, NO_POINTSET_CONFIG);
+    ifNullSkipTest(deviceConfig.pointset, "no pointset found in config");
 
     untilTrue("receive a pointset event",
         () -> (countReceivedEvents(PointsetEvent.class) > 1
