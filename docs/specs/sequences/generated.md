@@ -29,9 +29,9 @@ Some caveats:
 <!-- START GENERATED, do not edit anything after this line! -->
 * [config_logging](#config_logging): Check that the device publishes minimum required log entries when receiving config
 * [device_config_acked](#device_config_acked): Check that the device MQTT-acknowledges a sent config.
-* [empty_enumeration](#empty_enumeration)
+* [empty_enumeration](#empty_enumeration): check enumeration of nothing at all
 * [extra_config](#extra_config): Check that the device correctly handles an extra out-of-schema field
-* [feature_enumeration](#feature_enumeration)
+* [feature_enumeration](#feature_enumeration): check enumeration of device features
 * [pointset_publish](#pointset_publish): device publishes pointset events
 * [pointset_publish_interval](#pointset_publish_interval): test sample rate and sample limit sec
 * [pointset_sample_rate](#pointset_sample_rate): device publishes pointset events at a rate of no more than config sample_rate_sec
@@ -58,6 +58,8 @@ Check that the device MQTT-acknowledges a sent config.
 1. Wait for config acked
 
 ## empty_enumeration (PREVIEW)
+
+check enumeration of nothing at all
 
 1. Update config before enumeration not active:
     * Add `discovery` = { "enumerate": {  } }
@@ -95,6 +97,8 @@ Check that the device correctly handles an extra out-of-schema field
 1. Wait for log category `system.config.apply` level `NOTICE` was logged
 
 ## feature_enumeration (PREVIEW)
+
+check enumeration of device features
 
 1. Update config before enumeration not active:
     * Add `discovery` = { "enumerate": { "features": `true` } }

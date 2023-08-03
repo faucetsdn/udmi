@@ -31,6 +31,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
     "msg_prefix",
     "recv_id",
     "send_id",
+    "distributor",
     "auth_provider",
     "generation"
 })
@@ -63,11 +64,11 @@ public class EndpointConfiguration {
     @JsonProperty("port")
     public Integer port = 8883;
     /**
-     * Delay waiting for config message on start, <0 to disable
+     * Delay waiting for config message on start, 0 for default, <0 to disable
      * 
      */
     @JsonProperty("config_sync_sec")
-    @JsonPropertyDescription("Delay waiting for config message on start, <0 to disable")
+    @JsonPropertyDescription("Delay waiting for config message on start, 0 for default, <0 to disable")
     public Integer config_sync_sec;
     /**
      * 
@@ -97,6 +98,13 @@ public class EndpointConfiguration {
     @JsonProperty("send_id")
     @JsonPropertyDescription("Id for the sending messages channel")
     public String send_id;
+    /**
+     * processor designation for a distributor channel
+     * 
+     */
+    @JsonProperty("distributor")
+    @JsonPropertyDescription("processor designation for a distributor channel")
+    public String distributor;
     @JsonProperty("auth_provider")
     public Auth_provider auth_provider;
     /**
@@ -114,6 +122,7 @@ public class EndpointConfiguration {
         result = ((result* 31)+((this.transport == null)? 0 :this.transport.hashCode()));
         result = ((result* 31)+((this.error == null)? 0 :this.error.hashCode()));
         result = ((result* 31)+((this.config_sync_sec == null)? 0 :this.config_sync_sec.hashCode()));
+        result = ((result* 31)+((this.distributor == null)? 0 :this.distributor.hashCode()));
         result = ((result* 31)+((this.client_id == null)? 0 :this.client_id.hashCode()));
         result = ((result* 31)+((this.msg_prefix == null)? 0 :this.msg_prefix.hashCode()));
         result = ((result* 31)+((this.send_id == null)? 0 :this.send_id.hashCode()));
@@ -134,7 +143,7 @@ public class EndpointConfiguration {
             return false;
         }
         EndpointConfiguration rhs = ((EndpointConfiguration) other);
-        return (((((((((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.transport == rhs.transport)||((this.transport!= null)&&this.transport.equals(rhs.transport))))&&((this.error == rhs.error)||((this.error!= null)&&this.error.equals(rhs.error))))&&((this.config_sync_sec == rhs.config_sync_sec)||((this.config_sync_sec!= null)&&this.config_sync_sec.equals(rhs.config_sync_sec))))&&((this.client_id == rhs.client_id)||((this.client_id!= null)&&this.client_id.equals(rhs.client_id))))&&((this.msg_prefix == rhs.msg_prefix)||((this.msg_prefix!= null)&&this.msg_prefix.equals(rhs.msg_prefix))))&&((this.send_id == rhs.send_id)||((this.send_id!= null)&&this.send_id.equals(rhs.send_id))))&&((this.protocol == rhs.protocol)||((this.protocol!= null)&&this.protocol.equals(rhs.protocol))))&&((this.hostname == rhs.hostname)||((this.hostname!= null)&&this.hostname.equals(rhs.hostname))))&&((this.port == rhs.port)||((this.port!= null)&&this.port.equals(rhs.port))))&&((this.recv_id == rhs.recv_id)||((this.recv_id!= null)&&this.recv_id.equals(rhs.recv_id))))&&((this.auth_provider == rhs.auth_provider)||((this.auth_provider!= null)&&this.auth_provider.equals(rhs.auth_provider))));
+        return ((((((((((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.transport == rhs.transport)||((this.transport!= null)&&this.transport.equals(rhs.transport))))&&((this.error == rhs.error)||((this.error!= null)&&this.error.equals(rhs.error))))&&((this.config_sync_sec == rhs.config_sync_sec)||((this.config_sync_sec!= null)&&this.config_sync_sec.equals(rhs.config_sync_sec))))&&((this.distributor == rhs.distributor)||((this.distributor!= null)&&this.distributor.equals(rhs.distributor))))&&((this.client_id == rhs.client_id)||((this.client_id!= null)&&this.client_id.equals(rhs.client_id))))&&((this.msg_prefix == rhs.msg_prefix)||((this.msg_prefix!= null)&&this.msg_prefix.equals(rhs.msg_prefix))))&&((this.send_id == rhs.send_id)||((this.send_id!= null)&&this.send_id.equals(rhs.send_id))))&&((this.protocol == rhs.protocol)||((this.protocol!= null)&&this.protocol.equals(rhs.protocol))))&&((this.hostname == rhs.hostname)||((this.hostname!= null)&&this.hostname.equals(rhs.hostname))))&&((this.port == rhs.port)||((this.port!= null)&&this.port.equals(rhs.port))))&&((this.recv_id == rhs.recv_id)||((this.recv_id!= null)&&this.recv_id.equals(rhs.recv_id))))&&((this.auth_provider == rhs.auth_provider)||((this.auth_provider!= null)&&this.auth_provider.equals(rhs.auth_provider))));
     }
 
     @Generated("jsonschema2pojo")

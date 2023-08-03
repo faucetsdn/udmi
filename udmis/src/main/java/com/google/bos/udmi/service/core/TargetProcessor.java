@@ -20,6 +20,7 @@ import udmi.schema.Envelope.SubType;
  * this is just a simple pass-through with no logic or functionality. It's essentially a TAP point
  * for all events flowing through the system.
  */
+@ComponentName("target")
 public class TargetProcessor extends ProcessorBase {
 
   @Override

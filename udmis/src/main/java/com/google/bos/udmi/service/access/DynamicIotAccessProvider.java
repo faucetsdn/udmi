@@ -1,14 +1,18 @@
 package com.google.bos.udmi.service.access;
 
+import static com.google.bos.udmi.service.pod.UdmiServicePod.getComponent;
+import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.sortedMapCollector;
+import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static java.lang.String.format;
+import static java.util.Optional.ofNullable;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
 import java.util.TreeMap;
 import java.util.function.Function;
 import udmi.schema.CloudModel;
@@ -23,7 +27,6 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   private final Map<String, String> registryProviders = new HashMap<>();
   private final List<String> providerList;
   private final Map<String, IotAccessBase> providers = new HashMap<>();
-  private final Map<String, String> defaultProvisioned = new HashMap<>();
 
   /**
    * Create a new instance for interfacing with multiple providers.
@@ -41,7 +44,7 @@ public class DynamicIotAccessProvider extends IotAccessBase {
     TreeMap<String, String> sortedMap = providers.entrySet().stream()
         .collect(sortedMapCollector(entry -> registryPriority(registryId, entry)));
     String providerId = sortedMap.lastEntry().getValue();
-    debug("Determined registry mapping for " + registryId + " to be " + providerId);
+    debug("Registry mapping for " + registryId + " is " + providerId);
     return providerId;
   }
 
@@ -50,16 +53,29 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   private String registryPriority(String registryId, Entry<String, IotAccessBase> provider) {
-    String provisionedAt =
-        provider.getValue().fetchRegistryMetadata(registryId, "udmi_provisioned");
+    String provisionedAt = ofNullable(
+        provider.getValue().fetchRegistryMetadata(registryId, "udmi_provisioned")).orElse(
+        getTimestamp(new Date(0)));
     debug(format("Provider %s provisioned %s at %s", provider.getKey(), registryId, provisionedAt));
-    return Optional.ofNullable(provisionedAt).orElse(defaultProvisioned.get(provider.getKey()));
+    return provisionedAt;
+  }
+
+  @Override
+  protected boolean isEnabled() {
+    throw new RuntimeException("Should not be called!");
   }
 
   @Override
   public void activate() {
     super.activate();
-    providerList.forEach(providerId -> providers.get(providerId).activate());
+    providerList.forEach(
+        providerId -> {
+          IotAccessBase component = getComponent(providerId);
+          ifTrueThen(component.isEnabled(), () -> providers.put(providerId, component));
+        });
+    if (providerList.isEmpty()) {
+      throw new RuntimeException("No providers enabled");
+    }
   }
 
   @Override
@@ -79,7 +95,7 @@ public class DynamicIotAccessProvider extends IotAccessBase {
 
   @Override
   public String fetchState(String deviceRegistryId, String deviceId) {
-    throw new RuntimeException("Not yet implemented");
+    return getProviderFor(deviceRegistryId).fetchState(deviceRegistryId, deviceId);
   }
 
   @Override
@@ -112,5 +128,6 @@ public class DynamicIotAccessProvider extends IotAccessBase {
             providerId));
       }
     }
+    super.setProviderAffinity(registryId, deviceId, providerId);
   }
 }

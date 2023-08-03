@@ -1,0 +1,28 @@
+#!/bin/bash -e
+
+ROOT_DIR=$(dirname $0)/..
+
+TIME=`date --utc +%Y%M%d-%H%m%S`
+OUTFILE=/tmp/udmi-support_$TIME.tgz
+VALIDATOR_CONFIG=/tmp/validator_config.json
+OUT_DIR=$(realpath $ROOT_DIR/out --relative-to=$PWD)
+
+CONFIG_FILES="$VALIDATOR_CONFIG /tmp/pubber_config.json"
+
+mkdir -p $OUT_DIR
+echo Copying cached config files to $OUT_DIR/
+cp $CONFIG_FILES $OUT_DIR/ || true
+
+if [[ -f $VALIDATOR_CONFIG ]]; then
+    site_model=`jq -r .site_model $VALIDATOR_CONFIG`
+    site_model=$(realpath --relative-to=$PWD $site_model)
+    echo Using site_model $site_model from cached $VALIDATOR_CONFIG
+else
+    site_model=
+fi
+
+tar --exclude-vcs -czf $OUTFILE $site_model $OUT_DIR
+
+echo Created support archive $(realpath $OUTFILE)
+ls -l $OUTFILE
+md5sum $OUTFILE

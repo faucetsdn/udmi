@@ -1,6 +1,8 @@
 {
   "flow_defaults": {
-    "protocol": "local"
+    "protocol": "local",
+    "distributor": "distrib",
+    "hostname": "foo"
   },
   "flows": {
     "target": {
@@ -17,8 +19,16 @@
     }
   },
   "iot_access": {
-    "iot_access": {
+    "iot-access": {
       "provider": "local"
+    }
+  },
+  "distributors": {
+    "distrib": {
+      "protocol": "local",
+      "send_id": "mark",
+      "recv_id": "mend",
+      "hostname": "foo"
     }
   }
 }

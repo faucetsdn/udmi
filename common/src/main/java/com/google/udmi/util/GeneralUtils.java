@@ -1,5 +1,7 @@
 package com.google.udmi.util;
 
+import static java.util.Optional.ofNullable;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -44,7 +46,7 @@ public class GeneralUtils {
   }
 
   public static String changedLines(List<String> nullableChanges) {
-    List<String> changes = Optional.ofNullable(nullableChanges).orElse(ImmutableList.of());
+    List<String> changes = ofNullable(nullableChanges).orElse(ImmutableList.of());
     String terminator = changes.size() == 0 ? "." : ":";
     String header = String.format("Changed %d fields%s%s", changes.size(), terminator, SEPARATOR);
     return (header + INDENTED_LINES.join(changes)).trim();
@@ -106,7 +108,7 @@ public class GeneralUtils {
   public static String friendlyStackTrace(Throwable e) {
     List<String> messages = new ArrayList<>();
     while (e != null) {
-      messages.add(Optional.ofNullable(e.getMessage()).orElseGet(e::toString));
+      messages.add(ofNullable(e.getMessage()).orElseGet(e::toString));
       e = e.getCause();
     }
     return CSV_JOINER.join(messages).replace('\n', ' ');
@@ -161,11 +163,15 @@ public class GeneralUtils {
   }
 
   public static <T> void ifNotNullThen(T value, Consumer<T> consumer) {
-    Optional.ofNullable(value).ifPresent(consumer);
+    ofNullable(value).ifPresent(consumer);
+  }
+
+  public static <T> void ifNotNullThen(T value, Consumer<T> consumer, Runnable otherwise) {
+    ofNullable(value).ifPresentOrElse(consumer, otherwise);
   }
 
   public static <T> void ifNotNullThen(T value, Runnable action) {
-    Optional.ofNullable(value).ifPresent(derp -> action.run());
+    ofNullable(value).ifPresent(derp -> action.run());
   }
 
   public static <T> void ifNotTrueThen(Object conditional, Runnable action) {
@@ -182,6 +188,14 @@ public class GeneralUtils {
 
   public static boolean isTrue(Object value) {
     return Boolean.TRUE.equals(value);
+  }
+
+  public static void catchOrElse(Runnable action, Consumer<Exception> caught) {
+    try {
+      action.run();
+    } catch (Exception e) {
+      caught.accept(e);
+    }
   }
 
   public static <T> T catchOrElse(Supplier<T> provider, Supplier<T> alternate) {

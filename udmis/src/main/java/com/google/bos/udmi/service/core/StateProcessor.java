@@ -8,10 +8,7 @@ import static udmi.schema.Envelope.SubFolder.UPDATE;
 
 import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.StateUpdate;
-import com.google.udmi.util.GeneralUtils;
 import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -26,17 +23,17 @@ import udmi.schema.State;
  * the system. Involves tagging the envelope with the appropriate designators, and splitting up the
  * monolithic block into constituent parts.
  */
+@ComponentName("state")
 public class StateProcessor extends ProcessorBase {
 
-  public static final String IOT_ACCESS_COMPONENT = "iot_access";
   private static final Set<String> STATE_SUB_FOLDERS =
       Arrays.stream(SubFolder.values()).map(SubFolder::value).collect(Collectors.toSet());
 
   @Override
   protected void defaultHandler(Object originalMessage) {
     StateUpdate stateMessage = convertToStrict(StateUpdate.class, originalMessage);
-    shardStateUpdate(stateMessage, originalMessage);
-    updateLastStart(stateMessage, originalMessage);
+    shardStateUpdate(getContinuation(originalMessage), stateMessage);
+    updateLastStart(getContinuation(originalMessage).getEnvelope(), stateMessage);
   }
 
   @Override
@@ -49,9 +46,8 @@ public class StateProcessor extends ProcessorBase {
     registerHandler(StateUpdate.class, this::stateHandler);
   }
 
-  private void shardStateUpdate(StateUpdate message, Object baseMessage) {
+  private void shardStateUpdate(MessageContinuation continuation, StateUpdate message) {
     info("Sharding state message to pipeline as incremental updates");
-    MessageContinuation continuation = getContinuation(baseMessage);
     Envelope envelope = continuation.getEnvelope();
     envelope.subType = SubType.STATE;
     envelope.subFolder = UPDATE;
@@ -79,23 +75,7 @@ public class StateProcessor extends ProcessorBase {
   }
 
   private void stateHandler(StateUpdate message) {
-    shardStateUpdate(message, message);
-  }
-
-  private void updateLastStart(StateUpdate message, Object baseMessage) {
-    if (message == null || message.system == null || message.system.operation == null
-        || message.system.operation.last_start == null) {
-      return;
-    }
-
-    try {
-      Date newLastStart = message.system.operation.last_start;
-      Envelope envelope = getContinuation(baseMessage).getEnvelope();
-      processConfigChange(envelope, new HashMap<>(), newLastStart);
-    } catch (Exception e) {
-      debug("Could not process config last_state update, skipping: "
-          + GeneralUtils.friendlyStackTrace(e));
-    }
+    shardStateUpdate(getContinuation(message), message);
   }
 
 }

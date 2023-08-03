@@ -41,6 +41,9 @@ else
     registry_suffix=
 fi
 
+registry_id=`jq -r .registry_id $site_path/cloud_iot_config.json`
+cloud_region=`jq -r .cloud_region $site_path/cloud_iot_config.json`
+
 if [[ -n $UDMI_REFLECTOR_ENDPOINT ]]; then
     endpoint=$(tr -d ' \n\r' <<< $UDMI_REFLECTOR_ENDPOINT | base64 --decode)
     echo $endpoint
@@ -64,13 +67,13 @@ if [[ $project_id =~ ^// ]]; then
 else
     iot_provider=gcp
 fi
+
 if [[ $iot_provider == clearblade ]]; then
     broker_hostname=${cloud_region}-mqtt.clearblade.com
 else
     broker_hostname=mqtt.googleapis.com
 fi
-registry_id=`jq -r .registry_id $site_path/cloud_iot_config.json`
-cloud_region=`jq -r .cloud_region $site_path/cloud_iot_config.json`
+
 cat <<EOF > $pubber_config
 {
     "endpoint": {

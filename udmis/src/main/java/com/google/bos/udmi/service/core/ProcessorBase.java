@@ -1,7 +1,6 @@
 package com.google.bos.udmi.service.core;
 
 import static com.google.bos.udmi.service.core.ReflectProcessor.UDMI_VERSION;
-import static com.google.bos.udmi.service.core.StateProcessor.IOT_ACCESS_COMPONENT;
 import static com.google.bos.udmi.service.messaging.MessageDispatcher.messageHandlerFor;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.Common.DEVICE_ID_PROPERTY_KEY;
@@ -30,6 +29,7 @@ import com.google.bos.udmi.service.access.IotAccessBase;
 import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.MessageDispatcher;
 import com.google.bos.udmi.service.messaging.MessageDispatcher.HandlerSpecification;
+import com.google.bos.udmi.service.messaging.StateUpdate;
 import com.google.bos.udmi.service.messaging.impl.MessageBase;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.BundleException;
@@ -37,13 +37,11 @@ import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.Common;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Objects;
 import java.util.function.Consumer;
 import org.jetbrains.annotations.TestOnly;
 import udmi.schema.EndpointConfiguration;
@@ -60,17 +58,20 @@ public abstract class ProcessorBase extends ContainerBase {
   public static final Integer FUNCTIONS_VERSION_MAX = 9;
   public static final String EMPTY_JSON = "{}";
   public static final String REFLECT_REGISTRY = "UDMI-REFLECT";
+  public static final String IOT_ACCESS_COMPONENT = "iot-access";
   private static final String RESET_CONFIG_VALUE = "reset_config";
   private static final String BREAK_CONFIG_VALUE = "break_json";
   private static final String EXTRA_FIELD_KEY = "extra_field";
   private static final String BROKEN_CONFIG_JSON =
       format("{ broken by %s == %s", EXTRA_FIELD_KEY, BREAK_CONFIG_VALUE);
   protected MessageDispatcher dispatcher;
+  protected IotAccessBase iotAccess;
   private final ImmutableList<HandlerSpecification> baseHandlers = ImmutableList.of(
       messageHandlerFor(Object.class, this::defaultHandler),
       messageHandlerFor(Exception.class, this::exceptionHandler)
   );
-  protected IotAccessBase iotAccess;
+  protected DistributorPipe distributor;
+  String distributorName;
 
   /**
    * Create a new instance of the given target class with the provided configuration.
@@ -79,16 +80,11 @@ public abstract class ProcessorBase extends ContainerBase {
     try {
       T object = clazz.getDeclaredConstructor().newInstance();
       object.dispatcher = MessageDispatcher.from(config);
+      object.distributorName = config.distributor;
       return object;
     } catch (Exception e) {
       throw new RuntimeException("While instantiating class " + clazz.getName(), e);
     }
-  }
-
-  private static void reflectString(String deviceRegistryId, String stringify) {
-    ifNotNullThen(UdmiServicePod.<IotAccessBase>maybeGetComponent(IOT_ACCESS_COMPONENT),
-        iotAccess -> iotAccess.sendCommand(REFLECT_REGISTRY, deviceRegistryId, null,
-            stringify));
   }
 
   /**
@@ -200,6 +196,11 @@ public abstract class ProcessorBase extends ContainerBase {
     dispatcher.registerHandlers(messageHandlers);
   }
 
+  private void mungeConfigDebug(Envelope attributes, Object lastConfig, String reason) {
+    debug("Munge config %s, %s/%s last_config %s %s", reason,
+        attributes.deviceRegistryId, attributes.deviceId, lastConfig, attributes.transactionId);
+  }
+
   private void reflectInvalidEnvelope(BundleException bundleException) {
     Map<String, String> envelopeMap = bundleException.bundle.attributesMap;
     error(format("Reflecting invalid %s/%s for %s", envelopeMap.get(SUBTYPE_PROPERTY_KEY),
@@ -210,6 +211,11 @@ public abstract class ProcessorBase extends ContainerBase {
     reflectString(deviceRegistryId, stringify(envelopeMap));
   }
 
+  private void reflectString(String deviceRegistryId, String commandString) {
+    ifNotNullThen(iotAccess, () ->
+        iotAccess.sendCommand(REFLECT_REGISTRY, deviceRegistryId, SubFolder.UDMI, commandString));
+  }
+
   private String updateConfig(String previous, Envelope attributes,
       Map<String, Object> updatePayload, Date newLastStart) {
     Object extraField = ifNotNullGet(updatePayload, p -> p.remove(EXTRA_FIELD_KEY));
@@ -217,21 +223,28 @@ public abstract class ProcessorBase extends ContainerBase {
     boolean breakConfig = BREAK_CONFIG_VALUE.equals(extraField);
     final Map<String, Object> payload;
 
+    final String reason;
+
     if (resetConfig) {
-      debug("Resetting config due to %s value %s", EXTRA_FIELD_KEY, extraField);
+      reason = Objects.toString(extraField);
       payload = new HashMap<>();
     } else if (breakConfig) {
-      debug("Breaking config due to %s value %s", EXTRA_FIELD_KEY, extraField);
+      mungeConfigDebug(attributes, "undefined", (String) extraField);
       return BROKEN_CONFIG_JSON;
     } else if (newLastStart != null) {
       payload = asMap(ofNullable(previous).orElse(EMPTY_JSON));
-      return updateWithLastStart(payload, newLastStart);
+      String update = updateWithLastStart(payload, newLastStart);
+      ifNotNullThen(update,
+          () -> mungeConfigDebug(attributes, payload.get(TIMESTAMP_KEY), "last_start"));
+      return update;
     } else if (attributes.subFolder == UPDATE) {
+      reason = "update";
       payload = new HashMap<>(updatePayload);
     } else {
       ifNotNullThen(extraField,
           field -> warn(format("Ignoring unknown %s value %s", EXTRA_FIELD_KEY, extraField)));
       payload = asMap(ofNullable(previous).orElse(EMPTY_JSON));
+      reason = ifNotNullGet(attributes.subFolder, SubFolder::value, null);
     }
 
     ifNotNullThen(updatePayload, p -> updatePayload.remove(TIMESTAMP_KEY));
@@ -241,9 +254,11 @@ public abstract class ProcessorBase extends ContainerBase {
       payload.put(attributes.subFolder.value(), updatePayload);
     }
 
-    payload.put(TIMESTAMP_KEY, getTimestamp());
+    String updateTimestamp = getTimestamp();
+    payload.put(TIMESTAMP_KEY, updateTimestamp);
     payload.put(VERSION_KEY, UDMI_VERSION);
 
+    mungeConfigDebug(attributes, updateTimestamp, reason);
     return stringify(payload);
   }
 
@@ -274,6 +289,7 @@ public abstract class ProcessorBase extends ContainerBase {
   public void activate() {
     info("Activating");
     iotAccess = UdmiServicePod.getComponent(IOT_ACCESS_COMPONENT);
+    distributor = UdmiServicePod.maybeGetComponent(distributorName);
     if (dispatcher != null) {
       registerHandlers(baseHandlers);
       registerHandlers();
@@ -318,5 +334,21 @@ public abstract class ProcessorBase extends ContainerBase {
   @TestOnly
   MessageDispatcher getDispatcher() {
     return dispatcher;
+  }
+
+  void updateLastStart(Envelope envelope, StateUpdate message) {
+    if (message == null || message.system == null || message.system.operation == null
+        || message.system.operation.last_start == null) {
+      return;
+    }
+
+    try {
+      Date newLastStart = message.system.operation.last_start;
+      debug("Checking config last_start against state last_start %s", getTimestamp(newLastStart));
+      processConfigChange(envelope, new HashMap<>(), newLastStart);
+    } catch (Exception e) {
+      debug("Could not process config last_state update, skipping: "
+          + friendlyStackTrace(e));
+    }
   }
 }

@@ -193,7 +193,7 @@ public class SequenceRunner {
   }
 
   private boolean isTargetMethod(String methodName) {
-    return shouldExecuteAll() || targets.isEmpty() || targets.contains(methodName);
+    return targets.isEmpty() || targets.contains(methodName);
   }
 
   private boolean shouldExecuteAll() {

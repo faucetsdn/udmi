@@ -38,9 +38,9 @@ shift
 targets=$*
 
 [[ -n $GITHUB_RUN_NUMBER ]] && echo "Workflow run number $GITHUB_RUN_NUMBER" || true
-echo "Using target project=$project_id"
-echo "Using UDMI_REGISTRY_SUFFIX=$UDMI_REGISTRY_SUFFIX"
-echo "Using UDMI_ALT_REGISTRY=$UDMI_ALT_REGISTRY"
+echo "export target_project=$project_id"
+echo "export UDMI_REGISTRY_SUFFIX=$UDMI_REGISTRY_SUFFIX"
+echo "export UDMI_ALT_REGISTRY=$UDMI_ALT_REGISTRY"
 
 site_path=sites/udmi_site_model
 device_id=AHU-1

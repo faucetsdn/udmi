@@ -1,6 +1,7 @@
 package com.google.bos.iot.core.proxy;
 
 import static com.google.bos.iot.core.proxy.IotReflectorClient.MESSAGE_POLL_TIME_SEC;
+import static java.lang.String.format;
 
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.validator.Validator;
@@ -31,7 +32,7 @@ public class MockPublisher implements MessagePublisher {
       bundle.attributes = new HashMap<>();
       bundle.timestamp = JsonUtil.getTimestamp();
       messages.put(bundle);
-      return null;
+      return format("%08x", System.currentTimeMillis());
     } catch (Exception e) {
       throw new RuntimeException("While publishing mock message", e);
     }
@@ -55,6 +56,9 @@ public class MockPublisher implements MessagePublisher {
   @Override
   public Validator.MessageBundle takeNextMessage(boolean enableTimeout) {
     try {
+      if (messages.isEmpty()) {
+        throw new RuntimeException("Mock publisher has no messages");
+      }
       if (enableTimeout) {
         return messages.poll(MESSAGE_POLL_TIME_SEC, TimeUnit.SECONDS);
       } else {

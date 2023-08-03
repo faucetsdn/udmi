@@ -25,6 +25,7 @@ import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static java.lang.String.format;
 import static java.nio.file.Files.newOutputStream;
+import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static org.junit.Assume.assumeTrue;
 import static udmi.schema.Bucket.SYSTEM;
@@ -360,6 +361,7 @@ public class SequenceBase {
 
   private static MessagePublisher getAlternateClient() {
     if (altRegistry == null) {
+      System.err.println("No alternate registry configured, disabling");
       return null;
     }
     ExecutionConfiguration altConfiguration = GeneralUtils.deepCopy(validatorConfig);
@@ -369,7 +371,8 @@ public class SequenceBase {
     try {
       return new IotReflectorClient(altConfiguration, getRequiredFunctionsVersion());
     } catch (Exception e) {
-      System.err.println("Could not connect to alternate registry, disabling: " + e.getMessage());
+      System.err.println(
+          "Could not connect to alternate registry, disabling: " + friendlyStackTrace(e));
       if (traceLogLevel()) {
         e.printStackTrace();
       }
@@ -529,6 +532,10 @@ public class SequenceBase {
   @NotNull
   private static AtomicInteger getUpdateCount(String subTypeRaw) {
     return UPDATE_COUNTS.computeIfAbsent(subTypeRaw, key -> new AtomicInteger());
+  }
+
+  private static int getStateUpdateCount() {
+    return getUpdateCount(SubType.STATE.value()).get();
   }
 
   /**
@@ -968,8 +975,8 @@ public class SequenceBase {
     updateConfig(SubFolder.DISCOVERY, deviceConfig.discovery);
     if (!configIsPending() && force) {
       debug("Forcing config update");
-      sentConfig.remove(FORCE_UPDATE_CONFIG_KEY);
-      updateConfig(null, null);
+      sentConfig.remove(SubFolder.UDMI);
+      updateConfig(SubFolder.UPDATE, null);
     }
     if (configIsPending()) {
       lastConfigUpdate = CleanDateFormat.clean(Instant.now());
@@ -984,13 +991,15 @@ public class SequenceBase {
   private boolean updateConfig(SubFolder subBlock, Object data) {
     try {
       String messageData = stringify(data);
-      String sentBlockConfig = sentConfig.computeIfAbsent(subBlock, key -> FORCE_UPDATE_CONFIG_KEY);
+      String sentBlockConfig = sentConfig.get(requireNonNull(subBlock, "subBlock not defined"));
       boolean updated = !messageData.equals(sentBlockConfig);
-      trace("updated check config_" + subBlock + " " + updated, sentBlockConfig);
+      trace(format("updated check %s_%s: %s", CONFIG_SUBTYPE, subBlock, updated));
       if (updated) {
         String augmentedMessage = actualize(stringify(data));
         String topic = subBlock + "/config";
-        final String transactionId = reflector().publish(getDeviceId(), topic, augmentedMessage);
+        final String transactionId =
+            requireNonNull(reflector().publish(getDeviceId(), topic, augmentedMessage),
+                "no transactionId returned for publish");
         debug(
             format("update %s_%s, configTransaction %s", CONFIG_SUBTYPE, subBlock, transactionId));
         recordRawMessage(data, LOCAL_PREFIX + subBlock.value());
@@ -1303,16 +1312,21 @@ public class SequenceBase {
       return;
     }
 
-    recordRawMessage(attributes, message);
+    try {
+      recordRawMessage(attributes, message);
 
-    preprocessMessage(attributes, message);
+      preprocessMessage(attributes, message);
 
-    validateMessage(attributes, message);
+      validateMessage(attributes, message);
 
-    if (SubFolder.UPDATE.value().equals(subFolderRaw)) {
-      handleReflectorMessage(subTypeRaw, message, transactionId);
-    } else {
-      handleDeviceMessage(message, subFolderRaw, subTypeRaw, transactionId);
+      if (SubFolder.UPDATE.value().equals(subFolderRaw)) {
+        handleReflectorMessage(subTypeRaw, message, transactionId);
+      } else {
+        handleDeviceMessage(message, subTypeRaw, subFolderRaw, transactionId);
+      }
+    } catch (Exception e) {
+      throw new RuntimeException(
+          format("While processing message %s_%s %s", subTypeRaw, subFolderRaw, transactionId), e);
     }
   }
 
@@ -1334,11 +1348,11 @@ public class SequenceBase {
         format("Pipeline type %s error: %s", subTypeRaw, message.get("error")));
   }
 
-  private void handleDeviceMessage(Map<String, Object> message, String subFolderRaw,
-      String subTypeRaw, String transactionId) {
-    debug(format("Handling device message %s/%s %s", subTypeRaw, subFolderRaw, transactionId));
-    SubFolder subFolder = SubFolder.fromValue(subFolderRaw);
-    SubType subType = SubType.fromValue(subTypeRaw);
+  private void handleDeviceMessage(Map<String, Object> message, String subTypeRaw,
+      String subFolderRaw, String transactionId) {
+    debug(format("Handling device message %s_%s %s", subTypeRaw, subFolderRaw, transactionId));
+    SubType subType = SubType.fromValue(requireNonNull(subTypeRaw, "missing subType"));
+    SubFolder subFolder = SubFolder.fromValue(requireNonNull(subFolderRaw, "missing subFolder"));
     switch (subType) {
       case CONFIG:
         // These are echos of sent partial config messages, so do nothing.
@@ -1667,7 +1681,8 @@ public class SequenceBase {
   protected void untilHasInterestingSystemStatus(boolean isInteresting) {
     BiConsumer<String, Supplier<Boolean>> until =
         isInteresting ? this::untilTrue : this::untilFalse;
-    until.accept("interesting system status", this::hasInterestingSystemStatus);
+    String message = (isInteresting ? "has" : "no") + " interesting system status";
+    until.accept(message, this::hasInterestingSystemStatus);
   }
 
   private void putSequencerResult(Description description, SequenceResult result) {
@@ -1708,12 +1723,8 @@ public class SequenceBase {
     return getStateUpdateCount() > startStateCount;
   }
 
-  private static int getStateUpdateCount() {
-    return getUpdateCount(SubType.STATE.value()).get();
-  }
-
   protected void ensureStateUpdate() {
-    updateConfig("state update", true);
+    updateConfig("ensure state update", true);
     withRecordSequence(false,
         () -> untilTrue("received at least one state update", this::receivedAtLeastOneState));
   }
@@ -1831,9 +1842,6 @@ public class SequenceBase {
         message = e.getMessage();
         failureType = SequenceResult.SKIP;
       } else {
-        while (e.getCause() != null) {
-          e = e.getCause();
-        }
         message = friendlyStackTrace(e);
         failureType = SequenceResult.FAIL;
       }

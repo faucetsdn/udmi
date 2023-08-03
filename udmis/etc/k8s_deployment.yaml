@@ -20,6 +20,9 @@ spec:
       - name: udmis-core
         image: @IMAGE@
         imagePullPolicy: Always
+        env:
+        - name: GCP_PROJECT
+          value: @GCP_PROJECT@
         resources:
           requests:
             cpu: 100m
@@ -32,8 +35,6 @@ spec:
         - name: secret-volume
           projected:
             sources:
-            - secret:
-                name: pod-config.json
             - secret:
                 name: clearblade.json
                 optional: true

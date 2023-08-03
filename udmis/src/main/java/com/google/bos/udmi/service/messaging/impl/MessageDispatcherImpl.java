@@ -1,6 +1,9 @@
 package com.google.bos.udmi.service.messaging.impl;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
@@ -62,20 +65,29 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     registerMessageClass(SubType.CONFIG, SubFolder.UPDATE, ConfigUpdate.class);
   }
 
+  public final Envelope prototypeEnvelope = new Envelope();
   private final MessagePipe messagePipe;
   private final Map<Object, Envelope> messageEnvelopes = new ConcurrentHashMap<>();
   private final Map<Class<?>, Consumer<Object>> handlers = new HashMap<>();
   private final Map<Class<?>, AtomicInteger> handlerCounts = new ConcurrentHashMap<>();
   private final String projectId;
-  public final Envelope prototypeEnvelope = new Envelope();
 
   /**
    * Create a new instance of the message dispatcher.
    */
   public MessageDispatcherImpl(EndpointConfiguration configuration) {
     messagePipe = MessagePipe.from(configuration);
-    projectId = configuration.hostname;
+    projectId = variableSubstitution(configuration.hostname, "project_id/hostname not defined");
     prototypeEnvelope.projectId = projectId;
+  }
+
+  @Nullable
+  private static Object convertStrictOrObject(Class<?> handlerType, Object message) {
+    try {
+      return convertToStrict(handlerType, message);
+    } catch (Exception e) {
+      return toMap(message);
+    }
   }
 
   private static String getMapKey(SubType subType, SubFolder subFolder) {
@@ -91,6 +103,11 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     } catch (ClassNotFoundException e) {
       return null;
     }
+  }
+
+  public static Class<?> getMessageClassFor(Envelope envelope) {
+    String mapKey = getMapKey(envelope.subType, envelope.subFolder);
+    return TYPE_CLASSES.getOrDefault(mapKey, SPECIAL_CLASSES.getOrDefault(mapKey, DEFAULT_CLASS));
   }
 
   @NotNull
@@ -153,20 +170,6 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     }
   }
 
-  @Nullable
-  private static Object convertStrictOrObject(Class<?> handlerType, Object message) {
-    try {
-      return convertToStrict(handlerType, message);
-    } catch (Exception e) {
-      return toMap(message);
-    }
-  }
-
-  public static Class<?> getMessageClassFor(Envelope envelope) {
-    String mapKey = getMapKey(envelope.subType, envelope.subFolder);
-    return TYPE_CLASSES.getOrDefault(mapKey, SPECIAL_CLASSES.getOrDefault(mapKey, DEFAULT_CLASS));
-  }
-
   @Override
   public void activate() {
     Consumer<Bundle> processMessage = this::processMessage;
@@ -202,9 +205,14 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   public MessageContinuation getContinuation(Object message) {
     final Envelope continuationEnvelope =
         requireNonNull(deepCopy(messageEnvelopes.get(message)), "missing message envelope");
+
     return new MessageContinuation() {
+      private boolean available = true;
+
       @Override
       public Envelope getEnvelope() {
+        checkState(available, "message envelope already extracted");
+        available = false;
         return continuationEnvelope;
       }
 

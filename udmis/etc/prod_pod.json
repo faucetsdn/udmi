@@ -1,7 +1,8 @@
 {
   "flow_defaults": {
     "protocol": "pubsub",
-    "hostname": "@PROJECT@"
+    "hostname": "${GCP_PROJECT}",
+    "distributor": "stately"
   },
   "flows": {
     "target": {
@@ -17,9 +18,25 @@
     }
   },
   "iot_access": {
-    "iot_access": {
+    "iot-access": {
+      "provider": "dynamic",
+      "project_id": "gcp-iot-core,clearblade-iot-core"
+    },
+    "clearblade-iot-core": {
+      "provider": "clearblade",
+      "project_id": "${CLEARBLADE_PROJECT}"
+    },
+    "gcp-iot-core": {
       "provider": "gcp",
-      "project_id": "@PROJECT@"
+      "project_id": "${GCP_PROJECT}"
+    }
+  },
+  "distributors": {
+    "stately": {
+      "protocol": "mqtt",
+      "transport": "tcp",
+      "hostname": "udmis-broker",
+      "port": "1883"
     }
   }
 }

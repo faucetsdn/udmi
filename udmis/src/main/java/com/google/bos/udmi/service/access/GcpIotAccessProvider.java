@@ -47,6 +47,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import udmi.schema.CloudModel;
@@ -73,7 +74,6 @@ public class GcpIotAccessProvider extends IotAccessBase {
   private static final String RSA_CERT_FORMAT = "RSA_X509_PEM";
   private static final String ES_KEY_FORMAT = "ES256_PEM";
   private static final String ES_CERT_FILE = "ES256_X509_PEM";
-  private static final String UDMIS_REGISTRY = "UDMS-REFLECT";
   private static final BiMap<Key_format, String> AUTH_TYPE_MAP =
       ImmutableBiMap.of(
           Key_format.RS_256, RSA_KEY_FORMAT,
@@ -87,16 +87,17 @@ public class GcpIotAccessProvider extends IotAccessBase {
       new GatewayConfig().setGatewayType(GATEWAY_TYPE).setGatewayAuthMethod(ASSOCIATION_ONLY);
   private final String projectId;
   private final CloudIot cloudIotService;
-  private Map<String, String> registryCloudRegions;
-  private CloudIot.Projects.Locations.Registries registries;
+  private final CompletableFuture<Map<String, String>> registryRegions = new CompletableFuture<>();
+  private final CloudIot.Projects.Locations.Registries registries;
 
   /**
    * Create a new instance for interfacing with GCP IoT Core.
    * TODO: Need to implement page tokens for all requisite API calls.
    */
   public GcpIotAccessProvider(IotAccess iotAccess) {
-    projectId = requireNonNull(iotAccess.project_id, "gcp project id not specified");
+    projectId = variableSubstitution(iotAccess.project_id, "gcp project id not specified");
     cloudIotService = createCloudIotService();
+    registries = cloudIotService.projects().locations().registries();
   }
 
   @NotNull
@@ -230,27 +231,32 @@ public class GcpIotAccessProvider extends IotAccessBase {
 
   @NotNull
   private Map<String, String> getRegistriesForRegion(String region) {
+    String locationPath = getLocationPath(region);
     try {
-      debug("Fetching registries for " + region);
+      debug("Fetching registries for " + locationPath);
       ListDeviceRegistriesResponse response = cloudIotService
           .projects()
           .locations()
           .registries()
-          .list(getLocationPath(region))
+          .list(locationPath)
           .execute();
       List<DeviceRegistry> deviceRegistries = response.getDeviceRegistries();
       return ofNullable(deviceRegistries).orElseGet(ImmutableList::of).stream()
           .map(DeviceRegistry::getId)
           .collect(Collectors.toMap(item -> item, item -> region));
     } catch (Exception e) {
-      throw new RuntimeException("While fetching registry cloud regions", e);
+      throw new RuntimeException("While fetching registries for " + locationPath, e);
     }
   }
 
   private String getRegistryPath(String registryId) {
-    String region = requireNonNull(registryCloudRegions.get(registryId),
-        "unknown region for registry " + registryId);
-    return format(REGISTRY_PATH_FORMAT, getLocationPath(region), registryId);
+    try {
+      String region = requireNonNull(registryRegions.get().get(registryId),
+          "unknown region for registry " + registryId);
+      return format(REGISTRY_PATH_FORMAT, getLocationPath(region), registryId);
+    } catch (Exception e) {
+      throw new RuntimeException("While getting registry path for " + registryId, e);
+    }
   }
 
   private CloudModel listRegistryDevices(String deviceRegistryId, String gatewayId) {
@@ -291,11 +297,19 @@ public class GcpIotAccessProvider extends IotAccessBase {
   }
 
   @Override
+  protected boolean isEnabled() {
+    return projectId != null;
+  }
+
+  @Override
   public void activate() {
     try {
+      if (!isEnabled()) {
+        warn("GCP access provider disabled b/c empty project id");
+        return;
+      }
       debug("Initializing GCP access provider for project " + projectId);
-      registryCloudRegions = fetchRegistryCloudRegions();
-      registries = cloudIotService.projects().locations().registries();
+      registryRegions.complete(fetchRegistryCloudRegions());
       super.activate();
     } catch (Exception e) {
       throw new RuntimeException("While activating", e);
@@ -335,10 +349,10 @@ public class GcpIotAccessProvider extends IotAccessBase {
   @Override
   public String fetchRegistryMetadata(String registryId, String metadataKey) {
     try {
-      CloudModel cloudModel = fetchDevice(UDMIS_REGISTRY, registryId);
+      CloudModel cloudModel = fetchDevice(UDMI_REGISTRY, registryId);
       return cloudModel.metadata.get(metadataKey);
     } catch (Exception e) {
-      debug(format("No device entry for %s/%s", UDMIS_REGISTRY, registryId));
+      debug(format("No device entry for %s/%s", UDMI_REGISTRY, registryId));
       return null;
     }
   }
@@ -397,18 +411,10 @@ public class GcpIotAccessProvider extends IotAccessBase {
   public void sendCommandBase(String registryId, String deviceId, SubFolder folder,
       String message) {
     try {
-      Map<String, Object> messageMap = toMap(message);
-      Object payloadSubType = messageMap.get("subType");
-      Object payloadSubFolder = messageMap.get("subFolder");
-      String payload = decodeBase64((String) messageMap.get("payload"));
-      trace("Sending command containing %s/%s: %s", payloadSubType, payloadSubFolder, payload);
-      requireNonNull(registryId, "registry not defined");
-      requireNonNull(deviceId, "device not defined");
       String subFolder = ifNotNullGet(folder, SubFolder::value);
       SendCommandToDeviceRequest request = new SendCommandToDeviceRequest()
           .setBinaryData(encodeBase64(message))
           .setSubfolder(subFolder);
-      debug("Sending iot command to %s/%s/%s", registryId, deviceId, subFolder);
       registries.devices().sendCommandToDevice(getDevicePath(registryId, deviceId), request)
           .execute();
     } catch (Exception e) {
@@ -419,7 +425,6 @@ public class GcpIotAccessProvider extends IotAccessBase {
 
   @Override
   public void shutdown() {
-    registries = null;
     super.shutdown();
   }
 }

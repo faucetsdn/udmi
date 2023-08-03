@@ -1,7 +1,7 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.daq.mqtt.util.TimePeriodConstants.ONE_MINUTES_MS;
+import static com.google.daq.mqtt.util.TimePeriodConstants.ONE_MINUTE_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
@@ -39,7 +39,7 @@ public class ConfigSequences extends SequenceBase {
   // Delay after receiving a parse error to ensure an apply entry has not been received.
   private static final long LOG_APPLY_DELAY_MS = 1000;
 
-  @Test(timeout = ONE_MINUTES_MS)
+  @Test(timeout = ONE_MINUTE_MS)
   @Feature(stage = STABLE, bucket = SYSTEM)
   @Summary("Check that last_update state is correctly set in response to a config update.")
   @ValidateSchema
@@ -141,7 +141,7 @@ public class ConfigSequences extends SequenceBase {
     checkNotLogged(SYSTEM_CONFIG_PARSE, SYSTEM_CONFIG_PARSE_LEVEL);
   }
 
-  @Test(timeout = ONE_MINUTES_MS)
+  @Test(timeout = ONE_MINUTE_MS)
   @Feature(stage = BETA, bucket = SYSTEM)
   @Summary("Check that the device correctly handles an extra out-of-schema field")
   public void extra_config() {

@@ -5,8 +5,10 @@
 #
 
 ROOT_DIR=$(realpath $(dirname $0)/..)
-TEST_LOG=$ROOT_DIR/out/sequencer.out
-SCHEMA_OUT=$ROOT_DIR/out/schema.out
+OUT_DIR=$ROOT_DIR/out
+TEST_LOG=$OUT_DIR/sequencer.out
+SCHEMA_OUT=$OUT_DIR/schema.out
+SEQUENCER_RES=$OUT_DIR/sequencer.res
 log_level=INFO
 alt_registry=\"${UDMI_ALT_REGISTRY:-ZZ-REDIRECT-NA}\"
 min_stage=PREVIEW
@@ -61,6 +63,12 @@ test_names="$@"
 udmi_version=`git describe --always --dirty`
 
 cd $ROOT_DIR
+mkdir -p $OUT_DIR
+
+if ! bin/which_venv_pip3; then
+    echo ERROR venv pip3 not installed, please run bin/setup_base and try again
+    false
+fi
 
 if [[ -d $site_path ]]; then
     echo Using site model directory $site_path
@@ -125,9 +133,9 @@ $JAVA_CMD $test_names 2>&1 | tee $TEST_LOG
 
 echo
 # Sort by test name (6th field)
-fgrep 'RESULT ' $TEST_LOG | fgrep NOTICE | sort -k 6 | tee out/sequencer.res
+fgrep 'RESULT ' $TEST_LOG | fgrep NOTICE | sort -k 6 | tee $SEQUENCER_RES
 
-if [[ $(wc -l < out/sequencer.res) -eq 0 ]]; then
+if [[ $(wc -l < $SEQUENCER_RES) -eq 0 ]]; then
     echo No test results found.
     exit 1
 fi
@@ -135,5 +143,7 @@ fi
 # Sort by test name (4th field)
 fgrep RESULT $site_model/out/devices/$device_id/RESULT.log | \
     fgrep ' schemas ' | sort -k 3 | tee $SCHEMA_OUT
+
+(source venv/bin/activate && bin/sequencer_report $site_model $device_id)
 
 bin/check_version

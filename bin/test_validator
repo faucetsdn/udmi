@@ -98,8 +98,8 @@ function pubber_bg {
     fi
 }
 
-echo Sleeping to wait for validator to be ready...
-sleep 10
+echo Waiting 60s so that validator is ready and UDMIS registry backoff restrictions clear...
+sleep 60
 
 pubber_bg AHU-1 extraField=prlagle
 pubber_bg AHU-22 emptyMissing
