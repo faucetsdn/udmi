@@ -243,8 +243,12 @@ public abstract class ProcessorBase extends ContainerBase {
     } else {
       ifNotNullThen(extraField,
           field -> warn(format("Ignoring unknown %s value %s", EXTRA_FIELD_KEY, extraField)));
-      payload = asMap(ofNullable(previous).orElse(EMPTY_JSON));
-      reason = ifNotNullGet(attributes.subFolder, SubFolder::value, null);
+      try {
+        payload = asMap(ofNullable(previous).orElse(EMPTY_JSON));
+        reason = ifNotNullGet(attributes.subFolder, SubFolder::value, null);
+      } catch (Exception e) {
+        throw new PreviousParseException("parsing previous config", e);
+      }
     }
 
     ifNotNullThen(updatePayload, p -> updatePayload.remove(TIMESTAMP_KEY));
@@ -260,6 +264,12 @@ public abstract class ProcessorBase extends ContainerBase {
 
     mungeConfigDebug(attributes, updateTimestamp, reason);
     return stringify(payload);
+  }
+
+  public static class PreviousParseException extends RuntimeException {
+    public PreviousParseException(String message, Exception cause) {
+      super(message, cause);
+    }
   }
 
   private String updateWithLastStart(Map<String, Object> oldPayload, Date newLastStart) {
