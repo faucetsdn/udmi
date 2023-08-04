@@ -266,12 +266,6 @@ public abstract class ProcessorBase extends ContainerBase {
     return stringify(payload);
   }
 
-  public static class PreviousParseException extends RuntimeException {
-    public PreviousParseException(String message, Exception cause) {
-      super(message, cause);
-    }
-  }
-
   private String updateWithLastStart(Map<String, Object> oldPayload, Date newLastStart) {
     Map<String, Object> oldSystem = getSubMap(oldPayload, "system");
     Map<String, Object> oldOperation = getSubMap(oldSystem, "operation");
@@ -317,6 +311,17 @@ public abstract class ProcessorBase extends ContainerBase {
   public void shutdown() {
     if (dispatcher != null) {
       dispatcher.shutdown();
+    }
+  }
+
+  /**
+   * Simple exception indicator that a parse error occurred, so it wasn't something about the
+   * new config, but the previous config, so should essentially be retried.
+   */
+  public static class PreviousParseException extends RuntimeException {
+
+    public PreviousParseException(String message, Exception cause) {
+      super(message, cause);
     }
   }
 
