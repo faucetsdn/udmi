@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.Common.VERSION_KEY;
+import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.getDate;
@@ -55,6 +56,7 @@ import udmi.schema.UdmiState;
 public class IotReflectorClient implements MessagePublisher {
 
   public static final String UDMI_FOLDER = "udmi";
+  static final long MESSAGE_POLL_TIME_SEC = 10;
   private static final int MIN_REQUIRED_VERSION = 9;
   private static final String IOT_KEY_ALGORITHM = "RS256";
   private static final String UDMI_REFLECT = "UDMI-REFLECT";
@@ -64,7 +66,6 @@ public class IotReflectorClient implements MessagePublisher {
   private static final String CONFIG_CATEGORY = "config";
   private static final String COMMANDS_CATEGORY = "commands";
   private static final long CONFIG_TIMEOUT_SEC = 30;
-  static final long MESSAGE_POLL_TIME_SEC = 10;
   private static String prevTransactionId;
   private final String udmiVersion;
   private final CountDownLatch initialConfigReceived = new CountDownLatch(1);
@@ -110,7 +111,6 @@ public class IotReflectorClient implements MessagePublisher {
     subscriptionId =
         format("%s/%s/%s/%s", projectId, cloudRegion, UDMI_REFLECT, registryId);
     System.err.println("Using client subscription " + subscriptionId);
-
 
     try {
       mqttPublisher = new MqttPublisher(makeReflectConfiguration(iotConfig, registryId), keyBytes,
@@ -292,8 +292,6 @@ public class IotReflectorClient implements MessagePublisher {
         }
 
         udmiInfo = reflectorConfig.setup;
-        System.err.println("UDMI deployed by " + udmiInfo.deployed_by + " at " + getTimestamp(
-            udmiInfo.deployed_at));
 
         System.err.printf("UDMI functions support versions %s:%s (required %s)%n",
             udmiInfo.functions_min, udmiInfo.functions_max, requiredVersion);

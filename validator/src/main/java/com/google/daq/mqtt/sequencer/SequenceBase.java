@@ -387,10 +387,6 @@ public class SequenceBase {
         : FUNCTIONS_VERSION_BETA;
   }
 
-  private static MessagePublisher getReflectorClient() {
-    return new IotReflectorClient(validatorConfig, getRequiredFunctionsVersion());
-  }
-
   static void resetState() {
     validatorConfig = null;
     client = null;
@@ -536,6 +532,10 @@ public class SequenceBase {
 
   private static int getStateUpdateCount() {
     return getUpdateCount(SubType.STATE.value()).get();
+  }
+
+  private static MessagePublisher getReflectorClient() {
+    return new IotReflectorClient(validatorConfig, getRequiredFunctionsVersion());
   }
 
   /**
@@ -991,7 +991,8 @@ public class SequenceBase {
   private boolean updateConfig(SubFolder subBlock, Object data) {
     try {
       String messageData = stringify(data);
-      String sentBlockConfig = sentConfig.get(requireNonNull(subBlock, "subBlock not defined"));
+      String sentBlockConfig = String.valueOf(
+          sentConfig.get(requireNonNull(subBlock, "subBlock not defined")));
       boolean updated = !messageData.equals(sentBlockConfig);
       trace(format("updated check %s_%s: %s", CONFIG_SUBTYPE, subBlock, updated));
       if (updated) {
