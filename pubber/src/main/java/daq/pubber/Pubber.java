@@ -1490,14 +1490,14 @@ public class Pubber {
     managedPoints.forEach((name, point) -> updatePointConfig(point, points.get(name)));
     deviceState.pointset.state_etag = useConfig.state_etag;
 
-    if (pointsetConfig == null) {
+    if (pointsetConfig == null || pointsetConfig.points == null) {
       return;
     }
 
-    Set<String> configured = ofNullable(pointsetConfig.points).orElseGet(HashMap::new).keySet();
+    Set<String> configuredPoints = pointsetConfig.points.keySet();
     Set<String> statePoints = deviceState.pointset.points.keySet();
-    Set<String> missingPoints = Sets.difference(configured, statePoints).immutableCopy();
-    final Set<String> clearPoints = Sets.difference(statePoints, configured).immutableCopy();
+    Set<String> missingPoints = Sets.difference(configuredPoints, statePoints).immutableCopy();
+    final Set<String> clearPoints = Sets.difference(statePoints, configuredPoints).immutableCopy();
 
     missingPoints.forEach(name -> {
       debug("Restoring mismatched point " + name);
