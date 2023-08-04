@@ -393,6 +393,12 @@ public class Pubber {
     }
   }
 
+  private static PointPointsetEvent extraPointsetEvent() {
+    PointPointsetEvent pointPointsetEvent = new PointPointsetEvent();
+    pointPointsetEvent.present_value = 100;
+    return pointPointsetEvent;
+  }
+
   private AbstractPoint makePoint(String name, PointPointsetModel point) {
     boolean writable = point.writable != null && point.writable;
     if (BOOLEAN_UNITS.contains(point.units)) {
@@ -844,7 +850,6 @@ public class Pubber {
     deviceState.pointset.points.remove(pointName);
     pointsetEvent.points.remove(pointName);
   }
-
 
   protected void initialize() {
     try {
@@ -1489,10 +1494,10 @@ public class Pubber {
       return;
     }
 
-    Set<String> configuredPoints = pointsetConfig.points.keySet();
+    Set<String> configured = ofNullable(pointsetConfig.points).orElseGet(HashMap::new).keySet();
     Set<String> statePoints = deviceState.pointset.points.keySet();
-    Set<String> missingPoints = Sets.difference(configuredPoints, statePoints).immutableCopy();
-    final Set<String> clearPoints = Sets.difference(statePoints, configuredPoints).immutableCopy();
+    Set<String> missingPoints = Sets.difference(configured, statePoints).immutableCopy();
+    final Set<String> clearPoints = Sets.difference(statePoints, configured).immutableCopy();
 
     missingPoints.forEach(name -> {
       debug("Restoring mismatched point " + name);
@@ -1515,12 +1520,6 @@ public class Pubber {
           }
         }));
     registerSystemStatus(POINTSET_BUCKET, maxStatus.get());
-  }
-
-  private static PointPointsetEvent extraPointsetEvent() {
-    PointPointsetEvent pointPointsetEvent = new PointPointsetEvent();
-    pointPointsetEvent.present_value = 100;
-    return pointPointsetEvent;
   }
 
   private PointPointsetState invalidPoint(String pointName) {

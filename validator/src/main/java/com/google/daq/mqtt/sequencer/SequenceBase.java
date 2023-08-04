@@ -1318,7 +1318,7 @@ public class SequenceBase {
       validateMessage(attributes, message);
 
       if (SubFolder.UPDATE.value().equals(subFolderRaw)) {
-        handleReflectorMessage(subTypeRaw, message, transactionId);
+        handleUpdateMessage(subTypeRaw, message, transactionId);
       } else {
         handleDeviceMessage(message, subTypeRaw, subFolderRaw, transactionId);
       }
@@ -1368,9 +1368,11 @@ public class SequenceBase {
     }
   }
 
-  private synchronized void handleReflectorMessage(String subTypeRaw,
+  private synchronized void handleUpdateMessage(String subTypeRaw,
       Map<String, Object> message, String txnId) {
     try {
+      debug(format("Handling update message %s_update %s", subTypeRaw, txnId));
+
       // Do this first to handle all cases of a Config payload, including exceptions.
       if (CONFIG_SUBTYPE.equals(subTypeRaw) && txnId != null) {
         debug("Removing configTransaction " + txnId);
