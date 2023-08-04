@@ -15,7 +15,7 @@ if (( $# < 4 )); then
     false
 fi
 
-site_path=$1
+site_path=$(realpath $1)
 project_id=$2
 device_id=$3
 serial_no=$4
