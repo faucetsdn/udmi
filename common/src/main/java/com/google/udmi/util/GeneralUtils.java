@@ -1,6 +1,7 @@
 package com.google.udmi.util;
 
 import static java.util.Optional.ofNullable;
+import static org.checkerframework.checker.nullness.Opt.orElse;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -23,7 +24,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
 import java.util.TreeMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -57,8 +57,8 @@ public class GeneralUtils {
    * the target class is "final" but the fields themselves need to be updated.
    *
    * @param from source object
-   * @param to target object
-   * @param <T> type of object
+   * @param to   target object
+   * @param <T>  type of object
    */
   public static <T> void copyFields(T from, T to, boolean includeNull) {
     Field[] fields = from.getClass().getDeclaredFields();
@@ -103,12 +103,14 @@ public class GeneralUtils {
   }
 
   /**
-   * Get a "friendly" (cause messages only) stack trace string.
+   * Get a "friendly" (cause messages only) stack trace string.  There is no science to this,
+   * it's just a hacky algorithm that turns a pedantically detailed Java stack trace into something
+   * hopefully somewhat meaningful. Real debuggers will need to dig out the full stack trace!
    */
   public static String friendlyStackTrace(Throwable e) {
     List<String> messages = new ArrayList<>();
     while (e != null) {
-      messages.add(e.toString());
+      messages.add(e.getMessage());
       e = e.getCause();
     }
     return CSV_JOINER.join(messages).replace('\n', ' ');

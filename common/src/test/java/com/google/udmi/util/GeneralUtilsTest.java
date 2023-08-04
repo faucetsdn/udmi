@@ -1,6 +1,7 @@
 package com.google.udmi.util;
 
 import static com.google.udmi.util.GeneralUtils.deepCopy;
+import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.mergeObject;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -77,6 +78,34 @@ public class GeneralUtilsTest {
     assertEquals("source c", true, source.bool);
     assertEquals("target c", false, target.bool);
     assertEquals("merged c", true, merged.bool);
+  }
+
+  @Test
+  public void testStackTraceNpe() {
+    Long noValue = null;
+    try {
+      try {
+        System.err.println(noValue.toString());
+      } catch (Exception e1) {
+        throw new RuntimeException("While doing a thing", e1);
+      }
+      throw new RuntimeException("Not expected!");
+    } catch (Exception e2) {
+      String message = friendlyStackTrace(e2);
+      String expected = "While doing a thing, "
+          + "Cannot invoke \"java.lang.Long.toString()\" because \"noValue\" is null";
+      assertEquals("expected message", expected, message);
+    }
+  }
+
+  @Test
+  public void testFriendlyStackTraceBasic() {
+    Exception one = new NullPointerException("Deepest Level!");
+    Exception two = new RuntimeException("Wrap it in a box...", one);
+    Exception three = new IllegalArgumentException("And smash it with a hammer!", two);
+    String stackTrace = friendlyStackTrace(three);
+    String expected = "And smash it with a hammer!, Wrap it in a box..., Deepest Level!";
+    assertEquals("expected output", expected, stackTrace);
   }
 
   /**
