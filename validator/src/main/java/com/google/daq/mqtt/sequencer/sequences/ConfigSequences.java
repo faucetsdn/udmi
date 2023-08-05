@@ -175,6 +175,8 @@ public class ConfigSequences extends SequenceBase {
   public void config_logging() {
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
     updateConfig("set min_loglevel to debug");
+    deviceConfig.system.min_loglevel = Level.TRACE.value();
+    safeSleep(CONFIG_THRESHOLD_SEC * 2000);
     forceConfigUpdate("send config");
     untilLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
     untilLogged(SYSTEM_CONFIG_PARSE, SYSTEM_CONFIG_PARSE_LEVEL);
