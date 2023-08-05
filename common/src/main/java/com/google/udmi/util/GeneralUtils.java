@@ -1,7 +1,6 @@
 package com.google.udmi.util;
 
 import static java.util.Optional.ofNullable;
-import static org.checkerframework.checker.nullness.Opt.orElse;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
