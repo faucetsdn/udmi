@@ -10,6 +10,7 @@ import static com.google.udmi.util.JsonUtil.toMap;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
+import com.google.bos.udmi.service.core.ProcessorBase.PreviousParseException;
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.common.collect.ImmutableMap;
 import java.time.Instant;
@@ -95,6 +96,9 @@ public abstract class IotAccessBase extends ContainerBase {
   private String safeMunge(Function<String, String> munger, Entry<Long, String> configPair) {
     try {
       return munger.apply(ifNotNullGet(configPair, Entry::getValue));
+    } catch (PreviousParseException e) {
+      error("Exception parsing previous config: " + friendlyStackTrace(e));
+      throw e;
     } catch (Exception e) {
       error("Exception munging config: " + friendlyStackTrace(e));
       return null;

@@ -6,6 +6,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.catchOrElse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
+import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.fromJsonFile;
 import static com.google.udmi.util.GeneralUtils.fromJsonString;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -302,7 +303,7 @@ public class Pubber {
       }
       LOG.info("Done with main");
     } catch (Exception e) {
-      LOG.error("Exception starting pubber: " + GeneralUtils.friendlyStackTrace(e));
+      LOG.error("Exception starting pubber: " + friendlyStackTrace(e));
       System.exit(-1);
     }
   }
@@ -398,6 +399,12 @@ public class Pubber {
     } catch (Throwable e) {
       throw new RuntimeException("While augmenting device message", e);
     }
+  }
+
+  private static PointPointsetEvent extraPointsetEvent() {
+    PointPointsetEvent pointPointsetEvent = new PointPointsetEvent();
+    pointPointsetEvent.present_value = 100;
+    return pointPointsetEvent;
   }
 
   private AbstractPoint makePoint(String name, PointPointsetModel point) {
@@ -580,8 +587,7 @@ public class Pubber {
 
   private void processDeviceMetadata(Metadata metadata) {
     if (metadata.cloud != null) {
-      configuration.algorithm = metadata.cloud.auth_type.value();
-      info("Configuring with key type " + configuration.algorithm);
+      configuration.algorithm = catchToNull(() -> metadata.cloud.auth_type.value());
     }
 
     if (metadata.gateway != null) {
@@ -595,6 +601,7 @@ public class Pubber {
     }
 
     setHardwareSoftware(metadata);
+    info("Configured with auth_type " + configuration.algorithm);
 
     Map<String, PointPointsetModel> points =
         ifNotNullGet(metadata.pointset, data -> data.points, DEFAULT_POINTS);
@@ -875,7 +882,6 @@ public class Pubber {
     deviceState.pointset.points.remove(pointName);
     pointsetEvent.points.remove(pointName);
   }
-
 
   protected void initialize() {
     try {
@@ -1520,7 +1526,7 @@ public class Pubber {
     managedPoints.forEach((name, point) -> updatePointConfig(point, points.get(name)));
     deviceState.pointset.state_etag = useConfig.state_etag;
 
-    if (pointsetConfig == null) {
+    if (pointsetConfig == null || pointsetConfig.points == null) {
       return;
     }
 
@@ -1550,12 +1556,6 @@ public class Pubber {
           }
         }));
     registerSystemStatus(POINTSET_BUCKET, maxStatus.get());
-  }
-
-  private static PointPointsetEvent extraPointsetEvent() {
-    PointPointsetEvent pointPointsetEvent = new PointPointsetEvent();
-    pointPointsetEvent.present_value = 100;
-    return pointPointsetEvent;
   }
 
   private PointPointsetState invalidPoint(String pointName) {

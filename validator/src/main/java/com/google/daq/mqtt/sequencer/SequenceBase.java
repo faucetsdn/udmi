@@ -387,10 +387,6 @@ public class SequenceBase {
         : FUNCTIONS_VERSION_BETA;
   }
 
-  private static MessagePublisher getReflectorClient() {
-    return new IotReflectorClient(validatorConfig, getRequiredFunctionsVersion());
-  }
-
   static void resetState() {
     validatorConfig = null;
     client = null;
@@ -536,6 +532,10 @@ public class SequenceBase {
 
   private static int getStateUpdateCount() {
     return getUpdateCount(SubType.STATE.value()).get();
+  }
+
+  private static MessagePublisher getReflectorClient() {
+    return new IotReflectorClient(validatorConfig, getRequiredFunctionsVersion());
   }
 
   /**
@@ -991,7 +991,8 @@ public class SequenceBase {
   private boolean updateConfig(SubFolder subBlock, Object data) {
     try {
       String messageData = stringify(data);
-      String sentBlockConfig = sentConfig.get(requireNonNull(subBlock, "subBlock not defined"));
+      String sentBlockConfig = String.valueOf(
+          sentConfig.get(requireNonNull(subBlock, "subBlock not defined")));
       boolean updated = !messageData.equals(sentBlockConfig);
       trace(format("updated check %s_%s: %s", CONFIG_SUBTYPE, subBlock, updated));
       if (updated) {
@@ -1320,7 +1321,7 @@ public class SequenceBase {
       validateMessage(attributes, message);
 
       if (SubFolder.UPDATE.value().equals(subFolderRaw)) {
-        handleReflectorMessage(subTypeRaw, message, transactionId);
+        handleUpdateMessage(subTypeRaw, message, transactionId);
       } else {
         handleDeviceMessage(message, subTypeRaw, subFolderRaw, transactionId);
       }
@@ -1370,9 +1371,11 @@ public class SequenceBase {
     }
   }
 
-  private synchronized void handleReflectorMessage(String subTypeRaw,
+  private synchronized void handleUpdateMessage(String subTypeRaw,
       Map<String, Object> message, String txnId) {
     try {
+      debug(format("Handling update message %s_update %s", subTypeRaw, txnId));
+
       // Do this first to handle all cases of a Config payload, including exceptions.
       if (CONFIG_SUBTYPE.equals(subTypeRaw) && txnId != null) {
         debug("Removing configTransaction " + txnId);
