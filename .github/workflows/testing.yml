@@ -45,23 +45,11 @@ jobs:
           python-version: '3.10'
       - name: Checkout source
         uses: actions/checkout@v3
-      - name: bin/run_tests install_dependencies
-        run: bin/run_tests install_dependencies
-      - name: bin/run_tests code_tests
+      - name: bin/run_tests all_tests
+        run: bin/run_tests all_tests
+      - name: all test output
         if: ${{ always() }}
-        run: bin/run_tests code_tests
-      - name: bin/run_tests schema_tests
-        if: ${{ always() }}
-        run: bin/run_tests schema_tests
-      - name: bin/run_tests trace_tests
-        if: ${{ always() }}
-        run: bin/run_tests trace_tests
-      - name: bin/run_tests registrar_tests
-        if: ${{ always() }}
-        run: bin/run_tests registrar_tests
-      - name: bin/run_tests util_tests
-        if: ${{ always() }}
-        run: bin/run_tests util_tests
+        run: more out/test_* | cat
 
   spelling:
     name: Docs Spelling Checks
