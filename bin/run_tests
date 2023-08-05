@@ -3,6 +3,8 @@
 function usage() {
   >&2 cat << EOF
 
+usage error: $*
+
 $0 [step]
 
 where [step] is one of:
@@ -11,15 +13,22 @@ where [step] is one of:
   schema_tests
   trace_tests
   registrar_tests
-  util_tests
   udmis_tests
+  util_tests
   all_tests
 EOF
   false
 }
 
-failures=out/test-failures
+[[ $# == 1 ]] || usage incorrect number of arguments
+ 
+failures=out/test_failures-$1
 echo -n > $failures
+
+function run_wrap {
+    bin/run_tests $1 || true
+    cat < out/test_failures-$1 >> $failures
+}
 
 function test_wrap {
     command=$*
@@ -30,7 +39,6 @@ function test_wrap {
         echo pass
     else
         echo fail, output in $outfile
-        [[ -s $failures ]] && echo ", " >> $failures
         echo $command >> $failures
     fi
 }
@@ -50,9 +58,6 @@ case "$1" in
   schema_tests)
     test_wrap bin/test_schema
     ;;
-  util_tests)
-    test_wrap bin/test_locate
-    ;;
   trace_tests)
     test_wrap bin/test_trace simple
     test_wrap bin/test_trace upgrade
@@ -65,19 +70,26 @@ case "$1" in
   udmis_tests)
     test_wrap bin/test_udmis
     ;;
+  util_tests)
+    test_wrap bin/test_locate
+    ;;
   all_tests)
-    bin/run_tests install_dependencies
-    bin/run_tests code_tests
-    bin/run_tests schema_tests
-    bin/run_tests trace_tests
-    bin/run_tests registrar_tests
-    bin/run_tests util_tests
-    bin/run_tests udmis_tests
+    run_wrap install_dependencies
+    run_wrap code_tests
+    run_wrap schema_tests
+    run_wrap trace_tests
+    run_wrap registrar_tests
+    run_wrap udmis_tests
+    run_wrap util_tests
     ;;
   *)
-    usage
+    usage unrecognized step $1
     ;;
 esac
 
-[[ -s $failures ]] && echo All tests passed!
-[[ -s $failures ]] || echo Test failures: $(<failures)
+if [[ -s $failures ]]; then
+    echo ====== Test failures: $(tr '\n' ' ' <$failures)
+    false
+else
+    echo ====== All tests passed for $1
+fi
