@@ -21,7 +21,8 @@ EOF
 }
 
 [[ $# == 1 ]] || usage incorrect number of arguments
- 
+
+mkdir -p out
 failures=out/test_failures-$1
 echo -n > $failures
 
