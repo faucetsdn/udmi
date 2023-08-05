@@ -18,11 +18,21 @@ EOF
   false
 }
 
+failures=out/test-failures
+echo -n > $failures
+
 function test_wrap {
     command=$*
-    echo :::::::::::::::::::: $command
-    outfile=out/${command//[ \/]/+}
-    $command > $outfile 2>&1 || cat $outfile
+    echo -n "Testing $command: "
+    outfile=out/test_${command//[ \/]/+}
+    result=0
+    if $command > $outfile 2>&1; then
+        echo pass
+    else
+        echo fail, output in $outfile
+        [[ -s $failures ]] && echo ", " >> $failures
+        echo $command >> $failures
+    fi
 }
 
 case "$1" in
@@ -35,25 +45,25 @@ case "$1" in
     test_wrap bin/gencode check
     test_wrap pubber/bin/build check
     test_wrap validator/bin/build check
-    bin/test_pylint
+    test_wrap bin/test_pylint
     ;;
   schema_tests)
-    bin/test_schema
+    test_wrap bin/test_schema
     ;;
   util_tests)
-    bin/test_locate
+    test_wrap bin/test_locate
     ;;
   trace_tests)
-    bin/test_trace simple
-    bin/test_trace upgrade
-    bin/test_combos
+    test_wrap bin/test_trace simple
+    test_wrap bin/test_trace upgrade
+    test_wrap bin/test_combos
     ;;
   registrar_tests)
-    bin/test_registrar
-    bin/test_sites
+    test_wrap bin/test_registrar
+    test_wrap bin/test_sites
     ;;
   udmis_tests)
-    bin/test_udmis
+    test_wrap bin/test_udmis
     ;;
   all_tests)
     bin/run_tests install_dependencies
@@ -68,3 +78,6 @@ case "$1" in
     usage
     ;;
 esac
+
+[[ -s $failures ]] && echo All tests passed!
+[[ -s $failures ]] || echo Test failures: $(<failures)
