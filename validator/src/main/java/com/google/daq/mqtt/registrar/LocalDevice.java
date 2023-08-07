@@ -9,19 +9,16 @@ import static com.google.daq.mqtt.registrar.Registrar.METADATA_JSON;
 import static com.google.daq.mqtt.registrar.Registrar.NORMALIZED_JSON;
 import static com.google.daq.mqtt.util.MessageUpgrader.METADATA_SCHEMA;
 import static com.google.udmi.util.Common.VERSION_KEY;
+import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_STRICT;
+import static com.google.udmi.util.GeneralUtils.compressJsonString;
+import static com.google.udmi.util.GeneralUtils.writeString;
 import static com.google.udmi.util.JsonUtil.asMap;
 
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.PrettyPrinter;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.github.fge.jsonschema.core.report.LogLevel;
 import com.github.fge.jsonschema.core.report.ProcessingMessage;
@@ -94,20 +91,6 @@ class LocalDevice {
   public static final String EXCEPTION_ENVELOPE = "Envelope";
   public static final String EXCEPTION_SAMPLES = "Samples";
   public static final String EXCEPTION_BINDING = "Binding";
-  private static final PrettyPrinter PROPER_PRETTY_PRINTER_POLICY = new ProperPrettyPrinterPolicy();
-  private static final ObjectMapper OBJECT_MAPPER_RAW =
-      new ObjectMapper()
-          .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
-          .enable(Feature.ALLOW_TRAILING_COMMA)
-          .enable(Feature.STRICT_DUPLICATE_DETECTION)
-          .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-          .setDateFormat(new ISO8601DateFormat())
-          .setSerializationInclusion(Include.NON_NULL);
-  private static final ObjectMapper OBJECT_MAPPER =
-      OBJECT_MAPPER_RAW
-          .copy()
-          .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-          .enable(SerializationFeature.INDENT_OUTPUT);
   private static final String RSA_PUBLIC_PEM = "rsa_public.pem";
   private static final String RSA2_PUBLIC_PEM = "rsa2_public.pem";
   private static final String RSA3_PUBLIC_PEM = "rsa3_public.pem";
@@ -179,7 +162,7 @@ class LocalDevice {
           ES3_PUBLIC_PEM);
   private static final Set<String> ALL_CERT_FILES = ImmutableSet.of(RSA_CERT_PEM, ES_CERT_PEM);
   private static final String ERROR_FORMAT_INDENT = "  ";
-  private static final int MAX_METADATA_LENGTH = 32767;
+  private static final int MAX_JSON_LENGTH = 32767;
   private static final String UDMI_VERSION = "1.4.1";
   private final String deviceId;
   private final Map<String, JsonSchema> schemas;
@@ -338,7 +321,7 @@ class LocalDevice {
   private Metadata readNormalized() {
     try {
       File metadataFile = new File(outDir, NORMALIZED_JSON);
-      return OBJECT_MAPPER.readValue(metadataFile, Metadata.class);
+      return OBJECT_MAPPER_STRICT.readValue(metadataFile, Metadata.class);
     } catch (Exception e) {
       return new Metadata();
     }
@@ -353,7 +336,7 @@ class LocalDevice {
     try {
       metadata.hash = null;
       metadata.timestamp = null;
-      String json = metadataString();
+      String json = deviceMetadataString();
       return String.format("%08x", Objects.hash(json));
     } catch (Exception e) {
       throw new RuntimeException("Converting object to string", e);
@@ -491,7 +474,7 @@ class LocalDevice {
       }
 
       settings.updated = getUpdatedTimestamp();
-      settings.metadata = metadataString();
+      settings.metadata = deviceMetadataString();
       settings.proxyDevices = getProxyDevicesList();
       settings.keyAlgorithm = getAuthType();
       settings.keyBytes = getKeyBytes();
@@ -535,7 +518,7 @@ class LocalDevice {
 
   private String getTimestampString(Date timestamp) {
     try {
-      String quotedString = OBJECT_MAPPER.writeValueAsString(timestamp);
+      String quotedString = OBJECT_MAPPER_STRICT.writeValueAsString(timestamp);
       return quotedString.substring(1, quotedString.length() - 1);
     } catch (JsonProcessingException e) {
       throw new RuntimeException("While generating updated timestamp", e);
@@ -544,9 +527,9 @@ class LocalDevice {
 
   private String deviceConfigString() {
     try {
-      JsonNode configJson = OBJECT_MAPPER.valueToTree(deviceConfigObject());
+      JsonNode configJson = OBJECT_MAPPER_STRICT.valueToTree(deviceConfigObject());
       new MessageDowngrader("config", configJson).downgrade(baseVersion);
-      return OBJECT_MAPPER.writeValueAsString(configJson);
+      return compressJsonString(configJson, MAX_JSON_LENGTH);
     } catch (Exception e) {
       throw new RuntimeException("While converting device config", e);
     }
@@ -609,13 +592,9 @@ class LocalDevice {
     return pointConfig;
   }
 
-  private String metadataString() {
+  private String deviceMetadataString() {
     try {
-      String prettyString = OBJECT_MAPPER.writeValueAsString(metadata);
-      if (prettyString.length() <= MAX_METADATA_LENGTH) {
-        return prettyString;
-      }
-      return OBJECT_MAPPER_RAW.writeValueAsString(metadata);
+      return compressJsonString(metadata, MAX_JSON_LENGTH);
     } catch (Exception e) {
       throw new RuntimeException("While converting metadata to string", e);
     }
@@ -632,9 +611,9 @@ class LocalDevice {
       // Don't use actual project id because it should be abstracted away.
       envelope.projectId = fakeProjectId();
       envelope.deviceNumId = makeNumId(envelope);
-      String envelopeJson = OBJECT_MAPPER.writeValueAsString(envelope);
+      String envelopeJson = OBJECT_MAPPER_STRICT.writeValueAsString(envelope);
       ProcessingReport processingReport = schemas.get(ENVELOPE_JSON)
-          .validate(OBJECT_MAPPER.readTree(envelopeJson));
+          .validate(OBJECT_MAPPER_STRICT.readTree(envelopeJson));
       if (!processingReport.isSuccess()) {
         processingReport.forEach(action -> {
           throw new RuntimeException("against schema", action.asException());
@@ -734,14 +713,8 @@ class LocalDevice {
     }
     metadata.hash = metadataHash;
     System.err.println("Writing normalized " + metadataFile.getAbsolutePath());
-    try (OutputStream outputStream = Files.newOutputStream(metadataFile.toPath())) {
-      // Super annoying, but can't set this on the global static instance.
-      JsonGenerator generator =
-          OBJECT_MAPPER
-              .getFactory()
-              .createGenerator(outputStream)
-              .setPrettyPrinter(PROPER_PRETTY_PRINTER_POLICY);
-      OBJECT_MAPPER.writeValue(generator, metadata);
+    try {
+      writeString(metadataFile, compressJsonString(metadata, MAX_JSON_LENGTH));
     } catch (Exception e) {
       exceptionMap.put(EXCEPTION_WRITING, e);
     }
@@ -806,7 +779,7 @@ class LocalDevice {
         if (!schemas.containsKey(sampleName)) {
           throw new RuntimeException("No valid matching schema found");
         }
-        schemas.get(sampleName).validate(OBJECT_MAPPER.readTree(sampleStream));
+        schemas.get(sampleName).validate(OBJECT_MAPPER_STRICT.readTree(sampleStream));
       } catch (Exception e) {
         Exception scopedException =
             new RuntimeException("While validating sample file " + sampleName, e);
@@ -828,11 +801,4 @@ class LocalDevice {
     return metadata;
   }
 
-  private static class ProperPrettyPrinterPolicy extends DefaultPrettyPrinter {
-
-    @Override
-    public void writeObjectFieldValueSeparator(JsonGenerator jg) throws IOException {
-      jg.writeRaw(": ");
-    }
-  }
 }
