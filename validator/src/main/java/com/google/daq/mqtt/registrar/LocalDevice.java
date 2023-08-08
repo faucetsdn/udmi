@@ -357,8 +357,7 @@ class LocalDevice {
   }
 
   private boolean isDeviceKeySource() {
-    return metadata != null
-        && (metadata.cloud != null && Boolean.TRUE.equals(metadata.cloud.device_key));
+    return metadata != null && (metadata.cloud != null && isTrue(metadata.cloud.device_key));
   }
 
   public void loadCredentials() {
