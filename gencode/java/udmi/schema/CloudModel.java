@@ -61,11 +61,11 @@ public class CloudModel {
     @JsonPropertyDescription("The key type used for cloud communication.")
     public CloudModel.Auth_type auth_type;
     /**
-     * Whether the device authenticates via a private key. Typically false for devices which are proxied for by an IoT core gateway
+     * Indicates if the device private key is provided in the site model.
      * 
      */
     @JsonProperty("device_key")
-    @JsonPropertyDescription("Whether the device authenticates via a private key. Typically false for devices which are proxied for by an IoT core gateway")
+    @JsonPropertyDescription("Indicates if the device private key is provided in the site model.")
     public Boolean device_key;
     /**
      * If the device functions as an IoT Gateway, proxying for other devices using a single logical connection
