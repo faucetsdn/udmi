@@ -162,18 +162,18 @@ public class GeneralUtils {
 
   public static String compressJsonString(Object data, int lengthThreshold) {
     try {
-      String prettyString = writeToPrettyString(data, true);
+      String prettyString = writeToPrettyString(data, OutputFormat.VERBOSE);
       if (prettyString.length() <= lengthThreshold) {
         return prettyString;
       }
 
-      return writeToPrettyString(data, false);
+      return writeToPrettyString(data, OutputFormat.COMPRESSED);
     } catch (Exception e) {
       throw new RuntimeException("While converting to limited json string", e);
     }
   }
 
-  private static String writeToPrettyString(Object data, boolean indent) {
+  private static String writeToPrettyString(Object data, OutputFormat indent) {
     try {
       ByteArrayOutputStream outputString = new ByteArrayOutputStream();
       OBJECT_MAPPER_STRICT.writeValue(getPrettyPrinterGenerator(outputString, indent), data);
@@ -187,12 +187,12 @@ public class GeneralUtils {
    * A custom generator can't be set on a base object mapper instance, so need to do it for each
    * invocation.
    */
-  private static JsonGenerator getPrettyPrinterGenerator(OutputStream outputStream, boolean indent) {
+  private static JsonGenerator getPrettyPrinterGenerator(OutputStream outputStream, OutputFormat indent) {
     try {
       return OBJECT_MAPPER_STRICT
           .getFactory()
           .createGenerator(outputStream)
-          .setPrettyPrinter(indent ? INDENT_PRINTER : NO_INDENT_PRINTER);
+          .setPrettyPrinter(indent == OutputFormat.VERBOSE ? INDENT_PRINTER : NO_INDENT_PRINTER);
     } catch (Exception e) {
       throw new RuntimeException("While creating pretty printer", e);
     }
@@ -431,5 +431,10 @@ public class GeneralUtils {
       generator.writeRaw(": ");
     }
 
+  }
+
+  private enum OutputFormat {
+    VERBOSE,
+    COMPRESSED
   }
 }
