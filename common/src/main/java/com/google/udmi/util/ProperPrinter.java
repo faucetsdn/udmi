@@ -14,9 +14,12 @@ class ProperPrinter extends DefaultPrettyPrinter {
   static final PrettyPrinter INDENT_PRINTER = new ProperPrinter(VERBOSE);
   static final PrettyPrinter NO_INDENT_PRINTER = new ProperPrinter(COMPRESSED);
 
+  private final boolean isCompressed;
+
   private ProperPrinter(OutputFormat indent) {
     super();
-    if (indent == OutputFormat.COMPRESSED) {
+    isCompressed = indent == COMPRESSED;
+    if (isCompressed) {
       Indenter indenter = new DefaultIndenter("", "");
       indentObjectsWith(indenter);
       indentArraysWith(indenter);
@@ -25,7 +28,7 @@ class ProperPrinter extends DefaultPrettyPrinter {
 
   @Override
   public void writeObjectFieldValueSeparator(JsonGenerator generator) throws IOException {
-    generator.writeRaw(": ");
+    generator.writeRaw(isCompressed ? ":" : ": ");
   }
 
   enum OutputFormat {
