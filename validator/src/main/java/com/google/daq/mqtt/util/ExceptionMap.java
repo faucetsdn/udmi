@@ -110,6 +110,9 @@ public class ExceptionMap extends RuntimeException {
     return exceptions.size();
   }
 
+  /**
+   * Execute the action and capture into the map if it throws an exception.
+   */
   public void capture(String category, Runnable action) {
     try {
       action.run();
