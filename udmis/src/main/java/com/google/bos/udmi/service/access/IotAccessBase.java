@@ -156,8 +156,9 @@ public abstract class IotAccessBase extends ContainerBase {
         Map<String, Object> messageMap = toMap(message);
         Object payloadSubType = messageMap.get("subType");
         Object payloadSubFolder = messageMap.get("subFolder");
-        debug("Sending command containing %s/%s to %s/%s/%s", payloadSubType, payloadSubFolder,
-            registryId, deviceId, folder);
+        Object transactionId = messageMap.get("transactionId");
+        debug("Sending command containing %s/%s to %s/%s/%s %s", payloadSubType, payloadSubFolder,
+            registryId, deviceId, folder, transactionId);
         requireNonNull(registryId, "registry not defined");
         requireNonNull(deviceId, "device not defined");
         sendCommandBase(registryId, deviceId, folder, message);

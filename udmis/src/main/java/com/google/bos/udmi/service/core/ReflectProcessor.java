@@ -124,9 +124,10 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private void processException(Envelope reflection, Exception e) {
-    warn("Processing exception %s: %s", reflection.transactionId, friendlyStackTrace(e));
+    String stackMessage = friendlyStackTrace(e);
+    warn("Processing exception %s: %s", reflection.transactionId, stackMessage);
     Map<String, Object> message = new HashMap<>();
-    message.put(ERROR_KEY, stackTraceString(e));
+    message.put(ERROR_KEY, stackMessage);
     Envelope envelope = new Envelope();
     envelope.subFolder = SubFolder.ERROR;
     envelope.transactionId = reflection.transactionId;

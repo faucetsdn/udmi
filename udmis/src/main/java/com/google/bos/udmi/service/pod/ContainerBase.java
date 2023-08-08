@@ -128,8 +128,8 @@ public abstract class ContainerBase {
     // TODO: Make this dynamic and/or structured logging.
   }
 
-  public void trace(String message, Object... args) {
-    trace(format(message, args));
+  public void trace(String format, Object... args) {
+    trace(format(format, args));
   }
 
   public void warn(String message) {
