@@ -11,6 +11,7 @@ import static com.google.daq.mqtt.util.MessageUpgrader.METADATA_SCHEMA;
 import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_STRICT;
 import static com.google.udmi.util.GeneralUtils.compressJsonString;
+import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.writeString;
 import static com.google.udmi.util.JsonUtil.asMap;
 
@@ -567,10 +568,11 @@ class LocalDevice {
   private PointsetConfig getDevicePointsetConfig() {
     PointsetConfig pointsetConfig = new PointsetConfig();
     pointsetConfig.points = new HashMap<>();
+    boolean excludeUnits = isTrue(metadata.pointset.exclude_units_from_config);
     metadata.pointset.points.forEach(
         (metadataKey, value) ->
             pointsetConfig.points.computeIfAbsent(
-                metadataKey, configKey -> configFromMetadata(value)));
+                metadataKey, configKey -> configFromMetadata(value, excludeUnits)));
 
     // Copy selected MetadataPointset properties into PointsetConfig.
     if (metadata.pointset.sample_limit_sec != null) {
@@ -582,9 +584,9 @@ class LocalDevice {
     return pointsetConfig;
   }
 
-  PointPointsetConfig configFromMetadata(PointPointsetModel metadata) {
+  PointPointsetConfig configFromMetadata(PointPointsetModel metadata, boolean excludeUnits) {
     PointPointsetConfig pointConfig = new PointPointsetConfig();
-    pointConfig.units = metadata.units;
+    pointConfig.units = excludeUnits ? null : metadata.units;
     pointConfig.ref = metadata.ref;
     if (Boolean.TRUE.equals(metadata.writable)) {
       pointConfig.set_value = metadata.baseline_value;

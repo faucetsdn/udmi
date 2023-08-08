@@ -1,5 +1,7 @@
 package com.google.udmi.util;
 
+import static com.google.udmi.util.ProperPrinter.OutputFormat.COMPRESSED;
+import static com.google.udmi.util.ProperPrinter.OutputFormat.VERBOSE;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 
@@ -7,9 +9,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser.Feature;
-import com.fasterxml.jackson.core.PrettyPrinter;
-import com.fasterxml.jackson.core.util.DefaultIndenter;
-import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -17,6 +16,7 @@ import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.Hashing;
+import com.google.udmi.util.ProperPrinter.OutputFormat;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -28,6 +28,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
@@ -55,9 +56,6 @@ public class GeneralUtils {
           .enable(Feature.STRICT_DUPLICATE_DETECTION)
           .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
           .setSerializationInclusion(Include.NON_NULL);
-  private static final PrettyPrinter INDENT_PRINTER = new ProperPrinter(true);
-  private static final PrettyPrinter NO_INDENT_PRINTER = new ProperPrinter(false);
-
   public static final ObjectMapper OBJECT_MAPPER_STRICT =
       OBJECT_MAPPER_RAW.copy()
           .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
@@ -162,12 +160,12 @@ public class GeneralUtils {
 
   public static String compressJsonString(Object data, int lengthThreshold) {
     try {
-      String prettyString = writeToPrettyString(data, OutputFormat.VERBOSE);
+      String prettyString = writeToPrettyString(data, VERBOSE);
       if (prettyString.length() <= lengthThreshold) {
         return prettyString;
       }
 
-      return writeToPrettyString(data, OutputFormat.COMPRESSED);
+      return writeToPrettyString(data, COMPRESSED);
     } catch (Exception e) {
       throw new RuntimeException("While converting to limited json string", e);
     }
@@ -192,7 +190,7 @@ public class GeneralUtils {
       return OBJECT_MAPPER_STRICT
           .getFactory()
           .createGenerator(outputStream)
-          .setPrettyPrinter(indent == OutputFormat.VERBOSE ? INDENT_PRINTER : NO_INDENT_PRINTER);
+          .setPrettyPrinter(indent == VERBOSE ? ProperPrinter.INDENT_PRINTER : ProperPrinter.NO_INDENT_PRINTER);
     } catch (Exception e) {
       throw new RuntimeException("While creating pretty printer", e);
     }
@@ -414,27 +412,8 @@ public class GeneralUtils {
     }
   }
 
-
-  private static class ProperPrinter extends DefaultPrettyPrinter {
-
-    public ProperPrinter(boolean indent) {
-      super();
-      if (!indent) {
-        DefaultPrettyPrinter.Indenter indenter = new DefaultIndenter("", "");
-        indentObjectsWith(indenter);
-        indentArraysWith(indenter);
-      }
-    }
-
-    @Override
-    public void writeObjectFieldValueSeparator(JsonGenerator generator) throws IOException {
-      generator.writeRaw(": ");
-    }
-
-  }
-
-  private enum OutputFormat {
-    VERBOSE,
-    COMPRESSED
+  public static String multiTrim(String message) {
+    return Arrays.stream(message.split("\n"))
+        .map(String::trim).collect(Collectors.joining(" "));
   }
 }

@@ -1,5 +1,7 @@
 package com.google.daq.mqtt.util;
 
+import static com.google.udmi.util.GeneralUtils.multiTrim;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -41,7 +43,7 @@ public class ExceptionMap extends RuntimeException {
   private static ErrorTree format(Throwable e, final String prefix, final String indent) {
     final ErrorTree errorTree = new ErrorTree();
     errorTree.prefix = prefix;
-    errorTree.message = e.getMessage();
+    errorTree.message = multiTrim(e.getMessage());
     final String newPrefix = prefix + indent;
     if (e instanceof ExceptionMap) {
       if (e.getCause() != null) {
@@ -52,7 +54,8 @@ public class ExceptionMap extends RuntimeException {
     } else if (e instanceof ValidationException) {
       ((ValidationException) e)
           .getCausingExceptions()
-          .forEach(sub -> errorTree.children.put(sub.getMessage(), format(sub, newPrefix, indent)));
+          .forEach(sub -> errorTree.children.put(multiTrim(sub.getMessage()),
+              format(sub, newPrefix, indent)));
     } else if (e.getCause() != null) {
       errorTree.child = format(e.getCause(), newPrefix, indent);
     }
@@ -105,6 +108,14 @@ public class ExceptionMap extends RuntimeException {
    */
   public int size() {
     return exceptions.size();
+  }
+
+  public void capture(String category, Runnable action) {
+    try {
+      action.run();
+    } catch (Exception e) {
+      put(category, e);
+    }
   }
 
   /**

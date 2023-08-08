@@ -25,6 +25,9 @@
     "proxy_ids": ["AHU-22"]
   },
   "pointset": {
+    "properties": {
+      "exclude_units_from_points": true
+    },
     "points": {
       "return_air_temperature_sensor": {
         "units": "Degrees-Celsius"

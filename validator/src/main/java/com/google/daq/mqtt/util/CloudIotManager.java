@@ -3,6 +3,7 @@ package com.google.daq.mqtt.util;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.daq.mqtt.util.ConfigUtil.readExeConfig;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.mergeObject;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -39,6 +40,8 @@ public class CloudIotManager {
   private static final String UDMI_UPDATED = "udmi_updated";
   private static final String KEY_BYTES_KEY = "key_bytes";
   private static final String KEY_ALGORITHM_KEY = "key_algorithm";
+  public static final int METADATA_SIZE_LIMIT = 32767;
+  public static final String REDACTED_MESSAGE = "REDACTED DUE TO SIZE LIMIT";
 
   public final ExecutionConfiguration executionConfiguration;
 
@@ -182,18 +185,16 @@ public class CloudIotManager {
    * @return true if this is a new device entry
    */
   public boolean registerDevice(String deviceId, CloudDeviceSettings settings) {
-    try {
-      CloudModel device = getRegisteredDevice(deviceId);
-      if (device == null) {
-        createDevice(deviceId, settings);
-      } else {
-        updateDevice(deviceId, settings, device);
-      }
-      writeDeviceConfig(deviceId, settings.config);
-      return device == null;
-    } catch (Exception e) {
-      throw new RuntimeException("While registering device " + deviceId, e);
+    ExceptionMap exceptions = new ExceptionMap("registering");
+    CloudModel device = getRegisteredDevice(deviceId);
+    if (device == null) {
+      exceptions.capture("creating", () -> createDevice(deviceId, settings));
+    } else {
+      exceptions.capture("updating", () -> updateDevice(deviceId, settings, device));
     }
+    exceptions.capture("configuring", () -> writeDeviceConfig(deviceId, settings.config));
+    exceptions.throwIfNotEmpty();
+    return device == null;
   }
 
   public CloudModel getRegisteredDevice(String deviceId) {
@@ -245,12 +246,20 @@ public class CloudIotManager {
 
   private void createDevice(String deviceId, CloudDeviceSettings settings) {
     CloudModel newDevice = makeDevice(settings, null);
+    limitValueSizes(newDevice.metadata);
     iotProvider.createDevice(deviceId, newDevice);
     deviceMap.put(deviceId, newDevice);
   }
 
   private void updateDevice(String deviceId, CloudDeviceSettings settings, CloudModel oldDevice) {
-    iotProvider.updateDevice(deviceId, makeDevice(settings, oldDevice));
+    CloudModel device = makeDevice(settings, oldDevice);
+    limitValueSizes(device.metadata);
+    iotProvider.updateDevice(deviceId, device);
+  }
+
+  private void limitValueSizes(Map<String, String> metadata) {
+    metadata.keySet().forEach(key -> ifTrueThen(metadata.get(key).length() > METADATA_SIZE_LIMIT,
+        () -> metadata.put(key, REDACTED_MESSAGE)));
   }
 
   public SetupUdmiConfig getVersionInformation() {
