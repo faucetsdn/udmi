@@ -15,10 +15,7 @@ import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.writeString;
 import static com.google.udmi.util.JsonUtil.asMap;
 
-import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.PrettyPrinter;
-import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.github.fge.jsonschema.core.report.LogLevel;
@@ -150,9 +147,8 @@ class LocalDevice {
           AUX_DIR,
           EXPECTED_DIR,
           OUT_DIR);
-  private static final Set<String> OUT_FILES =
-      ImmutableSet.of(GENERATED_CONFIG_JSON, DEVICE_ERRORS_JSON, NORMALIZED_JSON,
-          EXCEPTION_LOG_FILE);
+  private static final Set<String> OUT_FILES = ImmutableSet.of(
+      GENERATED_CONFIG_JSON, DEVICE_ERRORS_JSON, NORMALIZED_JSON, EXCEPTION_LOG_FILE);
   private static final Set<String> ALL_KEY_FILES =
       ImmutableSet.of(
           RSA_PUBLIC_PEM,
@@ -235,8 +231,7 @@ class LocalDevice {
     if (!outDir.exists()) {
       outDir.mkdir();
     }
-    File exceptionLog = new File(outDir, EXCEPTION_LOG_FILE);
-    exceptionLog.delete();
+    new File(outDir, EXCEPTION_LOG_FILE).delete();
   }
 
   public void validateExpected() {
@@ -686,7 +681,7 @@ class LocalDevice {
     if (exceptionMap.isEmpty()) {
       return null;
     }
-    ErrorTree errorTree = ExceptionMap.format(exceptionMap, ERROR_FORMAT_INDENT);
+    ErrorTree errorTree = ExceptionMap.format(exceptionMap);
     return errorTree.purge(ignoreErrors) ? null : errorTree;
   }
 

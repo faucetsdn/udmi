@@ -76,7 +76,6 @@ public class Registrar {
   static final String DEVICE_ERRORS_JSON = "errors.json";
   static final String GENERATED_CONFIG_JSON = "generated_config.json";
   private static final String DEVICES_DIR = "devices";
-  private static final String ERROR_FORMAT_INDENT = "  ";
   private static final String SCHEMA_SUFFIX = ".json";
   private static final String REGISTRATION_SUMMARY_JSON = "out/registration_summary.json";
   private static final String SCHEMA_NAME = "UDMI";
@@ -228,7 +227,7 @@ public class Registrar {
       processDevices();
       writeErrors();
     } catch (ExceptionMap em) {
-      ExceptionMap.format(em, ERROR_FORMAT_INDENT).write(System.err);
+      ExceptionMap.format(em).write(System.err);
       throw new RuntimeException("mapped exceptions", em);
     } catch (Exception ex) {
       ex.printStackTrace();
