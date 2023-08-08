@@ -235,8 +235,7 @@ class LocalDevice {
   }
 
   public void validateExpected() {
-    Path relativized = siteDir.toPath().relativize(deviceDir.toPath());
-    ExceptionMap exceptionMap = new ExceptionMap(relativized.toString());
+    ExceptionMap exceptionMap = new ExceptionMap("expected files");
 
     String[] files = deviceDir.list();
     checkNotNull(files, "No files found in " + deviceDir.getAbsolutePath());

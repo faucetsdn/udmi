@@ -211,9 +211,4 @@ public class ExceptionMap extends RuntimeException {
       return false;
     }
   }
-
-  @Override
-  public void printStackTrace(PrintWriter s) {
-    format(this).write(new WriterOutputStream(s, Charset.defaultCharset()));
-  }
 }
