@@ -28,57 +28,8 @@ public abstract class ProcessorTestBase extends MessageTestBase {
   public static final Date TEST_TIMESTAMP = CleanDateFormat.cleanDate();
   public static final String TEST_FUNCTIONS = "functions-version";
   protected final List<Object> captured = new ArrayList<>();
-  private ProcessorBase processor;
   protected IotAccessBase provider;
-
-  protected int getDefaultCount() {
-    return getMessageCount(Object.class);
-  }
-
-  protected int getExceptionCount() {
-    return getMessageCount(Exception.class);
-  }
-
-  protected int getMessageCount(Class<?> clazz) {
-    return processor.getMessageCount(clazz);
-  }
-
-  protected void initializeTestInstance() {
-    try {
-      UdmiServicePod.resetForTest();
-      writeVersionDeployFile();
-      createProcessorInstance();
-      activateReverseProcessor();
-    } catch (Exception e) {
-      throw new RuntimeException("While initializing test instance", e);
-    }
-  }
-
-  protected <T> T initializeTestInstance(@SuppressWarnings("unused") Class<T> clazz) {
-    initializeTestInstance();
-    //noinspection unchecked
-    return (T) processor;
-  }
-
-    private void activateReverseProcessor() {
-    MessageDispatcherImpl reverseDispatcher = getReverseDispatcher();
-    reverseDispatcher.registerHandler(Object.class, this::resultHandler);
-    reverseDispatcher.activate();
-  }
-
-  private void createProcessorInstance() {
-    EndpointConfiguration config = new EndpointConfiguration();
-    config.protocol = Protocol.LOCAL;
-    config.hostname = TEST_NAMESPACE;
-    config.recv_id = TEST_SOURCE;
-    config.send_id = TEST_DESTINATION;
-    processor = ProcessorBase.create(getProcessorClass(), config);
-    setTestDispatcher(processor.getDispatcher());
-    provider = mock(IotAccessBase.class);
-    UdmiServicePod.putComponent(IOT_ACCESS_COMPONENT, () -> provider);
-    processor.activate();
-    provider.activate();
-  }
+  private ProcessorBase processor;
 
   /**
    * Write a deployment file for testing.
@@ -99,8 +50,37 @@ public abstract class ProcessorTestBase extends MessageTestBase {
     }
   }
 
+  protected int getDefaultCount() {
+    return getMessageCount(Object.class);
+  }
+
+  protected int getExceptionCount() {
+    return getMessageCount(Exception.class);
+  }
+
+  protected int getMessageCount(Class<?> clazz) {
+    return processor.getMessageCount(clazz);
+  }
+
   @NotNull
   protected abstract Class<? extends ProcessorBase> getProcessorClass();
+
+  protected <T> T initializeTestInstance(@SuppressWarnings("unused") Class<T> clazz) {
+    initializeTestInstance();
+    //noinspection unchecked
+    return (T) processor;
+  }
+
+  protected void initializeTestInstance() {
+    try {
+      UdmiServicePod.resetForTest();
+      writeVersionDeployFile();
+      createProcessorInstance();
+      activateReverseProcessor();
+    } catch (Exception e) {
+      throw new RuntimeException("While initializing test instance", e);
+    }
+  }
 
   protected void terminateAndWait() {
     getReverseDispatcher().terminate();
@@ -109,6 +89,26 @@ public abstract class ProcessorTestBase extends MessageTestBase {
     getReverseDispatcher().awaitShutdown();
     provider.shutdown();
     processor.shutdown();
+  }
+
+  private void activateReverseProcessor() {
+    MessageDispatcherImpl reverseDispatcher = getReverseDispatcher();
+    reverseDispatcher.registerHandler(Object.class, this::resultHandler);
+    reverseDispatcher.activate();
+  }
+
+  private void createProcessorInstance() {
+    EndpointConfiguration config = new EndpointConfiguration();
+    config.protocol = Protocol.LOCAL;
+    config.hostname = TEST_NAMESPACE;
+    config.recv_id = TEST_SOURCE;
+    config.send_id = TEST_DESTINATION;
+    processor = ProcessorBase.create(getProcessorClass(), config);
+    setTestDispatcher(processor.getDispatcher());
+    provider = mock(IotAccessBase.class);
+    UdmiServicePod.putComponent(IOT_ACCESS_COMPONENT, () -> provider);
+    processor.activate();
+    provider.activate();
   }
 
   private void resultHandler(Object message) {

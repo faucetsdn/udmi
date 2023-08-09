@@ -30,6 +30,9 @@ jobs:
         run: bin/test_mosquitto
       - name: bin/run_tests udmis_tests
         run: bin/run_tests udmis_tests
+      - name: udmis test output
+        if: ${{ always() }}
+        run: more out/test_* | cat
 
   unit:
     name: Unit Tests
