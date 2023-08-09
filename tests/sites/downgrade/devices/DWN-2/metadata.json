@@ -1,5 +1,6 @@
 {
   "pointset": {
+    "exclude_units_from_config": true,
     "points": {
       "filter_alarm_pressure_status": {
         "units": "No-units",

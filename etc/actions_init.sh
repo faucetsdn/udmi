@@ -12,3 +12,5 @@ function fail {
 }
 
 export UDMI_BIN=$HOME/udmi/bin
+
+UDMI_WORKFLOW=$HOME/udmi/etc/site_model_workflow.yml
