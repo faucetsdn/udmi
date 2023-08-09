@@ -19,12 +19,17 @@ RUN gcloud components install gke-gcloud-auth-plugin
 RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
 RUN install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
 
-RUN apk add docker openrc
-RUN rc-update add docker boot
+RUN apk add docker
+RUN addgroup root docker
 
 ENV GCP_PROJECT=bos-peringknife-dev
 ENV GCP_REGION=us-central1-c
 ENV GCP_CLUSTER=udmis-dev
+ENV UDMI_REPO=https://github.com/grafnu/udmi.git
+ENV UDMI_TARGET=master
+
+RUN git clone $UDMI_REPO
+RUN cd udmi && git switch $UDMI_TARGET && git pull
 
 ADD bin/selfie .
 
