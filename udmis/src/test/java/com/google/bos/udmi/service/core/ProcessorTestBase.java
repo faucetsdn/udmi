@@ -11,8 +11,6 @@ import com.google.bos.udmi.service.messaging.impl.MessageTestBase;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.udmi.util.CleanDateFormat;
 import java.io.File;
-import java.io.IOException;
-import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -56,7 +54,13 @@ public abstract class ProcessorTestBase extends MessageTestBase {
     }
   }
 
-  private void activateReverseProcessor() {
+  protected <T> T initializeTestInstance(@SuppressWarnings("unused") Class<T> clazz) {
+    initializeTestInstance();
+    //noinspection unchecked
+    return (T) processor;
+  }
+
+    private void activateReverseProcessor() {
     MessageDispatcherImpl reverseDispatcher = getReverseDispatcher();
     reverseDispatcher.registerHandler(Object.class, this::resultHandler);
     reverseDispatcher.activate();

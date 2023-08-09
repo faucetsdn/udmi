@@ -2,6 +2,7 @@ package com.google.bos.udmi.service.core;
 
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.JsonUtil.fromStringStrict;
+import static com.google.udmi.util.JsonUtil.loadFileRequired;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -14,6 +15,8 @@ import static org.mockito.Mockito.verify;
 
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.udmi.util.CleanDateFormat;
+import com.google.udmi.util.GeneralUtils;
+import com.google.udmi.util.JsonUtil;
 import java.util.Date;
 import java.util.function.Function;
 import org.jetbrains.annotations.NotNull;
@@ -34,6 +37,7 @@ import udmi.schema.SystemState;
 public class StateProcessorTest extends ProcessorTestBase {
 
   public static final Date INITIAL_LAST_START = CleanDateFormat.cleanDate(new Date(12981837));
+  private static final String BAD_STATE_MESSAGE_FILE = "src/test/messages/bad_state.json";
 
   @NotNull
   protected Class<? extends ProcessorBase> getProcessorClass() {
@@ -134,6 +138,12 @@ public class StateProcessorTest extends ProcessorTestBase {
         "has GatewayState");
     assertEquals(0, getExceptionCount(), "exception count");
     assertEquals(1, getDefaultCount(), "default handler count");
+  }
+
+  @Test
+  public void badMessage() {
+    StateProcessor processor = initializeTestInstance(StateProcessor.class);
+    processor.defaultHandler(loadFileRequired(Object.class, BAD_STATE_MESSAGE_FILE));
   }
 
   /**

@@ -3,7 +3,6 @@ package com.google.bos.udmi.service.core;
 import static com.google.bos.udmi.service.core.ProcessorBase.REFLECT_REGISTRY;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.times;
