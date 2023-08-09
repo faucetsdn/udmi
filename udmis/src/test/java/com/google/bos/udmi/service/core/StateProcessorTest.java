@@ -37,7 +37,7 @@ import udmi.schema.SystemState;
 public class StateProcessorTest extends ProcessorTestBase {
 
   public static final Date INITIAL_LAST_START = CleanDateFormat.cleanDate(new Date(12981837));
-  private static final String BAD_STATE_MESSAGE_FILE = "src/test/messages/bad_state.json";
+  private static final String LEGACY_STATE_MESSAGE_FILE = "src/test/messages/legacy_state.json";
 
   @NotNull
   protected Class<? extends ProcessorBase> getProcessorClass() {
@@ -141,9 +141,9 @@ public class StateProcessorTest extends ProcessorTestBase {
   }
 
   @Test
-  public void badMessage() {
+  public void legacyStateMessage() {
     StateProcessor processor = initializeTestInstance(StateProcessor.class);
-    processor.defaultHandler(loadFileRequired(Object.class, BAD_STATE_MESSAGE_FILE));
+    processor.defaultHandler(loadFileRequired(Object.class, LEGACY_STATE_MESSAGE_FILE));
   }
 
   /**
