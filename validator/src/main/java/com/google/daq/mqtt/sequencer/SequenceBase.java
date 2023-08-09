@@ -975,7 +975,7 @@ public class SequenceBase {
     updateConfig(SubFolder.DISCOVERY, deviceConfig.discovery);
     if (!configIsPending() && force) {
       debug("Forcing config update");
-      sentConfig.remove(SubFolder.UDMI);
+      sentConfig.remove(SubFolder.UPDATE);
       updateConfig(SubFolder.UPDATE, deviceConfig);
     }
     if (configIsPending()) {
