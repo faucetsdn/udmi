@@ -976,7 +976,7 @@ public class SequenceBase {
     if (!configIsPending() && force) {
       debug("Forcing config update");
       sentConfig.remove(SubFolder.UDMI);
-      updateConfig(SubFolder.UPDATE, null);
+      updateConfig(SubFolder.UPDATE, deviceConfig);
     }
     if (configIsPending()) {
       lastConfigUpdate = CleanDateFormat.clean(Instant.now());
@@ -1734,6 +1734,7 @@ public class SequenceBase {
 
   protected void forceConfigUpdate(String reason) {
     updateConfig(reason, true);
+    recordSequence("Force config update to " + reason);
   }
 
   protected void skipTest(String reason) {
