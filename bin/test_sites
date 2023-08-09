@@ -37,28 +37,48 @@ function redact_files {
     done
 }
 
+if [[ $# == 0 ]]; then
+    subsets=$(cd $sitesdir; ls -d *)
+else
+    subsets=$*
+fi
 
-subsets=$(cd $sitesdir; ls -d *)
-echo Testing against $subsets
+echo Testing against: $subsets
+
+FAILURES=out/test_sites-fixes.sh
+rm -f $FAILURES
+
 for subset in $subsets; do
     echo '##########################################' Testing site $subset
     devicesdir=$sitesdir/$subset/devices
     rm -rf $devicesdir/*/out
     mkdir -p $devicesdir
     devices=$(cd $devicesdir; ls -d *)
-    
+
     bin/registrar $sitesdir/$subset
-    
+
     for device in $devices; do
         if [[ -d $devicesdir/$device/out ]]; then
             redact_files $devicesdir/$device/out/* $sitesdir/$subset/registration_summary.json
-            diff -r $devicesdir/$device/out $devicesdir/$device/expected
+            diffs=$(diff -rq $devicesdir/$device/out $devicesdir/$device/expected 2>&1) || true
+            if [[ -n $diffs ]]; then
+                cat <<< $diffs >> $FAILURES
+                diff -r $devicesdir/$device/out $devicesdir/$device/expected || true
+            fi
         elif [[ -d $devicesdir/$device/expected ]]; then
             echo Missing output directory $devicesdir/$device/out
             false
         fi
     done
 done
+
+if [[ -s $FAILURES ]]; then
+    echo
+    echo :::::: Failures found, to fix execute $FAILURES:
+    sed -i -E -e 's/^Files (.*) and (.*) differ$/cp \1 \2/' $FAILURES
+    cat $FAILURES
+    false
+fi
 
 echo '#########################################' Testing simple mock sequencer...
 bin/sequencer tests/sites/downgrade/ -- DWN-2 54321 system_mode_restart

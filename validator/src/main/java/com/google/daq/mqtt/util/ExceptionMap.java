@@ -1,9 +1,13 @@
 package com.google.daq.mqtt.util;
 
+import static com.google.udmi.util.GeneralUtils.multiTrim;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -12,6 +16,7 @@ import java.util.function.BiConsumer;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.apache.commons.io.output.WriterOutputStream;
 
 /**
  * Class for managing a map of exceptions (named by category).
@@ -20,6 +25,7 @@ public class ExceptionMap extends RuntimeException {
 
   private static final byte[] NEWLINE_BYTES = "\n".getBytes();
   private static final byte[] SEPARATOR_BYTES = ": ".getBytes();
+  private static final String ERROR_FORMAT_INDENT = "  ";
 
   final Map<String, Exception> exceptions = new TreeMap<>();
 
@@ -30,18 +36,17 @@ public class ExceptionMap extends RuntimeException {
   /**
    * Format the given exception with indicated level.
    *
-   * @param e      exception (tree) to format
-   * @param indent indent level
+   * @param e exception (tree) to format
    * @return formatted error tree
    */
-  public static ErrorTree format(Exception e, String indent) {
-    return format(e, "", indent);
+  public static ErrorTree format(Exception e) {
+    return format(e, "", ERROR_FORMAT_INDENT);
   }
 
   private static ErrorTree format(Throwable e, final String prefix, final String indent) {
     final ErrorTree errorTree = new ErrorTree();
     errorTree.prefix = prefix;
-    errorTree.message = e.getMessage();
+    errorTree.message = multiTrim(e.getMessage());
     final String newPrefix = prefix + indent;
     if (e instanceof ExceptionMap) {
       if (e.getCause() != null) {
@@ -52,7 +57,8 @@ public class ExceptionMap extends RuntimeException {
     } else if (e instanceof ValidationException) {
       ((ValidationException) e)
           .getCausingExceptions()
-          .forEach(sub -> errorTree.children.put(sub.getMessage(), format(sub, newPrefix, indent)));
+          .forEach(sub -> errorTree.children.put(multiTrim(sub.getMessage()),
+              format(sub, newPrefix, indent)));
     } else if (e.getCause() != null) {
       errorTree.child = format(e.getCause(), newPrefix, indent);
     }
@@ -105,6 +111,17 @@ public class ExceptionMap extends RuntimeException {
    */
   public int size() {
     return exceptions.size();
+  }
+
+  /**
+   * Execute the action and capture into the map if it throws an exception.
+   */
+  public void capture(String category, Runnable action) {
+    try {
+      action.run();
+    } catch (Exception e) {
+      put(category, e);
+    }
   }
 
   /**

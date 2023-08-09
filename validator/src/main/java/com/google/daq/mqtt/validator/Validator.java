@@ -882,7 +882,7 @@ public class Validator {
       validateFiles(schemaSpec, prefix, file);
       client = new NullPublisher();
     } catch (ExceptionMap processingException) {
-      ErrorTree errorTree = ExceptionMap.format(processingException, ERROR_FORMAT_INDENT);
+      ErrorTree errorTree = ExceptionMap.format(processingException);
       errorTree.write(System.err);
       throw processingException;
     }
@@ -968,7 +968,7 @@ public class Validator {
   private void writeExceptionOutput(File targetOut, Exception e) {
     try (OutputStream outputStream = Files.newOutputStream(targetOut.toPath())) {
       if (e != null) {
-        ExceptionMap.format(e, ERROR_FORMAT_INDENT).write(outputStream);
+        ExceptionMap.format(e).write(outputStream);
       }
     } catch (Exception e2) {
       throw new RuntimeException("While writing " + targetOut, e2);

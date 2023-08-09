@@ -2,7 +2,6 @@ Exceptions for DWN-2
   While loading credentials for local device DWN-2
     Found 0 credentials
   REDACTED/sites/downgrade/devices/DWN-2/metadata.json
-    Unrecognized field "grumpy" (class udmi.schema.Metadata), not marked as ignorable (13 known properties: "gateway", "hash", "exception", "discovery", "localnet", "cloud", "timestamp", "version", "description", "features", "system", "testing", "pointset"])
- at [Source: (File); line: 26, column: 14] (through reference chain: udmi.schema.Metadata["grumpy"])
-  devices/DWN-2
+    Unrecognized field "grumpy" (class udmi.schema.Metadata), not marked as ignorable (13 known properties: "gateway", "hash", "exception", "discovery", "localnet", "cloud", "timestamp", "version", "description", "features", "system", "testing", "pointset"]) at [Source: (File); line: 27, column: 14] (through reference chain: udmi.schema.Metadata["grumpy"])
+  expected files
     Missing files: [rsa_private.pem, rsa_private.pkcs8, rsa_public.pem]

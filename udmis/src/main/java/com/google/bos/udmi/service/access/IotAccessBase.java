@@ -41,6 +41,7 @@ public abstract class IotAccessBase extends ContainerBase {
       IotProvider.GCP, GcpIotAccessProvider.class,
       IotProvider.LOCAL, LocalIotAccessProvider.class
   );
+  public static final int MAX_CONFIG_LENGTH = 65535;
 
   /**
    * Factory constructor for new instances.
@@ -125,7 +126,9 @@ public abstract class IotAccessBase extends ContainerBase {
           Entry<Long, String> configPair = fetchConfig(registryId, deviceId);
           Long version = ifNotNullGet(configPair, Entry::getKey);
           return ifNotNullGet(safeMunge(munger, configPair),
-              updated -> updateConfig(registryId, deviceId, updated, version));
+              updated -> checkedUpdate(registryId, deviceId, version, updated));
+        } catch (AbortLoopException e) {
+          throw e;
         } catch (Exception e) {
           if (retryCount <= 0) {
             error("Failed modifying config for %s/%s: %s", registryId, deviceId,
@@ -138,10 +141,27 @@ public abstract class IotAccessBase extends ContainerBase {
           safeSleep(CONFIG_UPDATE_BACKOFF_MS);
         }
       }
+    } catch (AbortLoopException e) {
+      throw e;
     } catch (Exception e) {
       throw new RuntimeException(
           format("Maximum config retry count exceeded for %s/%s, giving up.", registryId,
               deviceId), e);
+    }
+  }
+
+  private String checkedUpdate(String registryId, String deviceId, Long version, String updated) {
+    int configLength = updated.length();
+    if (configLength > MAX_CONFIG_LENGTH) {
+      throw new AbortLoopException(
+          format("Config length %d exceeds maximum %d", configLength, MAX_CONFIG_LENGTH));
+    }
+    return updateConfig(registryId, deviceId, updated, version);
+  }
+
+  private static class AbortLoopException extends RuntimeException {
+    public AbortLoopException(String message) {
+      super(message);
     }
   }
 
@@ -156,8 +176,9 @@ public abstract class IotAccessBase extends ContainerBase {
         Map<String, Object> messageMap = toMap(message);
         Object payloadSubType = messageMap.get("subType");
         Object payloadSubFolder = messageMap.get("subFolder");
-        debug("Sending command containing %s/%s to %s/%s/%s", payloadSubType, payloadSubFolder,
-            registryId, deviceId, folder);
+        Object transactionId = messageMap.get("transactionId");
+        debug("Sending command containing %s/%s to %s/%s/%s %s", payloadSubType, payloadSubFolder,
+            registryId, deviceId, folder, transactionId);
         requireNonNull(registryId, "registry not defined");
         requireNonNull(deviceId, "device not defined");
         sendCommandBase(registryId, deviceId, folder, message);

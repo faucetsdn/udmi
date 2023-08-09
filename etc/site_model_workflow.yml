@@ -103,7 +103,7 @@ jobs:
       - name: Output of registrar errors
         run: |
           steps to show a summary of registrar errors.
-          more udmi/devices/*/out/e* | cat
+          more $SITE_MODEL/devices/*/out/e* | cat
       - name: Startup testing pubber instance
         if: vars.PUBBER_OPTS != ''
         run: |
