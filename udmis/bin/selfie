@@ -1,0 +1,6 @@
+#!/bin/bash
+
+gcloud container clusters get-credentials ${GCP_CLUSTER} --region ${GCP_REGION} --project ${GCP_PROJECT}
+
+echo Waiting for eternity to end.
+tail -f /dev/null

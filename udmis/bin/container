@@ -20,15 +20,22 @@ REPOSITORY=gcr.io/$GCP_PROJECT
 
 mkdir -p tmp
 
-for optionalarg in $@; do
-    if [[ $optionalarg == "--no-check" ]]; then
-        NOCHECK=1
-    else
-        REPOSITORY=$optionalarg
-    fi
-done
-
 IMAGE=udmis
+
+if [[ $1 == "--no-check" ]]; then
+    NOCHECK=1
+    shift
+fi
+
+if [[ $1 == "--selfie" ]]; then
+    IMAGE=selfie
+    shift
+fi
+
+if [[ -n $1 ]]; then
+    REPOSITORY=$optionalarg
+    shift
+fi
 
 echo Using GCP project $GCP_PROJECT
 
@@ -72,7 +79,7 @@ if [[ $cmd == build ]]; then
 }
 EOF
     more var/deployed_version.json var/prod_pod.json | cat
-    docker build -f Dockerfile.udmis -t $IMAGE $DROOT
+    docker build -f Dockerfile.$IMAGE -t $IMAGE $DROOT
     echo Next try: $0 push
 elif [[ $cmd == run ]]; then
     docker run $RUNARGS $IMAGE
@@ -83,13 +90,13 @@ elif [[ $cmd == push ]]; then
     docker tag $IMAGE $IMAGENAME
     docker push $IMAGENAME
     hash=$(docker images --digests $IMAGENAME | fgrep latest | awk '{print $3}')
-    image=$IMAGENAME@$hash
+    ihash=$IMAGENAME@$hash
     for file in $TEMPLATES; do
         sed < etc/$file > tmp/$file \
-            -e "s^@IMAGE@^$image^" \
+            -e "s^@IMAGE-$IMAGE@^$ihash^" \
             -e "s^@GCP_PROJECT@^$GCP_PROJECT^" \
             -e "s^@CLEARBLADE_PROJECT@^$CLEARBLADE_PROJECT^"
-        echo Updated tmp/$file with image $image
+        echo Updated tmp/$file with image $ihash
     done
     echo Next try: $0 deploy
 elif [[ $cmd == deploy ]]; then

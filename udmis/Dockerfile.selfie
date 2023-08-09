@@ -1,0 +1,31 @@
+FROM alpine:latest
+
+WORKDIR /root
+
+# Same as main udmis pod docker just to share image layer
+RUN apk add openjdk17 bash gcompat mosquitto-clients
+
+# Workaround for https://github.com/grpc/grpc-java/issues/8751
+ENV LD_PRELOAD=/lib/libgcompat.so.0
+
+RUN apk add git curl python3
+
+RUN curl -sSL https://sdk.cloud.google.com | bash
+
+ENV PATH $PATH:/root/google-cloud-sdk/bin
+
+RUN gcloud components install gke-gcloud-auth-plugin
+
+RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+RUN install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+
+RUN apk add docker openrc
+RUN rc-update add docker boot
+
+ENV GCP_PROJECT=bos-peringknife-dev
+ENV GCP_REGION=us-central1-c
+ENV GCP_CLUSTER=udmis-dev
+
+ADD bin/selfie .
+
+CMD ["./selfie"]
