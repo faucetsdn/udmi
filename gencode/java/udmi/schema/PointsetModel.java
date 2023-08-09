@@ -18,6 +18,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "points",
+    "exclude_units_from_config",
     "sample_limit_sec",
     "sample_rate_sec"
 })
@@ -32,6 +33,8 @@ public class PointsetModel {
     @JsonProperty("points")
     @JsonPropertyDescription("Information about a specific point name of the device.")
     public HashMap<String, PointPointsetModel> points;
+    @JsonProperty("exclude_units_from_config")
+    public Boolean exclude_units_from_config;
     /**
      * Minimum time between sample updates for the device (including complete and COV updates). Updates more frequent than this should be coalesced into one update.
      * 
@@ -51,6 +54,7 @@ public class PointsetModel {
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.sample_rate_sec == null)? 0 :this.sample_rate_sec.hashCode()));
+        result = ((result* 31)+((this.exclude_units_from_config == null)? 0 :this.exclude_units_from_config.hashCode()));
         result = ((result* 31)+((this.sample_limit_sec == null)? 0 :this.sample_limit_sec.hashCode()));
         result = ((result* 31)+((this.points == null)? 0 :this.points.hashCode()));
         return result;
@@ -65,7 +69,7 @@ public class PointsetModel {
             return false;
         }
         PointsetModel rhs = ((PointsetModel) other);
-        return ((((this.sample_rate_sec == rhs.sample_rate_sec)||((this.sample_rate_sec!= null)&&this.sample_rate_sec.equals(rhs.sample_rate_sec)))&&((this.sample_limit_sec == rhs.sample_limit_sec)||((this.sample_limit_sec!= null)&&this.sample_limit_sec.equals(rhs.sample_limit_sec))))&&((this.points == rhs.points)||((this.points!= null)&&this.points.equals(rhs.points))));
+        return (((((this.sample_rate_sec == rhs.sample_rate_sec)||((this.sample_rate_sec!= null)&&this.sample_rate_sec.equals(rhs.sample_rate_sec)))&&((this.exclude_units_from_config == rhs.exclude_units_from_config)||((this.exclude_units_from_config!= null)&&this.exclude_units_from_config.equals(rhs.exclude_units_from_config))))&&((this.sample_limit_sec == rhs.sample_limit_sec)||((this.sample_limit_sec!= null)&&this.sample_limit_sec.equals(rhs.sample_limit_sec))))&&((this.points == rhs.points)||((this.points!= null)&&this.points.equals(rhs.points))));
     }
 
 }

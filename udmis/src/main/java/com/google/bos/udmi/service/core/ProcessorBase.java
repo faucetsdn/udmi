@@ -1,5 +1,6 @@
 package com.google.bos.udmi.service.core;
 
+import static com.google.bos.udmi.service.access.IotAccessBase.MAX_CONFIG_LENGTH;
 import static com.google.bos.udmi.service.core.ReflectProcessor.UDMI_VERSION;
 import static com.google.bos.udmi.service.messaging.MessageDispatcher.messageHandlerFor;
 import static com.google.common.base.Preconditions.checkState;
@@ -9,6 +10,7 @@ import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.Common.VERSION_KEY;
+import static com.google.udmi.util.GeneralUtils.compressJsonString;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
@@ -263,7 +265,7 @@ public abstract class ProcessorBase extends ContainerBase {
     payload.put(VERSION_KEY, UDMI_VERSION);
 
     mungeConfigDebug(attributes, updateTimestamp, reason);
-    return stringify(payload);
+    return compressJsonString(payload, MAX_CONFIG_LENGTH);
   }
 
   private String updateWithLastStart(Map<String, Object> oldPayload, Date newLastStart) {

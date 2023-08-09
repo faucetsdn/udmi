@@ -1,23 +1,34 @@
 package com.google.udmi.util;
 
+import static com.google.udmi.util.ProperPrinter.OutputFormat.COMPRESSED;
+import static com.google.udmi.util.ProperPrinter.OutputFormat.VERBOSE;
+import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser.Feature;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.Hashing;
+import com.google.udmi.util.ProperPrinter.OutputFormat;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
@@ -29,6 +40,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
+import org.apache.commons.io.FileUtils;
 
 public class GeneralUtils {
 
@@ -37,6 +49,18 @@ public class GeneralUtils {
       .enable(SerializationFeature.INDENT_OUTPUT)
       .setDateFormat(new ISO8601DateFormat())
       .setSerializationInclusion(JsonInclude.Include.NON_NULL);
+  private static final ObjectMapper OBJECT_MAPPER_RAW =
+      OBJECT_MAPPER.copy()
+          .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
+          .enable(Feature.ALLOW_TRAILING_COMMA)
+          .enable(Feature.STRICT_DUPLICATE_DETECTION)
+          .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+          .setSerializationInclusion(Include.NON_NULL);
+  public static final ObjectMapper OBJECT_MAPPER_STRICT =
+      OBJECT_MAPPER_RAW.copy()
+          .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+          .disable(SerializationFeature.INDENT_OUTPUT);
+
   private static final String SEPARATOR = "\n  ";
   private static final Joiner INDENTED_LINES = Joiner.on(SEPARATOR);
 
@@ -47,7 +71,7 @@ public class GeneralUtils {
   public static String changedLines(List<String> nullableChanges) {
     List<String> changes = ofNullable(nullableChanges).orElse(ImmutableList.of());
     String terminator = changes.size() == 0 ? "." : ":";
-    String header = String.format("Changed %d fields%s%s", changes.size(), terminator, SEPARATOR);
+    String header = format("Changed %d fields%s%s", changes.size(), terminator, SEPARATOR);
     return (header + INDENTED_LINES.join(changes)).trim();
   }
 
@@ -102,8 +126,8 @@ public class GeneralUtils {
   }
 
   /**
-   * Get a "friendly" (cause messages only) stack trace string.  There is no science to this,
-   * it's just a hacky algorithm that turns a pedantically detailed Java stack trace into something
+   * Get a "friendly" (cause messages only) stack trace string.  There is no science to this, it's
+   * just a hacky algorithm that turns a pedantically detailed Java stack trace into something
    * hopefully somewhat meaningful. Real debuggers will need to dig out the full stack trace!
    */
   public static String friendlyStackTrace(Throwable e) {
@@ -131,6 +155,44 @@ public class GeneralUtils {
       return OBJECT_MAPPER.readValue(body, valueType);
     } catch (Exception e) {
       throw new RuntimeException("While loading json string", e);
+    }
+  }
+
+  public static String compressJsonString(Object data, int lengthThreshold) {
+    try {
+      String prettyString = writeToPrettyString(data, VERBOSE);
+      if (prettyString.length() <= lengthThreshold) {
+        return prettyString;
+      }
+
+      return writeToPrettyString(data, COMPRESSED);
+    } catch (Exception e) {
+      throw new RuntimeException("While converting to limited json string", e);
+    }
+  }
+
+  private static String writeToPrettyString(Object data, OutputFormat indent) {
+    try {
+      ByteArrayOutputStream outputString = new ByteArrayOutputStream();
+      OBJECT_MAPPER_STRICT.writeValue(getPrettyPrinterGenerator(outputString, indent), data);
+      return outputString.toString();
+    } catch (Exception e) {
+      throw new RuntimeException("While writing output string", e);
+    }
+  }
+
+  /**
+   * A custom generator can't be set on a base object mapper instance, so need to do it for each
+   * invocation.
+   */
+  private static JsonGenerator getPrettyPrinterGenerator(OutputStream outputStream, OutputFormat indent) {
+    try {
+      return OBJECT_MAPPER_STRICT
+          .getFactory()
+          .createGenerator(outputStream)
+          .setPrettyPrinter(indent == VERBOSE ? ProperPrinter.INDENT_PRINTER : ProperPrinter.NO_INDENT_PRINTER);
+    } catch (Exception e) {
+      throw new RuntimeException("While creating pretty printer", e);
     }
   }
 
@@ -340,5 +402,18 @@ public class GeneralUtils {
   public static <T> T using(T variable, Consumer<T> consumer) {
     consumer.accept(variable);
     return variable;
+  }
+
+  public static void writeString(File metadataFile, String metadataString) {
+    try {
+      FileUtils.write(metadataFile, metadataString, Charset.defaultCharset());
+    } catch (IOException e) {
+      throw new RuntimeException("While writing output file " + metadataFile.getAbsolutePath(), e);
+    }
+  }
+
+  public static String multiTrim(String message) {
+    return Arrays.stream(message.split("\n"))
+        .map(String::trim).collect(Collectors.joining(" "));
   }
 }

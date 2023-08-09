@@ -9,6 +9,7 @@ concurrency:
 
 env:
   UDMI_VERSION: ${{ vars.UDMI_VERSION }}
+  SKIP_CHECKS: ${{ vars.SKIP_CHECKS }}
   SITE_MODEL: ${{ vars.SITE_MODEL }}
   REFLECTOR_PKCS8_B64: ${{ secrets.REFLECTOR_PKCS8_B64 }}
   DEVICE_NAME: ${{ vars.DEVICE_NAME }}
@@ -53,6 +54,10 @@ jobs:
           [[ -n $UDMI_BIN ]] || fail UDMI_BIN not defined.
           [[ -n $GCP_PROJECT ]] || fail GCP_PROJECT not defined.
           [[ -n $SITE_MODEL ]] || fail SITE_MODEL not defined.
+          [[ -n $SKIP_CHECKS ]] || (
+            MODEL_WORKFLOW=.github/workflows/testing.yml
+            diff $UDMI_WORKFLOW $MODEL_WORKFLOW || fail Model workflow is out of sync, please update.
+          )
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
@@ -98,7 +103,7 @@ jobs:
       - name: Output of registrar errors
         run: |
           steps to show a summary of registrar errors.
-          more udmi/devices/*/out/e* | cat
+          more $SITE_MODEL/devices/*/out/e* | cat
       - name: Startup testing pubber instance
         if: vars.PUBBER_OPTS != ''
         run: |
