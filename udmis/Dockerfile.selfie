@@ -27,10 +27,11 @@ ENV GCP_REGION=us-central1-c
 ENV GCP_CLUSTER=udmis-dev
 ENV UDMI_REPO=https://github.com/grafnu/udmi.git
 ENV UDMI_TARGET=master
+ENV UDMI_VERSION=g6d80c3596
 
 RUN git clone $UDMI_REPO
 RUN cd udmi && git switch $UDMI_TARGET && git pull
 
-ADD bin/selfie .
+ADD bin/ bin/
 
-CMD ["./selfie"]
+CMD ["bin/selfie"]
