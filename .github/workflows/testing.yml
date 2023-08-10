@@ -13,6 +13,7 @@ concurrency:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  REF_NAME: ${{ github.ref }}
 
 jobs:
   udmis:
@@ -37,7 +38,8 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Setup udmis build
         run: |
-          echo IMAGE_TAG=$(git describe) >> $GITHUB_ENV
+          echo IMAGE_TAG=$(git rev-parse $REV_NAME)
+          echo IMAGE_TAG=$(git rev-parse $REV_NAME) >> $GITHUB_ENV
           udmis/bin/container prep
       - name: Build and push Docker image
         uses: docker/build-push-action@v2
