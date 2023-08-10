@@ -80,7 +80,7 @@ if [[ $cmd == prep ]]; then
   "built_by": "$current_user"
 }
 EOF
-    more var/deployed_version.json var/prod_pod.json | cat
+    more var/deployed_version.json | cat
     echo Next try: $0 build
 elif [[ $cmd == build ]]; then
     docker build -f Dockerfile.$IMAGE -t $IMAGE $DROOT
