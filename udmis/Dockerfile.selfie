@@ -2,7 +2,7 @@ FROM alpine:latest
 
 WORKDIR /root
 
-# Same as main udmis pod docker just to share image layer
+# Same as main udmis pod just to share image layer
 RUN apk add openjdk17 bash gcompat mosquitto-clients
 
 # Workaround for https://github.com/grpc/grpc-java/issues/8751
@@ -19,18 +19,14 @@ RUN gcloud components install gke-gcloud-auth-plugin
 RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
 RUN install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
 
-RUN apk add docker
-RUN addgroup root docker
-
 ENV GCP_PROJECT=bos-peringknife-dev
 ENV GCP_REGION=us-central1-c
 ENV GCP_CLUSTER=udmis-dev
 ENV UDMI_REPO=https://github.com/grafnu/udmi.git
 ENV UDMI_TARGET=master
-ENV UDMI_VERSION=g6d80c3596
 
-RUN git clone $UDMI_REPO
-RUN cd udmi && git switch $UDMI_TARGET && git pull
+RUN git clone --depth 1 $UDMI_REPO
+RUN cd udmi && git fetch $UDMI_TARGET && switch $UDMI_TARGET && git pull
 
 ADD bin/ bin/
 
