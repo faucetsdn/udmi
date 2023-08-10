@@ -6,7 +6,7 @@ DROOT=.
 
 function usage {
     echo Error: $*
-    echo Usage: $0 { build, shell, run, push, deploy, update, status, logs, stop } [repo] [--no-check]
+    echo Usage: $0 { prep, build, shell, run, push, deploy, update, status, logs, stop } [repo] [--no-check]
     echo Project: $GCP_PROJECT
     echo Try starting with: $0 build
     exit 1
@@ -64,7 +64,7 @@ funcver=`git describe $funchash`$funcdirty
 RUNARGS="--rm -ti -v $PWD/var:/udmi -v $HOME/.config:/root/.config --tmpfs /tmp --env GCP_PROJECT=$GCP_PROJECT"
 TEMPLATES=$(cd etc; ls k8s_*.yaml)
 
-if [[ $cmd == build ]]; then
+if [[ $cmd == prep ]]; then
     rm -rf var tmp && mkdir -p var
     bin/build
     build_time=`date --utc -Imin -r $LIBFILE`
@@ -79,6 +79,8 @@ if [[ $cmd == build ]]; then
 }
 EOF
     more var/deployed_version.json var/prod_pod.json | cat
+    echo Next try: $0 prep
+elif [[ $cmd == build ]]; then
     docker build -f Dockerfile.$IMAGE -t $IMAGE $DROOT
     echo Next try: $0 push
 elif [[ $cmd == run ]]; then
