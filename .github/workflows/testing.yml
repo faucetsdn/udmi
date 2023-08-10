@@ -47,15 +47,17 @@ jobs:
       - name: Setup udmis container build
         run: |
           revhash=$(git rev-parse $GITHUB_REF)
-          echo IMAGE_TAG=g${revhash:0:9} >> $GITHUB_ENV
+          echo IMAGE_TAG=g${revhash:0:9}
+          echo PUSH_TAG=$PUSH_REGISTRY/${{ github.repository }}:$IMAGE_TAG >> $GITHUB_ENV
           udmis/bin/container prep --no-check
+          echo Pushing buit container as $PUSH_TAG | tee -a $GITHUB_STEP_SUMMARY
       - name: Build and push docker image
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v4
         with:
           file: udmis/Dockerfile.udmis
           context: udmis
           push: true
-          tags: ${{ env.PUSH_REGISTRY }}/${{ github.repository }}:${{ env.IMAGE_TAG }}
+          tags: ${{ env.PUSH_TAG }}
 
   unit:
     name: Unit Tests

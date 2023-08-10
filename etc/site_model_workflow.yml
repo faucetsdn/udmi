@@ -137,7 +137,7 @@ jobs:
           [[ -z DEVICE_SERIAL ]] && fail DEVICE_SERIAL not defined.
           echo $UDMI_BIN/sequencer $SEQUENCER_OPTS $SITE_MODEL $GCP_PROJECT $DEVICE_NAME $DEVICE_SERIAL $SEQUENCER_TESTS
           $UDMI_BIN/sequencer $SEQUENCER_OPTS $SITE_MODEL $GCP_PROJECT $DEVICE_NAME $DEVICE_SERIAL $SEQUENCER_TESTS | tee sequencer.log
-          cp $SITE_MODEL/out/devices/$DEVICE_NAME/results.md $GITHUB_STEP_SUMMARY
+          cat $SITE_MODEL/out/devices/$DEVICE_NAME/results.md >> $GITHUB_STEP_SUMMARY
       - name: Sequencer results
         if: vars.SEQUENCER_OPTS != ''
         run: |
