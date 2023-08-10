@@ -5,14 +5,17 @@ gcloud container clusters get-credentials ${GCP_CLUSTER} --region ${GCP_REGION} 
 git clone $UDMI_REPO
 (cd udmi && git switch $UDMI_TARGET)
 
-echo Entering udmis_broker message loop
+echo Entering udmis-broker message loop
 
-mosquitto_sub -h udmis_broker -t udmis-broker/+/+ | while read input; do
-    update_to=$(jq -r .setup.update_to <<< $input || true)
-    if [[ -n $update_to && update_to != null ]]; then
-        echo Update install to version $update_to
+mosquitto_sub -h udmis-broker -t udmis-broker/+/+ | jq . --indent 0 | while read input; do
+    echo Processing $input
+    update_to=$(jq -r .message.setup.update_to <<< $input || true)
+    timestamp=$(jq -r .message.timestamp <<< $input || true)
+    if [[ -n $update_to && $update_to != null ]]; then
+        echo Message $timestamp updating install to version $update_to
+    else
+        echo Message $timestamp ignoring state update with no update_to field
     fi
 done
 
 echo Message loop terminated
-
