@@ -61,7 +61,7 @@ funccount=`git diff --name-only -- src/ | wc -l`
 if [[ $funccount != 0 ]]; then
     funcdirty=-dirty
 fi
-funcver=`git describe $funchash`$funcdirty
+funcver=`git describe $funchash || echo $revparse`$funcdirty
 
 RUNARGS="--rm -ti -v $PWD/var:/udmi -v $HOME/.config:/root/.config --tmpfs /tmp --env GCP_PROJECT=$GCP_PROJECT"
 TEMPLATES=$(cd etc; ls k8s_*.yaml)
