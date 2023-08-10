@@ -67,7 +67,7 @@ TEMPLATES=$(cd etc; ls k8s_*.yaml)
 if [[ $cmd == build ]]; then
     rm -rf var tmp && mkdir -p var
     bin/build
-    build_time=`date --utc --iso=seconds -r $LIBFILE`
+    build_time=`date --utc -Imin -r $LIBFILE`
     cp etc/prod_pod.json var/
     cat <<EOF > var/deployed_version.json
 {
