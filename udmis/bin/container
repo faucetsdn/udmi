@@ -53,15 +53,8 @@ LIBFILE=build/libs/udmis-1.0-SNAPSHOT-all.jar
 
 current_user=$USER@$HOSTNAME
 revparse=`git rev-parse HEAD`
-revparse=g${revparse:0:9}
-version=`git describe --abbrev=0 || echo $revparse`
-srcver=`git describe --dirty || echo $revparse`
-funchash=`git log -n 1 --oneline -- src/ | awk '{print $1}'`
-funccount=`git diff --name-only -- src/ | wc -l`
-if [[ $funccount != 0 ]]; then
-    funcdirty=-dirty
-fi
-funcver=`git describe $funchash || echo $revparse`$funcdirty
+udmi_rev=g${revparse:0:9}
+version=`git describe || echo $udmi_rev`
 
 RUNARGS="--rm -ti -v $PWD/var:/udmi -v $HOME/.config:/root/.config --tmpfs /tmp --env GCP_PROJECT=$GCP_PROJECT"
 TEMPLATES=$(cd etc; ls k8s_*.yaml)
@@ -74,8 +67,7 @@ if [[ $cmd == prep || $cmd == build ]]; then
     cat <<EOF > var/deployed_version.json
 {
   "udmi_version": "$version",
-  "udmi_source": "$srcver",
-  "udmi_functions": "$funcver",
+  "udmi_ref": "$udmi_rev",
   "built_at": "$build_time",
   "built_by": "$current_user"
 }
