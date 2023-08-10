@@ -13,7 +13,6 @@ cd $ROOT
 
 bin/setup $project_id
 
-bin/container prep
 bin/container build
 bin/container push
 bin/container update

@@ -66,7 +66,7 @@ funcver=`git describe $funchash || echo $revparse`$funcdirty
 RUNARGS="--rm -ti -v $PWD/var:/udmi -v $HOME/.config:/root/.config --tmpfs /tmp --env GCP_PROJECT=$GCP_PROJECT"
 TEMPLATES=$(cd etc; ls k8s_*.yaml)
 
-if [[ $cmd == prep ]]; then
+if [[ $cmd == prep || $cmd == build ]]; then
     rm -rf var tmp && mkdir -p var
     bin/build
     build_time=`date --utc -Imin -r $LIBFILE`
@@ -82,7 +82,10 @@ if [[ $cmd == prep ]]; then
 EOF
     more var/deployed_version.json | cat
     echo Next try: $0 build
-elif [[ $cmd == build ]]; then
+fi
+
+if [[ $cmd == build ]]; then
+    echo Building Dockerfile.$IMAGE
     docker build -f Dockerfile.$IMAGE -t $IMAGE $DROOT
     echo Next try: $0 push
 elif [[ $cmd == run ]]; then
