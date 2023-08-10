@@ -41,7 +41,7 @@ jobs:
           revhash=$(git rev-parse $GITHUB_REF)
           echo IMAGE_TAG=g${revhash:0:9}
           echo IMAGE_TAG=g${revhash:0:9} >> $GITHUB_ENV
-          udmis/bin/container prep
+          bash -ex udmis/bin/container prep --no-check
       - name: Build and push Docker image
         uses: docker/build-push-action@v2
         with:
