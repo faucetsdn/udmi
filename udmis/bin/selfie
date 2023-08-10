@@ -2,5 +2,8 @@
 
 gcloud container clusters get-credentials ${GCP_CLUSTER} --region ${GCP_REGION} --project ${GCP_PROJECT}
 
+git clone $UDMI_REPO
+(cd udmi && git switch $UDMI_TARGET)
+
 echo Waiting for eternity to end.
 tail -f /dev/null

@@ -2,13 +2,10 @@ FROM alpine:latest
 
 WORKDIR /root
 
-# Same as main udmis pod just to share image layer
-RUN apk add openjdk17 bash gcompat mosquitto-clients
+RUN apk add bash gcompat mosquitto-clients git curl python3 jq
 
 # Workaround for https://github.com/grpc/grpc-java/issues/8751
 ENV LD_PRELOAD=/lib/libgcompat.so.0
-
-RUN apk add git curl python3
 
 RUN curl -sSL https://sdk.cloud.google.com | bash
 
@@ -24,9 +21,6 @@ ENV GCP_REGION=us-central1-c
 ENV GCP_CLUSTER=udmis-dev
 ENV UDMI_REPO=https://github.com/grafnu/udmi.git
 ENV UDMI_TARGET=master
-
-RUN git clone --depth 1 $UDMI_REPO
-RUN cd udmi && git fetch $UDMI_TARGET && switch $UDMI_TARGET && git pull
 
 ADD bin/ bin/
 
