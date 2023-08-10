@@ -1,9 +1,18 @@
-#!/bin/bash
+#!/bin/bash -e
 
 gcloud container clusters get-credentials ${GCP_CLUSTER} --region ${GCP_REGION} --project ${GCP_PROJECT}
 
 git clone $UDMI_REPO
 (cd udmi && git switch $UDMI_TARGET)
 
-echo Waiting for eternity to end.
-tail -f /dev/null
+echo Entering udmis_broker message loop
+
+mosquitto_sub -h udmis_broker -t udmis-broker/+/+ | while read input; do
+    update_to=$(jq -r .setup.update_to <<< $input || true)
+    if [[ -n $update_to && update_to != null ]]; then
+        echo Update install to version $update_to
+    fi
+done
+
+echo Message loop terminated
+

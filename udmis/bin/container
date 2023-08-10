@@ -84,7 +84,9 @@ EOF
     echo Next try: $0 build
 fi
 
-if [[ $cmd == build ]]; then
+if [[ $cmd == prep ]]; then
+    true
+elif [[ $cmd == build ]]; then
     echo Building Dockerfile.$IMAGE
     docker build -f Dockerfile.$IMAGE -t $IMAGE $DROOT
     echo Next try: $0 push
