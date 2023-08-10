@@ -48,7 +48,7 @@ jobs:
           file: udmis/Dockerfile.udmis
           context: udmis
           push: true
-          tags: ghcr.io/udmi:${{ env.IMAGE_TAG }}
+          tags: grafnu/udmi:${{ env.IMAGE_TAG }}
       - name: bin/run_tests install_dependencies
         run: bin/run_tests install_dependencies
       - name: bin/start_pubsub
