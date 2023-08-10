@@ -77,6 +77,7 @@ public class IotReflectorClient implements MessagePublisher {
   private final String subscriptionId;
   private final String registryId;
   private final String projectId;
+  private final String updateTo;
   private boolean isInstallValid;
   private boolean active;
   private Exception syncFailure;
@@ -106,6 +107,7 @@ public class IotReflectorClient implements MessagePublisher {
     registryId = SiteModel.getRegistryActual(iotConfig);
     projectId = iotConfig.project_id;
     udmiVersion = Optional.ofNullable(iotConfig.udmi_version).orElseGet(Common::getUdmiVersion);
+    updateTo = iotConfig.update_to;
     String cloudRegion = Optional.ofNullable(iotConfig.reflect_region)
         .orElse(iotConfig.cloud_region);
     subscriptionId =
@@ -171,6 +173,7 @@ public class IotReflectorClient implements MessagePublisher {
     UdmiState udmiState = new UdmiState();
     udmiState.setup = new SetupUdmiState();
     udmiState.setup.user = System.getenv("USER");
+    udmiState.setup.update_to = updateTo;
     try {
       System.err.printf("Setting state version %s timestamp %s%n",
           udmiVersion, getTimestamp(REFLECTOR_STATE_TIMESTAMP));
@@ -185,6 +188,8 @@ public class IotReflectorClient implements MessagePublisher {
     map.put(TIMESTAMP_KEY, REFLECTOR_STATE_TIMESTAMP);
     map.put(VERSION_KEY, udmiVersion);
     map.put(SubFolder.UDMI.value(), udmiState);
+
+    System.err.println("UDMI setting reflectorState: " + stringify(map));
 
     mqttPublisher.publish(registryId, SubType.STATE.toString(), stringify(map));
   }

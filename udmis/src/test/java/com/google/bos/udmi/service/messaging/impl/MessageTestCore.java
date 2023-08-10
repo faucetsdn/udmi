@@ -18,6 +18,7 @@ public abstract class MessageTestCore {
   protected static final String TEST_SOURCE = "message_from";
   protected static final String TEST_DESTINATION = "message_to";
   protected static final String TEST_VERSION = "1.32";
+  protected static final String TEST_REF = "g123456789";
 
   protected void augmentConfig(EndpointConfiguration configuration) {
     configuration.protocol = Protocol.LOCAL;

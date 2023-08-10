@@ -285,26 +285,26 @@ public class GeneralUtils {
     return added;
   }
 
-  public static <T> T mergeObject(Object destination, Object source) {
-    Map<String, Object> target = JsonUtil.asMap(destination);
-    mergeObject(target, JsonUtil.asMap(source));
+  public static <T> T mergeObject(Object under, Object over) {
+    Map<String, Object> target = JsonUtil.asMap(under);
+    mergeObject(target, JsonUtil.asMap(over));
     @SuppressWarnings("unchecked")
-    T t = (T) JsonUtil.convertTo(destination.getClass(), target);
+    T t = (T) JsonUtil.convertTo(under.getClass(), target);
     return t;
   }
 
-  public static void mergeObject(Map<String, Object> target, Map<String, Object> source) {
-    for (String key : source.keySet()) {
-      Object targetValue = target.get(key);
-      Object sourceValue = source.get(key);
-      if (targetValue instanceof Map && sourceValue instanceof Map) {
+  public static void mergeObject(Map<String, Object> under, Map<String, Object> over) {
+    for (String key : over.keySet()) {
+      Object underValue = under.get(key);
+      Object overValue = over.get(key);
+      if (underValue instanceof Map && overValue instanceof Map) {
         @SuppressWarnings("unchecked")
-        Map<String, Object> castTarget = (Map<String, Object>) targetValue;
+        Map<String, Object> underCast = (Map<String, Object>) underValue;
         @SuppressWarnings("unchecked")
-        Map<String, Object> castSource = (Map<String, Object>) sourceValue;
-        mergeObject(castTarget, castSource);
+        Map<String, Object> overCast = (Map<String, Object>) overValue;
+        mergeObject(underCast, overCast);
       } else {
-        target.put(key, sourceValue);
+        under.put(key, overValue);
       }
     }
   }

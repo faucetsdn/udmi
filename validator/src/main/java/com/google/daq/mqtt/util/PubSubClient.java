@@ -345,7 +345,7 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
   @Override
   public SetupUdmiConfig getVersionInformation() {
     SetupUdmiConfig setupUdmiConfig = new SetupUdmiConfig();
-    setupUdmiConfig.udmi_functions = "PubSub";
+    setupUdmiConfig.udmi_ref = "PubSub";
     return setupUdmiConfig;
   }
 
