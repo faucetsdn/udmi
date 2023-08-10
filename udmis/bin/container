@@ -52,8 +52,10 @@ fi
 LIBFILE=build/libs/udmis-1.0-SNAPSHOT-all.jar
 
 current_user=$USER@$HOSTNAME
-version=`git describe --abbrev=0`
-srcver=`git describe --dirty`
+revparse=`git rev-parse HEAD`
+revparse=g${revparse:0:9}
+version=`git describe --abbrev=0 || echo $revparse`
+srcver=`git describe --dirty || echo $revparse`
 funchash=`git log -n 1 --oneline -- src/ | awk '{print $1}'`
 funccount=`git diff --name-only -- src/ | wc -l`
 if [[ $funccount != 0 ]]; then
