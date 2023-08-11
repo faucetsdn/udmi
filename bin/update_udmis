@@ -19,10 +19,24 @@ update_to=g${full_hash:0:9}
 
 echo Updating udmis install to $target_ref as $update_to
 
+if [[ -n $project_id ]]; then
+    quoted_id=\"${project_id##*/}\"
+else
+    quoted_id=null
+fi
+
+if [[ $project_id =~ ^// ]]; then
+    sans_project=${project_id%/*}
+    iot_provider=\"${sans_project#//}\"
+else
+    iot_provider=null
+fi
+
 echo Writing config to $REFLECTOR_CONFIG
 cat <<EOF > $REFLECTOR_CONFIG
 {
-  "project_id": "$project_id",
+  "iot_provider": $iot_provider,
+  "project_id": $quoted_id,
   "site_model": "$site_model",
   "update_to": "$update_to"
 }
