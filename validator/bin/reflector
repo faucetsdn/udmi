@@ -20,6 +20,8 @@ validator/bin/build
 jarfile=validator/build/libs/validator-1.0-SNAPSHOT-all.jar
 mainclass=com.google.daq.mqtt.validator.Reflector
 
+cat $config_file
+
 cmd="java -cp $jarfile $mainclass $config_file $*"
 echo $cmd
 $cmd
