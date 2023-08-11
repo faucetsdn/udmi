@@ -42,5 +42,6 @@ cat <<EOF > $REFLECTOR_CONFIG
 }
 EOF
 
+cat $REFLECTOR_CONFIG
 validator/bin/reflector $REFLECTOR_CONFIG
 
