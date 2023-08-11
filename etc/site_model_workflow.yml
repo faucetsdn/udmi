@@ -75,6 +75,10 @@ jobs:
           keyfile=$SITE_MODEL/reflector/rsa_private.pkcs8
           echo $REFLECTOR_PKCS8_B64 | tr -d ' \n' | base64 --decode > $keyfile
           md5sum $keyfile
+      - name: Upgrade UDMIS cloud install
+        run: |
+          steps to update GCP udmis k8s install
+          $UDMI_BIN/update_udmis $SITE_MODEL $GCP_PROJECT
       - name: Generate device key pair
         if: vars.KEYGEN_DEVICE != ''
         run: |
@@ -137,7 +141,7 @@ jobs:
           [[ -z DEVICE_SERIAL ]] && fail DEVICE_SERIAL not defined.
           echo $UDMI_BIN/sequencer $SEQUENCER_OPTS $SITE_MODEL $GCP_PROJECT $DEVICE_NAME $DEVICE_SERIAL $SEQUENCER_TESTS
           $UDMI_BIN/sequencer $SEQUENCER_OPTS $SITE_MODEL $GCP_PROJECT $DEVICE_NAME $DEVICE_SERIAL $SEQUENCER_TESTS | tee sequencer.log
-          cat $SITE_MODEL/out/devices/$DEVICE_NAME/results.md >> $GITHUB_STEP_SUMMARY
+          cp $SITE_MODEL/out/devices/$DEVICE_NAME/results.md $GITHUB_STEP_SUMMARY
       - name: Sequencer results
         if: vars.SEQUENCER_OPTS != ''
         run: |

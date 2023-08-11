@@ -7,7 +7,7 @@ if [[ $# != 2 ]]; then
     false
 fi
 
-site_model=$1
+site_model=$(realpath $1)
 project_id=$2
 shift 2
 REFLECTOR_CONFIG=/tmp/reflector_config.json
