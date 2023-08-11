@@ -7,7 +7,7 @@ git clone $UDMI_REPO
 
 echo Entering udmis-broker message loop
 
-mosquitto_sub -h udmis-broker -t udmis-broker/+/+ | jq . --indent 0 | while read input; do
+mosquitto_sub -h udmis-broker -t udmis-broker/+/+ | jq --unbuffered --indent 0 . | while read input; do
     echo Processing $input
     update_to=$(jq -r .message.setup.update_to <<< $input || true)
     timestamp=$(jq -r .message.timestamp <<< $input || true)
