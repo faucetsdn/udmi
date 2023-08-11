@@ -129,7 +129,7 @@ public class IotReflectorClient implements MessagePublisher {
         System.err.println("Ignoring initial config received timeout (config likely empty)");
       }
       retries = updateTo == null ? 1 : UPDATE_RETRIES;
-      while (retries >= 0) {
+      while (validConfigReceived.getCount() > 0) {
         initializeReflectorState();
         initializedStateSent.countDown();
         if (!validConfigReceived.await(CONFIG_TIMEOUT_SEC, TimeUnit.SECONDS)) {

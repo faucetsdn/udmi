@@ -19,14 +19,17 @@ mosquitto_sub -h udmis-broker -t udmis-broker/+/+ | jq --unbuffered --indent 0 .
         jq . old.json | sponge old.json
         jq .spec.template.spec.containers[0].image=\"$image_tag\" old.json > new.json
         echo Applying changes to k8s deployment:
-        diff old.json new.json || true
-        kubectl apply -f new.json
-        echo
-        kubectl get pods
-        sleep 10
-        echo
-        kubectl get pods
-        echo Done with udmis update
+        if diff old.json new.json; then
+            kubectl apply -f new.json
+            echo
+            kubectl get pods
+            sleep 10
+            echo
+            kubectl get pods
+        else
+            echo No version update applied.
+        fi
+        echo Done with udmis update processing
     fi
     echo Waiting for next state update
 done
