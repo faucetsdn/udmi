@@ -2,7 +2,7 @@ FROM alpine:latest
 
 WORKDIR /root
 
-RUN apk add bash gcompat mosquitto-clients git curl python3 jq
+RUN apk add bash gcompat mosquitto-clients curl python3 jq moreutils
 
 # Workaround for https://github.com/grpc/grpc-java/issues/8751
 ENV LD_PRELOAD=/lib/libgcompat.so.0
@@ -19,8 +19,6 @@ RUN install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
 ENV GCP_PROJECT=bos-peringknife-dev
 ENV GCP_REGION=us-central1-c
 ENV GCP_CLUSTER=udmis-dev
-ENV UDMI_REPO=https://github.com/grafnu/udmi.git
-ENV UDMI_TARGET=master
 ENV REPO_NAME=grafnu
 
 ADD bin/ bin/
