@@ -16,20 +16,22 @@ mosquitto_sub -h udmis-broker -t udmis-broker/+/+ | jq --unbuffered --indent 0 .
     if [[ -z $update_to || $update_to == null ]]; then
         echo Message $timestamp ignoring state update with no update_to field
     else
-        image_tag=ghcr.io/$REPO_NAME/udmis:$update_to
+        image_tag=ghcr.io/$REPO_NAME/udmi:$update_to
         echo Message $timestamp updating install to version $update_to, image $image_tag
-        (cd udmi && git fetch origin --refetch && git switch ${update_to:1:9})
-        sed udmi/udmis/etc/$k8s_file > $k8s_file \
-            -e "s/@IMAGE-udmis@/$image_tag/" \
-            -e "s/@GCP_PROJECT@/$GCP_PROJECT/"
+        (cd udmi && git fetch origin --refetch && git switch ${update_to:1:9} --detach)
+        kubectl get deployment udmis-pods -o json > old.json
+        prev_image=$(jq -r .spec.template.spec.containers[0].image old.json)
+        echo Previous image $prev_image
+        jq .spec.template.spec.containers[0].image=\"$image_tag\" old.json > new.json
         kubectl apply -f $k8s_file
         echo
         kubectl get pods
         sleep 10
         echo
         kubectl get pods
-        echo Done with update.
+        echo Done with udmis update
     fi
+    echo Waiting for next state update
 done
 
 echo Message loop terminated

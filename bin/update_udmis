@@ -2,23 +2,22 @@
 
 ROOT=$(realpath $(dirname $0)/..)
 
-if [[ $# != 3 ]]; then
-    echo Usage: $0 SITE_MODEL PROJECT_ID UDMIS_VERSION
+if [[ $# != 2 ]]; then
+    echo Usage: $0 SITE_MODEL PROJECT_ID
     false
 fi
 
 site_model=$1
 project_id=$2
-target_ref=$3
-shift 3
+shift 2
 REFLECTOR_CONFIG=/tmp/reflector_config.json
 
-full_hash=$(git rev-parse $target_ref)
+cd $ROOT
+
+full_hash=$(git rev-parse HEAD)
 update_to=g${full_hash:0:9}
 
 echo Updating udmis install to $target_ref as $update_to
-
-cd $ROOT
 
 echo Writing config to $REFLECTOR_CONFIG
 cat <<EOF > $REFLECTOR_CONFIG
