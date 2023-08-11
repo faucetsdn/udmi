@@ -13,14 +13,13 @@ mosquitto_sub -h udmis-broker -t udmis-broker/+/+ | jq --unbuffered --indent 0 .
     else
         image_tag=ghcr.io/$REPO_NAME/udmi:$update_to
         echo Message $timestamp updating install to version $update_to, image $image_tag
-        (cd udmi && git fetch origin --refetch && git switch ${update_to:1:9} --detach)
         kubectl get deployment udmis-pods -o json > old.json
         prev_image=$(jq -r .spec.template.spec.containers[0].image old.json)
         echo Previous image $prev_image
         jq . old.json | sponge old.json
         jq .spec.template.spec.containers[0].image=\"$image_tag\" old.json > new.json
         echo Applying changes to k8s deployment:
-        diff old.json new.json
+        diff -u old.json new.json
         kubectl apply -f new.json
         echo
         kubectl get pods
