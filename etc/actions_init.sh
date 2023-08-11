@@ -14,7 +14,3 @@ function fail {
 export UDMI_BIN=$HOME/udmi/bin
 
 UDMI_WORKFLOW=$HOME/udmi/etc/site_model_workflow.yml
-
-export GCP_PROJECT=${PROJECT_SPEC##*/}
-prefix=${PROJECT_SPEC%/*}
-export IOT_PROVIDER=${prefix#//}
