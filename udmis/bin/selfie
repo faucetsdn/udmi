@@ -5,16 +5,30 @@ gcloud container clusters get-credentials ${GCP_CLUSTER} --region ${GCP_REGION} 
 git clone $UDMI_REPO
 (cd udmi && git switch $UDMI_TARGET)
 
+k8s_file=k8s_deployment.yaml
+
 echo Entering udmis-broker message loop
 
 mosquitto_sub -h udmis-broker -t udmis-broker/+/+ | jq --unbuffered --indent 0 . | while read input; do
     echo Processing $input
     update_to=$(jq -r .message.setup.update_to <<< $input || true)
     timestamp=$(jq -r .message.timestamp <<< $input || true)
-    if [[ -n $update_to && $update_to != null ]]; then
-        echo Message $timestamp updating install to version $update_to
-    else
+    if [[ -z $update_to || $update_to == null ]]; then
         echo Message $timestamp ignoring state update with no update_to field
+    else
+        image_tag=ghcr.io/$REPO_NAME/udmis:$update_to
+        echo Message $timestamp updating install to version $update_to, image $image_tag
+        (cd udmi && git fetch origin --refetch && git switch ${update_to:1:9})
+        sed udmi/udmis/etc/$k8s_file > $k8s_file \
+            -e "s/@IMAGE-udmis@/$image_tag/" \
+            -e "s/@GCP_PROJECT@/$GCP_PROJECT/"
+        kubectl apply -f $k8s_file
+        echo
+        kubectl get pods
+        sleep 10
+        echo
+        kubectl get pods
+        echo Done with update.
     fi
 done
 

@@ -21,6 +21,7 @@ ENV GCP_REGION=us-central1-c
 ENV GCP_CLUSTER=udmis-dev
 ENV UDMI_REPO=https://github.com/grafnu/udmi.git
 ENV UDMI_TARGET=master
+ENV REMO_NAME=grafnu
 
 ADD bin/ bin/
 
