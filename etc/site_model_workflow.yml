@@ -9,12 +9,12 @@ concurrency:
 
 env:
   UDMI_VERSION: ${{ vars.UDMI_VERSION }}
-  SKIP_CHECKS: ${{ vars.SKIP_CHECKS }}
+  UPDATE_OPTS: ${{ vars.UPDATE_OPTS }}
   SITE_MODEL: ${{ vars.SITE_MODEL }}
   REFLECTOR_PKCS8_B64: ${{ secrets.REFLECTOR_PKCS8_B64 }}
   DEVICE_NAME: ${{ vars.DEVICE_NAME }}
   DEVICE_SERIAL: ${{ vars.DEVICE_SERIAL }}
-  GCP_PROJECT: ${{ vars.GCP_PROJECT }}
+  PROJECT_ID: ${{ vars.PROJECT_ID }}
   SITE_OPTS: ${{ vars.SITE_OPTS }}
   PUBBER_OPTS: ${{ vars.PUBBER_OPTS }}
   PUBBER_PKCS8_B64: ${{ secrets.PUBBER_PKCS8_B64 }}
@@ -52,12 +52,8 @@ jobs:
         run: |
           steps to check to see that required env variables are defined.
           [[ -n $UDMI_BIN ]] || fail UDMI_BIN not defined.
-          [[ -n $GCP_PROJECT ]] || fail GCP_PROJECT not defined.
+          [[ -n $PROJECT_ID ]] || fail PROJECT_ID not defined.
           [[ -n $SITE_MODEL ]] || fail SITE_MODEL not defined.
-          [[ -n $SKIP_CHECKS ]] || (
-            MODEL_WORKFLOW=.github/workflows/testing.yml
-            diff $UDMI_WORKFLOW $MODEL_WORKFLOW || fail Model workflow is out of sync, please update.
-          )
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
@@ -75,10 +71,12 @@ jobs:
           keyfile=$SITE_MODEL/reflector/rsa_private.pkcs8
           echo $REFLECTOR_PKCS8_B64 | tr -d ' \n' | base64 --decode > $keyfile
           md5sum $keyfile
-      - name: Upgrade UDMIS cloud install
+      - name: Upgrade UDMI components
+        if: vars.UPDATE_OPTS != ''
         run: |
           steps to update GCP udmis k8s install
-          $UDMI_BIN/update_udmis $SITE_MODEL $GCP_PROJECT
+          echo $UDMI_BIN/update_udmis $SITE_MODEL $PROJECT_ID
+          $UDMI_BIN/update_udmis $SITE_MODEL $PROJECT_ID
       - name: Generate device key pair
         if: vars.KEYGEN_DEVICE != ''
         run: |
@@ -94,16 +92,16 @@ jobs:
         run: |
           steps to registrar on the entire site.
           md5sum $SITE_MODEL/reflector/rsa_private.pkcs8
-          echo $UDMI_BIN/registrar $SITE_MODEL $GCP_PROJECT $SITE_OPTS
-          bash -ex $UDMI_BIN/registrar $SITE_MODEL $GCP_PROJECT $SITE_OPTS
+          echo $UDMI_BIN/registrar $SITE_MODEL $PROJECT_ID $SITE_OPTS
+          $UDMI_BIN/registrar $SITE_MODEL $PROJECT_ID $SITE_OPTS
       - name: Perform registrar device-only run
         if: vars.SITE_OPTS == ''
         run: |
           steps to registrar just the device DEVICE_NAME.
           md5sum $SITE_MODEL/reflector/rsa_private.pkcs8
           [[ -z DEVICE_NAME ]] && fail DEVICE_NAME not defined.
-          echo $UDMI_BIN/registrar $SITE_MODEL $GCP_PROJECT $DEVICE_NAME
-          $UDMI_BIN/registrar $SITE_MODEL $GCP_PROJECT $DEVICE_NAME
+          echo $UDMI_BIN/registrar $SITE_MODEL $PROJECT_ID $DEVICE_NAME
+          $UDMI_BIN/registrar $SITE_MODEL $PROJECT_ID $DEVICE_NAME
       - name: Output of registrar errors
         run: |
           steps to show a summary of registrar errors.
@@ -115,8 +113,8 @@ jobs:
           [[ -z DEVICE_NAME ]] && fail DEVICE_NAME not defined.
           [[ -z DEVICE_SERIAL ]] && fail DEVICE_SERIAL not defined.
           [[ -n $PUBBER_PKCS8_B64 ]] && $UDMI_BIN/augment_auth $SITE_MODEL $DEVICE_NAME "$PUBBER_PKCS8_B64"
-          echo $UDMI_BIN/pubber $SITE_MODEL $GCP_PROJECT $DEVICE_NAME $DEVICE_SERIAL $PUBBER_OPTS
-          $UDMI_BIN/pubber $SITE_MODEL $GCP_PROJECT $DEVICE_NAME $DEVICE_SERIAL $PUBBER_OPTS > $HOME/pubber.out 2>&1 &
+          echo $UDMI_BIN/pubber $SITE_MODEL $PROJECT_ID $DEVICE_NAME $DEVICE_SERIAL $PUBBER_OPTS
+          $UDMI_BIN/pubber $SITE_MODEL $PROJECT_ID $DEVICE_NAME $DEVICE_SERIAL $PUBBER_OPTS > $HOME/pubber.out 2>&1 &
           PUBBER_PID=$!
           sleep 60 # Wait for connection retries, and supported features file.
           $UDMI_BIN/augment_metadata $SITE_MODEL $DEVICE_NAME
@@ -127,8 +125,8 @@ jobs:
         run: |
           steps to validate all site telemetry.
           [[ -n VALIDATOR_TIMEOUT ]] || echo Defaulting VALIDATOR_TIMEOUT to 10m
-          echo timeout ${VALIDATOR_TIMEOUT:-10m} $UDMI_BIN/validator $SITE_MODEL $GCP_PROJECT $VALIDATOR_OPTS
-          timeout ${VALIDATOR_TIMEOUT:-10m} $UDMI_BIN/validator $SITE_MODEL $GCP_PROJECT $VALIDATOR_OPTS || true
+          echo timeout ${VALIDATOR_TIMEOUT:-10m} $UDMI_BIN/validator $SITE_MODEL $PROJECT_ID $VALIDATOR_OPTS
+          timeout ${VALIDATOR_TIMEOUT:-10m} $UDMI_BIN/validator $SITE_MODEL $PROJECT_ID $VALIDATOR_OPTS || true
       - name: Validator results
         if: vars.VALIDATOR_OPTS != ''
         run: |
@@ -139,8 +137,8 @@ jobs:
           steps to run a complete sequence test on device DEVICE_NAME.
           [[ -z DEVICE_NAME ]] && fail DEVICE_NAME not defined.
           [[ -z DEVICE_SERIAL ]] && fail DEVICE_SERIAL not defined.
-          echo $UDMI_BIN/sequencer $SEQUENCER_OPTS $SITE_MODEL $GCP_PROJECT $DEVICE_NAME $DEVICE_SERIAL $SEQUENCER_TESTS
-          $UDMI_BIN/sequencer $SEQUENCER_OPTS $SITE_MODEL $GCP_PROJECT $DEVICE_NAME $DEVICE_SERIAL $SEQUENCER_TESTS | tee sequencer.log
+          echo $UDMI_BIN/sequencer $SEQUENCER_OPTS $SITE_MODEL $PROJECT_ID $DEVICE_NAME $DEVICE_SERIAL $SEQUENCER_TESTS
+          $UDMI_BIN/sequencer $SEQUENCER_OPTS $SITE_MODEL $PROJECT_ID $DEVICE_NAME $DEVICE_SERIAL $SEQUENCER_TESTS | tee sequencer.log
           cp $SITE_MODEL/out/devices/$DEVICE_NAME/results.md $GITHUB_STEP_SUMMARY
       - name: Sequencer results
         if: vars.SEQUENCER_OPTS != ''
