@@ -10,11 +10,6 @@ concurrency:
   group: ci-${{ github.repository }}
   cancel-in-progress: true
 
-env:
-  PUSH_REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
-  GITHUB_REF: ${{ github.ref }}
-
 jobs:
   udmis:
     name: UDMIS Tests
@@ -23,6 +18,10 @@ jobs:
       contents: read
       packages: write
     timeout-minutes: 10
+    env:
+      PUSH_REGISTRY: ghcr.io
+      IMAGE_NAME: ${{ github.repository }}
+      GITHUB_REF: ${{ github.ref }}
     steps:
       - uses: actions/setup-java@v3
         with:

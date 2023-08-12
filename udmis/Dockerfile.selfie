@@ -16,11 +16,8 @@ RUN gcloud components install gke-gcloud-auth-plugin
 RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
 RUN install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
 
-ENV GCP_PROJECT=bos-peringknife-dev
-ENV GCP_REGION=us-central1-c
-ENV GCP_CLUSTER=udmis-dev
-ENV REPO_NAME=grafnu
-
 ADD bin/ bin/
+
+ADD var/ var/
 
 CMD ["bin/selfie"]

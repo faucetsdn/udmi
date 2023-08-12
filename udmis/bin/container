@@ -56,7 +56,13 @@ revparse=`git rev-parse HEAD`
 udmi_rev=g${revparse:0:9}
 version=`git describe || echo $udmi_rev`
 
-RUNARGS="--rm -ti -v $PWD/var:/udmi -v $HOME/.config:/root/.config --tmpfs /tmp --env GCP_PROJECT=$GCP_PROJECT"
+git_branch=$(git rev-parse --abbrev-ref HEAD)
+git_remote=$(git config --get branch.$git_branch.remote)
+git_url=$(git config --get remote.$git_remote.url)
+git_prefix=${git_url%.*}
+git_repo=${git_prefix#*:}
+
+RUNARGS="--rm -ti -v $PWD/var:/udmi -v $HOME/.config:/root/.config --tmpfs /tmp"
 TEMPLATES=$(cd etc; ls k8s_*.yaml)
 
 if [[ $cmd == prep || $cmd == build ]]; then
@@ -68,6 +74,7 @@ if [[ $cmd == prep || $cmd == build ]]; then
 {
   "udmi_version": "$version",
   "udmi_ref": "$udmi_rev",
+  "git_repo": "$git_repo",
   "built_at": "$build_time",
   "built_by": "$current_user"
 }
@@ -93,16 +100,14 @@ elif [[ $cmd == push ]]; then
     hash=$(docker images --digests $IMAGENAME | fgrep latest | awk '{print $3}')
     ihash=$IMAGENAME@$hash
     for file in $TEMPLATES; do
-        sed < etc/$file > tmp/$file \
-            -e "s^@IMAGE-$IMAGE@^$ihash^" \
-            -e "s^@GCP_PROJECT@^$GCP_PROJECT^" \
-            -e "s^@CLEARBLADE_PROJECT@^$CLEARBLADE_PROJECT^"
-        echo Updated tmp/$file with image $ihash
+        if fgrep -q @IMAGE-$IMAGE@ etc/$file; then
+            sed < etc/$file > tmp/$file -e "s^@IMAGE-$IMAGE@^$ihash^"
+            echo Updated tmp/$file with image $ihash
+        fi
     done
     echo Next try: $0 deploy
 elif [[ $cmd == deploy ]]; then
     kubectl apply -f tmp/k8s_pod.yaml
-    kubectl apply -f tmp/k8s_broker.yaml
     echo Next try: $0 status
 elif [[ $cmd == status ]]; then
     kubectl describe pods udmis-test-pod
@@ -112,7 +117,7 @@ elif [[ $cmd == logs ]]; then
 elif [[ $cmd == stop ]]; then
     kubectl delete pod/udmis-test-pod
 elif [[ $cmd == update ]]; then
-    kubectl apply -f tmp/k8s_deployment.yaml
+    kubectl apply -f tmp/k8s_udmis.yaml
 elif [[ $cmd == remove ]]; then
     kubectl delete deployment/udmis-pods
 else

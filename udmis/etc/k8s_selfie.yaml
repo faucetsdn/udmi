@@ -20,10 +20,17 @@ spec:
       - name: selfie-core
         image: @IMAGE-selfie@
         imagePullPolicy: Always
-        env:
-        - name: GCP_PROJECT
-          value: @GCP_PROJECT@
         resources:
           requests:
             cpu: 100m
             memory: 300Mi
+        volumeMounts:
+        - name: secret-volume
+          mountPath: /udmi
+          readOnly: true
+      volumes:
+        - name: secret-volume
+          projected:
+            sources:
+            - secret:
+                name: k8s-info

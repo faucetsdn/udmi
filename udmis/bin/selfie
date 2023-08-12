@@ -1,5 +1,18 @@
 #!/bin/bash -e
 
+# Cluster info comes from a k8s secret that needs to be externally added.
+k8s_context=$(tr '_' ' ' < /udmi/context)
+echo k8s context is $k8s_context
+
+GCP_PROJECT=$(awk '{print $2}' <<<$k8s_context)
+GCP_REGION=$(awk '{print $3}' <<<$k8s_context)
+GCP_CLUSTER=$(awk '{print $4}' <<<$k8s_context)
+
+echo Derrived info $GCP_PROJECT/$GCP_REGION/$GCP_CLUSTER
+
+REPO_NAME=$(jq -r .git_repo var/deployed_version.json)
+echo Extracted git repo $REPO_NAME
+
 gcloud container clusters get-credentials ${GCP_CLUSTER} --region ${GCP_REGION} --project ${GCP_PROJECT}
 
 echo Entering udmis-broker message loop
@@ -11,7 +24,7 @@ mosquitto_sub -h udmis-broker -t udmis-broker/+/+ | jq --unbuffered --indent 0 .
     if [[ -z $update_to || $update_to == null ]]; then
         echo Message $timestamp ignoring state update with no update_to field
     else
-        image_tag=ghcr.io/$REPO_NAME/udmi:$update_to
+        image_tag=ghcr.io/$REPO_NAME:$update_to
         echo Message $timestamp updating install to version $update_to, image $image_tag
         kubectl get deployment udmis-pods -o json > old.json
         prev_image=$(jq -r .spec.template.spec.containers[0].image old.json)
