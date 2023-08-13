@@ -20,7 +20,8 @@ git_branch=$(git rev-parse --abbrev-ref HEAD)
 git_remote=$(git config --get branch.$git_branch.remote)
 git_url=$(git config --get remote.$git_remote.url)
 git_prefix=${git_url%.*}
-git_repo=${git_prefix#*:}
+git_prefix=${git_prefix#*.com/}
+git_repo=${git_prefix#*.com:}
 
 update_to=ghcr.io/$git_repo:g${full_hash:0:9}
 
