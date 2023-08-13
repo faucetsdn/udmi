@@ -56,12 +56,6 @@ revparse=`git rev-parse HEAD`
 udmi_rev=g${revparse:0:9}
 version=`git describe || echo $udmi_rev`
 
-git_branch=$(git rev-parse --abbrev-ref HEAD)
-git_remote=$(git config --get branch.$git_branch.remote)
-git_url=$(git config --get remote.$git_remote.url)
-git_prefix=${git_url%.*}
-git_repo=${git_prefix#*:}
-
 RUNARGS="--rm -ti -v $PWD/var:/udmi -v $HOME/.config:/root/.config --tmpfs /tmp"
 TEMPLATES=$(cd etc; ls k8s_*.yaml)
 
@@ -74,7 +68,6 @@ if [[ $cmd == prep || $cmd == build ]]; then
 {
   "udmi_version": "$version",
   "udmi_ref": "$udmi_rev",
-  "git_repo": "$git_repo",
   "built_at": "$build_time",
   "built_by": "$current_user"
 }

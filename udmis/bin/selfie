@@ -10,9 +10,6 @@ GCP_CLUSTER=$(awk '{print $4}' <<<$k8s_context)
 
 echo Derrived info $GCP_PROJECT/$GCP_REGION/$GCP_CLUSTER
 
-REPO_NAME=$(jq -r .git_repo var/deployed_version.json)
-echo Extracted git repo $REPO_NAME
-
 gcloud container clusters get-credentials ${GCP_CLUSTER} --region ${GCP_REGION} --project ${GCP_PROJECT}
 
 echo Entering udmis-broker message loop
@@ -24,13 +21,12 @@ mosquitto_sub -h udmis-broker -t udmis-broker/+/+ | jq --unbuffered --indent 0 .
     if [[ -z $update_to || $update_to == null ]]; then
         echo Message $timestamp ignoring state update with no update_to field
     else
-        image_tag=ghcr.io/$REPO_NAME:$update_to
-        echo Message $timestamp updating install to version $update_to, image $image_tag
+        echo Message $timestamp updating install to version $update_to
         kubectl get deployment udmis-pods -o json > old.json
         prev_image=$(jq -r .spec.template.spec.containers[0].image old.json)
         echo Previous image $prev_image
         jq . old.json | sponge old.json
-        jq .spec.template.spec.containers[0].image=\"$image_tag\" old.json > new.json
+        jq .spec.template.spec.containers[0].image=\"$update_to\" old.json > new.json
         echo Applying changes to k8s deployment:
         if ! diff old.json new.json; then
             kubectl apply -f new.json
