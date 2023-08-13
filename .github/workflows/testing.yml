@@ -49,7 +49,7 @@ jobs:
           IMAGE_TAG=g${revhash:0:9}
           PUSH_TAG=$PUSH_REGISTRY/${{ github.repository }}:$IMAGE_TAG
           echo PUSH_TAG=$PUSH_TAG >> $GITHUB_ENV
-          udmis/bin/container prep $PUSH_TAG --no-check
+          udmis/bin/container prep --no-check $PUSH_TAG
           echo Pushing built container as $PUSH_TAG | tee -a $GITHUB_STEP_SUMMARY
       - name: Build and push docker image
         uses: docker/build-push-action@v4
