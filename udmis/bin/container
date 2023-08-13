@@ -52,9 +52,18 @@ fi
 LIBFILE=build/libs/udmis-1.0-SNAPSHOT-all.jar
 
 current_user=$USER@$HOSTNAME
+
 revparse=`git rev-parse HEAD`
-udmi_rev=g${revparse:0:9}
-version=`git describe || echo $udmi_rev`
+
+git_branch=$(git rev-parse --abbrev-ref HEAD)
+git_remote=$(git config --get branch.$git_branch.remote)
+git_url=$(git config --get remote.$git_remote.url)
+git_prefix=${git_url%.*}
+git_repo=${git_prefix#*:}
+
+udmi_ref=ghcr.io/$git_repo:g${revparse:0:9}
+
+version=`git describe || echo $udmi_ref`
 
 RUNARGS="--rm -ti -v $PWD/var:/udmi -v $HOME/.config:/root/.config --tmpfs /tmp"
 TEMPLATES=$(cd etc; ls k8s_*.yaml)
@@ -67,7 +76,7 @@ if [[ $cmd == prep || $cmd == build ]]; then
     cat <<EOF > var/deployed_version.json
 {
   "udmi_version": "$version",
-  "udmi_ref": "$udmi_rev",
+  "udmi_ref": "$udmi_ref",
   "built_at": "$build_time",
   "built_by": "$current_user"
 }
