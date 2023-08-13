@@ -6,7 +6,7 @@ DROOT=.
 
 function usage {
     echo Error: $*
-    echo Usage: $0 { prep, build, shell, run, push, deploy, update, status, logs, stop } [repo] [--no-check]
+    echo Usage: $0 { prep, build, shell, run, push, deploy, update, status, logs, stop } [--no-check] [--selfie] [repo]
     echo Project: $GCP_PROJECT
     echo Try starting with: $0 build
     exit 1
@@ -37,6 +37,11 @@ if [[ -n $1 ]]; then
     shift
 fi
 
+if [[ $# != 0 ]]; then
+    echo unknown arguments: $*
+    usage
+fi
+
 echo Using GCP project $GCP_PROJECT
 
 if [[ -z $NOCHECK ]]; then
@@ -55,13 +60,7 @@ current_user=$USER@$HOSTNAME
 
 revparse=`git rev-parse HEAD`
 
-git_branch=$(git rev-parse --abbrev-ref HEAD)
-git_remote=$(git config --get branch.$git_branch.remote)
-git_url=$(git config --get remote.$git_remote.url)
-git_prefix=${git_url%.*}
-git_repo=${git_prefix#*:}
-
-udmi_ref=ghcr.io/$git_repo:g${revparse:0:9}
+udmi_ref=$REPOSITORY:g${revparse:0:9}
 
 version=`git describe || echo $udmi_ref`
 
