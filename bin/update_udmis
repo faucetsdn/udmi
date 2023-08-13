@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash -ex
 
 ROOT=$(realpath $(dirname $0)/..)
 
@@ -24,7 +24,7 @@ git_repo=${git_prefix#*:}
 
 update_to=ghcr.io/$git_repo:g${full_hash:0:9}
 
-echo Updating udmis install to $target_ref as $update_to
+echo Updating udmis install to $update_to
 
 if [[ -n $project_id ]]; then
     quoted_id=\"${project_id##*/}\"
