@@ -20,9 +20,6 @@ spec:
       - name: udmis-core
         image: @IMAGE-udmis@
         imagePullPolicy: Always
-        env:
-        - name: GCP_PROJECT
-          value: @GCP_PROJECT@
         resources:
           requests:
             cpu: 100m
