@@ -3,6 +3,7 @@ package daq.pubber;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.udmi.util.GeneralUtils.catchOrElse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
@@ -185,6 +186,11 @@ public class Pubber {
   private static final String CORRUPT_STATE_MESSAGE = "!&*@(!*&@!";
   private static final long INJECT_MESSAGE_DELAY_MS = 2000; // Delay to make sure testing is stable.
   private static final int FORCED_STATE_TIME_MS = 10000;
+  private static final String DEFAULT_MAKE = "bos";
+  private static final String DEFAULT_MODEL = "pubber";
+  private static final String DEFAULT_SOFTWARE_KEY = "firmware";
+  private static final String DEFAULT_SOFTWARE_VALUE  = "v1";
+
   protected final PubberConfiguration configuration;
   final State deviceState = new State();
   final Config deviceConfig = new Config();
@@ -436,6 +442,8 @@ public class Pubber {
     if (!TRUE.equals(configuration.options.noLastStart)) {
       deviceState.system.operation.last_start = DEVICE_START_TIME;
     }
+
+
     deviceState.system.hardware = new StateSystemHardware();
     deviceState.pointset = new PointsetState();
     deviceState.pointset.points = new HashMap<>();
@@ -465,10 +473,7 @@ public class Pubber {
     deviceState.system.operation.operational = true;
     deviceState.system.operation.mode = SystemMode.INITIAL;
     deviceState.system.serial_no = configuration.serialNo;
-    deviceState.system.hardware.make = "BOS";
-    deviceState.system.hardware.model = "pubber";
-    deviceState.system.software = new HashMap<>();
-    deviceState.system.software.put("firmware", "v1");
+
     deviceState.system.last_config = new Date(0);
 
     ifNotNullThen(configuration.options.extraField, field -> pointsetEvent.extraField = field);
@@ -595,6 +600,7 @@ public class Pubber {
       }
     }
 
+    setHardwareSoftware(metadata);
     info("Configured with auth_type " + configuration.algorithm);
 
     Map<String, PointPointsetModel> points =
@@ -605,6 +611,29 @@ public class Pubber {
             "missing point not in pointset metadata"));
 
     points.forEach((name, point) -> addPoint(makePoint(name, point)));
+
+  }
+
+  private void setHardwareSoftware(Metadata metadata) {
+
+    deviceState.system.hardware.make = catchOrElse(
+        () -> metadata.system.hardware.make, () -> DEFAULT_MAKE);
+
+    deviceState.system.hardware.model = catchOrElse(
+        () -> metadata.system.hardware.model, () -> DEFAULT_MODEL);
+
+    deviceState.system.software = new HashMap<>();
+    Map metadataSoftware = catchToNull(() -> metadata.system.software);
+    if (metadataSoftware == null) {
+      deviceState.system.software.put(DEFAULT_SOFTWARE_KEY, DEFAULT_SOFTWARE_VALUE);
+    } else {
+      deviceState.system.software = metadataSoftware;
+    }
+
+    if (configuration.options.softwareFirmwareValue != null) {
+      deviceState.system.software.put("firmware", configuration.options.softwareFirmwareValue);
+    }
+
   }
 
   private synchronized void maybeRestartExecutor(int intervalMs) {
@@ -997,6 +1026,10 @@ public class Pubber {
   }
 
   private boolean shouldLogLevel(int level) {
+    if (configuration.options.fixedLogLevel != null) {
+      return level >= configuration.options.fixedLogLevel;
+    }
+
     Integer minLoglevel = deviceConfig.system == null ? null : deviceConfig.system.min_loglevel;
     return level >= (minLoglevel == null ? Level.INFO.value() : minLoglevel);
   }

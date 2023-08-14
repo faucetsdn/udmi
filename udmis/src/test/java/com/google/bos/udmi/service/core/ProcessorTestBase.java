@@ -87,8 +87,8 @@ public abstract class ProcessorTestBase extends MessageTestBase {
       SetupUdmiConfig deployedVersion = new SetupUdmiConfig();
       deployedVersion.deployed_at = TEST_TIMESTAMP;
       deployedVersion.deployed_by = TEST_USER;
-      deployedVersion.udmi_functions = TEST_FUNCTIONS;
       deployedVersion.udmi_version = TEST_VERSION;
+      deployedVersion.udmi_ref = TEST_REF;
       writeFile(deployedVersion, deployFile);
     } catch (Exception e) {
       throw new RuntimeException("While writing deploy file " + deployFile.getAbsolutePath(), e);

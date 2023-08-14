@@ -12,7 +12,7 @@ ROOT=$(dirname $0)/..
 cd $ROOT
 
 echo Configuring for GCP project $project_id...
-gcloud config set project $project_id
+gcloud --quiet config set project $project_id
 
 kcontext=$(kubectl config get-contexts | fgrep $project_id | tr '*' ' ' | awk '{ print $1 }')
 

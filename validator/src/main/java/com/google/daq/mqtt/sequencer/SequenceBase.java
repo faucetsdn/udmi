@@ -975,8 +975,8 @@ public class SequenceBase {
     updateConfig(SubFolder.DISCOVERY, deviceConfig.discovery);
     if (!configIsPending() && force) {
       debug("Forcing config update");
-      sentConfig.remove(SubFolder.UDMI);
-      updateConfig(SubFolder.UPDATE, null);
+      sentConfig.remove(SubFolder.UPDATE);
+      updateConfig(SubFolder.UPDATE, deviceConfig);
     }
     if (configIsPending()) {
       lastConfigUpdate = CleanDateFormat.clean(Instant.now());
@@ -1092,6 +1092,8 @@ public class SequenceBase {
       return null;
     }
   }
+
+
 
   private String getExceptionLine(Exception e) {
     return Common.getExceptionLine(e, SequenceBase.class);
@@ -1730,6 +1732,11 @@ public class SequenceBase {
         () -> untilTrue("received at least one state update", this::receivedAtLeastOneState));
   }
 
+  protected void forceConfigUpdate(String reason) {
+    updateConfig(reason, true);
+    recordSequence("Force config update to " + reason);
+  }
+
   protected void skipTest(String reason) {
     throw new AssumptionViolatedException(reason);
   }
@@ -1737,6 +1744,12 @@ public class SequenceBase {
   protected <T> T ifNullSkipTest(T testable, String reason) {
     ifNullThen(testable, () -> skipTest(reason));
     return testable;
+  }
+
+  protected <T> T ifCatchNullSkipTest(Supplier<T> evaluator, String reason) {
+    T evaluatorResult = catchToNull(evaluator);
+    return ifNullSkipTest(evaluatorResult, reason);
+
   }
 
   /**

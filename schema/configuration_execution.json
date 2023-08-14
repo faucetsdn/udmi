@@ -61,6 +61,10 @@
     "udmi_root": {
       "type": "string"
     },
+    "update_to": {
+      "type": "string",
+      "description": "Optional version for a udmis update trigger"
+    },
     "alt_project": {
       "type": "string"
     },

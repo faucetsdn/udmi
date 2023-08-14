@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: udmis-pods
+spec:
+  selector:
+    matchLabels:
+      app: udmis
+      role: master
+      tier: backend
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: udmis
+        role: master
+        tier: backend
+    spec:
+      containers:
+      - name: udmis-core
+        image: @IMAGE-udmis@
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: 100m
+            memory: 300Mi
+        volumeMounts:
+        - name: secret-volume
+          mountPath: /udmi
+          readOnly: true
+      volumes:
+        - name: secret-volume
+          projected:
+            sources:
+            - secret:
+                name: clearblade.json
+                optional: true

@@ -5,10 +5,7 @@ metadata:
 spec:
   containers:
     - name: test-pod
-      image: @IMAGE@
-      env:
-      - name: GCP_PROJECT
-        value: @GCP_PROJECT@
+      image: @IMAGE-udmis@
       resources:
         requests:
           cpu: 100m
