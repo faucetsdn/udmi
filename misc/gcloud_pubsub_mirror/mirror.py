@@ -140,7 +140,9 @@ else:
 while has_messages:
   try:
     get_messages()
-  except (futures.CancelledError, KeyboardInterrupt, futures.TimeoutError):
+  except futures.TimeoutError:
+    pass
+  except (futures.CancelledError, KeyboardInterrupt):
     print('Ending message loop due to normal termination')
     break
   # pylint: disable-next=broad-except

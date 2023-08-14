@@ -169,4 +169,16 @@ public class ConfigSequences extends SequenceBase {
     untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
   }
 
+  @Test(timeout = ONE_MINUTE_MS)
+  @Feature(stage = BETA, bucket = SYSTEM)
+  @Summary("Check that the device publishes minimum required log entries when receiving config")
+  public void config_logging() {
+    deviceConfig.system.min_loglevel = Level.DEBUG.value();
+    updateConfig("set min_loglevel to debug");
+    forceConfigUpdate("resend config to device");
+    untilLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
+    untilLogged(SYSTEM_CONFIG_PARSE, SYSTEM_CONFIG_PARSE_LEVEL);
+    untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
+  }
+
 }
