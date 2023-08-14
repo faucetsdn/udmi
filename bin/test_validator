@@ -65,7 +65,7 @@ if [[ $i -eq $WAITING ]]; then
 fi
 
 echo Checking reported cloud version info
-jq .cloud_version.udmi_functions $output_file
+jq .cloud_version.udmi_ref $output_file
 
 function pubber_bg {
     did=$1

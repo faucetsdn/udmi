@@ -2,7 +2,7 @@ FROM alpine:latest
 
 WORKDIR /root
 
-RUN apk add openjdk17 bash gcompat mosquitto-clients
+RUN apk add openjdk17 bash gcompat mosquitto-clients curl
 
 # Workaround for https://github.com/grpc/grpc-java/issues/8751
 ENV LD_PRELOAD=/lib/libgcompat.so.0

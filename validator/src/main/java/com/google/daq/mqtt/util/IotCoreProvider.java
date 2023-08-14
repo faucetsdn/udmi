@@ -55,7 +55,7 @@ class IotCoreProvider implements IotProvider {
           Key_format.RS_256_X_509, RSA_CERT_FORMAT,
           Key_format.ES_256, ES_KEY_FORMAT,
           Key_format.ES_256_X_509, ES_CERT_FILE);
-  public static final String FUNCTIONS_VERSION_STRING = "GCP IoT Core Direct";
+  public static final String UDMI_REF = "GCP IoT Core Direct";
   private final CloudIot.Projects.Locations.Registries registries;
   private final String projectId;
   private final String cloudRegion;
@@ -294,7 +294,7 @@ class IotCoreProvider implements IotProvider {
   public SetupUdmiConfig getVersionInformation() {
     SetupUdmiConfig setupUdmiConfig = new SetupUdmiConfig();
     setupUdmiConfig.udmi_version = Common.getUdmiVersion();
-    setupUdmiConfig.udmi_functions = FUNCTIONS_VERSION_STRING;
+    setupUdmiConfig.udmi_ref = UDMI_REF;
     return setupUdmiConfig;
   }
 

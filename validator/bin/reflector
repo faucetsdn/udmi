@@ -2,8 +2,8 @@
 
 ROOT=$(realpath $(dirname $0)/../..)
 
-if [[ $# < 2 ]]; then
-    echo Usage: $0 config_file directive [directives...]
+if [[ $# < 1 ]]; then
+    echo Usage: $0 config_file [directives...]
     echo "  Directive is something like update/config:sites/udmi_site_model/devices/AHU-1/out/generated_config.json"
     false
 fi

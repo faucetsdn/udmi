@@ -1,0 +1,55 @@
+#!/bin/bash -e
+
+ROOT=$(realpath $(dirname $0)/..)
+
+if [[ $# != 2 ]]; then
+    echo Usage: $0 SITE_MODEL PROJECT_ID
+    false
+fi
+
+site_model=$(realpath $1)
+project_id=$2
+shift 2
+REFLECTOR_CONFIG=/tmp/reflector_config.json
+
+cd $ROOT
+
+full_hash=$(git rev-parse HEAD)
+
+git_branch=$(git rev-parse --abbrev-ref HEAD)
+git_remote=$(git config --get branch.$git_branch.remote)
+git_url=$(git config --get remote.$git_remote.url)
+git_prefix=${git_url%.*}
+git_prefix=${git_prefix#*.com/}
+git_repo=${git_prefix#*.com:}
+
+update_to=ghcr.io/$git_repo:g${full_hash:0:9}
+
+echo Updating udmis install to $update_to
+
+if [[ -n $project_id ]]; then
+    quoted_id=\"${project_id##*/}\"
+else
+    quoted_id=null
+fi
+
+if [[ $project_id =~ ^// ]]; then
+    sans_project=${project_id%/*}
+    iot_provider=\"${sans_project#//}\"
+else
+    iot_provider=null
+fi
+
+echo Writing config to $REFLECTOR_CONFIG
+cat <<EOF > $REFLECTOR_CONFIG
+{
+  "iot_provider": $iot_provider,
+  "project_id": $quoted_id,
+  "site_model": "$site_model",
+  "update_to": "$update_to"
+}
+EOF
+
+cat $REFLECTOR_CONFIG
+validator/bin/reflector $REFLECTOR_CONFIG
+
