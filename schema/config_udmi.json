@@ -21,13 +21,16 @@
           "type": "integer"
         },
         "udmi_version": {
-          "type": "string"
+          "type": "string",
+          "description": "Semantic tagged version of udmis install"
         },
-        "udmi_source": {
-          "type": "string"
+        "udmi_ref": {
+          "type": "string",
+          "description": "Exact reference hash of udmis install"
         },
-        "udmi_functions": {
-          "type": "string"
+        "udmi_timever": {
+          "type": "string",
+          "description": "Timestamp version id of udmis install"
         },
         "built_at": {
           "type": "string",

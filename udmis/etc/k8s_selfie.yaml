@@ -1,28 +1,25 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: udmis-pods
+  name: udmis-selfie
 spec:
   selector:
     matchLabels:
-      app: udmis
+      app: selfie
       role: master
       tier: backend
-  replicas: 3
+  replicas: 1
   template:
     metadata:
       labels:
-        app: udmis
+        app: selfie
         role: master
         tier: backend
     spec:
       containers:
-      - name: udmis-core
-        image: @IMAGE@
+      - name: selfie-core
+        image: @IMAGE-selfie@
         imagePullPolicy: Always
-        env:
-        - name: GCP_PROJECT
-          value: @GCP_PROJECT@
         resources:
           requests:
             cpu: 100m
@@ -36,5 +33,4 @@ spec:
           projected:
             sources:
             - secret:
-                name: clearblade.json
-                optional: true
+                name: k8s-info

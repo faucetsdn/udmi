@@ -6,6 +6,7 @@ class SetupUdmiState:
 
   def __init__(self):
     self.user = None
+    self.update_to = None
 
   @staticmethod
   def from_dict(source):
@@ -13,6 +14,7 @@ class SetupUdmiState:
       return None
     result = SetupUdmiState()
     result.user = source.get('user')
+    result.update_to = source.get('update_to')
     return result
 
   @staticmethod
@@ -35,6 +37,8 @@ class SetupUdmiState:
     result = {}
     if self.user:
       result['user'] = self.user # 5
+    if self.update_to:
+      result['update_to'] = self.update_to # 5
     return result
 
 

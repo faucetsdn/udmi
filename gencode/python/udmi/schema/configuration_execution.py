@@ -24,6 +24,7 @@ class ExecutionConfiguration:
     self.min_stage = None
     self.udmi_version = None
     self.udmi_root = None
+    self.update_to = None
     self.alt_project = None
     self.alt_registry = None
     self.block_unknown = None
@@ -51,6 +52,7 @@ class ExecutionConfiguration:
     result.min_stage = source.get('min_stage')
     result.udmi_version = source.get('udmi_version')
     result.udmi_root = source.get('udmi_root')
+    result.update_to = source.get('update_to')
     result.alt_project = source.get('alt_project')
     result.alt_registry = source.get('alt_registry')
     result.block_unknown = source.get('block_unknown')
@@ -110,6 +112,8 @@ class ExecutionConfiguration:
       result['udmi_version'] = self.udmi_version # 5
     if self.udmi_root:
       result['udmi_root'] = self.udmi_root # 5
+    if self.update_to:
+      result['update_to'] = self.update_to # 5
     if self.alt_project:
       result['alt_project'] = self.alt_project # 5
     if self.alt_registry:
