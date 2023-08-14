@@ -6,7 +6,7 @@ DROOT=.
 
 function usage {
     echo Error: $*
-    echo Usage: $0 { build, shell, run, push, deploy, update, status, logs, stop } [repo] [--no-check]
+    echo Usage: $0 { prep, build, shell, run, push, deploy, update, status, logs, stop } [--no-check] [--selfie] [repo]
     echo Project: $GCP_PROJECT
     echo Try starting with: $0 build
     exit 1
@@ -20,15 +20,27 @@ REPOSITORY=gcr.io/$GCP_PROJECT
 
 mkdir -p tmp
 
-for optionalarg in $@; do
-    if [[ $optionalarg == "--no-check" ]]; then
-        NOCHECK=1
-    else
-        REPOSITORY=$optionalarg
-    fi
-done
-
 IMAGE=udmis
+
+if [[ $1 == "--no-check" ]]; then
+    NOCHECK=1
+    shift
+fi
+
+if [[ $1 == "--selfie" ]]; then
+    IMAGE=selfie
+    shift
+fi
+
+if [[ -n $1 ]]; then
+    REPOSITORY=$1
+    shift
+fi
+
+if [[ $# != 0 ]]; then
+    echo unknown arguments: $*
+    usage
+fi
 
 echo Using GCP project $GCP_PROJECT
 
@@ -45,34 +57,38 @@ fi
 LIBFILE=build/libs/udmis-1.0-SNAPSHOT-all.jar
 
 current_user=$USER@$HOSTNAME
-version=`git describe --abbrev=0`
-srcver=`git describe --dirty`
-funchash=`git log -n 1 --oneline -- src/ | awk '{print $1}'`
-funccount=`git diff --name-only -- src/ | wc -l`
-if [[ $funccount != 0 ]]; then
-    funcdirty=-dirty
-fi
-funcver=`git describe $funchash`$funcdirty
 
-RUNARGS="--rm -ti -v $PWD/var:/udmi -v $HOME/.config:/root/.config --tmpfs /tmp --env GCP_PROJECT=$GCP_PROJECT"
+revparse=`git rev-parse HEAD`
+
+udmi_ref=$REPOSITORY:g${revparse:0:9}
+
+version=`git describe || echo $udmi_ref`
+
+RUNARGS="--rm -ti -v $PWD/var:/udmi -v $HOME/.config:/root/.config --tmpfs /tmp"
 TEMPLATES=$(cd etc; ls k8s_*.yaml)
 
-if [[ $cmd == build ]]; then
+if [[ $cmd == prep || $cmd == build ]]; then
     rm -rf var tmp && mkdir -p var
     bin/build
-    build_time=`date --utc --iso=seconds -r $LIBFILE`
+    build_time=`date --utc -Imin -r $LIBFILE`
     cp etc/prod_pod.json var/
     cat <<EOF > var/deployed_version.json
 {
   "udmi_version": "$version",
-  "udmi_source": "$srcver",
-  "udmi_functions": "$funcver",
+  "udmi_ref": "$udmi_ref",
   "built_at": "$build_time",
   "built_by": "$current_user"
 }
 EOF
-    more var/deployed_version.json var/prod_pod.json | cat
-    docker build -f Dockerfile.udmis -t $IMAGE $DROOT
+    more var/deployed_version.json | cat
+    echo Next try: $0 build
+fi
+
+if [[ $cmd == prep ]]; then
+    true
+elif [[ $cmd == build ]]; then
+    echo Building Dockerfile.$IMAGE
+    docker build -f Dockerfile.$IMAGE -t $IMAGE $DROOT
     echo Next try: $0 push
 elif [[ $cmd == run ]]; then
     docker run $RUNARGS $IMAGE
@@ -83,18 +99,16 @@ elif [[ $cmd == push ]]; then
     docker tag $IMAGE $IMAGENAME
     docker push $IMAGENAME
     hash=$(docker images --digests $IMAGENAME | fgrep latest | awk '{print $3}')
-    image=$IMAGENAME@$hash
+    ihash=$IMAGENAME@$hash
     for file in $TEMPLATES; do
-        sed < etc/$file > tmp/$file \
-            -e "s^@IMAGE@^$image^" \
-            -e "s^@GCP_PROJECT@^$GCP_PROJECT^" \
-            -e "s^@CLEARBLADE_PROJECT@^$CLEARBLADE_PROJECT^"
-        echo Updated tmp/$file with image $image
+        if fgrep -q @IMAGE-$IMAGE@ etc/$file; then
+            sed < etc/$file > tmp/$file -e "s^@IMAGE-$IMAGE@^$ihash^"
+            echo Updated tmp/$file with image $ihash
+        fi
     done
     echo Next try: $0 deploy
 elif [[ $cmd == deploy ]]; then
     kubectl apply -f tmp/k8s_pod.yaml
-    kubectl apply -f tmp/k8s_broker.yaml
     echo Next try: $0 status
 elif [[ $cmd == status ]]; then
     kubectl describe pods udmis-test-pod
@@ -104,7 +118,7 @@ elif [[ $cmd == logs ]]; then
 elif [[ $cmd == stop ]]; then
     kubectl delete pod/udmis-test-pod
 elif [[ $cmd == update ]]; then
-    kubectl apply -f tmp/k8s_deployment.yaml
+    kubectl apply -f tmp/k8s_udmis.yaml
 elif [[ $cmd == remove ]]; then
     kubectl delete deployment/udmis-pods
 else

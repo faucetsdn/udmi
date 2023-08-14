@@ -97,7 +97,7 @@ bin/sequencer $debug_opts $seq_opts $site_path $project_id $device_id $serial_no
 echo Completed execution of sequencer test run.
 
 echo Checking reported cloud version info
-jq .cloud_version.udmi_functions $output_file
+jq .cloud_version.udmi_ref $output_file
 
 pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
 if [[ -n $pids ]]; then

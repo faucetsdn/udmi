@@ -21,7 +21,12 @@
       "type": "object",
       "properties": {
         "user": {
-          "type": "string"
+          "type": "string",
+          "description": "User id of the person running the tool"
+        },
+        "update_to": {
+          "type": "string",
+          "description": "Optional version for a udmis update trigger"
         }
       }
     }

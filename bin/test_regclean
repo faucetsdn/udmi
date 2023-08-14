@@ -105,7 +105,7 @@ echo Clean out the registry to make sure devices get removed...
 bin/registrar $site_arg $registrar_project -d
 
 echo Checking reported cloud version info
-jq .cloud_version.udmi_functions $output_file
+jq .cloud_version.udmi_ref $output_file
 
 echo Check for failure in running pubber...
 RESULT=0

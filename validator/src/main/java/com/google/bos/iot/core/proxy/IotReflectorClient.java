@@ -5,7 +5,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.Common.VERSION_KEY;
-import static com.google.udmi.util.GeneralUtils.ifTrueThen;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.getDate;
@@ -62,10 +62,10 @@ public class IotReflectorClient implements MessagePublisher {
   private static final String UDMI_REFLECT = "UDMI-REFLECT";
   private static final String MOCK_DEVICE_NUM_ID = "123456789101112";
   private static final String UDMI_TOPIC = "events/" + UDMI_FOLDER;
-  private static final Date REFLECTOR_STATE_TIMESTAMP = new Date();
   private static final String CONFIG_CATEGORY = "config";
   private static final String COMMANDS_CATEGORY = "commands";
   private static final long CONFIG_TIMEOUT_SEC = 30;
+  private static final int UPDATE_RETRIES = 3;
   private static String prevTransactionId;
   private final String udmiVersion;
   private final CountDownLatch initialConfigReceived = new CountDownLatch(1);
@@ -77,10 +77,13 @@ public class IotReflectorClient implements MessagePublisher {
   private final String subscriptionId;
   private final String registryId;
   private final String projectId;
+  private final String updateTo;
+  private Date reflectorStateTimestamp;
   private boolean isInstallValid;
   private boolean active;
   private Exception syncFailure;
   private SetupUdmiConfig udmiInfo;
+  private int retries;
 
   /**
    * Create a new reflector instance.
@@ -106,6 +109,7 @@ public class IotReflectorClient implements MessagePublisher {
     registryId = SiteModel.getRegistryActual(iotConfig);
     projectId = iotConfig.project_id;
     udmiVersion = Optional.ofNullable(iotConfig.udmi_version).orElseGet(Common::getUdmiVersion);
+    updateTo = iotConfig.update_to;
     String cloudRegion = Optional.ofNullable(iotConfig.reflect_region)
         .orElse(iotConfig.cloud_region);
     subscriptionId =
@@ -124,11 +128,18 @@ public class IotReflectorClient implements MessagePublisher {
       if (!initialConfigReceived.await(CONFIG_TIMEOUT_SEC, TimeUnit.SECONDS)) {
         System.err.println("Ignoring initial config received timeout (config likely empty)");
       }
-      initializeReflectorState();
-      initializedStateSent.countDown();
-      if (!validConfigReceived.await(CONFIG_TIMEOUT_SEC, TimeUnit.SECONDS)) {
-        throw new RuntimeException(
-            "Config sync timeout expired. Investigate UDMI cloud functions install.", syncFailure);
+      retries = updateTo == null ? 1 : UPDATE_RETRIES;
+      while (validConfigReceived.getCount() > 0) {
+        initializeReflectorState();
+        initializedStateSent.countDown();
+        if (!validConfigReceived.await(CONFIG_TIMEOUT_SEC, TimeUnit.SECONDS)) {
+          retries--;
+          if (retries <= 0) {
+            throw new RuntimeException(
+                "Config sync timeout expired. Investigate UDMI cloud functions install.",
+                syncFailure);
+          }
+        }
       }
 
       active = true;
@@ -171,9 +182,11 @@ public class IotReflectorClient implements MessagePublisher {
     UdmiState udmiState = new UdmiState();
     udmiState.setup = new SetupUdmiState();
     udmiState.setup.user = System.getenv("USER");
+    udmiState.setup.update_to = updateTo;
     try {
+      reflectorStateTimestamp = new Date();
       System.err.printf("Setting state version %s timestamp %s%n",
-          udmiVersion, getTimestamp(REFLECTOR_STATE_TIMESTAMP));
+          udmiVersion, getTimestamp(reflectorStateTimestamp));
       setReflectorState(udmiState);
     } catch (Exception e) {
       throw new RuntimeException("Could not set reflector state", e);
@@ -182,9 +195,11 @@ public class IotReflectorClient implements MessagePublisher {
 
   private void setReflectorState(UdmiState udmiState) {
     Map<String, Object> map = new HashMap<>();
-    map.put(TIMESTAMP_KEY, REFLECTOR_STATE_TIMESTAMP);
+    map.put(TIMESTAMP_KEY, reflectorStateTimestamp);
     map.put(VERSION_KEY, udmiVersion);
     map.put(SubFolder.UDMI.value(), udmiState);
+
+    System.err.println("UDMI setting reflectorState: " + stringify(map));
 
     mqttPublisher.publish(registryId, SubType.STATE.toString(), stringify(map));
   }
@@ -282,16 +297,18 @@ public class IotReflectorClient implements MessagePublisher {
       System.err.println("UDMI received reflectorConfig: " + stringify(reflectorConfig));
       Date lastState = reflectorConfig.last_state;
       System.err.println("UDMI matching against expected state timestamp " + getTimestamp(
-          REFLECTOR_STATE_TIMESTAMP));
-      boolean configMatch = dateEquals(lastState, REFLECTOR_STATE_TIMESTAMP);
-      if (configMatch) {
-        String deployedVersion = reflectorConfig.setup.udmi_version;
-        System.err.println("UDMI deployed version: " + deployedVersion);
+          reflectorStateTimestamp));
+
+      udmiInfo = reflectorConfig.setup;
+      String deployedVersion = udmiInfo.udmi_version;
+      boolean timestampMatch = dateEquals(lastState, reflectorStateTimestamp);
+      boolean versionMatch = ifNotNullGet(updateTo, to -> to.equals(deployedVersion), true);
+
+      if (timestampMatch && versionMatch) {
         if (!udmiVersion.equals(deployedVersion)) {
           System.err.println("UDMI version mismatch: " + udmiVersion);
         }
 
-        udmiInfo = reflectorConfig.setup;
 
         System.err.printf("UDMI functions support versions %s:%s (required %s)%n",
             udmiInfo.functions_min, udmiInfo.functions_max, requiredVersion);
@@ -309,9 +326,10 @@ public class IotReflectorClient implements MessagePublisher {
         }
         isInstallValid = true;
         validConfigReceived.countDown();
+      } else if (!versionMatch) {
+        System.err.println("UDMI update version mismatch... waiting for retry...");
       } else {
-        System.err.println(
-            "UDMI ignoring mismatching config timestamp " + getTimestamp(lastState));
+        System.err.println("UDMI ignoring mismatching timestamp " + getTimestamp(lastState));
       }
     } catch (Exception e) {
       syncFailure = e;

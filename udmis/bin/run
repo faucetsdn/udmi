@@ -17,15 +17,20 @@ java -version
 
 POD_JAR=build/libs/udmis-1.0-SNAPSHOT-all.jar
 
+gce_project=$(curl "http://metadata.google.internal/computeMetadata/v1/project/project-id" -H "Metadata-Flavor: Google" || true)
 gcloud_project=$(gcloud config get project || true)
+
 if [[ -n $GCP_PROJECT ]]; then
     echo Using GCP_PROJECT $GCP_PROJECT from env.
-elif [[ -z $gcloud_project ]]; then
-    echo No GCP_PROJECT or gcloud project defined.
-    false
-else
+elif [[ -n $gcloud_project ]]; then
     echo Using GCP_PROJECT $gcloud_project from gcloud config.
     export GCP_PROJECT=$gcloud_project
+elif [[ -n $gce_project ]]; then
+    echo Using GCP_PROJECT $gce_project from gce metadata.
+    export GCP_PROJECT=$gce_project
+else
+    echo No GCP_PROJECT, gcloud, or GCE project defined.
+    false
 fi
 
 java -jar $POD_JAR $POD_CONFIG

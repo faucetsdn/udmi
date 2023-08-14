@@ -158,7 +158,7 @@ public abstract class ProcessorBase extends ContainerBase {
     ErrorMessage errorMessage = new ErrorMessage();
     errorMessage.error = (String) bundle.message;
     errorMessage.data = encodeBase64(bundle.payload);
-    errorMessage.version = ReflectProcessor.DEPLOYED_CONFIG.udmi_functions;
+    errorMessage.version = ReflectProcessor.DEPLOYED_CONFIG.udmi_version;
     errorMessage.timestamp = getTimestamp();
     errorMap.put("payload", encodeBase64(stringify(errorMessage)));
     error(format("Reflecting error %s/%s for %s", errorMap.get(SUBTYPE_PROPERTY_KEY),
