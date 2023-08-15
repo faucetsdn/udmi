@@ -6,7 +6,7 @@
 
 ## Device Identification
 
-| Device | AHU-1 |
+| Device | {{report.device_id}} |
 |---|---|
 | Site |  |
 | Make | {{report.device_make}} |
