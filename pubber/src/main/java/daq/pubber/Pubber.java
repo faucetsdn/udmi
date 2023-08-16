@@ -204,7 +204,6 @@ public class Pubber {
   private final Semaphore stateLock = new Semaphore(1);
   private final String deviceId;
   private final List<Entry> logentries = new ArrayList<>();
-  private final Map<String, Entry> reportMap = new ConcurrentHashMap<>();
   protected DevicePersistent persistentData;
   private int deviceUpdateCount = -1;
   private MqttDevice deviceTarget;
@@ -995,14 +994,11 @@ public class Pubber {
     Entry report = entryFromException(category, cause);
     localLog(report);
     publishLogMessage(report);
-    registerSystemStatus(PUBLISHER_BUCKET, report);
+    registerSystemStatus(report);
   }
 
-  private void registerSystemStatus(String bucket, Entry report) {
-    ifNotNullGet(report, r -> reportMap.put(bucket, report), reportMap.remove(bucket));
-    Entry highestEntry = reportMap.values().stream().max(comparingInt(a -> a.level)).orElse(null);
-    deviceState.system.status = ifNotNullGet(highestEntry,
-        entry -> ifTrue(shouldLogLevel(entry.level), () -> entry));
+  private void registerSystemStatus(Entry report) {
+    deviceState.system.status = report;
     markStateDirty();
   }
 
@@ -1556,7 +1552,6 @@ public class Pubber {
             maxStatus.set(status);
           }
         }));
-    registerSystemStatus(POINTSET_BUCKET, maxStatus.get());
   }
 
   private PointPointsetState invalidPoint(String pointName) {
