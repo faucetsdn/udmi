@@ -188,8 +188,10 @@ public class SequenceBase {
   private static final ObjectDiffEngine RECV_STATE_DIFFERNATOR = new ObjectDiffEngine();
   private static final Set<String> configTransactions = new ConcurrentSkipListSet<>();
   private static final int MINIMUM_TEST_SEC = 15;
-  private static final String FORCE_UPDATE_CONFIG_KEY = "null";
   private static final Date RESET_LAST_START = new Date(73642);
+  public static final String SYSTEM_STATUS_MESSAGE = "interesting system status";
+  public static final String HAS_STATUS_PREFIX = "has ";
+  public static final String NOT_STATUS_PREFIX = "no ";
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -1108,16 +1110,17 @@ public class SequenceBase {
   }
 
   protected void checkThat(String description, Supplier<Boolean> condition, String details) {
+    String hasDescription = HAS_STATUS_PREFIX + description;
     if (!catchToFalse(condition)) {
-      warning("Failed check that " + description);
+      warning("Failed check that " + hasDescription);
       String suffix = ifNotNullGet(details, base -> "; " + base, "");
-      throw new IllegalStateException("Failed check that " + description + suffix);
+      throw new IllegalStateException("Failed check that " + hasDescription + suffix);
     }
-    recordSequence("Check that " + description);
+    recordSequence("Check that " + hasDescription);
   }
 
   protected void checkNotThat(String description, Supplier<Boolean> condition) {
-    String notDescription = "no " + description;
+    String notDescription = NOT_STATUS_PREFIX + description;
     if (catchToTrue(condition)) {
       warning("Failed check that " + notDescription);
       throw new IllegalStateException("Failed check that " + notDescription);
@@ -1687,7 +1690,7 @@ public class SequenceBase {
   protected void checkThatHasInterestingSystemStatusTodo(boolean isInteresting) {
     BiConsumer<String, Supplier<Boolean>> check =
         isInteresting ? this::checkThat : this::checkNotThat;
-    check.accept(systemStatusMessage(isInteresting), this::hasInterestingSystemStatus);
+    check.accept(SYSTEM_STATUS_MESSAGE, this::hasInterestingSystemStatus);
   }
 
   protected void untilHasInterestingSystemStatus(boolean isInteresting) {
@@ -1695,14 +1698,10 @@ public class SequenceBase {
     untilHasInterestingSystemStatusTodo(isInteresting);
   }
 
-  protected void untilHasInterestingSystemStatusTodo(boolean isInteresting) {
-    BiConsumer<String, Supplier<Boolean>> until =
-        isInteresting ? this::untilTrue : this::untilFalse;
-    until.accept(systemStatusMessage(isInteresting), this::hasInterestingSystemStatus);
-  }
-
-  private static String systemStatusMessage(boolean isInteresting) {
-    return (isInteresting ? "has" : "no") + " interesting system status";
+  protected void untilHasInterestingSystemStatusTodo(boolean isSet) {
+    BiConsumer<String, Supplier<Boolean>> until = isSet ? this::untilTrue : this::untilFalse;
+    String message = (isSet ? HAS_STATUS_PREFIX : NOT_STATUS_PREFIX) + SYSTEM_STATUS_MESSAGE;
+    until.accept(message, this::hasInterestingSystemStatus);
   }
 
   private void putSequencerResult(Description description, SequenceResult result) {
