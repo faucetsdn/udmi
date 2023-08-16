@@ -132,6 +132,9 @@ public class SequenceBase {
   public static final String STATE_UPDATE_MESSAGE_TYPE = "state_update";
   public static final String RESET_CONFIG_MARKER = "reset_config";
   public static final String FINALIZE_TEST = "finalize_test";
+  public static final String SYSTEM_STATUS_MESSAGE = "interesting system status";
+  public static final String HAS_STATUS_PREFIX = "has ";
+  public static final String NOT_STATUS_PREFIX = "no ";
   static final FeatureStage DEFAULT_MIN_STAGE = BETA;
   private static final int FUNCTIONS_VERSION_BETA = Validator.REQUIRED_FUNCTION_VER;
   private static final int FUNCTIONS_VERSION_ALPHA = 9; // Version required for alpha execution.
@@ -189,9 +192,6 @@ public class SequenceBase {
   private static final Set<String> configTransactions = new ConcurrentSkipListSet<>();
   private static final int MINIMUM_TEST_SEC = 15;
   private static final Date RESET_LAST_START = new Date(73642);
-  public static final String SYSTEM_STATUS_MESSAGE = "interesting system status";
-  public static final String HAS_STATUS_PREFIX = "has ";
-  public static final String NOT_STATUS_PREFIX = "no ";
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -252,7 +252,7 @@ public class SequenceBase {
   private boolean useAlternateClient;
   private SequenceResult testResult;
   private int startStateCount;
-  private boolean expectedSystemStatus;
+  private Boolean expectedSystemStatus;
 
   static void ensureValidatorConfig() {
     if (validatorConfig != null) {
@@ -1100,7 +1100,6 @@ public class SequenceBase {
   }
 
 
-
   private String getExceptionLine(Exception e) {
     return Common.getExceptionLine(e, SequenceBase.class);
   }
@@ -1225,7 +1224,9 @@ public class SequenceBase {
     while (evaluator.get()) {
       processNextMessage();
     }
-    withRecordSequence(false, () -> checkThatHasInterestingSystemStatus(expectedSystemStatus));
+    if (expectedSystemStatus != null) {
+      withRecordSequence(false, () -> checkThatHasInterestingSystemStatus(expectedSystemStatus));
+    }
   }
 
   private void recordSequence(String step) {
@@ -1694,8 +1695,10 @@ public class SequenceBase {
   }
 
   protected void untilHasInterestingSystemStatus(boolean isInteresting) {
-    expectedSystemStatus = isInteresting;
+    expectedSystemStatus = null;
     untilHasInterestingSystemStatusTodo(isInteresting);
+    expectedSystemStatus = isInteresting;
+    checkThatHasInterestingSystemStatus(isInteresting);
   }
 
   protected void untilHasInterestingSystemStatusTodo(boolean isSet) {
