@@ -250,6 +250,7 @@ public class SequenceBase {
   private boolean useAlternateClient;
   private SequenceResult testResult;
   private int startStateCount;
+  private boolean expectedSystemStatus;
 
   static void ensureValidatorConfig() {
     if (validatorConfig != null) {
@@ -1221,7 +1222,7 @@ public class SequenceBase {
     while (evaluator.get()) {
       processNextMessage();
     }
-    withRecordSequence(false, () -> checkThatHasInterestingSystemStatus(false));
+    withRecordSequence(false, () -> checkThatHasInterestingSystemStatus(expectedSystemStatus));
   }
 
   private void recordSequence(String step) {
@@ -1671,7 +1672,7 @@ public class SequenceBase {
     return dateEquals(expectedConfig, lastConfig);
   }
 
-  private boolean hasInterestingSystemStatusTodo() {
+  private boolean hasInterestingSystemStatus() {
     if (deviceState.system.status != null) {
       debug("Status level: " + deviceState.system.status.level);
     }
@@ -1686,18 +1687,22 @@ public class SequenceBase {
   protected void checkThatHasInterestingSystemStatusTodo(boolean isInteresting) {
     BiConsumer<String, Supplier<Boolean>> check =
         isInteresting ? this::checkThat : this::checkNotThat;
-    check.accept("interesting system status", this::hasInterestingSystemStatusTodo);
+    check.accept(systemStatusMessage(isInteresting), this::hasInterestingSystemStatus);
   }
 
   protected void untilHasInterestingSystemStatus(boolean isInteresting) {
-    checkThatHasInterestingSystemStatusTodo(isInteresting);
+    expectedSystemStatus = isInteresting;
+    untilHasInterestingSystemStatusTodo(isInteresting);
   }
 
   protected void untilHasInterestingSystemStatusTodo(boolean isInteresting) {
     BiConsumer<String, Supplier<Boolean>> until =
         isInteresting ? this::untilTrue : this::untilFalse;
-    String message = (isInteresting ? "has" : "no") + " interesting system status";
-    until.accept(message, this::hasInterestingSystemStatusTodo);
+    until.accept(systemStatusMessage(isInteresting), this::hasInterestingSystemStatus);
+  }
+
+  private static String systemStatusMessage(boolean isInteresting) {
+    return (isInteresting ? "has" : "no") + " interesting system status";
   }
 
   private void putSequencerResult(Description description, SequenceResult result) {
