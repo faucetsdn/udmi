@@ -131,7 +131,6 @@ public class SequenceBase {
   public static final String SCHEMA_PASS_DETAIL = "No schema violations found";
   public static final String STATE_UPDATE_MESSAGE_TYPE = "state_update";
   public static final String RESET_CONFIG_MARKER = "reset_config";
-  public static final String FINALIZE_TEST = "finalize_test";
   public static final String SYSTEM_STATUS_MESSAGE = "interesting system status";
   public static final String HAS_STATUS_PREFIX = "has ";
   public static final String NOT_STATUS_PREFIX = "no ";
@@ -1109,13 +1108,12 @@ public class SequenceBase {
   }
 
   protected void checkThat(String description, Supplier<Boolean> condition, String details) {
-    String hasDescription = HAS_STATUS_PREFIX + description;
     if (!catchToFalse(condition)) {
-      warning("Failed check that " + hasDescription);
+      warning("Failed check that " + description);
       String suffix = ifNotNullGet(details, base -> "; " + base, "");
-      throw new IllegalStateException("Failed check that " + hasDescription + suffix);
+      throw new IllegalStateException("Failed check that " + description + suffix);
     }
-    recordSequence("Check that " + hasDescription);
+    recordSequence("Check that " + description);
   }
 
   protected void checkNotThat(String description, Supplier<Boolean> condition) {
