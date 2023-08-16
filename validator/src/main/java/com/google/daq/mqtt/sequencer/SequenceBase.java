@@ -1221,6 +1221,7 @@ public class SequenceBase {
     while (evaluator.get()) {
       processNextMessage();
     }
+    withRecordSequence(false, () -> checkThatHasInterestingSystemStatus(false));
   }
 
   private void recordSequence(String step) {
