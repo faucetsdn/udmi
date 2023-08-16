@@ -54,6 +54,7 @@ public class PointsetSequences extends PointsetBase {
               .equals(deviceConfig.pointset.points.keySet());
         }
     );
+    checkThatHasInterestingSystemStatus(false);
   }
 
   private boolean validPointEntry(Entry<String, PointPointsetEvent> point) {
@@ -92,8 +93,6 @@ public class PointsetSequences extends PointsetBase {
   @Summary("pointset state does not report unconfigured point")
   @Feature(stage = ALPHA, bucket = POINTSET)
   public void pointset_remove_point() {
-    untilHasInterestingSystemStatusTodo(false);
-
     untilPointsetSanity();
 
     List<String> candidatePoints = new ArrayList<>(deviceConfig.pointset.points.keySet());
@@ -106,7 +105,6 @@ public class PointsetSequences extends PointsetBase {
     try {
       untilFalse("pointset status does not contain removed point",
           () -> deviceState.pointset.points.containsKey(name));
-      untilHasInterestingSystemStatusTodo(false);
       untilPointsetSanity();
     } finally {
       deviceConfig.pointset.points.put(name, removed);
@@ -114,7 +112,7 @@ public class PointsetSequences extends PointsetBase {
 
     untilFalse("pointset status contains removed point",
         () -> deviceState.pointset.points.containsKey(name));
-    untilHasInterestingSystemStatusTodo(false);
+
     untilPointsetSanity();
   }
 

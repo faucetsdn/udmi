@@ -107,7 +107,7 @@ public class ConfigSequences extends SequenceBase {
 
     setExtraField("break_json");
     untilLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
-    untilHasInterestingSystemStatusTodo(true);
+    untilHasInterestingSystemStatus(true);
     Entry stateStatus = deviceState.system.status;
     info("Error message: " + stateStatus.message);
     debug("Error detail: " + stateStatus.detail);

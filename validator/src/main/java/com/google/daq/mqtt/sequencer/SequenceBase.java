@@ -945,10 +945,11 @@ public class SequenceBase {
     if (activeInstance == null) {
       return;
     }
-    checkThatHasInterestingSystemStatus(false);
     String condition = waitingCondition.isEmpty() ? "initialize" : waitingConditionPeek();
     debug(format("stage done %s at %s", condition, timeSinceStart()));
     recordSequence = false;
+
+    checkThatHasInterestingSystemStatus(false);
 
     recordMessages = false;
     configAcked = false;
