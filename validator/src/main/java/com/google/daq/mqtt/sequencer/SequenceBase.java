@@ -660,6 +660,7 @@ public class SequenceBase {
     updateConfig("initial setup");
 
     untilTrue("device state update", () -> deviceState != null);
+    checkThatHasInterestingSystemStatus(false);
 
     // Do this late in the sequence to make sure any state is cleared out from previous test.
     startStateCount = getStateUpdateCount();
@@ -944,6 +945,7 @@ public class SequenceBase {
     if (activeInstance == null) {
       return;
     }
+    checkThatHasInterestingSystemStatus(false);
     String condition = waitingCondition.isEmpty() ? "initialize" : waitingConditionPeek();
     debug(format("stage done %s at %s", condition, timeSinceStart()));
     recordSequence = false;
@@ -1678,6 +1680,7 @@ public class SequenceBase {
   protected void checkThatHasInterestingSystemStatus(boolean isInteresting) {
     checkThatHasInterestingSystemStatusTodo(isInteresting);
   }
+
   protected void checkThatHasInterestingSystemStatusTodo(boolean isInteresting) {
     BiConsumer<String, Supplier<Boolean>> check =
         isInteresting ? this::checkThat : this::checkNotThat;

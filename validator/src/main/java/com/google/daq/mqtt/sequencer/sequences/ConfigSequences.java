@@ -130,7 +130,7 @@ public class ConfigSequences extends SequenceBase {
         () -> dateEquals(deviceConfig.timestamp, deviceState.system.last_config));
 
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
-    checkThatHasInterestingSystemStatusTodo(false);
+    checkThatHasInterestingSystemStatus(false);
     untilTrue("last_config updated",
         () -> !dateEquals(stableConfig, deviceState.system.last_config)
     );
@@ -148,13 +148,13 @@ public class ConfigSequences extends SequenceBase {
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
     untilTrue("last_config not null", () -> deviceState.system.last_config != null);
     untilTrue("system operational", () -> deviceState.system.operation.operational);
-    checkThatHasInterestingSystemStatusTodo(false);
+    checkThatHasInterestingSystemStatus(false);
     final Date prevConfig = deviceState.system.last_config;
     setExtraField("Flabberguilstadt");
     untilLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
     untilTrue("last_config updated", () -> !deviceState.system.last_config.equals(prevConfig));
     untilTrue("system operational", () -> deviceState.system.operation.operational);
-    checkThatHasInterestingSystemStatusTodo(false);
+    checkThatHasInterestingSystemStatus(false);
     untilLogged(SYSTEM_CONFIG_PARSE, SYSTEM_CONFIG_PARSE_LEVEL);
     untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
     final Date updatedConfig = deviceState.system.last_config;
@@ -164,7 +164,6 @@ public class ConfigSequences extends SequenceBase {
         () -> !deviceState.system.last_config.equals(updatedConfig)
     );
     untilTrue("system operational", () -> deviceState.system.operation.operational);
-    checkThatHasInterestingSystemStatusTodo(false);
     untilLogged(SYSTEM_CONFIG_PARSE, SYSTEM_CONFIG_PARSE_LEVEL);
     untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
   }
