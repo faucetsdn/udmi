@@ -1667,7 +1667,7 @@ public class SequenceBase {
     return dateEquals(expectedConfig, lastConfig);
   }
 
-  protected boolean hasInterestingSystemStatus() {
+  private boolean hasInterestingSystemStatusTodo() {
     if (deviceState.system.status != null) {
       debug("Status level: " + deviceState.system.status.level);
     }
@@ -1676,16 +1676,23 @@ public class SequenceBase {
   }
 
   protected void checkThatHasInterestingSystemStatus(boolean isInteresting) {
+    checkThatHasInterestingSystemStatusTodo(isInteresting);
+  }
+  protected void checkThatHasInterestingSystemStatusTodo(boolean isInteresting) {
     BiConsumer<String, Supplier<Boolean>> check =
         isInteresting ? this::checkThat : this::checkNotThat;
-    check.accept("interesting system status", this::hasInterestingSystemStatus);
+    check.accept("interesting system status", this::hasInterestingSystemStatusTodo);
   }
 
   protected void untilHasInterestingSystemStatus(boolean isInteresting) {
+    checkThatHasInterestingSystemStatusTodo(isInteresting);
+  }
+
+  protected void untilHasInterestingSystemStatusTodo(boolean isInteresting) {
     BiConsumer<String, Supplier<Boolean>> until =
         isInteresting ? this::untilTrue : this::untilFalse;
     String message = (isInteresting ? "has" : "no") + " interesting system status";
-    until.accept(message, this::hasInterestingSystemStatus);
+    until.accept(message, this::hasInterestingSystemStatusTodo);
   }
 
   private void putSequencerResult(Description description, SequenceResult result) {

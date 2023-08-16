@@ -66,7 +66,7 @@ public class PointsetSequences extends PointsetBase {
   @Feature(stage = ALPHA, bucket = POINTSET)
   public void pointset_request_extraneous() {
 
-    untilHasInterestingSystemStatus(false);
+    untilHasInterestingSystemStatusTodo(false);
     untilPointsetSanity();
 
     deviceConfig.pointset.points.put(EXTRANEOUS_POINT, new PointPointsetConfig());
@@ -76,7 +76,7 @@ public class PointsetSequences extends PointsetBase {
           () -> ifNotNullGet(deviceState.pointset.points.get(EXTRANEOUS_POINT),
               state -> state.status.category.equals(POINTSET_POINT_INVALID)
                   && state.status.level.equals(POINTSET_POINT_INVALID_VALUE)));
-      untilHasInterestingSystemStatus(true);
+      untilHasInterestingSystemStatusTodo(true);
       untilPointsetSanity();
     } finally {
       deviceConfig.pointset.points.remove(EXTRANEOUS_POINT);
@@ -84,7 +84,7 @@ public class PointsetSequences extends PointsetBase {
 
     untilTrue("pointset status removes extraneous point error",
         () -> !deviceState.pointset.points.containsKey(EXTRANEOUS_POINT));
-    untilHasInterestingSystemStatus(false);
+    untilHasInterestingSystemStatusTodo(false);
     untilPointsetSanity();
   }
 
@@ -92,7 +92,7 @@ public class PointsetSequences extends PointsetBase {
   @Summary("pointset state does not report unconfigured point")
   @Feature(stage = ALPHA, bucket = POINTSET)
   public void pointset_remove_point() {
-    untilHasInterestingSystemStatus(false);
+    untilHasInterestingSystemStatusTodo(false);
 
     untilPointsetSanity();
 
@@ -106,7 +106,7 @@ public class PointsetSequences extends PointsetBase {
     try {
       untilFalse("pointset status does not contain removed point",
           () -> deviceState.pointset.points.containsKey(name));
-      untilHasInterestingSystemStatus(false);
+      untilHasInterestingSystemStatusTodo(false);
       untilPointsetSanity();
     } finally {
       deviceConfig.pointset.points.put(name, removed);
@@ -114,7 +114,7 @@ public class PointsetSequences extends PointsetBase {
 
     untilFalse("pointset status contains removed point",
         () -> deviceState.pointset.points.containsKey(name));
-    untilHasInterestingSystemStatus(false);
+    untilHasInterestingSystemStatusTodo(false);
     untilPointsetSanity();
   }
 
