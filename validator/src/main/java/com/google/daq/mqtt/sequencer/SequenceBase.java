@@ -696,6 +696,7 @@ public class SequenceBase {
     withRecordSequence(false, () -> {
       debug("Starting reset_config full reset " + fullReset);
       if (fullReset) {
+        expectedSystemStatus = null;
         resetDeviceConfig(true);
         setExtraField(RESET_CONFIG_MARKER);
         deviceConfig.system.testing.sequence_name = RESET_CONFIG_MARKER;
@@ -704,6 +705,7 @@ public class SequenceBase {
         configTransactions.clear();
         SENT_CONFIG_DIFFERNATOR.resetState(deviceConfig);
         updateConfig("full reset");
+        untilHasInterestingSystemStatus(false);
       }
       resetDeviceConfig(false);
       updateConfig("soft reset");

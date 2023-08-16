@@ -124,8 +124,8 @@ public class ConfigSequences extends SequenceBase {
     checkNotLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
 
     // Will restore min_loglevel to the default of INFO.
-    resetConfig(); // clears extra_field
-    untilHasInterestingSystemStatus(false);
+    resetConfig(); // clears extra_field and interesting status checks
+
     untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
     untilTrue("restored state synchronized",
         () -> dateEquals(deviceConfig.timestamp, deviceState.system.last_config));
