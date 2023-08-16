@@ -1228,6 +1228,7 @@ public class Pubber {
     entry.detail = stackTraceString(e);
     entry.category = category;
     entry.level = Level.ERROR.value();
+    entry.timestamp = getCurrentTimestamp();
     return entry;
   }
 
