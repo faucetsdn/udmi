@@ -10,18 +10,36 @@ function cleanup {
 }
 trap cleanup EXIT
 
+if [[ $# != 1 ]]; then
+    echo usage: $0 config_file
+    false
+fi
+
+config_file=$1
+shift
+
+# For the first run, don't persist the store.
+orig_persist=`jq -r .options.noPersist $config_file`
+echo Original noPersist is $orig_persist
+if [[ $orig_persist == null ]]; then
+    jq '.options.noPersist = true' $config_file | sponge $config_file
+fi
+
 result=192  # Exit code used to indicate intentional system restart.
 
 while [[ $result -eq 192 ]]; do
     java -Dorg.slf4j.simpleLogger.showThreadName=false \
          -jar $ROOT_DIR/pubber/build/libs/pubber-1.0-SNAPSHOT-all.jar \
-         $@ &
+         $config_file &
 
     PUB_PID=$!
 
     result=0
     echo Waiting for pubber pid $PUB_PID to complete...
     wait $PUB_PID || result=$?
+
+    # From here on out, persist the storage.
+    jq ".options.noPersist = $orig_persist" $config_file | sponge $config_file
 done
 
 echo Done with pubber run, exit code $result at `date -u +%FT%TZ`

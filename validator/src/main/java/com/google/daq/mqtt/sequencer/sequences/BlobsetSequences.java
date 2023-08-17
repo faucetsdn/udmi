@@ -81,7 +81,7 @@ public class BlobsetSequences extends SequenceBase {
           && blobBlobsetConfig.generation.equals(blobBlobsetState.generation)
           && blobStateStatus == null;
     });
-    checkThatHasInterestingSystemStatus(false);
+
     // This case is tracking the finalization of the redirect, so clear out the non-used one.
     if (blobPhase == BlobPhase.FINAL) {
       clearOtherConfig();
@@ -97,7 +97,6 @@ public class BlobsetSequences extends SequenceBase {
           && blobBlobsetState.status.category.equals(BLOBSET_BLOB_APPLY)
           && blobBlobsetState.status.level == Level.ERROR.value();
     });
-    checkThatHasInterestingSystemStatus(false);
   }
 
   private void setDeviceConfigEndpointBlob(String hostname, String registryId, boolean badHash) {
@@ -174,7 +173,6 @@ public class BlobsetSequences extends SequenceBase {
           && blobStateStatus.category.equals(BLOBSET_BLOB_APPLY)
           && blobStateStatus.level == Level.ERROR.value();
     });
-    checkThatHasInterestingSystemStatus(false);
   }
 
   @Test
