@@ -8,7 +8,7 @@ class PubberOptions:
     self.fixedSampleRate = None
     self.noHardware = None
     self.noConfigAck = None
-    self.persistStore = None
+    self.noPersist = None
     self.noLastStart = None
     self.barfConfig = None
     self.messageTrace = None
@@ -34,7 +34,7 @@ class PubberOptions:
     result.fixedSampleRate = source.get('fixedSampleRate')
     result.noHardware = source.get('noHardware')
     result.noConfigAck = source.get('noConfigAck')
-    result.persistStore = source.get('persistStore')
+    result.noPersist = source.get('noPersist')
     result.noLastStart = source.get('noLastStart')
     result.barfConfig = source.get('barfConfig')
     result.messageTrace = source.get('messageTrace')
@@ -77,8 +77,8 @@ class PubberOptions:
       result['noHardware'] = self.noHardware # 5
     if self.noConfigAck:
       result['noConfigAck'] = self.noConfigAck # 5
-    if self.persistStore:
-      result['persistStore'] = self.persistStore # 5
+    if self.noPersist:
+      result['noPersist'] = self.noPersist # 5
     if self.noLastStart:
       result['noLastStart'] = self.noLastStart # 5
     if self.barfConfig:

@@ -10,7 +10,6 @@ debug_opts=-v
 seq_opts=
 alpha_mode=
 clean_cache=
-pubber_opts=persistStore
 
 if [[ $1 == 'clean' ]]; then
     shift
@@ -73,7 +72,7 @@ pubber/bin/build
 
 echo Writing pubber output to $PUBBER_OUT
 echo bin/pubber $site_path $project_id $device_id $serial_no
-bin/pubber $site_path $project_id $device_id $serial_no $pubber_opts > $PUBBER_OUT 2>&1 &
+bin/pubber $site_path $project_id $device_id $serial_no > $PUBBER_OUT 2>&1 &
 
 WAITING=10
 for i in `seq 1 $WAITING`; do

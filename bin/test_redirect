@@ -19,11 +19,10 @@ log 'Using target project:' $project_id
 
 site_path=sites/udmi_site_model
 device_id=AHU-1 # Static device for testing. Needs to be different than other tests scripts so as not to conflict during CI.
-mkdir -p out
-
 out_base=$site_path/devices/$device_id/out # For officially generated files (in repo)
 work_base=$site_path/out/devices/$device_id # For runtime out files (transitory)
-rm -rf $work_base
+rm -rf $work_base $out_base
+mkdir -p $work_base $out_base
 
 serial_no=sequencer-$RANDOM
 log Using pubber with serial $serial_no
@@ -45,7 +44,7 @@ log Running pubber with redirectRegistry on timeout
 timeout 3m unbuffer bin/pubber $site_path $project_id $device_id $serial_no redirectRegistry=missing > $PUBBER_OUT.1 2>&1 || true
 
 log Done with timeout, running pubber in background...
-bin/pubber $site_path $project_id $device_id $serial_no persistStore > $PUBBER_OUT.2 2>&1 &
+bin/pubber $site_path $project_id $device_id $serial_no > $PUBBER_OUT.2 2>&1 &
 
 # Wait for initial connection, then reset config to redirect
 sleep 20

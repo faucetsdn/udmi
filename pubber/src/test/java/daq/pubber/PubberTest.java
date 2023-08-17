@@ -53,7 +53,7 @@ public class PubberTest extends TestBase {
     private HashMap<PubberUnderTestFeatures, Boolean> testFeatures = new HashMap<>();
 
     private void setOptionsNoPersist(boolean value) {
-      configuration.options.persistStore = !value;
+      configuration.options.noPersist = value;
     }
 
     @Override

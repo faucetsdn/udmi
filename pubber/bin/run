@@ -10,19 +10,25 @@ function cleanup {
 }
 trap cleanup EXIT
 
+PUBBER_TMP_OPTS=`mktemp`
+echo noPersist > $PUBBER_TMP_OPTS
+
 result=192  # Exit code used to indicate intentional system restart.
 
 while [[ $result -eq 192 ]]; do
     java -Dorg.slf4j.simpleLogger.showThreadName=false \
          -jar $ROOT_DIR/pubber/build/libs/pubber-1.0-SNAPSHOT-all.jar \
-         $@ &
+         $(<$PUBBER_TMP_OPTS) $@ &
 
     PUB_PID=$!
+    echo > $PUBBER_TMP_OPTS
 
     result=0
     echo Waiting for pubber pid $PUB_PID to complete...
     wait $PUB_PID || result=$?
 done
+
+rm -f $PUBBER_TMP_OPTS
 
 echo Done with pubber run, exit code $result at `date -u +%FT%TZ`
 exit $result

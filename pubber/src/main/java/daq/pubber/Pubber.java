@@ -491,14 +491,14 @@ public class Pubber {
     checkState(persistentData == null, "persistent data already loaded");
     File persistentStore = getPersistentStore();
 
-    if (TRUE.equals(configuration.options.persistStore)) {
+    if (TRUE.equals(configuration.options.noPersist)) {
+      info("Resetting persistent store " + persistentStore.getAbsolutePath());
+      persistentData = newDevicePersistent();
+    } else {
       info("Initializing from persistent store " + persistentStore.getAbsolutePath());
       persistentData =
           persistentStore.exists() ? fromJsonFile(persistentStore, DevicePersistent.class)
               : newDevicePersistent();
-    } else {
-      info("Resetting persistent store " + persistentStore.getAbsolutePath());
-      persistentData = newDevicePersistent();
     }
 
     persistentData.restart_count = Objects.requireNonNullElse(persistentData.restart_count, 0) + 1;

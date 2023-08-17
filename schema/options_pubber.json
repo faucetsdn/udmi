@@ -13,7 +13,7 @@
     "noConfigAck": {
       "type": "boolean"
     },
-    "persistStore": {
+    "noPersist": {
       "type": "boolean"
     },
     "noLastStart": {
