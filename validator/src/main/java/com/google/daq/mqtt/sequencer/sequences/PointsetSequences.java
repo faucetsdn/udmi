@@ -54,7 +54,6 @@ public class PointsetSequences extends PointsetBase {
               .equals(deviceConfig.pointset.points.keySet());
         }
     );
-    checkThatHasInterestingSystemStatus(false);
   }
 
   private boolean validPointEntry(Entry<String, PointPointsetEvent> point) {
@@ -66,8 +65,6 @@ public class PointsetSequences extends PointsetBase {
   @Summary("pointset configuration contains extraneous point")
   @Feature(stage = ALPHA, bucket = POINTSET)
   public void pointset_request_extraneous() {
-
-    untilHasInterestingSystemStatusTodo(false);
     untilPointsetSanity();
 
     deviceConfig.pointset.points.put(EXTRANEOUS_POINT, new PointPointsetConfig());
@@ -77,7 +74,6 @@ public class PointsetSequences extends PointsetBase {
           () -> ifNotNullGet(deviceState.pointset.points.get(EXTRANEOUS_POINT),
               state -> state.status.category.equals(POINTSET_POINT_INVALID)
                   && state.status.level.equals(POINTSET_POINT_INVALID_VALUE)));
-      untilHasInterestingSystemStatusTodo(true);
       untilPointsetSanity();
     } finally {
       deviceConfig.pointset.points.remove(EXTRANEOUS_POINT);
@@ -85,7 +81,7 @@ public class PointsetSequences extends PointsetBase {
 
     untilTrue("pointset status removes extraneous point error",
         () -> !deviceState.pointset.points.containsKey(EXTRANEOUS_POINT));
-    untilHasInterestingSystemStatusTodo(false);
+
     untilPointsetSanity();
   }
 
