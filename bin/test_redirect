@@ -42,7 +42,7 @@ bin/registrar $site_path
 bin/reset_config $site_path $project_id $device_id
 
 log Running pubber with redirectRegistry on timeout
-timeout 3m unbuffer bin/pubber $site_path $project_id $device_id $serial_no redirectRegistry=missing persistStore > $PUBBER_OUT.1 2>&1 || true
+timeout 3m unbuffer bin/pubber $site_path $project_id $device_id $serial_no redirectRegistry=missing > $PUBBER_OUT.1 2>&1 || true
 
 log Done with timeout, running pubber in background...
 bin/pubber $site_path $project_id $device_id $serial_no persistStore > $PUBBER_OUT.2 2>&1 &
@@ -118,7 +118,7 @@ sleep 20
 
 # Quick sanity check that the restart_count persistent store is handled correctly.
 restarts=$(jq .restart_count $work_base/persistent_data.json)
-if [[ $restarts -ne 3 ]]; then
+if [[ $restarts -ne 2 ]]; then
     log Restart count incorrect, was $restarts
     false
 fi
