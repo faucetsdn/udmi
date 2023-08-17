@@ -28,7 +28,8 @@
     },
     "gcp-iot-core": {
       "provider": "gcp",
-      "project_id": "${GCP_PROJECT}"
+      "project_id": "${GCP_PROJECT}",
+      "options": "${GCP_IOT_OPTIONS}"
     }
   },
   "distributors": {

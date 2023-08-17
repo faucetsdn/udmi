@@ -50,16 +50,19 @@ public abstract class ContainerBase {
   }
 
   protected String variableSubstitution(String value, String nullMessage) {
+    if (nullMessage == null && value == null) {
+      return null;
+    }
     requireNonNull(value, nullMessage);
     Matcher matcher = VARIABLE_PATTERN.matcher(value);
     String out = matcher.replaceAll(ContainerBase::environmentReplacer);
-    ifNotTrueThen(value.equals(out), () -> debug("Replaced value %s with %s", value, out));
+    ifNotTrueThen(value.equals(out), () -> debug("Replaced value %s with '%s'", value, out));
     return out;
   }
 
   private static String environmentReplacer(MatchResult match) {
     String group = match.group(1);
-    String value = System.getenv(group);
+    String value = Optional.ofNullable(System.getenv(group)).
     if (value == null) {
       throw new IllegalArgumentException("Missing definition for env " + group);
     }

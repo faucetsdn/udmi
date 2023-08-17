@@ -3,5 +3,5 @@ kind: ConfigMap
 metadata:
   name: config
 data:
-  GCP_IOT_ENABLED: yeppers
+  GCP_IOT_OPTIONS: disabled
   CLEARBLADE_PROJECT: udmi-external
