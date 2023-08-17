@@ -10,6 +10,7 @@ function cleanup {
 }
 trap cleanup EXIT
 
+# For the first run, don't persist the store.
 PUBBER_TMP_OPTS=`mktemp`
 echo noPersist > $PUBBER_TMP_OPTS
 
@@ -21,11 +22,12 @@ while [[ $result -eq 192 ]]; do
          $(<$PUBBER_TMP_OPTS) $@ &
 
     PUB_PID=$!
-    echo > $PUBBER_TMP_OPTS
 
     result=0
     echo Waiting for pubber pid $PUB_PID to complete...
     wait $PUB_PID || result=$?
+
+    echo > $PUBBER_TMP_OPTS
 done
 
 rm -f $PUBBER_TMP_OPTS
