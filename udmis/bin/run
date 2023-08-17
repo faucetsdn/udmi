@@ -13,6 +13,8 @@ cd $ROOT
 
 more /etc/os-release $POD_CONFIG | cat
 
+env
+
 java -version
 
 POD_JAR=build/libs/udmis-1.0-SNAPSHOT-all.jar

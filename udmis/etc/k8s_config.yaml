@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config
+data:
+  GCP_IOT_ENABLED: yeppers
+  CLEARBLADE_PROJECT: udmi-external
