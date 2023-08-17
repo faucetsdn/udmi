@@ -484,22 +484,23 @@ public class Pubber {
   }
 
   protected DevicePersistent newDevicePersistent() {
-    DevicePersistent data = new DevicePersistent();
-    return data;
+    return new DevicePersistent();
   }
 
   protected void initializePersistentStore() {
     checkState(persistentData == null, "persistent data already loaded");
     File persistentStore = getPersistentStore();
-    if (TRUE.equals(configuration.options.noPersist)) {
-      info("Resetting persistent store " + persistentStore.getAbsolutePath());
-      persistentData = newDevicePersistent();
-    } else {
+
+    if (TRUE.equals(configuration.options.persistStore)) {
       info("Initializing from persistent store " + persistentStore.getAbsolutePath());
       persistentData =
           persistentStore.exists() ? fromJsonFile(persistentStore, DevicePersistent.class)
               : newDevicePersistent();
+    } else {
+      info("Resetting persistent store " + persistentStore.getAbsolutePath());
+      persistentData = newDevicePersistent();
     }
+
     persistentData.restart_count = Objects.requireNonNullElse(persistentData.restart_count, 0) + 1;
     deviceState.system.operation.restart_count = persistentData.restart_count;
 
