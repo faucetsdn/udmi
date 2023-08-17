@@ -790,13 +790,19 @@ public class Pubber {
   }
 
   private void updateState(AbstractPoint point) {
+    String pointName = point.getName();
+
+    if (pointName.equals(configuration.options.missingPoint)) {
+      return;
+    }
+
     if (configuration.options.noPointState != null && configuration.options.noPointState) {
-      deviceState.pointset.points.put(point.getName(), new PointPointsetState());
+      deviceState.pointset.points.put(pointName, new PointPointsetState());
       return;
     }
 
     if (point.isDirty()) {
-      deviceState.pointset.points.put(point.getName(), point.getState());
+      deviceState.pointset.points.put(pointName, point.getState());
       markStateDirty(-1);
     }
   }
@@ -864,6 +870,11 @@ public class Pubber {
 
   private void addPoint(AbstractPoint point) {
     String pointName = point.getName();
+
+    if (pointName.equals(configuration.options.missingPoint)) {
+      return;
+    }
+
     if (pointsetEvent.points.put(pointName, point.getData()) != null) {
       throw new IllegalStateException("Duplicate pointName " + pointName);
     }
@@ -872,6 +883,10 @@ public class Pubber {
   }
 
   private void restorePoint(String pointName) {
+    if (pointName.equals(configuration.options.missingPoint)) {
+      return;
+    }
+
     deviceState.pointset.points.put(pointName, ifNotNullGet(managedPoints.get(pointName),
         AbstractPoint::getState, invalidPoint(pointName)));
     pointsetEvent.points.put(pointName, ifNotNullGet(managedPoints.get(pointName),
