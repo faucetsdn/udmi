@@ -34,11 +34,11 @@ spec:
             configMapKeyRef:
               name: config
               key: CLEARBLADE_PROJECT
-        - name: GCP_IOT_ENABLED
+        - name: GCP_IOT_OPTIONS
           valueFrom:
             configMapKeyRef:
               name: config
-              key: GCP_IOT_ENABLED
+              key: GCP_IOT_OPTIONS
       volumes:
       - name: secret-volume
         projected:

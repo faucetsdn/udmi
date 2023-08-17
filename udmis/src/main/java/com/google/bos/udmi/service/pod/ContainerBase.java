@@ -12,6 +12,7 @@ import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import java.io.PrintStream;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -61,12 +62,7 @@ public abstract class ContainerBase {
   }
 
   private static String environmentReplacer(MatchResult match) {
-    String group = match.group(1);
-    String value = Optional.ofNullable(System.getenv(group)).
-    if (value == null) {
-      throw new IllegalArgumentException("Missing definition for env " + group);
-    }
-    return value;
+    return ofNullable(System.getenv(match.group(1))).orElse("");
   }
 
   private String getExecutionContext() {
