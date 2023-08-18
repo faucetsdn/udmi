@@ -85,6 +85,7 @@ public class GcpIotAccessProvider extends IotAccessBase {
   private static final String ASSOCIATION_ONLY = "ASSOCIATION_ONLY";
   private static final GatewayConfig GATEWAY_CONFIG =
       new GatewayConfig().setGatewayType(GATEWAY_TYPE).setGatewayAuthMethod(ASSOCIATION_ONLY);
+  private static final String DISABLED_OPTION = "disabled";
   private final String projectId;
   private final CloudIot cloudIotService;
   private final CompletableFuture<Map<String, String>> registryRegions = new CompletableFuture<>();
@@ -95,6 +96,15 @@ public class GcpIotAccessProvider extends IotAccessBase {
    * TODO: Need to implement page tokens for all requisite API calls.
    */
   public GcpIotAccessProvider(IotAccess iotAccess) {
+    String options = variableSubstitution(iotAccess.options, null);
+    if (DISABLED_OPTION.equals(options)) {
+      warn("access provider disabled through options");
+      projectId = null;
+      cloudIotService = null;
+      registries = null;
+      return;
+    }
+
     projectId = variableSubstitution(iotAccess.project_id, "gcp project id not specified");
     cloudIotService = createCloudIotService();
     registries = cloudIotService.projects().locations().registries();

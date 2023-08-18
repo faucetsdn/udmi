@@ -47,6 +47,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Setup udmis container build
+        if: ${{ github.event_name == 'push' }}
         run: |
           revhash=$(git rev-parse $GITHUB_REF)
           IMAGE_TAG=g${revhash:0:9}
@@ -56,6 +57,7 @@ jobs:
           udmis/bin/container prep --no-check $PUSH_REPO
           echo Pushing built container as $PUSH_TAG | tee -a $GITHUB_STEP_SUMMARY
       - name: Build and push docker image
+        if: ${{ github.event_name == 'push' }}
         uses: docker/build-push-action@v4
         with:
           file: udmis/Dockerfile.udmis
