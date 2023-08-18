@@ -484,7 +484,7 @@ public class Registrar {
       localDevice.captureError(LocalDevice.EXCEPTION_REGISTERING, e);
     }
     Duration between = Duration.between(start, Instant.now());
-    double seconds = between.getSeconds() + between.getNano() / 1e9;
+    double seconds = (between.getSeconds() + between.getNano() / 1e9) / RUNNER_THREADS;
     System.err.printf("Finished processing %s in %.03fs%n", localName, seconds);
   }
 
