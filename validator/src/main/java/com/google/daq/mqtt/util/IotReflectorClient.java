@@ -184,7 +184,8 @@ public class IotReflectorClient implements IotProvider {
         CompletableFuture<Map<String, Object>> future = ifNotNullGet(transactionId,
             futures::remove);
         ifNotNullThen(future, f -> f.complete(messageBundle.message));
-        if (future == null && transactionId.startsWith(REFLECTOR_PREFIX)) {
+        if (future == null && transactionId != null
+            && transactionId.startsWith(REFLECTOR_PREFIX)) {
           throw new RuntimeException("Received unexpected reply message " + transactionId);
         }
       } catch (Exception e) {
