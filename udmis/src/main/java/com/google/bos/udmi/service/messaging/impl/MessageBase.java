@@ -18,8 +18,7 @@ import static java.util.Objects.requireNonNull;
 
 import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.bos.udmi.service.pod.ContainerBase;
-import java.time.Duration;
-import java.time.Instant;
+import com.google.udmi.util.GeneralUtils;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -29,6 +28,7 @@ import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -49,10 +49,10 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   private static final Set<Object> HANDLED_QUEUES = new HashSet<>();
   private static final long DEFAULT_POLL_TIME_SEC = 1;
   private static final long AWAIT_TERMINATION_SEC = 10;
-  public static final int EXECUTION_THREADS = 10;
 
-  private final ExecutorService executor = Executors.newFixedThreadPool(EXECUTION_THREADS);
+  private final ExecutorService executor = Executors.newSingleThreadExecutor();
   private BlockingQueue<QueueEntry> sourceQueue;
+  private Future<Void> sourceFuture;
   private Consumer<Bundle> dispatcher;
 
   /**
@@ -85,8 +85,8 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
 
   protected void pushQueueEntry(BlockingQueue<QueueEntry> queue, String stringBundle) {
     try {
-      requireNonNull(stringBundle, "missing queue bundle");
-      queue.put(new QueueEntry(grabExecutionContext(), stringBundle));
+      QueueEntry queueEntry = new QueueEntry(grabExecutionContext(), stringBundle);
+      queue.put(requireNonNull(queueEntry));
     } catch (Exception e) {
       throw new RuntimeException("While pushing queue entry", e);
     }
@@ -134,12 +134,12 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     sourceQueue = queueForScope;
   }
 
-  protected void terminateHandlers() {
+  protected void terminateHandler() {
     debug("Terminating " + this);
     receiveBundle(new Bundle(TERMINATE_MARKER));
   }
 
-  private synchronized void ensureSourceQueue() {
+  private void ensureSourceQueue() {
     if (sourceQueue == null) {
       sourceQueue = new LinkedBlockingDeque<>();
     }
@@ -167,40 +167,30 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   }
 
   @SuppressWarnings("unchecked")
-  private void handleQueue() {
+  private Future<Void> handleQueue() {
     // Keep track of used queues to make sure there's no shenanigans during testing.
     if (!HANDLED_QUEUES.add(System.identityHashCode(sourceQueue))) {
       throw new IllegalStateException("Source queue handled multiple times!");
     }
-    for (int i = 0; i < EXECUTION_THREADS; i++) {
-      String id = format("%s:%02d", queueIdentifier(), i);
-      executor.submit(() -> messageLoop(id));
-    }
+    return (Future<Void>) executor.submit(this::messageLoop);
   }
 
-  private void messageLoop(String id) {
-    info("Starting message loop %s", id);
-    while (!executor.isShutdown()) {
+  private void messageLoop() {
+    while (true) {
       try {
         grabExecutionContext();
         Envelope envelope = null;
         try {
-          final Instant before = Instant.now();
           Bundle bundle = extractBundle(getFromSourceQueue(true));
-          final Instant start = Instant.now();
-          long waiting = Duration.between(before, start).getSeconds();
-          debug("Processing waited %ds on message loop %s", waiting, id);
           if (bundle.message.equals(TERMINATE_MARKER)) {
-            info("Terminating message loop %s", id);
-            executor.shutdown();
+            debug("Exiting %s", this);
+            info("Message loop terminated");
             return;
           }
           envelope = bundle.envelope;
           trace("Processing %s/%s %s %s -> %s", envelope.subType, envelope.subFolder,
               envelope.transactionId, queueIdentifier(), dispatcher);
           dispatcher.accept(bundle);
-          long seconds = Duration.between(start, Instant.now()).getSeconds();
-          debug("Processing took %ds for message loop %s", seconds, id);
         } catch (Exception e) {
           warn("Handling dispatch exception: " + friendlyStackTrace(e));
           handleDispatchException(envelope, e);
@@ -210,7 +200,6 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
         error(stackTraceString(loopException));
       }
     }
-    info("Exiting message loop %s", id);
   }
 
   private String queueIdentifier() {
@@ -223,7 +212,8 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
 
   private void receiveBundle(String stringBundle) {
     ensureSourceQueue();
-    pushQueueEntry(sourceQueue, stringBundle);
+    BlockingQueue<QueueEntry> queue = sourceQueue;
+    pushQueueEntry(queue, stringBundle);
   }
 
   private void receiveException(Map<String, String> attributesMap, String messageString,
@@ -240,27 +230,32 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   @Override
   public void activate(Consumer<Bundle> bundleConsumer) {
     dispatcher = bundleConsumer;
+    checkState(sourceFuture == null, "pipe already activated");
     ensureSourceQueue();
     debug("Handling %s to %08x", this, Objects.hash(bundleConsumer));
-    handleQueue();
+    sourceFuture = handleQueue();
   }
 
   /**
    * Await the shutdown of the input handler.
    */
   public void awaitShutdown() {
+    debug("Awaiting shutdown of %s", this);
+    if (sourceFuture == null) {
+      return;
+    }
     try {
-      debug("Awaiting shutdown of %s", this);
-      executor.shutdown();
-      executor.awaitTermination(AWAIT_TERMINATION_SEC, TimeUnit.SECONDS);
+      sourceFuture.get(AWAIT_TERMINATION_SEC, TimeUnit.SECONDS);
     } catch (Exception e) {
       throw new RuntimeException("While awaiting termination", e);
+    } finally {
+      sourceFuture = null;
     }
   }
 
   @Override
   public boolean isActive() {
-    return !executor.isTerminated();
+    return sourceFuture != null && !sourceFuture.isDone();
   }
 
   /**
@@ -283,7 +278,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   @Override
   public void shutdown() {
     try {
-      terminateHandlers();
+      terminateHandler();
       awaitShutdown();
     } catch (Exception e) {
       throw new RuntimeException("While processing shutdown", e);

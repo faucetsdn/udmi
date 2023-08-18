@@ -13,10 +13,12 @@ import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.common.collect.ImmutableMap;
+import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -98,7 +100,7 @@ public class TraceMessagePipe extends MessageBase {
     ExecutorService playback = Executors.newSingleThreadExecutor();
     playback.submit(() -> {
       traceIn.stream().forEach(this::consumeTrace);
-      terminateHandlers();
+      terminateHandler();
     });
   }
 

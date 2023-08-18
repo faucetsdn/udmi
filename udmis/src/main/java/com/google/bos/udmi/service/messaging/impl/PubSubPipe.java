@@ -29,14 +29,11 @@ import com.google.udmi.util.Common;
 import com.google.udmi.util.GeneralUtils;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
@@ -125,7 +122,6 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
 
   @Override
   public void receiveMessage(PubsubMessage message, AckReplyConsumer reply) {
-    Instant start = Instant.now();
     Map<String, String> attributesMap = new HashMap<>(message.getAttributesMap());
     String messageString = message.getData().toStringUtf8();
     // Ack first to prevent a recurring loop of processing a faulty message.
@@ -133,9 +129,6 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
     String messageId = message.getMessageId();
     attributesMap.put(Common.TRANSACTION_KEY, "PS:" + messageId);
     receiveMessage(attributesMap, messageString);
-    Instant end = Instant.now();
-    long seconds = Duration.between(start, end).getSeconds();
-    debug("Receive message took %ss", seconds);
   }
 
   @Override
@@ -167,7 +160,6 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
       ifNotNullThen(emu, host -> builder.setChannelProvider(getTransportChannelProvider(host)));
       ifNotNullThen(emu, host -> builder.setCredentialsProvider(NoCredentialsProvider.create()));
       info(format("Subscriber %s:%s", Optional.ofNullable(emu).orElse(GCP_HOST), subscription));
-      builder.setParallelPullCount(EXECUTION_THREADS);
       Subscriber built = builder.build();
       built.addListener(new Listener() {
         @Override

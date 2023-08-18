@@ -43,7 +43,7 @@ public abstract class ContainerBase {
     }
   }
 
-  protected synchronized String grabExecutionContext() {
+  protected String grabExecutionContext() {
     String previous = getExecutionContext();
     String context = format("%08x", Objects.hash(this, Long.toString(System.currentTimeMillis())));
     setExecutionContext(context);

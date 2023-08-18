@@ -14,28 +14,10 @@ spec:
       - name: secret-volume
         mountPath: /udmi
         readOnly: true
-      env:
-      - name: CLEARBLADE_PROJECT
-        valueFrom:
-          configMapKeyRef:
-            name: config
-            key: CLEARBLADE_PROJECT
-      - name: GCP_IOT_OPTIONS
-        valueFrom:
-          configMapKeyRef:
-            name: config
-            key: GCP_IOT_OPTIONS
   volumes:
     - name: secret-volume
       projected:
         sources:
         - secret:
             name: clearblade.json
-    - name: tmp
-      emptyDir:
-        medium: Memory
-    - name: var
-      projected:
-        sources:
-        - configMap:
-            name: config
+            optional: true
