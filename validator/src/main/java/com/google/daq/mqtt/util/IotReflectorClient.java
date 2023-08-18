@@ -147,6 +147,7 @@ public class IotReflectorClient implements IotProvider {
 
   private Map<String, Object> transaction(String deviceId, String topic,
       String message, QuerySpeed speed) {
+      // TODO: Publish should return future.
     return waitForReply(messageClient.publish(deviceId, topic, message), speed);
   }
 
