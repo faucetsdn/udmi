@@ -11,6 +11,7 @@ import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.getDate;
+import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
@@ -299,7 +300,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       registryRegions.complete(fetchRegistryCloudRegions());
       registryRetry = Instant.now().plus(REGISTRY_RETRY_TIME);
     } else {
-      warn("Not refetching regions due to fetch retry threshold");
+      warn("Not refetching regions due to fetch retry threshold " + getTimestamp(registryRetry));
     }
   }
 

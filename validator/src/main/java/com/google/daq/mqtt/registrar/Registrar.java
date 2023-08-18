@@ -43,6 +43,7 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -365,7 +366,7 @@ public class Registrar {
     AtomicInteger processedCount = new AtomicInteger();
     try {
       localDevices = loadLocalDevices(deviceSet);
-      cloudDevices = fetchCloudDevices();
+      cloudDevices = new HashSet<>(fetchCloudDevices());
       if (deleteDevices) {
         deleteCloudDevices(deviceSet);
         return;
@@ -452,13 +453,14 @@ public class Registrar {
   private void processLocalDevice(String localName, AtomicInteger processedDeviceCount) {
     LocalDevice localDevice = localDevices.get(localName);
     if (!localDevice.isValid()) {
-      System.err.println("Skipping (invalid) " + localName);
+      System.err.println("Skipping invalid device " + localName);
       return;
     }
     if (shouldLimitDevice(localDevice)) {
-      // System.err.println("Skipping active device " + localDevice.getDeviceId());
+      System.err.println("Skipping active device " + localDevice.getDeviceId());
       return;
     }
+    System.err.println("Processing device " + localName);
     processedDeviceCount.incrementAndGet();
     try {
       localDevice.writeConfigFile();
@@ -470,7 +472,7 @@ public class Registrar {
         }
       }
     } catch (Exception e) {
-      System.err.println("Deferring exception: " + e);
+      System.err.printf("Deferring exception for %s: %s%n", localDevice.getDeviceId(), e);
       localDevice.captureError(LocalDevice.EXCEPTION_REGISTERING, e);
     }
   }
@@ -543,6 +545,7 @@ public class Registrar {
     }
     if (cloudIotManager.registerDevice(localName, localDeviceSettings)) {
       System.err.println("Created new device entry " + localName);
+      cloudDevices.add(localName);
     } else {
       System.err.println("Updated device entry " + localName);
     }
@@ -592,7 +595,7 @@ public class Registrar {
 
   private CloudModel fetchDevice(String localName) {
     try {
-      return cloudIotManager.fetchDevice(localName);
+      return cloudDevices.contains(localName) ? cloudIotManager.fetchDevice(localName) : null;
     } catch (Exception e) {
       throw new RuntimeException("Fetching device " + localName, e);
     }
