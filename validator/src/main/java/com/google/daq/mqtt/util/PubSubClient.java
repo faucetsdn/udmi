@@ -248,7 +248,7 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
   public void messageLoop() {
     while (isActive()) {
       try {
-        handlerHandler(takeNextMessage(QuerySpeed.BLOCK));
+        handlerHandler(takeNextMessage(QuerySpeed.QUICK));
       } catch (Exception e) {
         System.err.println("Exception processing received message:");
         e.printStackTrace();
@@ -260,6 +260,10 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
   }
 
   private void handlerHandler(MessageBundle bundle) {
+    if (bundle == null) {
+      return;
+    }
+
     Envelope envelope = JsonUtil.convertTo(Envelope.class, bundle.attributes);
     String mapKey = getMapKey(envelope.subType, envelope.subFolder);
     try {

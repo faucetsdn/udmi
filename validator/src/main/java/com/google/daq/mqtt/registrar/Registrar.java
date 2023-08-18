@@ -8,6 +8,7 @@ import static com.google.udmi.util.Common.NO_SITE;
 import static com.google.udmi.util.Common.UDMI_VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
 import static java.util.Objects.requireNonNull;
@@ -83,7 +84,7 @@ public class Registrar {
   private static final String SITE_METADATA_JSON = "site_metadata.json";
   private static final String SWARM_SUBFOLDER = "swarm";
   private static final long PROCESSING_TIMEOUT_MIN = 60;
-  private static final int RUNNER_THREADS = 10;
+  private static final int RUNNER_THREADS = 20;
   private static final String CONFIG_SUB_TYPE = "config";
   private static final String MODEL_SUB_TYPE = "model";
   private static final boolean DEFAULT_BLOCK_UNKNOWN = true;
@@ -434,27 +435,32 @@ public class Registrar {
     }
   }
 
-  private void processLocalDevices(AtomicInteger updatedCount, AtomicInteger processedCount)
-      throws InterruptedException {
-    ExecutorService executor = Executors.newFixedThreadPool(RUNNER_THREADS);
-    final Instant start = Instant.now();
-    for (String localName : localDevices.keySet()) {
-      executor.execute(() -> {
-        int count = processedCount.incrementAndGet();
-        if (count % 500 == 0) {
-          System.err.printf("Processed %d device records...%n", count);
-        }
-        processLocalDevice(localName, updatedCount);
-      });
-    }
-    executor.shutdown();
-    executor.awaitTermination(PROCESSING_TIMEOUT_MIN, TimeUnit.MINUTES);
+  private void processLocalDevices(AtomicInteger updatedCount, AtomicInteger processedCount) {
+    try {
+      ExecutorService executor = Executors.newFixedThreadPool(RUNNER_THREADS);
+      executor.execute(() -> System.err.println(
+          "Local devices executing in pool " + Thread.currentThread().getName()));
+      final Instant start = Instant.now();
+      for (String localName : localDevices.keySet()) {
+        executor.execute(() -> {
+          int count = processedCount.incrementAndGet();
+          if (count % 500 == 0) {
+            System.err.printf("Processed %d device records...%n", count);
+          }
+          processLocalDevice(localName, updatedCount);
+        });
+      }
+      executor.shutdown();
+      executor.awaitTermination(PROCESSING_TIMEOUT_MIN, TimeUnit.MINUTES);
 
-    Duration between = Duration.between(start, Instant.now());
-    double seconds = between.getSeconds() + between.getNano() / 1e9;
-    double perDevice = Math.floor(seconds / localDevices.size() * 1000.0) / 1000.0;
-    System.err.printf("Finished %d devices in %.03f, %.03fs/d%n",
-        localDevices.size(), seconds, perDevice);
+      Duration between = Duration.between(start, Instant.now());
+      double seconds = between.getSeconds() + between.getNano() / 1e9;
+      double perDevice = Math.floor(seconds / localDevices.size() * 1000.0) / 1000.0;
+      System.err.printf("Finished %d devices in %.03f, %.03fs/d%n",
+          localDevices.size(), seconds, perDevice);
+    } catch (Exception e) {
+      throw new RuntimeException("While processing local devices", e);
+    }
   }
 
   private void processLocalDevice(String localName, AtomicInteger processedDeviceCount) {
@@ -659,18 +665,33 @@ public class Registrar {
   }
 
   private void bindGatewayDevices(Map<String, LocalDevice> localDevices, Set<String> deviceSet) {
-    localDevices.values().stream()
-        .filter(LocalDevice::isGateway)
-        .forEach(localDevice -> bindGatewayDevice(localDevices, deviceSet, localDevice));
+    try {
+      ExecutorService executor = Executors.newFixedThreadPool(RUNNER_THREADS);
+      executor.execute(() -> System.err.println(
+          "Gateway binding executing in pool " + Thread.currentThread().getName()));
+      final Instant start = Instant.now();
+      for (LocalDevice localDevice : localDevices.values()) {
+        ifTrueThen(localDevice.isGateway(), () -> executor.execute(
+            () -> bindGatewayDevice(localDevices, deviceSet, localDevice)));
+      }
+      executor.shutdown();
+      executor.awaitTermination(PROCESSING_TIMEOUT_MIN, TimeUnit.MINUTES);
+
+      Duration between = Duration.between(start, Instant.now());
+      double seconds = between.getSeconds() + between.getNano() / 1e9;
+      System.err.printf("Finished binding gateways in %.03f%n", seconds);
+    } catch (Exception e) {
+      throw new RuntimeException("While binding gateways", e);
+    }
   }
 
   private void bindGatewayDevice(Map<String, LocalDevice> localDevices, Set<String> deviceSet,
       LocalDevice localDevice) {
     String gatewayId = localDevice.getDeviceId();
     try {
-      System.err.println("Binding devices to gateway " + gatewayId);
       Set<String> boundDevices = cloudIotManager.fetchBoundDevices(gatewayId);
-      System.err.println("Devices already bound: " + JOIN_CSV.join(boundDevices));
+      System.err.printf("Binding devices to %s, already bound: %s%n",
+          gatewayId, JOIN_CSV.join(boundDevices));
       int total = cloudDevices.size() != 0 ? cloudDevices.size() : localDevices.size();
       Preconditions.checkState(boundDevices.size() != total,
           "all devices including the gateway can't be bound to one gateway!");

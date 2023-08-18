@@ -58,11 +58,7 @@ public class MockPublisher implements MessagePublisher {
       if (messages.isEmpty()) {
         throw new RuntimeException("Mock publisher has no messages");
       }
-      if (speed == QuerySpeed.BLOCK) {
-        return messages.take();
-      } else {
-        return messages.poll(speed.seconds(), TimeUnit.SECONDS);
-      }
+      return messages.poll(speed.seconds(), TimeUnit.SECONDS);
     } catch (Exception e) {
       throw new RuntimeException("While taking next message", e);
     }

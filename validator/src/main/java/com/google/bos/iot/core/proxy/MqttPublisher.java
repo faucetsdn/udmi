@@ -104,6 +104,10 @@ class MqttPublisher implements MessagePublisher {
     LOG.info(deviceId + " token expiration sec " + TOKEN_EXPIRATION_SEC);
     mqttClient = newMqttClient(deviceId);
     connectMqttClient(deviceId);
+
+    publisherExecutor.execute(() -> {
+      LOG.info("Executing in pool " + Thread.currentThread().getName());
+    });
   }
 
   @Override

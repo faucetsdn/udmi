@@ -31,9 +31,9 @@ public interface MessagePublisher {
    * Speed of a query -- how long to wait before a timeout.
    */
   enum QuerySpeed {
+    QUICK(1),
     SHORT(10),
-    LONG(30),
-    BLOCK(-1);
+    LONG(30);
 
     private final int seconds;
     QuerySpeed(int seconds) {

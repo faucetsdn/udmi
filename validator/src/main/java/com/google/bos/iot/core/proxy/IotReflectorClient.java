@@ -372,11 +372,7 @@ public class IotReflectorClient implements MessagePublisher {
   @Override
   public Validator.MessageBundle takeNextMessage(QuerySpeed timeout) {
     try {
-      if (timeout == QuerySpeed.BLOCK) {
-        return messages.take();
-      } else {
-        return messages.poll(timeout.seconds(), TimeUnit.SECONDS);
-      }
+      return messages.poll(timeout.seconds(), TimeUnit.SECONDS);
     } catch (Exception e) {
       throw new RuntimeException("While taking next message", e);
     }

@@ -439,7 +439,7 @@ public class Validator {
     try {
       while (client.isActive()) {
         try {
-          validateMessage(client.takeNextMessage(QuerySpeed.BLOCK));
+          validateMessage(client.takeNextMessage(QuerySpeed.SHORT));
         } catch (Exception e) {
           e.printStackTrace();
         }

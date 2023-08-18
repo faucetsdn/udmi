@@ -24,6 +24,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import org.jetbrains.annotations.Nullable;
@@ -45,7 +46,7 @@ public class IotReflectorClient implements IotProvider {
   private static final String REFLECTOR_PREFIX = "RC:";
   private final com.google.bos.iot.core.proxy.IotReflectorClient messageClient;
   private final Map<String, CompletableFuture<Map<String, Object>>> futures = new ConcurrentHashMap<>();
-  private final Executor executor = Executors.newSingleThreadExecutor();
+  private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
   /**
    * Create a new client.
@@ -63,6 +64,7 @@ public class IotReflectorClient implements IotProvider {
   @Override
   public void shutdown() {
     messageClient.close();
+    executor.shutdown();
   }
 
   @Override
@@ -163,7 +165,10 @@ public class IotReflectorClient implements IotProvider {
   private void processReplies() {
     while (messageClient.isActive()) {
       try {
-        MessageBundle messageBundle = messageClient.takeNextMessage(QuerySpeed.BLOCK);
+        MessageBundle messageBundle = messageClient.takeNextMessage(QuerySpeed.QUICK);
+        if (messageBundle == null) {
+          continue;
+        }
         Exception exception = (Exception) messageBundle.message.get(EXCEPTION_KEY);
         if (exception != null) {
           exception.printStackTrace();
