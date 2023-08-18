@@ -4,13 +4,11 @@ import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.JSON_EXT;
 import static com.google.udmi.util.JsonUtil.loadFileString;
-import static com.google.udmi.util.JsonUtil.loadMap;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static com.google.udmi.util.JsonUtil.toStringMap;
 import static java.lang.String.format;
 
 import com.google.bos.udmi.service.messaging.MessagePipe;
-import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import java.io.File;
 import java.util.HashMap;
@@ -75,7 +73,7 @@ public class FileMessagePipe extends MessageBase {
     ExecutorService playback = Executors.newSingleThreadExecutor();
     playback.submit(() -> {
       filesIn.stream().forEach(this::consumeFile);
-      terminateHandler();
+      terminateHandlers();
     });
   }
 

@@ -16,7 +16,7 @@ public interface MessagePublisher {
 
   boolean isActive();
 
-  MessageBundle takeNextMessage(boolean enableTimeout);
+  MessageBundle takeNextMessage(QuerySpeed querySpeed);
 
   /**
    * Get a version structure describing the cloud-side deployment info.
@@ -25,5 +25,23 @@ public interface MessagePublisher {
     SetupUdmiConfig setupUdmiConfig = new SetupUdmiConfig();
     setupUdmiConfig.deployed_by = "Default implementation for " + this.getClass();
     return setupUdmiConfig;
+  }
+
+  /**
+   * Speed of a query -- how long to wait before a timeout.
+   */
+  enum QuerySpeed {
+    SHORT(10),
+    LONG(30),
+    BLOCK(-1);
+
+    private final int seconds;
+    QuerySpeed(int seconds) {
+      this.seconds = seconds;
+    }
+
+    public int seconds() {
+      return this.seconds;
+    }
   }
 }

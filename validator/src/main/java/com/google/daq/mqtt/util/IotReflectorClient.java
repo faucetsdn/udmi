@@ -12,6 +12,7 @@ import static java.util.Optional.ofNullable;
 import static udmi.schema.CloudModel.Operation.BIND;
 
 import com.google.common.base.Preconditions;
+import com.google.daq.mqtt.util.MessagePublisher.QuerySpeed;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
 import com.google.udmi.util.SiteModel;
 import java.util.HashMap;
@@ -56,7 +57,7 @@ public class IotReflectorClient implements IotProvider {
 
   @Override
   public void updateConfig(String deviceId, String config) {
-    transaction(deviceId, UPDATE_CONFIG_TOPIC, config);
+    transaction(deviceId, UPDATE_CONFIG_TOPIC, config, MessagePublisher.QuerySpeed.SHORT);
   }
 
   @Override
@@ -86,7 +87,8 @@ public class IotReflectorClient implements IotProvider {
 
   private CloudModel cloudModelTransaction(String deviceId, String topic, CloudModel model) {
     Operation operation = Preconditions.checkNotNull(model.operation, "no operation");
-    Map<String, Object> message = transaction(deviceId, topic, stringify(model));
+    Map<String, Object> message = transaction(deviceId, topic, stringify(model),
+        MessagePublisher.QuerySpeed.SHORT);
     CloudModel cloudModel = convertToStrict(CloudModel.class, message);
     String cloudNumId = ifNotNullGet(cloudModel, result -> result.num_id);
     Operation cloudOperation = ifNotNullGet(cloudModel, result -> result.operation);
@@ -120,7 +122,8 @@ public class IotReflectorClient implements IotProvider {
   @Nullable
   private CloudModel fetchCloudModel(String deviceId) {
     try {
-      Map<String, Object> message = transaction(deviceId, CLOUD_QUERY_TOPIC, EMPTY_MESSAGE);
+      Map<String, Object> message = transaction(deviceId, CLOUD_QUERY_TOPIC, EMPTY_MESSAGE,
+          MessagePublisher.QuerySpeed.LONG);
       return convertToStrict(CloudModel.class, message);
     } catch (Exception e) {
       if (e.getMessage().contains("NOT_FOUND")) {
@@ -131,15 +134,16 @@ public class IotReflectorClient implements IotProvider {
   }
 
   private synchronized Map<String, Object> transaction(String deviceId, String topic,
-      String message) {
-    return waitForReply(messageClient.publish(deviceId, topic, message));
+      String message, QuerySpeed speed) {
+    return waitForReply(messageClient.publish(deviceId, topic, message), speed);
   }
 
-  private Map<String, Object> waitForReply(String sentId) {
+  private Map<String, Object> waitForReply(String sentId, QuerySpeed speed) {
     while (messageClient.isActive()) {
-      MessageBundle messageBundle = messageClient.takeNextMessage(true);
+      MessageBundle messageBundle = messageClient.takeNextMessage(speed);
       if (messageBundle == null) {
-        throw new RuntimeException("UDMIS reflector transaction timeout " + sentId);
+        throw new RuntimeException(
+            format("UDMIS reflector timeout %ss for %s", speed.seconds(), sentId));
       }
       Exception exception = (Exception) messageBundle.message.get(EXCEPTION_KEY);
       if (exception != null) {
@@ -174,4 +178,5 @@ public class IotReflectorClient implements IotProvider {
   public SetupUdmiConfig getVersionInformation() {
     return messageClient.getVersionInformation();
   }
+
 }

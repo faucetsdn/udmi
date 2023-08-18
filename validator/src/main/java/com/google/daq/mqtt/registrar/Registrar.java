@@ -702,15 +702,19 @@ public class Registrar {
   }
 
   private Set<String> fetchCloudDevices() {
-    boolean requiresCloud = updateCloudIoT || (idleLimit != null);
-    if (requiresCloud) {
-      Set<String> devices = cloudIotManager.fetchDeviceIds();
-      System.err.printf("Fetched %d devices from cloud registry %s%n", devices.size(),
-          cloudIotManager.getRegistryId());
-      return devices;
-    } else {
-      System.err.println("Skipping remote registry fetch");
-      return null;
+    try {
+      boolean requiresCloud = updateCloudIoT || (idleLimit != null);
+      if (requiresCloud) {
+        Set<String> devices = cloudIotManager.fetchDeviceIds();
+        System.err.printf("Fetched %d devices from cloud registry %s%n", devices.size(),
+            cloudIotManager.getRegistryId());
+        return devices;
+      } else {
+        System.err.println("Skipping remote registry fetch");
+        return null;
+      }
+    } catch (Exception e) {
+      throw new RuntimeException("While fetching cloud devices", e);
     }
   }
 
