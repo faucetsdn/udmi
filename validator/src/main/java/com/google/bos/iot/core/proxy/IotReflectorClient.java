@@ -309,7 +309,6 @@ public class IotReflectorClient implements MessagePublisher {
           System.err.println("UDMI version mismatch: " + udmiVersion);
         }
 
-
         System.err.printf("UDMI functions support versions %s:%s (required %s)%n",
             udmiInfo.functions_min, udmiInfo.functions_max, requiredVersion);
         String baseError = format("UDMI required functions version %d not allowed",
