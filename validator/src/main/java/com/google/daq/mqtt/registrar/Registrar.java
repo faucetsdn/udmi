@@ -412,9 +412,23 @@ public class Registrar {
           LocalDevice::isGateway, false)).collect(Collectors.toSet());
       Set<String> others = Sets.difference(union, gateways);
 
+      ExecutorService executor = Executors.newFixedThreadPool(RUNNER_THREADS);
+      executor.execute(() -> System.err.println(
+          "Deleting devices executing in pool " + Thread.currentThread().getName()));
+      final Instant start = Instant.now();
+
       // Delete gateways first so that they aren't holding the other devices hostage.
-      gateways.forEach(this::deleteDevice);
-      others.forEach(this::deleteDevice);
+      gateways.forEach(id -> executor.execute(() -> deleteDevice(id)));
+      Thread.sleep(1000); // Some time to let the gateways get deleted.
+      others.forEach(id -> executor.execute(() -> deleteDevice((id))));
+
+      executor.shutdown();
+      executor.awaitTermination(PROCESSING_TIMEOUT_MIN, TimeUnit.MINUTES);
+
+      Duration between = Duration.between(start, Instant.now());
+      double seconds = between.getSeconds() + between.getNano() / 1e9;
+      System.err.printf("Deleted %d devices in %.03fs%n",
+          (gateways.size() + others.size()), seconds);
 
       Set<String> deviceIds = fetchCloudDevices();
       Set<String> remaining = intersection(deviceIds, ofNullable(deviceSet).orElse(deviceIds));
