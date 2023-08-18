@@ -366,7 +366,7 @@ public class Registrar {
     AtomicInteger processedCount = new AtomicInteger();
     try {
       localDevices = loadLocalDevices(deviceSet);
-      cloudDevices = new HashSet<>(fetchCloudDevices());
+      cloudDevices = ifNotNullGet(fetchCloudDevices(), devices -> new HashSet<>(devices));
       if (deleteDevices) {
         deleteCloudDevices(deviceSet);
         return;
