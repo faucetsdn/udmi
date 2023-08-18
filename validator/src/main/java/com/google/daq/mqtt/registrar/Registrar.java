@@ -83,7 +83,7 @@ public class Registrar {
   private static final String SITE_METADATA_JSON = "site_metadata.json";
   private static final String SWARM_SUBFOLDER = "swarm";
   private static final long PROCESSING_TIMEOUT_MIN = 60;
-  private static final int RUNNER_THREADS = 25;
+  private static final int RUNNER_THREADS = 10;
   private static final String CONFIG_SUB_TYPE = "config";
   private static final String MODEL_SUB_TYPE = "model";
   private static final boolean DEFAULT_BLOCK_UNKNOWN = true;
@@ -437,6 +437,7 @@ public class Registrar {
   private void processLocalDevices(AtomicInteger updatedCount, AtomicInteger processedCount)
       throws InterruptedException {
     ExecutorService executor = Executors.newFixedThreadPool(RUNNER_THREADS);
+    Instant start = Instant.now();
     for (String localName : localDevices.keySet()) {
       executor.execute(() -> {
         int count = processedCount.incrementAndGet();
@@ -448,6 +449,12 @@ public class Registrar {
     }
     executor.shutdown();
     executor.awaitTermination(PROCESSING_TIMEOUT_MIN, TimeUnit.MINUTES);
+
+    Duration between = Duration.between(start, Instant.now());
+    double seconds = between.getSeconds() + between.getNano() / 1e9;
+    double perDevice = Math.floor(seconds / localDevices.size() * 1000.0) / 1000.0;
+    System.err.printf("Finished %d devices in %.03f, %.03fs/d%n",
+        localDevices.size(), seconds, perDevice);
   }
 
   private void processLocalDevice(String localName, AtomicInteger processedDeviceCount) {
@@ -461,6 +468,7 @@ public class Registrar {
       return;
     }
     System.err.println("Processing device " + localName);
+    Instant start = Instant.now();
     processedDeviceCount.incrementAndGet();
     try {
       localDevice.writeConfigFile();
@@ -475,6 +483,9 @@ public class Registrar {
       System.err.printf("Deferring exception for %s: %s%n", localDevice.getDeviceId(), e);
       localDevice.captureError(LocalDevice.EXCEPTION_REGISTERING, e);
     }
+    Duration between = Duration.between(start, Instant.now());
+    double seconds = between.getSeconds() + between.getNano() / 1e9;
+    System.err.printf("Finished processing %s in %.03fs%n", localName, seconds);
   }
 
   private boolean shouldLimitDevice(LocalDevice localDevice) {
