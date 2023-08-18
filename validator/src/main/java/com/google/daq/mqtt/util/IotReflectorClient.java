@@ -4,7 +4,9 @@ import static com.google.daq.mqtt.sequencer.SequenceBase.EMPTY_MESSAGE;
 import static com.google.udmi.util.Common.ERROR_KEY;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
 import static com.google.udmi.util.Common.TRANSACTION_KEY;
+import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static java.lang.String.format;
@@ -19,6 +21,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import org.jetbrains.annotations.Nullable;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
@@ -37,6 +44,8 @@ public class IotReflectorClient implements IotProvider {
   private static final String UPDATE_CONFIG_TOPIC = "update/config";
   private static final String REFLECTOR_PREFIX = "RC:";
   private final com.google.bos.iot.core.proxy.IotReflectorClient messageClient;
+  private final Map<String, CompletableFuture<Map<String, Object>>> futures = new ConcurrentHashMap<>();
+  private final Executor executor = Executors.newSingleThreadExecutor();
 
   /**
    * Create a new client.
@@ -48,6 +57,7 @@ public class IotReflectorClient implements IotProvider {
     executionConfiguration.key_file = siteModel.validatorKey();
     messageClient = new com.google.bos.iot.core.proxy.IotReflectorClient(executionConfiguration,
         REQUIRED_FUNCTION_VER);
+    executor.execute(this::processReplies);
   }
 
   @Override
@@ -133,35 +143,49 @@ public class IotReflectorClient implements IotProvider {
     }
   }
 
-  private synchronized Map<String, Object> transaction(String deviceId, String topic,
+  private Map<String, Object> transaction(String deviceId, String topic,
       String message, QuerySpeed speed) {
     return waitForReply(messageClient.publish(deviceId, topic, message), speed);
   }
 
   private Map<String, Object> waitForReply(String sentId, QuerySpeed speed) {
+    try {
+      CompletableFuture<Map<String, Object>> replyFuture = new CompletableFuture<>();
+      futures.put(sentId, replyFuture);
+      return replyFuture.get(speed.seconds(), TimeUnit.SECONDS);
+    } catch (Exception e) {
+      futures.remove(sentId);
+      throw new RuntimeException(
+          format("UDMIS reflector timeout %ss for %s", speed.seconds(), sentId));
+    }
+  }
+
+  private void processReplies() {
     while (messageClient.isActive()) {
-      MessageBundle messageBundle = messageClient.takeNextMessage(speed);
-      if (messageBundle == null) {
-        throw new RuntimeException(
-            format("UDMIS reflector timeout %ss for %s", speed.seconds(), sentId));
-      }
-      Exception exception = (Exception) messageBundle.message.get(EXCEPTION_KEY);
-      if (exception != null) {
-        exception.printStackTrace();
-        throw new RuntimeException("UDMIS processing exception", exception);
-      }
-      String transactionId = messageBundle.attributes.get(TRANSACTION_KEY);
-      if (sentId.equals(transactionId)) {
+      try {
+        MessageBundle messageBundle = messageClient.takeNextMessage(QuerySpeed.BLOCK);
+        Exception exception = (Exception) messageBundle.message.get(EXCEPTION_KEY);
+        if (exception != null) {
+          exception.printStackTrace();
+          throw new RuntimeException("UDMIS processing exception", exception);
+        }
+
         String error = (String) messageBundle.message.get(ERROR_KEY);
         if (error != null) {
           throw new RuntimeException("UDMIS error: " + error);
         }
-        return messageBundle.message;
-      } else if (transactionId != null && transactionId.startsWith(REFLECTOR_PREFIX)) {
-        System.err.println("Received unexpected reply message " + transactionId);
+
+        String transactionId = messageBundle.attributes.get(TRANSACTION_KEY);
+        CompletableFuture<Map<String, Object>> future = ifNotNullGet(transactionId,
+            futures::remove);
+        ifNotNullThen(future, f -> f.complete(messageBundle.message));
+        if (future == null && transactionId.startsWith(REFLECTOR_PREFIX)) {
+          throw new RuntimeException("Received unexpected reply message " + transactionId);
+        }
+      } catch (Exception e) {
+        System.err.printf("Exception handling message: %s", friendlyStackTrace(e));
       }
     }
-    throw new RuntimeException("Unexpected termination of message loop");
   }
 
   @Override
