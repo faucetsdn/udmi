@@ -442,7 +442,7 @@ public class Registrar {
 
   private void deleteDevice(String deviceId) {
     try {
-      System.err.println("Removing " + deviceId + " from registry...");
+      System.err.println("Deleting device " + deviceId);
       cloudIotManager.deleteDevice(deviceId);
     } catch (Exception e) {
       throw new RuntimeException("While deleting device " + deviceId, e);
