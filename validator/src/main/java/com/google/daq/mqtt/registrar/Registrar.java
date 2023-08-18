@@ -410,7 +410,7 @@ public class Registrar {
       Set<String> union = intersection(cloudDevices, ofNullable(deviceSet).orElse(cloudDevices));
       Set<String> gateways = union.stream().filter(id -> ifNotNullGet(localDevices.get(id),
           LocalDevice::isGateway, false)).collect(Collectors.toSet());
-      Set<String> others = Sets.difference(union, gateways);
+      final Set<String> others = Sets.difference(union, gateways);
 
       ExecutorService executor = Executors.newFixedThreadPool(RUNNER_THREADS);
       executor.execute(() -> System.err.println(
