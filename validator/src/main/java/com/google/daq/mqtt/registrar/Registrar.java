@@ -437,7 +437,7 @@ public class Registrar {
   private void processLocalDevices(AtomicInteger updatedCount, AtomicInteger processedCount)
       throws InterruptedException {
     ExecutorService executor = Executors.newFixedThreadPool(RUNNER_THREADS);
-    Instant start = Instant.now();
+    final Instant start = Instant.now();
     for (String localName : localDevices.keySet()) {
       executor.execute(() -> {
         int count = processedCount.incrementAndGet();
