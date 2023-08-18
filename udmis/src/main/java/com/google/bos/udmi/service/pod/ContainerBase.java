@@ -12,6 +12,7 @@ import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import java.io.PrintStream;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -50,20 +51,18 @@ public abstract class ContainerBase {
   }
 
   protected String variableSubstitution(String value, String nullMessage) {
+    if (nullMessage == null && value == null) {
+      return null;
+    }
     requireNonNull(value, nullMessage);
     Matcher matcher = VARIABLE_PATTERN.matcher(value);
     String out = matcher.replaceAll(ContainerBase::environmentReplacer);
-    ifNotTrueThen(value.equals(out), () -> debug("Replaced value %s with %s", value, out));
+    ifNotTrueThen(value.equals(out), () -> debug("Replaced value %s with '%s'", value, out));
     return out;
   }
 
   private static String environmentReplacer(MatchResult match) {
-    String group = match.group(1);
-    String value = System.getenv(group);
-    if (value == null) {
-      throw new IllegalArgumentException("Missing definition for env " + group);
-    }
-    return value;
+    return ofNullable(System.getenv(match.group(1))).orElse("");
   }
 
   private String getExecutionContext() {

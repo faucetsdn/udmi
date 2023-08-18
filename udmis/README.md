@@ -23,7 +23,7 @@ gcloud config set project bos-test-dev
 gcloud container clusters get-credentials XXXXXXX --region us-central1 --project bos-test-dev
 kubectl config get-contexts
 kubectl config use-context XXX_bos-test-dev_XXX
-kubectl create secret generic pod-config.json --from-file=var/prod_pod.json
+kubectl create secret generic clearblade.json --from-file=clearblade.json=$HOME/creds/udmi-external-credentials.json
 kubectl create secret generic k8s-info --from-literal=context=$(kubectl config current-context)
 kubectl get pods
 kubectl apply -f k8s_pod.yaml

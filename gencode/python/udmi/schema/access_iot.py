@@ -7,6 +7,7 @@ class IotAccess:
   def __init__(self):
     self.provider = None
     self.project_id = None
+    self.options = None
 
   @staticmethod
   def from_dict(source):
@@ -15,6 +16,7 @@ class IotAccess:
     result = IotAccess()
     result.provider = source.get('provider')
     result.project_id = source.get('project_id')
+    result.options = source.get('options')
     return result
 
   @staticmethod
@@ -39,4 +41,6 @@ class IotAccess:
       result['provider'] = self.provider # 5
     if self.project_id:
       result['project_id'] = self.project_id # 5
+    if self.options:
+      result['options'] = self.options # 5
     return result
