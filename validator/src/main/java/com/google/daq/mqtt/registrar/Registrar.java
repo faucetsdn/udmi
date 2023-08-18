@@ -84,7 +84,7 @@ public class Registrar {
   private static final String SITE_METADATA_JSON = "site_metadata.json";
   private static final String SWARM_SUBFOLDER = "swarm";
   private static final long PROCESSING_TIMEOUT_MIN = 60;
-  private static final int RUNNER_THREADS = 10;
+  private static final int RUNNER_THREADS = 20;
   private static final String CONFIG_SUB_TYPE = "config";
   private static final String MODEL_SUB_TYPE = "model";
   private static final boolean DEFAULT_BLOCK_UNKNOWN = true;
