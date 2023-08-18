@@ -5,6 +5,7 @@ import static com.google.daq.mqtt.util.TimePeriodConstants.THREE_MINUTES_MS;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static udmi.schema.Bucket.POINTSET;
 import static udmi.schema.Category.POINTSET_POINT_INVALID;
@@ -22,6 +23,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import org.junit.Test;
 import udmi.schema.Level;
@@ -65,8 +67,6 @@ public class PointsetSequences extends PointsetBase {
   @Summary("pointset configuration contains extraneous point")
   @Feature(stage = ALPHA, bucket = POINTSET)
   public void pointset_request_extraneous() {
-
-    untilHasInterestingSystemStatus(false);
     untilPointsetSanity();
 
     deviceConfig.pointset.points.put(EXTRANEOUS_POINT, new PointPointsetConfig());
@@ -76,7 +76,6 @@ public class PointsetSequences extends PointsetBase {
           () -> ifNotNullGet(deviceState.pointset.points.get(EXTRANEOUS_POINT),
               state -> state.status.category.equals(POINTSET_POINT_INVALID)
                   && state.status.level.equals(POINTSET_POINT_INVALID_VALUE)));
-      untilHasInterestingSystemStatus(true);
       untilPointsetSanity();
     } finally {
       deviceConfig.pointset.points.remove(EXTRANEOUS_POINT);
@@ -84,7 +83,7 @@ public class PointsetSequences extends PointsetBase {
 
     untilTrue("pointset status removes extraneous point error",
         () -> !deviceState.pointset.points.containsKey(EXTRANEOUS_POINT));
-    untilHasInterestingSystemStatus(false);
+
     untilPointsetSanity();
   }
 
@@ -92,21 +91,18 @@ public class PointsetSequences extends PointsetBase {
   @Summary("pointset state does not report unconfigured point")
   @Feature(stage = ALPHA, bucket = POINTSET)
   public void pointset_remove_point() {
-    untilHasInterestingSystemStatus(false);
-
     untilPointsetSanity();
 
-    List<String> candidatePoints = new ArrayList<>(deviceConfig.pointset.points.keySet());
+    List<String> candidatePoints = new ArrayList<>(deviceState.pointset.points.keySet());
     ifTrueThen(candidatePoints.isEmpty(), () -> skipTest("No points to remove"));
     String name = candidatePoints.get((int) Math.floor(Math.random() * candidatePoints.size()));
 
     debug("Removing randomly selected test point " + name);
-    PointPointsetConfig removed = deviceConfig.pointset.points.remove(name);
+    PointPointsetConfig removed = requireNonNull(deviceConfig.pointset.points.remove(name));
 
     try {
       untilFalse("pointset status does not contain removed point",
           () -> deviceState.pointset.points.containsKey(name));
-      untilHasInterestingSystemStatus(false);
       untilPointsetSanity();
     } finally {
       deviceConfig.pointset.points.put(name, removed);
@@ -114,7 +110,7 @@ public class PointsetSequences extends PointsetBase {
 
     untilFalse("pointset status contains removed point",
         () -> deviceState.pointset.points.containsKey(name));
-    untilHasInterestingSystemStatus(false);
+
     untilPointsetSanity();
   }
 

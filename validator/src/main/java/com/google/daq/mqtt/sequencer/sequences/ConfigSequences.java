@@ -106,8 +106,8 @@ public class ConfigSequences extends SequenceBase {
     untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
 
     setExtraField("break_json");
-    untilLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
     untilHasInterestingSystemStatus(true);
+    untilLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
     Entry stateStatus = deviceState.system.status;
     info("Error message: " + stateStatus.message);
     debug("Error detail: " + stateStatus.detail);
@@ -124,13 +124,13 @@ public class ConfigSequences extends SequenceBase {
     checkNotLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
 
     // Will restore min_loglevel to the default of INFO.
-    resetConfig(); // clears extra_field
+    resetConfig(); // clears extra_field and interesting status checks
+
     untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
     untilTrue("restored state synchronized",
         () -> dateEquals(deviceConfig.timestamp, deviceState.system.last_config));
 
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
-    checkThatHasInterestingSystemStatus(false);
     untilTrue("last_config updated",
         () -> !dateEquals(stableConfig, deviceState.system.last_config)
     );
@@ -164,7 +164,6 @@ public class ConfigSequences extends SequenceBase {
         () -> !deviceState.system.last_config.equals(updatedConfig)
     );
     untilTrue("system operational", () -> deviceState.system.operation.operational);
-    checkThatHasInterestingSystemStatus(false);
     untilLogged(SYSTEM_CONFIG_PARSE, SYSTEM_CONFIG_PARSE_LEVEL);
     untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
   }
