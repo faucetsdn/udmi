@@ -18,7 +18,6 @@ import static java.util.Objects.requireNonNull;
 
 import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.bos.udmi.service.pod.ContainerBase;
-import com.google.udmi.util.GeneralUtils;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
