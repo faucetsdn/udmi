@@ -1,6 +1,7 @@
 package com.google.bos.udmi.service.access;
 
 import static com.clearblade.cloud.iot.v1.devicetypes.GatewayType.NON_GATEWAY;
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
@@ -138,7 +139,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
 
   @Nullable
   private static Date getSafeDate(String lastEventTime) {
-    return getDate(Strings.isNullOrEmpty(lastEventTime) ? null : lastEventTime);
+    return getDate(isNullOrEmpty(lastEventTime) ? null : lastEventTime);
   }
 
   @VisibleForTesting
@@ -157,7 +158,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
 
   @Override
   protected boolean isEnabled() {
-    return projectId != null;
+    return !isNullOrEmpty(projectId);
   }
 
   protected String updateConfig(String registryId, String deviceId, String config, Long version) {

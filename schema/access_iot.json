@@ -8,6 +8,9 @@
     },
     "project_id": {
       "type": "string"
+    },
+    "options": {
+      "type": "string"
     }
   }
 }

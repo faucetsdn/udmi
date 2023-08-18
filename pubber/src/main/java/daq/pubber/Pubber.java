@@ -19,6 +19,7 @@ import static com.google.udmi.util.JsonUtil.safeSleep;
 import static daq.pubber.MqttDevice.CONFIG_TOPIC;
 import static daq.pubber.MqttDevice.ERRORS_TOPIC;
 import static java.lang.Boolean.TRUE;
+import static java.lang.String.format;
 import static java.util.Comparator.comparingInt;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
@@ -320,7 +321,7 @@ public class Pubber {
       }
       pubber.initialize();
       pubber.startConnection(deviceId -> {
-        LOG.info(String.format("Connection closed/finished for %s", deviceId));
+        LOG.info(format("Connection closed/finished for %s", deviceId));
         return true;
       });
     } catch (Exception e) {
@@ -341,12 +342,12 @@ public class Pubber {
     String siteName = args[1];
     String feedName = args[2];
     int instances = Integer.parseInt(args[3]);
-    LOG.info(String.format("Starting %d pubber instances", instances));
+    LOG.info(format("Starting %d pubber instances", instances));
     for (int instance = 0; instance < instances; instance++) {
-      String serialNo = String.format("%s-%d", HOSTNAME, (instance + 1));
+      String serialNo = format("%s-%d", HOSTNAME, (instance + 1));
       startFeedListener(projectId, siteName, feedName, serialNo);
     }
-    LOG.info(String.format("Started all %d pubber instances", instances));
+    LOG.info(format("Started all %d pubber instances", instances));
   }
 
   private static void startFeedListener(String projectId, String siteName, String feedName,
@@ -465,7 +466,7 @@ public class Pubber {
 
     initializePersistentStore();
 
-    info(String.format("Starting pubber %s, serial %s, mac %s, gateway %s, options %s",
+    info(format("Starting pubber %s, serial %s, mac %s, gateway %s, options %s",
         configuration.deviceId, configuration.serialNo, configuration.macAddr,
         configuration.gatewayId, optionsString(configuration.options)));
 
@@ -526,7 +527,7 @@ public class Pubber {
   }
 
   private File getPersistentStore() {
-    return siteModel == null ? new File(String.format(PERSISTENT_TMP_FORMAT, deviceId)) :
+    return siteModel == null ? new File(format(PERSISTENT_TMP_FORMAT, deviceId)) :
         new File(siteModel.getDeviceWorkingDir(deviceId), PERSISTENT_STORE_FILE);
   }
 
@@ -734,30 +735,35 @@ public class Pubber {
   }
 
   private void deferredConfigActions() {
-    maybeRedirectEndpoint();
     maybeRestartSystem();
+
+    // Do redirect after restart system check, since this might take a long time.
+    maybeRedirectEndpoint();
   }
 
   private void maybeRestartSystem() {
     SystemConfig system = ofNullable(deviceConfig.system).orElseGet(SystemConfig::new);
     Operation operation = ofNullable(system.operation).orElseGet(Operation::new);
-    if (SystemMode.ACTIVE.equals(deviceState.system.operation.mode)
-        && SystemMode.RESTART.equals(operation.mode)) {
+    SystemMode configMode = operation.mode;
+    SystemMode stateMode = deviceState.system.operation.mode;
+    debug(format("operation.mode state=%s / config=%s", stateMode, configMode));
+    if (SystemMode.ACTIVE.equals(stateMode)
+        && SystemMode.RESTART.equals(configMode)) {
       systemLifecycle(SystemMode.RESTART);
     }
-    if (SystemMode.ACTIVE.equals(operation.mode)) {
+    if (SystemMode.ACTIVE.equals(configMode)) {
       deviceState.system.operation.mode = SystemMode.ACTIVE;
       markStateDirty();
     }
     Date configLastStart = operation.last_start;
     if (configLastStart != null) {
       if (DEVICE_START_TIME.before(configLastStart)) {
-        warn(String.format("Device start time %s before last config start %s, terminating.",
+        warn(format("Device start time %s before last config start %s, terminating.",
             isoConvert(DEVICE_START_TIME), isoConvert(configLastStart)));
         systemLifecycle(SystemMode.TERMINATE);
       } else if (TRUE.equals(configuration.options.smokeCheck)
           && CleanDateFormat.dateEquals(DEVICE_START_TIME, configLastStart)) {
-        warn(String.format("Device start time %s matches, smoke check indicating success!",
+        warn(format("Device start time %s matches, smoke check indicating success!",
             isoConvert(configLastStart)));
         systemLifecycle(SystemMode.SHUTDOWN);
       }
@@ -1006,7 +1012,7 @@ public class Pubber {
         systemLifecycle(SystemMode.RESTART);
       }
     }
-    String category = String.format(MESSAGE_CATEGORY_FORMAT, type, phase);
+    String category = format(MESSAGE_CATEGORY_FORMAT, type, phase);
     Entry report = entryFromException(category, cause);
     localLog(report);
     publishLogMessage(report);
@@ -1069,7 +1075,7 @@ public class Pubber {
   }
 
   private void gatewayHandler(Config config) {
-    info(String.format("%s gateway config %s", getTimestamp(), isoConvert(config.timestamp)));
+    info(format("%s gateway config %s", getTimestamp(), isoConvert(config.timestamp)));
   }
 
   private void configHandler(Config config) {
@@ -1077,7 +1083,7 @@ public class Pubber {
       info("Config handler");
       File configOut = new File(outDir, traceTimestamp("config") + ".json");
       toJsonFile(configOut, config);
-      debug(String.format("Config update%s", getTestingTag(config)), toJsonString(config));
+      debug(format("Config update%s", getTestingTag(config)), toJsonString(config));
       processConfigUpdate(config);
       configLatch.countDown();
       publisherConfigLog("apply", null);
@@ -1095,7 +1101,7 @@ public class Pubber {
         systemLifecycle(SystemMode.RESTART);
       }
       GeneralUtils.copyFields(config, deviceConfig, true);
-      info(String.format("%s received config %s", getTimestamp(), isoConvert(config.timestamp)));
+      info(format("%s received config %s", getTimestamp(), isoConvert(config.timestamp)));
       deviceState.system.last_config = config.timestamp;
       actualInterval = updatePointsetConfig(config.pointset);
       updatePointsetPointsConfig(config.pointset);
@@ -1318,7 +1324,7 @@ public class Pubber {
   }
 
   private String getPointUniqKey(Map.Entry<String, PointPointsetModel> entry) {
-    return String.format("%08x", entry.getKey().hashCode());
+    return format("%08x", entry.getKey().hashCode());
   }
 
   private PointEnumerationEvent getPointEnumerationEvent(
@@ -1393,7 +1399,7 @@ public class Pubber {
       throw new RuntimeException("Executor shutdown/terminated, not scheduling");
     }
     long delay = futureTime.getTime() - getCurrentTimestamp().getTime();
-    debug(String.format("Scheduling future in %dms", delay));
+    debug(format("Scheduling future in %dms", delay));
     executor.schedule(futureTask, delay, TimeUnit.MILLISECONDS);
     return delay;
   }
@@ -1596,7 +1602,7 @@ public class Pubber {
   }
 
   private void errorHandler(GatewayError error) {
-    info(String.format("%s for %s: %s", error.error_type, error.device_id, error.description));
+    info(format("%s for %s: %s", error.error_type, error.device_id, error.description));
   }
 
   private byte[] getFileBytes(String dataFile) {
@@ -1610,7 +1616,7 @@ public class Pubber {
 
   private void sendDevicePoints() {
     if (deviceUpdateCount % MESSAGE_REPORT_INTERVAL == 0) {
-      info(String.format("%s sending test message #%d", getTimestamp(), deviceUpdateCount));
+      info(format("%s sending test message #%d", getTimestamp(), deviceUpdateCount));
     }
     publishDeviceMessage(pointsetEvent);
   }
@@ -1637,7 +1643,7 @@ public class Pubber {
       try {
         long soonestAllowedStateUpdate = lastStateTimeMs + STATE_THROTTLE_MS;
         long delay = soonestAllowedStateUpdate - System.currentTimeMillis();
-        debug(String.format("State update defer %dms", delay));
+        debug(format("State update defer %dms", delay));
         if (delay > 0) {
           markStateDirty(delay);
         } else {
@@ -1664,10 +1670,10 @@ public class Pubber {
 
   private void publishStateMessage() {
     deviceState.timestamp = getCurrentTimestamp();
-    info(String.format("update state %s last_config %s", isoConvert(deviceState.timestamp),
+    info(format("update state %s last_config %s", isoConvert(deviceState.timestamp),
         isoConvert(deviceState.system.last_config)));
     try {
-      debug(String.format("State update%s", getTestingTag(deviceConfig)),
+      debug(format("State update%s", getTestingTag(deviceConfig)),
           toJsonString(deviceState));
     } catch (Exception e) {
       throw new RuntimeException("While converting new device state", e);
@@ -1684,7 +1690,7 @@ public class Pubber {
   private void publishStateMessage(Object stateToSend) {
     long delay = lastStateTimeMs + STATE_THROTTLE_MS - System.currentTimeMillis();
     if (delay > 0) {
-      warn(String.format("State update delay %dms", delay));
+      warn(format("State update delay %dms", delay));
       safeSleep(delay);
     }
     lastStateTimeMs = System.currentTimeMillis();
@@ -1733,7 +1739,7 @@ public class Pubber {
   private String traceTimestamp(String messageBase) {
     int serial = MESSAGE_COUNTS.computeIfAbsent(messageBase, key -> new AtomicInteger())
         .incrementAndGet();
-    String timestamp = getTimestamp().replace("Z", String.format(".%03dZ", serial));
+    String timestamp = getTimestamp().replace("Z", format(".%03dZ", serial));
     return messageBase + (TRUE.equals(configuration.options.messageTrace) ? ("_" + timestamp) : "");
   }
 
@@ -1766,11 +1772,11 @@ public class Pubber {
   private String getTestingTag(Config config) {
     return config == null || config.system == null || config.system.testing == null
         || config.system.testing.sequence_name == null ? ""
-        : String.format(" (%s)", config.system.testing.sequence_name);
+        : format(" (%s)", config.system.testing.sequence_name);
   }
 
   private void localLog(Entry entry) {
-    String message = String.format("Entry %s%s %s %s %s%s", Level.fromValue(entry.level).name(),
+    String message = format("Entry %s%s %s %s %s%s", Level.fromValue(entry.level).name(),
         shouldLogLevel(entry.level) ? "" : "*",
         entry.category, entry.message, isoConvert(entry.timestamp), getTestingTag(deviceConfig));
     localLog(message, Level.fromValue(entry.level), isoConvert(entry.timestamp), null);
@@ -1778,7 +1784,7 @@ public class Pubber {
 
   private void localLog(String message, Level level, String timestamp, String detail) {
     String detailPostfix = detail == null ? "" : ":\n" + detail;
-    String logMessage = String.format("%s %s%s", timestamp, message, detailPostfix);
+    String logMessage = format("%s %s%s", timestamp, message, detailPostfix);
     LOG_MAP.get(level).accept(logMessage);
     try {
       if (logPrintWriter != null) {
