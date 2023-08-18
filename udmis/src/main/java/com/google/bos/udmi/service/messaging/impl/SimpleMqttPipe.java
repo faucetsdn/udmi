@@ -134,7 +134,7 @@ public class SimpleMqttPipe extends MessageBase {
       trace("Subscribing %s, active=%s connected=%s", clientId, isActive(), connected);
       if (isActive() && connected) {
         mqttClient.subscribe(topic);
-        warn("Subscribed %s to topic %s", clientId, topic);
+        info("Subscribed %s to topic %s", clientId, topic);
       }
     } catch (Exception e) {
       throw new RuntimeException("While subscribing to mqtt topic: " + topic, e);

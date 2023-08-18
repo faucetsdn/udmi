@@ -35,14 +35,13 @@ public class CloudIotManager {
 
   public static final String UDMI_METADATA = "udmi_metadata";
   public static final String CLOUD_IOT_CONFIG_JSON = "cloud_iot_config.json";
+  public static final int METADATA_SIZE_LIMIT = 32767;
+  public static final String REDACTED_MESSAGE = "REDACTED DUE TO SIZE LIMIT";
   private static final String UDMI_CONFIG = "udmi_config";
   private static final String UDMI_GENERATION = "udmi_generation";
   private static final String UDMI_UPDATED = "udmi_updated";
   private static final String KEY_BYTES_KEY = "key_bytes";
   private static final String KEY_ALGORITHM_KEY = "key_algorithm";
-  public static final int METADATA_SIZE_LIMIT = 32767;
-  public static final String REDACTED_MESSAGE = "REDACTED DUE TO SIZE LIMIT";
-
   public final ExecutionConfiguration executionConfiguration;
 
   private final String registryId;
@@ -98,7 +97,8 @@ public class CloudIotManager {
       File baseConfig = new File(siteDir, CLOUD_IOT_CONFIG_JSON);
       ExecutionConfiguration newConfig = mergeObject(readExeConfig(baseConfig), config);
       executionConfiguration = validate(newConfig, this.projectId);
-      executionConfiguration.iot_provider = IMPLICIT;
+      executionConfiguration.iot_provider = ofNullable(executionConfiguration.iot_provider).orElse(
+          IMPLICIT);
       executionConfiguration.site_model = siteDir.getPath();
       String targetRegistry = ofNullable(newConfig.alt_registry).orElse(newConfig.registry_id);
       registryId = SiteModel.getRegistryActual(targetRegistry, newConfig.registry_suffix);
