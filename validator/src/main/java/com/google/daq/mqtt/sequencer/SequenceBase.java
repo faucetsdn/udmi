@@ -131,7 +131,9 @@ public class SequenceBase {
   public static final String SCHEMA_PASS_DETAIL = "No schema violations found";
   public static final String STATE_UPDATE_MESSAGE_TYPE = "state_update";
   public static final String RESET_CONFIG_MARKER = "reset_config";
-  public static final String FINALIZE_TEST = "finalize_test";
+  public static final String SYSTEM_STATUS_MESSAGE = "interesting system status";
+  public static final String HAS_STATUS_PREFIX = "has ";
+  public static final String NOT_STATUS_PREFIX = "no ";
   static final FeatureStage DEFAULT_MIN_STAGE = BETA;
   private static final int FUNCTIONS_VERSION_BETA = Validator.REQUIRED_FUNCTION_VER;
   private static final int FUNCTIONS_VERSION_ALPHA = 9; // Version required for alpha execution.
@@ -188,7 +190,6 @@ public class SequenceBase {
   private static final ObjectDiffEngine RECV_STATE_DIFFERNATOR = new ObjectDiffEngine();
   private static final Set<String> configTransactions = new ConcurrentSkipListSet<>();
   private static final int MINIMUM_TEST_SEC = 15;
-  private static final String FORCE_UPDATE_CONFIG_KEY = "null";
   private static final Date RESET_LAST_START = new Date(73642);
   protected static Metadata deviceMetadata;
   protected static String projectId;
@@ -250,6 +251,7 @@ public class SequenceBase {
   private boolean useAlternateClient;
   private SequenceResult testResult;
   private int startStateCount;
+  private Boolean expectedSystemStatus;
 
   static void ensureValidatorConfig() {
     if (validatorConfig != null) {
@@ -660,6 +662,7 @@ public class SequenceBase {
     updateConfig("initial setup");
 
     untilTrue("device state update", () -> deviceState != null);
+    checkThatHasInterestingSystemStatus(false);
 
     // Do this late in the sequence to make sure any state is cleared out from previous test.
     startStateCount = getStateUpdateCount();
@@ -693,6 +696,7 @@ public class SequenceBase {
     withRecordSequence(false, () -> {
       debug("Starting reset_config full reset " + fullReset);
       if (fullReset) {
+        expectedSystemStatus = null;
         resetDeviceConfig(true);
         setExtraField(RESET_CONFIG_MARKER);
         deviceConfig.system.testing.sequence_name = RESET_CONFIG_MARKER;
@@ -701,6 +705,7 @@ public class SequenceBase {
         configTransactions.clear();
         SENT_CONFIG_DIFFERNATOR.resetState(deviceConfig);
         updateConfig("full reset");
+        untilHasInterestingSystemStatus(false);
       }
       resetDeviceConfig(false);
       updateConfig("soft reset");
@@ -948,6 +953,8 @@ public class SequenceBase {
     debug(format("stage done %s at %s", condition, timeSinceStart()));
     recordSequence = false;
 
+    checkThatHasInterestingSystemStatus(false);
+
     recordMessages = false;
     configAcked = false;
   }
@@ -1094,7 +1101,6 @@ public class SequenceBase {
   }
 
 
-
   private String getExceptionLine(Exception e) {
     return Common.getExceptionLine(e, SequenceBase.class);
   }
@@ -1113,7 +1119,7 @@ public class SequenceBase {
   }
 
   protected void checkNotThat(String description, Supplier<Boolean> condition) {
-    String notDescription = "no " + description;
+    String notDescription = NOT_STATUS_PREFIX + description;
     if (catchToTrue(condition)) {
       warning("Failed check that " + notDescription);
       throw new IllegalStateException("Failed check that " + notDescription);
@@ -1217,6 +1223,9 @@ public class SequenceBase {
   private void messageEvaluateLoop(Supplier<Boolean> evaluator) {
     while (evaluator.get()) {
       processNextMessage();
+    }
+    if (expectedSystemStatus != null) {
+      withRecordSequence(false, () -> checkThatHasInterestingSystemStatus(expectedSystemStatus));
     }
   }
 
@@ -1667,7 +1676,7 @@ public class SequenceBase {
     return dateEquals(expectedConfig, lastConfig);
   }
 
-  protected boolean hasInterestingSystemStatus() {
+  private boolean hasInterestingSystemStatus() {
     if (deviceState.system.status != null) {
       debug("Status level: " + deviceState.system.status.level);
     }
@@ -1676,15 +1685,25 @@ public class SequenceBase {
   }
 
   protected void checkThatHasInterestingSystemStatus(boolean isInteresting) {
+    checkThatHasInterestingSystemStatusTodo(isInteresting);
+  }
+
+  protected void checkThatHasInterestingSystemStatusTodo(boolean isInteresting) {
     BiConsumer<String, Supplier<Boolean>> check =
         isInteresting ? this::checkThat : this::checkNotThat;
-    check.accept("interesting system status", this::hasInterestingSystemStatus);
+    check.accept(SYSTEM_STATUS_MESSAGE, this::hasInterestingSystemStatus);
   }
 
   protected void untilHasInterestingSystemStatus(boolean isInteresting) {
-    BiConsumer<String, Supplier<Boolean>> until =
-        isInteresting ? this::untilTrue : this::untilFalse;
-    String message = (isInteresting ? "has" : "no") + " interesting system status";
+    expectedSystemStatus = null;
+    untilHasInterestingSystemStatusTodo(isInteresting);
+    expectedSystemStatus = isInteresting;
+    checkThatHasInterestingSystemStatus(isInteresting);
+  }
+
+  protected void untilHasInterestingSystemStatusTodo(boolean isSet) {
+    BiConsumer<String, Supplier<Boolean>> until = isSet ? this::untilTrue : this::untilFalse;
+    String message = (isSet ? HAS_STATUS_PREFIX : NOT_STATUS_PREFIX) + SYSTEM_STATUS_MESSAGE;
     until.accept(message, this::hasInterestingSystemStatus);
   }
 

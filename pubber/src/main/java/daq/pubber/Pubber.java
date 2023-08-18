@@ -205,7 +205,6 @@ public class Pubber {
   private final Semaphore stateLock = new Semaphore(1);
   private final String deviceId;
   private final List<Entry> logentries = new ArrayList<>();
-  private final Map<String, Entry> reportMap = new ConcurrentHashMap<>();
   protected DevicePersistent persistentData;
   private int deviceUpdateCount = -1;
   private MqttDevice deviceTarget;
@@ -486,13 +485,13 @@ public class Pubber {
   }
 
   protected DevicePersistent newDevicePersistent() {
-    DevicePersistent data = new DevicePersistent();
-    return data;
+    return new DevicePersistent();
   }
 
   protected void initializePersistentStore() {
     checkState(persistentData == null, "persistent data already loaded");
     File persistentStore = getPersistentStore();
+
     if (TRUE.equals(configuration.options.noPersist)) {
       info("Resetting persistent store " + persistentStore.getAbsolutePath());
       persistentData = newDevicePersistent();
@@ -502,6 +501,7 @@ public class Pubber {
           persistentStore.exists() ? fromJsonFile(persistentStore, DevicePersistent.class)
               : newDevicePersistent();
     }
+
     persistentData.restart_count = Objects.requireNonNullElse(persistentData.restart_count, 0) + 1;
     deviceState.system.operation.restart_count = persistentData.restart_count;
 
@@ -796,13 +796,19 @@ public class Pubber {
   }
 
   private void updateState(AbstractPoint point) {
+    String pointName = point.getName();
+
+    if (pointName.equals(configuration.options.missingPoint)) {
+      return;
+    }
+
     if (configuration.options.noPointState != null && configuration.options.noPointState) {
-      deviceState.pointset.points.put(point.getName(), new PointPointsetState());
+      deviceState.pointset.points.put(pointName, new PointPointsetState());
       return;
     }
 
     if (point.isDirty()) {
-      deviceState.pointset.points.put(point.getName(), point.getState());
+      deviceState.pointset.points.put(pointName, point.getState());
       markStateDirty(-1);
     }
   }
@@ -870,6 +876,11 @@ public class Pubber {
 
   private void addPoint(AbstractPoint point) {
     String pointName = point.getName();
+
+    if (pointName.equals(configuration.options.missingPoint)) {
+      return;
+    }
+
     if (pointsetEvent.points.put(pointName, point.getData()) != null) {
       throw new IllegalStateException("Duplicate pointName " + pointName);
     }
@@ -878,6 +889,10 @@ public class Pubber {
   }
 
   private void restorePoint(String pointName) {
+    if (pointName.equals(configuration.options.missingPoint)) {
+      return;
+    }
+
     deviceState.pointset.points.put(pointName, ifNotNullGet(managedPoints.get(pointName),
         AbstractPoint::getState, invalidPoint(pointName)));
     pointsetEvent.points.put(pointName, ifNotNullGet(managedPoints.get(pointName),
@@ -1001,14 +1016,11 @@ public class Pubber {
     Entry report = entryFromException(category, cause);
     localLog(report);
     publishLogMessage(report);
-    registerSystemStatus(PUBLISHER_BUCKET, report);
+    registerSystemStatus(report);
   }
 
-  private void registerSystemStatus(String bucket, Entry report) {
-    ifNotNullGet(report, r -> reportMap.put(bucket, report), reportMap.remove(bucket));
-    Entry highestEntry = reportMap.values().stream().max(comparingInt(a -> a.level)).orElse(null);
-    deviceState.system.status = ifNotNullGet(highestEntry,
-        entry -> ifTrue(shouldLogLevel(entry.level), () -> entry));
+  private void registerSystemStatus(Entry report) {
+    deviceState.system.status = report;
     markStateDirty();
   }
 
@@ -1562,7 +1574,6 @@ public class Pubber {
             maxStatus.set(status);
           }
         }));
-    registerSystemStatus(POINTSET_BUCKET, maxStatus.get());
   }
 
   private PointPointsetState invalidPoint(String pointName) {
