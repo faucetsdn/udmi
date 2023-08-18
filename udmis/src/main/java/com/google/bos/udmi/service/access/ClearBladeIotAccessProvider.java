@@ -298,6 +298,8 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       registryRegions = new CompletableFuture<>();
       registryRegions.complete(fetchRegistryCloudRegions());
       registryRetry = Instant.now().plus(REGISTRY_RETRY_TIME);
+    } else {
+      warn("Not refetching regions due to fetch retry threshold");
     }
   }
 
@@ -385,7 +387,10 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   private String regionRetry(String registry) {
     try {
       String region = registryRegions.get().get(registry);
-      ifNullThen(region, this::fetchRegistryRegions);
+      if (region == null) {
+        warn("No registry found for registry " + registry);
+        fetchRegistryRegions();
+      }
       return registryRegions.get().get(registry);
     } catch (Exception e) {
       throw new RuntimeException("While getting location for " + registry, e);
