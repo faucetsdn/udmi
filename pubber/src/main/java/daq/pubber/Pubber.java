@@ -736,6 +736,8 @@ public class Pubber {
 
   private void deferredConfigActions() {
     maybeRestartSystem();
+
+    // Do redirect after restart system check, since this might take a long time.
     maybeRedirectEndpoint();
   }
 
