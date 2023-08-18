@@ -34,6 +34,7 @@ public class IotReflectorClient implements IotProvider {
   // Requires functions that support cloud device manager support.
   private static final int REQUIRED_FUNCTION_VER = 9;
   private static final String UPDATE_CONFIG_TOPIC = "update/config";
+  private static final String REFLECTOR_PREFIX = "RC:";
   private final com.google.bos.iot.core.proxy.IotReflectorClient messageClient;
 
   /**
@@ -152,7 +153,7 @@ public class IotReflectorClient implements IotProvider {
           throw new RuntimeException("UDMIS error: " + error);
         }
         return messageBundle.message;
-      } else if (transactionId != null) {
+      } else if (transactionId != null && transactionId.startsWith(REFLECTOR_PREFIX)) {
         System.err.println("Received unexpected reply message " + transactionId);
       }
     }
