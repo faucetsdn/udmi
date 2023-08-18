@@ -7,6 +7,8 @@ import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifNullThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.getDate;
 import static java.lang.String.format;
@@ -54,6 +56,8 @@ import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.udmi.util.GeneralUtils;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Base64;
 import java.util.Date;
@@ -65,6 +69,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+import org.checkerframework.checker.units.qual.C;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import udmi.schema.CloudModel;
@@ -96,15 +101,18 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       .setGatewayType(GatewayType.GATEWAY)
       .setGatewayAuthMethod(GatewayAuthMethod.ASSOCIATION_ONLY)
       .build();
+  private static final Duration REGISTRY_RETRY_TIME = Duration.ofSeconds(30);
 
   private final String projectId;
-  private final CompletableFuture<Map<String, String>> registryRegions = new CompletableFuture<>();
+  private CompletableFuture<Map<String, String>> registryRegions;
+  private Instant registryRetry = Instant.now();
 
   /**
    * Create a new instance for interfacing with GCP IoT Core.
    */
   public ClearBladeIotAccessProvider(IotAccess iotAccess) {
     projectId = getProjectId(iotAccess);
+    ifTrueThen(isEnabled(), this::fetchRegistryRegions);
   }
 
   private static Credential convertIot(DeviceCredential device) {
@@ -285,6 +293,14 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     }
   }
 
+  private void fetchRegistryRegions() {
+    if (registryRetry.isBefore(Instant.now())) {
+      registryRegions = new CompletableFuture<>();
+      registryRegions.complete(fetchRegistryCloudRegions());
+      registryRetry = Instant.now().plus(REGISTRY_RETRY_TIME);
+    }
+  }
+
   private String getDeviceName(String registryId, String deviceId) {
     return DeviceName.of(projectId, getRegistryLocation(registryId), registryId, deviceId)
         .toString();
@@ -330,10 +346,9 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
 
   private String getRegistryLocation(String registry) {
     try {
-      return requireNonNull(registryRegions.get().get(registry),
-          "unknown region for registry " + registry);
+      return requireNonNull(regionRetry(registry), "unknown region for registry " + registry);
     } catch (Exception e) {
-      throw new RuntimeException("While getting registry path for " + registry, e);
+      throw new RuntimeException("While trying location for registry " + registry, e);
     }
   }
 
@@ -364,6 +379,16 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       return cloudModel;
     } catch (Exception e) {
       throw new RuntimeException("While listing devices " + getRegistryName(deviceRegistryId), e);
+    }
+  }
+
+  private String regionRetry(String registry) {
+    try {
+      String region = registryRegions.get().get(registry);
+      ifNullThen(region, this::fetchRegistryRegions);
+      return registryRegions.get().get(registry);
+    } catch (Exception e) {
+      throw new RuntimeException("While getting location for " + registry, e);
     }
   }
 
@@ -417,7 +442,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       return;
     }
     debug("Initializing ClearBlade access provider for project " + projectId);
-    registryRegions.complete(fetchRegistryCloudRegions());
   }
 
   @Override
