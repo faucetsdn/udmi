@@ -45,6 +45,7 @@ import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.FileDataSink;
 import com.google.daq.mqtt.util.MessagePublisher;
+import com.google.daq.mqtt.util.MessagePublisher.QuerySpeed;
 import com.google.daq.mqtt.util.MessageUpgrader;
 import com.google.daq.mqtt.util.PubSubClient;
 import com.google.daq.mqtt.util.ValidationException;
@@ -438,7 +439,7 @@ public class Validator {
     try {
       while (client.isActive()) {
         try {
-          validateMessage(client.takeNextMessage(false));
+          validateMessage(client.takeNextMessage(QuerySpeed.SHORT));
         } catch (Exception e) {
           e.printStackTrace();
         }

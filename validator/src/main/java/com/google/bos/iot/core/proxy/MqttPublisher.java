@@ -11,15 +11,15 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.validator.Validator;
-import com.google.udmi.util.GeneralUtils;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ExecutorService;
@@ -104,6 +104,10 @@ class MqttPublisher implements MessagePublisher {
     LOG.info(deviceId + " token expiration sec " + TOKEN_EXPIRATION_SEC);
     mqttClient = newMqttClient(deviceId);
     connectMqttClient(deviceId);
+
+    publisherExecutor.execute(() -> {
+      LOG.info("Executing in pool " + Thread.currentThread().getName());
+    });
   }
 
   @Override
@@ -111,14 +115,15 @@ class MqttPublisher implements MessagePublisher {
     Preconditions.checkNotNull(deviceId, "publish deviceId");
     LOG.debug(this.deviceId + " publishing in background " + registryId + "/" + deviceId);
     try {
-      publisherExecutor.submit(() -> publishCore(deviceId, topic, data));
+      Instant now = Instant.now();
+      publisherExecutor.submit(() -> publishCore(deviceId, topic, data, now));
     } catch (Exception e) {
       throw new RuntimeException("While publishing message", e);
     }
     return null;
   }
 
-  private void publishCore(String deviceId, String topic, String payload) {
+  private void publishCore(String deviceId, String topic, String payload, Instant start) {
     try {
       if (!connectWait.tryAcquire(INITIALIZE_TIME_MS, TimeUnit.MILLISECONDS)) {
         throw new RuntimeException("Timeout waiting for connection");
@@ -146,6 +151,8 @@ class MqttPublisher implements MessagePublisher {
     } finally {
       connectWait.release();
     }
+    long seconds = Duration.between(start, Instant.now()).getSeconds();
+    LOG.debug(format("Publishing mqtt message took %ss", seconds));
   }
 
   private synchronized void delayStateUpdate(String deviceId) {
@@ -201,7 +208,7 @@ class MqttPublisher implements MessagePublisher {
   }
 
   @Override
-  public Validator.MessageBundle takeNextMessage(boolean enableTimeout) {
+  public Validator.MessageBundle takeNextMessage(QuerySpeed speed) {
     throw new IllegalStateException("Can't process message");
   }
 
