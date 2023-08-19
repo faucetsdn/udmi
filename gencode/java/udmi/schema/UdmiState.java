@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder({
     "timestamp",
     "version",
+    "registry",
     "setup"
 })
 @Generated("jsonschema2pojo")
@@ -39,6 +40,14 @@ public class UdmiState {
     @JsonPropertyDescription("Version of the UDMI schema")
     public String version;
     /**
+     * Registry Udmi State
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("registry")
+    public RegistryUdmiState registry;
+    /**
      * Setup Udmi State
      * <p>
      * 
@@ -50,6 +59,7 @@ public class UdmiState {
     @Override
     public int hashCode() {
         int result = 1;
+        result = ((result* 31)+((this.registry == null)? 0 :this.registry.hashCode()));
         result = ((result* 31)+((this.setup == null)? 0 :this.setup.hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
         result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
@@ -65,7 +75,7 @@ public class UdmiState {
             return false;
         }
         UdmiState rhs = ((UdmiState) other);
-        return ((((this.setup == rhs.setup)||((this.setup!= null)&&this.setup.equals(rhs.setup)))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
+        return (((((this.registry == rhs.registry)||((this.registry!= null)&&this.registry.equals(rhs.registry)))&&((this.setup == rhs.setup)||((this.setup!= null)&&this.setup.equals(rhs.setup))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
     }
 
 }

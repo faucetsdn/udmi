@@ -16,6 +16,15 @@
       "description": "Version of the UDMI schema",
       "type": "string"
     },
+    "registry": {
+      "title": "Registry Udmi State",
+      "type": "object",
+      "properties": {
+        "iot_provider": {
+          "$ref": "file:common.json#/definitions/provider"
+        }
+      }
+    },
     "setup": {
       "title": "Setup Udmi State",
       "type": "object",
