@@ -171,7 +171,7 @@ public class MessageReadingClient implements MessagePublisher {
   }
 
   @Override
-  public Validator.MessageBundle takeNextMessage(boolean enableTimeout) {
+  public Validator.MessageBundle takeNextMessage(QuerySpeed speed) {
     final String deviceId = getNextDevice();
     final Map<String, Object> message = deviceMessages.remove(deviceId);
     final Map<String, String> attributes = deviceAttributes.remove(deviceId);

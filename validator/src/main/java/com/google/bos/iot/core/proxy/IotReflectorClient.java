@@ -56,7 +56,6 @@ import udmi.schema.UdmiState;
 public class IotReflectorClient implements MessagePublisher {
 
   public static final String UDMI_FOLDER = "udmi";
-  static final long MESSAGE_POLL_TIME_SEC = 10;
   private static final int MIN_REQUIRED_VERSION = 9;
   private static final String IOT_KEY_ALGORITHM = "RS256";
   private static final String UDMI_REFLECT = "UDMI-REFLECT";
@@ -371,13 +370,9 @@ public class IotReflectorClient implements MessagePublisher {
   }
 
   @Override
-  public Validator.MessageBundle takeNextMessage(boolean enableTimeout) {
+  public Validator.MessageBundle takeNextMessage(QuerySpeed timeout) {
     try {
-      if (enableTimeout) {
-        return messages.poll(MESSAGE_POLL_TIME_SEC, TimeUnit.SECONDS);
-      } else {
-        return messages.take();
-      }
+      return messages.poll(timeout.seconds(), TimeUnit.SECONDS);
     } catch (Exception e) {
       throw new RuntimeException("While taking next message", e);
     }
