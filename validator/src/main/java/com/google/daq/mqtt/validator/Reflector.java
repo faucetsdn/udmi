@@ -10,6 +10,7 @@ import static com.google.udmi.util.GeneralUtils.mergeObject;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ConfigUtil;
+import com.google.daq.mqtt.util.MessagePublisher.QuerySpeed;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
 import com.google.udmi.util.Common;
 import com.google.udmi.util.GeneralUtils;
@@ -90,7 +91,7 @@ public class Reflector {
     String sendId = client.publish(executionConfiguration.device_id, topic, data);
     System.err.println("Waiting for return transaction " + sendId);
     do {
-      MessageBundle messageBundle = client.takeNextMessage(true);
+      MessageBundle messageBundle = client.takeNextMessage(QuerySpeed.SHORT);
       if (messageBundle == null) {
         System.err.println("Receive timeout, retries left: " + --retryCount);
         if (retryCount == 0) {

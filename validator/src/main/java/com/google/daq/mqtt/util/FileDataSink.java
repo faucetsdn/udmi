@@ -108,7 +108,7 @@ public class FileDataSink implements MessagePublisher {
   }
 
   @Override
-  public MessageBundle takeNextMessage(boolean enableTimeout) {
+  public MessageBundle takeNextMessage(QuerySpeed speed) {
     throw new RuntimeException("Not implemented for file data sink");
   }
 

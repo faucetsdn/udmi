@@ -189,7 +189,7 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
   }
 
   @Override
-  public Validator.MessageBundle takeNextMessage(boolean enableTimeout) {
+  public Validator.MessageBundle takeNextMessage(QuerySpeed speed) {
     try {
       PubsubMessage message = messages.take();
       long seconds = message.getPublishTime().getSeconds();
@@ -248,7 +248,7 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
   public void messageLoop() {
     while (isActive()) {
       try {
-        handlerHandler(takeNextMessage(false));
+        handlerHandler(takeNextMessage(QuerySpeed.QUICK));
       } catch (Exception e) {
         System.err.println("Exception processing received message:");
         e.printStackTrace();
@@ -260,6 +260,10 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
   }
 
   private void handlerHandler(MessageBundle bundle) {
+    if (bundle == null) {
+      return;
+    }
+
     Envelope envelope = JsonUtil.convertTo(Envelope.class, bundle.attributes);
     String mapKey = getMapKey(envelope.subType, envelope.subFolder);
     try {
