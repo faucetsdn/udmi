@@ -52,6 +52,7 @@ import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
 import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.util.MessagePublisher;
+import com.google.daq.mqtt.util.MessagePublisher.QuerySpeed;
 import com.google.daq.mqtt.util.ObjectDiffEngine;
 import com.google.daq.mqtt.validator.AugmentedSystemConfig;
 import com.google.daq.mqtt.validator.ReportingDevice;
@@ -1282,7 +1283,7 @@ public class SequenceBase {
       if (!reflector().isActive()) {
         throw new RuntimeException("Trying to receive message from inactive client");
       }
-      MessageBundle bundle = reflector().takeNextMessage(true);
+      MessageBundle bundle = reflector().takeNextMessage(QuerySpeed.SHORT);
       if (activeInstance != this) {
         debug("stashing interrupted message bundle");
         checkState(stashedBundle == null, "stashed bundle is not null");
