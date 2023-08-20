@@ -15,6 +15,7 @@ import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toStringMap;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
+import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.bos.udmi.service.pod.ContainerBase;
@@ -60,21 +61,17 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
    */
   public static EndpointConfiguration combineConfig(EndpointConfiguration defaults,
       EndpointConfiguration defined) {
-    EndpointConfiguration useDefaults = Optional.ofNullable(defaults).orElseGet(
+    EndpointConfiguration useDefaults = ofNullable(defaults).orElseGet(
         EndpointConfiguration::new);
     return ifNotNullGet(defined, () -> mergeObject(deepCopy(useDefaults), defined));
   }
 
   static Bundle extractBundle(String bundleString) {
-    return fromString(Bundle.class, bundleString);
+    return ifNotNullGet(bundleString, b -> fromString(Bundle.class,  b));
   }
 
   static String normalizeNamespace(String configSpace) {
-    return Optional.ofNullable(configSpace).orElse(DEFAULT_NAMESPACE);
-  }
-
-  protected long getPollTimeSec() {
-    return DEFAULT_POLL_TIME_SEC;
+    return ofNullable(configSpace).orElse(DEFAULT_NAMESPACE);
   }
 
   protected Bundle makeExceptionBundle(Envelope envelope, Exception exception) {
@@ -146,15 +143,10 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   }
 
   @Nullable
-  private String getFromSourceQueue(boolean take) throws InterruptedException {
-    QueueEntry poll = take
-        ? sourceQueue.take()
-        : sourceQueue.poll(getPollTimeSec(), TimeUnit.SECONDS);
-    if (poll == null) {
-      return null;
-    }
-    setExecutionContext(poll.context);
-    return poll.message;
+  private String getFromSourceQueue() throws InterruptedException {
+    QueueEntry poll = sourceQueue.poll(DEFAULT_POLL_TIME_SEC, TimeUnit.SECONDS);
+    ifNotNullThen(poll, p -> setExecutionContext(p.context));
+    return ifNotNullGet(poll, p -> p.message);
   }
 
   private void handleDispatchException(Envelope envelope, Exception e) {
@@ -186,7 +178,10 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
         Envelope envelope = null;
         try {
           final Instant before = Instant.now();
-          Bundle bundle = extractBundle(getFromSourceQueue(true));
+          Bundle bundle = extractBundle(getFromSourceQueue());
+          if (bundle == null) {
+            continue;
+          }
           final Instant start = Instant.now();
           long waiting = Duration.between(before, start).getSeconds();
           debug("Processing waited %ds on message loop %s", waiting, id);
@@ -272,7 +267,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
         throw new RuntimeException("Drain on active pipe");
       }
       debug("Polling on %s", this);
-      return ifNotNullGet(getFromSourceQueue(false), MessageBase::extractBundle);
+      return ifNotNullGet(getFromSourceQueue(), MessageBase::extractBundle);
     } catch (Exception e) {
       throw new RuntimeException("While polling queue", e);
     }
@@ -323,7 +318,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     }
 
     public Bundle(Envelope envelope, Object message) {
-      this.envelope = Optional.ofNullable(envelope).orElseGet(Envelope::new);
+      this.envelope = ofNullable(envelope).orElseGet(Envelope::new);
       this.message = message;
     }
   }
