@@ -125,7 +125,7 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
 
   @Override
   public void receiveMessage(PubsubMessage message, AckReplyConsumer reply) {
-    Instant start = Instant.now();
+    final Instant start = Instant.now();
     Map<String, String> attributesMap = new HashMap<>(message.getAttributesMap());
     String messageString = message.getData().toStringUtf8();
     // Ack first to prevent a recurring loop of processing a faulty message.
