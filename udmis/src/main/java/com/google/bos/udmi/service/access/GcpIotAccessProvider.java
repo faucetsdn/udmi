@@ -6,9 +6,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.getDate;
-import static com.google.udmi.util.JsonUtil.toMap;
 import static java.lang.String.format;
-import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
@@ -47,7 +45,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import udmi.schema.CloudModel;
@@ -85,10 +82,9 @@ public class GcpIotAccessProvider extends IotAccessBase {
   private static final String ASSOCIATION_ONLY = "ASSOCIATION_ONLY";
   private static final GatewayConfig GATEWAY_CONFIG =
       new GatewayConfig().setGatewayType(GATEWAY_TYPE).setGatewayAuthMethod(ASSOCIATION_ONLY);
-  private static final String DISABLED_OPTION = "disabled";
+  private static final String ENABLED_OPTION = "enabled";
   private final String projectId;
   private final CloudIot cloudIotService;
-  private final CompletableFuture<Map<String, String>> registryRegions = new CompletableFuture<>();
   private final CloudIot.Projects.Locations.Registries registries;
 
   /**
@@ -97,8 +93,8 @@ public class GcpIotAccessProvider extends IotAccessBase {
    */
   public GcpIotAccessProvider(IotAccess iotAccess) {
     String options = variableSubstitution(iotAccess.options, null);
-    if (DISABLED_OPTION.equals(options)) {
-      warn("access provider disabled through options");
+    if (!ENABLED_OPTION.equals(options)) {
+      warn("access provider disabled, missing option '%s'", ENABLED_OPTION);
       projectId = null;
       cloudIotService = null;
       registries = null;
@@ -216,7 +212,8 @@ public class GcpIotAccessProvider extends IotAccessBase {
         list -> list.stream().map(this::convertUdmi).collect(Collectors.toList()));
   }
 
-  private Map<String, String> fetchRegistryCloudRegions() {
+  @Override
+  protected Map<String, String> fetchRegistryRegions() {
     Map<String, String> regionMap = CLOUD_REGIONS.stream().map(this::getRegistriesForRegion)
         .flatMap(map -> map.entrySet().stream())
         .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
@@ -261,8 +258,7 @@ public class GcpIotAccessProvider extends IotAccessBase {
 
   private String getRegistryPath(String registryId) {
     try {
-      String region = requireNonNull(registryRegions.get().get(registryId),
-          "unknown region for registry " + registryId);
+      String region = getRegistryRegion(registryId);
       return format(REGISTRY_PATH_FORMAT, getLocationPath(region), registryId);
     } catch (Exception e) {
       throw new RuntimeException("While getting registry path for " + registryId, e);
@@ -313,17 +309,12 @@ public class GcpIotAccessProvider extends IotAccessBase {
 
   @Override
   public void activate() {
-    try {
-      if (!isEnabled()) {
-        warn("GCP access provider disabled b/c empty project id");
-        return;
-      }
-      debug("Initializing GCP access provider for project " + projectId);
-      registryRegions.complete(fetchRegistryCloudRegions());
-      super.activate();
-    } catch (Exception e) {
-      throw new RuntimeException("While activating", e);
+    super.activate();
+    if (!isEnabled()) {
+      warn("GCP access provider disabled b/c empty project id");
+      return;
     }
+    debug("Initializing GCP access provider for project " + projectId);
   }
 
   @Override

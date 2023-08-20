@@ -143,7 +143,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   }
 
   @VisibleForTesting
-  protected Map<String, String> fetchRegistryCloudRegions() {
+  protected Map<String, String> fetchRegistryRegions() {
     Map<String, String> regionMap = CLOUD_REGIONS.stream().map(this::getRegistriesForRegion)
         .flatMap(map -> map.entrySet().stream())
         .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
@@ -329,12 +329,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   }
 
   private String getRegistryLocation(String registry) {
-    try {
-      return requireNonNull(registryRegions.get().get(registry),
-          "unknown region for registry " + registry);
-    } catch (Exception e) {
-      throw new RuntimeException("While getting registry path for " + registry, e);
-    }
+    return getRegistryRegion(registry);
   }
 
   private String getRegistryName(String registryId) {
@@ -417,7 +412,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       return;
     }
     debug("Initializing ClearBlade access provider for project " + projectId);
-    registryRegions.complete(fetchRegistryCloudRegions());
   }
 
   @Override

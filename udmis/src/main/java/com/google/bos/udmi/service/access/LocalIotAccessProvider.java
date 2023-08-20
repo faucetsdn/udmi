@@ -47,6 +47,11 @@ public class LocalIotAccessProvider extends IotAccessBase {
   }
 
   @Override
+  protected Map<String, String> fetchRegistryRegions() {
+    return null;
+  }
+
+  @Override
   public void activate() {
     debug("activate");
   }

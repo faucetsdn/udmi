@@ -9,16 +9,21 @@ import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
+import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.core.ProcessorBase.PreviousParseException;
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.common.collect.ImmutableMap;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAmount;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
+import org.jetbrains.annotations.NotNull;
 import udmi.schema.CloudModel;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.IotAccess;
@@ -42,6 +47,9 @@ public abstract class IotAccessBase extends ContainerBase {
       IotProvider.LOCAL, LocalIotAccessProvider.class
   );
   public static final int MAX_CONFIG_LENGTH = 65535;
+  public static final TemporalAmount REGION_RETRY_BACKOFF = Duration.ofSeconds(30);
+  private CompletableFuture<Map<String, String>> registryRegions;
+  private Instant regionRetry = Instant.now();
 
   /**
    * Factory constructor for new instances.
@@ -64,7 +72,41 @@ public abstract class IotAccessBase extends ContainerBase {
     return format("%s/%s", registryId, deviceId);
   }
 
+  @Override
+  public void activate() {
+    super.activate();
+    if (isEnabled()) {
+      populateRegistryRegions(REFLECT_REGISTRY);
+    }
+  }
+
+  protected synchronized String populateRegistryRegions(String registryId) {
+    if (regionRetry.isBefore(Instant.now())) {
+      registryRegions = new CompletableFuture<>();
+      registryRegions.complete(fetchRegistryRegions());
+      regionRetry = Instant.now().plus(REGION_RETRY_BACKOFF);
+    }
+    return getCompletedRegistryRegion(registryId);
+  }
+
+  protected abstract Map<String, String> fetchRegistryRegions();
+
   protected abstract Entry<Long, String> fetchConfig(String registryId, String deviceId);
+
+  @NotNull
+  protected String getRegistryRegion(String registryId) {
+    String region = ofNullable(getCompletedRegistryRegion(registryId)).orElseGet(
+        () -> populateRegistryRegions(registryId));
+    return requireNonNull(region, "unknown region for registry " + registryId);
+  }
+
+  private String getCompletedRegistryRegion(String registryId) {
+    try {
+      return registryRegions.get().get(registryId);
+    } catch (Exception e) {
+      throw new RuntimeException("While getting region for registry " + registryId, e);
+    }
+  }
 
   protected abstract boolean isEnabled();
 

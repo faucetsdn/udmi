@@ -7,6 +7,9 @@ import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.graph.ImmutableNetwork;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -62,7 +65,12 @@ public class DynamicIotAccessProvider extends IotAccessBase {
 
   @Override
   protected boolean isEnabled() {
-    throw new RuntimeException("Should not be called!");
+    return true;
+  }
+
+  @Override
+  protected Map<String, String> fetchRegistryRegions() {
+    return ImmutableMap.of();
   }
 
   @Override
