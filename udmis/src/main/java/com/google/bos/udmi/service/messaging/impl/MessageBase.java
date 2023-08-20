@@ -1,6 +1,5 @@
 package com.google.bos.udmi.service.messaging.impl;
 
-import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
@@ -25,7 +24,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
@@ -51,6 +49,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   private static final long DEFAULT_POLL_TIME_SEC = 1;
   private static final long AWAIT_TERMINATION_SEC = 10;
   public static final int EXECUTION_THREADS = 10;
+  public static final String ERROR_MESSAGE_MARKER = "error-mark";
 
   private final ExecutorService executor = Executors.newFixedThreadPool(EXECUTION_THREADS);
   private BlockingQueue<QueueEntry> sourceQueue;
@@ -193,6 +192,9 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
           envelope = bundle.envelope;
           trace("Processing %s/%s %s %s -> %s", envelope.subType, envelope.subFolder,
               envelope.transactionId, queueIdentifier(), dispatcher);
+          if (ERROR_MESSAGE_MARKER.equals(envelope.transactionId)) {
+            throw new RuntimeException("Exception due to test-induced error");
+          }
           dispatcher.accept(bundle);
           long seconds = Duration.between(start, Instant.now()).getSeconds();
           debug("Processing took %ds for message loop %s", seconds, id);
