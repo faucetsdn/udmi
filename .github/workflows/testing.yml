@@ -37,6 +37,9 @@ jobs:
         run: bin/test_mosquitto
       - name: bin/run_tests udmis_tests
         run: bin/run_tests udmis_tests
+      - name: all test output
+        if: ${{ always() }}
+        run: more out/test_* | cat
       - name: Log in to the github registry
         uses: docker/login-action@v2
         with:
