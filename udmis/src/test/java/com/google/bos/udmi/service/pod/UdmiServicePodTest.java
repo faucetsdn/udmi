@@ -35,6 +35,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import udmi.schema.DiscoveryState;
 import udmi.schema.EndpointConfiguration;
+import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.LocalnetModel;
 import udmi.schema.PodConfiguration;
@@ -84,21 +85,26 @@ public class UdmiServicePodTest {
         combineConfig(podConfig.flow_defaults, reverseFlow(podConfig.flows.get("state")));
     final MessageDispatcherImpl stateDispatcher =
         MessagePipeTestBase.getDispatcherFor(reversedState);
-    stateDispatcher.prototypeEnvelope.deviceId = TEST_DEVICE;
-    stateDispatcher.prototypeEnvelope.deviceRegistryId = TEST_REGISTRY;
 
     pod.activate();
 
     StateUpdate stateUpdate = new StateUpdate();
     stateUpdate.discovery = new DiscoveryState();
     stateUpdate.pointset = new PointsetState();
-    stateDispatcher.publish(stateUpdate);
+    stateDispatcher.withEnvelope(makeTestEnvelope()).publish(stateUpdate);
 
     pod.shutdown();
 
     LocalIotAccessProvider iotAccess = UdmiServicePod.getComponent(IOT_ACCESS_COMPONENT);
     List<String> commands = iotAccess.getCommands();
     assertEquals(3, commands.size(), "sent commands");
+  }
+
+  private Envelope makeTestEnvelope() {
+    Envelope envelope = new Envelope();
+    envelope.deviceId = TEST_DEVICE;
+    envelope.deviceRegistryId = TEST_REGISTRY;
+    return envelope;
   }
 
   @Test

@@ -63,12 +63,12 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     registerMessageClass(SubType.CONFIG, SubFolder.UPDATE, ConfigUpdate.class);
   }
 
-  public final Envelope prototypeEnvelope = new Envelope();
   private final MessagePipe messagePipe;
   private final Map<Object, Envelope> messageEnvelopes = new ConcurrentHashMap<>();
   private final Map<Class<?>, Consumer<Object>> handlers = new HashMap<>();
   private final Map<Class<?>, AtomicInteger> handlerCounts = new ConcurrentHashMap<>();
   private final String projectId;
+  private final ThreadLocal<Envelope> threadEnvelope = new ThreadLocal<>();
 
   /**
    * Create a new instance of the message dispatcher.
@@ -76,7 +76,6 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   public MessageDispatcherImpl(EndpointConfiguration configuration) {
     messagePipe = MessagePipe.from(configuration);
     projectId = variableSubstitution(configuration.hostname, "project_id/hostname not defined");
-    prototypeEnvelope.projectId = projectId;
   }
 
   @Nullable
@@ -134,10 +133,12 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   private void processHandler(Envelope envelope, Class<?> handlerType, Object messageObject) {
     try {
       messageEnvelopes.put(messageObject, envelope);
+      threadEnvelope.set(envelope);
       handlers.get(handlerType).accept(messageObject);
       handlerCounts.computeIfAbsent(handlerType, key -> new AtomicInteger()).incrementAndGet();
     } finally {
       messageEnvelopes.remove(messageObject);
+      threadEnvelope.set(null);
     }
   }
 
@@ -199,10 +200,31 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     }
   }
 
+  public void setThreadEnvelope(Envelope envelope) {
+    threadEnvelope.set(envelope);
+  }
+
+  @Override
+  public MessageContinuation withEnvelope(Envelope envelope) {
+    return new MessageContinuation() {
+      @Override
+      public Envelope getEnvelope() {
+        return envelope;
+      }
+
+      @Override
+      public void publish(Object message) {
+        publishBundle(makeMessageBundle(envelope, message));
+      }
+    };
+  }
+
   @Override
   public MessageContinuation getContinuation(Object message) {
+    Envelope messageEnvelope = messageEnvelopes.get(message);
+    Envelope envelope = messageEnvelope == null ? getThreadEnvelope() : messageEnvelope;
     final Envelope continuationEnvelope =
-        requireNonNull(deepCopy(messageEnvelopes.get(message)), "missing message envelope");
+        requireNonNull(deepCopy(envelope), "missing message envelope");
 
     return new MessageContinuation() {
       private boolean available = true;
@@ -219,6 +241,10 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
         publishBundle(makeMessageBundle(continuationEnvelope, message));
       }
     };
+  }
+
+  private Envelope getThreadEnvelope() {
+    return requireNonNull(threadEnvelope.get(), "thread envelope not defined");
   }
 
   @Override

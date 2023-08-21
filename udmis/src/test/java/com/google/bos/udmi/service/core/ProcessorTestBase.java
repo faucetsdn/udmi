@@ -21,6 +21,7 @@ import java.util.List;
 import org.jetbrains.annotations.NotNull;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.EndpointConfiguration.Protocol;
+import udmi.schema.Envelope;
 import udmi.schema.SetupUdmiConfig;
 
 /**
@@ -54,16 +55,22 @@ public abstract class ProcessorTestBase extends MessageTestBase {
       writeVersionDeployFile();
       createProcessorInstance();
       activateReverseProcessor();
+      getReverseDispatcher().setThreadEnvelope(makeTestEnvelope());
     } catch (Exception e) {
       throw new RuntimeException("While initializing test instance", e);
     }
   }
 
   protected Bundle makeMessageBundle(Object message) {
-    Bundle bundle = new Bundle(message);
-    bundle.envelope.deviceId = TEST_DEVICE;
-    bundle.envelope.deviceRegistryId = TEST_REGISTRY;
-    return bundle;
+    return new Bundle(makeTestEnvelope(), message);
+  }
+
+  protected Envelope makeTestEnvelope() {
+    Envelope envelope = new Envelope();
+    envelope.deviceId = TEST_DEVICE;
+    envelope.deviceRegistryId = TEST_REGISTRY;
+    envelope.projectId = TEST_NAMESPACE;
+    return envelope;
   }
 
   private void activateReverseProcessor() {
