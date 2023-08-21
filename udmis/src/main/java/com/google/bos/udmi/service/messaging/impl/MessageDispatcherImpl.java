@@ -259,7 +259,10 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
 
   @Override
   public void publish(Object message) {
-    publishBundle(makeMessageBundle(prototypeEnvelope, message));
+    Bundle messageBundle = message instanceof Bundle ? (Bundle) message : makeMessageBundle(
+        requireNonNull(getContinuation(message), "no continuation found for message").getEnvelope(),
+        message);
+    publishBundle(messageBundle);
   }
 
   /**

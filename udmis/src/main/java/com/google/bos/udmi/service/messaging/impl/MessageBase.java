@@ -232,9 +232,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
 
   private void receiveBundle(String stringBundle) {
     ensureSourceQueue();
-    if (!stringBundle.contains("\"terminate\"")) {
-      debug("Received message %d on %s", inCount++, this);
-    }
+    debug("Received message %d on %s", inCount++, this);
     pushQueueEntry(sourceQueue, stringBundle);
   }
 

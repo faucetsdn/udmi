@@ -164,8 +164,9 @@ public class StateProcessorTest extends ProcessorTestBase {
   @Test
   public void stateException() {
     initializeTestInstance();
-    getReverseDispatcher().prototypeEnvelope.transactionId = MessageBase.ERROR_MESSAGE_MARKER;
-    getReverseDispatcher().publish(MessageBase.ERROR_MESSAGE_MARKER);
+    Bundle bundle = new Bundle();
+    bundle.envelope.transactionId = MessageBase.ERROR_MESSAGE_MARKER;
+    getReverseDispatcher().publish(bundle);
     terminateAndWait();
 
     assertEquals(0, captured.size(), "unexpected received message count");

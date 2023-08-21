@@ -49,7 +49,7 @@ public class UdmiServicePodTest {
   private static final String BASE_CONFIG = "src/test/configs/base_pod.json";
   private static final String BRIDGE_CONFIG = "src/test/configs/bridge_pod.json";
   private static final String FILE_CONFIG = "src/test/configs/trace_pod.json";
-  private static final String TARGET_FILE = "foo/null/devices/null/003_event_pointset.json";
+  private static final String TARGET_FILE = "traces/simple/devices/AHU-22/002_event_pointset.json";
   private static final long RECEIVE_TIMEOUT_SEC = 2;
   private static final long RECEIVE_TIMEOUT_MS = RECEIVE_TIMEOUT_SEC * 1000;
   public static final String EMPTY_CONFIG = "{}";
