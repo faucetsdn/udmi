@@ -134,8 +134,8 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   private void processHandler(Envelope envelope, Class<?> handlerType, Object messageObject) {
     try {
       messageEnvelopes.put(messageObject, envelope);
-      handlerCounts.computeIfAbsent(handlerType, key -> new AtomicInteger()).incrementAndGet();
       handlers.get(handlerType).accept(messageObject);
+      handlerCounts.computeIfAbsent(handlerType, key -> new AtomicInteger()).incrementAndGet();
     } finally {
       messageEnvelopes.remove(messageObject);
     }

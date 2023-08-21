@@ -7,6 +7,7 @@ import static org.apache.commons.io.FileUtils.deleteDirectory;
 import static org.mockito.Mockito.mock;
 
 import com.google.bos.udmi.service.access.IotAccessBase;
+import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl;
 import com.google.bos.udmi.service.messaging.impl.MessageTestBase;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
@@ -56,6 +57,13 @@ public abstract class ProcessorTestBase extends MessageTestBase {
     } catch (Exception e) {
       throw new RuntimeException("While initializing test instance", e);
     }
+  }
+
+  protected Bundle makeMessageBundle(Object message) {
+    Bundle bundle = new Bundle(message);
+    bundle.envelope.deviceId = TEST_DEVICE;
+    bundle.envelope.deviceRegistryId = TEST_REGISTRY;
+    return bundle;
   }
 
   private void activateReverseProcessor() {
