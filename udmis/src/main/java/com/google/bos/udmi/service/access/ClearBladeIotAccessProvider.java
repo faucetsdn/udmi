@@ -7,8 +7,10 @@ import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.getDate;
+import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
@@ -53,6 +55,8 @@ import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.udmi.util.GeneralUtils;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Base64;
 import java.util.Date;
@@ -95,15 +99,18 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       .setGatewayType(GatewayType.GATEWAY)
       .setGatewayAuthMethod(GatewayAuthMethod.ASSOCIATION_ONLY)
       .build();
+  private static final Duration REGISTRY_RETRY_TIME = Duration.ofSeconds(30);
 
   private final String projectId;
-  private final CompletableFuture<Map<String, String>> registryRegions = new CompletableFuture<>();
+  private CompletableFuture<Map<String, String>> registryRegions;
+  private Instant registryRetry = Instant.now();
 
   /**
    * Create a new instance for interfacing with GCP IoT Core.
    */
   public ClearBladeIotAccessProvider(IotAccess iotAccess) {
     projectId = getProjectId(iotAccess);
+    ifTrueThen(isEnabled(), this::fetchRegistryRegions);
   }
 
   private static Credential convertIot(DeviceCredential device) {
@@ -224,7 +231,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
         .setBlocked(isTrue(cloudModel.blocked))
         .setCredentials(convertUdmi(cloudModel.credentials))
         .setGatewayConfig(isTrue(cloudModel.is_gateway) ? GATEWAY_CONFIG : NON_GATEWAY_CONFIG)
-        .setLogLevel(LogLevel.INFO)
+        .setLogLevel(LogLevel.LOG_LEVEL_UNSPECIFIED)
         .setMetadata(cloudModel.metadata)
         .setId(deviceId)
         .build();
@@ -284,6 +291,16 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     }
   }
 
+  private synchronized void fetchRegistryRegions() {
+    if (registryRetry.isBefore(Instant.now())) {
+      registryRegions = new CompletableFuture<>();
+      registryRegions.complete(fetchRegistryCloudRegions());
+      registryRetry = Instant.now().plus(REGISTRY_RETRY_TIME);
+    } else {
+      warn("Not refetching regions due to fetch retry threshold " + getTimestamp(registryRetry));
+    }
+  }
+
   private String getDeviceName(String registryId, String deviceId) {
     return DeviceName.of(projectId, getRegistryLocation(registryId), registryId, deviceId)
         .toString();
@@ -333,6 +350,29 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
 
   private String getRegistryName(String registryId) {
     return RegistryName.of(projectId, getRegistryLocation(registryId), registryId).toString();
+  }
+
+  @NotNull
+  private Entry<String, HashMap<String, CloudModel>> listDevicesPage(String deviceRegistryId,
+      String gatewayId, String pageToken) {
+    String location = getRegistryLocation(deviceRegistryId);
+    DeviceManagerClient deviceManagerClient = getDeviceManagerClient();
+    GatewayListOptions gatewayListOptions =
+        ifNotNullGet(gatewayId, this::getGatewayListOptions);
+    String registryFullName =
+        RegistryName.of(projectId, location, deviceRegistryId).getRegistryFullName();
+    DevicesListRequest request = DevicesListRequest.Builder.newBuilder().setParent(
+            registryFullName)
+        .setGatewayListOptions(gatewayListOptions)
+        .setPageToken(pageToken)
+        .build();
+    DevicesListResponse response = deviceManagerClient.listDevices(request);
+    requireNonNull(response, "DeviceRegistriesList fetch failed");
+    HashMap<String, CloudModel> devices =
+        response.getDevicesList().stream().map(ClearBladeIotAccessProvider::convertToEntry)
+            .collect(Collectors.toMap(Entry::getKey, Entry::getValue, GeneralUtils::mapReplace,
+                HashMap::new));
+    return new SimpleEntry<>(response.getNextPageToken(), devices);
   }
 
   private CloudModel listRegistryDevices(String deviceRegistryId, String gatewayId) {

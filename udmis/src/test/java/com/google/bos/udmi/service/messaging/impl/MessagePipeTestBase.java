@@ -11,6 +11,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import udmi.schema.EndpointConfiguration;
+import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
 import udmi.schema.LocalnetModel;
@@ -23,9 +24,25 @@ public abstract class MessagePipeTestBase extends MessageTestBase {
 
   private static final long RECEIVE_TIMEOUT_MS = 1000;
 
+  /**
+   * Get a dispatcher for the given configuration.
+   */
   @NotNull
   public static MessageDispatcherImpl getDispatcherFor(EndpointConfiguration reversedTarget) {
-    return (MessageDispatcherImpl) MessageDispatcher.from(reversedTarget);
+    MessageDispatcherImpl from = (MessageDispatcherImpl) MessageDispatcher.from(reversedTarget);
+    from.setThreadEnvelope(makeTestEnvelope());
+    return from;
+  }
+
+  /**
+   * Make a message envelope suitable for testing.
+   */
+  public static Envelope makeTestEnvelope() {
+    Envelope envelope = new Envelope();
+    envelope.deviceId = TEST_DEVICE;
+    envelope.deviceRegistryId = TEST_REGISTRY;
+    envelope.projectId = TEST_NAMESPACE;
+    return envelope;
   }
 
   protected boolean environmentIsEnabled() {
@@ -86,7 +103,8 @@ public abstract class MessagePipeTestBase extends MessageTestBase {
   void receiveMessage() throws InterruptedException {
     Assumptions.assumeTrue(environmentIsEnabled(), "environment is not enabled");
     MessageDispatcher reversed = getReverseDispatcher();
-    reversed.publish(new LocalnetModel());
+    reversed.activate();
+    reversed.withEnvelope(new Envelope()).publish(new LocalnetModel());
     Object received = synchronizedReceive();
     assertTrue(received instanceof LocalnetModel, "Expected state update message");
   }

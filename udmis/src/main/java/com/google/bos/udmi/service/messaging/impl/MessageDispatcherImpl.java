@@ -2,8 +2,6 @@ package com.google.bos.udmi.service.messaging.impl;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
-import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
-import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
@@ -23,6 +21,7 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableMap;
 import com.google.udmi.util.Common;
+import java.time.Instant;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,6 +33,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.TestOnly;
@@ -57,6 +57,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   );
   private static final Map<Class<?>, SimpleEntry<SubType, SubFolder>> CLASS_TYPES = new HashMap<>();
   private static final BiMap<String, Class<?>> TYPE_CLASSES = HashBiMap.create();
+  private static final long HANDLER_TIMEOUT_MS = 2000;
 
   static {
     Arrays.stream(SubType.values()).forEach(type -> Arrays.stream(SubFolder.values())
@@ -65,12 +66,12 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     registerMessageClass(SubType.CONFIG, SubFolder.UPDATE, ConfigUpdate.class);
   }
 
-  public final Envelope prototypeEnvelope = new Envelope();
   private final MessagePipe messagePipe;
   private final Map<Object, Envelope> messageEnvelopes = new ConcurrentHashMap<>();
   private final Map<Class<?>, Consumer<Object>> handlers = new HashMap<>();
   private final Map<Class<?>, AtomicInteger> handlerCounts = new ConcurrentHashMap<>();
   private final String projectId;
+  private final ThreadLocal<Envelope> threadEnvelope = new ThreadLocal<>();
 
   /**
    * Create a new instance of the message dispatcher.
@@ -78,7 +79,6 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   public MessageDispatcherImpl(EndpointConfiguration configuration) {
     messagePipe = MessagePipe.from(configuration);
     projectId = variableSubstitution(configuration.hostname, "project_id/hostname not defined");
-    prototypeEnvelope.projectId = projectId;
   }
 
   @Nullable
@@ -136,10 +136,15 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   private void processHandler(Envelope envelope, Class<?> handlerType, Object messageObject) {
     try {
       messageEnvelopes.put(messageObject, envelope);
-      handlerCounts.computeIfAbsent(handlerType, key -> new AtomicInteger()).incrementAndGet();
+      setThreadEnvelope(envelope);
       handlers.get(handlerType).accept(messageObject);
+      synchronized (handlerCounts) {
+        handlerCounts.computeIfAbsent(handlerType, key -> new AtomicInteger()).incrementAndGet();
+        handlerCounts.notify();
+      }
     } finally {
       messageEnvelopes.remove(messageObject);
+      setThreadEnvelope(null);
     }
   }
 
@@ -201,10 +206,54 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     }
   }
 
+  /**
+   * Set the message envelope to use for published messages from the current thread.
+   */
+  public void setThreadEnvelope(Envelope envelope) {
+    Envelope previous = threadEnvelope.get();
+    threadEnvelope.set(envelope);
+    if (previous != null && envelope != null) {
+      throw new RuntimeException("Overwriting existing thread envelope");
+    }
+  }
+
+  /**
+   * Wait for a message of the given handler type to be processed. Primarily for testing.
+   */
+  public void waitForMessageProcessed(Class<?> clazz) {
+    synchronized (handlerCounts) {
+      try {
+        Instant endTime = Instant.now().plusMillis(HANDLER_TIMEOUT_MS);
+        do {
+          handlerCounts.wait(HANDLER_TIMEOUT_MS);
+        } while (getHandlerCount(clazz) == 0 && Instant.now().isBefore(endTime));
+      } catch (InterruptedException e) {
+        throw new RuntimeException("While waiting for handler count update", e);
+      }
+    }
+  }
+
+  @Override
+  public MessageContinuation withEnvelope(Envelope envelope) {
+    return new MessageContinuation() {
+      @Override
+      public Envelope getEnvelope() {
+        return envelope;
+      }
+
+      @Override
+      public void publish(Object message) {
+        publishBundle(makeMessageBundle(envelope, message));
+      }
+    };
+  }
+
   @Override
   public MessageContinuation getContinuation(Object message) {
+    Envelope messageEnvelope = messageEnvelopes.get(message);
+    Envelope envelope = messageEnvelope == null ? getThreadEnvelope() : messageEnvelope;
     final Envelope continuationEnvelope =
-        requireNonNull(deepCopy(messageEnvelopes.get(message)), "missing message envelope");
+        requireNonNull(deepCopy(envelope), "missing message envelope");
 
     return new MessageContinuation() {
       private boolean available = true;
@@ -221,6 +270,10 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
         publishBundle(makeMessageBundle(continuationEnvelope, message));
       }
     };
+  }
+
+  private Envelope getThreadEnvelope() {
+    return requireNonNull(threadEnvelope.get(), "thread envelope not defined");
   }
 
   @Override
@@ -261,7 +314,10 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
 
   @Override
   public void publish(Object message) {
-    publishBundle(makeMessageBundle(prototypeEnvelope, message));
+    Bundle messageBundle = message instanceof Bundle ? (Bundle) message : makeMessageBundle(
+        requireNonNull(getContinuation(message), "no continuation found for message").getEnvelope(),
+        message);
+    publishBundle(messageBundle);
   }
 
   /**
