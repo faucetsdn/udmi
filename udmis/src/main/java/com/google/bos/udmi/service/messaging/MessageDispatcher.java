@@ -7,6 +7,7 @@ import java.util.AbstractMap.SimpleEntry;
 import java.util.Collection;
 import java.util.function.Consumer;
 import udmi.schema.EndpointConfiguration;
+import udmi.schema.Envelope;
 
 /**
  * Strongly typed interface for working with message pipes.
@@ -39,6 +40,11 @@ public interface MessageDispatcher {
   }
 
   void activate();
+
+  /**
+   * Make a new continuation with the given envelope.
+   */
+  public MessageContinuation withEnvelope(Envelope envelope);
 
   /**
    * Get a message continuation for the received message.

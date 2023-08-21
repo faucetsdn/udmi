@@ -3,11 +3,14 @@ package com.google.bos.udmi.service.messaging.impl;
 import static com.google.bos.udmi.service.messaging.impl.MessagePipeTestBase.TEST_DESTINATION;
 import static com.google.bos.udmi.service.messaging.impl.MessagePipeTestBase.TEST_NAMESPACE;
 import static com.google.bos.udmi.service.messaging.impl.MessagePipeTestBase.TEST_SOURCE;
+import static com.google.bos.udmi.service.messaging.impl.MessagePipeTestBase.makeTestEnvelope;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import com.google.bos.udmi.service.core.ProcessorTestBase;
 import com.google.bos.udmi.service.messaging.MessageDispatcher;
+import com.google.udmi.util.JsonUtil;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -42,7 +45,9 @@ public class MessageDispatcherImplTest {
   }
 
   private MessageDispatcher getReversedDispatcher() {
-    return new MessageDispatcherImpl(getConfiguration(true));
+    MessageDispatcherImpl messageDispatcher = new MessageDispatcherImpl(getConfiguration(true));
+    messageDispatcher.setThreadEnvelope(makeTestEnvelope());
+    return messageDispatcher;
   }
 
   @Test
@@ -68,6 +73,7 @@ public class MessageDispatcherImplTest {
     assertThrows(TimeoutException.class, () -> future.get(GET_TIMEOUT_SEC, TimeUnit.SECONDS));
     assertEquals(0, dispatcher.getHandlerCount(LocalnetModel.class), "processed LocalnetModel");
     dispatcher.activate();
+    JsonUtil.safeSleep(ProcessorTestBase.ASYNC_PROCESSING_DELAY_MS);
     assertNotNull(future.get(GET_TIMEOUT_SEC, TimeUnit.SECONDS));
     assertEquals(1, dispatcher.getHandlerCount(LocalnetModel.class), "processed LocalnetModel");
     assertEquals(1, dispatcher.getHandlerCount(GatewayConfig.class), "processed GatewayConfig");
@@ -79,6 +85,7 @@ public class MessageDispatcherImplTest {
 
     public TestingDispatcher() {
       super(getConfiguration(false));
+      setThreadEnvelope(makeTestEnvelope());
     }
 
     @Override
