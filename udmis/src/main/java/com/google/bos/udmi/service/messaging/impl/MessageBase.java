@@ -56,6 +56,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   private Consumer<Bundle> dispatcher;
   private int inCount;
   private int outCount;
+  private boolean activated;
 
   /**
    * Combine two message configurations together (for applying defaults).
@@ -254,6 +255,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     ensureSourceQueue();
     debug("Handling %s to %08x", this, Objects.hash(bundleConsumer));
     handleQueue();
+    activated = true;
   }
 
   /**
@@ -264,6 +266,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
       shutdownExecutor();
       debug("Awaiting termination of %s", this);
       executor.awaitTermination(AWAIT_TERMINATION_SEC, TimeUnit.SECONDS);
+      activated = false;
       debug("Finished termination of %s", this);
     } catch (Exception e) {
       throw new RuntimeException("While awaiting termination", e);
@@ -272,7 +275,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
 
   @Override
   public boolean isActive() {
-    return !executor.isTerminated();
+    return activated;
   }
 
   /**
