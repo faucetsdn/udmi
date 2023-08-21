@@ -48,12 +48,14 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   private static final Set<Object> HANDLED_QUEUES = new HashSet<>();
   private static final long DEFAULT_POLL_TIME_SEC = 1;
   private static final long AWAIT_TERMINATION_SEC = 10;
-  public static final int EXECUTION_THREADS = 10;
+  public static final int EXECUTION_THREADS = 4;
   public static final String ERROR_MESSAGE_MARKER = "error-mark";
 
   private final ExecutorService executor = Executors.newFixedThreadPool(EXECUTION_THREADS);
   private BlockingQueue<QueueEntry> sourceQueue;
   private Consumer<Bundle> dispatcher;
+  private int inCount;
+  private int outCount;
 
   /**
    * Combine two message configurations together (for applying defaults).
@@ -171,7 +173,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
 
   private void messageLoop(String id) {
     info("Starting message loop %s", id);
-    while (!executor.isShutdown()) {
+    while (true) {
       try {
         grabExecutionContext();
         Envelope envelope = null;
@@ -186,11 +188,12 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
           debug("Processing waited %ds on message loop %s", waiting, id);
           if (bundle.message.equals(TERMINATE_MARKER)) {
             info("Terminating message loop %s", id);
-            executor.shutdown();
+            terminateHandlers();
             return;
           }
+          debug("Handling message %d of %s", outCount++, this);
           envelope = bundle.envelope;
-          trace("Processing %s/%s %s %s -> %s", envelope.subType, envelope.subFolder,
+          debug("Processing %s/%s %s %s -> %s", envelope.subType, envelope.subFolder,
               envelope.transactionId, queueIdentifier(), dispatcher);
           if (ERROR_MESSAGE_MARKER.equals(envelope.transactionId)) {
             throw new RuntimeException("Exception due to test-induced error");
@@ -207,11 +210,19 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
         error(stackTraceString(loopException));
       }
     }
-    info("Exiting message loop %s", id);
   }
 
-  private String queueIdentifier() {
-    return format("%08x", Objects.hash(sourceQueue));
+  private void shutdownExecutor() {
+    debug("Shutdown of %s", this);
+    executor.shutdown();
+  }
+
+  protected String queueIdentifier() {
+    return queueIdentifier(sourceQueue);
+  }
+
+  protected static String queueIdentifier(BlockingQueue<QueueEntry> queue) {
+    return format("%08x", Objects.hash(queue));
   }
 
   private void receiveBundle(Bundle bundle) {
@@ -220,6 +231,9 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
 
   private void receiveBundle(String stringBundle) {
     ensureSourceQueue();
+    if (!stringBundle.contains("\"terminate\"")) {
+      debug("Received message %d on %s", inCount++, this);
+    }
     pushQueueEntry(sourceQueue, stringBundle);
   }
 
@@ -247,9 +261,10 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
    */
   public void awaitShutdown() {
     try {
-      debug("Awaiting shutdown of %s", this);
-      executor.shutdown();
+      shutdownExecutor();
+      debug("Awaiting termination of %s", this);
       executor.awaitTermination(AWAIT_TERMINATION_SEC, TimeUnit.SECONDS);
+      debug("Finished termination of %s", this);
     } catch (Exception e) {
       throw new RuntimeException("While awaiting termination", e);
     }
@@ -291,8 +306,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
    * Terminate the output path.
    */
   public void terminate() {
-    debug("Terminating %s", this);
-    publish(new Bundle(TERMINATE_MARKER));
+    terminateHandlers();
   }
 
   @Override

@@ -2,6 +2,7 @@ package com.google.bos.udmi.service.core;
 
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.JsonUtil.fromStringStrict;
+import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -35,6 +36,7 @@ import udmi.schema.SystemState;
 public class StateProcessorTest extends ProcessorTestBase {
 
   public static final Date INITIAL_LAST_START = CleanDateFormat.cleanDate(new Date(12981837));
+  private static final int PROCESSING_DELAY_MS = 2000;
 
   @NotNull
   protected Class<? extends ProcessorBase> getProcessorClass() {
@@ -144,6 +146,7 @@ public class StateProcessorTest extends ProcessorTestBase {
   public void singleExpansion() {
     initializeTestInstance();
     getReverseDispatcher().publish(getTestStateBundle(false, false));
+    safeSleep(PROCESSING_DELAY_MS);
     terminateAndWait();
 
     assertEquals(1, captured.size(), "unexpected received message count");
