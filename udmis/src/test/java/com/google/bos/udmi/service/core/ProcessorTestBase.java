@@ -1,6 +1,7 @@
 package com.google.bos.udmi.service.core;
 
 import static com.google.bos.udmi.service.core.StateProcessor.IOT_ACCESS_COMPONENT;
+import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.writeFile;
 import static org.apache.commons.io.FileUtils.deleteDirectory;
 import static org.mockito.Mockito.mock;
@@ -29,6 +30,7 @@ public abstract class ProcessorTestBase extends MessageTestBase {
   public static final String TEST_USER = "giraffe@safari.com";
   public static final Date TEST_TIMESTAMP = CleanDateFormat.cleanDate();
   public static final String TEST_FUNCTIONS = "functions-version";
+  public static final long ASYNC_PROCESSING_DELAY_MS = 2000;
   protected final List<Object> captured = new ArrayList<>();
   private ProcessorBase processor;
   protected IotAccessBase provider;
@@ -99,6 +101,8 @@ public abstract class ProcessorTestBase extends MessageTestBase {
   protected abstract Class<? extends ProcessorBase> getProcessorClass();
 
   protected void terminateAndWait() {
+    debug("Waiting for async processing to complete...");
+    safeSleep(ASYNC_PROCESSING_DELAY_MS);
     getReverseDispatcher().terminate();
     getTestDispatcher().awaitShutdown();
     getTestDispatcher().terminate();
