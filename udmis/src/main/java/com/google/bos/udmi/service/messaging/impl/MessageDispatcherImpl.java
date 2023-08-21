@@ -201,6 +201,9 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     }
   }
 
+  /**
+   * Set the message envelope to use for published messages from the current thread.
+   */
   public void setThreadEnvelope(Envelope envelope) {
     Envelope previous = threadEnvelope.get();
     threadEnvelope.set(envelope);

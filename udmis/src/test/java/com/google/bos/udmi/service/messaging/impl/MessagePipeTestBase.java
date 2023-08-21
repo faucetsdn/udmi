@@ -24,6 +24,9 @@ public abstract class MessagePipeTestBase extends MessageTestBase {
 
   private static final long RECEIVE_TIMEOUT_MS = 1000;
 
+  /**
+   * Get a dispatcher for the given configuration.
+   */
   @NotNull
   public static MessageDispatcherImpl getDispatcherFor(EndpointConfiguration reversedTarget) {
     MessageDispatcherImpl from = (MessageDispatcherImpl) MessageDispatcher.from(reversedTarget);
@@ -31,6 +34,9 @@ public abstract class MessagePipeTestBase extends MessageTestBase {
     return from;
   }
 
+  /**
+   * Make a message envelope suitable for testing.
+   */
   public static Envelope makeTestEnvelope() {
     Envelope envelope = new Envelope();
     envelope.deviceId = TEST_DEVICE;
