@@ -77,6 +77,7 @@ public class StateProcessorTest extends ProcessorTestBase {
   private Config processLastStart(Config testConfig) {
     initializeTestInstance();
     getReverseDispatcher().publish(getTestStateBundle(false, true));
+    getReverseDispatcher().waitForMessageProcessed(SystemState.class);
     terminateAndWait();
 
     @SuppressWarnings("rawtypes")
@@ -127,6 +128,8 @@ public class StateProcessorTest extends ProcessorTestBase {
   public void multiExpansion() {
     initializeTestInstance();
     getReverseDispatcher().publish(getTestStateBundle(true, false));
+    getReverseDispatcher().waitForMessageProcessed(SystemState.class);
+    getReverseDispatcher().waitForMessageProcessed(GatewayState.class);
     terminateAndWait();
 
     assertEquals(2, captured.size(), "unexpected received message count");
@@ -164,8 +167,11 @@ public class StateProcessorTest extends ProcessorTestBase {
   @Test
   public void stateException() {
     initializeTestInstance();
-    getReverseDispatcher().prototypeEnvelope.transactionId = MessageBase.ERROR_MESSAGE_MARKER;
-    getReverseDispatcher().publish(MessageBase.ERROR_MESSAGE_MARKER);
+    Bundle bundle = new Bundle();
+    bundle.envelope.transactionId = MessageBase.ERROR_MESSAGE_MARKER;
+    bundle.message = "hello";
+    getReverseDispatcher().publish(bundle);
+    getReverseDispatcher().waitForMessageProcessed(Exception.class);
     terminateAndWait();
 
     assertEquals(0, captured.size(), "unexpected received message count");

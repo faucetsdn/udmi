@@ -7,19 +7,20 @@ import static org.apache.commons.io.FileUtils.deleteDirectory;
 import static org.mockito.Mockito.mock;
 
 import com.google.bos.udmi.service.access.IotAccessBase;
+import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl;
+import com.google.bos.udmi.service.messaging.impl.MessagePipeTestBase;
 import com.google.bos.udmi.service.messaging.impl.MessageTestBase;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.udmi.util.CleanDateFormat;
 import java.io.File;
-import java.io.IOException;
-import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import org.jetbrains.annotations.NotNull;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.EndpointConfiguration.Protocol;
+import udmi.schema.Envelope;
 import udmi.schema.SetupUdmiConfig;
 
 /**
@@ -53,9 +54,18 @@ public abstract class ProcessorTestBase extends MessageTestBase {
       writeVersionDeployFile();
       createProcessorInstance();
       activateReverseProcessor();
+      getReverseDispatcher();
     } catch (Exception e) {
       throw new RuntimeException("While initializing test instance", e);
     }
+  }
+
+  protected Bundle makeMessageBundle(Object message) {
+    return new Bundle(makeTestEnvelope(), message);
+  }
+
+  protected Envelope makeTestEnvelope() {
+    return MessagePipeTestBase.makeTestEnvelope();
   }
 
   private void activateReverseProcessor() {
@@ -101,11 +111,9 @@ public abstract class ProcessorTestBase extends MessageTestBase {
   protected abstract Class<? extends ProcessorBase> getProcessorClass();
 
   protected void terminateAndWait() {
-    debug("Waiting for async processing to complete...");
-    safeSleep(ASYNC_PROCESSING_DELAY_MS);
+    getTestDispatcher().terminate();
     getReverseDispatcher().terminate();
     getTestDispatcher().awaitShutdown();
-    getTestDispatcher().terminate();
     getReverseDispatcher().awaitShutdown();
     provider.shutdown();
     processor.shutdown();
