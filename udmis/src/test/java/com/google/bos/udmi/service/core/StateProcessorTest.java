@@ -13,6 +13,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import com.google.bos.udmi.service.messaging.impl.MessageBase;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.udmi.util.CleanDateFormat;
 import com.google.udmi.util.GeneralUtils;
@@ -153,6 +154,7 @@ public class StateProcessorTest extends ProcessorTestBase {
   public void singleExpansion() {
     initializeTestInstance();
     getReverseDispatcher().publish(getTestStateBundle(false, false));
+    safeSleep(ASYNC_PROCESSING_DELAY_MS);
     terminateAndWait();
 
     assertEquals(1, captured.size(), "unexpected received message count");
@@ -171,7 +173,8 @@ public class StateProcessorTest extends ProcessorTestBase {
   @Test
   public void stateException() {
     initializeTestInstance();
-    getReverseDispatcher().publish(null);
+    getReverseDispatcher().prototypeEnvelope.transactionId = MessageBase.ERROR_MESSAGE_MARKER;
+    getReverseDispatcher().publish(MessageBase.ERROR_MESSAGE_MARKER);
     terminateAndWait();
 
     assertEquals(0, captured.size(), "unexpected received message count");

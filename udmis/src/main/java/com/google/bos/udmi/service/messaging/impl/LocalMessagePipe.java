@@ -81,8 +81,7 @@ public class LocalMessagePipe extends MessageBase {
 
   @Override
   public String toString() {
-    String activeString = isActive() ? "*" : "O";
-    return format("%s >-%s-> %08x", super.toString(), activeString,
-        Objects.hash(destinationQueue));
+    String isActive = isActive() ? "*" : "O";
+    return format("%s >-%s-> %s", super.toString(), isActive, queueIdentifier(destinationQueue));
   }
 }
