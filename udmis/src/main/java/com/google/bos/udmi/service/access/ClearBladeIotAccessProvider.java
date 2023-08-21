@@ -149,15 +149,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   }
 
   @VisibleForTesting
-  protected Map<String, String> fetchRegistryRegions() {
-    Map<String, String> regionMap = CLOUD_REGIONS.stream().map(this::getRegistriesForRegion)
-        .flatMap(map -> map.entrySet().stream())
-        .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
-    debug(format("Fetched %s registry regions", regionMap.size()));
-    return regionMap;
-  }
-
-  @VisibleForTesting
   protected DeviceManagerClient getDeviceManagerClient() {
     return new DeviceManagerClient();
   }
@@ -291,7 +282,8 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     }
   }
 
-  private synchronized void fetchRegistryRegions() {
+  @Override
+  protected synchronized void fetchRegistryRegions() {
     if (registryRetry.isBefore(Instant.now())) {
       registryRegions = new CompletableFuture<>();
       registryRegions.complete(fetchRegistryCloudRegions());
