@@ -41,7 +41,11 @@ public abstract class MessageTestBase extends MessageTestCore {
   }
 
   protected MessageDispatcherImpl getTestDispatcher() {
-    dispatcher = Optional.ofNullable(dispatcher).orElseGet(() -> getTestDispatcher(false));
+    dispatcher = Optional.ofNullable(dispatcher).orElseGet(() -> {
+      MessageDispatcherImpl testDispatcher = getTestDispatcher(false);
+      testDispatcher.setThreadEnvelope(makeTestEnvelope());
+      return testDispatcher;
+    });
     return dispatcher;
   }
 

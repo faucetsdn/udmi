@@ -78,7 +78,7 @@ public class MessageDispatcherImplTest {
     assertEquals(1, dispatcher.getHandlerCount(LocalnetModel.class), "processed LocalnetModel");
     assertEquals(1, dispatcher.getHandlerCount(GatewayConfig.class), "processed GatewayConfig");
     assertEquals(0, dispatcher.getHandlerCount(DiscoveryConfig.class), "processed DiscoveryConfig");
-    assertEquals(1, devNullCapture.size());
+    assertEquals(2, devNullCapture.size());
   }
 
   class TestingDispatcher extends MessageDispatcherImpl {

@@ -26,16 +26,20 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.TestOnly;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
+import udmi.schema.Envelope.SubType;
 
 /**
  * Base class for supporting a variety of messaging interfaces.
@@ -78,6 +82,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
 
   protected Bundle makeExceptionBundle(Envelope envelope, Exception exception) {
     Bundle bundle = new Bundle(envelope, exception);
+    bundle.envelope.subType = SubType.EVENT;
     bundle.envelope.subFolder = SubFolder.ERROR;
     return bundle;
   }

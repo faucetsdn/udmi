@@ -166,6 +166,7 @@ public class StateProcessorTest extends ProcessorTestBase {
     initializeTestInstance();
     Bundle bundle = new Bundle();
     bundle.envelope.transactionId = MessageBase.ERROR_MESSAGE_MARKER;
+    bundle.message = "hello";
     getReverseDispatcher().publish(bundle);
     terminateAndWait();
 
