@@ -86,6 +86,7 @@ public abstract class MessagePipeTestBase extends MessageTestBase {
   void receiveMessage() throws InterruptedException {
     Assumptions.assumeTrue(environmentIsEnabled(), "environment is not enabled");
     MessageDispatcher reversed = getReverseDispatcher();
+    reversed.activate();
     reversed.publish(new LocalnetModel());
     Object received = synchronizedReceive();
     assertTrue(received instanceof LocalnetModel, "Expected state update message");

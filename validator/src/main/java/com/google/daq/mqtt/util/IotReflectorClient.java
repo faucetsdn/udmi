@@ -147,6 +147,7 @@ public class IotReflectorClient implements IotProvider {
 
   private Map<String, Object> transaction(String deviceId, String topic,
       String message, QuerySpeed speed) {
+    // TODO: Publish should return future to avoid race conditions.
     return waitForReply(messageClient.publish(deviceId, topic, message), speed);
   }
 
@@ -184,7 +185,8 @@ public class IotReflectorClient implements IotProvider {
         CompletableFuture<Map<String, Object>> future = ifNotNullGet(transactionId,
             futures::remove);
         ifNotNullThen(future, f -> f.complete(messageBundle.message));
-        if (future == null && transactionId.startsWith(REFLECTOR_PREFIX)) {
+        if (future == null && transactionId != null
+            && transactionId.startsWith(REFLECTOR_PREFIX)) {
           throw new RuntimeException("Received unexpected reply message " + transactionId);
         }
       } catch (Exception e) {
