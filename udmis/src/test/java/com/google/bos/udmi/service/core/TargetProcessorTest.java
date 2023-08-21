@@ -5,7 +5,6 @@ import static com.google.udmi.util.JsonUtil.toMap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -28,7 +27,6 @@ class TargetProcessorTest extends ProcessorTestBase {
     Map<String, Object> command = toMap(commandCaptor.getValue());
     String payload = (String) command.remove("payload");
     String payloadString = GeneralUtils.decodeBase64(payload);
-    Map<String, Object> payloadMap = toMap(payloadString);
     assertEquals(SubFolder.POINTSET.value(), command.remove("subFolder"), "subFolder field");
     assertEquals("event", command.remove("subType"), "subType field");
     assertEquals(TEST_DEVICE, command.remove("deviceId"));
@@ -64,6 +62,7 @@ class TargetProcessorTest extends ProcessorTestBase {
   public void unexpectedReceive() {
     initializeTestInstance();
     getReverseDispatcher().publish(getTestMessage(true));
+    getReverseDispatcher().waitForMessageProcessed(Object.class);
     terminateAndWait();
 
     assertEquals(1, captured.size(), "unexpected received message count");
@@ -85,6 +84,7 @@ class TargetProcessorTest extends ProcessorTestBase {
   public void simpleReceive() {
     initializeTestInstance();
     getReverseDispatcher().publish(getTestMessage(false));
+    getReverseDispatcher().waitForMessageProcessed(PointsetEvent.class);
     terminateAndWait();
 
     assertEquals(1, captured.size(), "unexpected received message count");

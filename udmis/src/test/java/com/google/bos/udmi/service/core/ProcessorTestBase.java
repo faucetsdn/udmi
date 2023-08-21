@@ -111,11 +111,9 @@ public abstract class ProcessorTestBase extends MessageTestBase {
   protected abstract Class<? extends ProcessorBase> getProcessorClass();
 
   protected void terminateAndWait() {
-    debug("Waiting for async processing to complete...");
-    safeSleep(ASYNC_PROCESSING_DELAY_MS);
+    getTestDispatcher().terminate();
     getReverseDispatcher().terminate();
     getTestDispatcher().awaitShutdown();
-    getTestDispatcher().terminate();
     getReverseDispatcher().awaitShutdown();
     provider.shutdown();
     processor.shutdown();

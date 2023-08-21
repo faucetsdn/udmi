@@ -140,7 +140,9 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
 
   protected void terminateHandlers() {
     debug("Terminating " + this);
-    receiveBundle(new Bundle(TERMINATE_MARKER));
+    for (int i = 0; i < EXECUTION_THREADS; i++) {
+      receiveBundle(new Bundle(TERMINATE_MARKER));
+    }
   }
 
   private synchronized void ensureSourceQueue() {
@@ -194,7 +196,6 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
           debug("Processing waited %ds on message loop %s", waiting, id);
           if (bundle.message.equals(TERMINATE_MARKER)) {
             info("Terminating message loop %s", id);
-            terminateHandlers();
             return;
           }
           debug("Handling message %d of %s", outCount++, this);

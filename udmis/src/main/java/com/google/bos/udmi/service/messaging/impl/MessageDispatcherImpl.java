@@ -21,6 +21,7 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableMap;
 import com.google.udmi.util.Common;
+import java.time.Instant;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,6 +33,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.TestOnly;
@@ -55,6 +57,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   );
   private static final Map<Class<?>, SimpleEntry<SubType, SubFolder>> CLASS_TYPES = new HashMap<>();
   private static final BiMap<String, Class<?>> TYPE_CLASSES = HashBiMap.create();
+  private static final long HANDLER_TIMEOUT_MS = 2000;
 
   static {
     Arrays.stream(SubType.values()).forEach(type -> Arrays.stream(SubFolder.values())
@@ -135,7 +138,10 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
       messageEnvelopes.put(messageObject, envelope);
       setThreadEnvelope(envelope);
       handlers.get(handlerType).accept(messageObject);
-      handlerCounts.computeIfAbsent(handlerType, key -> new AtomicInteger()).incrementAndGet();
+      synchronized (handlerCounts) {
+        handlerCounts.computeIfAbsent(handlerType, key -> new AtomicInteger()).incrementAndGet();
+        handlerCounts.notify();
+      }
     } finally {
       messageEnvelopes.remove(messageObject);
       setThreadEnvelope(null);
@@ -208,6 +214,22 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     threadEnvelope.set(envelope);
     if (previous != null && envelope != null) {
       throw new RuntimeException("Overwriting existing thread envelope");
+    }
+  }
+
+  /**
+   * Wait for a message of the given handler type to be processed. Primarily for testing.
+   */
+  public void waitForMessageProcessed(Class<?> clazz) {
+    synchronized (handlerCounts) {
+      try {
+        Instant endTime = Instant.now().plusMillis(HANDLER_TIMEOUT_MS);
+        do {
+          handlerCounts.wait(HANDLER_TIMEOUT_MS);
+        } while (getHandlerCount(clazz) == 0 && Instant.now().isBefore(endTime));
+      } catch (InterruptedException e) {
+        throw new RuntimeException("While waiting for handler count update", e);
+      }
     }
   }
 
