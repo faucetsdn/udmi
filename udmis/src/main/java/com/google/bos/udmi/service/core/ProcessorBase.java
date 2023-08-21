@@ -148,7 +148,7 @@ public abstract class ProcessorBase extends ContainerBase {
 
     // If the error comes from the reflect registry, then don't use the registry as the device,
     // so revert the default behavior (otherwise the message goes nowhere!).
-    if (errorMap.get(REGISTRY_ID_PROPERTY_KEY).equals(REFLECT_REGISTRY)) {
+    if (REFLECT_REGISTRY.equals(errorMap.get(REGISTRY_ID_PROPERTY_KEY))) {
       errorMap.put(REGISTRY_ID_PROPERTY_KEY, errorMap.get(DEVICE_ID_PROPERTY_KEY));
       errorMap.put(DEVICE_ID_PROPERTY_KEY, null);
     }

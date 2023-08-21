@@ -66,9 +66,7 @@ public class ReflectProcessorTest extends ProcessorTestBase {
   }
 
   private Bundle makeModelBundle(CloudModel model) {
-    Envelope reflect = new Envelope();
-    reflect.deviceId = TEST_DEVICE;
-    reflect.deviceRegistryId = TEST_REGISTRY;
+    Envelope reflect = makeTestEnvelope();
     reflect.transactionId = transactionId;
     reflect.subType = SubType.MODEL;
     reflect.payload = encodeBase64(stringify(model));

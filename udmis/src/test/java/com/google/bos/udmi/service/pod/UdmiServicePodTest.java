@@ -35,6 +35,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import udmi.schema.DiscoveryState;
 import udmi.schema.EndpointConfiguration;
+import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.LocalnetModel;
 import udmi.schema.PodConfiguration;
@@ -49,7 +50,7 @@ public class UdmiServicePodTest {
   private static final String BASE_CONFIG = "src/test/configs/base_pod.json";
   private static final String BRIDGE_CONFIG = "src/test/configs/bridge_pod.json";
   private static final String FILE_CONFIG = "src/test/configs/trace_pod.json";
-  private static final String TARGET_FILE = "foo/null/devices/null/003_event_pointset.json";
+  private static final String TARGET_FILE = "traces/simple/devices/AHU-22/002_event_pointset.json";
   private static final long RECEIVE_TIMEOUT_SEC = 2;
   private static final long RECEIVE_TIMEOUT_MS = RECEIVE_TIMEOUT_SEC * 1000;
   public static final String EMPTY_CONFIG = "{}";
@@ -84,21 +85,26 @@ public class UdmiServicePodTest {
         combineConfig(podConfig.flow_defaults, reverseFlow(podConfig.flows.get("state")));
     final MessageDispatcherImpl stateDispatcher =
         MessagePipeTestBase.getDispatcherFor(reversedState);
-    stateDispatcher.prototypeEnvelope.deviceId = TEST_DEVICE;
-    stateDispatcher.prototypeEnvelope.deviceRegistryId = TEST_REGISTRY;
 
     pod.activate();
 
     StateUpdate stateUpdate = new StateUpdate();
     stateUpdate.discovery = new DiscoveryState();
     stateUpdate.pointset = new PointsetState();
-    stateDispatcher.publish(stateUpdate);
+    stateDispatcher.withEnvelope(makeTestEnvelope()).publish(stateUpdate);
 
     pod.shutdown();
 
     LocalIotAccessProvider iotAccess = UdmiServicePod.getComponent(IOT_ACCESS_COMPONENT);
     List<String> commands = iotAccess.getCommands();
     assertEquals(3, commands.size(), "sent commands");
+  }
+
+  private Envelope makeTestEnvelope() {
+    Envelope envelope = new Envelope();
+    envelope.deviceId = TEST_DEVICE;
+    envelope.deviceRegistryId = TEST_REGISTRY;
+    return envelope;
   }
 
   @Test
