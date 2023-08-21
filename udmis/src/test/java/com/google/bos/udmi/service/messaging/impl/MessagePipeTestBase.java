@@ -26,7 +26,17 @@ public abstract class MessagePipeTestBase extends MessageTestBase {
 
   @NotNull
   public static MessageDispatcherImpl getDispatcherFor(EndpointConfiguration reversedTarget) {
-    return (MessageDispatcherImpl) MessageDispatcher.from(reversedTarget);
+    MessageDispatcherImpl from = (MessageDispatcherImpl) MessageDispatcher.from(reversedTarget);
+    from.setThreadEnvelope(makeTestEnvelope());
+    return from;
+  }
+
+  public static Envelope makeTestEnvelope() {
+    Envelope envelope = new Envelope();
+    envelope.deviceId = TEST_DEVICE;
+    envelope.deviceRegistryId = TEST_REGISTRY;
+    envelope.projectId = TEST_NAMESPACE;
+    return envelope;
   }
 
   protected boolean environmentIsEnabled() {

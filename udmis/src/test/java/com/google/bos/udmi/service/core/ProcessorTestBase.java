@@ -9,6 +9,7 @@ import static org.mockito.Mockito.mock;
 import com.google.bos.udmi.service.access.IotAccessBase;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl;
+import com.google.bos.udmi.service.messaging.impl.MessagePipeTestBase;
 import com.google.bos.udmi.service.messaging.impl.MessageTestBase;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.udmi.util.CleanDateFormat;
@@ -66,11 +67,7 @@ public abstract class ProcessorTestBase extends MessageTestBase {
   }
 
   protected Envelope makeTestEnvelope() {
-    Envelope envelope = new Envelope();
-    envelope.deviceId = TEST_DEVICE;
-    envelope.deviceRegistryId = TEST_REGISTRY;
-    envelope.projectId = TEST_NAMESPACE;
-    return envelope;
+    return MessagePipeTestBase.makeTestEnvelope();
   }
 
   private void activateReverseProcessor() {

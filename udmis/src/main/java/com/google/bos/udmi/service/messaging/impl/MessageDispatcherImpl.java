@@ -2,6 +2,7 @@ package com.google.bos.udmi.service.messaging.impl;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
+import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
@@ -133,12 +134,12 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   private void processHandler(Envelope envelope, Class<?> handlerType, Object messageObject) {
     try {
       messageEnvelopes.put(messageObject, envelope);
-      threadEnvelope.set(envelope);
+      setThreadEnvelope(envelope);
       handlers.get(handlerType).accept(messageObject);
       handlerCounts.computeIfAbsent(handlerType, key -> new AtomicInteger()).incrementAndGet();
     } finally {
       messageEnvelopes.remove(messageObject);
-      threadEnvelope.set(null);
+      setThreadEnvelope(null);
     }
   }
 
@@ -201,7 +202,11 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   }
 
   public void setThreadEnvelope(Envelope envelope) {
+    Envelope previous = threadEnvelope.get();
     threadEnvelope.set(envelope);
+    if (previous != null && envelope != null) {
+      throw new RuntimeException("Overwriting existing thread envelope");
+    }
   }
 
   @Override
