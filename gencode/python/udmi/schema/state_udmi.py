@@ -1,43 +1,6 @@
 """Generated class for state_udmi.json"""
 
 
-class RegistryUdmiState:
-  """Generated schema class"""
-
-  def __init__(self):
-    self.iot_provider = None
-
-  @staticmethod
-  def from_dict(source):
-    if not source:
-      return None
-    result = RegistryUdmiState()
-    result.iot_provider = source.get('iot_provider')
-    return result
-
-  @staticmethod
-  def map_from(source):
-    if not source:
-      return None
-    result = {}
-    for key in source:
-      result[key] = RegistryUdmiState.from_dict(source[key])
-    return result
-
-  @staticmethod
-  def expand_dict(input):
-    result = {}
-    for property in input:
-      result[property] = input[property].to_dict() if input[property] else {}
-    return result
-
-  def to_dict(self):
-    result = {}
-    if self.iot_provider:
-      result['iot_provider'] = self.iot_provider # 5
-    return result
-
-
 class SetupUdmiState:
   """Generated schema class"""
 
@@ -85,7 +48,7 @@ class UdmiState:
   def __init__(self):
     self.timestamp = None
     self.version = None
-    self.registry = None
+    self.regions = None
     self.setup = None
 
   @staticmethod
@@ -95,7 +58,7 @@ class UdmiState:
     result = UdmiState()
     result.timestamp = source.get('timestamp')
     result.version = source.get('version')
-    result.registry = RegistryUdmiState.from_dict(source.get('registry'))
+    result.regions = source.get('regions')
     result.setup = SetupUdmiState.from_dict(source.get('setup'))
     return result
 
@@ -121,8 +84,8 @@ class UdmiState:
       result['timestamp'] = self.timestamp # 5
     if self.version:
       result['version'] = self.version # 5
-    if self.registry:
-      result['registry'] = self.registry.to_dict() # 4
+    if self.regions:
+      result['regions'] = self.regions # 1
     if self.setup:
       result['setup'] = self.setup.to_dict() # 4
     return result

@@ -2,6 +2,7 @@
 package udmi.schema;
 
 import java.util.Date;
+import java.util.Map;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -19,7 +20,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder({
     "timestamp",
     "version",
-    "registry",
+    "regions",
     "setup"
 })
 @Generated("jsonschema2pojo")
@@ -38,15 +39,15 @@ public class UdmiState {
      */
     @JsonProperty("version")
     @JsonPropertyDescription("Version of the UDMI schema")
-    public String version;
+    public java.lang.String version;
     /**
-     * Registry Udmi State
+     * Regions Udmi State
      * <p>
      * 
      * 
      */
-    @JsonProperty("registry")
-    public RegistryUdmiState registry;
+    @JsonProperty("regions")
+    public Map<String, String> regions;
     /**
      * Setup Udmi State
      * <p>
@@ -59,8 +60,8 @@ public class UdmiState {
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.registry == null)? 0 :this.registry.hashCode()));
         result = ((result* 31)+((this.setup == null)? 0 :this.setup.hashCode()));
+        result = ((result* 31)+((this.regions == null)? 0 :this.regions.hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
         result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
         return result;
@@ -75,7 +76,7 @@ public class UdmiState {
             return false;
         }
         UdmiState rhs = ((UdmiState) other);
-        return (((((this.registry == rhs.registry)||((this.registry!= null)&&this.registry.equals(rhs.registry)))&&((this.setup == rhs.setup)||((this.setup!= null)&&this.setup.equals(rhs.setup))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
+        return (((((this.setup == rhs.setup)||((this.setup!= null)&&this.setup.equals(rhs.setup)))&&((this.regions == rhs.regions)||((this.regions!= null)&&this.regions.equals(rhs.regions))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
     }
 
 }

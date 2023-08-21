@@ -101,18 +101,18 @@
         </div>
     </div>
 </div>
-<div class="accordion" id="accordionregistry">
+<div class="accordion" id="accordionregions">
     <div class="card">
-        <div class="card-header" id="headingregistry">
+        <div class="card-header" id="headingregions">
             <h2 class="mb-0">
-                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#registry"
-                        aria-expanded="" aria-controls="registry" onclick="setAnchor('#registry')"><span class="property-name">registry</span></button>
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#regions"
+                        aria-expanded="" aria-controls="regions" onclick="setAnchor('#regions')"><span class="property-name">regions</span></button>
             </h2>
         </div>
 
-        <div id="registry"
-             class="collapse property-definition-div" aria-labelledby="headingregistry"
-             data-parent="#accordionregistry">
+        <div id="regions"
+             class="collapse property-definition-div" aria-labelledby="headingregions"
+             data-parent="#accordionregions">
             <div class="card-body pl-5">
 
     <div class="breadcrumbs">root
@@ -122,27 +122,32 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#registry" onclick="anchorLink('registry')">registry</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
-
+    <a href="#regions" onclick="anchorLink('regions')">regions</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+ <span class="badge badge-info no-additional">No Additional Properties</span>
             
 
             
             
 
             
-<div class="accordion" id="accordionregistry_iot_provider">
+<div class="accordion" id="accordionregions_pattern1">
     <div class="card">
-        <div class="card-header" id="headingregistry_iot_provider">
+        <div class="card-header" id="headingregions_pattern1">
             <h2 class="mb-0">
-                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#registry_iot_provider"
-                        aria-expanded="" aria-controls="registry_iot_provider" onclick="setAnchor('#registry_iot_provider')"><span class="property-name">iot_provider</span></button>
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#regions_pattern1"
+                        aria-expanded="" aria-controls="regions_pattern1" onclick="setAnchor('#regions_pattern1')"><span class="property-name">^[A-Z-]+$</span> <span class="badge badge-info pattern-property">Pattern Property</span></button>
             </h2>
         </div>
 
-        <div id="registry_iot_provider"
-             class="collapse property-definition-div" aria-labelledby="headingregistry_iot_provider"
-             data-parent="#accordionregistry_iot_provider">
-            <div class="card-body pl-5">
+        <div id="regions_pattern1"
+             class="collapse property-definition-div" aria-labelledby="headingregions_pattern1"
+             data-parent="#accordionregions_pattern1">
+            <div class="card-body pl-5"><h2 class="handle">
+                        <label>Pattern Property</label>
+                    </h2>
+                    <p>All property whose name matches the following regular expression must respect the following conditions</p>
+                    <span class="pattern-value">Property name regular expression: <code>^[A-Z-]+$</code></span>
+                    <br/>
 
     <div class="breadcrumbs">root
         <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -151,20 +156,15 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#registry" onclick="anchorLink('registry')">registry</a>
+    <a href="#regions" onclick="anchorLink('regions')">regions</a>
         <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
             <path
                 fill-rule="evenodd"
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#registry_iot_provider" onclick="anchorLink('registry_iot_provider')">iot_provider</a></div><span class="badge badge-dark value-type">Type: enum (of string)</span><br/>
+    <a href="#regions_pattern1" onclick="anchorLink('regions_pattern1')">^[A-Z-]+$</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 
-
-    <div class="enum-value" id="registry_iot_provider_enum">
-                <h4>Must be one of:</h4>
-                <ul class="list-group"><li class="list-group-item enum-item">"local"</li><li class="list-group-item enum-item">"dynamic"</li><li class="list-group-item enum-item">"implicit"</li><li class="list-group-item enum-item">"gcp_native"</li><li class="list-group-item enum-item">"gcp"</li><li class="list-group-item enum-item">"clearblade_native"</li><li class="list-group-item enum-item">"clearblade"</li></ul>
-                </div>
             
 
             

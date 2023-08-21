@@ -16,12 +16,14 @@
       "description": "Version of the UDMI schema",
       "type": "string"
     },
-    "registry": {
-      "title": "Registry Udmi State",
+    "regions": {
+      "title": "Regions Udmi State",
       "type": "object",
-      "properties": {
-        "iot_provider": {
-          "$ref": "file:common.json#/definitions/provider"
+      "existingJavaType": "java.util.Map<String, String>",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[A-Z-]+$": {
+          "type": "string"
         }
       }
     },
