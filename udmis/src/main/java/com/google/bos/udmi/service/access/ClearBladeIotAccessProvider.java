@@ -405,6 +405,19 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     return collect;
   }
 
+  private synchronized String regionRetry(String registry) {
+    try {
+      String region = registryRegions.get().get(registry);
+      if (region == null) {
+        warn("No registry found for registry " + registry);
+        fetchRegistryRegions();
+      }
+      return registryRegions.get().get(registry);
+    } catch (Exception e) {
+      throw new RuntimeException("While getting location for " + registry, e);
+    }
+  }
+
   private void unbindDevice(String registryId, String gatewayId, String proxyId) {
     try {
       debug(format("Unbind %s: %s from %s", registryId, proxyId, gatewayId));

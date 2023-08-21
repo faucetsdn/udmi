@@ -196,6 +196,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
           debug("Processing waited %ds on message loop %s", waiting, id);
           if (bundle.message.equals(TERMINATE_MARKER)) {
             info("Terminating message loop %s", id);
+            terminateHandlers();
             return;
           }
           debug("Handling message %d of %s", outCount++, this);
