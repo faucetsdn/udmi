@@ -58,8 +58,6 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   private final ExecutorService executor = Executors.newFixedThreadPool(EXECUTION_THREADS);
   private BlockingQueue<QueueEntry> sourceQueue;
   private Consumer<Bundle> dispatcher;
-  private int inCount;
-  private int outCount;
   private boolean activated;
 
   /**
@@ -199,7 +197,6 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
             terminateHandlers();
             return;
           }
-          debug("Handling message %d of %s", outCount++, this);
           envelope = bundle.envelope;
           debug("Processing %s/%s %s %s -> %s", envelope.subType, envelope.subFolder,
               envelope.transactionId, queueIdentifier(), dispatcher);
@@ -239,7 +236,6 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
 
   private void receiveBundle(String stringBundle) {
     ensureSourceQueue();
-    debug("Received message %d on %s", inCount++, this);
     pushQueueEntry(sourceQueue, stringBundle);
   }
 
