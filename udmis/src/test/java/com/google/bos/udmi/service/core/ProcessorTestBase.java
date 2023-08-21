@@ -14,8 +14,6 @@ import com.google.bos.udmi.service.messaging.impl.MessageTestBase;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.udmi.util.CleanDateFormat;
 import java.io.File;
-import java.io.IOException;
-import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -56,7 +54,7 @@ public abstract class ProcessorTestBase extends MessageTestBase {
       writeVersionDeployFile();
       createProcessorInstance();
       activateReverseProcessor();
-      getReverseDispatcher().setThreadEnvelope(makeTestEnvelope());
+      getReverseDispatcher();
     } catch (Exception e) {
       throw new RuntimeException("While initializing test instance", e);
     }

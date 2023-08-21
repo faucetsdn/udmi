@@ -3,6 +3,7 @@ package com.google.bos.udmi.service.core;
 import static com.google.bos.udmi.service.core.ProcessorBase.REFLECT_REGISTRY;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.times;
@@ -28,8 +29,7 @@ class TargetProcessorTest extends ProcessorTestBase {
     String payload = (String) command.remove("payload");
     String payloadString = GeneralUtils.decodeBase64(payload);
     Map<String, Object> payloadMap = toMap(payloadString);
-    String expectedFolder = isError ? SubFolder.ERROR.value() : SubFolder.POINTSET.value();
-    assertEquals(expectedFolder, command.remove("subFolder"), "subFolder field");
+    assertEquals(SubFolder.POINTSET.value(), command.remove("subFolder"), "subFolder field");
     assertEquals("event", command.remove("subType"), "subType field");
     assertEquals(TEST_DEVICE, command.remove("deviceId"));
     assertEquals(TEST_NAMESPACE, command.remove("projectId"));
@@ -42,11 +42,11 @@ class TargetProcessorTest extends ProcessorTestBase {
   }
 
   @NotNull
-  private Object getTestMessage(boolean isError) {
-    return isError ? makeErrorMessage() : new PointsetEvent();
+  private Object getTestMessage(boolean isExtra) {
+    return isExtra ? makeExtraFieldMessage() : new PointsetEvent();
   }
 
-  private Bundle makeErrorMessage() {
+  private Bundle makeExtraFieldMessage() {
     Map<String, Object> stringObjectMap = toMap(new PointsetEvent());
     stringObjectMap.put(EXTRA_FIELD_KEY, MONGOOSE);
     // Specify these explicitly since the sent object is a (generic) map.
@@ -58,17 +58,18 @@ class TargetProcessorTest extends ProcessorTestBase {
   }
 
   /**
-   * Test that a state update with multiple sub-blocks results in the expected defaulted message.
+   * Test receiving a message that has an unexpected extra field.
    */
   @Test
-  public void errorReceive() {
+  public void unexpectedReceive() {
     initializeTestInstance();
     getReverseDispatcher().publish(getTestMessage(true));
     terminateAndWait();
 
-    assertEquals(0, captured.size(), "unexpected received message count");
-    assertEquals(1, getExceptionCount(), "exception count");
-    assertEquals(0, getDefaultCount(), "default handler count");
+    assertEquals(1, captured.size(), "unexpected received message count");
+    assertTrue(captured.get(0) instanceof Map, "unexpected on-map message");
+    assertEquals(0, getExceptionCount(), "exception count");
+    assertEquals(1, getDefaultCount(), "default handler count");
     assertEquals(0, getMessageCount(PointsetEvent.class), "pointset handler count");
 
     ArgumentCaptor<String> commandCaptor = ArgumentCaptor.forClass(String.class);

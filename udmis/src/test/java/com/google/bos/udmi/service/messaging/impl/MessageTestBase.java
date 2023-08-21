@@ -1,6 +1,7 @@
 package com.google.bos.udmi.service.messaging.impl;
 
 import static com.google.bos.udmi.service.messaging.MessageDispatcher.messageHandlerFor;
+import static com.google.bos.udmi.service.messaging.impl.MessagePipeTestBase.makeTestEnvelope;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
@@ -31,7 +32,11 @@ public abstract class MessageTestBase extends MessageTestCore {
 
   protected MessageDispatcherImpl getReverseDispatcher() {
     getTestDispatcher();  // Ensure that the main pipe exists before doing the reverse.
-    reverse = Optional.ofNullable(reverse).orElseGet(() -> getTestDispatcher(true));
+    reverse = Optional.ofNullable(reverse).orElseGet(() -> {
+      MessageDispatcherImpl testDispatcher = getTestDispatcher(true);
+      testDispatcher.setThreadEnvelope(makeTestEnvelope());
+      return testDispatcher;
+    });
     return reverse;
   }
 
