@@ -413,8 +413,6 @@ public class Registrar {
       final Set<String> others = Sets.difference(union, gateways);
 
       ExecutorService executor = Executors.newFixedThreadPool(RUNNER_THREADS);
-      executor.execute(() -> System.err.println(
-          "Deleting devices executing in pool " + Thread.currentThread().getName()));
       final Instant start = Instant.now();
 
       // Delete gateways first so that they aren't holding the other devices hostage.
@@ -452,8 +450,6 @@ public class Registrar {
   private void processLocalDevices(AtomicInteger updatedCount, AtomicInteger processedCount) {
     try {
       ExecutorService executor = Executors.newFixedThreadPool(RUNNER_THREADS);
-      executor.execute(() -> System.err.println(
-          "Local devices executing in pool " + Thread.currentThread().getName()));
       final Instant start = Instant.now();
       for (String localName : localDevices.keySet()) {
         executor.execute(() -> {
@@ -681,8 +677,6 @@ public class Registrar {
   private void bindGatewayDevices(Map<String, LocalDevice> localDevices, Set<String> deviceSet) {
     try {
       ExecutorService executor = Executors.newFixedThreadPool(RUNNER_THREADS);
-      executor.execute(() -> System.err.println(
-          "Gateway binding executing in pool " + Thread.currentThread().getName()));
       final Instant start = Instant.now();
       for (LocalDevice localDevice : localDevices.values()) {
         ifTrueThen(localDevice.isGateway(), () -> executor.execute(

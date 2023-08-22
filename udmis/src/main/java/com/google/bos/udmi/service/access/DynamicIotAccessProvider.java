@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import udmi.schema.CloudModel;
 import udmi.schema.Envelope.SubFolder;
@@ -29,7 +30,7 @@ import udmi.schema.IotAccess;
  */
 public class DynamicIotAccessProvider extends IotAccessBase {
 
-  private final Map<String, String> registryProviders = new HashMap<>();
+  private final Map<String, String> registryProviders = new ConcurrentHashMap<>();
   private final List<String> providerList;
   private final Map<String, IotAccessBase> providers = new HashMap<>();
 

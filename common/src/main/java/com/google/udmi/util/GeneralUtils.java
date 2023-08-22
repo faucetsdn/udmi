@@ -134,7 +134,7 @@ public class GeneralUtils {
   public static String friendlyStackTrace(Throwable e) {
     List<String> messages = new ArrayList<>();
     while (e != null) {
-      messages.add(ofNullable(e.getMessage()).orElse(""));
+      messages.add(ofNullable(e.getMessage()).orElse(e.getClass().getSimpleName()));
       e = e.getCause();
     }
     return CSV_JOINER.join(messages).replace('\n', ' ');
