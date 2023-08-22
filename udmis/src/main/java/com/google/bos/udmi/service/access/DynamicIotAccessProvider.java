@@ -9,6 +9,7 @@ import static java.util.Optional.ofNullable;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.graph.ImmutableNetwork;
 import java.util.Arrays;
 import java.util.Date;
@@ -16,6 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.Function;
 import udmi.schema.CloudModel;
@@ -69,8 +71,8 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  protected Map<String, String> fetchRegistryRegions() {
-    return ImmutableMap.of();
+  protected Set<String> getRegistriesForRegion(String region) {
+    return ImmutableSet.of();
   }
 
   @Override

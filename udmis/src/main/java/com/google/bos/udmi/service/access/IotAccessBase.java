@@ -14,15 +14,18 @@ import static java.util.Optional.ofNullable;
 import com.google.bos.udmi.service.core.ProcessorBase.PreviousParseException;
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAmount;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import udmi.schema.CloudModel;
 import udmi.schema.Envelope.SubFolder;
@@ -34,8 +37,12 @@ import udmi.schema.IotAccess.IotProvider;
  */
 public abstract class IotAccessBase extends ContainerBase {
 
+  public static final int MAX_CONFIG_LENGTH = 65535;
+  public static final TemporalAmount REGION_RETRY_BACKOFF = Duration.ofSeconds(30);
   protected static final String UDMI_REGISTRY = "UDMI-REFLECT";
   protected static final String EMPTY_JSON = "{}";
+  static final Set<String> CLOUD_REGIONS =
+      ImmutableSet.of("us-central1", "europe-west1", "asia-east1");
   private static final long REGISTRY_COMMAND_BACKOFF_SEC = 60;
   private static final Map<String, Instant> BACKOFF_MAP = new ConcurrentHashMap<>();
   private static final long CONFIG_UPDATE_BACKOFF_MS = 1000;
@@ -46,8 +53,6 @@ public abstract class IotAccessBase extends ContainerBase {
       IotProvider.GCP, GcpIotAccessProvider.class,
       IotProvider.LOCAL, LocalIotAccessProvider.class
   );
-  public static final int MAX_CONFIG_LENGTH = 65535;
-  public static final TemporalAmount REGION_RETRY_BACKOFF = Duration.ofSeconds(30);
   private CompletableFuture<Map<String, String>> registryRegions;
   private Instant regionRetry = Instant.now();
 
@@ -72,13 +77,30 @@ public abstract class IotAccessBase extends ContainerBase {
     return format("%s/%s", registryId, deviceId);
   }
 
-  @Override
-  public void activate() {
-    super.activate();
-    if (isEnabled()) {
-      populateRegistryRegions(REFLECT_REGISTRY);
+  protected abstract Entry<Long, String> fetchConfig(String registryId, String deviceId);
+
+  protected Map<String, String> fetchRegistryRegions() {
+    Map<String, String> regionMap = CLOUD_REGIONS.stream().flatMap(
+        region -> getRegistriesForRegion(region).stream()
+            .collect(Collectors.toMap(x -> x, x -> region)).entrySet()
+            .stream()).collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+    debug(format("Fetched %s registry regions", regionMap.size()));
+    if (regionMap.isEmpty()) {
+      throw new RuntimeException("Region map is empty, assuming project misconfiguration.");
     }
+    return regionMap;
   }
+
+  protected abstract Set<String> getRegistriesForRegion(String region);
+
+  @NotNull
+  protected String getRegistryRegion(String registryId) {
+    String region = ofNullable(getCompletedRegistryRegion(registryId)).orElseGet(
+        () -> populateRegistryRegions(registryId));
+    return requireNonNull(region, "unknown region for registry " + registryId);
+  }
+
+  protected abstract boolean isEnabled();
 
   protected synchronized String populateRegistryRegions(String registryId) {
     if (regionRetry.isBefore(Instant.now())) {
@@ -89,15 +111,19 @@ public abstract class IotAccessBase extends ContainerBase {
     return getCompletedRegistryRegion(registryId);
   }
 
-  protected abstract Map<String, String> fetchRegistryRegions();
+  protected abstract void sendCommandBase(String registryId, String deviceId, SubFolder folder,
+      String message);
 
-  protected abstract Entry<Long, String> fetchConfig(String registryId, String deviceId);
+  protected abstract String updateConfig(String registryId, String deviceId, String config,
+      Long version);
 
-  @NotNull
-  protected String getRegistryRegion(String registryId) {
-    String region = ofNullable(getCompletedRegistryRegion(registryId)).orElseGet(
-        () -> populateRegistryRegions(registryId));
-    return requireNonNull(region, "unknown region for registry " + registryId);
+  private String checkedUpdate(String registryId, String deviceId, Long version, String updated) {
+    int configLength = updated.length();
+    if (configLength > MAX_CONFIG_LENGTH) {
+      throw new AbortLoopException(
+          format("Config length %d exceeds maximum %d", configLength, MAX_CONFIG_LENGTH));
+    }
+    return updateConfig(registryId, deviceId, updated, version);
   }
 
   private String getCompletedRegistryRegion(String registryId) {
@@ -107,14 +133,6 @@ public abstract class IotAccessBase extends ContainerBase {
       throw new RuntimeException("While getting region for registry " + registryId, e);
     }
   }
-
-  protected abstract boolean isEnabled();
-
-  protected abstract void sendCommandBase(String registryId, String deviceId, SubFolder folder,
-      String message);
-
-  protected abstract String updateConfig(String registryId, String deviceId, String config,
-      Long version);
 
   private boolean registryBackoffCheck(String registryId, String deviceId) {
     return ifNotNullGet(getBackoff(registryId, deviceId), end -> Instant.now().isAfter(end),
@@ -145,6 +163,14 @@ public abstract class IotAccessBase extends ContainerBase {
     } catch (Exception e) {
       error("Exception munging config: " + friendlyStackTrace(e));
       return null;
+    }
+  }
+
+  @Override
+  public void activate() {
+    super.activate();
+    if (isEnabled()) {
+      populateRegistryRegions(REFLECT_REGISTRY);
     }
   }
 
@@ -192,21 +218,6 @@ public abstract class IotAccessBase extends ContainerBase {
     }
   }
 
-  private String checkedUpdate(String registryId, String deviceId, Long version, String updated) {
-    int configLength = updated.length();
-    if (configLength > MAX_CONFIG_LENGTH) {
-      throw new AbortLoopException(
-          format("Config length %d exceeds maximum %d", configLength, MAX_CONFIG_LENGTH));
-    }
-    return updateConfig(registryId, deviceId, updated, version);
-  }
-
-  private static class AbortLoopException extends RuntimeException {
-    public AbortLoopException(String message) {
-      super(message);
-    }
-  }
-
   /**
    * Send a command to a device.
    */
@@ -238,6 +249,13 @@ public abstract class IotAccessBase extends ContainerBase {
 
   public void setProviderAffinity(String registryId, String deviceId, String providerId) {
     registryBackoffClear(registryId, deviceId);
+  }
+
+  private static class AbortLoopException extends RuntimeException {
+
+    public AbortLoopException(String message) {
+      super(message);
+    }
   }
 
   abstract String fetchRegistryMetadata(String registryId, String metadataKey);

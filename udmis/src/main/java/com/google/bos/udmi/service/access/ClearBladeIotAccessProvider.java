@@ -83,8 +83,6 @@ import udmi.schema.IotAccess;
  */
 public class ClearBladeIotAccessProvider extends IotAccessBase {
 
-  static final Set<String> CLOUD_REGIONS =
-      ImmutableSet.of("us-central1", "europe-west1", "asia-east1");
   private static final String EMPTY_JSON = "{}";
   private static final BiMap<Key_format, PublicKeyFormat> AUTH_TYPE_MAP = ImmutableBiMap.of(
       Key_format.RS_256, PublicKeyFormat.RSA_PEM,
@@ -99,11 +97,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       .setGatewayType(GatewayType.GATEWAY)
       .setGatewayAuthMethod(GatewayAuthMethod.ASSOCIATION_ONLY)
       .build();
-  private static final Duration REGISTRY_RETRY_TIME = Duration.ofSeconds(30);
-
   private final String projectId;
-  private CompletableFuture<Map<String, String>> registryRegions;
-  private Instant registryRetry = Instant.now();
 
   /**
    * Create a new instance for interfacing with GCP IoT Core.
@@ -282,17 +276,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     }
   }
 
-  @Override
-  protected synchronized void fetchRegistryRegions() {
-    if (registryRetry.isBefore(Instant.now())) {
-      registryRegions = new CompletableFuture<>();
-      registryRegions.complete(fetchRegistryCloudRegions());
-      registryRetry = Instant.now().plus(REGISTRY_RETRY_TIME);
-    } else {
-      warn("Not refetching regions due to fetch retry threshold " + getTimestamp(registryRetry));
-    }
-  }
-
   private String getDeviceName(String registryId, String deviceId) {
     return DeviceName.of(projectId, getRegistryLocation(registryId), registryId, deviceId)
         .toString();
@@ -316,7 +299,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   }
 
   @NotNull
-  private Map<String, String> getRegistriesForRegion(String region) {
+  protected Set<String> getRegistriesForRegion(String region) {
     try {
       DeviceManagerClient deviceManagerClient = getDeviceManagerClient();
       ListDeviceRegistriesRequest request = ListDeviceRegistriesRequest.Builder.newBuilder()
@@ -325,10 +308,10 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       ListDeviceRegistriesResponse response = deviceManagerClient.listDeviceRegistries(request);
       requireNonNull(response, "get registries response is null");
       List<DeviceRegistry> deviceRegistries = response.getDeviceRegistriesList();
-      Map<String, String> registries =
+      Set<String> registries =
           ofNullable(deviceRegistries).orElseGet(ImmutableList::of).stream()
               .map(registry -> registry.toBuilder().getId())
-              .collect(Collectors.toMap(item -> item, item -> region));
+              .collect(Collectors.toSet());
       debug("Fetched " + registries.size() + " registries for region " + region);
       return registries;
     } catch (Exception e) {
@@ -403,19 +386,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       pageToken = response.getNextPageToken();
     } while (pageToken != null);
     return collect;
-  }
-
-  private synchronized String regionRetry(String registry) {
-    try {
-      String region = registryRegions.get().get(registry);
-      if (region == null) {
-        warn("No registry found for registry " + registry);
-        fetchRegistryRegions();
-      }
-      return registryRegions.get().get(registry);
-    } catch (Exception e) {
-      throw new RuntimeException("While getting location for " + registry, e);
-    }
   }
 
   private void unbindDevice(String registryId, String gatewayId, String proxyId) {

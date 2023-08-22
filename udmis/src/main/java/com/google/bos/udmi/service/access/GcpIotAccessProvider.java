@@ -5,6 +5,7 @@ import static com.google.udmi.util.GeneralUtils.decodeBase64;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.getDate;
 import static java.lang.String.format;
@@ -105,6 +106,7 @@ public class GcpIotAccessProvider extends IotAccessBase {
     projectId = variableSubstitution(iotAccess.project_id, "gcp project id not specified");
     cloudIotService = createCloudIotService();
     registries = cloudIotService.projects().locations().registries();
+    ifTrueThen(isEnabled(), this::fetchRegistryRegions);
   }
 
   @NotNull
@@ -213,18 +215,6 @@ public class GcpIotAccessProvider extends IotAccessBase {
         list -> list.stream().map(this::convertUdmi).collect(Collectors.toList()));
   }
 
-  @Override
-  protected Map<String, String> fetchRegistryRegions() {
-    Map<String, String> regionMap = CLOUD_REGIONS.stream().map(this::getRegistriesForRegion)
-        .flatMap(map -> map.entrySet().stream())
-        .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
-    debug(format("Fetched %s registry regions", regionMap.size()));
-    if (regionMap.isEmpty()) {
-      throw new RuntimeException("Region map is empty, assuming project misconfiguration.");
-    }
-    return regionMap;
-  }
-
   private String getDevicePath(String registryId, String deviceId) {
     return format(DEVICE_PATH_FORMAT, getRegistryPath(registryId), deviceId);
   }
@@ -238,7 +228,7 @@ public class GcpIotAccessProvider extends IotAccessBase {
   }
 
   @NotNull
-  private Map<String, String> getRegistriesForRegion(String region) {
+  protected Set<String> getRegistriesForRegion(String region) {
     String locationPath = getLocationPath(region);
     try {
       debug("Fetching registries for " + locationPath);
@@ -251,7 +241,7 @@ public class GcpIotAccessProvider extends IotAccessBase {
       List<DeviceRegistry> deviceRegistries = response.getDeviceRegistries();
       return ofNullable(deviceRegistries).orElseGet(ImmutableList::of).stream()
           .map(DeviceRegistry::getId)
-          .collect(Collectors.toMap(item -> item, item -> region));
+          .collect(Collectors.toSet());
     } catch (Exception e) {
       throw new RuntimeException("While fetching registries for " + locationPath, e);
     }
