@@ -83,7 +83,7 @@ public class Registrar {
   private static final String SCHEMA_NAME = "UDMI";
   private static final String SITE_METADATA_JSON = "site_metadata.json";
   private static final String SWARM_SUBFOLDER = "swarm";
-  private static final long PROCESSING_TIMEOUT_MIN = 60;
+  private static final long PROCESSING_TIMEOUT_SEC = 60;
   private static final int RUNNER_THREADS = 20;
   private static final String CONFIG_SUB_TYPE = "config";
   private static final String MODEL_SUB_TYPE = "model";
@@ -412,18 +412,11 @@ public class Registrar {
           LocalDevice::isGateway, false)).collect(Collectors.toSet());
       final Set<String> others = Sets.difference(union, gateways);
 
-      ExecutorService executor = Executors.newFixedThreadPool(RUNNER_THREADS);
-      executor.execute(() -> System.err.println(
-          "Deleting devices executing in pool " + Thread.currentThread().getName()));
       final Instant start = Instant.now();
 
       // Delete gateways first so that they aren't holding the other devices hostage.
-      gateways.forEach(id -> executor.execute(() -> deleteDevice(id)));
-      Thread.sleep(1000); // Some time to let the gateways get deleted.
-      others.forEach(id -> executor.execute(() -> deleteDevice((id))));
-
-      executor.shutdown();
-      executor.awaitTermination(PROCESSING_TIMEOUT_MIN, TimeUnit.MINUTES);
+      synchronizedDelete(gateways);
+      synchronizedDelete(others);
 
       Duration between = Duration.between(start, Instant.now());
       double seconds = between.getSeconds() + between.getNano() / 1e9;
@@ -440,6 +433,13 @@ public class Registrar {
     }
   }
 
+  private void synchronizedDelete(Set<String> gateways) throws InterruptedException {
+    ExecutorService executor = Executors.newFixedThreadPool(RUNNER_THREADS);
+    gateways.forEach(id -> executor.execute(() -> deleteDevice(id)));
+    executor.shutdown();
+    executor.awaitTermination(PROCESSING_TIMEOUT_SEC, TimeUnit.SECONDS);
+  }
+
   private void deleteDevice(String deviceId) {
     try {
       System.err.println("Deleting device " + deviceId);
@@ -452,8 +452,6 @@ public class Registrar {
   private void processLocalDevices(AtomicInteger updatedCount, AtomicInteger processedCount) {
     try {
       ExecutorService executor = Executors.newFixedThreadPool(RUNNER_THREADS);
-      executor.execute(() -> System.err.println(
-          "Local devices executing in pool " + Thread.currentThread().getName()));
       final Instant start = Instant.now();
       for (String localName : localDevices.keySet()) {
         executor.execute(() -> {
@@ -465,7 +463,7 @@ public class Registrar {
         });
       }
       executor.shutdown();
-      executor.awaitTermination(PROCESSING_TIMEOUT_MIN, TimeUnit.MINUTES);
+      executor.awaitTermination(PROCESSING_TIMEOUT_SEC, TimeUnit.SECONDS);
 
       Duration between = Duration.between(start, Instant.now());
       double seconds = between.getSeconds() + between.getNano() / 1e9;
@@ -681,15 +679,13 @@ public class Registrar {
   private void bindGatewayDevices(Map<String, LocalDevice> localDevices, Set<String> deviceSet) {
     try {
       ExecutorService executor = Executors.newFixedThreadPool(RUNNER_THREADS);
-      executor.execute(() -> System.err.println(
-          "Gateway binding executing in pool " + Thread.currentThread().getName()));
       final Instant start = Instant.now();
       for (LocalDevice localDevice : localDevices.values()) {
         ifTrueThen(localDevice.isGateway(), () -> executor.execute(
             () -> bindGatewayDevice(localDevices, deviceSet, localDevice)));
       }
       executor.shutdown();
-      executor.awaitTermination(PROCESSING_TIMEOUT_MIN, TimeUnit.MINUTES);
+      executor.awaitTermination(PROCESSING_TIMEOUT_SEC, TimeUnit.SECONDS);
 
       Duration between = Duration.between(start, Instant.now());
       double seconds = between.getSeconds() + between.getNano() / 1e9;

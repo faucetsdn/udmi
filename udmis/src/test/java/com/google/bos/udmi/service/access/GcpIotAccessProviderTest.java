@@ -41,6 +41,7 @@ class GcpIotAccessProviderTest {
   private static IotAccess getConfig() {
     IotAccess iotAccess = new IotAccess();
     iotAccess.project_id = TEST_PROJECT;
+    iotAccess.options = "enabled";
     return iotAccess;
   }
 

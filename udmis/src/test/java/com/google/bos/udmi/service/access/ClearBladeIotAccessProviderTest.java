@@ -43,7 +43,7 @@ class ClearBladeIotAccessProviderTest {
     }
 
     @Override
-    protected Map<String, String> fetchRegistryCloudRegions() {
+    protected Map<String, String> fetchRegistryRegions() {
       return ImmutableMap.of(TEST_REGISTRY, TEST_REGION);
     }
 
