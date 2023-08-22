@@ -231,7 +231,6 @@ public class GcpIotAccessProvider extends IotAccessBase {
   protected Set<String> getRegistriesForRegion(String region) {
     String locationPath = getLocationPath(region);
     try {
-      debug("Fetching registries for " + locationPath);
       ListDeviceRegistriesResponse response = cloudIotService
           .projects()
           .locations()
@@ -239,9 +238,11 @@ public class GcpIotAccessProvider extends IotAccessBase {
           .list(locationPath)
           .execute();
       List<DeviceRegistry> deviceRegistries = response.getDeviceRegistries();
-      return ofNullable(deviceRegistries).orElseGet(ImmutableList::of).stream()
+      Set<String> registries = ofNullable(deviceRegistries).orElseGet(ImmutableList::of).stream()
           .map(DeviceRegistry::getId)
           .collect(Collectors.toSet());
+      debug("Fetched " + registries.size() + " registries for region " + region);
+      return registries;
     } catch (Exception e) {
       throw new RuntimeException("While fetching registries for " + locationPath, e);
     }

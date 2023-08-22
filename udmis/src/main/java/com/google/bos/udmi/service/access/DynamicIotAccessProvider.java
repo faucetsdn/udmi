@@ -71,8 +71,13 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   @Override
+  protected Map<String, String> fetchRegistryRegions() {
+    return ImmutableMap.of();
+  }
+
+  @Override
   protected Set<String> getRegistriesForRegion(String region) {
-    return ImmutableSet.of();
+    throw new RuntimeException("Should not be called!");
   }
 
   @Override
