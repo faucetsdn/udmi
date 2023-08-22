@@ -34,6 +34,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.TreeMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -133,7 +134,7 @@ public class GeneralUtils {
   public static String friendlyStackTrace(Throwable e) {
     List<String> messages = new ArrayList<>();
     while (e != null) {
-      messages.add(e.getMessage());
+      messages.add(ofNullable(e.getMessage()).orElse(e.getClass().getSimpleName()));
       e = e.getCause();
     }
     return CSV_JOINER.join(messages).replace('\n', ' ');

@@ -16,6 +16,17 @@
       "description": "Version of the UDMI schema",
       "type": "string"
     },
+    "regions": {
+      "title": "Regions Udmi State",
+      "type": "object",
+      "existingJavaType": "java.util.Map<String, String>",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[A-Z-]+$": {
+          "type": "string"
+        }
+      }
+    },
     "setup": {
       "title": "Setup Udmi State",
       "type": "object",

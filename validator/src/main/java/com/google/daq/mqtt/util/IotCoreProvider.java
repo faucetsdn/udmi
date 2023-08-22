@@ -255,7 +255,6 @@ class IotCoreProvider implements IotProvider {
             .execute();
         java.util.List<Device> devices = response.getDevices();
         allDevices.addAll(devices == null ? ImmutableList.of() : devices);
-        System.err.printf("Retrieved %d devices from registry...%n", allDevices.size());
         nextPageToken = response.getNextPageToken();
       } while (nextPageToken != null);
       return allDevices.stream().map(Device::getId).collect(Collectors.toSet());

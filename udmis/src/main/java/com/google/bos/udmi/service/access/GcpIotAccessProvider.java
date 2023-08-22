@@ -1,14 +1,14 @@
 package com.google.bos.udmi.service.access;
 
+import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.decodeBase64;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.getDate;
-import static com.google.udmi.util.JsonUtil.toMap;
 import static java.lang.String.format;
-import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
@@ -39,7 +39,7 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.udmi.util.GeneralUtils;
+import java.io.IOException;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Base64;
 import java.util.HashMap;
@@ -47,7 +47,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import udmi.schema.CloudModel;
@@ -85,10 +84,9 @@ public class GcpIotAccessProvider extends IotAccessBase {
   private static final String ASSOCIATION_ONLY = "ASSOCIATION_ONLY";
   private static final GatewayConfig GATEWAY_CONFIG =
       new GatewayConfig().setGatewayType(GATEWAY_TYPE).setGatewayAuthMethod(ASSOCIATION_ONLY);
-  private static final String DISABLED_OPTION = "disabled";
+  private static final String ENABLED_OPTION = "enabled";
   private final String projectId;
   private final CloudIot cloudIotService;
-  private final CompletableFuture<Map<String, String>> registryRegions = new CompletableFuture<>();
   private final CloudIot.Projects.Locations.Registries registries;
 
   /**
@@ -97,8 +95,8 @@ public class GcpIotAccessProvider extends IotAccessBase {
    */
   public GcpIotAccessProvider(IotAccess iotAccess) {
     String options = variableSubstitution(iotAccess.options, null);
-    if (DISABLED_OPTION.equals(options)) {
-      warn("access provider disabled through options");
+    if (!ENABLED_OPTION.equals(options)) {
+      warn("access provider disabled, missing option '%s'", ENABLED_OPTION);
       projectId = null;
       cloudIotService = null;
       registries = null;
@@ -108,6 +106,7 @@ public class GcpIotAccessProvider extends IotAccessBase {
     projectId = variableSubstitution(iotAccess.project_id, "gcp project id not specified");
     cloudIotService = createCloudIotService();
     registries = cloudIotService.projects().locations().registries();
+    ifTrueThen(isEnabled(), this::fetchRegistryRegions);
   }
 
   @NotNull
@@ -216,17 +215,6 @@ public class GcpIotAccessProvider extends IotAccessBase {
         list -> list.stream().map(this::convertUdmi).collect(Collectors.toList()));
   }
 
-  private Map<String, String> fetchRegistryCloudRegions() {
-    Map<String, String> regionMap = CLOUD_REGIONS.stream().map(this::getRegistriesForRegion)
-        .flatMap(map -> map.entrySet().stream())
-        .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
-    debug(format("Fetched %s registry regions", regionMap.size()));
-    if (regionMap.isEmpty()) {
-      throw new RuntimeException("Region map is empty, assuming project misconfiguration.");
-    }
-    return regionMap;
-  }
-
   private String getDevicePath(String registryId, String deviceId) {
     return format(DEVICE_PATH_FORMAT, getRegistryPath(registryId), deviceId);
   }
@@ -240,10 +228,9 @@ public class GcpIotAccessProvider extends IotAccessBase {
   }
 
   @NotNull
-  private Map<String, String> getRegistriesForRegion(String region) {
+  protected Set<String> getRegistriesForRegion(String region) {
     String locationPath = getLocationPath(region);
     try {
-      debug("Fetching registries for " + locationPath);
       ListDeviceRegistriesResponse response = cloudIotService
           .projects()
           .locations()
@@ -251,9 +238,11 @@ public class GcpIotAccessProvider extends IotAccessBase {
           .list(locationPath)
           .execute();
       List<DeviceRegistry> deviceRegistries = response.getDeviceRegistries();
-      return ofNullable(deviceRegistries).orElseGet(ImmutableList::of).stream()
+      Set<String> registries = ofNullable(deviceRegistries).orElseGet(ImmutableList::of).stream()
           .map(DeviceRegistry::getId)
-          .collect(Collectors.toMap(item -> item, item -> region));
+          .collect(Collectors.toSet());
+      debug("Fetched " + registries.size() + " registries for region " + region);
+      return registries;
     } catch (Exception e) {
       throw new RuntimeException("While fetching registries for " + locationPath, e);
     }
@@ -261,8 +250,7 @@ public class GcpIotAccessProvider extends IotAccessBase {
 
   private String getRegistryPath(String registryId) {
     try {
-      String region = requireNonNull(registryRegions.get().get(registryId),
-          "unknown region for registry " + registryId);
+      String region = getRegistryRegion(registryId);
       return format(REGISTRY_PATH_FORMAT, getLocationPath(region), registryId);
     } catch (Exception e) {
       throw new RuntimeException("While getting registry path for " + registryId, e);
@@ -272,20 +260,34 @@ public class GcpIotAccessProvider extends IotAccessBase {
   private CloudModel listRegistryDevices(String deviceRegistryId, String gatewayId) {
     String registryPath = getRegistryPath(deviceRegistryId);
     try {
-      Devices.List request = registries.devices().list(registryPath);
-      ifNotNullThen(gatewayId, request::setGatewayListOptionsAssociationsGatewayId);
-      ListDevicesResponse response = request.execute();
-      List<Device> devices =
-          ofNullable(response.getDevices()).orElseGet(ImmutableList::of);
       CloudModel cloudModel = new CloudModel();
-      cloudModel.device_ids =
-          devices.stream().map(this::convertToEntry)
-              .collect(Collectors.toMap(Entry::getKey, Entry::getValue, GeneralUtils::mapReplace,
-                  HashMap::new));
+      cloudModel.device_ids = fetchDevices(gatewayId, registryPath);
+      ifNotNullThen(gatewayId, options -> debug(format("Bound devices for %s: %s",
+          gatewayId, CSV_JOINER.join(cloudModel.device_ids.keySet()))));
       return cloudModel;
     } catch (Exception e) {
       throw new RuntimeException("While listing devices for " + registryPath, e);
     }
+  }
+
+  @NotNull
+  private HashMap<String, CloudModel> fetchDevices(String gatewayId,
+      String registryPath) throws IOException {
+    HashMap<String, CloudModel> collect = new HashMap<>();
+    String pageToken = null;
+    do {
+      Devices.List request = registries.devices().list(registryPath);
+      ifNotNullThen(gatewayId, request::setGatewayListOptionsAssociationsGatewayId);
+      request.setPageToken(pageToken);
+      ListDevicesResponse response = request.execute();
+      List<Device> devices =
+          ofNullable(response.getDevices()).orElseGet(ImmutableList::of);
+      Map<String, CloudModel> deviceMap = devices.stream().map(this::convertToEntry)
+          .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+      collect.putAll(deviceMap);
+      pageToken = response.getNextPageToken();
+    } while (pageToken != null);
+    return collect;
   }
 
   private void unbindDevice(String registryId, String gatewayId, String proxyId) {
@@ -313,17 +315,12 @@ public class GcpIotAccessProvider extends IotAccessBase {
 
   @Override
   public void activate() {
-    try {
-      if (!isEnabled()) {
-        warn("GCP access provider disabled b/c empty project id");
-        return;
-      }
-      debug("Initializing GCP access provider for project " + projectId);
-      registryRegions.complete(fetchRegistryCloudRegions());
-      super.activate();
-    } catch (Exception e) {
-      throw new RuntimeException("While activating", e);
+    super.activate();
+    if (!isEnabled()) {
+      warn("GCP access provider disabled b/c empty project id");
+      return;
     }
+    debug("Initializing GCP access provider for project " + projectId);
   }
 
   @Override

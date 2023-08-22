@@ -190,7 +190,7 @@ public class IotReflectorClient implements IotProvider {
           throw new RuntimeException("Received unexpected reply message " + transactionId);
         }
       } catch (Exception e) {
-        System.err.printf("Exception handling message: %s", friendlyStackTrace(e));
+        System.err.printf("Exception handling message: %s%n", friendlyStackTrace(e));
       }
     }
   }

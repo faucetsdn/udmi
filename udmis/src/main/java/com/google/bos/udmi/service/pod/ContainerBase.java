@@ -1,22 +1,18 @@
 package com.google.bos.udmi.service.pod;
 
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
-import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.core.ComponentName;
-import com.google.bos.udmi.service.core.ProcessorBase;
-import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import java.io.PrintStream;
+import java.time.Instant;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.apache.commons.cli.MissingArgumentException;
 import org.jetbrains.annotations.NotNull;
 import udmi.schema.Level;
 
@@ -30,6 +26,10 @@ public abstract class ContainerBase {
   public static final String INITIAL_EXECUTION_CONTEXT = "xxxxxxxx";
   private static final ThreadLocal<String> executionContext = new ThreadLocal<>();
   private static final Pattern VARIABLE_PATTERN = Pattern.compile("\\$\\{([A-Z_]+)\\}");
+
+  private static String environmentReplacer(MatchResult match) {
+    return ofNullable(System.getenv(match.group(1))).orElse("");
+  }
 
   /**
    * Get the component name taken from a class annotation.
@@ -45,7 +45,7 @@ public abstract class ContainerBase {
 
   protected synchronized String grabExecutionContext() {
     String previous = getExecutionContext();
-    String context = format("%08x", Objects.hash(this, Long.toString(System.currentTimeMillis())));
+    String context = format("%08x", (long) (Math.random() * 0x100000000L));
     setExecutionContext(context);
     return previous;
   }
@@ -59,10 +59,6 @@ public abstract class ContainerBase {
     String out = matcher.replaceAll(ContainerBase::environmentReplacer);
     ifNotTrueThen(value.equals(out), () -> debug("Replaced value %s with '%s'", value, out));
     return out;
-  }
-
-  private static String environmentReplacer(MatchResult match) {
-    return ofNullable(System.getenv(match.group(1))).orElse("");
   }
 
   private String getExecutionContext() {
