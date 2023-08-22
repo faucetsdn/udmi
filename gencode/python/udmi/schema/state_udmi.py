@@ -48,6 +48,7 @@ class UdmiState:
   def __init__(self):
     self.timestamp = None
     self.version = None
+    self.regions = None
     self.setup = None
 
   @staticmethod
@@ -57,6 +58,7 @@ class UdmiState:
     result = UdmiState()
     result.timestamp = source.get('timestamp')
     result.version = source.get('version')
+    result.regions = source.get('regions')
     result.setup = SetupUdmiState.from_dict(source.get('setup'))
     return result
 
@@ -82,6 +84,8 @@ class UdmiState:
       result['timestamp'] = self.timestamp # 5
     if self.version:
       result['version'] = self.version # 5
+    if self.regions:
+      result['regions'] = self.regions # 1
     if self.setup:
       result['setup'] = self.setup.to_dict() # 4
     return result

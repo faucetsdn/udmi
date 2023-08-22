@@ -3,6 +3,7 @@ package com.google.bos.udmi.service.access;
 import static com.google.udmi.util.GeneralUtils.using;
 import static java.lang.String.format;
 
+import com.google.common.collect.ImmutableSet;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import udmi.schema.CloudModel;
@@ -44,6 +46,11 @@ public class LocalIotAccessProvider extends IotAccessBase {
   @Override
   protected boolean isEnabled() {
     return true;
+  }
+
+  @Override
+  protected Set<String> getRegistriesForRegion(String region) {
+    return ImmutableSet.of();
   }
 
   @Override

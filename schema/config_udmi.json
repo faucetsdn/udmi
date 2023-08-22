@@ -14,6 +14,9 @@
       "title": "Setup Udmi Config",
       "type": "object",
       "properties": {
+        "hostname": {
+          "type": "string"
+        },
         "functions_min": {
           "type": "integer"
         },

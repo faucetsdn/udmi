@@ -7,13 +7,19 @@ import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.graph.ImmutableNetwork;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import udmi.schema.CloudModel;
 import udmi.schema.Envelope.SubFolder;
@@ -24,7 +30,7 @@ import udmi.schema.IotAccess;
  */
 public class DynamicIotAccessProvider extends IotAccessBase {
 
-  private final Map<String, String> registryProviders = new HashMap<>();
+  private final Map<String, String> registryProviders = new ConcurrentHashMap<>();
   private final List<String> providerList;
   private final Map<String, IotAccessBase> providers = new HashMap<>();
 
@@ -62,6 +68,16 @@ public class DynamicIotAccessProvider extends IotAccessBase {
 
   @Override
   protected boolean isEnabled() {
+    return true;
+  }
+
+  @Override
+  protected Map<String, String> fetchRegistryRegions() {
+    return ImmutableMap.of();
+  }
+
+  @Override
+  protected Set<String> getRegistriesForRegion(String region) {
     throw new RuntimeException("Should not be called!");
   }
 
