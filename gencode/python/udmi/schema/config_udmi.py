@@ -5,6 +5,7 @@ class SetupUdmiConfig:
   """Generated schema class"""
 
   def __init__(self):
+    self.hostname = None
     self.functions_min = None
     self.functions_max = None
     self.udmi_version = None
@@ -20,6 +21,7 @@ class SetupUdmiConfig:
     if not source:
       return None
     result = SetupUdmiConfig()
+    result.hostname = source.get('hostname')
     result.functions_min = source.get('functions_min')
     result.functions_max = source.get('functions_max')
     result.udmi_version = source.get('udmi_version')
@@ -49,6 +51,8 @@ class SetupUdmiConfig:
 
   def to_dict(self):
     result = {}
+    if self.hostname:
+      result['hostname'] = self.hostname # 5
     if self.functions_min:
       result['functions_min'] = self.functions_min # 5
     if self.functions_max:

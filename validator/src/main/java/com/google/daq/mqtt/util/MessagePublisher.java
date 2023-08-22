@@ -32,7 +32,7 @@ public interface MessagePublisher {
    */
   enum QuerySpeed {
     QUICK(1),
-    SHORT(10),
+    SHORT(15),
     LONG(30);
 
     private final int seconds;
