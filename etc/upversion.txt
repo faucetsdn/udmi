@@ -106,3 +106,5 @@ y tests/schemas/metadata/nosys.json
 y tests/schemas/state/gateway_test.json
 y tests/schemas/state_validation/sequencer.json
 n tests/schemas/configuration_pubber/mosquitto.json
+y tests/schemas/metadata/network.json
+y tests/schemas/state/network.json
