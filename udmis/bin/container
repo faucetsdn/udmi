@@ -59,7 +59,7 @@ current_user=$USER@$HOSTNAME
 revparse=`git rev-parse HEAD`
 
 udmi_ver=g${revparse:0:9}
-udmi_ref=$REPOSITORY/$IMAGE:$udmi_ver
+udmi_ref=$REPOSITORY/udmi:$udmi_ver
 
 version=`git describe || echo $udmi_ref`
 
@@ -91,7 +91,7 @@ fi
 if [[ $cmd == build && $REPOSITORY != local ]]; then
     docker tag $IMAGE $udmi_ref
     docker push $udmi_ref
-    hash=$(docker images --digests $REPOSITORY/$IMAGE | fgrep $udmi_ver | awk '{print $3}')
+    hash=$(docker images --digests ${udmi_ref%/*} | fgrep $udmi_ver | awk '{print $3}')
     ihash=$udmi_ref@$hash
     for file in $TEMPLATES; do
         if fgrep -q @IMAGE-$IMAGE@ etc/$file; then
