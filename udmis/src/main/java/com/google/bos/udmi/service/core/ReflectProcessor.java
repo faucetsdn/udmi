@@ -48,6 +48,7 @@ public class ReflectProcessor extends ProcessorBase {
   static final SetupUdmiConfig DEPLOYED_CONFIG =
       loadFileStrictRequired(SetupUdmiConfig.class, new File(DEPLOY_FILE));
   static final String UDMI_VERSION = requireNonNull(ReflectProcessor.DEPLOYED_CONFIG.udmi_version);
+  public static final String HOSTNAME = System.getenv("HOSTNAME");
 
   @Override
   protected void defaultHandler(Object message) {
@@ -221,6 +222,7 @@ public class ReflectProcessor extends ProcessorBase {
     udmiConfig.last_state = toolState.timestamp;
     udmiConfig.setup = new SetupUdmiConfig();
     copyFields(DEPLOYED_CONFIG, udmiConfig.setup, false);
+    udmiConfig.setup.hostname = HOSTNAME;
     udmiConfig.setup.udmi_version = UDMI_VERSION;
     udmiConfig.setup.functions_min = FUNCTIONS_VERSION_MIN;
     udmiConfig.setup.functions_max = FUNCTIONS_VERSION_MAX;

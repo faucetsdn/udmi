@@ -91,7 +91,7 @@ fi
 if [[ $cmd == build && $REPOSITORY != local ]]; then
     docker tag $IMAGE $udmi_ref
     docker push $udmi_ref
-    hash=$(docker images --digests ${udmi_ref%/*} | fgrep $udmi_ver | awk '{print $3}')
+    hash=$(docker images --digests ${udmi_ref%:*} | fgrep $udmi_ver | awk '{print $3}')
     ihash=$udmi_ref@$hash
     for file in $TEMPLATES; do
         if fgrep -q @IMAGE-$IMAGE@ etc/$file; then
