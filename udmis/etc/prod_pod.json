@@ -24,12 +24,13 @@
     },
     "clearblade-iot-core": {
       "provider": "clearblade",
-      "project_id": "${CLEARBLADE_PROJECT}"
+      "project_id": "${CLEARBLADE_PROJECT}",
+      "options": "distributor=stately"
     },
     "gcp-iot-core": {
       "provider": "gcp",
       "project_id": "${GCP_PROJECT}",
-      "options": "${GCP_IOT_OPTIONS}"
+      "options": "${GCP_IOT_OPTIONS},distributor=stately"
     }
   },
   "distributors": {

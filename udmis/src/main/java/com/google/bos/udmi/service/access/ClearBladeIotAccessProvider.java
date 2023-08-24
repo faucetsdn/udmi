@@ -103,6 +103,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
    * Create a new instance for interfacing with GCP IoT Core.
    */
   public ClearBladeIotAccessProvider(IotAccess iotAccess) {
+    super(iotAccess);
     projectId = getProjectId(iotAccess);
     ifTrueThen(isEnabled(), this::fetchRegistryRegions);
   }

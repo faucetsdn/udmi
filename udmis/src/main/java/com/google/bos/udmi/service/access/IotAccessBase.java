@@ -13,12 +13,15 @@ import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.core.ProcessorBase.PreviousParseException;
 import com.google.bos.udmi.service.pod.ContainerBase;
+import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAmount;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -31,6 +34,7 @@ import udmi.schema.CloudModel;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.IotAccess;
 import udmi.schema.IotAccess.IotProvider;
+import udmi.schema.UdmiState;
 
 /**
  * Generic interface for accessing iot device management.
@@ -53,8 +57,13 @@ public abstract class IotAccessBase extends ContainerBase {
       IotProvider.GCP, GcpIotAccessProvider.class,
       IotProvider.LOCAL, LocalIotAccessProvider.class
   );
+  final Map<String, Object> options;
   private CompletableFuture<Map<String, String>> registryRegions;
   private Instant regionRetry = Instant.now();
+
+  public IotAccessBase(IotAccess iotAccess) {
+    options = parseOptions(iotAccess);
+  }
 
   /**
    * Factory constructor for new instances.
@@ -75,6 +84,16 @@ public abstract class IotAccessBase extends ContainerBase {
 
   private static String getBackoffKey(String registryId, String deviceId) {
     return format("%s/%s", registryId, deviceId);
+  }
+
+  Map<String, Object> parseOptions(IotAccess iotAccess) {
+    String options = variableSubstitution(iotAccess.options, null);
+    if (options == null) {
+      return ImmutableMap.of();
+    }
+    String[] parts = options.split(",");
+    return Arrays.stream(parts).map(String::trim).map(option -> option.split("=", 2))
+        .collect(Collectors.toMap(x -> x[0], x -> x.length > 1 ? x[1] : true));
   }
 
   protected abstract Entry<Long, String> fetchConfig(String registryId, String deviceId);
@@ -104,9 +123,12 @@ public abstract class IotAccessBase extends ContainerBase {
 
   protected synchronized String populateRegistryRegions(String registryId) {
     if (regionRetry.isBefore(Instant.now())) {
+      regionRetry = Instant.now().plus(REGION_RETRY_BACKOFF);
+      Map<String, String> previousRegions = registryRegions.getNow(null);
       registryRegions = new CompletableFuture<>();
       registryRegions.complete(fetchRegistryRegions());
-      regionRetry = Instant.now().plus(REGION_RETRY_BACKOFF);
+      Map<String, String> currentRegions = registryRegions.getNow(null);
+      disseminateDifference(previousRegions, currentRegions);
     }
     return getCompletedRegistryRegion(registryId);
   }
@@ -124,6 +146,16 @@ public abstract class IotAccessBase extends ContainerBase {
           format("Config length %d exceeds maximum %d", configLength, MAX_CONFIG_LENGTH));
     }
     return updateConfig(registryId, deviceId, updated, version);
+  }
+
+  private void disseminateDifference(Map<String, String> previousRegions,
+      Map<String, String> currentRegions) {
+    Map<String, String> newRegions = currentRegions.entrySet().stream()
+        .filter(entry -> !previousRegions.containsKey(entry.getKey())).collect(
+            Collectors.toMap(Entry::getKey, Entry::getValue));
+    UdmiState udmiState = new UdmiState();
+    udmiState.regions = newRegions;
+
   }
 
   private String getCompletedRegistryRegion(String registryId) {

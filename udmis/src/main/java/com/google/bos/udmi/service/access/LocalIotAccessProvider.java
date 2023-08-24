@@ -30,6 +30,7 @@ public class LocalIotAccessProvider extends IotAccessBase {
    * Create a new instance for interfacing with multiple providers.
    */
   public LocalIotAccessProvider(IotAccess iotAccess) {
+    super(iotAccess);
   }
 
   @Override

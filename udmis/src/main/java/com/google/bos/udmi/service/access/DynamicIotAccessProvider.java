@@ -38,6 +38,7 @@ public class DynamicIotAccessProvider extends IotAccessBase {
    * Create a new instance for interfacing with multiple providers.
    */
   public DynamicIotAccessProvider(IotAccess iotAccess) {
+    super(iotAccess);
     providerList = Arrays.asList(iotAccess.project_id.split(","));
   }
 
