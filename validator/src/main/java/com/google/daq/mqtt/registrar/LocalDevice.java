@@ -14,6 +14,7 @@ import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_STRICT;
 import static com.google.udmi.util.GeneralUtils.compressJsonString;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.writeString;
+import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
 import static com.google.udmi.util.JsonUtil.asMap;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -609,7 +610,7 @@ class LocalDevice {
       envelope.deviceNumId = makeNumId(envelope);
       String envelopeJson = OBJECT_MAPPER_STRICT.writeValueAsString(envelope);
       ProcessingReport processingReport = schemas.get(ENVELOPE_JSON)
-          .validate(OBJECT_MAPPER_RAW.readTree(envelopeJson));
+          .validate(OBJECT_MAPPER.readTree(envelopeJson));
       if (!processingReport.isSuccess()) {
         processingReport.forEach(action -> {
           throw new RuntimeException("against schema", action.asException());

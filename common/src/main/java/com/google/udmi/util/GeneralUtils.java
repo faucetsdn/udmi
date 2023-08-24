@@ -49,6 +49,7 @@ public class GeneralUtils {
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
       .enable(SerializationFeature.INDENT_OUTPUT)
       .setDateFormat(new ISO8601DateFormat())
+      .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
       .setSerializationInclusion(JsonInclude.Include.NON_NULL);
   public static final ObjectMapper OBJECT_MAPPER_RAW =
       OBJECT_MAPPER.copy()
@@ -59,7 +60,7 @@ public class GeneralUtils {
           .setSerializationInclusion(Include.NON_NULL);
   public static final ObjectMapper OBJECT_MAPPER_STRICT =
       OBJECT_MAPPER_RAW.copy()
-          .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+          .enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
           .disable(SerializationFeature.INDENT_OUTPUT);
 
   private static final String SEPARATOR = "\n  ";
