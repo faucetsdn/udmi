@@ -50,7 +50,7 @@ public class GeneralUtils {
       .enable(SerializationFeature.INDENT_OUTPUT)
       .setDateFormat(new ISO8601DateFormat())
       .setSerializationInclusion(JsonInclude.Include.NON_NULL);
-  private static final ObjectMapper OBJECT_MAPPER_RAW =
+  public static final ObjectMapper OBJECT_MAPPER_RAW =
       OBJECT_MAPPER.copy()
           .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
           .enable(Feature.ALLOW_TRAILING_COMMA)
