@@ -1,9 +1,8 @@
 package com.google.bos.udmi.service.access;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.google.common.collect.ImmutableMap;
-import java.util.Map;
 import org.junit.jupiter.api.Test;
 import udmi.schema.IotAccess;
 
@@ -11,17 +10,18 @@ class IotAccessBaseTest {
 
   @Test
   public void emptyOptions() {
-    Map<String, Object> stringObjectMap = IotAccessBase.parseOptions(new IotAccess());
-    assertEquals(ImmutableMap.of(), stringObjectMap, "empty options");
+    IotAccess access = new IotAccess();
+    LocalIotAccessProvider localIotAccessProvider = new LocalIotAccessProvider(access);
+    assertEquals(ImmutableMap.of(), localIotAccessProvider.options, "empty options");
   }
 
   @Test
   public void optionsParser() {
     IotAccess access = new IotAccess();
     access.options = "enable, foo=bar, x=";
-    Map<String, Object> stringObjectMap = IotAccessBase.parseOptions(access);
-    ImmutableMap<String, Object> of =
+    LocalIotAccessProvider localIotAccessProvider = new LocalIotAccessProvider(access);
+    ImmutableMap<String, Object> expected =
         ImmutableMap.of("enable", true, "foo", "bar", "x", "");
-    assertEquals(of, stringObjectMap, "parsed options object");
+    assertEquals(expected, localIotAccessProvider.options, "parsed options object");
   }
 }

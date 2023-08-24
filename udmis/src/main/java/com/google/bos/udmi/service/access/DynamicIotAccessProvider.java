@@ -137,6 +137,11 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   @Override
+  public void updateRegistryRegions(Map<String, String> regions) {
+    providers.values().forEach(provider -> provider.updateRegistryRegions(regions));
+  }
+
+  @Override
   public void setProviderAffinity(String registryId, String deviceId, String providerId) {
     if (providerId != null) {
       String previous = registryProviders.put(registryId, providerId);

@@ -90,6 +90,17 @@ public abstract class IotAccessBase extends ContainerBase {
 
   protected abstract Entry<Long, String> fetchConfig(String registryId, String deviceId);
 
+  /**
+   * Update the cached registry regions with any incremental updates.
+   */
+  public void updateRegistryRegions(Map<String, String> regions) {
+    try {
+      registryRegions.get().putAll(regions);
+    } catch (Exception e) {
+      throw new RuntimeException("While updating registry regions", e);
+    }
+  }
+
   protected Map<String, String> fetchRegistryRegions() {
     Map<String, String> regionMap = CLOUD_REGIONS.stream().flatMap(
         region -> getRegistriesForRegion(region).stream()

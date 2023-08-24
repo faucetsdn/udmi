@@ -44,11 +44,11 @@ import udmi.schema.UdmiState;
 public class ReflectProcessor extends ProcessorBase {
 
   public static final String PAYLOAD_KEY = "payload";
+  public static final String HOSTNAME = System.getenv("HOSTNAME");
   static final String DEPLOY_FILE = "var/deployed_version.json";
   static final SetupUdmiConfig DEPLOYED_CONFIG =
       loadFileStrictRequired(SetupUdmiConfig.class, new File(DEPLOY_FILE));
   static final String UDMI_VERSION = requireNonNull(ReflectProcessor.DEPLOYED_CONFIG.udmi_version);
-  public static final String HOSTNAME = System.getenv("HOSTNAME");
 
   @Override
   protected void defaultHandler(Object message) {
@@ -138,11 +138,17 @@ public class ReflectProcessor extends ProcessorBase {
       Map<String, Object> payload) {
     debug("Processing reflection %s/%s %s", envelope.subType, envelope.subFolder,
         envelope.transactionId);
-    iotAccess.setProviderAffinity(envelope.deviceRegistryId, envelope.deviceId, reflection.source);
+    updateProviderAffinity(envelope, reflection.source);
     CloudModel result = getReflectionResult(envelope, payload);
     ifNotNullThen(result,
         v -> debug("Reflection result %s: %s", envelope.transactionId, envelope.subType));
     ifNotNullThen(result, v -> sendReflectCommand(reflection, envelope, result));
+  }
+
+  private void processStateUpdate(Envelope envelope, StateUpdate stateUpdate) {
+    debug("Updating last_start b/c of device state query %s/%s",
+        envelope.deviceRegistryId, envelope.deviceId);
+    updateLastStart(envelope, stateUpdate);
   }
 
   private CloudModel queryCloudDevice(Envelope attributes) {
@@ -169,12 +175,6 @@ public class ReflectProcessor extends ProcessorBase {
     } catch (Exception e) {
       throw new RuntimeException("While querying device state " + attributes.deviceId, e);
     }
-  }
-
-  private void processStateUpdate(Envelope envelope, StateUpdate stateUpdate) {
-    debug("Updating last_start b/c of device state query %s/%s",
-        envelope.deviceRegistryId, envelope.deviceId);
-    updateLastStart(envelope, stateUpdate);
   }
 
   private CloudModel reflectModel(Envelope attributes, CloudModel request) {
@@ -257,6 +257,16 @@ public class ReflectProcessor extends ProcessorBase {
   void updateAwareness(Envelope envelope, UdmiState toolState) {
     debug("Processing UdmiState for %s/%s %s", envelope.deviceId, envelope.source,
         stringify(toolState));
-    iotAccess.setProviderAffinity(envelope.deviceRegistryId, envelope.deviceId, envelope.source);
+    ifNotNullThen(envelope.source, source -> updateProviderAffinity(envelope, source));
+    ifNotNullThen(toolState.regions, regions -> updateRegistryRegions(regions));
+
+  }
+
+  private void updateRegistryRegions(Map<String, String> regions) {
+    iotAccess.updateRegistryRegions(regions);
+  }
+
+  private void updateProviderAffinity(Envelope envelope, String source) {
+    iotAccess.setProviderAffinity(envelope.deviceRegistryId, envelope.deviceId, source);
   }
 }

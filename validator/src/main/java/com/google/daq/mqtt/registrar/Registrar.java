@@ -737,7 +737,8 @@ public class Registrar {
       boolean requiresCloud = updateCloudIoT || (idleLimit != null);
       if (requiresCloud) {
         Set<String> devices = cloudIotManager.fetchDeviceIds();
-        System.err.printf("Fetched %d devices from cloud registry %s%n", devices.size(),
+        int size = ifNotNullGet(devices, Set::size, -1);
+        System.err.printf("Fetched %d devices from cloud registry %s%n", size,
             cloudIotManager.getRegistryId());
         return devices;
       } else {
