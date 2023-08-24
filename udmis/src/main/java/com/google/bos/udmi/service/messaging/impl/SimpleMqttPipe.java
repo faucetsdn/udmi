@@ -51,9 +51,8 @@ public class SimpleMqttPipe extends MessageBase {
     namespace = config.hostname;
     endpoint = config;
     mqttClient = createMqttClient();
-    tryConnect();
     scheduledFuture = Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(
-        SimpleMqttPipe.this::tryConnect, RECONNECT_SEC, RECONNECT_SEC, TimeUnit.SECONDS);
+        SimpleMqttPipe.this::tryConnect, 0, RECONNECT_SEC, TimeUnit.SECONDS);
   }
 
   public static MessagePipe fromConfig(EndpointConfiguration config) {
@@ -156,11 +155,8 @@ public class SimpleMqttPipe extends MessageBase {
   }
 
   @Override
-  public synchronized void publish(Bundle bundle) {
+  public void publish(Bundle bundle) {
     try {
-      if (!mqttClient.isConnected()) {
-        connect();
-      }
       mqttClient.publish(makeMqttTopic(bundle), makeMqttMessage(bundle));
     } catch (Exception e) {
       throw new RuntimeException("While publishing to mqtt client " + clientId, e);
