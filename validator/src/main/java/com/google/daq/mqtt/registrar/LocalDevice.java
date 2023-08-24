@@ -160,7 +160,7 @@ class LocalDevice {
   private static final Set<String> ALL_CERT_FILES = ImmutableSet.of(RSA_CERT_PEM, ES_CERT_PEM);
   private static final String ERROR_FORMAT_INDENT = "  ";
   private static final int MAX_JSON_LENGTH = 32767;
-  private static final String UDMI_VERSION = "1.4.1";
+  private static final String UDMI_VERSION = "1.4.2";
   private final String deviceId;
   private final Map<String, JsonSchema> schemas;
   private final File siteDir;
