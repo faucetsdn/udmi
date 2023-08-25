@@ -3,6 +3,7 @@ package com.google.bos.udmi.service.messaging.impl;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static com.google.udmi.util.JsonUtil.toStringMap;
@@ -51,38 +52,41 @@ public class SimpleMqttPipe extends MessageBase {
     namespace = config.hostname;
     endpoint = config;
     mqttClient = createMqttClient();
+    tryConnect(false);
     scheduledFuture = Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(
-        SimpleMqttPipe.this::tryConnect, 0, RECONNECT_SEC, TimeUnit.SECONDS);
+        () -> SimpleMqttPipe.this.tryConnect(true), 0, RECONNECT_SEC, TimeUnit.SECONDS);
   }
 
   public static MessagePipe fromConfig(EndpointConfiguration config) {
     return new SimpleMqttPipe(config);
   }
 
-  private synchronized void connect() {
+  private void connect(boolean forceDisconnect) {
     try {
-      if (mqttClient.isConnected()) {
-        return;
+      synchronized (mqttClient) {
+        if (mqttClient.isConnected()) {
+          return;
+        }
+        debug("Attempting connection of mqtt client %s", clientId);
+        MqttConnectOptions options = new MqttConnectOptions();
+        options.setMqttVersion(MqttConnectOptions.MQTT_VERSION_3_1_1);
+        options.setMaxInflight(PUBLISH_THREAD_COUNT * 2);
+        options.setConnectionTimeout(INITIALIZE_TIME_MS);
+
+        ifNotNullThen(endpoint.auth_provider, provider -> {
+          Basic basicAuth = checkNotNull(provider.basic, "basic auth not defined");
+          options.setUserName(checkNotNull(basicAuth.username, "MQTT username not defined"));
+          options.setPassword(
+              checkNotNull(basicAuth.password, "MQTT password not defined").toCharArray());
+        });
+
+        mqttClient.connect(options);
+        info("Connection established to mqtt server as " + clientId);
+        subscribeToMessages();
       }
-      debug("Attempting connection of mqtt client %s", clientId);
-      MqttConnectOptions options = new MqttConnectOptions();
-      options.setMqttVersion(MqttConnectOptions.MQTT_VERSION_3_1_1);
-      options.setMaxInflight(PUBLISH_THREAD_COUNT * 2);
-      options.setConnectionTimeout(INITIALIZE_TIME_MS);
-
-      ifNotNullThen(endpoint.auth_provider, provider -> {
-        Basic basicAuth = checkNotNull(provider.basic, "basic auth not defined");
-        options.setUserName(checkNotNull(basicAuth.username, "MQTT username not defined"));
-        options.setPassword(
-            checkNotNull(basicAuth.password, "MQTT password not defined").toCharArray());
-      });
-
-      mqttClient.connect(options);
-      info("Connection established to mqtt server as " + clientId);
-      subscribeToMessages();
     } catch (Exception e) {
       // Sometimes a forced disconnect is necessary else the connection attempt gets stuck somehow.
-      forceDisconnect();
+      ifTrueThen(forceDisconnect, this::forcedisconnect);
       throw new RuntimeException("While connecting mqtt client", e);
     }
   }
@@ -100,7 +104,7 @@ public class SimpleMqttPipe extends MessageBase {
     }
   }
 
-  private void forceDisconnect() {
+  private void forcedisconnect() {
     try {
       mqttClient.disconnectForcibly();
     } catch (Exception e) {
@@ -126,23 +130,25 @@ public class SimpleMqttPipe extends MessageBase {
         : format(TOPIC_FORMAT, namespace, envelope.subType, envelope.subFolder);
   }
 
-  private synchronized void subscribeToMessages() {
+  private void subscribeToMessages() {
     String topic = format(TOPIC_FORMAT, namespace, TOPIC_WILDCARD, TOPIC_WILDCARD);
     try {
-      boolean connected = mqttClient.isConnected();
-      trace("Subscribing %s, active=%s connected=%s", clientId, isActive(), connected);
-      if (isActive() && connected) {
-        mqttClient.subscribe(topic);
-        info("Subscribed %s to topic %s", clientId, topic);
+      synchronized (mqttClient) {
+        boolean connected = mqttClient.isConnected();
+        trace("Subscribing %s, active=%s connected=%s", clientId, isActive(), connected);
+        if (isActive() && connected) {
+          mqttClient.subscribe(topic);
+          info("Subscribed %s to topic %s", clientId, topic);
+        }
       }
     } catch (Exception e) {
       throw new RuntimeException("While subscribing to mqtt topic: " + topic, e);
     }
   }
 
-  private void tryConnect() {
+  private void tryConnect(boolean forceDisconnect) {
     try {
-      connect();
+      connect(forceDisconnect);
     } catch (Exception e) {
       error("While attempting scheduled connect for %s: %s", clientId, friendlyStackTrace(e));
     }
