@@ -64,6 +64,9 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
           "no project id defined in configuration as 'hostname'");
       publisher = ifNotNullGet(configuration.send_id, this::getPublisher);
       subscriber = ifNotNullGet(configuration.recv_id, this::getSubscriber);
+      String subscriptionName = ifNotNullGet(subscriber, Subscriber::getSubscriptionNameString);
+      String topicName = ifNotNullGet(publisher, Publisher::getTopicNameString);
+      debug("PubSub %s s -> %s", super.toString(), subscriptionName, topicName);
     } catch (Exception e) {
       throw new RuntimeException("While creating PubSub pipe", e);
     }
@@ -136,13 +139,6 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
     Instant end = Instant.now();
     long seconds = Duration.between(start, end).getSeconds();
     debug("Receive message took %ss", seconds);
-  }
-
-  @Override
-  public String toString() {
-    String subscriptionName = ifNotNullGet(subscriber, Subscriber::getSubscriptionNameString);
-    String topicName = ifNotNullGet(publisher, Publisher::getTopicNameString);
-    return format("PubSub %s -> %s", subscriptionName, topicName);
   }
 
   Publisher getPublisher(String topicName) {

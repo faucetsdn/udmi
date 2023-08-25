@@ -148,7 +148,13 @@ public class IotReflectorClient implements IotProvider {
   private Map<String, Object> transaction(String deviceId, String topic,
       String message, QuerySpeed speed) {
     // TODO: Publish should return future to avoid race conditions.
-    return waitForReply(messageClient.publish(deviceId, topic, message), speed);
+    String transactionId = messageClient.publish(deviceId, topic, message);
+    Map<String, Object> objectMap = waitForReply(transactionId, speed);
+    String error = (String) objectMap.get("error");
+    if (error != null) {
+      throw new RuntimeException(format("UDMIS error %s: %s", transactionId, error));
+    }
+    return objectMap;
   }
 
   private Map<String, Object> waitForReply(String sentId, QuerySpeed speed) {
@@ -178,7 +184,7 @@ public class IotReflectorClient implements IotProvider {
 
         String error = (String) messageBundle.message.get(ERROR_KEY);
         if (error != null) {
-          throw new RuntimeException("UDMIS error: " + error);
+          System.err.println("UDMIS error: " + error);
         }
 
         String transactionId = messageBundle.attributes.get(TRANSACTION_KEY);

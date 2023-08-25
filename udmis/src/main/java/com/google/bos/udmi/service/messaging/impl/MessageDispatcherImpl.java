@@ -68,7 +68,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
 
   private final MessagePipe messagePipe;
   private final Map<Object, Envelope> messageEnvelopes = new ConcurrentHashMap<>();
-  private final Map<Class<?>, Consumer<Object>> handlers = new HashMap<>();
+  private final Map<Class<?>, Consumer<Object>> handlers = new ConcurrentHashMap<>();
   private final Map<Class<?>, AtomicInteger> handlerCounts = new ConcurrentHashMap<>();
   private final String projectId;
   private final ThreadLocal<Envelope> threadEnvelope = new ThreadLocal<>();

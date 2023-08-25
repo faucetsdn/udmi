@@ -16,6 +16,7 @@ import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.fromStringStrict;
 import static com.google.udmi.util.JsonUtil.loadFileStrictRequired;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -28,6 +29,7 @@ import com.google.udmi.util.JsonUtil;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
 import udmi.schema.Envelope;
@@ -44,6 +46,7 @@ import udmi.schema.UdmiState;
 public class ReflectProcessor extends ProcessorBase {
 
   public static final String PAYLOAD_KEY = "payload";
+  public static final String HOSTNAME = System.getenv("HOSTNAME");
   static final String DEPLOY_FILE = "var/deployed_version.json";
   static final SetupUdmiConfig DEPLOYED_CONFIG =
       loadFileStrictRequired(SetupUdmiConfig.class, new File(DEPLOY_FILE));
@@ -137,11 +140,17 @@ public class ReflectProcessor extends ProcessorBase {
       Map<String, Object> payload) {
     debug("Processing reflection %s/%s %s", envelope.subType, envelope.subFolder,
         envelope.transactionId);
-    iotAccess.setProviderAffinity(envelope.deviceRegistryId, envelope.deviceId, reflection.source);
+    updateProviderAffinity(envelope, reflection.source);
     CloudModel result = getReflectionResult(envelope, payload);
     ifNotNullThen(result,
         v -> debug("Reflection result %s: %s", envelope.transactionId, envelope.subType));
     ifNotNullThen(result, v -> sendReflectCommand(reflection, envelope, result));
+  }
+
+  private void processStateUpdate(Envelope envelope, StateUpdate stateUpdate) {
+    debug("Updating last_start b/c of device state query %s/%s",
+        envelope.deviceRegistryId, envelope.deviceId);
+    updateLastStart(envelope, stateUpdate);
   }
 
   private CloudModel queryCloudDevice(Envelope attributes) {
@@ -168,12 +177,6 @@ public class ReflectProcessor extends ProcessorBase {
     } catch (Exception e) {
       throw new RuntimeException("While querying device state " + attributes.deviceId, e);
     }
-  }
-
-  private void processStateUpdate(Envelope envelope, StateUpdate stateUpdate) {
-    debug("Updating last_start b/c of device state query %s/%s",
-        envelope.deviceRegistryId, envelope.deviceId);
-    updateLastStart(envelope, stateUpdate);
   }
 
   private CloudModel reflectModel(Envelope attributes, CloudModel request) {
@@ -221,6 +224,7 @@ public class ReflectProcessor extends ProcessorBase {
     udmiConfig.last_state = toolState.timestamp;
     udmiConfig.setup = new SetupUdmiConfig();
     copyFields(DEPLOYED_CONFIG, udmiConfig.setup, false);
+    udmiConfig.setup.hostname = HOSTNAME;
     udmiConfig.setup.udmi_version = UDMI_VERSION;
     udmiConfig.setup.functions_min = FUNCTIONS_VERSION_MIN;
     udmiConfig.setup.functions_max = FUNCTIONS_VERSION_MAX;
@@ -246,6 +250,18 @@ public class ReflectProcessor extends ProcessorBase {
     iotAccess.sendCommand(reflectRegistry, deviceRegistry, SubFolder.UDMI, stringify(message));
   }
 
+  private void updateProviderAffinity(Envelope envelope, String source) {
+    debug("Setting affinity for %s/%s to %s", envelope.deviceRegistryId, envelope.deviceId, source);
+    iotAccess.setProviderAffinity(envelope.deviceRegistryId, envelope.deviceId, source);
+  }
+
+  private void updateRegistryRegions(Map<String, String> regions) {
+    debug("Updating registry regions: ",
+        regions.entrySet().stream().map(entry -> format("%s:%s", entry.getKey(), entry.getValue()))
+            .collect(Collectors.joining(", ")));
+    iotAccess.updateRegistryRegions(regions);
+  }
+
   @Override
   public void activate() {
     debug("Deployment configuration: " + stringify(DEPLOYED_CONFIG));
@@ -253,8 +269,9 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   void updateAwareness(Envelope envelope, UdmiState toolState) {
-    debug("Processing UdmiState for %s/%s %s", envelope.deviceId, envelope.source,
-        stringify(toolState));
-    iotAccess.setProviderAffinity(envelope.deviceRegistryId, envelope.deviceId, envelope.source);
+    debug("Processing UdmiState for %s/%s: %s", envelope.deviceRegistryId, envelope.deviceId,
+        stringifyTerse(toolState));
+    ifNotNullThen(toolState.setup, setup -> updateProviderAffinity(envelope, envelope.source));
+    ifNotNullThen(toolState.regions, this::updateRegistryRegions);
   }
 }
