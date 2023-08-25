@@ -60,8 +60,8 @@ public class DistributorPipe extends ContainerBase {
    */
   public void distribute(Envelope envelope, UdmiState toolState) {
     try {
-      debug("Distributing %s for %s %s", toolState.getClass().getSimpleName(),
-          envelope.deviceId, envelope.transactionId);
+      debug("Distributing %s for %s/%s %s", toolState.getClass().getSimpleName(),
+          envelope.deviceRegistryId, envelope.deviceId, envelope.transactionId);
       envelope.gatewayId = clientId;
       dispatcher.publish(dispatcher.makeMessageBundle(envelope, toolState));
     } catch (Exception e) {

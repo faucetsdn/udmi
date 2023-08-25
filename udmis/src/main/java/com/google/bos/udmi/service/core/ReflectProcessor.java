@@ -28,6 +28,7 @@ import com.google.udmi.util.JsonUtil;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
 import udmi.schema.Envelope;
@@ -248,6 +249,18 @@ public class ReflectProcessor extends ProcessorBase {
     iotAccess.sendCommand(reflectRegistry, deviceRegistry, SubFolder.UDMI, stringify(message));
   }
 
+  private void updateProviderAffinity(Envelope envelope, String source) {
+    debug("Setting affinity for %s/%s to %s", envelope.deviceRegistryId, envelope.deviceId, source);
+    iotAccess.setProviderAffinity(envelope.deviceRegistryId, envelope.deviceId, source);
+  }
+
+  private void updateRegistryRegions(Map<String, String> regions) {
+    debug("Updating registry regions: ",
+        regions.entrySet().stream().map(entry -> format("%s:%s", entry.getKey(), entry.getValue()))
+            .collect(Collectors.joining(", ")));
+    iotAccess.updateRegistryRegions(regions);
+  }
+
   @Override
   public void activate() {
     debug("Deployment configuration: " + stringify(DEPLOYED_CONFIG));
@@ -255,18 +268,9 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   void updateAwareness(Envelope envelope, UdmiState toolState) {
-    debug("Processing UdmiState for %s/%s %s", envelope.deviceId, envelope.source,
+    debug("Processing UdmiState for %s/%s %s", envelope.deviceRegistryId, envelope.deviceId,
         stringify(toolState));
     ifNotNullThen(envelope.source, source -> updateProviderAffinity(envelope, source));
-    ifNotNullThen(toolState.regions, regions -> updateRegistryRegions(regions));
-
-  }
-
-  private void updateRegistryRegions(Map<String, String> regions) {
-    iotAccess.updateRegistryRegions(regions);
-  }
-
-  private void updateProviderAffinity(Envelope envelope, String source) {
-    iotAccess.setProviderAffinity(envelope.deviceRegistryId, envelope.deviceId, source);
+    ifNotNullThen(toolState.regions, this::updateRegistryRegions);
   }
 }
