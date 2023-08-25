@@ -94,8 +94,8 @@ public class GcpIotAccessProvider extends IotAccessBase {
    * TODO: Need to implement page tokens for all requisite API calls.
    */
   public GcpIotAccessProvider(IotAccess iotAccess) {
-    String options = variableSubstitution(iotAccess.options, null);
-    if (!ENABLED_OPTION.equals(options)) {
+    super(iotAccess);
+    if (!options.containsKey(ENABLED_OPTION)) {
       warn("access provider disabled, missing option '%s'", ENABLED_OPTION);
       projectId = null;
       cloudIotService = null;

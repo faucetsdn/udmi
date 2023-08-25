@@ -6,7 +6,7 @@ DROOT=.
 
 function usage {
     echo Error: $*
-    echo Usage: $0 { prep, build, shell, run, push, deploy, update, status, logs, stop } [--no-check] [--selfie] [repo]
+    echo Usage: $0 { prep, build, shell, run, deploy, update, status, logs, stop } [--no-check] [--selfie] [repo]
     echo Project: $GCP_PROJECT
     echo Try starting with: $0 build
     exit 1
@@ -17,8 +17,6 @@ shift || usage missing command
 
 GCP_PROJECT=$(gcloud config get project)
 REPOSITORY=gcr.io/$GCP_PROJECT
-
-mkdir -p tmp
 
 IMAGE=udmis
 
@@ -60,7 +58,8 @@ current_user=$USER@$HOSTNAME
 
 revparse=`git rev-parse HEAD`
 
-udmi_ref=$REPOSITORY:g${revparse:0:9}
+udmi_ver=g${revparse:0:9}
+udmi_ref=$REPOSITORY/udmi:$udmi_ver
 
 version=`git describe || echo $udmi_ref`
 
@@ -68,7 +67,7 @@ RUNARGS="--rm -ti -v $PWD/var:/udmi -v $HOME/.config:/root/.config --tmpfs /tmp"
 TEMPLATES=$(cd etc; ls k8s_*.yaml)
 
 if [[ $cmd == prep || $cmd == build ]]; then
-    rm -rf var tmp && mkdir -p var
+    rm -rf var tmp && mkdir -p var tmp
     bin/build
     build_time=`date --utc -Imin -r $LIBFILE`
     cp etc/prod_pod.json var/
@@ -84,29 +83,32 @@ EOF
     echo Next try: $0 build
 fi
 
-if [[ $cmd == prep ]]; then
-    true
-elif [[ $cmd == build ]]; then
+if [[ $cmd == build ]]; then
     echo Building Dockerfile.$IMAGE
     docker build -f Dockerfile.$IMAGE -t $IMAGE $DROOT
-    echo Next try: $0 push
-elif [[ $cmd == run ]]; then
-    docker run $RUNARGS $IMAGE
-elif [[ $cmd == shell ]]; then
-    docker run $RUNARGS $IMAGE bash
-elif [[ $cmd == push ]]; then
-    IMAGENAME=$REPOSITORY/$IMAGE
-    docker tag $IMAGE $IMAGENAME
-    docker push $IMAGENAME
-    hash=$(docker images --digests $IMAGENAME | fgrep latest | awk '{print $3}')
-    ihash=$IMAGENAME@$hash
+fi
+
+if [[ $cmd == build && $REPOSITORY != local ]]; then
+    docker tag $IMAGE $udmi_ref
+    docker push $udmi_ref
+    hash=$(docker images --digests ${udmi_ref%:*} | fgrep $udmi_ver | awk '{print $3}')
+    ihash=$udmi_ref@$hash
     for file in $TEMPLATES; do
         if fgrep -q @IMAGE-$IMAGE@ etc/$file; then
             sed < etc/$file > tmp/$file -e "s^@IMAGE-$IMAGE@^$ihash^"
             echo Updated tmp/$file with image $ihash
         fi
     done
-    echo Next try: $0 deploy
+fi
+
+if [[ $cmd == prep ]]; then
+    echo Next try: $0 build
+elif [[ $cmd == build ]]; then
+    echo Next try: $0 '{run, deploy, update}'
+elif [[ $cmd == run ]]; then
+    docker run $RUNARGS $IMAGE
+elif [[ $cmd == shell ]]; then
+    docker run $RUNARGS $IMAGE bash
 elif [[ $cmd == deploy ]]; then
     kubectl apply -f tmp/k8s_pod.yaml
     echo Next try: $0 status

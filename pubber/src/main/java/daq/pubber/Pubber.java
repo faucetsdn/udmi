@@ -131,7 +131,7 @@ public class Pubber {
   public static final String DATA_URL_JSON_BASE64 = "data:application/json;base64,";
   public static final String POINTSET_BUCKET = "pointset_state";
   public static final String PUBLISHER_BUCKET = "publisher_bucket";
-  static final String UDMI_VERSION = "1.4.1";
+  static final String UDMI_VERSION = "1.4.2";
   private static final Logger LOG = LoggerFactory.getLogger(Pubber.class);
   private static final String HOSTNAME = System.getenv("HOSTNAME");
   private static final int MIN_REPORT_MS = 200;
