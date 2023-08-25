@@ -1310,7 +1310,7 @@ public class SequenceBase {
     String commandSignature = format("%s/%s/%s", deviceId, subTypeRaw, subFolderRaw);
     trace("received command " + commandSignature);
 
-    if (SubType.REPLY.value().equals(subTypeRaw)) {
+    if (!SequenceBase.getDeviceId().equals(deviceId)) {
       return;
     }
 
@@ -1319,7 +1319,7 @@ public class SequenceBase {
       return;
     }
 
-    if (!SequenceBase.getDeviceId().equals(deviceId)) {
+    if (SubType.REPLY.value().equals(subTypeRaw)) {
       return;
     }
 

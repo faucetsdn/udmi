@@ -38,6 +38,7 @@ public class DynamicIotAccessProvider extends IotAccessBase {
    * Create a new instance for interfacing with multiple providers.
    */
   public DynamicIotAccessProvider(IotAccess iotAccess) {
+    super(iotAccess);
     providerList = Arrays.asList(iotAccess.project_id.split(","));
   }
 
@@ -133,6 +134,11 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   public void sendCommandBase(String registryId, String deviceId, SubFolder folder,
       String message) {
     getProviderFor(registryId).sendCommandBase(registryId, deviceId, folder, message);
+  }
+
+  @Override
+  public void updateRegistryRegions(Map<String, String> regions) {
+    providers.values().forEach(provider -> provider.updateRegistryRegions(regions));
   }
 
   @Override

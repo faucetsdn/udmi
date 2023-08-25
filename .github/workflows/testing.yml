@@ -49,12 +49,13 @@ jobs:
       - name: Setup udmis container build
         if: ${{ github.event_name == 'push' }}
         run: |
+          set -x
           revhash=$(git rev-parse $GITHUB_REF)
           IMAGE_TAG=g${revhash:0:9}
           PUSH_REPO=$PUSH_REGISTRY/${{ github.repository }}
           PUSH_TAG=$PUSH_REPO:$IMAGE_TAG
           echo PUSH_TAG=$PUSH_TAG >> $GITHUB_ENV
-          udmis/bin/container prep --no-check $PUSH_REPO
+          udmis/bin/container prep --no-check ${PUSH_REPO%/*}
           echo Pushing built container as $PUSH_TAG | tee -a $GITHUB_STEP_SUMMARY
       - name: Build and push docker image
         if: ${{ github.event_name == 'push' }}
@@ -295,7 +296,6 @@ jobs:
           cd sites/udmi_site_model/out
           find . -type f | sort | xargs more | cat
       - name: itemized sequencer tests
-        if: ${{ always() }}
         run: |
           bin/test_itemized $GCP_TARGET_PROJECT
       - name: itemized output logs

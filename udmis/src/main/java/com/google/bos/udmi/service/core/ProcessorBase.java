@@ -108,6 +108,7 @@ public abstract class ProcessorBase extends ContainerBase {
     String message = Common.getExceptionMessage(e);
     String payload = friendlyStackTrace(e);
     error(format("Received message exception: %s", payload));
+    e.printStackTrace();
     BundleException bundleException = new BundleException(message, toStringMap(envelope), payload);
     reflectError(SubType.EVENT, bundleException);
   }
