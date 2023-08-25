@@ -16,6 +16,7 @@ import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.fromStringStrict;
 import static com.google.udmi.util.JsonUtil.loadFileStrictRequired;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -268,9 +269,9 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   void updateAwareness(Envelope envelope, UdmiState toolState) {
-    debug("Processing UdmiState for %s/%s %s", envelope.deviceRegistryId, envelope.deviceId,
-        stringify(toolState));
-    ifNotNullThen(envelope.source, source -> updateProviderAffinity(envelope, source));
+    debug("Processing UdmiState for %s/%s: %s", envelope.deviceRegistryId, envelope.deviceId,
+        stringifyTerse(toolState));
+    ifNotNullThen(toolState.setup, setup -> updateProviderAffinity(envelope, envelope.source));
     ifNotNullThen(toolState.regions, this::updateRegistryRegions);
   }
 }
