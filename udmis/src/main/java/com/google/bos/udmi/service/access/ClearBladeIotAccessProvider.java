@@ -7,10 +7,10 @@ import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.getDate;
-import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
@@ -53,10 +53,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.udmi.util.GeneralUtils;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Base64;
 import java.util.Date;
@@ -66,7 +63,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -103,8 +99,11 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
    * Create a new instance for interfacing with GCP IoT Core.
    */
   public ClearBladeIotAccessProvider(IotAccess iotAccess) {
+    super(iotAccess);
     projectId = getProjectId(iotAccess);
     ifTrueThen(isEnabled(), this::fetchRegistryRegions);
+    ifNotTrueThen(isEnabled(),
+        () -> warn("Clearblade access provided disabled because project id is null or empty"));
   }
 
   private static Credential convertIot(DeviceCredential device) {
@@ -145,6 +144,27 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   @VisibleForTesting
   protected DeviceManagerClient getDeviceManagerClient() {
     return new DeviceManagerClient();
+  }
+
+  @NotNull
+  protected Set<String> getRegistriesForRegion(String region) {
+    try {
+      DeviceManagerClient deviceManagerClient = getDeviceManagerClient();
+      ListDeviceRegistriesRequest request = ListDeviceRegistriesRequest.Builder.newBuilder()
+          .setParent(LocationName.of(projectId, region).getLocationFullName())
+          .build();
+      ListDeviceRegistriesResponse response = deviceManagerClient.listDeviceRegistries(request);
+      requireNonNull(response, "get registries response is null");
+      List<DeviceRegistry> deviceRegistries = response.getDeviceRegistriesList();
+      Set<String> registries =
+          ofNullable(deviceRegistries).orElseGet(ImmutableList::of).stream()
+              .map(registry -> registry.toBuilder().getId())
+              .collect(Collectors.toSet());
+      debug("Fetched " + registries.size() + " registries for region " + region);
+      return registries;
+    } catch (Exception e) {
+      throw new RuntimeException("While fetching registries for region " + region, e);
+    }
   }
 
   @Override
@@ -276,6 +296,32 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     }
   }
 
+  @NotNull
+  private HashMap<String, CloudModel> fetchDevices(String deviceRegistryId, String gatewayId) {
+    String location = getRegistryLocation(deviceRegistryId);
+    DeviceManagerClient deviceManagerClient = getDeviceManagerClient();
+    GatewayListOptions gatewayListOptions = ifNotNullGet(gatewayId, this::getGatewayListOptions);
+    String registryFullName =
+        RegistryName.of(projectId, location, deviceRegistryId).getRegistryFullName();
+    String pageToken = null;
+    HashMap<String, CloudModel> collect = new HashMap<>();
+    do {
+      DevicesListRequest request = DevicesListRequest.Builder.newBuilder().setParent(
+              registryFullName)
+          .setGatewayListOptions(gatewayListOptions)
+          .setPageToken(pageToken)
+          .build();
+      DevicesListResponse response = deviceManagerClient.listDevices(request);
+      requireNonNull(response, "DeviceRegistriesList fetch failed");
+      Map<String, CloudModel> responseMap =
+          response.getDevicesList().stream().map(ClearBladeIotAccessProvider::convertToEntry)
+              .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+      collect.putAll(responseMap);
+      pageToken = response.getNextPageToken();
+    } while (pageToken != null);
+    return collect;
+  }
+
   private String getDeviceName(String registryId, String deviceId) {
     return DeviceName.of(projectId, getRegistryLocation(registryId), registryId, deviceId)
         .toString();
@@ -295,27 +341,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     } catch (IllegalArgumentException e) {
       warn("Missing variable in substitution, disabling provider: " + friendlyStackTrace(e));
       return null;
-    }
-  }
-
-  @NotNull
-  protected Set<String> getRegistriesForRegion(String region) {
-    try {
-      DeviceManagerClient deviceManagerClient = getDeviceManagerClient();
-      ListDeviceRegistriesRequest request = ListDeviceRegistriesRequest.Builder.newBuilder()
-          .setParent(LocationName.of(projectId, region).getLocationFullName())
-          .build();
-      ListDeviceRegistriesResponse response = deviceManagerClient.listDeviceRegistries(request);
-      requireNonNull(response, "get registries response is null");
-      List<DeviceRegistry> deviceRegistries = response.getDeviceRegistriesList();
-      Set<String> registries =
-          ofNullable(deviceRegistries).orElseGet(ImmutableList::of).stream()
-              .map(registry -> registry.toBuilder().getId())
-              .collect(Collectors.toSet());
-      debug("Fetched " + registries.size() + " registries for region " + region);
-      return registries;
-    } catch (Exception e) {
-      throw new RuntimeException("While fetching registries for region " + region, e);
     }
   }
 
@@ -360,32 +385,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     } catch (Exception e) {
       throw new RuntimeException("While listing devices " + getRegistryName(deviceRegistryId), e);
     }
-  }
-
-  @NotNull
-  private HashMap<String, CloudModel> fetchDevices(String deviceRegistryId, String gatewayId) {
-    String location = getRegistryLocation(deviceRegistryId);
-    DeviceManagerClient deviceManagerClient = getDeviceManagerClient();
-    GatewayListOptions gatewayListOptions = ifNotNullGet(gatewayId, this::getGatewayListOptions);
-    String registryFullName =
-        RegistryName.of(projectId, location, deviceRegistryId).getRegistryFullName();
-    String pageToken = null;
-    HashMap<String, CloudModel> collect = new HashMap<>();
-    do {
-      DevicesListRequest request = DevicesListRequest.Builder.newBuilder().setParent(
-              registryFullName)
-          .setGatewayListOptions(gatewayListOptions)
-          .setPageToken(pageToken)
-          .build();
-      DevicesListResponse response = deviceManagerClient.listDevices(request);
-      requireNonNull(response, "DeviceRegistriesList fetch failed");
-      Map<String, CloudModel> responseMap =
-          response.getDevicesList().stream().map(ClearBladeIotAccessProvider::convertToEntry)
-              .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
-      collect.putAll(responseMap);
-      pageToken = response.getNextPageToken();
-    } while (pageToken != null);
-    return collect;
   }
 
   private void unbindDevice(String registryId, String gatewayId, String proxyId) {

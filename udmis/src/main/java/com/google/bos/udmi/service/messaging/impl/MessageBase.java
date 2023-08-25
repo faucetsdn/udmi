@@ -26,13 +26,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.TestOnly;
@@ -198,8 +195,8 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
             return;
           }
           envelope = bundle.envelope;
-          debug("Processing %s/%s %s %s -> %s", envelope.subType, envelope.subFolder,
-              envelope.transactionId, queueIdentifier(), dispatcher);
+          debug("Processing %s %s/%s %s", this, envelope.subType, envelope.subFolder,
+              envelope.transactionId);
           if (ERROR_MESSAGE_MARKER.equals(envelope.transactionId)) {
             throw new RuntimeException("Exception due to test-induced error");
           }
@@ -254,7 +251,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   public void activate(Consumer<Bundle> bundleConsumer) {
     dispatcher = bundleConsumer;
     ensureSourceQueue();
-    debug("Handling %s to %08x", this, Objects.hash(bundleConsumer));
+    debug("Handling %s", this);
     handleQueue();
     activated = true;
   }
@@ -315,7 +312,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
 
   @Override
   public String toString() {
-    return format("MessagePipe %s", queueIdentifier());
+    return format("MessagePipe %s => %s", queueIdentifier(), Objects.hash(dispatcher));
   }
 
   /**

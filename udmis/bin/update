@@ -8,13 +8,13 @@ fi
 project_id=$1
 shift
 
+CMD=$(basename $0)
 ROOT=$(dirname $0)/..
 cd $ROOT
 
 bin/setup $project_id
 
 bin/container build
-bin/container push
-bin/container update
+bin/container $CMD
 sleep 10
 kubectl get pods

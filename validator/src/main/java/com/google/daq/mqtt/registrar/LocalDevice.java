@@ -9,10 +9,12 @@ import static com.google.daq.mqtt.registrar.Registrar.METADATA_JSON;
 import static com.google.daq.mqtt.registrar.Registrar.NORMALIZED_JSON;
 import static com.google.daq.mqtt.util.MessageUpgrader.METADATA_SCHEMA;
 import static com.google.udmi.util.Common.VERSION_KEY;
+import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_RAW;
 import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_STRICT;
 import static com.google.udmi.util.GeneralUtils.compressJsonString;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.writeString;
+import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
 import static com.google.udmi.util.JsonUtil.asMap;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -160,7 +162,7 @@ class LocalDevice {
   private static final Set<String> ALL_CERT_FILES = ImmutableSet.of(RSA_CERT_PEM, ES_CERT_PEM);
   private static final String ERROR_FORMAT_INDENT = "  ";
   private static final int MAX_JSON_LENGTH = 32767;
-  private static final String UDMI_VERSION = "1.4.1";
+  private static final String UDMI_VERSION = "1.4.2";
   private final String deviceId;
   private final Map<String, JsonSchema> schemas;
   private final File siteDir;
@@ -608,7 +610,7 @@ class LocalDevice {
       envelope.deviceNumId = makeNumId(envelope);
       String envelopeJson = OBJECT_MAPPER_STRICT.writeValueAsString(envelope);
       ProcessingReport processingReport = schemas.get(ENVELOPE_JSON)
-          .validate(OBJECT_MAPPER_STRICT.readTree(envelopeJson));
+          .validate(OBJECT_MAPPER.readTree(envelopeJson));
       if (!processingReport.isSuccess()) {
         processingReport.forEach(action -> {
           throw new RuntimeException("against schema", action.asException());
