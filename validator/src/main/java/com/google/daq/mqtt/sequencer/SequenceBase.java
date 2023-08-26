@@ -938,8 +938,11 @@ public class SequenceBase {
   }
 
   protected void queryState() {
+    assertConfigIsNotPending();
     String txnId = reflector().publish(getDeviceId(), Common.STATE_QUERY_TOPIC, EMPTY_MESSAGE);
-    debug(format("Sending device state query %s", txnId));
+    debug(format("Waiting for device state query %s", txnId));
+    configTransactions.add(txnId);
+    whileDoing("state query", () -> messageEvaluateLoop(this::configIsPending));
   }
 
   /**
