@@ -938,8 +938,8 @@ public class SequenceBase {
   }
 
   protected void queryState() {
-    debug("Sending device state query");
-    reflector().publish(getDeviceId(), Common.STATE_QUERY_TOPIC, EMPTY_MESSAGE);
+    String txnId = reflector().publish(getDeviceId(), Common.STATE_QUERY_TOPIC, EMPTY_MESSAGE);
+    debug(format("Sending device state query %s", txnId));
   }
 
   /**

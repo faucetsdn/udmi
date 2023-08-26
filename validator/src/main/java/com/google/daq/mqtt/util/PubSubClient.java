@@ -35,6 +35,7 @@ import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
@@ -318,6 +319,7 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
     envelope.subFolder = SubFolder.fromValue(parts[0]);
     envelope.subType = SubType.fromValue(parts[1]);
     envelope.transactionId = IotReflectorClient.getNextTransactionId();
+    envelope.publishTime = new Date();
     return envelope;
   }
 
