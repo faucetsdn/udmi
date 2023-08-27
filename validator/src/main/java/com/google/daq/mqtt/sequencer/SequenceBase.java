@@ -44,6 +44,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
 import com.google.bos.iot.core.proxy.MockPublisher;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
@@ -83,6 +84,7 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -190,6 +192,7 @@ public class SequenceBase {
   private static final ObjectDiffEngine RECV_CONFIG_DIFFERNATOR = new ObjectDiffEngine();
   private static final ObjectDiffEngine RECV_STATE_DIFFERNATOR = new ObjectDiffEngine();
   private static final Set<String> configTransactions = new ConcurrentSkipListSet<>();
+  private static final AtomicReference<String> stateTransaction = new AtomicReference<>();
   private static final int MINIMUM_TEST_SEC = 15;
   private static final Date RESET_LAST_START = new Date(73642);
   protected static Metadata deviceMetadata;
@@ -937,12 +940,17 @@ public class SequenceBase {
     return messageStr;
   }
 
+  private boolean stateTransactionPending() {
+    return stateTransaction.get() != null;
+  }
+
   protected void queryState() {
     assertConfigIsNotPending();
+    Preconditions.checkState(!stateTransactionPending(), "state transaction already pending");
     String txnId = reflector().publish(getDeviceId(), Common.STATE_QUERY_TOPIC, EMPTY_MESSAGE);
+    stateTransaction.set(txnId);
     debug(format("Waiting for device state query %s", txnId));
-    configTransactions.add(txnId);
-    whileDoing("state query", () -> messageEvaluateLoop(this::configIsPending));
+    whileDoing("state query", () -> messageEvaluateLoop(this::stateTransactionPending));
   }
 
   /**
@@ -1389,11 +1397,20 @@ public class SequenceBase {
     try {
       debug(format("Handling update message %s_update %s", subTypeRaw, txnId));
 
-      // Do this first to handle all cases of a Config payload, including exceptions.
-      if (CONFIG_SUBTYPE.equals(subTypeRaw) && txnId != null) {
-        debug("Removing configTransaction " + txnId);
-        configTransactions.remove(txnId);
+      // Do this first to handle all cases of update payloads, including exceptions.
+      if (txnId != null) {
+        if (CONFIG_SUBTYPE.equals(subTypeRaw)) {
+          boolean removed = configTransactions.remove(txnId);
+          ifTrueThen(removed, () -> debug("Removed configTransaction " + txnId));
+        } else if (STATE_SUBTYPE.equals(subTypeRaw)) {
+          String previous = stateTransaction.getAndSet(null);
+          if (previous != null) {
+            debug("Removed stateTransaction " + txnId);
+            checkState(previous.equals(txnId), "unexpected state transaction id");
+          }
+        }
       }
+
       if (message.containsKey(EXCEPTION_KEY)) {
         debug("Ignoring reflector exception:\n" + message.get(EXCEPTION_KEY).toString());
         configExceptionTimestamp = (String) message.get(TIMESTAMP_KEY);
