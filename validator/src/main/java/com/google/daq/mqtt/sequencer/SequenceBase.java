@@ -1722,9 +1722,7 @@ public class SequenceBase {
   protected void checkThatHasInterestingSystemStatus(boolean isInteresting) {
     BiConsumer<String, Supplier<Boolean>> check =
         isInteresting ? this::checkThat : this::checkNotThat;
-    String message =
-        (isInteresting ? HAS_STATUS_PREFIX : NOT_STATUS_PREFIX) + SYSTEM_STATUS_MESSAGE;
-    check.accept(message, this::hasInterestingSystemStatus);
+    check.accept(SYSTEM_STATUS_MESSAGE, this::hasInterestingSystemStatus);
   }
 
   protected void untilHasInterestingSystemStatus(boolean isInteresting) {
