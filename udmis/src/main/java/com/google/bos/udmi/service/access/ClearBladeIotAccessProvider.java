@@ -183,10 +183,11 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
               .setName(DeviceName.of(projectId, location, registryId, deviceId).toString())
               .setBinaryData(binaryData).setVersionToUpdate(updateVersion).build();
       DeviceConfig response = deviceManagerClient.modifyCloudToDeviceConfig(request);
-      System.err.println("Config modified version " + response.getVersion());
+      debug("Modified %s/%s config version %s", registryId, deviceId, response.getVersion());
       return config;
     } catch (Exception e) {
-      throw new RuntimeException("While modifying device config", e);
+      throw new RuntimeException(
+          format("While modifying device config %s/%s", registryId, deviceId), e);
     }
   }
 

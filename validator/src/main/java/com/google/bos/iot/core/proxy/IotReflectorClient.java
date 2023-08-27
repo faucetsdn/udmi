@@ -389,6 +389,7 @@ public class IotReflectorClient implements MessagePublisher {
     envelope.payload = GeneralUtils.encodeBase64(data);
     String transactionId = getNextTransactionId();
     envelope.transactionId = transactionId;
+    envelope.publishTime = new Date();
     mqttPublisher.publish(registryId, UDMI_TOPIC, JsonUtil.stringify(envelope));
     return transactionId;
   }

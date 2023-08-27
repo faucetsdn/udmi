@@ -2,7 +2,7 @@
   "logentries" : [ {
     "message" : "2022-07-19T05:04:39Z sent message #70",
     "category" : "device.log_message",
-    "timestamp" : "2022-07-19T05:04:39Z",
+    "timestamp" : "2022-07-19T05:04:32Z",
     "level" : 200
   } ],
   "timestamp" : "2022-07-19T05:04:39Z",

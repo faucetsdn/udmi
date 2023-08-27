@@ -36,11 +36,25 @@ echo Setting config timestamp ${now_date}
 jq < ${src_config} .timestamp=\"${now_date}\" |\
     jq .system.testing.sequence_name=\"${config_file%.json}\" > ${dst_config}
 
+if [[ -n $project_id ]]; then
+    quoted_id=\"${project_id##*/}\"
+else
+    quoted_id=null
+fi
+
+if [[ $project_id =~ ^// ]]; then
+    sans_project=${project_id%/*}
+    iot_provider=\"${sans_project#//}\"
+else
+    iot_provider=null
+fi
+
 echo Resetting device ${device_id} config...
 echo Writing config to $REFLECTOR_CONFIG
 cat <<EOF > $REFLECTOR_CONFIG
 {
-  "project_id": "$project_id",
+  "iot_provider": $iot_provider,
+  "project_id": $quoted_id,
   "site_model": "$site_dir",
   "device_id": "$device_id",
   "registry_suffix": $registry_suffix
