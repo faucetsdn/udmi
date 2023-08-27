@@ -953,7 +953,8 @@ public class SequenceBase {
     stateTransaction.set(txnId);
     debug(format("Waiting for device stateTransaction %s", txnId));
     whileDoing("state query", () -> messageEvaluateLoop(this::stateTransactionPending),
-        e -> debug(format("While waiting for stateTransaction %s: %s", txnId, friendlyStackTrace(e))));
+        e -> debug(
+            format("While waiting for stateTransaction %s: %s", txnId, friendlyStackTrace(e))));
   }
 
   /**
@@ -1414,11 +1415,12 @@ public class SequenceBase {
         if (CONFIG_SUBTYPE.equals(subTypeRaw)) {
           ifTrueThen(configTransactions.remove(txnId),
               () -> debug("Removed configTransaction " + txnId));
-        } else if (STATE_SUBTYPE.equals(subTypeRaw)) {
-          if (stateTransaction.compareAndSet(txnId, null)) {
+        } else if (STATE_SUBTYPE.equals(subTypeRaw) && txnId.startsWith(REFLECTOR_PREFIX)) {
+          String expected = stateTransaction.getAndSet(null);
+          if (txnId.equals(expected)) {
             debug("Removed stateTransaction " + txnId);
-          } else if (txnId.startsWith(REFLECTOR_PREFIX)) {
-            debug("Ignoring unexpected stateTransaction " + txnId);
+          } else {
+            debug(format("Received unexpected stateTransaction %s, dropping %s", txnId, expected));
           }
         }
       }
