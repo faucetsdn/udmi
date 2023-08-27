@@ -138,7 +138,9 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
     receiveMessage(attributesMap, messageString);
     Instant end = Instant.now();
     long seconds = Duration.between(start, end).getSeconds();
-    debug("Receive message took %ss", seconds);
+    if (seconds > 1) {
+      warn("Receive message took %ss", seconds);
+    }
   }
 
   Publisher getPublisher(String topicName) {

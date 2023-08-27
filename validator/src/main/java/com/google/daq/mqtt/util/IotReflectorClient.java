@@ -42,7 +42,7 @@ public class IotReflectorClient implements IotProvider {
   // Requires functions that support cloud device manager support.
   private static final int REQUIRED_FUNCTION_VER = 9;
   private static final String UPDATE_CONFIG_TOPIC = "update/config";
-  private static final String REFLECTOR_PREFIX = "RC:";
+  public static final String REFLECTOR_PREFIX = "RC:";
   private final com.google.bos.iot.core.proxy.IotReflectorClient messageClient;
   private final Map<String, CompletableFuture<Map<String, Object>>> futures =
       new ConcurrentHashMap<>();

@@ -280,8 +280,7 @@ public abstract class IotAccessBase extends ContainerBase {
                 backoffKey, getTimestamp(until)));
       }
     } else {
-      debug("Dropping message because registry backoff for %s",
-          backoffKey);
+      debug("Dropping message because registry backoff for %s", backoffKey);
     }
   }
 
