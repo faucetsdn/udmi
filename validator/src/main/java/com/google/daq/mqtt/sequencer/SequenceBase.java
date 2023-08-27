@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
+import static com.google.daq.mqtt.util.IotReflectorClient.REFLECTOR_PREFIX;
 import static com.google.daq.mqtt.validator.Validator.CONFIG_PREFIX;
 import static com.google.daq.mqtt.validator.Validator.STATE_PREFIX;
 import static com.google.udmi.util.CleanDateFormat.cleanDate;
@@ -86,6 +87,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -949,8 +951,9 @@ public class SequenceBase {
     Preconditions.checkState(!stateTransactionPending(), "state transaction already pending");
     String txnId = reflector().publish(getDeviceId(), Common.STATE_QUERY_TOPIC, EMPTY_MESSAGE);
     stateTransaction.set(txnId);
-    debug(format("Waiting for device state query %s", txnId));
-    whileDoing("state query", () -> messageEvaluateLoop(this::stateTransactionPending));
+    debug(format("Waiting for device stateTransaction %s", txnId));
+    whileDoing("state query", () -> messageEvaluateLoop(this::stateTransactionPending),
+        e -> debug(format("While waiting for stateTransaction %s: %s", txnId, friendlyStackTrace(e))));
   }
 
   /**
@@ -1195,11 +1198,20 @@ public class SequenceBase {
   }
 
   protected void whileDoing(String condition, Runnable action) {
+    whileDoing(condition, action, e -> debug("Caught " + friendlyStackTrace(e)));
+  }
+
+  protected void whileDoing(String condition, Runnable action, Consumer<Exception> catcher) {
     final Instant startTime = Instant.now();
 
     waitingConditionPush(condition);
 
-    action.run();
+    try {
+      action.run();
+    } catch (Exception e) {
+      catcher.accept(e);
+      throw e;
+    }
 
     waitingConditionPop(startTime);
   }
@@ -1403,8 +1415,11 @@ public class SequenceBase {
           ifTrueThen(configTransactions.remove(txnId),
               () -> debug("Removed configTransaction " + txnId));
         } else if (STATE_SUBTYPE.equals(subTypeRaw)) {
-          ifTrueThen(stateTransaction.compareAndSet(txnId, null),
-              () -> debug("Removed stateTransaction " + txnId));
+          if (stateTransaction.compareAndSet(txnId, null)) {
+            debug("Removed stateTransaction " + txnId);
+          } else if (txnId.startsWith(REFLECTOR_PREFIX)) {
+            debug("Ignoring unexpected stateTransaction " + txnId);
+          }
         }
       }
 
