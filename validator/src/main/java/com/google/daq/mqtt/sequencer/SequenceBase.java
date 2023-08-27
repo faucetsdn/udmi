@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
+import static com.google.daq.mqtt.util.IotReflectorClient.REFLECTOR_PREFIX;
 import static com.google.daq.mqtt.validator.Validator.CONFIG_PREFIX;
 import static com.google.daq.mqtt.validator.Validator.STATE_PREFIX;
 import static com.google.udmi.util.CleanDateFormat.cleanDate;
@@ -44,6 +45,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
 import com.google.bos.iot.core.proxy.MockPublisher;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
@@ -83,7 +85,9 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -190,6 +194,7 @@ public class SequenceBase {
   private static final ObjectDiffEngine RECV_CONFIG_DIFFERNATOR = new ObjectDiffEngine();
   private static final ObjectDiffEngine RECV_STATE_DIFFERNATOR = new ObjectDiffEngine();
   private static final Set<String> configTransactions = new ConcurrentSkipListSet<>();
+  private static final AtomicReference<String> stateTransaction = new AtomicReference<>();
   private static final int MINIMUM_TEST_SEC = 15;
   private static final Date RESET_LAST_START = new Date(73642);
   protected static Metadata deviceMetadata;
@@ -937,9 +942,19 @@ public class SequenceBase {
     return messageStr;
   }
 
+  private boolean stateTransactionPending() {
+    return stateTransaction.get() != null;
+  }
+
   protected void queryState() {
-    debug("Sending device state query");
-    reflector().publish(getDeviceId(), Common.STATE_QUERY_TOPIC, EMPTY_MESSAGE);
+    assertConfigIsNotPending();
+    Preconditions.checkState(!stateTransactionPending(), "state transaction already pending");
+    String txnId = reflector().publish(getDeviceId(), Common.STATE_QUERY_TOPIC, EMPTY_MESSAGE);
+    stateTransaction.set(txnId);
+    debug(format("Waiting for device stateTransaction %s", txnId));
+    whileDoing("state query", () -> messageEvaluateLoop(this::stateTransactionPending),
+        e -> debug(
+            format("While waiting for stateTransaction %s: %s", txnId, friendlyStackTrace(e))));
   }
 
   /**
@@ -1184,11 +1199,20 @@ public class SequenceBase {
   }
 
   protected void whileDoing(String condition, Runnable action) {
+    whileDoing(condition, action, e -> debug("Caught " + friendlyStackTrace(e)));
+  }
+
+  protected void whileDoing(String condition, Runnable action, Consumer<Exception> catcher) {
     final Instant startTime = Instant.now();
 
     waitingConditionPush(condition);
 
-    action.run();
+    try {
+      action.run();
+    } catch (Exception e) {
+      catcher.accept(e);
+      throw e;
+    }
 
     waitingConditionPop(startTime);
   }
@@ -1386,11 +1410,21 @@ public class SequenceBase {
     try {
       debug(format("Handling update message %s_update %s", subTypeRaw, txnId));
 
-      // Do this first to handle all cases of a Config payload, including exceptions.
-      if (CONFIG_SUBTYPE.equals(subTypeRaw) && txnId != null) {
-        debug("Removing configTransaction " + txnId);
-        configTransactions.remove(txnId);
+      // Do this first to handle all cases of update payloads, including exceptions.
+      if (txnId != null) {
+        if (CONFIG_SUBTYPE.equals(subTypeRaw)) {
+          ifTrueThen(configTransactions.remove(txnId),
+              () -> debug("Removed configTransaction " + txnId));
+        } else if (STATE_SUBTYPE.equals(subTypeRaw) && txnId.startsWith(REFLECTOR_PREFIX)) {
+          String expected = stateTransaction.getAndSet(null);
+          if (txnId.equals(expected)) {
+            debug("Removed stateTransaction " + txnId);
+          } else {
+            debug(format("Received unexpected stateTransaction %s, dropping %s", txnId, expected));
+          }
+        }
       }
+
       if (message.containsKey(EXCEPTION_KEY)) {
         debug("Ignoring reflector exception:\n" + message.get(EXCEPTION_KEY).toString());
         configExceptionTimestamp = (String) message.get(TIMESTAMP_KEY);
@@ -1686,10 +1720,6 @@ public class SequenceBase {
   }
 
   protected void checkThatHasInterestingSystemStatus(boolean isInteresting) {
-    checkThatHasInterestingSystemStatusTodo(isInteresting);
-  }
-
-  protected void checkThatHasInterestingSystemStatusTodo(boolean isInteresting) {
     BiConsumer<String, Supplier<Boolean>> check =
         isInteresting ? this::checkThat : this::checkNotThat;
     check.accept(SYSTEM_STATUS_MESSAGE, this::hasInterestingSystemStatus);
@@ -1697,15 +1727,13 @@ public class SequenceBase {
 
   protected void untilHasInterestingSystemStatus(boolean isInteresting) {
     expectedSystemStatus = null;
-    untilHasInterestingSystemStatusTodo(isInteresting);
+    BiConsumer<String, Supplier<Boolean>> until =
+        isInteresting ? this::untilTrue : this::untilFalse;
+    String message =
+        (isInteresting ? HAS_STATUS_PREFIX : NOT_STATUS_PREFIX) + SYSTEM_STATUS_MESSAGE;
+    until.accept(message, this::hasInterestingSystemStatus);
     expectedSystemStatus = isInteresting;
     checkThatHasInterestingSystemStatus(isInteresting);
-  }
-
-  protected void untilHasInterestingSystemStatusTodo(boolean isSet) {
-    BiConsumer<String, Supplier<Boolean>> until = isSet ? this::untilTrue : this::untilFalse;
-    String message = (isSet ? HAS_STATUS_PREFIX : NOT_STATUS_PREFIX) + SYSTEM_STATUS_MESSAGE;
-    until.accept(message, this::hasInterestingSystemStatus);
   }
 
   private void putSequencerResult(Description description, SequenceResult result) {
