@@ -1400,14 +1400,11 @@ public class SequenceBase {
       // Do this first to handle all cases of update payloads, including exceptions.
       if (txnId != null) {
         if (CONFIG_SUBTYPE.equals(subTypeRaw)) {
-          boolean removed = configTransactions.remove(txnId);
-          ifTrueThen(removed, () -> debug("Removed configTransaction " + txnId));
+          ifTrueThen(configTransactions.remove(txnId),
+              () -> debug("Removed configTransaction " + txnId));
         } else if (STATE_SUBTYPE.equals(subTypeRaw)) {
-          String previous = stateTransaction.getAndSet(null);
-          if (previous != null) {
-            debug("Removed stateTransaction " + txnId);
-            checkState(previous.equals(txnId), "unexpected state transaction id");
-          }
+          ifTrueThen(stateTransaction.compareAndSet(txnId, null),
+              () -> debug("Removed stateTransaction " + txnId));
         }
       }
 
@@ -1708,13 +1705,17 @@ public class SequenceBase {
   protected void checkThatHasInterestingSystemStatus(boolean isInteresting) {
     BiConsumer<String, Supplier<Boolean>> check =
         isInteresting ? this::checkThat : this::checkNotThat;
-    check.accept(SYSTEM_STATUS_MESSAGE, this::hasInterestingSystemStatus);
+    String message =
+        (isInteresting ? HAS_STATUS_PREFIX : NOT_STATUS_PREFIX) + SYSTEM_STATUS_MESSAGE;
+    check.accept(message, this::hasInterestingSystemStatus);
   }
 
   protected void untilHasInterestingSystemStatus(boolean isInteresting) {
     expectedSystemStatus = null;
-    BiConsumer<String, Supplier<Boolean>> until = isInteresting ? this::untilTrue : this::untilFalse;
-    String message = (isInteresting ? HAS_STATUS_PREFIX : NOT_STATUS_PREFIX) + SYSTEM_STATUS_MESSAGE;
+    BiConsumer<String, Supplier<Boolean>> until =
+        isInteresting ? this::untilTrue : this::untilFalse;
+    String message =
+        (isInteresting ? HAS_STATUS_PREFIX : NOT_STATUS_PREFIX) + SYSTEM_STATUS_MESSAGE;
     until.accept(message, this::hasInterestingSystemStatus);
     expectedSystemStatus = isInteresting;
     checkThatHasInterestingSystemStatus(isInteresting);
