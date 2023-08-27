@@ -14,6 +14,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.fromStringStrict;
+import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.loadFileStrictRequired;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
@@ -138,8 +139,8 @@ public class ReflectProcessor extends ProcessorBase {
 
   private void processReflection(Envelope reflection, Envelope envelope,
       Map<String, Object> payload) {
-    debug("Processing reflection %s/%s %s", envelope.subType, envelope.subFolder,
-        envelope.transactionId);
+    debug("Processing reflection %s/%s %s %s", envelope.subType, envelope.subFolder,
+        getTimestamp(envelope.publishTime), envelope.transactionId);
     updateProviderAffinity(envelope, reflection.source);
     CloudModel result = getReflectionResult(envelope, payload);
     ifNotNullThen(result,
@@ -231,7 +232,7 @@ public class ReflectProcessor extends ProcessorBase {
 
     Map<String, Object> configMap = new HashMap<>();
     configMap.put(SubFolder.UDMI.value(), udmiConfig);
-    String contents = stringify(configMap);
+    String contents = stringifyTerse(configMap);
     debug("Setting reflector config %s %s: %s", registryId, deviceId, contents);
     iotAccess.modifyConfig(registryId, deviceId, previous -> contents);
   }
@@ -264,7 +265,7 @@ public class ReflectProcessor extends ProcessorBase {
 
   @Override
   public void activate() {
-    debug("Deployment configuration: " + stringify(DEPLOYED_CONFIG));
+    debug("Deployment configuration: " + stringifyTerse(DEPLOYED_CONFIG));
     super.activate();
   }
 
