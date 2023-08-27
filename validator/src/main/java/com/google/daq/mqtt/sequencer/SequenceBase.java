@@ -1706,10 +1706,6 @@ public class SequenceBase {
   }
 
   protected void checkThatHasInterestingSystemStatus(boolean isInteresting) {
-    checkThatHasInterestingSystemStatusTodo(isInteresting);
-  }
-
-  protected void checkThatHasInterestingSystemStatusTodo(boolean isInteresting) {
     BiConsumer<String, Supplier<Boolean>> check =
         isInteresting ? this::checkThat : this::checkNotThat;
     check.accept(SYSTEM_STATUS_MESSAGE, this::hasInterestingSystemStatus);
@@ -1717,15 +1713,11 @@ public class SequenceBase {
 
   protected void untilHasInterestingSystemStatus(boolean isInteresting) {
     expectedSystemStatus = null;
-    untilHasInterestingSystemStatusTodo(isInteresting);
+    BiConsumer<String, Supplier<Boolean>> until = isInteresting ? this::untilTrue : this::untilFalse;
+    String message = (isInteresting ? HAS_STATUS_PREFIX : NOT_STATUS_PREFIX) + SYSTEM_STATUS_MESSAGE;
+    until.accept(message, this::hasInterestingSystemStatus);
     expectedSystemStatus = isInteresting;
     checkThatHasInterestingSystemStatus(isInteresting);
-  }
-
-  protected void untilHasInterestingSystemStatusTodo(boolean isSet) {
-    BiConsumer<String, Supplier<Boolean>> until = isSet ? this::untilTrue : this::untilFalse;
-    String message = (isSet ? HAS_STATUS_PREFIX : NOT_STATUS_PREFIX) + SYSTEM_STATUS_MESSAGE;
-    until.accept(message, this::hasInterestingSystemStatus);
   }
 
   private void putSequencerResult(Description description, SequenceResult result) {
