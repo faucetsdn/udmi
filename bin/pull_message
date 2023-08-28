@@ -21,20 +21,20 @@ gcloud --format=json --project=$project_id pubsub subscriptions pull $subscripti
 subType=$(jq -r '.[0].message.attributes.subType' $out_file 2> /dev/null)
 subFolder=$(jq -r '.[0].message.attributes.subFolder' $out_file 2> /dev/null)
 deviceId=$(jq -r '.[0].message.attributes.deviceId' $out_file 2> /dev/null)
+registryId=$(jq -r '.[0].message.attributes.deviceRegistryId' $out_file 2> /dev/null)
 timestamp=$(jq -r '.[0].message.data' $out_file 2>/dev/null | base64 --decode | jq -r .timestamp 2> /dev/null) || true
-data=$(jq -r .[0].message.data /tmp/captured.json  | base64 --decode)
-
-out_folder=$ROOT/out/devices/$deviceId
-mkdir -p $out_folder
+data=$(jq -r .[0].message.data $out_file | base64 --decode)
 
 if [[ $subType == null ]]; then
     subType=event
 fi
 
 if [[ $subFolder != null ]]; then
-    echo $subFolder $subType $deviceId $timestamp
-    out_file=$out_folder/${timestamp}_${subFolder}_${subType}.json
+    out_file=$ROOT/out/registries/$registryId/devices/$deviceId/${timestamp}_${subFolder}_${subType}.json
+    echo $out_file
+    mkdir -p $(dirname $out_file)
     echo $data | jq . > $out_file
 else
     echo No matching messages found.
+    false
 fi

@@ -1776,7 +1776,7 @@ public class Pubber {
   }
 
   private void localLog(Entry entry) {
-    String message = format("Entry %s%s %s %s %s%s", Level.fromValue(entry.level).name(),
+    String message = format("Log %s%s %s %s %s%s", Level.fromValue(entry.level).name(),
         shouldLogLevel(entry.level) ? "" : "*",
         entry.category, entry.message, isoConvert(entry.timestamp), getTestingTag(deviceConfig));
     localLog(message, Level.fromValue(entry.level), isoConvert(entry.timestamp), null);
