@@ -22,7 +22,7 @@ subType=$(jq -r '.[0].message.attributes.subType' $out_file 2> /dev/null)
 subFolder=$(jq -r '.[0].message.attributes.subFolder' $out_file 2> /dev/null)
 deviceId=$(jq -r '.[0].message.attributes.deviceId' $out_file 2> /dev/null)
 registryId=$(jq -r '.[0].message.attributes.deviceRegistryId' $out_file 2> /dev/null)
-timestamp=$(jq -r '.[0].message.data' $out_file 2>/dev/null | base64 --decode | jq -r .timestamp 2> /dev/null) || true
+timestamp=$(jq -r '.[0].message.publishTime' $out_file 2> /dev/null)
 data=$(jq -r .[0].message.data $out_file | base64 --decode)
 
 if [[ $subType == null ]]; then
