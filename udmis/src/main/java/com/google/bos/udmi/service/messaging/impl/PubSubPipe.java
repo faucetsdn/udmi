@@ -10,6 +10,7 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 import com.google.api.core.ApiFuture;
+import com.google.api.core.ApiService;
 import com.google.api.core.ApiService.Listener;
 import com.google.api.core.ApiService.State;
 import com.google.api.gax.core.NoCredentialsProvider;
@@ -101,6 +102,12 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
   public void activate(Consumer<Bundle> bundleConsumer) {
     super.activate(bundleConsumer);
     subscriber.startAsync();
+  }
+
+  @Override
+  public void shutdown() {
+    subscriber.stopAsync().awaitTerminated();
+    super.shutdown();
   }
 
   @Override
