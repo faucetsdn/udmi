@@ -35,6 +35,5 @@ else
     false
 fi
 
+# Run with exec to replace shell so java receives SIGTERM signal.
 exec java -jar $POD_JAR $POD_CONFIG
-
-echo $?

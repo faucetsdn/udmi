@@ -18,7 +18,6 @@ import com.google.bos.udmi.service.core.ReflectProcessor;
 import com.google.bos.udmi.service.core.StateProcessor;
 import com.google.bos.udmi.service.core.TargetProcessor;
 import com.google.common.collect.ImmutableSet;
-import com.google.udmi.util.GeneralUtils;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -33,7 +32,7 @@ import udmi.schema.PodConfiguration;
 /**
  * Main entrypoint wrapper for a UDMI service pod.
  */
-public class UdmiServicePod {
+public class UdmiServicePod extends ContainerBase {
 
   private static final Map<String, ContainerBase> COMPONENT_MAP = new ConcurrentHashMap<>();
   private static final Set<Class<? extends ProcessorBase>> PROCESSOR_CLASSES = ImmutableSet.of(
@@ -89,6 +88,7 @@ public class UdmiServicePod {
 
   public static void main(String[] args) {
     UdmiServicePod udmiServicePod = new UdmiServicePod(args);
+    Runtime.getRuntime().addShutdownHook(new Thread(udmiServicePod::shutdown));
     udmiServicePod.activate();
   }
 
@@ -147,8 +147,11 @@ public class UdmiServicePod {
   /**
    * Activate all processors and components in the pod.
    */
+  @Override
   public void activate() {
+    notice("Starting activation of container components");
     forAllComponents(ContainerBase::activate);
+    notice("Finished activation of container components");
   }
 
   public PodConfiguration getPodConfiguration() {
@@ -158,7 +161,10 @@ public class UdmiServicePod {
   /**
    * Shutdown all processors and bridges in the pod.
    */
+  @Override
   public void shutdown() {
+    notice("Starting shutdown of container components");
     forAllComponents(ContainerBase::shutdown);
+    notice("Finished shutdown of container components");
   }
 }
