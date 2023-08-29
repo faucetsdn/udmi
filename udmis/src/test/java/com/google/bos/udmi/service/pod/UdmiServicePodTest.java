@@ -150,13 +150,29 @@ public class UdmiServicePodTest {
     File targetFile = new File(outDir, TARGET_FILE);
     assertFalse(targetFile.exists(), "file should not exist " + targetFile.getAbsolutePath());
     pod.activate();
+    assertTrue(UdmiServicePod.READY_INDICATOR.exists(), "readiness indicator file missing");
     Thread.sleep(RECEIVE_TIMEOUT_MS);
     pod.shutdown();
     assertTrue(targetFile.exists(), "missing target output file " + targetFile.getAbsolutePath());
   }
 
   @Test
-  public void reflectPodTest() throws Exception {
+  public void failedActivation() {
+    UdmiServicePod pod = new UdmiServicePod(arrayOf(BASE_CONFIG));
+    UdmiServicePod.getComponent(LocalIotAccessProvider.class).setFailureForTest();
+    boolean success = false;
+    try {
+      pod.activate();
+      success = true;
+    } catch (Exception e) {
+      // expected exception thrown for test.
+    }
+    assertFalse(success, "pod activation should not return");
+    assertFalse(UdmiServicePod.READY_INDICATOR.exists(), "readiness indicator file exists");
+  }
+
+  @Test
+  public void reflectPodTest() {
     ProcessorTestBase.writeVersionDeployFile();
     UdmiServicePod pod = new UdmiServicePod(arrayOf(BASE_CONFIG));
 

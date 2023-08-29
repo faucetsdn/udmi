@@ -40,7 +40,7 @@ public class UdmiServicePod extends ContainerBase {
       TargetProcessor.class, ReflectProcessor.class, StateProcessor.class);
   private static final Map<String, Class<? extends ProcessorBase>> PROCESSORS =
       PROCESSOR_CLASSES.stream().collect(Collectors.toMap(ContainerBase::getName, clazz -> clazz));
-  private static final File READY_INDICATOR = new File("/tmp/pod_ready.txt");
+  static final File READY_INDICATOR = new File("/tmp/pod_ready.txt");
   public static final int FATAL_ERROR_CODE = -1;
 
   private final PodConfiguration podConfiguration;
@@ -59,10 +59,7 @@ public class UdmiServicePod extends ContainerBase {
       ifNotNullThen(podConfiguration.iot_access, access -> access.forEach(this::createAccess));
       ifNotNullThen(podConfiguration.distributors, dist -> dist.forEach(this::createDistributor));
     } catch (Exception e) {
-      System.err.printf("Fatal error instantiating pod %s %s%n", CSV_JOINER.join(args),
-          friendlyStackTrace(e));
-      System.exit(FATAL_ERROR_CODE);
-      throw e;
+      throw new RuntimeException("Fatal error instantiating pod " + CSV_JOINER.join(args), e);
     }
   }
 
@@ -92,9 +89,14 @@ public class UdmiServicePod extends ContainerBase {
    * Instantiate and activate the service pod.
    */
   public static void main(String[] args) {
-    UdmiServicePod udmiServicePod = new UdmiServicePod(args);
-    Runtime.getRuntime().addShutdownHook(new Thread(udmiServicePod::shutdown));
-    udmiServicePod.activate();
+    try {
+      UdmiServicePod udmiServicePod = new UdmiServicePod(args);
+      Runtime.getRuntime().addShutdownHook(new Thread(udmiServicePod::shutdown));
+      udmiServicePod.activate();
+    } catch (Exception e) {
+      System.err.println("Exception activating pod: " + friendlyStackTrace(e));
+      System.exit(FATAL_ERROR_CODE);
+    }
   }
 
   @SuppressWarnings("unchecked")
@@ -123,6 +125,7 @@ public class UdmiServicePod extends ContainerBase {
 
   public static void resetForTest() {
     COMPONENT_MAP.clear();
+    READY_INDICATOR.delete();
   }
 
   private void createAccess(String name, IotAccess config) {
@@ -156,13 +159,13 @@ public class UdmiServicePod extends ContainerBase {
   public void activate() {
     super.activate();
     notice("Starting activation of container components");
-    forAllComponents(ContainerBase::activate);
     String absolutePath = READY_INDICATOR.getAbsolutePath();
     try {
+      forAllComponents(ContainerBase::activate);
       checkState(READY_INDICATOR.createNewFile(), "ready file already exists");
       READY_INDICATOR.deleteOnExit();
     } catch (Exception e) {
-      throw new RuntimeException("While creating ready indicator " + absolutePath, e);
+      throw new RuntimeException("While activating pod", e);
     }
     notice("Finished activation of container components, created " + absolutePath);
   }
