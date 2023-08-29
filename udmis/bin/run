@@ -35,6 +35,6 @@ else
     false
 fi
 
-java -jar $POD_JAR $POD_CONFIG
+exec java -jar $POD_JAR $POD_CONFIG
 
 echo $?
