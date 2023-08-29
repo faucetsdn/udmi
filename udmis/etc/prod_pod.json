@@ -9,7 +9,7 @@
       "recv_id": "udmi_target-udmis"
     },
     "state": {
-      "recv_id": "udmi_state-udmis",
+      "recv_id": "udmi_state-udmi",
       "send_id": "udmi_target"
     },
     "reflect": {
