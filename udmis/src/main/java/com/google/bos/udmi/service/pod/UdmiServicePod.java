@@ -86,6 +86,9 @@ public class UdmiServicePod extends ContainerBase {
     return requireNonNull(maybeGetComponent(name), "missing component " + name);
   }
 
+  /**
+   * Instantiate and activate the service pod.
+   */
   public static void main(String[] args) {
     UdmiServicePod udmiServicePod = new UdmiServicePod(args);
     Runtime.getRuntime().addShutdownHook(new Thread(udmiServicePod::shutdown));
