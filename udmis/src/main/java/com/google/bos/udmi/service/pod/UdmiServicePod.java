@@ -18,6 +18,7 @@ import com.google.bos.udmi.service.core.ReflectProcessor;
 import com.google.bos.udmi.service.core.StateProcessor;
 import com.google.bos.udmi.service.core.TargetProcessor;
 import com.google.common.collect.ImmutableSet;
+import java.io.File;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -39,6 +40,7 @@ public class UdmiServicePod extends ContainerBase {
       TargetProcessor.class, ReflectProcessor.class, StateProcessor.class);
   private static final Map<String, Class<? extends ProcessorBase>> PROCESSORS =
       PROCESSOR_CLASSES.stream().collect(Collectors.toMap(ContainerBase::getName, clazz -> clazz));
+  private static final File READY_INDICATOR = new File("/tmp/pod_ready.txt");
   public static final int FATAL_ERROR_CODE = -1;
 
   private final PodConfiguration podConfiguration;
@@ -152,8 +154,15 @@ public class UdmiServicePod extends ContainerBase {
    */
   @Override
   public void activate() {
+    super.activate();
     notice("Starting activation of container components");
     forAllComponents(ContainerBase::activate);
+    try {
+      checkState(READY_INDICATOR.createNewFile(), "ready file already exists");
+      READY_INDICATOR.deleteOnExit();
+    } catch (Exception e) {
+      throw new RuntimeException("While creating ready indicator " + READY_INDICATOR.getAbsolutePath(), e);
+    }
     notice("Finished activation of container components");
   }
 
@@ -169,5 +178,6 @@ public class UdmiServicePod extends ContainerBase {
     notice("Starting shutdown of container components");
     forAllComponents(ContainerBase::shutdown);
     notice("Finished shutdown of container components");
+    super.shutdown();
   }
 }
