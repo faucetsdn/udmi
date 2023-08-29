@@ -157,13 +157,14 @@ public class UdmiServicePod extends ContainerBase {
     super.activate();
     notice("Starting activation of container components");
     forAllComponents(ContainerBase::activate);
+    String absolutePath = READY_INDICATOR.getAbsolutePath();
     try {
       checkState(READY_INDICATOR.createNewFile(), "ready file already exists");
       READY_INDICATOR.deleteOnExit();
     } catch (Exception e) {
-      throw new RuntimeException("While creating ready indicator " + READY_INDICATOR.getAbsolutePath(), e);
+      throw new RuntimeException("While creating ready indicator " + absolutePath, e);
     }
-    notice("Finished activation of container components");
+    notice("Finished activation of container components, created " + absolutePath);
   }
 
   public PodConfiguration getPodConfiguration() {
