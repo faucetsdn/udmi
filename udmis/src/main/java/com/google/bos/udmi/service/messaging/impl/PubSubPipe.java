@@ -2,15 +2,14 @@ package com.google.bos.udmi.service.messaging.impl;
 
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
+import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static java.lang.String.format;
-import static java.util.Objects.requireNonNull;
 
 import com.google.api.core.ApiFuture;
-import com.google.api.core.ApiService;
 import com.google.api.core.ApiService.Listener;
 import com.google.api.core.ApiService.State;
 import com.google.api.gax.core.NoCredentialsProvider;
@@ -27,7 +26,6 @@ import com.google.pubsub.v1.ProjectSubscriptionName;
 import com.google.pubsub.v1.ProjectTopicName;
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.udmi.util.Common;
-import com.google.udmi.util.GeneralUtils;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import java.time.Duration;
@@ -37,7 +35,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
@@ -177,7 +174,7 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
       built.addListener(new Listener() {
         @Override
         public void failed(State from, Throwable failure) {
-          debug("Subscriber state %s: %s", from, GeneralUtils.stackTraceString(failure));
+          debug("Subscriber state %s: %s", from, friendlyStackTrace(failure));
         }
       }, Executors.newSingleThreadExecutor());
       return built;
