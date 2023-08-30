@@ -35,6 +35,11 @@ public abstract class ProcessorTestBase extends MessageTestBase {
   private ProcessorBase processor;
   protected IotAccessBase provider;
 
+  {
+    // Write this first so other static code picks up this data.
+    writeVersionDeployFile();
+  }
+
   protected int getDefaultCount() {
     return getMessageCount(Object.class);
   }
@@ -50,7 +55,6 @@ public abstract class ProcessorTestBase extends MessageTestBase {
   protected void initializeTestInstance() {
     try {
       UdmiServicePod.resetForTest();
-      writeVersionDeployFile();
       createProcessorInstance();
       activateReverseProcessor();
       getReverseDispatcher();

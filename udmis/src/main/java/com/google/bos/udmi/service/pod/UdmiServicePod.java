@@ -42,17 +42,14 @@ public class UdmiServicePod extends ContainerBase {
 
   public static final String HOSTNAME = System.getenv("HOSTNAME");
   public static final String DEPLOY_FILE = "var/deployed_version.json";
-  public static final SetupUdmiConfig DEPLOYED_CONFIG =
-      loadFileStrictRequired(SetupUdmiConfig.class, new File(DEPLOY_FILE));
-  public static final String UDMI_VERSION = requireNonNull(DEPLOYED_CONFIG.udmi_version);
+  public static final String UDMI_VERSION = requireNonNull(getDeployedConfig().udmi_version);
+  public static final int FATAL_ERROR_CODE = -1;
+  static final File READY_INDICATOR = new File("/tmp/pod_ready.txt");
   private static final Map<String, ContainerBase> COMPONENT_MAP = new ConcurrentHashMap<>();
   private static final Set<Class<? extends ProcessorBase>> PROCESSOR_CLASSES = ImmutableSet.of(
       TargetProcessor.class, ReflectProcessor.class, StateProcessor.class);
   private static final Map<String, Class<? extends ProcessorBase>> PROCESSORS =
       PROCESSOR_CLASSES.stream().collect(Collectors.toMap(ContainerBase::getName, clazz -> clazz));
-  static final File READY_INDICATOR = new File("/tmp/pod_ready.txt");
-  public static final int FATAL_ERROR_CODE = -1;
-
   private final PodConfiguration podConfiguration;
 
   /**
@@ -95,12 +92,19 @@ public class UdmiServicePod extends ContainerBase {
     return requireNonNull(maybeGetComponent(name), "missing component " + name);
   }
 
+  public static SetupUdmiConfig getDeployedConfig() {
+    return loadFileStrictRequired(SetupUdmiConfig.class, new File(DEPLOY_FILE));
+  }
+
+  /**
+   * Create a new UdmiConfig object for reporting system setup.
+   */
   @NotNull
   public static UdmiConfig getUdmiConfig(UdmiState toolState) {
     UdmiConfig udmiConfig = new UdmiConfig();
     udmiConfig.last_state = ifNotNullGet(toolState, state -> state.timestamp);
     udmiConfig.setup = new SetupUdmiConfig();
-    copyFields(DEPLOYED_CONFIG, udmiConfig.setup, false);
+    copyFields(getDeployedConfig(), udmiConfig.setup, false);
     udmiConfig.setup.hostname = HOSTNAME;
     udmiConfig.setup.udmi_version = UDMI_VERSION;
     udmiConfig.setup.functions_min = ProcessorBase.FUNCTIONS_VERSION_MIN;

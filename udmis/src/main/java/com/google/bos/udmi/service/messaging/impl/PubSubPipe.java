@@ -5,6 +5,7 @@ import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static java.lang.String.format;
@@ -172,9 +173,9 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
   Subscriber getSubscriber(String subName) {
     try {
       ProjectSubscriptionName subscriptionName = ProjectSubscriptionName.of(projectId, subName);
-      checkSubscription(subscriptionName);
       Subscriber.Builder builder = Subscriber.newBuilder(subscriptionName, this);
       String emu = getEmulatorHost();
+      ifNullThen(emu, () -> checkSubscription(subscriptionName));
       ifNotNullThen(emu, host -> builder.setChannelProvider(getTransportChannelProvider(host)));
       ifNotNullThen(emu, host -> builder.setCredentialsProvider(NoCredentialsProvider.create()));
       builder.setParallelPullCount(EXECUTION_THREADS);

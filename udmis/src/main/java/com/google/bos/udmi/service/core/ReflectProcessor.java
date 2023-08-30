@@ -218,6 +218,7 @@ public class ReflectProcessor extends ProcessorBase {
 
     Map<String, Object> configMap = new HashMap<>();
     configMap.put(SubFolder.UDMI.value(), udmiConfig);
+    configMap.put(TIMESTAMP_KEY, getTimestamp());
     String contents = stringifyTerse(configMap);
     debug("Setting reflector config %s %s: %s", registryId, deviceId, contents);
     iotAccess.modifyConfig(registryId, deviceId, previous -> contents);
@@ -251,7 +252,7 @@ public class ReflectProcessor extends ProcessorBase {
 
   @Override
   public void activate() {
-    debug("Deployment configuration: " + stringifyTerse(UdmiServicePod.DEPLOYED_CONFIG));
+    debug("Deployment configuration: " + stringifyTerse(UdmiServicePod.getDeployedConfig()));
     super.activate();
   }
 
