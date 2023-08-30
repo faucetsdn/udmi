@@ -16,6 +16,7 @@ import java.util.function.Consumer;
 import org.junit.jupiter.api.AfterEach;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.LocalnetModel;
+import udmi.schema.UdmiConfig;
 
 /**
  * Simple base class for many kinds of message-base tests.
@@ -65,6 +66,11 @@ public abstract class MessageTestBase extends MessageTestCore {
   }
 
   private <T> void defaultHandler(T message) {
+    // UdmiConfig messages are sometimes injected by the pipes, so ignore them here.
+    if (message instanceof UdmiConfig) {
+      return;
+    }
+
     // Wrap the message in an AtomicReference as a signal that this was the default handler.
     messageHandler(new AtomicReference<>(message));
   }

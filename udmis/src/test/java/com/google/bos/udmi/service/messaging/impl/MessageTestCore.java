@@ -1,7 +1,14 @@
 package com.google.bos.udmi.service.messaging.impl;
 
+import static com.google.udmi.util.JsonUtil.writeFile;
+import static org.apache.commons.io.FileUtils.deleteDirectory;
+
+import com.google.bos.udmi.service.core.ProcessorTestBase;
+import com.google.bos.udmi.service.pod.UdmiServicePod;
+import java.io.File;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.EndpointConfiguration.Protocol;
+import udmi.schema.SetupUdmiConfig;
 
 /**
  * Core functions and constants for testing anything message related.
@@ -19,6 +26,30 @@ public abstract class MessageTestCore {
   protected static final String TEST_DESTINATION = "message_to";
   protected static final String TEST_VERSION = "1.32";
   protected static final String TEST_REF = "g123456789";
+
+  {
+    // Write this first so other static code picks up this data.
+    writeVersionDeployFile();
+  }
+
+  /**
+   * Write a deployment file for testing.
+   */
+  public static void writeVersionDeployFile() {
+    File deployFile = new File(UdmiServicePod.DEPLOY_FILE);
+    try {
+      deleteDirectory(deployFile.getParentFile());
+      deployFile.getParentFile().mkdirs();
+      SetupUdmiConfig deployedVersion = new SetupUdmiConfig();
+      deployedVersion.deployed_at = ProcessorTestBase.TEST_TIMESTAMP;
+      deployedVersion.deployed_by = ProcessorTestBase.TEST_USER;
+      deployedVersion.udmi_version = TEST_VERSION;
+      deployedVersion.udmi_ref = TEST_REF;
+      writeFile(deployedVersion, deployFile);
+    } catch (Exception e) {
+      throw new RuntimeException("While writing deploy file " + deployFile.getAbsolutePath(), e);
+    }
+  }
 
   protected void augmentConfig(EndpointConfiguration configuration) {
     configuration.protocol = Protocol.LOCAL;

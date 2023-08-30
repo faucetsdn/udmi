@@ -64,7 +64,7 @@ public class IotReflectorClient implements MessagePublisher {
   private static final String CONFIG_CATEGORY = "config";
   private static final String COMMANDS_CATEGORY = "commands";
   private static final long CONFIG_TIMEOUT_SEC = 30;
-  private static final int UPDATE_RETRIES = 3;
+  private static final int UPDATE_RETRIES = 4;
   private static String prevTransactionId;
   private final String udmiVersion;
   private final CountDownLatch initialConfigReceived = new CountDownLatch(1);
@@ -299,12 +299,11 @@ public class IotReflectorClient implements MessagePublisher {
           reflectorStateTimestamp));
 
       udmiInfo = reflectorConfig.setup;
-      String deployedVersion = udmiInfo.udmi_version;
       boolean timestampMatch = dateEquals(lastState, reflectorStateTimestamp);
-      boolean versionMatch = ifNotNullGet(updateTo, to -> to.equals(deployedVersion), true);
+      boolean versionMatch = ifNotNullGet(updateTo, to -> to.equals(udmiInfo.udmi_ref), true);
 
       if (timestampMatch && versionMatch) {
-        if (!udmiVersion.equals(deployedVersion)) {
+        if (!udmiVersion.equals(udmiInfo.udmi_version)) {
           System.err.println("UDMI version mismatch: " + udmiVersion);
         }
 

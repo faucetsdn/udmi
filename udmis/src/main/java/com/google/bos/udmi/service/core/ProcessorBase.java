@@ -1,8 +1,8 @@
 package com.google.bos.udmi.service.core;
 
 import static com.google.bos.udmi.service.access.IotAccessBase.MAX_CONFIG_LENGTH;
-import static com.google.bos.udmi.service.core.ReflectProcessor.UDMI_VERSION;
 import static com.google.bos.udmi.service.messaging.MessageDispatcher.messageHandlerFor;
+import static com.google.bos.udmi.service.pod.UdmiServicePod.UDMI_VERSION;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.Common.DEVICE_ID_PROPERTY_KEY;
 import static com.google.udmi.util.Common.REGISTRY_ID_PROPERTY_KEY;
@@ -159,7 +159,7 @@ public abstract class ProcessorBase extends ContainerBase {
     ErrorMessage errorMessage = new ErrorMessage();
     errorMessage.error = (String) bundle.message;
     errorMessage.data = encodeBase64(bundle.payload);
-    errorMessage.version = ReflectProcessor.DEPLOYED_CONFIG.udmi_version;
+    errorMessage.version = UdmiServicePod.getDeployedConfig().udmi_version;
     errorMessage.timestamp = getTimestamp();
     errorMap.put("payload", encodeBase64(stringify(errorMessage)));
     error(format("Reflecting error %s/%s for %s", errorMap.get(SUBTYPE_PROPERTY_KEY),
@@ -318,8 +318,8 @@ public abstract class ProcessorBase extends ContainerBase {
   }
 
   /**
-   * Simple exception indicator that a parse error occurred, so it wasn't something about the
-   * new config, but the previous config, so should essentially be retried.
+   * Simple exception indicator that a parse error occurred, so it wasn't something about the new
+   * config, but the previous config, so should essentially be retried.
    */
   public static class PreviousParseException extends RuntimeException {
 
