@@ -78,7 +78,6 @@ public class UdmiServicePodTest {
 
   @Test
   public void basicPodTest() {
-    ProcessorTestBase.writeVersionDeployFile();
     UdmiServicePod pod = new UdmiServicePod(arrayOf(BASE_CONFIG));
 
     PodConfiguration podConfig = pod.getPodConfiguration();
@@ -178,7 +177,6 @@ public class UdmiServicePodTest {
 
   @Test
   public void reflectPodTest() {
-    ProcessorTestBase.writeVersionDeployFile();
     UdmiServicePod pod = new UdmiServicePod(arrayOf(BASE_CONFIG));
 
     IotAccessBase iotAccess = UdmiServicePod.getComponent(IOT_ACCESS_COMPONENT);
