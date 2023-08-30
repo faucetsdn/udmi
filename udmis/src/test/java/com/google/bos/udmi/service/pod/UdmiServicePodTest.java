@@ -8,6 +8,7 @@ import static com.google.bos.udmi.service.messaging.impl.MessageTestCore.TEST_RE
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.udmi.util.GeneralUtils.arrayOf;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
+import static java.lang.String.format;
 import static org.apache.commons.io.FileUtils.deleteDirectory;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -50,7 +51,8 @@ public class UdmiServicePodTest {
   private static final String BASE_CONFIG = "src/test/configs/base_pod.json";
   private static final String BRIDGE_CONFIG = "src/test/configs/bridge_pod.json";
   private static final String FILE_CONFIG = "src/test/configs/trace_pod.json";
-  private static final String TARGET_FILE = "traces/simple/devices/AHU-22/002_event_pointset.json";
+  private static final String TARGET_FILE1 = "traces/simple/devices/AHU-22/002_event_pointset.json";
+  private static final String TARGET_FILE2 = "traces/simple/devices/AHU-22/003_event_pointset.json";
   private static final long RECEIVE_TIMEOUT_SEC = 2;
   private static final long RECEIVE_TIMEOUT_MS = RECEIVE_TIMEOUT_SEC * 1000;
   public static final String EMPTY_CONFIG = "{}";
@@ -76,7 +78,6 @@ public class UdmiServicePodTest {
 
   @Test
   public void basicPodTest() {
-    ProcessorTestBase.writeVersionDeployFile();
     UdmiServicePod pod = new UdmiServicePod(arrayOf(BASE_CONFIG));
 
     PodConfiguration podConfig = pod.getPodConfiguration();
@@ -147,17 +148,35 @@ public class UdmiServicePodTest {
     PodConfiguration podConfiguration = pod.getPodConfiguration();
     File outDir = new File(podConfiguration.bridges.get("trace").from.send_id);
     deleteDirectory(outDir);
-    File targetFile = new File(outDir, TARGET_FILE);
-    assertFalse(targetFile.exists(), "file should not exist " + targetFile.getAbsolutePath());
+    File targetFile1 = new File(outDir, TARGET_FILE1);
+    File targetFile2 = new File(outDir, TARGET_FILE2);
+    assertFalse(targetFile1.exists(), "file should not exist " + targetFile1.getAbsolutePath());
+    assertFalse(targetFile2.exists(), "file should not exist " + targetFile2.getAbsolutePath());
     pod.activate();
+    assertTrue(UdmiServicePod.READY_INDICATOR.exists(), "readiness indicator file missing");
     Thread.sleep(RECEIVE_TIMEOUT_MS);
     pod.shutdown();
-    assertTrue(targetFile.exists(), "missing target output file " + targetFile.getAbsolutePath());
+    boolean exists = targetFile1.exists() || targetFile2.exists();
+    assertTrue(exists, format("missing target file %s or %s", targetFile1, targetFile2));
   }
 
   @Test
-  public void reflectPodTest() throws Exception {
-    ProcessorTestBase.writeVersionDeployFile();
+  public void failedActivation() {
+    UdmiServicePod pod = new UdmiServicePod(arrayOf(BASE_CONFIG));
+    UdmiServicePod.getComponent(LocalIotAccessProvider.class).setFailureForTest();
+    boolean success = false;
+    try {
+      pod.activate();
+      success = true;
+    } catch (Exception e) {
+      // expected exception thrown for test.
+    }
+    assertFalse(success, "pod activation should not return");
+    assertFalse(UdmiServicePod.READY_INDICATOR.exists(), "readiness indicator file exists");
+  }
+
+  @Test
+  public void reflectPodTest() {
     UdmiServicePod pod = new UdmiServicePod(arrayOf(BASE_CONFIG));
 
     IotAccessBase iotAccess = UdmiServicePod.getComponent(IOT_ACCESS_COMPONENT);

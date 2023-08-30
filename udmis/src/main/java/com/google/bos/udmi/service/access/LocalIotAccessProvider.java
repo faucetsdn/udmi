@@ -1,8 +1,10 @@
 package com.google.bos.udmi.service.access;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.using;
 import static java.lang.String.format;
 
+import com.google.bos.udmi.service.core.ComponentName;
 import com.google.common.collect.ImmutableSet;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
@@ -14,6 +16,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import org.jetbrains.annotations.TestOnly;
 import udmi.schema.CloudModel;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.IotAccess;
@@ -21,10 +24,12 @@ import udmi.schema.IotAccess;
 /**
  * Iot Access Provider that runs locally (through filesystem).
  */
+@ComponentName("iot-access")
 public class LocalIotAccessProvider extends IotAccessBase {
 
   private static final Map<String, Entry<Long, String>> DEVICE_CONFIGS = new HashMap<>();
   BlockingQueue<String> sentCommands = new LinkedBlockingQueue<>();
+  private boolean failActivation;
 
   /**
    * Create a new instance for interfacing with multiple providers.
@@ -57,6 +62,7 @@ public class LocalIotAccessProvider extends IotAccessBase {
   @Override
   public void activate() {
     debug("activate");
+    checkState(!failActivation, "failing activation for test");
   }
 
   @Override
@@ -92,6 +98,11 @@ public class LocalIotAccessProvider extends IotAccessBase {
   public void sendCommandBase(String registryId, String deviceId, SubFolder folder,
       String message) {
     sentCommands.add(format("%s/%s/%s:%s", registryId, deviceId, folder, message));
+  }
+
+  @TestOnly
+  public void setFailureForTest() {
+    failActivation = true;
   }
 
   @Override

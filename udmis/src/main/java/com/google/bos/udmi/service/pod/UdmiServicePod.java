@@ -3,6 +3,7 @@ package com.google.bos.udmi.service.pod;
 import static com.google.bos.udmi.service.messaging.impl.MessageBase.combineConfig;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
+import static com.google.udmi.util.GeneralUtils.copyFields;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
@@ -18,30 +19,37 @@ import com.google.bos.udmi.service.core.ReflectProcessor;
 import com.google.bos.udmi.service.core.StateProcessor;
 import com.google.bos.udmi.service.core.TargetProcessor;
 import com.google.common.collect.ImmutableSet;
-import com.google.udmi.util.GeneralUtils;
+import java.io.File;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import org.jetbrains.annotations.NotNull;
 import udmi.schema.BridgePodConfiguration;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.IotAccess;
 import udmi.schema.PodConfiguration;
+import udmi.schema.SetupUdmiConfig;
+import udmi.schema.UdmiConfig;
+import udmi.schema.UdmiState;
 
 /**
  * Main entrypoint wrapper for a UDMI service pod.
  */
-public class UdmiServicePod {
+public class UdmiServicePod extends ContainerBase {
 
+  public static final String HOSTNAME = System.getenv("HOSTNAME");
+  public static final String DEPLOY_FILE = "var/deployed_version.json";
+  public static final String UDMI_VERSION = requireNonNull(getDeployedConfig().udmi_version);
+  public static final int FATAL_ERROR_CODE = -1;
+  static final File READY_INDICATOR = new File("/tmp/pod_ready.txt");
   private static final Map<String, ContainerBase> COMPONENT_MAP = new ConcurrentHashMap<>();
   private static final Set<Class<? extends ProcessorBase>> PROCESSOR_CLASSES = ImmutableSet.of(
       TargetProcessor.class, ReflectProcessor.class, StateProcessor.class);
   private static final Map<String, Class<? extends ProcessorBase>> PROCESSORS =
       PROCESSOR_CLASSES.stream().collect(Collectors.toMap(ContainerBase::getName, clazz -> clazz));
-  public static final int FATAL_ERROR_CODE = -1;
-
   private final PodConfiguration podConfiguration;
 
   /**
@@ -58,10 +66,7 @@ public class UdmiServicePod {
       ifNotNullThen(podConfiguration.iot_access, access -> access.forEach(this::createAccess));
       ifNotNullThen(podConfiguration.distributors, dist -> dist.forEach(this::createDistributor));
     } catch (Exception e) {
-      System.err.printf("Fatal error instantiating pod %s %s%n", CSV_JOINER.join(args),
-          friendlyStackTrace(e));
-      System.exit(FATAL_ERROR_CODE);
-      throw e;
+      throw new RuntimeException("Fatal error instantiating pod " + CSV_JOINER.join(args), e);
     }
   }
 
@@ -87,9 +92,38 @@ public class UdmiServicePod {
     return requireNonNull(maybeGetComponent(name), "missing component " + name);
   }
 
+  public static SetupUdmiConfig getDeployedConfig() {
+    return loadFileStrictRequired(SetupUdmiConfig.class, new File(DEPLOY_FILE));
+  }
+
+  /**
+   * Create a new UdmiConfig object for reporting system setup.
+   */
+  @NotNull
+  public static UdmiConfig getUdmiConfig(UdmiState toolState) {
+    UdmiConfig udmiConfig = new UdmiConfig();
+    udmiConfig.last_state = ifNotNullGet(toolState, state -> state.timestamp);
+    udmiConfig.setup = new SetupUdmiConfig();
+    copyFields(getDeployedConfig(), udmiConfig.setup, false);
+    udmiConfig.setup.hostname = HOSTNAME;
+    udmiConfig.setup.udmi_version = UDMI_VERSION;
+    udmiConfig.setup.functions_min = ProcessorBase.FUNCTIONS_VERSION_MIN;
+    udmiConfig.setup.functions_max = ProcessorBase.FUNCTIONS_VERSION_MAX;
+    return udmiConfig;
+  }
+
+  /**
+   * Instantiate and activate the service pod.
+   */
   public static void main(String[] args) {
-    UdmiServicePod udmiServicePod = new UdmiServicePod(args);
-    udmiServicePod.activate();
+    try {
+      UdmiServicePod udmiServicePod = new UdmiServicePod(args);
+      Runtime.getRuntime().addShutdownHook(new Thread(udmiServicePod::shutdown));
+      udmiServicePod.activate();
+    } catch (Exception e) {
+      System.err.println("Exception activating pod: " + friendlyStackTrace(e));
+      System.exit(FATAL_ERROR_CODE);
+    }
   }
 
   @SuppressWarnings("unchecked")
@@ -118,6 +152,7 @@ public class UdmiServicePod {
 
   public static void resetForTest() {
     COMPONENT_MAP.clear();
+    READY_INDICATOR.delete();
   }
 
   private void createAccess(String name, IotAccess config) {
@@ -147,8 +182,19 @@ public class UdmiServicePod {
   /**
    * Activate all processors and components in the pod.
    */
+  @Override
   public void activate() {
-    forAllComponents(ContainerBase::activate);
+    super.activate();
+    notice("Starting activation of container components");
+    String absolutePath = READY_INDICATOR.getAbsolutePath();
+    try {
+      forAllComponents(ContainerBase::activate);
+      checkState(READY_INDICATOR.createNewFile(), "ready file already exists");
+      READY_INDICATOR.deleteOnExit();
+    } catch (Exception e) {
+      throw new RuntimeException("While activating pod", e);
+    }
+    notice("Finished activation of container components, created " + absolutePath);
   }
 
   public PodConfiguration getPodConfiguration() {
@@ -158,7 +204,11 @@ public class UdmiServicePod {
   /**
    * Shutdown all processors and bridges in the pod.
    */
+  @Override
   public void shutdown() {
+    notice("Starting shutdown of container components");
     forAllComponents(ContainerBase::shutdown);
+    notice("Finished shutdown of container components");
+    super.shutdown();
   }
 }
