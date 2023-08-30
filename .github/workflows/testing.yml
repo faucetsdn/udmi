@@ -52,7 +52,6 @@ jobs:
       - name: Setup udmis container build
         if: ${{ github.event_name == 'push' }}
         run: |
-          set -x
           revhash=$(git rev-parse $GITHUB_REF)
           IMAGE_TAG=g${revhash:0:9}
           PUSH_REPO=$PUSH_REGISTRY/${{ github.repository }}
