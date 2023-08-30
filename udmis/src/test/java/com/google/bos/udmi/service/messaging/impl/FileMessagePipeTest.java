@@ -29,7 +29,7 @@ import udmi.schema.PointPointsetEvent;
 import udmi.schema.PointsetEvent;
 import udmi.schema.SystemEvent;
 
-class FileMessagePipeTest {
+class FileMessagePipeTest extends MessageTestCore {
 
   private static final String SIMPLE_TRACE = "../tests/traces/simple/devices";
   private static final String TRACE_OUT = "out/test.trace/";

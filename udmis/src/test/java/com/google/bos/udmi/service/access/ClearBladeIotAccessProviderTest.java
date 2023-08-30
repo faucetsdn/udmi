@@ -1,9 +1,5 @@
 package com.google.bos.udmi.service.access;
 
-import static com.google.bos.udmi.service.messaging.impl.MessageTestCore.TEST_DEVICE;
-import static com.google.bos.udmi.service.messaging.impl.MessageTestCore.TEST_PROJECT;
-import static com.google.bos.udmi.service.messaging.impl.MessageTestCore.TEST_REGION;
-import static com.google.bos.udmi.service.messaging.impl.MessageTestCore.TEST_REGISTRY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -13,6 +9,7 @@ import com.clearblade.cloud.iot.v1.DeviceManagerClient;
 import com.clearblade.cloud.iot.v1.deviceslist.DevicesListRequest;
 import com.clearblade.cloud.iot.v1.deviceslist.DevicesListResponse;
 import com.clearblade.cloud.iot.v1.devicetypes.Device;
+import com.google.bos.udmi.service.messaging.impl.MessageTestCore;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
@@ -23,7 +20,7 @@ import org.mockito.invocation.InvocationOnMock;
 import udmi.schema.CloudModel;
 import udmi.schema.IotAccess;
 
-class ClearBladeIotAccessProviderTest {
+class ClearBladeIotAccessProviderTest extends MessageTestCore {
 
   private final DeviceManagerClient mockClient = mock(DeviceManagerClient.class);
 

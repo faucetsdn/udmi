@@ -1,5 +1,6 @@
 package com.google.bos.udmi.service.messaging.impl;
 
+import static com.google.bos.udmi.service.pod.UdmiServicePod.HOSTNAME;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
@@ -18,8 +19,10 @@ import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.bos.udmi.service.pod.ContainerBase;
+import com.google.bos.udmi.service.pod.UdmiServicePod;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -37,6 +40,7 @@ import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
+import udmi.schema.UdmiConfig;
 
 /**
  * Base class for supporting a variety of messaging interfaces.
@@ -79,6 +83,15 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     Bundle bundle = new Bundle(envelope, exception);
     bundle.envelope.subType = SubType.EVENT;
     bundle.envelope.subFolder = SubFolder.ERROR;
+    return bundle;
+  }
+
+  protected Bundle makeHelloBundle() {
+    UdmiConfig udmiConfig = UdmiServicePod.getUdmiConfig(null);
+    Bundle bundle = new Bundle(udmiConfig);
+    bundle.envelope.subType = SubType.CONFIG;
+    bundle.envelope.subFolder = SubFolder.UDMI;
+    bundle.envelope.publishTime = new Date();
     return bundle;
   }
 
@@ -191,7 +204,6 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
           debug("Processing waited %ds on message loop %s", waiting, id);
           if (bundle.message.equals(TERMINATE_MARKER)) {
             info("Terminating message loop %s", id);
-            terminateHandlers();
             return;
           }
           envelope = bundle.envelope;
