@@ -299,12 +299,11 @@ public class IotReflectorClient implements MessagePublisher {
           reflectorStateTimestamp));
 
       udmiInfo = reflectorConfig.setup;
-      String deployedVersion = udmiInfo.udmi_version;
       boolean timestampMatch = dateEquals(lastState, reflectorStateTimestamp);
-      boolean versionMatch = ifNotNullGet(updateTo, to -> to.equals(deployedVersion), true);
+      boolean versionMatch = ifNotNullGet(updateTo, to -> to.equals(udmiInfo.udmi_ref), true);
 
       if (timestampMatch && versionMatch) {
-        if (!udmiVersion.equals(deployedVersion)) {
+        if (!udmiVersion.equals(udmiInfo.udmi_version)) {
           System.err.println("UDMI version mismatch: " + udmiVersion);
         }
 
