@@ -61,7 +61,7 @@ revparse=`git rev-parse HEAD`
 udmi_ver=g${revparse:0:9}
 udmi_ref=$REPOSITORY/udmi:$udmi_ver
 
-version=`git describe || echo $udmi_ref`
+version=`git describe`
 
 RUNARGS="--rm -ti -v $PWD/var:/udmi -v $HOME/.config:/root/.config --tmpfs /tmp"
 TEMPLATES=$(cd etc; ls k8s_*.yaml)

@@ -20,6 +20,11 @@ spec:
       - name: udmis-core
         image: @IMAGE-udmis@
         imagePullPolicy: Always
+        readinessProbe:
+          exec:
+            command:
+              - cat
+              - /tmp/pod_ready.txt
         resources:
           requests:
             cpu: 100m
