@@ -4,7 +4,6 @@ import static com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl.g
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.Common.ERROR_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
-import static com.google.udmi.util.GeneralUtils.copyFields;
 import static com.google.udmi.util.GeneralUtils.decodeBase64;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
@@ -26,8 +25,8 @@ import static udmi.schema.Envelope.SubFolder.UPDATE;
 
 import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.StateUpdate;
+import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.udmi.util.JsonUtil;
-import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -36,7 +35,6 @@ import udmi.schema.CloudModel.Operation;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
-import udmi.schema.SetupUdmiConfig;
 import udmi.schema.UdmiConfig;
 import udmi.schema.UdmiState;
 
@@ -47,11 +45,6 @@ import udmi.schema.UdmiState;
 public class ReflectProcessor extends ProcessorBase {
 
   public static final String PAYLOAD_KEY = "payload";
-  public static final String HOSTNAME = System.getenv("HOSTNAME");
-  static final String DEPLOY_FILE = "var/deployed_version.json";
-  static final SetupUdmiConfig DEPLOYED_CONFIG =
-      loadFileStrictRequired(SetupUdmiConfig.class, new File(DEPLOY_FILE));
-  static final String UDMI_VERSION = requireNonNull(ReflectProcessor.DEPLOYED_CONFIG.udmi_version);
 
   @Override
   protected void defaultHandler(Object message) {
@@ -221,14 +214,7 @@ public class ReflectProcessor extends ProcessorBase {
     ifNotNullThen(distributor, d -> d.distribute(envelope, toolState));
     updateAwareness(envelope, toolState);
 
-    UdmiConfig udmiConfig = new UdmiConfig();
-    udmiConfig.last_state = toolState.timestamp;
-    udmiConfig.setup = new SetupUdmiConfig();
-    copyFields(DEPLOYED_CONFIG, udmiConfig.setup, false);
-    udmiConfig.setup.hostname = HOSTNAME;
-    udmiConfig.setup.udmi_version = UDMI_VERSION;
-    udmiConfig.setup.functions_min = FUNCTIONS_VERSION_MIN;
-    udmiConfig.setup.functions_max = FUNCTIONS_VERSION_MAX;
+    UdmiConfig udmiConfig = UdmiServicePod.getUdmiConfig(toolState);
 
     Map<String, Object> configMap = new HashMap<>();
     configMap.put(SubFolder.UDMI.value(), udmiConfig);
@@ -265,7 +251,7 @@ public class ReflectProcessor extends ProcessorBase {
 
   @Override
   public void activate() {
-    debug("Deployment configuration: " + stringifyTerse(DEPLOYED_CONFIG));
+    debug("Deployment configuration: " + stringifyTerse(UdmiServicePod.DEPLOYED_CONFIG));
     super.activate();
   }
 

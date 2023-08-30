@@ -1,7 +1,6 @@
 package com.google.bos.udmi.service.core;
 
 import static com.google.bos.udmi.service.core.StateProcessor.IOT_ACCESS_COMPONENT;
-import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.writeFile;
 import static org.apache.commons.io.FileUtils.deleteDirectory;
 import static org.mockito.Mockito.mock;
@@ -92,7 +91,7 @@ public abstract class ProcessorTestBase extends MessageTestBase {
    * Write a deployment file for testing.
    */
   public static void writeVersionDeployFile() {
-    File deployFile = new File(ReflectProcessor.DEPLOY_FILE);
+    File deployFile = new File(UdmiServicePod.DEPLOY_FILE);
     try {
       deleteDirectory(deployFile.getParentFile());
       deployFile.getParentFile().mkdirs();

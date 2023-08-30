@@ -21,13 +21,16 @@ import com.google.cloud.pubsub.v1.AckReplyConsumer;
 import com.google.cloud.pubsub.v1.MessageReceiver;
 import com.google.cloud.pubsub.v1.Publisher;
 import com.google.cloud.pubsub.v1.Subscriber;
+import com.google.cloud.pubsub.v1.SubscriptionAdminClient;
 import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.ProjectSubscriptionName;
 import com.google.pubsub.v1.ProjectTopicName;
+import com.google.pubsub.v1.PublisherGrpc;
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.udmi.util.Common;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
@@ -61,6 +64,7 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
       projectId = variableSubstitution(configuration.hostname,
           "no project id defined in configuration as 'hostname'");
       publisher = ifNotNullGet(configuration.send_id, this::getPublisher);
+      ifNotNullThen(publisher, this::checkPublisher);
       subscriber = ifNotNullGet(configuration.recv_id, this::getSubscriber);
       String subscriptionName = ifNotNullGet(subscriber, Subscriber::getSubscriptionNameString);
       String topicName = ifNotNullGet(publisher, Publisher::getTopicNameString);
@@ -68,6 +72,10 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
     } catch (Exception e) {
       throw new RuntimeException("While creating PubSub pipe", e);
     }
+  }
+
+  private void checkPublisher() {
+    publish(makeHelloBundle());
   }
 
   public static MessagePipe fromConfig(EndpointConfiguration configuration) {
@@ -157,20 +165,21 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
       info(format("Publisher %s:%s", Optional.ofNullable(emu).orElse(GCP_HOST), projectTopicName));
       return builder.build();
     } catch (Exception e) {
-      throw new RuntimeException("While creating emulator publisher", e);
+      throw new RuntimeException("While creating publisher", e);
     }
   }
 
   Subscriber getSubscriber(String subName) {
     try {
-      ProjectSubscriptionName subscription = ProjectSubscriptionName.of(projectId, subName);
-      Subscriber.Builder builder = Subscriber.newBuilder(subscription, this);
+      ProjectSubscriptionName subscriptionName = ProjectSubscriptionName.of(projectId, subName);
+      checkSubscription(subscriptionName);
+      Subscriber.Builder builder = Subscriber.newBuilder(subscriptionName, this);
       String emu = getEmulatorHost();
       ifNotNullThen(emu, host -> builder.setChannelProvider(getTransportChannelProvider(host)));
       ifNotNullThen(emu, host -> builder.setCredentialsProvider(NoCredentialsProvider.create()));
-      info(format("Subscriber %s:%s", Optional.ofNullable(emu).orElse(GCP_HOST), subscription));
       builder.setParallelPullCount(EXECUTION_THREADS);
       Subscriber built = builder.build();
+      info(format("Subscriber %s:%s", Optional.ofNullable(emu).orElse(GCP_HOST), subscriptionName));
       built.addListener(new Listener() {
         @Override
         public void failed(State from, Throwable failure) {
@@ -179,7 +188,15 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
       }, Executors.newSingleThreadExecutor());
       return built;
     } catch (Exception e) {
-      throw new RuntimeException("While creating emulator subscriber", e);
+      throw new RuntimeException("While creating subscriber", e);
+    }
+  }
+
+  private static void checkSubscription(ProjectSubscriptionName subscriptionName) {
+    try (SubscriptionAdminClient client = SubscriptionAdminClient.create()) {
+      client.getSubscription(subscriptionName).getAckDeadlineSeconds();
+    } catch (Exception e) {
+      throw new RuntimeException("Checking subscription " + subscriptionName, e);
     }
   }
 

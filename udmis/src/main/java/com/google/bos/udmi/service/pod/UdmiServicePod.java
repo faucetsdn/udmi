@@ -3,6 +3,7 @@ package com.google.bos.udmi.service.pod;
 import static com.google.bos.udmi.service.messaging.impl.MessageBase.combineConfig;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
+import static com.google.udmi.util.GeneralUtils.copyFields;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
@@ -25,16 +26,25 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import org.jetbrains.annotations.NotNull;
 import udmi.schema.BridgePodConfiguration;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.IotAccess;
 import udmi.schema.PodConfiguration;
+import udmi.schema.SetupUdmiConfig;
+import udmi.schema.UdmiConfig;
+import udmi.schema.UdmiState;
 
 /**
  * Main entrypoint wrapper for a UDMI service pod.
  */
 public class UdmiServicePod extends ContainerBase {
 
+  public static final String HOSTNAME = System.getenv("HOSTNAME");
+  public static final String DEPLOY_FILE = "var/deployed_version.json";
+  public static final SetupUdmiConfig DEPLOYED_CONFIG =
+      loadFileStrictRequired(SetupUdmiConfig.class, new File(DEPLOY_FILE));
+  public static final String UDMI_VERSION = requireNonNull(DEPLOYED_CONFIG.udmi_version);
   private static final Map<String, ContainerBase> COMPONENT_MAP = new ConcurrentHashMap<>();
   private static final Set<Class<? extends ProcessorBase>> PROCESSOR_CLASSES = ImmutableSet.of(
       TargetProcessor.class, ReflectProcessor.class, StateProcessor.class);
@@ -83,6 +93,19 @@ public class UdmiServicePod extends ContainerBase {
   public static <T> T getComponent(Class<T> clazz) {
     String name = ContainerBase.getName(clazz);
     return requireNonNull(maybeGetComponent(name), "missing component " + name);
+  }
+
+  @NotNull
+  public static UdmiConfig getUdmiConfig(UdmiState toolState) {
+    UdmiConfig udmiConfig = new UdmiConfig();
+    udmiConfig.last_state = ifNotNullGet(toolState, state -> state.timestamp);
+    udmiConfig.setup = new SetupUdmiConfig();
+    copyFields(DEPLOYED_CONFIG, udmiConfig.setup, false);
+    udmiConfig.setup.hostname = HOSTNAME;
+    udmiConfig.setup.udmi_version = UDMI_VERSION;
+    udmiConfig.setup.functions_min = ProcessorBase.FUNCTIONS_VERSION_MIN;
+    udmiConfig.setup.functions_max = ProcessorBase.FUNCTIONS_VERSION_MAX;
+    return udmiConfig;
   }
 
   /**
