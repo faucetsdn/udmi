@@ -1,6 +1,7 @@
 package com.google.daq.mqtt.util;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.util.ConfigUtil.readExeConfig;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
@@ -11,6 +12,7 @@ import static java.util.Optional.ofNullable;
 import static udmi.schema.IotAccess.IotProvider.GCP_NATIVE;
 import static udmi.schema.IotAccess.IotProvider.IMPLICIT;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
@@ -48,7 +50,7 @@ public class CloudIotManager {
   private final String projectId;
   private final String cloudRegion;
   private final Map<String, CloudModel> deviceMap = new ConcurrentHashMap<>();
-  private final File siteDir;
+  private final File siteModel;
   private final boolean useReflectClient;
   private IotProvider iotProvider;
 
@@ -64,7 +66,8 @@ public class CloudIotManager {
   public CloudIotManager(String projectId, File siteDir, String altRegistry,
       String registrySuffix, IotAccess.IotProvider iotProvider) {
     checkNotNull(projectId, "project id undefined");
-    this.siteDir = checkNotNull(siteDir, "site directory undefined");
+    this.siteModel = checkNotNull(siteDir, "site directory undefined");
+    checkState(siteDir.isDirectory(), "not a directory " + siteDir.getAbsolutePath());
     this.useReflectClient = ofNullable(iotProvider).orElse(GCP_NATIVE) != GCP_NATIVE;
     this.projectId = projectId;
     File cloudConfig = new File(siteDir, CLOUD_IOT_CONFIG_JSON);
@@ -93,13 +96,14 @@ public class CloudIotManager {
       ExecutionConfiguration config = readExeConfig(siteConfig);
       this.projectId = requireNonNull(config.project_id, "no project_id defined");
       this.useReflectClient = shouldUseReflectorClient(config);
-      this.siteDir = ifNotNullGet(config.site_model, File::new, siteConfig.getParentFile());
-      File baseConfig = new File(siteDir, CLOUD_IOT_CONFIG_JSON);
+      String model = config.site_model != null ? config.site_model : ".";
+      siteModel = new File(siteConfig.getParentFile(), model);
+      File baseConfig = new File(siteModel, CLOUD_IOT_CONFIG_JSON);
       ExecutionConfiguration newConfig = mergeObject(readExeConfig(baseConfig), config);
       executionConfiguration = validate(newConfig, this.projectId);
       executionConfiguration.iot_provider = ofNullable(executionConfiguration.iot_provider).orElse(
           IMPLICIT);
-      executionConfiguration.site_model = siteDir.getPath();
+      executionConfiguration.site_model = siteModel.getAbsolutePath();
       String targetRegistry = ofNullable(newConfig.alt_registry).orElse(newConfig.registry_id);
       registryId = SiteModel.getRegistryActual(targetRegistry, newConfig.registry_suffix);
       cloudRegion = executionConfiguration.cloud_region;

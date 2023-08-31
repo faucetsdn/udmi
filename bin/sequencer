@@ -5,6 +5,8 @@
 #
 
 ROOT_DIR=$(realpath $(dirname $0)/..)
+source $UDMI_ROOT/etc/shell_common.sh
+
 OUT_DIR=$ROOT_DIR/out
 TEST_LOG=$OUT_DIR/sequencer.out
 SCHEMA_OUT=$OUT_DIR/schema.out
@@ -12,7 +14,7 @@ SEQUENCER_RES=$OUT_DIR/sequencer.res
 log_level=INFO
 alt_registry=\"${UDMI_ALT_REGISTRY:-ZZ-REDIRECT-NA}\"
 min_stage=PREVIEW
-export UDMI_VERSION=`cd $ROOT_DIR; git describe`
+export UDMI_VERSION=$udmi_version
 
 # For cross-env sort stability
 export LC_ALL=C
@@ -34,8 +36,7 @@ while [[ $1 =~ ^- ]]; do
 done
 
 if [[ $# < 3 ]]; then
-    echo Usage: $0 [-v] [-vv] [-a] SITE_MODEL PROJECT_ID DEVICE_ID [SERIAL_NO] [TEST_NAMES...]
-    false
+    usage [-v] [-vv] [-a] SITE_MODEL PROJECT_ID DEVICE_ID [SERIAL_NO] [TEST_NAMES...]
 fi
 
 site_path=$(realpath $1)

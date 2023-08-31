@@ -293,7 +293,8 @@ public class Validator {
 
   private void processProfile(File profilePath) {
     config = ConfigUtil.readExeConfig(profilePath);
-    setSiteDir(config.site_model);
+    File adjustedPath = new File(profilePath.getParentFile(), config.site_model);
+    setSiteDir(adjustedPath.getAbsolutePath());
     if (!Strings.isNullOrEmpty(config.feed_name)) {
       validatePubSub(config.feed_name);
     }

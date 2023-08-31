@@ -1,6 +1,7 @@
 #!/bin/bash -e
 
-ROOT_DIR=$(realpath $(dirname $0)/..)
+UDMI_ROOT=$(realpath $(dirname $0)/..)
+source $UDMI_ROOT/etc/shell_common.sh
 
 function cleanup {
     if [[ -n $PUB_PID && -d /proc/$PUB_PID ]]; then
@@ -10,16 +11,37 @@ function cleanup {
 }
 trap cleanup EXIT
 
-if (( $# < 4 )); then
-    echo $0 SITE_PATH PROJECT_ID DEVICE_ID SERIAL_NO [options] ...
-    false
-fi
+[[ $# == 0 ]] && usage SITE_{PATH/FILE} [PROJECT_ID] [DEVICE_ID] [SERIAL_NO] [options] ...
 
-site_path=$(realpath $1)
-project_id=$2
-device_id=$3
-serial_no=$4
-shift 4
+config_file=$(realpath $1)
+shift
+
+rm -f /tmp/endpoint.json
+if [[ -d $config_file ]]; then
+    echo Constructing pubber config from command line args.
+    (( $# >= 3 )) || fail missing project etc... with site model dir
+    project_id=$1
+    device_id=$2
+    serial_no=$3
+    shift 3
+    site_model=$config_file
+    site_config=$site_model/cloud_iot_config.json
+elif [[ ! -f $config_file ]]; then
+    fail Missing config file $(realpath $config_file)
+elif [[ $(jq -r .deviceId $config_file) != null ]]; then
+    echo Using pubber configuration file direct.
+    jq -r .endpoint $config_file > /tmp/endpoint.json
+elif [[ $(jq -r .device_id $config_file) == null ]]; then
+    fail Neither deviceId nor device_id defined in config file.
+else
+    echo Constructing pubber configuration from site config.
+    project_id=$(jq -r .project_id $config_file)
+    device_id=$(jq -r .device_id $config_file)
+    serial_no=$(jq -r .serial_no $config_file)
+    rel_model=$(jq -r .site_model $config_file)
+    site_model=$(dirname $config_file)/$rel_model
+    site_config=$site_model/cloud_iot_config.json
+fi
 
 if [[ -n $UDMI_REGISTRY_SUFFIX ]]; then
     echo Using registry suffix $UDMI_REGISTRY_SUFFIX
@@ -28,18 +50,13 @@ else
     registry_suffix=
 fi
 
-if [ ! -f $site_path/cloud_iot_config.json ]; then
-    echo cloud_iot_config.json not found at $site_path
-    false
-fi
-
-echo Cleaning output directory $ROOT_DIR/pubber/out/$serial_no
-rm -rf $ROOT_DIR/pubber/out/$serial_no
+echo Cleaning output directory $UDMI_ROOT/pubber/out/$serial_no
+rm -rf $UDMI_ROOT/pubber/out/$serial_no
 
 echo Building pubber...
-$ROOT_DIR/pubber/bin/build
+$UDMI_ROOT/pubber/bin/build
 
-echo Running tools version `(cd $ROOT_DIR; git describe)`
+echo Running tools version `(cd $UDMI_ROOT; git describe)`
 
 for option in $*; do
     if [[ $option == *"="* ]]; then
@@ -51,17 +68,20 @@ for option in $*; do
     fi
     printf -v options_json '%s"%s":%s,' "$options_json" "$k" "$v"
 done
-options_json="{${options_json%,}}"
 
-registry_id=`jq -r .registry_id $site_path/cloud_iot_config.json`
-cloud_region=`jq -r .cloud_region $site_path/cloud_iot_config.json`
+if [[ -n $options_json ]]; then
+    options_json="{${options_json%,}}"
+else
+    options_json=null
+fi
 
 # Format of cmdline project_id is {//PROVIDER/}PROJECT (optional PROVIDER)
 # e.g. bos-testing-dev or //gcp/bos-testing-dev
-
 project_target=${project_id##*/}
 
-if [[ $project_id =~ ^// ]]; then
+if [[ -z $project_id ]]; then
+    true using config file based configuration
+elif [[ $project_id =~ ^// ]]; then
     no_project=${project_id%/*}
     iot_provider=${no_project#//}
 else
@@ -74,23 +94,39 @@ else
     broker_hostname=mqtt.googleapis.com
 fi
 
-cat <<EOF > /tmp/pubber_config.json
+if [[ ! -f /tmp/endpoint.json ]]; then
+    registry_id=$(jq -r .registry_id $site_config)
+    cloud_region=$(jq -r .cloud_region $site_config)
+    cat <<EOF > /tmp/endpoint.json
 {
-    "endpoint": {
-      "protocol": "mqtt",
-      "client_id": "projects/$project_target/locations/$cloud_region/registries/$registry_id$registry_suffix/devices/$device_id",
-      "hostname": "$broker_hostname"
-    },
-    "sitePath": "$site_path",
+    "client_id": "projects/$project_target/locations/$cloud_region/registries/$registry_id$registry_suffix/devices/$device_id",
+    "hostname": "$broker_hostname"
+}
+EOF
+fi
+
+tmp_config=/tmp/pubber_config.json
+if [[ -n $site_model ]]; then
+    cat <<EOF > $tmp_config
+{
+    "sitePath": "$site_model",
     "deviceId": "$device_id",
     "projectId": "$project_target",
     "serialNo": "$serial_no",
     "options": $options_json
 }
 EOF
+elif [[ $options_json != null ]]; then
+    echo Inserting command line options into json file.
+    jq ".options=$options_json" $config_file > $tmp_config
+else
+    cp $config_file $tmp_config
+fi
+
+jq --slurpfile endpoint /tmp/endpoint.json '.endpoint = $endpoint[0]' $tmp_config | sponge $tmp_config
 
 # Run in the background to force new process group and get PID
-$ROOT_DIR/pubber/bin/run /tmp/pubber_config.json &
+$UDMI_ROOT/pubber/bin/run $tmp_config &
 PUB_PID=$!
 wait $PUB_PID
 RESULT=$?

@@ -1,0 +1,21 @@
+{
+  "cloud_region": "us-central1",
+  "site_name": "ZZ-TRI-FECTA",
+  "registry_id": "ZZ-TRI-FECTA",
+  "reflector_endpoint": {
+    "client_id": "projects/udmi-external/locations/us-central1/registries/UDMI-REFLECT/devices/ZZ-TRI-FECTA",
+    "hostname": "us-central1-mqtt.clearblade.com"
+  },
+  "endpoint": {
+    "client_id": "projects/udmi-external/locations/us-central1/registries/UK-LON-GLAB/devices/AHU-22",
+    "hostname": "us-central1-mqtt.clearblade.com"
+  },
+  "device_id": "AHU-22",
+  "feed_name": "peringknife-debug",
+  "serial_no": "validator-1234",
+  "project_id": "udmi-external",
+  "site_model": "../../sites/udmi_site_model",
+  "options": {
+    "noPersist": null
+  }
+}

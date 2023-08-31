@@ -199,13 +199,12 @@ public class Registrar {
 
   private void processProfile(File profilePath) {
     System.err.println("Reading registrar configuration from " + profilePath.getAbsolutePath());
-    if (profilePath.isFile()) {
-      profile = profilePath;
-    }
+    profile = profilePath;
     processProfile(readExeConfig(profilePath));
   }
 
   Registrar processProfile(ExecutionConfiguration config) {
+    config.site_model = new File(profile.getParentFile(), config.site_model).getAbsolutePath();
     setSitePath(config.site_model);
     altRegistry = config.alt_registry;
     iotProvider = config.iot_provider;

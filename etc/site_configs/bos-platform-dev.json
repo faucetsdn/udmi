@@ -12,6 +12,6 @@
   },
   "device_id": "AHU-22",
   "serial_no": "validator-1234",
-  "project_id": "udmi-external",
-  "site_model": "../sites/udmi_site_model"
+  "project_id": "bos-platform-dev",
+  "site_model": "../../sites/udmi_site_model"
 }

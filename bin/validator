@@ -1,20 +1,9 @@
 #!/bin/bash -e
 
-ROOT_DIR=$(realpath $(dirname $0)/..)
+UDMI_ROOT=$(realpath $(dirname $0)/..)
+source $UDMI_ROOT/etc/shell_common.sh
 
-funciton usage {
-    echo $0 'SITE_{PATH/FILE}' [PROJECT_ID] [SUBSCRIPTION_ID]
-    false
-}
-
-funciton fail {
-    echo fatal error: $*
-    false
-}
-
-if [[ $# == 0 ]]; then
-    usage
-fi
+[[ $# == 0 ]] && usage 'SITE_{PATH/FILE}' [PROJECT_ID] [SUBSCRIPTION_ID]
 
 site_path=$(realpath $1)
 shift
@@ -45,6 +34,7 @@ fi
 if [[ -f $site_path ]]; then
     site_file=$site_path
     [[ -z $project_id ]] || fail project id specificed with config file
+    rm -f /tmp/validator_config.json
 elif [[ ! -d $site_path ]]; then
     echo $site_path not found.
     false
@@ -63,11 +53,11 @@ elif [[ -n $project_id ]]; then
 }
 EOF
 else
-    usage
+    fail unknown configuration options
 fi
 
-echo Running tools version `(cd $ROOT_DIR; git describe)`
+echo Running tools version $udmi_version
 
-$ROOT_DIR/validator/bin/validate $site_file $*
+$UDMI_ROOT/validator/bin/validate $site_file $*
 
 bin/check_version
