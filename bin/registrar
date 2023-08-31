@@ -4,7 +4,7 @@ ROOT_DIR=$(dirname $0)/..
 config_file=/tmp/registrar_config.json
 
 if [ $# == 0 ]; then
-    echo $0 SITE_PATH [PROJECT_ID] [OPTIONS] [devices...]
+    echo $0 'SITE_{PATH/FILE}' [PROJECT_ID] [OPTIONS] [devices...]
     false
 fi
 
