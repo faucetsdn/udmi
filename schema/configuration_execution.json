@@ -40,7 +40,7 @@
     "reflector_endpoint": {
       "$ref": "file:configuration_endpoint.json"
     },
-    "endpoint": {
+    "device_endpoint": {
       "$ref": "file:configuration_endpoint.json"
     },
     "project_id": {
