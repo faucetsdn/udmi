@@ -14,6 +14,7 @@ udmi_profile=out/pubber_profile.json
 SITE_PATH=sites/udmi_site_model
 DEVICE_ID=AHU-1
 seq_opts=-v
+serial_no=sequencer-$RANDOM
 
 PUBBER_OUT=out/pubber.out
 SEQUENCER_OUT=out/sequencer.out
@@ -30,7 +31,8 @@ cat <<EOF > $udmi_profile
 {
   "site_model": "$PWD/$SITE_PATH",
   "device_id": "$DEVICE_ID",
-  "project_id": "$PROJECT_ID"
+  "project_id": "$PROJECT_ID",
+  "serial_no": "$serial_no"
 }
 EOF
 
@@ -52,8 +54,7 @@ while read -u 7 action test_name remainder; do
 
     bin/reset_config $SITE_PATH $PROJECT_ID $DEVICE_ID
 
-    serial_no=sequencer-$RANDOM
-    udmi pubber $udmi_profile -x $serial_no $pubber_opts > $PUBBER_OUT 2>&1 &
+    bin/pubber $udmi_profile $pubber_opts > $PUBBER_OUT 2>&1 &
     WAITING=20
     for i in `seq 1 $WAITING`; do
         if [[ -n $(fgrep "Connection complete" $PUBBER_OUT) ]]; then
