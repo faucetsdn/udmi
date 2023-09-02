@@ -294,7 +294,8 @@ public class Validator {
   private void processProfile(File profilePath) {
     config = ConfigUtil.readExeConfig(profilePath);
     File model = new File(config.site_model);
-    File adjustedPath = model.isAbsolute() ? model : new File(profilePath.getParentFile(), config.site_model);
+    File adjustedPath = model.isAbsolute() ? model :
+        new File(profilePath.getParentFile(), config.site_model);
     setSiteDir(adjustedPath.getAbsolutePath());
     if (!Strings.isNullOrEmpty(config.feed_name)) {
       validatePubSub(config.feed_name);
