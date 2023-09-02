@@ -88,6 +88,7 @@ public class Registrar {
   private static final String CONFIG_SUB_TYPE = "config";
   private static final String MODEL_SUB_TYPE = "model";
   private static final boolean DEFAULT_BLOCK_UNKNOWN = true;
+  private static final File BASE_DIR = new File(".");
   private final Map<String, JsonSchema> schemas = new HashMap<>();
   private final String generation = getGenerationString();
   private CloudIotManager cloudIotManager;
@@ -204,7 +205,8 @@ public class Registrar {
   }
 
   Registrar processProfile(ExecutionConfiguration config) {
-    config.site_model = new File(profile.getParentFile(), config.site_model).getAbsolutePath();
+    File base = ifNotNullGet(profile, File::getParentFile, BASE_DIR);
+    config.site_model = new File(base, config.site_model).getAbsolutePath();
     setSitePath(config.site_model);
     altRegistry = config.alt_registry;
     iotProvider = config.iot_provider;
