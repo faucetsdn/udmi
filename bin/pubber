@@ -40,7 +40,7 @@ else
     serial_no=$(jq -r .serial_no $config_file)
     site_model=$(jq -r .site_model $config_file)
     [[ $site_model = /* ]] || site_model=$(dirname $config_file)/$site_model
-    site_config=$site_model/cloud_iot_config.json
+    jq -r .device_endpoint $config_file > /tmp/endpoint.json
 fi
 
 if [[ -n $UDMI_REGISTRY_SUFFIX ]]; then
