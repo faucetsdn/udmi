@@ -156,8 +156,8 @@ public class SequenceBase {
   private static final String DEVICE_METADATA = "%s/devices/%s/metadata.json";
   private static final String DEVICE_CONFIG_FORMAT = "%s/devices/%s/out/generated_config.json";
   private static final String SUMMARY_OUTPUT_FORMAT = "%s/out/sequencer_%s.json";
-  private static final String CONFIG_ENV = "VALIDATOR_CONFIG";
-  private static final String DEFAULT_CONFIG = "/tmp/validator_config.json";
+  private static final String CONFIG_ENV = "SEQUENCER_CONFIG";
+  private static final String DEFAULT_CONFIG = "/tmp/sequencer_config.json";
   private static final String CONFIG_PATH =
       Objects.requireNonNullElse(System.getenv(CONFIG_ENV), DEFAULT_CONFIG);
   private static final Map<Class<?>, SubFolder> CLASS_SUBFOLDER_MAP = ImmutableMap.of(
