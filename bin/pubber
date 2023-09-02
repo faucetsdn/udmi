@@ -38,8 +38,8 @@ else
     project_id=$(jq -r .project_id $config_file)
     device_id=$(jq -r .device_id $config_file)
     serial_no=$(jq -r .serial_no $config_file)
-    rel_model=$(jq -r .site_model $config_file)
-    site_model=$(dirname $config_file)/$rel_model
+    site_model=$(jq -r .site_model $config_file)
+    [[ $site_model = /* ]] || site_model=$(dirname $config_file)/$site_model
     site_config=$site_model/cloud_iot_config.json
 fi
 
