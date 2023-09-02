@@ -73,6 +73,7 @@ public class Registrar {
 
   public static final String SCHEMA_BASE_PATH = "schema";
   public static final Joiner JOIN_CSV = Joiner.on(", ");
+  public static final File BASE_DIR = new File(".");
   static final String METADATA_JSON = "metadata.json";
   static final String ENVELOPE_JSON = "envelope.json";
   static final String NORMALIZED_JSON = "metadata_norm.json";
@@ -89,7 +90,6 @@ public class Registrar {
   private static final String CONFIG_SUB_TYPE = "config";
   private static final String MODEL_SUB_TYPE = "model";
   private static final boolean DEFAULT_BLOCK_UNKNOWN = true;
-  public static final File BASE_DIR = new File(".");
   private final Map<String, JsonSchema> schemas = new HashMap<>();
   private final String generation = getGenerationString();
   private CloudIotManager cloudIotManager;
@@ -209,7 +209,7 @@ public class Registrar {
     String siteModel = Optional.ofNullable(config.site_model).orElse(BASE_DIR.getName());
     File siteModelRaw = new File(siteModel);
     File useModel = siteModelRaw.isAbsolute() ? siteModelRaw :
-       new File(ifNotNullGet(profile, File::getParentFile, BASE_DIR), siteModel);
+        new File(ifNotNullGet(profile, File::getParentFile, BASE_DIR), siteModel);
     config.site_model = useModel.getAbsolutePath();
     setSitePath(config.site_model);
     altRegistry = config.alt_registry;
