@@ -205,8 +205,10 @@ public class Registrar {
   }
 
   Registrar processProfile(ExecutionConfiguration config) {
-    File base = ifNotNullGet(profile, File::getParentFile, BASE_DIR);
-    config.site_model = new File(base, config.site_model).getAbsolutePath();
+    if (!(new File(config.site_model).isAbsolute())) {
+      File base = ifNotNullGet(profile, File::getParentFile, BASE_DIR);
+      config.site_model = new File(base, config.site_model).getAbsolutePath();
+    }
     setSitePath(config.site_model);
     altRegistry = config.alt_registry;
     iotProvider = config.iot_provider;
