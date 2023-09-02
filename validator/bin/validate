@@ -59,10 +59,11 @@ else
     false
 fi
 
+echo Exeucting from $(pwd)
 echo java -jar $jarfile $args $srcargs
 
 error=0
-java -jar $jarfile $args || error=$?
+java -jar $jarfile $args $srcargs || error=$?
 
 echo Validation complete, exit $error
 exit $error
