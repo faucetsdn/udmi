@@ -3,7 +3,6 @@ package com.google.daq.mqtt.util;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.util.ConfigUtil.readExeConfig;
-import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.mergeObject;
 import static java.lang.String.format;
@@ -12,7 +11,6 @@ import static java.util.Optional.ofNullable;
 import static udmi.schema.IotAccess.IotProvider.GCP_NATIVE;
 import static udmi.schema.IotAccess.IotProvider.IMPLICIT;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
@@ -96,8 +94,9 @@ public class CloudIotManager {
       ExecutionConfiguration config = readExeConfig(siteConfig);
       this.projectId = requireNonNull(config.project_id, "no project_id defined");
       this.useReflectClient = shouldUseReflectorClient(config);
-      String model = config.site_model != null ? config.site_model : ".";
-      siteModel = new File(siteConfig.getParentFile(), model);
+      File model = new File(config.site_model != null ? config.site_model : ".");
+      siteModel =
+          model.isAbsolute() ? model : new File(siteConfig.getParentFile(), model.getName());
       File baseConfig = new File(siteModel, CLOUD_IOT_CONFIG_JSON);
       ExecutionConfiguration newConfig = mergeObject(readExeConfig(baseConfig), config);
       executionConfiguration = validate(newConfig, this.projectId);
