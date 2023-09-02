@@ -20,7 +20,6 @@ import static daq.pubber.MqttDevice.CONFIG_TOPIC;
 import static daq.pubber.MqttDevice.ERRORS_TOPIC;
 import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
-import static java.util.Comparator.comparingInt;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
@@ -59,7 +58,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -191,7 +189,7 @@ public class Pubber {
   private static final String DEFAULT_MAKE = "bos";
   private static final String DEFAULT_MODEL = "pubber";
   private static final String DEFAULT_SOFTWARE_KEY = "firmware";
-  private static final String DEFAULT_SOFTWARE_VALUE  = "v1";
+  private static final String DEFAULT_SOFTWARE_VALUE = "v1";
 
   protected final PubberConfiguration configuration;
   final State deviceState = new State();
@@ -232,7 +230,8 @@ public class Pubber {
     File configFile = new File(configPath);
     try {
       configuration = sanitizeConfiguration(fromJsonFile(configFile, PubberConfiguration.class));
-      Protocol protocol = ofNullable(configuration.endpoint.protocol).orElse(MQTT);
+      Protocol protocol = ofNullable(
+          ifNotNullGet(configuration.endpoint, endpoint -> endpoint.protocol)).orElse(MQTT);
       checkArgument(MQTT.equals(protocol), "protocol mismatch");
       deviceId = requireNonNull(configuration.deviceId, "device id not defined");
       outDir = new File(PUBBER_OUT);
@@ -444,7 +443,6 @@ public class Pubber {
     if (!TRUE.equals(configuration.options.noLastStart)) {
       deviceState.system.operation.last_start = DEVICE_START_TIME;
     }
-
 
     deviceState.system.hardware = new StateSystemHardware();
     deviceState.pointset = new PointsetState();
