@@ -26,6 +26,8 @@ if [[ -d $config_file ]]; then
     shift 3
     site_model=$config_file
     site_config=$site_model/cloud_iot_config.json
+    cloud_region=$(jq -r .cloud_region $site_config)
+    registry_id=$(jq -r .registry_id $site_config)
 elif [[ ! -f $config_file ]]; then
     fail Missing config file $(realpath $config_file)
 elif [[ $(jq -r .deviceId $config_file) != null ]]; then
@@ -95,8 +97,6 @@ else
 fi
 
 if [[ ! -f /tmp/endpoint.json ]]; then
-    registry_id=$(jq -r .registry_id $site_config)
-    cloud_region=$(jq -r .cloud_region $site_config)
     cat <<EOF > /tmp/endpoint.json
 {
     "client_id": "projects/$project_target/locations/$cloud_region/registries/$registry_id$registry_suffix/devices/$device_id",
