@@ -80,7 +80,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
+import java.util.SortedMap;
 import java.util.Stack;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
@@ -229,7 +231,7 @@ public class SequenceBase {
   private final Map<String, Object> receivedUpdates = new HashMap<>();
   private final Queue<Entry> logEntryQueue = new LinkedBlockingDeque<>();
   private final Stack<String> waitingCondition = new Stack<>();
-  private final Map<String, List<Entry>> validationResults = new HashMap<>();
+  private final SortedMap<String, List<Entry>> validationResults = new TreeMap<>();
   @Rule
   public Timeout globalTimeout = new Timeout(NORM_TIMEOUT_MS, TimeUnit.MILLISECONDS);
   @Rule
@@ -473,8 +475,7 @@ public class SequenceBase {
   }
 
   private static void emitSequenceResult(SequenceResult result, String bucket, String methodName,
-      String stage,
-      int score, String message) {
+      String stage, int score, String message) {
     emitSequencerOut(format(RESULT_FORMAT, result, bucket, methodName, stage, score, message));
   }
 
@@ -765,8 +766,7 @@ public class SequenceBase {
   }
 
   private void collectSchemaResult(Description description, String schemaName,
-      SequenceResult result,
-      String detail) {
+      SequenceResult result, String detail) {
     String sequence = description.getMethodName();
     Feature feature = description.getAnnotation(Feature.class);
     String bucket = getBucket(feature).value();
