@@ -6,7 +6,7 @@
     "client_id": "projects/bos-platform-dev/locations/us-central1/registries/UDMI-REFLECT/devices/UK-LON-GLAB",
     "hostname": "bos-dev-us-central-mqtt.clearblade.com"
   },
-  "endpoint": {
+  "device_endpoint": {
     "client_id": "projects/bos-platform-dev/locations/us-central1/registries/UK-LON-GLAB/devices/AHU-22",
     "hostname": "bos-dev-us-central-mqtt.clearblade.com"
   },

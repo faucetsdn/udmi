@@ -85,7 +85,7 @@ elif [[ -f $site_path ]]; then
     site_model=`jq -r .site_model $site_path`
     [[ $site_model == null ]] && site_model=$(dirname $site_path)
     project_id=`jq -r .project_id $site_path`
-    [[ $project_id == null ]] && fail Parameter project_id not defined in config file.
+    [[ $project_id == null ]] && project_id=
     device_id=`jq -r .device_id $site_path`
     [[ $device_id == null ]] && fail Parameter device_id not defined in config file.
     serial_no=`jq -r .serial_no $site_path`

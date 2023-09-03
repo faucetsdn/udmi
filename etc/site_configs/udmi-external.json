@@ -6,7 +6,7 @@
     "client_id": "projects/udmi-external/locations/us-central1/registries/UDMI-REFLECT/devices/ZZ-TRI-FECTA",
     "hostname": "us-central1-mqtt.clearblade.com"
   },
-  "endpoint": {
+  "device_endpoint": {
     "client_id": "projects/udmi-external/locations/us-central1/registries/UK-LON-GLAB/devices/AHU-22",
     "hostname": "us-central1-mqtt.clearblade.com"
   },
