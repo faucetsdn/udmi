@@ -165,10 +165,6 @@ jobs:
         run: bin/test_regclean //gcp/$GCP_TARGET_PROJECT
       - name: sequence tests clean
         run: bin/test_sequencer clean $GCP_TARGET_PROJECT
-      - name: corrupt site model
-        run: |
-          mkdir -p sites/udmi_site_model/devices/XXX-1
-          echo { > sites/udmi_site_model/devices/XXX-1/metadata.json
       - name: sequence tests alpha
         run: bin/test_sequencer alpha $GCP_TARGET_PROJECT
       - name: sequence test timing

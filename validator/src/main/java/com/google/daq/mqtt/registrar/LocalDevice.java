@@ -37,6 +37,7 @@ import com.google.daq.mqtt.util.ValidationException;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
+import com.google.udmi.util.SiteModel.MetadataException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
@@ -308,9 +309,8 @@ class LocalDevice {
 
   private Metadata readMetadata() {
     Metadata deviceMetadata = readMetadataWithValidation(validateMetadata);
-    if (deviceMetadata != null && deviceMetadata.exception != null) {
-      exceptionMap.put(EXCEPTION_CONVERTING, deviceMetadata.exception);
-      deviceMetadata.exception = null;
+    if (deviceMetadata instanceof MetadataException metadataException) {
+      exceptionMap.put(EXCEPTION_CONVERTING, metadataException.exception);
     }
     return deviceMetadata;
   }

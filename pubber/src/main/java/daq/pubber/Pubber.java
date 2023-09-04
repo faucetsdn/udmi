@@ -587,7 +587,7 @@ public class Pubber {
   private void processDeviceMetadata(Metadata metadata) {
     if (metadata instanceof MetadataException metadataException) {
       throw new RuntimeException("While processing metadata file " + metadataException.file,
-          metadataException.metadataException);
+          metadataException.exception);
     }
     if (metadata.cloud != null) {
       configuration.algorithm = catchToNull(() -> metadata.cloud.auth_type.value());

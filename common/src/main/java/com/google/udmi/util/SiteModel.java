@@ -314,11 +314,11 @@ public class SiteModel {
   public static class MetadataException extends Metadata {
 
     public final File file;
-    public final Exception metadataException;
+    public final Exception exception;
 
-    public MetadataException(File deviceMetadataFile, Exception exception) {
+    public MetadataException(File deviceMetadataFile, Exception metadataException) {
       file = deviceMetadataFile;
-      metadataException = exception;
+      exception = metadataException;
     }
   }
 
