@@ -29,7 +29,6 @@ public class SystemModel {
 
     /**
      * Properties the expected physical location of the device.
-     * (Required)
      * 
      */
     @JsonProperty("location")
@@ -53,7 +52,6 @@ public class SystemModel {
     public Map<String, String> software;
     /**
      * Information used to print a physical QR code label.
-     * (Required)
      * 
      */
     @JsonProperty("physical_tag")
