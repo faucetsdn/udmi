@@ -20,7 +20,6 @@ import static daq.pubber.MqttDevice.CONFIG_TOPIC;
 import static daq.pubber.MqttDevice.ERRORS_TOPIC;
 import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
-import static java.util.Comparator.comparingInt;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
@@ -38,6 +37,7 @@ import com.google.udmi.util.CleanDateFormat;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
+import com.google.udmi.util.SiteModel.MetadataException;
 import daq.pubber.MqttPublisher.InjectedMessage;
 import daq.pubber.MqttPublisher.InjectedState;
 import daq.pubber.MqttPublisher.PublisherException;
@@ -59,7 +59,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -190,7 +189,7 @@ public class Pubber {
   private static final String DEFAULT_MAKE = "bos";
   private static final String DEFAULT_MODEL = "pubber";
   private static final String DEFAULT_SOFTWARE_KEY = "firmware";
-  private static final String DEFAULT_SOFTWARE_VALUE  = "v1";
+  private static final String DEFAULT_SOFTWARE_VALUE = "v1";
 
   protected final PubberConfiguration configuration;
   final State deviceState = new State();
@@ -443,7 +442,6 @@ public class Pubber {
       deviceState.system.operation.last_start = DEVICE_START_TIME;
     }
 
-
     deviceState.system.hardware = new StateSystemHardware();
     deviceState.pointset = new PointsetState();
     deviceState.pointset.points = new HashMap<>();
@@ -587,6 +585,10 @@ public class Pubber {
   }
 
   private void processDeviceMetadata(Metadata metadata) {
+    if (metadata instanceof MetadataException metadataException) {
+      throw new RuntimeException("While processing metadata file " + metadataException.file,
+          metadataException.metadataException);
+    }
     if (metadata.cloud != null) {
       configuration.algorithm = catchToNull(() -> metadata.cloud.auth_type.value());
     }
