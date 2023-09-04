@@ -295,7 +295,8 @@ public class SequenceBase {
         format("device_id %s not found in site model", deviceId));
     Metadata metadata = model.getMetadata(deviceId);
     if (metadata instanceof MetadataException metadataException) {
-      System.err.println("Device loading error: " + friendlyStackTrace(metadataException.exception));
+      System.err.println(
+          "Device loading error: " + friendlyStackTrace(metadataException.exception));
     }
   }
 
