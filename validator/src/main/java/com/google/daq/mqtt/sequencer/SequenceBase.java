@@ -494,7 +494,8 @@ public class SequenceBase {
   }
 
   private static void summarizeSchemaStages() {
-    validationState.schemas.forEach((schema, schemaResult) -> {
+    Map<String, SchemaValidationState> sortedSchemas = new TreeMap<>(validationState.schemas);
+    sortedSchemas.forEach((schema, schemaResult) -> {
       Map<FeatureStage, List<SequenceValidationState>> schemaStages = new HashMap<>();
       schemaResult.sequences.forEach((sequence, sequenceResult) -> {
         schemaStages.computeIfAbsent(sequenceResult.stage, stage -> new ArrayList<>())
@@ -502,6 +503,7 @@ public class SequenceBase {
       });
       schemaResult.stages = schemaStages.entrySet().stream().collect(Collectors.toMap(
           Map.Entry::getKey, SequenceBase::summarizeSchemaResults));
+
       schemaResult.stages.forEach((stage, entry) -> {
         SequenceResult result = RESULT_LEVEL_MAP.inverse().get(Level.fromValue(entry.level));
         String stageValue = stage.value();
