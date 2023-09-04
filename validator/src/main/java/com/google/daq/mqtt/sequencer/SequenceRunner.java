@@ -41,7 +41,7 @@ public class SequenceRunner {
   static ExecutionConfiguration executionConfiguration;
   private static final Set<String> failures = new TreeSet<>();
   private static final Map<String, SequenceResult> allTestResults = new TreeMap<>();
-  private final Set<String> sequenceClasses = Common.allClassesInPackage(ConfigSequences.class);
+  private final Set<String> sequenceClasses = new TreeSet<>();
   private List<String> targets = List.of();
 
   /**
@@ -51,6 +51,13 @@ public class SequenceRunner {
    */
   public static void main(String[] args) {
     System.exit(processResult(Arrays.asList(args)));
+  }
+
+  /**
+   * Create instance with properly sorted classes for stability.
+   */
+  public SequenceRunner() {
+    sequenceClasses.addAll(Common.allClassesInPackage(ConfigSequences.class));
   }
 
   /**
