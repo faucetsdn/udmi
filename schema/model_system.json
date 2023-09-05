@@ -108,9 +108,5 @@
       "maximum": 800,
       "default": 300
     }
-  },
-  "required": [
-    "location",
-    "physical_tag"
-  ]
+  }
 }

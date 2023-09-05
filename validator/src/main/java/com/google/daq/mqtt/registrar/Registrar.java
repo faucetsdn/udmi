@@ -49,6 +49,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
@@ -72,6 +73,7 @@ public class Registrar {
 
   public static final String SCHEMA_BASE_PATH = "schema";
   public static final Joiner JOIN_CSV = Joiner.on(", ");
+  public static final File BASE_DIR = new File(".");
   static final String METADATA_JSON = "metadata.json";
   static final String ENVELOPE_JSON = "envelope.json";
   static final String NORMALIZED_JSON = "metadata_norm.json";
@@ -199,13 +201,16 @@ public class Registrar {
 
   private void processProfile(File profilePath) {
     System.err.println("Reading registrar configuration from " + profilePath.getAbsolutePath());
-    if (profilePath.isFile()) {
-      profile = profilePath;
-    }
+    profile = profilePath;
     processProfile(readExeConfig(profilePath));
   }
 
   Registrar processProfile(ExecutionConfiguration config) {
+    String siteModel = Optional.ofNullable(config.site_model).orElse(BASE_DIR.getName());
+    File siteModelRaw = new File(siteModel);
+    File useModel = siteModelRaw.isAbsolute() ? siteModelRaw :
+        new File(ifNotNullGet(profile, File::getParentFile, BASE_DIR), siteModel);
+    config.site_model = useModel.getAbsolutePath();
     setSitePath(config.site_model);
     altRegistry = config.alt_registry;
     iotProvider = config.iot_provider;
