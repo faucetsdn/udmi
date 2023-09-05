@@ -4,10 +4,12 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
+import static com.google.udmi.util.MessageUpgrader.STATE_SCHEMA;
 import static udmi.schema.Envelope.SubFolder.UPDATE;
 
 import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.StateUpdate;
+import com.google.udmi.util.MessageUpgrader;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
@@ -31,7 +33,8 @@ public class StateProcessor extends ProcessorBase {
 
   @Override
   protected void defaultHandler(Object originalMessage) {
-    StateUpdate stateMessage = convertToStrict(StateUpdate.class, originalMessage);
+    Object upgradedMessage = new MessageUpgrader(STATE_SCHEMA, originalMessage).upgrade(false);
+    StateUpdate stateMessage = convertToStrict(StateUpdate.class, upgradedMessage);
     shardStateUpdate(getContinuation(originalMessage), stateMessage);
     updateLastStart(getContinuation(originalMessage).getEnvelope(), stateMessage);
   }

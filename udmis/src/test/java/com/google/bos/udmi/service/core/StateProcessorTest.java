@@ -17,8 +17,6 @@ import static org.mockito.Mockito.verify;
 import com.google.bos.udmi.service.messaging.impl.MessageBase;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.udmi.util.CleanDateFormat;
-import com.google.udmi.util.GeneralUtils;
-import com.google.udmi.util.JsonUtil;
 import java.util.Date;
 import java.util.function.Function;
 import org.jetbrains.annotations.NotNull;
@@ -148,7 +146,8 @@ public class StateProcessorTest extends ProcessorTestBase {
   @Test
   public void legacyStateMessage() {
     StateProcessor processor = initializeTestInstance(StateProcessor.class);
-    processor.defaultHandler(loadFileRequired(Object.class, LEGACY_STATE_MESSAGE_FILE));
+    Object message = loadFileRequired(Object.class, LEGACY_STATE_MESSAGE_FILE);
+    dispatcher.withEnvelopeFor(new Envelope(), message, () -> processor.defaultHandler(message));
   }
 
   /**

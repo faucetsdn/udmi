@@ -33,7 +33,6 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.TestOnly;
@@ -133,18 +132,27 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   protected void devNullHandler(Object message) {
   }
 
-  private void processHandler(Envelope envelope, Class<?> handlerType, Object messageObject) {
+  @VisibleForTesting
+  public void withEnvelopeFor(Envelope envelope, Object originalMessage, Runnable run) {
     try {
-      messageEnvelopes.put(messageObject, envelope);
+      messageEnvelopes.put(originalMessage, envelope);
       setThreadEnvelope(envelope);
-      handlers.get(handlerType).accept(messageObject);
-      synchronized (handlerCounts) {
-        handlerCounts.computeIfAbsent(handlerType, key -> new AtomicInteger()).incrementAndGet();
-        handlerCounts.notify();
-      }
+      run.run();
     } finally {
-      messageEnvelopes.remove(messageObject);
+      messageEnvelopes.remove(originalMessage);
       setThreadEnvelope(null);
+    }
+  }
+
+  private void processHandler(Envelope envelope, Class<?> handlerType, Object messageObject) {
+    withEnvelopeFor(envelope, messageObject, () -> executeHandler(handlerType, messageObject));
+  }
+
+  private void executeHandler(Class<?> handlerType, Object messageObject) {
+    handlers.get(handlerType).accept(messageObject);
+    synchronized (handlerCounts) {
+      handlerCounts.computeIfAbsent(handlerType, key -> new AtomicInteger()).incrementAndGet();
+      handlerCounts.notify();
     }
   }
 
@@ -355,4 +363,5 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   public String toString() {
     return format("Dispatcher %08x", Objects.hash(this));
   }
+
 }
