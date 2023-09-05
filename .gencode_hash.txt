@@ -12,11 +12,7 @@ d40bfc9f4a30c56986435dc08f1e5f42401e5ac043359a1e359011c913cad673  gencode/docs/c
 71fe25d3b17d1dc87b52c049a3235c20527f73e12ffa53fa4800a15e53f73732  gencode/docs/event_pointset.html
 acd50976d1afd771d55177db9a1b9452a0c6a35e3e15b2e444c799991294808d  gencode/docs/event_system.html
 816481f69d3b1bdeb2224eaad6e3751a991d20eb98294d89f888b1323505209c  gencode/docs/event_validation.html
-<<<<<<< HEAD
-6990379b76407d1d7a6c66a2707b2154315972aeaa54f045524646a1c49d2550  gencode/docs/metadata.html
-=======
-21a66523e339c2d6424761e7dbcc9bf14a1a294a684361ff060a91792e6d4fc0  gencode/docs/metadata.html
->>>>>>> master
+ae5762dbe2304e44cd742e7236d2de6987bdc1384b21093490cfcd7e33a5509f  gencode/docs/metadata.html
 4db86e0b979a1873d73da07d68a432df39282cb8b94ea509514d2b411411d55e  gencode/docs/monitoring.html
 180b32717db748e164a185b163ef9a97aa83d9d6add306283d5b9852d04af947  gencode/docs/persistent_device.html
 5d039d607af9ec75ee552dfe36b16c702687ea16f5663f41fc49b4533b86e00d  gencode/docs/properties.html
