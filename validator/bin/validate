@@ -1,16 +1,20 @@
 #!/bin/bash -e
 
-if [[ $# < 5 ]]; then
-    echo Usage: $0 project schema target subscription sitepath [devices...]
-    false
+if [[ -f $1 ]]; then
+    config_file=$(realpath $1)
+    schema=schema
+    target=config
+    shift 1
+    args=$config_file
+else
+    project=$1
+    schema=$2
+    target=$3
+    subscription=$4
+    sitepath=$(realpath $5)
+    shift 5
+    args="-p $project -s $sitepath"
 fi
-
-project=$1
-schema=$2
-target=$3
-subscription=$4
-sitepath=$(realpath $5)
-shift 5
 devices="$*"
 
 ROOT=$(dirname $0)/../..
@@ -30,8 +34,10 @@ validator/bin/build
 auth_type=`jq -r .type ~/.config/gcloud/application_default_credentials.json || true`
 echo Application default credentials auth type ${auth_type:-unknown}
 
-echo Cleaning output directory $sitepath/out/
-rm -rf $sitepath/out/
+if [[ -n $sitepath ]]; then
+    echo Cleaning output directory $sitepath/out/
+    rm -rf $sitepath/out/
+fi
 
 echo Executing validator $schema $target...
 
@@ -46,16 +52,18 @@ elif [[ $target == pubsub ]]; then
     srcargs="-t $subscription"
 elif [[ $target == trace ]]; then
     srcargs="-r $subscription -- $devices"
+elif [[ $target == config ]]; then
+    true
 else
     echo Unsupported target $target
     false
 fi
 
-args="-p $project -s $sitepath $srcargs"
-echo java -jar $jarfile $args
+echo Exeucting from $(pwd)
+echo java -jar $jarfile $args $srcargs
 
 error=0
-java -jar $jarfile $args || error=$?
+java -jar $jarfile $args $srcargs || error=$?
 
 echo Validation complete, exit $error
 exit $error

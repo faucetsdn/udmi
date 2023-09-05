@@ -3,7 +3,6 @@
 # executing scripts.
 #
 
-
 #
 # Walk up the directory tree looking for the cloud_iot_config.json site model marker.
 # If not found, just return empty.
@@ -15,7 +14,16 @@ function find_site_model_root {
     done
 }
 
+function fail {
+    echo error: $*
+    false
+}
 
+function usage {
+    echo usage: $0 $*
+    false
+}
+    
 UDMI_JAR=$UDMI_ROOT/validator/build/libs/validator-1.0-SNAPSHOT-all.jar
 
 udmi_version=$(cd $UDMI_ROOT; git describe --dirty --always)

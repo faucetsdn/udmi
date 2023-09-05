@@ -1,7 +1,7 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="SequenceRunner" type="Application" factoryName="Application">
     <envs>
-      <env name="VALIDATOR_CONFIG" value="/tmp/validator_config.json" />
+      <env name="SEQUENCER_CONFIG" value="/tmp/sequencer_config.json" />
     </envs>
     <option name="MAIN_CLASS_NAME" value="com.google.daq.mqtt.sequencer.SequenceRunner" />
     <module name="validator" />

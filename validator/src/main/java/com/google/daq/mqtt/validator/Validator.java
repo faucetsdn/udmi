@@ -1,6 +1,7 @@
 package com.google.daq.mqtt.validator;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.daq.mqtt.registrar.Registrar.BASE_DIR;
 import static com.google.daq.mqtt.sequencer.SequenceBase.EMPTY_MESSAGE;
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_TOOLS;
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_VERSION;
@@ -293,7 +294,12 @@ public class Validator {
 
   private void processProfile(File profilePath) {
     config = ConfigUtil.readExeConfig(profilePath);
-    setSiteDir(config.site_model);
+    String siteModel = ofNullable(config.site_model).orElse(BASE_DIR.getName());
+    File model = new File(siteModel);
+    File adjustedPath = model.isAbsolute() ? model :
+        new File(profilePath.getParentFile(), siteModel);
+    config.site_model = adjustedPath.getAbsolutePath();
+    setSiteDir(adjustedPath.getAbsolutePath());
     if (!Strings.isNullOrEmpty(config.feed_name)) {
       validatePubSub(config.feed_name);
     }
