@@ -2,14 +2,13 @@ package com.google.daq.mqtt.registrar;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.daq.mqtt.registrar.Registrar.DEVICE_ERRORS_JSON;
+import static com.google.daq.mqtt.registrar.Registrar.DEVICE_ERRORS_MAP;
 import static com.google.daq.mqtt.registrar.Registrar.ENVELOPE_JSON;
 import static com.google.daq.mqtt.registrar.Registrar.GENERATED_CONFIG_JSON;
 import static com.google.daq.mqtt.registrar.Registrar.METADATA_JSON;
 import static com.google.daq.mqtt.registrar.Registrar.NORMALIZED_JSON;
 import static com.google.daq.mqtt.util.MessageUpgrader.METADATA_SCHEMA;
 import static com.google.udmi.util.Common.VERSION_KEY;
-import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_RAW;
 import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_STRICT;
 import static com.google.udmi.util.GeneralUtils.compressJsonString;
 import static com.google.udmi.util.GeneralUtils.isTrue;
@@ -151,7 +150,7 @@ class LocalDevice {
           EXPECTED_DIR,
           OUT_DIR);
   private static final Set<String> OUT_FILES = ImmutableSet.of(
-      GENERATED_CONFIG_JSON, DEVICE_ERRORS_JSON, NORMALIZED_JSON, EXCEPTION_LOG_FILE);
+      GENERATED_CONFIG_JSON, DEVICE_ERRORS_MAP, NORMALIZED_JSON, EXCEPTION_LOG_FILE);
   private static final Set<String> ALL_KEY_FILES =
       ImmutableSet.of(
           RSA_PUBLIC_PEM,
@@ -270,6 +269,10 @@ class LocalDevice {
     try {
       Metadata loadedMetadata = SiteModel.loadDeviceMetadata(siteDir.getPath(), deviceId,
           LocalDevice.class);
+      if (loadedMetadata instanceof MetadataException metadataException) {
+        throw new RuntimeException("Loading " + metadataException.file.getAbsolutePath(),
+            metadataException.exception);
+      }
       instance = JsonUtil.convertTo(JsonNode.class, loadedMetadata);
       baseVersion = instance.get(VERSION_KEY);
       new MessageUpgrader(METADATA_SCHEMA, instance).upgrade(false);
@@ -359,6 +362,9 @@ class LocalDevice {
   public void loadCredentials() {
     try {
       deviceCredentials.clear();
+      if (metadata == null) {
+        return;
+      }
       if (hasGateway() && hasAuthType()) {
         throw new RuntimeException("Proxied devices should not have cloud.auth_type defined");
       }
@@ -400,7 +406,7 @@ class LocalDevice {
   }
 
   private Set<String> keyFiles() {
-    if (!isDirectConnect()) {
+    if (metadata == null || !isDirectConnect()) {
       return ImmutableSet.of();
     }
     String authType = getAuthType();
@@ -663,7 +669,7 @@ class LocalDevice {
   }
 
   public void writeErrors(List<Pattern> ignoreErrors) {
-    File errorsFile = new File(outDir, DEVICE_ERRORS_JSON);
+    File errorsFile = new File(outDir, DEVICE_ERRORS_MAP);
     ErrorTree errorTree = getErrorTree(ignoreErrors);
     if (errorTree != null) {
       try (PrintStream printStream = new PrintStream(Files.newOutputStream(errorsFile.toPath()))) {
