@@ -1,4 +1,4 @@
-package com.google.daq.mqtt.util;
+package com.google.udmi.util;
 
 import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
