@@ -102,6 +102,11 @@ echo $pubber_config:
 cat $pubber_config
 
 echo Corrupting site model to check error handling...
+function cleanup {
+    echo Cleanup temporary mangled device path
+    rm -rf $site_path/devices/XXX-1
+}
+trap cleanup EXIT
 mkdir -p $site_path/devices/XXX-1
 echo { > $site_path/devices/XXX-1/metadata.json
 
