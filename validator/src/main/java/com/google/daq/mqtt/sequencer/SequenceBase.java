@@ -80,7 +80,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
+import java.util.SortedMap;
 import java.util.Stack;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
@@ -156,8 +158,8 @@ public class SequenceBase {
   private static final String DEVICE_METADATA = "%s/devices/%s/metadata.json";
   private static final String DEVICE_CONFIG_FORMAT = "%s/devices/%s/out/generated_config.json";
   private static final String SUMMARY_OUTPUT_FORMAT = "%s/out/sequencer_%s.json";
-  private static final String CONFIG_ENV = "VALIDATOR_CONFIG";
-  private static final String DEFAULT_CONFIG = "/tmp/validator_config.json";
+  private static final String CONFIG_ENV = "SEQUENCER_CONFIG";
+  private static final String DEFAULT_CONFIG = "/tmp/sequencer_config.json";
   private static final String CONFIG_PATH =
       Objects.requireNonNullElse(System.getenv(CONFIG_ENV), DEFAULT_CONFIG);
   private static final Map<Class<?>, SubFolder> CLASS_SUBFOLDER_MAP = ImmutableMap.of(
@@ -229,7 +231,7 @@ public class SequenceBase {
   private final Map<String, Object> receivedUpdates = new HashMap<>();
   private final Queue<Entry> logEntryQueue = new LinkedBlockingDeque<>();
   private final Stack<String> waitingCondition = new Stack<>();
-  private final Map<String, List<Entry>> validationResults = new HashMap<>();
+  private final SortedMap<String, List<Entry>> validationResults = new TreeMap<>();
   @Rule
   public Timeout globalTimeout = new Timeout(NORM_TIMEOUT_MS, TimeUnit.MILLISECONDS);
   @Rule
@@ -473,8 +475,7 @@ public class SequenceBase {
   }
 
   private static void emitSequenceResult(SequenceResult result, String bucket, String methodName,
-      String stage,
-      int score, String message) {
+      String stage, int score, String message) {
     emitSequencerOut(format(RESULT_FORMAT, result, bucket, methodName, stage, score, message));
   }
 
@@ -493,7 +494,8 @@ public class SequenceBase {
   }
 
   private static void summarizeSchemaStages() {
-    validationState.schemas.forEach((schema, schemaResult) -> {
+    Map<String, SchemaValidationState> sortedSchemas = new TreeMap<>(validationState.schemas);
+    sortedSchemas.forEach((schema, schemaResult) -> {
       Map<FeatureStage, List<SequenceValidationState>> schemaStages = new HashMap<>();
       schemaResult.sequences.forEach((sequence, sequenceResult) -> {
         schemaStages.computeIfAbsent(sequenceResult.stage, stage -> new ArrayList<>())
@@ -501,6 +503,7 @@ public class SequenceBase {
       });
       schemaResult.stages = schemaStages.entrySet().stream().collect(Collectors.toMap(
           Map.Entry::getKey, SequenceBase::summarizeSchemaResults));
+
       schemaResult.stages.forEach((stage, entry) -> {
         SequenceResult result = RESULT_LEVEL_MAP.inverse().get(Level.fromValue(entry.level));
         String stageValue = stage.value();
@@ -765,8 +768,7 @@ public class SequenceBase {
   }
 
   private void collectSchemaResult(Description description, String schemaName,
-      SequenceResult result,
-      String detail) {
+      SequenceResult result, String detail) {
     String sequence = description.getMethodName();
     Feature feature = description.getAnnotation(Feature.class);
     String bucket = getBucket(feature).value();

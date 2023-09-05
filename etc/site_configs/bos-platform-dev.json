@@ -1,0 +1,17 @@
+{
+  "cloud_region": "us-central1",
+  "site_name": "ZZ-TRI-FECTA",
+  "registry_id": "ZZ-TRI-FECTA",
+  "reflector_endpoint": {
+    "client_id": "projects/bos-platform-dev/locations/us-central1/registries/UDMI-REFLECT/devices/UK-LON-GLAB",
+    "hostname": "bos-dev-us-central-mqtt.clearblade.com"
+  },
+  "device_endpoint": {
+    "client_id": "projects/bos-platform-dev/locations/us-central1/registries/UK-LON-GLAB/devices/AHU-22",
+    "hostname": "bos-dev-us-central-mqtt.clearblade.com"
+  },
+  "device_id": "AHU-22",
+  "serial_no": "validator-1234",
+  "project_id": "bos-platform-dev",
+  "site_model": "../../sites/udmi_site_model"
+}

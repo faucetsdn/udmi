@@ -1,5 +1,6 @@
 """Generated class for configuration_execution.json"""
 from .configuration_endpoint import EndpointConfiguration
+from .configuration_endpoint import EndpointConfiguration
 
 
 class ExecutionConfiguration:
@@ -17,6 +18,7 @@ class ExecutionConfiguration:
     self.device_id = None
     self.iot_provider = None
     self.reflector_endpoint = None
+    self.device_endpoint = None
     self.project_id = None
     self.key_file = None
     self.serial_no = None
@@ -45,6 +47,7 @@ class ExecutionConfiguration:
     result.device_id = source.get('device_id')
     result.iot_provider = source.get('iot_provider')
     result.reflector_endpoint = EndpointConfiguration.from_dict(source.get('reflector_endpoint'))
+    result.device_endpoint = EndpointConfiguration.from_dict(source.get('device_endpoint'))
     result.project_id = source.get('project_id')
     result.key_file = source.get('key_file')
     result.serial_no = source.get('serial_no')
@@ -98,6 +101,8 @@ class ExecutionConfiguration:
       result['iot_provider'] = self.iot_provider # 5
     if self.reflector_endpoint:
       result['reflector_endpoint'] = self.reflector_endpoint.to_dict() # 4
+    if self.device_endpoint:
+      result['device_endpoint'] = self.device_endpoint.to_dict() # 4
     if self.project_id:
       result['project_id'] = self.project_id # 5
     if self.key_file:

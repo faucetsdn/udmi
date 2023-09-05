@@ -55,7 +55,8 @@ for subset in $subsets; do
     mkdir -p $devicesdir
     devices=$(cd $devicesdir; ls -d *)
 
-    bin/registrar $sitesdir/$subset
+    # Test the direct config-file variant of registrar.
+    bin/registrar $sitesdir/$subset/cloud_iot_config.json
 
     for device in $devices; do
         if [[ -d $devicesdir/$device/out ]]; then
