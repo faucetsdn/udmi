@@ -5,7 +5,6 @@ import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_RAW;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
@@ -72,11 +71,11 @@ public class MessageUpgrader {
     return upgrade(false);
   }
 
-    /**
-     * Update message to the latest standard.
-     *
-     * @param forceUpgrade true to force a complete upgrade pass irrespective of original version
-     */
+  /**
+   * Update message to the latest standard.
+   *
+   * @param forceUpgrade true to force a complete upgrade pass irrespective of original version
+   */
   public Object upgrade(boolean forceUpgrade) {
     if (major != 1) {
       throw new IllegalArgumentException("Starting major version " + major);
@@ -205,8 +204,8 @@ public class MessageUpgrader {
   private TextNode sanitizeFirmwareVersion(JsonNode version) {
     if (version.isArray()) {
       List<String> values = new ArrayList<>();
-      Iterator<JsonNode> elements = ((ArrayNode) version).elements();
-      elements.forEachRemaining(item -> values.add(((TextNode) item).asText()));
+      Iterator<JsonNode> elements = version.elements();
+      elements.forEachRemaining(item -> values.add(item.asText()));
       String collect = values.stream().collect(Collectors.joining(", "));
       return new TextNode(collect);
     }

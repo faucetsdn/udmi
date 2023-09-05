@@ -132,14 +132,17 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   protected void devNullHandler(Object message) {
   }
 
+  /**
+   * Execute the runnable with the envelope mapped for the message.
+   */
   @VisibleForTesting
-  public void withEnvelopeFor(Envelope envelope, Object originalMessage, Runnable run) {
+  public void withEnvelopeFor(Envelope envelope, Object message, Runnable run) {
     try {
-      messageEnvelopes.put(originalMessage, envelope);
+      messageEnvelopes.put(message, envelope);
       setThreadEnvelope(envelope);
       run.run();
     } finally {
-      messageEnvelopes.remove(originalMessage);
+      messageEnvelopes.remove(message);
       setThreadEnvelope(null);
     }
   }

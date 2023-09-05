@@ -33,7 +33,7 @@ public class StateProcessor extends ProcessorBase {
 
   @Override
   protected void defaultHandler(Object originalMessage) {
-    Object upgradedMessage = new MessageUpgrader(STATE_SCHEMA, originalMessage).upgrade(false);
+    Object upgradedMessage = new MessageUpgrader(STATE_SCHEMA, originalMessage).upgrade();
     StateUpdate stateMessage = convertToStrict(StateUpdate.class, upgradedMessage);
     shardStateUpdate(getContinuation(originalMessage), stateMessage);
     updateLastStart(getContinuation(originalMessage).getEnvelope(), stateMessage);

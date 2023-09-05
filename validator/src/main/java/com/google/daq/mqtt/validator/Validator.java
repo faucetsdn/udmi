@@ -943,7 +943,9 @@ public class Validator {
       Map<String, Object> message = JsonUtil.loadMap(inputFile);
       sanitizeMessage(schemaName, message);
       JsonNode jsonNode = OBJECT_MAPPER.valueToTree(message);
-      if (upgradeMessage(schemaName, jsonNode)) {
+      MessageUpgrader messageUpgrader = new MessageUpgrader(schemaName, jsonNode);
+      messageUpgrader.upgrade(forceUpgrade);
+      if (messageUpgrader.wasUpgraded()) {
         OBJECT_MAPPER.writeValue(outputStream, jsonNode);
       } else {
         // If the message was not upgraded, then copy over unmolested to preserve formatting.
@@ -993,16 +995,12 @@ public class Validator {
 
   private void upgradeMessage(String schemaName, Map<String, Object> message) {
     JsonNode jsonNode = OBJECT_MAPPER.convertValue(message, JsonNode.class);
-    upgradeMessage(schemaName, jsonNode);
-    Map<String, Object> objectMap = OBJECT_MAPPER.convertValue(jsonNode,
+    Object upgraded = new MessageUpgrader(schemaName, jsonNode).upgrade(forceUpgrade);
+    Map<String, Object> objectMap = OBJECT_MAPPER.convertValue(upgraded,
         new TypeReference<>() {
         });
     message.clear();
     message.putAll(objectMap);
-  }
-
-  private boolean upgradeMessage(String schemaName, JsonNode jsonNode) {
-    return new MessageUpgrader(schemaName, jsonNode).upgrade(forceUpgrade);
   }
 
   private void validateJsonNode(JsonSchema schema, JsonNode jsonNode) throws ProcessingException {
