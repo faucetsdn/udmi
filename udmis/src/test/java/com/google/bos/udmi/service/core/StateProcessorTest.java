@@ -66,7 +66,7 @@ public class StateProcessorTest extends ProcessorTestBase {
   @NotNull
   private State getTestStateMessage(boolean includeGateway, boolean includeLastStart) {
     State stateMessage = new State();
-    stateMessage.version = TEST_VERSION + "x";
+    stateMessage.version = TEST_VERSION;
     stateMessage.gateway = includeGateway ? new GatewayState() : null;
     stateMessage.system = new SystemState();
     if (includeLastStart) {
