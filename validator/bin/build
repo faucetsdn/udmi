@@ -24,6 +24,11 @@ if [[ -z $check && -z $covg && -f $jarfile && $jarfile -nt $newest ]]; then
     exit 0
 fi
 
+if [[ -n $check ]]; then
+    rm -rf $BASE/sites/udmi_site_model/devices/XXX-1
+    $BASE/bin/clone_model
+fi
+
 echo Java version $(java --version)
 
 echo Building validator in $PWD
