@@ -38,10 +38,11 @@ public class SequenceRunner {
   private static final int EXIT_STATUS_SUCCESS = 0;
   private static final int EXIST_STATUS_FAILURE = 1;
   private static final String TOOL_ROOT = "..";
-  static ExecutionConfiguration executionConfiguration;
   private static final Set<String> failures = new TreeSet<>();
   private static final Map<String, SequenceResult> allTestResults = new TreeMap<>();
-  private final Set<String> sequenceClasses = Common.allClassesInPackage(ConfigSequences.class);
+  static ExecutionConfiguration executionConfiguration;
+  private final Set<String> sequenceClasses = new TreeSet<>(
+      Common.allClassesInPackage(ConfigSequences.class));
   private List<String> targets = List.of();
 
   /**
@@ -121,6 +122,15 @@ public class SequenceRunner {
 
   public static Map<String, SequenceResult> getAllTests() {
     return allTestResults;
+  }
+
+  public static boolean processGiven(FeatureStage query, FeatureStage level) {
+    return query.compareTo(level) >= 0;
+  }
+
+  static FeatureStage getFeatureMinStage() {
+    String stage = SequenceBase.validatorConfig.min_stage;
+    return isNullOrEmpty(stage) ? SequenceBase.DEFAULT_MIN_STAGE : FeatureStage.valueOf(stage);
   }
 
   private int resultCode() {
@@ -212,15 +222,6 @@ public class SequenceRunner {
     Feature annotation = method.getAnnotation(Feature.class);
     FeatureStage stage = annotation == null ? Feature.DEFAULT_STAGE : annotation.stage();
     return processGiven(stage, getFeatureMinStage());
-  }
-
-  public static boolean processGiven(FeatureStage query, FeatureStage level) {
-    return query.compareTo(level) >= 0;
-  }
-
-  static FeatureStage getFeatureMinStage() {
-    String stage = SequenceBase.validatorConfig.min_stage;
-    return isNullOrEmpty(stage) ? SequenceBase.DEFAULT_MIN_STAGE : FeatureStage.valueOf(stage);
   }
 
   public void setTargets(List<String> targets) {

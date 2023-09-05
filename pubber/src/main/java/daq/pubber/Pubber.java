@@ -87,6 +87,7 @@ import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvent;
 import udmi.schema.DiscoveryState;
 import udmi.schema.EndpointConfiguration;
+import udmi.schema.EndpointConfiguration.Protocol;
 import udmi.schema.Entry;
 import udmi.schema.Enumerate;
 import udmi.schema.Envelope;
@@ -230,8 +231,10 @@ public class Pubber {
     File configFile = new File(configPath);
     try {
       configuration = sanitizeConfiguration(fromJsonFile(configFile, PubberConfiguration.class));
-      checkArgument(MQTT.equals(configuration.endpoint.protocol), "protocol mismatch");
-      deviceId = configuration.deviceId;
+      Protocol protocol = ofNullable(
+          ifNotNullGet(configuration.endpoint, endpoint -> endpoint.protocol)).orElse(MQTT);
+      checkArgument(MQTT.equals(protocol), "protocol mismatch");
+      deviceId = requireNonNull(configuration.deviceId, "device id not defined");
       outDir = new File(PUBBER_OUT);
     } catch (Exception e) {
       throw new RuntimeException("While configuring instance from " + configFile.getAbsolutePath(),
@@ -307,7 +310,7 @@ public class Pubber {
     }
   }
 
-  static Pubber singularPubber(String[] args) throws InterruptedException {
+  static Pubber singularPubber(String[] args) {
     Pubber pubber = null;
     try {
       if (args.length == 1) {
