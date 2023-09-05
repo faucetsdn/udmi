@@ -38,14 +38,13 @@ public abstract class ProcessorTestBase extends MessageTestBase {
    * Write a deployment file for testing.
    */
   public static void writeVersionDeployFile() {
-    File deployFile = new File(ReflectProcessor.DEPLOY_FILE);
+    File deployFile = new File(UdmiServicePod.DEPLOY_FILE);
     try {
       deleteDirectory(deployFile.getParentFile());
       deployFile.getParentFile().mkdirs();
       SetupUdmiConfig deployedVersion = new SetupUdmiConfig();
       deployedVersion.deployed_at = TEST_TIMESTAMP;
       deployedVersion.deployed_by = TEST_USER;
-      deployedVersion.udmi_functions = TEST_FUNCTIONS;
       deployedVersion.udmi_version = TEST_VERSION;
       writeFile(deployedVersion, deployFile);
     } catch (Exception e) {
@@ -112,9 +111,6 @@ public abstract class ProcessorTestBase extends MessageTestBase {
     processor.activate();
     provider.activate();
   }
-
-  @NotNull
-  protected abstract Class<? extends ProcessorBase> getProcessorClass();
 
   protected void terminateAndWait() {
     getTestDispatcher().terminate();
