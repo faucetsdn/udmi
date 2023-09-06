@@ -37,6 +37,7 @@ import com.google.udmi.util.CleanDateFormat;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
+import com.google.udmi.util.SiteModel.MetadataException;
 import daq.pubber.MqttPublisher.InjectedMessage;
 import daq.pubber.MqttPublisher.InjectedState;
 import daq.pubber.MqttPublisher.PublisherException;
@@ -587,6 +588,10 @@ public class Pubber {
   }
 
   private void processDeviceMetadata(Metadata metadata) {
+    if (metadata instanceof MetadataException metadataException) {
+      throw new RuntimeException("While processing metadata file " + metadataException.file,
+          metadataException.exception);
+    }
     if (metadata.cloud != null) {
       configuration.algorithm = catchToNull(() -> metadata.cloud.auth_type.value());
     }
@@ -1776,7 +1781,7 @@ public class Pubber {
   }
 
   private void localLog(Entry entry) {
-    String message = format("Entry %s%s %s %s %s%s", Level.fromValue(entry.level).name(),
+    String message = format("Log %s%s %s %s %s%s", Level.fromValue(entry.level).name(),
         shouldLogLevel(entry.level) ? "" : "*",
         entry.category, entry.message, isoConvert(entry.timestamp), getTestingTag(deviceConfig));
     localLog(message, Level.fromValue(entry.level), isoConvert(entry.timestamp), null);

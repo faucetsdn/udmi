@@ -88,7 +88,7 @@ case "$1" in
 esac
 
 if [[ -s $failures ]]; then
-    echo ====== Test failures: $(tr '\n' ' ' <$failures)
+    echo ====== Failures for $1: $(tr '\n' ' ' <$failures)
     false
 else
     echo ====== All tests passed for $1

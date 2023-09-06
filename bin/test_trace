@@ -28,7 +28,8 @@ site_out=$site_model/out
 # Use a static/constant value to make output stable.
 export UDMI_TOOLS=test_trace
 
-rm -rf $site_out
+# Clean things out, including some potentially corrupt state.
+rm -rf $site_out $site_model/devices/XXX-1
 validator/bin/validate -- schema trace $trace_in $site_model
 
 echo Redacting output files...

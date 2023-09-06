@@ -65,6 +65,7 @@ import com.google.udmi.util.Common;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
+import com.google.udmi.util.SiteModel.MetadataException;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
@@ -294,9 +295,10 @@ public class SequenceBase {
     String deviceId = validatorConfig.device_id;
     checkState(model.allDeviceIds().contains(deviceId),
         format("device_id %s not found in site model", deviceId));
-    Exception exception = model.getMetadata(deviceId).exception;
-    if (exception != null) {
-      System.err.println("Device loading error: " + exception.getMessage());
+    Metadata metadata = model.getMetadata(deviceId);
+    if (metadata instanceof MetadataException metadataException) {
+      System.err.println(
+          "Device loading error: " + friendlyStackTrace(metadataException.exception));
     }
   }
 
