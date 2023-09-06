@@ -101,6 +101,10 @@ fi
 echo $pubber_config:
 cat $pubber_config
 
+echo Corrupting site model to check error handling...
+mkdir -p $site_path/devices/XXX-1
+echo { > $site_path/devices/XXX-1/metadata.json
+
 echo Clean out the registry to make sure devices get removed...
 bin/registrar $site_arg $registrar_project -d
 

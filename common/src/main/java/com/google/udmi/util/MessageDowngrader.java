@@ -1,4 +1,4 @@
-package com.google.daq.mqtt.registrar;
+package com.google.udmi.util;
 
 import static com.google.udmi.util.Common.VERSION_KEY;
 

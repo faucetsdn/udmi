@@ -415,7 +415,7 @@ public class GeneralUtils {
   }
 
   public static String multiTrim(String message) {
-    return Arrays.stream(message.split("\n"))
+    return Arrays.stream(ofNullable(message).orElse("").split("\n"))
         .map(String::trim).collect(Collectors.joining(" "));
   }
 }
