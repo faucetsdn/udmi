@@ -1,4 +1,4 @@
-package com.google.daq.mqtt.registrar;
+package com.google.udmi.util;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
+import com.google.udmi.util.MessageDowngrader;
 import java.io.File;
 import org.junit.Test;
 

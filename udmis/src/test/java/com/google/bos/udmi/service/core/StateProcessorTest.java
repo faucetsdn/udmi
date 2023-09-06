@@ -2,6 +2,7 @@ package com.google.bos.udmi.service.core;
 
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.JsonUtil.fromStringStrict;
+import static com.google.udmi.util.JsonUtil.loadFileRequired;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -36,6 +37,7 @@ import udmi.schema.SystemState;
 public class StateProcessorTest extends ProcessorTestBase {
 
   public static final Date INITIAL_LAST_START = CleanDateFormat.cleanDate(new Date(12981837));
+  private static final String LEGACY_STATE_MESSAGE_FILE = "src/test/messages/legacy_state.json";
 
   @NotNull
   protected Class<? extends ProcessorBase> getProcessorClass() {
@@ -64,7 +66,7 @@ public class StateProcessorTest extends ProcessorTestBase {
   @NotNull
   private State getTestStateMessage(boolean includeGateway, boolean includeLastStart) {
     State stateMessage = new State();
-    stateMessage.version = TEST_VERSION + "x";
+    stateMessage.version = TEST_VERSION;
     stateMessage.gateway = includeGateway ? new GatewayState() : null;
     stateMessage.system = new SystemState();
     if (includeLastStart) {
@@ -139,6 +141,15 @@ public class StateProcessorTest extends ProcessorTestBase {
         "has GatewayState");
     assertEquals(0, getExceptionCount(), "exception count");
     assertEquals(1, getDefaultCount(), "default handler count");
+  }
+
+  @Test
+  public void legacyStateMessage() {
+    StateProcessor processor = initializeTestInstance(StateProcessor.class);
+    Object message = loadFileRequired(Object.class, LEGACY_STATE_MESSAGE_FILE);
+    dispatcher.withEnvelopeFor(new Envelope(), message, () -> processor.defaultHandler(message));
+    getReverseDispatcher().waitForMessageProcessed(SystemState.class);
+    terminateAndWait();
   }
 
   /**

@@ -27,7 +27,7 @@ The various tools will generate some output files in the same `devices/` directo
 * `rsa_*`: Device public/private key files (`genkeys` tool).
 * `metadata_norm.json`: Normalized version of the `metadata.json` file (`registrar` tool).
 * `generated_config.json`: Default device IoT Core `config` block (`registrar` tool).
-* `errors.json`: Detailed error file (`registrar` tool).
+* `errors.map`: Detailed error file (`registrar` tool).
 
 ## Metadata Structure
 

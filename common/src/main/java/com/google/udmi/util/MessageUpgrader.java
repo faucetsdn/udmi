@@ -1,20 +1,17 @@
-package com.google.daq.mqtt.util;
+package com.google.udmi.util;
 
 import static com.google.udmi.util.Common.VERSION_KEY;
-import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
+import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_RAW;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
-import com.google.udmi.util.GeneralUtils;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 /**
  * Container class for upgrading UDMI messages from older versions.
@@ -27,6 +24,7 @@ public class MessageUpgrader {
   public static final String METADATA_SCHEMA = "metadata";
   private static final String TARGET_FORMAT = "%d.%d.%d";
   private final ObjectNode message;
+  private final JsonNode original;
   private final String schemaName;
   private final int major;
   private int patch;
@@ -41,6 +39,7 @@ public class MessageUpgrader {
   public MessageUpgrader(String schemaName, JsonNode message) {
     this.message = (ObjectNode) message;
     this.schemaName = schemaName;
+    this.original = message.deepCopy();
 
     JsonNode version = message.get(VERSION_KEY);
     String verStr =
@@ -57,18 +56,31 @@ public class MessageUpgrader {
     }
   }
 
+  public MessageUpgrader(String schemaName, Object originalMessage) {
+    this(schemaName, OBJECT_MAPPER_RAW.valueToTree(originalMessage));
+  }
+
+  public boolean wasUpgraded() {
+    return !original.equals(message);
+  }
+
+  /**
+   * Update message to the latest standard, if necessary.
+   */
+  public Object upgrade() {
+    return upgrade(false);
+  }
+
   /**
    * Update message to the latest standard.
    *
    * @param forceUpgrade true to force a complete upgrade pass irrespective of original version
-   * @return true if the message has been altered
    */
-  public boolean upgrade(boolean forceUpgrade) {
+  public Object upgrade(boolean forceUpgrade) {
     if (major != 1) {
       throw new IllegalArgumentException("Starting major version " + major);
     }
 
-    final JsonNode original = message.deepCopy();
     boolean upgraded = false;
 
     if (forceUpgrade || minor < 0) {
@@ -102,11 +114,10 @@ public class MessageUpgrader {
     }
 
     if (upgraded && message.has(VERSION_KEY)) {
-      ((ObjectNode) message).put(VERSION_KEY,
-          String.format(TARGET_FORMAT, major, minor, patch));
+      message.put(VERSION_KEY, String.format(TARGET_FORMAT, major, minor, patch));
     }
 
-    return !original.equals(message);
+    return message;
   }
 
   private void upgrade_1_3_14() {
@@ -193,8 +204,8 @@ public class MessageUpgrader {
   private TextNode sanitizeFirmwareVersion(JsonNode version) {
     if (version.isArray()) {
       List<String> values = new ArrayList<>();
-      Iterator<JsonNode> elements = ((ArrayNode) version).elements();
-      elements.forEachRemaining(item -> values.add(((TextNode) item).asText()));
+      Iterator<JsonNode> elements = version.elements();
+      elements.forEachRemaining(item -> values.add(item.asText()));
       String collect = values.stream().collect(Collectors.joining(", "));
       return new TextNode(collect);
     }

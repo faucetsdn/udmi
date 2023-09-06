@@ -83,10 +83,10 @@ Loading local device SNS-4
 Loading local device AHU-1
 Skipping remote registry fetch
 Processed 4 devices
-Removing test_site/devices/GAT-123/errors.json
-Removing test_site/devices/AHU-1/errors.json
-Removing test_site/devices/AHU-22/errors.json
-Removing test_site/devices/SNS-4/errors.json
+Removing test_site/devices/GAT-123/errors.map
+Removing test_site/devices/AHU-1/errors.map
+Removing test_site/devices/AHU-22/errors.map
+Removing test_site/devices/SNS-4/errors.map
 
 Summary:
   Device Clean: 4

@@ -31,11 +31,6 @@
       "type": "string",
       "pattern": "^[0-9a-z]{8}$"
     },
-    "exception": {
-      "description": "Exception captured during processing or conversion.",
-      "existingJavaType": "Exception",
-      "type": "object"
-    },
     "cloud": {
       "$ref": "file:model_cloud.json#"
     },

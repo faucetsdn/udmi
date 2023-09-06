@@ -2,6 +2,7 @@ package com.google.udmi.util;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
+import static com.google.udmi.util.JsonUtil.loadFileStrict;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toMap;
 
@@ -115,6 +116,49 @@ public class SiteModel {
         .collect(Collectors.toList());
   }
 
+  private static boolean validDeviceDirectory(String dirName) {
+    return !(dirName.startsWith(".") || dirName.endsWith("~"));
+  }
+
+  public static Metadata loadDeviceMetadata(String sitePath, String deviceId, Class<?> container) {
+    Preconditions.checkState(sitePath != null, "sitePath not defined");
+    File deviceDir = getDeviceDir(sitePath, deviceId);
+    File deviceMetadataFile = new File(deviceDir, "metadata.json");
+    Metadata metadata = captureLoadErrors(deviceMetadataFile);
+    if (metadata != null) {
+      // Missing arrays are automatically parsed to an empty list, which is not what
+      // we want, so hacky go through and convert an empty list to null.
+      if (metadata.gateway != null && metadata.gateway.proxy_ids.isEmpty()) {
+        metadata.gateway.proxy_ids = null;
+      }
+    }
+    return metadata;
+  }
+
+  private static Metadata captureLoadErrors(File deviceMetadataFile) {
+    try {
+      return loadFileStrict(Metadata.class, deviceMetadataFile);
+    } catch (Exception e) {
+      return new MetadataException(deviceMetadataFile, e);
+    }
+  }
+
+  private static File getDeviceDir(String sitePath, String deviceId) {
+    File devicesFile = new File(new File(sitePath), "devices");
+    return new File(devicesFile, deviceId);
+  }
+
+  public static String getRegistryActual(ExecutionConfiguration iotConfig) {
+    return getRegistryActual(iotConfig.registry_id, iotConfig.registry_suffix);
+  }
+
+  public static String getRegistryActual(String registry_id, String registry_suffix) {
+    if (registry_id == null) {
+      return null;
+    }
+    return registry_id + Optional.ofNullable(registry_suffix).orElse("");
+  }
+
   public EndpointConfiguration makeEndpointConfig(String projectId, String deviceId) {
     return makeEndpointConfig(projectId, executionConfiguration, deviceId);
   }
@@ -123,11 +167,8 @@ public class SiteModel {
     Preconditions.checkState(sitePath != null, "sitePath not defined");
     File devicesFile = new File(new File(sitePath), "devices");
     File[] files = Objects.requireNonNull(devicesFile.listFiles(), "no files in site devices/");
-    return Arrays.stream(files).map(File::getName).filter(SiteModel::validDeviceDirectory).collect(Collectors.toSet());
-  }
-
-  private static boolean validDeviceDirectory(String dirName) {
-    return !(dirName.startsWith(".") || dirName.endsWith("~"));
+    return Arrays.stream(files).map(File::getName).filter(SiteModel::validDeviceDirectory)
+        .collect(Collectors.toSet());
   }
 
   private void loadAllDeviceMetadata() {
@@ -137,51 +178,15 @@ public class SiteModel {
   }
 
   private CloudModel newDevice(String deviceId) {
-    CloudModel cloudModel = new CloudModel();
-    return cloudModel;
+    return new CloudModel();
   }
 
   private Metadata loadDeviceMetadata(String deviceId) {
     return loadDeviceMetadata(sitePath, deviceId, SiteModel.class);
   }
 
-  public static Metadata loadDeviceMetadata(String sitePath, String deviceId, Class<?> container) {
-    Preconditions.checkState(sitePath != null, "sitePath not defined");
-    File deviceDir = getDeviceDir(sitePath, deviceId);
-    File deviceMetadataFile = new File(deviceDir, "metadata.json");
-    try {
-      Metadata metadata = JsonUtil.loadFile(Metadata.class, deviceMetadataFile);
-      if (metadata != null) {
-        metadata.exception = captureLoadErrors(deviceMetadataFile, container);
-        // Missing arrays are automatically parsed to an empty list, which is not what
-        // we want, so hacky go through and convert an empty list to null.
-        if (metadata.gateway != null && metadata.gateway.proxy_ids.isEmpty()) {
-          metadata.gateway.proxy_ids = null;
-        }
-      }
-      return metadata;
-    } catch (Exception e) {
-      throw new RuntimeException(
-          "While reading metadata file " + deviceMetadataFile.getAbsolutePath(), e);
-    }
-  }
-
-  private static Exception captureLoadErrors(File deviceMetadataFile, Class<?> container) {
-    try {
-      JsonUtil.loadFileStrict(Metadata.class, deviceMetadataFile);
-      return null;
-    } catch (Exception e) {
-      return e;
-    }
-  }
-
   public File getDeviceDir(String deviceId) {
     return getDeviceDir(sitePath, deviceId);
-  }
-
-  private static File getDeviceDir(String sitePath, String deviceId) {
-    File devicesFile = new File(new File(sitePath), "devices");
-    return new File(devicesFile, deviceId);
   }
 
   public Metadata getMetadata(String deviceId) {
@@ -239,17 +244,6 @@ public class SiteModel {
   private String getDeviceKeyPrefix(String targetId) {
     Auth_type auth_type = getMetadata(targetId).cloud.auth_type;
     return auth_type.value().startsWith("RS") ? "rsa" : "ec";
-  }
-
-  public static String getRegistryActual(ExecutionConfiguration iotConfig) {
-    return getRegistryActual(iotConfig.registry_id, iotConfig.registry_suffix);
-  }
-
-  public static String getRegistryActual(String registry_id, String registry_suffix) {
-    if (registry_id == null) {
-      return null;
-    }
-    return registry_id + Optional.ofNullable(registry_suffix).orElse("");
   }
 
   /**
@@ -315,6 +309,17 @@ public class SiteModel {
   public ExecutionConfiguration getExecutionConfiguration() {
     ifNullThen(executionConfiguration, this::loadSiteConfig);
     return executionConfiguration;
+  }
+
+  public static class MetadataException extends Metadata {
+
+    public final File file;
+    public final Exception exception;
+
+    public MetadataException(File deviceMetadataFile, Exception metadataException) {
+      file = deviceMetadataFile;
+      exception = metadataException;
+    }
   }
 
   public static class ClientInfo {

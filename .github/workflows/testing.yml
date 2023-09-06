@@ -2,6 +2,7 @@ name: UDMI test suite
 
 on:
   push:
+  workflow_dispatch:
   pull_request:
   schedule:
     - cron: '0 13 * * *'
@@ -40,7 +41,7 @@ jobs:
         run: bin/test_mosquitto
       - name: bin/run_tests udmis_tests
         run: bin/run_tests udmis_tests
-      - name: all test output
+      - name: test output
         if: ${{ always() }}
         run: more out/test_* | cat
       - name: Log in to the github registry

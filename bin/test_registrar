@@ -19,7 +19,7 @@ exit_status=clean
 echo Found ${clean_devices} clean devices.
 [ "${clean_devices}" == $EXPECTED_CLEAN ] || exit_status=expected_clean
 
-device_files=$(ls -d ${TEST_SITE}/devices/*)
+device_files=$(ls -d ${TEST_SITE}/devices/* | fgrep -v XXX)
 
 # Individual tests for generated config values
 echo
@@ -58,6 +58,7 @@ function check_norm {
 
 sm_devices=$(check_norm)
 echo Devices with correct site_metadata: ${sm_devices}
+
 [ "${sm_devices}" == "${device_files}" ] || exit_status=site_metadata
 
 mv ${TEST_SITE}/site_metadata.json ${TEST_SITE}/_site_metadata.json
