@@ -148,6 +148,8 @@ public class StateProcessorTest extends ProcessorTestBase {
     StateProcessor processor = initializeTestInstance(StateProcessor.class);
     Object message = loadFileRequired(Object.class, LEGACY_STATE_MESSAGE_FILE);
     dispatcher.withEnvelopeFor(new Envelope(), message, () -> processor.defaultHandler(message));
+    getReverseDispatcher().waitForMessageProcessed(SystemState.class);
+    terminateAndWait();
   }
 
   /**
