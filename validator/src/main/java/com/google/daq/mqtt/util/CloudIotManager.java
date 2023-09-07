@@ -240,6 +240,7 @@ public class CloudIotManager {
     cloudModel.is_gateway = settings.proxyDevices != null;
     cloudModel.credentials = getCredentials(settings);
     cloudModel.metadata = metadataMap;
+    cloudModel.num_id = settings.deviceNumId;
     return cloudModel;
   }
 

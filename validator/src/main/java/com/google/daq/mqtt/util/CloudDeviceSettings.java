@@ -10,6 +10,7 @@ public class CloudDeviceSettings {
 
   public List<Credential> credentials;
   public String metadata;
+  public String deviceNumId;
   public List<String> proxyDevices;
   public String config;
   public String keyAlgorithm;
