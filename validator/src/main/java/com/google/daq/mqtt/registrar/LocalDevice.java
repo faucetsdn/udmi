@@ -10,6 +10,7 @@ import static com.google.daq.mqtt.registrar.Registrar.NORMALIZED_JSON;
 import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_STRICT;
 import static com.google.udmi.util.GeneralUtils.compressJsonString;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.writeString;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
@@ -478,6 +479,7 @@ class LocalDevice {
 
       settings.updated = getUpdatedTimestamp();
       settings.metadata = deviceMetadataString();
+      settings.deviceNumId = ifNotNullGet(metadata.cloud, cloud -> cloud.num_id);
       settings.proxyDevices = getProxyDevicesList();
       settings.keyAlgorithm = getAuthType();
       settings.keyBytes = getKeyBytes();

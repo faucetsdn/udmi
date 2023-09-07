@@ -1,5 +1,6 @@
 package com.google.daq.mqtt.util;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.sequencer.SequenceBase.EMPTY_MESSAGE;
 import static com.google.udmi.util.Common.ERROR_KEY;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
@@ -39,10 +40,10 @@ public class IotReflectorClient implements IotProvider {
 
   public static final String CLOUD_QUERY_TOPIC = "cloud/query";
   public static final String CLOUD_MODEL_TOPIC = "cloud/model";
+  public static final String REFLECTOR_PREFIX = "RC:";
   // Requires functions that support cloud device manager support.
   private static final int REQUIRED_FUNCTION_VER = 9;
   private static final String UPDATE_CONFIG_TOPIC = "update/config";
-  public static final String REFLECTOR_PREFIX = "RC:";
   private final com.google.bos.iot.core.proxy.IotReflectorClient messageClient;
   private final Map<String, CompletableFuture<Map<String, Object>>> futures =
       new ConcurrentHashMap<>();
@@ -87,6 +88,8 @@ public class IotReflectorClient implements IotProvider {
   public void createDevice(String deviceId, CloudModel makeDevice) {
     makeDevice.operation = Operation.CREATE;
     CloudModel created = cloudModelTransaction(deviceId, CLOUD_MODEL_TOPIC, makeDevice);
+    ifNotNullThen(makeDevice.num_id, () -> checkState(makeDevice.num_id.equals(created.num_id),
+        "created num_id does not match"));
     makeDevice.num_id = created.num_id;
   }
 
