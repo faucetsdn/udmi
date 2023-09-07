@@ -239,6 +239,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
         .setGatewayConfig(isTrue(cloudModel.is_gateway) ? GATEWAY_CONFIG : NON_GATEWAY_CONFIG)
         .setLogLevel(LogLevel.LOG_LEVEL_UNSPECIFIED)
         .setMetadata(cloudModel.metadata)
+        .setNumId(cloudModel.num_id)
         .setId(deviceId)
         .build();
   }
