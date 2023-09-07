@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -121,18 +122,25 @@ public class SiteModel {
   }
 
   public static Metadata loadDeviceMetadata(String sitePath, String deviceId, Class<?> container) {
-    Preconditions.checkState(sitePath != null, "sitePath not defined");
-    File deviceDir = getDeviceDir(sitePath, deviceId);
-    File deviceMetadataFile = new File(deviceDir, "metadata.json");
-    Metadata metadata = captureLoadErrors(deviceMetadataFile);
-    if (metadata != null) {
+    try {
+      Preconditions.checkState(sitePath != null, "sitePath not defined");
+      File deviceDir = getDeviceDir(sitePath, deviceId);
+      File deviceMetadataFile = new File(deviceDir, "metadata.json");
+      if (!deviceMetadataFile.exists()) {
+        return new MetadataException(deviceMetadataFile, new FileNotFoundException());
+      }
+      Metadata metadata = requireNonNull(captureLoadErrors(deviceMetadataFile), "bad metadata");
+
       // Missing arrays are automatically parsed to an empty list, which is not what
       // we want, so hacky go through and convert an empty list to null.
       if (metadata.gateway != null && metadata.gateway.proxy_ids.isEmpty()) {
         metadata.gateway.proxy_ids = null;
       }
+
+      return metadata;
+    } catch (Exception e) {
+      throw new RuntimeException("While loading device metadata for " + deviceId, e);
     }
-    return metadata;
   }
 
   private static Metadata captureLoadErrors(File deviceMetadataFile) {
