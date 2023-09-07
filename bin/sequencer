@@ -83,7 +83,8 @@ if [[ -d $site_path ]]; then
 elif [[ -f $site_path ]]; then
     echo Using site config file $site_path
     site_model=`jq -r .site_model $site_path`
-    [[ $site_model == null ]] && site_model=$(dirname $site_path)
+    [[ $site_model == null ]] && site_model=.
+    [[ $site_model =~ ^/ ]] || site_model=$(realpath $(dirname $site_path)/$site_model)
     project_id=`jq -r .project_id $site_path`
     [[ $project_id == null ]] && project_id=
     device_id=`jq -r .device_id $site_path`
