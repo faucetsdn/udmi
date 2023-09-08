@@ -6,9 +6,11 @@ import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
+import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static java.lang.String.format;
+import static java.time.Instant.ofEpochSecond;
 
 import com.google.api.core.ApiFuture;
 import com.google.api.core.ApiService.Listener;
@@ -24,6 +26,7 @@ import com.google.cloud.pubsub.v1.Publisher;
 import com.google.cloud.pubsub.v1.Subscriber;
 import com.google.cloud.pubsub.v1.SubscriptionAdminClient;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.Timestamp;
 import com.google.pubsub.v1.ProjectSubscriptionName;
 import com.google.pubsub.v1.ProjectTopicName;
 import com.google.pubsub.v1.PublisherGrpc;
@@ -147,7 +150,11 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
     // Ack first to prevent a recurring loop of processing a faulty message.
     reply.ack();
     String messageId = message.getMessageId();
-    attributesMap.put(Common.TRANSACTION_KEY, "PS:" + messageId);
+    attributesMap.computeIfAbsent("publishTime", key -> {
+          Timestamp publishTime = message.getPublishTime();
+          return getTimestamp(ofEpochSecond(publishTime.getSeconds(), publishTime.getNanos()));
+        });
+    attributesMap.computeIfAbsent(Common.TRANSACTION_KEY, key -> "PS:" + messageId);
     receiveMessage(attributesMap, messageString);
     Instant end = Instant.now();
     long seconds = Duration.between(start, end).getSeconds();
