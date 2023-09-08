@@ -26,15 +26,12 @@ import com.google.cloud.pubsub.v1.Publisher;
 import com.google.cloud.pubsub.v1.Subscriber;
 import com.google.cloud.pubsub.v1.SubscriptionAdminClient;
 import com.google.protobuf.ByteString;
-import com.google.protobuf.Timestamp;
 import com.google.pubsub.v1.ProjectSubscriptionName;
 import com.google.pubsub.v1.ProjectTopicName;
-import com.google.pubsub.v1.PublisherGrpc;
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.udmi.util.Common;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
-import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
@@ -78,12 +75,20 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
     }
   }
 
-  private void checkPublisher() {
-    publish(makeHelloBundle());
+  private static void checkSubscription(ProjectSubscriptionName subscriptionName) {
+    try (SubscriptionAdminClient client = SubscriptionAdminClient.create()) {
+      client.getSubscription(subscriptionName).getAckDeadlineSeconds();
+    } catch (Exception e) {
+      throw new RuntimeException("Checking subscription " + subscriptionName, e);
+    }
   }
 
   public static MessagePipe fromConfig(EndpointConfiguration configuration) {
     return new PubSubPipe(configuration);
+  }
+
+  private void checkPublisher() {
+    publish(makeHelloBundle());
   }
 
   private String getEmulatorHost() {
@@ -111,12 +116,6 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
   public void activate(Consumer<Bundle> bundleConsumer) {
     super.activate(bundleConsumer);
     subscriber.startAsync();
-  }
-
-  @Override
-  public void shutdown() {
-    subscriber.stopAsync().awaitTerminated();
-    super.shutdown();
   }
 
   @Override
@@ -150,10 +149,8 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
     // Ack first to prevent a recurring loop of processing a faulty message.
     reply.ack();
     String messageId = message.getMessageId();
-    attributesMap.computeIfAbsent("publishTime", key -> {
-          Timestamp publishTime = message.getPublishTime();
-          return getTimestamp(ofEpochSecond(publishTime.getSeconds(), publishTime.getNanos()));
-        });
+    attributesMap.computeIfAbsent("publishTime",
+        key -> getTimestamp(ofEpochSecond(message.getPublishTime().getSeconds())));
     attributesMap.computeIfAbsent(Common.TRANSACTION_KEY, key -> "PS:" + messageId);
     receiveMessage(attributesMap, messageString);
     Instant end = Instant.now();
@@ -161,6 +158,12 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
     if (seconds > 1) {
       warn("Receive message took %ss", seconds);
     }
+  }
+
+  @Override
+  public void shutdown() {
+    subscriber.stopAsync().awaitTerminated();
+    super.shutdown();
   }
 
   Publisher getPublisher(String topicName) {
@@ -197,14 +200,6 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
       return built;
     } catch (Exception e) {
       throw new RuntimeException("While creating subscriber", e);
-    }
-  }
-
-  private static void checkSubscription(ProjectSubscriptionName subscriptionName) {
-    try (SubscriptionAdminClient client = SubscriptionAdminClient.create()) {
-      client.getSubscription(subscriptionName).getAckDeadlineSeconds();
-    } catch (Exception e) {
-      throw new RuntimeException("Checking subscription " + subscriptionName, e);
     }
   }
 

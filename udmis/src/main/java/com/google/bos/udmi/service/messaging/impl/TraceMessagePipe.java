@@ -13,6 +13,7 @@ import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.common.collect.ImmutableMap;
+import com.google.udmi.util.Common;
 import com.google.udmi.util.JsonUtil;
 import java.io.File;
 import java.util.HashMap;
@@ -84,7 +85,7 @@ public class TraceMessagePipe extends MessageBase {
       envelope.deviceId = attributes.get("deviceId");
       envelope.projectId = attributes.get("projectId");
       envelope.deviceRegistryId = attributes.get("deviceRegistryId");
-      envelope.publishTime = ifNotNullGet(ofNullable(attributes.get("publishTime"))
+      envelope.publishTime = ifNotNullGet(ofNullable(attributes.get(Common.PUBLISH_TIME_KEY))
           .orElse((String) bundle.get("publish_time")), JsonUtil::getDate);
       return envelope;
     } catch (Exception e) {
