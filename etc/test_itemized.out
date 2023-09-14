@@ -1,5 +1,5 @@
-TEST pointset_request_extraneous extraPoint=llama RESULT fail pointset pointset_request_extraneous ALPHA 5 timeout waiting for pointset event contains correct points with present_value
-TEST pointset_remove_point missingPoint=filter_alarm_pressure_status RESULT fail pointset pointset_remove_point ALPHA 5 timeout waiting for pointset state reports same points as defined in config
+TEST pointset_request_extraneous extraPoint=llama RESULT fail pointset pointset_request_extraneous BETA 5 timeout waiting for pointset event contains correct points with present_value
+TEST pointset_remove_point missingPoint=filter_alarm_pressure_status RESULT fail pointset pointset_remove_point BETA 5 timeout waiting for pointset state reports same points as defined in config
 TEST feature_enumeration featureEnableSwap RESULT fail enumeration.features feature_enumeration PREVIEW 5 Failed check that feature enumeration matches metadata; missing { enumeration }, extra { unknown }
 TEST broken_config configStateDelay RESULT pass system broken_config ALPHA 5 Sequence complete
 TEST valid_serial_no noLastStart RESULT pass system valid_serial_no ALPHA 5 Sequence complete
