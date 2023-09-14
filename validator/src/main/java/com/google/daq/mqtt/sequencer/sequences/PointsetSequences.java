@@ -65,7 +65,7 @@ public class PointsetSequences extends PointsetBase {
 
   @Test(timeout = ONE_MINUTE_MS)
   @Summary("pointset configuration contains extraneous point")
-  @Feature(stage = ALPHA, bucket = POINTSET)
+  @Feature(stage = BETA, bucket = POINTSET)
   public void pointset_request_extraneous() {
     untilPointsetSanity();
 
@@ -89,7 +89,7 @@ public class PointsetSequences extends PointsetBase {
 
   @Test(timeout = ONE_MINUTE_MS)
   @Summary("pointset state does not report unconfigured point")
-  @Feature(stage = ALPHA, bucket = POINTSET)
+  @Feature(stage = BETA, bucket = POINTSET)
   public void pointset_remove_point() {
     untilPointsetSanity();
 

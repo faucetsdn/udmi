@@ -34,6 +34,8 @@ Some caveats:
 * [feature_enumeration](#feature_enumeration): check enumeration of device features
 * [pointset_publish](#pointset_publish): device publishes pointset events
 * [pointset_publish_interval](#pointset_publish_interval): test sample rate and sample limit sec
+* [pointset_remove_point](#pointset_remove_point): pointset state does not report unconfigured point
+* [pointset_request_extraneous](#pointset_request_extraneous): pointset configuration contains extraneous point
 * [pointset_sample_rate](#pointset_sample_rate): device publishes pointset events at a rate of no more than config sample_rate_sec
 * [state_make_model](#state_make_model): device publishes correct make and model information in state messages
 * [state_software](#state_software): device publishes correct software information in state messages
@@ -132,6 +134,40 @@ test sample rate and sample limit sec
     * Set `pointset.sample_limit_sec` = `15`
 1. Wait for receive at least 4 pointset events
 1. Check that time period between successive pointset events is between 15 and 18 seconds
+
+## pointset_remove_point (BETA)
+
+pointset state does not report unconfigured point
+
+1. Wait for pointset state reports same points as defined in config
+1. Wait for pointset event contains correct points with present_value
+1. Update config before pointset status does not contain removed point:
+    * Remove `pointset.points.filter_differential_pressure_setpoint`
+1. Wait for pointset status does not contain removed point
+1. Wait for pointset state reports same points as defined in config
+1. Wait for pointset event contains correct points with present_value
+1. Update config before pointset status contains removed point:
+    * Add `pointset.points.filter_differential_pressure_setpoint` = { "set_value": `98`, "units": `Bars` }
+1. Wait for pointset status contains removed point
+1. Wait for pointset state reports same points as defined in config
+1. Wait for pointset event contains correct points with present_value
+
+## pointset_request_extraneous (BETA)
+
+pointset configuration contains extraneous point
+
+1. Wait for pointset state reports same points as defined in config
+1. Wait for pointset event contains correct points with present_value
+1. Update config before pointset status contains extraneous point error:
+    * Add `pointset.points.extraneous_point` = {  }
+1. Wait for pointset status contains extraneous point error
+1. Wait for pointset state reports same points as defined in config
+1. Wait for pointset event contains correct points with present_value
+1. Update config before pointset status removes extraneous point error:
+    * Remove `pointset.points.extraneous_point`
+1. Wait for pointset status removes extraneous point error
+1. Wait for pointset state reports same points as defined in config
+1. Wait for pointset event contains correct points with present_value
 
 ## pointset_sample_rate (BETA)
 

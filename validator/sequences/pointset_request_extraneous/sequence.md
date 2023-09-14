@@ -1,5 +1,5 @@
 
-## pointset_request_extraneous (ALPHA)
+## pointset_request_extraneous (BETA)
 
 pointset configuration contains extraneous point
 
