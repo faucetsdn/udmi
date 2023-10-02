@@ -39,8 +39,13 @@ sudo apt-get update
 # Second step is to actually try the apt-get install. If that fails, then try the gcloud components version.
 #
 
-echo Trying emulator install: apt-get install google-cloud-sdk-pubsub-emulator
-if ! sudo apt-get install google-cloud-sdk-pubsub-emulator; then
+#
+# Ugly hack for package dependency problems, not recommended.
+# https://askubuntu.com/questions/176121/dpkg-error-trying-to-overwrite-file-which-is-also-in
+HACK_OPT="-o Dpkg::Options::=--force-overwrite"
+
+echo Trying emulator install: apt-get install $HACK_OPT google-cloud-sdk-pubsub-emulator
+if ! sudo apt-get install $HACK_OPT google-cloud-sdk-pubsub-emulator; then
     echo Failed apt-get install, trying: gcloud components install pubsub-emulator && gcloud components update
     gcloud components install pubsub-emulator && gcloud components update
 fi
