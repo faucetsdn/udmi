@@ -13,7 +13,7 @@ shift
 cd $UDMI_ROOT
 
 if [[ -z $1 || $1 =~ ^- ]]; then
-    echo No project ID supplied.
+    [[ -f $site_path ]] || echo No project ID supplied with site directory.
 else
     project_id=$1
     shift
@@ -23,7 +23,7 @@ iot_config=$site_path/cloud_iot_config.json
 if [[ -d $site_path && ! -f $iot_config ]]; then
     echo Config file not found: $iot_config
     false
-elif [[ -z $project_id ]]; then
+elif [[ -d $site_path && -z $project_id ]]; then
     echo No project defined, dry run only.
 fi
 
