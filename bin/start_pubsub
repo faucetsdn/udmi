@@ -33,12 +33,22 @@ sudo apt-get install apt-transport-https ca-certificates gnupg
 
 curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
 
+sudo apt-get update
+
 #
 # Second step is to actually try the apt-get install. If that fails, then try the gcloud components version.
 #
 
-(sudo apt-get update && sudo apt-get install google-cloud-sdk-pubsub-emulator) ||
-    (gcloud components install pubsub-emulator && gcloud components update)
+#
+# Ugly hack for package dependency problems, not recommended.
+# https://askubuntu.com/questions/176121/dpkg-error-trying-to-overwrite-file-which-is-also-in
+HACK_OPT="-o Dpkg::Options::=--force-overwrite"
+
+echo Trying emulator install: apt-get install $HACK_OPT google-cloud-sdk-pubsub-emulator
+if ! sudo apt-get install $HACK_OPT google-cloud-sdk-pubsub-emulator; then
+    echo Failed apt-get install, trying: gcloud components install pubsub-emulator && gcloud components update
+    gcloud components install pubsub-emulator && gcloud components update
+fi
 
 echo Starting pubsub emulator...
 mkdir -p out/
