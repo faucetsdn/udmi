@@ -105,7 +105,8 @@ class MqttPublisher implements MessagePublisher {
   }
 
   private static String getProviderHostname(ExecutionConfiguration executionConfiguration) {
-    IotProvider iotProvider = executionConfiguration.iot_provider;
+    IotProvider iotProvider =
+        ofNullable(executionConfiguration.iot_provider).orElse(IotProvider.IMPLICIT);
     return catchOrElse(() -> executionConfiguration.reflector_endpoint.hostname,
         () -> switch (iotProvider) {
           case JWT -> requireNonNull(executionConfiguration.bridge_host, "missing bridge_host");
