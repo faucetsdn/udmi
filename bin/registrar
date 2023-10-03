@@ -39,20 +39,25 @@ validator/bin/build > /dev/null
 
 echo Running tools version `git describe`
 
-# Format of cmdline project_id is {//PROVIDER/}PROJECT (optional PROVIDER)
-# e.g. bos-testing-dev or //gcp/bos-testing-dev
+# Format of cmdline project_id is [//PROVIDER/]PROJECT[@BRIDGE] (optional PROVIDER and BRIDGE)
+# e.g. bos-testing-dev or //gcp/bos-testing-dev or bos-platform-dev@mqtt.bos.goog
+
+quoted_bridge=null
+iot_provider=null
+if [[ $project_id =~ ^// ]]; then
+    sans_project=${project_id%/*}
+    iot_provider=\"${sans_project#//}\"
+    project_id=${project_id#*/}
+elif [[ $project_id =~ @ ]]; then
+    iot_provider=\"jwt\"
+    quoted_bridge=\"${project_id#*@}\"
+    project_id=${project_id%@*}
+fi
 
 if [[ -n $project_id ]]; then
     quoted_id=\"${project_id##*/}\"
 else
     quoted_id=null
-fi
-
-if [[ $project_id =~ ^// ]]; then
-    sans_project=${project_id%/*}
-    iot_provider=\"${sans_project#//}\"
-else
-    iot_provider=null
 fi
 
 if [[ -f $site_path ]]; then
@@ -64,6 +69,7 @@ else
 {
   "iot_provider": $iot_provider,
   "project_id": $quoted_id,
+  "bridge_host": $quoted_bridge,
   "site_model": "$site_path",
   "registry_suffix": $registry_suffix
 }

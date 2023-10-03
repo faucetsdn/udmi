@@ -153,6 +153,7 @@ public class IotReflectorClient implements MessagePublisher {
     ExecutionConfiguration reflectConfiguration = new ExecutionConfiguration();
     reflectConfiguration.iot_provider = iotConfig.iot_provider;
     reflectConfiguration.project_id = iotConfig.project_id;
+    reflectConfiguration.bridge_host = iotConfig.bridge_host;
     reflectConfiguration.cloud_region = Optional.ofNullable(iotConfig.reflect_region)
         .orElse(iotConfig.cloud_region);
     reflectConfiguration.registry_id = UDMI_REFLECT;

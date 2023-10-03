@@ -4,8 +4,8 @@ import static com.google.bos.iot.core.proxy.ProxyTarget.STATE_TOPIC;
 import static com.google.udmi.util.GeneralUtils.catchOrElse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
-import static udmi.schema.IotAccess.IotProvider.CLEARBLADE;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
@@ -97,13 +97,22 @@ class MqttPublisher implements MessagePublisher {
     this.deviceId = executionConfiguration.device_id;
     this.algorithm = algorithm;
     this.keyBytes = keyBytes;
-    IotProvider iotProvider = executionConfiguration.iot_provider;
-    this.providerHostname = catchOrElse(() -> executionConfiguration.reflector_endpoint.hostname,
-            () -> iotProvider == CLEARBLADE ? DEFAULT_CLEARBLADE_HOSTNAME : GCP_BRIDGE_HOSTNAME);
+    this.providerHostname = getProviderHostname(executionConfiguration);
     this.clientId = catchToNull(() -> executionConfiguration.reflector_endpoint.client_id);
     LOG.info(deviceId + " token expiration sec " + TOKEN_EXPIRATION_SEC);
     mqttClient = newMqttClient(deviceId);
     connectMqttClient(deviceId);
+  }
+
+  private static String getProviderHostname(ExecutionConfiguration executionConfiguration) {
+    IotProvider iotProvider = executionConfiguration.iot_provider;
+    return catchOrElse(() -> executionConfiguration.reflector_endpoint.hostname,
+        () -> switch (iotProvider) {
+          case JWT -> requireNonNull(executionConfiguration.bridge_host, "missing bridge_host");
+          case CLEARBLADE -> DEFAULT_CLEARBLADE_HOSTNAME;
+          default -> GCP_BRIDGE_HOSTNAME;
+        }
+    );
   }
 
   @Override
