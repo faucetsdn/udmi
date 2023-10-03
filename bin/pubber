@@ -77,8 +77,8 @@ else
     options_json=null
 fi
 
-# Format of cmdline project_id is {//PROVIDER/}PROJECT (optional PROVIDER)
-# e.g. bos-testing-dev or //gcp/bos-testing-dev
+# Format of cmdline project_id is {//PROVIDER/}PROJECT[@BROKER] (optional PROVIDER and BROKER)
+# e.g. bos-testing-dev or //gcp/bos-testing-dev or bos-platform-dev@mqtt.bos.goog
 project_target=${project_id##*/}
 
 if [[ -z $project_id ]]; then
@@ -86,13 +86,17 @@ if [[ -z $project_id ]]; then
 elif [[ $project_id =~ ^// ]]; then
     no_project=${project_id%/*}
     iot_provider=${no_project#//}
+elif [[ $project_id =~ @ ]]; then
+    iot_provider=\"jwt\"
+    broker_hostname=${project_id#*@}
+    project_target=${project_id%@*}
 else
     iot_provider=gcp
 fi
 
 if [[ $iot_provider == clearblade ]]; then
     broker_hostname=${cloud_region}-mqtt.clearblade.com
-else
+elif [[ -z $broker_hostname ]]; then
     broker_hostname=mqtt.googleapis.com
 fi
 
