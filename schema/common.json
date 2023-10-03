@@ -20,6 +20,7 @@
         "local",
         "dynamic",
         "implicit",
+        "jwt",
         "gcp_native",
         "gcp",
         "clearblade_native",

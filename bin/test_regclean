@@ -7,7 +7,7 @@ ROOT_DIR=$(dirname $0)/..
 cd $ROOT_DIR
 
 if [[ $# -ne 1 ]]; then
-    echo Usage: $0 PROJECT_ID
+    echo Usage: $0 PROJECT_ID[@BROKER]
     false
 fi
 
@@ -98,9 +98,6 @@ if [[ -n $UDMI_PUBBER_ENDPOINT ]]; then
        $pubber_config | sponge $pubber_config
 fi
 
-echo $pubber_config:
-cat $pubber_config
-
 echo Corrupting site model to check error handling...
 mkdir -p $site_path/devices/XXX-1
 echo { > $site_path/devices/XXX-1/metadata.json
@@ -108,16 +105,21 @@ mkdir -p $site_path/devices/XXX-2/out
 echo hello > $site_path/devices/XXX-2/out/exceptions.txt
 
 echo Clean out the registry to make sure devices get removed...
+echo bin/registrar $site_arg $registrar_project -d
 bin/registrar $site_arg $registrar_project -d
 
 echo Checking reported cloud version info
 jq .cloud_version.udmi_ref $output_file
+
+echo Pubber config from $pubber_config:
+cat $pubber_config
 
 echo Check for failure in running pubber...
 RESULT=0
 pubber/bin/run $pubber_config || RESULT=$?
 
 echo Now recreate the registry from scratch!
+echo bin/registrar $site_arg $registrar_project -u
 bin/registrar $site_arg $registrar_project -u
 
 echo And check again, but this time with success...
