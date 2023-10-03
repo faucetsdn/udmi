@@ -45,6 +45,7 @@ bin/reset_config $site_path $project_id $proxy_id
 
 echo Starting validator, output in $VALIDATOR_OUT
 rm -rf $TRACE_DIR
+echo bin/validator $site_path $project_id -w $TRACE_DIR
 bin/validator $site_path $project_id -w $TRACE_DIR > $VALIDATOR_OUT 2>&1 &
 vpid=$!
 echo Started validator pid $vpid
