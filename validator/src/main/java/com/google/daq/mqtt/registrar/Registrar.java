@@ -56,6 +56,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import udmi.schema.CloudModel;
@@ -386,7 +387,8 @@ public class Registrar {
         }
       }
 
-      processLocalDevices(updatedCount, processedCount);
+      processLocalDevices(updatedCount, processedCount, this::notAlreadyRegistered);
+      processLocalDevices(updatedCount, processedCount, this::alreadyRegistered);
       System.err.printf("Finished processing %d device records...%n", processedCount.get());
 
       if (updateCloudIoT) {
@@ -404,6 +406,14 @@ public class Registrar {
     } catch (Exception e) {
       throw new RuntimeException("While processing devices", e);
     }
+  }
+
+  private boolean notAlreadyRegistered(String device) {
+    return !alreadyRegistered(device);
+  }
+
+  private boolean alreadyRegistered(String device) {
+    return ifNotNullGet(cloudDevices, devices -> devices.contains(device), false);
   }
 
   private void deleteCloudDevices(Set<String> deviceSet) {
@@ -454,18 +464,21 @@ public class Registrar {
     }
   }
 
-  private void processLocalDevices(AtomicInteger updatedCount, AtomicInteger processedCount) {
+  private void processLocalDevices(AtomicInteger updatedCount, AtomicInteger processedCount,
+      Function<String, Boolean> filter) {
     try {
       ExecutorService executor = Executors.newFixedThreadPool(RUNNER_THREADS);
       final Instant start = Instant.now();
       for (String localName : localDevices.keySet()) {
-        executor.execute(() -> {
-          int count = processedCount.incrementAndGet();
-          if (count % 500 == 0) {
-            System.err.printf("Processed %d device records...%n", count);
-          }
-          processLocalDevice(localName, updatedCount);
-        });
+        if (filter.apply(localName)) {
+          executor.execute(() -> {
+            int count = processedCount.incrementAndGet();
+            if (count % 500 == 0) {
+              System.err.printf("Processed %d device records...%n", count);
+            }
+            processLocalDevice(localName, updatedCount);
+          });
+        }
       }
       executor.shutdown();
       executor.awaitTermination(PROCESSING_TIMEOUT_SEC, TimeUnit.SECONDS);
@@ -741,10 +754,11 @@ public class Registrar {
     try {
       boolean requiresCloud = updateCloudIoT || (idleLimit != null);
       if (requiresCloud) {
+        System.err.printf("Fetching devices from registry %s...%n",
+            cloudIotManager.getRegistryId());
         Set<String> devices = cloudIotManager.fetchDeviceIds();
         int size = ifNotNullGet(devices, Set::size, -1);
-        System.err.printf("Fetched %d devices from cloud registry %s%n", size,
-            cloudIotManager.getRegistryId());
+        System.err.printf("Fetched %d devices from cloud registry%n", size);
         return devices;
       } else {
         System.err.println("Skipping remote registry fetch");
