@@ -76,6 +76,7 @@ public class IotAccess {
         JWT("jwt"),
         GCP_NATIVE("gcp_native"),
         GCP("gcp"),
+        GBOS("gbos"),
         CLEARBLADE_NATIVE("clearblade_native"),
         CLEARBLADE("clearblade");
         private final String value;
