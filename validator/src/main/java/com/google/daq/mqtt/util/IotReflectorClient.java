@@ -70,7 +70,7 @@ public class IotReflectorClient implements IotProvider {
 
   @Override
   public void updateConfig(String deviceId, String config) {
-    transaction(deviceId, UPDATE_CONFIG_TOPIC, config, QuerySpeed.SHORT);
+    transaction(deviceId, UPDATE_CONFIG_TOPIC, config, QuerySpeed.LONG);
   }
 
   @Override
@@ -102,7 +102,7 @@ public class IotReflectorClient implements IotProvider {
 
   private CloudModel cloudModelTransaction(String deviceId, String topic, CloudModel model) {
     Operation operation = Preconditions.checkNotNull(model.operation, "no operation");
-    Map<String, Object> message = transaction(deviceId, topic, stringify(model), QuerySpeed.SHORT);
+    Map<String, Object> message = transaction(deviceId, topic, stringify(model), QuerySpeed.LONG);
     CloudModel cloudModel = convertToStrict(CloudModel.class, message);
     String cloudNumId = ifNotNullGet(cloudModel, result -> result.num_id);
     Operation cloudOperation = ifNotNullGet(cloudModel, result -> result.operation);
