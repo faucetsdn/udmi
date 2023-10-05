@@ -4,7 +4,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.JsonUtil.loadFileStrict;
 import static java.util.Objects.requireNonNull;
+import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
+import static udmi.schema.IotAccess.IotProvider.GCP;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -69,8 +71,7 @@ public class SiteModel {
   }
 
   private static String getEndpointHostname(ExecutionConfiguration executionConfig) {
-    IotProvider iotProvider = requireNonNull(executionConfig.iot_provider,
-        "iot_provider not specified");
+    IotProvider iotProvider = ofNullable(executionConfig.iot_provider).orElse(GCP);
     return switch (iotProvider) {
       case CLEARBLADE -> DEFAULT_CLEARBLADE_HOSTNAME;
       case GBOS -> DEFAULT_GBOS_HOSTNAME;
@@ -178,7 +179,7 @@ public class SiteModel {
     if (registry_id == null) {
       return null;
     }
-    return registry_id + Optional.ofNullable(registry_suffix).orElse("");
+    return registry_id + ofNullable(registry_suffix).orElse("");
   }
 
   public EndpointConfiguration makeEndpointConfig(String projectId, String deviceId) {
