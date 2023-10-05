@@ -87,7 +87,7 @@ public class Registrar {
   private static final String CONFIG_SUB_TYPE = "config";
   private static final String MODEL_SUB_TYPE = "model";
   private static final boolean DEFAULT_BLOCK_UNKNOWN = true;
-  private static final int EACH_ITEM_TIMEOUT_SEC = 30;
+  private static final int EACH_ITEM_TIMEOUT_SEC = 15;
   private final Map<String, JsonSchema> schemas = new HashMap<>();
   private final String generation = getGenerationString();
   private CloudIotManager cloudIotManager;
@@ -501,9 +501,11 @@ public class Registrar {
 
   private void dynamicTerminate(ExecutorService executor, int count) throws InterruptedException {
     executor.shutdown();
-    System.err.println("Waiting for " + count + " tasks to complete...");
     int timeout = (count / runnerThreads + 1) * EACH_ITEM_TIMEOUT_SEC;
-    executor.awaitTermination(timeout, TimeUnit.SECONDS);
+    System.err.printf("Waiting %ds for %d tasks to complete...%n", timeout, count);
+    if (!executor.awaitTermination(timeout, TimeUnit.SECONDS)) {
+      throw new RuntimeException("Incomplete executor termination after " + timeout + "s");
+    }
   }
 
   private void processLocalDevice(String localName, AtomicInteger processedDeviceCount) {
