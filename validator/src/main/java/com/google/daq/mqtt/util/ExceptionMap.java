@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -122,6 +123,10 @@ public class ExceptionMap extends RuntimeException {
     } catch (Exception e) {
       put(category, e);
     }
+  }
+
+  public void forEach(Consumer<Exception> handler) {
+    exceptions.values().forEach(handler);
   }
 
   /**

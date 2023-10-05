@@ -759,6 +759,9 @@ class LocalDevice {
           PrintWriter printWriter = new PrintWriter(fileWriter)) {
         printWriter.println(exceptionType);
         exception.printStackTrace(printWriter);
+        if (exception instanceof ExceptionMap exceptionMap) {
+          exceptionMap.forEach(mapped -> mapped.printStackTrace(printWriter));
+        }
       }
     } catch (Exception e) {
       throw new RuntimeException("Writing exception log file " + exceptionLog.getAbsolutePath(), e);

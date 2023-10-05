@@ -8,7 +8,6 @@ import static com.google.udmi.util.Common.NO_SITE;
 import static com.google.udmi.util.Common.UDMI_VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
-import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
 import static java.util.Objects.requireNonNull;
@@ -49,7 +48,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
@@ -86,10 +84,10 @@ public class Registrar {
   private static final String SCHEMA_NAME = "UDMI";
   private static final String SITE_METADATA_JSON = "site_metadata.json";
   private static final String SWARM_SUBFOLDER = "swarm";
-  private static final long PROCESSING_TIMEOUT_SEC = 60;
   private static final String CONFIG_SUB_TYPE = "config";
   private static final String MODEL_SUB_TYPE = "model";
   private static final boolean DEFAULT_BLOCK_UNKNOWN = true;
+  private static final int EACH_ITEM_TIMEOUT_SEC = 30;
   private final Map<String, JsonSchema> schemas = new HashMap<>();
   private final String generation = getGenerationString();
   private CloudIotManager cloudIotManager;
@@ -214,7 +212,7 @@ public class Registrar {
   }
 
   Registrar processProfile(ExecutionConfiguration config) {
-    String siteModel = Optional.ofNullable(config.site_model).orElse(BASE_DIR.getName());
+    String siteModel = ofNullable(config.site_model).orElse(BASE_DIR.getName());
     File siteModelRaw = new File(siteModel);
     File useModel = siteModelRaw.isAbsolute() ? siteModelRaw :
         new File(ifNotNullGet(profile, File::getParentFile, BASE_DIR), siteModel);
@@ -455,11 +453,10 @@ public class Registrar {
     }
   }
 
-  private void synchronizedDelete(Set<String> gateways) throws InterruptedException {
+  private void synchronizedDelete(Set<String> devices) throws InterruptedException {
     ExecutorService executor = Executors.newFixedThreadPool(runnerThreads);
-    gateways.forEach(id -> executor.execute(() -> deleteDevice(id)));
-    executor.shutdown();
-    executor.awaitTermination(PROCESSING_TIMEOUT_SEC, TimeUnit.SECONDS);
+    devices.forEach(id -> executor.execute(() -> deleteDevice(id)));
+    dynamicTerminate(executor, devices.size());
   }
 
   private void deleteDevice(String deviceId) {
@@ -475,20 +472,22 @@ public class Registrar {
       Function<String, Boolean> filter) {
     try {
       ExecutorService executor = Executors.newFixedThreadPool(runnerThreads);
+      AtomicInteger queued = new AtomicInteger();
       final Instant start = Instant.now();
       for (String localName : localDevices.keySet()) {
         if (filter.apply(localName)) {
+          queued.incrementAndGet();
           executor.execute(() -> {
             int count = processedCount.incrementAndGet();
             if (count % 500 == 0) {
               System.err.printf("Processed %d device records...%n", count);
             }
             processLocalDevice(localName, updatedCount);
+            queued.decrementAndGet();
           });
         }
       }
-      executor.shutdown();
-      executor.awaitTermination(PROCESSING_TIMEOUT_SEC, TimeUnit.SECONDS);
+      dynamicTerminate(executor, queued.get());
 
       Duration between = Duration.between(start, Instant.now());
       double seconds = between.getSeconds() + between.getNano() / 1e9;
@@ -498,6 +497,13 @@ public class Registrar {
     } catch (Exception e) {
       throw new RuntimeException("While processing local devices", e);
     }
+  }
+
+  private void dynamicTerminate(ExecutorService executor, int count) throws InterruptedException {
+    executor.shutdown();
+    System.err.println("Waiting for " + count + " tasks to complete...");
+    int timeout = (count / runnerThreads + 1) * EACH_ITEM_TIMEOUT_SEC;
+    executor.awaitTermination(timeout, TimeUnit.SECONDS);
   }
 
   private void processLocalDevice(String localName, AtomicInteger processedDeviceCount) {
@@ -705,12 +711,11 @@ public class Registrar {
     try {
       ExecutorService executor = Executors.newFixedThreadPool(runnerThreads);
       final Instant start = Instant.now();
-      for (LocalDevice localDevice : localDevices.values()) {
-        ifTrueThen(localDevice.isGateway(), () -> executor.execute(
-            () -> bindGatewayDevice(localDevices, deviceSet, localDevice)));
-      }
-      executor.shutdown();
-      executor.awaitTermination(PROCESSING_TIMEOUT_SEC, TimeUnit.SECONDS);
+      Set<LocalDevice> gateways = localDevices.values().stream().filter(LocalDevice::isGateway)
+          .collect(Collectors.toSet());
+      gateways.forEach(
+          localDevice -> executor.execute(() -> bindGatewayDevice(deviceSet, localDevice)));
+      dynamicTerminate(executor, gateways.size());
 
       Duration between = Duration.between(start, Instant.now());
       double seconds = between.getSeconds() + between.getNano() / 1e9;
@@ -720,11 +725,12 @@ public class Registrar {
     }
   }
 
-  private void bindGatewayDevice(Map<String, LocalDevice> localDevices, Set<String> deviceSet,
+  private void bindGatewayDevice(Set<String> deviceSet,
       LocalDevice localDevice) {
     String gatewayId = localDevice.getDeviceId();
     try {
-      Set<String> boundDevices = cloudIotManager.fetchBoundDevices(gatewayId);
+      Set<String> boundDevices = ofNullable(cloudIotManager.fetchBoundDevices(gatewayId)).orElse(
+          ImmutableSet.of());
       System.err.printf("Binding devices to %s, already bound: %s%n",
           gatewayId, JOIN_CSV.join(boundDevices));
       int total = cloudDevices.size() != 0 ? cloudDevices.size() : localDevices.size();
