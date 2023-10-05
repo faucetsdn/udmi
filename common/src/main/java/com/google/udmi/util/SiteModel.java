@@ -32,6 +32,7 @@ import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
 import udmi.schema.ExecutionConfiguration;
 import udmi.schema.GatewayModel;
+import udmi.schema.IotAccess.IotProvider;
 import udmi.schema.Metadata;
 
 public class SiteModel {
@@ -43,7 +44,9 @@ public class SiteModel {
       .enable(SerializationFeature.INDENT_OUTPUT)
       .setDateFormat(new ISO8601DateFormat())
       .setSerializationInclusion(JsonInclude.Include.NON_NULL);
-  private static final String DEFAULT_ENDPOINT_HOSTNAME = "mqtt.googleapis.com";
+  private static final String DEFAULT_GCP_HOSTNAME = "mqtt.googleapis.com";
+  private static final String DEFAULT_CLEARBLADE_HOSTNAME = "mqtt.googleapis.com";
+  private static final String DEFAULT_GBOS_HOSTNAME = "mqtt.googleapis.com";
   private static final Pattern ID_PATTERN = Pattern.compile(
       "projects/(.*)/locations/(.*)/registries/(.*)/devices/(.*)");
 
@@ -61,8 +64,19 @@ public class SiteModel {
     EndpointConfiguration endpoint = new EndpointConfiguration();
     endpoint.client_id = getClientId(projectId,
         executionConfig.cloud_region, getRegistryActual(executionConfig), deviceId);
-    endpoint.hostname = DEFAULT_ENDPOINT_HOSTNAME;
+    endpoint.hostname = getEndpointHostname(executionConfig);
     return endpoint;
+  }
+
+  private static String getEndpointHostname(ExecutionConfiguration executionConfig) {
+    IotProvider iotProvider = requireNonNull(executionConfig.iot_provider,
+        "iot_provider not specified");
+    return switch (iotProvider) {
+      case CLEARBLADE -> DEFAULT_CLEARBLADE_HOSTNAME;
+      case GBOS -> DEFAULT_GBOS_HOSTNAME;
+      case GCP -> DEFAULT_GCP_HOSTNAME;
+      default -> throw new RuntimeException("Unsupported iot_provider " + iotProvider);
+    };
   }
 
   public static String getClientId(String projectId, String cloudRegion, String registryId,
