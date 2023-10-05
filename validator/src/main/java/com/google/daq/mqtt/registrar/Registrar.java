@@ -87,7 +87,6 @@ public class Registrar {
   private static final String SITE_METADATA_JSON = "site_metadata.json";
   private static final String SWARM_SUBFOLDER = "swarm";
   private static final long PROCESSING_TIMEOUT_SEC = 60;
-  private static final int RUNNER_THREADS = 20;
   private static final String CONFIG_SUB_TYPE = "config";
   private static final String MODEL_SUB_TYPE = "model";
   private static final boolean DEFAULT_BLOCK_UNKNOWN = true;
@@ -116,6 +115,7 @@ public class Registrar {
   private boolean deleteDevices;
   private IotProvider iotProvider;
   private File profile;
+  private int runnerThreads = 20;
 
   /**
    * Main entry point for registrar.
@@ -174,6 +174,9 @@ public class Registrar {
         case "-d":
           setDeleteDevices(true);
           break;
+        case "-n":
+          setRunnerThreads(argList.remove(0));
+          break;
         case "--":
           setDeviceList(argList);
           return this;
@@ -188,6 +191,10 @@ public class Registrar {
       }
     }
     return this;
+  }
+
+  private void setRunnerThreads(String argValue) {
+    runnerThreads = Integer.parseInt(argValue);
   }
 
   private void setDeleteDevices(boolean deleteDevices) {
@@ -449,7 +456,7 @@ public class Registrar {
   }
 
   private void synchronizedDelete(Set<String> gateways) throws InterruptedException {
-    ExecutorService executor = Executors.newFixedThreadPool(RUNNER_THREADS);
+    ExecutorService executor = Executors.newFixedThreadPool(runnerThreads);
     gateways.forEach(id -> executor.execute(() -> deleteDevice(id)));
     executor.shutdown();
     executor.awaitTermination(PROCESSING_TIMEOUT_SEC, TimeUnit.SECONDS);
@@ -467,7 +474,7 @@ public class Registrar {
   private void processLocalDevices(AtomicInteger updatedCount, AtomicInteger processedCount,
       Function<String, Boolean> filter) {
     try {
-      ExecutorService executor = Executors.newFixedThreadPool(RUNNER_THREADS);
+      ExecutorService executor = Executors.newFixedThreadPool(runnerThreads);
       final Instant start = Instant.now();
       for (String localName : localDevices.keySet()) {
         if (filter.apply(localName)) {
@@ -520,7 +527,7 @@ public class Registrar {
       localDevice.captureError(LocalDevice.EXCEPTION_REGISTERING, e);
     }
     Duration between = Duration.between(start, Instant.now());
-    double seconds = (between.getSeconds() + between.getNano() / 1e9) / RUNNER_THREADS;
+    double seconds = (between.getSeconds() + between.getNano() / 1e9) / runnerThreads;
     System.err.printf("Finished processing %s in %.03fs%n", localName, seconds);
   }
 
@@ -696,7 +703,7 @@ public class Registrar {
 
   private void bindGatewayDevices(Map<String, LocalDevice> localDevices, Set<String> deviceSet) {
     try {
-      ExecutorService executor = Executors.newFixedThreadPool(RUNNER_THREADS);
+      ExecutorService executor = Executors.newFixedThreadPool(runnerThreads);
       final Instant start = Instant.now();
       for (LocalDevice localDevice : localDevices.values()) {
         ifTrueThen(localDevice.isGateway(), () -> executor.execute(

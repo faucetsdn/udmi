@@ -10,7 +10,6 @@ fi
 PROJECT_ID=$1
 shift 1
 
-udmi_profile=out/pubber_profile.json
 SITE_PATH=sites/udmi_site_model
 DEVICE_ID=AHU-1
 seq_opts=-v
@@ -26,15 +25,6 @@ GOLDEN_SCHEMAS=etc/schema_itemized.out
 rm -f $RESULTS_OUT $SEQUENCER_OUT $PUBBER_OUT $SCHEMA_OUT
 mkdir -p out
 touch $RESULTS_OUT $SEQUENCER_OUT $PUBBER_OUT $SCHEMA_OUT
-
-cat <<EOF > $udmi_profile
-{
-  "site_model": "$PWD/$SITE_PATH",
-  "device_id": "$DEVICE_ID",
-  "project_id": "$PROJECT_ID",
-  "serial_no": "$serial_no"
-}
-EOF
 
 pubber/bin/build
 validator/bin/build
@@ -52,9 +42,13 @@ while read -u 7 action test_name remainder; do
     # Clean out the persistant data store to ensure a clean state each time.
     rm -rf sites/udmi_site_model/out/devices/AHU-1/persistent_data.json
 
+    echo bin/reset_config $SITE_PATH $PROJECT_ID $DEVICE_ID
     bin/reset_config $SITE_PATH $PROJECT_ID $DEVICE_ID
 
-    bin/pubber $udmi_profile $pubber_opts > $PUBBER_OUT 2>&1 &
+    echo
+    echo bin/pubber $SITE_PATH $PROJECT_ID $DEVICE_ID $serial_no $pubber_opts \> $PUBBER_OUT
+    bin/pubber $SITE_PATH $PROJECT_ID $DEVICE_ID $serial_no $pubber_opts > $PUBBER_OUT 2>&1 &
+
     WAITING=20
     for i in `seq 1 $WAITING`; do
         if [[ -n $(fgrep "Connection complete" $PUBBER_OUT) ]]; then
@@ -71,6 +65,8 @@ while read -u 7 action test_name remainder; do
 
     bin/augment_metadata $SITE_PATH $DEVICE_ID
 
+    echo
+    echo bin/sequencer $seq_opts $SITE_PATH $PROJECT_ID $DEVICE_ID $serial_no $test_name \> $SEQUENCER_OUT
     bin/sequencer $seq_opts $SITE_PATH $PROJECT_ID $DEVICE_ID $serial_no $test_name 2>&1 | tee $SEQUENCER_OUT
 
     kill $(ps ax | fgrep pubber | fgrep java | awk '{print $1}') || true
