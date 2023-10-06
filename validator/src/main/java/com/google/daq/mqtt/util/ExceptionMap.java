@@ -6,8 +6,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.io.PrintWriter;
-import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -17,7 +15,6 @@ import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.apache.commons.io.output.WriterOutputStream;
 
 /**
  * Class for managing a map of exceptions (named by category).
@@ -76,6 +73,10 @@ public class ExceptionMap extends RuntimeException {
     exceptions.forEach(consumer);
   }
 
+  public void forEach(Consumer<Exception> handler) {
+    exceptions.values().forEach(handler);
+  }
+
   public boolean isEmpty() {
     return exceptions.isEmpty();
   }
@@ -123,10 +124,6 @@ public class ExceptionMap extends RuntimeException {
     } catch (Exception e) {
       put(category, e);
     }
-  }
-
-  public void forEach(Consumer<Exception> handler) {
-    exceptions.values().forEach(handler);
   }
 
   /**
