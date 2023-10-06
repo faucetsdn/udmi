@@ -529,6 +529,7 @@ public class Registrar {
     Instant start = Instant.now();
     int count = processedDeviceCount.incrementAndGet();
     boolean created = false;
+    boolean error = false;
     try {
       localDevice.writeConfigFile();
       if (cloudDevices != null) {
@@ -541,11 +542,13 @@ public class Registrar {
     } catch (Exception e) {
       System.err.printf("Deferring exception for %s: %s%n", localDevice.getDeviceId(), e);
       localDevice.captureError(LocalDevice.EXCEPTION_REGISTERING, e);
+      error = true;
     }
     Duration between = Duration.between(start, Instant.now());
     double seconds = (between.getSeconds() + between.getNano() / 1e9) / runnerThreads;
-    System.err.printf("Processed %s (%d/%d) in %.03fs%s%n", localName, count, totalCount, seconds,
-        created ? " (new)" : "");
+    String code = error ? "error" : (created ? "add" : "update");
+    System.err.printf("Processed %s (%d/%d) in %.03fs (%s)%n", localName, count, totalCount,
+        seconds, code);
     return created;
   }
 
