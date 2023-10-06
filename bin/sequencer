@@ -12,7 +12,6 @@ TEST_LOG=$OUT_DIR/sequencer.out
 SCHEMA_OUT=$OUT_DIR/schema.out
 SEQUENCER_RES=$OUT_DIR/sequencer.res
 log_level=INFO
-alt_registry=\"${UDMI_ALT_REGISTRY:-ZZ-REDIRECT-NA}\"
 min_stage=PREVIEW
 export UDMI_VERSION=$udmi_version
 
@@ -58,6 +57,11 @@ fi
 DEFAULT_SERIAL=//
 serial_no=${1:-$DEFAULT_SERIAL}
 shift || true
+
+alt_registry=null
+if [[ -n $UDMI_ALT_REGISTRY ]]; then
+    alt_registry=\"${UDMI_ALT_REGISTRY}\"
+fi
 
 if [[ $project_id == -- ]]; then
     echo Configuring for mock project use...
