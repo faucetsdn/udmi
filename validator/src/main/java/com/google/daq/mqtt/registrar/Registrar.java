@@ -59,7 +59,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import udmi.schema.CloudModel;
@@ -379,41 +378,37 @@ public class Registrar {
 
   private void processDevices() {
     Set<String> deviceSet = calculateDevices();
-    AtomicInteger updatedCount = new AtomicInteger();
-    AtomicInteger processedCount = new AtomicInteger();
     try {
       localDevices = loadLocalDevices(deviceSet);
+      if (deviceSet == null) {
+        deviceSet = localDevices.keySet();
+      }
       cloudDevices = ifNotNullGet(fetchCloudDevices(), devices -> new HashSet<>(devices));
       if (deleteDevices) {
         deleteCloudDevices(deviceSet);
         return;
       }
 
-      if (deviceSet != null) {
-        Set<String> unknowns = Sets.difference(deviceSet, localDevices.keySet());
-        if (!unknowns.isEmpty()) {
-          throw new RuntimeException(
-              "Unknown specified devices: " + JOIN_CSV.join(unknowns));
-        }
+      Set<String> unknowns = Sets.difference(deviceSet, localDevices.keySet());
+      if (!unknowns.isEmpty()) {
+        throw new RuntimeException(
+            "Unknown specified devices: " + JOIN_CSV.join(unknowns));
       }
 
-      System.err.println("Processing new device registrations...");
-      processLocalDevices(updatedCount, processedCount, this::notAlreadyRegistered);
-      System.err.println("Updating existing devices...");
-      processLocalDevices(updatedCount, processedCount, this::alreadyRegistered);
-      System.err.printf("Finished processing %d device records...%n", processedCount.get());
+      Set<String> oldDevices = deviceSet.stream().filter(this::alreadyRegistered)
+          .collect(Collectors.toSet());
+      Set<String> newDevices = Sets.difference(deviceSet, oldDevices);
+      System.err.printf("Processing %d new devices...%n", newDevices.size());
+      int total = processLocalDevices(newDevices);
+      System.err.printf("Updating %d existing devices...%n", oldDevices.size());
+      total += processLocalDevices(oldDevices);
+      System.err.printf("Finished registering %d/%d devices.%n", total, deviceSet.size());
 
       if (updateCloudIoT) {
-        bindGatewayDevices(localDevices, deviceSet);
-        Set<String> extraDevices = cloudDevices == null ? ImmutableSet.of()
-            : Sets.difference(cloudDevices, localDevices.keySet());
+        bindGatewayDevices(localDevices);
+        Set<String> extraDevices = Sets.difference(cloudDevices, deviceSet);
+        System.err.printf("Blocking %d extra devices.%n", extraDevices.size());
         blockErrors = blockExtraDevices(extraDevices);
-      }
-      System.err.printf("Updated %d devices (out of %d)%n", updatedCount.get(),
-          localDevices.size());
-      if (cloudDevices != null) {
-        Set<String> unknownDevices = Sets.difference(localDevices.keySet(), cloudDevices);
-        System.err.printf("Skipped %d not-in-cloud devices.%n", unknownDevices.size());
       }
     } catch (Exception e) {
       throw new RuntimeException("While processing devices", e);
@@ -479,20 +474,18 @@ public class Registrar {
     }
   }
 
-  private void processLocalDevices(AtomicInteger updatedCount, AtomicInteger processedCount,
-      Predicate<String> filter) {
+  private int processLocalDevices(Set<String> deviceSet) {
     try {
       ExecutorService executor = Executors.newFixedThreadPool(runnerThreads);
       AtomicInteger queued = new AtomicInteger();
       final Instant start = Instant.now();
-      Set<String> toProcess = localDevices.keySet().stream().filter(filter)
-          .collect(Collectors.toSet());
       Set<String> newDevices = new ConcurrentSkipListSet<>();
-      toProcess.forEach(localName -> {
+      int deviceCount = deviceSet.size();
+      AtomicInteger processedCount = new AtomicInteger();
+      deviceSet.forEach(localName -> {
         queued.incrementAndGet();
         executor.execute(() -> {
-          processedCount.incrementAndGet();
-          ifTrueThen(processLocalDevice(localName, updatedCount, toProcess.size()),
+          ifTrueThen(processLocalDevice(localName, processedCount, deviceCount),
               () -> newDevices.add(localName));
           queued.decrementAndGet();
         });
@@ -504,8 +497,10 @@ public class Registrar {
       Duration between = Duration.between(start, Instant.now());
       double seconds = between.getSeconds() + between.getNano() / 1e9;
       double perDevice = Math.floor(seconds / localDevices.size() * 1000.0) / 1000.0;
-      System.err.printf("Finished %d devices in %.03f, %.03fs/d%n",
-          localDevices.size(), seconds, perDevice);
+      int finalCount = processedCount.get();
+      System.err.printf("Processed %d (skipped %d) devices in %.03f, %.03fs/d%n",
+          finalCount, deviceCount - finalCount, seconds, perDevice);
+      return finalCount;
     } catch (Exception e) {
       throw new RuntimeException("While processing local devices", e);
     }
@@ -721,15 +716,15 @@ public class Registrar {
     }
   }
 
-  private void bindGatewayDevices(Map<String, LocalDevice> localDevices, Set<String> deviceSet) {
+  private void bindGatewayDevices(Map<String, LocalDevice> localDevices) {
     try {
       ExecutorService executor = Executors.newFixedThreadPool(runnerThreads);
       final Instant start = Instant.now();
       Set<LocalDevice> gateways = localDevices.values().stream().filter(LocalDevice::isGateway)
           .collect(Collectors.toSet());
       Set<Entry<String, String>> bindings = gateways.stream()
-          .map(gateway -> getBindings(deviceSet, gateway)).flatMap(Collection::stream).collect(
-              Collectors.toSet());
+          .map(gateway -> getBindings(localDevices.keySet(), gateway)).flatMap(Collection::stream)
+          .collect(Collectors.toSet());
       bindings.forEach(binding -> executor.execute(() -> {
         try {
           String proxyDeviceId = binding.getKey();
