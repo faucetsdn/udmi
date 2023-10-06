@@ -53,11 +53,11 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
@@ -396,7 +396,9 @@ public class Registrar {
         }
       }
 
+      System.err.println("Processing new device registrations...");
       processLocalDevices(updatedCount, processedCount, this::notAlreadyRegistered);
+      System.err.println("Updating existing devices...");
       processLocalDevices(updatedCount, processedCount, this::alreadyRegistered);
       System.err.printf("Finished processing %d device records...%n", processedCount.get());
 
@@ -461,10 +463,10 @@ public class Registrar {
     ExecutorService executor = Executors.newFixedThreadPool(runnerThreads);
     AtomicInteger count = new AtomicInteger();
     devices.forEach(id -> executor.execute(() -> {
-          int incremented = count.incrementAndGet();
-          System.err.printf("Deleting device %s (%d/%d)%n", id, incremented, devices.size());
-          deleteDevice(id);
-        }));
+      int incremented = count.incrementAndGet();
+      System.err.printf("Deleting device %s (%d/%d)%n", id, incremented, devices.size());
+      deleteDevice(id);
+    }));
     dynamicTerminate(executor, devices.size());
   }
 
@@ -484,15 +486,19 @@ public class Registrar {
       final Instant start = Instant.now();
       Set<String> toProcess = localDevices.keySet().stream().filter(filter)
           .collect(Collectors.toSet());
+      Set<String> newDevices = new ConcurrentSkipListSet<>();
       toProcess.forEach(localName -> {
         queued.incrementAndGet();
         executor.execute(() -> {
           processedCount.incrementAndGet();
-          processLocalDevice(localName, updatedCount, toProcess.size());
+          ifTrueThen(processLocalDevice(localName, updatedCount, toProcess.size()),
+              () -> newDevices.add(localName));
           queued.decrementAndGet();
         });
       });
       dynamicTerminate(executor, queued.get());
+
+      cloudDevices.addAll(newDevices);
 
       Duration between = Duration.between(start, Instant.now());
       double seconds = between.getSeconds() + between.getNano() / 1e9;
@@ -513,15 +519,16 @@ public class Registrar {
     }
   }
 
-  private void processLocalDevice(String localName, AtomicInteger processedDeviceCount, int totalCount) {
+  private boolean processLocalDevice(String localName, AtomicInteger processedDeviceCount,
+      int totalCount) {
     LocalDevice localDevice = localDevices.get(localName);
     if (!localDevice.isValid()) {
       System.err.println("Skipping invalid device " + localName);
-      return;
+      return false;
     }
     if (shouldLimitDevice(localDevice)) {
       System.err.println("Skipping active device " + localDevice.getDeviceId());
-      return;
+      return false;
     }
     Instant start = Instant.now();
     int count = processedDeviceCount.incrementAndGet();
@@ -543,6 +550,7 @@ public class Registrar {
     double seconds = (between.getSeconds() + between.getNano() / 1e9) / runnerThreads;
     System.err.printf("Processed %s (%d/%d) in %.03fs%s%n", localName, count, totalCount, seconds,
         created ? " (new)" : "");
+    return created;
   }
 
   private boolean shouldLimitDevice(LocalDevice localDevice) {
@@ -595,9 +603,8 @@ public class Registrar {
     }
 
     boolean created = updateCloudIoT(localDevice);
-    ifTrueThen(created, () -> cloudDevices.add(localName));
     CloudModel device =
-        checkNotNull(fetchDevice(localName), "missing device " + localName);
+        checkNotNull(fetchDevice(localName, created), "missing device " + localName);
     String numId =
         checkNotNull(
             device.num_id, "missing deviceNumId for " + localName);
@@ -607,7 +614,7 @@ public class Registrar {
 
   private boolean updateCloudIoT(LocalDevice localDevice) {
     String localName = localDevice.getDeviceId();
-    fetchDevice(localName);
+    fetchDevice(localName, false);
     CloudDeviceSettings localDeviceSettings = localDevice.getSettings();
     if (preDeleteDevice(localName)) {
       System.err.println("Deleting to incite recreation " + localName);
@@ -658,9 +665,10 @@ public class Registrar {
     return exceptionMap;
   }
 
-  private CloudModel fetchDevice(String localName) {
+  private CloudModel fetchDevice(String localName, boolean newDevice) {
     try {
-      return cloudDevices.contains(localName) ? cloudIotManager.fetchDevice(localName) : null;
+      boolean shouldFetch = newDevice || cloudDevices.contains(localName);
+      return shouldFetch ? cloudIotManager.fetchDevice(localName) : null;
     } catch (Exception e) {
       throw new RuntimeException("Fetching device " + localName, e);
     }
@@ -722,15 +730,15 @@ public class Registrar {
           .map(gateway -> getBindings(deviceSet, gateway)).flatMap(Collection::stream).collect(
               Collectors.toSet());
       bindings.forEach(binding -> executor.execute(() -> {
-            try {
-              String proxyDeviceId = binding.getKey();
-              String gatewayId = binding.getValue();
-              System.err.println("Binding " + proxyDeviceId + " to gateway " + gatewayId);
-              cloudIotManager.bindDevice(proxyDeviceId, gatewayId);
-            } catch (Exception e) {
-              localDevices.get(binding.getKey()).captureError(LocalDevice.EXCEPTION_BINDING, e);
-            }
-          }));
+        try {
+          String proxyDeviceId = binding.getKey();
+          String gatewayId = binding.getValue();
+          System.err.println("Binding " + proxyDeviceId + " to gateway " + gatewayId);
+          cloudIotManager.bindDevice(proxyDeviceId, gatewayId);
+        } catch (Exception e) {
+          localDevices.get(binding.getKey()).captureError(LocalDevice.EXCEPTION_BINDING, e);
+        }
+      }));
 
       dynamicTerminate(executor, bindings.size());
 
