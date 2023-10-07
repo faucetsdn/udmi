@@ -498,7 +498,7 @@ public class Registrar {
       double seconds = between.getSeconds() + between.getNano() / 1e9;
       double perDevice = Math.floor(seconds / localDevices.size() * 1000.0) / 1000.0;
       int finalCount = processedCount.get();
-      System.err.printf("Processed %d (skipped %d) devices in %.03f, %.03fs/d%n",
+      System.err.printf("Processed %d (skipped %d) devices in %.03fs, %.03fs/d%n",
           finalCount, deviceCount - finalCount, seconds, perDevice);
       return finalCount;
     } catch (Exception e) {
@@ -728,11 +728,16 @@ public class Registrar {
       Set<Entry<String, String>> bindings = gateways.stream()
           .map(gateway -> getBindings(localDevices.keySet(), gateway)).flatMap(Collection::stream)
           .collect(Collectors.toSet());
+      AtomicInteger bindingCount = new AtomicInteger();
+      System.err.printf("Binding %d unbound devices to %d gateways...%n", bindings.size(),
+          gateways.size());
       bindings.forEach(binding -> executor.execute(() -> {
         try {
           String proxyDeviceId = binding.getKey();
           String gatewayId = binding.getValue();
-          System.err.println("Binding " + proxyDeviceId + " to gateway " + gatewayId);
+          int count = bindingCount.incrementAndGet();
+          System.err.printf("Binding %s to %s (%d/%d)%n", proxyDeviceId, gatewayId, count,
+              bindings.size());
           cloudIotManager.bindDevice(proxyDeviceId, gatewayId);
         } catch (Exception e) {
           localDevices.get(binding.getKey()).captureError(LocalDevice.EXCEPTION_BINDING, e);
