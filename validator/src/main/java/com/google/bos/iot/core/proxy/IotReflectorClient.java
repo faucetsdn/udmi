@@ -346,7 +346,7 @@ public class IotReflectorClient implements MessagePublisher {
   }
 
   private void errorHandler(MqttPublisher mqttPublisher, Throwable throwable) {
-    System.err.println("mqtt client error: " + throwable.getMessage());
+    System.err.printf("mqtt client error: %s at %s%n", throwable.getMessage(), getTimestamp());
     close();
   }
 
@@ -405,6 +405,10 @@ public class IotReflectorClient implements MessagePublisher {
   @Override
   public SetupUdmiConfig getVersionInformation() {
     return requireNonNull(udmiInfo, "udmi version information not available");
+  }
+
+  public String getBridgeHost() {
+    return mqttPublisher.getBridgeHost();
   }
 
   static class MessageBundle {

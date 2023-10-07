@@ -206,7 +206,7 @@ public class SequenceBase {
   protected static String registryId;
   protected static String altRegistry;
   protected static Config deviceConfig;
-  protected static MessagePublisher altClient;
+  protected static IotReflectorClient altClient;
   protected static String serialNo;
   static ExecutionConfiguration validatorConfig;
   private static Validator messageValidator;
@@ -371,7 +371,7 @@ public class SequenceBase {
     return ofNullable((MockPublisher) client).orElseGet(() -> new MockPublisher(failFast));
   }
 
-  private static MessagePublisher getAlternateClient() {
+  private static IotReflectorClient getAlternateClient() {
     if (altRegistry == null) {
       System.err.println("No alternate registry configured, disabling");
       return null;
@@ -436,6 +436,8 @@ public class SequenceBase {
     JsonUtil.writeFile(validationState, getSequencerStateFile());
     String validationString = stringify(validationState);
     client.publish(getDeviceId(), VALIDATION_STATE_TOPIC, validationString);
+    ifNotNullThen(altClient,
+        client -> client.publish(getDeviceId(), VALIDATION_STATE_TOPIC, validationString));
   }
 
   static File getSequencerStateFile() {
@@ -549,6 +551,11 @@ public class SequenceBase {
 
   private static MessagePublisher getReflectorClient() {
     return new IotReflectorClient(validatorConfig, getRequiredFunctionsVersion());
+  }
+
+  protected String getAlternateEndpointHostname() {
+    ifNullSkipTest(altClient, "No functional alternate registry defined");
+    return altClient.getBridgeHost();
   }
 
   /**

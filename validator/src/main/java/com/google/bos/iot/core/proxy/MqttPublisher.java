@@ -394,6 +394,10 @@ class MqttPublisher implements MessagePublisher {
     }
   }
 
+  public String getBridgeHost() {
+    return providerHostname;
+  }
+
   private class MqttCallbackHandler implements MqttCallback {
 
     MqttCallbackHandler() {
