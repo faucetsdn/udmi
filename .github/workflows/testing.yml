@@ -120,7 +120,7 @@ jobs:
   sequencer:
     name: Sequencer Suite
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 35
     if: vars.TARGET_PROJECT != '' && vars.UDMI_REGISTRY_SUFFIX != ''
     env:
       TARGET_PROJECT: ${{ vars.TARGET_PROJECT }}
@@ -184,7 +184,7 @@ jobs:
   sequencer_dep:
     name: Sequencer Suite
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 35
     needs: redirect
     if: vars.TARGET_PROJECT != '' && vars.UDMI_REGISTRY_SUFFIX == ''
     env:
@@ -242,7 +242,7 @@ jobs:
   comprehensive:
     name: Comprehensive Suite
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 30
     if: vars.TARGET_PROJECT != ''
     env:
       TARGET_PROJECT: ${{ vars.TARGET_PROJECT }}
