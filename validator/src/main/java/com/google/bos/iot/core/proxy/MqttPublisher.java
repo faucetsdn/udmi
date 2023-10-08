@@ -26,6 +26,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
@@ -104,9 +105,15 @@ class MqttPublisher implements MessagePublisher {
     LOG.info(deviceId + " token expiration sec " + TOKEN_EXPIRATION_SEC);
     mqttClient = newMqttClient(deviceId);
     connectMqttClient(deviceId);
-    tickler = Executors.newSingleThreadScheduledExecutor()
-        .scheduleWithFixedDelay(this::maybeRefreshJwt,
-            TOKEN_EXPIRATION_SEC / 2, TOKEN_EXPIRATION_SEC / 2, TimeUnit.SECONDS);
+    tickler = scheduleTickler();
+  }
+
+  private static ThreadFactory getDaemonThreadFactory() {
+    return runnable -> {
+      Thread thread = Executors.defaultThreadFactory().newThread(runnable);
+      thread.setDaemon(true);
+      return thread;
+    };
   }
 
   private static String getProviderHostname(ExecutionConfiguration executionConfiguration) {
@@ -120,6 +127,12 @@ class MqttPublisher implements MessagePublisher {
           default -> throw new RuntimeException("Unsupported iot provider " + iotProvider);
         }
     );
+  }
+
+  private ScheduledFuture<?> scheduleTickler() {
+    return Executors.newSingleThreadScheduledExecutor(getDaemonThreadFactory())
+        .scheduleWithFixedDelay(this::maybeRefreshJwt,
+            TOKEN_EXPIRATION_SEC / 2, TOKEN_EXPIRATION_SEC / 2, TimeUnit.SECONDS);
   }
 
   @Override
