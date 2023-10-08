@@ -346,8 +346,8 @@ public class IotReflectorClient implements MessagePublisher {
   }
 
   private void errorHandler(MqttPublisher mqttPublisher, Throwable throwable) {
-    System.err.printf("mqtt client error: %s at %s%n", throwable.getMessage(), getTimestamp());
-    close();
+    System.err.printf("reconnecting after client error: %s at %s%n", throwable.getMessage(), getTimestamp());
+    mqttPublisher.connectAndSetupMqtt();
   }
 
   private byte[] getFileBytes(String dataFile) {

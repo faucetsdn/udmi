@@ -268,19 +268,23 @@ class MqttPublisher implements MessagePublisher {
     }
   }
 
-  private void connectAndSetupMqtt() throws Exception {
-    LOG.info(deviceId + " creating new jwt");
-    mqttConnectOptions.setPassword(createJwt());
-    mqttTokenSetTimeMs = System.currentTimeMillis();
-    LOG.info(deviceId + " connecting to mqtt server " + getBrokerUrl());
-    mqttClient.connect(mqttConnectOptions);
-    attachedClients.clear();
-    attachedClients.add(deviceId);
-    LOG.info(deviceId + " adding subscriptions");
-    subscribeToUpdates(deviceId);
-    subscribeToErrors(deviceId);
-    subscribeToCommands(deviceId);
-    LOG.info(deviceId + " done with setup connection");
+  public void connectAndSetupMqtt() {
+    try {
+      LOG.info(deviceId + " creating new jwt");
+      mqttConnectOptions.setPassword(createJwt());
+      mqttTokenSetTimeMs = System.currentTimeMillis();
+      LOG.info(deviceId + " connecting to mqtt server " + getBrokerUrl());
+      mqttClient.connect(mqttConnectOptions);
+      attachedClients.clear();
+      attachedClients.add(deviceId);
+      LOG.info(deviceId + " adding subscriptions");
+      subscribeToUpdates(deviceId);
+      subscribeToErrors(deviceId);
+      subscribeToCommands(deviceId);
+      LOG.info(deviceId + " done with setup connection");
+    } catch (Exception e) {
+      throw new RuntimeException("While setting up new mqtt connection to " + deviceId, e);
+    }
   }
 
   private void maybeRefreshJwt() {
