@@ -65,7 +65,7 @@ class MqttPublisher implements MessagePublisher {
   private static final int PUBLISH_THREAD_COUNT = 10;
   private static final String ATTACH_MESSAGE_FORMAT = "/devices/%s/attach";
   private static final int TOKEN_EXPIRATION_SEC = 60 * 60;
-  private static final int TOKEN_EXPIRATION_MS = TOKEN_EXPIRATION_SEC * 1000;
+  static final int TOKEN_EXPIRATION_MS = TOKEN_EXPIRATION_SEC * 1000;
   private final ExecutorService publisherExecutor =
       Executors.newFixedThreadPool(PUBLISH_THREAD_COUNT);
   private final Semaphore connectWait = new Semaphore(0);
@@ -85,7 +85,7 @@ class MqttPublisher implements MessagePublisher {
   private final String providerHostname;
   private final String clientId;
   private MqttConnectOptions mqttConnectOptions;
-  private long mqttTokenSetTimeMs;
+  long mqttTokenSetTimeMs;
 
   MqttPublisher(ExecutionConfiguration executionConfiguration, byte[] keyBytes, String algorithm,
       BiConsumer<String, String> onMessage, BiConsumer<MqttPublisher, Throwable> onError) {

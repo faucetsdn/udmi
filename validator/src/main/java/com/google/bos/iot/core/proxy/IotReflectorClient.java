@@ -346,8 +346,12 @@ public class IotReflectorClient implements MessagePublisher {
   }
 
   private void errorHandler(MqttPublisher mqttPublisher, Throwable throwable) {
-    System.err.printf("reconnecting after client error: %s at %s%n", throwable.getMessage(), getTimestamp());
-    mqttPublisher.connectAndSetupMqtt();
+    System.err.printf("reconnecting after client error: %s at %s%n", throwable.getMessage(),
+        getTimestamp());
+    Date expiry = new Date(mqttPublisher.mqttTokenSetTimeMs + MqttPublisher.TOKEN_EXPIRATION_MS);
+    System.err.println("Expected disconnect at " + getTimestamp(expiry));
+    mqttPublisher.close();
+    //mqttPublisher.connectAndSetupMqtt();
   }
 
   private byte[] getFileBytes(String dataFile) {
