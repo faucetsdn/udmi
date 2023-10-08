@@ -85,7 +85,9 @@ import java.util.SortedMap;
 import java.util.Stack;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -136,6 +138,7 @@ public class SequenceBase {
   public static final String EMPTY_MESSAGE = "{}";
   public static final String SERIAL_NO_MISSING = "//";
   public static final String VALIDATION_STATE_TOPIC = "validation/state";
+  public static final String VALIDATION_EVENT_TOPIC = "validation/event";
   public static final String SCHEMA_PASS_DETAIL = "No schema violations found";
   public static final String STATE_UPDATE_MESSAGE_TYPE = "state_update";
   public static final String RESET_CONFIG_MARKER = "reset_config";
@@ -146,6 +149,7 @@ public class SequenceBase {
   private static final int FUNCTIONS_VERSION_BETA = Validator.REQUIRED_FUNCTION_VER;
   private static final int FUNCTIONS_VERSION_ALPHA = 9; // Version required for alpha execution.
   private static final long CONFIG_BARRIER_MS = 1000;
+  private static final long TICKLER_PERIOD_SEC = 10;
   private static final String START_END_MARKER = "################################";
   private static final String RESULT_FORMAT = "RESULT %s %s %s %s %s %s";
   private static final String SCHEMA_FORMAT = "SCHEMA %s %s %s %s %s %s";
@@ -221,6 +225,7 @@ public class SequenceBase {
   private static MessageBundle stashedBundle;
   private static boolean resetRequired = true;
   private static boolean enableAllTargets;
+  private static boolean useAlternateClient;
 
   static {
     // Sanity check to make sure ALPHA version is increased if forced by increased BETA.
@@ -257,7 +262,6 @@ public class SequenceBase {
   private boolean recordSequence;
   private int previousEventCount;
   private String configExceptionTimestamp;
-  private boolean useAlternateClient;
   private SequenceResult testResult;
   private int startStateCount;
   private Boolean expectedSystemStatus;
@@ -342,7 +346,15 @@ public class SequenceBase {
     System.err.printf("Validating against device %s serial %s%n", getDeviceId(), serialNo);
     client = getPublisherClient();
     altClient = getAlternateClient();
+    startClientTickler();
     initializeValidationState();
+  }
+
+  private static void startClientTickler() {
+    ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
+    service.scheduleWithFixedDelay(() -> ifNotNullThen(altReflector(),
+            client -> client.publish(getDeviceId(), VALIDATION_EVENT_TOPIC, EMPTY_MESSAGE)),
+        TICKLER_PERIOD_SEC, TICKLER_PERIOD_SEC, TimeUnit.SECONDS);
   }
 
   private static void initializeValidationState() {
@@ -436,8 +448,6 @@ public class SequenceBase {
     JsonUtil.writeFile(validationState, getSequencerStateFile());
     String validationString = stringify(validationState);
     client.publish(getDeviceId(), VALIDATION_STATE_TOPIC, validationString);
-    ifNotNullThen(altClient,
-        client -> client.publish(getDeviceId(), VALIDATION_STATE_TOPIC, validationString));
   }
 
   static File getSequencerStateFile() {
@@ -551,6 +561,18 @@ public class SequenceBase {
 
   private static MessagePublisher getReflectorClient() {
     return new IotReflectorClient(validatorConfig, getRequiredFunctionsVersion());
+  }
+
+  private static MessagePublisher altReflector() {
+    return reflector(!useAlternateClient);
+  }
+
+  private static MessagePublisher reflector() {
+    return reflector(useAlternateClient);
+  }
+
+  private static MessagePublisher reflector(boolean useAlternateClient) {
+    return useAlternateClient ? altClient : client;
   }
 
   protected String getAlternateEndpointHostname() {
@@ -1127,7 +1149,6 @@ public class SequenceBase {
     }
   }
 
-
   private String getExceptionLine(Exception e) {
     return Common.getExceptionLine(e, SequenceBase.class);
   }
@@ -1702,18 +1723,10 @@ public class SequenceBase {
   private void updateMirrorConfig(String receivedConfig) {
     if (altClient != null) {
       String topic = UPDATE_SUBFOLDER + "/" + CONFIG_SUBTYPE;
-      reflector(!useAlternateClient).publish(getDeviceId(), topic, receivedConfig);
+      altReflector().publish(getDeviceId(), topic, receivedConfig);
       // There's a race condition if the mirror command gets delayed, so chill for a bit.
       safeSleep(ONE_SECOND_MS);
     }
-  }
-
-  private MessagePublisher reflector() {
-    return reflector(useAlternateClient);
-  }
-
-  private MessagePublisher reflector(boolean useAlternateClient) {
-    return useAlternateClient ? altClient : client;
   }
 
   protected boolean stateMatchesConfigTimestamp() {
