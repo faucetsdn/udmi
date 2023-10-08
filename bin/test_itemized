@@ -22,6 +22,10 @@ GOLDEN_FILE=etc/test_itemized.out
 SCHEMA_OUT=out/schema_itemized.out
 GOLDEN_SCHEMAS=etc/schema_itemized.out
 
+echo "export TARGET_PROJECT=$PROJECT_ID"
+echo "export UDMI_REGISTRY_SUFFIX=$UDMI_REGISTRY_SUFFIX"
+echo "export UDMI_ALT_REGISTRY=$UDMI_ALT_REGISTRY"
+
 rm -f $RESULTS_OUT $SEQUENCER_OUT $PUBBER_OUT $SCHEMA_OUT
 mkdir -p out
 touch $RESULTS_OUT $SEQUENCER_OUT $PUBBER_OUT $SCHEMA_OUT
