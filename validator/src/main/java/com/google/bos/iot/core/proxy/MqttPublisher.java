@@ -24,6 +24,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -84,8 +85,9 @@ class MqttPublisher implements MessagePublisher {
   private final String cloudRegion;
   private final String providerHostname;
   private final String clientId;
-  private MqttConnectOptions mqttConnectOptions;
+  private final ScheduledFuture<?> tickler;
   long mqttTokenSetTimeMs;
+  private MqttConnectOptions mqttConnectOptions;
 
   MqttPublisher(ExecutionConfiguration executionConfiguration, byte[] keyBytes, String algorithm,
       BiConsumer<String, String> onMessage, BiConsumer<MqttPublisher, Throwable> onError) {
@@ -102,6 +104,9 @@ class MqttPublisher implements MessagePublisher {
     LOG.info(deviceId + " token expiration sec " + TOKEN_EXPIRATION_SEC);
     mqttClient = newMqttClient(deviceId);
     connectMqttClient(deviceId);
+    tickler = Executors.newSingleThreadScheduledExecutor()
+        .scheduleWithFixedDelay(this::maybeRefreshJwt,
+            TOKEN_EXPIRATION_SEC / 2, TOKEN_EXPIRATION_SEC / 2, TimeUnit.SECONDS);
   }
 
   private static String getProviderHostname(ExecutionConfiguration executionConfiguration) {
@@ -130,7 +135,8 @@ class MqttPublisher implements MessagePublisher {
     return null;
   }
 
-  private void publishCore(String deviceId, String topic, String payload, Instant start) {
+  private synchronized void publishCore(String deviceId, String topic, String payload,
+      Instant start) {
     try {
       if (!connectWait.tryAcquire(INITIALIZE_TIME_MS, TimeUnit.MILLISECONDS)) {
         throw new RuntimeException("Timeout waiting for connection");
@@ -191,6 +197,7 @@ class MqttPublisher implements MessagePublisher {
   public void close() {
     try {
       LOG.debug(format("Shutting down executor %x", publisherExecutor.hashCode()));
+      tickler.cancel(false);
       publisherExecutor.shutdownNow();
       if (!publisherExecutor.awaitTermination(INITIALIZE_TIME_MS, TimeUnit.MILLISECONDS)) {
         LOG.error("Executor tasks still remaining");
@@ -287,7 +294,7 @@ class MqttPublisher implements MessagePublisher {
     }
   }
 
-  private void maybeRefreshJwt() {
+  private synchronized void maybeRefreshJwt() {
     long refreshTime = mqttTokenSetTimeMs + TOKEN_EXPIRATION_MS / 2;
     long currentTimeMillis = System.currentTimeMillis();
     long remaining = refreshTime - currentTimeMillis;

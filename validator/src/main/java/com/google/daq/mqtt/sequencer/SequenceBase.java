@@ -85,9 +85,7 @@ import java.util.SortedMap;
 import java.util.Stack;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -346,15 +344,7 @@ public class SequenceBase {
     System.err.printf("Validating against device %s serial %s%n", getDeviceId(), serialNo);
     client = getPublisherClient();
     altClient = getAlternateClient();
-    startClientTickler();
     initializeValidationState();
-  }
-
-  private static void startClientTickler() {
-    ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
-    service.scheduleWithFixedDelay(() -> ifNotNullThen(altReflector(),
-            client -> client.publish(getDeviceId(), VALIDATION_EVENT_TOPIC, EMPTY_MESSAGE)),
-        TICKLER_PERIOD_SEC, TICKLER_PERIOD_SEC, TimeUnit.SECONDS);
   }
 
   private static void initializeValidationState() {
