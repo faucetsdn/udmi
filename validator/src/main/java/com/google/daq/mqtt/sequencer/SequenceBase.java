@@ -136,7 +136,6 @@ public class SequenceBase {
   public static final String EMPTY_MESSAGE = "{}";
   public static final String SERIAL_NO_MISSING = "//";
   public static final String VALIDATION_STATE_TOPIC = "validation/state";
-  public static final String VALIDATION_EVENT_TOPIC = "validation/event";
   public static final String SCHEMA_PASS_DETAIL = "No schema violations found";
   public static final String STATE_UPDATE_MESSAGE_TYPE = "state_update";
   public static final String RESET_CONFIG_MARKER = "reset_config";
@@ -147,7 +146,6 @@ public class SequenceBase {
   private static final int FUNCTIONS_VERSION_BETA = Validator.REQUIRED_FUNCTION_VER;
   private static final int FUNCTIONS_VERSION_ALPHA = 9; // Version required for alpha execution.
   private static final long CONFIG_BARRIER_MS = 1000;
-  private static final long TICKLER_PERIOD_SEC = 10;
   private static final String START_END_MARKER = "################################";
   private static final String RESULT_FORMAT = "RESULT %s %s %s %s %s %s";
   private static final String SCHEMA_FORMAT = "SCHEMA %s %s %s %s %s %s";

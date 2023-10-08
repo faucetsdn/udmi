@@ -68,6 +68,9 @@ class MqttPublisher implements MessagePublisher {
   private static final String ATTACH_MESSAGE_FORMAT = "/devices/%s/attach";
   private static final int TOKEN_EXPIRATION_SEC = 60 * 60;
   static final int TOKEN_EXPIRATION_MS = TOKEN_EXPIRATION_SEC * 1000;
+  public static final String EMPTY_JSON = "{}";
+  private static final String TICKLE_TOPIC = "events/tickle";
+  private static final long TICKLE_PERIOD_SEC = 10;
   private final ExecutorService publisherExecutor =
       Executors.newFixedThreadPool(PUBLISH_THREAD_COUNT);
   private final Semaphore connectWait = new Semaphore(0);
@@ -131,8 +134,13 @@ class MqttPublisher implements MessagePublisher {
 
   private ScheduledFuture<?> scheduleTickler() {
     return Executors.newSingleThreadScheduledExecutor(getDaemonThreadFactory())
-        .scheduleWithFixedDelay(this::maybeRefreshJwt,
-            TOKEN_EXPIRATION_SEC / 2, TOKEN_EXPIRATION_SEC / 2, TimeUnit.SECONDS);
+        .scheduleWithFixedDelay(this::tickleConnection,
+            TICKLE_PERIOD_SEC, TICKLE_PERIOD_SEC, TimeUnit.SECONDS);
+  }
+
+  private void tickleConnection() {
+    LOG.debug("Tickle " + mqttClient.getClientId());
+    publish(deviceId, TICKLE_TOPIC, EMPTY_JSON);
   }
 
   @Override
@@ -307,7 +315,7 @@ class MqttPublisher implements MessagePublisher {
     }
   }
 
-  private synchronized void maybeRefreshJwt() {
+  private void maybeRefreshJwt() {
     long refreshTime = mqttTokenSetTimeMs + TOKEN_EXPIRATION_MS / 2;
     long currentTimeMillis = System.currentTimeMillis();
     long remaining = refreshTime - currentTimeMillis;
@@ -317,7 +325,7 @@ class MqttPublisher implements MessagePublisher {
         LOG.info(deviceId + " handling token refresh");
         mqttClient.disconnect();
         long disconnectTime = System.currentTimeMillis() - currentTimeMillis;
-        LOG.info(deviceId + " disconnect took " + disconnectTime);
+        LOG.debug(deviceId + " disconnect took " + disconnectTime);
         connectAndSetupMqtt();
       } catch (Exception e) {
         throw new RuntimeException("While processing disconnect", e);
