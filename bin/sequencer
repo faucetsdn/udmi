@@ -158,6 +158,6 @@ fi
 fgrep RESULT $site_model/out/devices/$device_id/RESULT.log | \
     fgrep ' schemas ' | sort -k 3 | tee $SCHEMA_OUT
 
-(source venv/bin/activate && bin/sequencer_report $site_model $device_id)
+(source venv/bin/activate && python3 bin/sequencer_report.py $site_model $device_id)
 
 bin/check_version
