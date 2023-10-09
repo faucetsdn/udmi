@@ -3,6 +3,7 @@ package com.google.bos.iot.core.proxy;
 import static com.google.bos.iot.core.proxy.ProxyTarget.STATE_TOPIC;
 import static com.google.udmi.util.GeneralUtils.catchOrElse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
@@ -218,7 +219,7 @@ class MqttPublisher implements MessagePublisher {
   public void close() {
     try {
       LOG.debug(format("Shutting down executor %x", publisherExecutor.hashCode()));
-      tickler.cancel(false);
+      ifNotNullThen(tickler, future -> future.cancel(false));
       publisherExecutor.shutdownNow();
       if (!publisherExecutor.awaitTermination(INITIALIZE_TIME_MS, TimeUnit.MILLISECONDS)) {
         LOG.error("Executor tasks still remaining");
