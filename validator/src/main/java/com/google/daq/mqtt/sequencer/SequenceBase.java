@@ -206,7 +206,7 @@ public class SequenceBase {
   protected static String registryId;
   protected static String altRegistry;
   protected static Config deviceConfig;
-  protected static MessagePublisher altClient;
+  protected static IotReflectorClient altClient;
   protected static String serialNo;
   static ExecutionConfiguration validatorConfig;
   private static Validator messageValidator;
@@ -221,6 +221,7 @@ public class SequenceBase {
   private static MessageBundle stashedBundle;
   private static boolean resetRequired = true;
   private static boolean enableAllTargets;
+  private static boolean useAlternateClient;
 
   static {
     // Sanity check to make sure ALPHA version is increased if forced by increased BETA.
@@ -257,7 +258,6 @@ public class SequenceBase {
   private boolean recordSequence;
   private int previousEventCount;
   private String configExceptionTimestamp;
-  private boolean useAlternateClient;
   private SequenceResult testResult;
   private int startStateCount;
   private Boolean expectedSystemStatus;
@@ -371,7 +371,7 @@ public class SequenceBase {
     return ofNullable((MockPublisher) client).orElseGet(() -> new MockPublisher(failFast));
   }
 
-  private static MessagePublisher getAlternateClient() {
+  private static IotReflectorClient getAlternateClient() {
     if (altRegistry == null) {
       System.err.println("No alternate registry configured, disabling");
       return null;
@@ -549,6 +549,23 @@ public class SequenceBase {
 
   private static MessagePublisher getReflectorClient() {
     return new IotReflectorClient(validatorConfig, getRequiredFunctionsVersion());
+  }
+
+  private static MessagePublisher altReflector() {
+    return reflector(!useAlternateClient);
+  }
+
+  private static MessagePublisher reflector() {
+    return reflector(useAlternateClient);
+  }
+
+  private static MessagePublisher reflector(boolean useAlternateClient) {
+    return useAlternateClient ? altClient : client;
+  }
+
+  protected String getAlternateEndpointHostname() {
+    ifNullSkipTest(altClient, "No functional alternate registry defined");
+    return altClient.getBridgeHost();
   }
 
   /**
@@ -1119,7 +1136,6 @@ public class SequenceBase {
       return null;
     }
   }
-
 
   private String getExceptionLine(Exception e) {
     return Common.getExceptionLine(e, SequenceBase.class);
@@ -1695,18 +1711,10 @@ public class SequenceBase {
   private void updateMirrorConfig(String receivedConfig) {
     if (altClient != null) {
       String topic = UPDATE_SUBFOLDER + "/" + CONFIG_SUBTYPE;
-      reflector(!useAlternateClient).publish(getDeviceId(), topic, receivedConfig);
+      altReflector().publish(getDeviceId(), topic, receivedConfig);
       // There's a race condition if the mirror command gets delayed, so chill for a bit.
       safeSleep(ONE_SECOND_MS);
     }
-  }
-
-  private MessagePublisher reflector() {
-    return reflector(useAlternateClient);
-  }
-
-  private MessagePublisher reflector(boolean useAlternateClient) {
-    return useAlternateClient ? altClient : client;
   }
 
   protected boolean stateMatchesConfigTimestamp() {

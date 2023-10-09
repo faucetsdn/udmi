@@ -28,9 +28,11 @@ fi
 result=192  # Exit code used to indicate intentional system restart.
 
 while [[ $result -eq 192 ]]; do
-    java -Dorg.slf4j.simpleLogger.showThreadName=false \
+    cmd="java -Dorg.slf4j.simpleLogger.showThreadName=false \
          -jar $ROOT_DIR/pubber/build/libs/pubber-1.0-SNAPSHOT-all.jar \
-         $config_file &
+         $config_file"
+    echo $cmd
+    $cmd &
 
     PUB_PID=$!
 
