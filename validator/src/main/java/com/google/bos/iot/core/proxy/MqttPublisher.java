@@ -4,8 +4,8 @@ import static com.google.bos.iot.core.proxy.ProxyTarget.STATE_TOPIC;
 import static com.google.udmi.util.GeneralUtils.catchOrElse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
-import static udmi.schema.IotAccess.IotProvider.CLEARBLADE;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
@@ -24,7 +24,9 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
@@ -46,8 +48,8 @@ import udmi.schema.IotAccess.IotProvider;
  */
 class MqttPublisher implements MessagePublisher {
 
-  static final String GCP_BRIDGE_HOSTNAME = "mqtt.googleapis.com";
   static final String DEFAULT_CLEARBLADE_HOSTNAME = "us-central1-mqtt.clearblade.com";
+  static final String DEFAULT_GBOS_HOSTNAME = "mqtt.bos.goog";
   static final String BRIDGE_PORT = "8883";
   private static final Logger LOG = LoggerFactory.getLogger(MqttPublisher.class);
   private static final boolean MQTT_SHOULD_RETAIN = false;
@@ -65,7 +67,10 @@ class MqttPublisher implements MessagePublisher {
   private static final int PUBLISH_THREAD_COUNT = 10;
   private static final String ATTACH_MESSAGE_FORMAT = "/devices/%s/attach";
   private static final int TOKEN_EXPIRATION_SEC = 60 * 60;
-  private static final int TOKEN_EXPIRATION_MS = TOKEN_EXPIRATION_SEC * 1000;
+  static final int TOKEN_EXPIRATION_MS = TOKEN_EXPIRATION_SEC * 1000;
+  public static final String EMPTY_JSON = "{}";
+  private static final String TICKLE_TOPIC = "events/tickle";
+  private static final long TICKLE_PERIOD_SEC = 10;
   private final ExecutorService publisherExecutor =
       Executors.newFixedThreadPool(PUBLISH_THREAD_COUNT);
   private final Semaphore connectWait = new Semaphore(0);
@@ -84,8 +89,9 @@ class MqttPublisher implements MessagePublisher {
   private final String cloudRegion;
   private final String providerHostname;
   private final String clientId;
+  private final ScheduledFuture<?> tickler;
+  long mqttTokenSetTimeMs;
   private MqttConnectOptions mqttConnectOptions;
-  private long mqttTokenSetTimeMs;
 
   MqttPublisher(ExecutionConfiguration executionConfiguration, byte[] keyBytes, String algorithm,
       BiConsumer<String, String> onMessage, BiConsumer<MqttPublisher, Throwable> onError) {
@@ -97,13 +103,44 @@ class MqttPublisher implements MessagePublisher {
     this.deviceId = executionConfiguration.device_id;
     this.algorithm = algorithm;
     this.keyBytes = keyBytes;
-    IotProvider iotProvider = executionConfiguration.iot_provider;
-    this.providerHostname = catchOrElse(() -> executionConfiguration.reflector_endpoint.hostname,
-            () -> iotProvider == CLEARBLADE ? DEFAULT_CLEARBLADE_HOSTNAME : GCP_BRIDGE_HOSTNAME);
+    this.providerHostname = getProviderHostname(executionConfiguration);
     this.clientId = catchToNull(() -> executionConfiguration.reflector_endpoint.client_id);
     LOG.info(deviceId + " token expiration sec " + TOKEN_EXPIRATION_SEC);
     mqttClient = newMqttClient(deviceId);
     connectMqttClient(deviceId);
+    tickler = scheduleTickler();
+  }
+
+  private static ThreadFactory getDaemonThreadFactory() {
+    return runnable -> {
+      Thread thread = Executors.defaultThreadFactory().newThread(runnable);
+      thread.setDaemon(true);
+      return thread;
+    };
+  }
+
+  private static String getProviderHostname(ExecutionConfiguration executionConfiguration) {
+    IotProvider iotProvider =
+        ofNullable(executionConfiguration.iot_provider).orElse(IotProvider.IMPLICIT);
+    return catchOrElse(() -> executionConfiguration.reflector_endpoint.hostname,
+        () -> switch (iotProvider) {
+          case JWT -> requireNonNull(executionConfiguration.bridge_host, "missing bridge_host");
+          case GBOS -> DEFAULT_GBOS_HOSTNAME;
+          case CLEARBLADE -> DEFAULT_CLEARBLADE_HOSTNAME;
+          default -> throw new RuntimeException("Unsupported iot provider " + iotProvider);
+        }
+    );
+  }
+
+  private ScheduledFuture<?> scheduleTickler() {
+    return Executors.newSingleThreadScheduledExecutor(getDaemonThreadFactory())
+        .scheduleWithFixedDelay(this::tickleConnection,
+            TICKLE_PERIOD_SEC, TICKLE_PERIOD_SEC, TimeUnit.SECONDS);
+  }
+
+  private void tickleConnection() {
+    LOG.debug("Tickle " + mqttClient.getClientId());
+    publish(deviceId, TICKLE_TOPIC, EMPTY_JSON);
   }
 
   @Override
@@ -119,7 +156,8 @@ class MqttPublisher implements MessagePublisher {
     return null;
   }
 
-  private void publishCore(String deviceId, String topic, String payload, Instant start) {
+  private synchronized void publishCore(String deviceId, String topic, String payload,
+      Instant start) {
     try {
       if (!connectWait.tryAcquire(INITIALIZE_TIME_MS, TimeUnit.MILLISECONDS)) {
         throw new RuntimeException("Timeout waiting for connection");
@@ -180,6 +218,7 @@ class MqttPublisher implements MessagePublisher {
   public void close() {
     try {
       LOG.debug(format("Shutting down executor %x", publisherExecutor.hashCode()));
+      tickler.cancel(false);
       publisherExecutor.shutdownNow();
       if (!publisherExecutor.awaitTermination(INITIALIZE_TIME_MS, TimeUnit.MILLISECONDS)) {
         LOG.error("Executor tasks still remaining");
@@ -257,19 +296,23 @@ class MqttPublisher implements MessagePublisher {
     }
   }
 
-  private void connectAndSetupMqtt() throws Exception {
-    LOG.info(deviceId + " creating new jwt");
-    mqttConnectOptions.setPassword(createJwt());
-    mqttTokenSetTimeMs = System.currentTimeMillis();
-    LOG.info(deviceId + " connecting to mqtt server " + getBrokerUrl());
-    mqttClient.connect(mqttConnectOptions);
-    attachedClients.clear();
-    attachedClients.add(deviceId);
-    LOG.info(deviceId + " adding subscriptions");
-    subscribeToUpdates(deviceId);
-    subscribeToErrors(deviceId);
-    subscribeToCommands(deviceId);
-    LOG.info(deviceId + " done with setup connection");
+  public void connectAndSetupMqtt() {
+    try {
+      LOG.info(deviceId + " creating new jwt");
+      mqttConnectOptions.setPassword(createJwt());
+      mqttTokenSetTimeMs = System.currentTimeMillis();
+      LOG.info(deviceId + " connecting to mqtt server " + getBrokerUrl());
+      mqttClient.connect(mqttConnectOptions);
+      attachedClients.clear();
+      attachedClients.add(deviceId);
+      LOG.info(deviceId + " adding subscriptions");
+      subscribeToUpdates(deviceId);
+      subscribeToErrors(deviceId);
+      subscribeToCommands(deviceId);
+      LOG.info(deviceId + " done with setup connection");
+    } catch (Exception e) {
+      throw new RuntimeException("While setting up new mqtt connection to " + deviceId, e);
+    }
   }
 
   private void maybeRefreshJwt() {
@@ -282,7 +325,7 @@ class MqttPublisher implements MessagePublisher {
         LOG.info(deviceId + " handling token refresh");
         mqttClient.disconnect();
         long disconnectTime = System.currentTimeMillis() - currentTimeMillis;
-        LOG.info(deviceId + " disconnect took " + disconnectTime);
+        LOG.debug(deviceId + " disconnect took " + disconnectTime);
         connectAndSetupMqtt();
       } catch (Exception e) {
         throw new RuntimeException("While processing disconnect", e);
@@ -381,6 +424,10 @@ class MqttPublisher implements MessagePublisher {
         throw new IllegalArgumentException(
             "Invalid algorithm " + algorithm + ". Should be one of 'RS256' or 'ES256'.");
     }
+  }
+
+  public String getBridgeHost() {
+    return providerHostname;
   }
 
   private class MqttCallbackHandler implements MqttCallback {

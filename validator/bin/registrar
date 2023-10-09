@@ -24,7 +24,7 @@ echo Using tool root $ROOT
 echo With options/devices $*
 
 error=0
-echo java -cp $jarfile $mainclass $config_file -r $ROOT $*
+echo java -cp $jarfile $mainclass $config_file -r $ROOT -t $*
 java -cp $jarfile $mainclass $config_file -r $ROOT -t $* || error=$?
 
 echo Registrar complete, exit $error

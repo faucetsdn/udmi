@@ -38,11 +38,14 @@ validator/bin/build
 pubber/bin/build
 
 # Have to reset pubber configs before running validator to avoid reflector registry conflict
+echo bin/reset_config $site_path $project_id $device_id
 bin/reset_config $site_path $project_id $device_id
+echo bin/reset_config $site_path $project_id $proxy_id
 bin/reset_config $site_path $project_id $proxy_id
 
 echo Starting validator, output in $VALIDATOR_OUT
 rm -rf $TRACE_DIR
+echo bin/validator $site_path $project_id -w $TRACE_DIR
 bin/validator $site_path $project_id -w $TRACE_DIR > $VALIDATOR_OUT 2>&1 &
 vpid=$!
 echo Started validator pid $vpid
@@ -97,9 +100,6 @@ function pubber_bg {
         return 1
     fi
 }
-
-echo Waiting 60s so that validator is ready and UDMIS registry backoff restrictions clear...
-sleep 60
 
 pubber_bg AHU-1 extraField=prlagle
 pubber_bg AHU-22 emptyMissing

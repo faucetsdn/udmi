@@ -4,7 +4,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.JsonUtil.loadFileStrict;
 import static java.util.Objects.requireNonNull;
+import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
+import static udmi.schema.IotAccess.IotProvider.GCP;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,6 +34,7 @@ import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
 import udmi.schema.ExecutionConfiguration;
 import udmi.schema.GatewayModel;
+import udmi.schema.IotAccess.IotProvider;
 import udmi.schema.Metadata;
 
 public class SiteModel {
@@ -43,7 +46,9 @@ public class SiteModel {
       .enable(SerializationFeature.INDENT_OUTPUT)
       .setDateFormat(new ISO8601DateFormat())
       .setSerializationInclusion(JsonInclude.Include.NON_NULL);
-  private static final String DEFAULT_ENDPOINT_HOSTNAME = "mqtt.googleapis.com";
+  private static final String DEFAULT_GCP_HOSTNAME = "mqtt.googleapis.com";
+  private static final String DEFAULT_CLEARBLADE_HOSTNAME = "mqtt.googleapis.com";
+  private static final String DEFAULT_GBOS_HOSTNAME = "mqtt.googleapis.com";
   private static final Pattern ID_PATTERN = Pattern.compile(
       "projects/(.*)/locations/(.*)/registries/(.*)/devices/(.*)");
 
@@ -61,8 +66,18 @@ public class SiteModel {
     EndpointConfiguration endpoint = new EndpointConfiguration();
     endpoint.client_id = getClientId(projectId,
         executionConfig.cloud_region, getRegistryActual(executionConfig), deviceId);
-    endpoint.hostname = DEFAULT_ENDPOINT_HOSTNAME;
+    endpoint.hostname = getEndpointHostname(executionConfig);
     return endpoint;
+  }
+
+  private static String getEndpointHostname(ExecutionConfiguration executionConfig) {
+    IotProvider iotProvider = ofNullable(executionConfig.iot_provider).orElse(GCP);
+    return switch (iotProvider) {
+      case CLEARBLADE -> DEFAULT_CLEARBLADE_HOSTNAME;
+      case GBOS -> DEFAULT_GBOS_HOSTNAME;
+      case GCP -> DEFAULT_GCP_HOSTNAME;
+      default -> throw new RuntimeException("Unsupported iot_provider " + iotProvider);
+    };
   }
 
   public static String getClientId(String projectId, String cloudRegion, String registryId,
@@ -164,7 +179,7 @@ public class SiteModel {
     if (registry_id == null) {
       return null;
     }
-    return registry_id + Optional.ofNullable(registry_suffix).orElse("");
+    return registry_id + ofNullable(registry_suffix).orElse("");
   }
 
   public EndpointConfiguration makeEndpointConfig(String projectId, String deviceId) {
