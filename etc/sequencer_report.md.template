@@ -36,3 +36,18 @@
 {% for schema, result in report.schema_results_by_stage.items() -%}
 | {{schema}} | {{result|result_icon}} |
 {% endfor %}
+
+## Sequences
+
+{% for feature, results in report.results_by_feature.items() -%}
+
+### {{feature}}
+{% for result in results %}
+#### {{result.name}}
+
+```
+{{report.sequences[result.name]}}
+```
+
+{% endfor -%}
+{% endfor -%}

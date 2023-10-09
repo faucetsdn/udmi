@@ -5,7 +5,7 @@ import json
 import os
 import sys
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import textwrap
 
 import jinja2
@@ -84,7 +84,7 @@ class Sequence:
 
     self.formatted = Sequence.format(self.ref, self.act, test)
 
-  def __str__(self):
+  def __repr__(self):
     return self.formatted
 
   @classmethod
@@ -206,12 +206,13 @@ class TemplateHelper:
 
 
 @dataclass
-class FeatureStageScore:
+class FeatureStage:
   """Container for scored points and total points for a feature and stage"""
 
   scored: int = 0
   total: int = 0
   stage: str = ""
+  tests: list = field(default_factory=list)
 
   def add(self, result, score):
     self.total += score
@@ -222,7 +223,7 @@ class FeatureStageScore:
     """Did the sequencer results have this feature & stage combination?"""
     return self.total > 0
 
-  # TODO This is logic, needs to reside within sequencere itself
+  # TODO This is logic, needs to reside within sequencer itself
   def passed(self):
     """Was the feature & stage combination a pass (full marks)"""
     return self.total > 0 and self.scored == self.total
@@ -252,7 +253,7 @@ class SequencerReport:
     self.site_path = site_path
     self.device_id = device_id
     self.results_path = os.path.join(site_path, f"out/sequencer_{device_id}.json")
-    self.sequences_path = os.path.join(site_path, f"out/{device_id}/tests")
+    self.sequences_path = os.path.join(site_path, f"out/devices/{device_id}/tests")
 
     with open(self.results_path, encoding="utf-8") as f:
       self.results_json = json.load(f)
@@ -267,11 +268,8 @@ class SequencerReport:
     self._load_sequences()
 
   def _load_sequences(self):
-    self.sequences = {feature: Sequence(feature, REFERENCE_SEQUENCES_DIR, self.sequences_path) for feature in self.features}
-    for k,v in enumerate(self.sequences):
-      print(k)
-      print(str(v))
-      
+    self.sequences = {name: Sequence(result, REFERENCE_SEQUENCES_DIR, self.sequences_path) for name, result in self.results.items()}
+
   def _load_schema_results(self):
     """Loads and processes schema validation results"""
     self.schema_results = []
@@ -325,7 +323,7 @@ class SequencerReport:
     """Load sequencer test results and features"""
     results = {}
     features = {}
-    stages_template = {s: FeatureStageScore(stage=s) for s in STAGES}
+    stages_template = {s: FeatureStage(stage=s) for s in STAGES}
     for feature, sequences in self.results_json["features"].items():
       features[feature] = copy.deepcopy(stages_template)
       for name, result in sequences["sequences"].items():
@@ -337,6 +335,7 @@ class SequencerReport:
             result["status"]["message"],
         )
         features[feature][result["stage"]].add(result["result"], DEFAULT_SCORE)
+        features[feature][result["stage"]].tests.append(result)
 
     self.results = {
         x: results[x]
@@ -360,6 +359,8 @@ class SequencerReport:
     }
 
     self.stages = [x for x in STAGES if self.has_stage(x)]
+
+    self.results_by_feature = {f: [x for x in self.results.values() if x.bucket == f] for f in self.features}
 
   def __repr__(self):
     return str(self.results)
