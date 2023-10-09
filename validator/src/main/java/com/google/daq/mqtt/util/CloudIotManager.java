@@ -96,7 +96,7 @@ public class CloudIotManager {
       this.useReflectClient = shouldUseReflectorClient(config);
       File model = new File(config.site_model != null ? config.site_model : ".");
       siteModel =
-          model.isAbsolute() ? model : new File(siteConfig.getParentFile(), model.getName());
+          model.isAbsolute() ? model : new File(siteConfig.getParentFile(), model.getPath());
       File baseConfig = new File(siteModel, CLOUD_IOT_CONFIG_JSON);
       ExecutionConfiguration newConfig = mergeObject(readExeConfig(baseConfig), config);
       executionConfiguration = validate(newConfig, this.projectId);
