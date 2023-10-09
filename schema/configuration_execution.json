@@ -46,6 +46,9 @@
     "project_id": {
       "type": "string"
     },
+    "bridge_host": {
+      "type": "string"
+    },
     "key_file": {
       "type": "string"
     },

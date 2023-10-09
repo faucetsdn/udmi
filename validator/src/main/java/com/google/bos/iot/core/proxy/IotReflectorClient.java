@@ -153,6 +153,7 @@ public class IotReflectorClient implements MessagePublisher {
     ExecutionConfiguration reflectConfiguration = new ExecutionConfiguration();
     reflectConfiguration.iot_provider = iotConfig.iot_provider;
     reflectConfiguration.project_id = iotConfig.project_id;
+    reflectConfiguration.bridge_host = iotConfig.bridge_host;
     reflectConfiguration.cloud_region = Optional.ofNullable(iotConfig.reflect_region)
         .orElse(iotConfig.cloud_region);
     reflectConfiguration.registry_id = UDMI_REFLECT;
@@ -345,8 +346,9 @@ public class IotReflectorClient implements MessagePublisher {
   }
 
   private void errorHandler(MqttPublisher mqttPublisher, Throwable throwable) {
-    System.err.println("mqtt client error: " + throwable.getMessage());
-    close();
+    System.err.printf("Received mqtt client error: %s at %s%n",
+        throwable.getMessage(), getTimestamp());
+    mqttPublisher.close();
   }
 
   private byte[] getFileBytes(String dataFile) {
@@ -404,6 +406,10 @@ public class IotReflectorClient implements MessagePublisher {
   @Override
   public SetupUdmiConfig getVersionInformation() {
     return requireNonNull(udmiInfo, "udmi version information not available");
+  }
+
+  public String getBridgeHost() {
+    return mqttPublisher.getBridgeHost();
   }
 
   static class MessageBundle {

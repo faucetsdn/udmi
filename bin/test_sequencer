@@ -38,7 +38,7 @@ shift
 targets=$*
 
 [[ -n $GITHUB_RUN_NUMBER ]] && echo "Workflow run number $GITHUB_RUN_NUMBER" || true
-echo "export target_project=$project_id"
+echo "export TARGET_PROJECT=$project_id"
 echo "export UDMI_REGISTRY_SUFFIX=$UDMI_REGISTRY_SUFFIX"
 echo "export UDMI_ALT_REGISTRY=$UDMI_ALT_REGISTRY"
 
@@ -93,6 +93,7 @@ fi
 bin/augment_metadata $site_path $device_id
 
 # Run in debug mode for fail-fast when things go wrong!
+echo bin/sequencer $debug_opts $seq_opts $site_path $project_id $device_id $serial_no $targets
 bin/sequencer $debug_opts $seq_opts $site_path $project_id $device_id $serial_no $targets 2>&1 | tee out/sequencer.log
 echo Completed execution of sequencer test run.
 
