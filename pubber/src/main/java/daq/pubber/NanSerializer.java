@@ -6,6 +6,9 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import java.io.IOException;
 
+/**
+ * Serializer for a Double that generates a raw NaN rather than quoted NaN.
+ */
 public class NanSerializer extends JsonSerializer<Double> {
 
   public static SimpleModule MODULE = new SimpleModule();
@@ -15,12 +18,12 @@ public class NanSerializer extends JsonSerializer<Double> {
   }
 
   @Override
-  public void serialize(Double aDouble, JsonGenerator jsonGenerator,
+  public void serialize(Double value, JsonGenerator jsonGenerator,
       SerializerProvider serializerProvider) throws IOException {
-    if (aDouble.isNaN()) {
+    if (value.isNaN()) {
       jsonGenerator.writeRawValue("NaN");
     } else {
-      jsonGenerator.writeNumber(aDouble);
+      jsonGenerator.writeNumber(value);
     }
   }
 }
