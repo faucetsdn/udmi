@@ -1,4 +1,4 @@
-package daq.pubber;
+package com.google.udmi.util;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
