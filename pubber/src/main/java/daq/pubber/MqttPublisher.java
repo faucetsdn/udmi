@@ -51,7 +51,6 @@ import udmi.schema.Basic;
 import udmi.schema.EndpointConfiguration.Transport;
 import udmi.schema.Jwt;
 import udmi.schema.PubberConfiguration;
-import udmi.schema.State;
 
 /**
  * Handle publishing sensor data to a Cloud IoT MQTT endpoint.
@@ -64,7 +63,9 @@ public class MqttPublisher implements Publisher {
       .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
       .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
       .setDateFormat(new ISO8601DateFormat())
+      .registerModule(NanSerializer.MODULE)
       .setSerializationInclusion(JsonInclude.Include.NON_NULL);
+
   // Indicate if this message should be a MQTT 'retained' message.
   private static final boolean SHOULD_RETAIN = false;
   private static final String UNUSED_ACCOUNT_NAME = "unused";
