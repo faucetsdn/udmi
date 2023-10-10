@@ -727,6 +727,7 @@ public class Pubber {
     Runtime runtime = Runtime.getRuntime();
     systemEvent.metrics.mem_free_mb = (double) runtime.freeMemory() / BYTES_PER_MEGABYTE;
     systemEvent.metrics.mem_total_mb = (double) runtime.totalMemory() / BYTES_PER_MEGABYTE;
+    systemEvent.metrics.store_total_mb = Double.NaN;
     systemEvent.event_count = systemEventCount++;
     systemEvent.logentries = ImmutableList.copyOf(logentries);
     logentries.clear();
