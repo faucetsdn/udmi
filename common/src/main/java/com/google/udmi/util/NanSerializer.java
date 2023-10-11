@@ -11,17 +11,25 @@ import java.io.IOException;
  */
 public class NanSerializer extends JsonSerializer<Double> {
 
-  public static SimpleModule MODULE = new SimpleModule();
+  public static SimpleModule TO_NULL = new SimpleModule();
+  public static SimpleModule TO_NAN = new SimpleModule();
 
   static {
-    MODULE.addSerializer(Double.class, new NanSerializer());
+    TO_NULL.addSerializer(Double.class, new NanSerializer(false));
+    TO_NAN.addSerializer(Double.class, new NanSerializer(true));
+  }
+
+  private final boolean toNan;
+
+  public NanSerializer(boolean toNan) {
+    this.toNan = toNan;
   }
 
   @Override
   public void serialize(Double value, JsonGenerator jsonGenerator,
       SerializerProvider serializerProvider) throws IOException {
     if (value.isNaN()) {
-      jsonGenerator.writeRawValue("NaN");
+      jsonGenerator.writeRawValue(toNan ? "NaN" : "null");
     } else {
       jsonGenerator.writeNumber(value);
     }

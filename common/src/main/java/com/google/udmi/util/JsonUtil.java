@@ -32,7 +32,7 @@ public abstract class JsonUtil {
       .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
       .setDateFormat(new CleanDateFormat())
       .enable(JsonReadFeature.ALLOW_NON_NUMERIC_NUMBERS.mappedFeature())
-      .registerModule(NanSerializer.MODULE)
+      .registerModule(NanSerializer.TO_NULL) // NaN is not valid JSON, so squash it now.
       .setSerializationInclusion(Include.NON_NULL);
   public static final ObjectMapper OBJECT_MAPPER = STRICT_MAPPER.copy()
       .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);

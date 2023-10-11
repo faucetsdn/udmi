@@ -64,7 +64,7 @@ public class MqttPublisher implements Publisher {
       .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
       .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
       .setDateFormat(new ISO8601DateFormat())
-      .registerModule(NanSerializer.MODULE)
+      .registerModule(NanSerializer.TO_NAN)
       .setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
   // Indicate if this message should be a MQTT 'retained' message.
