@@ -18,6 +18,7 @@ import static com.google.udmi.util.GeneralUtils.toJsonString;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static daq.pubber.MqttDevice.CONFIG_TOPIC;
 import static daq.pubber.MqttDevice.ERRORS_TOPIC;
+import static daq.pubber.MqttDevice.STATE_TOPIC;
 import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -1721,6 +1722,11 @@ public class Pubber {
     String topicSuffix = MESSAGE_TOPIC_SUFFIX_MAP.get(message.getClass());
     if (topicSuffix == null) {
       error("Unknown message class " + message.getClass());
+      return;
+    }
+
+    if (isTrue(() -> configuration.options.noState) && topicSuffix.equals(STATE_TOPIC)) {
+      info("Squelching state update as per configuration");
       return;
     }
 
