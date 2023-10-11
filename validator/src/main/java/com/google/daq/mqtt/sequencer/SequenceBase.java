@@ -262,7 +262,7 @@ public class SequenceBase {
   private SequenceResult testResult;
   private int startStateCount;
   private Boolean expectedSystemStatus;
-  private Date stateCutoffThreshold;
+  private Date stateCutoffThreshold = new Date();
 
   static void ensureValidatorConfig() {
     if (validatorConfig != null) {
@@ -730,7 +730,6 @@ public class SequenceBase {
     withRecordSequence(false, () -> {
       debug("Starting reset_config full reset " + fullReset);
       if (fullReset) {
-        stateCutoffThreshold = new Date();
         expectedSystemStatus = null;
         resetDeviceConfig(true);
         setExtraField(RESET_CONFIG_MARKER);
@@ -1493,16 +1492,16 @@ public class SequenceBase {
           warning(format("Ignoring out-of-order state update %s %s", timestamp, txnId));
           return;
         }
-        if (deviceState == null && (stateCutoffThreshold == null ||
-            convertedState.timestamp.before(stateCutoffThreshold))) {
+        if (deviceState == null && convertedState.timestamp.before(stateCutoffThreshold)) {
           warning(format("Ignoring stale state update %s %s", timestamp, stateCutoffThreshold));
           return;
         }
+        boolean initialState = RECV_STATE_DIFFERNATOR.isInitialized();
         List<String> stateChanges = RECV_STATE_DIFFERNATOR.computeChanges(converted);
         Instant start = ofNullable(convertedState.timestamp).orElseGet(Date::new).toInstant();
         long delta = Duration.between(start, Instant.now()).getSeconds();
         debug(format("Updated state after %ds %s %s", delta, timestamp, txnId));
-        if (updateCount == 1) {
+        if (initialState) {
           info(format("Initial state #%03d", updateCount), stringify(converted));
         } else {
           info(format("Updated state #%03d", updateCount), changedLines(stateChanges));
