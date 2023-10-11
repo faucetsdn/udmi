@@ -1946,7 +1946,7 @@ public class SequenceBase {
       if (failureType != SequenceResult.SKIP) {
         resetRequired = true;
         if (debugLogLevel()) {
-          error("Forcing exit to preserve failing config/state " + START_END_MARKER);
+          error("terminating test " + testName + " after " + timeSinceStart() + " " + START_END_MARKER);
           System.exit(EXIT_CODE_PRESERVE);
         }
       }

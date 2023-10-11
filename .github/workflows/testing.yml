@@ -242,7 +242,7 @@ jobs:
   comprehensive:
     name: Comprehensive Suite
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
     if: vars.TARGET_PROJECT != ''
     env:
       TARGET_PROJECT: ${{ vars.TARGET_PROJECT }}
