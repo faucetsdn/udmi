@@ -262,7 +262,7 @@ public class SequenceBase {
   private SequenceResult testResult;
   private int startStateCount;
   private Boolean expectedSystemStatus;
-  private Date queryStartTime;
+  private Date stateCutoffThreshold;
 
   static void ensureValidatorConfig() {
     if (validatorConfig != null) {
@@ -730,6 +730,7 @@ public class SequenceBase {
     withRecordSequence(false, () -> {
       debug("Starting reset_config full reset " + fullReset);
       if (fullReset) {
+        stateCutoffThreshold = new Date();
         expectedSystemStatus = null;
         resetDeviceConfig(true);
         setExtraField(RESET_CONFIG_MARKER);
@@ -974,7 +975,6 @@ public class SequenceBase {
   }
 
   protected void queryState() {
-    queryStartTime = new Date();
     if (!deviceSupportsState()) {
       return;
     }
@@ -1493,8 +1493,8 @@ public class SequenceBase {
           warning(format("Ignoring out-of-order state update %s %s", timestamp, txnId));
           return;
         }
-        if (deviceState == null && convertedState.timestamp.before(queryStartTime)) {
-          warning(format("Ignoring stale state update %s %s", timestamp, queryStartTime));
+        if (deviceState == null && convertedState.timestamp.before(stateCutoffThreshold)) {
+          warning(format("Ignoring stale state update %s %s", timestamp, stateCutoffThreshold));
           return;
         }
         List<String> stateChanges = RECV_STATE_DIFFERNATOR.computeChanges(converted);
