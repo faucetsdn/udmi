@@ -262,6 +262,7 @@ public class SequenceBase {
   private SequenceResult testResult;
   private int startStateCount;
   private Boolean expectedSystemStatus;
+  private Date queryStartTime;
 
   static void ensureValidatorConfig() {
     if (validatorConfig != null) {
@@ -562,6 +563,10 @@ public class SequenceBase {
 
   private static MessagePublisher reflector(boolean useAlternateClient) {
     return useAlternateClient ? altClient : client;
+  }
+
+  private static boolean deviceSupportsState() {
+    return !isTrue(deviceMetadata.testing.nostate);
   }
 
   protected String getAlternateEndpointHostname() {
@@ -969,6 +974,7 @@ public class SequenceBase {
   }
 
   protected void queryState() {
+    queryStartTime = new Date();
     if (!deviceSupportsState()) {
       return;
     }
@@ -980,10 +986,6 @@ public class SequenceBase {
     whileDoing("state query", () -> messageEvaluateLoop(this::stateTransactionPending),
         e -> debug(
             format("While waiting for stateTransaction %s: %s", txnId, friendlyStackTrace(e))));
-  }
-
-  private static boolean deviceSupportsState() {
-    return !isTrue(deviceMetadata.testing.nostate);
   }
 
   /**
@@ -1483,9 +1485,16 @@ public class SequenceBase {
         }
       } else if (converted instanceof State convertedState) {
         String timestamp = getTimestamp(convertedState.timestamp);
-        if (deviceState != null && convertedState.timestamp != null
-            && convertedState.timestamp.before(deviceState.timestamp)) {
+        if (convertedState.timestamp == null) {
+          warning("No timestamp in state message, rejecting.");
+          return;
+        }
+        if (deviceState != null && convertedState.timestamp.before(deviceState.timestamp)) {
           warning(format("Ignoring out-of-order state update %s %s", timestamp, txnId));
+          return;
+        }
+        if (deviceState == null && convertedState.timestamp.before(queryStartTime)) {
+          warning(format("Ignoring stale state update %s %s", timestamp, queryStartTime));
           return;
         }
         List<String> stateChanges = RECV_STATE_DIFFERNATOR.computeChanges(converted);
