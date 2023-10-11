@@ -6,6 +6,9 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "additionalProperties": false,
   "properties": {
+    "nostate": {
+      "type": "boolean"
+    },
     "targets": {
       "additionalProperties": false,
       "existingJavaType": "java.util.HashMap<String, TargetTestingModel>",

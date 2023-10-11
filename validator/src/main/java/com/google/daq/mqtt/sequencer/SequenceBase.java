@@ -19,6 +19,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
+import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.loadFileRequired;
@@ -968,6 +969,9 @@ public class SequenceBase {
   }
 
   protected void queryState() {
+    if (!deviceSupportsState()) {
+      return;
+    }
     assertConfigIsNotPending();
     Preconditions.checkState(!stateTransactionPending(), "state transaction already pending");
     String txnId = reflector().publish(getDeviceId(), Common.STATE_QUERY_TOPIC, EMPTY_MESSAGE);
@@ -976,6 +980,10 @@ public class SequenceBase {
     whileDoing("state query", () -> messageEvaluateLoop(this::stateTransactionPending),
         e -> debug(
             format("While waiting for stateTransaction %s: %s", txnId, friendlyStackTrace(e))));
+  }
+
+  private static boolean deviceSupportsState() {
+    return !isTrue(deviceMetadata.testing.nostate);
   }
 
   /**
@@ -1732,12 +1740,18 @@ public class SequenceBase {
   }
 
   protected void checkThatHasInterestingSystemStatus(boolean isInteresting) {
+    if (!deviceSupportsState()) {
+      return;
+    }
     BiConsumer<String, Supplier<Boolean>> check =
         isInteresting ? this::checkThat : this::checkNotThat;
     check.accept(SYSTEM_STATUS_MESSAGE, this::hasInterestingSystemStatus);
   }
 
   protected void untilHasInterestingSystemStatus(boolean isInteresting) {
+    if (!deviceSupportsState()) {
+      return;
+    }
     expectedSystemStatus = null;
     BiConsumer<String, Supplier<Boolean>> until =
         isInteresting ? this::untilTrue : this::untilFalse;

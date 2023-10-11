@@ -6,6 +6,7 @@ class TestingModel:
   """Generated schema class"""
 
   def __init__(self):
+    self.nostate = None
     self.targets = None
 
   @staticmethod
@@ -13,6 +14,7 @@ class TestingModel:
     if not source:
       return None
     result = TestingModel()
+    result.nostate = source.get('nostate')
     result.targets = TargetTestingModel.map_from(source.get('targets'))
     return result
 
@@ -34,6 +36,8 @@ class TestingModel:
 
   def to_dict(self):
     result = {}
+    if self.nostate:
+      result['nostate'] = self.nostate # 5
     if self.targets:
       result['targets'] = TargetTestingModel.expand_dict(self.targets) # 2
     return result
