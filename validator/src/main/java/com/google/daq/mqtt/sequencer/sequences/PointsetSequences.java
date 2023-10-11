@@ -114,7 +114,6 @@ public class PointsetSequences extends PointsetBase {
     untilPointsetSanity();
   }
 
-
   /**
    * Simple check that device publishes pointset events.
    */
@@ -128,7 +127,6 @@ public class PointsetSequences extends PointsetBase {
         () -> (countReceivedEvents(PointsetEvent.class) > 1
     ));
   }
-
 
   /**
    * Tests sample_rate_min by measuring the initial interval between the last two messages received,

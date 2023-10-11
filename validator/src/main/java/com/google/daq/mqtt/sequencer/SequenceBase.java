@@ -201,6 +201,7 @@ public class SequenceBase {
   private static final AtomicReference<String> stateTransaction = new AtomicReference<>();
   private static final int MINIMUM_TEST_SEC = 15;
   private static final Date RESET_LAST_START = new Date(73642);
+  private static final Date stateCutoffThreshold = new Date();
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -262,7 +263,6 @@ public class SequenceBase {
   private SequenceResult testResult;
   private int startStateCount;
   private Boolean expectedSystemStatus;
-  private Date stateCutoffThreshold = new Date();
 
   static void ensureValidatorConfig() {
     if (validatorConfig != null) {
@@ -1496,15 +1496,15 @@ public class SequenceBase {
           warning(format("Ignoring stale state update %s %s", timestamp, stateCutoffThreshold));
           return;
         }
-        boolean initialState = RECV_STATE_DIFFERNATOR.isInitialized();
+        boolean deltaState = RECV_STATE_DIFFERNATOR.isInitialized();
         List<String> stateChanges = RECV_STATE_DIFFERNATOR.computeChanges(converted);
         Instant start = ofNullable(convertedState.timestamp).orElseGet(Date::new).toInstant();
         long delta = Duration.between(start, Instant.now()).getSeconds();
         debug(format("Updated state after %ds %s %s", delta, timestamp, txnId));
-        if (initialState) {
-          info(format("Initial state #%03d", updateCount), stringify(converted));
-        } else {
+        if (deltaState) {
           info(format("Updated state #%03d", updateCount), changedLines(stateChanges));
+        } else {
+          info(format("Initial state #%03d", updateCount), stringify(converted));
         }
         deviceState = convertedState;
         validSerialNo();
