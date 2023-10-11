@@ -1493,7 +1493,8 @@ public class SequenceBase {
           warning(format("Ignoring out-of-order state update %s %s", timestamp, txnId));
           return;
         }
-        if (deviceState == null && convertedState.timestamp.before(stateCutoffThreshold)) {
+        if (deviceState == null && (stateCutoffThreshold == null ||
+            convertedState.timestamp.before(stateCutoffThreshold))) {
           warning(format("Ignoring stale state update %s %s", timestamp, stateCutoffThreshold));
           return;
         }
