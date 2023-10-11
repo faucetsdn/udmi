@@ -1740,10 +1740,16 @@ public class SequenceBase {
     return dateEquals(expectedConfig, lastConfig);
   }
 
-  private boolean hasInterestingSystemStatus() {
+  private Boolean hasInterestingSystemStatus() {
     if (deviceState.system.status != null) {
       debug("Status level: " + deviceState.system.status.level);
     }
+
+    // State missing is neither interesting nor not-interesting...
+    if (deviceState == null || deviceState.system == null) {
+      return null;
+    }
+
     return deviceState.system.status != null
         && deviceState.system.status.level >= Level.WARNING.value();
   }
