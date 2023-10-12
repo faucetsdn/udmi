@@ -256,11 +256,9 @@ jobs:
       - name: base setup
         run: bin/run_tests install_dependencies
       - name: registrar clean
-        run: |
-          bin/test_regclean $TARGET_PROJECT
+        run: bin/test_regclean $TARGET_PROJECT
       - name: telemetry validator
-        run: |
-          bin/test_validator $TARGET_PROJECT
+        run: bin/test_validator $TARGET_PROJECT
       - name: validator result
         if: ${{ always() }}
         run: |
@@ -272,11 +270,9 @@ jobs:
           find . -type f | sort | xargs more | cat
       - name: nostate sequences
         if: ${{ always() }}
-        run: |
-          bin/test_sequencer clean alpha nostate full $TARGET_PROJECT
+        run: bin/test_sequencer clean alpha nostate full $TARGET_PROJECT
       - name: itemized sequencer tests
-        run: |
-          bin/test_itemized $TARGET_PROJECT
+        run: bin/test_itemized $TARGET_PROJECT
       - name: itemized output logs
         if: ${{ always() }}
         run: |
@@ -323,11 +319,9 @@ jobs:
         run: bin/run_tests install_dependencies
       - name: bin/test_proxy
         if: "${{ env.MQTT_PROXY_HOST != '' }}"
-        run: |
-          bin/test_proxy $TARGET_PROJECT $MQTT_PROXY_HOST
+        run: bin/test_proxy $TARGET_PROJECT $MQTT_PROXY_HOST
       - name: bin/test_redirect
-        run: |
-          bin/test_redirect $TARGET_PROJECT
+        run: bin/test_redirect $TARGET_PROJECT
       - name: pubber.out.1
         run: |
           echo ::::::: pubber.out.1

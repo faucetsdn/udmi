@@ -120,16 +120,16 @@ fi
 if [[ -n $clean_cache ]]; then
     echo Cleaning sequencer result cache...
     rm -rf validator/sequences
-else
+fi
+
+if [[ -n $alpha_mode ]]; then
     bin/sequencer_cache
 
     echo Comparing diff out/sequencer.out etc/sequencer${suffix}.out
     diff -u out/sequencer.out etc/sequencer${suffix}.out
-fi
 
-if [[ -n $alpha_mode ]]; then
-    echo Comparing diff out/schema.out etc/schema.out
-    diff -u out/schema.out etc/schema.out
+    echo Comparing diff out/schema.out etc/schema${suffix}.out
+    diff -u out/schema.out etc/schema${suffix}.out
 fi
 
 cp docs/specs/sequences/generated.md out/  # Save for test/comparison later
