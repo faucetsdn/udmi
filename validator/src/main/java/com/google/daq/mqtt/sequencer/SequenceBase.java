@@ -678,8 +678,9 @@ public class SequenceBase {
     assumeTrue("Feature bucket not enabled", isBucketEnabled(testBucket));
 
     if (!stateTestingEnabled()) {
-      Feature feature = testDescription.getAnnotation(Feature.class);
-      ifTrueSkipTest(!feature.nostate(), "State testing disabled");
+      ifTrueSkipTest(
+          ifNotNullGet(testDescription.getAnnotation(Feature.class), feature -> !feature.nostate()),
+          "State testing disabled");
       notice("Running test with state checks disabled");
     }
 
