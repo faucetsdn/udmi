@@ -10,6 +10,7 @@ debug_opts=-v
 seq_opts=
 alpha_mode=
 clean_cache=
+pubber_opts=
 
 if [[ $1 == 'clean' ]]; then
     shift
@@ -23,13 +24,18 @@ if [[ $1 == 'alpha' ]]; then
     alpha_mode=y
 fi
 
+if [[ $1 == 'nostate' ]]; then
+    shift
+    pubber_opts+=" noState"
+fi
+
 if [[ $1 == 'full' ]]; then
     shift
     debug_opts=
 fi
 
 if [[ $# -lt 1 ]]; then
-    echo Usage: $0 [clean] [alpha] [full] PROJECT_ID [tests...]
+    echo Usage: $0 [clean] [alpha] [nostate] [full] PROJECT_ID [tests...]
     false
 fi
 
@@ -71,8 +77,8 @@ rm -rf $site_path/out/devices/AHU-1/persistent_data.json
 pubber/bin/build
 
 echo Writing pubber output to $PUBBER_OUT
-echo bin/pubber $site_path $project_id $device_id $serial_no
-bin/pubber $site_path $project_id $device_id $serial_no > $PUBBER_OUT 2>&1 &
+echo bin/pubber $site_path $project_id $device_id $serial_no $pubber_opts
+bin/pubber $site_path $project_id $device_id $serial_no $pubber_opts > $PUBBER_OUT 2>&1 &
 
 WAITING=10
 for i in `seq 1 $WAITING`; do
@@ -90,7 +96,7 @@ if [[ $i -eq $WAITING ]]; then
 fi
 
 # Augment the device metadata to that tests know what to expect...
-bin/augment_metadata $site_path $device_id
+bin/augment_metadata $site_path $device_id $pubber_opts
 
 # Run in debug mode for fail-fast when things go wrong!
 echo bin/sequencer $debug_opts $seq_opts $site_path $project_id $device_id $serial_no $targets
