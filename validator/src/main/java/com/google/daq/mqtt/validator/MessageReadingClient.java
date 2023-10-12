@@ -5,6 +5,7 @@ import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonParser.Feature;
+import com.fasterxml.jackson.core.json.JsonReadFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
@@ -35,6 +36,7 @@ public class MessageReadingClient implements MessagePublisher {
           .enable(Feature.ALLOW_COMMENTS)
           .enable(SerializationFeature.INDENT_OUTPUT)
           .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+          .enable(JsonReadFeature.ALLOW_NON_NUMERIC_NUMBERS.mappedFeature())
           .setDateFormat(new ISO8601DateFormat())
           .setSerializationInclusion(Include.NON_NULL);
   private static final Pattern filenamePattern = Pattern.compile("[0-9]+_([a-z]+)_([a-z]+)\\.json");

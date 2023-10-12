@@ -605,7 +605,8 @@ public class Validator {
       try {
         validateMessage(schemaMap.get(schemaName), message);
       } catch (Exception e) {
-        System.err.printf("Error validating schema %s: %s%n", schemaName, e.getMessage());
+        System.err.printf("Error validating schema %s: %s%n", schemaName,
+            GeneralUtils.friendlyStackTrace(e));
         device.addError(e, attributes, Category.VALIDATION_DEVICE_SCHEMA);
       }
     }
