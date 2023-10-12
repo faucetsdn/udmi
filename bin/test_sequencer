@@ -109,8 +109,9 @@ else
 fi
 
 if [[ -n $clean_cache ]]; then
-    echo Cleaning sequencer result cache...
-    rm -rf validator/sequences
+    echo Removing sequencer result cache...
+    rm -rf /tmp/validator/sequences && mkdir -p /tmp/validator
+    mv validator/sequences /tmp/validator/sequences
 else
     bin/sequencer_cache
 
@@ -135,10 +136,10 @@ diff -u out/generated.md docs/specs/sequences/generated.md || (
 echo Checking for duplication in out/sequencer.out and etc/sequencer_planning.txt
 bin/test_sequencer_plan
 
-echo Checking that the sequences in validator/sequences are correct
+echo Comparing sequencer results cache against generated files
 ls -1 sites/udmi_site_model/out/devices/AHU-1/tests/ \
     | xargs -I% diff -u \
         sites/udmi_site_model/out/devices/AHU-1/tests/%/sequence.md \
-        validator/sequences/%/sequence.md
+        /tmp/validator/sequences/%/sequence.md
 
 echo Done with base test_sequencer run.

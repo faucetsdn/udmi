@@ -1,19 +1,18 @@
-"""Generate markdown report from sequencer results"""
+#!/usr/bin/env python3
+"""Generate markdown report from sequencer results."""
 import argparse
 import copy
+from dataclasses import dataclass, field
 import json
 import os
-import sys
 import re
-from dataclasses import dataclass, field
-import textwrap
-
+import sys
 import jinja2
 
 TEMPLATE_PATH = "etc/sequencer_report.md.template"
 OUT_FILE = "results.md"
 
-# minimum set of schemas (incase device doesn't publish given message typ)
+# minimum set of schemas (incase device doesn't publish given message type)
 SCHEMAS = ["state_update", "event_pointset", "event_system"]
 
 # stages for column headers
@@ -23,13 +22,14 @@ STAGES = ["stable", "beta", "preview", "alpha"]
 
 STAGES_FOR_PASS = ["stable", "beta"]
 DEFAULT_SCORE = 1
-REFERENCE_SEQUENCES_DIR = 'validator/sequences'
-CHECKMARK = '✓'
-CROSS = '✕'
+REFERENCE_SEQUENCES_DIR = "validator/sequences"
+CHECKMARK = "✓"
+CROSS = "✕"
+
 
 @dataclass(unsafe_hash=True, eq=True, order=True)
 class TestResult:
-  """Container for test result"""
+  """Container for test result."""
 
   bucket: str = ""
   name: str = ""
@@ -51,17 +51,17 @@ class SequenceStep(list):
 
 
 class Sequence:
-
+  """Loads the sequence steps for a given testresults"""
   # The line number inside the sequence.md file where the first sequence starts
   START_LINE = 5
 
-  # What exact raw text a single step prefixed with (used for matching and replacing)
+  # What exact raw text a single step prefixed with
   STEP_PREFIX = "1. "
 
   # Universal indent on each line
   PADDING = 4
 
-  FILE_NAME = 'sequence.md'
+  FILE_NAME = "sequence.md"
 
   def __init__(self, test: TestResult, reference_dir: str, results_dir: str):
     self.sequence_name = test.name
@@ -78,7 +78,7 @@ class Sequence:
 
     with open(self.ref_path, encoding="utf-8") as f:
       self.ref_text = f.read()
-    
+
     self.act = Sequence.get_steps(self.act_text)
     self.ref = Sequence.get_steps(self.ref_text)
 
@@ -89,7 +89,7 @@ class Sequence:
 
   @classmethod
   def get_steps(cls, text: str) -> list[SequenceStep]:
-    """ returns steps from the contents of a sequence.md file"""
+    """returns steps from the contents of a sequence.md file."""
     buffer = []
     steps = []
     sequence_lines = text.splitlines()[cls.START_LINE :]
@@ -102,21 +102,20 @@ class Sequence:
 
   @staticmethod
   def indent(line: str, indent: int, prefix: str = "") -> str:
-    """Adds a fixed width indent of length 'indent' and optionally a prefix to a line"""
-    #return f"{{0: <{indent}}}{line}".format(prefix)
-    return prefix.ljust(indent, ' ') + line
+    """Adds a fixed width indent of length 'indent' with an optional prefix"""
+    # return f"{{0: <{indent}}}{line}".format(prefix)
+    return prefix.ljust(indent, " ") + line
 
   @staticmethod
   def longest_line_length(lines: list[str]) -> int:
-    """Returns the length of the longest string in a list of strings"""
+    """Returns the length of the longest string in a list of strings."""
     return max(len(l) for l in lines)
 
   @staticmethod
-  def failing_step(
-      ref: list[SequenceStep], act: list[SequenceStep], result: str = ""
-  ) -> int:
-    """Returns the index number of the step at which a sequence failed
-    Or returns false if there is no failure step
+  def failing_step(act: list[SequenceStep], result: str = "") -> int:
+    """Returns the index number of the step at which a sequence failed.
+
+    If the sequence passed, the returned index is out of bounds
     """
     # The text contents of a sequence may (though shouldn't) differ from the
     # reference spec, but a step is a step, so use lengths
@@ -128,7 +127,7 @@ class Sequence:
   def classify_steps(
       ref: list[SequenceStep], act: list[SequenceStep], result=""
   ) -> (list[SequenceStep], SequenceStep, list[SequenceStep]):
-    fail_index = Sequence.failing_step(ref, act, result)
+    fail_index = Sequence.failing_step(act, result)
     failing = []
     not_done = []
 
@@ -142,62 +141,81 @@ class Sequence:
     return completed, failing, not_done
 
   @staticmethod
-  def format(ref: list[SequenceStep], act: list[SequenceStep], result: TestResult) -> str:
+  def format(
+      ref: list[SequenceStep], act: list[SequenceStep], result: TestResult
+  ) -> str:
     f = []
     step_count = 0
 
-    completed, failing, not_done = Sequence.classify_steps(ref, act, result.result)
-    
+    completed, failing, not_done = Sequence.classify_steps(
+        ref, act, result.result
+    )
+
     for step in completed:
       step_count += 1
-      unnumbered_line = step.pop(0)[len(Sequence.STEP_PREFIX):]
-      f.append(Sequence.indent(f"{step_count}. {unnumbered_line}", Sequence.PADDING, CHECKMARK))
+      unnumbered_line = step.pop(0)[len(Sequence.STEP_PREFIX) :]
+      f.append(
+          Sequence.indent(
+              f"{step_count}. {unnumbered_line}", Sequence.PADDING, CHECKMARK
+          )
+      )
       for l in step:
         f.append(Sequence.indent(l, Sequence.PADDING))
-    
+
     if failing:
       step_count += 1
       longest_line_length = Sequence.longest_line_length(failing)
       # + 3 is for the additional " X"
       dash_width = longest_line_length + Sequence.PADDING + 3
-      unnumbered_line = failing.pop(0).ljust(longest_line_length, ' ')[len(Sequence.STEP_PREFIX):]
-      f.append('')
-      f.append('-' * dash_width)
-      f.append(Sequence.indent(f"{step_count}. {unnumbered_line} {CROSS}", 4, CROSS))
+      unnumbered_line = failing.pop(0).ljust(longest_line_length, " ")[
+          len(Sequence.STEP_PREFIX) :
+      ]
+      f.append("")
+      f.append("-" * dash_width)
+      f.append(
+          Sequence.indent(f"{step_count}. {unnumbered_line} {CROSS}", 4, CROSS)
+      )
       for l in failing:
-        f.append(f"{Sequence.indent(l.ljust(longest_line_length, ' '), 4, CROSS)} {CROSS}")
-      f.append('-' * dash_width)
-      f.append('')
+        f.append(
+            #pylint: disable-next=line-too-long
+            f"{Sequence.indent(l.ljust(longest_line_length, ' '), 4, CROSS)} {CROSS}"
+        )
+      f.append("-" * dash_width)
+      f.append("")
 
     if not_done:
       for step in not_done:
         step_count += 1
-        unnumbered_line = step.pop(0)[len(Sequence.STEP_PREFIX):]
-        f.append(Sequence.indent(f"{step_count}. {unnumbered_line}", Sequence.PADDING))
+        unnumbered_line = step.pop(0)[len(Sequence.STEP_PREFIX) :]
+        f.append(
+            Sequence.indent(
+                f"{step_count}. {unnumbered_line}", Sequence.PADDING
+            )
+        )
         for l in step:
           f.append(Sequence.indent(l, Sequence.PADDING))
 
     return "\n".join(f)
-      
+
 
 class TemplateHelper:
-  """Collection of helper functions made available within Jinja template"""
+  """Collection of helper functions made available within Jinja template."""
 
   @staticmethod
   def pretty_dict(thing: dict):
-    """Pretty print dictionary, e.g. key1: value1, key2: value2"""
+    """Pretty print dictionary, e.g. key1: value1, key2: value2."""
     if not isinstance(thing, dict):
       return ""
     return ", ".join([": ".join([k, v]) for k, v in thing.items()])
 
   @staticmethod
   def md_table_header(cols: int):
-    """Generate md table headers ( |---|--...) based on no. of cols"""
+    """Generate md table headers ( |---|--...) based on no. of cols."""
     return " --- ".join(["|"] * (cols + 1))
 
   @staticmethod
   def result_icon(result):
-    """Textural representation of Boolean or None values"""
+    """Textural representation of Boolean or None values."""
     if result is True:
       return CHECKMARK
     if result is False:
@@ -207,7 +225,7 @@ class TemplateHelper:
 
 @dataclass
 class FeatureStage:
-  """Container for scored points and total points for a feature and stage"""
+  """Container for scored points and total points for a feature and stage."""
 
   scored: int = 0
   total: int = 0
@@ -220,18 +238,18 @@ class FeatureStage:
       self.scored += score
 
   def has(self):
-    """Did the sequencer results have this feature & stage combination?"""
+    """Did the sequencer results have this feature & stage combination?."""
     return self.total > 0
 
   # TODO This is logic, needs to reside within sequencer itself
   def passed(self):
-    """Was the feature & stage combination a pass (full marks)"""
+    """Was the feature & stage combination a pass (full marks)."""
     return self.total > 0 and self.scored == self.total
 
 
 @dataclass
 class SchemaResult:
-  """Container for Schema results"""
+  """Container for Schema results."""
 
   schema: str = ""
   stage: str = ""
@@ -247,13 +265,17 @@ class SchemaResult:
 
 
 class SequencerReport:
-  """Results of a single sequencer run"""
+  """Results of a single sequencer run."""
 
   def __init__(self, site_path: str, device_id: str):
     self.site_path = site_path
     self.device_id = device_id
-    self.results_path = os.path.join(site_path, f"out/sequencer_{device_id}.json")
-    self.sequences_path = os.path.join(site_path, f"out/devices/{device_id}/tests")
+    self.results_path = os.path.join(
+        site_path, f"out/sequencer_{device_id}.json"
+    )
+    self.sequences_path = os.path.join(
+        site_path, f"out/devices/{device_id}/tests"
+    )
 
     with open(self.results_path, encoding="utf-8") as f:
       self.results_json = json.load(f)
@@ -268,10 +290,13 @@ class SequencerReport:
     self._load_sequences()
 
   def _load_sequences(self):
-    self.sequences = {name: Sequence(result, REFERENCE_SEQUENCES_DIR, self.sequences_path) for name, result in self.results.items()}
+    self.sequences = {
+        name: Sequence(result, REFERENCE_SEQUENCES_DIR, self.sequences_path)
+        for name, result in self.results.items()
+    }
 
   def _load_schema_results(self):
-    """Loads and processes schema validation results"""
+    """Loads and processes schema validation results."""
     self.schema_results = []
     for schema, value in self.results_json["schemas"].items():
       for test_name, result in value["sequences"].items():
@@ -281,20 +306,26 @@ class SequencerReport:
 
     # Ensure all results include at least items from SCHEMAS set of schemas
     schemas = SCHEMAS[:]
-    schemas.extend(x.schema for x in self.schema_results if x.schema not in schemas)
+    schemas.extend(
+        x.schema for x in self.schema_results if x.schema not in schemas
+    )
 
     self.schema_results_by_schema = {
-        k: all_or_none([x.passed() for x in self.schema_results if x.schema == k])
+        k: all_or_none(
+            [x.passed() for x in self.schema_results if x.schema == k]
+        )
         for k in schemas
     }
 
     self.schema_results_by_stage = {
-        k: all_or_none([x.passed() for x in self.schema_results if x.stage == k])
+        k: all_or_none(
+            [x.passed() for x in self.schema_results if x.stage == k]
+        )
         for k in self.stages
     }
 
   def _load_device_metadata(self):
-    """Loads device metadata.json and sets used attributes"""
+    """Loads device metadata.json and sets used attributes."""
     self.metadata_path = os.path.join(
         self.site_path, f"devices/{self.device_id}/metadata.json"
     )
@@ -312,15 +343,17 @@ class SequencerReport:
     )
     self.device_software = self.metadata.get("system", {}).get("software")
 
-    self.cloud_iot_config_path = os.path.join(self.site_path, "cloud_iot_config.json")
+    self.cloud_iot_config_path = os.path.join(
+        self.site_path, "cloud_iot_config.json"
+    )
 
   def has_stage(self, stage: str):
-    """Checks if sequencer report has any tests at given stage"""
+    """Checks if sequencer report has any tests at given stage."""
     all_features = [x[stage] for x in self.features.values()]
     return any(x.total > 0 for x in all_features)
 
   def _load_test_results(self):
-    """Load sequencer test results and features"""
+    """Load sequencer test results and features."""
     results = {}
     features = {}
     stages_template = {s: FeatureStage(stage=s) for s in STAGES}
@@ -360,15 +393,18 @@ class SequencerReport:
 
     self.stages = [x for x in STAGES if self.has_stage(x)]
 
-    self.results_by_feature = {f: [x for x in self.results.values() if x.bucket == f] for f in self.features}
+    self.results_by_feature = {
+        f: [x for x in self.results.values() if x.bucket == f]
+        for f in self.features
+    }
 
   def __repr__(self):
     return str(self.results)
 
 
-def all_or_none(results: list):
-  """Passes list to all, or return None if list is empty"""
-  if len(results) == 0:
+def all_or_none(results: list[bool]):
+  """Passes list to all, or return None if list is empty."""
+  if not results:
     return None
   return all(results)
 
