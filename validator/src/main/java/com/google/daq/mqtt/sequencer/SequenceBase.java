@@ -247,7 +247,7 @@ public class SequenceBase {
   private Instant lastConfigUpdate;
   private boolean enforceSerial;
   private String testName;
-  private String testDescription;
+  private String testSummary;
   private Bucket testBucket;
   private FeatureStage testStage;
   private long startTestTimeMs;
@@ -263,6 +263,7 @@ public class SequenceBase {
   private SequenceResult testResult;
   private int startStateCount;
   private Boolean expectedSystemStatus;
+  private Description testDescription;
 
   static void ensureValidatorConfig() {
     if (validatorConfig != null) {
@@ -607,7 +608,7 @@ public class SequenceBase {
   }
 
   private void writeSequenceMdHeader() {
-    String block = testDescription == null ? "" : format("%s\n\n", testDescription);
+    String block = testSummary == null ? "" : format("%s\n\n", testSummary);
     sequenceMd.printf("\n## %s (%s)\n\n%s", testName, testStage.name(), block);
     sequenceMd.flush();
   }
@@ -675,6 +676,11 @@ public class SequenceBase {
     }
 
     assumeTrue("Feature bucket not enabled", isBucketEnabled(testBucket));
+
+    if (isTrue(catchToNull(() -> deviceMetadata.testing.nostate))) {
+      ifNullSkipTest(testDescription.getAnnotation(AllowNoState.class),
+          "skipping because no state");
+    }
 
     waitingConditionPush("starting test wrapper");
     checkState(reflector().isActive(), "Reflector is not currently active");
@@ -1861,7 +1867,8 @@ public class SequenceBase {
         putSequencerResult(description, SequenceResult.START);
         checkState(reflector().isActive(), "Reflector is not currently active");
 
-        testDescription = getTestSummary(description);
+        testDescription = description;
+        testSummary = getTestSummary(description);
         testStage = getTestStage(description);
         testBucket = getBucket(description);
 
