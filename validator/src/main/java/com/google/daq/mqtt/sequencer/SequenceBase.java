@@ -677,9 +677,10 @@ public class SequenceBase {
 
     assumeTrue("Feature bucket not enabled", isBucketEnabled(testBucket));
 
-    if (isTrue(catchToNull(() -> deviceMetadata.testing.nostate))) {
+    if (!stateTestingEnabled()) {
       ifNullSkipTest(testDescription.getAnnotation(AllowNoState.class),
           "State testing disabled");
+      notice("Running test with state checks disabled");
     }
 
     waitingConditionPush("starting test wrapper");
@@ -701,7 +702,8 @@ public class SequenceBase {
 
     updateConfig("initial setup");
 
-    untilTrue("device state update", () -> deviceState != null);
+    ifTrueThen(stateTestingEnabled(),
+        () -> untilTrue("device state update", () -> deviceState != null));
     checkThatHasInterestingSystemStatus(false);
 
     // Do this late in the sequence to make sure any state is cleared out from previous test.
@@ -714,6 +716,10 @@ public class SequenceBase {
     waitingConditionPush("executing test");
 
     debug(format("stage begin %s at %s", waitingConditionPeek(), timeSinceStart()));
+  }
+
+  private boolean stateTestingEnabled() {
+    return !isTrue(catchToNull(() -> deviceMetadata.testing.nostate));
   }
 
   protected boolean isBucketEnabled(Bucket bucket) {
@@ -1192,8 +1198,9 @@ public class SequenceBase {
 
   protected void checkNotLogged(String category, Level minLevel) {
     withRecordSequence(false, () -> {
-      untilTrue("last_config synchronized",
-          () -> dateEquals(deviceConfig.timestamp, deviceState.system.last_config));
+      ifTrueThen(stateTestingEnabled(), () ->
+          untilTrue("last_config synchronized",
+              () -> dateEquals(deviceConfig.timestamp, deviceState.system.last_config)));
       processLogMessages();
     });
     final Instant endTime = lastConfigUpdate.plusSeconds(LOG_TIMEOUT_SEC);
