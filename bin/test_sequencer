@@ -11,6 +11,7 @@ seq_opts=
 alpha_mode=
 clean_cache=
 pubber_opts=
+suffix=
 
 if [[ $1 == 'clean' ]]; then
     shift
@@ -27,6 +28,7 @@ fi
 if [[ $1 == 'nostate' ]]; then
     shift
     pubber_opts+=" noState"
+    suffix=_nostate
 fi
 
 if [[ $1 == 'full' ]]; then
@@ -121,8 +123,8 @@ if [[ -n $clean_cache ]]; then
 else
     bin/sequencer_cache
 
-    echo Comparing diff out/sequencer.out etc/sequencer.out
-    diff -u out/sequencer.out etc/sequencer.out
+    echo Comparing diff out/sequencer.out etc/sequencer${suffix}.out
+    diff -u out/sequencer.out etc/sequencer${suffix}.out
 fi
 
 if [[ -n $alpha_mode ]]; then
