@@ -1706,12 +1706,16 @@ public class Pubber {
       latch.countDown();
     });
     try {
-      if (!latch.await(WAIT_TIME_SEC, TimeUnit.SECONDS)) {
+      if (shouldSendState() && !latch.await(WAIT_TIME_SEC, TimeUnit.SECONDS)) {
         throw new RuntimeException("Timeout waiting for state send");
       }
     } catch (Exception e) {
       throw new RuntimeException("While waiting for state send latch", e);
     }
+  }
+
+  private boolean shouldSendState() {
+    return !isTrue(() -> configuration.options.noState);
   }
 
   private void publishDeviceMessage(Object message) {
@@ -1725,7 +1729,7 @@ public class Pubber {
       return;
     }
 
-    if (isTrue(() -> configuration.options.noState) && topicSuffix.equals(STATE_TOPIC)) {
+    if (!shouldSendState() && topicSuffix.equals(STATE_TOPIC)) {
       info("Squelching state update as per configuration");
       return;
     }
