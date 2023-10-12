@@ -62,6 +62,7 @@ public class ConfigSequences extends SequenceBase {
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = ALPHA, bucket = SYSTEM)
   @Summary("Check that the min log-level config is honored by the device.")
+  @AllowNoState
   public void system_min_loglevel() {
     Integer savedLevel = deviceConfig.system.min_loglevel;
     checkState(SYSTEM_CONFIG_APPLY_LEVEL.value() >= savedLevel, "invalid saved level");
