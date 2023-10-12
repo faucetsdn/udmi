@@ -678,8 +678,8 @@ public class SequenceBase {
     assumeTrue("Feature bucket not enabled", isBucketEnabled(testBucket));
 
     if (!stateTestingEnabled()) {
-      ifNullSkipTest(testDescription.getAnnotation(AllowNoState.class),
-          "State testing disabled");
+      Feature feature = testDescription.getAnnotation(Feature.class);
+      ifTrueSkipTest(!feature.nostate(), "State testing disabled");
       notice("Running test with state checks disabled");
     }
 
@@ -1843,6 +1843,10 @@ public class SequenceBase {
     throw new AssumptionViolatedException(reason);
   }
 
+  protected void ifTrueSkipTest(Boolean condition, String reason) {
+    ifTrueThen(condition, () -> skipTest(reason));
+  }
+
   protected <T> T ifNullSkipTest(T testable, String reason) {
     ifNullThen(testable, () -> skipTest(reason));
     return testable;
@@ -1851,7 +1855,6 @@ public class SequenceBase {
   protected <T> T ifCatchNullSkipTest(Supplier<T> evaluator, String reason) {
     T evaluatorResult = catchToNull(evaluator);
     return ifNullSkipTest(evaluatorResult, reason);
-
   }
 
   /**

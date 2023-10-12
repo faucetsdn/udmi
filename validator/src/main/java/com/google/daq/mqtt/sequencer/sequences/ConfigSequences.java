@@ -19,7 +19,6 @@ import static udmi.schema.FeatureEnumeration.FeatureStage.ALPHA;
 import static udmi.schema.FeatureEnumeration.FeatureStage.BETA;
 import static udmi.schema.FeatureEnumeration.FeatureStage.STABLE;
 
-import com.google.daq.mqtt.sequencer.AllowNoState;
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.Summary;
@@ -41,10 +40,9 @@ public class ConfigSequences extends SequenceBase {
   private static final long LOG_APPLY_DELAY_MS = 1000;
 
   @Test(timeout = ONE_MINUTE_MS)
-  @Feature(stage = STABLE, bucket = SYSTEM)
+  @Feature(stage = STABLE, bucket = SYSTEM, nostate = true)
   @Summary("Check that last_update state is correctly set in response to a config update.")
   @ValidateSchema
-  @AllowNoState
   public void system_last_update() {
     untilTrue("state last_config matches config timestamp", this::stateMatchesConfigTimestamp);
     ensureStateUpdate();
@@ -60,9 +58,8 @@ public class ConfigSequences extends SequenceBase {
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Feature(stage = ALPHA, bucket = SYSTEM)
+  @Feature(stage = ALPHA, bucket = SYSTEM, nostate = true)
   @Summary("Check that the min log-level config is honored by the device.")
-  @AllowNoState
   public void system_min_loglevel() {
     Integer savedLevel = deviceConfig.system.min_loglevel;
     checkState(SYSTEM_CONFIG_APPLY_LEVEL.value() >= savedLevel, "invalid saved level");
