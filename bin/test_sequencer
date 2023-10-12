@@ -132,6 +132,11 @@ if [[ -n $alpha_mode ]]; then
     diff -u out/schema.out etc/schema${suffix}.out
 fi
 
+if [[ -n $suffix ]]; then
+    echo Done with $suffix test_sequencer run.
+    exit 0
+fi
+
 cp docs/specs/sequences/generated.md out/  # Save for test/comparison later
 bin/gencode_seq
 
