@@ -679,7 +679,7 @@ public class SequenceBase {
 
     if (isTrue(catchToNull(() -> deviceMetadata.testing.nostate))) {
       ifNullSkipTest(testDescription.getAnnotation(AllowNoState.class),
-          "skipping because no state");
+          "State testing disabled");
     }
 
     waitingConditionPush("starting test wrapper");
