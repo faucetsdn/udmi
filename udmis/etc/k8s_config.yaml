@@ -3,5 +3,5 @@ kind: ConfigMap
 metadata:
   name: config
 data:
-  GCP_IOT_OPTIONS: enabled
-  CLEARBLADE_PROJECT: ""
+  GCP_IOT_OPTIONS: disabled
+  CLEARBLADE_PROJECT: bos-platform-dev

@@ -5,6 +5,9 @@
     "timestamp" : "1999-10-20T01:02:03Z",
     "level" : 200
   } ],
+  "metrics" : {
+    "mem_total_mb" : 25164.88
+  },
   "timestamp" : "1999-10-20T01:02:03Z",
   "version" : "1.3.14"
 }
