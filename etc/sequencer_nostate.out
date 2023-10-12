@@ -23,8 +23,8 @@ RESULT skip system device_config_acked BETA 5 State testing disabled
 RESULT skip system extra_config BETA 5 State testing disabled
 RESULT skip system state_make_model BETA 5 State testing disabled
 RESULT skip system state_software BETA 5 State testing disabled
-RESULT skip system system_last_update STABLE 5 State testing disabled
-RESULT skip system system_min_loglevel ALPHA 5 State testing disabled
+RESULT fail system system_last_update STABLE 5 timeout waiting for device state update
+RESULT fail system system_min_loglevel ALPHA 5 timeout waiting for device state update
 RESULT skip system valid_serial_no ALPHA 5 State testing disabled
 RESULT skip system.mode system_mode_restart ALPHA 5 State testing disabled
 RESULT skip unknown family_ether_addr ALPHA 5 State testing disabled
