@@ -93,4 +93,5 @@ echo Comparing diff $RESULTS_OUT $GOLDEN_FILE
 diff -u $RESULTS_OUT $GOLDEN_FILE
 
 echo Comparing diff $SCHEMA_OUT $GOLDEN_SCHEMAS
+uniq < $SCHEMA_OUT | sponge $SCHEMA_OUT
 diff -u $SCHEMA_OUT $GOLDEN_SCHEMAS
