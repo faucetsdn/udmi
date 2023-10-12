@@ -19,6 +19,7 @@ import static udmi.schema.FeatureEnumeration.FeatureStage.ALPHA;
 import static udmi.schema.FeatureEnumeration.FeatureStage.BETA;
 import static udmi.schema.FeatureEnumeration.FeatureStage.STABLE;
 
+import com.google.daq.mqtt.sequencer.AllowNoState;
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.Summary;
@@ -43,6 +44,7 @@ public class ConfigSequences extends SequenceBase {
   @Feature(stage = STABLE, bucket = SYSTEM)
   @Summary("Check that last_update state is correctly set in response to a config update.")
   @ValidateSchema
+  @AllowNoState
   public void system_last_update() {
     untilTrue("state last_config matches config timestamp", this::stateMatchesConfigTimestamp);
     ensureStateUpdate();
