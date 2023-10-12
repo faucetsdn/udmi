@@ -189,7 +189,7 @@ public class UdmiServicePod extends ContainerBase {
     String absolutePath = READY_INDICATOR.getAbsolutePath();
     try {
       forAllComponents(ContainerBase::activate);
-      checkState(READY_INDICATOR.createNewFile(), "ready file already exists");
+      checkState(READY_INDICATOR.createNewFile(), "ready file already exists: " + absolutePath);
       READY_INDICATOR.deleteOnExit();
     } catch (Exception e) {
       throw new RuntimeException("While activating pod", e);

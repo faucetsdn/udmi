@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.base.Preconditions;
 import com.google.common.hash.Hashing;
+import com.google.udmi.util.NanSerializer;
 import com.google.udmi.util.SiteModel;
 import com.google.udmi.util.SiteModel.ClientInfo;
 import io.jsonwebtoken.JwtBuilder;
@@ -51,7 +52,6 @@ import udmi.schema.Basic;
 import udmi.schema.EndpointConfiguration.Transport;
 import udmi.schema.Jwt;
 import udmi.schema.PubberConfiguration;
-import udmi.schema.State;
 
 /**
  * Handle publishing sensor data to a Cloud IoT MQTT endpoint.
@@ -64,7 +64,9 @@ public class MqttPublisher implements Publisher {
       .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
       .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
       .setDateFormat(new ISO8601DateFormat())
+      .registerModule(NanSerializer.TO_NAN)
       .setSerializationInclusion(JsonInclude.Include.NON_NULL);
+
   // Indicate if this message should be a MQTT 'retained' message.
   private static final boolean SHOULD_RETAIN = false;
   private static final String UNUSED_ACCOUNT_NAME = "unused";
