@@ -1,12 +1,10 @@
 =========== pointset_request_extraneous
 =========== pointset_remove_point
 =========== feature_enumeration
-=========== broken_config
 =========== valid_serial_no
 RESULT pass schemas event_pointset_alpha ALPHA 5 All schema validations passed
 RESULT pass schemas event_system_alpha ALPHA 5 All schema validations passed
 RESULT pass schemas state_update_alpha ALPHA 5 All schema validations passed
-=========== writeback_success
 =========== writeback_success
 =========== pointset_sample_rate
 =========== system_mode_restart
