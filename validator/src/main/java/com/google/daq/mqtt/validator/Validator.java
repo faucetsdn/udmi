@@ -1,6 +1,7 @@
 package com.google.daq.mqtt.validator;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.daq.mqtt.registrar.Registrar.BASE_DIR;
 import static com.google.daq.mqtt.sequencer.SequenceBase.EMPTY_MESSAGE;
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_TOOLS;
@@ -31,6 +32,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.github.fge.jsonschema.core.load.configuration.LoadingConfiguration;
 import com.github.fge.jsonschema.core.load.download.URIDownloader;
+import com.github.fge.jsonschema.core.report.LogLevel;
+import com.github.fge.jsonschema.core.report.ProcessingMessage;
 import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
@@ -83,6 +86,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 import org.apache.commons.io.FileUtils;
 import udmi.schema.Category;
 import udmi.schema.DeviceValidationEvent;
@@ -216,6 +220,29 @@ public class Validator {
     if (message.get(EXCEPTION_KEY) instanceof Exception exception) {
       message.put(EXCEPTION_KEY, friendlyStackTrace(exception));
     }
+  }
+
+  /**
+   * From an external processing report.
+   *
+   * @param report Report to convert
+   * @return Converted exception.
+   */
+  public static ValidationException fromProcessingReport(ProcessingReport report) {
+    checkArgument(!report.isSuccess(), "Report must not be successful");
+    ImmutableList<ValidationException> causingExceptions =
+        StreamSupport.stream(report.spliterator(), false)
+            .filter(
+                processingMessage -> processingMessage.getLogLevel().compareTo(LogLevel.ERROR) >= 0)
+            .map(Validator::convertMessage).collect(toImmutableList());
+    return new ValidationException(
+        String.format("%d schema violations found", causingExceptions.size()), causingExceptions);
+  }
+
+  private static ValidationException convertMessage(ProcessingMessage processingMessage) {
+    String pointer = processingMessage.asJson().get("instance").get("pointer").asText();
+    String prefix = com.google.api.client.util.Strings.isNullOrEmpty(pointer) ? "" : (pointer + ": ");
+    return new ValidationException(prefix + processingMessage.getMessage());
   }
 
   private List<String> parseArgs(List<String> argList) {
@@ -1011,7 +1038,7 @@ public class Validator {
   private void validateJsonNode(JsonSchema schema, JsonNode jsonNode) throws ProcessingException {
     ProcessingReport report = schema.validate(jsonNode, true);
     if (!report.isSuccess()) {
-      throw ValidationException.fromProcessingReport(report);
+      throw fromProcessingReport(report);
     }
   }
 
