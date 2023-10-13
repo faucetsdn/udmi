@@ -3,7 +3,6 @@ package daq.pubber;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.udmi.util.Common.UDMI_VERSION_KEY;
 import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.catchOrElse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
@@ -135,8 +134,7 @@ public class Pubber {
   public static final String PERSISTENT_TMP_FORMAT = "/tmp/pubber_%s_" + PERSISTENT_STORE_FILE;
   public static final String PUBBER_LOG_CATEGORY = "device.log";
   public static final String DATA_URL_JSON_BASE64 = "data:application/json;base64,";
-  private static final String UDMI_VERSION_1_4_0 = "1.4.0";
-  static final String UDMI_VERSION = "1.4.2";
+  static final String UDMI_VERSION = SchemaVersion.CURRENT.key();
   private static final Logger LOG = LoggerFactory.getLogger(Pubber.class);
   private static final String HOSTNAME = System.getenv("HOSTNAME");
   private static final int MIN_REPORT_MS = 200;
@@ -226,6 +224,7 @@ public class Pubber {
   private MqttDevice gatewayTarget;
   private int systemEventCount;
   private LocalnetManager localnetManager;
+  private SchemaVersion targetSchema;
 
   /**
    * Start an instance from a configuration file.
@@ -597,6 +596,9 @@ public class Pubber {
       throw new RuntimeException("While processing metadata file " + metadataException.file,
           metadataException.exception);
     }
+    targetSchema = ifNotNullGet(metadata.device_version, SchemaVersion::fromKey);
+    ifNotNullThen(targetSchema, version -> warn("Emulating UDMI version " + version.key()));
+
     if (metadata.cloud != null) {
       configuration.algorithm = catchToNull(() -> metadata.cloud.auth_type.value());
     }
@@ -1750,21 +1752,19 @@ public class Pubber {
   }
 
   private Object downgradeMessage(Object message) {
-    String legacyVersion = configuration.options.legacy;
-    if (isNull(legacyVersion)) {
+    if (isNull(targetSchema) || UDMI_VERSION.equals(targetSchema.key())) {
       return message;
     }
-
     Map<String, Object> messageMap = JsonUtil.asMap(message);
-    messageMap.put(VERSION_KEY, legacyVersion);
+    messageMap.put(VERSION_KEY, targetSchema.key());
     Map<String, Object> systemMap = GeneralUtils.getSubMap(messageMap, "system");
-    if (legacyVersion.equals(UDMI_VERSION_1_4_0)) {
+    if (targetSchema == SchemaVersion.VERSION_1_4_2) {
       if (!isNull(systemMap)) {
         systemMap.put("operational", TRUE);
         systemMap.remove("operation");
       }
     } else {
-      throw new RuntimeException("Unknown legacy version " + legacyVersion);
+      throw new RuntimeException("Unknown legacy version " + targetSchema.key());
     }
 
     return messageMap;
@@ -1869,5 +1869,4 @@ public class Pubber {
     // This extraField exists only to trigger schema parsing errors.
     public Object extraField;
   }
-
 }

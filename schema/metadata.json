@@ -19,7 +19,7 @@
       "examples": ["2019-01-17T14:02:29.364Z"]
     },
     "version": {
-      "description": "Version of the UDMI schema",
+      "description": "Version of the UDMI schema for this file",
       "type": "string"
     },
     "description": {
@@ -30,6 +30,10 @@
       "description": "Automatically generated field that contains the hash of file contents.",
       "type": "string",
       "pattern": "^[0-9a-z]{8}$"
+    },
+    "device_version": {
+      "description": "Version of schema supported by the device",
+      "type": "string"
     },
     "cloud": {
       "$ref": "file:model_cloud.json#"

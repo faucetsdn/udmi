@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder({
     "timestamp",
     "version",
+    "upgraded_from",
     "partial_update",
     "points"
 })
@@ -43,6 +44,13 @@ public class PointsetEvent {
     @JsonPropertyDescription("Version of the UDMI schema")
     public java.lang.String version;
     /**
+     * Original version of schema pre-upgrade
+     * 
+     */
+    @JsonProperty("upgraded_from")
+    @JsonPropertyDescription("Original version of schema pre-upgrade")
+    public java.lang.String upgraded_from;
+    /**
      * Indicates if this is a partial update (only some points may be included)
      * 
      */
@@ -62,6 +70,7 @@ public class PointsetEvent {
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.partial_update == null)? 0 :this.partial_update.hashCode()));
+        result = ((result* 31)+((this.upgraded_from == null)? 0 :this.upgraded_from.hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
         result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
         result = ((result* 31)+((this.points == null)? 0 :this.points.hashCode()));
@@ -77,7 +86,7 @@ public class PointsetEvent {
             return false;
         }
         PointsetEvent rhs = ((PointsetEvent) other);
-        return (((((this.partial_update == rhs.partial_update)||((this.partial_update!= null)&&this.partial_update.equals(rhs.partial_update)))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.points == rhs.points)||((this.points!= null)&&this.points.equals(rhs.points))));
+        return ((((((this.partial_update == rhs.partial_update)||((this.partial_update!= null)&&this.partial_update.equals(rhs.partial_update)))&&((this.upgraded_from == rhs.upgraded_from)||((this.upgraded_from!= null)&&this.upgraded_from.equals(rhs.upgraded_from))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.points == rhs.points)||((this.points!= null)&&this.points.equals(rhs.points))));
     }
 
 }

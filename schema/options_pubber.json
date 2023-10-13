@@ -52,9 +52,6 @@
     "noState": {
       "type": "boolean"
     },
-    "legacy": {
-      "type": "string"
-    },
     "featureEnableSwap": {
       "type": "boolean"
     },

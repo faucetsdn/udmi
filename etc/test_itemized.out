@@ -3,6 +3,7 @@ TEST pointset_remove_point missingPoint=filter_alarm_pressure_status RESULT fail
 TEST pointset_remove_point noState RESULT fail pointset pointset_remove_point ALPHA 5 timeout waiting for no interesting system status
 TEST feature_enumeration featureEnableSwap RESULT fail enumeration.features feature_enumeration PREVIEW 5 Failed check that feature enumeration matches metadata; missing { enumeration }, extra { unknown }
 TEST valid_serial_no noLastStart RESULT pass system valid_serial_no ALPHA 5 Sequence complete
+TEST valid_serial_no RESULT pass system valid_serial_no ALPHA 5 Sequence complete
 TEST writeback_success noWriteback RESULT fail writeback writeback_success ALPHA 5 timeout waiting for point filter_differential_pressure_setpoint to have value_state applied
 TEST writeback_success noPointState RESULT fail writeback writeback_success ALPHA 5 timeout waiting for point filter_differential_pressure_setpoint to have value_state applied
 TEST pointset_sample_rate fixedSampleRate=10 RESULT fail pointset pointset_sample_rate BETA 5 Failed check that time period between successive pointset events is between 1 and 5 seconds
