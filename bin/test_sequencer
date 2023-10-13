@@ -74,7 +74,7 @@ bin/clone_model # Clone, and check that version is correct.
 bin/reset_config $site_path $project_id $device_id
 
 # Clean out the persistant data store to ensure a clean state each time.
-rm -rf $site_path/out/devices/AHU-1/persistent_data.json
+rm -rf $site_path/out/devices/${device_id}/persistent_data.json
 
 pubber/bin/build
 

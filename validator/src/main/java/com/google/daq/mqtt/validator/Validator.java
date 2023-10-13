@@ -7,6 +7,7 @@ import static com.google.daq.mqtt.util.ConfigUtil.UDMI_TOOLS;
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_VERSION;
 import static com.google.daq.mqtt.util.ConfigUtil.readExeConfig;
 import static com.google.daq.mqtt.validator.ReportingDevice.typeFolderPairKey;
+import static com.google.udmi.util.Common.DEVICE_ID_PROPERTY_KEY;
 import static com.google.udmi.util.Common.ERROR_KEY;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
 import static com.google.udmi.util.Common.GCP_REFLECT_KEY_PKCS8;
@@ -142,6 +143,7 @@ public class Validator {
   private static final String VALIDATION_STATE_TOPIC = "validation/state";
   private static final String POINTSET_SUBFOLDER = "pointset";
   private static final Date START_TIME = new Date();
+  private static final String FAKE_DEVICE_ID = "TAP-1";
   private final Map<String, ReportingDevice> reportingDevices = new TreeMap<>();
   private final Set<String> extraDevices = new TreeSet<>();
   private final Set<String> processedDevices = new TreeSet<>();
@@ -595,9 +597,11 @@ public class Validator {
     }
 
     try {
-      validateMessage(schemaMap.get(ENVELOPE_SCHEMA_ID), attributes);
+      Map<String, String> modified = new HashMap<>(attributes);
+      modified.put(DEVICE_ID_PROPERTY_KEY, FAKE_DEVICE_ID); // Allow for non-standard device IDs.
+      validateMessage(schemaMap.get(ENVELOPE_SCHEMA_ID), modified);
     } catch (Exception e) {
-      System.err.println("Error validating attributes: " + e);
+      System.err.println("Error validating attributes: " + friendlyStackTrace(e));
       device.addError(e, attributes, Category.VALIDATION_DEVICE_RECEIVE);
     }
 
@@ -606,7 +610,7 @@ public class Validator {
         validateMessage(schemaMap.get(schemaName), message);
       } catch (Exception e) {
         System.err.printf("Error validating schema %s: %s%n", schemaName,
-            GeneralUtils.friendlyStackTrace(e));
+            friendlyStackTrace(e));
         device.addError(e, attributes, Category.VALIDATION_DEVICE_SCHEMA);
       }
     }
@@ -620,7 +624,7 @@ public class Validator {
           device.validateMessageType(messageObject, JsonUtil.getDate(timeString), attributes);
         });
       } catch (Exception e) {
-        System.err.println("Error validating contents: " + e.getMessage());
+        System.err.println("Error validating contents: " + friendlyStackTrace(e));
         device.addError(e, attributes, Category.VALIDATION_DEVICE_CONTENT);
       }
     } else {

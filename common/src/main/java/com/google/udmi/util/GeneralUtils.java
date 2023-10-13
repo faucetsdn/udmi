@@ -16,6 +16,7 @@ import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.Hashing;
+import com.google.daq.mqtt.util.ValidationException;
 import com.google.udmi.util.ProperPrinter.OutputFormat;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -134,7 +135,16 @@ public class GeneralUtils {
   public static String friendlyStackTrace(Throwable e) {
     List<String> messages = new ArrayList<>();
     while (e != null) {
-      messages.add(ofNullable(e.getMessage()).orElse(e.getClass().getSimpleName()));
+      if (e instanceof ValidationException validationException) {
+        ImmutableList<ValidationException> causes = validationException.getCausingExceptions();
+        if (causes.isEmpty()) {
+          messages.add(validationException.getMessage());
+        } else {
+          causes.forEach(exception -> messages.add(friendlyStackTrace(exception)));
+        }
+      } else {
+        messages.add(ofNullable(e.getMessage()).orElse(e.getClass().getSimpleName()));
+      }
       e = e.getCause();
     }
     return CSV_JOINER.join(messages).replace('\n', ' ');
@@ -186,12 +196,14 @@ public class GeneralUtils {
    * A custom generator can't be set on a base object mapper instance, so need to do it for each
    * invocation.
    */
-  private static JsonGenerator getPrettyPrinterGenerator(OutputStream outputStream, OutputFormat indent) {
+  private static JsonGenerator getPrettyPrinterGenerator(OutputStream outputStream,
+      OutputFormat indent) {
     try {
       return OBJECT_MAPPER_STRICT
           .getFactory()
           .createGenerator(outputStream)
-          .setPrettyPrinter(indent == VERBOSE ? ProperPrinter.INDENT_PRINTER : ProperPrinter.NO_INDENT_PRINTER);
+          .setPrettyPrinter(
+              indent == VERBOSE ? ProperPrinter.INDENT_PRINTER : ProperPrinter.NO_INDENT_PRINTER);
     } catch (Exception e) {
       throw new RuntimeException("While creating pretty printer", e);
     }
