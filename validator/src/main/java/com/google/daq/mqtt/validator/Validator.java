@@ -241,7 +241,8 @@ public class Validator {
 
   private static ValidationException convertMessage(ProcessingMessage processingMessage) {
     String pointer = processingMessage.asJson().get("instance").get("pointer").asText();
-    String prefix = com.google.api.client.util.Strings.isNullOrEmpty(pointer) ? "" : (pointer + ": ");
+    String prefix =
+        com.google.api.client.util.Strings.isNullOrEmpty(pointer) ? "" : (pointer + ": ");
     return new ValidationException(prefix + processingMessage.getMessage());
   }
 
