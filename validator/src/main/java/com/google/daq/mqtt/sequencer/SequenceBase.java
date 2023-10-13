@@ -568,10 +568,6 @@ public class SequenceBase {
     return useAlternateClient ? altClient : client;
   }
 
-  private static boolean deviceSupportsState() {
-    return !isTrue(deviceMetadata.testing.nostate);
-  }
-
   protected String getAlternateEndpointHostname() {
     ifNullSkipTest(altClient, "No functional alternate registry defined");
     return altClient.getBridgeHost();
@@ -679,7 +675,7 @@ public class SequenceBase {
 
     assumeTrue("Feature bucket not enabled", isBucketEnabled(testBucket));
 
-    if (!stateTestingEnabled()) {
+    if (!deviceSupportsState()) {
       boolean featureDisabled = ifNotNullGet(testDescription.getAnnotation(Feature.class),
           feature -> !feature.nostate(), true);
       ifTrueSkipTest(featureDisabled, "State testing disabled");
@@ -705,7 +701,7 @@ public class SequenceBase {
 
     updateConfig("initial setup");
 
-    ifTrueThen(stateTestingEnabled(),
+    ifTrueThen(deviceSupportsState(),
         () -> untilTrue("device state update", () -> deviceState != null));
     checkThatHasInterestingSystemStatus(false);
 
@@ -721,7 +717,7 @@ public class SequenceBase {
     debug(format("stage begin %s at %s", waitingConditionPeek(), timeSinceStart()));
   }
 
-  private boolean stateTestingEnabled() {
+  private boolean deviceSupportsState() {
     return !isTrue(catchToNull(() -> deviceMetadata.testing.nostate));
   }
 
@@ -993,10 +989,9 @@ public class SequenceBase {
       return;
     }
     assertConfigIsNotPending();
-    Preconditions.checkState(!stateTransactionPending(), "state transaction already pending");
     String txnId = reflector().publish(getDeviceId(), Common.STATE_QUERY_TOPIC, EMPTY_MESSAGE);
-    stateTransaction.set(txnId);
-    debug(format("Waiting for device stateTransaction %s", txnId));
+    String previous = stateTransaction.getAndSet(txnId);
+    debug(format("Waiting for device stateTransaction %s (was %s)", txnId, previous));
     whileDoing("state query", () -> messageEvaluateLoop(this::stateTransactionPending),
         e -> debug(
             format("While waiting for stateTransaction %s: %s", txnId, friendlyStackTrace(e))));
@@ -1201,7 +1196,7 @@ public class SequenceBase {
 
   protected void checkNotLogged(String category, Level minLevel) {
     withRecordSequence(false, () -> {
-      ifTrueThen(stateTestingEnabled(), () ->
+      ifTrueThen(deviceSupportsState(), () ->
           untilTrue("last_config synchronized",
               () -> dateEquals(deviceConfig.timestamp, deviceState.system.last_config)));
       processLogMessages();
