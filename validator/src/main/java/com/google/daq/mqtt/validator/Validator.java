@@ -147,7 +147,6 @@ public class Validator {
   private static final String VALIDATION_STATE_TOPIC = "validation/state";
   private static final String POINTSET_SUBFOLDER = "pointset";
   private static final Date START_TIME = new Date();
-  private static final String FAKE_DEVICE_ID = "TAP-1";
   private final Map<String, ReportingDevice> reportingDevices = new TreeMap<>();
   private final Set<String> extraDevices = new TreeSet<>();
   private final Set<String> processedDevices = new TreeSet<>();
@@ -625,9 +624,7 @@ public class Validator {
     }
 
     try {
-      Map<String, String> modified = new HashMap<>(attributes);
-      modified.put(DEVICE_ID_PROPERTY_KEY, FAKE_DEVICE_ID); // Allow for non-standard device IDs.
-      validateMessage(schemaMap.get(ENVELOPE_SCHEMA_ID), modified);
+      validateMessage(schemaMap.get(ENVELOPE_SCHEMA_ID), attributes);
     } catch (Exception e) {
       System.err.println("Error validating attributes: " + friendlyStackTrace(e));
       device.addError(e, attributes, Category.VALIDATION_DEVICE_RECEIVE);

@@ -10,6 +10,7 @@ import static com.google.daq.mqtt.validator.Validator.CONFIG_PREFIX;
 import static com.google.daq.mqtt.validator.Validator.STATE_PREFIX;
 import static com.google.udmi.util.CleanDateFormat.cleanDate;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
+import static com.google.udmi.util.Common.DEVICE_ID_PROPERTY_KEY;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.GeneralUtils.changedLines;
@@ -202,6 +203,7 @@ public class SequenceBase {
   private static final int MINIMUM_TEST_SEC = 15;
   private static final Date RESET_LAST_START = new Date(73642);
   private static final Date stateCutoffThreshold = new Date();
+  private static final String FAKE_DEVICE_ID = "TAP-1";
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -1415,7 +1417,11 @@ public class SequenceBase {
 
     String deviceId = attributes.get("deviceId");
     ReportingDevice reportingDevice = new ReportingDevice(deviceId);
-    messageValidator.validateDeviceMessage(reportingDevice, message, attributes);
+
+    Map<String, String> modified = new HashMap<>(attributes);
+    modified.put(DEVICE_ID_PROPERTY_KEY, FAKE_DEVICE_ID); // Allow for non-standard device IDs.
+
+    messageValidator.validateDeviceMessage(reportingDevice, message, modified);
     String messageBase = makeMessageBase(attributes);
     validationResults.computeIfAbsent(messageBase, key -> new ArrayList<>())
         .addAll(reportingDevice.getMessageEntries());
