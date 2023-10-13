@@ -21,6 +21,7 @@ class PubberOptions:
     self.smokeCheck = None
     self.noPointState = None
     self.noState = None
+    self.legacy = None
     self.featureEnableSwap = None
     self.disableWriteback = None
     self.noWriteback = None
@@ -48,6 +49,7 @@ class PubberOptions:
     result.smokeCheck = source.get('smokeCheck')
     result.noPointState = source.get('noPointState')
     result.noState = source.get('noState')
+    result.legacy = source.get('legacy')
     result.featureEnableSwap = source.get('featureEnableSwap')
     result.disableWriteback = source.get('disableWriteback')
     result.noWriteback = source.get('noWriteback')
@@ -105,6 +107,8 @@ class PubberOptions:
       result['noPointState'] = self.noPointState # 5
     if self.noState:
       result['noState'] = self.noState # 5
+    if self.legacy:
+      result['legacy'] = self.legacy # 5
     if self.featureEnableSwap:
       result['featureEnableSwap'] = self.featureEnableSwap # 5
     if self.disableWriteback:

@@ -3,6 +3,8 @@ package daq.pubber;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.udmi.util.Common.UDMI_VERSION_KEY;
+import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.catchOrElse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
@@ -12,6 +14,8 @@ import static com.google.udmi.util.GeneralUtils.fromJsonString;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
+import static com.google.udmi.util.GeneralUtils.isGetTrue;
+import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.optionsString;
 import static com.google.udmi.util.GeneralUtils.toJsonFile;
 import static com.google.udmi.util.GeneralUtils.toJsonString;
@@ -21,6 +25,7 @@ import static daq.pubber.MqttDevice.ERRORS_TOPIC;
 import static daq.pubber.MqttDevice.STATE_TOPIC;
 import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
+import static java.util.Objects.isNull;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
@@ -130,6 +135,7 @@ public class Pubber {
   public static final String PERSISTENT_TMP_FORMAT = "/tmp/pubber_%s_" + PERSISTENT_STORE_FILE;
   public static final String PUBBER_LOG_CATEGORY = "device.log";
   public static final String DATA_URL_JSON_BASE64 = "data:application/json;base64,";
+  private static final String UDMI_VERSION_1_4_0 = "1.4.0";
   static final String UDMI_VERSION = "1.4.2";
   private static final Logger LOG = LoggerFactory.getLogger(Pubber.class);
   private static final String HOSTNAME = System.getenv("HOSTNAME");
@@ -440,7 +446,7 @@ public class Pubber {
 
     deviceState.system = new SystemState();
     deviceState.system.operation = new StateSystemOperation();
-    if (!TRUE.equals(configuration.options.noLastStart)) {
+    if (!isTrue(configuration.options.noLastStart)) {
       deviceState.system.operation.last_start = DEVICE_START_TIME;
     }
 
@@ -492,7 +498,7 @@ public class Pubber {
     checkState(persistentData == null, "persistent data already loaded");
     File persistentStore = getPersistentStore();
 
-    if (TRUE.equals(configuration.options.noPersist)) {
+    if (isTrue(configuration.options.noPersist)) {
       info("Resetting persistent store " + persistentStore.getAbsolutePath());
       persistentData = newDevicePersistent();
     } else {
@@ -691,7 +697,7 @@ public class Pubber {
    */
   private void sendEmptyMissingBadEvents() {
     int phase = deviceUpdateCount % MESSAGE_REPORT_INTERVAL;
-    if (!TRUE.equals(configuration.options.emptyMissing)
+    if (!isTrue(configuration.options.emptyMissing)
         || (phase >= INVALID_REPLACEMENTS.size() + 2)) {
       return;
     }
@@ -766,7 +772,7 @@ public class Pubber {
         warn(format("Device start time %s before last config start %s, terminating.",
             isoConvert(DEVICE_START_TIME), isoConvert(configLastStart)));
         systemLifecycle(SystemMode.TERMINATE);
-      } else if (TRUE.equals(configuration.options.smokeCheck)
+      } else if (isTrue(configuration.options.smokeCheck)
           && CleanDateFormat.dateEquals(DEVICE_START_TIME, configLastStart)) {
         warn(format("Device start time %s matches, smoke check indicating success!",
             isoConvert(configLastStart)));
@@ -1012,7 +1018,7 @@ public class Pubber {
   private void publisherHandler(String type, String phase, Throwable cause) {
     if (cause != null) {
       error("Error receiving message " + type, cause);
-      if (TRUE.equals(configuration.options.barfConfig)) {
+      if (isTrue(configuration.options.barfConfig)) {
         error("Restarting system because of restart-on-error configuration setting");
         systemLifecycle(SystemMode.RESTART);
       }
@@ -1035,7 +1041,7 @@ public class Pubber {
    * this case appropriately.
    */
   private void publishConfigStateUpdate() {
-    if (TRUE.equals(configuration.options.configStateDelay)) {
+    if (isTrue(configuration.options.configStateDelay)) {
       delayNextStateUpdate();
     }
     publishAsynchronousState();
@@ -1101,7 +1107,7 @@ public class Pubber {
   private void processConfigUpdate(Config config) {
     final int actualInterval;
     if (config != null) {
-      if (config.system == null && TRUE.equals(configuration.options.barfConfig)) {
+      if (config.system == null && isTrue(configuration.options.barfConfig)) {
         error("Empty config system block and configured to restart on bad config!");
         systemLifecycle(SystemMode.RESTART);
       }
@@ -1320,7 +1326,7 @@ public class Pubber {
   }
 
   private <T> T ifTrue(Boolean condition, Supplier<T> supplier) {
-    return isTrue(() -> condition) ? supplier.get() : null;
+    return isGetTrue(() -> condition) ? supplier.get() : null;
   }
 
   private Map<String, PointEnumerationEvent> enumeratePoints(String deviceId) {
@@ -1449,7 +1455,7 @@ public class Pubber {
               .collect(toMap(Map.Entry::getKey, this::eventForTarget));
           discoveryEvent.families.computeIfAbsent("iot",
               key -> new FamilyDiscoveryEvent()).addr = deviceId;
-          if (isTrue(() -> deviceConfig.discovery.families.get(family).enumerate)) {
+          if (isGetTrue(() -> deviceConfig.discovery.families.get(family).enumerate)) {
             discoveryEvent.uniqs = enumeratePoints(deviceId);
           }
           publishDeviceMessage(discoveryEvent);
@@ -1458,14 +1464,6 @@ public class Pubber {
       });
       info("Sent " + sentEvents.get() + " discovery events from " + family + " for "
           + scanGeneration);
-    }
-  }
-
-  private boolean isTrue(Supplier<Boolean> target) {
-    try {
-      return target.get();
-    } catch (Exception e) {
-      return false;
     }
   }
 
@@ -1714,7 +1712,7 @@ public class Pubber {
   }
 
   private boolean shouldSendState() {
-    return !isTrue(() -> configuration.options.noState);
+    return !isGetTrue(() -> configuration.options.noState);
   }
 
   private void publishDeviceMessage(Object message) {
@@ -1739,22 +1737,44 @@ public class Pubber {
     }
 
     augmentDeviceMessage(message);
-    deviceTarget.publish(topicSuffix, message, callback);
+    Object downgraded = downgradeMessage(message);
+    deviceTarget.publish(topicSuffix, downgraded, callback);
     String messageBase = topicSuffix.replace("/", "_");
     String fileName = traceTimestamp(messageBase) + ".json";
     File messageOut = new File(outDir, fileName);
     try {
-      toJsonFile(messageOut, message);
+      toJsonFile(messageOut, downgraded);
     } catch (Exception e) {
       throw new RuntimeException("While writing " + messageOut.getAbsolutePath(), e);
     }
+  }
+
+  private Object downgradeMessage(Object message) {
+    String legacyVersion = configuration.options.legacy;
+    if (isNull(legacyVersion)) {
+      return message;
+    }
+
+    Map<String, Object> messageMap = JsonUtil.asMap(message);
+    messageMap.put(VERSION_KEY, legacyVersion);
+    Map<String, Object> systemMap = GeneralUtils.getSubMap(messageMap, "system");
+    if (legacyVersion.equals(UDMI_VERSION_1_4_0)) {
+      if (!isNull(systemMap)) {
+        systemMap.put("operational", TRUE);
+        systemMap.remove("operation");
+      }
+    } else {
+      throw new RuntimeException("Unknown legacy version " + legacyVersion);
+    }
+
+    return messageMap;
   }
 
   private String traceTimestamp(String messageBase) {
     int serial = MESSAGE_COUNTS.computeIfAbsent(messageBase, key -> new AtomicInteger())
         .incrementAndGet();
     String timestamp = getTimestamp().replace("Z", format(".%03dZ", serial));
-    return messageBase + (TRUE.equals(configuration.options.messageTrace) ? ("_" + timestamp) : "");
+    return messageBase + (isTrue(configuration.options.messageTrace) ? ("_" + timestamp) : "");
   }
 
   private boolean publisherActive() {

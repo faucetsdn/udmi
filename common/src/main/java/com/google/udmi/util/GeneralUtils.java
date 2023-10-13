@@ -266,6 +266,14 @@ public class GeneralUtils {
     return Boolean.TRUE.equals(value);
   }
 
+  public static boolean isGetTrue(Supplier<Object> target) {
+    try {
+      return Boolean.TRUE.equals(target.get());
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
   public static void catchOrElse(Runnable action, Consumer<Exception> caught) {
     try {
       action.run();
