@@ -1508,7 +1508,8 @@ public class SequenceBase {
           return;
         }
         if (deviceState == null && convertedState.timestamp.before(stateCutoffThreshold)) {
-          warning(format("Ignoring stale state update %s %s", timestamp, stateCutoffThreshold));
+          warning(format("Ignoring stale state update %s %s %s", timestamp,
+              getTimestamp(stateCutoffThreshold), txnId));
           return;
         }
         boolean deltaState = RECV_STATE_DIFFERNATOR.isInitialized();
