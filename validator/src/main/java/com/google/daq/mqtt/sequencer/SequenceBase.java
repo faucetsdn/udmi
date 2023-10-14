@@ -47,7 +47,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
 import com.google.bos.iot.core.proxy.MockPublisher;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
@@ -202,7 +201,9 @@ public class SequenceBase {
   private static final AtomicReference<String> stateTransaction = new AtomicReference<>();
   private static final int MINIMUM_TEST_SEC = 15;
   private static final Date RESET_LAST_START = new Date(73642);
-  private static final Date stateCutoffThreshold = new Date();
+  private static final long STATE_QUERY_CUTOFF_SEC = 60;
+  private static final Date stateCutoffThreshold = Date.from(Instant.now().minusSeconds(
+      STATE_QUERY_CUTOFF_SEC));
   private static final String FAKE_DEVICE_ID = "TAP-1";
   protected static Metadata deviceMetadata;
   protected static String projectId;
@@ -1508,8 +1509,10 @@ public class SequenceBase {
           return;
         }
         if (deviceState == null && convertedState.timestamp.before(stateCutoffThreshold)) {
-          warning(format("Ignoring stale state update %s %s %s", timestamp,
-              getTimestamp(stateCutoffThreshold), txnId));
+          String lastStart = getTimestamp(
+              catchToNull(() -> convertedState.system.operation.last_start));
+          warning(format("Ignoring stale state update %s %s %s %s", timestamp,
+              getTimestamp(stateCutoffThreshold), lastStart, txnId));
           return;
         }
         boolean deltaState = RECV_STATE_DIFFERNATOR.isInitialized();
