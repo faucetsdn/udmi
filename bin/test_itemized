@@ -110,9 +110,9 @@ done 7< $GOLDEN_FILE
 
 if [[ -z $TARGET_TEST ]]; then
     echo Comparing diff $RESULTS_OUT $GOLDEN_FILE
-    diff -u $RESULTS_OUT $GOLDEN_FILE
+    diff -bu $RESULTS_OUT $GOLDEN_FILE
 
     echo Comparing diff $SCHEMA_OUT $GOLDEN_SCHEMAS
     uniq < $SCHEMA_OUT | sponge $SCHEMA_OUT
-    diff -u $SCHEMA_OUT $GOLDEN_SCHEMAS
+    diff -bu $SCHEMA_OUT $GOLDEN_SCHEMAS
 fi
