@@ -276,7 +276,7 @@ jobs:
       - name: itemized output logs
         if: ${{ always() }}
         run: |
-          more out/test_itemized.out out/schemas_itemized.out | cat
+          more out/*_itemized.out | cat
           more out/sequencer.out-* out/pubber.out-* | cat
       - name: tool output logs
         if: ${{ always() }}

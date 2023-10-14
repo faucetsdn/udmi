@@ -46,7 +46,7 @@ while read -u 7 action test_name remainder; do
     pubber_opts=${remainder/RESULT*/}
 
     echo -n "TEST $test_name $pubber_opts" >> $RESULTS_OUT
-    echo "TEST $test_name $pubber_opts"
+    echo itemized test $test_name $pubber_opts
 
     # Clean out the persistant data store to ensure a clean state each time.
     rm -rf sites/udmi_site_model/out/devices/AHU-1/persistent_data.json
