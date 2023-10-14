@@ -22,14 +22,15 @@ RESULTS_OUT=out/test_itemized.out
 GOLDEN_FILE=etc/test_itemized.out
 SCHEMA_OUT=out/schema_itemized.out
 GOLDEN_SCHEMAS=etc/schema_itemized.out
+AUGMENT_OPTS=out/augment_opts.txt
 
 echo "export TARGET_PROJECT=$PROJECT_ID"
 echo "export UDMI_REGISTRY_SUFFIX=$UDMI_REGISTRY_SUFFIX"
 echo "export UDMI_ALT_REGISTRY=$UDMI_ALT_REGISTRY"
 
-rm -f $RESULTS_OUT $SEQUENCER_OUT $PUBBER_OUT $SCHEMA_OUT
+rm -f $RESULTS_OUT $SEQUENCER_OUT $PUBBER_OUT $SCHEMA_OUT $AUGMENT_OPTS
 mkdir -p out
-touch $RESULTS_OUT $SEQUENCER_OUT $PUBBER_OUT $SCHEMA_OUT
+touch $RESULTS_OUT $SEQUENCER_OUT $PUBBER_OUT $SCHEMA_OUT $AUGMENT_OPTS
 
 pubber/bin/build
 validator/bin/build
@@ -37,12 +38,23 @@ validator/bin/build
 test_index=0
 while read -u 7 action test_name remainder; do
     if [[ -n $TARGET_TEST && $TARGET_TEST != $test_name ]]; then
-        continue;
+        continue
+    fi
+
+    if [[ $action == WITH ]]; then
+        echo $remainder > $AUGMENT_OPTS
+        continue
+    fi
+
+    if [[ $action =~ ^# ]]; then
+        continue
     fi
 
     if [[ $action != TEST ]]; then
-        continue;
+        echo Unknown test action $action
+        false
     fi
+
     pubber_opts=${remainder/RESULT*/}
 
     echo -n "TEST $test_name $pubber_opts" >> $RESULTS_OUT
@@ -72,9 +84,10 @@ while read -u 7 action test_name remainder; do
         false
     fi
 
-    bin/augment_metadata $SITE_PATH $DEVICE_ID
-
     echo
+    echo bin/augment_metadata $SITE_PATH $DEVICE_ID $(< $AUGMENT_OPTS)
+    bin/augment_metadata $SITE_PATH $DEVICE_ID $(< $AUGMENT_OPTS)
+
     echo bin/sequencer $seq_opts $SITE_PATH $PROJECT_ID $DEVICE_ID $serial_no $test_name \> $SEQUENCER_OUT
     bin/sequencer $seq_opts $SITE_PATH $PROJECT_ID $DEVICE_ID $serial_no $test_name 2>&1 | tee $SEQUENCER_OUT
 
