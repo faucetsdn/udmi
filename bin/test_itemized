@@ -37,28 +37,29 @@ validator/bin/build
 
 test_index=0
 while read -u 7 action test_name remainder; do
-    if [[ -n $TARGET_TEST && $TARGET_TEST != $test_name ]]; then
+    if [[ $action == TEST && -n $TARGET_TEST && $TARGET_TEST != $test_name ]]; then
         continue
     fi
 
     if [[ $action == WITH ]]; then
-        echo $remainder > $AUGMENT_OPTS
-        continue
-    fi
-
-    if [[ $action =~ ^# ]]; then
-        continue
-    fi
-
-    if [[ $action != TEST ]]; then
+        echo $test_name $remainder > $AUGMENT_OPTS
+    elif [[ -z $action || $action =~ ^# ]]; then
+        true # skip blank lines and comments
+    elif [[ $action != TEST ]]; then
         echo Unknown test action $action
         false
     fi
 
     pubber_opts=${remainder/RESULT*/}
 
-    echo -n "TEST $test_name $pubber_opts" >> $RESULTS_OUT
-    echo itemized test $test_name $pubber_opts
+    echo -n "$action $test_name $pubber_opts" >> $RESULTS_OUT
+
+    if [[ $action != TEST ]]; then
+        echo >> $RESULTS_OUT
+        continue
+    fi
+
+    echo itemized test $test_name $pubber_opts [$(< $AUGMENT_OPTS)]
 
     # Clean out the persistant data store to ensure a clean state each time.
     rm -rf sites/udmi_site_model/out/devices/AHU-1/persistent_data.json
@@ -107,9 +108,11 @@ while read -u 7 action test_name remainder; do
 
 done 7< $GOLDEN_FILE
 
-echo Comparing diff $RESULTS_OUT $GOLDEN_FILE
-diff -u $RESULTS_OUT $GOLDEN_FILE
+if [[ -z $TARGET_TEST ]]; then
+    echo Comparing diff $RESULTS_OUT $GOLDEN_FILE
+    diff -u $RESULTS_OUT $GOLDEN_FILE
 
-echo Comparing diff $SCHEMA_OUT $GOLDEN_SCHEMAS
-uniq < $SCHEMA_OUT | sponge $SCHEMA_OUT
-diff -u $SCHEMA_OUT $GOLDEN_SCHEMAS
+    echo Comparing diff $SCHEMA_OUT $GOLDEN_SCHEMAS
+    uniq < $SCHEMA_OUT | sponge $SCHEMA_OUT
+    diff -u $SCHEMA_OUT $GOLDEN_SCHEMAS
+fi

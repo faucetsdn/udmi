@@ -11,5 +11,7 @@ TEST broken_config barfConfig RESULT fail system broken_config ALPHA 5 timeout w
 TEST broken_config configStateDelay RESULT pass system broken_config ALPHA 5 Sequence complete
 TEST broken_config noState RESULT fail system broken_config ALPHA 5 timeout waiting for initial state synchronized
 TEST system_last_update extraField=fnooz RESULT pass system system_last_update STABLE 5 Sequence complete
+
+# Test with various device metadata.json options
 WITH noState
 TEST valid_serial_no RESULT pass system valid_serial_no ALPHA 5 Sequence complete
