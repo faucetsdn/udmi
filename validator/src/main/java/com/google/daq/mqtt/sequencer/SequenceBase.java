@@ -1515,6 +1515,7 @@ public class SequenceBase {
               getTimestamp(stateCutoffThreshold), lastStart, txnId));
           return;
         }
+        checkState(!deviceSupportsState(), "Received state update with no-state device");
         boolean deltaState = RECV_STATE_DIFFERNATOR.isInitialized();
         List<String> stateChanges = RECV_STATE_DIFFERNATOR.computeChanges(converted);
         Instant start = ofNullable(convertedState.timestamp).orElseGet(Date::new).toInstant();
