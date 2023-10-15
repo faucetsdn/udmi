@@ -14,7 +14,7 @@ TEST system_last_update extraField=fnooz RESULT pass system system_last_update S
 
 # Test with various device metadata.json options
 WITH noState
-TEST valid_serial_no RESULT pass system valid_serial_no ALPHA 5 Sequence complete
-TEST valid_serial_no noState RESULT pass system valid_serial_no ALPHA 5 Sequence complete
+TEST valid_serial_no RESULT skip system valid_serial_no ALPHA 5 State testing disabled
 TEST system_last_update noState RESULT fail system system_last_update STABLE 5 timeout waiting for state last_config matches config timestamp
+TEST system_min_loglevel RESULT pass system system_min_loglevel ALPHA 5 Sequence complete
 TEST system_min_loglevel noState RESULT pass system system_min_loglevel ALPHA 5 Sequence complete
