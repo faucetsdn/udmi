@@ -1,7 +1,8 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.4.1",
-  "hash": "5ad401e4",
+  "upgraded_from": "1",
+  "hash": "302d594c",
   "system": {
     "location": {
       "site": "ZZ-TRI-FECTA",
