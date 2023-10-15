@@ -115,7 +115,7 @@ public class MessageUpgrader {
       patch = 1;
     }
 
-    if (upgraded) {
+    if (upgraded && message.get(VERSION_KEY) != null) {
       message.put(UPGRADED_FROM, originalVersion);
       message.put(VERSION_KEY, String.format(TARGET_FORMAT, major, minor, patch));
     }
