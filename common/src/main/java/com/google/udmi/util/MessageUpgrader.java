@@ -1,8 +1,10 @@
 package com.google.udmi.util;
 
+import static com.google.udmi.util.Common.UPGRADED_FROM;
 import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_RAW;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.MessageDowngrader.convertVersion;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -27,6 +29,7 @@ public class MessageUpgrader {
   private final JsonNode original;
   private final String schemaName;
   private final int major;
+  private final String originalVersion;
   private int patch;
   private int minor;
 
@@ -42,18 +45,17 @@ public class MessageUpgrader {
     this.original = message.deepCopy();
 
     JsonNode version = message.get(VERSION_KEY);
-    String verStr =
-        version != null ? version.isNumber() ? Integer.toString(version.asInt()) : version.asText()
-            : "1";
-    String[] components = verStr.split("-", 2);
+    String versionString = convertVersion(version);
+    String[] components = versionString.split("-", 2);
     String[] parts = components[0].split("\\.", 4);
     major = Integer.parseInt(parts[0]);
     minor = parts.length >= 2 ? Integer.parseInt(parts[1]) : -1;
     patch = parts.length >= 3 ? Integer.parseInt(parts[2]) : -1;
 
     if (parts.length >= 4) {
-      throw new IllegalArgumentException("Unexpected version " + verStr);
+      throw new IllegalArgumentException("Unexpected src version " + versionString);
     }
+    originalVersion = versionString;
   }
 
   public MessageUpgrader(String schemaName, Object originalMessage) {
@@ -113,7 +115,8 @@ public class MessageUpgrader {
       patch = 1;
     }
 
-    if (upgraded && message.has(VERSION_KEY)) {
+    if (upgraded) {
+      message.put(UPGRADED_FROM, originalVersion);
       message.put(VERSION_KEY, String.format(TARGET_FORMAT, major, minor, patch));
     }
 
@@ -192,7 +195,7 @@ public class MessageUpgrader {
   private void upgradeFirmware(ObjectNode system) {
     JsonNode firmware = system.remove("firmware");
     if (firmware != null) {
-      JsonNode version = ((ObjectNode) firmware).remove(VERSION_KEY);
+      JsonNode version = ((ObjectNode) firmware).remove("version");
       if (version != null && !system.has("software")) {
         ObjectNode softwareNode = new ObjectNode(NODE_FACTORY);
         softwareNode.set("firmware", sanitizeFirmwareVersion(version));

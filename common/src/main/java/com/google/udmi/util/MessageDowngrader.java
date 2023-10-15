@@ -1,5 +1,6 @@
 package com.google.udmi.util;
 
+import static com.google.udmi.util.Common.DOWNGRADED_FROM;
 import static com.google.udmi.util.Common.VERSION_KEY;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -64,10 +65,11 @@ public class MessageDowngrader {
 
     JsonNode useVersion = versionNode.equals(LEGACY_VERSION) ? LEGACY_REPLACEMENT : versionNode;
 
+    message.set(DOWNGRADED_FROM, new TextNode(version));
     message.set(VERSION_KEY, useVersion);
   }
 
-  private String convertVersion(JsonNode versionNode) {
+  static String convertVersion(JsonNode versionNode) {
     if (versionNode == null) {
       return "1";
     }
