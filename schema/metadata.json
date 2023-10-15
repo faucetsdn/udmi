@@ -22,6 +22,10 @@
       "description": "Version of the UDMI schema for this file",
       "type": "string"
     },
+    "upgraded_from": {
+      "description": "Original version of the UDMI schema for this file",
+      "type": "string"
+    },
     "description": {
       "description": "Generic human-readable text describing the device",
       "type": "string"

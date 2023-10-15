@@ -15,6 +15,7 @@ class Metadata:
   def __init__(self):
     self.timestamp = None
     self.version = None
+    self.upgraded_from = None
     self.description = None
     self.hash = None
     self.device_version = None
@@ -34,6 +35,7 @@ class Metadata:
     result = Metadata()
     result.timestamp = source.get('timestamp')
     result.version = source.get('version')
+    result.upgraded_from = source.get('upgraded_from')
     result.description = source.get('description')
     result.hash = source.get('hash')
     result.device_version = source.get('device_version')
@@ -69,6 +71,8 @@ class Metadata:
       result['timestamp'] = self.timestamp # 5
     if self.version:
       result['version'] = self.version # 5
+    if self.upgraded_from:
+      result['upgraded_from'] = self.upgraded_from # 5
     if self.description:
       result['description'] = self.description # 5
     if self.hash:
