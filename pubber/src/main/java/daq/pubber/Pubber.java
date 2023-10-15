@@ -41,6 +41,8 @@ import com.google.daq.mqtt.util.CatchingScheduledThreadPoolExecutor;
 import com.google.udmi.util.CleanDateFormat;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
+import com.google.udmi.util.MessageDowngrader;
+import com.google.udmi.util.SchemaVersion;
 import com.google.udmi.util.SiteModel;
 import com.google.udmi.util.SiteModel.MetadataException;
 import daq.pubber.MqttPublisher.InjectedMessage;
@@ -97,6 +99,7 @@ import udmi.schema.Entry;
 import udmi.schema.Enumerate;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
+import udmi.schema.Envelope.SubType;
 import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyDiscoveryEvent;
 import udmi.schema.FamilyDiscoveryState;
@@ -1752,22 +1755,8 @@ public class Pubber {
   }
 
   private Object downgradeMessage(Object message) {
-    if (isNull(targetSchema) || UDMI_VERSION.equals(targetSchema.key())) {
-      return message;
-    }
-    Map<String, Object> messageMap = JsonUtil.asMap(message);
-    messageMap.put(VERSION_KEY, targetSchema.key());
-    Map<String, Object> systemMap = GeneralUtils.getSubMap(messageMap, "system");
-    if (targetSchema == SchemaVersion.VERSION_1_4_2) {
-      if (!isNull(systemMap)) {
-        systemMap.put("operational", TRUE);
-        systemMap.remove("operation");
-      }
-    } else {
-      throw new RuntimeException("Unknown legacy version " + targetSchema.key());
-    }
-
-    return messageMap;
+    MessageDowngrader messageDowngrader = new MessageDowngrader(SubType.STATE.value(), message);
+    return ifNotNullGet(targetSchema, messageDowngrader::downgrade, message);
   }
 
   private String traceTimestamp(String messageBase) {

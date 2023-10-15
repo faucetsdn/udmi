@@ -1,4 +1,4 @@
-package daq.pubber;
+package com.google.udmi.util;
 
 import static com.google.common.base.Preconditions.checkState;
 
