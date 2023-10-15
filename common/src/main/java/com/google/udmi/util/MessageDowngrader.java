@@ -61,9 +61,15 @@ public class MessageDowngrader {
     throw new IllegalStateException("Unrecognized version node " + versionNode.asText());
   }
 
-  public Object downgrade(SchemaVersion version) {
-    downgrade(new TextNode(version.key()));
-    return JsonUtil.toMap(message);
+  /**
+   * Downgrade a message to a target version.
+   *
+   * @param version target downgrade version (as a SchemaVersion)
+   *
+   * @return downgraded object
+   */
+  public Map<String, Object> downgrade(SchemaVersion version) {
+    return downgrade(new TextNode(version.key()));
   }
 
   /**
@@ -73,7 +79,7 @@ public class MessageDowngrader {
    *
    * @return downgraded object
    */
-  public Object downgrade(JsonNode targetVersion) {
+  public Map<String, Object> downgrade(JsonNode targetVersion) {
     return switch (schema) {
       case "config" -> downgradeConfig(targetVersion);
       case "state" -> downgradeState(targetVersion);
@@ -82,7 +88,7 @@ public class MessageDowngrader {
     };
   }
 
-  private Object downgradeState(JsonNode targetVersion) {
+  private Map<String, Object> downgradeState(JsonNode targetVersion) {
     final String version = convertVersion(targetVersion);
 
     ObjectNode system = (ObjectNode) message.get("system");
@@ -97,7 +103,7 @@ public class MessageDowngrader {
     return JsonUtil.asMap(message);
   }
 
-  private Object downgradeConfig(JsonNode targetVersion) {
+  private Map<String, Object> downgradeConfig(JsonNode targetVersion) {
     downgradeConfigRaw(targetVersion);
     return JsonUtil.asMap(message);
   }
