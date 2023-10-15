@@ -13,6 +13,7 @@ import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.Common.DEVICE_ID_PROPERTY_KEY;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
+import static com.google.udmi.util.Common.getExceptionMessage;
 import static com.google.udmi.util.GeneralUtils.changedLines;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -1959,10 +1960,14 @@ public class SequenceBase {
         message = e.getMessage();
         failureType = SequenceResult.SKIP;
       } else {
-        message = friendlyStackTrace(e);
+        Throwable cause = e;
+        while (cause.getCause() != null) {
+          cause = cause.getCause();
+        }
+        message = getExceptionMessage(cause);
         failureType = SequenceResult.FAIL;
       }
-      debug("exception message: " + Common.getExceptionMessage(e));
+      debug("exception message: " + friendlyStackTrace(e));
       trace("ending stack trace", stackTraceString(e));
       recordCompletion(failureType, description, message);
       String action = failureType == SequenceResult.SKIP ? "skipped" : "failed";
