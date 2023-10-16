@@ -34,6 +34,7 @@ import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.ValidationException;
+import com.google.daq.mqtt.validator.Validator;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.MessageDowngrader;
@@ -223,7 +224,7 @@ class LocalDevice {
 
     for (ProcessingMessage msg : report) {
       if (msg.getLogLevel().compareTo(LogLevel.ERROR) >= 0) {
-        throw ValidationException.fromProcessingReport(report);
+        throw Validator.fromProcessingReport(report);
       }
     }
   }

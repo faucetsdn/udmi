@@ -7,5 +7,6 @@
   },
   "gateway": {
     "proxy_ids": [ "SNS-4", "AHU-22" ]
-  }
+  },
+  "downgraded_from": "1.4.2"
 }

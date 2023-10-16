@@ -40,7 +40,7 @@ public class ConfigSequences extends SequenceBase {
   private static final long LOG_APPLY_DELAY_MS = 1000;
 
   @Test(timeout = ONE_MINUTE_MS)
-  @Feature(stage = STABLE, bucket = SYSTEM)
+  @Feature(stage = STABLE, bucket = SYSTEM, nostate = true)
   @Summary("Check that last_update state is correctly set in response to a config update.")
   @ValidateSchema
   public void system_last_update() {
@@ -58,7 +58,7 @@ public class ConfigSequences extends SequenceBase {
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Feature(stage = ALPHA, bucket = SYSTEM)
+  @Feature(stage = ALPHA, bucket = SYSTEM, nostate = true)
   @Summary("Check that the min log-level config is honored by the device.")
   public void system_min_loglevel() {
     Integer savedLevel = deviceConfig.system.min_loglevel;

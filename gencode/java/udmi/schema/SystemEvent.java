@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder({
     "timestamp",
     "version",
+    "upgraded_from",
     "last_config",
     "logentries",
     "event_count",
@@ -46,6 +47,13 @@ public class SystemEvent {
     @JsonPropertyDescription("Version of the UDMI schema")
     public String version;
     /**
+     * Original version of schema pre-upgrade
+     * 
+     */
+    @JsonProperty("upgraded_from")
+    @JsonPropertyDescription("Original version of schema pre-upgrade")
+    public String upgraded_from;
+    /**
      * Last config received
      * 
      */
@@ -68,6 +76,7 @@ public class SystemEvent {
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.event_count == null)? 0 :this.event_count.hashCode()));
+        result = ((result* 31)+((this.upgraded_from == null)? 0 :this.upgraded_from.hashCode()));
         result = ((result* 31)+((this.metrics == null)? 0 :this.metrics.hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
         result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
@@ -85,7 +94,7 @@ public class SystemEvent {
             return false;
         }
         SystemEvent rhs = ((SystemEvent) other);
-        return (((((((this.event_count == rhs.event_count)||((this.event_count!= null)&&this.event_count.equals(rhs.event_count)))&&((this.metrics == rhs.metrics)||((this.metrics!= null)&&this.metrics.equals(rhs.metrics))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.last_config == rhs.last_config)||((this.last_config!= null)&&this.last_config.equals(rhs.last_config))))&&((this.logentries == rhs.logentries)||((this.logentries!= null)&&this.logentries.equals(rhs.logentries))));
+        return ((((((((this.event_count == rhs.event_count)||((this.event_count!= null)&&this.event_count.equals(rhs.event_count)))&&((this.upgraded_from == rhs.upgraded_from)||((this.upgraded_from!= null)&&this.upgraded_from.equals(rhs.upgraded_from))))&&((this.metrics == rhs.metrics)||((this.metrics!= null)&&this.metrics.equals(rhs.metrics))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.last_config == rhs.last_config)||((this.last_config!= null)&&this.last_config.equals(rhs.last_config))))&&((this.logentries == rhs.logentries)||((this.logentries!= null)&&this.logentries.equals(rhs.logentries))));
     }
 
 }

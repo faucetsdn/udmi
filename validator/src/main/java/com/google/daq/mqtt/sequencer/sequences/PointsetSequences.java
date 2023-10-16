@@ -114,7 +114,6 @@ public class PointsetSequences extends PointsetBase {
     untilPointsetSanity();
   }
 
-
   /**
    * Simple check that device publishes pointset events.
    */
@@ -128,7 +127,6 @@ public class PointsetSequences extends PointsetBase {
         () -> (countReceivedEvents(PointsetEvent.class) > 1
     ));
   }
-
 
   /**
    * Tests sample_rate_min by measuring the initial interval between the last two messages received,
@@ -198,7 +196,7 @@ public class PointsetSequences extends PointsetBase {
    */
   @Test(timeout = THREE_MINUTES_MS)
   @Summary("test sample rate and sample limit sec")
-  @Feature(stage = BETA, bucket = POINTSET)
+  @Feature(stage = BETA, bucket = POINTSET, nostate = true)
   public void pointset_publish_interval() {
     ifNullSkipTest(deviceConfig.pointset, "no pointset found in config");
 

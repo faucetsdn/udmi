@@ -21,6 +21,10 @@
       "description": "Version of the UDMI schema",
       "type": "string"
     },
+    "downgraded_from": {
+      "description": "Original version of schema pre-downgrade",
+      "type": "string"
+    },
     "system": {
       "$ref": "file:config_system.json#"
     },
