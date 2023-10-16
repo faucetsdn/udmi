@@ -219,7 +219,7 @@ public class ObjectDiffEngine {
       String describedValue) {
     String fullKey = keyPath + "." + keyName;
     descriptions.put(fullKey, description);
-    describedValies.put(fullKey, describedValue);
+    describedValues.put(fullKey, describedValue);
   }
 
   public boolean isInitialized() {
