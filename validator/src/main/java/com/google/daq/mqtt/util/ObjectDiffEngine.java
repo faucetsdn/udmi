@@ -210,8 +210,8 @@ public class ObjectDiffEngine {
     return updates;
   }
 
-  public void mapSemanticKey(String keyPath, String description) {
-    descriptions.put(keyPath, description);
+  public void mapSemanticKey(String keyPath, String keyName, String description) {
+    descriptions.put(keyPath + "." + keyName, description);
   }
 
   public boolean isInitialized() {
