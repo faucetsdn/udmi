@@ -10,8 +10,10 @@ import static com.google.daq.mqtt.validator.Validator.CONFIG_PREFIX;
 import static com.google.daq.mqtt.validator.Validator.STATE_PREFIX;
 import static com.google.udmi.util.CleanDateFormat.cleanDate;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
+import static com.google.udmi.util.Common.DEVICE_ID_PROPERTY_KEY;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
+import static com.google.udmi.util.Common.getExceptionMessage;
 import static com.google.udmi.util.GeneralUtils.changedLines;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -19,6 +21,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
+import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.loadFileRequired;
@@ -45,7 +48,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
 import com.google.bos.iot.core.proxy.MockPublisher;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
@@ -200,6 +202,10 @@ public class SequenceBase {
   private static final AtomicReference<String> stateTransaction = new AtomicReference<>();
   private static final int MINIMUM_TEST_SEC = 15;
   private static final Date RESET_LAST_START = new Date(73642);
+  private static final long STATE_QUERY_CUTOFF_SEC = 60;
+  private static final Date stateCutoffThreshold = Date.from(Instant.now().minusSeconds(
+      STATE_QUERY_CUTOFF_SEC));
+  private static final String FAKE_DEVICE_ID = "TAP-1";
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -245,7 +251,7 @@ public class SequenceBase {
   private Instant lastConfigUpdate;
   private boolean enforceSerial;
   private String testName;
-  private String testDescription;
+  private String testSummary;
   private Bucket testBucket;
   private FeatureStage testStage;
   private long startTestTimeMs;
@@ -261,6 +267,7 @@ public class SequenceBase {
   private SequenceResult testResult;
   private int startStateCount;
   private Boolean expectedSystemStatus;
+  private Description testDescription;
 
   static void ensureValidatorConfig() {
     if (validatorConfig != null) {
@@ -601,7 +608,7 @@ public class SequenceBase {
   }
 
   private void writeSequenceMdHeader() {
-    String block = testDescription == null ? "" : format("%s\n\n", testDescription);
+    String block = testSummary == null ? "" : format("%s\n\n", testSummary);
     sequenceMd.printf("\n## %s (%s)\n\n%s", testName, testStage.name(), block);
     sequenceMd.flush();
   }
@@ -670,6 +677,13 @@ public class SequenceBase {
 
     assumeTrue("Feature bucket not enabled", isBucketEnabled(testBucket));
 
+    if (!deviceSupportsState()) {
+      boolean featureDisabled = ifNotNullGet(testDescription.getAnnotation(Feature.class),
+          feature -> !feature.nostate(), true);
+      ifTrueSkipTest(featureDisabled, "State testing disabled");
+      notice("Running test with state checks disabled");
+    }
+
     waitingConditionPush("starting test wrapper");
     checkState(reflector().isActive(), "Reflector is not currently active");
 
@@ -689,7 +703,8 @@ public class SequenceBase {
 
     updateConfig("initial setup");
 
-    untilTrue("device state update", () -> deviceState != null);
+    ifTrueThen(deviceSupportsState(),
+        () -> untilTrue("device state update", () -> deviceState != null));
     checkThatHasInterestingSystemStatus(false);
 
     // Do this late in the sequence to make sure any state is cleared out from previous test.
@@ -702,6 +717,10 @@ public class SequenceBase {
     waitingConditionPush("executing test");
 
     debug(format("stage begin %s at %s", waitingConditionPeek(), timeSinceStart()));
+  }
+
+  private boolean deviceSupportsState() {
+    return !isTrue(catchToNull(() -> deviceMetadata.testing.nostate));
   }
 
   protected boolean isBucketEnabled(Bucket bucket) {
@@ -968,11 +987,13 @@ public class SequenceBase {
   }
 
   protected void queryState() {
+    if (!deviceSupportsState()) {
+      return;
+    }
     assertConfigIsNotPending();
-    Preconditions.checkState(!stateTransactionPending(), "state transaction already pending");
     String txnId = reflector().publish(getDeviceId(), Common.STATE_QUERY_TOPIC, EMPTY_MESSAGE);
-    stateTransaction.set(txnId);
-    debug(format("Waiting for device stateTransaction %s", txnId));
+    String previous = stateTransaction.getAndSet(txnId);
+    debug(format("Waiting for device stateTransaction %s (was %s)", txnId, previous));
     whileDoing("state query", () -> messageEvaluateLoop(this::stateTransactionPending),
         e -> debug(
             format("While waiting for stateTransaction %s: %s", txnId, friendlyStackTrace(e))));
@@ -1177,8 +1198,9 @@ public class SequenceBase {
 
   protected void checkNotLogged(String category, Level minLevel) {
     withRecordSequence(false, () -> {
-      untilTrue("last_config synchronized",
-          () -> dateEquals(deviceConfig.timestamp, deviceState.system.last_config));
+      ifTrueThen(deviceSupportsState(), () ->
+          untilTrue("last_config synchronized",
+              () -> dateEquals(deviceConfig.timestamp, deviceState.system.last_config)));
       processLogMessages();
     });
     final Instant endTime = lastConfigUpdate.plusSeconds(LOG_TIMEOUT_SEC);
@@ -1392,7 +1414,11 @@ public class SequenceBase {
 
     String deviceId = attributes.get("deviceId");
     ReportingDevice reportingDevice = new ReportingDevice(deviceId);
-    messageValidator.validateDeviceMessage(reportingDevice, message, attributes);
+
+    Map<String, String> modified = new HashMap<>(attributes);
+    modified.put(DEVICE_ID_PROPERTY_KEY, FAKE_DEVICE_ID); // Allow for non-standard device IDs.
+
+    messageValidator.validateDeviceMessage(reportingDevice, message, modified);
     String messageBase = makeMessageBase(attributes);
     validationResults.computeIfAbsent(messageBase, key -> new ArrayList<>())
         .addAll(reportingDevice.getMessageEntries());
@@ -1475,19 +1501,31 @@ public class SequenceBase {
         }
       } else if (converted instanceof State convertedState) {
         String timestamp = getTimestamp(convertedState.timestamp);
-        if (deviceState != null && convertedState.timestamp != null
-            && convertedState.timestamp.before(deviceState.timestamp)) {
+        if (convertedState.timestamp == null) {
+          warning("No timestamp in state message, rejecting.");
+          return;
+        }
+        if (deviceState != null && convertedState.timestamp.before(deviceState.timestamp)) {
           warning(format("Ignoring out-of-order state update %s %s", timestamp, txnId));
           return;
         }
+        if (deviceState == null && convertedState.timestamp.before(stateCutoffThreshold)) {
+          String lastStart = getTimestamp(
+              catchToNull(() -> convertedState.system.operation.last_start));
+          warning(format("Ignoring stale state update %s %s %s %s", timestamp,
+              getTimestamp(stateCutoffThreshold), lastStart, txnId));
+          return;
+        }
+        checkState(deviceSupportsState(), "Received state update with no-state device");
+        boolean deltaState = RECV_STATE_DIFFERNATOR.isInitialized();
         List<String> stateChanges = RECV_STATE_DIFFERNATOR.computeChanges(converted);
         Instant start = ofNullable(convertedState.timestamp).orElseGet(Date::new).toInstant();
         long delta = Duration.between(start, Instant.now()).getSeconds();
         debug(format("Updated state after %ds %s %s", delta, timestamp, txnId));
-        if (updateCount == 1) {
-          info(format("Initial state #%03d", updateCount), stringify(converted));
-        } else {
+        if (deltaState) {
           info(format("Updated state #%03d", updateCount), changedLines(stateChanges));
+        } else {
+          info(format("Initial state #%03d", updateCount), stringify(converted));
         }
         deviceState = convertedState;
         validSerialNo();
@@ -1723,21 +1761,33 @@ public class SequenceBase {
     return dateEquals(expectedConfig, lastConfig);
   }
 
-  private boolean hasInterestingSystemStatus() {
+  private Boolean hasInterestingSystemStatus() {
     if (deviceState.system.status != null) {
       debug("Status level: " + deviceState.system.status.level);
     }
+
+    // State missing is neither interesting nor not-interesting...
+    if (deviceState == null || deviceState.system == null) {
+      return null;
+    }
+
     return deviceState.system.status != null
         && deviceState.system.status.level >= Level.WARNING.value();
   }
 
   protected void checkThatHasInterestingSystemStatus(boolean isInteresting) {
+    if (!deviceSupportsState()) {
+      return;
+    }
     BiConsumer<String, Supplier<Boolean>> check =
         isInteresting ? this::checkThat : this::checkNotThat;
     check.accept(SYSTEM_STATUS_MESSAGE, this::hasInterestingSystemStatus);
   }
 
   protected void untilHasInterestingSystemStatus(boolean isInteresting) {
+    if (!deviceSupportsState()) {
+      return;
+    }
     expectedSystemStatus = null;
     BiConsumer<String, Supplier<Boolean>> until =
         isInteresting ? this::untilTrue : this::untilFalse;
@@ -1801,6 +1851,10 @@ public class SequenceBase {
     throw new AssumptionViolatedException(reason);
   }
 
+  protected void ifTrueSkipTest(Boolean condition, String reason) {
+    ifTrueThen(condition, () -> skipTest(reason));
+  }
+
   protected <T> T ifNullSkipTest(T testable, String reason) {
     ifNullThen(testable, () -> skipTest(reason));
     return testable;
@@ -1809,7 +1863,6 @@ public class SequenceBase {
   protected <T> T ifCatchNullSkipTest(Supplier<T> evaluator, String reason) {
     T evaluatorResult = catchToNull(evaluator);
     return ifNullSkipTest(evaluatorResult, reason);
-
   }
 
   /**
@@ -1832,7 +1885,8 @@ public class SequenceBase {
         putSequencerResult(description, SequenceResult.START);
         checkState(reflector().isActive(), "Reflector is not currently active");
 
-        testDescription = getTestSummary(description);
+        testDescription = description;
+        testSummary = getTestSummary(description);
         testStage = getTestStage(description);
         testBucket = getBucket(description);
 
@@ -1906,10 +1960,14 @@ public class SequenceBase {
         message = e.getMessage();
         failureType = SequenceResult.SKIP;
       } else {
-        message = friendlyStackTrace(e);
+        Throwable cause = e;
+        while (cause.getCause() != null) {
+          cause = cause.getCause();
+        }
+        message = getExceptionMessage(cause);
         failureType = SequenceResult.FAIL;
       }
-      debug("exception message: " + Common.getExceptionMessage(e));
+      debug("exception message: " + friendlyStackTrace(e));
       trace("ending stack trace", stackTraceString(e));
       recordCompletion(failureType, description, message);
       String action = failureType == SequenceResult.SKIP ? "skipped" : "failed";
@@ -1917,7 +1975,8 @@ public class SequenceBase {
       if (failureType != SequenceResult.SKIP) {
         resetRequired = true;
         if (debugLogLevel()) {
-          error("Forcing exit to preserve failing config/state " + START_END_MARKER);
+          error("terminating test " + testName + " after " + timeSinceStart() + " "
+              + START_END_MARKER);
           System.exit(EXIT_CODE_PRESERVE);
         }
       }

@@ -193,4 +193,8 @@ public class ObjectDiffEngine {
     accumulateDifference("", left, right, updates);
     return updates;
   }
+
+  public boolean isInitialized() {
+    return previous != null;
+  }
 }

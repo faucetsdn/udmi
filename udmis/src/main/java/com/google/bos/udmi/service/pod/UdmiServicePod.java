@@ -122,6 +122,7 @@ public class UdmiServicePod extends ContainerBase {
       udmiServicePod.activate();
     } catch (Exception e) {
       System.err.println("Exception activating pod: " + friendlyStackTrace(e));
+      e.printStackTrace();
       System.exit(FATAL_ERROR_CODE);
     }
   }

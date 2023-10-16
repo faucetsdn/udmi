@@ -13,6 +13,7 @@ class Config:
   def __init__(self):
     self.timestamp = None
     self.version = None
+    self.downgraded_from = None
     self.system = None
     self.gateway = None
     self.discovery = None
@@ -27,6 +28,7 @@ class Config:
     result = Config()
     result.timestamp = source.get('timestamp')
     result.version = source.get('version')
+    result.downgraded_from = source.get('downgraded_from')
     result.system = SystemConfig.from_dict(source.get('system'))
     result.gateway = GatewayConfig.from_dict(source.get('gateway'))
     result.discovery = DiscoveryConfig.from_dict(source.get('discovery'))
@@ -57,6 +59,8 @@ class Config:
       result['timestamp'] = self.timestamp # 5
     if self.version:
       result['version'] = self.version # 5
+    if self.downgraded_from:
+      result['downgraded_from'] = self.downgraded_from # 5
     if self.system:
       result['system'] = self.system.to_dict() # 4
     if self.gateway:
