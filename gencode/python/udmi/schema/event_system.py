@@ -60,6 +60,7 @@ class SystemEvent:
   def __init__(self):
     self.timestamp = None
     self.version = None
+    self.upgraded_from = None
     self.last_config = None
     self.logentries = None
     self.event_count = None
@@ -72,6 +73,7 @@ class SystemEvent:
     result = SystemEvent()
     result.timestamp = source.get('timestamp')
     result.version = source.get('version')
+    result.upgraded_from = source.get('upgraded_from')
     result.last_config = source.get('last_config')
     result.logentries = Entry.array_from(source.get('logentries'))
     result.event_count = source.get('event_count')
@@ -100,6 +102,8 @@ class SystemEvent:
       result['timestamp'] = self.timestamp # 5
     if self.version:
       result['version'] = self.version # 5
+    if self.upgraded_from:
+      result['upgraded_from'] = self.upgraded_from # 5
     if self.last_config:
       result['last_config'] = self.last_config # 5
     if self.logentries:

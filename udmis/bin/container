@@ -59,7 +59,7 @@ current_user=$USER@$HOSTNAME
 revparse=`git rev-parse HEAD`
 
 udmi_ver=g${revparse:0:9}
-udmi_ref=$REPOSITORY/udmi:$udmi_ver
+udmi_ref=$REPOSITORY/udmis:$udmi_ver
 
 version=`git describe`
 

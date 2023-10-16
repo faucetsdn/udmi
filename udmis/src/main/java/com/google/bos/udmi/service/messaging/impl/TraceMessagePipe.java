@@ -1,5 +1,6 @@
 package com.google.bos.udmi.service.messaging.impl;
 
+import static com.google.udmi.util.Common.DEVICE_ID_PROPERTY_KEY;
 import static com.google.udmi.util.GeneralUtils.decodeBase64;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -81,7 +82,7 @@ public class TraceMessagePipe extends MessageBase {
       Envelope envelope = new Envelope();
       envelope.subFolder = getBundleSubfolder(attributes);
       envelope.subType = ifNotNullGet(attributes.get("subType"), SubType::fromValue);
-      envelope.deviceId = attributes.get("deviceId");
+      envelope.deviceId = attributes.get(DEVICE_ID_PROPERTY_KEY);
       envelope.projectId = attributes.get("projectId");
       envelope.deviceRegistryId = attributes.get("deviceRegistryId");
       envelope.publishTime = ifNotNullGet(ofNullable(attributes.get("publishTime"))
