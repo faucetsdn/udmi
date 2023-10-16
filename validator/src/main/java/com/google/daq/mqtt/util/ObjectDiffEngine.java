@@ -141,7 +141,8 @@ public class ObjectDiffEngine {
   }
 
   private String keyDescription(String prefix, String fullKey) {
-    String formattedKey = String.format("%s[%s]", prefix, descriptions.get(fullKey));
+    String keyPath = prefix.endsWith(".") ? prefix.substring(0, prefix.length() - 1) : prefix;
+    String formattedKey = String.format("%s[%s]", keyPath, descriptions.get(fullKey));
     return descriptions.containsKey(fullKey) ? formattedKey : fullKey;
   }
 
