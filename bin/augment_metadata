@@ -5,14 +5,20 @@
 # the testing infrastrucure. Not intended for use outside of CI testing.
 #
 
-if [[ $# -ne 2 ]]; then
-    echo Usage: $0 SITE_DIR DEVICE_ID
+if [[ $# -lt 2 ]]; then
+    echo Usage: $0 SITE_DIR DEVICE_ID [PUBBER_OPTS...]
     false
 fi
 
 site_dir=$(realpath $1)
 device_id=$2
 shift 2
+pubber_opts=$*
+
+nostate=false
+if [[ $pubber_opts =~ noState ]]; then
+    nostate=true
+fi
 
 ROOT_DIR=$(dirname $0)/..
 cd $ROOT_DIR
@@ -35,12 +41,16 @@ ipv4_addr=${ipv4_addr%/*}
 ipv6_addr=$(ip addr show dev $default_iface | fgrep 'inet6 ' | tail -n 1 | awk '{print $2}')
 ipv6_addr=${ipv6_addr%/*}
 
-echo Setting $metadata_out ether addr to $ether_addr
-echo Setting $metadata_out ipv4 addr to $ipv4_addr
-echo Setting $metadata_out ipv6 addr to $ipv6_addr
+echo Augmenting to $metadata_out
+echo Setting ether addr to $ether_addr
+echo Setting ipv4 addr to $ipv4_addr
+echo Setting ipv6 addr to $ipv6_addr
+echo Setting nostate to $nostate
+
 jq ".localnet.families.ether.addr = \"$ether_addr\"" $metadata_file |
     jq ".localnet.families.ipv4.addr = \"$ipv4_addr\"" |
-    jq ".localnet.families.ipv6.addr = \"$ipv6_addr\"" > $metadata_out
+    jq ".localnet.families.ipv6.addr = \"$ipv6_addr\"" |
+    jq ".testing.nostate = $nostate" > $metadata_out
 
 # Dynamically update the site model based off of dynamic pubber output.
 pubber_features=$(< $site_dir/out/pubber_features.json)

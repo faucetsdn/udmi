@@ -8,6 +8,7 @@ class PointsetEvent:
   def __init__(self):
     self.timestamp = None
     self.version = None
+    self.upgraded_from = None
     self.partial_update = None
     self.points = None
 
@@ -18,6 +19,7 @@ class PointsetEvent:
     result = PointsetEvent()
     result.timestamp = source.get('timestamp')
     result.version = source.get('version')
+    result.upgraded_from = source.get('upgraded_from')
     result.partial_update = source.get('partial_update')
     result.points = PointPointsetEvent.map_from(source.get('points'))
     return result
@@ -44,6 +46,8 @@ class PointsetEvent:
       result['timestamp'] = self.timestamp # 5
     if self.version:
       result['version'] = self.version # 5
+    if self.upgraded_from:
+      result['upgraded_from'] = self.upgraded_from # 5
     if self.partial_update:
       result['partial_update'] = self.partial_update # 5
     if self.points:

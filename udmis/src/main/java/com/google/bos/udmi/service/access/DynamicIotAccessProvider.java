@@ -5,12 +5,10 @@ import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.sortedMapCollector;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.graph.ImmutableNetwork;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -43,6 +41,21 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   @Override
+  protected Map<String, String> fetchRegistryRegions() {
+    return ImmutableMap.of();
+  }
+
+  @Override
+  protected Set<String> getRegistriesForRegion(String region) {
+    throw new RuntimeException("Should not be called!");
+  }
+
+  @Override
+  protected boolean isEnabled() {
+    return true;
+  }
+
+  @Override
   protected String updateConfig(String registryId, String deviceId, String config, Long version) {
     throw new RuntimeException("Shouldn't be called for dynamic provider");
   }
@@ -56,7 +69,11 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   private IotAccessBase getProviderFor(String registryId) {
-    return providers.get(registryProviders.computeIfAbsent(registryId, this::determineProvider));
+    IotAccessBase provider =
+        providers.get(registryProviders.computeIfAbsent(registryId, this::determineProvider));
+    return requireNonNull(
+        provider,
+        "could not determine provider for " + registryId);
   }
 
   private String registryPriority(String registryId, Entry<String, IotAccessBase> provider) {
@@ -65,21 +82,6 @@ public class DynamicIotAccessProvider extends IotAccessBase {
         getTimestamp(new Date(0)));
     debug(format("Provider %s provisioned %s at %s", provider.getKey(), registryId, provisionedAt));
     return provisionedAt;
-  }
-
-  @Override
-  protected boolean isEnabled() {
-    return true;
-  }
-
-  @Override
-  protected Map<String, String> fetchRegistryRegions() {
-    return ImmutableMap.of();
-  }
-
-  @Override
-  protected Set<String> getRegistriesForRegion(String region) {
-    throw new RuntimeException("Should not be called!");
   }
 
   @Override
@@ -137,11 +139,6 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public void updateRegistryRegions(Map<String, String> regions) {
-    providers.values().forEach(provider -> provider.updateRegistryRegions(regions));
-  }
-
-  @Override
   public void setProviderAffinity(String registryId, String deviceId, String providerId) {
     if (providerId != null) {
       String previous = registryProviders.put(registryId, providerId);
@@ -151,5 +148,10 @@ public class DynamicIotAccessProvider extends IotAccessBase {
       }
     }
     super.setProviderAffinity(registryId, deviceId, providerId);
+  }
+
+  @Override
+  public void updateRegistryRegions(Map<String, String> regions) {
+    providers.values().forEach(provider -> provider.updateRegistryRegions(regions));
   }
 }

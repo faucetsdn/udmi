@@ -44,4 +44,9 @@ Feature {
    * @return feature score value
    */
   int score() default DEFAULT_SCORE;
+
+  /**
+   * Indicates if this test can run without state updates.
+   */
+  boolean nostate() default false;
 }

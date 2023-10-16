@@ -1,7 +1,8 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.4.1",
-  "hash": "51901e97",
+  "upgraded_from": "1",
+  "hash": "fdda202f",
   "cloud": {
     "auth_type": "ES256"
   },
