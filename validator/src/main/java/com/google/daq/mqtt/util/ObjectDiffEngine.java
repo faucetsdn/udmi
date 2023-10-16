@@ -8,6 +8,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -19,6 +20,7 @@ import udmi.schema.State;
 public class ObjectDiffEngine {
 
   private Map<String, Object> previous;
+  private final Map<String, String> descriptions = new HashMap<>();
   private boolean ignoreSemantics;
 
   public ObjectDiffEngine() {
@@ -46,18 +48,19 @@ public class ObjectDiffEngine {
    * @param updatedObject new object state
    */
   public void resetState(Object updatedObject) {
+    descriptions.clear();
     previous = extractDefinitions(updatedObject);
   }
 
   private Map<String, Object> extractValues(Object thing) {
-    return traverseExtract(thing, true);
+    return traverseExtract(thing, true, "");
   }
 
   private Map<String, Object> extractDefinitions(Object thing) {
-    return traverseExtract(thing, false);
+    return traverseExtract(thing, false, "");
   }
 
-  private Map<String, Object> traverseExtract(Object thing, boolean asValues) {
+  private Map<String, Object> traverseExtract(Object thing, boolean asValues, String keyPath) {
     if (thing == null) {
       return ImmutableMap.of();
     }
@@ -65,21 +68,27 @@ public class ObjectDiffEngine {
       @SuppressWarnings("unchecked")
       Map<String, Object> asMap = (Map<String, Object>) thing;
       return asMap.keySet().stream()
-          .collect(Collectors.toMap(key -> key, key -> traverseExtract(asMap.get(key), asValues)));
+          .collect(Collectors.toMap(key -> key,
+              key -> traverseExtract(asMap.get(key), asValues, keyPath + "." + key)));
     }
     return Arrays.stream(thing.getClass().getFields())
         .filter(field -> isNotNull(thing, field)).collect(
-            Collectors.toMap(Field::getName, field -> extractField(thing, field, asValues)));
+            Collectors.toMap(Field::getName,
+                field -> extractField(thing, field, asValues, keyPath)));
   }
 
-  private Object extractField(Object thing, Field field, boolean asValue) {
+  private Object extractField(Object thing, Field field, boolean asValue, String keyPath) {
     try {
       Object result = field.get(thing);
-      if (isBaseType(field) || isBaseType(result)) {
+      String fieldName = field.getName();
+      String newPath = keyPath + "." + fieldName;
+      if (descriptions.containsKey(newPath)) {
+        return descriptions.get(newPath);
+      } else if (isBaseType(field) || isBaseType(result)) {
         boolean useValue = asValue || !SemanticValue.isSemanticValue(result);
         return useValue ? SemanticValue.getValue(result) : SemanticValue.getDescription(result);
       } else {
-        return traverseExtract(result, asValue);
+        return traverseExtract(result, asValue, newPath);
       }
     } catch (Exception e) {
       throw new RuntimeException("While converting field " + field.getName(), e);
@@ -108,26 +117,31 @@ public class ObjectDiffEngine {
   void accumulateDifference(String prefix, Map<String, Object> left, Map<String, Object> right,
       List<String> updates) {
     right.forEach((key, value) -> {
+      String fullKey = prefix + key;
+      String describedKey =
+          descriptions.containsKey(fullKey) ? (prefix + descriptions.get(fullKey)) : fullKey;
       if (left != null && left.containsKey(key)) {
         Object leftValue = left.get(key);
         if (SemanticValue.equals(value, leftValue)) {
           return;
         }
         if (isBaseType(value)) {
-          updates.add(String.format("Set `%s%s` = %s", prefix, key, semanticValue(value)));
+          updates.add(String.format("Set `%s` = %s", describedKey, semanticValue(value)));
         } else {
-          String newPrefix = prefix + key + ".";
-          accumulateDifference(newPrefix, (Map<String, Object>) leftValue,
+          accumulateDifference(fullKey + ".", (Map<String, Object>) leftValue,
               (Map<String, Object>) value, updates);
         }
       } else {
-        updates.add(String.format("Add `%s%s` = %s", prefix, key, semanticValue(value)));
+        updates.add(String.format("Add `%s` = %s", describedKey, semanticValue(value)));
       }
     });
     if (left != null) {
       left.forEach((key, value) -> {
         if (!right.containsKey(key)) {
-          updates.add(String.format("Remove `%s%s`", prefix, key));
+          String fullKey = prefix + key;
+          String describedKey =
+              descriptions.containsKey(fullKey) ? (prefix + descriptions.get(fullKey)) : fullKey;
+          updates.add(String.format("Remove `%s`", describedKey));
         }
       });
     }
@@ -192,5 +206,9 @@ public class ObjectDiffEngine {
     List<String> updates = new ArrayList<>();
     accumulateDifference("", left, right, updates);
     return updates;
+  }
+
+  public void mapSemanticKey(String keyPath, String description) {
+    descriptions.put(keyPath, description);
   }
 }

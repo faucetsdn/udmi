@@ -1812,6 +1812,10 @@ public class SequenceBase {
 
   }
 
+  protected void mapSemanticKey(String keyPath, String description) {
+    SENT_CONFIG_DIFFERNATOR.mapSemanticKey(keyPath, description);
+  }
+
   /**
    * Special exception to indicate that catching-loops should be terminated.
    */

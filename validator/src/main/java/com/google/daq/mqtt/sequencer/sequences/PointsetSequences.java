@@ -23,7 +23,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.stream.Collectors;
 import org.junit.Test;
 import udmi.schema.Level;
@@ -98,6 +97,7 @@ public class PointsetSequences extends PointsetBase {
     String name = candidatePoints.get((int) Math.floor(Math.random() * candidatePoints.size()));
 
     debug("Removing randomly selected test point " + name);
+    mapSemanticKey("pointset.points." + name, "Random point");
     PointPointsetConfig removed = requireNonNull(deviceConfig.pointset.points.remove(name));
 
     try {
@@ -113,7 +113,6 @@ public class PointsetSequences extends PointsetBase {
 
     untilPointsetSanity();
   }
-
 
   /**
    * Simple check that device publishes pointset events.
