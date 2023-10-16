@@ -2,6 +2,7 @@ package com.google.bos.udmi.service.core;
 
 import static com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl.getMessageClassFor;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.udmi.util.Common.DEVICE_ID_PROPERTY_KEY;
 import static com.google.udmi.util.Common.ERROR_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.GeneralUtils.decodeBase64;
@@ -12,9 +13,8 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
-import static com.google.udmi.util.JsonUtil.fromStringStrict;
+import static com.google.udmi.util.JsonUtil.fromString;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
-import static com.google.udmi.util.JsonUtil.loadFileStrictRequired;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static com.google.udmi.util.JsonUtil.toMap;
@@ -50,20 +50,20 @@ public class ReflectProcessor extends ProcessorBase {
   protected void defaultHandler(Object message) {
     MessageContinuation continuation = getContinuation(message);
     Envelope reflection = continuation.getEnvelope();
+    Map<String, Object> objectMap = toMap(message);
     try {
       if (reflection.subFolder == null) {
         reflectStateHandler(reflection, extractUdmiState(message));
       } else if (reflection.subFolder != SubFolder.UDMI) {
         throw new IllegalStateException("Unexpected reflect subfolder " + reflection.subFolder);
       } else {
-        Map<String, Object> stringObjectMap = toMap(message);
-        Map<String, Object> payload = extractMessagePayload(stringObjectMap);
-        Envelope envelope = extractMessageEnvelope(stringObjectMap);
+        Map<String, Object> payload = extractMessagePayload(objectMap);
+        Envelope envelope = extractMessageEnvelope(objectMap);
         reflection.transactionId = envelope.transactionId;
         processReflection(reflection, envelope, payload);
       }
     } catch (Exception e) {
-      processException(reflection, e);
+      processException(reflection, objectMap, e);
     }
   }
 
@@ -119,13 +119,14 @@ public class ReflectProcessor extends ProcessorBase {
     }
   }
 
-  private void processException(Envelope reflection, Exception e) {
+  private void processException(Envelope reflection, Map<String, Object> objectMap, Exception e) {
     String stackMessage = friendlyStackTrace(e);
     warn("Processing exception %s: %s", reflection.transactionId, stackMessage);
     Map<String, Object> message = new HashMap<>();
     message.put(ERROR_KEY, stackMessage);
     Envelope envelope = new Envelope();
     envelope.subFolder = SubFolder.ERROR;
+    envelope.deviceId = (String) objectMap.get(DEVICE_ID_PROPERTY_KEY);
     envelope.transactionId = reflection.transactionId;
     sendReflectCommand(reflection, envelope, message);
   }
@@ -160,7 +161,7 @@ public class ReflectProcessor extends ProcessorBase {
       String state = ofNullable(
           iotAccess.fetchState(attributes.deviceRegistryId, attributes.deviceId)).orElse("{}");
       debug(format("Processing device %s state query", attributes.deviceId));
-      StateUpdate stateUpdate = fromStringStrict(StateUpdate.class, state);
+      StateUpdate stateUpdate = fromString(StateUpdate.class, state);
       stateUpdate.configAcked = checkConfigAckTime(attributes, state);
       processStateUpdate(attributes, stateUpdate);
       publish(stateUpdate);

@@ -211,4 +211,8 @@ public class ObjectDiffEngine {
   public void mapSemanticKey(String keyPath, String description) {
     descriptions.put(keyPath, description);
   }
+
+  public boolean isInitialized() {
+    return previous != null;
+  }
 }

@@ -13,6 +13,7 @@ class State:
   def __init__(self):
     self.timestamp = None
     self.version = None
+    self.upgraded_from = None
     self.system = None
     self.gateway = None
     self.discovery = None
@@ -27,6 +28,7 @@ class State:
     result = State()
     result.timestamp = source.get('timestamp')
     result.version = source.get('version')
+    result.upgraded_from = source.get('upgraded_from')
     result.system = SystemState.from_dict(source.get('system'))
     result.gateway = GatewayState.from_dict(source.get('gateway'))
     result.discovery = DiscoveryState.from_dict(source.get('discovery'))
@@ -57,6 +59,8 @@ class State:
       result['timestamp'] = self.timestamp # 5
     if self.version:
       result['version'] = self.version # 5
+    if self.upgraded_from:
+      result['upgraded_from'] = self.upgraded_from # 5
     if self.system:
       result['system'] = self.system.to_dict() # 4
     if self.gateway:

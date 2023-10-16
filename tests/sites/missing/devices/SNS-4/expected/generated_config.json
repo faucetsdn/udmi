@@ -14,5 +14,6 @@
         "units": "Degrees-phase"
       }
     }
-  }
+  },
+  "downgraded_from": "1.4.2"
 }

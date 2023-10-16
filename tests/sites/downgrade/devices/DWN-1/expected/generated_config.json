@@ -26,5 +26,6 @@
         "units": "Degrees-Celsius"
       }
     }
-  }
+  },
+  "downgraded_from": "1.4.2"
 }

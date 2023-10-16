@@ -11,6 +11,7 @@ import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.daq.mqtt.util.ValidationException;
+import com.google.daq.mqtt.validator.Validator;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -57,7 +58,7 @@ public class MessageValidator {
       if (report.isSuccess()) {
         return ImmutableList.of();
       }
-      throw ValidationException.fromProcessingReport(report);
+      throw Validator.fromProcessingReport(report);
     } catch (ValidationException e) {
       return e.getAllMessages();
     } catch (IOException | ProcessingException ex) {

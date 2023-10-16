@@ -128,7 +128,6 @@ public class PointsetSequences extends PointsetBase {
     ));
   }
 
-
   /**
    * Tests sample_rate_min by measuring the initial interval between the last two messages received,
    * then setting the config.pointset.sample_rate_min to match half the initial interval and
@@ -197,7 +196,7 @@ public class PointsetSequences extends PointsetBase {
    */
   @Test(timeout = THREE_MINUTES_MS)
   @Summary("test sample rate and sample limit sec")
-  @Feature(stage = BETA, bucket = POINTSET)
+  @Feature(stage = BETA, bucket = POINTSET, nostate = true)
   public void pointset_publish_interval() {
     ifNullSkipTest(deviceConfig.pointset, "no pointset found in config");
 

@@ -49,6 +49,9 @@
     "noPointState": {
       "type": "boolean"
     },
+    "noState": {
+      "type": "boolean"
+    },
     "featureEnableSwap": {
       "type": "boolean"
     },

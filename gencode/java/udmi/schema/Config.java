@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder({
     "timestamp",
     "version",
+    "downgraded_from",
     "system",
     "gateway",
     "discovery",
@@ -45,6 +46,13 @@ public class Config {
     @JsonProperty("version")
     @JsonPropertyDescription("Version of the UDMI schema")
     public String version;
+    /**
+     * Original version of schema pre-downgrade
+     * 
+     */
+    @JsonProperty("downgraded_from")
+    @JsonPropertyDescription("Original version of schema pre-downgrade")
+    public String downgraded_from;
     /**
      * System Config
      * <p>
@@ -104,6 +112,7 @@ public class Config {
         int result = 1;
         result = ((result* 31)+((this.system == null)? 0 :this.system.hashCode()));
         result = ((result* 31)+((this.discovery == null)? 0 :this.discovery.hashCode()));
+        result = ((result* 31)+((this.downgraded_from == null)? 0 :this.downgraded_from.hashCode()));
         result = ((result* 31)+((this.pointset == null)? 0 :this.pointset.hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
         result = ((result* 31)+((this.blobset == null)? 0 :this.blobset.hashCode()));
@@ -122,7 +131,7 @@ public class Config {
             return false;
         }
         Config rhs = ((Config) other);
-        return (((((((((this.system == rhs.system)||((this.system!= null)&&this.system.equals(rhs.system)))&&((this.discovery == rhs.discovery)||((this.discovery!= null)&&this.discovery.equals(rhs.discovery))))&&((this.pointset == rhs.pointset)||((this.pointset!= null)&&this.pointset.equals(rhs.pointset))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.blobset == rhs.blobset)||((this.blobset!= null)&&this.blobset.equals(rhs.blobset))))&&((this.gateway == rhs.gateway)||((this.gateway!= null)&&this.gateway.equals(rhs.gateway))))&&((this.localnet == rhs.localnet)||((this.localnet!= null)&&this.localnet.equals(rhs.localnet))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
+        return ((((((((((this.system == rhs.system)||((this.system!= null)&&this.system.equals(rhs.system)))&&((this.discovery == rhs.discovery)||((this.discovery!= null)&&this.discovery.equals(rhs.discovery))))&&((this.downgraded_from == rhs.downgraded_from)||((this.downgraded_from!= null)&&this.downgraded_from.equals(rhs.downgraded_from))))&&((this.pointset == rhs.pointset)||((this.pointset!= null)&&this.pointset.equals(rhs.pointset))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.blobset == rhs.blobset)||((this.blobset!= null)&&this.blobset.equals(rhs.blobset))))&&((this.gateway == rhs.gateway)||((this.gateway!= null)&&this.gateway.equals(rhs.gateway))))&&((this.localnet == rhs.localnet)||((this.localnet!= null)&&this.localnet.equals(rhs.localnet))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
     }
 
 }
