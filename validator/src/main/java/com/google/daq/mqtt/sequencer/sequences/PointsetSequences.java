@@ -69,7 +69,7 @@ public class PointsetSequences extends PointsetBase {
   public void pointset_request_extraneous() {
     untilPointsetSanity();
 
-    mapSemanticKey(POINTS_MAP_PATH, EXTRANEOUS_POINT, "extraneous_point");
+    mapSemanticKey(POINTS_MAP_PATH, EXTRANEOUS_POINT, "extraneous_point", "point configuration");
 
     deviceConfig.pointset.points.put(EXTRANEOUS_POINT, new PointPointsetConfig());
 
@@ -100,7 +100,7 @@ public class PointsetSequences extends PointsetBase {
     String name = candidatePoints.get((int) Math.floor(Math.random() * candidatePoints.size()));
 
     debug("Removing randomly selected test point " + name);
-    mapSemanticKey(POINTS_MAP_PATH, name, "random_point");
+    mapSemanticKey(POINTS_MAP_PATH, name, "random_point", "point configuration");
     PointPointsetConfig removed = requireNonNull(deviceConfig.pointset.points.remove(name));
 
     try {

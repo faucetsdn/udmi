@@ -21,6 +21,7 @@ public class ObjectDiffEngine {
 
   private Map<String, Object> previous;
   private final Map<String, String> descriptions = new HashMap<>();
+  private final Map<String, String> describedValues = new HashMap<>();
   private boolean ignoreSemantics;
 
   public ObjectDiffEngine() {
@@ -49,6 +50,7 @@ public class ObjectDiffEngine {
    */
   public void resetState(Object updatedObject) {
     descriptions.clear();
+    describedValues.clear();
     previous = extractDefinitions(updatedObject);
   }
 
@@ -113,34 +115,40 @@ public class ObjectDiffEngine {
   void accumulateDifference(String prefix, Map<String, Object> left, Map<String, Object> right,
       List<String> updates) {
     right.forEach((key, value) -> {
-      String describedKey = keyDescription(prefix, prefix + key);
+      String describedKey = describedKey(prefix, key);
+      String describedValue = describeValue(prefix, key, semanticValue(value));
       if (left != null && left.containsKey(key)) {
         Object leftValue = left.get(key);
         if (SemanticValue.equals(value, leftValue)) {
           return;
         }
         if (isBaseType(value)) {
-          updates.add(String.format("Set `%s` = %s", describedKey, semanticValue(value)));
+          updates.add(String.format("Set `%s` = %s", describedKey, describedValue));
         } else {
           accumulateDifference((prefix + key) + ".", (Map<String, Object>) leftValue,
               (Map<String, Object>) value, updates);
         }
       } else {
-        updates.add(String.format("Add `%s` = %s", describedKey, semanticValue(value)));
+        updates.add(String.format("Add `%s` = %s", describedKey, describedValue));
       }
     });
     if (left != null) {
       left.forEach((key, value) -> {
         if (!right.containsKey(key)) {
-          String fullKey = prefix + key;
-          String describedKey = keyDescription(prefix, fullKey);
+          String describedKey = describedKey(prefix, key);
           updates.add(String.format("Remove `%s`", describedKey));
         }
       });
     }
   }
 
-  private String keyDescription(String prefix, String fullKey) {
+  private String describeValue(String prefix, String key, String value) {
+    String fullKey = prefix + key;
+    return descriptions.containsKey(fullKey) ? describedValues.get(fullKey) : value;
+  }
+
+  private String describedKey(String prefix, String key) {
+    String fullKey = prefix + key;
     String keyPath = prefix.endsWith(".") ? prefix.substring(0, prefix.length() - 1) : prefix;
     String formattedKey = String.format("%s[%s]", keyPath, descriptions.get(fullKey));
     return descriptions.containsKey(fullKey) ? formattedKey : fullKey;
@@ -207,8 +215,11 @@ public class ObjectDiffEngine {
     return updates;
   }
 
-  public void mapSemanticKey(String keyPath, String keyName, String description) {
-    descriptions.put(keyPath + "." + keyName, description);
+  public void mapSemanticKey(String keyPath, String keyName, String description,
+      String describedValue) {
+    String fullKey = keyPath + "." + keyName;
+    descriptions.put(fullKey, description);
+    describedValies.put(fullKey, describedValue);
   }
 
   public boolean isInitialized() {
