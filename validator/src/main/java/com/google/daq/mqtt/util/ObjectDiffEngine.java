@@ -19,9 +19,9 @@ import udmi.schema.State;
  */
 public class ObjectDiffEngine {
 
-  private Map<String, Object> previous;
   private final Map<String, String> descriptions = new HashMap<>();
   private final Map<String, String> describedValues = new HashMap<>();
+  private Map<String, Object> previous;
   private boolean ignoreSemantics;
 
   public ObjectDiffEngine() {
@@ -215,6 +215,14 @@ public class ObjectDiffEngine {
     return updates;
   }
 
+  /**
+   * Set up a semantic mapping for a key/value pair.
+   *
+   * @param keyPath        path to container
+   * @param keyName        key name
+   * @param description    semantic description of key
+   * @param describedValue semantic description of value
+   */
   public void mapSemanticKey(String keyPath, String keyName, String description,
       String describedValue) {
     String fullKey = keyPath + "." + keyName;
