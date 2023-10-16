@@ -53,14 +53,14 @@ public class ObjectDiffEngine {
   }
 
   private Map<String, Object> extractValues(Object thing) {
-    return traverseExtract(thing, true, "");
+    return traverseExtract(thing, true);
   }
 
   private Map<String, Object> extractDefinitions(Object thing) {
-    return traverseExtract(thing, false, "");
+    return traverseExtract(thing, false);
   }
 
-  private Map<String, Object> traverseExtract(Object thing, boolean asValues, String keyPath) {
+  private Map<String, Object> traverseExtract(Object thing, boolean asValues) {
     if (thing == null) {
       return ImmutableMap.of();
     }
@@ -69,26 +69,22 @@ public class ObjectDiffEngine {
       Map<String, Object> asMap = (Map<String, Object>) thing;
       return asMap.keySet().stream()
           .collect(Collectors.toMap(key -> key,
-              key -> traverseExtract(asMap.get(key), asValues, keyPath + "." + key)));
+              key -> traverseExtract(asMap.get(key), asValues)));
     }
     return Arrays.stream(thing.getClass().getFields())
         .filter(field -> isNotNull(thing, field)).collect(
             Collectors.toMap(Field::getName,
-                field -> extractField(thing, field, asValues, keyPath)));
+                field -> extractField(thing, field, asValues)));
   }
 
-  private Object extractField(Object thing, Field field, boolean asValue, String keyPath) {
+  private Object extractField(Object thing, Field field, boolean asValue) {
     try {
       Object result = field.get(thing);
-      String fieldName = field.getName();
-      String newPath = keyPath + "." + fieldName;
-      if (descriptions.containsKey(newPath)) {
-        return descriptions.get(newPath);
-      } else if (isBaseType(field) || isBaseType(result)) {
+      if (isBaseType(field) || isBaseType(result)) {
         boolean useValue = asValue || !SemanticValue.isSemanticValue(result);
         return useValue ? SemanticValue.getValue(result) : SemanticValue.getDescription(result);
       } else {
-        return traverseExtract(result, asValue, newPath);
+        return traverseExtract(result, asValue);
       }
     } catch (Exception e) {
       throw new RuntimeException("While converting field " + field.getName(), e);
