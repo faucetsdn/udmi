@@ -84,7 +84,7 @@ Config message to initiate Reconfiguration (sequence #1 in diagrams above)
       "_iot_endpoint_config": {
         "phase": "final",
         "url": "data:application/json;base64,ewogICJwcm90b2NvbCI6ICJtcXR0IiwKICAiY2xpZW50X2lkIjogInByb2plY3RzL2Jvcy1zbm9yay1kZXYvbG9jYXRpb25zL3VzLWNlbnRyYWwxL3JlZ2lzdHJpZXMvWlotVFJJLUZFQ1RBL2RldmljZXMvQUhVLTEiLAogICJob3N0bmFtZSI6ICJtcXR0Lmdvb2dsZWFwaXMuY29tIgp9",
-        "sha256": "c8a25e6ecf487f0a2ff85845c9bc59fb81e1dd4eaa08d7ff7d55bd924447e015",
+        "sha256": "9c8423ac2e707a40c239fce4ce52b8c05ae8c32b163927b9350c97d0f64a8cf7",
         "generation": "2022-07-13T12:00:00.000Z"
       }
     }

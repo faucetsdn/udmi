@@ -68,6 +68,8 @@ public class PointsetSequences extends PointsetBase {
   public void pointset_request_extraneous() {
     untilPointsetSanity();
 
+    mapSemanticKey("pointset.points." + EXTRANEOUS_POINT, "extranious_point");
+
     deviceConfig.pointset.points.put(EXTRANEOUS_POINT, new PointPointsetConfig());
 
     try {
