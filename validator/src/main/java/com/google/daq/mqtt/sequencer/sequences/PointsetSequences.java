@@ -97,7 +97,7 @@ public class PointsetSequences extends PointsetBase {
     String name = candidatePoints.get((int) Math.floor(Math.random() * candidatePoints.size()));
 
     debug("Removing randomly selected test point " + name);
-    mapSemanticKey("pointset.points." + name, "Random point");
+    mapSemanticKey("pointset.points." + name, "random_point");
     PointPointsetConfig removed = requireNonNull(deviceConfig.pointset.points.remove(name));
 
     try {

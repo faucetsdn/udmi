@@ -117,9 +117,7 @@ public class ObjectDiffEngine {
   void accumulateDifference(String prefix, Map<String, Object> left, Map<String, Object> right,
       List<String> updates) {
     right.forEach((key, value) -> {
-      String fullKey = prefix + key;
-      String describedKey =
-          descriptions.containsKey(fullKey) ? (prefix + descriptions.get(fullKey)) : fullKey;
+      String describedKey = keyDescription(prefix, prefix + key);
       if (left != null && left.containsKey(key)) {
         Object leftValue = left.get(key);
         if (SemanticValue.equals(value, leftValue)) {
@@ -128,7 +126,7 @@ public class ObjectDiffEngine {
         if (isBaseType(value)) {
           updates.add(String.format("Set `%s` = %s", describedKey, semanticValue(value)));
         } else {
-          accumulateDifference(fullKey + ".", (Map<String, Object>) leftValue,
+          accumulateDifference((prefix + key) + ".", (Map<String, Object>) leftValue,
               (Map<String, Object>) value, updates);
         }
       } else {
@@ -139,12 +137,16 @@ public class ObjectDiffEngine {
       left.forEach((key, value) -> {
         if (!right.containsKey(key)) {
           String fullKey = prefix + key;
-          String describedKey =
-              descriptions.containsKey(fullKey) ? (prefix + descriptions.get(fullKey)) : fullKey;
+          String describedKey = keyDescription(prefix, fullKey);
           updates.add(String.format("Remove `%s`", describedKey));
         }
       });
     }
+  }
+
+  private String keyDescription(String prefix, String fullKey) {
+    String formattedKey = String.format("%s[%s]", prefix, descriptions.get(fullKey));
+    return descriptions.containsKey(fullKey) ? formattedKey : fullKey;
   }
 
   private String singleLine(String toJsonString) {
