@@ -1865,6 +1865,11 @@ public class SequenceBase {
     return ifNullSkipTest(evaluatorResult, reason);
   }
 
+  protected void mapSemanticKey(String keyPath, String keyName, String description,
+      String describedValue) {
+    SENT_CONFIG_DIFFERNATOR.mapSemanticKey(keyPath, keyName, description, describedValue);
+  }
+
   /**
    * Special exception to indicate that catching-loops should be terminated.
    */
