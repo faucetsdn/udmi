@@ -540,13 +540,6 @@ public class Validator {
     }
   }
 
-  private void sanitizeMessage(String schemaName, Map<String, Object> message) {
-    //    if (schemaName.startsWith(CONFIG_PREFIX) || schemaName.startsWith(STATE_PREFIX)) {
-    //      message.remove(VERSION_KEY);
-    //      message.remove(TIMESTAMP_KEY);
-    //    }
-  }
-
   private ReportingDevice validateMessageCore(
       Map<String, Object> message,
       Map<String, String> attributes) {
@@ -607,7 +600,6 @@ public class Validator {
     }
 
     upgradeMessage(schemaName, message);
-    sanitizeMessage(schemaName, message);
 
     String timestampRaw = (String) message.get("timestamp");
     Instant timestamp = ifNotNullGet(timestampRaw, Instant::parse);
@@ -998,7 +990,6 @@ public class Validator {
     try (OutputStream outputStream = Files.newOutputStream(outputFile.toPath())) {
       copyFileHeader(inputFile, outputStream);
       Map<String, Object> message = JsonUtil.loadMap(inputFile);
-      sanitizeMessage(schemaName, message);
       JsonNode jsonNode = OBJECT_MAPPER.valueToTree(message);
       MessageUpgrader messageUpgrader = new MessageUpgrader(schemaName, jsonNode);
       messageUpgrader.upgrade(forceUpgrade);
