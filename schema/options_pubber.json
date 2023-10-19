@@ -46,6 +46,9 @@
     "smokeCheck": {
       "type": "boolean"
     },
+    "skewClock": {
+      "type": "boolean"
+    },
     "noPointState": {
       "type": "boolean"
     },
