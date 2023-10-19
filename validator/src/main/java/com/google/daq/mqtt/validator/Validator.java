@@ -18,7 +18,6 @@ import static com.google.udmi.util.Common.STATE_QUERY_TOPIC;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
-import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.Common.removeNextArg;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -68,7 +67,6 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.TemporalAmount;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -116,6 +114,8 @@ public class Validator {
   public static final String CONFIG_PREFIX = "config_";
   public static final String STATE_PREFIX = "state_";
   public static final String PROJECT_PROVIDER_PREFIX = "//";
+  public static final String TIMESTAMP_ZULU_SUFFIX = "Z";
+  public static final String TIMESTAMP_UTC_SUFFIX = "+00:00";
   private static final String ERROR_FORMAT_INDENT = "  ";
   private static final String SCHEMA_VALIDATION_FORMAT = "Validating %d schemas";
   private static final String TARGET_VALIDATION_FORMAT = "Validating %d files against %s";
@@ -150,8 +150,6 @@ public class Validator {
   private static final String POINTSET_SUBFOLDER = "pointset";
   private static final Date START_TIME = new Date();
   private static final int TIMESTAMP_JITTER_SEC = 30;
-  public static final String TIMESTAMP_ZULU_SUFFIX = "Z";
-  public static final String TIMESTAMP_UTC_SUFFIX = "+00:00";
   private final Map<String, ReportingDevice> reportingDevices = new TreeMap<>();
   private final Set<String> extraDevices = new TreeSet<>();
   private final Set<String> processedDevices = new TreeSet<>();
@@ -543,10 +541,10 @@ public class Validator {
   }
 
   private void sanitizeMessage(String schemaName, Map<String, Object> message) {
-    if (schemaName.startsWith(CONFIG_PREFIX) || schemaName.startsWith(STATE_PREFIX)) {
-      message.remove(VERSION_KEY);
-      message.remove(TIMESTAMP_KEY);
-    }
+    //    if (schemaName.startsWith(CONFIG_PREFIX) || schemaName.startsWith(STATE_PREFIX)) {
+    //      message.remove(VERSION_KEY);
+    //      message.remove(TIMESTAMP_KEY);
+    //    }
   }
 
   private ReportingDevice validateMessageCore(
