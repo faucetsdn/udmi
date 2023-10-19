@@ -606,6 +606,8 @@ public class Validator {
     String publishRaw = attributes.get(PUBLISH_TIME_KEY);
     Instant publishTime = ifNotNullGet(publishRaw, Instant::parse);
     try {
+      // TODO: Validate message contests to make sure state sub-blocks don't also have timestamp.
+
       String subTypeRaw = ofNullable(attributes.get(SUBTYPE_PROPERTY_KEY))
           .orElse(UNKNOWN_TYPE_DEFAULT);
       boolean lastSeenValid = LAST_SEEN_SUBTYPES.contains(SubType.fromValue(subTypeRaw));
