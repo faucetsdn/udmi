@@ -262,6 +262,7 @@ public class Pubber {
     this.deviceId = deviceId;
     outDir = new File(PUBBER_OUT + "/" + serialNo);
     configuration = sanitizeConfiguration(new PubberConfiguration());
+    pubberOptions = configuration.options;
     configuration.deviceId = deviceId;
     configuration.projectId = projectId;
     configuration.serialNo = serialNo;
