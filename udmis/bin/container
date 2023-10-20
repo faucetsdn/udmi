@@ -40,11 +40,6 @@ if [[ $# != 0 ]]; then
     usage
 fi
 
-echo Using GCP project $GCP_PROJECT
-
-NAMESPACE=$(kubectl config view --minify -o jsonpath='{..namespace}')
-echo Using k8s namespace $NAMESPACE
-
 if [[ -z $NOCHECK ]]; then
     CONTEXT=`kubectl config current-context`
     CONTEXT_ARGS=(${CONTEXT//_/ })
@@ -53,7 +48,11 @@ if [[ -z $NOCHECK ]]; then
         echo Kubernetes context $CONTEXT does not match gcloud project $GCP_PROJECT
         false
     fi
+    NAMESPACE=$(kubectl config view --minify -o jsonpath='{..namespace}')
 fi
+
+echo Using GCP project $GCP_PROJECT
+echo Using k8s namespace $NAMESPACE
 
 LIBFILE=build/libs/udmis-1.0-SNAPSHOT-all.jar
 
