@@ -155,14 +155,15 @@ public class IotReflectorClient implements MessagePublisher {
     reflectConfiguration.iot_provider = iotConfig.iot_provider;
     reflectConfiguration.project_id = iotConfig.project_id;
     reflectConfiguration.bridge_host = iotConfig.bridge_host;
+    reflectConfiguration.reflector_endpoint = iotConfig.reflector_endpoint;
     reflectConfiguration.cloud_region = Optional.ofNullable(iotConfig.reflect_region)
         .orElse(iotConfig.cloud_region);
+
     reflectConfiguration.registry_id = UDMI_REFLECT;
     reflectConfiguration.udmi_namespace = iotConfig.udmi_namespace;
-    reflectConfiguration.reflector_endpoint = iotConfig.reflector_endpoint;
-
     // Intentionally map registry -> device because of reflection registry semantics.
     reflectConfiguration.device_id = registryId;
+
     return reflectConfiguration;
   }
 
@@ -350,7 +351,7 @@ public class IotReflectorClient implements MessagePublisher {
   private void errorHandler(MqttPublisher mqttPublisher, Throwable throwable) {
     System.err.printf("Received mqtt client error: %s at %s%n",
         throwable.getMessage(), getTimestamp());
-    mqttPublisher.close();
+    mqttPublisher.shutdown();
   }
 
   private byte[] getFileBytes(String dataFile) {

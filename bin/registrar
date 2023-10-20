@@ -42,8 +42,6 @@ echo Running tools version `git describe`
 # Format of cmdline project_id is [//PROVIDER/]PROJECT[@BRIDGE] (optional PROVIDER and BRIDGE)
 # e.g. bos-testing-dev or //gcp/bos-testing-dev or bos-platform-dev@mqtt.bos.goog
 
-set -x
-
 quoted_namespace=null
 quoted_bridge=null
 iot_provider=null

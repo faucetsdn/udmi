@@ -1,6 +1,7 @@
 package com.google.udmi.util;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.udmi.util.Common.PREFIX_SEPARATOR;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.JsonUtil.loadFileStrict;
 import static java.util.Objects.requireNonNull;
@@ -21,7 +22,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -172,14 +172,17 @@ public class SiteModel {
   }
 
   public static String getRegistryActual(ExecutionConfiguration iotConfig) {
-    return getRegistryActual(iotConfig.registry_id, iotConfig.registry_suffix);
+    return getRegistryActual(iotConfig.udmi_namespace, iotConfig.registry_id,
+        iotConfig.registry_suffix);
   }
 
-  public static String getRegistryActual(String registry_id, String registry_suffix) {
+  public static String getRegistryActual(String namespace,
+      String registry_id, String registry_suffix) {
     if (registry_id == null) {
       return null;
     }
-    return registry_id + ofNullable(registry_suffix).orElse("");
+    String prefix = ofNullable(namespace).map(name -> name + PREFIX_SEPARATOR).orElse("");
+    return prefix + registry_id + ofNullable(registry_suffix).orElse("");
   }
 
   public EndpointConfiguration makeEndpointConfig(String projectId, String deviceId) {
