@@ -145,8 +145,8 @@ public class SequenceBase {
   public static final String HAS_STATUS_PREFIX = "has ";
   public static final String NOT_STATUS_PREFIX = "no ";
   static final FeatureStage DEFAULT_MIN_STAGE = BETA;
-  private static final int FUNCTIONS_VERSION_BETA = Validator.REQUIRED_FUNCTION_VER;
-  private static final int FUNCTIONS_VERSION_ALPHA = 9; // Version required for alpha execution.
+  private static final int FUNCTIONS_VERSION_BETA = 10;
+  private static final int FUNCTIONS_VERSION_ALPHA = FUNCTIONS_VERSION_BETA;
   private static final long CONFIG_BARRIER_MS = 1000;
   private static final String START_END_MARKER = "################################";
   private static final String RESULT_FORMAT = "RESULT %s %s %s %s %s %s";

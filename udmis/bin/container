@@ -42,6 +42,9 @@ fi
 
 echo Using GCP project $GCP_PROJECT
 
+NAMESPACE=$(kubectl config view --minify -o jsonpath='{..namespace}')
+echo Using k8s namespace $NAMESPACE
+
 if [[ -z $NOCHECK ]]; then
     CONTEXT=`kubectl config current-context`
     CONTEXT_ARGS=(${CONTEXT//_/ })
@@ -94,9 +97,15 @@ if [[ $cmd == build && $REPOSITORY != local ]]; then
     hash=$(docker images --digests ${udmi_ref%:*} | fgrep $udmi_ver | awk '{print $3}')
     ihash=$udmi_ref@$hash
     for file in $TEMPLATES; do
-        if fgrep -q @IMAGE-$IMAGE@ etc/$file; then
-            sed < etc/$file > tmp/$file -e "s^@IMAGE-$IMAGE@^$ihash^"
-            echo Updated tmp/$file with image $ihash
+        cp etc/$file tmp/$file
+        sed -i tmp/$file \
+            -e "s^@IMAGE-$IMAGE@^$ihash^" \
+            -e "s^@NAMESPACE@^$NAMESPACE^" \
+            -e "s^@GCP_PROJECT@^$GCP_PROJECT^"
+        if diff etc/$file tmp/$file; then
+            rm tmp/$file
+        else
+            echo Customized output in tmp/$file
         fi
     done
 fi

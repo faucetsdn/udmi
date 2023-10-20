@@ -28,7 +28,7 @@ public abstract class ContainerBase {
 
   public static final String INITIAL_EXECUTION_CONTEXT = "xxxxxxxx";
   public static final Integer FUNCTIONS_VERSION_MIN = 9;
-  public static final Integer FUNCTIONS_VERSION_MAX = 9;
+  public static final Integer FUNCTIONS_VERSION_MAX = 10;
   public static final String EMPTY_JSON = "{}";
   public static final String REFLECT_BASE = "UDMI-REFLECT";
   private static final ThreadLocal<String> executionContext = new ThreadLocal<>();
