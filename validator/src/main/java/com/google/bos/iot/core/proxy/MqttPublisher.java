@@ -3,6 +3,7 @@ package com.google.bos.iot.core.proxy;
 import static com.google.bos.iot.core.proxy.ProxyTarget.STATE_TOPIC;
 import static com.google.udmi.util.GeneralUtils.catchOrElse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
@@ -11,6 +12,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.validator.Validator;
+import com.google.udmi.util.Common;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -99,7 +101,7 @@ class MqttPublisher implements MessagePublisher {
     this.onError = onError;
     this.projectId = executionConfiguration.project_id;
     this.cloudRegion = executionConfiguration.cloud_region;
-    this.registryId = executionConfiguration.registry_id;
+    this.registryId = getRegistryId(executionConfiguration);
     this.deviceId = executionConfiguration.device_id;
     this.algorithm = algorithm;
     this.keyBytes = keyBytes;
@@ -109,6 +111,11 @@ class MqttPublisher implements MessagePublisher {
     mqttClient = newMqttClient(deviceId);
     connectMqttClient(deviceId);
     tickler = scheduleTickler();
+  }
+
+  private static String getRegistryId(ExecutionConfiguration config) {
+    String prefix = ifNotNullGet(config.udmi_namespace, name -> name + Common.PREFIX_SEPARATOR, "");
+    return prefix + config.registry_id;
   }
 
   private static ThreadFactory getDaemonThreadFactory() {

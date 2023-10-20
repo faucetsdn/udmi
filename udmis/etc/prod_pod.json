@@ -1,4 +1,7 @@
 {
+  "base": {
+    "udmi_prefix": "${UDMI_PREFIX}"
+  },
   "flow_defaults": {
     "protocol": "pubsub",
     "hostname": "${GCP_PROJECT}",

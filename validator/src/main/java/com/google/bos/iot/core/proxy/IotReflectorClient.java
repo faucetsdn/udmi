@@ -111,8 +111,9 @@ public class IotReflectorClient implements MessagePublisher {
     updateTo = iotConfig.update_to;
     String cloudRegion = Optional.ofNullable(iotConfig.reflect_region)
         .orElse(iotConfig.cloud_region);
+    String prefix = ifNotNullGet(iotConfig.udmi_namespace, name -> name + Common.PREFIX_SEPARATOR);
     subscriptionId =
-        format("%s/%s/%s/%s", projectId, cloudRegion, UDMI_REFLECT, registryId);
+        format("%s/%s/%s%s/%s", projectId, cloudRegion, prefix, UDMI_REFLECT, registryId);
     System.err.println("Using client subscription " + subscriptionId);
 
     try {
@@ -157,6 +158,7 @@ public class IotReflectorClient implements MessagePublisher {
     reflectConfiguration.cloud_region = Optional.ofNullable(iotConfig.reflect_region)
         .orElse(iotConfig.cloud_region);
     reflectConfiguration.registry_id = UDMI_REFLECT;
+    reflectConfiguration.udmi_namespace = iotConfig.udmi_namespace;
     reflectConfiguration.reflector_endpoint = iotConfig.reflector_endpoint;
 
     // Intentionally map registry -> device because of reflection registry semantics.
