@@ -332,8 +332,10 @@ public class SequenceBase {
 
     cloudRegion = validatorConfig.cloud_region;
     registryId = SiteModel.getRegistryActual(validatorConfig);
-    altRegistry = SiteModel.getRegistryActual("FOOZLEWAZ", validatorConfig.alt_registry,
-        validatorConfig.registry_suffix);
+    String udmiNamespace = validatorConfig.udmi_namespace;
+    String altRegistryId = validatorConfig.alt_registry;
+    String registrySuffix = validatorConfig.registry_suffix;
+    altRegistry = SiteModel.getRegistryActual(udmiNamespace, altRegistryId, registrySuffix);
 
     deviceMetadata = readDeviceMetadata();
 

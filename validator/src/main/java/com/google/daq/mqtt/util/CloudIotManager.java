@@ -76,7 +76,8 @@ public class CloudIotManager {
       executionConfiguration.site_model = siteDir.getPath();
       executionConfiguration.registry_suffix = registrySuffix;
       String targetRegistry = ofNullable(altRegistry).orElse(executionConfiguration.registry_id);
-      registryId = SiteModel.getRegistryActual("FOOZLEWAZ", targetRegistry, registrySuffix);
+      String udmiNamespace = executionConfiguration.udmi_namespace;
+      registryId = SiteModel.getRegistryActual(udmiNamespace, targetRegistry, registrySuffix);
       cloudRegion = executionConfiguration.cloud_region;
       initializeIotProvider();
     } catch (Exception e) {
@@ -103,10 +104,10 @@ public class CloudIotManager {
       executionConfiguration.iot_provider = ofNullable(executionConfiguration.iot_provider).orElse(
           IMPLICIT);
       executionConfiguration.site_model = siteModel.getAbsolutePath();
+      String udmiNamespace = executionConfiguration.udmi_namespace;
       String targetRegistry = ofNullable(newConfig.alt_registry).orElse(newConfig.registry_id);
-      registryId = SiteModel.getRegistryActual("FOOZLEWAZ", targetRegistry,
-          newConfig.registry_suffix
-      );
+      String registrySuffix = newConfig.registry_suffix;
+      registryId = SiteModel.getRegistryActual(udmiNamespace, targetRegistry, registrySuffix);
       cloudRegion = executionConfiguration.cloud_region;
       initializeIotProvider();
     } catch (Exception e) {
