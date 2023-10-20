@@ -1,5 +1,6 @@
 {
   "deviceNumId" : "00000079057151",
+  "publishTime" : "1999-10-20T01:02:03Z",
   "subFolder" : "pointset",
   "deviceRegistryId" : "ZZ-TRI-FECTA",
   "subType" : "event",

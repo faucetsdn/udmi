@@ -23,6 +23,7 @@ public abstract class Common {
   public static final String EXCEPTION_KEY = "exception";
   public static final String ERROR_KEY = "error";
   public static final String TRANSACTION_KEY = "transactionId";
+  public static final String PUBLISH_TIME_KEY = "publishTime";
   public static final String MESSAGE_KEY = "message";
   public static final String TIMESTAMP_KEY = "timestamp";
   public static final String VERSION_KEY = "version";
