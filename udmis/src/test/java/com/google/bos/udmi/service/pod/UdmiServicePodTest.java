@@ -216,6 +216,7 @@ public class UdmiServicePodTest {
    */
   @AfterEach
   public void resetForTest() {
+    ContainerBase.resetForTest();
     UdmiServicePod.resetForTest();
     LocalMessagePipe.resetForTestStatic();
   }

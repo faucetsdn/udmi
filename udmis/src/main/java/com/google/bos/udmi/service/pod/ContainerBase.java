@@ -1,17 +1,20 @@
 package com.google.bos.udmi.service.pod;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.core.ComponentName;
+import com.google.common.base.Preconditions;
 import com.google.udmi.util.JsonUtil;
 import java.io.PrintStream;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.TestOnly;
 import udmi.schema.BasePodConfiguration;
 import udmi.schema.Level;
 import udmi.schema.PodConfiguration;
@@ -30,16 +33,22 @@ public abstract class ContainerBase {
   public static final String REFLECT_BASE = "UDMI-REFLECT";
   private static final ThreadLocal<String> executionContext = new ThreadLocal<>();
   private static final Pattern VARIABLE_PATTERN = Pattern.compile("\\$\\{([A-Z_]+)\\}");
-  private static BasePodConfiguration basePodConfig;
-  protected static String reflectRegistry;
+  private static BasePodConfiguration basePodConfig = new BasePodConfiguration();
+  protected static String reflectRegistry = REFLECT_BASE;
   protected final PodConfiguration podConfiguration;
 
+  /**
+   * Create a basic pod container.
+   */
   public ContainerBase() {
     podConfiguration = null;
-    requireNonNull(basePodConfig, "static basePodConfig not defined");
-    requireNonNull(reflectRegistry, "static reflect registry not defined");
   }
 
+  /**
+   * Construct a new instance given a configuration file. Only used once for the pod itself.
+   *
+   * @param config pod configuration
+   */
   public ContainerBase(PodConfiguration config) {
     podConfiguration = config;
     basePodConfig = ofNullable(podConfiguration.base).orElseGet(BasePodConfiguration::new);
@@ -49,6 +58,12 @@ public abstract class ContainerBase {
 
   private static String environmentReplacer(MatchResult match) {
     return ofNullable(System.getenv(match.group(1))).orElse("");
+  }
+
+  @TestOnly
+  static void resetForTest() {
+    basePodConfig = null;
+    reflectRegistry = null;
   }
 
   /**

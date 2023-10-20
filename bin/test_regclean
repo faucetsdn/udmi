@@ -18,8 +18,6 @@ shift
 echo "Run as: $0 $project_id"
 echo "export UDMI_REGISTRY_SUFFIX=$UDMI_REGISTRY_SUFFIX"
 echo "export UDMI_ALT_REGISTRY=$UDMI_ALT_REGISTRY"
-echo "export UDMI_REFLECTOR_ENDPOINT='$UDMI_REFLECTOR_ENDPOINT'"
-echo "export UDMI_PUBBER_ENDPOINT='$UDMI_PUBBER_ENDPOINT'"
 
 site_path=sites/udmi_site_model
 output_file=$site_path/out/registration_summary.json
@@ -44,21 +42,8 @@ fi
 registry_id=`jq -r .registry_id $site_path/cloud_iot_config.json`
 cloud_region=`jq -r .cloud_region $site_path/cloud_iot_config.json`
 
-if [[ -n $UDMI_REFLECTOR_ENDPOINT ]]; then
-    endpoint=$(tr -d ' \n\r' <<< $UDMI_REFLECTOR_ENDPOINT | base64 --decode)
-    echo $endpoint
-    site_arg=out/cloud_iot_config-reflect.json
-    jq --argjson endpoint "$endpoint" '.reflector_endpoint = $endpoint' \
-       $site_path/cloud_iot_config.json > $site_arg
-    jq ".project_id = \"$project_id\"" $site_arg | sponge $site_arg
-    jq ".site_model = \"$site_path\"" $site_arg | sponge $site_arg
-    echo $site_arg:
-    cat $site_arg
-    registrar_project=
-else
-    site_arg=$site_path
-    registrar_project=$project_id
-fi
+site_arg=$site_path
+registrar_project=$project_id
 
 registry_prefix=
 project_target=${project_id##*/}
@@ -102,13 +87,6 @@ cat <<EOF > $pubber_config
     }
 }
 EOF
-
-if [[ -n $UDMI_PUBBER_ENDPOINT ]]; then
-    endpoint=$(tr -d ' \n\r' <<< $UDMI_PUBBER_ENDPOINT | base64 --decode)
-    echo $endpoint
-    jq --argjson endpoint "$endpoint" '.endpoint = $endpoint' \
-       $pubber_config | sponge $pubber_config
-fi
 
 echo Corrupting site model to check error handling...
 mkdir -p $site_path/devices/XXX-1
