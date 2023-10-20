@@ -3,6 +3,7 @@ package com.google.bos.iot.core.proxy;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
+import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -258,6 +259,7 @@ public class IotReflectorClient implements MessagePublisher {
     attributes.put("subFolder", (String) messageMap.get("subFolder"));
     attributes.put("transactionId", (String) messageMap.get("transactionId"));
     attributes.put("deviceNumId", MOCK_DEVICE_NUM_ID);
+    attributes.put(PUBLISH_TIME_KEY, (String) messageMap.get("publishTime"));
     return attributes;
   }
 

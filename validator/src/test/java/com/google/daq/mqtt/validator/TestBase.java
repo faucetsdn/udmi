@@ -1,9 +1,11 @@
 package com.google.daq.mqtt.validator;
 
 import static com.google.daq.mqtt.util.FileDataSink.REPORT_JSON_FILENAME;
+import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
 
 import com.google.daq.mqtt.TestCommon;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
+import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
 import java.time.Instant;
@@ -107,6 +109,7 @@ public class TestBase {
     attributes.put("subType", subType);
     attributes.put("deviceNumId", TestCommon.DEVICE_NUM_ID);
     attributes.put("projectId", SiteModel.MOCK_PROJECT);
+    attributes.put(PUBLISH_TIME_KEY, JsonUtil.getTimestamp());
     return attributes;
   }
 }
