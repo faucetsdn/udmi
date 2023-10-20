@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-NAMESPACE=peringknife
+NAMESPACE=$(kubectl config view --minify -o jsonpath='{..namespace}')
 PREFIX=${NAMESPACE}~
 TOPICS="udmi_reflect udmi_target udmi_state udmi_config"
 
