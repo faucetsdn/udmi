@@ -8,17 +8,16 @@ import static com.google.daq.mqtt.util.ConfigUtil.UDMI_TOOLS;
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_VERSION;
 import static com.google.daq.mqtt.util.ConfigUtil.readExeConfig;
 import static com.google.daq.mqtt.validator.ReportingDevice.typeFolderPairKey;
-import static com.google.udmi.util.Common.DEVICE_ID_PROPERTY_KEY;
 import static com.google.udmi.util.Common.ERROR_KEY;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
 import static com.google.udmi.util.Common.GCP_REFLECT_KEY_PKCS8;
 import static com.google.udmi.util.Common.MESSAGE_KEY;
 import static com.google.udmi.util.Common.NO_SITE;
+import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
 import static com.google.udmi.util.Common.STATE_QUERY_TOPIC;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
-import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.Common.removeNextArg;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -66,6 +65,7 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -114,6 +114,8 @@ public class Validator {
   public static final String CONFIG_PREFIX = "config_";
   public static final String STATE_PREFIX = "state_";
   public static final String PROJECT_PROVIDER_PREFIX = "//";
+  public static final String TIMESTAMP_ZULU_SUFFIX = "Z";
+  public static final String TIMESTAMP_UTC_SUFFIX = "+00:00";
   private static final String ERROR_FORMAT_INDENT = "  ";
   private static final String SCHEMA_VALIDATION_FORMAT = "Validating %d schemas";
   private static final String TARGET_VALIDATION_FORMAT = "Validating %d files against %s";
@@ -147,6 +149,7 @@ public class Validator {
   private static final String VALIDATION_STATE_TOPIC = "validation/state";
   private static final String POINTSET_SUBFOLDER = "pointset";
   private static final Date START_TIME = new Date();
+  private static final int TIMESTAMP_JITTER_SEC = 30;
   private final Map<String, ReportingDevice> reportingDevices = new TreeMap<>();
   private final Set<String> extraDevices = new TreeSet<>();
   private final Set<String> processedDevices = new TreeSet<>();
@@ -537,13 +540,6 @@ public class Validator {
     }
   }
 
-  private void sanitizeMessage(String schemaName, Map<String, Object> message) {
-    if (schemaName.startsWith(CONFIG_PREFIX) || schemaName.startsWith(STATE_PREFIX)) {
-      message.remove(VERSION_KEY);
-      message.remove(TIMESTAMP_KEY);
-    }
-  }
-
   private ReportingDevice validateMessageCore(
       Map<String, Object> message,
       Map<String, String> attributes) {
@@ -604,13 +600,38 @@ public class Validator {
     }
 
     upgradeMessage(schemaName, message);
-    sanitizeMessage(schemaName, message);
 
-    String timeString = (String) message.get(TIMESTAMP_KEY);
-    String subTypeRaw = ofNullable(attributes.get(SUBTYPE_PROPERTY_KEY))
-        .orElse(UNKNOWN_TYPE_DEFAULT);
-    if (timeString != null && LAST_SEEN_SUBTYPES.contains(SubType.fromValue(subTypeRaw))) {
-      device.updateLastSeen(Date.from(Instant.parse(timeString)));
+    String timestampRaw = (String) message.get("timestamp");
+    Instant timestamp = ifNotNullGet(timestampRaw, Instant::parse);
+    String publishRaw = attributes.get(PUBLISH_TIME_KEY);
+    Instant publishTime = ifNotNullGet(publishRaw, Instant::parse);
+    try {
+      // TODO: Validate message contests to make sure state sub-blocks don't also have timestamp.
+
+      String subTypeRaw = ofNullable(attributes.get(SUBTYPE_PROPERTY_KEY))
+          .orElse(UNKNOWN_TYPE_DEFAULT);
+      boolean lastSeenValid = LAST_SEEN_SUBTYPES.contains(SubType.fromValue(subTypeRaw));
+      if (lastSeenValid) {
+        if (publishTime != null) {
+          device.updateLastSeen(Date.from(publishTime));
+        }
+        if (timestamp == null) {
+          throw new RuntimeException("Missing message timestamp");
+        }
+        if (publishTime != null) {
+          if (!timestampRaw.endsWith(TIMESTAMP_ZULU_SUFFIX)
+              && !timestampRaw.endsWith(TIMESTAMP_UTC_SUFFIX)) {
+            throw new RuntimeException("Invalid timestamp timezone " + timestampRaw);
+          }
+          long between = Duration.between(publishTime, timestamp).getSeconds();
+          if (between > TIMESTAMP_JITTER_SEC || between < -TIMESTAMP_JITTER_SEC) {
+            throw new RuntimeException("Timestamp jitter exceeds threshold: " + between);
+          }
+        }
+      }
+    } catch (Exception e) {
+      System.err.println("Timestamp validation error: " + friendlyStackTrace(e));
+      device.addError(e, attributes, Category.VALIDATION_DEVICE_CONTENT);
     }
 
     try {
@@ -646,7 +667,7 @@ public class Validator {
       try {
         ifNotNullThen(CONTENT_VALIDATORS.get(schemaName), targetClass -> {
           Object messageObject = OBJECT_MAPPER.convertValue(message, targetClass);
-          device.validateMessageType(messageObject, JsonUtil.getDate(timeString), attributes);
+          device.validateMessageType(messageObject, JsonUtil.getDate(publishRaw), attributes);
         });
       } catch (Exception e) {
         System.err.println("Error validating contents: " + friendlyStackTrace(e));
@@ -971,7 +992,6 @@ public class Validator {
     try (OutputStream outputStream = Files.newOutputStream(outputFile.toPath())) {
       copyFileHeader(inputFile, outputStream);
       Map<String, Object> message = JsonUtil.loadMap(inputFile);
-      sanitizeMessage(schemaName, message);
       JsonNode jsonNode = OBJECT_MAPPER.valueToTree(message);
       MessageUpgrader messageUpgrader = new MessageUpgrader(schemaName, jsonNode);
       messageUpgrader.upgrade(forceUpgrade);

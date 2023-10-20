@@ -1,7 +1,9 @@
 package com.google.daq.mqtt.validator;
 
+import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
+import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonParser.Feature;
@@ -23,7 +25,6 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import udmi.schema.SetupUdmiConfig;
 
 /**
  * Client to read messages from a directory of captured messages.
@@ -86,9 +87,9 @@ public class MessageReadingClient implements MessagePublisher {
         return;
       }
       String msgName = deviceMessageLists.get(deviceId).remove(0);
-      Map<String, String> attributes = makeAttributes(deviceId, msgName);
-      deviceAttributes.put(deviceId, attributes);
       Map<String, Object> msgObj = getMessageObject(deviceId, msgName);
+      Map<String, String> attributes = makeAttributes(deviceId, msgName, msgObj);
+      deviceAttributes.put(deviceId, attributes);
       deviceMessages.put(deviceId, msgObj);
       if (!msgObj.containsKey("timestamp")) {
         msgObj.put("timestamp", deviceLastTimestamp.get(deviceId));
@@ -112,7 +113,8 @@ public class MessageReadingClient implements MessagePublisher {
     }
   }
 
-  private Map<String, String> makeAttributes(String deviceId, String msgName) {
+  private Map<String, String> makeAttributes(String deviceId, String msgName,
+      Map<String, Object> msgObj) {
     try {
       Map<String, String> attributes = new HashMap<>();
       attributes.put(MSG_SOURCE, msgName);
@@ -120,6 +122,7 @@ public class MessageReadingClient implements MessagePublisher {
       attributes.put("deviceNumId", getNumId(deviceId));
       attributes.put("projectId", PLAYBACK_PROJECT_ID);
       attributes.put("deviceRegistryId", registryId);
+      attributes.put(PUBLISH_TIME_KEY, (String) msgObj.get(TIMESTAMP_KEY));
 
       Matcher matcher = filenamePattern.matcher(msgName);
       if (matcher.matches()) {

@@ -19,6 +19,7 @@ class PubberOptions:
     self.emptyMissing = None
     self.redirectRegistry = None
     self.smokeCheck = None
+    self.skewClock = None
     self.noPointState = None
     self.noState = None
     self.featureEnableSwap = None
@@ -46,6 +47,7 @@ class PubberOptions:
     result.emptyMissing = source.get('emptyMissing')
     result.redirectRegistry = source.get('redirectRegistry')
     result.smokeCheck = source.get('smokeCheck')
+    result.skewClock = source.get('skewClock')
     result.noPointState = source.get('noPointState')
     result.noState = source.get('noState')
     result.featureEnableSwap = source.get('featureEnableSwap')
@@ -101,6 +103,8 @@ class PubberOptions:
       result['redirectRegistry'] = self.redirectRegistry # 5
     if self.smokeCheck:
       result['smokeCheck'] = self.smokeCheck # 5
+    if self.skewClock:
+      result['skewClock'] = self.skewClock # 5
     if self.noPointState:
       result['noPointState'] = self.noPointState # 5
     if self.noState:
