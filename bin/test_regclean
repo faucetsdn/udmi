@@ -60,10 +60,15 @@ else
     registrar_project=$project_id
 fi
 
+registry_prefix=
 project_target=${project_id##*/}
 if [[ $project_id =~ ^// ]]; then
-    no_project=${project_id%/*}
-    iot_provider=${no_project#//}
+    no_prefix=${project_id#//}
+    iot_provider=${no_prefix%%/*}
+    no_provider=${no_prefix#*/}
+    project_target=${no_provider%/*}
+    udmi_namespace=${no_provider#*/}
+    [[ -n $udmi_namespace ]] && registry_prefix=${udmi_namespace}~
 elif [[ $project_id =~ @ ]]; then
     iot_provider=\"jwt\"
     broker_hostname=${project_id#*@}
@@ -85,7 +90,7 @@ cat <<EOF > $pubber_config
 {
     "endpoint": {
       "protocol": "mqtt",
-      "client_id": "projects/$project_target/locations/$cloud_region/registries/$registry_id$registry_suffix/devices/$device_id",
+      "client_id": "projects/$project_target/locations/$cloud_region/registries/$registry_prefix$registry_id$registry_suffix/devices/$device_id",
       "hostname": "$broker_hostname"
     },
     "sitePath": "$site_path",

@@ -14,7 +14,7 @@ ADD bin/ bin/
 ADD var/ var/
 
 ENV CLEARBLADE_CONFIGURATION=/udmi/clearblade.json
-
 ENV GCP_PROJECT=$GCP_PROJECT
+ENV UDMI_PREFIX=$UDMI_PREFIX
 
 CMD ["/root/bin/run", "var/prod_pod.json"]

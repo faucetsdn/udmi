@@ -35,5 +35,16 @@ else
     false
 fi
 
+export UDMI_PREFIX=
+if [[ -n $UDMI_NAMESPACE ]]; then
+    UDMI_PREFIX=${UDMI_NAMESPACE}~
+fi
+
+
+if [[ -n $CLEARBLADE_PROJECT ]]; then
+    echo CLEARBLADE_PROJECT defined, would be clobbered by value from CLEARBLADE_CREDENTIALS
+    false
+fi
+
 # Run with exec to replace shell so java receives SIGTERM signal.
 exec java -jar $POD_JAR $POD_CONFIG

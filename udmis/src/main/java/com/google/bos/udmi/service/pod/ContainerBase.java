@@ -50,11 +50,15 @@ public abstract class ContainerBase {
     return previous;
   }
 
-  protected String variableSubstitution(String value, String nullMessage) {
-    if (nullMessage == null && value == null) {
+  protected String variableSubstitution(String value) {
+    if (value == null) {
       return null;
     }
-    requireNonNull(value, nullMessage);
+    return variableSubstitution(value, "unknown null value");
+  }
+
+  protected String variableSubstitution(String value, @NotNull String nullMessage) {
+    requireNonNull(value, requireNonNull(nullMessage, "null message not defined"));
     Matcher matcher = VARIABLE_PATTERN.matcher(value);
     String out = matcher.replaceAll(ContainerBase::environmentReplacer);
     ifNotTrueThen(value.equals(out), () -> debug("Replaced value %s with '%s'", value, out));

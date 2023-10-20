@@ -296,7 +296,7 @@ public abstract class IotAccessBase extends ContainerBase {
   }
 
   Map<String, Object> parseOptions(IotAccess iotAccess) {
-    String options = variableSubstitution(iotAccess.options, null);
+    String options = variableSubstitution(iotAccess.options);
     if (options == null) {
       return ImmutableMap.of();
     }
