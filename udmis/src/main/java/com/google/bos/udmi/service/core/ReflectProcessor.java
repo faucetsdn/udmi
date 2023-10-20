@@ -2,6 +2,7 @@ package com.google.bos.udmi.service.core;
 
 import static com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl.getMessageClassFor;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.udmi.util.Common.CONDENSER_STRING;
 import static com.google.udmi.util.Common.DETAIL_KEY;
 import static com.google.udmi.util.Common.DEVICE_ID_PROPERTY_KEY;
 import static com.google.udmi.util.Common.ERROR_KEY;
@@ -124,7 +125,7 @@ public class ReflectProcessor extends ProcessorBase {
 
   private void processException(Envelope reflection, Map<String, Object> objectMap, Exception e) {
     String stackMessage = friendlyStackTrace(e);
-    String detailString = multiTrim(stackTraceString(e));
+    String detailString = multiTrim(stackTraceString(e), CONDENSER_STRING);
     warn("Processing exception %s: %s", reflection.transactionId, stackMessage);
     debug("Stack trace details %s: %s", reflection.transactionId, detailString);
     Map<String, Object> message = new HashMap<>();

@@ -7,6 +7,7 @@ import static com.google.udmi.util.Common.CLOUD_VERSION_KEY;
 import static com.google.udmi.util.Common.NO_SITE;
 import static com.google.udmi.util.Common.UDMI_VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
+import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
@@ -126,7 +127,11 @@ public class Registrar {
    */
   public static void main(String[] args) {
     ArrayList<String> argList = new ArrayList<>(List.of(args));
-    new Registrar().processArgs(argList).execute();
+    try {
+      new Registrar().processArgs(argList).execute();
+    } catch (Exception e) {
+      System.err.println("Exception in main: " + friendlyStackTrace(e));
+    }
   }
 
   @SuppressWarnings("unchecked")
@@ -247,7 +252,6 @@ public class Registrar {
       ExceptionMap.format(em).write(System.err);
       throw new RuntimeException("mapped exceptions", em);
     } catch (Exception ex) {
-      ex.printStackTrace();
       throw new RuntimeException("main exception", ex);
     } finally {
       shutdown();

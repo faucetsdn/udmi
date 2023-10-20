@@ -434,7 +434,11 @@ public class GeneralUtils {
   }
 
   public static String multiTrim(String message) {
+    return multiTrim(message, " ");
+  }
+
+  public static String multiTrim(String message, String delimiter) {
     return Arrays.stream(ofNullable(message).orElse("").split("\n"))
-        .map(String::trim).collect(Collectors.joining(" "));
+        .map(String::trim).collect(Collectors.joining(delimiter));
   }
 }

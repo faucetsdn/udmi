@@ -39,6 +39,7 @@ public abstract class Common {
   public static final String NO_SITE = "--";
   public static final String GCP_REFLECT_KEY_PKCS8 = "reflector/rsa_private.pkcs8";
   public static final String PREFIX_SEPARATOR = "~";
+  public static final String CONDENSER_STRING = "^^";
   private static final String UDMI_VERSION_ENV = "UDMI_VERSION";
   public static final char DETAIL_SEPARATOR_CHAR = ';';
   public static final String DETAIL_SEPARATOR = DETAIL_SEPARATOR_CHAR + " ";
