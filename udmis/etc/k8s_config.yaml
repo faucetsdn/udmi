@@ -4,5 +4,4 @@ metadata:
   name: config
 data:
   GCP_IOT_OPTIONS: disabled
-  CLEARBLADE_PROJECT: bos-platform-dev
-  UDMI_PREFIX: udmis~
+  UDMI_NAMESPACE: udmis

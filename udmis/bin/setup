@@ -1,25 +1,29 @@
 #!/bin/bash -e
 
 if [[ $# != 1 ]]; then
-    echo Usage: $0 project_id
+    echo Usage: $0 project_id[/namespace]
     false
 fi
 
-project_id=$1
+full_id=$1
 shift
+
+project_id=${full_id%/*}
+namespace=${full_id#$project_id/}
 
 ROOT=$(dirname $0)/..
 cd $ROOT
 
 echo Configuring for GCP project $project_id...
-gcloud auth application-default set-quota-project $project_id
+# This is slow, and not sure it's necessary...
+# gcloud auth application-default set-quota-project $project_id
 gcloud --quiet config set project $project_id
 
-kcontext=$(kubectl config get-contexts | fgrep $project_id | tr '*' ' ' | awk '{ print $1 }')
+kcontext=$(kubectl config get-contexts | fgrep $project_id | fgrep ${namespace:-_} | tr '*' ' ' | awk '{ print $1 }')
 
 if [[ -z $kcontext ]]; then
     echo No kubectl context defined for project $project_id
-    echo "  kubectl config get-contexts | fgrep $project_id"
+    echo "  kubectl config get-contexts | fgrep ${project_id} | fgrep ${namespace:-_} "
     false
 fi
 

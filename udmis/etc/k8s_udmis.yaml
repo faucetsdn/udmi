@@ -34,11 +34,11 @@ spec:
           mountPath: /udmi
           readOnly: true
         env:
-        - name: CLEARBLADE_PROJECT
+        - name: UDMI_NAMESPACE
           valueFrom:
             configMapKeyRef:
               name: config
-              key: CLEARBLADE_PROJECT
+              key: UDMI_NAMESPACE
         - name: GCP_IOT_OPTIONS
           valueFrom:
             configMapKeyRef:

@@ -11,9 +11,12 @@ shift
 ROOT=$(dirname $0)/..
 cd $ROOT
 
-more /etc/os-release $POD_CONFIG | cat
-
+echo
+echo Initial env:
 env
+echo
+
+more /etc/os-release $POD_CONFIG | cat
 
 java -version
 
@@ -38,13 +41,27 @@ fi
 export UDMI_PREFIX=
 if [[ -n $UDMI_NAMESPACE ]]; then
     UDMI_PREFIX=${UDMI_NAMESPACE}~
+    echo Using UDMI_PREFIX $UDMI_PREFIX
 fi
 
 
 if [[ -n $CLEARBLADE_PROJECT ]]; then
-    echo CLEARBLADE_PROJECT defined, would be clobbered by value from CLEARBLADE_CREDENTIALS
+    echo CLEARBLADE_PROJECT defined, would be clobbered by value from CLEARBLADE_CONFIGURATION
     false
 fi
+
+if [[ -n $CLEARBLADE_CONFIGURATION ]]; then
+    export CLEARBLADE_PROJECT=$(jq -r .project $CLEARBLADE_CONFIGURATION)
+    echo Extracted ClearBlade project $CLEARBLADE_PROJECT from $CLEARBLADE_CONFIGURATION
+fi
+
+SERVICE_ACCOUNT=$(curl -H "Metadata-Flavor: Google" http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/email)
+echo Configured with service-account $SERVICE_ACCOUNT
+
+echo
+echo Final java env:
+env
+echo
 
 # Run with exec to replace shell so java receives SIGTERM signal.
 exec java -jar $POD_JAR $POD_CONFIG

@@ -73,12 +73,20 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
     }
   }
 
-  private void checkPublisher() {
-    publish(makeHelloBundle());
+  private static void checkSubscription(ProjectSubscriptionName subscriptionName) {
+    try (SubscriptionAdminClient client = SubscriptionAdminClient.create()) {
+      client.getSubscription(subscriptionName).getAckDeadlineSeconds();
+    } catch (Exception e) {
+      throw new RuntimeException("Checking subscription " + subscriptionName, e);
+    }
   }
 
   public static MessagePipe fromConfig(EndpointConfiguration configuration) {
     return new PubSubPipe(configuration);
+  }
+
+  private void checkPublisher() {
+    publish(makeHelloBundle());
   }
 
   private String getEmulatorHost() {
@@ -109,18 +117,12 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
   }
 
   @Override
-  public void shutdown() {
-    subscriber.stopAsync().awaitTerminated();
-    super.shutdown();
-  }
-
-  @Override
   public void publish(Bundle bundle) {
+    if (publisher == null) {
+      trace("Dropping message because publisher is null");
+      return;
+    }
     try {
-      if (publisher == null) {
-        trace("Dropping message because publisher is null");
-        return;
-      }
       Envelope envelope = Optional.ofNullable(bundle.envelope).orElse(new Envelope());
       Map<String, String> stringMap = toMap(envelope).entrySet().stream()
           .collect(Collectors.toMap(Entry::getKey, entry -> (String) entry.getValue()));
@@ -133,7 +135,7 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
       debug(format("Published PubSub %s/%s to %s as %s", stringMap.get(SUBTYPE_PROPERTY_KEY),
           stringMap.get(SUBFOLDER_PROPERTY_KEY), publisher.getTopicNameString(), publishedId));
     } catch (Exception e) {
-      throw new RuntimeException("While publishing pubsub bundle", e);
+      throw new RuntimeException("While publishing bundle to " + publisher.getTopicNameString(), e);
     }
   }
 
@@ -152,6 +154,12 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
     if (seconds > 1) {
       warn("Receive message took %ss", seconds);
     }
+  }
+
+  @Override
+  public void shutdown() {
+    subscriber.stopAsync().awaitTerminated();
+    super.shutdown();
   }
 
   Publisher getPublisher(String topicName) {
@@ -188,14 +196,6 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
       return built;
     } catch (Exception e) {
       throw new RuntimeException("While creating subscriber", e);
-    }
-  }
-
-  private static void checkSubscription(ProjectSubscriptionName subscriptionName) {
-    try (SubscriptionAdminClient client = SubscriptionAdminClient.create()) {
-      client.getSubscription(subscriptionName).getAckDeadlineSeconds();
-    } catch (Exception e) {
-      throw new RuntimeException("Checking subscription " + subscriptionName, e);
     }
   }
 
