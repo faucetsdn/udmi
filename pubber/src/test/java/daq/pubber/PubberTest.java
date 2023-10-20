@@ -211,12 +211,12 @@ public class PubberTest extends TestBase {
     State testMessage = new State();
 
     assertNull(testMessage.timestamp);
-    Pubber.augmentDeviceMessage(testMessage);
+    Pubber.augmentDeviceMessage(testMessage, new Date());
     assertEquals(testMessage.version, Pubber.UDMI_VERSION);
     assertNotEquals(testMessage.timestamp, null);
 
     testMessage.timestamp = new Date(1241);
-    Pubber.augmentDeviceMessage(testMessage);
+    Pubber.augmentDeviceMessage(testMessage, new Date());
     assertEquals(testMessage.version, Pubber.UDMI_VERSION);
     assertNotEquals(testMessage.timestamp, new Date(1241));
   }

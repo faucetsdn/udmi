@@ -3,7 +3,6 @@ package daq.pubber;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.catchOrElse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
@@ -22,9 +21,7 @@ import static com.google.udmi.util.JsonUtil.safeSleep;
 import static daq.pubber.MqttDevice.CONFIG_TOPIC;
 import static daq.pubber.MqttDevice.ERRORS_TOPIC;
 import static daq.pubber.MqttDevice.STATE_TOPIC;
-import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
-import static java.util.Objects.isNull;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
@@ -57,6 +54,7 @@ import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -179,7 +177,6 @@ public class Pubber {
       "faulty_finding", makePointPointsetModel(true, 40, 0, "deg"),
       "superimposition_reading", makePointPointsetModel(false)
   );
-  private static final Date DEVICE_START_TIME = getRoundedStartTime();
   private static final Map<SystemMode, Integer> EXIT_CODE_MAP = ImmutableMap.of(
       SystemMode.SHUTDOWN, 0, // Indicates expected clean shutdown (success).
       SystemMode.RESTART, 192, // Indicate process to be explicitly restarted.
@@ -197,10 +194,12 @@ public class Pubber {
   private static final String DEFAULT_MODEL = "pubber";
   private static final String DEFAULT_SOFTWARE_KEY = "firmware";
   private static final String DEFAULT_SOFTWARE_VALUE = "v1";
-
+  private static final Duration CLOCK_SKEW = Duration.ofMinutes(30);
+  private static PubberOptions pubberOptions;
   protected final PubberConfiguration configuration;
   final State deviceState = new State();
   final Config deviceConfig = new Config();
+  private final Date deviceStartTime;
   private final File outDir;
   private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
   private final AtomicInteger messageDelayMs = new AtomicInteger(DEFAULT_REPORT_SEC * 1000);
@@ -238,6 +237,8 @@ public class Pubber {
     File configFile = new File(configPath);
     try {
       configuration = sanitizeConfiguration(fromJsonFile(configFile, PubberConfiguration.class));
+      pubberOptions = configuration.options;
+      deviceStartTime = getRoundedStartTime();
       Protocol protocol = ofNullable(
           ifNotNullGet(configuration.endpoint, endpoint -> endpoint.protocol)).orElse(MQTT);
       checkArgument(MQTT.equals(protocol), "protocol mismatch");
@@ -261,6 +262,7 @@ public class Pubber {
     this.deviceId = deviceId;
     outDir = new File(PUBBER_OUT + "/" + serialNo);
     configuration = sanitizeConfiguration(new PubberConfiguration());
+    pubberOptions = configuration.options;
     configuration.deviceId = deviceId;
     configuration.iotProject = iotProject;
     configuration.serialNo = serialNo;
@@ -269,6 +271,7 @@ public class Pubber {
     } else {
       configuration.sitePath = sitePath;
     }
+    deviceStartTime = getRoundedStartTime();
   }
 
   private static String getEventsSuffix(String suffixSuffix) {
@@ -276,7 +279,7 @@ public class Pubber {
   }
 
   private static Date getRoundedStartTime() {
-    long timestamp = getCurrentTimestamp().getTime();
+    long timestamp = getNow().getTime();
     // Remove ms so that rounded conversions preserve equality.
     return new Date(timestamp - (timestamp % 1000));
   }
@@ -383,8 +386,9 @@ public class Pubber {
     return configuration;
   }
 
-  private static Date getCurrentTimestamp() {
-    return new Date();
+  static Date getNow() {
+    Duration clockSkew = isTrue(pubberOptions.skewClock) ? CLOCK_SKEW : Duration.ZERO;
+    return Date.from(Instant.now().plus(clockSkew));
   }
 
   static String acquireBlobData(String url, String sha256) {
@@ -399,12 +403,12 @@ public class Pubber {
     return new String(dataBytes);
   }
 
-  static void augmentDeviceMessage(Object message) {
+  static void augmentDeviceMessage(Object message, Date now) {
     try {
       Field version = message.getClass().getField("version");
       version.set(message, UDMI_VERSION);
       Field timestamp = message.getClass().getField("timestamp");
-      timestamp.set(message, getCurrentTimestamp());
+      timestamp.set(message, now);
     } catch (Throwable e) {
       throw new RuntimeException("While augmenting device message", e);
     }
@@ -449,7 +453,7 @@ public class Pubber {
     deviceState.system = new SystemState();
     deviceState.system.operation = new StateSystemOperation();
     if (!isTrue(configuration.options.noLastStart)) {
-      deviceState.system.operation.last_start = DEVICE_START_TIME;
+      deviceState.system.operation.last_start = deviceStartTime;
     }
 
     deviceState.system.hardware = new StateSystemHardware();
@@ -773,12 +777,12 @@ public class Pubber {
     }
     Date configLastStart = operation.last_start;
     if (configLastStart != null) {
-      if (DEVICE_START_TIME.before(configLastStart)) {
+      if (deviceStartTime.before(configLastStart)) {
         warn(format("Device start time %s before last config start %s, terminating.",
-            isoConvert(DEVICE_START_TIME), isoConvert(configLastStart)));
+            isoConvert(deviceStartTime), isoConvert(configLastStart)));
         systemLifecycle(SystemMode.TERMINATE);
       } else if (isTrue(configuration.options.smokeCheck)
-          && CleanDateFormat.dateEquals(DEVICE_START_TIME, configLastStart)) {
+          && CleanDateFormat.dateEquals(deviceStartTime, configLastStart)) {
         warn(format("Device start time %s matches, smoke check indicating success!",
             isoConvert(configLastStart)));
         systemLifecycle(SystemMode.SHUTDOWN);
@@ -1072,7 +1076,7 @@ public class Pubber {
     boolean success = e == null;
     Entry entry = new Entry();
     entry.category = category;
-    entry.timestamp = getCurrentTimestamp();
+    entry.timestamp = getNow();
     entry.message = success ? "success"
         : e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
     entry.detail = success ? null : exceptionDetail(e);
@@ -1262,7 +1266,7 @@ public class Pubber {
     entry.detail = stackTraceString(e);
     entry.category = category;
     entry.level = Level.ERROR.value();
-    entry.timestamp = getCurrentTimestamp();
+    entry.timestamp = getNow();
     return entry;
   }
 
@@ -1380,7 +1384,7 @@ public class Pubber {
       }
 
       Date previousGeneration = getFamilyDiscoveryState(family).generation;
-      Date baseGeneration = previousGeneration == null ? DEVICE_START_TIME : previousGeneration;
+      Date baseGeneration = previousGeneration == null ? deviceStartTime : previousGeneration;
       final Date startGeneration;
       if (configGeneration.before(baseGeneration)) {
         int interval = getScanInterval(family);
@@ -1414,7 +1418,7 @@ public class Pubber {
     if (executor.isShutdown() || executor.isTerminated()) {
       throw new RuntimeException("Executor shutdown/terminated, not scheduling");
     }
-    long delay = futureTime.getTime() - getCurrentTimestamp().getTime();
+    long delay = futureTime.getTime() - getNow().getTime();
     debug(format("Scheduling future in %dms", delay));
     executor.schedule(futureTask, delay, TimeUnit.MILLISECONDS);
     return delay;
@@ -1522,7 +1526,7 @@ public class Pubber {
   }
 
   private String getTimestamp() {
-    return isoConvert(getCurrentTimestamp());
+    return isoConvert(getNow());
   }
 
   private Date isoConvert(String timestamp) {
@@ -1590,7 +1594,7 @@ public class Pubber {
     pointPointsetState.status.category = POINTSET_POINT_INVALID;
     pointPointsetState.status.level = POINTSET_POINT_INVALID_VALUE;
     pointPointsetState.status.message = "Unknown configured point " + pointName;
-    pointPointsetState.status.timestamp = getCurrentTimestamp();
+    pointPointsetState.status.timestamp = getNow();
     return pointPointsetState;
   }
 
@@ -1677,7 +1681,7 @@ public class Pubber {
   }
 
   private void publishStateMessage() {
-    deviceState.timestamp = getCurrentTimestamp();
+    deviceState.timestamp = getNow();
     info(format("update state %s last_config %s", isoConvert(deviceState.timestamp),
         isoConvert(deviceState.system.last_config)));
     try {
@@ -1741,7 +1745,7 @@ public class Pubber {
       return;
     }
 
-    augmentDeviceMessage(message);
+    augmentDeviceMessage(message, getNow());
     Object downgraded = downgradeMessage(message);
     deviceTarget.publish(topicSuffix, downgraded, callback);
     String messageBase = topicSuffix.replace("/", "_");

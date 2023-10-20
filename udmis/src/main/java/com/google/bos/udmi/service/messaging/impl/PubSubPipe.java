@@ -6,9 +6,11 @@ import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
+import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static java.lang.String.format;
+import static java.time.Instant.ofEpochSecond;
 
 import com.google.api.core.ApiFuture;
 import com.google.api.core.ApiService.Listener;
@@ -143,12 +145,13 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
   public void receiveMessage(PubsubMessage message, AckReplyConsumer reply) {
     final Instant start = Instant.now();
     Map<String, String> attributesMap = new HashMap<>(message.getAttributesMap());
-    String messageString = message.getData().toStringUtf8();
     // Ack first to prevent a recurring loop of processing a faulty message.
     reply.ack();
     String messageId = message.getMessageId();
-    attributesMap.put(Common.TRANSACTION_KEY, "PS:" + messageId);
-    receiveMessage(attributesMap, messageString);
+    attributesMap.computeIfAbsent("publishTime",
+        key -> getTimestamp(ofEpochSecond(message.getPublishTime().getSeconds())));
+    attributesMap.computeIfAbsent(Common.TRANSACTION_KEY, key -> "PS:" + messageId);
+    receiveMessage(attributesMap, message.getData().toStringUtf8());
     Instant end = Instant.now();
     long seconds = Duration.between(start, end).getSeconds();
     if (seconds > 1) {
