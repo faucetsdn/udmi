@@ -8,6 +8,7 @@ class PubberConfiguration:
   def __init__(self):
     self.endpoint = None
     self.iotProject = None
+    self.registryId = None
     self.deviceId = None
     self.gatewayId = None
     self.sitePath = None
@@ -25,6 +26,7 @@ class PubberConfiguration:
     result = PubberConfiguration()
     result.endpoint = EndpointConfiguration.from_dict(source.get('endpoint'))
     result.iotProject = source.get('iotProject')
+    result.registryId = source.get('registryId')
     result.deviceId = source.get('deviceId')
     result.gatewayId = source.get('gatewayId')
     result.sitePath = source.get('sitePath')
@@ -58,6 +60,8 @@ class PubberConfiguration:
       result['endpoint'] = self.endpoint.to_dict() # 4
     if self.iotProject:
       result['iotProject'] = self.iotProject # 5
+    if self.registryId:
+      result['registryId'] = self.registryId # 5
     if self.deviceId:
       result['deviceId'] = self.deviceId # 5
     if self.gatewayId:
