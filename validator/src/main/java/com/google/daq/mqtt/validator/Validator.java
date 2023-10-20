@@ -13,6 +13,7 @@ import static com.google.udmi.util.Common.EXCEPTION_KEY;
 import static com.google.udmi.util.Common.GCP_REFLECT_KEY_PKCS8;
 import static com.google.udmi.util.Common.MESSAGE_KEY;
 import static com.google.udmi.util.Common.NO_SITE;
+import static com.google.udmi.util.Common.PREFIX_SEPARATOR;
 import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
 import static com.google.udmi.util.Common.STATE_QUERY_TOPIC;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
@@ -342,7 +343,7 @@ public class Validator {
   }
 
   private void validateMessageTrace(String messageDir) {
-    client = new MessageReadingClient(config.registry_id, messageDir);
+    client = new MessageReadingClient(getRegistryId(), messageDir);
     dataSinks.add(client);
     prepForMock();
   }
@@ -453,7 +454,13 @@ public class Validator {
   }
 
   private String getRegistryId() {
-    return config.registry_id;
+    if (config == null) {
+      return null;
+    }
+    String prefix = ofNullable(config.udmi_namespace).map(name -> name + PREFIX_SEPARATOR)
+        .orElse("");
+    String suffix = ofNullable(config.registry_suffix).orElse("");
+    return prefix + config.registry_id + suffix;
   }
 
   private void validateReflector() {
@@ -744,7 +751,7 @@ public class Validator {
   private boolean shouldConsiderMessage(Map<String, String> attributes) {
     String registryId = attributes.get(DEVICE_REGISTRY_ID_KEY);
 
-    if (config != null && !config.registry_id.equals(registryId)) {
+    if (!registryId.equals(getRegistryId())) {
       if (ignoredRegistries.add(registryId)) {
         System.err.println("Ignoring data for not-configured registry " + registryId);
       }
