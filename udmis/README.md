@@ -26,10 +26,9 @@ kubectl config use-context XXX_bos-test-dev_XXX
 kubectl config set-context --current --namespace=udmis
 kubectl create secret generic clearblade.json --from-file=clearblade.json=$HOME/creds/udmi-external-credentials.json
 kubectl create secret generic k8s-info --from-literal=context=$(kubectl config current-context)
-kubectl apply -f etc/k8s_config.yaml
+kubectl apply -f tmp/k8s_config.yaml
+kubectl apply -f etc/k8s_broker.yaml
 kubectl get pods
-kubectl apply -f k8s_pod.yaml
-kubectl edit pod/udmis-test-pod
 kubectl delete pod/udmis-test-pod
 kubectl logs udmis-test-pod
 kubectl describe pods

@@ -9,7 +9,10 @@ full_id=$1
 shift
 
 project_id=${full_id%/*}
-namespace=${full_id#$project_id/}
+namespace=${full_id#$project_id}
+namespace=${namespace#/}
+success=$(mktemp)
+rm -f $success
 
 ROOT=$(dirname $0)/..
 cd $ROOT
@@ -19,13 +22,27 @@ echo Configuring for GCP project $project_id...
 # gcloud auth application-default set-quota-project $project_id
 gcloud --quiet config set project $project_id
 
-kcontext=$(kubectl config get-contexts | fgrep $project_id | fgrep _${namespace} | tr '*' ' ' | awk '{ print $1 }')
+saved=$(kubectl config current-context)
+kcontexts=$(kubectl config get-contexts -o name | fgrep _${project_id}_)
 
-if [[ -z $kcontext ]]; then
+if [[ -z $kcontexts ]]; then
     echo No kubectl context defined for project $project_id
-    echo "  kubectl config get-contexts | fgrep ${project_id} | fgrep _${namespace} "
+    echo "  kubectl config get-contexts -o name | fgrep _${project_id}_)"
     false
 fi
 
-echo Using k8s context $kcontext
-kubectl config use-context $kcontext
+for context in $kcontexts; do
+    kubectl config use-context $context
+    used=$(kubectl config view --minify -o jsonpath='{..namespace}')
+    if [[ $used == $namespace ]]; then
+        echo $context > $success
+        echo Matched namespace $namespace
+        break
+    fi
+done
+
+if [[ ! -f $success ]]; then
+    echo No context matching namespace ${namespace:-default} found.
+    kubectl config use-context $saved
+    false
+fi
