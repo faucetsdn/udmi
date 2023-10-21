@@ -32,17 +32,24 @@ if [[ -z $kcontexts ]]; then
 fi
 
 for context in $kcontexts; do
-    kubectl config use-context $context
-    used=$(kubectl config view --minify -o jsonpath='{..namespace}')
-    if [[ $used == $namespace ]]; then
+    k8s_parts=$(tr '_' ' ' <<<$context)
+    echo k8s context is $k8s_parts
+
+    GCP_PROJECT=$(awk '{print $2}' <<<$k8s_parts)
+    GCP_REGION=$(awk '{print $3}' <<<$k8s_parts)
+    K8S_CLUSTER=$(awk '{print $4}' <<<$k8s_parts)
+    K8S_NAMESPACE=$(awk '{print $5}' <<<$k8s_parts)
+
+    if [[ $GCP_PROJECT == $project_id && $K8S_NAMESPACE == $namespace ]]; then
+        echo Matched context $context
         echo $context > $success
-        echo Matched namespace $namespace
         break
     fi
 done
 
 if [[ ! -f $success ]]; then
-    echo No context matching namespace ${namespace:-default} found.
-    kubectl config use-context $saved
+    echo No context matching project $project_id and namespace ${namespace:-default} found.
     false
 fi
+
+kubectl config use-context $(< $success)

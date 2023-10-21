@@ -4,4 +4,4 @@ metadata:
   annotations:
     iam.gke.io/gcp-service-account: udmi-service@@GCP_PROJECT@.iam.gserviceaccount.com
   name: default
-  namespace: @NAMESPACE@
+  namespace: @UDMI_NAMESPACE@

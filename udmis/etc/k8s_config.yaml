@@ -4,4 +4,4 @@ metadata:
   name: config
 data:
   GCP_IOT_OPTIONS: disabled
-  UDMI_NAMESPACE: @NAMESPACE@
+  UDMI_NAMESPACE: @UDMI_NAMESPACE@
