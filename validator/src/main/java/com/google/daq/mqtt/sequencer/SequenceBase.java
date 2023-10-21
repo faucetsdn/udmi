@@ -332,9 +332,7 @@ public class SequenceBase {
 
     cloudRegion = validatorConfig.cloud_region;
     registryId = SiteModel.getRegistryActual(validatorConfig);
-    String altRegistryId = validatorConfig.alt_registry;
-    String registrySuffix = validatorConfig.registry_suffix;
-    altRegistry = SiteModel.getRegistryActual(null, altRegistryId, registrySuffix);
+
 
     deviceMetadata = readDeviceMetadata();
 
@@ -349,7 +347,13 @@ public class SequenceBase {
     System.err.printf("Loading reflector key file from %s%n", new File(key_file).getAbsolutePath());
     System.err.printf("Validating against device %s serial %s%n", getDeviceId(), serialNo);
     client = getPublisherClient();
+
+    String udmiNamespace = validatorConfig.udmi_namespace;
+    String altRegistryId = validatorConfig.alt_registry;
+    String registrySuffix = validatorConfig.registry_suffix;
+    altRegistry = SiteModel.getRegistryActual(udmiNamespace, altRegistryId, registrySuffix);
     altClient = getAlternateClient();
+
     initializeValidationState();
   }
 
@@ -384,10 +388,13 @@ public class SequenceBase {
       System.err.println("No alternate registry configured, disabling");
       return null;
     }
+
     ExecutionConfiguration altConfiguration = GeneralUtils.deepCopy(validatorConfig);
-    altConfiguration.registry_id = altRegistry;
-    altConfiguration.registry_suffix = null;  // Don't double-dip adding suffix to the registry.
+    altConfiguration.registry_id = validatorConfig.alt_registry;
+    altConfiguration.registry_suffix = validatorConfig.registry_suffix;
+    altConfiguration.udmi_namespace = validatorConfig.udmi_namespace;
     altConfiguration.alt_registry = null;
+
     try {
       return new IotReflectorClient(altConfiguration, getRequiredFunctionsVersion());
     } catch (Exception e) {
