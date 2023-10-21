@@ -39,6 +39,7 @@ spec:
             configMapKeyRef:
               name: config
               key: UDMI_NAMESPACE
+              optional: true
         - name: GCP_IOT_OPTIONS
           valueFrom:
             configMapKeyRef:
