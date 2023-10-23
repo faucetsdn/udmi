@@ -15,8 +15,15 @@ function usage {
 cmd=$1
 shift || usage missing command
 
+git_branch=$(git rev-parse --abbrev-ref HEAD)
+git_remote=$(git config --get branch.$git_branch.remote)
+git_url=$(git config --get remote.$git_remote.url)
+git_prefix=${git_url%.*}
+git_prefix=${git_prefix#*.com/}
+git_repo=${git_prefix#*.com:}
+
 GCP_PROJECT=$(gcloud config get project)
-REPOSITORY=gcr.io/$GCP_PROJECT
+REPOSITORY=ghcr.io/${git_repo}
 
 IMAGE=udmis
 
@@ -64,7 +71,7 @@ current_user=$USER@$HOSTNAME
 revparse=`git rev-parse HEAD`
 
 udmi_ver=g${revparse:0:9}
-udmi_ref=$REPOSITORY/udmis:$udmi_ver
+udmi_ref=$REPOSITORY:$udmi_ver
 
 version=`git describe`
 
