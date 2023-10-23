@@ -1,6 +1,7 @@
 package daq.pubber;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.udmi.util.GeneralUtils.isTrue;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -274,7 +275,7 @@ public class MqttPublisher implements Publisher {
       String topic = getMessageTopic(deviceId, MqttDevice.ATTACH_TOPIC);
       String payload = "";
       info("Publishing attach message " + topic);
-      mqttClient.publish(topic, payload.getBytes(StandardCharsets.UTF_8.name()), QOS_AT_LEAST_ONCE,
+      mqttClient.publish(topic, payload.getBytes(StandardCharsets.UTF_8), QOS_AT_LEAST_ONCE,
           SHOULD_RETAIN);
       subscribeToUpdates(mqttClient, deviceId);
       return mqttClient;
@@ -409,9 +410,8 @@ public class MqttPublisher implements Publisher {
   }
 
   private void subscribeToUpdates(MqttClient client, String deviceId) {
-    boolean noConfigAck = (configuration.options.noConfigAck != null
-        && configuration.options.noConfigAck);
-    int configQos = noConfigAck ? QOS_AT_MOST_ONCE : QOS_AT_LEAST_ONCE;
+    int configQos =
+        isTrue(configuration.options.noConfigAck) ? QOS_AT_MOST_ONCE : QOS_AT_LEAST_ONCE;
     if (configuration.endpoint.recv_id == null) {
       subscribeTopic(client, getMessageTopic(deviceId, MqttDevice.CONFIG_TOPIC), configQos);
       subscribeTopic(client, getMessageTopic(deviceId, MqttDevice.ERRORS_TOPIC), QOS_AT_MOST_ONCE);
@@ -419,7 +419,7 @@ public class MqttPublisher implements Publisher {
       subscribeTopic(client, configuration.endpoint.recv_id, configQos);
     }
 
-    info("Updates subscribed");
+    info("Updates subscribed, with config QOS " + configQos);
   }
 
   private void subscribeTopic(MqttClient client, String updateTopic, int mqttQos) {
@@ -602,20 +602,19 @@ public class MqttPublisher implements Publisher {
 
   static class InjectedMessage {
 
+    private static final String REPLACE_MESSAGE_KEY = "REPLACE_MESSAGE_WITH";
+    private static final String REPLACE_TOPIC_KEY = "REPLACE_TOPIC_WITH";
     public String version;
     public Date timestamp;
     public String field;
-
     @SuppressWarnings({"MemberName", "AbbreviationAsWordInName"})
     public String REPLACE_MESSAGE_WITH;
-    private static final String REPLACE_MESSAGE_KEY = "REPLACE_MESSAGE_WITH";
-
     @SuppressWarnings({"MemberName", "AbbreviationAsWordInName"})
     public String REPLACE_TOPIC_WITH;
-    private static final String REPLACE_TOPIC_KEY = "REPLACE_TOPIC_WITH";
   }
 
   static class InjectedState extends InjectedMessage {
+
   }
 
   private class MqttCallbackHandler implements MqttCallback {
