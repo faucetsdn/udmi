@@ -64,9 +64,9 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
     try {
       projectId = variableSubstitution(configuration.hostname,
           "no project id defined in configuration as 'hostname'");
-      publisher = ifNotNullGet(configuration.send_id, this::getPublisher);
+      publisher = ifNotNullGet(variableSubstitution(configuration.send_id), this::getPublisher);
       ifNotNullThen(publisher, this::checkPublisher);
-      subscriber = ifNotNullGet(configuration.recv_id, this::getSubscriber);
+      subscriber = ifNotNullGet(variableSubstitution(configuration.recv_id), this::getSubscriber);
       String subscriptionName = ifNotNullGet(subscriber, Subscriber::getSubscriptionNameString);
       String topicName = ifNotNullGet(publisher, Publisher::getTopicNameString);
       debug("PubSub %s s -> %s", super.toString(), subscriptionName, topicName);
@@ -120,11 +120,11 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
 
   @Override
   public void publish(Bundle bundle) {
+    if (publisher == null) {
+      trace("Dropping message because publisher is null");
+      return;
+    }
     try {
-      if (publisher == null) {
-        trace("Dropping message because publisher is null");
-        return;
-      }
       Envelope envelope = Optional.ofNullable(bundle.envelope).orElse(new Envelope());
       Map<String, String> stringMap = toMap(envelope).entrySet().stream()
           .collect(Collectors.toMap(Entry::getKey, entry -> (String) entry.getValue()));
@@ -137,7 +137,7 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
       debug(format("Published PubSub %s/%s to %s as %s", stringMap.get(SUBTYPE_PROPERTY_KEY),
           stringMap.get(SUBFOLDER_PROPERTY_KEY), publisher.getTopicNameString(), publishedId));
     } catch (Exception e) {
-      throw new RuntimeException("While publishing pubsub bundle", e);
+      throw new RuntimeException("While publishing bundle to " + publisher.getTopicNameString(), e);
     }
   }
 

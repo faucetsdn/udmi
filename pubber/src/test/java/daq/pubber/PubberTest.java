@@ -68,8 +68,8 @@ public class PubberTest extends TestBase {
       }
     }
 
-    PubberUnderTest(String projectId, String sitePath, String deviceId, String serialNo) {
-      super(projectId, sitePath, deviceId, serialNo);
+    PubberUnderTest(String iotProject, String sitePath, String deviceId, String serialNo) {
+      super(iotProject, sitePath, deviceId, serialNo);
       setOptionsNoPersist(true);
     }
 

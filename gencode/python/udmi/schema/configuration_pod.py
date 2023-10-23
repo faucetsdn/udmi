@@ -1,4 +1,5 @@
 """Generated class for configuration_pod.json"""
+from .configuration_pod_base import BasePodConfiguration
 from .configuration_endpoint import EndpointConfiguration
 from .configuration_endpoint import EndpointConfiguration
 from .configuration_pod_bridge import BridgePodConfiguration
@@ -10,6 +11,7 @@ class PodConfiguration:
   """Generated schema class"""
 
   def __init__(self):
+    self.base = None
     self.flow_defaults = None
     self.flows = None
     self.bridges = None
@@ -21,6 +23,7 @@ class PodConfiguration:
     if not source:
       return None
     result = PodConfiguration()
+    result.base = BasePodConfiguration.from_dict(source.get('base'))
     result.flow_defaults = EndpointConfiguration.from_dict(source.get('flow_defaults'))
     result.flows = EndpointConfiguration.map_from(source.get('flows'))
     result.bridges = BridgePodConfiguration.map_from(source.get('bridges'))
@@ -46,6 +49,8 @@ class PodConfiguration:
 
   def to_dict(self):
     result = {}
+    if self.base:
+      result['base'] = self.base.to_dict() # 4
     if self.flow_defaults:
       result['flow_defaults'] = self.flow_defaults.to_dict() # 4
     if self.flows:

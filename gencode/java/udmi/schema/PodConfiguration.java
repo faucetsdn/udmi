@@ -17,6 +17,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "base",
     "flow_defaults",
     "flows",
     "bridges",
@@ -26,6 +27,15 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @Generated("jsonschema2pojo")
 public class PodConfiguration {
 
+    /**
+     * Base Pod Configuration
+     * <p>
+     * Parameters to define pod base parameters
+     * 
+     */
+    @JsonProperty("base")
+    @JsonPropertyDescription("Parameters to define pod base parameters")
+    public BasePodConfiguration base;
     /**
      * Endpoint Configuration
      * <p>
@@ -59,11 +69,12 @@ public class PodConfiguration {
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.bridges == null)? 0 :this.bridges.hashCode()));
-        result = ((result* 31)+((this.flow_defaults == null)? 0 :this.flow_defaults.hashCode()));
         result = ((result* 31)+((this.distributors == null)? 0 :this.distributors.hashCode()));
         result = ((result* 31)+((this.flows == null)? 0 :this.flows.hashCode()));
+        result = ((result* 31)+((this.bridges == null)? 0 :this.bridges.hashCode()));
+        result = ((result* 31)+((this.flow_defaults == null)? 0 :this.flow_defaults.hashCode()));
         result = ((result* 31)+((this.iot_access == null)? 0 :this.iot_access.hashCode()));
+        result = ((result* 31)+((this.base == null)? 0 :this.base.hashCode()));
         return result;
     }
 
@@ -76,7 +87,7 @@ public class PodConfiguration {
             return false;
         }
         PodConfiguration rhs = ((PodConfiguration) other);
-        return ((((((this.bridges == rhs.bridges)||((this.bridges!= null)&&this.bridges.equals(rhs.bridges)))&&((this.flow_defaults == rhs.flow_defaults)||((this.flow_defaults!= null)&&this.flow_defaults.equals(rhs.flow_defaults))))&&((this.distributors == rhs.distributors)||((this.distributors!= null)&&this.distributors.equals(rhs.distributors))))&&((this.flows == rhs.flows)||((this.flows!= null)&&this.flows.equals(rhs.flows))))&&((this.iot_access == rhs.iot_access)||((this.iot_access!= null)&&this.iot_access.equals(rhs.iot_access))));
+        return (((((((this.distributors == rhs.distributors)||((this.distributors!= null)&&this.distributors.equals(rhs.distributors)))&&((this.flows == rhs.flows)||((this.flows!= null)&&this.flows.equals(rhs.flows))))&&((this.bridges == rhs.bridges)||((this.bridges!= null)&&this.bridges.equals(rhs.bridges))))&&((this.flow_defaults == rhs.flow_defaults)||((this.flow_defaults!= null)&&this.flow_defaults.equals(rhs.flow_defaults))))&&((this.iot_access == rhs.iot_access)||((this.iot_access!= null)&&this.iot_access.equals(rhs.iot_access))))&&((this.base == rhs.base)||((this.base!= null)&&this.base.equals(rhs.base))));
     }
 
 }
