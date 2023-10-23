@@ -7,7 +7,11 @@
     "endpoint": {
       "$ref": "file:configuration_endpoint.json#"
     },
-    "projectId": {
+    "iotProject": {
+      "description": "IoT Core ingest project id",
+      "type": "string"
+    },
+    "registryId": {
       "type": "string"
     },
     "deviceId": {

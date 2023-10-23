@@ -253,21 +253,21 @@ public class Pubber {
   /**
    * Start an instance from explicit args.
    *
-   * @param projectId GCP project
+   * @param iotProject GCP project
    * @param sitePath  Path to site_model
    * @param deviceId  Device ID to emulate
    * @param serialNo  Serial number of the device
    */
-  public Pubber(String projectId, String sitePath, String deviceId, String serialNo) {
+  public Pubber(String iotProject, String sitePath, String deviceId, String serialNo) {
     this.deviceId = deviceId;
     outDir = new File(PUBBER_OUT + "/" + serialNo);
     configuration = sanitizeConfiguration(new PubberConfiguration());
     pubberOptions = configuration.options;
     configuration.deviceId = deviceId;
-    configuration.projectId = projectId;
+    configuration.iotProject = iotProject;
     configuration.serialNo = serialNo;
     if (PUBSUB_SITE.equals(sitePath)) {
-      pubSubClient = new PubSubClient(projectId, deviceId);
+      pubSubClient = new PubSubClient(iotProject, deviceId);
     } else {
       configuration.sitePath = sitePath;
     }
@@ -465,7 +465,7 @@ public class Pubber {
       siteModel = new SiteModel(configuration.sitePath);
       siteModel.initialize();
       if (configuration.endpoint == null) {
-        configuration.endpoint = siteModel.makeEndpointConfig(configuration.projectId, deviceId);
+        configuration.endpoint = siteModel.makeEndpointConfig(configuration.iotProject, deviceId);
       }
       if (!siteModel.allDeviceIds().contains(configuration.deviceId)) {
         throw new IllegalArgumentException(
@@ -1279,7 +1279,7 @@ public class Pubber {
 
   private String getClientId(String forRegistry) {
     String cloudRegion = SiteModel.parseClientId(configuration.endpoint.client_id).cloudRegion;
-    return SiteModel.getClientId(configuration.projectId, cloudRegion, forRegistry, deviceId);
+    return SiteModel.getClientId(configuration.iotProject, cloudRegion, forRegistry, deviceId);
   }
 
   private String extractConfigBlob(String blobName) {

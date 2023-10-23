@@ -84,10 +84,14 @@ project_target=${project_id##*/}
 if [[ -z $project_id ]]; then
     true using config file based configuration
 elif [[ $project_id =~ ^// ]]; then
-    no_project=${project_id%/*}
-    iot_provider=${no_project#//}
+    no_prefix=${project_id#//}
+    iot_provider=${no_prefix%%/*}
+    no_provider=${no_prefix#*/}
+    project_target=${no_provider%/*}
+    udmi_namespace=${no_provider#$project_target}
+    [[ -n $udmi_namespace ]] && udmi_prefix=${udmi_namespace#/}~
 elif [[ $project_id =~ @ ]]; then
-    iot_provider=\"jwt\"
+    iot_provider=jwt
     broker_hostname=${project_id#*@}
     project_target=${project_id%@*}
 else
@@ -102,10 +106,12 @@ elif [[ -z $broker_hostname ]]; then
     broker_hostname=mqtt.googleapis.com
 fi
 
+registry_actual=${udmi_prefix}${registry_id}${registry_suffix}
+
 if [[ ! -f /tmp/endpoint.json ]]; then
     cat <<EOF > /tmp/endpoint.json
 {
-    "client_id": "projects/$project_target/locations/$cloud_region/registries/$registry_id$registry_suffix/devices/$device_id",
+    "client_id": "projects/$project_target/locations/$cloud_region/registries/$registry_actual/devices/$device_id",
     "hostname": "$broker_hostname"
 }
 EOF
@@ -117,7 +123,8 @@ if [[ -n $site_model ]]; then
 {
     "sitePath": "$site_model",
     "deviceId": "$device_id",
-    "projectId": "$project_target",
+    "registryId": "$registry_actual",
+    "iotProject": "$project_target",
     "serialNo": "$serial_no",
     "options": $options_json
 }

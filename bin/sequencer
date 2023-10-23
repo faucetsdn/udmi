@@ -107,11 +107,16 @@ validator/bin/build
 # Format of cmdline project_id is {//PROVIDER/}PROJECT (optional PROVIDER)
 # e.g. bos-testing-dev or //gcp/bos-testing-dev
 
+quoted_namespace=null
 quoted_bridge=null
 iot_provider=null
 if [[ $project_id =~ ^// ]]; then
-    sans_project=${project_id%/*}
-    iot_provider=\"${sans_project#//}\"
+    no_prefix=${project_id#//}
+    iot_provider=\"${no_prefix%%/*}\"
+    no_provider=${no_prefix#*/}
+    project_id=${no_provider%/*}
+    udmi_namespace=${no_provider#$project_id}
+    [[ -n $udmi_namespace ]] && quoted_namespace=\"${udmi_namespace#/}\"
 elif [[ $project_id =~ @ ]]; then
     iot_provider=\"jwt\"
     quoted_bridge=\"${project_id#*@}\"
@@ -132,6 +137,7 @@ cat <<EOF > $SEQUENCER_CONFIG
   "iot_provider": $iot_provider,
   "project_id": $quoted_id,
   "bridge_host": $quoted_bridge,
+  "udmi_namespace": $quoted_namespace,
   "site_model": "$site_model",
   "device_id": "$device_id",
   "alt_registry": $alt_registry,

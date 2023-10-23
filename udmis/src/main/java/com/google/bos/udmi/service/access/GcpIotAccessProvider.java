@@ -356,10 +356,10 @@ public class GcpIotAccessProvider extends IotAccessBase {
   @Override
   public String fetchRegistryMetadata(String registryId, String metadataKey) {
     try {
-      CloudModel cloudModel = fetchDevice(UDMI_REGISTRY, registryId);
+      CloudModel cloudModel = fetchDevice(reflectRegistry, registryId);
       return cloudModel.metadata.get(metadataKey);
     } catch (Exception e) {
-      debug(format("No device entry for %s/%s", UDMI_REGISTRY, registryId));
+      debug(format("No device entry for %s/%s", reflectRegistry, registryId));
       return null;
     }
   }

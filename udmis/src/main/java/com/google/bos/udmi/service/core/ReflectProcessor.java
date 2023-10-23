@@ -2,6 +2,8 @@ package com.google.bos.udmi.service.core;
 
 import static com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl.getMessageClassFor;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.udmi.util.Common.CONDENSER_STRING;
+import static com.google.udmi.util.Common.DETAIL_KEY;
 import static com.google.udmi.util.Common.DEVICE_ID_PROPERTY_KEY;
 import static com.google.udmi.util.Common.ERROR_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
@@ -11,6 +13,8 @@ import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.multiTrim;
+import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.fromString;
@@ -121,9 +125,12 @@ public class ReflectProcessor extends ProcessorBase {
 
   private void processException(Envelope reflection, Map<String, Object> objectMap, Exception e) {
     String stackMessage = friendlyStackTrace(e);
+    String detailString = multiTrim(stackTraceString(e), CONDENSER_STRING);
     warn("Processing exception %s: %s", reflection.transactionId, stackMessage);
+    debug("Stack trace details %s: %s", reflection.transactionId, detailString);
     Map<String, Object> message = new HashMap<>();
     message.put(ERROR_KEY, stackMessage);
+    message.put(DETAIL_KEY, detailString);
     Envelope envelope = new Envelope();
     envelope.subFolder = SubFolder.ERROR;
     envelope.deviceId = (String) objectMap.get(DEVICE_ID_PROPERTY_KEY);
