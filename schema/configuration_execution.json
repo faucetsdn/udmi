@@ -46,6 +46,9 @@
     "project_id": {
       "type": "string"
     },
+    "udmi_namespace": {
+      "type": "string"
+    },
     "bridge_host": {
       "type": "string"
     },

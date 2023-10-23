@@ -3,6 +3,7 @@ package com.google.bos.iot.core.proxy;
 import static com.google.bos.iot.core.proxy.ProxyTarget.STATE_TOPIC;
 import static com.google.udmi.util.GeneralUtils.catchOrElse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -12,6 +13,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.validator.Validator;
+import com.google.udmi.util.Common;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -93,6 +95,7 @@ class MqttPublisher implements MessagePublisher {
   private final ScheduledFuture<?> tickler;
   long mqttTokenSetTimeMs;
   private MqttConnectOptions mqttConnectOptions;
+  private boolean shutdown;
 
   MqttPublisher(ExecutionConfiguration executionConfiguration, byte[] keyBytes, String algorithm,
       BiConsumer<String, String> onMessage, BiConsumer<MqttPublisher, Throwable> onError) {
@@ -100,7 +103,7 @@ class MqttPublisher implements MessagePublisher {
     this.onError = onError;
     this.projectId = executionConfiguration.project_id;
     this.cloudRegion = executionConfiguration.cloud_region;
-    this.registryId = executionConfiguration.registry_id;
+    this.registryId = getRegistryId(executionConfiguration);
     this.deviceId = executionConfiguration.device_id;
     this.algorithm = algorithm;
     this.keyBytes = keyBytes;
@@ -110,6 +113,11 @@ class MqttPublisher implements MessagePublisher {
     mqttClient = newMqttClient(deviceId);
     connectMqttClient(deviceId);
     tickler = scheduleTickler();
+  }
+
+  private static String getRegistryId(ExecutionConfiguration config) {
+    String prefix = ifNotNullGet(config.udmi_namespace, name -> name + Common.PREFIX_SEPARATOR, "");
+    return prefix + config.registry_id;
   }
 
   private static ThreadFactory getDaemonThreadFactory() {
@@ -141,6 +149,15 @@ class MqttPublisher implements MessagePublisher {
 
   private void tickleConnection() {
     LOG.debug("Tickle " + mqttClient.getClientId());
+    if (shutdown) {
+      try {
+        LOG.info("Tickler closing connection due to shutdown request");
+        close();
+      } catch (Exception e) {
+        throw new RuntimeException("While shutting down connection", e);
+      }
+      return;
+    }
     publish(deviceId, TICKLE_TOPIC, EMPTY_JSON);
   }
 
@@ -149,6 +166,9 @@ class MqttPublisher implements MessagePublisher {
     Preconditions.checkNotNull(deviceId, "publish deviceId");
     LOG.debug(this.deviceId + " publishing in background " + registryId + "/" + deviceId);
     try {
+      if (shutdown) {
+        LOG.error("Publishing to shutdown connection");
+      }
       Instant now = Instant.now();
       publisherExecutor.submit(() -> publishCore(deviceId, topic, data, now));
     } catch (Exception e) {
@@ -219,7 +239,7 @@ class MqttPublisher implements MessagePublisher {
   public void close() {
     try {
       LOG.debug(format("Shutting down executor %x", publisherExecutor.hashCode()));
-      ifNotNullThen(tickler, future -> future.cancel(false));
+      ifNotNullThen(tickler, () -> tickler.cancel(false));
       publisherExecutor.shutdownNow();
       if (!publisherExecutor.awaitTermination(INITIALIZE_TIME_MS, TimeUnit.MILLISECONDS)) {
         LOG.error("Executor tasks still remaining");
@@ -429,6 +449,10 @@ class MqttPublisher implements MessagePublisher {
 
   public String getBridgeHost() {
     return providerHostname;
+  }
+
+  public void shutdown() {
+    shutdown = true;
   }
 
   private class MqttCallbackHandler implements MqttCallback {

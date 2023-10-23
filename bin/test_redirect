@@ -123,13 +123,13 @@ if [[ $restarts -ne 2 ]]; then
 fi
 
 log Checks that a redirect happened and failed...
-fgrep -q registries/ZZ-TRI-FECTA/devices $PUBBER_OUT.1 || bin/fail no ZZ-TRI-FECTA registry reference
+egrep -q 'registries/(.*~)?ZZ-TRI-FECTA(_.*)?/devices' $PUBBER_OUT.1 || bin/fail no ZZ-TRI-FECTA registry reference
 fgrep -q registries/missing/devices $PUBBER_OUT.1 || bin/fail no missing registry reference
 fgrep -q 'While waiting for connection start: Connection error' $PUBBER_OUT.1 || bin/fail no connection error
 fgrep -q 'Endpoint connection restored to last working endpoint' $PUBBER_OUT.1 || bin/fail no restore log message
 
 log Check basic redirect-by-config setup...
-fgrep -q registries/ZZ-TRI-FECTA/devices $PUBBER_OUT.2 || bin/fail no ZZ-TRI-FECTA registry reference
+egrep -q 'registries/(.*~)?ZZ-TRI-FECTA(_.*)?/devices' $PUBBER_OUT.2 || bin/fail no ZZ-TRI-FECTA registry reference
 fgrep -q registries/reconfigure/devices $PUBBER_OUT.2 || bin/fail no reconfigure registry reference
 fgrep -q 'While waiting for connection start: Connection error' $PUBBER_OUT.2 || bin/fail no connection error
 fgrep -q 'Endpoint connection restored to last working endpoint' $PUBBER_OUT.2 || bin/fail no connection restore

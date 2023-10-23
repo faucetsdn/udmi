@@ -145,8 +145,8 @@ public class SequenceBase {
   public static final String HAS_STATUS_PREFIX = "has ";
   public static final String NOT_STATUS_PREFIX = "no ";
   static final FeatureStage DEFAULT_MIN_STAGE = BETA;
-  private static final int FUNCTIONS_VERSION_BETA = Validator.REQUIRED_FUNCTION_VER;
-  private static final int FUNCTIONS_VERSION_ALPHA = 9; // Version required for alpha execution.
+  private static final int FUNCTIONS_VERSION_BETA = 10;
+  private static final int FUNCTIONS_VERSION_ALPHA = FUNCTIONS_VERSION_BETA;
   private static final long CONFIG_BARRIER_MS = 1000;
   private static final String START_END_MARKER = "################################";
   private static final String RESULT_FORMAT = "RESULT %s %s %s %s %s %s";
@@ -332,8 +332,7 @@ public class SequenceBase {
 
     cloudRegion = validatorConfig.cloud_region;
     registryId = SiteModel.getRegistryActual(validatorConfig);
-    altRegistry = SiteModel.getRegistryActual(validatorConfig.alt_registry,
-        validatorConfig.registry_suffix);
+
 
     deviceMetadata = readDeviceMetadata();
 
@@ -348,7 +347,13 @@ public class SequenceBase {
     System.err.printf("Loading reflector key file from %s%n", new File(key_file).getAbsolutePath());
     System.err.printf("Validating against device %s serial %s%n", getDeviceId(), serialNo);
     client = getPublisherClient();
+
+    String udmiNamespace = validatorConfig.udmi_namespace;
+    String altRegistryId = validatorConfig.alt_registry;
+    String registrySuffix = validatorConfig.registry_suffix;
+    altRegistry = SiteModel.getRegistryActual(udmiNamespace, altRegistryId, registrySuffix);
     altClient = getAlternateClient();
+
     initializeValidationState();
   }
 
@@ -383,10 +388,13 @@ public class SequenceBase {
       System.err.println("No alternate registry configured, disabling");
       return null;
     }
+
     ExecutionConfiguration altConfiguration = GeneralUtils.deepCopy(validatorConfig);
-    altConfiguration.registry_id = altRegistry;
-    altConfiguration.registry_suffix = null;  // Don't double-dip adding suffix to the registry.
+    altConfiguration.registry_id = validatorConfig.alt_registry;
+    altConfiguration.registry_suffix = validatorConfig.registry_suffix;
+    altConfiguration.udmi_namespace = validatorConfig.udmi_namespace;
     altConfiguration.alt_registry = null;
+
     try {
       return new IotReflectorClient(altConfiguration, getRequiredFunctionsVersion());
     } catch (Exception e) {

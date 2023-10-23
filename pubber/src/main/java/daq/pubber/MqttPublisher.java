@@ -108,7 +108,7 @@ public class MqttPublisher implements Publisher {
     this.configuration = configuration;
     if (isGcpIotCore(configuration)) {
       ClientInfo clientIdParts = SiteModel.parseClientId(configuration.endpoint.client_id);
-      this.projectId = clientIdParts.projectId;
+      this.projectId = clientIdParts.iotProject;
       this.cloudRegion = clientIdParts.cloudRegion;
       this.registryId = clientIdParts.registryId;
     } else {
@@ -130,7 +130,7 @@ public class MqttPublisher implements Publisher {
     // Google Cloud IoT, it must be in the format below.
     if (isGcpIotCore(configuration)) {
       ClientInfo clientInfo = SiteModel.parseClientId(configuration.endpoint.client_id);
-      return SiteModel.getClientId(clientInfo.projectId, clientInfo.cloudRegion,
+      return SiteModel.getClientId(clientInfo.iotProject, clientInfo.cloudRegion,
           clientInfo.registryId, deviceId);
     } else if (configuration.endpoint.client_id != null) {
       return configuration.endpoint.client_id;

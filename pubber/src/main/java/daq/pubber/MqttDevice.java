@@ -34,7 +34,7 @@ public class MqttDevice {
 
   Publisher getPublisher(PubberConfiguration configuration,
       Consumer<Exception> onError) {
-    return TEST_PROJECT.equals(configuration.projectId) ? new ListPublisher(configuration, onError)
+    return TEST_PROJECT.equals(configuration.iotProject) ? new ListPublisher(configuration, onError)
         : new MqttPublisher(configuration, onError);
   }
 
