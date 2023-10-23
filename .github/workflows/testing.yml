@@ -261,8 +261,7 @@ jobs:
         run: bin/test_validator $TARGET_PROJECT
       - name: validator result
         if: ${{ always() }}
-        run: |
-          cat /tmp/validator.out || true
+        run: cat /tmp/validator.out || true
       - name: message captures
         if: ${{ always() }}
         run: |
@@ -275,17 +274,16 @@ jobs:
         run: bin/test_itemized $TARGET_PROJECT
       - name: itemized output logs
         if: ${{ always() }}
-        run: |
-          more out/*_itemized.out | cat
-          more out/sequencer.out-* out/pubber.out-* | cat
+        run: more out/*_itemized.out out/sequencer.out-* out/pubber.out-* | cat
+      - name: itemized test timing
+        if: ${{ always() }}
+        run: egrep ' test .* after .*s #' out/sequencer.out-*
       - name: tool output logs
         if: ${{ always() }}
-        run: |
-          more sites/udmi_site_model/out/*.json | cat
+        run: more sites/udmi_site_model/out/*.json | cat
       - name: pubber output logs
         if: ${{ always() }}
-        run: |
-          more out/pubber.out* | cat
+        run: more out/pubber.out* | cat
       - name: support bundle
         if: ${{ always() }}
         run: |
