@@ -322,11 +322,6 @@ jobs:
         run: bin/test_proxy $TARGET_PROJECT $MQTT_PROXY_HOST
       - name: bin/test_redirect
         run: bin/test_redirect $TARGET_PROJECT
-      - name: pubber.out.1
-        run: |
-          echo ::::::: pubber.out.1
-          cat out/pubber.out.1
-      - name: pubber.out.2
-        run: |
-          echo ::::::: pubber.out.2
-          cat out/pubber.out.2
+      - name: pubber.out
+        if: ${{ always() }}
+        run: more out/pubber.out* | cat

@@ -24,7 +24,7 @@ public class TestBase {
 
   protected PubberConfiguration getTestConfiguration() {
     PubberConfiguration configuration = new PubberConfiguration();
-    configuration.projectId = MqttDevice.TEST_PROJECT;
+    configuration.iotProject = MqttDevice.TEST_PROJECT;
     configuration.deviceId = TEST_DEVICE;
     configuration.endpoint = new EndpointConfiguration();
     configuration.endpoint.msg_prefix = TEST_PREFIX;

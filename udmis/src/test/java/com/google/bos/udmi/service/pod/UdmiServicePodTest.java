@@ -1,10 +1,10 @@
 package com.google.bos.udmi.service.pod;
 
-import static com.google.bos.udmi.service.core.ProcessorBase.REFLECT_REGISTRY;
 import static com.google.bos.udmi.service.core.StateProcessor.IOT_ACCESS_COMPONENT;
 import static com.google.bos.udmi.service.messaging.impl.MessageBase.combineConfig;
 import static com.google.bos.udmi.service.messaging.impl.MessageTestCore.TEST_DEVICE;
 import static com.google.bos.udmi.service.messaging.impl.MessageTestCore.TEST_REGISTRY;
+import static com.google.bos.udmi.service.pod.ContainerBase.REFLECT_BASE;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.udmi.util.GeneralUtils.arrayOf;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
@@ -19,7 +19,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.bos.udmi.service.access.IotAccessBase;
 import com.google.bos.udmi.service.access.LocalIotAccessProvider;
-import com.google.bos.udmi.service.core.ProcessorTestBase;
 import com.google.bos.udmi.service.messaging.StateUpdate;
 import com.google.bos.udmi.service.messaging.impl.LocalMessagePipe;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
@@ -62,7 +61,7 @@ public class UdmiServicePodTest {
     UdmiState state = new UdmiState();
     messageMap.put(SubFolder.UDMI.value(), state);
     Bundle bundle = new Bundle(messageMap);
-    bundle.envelope.deviceRegistryId = REFLECT_REGISTRY;
+    bundle.envelope.deviceRegistryId = REFLECT_BASE;
     bundle.envelope.deviceId = TEST_REGISTRY;
     return bundle;
   }
@@ -197,7 +196,7 @@ public class UdmiServicePodTest {
     List<String> commands = iotAccessProvider.getCommands();
     assertEquals(0, commands.size(), "expected sent device commands");
 
-    iotAccess.modifyConfig(REFLECT_REGISTRY, TEST_REGISTRY, oldConfig -> {
+    iotAccess.modifyConfig(REFLECT_BASE, TEST_REGISTRY, oldConfig -> {
       // TODO: Check that this conforms to the actual expected reflector config bundle.
       assertNotEquals(EMPTY_CONFIG, oldConfig, "updated device config");
       return null;
@@ -206,7 +205,7 @@ public class UdmiServicePodTest {
     LocalMessagePipe distributor =
         new LocalMessagePipe(reverseFlow(podConfig.distributors.get("distrib")));
     Bundle distributedBundle = distributor.poll();
-    assertEquals(REFLECT_REGISTRY, distributedBundle.envelope.deviceRegistryId, "registry id");
+    assertEquals(REFLECT_BASE, distributedBundle.envelope.deviceRegistryId, "registry id");
     assertEquals(TEST_REGISTRY, distributedBundle.envelope.deviceId, "site id");
     // TODO: Check bundle message to make sure it conforms.
     assertNull(distributor.poll(), "unexpected distribution message");
@@ -217,6 +216,7 @@ public class UdmiServicePodTest {
    */
   @AfterEach
   public void resetForTest() {
+    ContainerBase.resetForTest();
     UdmiServicePod.resetForTest();
     LocalMessagePipe.resetForTestStatic();
   }

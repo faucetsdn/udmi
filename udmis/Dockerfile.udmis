@@ -2,7 +2,7 @@ FROM alpine:latest
 
 WORKDIR /root
 
-RUN apk add openjdk17 bash gcompat mosquitto-clients curl
+RUN apk add openjdk17 bash gcompat mosquitto-clients curl jq
 
 # Workaround for https://github.com/grpc/grpc-java/issues/8751
 ENV LD_PRELOAD=/lib/libgcompat.so.0
@@ -14,7 +14,7 @@ ADD bin/ bin/
 ADD var/ var/
 
 ENV CLEARBLADE_CONFIGURATION=/udmi/clearblade.json
-
 ENV GCP_PROJECT=$GCP_PROJECT
+ENV UDMI_PREFIX=$UDMI_PREFIX
 
 CMD ["/root/bin/run", "var/prod_pod.json"]

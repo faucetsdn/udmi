@@ -1,27 +1,57 @@
 #!/bin/bash -e
 
 if [[ $# != 1 ]]; then
-    echo Usage: $0 project_id
+    echo Usage: $0 project_id[/namespace]
     false
 fi
 
-project_id=$1
+full_id=$1
 shift
+
+project_id=${full_id%/*}
+namespace=${full_id#$project_id}
+namespace=${namespace#/}
+success=$(mktemp)
+rm -f $success
 
 ROOT=$(dirname $0)/..
 cd $ROOT
 
 echo Configuring for GCP project $project_id...
-gcloud auth application-default set-quota-project $project_id
+quota_project=$(jq -r .quota_project_id $HOME/.config/gcloud/application_default_credentials.json)
+if [[ $quota_project != $project_id ]]; then
+    gcloud auth application-default set-quota-project $project_id
+fi
 gcloud --quiet config set project $project_id
 
-kcontext=$(kubectl config get-contexts | fgrep $project_id | tr '*' ' ' | awk '{ print $1 }')
+saved=$(kubectl config current-context)
+kcontexts=$(kubectl config get-contexts -o name | fgrep _${project_id}_)
 
-if [[ -z $kcontext ]]; then
+if [[ -z $kcontexts ]]; then
     echo No kubectl context defined for project $project_id
-    echo "  kubectl config get-contexts | fgrep $project_id"
+    echo "  kubectl config get-contexts -o name | fgrep _${project_id}_)"
     false
 fi
 
-echo Using k8s context $kcontext
-kubectl config use-context $kcontext
+for context in $kcontexts; do
+    k8s_parts=$(tr '_' ' ' <<<$context)
+    echo k8s context is $k8s_parts
+
+    GCP_PROJECT=$(awk '{print $2}' <<<$k8s_parts)
+    GCP_REGION=$(awk '{print $3}' <<<$k8s_parts)
+    K8S_CLUSTER=$(awk '{print $4}' <<<$k8s_parts)
+    K8S_NAMESPACE=$(awk '{print $5}' <<<$k8s_parts)
+
+    if [[ $GCP_PROJECT == $project_id && $K8S_NAMESPACE == $namespace ]]; then
+        echo Matched context $context
+        echo $context > $success
+        break
+    fi
+done
+
+if [[ ! -f $success ]]; then
+    echo No context matching project $project_id and namespace ${namespace:-default} found.
+    false
+fi
+
+kubectl config use-context $(< $success)
