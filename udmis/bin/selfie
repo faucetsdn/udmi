@@ -24,6 +24,9 @@ fi
 echo kubectl config get-contexts:
 kubectl config get-contexts
 
+echo kubectl get deployments:
+kubectl get deployments
+
 echo Entering udmis-broker message loop
 
 mosquitto_sub -h udmis-broker -t udmis-broker/+/+ | jq --unbuffered --indent 0 . | while read input; do
@@ -41,7 +44,7 @@ mosquitto_sub -h udmis-broker -t udmis-broker/+/+ | jq --unbuffered --indent 0 .
         jq .spec.template.spec.containers[0].image=\"$update_to\" old.json > new.json
         echo Applying changes to k8s deployment:
         if ! diff old.json new.json; then
-            kubectl apply -f new.json
+            kubectl apply -f new.json || true
             echo
             kubectl get pods
             sleep 10
