@@ -18,8 +18,10 @@ ROOT=$(dirname $0)/..
 cd $ROOT
 
 echo Configuring for GCP project $project_id...
-# This is slow, and not sure it's necessary...
-# gcloud auth application-default set-quota-project $project_id
+quota_project=$(jq -r .quota_project_id $HOME/.config/gcloud/application_default_credentials.json)
+if [[ $quota_project != $project_id ]]; then
+    gcloud auth application-default set-quota-project $project_id
+fi
 gcloud --quiet config set project $project_id
 
 saved=$(kubectl config current-context)
