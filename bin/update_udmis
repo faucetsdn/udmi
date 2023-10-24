@@ -23,7 +23,7 @@ git_prefix=${git_url%.*}
 git_prefix=${git_prefix#*.com/}
 git_repo=${git_prefix#*.com:}
 
-update_to=ghcr.io/${git_repo}:g${full_hash:0:9}
+update_to=ghcr.io/${git_repo}:udmis-g${full_hash:0:9}
 
 echo Updating udmis install to $update_to
 
