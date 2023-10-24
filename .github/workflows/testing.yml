@@ -253,18 +253,6 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-      - name: itemized test timing
-        if: ${{ always() }}
-        run: egrep ' test .* after .*s #' out/sequencer.out-*
-      - name: itemized test timing
-        if: ${{ always() }}
-        run: egrep ' test .* after .*s ' out/sequencer.out-*
-      - name: itemized test timing
-        if: ${{ always() }}
-        run: egrep ' test .* after .*s #\' out/sequencer.out-*
-      - name: itemized test timing
-        if: ${{ always() }}
-        run: egrep \' test .* after .*s #\' out/sequencer.out-*
       - name: base setup
         run: bin/run_tests install_dependencies
       - name: registrar clean
@@ -289,7 +277,7 @@ jobs:
         run: more out/*_itemized.out out/sequencer.out-* out/pubber.out-* | cat
       - name: itemized test timing
         if: ${{ always() }}
-        run: egrep ' test .* after .*s #' out/sequencer.out-*
+        run: egrep ' test .* after .*s ' out/sequencer.out-*
       - name: tool output logs
         if: ${{ always() }}
         run: more sites/udmi_site_model/out/*.json | cat
