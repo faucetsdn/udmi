@@ -35,16 +35,6 @@ jobs:
           fetch-tags: true
       - name: bin/run_tests install_dependencies
         run: bin/run_tests install_dependencies
-      - name: Setup udmis container build
-        if: ${{ github.event_name == 'push' }}
-        run: |
-          revhash=$(git rev-parse $GITHUB_REF)
-          IMAGE_TAG=g${revhash:0:9}
-          PUSH_REPO=$PUSH_REGISTRY/${{ github.repository }}
-          PUSH_TAG=$PUSH_REPO:udmis-$IMAGE_TAG
-          echo PUSH_TAG=$PUSH_TAG >> $GITHUB_ENV
-          bin/container udmis prep --no-check $PUSH_REPO
-          echo Pushing built container as $PUSH_TAG | tee -a $GITHUB_STEP_SUMMARY
       - name: bin/start_pubsub
         run: bin/start_pubsub
       - name: bin/test_mosquitto
@@ -60,6 +50,16 @@ jobs:
           registry: ${{ env.PUSH_REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Setup udmis container build
+        if: ${{ github.event_name == 'push' }}
+        run: |
+          revhash=$(git rev-parse $GITHUB_REF)
+          IMAGE_TAG=g${revhash:0:9}
+          PUSH_REPO=$PUSH_REGISTRY/${{ github.repository }}
+          PUSH_TAG=$PUSH_REPO:udmis-$IMAGE_TAG
+          echo PUSH_TAG=$PUSH_TAG >> $GITHUB_ENV
+          bin/container udmis prep --no-check $PUSH_REPO
+          echo Pushing built container as $PUSH_TAG | tee -a $GITHUB_STEP_SUMMARY
       - name: Build and push docker image
         if: ${{ github.event_name == 'push' }}
         uses: docker/build-push-action@v4
