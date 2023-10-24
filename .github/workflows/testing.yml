@@ -253,6 +253,9 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
+      - name: itemized test timing
+        if: ${{ always() }}
+        run: egrep ' test .* after .*s #' out/sequencer.out-*
       - name: base setup
         run: bin/run_tests install_dependencies
       - name: registrar clean
