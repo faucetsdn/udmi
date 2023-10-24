@@ -56,7 +56,7 @@ jobs:
           revhash=$(git rev-parse $GITHUB_REF)
           IMAGE_TAG=g${revhash:0:9}
           PUSH_REPO=$PUSH_REGISTRY/${{ github.repository }}
-          PUSH_TAG=$PUSH_REPO:$IMAGE_TAG
+          PUSH_TAG=$PUSH_REPO:udmis-$IMAGE_TAG
           echo PUSH_TAG=$PUSH_TAG >> $GITHUB_ENV
           bin/container udmis prep --no-check ${PUSH_REPO%/*}
           echo Pushing built container as $PUSH_TAG | tee -a $GITHUB_STEP_SUMMARY
