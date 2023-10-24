@@ -58,7 +58,8 @@ jobs:
           PUSH_REPO=$PUSH_REGISTRY/${{ github.repository }}
           PUSH_TAG=$PUSH_REPO:udmis-$IMAGE_TAG
           echo PUSH_TAG=$PUSH_TAG >> $GITHUB_ENV
-          bin/container udmis prep --no-check ${PUSH_REPO%/*}
+          echo bin/container udmis prep --no-check ${PUSH_REPO%/*}
+          bash -ex bin/container udmis prep --no-check ${PUSH_REPO%/*}
           echo Pushing built container as $PUSH_TAG | tee -a $GITHUB_STEP_SUMMARY
       - name: Build and push docker image
         if: ${{ github.event_name == 'push' }}
