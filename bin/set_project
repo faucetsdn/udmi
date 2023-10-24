@@ -18,11 +18,21 @@ ROOT=$(dirname $0)/..
 cd $ROOT
 
 echo Configuring for GCP project $project_id...
+
+current_project=$(gcloud config get project)
 quota_project=$(jq -r .quota_project_id $HOME/.config/gcloud/application_default_credentials.json)
+
 if [[ $quota_project != $project_id ]]; then
+    echo Setting gcloud quota project to $project_id
     gcloud auth application-default set-quota-project $project_id
 fi
-gcloud --quiet config set project $project_id
+
+if [[ $project_id != $current_project ]]; then
+    echo Setting gcloud defailt project to $project_id
+    gcloud --quiet config set project $project_id
+fi
+
+false
 
 saved=$(kubectl config current-context)
 kcontexts=$(kubectl config get-contexts -o name | fgrep _${project_id}_)
