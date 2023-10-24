@@ -95,7 +95,6 @@ if [[ $cmd == prep || $cmd == build ]]; then
 }
 EOF
     more var/deployed_version.json | cat
-    echo Next try: $0 build
 fi
 
 if [[ $cmd == build ]]; then
