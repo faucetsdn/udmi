@@ -32,15 +32,23 @@ Some caveats:
 * [empty_enumeration](#empty_enumeration-preview): check enumeration of nothing at all
 * [extra_config](#extra_config-beta): Check that the device correctly handles an extra out-of-schema field
 * [feature_enumeration](#feature_enumeration-preview): check enumeration of device features
+* [pointset_publish](#pointset_publish-beta): device publishes pointset events
 * [pointset_publish_interval](#pointset_publish_interval-beta): test sample rate and sample limit sec
 * [pointset_sample_rate](#pointset_sample_rate-beta): device publishes pointset events at a rate of no more than config sample_rate_sec
+* [state_make_model](#state_make_model-beta): device publishes correct make and model information in state messages
+* [state_software](#state_software-beta): device publishes correct software information in state messages
 * [system_last_update](#system_last_update-stable): Check that last_update state is correctly set in response to a config update.
 
 ## config_logging (BETA)
 
 Check that the device publishes minimum required log entries when receiving config
 
-1. Test failed: timeout waiting for config sync
+1. Update config set min_loglevel to debug:
+    * Set `system.min_loglevel` = `100`
+1. Force config update to resend config to device
+1. Wait for log category `system.config.receive` level `DEBUG` was logged
+1. Wait for log category `system.config.parse` level `DEBUG` was logged
+1. Wait for log category `system.config.apply` level `NOTICE` was logged
 
 ## device_config_acked (BETA)
 
@@ -83,7 +91,6 @@ Check that the device correctly handles an extra out-of-schema field
 1. Wait for log category `system.config.receive` level `DEBUG` was logged
 1. Wait for last_config updated again
 1. Wait for system operational
-1. Check that no interesting system status
 1. Wait for log category `system.config.parse` level `DEBUG` was logged
 1. Wait for log category `system.config.apply` level `NOTICE` was logged
 
@@ -104,6 +111,12 @@ check enumeration of device features
 1. Check that feature enumeration matches metadata
 1. Check that all enumerated features are official buckets
 1. Check that no point enumeration
+
+## pointset_publish (BETA)
+
+device publishes pointset events
+
+1. Wait for receive a pointset event
 
 ## pointset_publish_interval (BETA)
 
@@ -130,6 +143,18 @@ device publishes pointset events at a rate of no more than config sample_rate_se
     * Add `pointset.sample_limit_sec` = `1`
 1. Wait for receive at least 5 pointset events
 1. Check that time period between successive pointset events is between 1 and 5 seconds
+
+## state_make_model (BETA)
+
+device publishes correct make and model information in state messages
+
+1. Check that make and model in state matches make in metadata
+
+## state_software (BETA)
+
+device publishes correct software information in state messages
+
+1. Check that software in metadata matches state
 
 ## system_last_update (STABLE)
 
