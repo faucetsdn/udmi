@@ -47,6 +47,7 @@ class CloudModel:
     self.blocked = None
     self.credentials = None
     self.last_event_time = None
+    self.last_config_ack = None
     self.num_id = None
     self.operation = None
     self.metadata = None
@@ -65,6 +66,7 @@ class CloudModel:
     result.blocked = source.get('blocked')
     result.credentials = source.get('credentials')
     result.last_event_time = source.get('last_event_time')
+    result.last_config_ack = source.get('last_config_ack')
     result.num_id = source.get('num_id')
     result.operation = source.get('operation')
     result.metadata = source.get('metadata')
@@ -105,6 +107,8 @@ class CloudModel:
       result['credentials'] = self.credentials # 1
     if self.last_event_time:
       result['last_event_time'] = self.last_event_time # 5
+    if self.last_config_ack:
+      result['last_config_ack'] = self.last_config_ack # 5
     if self.num_id:
       result['num_id'] = self.num_id # 5
     if self.operation:
