@@ -1,0 +1,8 @@
+#!/bin/bash -e
+#
+# Automation of tools using PubSub triggers.
+#
+
+env
+
+exec tail -f /dev/null

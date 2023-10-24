@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: udmis-tools
+spec:
+  selector:
+    matchLabels:
+      app: tools
+      role: master
+      tier: backend
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: tools
+        role: master
+        tier: backend
+    spec:
+      containers:
+      - name: tools-core
+        image: @IMAGE-validator@
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: 100m
+            memory: 300Mi
+        env:
+        - name: UDMI_NAMESPACE
+          valueFrom:
+            configMapKeyRef:
+              name: config
+              key: UDMI_NAMESPACE
+              optional: true
