@@ -1,0 +1,4 @@
+# Empty dummy build script for non-existant selfie source.
+
+mkdir -p build/libs
+touch build/libs/selfie-1.0-SNAPSHOT-all.jar
