@@ -2,7 +2,65 @@
 #
 # Automation of tools using PubSub triggers.
 #
+#{
+#  "name": "projects/bos-platform-dev/repos/ZZ-TRI-FECTA",
+#  "url": "https://source.developers.google.com/p/bos-platform-dev/r/ZZ-TRI-FECTA",
+#  "eventTime": "2023-10-24T20:36:09.368223Z",
+#  "refUpdateEvent": {
+#    "email": "peringknife@google.com",
+#    "refUpdates": {
+#      "refs/heads/main": {
+#        "refName": "refs/heads/main",
+#        "updateType": "UPDATE_FAST_FORWARD",
+#        "oldId": "f24c703a13ba9729353630d1de456277318a8847",
+#        "newId": "64ab690448d5ae23876bc099dac09c10ae531b27"
+#      }
+#    }
+#  }
+#}
 
 env
 
-exec tail -f /dev/null
+UDMI_PREFIX=${UDMI_NAMESPACE}~
+
+PUBSUB_FILE=pubsub.json
+MESSAGE_FILE=message.json
+RETRY_DELAY_SEC=60
+
+SUBSCRIPTION=${UDMI_PREFIX#\~}source_repo-udmis
+echo Pulling from PubSub subscription $SUBSCRIPTION
+
+export GCP_PROJECT=$(curl -s "http://metadata.google.internal/computeMetadata/v1/project/project-id" -H "Metadata-Flavor: Google" || true)
+echo Using GCP_PROJECT $GCP_PROJECT from GCE metadata.
+
+GCP_SERVICE_ACCOUNT=$(curl -s -H "Metadata-Flavor: Google" http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/email)
+echo Configured with GCP service account $GCP_SERVICE_ACCOUNT
+
+while true; do
+    echo Waiting for repo updates at $(date -u -Iseconds)
+    gcloud --format=json --project=$GCP_PROJECT pubsub subscriptions pull $SUBSCRIPTION --auto-ack > $PUBSUB_FILE
+
+    cat $PUBSUB_FILE
+    echo
+
+    lines=$(cat $PUBSUB_FILE | wc -l)
+    if [[ ! -s $PUBSUB_FILE || $lines -lt 5 ]]; then
+        echo No valid message found, waiting ${RETRY_DELAY_SEC}s until retry...
+        sleep $RETRY_DELAY_SEC
+        continue
+    fi
+
+    echo Processing updates starting $(date -u -Iseconds)
+    jq -r .[0].message.data $PUBSUB_FILE | base64 -d > $MESSAGE_FILE
+
+    cat $MESSAGE_FILE
+    echo
+
+    repo_url=$(jq -r .url $MESSAGE_FILE)
+    repo_name=${repo_url##*/}
+
+    echo Cloning repo $repo_name from $repo_url
+
+    echo gcloud source repos clone $repo_name --project=$GCP_PROJECT
+    gcloud source repos clone $repo_name --project=$GCP_PROJECT
+done
