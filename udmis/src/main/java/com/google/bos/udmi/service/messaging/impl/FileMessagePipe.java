@@ -4,6 +4,7 @@ import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.JSON_EXT;
 import static com.google.udmi.util.JsonUtil.loadFileString;
+import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static com.google.udmi.util.JsonUtil.toStringMap;
 import static java.lang.String.format;
@@ -29,6 +30,7 @@ import udmi.schema.Envelope.SubType;
 public class FileMessagePipe extends MessageBase {
 
   public static final String DEVICES_DIR_NAME = "devices";
+  private static final long FILE_PLAYBACK_MESSAGE_DELAY_MS = 50;
   private final Map<File, AtomicInteger> traceCounts = new HashMap<>();
   private File outFileRoot;
 
@@ -81,6 +83,8 @@ public class FileMessagePipe extends MessageBase {
     try {
       Envelope envelope = makeEnvelope(file);
       receiveMessage(toStringMap(envelope), loadFileString(file));
+      // Processing of received messages is asynchronous, so add a small artificial delay.
+      safeSleep(FILE_PLAYBACK_MESSAGE_DELAY_MS);
     } catch (Exception e) {
       e.printStackTrace();
     }
