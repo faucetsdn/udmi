@@ -119,6 +119,7 @@ class FileMessagePipeTest extends MessageTestCore {
             .map(bundle -> bundle.envelope.deviceId).collect(Collectors.toSet());
     assertEquals(4, devices.size(), "expected devices in trace");
 
+    assertEquals(SubFolder.SYSTEM, consumed.get(1).envelope.subFolder, "expecting system event");
     SystemEvent systemEvent = JsonUtil.convertTo(SystemEvent.class, consumed.get(1).message);
     assertEquals("device.testing", systemEvent.logentries.get(0).category,
         "log entry category for second message");
