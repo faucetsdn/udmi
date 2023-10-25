@@ -1,4 +1,4 @@
-package com.google.daq.mqtt.util;
+package com.google.udmi.util;
 
 import static com.google.api.client.util.Preconditions.checkNotNull;
 import static com.google.bos.iot.core.proxy.IotReflectorClient.UDMI_FOLDER;
@@ -24,7 +24,8 @@ import com.google.cloud.pubsub.v1.Subscriber;
 import com.google.cloud.pubsub.v1.SubscriptionAdminClient;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
-import com.google.daq.mqtt.validator.Validator;
+import com.google.daq.mqtt.util.MessageHandler;
+import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.validator.Validator.ErrorContainer;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
 import com.google.protobuf.ByteString;
@@ -56,7 +57,7 @@ import udmi.schema.SystemState;
 /**
  * Message publisher that uses PubSub.
  */
-public class PubSubClient implements MessagePublisher, MessageHandler {
+public class PubSubReflector implements MessagePublisher {
 
   private static final String CONNECT_ERROR_FORMAT = "While connecting to project %s";
 
@@ -78,9 +79,6 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
   private final Subscriber subscriber;
   private final Publisher publisher;
   private final boolean flushSubscription;
-  private final Map<String, HandlerConsumer<Object>> handlers = new HashMap<>();
-  private final BiMap<String, Class<?>> typeClasses = HashBiMap.create();
-  private final Map<Class<?>, SimpleEntry<SubType, SubFolder>> classTypes = new HashMap<>();
 
   /**
    * Create a simple proxy instance.
@@ -88,7 +86,7 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
    * @param projectId    target project id
    * @param subscription target subscription name
    */
-  public PubSubClient(String projectId, String subscription) {
+  public PubSubReflector(String projectId, String subscription) {
     this(projectId, null, subscription, null);
   }
 
@@ -100,7 +98,7 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
    * @param subscription target subscription name
    * @param updateTopic  output PubSub topic for updates (else null)
    */
-  public PubSubClient(String projectId, String registryId, String subscription,
+  public PubSubReflector(String projectId, String registryId, String subscription,
       String updateTopic) {
     this(projectId, registryId, subscription, updateTopic, true);
   }
@@ -114,7 +112,7 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
    * @param updateTopic  output PubSub topic for updates (else null)
    * @param reset        if the connection should be reset before use
    */
-  public PubSubClient(String projectId, String registryId, String subscription, String updateTopic,
+  public PubSubReflector(String projectId, String registryId, String subscription, String updateTopic,
       boolean reset) {
     try {
       this.projectId = checkNotNull(projectId, "project id not defined");
@@ -136,36 +134,17 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
         publisher = null;
       }
 
-      initializeHandlerTypes();
-
       active.set(true);
     } catch (Exception e) {
       throw new RuntimeException(String.format(CONNECT_ERROR_FORMAT, projectId), e);
     }
   }
 
-  private void initializeHandlerTypes() {
-    Arrays.stream(SubType.values()).forEach(type -> Arrays.stream(SubFolder.values())
-        .forEach(folder -> registerHandlerType(type, folder)));
-  }
-
-  private void registerHandlerType(SubType type, SubFolder folder) {
-    String mapKey = getMapKey(type, folder);
-    Class<?> messageClass = getMessageClass(type, folder);
-    if (messageClass != null) {
-      typeClasses.put(mapKey, messageClass);
-      classTypes.put(messageClass, new SimpleEntry<>(type, folder));
-    }
-  }
-
-  private Class<?> getMessageClass(SubType type, SubFolder folder) {
-    String typeName = Common.capitalize(folder.value()) + Common.capitalize(type.value());
-    String className = SystemState.class.getPackageName() + "." + typeName;
-    try {
-      return Class.forName(className);
-    } catch (ClassNotFoundException e) {
-      return null;
-    }
+  public static MessagePublisher from(ExecutionConfiguration iotConfig,
+      BiConsumer<String, String> messageHandler, Consumer<Throwable> errorHandler) {
+    String projectId = "bos-platform-dev";
+    String subscription = "peringknife~udmi_reply-tools";
+    return new PubSubReflector(projectId, subscription);
   }
 
   private SeekRequest getCurrentTimeSeekRequest(String subscription) {
@@ -194,7 +173,7 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
   }
 
   @Override
-  public Validator.MessageBundle takeNextMessage(QuerySpeed speed) {
+  public MessageBundle takeNextMessage(QuerySpeed speed) {
     try {
       PubsubMessage message = messages.take();
       long seconds = message.getPublishTime().getSeconds();
@@ -232,62 +211,6 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
     } catch (Exception e) {
       throw new RuntimeException("While taking next message", e);
     }
-  }
-
-  @Override
-  @SuppressWarnings("unchecked")
-  public <T> void registerHandler(Class<T> clazz, HandlerConsumer<T> handler) {
-    String mapKey = typeClasses.inverse().get(clazz);
-    if (handlers.put(mapKey, (HandlerConsumer<Object>) handler) != null) {
-      throw new RuntimeException("Type handler already defined for " + mapKey);
-    }
-  }
-
-  @Override
-  public void publishMessage(String deviceId, Object message) {
-    SimpleEntry<SubType, SubFolder> typePair = classTypes.get(message.getClass());
-    String mqttTopic = getMapKey(typePair.getKey(), typePair.getValue());
-    publish(deviceId, mqttTopic, stringify(message));
-  }
-
-  @Override
-  public void messageLoop() {
-    while (isActive()) {
-      try {
-        handlerHandler(takeNextMessage(QuerySpeed.QUICK));
-      } catch (Exception e) {
-        System.err.println("Exception processing received message:");
-        e.printStackTrace();
-      }
-    }
-  }
-
-  private void ignoreMessage(Envelope attributes, Object message) {
-  }
-
-  private void handlerHandler(MessageBundle bundle) {
-    if (bundle == null) {
-      return;
-    }
-
-    Envelope envelope = JsonUtil.convertTo(Envelope.class, bundle.attributes);
-    String mapKey = getMapKey(envelope.subType, envelope.subFolder);
-    try {
-      Class<?> handlerType = typeClasses.computeIfAbsent(mapKey, key -> {
-        System.err.println("Ignoring messages of type " + mapKey);
-        return Object.class;
-      });
-      Object messageObject = JsonUtil.convertTo(handlerType, bundle.message);
-      HandlerConsumer<Object> handlerConsumer = handlers.computeIfAbsent(mapKey,
-          key -> this::ignoreMessage);
-      handlerConsumer.accept(envelope, messageObject);
-    } catch (Exception e) {
-      throw new RuntimeException("While processing message key " + mapKey, e);
-    }
-  }
-
-  private String getMapKey(SubType subType, SubFolder subFolder) {
-    return subFolder + "/" + (subType != null ? subType : SubType.EVENT);
   }
 
   @Override
