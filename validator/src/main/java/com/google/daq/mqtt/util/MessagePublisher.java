@@ -27,6 +27,10 @@ public interface MessagePublisher {
     return setupUdmiConfig;
   }
 
+  default String getBridgeHost() {
+    throw new RuntimeException("Not implemented");
+  }
+
   /**
    * Speed of a query -- how long to wait before a timeout.
    */

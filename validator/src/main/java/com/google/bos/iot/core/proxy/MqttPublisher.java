@@ -1,6 +1,7 @@
 package com.google.bos.iot.core.proxy;
 
 import static com.google.bos.iot.core.proxy.ProxyTarget.STATE_TOPIC;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.udmi.util.GeneralUtils.catchOrElse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -14,9 +15,14 @@ import com.google.common.collect.Maps;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.validator.Validator;
 import com.google.udmi.util.Common;
+import com.google.udmi.util.SiteModel;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -40,6 +46,7 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+import org.jetbrains.annotations.NotNull;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,6 +58,7 @@ import udmi.schema.IotAccess.IotProvider;
  */
 class MqttPublisher implements MessagePublisher {
 
+  public static final String EMPTY_JSON = "{}";
   static final String DEFAULT_CLEARBLADE_HOSTNAME = "us-central1-mqtt.clearblade.com";
   static final String DEFAULT_GBOS_HOSTNAME = "mqtt.bos.goog";
   static final String BRIDGE_PORT = "8883";
@@ -71,7 +79,6 @@ class MqttPublisher implements MessagePublisher {
   private static final String ATTACH_MESSAGE_FORMAT = "/devices/%s/attach";
   private static final int TOKEN_EXPIRATION_SEC = 60 * 60;
   static final int TOKEN_EXPIRATION_MS = TOKEN_EXPIRATION_SEC * 1000;
-  public static final String EMPTY_JSON = "{}";
   private static final String TICKLE_TOPIC = "events/tickle";
   private static final long TICKLE_PERIOD_SEC = 10;
   private final ExecutorService publisherExecutor =
@@ -139,6 +146,36 @@ class MqttPublisher implements MessagePublisher {
           default -> throw new RuntimeException("Unsupported iot provider " + iotProvider);
         }
     );
+  }
+
+  @NotNull
+  static MqttPublisher from(ExecutionConfiguration iotConfig,
+      BiConsumer<String, String> messageHandler,
+      BiConsumer<MqttPublisher, Throwable> errorHandler) {
+    final byte[] keyBytes;
+    checkNotNull(iotConfig.key_file, "missing key file in config");
+    try {
+      System.err.println("Loading key bytes from " + iotConfig.key_file);
+      keyBytes = getFileBytes(iotConfig.key_file);
+    } catch (Exception e) {
+      throw new RuntimeException(
+          "While loading key file " + new File(iotConfig.key_file).getAbsolutePath(), e);
+    }
+    String registryActual = SiteModel.getRegistryActual(iotConfig);
+
+    MqttPublisher mqttPublisher = new MqttPublisher(
+        IotReflectorClient.makeReflectConfiguration(iotConfig, registryActual), keyBytes,
+        IotReflectorClient.REFLECTOR_KEY_ALGORITHM, messageHandler, errorHandler);
+    return mqttPublisher;
+  }
+
+  private static byte[] getFileBytes(String dataFile) {
+    Path dataPath = Paths.get(dataFile);
+    try {
+      return Files.readAllBytes(dataPath);
+    } catch (Exception e) {
+      throw new RuntimeException("While getting data from " + dataPath.toAbsolutePath(), e);
+    }
   }
 
   private ScheduledFuture<?> scheduleTickler() {
