@@ -36,6 +36,13 @@ public interface MessagePublisher {
     throw new RuntimeException("Not implemented");
   }
 
+  /**
+   * Factory to create an instance with the given provider and handlers.
+   *
+   * @param iotConfig      configuration to use
+   * @param messageHandler received message handler
+   * @param errorHandler   error/exception handler
+   */
   static MessagePublisher from(ExecutionConfiguration iotConfig,
       BiConsumer<String, String> messageHandler, Consumer<Throwable> errorHandler) {
     if (IotAccess.IotProvider.PUBSUB == iotConfig.iot_provider) {
