@@ -31,8 +31,10 @@ import static udmi.schema.Envelope.SubFolder.UPDATE;
 import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.StateUpdate;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
-import com.google.udmi.util.CleanDateFormat;
 import com.google.udmi.util.JsonUtil;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAmount;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -52,7 +54,8 @@ import udmi.schema.UdmiState;
 public class ReflectProcessor extends ProcessorBase {
 
   public static final String PAYLOAD_KEY = "payload";
-  public static final Date START_TIME = new Date();
+  private static final Date START_TIME = new Date();
+  private static final TemporalAmount CONFIG_ACK_FUDGE = Duration.of(5, ChronoUnit.MINUTES);
 
   @Override
   protected void defaultHandler(Object message) {
@@ -83,7 +86,9 @@ public class ReflectProcessor extends ProcessorBase {
     if (lastConfig == null || lastConfigAck == null) {
       return false;
     }
-    return lastConfig.after(START_TIME) && !lastConfigAck.before(lastConfig);
+    // The ClearBlade implementation is currently slow to apply the last-config-ack time, so fudge.
+    Date configAck = Date.from(lastConfig.toInstant().plus(CONFIG_ACK_FUDGE));
+    return lastConfig.after(START_TIME) && !configAck.before(lastConfig);
   }
 
   private Envelope extractMessageEnvelope(Object message) {
