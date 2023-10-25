@@ -87,6 +87,9 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
     return new PubSubPipe(configuration);
   }
 
+  /**
+   * Get the appropriate host to use with the PubSub emulator.
+   */
   public static String getEmulatorHost() {
     if (EMULATOR_HOST == null) {
       return null;
