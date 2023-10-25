@@ -15,7 +15,7 @@ import static com.google.udmi.util.Common.MESSAGE_KEY;
 import static com.google.udmi.util.Common.NO_SITE;
 import static com.google.udmi.util.Common.PREFIX_SEPARATOR;
 import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
-import static com.google.udmi.util.Common.STATE_QUERY_TOPIC;
+import static com.google.udmi.util.Common.UPDATE_QUERY_TOPIC;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
@@ -500,7 +500,7 @@ public class Validator {
   private void sendInitializationQuery() {
     for (String deviceId : targetDevices) {
       System.err.println("Sending initialization query messages for device " + deviceId);
-      client.publish(deviceId, STATE_QUERY_TOPIC, EMPTY_MESSAGE);
+      client.publish(deviceId, UPDATE_QUERY_TOPIC, EMPTY_MESSAGE);
     }
   }
 

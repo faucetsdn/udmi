@@ -1,6 +1,5 @@
 package com.google.bos.iot.core.proxy;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
@@ -55,7 +54,7 @@ public class IotReflectorClient implements MessagePublisher {
   public static final String UDMI_FOLDER = "udmi";
   private static final int MIN_REQUIRED_VERSION = 9;
   static final String REFLECTOR_KEY_ALGORITHM = "RS256";
-  private static final String UDMI_REFLECT = "UDMI-REFLECT";
+  public static final String UDMI_REFLECT = "UDMI-REFLECT";
   private static final String MOCK_DEVICE_NUM_ID = "123456789101112";
   private static final String UDMI_TOPIC = "events/" + UDMI_FOLDER;
   private static final String CONFIG_CATEGORY = "config";
@@ -136,7 +135,7 @@ public class IotReflectorClient implements MessagePublisher {
     }
   }
 
-  static ExecutionConfiguration makeReflectConfiguration(ExecutionConfiguration iotConfig,
+  public static ExecutionConfiguration makeReflectConfiguration(ExecutionConfiguration iotConfig,
       String registryId) {
     ExecutionConfiguration reflectConfiguration = new ExecutionConfiguration();
     reflectConfiguration.iot_provider = iotConfig.iot_provider;

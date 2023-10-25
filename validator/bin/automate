@@ -20,6 +20,13 @@ GCP_SERVICE_ACCOUNT=$(curl -s -H "Metadata-Flavor: Google" http://169.254.169.25
 echo Configured with GCP service account $GCP_SERVICE_ACCOUNT
 gcloud config set account $GCP_SERVICE_ACCOUNT
 
+# Create an as-needed subscription for this pod, and then garbage collect to clean them up (eventually).
+host_suffix=${HOSTNAME##*-}
+udmi_topic=${UDMI_PREFIX}udmi_reply
+udmi_feed=${udmi_topic}-${host_suffix}
+gcloud pubsub subscriptions create ${udmi_feed} --topic=${udmi_topic} --expiration-period=24h
+echo Created dynamic subscription ${udmi_feed} for host ${HOSTNAME}
+
 git config --global user.email $GCP_SERVICE_ACCOUNT
 git config --global user.name "UDMIS automation runner $UDMI_PREFIX"
 
@@ -29,7 +36,6 @@ while true; do
 
     lines=$(cat $PUBSUB_FILE | wc -l)
     if [[ ! -s $PUBSUB_FILE || $lines -lt 5 ]]; then
-        echo No valid message found, waiting ${RETRY_DELAY_SEC}s until retry...
         sleep $RETRY_DELAY_SEC
         continue
     fi
