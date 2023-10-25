@@ -5,6 +5,7 @@ import com.google.daq.mqtt.validator.Validator.MessageBundle;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import udmi.schema.ExecutionConfiguration;
+import udmi.schema.IotAccess;
 import udmi.schema.SetupUdmiConfig;
 
 /**
@@ -37,6 +38,9 @@ public interface MessagePublisher {
 
   static MessagePublisher from(ExecutionConfiguration iotConfig,
       BiConsumer<String, String> messageHandler, Consumer<Throwable> errorHandler) {
+    if (IotAccess.IotProvider.PUBSUB == iotConfig.iot_provider) {
+      return PubSubClient.from(iotConfig, messageHandler, errorHandler);
+    }
     return MqttPublisher.from(iotConfig, messageHandler, errorHandler);
   }
 

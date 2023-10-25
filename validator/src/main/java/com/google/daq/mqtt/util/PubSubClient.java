@@ -16,6 +16,7 @@ import com.google.api.client.util.Base64;
 import com.google.api.core.ApiFuture;
 import com.google.api.gax.rpc.NotFoundException;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
+import com.google.bos.iot.core.proxy.MqttPublisher;
 import com.google.cloud.pubsub.v1.AckReplyConsumer;
 import com.google.cloud.pubsub.v1.MessageReceiver;
 import com.google.cloud.pubsub.v1.Publisher;
@@ -44,9 +45,11 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
+import udmi.schema.ExecutionConfiguration;
 import udmi.schema.SetupUdmiConfig;
 import udmi.schema.SystemState;
 
@@ -139,6 +142,11 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
     } catch (Exception e) {
       throw new RuntimeException(String.format(CONNECT_ERROR_FORMAT, projectId), e);
     }
+  }
+
+  public static MqttPublisher from(ExecutionConfiguration iotConfig,
+      BiConsumer<String, String> messageHandler, Consumer<Throwable> errorHandler) {
+    throw new RuntimeException("Working on this!");
   }
 
   private void initializeHandlerTypes() {
