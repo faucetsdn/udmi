@@ -219,7 +219,7 @@ public class PubSubReflector implements MessagePublisher {
       Map<String, String> attributesMap = Map.of(
           "projectId", projectId,
           "deviceId", deviceId,
-          "source", "udmi_reflect",
+          "source", UDMI_REFLECT,
           "deviceRegistryId", registryId
       );
       PubsubMessage message = PubsubMessage.newBuilder()

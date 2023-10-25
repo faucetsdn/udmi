@@ -44,8 +44,6 @@ public abstract class IotAccessBase extends ContainerBase {
   public static final int MAX_CONFIG_LENGTH = 65535;
   public static final TemporalAmount REGION_RETRY_BACKOFF = Duration.ofSeconds(30);
   protected static final String EMPTY_JSON = "{}";
-  static final Set<String> CLOUD_REGIONS =
-      ImmutableSet.of("us-central1", "europe-west1", "asia-east1");
   private static final long REGISTRY_COMMAND_BACKOFF_SEC = 60;
   private static final Map<String, Instant> BACKOFF_MAP = new ConcurrentHashMap<>();
   private static final long CONFIG_UPDATE_BACKOFF_MS = 1000;
@@ -54,6 +52,7 @@ public abstract class IotAccessBase extends ContainerBase {
       IotProvider.DYNAMIC, DynamicIotAccessProvider.class,
       IotProvider.CLEARBLADE, ClearBladeIotAccessProvider.class,
       IotProvider.GCP, GcpIotAccessProvider.class,
+      IotProvider.PUBSUB, PubSubIotAccessProvider.class,
       IotProvider.LOCAL, LocalIotAccessProvider.class
   );
   final Map<String, Object> options;
@@ -100,7 +99,12 @@ public abstract class IotAccessBase extends ContainerBase {
   }
 
   protected Map<String, String> fetchRegistryRegions() {
-    Map<String, String> regionMap = CLOUD_REGIONS.stream().flatMap(
+    Set<String> cloudRegions = getRegistriesForRegion(null);
+    if (cloudRegions == null) {
+      return null;
+    }
+
+    Map<String, String> regionMap = cloudRegions.stream().flatMap(
         region -> getRegistriesForRegion(region).stream()
             .collect(Collectors.toMap(x -> x, x -> region)).entrySet()
             .stream()).collect(Collectors.toMap(Entry::getKey, Entry::getValue));
@@ -163,7 +167,7 @@ public abstract class IotAccessBase extends ContainerBase {
 
   private String getCompletedRegistryRegion(String registryId) {
     try {
-      return registryRegions.get().get(registryId);
+      return ifNotNullGet(registryRegions.get(), regions -> regions.get(registryId));
     } catch (Exception e) {
       throw new RuntimeException("While getting region for registry " + registryId, e);
     }

@@ -23,7 +23,7 @@
   "iot_access": {
     "iot-access": {
       "provider": "dynamic",
-      "project_id": "gcp-iot-core,clearblade-iot-core"
+      "project_id": "gcp-iot-core, clearblade-iot-core, UDMI-REFLECT"
     },
     "clearblade-iot-core": {
       "provider": "clearblade",
@@ -34,6 +34,10 @@
       "provider": "gcp",
       "project_id": "${GCP_PROJECT}",
       "options": "${GCP_IOT_OPTIONS},distributor=stately"
+    },
+    "UDMI-REFLECT": {
+      "provider": "pubsub",
+      "options": "topic=${UDMI_PREFIX}udmi_reply"
     }
   },
   "distributors": {

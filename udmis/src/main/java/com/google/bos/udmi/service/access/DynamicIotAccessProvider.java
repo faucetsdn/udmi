@@ -19,6 +19,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import udmi.schema.CloudModel;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.IotAccess;
@@ -37,7 +38,8 @@ public class DynamicIotAccessProvider extends IotAccessBase {
    */
   public DynamicIotAccessProvider(IotAccess iotAccess) {
     super(iotAccess);
-    providerList = Arrays.asList(iotAccess.project_id.split(","));
+    providerList = Arrays.stream(iotAccess.project_id.split(",")).map(String::trim)
+        .collect(Collectors.toList());
   }
 
   @Override

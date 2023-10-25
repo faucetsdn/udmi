@@ -229,6 +229,10 @@ public class GcpIotAccessProvider extends IotAccessBase {
 
   @NotNull
   protected Set<String> getRegistriesForRegion(String region) {
+    if (region == null) {
+      return CLOUD_REGIONS;
+    }
+
     String locationPath = getLocationPath(region);
     try {
       ListDeviceRegistriesResponse response = cloudIotService

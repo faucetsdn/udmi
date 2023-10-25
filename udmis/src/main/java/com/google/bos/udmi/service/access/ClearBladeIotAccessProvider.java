@@ -53,6 +53,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.udmi.util.GeneralUtils;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Base64;
@@ -79,6 +80,7 @@ import udmi.schema.IotAccess;
  */
 public class ClearBladeIotAccessProvider extends IotAccessBase {
 
+  private static final Set<String> CLOUD_REGIONS = ImmutableSet.of("us-central1");
   private static final String EMPTY_JSON = "{}";
   private static final BiMap<Key_format, PublicKeyFormat> AUTH_TYPE_MAP = ImmutableBiMap.of(
       Key_format.RS_256, PublicKeyFormat.RSA_PEM,
@@ -148,6 +150,10 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
 
   @NotNull
   protected Set<String> getRegistriesForRegion(String region) {
+    if (region == null) {
+      return CLOUD_REGIONS;
+    }
+
     try {
       DeviceManagerClient deviceManagerClient = getDeviceManagerClient();
       ListDeviceRegistriesRequest request = ListDeviceRegistriesRequest.Builder.newBuilder()
