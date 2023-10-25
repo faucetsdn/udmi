@@ -2,7 +2,7 @@ FROM alpine:latest
 
 WORKDIR /root
 
-RUN apk add openjdk17 bash gcompat curl jq python3
+RUN apk add openjdk17 bash gcompat curl jq python3 git
 
 RUN curl -sSL https://sdk.cloud.google.com | bash
 
