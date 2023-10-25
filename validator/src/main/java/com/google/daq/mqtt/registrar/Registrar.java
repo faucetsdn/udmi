@@ -93,6 +93,7 @@ public class Registrar {
   private static final String MODEL_SUB_TYPE = "model";
   private static final boolean DEFAULT_BLOCK_UNKNOWN = true;
   private static final int EACH_ITEM_TIMEOUT_SEC = 10;
+  private static final int EXIT_CODE_ERROR = 1;
   private final Map<String, JsonSchema> schemas = new HashMap<>();
   private final String generation = getGenerationString();
   private CloudIotManager cloudIotManager;
@@ -131,6 +132,7 @@ public class Registrar {
       new Registrar().processArgs(argList).execute();
     } catch (Exception e) {
       System.err.println("Exception in main: " + friendlyStackTrace(e));
+      System.exit(EXIT_CODE_ERROR);
     }
   }
 
