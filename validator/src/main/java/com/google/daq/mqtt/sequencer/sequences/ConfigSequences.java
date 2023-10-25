@@ -1,6 +1,7 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.daq.mqtt.util.TimePeriodConstants.FIVE_MINUTES_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.ONE_MINUTE_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
@@ -83,11 +84,15 @@ public class ConfigSequences extends SequenceBase {
     untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
   }
 
-  @Test(timeout = TWO_MINUTES_MS)
+  @Test(timeout = FIVE_MINUTES_MS)
   @Feature(stage = BETA, bucket = SYSTEM)
   @Summary("Check that the device MQTT-acknowledges a sent config.")
   public void device_config_acked() {
-    checkThat("config acked", () -> configAcked);
+    untilTrue("config acked", () -> {
+      queryState();
+      safeSleep(ONE_MINUTE_MS);
+      return configAcked;
+    });
   }
 
   @Test(timeout = TWO_MINUTES_MS)
