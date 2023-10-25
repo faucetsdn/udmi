@@ -39,6 +39,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttClient;
@@ -46,7 +47,6 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
-import org.jetbrains.annotations.NotNull;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,7 +56,7 @@ import udmi.schema.IotAccess.IotProvider;
 /**
  * Handle publishing sensor data to a Cloud IoT MQTT endpoint.
  */
-class MqttPublisher implements MessagePublisher {
+public class MqttPublisher implements MessagePublisher {
 
   public static final String EMPTY_JSON = "{}";
   static final String DEFAULT_CLEARBLADE_HOSTNAME = "us-central1-mqtt.clearblade.com";
@@ -90,7 +90,7 @@ class MqttPublisher implements MessagePublisher {
   private final MqttClient mqttClient;
   private final Set<String> attachedClients = new ConcurrentSkipListSet<>();
   private final BiConsumer<String, String> onMessage;
-  private final BiConsumer<MqttPublisher, Throwable> onError;
+  private final Consumer<Throwable> onError;
   private final String deviceId;
   private final byte[] keyBytes;
   private final String algorithm;
@@ -105,7 +105,7 @@ class MqttPublisher implements MessagePublisher {
   private boolean shutdown;
 
   MqttPublisher(ExecutionConfiguration executionConfiguration, byte[] keyBytes, String algorithm,
-      BiConsumer<String, String> onMessage, BiConsumer<MqttPublisher, Throwable> onError) {
+      BiConsumer<String, String> onMessage, Consumer<Throwable> onError) {
     this.onMessage = onMessage;
     this.onError = onError;
     this.projectId = executionConfiguration.project_id;
@@ -148,10 +148,15 @@ class MqttPublisher implements MessagePublisher {
     );
   }
 
-  @NotNull
-  static MqttPublisher from(ExecutionConfiguration iotConfig,
-      BiConsumer<String, String> messageHandler,
-      BiConsumer<MqttPublisher, Throwable> errorHandler) {
+  /**
+   * Construct a new instance with the given configuration and handlers.
+   *
+   * @param iotConfig      publisher configuration
+   * @param messageHandler handler for received messages
+   * @param errorHandler   handler for errors/exceptions
+   */
+  public static MqttPublisher from(ExecutionConfiguration iotConfig,
+      BiConsumer<String, String> messageHandler, Consumer<Throwable> errorHandler) {
     final byte[] keyBytes;
     checkNotNull(iotConfig.key_file, "missing key file in config");
     try {
@@ -354,7 +359,7 @@ class MqttPublisher implements MessagePublisher {
     }
   }
 
-  public void connectAndSetupMqtt() {
+  private void connectAndSetupMqtt() {
     try {
       LOG.info(deviceId + " creating new jwt");
       mqttConnectOptions.setPassword(createJwt());
@@ -501,7 +506,7 @@ class MqttPublisher implements MessagePublisher {
     public void connectionLost(Throwable cause) {
       LOG.warn("MQTT connection lost " + deviceId, cause);
       connectWait.release();
-      onError.accept(MqttPublisher.this, cause);
+      onError.accept(cause);
     }
 
     @Override
@@ -513,7 +518,7 @@ class MqttPublisher implements MessagePublisher {
       try {
         onMessage.accept(topic, message.toString());
       } catch (Exception e) {
-        onError.accept(MqttPublisher.this, e);
+        onError.accept(e);
       }
     }
   }

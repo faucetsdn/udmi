@@ -37,7 +37,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-import java.util.function.BiConsumer;
 import org.jetbrains.annotations.NotNull;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
@@ -104,8 +103,12 @@ public class IotReflectorClient implements MessagePublisher {
     subscriptionId = format("%s/%s/%s/%s%s/%s",
         projectId, iotProvider, cloudRegion, prefix, UDMI_REFLECT, registryId);
 
-    publisher = getPublisher(iotConfig);
-    System.err.println("Using client subscription " + subscriptionId);
+    try {
+      publisher = MessagePublisher.from(iotConfig, this::messageHandler, this::errorHandler);
+    } catch (Exception e1) {
+      throw new RuntimeException("While creating client " + subscriptionId, e1);
+    }
+    System.err.println("Subscribed to " + subscriptionId);
 
     try {
       System.err.println("Starting initial UDMI setup process");
@@ -130,17 +133,6 @@ public class IotReflectorClient implements MessagePublisher {
     } catch (Exception e) {
       publisher.close();
       throw new RuntimeException("Waiting for initial config", e);
-    }
-  }
-
-  @NotNull
-  private MqttPublisher getPublisher(ExecutionConfiguration iotConfig) {
-    BiConsumer<String, String> messageHandler = this::messageHandler;
-    BiConsumer<MqttPublisher, Throwable> errorHandler = this::errorHandler;
-    try {
-      return MqttPublisher.from(iotConfig, messageHandler, errorHandler);
-    } catch (Exception e) {
-      throw new RuntimeException("While creating client " + subscriptionId, e);
     }
   }
 
@@ -344,10 +336,10 @@ public class IotReflectorClient implements MessagePublisher {
     return parts;
   }
 
-  private void errorHandler(MqttPublisher mqttPublisher, Throwable throwable) {
+  private void errorHandler(Throwable throwable) {
     System.err.printf("Received mqtt client error: %s at %s%n",
         throwable.getMessage(), getTimestamp());
-    mqttPublisher.shutdown();
+    publisher.close();
   }
 
   @Override

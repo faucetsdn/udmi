@@ -1,6 +1,10 @@
 package com.google.daq.mqtt.util;
 
+import com.google.bos.iot.core.proxy.MqttPublisher;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import udmi.schema.ExecutionConfiguration;
 import udmi.schema.SetupUdmiConfig;
 
 /**
@@ -29,6 +33,11 @@ public interface MessagePublisher {
 
   default String getBridgeHost() {
     throw new RuntimeException("Not implemented");
+  }
+
+  static MessagePublisher from(ExecutionConfiguration iotConfig,
+      BiConsumer<String, String> messageHandler, Consumer<Throwable> errorHandler) {
+    return MqttPublisher.from(iotConfig, messageHandler, errorHandler);
   }
 
   /**
