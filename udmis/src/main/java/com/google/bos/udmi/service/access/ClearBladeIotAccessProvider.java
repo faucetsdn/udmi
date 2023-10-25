@@ -4,7 +4,6 @@ import static com.clearblade.cloud.iot.v1.devicetypes.GatewayType.NON_GATEWAY;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
-import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
@@ -103,6 +102,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   public ClearBladeIotAccessProvider(IotAccess iotAccess) {
     super(iotAccess);
     projectId = getProjectId(iotAccess);
+    info("Fetching registry regions...");
     ifTrueThen(isEnabled(), this::fetchRegistryRegions);
     ifNotTrueThen(isEnabled(),
         () -> warn("Clearblade access provided disabled because project id is null or empty"));
@@ -340,16 +340,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
         .setGatewayType(NON_GATEWAY)
         .setAssociationsGatewayId(requireNonNull(gatewayId, "gateway undefined"))
         .build();
-  }
-
-  @Nullable
-  private String getProjectId(IotAccess iotAccess) {
-    try {
-      return variableSubstitution(iotAccess.project_id, "project id not specified");
-    } catch (IllegalArgumentException e) {
-      warn("Missing variable in substitution, disabling provider: " + friendlyStackTrace(e));
-      return null;
-    }
   }
 
   private String getRegistryLocation(String registry) {

@@ -103,7 +103,7 @@ public class GcpIotAccessProvider extends IotAccessBase {
       return;
     }
 
-    projectId = variableSubstitution(iotAccess.project_id, "gcp project id not specified");
+    projectId = getProjectId(iotAccess);
     cloudIotService = createCloudIotService();
     registries = cloudIotService.projects().locations().registries();
     ifTrueThen(isEnabled(), this::fetchRegistryRegions);

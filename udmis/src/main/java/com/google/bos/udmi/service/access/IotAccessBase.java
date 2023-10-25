@@ -29,6 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import udmi.schema.CloudModel;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
@@ -201,6 +202,16 @@ public abstract class IotAccessBase extends ContainerBase {
       throw e;
     } catch (Exception e) {
       error("Exception munging config: " + friendlyStackTrace(e));
+      return null;
+    }
+  }
+
+  @Nullable
+  protected String getProjectId(IotAccess iotAccess) {
+    try {
+      return variableSubstitution(iotAccess.project_id, "project id not specified");
+    } catch (IllegalArgumentException e) {
+      warn("Missing variable in substitution, disabling provider: " + friendlyStackTrace(e));
       return null;
     }
   }

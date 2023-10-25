@@ -37,6 +37,7 @@
     },
     "UDMI-REFLECT": {
       "provider": "pubsub",
+      "project_id": "${GCP_PROJECT}",
       "options": "topic=${UDMI_PREFIX}udmi_reply"
     }
   },

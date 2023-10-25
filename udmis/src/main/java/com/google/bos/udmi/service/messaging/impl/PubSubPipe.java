@@ -87,11 +87,7 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
     return new PubSubPipe(configuration);
   }
 
-  private void checkPublisher() {
-    publish(makeHelloBundle());
-  }
-
-  private String getEmulatorHost() {
+  public static String getEmulatorHost() {
     if (EMULATOR_HOST == null) {
       return null;
     }
@@ -106,10 +102,13 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
   }
 
   @NotNull
-  private TransportChannelProvider getTransportChannelProvider(String useHost) {
-    info(format("Using pubsub emulator host %s", useHost));
+  public static TransportChannelProvider getTransportChannelProvider(String useHost) {
     ManagedChannel channel = ManagedChannelBuilder.forTarget(useHost).usePlaintext().build();
     return FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel));
+  }
+
+  private void checkPublisher() {
+    publish(makeHelloBundle());
   }
 
   @Override
