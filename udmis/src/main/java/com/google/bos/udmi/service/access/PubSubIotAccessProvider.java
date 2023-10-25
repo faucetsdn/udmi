@@ -6,6 +6,9 @@ import udmi.schema.CloudModel;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.IotAccess;
 
+/**
+ * An access provider that uses PubSub topics/subscriptions for communication.
+ */
 public class PubSubIotAccessProvider extends IotAccessBase {
 
   PubSubIotAccessProvider(IotAccess iotAccess) {
@@ -14,7 +17,7 @@ public class PubSubIotAccessProvider extends IotAccessBase {
 
   @Override
   protected Entry<Long, String> fetchConfig(String registryId, String deviceId) {
-    throw new RuntimeException("Not implemented for PubSub");
+    throw new RuntimeException("fetchConfig not implemented for PubSub");
   }
 
   @Override
@@ -35,31 +38,31 @@ public class PubSubIotAccessProvider extends IotAccessBase {
 
   @Override
   protected String updateConfig(String registryId, String deviceId, String config, Long version) {
-    throw new RuntimeException("Not implemented for PubSub");
+    throw new RuntimeException("updateConfig not implemented for PubSub");
   }
 
   @Override
   public CloudModel fetchDevice(String deviceRegistryId, String deviceId) {
-    throw new RuntimeException("Not implemented for PubSub");
+    throw new RuntimeException("fetchDevice not implemented for PubSub");
   }
 
   @Override
   public String fetchState(String deviceRegistryId, String deviceId) {
-    throw new RuntimeException("Not implemented for PubSub");
+    throw new RuntimeException("fetchState not implemented for PubSub");
   }
 
   @Override
   public CloudModel listDevices(String deviceRegistryId) {
-    throw new RuntimeException("Not implemented for PubSub");
+    throw new RuntimeException("listDevices not implemented for PubSub");
   }
 
   @Override
   public CloudModel modelDevice(String deviceRegistryId, String deviceId, CloudModel cloudModel) {
-    throw new RuntimeException("Not implemented for PubSub");
+    throw new RuntimeException("modelDevice not implemented for PubSub");
   }
 
   @Override
   String fetchRegistryMetadata(String registryId, String metadataKey) {
-    throw new RuntimeException("Not implemented for PubSub");
+    throw new RuntimeException("fetchRegistryMetadata not implemented for PubSub");
   }
 }

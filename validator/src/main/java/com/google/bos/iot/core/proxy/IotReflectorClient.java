@@ -135,6 +135,12 @@ public class IotReflectorClient implements MessagePublisher {
     }
   }
 
+  /**
+   * Make an execution configuration that's used for reflector operations.
+   *
+   * @param iotConfig  basic non-reflector configuration
+   * @param registryId the registry that will be reflected
+   */
   public static ExecutionConfiguration makeReflectConfiguration(ExecutionConfiguration iotConfig,
       String registryId) {
     ExecutionConfiguration reflectConfiguration = new ExecutionConfiguration();

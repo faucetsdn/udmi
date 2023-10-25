@@ -1,14 +1,9 @@
 package com.google.udmi.util;
 
 import static com.google.api.client.util.Preconditions.checkNotNull;
-import static com.google.bos.iot.core.proxy.IotReflectorClient.UDMI_FOLDER;
 import static com.google.bos.iot.core.proxy.IotReflectorClient.UDMI_REFLECT;
-import static com.google.bos.iot.core.proxy.MqttPublisher.EMPTY_JSON;
 import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
-import static com.google.udmi.util.Common.UPDATE_QUERY_TOPIC;
-import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
-import static com.google.udmi.util.JsonUtil.stringify;
 import static java.time.Instant.ofEpochSecond;
 import static java.util.Objects.requireNonNull;
 
@@ -20,7 +15,6 @@ import com.google.api.client.util.Base64;
 import com.google.api.core.ApiFuture;
 import com.google.api.gax.rpc.NotFoundException;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
-import com.google.bos.iot.core.proxy.MqttPublisher;
 import com.google.cloud.pubsub.v1.AckReplyConsumer;
 import com.google.cloud.pubsub.v1.MessageReceiver;
 import com.google.cloud.pubsub.v1.Publisher;
@@ -35,7 +29,6 @@ import com.google.pubsub.v1.ProjectSubscriptionName;
 import com.google.pubsub.v1.ProjectTopicName;
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.pubsub.v1.SeekRequest;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
@@ -44,9 +37,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import org.jetbrains.annotations.Nullable;
-import udmi.schema.Envelope;
-import udmi.schema.Envelope.SubFolder;
-import udmi.schema.Envelope.SubType;
 import udmi.schema.ExecutionConfiguration;
 import udmi.schema.SetupUdmiConfig;
 
@@ -94,13 +84,14 @@ public class PubSubReflector implements MessagePublisher {
   /**
    * Create a new PubSub client.
    *
-   * @param projectId    target project id
+   * @param projectId      target project id
    * @param registryId     target registry id
    * @param updateTopic    output PubSub topic for updates (else null)
    * @param subscriptionId target subscription name
-   * @param reset        if the connection should be reset before use
+   * @param reset          if the connection should be reset before use
    */
-  public PubSubReflector(String projectId, String registryId, String updateTopic, String subscriptionId,
+  public PubSubReflector(String projectId, String registryId, String updateTopic,
+      String subscriptionId,
       boolean reset) {
     try {
       this.projectId = checkNotNull(projectId, "project id not defined");
@@ -125,6 +116,13 @@ public class PubSubReflector implements MessagePublisher {
     }
   }
 
+  /**
+   * Create a new instance factory method.
+   *
+   * @param iotConfig      basic execution configuration
+   * @param messageHandler message handler callback
+   * @param errorHandler   error/exception handler
+   */
   public static MessagePublisher from(ExecutionConfiguration iotConfig,
       BiConsumer<String, String> messageHandler, Consumer<Throwable> errorHandler) {
     String projectId = requireNonNull(iotConfig.project_id, "missing project id");
@@ -139,7 +137,8 @@ public class PubSubReflector implements MessagePublisher {
     return reflector;
   }
 
-  private void activate(BiConsumer<String, String> messageHandler, Consumer<Throwable> errorHandler) {
+  private void activate(BiConsumer<String, String> messageHandler,
+      Consumer<Throwable> errorHandler) {
     this.messageHandler = messageHandler;
     this.errorHandler = errorHandler;
     subscriber.startAsync().awaitRunning();
