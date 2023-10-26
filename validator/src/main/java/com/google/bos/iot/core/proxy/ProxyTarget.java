@@ -22,6 +22,9 @@ import org.slf4j.LoggerFactory;
 import udmi.schema.ExecutionConfiguration;
 import udmi.schema.Metadata;
 
+/**
+ * Target proxy entry.
+ */
 public class ProxyTarget {
 
   public static final String STATE_TOPIC = "state";
