@@ -1,0 +1,134 @@
+#!/bin/bash -e
+
+ROOT=$(dirname $0)/..
+
+function usage {
+    echo Error: $*
+    echo Usage: $0 target { prep, build } [--no-check] [repo]
+    echo Project: $GCP_PROJECT
+    echo Try starting with: $0 build
+    exit 1
+}
+
+function fail {
+    echo Error: $*
+    exit 1
+}
+
+target=$1
+cmd=$2
+shift 2 || usage missing arguments
+
+cd ${ROOT}/${target}
+DROOT=$PWD
+
+git_branch=$(git rev-parse --abbrev-ref HEAD)
+git_remote=$(git config --get branch.$git_branch.remote) || fail missing git remote
+git_url=$(git config --get remote.$git_remote.url)
+git_prefix=${git_url%.*}
+git_prefix=${git_prefix#*.com/}
+git_repo=${git_prefix#*.com:}
+
+GCP_PROJECT=$(gcloud config get project)
+REPOSITORY=ghcr.io/${git_repo}
+
+if [[ $1 == "--no-check" ]]; then
+    NOCHECK=1
+    shift
+fi
+
+if [[ -n $1 ]]; then
+    REPOSITORY=$1
+    shift
+fi
+
+if [[ $# != 0 ]]; then
+    echo unknown arguments: $*
+    usage
+fi
+
+if [[ -z $NOCHECK ]]; then
+    CONTEXT=`kubectl config current-context`
+    k8s_parts=$(tr '_' ' ' <<<$CONTEXT)
+    echo k8s context is $k8s_parts
+
+    CONTEXT_ARGS=(${CONTEXT//_/ })
+    KPROJECT=${CONTEXT_ARGS[1]}
+    if [[ $KPROJECT != $GCP_PROJECT ]]; then
+        echo Kubernetes context $CONTEXT does not match gcloud project $GCP_PROJECT
+        false
+    fi
+    UDMI_NAMESPACE=${CONTEXT_ARGS[4]}
+fi
+
+echo Using GCP project $GCP_PROJECT
+echo Using udmi namespace $UDMI_NAMESPACE
+
+LIBFILE=build/libs/${target}-1.0-SNAPSHOT-all.jar
+
+current_user=$USER@$HOSTNAME
+
+revparse=`git rev-parse HEAD`
+
+udmi_ver=g${revparse:0:9}
+udmi_tag=$target-$udmi_ver
+udmi_ref=$REPOSITORY:$udmi_tag
+
+version=`git describe`
+
+RUNARGS="--rm -ti -v $PWD/var:/udmi -v $HOME/.config:/root/.config --tmpfs /tmp"
+
+if [[ $cmd == prep || $cmd == build ]]; then
+    rm -rf var tmp && mkdir -p var tmp
+
+    cp -f etc/*.json var/ || true
+
+    bin/build
+
+    build_time=`date --utc -Imin -r $LIBFILE`
+    cat <<EOF > var/deployed_version.json
+{
+  "udmi_version": "$version",
+  "udmi_ref": "$udmi_ref",
+  "built_at": "$build_time",
+  "built_by": "$current_user"
+}
+EOF
+    more var/deployed_version.json | cat
+fi
+
+if [[ $cmd == build ]]; then
+    echo Building Dockerfile.$target
+    docker build -f Dockerfile.$target -t $target $DROOT
+fi
+
+TEMPLATES=$(cd etc; ls k8s_*.yaml)
+if [[ $cmd == build && $REPOSITORY != local ]]; then
+    docker tag $target $udmi_ref
+    docker push $udmi_ref
+    hash=$(docker images --digests ${udmi_ref%:*} | fgrep $udmi_tag | awk '{print $3}')
+    ihash=$udmi_ref@$hash
+    for file in $TEMPLATES; do
+        cp etc/$file tmp/$file
+        sed -i tmp/$file \
+            -e "s^@IMAGE-$target@^$ihash^" \
+            -e "s^@UDMI_NAMESPACE@^$UDMI_NAMESPACE^" \
+            -e "s^@GCP_PROJECT@^$GCP_PROJECT^"
+        if diff etc/$file tmp/$file; then
+            rm tmp/$file
+        else
+            echo Customized output in tmp/$file
+        fi
+    done
+fi
+
+if [[ $cmd == prep ]]; then
+    echo Done with container prep.
+elif [[ $cmd == build ]]; then
+    echo Done with container build.
+    for file in tmp/k8s_*.yaml; do
+        echo kubectl apply -f $target/$file
+    done
+else
+    fail Unknown container command $cmd
+fi

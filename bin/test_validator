@@ -38,11 +38,14 @@ validator/bin/build
 pubber/bin/build
 
 # Have to reset pubber configs before running validator to avoid reflector registry conflict
+echo bin/reset_config $site_path $project_id $device_id
 bin/reset_config $site_path $project_id $device_id
+echo bin/reset_config $site_path $project_id $proxy_id
 bin/reset_config $site_path $project_id $proxy_id
 
 echo Starting validator, output in $VALIDATOR_OUT
 rm -rf $TRACE_DIR
+echo bin/validator $site_path $project_id -w $TRACE_DIR
 bin/validator $site_path $project_id -w $TRACE_DIR > $VALIDATOR_OUT 2>&1 &
 vpid=$!
 echo Started validator pid $vpid
@@ -98,11 +101,8 @@ function pubber_bg {
     fi
 }
 
-echo Waiting 60s so that validator is ready and UDMIS registry backoff restrictions clear...
-sleep 60
-
 pubber_bg AHU-1 extraField=prlagle
-pubber_bg AHU-22 emptyMissing
+pubber_bg AHU-22 emptyMissing skewClock
 
 echo Waiting for system to run for a bit...
 cat $VALIDATOR_OUT && timeout 60s tail -f $VALIDATOR_OUT || true
@@ -126,12 +126,14 @@ if [[ -z $outfiles ]]; then
     false
 fi
 
-more $outfiles | sed -E >> $TMP_VALIDATOR \
-                     -e "s/[0-9-]{10}T[0-9:]{8}Z/1999-10-20T01:02:03Z/" \
-                     -e 's/"message" .*/"message" REDACTED/' \
-                     -e 's/"detail" .*/"detail" REDACTED/' \
-                     -e "s/Validator.java:[0-9]+/REDACTED/" \
-                     -e 's/\\t[a-zA-Z .()$0-9]+\.java:[0-9]+\)\\n/\\tREDACTED\\n/g'
+echo Pre-REDACTED output available in $TMP_VALIDATOR.raw
+more $outfiles > $TMP_VALIDATOR.raw
+sed -E < $TMP_VALIDATOR.raw >> $TMP_VALIDATOR \
+    -e 's/[0-9-]{10}T[0-9:]{8}Z/REDACTED_TIMESTAMP/' \
+    -e 's/threshold: [0-9]+/REDACTED_THRESHOLD/' \
+    -e 's/@[^)]+\)/REDACTED_ERROR/' \
+    -e 's/Validator.java:[0-9]+/REDACTED_FILE/' \
+    -e 's/\\t[a-zA-Z .()$0-9]+\.java:[0-9]+\)\\n/\\tREDACTED_STACK\\n/g'
 
 echo diff -u $TMP_VALIDATOR etc/validator.out
 diff -u $TMP_VALIDATOR etc/validator.out && echo No mismatch from golden file.

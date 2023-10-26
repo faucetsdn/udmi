@@ -23,7 +23,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.stream.Collectors;
 import org.junit.Test;
 import udmi.schema.Level;
@@ -39,6 +38,7 @@ public class PointsetSequences extends PointsetBase {
 
   public static final String EXTRANEOUS_POINT = "extraneous_point";
   private static final int DEFAULT_SAMPLE_RATE_SEC = 10;
+  public static final String POINTS_MAP_PATH = "pointset.points";
 
   private boolean isErrorState(PointPointsetState pointState) {
     return ofNullable(catchToNull(() -> pointState.status.level)).orElse(Level.INFO.value())
@@ -69,6 +69,8 @@ public class PointsetSequences extends PointsetBase {
   public void pointset_request_extraneous() {
     untilPointsetSanity();
 
+    mapSemanticKey(POINTS_MAP_PATH, EXTRANEOUS_POINT, "extraneous_point", "point configuration");
+
     deviceConfig.pointset.points.put(EXTRANEOUS_POINT, new PointPointsetConfig());
 
     try {
@@ -98,6 +100,7 @@ public class PointsetSequences extends PointsetBase {
     String name = candidatePoints.get((int) Math.floor(Math.random() * candidatePoints.size()));
 
     debug("Removing randomly selected test point " + name);
+    mapSemanticKey(POINTS_MAP_PATH, name, "random_point", "point configuration");
     PointPointsetConfig removed = requireNonNull(deviceConfig.pointset.points.remove(name));
 
     try {
@@ -114,7 +117,6 @@ public class PointsetSequences extends PointsetBase {
     untilPointsetSanity();
   }
 
-
   /**
    * Simple check that device publishes pointset events.
    */
@@ -128,7 +130,6 @@ public class PointsetSequences extends PointsetBase {
         () -> (countReceivedEvents(PointsetEvent.class) > 1
     ));
   }
-
 
   /**
    * Tests sample_rate_min by measuring the initial interval between the last two messages received,
@@ -198,7 +199,7 @@ public class PointsetSequences extends PointsetBase {
    */
   @Test(timeout = THREE_MINUTES_MS)
   @Summary("test sample rate and sample limit sec")
-  @Feature(stage = BETA, bucket = POINTSET)
+  @Feature(stage = BETA, bucket = POINTSET, nostate = true)
   public void pointset_publish_interval() {
     ifNullSkipTest(deviceConfig.pointset, "no pointset found in config");
 

@@ -22,6 +22,7 @@ from .config_udmi import UdmiConfig
 from .configuration_endpoint import EndpointConfiguration
 from .configuration_execution import ExecutionConfiguration
 from .configuration_pod import PodConfiguration
+from .configuration_pod_base import BasePodConfiguration
 from .configuration_pod_bridge import BridgePodConfiguration
 from .configuration_pubber import PubberConfiguration
 from .entry import Entry

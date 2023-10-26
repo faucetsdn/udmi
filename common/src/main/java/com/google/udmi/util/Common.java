@@ -22,10 +22,14 @@ public abstract class Common {
   public static final String STATE_QUERY_TOPIC = "update/query";
   public static final String EXCEPTION_KEY = "exception";
   public static final String ERROR_KEY = "error";
+  public static final String DETAIL_KEY = "detail";
   public static final String TRANSACTION_KEY = "transactionId";
+  public static final String PUBLISH_TIME_KEY = "publishTime";
   public static final String MESSAGE_KEY = "message";
   public static final String TIMESTAMP_KEY = "timestamp";
   public static final String VERSION_KEY = "version";
+  public static final String UPGRADED_FROM = "upgraded_from";
+  public static final String DOWNGRADED_FROM = "downgraded_from";
   public static final String CLOUD_VERSION_KEY = "cloud_version";
   public static final String UDMI_VERSION_KEY = "udmi_version";
   public static final String SUBTYPE_PROPERTY_KEY = "subType";
@@ -34,6 +38,8 @@ public abstract class Common {
   public static final String REGISTRY_ID_PROPERTY_KEY = "deviceRegistryId";
   public static final String NO_SITE = "--";
   public static final String GCP_REFLECT_KEY_PKCS8 = "reflector/rsa_private.pkcs8";
+  public static final String PREFIX_SEPARATOR = "~";
+  public static final String CONDENSER_STRING = "^^";
   private static final String UDMI_VERSION_ENV = "UDMI_VERSION";
   public static final char DETAIL_SEPARATOR_CHAR = ';';
   public static final String DETAIL_SEPARATOR = DETAIL_SEPARATOR_CHAR + " ";

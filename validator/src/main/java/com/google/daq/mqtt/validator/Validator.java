@@ -1,6 +1,7 @@
 package com.google.daq.mqtt.validator;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.daq.mqtt.registrar.Registrar.BASE_DIR;
 import static com.google.daq.mqtt.sequencer.SequenceBase.EMPTY_MESSAGE;
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_TOOLS;
@@ -12,11 +13,12 @@ import static com.google.udmi.util.Common.EXCEPTION_KEY;
 import static com.google.udmi.util.Common.GCP_REFLECT_KEY_PKCS8;
 import static com.google.udmi.util.Common.MESSAGE_KEY;
 import static com.google.udmi.util.Common.NO_SITE;
+import static com.google.udmi.util.Common.PREFIX_SEPARATOR;
+import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
 import static com.google.udmi.util.Common.STATE_QUERY_TOPIC;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
-import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.Common.removeNextArg;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -30,6 +32,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.github.fge.jsonschema.core.load.configuration.LoadingConfiguration;
 import com.github.fge.jsonschema.core.load.download.URIDownloader;
+import com.github.fge.jsonschema.core.report.LogLevel;
+import com.github.fge.jsonschema.core.report.ProcessingMessage;
 import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
@@ -62,6 +66,7 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -82,6 +87,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 import org.apache.commons.io.FileUtils;
 import udmi.schema.Category;
 import udmi.schema.DeviceValidationEvent;
@@ -109,6 +115,8 @@ public class Validator {
   public static final String CONFIG_PREFIX = "config_";
   public static final String STATE_PREFIX = "state_";
   public static final String PROJECT_PROVIDER_PREFIX = "//";
+  public static final String TIMESTAMP_ZULU_SUFFIX = "Z";
+  public static final String TIMESTAMP_UTC_SUFFIX = "+00:00";
   private static final String ERROR_FORMAT_INDENT = "  ";
   private static final String SCHEMA_VALIDATION_FORMAT = "Validating %d schemas";
   private static final String TARGET_VALIDATION_FORMAT = "Validating %d files against %s";
@@ -142,6 +150,7 @@ public class Validator {
   private static final String VALIDATION_STATE_TOPIC = "validation/state";
   private static final String POINTSET_SUBFOLDER = "pointset";
   private static final Date START_TIME = new Date();
+  private static final int TIMESTAMP_JITTER_SEC = 30;
   private final Map<String, ReportingDevice> reportingDevices = new TreeMap<>();
   private final Set<String> extraDevices = new TreeSet<>();
   private final Set<String> processedDevices = new TreeSet<>();
@@ -214,6 +223,30 @@ public class Validator {
     if (message.get(EXCEPTION_KEY) instanceof Exception exception) {
       message.put(EXCEPTION_KEY, friendlyStackTrace(exception));
     }
+  }
+
+  /**
+   * From an external processing report.
+   *
+   * @param report Report to convert
+   * @return Converted exception.
+   */
+  public static ValidationException fromProcessingReport(ProcessingReport report) {
+    checkArgument(!report.isSuccess(), "Report must not be successful");
+    ImmutableList<ValidationException> causingExceptions =
+        StreamSupport.stream(report.spliterator(), false)
+            .filter(
+                processingMessage -> processingMessage.getLogLevel().compareTo(LogLevel.ERROR) >= 0)
+            .map(Validator::convertMessage).collect(toImmutableList());
+    return new ValidationException(
+        String.format("%d schema violations found", causingExceptions.size()), causingExceptions);
+  }
+
+  private static ValidationException convertMessage(ProcessingMessage processingMessage) {
+    String pointer = processingMessage.asJson().get("instance").get("pointer").asText();
+    String prefix =
+        com.google.api.client.util.Strings.isNullOrEmpty(pointer) ? "" : (pointer + ": ");
+    return new ValidationException(prefix + processingMessage.getMessage());
   }
 
   private List<String> parseArgs(List<String> argList) {
@@ -310,7 +343,7 @@ public class Validator {
   }
 
   private void validateMessageTrace(String messageDir) {
-    client = new MessageReadingClient(config.registry_id, messageDir);
+    client = new MessageReadingClient(getRegistryId(), messageDir);
     dataSinks.add(client);
     prepForMock();
   }
@@ -421,7 +454,13 @@ public class Validator {
   }
 
   private String getRegistryId() {
-    return config.registry_id;
+    if (config == null) {
+      return null;
+    }
+    String prefix = ofNullable(config.udmi_namespace).map(name -> name + PREFIX_SEPARATOR)
+        .orElse("");
+    String suffix = ofNullable(config.registry_suffix).orElse("");
+    return prefix + config.registry_id + suffix;
   }
 
   private void validateReflector() {
@@ -508,13 +547,6 @@ public class Validator {
     }
   }
 
-  private void sanitizeMessage(String schemaName, Map<String, Object> message) {
-    if (schemaName.startsWith(CONFIG_PREFIX) || schemaName.startsWith(STATE_PREFIX)) {
-      message.remove(VERSION_KEY);
-      message.remove(TIMESTAMP_KEY);
-    }
-  }
-
   private ReportingDevice validateMessageCore(
       Map<String, Object> message,
       Map<String, String> attributes) {
@@ -575,13 +607,38 @@ public class Validator {
     }
 
     upgradeMessage(schemaName, message);
-    sanitizeMessage(schemaName, message);
 
-    String timeString = (String) message.get(TIMESTAMP_KEY);
-    String subTypeRaw = ofNullable(attributes.get(SUBTYPE_PROPERTY_KEY))
-        .orElse(UNKNOWN_TYPE_DEFAULT);
-    if (timeString != null && LAST_SEEN_SUBTYPES.contains(SubType.fromValue(subTypeRaw))) {
-      device.updateLastSeen(Date.from(Instant.parse(timeString)));
+    String timestampRaw = (String) message.get("timestamp");
+    Instant timestamp = ifNotNullGet(timestampRaw, Instant::parse);
+    String publishRaw = attributes.get(PUBLISH_TIME_KEY);
+    Instant publishTime = ifNotNullGet(publishRaw, Instant::parse);
+    try {
+      // TODO: Validate message contests to make sure state sub-blocks don't also have timestamp.
+
+      String subTypeRaw = ofNullable(attributes.get(SUBTYPE_PROPERTY_KEY))
+          .orElse(UNKNOWN_TYPE_DEFAULT);
+      boolean lastSeenValid = LAST_SEEN_SUBTYPES.contains(SubType.fromValue(subTypeRaw));
+      if (lastSeenValid) {
+        if (publishTime != null) {
+          device.updateLastSeen(Date.from(publishTime));
+        }
+        if (timestamp == null) {
+          throw new RuntimeException("Missing message timestamp");
+        }
+        if (publishTime != null) {
+          if (!timestampRaw.endsWith(TIMESTAMP_ZULU_SUFFIX)
+              && !timestampRaw.endsWith(TIMESTAMP_UTC_SUFFIX)) {
+            throw new RuntimeException("Invalid timestamp timezone " + timestampRaw);
+          }
+          long between = Duration.between(publishTime, timestamp).getSeconds();
+          if (between > TIMESTAMP_JITTER_SEC || between < -TIMESTAMP_JITTER_SEC) {
+            throw new RuntimeException("Timestamp jitter exceeds threshold: " + between);
+          }
+        }
+      }
+    } catch (Exception e) {
+      System.err.println("Timestamp validation error: " + friendlyStackTrace(e));
+      device.addError(e, attributes, Category.VALIDATION_DEVICE_CONTENT);
     }
 
     try {
@@ -597,7 +654,7 @@ public class Validator {
     try {
       validateMessage(schemaMap.get(ENVELOPE_SCHEMA_ID), attributes);
     } catch (Exception e) {
-      System.err.println("Error validating attributes: " + e);
+      System.err.println("Error validating attributes: " + friendlyStackTrace(e));
       device.addError(e, attributes, Category.VALIDATION_DEVICE_RECEIVE);
     }
 
@@ -605,7 +662,8 @@ public class Validator {
       try {
         validateMessage(schemaMap.get(schemaName), message);
       } catch (Exception e) {
-        System.err.printf("Error validating schema %s: %s%n", schemaName, e.getMessage());
+        System.err.printf("Error validating schema %s: %s%n", schemaName,
+            friendlyStackTrace(e));
         device.addError(e, attributes, Category.VALIDATION_DEVICE_SCHEMA);
       }
     }
@@ -616,10 +674,10 @@ public class Validator {
       try {
         ifNotNullThen(CONTENT_VALIDATORS.get(schemaName), targetClass -> {
           Object messageObject = OBJECT_MAPPER.convertValue(message, targetClass);
-          device.validateMessageType(messageObject, JsonUtil.getDate(timeString), attributes);
+          device.validateMessageType(messageObject, JsonUtil.getDate(publishRaw), attributes);
         });
       } catch (Exception e) {
-        System.err.println("Error validating contents: " + e.getMessage());
+        System.err.println("Error validating contents: " + friendlyStackTrace(e));
         device.addError(e, attributes, Category.VALIDATION_DEVICE_CONTENT);
       }
     } else {
@@ -693,7 +751,7 @@ public class Validator {
   private boolean shouldConsiderMessage(Map<String, String> attributes) {
     String registryId = attributes.get(DEVICE_REGISTRY_ID_KEY);
 
-    if (config != null && !config.registry_id.equals(registryId)) {
+    if (!registryId.equals(getRegistryId())) {
       if (ignoredRegistries.add(registryId)) {
         System.err.println("Ignoring data for not-configured registry " + registryId);
       }
@@ -941,7 +999,6 @@ public class Validator {
     try (OutputStream outputStream = Files.newOutputStream(outputFile.toPath())) {
       copyFileHeader(inputFile, outputStream);
       Map<String, Object> message = JsonUtil.loadMap(inputFile);
-      sanitizeMessage(schemaName, message);
       JsonNode jsonNode = OBJECT_MAPPER.valueToTree(message);
       MessageUpgrader messageUpgrader = new MessageUpgrader(schemaName, jsonNode);
       messageUpgrader.upgrade(forceUpgrade);
@@ -1006,7 +1063,7 @@ public class Validator {
   private void validateJsonNode(JsonSchema schema, JsonNode jsonNode) throws ProcessingException {
     ProcessingReport report = schema.validate(jsonNode, true);
     if (!report.isSuccess()) {
-      throw ValidationException.fromProcessingReport(report);
+      throw fromProcessingReport(report);
     }
   }
 

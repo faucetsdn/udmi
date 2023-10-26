@@ -17,6 +17,10 @@
       "description": "Version of the UDMI schema",
       "type": "string"
     },
+    "upgraded_from": {
+      "description": "Original version of schema pre-upgrade",
+      "type": "string"
+    },
     "partial_update": {
       "description": "Indicates if this is a partial update (only some points may be included)",
       "type": "boolean"

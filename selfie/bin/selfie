@@ -1,16 +1,31 @@
 #!/bin/bash -e
 
+GCP_SERVICE_ACCOUNT=$(curl -H "Metadata-Flavor: Google" http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/email)
+echo Configured with GCP service account $GCP_SERVICE_ACCOUNT
+
 # Cluster info comes from a k8s secret that needs to be externally added.
 k8s_context=$(tr '_' ' ' < /udmi/context)
 echo k8s context is $k8s_context
 
 GCP_PROJECT=$(awk '{print $2}' <<<$k8s_context)
 GCP_REGION=$(awk '{print $3}' <<<$k8s_context)
-GCP_CLUSTER=$(awk '{print $4}' <<<$k8s_context)
+K8S_CLUSTER=$(awk '{print $4}' <<<$k8s_context)
+K8S_NAMESPACE=$(awk '{print $5}' <<<$k8s_context)
 
-echo Derrived info $GCP_PROJECT/$GCP_REGION/$GCP_CLUSTER
+echo Derrived info $GCP_PROJECT/$GCP_REGION/$K8S_CLUSTER/$K8S_NAMESPACE
 
-gcloud container clusters get-credentials ${GCP_CLUSTER} --region ${GCP_REGION} --project ${GCP_PROJECT}
+gcloud container clusters get-credentials ${K8S_CLUSTER} --region ${GCP_REGION} --project ${GCP_PROJECT}
+
+if [[ -n $K8S_NAMESPACE ]]; then
+    echo Setting config to k8s namespace $K8S_NAMESPACE
+    kubectl config set-context --current --namespace=$K8S_NAMESPACE
+fi
+
+echo kubectl config get-contexts:
+kubectl config get-contexts
+
+echo kubectl get deployments:
+kubectl get deployments
 
 echo Entering udmis-broker message loop
 
@@ -29,7 +44,7 @@ mosquitto_sub -h udmis-broker -t udmis-broker/+/+ | jq --unbuffered --indent 0 .
         jq .spec.template.spec.containers[0].image=\"$update_to\" old.json > new.json
         echo Applying changes to k8s deployment:
         if ! diff old.json new.json; then
-            kubectl apply -f new.json
+            kubectl apply -f new.json || true
             echo
             kubectl get pods
             sleep 10

@@ -13,11 +13,11 @@ echo Getting logs for pods $pods
 rm -f ${podprefix}*.log
 
 for pod in $pods; do
-  kubectl logs $pod > $pod.log &
+  kubectl logs $pod | sed "s/.*/$pod &/" > $pod.log &
 done
 
 wait
 
-cat ${podprefix}*.log | fgrep "Z " | sort -k 1 > pods.log
+cat ${podprefix}*.log | fgrep "Z " | sort -k 2 > pods.log
 
 echo Combined logs available in $(realpath pods.log)

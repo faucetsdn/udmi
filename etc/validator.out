@@ -23,14 +23,14 @@ sites/udmi_site_model/out/devices/AHU-22/state_system.json
 sites/udmi_site_model/out/devices/AHU-1/config.out
 ::::::::::::::
 {
-  "timestamp" : "1999-10-20T01:02:03Z",
+  "timestamp" : "REDACTED_TIMESTAMP",
   "version" : "1.4.2",
   "sub_folder" : "update",
   "sub_type" : "config",
   "status" : {
-    "message" REDACTED
+    "message" : "Successful validation",
     "category" : "validation.device.receive",
-    "timestamp" : "1999-10-20T01:02:03Z",
+    "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 200
   },
   "errors" : [ ]
@@ -39,15 +39,15 @@ sites/udmi_site_model/out/devices/AHU-1/config.out
 sites/udmi_site_model/out/devices/AHU-1/event_pointset.out
 ::::::::::::::
 {
-  "timestamp" : "1999-10-20T01:02:03Z",
+  "timestamp" : "REDACTED_TIMESTAMP",
   "version" : "1.4.2",
   "sub_folder" : "pointset",
   "sub_type" : "event",
   "status" : {
-    "message" REDACTED
-    "detail" REDACTED
+    "message" : "While converting to json node: 1 schema violations found",
+    "detail" : "event_pointset: While converting to json node: 1 schema violations found REDACTED_ERROR; 1 schema violations found; object instance has properties which are not allowed by the schema: [\"extraField\"]",
     "category" : "validation.device.schema",
-    "timestamp" : "1999-10-20T01:02:03Z",
+    "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   },
   "pointset" : {
@@ -55,10 +55,10 @@ sites/udmi_site_model/out/devices/AHU-1/event_pointset.out
     "extra" : [ ]
   },
   "errors" : [ {
-    "message" REDACTED
-    "detail" REDACTED
+    "message" : "While converting to json node: 1 schema violations found",
+    "detail" : "event_pointset: While converting to json node: 1 schema violations found REDACTED_ERROR; 1 schema violations found; object instance has properties which are not allowed by the schema: [\"extraField\"]",
     "category" : "validation.device.schema",
-    "timestamp" : "1999-10-20T01:02:03Z",
+    "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   } ]
 }
@@ -66,14 +66,14 @@ sites/udmi_site_model/out/devices/AHU-1/event_pointset.out
 sites/udmi_site_model/out/devices/AHU-1/event_system.out
 ::::::::::::::
 {
-  "timestamp" : "1999-10-20T01:02:03Z",
+  "timestamp" : "REDACTED_TIMESTAMP",
   "version" : "1.4.2",
   "sub_folder" : "system",
   "sub_type" : "event",
   "status" : {
-    "message" REDACTED
+    "message" : "Successful validation",
     "category" : "validation.device.receive",
-    "timestamp" : "1999-10-20T01:02:03Z",
+    "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 200
   },
   "errors" : [ ]
@@ -82,14 +82,14 @@ sites/udmi_site_model/out/devices/AHU-1/event_system.out
 sites/udmi_site_model/out/devices/AHU-1/state.out
 ::::::::::::::
 {
-  "timestamp" : "1999-10-20T01:02:03Z",
+  "timestamp" : "REDACTED_TIMESTAMP",
   "version" : "1.4.2",
   "sub_folder" : "update",
   "sub_type" : "state",
   "status" : {
-    "message" REDACTED
+    "message" : "Successful validation",
     "category" : "validation.device.receive",
-    "timestamp" : "1999-10-20T01:02:03Z",
+    "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 200
   },
   "errors" : [ ]
@@ -98,14 +98,14 @@ sites/udmi_site_model/out/devices/AHU-1/state.out
 sites/udmi_site_model/out/devices/AHU-1/state_localnet.out
 ::::::::::::::
 {
-  "timestamp" : "1999-10-20T01:02:03Z",
+  "timestamp" : "REDACTED_TIMESTAMP",
   "version" : "1.4.2",
   "sub_folder" : "localnet",
   "sub_type" : "state",
   "status" : {
-    "message" REDACTED
+    "message" : "Successful validation",
     "category" : "validation.device.receive",
-    "timestamp" : "1999-10-20T01:02:03Z",
+    "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 200
   },
   "errors" : [ ]
@@ -114,14 +114,14 @@ sites/udmi_site_model/out/devices/AHU-1/state_localnet.out
 sites/udmi_site_model/out/devices/AHU-1/state_pointset.out
 ::::::::::::::
 {
-  "timestamp" : "1999-10-20T01:02:03Z",
+  "timestamp" : "REDACTED_TIMESTAMP",
   "version" : "1.4.2",
   "sub_folder" : "pointset",
   "sub_type" : "state",
   "status" : {
-    "message" REDACTED
+    "message" : "Successful validation",
     "category" : "validation.device.receive",
-    "timestamp" : "1999-10-20T01:02:03Z",
+    "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 200
   },
   "pointset" : {
@@ -134,14 +134,14 @@ sites/udmi_site_model/out/devices/AHU-1/state_pointset.out
 sites/udmi_site_model/out/devices/AHU-1/state_system.out
 ::::::::::::::
 {
-  "timestamp" : "1999-10-20T01:02:03Z",
+  "timestamp" : "REDACTED_TIMESTAMP",
   "version" : "1.4.2",
   "sub_folder" : "system",
   "sub_type" : "state",
   "status" : {
-    "message" REDACTED
+    "message" : "Successful validation",
     "category" : "validation.device.receive",
-    "timestamp" : "1999-10-20T01:02:03Z",
+    "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 200
   },
   "errors" : [ ]
@@ -150,14 +150,14 @@ sites/udmi_site_model/out/devices/AHU-1/state_system.out
 sites/udmi_site_model/out/devices/AHU-22/config.out
 ::::::::::::::
 {
-  "timestamp" : "1999-10-20T01:02:03Z",
+  "timestamp" : "REDACTED_TIMESTAMP",
   "version" : "1.4.2",
   "sub_folder" : "update",
   "sub_type" : "config",
   "status" : {
-    "message" REDACTED
+    "message" : "Successful validation",
     "category" : "validation.device.receive",
-    "timestamp" : "1999-10-20T01:02:03Z",
+    "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 200
   },
   "errors" : [ ]
@@ -166,22 +166,22 @@ sites/udmi_site_model/out/devices/AHU-22/config.out
 sites/udmi_site_model/out/devices/AHU-22/event_blobset.out
 ::::::::::::::
 {
-  "timestamp" : "1999-10-20T01:02:03Z",
+  "timestamp" : "REDACTED_TIMESTAMP",
   "version" : "1.4.2",
   "sub_folder" : "blobset",
   "sub_type" : "event",
   "status" : {
-    "message" REDACTED
-    "detail" REDACTED
+    "message" : "While converting to java.util.TreeMap",
+    "detail" : "event_blobset: While converting to java.util.TreeMap; Cannot coerce empty String (\"\") to element of `java.util.TreeMap<java.lang.Object,java.lang.Object>` (but could if coercion was enabled using `CoercionConfig`)\n at [Source: (String)\"\"\"\"; line: 1, column: 1]",
     "category" : "validation.device.schema",
-    "timestamp" : "1999-10-20T01:02:03Z",
+    "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   },
   "errors" : [ {
-    "message" REDACTED
-    "detail" REDACTED
+    "message" : "While converting to java.util.TreeMap",
+    "detail" : "event_blobset: While converting to java.util.TreeMap; Cannot coerce empty String (\"\") to element of `java.util.TreeMap<java.lang.Object,java.lang.Object>` (but could if coercion was enabled using `CoercionConfig`)\n at [Source: (String)\"\"\"\"; line: 1, column: 1]",
     "category" : "validation.device.schema",
-    "timestamp" : "1999-10-20T01:02:03Z",
+    "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   } ]
 }
@@ -189,22 +189,22 @@ sites/udmi_site_model/out/devices/AHU-22/event_blobset.out
 sites/udmi_site_model/out/devices/AHU-22/event_discovery.out
 ::::::::::::::
 {
-  "timestamp" : "1999-10-20T01:02:03Z",
+  "timestamp" : "REDACTED_TIMESTAMP",
   "version" : "1.4.2",
   "sub_folder" : "discovery",
   "sub_type" : "event",
   "status" : {
-    "message" REDACTED
-    "detail" REDACTED
+    "message" : "While converting to json node: 1 schema violations found",
+    "detail" : "event_discovery: While converting to json node: 1 schema violations found REDACTED_ERROR; 1 schema violations found; object has missing required properties ([\"generation\"])",
     "category" : "validation.device.schema",
-    "timestamp" : "1999-10-20T01:02:03Z",
+    "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   },
   "errors" : [ {
-    "message" REDACTED
-    "detail" REDACTED
+    "message" : "While converting to json node: 1 schema violations found",
+    "detail" : "event_discovery: While converting to json node: 1 schema violations found REDACTED_ERROR; 1 schema violations found; object has missing required properties ([\"generation\"])",
     "category" : "validation.device.schema",
-    "timestamp" : "1999-10-20T01:02:03Z",
+    "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   } ]
 }
@@ -212,22 +212,22 @@ sites/udmi_site_model/out/devices/AHU-22/event_discovery.out
 sites/udmi_site_model/out/devices/AHU-22/event_error.out
 ::::::::::::::
 {
-  "timestamp" : "1999-10-20T01:02:03Z",
+  "timestamp" : "REDACTED_TIMESTAMP",
   "version" : "1.4.2",
   "sub_folder" : "error",
   "sub_type" : "event",
   "status" : {
-    "message" REDACTED
-    "detail" REDACTED
+    "message" : "Error in message pipeline: While parsing json object, Unexpected character ('N' (code 78)): was expecting double-quote to start field name  at [Source: (String)\"{ NOT VALID JSON!\"; line: 1, column: 4]",
+    "detail" : "event_error: Error in message pipeline: While parsing json object, Unexpected character ('N' (code 78)): was expecting double-quote to start field name  at [Source: (String)\"{ NOT VALID JSON!\"; line: 1, column: 4] REDACTED_ERROR",
     "category" : "validation.device.schema",
-    "timestamp" : "1999-10-20T01:02:03Z",
+    "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   },
   "errors" : [ {
-    "message" REDACTED
-    "detail" REDACTED
+    "message" : "Error in message pipeline: While parsing json object, Unexpected character ('N' (code 78)): was expecting double-quote to start field name  at [Source: (String)\"{ NOT VALID JSON!\"; line: 1, column: 4]",
+    "detail" : "event_error: Error in message pipeline: While parsing json object, Unexpected character ('N' (code 78)): was expecting double-quote to start field name  at [Source: (String)\"{ NOT VALID JSON!\"; line: 1, column: 4] REDACTED_ERROR",
     "category" : "validation.device.schema",
-    "timestamp" : "1999-10-20T01:02:03Z",
+    "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   } ]
 }
@@ -235,28 +235,34 @@ sites/udmi_site_model/out/devices/AHU-22/event_error.out
 sites/udmi_site_model/out/devices/AHU-22/event_invalid.out
 ::::::::::::::
 {
-  "timestamp" : "1999-10-20T01:02:03Z",
+  "timestamp" : "REDACTED_TIMESTAMP",
   "version" : "1.4.2",
   "sub_folder" : "invalid",
   "sub_type" : "event",
   "status" : {
-    "message" REDACTED
-    "detail" REDACTED
+    "message" : "Multiple validation errors",
+    "detail" : "Timestamp jitter exceeds REDACTED_THRESHOLD; Unknown schema subFolder 'event_invalid' for AHU-22; While converting to json node: 1 schema violations found",
     "category" : "validation.device.multiple",
-    "timestamp" : "1999-10-20T01:02:03Z",
+    "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   },
   "errors" : [ {
-    "message" REDACTED
-    "detail" REDACTED
+    "message" : "Timestamp jitter exceeds REDACTED_THRESHOLD",
+    "detail" : "event_invalid: Timestamp jitter exceeds REDACTED_THRESHOLD REDACTED_ERROR",
     "category" : "validation.device.schema",
-    "timestamp" : "1999-10-20T01:02:03Z",
+    "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   }, {
-    "message" REDACTED
-    "detail" REDACTED
+    "message" : "Unknown schema subFolder 'event_invalid' for AHU-22",
+    "detail" : "event_invalid: Unknown schema subFolder 'event_invalid' for AHU-22 REDACTED_ERROR",
     "category" : "validation.device.schema",
-    "timestamp" : "1999-10-20T01:02:03Z",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 500
+  }, {
+    "message" : "While converting to json node: 1 schema violations found",
+    "detail" : "event_invalid: While converting to json node: 1 schema violations found REDACTED_ERROR; 1 schema violations found; /subFolder: instance value (\"invalid\") not found in enum (possible values: [\"udmi\",\"update\",\"error\",\"cloud\",\"discovery\",\"mapping\",\"system\",\"gateway\",\"swarm\",\"localnet\",\"pointset\",\"validation\",\"blobset\",\"monitoring\"])",
+    "category" : "validation.device.schema",
+    "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   } ]
 }
@@ -264,74 +270,95 @@ sites/udmi_site_model/out/devices/AHU-22/event_invalid.out
 sites/udmi_site_model/out/devices/AHU-22/event_pointset.out
 ::::::::::::::
 {
-  "timestamp" : "1999-10-20T01:02:03Z",
+  "timestamp" : "REDACTED_TIMESTAMP",
   "version" : "1.4.2",
   "sub_folder" : "pointset",
   "sub_type" : "event",
   "status" : {
-    "message" REDACTED
-    "category" : "validation.device.receive",
-    "timestamp" : "1999-10-20T01:02:03Z",
-    "level" : 200
+    "message" : "Timestamp jitter exceeds REDACTED_THRESHOLD",
+    "detail" : "event_pointset: Timestamp jitter exceeds REDACTED_THRESHOLD REDACTED_ERROR",
+    "category" : "validation.device.schema",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 500
   },
   "pointset" : {
     "missing" : [ ],
     "extra" : [ ]
   },
-  "errors" : [ ]
+  "errors" : [ {
+    "message" : "Timestamp jitter exceeds REDACTED_THRESHOLD",
+    "detail" : "event_pointset: Timestamp jitter exceeds REDACTED_THRESHOLD REDACTED_ERROR",
+    "category" : "validation.device.schema",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 500
+  } ]
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/AHU-22/event_system.out
 ::::::::::::::
 {
-  "timestamp" : "1999-10-20T01:02:03Z",
+  "timestamp" : "REDACTED_TIMESTAMP",
   "version" : "1.4.2",
   "sub_folder" : "system",
   "sub_type" : "event",
   "status" : {
-    "message" REDACTED
-    "category" : "validation.device.receive",
-    "timestamp" : "1999-10-20T01:02:03Z",
-    "level" : 200
+    "message" : "Timestamp jitter exceeds REDACTED_THRESHOLD",
+    "detail" : "event_system: Timestamp jitter exceeds REDACTED_THRESHOLD REDACTED_ERROR",
+    "category" : "validation.device.schema",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 500
   },
-  "errors" : [ ]
+  "errors" : [ {
+    "message" : "Timestamp jitter exceeds REDACTED_THRESHOLD",
+    "detail" : "event_system: Timestamp jitter exceeds REDACTED_THRESHOLD REDACTED_ERROR",
+    "category" : "validation.device.schema",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 500
+  } ]
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/AHU-22/state.out
 ::::::::::::::
 {
-  "timestamp" : "1999-10-20T01:02:03Z",
+  "timestamp" : "REDACTED_TIMESTAMP",
   "version" : "1.4.2",
   "sub_folder" : "update",
   "sub_type" : "state",
   "status" : {
-    "message" REDACTED
-    "category" : "validation.device.receive",
-    "timestamp" : "1999-10-20T01:02:03Z",
-    "level" : 200
+    "message" : "Timestamp jitter exceeds REDACTED_THRESHOLD",
+    "detail" : "state_update: Timestamp jitter exceeds REDACTED_THRESHOLD REDACTED_ERROR",
+    "category" : "validation.device.schema",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 500
   },
-  "errors" : [ ]
+  "errors" : [ {
+    "message" : "Timestamp jitter exceeds REDACTED_THRESHOLD",
+    "detail" : "state_update: Timestamp jitter exceeds REDACTED_THRESHOLD REDACTED_ERROR",
+    "category" : "validation.device.schema",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 500
+  } ]
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/AHU-22/state_error.out
 ::::::::::::::
 {
-  "timestamp" : "1999-10-20T01:02:03Z",
+  "timestamp" : "REDACTED_TIMESTAMP",
   "version" : "1.4.2",
   "sub_folder" : "error",
   "sub_type" : "state",
   "status" : {
-    "message" REDACTED
-    "detail" REDACTED
+    "message" : "Error in message pipeline: While parsing json object, Unexpected character ('!' (code 33)): expected a valid value (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')  at [Source: (String)\"!&*@(!*&@!\"; line: 1, column: 2]",
+    "detail" : "state_error: Error in message pipeline: While parsing json object, Unexpected character ('!' (code 33)): expected a valid value (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')  at [Source: (String)\"!&*REDACTED_ERROR",
     "category" : "validation.device.schema",
-    "timestamp" : "1999-10-20T01:02:03Z",
+    "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   },
   "errors" : [ {
-    "message" REDACTED
-    "detail" REDACTED
+    "message" : "Error in message pipeline: While parsing json object, Unexpected character ('!' (code 33)): expected a valid value (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')  at [Source: (String)\"!&*@(!*&@!\"; line: 1, column: 2]",
+    "detail" : "state_error: Error in message pipeline: While parsing json object, Unexpected character ('!' (code 33)): expected a valid value (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')  at [Source: (String)\"!&*REDACTED_ERROR",
     "category" : "validation.device.schema",
-    "timestamp" : "1999-10-20T01:02:03Z",
+    "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   } ]
 }
@@ -339,51 +366,72 @@ sites/udmi_site_model/out/devices/AHU-22/state_error.out
 sites/udmi_site_model/out/devices/AHU-22/state_localnet.out
 ::::::::::::::
 {
-  "timestamp" : "1999-10-20T01:02:03Z",
+  "timestamp" : "REDACTED_TIMESTAMP",
   "version" : "1.4.2",
   "sub_folder" : "localnet",
   "sub_type" : "state",
   "status" : {
-    "message" REDACTED
-    "category" : "validation.device.receive",
-    "timestamp" : "1999-10-20T01:02:03Z",
-    "level" : 200
+    "message" : "Timestamp jitter exceeds REDACTED_THRESHOLD",
+    "detail" : "state_localnet: Timestamp jitter exceeds REDACTED_THRESHOLD REDACTED_ERROR",
+    "category" : "validation.device.schema",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 500
   },
-  "errors" : [ ]
+  "errors" : [ {
+    "message" : "Timestamp jitter exceeds REDACTED_THRESHOLD",
+    "detail" : "state_localnet: Timestamp jitter exceeds REDACTED_THRESHOLD REDACTED_ERROR",
+    "category" : "validation.device.schema",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 500
+  } ]
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/AHU-22/state_pointset.out
 ::::::::::::::
 {
-  "timestamp" : "1999-10-20T01:02:03Z",
+  "timestamp" : "REDACTED_TIMESTAMP",
   "version" : "1.4.2",
   "sub_folder" : "pointset",
   "sub_type" : "state",
   "status" : {
-    "message" REDACTED
-    "category" : "validation.device.receive",
-    "timestamp" : "1999-10-20T01:02:03Z",
-    "level" : 200
+    "message" : "Timestamp jitter exceeds REDACTED_THRESHOLD",
+    "detail" : "state_pointset: Timestamp jitter exceeds REDACTED_THRESHOLD REDACTED_ERROR",
+    "category" : "validation.device.schema",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 500
   },
   "pointset" : {
     "missing" : [ ],
     "extra" : [ ]
   },
-  "errors" : [ ]
+  "errors" : [ {
+    "message" : "Timestamp jitter exceeds REDACTED_THRESHOLD",
+    "detail" : "state_pointset: Timestamp jitter exceeds REDACTED_THRESHOLD REDACTED_ERROR",
+    "category" : "validation.device.schema",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 500
+  } ]
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/AHU-22/state_system.out
 ::::::::::::::
 {
-  "timestamp" : "1999-10-20T01:02:03Z",
+  "timestamp" : "REDACTED_TIMESTAMP",
   "version" : "1.4.2",
   "sub_folder" : "system",
   "sub_type" : "state",
   "status" : {
-    "message" REDACTED
-    "category" : "validation.device.receive",
-    "timestamp" : "1999-10-20T01:02:03Z",
-    "level" : 200
+    "message" : "Timestamp jitter exceeds REDACTED_THRESHOLD",
+    "detail" : "state_system: Timestamp jitter exceeds REDACTED_THRESHOLD REDACTED_ERROR",
+    "category" : "validation.device.schema",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 500
   },
-  "errors" : [ ]
+  "errors" : [ {
+    "message" : "Timestamp jitter exceeds REDACTED_THRESHOLD",
+    "detail" : "state_system: Timestamp jitter exceeds REDACTED_THRESHOLD REDACTED_ERROR",
+    "category" : "validation.device.schema",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 500
+  } ]
 }

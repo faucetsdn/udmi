@@ -1,5 +1,6 @@
 {
   "deviceNumId" : "00000528111775",
+  "publishTime" : "1999-10-20T01:02:03Z",
   "subFolder" : "gateway",
   "deviceRegistryId" : "ZZ-TRI-FECTA",
   "subType" : "state",

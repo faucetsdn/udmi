@@ -3,6 +3,7 @@ package com.google.bos.iot.core.proxy;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
+import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -111,8 +112,9 @@ public class IotReflectorClient implements MessagePublisher {
     updateTo = iotConfig.update_to;
     String cloudRegion = Optional.ofNullable(iotConfig.reflect_region)
         .orElse(iotConfig.cloud_region);
+    String prefix = ifNotNullGet(iotConfig.udmi_namespace, name -> name + Common.PREFIX_SEPARATOR);
     subscriptionId =
-        format("%s/%s/%s/%s", projectId, cloudRegion, UDMI_REFLECT, registryId);
+        format("%s/%s/%s%s/%s", projectId, cloudRegion, prefix, UDMI_REFLECT, registryId);
     System.err.println("Using client subscription " + subscriptionId);
 
     try {
@@ -153,13 +155,16 @@ public class IotReflectorClient implements MessagePublisher {
     ExecutionConfiguration reflectConfiguration = new ExecutionConfiguration();
     reflectConfiguration.iot_provider = iotConfig.iot_provider;
     reflectConfiguration.project_id = iotConfig.project_id;
+    reflectConfiguration.bridge_host = iotConfig.bridge_host;
+    reflectConfiguration.reflector_endpoint = iotConfig.reflector_endpoint;
     reflectConfiguration.cloud_region = Optional.ofNullable(iotConfig.reflect_region)
         .orElse(iotConfig.cloud_region);
-    reflectConfiguration.registry_id = UDMI_REFLECT;
-    reflectConfiguration.reflector_endpoint = iotConfig.reflector_endpoint;
 
+    reflectConfiguration.registry_id = UDMI_REFLECT;
+    reflectConfiguration.udmi_namespace = iotConfig.udmi_namespace;
     // Intentionally map registry -> device because of reflection registry semantics.
     reflectConfiguration.device_id = registryId;
+
     return reflectConfiguration;
   }
 
@@ -257,6 +262,7 @@ public class IotReflectorClient implements MessagePublisher {
     attributes.put("subFolder", (String) messageMap.get("subFolder"));
     attributes.put("transactionId", (String) messageMap.get("transactionId"));
     attributes.put("deviceNumId", MOCK_DEVICE_NUM_ID);
+    attributes.put(PUBLISH_TIME_KEY, (String) messageMap.get("publishTime"));
     return attributes;
   }
 
@@ -345,8 +351,9 @@ public class IotReflectorClient implements MessagePublisher {
   }
 
   private void errorHandler(MqttPublisher mqttPublisher, Throwable throwable) {
-    System.err.println("mqtt client error: " + throwable.getMessage());
-    close();
+    System.err.printf("Received mqtt client error: %s at %s%n",
+        throwable.getMessage(), getTimestamp());
+    mqttPublisher.shutdown();
   }
 
   private byte[] getFileBytes(String dataFile) {
@@ -404,6 +411,10 @@ public class IotReflectorClient implements MessagePublisher {
   @Override
   public SetupUdmiConfig getVersionInformation() {
     return requireNonNull(udmiInfo, "udmi version information not available");
+  }
+
+  public String getBridgeHost() {
+    return mqttPublisher.getBridgeHost();
   }
 
   static class MessageBundle {

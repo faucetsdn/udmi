@@ -12,7 +12,6 @@ TEST_LOG=$OUT_DIR/sequencer.out
 SCHEMA_OUT=$OUT_DIR/schema.out
 SEQUENCER_RES=$OUT_DIR/sequencer.res
 log_level=INFO
-alt_registry=\"${UDMI_ALT_REGISTRY:-ZZ-REDIRECT-NA}\"
 min_stage=PREVIEW
 export UDMI_VERSION=$udmi_version
 
@@ -59,6 +58,11 @@ DEFAULT_SERIAL=//
 serial_no=${1:-$DEFAULT_SERIAL}
 shift || true
 
+alt_registry=null
+if [[ -n $UDMI_ALT_REGISTRY ]]; then
+    alt_registry=\"${UDMI_ALT_REGISTRY}\"
+fi
+
 if [[ $project_id == -- ]]; then
     echo Configuring for mock project use...
     project_id=mock-project
@@ -103,17 +107,26 @@ validator/bin/build
 # Format of cmdline project_id is {//PROVIDER/}PROJECT (optional PROVIDER)
 # e.g. bos-testing-dev or //gcp/bos-testing-dev
 
+quoted_namespace=null
+quoted_bridge=null
+iot_provider=null
+if [[ $project_id =~ ^// ]]; then
+    no_prefix=${project_id#//}
+    iot_provider=\"${no_prefix%%/*}\"
+    no_provider=${no_prefix#*/}
+    project_id=${no_provider%/*}
+    udmi_namespace=${no_provider#$project_id}
+    [[ -n $udmi_namespace ]] && quoted_namespace=\"${udmi_namespace#/}\"
+elif [[ $project_id =~ @ ]]; then
+    iot_provider=\"jwt\"
+    quoted_bridge=\"${project_id#*@}\"
+    project_id=${project_id%@*}
+fi
+
 if [[ -n $project_id ]]; then
     quoted_id=\"${project_id##*/}\"
 else
     quoted_id=null
-fi
-
-if [[ $project_id =~ ^// ]]; then
-    sans_project=${project_id%/*}
-    iot_provider=\"${sans_project#//}\"
-else
-    iot_provider=null
 fi
 
 export SEQUENCER_CONFIG=/tmp/sequencer_config.json
@@ -123,6 +136,8 @@ cat <<EOF > $SEQUENCER_CONFIG
 {
   "iot_provider": $iot_provider,
   "project_id": $quoted_id,
+  "bridge_host": $quoted_bridge,
+  "udmi_namespace": $quoted_namespace,
   "site_model": "$site_model",
   "device_id": "$device_id",
   "alt_registry": $alt_registry,

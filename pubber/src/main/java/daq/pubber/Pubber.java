@@ -12,13 +12,15 @@ import static com.google.udmi.util.GeneralUtils.fromJsonString;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
+import static com.google.udmi.util.GeneralUtils.isGetTrue;
+import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.optionsString;
 import static com.google.udmi.util.GeneralUtils.toJsonFile;
 import static com.google.udmi.util.GeneralUtils.toJsonString;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static daq.pubber.MqttDevice.CONFIG_TOPIC;
 import static daq.pubber.MqttDevice.ERRORS_TOPIC;
-import static java.lang.Boolean.TRUE;
+import static daq.pubber.MqttDevice.STATE_TOPIC;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
@@ -36,6 +38,8 @@ import com.google.daq.mqtt.util.CatchingScheduledThreadPoolExecutor;
 import com.google.udmi.util.CleanDateFormat;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
+import com.google.udmi.util.MessageDowngrader;
+import com.google.udmi.util.SchemaVersion;
 import com.google.udmi.util.SiteModel;
 import com.google.udmi.util.SiteModel.MetadataException;
 import daq.pubber.MqttPublisher.InjectedMessage;
@@ -50,6 +54,7 @@ import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -92,6 +97,7 @@ import udmi.schema.Entry;
 import udmi.schema.Enumerate;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
+import udmi.schema.Envelope.SubType;
 import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyDiscoveryEvent;
 import udmi.schema.FamilyDiscoveryState;
@@ -129,9 +135,7 @@ public class Pubber {
   public static final String PERSISTENT_TMP_FORMAT = "/tmp/pubber_%s_" + PERSISTENT_STORE_FILE;
   public static final String PUBBER_LOG_CATEGORY = "device.log";
   public static final String DATA_URL_JSON_BASE64 = "data:application/json;base64,";
-  public static final String POINTSET_BUCKET = "pointset_state";
-  public static final String PUBLISHER_BUCKET = "publisher_bucket";
-  static final String UDMI_VERSION = "1.4.2";
+  static final String UDMI_VERSION = SchemaVersion.CURRENT.key();
   private static final Logger LOG = LoggerFactory.getLogger(Pubber.class);
   private static final String HOSTNAME = System.getenv("HOSTNAME");
   private static final int MIN_REPORT_MS = 200;
@@ -173,7 +177,6 @@ public class Pubber {
       "faulty_finding", makePointPointsetModel(true, 40, 0, "deg"),
       "superimposition_reading", makePointPointsetModel(false)
   );
-  private static final Date DEVICE_START_TIME = getRoundedStartTime();
   private static final Map<SystemMode, Integer> EXIT_CODE_MAP = ImmutableMap.of(
       SystemMode.SHUTDOWN, 0, // Indicates expected clean shutdown (success).
       SystemMode.RESTART, 192, // Indicate process to be explicitly restarted.
@@ -191,10 +194,12 @@ public class Pubber {
   private static final String DEFAULT_MODEL = "pubber";
   private static final String DEFAULT_SOFTWARE_KEY = "firmware";
   private static final String DEFAULT_SOFTWARE_VALUE = "v1";
-
+  private static final Duration CLOCK_SKEW = Duration.ofMinutes(30);
+  private static PubberOptions pubberOptions;
   protected final PubberConfiguration configuration;
   final State deviceState = new State();
   final Config deviceConfig = new Config();
+  private final Date deviceStartTime;
   private final File outDir;
   private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
   private final AtomicInteger messageDelayMs = new AtomicInteger(DEFAULT_REPORT_SEC * 1000);
@@ -221,6 +226,7 @@ public class Pubber {
   private MqttDevice gatewayTarget;
   private int systemEventCount;
   private LocalnetManager localnetManager;
+  private SchemaVersion targetSchema;
 
   /**
    * Start an instance from a configuration file.
@@ -231,6 +237,8 @@ public class Pubber {
     File configFile = new File(configPath);
     try {
       configuration = sanitizeConfiguration(fromJsonFile(configFile, PubberConfiguration.class));
+      pubberOptions = configuration.options;
+      deviceStartTime = getRoundedStartTime();
       Protocol protocol = ofNullable(
           ifNotNullGet(configuration.endpoint, endpoint -> endpoint.protocol)).orElse(MQTT);
       checkArgument(MQTT.equals(protocol), "protocol mismatch");
@@ -245,23 +253,25 @@ public class Pubber {
   /**
    * Start an instance from explicit args.
    *
-   * @param projectId GCP project
+   * @param iotProject GCP project
    * @param sitePath  Path to site_model
    * @param deviceId  Device ID to emulate
    * @param serialNo  Serial number of the device
    */
-  public Pubber(String projectId, String sitePath, String deviceId, String serialNo) {
+  public Pubber(String iotProject, String sitePath, String deviceId, String serialNo) {
     this.deviceId = deviceId;
     outDir = new File(PUBBER_OUT + "/" + serialNo);
     configuration = sanitizeConfiguration(new PubberConfiguration());
+    pubberOptions = configuration.options;
     configuration.deviceId = deviceId;
-    configuration.projectId = projectId;
+    configuration.iotProject = iotProject;
     configuration.serialNo = serialNo;
     if (PUBSUB_SITE.equals(sitePath)) {
-      pubSubClient = new PubSubClient(projectId, deviceId);
+      pubSubClient = new PubSubClient(iotProject, deviceId);
     } else {
       configuration.sitePath = sitePath;
     }
+    deviceStartTime = getRoundedStartTime();
   }
 
   private static String getEventsSuffix(String suffixSuffix) {
@@ -269,7 +279,7 @@ public class Pubber {
   }
 
   private static Date getRoundedStartTime() {
-    long timestamp = getCurrentTimestamp().getTime();
+    long timestamp = getNow().getTime();
     // Remove ms so that rounded conversions preserve equality.
     return new Date(timestamp - (timestamp % 1000));
   }
@@ -376,8 +386,9 @@ public class Pubber {
     return configuration;
   }
 
-  private static Date getCurrentTimestamp() {
-    return new Date();
+  static Date getNow() {
+    Duration clockSkew = isTrue(pubberOptions.skewClock) ? CLOCK_SKEW : Duration.ZERO;
+    return Date.from(Instant.now().plus(clockSkew));
   }
 
   static String acquireBlobData(String url, String sha256) {
@@ -392,12 +403,12 @@ public class Pubber {
     return new String(dataBytes);
   }
 
-  static void augmentDeviceMessage(Object message) {
+  static void augmentDeviceMessage(Object message, Date now) {
     try {
       Field version = message.getClass().getField("version");
       version.set(message, UDMI_VERSION);
       Field timestamp = message.getClass().getField("timestamp");
-      timestamp.set(message, getCurrentTimestamp());
+      timestamp.set(message, now);
     } catch (Throwable e) {
       throw new RuntimeException("While augmenting device message", e);
     }
@@ -441,8 +452,8 @@ public class Pubber {
 
     deviceState.system = new SystemState();
     deviceState.system.operation = new StateSystemOperation();
-    if (!TRUE.equals(configuration.options.noLastStart)) {
-      deviceState.system.operation.last_start = DEVICE_START_TIME;
+    if (!isTrue(configuration.options.noLastStart)) {
+      deviceState.system.operation.last_start = deviceStartTime;
     }
 
     deviceState.system.hardware = new StateSystemHardware();
@@ -454,7 +465,7 @@ public class Pubber {
       siteModel = new SiteModel(configuration.sitePath);
       siteModel.initialize();
       if (configuration.endpoint == null) {
-        configuration.endpoint = siteModel.makeEndpointConfig(configuration.projectId, deviceId);
+        configuration.endpoint = siteModel.makeEndpointConfig(configuration.iotProject, deviceId);
       }
       if (!siteModel.allDeviceIds().contains(configuration.deviceId)) {
         throw new IllegalArgumentException(
@@ -493,7 +504,7 @@ public class Pubber {
     checkState(persistentData == null, "persistent data already loaded");
     File persistentStore = getPersistentStore();
 
-    if (TRUE.equals(configuration.options.noPersist)) {
+    if (isTrue(configuration.options.noPersist)) {
       info("Resetting persistent store " + persistentStore.getAbsolutePath());
       persistentData = newDevicePersistent();
     } else {
@@ -592,6 +603,9 @@ public class Pubber {
       throw new RuntimeException("While processing metadata file " + metadataException.file,
           metadataException.exception);
     }
+    targetSchema = ifNotNullGet(metadata.device_version, SchemaVersion::fromKey);
+    ifNotNullThen(targetSchema, version -> warn("Emulating UDMI version " + version.key()));
+
     if (metadata.cloud != null) {
       configuration.algorithm = catchToNull(() -> metadata.cloud.auth_type.value());
     }
@@ -692,7 +706,7 @@ public class Pubber {
    */
   private void sendEmptyMissingBadEvents() {
     int phase = deviceUpdateCount % MESSAGE_REPORT_INTERVAL;
-    if (!TRUE.equals(configuration.options.emptyMissing)
+    if (!isTrue(configuration.options.emptyMissing)
         || (phase >= INVALID_REPLACEMENTS.size() + 2)) {
       return;
     }
@@ -727,6 +741,7 @@ public class Pubber {
     Runtime runtime = Runtime.getRuntime();
     systemEvent.metrics.mem_free_mb = (double) runtime.freeMemory() / BYTES_PER_MEGABYTE;
     systemEvent.metrics.mem_total_mb = (double) runtime.totalMemory() / BYTES_PER_MEGABYTE;
+    systemEvent.metrics.store_total_mb = Double.NaN;
     systemEvent.event_count = systemEventCount++;
     systemEvent.logentries = ImmutableList.copyOf(logentries);
     logentries.clear();
@@ -762,12 +777,12 @@ public class Pubber {
     }
     Date configLastStart = operation.last_start;
     if (configLastStart != null) {
-      if (DEVICE_START_TIME.before(configLastStart)) {
+      if (deviceStartTime.before(configLastStart)) {
         warn(format("Device start time %s before last config start %s, terminating.",
-            isoConvert(DEVICE_START_TIME), isoConvert(configLastStart)));
+            isoConvert(deviceStartTime), isoConvert(configLastStart)));
         systemLifecycle(SystemMode.TERMINATE);
-      } else if (TRUE.equals(configuration.options.smokeCheck)
-          && CleanDateFormat.dateEquals(DEVICE_START_TIME, configLastStart)) {
+      } else if (isTrue(configuration.options.smokeCheck)
+          && CleanDateFormat.dateEquals(deviceStartTime, configLastStart)) {
         warn(format("Device start time %s matches, smoke check indicating success!",
             isoConvert(configLastStart)));
         systemLifecycle(SystemMode.SHUTDOWN);
@@ -1012,7 +1027,7 @@ public class Pubber {
   private void publisherHandler(String type, String phase, Throwable cause) {
     if (cause != null) {
       error("Error receiving message " + type, cause);
-      if (TRUE.equals(configuration.options.barfConfig)) {
+      if (isTrue(configuration.options.barfConfig)) {
         error("Restarting system because of restart-on-error configuration setting");
         systemLifecycle(SystemMode.RESTART);
       }
@@ -1035,7 +1050,7 @@ public class Pubber {
    * this case appropriately.
    */
   private void publishConfigStateUpdate() {
-    if (TRUE.equals(configuration.options.configStateDelay)) {
+    if (isTrue(configuration.options.configStateDelay)) {
       delayNextStateUpdate();
     }
     publishAsynchronousState();
@@ -1061,7 +1076,7 @@ public class Pubber {
     boolean success = e == null;
     Entry entry = new Entry();
     entry.category = category;
-    entry.timestamp = getCurrentTimestamp();
+    entry.timestamp = getNow();
     entry.message = success ? "success"
         : e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
     entry.detail = success ? null : exceptionDetail(e);
@@ -1101,7 +1116,7 @@ public class Pubber {
   private void processConfigUpdate(Config config) {
     final int actualInterval;
     if (config != null) {
-      if (config.system == null && TRUE.equals(configuration.options.barfConfig)) {
+      if (config.system == null && isTrue(configuration.options.barfConfig)) {
         error("Empty config system block and configured to restart on bad config!");
         systemLifecycle(SystemMode.RESTART);
       }
@@ -1251,7 +1266,7 @@ public class Pubber {
     entry.detail = stackTraceString(e);
     entry.category = category;
     entry.level = Level.ERROR.value();
-    entry.timestamp = getCurrentTimestamp();
+    entry.timestamp = getNow();
     return entry;
   }
 
@@ -1264,7 +1279,7 @@ public class Pubber {
 
   private String getClientId(String forRegistry) {
     String cloudRegion = SiteModel.parseClientId(configuration.endpoint.client_id).cloudRegion;
-    return SiteModel.getClientId(configuration.projectId, cloudRegion, forRegistry, deviceId);
+    return SiteModel.getClientId(configuration.iotProject, cloudRegion, forRegistry, deviceId);
   }
 
   private String extractConfigBlob(String blobName) {
@@ -1320,7 +1335,7 @@ public class Pubber {
   }
 
   private <T> T ifTrue(Boolean condition, Supplier<T> supplier) {
-    return isTrue(() -> condition) ? supplier.get() : null;
+    return isGetTrue(() -> condition) ? supplier.get() : null;
   }
 
   private Map<String, PointEnumerationEvent> enumeratePoints(String deviceId) {
@@ -1369,7 +1384,7 @@ public class Pubber {
       }
 
       Date previousGeneration = getFamilyDiscoveryState(family).generation;
-      Date baseGeneration = previousGeneration == null ? DEVICE_START_TIME : previousGeneration;
+      Date baseGeneration = previousGeneration == null ? deviceStartTime : previousGeneration;
       final Date startGeneration;
       if (configGeneration.before(baseGeneration)) {
         int interval = getScanInterval(family);
@@ -1403,7 +1418,7 @@ public class Pubber {
     if (executor.isShutdown() || executor.isTerminated()) {
       throw new RuntimeException("Executor shutdown/terminated, not scheduling");
     }
-    long delay = futureTime.getTime() - getCurrentTimestamp().getTime();
+    long delay = futureTime.getTime() - getNow().getTime();
     debug(format("Scheduling future in %dms", delay));
     executor.schedule(futureTask, delay, TimeUnit.MILLISECONDS);
     return delay;
@@ -1449,7 +1464,7 @@ public class Pubber {
               .collect(toMap(Map.Entry::getKey, this::eventForTarget));
           discoveryEvent.families.computeIfAbsent("iot",
               key -> new FamilyDiscoveryEvent()).addr = deviceId;
-          if (isTrue(() -> deviceConfig.discovery.families.get(family).enumerate)) {
+          if (isGetTrue(() -> deviceConfig.discovery.families.get(family).enumerate)) {
             discoveryEvent.uniqs = enumeratePoints(deviceId);
           }
           publishDeviceMessage(discoveryEvent);
@@ -1458,14 +1473,6 @@ public class Pubber {
       });
       info("Sent " + sentEvents.get() + " discovery events from " + family + " for "
           + scanGeneration);
-    }
-  }
-
-  private boolean isTrue(Supplier<Boolean> target) {
-    try {
-      return target.get();
-    } catch (Exception e) {
-      return false;
     }
   }
 
@@ -1519,7 +1526,7 @@ public class Pubber {
   }
 
   private String getTimestamp() {
-    return isoConvert(getCurrentTimestamp());
+    return isoConvert(getNow());
   }
 
   private Date isoConvert(String timestamp) {
@@ -1587,7 +1594,7 @@ public class Pubber {
     pointPointsetState.status.category = POINTSET_POINT_INVALID;
     pointPointsetState.status.level = POINTSET_POINT_INVALID_VALUE;
     pointPointsetState.status.message = "Unknown configured point " + pointName;
-    pointPointsetState.status.timestamp = getCurrentTimestamp();
+    pointPointsetState.status.timestamp = getNow();
     return pointPointsetState;
   }
 
@@ -1674,7 +1681,7 @@ public class Pubber {
   }
 
   private void publishStateMessage() {
-    deviceState.timestamp = getCurrentTimestamp();
+    deviceState.timestamp = getNow();
     info(format("update state %s last_config %s", isoConvert(deviceState.timestamp),
         isoConvert(deviceState.system.last_config)));
     try {
@@ -1705,12 +1712,16 @@ public class Pubber {
       latch.countDown();
     });
     try {
-      if (!latch.await(WAIT_TIME_SEC, TimeUnit.SECONDS)) {
+      if (shouldSendState() && !latch.await(WAIT_TIME_SEC, TimeUnit.SECONDS)) {
         throw new RuntimeException("Timeout waiting for state send");
       }
     } catch (Exception e) {
       throw new RuntimeException("While waiting for state send latch", e);
     }
+  }
+
+  private boolean shouldSendState() {
+    return !isGetTrue(() -> configuration.options.noState);
   }
 
   private void publishDeviceMessage(Object message) {
@@ -1724,28 +1735,39 @@ public class Pubber {
       return;
     }
 
+    if (!shouldSendState() && topicSuffix.equals(STATE_TOPIC)) {
+      info("Squelching state update as per configuration");
+      return;
+    }
+
     if (deviceTarget == null) {
       error("publisher not active");
       return;
     }
 
-    augmentDeviceMessage(message);
-    deviceTarget.publish(topicSuffix, message, callback);
+    augmentDeviceMessage(message, getNow());
+    Object downgraded = downgradeMessage(message);
+    deviceTarget.publish(topicSuffix, downgraded, callback);
     String messageBase = topicSuffix.replace("/", "_");
     String fileName = traceTimestamp(messageBase) + ".json";
     File messageOut = new File(outDir, fileName);
     try {
-      toJsonFile(messageOut, message);
+      toJsonFile(messageOut, downgraded);
     } catch (Exception e) {
       throw new RuntimeException("While writing " + messageOut.getAbsolutePath(), e);
     }
+  }
+
+  private Object downgradeMessage(Object message) {
+    MessageDowngrader messageDowngrader = new MessageDowngrader(SubType.STATE.value(), message);
+    return ifNotNullGet(targetSchema, messageDowngrader::downgrade, message);
   }
 
   private String traceTimestamp(String messageBase) {
     int serial = MESSAGE_COUNTS.computeIfAbsent(messageBase, key -> new AtomicInteger())
         .incrementAndGet();
     String timestamp = getTimestamp().replace("Z", format(".%03dZ", serial));
-    return messageBase + (TRUE.equals(configuration.options.messageTrace) ? ("_" + timestamp) : "");
+    return messageBase + (isTrue(configuration.options.messageTrace) ? ("_" + timestamp) : "");
   }
 
   private boolean publisherActive() {
@@ -1840,5 +1862,4 @@ public class Pubber {
     // This extraField exists only to trigger schema parsing errors.
     public Object extraField;
   }
-
 }

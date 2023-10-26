@@ -1,10 +1,10 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="UdmiServicePod ClearBlade" type="Application" factoryName="Application">
     <envs>
-      <env name="CLEARBLADE_CONFIGURATION" value="$USER_HOME$/creds/udmi-external-credentials.json" />
-      <env name="GCP_PROJECT" value="udmi-external" />
-      <env name="GCP_IOT_OPTIONS" value="" />
-      <env name="CLEARBLADE_PROJECT" value="udmi-external" />
+      <env name="CLEARBLADE_CONFIGURATION" value="$USER_HOME$/creds/bos-platform-dev-credentials.json" />
+      <env name="GCP_PROJECT" value="bos-platform-dev" />
+      <env name="UDMI_PREFIX" value="udmis~" />
+      <env name="CLEARBLADE_PROJECT" value="bos-platform-dev" />
     </envs>
     <output_file path="out/console.log" is_save="true" />
     <option name="MAIN_CLASS_NAME" value="com.google.bos.udmi.service.pod.UdmiServicePod" />

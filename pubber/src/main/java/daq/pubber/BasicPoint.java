@@ -99,7 +99,7 @@ public abstract class BasicPoint implements AbstractPoint {
   private Entry getEntry() {
     Entry entry = new Entry();
     entry.detail = getPointDetail();
-    entry.timestamp = new Date();
+    entry.timestamp = Pubber.getNow();
     return entry;
   }
 

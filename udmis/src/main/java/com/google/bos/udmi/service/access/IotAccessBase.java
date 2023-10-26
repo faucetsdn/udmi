@@ -1,6 +1,5 @@
 package com.google.bos.udmi.service.access;
 
-import static com.google.bos.udmi.service.core.ProcessorBase.REFLECT_REGISTRY;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
@@ -44,7 +43,6 @@ public abstract class IotAccessBase extends ContainerBase {
 
   public static final int MAX_CONFIG_LENGTH = 65535;
   public static final TemporalAmount REGION_RETRY_BACKOFF = Duration.ofSeconds(30);
-  protected static final String UDMI_REGISTRY = "UDMI-REFLECT";
   protected static final String EMPTY_JSON = "{}";
   static final Set<String> CLOUD_REGIONS =
       ImmutableSet.of("us-central1", "europe-west1", "asia-east1");
@@ -183,7 +181,7 @@ public abstract class IotAccessBase extends ContainerBase {
   }
 
   private Instant registryBackoffInhibit(String registryId, String deviceId) {
-    if (!REFLECT_REGISTRY.equals(registryId)) {
+    if (!reflectRegistry.equals(registryId)) {
       return null;
     }
     Instant until = Instant.now().plus(REGISTRY_COMMAND_BACKOFF_SEC, ChronoUnit.SECONDS);
@@ -208,7 +206,7 @@ public abstract class IotAccessBase extends ContainerBase {
     super.activate();
     distributor = UdmiServicePod.maybeGetComponent((String) options.get("distributor"));
     if (isEnabled()) {
-      populateRegistryRegions(REFLECT_REGISTRY);
+      populateRegistryRegions(reflectRegistry);
     }
   }
 
@@ -296,7 +294,7 @@ public abstract class IotAccessBase extends ContainerBase {
   }
 
   Map<String, Object> parseOptions(IotAccess iotAccess) {
-    String options = variableSubstitution(iotAccess.options, null);
+    String options = variableSubstitution(iotAccess.options);
     if (options == null) {
       return ImmutableMap.of();
     }

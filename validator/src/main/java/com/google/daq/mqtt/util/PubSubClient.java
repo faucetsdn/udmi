@@ -2,15 +2,17 @@ package com.google.daq.mqtt.util;
 
 import static com.google.api.client.util.Preconditions.checkNotNull;
 import static com.google.bos.iot.core.proxy.IotReflectorClient.UDMI_FOLDER;
+import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
+import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static java.time.Instant.ofEpochSecond;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.api.client.util.Base64;
-import com.google.api.client.util.Preconditions;
 import com.google.api.core.ApiFuture;
 import com.google.api.gax.rpc.NotFoundException;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
@@ -31,7 +33,6 @@ import com.google.pubsub.v1.ProjectTopicName;
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.pubsub.v1.SeekRequest;
 import com.google.udmi.util.Common;
-import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Arrays;
@@ -195,11 +196,10 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
       PubsubMessage message = messages.take();
       long seconds = message.getPublishTime().getSeconds();
       if (flushSubscription && seconds < startTimeSec) {
-        System.err.println(String.format("Flushing outdated message from %d seconds ago",
-            startTimeSec - seconds));
+        System.err.printf("Flushing outdated message from %d seconds ago%n",
+            startTimeSec - seconds);
         return null;
       }
-      Map<String, String> attributes = message.getAttributesMap();
       byte[] rawData = message.getData().toByteArray();
       final String data;
       boolean base64 = rawData[0] != '{';
@@ -217,7 +217,9 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
         asMap = new ErrorContainer(e, getSubscriptionId(), JsonUtil.getTimestamp());
       }
 
-      attributes = new HashMap<>(attributes);
+      HashMap<String, String> attributes = new HashMap<>(message.getAttributesMap());
+      attributes.computeIfAbsent(PUBLISH_TIME_KEY,
+          key -> getTimestamp(ofEpochSecond(message.getPublishTime().getSeconds())));
       attributes.put(WAS_BASE_64, "" + base64);
 
       MessageBundle bundle = new MessageBundle();

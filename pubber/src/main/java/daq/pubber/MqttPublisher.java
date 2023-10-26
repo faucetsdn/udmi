@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.base.Preconditions;
 import com.google.common.hash.Hashing;
+import com.google.udmi.util.NanSerializer;
 import com.google.udmi.util.SiteModel;
 import com.google.udmi.util.SiteModel.ClientInfo;
 import io.jsonwebtoken.JwtBuilder;
@@ -51,7 +52,6 @@ import udmi.schema.Basic;
 import udmi.schema.EndpointConfiguration.Transport;
 import udmi.schema.Jwt;
 import udmi.schema.PubberConfiguration;
-import udmi.schema.State;
 
 /**
  * Handle publishing sensor data to a Cloud IoT MQTT endpoint.
@@ -64,7 +64,9 @@ public class MqttPublisher implements Publisher {
       .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
       .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
       .setDateFormat(new ISO8601DateFormat())
+      .registerModule(NanSerializer.TO_NAN)
       .setSerializationInclusion(JsonInclude.Include.NON_NULL);
+
   // Indicate if this message should be a MQTT 'retained' message.
   private static final boolean SHOULD_RETAIN = false;
   private static final String UNUSED_ACCOUNT_NAME = "unused";
@@ -105,7 +107,7 @@ public class MqttPublisher implements Publisher {
     this.configuration = configuration;
     if (isGcpIotCore(configuration)) {
       ClientInfo clientIdParts = SiteModel.parseClientId(configuration.endpoint.client_id);
-      this.projectId = clientIdParts.projectId;
+      this.projectId = clientIdParts.iotProject;
       this.cloudRegion = clientIdParts.cloudRegion;
       this.registryId = clientIdParts.registryId;
     } else {
@@ -127,7 +129,7 @@ public class MqttPublisher implements Publisher {
     // Google Cloud IoT, it must be in the format below.
     if (isGcpIotCore(configuration)) {
       ClientInfo clientInfo = SiteModel.parseClientId(configuration.endpoint.client_id);
-      return SiteModel.getClientId(clientInfo.projectId, clientInfo.cloudRegion,
+      return SiteModel.getClientId(clientInfo.iotProject, clientInfo.cloudRegion,
           clientInfo.registryId, deviceId);
     } else if (configuration.endpoint.client_id != null) {
       return configuration.endpoint.client_id;
