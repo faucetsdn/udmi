@@ -247,8 +247,11 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private void updateProviderAffinity(Envelope envelope, String source) {
-    debug("Setting affinity for %s/%s to %s", envelope.deviceRegistryId, envelope.deviceId, source);
-    iotAccess.setProviderAffinity(envelope.deviceRegistryId, envelope.deviceId, source);
+    if (envelope.deviceId != null) {
+      debug("Setting affinity for %s/%s to %s", envelope.deviceRegistryId, envelope.deviceId,
+          source);
+      iotAccess.setProviderAffinity(envelope.deviceRegistryId, envelope.deviceId, source);
+    }
   }
 
   private void updateRegistryRegions(Map<String, String> regions) {
