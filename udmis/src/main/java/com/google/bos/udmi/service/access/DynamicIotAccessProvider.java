@@ -84,7 +84,8 @@ public class DynamicIotAccessProvider extends IotAccessBase {
     String provisionedAt = ofNullable(
         provider.getValue().fetchRegistryMetadata(registryId, "udmi_provisioned")).orElse(
         getTimestamp(new Date(providerIndex * INDEX_ORDERING_MULTIPLIER_MS)));
-    debug(format("Registry %s provider %s provisioned %s", registryId, provider.getKey(), provisionedAt));
+    debug(format("Registry %s provider %s provisioned %s", registryId, provider.getKey(),
+        provisionedAt));
     return provisionedAt;
   }
 
