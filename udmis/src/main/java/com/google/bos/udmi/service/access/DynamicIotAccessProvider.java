@@ -66,7 +66,7 @@ public class DynamicIotAccessProvider extends IotAccessBase {
     TreeMap<String, String> sortedMap = providers.entrySet().stream()
         .collect(sortedMapCollector(entry -> registryPriority(registryId, entry)));
     String providerId = sortedMap.lastEntry().getValue();
-    debug("Registry mapping for " + registryId + " is " + providerId);
+    debug("Registry affinity mapping for " + registryId + " is " + providerId);
     return providerId;
   }
 
