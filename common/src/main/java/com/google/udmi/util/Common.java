@@ -14,7 +14,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * Collection of common constants and minor utilities.
@@ -161,7 +160,6 @@ public abstract class Common {
     return message + (line == null ? "" : " @" + line);
   }
 
-  @NotNull
   public static String getNamespacePrefix(String udmiNamespace) {
     return ofNullable(udmiNamespace).map(x -> x + PREFIX_SEPARATOR).orElse("");
   }
