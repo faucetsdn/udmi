@@ -9,6 +9,7 @@ PUBSUB_FILE=pubsub.json
 MESSAGE_FILE=message.json
 RETRY_DELAY_SEC=60
 MODEL_DIR=source_model
+CONFIG_FILE=registrar_config.json
 
 SUBSCRIPTION=${UDMI_PREFIX#\~}source_repo-udmis
 echo Pulling from PubSub subscription $SUBSCRIPTION
@@ -24,11 +25,17 @@ gcloud config set account $GCP_SERVICE_ACCOUNT
 host_suffix=${HOSTNAME##*-}
 udmi_topic=${UDMI_PREFIX}udmi_reply
 udmi_feed=${udmi_topic}-${host_suffix}
-gcloud pubsub subscriptions create ${udmi_feed} --topic=${udmi_topic} --expiration-period=24h
-echo Created dynamic subscription ${udmi_feed} for host ${HOSTNAME}
+existing=$(gcloud pubsub subscriptions list | fgrep ${udmi_feed} || true)
+if [[ -n $existing ]]; then
+    echo Using existing subscription for $udmi_feed
+else
+    gcloud pubsub subscriptions create ${udmi_feed} --topic=${udmi_topic} --expiration-period=24h
+fi
 
 git config --global user.email $GCP_SERVICE_ACCOUNT
 git config --global user.name "UDMIS automation runner $UDMI_PREFIX"
+
+echo
 
 while true; do
     echo Waiting for repo updates at $(date -u -Iseconds)
@@ -54,7 +61,14 @@ while true; do
     rm -rf $MODEL_DIR
 
     echo gcloud source repos clone $repo_name $MODEL_DIR --project=$GCP_PROJECT
-    gcloud source repos clone $repo_name $MODEL_DIR --project=$GCP_PROJECT
+    gcloud source repos clone $repo_name $MODEL_DIR --project=$GCP_PROJECT || true
+
+    if [[ ! -d $MODEL_DIR ]]; then
+        echo
+        echo Error cloning repo, try again!
+        echo
+        continue
+    fi
 
     (
         cd $MODEL_DIR
@@ -63,13 +77,22 @@ while true; do
         ls -l
     )
 
-    # {
-    #   "iot_provider": "pubsub",
-    #   "project_id": "bos-platform-dev",
-    #   "udmi_namespace": "peringknife",
-    #   "bridge_host": "dev",
-    #   "site_model": "/home/peringknife/udmi/sites/udmi_site_model",
-    #   "registry_suffix": null
-    # }
-    
+    cat <<EOF > $CONFIG_FILE
+{
+  "iot_provider": "pubsub",
+  "project_id": "$GCP_PROJECT",
+  "udmi_namespace": "$UDMI_NAMESPACE",
+  "bridge_host": "${host_suffix}",
+  "site_model": "$MODEL_DIR"
+}
+EOF
+    echo Registrary config $CONFIG_FILE:
+    cat $CONFIG_FILE
+    echo
+
+    bin/registrar $CONFIG_FILE || true
+
+    echo
+    echo Site model status:
+    (cd $MODEL_DIR; git status)
 done

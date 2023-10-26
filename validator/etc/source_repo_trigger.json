@@ -1,0 +1,7 @@
+# Simple template file useful for manually triggering tool automation using gcloud pubsub publish.
+#
+#   gcloud pubsub topics publish source_repo --message="$(fgrep -v \# < validator/etc/source_repo_trigger.json)"
+#
+{
+  "url": "https://source.developers.google.com/p/@GCP_PROJECT@/r/@REPO_NAME@"
+}
