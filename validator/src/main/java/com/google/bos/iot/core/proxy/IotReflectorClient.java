@@ -262,7 +262,6 @@ public class IotReflectorClient implements MessagePublisher {
     Validator.MessageBundle messageBundle = new Validator.MessageBundle();
     messageBundle.attributes = attributes;
     messageBundle.message = message;
-    System.err.printf("TAP receive %s%n", stringify(attributes));
     messages.offer(messageBundle);
   }
 
@@ -379,7 +378,6 @@ public class IotReflectorClient implements MessagePublisher {
     String transactionId = getNextTransactionId();
     envelope.transactionId = transactionId;
     envelope.publishTime = new Date();
-    System.err.printf("TAP send %s %s %s%n", registryId, UDMI_TOPIC, stringify(envelope));
     publisher.publish(registryId, UDMI_TOPIC, stringify(envelope));
     return transactionId;
   }
