@@ -13,12 +13,12 @@ import static com.google.udmi.util.Common.EXCEPTION_KEY;
 import static com.google.udmi.util.Common.GCP_REFLECT_KEY_PKCS8;
 import static com.google.udmi.util.Common.MESSAGE_KEY;
 import static com.google.udmi.util.Common.NO_SITE;
-import static com.google.udmi.util.Common.PREFIX_SEPARATOR;
 import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.Common.UPDATE_QUERY_TOPIC;
+import static com.google.udmi.util.Common.getNamespacePrefix;
 import static com.google.udmi.util.Common.removeNextArg;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -457,8 +457,7 @@ public class Validator {
     if (config == null) {
       return null;
     }
-    String prefix = ofNullable(config.udmi_namespace).map(name -> name + PREFIX_SEPARATOR)
-        .orElse("");
+    String prefix = getNamespacePrefix(config.udmi_namespace);
     String suffix = ofNullable(config.registry_suffix).orElse("");
     return prefix + config.registry_id + suffix;
   }

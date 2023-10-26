@@ -17,7 +17,6 @@ import com.google.api.core.ApiFuture;
 import com.google.api.gax.core.NoCredentialsProvider;
 import com.google.bos.udmi.service.messaging.impl.PubSubPipe;
 import com.google.cloud.pubsub.v1.Publisher;
-import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.ProjectTopicName;
 import com.google.pubsub.v1.PubsubMessage;
@@ -133,6 +132,7 @@ public class PubSubIotAccessProvider extends IotAccessBase {
 
   @Override
   String fetchRegistryMetadata(String registryId, String metadataKey) {
-    throw new RuntimeException("fetchRegistryMetadata not implemented for PubSub");
+    // Metadata is not supported by PubSub, so just pretend there is none.
+    return null;
   }
 }

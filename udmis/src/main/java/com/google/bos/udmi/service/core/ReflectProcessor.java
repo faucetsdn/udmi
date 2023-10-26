@@ -142,7 +142,6 @@ public class ReflectProcessor extends ProcessorBase {
       Map<String, Object> payload) {
     debug("Processing reflection %s/%s %s %s", envelope.subType, envelope.subFolder,
         getTimestamp(envelope.publishTime), envelope.transactionId);
-    updateProviderAffinity(envelope, reflection.source);
     CloudModel result = getReflectionResult(envelope, payload);
     ifNotNullThen(result,
         v -> debug("Reflection result %s: %s", envelope.transactionId, envelope.subType));
@@ -247,11 +246,9 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private void updateProviderAffinity(Envelope envelope, String source) {
-    if (envelope.deviceId != null) {
-      debug("Setting affinity for %s/%s to %s", envelope.deviceRegistryId, envelope.deviceId,
-          source);
-      iotAccess.setProviderAffinity(envelope.deviceRegistryId, envelope.deviceId, source);
-    }
+    debug("Setting affinity for %s/%s to %s", envelope.deviceRegistryId, envelope.deviceId,
+        source);
+    iotAccess.setProviderAffinity(envelope.deviceRegistryId, envelope.deviceId, source);
   }
 
   private void updateRegistryRegions(Map<String, String> regions) {

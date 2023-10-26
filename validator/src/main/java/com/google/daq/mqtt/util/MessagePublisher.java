@@ -1,5 +1,6 @@
 package com.google.daq.mqtt.util;
 
+import static com.google.udmi.util.Common.getNamespacePrefix;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 
 import com.google.bos.iot.core.proxy.MqttPublisher;
@@ -18,8 +19,7 @@ import udmi.schema.SetupUdmiConfig;
 public interface MessagePublisher {
 
   static String getRegistryId(ExecutionConfiguration config) {
-    String prefix = ifNotNullGet(config.udmi_namespace, name -> name + Common.PREFIX_SEPARATOR, "");
-    return prefix + config.registry_id;
+    return getNamespacePrefix(config.udmi_namespace) + config.registry_id;
   }
 
   /**

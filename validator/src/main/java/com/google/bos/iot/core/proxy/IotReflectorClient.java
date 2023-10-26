@@ -6,6 +6,7 @@ import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.Common.VERSION_KEY;
+import static com.google.udmi.util.Common.getNamespacePrefix;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.convertTo;
@@ -97,7 +98,7 @@ public class IotReflectorClient implements MessagePublisher {
     updateTo = iotConfig.update_to;
     String cloudRegion = Optional.ofNullable(iotConfig.reflect_region)
         .orElse(iotConfig.cloud_region);
-    String prefix = ifNotNullGet(iotConfig.udmi_namespace, name -> name + Common.PREFIX_SEPARATOR);
+    String prefix = getNamespacePrefix(iotConfig.udmi_namespace);
     String iotProvider = iotConfig.iot_provider.value();
     subscriptionId = format("%s/%s/%s/%s%s/%s",
         projectId, iotProvider, cloudRegion, prefix, UDMI_REFLECT, registryId);

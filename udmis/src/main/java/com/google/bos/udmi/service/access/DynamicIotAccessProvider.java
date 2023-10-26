@@ -29,6 +29,7 @@ import udmi.schema.IotAccess;
  */
 public class DynamicIotAccessProvider extends IotAccessBase {
 
+  private static final long INDEX_ORDERING_MULTIPLIER_MS = 10000L;
   private final Map<String, String> registryProviders = new ConcurrentHashMap<>();
   private final List<String> providerList;
   private final Map<String, IotAccessBase> providers = new HashMap<>();
@@ -79,10 +80,11 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   private String registryPriority(String registryId, Entry<String, IotAccessBase> provider) {
+    int providerIndex = providerList.indexOf(provider.getKey());
     String provisionedAt = ofNullable(
         provider.getValue().fetchRegistryMetadata(registryId, "udmi_provisioned")).orElse(
-        getTimestamp(new Date(0)));
-    debug(format("Provider %s provisioned %s at %s", provider.getKey(), registryId, provisionedAt));
+        getTimestamp(new Date(providerIndex * INDEX_ORDERING_MULTIPLIER_MS)));
+    debug(format("Registry %s provider %s provisioned %s", registryId, provider.getKey(), provisionedAt));
     return provisionedAt;
   }
 

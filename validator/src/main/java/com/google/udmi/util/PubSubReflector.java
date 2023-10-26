@@ -7,6 +7,7 @@ import static com.google.udmi.util.Common.CATEGORY_PROPERTY_KEY;
 import static com.google.udmi.util.Common.DEVICE_ID_PROPERTY_KEY;
 import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
+import static com.google.udmi.util.Common.getNamespacePrefix;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
@@ -65,6 +66,8 @@ public class PubSubReflector implements MessagePublisher {
 
   private static final long SUBSCRIPTION_RACE_DELAY_MS = 10000;
   private static final String WAS_BASE_64 = "wasBase64";
+  public static final String UDMI_REFLECT_TOPIC = "udmi_reflect";
+  private static final String UDMI_REPLY_TOPIC = "udmi_reply";
 
   private final AtomicBoolean active = new AtomicBoolean();
   private final BlockingQueue<PubsubMessage> messages = null; // new LinkedBlockingDeque<>();
@@ -141,8 +144,11 @@ public class PubSubReflector implements MessagePublisher {
     ExecutionConfiguration reflectorConfig = IotReflectorClient.makeReflectConfiguration(iotConfig,
         registryActual);
     String registryId = MessagePublisher.getRegistryId(reflectorConfig);
-    String subscriptionId = requireNonNull(iotConfig.feed_name, "missing feed_name subscription");
-    String topicId = requireNonNull(iotConfig.update_topic, "missing update_topic specification");
+    String namespacePrefix = getNamespacePrefix(iotConfig.udmi_namespace);
+    String topicId = namespacePrefix + UDMI_REFLECT_TOPIC;
+    String bridgeHost = requireNonNull(iotConfig.bridge_host, "missing bridge_host");
+    String subscriptionId = namespacePrefix + UDMI_REPLY_TOPIC + "-" + bridgeHost;
+
     PubSubReflector reflector = new PubSubReflector(projectId, registryId, topicId, subscriptionId);
     reflector.activate(messageHandler, errorHandler);
     return reflector;
@@ -240,7 +246,6 @@ public class PubSubReflector implements MessagePublisher {
           .build();
       ApiFuture<String> publish = publisher.publish(message);
       publish.get(); // Wait for publish to complete.
-      System.err.printf("Published to %s/%s%n", registryId, deviceId);
     } catch (Exception e) {
       throw new RuntimeException("While publishing message", e);
     }

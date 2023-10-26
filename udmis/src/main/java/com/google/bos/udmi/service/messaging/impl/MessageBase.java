@@ -202,7 +202,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
           final Instant start = Instant.now();
           long waiting = Duration.between(before, start).getSeconds();
           debug("Processing waited %ds on message loop %s", waiting, id);
-          if (bundle.message.equals(TERMINATE_MARKER)) {
+          if (TERMINATE_MARKER.equals(bundle.message)) {
             info("Terminating message loop %s", id);
             return;
           }
