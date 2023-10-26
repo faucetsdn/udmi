@@ -62,4 +62,14 @@ while true; do
         pwd
         ls -l
     )
+
+    # {
+    #   "iot_provider": "pubsub",
+    #   "project_id": "bos-platform-dev",
+    #   "udmi_namespace": "peringknife",
+    #   "bridge_host": "dev",
+    #   "site_model": "/home/peringknife/udmi/sites/udmi_site_model",
+    #   "registry_suffix": null
+    # }
+    
 done
