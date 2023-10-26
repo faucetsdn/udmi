@@ -51,8 +51,10 @@ import udmi.schema.IotAccess.IotProvider;
  */
 class MqttPublisher implements MessagePublisher {
 
-  static final String DEFAULT_CLEARBLADE_HOSTNAME = "us-central1-mqtt.clearblade.com";
-  static final String DEFAULT_GBOS_HOSTNAME = "mqtt.bos.goog";
+  public static final String EMPTY_JSON = "{}";
+  public static final String DEFAULT_GCP_HOSTNAME = "mqtt.googleapis.com";
+  public static final String DEFAULT_CLEARBLADE_HOSTNAME = "us-central1-mqtt.clearblade.com";
+  public static final String DEFAULT_GBOS_HOSTNAME = "mqtt.bos.goog";
   static final String BRIDGE_PORT = "8883";
   private static final Logger LOG = LoggerFactory.getLogger(MqttPublisher.class);
   private static final boolean MQTT_SHOULD_RETAIN = false;
@@ -135,6 +137,7 @@ class MqttPublisher implements MessagePublisher {
         () -> switch (iotProvider) {
           case JWT -> requireNonNull(executionConfiguration.bridge_host, "missing bridge_host");
           case GBOS -> DEFAULT_GBOS_HOSTNAME;
+          case GCP -> DEFAULT_GCP_HOSTNAME;
           case CLEARBLADE -> DEFAULT_CLEARBLADE_HOSTNAME;
           default -> throw new RuntimeException("Unsupported iot provider " + iotProvider);
         }

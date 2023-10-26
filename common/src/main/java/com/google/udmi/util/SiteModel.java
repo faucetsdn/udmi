@@ -1,5 +1,8 @@
 package com.google.udmi.util;
 
+import static com.google.bos.iot.core.proxy.MqttPublisher.DEFAULT_CLEARBLADE_HOSTNAME;
+import static com.google.bos.iot.core.proxy.MqttPublisher.DEFAULT_GBOS_HOSTNAME;
+import static com.google.bos.iot.core.proxy.MqttPublisher.DEFAULT_GCP_HOSTNAME;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.udmi.util.Common.PREFIX_SEPARATOR;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
@@ -46,9 +49,6 @@ public class SiteModel {
       .enable(SerializationFeature.INDENT_OUTPUT)
       .setDateFormat(new ISO8601DateFormat())
       .setSerializationInclusion(JsonInclude.Include.NON_NULL);
-  private static final String DEFAULT_GCP_HOSTNAME = "mqtt.googleapis.com";
-  private static final String DEFAULT_CLEARBLADE_HOSTNAME = "mqtt.googleapis.com";
-  private static final String DEFAULT_GBOS_HOSTNAME = "mqtt.googleapis.com";
   private static final Pattern ID_PATTERN = Pattern.compile(
       "projects/(.*)/locations/(.*)/registries/(.*)/devices/(.*)");
 
