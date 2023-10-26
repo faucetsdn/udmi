@@ -2,8 +2,14 @@ package com.google.udmi.util;
 
 import static com.google.api.client.util.Preconditions.checkNotNull;
 import static com.google.bos.iot.core.proxy.IotReflectorClient.UDMI_REFLECT;
+import static com.google.udmi.util.Common.DEVICE_ID_PROPERTY_KEY;
 import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
+import static com.google.udmi.util.Common.REGISTRY_ID_PROPERTY_KEY;
+import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
+import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
+import static com.google.udmi.util.JsonUtil.stringify;
+import static java.lang.String.format;
 import static java.time.Instant.ofEpochSecond;
 import static java.util.Objects.requireNonNull;
 
@@ -112,7 +118,7 @@ public class PubSubReflector implements MessagePublisher {
         publisher = null;
       }
     } catch (Exception e) {
-      throw new RuntimeException(String.format(CONNECT_ERROR_FORMAT, projectId), e);
+      throw new RuntimeException(format(CONNECT_ERROR_FORMAT, projectId), e);
     }
   }
 
@@ -255,7 +261,7 @@ public class PubSubReflector implements MessagePublisher {
       throw new RuntimeException("Missing subscription for " + subscriptionName);
     } catch (Exception e) {
       throw new RuntimeException(
-          String.format(SUBSCRIPTION_ERROR_FORMAT, subscriptionName), e);
+          format(SUBSCRIPTION_ERROR_FORMAT, subscriptionName), e);
     }
   }
 
@@ -270,8 +276,16 @@ public class PubSubReflector implements MessagePublisher {
 
     @Override
     public void receiveMessage(PubsubMessage message, AckReplyConsumer consumer) {
-      processMessage(message);
-      consumer.ack();
+      try {
+        consumer.ack();
+        MessageBundle messageBundle = processMessage(message);
+        Map<String, String> attributes = messageBundle.attributes;
+        String topic = format("/devices/%s/%s", attributes.get(DEVICE_ID_PROPERTY_KEY),
+            attributes.get(SUBTYPE_PROPERTY_KEY));
+        messageHandler.accept(topic, stringify(messageBundle.message));
+      } catch (Exception e) {
+        errorHandler.accept(e);
+      }
     }
   }
 }
