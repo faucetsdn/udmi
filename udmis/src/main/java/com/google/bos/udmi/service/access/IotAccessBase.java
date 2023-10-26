@@ -5,6 +5,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.safeSleep;
+import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -285,6 +286,7 @@ public abstract class IotAccessBase extends ContainerBase {
             registryId, deviceId, folder, transactionId);
         requireNonNull(registryId, "registry not defined");
         requireNonNull(deviceId, "device not defined");
+        System.err.printf("TAP send %s %s %s %s%n", registryId, deviceId, folder, message);
         sendCommandBase(registryId, deviceId, folder, message);
       } catch (Exception e) {
         error("Exception sending command to %s: %s", backoffKey, friendlyStackTrace(e));

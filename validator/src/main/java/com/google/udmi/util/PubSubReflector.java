@@ -2,16 +2,15 @@ package com.google.udmi.util;
 
 import static com.google.api.client.util.Preconditions.checkNotNull;
 import static com.google.bos.iot.core.proxy.IotReflectorClient.UDMI_REFLECT;
-import static com.google.bos.iot.core.proxy.MqttPublisher.EMPTY_JSON;
+import static com.google.bos.iot.core.proxy.ProxyTarget.STATE_TOPIC;
 import static com.google.udmi.util.Common.CATEGORY_PROPERTY_KEY;
 import static com.google.udmi.util.Common.DEVICE_ID_PROPERTY_KEY;
 import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
-import static com.google.udmi.util.Common.REGISTRY_ID_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
-import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
-import static com.google.udmi.util.Common.UPDATE_QUERY_TOPIC;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static com.google.udmi.util.JsonUtil.toMap;
+import static com.google.udmi.util.JsonUtil.toStringMap;
 import static java.lang.String.format;
 import static java.time.Instant.ofEpochSecond;
 import static java.util.Objects.requireNonNull;
@@ -41,13 +40,14 @@ import com.google.pubsub.v1.PubsubMessage;
 import com.google.pubsub.v1.SeekRequest;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.TreeMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import org.jetbrains.annotations.Nullable;
+import udmi.schema.Envelope;
+import udmi.schema.Envelope.SubFolder;
 import udmi.schema.ExecutionConfiguration;
 import udmi.schema.SetupUdmiConfig;
 
@@ -141,8 +141,8 @@ public class PubSubReflector implements MessagePublisher {
     ExecutionConfiguration reflectorConfig = IotReflectorClient.makeReflectConfiguration(iotConfig,
         registryActual);
     String registryId = MessagePublisher.getRegistryId(reflectorConfig);
-    String subscriptionId = requireNonNull(iotConfig.feed_name, "missing feed name subscription");
-    String topicId = requireNonNull(iotConfig.update_topic, "missing update topic");
+    String subscriptionId = requireNonNull(iotConfig.feed_name, "missing feed_name subscription");
+    String topicId = requireNonNull(iotConfig.update_topic, "missing update_topic specification");
     PubSubReflector reflector = new PubSubReflector(projectId, registryId, topicId, subscriptionId);
     reflector.activate(messageHandler, errorHandler);
     return reflector;
@@ -153,9 +153,10 @@ public class PubSubReflector implements MessagePublisher {
     this.messageHandler = messageHandler;
     this.errorHandler = errorHandler;
     subscriber.startAsync().awaitRunning();
+    active.set(true);
+
     // TODO: Make this trigger both the config & state to be queried.
     // publish(UDMI_REFLECT, UPDATE_QUERY_TOPIC, EMPTY_JSON);
-    active.set(true);
   }
 
   private SeekRequest getCurrentTimeSeekRequest(String subscription) {
@@ -221,28 +222,29 @@ public class PubSubReflector implements MessagePublisher {
 
   @Override
   public String publish(String deviceId, String topic, String data) {
+    if (deviceId == null) {
+      System.err.printf("Refusing to publish to %s due to unspecified device%n", topic);
+      return null;
+    }
     try {
-      if (deviceId == null) {
-        System.err.printf("Refusing to publish to %s due to unspecified device%n", topic);
-        return null;
-      }
-      Map<String, String> attributesMap = Map.of(
-          "projectId", projectId,
-          "deviceId", deviceId,
-          "source", UDMI_REFLECT,
-          "deviceRegistryId", registryId
-      );
+      Envelope envelope = new Envelope();
+      envelope.deviceId = deviceId;
+      envelope.deviceRegistryId = registryId;
+      envelope.projectId = projectId;
+      envelope.source = UDMI_REFLECT;
+      envelope.subFolder = STATE_TOPIC.equals(topic) ? null : SubFolder.UDMI;
+      Map<String, String> map = toStringMap(envelope);
       PubsubMessage message = PubsubMessage.newBuilder()
           .setData(ByteString.copyFromUtf8(data))
-          .putAllAttributes(attributesMap)
+          .putAllAttributes(map)
           .build();
       ApiFuture<String> publish = publisher.publish(message);
       publish.get(); // Wait for publish to complete.
-      System.err.printf("Published to %s/%s/%s%n", registryId, deviceId, topic);
-      return null;
+      System.err.printf("Published to %s/%s%n", registryId, deviceId);
     } catch (Exception e) {
       throw new RuntimeException("While publishing message", e);
     }
+    return null;
   }
 
   @Override

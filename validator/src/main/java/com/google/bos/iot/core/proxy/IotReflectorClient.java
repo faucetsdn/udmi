@@ -1,5 +1,6 @@
 package com.google.bos.iot.core.proxy;
 
+import static com.google.bos.iot.core.proxy.ProxyTarget.STATE_TOPIC;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
@@ -11,6 +12,7 @@ import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.getDate;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -57,7 +59,7 @@ public class IotReflectorClient implements MessagePublisher {
   public static final String UDMI_REFLECT = "UDMI-REFLECT";
   private static final String MOCK_DEVICE_NUM_ID = "123456789101112";
   private static final String UDMI_TOPIC = "events/" + UDMI_FOLDER;
-  private static final long CONFIG_TIMEOUT_SEC = 30;
+  private static final long CONFIG_TIMEOUT_SEC = 10;
   private static final int UPDATE_RETRIES = 4;
   private static String prevTransactionId;
   private final String udmiVersion;
@@ -194,7 +196,7 @@ public class IotReflectorClient implements MessagePublisher {
 
     System.err.println("UDMI setting reflectorState: " + stringify(map));
 
-    publisher.publish(registryId, SubType.STATE.toString(), stringify(map));
+    publisher.publish(registryId, STATE_TOPIC, stringify(map));
   }
 
   private void messageHandler(String topic, String payload) {
@@ -260,6 +262,7 @@ public class IotReflectorClient implements MessagePublisher {
     Validator.MessageBundle messageBundle = new Validator.MessageBundle();
     messageBundle.attributes = attributes;
     messageBundle.message = message;
+    System.err.printf("TAP receive %s%n", stringify(attributes));
     messages.offer(messageBundle);
   }
 
@@ -376,7 +379,8 @@ public class IotReflectorClient implements MessagePublisher {
     String transactionId = getNextTransactionId();
     envelope.transactionId = transactionId;
     envelope.publishTime = new Date();
-    publisher.publish(registryId, UDMI_TOPIC, JsonUtil.stringify(envelope));
+    System.err.printf("TAP send %s %s %s%n", registryId, UDMI_TOPIC, stringify(envelope));
+    publisher.publish(registryId, UDMI_TOPIC, stringify(envelope));
     return transactionId;
   }
 

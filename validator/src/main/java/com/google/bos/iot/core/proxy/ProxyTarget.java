@@ -22,9 +22,9 @@ import org.slf4j.LoggerFactory;
 import udmi.schema.ExecutionConfiguration;
 import udmi.schema.Metadata;
 
-class ProxyTarget {
+public class ProxyTarget {
 
-  static final String STATE_TOPIC = "state";
+  public static final String STATE_TOPIC = "state";
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
       .enable(SerializationFeature.INDENT_OUTPUT)
       .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)

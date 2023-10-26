@@ -34,8 +34,10 @@ public abstract class Common {
   public static final String UDMI_VERSION_KEY = "udmi_version";
   public static final String SUBTYPE_PROPERTY_KEY = "subType";
   public static final String SUBFOLDER_PROPERTY_KEY = "subFolder";
-  public static final String DEVICE_ID_PROPERTY_KEY = "deviceId";
+  public static final String PROJECT_ID_PROPERTY_KEY = "projectId";
   public static final String REGISTRY_ID_PROPERTY_KEY = "deviceRegistryId";
+  public static final String DEVICE_ID_PROPERTY_KEY = "deviceId";
+  public static final String MESSAGE_SOURCE_PROPERTY_KEY = "source";
   public static final String NO_SITE = "--";
   public static final String GCP_REFLECT_KEY_PKCS8 = "reflector/rsa_private.pkcs8";
   public static final String PREFIX_SEPARATOR = "~";

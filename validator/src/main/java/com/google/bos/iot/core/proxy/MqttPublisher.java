@@ -5,6 +5,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.udmi.util.GeneralUtils.catchOrElse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.SiteModel.DEFAULT_CLEARBLADE_HOSTNAME;
+import static com.google.udmi.util.SiteModel.DEFAULT_GBOS_HOSTNAME;
+import static com.google.udmi.util.SiteModel.DEFAULT_GCP_HOSTNAME;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
@@ -57,9 +60,6 @@ import udmi.schema.IotAccess.IotProvider;
 public class MqttPublisher implements MessagePublisher {
 
   public static final String EMPTY_JSON = "{}";
-  public static final String DEFAULT_GCP_HOSTNAME = "mqtt.googleapis.com";
-  public static final String DEFAULT_CLEARBLADE_HOSTNAME = "us-central1-mqtt.clearblade.com";
-  public static final String DEFAULT_GBOS_HOSTNAME = "mqtt.bos.goog";
   static final String BRIDGE_PORT = "8883";
   private static final Logger LOG = LoggerFactory.getLogger(MqttPublisher.class);
   private static final boolean MQTT_SHOULD_RETAIN = false;
