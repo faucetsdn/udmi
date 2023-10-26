@@ -2,16 +2,20 @@ package com.google.udmi.util;
 
 import static com.google.api.client.util.Preconditions.checkNotNull;
 import static com.google.bos.iot.core.proxy.IotReflectorClient.UDMI_REFLECT;
+import static com.google.bos.iot.core.proxy.MqttPublisher.EMPTY_JSON;
+import static com.google.udmi.util.Common.CATEGORY_PROPERTY_KEY;
 import static com.google.udmi.util.Common.DEVICE_ID_PROPERTY_KEY;
 import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
 import static com.google.udmi.util.Common.REGISTRY_ID_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
+import static com.google.udmi.util.Common.UPDATE_QUERY_TOPIC;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static java.lang.String.format;
 import static java.time.Instant.ofEpochSecond;
 import static java.util.Objects.requireNonNull;
+import static java.util.Optional.ofNullable;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -37,6 +41,7 @@ import com.google.pubsub.v1.PubsubMessage;
 import com.google.pubsub.v1.SeekRequest;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TreeMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -148,7 +153,7 @@ public class PubSubReflector implements MessagePublisher {
     this.messageHandler = messageHandler;
     this.errorHandler = errorHandler;
     subscriber.startAsync().awaitRunning();
-    // TODO: Make this cause the config & state to be queried.
+    // TODO: Make this trigger both the config & state to be queried.
     // publish(UDMI_REFLECT, UPDATE_QUERY_TOPIC, EMPTY_JSON);
     active.set(true);
   }
@@ -280,8 +285,11 @@ public class PubSubReflector implements MessagePublisher {
         consumer.ack();
         MessageBundle messageBundle = processMessage(message);
         Map<String, String> attributes = messageBundle.attributes;
-        String topic = format("/devices/%s/%s", attributes.get(DEVICE_ID_PROPERTY_KEY),
-            attributes.get(SUBTYPE_PROPERTY_KEY));
+        String subFolder = attributes.get(SUBFOLDER_PROPERTY_KEY);
+        String suffix = ofNullable(subFolder).map(folder -> "/" + folder).orElse("");
+        String topic = format("/devices/%s/%s%s", attributes.get(DEVICE_ID_PROPERTY_KEY),
+            attributes.get(CATEGORY_PROPERTY_KEY),
+            suffix);
         messageHandler.accept(topic, stringify(messageBundle.message));
       } catch (Exception e) {
         errorHandler.accept(e);

@@ -57,8 +57,6 @@ public class IotReflectorClient implements MessagePublisher {
   public static final String UDMI_REFLECT = "UDMI-REFLECT";
   private static final String MOCK_DEVICE_NUM_ID = "123456789101112";
   private static final String UDMI_TOPIC = "events/" + UDMI_FOLDER;
-  private static final String CONFIG_CATEGORY = "config";
-  private static final String COMMANDS_CATEGORY = "commands";
   private static final long CONFIG_TIMEOUT_SEC = 30;
   private static final int UPDATE_RETRIES = 4;
   private static String prevTransactionId;
@@ -215,9 +213,9 @@ public class IotReflectorClient implements MessagePublisher {
       List<String> parts = parseMessageTopic(topic);
       String category = parts.get(0);
 
-      if (CONFIG_CATEGORY.equals(category)) {
+      if (Common.CONFIG_CATEGORY.equals(category)) {
         ensureCloudSync(messageMap);
-      } else if (COMMANDS_CATEGORY.equals(category)) {
+      } else if (Common.COMMANDS_CATEGORY.equals(category)) {
         handleCommandEnvelope(messageMap);
       } else {
         throw new RuntimeException("Unknown message category " + category);

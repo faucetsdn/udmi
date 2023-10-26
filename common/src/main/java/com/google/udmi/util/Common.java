@@ -44,6 +44,9 @@ public abstract class Common {
   public static final char DETAIL_SEPARATOR_CHAR = ';';
   public static final String DETAIL_SEPARATOR = DETAIL_SEPARATOR_CHAR + " ";
   public static final Joiner DETAIL_JOINER = Joiner.on(DETAIL_SEPARATOR);
+  public static final String CONFIG_CATEGORY = "config";
+  public static final String COMMANDS_CATEGORY = "commands";
+  public static final String CATEGORY_PROPERTY_KEY = "category";
 
   /**
    * Remove the next item from the list in an exception-safe way.
