@@ -1,8 +1,5 @@
 package com.google.udmi.util;
 
-import static com.google.bos.iot.core.proxy.MqttPublisher.DEFAULT_CLEARBLADE_HOSTNAME;
-import static com.google.bos.iot.core.proxy.MqttPublisher.DEFAULT_GBOS_HOSTNAME;
-import static com.google.bos.iot.core.proxy.MqttPublisher.DEFAULT_GCP_HOSTNAME;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.udmi.util.Common.PREFIX_SEPARATOR;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
@@ -42,6 +39,9 @@ import udmi.schema.Metadata;
 
 public class SiteModel {
 
+  public static final String DEFAULT_GCP_HOSTNAME = "mqtt.googleapis.com";
+  public static final String DEFAULT_CLEARBLADE_HOSTNAME = "us-central1-mqtt.clearblade.com";
+  public static final String DEFAULT_GBOS_HOSTNAME = "mqtt.bos.goog";
   public static final String MOCK_PROJECT = "mock-project";
   private static final String ID_FORMAT = "projects/%s/locations/%s/registries/%s/devices/%s";
   private static final String KEY_SITE_PATH_FORMAT = "%s/devices/%s/%s_private.pkcs8";
