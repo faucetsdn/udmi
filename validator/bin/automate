@@ -83,14 +83,15 @@ while true; do
   "project_id": "$GCP_PROJECT",
   "udmi_namespace": "$UDMI_NAMESPACE",
   "bridge_host": "${host_suffix}",
-  "site_model": "$MODEL_DIR"
+  "site_model": "$MODEL_DIR/udmi"
 }
 EOF
-    echo Registrary config $CONFIG_FILE:
+    echo Registrar config $CONFIG_FILE:
     cat $CONFIG_FILE
     echo
 
-    bin/registrar $CONFIG_FILE || true
+    echo validator/bin/registrar $CONFIG_FILE
+    validator/bin/registrar $CONFIG_FILE || true
 
     echo
     echo Site model status:

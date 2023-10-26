@@ -132,6 +132,7 @@ public class Registrar {
       new Registrar().processArgs(argList).execute();
     } catch (Exception e) {
       System.err.println("Exception in main: " + friendlyStackTrace(e));
+      e.printStackTrace();
       System.exit(EXIT_CODE_ERROR);
     }
   }
