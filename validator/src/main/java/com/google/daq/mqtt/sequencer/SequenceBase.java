@@ -999,7 +999,7 @@ public class SequenceBase {
       return;
     }
     assertConfigIsNotPending();
-    String txnId = reflector().publish(getDeviceId(), Common.STATE_QUERY_TOPIC, EMPTY_MESSAGE);
+    String txnId = reflector().publish(getDeviceId(), Common.UPDATE_QUERY_TOPIC, EMPTY_MESSAGE);
     String previous = stateTransaction.getAndSet(txnId);
     debug(format("Waiting for device stateTransaction %s (was %s)", txnId, previous));
     whileDoing("state query", () -> messageEvaluateLoop(this::stateTransactionPending),

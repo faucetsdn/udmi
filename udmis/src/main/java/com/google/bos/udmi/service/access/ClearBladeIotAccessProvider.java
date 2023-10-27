@@ -4,7 +4,6 @@ import static com.clearblade.cloud.iot.v1.devicetypes.GatewayType.NON_GATEWAY;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
-import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
@@ -53,6 +52,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.udmi.util.GeneralUtils;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Base64;
@@ -79,6 +79,7 @@ import udmi.schema.IotAccess;
  */
 public class ClearBladeIotAccessProvider extends IotAccessBase {
 
+  private static final Set<String> CLOUD_REGIONS = ImmutableSet.of("us-central1");
   private static final String EMPTY_JSON = "{}";
   private static final BiMap<Key_format, PublicKeyFormat> AUTH_TYPE_MAP = ImmutableBiMap.of(
       Key_format.RS_256, PublicKeyFormat.RSA_PEM,
@@ -101,6 +102,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   public ClearBladeIotAccessProvider(IotAccess iotAccess) {
     super(iotAccess);
     projectId = getProjectId(iotAccess);
+    info("Fetching registry regions...");
     ifTrueThen(isEnabled(), this::fetchRegistryRegions);
     ifNotTrueThen(isEnabled(),
         () -> warn("Clearblade access provided disabled because project id is null or empty"));
@@ -148,6 +150,10 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
 
   @NotNull
   protected Set<String> getRegistriesForRegion(String region) {
+    if (region == null) {
+      return CLOUD_REGIONS;
+    }
+
     try {
       DeviceManagerClient deviceManagerClient = getDeviceManagerClient();
       ListDeviceRegistriesRequest request = ListDeviceRegistriesRequest.Builder.newBuilder()
@@ -335,16 +341,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
         .setGatewayType(NON_GATEWAY)
         .setAssociationsGatewayId(requireNonNull(gatewayId, "gateway undefined"))
         .build();
-  }
-
-  @Nullable
-  private String getProjectId(IotAccess iotAccess) {
-    try {
-      return variableSubstitution(iotAccess.project_id, "project id not specified");
-    } catch (IllegalArgumentException e) {
-      warn("Missing variable in substitution, disabling provider: " + friendlyStackTrace(e));
-      return null;
-    }
   }
 
   private String getRegistryLocation(String registry) {

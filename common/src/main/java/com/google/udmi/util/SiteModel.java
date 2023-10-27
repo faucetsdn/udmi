@@ -1,7 +1,7 @@
 package com.google.udmi.util;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.udmi.util.Common.PREFIX_SEPARATOR;
+import static com.google.udmi.util.Common.getNamespacePrefix;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.JsonUtil.loadFileStrict;
 import static java.util.Objects.requireNonNull;
@@ -39,6 +39,9 @@ import udmi.schema.Metadata;
 
 public class SiteModel {
 
+  public static final String DEFAULT_GCP_HOSTNAME = "mqtt.googleapis.com";
+  public static final String DEFAULT_CLEARBLADE_HOSTNAME = "us-central1-mqtt.clearblade.com";
+  public static final String DEFAULT_GBOS_HOSTNAME = "mqtt.bos.goog";
   public static final String MOCK_PROJECT = "mock-project";
   private static final String ID_FORMAT = "projects/%s/locations/%s/registries/%s/devices/%s";
   private static final String KEY_SITE_PATH_FORMAT = "%s/devices/%s/%s_private.pkcs8";
@@ -46,9 +49,6 @@ public class SiteModel {
       .enable(SerializationFeature.INDENT_OUTPUT)
       .setDateFormat(new ISO8601DateFormat())
       .setSerializationInclusion(JsonInclude.Include.NON_NULL);
-  private static final String DEFAULT_GCP_HOSTNAME = "mqtt.googleapis.com";
-  private static final String DEFAULT_CLEARBLADE_HOSTNAME = "mqtt.googleapis.com";
-  private static final String DEFAULT_GBOS_HOSTNAME = "mqtt.googleapis.com";
   private static final Pattern ID_PATTERN = Pattern.compile(
       "projects/(.*)/locations/(.*)/registries/(.*)/devices/(.*)");
 
@@ -185,8 +185,7 @@ public class SiteModel {
     if (registry_id == null) {
       return null;
     }
-    String prefix = ofNullable(namespace).map(name -> name + PREFIX_SEPARATOR).orElse("");
-    return prefix + registry_id + ofNullable(registry_suffix).orElse("");
+    return getNamespacePrefix(namespace) + registry_id + ofNullable(registry_suffix).orElse("");
   }
 
   public EndpointConfiguration makeEndpointConfig(String iotProject, String deviceId) {

@@ -15,15 +15,19 @@ import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import udmi.schema.ExecutionConfiguration;
 import udmi.schema.Metadata;
 
-class ProxyTarget {
+/**
+ * Target proxy entry.
+ */
+public class ProxyTarget {
 
-  static final String STATE_TOPIC = "state";
+  public static final String STATE_TOPIC = "state";
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
       .enable(SerializationFeature.INDENT_OUTPUT)
       .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
@@ -146,8 +150,9 @@ class ProxyTarget {
     String keyAlgorithm = metadata.get("key_algorithm");
     String keyBytesRaw = metadata.get("key_bytes");
     byte[] keyBytes = Base64.getDecoder().decode(keyBytesRaw);
-    return new MqttPublisher(makeExecutionConfiguration(deviceId), keyBytes, keyAlgorithm,
-        this::messageHandler, this::errorHandler);
+
+    return new MqttPublisher(makeExecutionConfiguration(deviceId), keyBytes,
+        keyAlgorithm, this::messageHandler, e -> errorHandler(deviceId, e));
   }
 
   private ExecutionConfiguration makeExecutionConfiguration(String deviceId) {
@@ -231,8 +236,7 @@ class ProxyTarget {
     messagePublishers.clear();
   }
 
-  private void errorHandler(MqttPublisher publisher, Throwable error) {
-    String deviceId = publisher.getDeviceId();
+  private void errorHandler(String deviceId, Throwable error) {
     LOG.error("Error publishing " + deviceId, error);
     clearMqttPublisher(deviceId);
   }
