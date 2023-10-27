@@ -39,6 +39,7 @@ public class PubSubPusher {
       this.outTopic = outTopic;
       ProjectTopicName topicName = ProjectTopicName.of(projectId, outTopic);
       publisher = Publisher.newBuilder(topicName).build();
+      System.err.println("Pushing updates to " + publisher.getTopicNameString());
     } catch (Exception e) {
       throw new RuntimeException("While creating PubSubPublisher", e);
     }

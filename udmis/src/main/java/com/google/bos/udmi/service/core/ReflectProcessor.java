@@ -103,7 +103,7 @@ public class ReflectProcessor extends ProcessorBase {
     Map<String, Object> stringObjectMap = JsonUtil.asMap(message);
     UdmiState udmiState =
         convertToStrict(UdmiState.class, stringObjectMap.get(SubFolder.UDMI.value()));
-    requireNonNull(udmiState, "missing udmi subfolder");
+    requireNonNull(udmiState, "reflector state update missing udmi subfolder");
     udmiState.timestamp = JsonUtil.getDate((String) stringObjectMap.get(TIMESTAMP_KEY));
     return udmiState;
   }
@@ -142,7 +142,6 @@ public class ReflectProcessor extends ProcessorBase {
       Map<String, Object> payload) {
     debug("Processing reflection %s/%s %s %s", envelope.subType, envelope.subFolder,
         getTimestamp(envelope.publishTime), envelope.transactionId);
-    updateProviderAffinity(envelope, reflection.source);
     CloudModel result = getReflectionResult(envelope, payload);
     ifNotNullThen(result,
         v -> debug("Reflection result %s: %s", envelope.transactionId, envelope.subType));
@@ -247,7 +246,8 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private void updateProviderAffinity(Envelope envelope, String source) {
-    debug("Setting affinity for %s/%s to %s", envelope.deviceRegistryId, envelope.deviceId, source);
+    debug("Setting affinity for %s/%s to %s", envelope.deviceRegistryId, envelope.deviceId,
+        source);
     iotAccess.setProviderAffinity(envelope.deviceRegistryId, envelope.deviceId, source);
   }
 

@@ -2,13 +2,19 @@ FROM alpine:latest
 
 WORKDIR /root
 
-RUN apk add openjdk17 bash gcompat mosquitto-clients curl jq
+RUN apk add openjdk17 bash gcompat curl jq python3 git
+
+RUN curl -sSL https://sdk.cloud.google.com | bash
+
+ENV PATH=$PATH:/root/google-cloud-sdk/bin
 
 # Workaround for https://github.com/grpc/grpc-java/issues/8751
 ENV LD_PRELOAD=/lib/libgcompat.so.0
 
-ADD build/libs/validator-1.0-SNAPSHOT-all.jar build/libs/validator-1.0-SNAPSHOT-all.jar
+ADD tmp/schema/ schema/
 
-ADD bin/ bin/
+ADD build/ validator/build/
 
-CMD ["/root/bin/automate"]
+ADD bin/ validator/bin/
+
+CMD ["/root/validator/bin/automate"]
