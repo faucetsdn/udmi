@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-GCP_SERVICE_ACCOUNT=$(curl -H "Metadata-Flavor: Google" http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/email)
+GCP_SERVICE_ACCOUNT=$(curl -s -H "Metadata-Flavor: Google" http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/email)
 echo Configured with GCP service account $GCP_SERVICE_ACCOUNT
 
 # Cluster info comes from a k8s secret that needs to be externally added.

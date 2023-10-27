@@ -20,7 +20,6 @@ cmd=$2
 shift 2 || usage missing arguments
 
 cd ${ROOT}/${target}
-DROOT=$PWD
 
 git_branch=$(git rev-parse --abbrev-ref HEAD)
 git_remote=$(git config --get branch.$git_branch.remote) || fail missing git remote
@@ -82,6 +81,7 @@ if [[ $cmd == prep || $cmd == build ]]; then
     rm -rf var tmp && mkdir -p var tmp
 
     cp -f etc/*.json var/ || true
+    cp -a ../schema tmp/
 
     bin/build
 
@@ -99,7 +99,7 @@ fi
 
 if [[ $cmd == build ]]; then
     echo Building Dockerfile.$target
-    docker build -f Dockerfile.$target -t $target $DROOT
+    docker build -f Dockerfile.$target -t $target .
 fi
 
 TEMPLATES=$(cd etc; ls k8s_*.yaml)
