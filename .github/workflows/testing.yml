@@ -261,8 +261,7 @@ jobs:
 
   redirect:
     name: Endpoint Redirection
-    needs: comprehensive
-    needs: pretest
+    needs: [ comprehensive, pretest ]
     timeout-minutes: 10
     if: vars.TARGET_PROJECT != ''
     env:
