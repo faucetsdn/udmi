@@ -25,6 +25,9 @@ gcloud config set account $GCP_SERVICE_ACCOUNT
 host_suffix=${HOSTNAME##*-}
 udmi_topic=${UDMI_PREFIX}udmi_reply
 udmi_feed=${udmi_topic}-${host_suffix}
+
+echo Checking existing subscriptions...
+gcloud pubsub subscriptions list | fgrep name: || true
 existing=$(gcloud pubsub subscriptions list | fgrep ${udmi_feed} || true)
 if [[ -n $existing ]]; then
     echo Using existing subscription for $udmi_feed
