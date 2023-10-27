@@ -3,5 +3,5 @@
 #   gcloud pubsub topics publish source_repo --message="$(fgrep -v \# < validator/etc/source_repo_trigger.json)"
 #
 {
-  "url": "https://source.developers.google.com/p/bos-platform-dev/r/ZZ-TRI-FECTA"
+  "url": "https://source.developers.google.com/p/gcp-project-id/r/ZZ-TRI-FECTA"
 }
