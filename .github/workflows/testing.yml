@@ -290,7 +290,7 @@ jobs:
         run: more out/pubber.out* | cat
 
   posttest:
-    name: Pretest Setup
+    name: Posttest Summarization
     runs-on: ubuntu-latest
     timeout-minutes: 5
     needs: [ sequencer, comprehensive, redirect ]
