@@ -12,52 +12,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  udmis:
-    name: UDMIS Tests
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    timeout-minutes: 10
-    env:
-      PUSH_REGISTRY: ghcr.io
-      IMAGE_NAME: ${{ github.repository }}
-      GITHUB_REF: ${{ github.ref }}
-    steps:
-      - uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-      - name: Checkout source
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          fetch-tags: true
-      - name: Log in to the github registry
-        uses: docker/login-action@v2
-        with:
-          registry: ${{ env.PUSH_REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Setup udmis container build
-        if: ${{ github.event_name == 'push' }}
-        run: |
-          revhash=$(git rev-parse $GITHUB_REF)
-          IMAGE_TAG=g${revhash:0:9}
-          PUSH_REPO=$PUSH_REGISTRY/${{ github.repository }}
-          PUSH_TAG=$PUSH_REPO:udmis-$IMAGE_TAG
-          echo PUSH_TAG=$PUSH_TAG >> $GITHUB_ENV
-          bin/container udmis prep --no-check $PUSH_REPO
-          echo Pushing built container as $PUSH_TAG | tee -a $GITHUB_STEP_SUMMARY
-      - name: Build and push docker image
-        if: ${{ github.event_name == 'push' }}
-        uses: docker/build-push-action@v4
-        with:
-          file: udmis/Dockerfile.udmis
-          context: udmis
-          push: true
-          tags: ${{ env.PUSH_TAG }}
-
   unit:
     name: Unit Tests
     runs-on: ubuntu-latest
@@ -111,14 +65,23 @@ jobs:
   pretest:
     name: Pretest Setup
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    permissions:
+      contents: read
+      packages: write
+    timeout-minutes: 10
     if: vars.TARGET_PROJECT != ''
     env:
+      PUSH_REGISTRY: ghcr.io
       TARGET_PROJECT: ${{ vars.TARGET_PROJECT }}
       UDMI_REGISTRY_SUFFIX: ${{ vars.UDMI_REGISTRY_SUFFIX }}
       UDMI_ALT_REGISTRY: ${{ vars.UDMI_ALT_REGISTRY }}
+      IMAGE_NAME: ${{ github.repository }}
+      GITHUB_REF: ${{ github.ref }}
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          fetch-tags: true
       - uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
@@ -128,6 +91,31 @@ jobs:
           [[ -n $UDMI_REGISTRY_SUFFIX ]]
           [[ -n $UDMI_ALT_REGISTRY ]]
           [[ -n $TARGET_PROJECT ]]
+      - name: Log in to the github registry
+        if: ${{ github.event_name == 'push' }}
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.PUSH_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Setup udmis container build
+        if: ${{ github.event_name == 'push' }}
+        run: |
+          revhash=$(git rev-parse $GITHUB_REF)
+          IMAGE_TAG=g${revhash:0:9}
+          PUSH_REPO=$PUSH_REGISTRY/${{ github.repository }}
+          PUSH_TAG=$PUSH_REPO:udmis-$IMAGE_TAG
+          echo PUSH_TAG=$PUSH_TAG >> $GITHUB_ENV
+          bin/container udmis prep --no-check $PUSH_REPO
+          echo Pushing built container as $PUSH_TAG | tee -a $GITHUB_STEP_SUMMARY
+      - name: Build and push docker image
+        if: ${{ github.event_name == 'push' }}
+        uses: docker/build-push-action@v4
+        with:
+          file: udmis/Dockerfile.udmis
+          context: udmis
+          push: true
+          tags: ${{ env.PUSH_TAG }}
 
   sequencer:
     name: Sequencer Suite
