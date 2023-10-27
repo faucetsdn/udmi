@@ -338,7 +338,9 @@ public class IotReflectorClient implements MessagePublisher {
     List<String> parts = new ArrayList<>(Arrays.asList(topic.substring(1).split("/")));
     checkState("devices".equals(parts.remove(0)), "unknown parsed path field: " + topic);
     // Next field is registry, not device, since the reflector device holds the site registry.
-    checkState(registryId.equals(parts.remove(0)), "unexpected parsed registry id: " + topic);
+    String parsedId = parts.remove(0);
+    checkState(registryId.equals(parsedId),
+        format("registry id %s does not match expected %s", parsedId, registryId));
     return parts;
   }
 
