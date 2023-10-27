@@ -80,7 +80,7 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   private String registryPriority(String registryId, Entry<String, IotAccessBase> provider) {
-    int providerIndex = providerList.indexOf(provider.getKey());
+    int providerIndex = providerList.size() - providerList.indexOf(provider.getKey());
     String provisionedAt = ofNullable(
         provider.getValue().fetchRegistryMetadata(registryId, "udmi_provisioned")).orElse(
         getTimestamp(new Date(providerIndex * INDEX_ORDERING_MULTIPLIER_MS)));
