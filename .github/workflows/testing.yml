@@ -33,17 +33,6 @@ jobs:
         with:
           fetch-depth: 0
           fetch-tags: true
-      - name: bin/run_tests install_dependencies
-        run: bin/run_tests install_dependencies
-      - name: bin/start_pubsub
-        run: bin/start_pubsub
-      - name: bin/test_mosquitto
-        run: bin/test_mosquitto
-      - name: bin/run_tests udmis_tests
-        run: bin/run_tests udmis_tests
-      - name: test output
-        if: ${{ always() }}
-        run: more out/test_* | cat
       - name: Log in to the github registry
         uses: docker/login-action@v2
         with:
@@ -83,6 +72,8 @@ jobs:
           python-version: '3.10'
       - name: Checkout source
         uses: actions/checkout@v3
+      - name: start local servers
+        run: bin/start_pubsub && bin/test_mosquitto
       - name: bin/run_tests all_tests
         run: bin/run_tests all_tests
       - name: all test output
