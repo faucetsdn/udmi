@@ -103,7 +103,7 @@ public class GcpIotAccessProvider extends IotAccessBase {
       return;
     }
 
-    projectId = variableSubstitution(iotAccess.project_id, "gcp project id not specified");
+    projectId = getProjectId(iotAccess);
     cloudIotService = createCloudIotService();
     registries = cloudIotService.projects().locations().registries();
     ifTrueThen(isEnabled(), this::fetchRegistryRegions);
@@ -229,6 +229,10 @@ public class GcpIotAccessProvider extends IotAccessBase {
 
   @NotNull
   protected Set<String> getRegistriesForRegion(String region) {
+    if (region == null) {
+      return CLOUD_REGIONS;
+    }
+
     String locationPath = getLocationPath(region);
     try {
       ListDeviceRegistriesResponse response = cloudIotService

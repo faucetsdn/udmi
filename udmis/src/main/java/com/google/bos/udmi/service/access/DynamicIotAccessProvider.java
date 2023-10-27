@@ -19,6 +19,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import udmi.schema.CloudModel;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.IotAccess;
@@ -28,6 +29,7 @@ import udmi.schema.IotAccess;
  */
 public class DynamicIotAccessProvider extends IotAccessBase {
 
+  private static final long INDEX_ORDERING_MULTIPLIER_MS = 10000L;
   private final Map<String, String> registryProviders = new ConcurrentHashMap<>();
   private final List<String> providerList;
   private final Map<String, IotAccessBase> providers = new HashMap<>();
@@ -37,7 +39,8 @@ public class DynamicIotAccessProvider extends IotAccessBase {
    */
   public DynamicIotAccessProvider(IotAccess iotAccess) {
     super(iotAccess);
-    providerList = Arrays.asList(iotAccess.project_id.split(","));
+    providerList = Arrays.stream(iotAccess.project_id.split(",")).map(String::trim)
+        .collect(Collectors.toList());
   }
 
   @Override
@@ -64,7 +67,7 @@ public class DynamicIotAccessProvider extends IotAccessBase {
     TreeMap<String, String> sortedMap = providers.entrySet().stream()
         .collect(sortedMapCollector(entry -> registryPriority(registryId, entry)));
     String providerId = sortedMap.lastEntry().getValue();
-    debug("Registry mapping for " + registryId + " is " + providerId);
+    debug("Registry affinity mapping for " + registryId + " is " + providerId);
     return providerId;
   }
 
@@ -77,10 +80,12 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   private String registryPriority(String registryId, Entry<String, IotAccessBase> provider) {
+    int providerIndex = providerList.size() - providerList.indexOf(provider.getKey());
     String provisionedAt = ofNullable(
         provider.getValue().fetchRegistryMetadata(registryId, "udmi_provisioned")).orElse(
-        getTimestamp(new Date(0)));
-    debug(format("Provider %s provisioned %s at %s", provider.getKey(), registryId, provisionedAt));
+        getTimestamp(new Date(providerIndex * INDEX_ORDERING_MULTIPLIER_MS)));
+    debug(format("Registry %s provider %s provisioned %s", registryId, provider.getKey(),
+        provisionedAt));
     return provisionedAt;
   }
 

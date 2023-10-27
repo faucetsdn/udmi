@@ -20,6 +20,7 @@
         "local",
         "dynamic",
         "implicit",
+        "pubsub",
         "jwt",
         "gcp_native",
         "gcp",
