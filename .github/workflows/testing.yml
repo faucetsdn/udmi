@@ -27,7 +27,10 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v3
       - name: start local servers
-        run: bin/start_pubsub && bin/test_mosquitto
+        run: |
+          bin/setup_base
+          bin/start_pubsub
+          bin/test_mosquitto
       - name: bin/run_tests all_tests
         run: bin/run_tests all_tests
       - name: all test output
