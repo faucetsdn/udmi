@@ -13,6 +13,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
+import static com.google.udmi.util.JsonUtil.safeSleep;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
@@ -135,6 +136,10 @@ public class Registrar {
       e.printStackTrace();
       System.exit(EXIT_CODE_ERROR);
     }
+
+    // Force exist because PubSub Subscriber in PubSubReflector does not shut down properly.
+    safeSleep(2000);
+    System.exit(0);
   }
 
   @SuppressWarnings("unchecked")

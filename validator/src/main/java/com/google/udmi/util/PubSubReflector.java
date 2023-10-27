@@ -2,15 +2,17 @@ package com.google.udmi.util;
 
 import static com.google.api.client.util.Preconditions.checkNotNull;
 import static com.google.bos.iot.core.proxy.IotReflectorClient.UDMI_REFLECT;
+import static com.google.bos.iot.core.proxy.MqttPublisher.EMPTY_JSON;
 import static com.google.bos.iot.core.proxy.ProxyTarget.STATE_TOPIC;
 import static com.google.udmi.util.Common.CATEGORY_PROPERTY_KEY;
 import static com.google.udmi.util.Common.DEVICE_ID_PROPERTY_KEY;
 import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
+import static com.google.udmi.util.Common.UPDATE_QUERY_TOPIC;
 import static com.google.udmi.util.Common.getNamespacePrefix;
+import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.stringify;
-import static com.google.udmi.util.JsonUtil.toMap;
 import static com.google.udmi.util.JsonUtil.toStringMap;
 import static java.lang.String.format;
 import static java.time.Instant.ofEpochSecond;
@@ -22,6 +24,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.api.client.util.Base64;
+import com.google.api.core.AbstractApiService;
 import com.google.api.core.ApiFuture;
 import com.google.api.gax.rpc.NotFoundException;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
@@ -43,6 +46,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -70,7 +74,6 @@ public class PubSubReflector implements MessagePublisher {
   private static final String UDMI_REPLY_TOPIC = "udmi_reply";
 
   private final AtomicBoolean active = new AtomicBoolean();
-  private final BlockingQueue<PubsubMessage> messages = null; // new LinkedBlockingDeque<>();
   private final long startTimeSec = System.currentTimeMillis() / 1000;
 
   private final String projectId;
@@ -182,12 +185,7 @@ public class PubSubReflector implements MessagePublisher {
 
   @Override
   public MessageBundle takeNextMessage(QuerySpeed speed) {
-    try {
-      PubsubMessage message = messages.take();
-      return processMessage(message);
-    } catch (Exception e) {
-      throw new RuntimeException("While taking next message", e);
-    }
+    throw new RuntimeException("Not implemented for PubSubReflector");
   }
 
   @Nullable
@@ -233,6 +231,9 @@ public class PubSubReflector implements MessagePublisher {
       return null;
     }
     try {
+      if (!active.get()) {
+        throw new RuntimeException("Publishing to shutdown reflector");
+      }
       Envelope envelope = new Envelope();
       envelope.deviceId = deviceId;
       envelope.deviceRegistryId = registryId;
@@ -254,9 +255,18 @@ public class PubSubReflector implements MessagePublisher {
 
   @Override
   public void close() {
+    active.set(false);
     if (subscriber != null) {
-      active.set(false);
-      subscriber.stopAsync();
+      subscriber.stopAsync().awaitTerminated();
+    }
+    if (publisher != null) {
+      try {
+        publisher.publishAllOutstanding();
+        publisher.shutdown();
+      } catch (Exception e) {
+        System.err.println("Error shutting down publisher");
+        e.printStackTrace();
+      }
     }
   }
 
