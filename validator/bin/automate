@@ -10,6 +10,7 @@ MESSAGE_FILE=message.json
 RETRY_DELAY_SEC=60
 MODEL_DIR=source_model
 CONFIG_FILE=registrar_config.json
+REGISTRAR_TRIGGER=run-registrar
 
 SUBSCRIPTION=${UDMI_PREFIX#\~}source_repo-udmis
 echo Pulling from PubSub subscription $SUBSCRIPTION
@@ -80,6 +81,11 @@ while true; do
         ls -l
     )
 
+    if [[ ! -f $MODEL_DIR/$REGISTRAR_TRIGGER ]]; then
+        echo Missing $MODEL_DIR/$REGISTRAR_TRIGGER trigger file, doing nothing!
+        continue
+    fi
+
     cat <<EOF > $CONFIG_FILE
 {
   "iot_provider": "pubsub",
@@ -98,5 +104,12 @@ EOF
 
     echo
     echo Site model status:
-    (cd $MODEL_DIR; git status)
+    (
+        cd $MODEL_DIR
+        rm -f $REGISTRAR_TRIGGER
+        git status
+        git add .
+        git commit -F udmi/out/registration_summary.json
+        git push || true
+    )
 done
