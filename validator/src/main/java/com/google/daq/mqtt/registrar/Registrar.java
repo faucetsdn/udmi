@@ -13,6 +13,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
+import static com.google.udmi.util.JsonUtil.safeSleep;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
@@ -93,6 +94,7 @@ public class Registrar {
   private static final String MODEL_SUB_TYPE = "model";
   private static final boolean DEFAULT_BLOCK_UNKNOWN = true;
   private static final int EACH_ITEM_TIMEOUT_SEC = 10;
+  private static final int EXIT_CODE_ERROR = 1;
   private final Map<String, JsonSchema> schemas = new HashMap<>();
   private final String generation = getGenerationString();
   private CloudIotManager cloudIotManager;
@@ -131,7 +133,13 @@ public class Registrar {
       new Registrar().processArgs(argList).execute();
     } catch (Exception e) {
       System.err.println("Exception in main: " + friendlyStackTrace(e));
+      e.printStackTrace();
+      System.exit(EXIT_CODE_ERROR);
     }
+
+    // Force exist because PubSub Subscriber in PubSubReflector does not shut down properly.
+    safeSleep(2000);
+    System.exit(0);
   }
 
   @SuppressWarnings("unchecked")

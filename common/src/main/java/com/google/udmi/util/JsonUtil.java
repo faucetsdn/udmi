@@ -342,6 +342,18 @@ public abstract class JsonUtil {
   }
 
   /**
+   * Convert the pojo to a mapped representation of strings only.
+   *
+   * @param message input object to convert
+   * @return object-as-map
+   */
+  public static Map<String, String> toStringMap(String message) {
+    @SuppressWarnings("unchecked")
+    Map<String, String> map = fromString(TreeMap.class, message);
+    return map;
+  }
+
+  /**
    * Convert the pojo to a mapped representation.
    *
    * @param message input object to convert
