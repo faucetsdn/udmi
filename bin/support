@@ -2,7 +2,7 @@
 
 ROOT_DIR=$(dirname $0)/..
 
-TIME=`date --utc +%Y%M%d-%H%m%S`
+TIME=`date --utc +%Y%m%d-%H%M%S`
 OUTFILE=/tmp/udmi-support_$TIME.tgz
 OUT_DIR=$(realpath $ROOT_DIR/out --relative-to=$PWD)
 
