@@ -183,8 +183,6 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-      - name: diagnostics
-        run: echo Running matrix shard $MATRIX_SHARD
       - name: base setup
         run: bin/run_tests install_dependencies
       - name: registrar clean
