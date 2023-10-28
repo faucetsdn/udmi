@@ -26,7 +26,7 @@ jobs:
           python-version: '3.10'
       - name: Checkout source
         uses: actions/checkout@v3
-      - name: start local servers
+      - name: start and test local servers
         run: |
           bin/setup_base
           bin/clone_model
@@ -36,7 +36,7 @@ jobs:
         run: bin/run_tests all_tests
       - name: all test output
         if: ${{ always() }}
-        run: more out/test_* | cat
+        run: more out/test_*
 
   spelling:
     name: Docs Spelling Checks
