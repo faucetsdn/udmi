@@ -29,6 +29,7 @@ jobs:
       - name: start local servers
         run: |
           bin/setup_base
+          bin/clone_model
           bin/start_pubsub
           bin/test_mosquitto
       - name: bin/run_tests all_tests
