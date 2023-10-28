@@ -198,13 +198,15 @@ jobs:
     env:
       TARGET_PROJECT: ${{ vars.TARGET_PROJECT }}
       UDMI_ALT_REGISTRY: ${{ vars.UDMI_ALT_REGISTRY }}
-      MATRIX_SHARD: ${{ mattix.shard }}
+      MATRIX_SHARD: ${{ matrix.shard }}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '17'
+      - name: diagnostics
+        run: echo Running matrix shard $MATRIX_SHARD
       - name: base setup
         run: bin/run_tests install_dependencies
       - name: registrar clean
