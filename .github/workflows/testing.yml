@@ -67,7 +67,7 @@ jobs:
         run: udmif/api/runTests
 
   pretest:
-    name: Pretest Setup
+    name: Pre-test Setup
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -279,7 +279,7 @@ jobs:
         run: more out/pubber.out* | cat
 
   posttest:
-    name: Posttest Summarization
+    name: Post-test Summarization
     runs-on: ubuntu-latest
     timeout-minutes: 5
     needs: [ sequencer, comprehensive, redirect ]
