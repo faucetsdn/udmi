@@ -175,7 +175,8 @@ jobs:
     env:
       TARGET_PROJECT: ${{ vars.TARGET_PROJECT }}
       UDMI_ALT_REGISTRY: ${{ vars.UDMI_ALT_REGISTRY }}
-      MATRIX_SHARD: ${{ matrix.shard }}
+      UDMI_REGISTRY_SUFFIX: _${{ matrix.shard }}
+      UDMI_SHARD_COUNT: 1
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-java@v3
