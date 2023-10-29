@@ -47,8 +47,7 @@ if [[ -d $site_path ]]; then
     shift 2 || fail Missing configuration command line parameters.
 fi
 
-if [[ -n $MATRIX_SHARD_COUNT ]]; then
-    export UDMI_REGISTRY_SUFFIX=$(printf _%02d $MATRIX_SHARD_INDEX)
+if [[ -n $UDMI_REGISTRY_SUFFIX ]]; then
     echo Using registry suffix $UDMI_REGISTRY_SUFFIX
     registry_suffix=\"$UDMI_REGISTRY_SUFFIX\"
 else
