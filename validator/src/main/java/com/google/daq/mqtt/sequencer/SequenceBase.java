@@ -54,7 +54,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
-import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.util.MessagePublisher.QuerySpeed;
 import com.google.daq.mqtt.util.ObjectDiffEngine;
@@ -161,10 +160,6 @@ public class SequenceBase {
   private static final String DEVICE_METADATA = "%s/devices/%s/metadata.json";
   private static final String DEVICE_CONFIG_FORMAT = "%s/devices/%s/out/generated_config.json";
   private static final String SUMMARY_OUTPUT_FORMAT = "%s/out/sequencer_%s.json";
-  private static final String CONFIG_ENV = "SEQUENCER_CONFIG";
-  private static final String DEFAULT_CONFIG = "/tmp/sequencer_config.json";
-  private static final String CONFIG_PATH =
-      Objects.requireNonNullElse(System.getenv(CONFIG_ENV), DEFAULT_CONFIG);
   private static final Map<Class<?>, SubFolder> CLASS_SUBFOLDER_MAP = ImmutableMap.of(
       SystemEvent.class, SubFolder.SYSTEM,
       PointsetEvent.class, SubFolder.POINTSET,
@@ -214,7 +209,7 @@ public class SequenceBase {
   protected static Config deviceConfig;
   protected static IotReflectorClient altClient;
   protected static String serialNo;
-  static ExecutionConfiguration validatorConfig;
+  static ExecutionConfiguration exeConfig;
   private static Validator messageValidator;
   private static ValidationState validationState;
   private static String udmiVersion;
@@ -269,69 +264,29 @@ public class SequenceBase {
   private Boolean expectedSystemStatus;
   private Description testDescription;
 
-  static void ensureValidatorConfig() {
-    if (validatorConfig != null) {
-      return;
-    }
-    if (SequenceRunner.executionConfiguration != null) {
-      validatorConfig = SequenceRunner.executionConfiguration;
-    } else {
-      if (CONFIG_PATH == null || CONFIG_PATH.equals("")) {
-        throw new RuntimeException(CONFIG_ENV + " env not defined.");
-      }
-      final File configFile = new File(CONFIG_PATH);
-      try {
-        System.err.println("Reading config file " + configFile.getAbsolutePath());
-        validatorConfig = ConfigUtil.readValidatorConfig(configFile);
-        SiteModel model = new SiteModel(validatorConfig.site_model);
-        model.initialize();
-        reportLoadingErrors(model);
-        validatorConfig.cloud_region = ofNullable(validatorConfig.cloud_region)
-            .orElse(model.getCloudRegion());
-        validatorConfig.registry_id = ofNullable(validatorConfig.registry_id)
-            .orElse(model.getRegistryId());
-        validatorConfig.reflect_region = ofNullable(validatorConfig.reflect_region)
-            .orElse(model.getReflectRegion());
-      } catch (Exception e) {
-        throw new RuntimeException("While loading " + configFile, e);
-      }
-    }
-  }
-
-  private static void reportLoadingErrors(SiteModel model) {
-    String deviceId = validatorConfig.device_id;
-    checkState(model.allDeviceIds().contains(deviceId),
-        format("device_id %s not found in site model", deviceId));
-    Metadata metadata = model.getMetadata(deviceId);
-    if (metadata instanceof MetadataException metadataException) {
-      System.err.println(
-          "Device loading error: " + friendlyStackTrace(metadataException.exception));
-    }
-  }
-
   private static void setupSequencer() {
-    ensureValidatorConfig();
+    exeConfig = SequenceRunner.ensureExecutionConfig();
     if (client != null) {
       return;
     }
     final String key_file;
     try {
-      messageValidator = new Validator(validatorConfig);
-      siteModel = checkNotNull(validatorConfig.site_model, "site_model not defined");
-      projectId = checkNotNull(validatorConfig.project_id, "project_id not defined");
-      udmiVersion = checkNotNull(validatorConfig.udmi_version, "udmi_version not defined");
-      String serial = checkNotNull(validatorConfig.serial_no, "serial_no not defined");
+      messageValidator = new Validator(exeConfig);
+      siteModel = checkNotNull(exeConfig.site_model, "site_model not defined");
+      projectId = checkNotNull(exeConfig.project_id, "project_id not defined");
+      udmiVersion = checkNotNull(exeConfig.udmi_version, "udmi_version not defined");
+      String serial = checkNotNull(exeConfig.serial_no, "serial_no not defined");
       serialNo = serial.equals(SERIAL_NO_MISSING) ? null : serial;
-      logLevel = Level.valueOf(checkNotNull(validatorConfig.log_level, "log_level not defined"))
+      logLevel = Level.valueOf(checkNotNull(exeConfig.log_level, "log_level not defined"))
           .value();
-      key_file = checkNotNull(validatorConfig.key_file, "key_file not defined");
+      key_file = checkNotNull(exeConfig.key_file, "key_file not defined");
     } catch (Exception e) {
       e.printStackTrace();
       throw new RuntimeException("While processing validator config", e);
     }
 
-    cloudRegion = validatorConfig.cloud_region;
-    registryId = SiteModel.getRegistryActual(validatorConfig);
+    cloudRegion = exeConfig.cloud_region;
+    registryId = SiteModel.getRegistryActual(exeConfig);
 
 
     deviceMetadata = readDeviceMetadata();
@@ -348,9 +303,9 @@ public class SequenceBase {
     System.err.printf("Validating against device %s serial %s%n", getDeviceId(), serialNo);
     client = getPublisherClient();
 
-    String udmiNamespace = validatorConfig.udmi_namespace;
-    String altRegistryId = validatorConfig.alt_registry;
-    String registrySuffix = validatorConfig.registry_suffix;
+    String udmiNamespace = exeConfig.udmi_namespace;
+    String altRegistryId = exeConfig.alt_registry;
+    String registrySuffix = exeConfig.registry_suffix;
     altRegistry = SiteModel.getRegistryActual(udmiNamespace, altRegistryId, registrySuffix);
     altClient = getAlternateClient();
 
@@ -374,8 +329,8 @@ public class SequenceBase {
   }
 
   private static MessagePublisher getPublisherClient() {
-    boolean isMockProject = validatorConfig.project_id.equals(SiteModel.MOCK_PROJECT);
-    boolean failFast = SiteModel.MOCK_PROJECT.equals(validatorConfig.alt_project);
+    boolean isMockProject = exeConfig.project_id.equals(SiteModel.MOCK_PROJECT);
+    boolean failFast = SiteModel.MOCK_PROJECT.equals(exeConfig.alt_project);
     return isMockProject ? getMockClient(failFast) : getReflectorClient();
   }
 
@@ -389,10 +344,10 @@ public class SequenceBase {
       return null;
     }
 
-    ExecutionConfiguration altConfiguration = GeneralUtils.deepCopy(validatorConfig);
-    altConfiguration.registry_id = validatorConfig.alt_registry;
-    altConfiguration.registry_suffix = validatorConfig.registry_suffix;
-    altConfiguration.udmi_namespace = validatorConfig.udmi_namespace;
+    ExecutionConfiguration altConfiguration = GeneralUtils.deepCopy(exeConfig);
+    altConfiguration.registry_id = exeConfig.alt_registry;
+    altConfiguration.registry_suffix = exeConfig.registry_suffix;
+    altConfiguration.udmi_namespace = exeConfig.udmi_namespace;
     altConfiguration.alt_registry = null;
 
     try {
@@ -408,14 +363,14 @@ public class SequenceBase {
   }
 
   private static int getRequiredFunctionsVersion() {
-    FeatureStage minStage = isNullOrEmpty(validatorConfig.min_stage) ? DEFAULT_MIN_STAGE
-        : FeatureStage.valueOf(validatorConfig.min_stage);
+    FeatureStage minStage = isNullOrEmpty(exeConfig.min_stage) ? DEFAULT_MIN_STAGE
+        : FeatureStage.valueOf(exeConfig.min_stage);
     return SequenceRunner.processGiven(ALPHA, minStage) ? FUNCTIONS_VERSION_ALPHA
         : FUNCTIONS_VERSION_BETA;
   }
 
   static void resetState() {
-    validatorConfig = null;
+    exeConfig = null;
     client = null;
   }
 
@@ -429,12 +384,12 @@ public class SequenceBase {
   }
 
   protected static String getDeviceId() {
-    return checkNotNull(validatorConfig.device_id, "device_id not defined");
+    return checkNotNull(exeConfig.device_id, "device_id not defined");
   }
 
   protected static void setDeviceId(String deviceId) {
-    if (validatorConfig != null) {
-      validatorConfig.device_id = deviceId;
+    if (exeConfig != null) {
+      exeConfig.device_id = deviceId;
     }
   }
 
@@ -563,7 +518,7 @@ public class SequenceBase {
   }
 
   private static MessagePublisher getReflectorClient() {
-    return new IotReflectorClient(validatorConfig, getRequiredFunctionsVersion());
+    return new IotReflectorClient(exeConfig, getRequiredFunctionsVersion());
   }
 
   private static MessagePublisher altReflector() {

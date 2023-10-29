@@ -1,14 +1,21 @@
 package com.google.daq.mqtt.sequencer;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.sequencer.SequenceBase.getSequencerStateFile;
+import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
+import static java.lang.String.format;
+import static java.util.Optional.ofNullable;
 import static joptsimple.internal.Strings.isNullOrEmpty;
 import static udmi.schema.FeatureEnumeration.FeatureStage.ALPHA;
 
 import com.google.common.base.Joiner;
 import com.google.daq.mqtt.WebServerRunner;
 import com.google.daq.mqtt.sequencer.sequences.ConfigSequences;
+import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.udmi.util.Common;
 import com.google.udmi.util.SiteModel;
+import com.google.udmi.util.SiteModel.MetadataException;
+import java.io.File;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,10 +23,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import org.junit.Test;
 import org.junit.runner.JUnitCore;
@@ -28,6 +38,7 @@ import org.junit.runner.Result;
 import udmi.schema.ExecutionConfiguration;
 import udmi.schema.FeatureEnumeration.FeatureStage;
 import udmi.schema.Level;
+import udmi.schema.Metadata;
 import udmi.schema.SequenceValidationState.SequenceResult;
 
 /**
@@ -35,12 +46,18 @@ import udmi.schema.SequenceValidationState.SequenceResult;
  */
 public class SequenceRunner {
 
+  private static final String DEFAULT_CONFIG = "/tmp/sequencer_config.json";
+  private static final String CONFIG_ENV = "SEQUENCER_CONFIG";
+  private static final String CONFIG_PATH =
+      Objects.requireNonNullElse(System.getenv(CONFIG_ENV), DEFAULT_CONFIG);
   private static final int EXIT_STATUS_SUCCESS = 0;
   private static final int EXIST_STATUS_FAILURE = 1;
   private static final String TOOL_ROOT = "..";
   private static final Set<String> failures = new TreeSet<>();
   private static final Map<String, SequenceResult> allTestResults = new TreeMap<>();
-  static ExecutionConfiguration executionConfiguration;
+  static ExecutionConfiguration exeConfig;
+  private static AtomicInteger SHARD_COUNT = new AtomicInteger();
+  private static Set<String> SHARD_SET = new ConcurrentSkipListSet<>();
   private final Set<String> sequenceClasses = new TreeSet<>(
       Common.allClassesInPackage(ConfigSequences.class));
   private List<String> targets = List.of();
@@ -68,7 +85,7 @@ public class SequenceRunner {
   }
 
   private static SequenceRunner processConfig(ExecutionConfiguration config) {
-    executionConfiguration = config;
+    exeConfig = config;
     SequenceRunner sequenceRunner = new SequenceRunner();
     SequenceBase.setDeviceId(config.device_id);
     sequenceRunner.process();
@@ -129,7 +146,7 @@ public class SequenceRunner {
   }
 
   static FeatureStage getFeatureMinStage() {
-    String stage = SequenceBase.validatorConfig.min_stage;
+    String stage = exeConfig.min_stage;
     return isNullOrEmpty(stage) ? SequenceBase.DEFAULT_MIN_STAGE : FeatureStage.valueOf(stage);
   }
 
@@ -155,10 +172,10 @@ public class SequenceRunner {
       throw new RuntimeException("No testing classes found");
     }
     System.err.println("Target sequence classes:\n  " + Joiner.on("\n  ").join(sequenceClasses));
-    SequenceBase.ensureValidatorConfig();
+    ensureExecutionConfig();
     boolean enableAllBuckets = shouldExecuteAll() || !targets.isEmpty();
     SequenceBase.enableAllBuckets(enableAllBuckets);
-    String deviceId = SequenceBase.validatorConfig.device_id;
+    String deviceId = exeConfig.device_id;
     Set<String> remainingMethods = new HashSet<>(targets);
     int runCount = 0;
     for (String className : sequenceClasses) {
@@ -195,6 +212,48 @@ public class SequenceRunner {
         (key, value) -> System.err.println("Sequencer result count " + key.name() + " = " + value));
     String stateAbsolutePath = getSequencerStateFile().getAbsolutePath();
     System.err.println("Sequencer state summary in " + stateAbsolutePath);
+  }
+
+  static ExecutionConfiguration ensureExecutionConfig() {
+    if (exeConfig != null) {
+      return exeConfig;
+    }
+    if (CONFIG_PATH == null || CONFIG_PATH.equals("")) {
+      throw new RuntimeException(CONFIG_ENV + " env not defined.");
+    }
+    final File configFile = new File(CONFIG_PATH);
+    try {
+      System.err.println("Reading config file " + configFile.getAbsolutePath());
+      exeConfig = ConfigUtil.readValidatorConfig(configFile);
+      SiteModel model = new SiteModel(exeConfig.site_model);
+      model.initialize();
+      reportLoadingErrors(model);
+      exeConfig.cloud_region = ofNullable(exeConfig.cloud_region)
+          .orElse(model.getCloudRegion());
+      exeConfig.registry_id = ofNullable(exeConfig.registry_id)
+          .orElse(model.getRegistryId());
+      exeConfig.reflect_region = ofNullable(exeConfig.reflect_region)
+          .orElse(model.getReflectRegion());
+    } catch (Exception e) {
+      throw new RuntimeException("While loading " + configFile, e);
+    }
+    return exeConfig;
+  }
+
+  private static void reportLoadingErrors(SiteModel model) {
+    String deviceId = exeConfig.device_id;
+    checkState(model.allDeviceIds().contains(deviceId),
+        format("device_id %s not found in site model", deviceId));
+    Metadata metadata = model.getMetadata(deviceId);
+    if (metadata instanceof MetadataException metadataException) {
+      System.err.println(
+          "Device loading error: " + friendlyStackTrace(metadataException.exception));
+    }
+  }
+
+  private boolean shouldShardMethod(String method) {
+    return SHARD_SET.add(method)
+        && ((SHARD_COUNT.getAndIncrement() % exeConfig.shard_count) == exeConfig.shard_index);
   }
 
   private List<String> getRunMethods(Class<?> clazz) {

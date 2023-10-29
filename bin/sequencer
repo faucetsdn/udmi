@@ -142,6 +142,8 @@ cat <<EOF > $SEQUENCER_CONFIG
   "device_id": "$device_id",
   "alt_registry": $alt_registry,
   "registry_suffix": $registry_suffix,
+  "shard_count": ${MATRIX_SHARD_COUNT:-null},
+  "shard_index": ${MATRIX_SHARD_INDEX:-null},
   "serial_no": "$serial_no",
   "log_level": "$log_level",
   "min_stage": "$min_stage",
