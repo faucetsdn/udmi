@@ -126,14 +126,14 @@ jobs:
     timeout-minutes: 75
     strategy:
       matrix:
-        shard: [A]
+        shard: [0, 1]
     if: vars.TARGET_PROJECT != ''
     env:
       TARGET_PROJECT: ${{ vars.TARGET_PROJECT }}
       UDMI_ALT_REGISTRY: ${{ vars.UDMI_ALT_REGISTRY }}
       UDMI_REGISTRY_SUFFIX: _${{ matrix.shard }}
+      MATRIX_SHARD_COUNT: 2
       MATRIX_SHARD_INDEX: ${{ matrix.shard }}
-      MATRIX_SHARD_COUNT: 1
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-java@v3
