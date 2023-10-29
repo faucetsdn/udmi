@@ -18,6 +18,7 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import org.jetbrains.annotations.NotNull;
@@ -223,10 +224,8 @@ public class CloudIotManager {
   }
 
   private CloudModel makeDevice(CloudDeviceSettings settings, CloudModel oldDevice) {
-    Map<String, String> metadataMap = oldDevice == null ? null : oldDevice.metadata;
-    if (metadataMap == null) {
-      metadataMap = new HashMap<>();
-    }
+    Map<String, String> metadataMap = ofNullable(oldDevice)
+        .map(device -> device.metadata).orElse(new HashMap<>());
     metadataMap.put(UDMI_METADATA, settings.metadata);
     metadataMap.put(UDMI_UPDATED, settings.updated);
     metadataMap.put(UDMI_GENERATION, settings.generation);

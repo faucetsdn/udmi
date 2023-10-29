@@ -14,6 +14,7 @@ import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
 import static com.google.udmi.util.JsonUtil.safeSleep;
+import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
@@ -121,6 +122,7 @@ public class Registrar {
   private IotProvider iotProvider;
   private File profile;
   private int runnerThreads = 20;
+  private int createRegistries = -1;
 
   /**
    * Main entry point for registrar.
@@ -192,6 +194,9 @@ public class Registrar {
         case "-n":
           setRunnerThreads(argList.remove(0));
           break;
+        case "-c":
+          setCreateRegistries(argList.remove(0));
+          break;
         case "--":
           setDeviceList(argList);
           return this;
@@ -206,6 +211,17 @@ public class Registrar {
       }
     }
     return this;
+  }
+
+  private void setCreateRegistries(String registrySpec) {
+    try {
+      createRegistries = Integer.parseInt(registrySpec);
+      if (createRegistries < 0) {
+        throw new IllegalArgumentException("Negative value not allowed");
+      }
+    } catch (Exception e) {
+      throw new RuntimeException("Create registries spec should be >= 0: " + registrySpec, e);
+    }
   }
 
   private void setRunnerThreads(String argValue) {
@@ -254,7 +270,11 @@ public class Registrar {
         setToolRoot(null);
       }
       loadSiteMetadata();
-      processDevices();
+      if (createRegistries >= 0) {
+        createRegistries();
+      } else {
+        processDevices();
+      }
       writeErrors();
     } catch (ExceptionMap em) {
       ExceptionMap.format(em).write(System.err);
@@ -264,6 +284,20 @@ public class Registrar {
     } finally {
       shutdown();
     }
+  }
+
+  private void createRegistries() {
+    String createFormat = "_%0" + format("%d", createRegistries - 1).length() + "d";
+    if (createRegistries == 0) {
+      createRegistrySuffix("");
+    } else for (int i = 0; i  < createRegistries; i++) {
+      createRegistrySuffix(format(createFormat, i));
+    }
+  }
+
+  private void createRegistrySuffix(String suffix) {
+    System.err.println("Creating registry suffix " + suffix);
+    //cloudIotManager.registerDevice(registryId, settings);
   }
 
   private void setIdleLimit(String option) {
@@ -707,7 +741,7 @@ public class Registrar {
       Field declaredField = target.getClass().getDeclaredField(fieldName);
       sendSubMessage(localDevice, subType, subfolder, declaredField.get(target));
     } catch (Exception e) {
-      throw new RuntimeException(String.format("Getting field %s from target %s", fieldName,
+      throw new RuntimeException(format("Getting field %s from target %s", fieldName,
           target.getClass().getSimpleName()));
     }
   }
@@ -726,7 +760,7 @@ public class Registrar {
       updatePusher.sendMessage(attributes, messageString);
     } catch (Exception e) {
       throw new RuntimeException(
-          String.format("Sending %s/%s messages for %s%n", subType, subFolder,
+          format("Sending %s/%s messages for %s%n", subType, subFolder,
               localDevice.getDeviceId()), e);
     }
   }
@@ -883,7 +917,7 @@ public class Registrar {
                 if (previous != null) {
                   RuntimeException exception =
                       new RuntimeException(
-                          String.format(
+                          format(
                               "Duplicate credentials found for %s & %s", previous, deviceName));
                   localDevice.captureError(LocalDevice.EXCEPTION_CREDENTIALS, exception);
                 }
