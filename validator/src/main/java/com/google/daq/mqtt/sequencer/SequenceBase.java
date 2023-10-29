@@ -66,7 +66,6 @@ import com.google.udmi.util.Common;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
-import com.google.udmi.util.SiteModel.MetadataException;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;

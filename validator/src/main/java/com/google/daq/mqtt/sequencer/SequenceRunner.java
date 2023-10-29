@@ -28,8 +28,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import org.junit.Test;
 import org.junit.runner.JUnitCore;
@@ -55,9 +53,8 @@ public class SequenceRunner {
   private static final String TOOL_ROOT = "..";
   private static final Set<String> failures = new TreeSet<>();
   private static final Map<String, SequenceResult> allTestResults = new TreeMap<>();
+  private static final List<String> SHARD_LIST = new ArrayList<>();
   static ExecutionConfiguration exeConfig;
-  private static AtomicInteger SHARD_COUNT = new AtomicInteger();
-  private static Set<String> SHARD_SET = new ConcurrentSkipListSet<>();
   private final Set<String> sequenceClasses = new TreeSet<>(
       Common.allClassesInPackage(ConfigSequences.class));
   private List<String> targets = List.of();
@@ -150,6 +147,43 @@ public class SequenceRunner {
     return isNullOrEmpty(stage) ? SequenceBase.DEFAULT_MIN_STAGE : FeatureStage.valueOf(stage);
   }
 
+  static ExecutionConfiguration ensureExecutionConfig() {
+    if (exeConfig != null) {
+      return exeConfig;
+    }
+    if (CONFIG_PATH == null || CONFIG_PATH.equals("")) {
+      throw new RuntimeException(CONFIG_ENV + " env not defined.");
+    }
+    final File configFile = new File(CONFIG_PATH);
+    try {
+      System.err.println("Reading config file " + configFile.getAbsolutePath());
+      exeConfig = ConfigUtil.readValidatorConfig(configFile);
+      SiteModel model = new SiteModel(exeConfig.site_model);
+      model.initialize();
+      reportLoadingErrors(model);
+      exeConfig.cloud_region = ofNullable(exeConfig.cloud_region)
+          .orElse(model.getCloudRegion());
+      exeConfig.registry_id = ofNullable(exeConfig.registry_id)
+          .orElse(model.getRegistryId());
+      exeConfig.reflect_region = ofNullable(exeConfig.reflect_region)
+          .orElse(model.getReflectRegion());
+    } catch (Exception e) {
+      throw new RuntimeException("While loading " + configFile, e);
+    }
+    return exeConfig;
+  }
+
+  private static void reportLoadingErrors(SiteModel model) {
+    String deviceId = exeConfig.device_id;
+    checkState(model.allDeviceIds().contains(deviceId),
+        format("device_id %s not found in site model", deviceId));
+    Metadata metadata = model.getMetadata(deviceId);
+    if (metadata instanceof MetadataException metadataException) {
+      System.err.println(
+          "Device loading error: " + friendlyStackTrace(metadataException.exception));
+    }
+  }
+
   private int resultCode() {
     if (failures == null) {
       throw new RuntimeException("Sequences have not been processed");
@@ -214,51 +248,18 @@ public class SequenceRunner {
     System.err.println("Sequencer state summary in " + stateAbsolutePath);
   }
 
-  static ExecutionConfiguration ensureExecutionConfig() {
-    if (exeConfig != null) {
-      return exeConfig;
-    }
-    if (CONFIG_PATH == null || CONFIG_PATH.equals("")) {
-      throw new RuntimeException(CONFIG_ENV + " env not defined.");
-    }
-    final File configFile = new File(CONFIG_PATH);
-    try {
-      System.err.println("Reading config file " + configFile.getAbsolutePath());
-      exeConfig = ConfigUtil.readValidatorConfig(configFile);
-      SiteModel model = new SiteModel(exeConfig.site_model);
-      model.initialize();
-      reportLoadingErrors(model);
-      exeConfig.cloud_region = ofNullable(exeConfig.cloud_region)
-          .orElse(model.getCloudRegion());
-      exeConfig.registry_id = ofNullable(exeConfig.registry_id)
-          .orElse(model.getRegistryId());
-      exeConfig.reflect_region = ofNullable(exeConfig.reflect_region)
-          .orElse(model.getReflectRegion());
-    } catch (Exception e) {
-      throw new RuntimeException("While loading " + configFile, e);
-    }
-    return exeConfig;
-  }
-
-  private static void reportLoadingErrors(SiteModel model) {
-    String deviceId = exeConfig.device_id;
-    checkState(model.allDeviceIds().contains(deviceId),
-        format("device_id %s not found in site model", deviceId));
-    Metadata metadata = model.getMetadata(deviceId);
-    if (metadata instanceof MetadataException metadataException) {
-      System.err.println(
-          "Device loading error: " + friendlyStackTrace(metadataException.exception));
-    }
-  }
-
   private boolean shouldShardMethod(String method) {
-    return SHARD_SET.add(method)
-        && ((SHARD_COUNT.getAndIncrement() % exeConfig.shard_count) == exeConfig.shard_index);
+    int base = SHARD_LIST.indexOf(method);
+    int index = base >= 0 ? base : (SHARD_LIST.add(method) ? SHARD_LIST.size() - 1 : -1);
+    return exeConfig.shard_count == null
+        || (index % exeConfig.shard_count) == exeConfig.shard_index;
   }
 
   private List<String> getRunMethods(Class<?> clazz) {
-    return Arrays.stream(clazz.getMethods()).filter(this::shouldProcessMethod).map(Method::getName)
-        .filter(this::isTargetMethod).sorted().collect(Collectors.toList());
+    return Arrays.stream(clazz.getMethods())
+        .filter(this::shouldProcessMethod).map(Method::getName)
+        .filter(this::shouldShardMethod).filter(this::isTargetMethod)
+        .sorted().collect(Collectors.toList());
   }
 
   private boolean isTargetMethod(String methodName) {
