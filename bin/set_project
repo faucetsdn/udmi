@@ -2,6 +2,9 @@
 
 if [[ $# != 1 ]]; then
     echo Usage: $0 gcp_project[/udmi_namespace]
+    echo
+    echo Current context/project is $(kubectl config current-context)
+    echo
     false
 fi
 
