@@ -287,11 +287,13 @@ public class Registrar {
   }
 
   private void createRegistries() {
-    String createFormat = "_%0" + format("%d", createRegistries - 1).length() + "d";
     if (createRegistries == 0) {
       createRegistrySuffix("");
-    } else for (int i = 0; i  < createRegistries; i++) {
-      createRegistrySuffix(format(createFormat, i));
+    } else {
+      String createFormat = "_%0" + format("%d", createRegistries - 1).length() + "d";
+      for (int i = 0; i < createRegistries; i++) {
+        createRegistrySuffix(format(createFormat, i));
+      }
     }
   }
 
