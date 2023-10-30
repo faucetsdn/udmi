@@ -9,6 +9,7 @@ import com.google.udmi.util.Common;
 import com.google.udmi.util.PubSubReflector;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import udmi.schema.Credential;
 import udmi.schema.ExecutionConfiguration;
 import udmi.schema.IotAccess;
 import udmi.schema.SetupUdmiConfig;
@@ -57,7 +58,11 @@ public interface MessagePublisher {
   }
 
   default String getBridgeHost() {
-    throw new RuntimeException("Not implemented");
+    throw new RuntimeException("getBridgeHost not implemented");
+  }
+
+  default Credential getCredential() {
+    throw new RuntimeException("getCredential not implemented");
   }
 
   /**

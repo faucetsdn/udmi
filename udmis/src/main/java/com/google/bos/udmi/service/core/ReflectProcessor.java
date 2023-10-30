@@ -182,18 +182,7 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private CloudModel reflectModel(Envelope attributes, CloudModel request) {
-    String deviceRegistryId = attributes.deviceRegistryId;
-    String deviceId = attributes.deviceId;
-
-    if (deviceId.equals(deviceRegistryId)) {
-      return modelRegistry(deviceId, request);
-    }
-
-    return iotAccess.modelDevice(deviceRegistryId, deviceId, request);
-  }
-
-  private CloudModel modelRegistry(String deviceId, CloudModel request) {
-    return iotAccess.modelDevice(reflectRegistry, deviceId, request);
+    return iotAccess.modelResource(attributes.deviceRegistryId, attributes.deviceId, request);
   }
 
   private CloudModel reflectPropagate(Envelope attributes, Map<String, Object> payload) {

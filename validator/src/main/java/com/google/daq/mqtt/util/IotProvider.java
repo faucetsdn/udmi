@@ -3,6 +3,7 @@ package com.google.daq.mqtt.util;
 import java.util.List;
 import java.util.Set;
 import udmi.schema.CloudModel;
+import udmi.schema.Credential;
 import udmi.schema.SetupUdmiConfig;
 
 /**
@@ -44,7 +45,7 @@ public interface IotProvider {
    * @param deviceId   device id to create
    * @param makeDevice device specification to createCloudModel
    */
-  void createDevice(String deviceId, CloudModel makeDevice);
+  void createResource(String deviceId, CloudModel makeDevice);
 
   /**
    * Delete the specified device from the iot registry.
@@ -100,6 +101,10 @@ public interface IotProvider {
    * Get the version information about this provider.
    */
   default SetupUdmiConfig getVersionInformation() {
-    throw new IllegalStateException("Not yet implemented for " + this.getClass());
+    throw new IllegalStateException("getVersionInformation not implemented");
+  }
+
+  default Credential getCredential() {
+    throw new IllegalStateException("getCredential not implemented");
   }
 }

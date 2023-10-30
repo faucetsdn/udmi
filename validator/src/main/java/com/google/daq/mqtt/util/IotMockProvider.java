@@ -73,7 +73,7 @@ public class IotMockProvider implements IotProvider {
   }
 
   @Override
-  public void createDevice(String deviceId, CloudModel device) {
+  public void createResource(String deviceId, CloudModel device) {
     checkArgument(!cloudDevices.containsKey(deviceId), "device already exists");
     CloudModel cloudModel = populateCloudModel(deviceId);
     device.num_id = cloudModel.num_id;

@@ -40,6 +40,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import org.jetbrains.annotations.NotNull;
+import udmi.schema.Credential;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
@@ -152,6 +153,7 @@ public class IotReflectorClient implements MessagePublisher {
     reflectConfiguration.cloud_region = Optional.ofNullable(iotConfig.reflect_region)
         .orElse(iotConfig.cloud_region);
 
+    reflectConfiguration.site_model = iotConfig.site_model;
     reflectConfiguration.registry_id = UDMI_REFLECT;
     reflectConfiguration.udmi_namespace = iotConfig.udmi_namespace;
     // Intentionally map registry -> device because of reflection registry semantics.
@@ -198,6 +200,11 @@ public class IotReflectorClient implements MessagePublisher {
     System.err.println("UDMI setting reflectorState: " + stringify(map));
 
     publisher.publish(registryId, STATE_TOPIC, stringify(map));
+  }
+
+  @Override
+  public Credential getCredential() {
+    return publisher.getCredential();
   }
 
   private void messageHandler(String topic, String payload) {

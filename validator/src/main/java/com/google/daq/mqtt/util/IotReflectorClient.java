@@ -34,6 +34,7 @@ import java.util.concurrent.TimeUnit;
 import org.jetbrains.annotations.Nullable;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
+import udmi.schema.Credential;
 import udmi.schema.ExecutionConfiguration;
 import udmi.schema.SetupUdmiConfig;
 
@@ -68,6 +69,11 @@ public class IotReflectorClient implements IotProvider {
   }
 
   @Override
+  public Credential getCredential() {
+    return messageClient.getCredential();
+  }
+
+  @Override
   public void shutdown() {
     messageClient.close();
     executor.shutdown();
@@ -90,7 +96,7 @@ public class IotReflectorClient implements IotProvider {
   }
 
   @Override
-  public void createDevice(String deviceId, CloudModel makeDevice) {
+  public void createResource(String deviceId, CloudModel makeDevice) {
     makeDevice.operation = Operation.CREATE;
     CloudModel created = cloudModelTransaction(deviceId, CLOUD_MODEL_TOPIC, makeDevice);
     ifNotNullThen(makeDevice.num_id, () -> checkState(makeDevice.num_id.equals(created.num_id),

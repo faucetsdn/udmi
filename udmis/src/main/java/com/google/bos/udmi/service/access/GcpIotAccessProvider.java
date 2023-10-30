@@ -398,7 +398,7 @@ public class GcpIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public CloudModel modelDevice(String registryId, String deviceId, CloudModel cloudModel) {
+  public CloudModel modelResource(String registryId, String deviceId, CloudModel cloudModel) {
     String devicePath = getDevicePath(registryId, deviceId);
     Operation operation = cloudModel.operation;
     try {

@@ -18,7 +18,6 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import org.jetbrains.annotations.NotNull;
@@ -155,7 +154,7 @@ public class CloudIotManager {
    * @param keyData   key data
    * @return public key device credential
    */
-  public static Credential makeCredentials(String keyFormat, String keyData) {
+  public static Credential makeCredential(String keyFormat, String keyData) {
     Credential deviceCredential = new Credential();
     deviceCredential.key_format = Key_format.fromValue(keyFormat);
     deviceCredential.key_data = keyData;
@@ -258,7 +257,7 @@ public class CloudIotManager {
   private void createDevice(String deviceId, CloudDeviceSettings settings) {
     CloudModel newDevice = makeDevice(settings, null);
     limitValueSizes(newDevice.metadata);
-    iotProvider.createDevice(deviceId, newDevice);
+    iotProvider.createResource(deviceId, newDevice);
     deviceMap.put(deviceId, newDevice);
   }
 
@@ -368,6 +367,8 @@ public class CloudIotManager {
   public void createRegistry(String suffix) {
     CloudModel settings = new CloudModel();
     System.err.println("CloudIotManager createRegistry " + suffix);
-    iotProvider.createDevice(registryId, settings);
+    settings.resource_type = Resource_type.REGISTRY;
+    settings.credentials = List.of(iotProvider.getCredential());
+    iotProvider.createResource(suffix, settings);
   }
 }

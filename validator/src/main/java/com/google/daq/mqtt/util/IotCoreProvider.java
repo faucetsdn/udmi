@@ -126,7 +126,7 @@ class IotCoreProvider implements IotProvider {
   }
 
   @Override
-  public void createDevice(String deviceId, CloudModel iotDevice) {
+  public void createResource(String deviceId, CloudModel iotDevice) {
     try {
       Device execute = registries.devices()
           .create(getRegistryPath(), convert(iotDevice).setId(deviceId)).execute();
