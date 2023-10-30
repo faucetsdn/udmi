@@ -7,7 +7,7 @@ import static com.google.daq.mqtt.util.IotMockProvider.ActionType.CONFIG_DEVICE_
 import static com.google.daq.mqtt.util.IotMockProvider.ActionType.CREATE_DEVICE_ACTION;
 import static com.google.daq.mqtt.util.IotMockProvider.ActionType.DELETE_DEVICE_ACTION;
 import static com.google.daq.mqtt.util.IotMockProvider.ActionType.UPDATE_DEVICE_ACTION;
-import static com.google.udmi.util.GeneralUtils.isTrue;
+import static udmi.schema.CloudModel.Resource_type.GATEWAY;
 
 import com.google.udmi.util.SiteModel;
 import java.util.ArrayList;
@@ -30,8 +30,8 @@ public class IotMockProvider implements IotProvider {
   public static final String PROXY_DEVICE_ID = "AHU-22";
   private final SiteModel siteModel;
   private final String client;
-  private List<MockAction> mockActions = new ArrayList<>();
   private final Map<String, CloudModel> cloudDevices = new HashMap<>();
+  private List<MockAction> mockActions = new ArrayList<>();
 
   IotMockProvider(String projectId, String registryId, String cloudRegion) {
     siteModel = new SiteModel("../sites/udmi_site_model");
@@ -77,7 +77,7 @@ public class IotMockProvider implements IotProvider {
     checkArgument(!cloudDevices.containsKey(deviceId), "device already exists");
     CloudModel cloudModel = populateCloudModel(deviceId);
     device.num_id = cloudModel.num_id;
-    cloudModel.is_gateway = device.is_gateway;
+    cloudModel.resource_type = device.resource_type;
     mockAction(CREATE_DEVICE_ACTION, deviceId, device);
   }
 
@@ -106,7 +106,7 @@ public class IotMockProvider implements IotProvider {
   public void bindDeviceToGateway(String proxyDeviceId, String gatewayDeviceId) {
     checkArgument(cloudDevices.containsKey(proxyDeviceId), "missing proxy device");
     checkArgument(cloudDevices.containsKey(gatewayDeviceId), "missing gateway device");
-    checkArgument(isTrue(populateCloudModel(gatewayDeviceId).is_gateway), "gateway is not gateway");
+    checkArgument(populateCloudModel(gatewayDeviceId).resource_type == GATEWAY, "not a gateway");
     mockAction(BIND_DEVICE_ACTION, proxyDeviceId, gatewayDeviceId);
   }
 

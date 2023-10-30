@@ -23,6 +23,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import org.jetbrains.annotations.NotNull;
 import udmi.schema.CloudModel;
+import udmi.schema.CloudModel.Resource_type;
 import udmi.schema.Credential;
 import udmi.schema.Credential.Key_format;
 import udmi.schema.ExecutionConfiguration;
@@ -239,11 +240,15 @@ public class CloudIotManager {
       metadataMap.put(KEY_ALGORITHM_KEY, settings.keyAlgorithm);
     }
     CloudModel cloudModel = new CloudModel();
-    cloudModel.is_gateway = settings.proxyDevices != null;
+    cloudModel.resource_type = gatewayIfTrue(settings.proxyDevices != null);
     cloudModel.credentials = getCredentials(settings);
     cloudModel.metadata = metadataMap;
     cloudModel.num_id = settings.deviceNumId;
     return cloudModel;
+  }
+
+  private static Resource_type gatewayIfTrue(boolean isGateway) {
+    return isGateway ? Resource_type.GATEWAY : Resource_type.DEVICE;
   }
 
   private List<Credential> getCredentials(CloudDeviceSettings settings) {
@@ -360,4 +365,9 @@ public class CloudIotManager {
     deviceMap.remove(deviceId);
   }
 
+  public void createRegistry(String suffix) {
+    CloudModel settings = new CloudModel();
+    System.err.println("CloudIotManager createRegistry " + suffix);
+    iotProvider.createDevice(registryId, settings);
+  }
 }

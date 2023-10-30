@@ -65,6 +65,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import udmi.schema.CloudModel;
+import udmi.schema.CloudModel.Resource_type;
 import udmi.schema.Credential;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.ExecutionConfiguration;
@@ -298,8 +299,7 @@ public class Registrar {
   }
 
   private void createRegistrySuffix(String suffix) {
-    System.err.println("Creating registry suffix " + suffix);
-    //cloudIotManager.registerDevice(registryId, settings);
+    cloudIotManager.createRegistry(suffix);
   }
 
   private void setIdleLimit(String option) {
@@ -675,7 +675,11 @@ public class Registrar {
       return false;
     }
     CloudModel registeredDevice = cloudIotManager.getRegisteredDevice(localName);
-    return ifNotNullGet(registeredDevice, device -> !isTrue(device.is_gateway), false);
+    return ifNotNullGet(registeredDevice, Registrar::isGateway, false);
+  }
+
+  private static boolean isGateway(CloudModel device) {
+    return device.resource_type == Resource_type.GATEWAY;
   }
 
   private Set<String> calculateDevices() {

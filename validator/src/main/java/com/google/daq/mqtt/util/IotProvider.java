@@ -42,7 +42,7 @@ public interface IotProvider {
    * Create a new device entry.
    *
    * @param deviceId   device id to create
-   * @param makeDevice device specification to create
+   * @param makeDevice device specification to createCloudModel
    */
   void createDevice(String deviceId, CloudModel makeDevice);
 

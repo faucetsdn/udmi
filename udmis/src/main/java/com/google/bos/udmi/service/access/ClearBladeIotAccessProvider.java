@@ -13,6 +13,7 @@ import static com.google.udmi.util.JsonUtil.getDate;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
+import static udmi.schema.CloudModel.Resource_type.GATEWAY;
 
 import com.clearblade.cloud.iot.v1.DeviceManagerClient;
 import com.clearblade.cloud.iot.v1.binddevicetogateway.BindDeviceToGatewayRequest;
@@ -68,6 +69,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
+import udmi.schema.CloudModel.Resource_type;
 import udmi.schema.Credential;
 import udmi.schema.Credential.Key_format;
 import udmi.schema.Envelope.SubFolder;
@@ -141,6 +143,14 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   @Nullable
   private static Date getSafeDate(String lastEventTime) {
     return getDate(isNullOrEmpty(lastEventTime) ? null : lastEventTime);
+  }
+
+  private static Resource_type resourceType(Device.Builder device) {
+    GatewayConfig gatewayConfig = device.getGatewayConfig();
+    if (gatewayConfig != null && GatewayType.GATEWAY == gatewayConfig.getGatewayType()) {
+      return GATEWAY;
+    }
+    return Resource_type.DEVICE;
   }
 
   @VisibleForTesting
@@ -231,8 +241,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     cloudModel.blocked = device.isBlocked();
     cloudModel.metadata = device.getMetadata();
     cloudModel.last_event_time = getSafeDate(device.getLastEventTime());
-    cloudModel.is_gateway = ifNotNullGet(device.getGatewayConfig(),
-        config -> GatewayType.GATEWAY == config.getGatewayType());
+    cloudModel.resource_type = resourceType(device);
     cloudModel.credentials = convertIot(device.getCredentials());
     cloudModel.operation = operation;
     return cloudModel;
@@ -242,7 +251,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     return Device.newBuilder()
         .setBlocked(isTrue(cloudModel.blocked))
         .setCredentials(convertUdmi(cloudModel.credentials))
-        .setGatewayConfig(isTrue(cloudModel.is_gateway) ? GATEWAY_CONFIG : NON_GATEWAY_CONFIG)
+        .setGatewayConfig(cloudModel.resource_type == GATEWAY ? GATEWAY_CONFIG : NON_GATEWAY_CONFIG)
         .setLogLevel(LogLevel.LOG_LEVEL_UNSPECIFIED)
         .setMetadata(cloudModel.metadata)
         .setNumId(cloudModel.num_id)

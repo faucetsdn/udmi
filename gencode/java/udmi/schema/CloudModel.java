@@ -27,7 +27,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
     "version",
     "auth_type",
     "device_key",
-    "is_gateway",
+    "resource_type",
     "blocked",
     "credentials",
     "last_event_time",
@@ -68,12 +68,12 @@ public class CloudModel {
     @JsonPropertyDescription("Indicates if the device private key is provided in the site model.")
     public Boolean device_key;
     /**
-     * If the device functions as an IoT Gateway, proxying for other devices using a single logical connection
+     * The resource type of this model
      * 
      */
-    @JsonProperty("is_gateway")
-    @JsonPropertyDescription("If the device functions as an IoT Gateway, proxying for other devices using a single logical connection")
-    public Boolean is_gateway;
+    @JsonProperty("resource_type")
+    @JsonPropertyDescription("The resource type of this model")
+    public CloudModel.Resource_type resource_type;
     @JsonProperty("blocked")
     public Boolean blocked;
     @JsonProperty("credentials")
@@ -102,7 +102,7 @@ public class CloudModel {
         result = ((result* 31)+((this.metadata == null)? 0 :this.metadata.hashCode()));
         result = ((result* 31)+((this.last_event_time == null)? 0 :this.last_event_time.hashCode()));
         result = ((result* 31)+((this.credentials == null)? 0 :this.credentials.hashCode()));
-        result = ((result* 31)+((this.is_gateway == null)? 0 :this.is_gateway.hashCode()));
+        result = ((result* 31)+((this.resource_type == null)? 0 :this.resource_type.hashCode()));
         result = ((result* 31)+((this.num_id == null)? 0 :this.num_id.hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
         result = ((result* 31)+((this.blocked == null)? 0 :this.blocked.hashCode()));
@@ -121,7 +121,7 @@ public class CloudModel {
             return false;
         }
         CloudModel rhs = ((CloudModel) other);
-        return (((((((((((((this.auth_type == rhs.auth_type)||((this.auth_type!= null)&&this.auth_type.equals(rhs.auth_type)))&&((this.device_key == rhs.device_key)||((this.device_key!= null)&&this.device_key.equals(rhs.device_key))))&&((this.metadata == rhs.metadata)||((this.metadata!= null)&&this.metadata.equals(rhs.metadata))))&&((this.last_event_time == rhs.last_event_time)||((this.last_event_time!= null)&&this.last_event_time.equals(rhs.last_event_time))))&&((this.credentials == rhs.credentials)||((this.credentials!= null)&&this.credentials.equals(rhs.credentials))))&&((this.is_gateway == rhs.is_gateway)||((this.is_gateway!= null)&&this.is_gateway.equals(rhs.is_gateway))))&&((this.num_id == rhs.num_id)||((this.num_id!= null)&&this.num_id.equals(rhs.num_id))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.blocked == rhs.blocked)||((this.blocked!= null)&&this.blocked.equals(rhs.blocked))))&&((this.device_ids == rhs.device_ids)||((this.device_ids!= null)&&this.device_ids.equals(rhs.device_ids))))&&((this.operation == rhs.operation)||((this.operation!= null)&&this.operation.equals(rhs.operation))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
+        return (((((((((((((this.auth_type == rhs.auth_type)||((this.auth_type!= null)&&this.auth_type.equals(rhs.auth_type)))&&((this.device_key == rhs.device_key)||((this.device_key!= null)&&this.device_key.equals(rhs.device_key))))&&((this.metadata == rhs.metadata)||((this.metadata!= null)&&this.metadata.equals(rhs.metadata))))&&((this.last_event_time == rhs.last_event_time)||((this.last_event_time!= null)&&this.last_event_time.equals(rhs.last_event_time))))&&((this.credentials == rhs.credentials)||((this.credentials!= null)&&this.credentials.equals(rhs.credentials))))&&((this.resource_type == rhs.resource_type)||((this.resource_type!= null)&&this.resource_type.equals(rhs.resource_type))))&&((this.num_id == rhs.num_id)||((this.num_id!= null)&&this.num_id.equals(rhs.num_id))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.blocked == rhs.blocked)||((this.blocked!= null)&&this.blocked.equals(rhs.blocked))))&&((this.device_ids == rhs.device_ids)||((this.device_ids!= null)&&this.device_ids.equals(rhs.device_ids))))&&((this.operation == rhs.operation)||((this.operation!= null)&&this.operation.equals(rhs.operation))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
     }
 
 
@@ -206,6 +206,52 @@ public class CloudModel {
         @JsonCreator
         public static CloudModel.Operation fromValue(java.lang.String value) {
             CloudModel.Operation constant = CONSTANTS.get(value);
+            if (constant == null) {
+                throw new IllegalArgumentException(value);
+            } else {
+                return constant;
+            }
+        }
+
+    }
+
+
+    /**
+     * The resource type of this model
+     * 
+     */
+    @Generated("jsonschema2pojo")
+    public enum Resource_type {
+
+        DEVICE("DEVICE"),
+        GATEWAY("GATEWAY"),
+        REGISTRY("REGISTRY");
+        private final java.lang.String value;
+        private final static Map<java.lang.String, CloudModel.Resource_type> CONSTANTS = new HashMap<java.lang.String, CloudModel.Resource_type>();
+
+        static {
+            for (CloudModel.Resource_type c: values()) {
+                CONSTANTS.put(c.value, c);
+            }
+        }
+
+        Resource_type(java.lang.String value) {
+            this.value = value;
+        }
+
+        @Override
+        public java.lang.String toString() {
+            return this.value;
+        }
+
+        @JsonValue
+        public java.lang.String value() {
+            return this.value;
+        }
+
+        @JsonCreator
+        public static CloudModel.Resource_type fromValue(java.lang.String value) {
+            CloudModel.Resource_type constant = CONSTANTS.get(value);
             if (constant == null) {
                 throw new IllegalArgumentException(value);
             } else {

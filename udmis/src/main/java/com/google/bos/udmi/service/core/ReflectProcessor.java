@@ -142,7 +142,8 @@ public class ReflectProcessor extends ProcessorBase {
       Map<String, Object> payload) {
     debug("Processing reflection %s/%s %s %s", envelope.subType, envelope.subFolder,
         getTimestamp(envelope.publishTime), envelope.transactionId);
-    CloudModel result = getReflectionResult(envelope, payload);
+    CloudModel result =
+        requireNonNull(getReflectionResult(envelope, payload), "invalid reflection result");
     ifNotNullThen(result,
         v -> debug("Reflection result %s: %s", envelope.transactionId, envelope.subType));
     ifNotNullThen(result, v -> sendReflectCommand(reflection, envelope, result));
@@ -181,9 +182,18 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private CloudModel reflectModel(Envelope attributes, CloudModel request) {
-    return requireNonNull(
-        iotAccess.modelDevice(attributes.deviceRegistryId, attributes.deviceId, request),
-        "missing reflect model response");
+    String deviceRegistryId = attributes.deviceRegistryId;
+    String deviceId = attributes.deviceId;
+
+    if (deviceId.equals(deviceRegistryId)) {
+      return modelRegistry(deviceId, request);
+    }
+
+    return iotAccess.modelDevice(deviceRegistryId, deviceId, request);
+  }
+
+  private CloudModel modelRegistry(String deviceId, CloudModel request) {
+    return iotAccess.modelDevice(reflectRegistry, deviceId, request);
   }
 
   private CloudModel reflectPropagate(Envelope attributes, Map<String, Object> payload) {
