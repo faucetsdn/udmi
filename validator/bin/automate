@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash -ex
 #
 # Automation of tools using PubSub triggers.
 #
@@ -8,7 +8,8 @@ UDMI_PREFIX=${UDMI_NAMESPACE}~
 PUBSUB_FILE=pubsub.json
 MESSAGE_FILE=message.json
 RETRY_DELAY_SEC=60
-MODEL_DIR=source_model
+CLONE_DIR=source_model/
+MODEL_SUBDIR=udmi/
 CONFIG_FILE=registrar_config.json
 REGISTRAR_TRIGGER=run-registrar
 
@@ -60,14 +61,14 @@ while true; do
     repo_url=$(jq -r .url $MESSAGE_FILE)
     repo_name=${repo_url##*/}
 
-    echo Cloning repo $repo_name from $repo_url into $MODEL_DIR
+    echo Cloning repo $repo_name from $repo_url into $CLONE_DIR
 
-    rm -rf $MODEL_DIR
+    rm -rf $CLONE_DIR
 
-    echo gcloud source repos clone $repo_name $MODEL_DIR --project=$GCP_PROJECT
-    gcloud source repos clone $repo_name $MODEL_DIR --project=$GCP_PROJECT || true
+    echo gcloud source repos clone $repo_name $CLONE_DIR --project=$GCP_PROJECT
+    gcloud source repos clone $repo_name $CLONE_DIR --project=$GCP_PROJECT || true
 
-    if [[ ! -d $MODEL_DIR ]]; then
+    if [[ ! -d $CLONE_DIR ]]; then
         echo
         echo Error cloning repo, try again!
         echo
@@ -75,14 +76,39 @@ while true; do
     fi
 
     (
-        cd $MODEL_DIR
+        cd $CLONE_DIR
         git checkout main || true
         pwd
         ls -l
     )
 
-    if [[ ! -f $MODEL_DIR/$REGISTRAR_TRIGGER ]]; then
-        echo Missing $MODEL_DIR/$REGISTRAR_TRIGGER trigger file, doing nothing!
+    if [[ ! -f $CLONE_DIR/$REGISTRAR_TRIGGER ]]; then
+        echo Missing $CLONE_DIR/$REGISTRAR_TRIGGER trigger file, doing nothing!
+        continue
+    fi
+
+    MODEL_DIR=$(realpath $CLONE_DIR/$MODEL_SUBDIR/)
+    HISTORY_DIR=$MODEL_DIR/history
+    SUMMARY_FILE=$MODEL_DIR/out/registration_summary.json
+
+    TIMESTAMP=$(date --utc +%y%m%d%H%M%S)
+    mkdir -p $HISTORY_DIR
+    HISTORY_FILE=$HISTORY_DIR/registration_summary_${TIMESTAMP}.json
+    touch $HISTORY_FILE
+    rm -f $CLONE_DIR/$REGISTRAR_TRIGGER $SUMMARY_FILE
+
+    echo
+    echo Updating site model with start-of-action:
+    (
+        cd $CLONE_DIR
+        git add .
+        git status
+        git commit -m "Starting registration run $HISTORY_FILE on $HOSTNAME"
+        git push || touch failed
+    )
+
+    if [[ -f $CLONE_DIR/failed ]]; then
+        echo Run start push failed, aborting.
         continue
     fi
 
@@ -92,7 +118,7 @@ while true; do
   "project_id": "$GCP_PROJECT",
   "udmi_namespace": "$UDMI_NAMESPACE",
   "bridge_host": "${host_suffix}",
-  "site_model": "$MODEL_DIR/udmi"
+  "site_model": "$MODEL_DIR"
 }
 EOF
     echo Registrar config $CONFIG_FILE:
@@ -102,14 +128,15 @@ EOF
     echo validator/bin/registrar $CONFIG_FILE
     validator/bin/registrar $CONFIG_FILE || true
 
+    cp $SUMMARY_FILE $HISTORY_FILE
+
     echo
-    echo Site model status:
+    echo Updating site model with completion results:
     (
-        cd $MODEL_DIR
-        rm -f $REGISTRAR_TRIGGER
-        git status
+        cd $CLONE_DIR
         git add .
-        git commit -F udmi/out/registration_summary.json
+        git status
+        git commit -F $SUMMARY_FILE
         git push || true
     )
 done
