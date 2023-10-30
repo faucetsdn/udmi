@@ -4,9 +4,7 @@ ROOT=$(dirname $0)/..
 
 function usage {
     echo Error: $*
-    echo Usage: $0 target { prep, build } [--no-check] [repo]
-    echo Project: $GCP_PROJECT
-    echo Try starting with: $0 build
+    echo Usage: $0 target { prep, build, push, apply } [--no-check] [repo]
     exit 1
 }
 
@@ -30,6 +28,7 @@ git_repo=${git_prefix#*.com:}
 
 GCP_PROJECT=$(gcloud config get project)
 REPOSITORY=ghcr.io/${git_repo}
+TEMPLATES=$(cd etc; ls k8s_*.yaml)
 
 if [[ $1 == "--no-check" ]]; then
     NOCHECK=1
@@ -77,7 +76,21 @@ version=`git describe`
 
 RUNARGS="--rm -ti -v $PWD/var:/udmi -v $HOME/.config:/root/.config --tmpfs /tmp"
 
-if [[ $cmd == prep || $cmd == build ]]; then
+prep=
+build=
+push=
+apply=
+
+[[ $cmd == apply ]] && apply=y
+[[ $cmd == push || -n $apply ]] && push=y
+[[ $cmd == build || -n $push ]] && build=y
+[[ $cmd == prep || -n $build ]] && prep=y
+
+if [[ -z $prep ]]; then
+    usage Unknown command $cmd
+fi
+
+if [[ -n $prep ]]; then
     rm -rf var tmp && mkdir -p var tmp
 
     cp -f etc/*.json var/ || true
@@ -97,14 +110,13 @@ EOF
     more var/deployed_version.json | cat
 fi
 
-if [[ $cmd == build ]]; then
+if [[ -n $build ]]; then
     echo Building Dockerfile.$target
     docker build -f Dockerfile.$target -t $target .
+    docker tag $target $udmi_ref
 fi
 
-TEMPLATES=$(cd etc; ls k8s_*.yaml)
-if [[ $cmd == build && $REPOSITORY != local ]]; then
-    docker tag $target $udmi_ref
+if [[ -n $push ]]; then
     docker push $udmi_ref
     hash=$(docker images --digests ${udmi_ref%:*} | fgrep $udmi_tag | awk '{print $3}')
     ihash=$udmi_ref@$hash
@@ -120,15 +132,14 @@ if [[ $cmd == build && $REPOSITORY != local ]]; then
             echo Customized output in tmp/$file
         fi
     done
-fi
-
-if [[ $cmd == prep ]]; then
-    echo Done with container prep.
-elif [[ $cmd == build ]]; then
     echo Done with container build.
     for file in tmp/k8s_*.yaml; do
-        echo kubectl apply -f $target/$file
+        echo "    kubectl apply -f $target/$file"
     done
-else
-    fail Unknown container command $cmd
+fi
+
+if [[ -n $apply ]]; then
+    for file in tmp/k8s_*.yaml; do
+        kubectl apply -f ../$target/$file
+    done
 fi
