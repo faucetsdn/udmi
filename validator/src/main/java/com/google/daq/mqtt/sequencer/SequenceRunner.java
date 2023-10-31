@@ -231,8 +231,11 @@ public class SequenceRunner {
       }
     }
 
-    if (!remainingMethods.isEmpty()) {
-      throw new RuntimeException("Failed to find " + Joiner.on(", ").join(remainingMethods));
+    // Only flag remaining methods as a problem if they weren't excluded because of sharding.
+    Set<String> residual = remainingMethods.stream().filter(this::shouldShardMethod)
+        .collect(Collectors.toSet());
+    if (!residual.isEmpty()) {
+      throw new RuntimeException("Failed to find " + Joiner.on(", ").join(residual));
     }
 
     if (runCount <= 0) {

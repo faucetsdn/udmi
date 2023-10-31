@@ -118,7 +118,8 @@ sleep 20
 # Quick sanity check that the restart_count persistent store is handled correctly.
 restarts=$(jq .restart_count $work_base/persistent_data.json)
 if [[ $restarts -ne 2 ]]; then
-    log Restart count incorrect, was $restarts
+    log Restart count incorrect, was $restarts expected 2
+    cat $work_base/persistent_data.json
     false
 fi
 
