@@ -1,41 +1,51 @@
 {
-  "event_count" : 10,
-  "last_config" : "2023-07-28T20:20:27Z",
+  "event_count" : 13,
+  "last_config" : "2023-10-28T13:24:27Z",
   "logentries" : [ {
-    "message" : "update state 2023-07-28T20:20:18Z last_config 2023-07-28T20:20:09Z",
-    "category" : "device.log",
-    "timestamp" : "2023-07-28T20:20:18Z",
-    "level" : 200
-  }, {
-    "message" : "update state 2023-07-28T20:20:27Z last_config 2023-07-28T20:20:09Z",
-    "category" : "device.log",
-    "timestamp" : "2023-07-28T20:20:27Z",
-    "level" : 200
-  }, {
     "message" : "Config handler",
     "category" : "device.log",
-    "timestamp" : "2023-07-28T20:20:27Z",
+    "timestamp" : "2023-10-28T13:24:23Z",
     "level" : 200
   }, {
-    "message" : "2023-07-28T20:20:27Z received config 2023-07-28T20:20:27Z",
+    "message" : "2023-10-28T13:24:23Z received config 2023-10-28T13:24:23Z",
     "category" : "device.log",
-    "timestamp" : "2023-07-28T20:20:27Z",
+    "timestamp" : "2023-10-28T13:24:23Z",
     "level" : 200
   }, {
     "message" : "success",
     "category" : "system.config.apply",
-    "timestamp" : "2023-07-28T20:20:27Z",
+    "timestamp" : "2023-10-28T13:24:23Z",
     "level" : 300
   }, {
-    "message" : "2023-07-28T20:20:28Z sending test message #10",
+    "message" : "update state 2023-10-28T13:24:24Z last_config 2023-10-28T13:24:23Z",
     "category" : "device.log",
-    "timestamp" : "2023-07-28T20:20:28Z",
+    "timestamp" : "2023-10-28T13:24:24Z",
+    "level" : 200
+  }, {
+    "message" : "Config handler",
+    "category" : "device.log",
+    "timestamp" : "2023-10-28T13:24:27Z",
+    "level" : 200
+  }, {
+    "message" : "2023-10-28T13:24:27Z received config 2023-10-28T13:24:27Z",
+    "category" : "device.log",
+    "timestamp" : "2023-10-28T13:24:27Z",
+    "level" : 200
+  }, {
+    "message" : "success",
+    "category" : "system.config.apply",
+    "timestamp" : "2023-10-28T13:24:27Z",
+    "level" : 300
+  }, {
+    "message" : "update state 2023-10-28T13:24:27Z last_config 2023-10-28T13:24:27Z",
+    "category" : "device.log",
+    "timestamp" : "2023-10-28T13:24:27Z",
     "level" : 200
   } ],
   "metrics" : {
-    "mem_total_mb" : 250.0,
-    "mem_free_mb" : 161.41357421875
+    "mem_total_mb" : 112.0,
+    "mem_free_mb" : 82.20252990722656
   },
-  "timestamp" : "2023-07-28T20:20:28Z",
-  "version" : "1.4.1"
+  "timestamp" : "2023-10-28T13:24:32Z",
+  "version" : "1.4.2"
 }

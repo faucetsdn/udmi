@@ -103,11 +103,12 @@ if [[ -n $archive ]]; then
 fi 
 
 if [[ -n $validate_archive ]]; then
-    echo Comparing archived sequencer cache against generated files
+    echo Verifying archived sequencer cache against generated files
     ls -1 $TEST_ROOT/tests/ \
         | xargs -I% diff -u \
             $TEST_ROOT/tests/%/sequence.md \
             $ARCHIVE_ROOT/%/sequence.md
+    echo Verification successful
 fi
 
 if [[ -n $import_cache ]]; then
@@ -115,7 +116,7 @@ if [[ -n $import_cache ]]; then
         echo "File $github_artifact not found"
         false
     fi
-
+    echo "Updating sequencer cache from $github_artifact"
     TMP_DIR=/tmp/import_cache
     rm -rf $TMP_DIR && mkdir -p $TMP_DIR
 
@@ -125,9 +126,11 @@ if [[ -n $import_cache ]]; then
 
     for directory in $IMPORT_DIR/* ; do
         test_name=$(basename "$directory")
-        if ! diff "$IMPORT_DIR/$test_name/sequence.md" "$CACHE_ROOT$test_name/sequence.md" >/dev/null 2>&1; then
+        if ! diff "$IMPORT_DIR/$test_name/sequence.md" "$CACHE_ROOT/$test_name/sequence.md" >/dev/null 2>&1; then
+            echo Updating $test_name
             rm -rf "$CACHE_ROOT/$test_name/"
             cp -r "$IMPORT_DIR/$test_name" "$CACHE_ROOT/$test_name"
         fi
     done
+    echo Completed update
 fi

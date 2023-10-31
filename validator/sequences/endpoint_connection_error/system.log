@@ -1,62 +1,72 @@
-2023-07-28T20:18:26Z INFO update state 2023-07-28T20:18:26Z last_config 2023-07-28T20:18:24Z
-2023-07-28T20:18:28Z INFO Config handler
-2023-07-28T20:18:28Z INFO 2023-07-28T20:18:28Z received config 2023-07-28T20:18:27Z
-2023-07-28T20:18:28Z NOTICE success
-2023-07-28T20:18:28Z INFO update state 2023-07-28T20:18:28Z last_config 2023-07-28T20:18:27Z
-2023-07-28T20:18:35Z NOTICE Starting new endpoint generation
-2023-07-28T20:18:35Z INFO update state 2023-07-28T20:18:35Z last_config 2023-07-28T20:18:27Z
-2023-07-28T20:18:44Z INFO update state 2023-07-28T20:18:44Z last_config 2023-07-28T20:18:27Z
-2023-07-28T20:18:44Z INFO Config handler
-2023-07-28T20:18:44Z INFO 2023-07-28T20:18:44Z received config 2023-07-28T20:18:44Z
-2023-07-28T20:18:44Z NOTICE success
-2023-07-28T20:18:46Z INFO Config handler
-2023-07-28T20:18:46Z INFO 2023-07-28T20:18:46Z received config 2023-07-28T20:18:45Z
-2023-07-28T20:18:46Z NOTICE success
-2023-07-28T20:18:46Z INFO update state 2023-07-28T20:18:46Z last_config 2023-07-28T20:18:45Z
-2023-07-28T20:18:47Z INFO Config handler
-2023-07-28T20:18:47Z INFO 2023-07-28T20:18:47Z received config 2023-07-28T20:18:45Z
-2023-07-28T20:18:47Z NOTICE success
-2023-07-28T20:18:48Z INFO Config handler
-2023-07-28T20:18:48Z INFO 2023-07-28T20:18:48Z received config 2023-07-28T20:18:48Z
-2023-07-28T20:18:48Z NOTICE success
-2023-07-28T20:18:49Z INFO update state 2023-07-28T20:18:49Z last_config 2023-07-28T20:18:48Z
-2023-07-28T20:18:50Z INFO Config handler
-2023-07-28T20:18:50Z INFO 2023-07-28T20:18:50Z received config 2023-07-28T20:18:50Z
-2023-07-28T20:18:50Z NOTICE success
-2023-07-28T20:18:51Z INFO update state 2023-07-28T20:18:51Z last_config 2023-07-28T20:18:50Z
-2023-07-28T20:18:55Z NOTICE Starting new endpoint generation
-2023-07-28T20:18:55Z INFO New config blob endpoint detected
-2023-07-28T20:18:55Z INFO update state 2023-07-28T20:18:55Z last_config 2023-07-28T20:18:50Z
-2023-07-28T20:18:55Z ERROR While waiting for connection start: Connection error
-2023-07-28T20:18:55Z ERROR Attempt failed, retries remaining: 9
-2023-07-28T20:18:56Z ERROR While waiting for connection start: Connection error
-2023-07-28T20:18:56Z ERROR Attempt failed, retries remaining: 8
-2023-07-28T20:18:57Z ERROR While waiting for connection start: Connection error
-2023-07-28T20:18:57Z ERROR Attempt failed, retries remaining: 7
-2023-07-28T20:18:58Z ERROR While waiting for connection start: Connection error
-2023-07-28T20:18:58Z ERROR Attempt failed, retries remaining: 6
-2023-07-28T20:18:59Z ERROR While waiting for connection start: Connection error
-2023-07-28T20:18:59Z ERROR Attempt failed, retries remaining: 5
-2023-07-28T20:19:00Z ERROR While waiting for connection start: Connection error
-2023-07-28T20:19:00Z ERROR Attempt failed, retries remaining: 4
-2023-07-28T20:19:01Z ERROR While waiting for connection start: Connection error
-2023-07-28T20:19:01Z ERROR Attempt failed, retries remaining: 3
-2023-07-28T20:19:02Z ERROR While waiting for connection start: Connection error
-2023-07-28T20:19:02Z ERROR Attempt failed, retries remaining: 2
-2023-07-28T20:19:03Z ERROR While waiting for connection start: Connection error
-2023-07-28T20:19:03Z ERROR Attempt failed, retries remaining: 1
-2023-07-28T20:19:04Z ERROR While waiting for connection start: Connection error
-2023-07-28T20:19:04Z ERROR Attempt failed, retries remaining: 0
-2023-07-28T20:19:06Z INFO Config handler
-2023-07-28T20:19:06Z INFO 2023-07-28T20:19:06Z received config 2023-07-28T20:18:50Z
-2023-07-28T20:19:06Z INFO Starting executor with send message delay 10000
-2023-07-28T20:19:06Z NOTICE success
-2023-07-28T20:19:06Z INFO update state 2023-07-28T20:19:06Z last_config 2023-07-28T20:18:50Z
-2023-07-28T20:19:06Z INFO Connection complete.
-2023-07-28T20:19:06Z NOTICE Endpoint connection restored to last working endpoint
-2023-07-28T20:19:06Z ERROR While redirecting connection endpoint: While resetting connection
-2023-07-28T20:19:07Z INFO Config handler
-2023-07-28T20:19:07Z INFO 2023-07-28T20:19:07Z received config 2023-07-28T20:19:07Z
-2023-07-28T20:19:07Z NOTICE success
-2023-07-28T20:19:08Z INFO update state 2023-07-28T20:19:08Z last_config 2023-07-28T20:19:07Z
-2023-07-28T20:19:16Z NOTICE Sequence complete
+2023-10-28T13:21:52Z INFO 2023-10-28T13:21:52Z received config 2023-10-28T13:21:52Z
+2023-10-28T13:21:52Z NOTICE success
+2023-10-28T13:21:54Z INFO Config handler
+2023-10-28T13:21:54Z INFO 2023-10-28T13:21:54Z received config 2023-10-28T13:21:54Z
+2023-10-28T13:21:54Z NOTICE success
+2023-10-28T13:21:55Z INFO update state 2023-10-28T13:21:55Z last_config 2023-10-28T13:21:54Z
+2023-10-28T13:21:55Z INFO Config handler
+2023-10-28T13:21:55Z INFO 2023-10-28T13:21:55Z received config 2023-10-28T13:21:55Z
+2023-10-28T13:21:55Z NOTICE success
+2023-10-28T13:21:55Z INFO Config handler
+2023-10-28T13:21:55Z INFO 2023-10-28T13:21:55Z received config 2023-10-28T13:21:55Z
+2023-10-28T13:21:55Z NOTICE success
+2023-10-28T13:21:56Z INFO Config handler
+2023-10-28T13:21:56Z INFO 2023-10-28T13:21:56Z received config 2023-10-28T13:21:56Z
+2023-10-28T13:21:56Z NOTICE success
+2023-10-28T13:21:57Z INFO update state 2023-10-28T13:21:57Z last_config 2023-10-28T13:21:56Z
+2023-10-28T13:21:59Z INFO Config handler
+2023-10-28T13:21:59Z INFO update state 2023-10-28T13:21:59Z last_config 2023-10-28T13:21:56Z
+2023-10-28T13:21:59Z INFO 2023-10-28T13:21:59Z received config 2023-10-28T13:21:59Z
+2023-10-28T13:21:59Z NOTICE success
+2023-10-28T13:22:00Z NOTICE Starting new endpoint generation
+2023-10-28T13:22:00Z INFO update state 2023-10-28T13:22:00Z last_config 2023-10-28T13:21:59Z
+2023-10-28T13:22:00Z WARNING State update delay 1445ms
+2023-10-28T13:22:11Z INFO Config handler
+2023-10-28T13:22:11Z INFO update state 2023-10-28T13:22:11Z last_config 2023-10-28T13:21:59Z
+2023-10-28T13:22:11Z INFO 2023-10-28T13:22:11Z received config 2023-10-28T13:22:11Z
+2023-10-28T13:22:11Z NOTICE success
+2023-10-28T13:22:12Z INFO Config handler
+2023-10-28T13:22:12Z INFO 2023-10-28T13:22:12Z received config 2023-10-28T13:22:12Z
+2023-10-28T13:22:12Z NOTICE success
+2023-10-28T13:22:13Z INFO update state 2023-10-28T13:22:13Z last_config 2023-10-28T13:22:12Z
+2023-10-28T13:22:15Z INFO update state 2023-10-28T13:22:15Z last_config 2023-10-28T13:22:12Z
+2023-10-28T13:22:15Z INFO Config handler
+2023-10-28T13:22:15Z INFO 2023-10-28T13:22:15Z received config 2023-10-28T13:22:15Z
+2023-10-28T13:22:15Z NOTICE success
+2023-10-28T13:22:17Z INFO update state 2023-10-28T13:22:17Z last_config 2023-10-28T13:22:15Z
+2023-10-28T13:22:20Z NOTICE Starting new endpoint generation
+2023-10-28T13:22:20Z INFO New config blob endpoint detected
+2023-10-28T13:22:20Z INFO update state 2023-10-28T13:22:20Z last_config 2023-10-28T13:22:15Z
+2023-10-28T13:22:20Z ERROR While waiting for connection start: Connection error
+2023-10-28T13:22:20Z ERROR Attempt failed, retries remaining: 9
+2023-10-28T13:22:21Z ERROR While waiting for connection start: Connection error
+2023-10-28T13:22:21Z ERROR Attempt failed, retries remaining: 8
+2023-10-28T13:22:22Z ERROR While waiting for connection start: Connection error
+2023-10-28T13:22:22Z ERROR Attempt failed, retries remaining: 7
+2023-10-28T13:22:23Z ERROR While waiting for connection start: Connection error
+2023-10-28T13:22:23Z ERROR Attempt failed, retries remaining: 6
+2023-10-28T13:22:24Z ERROR While waiting for connection start: Connection error
+2023-10-28T13:22:24Z ERROR Attempt failed, retries remaining: 5
+2023-10-28T13:22:25Z ERROR While waiting for connection start: Connection error
+2023-10-28T13:22:25Z ERROR Attempt failed, retries remaining: 4
+2023-10-28T13:22:26Z ERROR While waiting for connection start: Connection error
+2023-10-28T13:22:26Z ERROR Attempt failed, retries remaining: 3
+2023-10-28T13:22:27Z ERROR While waiting for connection start: Connection error
+2023-10-28T13:22:27Z ERROR Attempt failed, retries remaining: 2
+2023-10-28T13:22:28Z ERROR While waiting for connection start: Connection error
+2023-10-28T13:22:28Z ERROR Attempt failed, retries remaining: 1
+2023-10-28T13:22:29Z ERROR While waiting for connection start: Connection error
+2023-10-28T13:22:29Z ERROR Attempt failed, retries remaining: 0
+2023-10-28T13:22:31Z INFO Config handler
+2023-10-28T13:22:31Z INFO 2023-10-28T13:22:31Z received config 2023-10-28T13:22:15Z
+2023-10-28T13:22:31Z INFO Starting executor with send message delay 10000
+2023-10-28T13:22:31Z NOTICE success
+2023-10-28T13:22:31Z INFO update state 2023-10-28T13:22:31Z last_config 2023-10-28T13:22:15Z
+2023-10-28T13:22:31Z INFO Connection complete.
+2023-10-28T13:22:31Z NOTICE Endpoint connection restored to last working endpoint
+2023-10-28T13:22:31Z ERROR While redirecting connection endpoint: While resetting connection
+2023-10-28T13:22:32Z INFO Config handler
+2023-10-28T13:22:32Z INFO 2023-10-28T13:22:32Z received config 2023-10-28T13:22:32Z
+2023-10-28T13:22:32Z NOTICE success
+2023-10-28T13:22:33Z INFO update state 2023-10-28T13:22:33Z last_config 2023-10-28T13:22:32Z
+2023-10-28T13:22:41Z NOTICE Sequence complete
