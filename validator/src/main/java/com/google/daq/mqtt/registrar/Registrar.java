@@ -11,7 +11,6 @@ import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
-import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static java.lang.String.format;
@@ -676,11 +675,11 @@ public class Registrar {
       return false;
     }
     CloudModel registeredDevice = cloudIotManager.getRegisteredDevice(localName);
-    return ifNotNullGet(registeredDevice, Registrar::isGateway, false);
+    return ifNotNullGet(registeredDevice, Registrar::isNotGateway, false);
   }
 
-  private static boolean isGateway(CloudModel device) {
-    return device.resource_type == Resource_type.GATEWAY;
+  private static boolean isNotGateway(CloudModel device) {
+    return device.resource_type != Resource_type.GATEWAY;
   }
 
   private Set<String> calculateDevices() {
