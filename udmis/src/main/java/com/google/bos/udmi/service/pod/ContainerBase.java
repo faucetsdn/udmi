@@ -7,7 +7,6 @@ import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.core.ComponentName;
-import com.google.common.base.Preconditions;
 import com.google.udmi.util.JsonUtil;
 import java.io.PrintStream;
 import java.util.regex.MatchResult;
@@ -114,8 +113,12 @@ public abstract class ContainerBase {
 
   @NotNull
   private String getReflectRegistry() {
-    return ofNullable(basePodConfig.udmi_prefix).map(this::variableSubstitution).orElse("")
-        + REFLECT_BASE;
+    return getPodNamespacePrefix() + REFLECT_BASE;
+  }
+
+  @NotNull
+  protected String getPodNamespacePrefix() {
+    return ofNullable(basePodConfig.udmi_prefix).map(this::variableSubstitution).orElse("");
   }
 
   @NotNull

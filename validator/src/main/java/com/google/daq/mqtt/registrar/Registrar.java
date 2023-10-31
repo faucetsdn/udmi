@@ -299,7 +299,8 @@ public class Registrar {
   }
 
   private void createRegistrySuffix(String suffix) {
-    cloudIotManager.createRegistry(suffix);
+    String registry = cloudIotManager.createRegistry(suffix);
+    System.err.println("Created registry " + registry);
   }
 
   private void setIdleLimit(String option) {

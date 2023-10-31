@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.util.ConfigUtil.readExeConfig;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.mergeObject;
+import static com.google.udmi.util.GeneralUtils.optionsString;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
@@ -364,11 +365,11 @@ public class CloudIotManager {
     deviceMap.remove(deviceId);
   }
 
-  public void createRegistry(String suffix) {
+  public String createRegistry(String suffix) {
     CloudModel settings = new CloudModel();
-    System.err.println("CloudIotManager createRegistry " + suffix);
     settings.resource_type = Resource_type.REGISTRY;
     settings.credentials = List.of(iotProvider.getCredential());
     iotProvider.createResource(suffix, settings);
+    return requireNonNull(settings.num_id, "Missing registry name in reply");
   }
 }

@@ -47,10 +47,12 @@ import com.clearblade.cloud.iot.v1.listdeviceregistries.ListDeviceRegistriesRequ
 import com.clearblade.cloud.iot.v1.listdeviceregistries.ListDeviceRegistriesResponse;
 import com.clearblade.cloud.iot.v1.modifycloudtodeviceconfig.ModifyCloudToDeviceConfigRequest;
 import com.clearblade.cloud.iot.v1.registrytypes.DeviceRegistry;
+import com.clearblade.cloud.iot.v1.registrytypes.EventNotificationConfig;
 import com.clearblade.cloud.iot.v1.registrytypes.LocationName;
 import com.clearblade.cloud.iot.v1.registrytypes.PublicKeyCredential;
 import com.clearblade.cloud.iot.v1.registrytypes.PublicKeyFormat;
 import com.clearblade.cloud.iot.v1.registrytypes.RegistryName;
+import com.clearblade.cloud.iot.v1.registrytypes.StateNotificationConfig;
 import com.clearblade.cloud.iot.v1.sendcommandtodevice.SendCommandToDeviceRequest;
 import com.clearblade.cloud.iot.v1.sendcommandtodevice.SendCommandToDeviceResponse;
 import com.clearblade.cloud.iot.v1.unbinddevicefromgateway.UnbindDeviceFromGatewayRequest;
@@ -99,13 +101,15 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   );
   private static final String EMPTY_RETURN_RECEIPT = "-1";
   private static final String RESOURCE_EXISTS = "-2";
-  private static final String REGISTRY_CREATE = "-3";
   private static final String UPDATE_FIELD_MASK = "blocked,credentials,metadata";
   private static final GatewayConfig NON_GATEWAY_CONFIG = new GatewayConfig();
   private static final GatewayConfig GATEWAY_CONFIG = GatewayConfig.newBuilder()
       .setGatewayType(GatewayType.GATEWAY)
       .setGatewayAuthMethod(GatewayAuthMethod.ASSOCIATION_ONLY)
       .build();
+
+  private static final String UDMI_TARGET_TOPIC = "udmi_target"; // TODO: Make this not hardcoded.
+  private static final String UDMI_STATE_TOPIC = "udmi_state"; // TODO: Make this not hardcoded.
   private final String projectId;
 
   /**
@@ -463,24 +467,35 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     CloudModel cloudModel = new CloudModel();
     cloudModel.operation = CREATE;
     cloudModel.resource_type = REGISTRY;
+    cloudModel.num_id = registryId;
     try {
       String location = getRegistryLocation(reflectRegistry);
       DeviceManagerClient client = new DeviceManagerClient();
+      DeviceRegistry.Builder registry = DeviceRegistry.newBuilder()
+          .setId(registryId)
+          .setEventNotificationConfigs(ImmutableList.of(eventNotificationConfig()))
+          .setStateNotificationConfig(stateNotificationConfig())
+          .setLogLevel(LogLevel.DEBUG);
       CreateDeviceRegistryRequest request = CreateDeviceRegistryRequest.Builder.newBuilder()
           .setParent(LocationName.of(projectId, location).toString())
-          .setDeviceRegistry(
-              DeviceRegistry.newBuilder().setId(registryId).setLogLevel(LogLevel.DEBUG).build())
-          .build();
-      DeviceRegistry actualResponse = client.createDeviceRegistry(request);
-      cloudModel.num_id = REGISTRY_CREATE;
-      return cloudModel;
+          .setDeviceRegistry(registry.build()).build();
+      client.createDeviceRegistry(request);
     } catch (ApplicationException applicationException) {
-      if (applicationException.getMessage().contains("ALREADY_EXISTS")) {
-        cloudModel.num_id = RESOURCE_EXISTS;
-        return cloudModel;
+      if (!applicationException.getMessage().contains("ALREADY_EXISTS")) {
+        throw applicationException;
       }
-      throw applicationException;
     }
+    return cloudModel;
+  }
+
+  private EventNotificationConfig eventNotificationConfig() {
+    String topicName = getPodNamespacePrefix() + UDMI_TARGET_TOPIC;
+    return EventNotificationConfig.newBuilder().setPubsubTopicName(topicName).build();
+  }
+
+  private StateNotificationConfig stateNotificationConfig() {
+    String topicName = getPodNamespacePrefix() + UDMI_STATE_TOPIC;
+    return StateNotificationConfig.newBuilder().setPubsubTopicName(topicName).build();
   }
 
   @NotNull
