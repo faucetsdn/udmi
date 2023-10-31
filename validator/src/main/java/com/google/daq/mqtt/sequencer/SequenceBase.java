@@ -1357,7 +1357,12 @@ public class SequenceBase {
       if (!reflector().isActive()) {
         throw new RuntimeException("Trying to receive message from inactive client");
       }
-      MessageBundle bundle = reflector().takeNextMessage(QuerySpeed.SHORT);
+      final MessageBundle bundle;
+      try {
+        bundle = reflector().takeNextMessage(QuerySpeed.SHORT);
+      } catch (Exception e) {
+        throw new AbortMessageLoop("Exception receiving message", e);
+      }
       if (activeInstance != this) {
         debug("stashing interrupted message bundle");
         checkState(stashedBundle == null, "stashed bundle is not null");
@@ -1885,6 +1890,10 @@ public class SequenceBase {
 
     public AbortMessageLoop(String message) {
       super(message);
+    }
+
+    public AbortMessageLoop(String message, Exception e) {
+      super(message, e);
     }
   }
 

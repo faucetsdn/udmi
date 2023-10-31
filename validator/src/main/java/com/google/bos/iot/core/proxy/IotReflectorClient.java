@@ -347,7 +347,7 @@ public class IotReflectorClient implements MessagePublisher {
   private void errorHandler(Throwable throwable) {
     System.err.printf("Received mqtt client error: %s at %s%n",
         throwable.getMessage(), getTimestamp());
-    publisher.close();
+    close();
   }
 
   @Override
@@ -363,6 +363,9 @@ public class IotReflectorClient implements MessagePublisher {
   @Override
   public Validator.MessageBundle takeNextMessage(QuerySpeed timeout) {
     try {
+      if (!active) {
+        throw new IllegalStateException("Reflector client not active");
+      }
       return messages.poll(timeout.seconds(), TimeUnit.SECONDS);
     } catch (Exception e) {
       throw new RuntimeException("While taking next message", e);
