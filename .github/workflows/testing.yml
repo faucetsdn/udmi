@@ -125,6 +125,7 @@ jobs:
     needs: pretest
     timeout-minutes: 75
     strategy:
+      fail-fast: false
       matrix:
         shard: [0, 1]
     if: vars.TARGET_PROJECT != ''
