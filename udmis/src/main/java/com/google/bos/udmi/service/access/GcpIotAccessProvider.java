@@ -173,14 +173,6 @@ public class GcpIotAccessProvider extends IotAccessBase {
     return cloudModel;
   }
 
-  private static Resource_type resourceType(Device device) {
-    GatewayConfig gatewayConfig = device.getGatewayConfig();
-    if (gatewayConfig != null && GATEWAY_TYPE.equals(gatewayConfig.getGatewayType())) {
-      return GATEWAY;
-    }
-    return Resource_type.DEVICE;
-  }
-
   private Device convert(CloudModel cloudModel) {
     return new Device()
         .setBlocked(cloudModel.blocked)
@@ -194,6 +186,14 @@ public class GcpIotAccessProvider extends IotAccessBase {
     cloudModel.operation = operation;
     cloudModel.num_id = EMPTY_RETURN_RECEIPT;
     return cloudModel;
+  }
+
+  private Resource_type resourceType(Device device) {
+    GatewayConfig gatewayConfig = device.getGatewayConfig();
+    if (gatewayConfig != null && GATEWAY_TYPE.equals(gatewayConfig.getGatewayType())) {
+      return GATEWAY;
+    }
+    return Resource_type.DEVICE;
   }
 
   private List<Credential> convertIot(List<DeviceCredential> credentials) {

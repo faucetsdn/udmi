@@ -365,6 +365,9 @@ public class CloudIotManager {
     deviceMap.remove(deviceId);
   }
 
+  /**
+   * Create a registry with the given suffix.
+   */
   public String createRegistry(String suffix) {
     CloudModel settings = new CloudModel();
     settings.resource_type = Resource_type.REGISTRY;
