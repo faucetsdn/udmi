@@ -118,20 +118,16 @@ else
 fi
 
 if [[ -n $clean_cache ]]; then
-    CACHE_BACKUP_DIR=/tmp/validator/sequences
-    echo Cleaning sequencer result cache...
-    echo A backup is found in $CACHE_BACKUP_DIR 
-    rm -rf $CACHE_BACKUP_DIR && mkdir -p $CACHE_BACKUP_DIR
-    mv validator/sequences/* $CACHE_BACKUP_DIR
+    bin/sequencer_cache -a
 else
-    bin/sequencer_cache
+    bin/sequencer_cache -u
 
     echo Comparing diff out/sequencer.out etc/sequencer.out
     diff -u out/sequencer.out etc/sequencer.out
 fi
 
 if [[ -n $alpha_mode ]]; then
-    bin/sequencer_cache
+    bin/sequencer_cache -u
 
     echo Comparing diff out/sequencer.out etc/sequencer${suffix}.out
     diff -u out/sequencer.out etc/sequencer${suffix}.out
@@ -156,11 +152,5 @@ diff -u out/generated.md docs/specs/sequences/generated.md || (
 
 echo Checking for duplication in out/sequencer.out and etc/sequencer_planning.txt
 bin/test_sequencer_plan
-
-echo Comparing sequencer cache against generated files
-ls -1 sites/udmi_site_model/out/devices/AHU-1/tests/ \
-    | xargs -I% diff -u \
-        sites/udmi_site_model/out/devices/AHU-1/tests/%/sequence.md \
-        /tmp/validator/sequences/%/sequence.md
 
 echo Done with base test_sequencer run.

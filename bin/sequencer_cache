@@ -19,40 +19,115 @@ cd $ROOT_DIR
 TEST_LIST=out/sequencer_tests.txt
 RESULT_OUT=out/sequencer.out
 CACHE_ROOT=validator/sequences
+ARCHIVE_ROOT=/tmp/validator/sequences
 TEST_ROOT=sites/udmi_site_model/out/devices/AHU-1
 
 # Fix sort order difference on different platforms.
 export LC_ALL=C
 
-mkdir -p $CACHE_ROOT
-find $CACHE_ROOT/ -name sequencer.log | xargs fgrep -H RESULT | awk '{print $6}' > $TEST_LIST
-find $TEST_ROOT/ -name sequencer.log | xargs fgrep -H RESULT | awk '{print $6}'>> $TEST_LIST
-sort < $TEST_LIST | uniq | sponge $TEST_LIST
-all_tests=$(cat $TEST_LIST)
-rm -f $RESULT_OUT
+function usage(){
+    echo "Usage: $0 [OPTION]"
+    echo
+    echo "-u Update sequencer cache from test root"
+    echo "-a Archive sequencer cache"
+    echo "-x Validate archived sequencer cache against the test root"
+    echo "-i PATH Import sequencer cache from Github Actions artifact"
+    exit 1
+}
 
-for test in $all_tests; do
-    src_dir=$TEST_ROOT/tests/$test
-    cache_dir=$CACHE_ROOT/$test
-    if ! test -f $src_dir/sequence.md; then
-        echo Missing $src_dir/sequence.md
-    elif diff -q $src_dir/sequence.md $cache_dir/sequence.md; then
-        echo Unchanged $cache_dir
-    else
-        echo Updating $cache_dir from $src_dir...
-        rm -rf $cache_dir
-        cp -a $src_dir $(dirname $cache_dir)
-        ls -l $src_dir/sequence.md $cache_dir/sequence.md
-    fi
+if [[ $# == 0 ]]; then
+    usage
+fi
 
-    fgrep RESULT $cache_dir/sequencer.log | sed -e 's/.*NOTICE RESULT/RESULT/' >> $RESULT_OUT
+while getopts "i:aux" opt; do
+    case $opt in
+        a)
+            archive=1
+            ;;
+        u)
+            update=1
+            ;;
+        x)
+            validate_archive=1
+            ;;
+        i)
+            import_cache=1
+            github_artifact="$OPTARG"
+            ;;
+        \?)
+            usage
+            ;;
+    esac
 done
 
-sort -k 3 < $RESULT_OUT | fgrep -v " DISABLED " | sponge $RESULT_OUT
+if [[ -n $update ]]; then
+    mkdir -p $CACHE_ROOT
+    find $CACHE_ROOT/ -name sequencer.log | xargs fgrep -H RESULT | awk '{print $6}' > $TEST_LIST
+    find $TEST_ROOT/ -name sequencer.log | xargs fgrep -H RESULT | awk '{print $6}'>> $TEST_LIST
+    sort < $TEST_LIST | uniq | sponge $TEST_LIST
+    all_tests=$(cat $TEST_LIST)
+    rm -f $RESULT_OUT
 
-echo
-echo Resulting $RESULT_OUT:
-cat $RESULT_OUT
+    for test in $all_tests; do
+        src_dir=$TEST_ROOT/tests/$test
+        cache_dir=$CACHE_ROOT/$test
+        if ! test -f $src_dir/sequence.md; then
+            echo Missing $src_dir/sequence.md
+        elif diff -q $src_dir/sequence.md $cache_dir/sequence.md; then
+            echo Unchanged $cache_dir
+        else
+            echo Updating $cache_dir from $src_dir...
+            rm -rf $cache_dir
+            cp -a $src_dir $(dirname $cache_dir)
+            ls -l $src_dir/sequence.md $cache_dir/sequence.md
+        fi
 
-echo
-echo Done with test cache update of $CACHE_ROOT, generated $RESULT_OUT
+        fgrep RESULT $cache_dir/sequencer.log | sed -e 's/.*NOTICE RESULT/RESULT/' >> $RESULT_OUT
+    done
+
+    sort -k 3 < $RESULT_OUT | fgrep -v " DISABLED " | sponge $RESULT_OUT
+
+    echo
+    echo Resulting $RESULT_OUT:
+    cat $RESULT_OUT
+
+    echo
+    echo Done with test cache update of $CACHE_ROOT, generated $RESULT_OUT
+fi
+
+if [[ -n $archive ]]; then
+    echo Cleaning sequencer result cache...
+    echo A backup is found in $ARCHIVE_ROOT 
+    rm -rf $ARCHIVE_ROOT && mkdir -p $ARCHIVE_ROOT
+    mv validator/sequences/* $ARCHIVE_ROOT
+fi 
+
+if [[ -n $validate_archive ]]; then
+    echo Comparing archived sequencer cache against generated files
+    ls -1 $TEST_ROOT/tests/ \
+        | xargs -I% diff -u \
+            $TEST_ROOT/tests/%/sequence.md \
+            $ARCHIVE_ROOT/%/sequence.md
+fi
+
+if [[ -n $import_cache ]]; then
+    if ! [[ -f $github_artifact ]]; then
+        echo "File $github_artifact not found"
+        false
+    fi
+
+    TMP_DIR=/tmp/import_cache
+    rm -rf $TMP_DIR && mkdir -p $TMP_DIR
+
+    SEQUENCER_OUT=$(zipinfo -1 $github_artifact | grep sequencer)
+    unzip -p $github_artifact $SEQUENCER_OUT | tar -zxC $TMP_DIR
+    IMPORT_DIR="$TMP_DIR/$TEST_ROOT/tests"
+
+    for directory in $IMPORT_DIR/* ; do
+        test_name=$(basename "$directory")
+        if ! diff "$IMPORT_DIR/$test_name/sequence.md" "$CACHE_ROOT$test_name/sequence.md" >/dev/null 2>&1; then
+            rm -rf "$CACHE_ROOT/$test_name/"
+            cp -r "$IMPORT_DIR/$test_name" "$CACHE_ROOT/$test_name"
+        fi
+    done
+fi
