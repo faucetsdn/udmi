@@ -322,25 +322,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     }
   }
 
-  private CloudModel deleteDevice(String registryId, Device device) {
-    String deviceId = requireNonNull(device.toBuilder().getId(), "unspecified device id");
-    try {
-      ifTrueThen(isGateway(device), () -> unbindGatewayDevices(registryId, device));
-      DeviceManagerClient deviceManagerClient = getDeviceManagerClient();
-      String location = getRegistryLocation(registryId);
-      DeviceName deviceName = DeviceName.of(projectId, location, registryId, deviceId);
-      DeleteDeviceRequest request =
-          DeleteDeviceRequest.Builder.newBuilder().setName(deviceName).build();
-      deviceManagerClient.deleteDevice(request);
-      CloudModel cloudModel = new CloudModel();
-      cloudModel.operation = DELETE;
-      cloudModel.num_id = extractNumId(device);
-      return cloudModel;
-    } catch (Exception e) {
-      throw new RuntimeException(format("While deleting %s/%s", registryId, deviceId), e);
-    }
-  }
-
   @NotNull
   private HashMap<String, CloudModel> fetchDevices(String deviceRegistryId, String gatewayId) {
     String location = getRegistryLocation(deviceRegistryId);
@@ -432,7 +413,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       return switch (operation) {
         case CREATE -> createDevice(registryId, device);
         case UPDATE -> updateDevice(registryId, device);
-        case DELETE -> unbindAndDelete(registryId, deviceId, device);
+        case DELETE -> unbindAndDelete(registryId, device);
         case BIND -> bindDeviceToGateway(registryId, deviceId, cloudModel);
         default -> throw new RuntimeException("Unknown operation " + operation);
       };
@@ -499,8 +480,23 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   }
 
   @NotNull
-  private CloudModel unbindAndDelete(String registryId, String deviceId, Device device) {
-    return deleteDevice(registryId, device);
+  private CloudModel unbindAndDelete(String registryId, Device device) {
+    String deviceId = requireNonNull(device.toBuilder().getId(), "unspecified device id");
+    try {
+      unbindGatewayDevices(registryId, device);
+      DeviceManagerClient deviceManagerClient = getDeviceManagerClient();
+      String location = getRegistryLocation(registryId);
+      DeviceName deviceName = DeviceName.of(projectId, location, registryId, deviceId);
+      DeleteDeviceRequest request =
+          DeleteDeviceRequest.Builder.newBuilder().setName(deviceName).build();
+      deviceManagerClient.deleteDevice(request);
+      CloudModel cloudModel = new CloudModel();
+      cloudModel.operation = DELETE;
+      cloudModel.num_id = extractNumId(device);
+      return cloudModel;
+    } catch (Exception e) {
+      throw new RuntimeException(format("While deleting %s/%s", registryId, deviceId), e);
+    }
   }
 
   private void unbindDevice(String registryId, String gatewayId, String proxyId) {
@@ -520,10 +516,12 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   private void unbindGatewayDevices(String registryId, Device device) {
     String gatewayId = device.toBuilder().getId();
     CloudModel cloudModel = listRegistryDevices(registryId, gatewayId);
-    debug(format("Unbinding from %s/%s: %s", registryId, gatewayId,
-        CSV_JOINER.join(cloudModel.device_ids.keySet())));
-    ifNotNullThen(cloudModel.device_ids, ids -> ids.keySet()
-        .forEach(id -> unbindDevice(registryId, gatewayId, id)));
+    if (!cloudModel.device_ids.isEmpty()) {
+      debug(format("Unbinding from %s/%s: %s", registryId, gatewayId,
+          CSV_JOINER.join(cloudModel.device_ids.keySet())));
+      ifNotNullThen(cloudModel.device_ids, ids -> ids.keySet()
+          .forEach(id -> unbindDevice(registryId, gatewayId, id)));
+    }
   }
 
   private CloudModel updateDevice(String registryId, Device device) {
