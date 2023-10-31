@@ -137,3 +137,5 @@ fi
 if [[ -n $out_check ]]; then
     bin/test_sequcheck $suffix
 fi
+
+echo Done with base test_sequencer run.
