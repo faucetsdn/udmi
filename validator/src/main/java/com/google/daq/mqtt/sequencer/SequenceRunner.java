@@ -231,11 +231,8 @@ public class SequenceRunner {
       }
     }
 
-    // Only flag remaining methods as a problem if they weren't excluded because of sharding.
-    Set<String> residual = remainingMethods.stream().filter(this::shouldShardMethod)
-        .collect(Collectors.toSet());
-    if (!residual.isEmpty()) {
-      throw new RuntimeException("Failed to find " + Joiner.on(", ").join(residual));
+    if (!remainingMethods.isEmpty()) {
+      throw new RuntimeException("Failed to find " + Joiner.on(", ").join(remainingMethods));
     }
 
     if (runCount <= 0) {
@@ -254,7 +251,7 @@ public class SequenceRunner {
   private boolean shouldShardMethod(String method) {
     int base = SHARD_LIST.indexOf(method);
     int index = base >= 0 ? base : (SHARD_LIST.add(method) ? SHARD_LIST.size() - 1 : -1);
-    return exeConfig.shard_count == null
+    return exeConfig.shard_count == null || targets.contains(method)
         || (index % exeConfig.shard_count) == exeConfig.shard_index;
   }
 
