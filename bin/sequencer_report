@@ -125,7 +125,7 @@ class Sequence:
     # reference spec, but a step is a step, so use lengths
     if result == "pass":
       return len(act)
-    
+
     # -1 because we've taken the failing element out of the list
     return len(act) - 1
 
@@ -188,7 +188,7 @@ class Sequence:
         )
       f.append("-" * dash_width)
       f.append("")
-      
+
     if not_done:
       for step in not_done:
         step_count += 1
