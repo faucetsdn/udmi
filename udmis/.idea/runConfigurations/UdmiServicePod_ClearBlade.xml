@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="UdmiServicePod ClearBlade" type="Application" factoryName="Application">
-    <option name="ALTERNATIVE_JRE_PATH" value="17 (2)" />
+    <option name="ALTERNATIVE_JRE_PATH" value="17" />
     <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
     <envs>
       <env name="CLEARBLADE_CONFIGURATION" value="$USER_HOME$/creds/bos-platform-dev-credentials.json" />

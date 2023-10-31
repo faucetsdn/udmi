@@ -142,8 +142,7 @@ public class ReflectProcessor extends ProcessorBase {
       Map<String, Object> payload) {
     debug("Processing reflection %s/%s %s %s", envelope.subType, envelope.subFolder,
         getTimestamp(envelope.publishTime), envelope.transactionId);
-    CloudModel result =
-        requireNonNull(getReflectionResult(envelope, payload), "invalid reflection result");
+    CloudModel result = getReflectionResult(envelope, payload);
     ifNotNullThen(result,
         v -> debug("Reflection result %s: %s", envelope.transactionId, envelope.subType));
     ifNotNullThen(result, v -> sendReflectCommand(reflection, envelope, result));
