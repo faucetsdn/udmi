@@ -4,6 +4,7 @@ import static com.clearblade.cloud.iot.v1.devicetypes.GatewayType.NON_GATEWAY;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
+import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
@@ -14,6 +15,7 @@ import static com.google.udmi.util.JsonUtil.getDate;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
+import static udmi.schema.CloudModel.Operation.CREATE;
 import static udmi.schema.CloudModel.Operation.DELETE;
 import static udmi.schema.CloudModel.Resource_type.DEVICE;
 import static udmi.schema.CloudModel.Resource_type.GATEWAY;
@@ -22,6 +24,7 @@ import static udmi.schema.CloudModel.Resource_type.REGISTRY;
 import com.clearblade.cloud.iot.v1.DeviceManagerClient;
 import com.clearblade.cloud.iot.v1.binddevicetogateway.BindDeviceToGatewayRequest;
 import com.clearblade.cloud.iot.v1.createdevice.CreateDeviceRequest;
+import com.clearblade.cloud.iot.v1.createdeviceregistry.CreateDeviceRegistryRequest;
 import com.clearblade.cloud.iot.v1.deletedevice.DeleteDeviceRequest;
 import com.clearblade.cloud.iot.v1.deviceslist.DevicesListRequest;
 import com.clearblade.cloud.iot.v1.deviceslist.DevicesListResponse;
@@ -36,6 +39,7 @@ import com.clearblade.cloud.iot.v1.devicetypes.GatewayAuthMethod;
 import com.clearblade.cloud.iot.v1.devicetypes.GatewayConfig;
 import com.clearblade.cloud.iot.v1.devicetypes.GatewayListOptions;
 import com.clearblade.cloud.iot.v1.devicetypes.GatewayType;
+import com.clearblade.cloud.iot.v1.exception.ApplicationException;
 import com.clearblade.cloud.iot.v1.getdevice.GetDeviceRequest;
 import com.clearblade.cloud.iot.v1.listdeviceconfigversions.ListDeviceConfigVersionsRequest;
 import com.clearblade.cloud.iot.v1.listdeviceconfigversions.ListDeviceConfigVersionsResponse;
@@ -94,6 +98,8 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       Key_format.ES_256_X_509, PublicKeyFormat.ES256_X509_PEM
   );
   private static final String EMPTY_RETURN_RECEIPT = "-1";
+  private static final String RESOURCE_EXISTS = "-2";
+  private static final String REGISTRY_CREATE = "-3";
   private static final String UPDATE_FIELD_MASK = "blocked,credentials,metadata";
   private static final GatewayConfig NON_GATEWAY_CONFIG = new GatewayConfig();
   private static final GatewayConfig GATEWAY_CONFIG = GatewayConfig.newBuilder()
@@ -290,18 +296,26 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   }
 
   private CloudModel createDevice(String registryId, Device device) {
-    DeviceManagerClient deviceManagerClient = getDeviceManagerClient();
-    String location = getRegistryLocation(registryId);
-    String parent = RegistryName.of(projectId, location, registryId).toString();
-    CreateDeviceRequest request =
-        CreateDeviceRequest.Builder.newBuilder().setParent(parent).setDevice(device)
-            .build();
-    requireNonNull(deviceManagerClient.createDevice(request),
-        "create device failed for " + parent);
     CloudModel cloudModel = new CloudModel();
-    cloudModel.operation = Operation.CREATE;
-    cloudModel.num_id = extractNumId(device);
-    return cloudModel;
+    cloudModel.operation = CREATE;
+    try {
+      DeviceManagerClient deviceManagerClient = getDeviceManagerClient();
+      String location = getRegistryLocation(registryId);
+      String parent = RegistryName.of(projectId, location, registryId).toString();
+      CreateDeviceRequest request =
+          CreateDeviceRequest.Builder.newBuilder().setParent(parent).setDevice(device)
+              .build();
+      requireNonNull(deviceManagerClient.createDevice(request),
+          "create device failed for " + parent);
+      cloudModel.num_id = extractNumId(device);
+      return cloudModel;
+    } catch (ApplicationException applicationException) {
+      if (applicationException.getMessage().contains("ALREADY_EXISTS")) {
+        cloudModel.num_id = RESOURCE_EXISTS;
+        return cloudModel;
+      }
+      throw applicationException;
+    }
   }
 
   private CloudModel deleteDevice(String registryId, Device device) {
@@ -426,10 +440,47 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   private CloudModel modelRegistry(String registryId, String deviceId, CloudModel cloudModel) {
     String registryActual = registryId + deviceId;
     if (!deviceId.isEmpty()) {
-      Device device = convert(cloudModel, registryActual);
-      createDevice(reflectRegistry, device);
+      CloudModel deviceModel = deepCopy(cloudModel);
+      deviceModel.resource_type = DEVICE;
+      modelDevice(reflectRegistry, registryActual, deviceModel);
     }
-    return cloudModel;
+    Operation operation = cloudModel.operation;
+    Resource_type type = ofNullable(cloudModel.resource_type).orElse(Resource_type.DEVICE);
+    checkState(type == REGISTRY, "unexpected resource type " + type);
+    try {
+      Device device = convert(cloudModel, deviceId);
+      if (operation == CREATE) {
+        return createRegistry(registryActual, device);
+      } else {
+        throw new RuntimeException("Unsupported operation " + operation);
+      }
+    } catch (Exception e) {
+      throw new RuntimeException("While " + operation + "ing registry " + registryActual, e);
+    }
+  }
+
+  private CloudModel createRegistry(String registryId, Device device) {
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.operation = CREATE;
+    cloudModel.resource_type = REGISTRY;
+    try {
+      String location = getRegistryLocation(reflectRegistry);
+      DeviceManagerClient client = new DeviceManagerClient();
+      CreateDeviceRegistryRequest request = CreateDeviceRegistryRequest.Builder.newBuilder()
+          .setParent(LocationName.of(projectId, location).toString())
+          .setDeviceRegistry(
+              DeviceRegistry.newBuilder().setId(registryId).setLogLevel(LogLevel.DEBUG).build())
+          .build();
+      DeviceRegistry actualResponse = client.createDeviceRegistry(request);
+      cloudModel.num_id = REGISTRY_CREATE;
+      return cloudModel;
+    } catch (ApplicationException applicationException) {
+      if (applicationException.getMessage().contains("ALREADY_EXISTS")) {
+        cloudModel.num_id = RESOURCE_EXISTS;
+        return cloudModel;
+      }
+      throw applicationException;
+    }
   }
 
   @NotNull
