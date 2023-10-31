@@ -189,7 +189,7 @@ jobs:
         if: ${{ always() }}
         run: |
           bin/support
-          mv /tmp/udmi-support_*.tgz ${{ github.repository_owner }}_${{ github.job }}_$(cd /tmp; ls udmi-support_*.tgz)
+          mv /tmp/udmi-support_*.tgz ${{ github.repository_owner }}_${{ github.job }}${UDMI_REGISTRY_SUFFIX}_$(cd /tmp; ls udmi-support_*.tgz)
           echo Renamed support file to `ls *_udmi-support_*.tgz`
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
@@ -212,8 +212,6 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-      - name: diagnostics
-        run: echo Running matrix shard $MATRIX_SHARD
       - name: base setup
         run: bin/run_tests install_dependencies
       - name: registrar clean
@@ -231,6 +229,18 @@ jobs:
       - name: nostate sequences
         if: ${{ always() }}
         run: bin/test_sequencer clean alpha nostate full $TARGET_PROJECT
+      - name: support bundle
+        if: ${{ always() }}
+        run: |
+          bin/support
+          mv /tmp/udmi-support_*.tgz ${{ github.repository_owner }}_${{ github.job }}${UDMI_REGISTRY_SUFFIX}_$(cd /tmp; ls udmi-support_*.tgz)
+          echo Renamed support file to `ls *_udmi-support_*.tgz`
+      - uses: actions/upload-artifact@v3
+        if: ${{ always() }}
+        with:
+          if-no-files-found: error
+          name: udmi-support_${{ github.run_id }}
+          path: '*_udmi-support_*.tgz'
 
   redirect:
     name: Endpoint Redirection
@@ -258,6 +268,18 @@ jobs:
       - name: pubber.out
         if: ${{ always() }}
         run: more out/pubber.out* | cat
+      - name: support bundle
+        if: ${{ always() }}
+        run: |
+          bin/support
+          mv /tmp/udmi-support_*.tgz ${{ github.repository_owner }}_${{ github.job }}${UDMI_REGISTRY_SUFFIX}_$(cd /tmp; ls udmi-support_*.tgz)
+          echo Renamed support file to `ls *_udmi-support_*.tgz`
+      - uses: actions/upload-artifact@v3
+        if: ${{ always() }}
+        with:
+          if-no-files-found: error
+          name: udmi-support_${{ github.run_id }}
+          path: '*_udmi-support_*.tgz'
 
   posttest:
     name: Post-test Summarization
