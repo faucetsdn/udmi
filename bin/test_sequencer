@@ -141,7 +141,7 @@ if [[ -n $out_check ]]; then
     bin/test_sequcheck $suffix
 else
     echo Archiving $site_path/out to $site_path/out-seq
-    rsync -ah site_path/out/ $site_path/out-seq/
+    rsync -ah $site_path/out/ $site_path/out-seq/
 fi
 
 echo Done with base test_sequencer run.
