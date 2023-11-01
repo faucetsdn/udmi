@@ -189,7 +189,7 @@ jobs:
         if: ${{ always() }}
         run: |
           bin/support
-          mv /tmp/udmi-support_*.tgz ${{ github.repository_owner }}_${{ github.job }}${UDMI_REGISTRY_SUFFIX}_$(cd /tmp; ls udmi-support_*.tgz)
+          mv /tmp/udmi-support_*.tgz ${{ github.repository_owner }}_${{ github.job }}_$(cd /tmp; ls udmi-support_*.tgz)
           echo Renamed support file to `ls *_udmi-support_*.tgz`
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
@@ -233,7 +233,7 @@ jobs:
         if: ${{ always() }}
         run: |
           bin/support
-          mv /tmp/udmi-support_*.tgz ${{ github.repository_owner }}_${{ github.job }}${UDMI_REGISTRY_SUFFIX}_$(cd /tmp; ls udmi-support_*.tgz)
+          mv /tmp/udmi-support_*.tgz ${{ github.repository_owner }}_${{ github.job }}_$(cd /tmp; ls udmi-support_*.tgz)
           echo Renamed support file to `ls *_udmi-support_*.tgz`
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
@@ -272,7 +272,7 @@ jobs:
         if: ${{ always() }}
         run: |
           bin/support
-          mv /tmp/udmi-support_*.tgz ${{ github.repository_owner }}_${{ github.job }}${UDMI_REGISTRY_SUFFIX}_$(cd /tmp; ls udmi-support_*.tgz)
+          mv /tmp/udmi-support_*.tgz ${{ github.repository_owner }}_${{ github.job }}_$(cd /tmp; ls udmi-support_*.tgz)
           echo Renamed support file to `ls *_udmi-support_*.tgz`
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
@@ -286,7 +286,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     needs: [ baseline, sequencer, redirect ]
-    if: vars.TARGET_PROJECT != ''
+    if: vars.TARGET_PROJECT != '' && ${{ always() }}
     env:
       TARGET_PROJECT: ${{ vars.TARGET_PROJECT }}
       UDMI_ALT_REGISTRY: ${{ vars.UDMI_ALT_REGISTRY }}
@@ -296,6 +296,13 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
+      - name: Download all workflow run artifacts
+        uses: actions/download-artifact@v3
+      - name: Reconciling expansion
+        run: |
+          ls -l
+          ls */*.tgz | xargs -n 1 tar -xzf
+          ls -l
       - name: sequencer validation
         run: bin/test_sequcheck
       - name: sequencer markdown report generator
