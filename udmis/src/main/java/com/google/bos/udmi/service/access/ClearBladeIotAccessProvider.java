@@ -70,6 +70,7 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -110,6 +111,8 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
 
   private static final String UDMI_TARGET_TOPIC = "udmi_target"; // TODO: Make this not hardcoded.
   private static final String UDMI_STATE_TOPIC = "udmi_state"; // TODO: Make this not hardcoded.
+  private static final String TOPIC_NAME_FORMAT = "projects/%s/topics/%s";
+
   private final String projectId;
 
   /**
@@ -469,13 +472,17 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     return cloudModel;
   }
 
+  private String getScopedTopic(String udmiTargetTopic) {
+    return format(TOPIC_NAME_FORMAT, projectId, getPodNamespacePrefix() + udmiTargetTopic);
+  }
+
   private EventNotificationConfig eventNotificationConfig() {
-    String topicName = getPodNamespacePrefix() + UDMI_TARGET_TOPIC;
+    String topicName = getScopedTopic(UDMI_TARGET_TOPIC);
     return EventNotificationConfig.newBuilder().setPubsubTopicName(topicName).build();
   }
 
   private StateNotificationConfig stateNotificationConfig() {
-    String topicName = getPodNamespacePrefix() + UDMI_STATE_TOPIC;
+    String topicName = getScopedTopic(UDMI_STATE_TOPIC);
     return StateNotificationConfig.newBuilder().setPubsubTopicName(topicName).build();
   }
 
