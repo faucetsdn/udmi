@@ -2,15 +2,16 @@
 
 ROOT_DIR=$(dirname $0)/..
 
-NEW_OUT=out${UDMI_REGISTRY_SUFFIX}
-if [[ -n $UDMI_REGISTRY_SUFFIX ]]; then
-    echo Relocating $ROOT_DIR/out/ to $NEW_OUT
-    mv $ROOT_DIR/out/ $ROOT_DIR/$NEW_OUT || true
+out_dir=$ROOT_DIR/out
+if [[ -n $UDMI_REGISTRY_SUFFIX && -n $out_dir ]]; then
+    echo Relocating $out_dir to $out_dir${UDMI_REGISTRY_SUFFIX}
+    mv $out_dir $out_dir${UDMI_REGISTRY_SUFFIX}
+    out_dir=$out_dir${UDMI_REGISTRY_SUFFIX}
 fi
 
 TIME=`date --utc +%Y%m%d-%H%M%S`
 ARCHIVE=/tmp/udmi-support${UDMI_REGISTRY_SUFFIX}_$TIME.tgz
-OUT_DIR=$(realpath $ROOT_DIR/$NEW_OUT --relative-to=$PWD)
+OUT_DIR=$(realpath $out_dir --relative-to=$PWD)
 
 CONFIG_FILES="/tmp/validator_config.json /tmp/registrar_config.json /tmp/sequencer_config.json /tmp/pubber_config.json"
 
@@ -26,6 +27,12 @@ for config in $CONFIG_FILES; do
         echo Using site_model $site_model from cached $config
     fi
 done
+
+if [[ -n $UDMI_REGISTRY_SUFFIX && -n $site_model ]]; then
+    echo Relocating $site_model to $site_model${UDMI_REGISTRY_SUFFIX}
+    mv $site_model $site_model${UDMI_REGISTRY_SUFFIX}
+    site_model=$site_model${UDMI_REGISTRY_SUFFIX}
+fi
 
 echo tar --exclude-vcs -czf $ARCHIVE $site_model $OUT_DIR
 tar --exclude-vcs -czf $ARCHIVE $site_model $OUT_DIR
