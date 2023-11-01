@@ -1,94 +1,84 @@
 {
-  "event_count" : 10,
-  "last_config" : "2023-07-28T20:24:59Z",
+  "event_count" : 11,
+  "last_config" : "2023-10-28T13:29:54Z",
   "logentries" : [ {
-    "message" : "success",
-    "category" : "system.config.receive",
-    "timestamp" : "2023-07-28T20:24:59Z",
-    "level" : 100
-  }, {
-    "message" : "State update defer -9850ms",
+    "message" : "State update defer 180ms",
     "category" : "device.log",
-    "timestamp" : "2023-07-28T20:24:59Z",
-    "level" : 100
-  }, {
-    "message" : "success",
-    "category" : "system.config.parse",
-    "timestamp" : "2023-07-28T20:24:59Z",
-    "level" : 100
-  }, {
-    "message" : "update state 2023-07-28T20:24:59Z last_config 2023-07-28T20:24:46Z",
-    "category" : "device.log",
-    "timestamp" : "2023-07-28T20:24:59Z",
-    "level" : 200
-  }, {
-    "message" : "Config handler",
-    "category" : "device.log",
-    "timestamp" : "2023-07-28T20:24:59Z",
-    "level" : 200
-  }, {
-    "message" : "State update (extra_config)",
-    "detail" : "{\n  \"timestamp\" : \"2023-07-28T20:24:59Z\",\n  \"version\" : \"1.4.1\",\n  \"system\" : {\n    \"last_config\" : \"2023-07-28T20:24:46Z\",\n    \"operation\" : {\n      \"operational\" : true,\n      \"last_start\" : \"2023-07-28T20:23:12Z\",\n      \"restart_count\" : 3,\n      \"mode\" : \"active\"\n    },\n    \"serial_no\" : \"sequencer-13214\",\n    \"hardware\" : {\n      \"make\" : \"BOS\",\n      \"model\" : \"pubber\"\n    },\n    \"software\" : {\n      \"firmware\" : \"v1\"\n    },\n    \"status\" : {\n      \"message\" : \"success\",\n      \"category\" : \"system.config.apply\",\n      \"timestamp\" : \"2023-07-28T20:24:46Z\",\n      \"level\" : 300\n    }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : {\n        \"addr\" : \"40:1c:83:ca:77:54\"\n      },\n      \"ipv4\" : {\n        \"addr\" : \"10.0.0.142\"\n      },\n      \"ipv6\" : {\n        \"addr\" : \"fe80::134f:c1f5:f225:a441\"\n      }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : { },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"value_state\" : \"applied\"\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
-    "category" : "device.log",
-    "timestamp" : "2023-07-28T20:24:59Z",
-    "level" : 100
-  }, {
-    "message" : "Config update (extra_config)",
-    "detail" : "{\n  \"timestamp\" : \"2023-07-28T20:24:59Z\",\n  \"version\" : \"1.4.1\",\n  \"system\" : {\n    \"min_loglevel\" : 100,\n    \"metrics_rate_sec\" : 600,\n    \"operation\" : {\n      \"last_start\" : \"2023-07-28T20:23:12Z\"\n    },\n    \"testing\" : {\n      \"sequence_name\" : \"extra_config\"\n    }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : {\n        \"addr\" : \"00:50:b6:ed:5f:77\"\n      },\n      \"ipv4\" : {\n        \"addr\" : \"192.168.2.1\"\n      }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"ref\" : \"BV11.present_value\",\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"set_value\" : 98\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"ref\" : \"AV12.present_value\",\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
-    "category" : "device.log",
-    "timestamp" : "2023-07-28T20:24:59Z",
-    "level" : 100
-  }, {
-    "message" : "2023-07-28T20:24:59Z received config 2023-07-28T20:24:59Z",
-    "category" : "device.log",
-    "timestamp" : "2023-07-28T20:24:59Z",
-    "level" : 200
-  }, {
-    "message" : "success",
-    "category" : "system.config.apply",
-    "timestamp" : "2023-07-28T20:24:59Z",
-    "level" : 300
-  }, {
-    "message" : "State update defer 2000ms",
-    "category" : "device.log",
-    "timestamp" : "2023-07-28T20:24:59Z",
-    "level" : 100
-  }, {
-    "message" : "State update defer 2000ms",
-    "category" : "device.log",
-    "timestamp" : "2023-07-28T20:24:59Z",
-    "level" : 100
-  }, {
-    "message" : "State update defer 2000ms",
-    "category" : "device.log",
-    "timestamp" : "2023-07-28T20:24:59Z",
+    "timestamp" : "2023-10-28T13:29:49Z",
     "level" : 100
   }, {
     "message" : "State update defer 0ms",
     "category" : "device.log",
-    "timestamp" : "2023-07-28T20:25:01Z",
+    "timestamp" : "2023-10-28T13:29:49Z",
     "level" : 100
   }, {
-    "message" : "update state 2023-07-28T20:25:01Z last_config 2023-07-28T20:24:59Z",
+    "message" : "update state 2023-10-28T13:29:49Z last_config 2023-10-28T13:29:48Z",
     "category" : "device.log",
-    "timestamp" : "2023-07-28T20:25:01Z",
+    "timestamp" : "2023-10-28T13:29:49Z",
     "level" : 200
   }, {
     "message" : "State update (extra_config)",
-    "detail" : "{\n  \"timestamp\" : \"2023-07-28T20:25:01Z\",\n  \"version\" : \"1.4.1\",\n  \"system\" : {\n    \"last_config\" : \"2023-07-28T20:24:59Z\",\n    \"operation\" : {\n      \"operational\" : true,\n      \"last_start\" : \"2023-07-28T20:23:12Z\",\n      \"restart_count\" : 3,\n      \"mode\" : \"active\"\n    },\n    \"serial_no\" : \"sequencer-13214\",\n    \"hardware\" : {\n      \"make\" : \"BOS\",\n      \"model\" : \"pubber\"\n    },\n    \"software\" : {\n      \"firmware\" : \"v1\"\n    },\n    \"status\" : {\n      \"message\" : \"success\",\n      \"category\" : \"system.config.apply\",\n      \"timestamp\" : \"2023-07-28T20:24:59Z\",\n      \"level\" : 300\n    }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : {\n        \"addr\" : \"40:1c:83:ca:77:54\"\n      },\n      \"ipv4\" : {\n        \"addr\" : \"10.0.0.142\"\n      },\n      \"ipv6\" : {\n        \"addr\" : \"fe80::134f:c1f5:f225:a441\"\n      }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : { },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"value_state\" : \"applied\"\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
+    "detail" : "{\n  \"timestamp\" : \"2023-10-28T13:29:49Z\",\n  \"version\" : \"1.4.2\",\n  \"system\" : {\n    \"last_config\" : \"2023-10-28T13:29:48Z\",\n    \"operation\" : {\n      \"operational\" : true,\n      \"last_start\" : \"2023-10-28T13:27:58Z\",\n      \"restart_count\" : 4,\n      \"mode\" : \"active\"\n    },\n    \"serial_no\" : \"sequencer-22510\",\n    \"hardware\" : {\n      \"make\" : \"BOS\",\n      \"model\" : \"pubber\"\n    },\n    \"software\" : {\n      \"firmware\" : \"v1\"\n    },\n    \"status\" : {\n      \"message\" : \"success\",\n      \"category\" : \"system.config.apply\",\n      \"timestamp\" : \"2023-10-28T13:29:48Z\",\n      \"level\" : 300\n    }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : {\n        \"addr\" : \"60:45:bd:e3:36:e3\"\n      },\n      \"ipv4\" : {\n        \"addr\" : \"10.1.1.78\"\n      },\n      \"ipv6\" : {\n        \"addr\" : \"fe80::6245:bdff:fee3:36e3\"\n      }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : { },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"value_state\" : \"applied\"\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
     "category" : "device.log",
-    "timestamp" : "2023-07-28T20:25:01Z",
+    "timestamp" : "2023-10-28T13:29:49Z",
     "level" : 100
   }, {
-    "message" : "2023-07-28T20:25:04Z sending test message #10",
+    "message" : "success",
+    "category" : "system.config.receive",
+    "timestamp" : "2023-10-28T13:29:54Z",
+    "level" : 100
+  }, {
+    "message" : "success",
+    "category" : "system.config.parse",
+    "timestamp" : "2023-10-28T13:29:54Z",
+    "level" : 100
+  }, {
+    "message" : "Config handler",
     "category" : "device.log",
-    "timestamp" : "2023-07-28T20:25:04Z",
+    "timestamp" : "2023-10-28T13:29:54Z",
     "level" : 200
+  }, {
+    "message" : "Config update (extra_config)",
+    "detail" : "{\n  \"timestamp\" : \"2023-10-28T13:29:54Z\",\n  \"version\" : \"1.4.2-51-g50234ecc\",\n  \"system\" : {\n    \"min_loglevel\" : 100,\n    \"metrics_rate_sec\" : 600,\n    \"operation\" : {\n      \"last_start\" : \"2023-10-28T13:27:58Z\"\n    },\n    \"testing\" : {\n      \"sequence_name\" : \"extra_config\"\n    }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : {\n        \"addr\" : \"00:50:b6:ed:5f:77\"\n      },\n      \"ipv4\" : {\n        \"addr\" : \"192.168.2.1\"\n      }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"ref\" : \"BV11.present_value\",\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"set_value\" : 98\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"ref\" : \"AV12.present_value\",\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
+    "category" : "device.log",
+    "timestamp" : "2023-10-28T13:29:54Z",
+    "level" : 100
+  }, {
+    "message" : "2023-10-28T13:29:54Z received config 2023-10-28T13:29:54Z",
+    "category" : "device.log",
+    "timestamp" : "2023-10-28T13:29:54Z",
+    "level" : 200
+  }, {
+    "message" : "success",
+    "category" : "system.config.apply",
+    "timestamp" : "2023-10-28T13:29:54Z",
+    "level" : 300
+  }, {
+    "message" : "State update defer -3107ms",
+    "category" : "device.log",
+    "timestamp" : "2023-10-28T13:29:54Z",
+    "level" : 100
+  }, {
+    "message" : "update state 2023-10-28T13:29:54Z last_config 2023-10-28T13:29:54Z",
+    "category" : "device.log",
+    "timestamp" : "2023-10-28T13:29:54Z",
+    "level" : 200
+  }, {
+    "message" : "State update (extra_config)",
+    "detail" : "{\n  \"timestamp\" : \"2023-10-28T13:29:54Z\",\n  \"version\" : \"1.4.2\",\n  \"system\" : {\n    \"last_config\" : \"2023-10-28T13:29:54Z\",\n    \"operation\" : {\n      \"operational\" : true,\n      \"last_start\" : \"2023-10-28T13:27:58Z\",\n      \"restart_count\" : 4,\n      \"mode\" : \"active\"\n    },\n    \"serial_no\" : \"sequencer-22510\",\n    \"hardware\" : {\n      \"make\" : \"BOS\",\n      \"model\" : \"pubber\"\n    },\n    \"software\" : {\n      \"firmware\" : \"v1\"\n    },\n    \"status\" : {\n      \"message\" : \"success\",\n      \"category\" : \"system.config.apply\",\n      \"timestamp\" : \"2023-10-28T13:29:54Z\",\n      \"level\" : 300\n    }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : {\n        \"addr\" : \"60:45:bd:e3:36:e3\"\n      },\n      \"ipv4\" : {\n        \"addr\" : \"10.1.1.78\"\n      },\n      \"ipv6\" : {\n        \"addr\" : \"fe80::6245:bdff:fee3:36e3\"\n      }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : { },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"value_state\" : \"applied\"\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
+    "category" : "device.log",
+    "timestamp" : "2023-10-28T13:29:54Z",
+    "level" : 100
+  }, {
+    "message" : "operation.mode state=active / config=null",
+    "category" : "device.log",
+    "timestamp" : "2023-10-28T13:29:59Z",
+    "level" : 100
   } ],
   "metrics" : {
-    "mem_total_mb" : 250.0,
-    "mem_free_mb" : 215.7657699584961
+    "mem_total_mb" : 112.0,
+    "mem_free_mb" : 82.0040512084961
   },
-  "timestamp" : "2023-07-28T20:25:04Z",
-  "version" : "1.4.1"
+  "timestamp" : "2023-10-28T13:29:59Z",
+  "version" : "1.4.2"
 }

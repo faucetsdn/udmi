@@ -118,12 +118,16 @@ else
 fi
 
 if [[ -n $clean_cache ]]; then
-    echo Cleaning sequencer result cache...
-    rm -rf validator/sequences
+    bin/sequencer_cache -a
+else
+    bin/sequencer_cache -u
+
+    echo Comparing diff out/sequencer.out etc/sequencer.out
+    diff -u out/sequencer.out etc/sequencer.out
 fi
 
 if [[ -n $alpha_mode ]]; then
-    bin/sequencer_cache
+    bin/sequencer_cache -u
 
     echo Comparing diff out/sequencer.out etc/sequencer${suffix}.out
     diff -u out/sequencer.out etc/sequencer${suffix}.out

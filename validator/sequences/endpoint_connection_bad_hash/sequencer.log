@@ -1,1007 +1,874 @@
-2023-07-28T20:18:10Z NOTICE starting test endpoint_connection_bad_hash ################################
-2023-07-28T20:18:10Z INFO stage start waiting for starting test wrapper at 0s
-2023-07-28T20:18:18Z DEBUG Sending device state query
-2023-07-28T20:18:18Z DEBUG Starting reset_config full reset true
-2023-07-28T20:18:18Z DEBUG Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null
-2023-07-28T20:18:18Z DEBUG Configuring device last_start to be 1970-01-01T00:01:13Z
-2023-07-28T20:18:18Z DEBUG last_start changed true, last_start 1970-01-01T00:01:13Z
-2023-07-28T20:18:18Z DEBUG extraFieldChanged false because extra_field null
-2023-07-28T20:18:18Z DEBUG extraFieldChanged true because extra_field reset_config
-2023-07-28T20:18:18Z DEBUG configTransactions clear
-2023-07-28T20:18:19Z DEBUG system config extra field reset_config
-2023-07-28T20:18:19Z TRACE updated check config_system true: null
-2023-07-28T20:18:19Z DEBUG update config_system, configTransaction RC:1690575499567
-2023-07-28T20:18:19Z TRACE local local_system: {
-2023-07-28T20:18:19Z TRACE local local_system:   "min_loglevel" : 200,
-2023-07-28T20:18:19Z TRACE local local_system:   "metrics_rate_sec" : 600,
-2023-07-28T20:18:19Z TRACE local local_system:   "operation" : {
-2023-07-28T20:18:19Z TRACE local local_system:     "last_start" : "1970-01-01T00:01:13Z"
-2023-07-28T20:18:19Z TRACE local local_system:   },
-2023-07-28T20:18:19Z TRACE local local_system:   "testing" : {
-2023-07-28T20:18:19Z TRACE local local_system:     "sequence_name" : "reset_config"
-2023-07-28T20:18:19Z TRACE local local_system:   },
-2023-07-28T20:18:19Z TRACE local local_system:   "extra_field" : "reset_config"
-2023-07-28T20:18:19Z TRACE local local_system: }
-2023-07-28T20:18:19Z TRACE updated check config_pointset false: null
-2023-07-28T20:18:19Z TRACE updated check config_gateway false: null
-2023-07-28T20:18:19Z TRACE updated check config_localnet false: null
-2023-07-28T20:18:19Z TRACE updated check config_blobset false: null
-2023-07-28T20:18:19Z TRACE updated check config_discovery false: null
-2023-07-28T20:18:19Z DEBUG Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null
-2023-07-28T20:18:19Z DEBUG Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null
-2023-07-28T20:18:19Z DEBUG Update lastConfigUpdate 2023-07-28T20:18:19Z, because full reset
-2023-07-28T20:18:19Z TRACE stage suspend waiting for starting test wrapper at 9s
-2023-07-28T20:18:19Z INFO stage start waiting for config sync at 9s
-2023-07-28T20:18:19Z DEBUG Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null
-2023-07-28T20:18:19Z TRACE received command AHU-1/event/pointset
-2023-07-28T20:18:19Z TRACE received event_pointset: {
-2023-07-28T20:18:19Z TRACE received event_pointset:   "points" : {
-2023-07-28T20:18:19Z TRACE received event_pointset:     "filter_alarm_pressure_status" : {
-2023-07-28T20:18:19Z TRACE received event_pointset:       "present_value" : false
-2023-07-28T20:18:19Z TRACE received event_pointset:     },
-2023-07-28T20:18:19Z TRACE received event_pointset:     "filter_differential_pressure_setpoint" : {
-2023-07-28T20:18:19Z TRACE received event_pointset:       "present_value" : 98
-2023-07-28T20:18:19Z TRACE received event_pointset:     },
-2023-07-28T20:18:19Z TRACE received event_pointset:     "filter_differential_pressure_sensor" : {
-2023-07-28T20:18:19Z TRACE received event_pointset:       "present_value" : 9
-2023-07-28T20:18:19Z TRACE received event_pointset:     }
-2023-07-28T20:18:19Z TRACE received event_pointset:   },
-2023-07-28T20:18:19Z TRACE received event_pointset:   "timestamp" : "2023-07-28T20:18:15Z",
-2023-07-28T20:18:19Z TRACE received event_pointset:   "version" : "1.4.1"
-2023-07-28T20:18:19Z TRACE received event_pointset: }
-2023-07-28T20:18:19Z DEBUG Handling device message event/pointset PS:8731788877875702
-2023-07-28T20:18:19Z DEBUG Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null
-2023-07-28T20:18:19Z TRACE received command AHU-1/event/system
-2023-07-28T20:18:19Z DEBUG received event_system 2023-07-28T20:18:05Z INFO device.log: Connection complete.
-2023-07-28T20:18:19Z DEBUG received event_system 2023-07-28T20:18:05Z INFO device.log: Config handler
-2023-07-28T20:18:19Z DEBUG received event_system 2023-07-28T20:18:05Z NOTICE system.config.apply: success
-2023-07-28T20:18:19Z DEBUG received event_system 2023-07-28T20:18:05Z NOTICE system.config.apply: success
-2023-07-28T20:18:19Z DEBUG Handling device message event/system PS:8733103908717115
-2023-07-28T20:18:19Z DEBUG Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null
-2023-07-28T20:18:19Z TRACE received command AHU-1/state/update
-2023-07-28T20:18:19Z DEBUG received state_update
-2023-07-28T20:18:19Z DEBUG Updated state after 12s 2023-07-28T20:18:07Z RC:1690575498467
-2023-07-28T20:18:19Z INFO Initial state #001: {
-2023-07-28T20:18:19Z INFO Initial state #001:   "timestamp" : "2023-07-28T20:18:07Z",
-2023-07-28T20:18:19Z INFO Initial state #001:   "version" : "1.4.1",
-2023-07-28T20:18:19Z INFO Initial state #001:   "system" : {
-2023-07-28T20:18:19Z INFO Initial state #001:     "last_config" : "2023-07-28T20:18:03Z",
-2023-07-28T20:18:19Z INFO Initial state #001:     "operation" : {
-2023-07-28T20:18:19Z INFO Initial state #001:       "operational" : true,
-2023-07-28T20:18:19Z INFO Initial state #001:       "last_start" : "2023-07-28T20:18:04Z",
-2023-07-28T20:18:19Z INFO Initial state #001:       "restart_count" : 1,
-2023-07-28T20:18:19Z INFO Initial state #001:       "mode" : "initial"
-2023-07-28T20:18:19Z INFO Initial state #001:     },
-2023-07-28T20:18:19Z INFO Initial state #001:     "serial_no" : "sequencer-13214",
-2023-07-28T20:18:19Z INFO Initial state #001:     "hardware" : {
-2023-07-28T20:18:19Z INFO Initial state #001:       "make" : "BOS",
-2023-07-28T20:18:20Z INFO Initial state #001:       "model" : "pubber"
-2023-07-28T20:18:20Z INFO Initial state #001:     },
-2023-07-28T20:18:20Z INFO Initial state #001:     "software" : {
-2023-07-28T20:18:20Z INFO Initial state #001:       "firmware" : "v1"
-2023-07-28T20:18:20Z INFO Initial state #001:     },
-2023-07-28T20:18:20Z INFO Initial state #001:     "status" : {
-2023-07-28T20:18:20Z INFO Initial state #001:       "message" : "success",
-2023-07-28T20:18:20Z INFO Initial state #001:       "category" : "system.config.apply",
-2023-07-28T20:18:20Z INFO Initial state #001:       "timestamp" : "2023-07-28T20:18:05Z",
-2023-07-28T20:18:20Z INFO Initial state #001:       "level" : 300
-2023-07-28T20:18:20Z INFO Initial state #001:     }
-2023-07-28T20:18:20Z INFO Initial state #001:   },
-2023-07-28T20:18:20Z INFO Initial state #001:   "localnet" : {
-2023-07-28T20:18:20Z INFO Initial state #001:     "families" : {
-2023-07-28T20:18:20Z INFO Initial state #001:       "ether" : {
-2023-07-28T20:18:20Z INFO Initial state #001:         "addr" : "40:1c:83:ca:77:54"
-2023-07-28T20:18:20Z INFO Initial state #001:       },
-2023-07-28T20:18:20Z INFO Initial state #001:       "ipv4" : {
-2023-07-28T20:18:20Z INFO Initial state #001:         "addr" : "10.0.0.142"
-2023-07-28T20:18:20Z INFO Initial state #001:       },
-2023-07-28T20:18:20Z INFO Initial state #001:       "ipv6" : {
-2023-07-28T20:18:20Z INFO Initial state #001:         "addr" : "fe80::134f:c1f5:f225:a441"
-2023-07-28T20:18:20Z INFO Initial state #001:       }
-2023-07-28T20:18:20Z INFO Initial state #001:     }
-2023-07-28T20:18:20Z INFO Initial state #001:   },
-2023-07-28T20:18:20Z INFO Initial state #001:   "pointset" : {
-2023-07-28T20:18:20Z INFO Initial state #001:     "points" : {
-2023-07-28T20:18:20Z INFO Initial state #001:       "filter_alarm_pressure_status" : { },
-2023-07-28T20:18:20Z INFO Initial state #001:       "filter_differential_pressure_setpoint" : {
-2023-07-28T20:18:20Z INFO Initial state #001:         "units" : "Bars",
-2023-07-28T20:18:20Z INFO Initial state #001:         "value_state" : "applied"
-2023-07-28T20:18:20Z INFO Initial state #001:       },
-2023-07-28T20:18:20Z INFO Initial state #001:       "filter_differential_pressure_sensor" : {
-2023-07-28T20:18:20Z INFO Initial state #001:         "units" : "Degrees-Celsius"
-2023-07-28T20:18:20Z INFO Initial state #001:       }
-2023-07-28T20:18:20Z INFO Initial state #001:     }
-2023-07-28T20:18:20Z INFO Initial state #001:   }
-2023-07-28T20:18:20Z INFO Initial state #001: }
-2023-07-28T20:18:20Z NOTICE Received serial number sequencer-13214
-2023-07-28T20:18:20Z DEBUG Updated state has last_config 2023-07-28T20:18:03Z (expecting null)
-2023-07-28T20:18:20Z TRACE received command AHU-1/reply/update
-2023-07-28T20:18:20Z TRACE received command AHU-1/config/update
-2023-07-28T20:18:20Z DEBUG received config_update
-2023-07-28T20:18:20Z DEBUG Removing configTransaction RC:1690575499567
-2023-07-28T20:18:20Z DEBUG last_start changed false, last_start 1970-01-01T00:01:13Z
-2023-07-28T20:18:20Z DEBUG Updated config 2023-07-28T20:18:19Z RC:1690575499567
-2023-07-28T20:18:20Z INFO Initial config #001: {
-2023-07-28T20:18:20Z INFO Initial config #001:   "timestamp" : "2023-07-28T20:18:19Z",
-2023-07-28T20:18:20Z INFO Initial config #001:   "version" : "@@@cloud udmi version###1.4.1",
-2023-07-28T20:18:20Z INFO Initial config #001:   "system" : {
-2023-07-28T20:18:20Z INFO Initial config #001:     "min_loglevel" : 200,
-2023-07-28T20:18:20Z INFO Initial config #001:     "metrics_rate_sec" : 600,
-2023-07-28T20:18:20Z INFO Initial config #001:     "operation" : {
-2023-07-28T20:18:20Z INFO Initial config #001:       "last_start" : "1970-01-01T00:01:13Z"
-2023-07-28T20:18:20Z INFO Initial config #001:     },
-2023-07-28T20:18:20Z INFO Initial config #001:     "testing" : {
-2023-07-28T20:18:20Z INFO Initial config #001:       "sequence_name" : "endpoint_connection_bad_hash"
-2023-07-28T20:18:20Z INFO Initial config #001:     }
-2023-07-28T20:18:20Z INFO Initial config #001:   }
-2023-07-28T20:18:20Z INFO Initial config #001: }
-2023-07-28T20:18:20Z TRACE received command AHU-1/state/update
-2023-07-28T20:18:20Z DEBUG received state_update
-2023-07-28T20:18:20Z DEBUG Updated state after 1s 2023-07-28T20:18:19Z PS:8731720405404098
-2023-07-28T20:18:20Z INFO Updated state #002: Changed 4 fields:
-2023-07-28T20:18:20Z INFO Updated state #002:   Set `system.last_config` = `2023-07-28T20:18:19Z`
-2023-07-28T20:18:20Z INFO Updated state #002:   Set `system.status.timestamp` = `2023-07-28T20:18:19Z`
-2023-07-28T20:18:20Z INFO Updated state #002:   Remove `pointset.points.filter_differential_pressure_setpoint.value_state`
-2023-07-28T20:18:20Z INFO Updated state #002:   Set `timestamp` = `2023-07-28T20:18:19Z`
-2023-07-28T20:18:20Z DEBUG Updated state has last_config 2023-07-28T20:18:19Z (expecting 2023-07-28T20:18:19Z)
-2023-07-28T20:18:20Z TRACE received command AHU-1/state/system
-2023-07-28T20:18:20Z TRACE received state_system: {
-2023-07-28T20:18:20Z TRACE received state_system:   "hardware" : {
-2023-07-28T20:18:20Z TRACE received state_system:     "make" : "BOS",
-2023-07-28T20:18:20Z TRACE received state_system:     "model" : "pubber"
-2023-07-28T20:18:20Z TRACE received state_system:   },
-2023-07-28T20:18:20Z TRACE received state_system:   "last_config" : "2023-07-28T20:18:19Z",
-2023-07-28T20:18:20Z TRACE received state_system:   "operation" : {
-2023-07-28T20:18:20Z TRACE received state_system:     "operational" : true,
-2023-07-28T20:18:20Z TRACE received state_system:     "last_start" : "2023-07-28T20:18:04Z",
-2023-07-28T20:18:20Z TRACE received state_system:     "restart_count" : 1,
-2023-07-28T20:18:20Z TRACE received state_system:     "mode" : "initial"
-2023-07-28T20:18:20Z TRACE received state_system:   },
-2023-07-28T20:18:20Z TRACE received state_system:   "serial_no" : "sequencer-13214",
-2023-07-28T20:18:20Z TRACE received state_system:   "software" : {
-2023-07-28T20:18:20Z TRACE received state_system:     "firmware" : "v1"
-2023-07-28T20:18:20Z TRACE received state_system:   },
-2023-07-28T20:18:20Z TRACE received state_system:   "status" : {
-2023-07-28T20:18:20Z TRACE received state_system:     "message" : "success",
-2023-07-28T20:18:20Z TRACE received state_system:     "category" : "system.config.apply",
-2023-07-28T20:18:20Z TRACE received state_system:     "timestamp" : "2023-07-28T20:18:19Z",
-2023-07-28T20:18:20Z TRACE received state_system:     "level" : 300
-2023-07-28T20:18:20Z TRACE received state_system:   },
-2023-07-28T20:18:20Z TRACE received state_system:   "timestamp" : "2023-07-28T20:18:19Z",
-2023-07-28T20:18:20Z TRACE received state_system:   "version" : "1.4.1"
-2023-07-28T20:18:20Z TRACE received state_system: }
-2023-07-28T20:18:20Z DEBUG Handling device message state/system PS:8731720405404098-0
-2023-07-28T20:18:20Z TRACE Ignoring partial state update
-2023-07-28T20:18:20Z TRACE received command AHU-1/state/localnet
-2023-07-28T20:18:20Z TRACE received state_localnet: {
-2023-07-28T20:18:20Z TRACE received state_localnet:   "families" : {
-2023-07-28T20:18:20Z TRACE received state_localnet:     "ether" : {
-2023-07-28T20:18:20Z TRACE received state_localnet:       "addr" : "40:1c:83:ca:77:54"
-2023-07-28T20:18:20Z TRACE received state_localnet:     },
-2023-07-28T20:18:20Z TRACE received state_localnet:     "ipv4" : {
-2023-07-28T20:18:20Z TRACE received state_localnet:       "addr" : "10.0.0.142"
-2023-07-28T20:18:20Z TRACE received state_localnet:     },
-2023-07-28T20:18:20Z TRACE received state_localnet:     "ipv6" : {
-2023-07-28T20:18:20Z TRACE received state_localnet:       "addr" : "fe80::134f:c1f5:f225:a441"
-2023-07-28T20:18:20Z TRACE received state_localnet:     }
-2023-07-28T20:18:20Z TRACE received state_localnet:   },
-2023-07-28T20:18:20Z TRACE received state_localnet:   "timestamp" : "2023-07-28T20:18:19Z",
-2023-07-28T20:18:20Z TRACE received state_localnet:   "version" : "1.4.1"
-2023-07-28T20:18:20Z TRACE received state_localnet: }
-2023-07-28T20:18:20Z DEBUG Handling device message state/localnet PS:8731720405404098-1
-2023-07-28T20:18:20Z TRACE Ignoring partial state update
-2023-07-28T20:18:20Z TRACE received command AHU-1/state/pointset
-2023-07-28T20:18:20Z TRACE received state_pointset: {
-2023-07-28T20:18:20Z TRACE received state_pointset:   "points" : {
-2023-07-28T20:18:20Z TRACE received state_pointset:     "filter_alarm_pressure_status" : { },
-2023-07-28T20:18:20Z TRACE received state_pointset:     "filter_differential_pressure_setpoint" : {
-2023-07-28T20:18:20Z TRACE received state_pointset:       "units" : "Bars"
-2023-07-28T20:18:20Z TRACE received state_pointset:     },
-2023-07-28T20:18:20Z TRACE received state_pointset:     "filter_differential_pressure_sensor" : {
-2023-07-28T20:18:20Z TRACE received state_pointset:       "units" : "Degrees-Celsius"
-2023-07-28T20:18:20Z TRACE received state_pointset:     }
-2023-07-28T20:18:20Z TRACE received state_pointset:   },
-2023-07-28T20:18:20Z TRACE received state_pointset:   "timestamp" : "2023-07-28T20:18:19Z",
-2023-07-28T20:18:20Z TRACE received state_pointset:   "version" : "1.4.1"
-2023-07-28T20:18:20Z TRACE received state_pointset: }
-2023-07-28T20:18:20Z DEBUG Handling device message state/pointset PS:8731720405404098-2
-2023-07-28T20:18:20Z TRACE Ignoring partial state update
-2023-07-28T20:18:21Z TRACE received command AHU-1/config/update
-2023-07-28T20:18:21Z DEBUG received config_update
-2023-07-28T20:18:21Z DEBUG Removing configTransaction PS:8731720405404098
-2023-07-28T20:18:21Z DEBUG last_start changed true, last_start 2023-07-28T20:18:04Z
-2023-07-28T20:18:21Z DEBUG Updated config 2023-07-28T20:18:19Z PS:8731720405404098
-2023-07-28T20:18:21Z INFO Updated config #002: Changed 0 fields.
-2023-07-28T20:18:21Z DEBUG stage finished waiting for config sync at 10s after 1s
-2023-07-28T20:18:21Z TRACE stage resume waiting for starting test wrapper at 10s
-2023-07-28T20:18:21Z DEBUG Configuration sync took 2s
-2023-07-28T20:18:21Z DEBUG wait for config sync pending false
-2023-07-28T20:18:21Z DEBUG Update config full reset: 2023-07-28T20:18:19Z
-2023-07-28T20:18:21Z TRACE local local_update: {
-2023-07-28T20:18:21Z TRACE local local_update:   "timestamp" : "2023-07-28T20:18:19Z",
-2023-07-28T20:18:21Z TRACE local local_update:   "version" : "@@@cloud udmi version###1.4.1",
-2023-07-28T20:18:21Z TRACE local local_update:   "system" : {
-2023-07-28T20:18:21Z TRACE local local_update:     "min_loglevel" : 200,
-2023-07-28T20:18:21Z TRACE local local_update:     "metrics_rate_sec" : 600,
-2023-07-28T20:18:21Z TRACE local local_update:     "operation" : {
-2023-07-28T20:18:21Z TRACE local local_update:       "last_start" : "2023-07-28T20:18:04Z"
-2023-07-28T20:18:21Z TRACE local local_update:     },
-2023-07-28T20:18:21Z TRACE local local_update:     "testing" : {
-2023-07-28T20:18:21Z TRACE local local_update:       "sequence_name" : "endpoint_connection_bad_hash"
-2023-07-28T20:18:21Z TRACE local local_update:     }
-2023-07-28T20:18:21Z TRACE local local_update:   }
-2023-07-28T20:18:21Z TRACE local local_update: }
-2023-07-28T20:18:21Z TRACE Update config full reset: Add `timestamp` = `generated timestamp`
-2023-07-28T20:18:21Z DEBUG Reading generated config file /home/peringknife/udmi/sites/udmi_site_model/devices/AHU-1/out/generated_config.json
-2023-07-28T20:18:21Z DEBUG Configuring device last_start to be 2023-07-28T20:18:04Z
-2023-07-28T20:18:21Z DEBUG last_start changed true, last_start 2023-07-28T20:18:04Z
-2023-07-28T20:18:21Z DEBUG extraFieldChanged true because extra_field null
-2023-07-28T20:18:22Z DEBUG system config extra field null
-2023-07-28T20:18:22Z TRACE updated check config_system true: {
-2023-07-28T20:18:22Z TRACE updated check config_system true:   "min_loglevel" : 200,
-2023-07-28T20:18:22Z TRACE updated check config_system true:   "metrics_rate_sec" : 600,
-2023-07-28T20:18:22Z TRACE updated check config_system true:   "operation" : {
-2023-07-28T20:18:22Z TRACE updated check config_system true:     "last_start" : "1970-01-01T00:01:13Z"
-2023-07-28T20:18:22Z TRACE updated check config_system true:   },
-2023-07-28T20:18:22Z TRACE updated check config_system true:   "testing" : {
-2023-07-28T20:18:22Z TRACE updated check config_system true:     "sequence_name" : "reset_config"
-2023-07-28T20:18:22Z TRACE updated check config_system true:   },
-2023-07-28T20:18:22Z TRACE updated check config_system true:   "extra_field" : "reset_config"
-2023-07-28T20:18:22Z TRACE updated check config_system true: }
-2023-07-28T20:18:22Z DEBUG update config_system, configTransaction RC:1690575502320
-2023-07-28T20:18:22Z TRACE local local_system: {
-2023-07-28T20:18:22Z TRACE local local_system:   "min_loglevel" : 200,
-2023-07-28T20:18:22Z TRACE local local_system:   "metrics_rate_sec" : 600,
-2023-07-28T20:18:22Z TRACE local local_system:   "operation" : {
-2023-07-28T20:18:22Z TRACE local local_system:     "last_start" : "2023-07-28T20:18:04Z"
-2023-07-28T20:18:22Z TRACE local local_system:   },
-2023-07-28T20:18:22Z TRACE local local_system:   "testing" : {
-2023-07-28T20:18:22Z TRACE local local_system:     "sequence_name" : "endpoint_connection_bad_hash"
-2023-07-28T20:18:22Z TRACE local local_system:   }
-2023-07-28T20:18:22Z TRACE local local_system: }
-2023-07-28T20:18:22Z TRACE updated check config_pointset true: null
-2023-07-28T20:18:22Z DEBUG update config_pointset, configTransaction RC:1690575502338
-2023-07-28T20:18:22Z TRACE local local_pointset: {
-2023-07-28T20:18:22Z TRACE local local_pointset:   "points" : {
-2023-07-28T20:18:22Z TRACE local local_pointset:     "filter_alarm_pressure_status" : {
-2023-07-28T20:18:22Z TRACE local local_pointset:       "ref" : "BV11.present_value",
-2023-07-28T20:18:22Z TRACE local local_pointset:       "units" : "No-units"
-2023-07-28T20:18:22Z TRACE local local_pointset:     },
-2023-07-28T20:18:22Z TRACE local local_pointset:     "filter_differential_pressure_setpoint" : {
-2023-07-28T20:18:22Z TRACE local local_pointset:       "units" : "Bars",
-2023-07-28T20:18:22Z TRACE local local_pointset:       "set_value" : 98
-2023-07-28T20:18:22Z TRACE local local_pointset:     },
-2023-07-28T20:18:22Z TRACE local local_pointset:     "filter_differential_pressure_sensor" : {
-2023-07-28T20:18:22Z TRACE local local_pointset:       "ref" : "AV12.present_value",
-2023-07-28T20:18:22Z TRACE local local_pointset:       "units" : "Degrees-Celsius"
-2023-07-28T20:18:22Z TRACE local local_pointset:     }
-2023-07-28T20:18:22Z TRACE local local_pointset:   }
-2023-07-28T20:18:22Z TRACE local local_pointset: }
-2023-07-28T20:18:22Z TRACE updated check config_gateway false: null
-2023-07-28T20:18:22Z TRACE updated check config_localnet true: null
-2023-07-28T20:18:22Z DEBUG update config_localnet, configTransaction RC:1690575502364
-2023-07-28T20:18:22Z TRACE local local_localnet: {
-2023-07-28T20:18:22Z TRACE local local_localnet:   "families" : {
-2023-07-28T20:18:22Z TRACE local local_localnet:     "ether" : {
-2023-07-28T20:18:22Z TRACE local local_localnet:       "addr" : "00:50:b6:ed:5f:77"
-2023-07-28T20:18:22Z TRACE local local_localnet:     },
-2023-07-28T20:18:22Z TRACE local local_localnet:     "ipv4" : {
-2023-07-28T20:18:22Z TRACE local local_localnet:       "addr" : "192.168.2.1"
-2023-07-28T20:18:22Z TRACE local local_localnet:     }
-2023-07-28T20:18:22Z TRACE local local_localnet:   }
-2023-07-28T20:18:22Z TRACE local local_localnet: }
-2023-07-28T20:18:22Z TRACE updated check config_blobset false: null
-2023-07-28T20:18:22Z TRACE updated check config_discovery false: null
-2023-07-28T20:18:22Z DEBUG Update lastConfigUpdate 2023-07-28T20:18:22Z, because soft reset
-2023-07-28T20:18:22Z TRACE stage suspend waiting for starting test wrapper at 11s
-2023-07-28T20:18:22Z INFO stage start waiting for config sync at 11s
-2023-07-28T20:18:22Z TRACE received command AHU-1/state/update
-2023-07-28T20:18:22Z DEBUG received state_update
-2023-07-28T20:18:22Z DEBUG Updated state after 1s 2023-07-28T20:18:21Z PS:8733103908691872
-2023-07-28T20:18:22Z INFO Updated state #003: Changed 2 fields:
-2023-07-28T20:18:22Z INFO Updated state #003:   Set `system.status.timestamp` = `2023-07-28T20:18:21Z`
-2023-07-28T20:18:22Z INFO Updated state #003:   Set `timestamp` = `2023-07-28T20:18:21Z`
-2023-07-28T20:18:22Z DEBUG Updated state has last_config 2023-07-28T20:18:19Z (expecting null)
-2023-07-28T20:18:22Z TRACE received command AHU-1/state/system
-2023-07-28T20:18:22Z TRACE received state_system: {
-2023-07-28T20:18:22Z TRACE received state_system:   "hardware" : {
-2023-07-28T20:18:22Z TRACE received state_system:     "make" : "BOS",
-2023-07-28T20:18:22Z TRACE received state_system:     "model" : "pubber"
-2023-07-28T20:18:22Z TRACE received state_system:   },
-2023-07-28T20:18:22Z TRACE received state_system:   "last_config" : "2023-07-28T20:18:19Z",
-2023-07-28T20:18:22Z TRACE received state_system:   "operation" : {
-2023-07-28T20:18:22Z TRACE received state_system:     "operational" : true,
-2023-07-28T20:18:22Z TRACE received state_system:     "last_start" : "2023-07-28T20:18:04Z",
-2023-07-28T20:18:22Z TRACE received state_system:     "restart_count" : 1,
-2023-07-28T20:18:22Z TRACE received state_system:     "mode" : "initial"
-2023-07-28T20:18:22Z TRACE received state_system:   },
-2023-07-28T20:18:22Z TRACE received state_system:   "serial_no" : "sequencer-13214",
-2023-07-28T20:18:22Z TRACE received state_system:   "software" : {
-2023-07-28T20:18:22Z TRACE received state_system:     "firmware" : "v1"
-2023-07-28T20:18:22Z TRACE received state_system:   },
-2023-07-28T20:18:22Z TRACE received state_system:   "status" : {
-2023-07-28T20:18:22Z TRACE received state_system:     "message" : "success",
-2023-07-28T20:18:22Z TRACE received state_system:     "category" : "system.config.apply",
-2023-07-28T20:18:22Z TRACE received state_system:     "timestamp" : "2023-07-28T20:18:21Z",
-2023-07-28T20:18:22Z TRACE received state_system:     "level" : 300
-2023-07-28T20:18:22Z TRACE received state_system:   },
-2023-07-28T20:18:22Z TRACE received state_system:   "timestamp" : "2023-07-28T20:18:21Z",
-2023-07-28T20:18:22Z TRACE received state_system:   "version" : "1.4.1"
-2023-07-28T20:18:22Z TRACE received state_system: }
-2023-07-28T20:18:22Z DEBUG Handling device message state/system PS:8733103908691872-0
-2023-07-28T20:18:22Z TRACE Ignoring partial state update
-2023-07-28T20:18:22Z TRACE received command AHU-1/state/localnet
-2023-07-28T20:18:22Z TRACE received state_localnet: {
-2023-07-28T20:18:22Z TRACE received state_localnet:   "families" : {
-2023-07-28T20:18:22Z TRACE received state_localnet:     "ether" : {
-2023-07-28T20:18:22Z TRACE received state_localnet:       "addr" : "40:1c:83:ca:77:54"
-2023-07-28T20:18:22Z TRACE received state_localnet:     },
-2023-07-28T20:18:22Z TRACE received state_localnet:     "ipv4" : {
-2023-07-28T20:18:22Z TRACE received state_localnet:       "addr" : "10.0.0.142"
-2023-07-28T20:18:22Z TRACE received state_localnet:     },
-2023-07-28T20:18:22Z TRACE received state_localnet:     "ipv6" : {
-2023-07-28T20:18:22Z TRACE received state_localnet:       "addr" : "fe80::134f:c1f5:f225:a441"
-2023-07-28T20:18:22Z TRACE received state_localnet:     }
-2023-07-28T20:18:22Z TRACE received state_localnet:   },
-2023-07-28T20:18:22Z TRACE received state_localnet:   "timestamp" : "2023-07-28T20:18:21Z",
-2023-07-28T20:18:22Z TRACE received state_localnet:   "version" : "1.4.1"
-2023-07-28T20:18:22Z TRACE received state_localnet: }
-2023-07-28T20:18:22Z DEBUG Handling device message state/localnet PS:8733103908691872-1
-2023-07-28T20:18:22Z TRACE Ignoring partial state update
-2023-07-28T20:18:22Z TRACE received command AHU-1/state/pointset
-2023-07-28T20:18:22Z TRACE received state_pointset: {
-2023-07-28T20:18:22Z TRACE received state_pointset:   "points" : {
-2023-07-28T20:18:22Z TRACE received state_pointset:     "filter_alarm_pressure_status" : { },
-2023-07-28T20:18:22Z TRACE received state_pointset:     "filter_differential_pressure_setpoint" : {
-2023-07-28T20:18:22Z TRACE received state_pointset:       "units" : "Bars"
-2023-07-28T20:18:22Z TRACE received state_pointset:     },
-2023-07-28T20:18:22Z TRACE received state_pointset:     "filter_differential_pressure_sensor" : {
-2023-07-28T20:18:22Z TRACE received state_pointset:       "units" : "Degrees-Celsius"
-2023-07-28T20:18:22Z TRACE received state_pointset:     }
-2023-07-28T20:18:22Z TRACE received state_pointset:   },
-2023-07-28T20:18:22Z TRACE received state_pointset:   "timestamp" : "2023-07-28T20:18:21Z",
-2023-07-28T20:18:22Z TRACE received state_pointset:   "version" : "1.4.1"
-2023-07-28T20:18:22Z TRACE received state_pointset: }
-2023-07-28T20:18:22Z DEBUG Handling device message state/pointset PS:8733103908691872-2
-2023-07-28T20:18:22Z TRACE Ignoring partial state update
-2023-07-28T20:18:22Z TRACE received command AHU-1/config/update
-2023-07-28T20:18:22Z DEBUG received config_update
-2023-07-28T20:18:22Z DEBUG Removing configTransaction RC:1690575502320
-2023-07-28T20:18:22Z DEBUG last_start changed false, last_start 2023-07-28T20:18:04Z
-2023-07-28T20:18:22Z DEBUG Updated config 2023-07-28T20:18:22Z RC:1690575502320
-2023-07-28T20:18:22Z INFO Updated config #003: Changed 2 fields:
-2023-07-28T20:18:22Z INFO Updated config #003:   Add `pointset` = { "points": { "filter_alarm_pressure_status": { "ref": `BV11.present_value`, "units": `No-units` }, "filter_differential_pressure_setpoint": { "set_value": `98`, "units": `Bars` }, "filter_differential_pressure_sensor": { "ref": `AV12.present_value`, "units": `Degrees-Celsius` } } }
-2023-07-28T20:18:22Z INFO Updated config #003:   Add `localnet` = { "families": { "ether": { "addr": { "CASE_INSENSITIVE_ORDER": {  } } }, "ipv4": { "addr": { "CASE_INSENSITIVE_ORDER": {  } } } } }
-2023-07-28T20:18:23Z TRACE received command AHU-1/config/update
-2023-07-28T20:18:23Z DEBUG received config_update
-2023-07-28T20:18:23Z DEBUG Removing configTransaction RC:1690575502338
-2023-07-28T20:18:23Z DEBUG last_start changed false, last_start 2023-07-28T20:18:04Z
-2023-07-28T20:18:23Z DEBUG Updated config 2023-07-28T20:18:23Z RC:1690575502338
-2023-07-28T20:18:23Z INFO Updated config #004: Changed 0 fields.
-2023-07-28T20:18:24Z TRACE received command AHU-1/state/update
-2023-07-28T20:18:24Z DEBUG received state_update
-2023-07-28T20:18:24Z DEBUG Updated state after 1s 2023-07-28T20:18:23Z PS:8733096544774064
-2023-07-28T20:18:24Z INFO Updated state #004: Changed 4 fields:
-2023-07-28T20:18:24Z INFO Updated state #004:   Set `system.last_config` = `2023-07-28T20:18:23Z`
-2023-07-28T20:18:24Z INFO Updated state #004:   Set `system.status.timestamp` = `2023-07-28T20:18:23Z`
-2023-07-28T20:18:24Z INFO Updated state #004:   Add `pointset.points.filter_differential_pressure_setpoint.value_state` = `applied`
-2023-07-28T20:18:24Z INFO Updated state #004:   Set `timestamp` = `2023-07-28T20:18:23Z`
-2023-07-28T20:18:24Z DEBUG Updated state has last_config 2023-07-28T20:18:23Z (expecting 2023-07-28T20:18:23Z)
-2023-07-28T20:18:24Z TRACE received command AHU-1/state/system
-2023-07-28T20:18:24Z TRACE received state_system: {
-2023-07-28T20:18:24Z TRACE received state_system:   "hardware" : {
-2023-07-28T20:18:24Z TRACE received state_system:     "make" : "BOS",
-2023-07-28T20:18:24Z TRACE received state_system:     "model" : "pubber"
-2023-07-28T20:18:24Z TRACE received state_system:   },
-2023-07-28T20:18:24Z TRACE received state_system:   "last_config" : "2023-07-28T20:18:23Z",
-2023-07-28T20:18:24Z TRACE received state_system:   "operation" : {
-2023-07-28T20:18:24Z TRACE received state_system:     "operational" : true,
-2023-07-28T20:18:24Z TRACE received state_system:     "last_start" : "2023-07-28T20:18:04Z",
-2023-07-28T20:18:24Z TRACE received state_system:     "restart_count" : 1,
-2023-07-28T20:18:24Z TRACE received state_system:     "mode" : "initial"
-2023-07-28T20:18:24Z TRACE received state_system:   },
-2023-07-28T20:18:24Z TRACE received state_system:   "serial_no" : "sequencer-13214",
-2023-07-28T20:18:24Z TRACE received state_system:   "software" : {
-2023-07-28T20:18:24Z TRACE received state_system:     "firmware" : "v1"
-2023-07-28T20:18:24Z TRACE received state_system:   },
-2023-07-28T20:18:24Z TRACE received state_system:   "status" : {
-2023-07-28T20:18:24Z TRACE received state_system:     "message" : "success",
-2023-07-28T20:18:24Z TRACE received state_system:     "category" : "system.config.apply",
-2023-07-28T20:18:24Z TRACE received state_system:     "timestamp" : "2023-07-28T20:18:23Z",
-2023-07-28T20:18:24Z TRACE received state_system:     "level" : 300
-2023-07-28T20:18:24Z TRACE received state_system:   },
-2023-07-28T20:18:24Z TRACE received state_system:   "timestamp" : "2023-07-28T20:18:23Z",
-2023-07-28T20:18:24Z TRACE received state_system:   "version" : "1.4.1"
-2023-07-28T20:18:24Z TRACE received state_system: }
-2023-07-28T20:18:24Z DEBUG Handling device message state/system PS:8733096544774064-0
-2023-07-28T20:18:24Z TRACE Ignoring partial state update
-2023-07-28T20:18:24Z TRACE received command AHU-1/state/localnet
-2023-07-28T20:18:24Z TRACE received state_localnet: {
-2023-07-28T20:18:24Z TRACE received state_localnet:   "families" : {
-2023-07-28T20:18:24Z TRACE received state_localnet:     "ether" : {
-2023-07-28T20:18:24Z TRACE received state_localnet:       "addr" : "40:1c:83:ca:77:54"
-2023-07-28T20:18:24Z TRACE received state_localnet:     },
-2023-07-28T20:18:24Z TRACE received state_localnet:     "ipv4" : {
-2023-07-28T20:18:24Z TRACE received state_localnet:       "addr" : "10.0.0.142"
-2023-07-28T20:18:24Z TRACE received state_localnet:     },
-2023-07-28T20:18:24Z TRACE received state_localnet:     "ipv6" : {
-2023-07-28T20:18:24Z TRACE received state_localnet:       "addr" : "fe80::134f:c1f5:f225:a441"
-2023-07-28T20:18:24Z TRACE received state_localnet:     }
-2023-07-28T20:18:24Z TRACE received state_localnet:   },
-2023-07-28T20:18:24Z TRACE received state_localnet:   "timestamp" : "2023-07-28T20:18:23Z",
-2023-07-28T20:18:24Z TRACE received state_localnet:   "version" : "1.4.1"
-2023-07-28T20:18:24Z TRACE received state_localnet: }
-2023-07-28T20:18:24Z DEBUG Handling device message state/localnet PS:8733096544774064-1
-2023-07-28T20:18:24Z TRACE Ignoring partial state update
-2023-07-28T20:18:24Z TRACE received command AHU-1/state/pointset
-2023-07-28T20:18:24Z TRACE received state_pointset: {
-2023-07-28T20:18:24Z TRACE received state_pointset:   "points" : {
-2023-07-28T20:18:24Z TRACE received state_pointset:     "filter_alarm_pressure_status" : { },
-2023-07-28T20:18:24Z TRACE received state_pointset:     "filter_differential_pressure_setpoint" : {
-2023-07-28T20:18:24Z TRACE received state_pointset:       "units" : "Bars",
-2023-07-28T20:18:24Z TRACE received state_pointset:       "value_state" : "applied"
-2023-07-28T20:18:24Z TRACE received state_pointset:     },
-2023-07-28T20:18:24Z TRACE received state_pointset:     "filter_differential_pressure_sensor" : {
-2023-07-28T20:18:24Z TRACE received state_pointset:       "units" : "Degrees-Celsius"
-2023-07-28T20:18:24Z TRACE received state_pointset:     }
-2023-07-28T20:18:24Z TRACE received state_pointset:   },
-2023-07-28T20:18:24Z TRACE received state_pointset:   "timestamp" : "2023-07-28T20:18:23Z",
-2023-07-28T20:18:24Z TRACE received state_pointset:   "version" : "1.4.1"
-2023-07-28T20:18:24Z TRACE received state_pointset: }
-2023-07-28T20:18:24Z DEBUG Handling device message state/pointset PS:8733096544774064-2
-2023-07-28T20:18:24Z TRACE Ignoring partial state update
-2023-07-28T20:18:24Z TRACE received command AHU-1/config/update
-2023-07-28T20:18:24Z DEBUG received config_update
-2023-07-28T20:18:24Z DEBUG Removing configTransaction RC:1690575502364
-2023-07-28T20:18:24Z DEBUG last_start changed false, last_start 2023-07-28T20:18:04Z
-2023-07-28T20:18:24Z DEBUG Updated config 2023-07-28T20:18:24Z RC:1690575502364
-2023-07-28T20:18:24Z INFO Updated config #005: Changed 0 fields.
-2023-07-28T20:18:24Z DEBUG stage finished waiting for config sync at 14s after 2s
-2023-07-28T20:18:24Z TRACE stage resume waiting for starting test wrapper at 14s
-2023-07-28T20:18:24Z DEBUG Configuration sync took 2s
-2023-07-28T20:18:24Z DEBUG wait for config sync pending false
-2023-07-28T20:18:24Z DEBUG Update config soft reset: 2023-07-28T20:18:24Z
-2023-07-28T20:18:24Z TRACE local local_update: {
-2023-07-28T20:18:24Z TRACE local local_update:   "timestamp" : "2023-07-28T20:18:24Z",
-2023-07-28T20:18:24Z TRACE local local_update:   "version" : "@@@cloud udmi version###1.4.1",
-2023-07-28T20:18:24Z TRACE local local_update:   "system" : {
-2023-07-28T20:18:24Z TRACE local local_update:     "min_loglevel" : 200,
-2023-07-28T20:18:24Z TRACE local local_update:     "metrics_rate_sec" : 600,
-2023-07-28T20:18:24Z TRACE local local_update:     "operation" : {
-2023-07-28T20:18:24Z TRACE local local_update:       "last_start" : "2023-07-28T20:18:04Z"
-2023-07-28T20:18:24Z TRACE local local_update:     },
-2023-07-28T20:18:24Z TRACE local local_update:     "testing" : {
-2023-07-28T20:18:24Z TRACE local local_update:       "sequence_name" : "endpoint_connection_bad_hash"
-2023-07-28T20:18:24Z TRACE local local_update:     }
-2023-07-28T20:18:24Z TRACE local local_update:   },
-2023-07-28T20:18:24Z TRACE local local_update:   "localnet" : {
-2023-07-28T20:18:24Z TRACE local local_update:     "families" : {
-2023-07-28T20:18:24Z TRACE local local_update:       "ether" : {
-2023-07-28T20:18:24Z TRACE local local_update:         "addr" : "00:50:b6:ed:5f:77"
-2023-07-28T20:18:24Z TRACE local local_update:       },
-2023-07-28T20:18:24Z TRACE local local_update:       "ipv4" : {
-2023-07-28T20:18:24Z TRACE local local_update:         "addr" : "192.168.2.1"
-2023-07-28T20:18:24Z TRACE local local_update:       }
-2023-07-28T20:18:24Z TRACE local local_update:     }
-2023-07-28T20:18:24Z TRACE local local_update:   },
-2023-07-28T20:18:24Z TRACE local local_update:   "pointset" : {
-2023-07-28T20:18:24Z TRACE local local_update:     "points" : {
-2023-07-28T20:18:24Z TRACE local local_update:       "filter_alarm_pressure_status" : {
-2023-07-28T20:18:24Z TRACE local local_update:         "ref" : "BV11.present_value",
-2023-07-28T20:18:24Z TRACE local local_update:         "units" : "No-units"
-2023-07-28T20:18:24Z TRACE local local_update:       },
-2023-07-28T20:18:24Z TRACE local local_update:       "filter_differential_pressure_setpoint" : {
-2023-07-28T20:18:24Z TRACE local local_update:         "units" : "Bars",
-2023-07-28T20:18:24Z TRACE local local_update:         "set_value" : 98
-2023-07-28T20:18:24Z TRACE local local_update:       },
-2023-07-28T20:18:24Z TRACE local local_update:       "filter_differential_pressure_sensor" : {
-2023-07-28T20:18:24Z TRACE local local_update:         "ref" : "AV12.present_value",
-2023-07-28T20:18:24Z TRACE local local_update:         "units" : "Degrees-Celsius"
-2023-07-28T20:18:24Z TRACE local local_update:       }
-2023-07-28T20:18:24Z TRACE local local_update:     }
-2023-07-28T20:18:24Z TRACE local local_update:   }
-2023-07-28T20:18:24Z TRACE local local_update: }
-2023-07-28T20:18:24Z TRACE Update config soft reset: Add `pointset` = { "points": { "filter_alarm_pressure_status": { "ref": `BV11.present_value`, "units": `No-units` }, "filter_differential_pressure_setpoint": { "set_value": `98`, "units": `Bars` }, "filter_differential_pressure_sensor": { "ref": `AV12.present_value`, "units": `Degrees-Celsius` } } }
-2023-07-28T20:18:24Z TRACE Update config soft reset: Add `localnet` = { "families": { "ether": { "addr": { "CASE_INSENSITIVE_ORDER": {  } } }, "ipv4": { "addr": { "CASE_INSENSITIVE_ORDER": {  } } } } }
-2023-07-28T20:18:24Z DEBUG Done with reset_config
-2023-07-28T20:18:25Z DEBUG system config extra field null
-2023-07-28T20:18:25Z TRACE updated check config_system false: {
-2023-07-28T20:18:25Z TRACE updated check config_system false:   "min_loglevel" : 200,
-2023-07-28T20:18:25Z TRACE updated check config_system false:   "metrics_rate_sec" : 600,
-2023-07-28T20:18:25Z TRACE updated check config_system false:   "operation" : {
-2023-07-28T20:18:25Z TRACE updated check config_system false:     "last_start" : "2023-07-28T20:18:04Z"
-2023-07-28T20:18:25Z TRACE updated check config_system false:   },
-2023-07-28T20:18:25Z TRACE updated check config_system false:   "testing" : {
-2023-07-28T20:18:25Z TRACE updated check config_system false:     "sequence_name" : "endpoint_connection_bad_hash"
-2023-07-28T20:18:25Z TRACE updated check config_system false:   }
-2023-07-28T20:18:25Z TRACE updated check config_system false: }
-2023-07-28T20:18:25Z TRACE updated check config_pointset false: {
-2023-07-28T20:18:25Z TRACE updated check config_pointset false:   "points" : {
-2023-07-28T20:18:25Z TRACE updated check config_pointset false:     "filter_alarm_pressure_status" : {
-2023-07-28T20:18:25Z TRACE updated check config_pointset false:       "ref" : "BV11.present_value",
-2023-07-28T20:18:25Z TRACE updated check config_pointset false:       "units" : "No-units"
-2023-07-28T20:18:25Z TRACE updated check config_pointset false:     },
-2023-07-28T20:18:25Z TRACE updated check config_pointset false:     "filter_differential_pressure_setpoint" : {
-2023-07-28T20:18:25Z TRACE updated check config_pointset false:       "units" : "Bars",
-2023-07-28T20:18:25Z TRACE updated check config_pointset false:       "set_value" : 98
-2023-07-28T20:18:25Z TRACE updated check config_pointset false:     },
-2023-07-28T20:18:25Z TRACE updated check config_pointset false:     "filter_differential_pressure_sensor" : {
-2023-07-28T20:18:25Z TRACE updated check config_pointset false:       "ref" : "AV12.present_value",
-2023-07-28T20:18:25Z TRACE updated check config_pointset false:       "units" : "Degrees-Celsius"
-2023-07-28T20:18:25Z TRACE updated check config_pointset false:     }
-2023-07-28T20:18:25Z TRACE updated check config_pointset false:   }
-2023-07-28T20:18:25Z TRACE updated check config_pointset false: }
-2023-07-28T20:18:25Z TRACE updated check config_gateway false: null
-2023-07-28T20:18:25Z TRACE updated check config_localnet false: {
-2023-07-28T20:18:25Z TRACE updated check config_localnet false:   "families" : {
-2023-07-28T20:18:25Z TRACE updated check config_localnet false:     "ether" : {
-2023-07-28T20:18:25Z TRACE updated check config_localnet false:       "addr" : "00:50:b6:ed:5f:77"
-2023-07-28T20:18:25Z TRACE updated check config_localnet false:     },
-2023-07-28T20:18:25Z TRACE updated check config_localnet false:     "ipv4" : {
-2023-07-28T20:18:25Z TRACE updated check config_localnet false:       "addr" : "192.168.2.1"
-2023-07-28T20:18:25Z TRACE updated check config_localnet false:     }
-2023-07-28T20:18:25Z TRACE updated check config_localnet false:   }
-2023-07-28T20:18:25Z TRACE updated check config_localnet false: }
-2023-07-28T20:18:25Z TRACE updated check config_blobset false: null
-2023-07-28T20:18:25Z TRACE updated check config_discovery false: null
-2023-07-28T20:18:25Z DEBUG Update config initial setup: 2023-07-28T20:18:24Z
-2023-07-28T20:18:25Z TRACE local local_update: {
-2023-07-28T20:18:25Z TRACE local local_update:   "timestamp" : "2023-07-28T20:18:24Z",
-2023-07-28T20:18:25Z TRACE local local_update:   "version" : "@@@cloud udmi version###1.4.1",
-2023-07-28T20:18:25Z TRACE local local_update:   "system" : {
-2023-07-28T20:18:25Z TRACE local local_update:     "min_loglevel" : 200,
-2023-07-28T20:18:25Z TRACE local local_update:     "metrics_rate_sec" : 600,
-2023-07-28T20:18:25Z TRACE local local_update:     "operation" : {
-2023-07-28T20:18:25Z TRACE local local_update:       "last_start" : "2023-07-28T20:18:04Z"
-2023-07-28T20:18:25Z TRACE local local_update:     },
-2023-07-28T20:18:25Z TRACE local local_update:     "testing" : {
-2023-07-28T20:18:25Z TRACE local local_update:       "sequence_name" : "endpoint_connection_bad_hash"
-2023-07-28T20:18:25Z TRACE local local_update:     }
-2023-07-28T20:18:25Z TRACE local local_update:   },
-2023-07-28T20:18:25Z TRACE local local_update:   "localnet" : {
-2023-07-28T20:18:25Z TRACE local local_update:     "families" : {
-2023-07-28T20:18:25Z TRACE local local_update:       "ether" : {
-2023-07-28T20:18:25Z TRACE local local_update:         "addr" : "00:50:b6:ed:5f:77"
-2023-07-28T20:18:25Z TRACE local local_update:       },
-2023-07-28T20:18:25Z TRACE local local_update:       "ipv4" : {
-2023-07-28T20:18:25Z TRACE local local_update:         "addr" : "192.168.2.1"
-2023-07-28T20:18:25Z TRACE local local_update:       }
-2023-07-28T20:18:25Z TRACE local local_update:     }
-2023-07-28T20:18:25Z TRACE local local_update:   },
-2023-07-28T20:18:25Z TRACE local local_update:   "pointset" : {
-2023-07-28T20:18:25Z TRACE local local_update:     "points" : {
-2023-07-28T20:18:25Z TRACE local local_update:       "filter_alarm_pressure_status" : {
-2023-07-28T20:18:25Z TRACE local local_update:         "ref" : "BV11.present_value",
-2023-07-28T20:18:25Z TRACE local local_update:         "units" : "No-units"
-2023-07-28T20:18:25Z TRACE local local_update:       },
-2023-07-28T20:18:25Z TRACE local local_update:       "filter_differential_pressure_setpoint" : {
-2023-07-28T20:18:25Z TRACE local local_update:         "units" : "Bars",
-2023-07-28T20:18:25Z TRACE local local_update:         "set_value" : 98
-2023-07-28T20:18:25Z TRACE local local_update:       },
-2023-07-28T20:18:25Z TRACE local local_update:       "filter_differential_pressure_sensor" : {
-2023-07-28T20:18:25Z TRACE local local_update:         "ref" : "AV12.present_value",
-2023-07-28T20:18:25Z TRACE local local_update:         "units" : "Degrees-Celsius"
-2023-07-28T20:18:25Z TRACE local local_update:       }
-2023-07-28T20:18:25Z TRACE local local_update:     }
-2023-07-28T20:18:25Z TRACE local local_update:   }
-2023-07-28T20:18:25Z TRACE local local_update: }
-2023-07-28T20:18:25Z TRACE stage suspend waiting for starting test wrapper at 15s
-2023-07-28T20:18:25Z INFO stage start waiting for device state update at 15s
-2023-07-28T20:18:26Z DEBUG system config extra field null
-2023-07-28T20:18:26Z TRACE updated check config_system false: {
-2023-07-28T20:18:26Z TRACE updated check config_system false:   "min_loglevel" : 200,
-2023-07-28T20:18:26Z TRACE updated check config_system false:   "metrics_rate_sec" : 600,
-2023-07-28T20:18:26Z TRACE updated check config_system false:   "operation" : {
-2023-07-28T20:18:26Z TRACE updated check config_system false:     "last_start" : "2023-07-28T20:18:04Z"
-2023-07-28T20:18:26Z TRACE updated check config_system false:   },
-2023-07-28T20:18:26Z TRACE updated check config_system false:   "testing" : {
-2023-07-28T20:18:26Z TRACE updated check config_system false:     "sequence_name" : "endpoint_connection_bad_hash"
-2023-07-28T20:18:26Z TRACE updated check config_system false:   }
-2023-07-28T20:18:26Z TRACE updated check config_system false: }
-2023-07-28T20:18:26Z TRACE updated check config_pointset false: {
-2023-07-28T20:18:26Z TRACE updated check config_pointset false:   "points" : {
-2023-07-28T20:18:26Z TRACE updated check config_pointset false:     "filter_alarm_pressure_status" : {
-2023-07-28T20:18:26Z TRACE updated check config_pointset false:       "ref" : "BV11.present_value",
-2023-07-28T20:18:26Z TRACE updated check config_pointset false:       "units" : "No-units"
-2023-07-28T20:18:26Z TRACE updated check config_pointset false:     },
-2023-07-28T20:18:26Z TRACE updated check config_pointset false:     "filter_differential_pressure_setpoint" : {
-2023-07-28T20:18:26Z TRACE updated check config_pointset false:       "units" : "Bars",
-2023-07-28T20:18:26Z TRACE updated check config_pointset false:       "set_value" : 98
-2023-07-28T20:18:26Z TRACE updated check config_pointset false:     },
-2023-07-28T20:18:26Z TRACE updated check config_pointset false:     "filter_differential_pressure_sensor" : {
-2023-07-28T20:18:26Z TRACE updated check config_pointset false:       "ref" : "AV12.present_value",
-2023-07-28T20:18:26Z TRACE updated check config_pointset false:       "units" : "Degrees-Celsius"
-2023-07-28T20:18:26Z TRACE updated check config_pointset false:     }
-2023-07-28T20:18:26Z TRACE updated check config_pointset false:   }
-2023-07-28T20:18:26Z TRACE updated check config_pointset false: }
-2023-07-28T20:18:26Z TRACE updated check config_gateway false: null
-2023-07-28T20:18:26Z TRACE updated check config_localnet false: {
-2023-07-28T20:18:26Z TRACE updated check config_localnet false:   "families" : {
-2023-07-28T20:18:26Z TRACE updated check config_localnet false:     "ether" : {
-2023-07-28T20:18:26Z TRACE updated check config_localnet false:       "addr" : "00:50:b6:ed:5f:77"
-2023-07-28T20:18:26Z TRACE updated check config_localnet false:     },
-2023-07-28T20:18:26Z TRACE updated check config_localnet false:     "ipv4" : {
-2023-07-28T20:18:26Z TRACE updated check config_localnet false:       "addr" : "192.168.2.1"
-2023-07-28T20:18:26Z TRACE updated check config_localnet false:     }
-2023-07-28T20:18:26Z TRACE updated check config_localnet false:   }
-2023-07-28T20:18:26Z TRACE updated check config_localnet false: }
-2023-07-28T20:18:26Z TRACE updated check config_blobset false: null
-2023-07-28T20:18:26Z TRACE updated check config_discovery false: null
-2023-07-28T20:18:26Z DEBUG Update config before device state update: 2023-07-28T20:18:24Z
-2023-07-28T20:18:26Z TRACE local local_update: {
-2023-07-28T20:18:26Z TRACE local local_update:   "timestamp" : "2023-07-28T20:18:24Z",
-2023-07-28T20:18:26Z TRACE local local_update:   "version" : "@@@cloud udmi version###1.4.1",
-2023-07-28T20:18:26Z TRACE local local_update:   "system" : {
-2023-07-28T20:18:26Z TRACE local local_update:     "min_loglevel" : 200,
-2023-07-28T20:18:26Z TRACE local local_update:     "metrics_rate_sec" : 600,
-2023-07-28T20:18:26Z TRACE local local_update:     "operation" : {
-2023-07-28T20:18:26Z TRACE local local_update:       "last_start" : "2023-07-28T20:18:04Z"
-2023-07-28T20:18:26Z TRACE local local_update:     },
-2023-07-28T20:18:26Z TRACE local local_update:     "testing" : {
-2023-07-28T20:18:26Z TRACE local local_update:       "sequence_name" : "endpoint_connection_bad_hash"
-2023-07-28T20:18:26Z TRACE local local_update:     }
-2023-07-28T20:18:26Z TRACE local local_update:   },
-2023-07-28T20:18:26Z TRACE local local_update:   "localnet" : {
-2023-07-28T20:18:26Z TRACE local local_update:     "families" : {
-2023-07-28T20:18:26Z TRACE local local_update:       "ether" : {
-2023-07-28T20:18:26Z TRACE local local_update:         "addr" : "00:50:b6:ed:5f:77"
-2023-07-28T20:18:26Z TRACE local local_update:       },
-2023-07-28T20:18:26Z TRACE local local_update:       "ipv4" : {
-2023-07-28T20:18:26Z TRACE local local_update:         "addr" : "192.168.2.1"
-2023-07-28T20:18:26Z TRACE local local_update:       }
-2023-07-28T20:18:26Z TRACE local local_update:     }
-2023-07-28T20:18:26Z TRACE local local_update:   },
-2023-07-28T20:18:26Z TRACE local local_update:   "pointset" : {
-2023-07-28T20:18:26Z TRACE local local_update:     "points" : {
-2023-07-28T20:18:26Z TRACE local local_update:       "filter_alarm_pressure_status" : {
-2023-07-28T20:18:26Z TRACE local local_update:         "ref" : "BV11.present_value",
-2023-07-28T20:18:26Z TRACE local local_update:         "units" : "No-units"
-2023-07-28T20:18:26Z TRACE local local_update:       },
-2023-07-28T20:18:26Z TRACE local local_update:       "filter_differential_pressure_setpoint" : {
-2023-07-28T20:18:26Z TRACE local local_update:         "units" : "Bars",
-2023-07-28T20:18:26Z TRACE local local_update:         "set_value" : 98
-2023-07-28T20:18:26Z TRACE local local_update:       },
-2023-07-28T20:18:26Z TRACE local local_update:       "filter_differential_pressure_sensor" : {
-2023-07-28T20:18:26Z TRACE local local_update:         "ref" : "AV12.present_value",
-2023-07-28T20:18:26Z TRACE local local_update:         "units" : "Degrees-Celsius"
-2023-07-28T20:18:26Z TRACE local local_update:       }
-2023-07-28T20:18:26Z TRACE local local_update:     }
-2023-07-28T20:18:26Z TRACE local local_update:   }
-2023-07-28T20:18:26Z TRACE local local_update: }
-2023-07-28T20:18:26Z DEBUG stage finished waiting for device state update at 16s after 1s
-2023-07-28T20:18:26Z TRACE stage resume waiting for starting test wrapper at 16s
-2023-07-28T20:18:26Z TRACE stage suspend waiting for starting test wrapper at 16s
-2023-07-28T20:18:26Z INFO stage start waiting for executing test at 16s
-2023-07-28T20:18:26Z DEBUG stage begin waiting for executing test at 16s
-2023-07-28T20:18:26Z DEBUG Endpoint config: {
-2023-07-28T20:18:26Z DEBUG Endpoint config:   "protocol" : "mqtt",
-2023-07-28T20:18:26Z DEBUG Endpoint config:   "hostname" : "mqtt.googleapis.com",
-2023-07-28T20:18:26Z DEBUG Endpoint config:   "port" : 8883,
-2023-07-28T20:18:26Z DEBUG Endpoint config:   "client_id" : "projects/bos-peringknife-dev/locations/us-central1/registries/ZZ-TRI-FECTA/devices/AHU-1"
-2023-07-28T20:18:26Z DEBUG Endpoint config: }
-2023-07-28T20:18:26Z TRACE stage suspend waiting for executing test at 16s
-2023-07-28T20:18:26Z INFO stage start waiting for blobset status is ERROR at 16s
-2023-07-28T20:18:27Z DEBUG system config extra field null
-2023-07-28T20:18:27Z TRACE updated check config_system false: {
-2023-07-28T20:18:27Z TRACE updated check config_system false:   "min_loglevel" : 200,
-2023-07-28T20:18:27Z TRACE updated check config_system false:   "metrics_rate_sec" : 600,
-2023-07-28T20:18:27Z TRACE updated check config_system false:   "operation" : {
-2023-07-28T20:18:27Z TRACE updated check config_system false:     "last_start" : "2023-07-28T20:18:04Z"
-2023-07-28T20:18:27Z TRACE updated check config_system false:   },
-2023-07-28T20:18:27Z TRACE updated check config_system false:   "testing" : {
-2023-07-28T20:18:27Z TRACE updated check config_system false:     "sequence_name" : "endpoint_connection_bad_hash"
-2023-07-28T20:18:27Z TRACE updated check config_system false:   }
-2023-07-28T20:18:27Z TRACE updated check config_system false: }
-2023-07-28T20:18:27Z TRACE updated check config_pointset false: {
-2023-07-28T20:18:27Z TRACE updated check config_pointset false:   "points" : {
-2023-07-28T20:18:27Z TRACE updated check config_pointset false:     "filter_alarm_pressure_status" : {
-2023-07-28T20:18:27Z TRACE updated check config_pointset false:       "ref" : "BV11.present_value",
-2023-07-28T20:18:27Z TRACE updated check config_pointset false:       "units" : "No-units"
-2023-07-28T20:18:27Z TRACE updated check config_pointset false:     },
-2023-07-28T20:18:27Z TRACE updated check config_pointset false:     "filter_differential_pressure_setpoint" : {
-2023-07-28T20:18:27Z TRACE updated check config_pointset false:       "units" : "Bars",
-2023-07-28T20:18:27Z TRACE updated check config_pointset false:       "set_value" : 98
-2023-07-28T20:18:27Z TRACE updated check config_pointset false:     },
-2023-07-28T20:18:27Z TRACE updated check config_pointset false:     "filter_differential_pressure_sensor" : {
-2023-07-28T20:18:27Z TRACE updated check config_pointset false:       "ref" : "AV12.present_value",
-2023-07-28T20:18:27Z TRACE updated check config_pointset false:       "units" : "Degrees-Celsius"
-2023-07-28T20:18:27Z TRACE updated check config_pointset false:     }
-2023-07-28T20:18:27Z TRACE updated check config_pointset false:   }
-2023-07-28T20:18:27Z TRACE updated check config_pointset false: }
-2023-07-28T20:18:27Z TRACE updated check config_gateway false: null
-2023-07-28T20:18:27Z TRACE updated check config_localnet false: {
-2023-07-28T20:18:27Z TRACE updated check config_localnet false:   "families" : {
-2023-07-28T20:18:27Z TRACE updated check config_localnet false:     "ether" : {
-2023-07-28T20:18:27Z TRACE updated check config_localnet false:       "addr" : "00:50:b6:ed:5f:77"
-2023-07-28T20:18:27Z TRACE updated check config_localnet false:     },
-2023-07-28T20:18:27Z TRACE updated check config_localnet false:     "ipv4" : {
-2023-07-28T20:18:27Z TRACE updated check config_localnet false:       "addr" : "192.168.2.1"
-2023-07-28T20:18:27Z TRACE updated check config_localnet false:     }
-2023-07-28T20:18:27Z TRACE updated check config_localnet false:   }
-2023-07-28T20:18:27Z TRACE updated check config_localnet false: }
-2023-07-28T20:18:27Z TRACE updated check config_blobset true: null
-2023-07-28T20:18:27Z DEBUG update config_blobset, configTransaction RC:1690575507857
-2023-07-28T20:18:27Z TRACE local local_blobset: {
-2023-07-28T20:18:27Z TRACE local local_blobset:   "blobs" : {
-2023-07-28T20:18:27Z TRACE local local_blobset:     "_iot_endpoint_config" : {
-2023-07-28T20:18:27Z TRACE local local_blobset:       "phase" : "final",
-2023-07-28T20:18:27Z TRACE local local_blobset:       "url" : "@@@endpoint data###data:application/json;base64,ewogICJwcm90b2NvbCIgOiAibXF0dCIsCiAgImhvc3RuYW1lIiA6ICJtcXR0Lmdvb2dsZWFwaXMuY29tIiwKICAicG9ydCIgOiA4ODgzLAogICJjbGllbnRfaWQiIDogInByb2plY3RzL2Jvcy1wZXJpbmdrbmlmZS1kZXYvbG9jYXRpb25zL3VzLWNlbnRyYWwxL3JlZ2lzdHJpZXMvWlotVFJJLUZFQ1RBL2RldmljZXMvQUhVLTEiCn0=",
-2023-07-28T20:18:27Z TRACE local local_blobset:       "sha256" : "@@@invalid blob data hash###2b6b47470d4fa9075f97d3af909088d92b91e444ce7eb2b8cacaead4aa63800e",
-2023-07-28T20:18:27Z TRACE local local_blobset:       "generation" : "2023-07-28T20:18:26Z"
-2023-07-28T20:18:27Z TRACE local local_blobset:     }
-2023-07-28T20:18:27Z TRACE local local_blobset:   }
-2023-07-28T20:18:27Z TRACE local local_blobset: }
-2023-07-28T20:18:27Z TRACE updated check config_discovery false: null
-2023-07-28T20:18:27Z DEBUG Update lastConfigUpdate 2023-07-28T20:18:27Z, because before blobset status is ERROR
-2023-07-28T20:18:27Z TRACE stage suspend waiting for blobset status is ERROR at 17s
-2023-07-28T20:18:27Z INFO stage start waiting for config sync at 17s
-2023-07-28T20:18:27Z TRACE received command AHU-1/event/pointset
-2023-07-28T20:18:27Z TRACE received event_pointset: {
-2023-07-28T20:18:27Z TRACE received event_pointset:   "points" : {
-2023-07-28T20:18:27Z TRACE received event_pointset:     "filter_alarm_pressure_status" : {
-2023-07-28T20:18:27Z TRACE received event_pointset:       "present_value" : true
-2023-07-28T20:18:27Z TRACE received event_pointset:     },
-2023-07-28T20:18:27Z TRACE received event_pointset:     "filter_differential_pressure_setpoint" : {
-2023-07-28T20:18:27Z TRACE received event_pointset:       "present_value" : 98
-2023-07-28T20:18:27Z TRACE received event_pointset:     },
-2023-07-28T20:18:27Z TRACE received event_pointset:     "filter_differential_pressure_sensor" : {
-2023-07-28T20:18:27Z TRACE received event_pointset:       "present_value" : 9
-2023-07-28T20:18:27Z TRACE received event_pointset:     }
-2023-07-28T20:18:27Z TRACE received event_pointset:   },
-2023-07-28T20:18:27Z TRACE received event_pointset:   "timestamp" : "2023-07-28T20:18:25Z",
-2023-07-28T20:18:27Z TRACE received event_pointset:   "version" : "1.4.1"
-2023-07-28T20:18:27Z TRACE received event_pointset: }
-2023-07-28T20:18:27Z DEBUG Handling device message event/pointset PS:8733024065144859
-2023-07-28T20:18:27Z TRACE received command AHU-1/event/system
-2023-07-28T20:18:27Z DEBUG received event_system 2023-07-28T20:18:19Z INFO device.log: 2023-07-28T20:18:19Z received config 2023-07-28T20:18:19Z
-2023-07-28T20:18:27Z DEBUG received event_system 2023-07-28T20:18:19Z NOTICE system.config.apply: success
-2023-07-28T20:18:27Z DEBUG received event_system 2023-07-28T20:18:21Z INFO device.log: Config handler
-2023-07-28T20:18:27Z DEBUG received event_system 2023-07-28T20:18:21Z INFO device.log: 2023-07-28T20:18:21Z received config 2023-07-28T20:18:19Z
-2023-07-28T20:18:27Z DEBUG received event_system 2023-07-28T20:18:21Z NOTICE system.config.apply: success
-2023-07-28T20:18:27Z DEBUG received event_system 2023-07-28T20:18:21Z INFO device.log: update state 2023-07-28T20:18:21Z last_config 2023-07-28T20:18:19Z
-2023-07-28T20:18:27Z DEBUG received event_system 2023-07-28T20:18:22Z INFO device.log: Config handler
-2023-07-28T20:18:27Z DEBUG received event_system 2023-07-28T20:18:22Z INFO device.log: 2023-07-28T20:18:22Z received config 2023-07-28T20:18:22Z
-2023-07-28T20:18:27Z DEBUG received event_system 2023-07-28T20:18:22Z NOTICE system.config.apply: success
-2023-07-28T20:18:27Z DEBUG received event_system 2023-07-28T20:18:23Z INFO device.log: Config handler
-2023-07-28T20:18:27Z DEBUG received event_system 2023-07-28T20:18:23Z INFO device.log: 2023-07-28T20:18:23Z received config 2023-07-28T20:18:23Z
-2023-07-28T20:18:27Z DEBUG received event_system 2023-07-28T20:18:23Z NOTICE system.config.apply: success
-2023-07-28T20:18:27Z DEBUG received event_system 2023-07-28T20:18:23Z INFO device.log: update state 2023-07-28T20:18:23Z last_config 2023-07-28T20:18:23Z
-2023-07-28T20:18:27Z DEBUG received event_system 2023-07-28T20:18:24Z INFO device.log: Config handler
-2023-07-28T20:18:27Z DEBUG received event_system 2023-07-28T20:18:24Z INFO device.log: 2023-07-28T20:18:24Z received config 2023-07-28T20:18:24Z
-2023-07-28T20:18:27Z DEBUG received event_system 2023-07-28T20:18:24Z NOTICE system.config.apply: success
-2023-07-28T20:18:27Z DEBUG Handling device message event/system PS:8731720405432448
-2023-07-28T20:18:27Z TRACE received command AHU-1/state/update
-2023-07-28T20:18:27Z DEBUG received state_update
-2023-07-28T20:18:27Z DEBUG Updated state after 1s 2023-07-28T20:18:26Z PS:8733079570228002
-2023-07-28T20:18:27Z INFO Updated state #005: Changed 3 fields:
-2023-07-28T20:18:27Z INFO Updated state #005:   Set `system.last_config` = `2023-07-28T20:18:24Z`
-2023-07-28T20:18:27Z INFO Updated state #005:   Set `system.status.timestamp` = `2023-07-28T20:18:24Z`
-2023-07-28T20:18:27Z INFO Updated state #005:   Set `timestamp` = `2023-07-28T20:18:26Z`
-2023-07-28T20:18:27Z DEBUG Updated state has last_config 2023-07-28T20:18:24Z (expecting 2023-07-28T20:18:24Z)
-2023-07-28T20:18:27Z TRACE received command AHU-1/state/system
-2023-07-28T20:18:27Z TRACE received state_system: {
-2023-07-28T20:18:27Z TRACE received state_system:   "hardware" : {
-2023-07-28T20:18:27Z TRACE received state_system:     "make" : "BOS",
-2023-07-28T20:18:27Z TRACE received state_system:     "model" : "pubber"
-2023-07-28T20:18:28Z TRACE received state_system:   },
-2023-07-28T20:18:28Z TRACE received state_system:   "last_config" : "2023-07-28T20:18:24Z",
-2023-07-28T20:18:28Z TRACE received state_system:   "operation" : {
-2023-07-28T20:18:28Z TRACE received state_system:     "operational" : true,
-2023-07-28T20:18:28Z TRACE received state_system:     "last_start" : "2023-07-28T20:18:04Z",
-2023-07-28T20:18:28Z TRACE received state_system:     "restart_count" : 1,
-2023-07-28T20:18:28Z TRACE received state_system:     "mode" : "initial"
-2023-07-28T20:18:28Z TRACE received state_system:   },
-2023-07-28T20:18:28Z TRACE received state_system:   "serial_no" : "sequencer-13214",
-2023-07-28T20:18:28Z TRACE received state_system:   "software" : {
-2023-07-28T20:18:28Z TRACE received state_system:     "firmware" : "v1"
-2023-07-28T20:18:28Z TRACE received state_system:   },
-2023-07-28T20:18:28Z TRACE received state_system:   "status" : {
-2023-07-28T20:18:28Z TRACE received state_system:     "message" : "success",
-2023-07-28T20:18:28Z TRACE received state_system:     "category" : "system.config.apply",
-2023-07-28T20:18:28Z TRACE received state_system:     "timestamp" : "2023-07-28T20:18:24Z",
-2023-07-28T20:18:28Z TRACE received state_system:     "level" : 300
-2023-07-28T20:18:28Z TRACE received state_system:   },
-2023-07-28T20:18:28Z TRACE received state_system:   "timestamp" : "2023-07-28T20:18:26Z",
-2023-07-28T20:18:28Z TRACE received state_system:   "version" : "1.4.1"
-2023-07-28T20:18:28Z TRACE received state_system: }
-2023-07-28T20:18:28Z DEBUG Handling device message state/system PS:8733079570228002-0
-2023-07-28T20:18:28Z TRACE Ignoring partial state update
-2023-07-28T20:18:28Z TRACE received command AHU-1/state/localnet
-2023-07-28T20:18:28Z TRACE received state_localnet: {
-2023-07-28T20:18:28Z TRACE received state_localnet:   "families" : {
-2023-07-28T20:18:28Z TRACE received state_localnet:     "ether" : {
-2023-07-28T20:18:28Z TRACE received state_localnet:       "addr" : "40:1c:83:ca:77:54"
-2023-07-28T20:18:28Z TRACE received state_localnet:     },
-2023-07-28T20:18:28Z TRACE received state_localnet:     "ipv4" : {
-2023-07-28T20:18:28Z TRACE received state_localnet:       "addr" : "10.0.0.142"
-2023-07-28T20:18:28Z TRACE received state_localnet:     },
-2023-07-28T20:18:28Z TRACE received state_localnet:     "ipv6" : {
-2023-07-28T20:18:28Z TRACE received state_localnet:       "addr" : "fe80::134f:c1f5:f225:a441"
-2023-07-28T20:18:28Z TRACE received state_localnet:     }
-2023-07-28T20:18:28Z TRACE received state_localnet:   },
-2023-07-28T20:18:28Z TRACE received state_localnet:   "timestamp" : "2023-07-28T20:18:26Z",
-2023-07-28T20:18:28Z TRACE received state_localnet:   "version" : "1.4.1"
-2023-07-28T20:18:28Z TRACE received state_localnet: }
-2023-07-28T20:18:28Z DEBUG Handling device message state/localnet PS:8733079570228002-1
-2023-07-28T20:18:28Z TRACE Ignoring partial state update
-2023-07-28T20:18:28Z TRACE received command AHU-1/state/pointset
-2023-07-28T20:18:28Z TRACE received state_pointset: {
-2023-07-28T20:18:28Z TRACE received state_pointset:   "points" : {
-2023-07-28T20:18:28Z TRACE received state_pointset:     "filter_alarm_pressure_status" : { },
-2023-07-28T20:18:28Z TRACE received state_pointset:     "filter_differential_pressure_setpoint" : {
-2023-07-28T20:18:28Z TRACE received state_pointset:       "units" : "Bars",
-2023-07-28T20:18:28Z TRACE received state_pointset:       "value_state" : "applied"
-2023-07-28T20:18:28Z TRACE received state_pointset:     },
-2023-07-28T20:18:28Z TRACE received state_pointset:     "filter_differential_pressure_sensor" : {
-2023-07-28T20:18:28Z TRACE received state_pointset:       "units" : "Degrees-Celsius"
-2023-07-28T20:18:28Z TRACE received state_pointset:     }
-2023-07-28T20:18:28Z TRACE received state_pointset:   },
-2023-07-28T20:18:28Z TRACE received state_pointset:   "timestamp" : "2023-07-28T20:18:26Z",
-2023-07-28T20:18:28Z TRACE received state_pointset:   "version" : "1.4.1"
-2023-07-28T20:18:28Z TRACE received state_pointset: }
-2023-07-28T20:18:28Z DEBUG Handling device message state/pointset PS:8733079570228002-2
-2023-07-28T20:18:28Z TRACE Ignoring partial state update
-2023-07-28T20:18:28Z TRACE received command AHU-1/config/update
-2023-07-28T20:18:28Z DEBUG received config_update
-2023-07-28T20:18:28Z DEBUG Removing configTransaction RC:1690575507857
-2023-07-28T20:18:28Z DEBUG last_start changed false, last_start 2023-07-28T20:18:04Z
-2023-07-28T20:18:28Z DEBUG Updated config 2023-07-28T20:18:27Z RC:1690575507857
-2023-07-28T20:18:28Z INFO Updated config #006: Changed 1 fields:
-2023-07-28T20:18:28Z INFO Updated config #006:   Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "generation": `blob generation`, "sha256": `invalid blob data hash`, "url": `endpoint data` } } }
-2023-07-28T20:18:28Z DEBUG stage finished waiting for config sync at 17s after 0s
-2023-07-28T20:18:28Z TRACE stage resume waiting for blobset status is ERROR at 17s
-2023-07-28T20:18:28Z DEBUG Configuration sync took 1s
-2023-07-28T20:18:28Z DEBUG wait for config sync pending false
-2023-07-28T20:18:28Z DEBUG Update config before blobset status is ERROR: 2023-07-28T20:18:27Z
-2023-07-28T20:18:28Z TRACE local local_update: {
-2023-07-28T20:18:28Z TRACE local local_update:   "timestamp" : "2023-07-28T20:18:27Z",
-2023-07-28T20:18:28Z TRACE local local_update:   "version" : "@@@cloud udmi version###1.4.1",
-2023-07-28T20:18:28Z TRACE local local_update:   "system" : {
-2023-07-28T20:18:28Z TRACE local local_update:     "min_loglevel" : 200,
-2023-07-28T20:18:28Z TRACE local local_update:     "metrics_rate_sec" : 600,
-2023-07-28T20:18:28Z TRACE local local_update:     "operation" : {
-2023-07-28T20:18:28Z TRACE local local_update:       "last_start" : "2023-07-28T20:18:04Z"
-2023-07-28T20:18:28Z TRACE local local_update:     },
-2023-07-28T20:18:28Z TRACE local local_update:     "testing" : {
-2023-07-28T20:18:28Z TRACE local local_update:       "sequence_name" : "endpoint_connection_bad_hash"
-2023-07-28T20:18:28Z TRACE local local_update:     }
-2023-07-28T20:18:28Z TRACE local local_update:   },
-2023-07-28T20:18:28Z TRACE local local_update:   "localnet" : {
-2023-07-28T20:18:28Z TRACE local local_update:     "families" : {
-2023-07-28T20:18:28Z TRACE local local_update:       "ether" : {
-2023-07-28T20:18:28Z TRACE local local_update:         "addr" : "00:50:b6:ed:5f:77"
-2023-07-28T20:18:28Z TRACE local local_update:       },
-2023-07-28T20:18:28Z TRACE local local_update:       "ipv4" : {
-2023-07-28T20:18:28Z TRACE local local_update:         "addr" : "192.168.2.1"
-2023-07-28T20:18:28Z TRACE local local_update:       }
-2023-07-28T20:18:28Z TRACE local local_update:     }
-2023-07-28T20:18:28Z TRACE local local_update:   },
-2023-07-28T20:18:28Z TRACE local local_update:   "blobset" : {
-2023-07-28T20:18:28Z TRACE local local_update:     "blobs" : {
-2023-07-28T20:18:28Z TRACE local local_update:       "_iot_endpoint_config" : {
-2023-07-28T20:18:28Z TRACE local local_update:         "phase" : "final",
-2023-07-28T20:18:28Z TRACE local local_update:         "url" : "@@@endpoint data###data:application/json;base64,ewogICJwcm90b2NvbCIgOiAibXF0dCIsCiAgImhvc3RuYW1lIiA6ICJtcXR0Lmdvb2dsZWFwaXMuY29tIiwKICAicG9ydCIgOiA4ODgzLAogICJjbGllbnRfaWQiIDogInByb2plY3RzL2Jvcy1wZXJpbmdrbmlmZS1kZXYvbG9jYXRpb25zL3VzLWNlbnRyYWwxL3JlZ2lzdHJpZXMvWlotVFJJLUZFQ1RBL2RldmljZXMvQUhVLTEiCn0=",
-2023-07-28T20:18:28Z TRACE local local_update:         "sha256" : "@@@invalid blob data hash###2b6b47470d4fa9075f97d3af909088d92b91e444ce7eb2b8cacaead4aa63800e",
-2023-07-28T20:18:28Z TRACE local local_update:         "generation" : "2023-07-28T20:18:26Z"
-2023-07-28T20:18:28Z TRACE local local_update:       }
-2023-07-28T20:18:28Z TRACE local local_update:     }
-2023-07-28T20:18:28Z TRACE local local_update:   },
-2023-07-28T20:18:28Z TRACE local local_update:   "pointset" : {
-2023-07-28T20:18:28Z TRACE local local_update:     "points" : {
-2023-07-28T20:18:28Z TRACE local local_update:       "filter_alarm_pressure_status" : {
-2023-07-28T20:18:28Z TRACE local local_update:         "ref" : "BV11.present_value",
-2023-07-28T20:18:28Z TRACE local local_update:         "units" : "No-units"
-2023-07-28T20:18:28Z TRACE local local_update:       },
-2023-07-28T20:18:28Z TRACE local local_update:       "filter_differential_pressure_setpoint" : {
-2023-07-28T20:18:28Z TRACE local local_update:         "units" : "Bars",
-2023-07-28T20:18:28Z TRACE local local_update:         "set_value" : 98
-2023-07-28T20:18:28Z TRACE local local_update:       },
-2023-07-28T20:18:28Z TRACE local local_update:       "filter_differential_pressure_sensor" : {
-2023-07-28T20:18:28Z TRACE local local_update:         "ref" : "AV12.present_value",
-2023-07-28T20:18:28Z TRACE local local_update:         "units" : "Degrees-Celsius"
-2023-07-28T20:18:28Z TRACE local local_update:       }
-2023-07-28T20:18:28Z TRACE local local_update:     }
-2023-07-28T20:18:28Z TRACE local local_update:   }
-2023-07-28T20:18:28Z TRACE local local_update: }
-2023-07-28T20:18:28Z INFO Device config Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "generation": `blob generation`, "sha256": `invalid blob data hash`, "url": `endpoint data` } } }
-2023-07-28T20:18:28Z TRACE Update config before blobset status is ERROR: Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "generation": `blob generation`, "sha256": `invalid blob data hash`, "url": `endpoint data` } } }
-2023-07-28T20:18:28Z DEBUG Suppressing exception: java.lang.NullPointerException: Cannot read field "blobs" because "this.deviceState.blobset" is null
-2023-07-28T20:18:28Z TRACE received command AHU-1/state/update
-2023-07-28T20:18:28Z DEBUG received state_update
-2023-07-28T20:18:28Z DEBUG Updated state after 0s 2023-07-28T20:18:28Z PS:8733015451537351
-2023-07-28T20:18:28Z INFO Updated state #006: Changed 3 fields:
-2023-07-28T20:18:28Z INFO Updated state #006:   Set `system.last_config` = `2023-07-28T20:18:27Z`
-2023-07-28T20:18:28Z INFO Updated state #006:   Set `system.status.timestamp` = `2023-07-28T20:18:28Z`
-2023-07-28T20:18:28Z INFO Updated state #006:   Set `timestamp` = `2023-07-28T20:18:28Z`
-2023-07-28T20:18:28Z DEBUG Updated state has last_config 2023-07-28T20:18:27Z (expecting 2023-07-28T20:18:27Z)
-2023-07-28T20:18:28Z DEBUG Suppressing exception: java.lang.NullPointerException: Cannot read field "blobs" because "this.deviceState.blobset" is null
-2023-07-28T20:18:28Z TRACE received command AHU-1/state/system
-2023-07-28T20:18:28Z TRACE received state_system: {
-2023-07-28T20:18:28Z TRACE received state_system:   "hardware" : {
-2023-07-28T20:18:28Z TRACE received state_system:     "make" : "BOS",
-2023-07-28T20:18:28Z TRACE received state_system:     "model" : "pubber"
-2023-07-28T20:18:28Z TRACE received state_system:   },
-2023-07-28T20:18:28Z TRACE received state_system:   "last_config" : "2023-07-28T20:18:27Z",
-2023-07-28T20:18:28Z TRACE received state_system:   "operation" : {
-2023-07-28T20:18:28Z TRACE received state_system:     "operational" : true,
-2023-07-28T20:18:28Z TRACE received state_system:     "last_start" : "2023-07-28T20:18:04Z",
-2023-07-28T20:18:28Z TRACE received state_system:     "restart_count" : 1,
-2023-07-28T20:18:28Z TRACE received state_system:     "mode" : "initial"
-2023-07-28T20:18:28Z TRACE received state_system:   },
-2023-07-28T20:18:28Z TRACE received state_system:   "serial_no" : "sequencer-13214",
-2023-07-28T20:18:28Z TRACE received state_system:   "software" : {
-2023-07-28T20:18:28Z TRACE received state_system:     "firmware" : "v1"
-2023-07-28T20:18:28Z TRACE received state_system:   },
-2023-07-28T20:18:28Z TRACE received state_system:   "status" : {
-2023-07-28T20:18:28Z TRACE received state_system:     "message" : "success",
-2023-07-28T20:18:28Z TRACE received state_system:     "category" : "system.config.apply",
-2023-07-28T20:18:28Z TRACE received state_system:     "timestamp" : "2023-07-28T20:18:28Z",
-2023-07-28T20:18:28Z TRACE received state_system:     "level" : 300
-2023-07-28T20:18:28Z TRACE received state_system:   },
-2023-07-28T20:18:28Z TRACE received state_system:   "timestamp" : "2023-07-28T20:18:28Z",
-2023-07-28T20:18:28Z TRACE received state_system:   "version" : "1.4.1"
-2023-07-28T20:18:28Z TRACE received state_system: }
-2023-07-28T20:18:28Z DEBUG Handling device message state/system PS:8733015451537351-0
-2023-07-28T20:18:28Z TRACE Ignoring partial state update
-2023-07-28T20:18:28Z DEBUG Suppressing exception: java.lang.NullPointerException: Cannot read field "blobs" because "this.deviceState.blobset" is null
-2023-07-28T20:18:28Z TRACE received command AHU-1/state/localnet
-2023-07-28T20:18:28Z TRACE received state_localnet: {
-2023-07-28T20:18:28Z TRACE received state_localnet:   "families" : {
-2023-07-28T20:18:28Z TRACE received state_localnet:     "ether" : {
-2023-07-28T20:18:28Z TRACE received state_localnet:       "addr" : "40:1c:83:ca:77:54"
-2023-07-28T20:18:28Z TRACE received state_localnet:     },
-2023-07-28T20:18:28Z TRACE received state_localnet:     "ipv4" : {
-2023-07-28T20:18:28Z TRACE received state_localnet:       "addr" : "10.0.0.142"
-2023-07-28T20:18:28Z TRACE received state_localnet:     },
-2023-07-28T20:18:28Z TRACE received state_localnet:     "ipv6" : {
-2023-07-28T20:18:28Z TRACE received state_localnet:       "addr" : "fe80::134f:c1f5:f225:a441"
-2023-07-28T20:18:28Z TRACE received state_localnet:     }
-2023-07-28T20:18:28Z TRACE received state_localnet:   },
-2023-07-28T20:18:28Z TRACE received state_localnet:   "timestamp" : "2023-07-28T20:18:28Z",
-2023-07-28T20:18:28Z TRACE received state_localnet:   "version" : "1.4.1"
-2023-07-28T20:18:28Z TRACE received state_localnet: }
-2023-07-28T20:18:28Z DEBUG Handling device message state/localnet PS:8733015451537351-1
-2023-07-28T20:18:28Z TRACE Ignoring partial state update
-2023-07-28T20:18:28Z DEBUG Suppressing exception: java.lang.NullPointerException: Cannot read field "blobs" because "this.deviceState.blobset" is null
-2023-07-28T20:18:28Z TRACE received command AHU-1/state/pointset
-2023-07-28T20:18:28Z TRACE received state_pointset: {
-2023-07-28T20:18:28Z TRACE received state_pointset:   "points" : {
-2023-07-28T20:18:28Z TRACE received state_pointset:     "filter_alarm_pressure_status" : { },
-2023-07-28T20:18:28Z TRACE received state_pointset:     "filter_differential_pressure_setpoint" : {
-2023-07-28T20:18:28Z TRACE received state_pointset:       "units" : "Bars",
-2023-07-28T20:18:28Z TRACE received state_pointset:       "value_state" : "applied"
-2023-07-28T20:18:28Z TRACE received state_pointset:     },
-2023-07-28T20:18:28Z TRACE received state_pointset:     "filter_differential_pressure_sensor" : {
-2023-07-28T20:18:28Z TRACE received state_pointset:       "units" : "Degrees-Celsius"
-2023-07-28T20:18:28Z TRACE received state_pointset:     }
-2023-07-28T20:18:28Z TRACE received state_pointset:   },
-2023-07-28T20:18:28Z TRACE received state_pointset:   "timestamp" : "2023-07-28T20:18:28Z",
-2023-07-28T20:18:28Z TRACE received state_pointset:   "version" : "1.4.1"
-2023-07-28T20:18:28Z TRACE received state_pointset: }
-2023-07-28T20:18:28Z DEBUG Handling device message state/pointset PS:8733015451537351-2
-2023-07-28T20:18:28Z TRACE Ignoring partial state update
-2023-07-28T20:18:28Z DEBUG Suppressing exception: java.lang.NullPointerException: Cannot read field "blobs" because "this.deviceState.blobset" is null
-2023-07-28T20:18:35Z TRACE received command AHU-1/state/update
-2023-07-28T20:18:35Z DEBUG received state_update
-2023-07-28T20:18:35Z DEBUG Updated state after 0s 2023-07-28T20:18:35Z PS:8733101405432924
-2023-07-28T20:18:35Z INFO Updated state #007: Changed 2 fields:
-2023-07-28T20:18:35Z INFO Updated state #007:   Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "generation": `2023-07-28T20:18:26Z`, "status": { "level": `500`, "detail": `java.lang.RuntimeException: java.lang.RuntimeException: Blob data hash mismatch
-2023-07-28T20:18:35Z INFO Updated state #007: 	at daq.pubber.Pubber.maybeRedirectEndpoint(Pubber.java:1107)
-2023-07-28T20:18:35Z INFO Updated state #007: 	at daq.pubber.Pubber.deferredConfigActions(Pubber.java:695)
-2023-07-28T20:18:35Z INFO Updated state #007: 	at daq.pubber.Pubber.periodicUpdate(Pubber.java:629)
-2023-07-28T20:18:35Z INFO Updated state #007: 	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539)
-2023-07-28T20:18:35Z INFO Updated state #007: 	at java.base/java.util.concurrent.FutureTask.runAndReset(FutureTask.java:305)
-2023-07-28T20:18:35Z INFO Updated state #007: 	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:305)
-2023-07-28T20:18:35Z INFO Updated state #007: 	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
-2023-07-28T20:18:35Z INFO Updated state #007: 	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
-2023-07-28T20:18:35Z INFO Updated state #007: 	at java.base/java.lang.Thread.run(Thread.java:833)
-2023-07-28T20:18:35Z INFO Updated state #007: `, "message": `java.lang.RuntimeException: Blob data hash mismatch`, "category": `blobset.blob.apply` } } } }
-2023-07-28T20:18:35Z INFO Updated state #007:   Set `timestamp` = `2023-07-28T20:18:35Z`
-2023-07-28T20:18:35Z DEBUG Updated state has last_config 2023-07-28T20:18:27Z (expecting 2023-07-28T20:18:27Z)
-2023-07-28T20:18:35Z DEBUG stage finished waiting for blobset status is ERROR at 25s after 8s
-2023-07-28T20:18:35Z TRACE stage resume waiting for executing test at 25s
-2023-07-28T20:18:35Z DEBUG Status level: 300
-2023-07-28T20:18:35Z DEBUG stage done waiting for executing test at 25s
-2023-07-28T20:18:35Z NOTICE RESULT pass endpoint endpoint_connection_bad_hash ALPHA 5 Sequence complete
-2023-07-28T20:18:35Z NOTICE Sequence complete
-2023-07-28T20:18:35Z NOTICE ending test endpoint_connection_bad_hash after 25s ################################
+2023-10-28T13:21:43Z NOTICE starting test endpoint_connection_bad_hash ################################
+2023-10-28T13:21:43Z INFO stage start waiting for starting test wrapper at 0s
+2023-10-28T13:21:51Z DEBUG Waiting for device stateTransaction RC:1698499311320 (was null)
+2023-10-28T13:21:51Z TRACE stage suspend waiting for starting test wrapper at 8s
+2023-10-28T13:21:51Z INFO stage start waiting for state query at 8s
+2023-10-28T13:21:51Z TRACE received command AHU-1/event/pointset
+2023-10-28T13:21:51Z TRACE received event_pointset: {
+2023-10-28T13:21:51Z TRACE received event_pointset:   "points" : {
+2023-10-28T13:21:51Z TRACE received event_pointset:     "filter_alarm_pressure_status" : {
+2023-10-28T13:21:51Z TRACE received event_pointset:       "present_value" : false
+2023-10-28T13:21:51Z TRACE received event_pointset:     },
+2023-10-28T13:21:51Z TRACE received event_pointset:     "filter_differential_pressure_setpoint" : {
+2023-10-28T13:21:51Z TRACE received event_pointset:       "present_value" : 98
+2023-10-28T13:21:51Z TRACE received event_pointset:     },
+2023-10-28T13:21:51Z TRACE received event_pointset:     "filter_differential_pressure_sensor" : {
+2023-10-28T13:21:51Z TRACE received event_pointset:       "present_value" : 10
+2023-10-28T13:21:51Z TRACE received event_pointset:     }
+2023-10-28T13:21:51Z TRACE received event_pointset:   },
+2023-10-28T13:21:51Z TRACE received event_pointset:   "timestamp" : "2023-10-28T13:21:50Z",
+2023-10-28T13:21:51Z TRACE received event_pointset:   "version" : "1.4.2"
+2023-10-28T13:21:51Z TRACE received event_pointset: }
+2023-10-28T13:21:51Z DEBUG Handling device message event_pointset PS:9512072884161824
+2023-10-28T13:21:51Z TRACE received command AHU-1/event/system
+2023-10-28T13:21:51Z DEBUG received event_system 2023-10-28T13:21:40Z INFO device.log: Config handler
+2023-10-28T13:21:51Z DEBUG received event_system 2023-10-28T13:21:40Z INFO device.log: Connection complete.
+2023-10-28T13:21:51Z DEBUG received event_system 2023-10-28T13:21:40Z NOTICE system.config.apply: success
+2023-10-28T13:21:51Z DEBUG received event_system 2023-10-28T13:21:40Z NOTICE system.config.apply: success
+2023-10-28T13:21:51Z DEBUG Handling device message event_system PS:8950414094240150
+2023-10-28T13:21:51Z TRACE received command AHU-1/state/update
+2023-10-28T13:21:51Z DEBUG received state_update
+2023-10-28T13:21:51Z DEBUG Handling update message state_update RC:1698499311320
+2023-10-28T13:21:51Z DEBUG Removed stateTransaction RC:1698499311320
+2023-10-28T13:21:51Z DEBUG Updated state after 9s 2023-10-28T13:21:42Z RC:1698499311320
+2023-10-28T13:21:51Z INFO Initial state #001: {
+2023-10-28T13:21:51Z INFO Initial state #001:   "timestamp" : "2023-10-28T13:21:42Z",
+2023-10-28T13:21:51Z INFO Initial state #001:   "version" : "1.4.2",
+2023-10-28T13:21:51Z INFO Initial state #001:   "system" : {
+2023-10-28T13:21:51Z INFO Initial state #001:     "last_config" : "2023-10-28T13:21:38Z",
+2023-10-28T13:21:51Z INFO Initial state #001:     "operation" : {
+2023-10-28T13:21:51Z INFO Initial state #001:       "operational" : true,
+2023-10-28T13:21:51Z INFO Initial state #001:       "last_start" : "2023-10-28T13:21:39Z",
+2023-10-28T13:21:51Z INFO Initial state #001:       "restart_count" : 1,
+2023-10-28T13:21:51Z INFO Initial state #001:       "mode" : "initial"
+2023-10-28T13:21:51Z INFO Initial state #001:     },
+2023-10-28T13:21:51Z INFO Initial state #001:     "serial_no" : "sequencer-22510",
+2023-10-28T13:21:51Z INFO Initial state #001:     "hardware" : {
+2023-10-28T13:21:51Z INFO Initial state #001:       "make" : "BOS",
+2023-10-28T13:21:51Z INFO Initial state #001:       "model" : "pubber"
+2023-10-28T13:21:51Z INFO Initial state #001:     },
+2023-10-28T13:21:51Z INFO Initial state #001:     "software" : {
+2023-10-28T13:21:51Z INFO Initial state #001:       "firmware" : "v1"
+2023-10-28T13:21:51Z INFO Initial state #001:     },
+2023-10-28T13:21:51Z INFO Initial state #001:     "status" : {
+2023-10-28T13:21:51Z INFO Initial state #001:       "message" : "success",
+2023-10-28T13:21:51Z INFO Initial state #001:       "category" : "system.config.apply",
+2023-10-28T13:21:51Z INFO Initial state #001:       "timestamp" : "2023-10-28T13:21:40Z",
+2023-10-28T13:21:51Z INFO Initial state #001:       "level" : 300
+2023-10-28T13:21:51Z INFO Initial state #001:     }
+2023-10-28T13:21:51Z INFO Initial state #001:   },
+2023-10-28T13:21:51Z INFO Initial state #001:   "localnet" : {
+2023-10-28T13:21:51Z INFO Initial state #001:     "families" : {
+2023-10-28T13:21:51Z INFO Initial state #001:       "ether" : {
+2023-10-28T13:21:51Z INFO Initial state #001:         "addr" : "60:45:bd:e3:36:e3"
+2023-10-28T13:21:51Z INFO Initial state #001:       },
+2023-10-28T13:21:51Z INFO Initial state #001:       "ipv4" : {
+2023-10-28T13:21:51Z INFO Initial state #001:         "addr" : "10.1.1.78"
+2023-10-28T13:21:51Z INFO Initial state #001:       },
+2023-10-28T13:21:51Z INFO Initial state #001:       "ipv6" : {
+2023-10-28T13:21:51Z INFO Initial state #001:         "addr" : "fe80::6245:bdff:fee3:36e3"
+2023-10-28T13:21:51Z INFO Initial state #001:       }
+2023-10-28T13:21:51Z INFO Initial state #001:     }
+2023-10-28T13:21:51Z INFO Initial state #001:   },
+2023-10-28T13:21:51Z INFO Initial state #001:   "pointset" : {
+2023-10-28T13:21:51Z INFO Initial state #001:     "points" : {
+2023-10-28T13:21:51Z INFO Initial state #001:       "filter_alarm_pressure_status" : { },
+2023-10-28T13:21:51Z INFO Initial state #001:       "filter_differential_pressure_setpoint" : {
+2023-10-28T13:21:51Z INFO Initial state #001:         "units" : "Bars",
+2023-10-28T13:21:51Z INFO Initial state #001:         "value_state" : "applied"
+2023-10-28T13:21:51Z INFO Initial state #001:       },
+2023-10-28T13:21:51Z INFO Initial state #001:       "filter_differential_pressure_sensor" : {
+2023-10-28T13:21:51Z INFO Initial state #001:         "units" : "Degrees-Celsius"
+2023-10-28T13:21:51Z INFO Initial state #001:       }
+2023-10-28T13:21:51Z INFO Initial state #001:     }
+2023-10-28T13:21:51Z INFO Initial state #001:   }
+2023-10-28T13:21:51Z INFO Initial state #001: }
+2023-10-28T13:21:51Z NOTICE Received serial number sequencer-22510
+2023-10-28T13:21:51Z DEBUG Updated state has last_config 2023-10-28T13:21:38Z (expecting null)
+2023-10-28T13:21:51Z DEBUG stage finished waiting for state query at 8s after 0s
+2023-10-28T13:21:51Z TRACE stage resume waiting for starting test wrapper at 8s
+2023-10-28T13:21:51Z DEBUG Starting reset_config full reset true
+2023-10-28T13:21:51Z DEBUG Configuring device last_start to be 2023-10-28T13:21:39Z
+2023-10-28T13:21:51Z DEBUG last_start changed true, last_start 2023-10-28T13:21:39Z
+2023-10-28T13:21:51Z DEBUG extraFieldChanged false because extra_field null
+2023-10-28T13:21:51Z DEBUG extraFieldChanged true because extra_field reset_config
+2023-10-28T13:21:51Z DEBUG configTransactions clear
+2023-10-28T13:21:52Z DEBUG system config extra field reset_config
+2023-10-28T13:21:52Z TRACE updated check config_system: true
+2023-10-28T13:21:52Z DEBUG update config_system, configTransaction RC:1698499312792
+2023-10-28T13:21:52Z TRACE local local_system: {
+2023-10-28T13:21:52Z TRACE local local_system:   "min_loglevel" : 200,
+2023-10-28T13:21:52Z TRACE local local_system:   "metrics_rate_sec" : 600,
+2023-10-28T13:21:52Z TRACE local local_system:   "operation" : {
+2023-10-28T13:21:52Z TRACE local local_system:     "last_start" : "2023-10-28T13:21:39Z"
+2023-10-28T13:21:52Z TRACE local local_system:   },
+2023-10-28T13:21:52Z TRACE local local_system:   "testing" : {
+2023-10-28T13:21:52Z TRACE local local_system:     "sequence_name" : "reset_config"
+2023-10-28T13:21:52Z TRACE local local_system:   },
+2023-10-28T13:21:52Z TRACE local local_system:   "extra_field" : "reset_config"
+2023-10-28T13:21:52Z TRACE local local_system: }
+2023-10-28T13:21:52Z TRACE updated check config_pointset: false
+2023-10-28T13:21:52Z TRACE updated check config_gateway: false
+2023-10-28T13:21:52Z TRACE updated check config_localnet: false
+2023-10-28T13:21:52Z TRACE updated check config_blobset: false
+2023-10-28T13:21:52Z TRACE updated check config_discovery: false
+2023-10-28T13:21:52Z DEBUG Update lastConfigUpdate 2023-10-28T13:21:52Z, because full reset
+2023-10-28T13:21:52Z TRACE stage suspend waiting for starting test wrapper at 9s
+2023-10-28T13:21:52Z INFO stage start waiting for config sync at 9s
+2023-10-28T13:21:52Z TRACE received command AHU-1/reply/update
+2023-10-28T13:21:52Z TRACE received command AHU-1/config/update
+2023-10-28T13:21:52Z DEBUG received config_update
+2023-10-28T13:21:52Z DEBUG Handling update message config_update RC:1698499312792
+2023-10-28T13:21:52Z DEBUG Removed configTransaction RC:1698499312792
+2023-10-28T13:21:52Z DEBUG last_start changed false, last_start 2023-10-28T13:21:39Z
+2023-10-28T13:21:52Z DEBUG Updated config 2023-10-28T13:21:52Z RC:1698499312792
+2023-10-28T13:21:52Z INFO Initial config #001: {
+2023-10-28T13:21:52Z INFO Initial config #001:   "timestamp" : "2023-10-28T13:21:52Z",
+2023-10-28T13:21:52Z INFO Initial config #001:   "version" : "@@@cloud udmi version###1.4.2-51-g50234ecc",
+2023-10-28T13:21:52Z INFO Initial config #001:   "system" : {
+2023-10-28T13:21:52Z INFO Initial config #001:     "min_loglevel" : 200,
+2023-10-28T13:21:52Z INFO Initial config #001:     "metrics_rate_sec" : 600,
+2023-10-28T13:21:52Z INFO Initial config #001:     "operation" : {
+2023-10-28T13:21:52Z INFO Initial config #001:       "last_start" : "2023-10-28T13:21:39Z"
+2023-10-28T13:21:52Z INFO Initial config #001:     },
+2023-10-28T13:21:52Z INFO Initial config #001:     "testing" : {
+2023-10-28T13:21:52Z INFO Initial config #001:       "sequence_name" : "endpoint_connection_bad_hash"
+2023-10-28T13:21:52Z INFO Initial config #001:     }
+2023-10-28T13:21:52Z INFO Initial config #001:   }
+2023-10-28T13:21:52Z INFO Initial config #001: }
+2023-10-28T13:21:52Z DEBUG stage finished waiting for config sync at 9s after 0s
+2023-10-28T13:21:52Z TRACE stage resume waiting for starting test wrapper at 9s
+2023-10-28T13:21:52Z DEBUG Configuration sync took 0s
+2023-10-28T13:21:52Z DEBUG wait for config sync pending false
+2023-10-28T13:21:52Z DEBUG Update config full reset: 2023-10-28T13:21:52Z
+2023-10-28T13:21:52Z TRACE local local_update: {
+2023-10-28T13:21:52Z TRACE local local_update:   "timestamp" : "2023-10-28T13:21:52Z",
+2023-10-28T13:21:52Z TRACE local local_update:   "version" : "@@@cloud udmi version###1.4.2-51-g50234ecc",
+2023-10-28T13:21:52Z TRACE local local_update:   "system" : {
+2023-10-28T13:21:52Z TRACE local local_update:     "min_loglevel" : 200,
+2023-10-28T13:21:52Z TRACE local local_update:     "metrics_rate_sec" : 600,
+2023-10-28T13:21:52Z TRACE local local_update:     "operation" : {
+2023-10-28T13:21:52Z TRACE local local_update:       "last_start" : "2023-10-28T13:21:39Z"
+2023-10-28T13:21:52Z TRACE local local_update:     },
+2023-10-28T13:21:52Z TRACE local local_update:     "testing" : {
+2023-10-28T13:21:52Z TRACE local local_update:       "sequence_name" : "endpoint_connection_bad_hash"
+2023-10-28T13:21:52Z TRACE local local_update:     }
+2023-10-28T13:21:52Z TRACE local local_update:   }
+2023-10-28T13:21:53Z TRACE local local_update: }
+2023-10-28T13:21:53Z TRACE Update config full reset: Add `timestamp` = `generated timestamp`
+2023-10-28T13:21:53Z TRACE stage suspend waiting for starting test wrapper at 9s
+2023-10-28T13:21:53Z INFO stage start waiting for no interesting system status at 9s
+2023-10-28T13:21:54Z DEBUG system config extra field reset_config
+2023-10-28T13:21:54Z TRACE updated check config_system: true
+2023-10-28T13:21:54Z DEBUG update config_system, configTransaction RC:1698499314006
+2023-10-28T13:21:54Z TRACE local local_system: {
+2023-10-28T13:21:54Z TRACE local local_system:   "min_loglevel" : 200,
+2023-10-28T13:21:54Z TRACE local local_system:   "metrics_rate_sec" : 600,
+2023-10-28T13:21:54Z TRACE local local_system:   "operation" : {
+2023-10-28T13:21:54Z TRACE local local_system:     "last_start" : "2023-10-28T13:21:39Z"
+2023-10-28T13:21:54Z TRACE local local_system:   },
+2023-10-28T13:21:54Z TRACE local local_system:   "testing" : {
+2023-10-28T13:21:54Z TRACE local local_system:     "sequence_name" : "endpoint_connection_bad_hash"
+2023-10-28T13:21:54Z TRACE local local_system:   },
+2023-10-28T13:21:54Z TRACE local local_system:   "extra_field" : "reset_config"
+2023-10-28T13:21:54Z TRACE local local_system: }
+2023-10-28T13:21:54Z TRACE updated check config_pointset: false
+2023-10-28T13:21:54Z TRACE updated check config_gateway: false
+2023-10-28T13:21:54Z TRACE updated check config_localnet: false
+2023-10-28T13:21:54Z TRACE updated check config_blobset: false
+2023-10-28T13:21:54Z TRACE updated check config_discovery: false
+2023-10-28T13:21:54Z DEBUG Update lastConfigUpdate 2023-10-28T13:21:54Z, because before no interesting system status
+2023-10-28T13:21:54Z TRACE stage suspend waiting for no interesting system status at 10s
+2023-10-28T13:21:54Z INFO stage start waiting for config sync at 10s
+2023-10-28T13:21:54Z TRACE received command AHU-1/state/update
+2023-10-28T13:21:54Z DEBUG received state_update
+2023-10-28T13:21:54Z DEBUG Handling update message state_update PS:9510529842773370
+2023-10-28T13:21:54Z DEBUG Updated state after 2s 2023-10-28T13:21:52Z PS:9510529842773370
+2023-10-28T13:21:54Z INFO Updated state #002: Changed 4 fields:
+2023-10-28T13:21:54Z INFO Updated state #002:   Set `system.last_config` = `2023-10-28T13:21:52Z`
+2023-10-28T13:21:54Z INFO Updated state #002:   Set `system.status.timestamp` = `2023-10-28T13:21:52Z`
+2023-10-28T13:21:54Z INFO Updated state #002:   Remove `pointset.points.filter_differential_pressure_setpoint.value_state`
+2023-10-28T13:21:54Z INFO Updated state #002:   Set `timestamp` = `2023-10-28T13:21:52Z`
+2023-10-28T13:21:54Z DEBUG Updated state has last_config 2023-10-28T13:21:52Z (expecting 2023-10-28T13:21:52Z)
+2023-10-28T13:21:54Z TRACE received command AHU-1/state/system
+2023-10-28T13:21:54Z TRACE received state_system: {
+2023-10-28T13:21:54Z TRACE received state_system:   "hardware" : {
+2023-10-28T13:21:54Z TRACE received state_system:     "make" : "BOS",
+2023-10-28T13:21:54Z TRACE received state_system:     "model" : "pubber"
+2023-10-28T13:21:54Z TRACE received state_system:   },
+2023-10-28T13:21:54Z TRACE received state_system:   "last_config" : "2023-10-28T13:21:52Z",
+2023-10-28T13:21:54Z TRACE received state_system:   "operation" : {
+2023-10-28T13:21:54Z TRACE received state_system:     "operational" : true,
+2023-10-28T13:21:54Z TRACE received state_system:     "last_start" : "2023-10-28T13:21:39Z",
+2023-10-28T13:21:54Z TRACE received state_system:     "restart_count" : 1,
+2023-10-28T13:21:54Z TRACE received state_system:     "mode" : "initial"
+2023-10-28T13:21:54Z TRACE received state_system:   },
+2023-10-28T13:21:54Z TRACE received state_system:   "serial_no" : "sequencer-22510",
+2023-10-28T13:21:54Z TRACE received state_system:   "software" : {
+2023-10-28T13:21:54Z TRACE received state_system:     "firmware" : "v1"
+2023-10-28T13:21:54Z TRACE received state_system:   },
+2023-10-28T13:21:54Z TRACE received state_system:   "status" : {
+2023-10-28T13:21:54Z TRACE received state_system:     "message" : "success",
+2023-10-28T13:21:54Z TRACE received state_system:     "category" : "system.config.apply",
+2023-10-28T13:21:54Z TRACE received state_system:     "timestamp" : "2023-10-28T13:21:52Z",
+2023-10-28T13:21:54Z TRACE received state_system:     "level" : 300
+2023-10-28T13:21:54Z TRACE received state_system:   },
+2023-10-28T13:21:54Z TRACE received state_system:   "timestamp" : "2023-10-28T13:21:52Z",
+2023-10-28T13:21:54Z TRACE received state_system:   "version" : "1.4.2"
+2023-10-28T13:21:54Z TRACE received state_system: }
+2023-10-28T13:21:54Z DEBUG Handling device message state_system PS:9510529842773370-0
+2023-10-28T13:21:54Z TRACE Ignoring partial state update
+2023-10-28T13:21:54Z TRACE received command AHU-1/state/localnet
+2023-10-28T13:21:54Z TRACE received state_localnet: {
+2023-10-28T13:21:54Z TRACE received state_localnet:   "families" : {
+2023-10-28T13:21:54Z TRACE received state_localnet:     "ether" : {
+2023-10-28T13:21:54Z TRACE received state_localnet:       "addr" : "60:45:bd:e3:36:e3"
+2023-10-28T13:21:54Z TRACE received state_localnet:     },
+2023-10-28T13:21:54Z TRACE received state_localnet:     "ipv4" : {
+2023-10-28T13:21:54Z TRACE received state_localnet:       "addr" : "10.1.1.78"
+2023-10-28T13:21:54Z TRACE received state_localnet:     },
+2023-10-28T13:21:54Z TRACE received state_localnet:     "ipv6" : {
+2023-10-28T13:21:54Z TRACE received state_localnet:       "addr" : "fe80::6245:bdff:fee3:36e3"
+2023-10-28T13:21:54Z TRACE received state_localnet:     }
+2023-10-28T13:21:54Z TRACE received state_localnet:   },
+2023-10-28T13:21:54Z TRACE received state_localnet:   "timestamp" : "2023-10-28T13:21:52Z",
+2023-10-28T13:21:54Z TRACE received state_localnet:   "version" : "1.4.2"
+2023-10-28T13:21:54Z TRACE received state_localnet: }
+2023-10-28T13:21:54Z DEBUG Handling device message state_localnet PS:9510529842773370-1
+2023-10-28T13:21:54Z TRACE Ignoring partial state update
+2023-10-28T13:21:54Z TRACE received command AHU-1/state/pointset
+2023-10-28T13:21:54Z TRACE received state_pointset: {
+2023-10-28T13:21:54Z TRACE received state_pointset:   "points" : {
+2023-10-28T13:21:54Z TRACE received state_pointset:     "filter_alarm_pressure_status" : { },
+2023-10-28T13:21:54Z TRACE received state_pointset:     "filter_differential_pressure_setpoint" : {
+2023-10-28T13:21:54Z TRACE received state_pointset:       "units" : "Bars"
+2023-10-28T13:21:54Z TRACE received state_pointset:     },
+2023-10-28T13:21:54Z TRACE received state_pointset:     "filter_differential_pressure_sensor" : {
+2023-10-28T13:21:54Z TRACE received state_pointset:       "units" : "Degrees-Celsius"
+2023-10-28T13:21:54Z TRACE received state_pointset:     }
+2023-10-28T13:21:54Z TRACE received state_pointset:   },
+2023-10-28T13:21:54Z TRACE received state_pointset:   "timestamp" : "2023-10-28T13:21:52Z",
+2023-10-28T13:21:54Z TRACE received state_pointset:   "version" : "1.4.2"
+2023-10-28T13:21:54Z TRACE received state_pointset: }
+2023-10-28T13:21:54Z DEBUG Handling device message state_pointset PS:9510529842773370-2
+2023-10-28T13:21:54Z TRACE Ignoring partial state update
+2023-10-28T13:21:54Z TRACE received command AHU-1/config/update
+2023-10-28T13:21:54Z DEBUG received config_update
+2023-10-28T13:21:54Z DEBUG Handling update message config_update RC:1698499314006
+2023-10-28T13:21:54Z DEBUG Removed configTransaction RC:1698499314006
+2023-10-28T13:21:54Z DEBUG last_start changed false, last_start 2023-10-28T13:21:39Z
+2023-10-28T13:21:54Z DEBUG Updated config 2023-10-28T13:21:54Z RC:1698499314006
+2023-10-28T13:21:54Z INFO Updated config #002: Changed 0 fields.
+2023-10-28T13:21:54Z DEBUG stage finished waiting for config sync at 10s after 0s
+2023-10-28T13:21:54Z TRACE stage resume waiting for no interesting system status at 10s
+2023-10-28T13:21:54Z DEBUG Configuration sync took 0s
+2023-10-28T13:21:54Z DEBUG wait for config sync pending false
+2023-10-28T13:21:54Z DEBUG Update config before no interesting system status: 2023-10-28T13:21:54Z
+2023-10-28T13:21:54Z TRACE local local_update: {
+2023-10-28T13:21:54Z TRACE local local_update:   "timestamp" : "2023-10-28T13:21:54Z",
+2023-10-28T13:21:54Z TRACE local local_update:   "version" : "@@@cloud udmi version###1.4.2-51-g50234ecc0",
+2023-10-28T13:21:54Z TRACE local local_update:   "system" : {
+2023-10-28T13:21:54Z TRACE local local_update:     "min_loglevel" : 200,
+2023-10-28T13:21:54Z TRACE local local_update:     "metrics_rate_sec" : 600,
+2023-10-28T13:21:54Z TRACE local local_update:     "operation" : {
+2023-10-28T13:21:54Z TRACE local local_update:       "last_start" : "2023-10-28T13:21:39Z"
+2023-10-28T13:21:54Z TRACE local local_update:     },
+2023-10-28T13:21:54Z TRACE local local_update:     "testing" : {
+2023-10-28T13:21:54Z TRACE local local_update:       "sequence_name" : "endpoint_connection_bad_hash"
+2023-10-28T13:21:54Z TRACE local local_update:     }
+2023-10-28T13:21:54Z TRACE local local_update:   }
+2023-10-28T13:21:54Z TRACE local local_update: }
+2023-10-28T13:21:54Z DEBUG Status level: 300
+2023-10-28T13:21:54Z DEBUG stage finished waiting for no interesting system status at 10s after 1s
+2023-10-28T13:21:54Z TRACE stage resume waiting for starting test wrapper at 10s
+2023-10-28T13:21:54Z DEBUG Status level: 300
+2023-10-28T13:21:54Z DEBUG Reading generated config file /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/out/generated_config.json
+2023-10-28T13:21:54Z DEBUG Configuring device last_start to be 2023-10-28T13:21:39Z
+2023-10-28T13:21:54Z DEBUG last_start changed true, last_start 2023-10-28T13:21:39Z
+2023-10-28T13:21:54Z DEBUG extraFieldChanged true because extra_field null
+2023-10-28T13:21:55Z DEBUG system config extra field null
+2023-10-28T13:21:55Z TRACE updated check config_system: true
+2023-10-28T13:21:55Z DEBUG update config_system, configTransaction RC:1698499315203
+2023-10-28T13:21:55Z TRACE local local_system: {
+2023-10-28T13:21:55Z TRACE local local_system:   "min_loglevel" : 200,
+2023-10-28T13:21:55Z TRACE local local_system:   "metrics_rate_sec" : 600,
+2023-10-28T13:21:55Z TRACE local local_system:   "operation" : {
+2023-10-28T13:21:55Z TRACE local local_system:     "last_start" : "2023-10-28T13:21:39Z"
+2023-10-28T13:21:55Z TRACE local local_system:   },
+2023-10-28T13:21:55Z TRACE local local_system:   "testing" : {
+2023-10-28T13:21:55Z TRACE local local_system:     "sequence_name" : "endpoint_connection_bad_hash"
+2023-10-28T13:21:55Z TRACE local local_system:   }
+2023-10-28T13:21:55Z TRACE local local_system: }
+2023-10-28T13:21:55Z TRACE updated check config_pointset: true
+2023-10-28T13:21:55Z DEBUG update config_pointset, configTransaction RC:1698499315208
+2023-10-28T13:21:55Z TRACE local local_pointset: {
+2023-10-28T13:21:55Z TRACE local local_pointset:   "points" : {
+2023-10-28T13:21:55Z TRACE local local_pointset:     "filter_alarm_pressure_status" : {
+2023-10-28T13:21:55Z TRACE local local_pointset:       "ref" : "BV11.present_value",
+2023-10-28T13:21:55Z TRACE local local_pointset:       "units" : "No-units"
+2023-10-28T13:21:55Z TRACE local local_pointset:     },
+2023-10-28T13:21:55Z TRACE local local_pointset:     "filter_differential_pressure_setpoint" : {
+2023-10-28T13:21:55Z TRACE local local_pointset:       "units" : "Bars",
+2023-10-28T13:21:55Z TRACE local local_pointset:       "set_value" : 98
+2023-10-28T13:21:55Z TRACE local local_pointset:     },
+2023-10-28T13:21:55Z TRACE local local_pointset:     "filter_differential_pressure_sensor" : {
+2023-10-28T13:21:55Z TRACE local local_pointset:       "ref" : "AV12.present_value",
+2023-10-28T13:21:55Z TRACE local local_pointset:       "units" : "Degrees-Celsius"
+2023-10-28T13:21:55Z TRACE local local_pointset:     }
+2023-10-28T13:21:55Z TRACE local local_pointset:   }
+2023-10-28T13:21:55Z TRACE local local_pointset: }
+2023-10-28T13:21:55Z TRACE updated check config_gateway: false
+2023-10-28T13:21:55Z TRACE updated check config_localnet: true
+2023-10-28T13:21:55Z DEBUG update config_localnet, configTransaction RC:1698499315210
+2023-10-28T13:21:55Z TRACE local local_localnet: {
+2023-10-28T13:21:55Z TRACE local local_localnet:   "families" : {
+2023-10-28T13:21:55Z TRACE local local_localnet:     "ether" : {
+2023-10-28T13:21:55Z TRACE local local_localnet:       "addr" : "00:50:b6:ed:5f:77"
+2023-10-28T13:21:55Z TRACE local local_localnet:     },
+2023-10-28T13:21:55Z TRACE local local_localnet:     "ipv4" : {
+2023-10-28T13:21:55Z TRACE local local_localnet:       "addr" : "192.168.2.1"
+2023-10-28T13:21:55Z TRACE local local_localnet:     }
+2023-10-28T13:21:55Z TRACE local local_localnet:   }
+2023-10-28T13:21:55Z TRACE local local_localnet: }
+2023-10-28T13:21:55Z TRACE updated check config_blobset: false
+2023-10-28T13:21:55Z TRACE updated check config_discovery: false
+2023-10-28T13:21:55Z DEBUG Update lastConfigUpdate 2023-10-28T13:21:55Z, because soft reset
+2023-10-28T13:21:55Z TRACE stage suspend waiting for starting test wrapper at 11s
+2023-10-28T13:21:55Z INFO stage start waiting for config sync at 11s
+2023-10-28T13:21:55Z TRACE received command AHU-1/state/update
+2023-10-28T13:21:55Z DEBUG received state_update
+2023-10-28T13:21:55Z DEBUG Handling update message state_update PS:8949443665156243
+2023-10-28T13:21:55Z DEBUG Updated state after 0s 2023-10-28T13:21:55Z PS:8949443665156243
+2023-10-28T13:21:55Z INFO Updated state #003: Changed 3 fields:
+2023-10-28T13:21:55Z INFO Updated state #003:   Set `system.last_config` = `2023-10-28T13:21:54Z`
+2023-10-28T13:21:55Z INFO Updated state #003:   Set `system.status.timestamp` = `2023-10-28T13:21:54Z`
+2023-10-28T13:21:55Z INFO Updated state #003:   Set `timestamp` = `2023-10-28T13:21:55Z`
+2023-10-28T13:21:55Z DEBUG Updated state has last_config 2023-10-28T13:21:54Z (expecting null)
+2023-10-28T13:21:55Z TRACE received command AHU-1/state/system
+2023-10-28T13:21:55Z TRACE received state_system: {
+2023-10-28T13:21:55Z TRACE received state_system:   "hardware" : {
+2023-10-28T13:21:55Z TRACE received state_system:     "make" : "BOS",
+2023-10-28T13:21:55Z TRACE received state_system:     "model" : "pubber"
+2023-10-28T13:21:55Z TRACE received state_system:   },
+2023-10-28T13:21:55Z TRACE received state_system:   "last_config" : "2023-10-28T13:21:54Z",
+2023-10-28T13:21:55Z TRACE received state_system:   "operation" : {
+2023-10-28T13:21:55Z TRACE received state_system:     "operational" : true,
+2023-10-28T13:21:55Z TRACE received state_system:     "last_start" : "2023-10-28T13:21:39Z",
+2023-10-28T13:21:55Z TRACE received state_system:     "restart_count" : 1,
+2023-10-28T13:21:55Z TRACE received state_system:     "mode" : "initial"
+2023-10-28T13:21:55Z TRACE received state_system:   },
+2023-10-28T13:21:55Z TRACE received state_system:   "serial_no" : "sequencer-22510",
+2023-10-28T13:21:55Z TRACE received state_system:   "software" : {
+2023-10-28T13:21:55Z TRACE received state_system:     "firmware" : "v1"
+2023-10-28T13:21:55Z TRACE received state_system:   },
+2023-10-28T13:21:55Z TRACE received state_system:   "status" : {
+2023-10-28T13:21:55Z TRACE received state_system:     "message" : "success",
+2023-10-28T13:21:55Z TRACE received state_system:     "category" : "system.config.apply",
+2023-10-28T13:21:55Z TRACE received state_system:     "timestamp" : "2023-10-28T13:21:54Z",
+2023-10-28T13:21:55Z TRACE received state_system:     "level" : 300
+2023-10-28T13:21:55Z TRACE received state_system:   },
+2023-10-28T13:21:55Z TRACE received state_system:   "timestamp" : "2023-10-28T13:21:55Z",
+2023-10-28T13:21:55Z TRACE received state_system:   "version" : "1.4.2"
+2023-10-28T13:21:55Z TRACE received state_system: }
+2023-10-28T13:21:55Z DEBUG Handling device message state_system PS:8949443665156243-0
+2023-10-28T13:21:55Z TRACE Ignoring partial state update
+2023-10-28T13:21:55Z TRACE received command AHU-1/state/localnet
+2023-10-28T13:21:55Z TRACE received state_localnet: {
+2023-10-28T13:21:55Z TRACE received state_localnet:   "families" : {
+2023-10-28T13:21:55Z TRACE received state_localnet:     "ether" : {
+2023-10-28T13:21:55Z TRACE received state_localnet:       "addr" : "60:45:bd:e3:36:e3"
+2023-10-28T13:21:55Z TRACE received state_localnet:     },
+2023-10-28T13:21:55Z TRACE received state_localnet:     "ipv4" : {
+2023-10-28T13:21:55Z TRACE received state_localnet:       "addr" : "10.1.1.78"
+2023-10-28T13:21:55Z TRACE received state_localnet:     },
+2023-10-28T13:21:55Z TRACE received state_localnet:     "ipv6" : {
+2023-10-28T13:21:55Z TRACE received state_localnet:       "addr" : "fe80::6245:bdff:fee3:36e3"
+2023-10-28T13:21:55Z TRACE received state_localnet:     }
+2023-10-28T13:21:55Z TRACE received state_localnet:   },
+2023-10-28T13:21:55Z TRACE received state_localnet:   "timestamp" : "2023-10-28T13:21:55Z",
+2023-10-28T13:21:55Z TRACE received state_localnet:   "version" : "1.4.2"
+2023-10-28T13:21:55Z TRACE received state_localnet: }
+2023-10-28T13:21:55Z DEBUG Handling device message state_localnet PS:8949443665156243-1
+2023-10-28T13:21:55Z TRACE Ignoring partial state update
+2023-10-28T13:21:55Z TRACE received command AHU-1/state/pointset
+2023-10-28T13:21:55Z TRACE received state_pointset: {
+2023-10-28T13:21:55Z TRACE received state_pointset:   "points" : {
+2023-10-28T13:21:55Z TRACE received state_pointset:     "filter_alarm_pressure_status" : { },
+2023-10-28T13:21:55Z TRACE received state_pointset:     "filter_differential_pressure_setpoint" : {
+2023-10-28T13:21:55Z TRACE received state_pointset:       "units" : "Bars"
+2023-10-28T13:21:55Z TRACE received state_pointset:     },
+2023-10-28T13:21:55Z TRACE received state_pointset:     "filter_differential_pressure_sensor" : {
+2023-10-28T13:21:55Z TRACE received state_pointset:       "units" : "Degrees-Celsius"
+2023-10-28T13:21:55Z TRACE received state_pointset:     }
+2023-10-28T13:21:55Z TRACE received state_pointset:   },
+2023-10-28T13:21:55Z TRACE received state_pointset:   "timestamp" : "2023-10-28T13:21:55Z",
+2023-10-28T13:21:55Z TRACE received state_pointset:   "version" : "1.4.2"
+2023-10-28T13:21:55Z TRACE received state_pointset: }
+2023-10-28T13:21:55Z DEBUG Handling device message state_pointset PS:8949443665156243-2
+2023-10-28T13:21:55Z TRACE Ignoring partial state update
+2023-10-28T13:21:55Z TRACE received command AHU-1/config/update
+2023-10-28T13:21:55Z DEBUG received config_update
+2023-10-28T13:21:55Z DEBUG Handling update message config_update RC:1698499315203
+2023-10-28T13:21:55Z DEBUG Removed configTransaction RC:1698499315203
+2023-10-28T13:21:55Z DEBUG last_start changed false, last_start 2023-10-28T13:21:39Z
+2023-10-28T13:21:55Z DEBUG Updated config 2023-10-28T13:21:55Z RC:1698499315203
+2023-10-28T13:21:55Z INFO Updated config #003: Changed 2 fields:
+2023-10-28T13:21:55Z INFO Updated config #003:   Add `pointset` = { "points": { "filter_alarm_pressure_status": { "ref": `BV11.present_value`, "units": `No-units` }, "filter_differential_pressure_setpoint": { "set_value": `98`, "units": `Bars` }, "filter_differential_pressure_sensor": { "ref": `AV12.present_value`, "units": `Degrees-Celsius` } } }
+2023-10-28T13:21:55Z INFO Updated config #003:   Add `localnet` = { "families": { "ether": { "addr": { "CASE_INSENSITIVE_ORDER": {  } } }, "ipv4": { "addr": { "CASE_INSENSITIVE_ORDER": {  } } } } }
+2023-10-28T13:21:55Z TRACE received command AHU-1/config/update
+2023-10-28T13:21:55Z DEBUG received config_update
+2023-10-28T13:21:55Z DEBUG Handling update message config_update RC:1698499315208
+2023-10-28T13:21:55Z DEBUG Removed configTransaction RC:1698499315208
+2023-10-28T13:21:55Z DEBUG last_start changed false, last_start 2023-10-28T13:21:39Z
+2023-10-28T13:21:55Z DEBUG Updated config 2023-10-28T13:21:55Z RC:1698499315208
+2023-10-28T13:21:55Z INFO Updated config #004: Changed 0 fields.
+2023-10-28T13:21:56Z TRACE received command AHU-1/config/update
+2023-10-28T13:21:56Z DEBUG received config_update
+2023-10-28T13:21:56Z DEBUG Handling update message config_update RC:1698499315210
+2023-10-28T13:21:56Z DEBUG Removed configTransaction RC:1698499315210
+2023-10-28T13:21:56Z DEBUG last_start changed false, last_start 2023-10-28T13:21:39Z
+2023-10-28T13:21:56Z DEBUG Updated config 2023-10-28T13:21:56Z RC:1698499315210
+2023-10-28T13:21:56Z INFO Updated config #005: Changed 0 fields.
+2023-10-28T13:21:56Z DEBUG Status level: 300
+2023-10-28T13:21:56Z DEBUG stage finished waiting for config sync at 13s after 1s
+2023-10-28T13:21:56Z TRACE stage resume waiting for starting test wrapper at 13s
+2023-10-28T13:21:56Z DEBUG Configuration sync took 1s
+2023-10-28T13:21:56Z DEBUG wait for config sync pending false
+2023-10-28T13:21:56Z DEBUG Update config soft reset: 2023-10-28T13:21:56Z
+2023-10-28T13:21:56Z TRACE local local_update: {
+2023-10-28T13:21:56Z TRACE local local_update:   "timestamp" : "2023-10-28T13:21:56Z",
+2023-10-28T13:21:56Z TRACE local local_update:   "version" : "@@@cloud udmi version###1.4.2-51-g50234ecc",
+2023-10-28T13:21:56Z TRACE local local_update:   "system" : {
+2023-10-28T13:21:56Z TRACE local local_update:     "min_loglevel" : 200,
+2023-10-28T13:21:56Z TRACE local local_update:     "metrics_rate_sec" : 600,
+2023-10-28T13:21:56Z TRACE local local_update:     "operation" : {
+2023-10-28T13:21:56Z TRACE local local_update:       "last_start" : "2023-10-28T13:21:39Z"
+2023-10-28T13:21:56Z TRACE local local_update:     },
+2023-10-28T13:21:56Z TRACE local local_update:     "testing" : {
+2023-10-28T13:21:56Z TRACE local local_update:       "sequence_name" : "endpoint_connection_bad_hash"
+2023-10-28T13:21:56Z TRACE local local_update:     }
+2023-10-28T13:21:56Z TRACE local local_update:   },
+2023-10-28T13:21:56Z TRACE local local_update:   "localnet" : {
+2023-10-28T13:21:56Z TRACE local local_update:     "families" : {
+2023-10-28T13:21:56Z TRACE local local_update:       "ether" : {
+2023-10-28T13:21:56Z TRACE local local_update:         "addr" : "00:50:b6:ed:5f:77"
+2023-10-28T13:21:56Z TRACE local local_update:       },
+2023-10-28T13:21:56Z TRACE local local_update:       "ipv4" : {
+2023-10-28T13:21:56Z TRACE local local_update:         "addr" : "192.168.2.1"
+2023-10-28T13:21:56Z TRACE local local_update:       }
+2023-10-28T13:21:56Z TRACE local local_update:     }
+2023-10-28T13:21:56Z TRACE local local_update:   },
+2023-10-28T13:21:56Z TRACE local local_update:   "pointset" : {
+2023-10-28T13:21:56Z TRACE local local_update:     "points" : {
+2023-10-28T13:21:56Z TRACE local local_update:       "filter_alarm_pressure_status" : {
+2023-10-28T13:21:56Z TRACE local local_update:         "ref" : "BV11.present_value",
+2023-10-28T13:21:56Z TRACE local local_update:         "units" : "No-units"
+2023-10-28T13:21:56Z TRACE local local_update:       },
+2023-10-28T13:21:56Z TRACE local local_update:       "filter_differential_pressure_setpoint" : {
+2023-10-28T13:21:56Z TRACE local local_update:         "units" : "Bars",
+2023-10-28T13:21:56Z TRACE local local_update:         "set_value" : 98
+2023-10-28T13:21:56Z TRACE local local_update:       },
+2023-10-28T13:21:56Z TRACE local local_update:       "filter_differential_pressure_sensor" : {
+2023-10-28T13:21:56Z TRACE local local_update:         "ref" : "AV12.present_value",
+2023-10-28T13:21:56Z TRACE local local_update:         "units" : "Degrees-Celsius"
+2023-10-28T13:21:56Z TRACE local local_update:       }
+2023-10-28T13:21:56Z TRACE local local_update:     }
+2023-10-28T13:21:56Z TRACE local local_update:   }
+2023-10-28T13:21:56Z TRACE local local_update: }
+2023-10-28T13:21:56Z TRACE Update config soft reset: Add `pointset` = { "points": { "filter_alarm_pressure_status": { "ref": `BV11.present_value`, "units": `No-units` }, "filter_differential_pressure_setpoint": { "set_value": `98`, "units": `Bars` }, "filter_differential_pressure_sensor": { "ref": `AV12.present_value`, "units": `Degrees-Celsius` } } }
+2023-10-28T13:21:56Z TRACE Update config soft reset: Add `localnet` = { "families": { "ether": { "addr": { "CASE_INSENSITIVE_ORDER": {  } } }, "ipv4": { "addr": { "CASE_INSENSITIVE_ORDER": {  } } } } }
+2023-10-28T13:21:56Z DEBUG Done with reset_config
+2023-10-28T13:21:57Z DEBUG system config extra field null
+2023-10-28T13:21:57Z TRACE updated check config_system: false
+2023-10-28T13:21:57Z TRACE updated check config_pointset: false
+2023-10-28T13:21:57Z TRACE updated check config_gateway: false
+2023-10-28T13:21:57Z TRACE updated check config_localnet: false
+2023-10-28T13:21:57Z TRACE updated check config_blobset: false
+2023-10-28T13:21:57Z TRACE updated check config_discovery: false
+2023-10-28T13:21:57Z DEBUG Update config initial setup: 2023-10-28T13:21:56Z
+2023-10-28T13:21:57Z TRACE local local_update: {
+2023-10-28T13:21:57Z TRACE local local_update:   "timestamp" : "2023-10-28T13:21:56Z",
+2023-10-28T13:21:57Z TRACE local local_update:   "version" : "@@@cloud udmi version###1.4.2-51-g50234ecc",
+2023-10-28T13:21:57Z TRACE local local_update:   "system" : {
+2023-10-28T13:21:57Z TRACE local local_update:     "min_loglevel" : 200,
+2023-10-28T13:21:57Z TRACE local local_update:     "metrics_rate_sec" : 600,
+2023-10-28T13:21:57Z TRACE local local_update:     "operation" : {
+2023-10-28T13:21:57Z TRACE local local_update:       "last_start" : "2023-10-28T13:21:39Z"
+2023-10-28T13:21:57Z TRACE local local_update:     },
+2023-10-28T13:21:57Z TRACE local local_update:     "testing" : {
+2023-10-28T13:21:57Z TRACE local local_update:       "sequence_name" : "endpoint_connection_bad_hash"
+2023-10-28T13:21:57Z TRACE local local_update:     }
+2023-10-28T13:21:57Z TRACE local local_update:   },
+2023-10-28T13:21:57Z TRACE local local_update:   "localnet" : {
+2023-10-28T13:21:57Z TRACE local local_update:     "families" : {
+2023-10-28T13:21:57Z TRACE local local_update:       "ether" : {
+2023-10-28T13:21:57Z TRACE local local_update:         "addr" : "00:50:b6:ed:5f:77"
+2023-10-28T13:21:57Z TRACE local local_update:       },
+2023-10-28T13:21:57Z TRACE local local_update:       "ipv4" : {
+2023-10-28T13:21:57Z TRACE local local_update:         "addr" : "192.168.2.1"
+2023-10-28T13:21:57Z TRACE local local_update:       }
+2023-10-28T13:21:57Z TRACE local local_update:     }
+2023-10-28T13:21:57Z TRACE local local_update:   },
+2023-10-28T13:21:57Z TRACE local local_update:   "pointset" : {
+2023-10-28T13:21:57Z TRACE local local_update:     "points" : {
+2023-10-28T13:21:57Z TRACE local local_update:       "filter_alarm_pressure_status" : {
+2023-10-28T13:21:57Z TRACE local local_update:         "ref" : "BV11.present_value",
+2023-10-28T13:21:57Z TRACE local local_update:         "units" : "No-units"
+2023-10-28T13:21:57Z TRACE local local_update:       },
+2023-10-28T13:21:57Z TRACE local local_update:       "filter_differential_pressure_setpoint" : {
+2023-10-28T13:21:57Z TRACE local local_update:         "units" : "Bars",
+2023-10-28T13:21:57Z TRACE local local_update:         "set_value" : 98
+2023-10-28T13:21:57Z TRACE local local_update:       },
+2023-10-28T13:21:57Z TRACE local local_update:       "filter_differential_pressure_sensor" : {
+2023-10-28T13:21:57Z TRACE local local_update:         "ref" : "AV12.present_value",
+2023-10-28T13:21:57Z TRACE local local_update:         "units" : "Degrees-Celsius"
+2023-10-28T13:21:57Z TRACE local local_update:       }
+2023-10-28T13:21:57Z TRACE local local_update:     }
+2023-10-28T13:21:57Z TRACE local local_update:   }
+2023-10-28T13:21:57Z TRACE local local_update: }
+2023-10-28T13:21:57Z TRACE stage suspend waiting for starting test wrapper at 14s
+2023-10-28T13:21:57Z INFO stage start waiting for device state update at 14s
+2023-10-28T13:21:58Z DEBUG system config extra field null
+2023-10-28T13:21:58Z TRACE updated check config_system: false
+2023-10-28T13:21:58Z TRACE updated check config_pointset: false
+2023-10-28T13:21:58Z TRACE updated check config_gateway: false
+2023-10-28T13:21:58Z TRACE updated check config_localnet: false
+2023-10-28T13:21:58Z TRACE updated check config_blobset: false
+2023-10-28T13:21:58Z TRACE updated check config_discovery: false
+2023-10-28T13:21:58Z DEBUG Update config before device state update: 2023-10-28T13:21:56Z
+2023-10-28T13:21:58Z TRACE local local_update: {
+2023-10-28T13:21:58Z TRACE local local_update:   "timestamp" : "2023-10-28T13:21:56Z",
+2023-10-28T13:21:58Z TRACE local local_update:   "version" : "@@@cloud udmi version###1.4.2-51-g50234ecc",
+2023-10-28T13:21:58Z TRACE local local_update:   "system" : {
+2023-10-28T13:21:58Z TRACE local local_update:     "min_loglevel" : 200,
+2023-10-28T13:21:58Z TRACE local local_update:     "metrics_rate_sec" : 600,
+2023-10-28T13:21:58Z TRACE local local_update:     "operation" : {
+2023-10-28T13:21:58Z TRACE local local_update:       "last_start" : "2023-10-28T13:21:39Z"
+2023-10-28T13:21:58Z TRACE local local_update:     },
+2023-10-28T13:21:58Z TRACE local local_update:     "testing" : {
+2023-10-28T13:21:58Z TRACE local local_update:       "sequence_name" : "endpoint_connection_bad_hash"
+2023-10-28T13:21:58Z TRACE local local_update:     }
+2023-10-28T13:21:58Z TRACE local local_update:   },
+2023-10-28T13:21:58Z TRACE local local_update:   "localnet" : {
+2023-10-28T13:21:58Z TRACE local local_update:     "families" : {
+2023-10-28T13:21:58Z TRACE local local_update:       "ether" : {
+2023-10-28T13:21:58Z TRACE local local_update:         "addr" : "00:50:b6:ed:5f:77"
+2023-10-28T13:21:58Z TRACE local local_update:       },
+2023-10-28T13:21:58Z TRACE local local_update:       "ipv4" : {
+2023-10-28T13:21:58Z TRACE local local_update:         "addr" : "192.168.2.1"
+2023-10-28T13:21:58Z TRACE local local_update:       }
+2023-10-28T13:21:58Z TRACE local local_update:     }
+2023-10-28T13:21:58Z TRACE local local_update:   },
+2023-10-28T13:21:58Z TRACE local local_update:   "pointset" : {
+2023-10-28T13:21:58Z TRACE local local_update:     "points" : {
+2023-10-28T13:21:58Z TRACE local local_update:       "filter_alarm_pressure_status" : {
+2023-10-28T13:21:58Z TRACE local local_update:         "ref" : "BV11.present_value",
+2023-10-28T13:21:58Z TRACE local local_update:         "units" : "No-units"
+2023-10-28T13:21:58Z TRACE local local_update:       },
+2023-10-28T13:21:58Z TRACE local local_update:       "filter_differential_pressure_setpoint" : {
+2023-10-28T13:21:58Z TRACE local local_update:         "units" : "Bars",
+2023-10-28T13:21:58Z TRACE local local_update:         "set_value" : 98
+2023-10-28T13:21:58Z TRACE local local_update:       },
+2023-10-28T13:21:58Z TRACE local local_update:       "filter_differential_pressure_sensor" : {
+2023-10-28T13:21:58Z TRACE local local_update:         "ref" : "AV12.present_value",
+2023-10-28T13:21:58Z TRACE local local_update:         "units" : "Degrees-Celsius"
+2023-10-28T13:21:58Z TRACE local local_update:       }
+2023-10-28T13:21:58Z TRACE local local_update:     }
+2023-10-28T13:21:58Z TRACE local local_update:   }
+2023-10-28T13:21:58Z TRACE local local_update: }
+2023-10-28T13:21:58Z DEBUG Status level: 300
+2023-10-28T13:21:58Z DEBUG stage finished waiting for device state update at 15s after 1s
+2023-10-28T13:21:58Z TRACE stage resume waiting for starting test wrapper at 15s
+2023-10-28T13:21:58Z DEBUG Status level: 300
+2023-10-28T13:21:58Z TRACE stage suspend waiting for starting test wrapper at 15s
+2023-10-28T13:21:58Z INFO stage start waiting for executing test at 15s
+2023-10-28T13:21:58Z DEBUG stage begin waiting for executing test at 15s
+2023-10-28T13:21:58Z DEBUG Endpoint config: {
+2023-10-28T13:21:58Z DEBUG Endpoint config:   "protocol" : "mqtt",
+2023-10-28T13:21:58Z DEBUG Endpoint config:   "hostname" : "mqtt.bos.goog",
+2023-10-28T13:21:58Z DEBUG Endpoint config:   "port" : 8883,
+2023-10-28T13:21:58Z DEBUG Endpoint config:   "client_id" : "projects/bos-platform-dev/locations/us-central1/registries/ZZ-TRI-FECTA_A/devices/AHU-1"
+2023-10-28T13:21:58Z DEBUG Endpoint config: }
+2023-10-28T13:21:58Z TRACE stage suspend waiting for executing test at 15s
+2023-10-28T13:21:58Z INFO stage start waiting for blobset status is ERROR at 15s
+2023-10-28T13:21:59Z DEBUG system config extra field null
+2023-10-28T13:21:59Z TRACE updated check config_system: false
+2023-10-28T13:21:59Z TRACE updated check config_pointset: false
+2023-10-28T13:21:59Z TRACE updated check config_gateway: false
+2023-10-28T13:21:59Z TRACE updated check config_localnet: false
+2023-10-28T13:21:59Z TRACE updated check config_blobset: true
+2023-10-28T13:21:59Z DEBUG update config_blobset, configTransaction RC:1698499319516
+2023-10-28T13:21:59Z TRACE local local_blobset: {
+2023-10-28T13:21:59Z TRACE local local_blobset:   "blobs" : {
+2023-10-28T13:21:59Z TRACE local local_blobset:     "_iot_endpoint_config" : {
+2023-10-28T13:21:59Z TRACE local local_blobset:       "phase" : "final",
+2023-10-28T13:21:59Z TRACE local local_blobset:       "url" : "@@@endpoint data###data:application/json;base64,ewogICJwcm90b2NvbCIgOiAibXF0dCIsCiAgImhvc3RuYW1lIiA6ICJtcXR0LmJvcy5nb29nIiwKICAicG9ydCIgOiA4ODgzLAogICJjbGllbnRfaWQiIDogInByb2plY3RzL2Jvcy1wbGF0Zm9ybS1kZXYvbG9jYXRpb25zL3VzLWNlbnRyYWwxL3JlZ2lzdHJpZXMvWlotVFJJLUZFQ1RBX0EvZGV2aWNlcy9BSFUtMSIKfQ==",
+2023-10-28T13:21:59Z TRACE local local_blobset:       "sha256" : "@@@invalid blob data hash###908f5366f65d071c591f9b9c0e50728d1247559f559597d2df1e6e72b825bdf9",
+2023-10-28T13:21:59Z TRACE local local_blobset:       "generation" : "2023-10-28T13:21:58Z"
+2023-10-28T13:21:59Z TRACE local local_blobset:     }
+2023-10-28T13:21:59Z TRACE local local_blobset:   }
+2023-10-28T13:21:59Z TRACE local local_blobset: }
+2023-10-28T13:21:59Z TRACE updated check config_discovery: false
+2023-10-28T13:21:59Z DEBUG Update lastConfigUpdate 2023-10-28T13:21:59Z, because before blobset status is ERROR
+2023-10-28T13:21:59Z TRACE stage suspend waiting for blobset status is ERROR at 16s
+2023-10-28T13:21:59Z INFO stage start waiting for config sync at 16s
+2023-10-28T13:21:59Z TRACE received command AHU-1/state/update
+2023-10-28T13:21:59Z DEBUG received state_update
+2023-10-28T13:21:59Z DEBUG Handling update message state_update PS:8949814330634653
+2023-10-28T13:21:59Z DEBUG Updated state after 2s 2023-10-28T13:21:57Z PS:8949814330634653
+2023-10-28T13:21:59Z INFO Updated state #004: Changed 4 fields:
+2023-10-28T13:21:59Z INFO Updated state #004:   Set `system.last_config` = `2023-10-28T13:21:56Z`
+2023-10-28T13:21:59Z INFO Updated state #004:   Set `system.status.timestamp` = `2023-10-28T13:21:56Z`
+2023-10-28T13:21:59Z INFO Updated state #004:   Add `pointset.points.filter_differential_pressure_setpoint.value_state` = `applied`
+2023-10-28T13:21:59Z INFO Updated state #004:   Set `timestamp` = `2023-10-28T13:21:57Z`
+2023-10-28T13:21:59Z DEBUG Updated state has last_config 2023-10-28T13:21:56Z (expecting 2023-10-28T13:21:56Z)
+2023-10-28T13:21:59Z TRACE received command AHU-1/state/system
+2023-10-28T13:21:59Z TRACE received state_system: {
+2023-10-28T13:21:59Z TRACE received state_system:   "hardware" : {
+2023-10-28T13:21:59Z TRACE received state_system:     "make" : "BOS",
+2023-10-28T13:21:59Z TRACE received state_system:     "model" : "pubber"
+2023-10-28T13:21:59Z TRACE received state_system:   },
+2023-10-28T13:21:59Z TRACE received state_system:   "last_config" : "2023-10-28T13:21:56Z",
+2023-10-28T13:21:59Z TRACE received state_system:   "operation" : {
+2023-10-28T13:21:59Z TRACE received state_system:     "operational" : true,
+2023-10-28T13:21:59Z TRACE received state_system:     "last_start" : "2023-10-28T13:21:39Z",
+2023-10-28T13:21:59Z TRACE received state_system:     "restart_count" : 1,
+2023-10-28T13:21:59Z TRACE received state_system:     "mode" : "initial"
+2023-10-28T13:21:59Z TRACE received state_system:   },
+2023-10-28T13:21:59Z TRACE received state_system:   "serial_no" : "sequencer-22510",
+2023-10-28T13:21:59Z TRACE received state_system:   "software" : {
+2023-10-28T13:21:59Z TRACE received state_system:     "firmware" : "v1"
+2023-10-28T13:21:59Z TRACE received state_system:   },
+2023-10-28T13:21:59Z TRACE received state_system:   "status" : {
+2023-10-28T13:21:59Z TRACE received state_system:     "message" : "success",
+2023-10-28T13:21:59Z TRACE received state_system:     "category" : "system.config.apply",
+2023-10-28T13:21:59Z TRACE received state_system:     "timestamp" : "2023-10-28T13:21:56Z",
+2023-10-28T13:21:59Z TRACE received state_system:     "level" : 300
+2023-10-28T13:21:59Z TRACE received state_system:   },
+2023-10-28T13:21:59Z TRACE received state_system:   "timestamp" : "2023-10-28T13:21:57Z",
+2023-10-28T13:21:59Z TRACE received state_system:   "version" : "1.4.2"
+2023-10-28T13:21:59Z TRACE received state_system: }
+2023-10-28T13:21:59Z DEBUG Handling device message state_system PS:8949814330634653-0
+2023-10-28T13:21:59Z TRACE Ignoring partial state update
+2023-10-28T13:21:59Z TRACE received command AHU-1/state/localnet
+2023-10-28T13:21:59Z TRACE received state_localnet: {
+2023-10-28T13:21:59Z TRACE received state_localnet:   "families" : {
+2023-10-28T13:21:59Z TRACE received state_localnet:     "ether" : {
+2023-10-28T13:21:59Z TRACE received state_localnet:       "addr" : "60:45:bd:e3:36:e3"
+2023-10-28T13:21:59Z TRACE received state_localnet:     },
+2023-10-28T13:21:59Z TRACE received state_localnet:     "ipv4" : {
+2023-10-28T13:21:59Z TRACE received state_localnet:       "addr" : "10.1.1.78"
+2023-10-28T13:21:59Z TRACE received state_localnet:     },
+2023-10-28T13:21:59Z TRACE received state_localnet:     "ipv6" : {
+2023-10-28T13:21:59Z TRACE received state_localnet:       "addr" : "fe80::6245:bdff:fee3:36e3"
+2023-10-28T13:21:59Z TRACE received state_localnet:     }
+2023-10-28T13:21:59Z TRACE received state_localnet:   },
+2023-10-28T13:21:59Z TRACE received state_localnet:   "timestamp" : "2023-10-28T13:21:57Z",
+2023-10-28T13:21:59Z TRACE received state_localnet:   "version" : "1.4.2"
+2023-10-28T13:21:59Z TRACE received state_localnet: }
+2023-10-28T13:21:59Z DEBUG Handling device message state_localnet PS:8949814330634653-1
+2023-10-28T13:21:59Z TRACE Ignoring partial state update
+2023-10-28T13:21:59Z TRACE received command AHU-1/state/pointset
+2023-10-28T13:21:59Z TRACE received state_pointset: {
+2023-10-28T13:21:59Z TRACE received state_pointset:   "points" : {
+2023-10-28T13:21:59Z TRACE received state_pointset:     "filter_alarm_pressure_status" : { },
+2023-10-28T13:21:59Z TRACE received state_pointset:     "filter_differential_pressure_setpoint" : {
+2023-10-28T13:21:59Z TRACE received state_pointset:       "units" : "Bars",
+2023-10-28T13:21:59Z TRACE received state_pointset:       "value_state" : "applied"
+2023-10-28T13:21:59Z TRACE received state_pointset:     },
+2023-10-28T13:21:59Z TRACE received state_pointset:     "filter_differential_pressure_sensor" : {
+2023-10-28T13:21:59Z TRACE received state_pointset:       "units" : "Degrees-Celsius"
+2023-10-28T13:21:59Z TRACE received state_pointset:     }
+2023-10-28T13:21:59Z TRACE received state_pointset:   },
+2023-10-28T13:21:59Z TRACE received state_pointset:   "timestamp" : "2023-10-28T13:21:57Z",
+2023-10-28T13:21:59Z TRACE received state_pointset:   "version" : "1.4.2"
+2023-10-28T13:21:59Z TRACE received state_pointset: }
+2023-10-28T13:21:59Z DEBUG Handling device message state_pointset PS:8949814330634653-2
+2023-10-28T13:21:59Z TRACE Ignoring partial state update
+2023-10-28T13:21:59Z TRACE received command AHU-1/config/update
+2023-10-28T13:21:59Z DEBUG received config_update
+2023-10-28T13:21:59Z DEBUG Handling update message config_update RC:1698499319516
+2023-10-28T13:21:59Z DEBUG Removed configTransaction RC:1698499319516
+2023-10-28T13:21:59Z DEBUG last_start changed false, last_start 2023-10-28T13:21:39Z
+2023-10-28T13:21:59Z DEBUG Updated config 2023-10-28T13:21:59Z RC:1698499319516
+2023-10-28T13:21:59Z INFO Updated config #006: Changed 1 fields:
+2023-10-28T13:21:59Z INFO Updated config #006:   Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "generation": `blob generation`, "sha256": `invalid blob data hash`, "url": `endpoint data` } } }
+2023-10-28T13:21:59Z DEBUG Status level: 300
+2023-10-28T13:21:59Z DEBUG stage finished waiting for config sync at 16s after 0s
+2023-10-28T13:21:59Z TRACE stage resume waiting for blobset status is ERROR at 16s
+2023-10-28T13:21:59Z DEBUG Configuration sync took 0s
+2023-10-28T13:21:59Z DEBUG wait for config sync pending false
+2023-10-28T13:21:59Z DEBUG Update config before blobset status is ERROR: 2023-10-28T13:21:59Z
+2023-10-28T13:21:59Z TRACE local local_update: {
+2023-10-28T13:21:59Z TRACE local local_update:   "timestamp" : "2023-10-28T13:21:59Z",
+2023-10-28T13:21:59Z TRACE local local_update:   "version" : "@@@cloud udmi version###1.4.2-51-g50234ecc0",
+2023-10-28T13:21:59Z TRACE local local_update:   "system" : {
+2023-10-28T13:21:59Z TRACE local local_update:     "min_loglevel" : 200,
+2023-10-28T13:21:59Z TRACE local local_update:     "metrics_rate_sec" : 600,
+2023-10-28T13:21:59Z TRACE local local_update:     "operation" : {
+2023-10-28T13:21:59Z TRACE local local_update:       "last_start" : "2023-10-28T13:21:39Z"
+2023-10-28T13:21:59Z TRACE local local_update:     },
+2023-10-28T13:21:59Z TRACE local local_update:     "testing" : {
+2023-10-28T13:21:59Z TRACE local local_update:       "sequence_name" : "endpoint_connection_bad_hash"
+2023-10-28T13:21:59Z TRACE local local_update:     }
+2023-10-28T13:21:59Z TRACE local local_update:   },
+2023-10-28T13:21:59Z TRACE local local_update:   "localnet" : {
+2023-10-28T13:21:59Z TRACE local local_update:     "families" : {
+2023-10-28T13:21:59Z TRACE local local_update:       "ether" : {
+2023-10-28T13:21:59Z TRACE local local_update:         "addr" : "00:50:b6:ed:5f:77"
+2023-10-28T13:21:59Z TRACE local local_update:       },
+2023-10-28T13:21:59Z TRACE local local_update:       "ipv4" : {
+2023-10-28T13:21:59Z TRACE local local_update:         "addr" : "192.168.2.1"
+2023-10-28T13:21:59Z TRACE local local_update:       }
+2023-10-28T13:21:59Z TRACE local local_update:     }
+2023-10-28T13:21:59Z TRACE local local_update:   },
+2023-10-28T13:21:59Z TRACE local local_update:   "blobset" : {
+2023-10-28T13:21:59Z TRACE local local_update:     "blobs" : {
+2023-10-28T13:21:59Z TRACE local local_update:       "_iot_endpoint_config" : {
+2023-10-28T13:21:59Z TRACE local local_update:         "phase" : "final",
+2023-10-28T13:21:59Z TRACE local local_update:         "url" : "@@@endpoint data###data:application/json;base64,ewogICJwcm90b2NvbCIgOiAibXF0dCIsCiAgImhvc3RuYW1lIiA6ICJtcXR0LmJvcy5nb29nIiwKICAicG9ydCIgOiA4ODgzLAogICJjbGllbnRfaWQiIDogInByb2plY3RzL2Jvcy1wbGF0Zm9ybS1kZXYvbG9jYXRpb25zL3VzLWNlbnRyYWwxL3JlZ2lzdHJpZXMvWlotVFJJLUZFQ1RBX0EvZGV2aWNlcy9BSFUtMSIKfQ==",
+2023-10-28T13:21:59Z TRACE local local_update:         "sha256" : "@@@invalid blob data hash###908f5366f65d071c591f9b9c0e50728d1247559f559597d2df1e6e72b825bdf9",
+2023-10-28T13:21:59Z TRACE local local_update:         "generation" : "2023-10-28T13:21:58Z"
+2023-10-28T13:21:59Z TRACE local local_update:       }
+2023-10-28T13:21:59Z TRACE local local_update:     }
+2023-10-28T13:21:59Z TRACE local local_update:   },
+2023-10-28T13:21:59Z TRACE local local_update:   "pointset" : {
+2023-10-28T13:21:59Z TRACE local local_update:     "points" : {
+2023-10-28T13:21:59Z TRACE local local_update:       "filter_alarm_pressure_status" : {
+2023-10-28T13:21:59Z TRACE local local_update:         "ref" : "BV11.present_value",
+2023-10-28T13:21:59Z TRACE local local_update:         "units" : "No-units"
+2023-10-28T13:21:59Z TRACE local local_update:       },
+2023-10-28T13:21:59Z TRACE local local_update:       "filter_differential_pressure_setpoint" : {
+2023-10-28T13:21:59Z TRACE local local_update:         "units" : "Bars",
+2023-10-28T13:21:59Z TRACE local local_update:         "set_value" : 98
+2023-10-28T13:21:59Z TRACE local local_update:       },
+2023-10-28T13:21:59Z TRACE local local_update:       "filter_differential_pressure_sensor" : {
+2023-10-28T13:21:59Z TRACE local local_update:         "ref" : "AV12.present_value",
+2023-10-28T13:21:59Z TRACE local local_update:         "units" : "Degrees-Celsius"
+2023-10-28T13:21:59Z TRACE local local_update:       }
+2023-10-28T13:21:59Z TRACE local local_update:     }
+2023-10-28T13:21:59Z TRACE local local_update:   }
+2023-10-28T13:21:59Z TRACE local local_update: }
+2023-10-28T13:21:59Z INFO Device config Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "generation": `blob generation`, "sha256": `invalid blob data hash`, "url": `endpoint data` } } }
+2023-10-28T13:21:59Z TRACE Update config before blobset status is ERROR: Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "generation": `blob generation`, "sha256": `invalid blob data hash`, "url": `endpoint data` } } }
+2023-10-28T13:21:59Z DEBUG Suppressing exception: java.lang.NullPointerException: Cannot read field "blobs" because "this.deviceState.blobset" is null
+2023-10-28T13:21:59Z TRACE received command AHU-1/state/update
+2023-10-28T13:21:59Z DEBUG received state_update
+2023-10-28T13:21:59Z DEBUG Handling update message state_update PS:9510682799924880
+2023-10-28T13:21:59Z DEBUG Updated state after 0s 2023-10-28T13:21:59Z PS:9510682799924880
+2023-10-28T13:21:59Z INFO Updated state #005: Changed 3 fields:
+2023-10-28T13:21:59Z INFO Updated state #005:   Set `system.last_config` = `2023-10-28T13:21:59Z`
+2023-10-28T13:21:59Z INFO Updated state #005:   Set `system.status.timestamp` = `2023-10-28T13:21:59Z`
+2023-10-28T13:21:59Z INFO Updated state #005:   Set `timestamp` = `2023-10-28T13:21:59Z`
+2023-10-28T13:21:59Z DEBUG Updated state has last_config 2023-10-28T13:21:59Z (expecting 2023-10-28T13:21:59Z)
+2023-10-28T13:21:59Z DEBUG Suppressing exception: java.lang.NullPointerException: Cannot read field "blobs" because "this.deviceState.blobset" is null
+2023-10-28T13:21:59Z TRACE received command AHU-1/state/system
+2023-10-28T13:21:59Z TRACE received state_system: {
+2023-10-28T13:21:59Z TRACE received state_system:   "hardware" : {
+2023-10-28T13:21:59Z TRACE received state_system:     "make" : "BOS",
+2023-10-28T13:21:59Z TRACE received state_system:     "model" : "pubber"
+2023-10-28T13:21:59Z TRACE received state_system:   },
+2023-10-28T13:21:59Z TRACE received state_system:   "last_config" : "2023-10-28T13:21:59Z",
+2023-10-28T13:21:59Z TRACE received state_system:   "operation" : {
+2023-10-28T13:21:59Z TRACE received state_system:     "operational" : true,
+2023-10-28T13:21:59Z TRACE received state_system:     "last_start" : "2023-10-28T13:21:39Z",
+2023-10-28T13:21:59Z TRACE received state_system:     "restart_count" : 1,
+2023-10-28T13:21:59Z TRACE received state_system:     "mode" : "initial"
+2023-10-28T13:21:59Z TRACE received state_system:   },
+2023-10-28T13:21:59Z TRACE received state_system:   "serial_no" : "sequencer-22510",
+2023-10-28T13:21:59Z TRACE received state_system:   "software" : {
+2023-10-28T13:21:59Z TRACE received state_system:     "firmware" : "v1"
+2023-10-28T13:21:59Z TRACE received state_system:   },
+2023-10-28T13:21:59Z TRACE received state_system:   "status" : {
+2023-10-28T13:21:59Z TRACE received state_system:     "message" : "success",
+2023-10-28T13:21:59Z TRACE received state_system:     "category" : "system.config.apply",
+2023-10-28T13:21:59Z TRACE received state_system:     "timestamp" : "2023-10-28T13:21:59Z",
+2023-10-28T13:21:59Z TRACE received state_system:     "level" : 300
+2023-10-28T13:21:59Z TRACE received state_system:   },
+2023-10-28T13:21:59Z TRACE received state_system:   "timestamp" : "2023-10-28T13:21:59Z",
+2023-10-28T13:21:59Z TRACE received state_system:   "version" : "1.4.2"
+2023-10-28T13:21:59Z TRACE received state_system: }
+2023-10-28T13:21:59Z DEBUG Handling device message state_system PS:9510682799924880-0
+2023-10-28T13:21:59Z TRACE Ignoring partial state update
+2023-10-28T13:21:59Z DEBUG Suppressing exception: java.lang.NullPointerException: Cannot read field "blobs" because "this.deviceState.blobset" is null
+2023-10-28T13:21:59Z TRACE received command AHU-1/state/localnet
+2023-10-28T13:21:59Z TRACE received state_localnet: {
+2023-10-28T13:21:59Z TRACE received state_localnet:   "families" : {
+2023-10-28T13:21:59Z TRACE received state_localnet:     "ether" : {
+2023-10-28T13:21:59Z TRACE received state_localnet:       "addr" : "60:45:bd:e3:36:e3"
+2023-10-28T13:21:59Z TRACE received state_localnet:     },
+2023-10-28T13:21:59Z TRACE received state_localnet:     "ipv4" : {
+2023-10-28T13:21:59Z TRACE received state_localnet:       "addr" : "10.1.1.78"
+2023-10-28T13:21:59Z TRACE received state_localnet:     },
+2023-10-28T13:21:59Z TRACE received state_localnet:     "ipv6" : {
+2023-10-28T13:21:59Z TRACE received state_localnet:       "addr" : "fe80::6245:bdff:fee3:36e3"
+2023-10-28T13:21:59Z TRACE received state_localnet:     }
+2023-10-28T13:21:59Z TRACE received state_localnet:   },
+2023-10-28T13:21:59Z TRACE received state_localnet:   "timestamp" : "2023-10-28T13:21:59Z",
+2023-10-28T13:21:59Z TRACE received state_localnet:   "version" : "1.4.2"
+2023-10-28T13:21:59Z TRACE received state_localnet: }
+2023-10-28T13:21:59Z DEBUG Handling device message state_localnet PS:9510682799924880-1
+2023-10-28T13:21:59Z TRACE Ignoring partial state update
+2023-10-28T13:21:59Z DEBUG Suppressing exception: java.lang.NullPointerException: Cannot read field "blobs" because "this.deviceState.blobset" is null
+2023-10-28T13:21:59Z TRACE received command AHU-1/state/pointset
+2023-10-28T13:21:59Z TRACE received state_pointset: {
+2023-10-28T13:21:59Z TRACE received state_pointset:   "points" : {
+2023-10-28T13:21:59Z TRACE received state_pointset:     "filter_alarm_pressure_status" : { },
+2023-10-28T13:21:59Z TRACE received state_pointset:     "filter_differential_pressure_setpoint" : {
+2023-10-28T13:21:59Z TRACE received state_pointset:       "units" : "Bars",
+2023-10-28T13:21:59Z TRACE received state_pointset:       "value_state" : "applied"
+2023-10-28T13:21:59Z TRACE received state_pointset:     },
+2023-10-28T13:21:59Z TRACE received state_pointset:     "filter_differential_pressure_sensor" : {
+2023-10-28T13:21:59Z TRACE received state_pointset:       "units" : "Degrees-Celsius"
+2023-10-28T13:21:59Z TRACE received state_pointset:     }
+2023-10-28T13:21:59Z TRACE received state_pointset:   },
+2023-10-28T13:21:59Z TRACE received state_pointset:   "timestamp" : "2023-10-28T13:21:59Z",
+2023-10-28T13:21:59Z TRACE received state_pointset:   "version" : "1.4.2"
+2023-10-28T13:21:59Z TRACE received state_pointset: }
+2023-10-28T13:21:59Z DEBUG Handling device message state_pointset PS:9510682799924880-2
+2023-10-28T13:21:59Z TRACE Ignoring partial state update
+2023-10-28T13:21:59Z DEBUG Suppressing exception: java.lang.NullPointerException: Cannot read field "blobs" because "this.deviceState.blobset" is null
+2023-10-28T13:22:01Z TRACE received command AHU-1/event/pointset
+2023-10-28T13:22:01Z TRACE received event_pointset: {
+2023-10-28T13:22:01Z TRACE received event_pointset:   "points" : {
+2023-10-28T13:22:01Z TRACE received event_pointset:     "filter_alarm_pressure_status" : {
+2023-10-28T13:22:01Z TRACE received event_pointset:       "present_value" : true
+2023-10-28T13:22:01Z TRACE received event_pointset:     },
+2023-10-28T13:22:01Z TRACE received event_pointset:     "filter_differential_pressure_setpoint" : {
+2023-10-28T13:22:01Z TRACE received event_pointset:       "present_value" : 98
+2023-10-28T13:22:01Z TRACE received event_pointset:     },
+2023-10-28T13:22:01Z TRACE received event_pointset:     "filter_differential_pressure_sensor" : {
+2023-10-28T13:22:01Z TRACE received event_pointset:       "present_value" : 11
+2023-10-28T13:22:01Z TRACE received event_pointset:     }
+2023-10-28T13:22:01Z TRACE received event_pointset:   },
+2023-10-28T13:22:01Z TRACE received event_pointset:   "timestamp" : "2023-10-28T13:22:01Z",
+2023-10-28T13:22:01Z TRACE received event_pointset:   "version" : "1.4.2"
+2023-10-28T13:22:01Z TRACE received event_pointset: }
+2023-10-28T13:22:01Z DEBUG Handling device message event_pointset PS:8948769269208925
+2023-10-28T13:22:01Z DEBUG Suppressing exception: java.lang.NullPointerException: Cannot read field "blobs" because "this.deviceState.blobset" is null
+2023-10-28T13:22:01Z TRACE received command AHU-1/state/update
+2023-10-28T13:22:01Z DEBUG received state_update
+2023-10-28T13:22:01Z DEBUG Handling update message state_update PS:8950414094284910
+2023-10-28T13:22:01Z DEBUG Updated state after 0s 2023-10-28T13:22:01Z PS:8950414094284910
+2023-10-28T13:22:01Z INFO Updated state #006: Changed 2 fields:
+2023-10-28T13:22:01Z INFO Updated state #006:   Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "generation": `2023-10-28T13:21:58Z`, "status": { "level": `500`, "detail": `java.lang.RuntimeException: java.lang.RuntimeException: Blob data hash mismatch
+2023-10-28T13:22:01Z INFO Updated state #006: 	at daq.pubber.Pubber.maybeRedirectEndpoint(Pubber.java:1202)
+2023-10-28T13:22:01Z INFO Updated state #006: 	at daq.pubber.Pubber.deferredConfigActions(Pubber.java:761)
+2023-10-28T13:22:01Z INFO Updated state #006: 	at daq.pubber.Pubber.periodicUpdate(Pubber.java:691)
+2023-10-28T13:22:01Z INFO Updated state #006: 	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539)
+2023-10-28T13:22:01Z INFO Updated state #006: 	at java.base/java.util.concurrent.FutureTask.runAndReset(FutureTask.java:305)
+2023-10-28T13:22:01Z INFO Updated state #006: 	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:305)
+2023-10-28T13:22:01Z INFO Updated state #006: 	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+2023-10-28T13:22:01Z INFO Updated state #006: 	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+2023-10-28T13:22:01Z INFO Updated state #006: 	at java.base/java.lang.Thread.run(Thread.java:833)
+2023-10-28T13:22:01Z INFO Updated state #006: `, "message": `java.lang.RuntimeException: Blob data hash mismatch`, "category": `blobset.blob.apply`, "timestamp": `2023-10-28T13:22:00Z` } } } }
+2023-10-28T13:22:01Z INFO Updated state #006:   Set `timestamp` = `2023-10-28T13:22:01Z`
+2023-10-28T13:22:01Z DEBUG Updated state has last_config 2023-10-28T13:21:59Z (expecting 2023-10-28T13:21:59Z)
+2023-10-28T13:22:01Z DEBUG Status level: 300
+2023-10-28T13:22:01Z DEBUG stage finished waiting for blobset status is ERROR at 18s after 3s
+2023-10-28T13:22:01Z TRACE stage resume waiting for executing test at 18s
+2023-10-28T13:22:01Z DEBUG stage done waiting for executing test at 18s
+2023-10-28T13:22:01Z DEBUG Status level: 300
+2023-10-28T13:22:01Z NOTICE RESULT pass endpoint endpoint_connection_bad_hash ALPHA 5 Sequence complete
+2023-10-28T13:22:01Z NOTICE Sequence complete
+2023-10-28T13:22:01Z NOTICE ending test endpoint_connection_bad_hash after 18s ################################
