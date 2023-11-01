@@ -29,6 +29,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
+import org.jetbrains.annotations.TestOnly;
 import org.junit.Test;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Request;
@@ -139,8 +140,20 @@ public class SequenceRunner {
     return allTestResults;
   }
 
+  /**
+   * Check if a particular feature stage should be processed given the configured level.
+   *
+   * @param query  stage to check
+   */
   public static boolean processStage(FeatureStage query) {
     return processStage(query, getFeatureMinStage());
+  }
+
+  @TestOnly
+  static boolean processStage(FeatureStage query, FeatureStage config) {
+    boolean exact = ofNullable(exeConfig.min_stage)
+        .map(value -> value.startsWith("=")).orElse(false);
+    return exact ? query == config : query.compareTo(config) >= 0;
   }
 
   private static FeatureStage getFeatureMinStage() {
@@ -148,12 +161,6 @@ public class SequenceRunner {
         .map(value -> value.startsWith("=") ? value.substring(1) : value)
         .map(FeatureStage::valueOf).orElse(DEFAULT_MIN_STAGE);
     return minStage;
-  }
-
-  public static boolean processStage(FeatureStage query, FeatureStage config) {
-    boolean exact = ofNullable(exeConfig.min_stage)
-        .map(value -> value.startsWith("=")).orElse(false);
-    return exact ? query == config : query.compareTo(config) >= 0;
   }
 
   static ExecutionConfiguration ensureExecutionConfig() {
