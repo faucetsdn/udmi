@@ -117,3 +117,12 @@ echo pubber/bin/run $pubber_config
 pubber/bin/run $pubber_config
 
 echo Successful pubber check passed on clean registry.
+
+if [[ -n $UDMI_ALT_REGISTRY ]]; then
+    echo Registering alt registry...
+    site_file=$site_arg/cloud_iot_config.json
+    cp $site_file $site_file-tmp
+    jq ".registry_id = \"$UDMI_ALT_REGISTRY\"" $site_file-tmp > $site_file
+    bin/registrar $site_arg $registrar_project -u
+    mv $site_file-tmp $site_file
+fi

@@ -162,9 +162,9 @@ jobs:
         if: ${{ always() }}
         run: |
           echo ============ out/schemas.out
-          cat out/schemas.out || true
+          more out*/schemas*.out || true
           echo ============ find RESULT.log
-          find sites/udmi_site_model/out/devices/ -name RESULT.log | xargs fgrep -i schema
+          find sites/udmi_site_model/out*/devices/ -name RESULT.log | xargs fgrep -i schema || true
       - name: pubber logs
         if: ${{ always() }}
         run: more out/pubber.out* pubber/out/*/*.json || true
