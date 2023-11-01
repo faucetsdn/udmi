@@ -228,7 +228,7 @@ jobs:
           find . -type f | sort | xargs more | cat
       - name: nostate sequences
         if: ${{ always() }}
-        run: bin/test_sequencer clean alpha nostate full $TARGET_PROJECT
+        run: bin/test_sequencer clean nostate full $TARGET_PROJECT
       - name: support bundle
         if: ${{ always() }}
         run: |
