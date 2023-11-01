@@ -288,8 +288,10 @@ public class Registrar {
 
   private void createRegistries() {
     if (createRegistries == 0) {
+      System.err.printf("Creating base registry...%n");
       createRegistrySuffix("");
     } else {
+      System.err.printf("Creating %d registries...%n", createRegistries);
       String createFormat = "_%0" + format("%d", createRegistries - 1).length() + "d";
       for (int i = 0; i < createRegistries; i++) {
         createRegistrySuffix(format(createFormat, i));
