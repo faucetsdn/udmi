@@ -23,7 +23,7 @@ echo "export UDMI_ALT_REGISTRY=$UDMI_ALT_REGISTRY"
 site_path=sites/udmi_site_model
 output_file=$site_path/out/registration_summary.json
 pubber_config=/tmp/pubber_config.json
-serial_no=$RANDOM
+serial_no=clean-$RANDOM
 device_id=AHU-1
 
 pubber/bin/build
