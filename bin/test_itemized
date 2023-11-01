@@ -35,7 +35,7 @@ touch $RESULTS_OUT $SEQUENCER_OUT $PUBBER_OUT $SCHEMA_OUT $AUGMENT_OPTS
 pubber/bin/build
 validator/bin/build
 
-test_index=0
+test_index=-1
 while read -u 7 action test_name remainder; do
     if [[ $action == TEST && -n $TARGET_TEST && $TARGET_TEST != $test_name ]]; then
         continue
@@ -43,21 +43,23 @@ while read -u 7 action test_name remainder; do
 
     if [[ $action == WITH ]]; then
         echo $test_name $remainder > $AUGMENT_OPTS
+        continue
     elif [[ -z $action || $action =~ ^# ]]; then
-        true # skip blank lines and comments
+        continue
     elif [[ $action != TEST ]]; then
         echo Unknown test action $action
         false
     fi
 
-    pubber_opts=${remainder/RESULT*/}
-
-    echo -n "$action $test_name $pubber_opts" >> $RESULTS_OUT
-
-    if [[ $action != TEST ]]; then
-        echo >> $RESULTS_OUT
+    ((test_index++)) || true
+    if [[ -z $MATRIX_SHARD_COUNT || $((test_index % MATRIX_SHARD_COUNT)) == $MATRIX_SHARD_INDEX ]]; then
+        echo Executing shard test index $test_index
+    else
+        echo Skipping non-shard test index $test_index
         continue
     fi
+
+    pubber_opts=${remainder/RESULT*/}
 
     echo itemized test $test_name $pubber_opts [$(< $AUGMENT_OPTS)]
 
@@ -97,7 +99,6 @@ while read -u 7 action test_name remainder; do
     result=$(grep -E -m 1 "RESULT [a-z]+ [a-z.]+ $test_name " $SEQUENCER_OUT)
     echo ${result/* NOTICE RESULT/RESULT} >> $RESULTS_OUT
 
-    ((++test_index))
     mv $PUBBER_OUT $PUBBER_OUT-$(printf %02d $test_index)
     mv $SEQUENCER_OUT $SEQUENCER_OUT-$(printf %02d $test_index)
 
@@ -108,7 +109,7 @@ while read -u 7 action test_name remainder; do
 
 done 7< $GOLDEN_FILE
 
-if [[ -z $TARGET_TEST ]]; then
+if [[ -z $TARGET_TEST -a -z $MATRIX_SHARD_COUNT ]]; then
     echo Comparing diff $RESULTS_OUT $GOLDEN_FILE
     diff -bu $RESULTS_OUT $GOLDEN_FILE
 
