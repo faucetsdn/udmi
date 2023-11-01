@@ -255,9 +255,9 @@ public class Pubber {
    * Start an instance from explicit args.
    *
    * @param iotProject GCP project
-   * @param sitePath  Path to site_model
-   * @param deviceId  Device ID to emulate
-   * @param serialNo  Serial number of the device
+   * @param sitePath   Path to site_model
+   * @param deviceId   Device ID to emulate
+   * @param serialNo   Serial number of the device
    */
   public Pubber(String iotProject, String sitePath, String deviceId, String serialNo) {
     this.deviceId = deviceId;
@@ -703,7 +703,8 @@ public class Pubber {
   private void checkSmokyFailure() {
     if (isTrue(configuration.options.smokeCheck)
         && Instant.now().minus(SMOKE_CHECK_TIME).isAfter(deviceStartTime.toInstant())) {
-      error(format("Smoke check failed after %s, terminating run.", SMOKE_CHECK_TIME));
+      error(format("Smoke check failed after %sm, terminating run.",
+          SMOKE_CHECK_TIME.getSeconds() / 60));
       systemLifecycle(SystemMode.TERMINATE);
     }
   }
