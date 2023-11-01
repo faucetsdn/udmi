@@ -5,8 +5,8 @@ import static com.google.daq.mqtt.sequencer.SequenceBase.getSequencerStateFile;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
-import static joptsimple.internal.Strings.isNullOrEmpty;
 import static udmi.schema.FeatureEnumeration.FeatureStage.ALPHA;
+import static udmi.schema.FeatureEnumeration.FeatureStage.BETA;
 
 import com.google.common.base.Joiner;
 import com.google.daq.mqtt.WebServerRunner;
@@ -44,6 +44,7 @@ import udmi.schema.SequenceValidationState.SequenceResult;
  */
 public class SequenceRunner {
 
+  private static final FeatureStage DEFAULT_MIN_STAGE = BETA;
   private static final String DEFAULT_CONFIG = "/tmp/sequencer_config.json";
   private static final String CONFIG_ENV = "SEQUENCER_CONFIG";
   private static final String CONFIG_PATH =
@@ -138,13 +139,21 @@ public class SequenceRunner {
     return allTestResults;
   }
 
-  public static boolean processGiven(FeatureStage query, FeatureStage level) {
-    return query.compareTo(level) >= 0;
+  public static boolean processStage(FeatureStage query) {
+    return processStage(query, getFeatureMinStage());
   }
 
-  static FeatureStage getFeatureMinStage() {
-    String stage = exeConfig.min_stage;
-    return isNullOrEmpty(stage) ? SequenceBase.DEFAULT_MIN_STAGE : FeatureStage.valueOf(stage);
+  private static FeatureStage getFeatureMinStage() {
+    FeatureStage minStage = ofNullable(exeConfig.min_stage)
+        .map(value -> value.startsWith("=") ? value.substring(1) : value)
+        .map(FeatureStage::valueOf).orElse(DEFAULT_MIN_STAGE);
+    return minStage;
+  }
+
+  public static boolean processStage(FeatureStage query, FeatureStage config) {
+    boolean exact = ofNullable(exeConfig.min_stage)
+        .map(value -> value.startsWith("=")).orElse(false);
+    return exact ? query == config : query.compareTo(config) >= 0;
   }
 
   static ExecutionConfiguration ensureExecutionConfig() {
@@ -280,8 +289,7 @@ public class SequenceRunner {
       return true;
     }
     Feature annotation = method.getAnnotation(Feature.class);
-    FeatureStage stage = annotation == null ? Feature.DEFAULT_STAGE : annotation.stage();
-    return processGiven(stage, getFeatureMinStage());
+    return processStage(annotation == null ? Feature.DEFAULT_STAGE : annotation.stage());
   }
 
   public void setTargets(List<String> targets) {

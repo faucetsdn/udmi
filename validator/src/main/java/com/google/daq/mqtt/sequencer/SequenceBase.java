@@ -3,7 +3,6 @@ package com.google.daq.mqtt.sequencer;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
 import static com.google.daq.mqtt.util.IotReflectorClient.REFLECTOR_PREFIX;
 import static com.google.daq.mqtt.validator.Validator.CONFIG_PREFIX;
@@ -37,7 +36,6 @@ import static udmi.schema.Bucket.UNKNOWN_DEFAULT;
 import static udmi.schema.Category.VALIDATION_FEATURE_SCHEMA;
 import static udmi.schema.Category.VALIDATION_FEATURE_SEQUENCE;
 import static udmi.schema.FeatureEnumeration.FeatureStage.ALPHA;
-import static udmi.schema.FeatureEnumeration.FeatureStage.BETA;
 import static udmi.schema.FeatureEnumeration.FeatureStage.PREVIEW;
 import static udmi.schema.FeatureEnumeration.FeatureStage.STABLE;
 import static udmi.schema.Level.ERROR;
@@ -142,7 +140,6 @@ public class SequenceBase {
   public static final String SYSTEM_STATUS_MESSAGE = "interesting system status";
   public static final String HAS_STATUS_PREFIX = "has ";
   public static final String NOT_STATUS_PREFIX = "no ";
-  static final FeatureStage DEFAULT_MIN_STAGE = BETA;
   private static final int FUNCTIONS_VERSION_BETA = 10;
   private static final int FUNCTIONS_VERSION_ALPHA = FUNCTIONS_VERSION_BETA;
   private static final long CONFIG_BARRIER_MS = 1000;
@@ -362,10 +359,7 @@ public class SequenceBase {
   }
 
   private static int getRequiredFunctionsVersion() {
-    FeatureStage minStage = isNullOrEmpty(exeConfig.min_stage) ? DEFAULT_MIN_STAGE
-        : FeatureStage.valueOf(exeConfig.min_stage);
-    return SequenceRunner.processGiven(ALPHA, minStage) ? FUNCTIONS_VERSION_ALPHA
-        : FUNCTIONS_VERSION_BETA;
+    return SequenceRunner.processStage(ALPHA) ? FUNCTIONS_VERSION_ALPHA : FUNCTIONS_VERSION_BETA;
   }
 
   static void resetState() {

@@ -8,7 +8,6 @@ cd $ROOT_DIR
 
 debug_opts=-v
 seq_opts=
-alpha_mode=
 clean_cache=
 pubber_opts=
 suffix=
@@ -21,9 +20,7 @@ fi
 
 if [[ $1 == 'alpha' ]]; then
     shift
-    # TODO: Make mode where it only runs tests that don't have results.
-    seq_opts=-a
-    alpha_mode=y
+    seq_opts=-x
 fi
 
 if [[ $1 == 'nostate' ]]; then

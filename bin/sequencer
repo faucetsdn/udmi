@@ -23,6 +23,8 @@ rm -f $TEST_LOG $SCHEMA_OUT
 while [[ $1 =~ ^- ]]; do
     if [[ $1 == '-a' ]]; then
         min_stage=ALPHA
+    elif [[ $1 == '-x' ]]; then
+        min_stage="=ALPHA"
     elif [[ $1 == '-v' ]]; then
         log_level=DEBUG
     elif [[ $1 == '-vv' ]]; then
@@ -35,7 +37,7 @@ while [[ $1 =~ ^- ]]; do
 done
 
 if [[ $# == 0 ]]; then
-    usage [-v] [-vv] [-a] SITE_MODEL PROJECT_ID DEVICE_ID [SERIAL_NO] [TEST_NAMES...]
+    usage [-v] [-vv] [-a] [-x] SITE_MODEL PROJECT_ID DEVICE_ID [SERIAL_NO] [TEST_NAMES...]
 fi
 
 site_path=$(realpath $1)
