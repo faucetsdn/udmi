@@ -119,5 +119,7 @@ if [[ -z $TARGET_TEST && -z $MATRIX_SHARD_COUNT ]]; then
     uniq < $SCHEMA_OUT | sponge $SCHEMA_OUT
     diff -bu $SCHEMA_OUT $GOLDEN_SCHEMAS
 else
-    echo Skipping itemized test verification.
+    echo Archiving $site_path/out to $site_path/out-itm
+    rm -rf $site_path/out-itm/
+    mv site_path/out/ $site_path/out-itm/
 fi

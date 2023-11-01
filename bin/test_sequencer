@@ -128,6 +128,9 @@ fi
 if [[ -n $clean_cache ]]; then
     echo Cleaning sequencer result cache...
     rm -rf validator/sequences
+
+    echo Cleaning sequencer out archive...
+    rm -rf $site_path/out-seq
 fi
 
 if [[ -n $suffix ]]; then
@@ -136,6 +139,9 @@ fi
 
 if [[ -n $out_check ]]; then
     bin/test_sequcheck $suffix
+else
+    echo Archiving $site_path/out to $site_path/out-seq
+    rsync -ah site_path/out/ $site_path/out-seq/
 fi
 
 echo Done with base test_sequencer run.

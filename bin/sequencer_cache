@@ -14,12 +14,15 @@
 # focusing on providing stability for bin/gencode_seq when needed.
 #
 
+RUNDIR=$PWD
 ROOT_DIR=$(realpath $(dirname $0)/..)
 cd $ROOT_DIR
-TEST_LIST=out/sequencer_tests.txt
-RESULT_OUT=out/sequencer.out
+
+mkdir -p $RUNDIR/out
+TEST_LIST=$RUNDIR/out/sequencer_tests.txt
+RESULT_OUT=$RUNDIR/out/sequencer.out
 CACHE_ROOT=validator/sequences
-TEST_ROOT=sites/udmi_site_model/out/devices/AHU-1
+TEST_ROOT=$RUNDIR/sites/udmi_site_model/out/devices/AHU-1
 
 # Fix sort order difference on different platforms.
 export LC_ALL=C
