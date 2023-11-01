@@ -137,9 +137,11 @@ jobs:
       - name: registrar clean
         run: bin/test_regclean $TARGET_PROJECT
       - name: sequence tests clean
-        run: bin/test_sequencer clean $TARGET_PROJECT
+        run: bin/test_sequencer $TARGET_PROJECT
       - name: sequence tests alpha
         run: bin/test_sequencer alpha $TARGET_PROJECT
+      - name: validate sequencer cache archive
+        run: bin/sequencer_cache -x
       - name: sequence test timing
         if: ${{ always() }}
         run: fgrep ' ending test ' out/sequencer.log
@@ -204,6 +206,8 @@ jobs:
         run: bin/test_sequencer clean $TARGET_PROJECT
       - name: sequence tests alpha
         run: bin/test_sequencer alpha $TARGET_PROJECT
+      - name: validate sequencer cache archive
+        run: bin/sequencer_cache -x
       - name: sequence test timing
         if: ${{ always() }}
         run: fgrep ' ending test ' out/sequencer.log

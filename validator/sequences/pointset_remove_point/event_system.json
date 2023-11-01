@@ -1,36 +1,26 @@
 {
   "event_count" : 56,
-  "last_config" : "2023-07-28T20:33:22Z",
+  "last_config" : "2023-10-28T13:38:06Z",
   "logentries" : [ {
-    "message" : "update state 2023-07-28T20:33:22Z last_config 2023-07-28T20:33:13Z",
+    "message" : "update state 2023-10-28T13:38:06Z last_config 2023-10-28T13:38:06Z",
     "category" : "device.log",
-    "timestamp" : "2023-07-28T20:33:22Z",
-    "level" : 200
-  }, {
-    "message" : "Config handler",
-    "category" : "device.log",
-    "timestamp" : "2023-07-28T20:33:22Z",
-    "level" : 200
-  }, {
-    "message" : "2023-07-28T20:33:22Z received config 2023-07-28T20:33:22Z",
-    "category" : "device.log",
-    "timestamp" : "2023-07-28T20:33:22Z",
+    "timestamp" : "2023-10-28T13:38:06Z",
     "level" : 200
   }, {
     "message" : "success",
     "category" : "system.config.apply",
-    "timestamp" : "2023-07-28T20:33:22Z",
+    "timestamp" : "2023-10-28T13:38:06Z",
     "level" : 300
   }, {
-    "message" : "update state 2023-07-28T20:33:24Z last_config 2023-07-28T20:33:22Z",
+    "message" : "update state 2023-10-28T13:38:08Z last_config 2023-10-28T13:38:06Z",
     "category" : "device.log",
-    "timestamp" : "2023-07-28T20:33:24Z",
+    "timestamp" : "2023-10-28T13:38:08Z",
     "level" : 200
   } ],
   "metrics" : {
-    "mem_total_mb" : 250.0,
-    "mem_free_mb" : 194.7124481201172
+    "mem_total_mb" : 112.0,
+    "mem_free_mb" : 63.290672302246094
   },
-  "timestamp" : "2023-07-28T20:33:31Z",
-  "version" : "1.4.1"
+  "timestamp" : "2023-10-28T13:38:15Z",
+  "version" : "1.4.2"
 }
