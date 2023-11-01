@@ -701,8 +701,8 @@ public class Pubber {
   }
 
   private void checkSmokyFailure() {
-    if (isTrue(configuration.options.smokeCheck) &&
-        Instant.now().minus(SMOKE_CHECK_TIME).isAfter(deviceStartTime.toInstant())) {
+    if (isTrue(configuration.options.smokeCheck)
+        && Instant.now().minus(SMOKE_CHECK_TIME).isAfter(deviceStartTime.toInstant())) {
       error(format("Smoke check failed after %s, terminating run.", SMOKE_CHECK_TIME));
       systemLifecycle(SystemMode.TERMINATE);
     }
