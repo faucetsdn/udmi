@@ -173,9 +173,11 @@ if [[ $(wc -l < $SEQUENCER_RES) -eq 0 ]]; then
     exit 1
 fi
 
-# Sort by test name (4th field)
+# Sort by test name (3th field)
 fgrep RESULT $site_model/out/devices/$device_id/RESULT.log | \
     fgrep ' schemas ' | sort -k 3 | tee $SCHEMA_OUT
+echo TAP $site_model/out/devices/$device_id/RESULT.log $SCHEMA_OUT
+more $site_model/out/devices/$device_id/RESULT.log $SCHEMA_OUT | cat
 
 (source venv/bin/activate && bin/sequencer_report $site_model $device_id)
 

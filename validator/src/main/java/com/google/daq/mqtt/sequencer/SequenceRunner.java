@@ -274,21 +274,15 @@ public class SequenceRunner {
     int base = SHARD_LIST.indexOf(method);
     boolean alreadyPresent = base >= 0;
     int index = alreadyPresent ? base : (SHARD_LIST.add(method) ? SHARD_LIST.size() - 1 : -1);
-    System.err.printf("Method %s is at shard index %d %% %d == %d %n", method, index,
-        exeConfig.shard_count, exeConfig.shard_index);
     return targets.contains(method) || (index % exeConfig.shard_count) == exeConfig.shard_index;
   }
 
   private List<String> getRunMethods(Class<?> clazz) {
-    System.err.println("Processing run methods for class " + clazz.getSimpleName());
-
     List<String> methods = Arrays.stream(clazz.getMethods()).filter(this::isTestMethod)
         .filter(this::shouldProcessMethod).map(Method::getName).toList();
 
     // Pre-process the entire list for shard stability independent of any other filtering.
     methods.stream().sorted().forEach(this::shouldShardMethod);
-
-    System.err.println("Filtered candidate methods: " + CSV_JOINER.join(SHARD_LIST));
 
     return methods.stream().filter(this::shouldShardMethod).filter(this::isTargetMethod).toList();
   }
