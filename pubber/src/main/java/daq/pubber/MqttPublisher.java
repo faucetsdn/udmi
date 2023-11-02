@@ -2,6 +2,7 @@ package daq.pubber;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.udmi.util.GeneralUtils.isTrue;
+import static java.lang.String.format;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -163,7 +164,7 @@ public class MqttPublisher implements Publisher {
       String timestamp = (String) mapped.get("timestamp");
       int serialNo = EVENT_SERIAL
           .computeIfAbsent(topic, key -> new AtomicInteger()).incrementAndGet();
-      mapped.put("timestamp", timestamp.replace("Z", String.format(".%03dZ", serialNo % 1000)));
+      mapped.put("timestamp", timestamp.replace("Z", format(".%03dZ", serialNo % 1000)));
       return mapped;
     } catch (Exception e) {
       throw new RuntimeException("While decorating message", e);
@@ -186,7 +187,7 @@ public class MqttPublisher implements Publisher {
       }
     } catch (Exception e) {
       errorCounter.incrementAndGet();
-      warn(String.format("Publish failed for %s: %s", deviceId, e));
+      warn(format("Publish failed for %s: %s", deviceId, e));
       if (configuration.gatewayId == null) {
         closeMqttClient(deviceId);
         if (mqttClients.isEmpty()) {
@@ -201,7 +202,7 @@ public class MqttPublisher implements Publisher {
 
   private String getMessageTopic(String deviceId, String topic) {
     return
-        topicPrefixMap.computeIfAbsent(deviceId, key -> String.format(TOPIC_PREFIX_FMT, deviceId))
+        topicPrefixMap.computeIfAbsent(deviceId, key -> format(TOPIC_PREFIX_FMT, deviceId))
             + "/" + topic;
   }
 
@@ -405,7 +406,7 @@ public class MqttPublisher implements Publisher {
     // Build the connection string for Google's Cloud IoT MQTT server. Only SSL connections are
     // accepted. For server authentication, the JVM's root certificates are used.
     Transport trans = Optional.ofNullable(configuration.endpoint.transport).orElse(Transport.SSL);
-    return String.format(BROKER_URL_FORMAT, trans, configuration.endpoint.hostname,
+    return format(BROKER_URL_FORMAT, trans, configuration.endpoint.hostname,
         configuration.endpoint.port);
   }
 
@@ -418,13 +419,12 @@ public class MqttPublisher implements Publisher {
     } else {
       subscribeTopic(client, configuration.endpoint.recv_id, configQos);
     }
-
-    info("Updates subscribed, with config QOS " + configQos);
   }
 
   private void subscribeTopic(MqttClient client, String updateTopic, int mqttQos) {
     try {
       client.subscribe(updateTopic, mqttQos);
+      info(format("Subscribed to mqtt topic %s (qos %d)", updateTopic, mqttQos));
     } catch (MqttException e) {
       throw new RuntimeException("While subscribing to MQTT topic " + updateTopic, e);
     }
@@ -455,7 +455,7 @@ public class MqttPublisher implements Publisher {
   }
 
   private String getHandlerKey(String topic) {
-    return String.format(HANDLER_KEY_FORMAT, registryId, topic);
+    return format(HANDLER_KEY_FORMAT, registryId, topic);
   }
 
   private String getMessageType(String topic) {
