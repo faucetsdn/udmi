@@ -3,7 +3,7 @@
 archive=$1
 shift
 
-sites_in=sites/udmi_site_model_*/out-seq
+sites_in=sites/udmi_site_model_*/
 sites_out=sites/udmi_site_model/out
 
 rm -rf out $sites_out
@@ -13,9 +13,9 @@ rm -f *_udmi-support_*.tgz
 unzip -o $archive
 ls *sequencer*.tgz | xargs -n 1 tar -xzf
 
-find $sites_in -name out-seq -exec rsync -ah {} $sites_out \;
+find $sites_in -name out-seq -print -exec rsync -ah {}/ $sites_out/ \;
 
-src_count=$(find $sites_in -name sequence.md | wc -l)
+src_count=$(find $sites_in/out-seq -name sequence.md | wc -l)
 dst_count=$(find $sites_out -name sequence.md | wc -l)
 
 if [[ $src_count != $dst_count ]]; then
