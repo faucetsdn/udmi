@@ -60,7 +60,11 @@ device_id=AHU-1
 output_file=$site_path/out/sequencer_$device_id.json
 device_out_base=$site_path/out/devices/$device_id
 test_out_base=$device_out_base/tests
-rm -rf $test_out_base
+
+if [[ -n clean_cache ]]; then
+    rm -rf out $test_out_base
+fi
+
 mkdir -p $test_out_base out/
 
 serial_no=sequencer-$RANDOM
@@ -121,6 +125,11 @@ else
     echo No pubber pids found, likely due to premature termination: failing test run.
     false
 fi
+
+cat out/schema.out >> out/schema.out.combined
+cp out/schema.out.combined out/schema.out
+cat out/sequencer.log >> out/sequencer.log.combined
+cp out/sequencer.log.combined out/sequencer.log
 
 if [[ -n $out_check ]]; then
     if [[ -n $clean_cache ]]; then
