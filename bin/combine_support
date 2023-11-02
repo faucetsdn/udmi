@@ -1,10 +1,13 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 
 archive=$1
 shift
 
 sites_in=sites/udmi_site_model_*/
 sites_out=sites/udmi_site_model/out
+archive_dir=${archive%/}
+archive_dir=${archive_dir%.zip}
+archive_dir=${archive_dir##*/}
 
 rm -rf out_* $sites_in
 rm -f *_udmi-support_*.tgz
@@ -12,8 +15,13 @@ rm -f *_udmi-support_*.tgz
 rm -rf out $sites_out
 mkdir -p out $sites_out
 
-unzip -o $archive
-ls *sequencer*.tgz | xargs -n 1 tar -xzf
+if [[ -f $archive ]]; then
+    echo Extracting archive to $archive_dir
+    unzip -o $archive -d $archive_dir
+fi
+
+ls -l $archive_dir/
+ls $archive_dir/*sequencer*.tgz | xargs -n 1 tar -xzf
 
 find $sites_in -name out-seq -print -exec rsync -ah {}/ $sites_out/ \;
 
