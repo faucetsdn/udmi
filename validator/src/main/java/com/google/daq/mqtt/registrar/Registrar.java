@@ -93,7 +93,7 @@ public class Registrar {
   private static final String CONFIG_SUB_TYPE = "config";
   private static final String MODEL_SUB_TYPE = "model";
   private static final boolean DEFAULT_BLOCK_UNKNOWN = true;
-  private static final int EACH_ITEM_TIMEOUT_SEC = 10;
+  private static final int EACH_ITEM_TIMEOUT_SEC = 30;
   private static final int EXIT_CODE_ERROR = 1;
   private final Map<String, JsonSchema> schemas = new HashMap<>();
   private final String generation = getGenerationString();
@@ -120,7 +120,7 @@ public class Registrar {
   private boolean deleteDevices;
   private IotProvider iotProvider;
   private File profile;
-  private int runnerThreads = 20;
+  private int runnerThreads = 5;
 
   /**
    * Main entry point for registrar.
