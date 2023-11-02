@@ -86,9 +86,7 @@ public class ReflectProcessor extends ProcessorBase {
     if (lastConfig == null || lastConfigAck == null) {
       return false;
     }
-    // The ClearBlade implementation is currently slow to apply the last-config-ack time, so fudge.
-    Date configAck = Date.from(lastConfig.toInstant().plus(CONFIG_ACK_FUDGE));
-    return lastConfig.after(START_TIME) && !configAck.before(lastConfig);
+    return lastConfig.after(START_TIME) && !lastConfigAck.before(lastConfig);
   }
 
   private Envelope extractMessageEnvelope(Object message) {
