@@ -2,6 +2,7 @@ package com.google.daq.mqtt.sequencer;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.sequencer.SequenceBase.getSequencerStateFile;
+import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static java.lang.String.format;
@@ -14,6 +15,7 @@ import com.google.daq.mqtt.WebServerRunner;
 import com.google.daq.mqtt.sequencer.sequences.ConfigSequences;
 import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.udmi.util.Common;
+import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.SiteModel;
 import com.google.udmi.util.SiteModel.MetadataException;
 import java.io.File;
@@ -276,10 +278,14 @@ public class SequenceRunner {
   }
 
   private List<String> getRunMethods(Class<?> clazz) {
+    System.err.println("Processing run methods for class " + clazz.getSimpleName());
+
     List<Method> methods = Arrays.asList(clazz.getMethods());
 
     // Pre-process the entire list for shard stability independent of any other filtering.
     methods.stream().map(Method::getName).sorted().filter(this::shouldShardMethod);
+
+    System.err.println("Filtered target methods: " + CSV_JOINER.join(SHARD_LIST));
 
     return methods.stream()
         .filter(this::shouldProcessMethod).map(Method::getName)
