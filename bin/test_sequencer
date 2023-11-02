@@ -6,6 +6,10 @@ export LC_ALL=C
 ROOT_DIR=$(dirname $0)/..
 cd $ROOT_DIR
 
+echo TAP debug
+ls -l out/ || true
+echo
+
 debug_opts=-v
 seq_opts=
 clean_cache=
@@ -62,10 +66,15 @@ device_out_base=$site_path/out/devices/$device_id
 test_out_base=$device_out_base/tests
 
 if [[ -n clean_cache ]]; then
-    rm -rf out $test_out_base
+    echo Cleaning out/ $test_out_base/
+    rm -rf out/ $test_out_base/
 fi
 
 mkdir -p $test_out_base out/
+
+echo TAP debug
+ls -l out/ || true
+echo
 
 serial_no=sequencer-$RANDOM
 echo Using pubber with serial $serial_no
@@ -125,6 +134,10 @@ else
     echo No pubber pids found, likely due to premature termination: failing test run.
     false
 fi
+
+echo TAP debug
+ls -l out/ || true
+echo
 
 ls -l out/schema.out* out/sequencer.log* || true
 
