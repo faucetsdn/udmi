@@ -633,7 +633,8 @@ public class Validator {
           }
           long between = Duration.between(publishTime, timestamp).getSeconds();
           if (between > TIMESTAMP_JITTER_SEC || between < -TIMESTAMP_JITTER_SEC) {
-            throw new RuntimeException(format("Timestamp jitter %ds (%s to %s) exceeds %ds threshold",
+            throw new RuntimeException(format(
+                "Timestamp jitter %ds (%s to %s) exceeds %ds threshold",
                 between, publishRaw, timestampRaw, TIMESTAMP_JITTER_SEC));
           }
         }
