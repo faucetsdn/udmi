@@ -231,6 +231,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     cloudModel.blocked = device.isBlocked();
     cloudModel.metadata = device.getMetadata();
     cloudModel.last_event_time = getSafeDate(device.getLastEventTime());
+    cloudModel.last_config_ack = getSafeDate(device.getLastConfigAckTime());
     cloudModel.is_gateway = ifNotNullGet(device.getGatewayConfig(),
         config -> GatewayType.GATEWAY == config.getGatewayType());
     cloudModel.credentials = convertIot(device.getCredentials());

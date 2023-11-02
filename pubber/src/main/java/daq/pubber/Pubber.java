@@ -766,15 +766,17 @@ public class Pubber {
     Operation operation = ofNullable(system.operation).orElseGet(Operation::new);
     SystemMode configMode = operation.mode;
     SystemMode stateMode = deviceState.system.operation.mode;
-    debug(format("operation.mode state=%s / config=%s", stateMode, configMode));
+
     if (SystemMode.ACTIVE.equals(stateMode)
         && SystemMode.RESTART.equals(configMode)) {
       systemLifecycle(SystemMode.RESTART);
     }
+
     if (SystemMode.ACTIVE.equals(configMode)) {
       deviceState.system.operation.mode = SystemMode.ACTIVE;
       markStateDirty();
     }
+
     Date configLastStart = operation.last_start;
     if (configLastStart != null) {
       if (deviceStartTime.before(configLastStart)) {
