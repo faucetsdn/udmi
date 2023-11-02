@@ -4,7 +4,6 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.sequencer.SequenceBase.getSequencerStateFile;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
-import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static udmi.schema.FeatureEnumeration.FeatureStage.ALPHA;
@@ -15,7 +14,6 @@ import com.google.daq.mqtt.WebServerRunner;
 import com.google.daq.mqtt.sequencer.sequences.ConfigSequences;
 import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.udmi.util.Common;
-import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.SiteModel;
 import com.google.udmi.util.SiteModel.MetadataException;
 import java.io.File;
@@ -32,7 +30,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.jetbrains.annotations.TestOnly;
 import org.junit.Test;
 import org.junit.runner.JUnitCore;
@@ -147,7 +144,7 @@ public class SequenceRunner {
   /**
    * Check if a particular feature stage should be processed given the configured level.
    *
-   * @param query  stage to check
+   * @param query stage to check
    */
   public static boolean processStage(FeatureStage query) {
     return processStage(query, getFeatureMinStage());
@@ -285,17 +282,15 @@ public class SequenceRunner {
   private List<String> getRunMethods(Class<?> clazz) {
     System.err.println("Processing run methods for class " + clazz.getSimpleName());
 
-    List<Method> methods = Arrays.stream(clazz.getMethods()).filter(this::isTestMethod).toList();
+    List<String> methods = Arrays.stream(clazz.getMethods()).filter(this::isTestMethod)
+        .filter(this::shouldProcessMethod).map(Method::getName).toList();
 
     // Pre-process the entire list for shard stability independent of any other filtering.
-    methods.stream().map(Method::getName).sorted().forEach(this::shouldShardMethod);
+    methods.stream().sorted().forEach(this::shouldShardMethod);
 
-    System.err.println("Filtered target methods: " + CSV_JOINER.join(SHARD_LIST));
+    System.err.println("Filtered candidate methods: " + CSV_JOINER.join(SHARD_LIST));
 
-    return methods.stream()
-        .filter(this::shouldProcessMethod).map(Method::getName)
-        .filter(this::shouldShardMethod).filter(this::isTargetMethod)
-        .sorted().collect(Collectors.toList());
+    return methods.stream().filter(this::shouldShardMethod).filter(this::isTargetMethod).toList();
   }
 
   private boolean isTestMethod(Method method) {
