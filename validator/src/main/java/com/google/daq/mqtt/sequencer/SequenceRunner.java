@@ -3,6 +3,7 @@ package com.google.daq.mqtt.sequencer;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.sequencer.SequenceBase.getSequencerStateFile;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
+import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static udmi.schema.FeatureEnumeration.FeatureStage.ALPHA;
@@ -266,7 +267,10 @@ public class SequenceRunner {
 
   private boolean shouldShardMethod(String method) {
     int base = SHARD_LIST.indexOf(method);
-    int index = base >= 0 ? base : (SHARD_LIST.add(method) ? SHARD_LIST.size() - 1 : -1);
+    boolean alreadyPresent = base >= 0;
+    int index = alreadyPresent ? base : (SHARD_LIST.add(method) ? SHARD_LIST.size() - 1 : -1);
+    ifTrueThen(alreadyPresent,
+        () -> System.err.printf("Method %s is at shard index %d%n", method, index));
     return exeConfig.shard_count == null || targets.contains(method)
         || (index % exeConfig.shard_count) == exeConfig.shard_index;
   }
