@@ -269,8 +269,7 @@ public class SequenceRunner {
     int base = SHARD_LIST.indexOf(method);
     boolean alreadyPresent = base >= 0;
     int index = alreadyPresent ? base : (SHARD_LIST.add(method) ? SHARD_LIST.size() - 1 : -1);
-    ifTrueThen(alreadyPresent,
-        () -> System.err.printf("Method %s is at shard index %d%n", method, index));
+    System.err.printf("Method %s is at shard index %d%n", method, index);
     return exeConfig.shard_count == null || targets.contains(method)
         || (index % exeConfig.shard_count) == exeConfig.shard_index;
   }
