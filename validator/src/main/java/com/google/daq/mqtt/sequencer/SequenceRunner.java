@@ -279,7 +279,7 @@ public class SequenceRunner {
     List<Method> methods = Arrays.asList(clazz.getMethods());
 
     // Pre-process the entire list for shard stability independent of any other filtering.
-    methods.stream().map(Method::getName).filter(this::shouldShardMethod);
+    methods.stream().map(Method::getName).sorted().filter(this::shouldShardMethod);
 
     return methods.stream()
         .filter(this::shouldProcessMethod).map(Method::getName)
