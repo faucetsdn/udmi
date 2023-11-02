@@ -236,6 +236,7 @@ public class SequenceRunner {
       Class<?> clazz = Common.classForName(className);
       List<Request> requests = new ArrayList<>();
       List<String> runMethods = getRunMethods(clazz);
+      System.err.printf("Found target methods: %s%n", CSV_JOINER.join(runMethods));
       for (String method : runMethods) {
         System.err.println("Running target " + clazz.getName() + "#" + method);
         requests.add(Request.method(clazz, method));
@@ -269,12 +270,16 @@ public class SequenceRunner {
   }
 
   private boolean shouldShardMethod(String method) {
+    if (exeConfig.shard_count == null) {
+      return true;
+    }
+
     int base = SHARD_LIST.indexOf(method);
     boolean alreadyPresent = base >= 0;
     int index = alreadyPresent ? base : (SHARD_LIST.add(method) ? SHARD_LIST.size() - 1 : -1);
-    System.err.printf("Method %s is at shard index %d%n", method, index);
-    return exeConfig.shard_count == null || targets.contains(method)
-        || (index % exeConfig.shard_count) == exeConfig.shard_index;
+    System.err.printf("Method %s is at shard index %d %% %d == %d %n", method, index,
+        exeConfig.shard_count, exeConfig.shard_index);
+    return targets.contains(method) || (index % exeConfig.shard_count) == exeConfig.shard_index;
   }
 
   private List<String> getRunMethods(Class<?> clazz) {
