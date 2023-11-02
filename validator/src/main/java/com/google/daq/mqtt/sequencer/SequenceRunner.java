@@ -30,6 +30,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.jetbrains.annotations.TestOnly;
 import org.junit.Test;
 import org.junit.runner.JUnitCore;
@@ -275,7 +276,12 @@ public class SequenceRunner {
   }
 
   private List<String> getRunMethods(Class<?> clazz) {
-    return Arrays.stream(clazz.getMethods())
+    List<Method> methods = Arrays.asList(clazz.getMethods());
+
+    // Pre-process the entire list for shard stability independent of any other filtering.
+    methods.stream().map(Method::getName).filter(this::shouldShardMethod);
+
+    return methods.stream()
         .filter(this::shouldProcessMethod).map(Method::getName)
         .filter(this::shouldShardMethod).filter(this::isTargetMethod)
         .sorted().collect(Collectors.toList());

@@ -304,7 +304,6 @@ jobs:
       - name: sequencer validation
         run: bin/test_sequcheck
       - name: sequencer markdown report generator
-        if: ${{ always() }}
         run: |
           SAMPLE_TEST_ROW="| system | system_last_update | stable | pass | Sequence complete |"
           echo Checking for entry in generated results.md
