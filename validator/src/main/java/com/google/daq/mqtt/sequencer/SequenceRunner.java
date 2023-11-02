@@ -280,7 +280,7 @@ public class SequenceRunner {
   private List<String> getRunMethods(Class<?> clazz) {
     System.err.println("Processing run methods for class " + clazz.getSimpleName());
 
-    List<Method> methods = Arrays.asList(clazz.getMethods());
+    List<Method> methods = Arrays.stream(clazz.getMethods()).filter(this::isTestMethod).toList();
 
     // Pre-process the entire list for shard stability independent of any other filtering.
     methods.stream().map(Method::getName).sorted().forEach(this::shouldShardMethod);
@@ -291,6 +291,10 @@ public class SequenceRunner {
         .filter(this::shouldProcessMethod).map(Method::getName)
         .filter(this::shouldShardMethod).filter(this::isTargetMethod)
         .sorted().collect(Collectors.toList());
+  }
+
+  private boolean isTestMethod(Method method) {
+    return method.getAnnotation(Test.class) != null;
   }
 
   private boolean isTargetMethod(String methodName) {
