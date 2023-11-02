@@ -18,6 +18,9 @@ mkdir -p out $sites_out
 if [[ -f $archive ]]; then
     echo Extracting archive to $archive_dir
     unzip -o $archive -d $archive_dir
+elif [[ ! -d $archive ]]; then
+    echo Unknown archive file $archive
+    false
 fi
 
 ls -l $archive_dir/

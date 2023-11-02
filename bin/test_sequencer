@@ -126,6 +126,8 @@ else
     false
 fi
 
+ls -l out/schema.out* out/sequencer.log* || true
+
 cat out/schema.out >> out/schema.out.combined
 cp out/schema.out.combined out/schema.out
 cat out/sequencer.log >> out/sequencer.log.combined
