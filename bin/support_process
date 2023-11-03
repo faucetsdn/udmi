@@ -43,5 +43,7 @@ fi
 
 echo Restored $dst_count test output files to $sites_out
 
-cat out_*/schema.out.combined | sort > out/schema.out
+cat out_*/sequencer.out.combined | sort -k 4 > out/sequencer.out
+cat out_*/schema.out.combined | sort -k 4 > out/schema.out
+
 echo Restored combined schema.out files.
