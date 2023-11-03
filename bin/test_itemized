@@ -58,7 +58,7 @@ while read -u 7 action test_name pubber_opts; do
     fi
 
     ((test_index++)) || true
-    test_format=$(printf %02d $test_index)
+    test_marker=$(printf %02d $test_index)
     if [[ -z $MATRIX_SHARD_COUNT || $((test_index % MATRIX_SHARD_COUNT)) == $MATRIX_SHARD_INDEX ]]; then
         echo Executing shard test index $test_index
     else
@@ -102,15 +102,15 @@ while read -u 7 action test_name pubber_opts; do
     kill $(ps ax | fgrep pubber | fgrep java | awk '{print $1}') || true
 
     result=$(grep -E -m 1 "RESULT [a-z]+ [a-z.]+ $test_name " $SEQUENCER_RES)
-    echo $test_format ${result/* NOTICE RESULT/RESULT} >> $RESULTS_OUT
+    echo $test_marker ${result/* NOTICE RESULT/RESULT} >> $RESULTS_OUT
 
-    mv $PUBBER_OUT $PUBBER_OUT-$test_format
-    mv $SEQUENCER_RES $SEQUENCER_RES-$test_format
-    mv $SEQUENCER_LOG $SEQUENCER_LOG-$test_format
+    mv $PUBBER_OUT $PUBBER_OUT-$test_marker
+    mv $SEQUENCER_RES $SEQUENCER_RES-$test_marker
+    mv $SEQUENCER_LOG $SEQUENCER_LOG-$test_marker
 
     echo =========== $test_name >> $SCHEMA_OUT
     cat out/schema.out >> $SCHEMA_OUT
-    mv out/schema.out $SCHEMA_OUT-$test_format
+    mv out/schema.out $SCHEMA_OUT-$test_marker
 
     sleep 2
 

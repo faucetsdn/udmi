@@ -154,7 +154,7 @@ jobs:
         run: fgrep ' ending test ' out/sequencer.log
       - name: generated files
         if: ${{ always() }}
-        run: more out/sequencer.out out/generated.md || true
+        run: more out/sequencer.res out/generated.md || true
       - name: sequencer end state
         if: ${{ always() }}
         run: cat sites/udmi_site_model/out/sequencer_AHU-1.json || true
@@ -175,10 +175,10 @@ jobs:
         run: bin/test_itemized $TARGET_PROJECT
       - name: itemized output logs
         if: ${{ always() }}
-        run: more out/*_itemized.out out/sequencer.out-* out/pubber.out-* | cat
+        run: more out/*_itemized.out out/sequencer.res-* out/pubber.out-* | cat
       - name: itemized test timing
         if: ${{ always() }}
-        run: egrep ' test .* after .*s ' out/sequencer.out-*
+        run: egrep ' test .* after .*s ' out/sequencer.log-*
       - name: tool output logs
         if: ${{ always() }}
         run: more sites/udmi_site_model/out/*.json | cat
