@@ -63,7 +63,7 @@ for sequence in $to_add; do
     cat $seqfile >> $SEQUENCE_MD
 done
 
-mkdir -p out && cp $SEQUENCER_MD out/
+mkdir -p out && cp $SEQUENCE_MD out/
 
 echo
 echo Done with $SEQUENCE_MD generation.

@@ -295,11 +295,14 @@ jobs:
       - name: Sequencer validation
         run: bin/test_sequcheck
       - name: Generated Report
-        run: more docs/specs/sequences/generated.md
-      - name: sequencer markdown generated report
         run: |
-          # The reconstruction of the complete report.md file is broken, and currenlty only works for alpha tests.
-          # If this test is promoted, then either need to find another test or fix the reconstruction.
+          find . -name results.md | xargs ls -l
           SAMPLE_TEST_ROW="| discovery.scan | single_scan | alpha | pass | Sequence complete |"
           echo Checking for expected entry in generated results.md
           fgrep "$SAMPLE_TEST_ROW" sites/udmi_site_model_*/out-seq/devices/AHU-1/results.md
+      - uses: actions/upload-artifact@v3
+        if: ${{ always() }}
+        with:
+          if-no-files-found: error
+          name: udmi-support_${{ github.run_id }}
+          path: 'out/'
