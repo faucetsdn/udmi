@@ -3,7 +3,7 @@
 suffix=$1
 shift || true
 
-bin/sequencer_cache -u
+bin/sequencer_cache -t
 
 echo Comparing diff out/sequencer.out etc/sequencer${suffix}.out
 diff -u out/sequencer.out etc/sequencer${suffix}.out

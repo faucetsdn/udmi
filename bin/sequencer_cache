@@ -23,7 +23,7 @@ TEST_LIST=$RUNDIR/out/sequencer_tests.txt
 RESULT_OUT=$RUNDIR/out/sequencer.out
 CACHE_ROOT=validator/sequences
 TEST_ROOT=$RUNDIR/sites/udmi_site_model/out/devices/AHU-1
-ARCHIVE_ROOT=/tmp/validator/sequences
+ARCHIVE_ROOT=/tmp/$CACHE_ROOT
 
 # Fix sort order difference on different platforms.
 export LC_ALL=C
@@ -32,8 +32,9 @@ function usage(){
     echo "Usage: $0 [OPTION]"
     echo
     echo "-u Update sequencer cache from test root"
+    echo "-t Test sequencer cache against test root"
     echo "-a Archive sequencer cache"
-    echo "-x Validate archived sequencer cache against the test root"
+    echo "-x Validate archived sequencer cache against test root"
     echo "-i PATH Import sequencer cache from Github Actions artifact"
     exit 1
 }
@@ -42,13 +43,16 @@ if [[ $# == 0 ]]; then
     usage
 fi
 
-while getopts "i:aux" opt; do
+while getopts "i:auxt" opt; do
     case $opt in
         a)
             archive=1
             ;;
         u)
             update=1
+            ;;
+        t)
+            validate_saved=1
             ;;
         x)
             validate_archive=1
@@ -98,11 +102,26 @@ if [[ -n $update ]]; then
     echo Done with test cache update of $CACHE_ROOT, generated $RESULT_OUT
 fi
 
+if [[ -n $validate_saved ]]; then
+    echo Verifying sequencer cache against generated files
+    ls -1 $TEST_ROOT/tests/ \
+        | xargs -I% diff -u \
+            $TEST_ROOT/tests/%/sequence.md \
+            $CACHE_ROOT/%/sequence.md
+    root_count=$(ls -1 $TEST_ROOT/tests/ | wc -l)
+    cache_count=$(ls -1 $CACHE_ROOT/ | wc -l)
+    if [[ $root_count != $cache_count ]]; then
+        echo Test count mismatch, was $root_count expected $cache_count
+        false
+    fi
+    echo Verification successful for $root_count tests.
+fi
+
 if [[ -n $archive ]]; then
     echo Cleaning sequencer result cache...
     echo A backup can be found in $ARCHIVE_ROOT 
     rm -rf $ARCHIVE_ROOT && mkdir -p $ARCHIVE_ROOT
-    mv validator/sequences/* $ARCHIVE_ROOT
+    mv $CACHE_ROOT/* $ARCHIVE_ROOT
 fi 
 
 if [[ -n $validate_archive ]]; then

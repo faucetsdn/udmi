@@ -303,8 +303,6 @@ jobs:
         run: bin/support_process udmi-support_*
       - name: Sequencer validation
         run: bin/test_sequcheck
-      - name: Validate sequencer cache
-        run: bin/sequencer_cache -x
       - name: sequencer markdown report generator
         run: |
           # The reconstruction of the report.md file is broken, and currenlty only works for alpha tests.
