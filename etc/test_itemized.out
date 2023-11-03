@@ -1,3 +1,4 @@
+RESULT fail system device_config_acked BETA 5 timeout waiting for config acked
 RESULT fail pointset pointset_request_extraneous ALPHA 5 timeout waiting for pointset event contains correct points with present_value
 RESULT fail pointset pointset_remove_point ALPHA 5 timeout waiting for pointset state reports same points as defined in config
 RESULT fail pointset pointset_remove_point ALPHA 5 timeout waiting for no interesting system status

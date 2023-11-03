@@ -1,6 +1,7 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.daq.mqtt.util.TimePeriodConstants.ONE_MINUTE_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
@@ -23,8 +24,11 @@ import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.Summary;
 import com.google.daq.mqtt.sequencer.ValidateSchema;
+import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.TemporalAmount;
 import java.util.Date;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Test;
 import udmi.schema.Entry;
 import udmi.schema.Level;
@@ -38,6 +42,8 @@ public class ConfigSequences extends SequenceBase {
   private static final long CONFIG_THRESHOLD_SEC = 10;
   // Delay after receiving a parse error to ensure an apply entry has not been received.
   private static final long LOG_APPLY_DELAY_MS = 1000;
+  // How frequently to send out confg queries for device config acked check.
+  private static final Duration CONFIG_QUERY_INTERVAL = Duration.ofSeconds(30);
 
   @Test(timeout = ONE_MINUTE_MS)
   @Feature(stage = STABLE, bucket = SYSTEM, nostate = true)
@@ -87,7 +93,23 @@ public class ConfigSequences extends SequenceBase {
   @Feature(stage = BETA, bucket = SYSTEM)
   @Summary("Check that the device MQTT-acknowledges a sent config.")
   public void device_config_acked() {
-    untilTrue("config acked", () -> configAcked);
+    ifTrueSkipTest(catchToFalse(() -> !isNullOrEmpty(deviceMetadata.gateway.gateway_id)),
+        "No config check for proxy device");
+
+    // There's two separate delays that are accounted for here.
+    //   * Data to show up in the backend API, this can take on the order of ~1m
+    //   * Query/Reply to go out, hit the API, and return a reply.
+    // Solution is to keep checking for the reply, and only occasionally send out a query.
+
+    AtomicReference<Instant> lastQuerySent = new AtomicReference<>(Instant.ofEpochSecond(0));
+    untilTrue("config acked", () -> {
+      if (lastQuerySent.get().isBefore(Instant.now().minus(CONFIG_QUERY_INTERVAL))) {
+        debug("Sending device config acked device query...");
+        queryState();
+        lastQuerySent.set(Instant.now());
+      }
+      return configAcked;
+    });
   }
 
   @Test(timeout = TWO_MINUTES_MS)

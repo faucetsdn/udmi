@@ -63,6 +63,10 @@
       "type": "string",
       "format": "date-time"
     },
+    "last_config_ack": {
+      "type": "string",
+      "format": "date-time"
+    },
     "num_id": {
       "type": "string"
     },

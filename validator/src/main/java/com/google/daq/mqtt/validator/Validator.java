@@ -25,6 +25,8 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.JSON_SUFFIX;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
+import static com.google.udmi.util.JsonUtil.getTimestamp;
+import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -239,7 +241,7 @@ public class Validator {
                 processingMessage -> processingMessage.getLogLevel().compareTo(LogLevel.ERROR) >= 0)
             .map(Validator::convertMessage).collect(toImmutableList());
     return new ValidationException(
-        String.format("%d schema violations found", causingExceptions.size()), causingExceptions);
+        format("%d schema violations found", causingExceptions.size()), causingExceptions);
   }
 
   private static ValidationException convertMessage(ProcessingMessage processingMessage) {
@@ -631,7 +633,9 @@ public class Validator {
           }
           long between = Duration.between(publishTime, timestamp).getSeconds();
           if (between > TIMESTAMP_JITTER_SEC || between < -TIMESTAMP_JITTER_SEC) {
-            throw new RuntimeException("Timestamp jitter exceeds threshold: " + between);
+            throw new RuntimeException(format(
+                "Timestamp jitter %ds (%s to %s) exceeds %ds threshold",
+                between, publishRaw, timestampRaw, TIMESTAMP_JITTER_SEC));
           }
         }
       }
@@ -642,8 +646,7 @@ public class Validator {
 
     try {
       if (!schemaMap.containsKey(schemaName)) {
-        throw new IllegalArgumentException(
-            String.format(SCHEMA_SKIP_FORMAT, schemaName, deviceId));
+        throw new IllegalArgumentException(format(SCHEMA_SKIP_FORMAT, schemaName, deviceId));
       }
     } catch (Exception e) {
       System.err.println("Missing schema entry " + schemaName);
@@ -692,11 +695,10 @@ public class Validator {
       event.timestamp = new Date();
       String subFolder = origAttributes.get(SUBFOLDER_PROPERTY_KEY);
       event.sub_folder = subFolder;
-      event.sub_type = ofNullable(origAttributes.get(SUBTYPE_PROPERTY_KEY))
-          .orElse(UNKNOWN_TYPE_DEFAULT);
+      String subType = origAttributes.get(SUBTYPE_PROPERTY_KEY);
+      event.sub_type = ofNullable(subType).orElse(UNKNOWN_TYPE_DEFAULT);
       event.status = ReportingDevice.getSummaryEntry(reportingDevice.getMessageEntries());
-      String prefix = String.format("%s:",
-          typeFolderPairKey(origAttributes.get(SUBTYPE_PROPERTY_KEY), subFolder));
+      String prefix = format("%s:", typeFolderPairKey(subType, subFolder));
       event.errors = reportingDevice.getErrors(now, prefix);
       if (POINTSET_SUBFOLDER.equals(subFolder)) {
         PointsetSummary pointsSummary = new PointsetSummary();
@@ -734,7 +736,7 @@ public class Validator {
     AtomicInteger messageIndex = deviceMessageIndex.computeIfAbsent(deviceId,
         key -> new AtomicInteger());
     int index = messageIndex.incrementAndGet();
-    String filename = String.format("%03d_%s.json", index, typeFolderPairKey(type, folder));
+    String filename = format("%03d_%s.json", index, typeFolderPairKey(type, folder));
     File deviceDir = new File(traceDir, deviceId);
     File messageFile = new File(deviceDir, filename);
     try {
@@ -784,7 +786,7 @@ public class Validator {
 
     File deviceDir = makeDeviceDir(deviceId);
 
-    File messageFile = new File(deviceDir, String.format(MESSAGE_FILE_FORMAT, schemaName));
+    File messageFile = new File(deviceDir, format(MESSAGE_FILE_FORMAT, schemaName));
 
     // OBJECT_MAPPER can't handle an Exception class object, so do a swap-and-restore.
     Exception saved = (Exception) message.get(EXCEPTION_KEY);
@@ -792,12 +794,12 @@ public class Validator {
     OBJECT_MAPPER.writeValue(messageFile, message);
     message.put(EXCEPTION_KEY, saved);
 
-    File attributesFile = new File(deviceDir, String.format(ATTRIBUTE_FILE_FORMAT, schemaName));
+    File attributesFile = new File(deviceDir, format(ATTRIBUTE_FILE_FORMAT, schemaName));
     OBJECT_MAPPER.writeValue(attributesFile, attributes);
   }
 
   private File makeDeviceDir(String deviceId) {
-    File deviceDir = new File(outBaseDir, String.format(DEVICE_FILE_FORMAT, deviceId));
+    File deviceDir = new File(outBaseDir, format(DEVICE_FILE_FORMAT, deviceId));
     deviceDir.mkdirs();
     return deviceDir;
   }
@@ -913,13 +915,13 @@ public class Validator {
       throw new RuntimeException("Cowardly refusing to validate against zero targets");
     }
     ExceptionMap schemaExceptions =
-        new ExceptionMap(String.format(SCHEMA_VALIDATION_FORMAT, schemaFiles.size()));
+        new ExceptionMap(format(SCHEMA_VALIDATION_FORMAT, schemaFiles.size()));
     for (File schemaFile : schemaFiles) {
       try {
         JsonSchema schema = getSchema(schemaFile);
         String fileName = schemaFile.getName();
         ExceptionMap validateExceptions =
-            new ExceptionMap(String.format(TARGET_VALIDATION_FORMAT, targetFiles.size(), fileName));
+            new ExceptionMap(format(TARGET_VALIDATION_FORMAT, targetFiles.size(), fileName));
         for (File targetFile : targetFiles) {
           try {
             System.out.println(

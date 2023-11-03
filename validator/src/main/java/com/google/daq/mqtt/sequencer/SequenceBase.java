@@ -1530,7 +1530,10 @@ public class SequenceBase {
   private void updateConfigAcked(Map<String, Object> converted) {
     Object ackedResult = converted.remove("configAcked");
     boolean wasAcked = "true".equals(ackedResult) || Boolean.TRUE.equals(ackedResult);
-    ifNotTrueThen(wasAcked, () -> configAcked = true);
+    if (wasAcked && !configAcked) {
+      info("Received device configAcked");
+    }
+    ifTrueThen(wasAcked, () -> configAcked = true);
   }
 
   private String getExtraField(Map<String, Object> message) {

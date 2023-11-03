@@ -301,8 +301,10 @@ jobs:
         uses: actions/download-artifact@v3
       - name: Processing support package
         run: bin/support_process udmi-support_*
-      - name: sequencer validation
+      - name: Sequencer validation
         run: bin/test_sequcheck
+      - name: Validate sequencer cache
+        run: bin/sequencer_cache -x
       - name: sequencer markdown report generator
         run: |
           # The reconstruction of the report.md file is broken, and currenlty only works for alpha tests.

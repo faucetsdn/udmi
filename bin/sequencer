@@ -82,6 +82,8 @@ if ! bin/which_venv_pip3; then
     false
 fi
 
+source venv/bin/activate
+
 if [[ -d $site_path ]]; then
     echo Using site model directory $site_path
     site_model=$site_path
@@ -179,6 +181,6 @@ fgrep RESULT $site_model/out/devices/$device_id/RESULT.log | \
 echo TAP $site_model/out/devices/$device_id/RESULT.log $SCHEMA_OUT
 more $site_model/out/devices/$device_id/RESULT.log $SCHEMA_OUT | cat
 
-(source venv/bin/activate && bin/sequencer_report $site_model $device_id)
+bin/sequencer_report $site_model $device_id
 
 bin/check_version
