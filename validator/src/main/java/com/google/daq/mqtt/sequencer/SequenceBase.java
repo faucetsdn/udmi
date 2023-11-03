@@ -140,7 +140,7 @@ public class SequenceBase {
   public static final String SYSTEM_STATUS_MESSAGE = "interesting system status";
   public static final String HAS_STATUS_PREFIX = "has ";
   public static final String NOT_STATUS_PREFIX = "no ";
-  private static final int FUNCTIONS_VERSION_BETA = 10;
+  private static final int FUNCTIONS_VERSION_BETA = 11;
   private static final int FUNCTIONS_VERSION_ALPHA = FUNCTIONS_VERSION_BETA;
   private static final long CONFIG_BARRIER_MS = 1000;
   private static final String START_END_MARKER = "################################";

@@ -18,6 +18,7 @@ import static udmi.schema.CloudModel.Operation.BIND;
 
 import com.google.common.base.Preconditions;
 import com.google.daq.mqtt.util.MessagePublisher.QuerySpeed;
+import com.google.daq.mqtt.validator.Validator;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
@@ -47,7 +48,6 @@ public class IotReflectorClient implements IotProvider {
   public static final String CLOUD_MODEL_TOPIC = "cloud/model";
   public static final String REFLECTOR_PREFIX = "RC:";
   // Requires functions that support cloud device manager support.
-  private static final int REQUIRED_FUNCTION_VER = 9;
   private static final String UPDATE_CONFIG_TOPIC = "update/config";
   private static final File ERROR_DIR = new File("out");
   private final com.google.bos.iot.core.proxy.IotReflectorClient messageClient;
@@ -64,7 +64,7 @@ public class IotReflectorClient implements IotProvider {
     SiteModel siteModel = new SiteModel(executionConfiguration.site_model);
     executionConfiguration.key_file = siteModel.validatorKey();
     messageClient = new com.google.bos.iot.core.proxy.IotReflectorClient(executionConfiguration,
-        REQUIRED_FUNCTION_VER);
+        Validator.REQUIRED_FUNCTION_VER);
     executor.execute(this::processReplies);
   }
 
