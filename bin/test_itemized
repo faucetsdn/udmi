@@ -16,7 +16,7 @@ DEVICE_ID=AHU-1
 seq_opts=-v
 serial_no=sequencer-$RANDOM
 
-PUBBER_OUT=out/pubber.out
+PUBBER_LOG=out/pubber.log
 SEQUENCER_LOG=out/sequencer.log
 SEQUENCER_OUT=out/sequencer.out
 INPUT_FILE=etc/test_itemized.in
@@ -40,7 +40,7 @@ validator/bin/build
 
 test_index=-1
 while read -u 7 action test_name pubber_opts; do
-    rm -f $RESULTS_OUT $SEQUENCER_OUT $PUBBER_OUT $SCHEMA_OUT $SEQUENCER_LOG
+    rm -f $RESULTS_OUT $SEQUENCER_OUT $PUBBER_LOG $SCHEMA_OUT $SEQUENCER_LOG
     mkdir -p out
 
     if [[ $action == TEST && -n $TARGET_TEST && $TARGET_TEST != $test_name ]]; then
@@ -75,12 +75,12 @@ while read -u 7 action test_name pubber_opts; do
     bin/reset_config $SITE_PATH $PROJECT_ID $DEVICE_ID
 
     echo
-    echo bin/pubber $SITE_PATH $PROJECT_ID $DEVICE_ID $serial_no $pubber_opts \> $PUBBER_OUT
-    bin/pubber $SITE_PATH $PROJECT_ID $DEVICE_ID $serial_no $pubber_opts > $PUBBER_OUT 2>&1 &
+    echo bin/pubber $SITE_PATH $PROJECT_ID $DEVICE_ID $serial_no $pubber_opts \> $PUBBER_LOG
+    bin/pubber $SITE_PATH $PROJECT_ID $DEVICE_ID $serial_no $pubber_opts > $PUBBER_LOG 2>&1 &
 
     WAITING=20
     for i in `seq 1 $WAITING`; do
-        if [[ -n $(fgrep "Connection complete" $PUBBER_OUT) ]]; then
+        if [[ -n $(fgrep "Connection complete" $PUBBER_LOG) ]]; then
             break
         fi
         sleep 1
@@ -88,7 +88,7 @@ while read -u 7 action test_name pubber_opts; do
 
     if [[ $i -eq $WAITING ]]; then
         echo pubber startup failed:
-        cat $PUBBER_OUT
+        cat $PUBBER_LOG
         false
     fi
 
@@ -104,7 +104,7 @@ while read -u 7 action test_name pubber_opts; do
     result=$(grep -E -m 1 "RESULT [a-z]+ [a-z.]+ $test_name " $SEQUENCER_OUT)
     echo $test_marker ${result/* NOTICE RESULT/RESULT} >> $RESULTS_OUT
 
-    mv $PUBBER_OUT $PUBBER_OUT-$test_marker
+    mv $PUBBER_LOG $PUBBER_LOG-$test_marker
     mv $SEQUENCER_OUT $SEQUENCER_OUT-$test_marker
     mv $SEQUENCER_LOG $SEQUENCER_LOG-$test_marker
 

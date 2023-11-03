@@ -71,7 +71,7 @@ mkdir -p $test_out_base out/
 serial_no=sequencer-$RANDOM
 echo Using pubber with serial $serial_no
 
-PUBBER_OUT=out/pubber.out
+PUBBER_LOG=out/pubber.log
 
 pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
 if [[ -n $pids ]]; then
@@ -88,13 +88,13 @@ rm -rf $site_path/out/devices/${device_id}/persistent_data.json
 
 pubber/bin/build
 
-echo Writing pubber output to $PUBBER_OUT
+echo Writing pubber output to $PUBBER_LOG
 echo bin/pubber $site_path $project_id $device_id $serial_no $pubber_opts
-bin/pubber $site_path $project_id $device_id $serial_no $pubber_opts > $PUBBER_OUT 2>&1 &
+bin/pubber $site_path $project_id $device_id $serial_no $pubber_opts > $PUBBER_LOG 2>&1 &
 
 WAITING=10
 for i in `seq 1 $WAITING`; do
-    if fgrep "Connection complete" $PUBBER_OUT; then
+    if fgrep "Connection complete" $PUBBER_LOG; then
         break
     fi
     echo Waiting for pubber startup $((WAITING - i))...
@@ -103,7 +103,7 @@ done
 
 if [[ $i -eq $WAITING ]]; then
     echo pubber startup failed:
-    cat $PUBBER_OUT
+    cat $PUBBER_LOG
     false
 fi
 

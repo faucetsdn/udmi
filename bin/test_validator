@@ -22,7 +22,7 @@ device_id=AHU-1
 proxy_id=AHU-22
 mkdir -p out
 
-PUBBER_OUT=out/pubber.out
+PUBBER_LOG=out/pubber.log
 VALIDATOR_OUT=out/validator.out
 TRACE_DIR=out/validator_trace
 WAITING=10
@@ -73,7 +73,7 @@ jq .cloud_version.udmi_ref $output_file
 function pubber_bg {
     did=$1
     shift
-    outfile=$PUBBER_OUT.$did
+    outfile=$PUBBER_LOG.$did
     serial_no=validator-$RANDOM
     echo Writing pubber output to $outfile, serial no $serial_no
     cmd="bin/pubber $site_path $project_id $did $serial_no $@"

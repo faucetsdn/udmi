@@ -167,7 +167,7 @@ jobs:
           find sites/udmi_site_model/out*/devices/ -name RESULT.log | xargs fgrep -i schema || true
       - name: pubber logs
         if: ${{ always() }}
-        run: more out/pubber.out* pubber/out/*/*.json || true
+        run: more out/pubber.log* pubber/out/*/*.json || true
       - name: output logs
         if: ${{ always() }}
         run: cd sites/udmi_site_model/out && more `find . -type f` || true
@@ -175,7 +175,7 @@ jobs:
         run: bin/test_itemized $TARGET_PROJECT
       - name: itemized output logs
         if: ${{ always() }}
-        run: more out/*_itemized.out out/sequencer.out-* out/pubber.out-* | cat
+        run: more out/*_itemized.out out/sequencer.out-* out/pubber.log-* | cat
       - name: itemized test timing
         if: ${{ always() }}
         run: egrep ' test .* after .*s ' out/sequencer.log-*
@@ -184,7 +184,7 @@ jobs:
         run: more sites/udmi_site_model/out/*.json | cat
       - name: pubber output logs
         if: ${{ always() }}
-        run: more out/pubber.out* | cat
+        run: more out/pubber.log* | cat
       - name: support bundle
         if: ${{ always() }}
         run: |
@@ -265,9 +265,9 @@ jobs:
         run: bin/test_proxy $TARGET_PROJECT $MQTT_PROXY_HOST
       - name: bin/test_redirect
         run: bin/test_redirect $TARGET_PROJECT
-      - name: pubber.out
+      - name: pubber.log
         if: ${{ always() }}
-        run: more out/pubber.out* | cat
+        run: more out/pubber.log* | cat
       - name: support bundle
         if: ${{ always() }}
         run: |
