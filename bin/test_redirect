@@ -48,6 +48,11 @@ bin/reset_config $site_path $project_id $device_id
 log Running pubber with redirectRegistry on timeout
 timeout 2m unbuffer bin/pubber $site_path $project_id $device_id $serial_no redirectRegistry=missing > $PUBBER_LOG.1 2>&1 || true
 
+echo
+log $PUBBER_LOG.1 tail:
+tail $PUBBER_LOG.1
+echo
+
 log Done with timeout, running pubber in background...
 bin/pubber $site_path $project_id $device_id $serial_no > $PUBBER_LOG.2 2>&1 &
 
@@ -128,6 +133,10 @@ sleep 20
 restarts=$(jq .restart_count $work_base/persistent_data.json)
 [[ $restarts -eq 2 ]] || fail Shutdown restart count incorrect, was $restarts expected 2
 
+echo
+log $PUBBER_LOG.2 tail:
+tail $PUBBER_LOG.2
+echo
 log Checking for lingering pubber instances...
 ps ax | fgrep pubber | fgrep java | awk '{print $1}'
 instances=$(ps ax | fgrep pubber | fgrep java | awk '{print $1}' | wc -l)
