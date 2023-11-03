@@ -112,7 +112,7 @@ bin/augment_metadata $site_path $device_id $pubber_opts
 
 # Run in debug mode for fail-fast when things go wrong!
 echo bin/sequencer $debug_opts $seq_opts $site_path $project_id $device_id $serial_no $targets
-bin/sequencer $debug_opts $seq_opts $site_path $project_id $device_id $serial_no $targets 2>&1 | tee out/sequencer.log
+bin/sequencer $debug_opts $seq_opts $site_path $project_id $device_id $serial_no $targets
 echo Completed execution of sequencer test run.
 
 echo Checking reported cloud version info

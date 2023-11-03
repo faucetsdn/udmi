@@ -17,6 +17,7 @@ seq_opts=-v
 serial_no=sequencer-$RANDOM
 
 PUBBER_OUT=out/pubber.out
+SEQUENCER_LOG=out/sequencer.log
 SEQUENCER_OUT=out/sequencer.out
 INPUT_FILE=etc/test_itemized.in
 RESULTS_OUT=out/test_itemized.out
@@ -93,8 +94,8 @@ while read -u 7 action test_name pubber_opts; do
     echo bin/augment_metadata $SITE_PATH $DEVICE_ID $(< $AUGMENT_OPTS)
     bin/augment_metadata $SITE_PATH $DEVICE_ID $(< $AUGMENT_OPTS)
 
-    echo bin/sequencer $seq_opts $SITE_PATH $PROJECT_ID $DEVICE_ID $serial_no $test_name \> $SEQUENCER_OUT
-    bin/sequencer $seq_opts $SITE_PATH $PROJECT_ID $DEVICE_ID $serial_no $test_name 2>&1 | tee $SEQUENCER_OUT
+    echo bin/sequencer $seq_opts $SITE_PATH $PROJECT_ID $DEVICE_ID $serial_no $test_name
+    bin/sequencer $seq_opts $SITE_PATH $PROJECT_ID $DEVICE_ID $serial_no $test_name
 
     kill $(ps ax | fgrep pubber | fgrep java | awk '{print $1}') || true
 

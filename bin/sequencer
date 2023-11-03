@@ -8,7 +8,7 @@ UDMI_ROOT=$(realpath $(dirname $0)/..)
 source $UDMI_ROOT/etc/shell_common.sh
 
 OUT_DIR=$UDMI_ROOT/out
-TEST_LOG=$OUT_DIR/sequencer.out
+TEST_LOG=$OUT_DIR/sequencer.log
 SCHEMA_OUT=$OUT_DIR/schema.out
 SEQUENCER_RES=$OUT_DIR/sequencer.res
 log_level=INFO
