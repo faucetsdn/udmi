@@ -43,10 +43,11 @@ class CloudModel:
     self.version = None
     self.auth_type = None
     self.device_key = None
-    self.is_gateway = None
+    self.resource_type = None
     self.blocked = None
     self.credentials = None
     self.last_event_time = None
+    self.last_config_ack = None
     self.num_id = None
     self.operation = None
     self.metadata = None
@@ -61,10 +62,11 @@ class CloudModel:
     result.version = source.get('version')
     result.auth_type = source.get('auth_type')
     result.device_key = source.get('device_key')
-    result.is_gateway = source.get('is_gateway')
+    result.resource_type = source.get('resource_type')
     result.blocked = source.get('blocked')
     result.credentials = source.get('credentials')
     result.last_event_time = source.get('last_event_time')
+    result.last_config_ack = source.get('last_config_ack')
     result.num_id = source.get('num_id')
     result.operation = source.get('operation')
     result.metadata = source.get('metadata')
@@ -97,14 +99,16 @@ class CloudModel:
       result['auth_type'] = self.auth_type # 5
     if self.device_key:
       result['device_key'] = self.device_key # 5
-    if self.is_gateway:
-      result['is_gateway'] = self.is_gateway # 5
+    if self.resource_type:
+      result['resource_type'] = self.resource_type # 5
     if self.blocked:
       result['blocked'] = self.blocked # 5
     if self.credentials:
       result['credentials'] = self.credentials # 1
     if self.last_event_time:
       result['last_event_time'] = self.last_event_time # 5
+    if self.last_config_ack:
+      result['last_config_ack'] = self.last_config_ack # 5
     if self.num_id:
       result['num_id'] = self.num_id # 5
     if self.operation:

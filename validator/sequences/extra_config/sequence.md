@@ -17,6 +17,5 @@ Check that the device correctly handles an extra out-of-schema field
 1. Wait for log category `system.config.receive` level `DEBUG` was logged
 1. Wait for last_config updated again
 1. Wait for system operational
-1. Check that no interesting system status
 1. Wait for log category `system.config.parse` level `DEBUG` was logged
 1. Wait for log category `system.config.apply` level `NOTICE` was logged

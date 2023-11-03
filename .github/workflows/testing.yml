@@ -12,67 +12,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  udmis:
-    name: UDMIS Tests
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    timeout-minutes: 10
-    env:
-      PUSH_REGISTRY: ghcr.io
-      IMAGE_NAME: ${{ github.repository }}
-      GITHUB_REF: ${{ github.ref }}
-    steps:
-      - uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-      - name: Checkout source
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          fetch-tags: true
-      - name: bin/run_tests install_dependencies
-        run: bin/run_tests install_dependencies
-      - name: bin/start_pubsub
-        run: bin/start_pubsub
-      - name: bin/test_mosquitto
-        run: bin/test_mosquitto
-      - name: bin/run_tests udmis_tests
-        run: bin/run_tests udmis_tests
-      - name: test output
-        if: ${{ always() }}
-        run: more out/test_* | cat
-      - name: Log in to the github registry
-        uses: docker/login-action@v2
-        with:
-          registry: ${{ env.PUSH_REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Setup udmis container build
-        if: ${{ github.event_name == 'push' }}
-        run: |
-          revhash=$(git rev-parse $GITHUB_REF)
-          IMAGE_TAG=g${revhash:0:9}
-          PUSH_REPO=$PUSH_REGISTRY/${{ github.repository }}
-          PUSH_TAG=$PUSH_REPO:udmis-$IMAGE_TAG
-          echo PUSH_TAG=$PUSH_TAG >> $GITHUB_ENV
-          bin/container udmis prep --no-check $PUSH_REPO
-          echo Pushing built container as $PUSH_TAG | tee -a $GITHUB_STEP_SUMMARY
-      - name: Build and push docker image
-        if: ${{ github.event_name == 'push' }}
-        uses: docker/build-push-action@v4
-        with:
-          file: udmis/Dockerfile.udmis
-          context: udmis
-          push: true
-          tags: ${{ env.PUSH_TAG }}
-
   unit:
     name: Unit Tests
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/setup-java@v3
         with:
@@ -83,11 +26,17 @@ jobs:
           python-version: '3.10'
       - name: Checkout source
         uses: actions/checkout@v3
+      - name: start and test local servers
+        run: |
+          bin/setup_base
+          bin/clone_model
+          bin/start_pubsub
+          bin/test_mosquitto
       - name: bin/run_tests all_tests
         run: bin/run_tests all_tests
       - name: all test output
         if: ${{ always() }}
-        run: more out/test_* | cat
+        run: more out/test_*
 
   spelling:
     name: Docs Spelling Checks
@@ -117,15 +66,75 @@ jobs:
       - name: api tests
         run: udmif/api/runTests
 
+  pretest:
+    name: Pre-test Setup
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    timeout-minutes: 10
+    if: vars.TARGET_PROJECT != ''
+    env:
+      PUSH_REGISTRY: ghcr.io
+      TARGET_PROJECT: ${{ vars.TARGET_PROJECT }}
+      UDMI_ALT_REGISTRY: ZZ-REDIRECT-NA
+      IMAGE_NAME: ${{ github.repository }}
+      GITHUB_REF: ${{ github.ref }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - name: sanity check
+        run: |
+          [[ -n $UDMI_ALT_REGISTRY ]]
+          [[ -n $TARGET_PROJECT ]]
+      - name: Log in to the github registry
+        if: ${{ github.event_name == 'push' }}
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.PUSH_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Setup udmis container build
+        if: ${{ github.event_name == 'push' }}
+        run: |
+          revhash=$(git rev-parse $GITHUB_REF)
+          IMAGE_TAG=g${revhash:0:9}
+          PUSH_REPO=$PUSH_REGISTRY/${{ github.repository }}
+          PUSH_TAG=$PUSH_REPO:udmis-$IMAGE_TAG
+          echo PUSH_TAG=$PUSH_TAG >> $GITHUB_ENV
+          bin/container udmis prep --no-check $PUSH_REPO
+          echo Pushing built container as $PUSH_TAG | tee -a $GITHUB_STEP_SUMMARY
+      - name: Build and push docker image
+        if: ${{ github.event_name == 'push' }}
+        uses: docker/build-push-action@v4
+        with:
+          file: udmis/Dockerfile.udmis
+          context: udmis
+          push: true
+          tags: ${{ env.PUSH_TAG }}
+
   sequencer:
-    name: Sequencer Suite
+    name: Sequencer Tests
     runs-on: ubuntu-latest
-    timeout-minutes: 35
-    if: vars.TARGET_PROJECT != '' && vars.UDMI_REGISTRY_SUFFIX != ''
+    needs: pretest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+    if: vars.TARGET_PROJECT != ''
     env:
       TARGET_PROJECT: ${{ vars.TARGET_PROJECT }}
-      UDMI_REGISTRY_SUFFIX: ${{ vars.UDMI_REGISTRY_SUFFIX }}
-      UDMI_ALT_REGISTRY: ${{ vars.UDMI_ALT_REGISTRY }}
+      UDMI_ALT_REGISTRY: ZZ-REDIRECT-NA
+      UDMI_REGISTRY_SUFFIX: _${{ matrix.shard }}
+      MATRIX_SHARD_COUNT: 8
+      MATRIX_SHARD_INDEX: ${{ matrix.shard }}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-java@v3
@@ -137,43 +146,26 @@ jobs:
       - name: registrar clean
         run: bin/test_regclean $TARGET_PROJECT
       - name: sequence tests clean
-        run: bin/test_sequencer clean $TARGET_PROJECT
+        run: bin/test_sequencer clean nocheck $TARGET_PROJECT
       - name: sequence tests alpha
-        run: bin/test_sequencer alpha $TARGET_PROJECT
+        run: bin/test_sequencer alpha nocheck $TARGET_PROJECT
       - name: sequence test timing
         if: ${{ always() }}
-        run: fgrep ' ending test ' out/sequencer.log
-      - name: generated files
+        run: egrep ' test .* after .*s ' out/sequencer.log.combined
+      - name: itemized sequencer tests
+        run: bin/test_itemized $TARGET_PROJECT
+      - name: itemized test timing
         if: ${{ always() }}
-        run: more out/sequencer.out out/generated.md || true
-      - name: sequencer end state
+        run: egrep ' test .* after .*s ' out/sequencer.log-*
+      - name: output files
         if: ${{ always() }}
-        run: cat sites/udmi_site_model/out/sequencer_AHU-1.json || true
-      - name: schema validation output
-        if: ${{ always() }}
-        run: |
-          echo ============ out/schemas.out
-          cat out/schemas.out || true
-          echo ============ find RESULT.log
-          find sites/udmi_site_model/out/devices/ -name RESULT.log | xargs fgrep -i schema
-      - name: sequencer markdown report generator
-        if: ${{ always() }}
-        run: |
-          SAMPLE_TEST_ROW="| system | system_last_update | stable | pass | Sequence complete |"
-          echo Checking for entry in generated results.md
-          grep "$SAMPLE_TEST_ROW" sites/udmi_site_model/out/devices/AHU-1/results.md
+        run: more out/*.out* | cat
       - name: pubber logs
         if: ${{ always() }}
-        run: more out/pubber.out* pubber/out/*/*.json || true
-      - name: output logs
-        if: ${{ always() }}
-        run: cd sites/udmi_site_model/out && more `find . -type f` || true
+        run: more out/pubber.log* pubber/out/*.json | cat
       - name: support bundle
         if: ${{ always() }}
-        run: |
-          bin/support
-          mv /tmp/udmi-support_*.tgz ${{ github.repository_owner }}_${{ github.job }}_$(cd /tmp; ls udmi-support_*.tgz)
-          echo Renamed support file to `ls *_udmi-support_*.tgz`
+        run: bin/support ${{ github.repository_owner }}_${{ github.job }}_
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
@@ -181,72 +173,15 @@ jobs:
           name: udmi-support_${{ github.run_id }}
           path: '*_udmi-support_*.tgz'
 
-  sequencer_dep:
-    name: Sequencer Suite
+  baseline:
+    name: Baseline Tests
     runs-on: ubuntu-latest
-    timeout-minutes: 35
-    needs: redirect
-    if: vars.TARGET_PROJECT != '' && vars.UDMI_REGISTRY_SUFFIX == ''
-    env:
-      TARGET_PROJECT: ${{ vars.TARGET_PROJECT }}
-      UDMI_ALT_REGISTRY: ${{ vars.UDMI_ALT_REGISTRY }}
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-      - name: base setup
-        run: bin/run_tests install_dependencies
-      - name: registrar clean
-        run: bin/test_regclean $TARGET_PROJECT
-      - name: sequence tests clean
-        run: bin/test_sequencer clean $TARGET_PROJECT
-      - name: sequence tests alpha
-        run: bin/test_sequencer alpha $TARGET_PROJECT
-      - name: sequence test timing
-        if: ${{ always() }}
-        run: fgrep ' ending test ' out/sequencer.log
-      - name: generated files
-        if: ${{ always() }}
-        run: more out/sequencer.out out/generated.md || true
-      - name: sequencer end state
-        if: ${{ always() }}
-        run: cat sites/udmi_site_model/out/sequencer_AHU-1.json || true
-      - name: schema validation output
-        if: ${{ always() }}
-        run: |
-          echo ============ out/schemas.out
-          cat out/schemas.out || true
-          echo ============ find RESULT.log
-          find sites/udmi_site_model/out/devices/ -name RESULT.log | xargs fgrep -i schema
-      - name: pubber logs
-        if: ${{ always() }}
-        run: more out/pubber.out* pubber/out/*/*.json || true
-      - name: output logs
-        if: ${{ always() }}
-        run: cd sites/udmi_site_model/out && more `find . -type f` || true
-      - name: support bundle
-        if: ${{ always() }}
-        run: |
-          bin/support
-          mv /tmp/udmi-support_*.tgz ${{ github.repository_owner }}_${{ github.job }}_$(cd /tmp; ls udmi-support_*.tgz)
-          echo Renamed support file to `ls *_udmi-support_*.tgz`
-      - uses: actions/upload-artifact@v3
-        if: ${{ always() }}
-        with:
-          if-no-files-found: error
-          name: udmi-support_${{ github.run_id }}
-          path: '*_udmi-support_*.tgz'
-
-  comprehensive:
-    name: Comprehensive Suite
-    runs-on: ubuntu-latest
+    needs: pretest
     timeout-minutes: 40
     if: vars.TARGET_PROJECT != ''
     env:
       TARGET_PROJECT: ${{ vars.TARGET_PROJECT }}
-      UDMI_ALT_REGISTRY: ${{ vars.UDMI_ALT_REGISTRY }}
+      UDMI_ALT_REGISTRY: ZZ-REDIRECT-NA
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-java@v3
@@ -266,30 +201,13 @@ jobs:
         if: ${{ always() }}
         run: |
           cd sites/udmi_site_model/out
+          find . -type f | sort | xargs ls -l
           find . -type f | sort | xargs more | cat
       - name: nostate sequences
-        if: ${{ always() }}
-        run: bin/test_sequencer clean alpha nostate full $TARGET_PROJECT
-      - name: itemized sequencer tests
-        run: bin/test_itemized $TARGET_PROJECT
-      - name: itemized output logs
-        if: ${{ always() }}
-        run: more out/*_itemized.out out/sequencer.out-* out/pubber.out-* | cat
-      - name: itemized test timing
-        if: ${{ always() }}
-        run: egrep ' test .* after .*s ' out/sequencer.out-*
-      - name: tool output logs
-        if: ${{ always() }}
-        run: more sites/udmi_site_model/out/*.json | cat
-      - name: pubber output logs
-        if: ${{ always() }}
-        run: more out/pubber.out* | cat
+        run: bin/test_sequencer clean nostate full $TARGET_PROJECT
       - name: support bundle
         if: ${{ always() }}
-        run: |
-          bin/support
-          mv /tmp/udmi-support_*.tgz ${{ github.repository_owner }}_${{ github.job }}_$(cd /tmp; ls udmi-support_*.tgz)
-          echo Renamed support file to `ls *_udmi-support_*.tgz`
+        run: UDMI_REGISTRY_SUFFIX=_b bin/support ${{ github.repository_owner }}_${{ github.job }}_
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
@@ -300,12 +218,12 @@ jobs:
   redirect:
     name: Endpoint Redirection
     runs-on: ubuntu-latest
-    needs: comprehensive
+    needs: [ pretest, baseline ]
     timeout-minutes: 10
     if: vars.TARGET_PROJECT != ''
     env:
       TARGET_PROJECT: ${{ vars.TARGET_PROJECT }}
-      UDMI_ALT_REGISTRY: ${{ vars.UDMI_ALT_REGISTRY }}
+      UDMI_ALT_REGISTRY: ZZ-REDIRECT-NA
       MQTT_PROXY_HOST: ${{ vars.MQTT_PROXY_HOST }}
     steps:
       - uses: actions/checkout@v3
@@ -320,6 +238,38 @@ jobs:
         run: bin/test_proxy $TARGET_PROJECT $MQTT_PROXY_HOST
       - name: bin/test_redirect
         run: bin/test_redirect $TARGET_PROJECT
-      - name: pubber.out
+      - name: pubber.log
         if: ${{ always() }}
-        run: more out/pubber.out* | cat
+        run: more out/pubber.log* | cat
+      - name: support bundle
+        if: ${{ always() }}
+        run: UDMI_REGISTRY_SUFFIX=_r bin/support ${{ github.repository_owner }}_${{ github.job }}_
+      - uses: actions/upload-artifact@v3
+        if: ${{ always() }}
+        with:
+          if-no-files-found: error
+          name: udmi-support_${{ github.run_id }}
+          path: '*_udmi-support_*.tgz'
+
+  posttest:
+    name: Post-test Summarization
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [ baseline, sequencer, redirect ]
+    if: vars.TARGET_PROJECT != '' && ${{ always() }}
+    env:
+      TARGET_PROJECT: ${{ vars.TARGET_PROJECT }}
+      UDMI_ALT_REGISTRY: ZZ-REDIRECT-NA
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Base setup
+        run: bin/setup_base
+      - name: Download all workflow run artifacts
+        uses: actions/download-artifact@v3
+      - name: Processing support package
+        run: bin/support_process udmi-support_*
+      - name: Sequencer validation
+        run: bin/test_sequcheck

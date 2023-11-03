@@ -29,9 +29,13 @@
       "type": "boolean",
       "description": "Indicates if the device private key is provided in the site model."
     },
-    "is_gateway": {
-      "description": "If the device functions as an IoT Gateway, proxying for other devices using a single logical connection",
-      "type": "boolean"
+    "resource_type": {
+      "description": "The resource type of this model",
+      "enum": [
+        "DEVICE",
+        "GATEWAY",
+        "REGISTRY"
+      ]
     },
     "blocked": {
       "type": "boolean"
@@ -56,6 +60,10 @@
       }
     },
     "last_event_time": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "last_config_ack": {
       "type": "string",
       "format": "date-time"
     },
