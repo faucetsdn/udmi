@@ -151,31 +151,18 @@ jobs:
         run: bin/test_sequencer alpha nocheck $TARGET_PROJECT
       - name: sequence test timing
         if: ${{ always() }}
-        run: fgrep ' ending test ' out/sequencer.log
-      - name: sequencer end state
-        if: ${{ always() }}
-        run: cat sites/udmi_site_model*/out/sequencer_AHU-1.json || true
-      - name: schema validation output
-        if: ${{ always() }}
-        run: |
-          echo ============ out/schemas.out
-          more out*/schemas*.out || true
-          echo ============ find RESULT.log
-          find sites/udmi_site_model/out*/devices/ -name RESULT.log | xargs fgrep -i schema || true
+        run: fgrep ' ending test ' out/sequencer.log.combined
       - name: itemized sequencer tests
         run: bin/test_itemized $TARGET_PROJECT
+      - name: itemized test timing
+        if: ${{ always() }}
+        run: fgrep ' ending test ' out/sequencer.log-*
       - name: output files
         if: ${{ always() }}
         run: more out/*.out* | cat
       - name: pubber logs
         if: ${{ always() }}
-        run: more out/pubber.log* pubber/out/*/*.json || true
-      - name: itemized test timing
-        if: ${{ always() }}
-        run: egrep ' test .* after .*s ' out/sequencer.log-*
-      - name: tool output files
-        if: ${{ always() }}
-        run: more sites/udmi_site_model/out/*.json | cat
+        run: more out/pubber.log* pubber/out/*/*.json | cat
       - name: support bundle
         if: ${{ always() }}
         run: |
@@ -294,15 +281,3 @@ jobs:
         run: bin/support_process udmi-support_*
       - name: Sequencer validation
         run: bin/test_sequcheck
-      - name: Generated Report
-        run: |
-          find . -name results.md | xargs ls -l
-          SAMPLE_TEST_ROW="| discovery.scan | single_scan | alpha | pass | Sequence complete |"
-          echo Checking for expected entry in generated results.md
-          fgrep "$SAMPLE_TEST_ROW" sites/udmi_site_model_*/out-seq/devices/AHU-1/results.md
-      - uses: actions/upload-artifact@v3
-        if: ${{ always() }}
-        with:
-          if-no-files-found: error
-          name: udmi-support_${{ github.run_id }}
-          path: 'out/'

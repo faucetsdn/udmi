@@ -12,6 +12,7 @@ sites_in=sites/udmi_site_model_*/
 sites_out=sites/udmi_site_model/out
 archive_dir=${archive%/}
 archive_dir=${archive_dir%.zip}
+archive_dir=${archive_dir%% *}
 archive_dir=${archive_dir##*/}
 
 rm -rf out_* $sites_in
@@ -21,8 +22,9 @@ rm -rf out $sites_out
 mkdir -p out $sites_out
 
 if [[ -f $archive ]]; then
+    rm -rf $archive_dir
     echo Extracting archive to $archive_dir
-    unzip -o $archive -d $archive_dir
+    unzip -o "$archive" -d $archive_dir
 elif [[ ! -d $archive ]]; then
     echo Unknown archive file $archive
     false

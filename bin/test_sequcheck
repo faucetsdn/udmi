@@ -24,6 +24,10 @@ diff -u out/generated.tmp docs/specs/sequences/generated.md || (
     false
 )
 
+SAMPLE_TEST_ROW="| discovery.scan | single_scan | alpha | pass | Sequence complete |"
+echo Checking for expected entry in generated results.md
+fgrep "$SAMPLE_TEST_ROW" sites/udmi_site_model/out/devices/AHU-1/results.md
+
 echo Checking for duplication in out/sequencer.out and etc/sequencer_planning.txt
 bin/test_sequencer_plan
 
