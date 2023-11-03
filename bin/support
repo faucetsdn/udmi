@@ -1,5 +1,8 @@
 #!/bin/bash -e
 
+PREFIX=$1
+shift || true
+
 ROOT_DIR=$(dirname $0)/..
 
 out_dir=$ROOT_DIR/out
@@ -10,7 +13,7 @@ if [[ -n $UDMI_REGISTRY_SUFFIX && -n $out_dir ]]; then
 fi
 
 TIME=`date --utc +%Y%m%d-%H%M%S`
-ARCHIVE=/tmp/udmi-support${UDMI_REGISTRY_SUFFIX}_$TIME.tgz
+ARCHIVE=${PREFIX}udmi-support${UDMI_REGISTRY_SUFFIX}_$TIME.tgz
 OUT_DIR=$(realpath $out_dir --relative-to=$PWD)
 
 CONFIG_FILES="/tmp/validator_config.json /tmp/registrar_config.json /tmp/sequencer_config.json /tmp/pubber_config.json"

@@ -151,12 +151,12 @@ jobs:
         run: bin/test_sequencer alpha nocheck $TARGET_PROJECT
       - name: sequence test timing
         if: ${{ always() }}
-        run: fgrep ' ending test ' out/sequencer.log.combined
+        run: egrep ' test .* after .*s ' out/sequencer.log.combined
       - name: itemized sequencer tests
         run: bin/test_itemized $TARGET_PROJECT
       - name: itemized test timing
         if: ${{ always() }}
-        run: fgrep ' ending test ' out/sequencer.log-*
+        run: egrep ' test .* after .*s ' out/sequencer.log-*
       - name: output files
         if: ${{ always() }}
         run: more out/*.out* | cat
@@ -165,10 +165,7 @@ jobs:
         run: more out/pubber.log* pubber/out/*/*.json | cat
       - name: support bundle
         if: ${{ always() }}
-        run: |
-          bin/support
-          mv /tmp/udmi-support_*.tgz ${{ github.repository_owner }}_${{ github.job }}_$(cd /tmp; ls udmi-support_*.tgz)
-          echo Renamed support file to `ls *_udmi-support_*.tgz`
+        run: bin/support ${{ github.repository_owner }}_${{ github.job }}_
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
@@ -209,10 +206,7 @@ jobs:
         run: bin/test_sequencer clean nostate full $TARGET_PROJECT
       - name: support bundle
         if: ${{ always() }}
-        run: |
-          UDMI_REGISTRY_SUFFIX=_b bin/support
-          mv /tmp/udmi-support_*.tgz ${{ github.repository_owner }}_${{ github.job }}_$(cd /tmp; ls udmi-support_*.tgz)
-          echo Renamed support file to `ls *_udmi-support_*.tgz`
+        run: UDMI_REGISTRY_SUFFIX=_b bin/support ${{ github.repository_owner }}_${{ github.job }}_
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
@@ -248,10 +242,7 @@ jobs:
         run: more out/pubber.log* | cat
       - name: support bundle
         if: ${{ always() }}
-        run: |
-          UDMI_REGISTRY_SUFFIX=_r bin/support
-          mv /tmp/udmi-support_*.tgz ${{ github.repository_owner }}_${{ github.job }}_$(cd /tmp; ls udmi-support_*.tgz)
-          echo Renamed support file to `ls *_udmi-support_*.tgz`
+        run: UDMI_REGISTRY_SUFFIX=_r bin/support ${{ github.repository_owner }}_${{ github.job }}_
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
