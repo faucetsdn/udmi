@@ -2,6 +2,7 @@ package com.google.bos.udmi.service.core;
 
 import static com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl.getMessageClassFor;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.udmi.util.CleanDateFormat.cleanDate;
 import static com.google.udmi.util.Common.CONDENSER_STRING;
 import static com.google.udmi.util.Common.DETAIL_KEY;
 import static com.google.udmi.util.Common.DEVICE_ID_PROPERTY_KEY;
@@ -31,6 +32,10 @@ import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.StateUpdate;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.udmi.util.JsonUtil;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAmount;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -49,6 +54,8 @@ import udmi.schema.UdmiState;
 public class ReflectProcessor extends ProcessorBase {
 
   public static final String PAYLOAD_KEY = "payload";
+  private static final Date START_TIME = new Date();
+  private static final TemporalAmount CONFIG_ACK_FUDGE = Duration.of(5, ChronoUnit.MINUTES);
 
   @Override
   protected void defaultHandler(Object message) {
@@ -71,23 +78,15 @@ public class ReflectProcessor extends ProcessorBase {
     }
   }
 
-  private Boolean checkConfigAckTime(Envelope attributes, String state) {
-    // const queries = [
-    // iotClient.getDevice(request),
-    //     iotClient.listDeviceConfigVersions(request)
-    //   ];
-    //
-    // return Promise.all(queries).then(([device, config]) =>{
-    // const stateBinaryData = device[0].state && device[0].state.binaryData;
-    // const stateString = stateBinaryData && stateBinaryData.toString();
-    // const msgObject = JSON.parse(stateString) || {};
-    // const lastConfig = config[0].deviceConfigs[0];
-    // const cloudUpdateTime = lastConfig.cloudUpdateTime.seconds;
-    // const deviceAckTime = lastConfig.deviceAckTime && lastConfig.deviceAckTime.seconds;
-    //   msgObject.configAcked = String(deviceAckTime >= cloudUpdateTime);
-    //   return process_state_update(attributes, msgObject);
-    // });
-    return true;
+  private Boolean checkConfigAckTime(Envelope attributes, StateUpdate stateUpdate) {
+    CloudModel cloudModel = iotAccess.fetchDevice(attributes.deviceRegistryId, attributes.deviceId);
+    Date lastConfigAck = cleanDate(cloudModel.last_config_ack);
+    Date lastConfig = cleanDate(ifNotNullGet(stateUpdate.system, system -> system.last_config));
+    debug("Check last config ack %s >= %s", getTimestamp(lastConfigAck), getTimestamp(lastConfig));
+    if (lastConfig == null || lastConfigAck == null) {
+      return false;
+    }
+    return lastConfig.after(START_TIME) && !lastConfigAck.before(lastConfig);
   }
 
   private Envelope extractMessageEnvelope(Object message) {
@@ -168,7 +167,7 @@ public class ReflectProcessor extends ProcessorBase {
           iotAccess.fetchState(attributes.deviceRegistryId, attributes.deviceId)).orElse("{}");
       debug(format("Processing device %s state query", attributes.deviceId));
       StateUpdate stateUpdate = fromString(StateUpdate.class, state);
-      stateUpdate.configAcked = checkConfigAckTime(attributes, state);
+      stateUpdate.configAcked = checkConfigAckTime(attributes, stateUpdate);
       processStateUpdate(attributes, stateUpdate);
       publish(stateUpdate);
       reflectStateUpdate(attributes, stringify(stateUpdate));
@@ -181,9 +180,7 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private CloudModel reflectModel(Envelope attributes, CloudModel request) {
-    return requireNonNull(
-        iotAccess.modelDevice(attributes.deviceRegistryId, attributes.deviceId, request),
-        "missing reflect model response");
+    return iotAccess.modelResource(attributes.deviceRegistryId, attributes.deviceId, request);
   }
 
   private CloudModel reflectPropagate(Envelope attributes, Map<String, Object> payload) {

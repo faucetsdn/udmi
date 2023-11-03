@@ -3,6 +3,8 @@ package com.google.daq.mqtt.util;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static java.lang.Boolean.TRUE;
 import static java.util.Optional.ofNullable;
+import static udmi.schema.CloudModel.Resource_type.DEVICE;
+import static udmi.schema.CloudModel.Resource_type.GATEWAY;
 
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
@@ -37,6 +39,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import udmi.schema.CloudModel;
+import udmi.schema.CloudModel.Resource_type;
 import udmi.schema.Credential;
 import udmi.schema.Credential.Key_format;
 import udmi.schema.SetupUdmiConfig;
@@ -56,6 +59,7 @@ class IotCoreProvider implements IotProvider {
           Key_format.ES_256, ES_KEY_FORMAT,
           Key_format.ES_256_X_509, ES_CERT_FILE);
   public static final String UDMI_REF = "GCP IoT Core Direct";
+  public static final String GATEWAY_TYPE = "GATEWAY";
   private final CloudIot.Projects.Locations.Registries registries;
   private final String projectId;
   private final String cloudRegion;
@@ -122,7 +126,7 @@ class IotCoreProvider implements IotProvider {
   }
 
   @Override
-  public void createDevice(String deviceId, CloudModel iotDevice) {
+  public void createResource(String deviceId, CloudModel iotDevice) {
     try {
       Device execute = registries.devices()
           .create(getRegistryPath(), convert(iotDevice).setId(deviceId)).execute();
@@ -155,12 +159,12 @@ class IotCoreProvider implements IotProvider {
     }
   }
 
-  private static GatewayConfig makeGatewayConfig(Boolean isGateway) {
-    if (!TRUE.equals(isGateway)) {
+  private static GatewayConfig makeGatewayConfig(CloudModel device) {
+    if (!TRUE.equals(device.resource_type == GATEWAY)) {
       return null;
     }
     GatewayConfig gatewayConfig = new GatewayConfig();
-    gatewayConfig.setGatewayType("GATEWAY");
+    gatewayConfig.setGatewayType(GATEWAY_TYPE);
     gatewayConfig.setGatewayAuthMethod("ASSOCIATION_ONLY");
     return gatewayConfig;
   }
@@ -175,7 +179,7 @@ class IotCoreProvider implements IotProvider {
         .setNumId(numId)
         .setBlocked(device.blocked)
         .setCredentials(newCredentials)
-        .setGatewayConfig(makeGatewayConfig(device.is_gateway))
+        .setGatewayConfig(makeGatewayConfig(device))
         .setLastEventTime(timestamp)
         .setMetadata(device.metadata);
   }
@@ -188,7 +192,7 @@ class IotCoreProvider implements IotProvider {
     cloudModel.num_id = device.getNumId().toString();
     cloudModel.blocked = device.getBlocked();
     cloudModel.credentials = newCredentials;
-    cloudModel.is_gateway = convert(device.getGatewayConfig());
+    cloudModel.resource_type = convert(device.getGatewayConfig());
     cloudModel.metadata = ofNullable(device.getMetadata()).map(HashMap::new).orElse(null);
     cloudModel.last_event_time = JsonUtil.getDate(device.getLastEventTime());
     return cloudModel;
@@ -208,11 +212,11 @@ class IotCoreProvider implements IotProvider {
     return credential;
   }
 
-  private static boolean convert(GatewayConfig gatewayConfig) {
+  private static Resource_type convert(GatewayConfig gatewayConfig) {
     if (gatewayConfig == null) {
-      return false;
+      return DEVICE;
     }
-    return "GATEWAY".equals(gatewayConfig.getGatewayType());
+    return GATEWAY_TYPE.equals(gatewayConfig.getGatewayType()) ? GATEWAY : DEVICE;
   }
 
   @Override

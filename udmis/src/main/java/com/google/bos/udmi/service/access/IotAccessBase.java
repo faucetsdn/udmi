@@ -5,7 +5,6 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.safeSleep;
-import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -16,7 +15,6 @@ import com.google.bos.udmi.service.core.ProcessorBase.PreviousParseException;
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -232,7 +230,7 @@ public abstract class IotAccessBase extends ContainerBase {
 
   public abstract CloudModel listDevices(String deviceRegistryId);
 
-  public abstract CloudModel modelDevice(String deviceRegistryId, String deviceId,
+  public abstract CloudModel modelResource(String deviceRegistryId, String deviceId,
       CloudModel cloudModel);
 
   /**

@@ -2,9 +2,9 @@
   "blobs" : {
     "_iot_endpoint_config" : {
       "phase" : "final",
-      "generation" : "2023-03-13T04:50:44Z"
+      "generation" : "2023-10-28T13:24:12Z"
     }
   },
-  "timestamp" : "2023-03-13T04:50:58Z",
-  "version" : "1.4.1"
+  "timestamp" : "2023-10-28T13:24:27Z",
+  "version" : "1.4.2"
 }
