@@ -132,6 +132,7 @@ ls -l out/schema.out* out/sequencer.log* || true
 
 cat out/schema.out >> out/schema.out.combined
 cat out/sequencer.log >> out/sequencer.log.combined
+cat out/sequencer.res >> out/sequencer.res.combined
 
 if [[ -n $out_check ]]; then
     if [[ -n $clean_cache ]]; then
