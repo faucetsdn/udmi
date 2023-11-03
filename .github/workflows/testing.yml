@@ -299,8 +299,8 @@ jobs:
         run: bin/setup_base
       - name: Download all workflow run artifacts
         uses: actions/download-artifact@v3
-      - name: Combining support package
-        run: bash -ex bin/combine_support udmi-support_*
+      - name: Processing support package
+        run: bin/support_process udmi-support_*
       - name: sequencer validation
         run: bin/test_sequcheck
       - name: sequencer markdown report generator
