@@ -8,9 +8,9 @@ UDMI_ROOT=$(realpath $(dirname $0)/..)
 source $UDMI_ROOT/etc/shell_common.sh
 
 OUT_DIR=$UDMI_ROOT/out
-TEST_LOG=$OUT_DIR/sequencer.log
+SEQUENCER_LOG=$OUT_DIR/sequencer.log
+SEQUENCER_OUT=$OUT_DIR/sequencer.out
 SCHEMA_OUT=$OUT_DIR/schema.out
-SEQUENCER_RES=$OUT_DIR/sequencer.res
 log_level=INFO
 min_stage=PREVIEW
 export UDMI_VERSION=$udmi_version
@@ -18,7 +18,7 @@ export UDMI_VERSION=$udmi_version
 # For cross-env sort stability
 export LC_ALL=C
 
-rm -f $TEST_LOG $SCHEMA_OUT
+rm -f $SEQUENCER_LOG $SEQUENCER_OUT $SCHEMA_OUT
 
 while [[ $1 =~ ^- ]]; do
     if [[ $1 == '-a' ]]; then
@@ -164,13 +164,13 @@ JARFILE=validator/build/libs/validator-1.0-SNAPSHOT-all.jar
 JAVA_CMD="java -cp $JARFILE com.google.daq.mqtt.sequencer.SequenceRunner"
 echo $JAVA_CMD $test_names
 result=0
-$JAVA_CMD $test_names 2>&1 | tee $TEST_LOG
+$JAVA_CMD $test_names 2>&1 | tee $SEQUENCER_LOG
 
 echo
 # Sort by test name (6th field)
-fgrep 'RESULT ' $TEST_LOG | fgrep NOTICE | sort -k 6 | tee $SEQUENCER_RES
+fgrep 'RESULT ' $SEQUENCER_LOG | fgrep NOTICE | sort -k 6 | tee $SEQUENCER_OUT
 
-if [[ $(wc -l < $SEQUENCER_RES) -eq 0 ]]; then
+if [[ $(wc -l < $SEQUENCER_OUT) -eq 0 ]]; then
     echo No test results found.
     exit 1
 fi
