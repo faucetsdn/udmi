@@ -1,6 +1,6 @@
 package com.google.daq.mqtt.sequencer;
 
-import static com.google.daq.mqtt.sequencer.SequenceRunner.processGiven;
+import static com.google.daq.mqtt.sequencer.SequenceRunner.processStage;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static udmi.schema.FeatureEnumeration.FeatureStage.ALPHA;
@@ -18,15 +18,15 @@ public class FeatureTest {
 
   @Test
   public void stageComparisons() {
-    assertTrue(processGiven(BETA, BETA));
-    assertTrue(processGiven(ALPHA, ALPHA));
-    assertTrue(processGiven(STABLE, BETA));
-    assertTrue(processGiven(STABLE, ALPHA));
-    assertTrue(processGiven(PREVIEW, ALPHA));
-    assertFalse(processGiven(ALPHA, BETA));
-    assertFalse(processGiven(PREVIEW, BETA));
-    assertFalse(processGiven(BETA, STABLE));
-    assertFalse(processGiven(DISABLED, ALPHA));
-    assertFalse(processGiven(DISABLED, STABLE));
+    assertTrue(processStage(BETA, BETA));
+    assertTrue(processStage(ALPHA, ALPHA));
+    assertTrue(processStage(STABLE, BETA));
+    assertTrue(processStage(STABLE, ALPHA));
+    assertTrue(processStage(PREVIEW, ALPHA));
+    assertFalse(processStage(ALPHA, BETA));
+    assertFalse(processStage(PREVIEW, BETA));
+    assertFalse(processStage(BETA, STABLE));
+    assertFalse(processStage(DISABLED, ALPHA));
+    assertFalse(processStage(DISABLED, STABLE));
   }
 }

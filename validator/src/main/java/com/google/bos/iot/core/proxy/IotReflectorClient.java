@@ -2,6 +2,7 @@ package com.google.bos.iot.core.proxy;
 
 import static com.google.bos.iot.core.proxy.ProxyTarget.STATE_TOPIC;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.daq.mqtt.validator.Validator.REQUIRED_FUNCTION_VER;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
@@ -40,6 +41,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import org.jetbrains.annotations.NotNull;
+import udmi.schema.Credential;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
@@ -55,7 +57,6 @@ import udmi.schema.UdmiState;
 public class IotReflectorClient implements MessagePublisher {
 
   public static final String UDMI_FOLDER = "udmi";
-  private static final int MIN_REQUIRED_VERSION = 9;
   static final String REFLECTOR_KEY_ALGORITHM = "RS256";
   public static final String UDMI_REFLECT = "UDMI-REFLECT";
   private static final String MOCK_DEVICE_NUM_ID = "123456789101112";
@@ -88,8 +89,8 @@ public class IotReflectorClient implements MessagePublisher {
    * @param requiredVersion version of the functions that are required by the tools
    */
   public IotReflectorClient(ExecutionConfiguration iotConfig, int requiredVersion) {
-    Preconditions.checkState(requiredVersion >= MIN_REQUIRED_VERSION,
-        format("Min required version %s not satisfied by tools version %s", MIN_REQUIRED_VERSION,
+    Preconditions.checkState(requiredVersion >= REQUIRED_FUNCTION_VER,
+        format("Min required version %s not satisfied by tools version %s", REQUIRED_FUNCTION_VER,
             requiredVersion));
     this.requiredVersion = requiredVersion;
     registryId = SiteModel.getRegistryActual(iotConfig);
@@ -152,6 +153,7 @@ public class IotReflectorClient implements MessagePublisher {
     reflectConfiguration.cloud_region = Optional.ofNullable(iotConfig.reflect_region)
         .orElse(iotConfig.cloud_region);
 
+    reflectConfiguration.site_model = iotConfig.site_model;
     reflectConfiguration.registry_id = UDMI_REFLECT;
     reflectConfiguration.udmi_namespace = iotConfig.udmi_namespace;
     // Intentionally map registry -> device because of reflection registry semantics.
@@ -198,6 +200,11 @@ public class IotReflectorClient implements MessagePublisher {
     System.err.println("UDMI setting reflectorState: " + stringify(map));
 
     publisher.publish(registryId, STATE_TOPIC, stringify(map));
+  }
+
+  @Override
+  public Credential getCredential() {
+    return publisher.getCredential();
   }
 
   private void messageHandler(String topic, String payload) {
@@ -347,7 +354,7 @@ public class IotReflectorClient implements MessagePublisher {
   private void errorHandler(Throwable throwable) {
     System.err.printf("Received mqtt client error: %s at %s%n",
         throwable.getMessage(), getTimestamp());
-    publisher.close();
+    close();
   }
 
   @Override
@@ -363,6 +370,9 @@ public class IotReflectorClient implements MessagePublisher {
   @Override
   public Validator.MessageBundle takeNextMessage(QuerySpeed timeout) {
     try {
+      if (!active) {
+        throw new IllegalStateException("Reflector client not active");
+      }
       return messages.poll(timeout.seconds(), TimeUnit.SECONDS);
     } catch (Exception e) {
       throw new RuntimeException("While taking next message", e);

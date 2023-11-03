@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import org.junit.Test;
 import udmi.schema.CloudModel;
+import udmi.schema.CloudModel.Resource_type;
 import udmi.schema.Credential;
 import udmi.schema.Credential.Key_format;
 
@@ -25,7 +26,7 @@ public class IotCoreProviderTest {
     original.metadata.put("A", "B");
     original.last_event_time = new Date();
     original.blocked = true;
-    original.is_gateway = true;
+    original.resource_type = Resource_type.GATEWAY;
     original.credentials = new LinkedList<>();
     Credential credential = new Credential();
     credential.key_format = Key_format.ES_256;

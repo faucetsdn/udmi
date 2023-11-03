@@ -4,7 +4,6 @@
 1. Update config before blobset entry config status is error:
     * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `endpoint data` } } }
 1. Wait for blobset entry config status is error
-1. Check that no interesting system status
 1. Wait for last_start is not zero
 1. Check that initial count is greater than 0
 1. Update config before system mode is ACTIVE:

@@ -7,7 +7,6 @@ import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.core.ComponentName;
-import com.google.common.base.Preconditions;
 import com.google.udmi.util.JsonUtil;
 import java.io.PrintStream;
 import java.util.regex.MatchResult;
@@ -27,8 +26,8 @@ import udmi.schema.PodConfiguration;
 public abstract class ContainerBase {
 
   public static final String INITIAL_EXECUTION_CONTEXT = "xxxxxxxx";
-  public static final Integer FUNCTIONS_VERSION_MIN = 9;
-  public static final Integer FUNCTIONS_VERSION_MAX = 10;
+  public static final Integer FUNCTIONS_VERSION_MIN = 11;
+  public static final Integer FUNCTIONS_VERSION_MAX = 11;
   public static final String EMPTY_JSON = "{}";
   public static final String REFLECT_BASE = "UDMI-REFLECT";
   private static final ThreadLocal<String> executionContext = new ThreadLocal<>();
@@ -114,8 +113,12 @@ public abstract class ContainerBase {
 
   @NotNull
   private String getReflectRegistry() {
-    return ofNullable(basePodConfig.udmi_prefix).map(this::variableSubstitution).orElse("")
-        + REFLECT_BASE;
+    return getPodNamespacePrefix() + REFLECT_BASE;
+  }
+
+  @NotNull
+  protected String getPodNamespacePrefix() {
+    return ofNullable(basePodConfig.udmi_prefix).map(this::variableSubstitution).orElse("");
   }
 
   @NotNull

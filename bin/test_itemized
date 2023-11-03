@@ -16,46 +16,53 @@ DEVICE_ID=AHU-1
 seq_opts=-v
 serial_no=sequencer-$RANDOM
 
-PUBBER_OUT=out/pubber.out
+PUBBER_LOG=out/pubber.log
+SEQUENCER_LOG=out/sequencer.log
 SEQUENCER_OUT=out/sequencer.out
+INPUT_FILE=etc/test_itemized.in
 RESULTS_OUT=out/test_itemized.out
 GOLDEN_FILE=etc/test_itemized.out
 SCHEMA_OUT=out/schema_itemized.out
 GOLDEN_SCHEMAS=etc/schema_itemized.out
 AUGMENT_OPTS=out/augment_opts.txt
 
+mkdir -p out
+echo > $AUGMENT_OPTS
+
 echo "export TARGET_PROJECT=$PROJECT_ID"
 echo "export UDMI_REGISTRY_SUFFIX=$UDMI_REGISTRY_SUFFIX"
 echo "export UDMI_ALT_REGISTRY=$UDMI_ALT_REGISTRY"
-
-rm -f $RESULTS_OUT $SEQUENCER_OUT $PUBBER_OUT $SCHEMA_OUT $AUGMENT_OPTS
-mkdir -p out
-touch $RESULTS_OUT $SEQUENCER_OUT $PUBBER_OUT $SCHEMA_OUT $AUGMENT_OPTS
+echo "export MATRIX_SHARD_COUNT=$MATRIX_SHARD_COUNT"
+echo "export MATRIX_SHARD_INDEX=$MATRIX_SHARD_INDEX"
 
 pubber/bin/build
 validator/bin/build
 
-test_index=0
-while read -u 7 action test_name remainder; do
+test_index=-1
+while read -u 7 action test_name pubber_opts; do
+    rm -f $RESULTS_OUT $SEQUENCER_OUT $PUBBER_LOG $SCHEMA_OUT $SEQUENCER_LOG
+    mkdir -p out
+
     if [[ $action == TEST && -n $TARGET_TEST && $TARGET_TEST != $test_name ]]; then
         continue
     fi
 
     if [[ $action == WITH ]]; then
-        echo $test_name $remainder > $AUGMENT_OPTS
+        echo $test_name $pubber_opts > $AUGMENT_OPTS
+        continue
     elif [[ -z $action || $action =~ ^# ]]; then
-        true # skip blank lines and comments
+        continue
     elif [[ $action != TEST ]]; then
         echo Unknown test action $action
         false
     fi
 
-    pubber_opts=${remainder/RESULT*/}
-
-    echo -n "$action $test_name $pubber_opts" >> $RESULTS_OUT
-
-    if [[ $action != TEST ]]; then
-        echo >> $RESULTS_OUT
+    ((test_index++)) || true
+    test_marker=$(printf %02d $test_index)
+    if [[ -z $MATRIX_SHARD_COUNT || $((test_index % MATRIX_SHARD_COUNT)) == $MATRIX_SHARD_INDEX ]]; then
+        echo Executing shard test index $test_index
+    else
+        echo Skipping non-shard test index $test_index
         continue
     fi
 
@@ -68,12 +75,12 @@ while read -u 7 action test_name remainder; do
     bin/reset_config $SITE_PATH $PROJECT_ID $DEVICE_ID
 
     echo
-    echo bin/pubber $SITE_PATH $PROJECT_ID $DEVICE_ID $serial_no $pubber_opts \> $PUBBER_OUT
-    bin/pubber $SITE_PATH $PROJECT_ID $DEVICE_ID $serial_no $pubber_opts > $PUBBER_OUT 2>&1 &
+    echo bin/pubber $SITE_PATH $PROJECT_ID $DEVICE_ID $serial_no $pubber_opts \> $PUBBER_LOG
+    bin/pubber $SITE_PATH $PROJECT_ID $DEVICE_ID $serial_no $pubber_opts > $PUBBER_LOG 2>&1 &
 
     WAITING=20
     for i in `seq 1 $WAITING`; do
-        if [[ -n $(fgrep "Connection complete" $PUBBER_OUT) ]]; then
+        if [[ -n $(fgrep "Connection complete" $PUBBER_LOG) ]]; then
             break
         fi
         sleep 1
@@ -81,7 +88,7 @@ while read -u 7 action test_name remainder; do
 
     if [[ $i -eq $WAITING ]]; then
         echo pubber startup failed:
-        cat $PUBBER_OUT
+        cat $PUBBER_LOG
         false
     fi
 
@@ -89,30 +96,35 @@ while read -u 7 action test_name remainder; do
     echo bin/augment_metadata $SITE_PATH $DEVICE_ID $(< $AUGMENT_OPTS)
     bin/augment_metadata $SITE_PATH $DEVICE_ID $(< $AUGMENT_OPTS)
 
-    echo bin/sequencer $seq_opts $SITE_PATH $PROJECT_ID $DEVICE_ID $serial_no $test_name \> $SEQUENCER_OUT
-    bin/sequencer $seq_opts $SITE_PATH $PROJECT_ID $DEVICE_ID $serial_no $test_name 2>&1 | tee $SEQUENCER_OUT
+    echo bin/sequencer $seq_opts $SITE_PATH $PROJECT_ID $DEVICE_ID $serial_no $test_name
+    bin/sequencer $seq_opts $SITE_PATH $PROJECT_ID $DEVICE_ID $serial_no $test_name
 
     kill $(ps ax | fgrep pubber | fgrep java | awk '{print $1}') || true
 
     result=$(grep -E -m 1 "RESULT [a-z]+ [a-z.]+ $test_name " $SEQUENCER_OUT)
-    echo ${result/* NOTICE RESULT/RESULT} >> $RESULTS_OUT
+    echo $test_marker ${result/* NOTICE RESULT/RESULT} >> $RESULTS_OUT
 
-    ((++test_index))
-    mv $PUBBER_OUT $PUBBER_OUT-$(printf %02d $test_index)
-    mv $SEQUENCER_OUT $SEQUENCER_OUT-$(printf %02d $test_index)
+    mv $PUBBER_LOG $PUBBER_LOG-$test_marker
+    mv $SEQUENCER_OUT $SEQUENCER_OUT-$test_marker
+    mv $SEQUENCER_LOG $SEQUENCER_LOG-$test_marker
 
     echo =========== $test_name >> $SCHEMA_OUT
     cat out/schema.out >> $SCHEMA_OUT
+    mv out/schema.out $SCHEMA_OUT-$test_marker
 
     sleep 2
 
-done 7< $GOLDEN_FILE
+done 7< $INPUT_FILE
 
-if [[ -z $TARGET_TEST ]]; then
+if [[ -z $TARGET_TEST && -z $MATRIX_SHARD_COUNT ]]; then
     echo Comparing diff $RESULTS_OUT $GOLDEN_FILE
     diff -bu $RESULTS_OUT $GOLDEN_FILE
 
     echo Comparing diff $SCHEMA_OUT $GOLDEN_SCHEMAS
     uniq < $SCHEMA_OUT | sponge $SCHEMA_OUT
     diff -bu $SCHEMA_OUT $GOLDEN_SCHEMAS
+else
+    echo Archiving $SITE_PATH/out to $SITE_PATH/out-itm
+    rm -rf $SITE_PATH/out-itm/
+    mv $SITE_PATH/out/ $SITE_PATH/out-itm/
 fi

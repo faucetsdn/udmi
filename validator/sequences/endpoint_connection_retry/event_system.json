@@ -1,31 +1,186 @@
 {
-  "event_count" : 9,
-  "last_config" : "2023-07-28T20:20:09Z",
+  "event_count" : 7,
+  "last_config" : "2023-10-28T13:23:12Z",
   "logentries" : [ {
     "message" : "Config handler",
     "category" : "device.log",
-    "timestamp" : "2023-07-28T20:20:09Z",
+    "timestamp" : "2023-10-28T13:23:13Z",
     "level" : 200
   }, {
-    "message" : "2023-07-28T20:20:09Z received config 2023-07-28T20:20:09Z",
+    "message" : "2023-10-28T13:23:13Z received config 2023-10-28T13:23:12Z",
     "category" : "device.log",
-    "timestamp" : "2023-07-28T20:20:09Z",
+    "timestamp" : "2023-10-28T13:23:13Z",
     "level" : 200
   }, {
     "message" : "success",
     "category" : "system.config.apply",
-    "timestamp" : "2023-07-28T20:20:09Z",
+    "timestamp" : "2023-10-28T13:23:13Z",
     "level" : 300
   }, {
-    "message" : "update state 2023-07-28T20:20:10Z last_config 2023-07-28T20:20:09Z",
+    "message" : "update state 2023-10-28T13:23:13Z last_config 2023-10-28T13:23:12Z",
     "category" : "device.log",
-    "timestamp" : "2023-07-28T20:20:10Z",
+    "timestamp" : "2023-10-28T13:23:13Z",
     "level" : 200
+  }, {
+    "message" : "Starting new endpoint generation",
+    "category" : "device.log",
+    "timestamp" : "2023-10-28T13:23:21Z",
+    "level" : 300
+  }, {
+    "message" : "New config blob endpoint detected",
+    "category" : "device.log",
+    "timestamp" : "2023-10-28T13:23:21Z",
+    "level" : 200
+  }, {
+    "message" : "update state 2023-10-28T13:23:21Z last_config 2023-10-28T13:23:12Z",
+    "category" : "device.log",
+    "timestamp" : "2023-10-28T13:23:21Z",
+    "level" : 200
+  }, {
+    "message" : "While waiting for connection start: Connection error",
+    "category" : "device.log",
+    "timestamp" : "2023-10-28T13:23:21Z",
+    "level" : 500
+  }, {
+    "message" : "Attempt failed, retries remaining: 9",
+    "category" : "device.log",
+    "timestamp" : "2023-10-28T13:23:21Z",
+    "level" : 500
+  }, {
+    "message" : "While waiting for connection start: Connection error",
+    "category" : "device.log",
+    "timestamp" : "2023-10-28T13:23:22Z",
+    "level" : 500
+  }, {
+    "message" : "Attempt failed, retries remaining: 8",
+    "category" : "device.log",
+    "timestamp" : "2023-10-28T13:23:22Z",
+    "level" : 500
+  }, {
+    "message" : "While waiting for connection start: Connection error",
+    "category" : "device.log",
+    "timestamp" : "2023-10-28T13:23:23Z",
+    "level" : 500
+  }, {
+    "message" : "Attempt failed, retries remaining: 7",
+    "category" : "device.log",
+    "timestamp" : "2023-10-28T13:23:23Z",
+    "level" : 500
+  }, {
+    "message" : "While waiting for connection start: Connection error",
+    "category" : "device.log",
+    "timestamp" : "2023-10-28T13:23:24Z",
+    "level" : 500
+  }, {
+    "message" : "Attempt failed, retries remaining: 6",
+    "category" : "device.log",
+    "timestamp" : "2023-10-28T13:23:24Z",
+    "level" : 500
+  }, {
+    "message" : "While waiting for connection start: Connection error",
+    "category" : "device.log",
+    "timestamp" : "2023-10-28T13:23:25Z",
+    "level" : 500
+  }, {
+    "message" : "Attempt failed, retries remaining: 5",
+    "category" : "device.log",
+    "timestamp" : "2023-10-28T13:23:25Z",
+    "level" : 500
+  }, {
+    "message" : "While waiting for connection start: Connection error",
+    "category" : "device.log",
+    "timestamp" : "2023-10-28T13:23:26Z",
+    "level" : 500
+  }, {
+    "message" : "Attempt failed, retries remaining: 4",
+    "category" : "device.log",
+    "timestamp" : "2023-10-28T13:23:26Z",
+    "level" : 500
+  }, {
+    "message" : "While waiting for connection start: Connection error",
+    "category" : "device.log",
+    "timestamp" : "2023-10-28T13:23:27Z",
+    "level" : 500
+  }, {
+    "message" : "Attempt failed, retries remaining: 3",
+    "category" : "device.log",
+    "timestamp" : "2023-10-28T13:23:27Z",
+    "level" : 500
+  }, {
+    "message" : "While waiting for connection start: Connection error",
+    "category" : "device.log",
+    "timestamp" : "2023-10-28T13:23:28Z",
+    "level" : 500
+  }, {
+    "message" : "Attempt failed, retries remaining: 2",
+    "category" : "device.log",
+    "timestamp" : "2023-10-28T13:23:28Z",
+    "level" : 500
+  }, {
+    "message" : "While waiting for connection start: Connection error",
+    "category" : "device.log",
+    "timestamp" : "2023-10-28T13:23:29Z",
+    "level" : 500
+  }, {
+    "message" : "Attempt failed, retries remaining: 1",
+    "category" : "device.log",
+    "timestamp" : "2023-10-28T13:23:29Z",
+    "level" : 500
+  }, {
+    "message" : "While waiting for connection start: Connection error",
+    "category" : "device.log",
+    "timestamp" : "2023-10-28T13:23:30Z",
+    "level" : 500
+  }, {
+    "message" : "Attempt failed, retries remaining: 0",
+    "category" : "device.log",
+    "timestamp" : "2023-10-28T13:23:30Z",
+    "level" : 500
+  }, {
+    "message" : "Config handler",
+    "category" : "device.log",
+    "timestamp" : "2023-10-28T13:23:32Z",
+    "level" : 200
+  }, {
+    "message" : "2023-10-28T13:23:32Z received config 2023-10-28T13:23:12Z",
+    "category" : "device.log",
+    "timestamp" : "2023-10-28T13:23:32Z",
+    "level" : 200
+  }, {
+    "message" : "Starting executor with send message delay 10000",
+    "category" : "device.log",
+    "timestamp" : "2023-10-28T13:23:32Z",
+    "level" : 200
+  }, {
+    "message" : "success",
+    "category" : "system.config.apply",
+    "timestamp" : "2023-10-28T13:23:32Z",
+    "level" : 300
+  }, {
+    "message" : "update state 2023-10-28T13:23:32Z last_config 2023-10-28T13:23:12Z",
+    "category" : "device.log",
+    "timestamp" : "2023-10-28T13:23:32Z",
+    "level" : 200
+  }, {
+    "message" : "Connection complete.",
+    "category" : "device.log",
+    "timestamp" : "2023-10-28T13:23:32Z",
+    "level" : 200
+  }, {
+    "message" : "Endpoint connection restored to last working endpoint",
+    "category" : "device.log",
+    "timestamp" : "2023-10-28T13:23:32Z",
+    "level" : 300
+  }, {
+    "message" : "While redirecting connection endpoint: While resetting connection",
+    "category" : "device.log",
+    "timestamp" : "2023-10-28T13:23:32Z",
+    "level" : 500
   } ],
   "metrics" : {
-    "mem_total_mb" : 250.0,
-    "mem_free_mb" : 163.51062774658203
+    "mem_total_mb" : 112.0,
+    "mem_free_mb" : 97.5521240234375
   },
-  "timestamp" : "2023-07-28T20:20:18Z",
-  "version" : "1.4.1"
+  "timestamp" : "2023-10-28T13:23:32Z",
+  "version" : "1.4.2"
 }

@@ -53,6 +53,7 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
   public static final String EMULATOR_HOST_ENV = "PUBSUB_EMULATOR_HOST";
   public static final String EMULATOR_HOST = System.getenv(EMULATOR_HOST_ENV);
   public static final String GCP_HOST = "gcp";
+  public static final String PS_TXN_PREFIX = "PS:";
   private final Subscriber subscriber;
   private final Publisher publisher;
   private final String projectId;
@@ -137,7 +138,8 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
       ApiFuture<String> publish = publisher.publish(message);
       String publishedId = publish.get();
       debug(format("Published PubSub %s/%s to %s as %s", stringMap.get(SUBTYPE_PROPERTY_KEY),
-          stringMap.get(SUBFOLDER_PROPERTY_KEY), publisher.getTopicNameString(), publishedId));
+          stringMap.get(SUBFOLDER_PROPERTY_KEY), publisher.getTopicNameString(),
+          PS_TXN_PREFIX + publishedId));
     } catch (Exception e) {
       throw new RuntimeException("While publishing bundle to " + publisher.getTopicNameString(), e);
     }
@@ -152,7 +154,7 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
     String messageId = message.getMessageId();
     attributesMap.computeIfAbsent("publishTime",
         key -> getTimestamp(ofEpochSecond(message.getPublishTime().getSeconds())));
-    attributesMap.computeIfAbsent(Common.TRANSACTION_KEY, key -> "PS:" + messageId);
+    attributesMap.computeIfAbsent(Common.TRANSACTION_KEY, key -> PS_TXN_PREFIX + messageId);
     receiveMessage(attributesMap, message.getData().toStringUtf8());
     Instant end = Instant.now();
     long seconds = Duration.between(start, end).getSeconds();

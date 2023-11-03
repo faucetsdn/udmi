@@ -15,6 +15,8 @@ class ExecutionConfiguration:
     self.reflect_region = None
     self.site_model = None
     self.registry_suffix = None
+    self.shard_count = None
+    self.shard_index = None
     self.device_id = None
     self.iot_provider = None
     self.reflector_endpoint = None
@@ -46,6 +48,8 @@ class ExecutionConfiguration:
     result.reflect_region = source.get('reflect_region')
     result.site_model = source.get('site_model')
     result.registry_suffix = source.get('registry_suffix')
+    result.shard_count = source.get('shard_count')
+    result.shard_index = source.get('shard_index')
     result.device_id = source.get('device_id')
     result.iot_provider = source.get('iot_provider')
     result.reflector_endpoint = EndpointConfiguration.from_dict(source.get('reflector_endpoint'))
@@ -99,6 +103,10 @@ class ExecutionConfiguration:
       result['site_model'] = self.site_model # 5
     if self.registry_suffix:
       result['registry_suffix'] = self.registry_suffix # 5
+    if self.shard_count:
+      result['shard_count'] = self.shard_count # 5
+    if self.shard_index:
+      result['shard_index'] = self.shard_index # 5
     if self.device_id:
       result['device_id'] = self.device_id # 5
     if self.iot_provider:
