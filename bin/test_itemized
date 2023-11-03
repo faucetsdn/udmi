@@ -17,6 +17,7 @@ seq_opts=-v
 serial_no=sequencer-$RANDOM
 
 PUBBER_OUT=out/pubber.out
+SEQUENCER_LOG=out/sequencer.log
 SEQUENCER_RES=out/sequencer.res
 INPUT_FILE=etc/test_itemized.in
 RESULTS_OUT=out/test_itemized.out
@@ -25,6 +26,7 @@ SCHEMA_OUT=out/schema_itemized.out
 GOLDEN_SCHEMAS=etc/schema_itemized.out
 AUGMENT_OPTS=out/augment_opts.txt
 
+mkdir -p out
 echo > $AUGMENT_OPTS
 
 echo "export TARGET_PROJECT=$PROJECT_ID"
@@ -38,7 +40,7 @@ validator/bin/build
 
 test_index=-1
 while read -u 7 action test_name pubber_opts; do
-    rm -f $RESULTS_OUT $SEQUENCER_RES $PUBBER_OUT $SCHEMA_OUT
+    rm -f $RESULTS_OUT $SEQUENCER_RES $PUBBER_OUT $SCHEMA_OUT $SEQUENCER_LOG
     mkdir -p out
 
     if [[ $action == TEST && -n $TARGET_TEST && $TARGET_TEST != $test_name ]]; then
@@ -104,9 +106,11 @@ while read -u 7 action test_name pubber_opts; do
 
     mv $PUBBER_OUT $PUBBER_OUT-$test_format
     mv $SEQUENCER_RES $SEQUENCER_RES-$test_format
+    mv $SEQUENCER_LOG $SEQUENCER_LOG-$test_format
 
     echo =========== $test_name >> $SCHEMA_OUT
     cat out/schema.out >> $SCHEMA_OUT
+    mv out/schema.out $SCHEMA_OUT-$test_format
 
     sleep 2
 
