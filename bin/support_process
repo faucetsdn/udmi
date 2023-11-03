@@ -1,7 +1,12 @@
 #!/bin/bash -e
 
 archive=$1
-shift
+shift || true
+
+if [[ -z $archive ]]; then
+    archive=$(ls -t ~/Downloads/udmi-support_*.zip | head -n 1)
+    echo Auto-detected archive $archive
+fi
 
 sites_in=sites/udmi_site_model_*/
 sites_out=sites/udmi_site_model/out
