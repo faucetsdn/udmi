@@ -162,7 +162,7 @@ jobs:
         run: more out/*.out* | cat
       - name: pubber logs
         if: ${{ always() }}
-        run: more out/pubber.log* pubber/out/*/*.json | cat
+        run: more out/pubber.log* pubber/out/*.json | cat
       - name: support bundle
         if: ${{ always() }}
         run: bin/support ${{ github.repository_owner }}_${{ github.job }}_
@@ -201,6 +201,7 @@ jobs:
         if: ${{ always() }}
         run: |
           cd sites/udmi_site_model/out
+          find . -type f | sort | xargs ls -l
           find . -type f | sort | xargs more | cat
       - name: nostate sequences
         run: bin/test_sequencer clean nostate full $TARGET_PROJECT
