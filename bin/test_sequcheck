@@ -15,11 +15,11 @@ diff -u out/schema.out etc/schema${suffix}.out
 
 [[ -n $suffix ]] && echo Done with suffix test checks. && exit 0
 
-cp docs/specs/sequences/generated.md out/  # Save for test/comparison later
+cp docs/specs/sequences/generated.md out/generated.tmp  # Save for test/comparison later
 bin/gencode_seq
 
 echo Comparing diff out/generated.md docs/specs/sequences/generated.md
-diff -u out/generated.md docs/specs/sequences/generated.md || (
+diff -u out/generated.tmp docs/specs/sequences/generated.md || (
     echo Run bin/gencode_seq to regenerate output, if necessary.
     false
 )

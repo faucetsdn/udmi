@@ -152,9 +152,6 @@ jobs:
       - name: sequence test timing
         if: ${{ always() }}
         run: fgrep ' ending test ' out/sequencer.log
-      - name: generated files
-        if: ${{ always() }}
-        run: more out/sequencer.out out/generated.md || true
       - name: sequencer end state
         if: ${{ always() }}
         run: cat sites/udmi_site_model*/out/sequencer_AHU-1.json || true
@@ -165,26 +162,20 @@ jobs:
           more out*/schemas*.out || true
           echo ============ find RESULT.log
           find sites/udmi_site_model/out*/devices/ -name RESULT.log | xargs fgrep -i schema || true
+      - name: itemized sequencer tests
+        run: bin/test_itemized $TARGET_PROJECT
+      - name: output files
+        if: ${{ always() }}
+        run: more out/*.out* | cat
       - name: pubber logs
         if: ${{ always() }}
         run: more out/pubber.log* pubber/out/*/*.json || true
-      - name: output logs
-        if: ${{ always() }}
-        run: cd sites/udmi_site_model/out && more `find . -type f` || true
-      - name: itemized sequencer tests
-        run: bin/test_itemized $TARGET_PROJECT
-      - name: itemized output logs
-        if: ${{ always() }}
-        run: more out/*_itemized.out out/sequencer.out-* out/pubber.log-* | cat
       - name: itemized test timing
         if: ${{ always() }}
         run: egrep ' test .* after .*s ' out/sequencer.log-*
-      - name: tool output logs
+      - name: tool output files
         if: ${{ always() }}
         run: more sites/udmi_site_model/out/*.json | cat
-      - name: pubber output logs
-        if: ${{ always() }}
-        run: more out/pubber.log* | cat
       - name: support bundle
         if: ${{ always() }}
         run: |
@@ -303,10 +294,12 @@ jobs:
         run: bin/support_process udmi-support_*
       - name: Sequencer validation
         run: bin/test_sequcheck
-      - name: sequencer markdown report generator
+      - name: Generated Report
+        run: more docs/specs/sequences/generated.md
+      - name: sequencer markdown generated report
         run: |
-          # The reconstruction of the report.md file is broken, and currenlty only works for alpha tests.
+          # The reconstruction of the complete report.md file is broken, and currenlty only works for alpha tests.
           # If this test is promoted, then either need to find another test or fix the reconstruction.
           SAMPLE_TEST_ROW="| discovery.scan | single_scan | alpha | pass | Sequence complete |"
-          echo Checking for entry in generated results.md
+          echo Checking for expected entry in generated results.md
           fgrep "$SAMPLE_TEST_ROW" sites/udmi_site_model_*/out-seq/devices/AHU-1/results.md
