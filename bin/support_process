@@ -38,5 +38,5 @@ fi
 
 echo Restored $dst_count test output files to $sites_out
 
-cat out_*/schema.out | sort > out/schema.out
-ls -l out/schema.out
+cat out_*/schema.out.combined | sort > out/schema.out
+ls -l out*/schema.out*
