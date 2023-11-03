@@ -404,7 +404,7 @@ class LocalDevice {
     if (!deviceKeyFile.exists()) {
       return null;
     }
-    return CloudIotManager.makeCredentials(
+    return CloudIotManager.makeCredential(
         getAuthType(),
         IOUtils.toString(new FileInputStream(deviceKeyFile), Charset.defaultCharset()));
   }

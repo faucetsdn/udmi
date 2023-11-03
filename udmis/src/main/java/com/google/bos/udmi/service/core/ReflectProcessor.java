@@ -180,9 +180,7 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private CloudModel reflectModel(Envelope attributes, CloudModel request) {
-    return requireNonNull(
-        iotAccess.modelDevice(attributes.deviceRegistryId, attributes.deviceId, request),
-        "missing reflect model response");
+    return iotAccess.modelResource(attributes.deviceRegistryId, attributes.deviceId, request);
   }
 
   private CloudModel reflectPropagate(Envelope attributes, Map<String, Object> payload) {

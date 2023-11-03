@@ -357,8 +357,10 @@ public abstract class ProcessorBase extends ContainerBase {
     }
 
     try {
+      String serialNo = message.system.serial_no;
       Date newLastStart = message.system.operation.last_start;
-      debug("Checking config last_start against state last_start %s", getTimestamp(newLastStart));
+      debug("Checking config last_start for %s/%s sn:%s against state last_start %s",
+          envelope.deviceRegistryId, envelope.deviceId, serialNo, getTimestamp(newLastStart));
       processConfigChange(envelope, new HashMap<>(), newLastStart);
     } catch (Exception e) {
       debug("Could not process config last_state update, skipping: "

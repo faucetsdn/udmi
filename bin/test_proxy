@@ -31,8 +31,8 @@ site_config=$site_path/cloud_iot_config.json
 cloud_region=$(jq -r .cloud_region $site_config)
 registry_id=$(jq -r .registry_id $site_config)
 
-PUBBER_OUT=out/pubber.out
-rm -f $PUBBER_OUT.*
+PUBBER_LOG=out/pubber.log
+rm -f $PUBBER_LOG.*
 
 validator/bin/build
 pubber/bin/build

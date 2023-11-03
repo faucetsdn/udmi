@@ -1,21 +1,18 @@
-TEST device_config_acked noConfigAck RESULT fail system device_config_acked BETA 5 timeout waiting for config acked
-TEST pointset_request_extraneous extraPoint=llama RESULT fail pointset pointset_request_extraneous ALPHA 5 timeout waiting for pointset event contains correct points with present_value
-TEST pointset_remove_point missingPoint=filter_alarm_pressure_status RESULT fail pointset pointset_remove_point ALPHA 5 timeout waiting for pointset state reports same points as defined in config
-TEST pointset_remove_point noState RESULT fail pointset pointset_remove_point ALPHA 5 timeout waiting for no interesting system status
-TEST feature_enumeration featureEnableSwap RESULT fail enumeration.features feature_enumeration PREVIEW 5 Failed check that feature enumeration matches metadata; missing { enumeration }, extra { unknown }
-TEST valid_serial_no noLastStart RESULT pass system valid_serial_no ALPHA 5 Sequence complete
-TEST writeback_success noWriteback RESULT fail writeback writeback_success ALPHA 5 timeout waiting for point filter_differential_pressure_setpoint to have value_state applied
-TEST writeback_success noPointState RESULT fail writeback writeback_success ALPHA 5 timeout waiting for point filter_differential_pressure_setpoint to have value_state applied
-TEST pointset_sample_rate fixedSampleRate=10 RESULT fail pointset pointset_sample_rate BETA 5 Failed check that time period between successive pointset events is between 1 and 5 seconds
-TEST system_mode_restart noPersist RESULT fail system.mode system_mode_restart ALPHA 5 Failed check that restart count increased by one
-TEST broken_config barfConfig RESULT fail system broken_config ALPHA 5 timeout waiting for has interesting system status
-TEST broken_config configStateDelay RESULT pass system broken_config ALPHA 5 Sequence complete
-TEST broken_config noState RESULT fail system broken_config ALPHA 5 timeout waiting for initial state synchronized
-TEST system_last_update extraField=fnooz RESULT pass system system_last_update STABLE 5 Sequence complete
-
-# Test with various device metadata.json options
-WITH noState
-TEST valid_serial_no RESULT skip system valid_serial_no ALPHA 5 State testing disabled
-TEST system_last_update noState RESULT fail system system_last_update STABLE 5 timeout waiting for state last_config matches config timestamp
-TEST system_min_loglevel RESULT fail system system_min_loglevel ALPHA 5 Received state update with no-state device
-TEST system_min_loglevel noState RESULT pass system system_min_loglevel ALPHA 5 Sequence complete
+RESULT fail system device_config_acked BETA 5 timeout waiting for config acked
+RESULT fail pointset pointset_request_extraneous ALPHA 5 timeout waiting for pointset event contains correct points with present_value
+RESULT fail pointset pointset_remove_point ALPHA 5 timeout waiting for pointset state reports same points as defined in config
+RESULT fail pointset pointset_remove_point ALPHA 5 timeout waiting for no interesting system status
+RESULT fail enumeration.features feature_enumeration PREVIEW 5 Failed check that feature enumeration matches metadata; missing { enumeration }, extra { unknown }
+RESULT pass system valid_serial_no ALPHA 5 Sequence complete
+RESULT fail writeback writeback_success ALPHA 5 timeout waiting for point filter_differential_pressure_setpoint to have value_state applied
+RESULT fail writeback writeback_success ALPHA 5 timeout waiting for point filter_differential_pressure_setpoint to have value_state applied
+RESULT fail pointset pointset_sample_rate BETA 5 Failed check that time period between successive pointset events is between 1 and 5 seconds
+RESULT fail system.mode system_mode_restart ALPHA 5 Failed check that restart count increased by one
+RESULT fail system broken_config ALPHA 5 timeout waiting for has interesting system status
+RESULT pass system broken_config ALPHA 5 Sequence complete
+RESULT fail system broken_config ALPHA 5 timeout waiting for initial state synchronized
+RESULT pass system system_last_update STABLE 5 Sequence complete
+RESULT skip system valid_serial_no ALPHA 5 State testing disabled
+RESULT fail system system_last_update STABLE 5 timeout waiting for state last_config matches config timestamp
+RESULT fail system system_min_loglevel ALPHA 5 Received state update with no-state device
+RESULT pass system system_min_loglevel ALPHA 5 Sequence complete

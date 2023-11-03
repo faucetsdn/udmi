@@ -50,13 +50,14 @@ public class StateProcessor extends ProcessorBase {
   }
 
   private void shardStateUpdate(MessageContinuation continuation, StateUpdate message) {
-    info("Sharding state message to pipeline as incremental updates");
     Envelope envelope = continuation.getEnvelope();
     envelope.subType = SubType.STATE;
     envelope.subFolder = UPDATE;
     reflectMessage(envelope, stringify(message));
     String originalTransaction = envelope.transactionId;
     AtomicInteger txnSuffix = new AtomicInteger();
+    info("Sharding state message for %s/%s %s", envelope.deviceRegistryId, envelope.deviceId,
+        originalTransaction);
     Arrays.stream(State.class.getFields()).forEach(field -> {
       try {
         if (STATE_SUB_FOLDERS.contains(field.getName())) {

@@ -195,6 +195,7 @@ public class Pubber {
   private static final String DEFAULT_SOFTWARE_KEY = "firmware";
   private static final String DEFAULT_SOFTWARE_VALUE = "v1";
   private static final Duration CLOCK_SKEW = Duration.ofMinutes(30);
+  private static final Duration SMOKE_CHECK_TIME = Duration.ofMinutes(5);
   private static PubberOptions pubberOptions;
   protected final PubberConfiguration configuration;
   final State deviceState = new State();
@@ -254,9 +255,9 @@ public class Pubber {
    * Start an instance from explicit args.
    *
    * @param iotProject GCP project
-   * @param sitePath  Path to site_model
-   * @param deviceId  Device ID to emulate
-   * @param serialNo  Serial number of the device
+   * @param sitePath   Path to site_model
+   * @param deviceId   Device ID to emulate
+   * @param serialNo   Serial number of the device
    */
   public Pubber(String iotProject, String sitePath, String deviceId, String serialNo) {
     this.deviceId = deviceId;
@@ -687,6 +688,7 @@ public class Pubber {
   private void periodicUpdate() {
     try {
       deviceUpdateCount++;
+      checkSmokyFailure();
       updatePoints();
       deferredConfigActions();
       sendDevicePoints();
@@ -695,6 +697,15 @@ public class Pubber {
       flushDirtyState();
     } catch (Exception e) {
       error("Fatal error during execution", e);
+    }
+  }
+
+  private void checkSmokyFailure() {
+    if (isTrue(configuration.options.smokeCheck)
+        && Instant.now().minus(SMOKE_CHECK_TIME).isAfter(deviceStartTime.toInstant())) {
+      error(format("Smoke check failed after %sm, terminating run.",
+          SMOKE_CHECK_TIME.getSeconds() / 60));
+      systemLifecycle(SystemMode.TERMINATE);
     }
   }
 

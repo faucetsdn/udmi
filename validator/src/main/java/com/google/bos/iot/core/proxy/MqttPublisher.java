@@ -51,6 +51,8 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import udmi.schema.Credential;
+import udmi.schema.Credential.Key_format;
 import udmi.schema.ExecutionConfiguration;
 import udmi.schema.IotAccess.IotProvider;
 
@@ -80,6 +82,7 @@ public class MqttPublisher implements MessagePublisher {
   static final int TOKEN_EXPIRATION_MS = TOKEN_EXPIRATION_SEC * 1000;
   private static final String TICKLE_TOPIC = "events/tickle";
   private static final long TICKLE_PERIOD_SEC = 10;
+  private static final String REFLECTOR_PUBLIC_KEY = "reflector/rsa_public.pem";
   private final ExecutorService publisherExecutor =
       Executors.newFixedThreadPool(PUBLISH_THREAD_COUNT);
   private final Semaphore connectWait = new Semaphore(0);
@@ -99,6 +102,7 @@ public class MqttPublisher implements MessagePublisher {
   private final String providerHostname;
   private final String clientId;
   private final ScheduledFuture<?> tickler;
+  private final String siteModel;
   long mqttTokenSetTimeMs;
   private MqttConnectOptions mqttConnectOptions;
   private boolean shutdown;
@@ -111,6 +115,7 @@ public class MqttPublisher implements MessagePublisher {
     this.cloudRegion = executionConfiguration.cloud_region;
     this.registryId = MessagePublisher.getRegistryId(executionConfiguration);
     this.deviceId = executionConfiguration.device_id;
+    this.siteModel = executionConfiguration.site_model;
     this.algorithm = algorithm;
     this.keyBytes = keyBytes;
     this.providerHostname = getProviderHostname(executionConfiguration);
@@ -167,6 +172,18 @@ public class MqttPublisher implements MessagePublisher {
         IotReflectorClient.makeReflectConfiguration(iotConfig, registryActual), keyBytes,
         IotReflectorClient.REFLECTOR_KEY_ALGORITHM, messageHandler, errorHandler);
     return mqttPublisher;
+  }
+
+  @Override
+  public Credential getCredential() {
+    Credential credential = new Credential();
+    credential.key_data = new String(getFileBytes(getReflectorPublicKeyFile()));
+    credential.key_format = Key_format.fromValue(algorithm);
+    return credential;
+  }
+
+  private String getReflectorPublicKeyFile() {
+    return new File(siteModel, REFLECTOR_PUBLIC_KEY).getAbsolutePath();
   }
 
   private static byte[] getFileBytes(String dataFile) {
