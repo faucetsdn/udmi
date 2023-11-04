@@ -135,7 +135,6 @@ restarts=$(jq .restart_count $work_base/persistent_data.json)
 [[ $restarts -eq 2 ]] || fail Shutdown restart count incorrect, was $restarts expected 2
 
 log Checking for lingering pubber instances...
-ps ax | fgrep pubber | fgrep java || true
 instances=$(ps ax | fgrep pubber | fgrep java | awk '{print $1}' | wc -l)
 [[ $instances -eq 0 ]] || fail Unexpected lingering pubber instances found.
 
