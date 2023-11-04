@@ -62,7 +62,7 @@ public class IotReflectorClient implements MessagePublisher {
   private static final String MOCK_DEVICE_NUM_ID = "123456789101112";
   private static final String UDMI_TOPIC = "events/" + UDMI_FOLDER;
   private static final long CONFIG_TIMEOUT_SEC = 10;
-  private static final int UPDATE_RETRIES = 4;
+  private static final int UPDATE_RETRIES = 6;
   private static String prevTransactionId;
   private final String udmiVersion;
   private final CountDownLatch initialConfigReceived = new CountDownLatch(1);

@@ -46,12 +46,13 @@ bin/registrar $site_path
 bin/reset_config $site_path $project_id $device_id
 
 log Running pubber with redirectRegistry on timeout
-timeout 2m unbuffer bin/pubber $site_path $project_id $device_id $serial_no redirectRegistry=missing > $PUBBER_LOG.1 2>&1 || true
+timeout 1m unbuffer bin/pubber $site_path $project_id $device_id $serial_no redirectRegistry=missing > $PUBBER_LOG.1 2>&1 || true
 
-echo
-log $PUBBER_LOG.1 tail:
-tail $PUBBER_LOG.1
-echo
+log Checks that a redirect happened and failed...
+egrep -q 'registries/(.*~)?ZZ-TRI-FECTA(_.*)?/devices' $PUBBER_LOG.1 || bin/fail no ZZ-TRI-FECTA registry reference
+fgrep -q registries/missing/devices $PUBBER_LOG.1 || bin/fail no missing registry reference
+fgrep -q 'While waiting for connection start: Connection error' $PUBBER_LOG.1 || bin/fail no connection error
+fgrep -q 'Endpoint connection restored to last working endpoint' $PUBBER_LOG.1 || bin/fail no restore log message
 
 log Done with timeout, running pubber in background...
 bin/pubber $site_path $project_id $device_id $serial_no > $PUBBER_LOG.2 2>&1 &
@@ -128,34 +129,22 @@ log bin/reset_config $site_path $project_id $device_id shutdown_config.json
 bin/reset_config $site_path $project_id $device_id shutdown_config.json
 
 log And let it settle for last start...
-sleep 20
+sleep 30
 
 restarts=$(jq .restart_count $work_base/persistent_data.json)
 [[ $restarts -eq 2 ]] || fail Shutdown restart count incorrect, was $restarts expected 2
 
-echo
-log $PUBBER_LOG.2 tail:
-tail $PUBBER_LOG.2
-echo
 log Checking for lingering pubber instances...
-ps ax | fgrep pubber | fgrep java | awk '{print $1}'
 instances=$(ps ax | fgrep pubber | fgrep java | awk '{print $1}' | wc -l)
 [[ $instances -eq 0 ]] || fail Unexpected lingering pubber instances found.
 
-log Checks that a redirect happened and failed...
-egrep -q 'registries/(.*~)?ZZ-TRI-FECTA(_.*)?/devices' $PUBBER_LOG.1 || bin/fail no ZZ-TRI-FECTA registry reference
-fgrep -q registries/missing/devices $PUBBER_LOG.1 || bin/fail no missing registry reference
-fgrep -q 'While waiting for connection start: Connection error' $PUBBER_LOG.1 || bin/fail no connection error
-fgrep -q 'Endpoint connection restored to last working endpoint' $PUBBER_LOG.1 || bin/fail no restore log message
-
 log Check basic redirect-by-config setup...
 egrep -q 'registries/(.*~)?ZZ-TRI-FECTA(_.*)?/devices' $PUBBER_LOG.2 || bin/fail no ZZ-TRI-FECTA registry reference
-fgrep -q registries/reconfigure/devices $PUBBER_LOG.2 || bin/fail no reconfigure registry reference
+fgrep -q 'registries/reconfigure/devices' $PUBBER_LOG.2 || bin/fail no reconfigure registry reference
 fgrep -q 'While waiting for connection start: Connection error' $PUBBER_LOG.2 || bin/fail no connection error
 fgrep -q 'Endpoint connection restored to last working endpoint' $PUBBER_LOG.2 || bin/fail no connection restore
 fgrep -q 'Stopping system with extreme prejudice, restart restart' $PUBBER_LOG.2 || bin/fail no restart to restart
-# TODO(b/272300543): Disable these tests until the underlying problem is fixed.
-#fgrep -q 'Stopping system with extreme prejudice, restart terminate' $PUBBER_LOG.2 || bin/fail no restart to terminate
-#fgrep -q 'Done with pubber run, exit code 193' $PUBBER_LOG.2 || bin/fail no auto-kill exit code
+fgrep -q 'Stopping system with extreme prejudice, restart terminate' $PUBBER_LOG.2 || bin/fail no restart to terminate
+fgrep -q 'Done with pubber run, exit code 193' $PUBBER_LOG.2 || bin/fail no auto-kill exit code
 
 log Done with redirect tests.
