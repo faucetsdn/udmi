@@ -1,11 +1,12 @@
 package com.google.daq.mqtt.util;
 
 import static com.google.udmi.util.Common.getNamespacePrefix;
-import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static java.util.Optional.ofNullable;
+import static udmi.schema.IotAccess.IotProvider.IMPLICIT;
+import static udmi.schema.IotAccess.IotProvider.PUBSUB;
 
 import com.google.bos.iot.core.proxy.MqttPublisher;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
-import com.google.udmi.util.Common;
 import com.google.udmi.util.PubSubReflector;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -32,7 +33,11 @@ public interface MessagePublisher {
    */
   static MessagePublisher from(ExecutionConfiguration iotConfig,
       BiConsumer<String, String> messageHandler, Consumer<Throwable> errorHandler) {
-    if (IotAccess.IotProvider.PUBSUB == iotConfig.iot_provider) {
+    IotAccess.IotProvider iotProvider = ofNullable(iotConfig.iot_provider).orElse(IMPLICIT);
+    if (iotConfig.reflector_endpoint != null && iotProvider != IMPLICIT) {
+      throw new RuntimeException("Explicit endpoint conflicts with iot_provider " + iotProvider);
+    }
+    if (PUBSUB == iotConfig.iot_provider) {
       return PubSubReflector.from(iotConfig, messageHandler, errorHandler);
     }
     return MqttPublisher.from(iotConfig, messageHandler, errorHandler);
