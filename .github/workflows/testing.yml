@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
   pull_request:
   schedule:
-    - cron: '40 */4 * * *'
+    - cron: '40 */1 * * *'
 
 concurrency:
   group: ci-${{ github.repository }}
@@ -271,5 +271,7 @@ jobs:
         uses: actions/download-artifact@v3
       - name: Processing support package
         run: bin/support_process udmi-support_*
+      - name: Test run index
+        run: ls -d sites/udmi_site_model*/out*/devices/AHU-1/tests/*
       - name: Sequencer validation
         run: bin/test_sequcheck
