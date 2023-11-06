@@ -3,9 +3,10 @@ package com.google.daq.mqtt.registrar;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.registrar.Registrar.DEVICE_ERRORS_MAP;
-import static com.google.daq.mqtt.registrar.Registrar.ENVELOPE_JSON;
+import static com.google.daq.mqtt.registrar.Registrar.ENVELOPE_SCHEMA_JSON;
 import static com.google.daq.mqtt.registrar.Registrar.GENERATED_CONFIG_JSON;
 import static com.google.daq.mqtt.registrar.Registrar.METADATA_JSON;
+import static com.google.daq.mqtt.registrar.Registrar.METADATA_SCHEMA_JSON;
 import static com.google.daq.mqtt.registrar.Registrar.NORMALIZED_JSON;
 import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_STRICT;
@@ -288,7 +289,7 @@ class LocalDevice {
     JsonNode mergedMetadata = getMergedMetadata(instance);
 
     try {
-      ProcessingReport report = schemas.get(METADATA_JSON).validate(mergedMetadata);
+      ProcessingReport report = schemas.get(METADATA_SCHEMA_JSON).validate(mergedMetadata);
       if (validate) {
         parseMetadataValidateProcessingReport(report);
       }
@@ -620,11 +621,11 @@ class LocalDevice {
       envelope.projectId = fakeProjectId();
       envelope.deviceNumId = makeNumId(envelope);
       String envelopeJson = OBJECT_MAPPER_STRICT.writeValueAsString(envelope);
-      ProcessingReport processingReport = schemas.get(ENVELOPE_JSON)
+      ProcessingReport processingReport = schemas.get(ENVELOPE_SCHEMA_JSON)
           .validate(OBJECT_MAPPER.readTree(envelopeJson));
       if (!processingReport.isSuccess()) {
         processingReport.forEach(action -> {
-          throw new RuntimeException("against schema", action.asException());
+          throw new RuntimeException("Against envelope schema", action.asException());
         });
       }
     } catch (Exception e) {

@@ -14,7 +14,6 @@ import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.getDate;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.stringify;
-import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -46,6 +45,7 @@ import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
 import udmi.schema.ExecutionConfiguration;
+import udmi.schema.IotAccess.IotProvider;
 import udmi.schema.SetupUdmiConfig;
 import udmi.schema.SetupUdmiState;
 import udmi.schema.UdmiConfig;
@@ -57,8 +57,8 @@ import udmi.schema.UdmiState;
 public class IotReflectorClient implements MessagePublisher {
 
   public static final String UDMI_FOLDER = "udmi";
-  static final String REFLECTOR_KEY_ALGORITHM = "RS256";
   public static final String UDMI_REFLECT = "UDMI-REFLECT";
+  static final String REFLECTOR_KEY_ALGORITHM = "RS256";
   private static final String MOCK_DEVICE_NUM_ID = "123456789101112";
   private static final String UDMI_TOPIC = "events/" + UDMI_FOLDER;
   private static final long CONFIG_TIMEOUT_SEC = 10;
@@ -100,7 +100,8 @@ public class IotReflectorClient implements MessagePublisher {
     String cloudRegion = Optional.ofNullable(iotConfig.reflect_region)
         .orElse(iotConfig.cloud_region);
     String prefix = getNamespacePrefix(iotConfig.udmi_namespace);
-    String iotProvider = iotConfig.iot_provider.value();
+    String iotProvider = ifNotNullGet(iotConfig.iot_provider, IotProvider::value,
+        IotProvider.IMPLICIT.value());
     subscriptionId = format("%s/%s/%s/%s%s/%s",
         projectId, iotProvider, cloudRegion, prefix, UDMI_REFLECT, registryId);
 

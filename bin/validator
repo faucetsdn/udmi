@@ -3,6 +3,10 @@
 UDMI_ROOT=$(realpath $(dirname $0)/..)
 source $UDMI_ROOT/etc/shell_common.sh
 
+OUT_DIR=$UDMI_ROOT/out
+mkdir -p $OUT_DIR
+echo $(date --utc +%Y%m%d-%H%M%S) $0 $@ >> $OUT_DIR/cmd_history.log
+
 [[ $# == 0 ]] && usage 'SITE_{PATH/FILE}' [PROJECT_ID] [SUBSCRIPTION_ID]
 
 site_path=$(realpath $1)
@@ -72,6 +76,6 @@ cat $site_file
 
 echo Running tools version $udmi_version
 
-$UDMI_ROOT/validator/bin/validate $site_file $*
+$UDMI_ROOT/validator/bin/validate $site_file $* 2>&1 | tee $OUT_DIR/validator.log
 
 bin/check_version
