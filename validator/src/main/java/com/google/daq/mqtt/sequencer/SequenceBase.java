@@ -217,7 +217,7 @@ public class SequenceBase {
   private static SequenceBase activeInstance;
   private static MessageBundle stashedBundle;
   private static boolean resetRequired = true;
-  private static boolean enableAllTargets;
+  private static boolean enableAllTargets = true;
   private static boolean useAlternateClient;
 
   static {
@@ -432,11 +432,12 @@ public class SequenceBase {
 
   @NotNull
   private static Predicate<Map.Entry<String, List<Entry>>> isInterestingValidation() {
-    return entry -> {
-      String schemaName = entry.getKey();
-      return !schemaName.startsWith(CONFIG_PREFIX)
-          && (!schemaName.startsWith(STATE_PREFIX) || schemaName.equals(STATE_UPDATE_MESSAGE_TYPE));
-    };
+    return entry -> isInterestingValidation(entry.getKey());
+  }
+
+  private static boolean isInterestingValidation(String schemaName) {
+    return !schemaName.startsWith(CONFIG_PREFIX)
+        && (!schemaName.startsWith(STATE_PREFIX) || schemaName.equals(STATE_UPDATE_MESSAGE_TYPE));
   }
 
   private static void emitSequenceResult(SequenceResult result, String bucket, String methodName,
@@ -647,7 +648,6 @@ public class SequenceBase {
     // TODO: Minimize time, or better yet find deterministic way to flush messages.
     safeSleep(CONFIG_UPDATE_DELAY_MS);
 
-    testResult = SequenceResult.START;
     configAcked = false;
     enforceSerial = false;
     recordMessages = true;
@@ -1369,7 +1369,8 @@ public class SequenceBase {
   }
 
   private void validateMessage(Map<String, String> attributes, Map<String, Object> message) {
-    if (SubType.CONFIG.value().equals(attributes.get("subType"))) {
+    String schemaName = format("%s_%s", attributes.get("subType"), attributes.get("subFolder"));
+    if (!isInterestingValidation(schemaName)) {
       return;
     }
 
@@ -1862,6 +1863,7 @@ public class SequenceBase {
         testSummary = getTestSummary(description);
         testStage = getTestStage(description);
         testBucket = getBucket(description);
+        testResult = SequenceResult.START;
 
         testDir = new File(new File(deviceOutputDir, TESTS_OUT_DIR), testName);
         FileUtils.deleteDirectory(testDir);
@@ -1893,8 +1895,10 @@ public class SequenceBase {
         throw new IllegalStateException("Unexpected test method name");
       }
 
-      ValidateSchema annotation = description.getAnnotation(ValidateSchema.class);
-      ifNotNullThen(annotation, a -> recordSchemaValidations(description));
+      if (testResult == SequenceResult.PASS) {
+        ValidateSchema annotation = description.getAnnotation(ValidateSchema.class);
+        ifNotNullThen(annotation, a -> recordSchemaValidations(description));
+      }
 
       notice("ending test " + testName + " after " + timeSinceStart() + " " + START_END_MARKER);
       testName = null;
