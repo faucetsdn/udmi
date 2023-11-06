@@ -3,6 +3,9 @@
 UDMI_ROOT=$(dirname $0)/..
 source $UDMI_ROOT/etc/shell_common.sh
 
+mkdir -p $UDMI_ROOT/out
+echo $(date --utc +%Y%m%d-%H%M%S) $0 $@ >> $UDMI_ROOT/out/cmd_history.log
+
 config_file=/tmp/registrar_config.json
 
 [[ $# == 0 ]] && usage 'SITE_{PATH/FILE}' [PROJECT_ID] [OPTIONS] [devices...]
