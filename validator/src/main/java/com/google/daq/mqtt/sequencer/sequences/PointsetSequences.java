@@ -16,6 +16,7 @@ import static udmi.schema.FeatureEnumeration.FeatureStage.BETA;
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.PointsetBase;
 import com.google.daq.mqtt.sequencer.Summary;
+import com.google.daq.mqtt.sequencer.ValidateSchema;
 import com.google.daq.mqtt.util.SamplingRange;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -200,6 +201,7 @@ public class PointsetSequences extends PointsetBase {
   @Test(timeout = THREE_MINUTES_MS)
   @Summary("test sample rate and sample limit sec")
   @Feature(stage = BETA, bucket = POINTSET, nostate = true)
+  @ValidateSchema
   public void pointset_publish_interval() {
     ifNullSkipTest(deviceConfig.pointset, "no pointset found in config");
 

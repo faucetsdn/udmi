@@ -13,6 +13,7 @@ import static udmi.schema.FeatureEnumeration.FeatureStage.ALPHA;
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.Summary;
+import com.google.daq.mqtt.sequencer.ValidateSchema;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
 import java.util.Date;
@@ -159,6 +160,7 @@ public class BlobsetSequences extends SequenceBase {
 
   @Feature(stage = ALPHA, bucket = ENDPOINT)
   @Summary("Failed connection because of bad hash.")
+  @ValidateSchema
   @Test
   public void endpoint_connection_bad_hash() {
     setDeviceConfigEndpointBlob(getAlternateEndpointHostname(), registryId, true);
