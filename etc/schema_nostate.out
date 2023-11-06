@@ -1,2 +1,2 @@
-RESULT pass schemas event_pointset_stable STABLE 5 All schema validations passed
-RESULT pass schemas event_system_stable STABLE 5 All schema validations passed
+RESULT pass schemas event_pointset_beta BETA 5 All schema validations passed
+RESULT pass schemas event_system_beta BETA 5 All schema validations passed
