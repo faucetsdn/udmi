@@ -432,11 +432,12 @@ public class SequenceBase {
 
   @NotNull
   private static Predicate<Map.Entry<String, List<Entry>>> isInterestingValidation() {
-    return entry -> {
-      String schemaName = entry.getKey();
-      return !schemaName.startsWith(CONFIG_PREFIX)
-          && (!schemaName.startsWith(STATE_PREFIX) || schemaName.equals(STATE_UPDATE_MESSAGE_TYPE));
-    };
+    return entry -> isInterestingValidation(entry.getKey());
+  }
+
+  private static boolean isInterestingValidation(String schemaName) {
+    return !schemaName.startsWith(CONFIG_PREFIX)
+        && (!schemaName.startsWith(STATE_PREFIX) || schemaName.equals(STATE_UPDATE_MESSAGE_TYPE));
   }
 
   private static void emitSequenceResult(SequenceResult result, String bucket, String methodName,
@@ -1368,7 +1369,8 @@ public class SequenceBase {
   }
 
   private void validateMessage(Map<String, String> attributes, Map<String, Object> message) {
-    if (SubType.CONFIG.value().equals(attributes.get("subType"))) {
+    String schemaName = format("%s_%s", attributes.get("subType"), attributes.get("subFolder"));
+    if (!isInterestingValidation(schemaName)) {
       return;
     }
 
