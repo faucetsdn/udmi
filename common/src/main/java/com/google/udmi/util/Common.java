@@ -14,6 +14,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
+import joptsimple.internal.Strings;
 
 /**
  * Collection of common constants and minor utilities.
@@ -161,6 +162,6 @@ public abstract class Common {
   }
 
   public static String getNamespacePrefix(String udmiNamespace) {
-    return ofNullable(udmiNamespace).map(x -> x + PREFIX_SEPARATOR).orElse("");
+    return Strings.isNullOrEmpty(udmiNamespace) ? "" : udmiNamespace + PREFIX_SEPARATOR;
   }
 }
