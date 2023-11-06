@@ -217,7 +217,7 @@ public class SequenceBase {
   private static SequenceBase activeInstance;
   private static MessageBundle stashedBundle;
   private static boolean resetRequired = true;
-  private static boolean enableAllTargets;
+  private static boolean enableAllTargets = true;
   private static boolean useAlternateClient;
 
   static {
@@ -647,7 +647,6 @@ public class SequenceBase {
     // TODO: Minimize time, or better yet find deterministic way to flush messages.
     safeSleep(CONFIG_UPDATE_DELAY_MS);
 
-    testResult = SequenceResult.START;
     configAcked = false;
     enforceSerial = false;
     recordMessages = true;
@@ -1862,6 +1861,7 @@ public class SequenceBase {
         testSummary = getTestSummary(description);
         testStage = getTestStage(description);
         testBucket = getBucket(description);
+        testResult = SequenceResult.START;
 
         testDir = new File(new File(deviceOutputDir, TESTS_OUT_DIR), testName);
         FileUtils.deleteDirectory(testDir);
@@ -1893,8 +1893,10 @@ public class SequenceBase {
         throw new IllegalStateException("Unexpected test method name");
       }
 
-      ValidateSchema annotation = description.getAnnotation(ValidateSchema.class);
-      ifNotNullThen(annotation, a -> recordSchemaValidations(description));
+      if (testResult == SequenceResult.PASS) {
+        ValidateSchema annotation = description.getAnnotation(ValidateSchema.class);
+        ifNotNullThen(annotation, a -> recordSchemaValidations(description));
+      }
 
       notice("ending test " + testName + " after " + timeSinceStart() + " " + START_END_MARKER);
       testName = null;
