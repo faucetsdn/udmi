@@ -18,6 +18,8 @@ import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.fge.jsonschema.core.load.configuration.LoadingConfiguration;
 import com.github.fge.jsonschema.core.load.download.URIDownloader;
 import com.github.fge.jsonschema.main.JsonSchema;
@@ -81,7 +83,8 @@ public class Registrar {
   public static final Joiner JOIN_CSV = Joiner.on(", ");
   public static final File BASE_DIR = new File(".");
   static final String METADATA_JSON = "metadata.json";
-  static final String ENVELOPE_JSON = "envelope.json";
+  static final String ENVELOPE_SCHEMA_JSON = "envelope.json";
+  static final String METADATA_SCHEMA_JSON = "metadata.json";
   static final String NORMALIZED_JSON = "metadata_norm.json";
   static final String DEVICE_ERRORS_MAP = "errors.map";
   static final String GENERATED_CONFIG_JSON = "generated_config.json";
@@ -990,14 +993,20 @@ public class Registrar {
   private void loadSchema(String key) {
     File schemaFile = new File(schemaBase, key);
     try (InputStream schemaStream = Files.newInputStream(schemaFile.toPath())) {
+      JsonNode schemaTree = OBJECT_MAPPER.readTree(schemaStream);
+      if (schemaTree instanceof ObjectNode schemaObject) {
+        Set<String> toRemove = new HashSet<>();
+        schemaObject.fields().forEachRemaining(entry -> {
+          ifTrueThen(entry.getKey().startsWith("$"), () -> toRemove.add(entry.getKey()));
+        });
+        toRemove.forEach(schemaObject::remove);
+      }
       JsonSchema schema =
           JsonSchemaFactory.newBuilder()
               .setLoadingConfiguration(
                   LoadingConfiguration.newBuilder()
                       .addScheme("file", new RelativeDownloader())
-                      .freeze())
-              .freeze()
-              .getJsonSchema(OBJECT_MAPPER.readTree(schemaStream));
+                      .freeze()).freeze().getJsonSchema(schemaTree);
       schemas.put(key, schema);
     } catch (Exception e) {
       throw new RuntimeException("While loading schema " + schemaFile.getAbsolutePath(), e);
@@ -1016,7 +1025,7 @@ public class Registrar {
       // At this time, do not validate the Metadata schema because, by its nature of being
       // a partial overlay on each device Metadata, this Metadata will likely be incomplete
       // and fail validation.
-      schemas.get(METADATA_JSON).validate(OBJECT_MAPPER.readTree(targetStream));
+      schemas.get(METADATA_SCHEMA_JSON).validate(OBJECT_MAPPER.readTree(targetStream));
     } catch (FileNotFoundException e) {
       return;
     } catch (Exception e) {

@@ -4,7 +4,7 @@ archive=$1
 shift || true
 
 if [[ -z $archive ]]; then
-    archive=$(ls -t ~/Downloads/udmi-support_*.zip | head -n 1)
+    archive=$(ls -t ~/Downloads/udmi-support_*.zip ~/Downloads/udmi-support_*.tgz | head -n 1)
     echo Auto-detected archive $archive
 fi
 
@@ -20,6 +20,12 @@ rm -f *_udmi-support_*.tgz
 
 rm -rf out $sites_out
 mkdir -p out $sites_out
+
+if [[ ${archive}\$ =~ '.tgz$' ]]; then
+    tar -xzvf $archive
+    echo Extracted singular archive $archive
+    exit 0
+fi
 
 if [[ -f $archive ]]; then
     rm -rf $archive_dir
