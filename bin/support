@@ -37,7 +37,7 @@ if [[ -n $UDMI_REGISTRY_SUFFIX && -n $site_model ]]; then
     site_model=$site_model${UDMI_REGISTRY_SUFFIX}
 fi
 
-echo tar --exclude-vcs -czf /tamp/$ARCHIVE $site_model $OUT_DIR
+echo tar --exclude-vcs -czf /tmp/$ARCHIVE $site_model $OUT_DIR
 tar --exclude-vcs -czf /tmp/$ARCHIVE $site_model $OUT_DIR
 mv /tmp/$ARCHIVE .
 
