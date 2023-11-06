@@ -5,6 +5,7 @@ import static java.util.Optional.ofNullable;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
 import com.google.common.reflect.ClassPath;
 import com.google.common.reflect.ClassPath.ClassInfo;
 import java.util.ArrayList;
@@ -14,7 +15,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
-import joptsimple.internal.Strings;
 
 /**
  * Collection of common constants and minor utilities.
