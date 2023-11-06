@@ -5,6 +5,7 @@ import static java.util.Optional.ofNullable;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
 import com.google.common.reflect.ClassPath;
 import com.google.common.reflect.ClassPath.ClassInfo;
 import java.util.ArrayList;
@@ -161,6 +162,6 @@ public abstract class Common {
   }
 
   public static String getNamespacePrefix(String udmiNamespace) {
-    return ofNullable(udmiNamespace).map(x -> x + PREFIX_SEPARATOR).orElse("");
+    return Strings.isNullOrEmpty(udmiNamespace) ? "" : udmiNamespace + PREFIX_SEPARATOR;
   }
 }
