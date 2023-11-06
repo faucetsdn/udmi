@@ -7,10 +7,10 @@
 UDMI_ROOT=$(realpath $(dirname $0)/..)
 source $UDMI_ROOT/etc/shell_common.sh
 
-mkdir -p $UDMI_ROOT/out
-echo $(date --utc +%Y%m%d-%H%M%S) $0 $@ >> $UDMI_ROOT/out/cmd_history.log
-
 OUT_DIR=$UDMI_ROOT/out
+mkdir -p $OUT_DIR
+echo $(date --utc +%Y%m%d-%H%M%S) $0 $@ >> $OUT_DIR/cmd_history.log
+
 SEQUENCER_LOG=$OUT_DIR/sequencer.log
 SEQUENCER_OUT=$OUT_DIR/sequencer.out
 SCHEMA_OUT=$OUT_DIR/schema.out
@@ -78,7 +78,6 @@ test_names="$@"
 udmi_version=`git describe --always --dirty`
 
 cd $UDMI_ROOT
-mkdir -p $OUT_DIR
 
 if ! bin/which_venv_pip3; then
     echo ERROR venv pip3 not installed, please run bin/setup_base and try again

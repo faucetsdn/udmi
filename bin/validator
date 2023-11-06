@@ -5,7 +5,7 @@ source $UDMI_ROOT/etc/shell_common.sh
 
 OUT_DIR=$UDMI_ROOT/out
 mkdir -p $OUT_DIR
-echo $(date --utc +%Y%m%d-%H%M%S) $0 $@ >> $OUT_DIR/out/cmd_history.log
+echo $(date --utc +%Y%m%d-%H%M%S) $0 $@ >> $OUT_DIR/cmd_history.log
 
 [[ $# == 0 ]] && usage 'SITE_{PATH/FILE}' [PROJECT_ID] [SUBSCRIPTION_ID]
 
