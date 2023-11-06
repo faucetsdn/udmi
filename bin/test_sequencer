@@ -128,11 +128,13 @@ else
 fi
 
 echo Combining partial-run output files...
-ls -l out/schema.out* out/sequencer.log* || true
+ls -l out/schema.out out/sequencer.log
 
 cat out/schema.out >> out/schema.out.combined
 cat out/sequencer.log >> out/sequencer.log.combined
 cat out/sequencer.out >> out/sequencer.out.combined
+echo Combined to:
+ls -l out/schema.out.combined out/sequencer.log.combined || true
 
 if [[ -n $out_check ]]; then
     if [[ -n $clean_cache ]]; then
