@@ -3,6 +3,10 @@
 UDMI_ROOT=$(dirname $0)/..
 source $UDMI_ROOT/etc/shell_common.sh
 
+OUT_DIR=$UDMI_ROOT/out
+mkdir -p $OUT_DIR
+echo $(date --utc +%Y%m%d-%H%M%S) $0 $@ >> $OUT_DIR/cmd_history.log
+
 config_file=/tmp/registrar_config.json
 
 [[ $# == 0 ]] && usage 'SITE_{PATH/FILE}' [PROJECT_ID] [OPTIONS] [devices...]
@@ -65,7 +69,7 @@ else
 fi
 
 if [[ -f $site_path ]]; then
-    rm -f $config_file
+    [[ $site_path -ef $config_file ]] || rm -f $config_file
     config_file=$site_path
 else
     echo Writing config to $config_file
@@ -85,6 +89,6 @@ echo $config_file:
 cat $config_file
 echo
 
-validator/bin/registrar $config_file $* 2>&1
+validator/bin/registrar $config_file $* 2>&1 | tee $OUT_DIR/registrar.log
 
 bin/check_version
