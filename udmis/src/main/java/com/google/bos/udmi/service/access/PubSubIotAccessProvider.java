@@ -5,7 +5,7 @@ import static com.google.bos.udmi.service.messaging.impl.PubSubPipe.getTransport
 import static com.google.udmi.util.Common.CATEGORY_PROPERTY_KEY;
 import static com.google.udmi.util.Common.COMMANDS_CATEGORY;
 import static com.google.udmi.util.Common.CONFIG_CATEGORY;
-import static com.google.udmi.util.Common.DEVICE_ID_PROPERTY_KEY;
+import static com.google.udmi.util.Common.DEVICE_ID_KEY;
 import static com.google.udmi.util.Common.REGISTRY_ID_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -94,7 +94,7 @@ public class PubSubIotAccessProvider extends IotAccessBase {
     try {
       Map<String, String> stringMap = new HashMap<>();
       stringMap.put(REGISTRY_ID_PROPERTY_KEY, registryId);
-      stringMap.put(DEVICE_ID_PROPERTY_KEY, deviceId);
+      stringMap.put(DEVICE_ID_KEY, deviceId);
       stringMap.put(CATEGORY_PROPERTY_KEY, category);
       ifNotNullThen(folder, () -> stringMap.put(SUBFOLDER_PROPERTY_KEY, folder.value()));
       PubsubMessage message = PubsubMessage.newBuilder()

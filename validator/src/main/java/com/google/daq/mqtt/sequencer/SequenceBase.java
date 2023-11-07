@@ -9,8 +9,9 @@ import static com.google.daq.mqtt.validator.Validator.CONFIG_PREFIX;
 import static com.google.daq.mqtt.validator.Validator.STATE_PREFIX;
 import static com.google.udmi.util.CleanDateFormat.cleanDate;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
-import static com.google.udmi.util.Common.DEVICE_ID_PROPERTY_KEY;
+import static com.google.udmi.util.Common.DEVICE_ID_KEY;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
+import static com.google.udmi.util.Common.GATEWAY_ID_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.Common.getExceptionMessage;
 import static com.google.udmi.util.GeneralUtils.changedLines;
@@ -225,7 +226,7 @@ public class SequenceBase {
         "ALPHA functions version should not be > BETA");
   }
 
-  private final Map<SubFolder, List<Map<String, Object>>> receivedEvents = new HashMap<>();
+  private final Map<String, Map<SubFolder, List<Map<String, Object>>>> receivedEvents = new HashMap<>();
   private final Map<String, Object> receivedUpdates = new HashMap<>();
   private final Queue<Entry> logEntryQueue = new LinkedBlockingDeque<>();
   private final Stack<String> waitingCondition = new Stack<>();
@@ -282,7 +283,6 @@ public class SequenceBase {
 
     cloudRegion = exeConfig.cloud_region;
     registryId = SiteModel.getRegistryActual(exeConfig);
-
 
     deviceMetadata = readDeviceMetadata();
 
@@ -425,8 +425,9 @@ public class SequenceBase {
   private static String makeMessageBase(Map<String, String> attributes) {
     String subType = attributes.get("subType");
     String subFolder = attributes.get("subFolder");
-    String messageBase = format("%s_%s", subType, subFolder);
-    return messageBase;
+    String gatewayId = attributes.get(GATEWAY_ID_KEY);
+    String deviceSuffix = ifNotNullGet(gatewayId, () -> "_" + attributes.get(DEVICE_ID_KEY));
+    return format("%s_%s%s", subType, subFolder, deviceSuffix);
   }
 
   @NotNull
@@ -1328,7 +1329,8 @@ public class SequenceBase {
   }
 
   private void processMessage(Map<String, String> attributes, Map<String, Object> message) {
-    String deviceId = attributes.get("deviceId");
+    String deviceId = attributes.get(DEVICE_ID_KEY);
+    String gatewayId = attributes.get(GATEWAY_ID_KEY);
     String subFolderRaw = attributes.get("subFolder");
     String subTypeRaw = attributes.get("subType");
     String transactionId = attributes.get("transactionId");
@@ -1336,7 +1338,10 @@ public class SequenceBase {
     String commandSignature = format("%s/%s/%s", deviceId, subTypeRaw, subFolderRaw);
     trace("received command " + commandSignature);
 
-    if (!SequenceBase.getDeviceId().equals(deviceId)) {
+    boolean targetDevice = getDeviceId().equals(deviceId);
+    boolean proxiedDevice = getDeviceId().equals(gatewayId);
+
+    if (!targetDevice && !proxiedDevice) {
       return;
     }
 
@@ -1373,15 +1378,14 @@ public class SequenceBase {
       return;
     }
 
-    String deviceId = attributes.get("deviceId");
+    String deviceId = attributes.get(DEVICE_ID_KEY);
     ReportingDevice reportingDevice = new ReportingDevice(deviceId);
 
     Map<String, String> modified = new HashMap<>(attributes);
-    modified.put(DEVICE_ID_PROPERTY_KEY, FAKE_DEVICE_ID); // Allow for non-standard device IDs.
+    modified.put(DEVICE_ID_KEY, FAKE_DEVICE_ID); // Allow for non-standard device IDs.
 
     messageValidator.validateDeviceMessage(reportingDevice, message, modified);
-    String messageBase = makeMessageBase(attributes);
-    validationResults.computeIfAbsent(messageBase, key -> new ArrayList<>())
+    validationResults.computeIfAbsent(makeMessageBase(attributes), key -> new ArrayList<>())
         .addAll(reportingDevice.getMessageEntries());
   }
 
@@ -1517,8 +1521,10 @@ public class SequenceBase {
   }
 
   private void preprocessMessage(Map<String, String> attributes, Map<String, Object> message) {
-    if (SubType.STATE.value().equals(attributes.get(Common.SUBTYPE_PROPERTY_KEY))) {
-      updateConfigAcked(message);
+    if (getDeviceId().equals(attributes.get(DEVICE_ID_KEY))) {
+      if (SubType.STATE.value().equals(attributes.get(Common.SUBTYPE_PROPERTY_KEY))) {
+        updateConfigAcked(message);
+      }
     }
   }
 
@@ -1835,11 +1841,11 @@ public class SequenceBase {
   }
 
   public Map<SubFolder, List<Map<String, Object>>> getReceivedEvents(String deviceId) {
-    return receivedEvents;
+    return receivedEvents.get(deviceId);
   }
 
   public Map<SubFolder, List<Map<String, Object>>> getReceivedEvents() {
-    return receivedEvents;
+    return getReceivedEvents(getDeviceId());
   }
 
   public Map<String, Object> getReceivedUpdates() {

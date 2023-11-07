@@ -1,7 +1,6 @@
 package com.google.udmi.util;
 
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
-import static java.util.Optional.ofNullable;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -38,7 +37,8 @@ public abstract class Common {
   public static final String SUBFOLDER_PROPERTY_KEY = "subFolder";
   public static final String PROJECT_ID_PROPERTY_KEY = "projectId";
   public static final String REGISTRY_ID_PROPERTY_KEY = "deviceRegistryId";
-  public static final String DEVICE_ID_PROPERTY_KEY = "deviceId";
+  public static final String DEVICE_ID_KEY = "deviceId";
+  public static final String GATEWAY_ID_KEY = "gatewayId";
   public static final String MESSAGE_SOURCE_PROPERTY_KEY = "source";
   public static final String NO_SITE = "--";
   public static final String GCP_REFLECT_KEY_PKCS8 = "reflector/rsa_private.pkcs8";

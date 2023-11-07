@@ -5,7 +5,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.CleanDateFormat.cleanDate;
 import static com.google.udmi.util.Common.CONDENSER_STRING;
 import static com.google.udmi.util.Common.DETAIL_KEY;
-import static com.google.udmi.util.Common.DEVICE_ID_PROPERTY_KEY;
+import static com.google.udmi.util.Common.DEVICE_ID_KEY;
 import static com.google.udmi.util.Common.ERROR_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.GeneralUtils.decodeBase64;
@@ -132,7 +132,7 @@ public class ReflectProcessor extends ProcessorBase {
     message.put(DETAIL_KEY, detailString);
     Envelope envelope = new Envelope();
     envelope.subFolder = SubFolder.ERROR;
-    envelope.deviceId = (String) objectMap.get(DEVICE_ID_PROPERTY_KEY);
+    envelope.deviceId = (String) objectMap.get(DEVICE_ID_KEY);
     envelope.transactionId = reflection.transactionId;
     sendReflectCommand(reflection, envelope, message);
   }
