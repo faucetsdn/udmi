@@ -119,12 +119,7 @@ while read -u 7 action test_name pubber_opts; do
 done 7< $INPUT_FILE
 
 if [[ -z $TARGET_TEST && -z $MATRIX_SHARD_COUNT ]]; then
-    echo Comparing diff $RESULTS_OUT $GOLDEN_FILE
-    diff -bu $RESULTS_OUT $GOLDEN_FILE
-
-    echo Comparing diff $SCHEMA_OUT $GOLDEN_SCHEMAS
-    uniq < $SCHEMA_OUT | sponge $SCHEMA_OUT
-    diff -bu $SCHEMA_OUT $GOLDEN_SCHEMAS
+    bin/test_itemcheck
 else
     echo Archiving $SITE_PATH/out to $SITE_PATH/out-itm
     rm -rf $SITE_PATH/out-itm/

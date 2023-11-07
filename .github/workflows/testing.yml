@@ -277,3 +277,5 @@ jobs:
           find out* -name 'schema*.out*' -size +0 | xargs more | cat
       - name: Sequencer validation
         run: bin/test_sequcheck
+      - name: Itemized validation
+        run: bin/test_itemcheck
