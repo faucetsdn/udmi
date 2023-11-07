@@ -9,7 +9,6 @@ import java.util.HashSet;
 import java.util.Set;
 import org.junit.Test;
 import udmi.schema.Bucket;
-import udmi.schema.Envelope.SubFolder;
 import udmi.schema.FeatureEnumeration.FeatureStage;
 
 /**
