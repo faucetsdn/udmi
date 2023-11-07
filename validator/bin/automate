@@ -1,0 +1,142 @@
+#!/bin/bash -ex
+#
+# Automation of tools using PubSub triggers.
+#
+
+UDMI_PREFIX=${UDMI_NAMESPACE}~
+
+PUBSUB_FILE=pubsub.json
+MESSAGE_FILE=message.json
+RETRY_DELAY_SEC=60
+CLONE_DIR=source_model/
+MODEL_SUBDIR=udmi/
+CONFIG_FILE=registrar_config.json
+REGISTRAR_TRIGGER=run-registrar
+
+SUBSCRIPTION=${UDMI_PREFIX#\~}source_repo-udmis
+echo Pulling from PubSub subscription $SUBSCRIPTION
+
+export GCP_PROJECT=$(curl -s "http://metadata.google.internal/computeMetadata/v1/project/project-id" -H "Metadata-Flavor: Google" || true)
+echo Using GCP_PROJECT $GCP_PROJECT from GCE metadata.
+
+GCP_SERVICE_ACCOUNT=$(curl -s -H "Metadata-Flavor: Google" http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/email)
+echo Configured with GCP service account $GCP_SERVICE_ACCOUNT
+gcloud config set account $GCP_SERVICE_ACCOUNT
+
+# Create an as-needed subscription for this pod, and then garbage collect to clean them up (eventually).
+host_suffix=${HOSTNAME##*-}
+udmi_topic=${UDMI_PREFIX}udmi_reply
+udmi_feed=${udmi_topic}-${host_suffix}
+
+echo Checking existing subscriptions...
+gcloud pubsub subscriptions list | fgrep name: || true
+existing=$(gcloud pubsub subscriptions list | fgrep ${udmi_feed} || true)
+if [[ -n $existing ]]; then
+    echo Using existing subscription for $udmi_feed
+else
+    gcloud pubsub subscriptions create ${udmi_feed} --topic=${udmi_topic} --expiration-period=24h
+fi
+
+git config --global user.email $GCP_SERVICE_ACCOUNT
+git config --global user.name "UDMIS automation runner $UDMI_PREFIX"
+
+echo
+
+while true; do
+    echo Waiting for repo updates at $(date -u -Iseconds)
+    gcloud --format=json --project=$GCP_PROJECT pubsub subscriptions pull $SUBSCRIPTION --auto-ack > $PUBSUB_FILE
+
+    lines=$(cat $PUBSUB_FILE | wc -l)
+    if [[ ! -s $PUBSUB_FILE || $lines -lt 5 ]]; then
+        sleep $RETRY_DELAY_SEC
+        continue
+    fi
+
+    echo Processing updates starting $(date -u -Iseconds)
+    jq -r .[0].message.data $PUBSUB_FILE | base64 -d > $MESSAGE_FILE
+
+    cat $MESSAGE_FILE
+    echo
+
+    repo_url=$(jq -r .url $MESSAGE_FILE)
+    repo_name=${repo_url##*/}
+
+    echo Cloning repo $repo_name from $repo_url into $CLONE_DIR
+
+    rm -rf $CLONE_DIR
+
+    echo gcloud source repos clone $repo_name $CLONE_DIR --project=$GCP_PROJECT
+    gcloud source repos clone $repo_name $CLONE_DIR --project=$GCP_PROJECT || true
+
+    if [[ ! -d $CLONE_DIR ]]; then
+        echo
+        echo Error cloning repo, try again!
+        echo
+        continue
+    fi
+
+    (
+        cd $CLONE_DIR
+        git checkout main || true
+        pwd
+        ls -l
+    )
+
+    if [[ ! -f $CLONE_DIR/$REGISTRAR_TRIGGER ]]; then
+        echo Missing $CLONE_DIR/$REGISTRAR_TRIGGER trigger file, doing nothing!
+        continue
+    fi
+
+    MODEL_DIR=$(realpath $CLONE_DIR/$MODEL_SUBDIR/)
+    HISTORY_DIR=$MODEL_DIR/history
+    SUMMARY_FILE=$MODEL_DIR/out/registration_summary.json
+
+    TIMESTAMP=$(date --utc +%y%m%d%H%M%S)
+    mkdir -p $HISTORY_DIR
+    HISTORY_FILE=$HISTORY_DIR/registration_summary_${TIMESTAMP}.json
+    touch $HISTORY_FILE
+    rm -f $CLONE_DIR/$REGISTRAR_TRIGGER $SUMMARY_FILE
+
+    echo
+    echo Updating site model with start-of-action:
+    (
+        cd $CLONE_DIR
+        git add .
+        git status
+        git commit -m "Starting registration run $HISTORY_FILE on $HOSTNAME"
+        git push || touch failed
+    )
+
+    if [[ -f $CLONE_DIR/failed ]]; then
+        echo Run start push failed, aborting.
+        continue
+    fi
+
+    cat <<EOF > $CONFIG_FILE
+{
+  "iot_provider": "pubsub",
+  "project_id": "$GCP_PROJECT",
+  "udmi_namespace": "$UDMI_NAMESPACE",
+  "bridge_host": "${host_suffix}",
+  "site_model": "$MODEL_DIR"
+}
+EOF
+    echo Registrar config $CONFIG_FILE:
+    cat $CONFIG_FILE
+    echo
+
+    echo validator/bin/registrar $CONFIG_FILE
+    validator/bin/registrar $CONFIG_FILE || true
+
+    cp $SUMMARY_FILE $HISTORY_FILE
+
+    echo
+    echo Updating site model with completion results:
+    (
+        cd $CLONE_DIR
+        git add .
+        git status
+        git commit -F $SUMMARY_FILE
+        git push || true
+    )
+done

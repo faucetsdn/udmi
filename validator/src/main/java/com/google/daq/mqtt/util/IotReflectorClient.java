@@ -2,6 +2,8 @@ package com.google.daq.mqtt.util;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.sequencer.SequenceBase.EMPTY_MESSAGE;
+import static com.google.udmi.util.Common.CONDENSER_STRING;
+import static com.google.udmi.util.Common.DETAIL_KEY;
 import static com.google.udmi.util.Common.ERROR_KEY;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
 import static com.google.udmi.util.Common.TRANSACTION_KEY;
@@ -16,8 +18,11 @@ import static udmi.schema.CloudModel.Operation.BIND;
 
 import com.google.common.base.Preconditions;
 import com.google.daq.mqtt.util.MessagePublisher.QuerySpeed;
+import com.google.daq.mqtt.validator.Validator;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
 import com.google.udmi.util.SiteModel;
+import java.io.File;
+import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +35,7 @@ import java.util.concurrent.TimeUnit;
 import org.jetbrains.annotations.Nullable;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
+import udmi.schema.Credential;
 import udmi.schema.ExecutionConfiguration;
 import udmi.schema.SetupUdmiConfig;
 
@@ -42,8 +48,8 @@ public class IotReflectorClient implements IotProvider {
   public static final String CLOUD_MODEL_TOPIC = "cloud/model";
   public static final String REFLECTOR_PREFIX = "RC:";
   // Requires functions that support cloud device manager support.
-  private static final int REQUIRED_FUNCTION_VER = 9;
   private static final String UPDATE_CONFIG_TOPIC = "update/config";
+  private static final File ERROR_DIR = new File("out");
   private final com.google.bos.iot.core.proxy.IotReflectorClient messageClient;
   private final Map<String, CompletableFuture<Map<String, Object>>> futures =
       new ConcurrentHashMap<>();
@@ -58,8 +64,13 @@ public class IotReflectorClient implements IotProvider {
     SiteModel siteModel = new SiteModel(executionConfiguration.site_model);
     executionConfiguration.key_file = siteModel.validatorKey();
     messageClient = new com.google.bos.iot.core.proxy.IotReflectorClient(executionConfiguration,
-        REQUIRED_FUNCTION_VER);
+        Validator.REQUIRED_FUNCTION_VER);
     executor.execute(this::processReplies);
+  }
+
+  @Override
+  public Credential getCredential() {
+    return messageClient.getCredential();
   }
 
   @Override
@@ -70,7 +81,7 @@ public class IotReflectorClient implements IotProvider {
 
   @Override
   public void updateConfig(String deviceId, String config) {
-    transaction(deviceId, UPDATE_CONFIG_TOPIC, config, MessagePublisher.QuerySpeed.SHORT);
+    transaction(deviceId, UPDATE_CONFIG_TOPIC, config, QuerySpeed.LONG);
   }
 
   @Override
@@ -85,7 +96,7 @@ public class IotReflectorClient implements IotProvider {
   }
 
   @Override
-  public void createDevice(String deviceId, CloudModel makeDevice) {
+  public void createResource(String deviceId, CloudModel makeDevice) {
     makeDevice.operation = Operation.CREATE;
     CloudModel created = cloudModelTransaction(deviceId, CLOUD_MODEL_TOPIC, makeDevice);
     ifNotNullThen(makeDevice.num_id, () -> checkState(makeDevice.num_id.equals(created.num_id),
@@ -102,8 +113,7 @@ public class IotReflectorClient implements IotProvider {
 
   private CloudModel cloudModelTransaction(String deviceId, String topic, CloudModel model) {
     Operation operation = Preconditions.checkNotNull(model.operation, "no operation");
-    Map<String, Object> message = transaction(deviceId, topic, stringify(model),
-        MessagePublisher.QuerySpeed.SHORT);
+    Map<String, Object> message = transaction(deviceId, topic, stringify(model), QuerySpeed.LONG);
     CloudModel cloudModel = convertToStrict(CloudModel.class, message);
     String cloudNumId = ifNotNullGet(cloudModel, result -> result.num_id);
     Operation cloudOperation = ifNotNullGet(cloudModel, result -> result.operation);
@@ -153,11 +163,26 @@ public class IotReflectorClient implements IotProvider {
     // TODO: Publish should return future to avoid race conditions.
     String transactionId = messageClient.publish(deviceId, topic, message);
     Map<String, Object> objectMap = waitForReply(transactionId, speed);
-    String error = (String) objectMap.get("error");
+    String error = (String) objectMap.get(ERROR_KEY);
     if (error != null) {
+      writeErrorDetail(transactionId, error, (String) objectMap.get(DETAIL_KEY));
       throw new RuntimeException(format("UDMIS error %s: %s", transactionId, error));
     }
     return objectMap;
+  }
+
+  private void writeErrorDetail(String transactionId, String error, String detail) {
+    String errorName = String.format("udmis_error_%s.txt", transactionId);
+    File errorFile = new File(ERROR_DIR, errorName);
+    String detailLines = ifNotNullGet(detail, string -> string.replace(CONDENSER_STRING, "\n"));
+    try (PrintWriter output = new PrintWriter(errorFile)) {
+      output.println("UDMIS error transaction " + transactionId);
+      output.println("Message: " + error);
+      output.println("Detail:\n" + detailLines);
+      System.err.println("Captured UDMIS error to " + errorFile.getAbsolutePath());
+    } catch (Exception e) {
+      System.err.println("Error writing exception capture: " + friendlyStackTrace(e));
+    }
   }
 
   private Map<String, Object> waitForReply(String sentId, QuerySpeed speed) {

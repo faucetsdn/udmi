@@ -1,5 +1,6 @@
 package com.google.udmi.util;
 
+import static java.lang.Boolean.TRUE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -9,9 +10,12 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
-import com.google.udmi.util.MessageDowngrader;
 import java.io.File;
+import java.util.Map;
 import org.junit.Test;
+import udmi.schema.State;
+import udmi.schema.StateSystemOperation;
+import udmi.schema.SystemState;
 
 /**
  * Unit tests for MessageDowngrader.
@@ -29,9 +33,16 @@ public class MessageDowngraderTest {
   private static final String LOCALNET_VERSION = "1.3.14";
   private static final IntNode OLD_VERSION = new IntNode(1);
 
-  @Test(expected = IllegalArgumentException.class)
-  public void stateFail() {
-    new MessageDowngrader(STATE_SCHEMA, new TextNode("hello"));
+  @Test
+  public void stateDowngrade() {
+    State state = new State();
+    state.system = new SystemState();
+    state.system.operation = new StateSystemOperation();
+    state.system.operation.operational = TRUE;
+    MessageDowngrader messageDowngrader = new MessageDowngrader(STATE_SCHEMA, state);
+    Map<String, Object> downgrade = messageDowngrader.downgrade(SchemaVersion.VERSION_1_4_0);
+    Object operational = GeneralUtils.getSubMap(downgrade, "system").get("operational");
+    assertTrue("downgraded operational not TRUE", (Boolean) operational);
   }
 
   @Test

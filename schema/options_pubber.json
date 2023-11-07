@@ -46,7 +46,13 @@
     "smokeCheck": {
       "type": "boolean"
     },
+    "skewClock": {
+      "type": "boolean"
+    },
     "noPointState": {
+      "type": "boolean"
+    },
+    "noState": {
       "type": "boolean"
     },
     "featureEnableSwap": {

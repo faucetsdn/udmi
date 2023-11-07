@@ -1,5 +1,6 @@
 package com.google.bos.udmi.service.pod;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -8,13 +9,14 @@ import static java.util.Optional.ofNullable;
 import com.google.bos.udmi.service.core.ComponentName;
 import com.google.udmi.util.JsonUtil;
 import java.io.PrintStream;
-import java.time.Instant;
-import java.util.Objects;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.TestOnly;
+import udmi.schema.BasePodConfiguration;
 import udmi.schema.Level;
+import udmi.schema.PodConfiguration;
 
 /**
  * Baseline functions that are useful for any other component. No real functionally, rather
@@ -24,11 +26,43 @@ import udmi.schema.Level;
 public abstract class ContainerBase {
 
   public static final String INITIAL_EXECUTION_CONTEXT = "xxxxxxxx";
+  public static final Integer FUNCTIONS_VERSION_MIN = 11;
+  public static final Integer FUNCTIONS_VERSION_MAX = 11;
+  public static final String EMPTY_JSON = "{}";
+  public static final String REFLECT_BASE = "UDMI-REFLECT";
   private static final ThreadLocal<String> executionContext = new ThreadLocal<>();
   private static final Pattern VARIABLE_PATTERN = Pattern.compile("\\$\\{([A-Z_]+)\\}");
+  private static BasePodConfiguration basePodConfig = new BasePodConfiguration();
+  protected static String reflectRegistry = REFLECT_BASE;
+  protected final PodConfiguration podConfiguration;
+
+  /**
+   * Create a basic pod container.
+   */
+  public ContainerBase() {
+    podConfiguration = null;
+  }
+
+  /**
+   * Construct a new instance given a configuration file. Only used once for the pod itself.
+   *
+   * @param config pod configuration
+   */
+  public ContainerBase(PodConfiguration config) {
+    podConfiguration = config;
+    basePodConfig = ofNullable(podConfiguration.base).orElseGet(BasePodConfiguration::new);
+    reflectRegistry = getReflectRegistry();
+    info("Configured with reflect registry " + reflectRegistry);
+  }
 
   private static String environmentReplacer(MatchResult match) {
     return ofNullable(System.getenv(match.group(1))).orElse("");
+  }
+
+  @TestOnly
+  static void resetForTest() {
+    basePodConfig = null;
+    reflectRegistry = null;
   }
 
   /**
@@ -50,11 +84,15 @@ public abstract class ContainerBase {
     return previous;
   }
 
-  protected String variableSubstitution(String value, String nullMessage) {
-    if (nullMessage == null && value == null) {
+  protected String variableSubstitution(String value) {
+    if (value == null) {
       return null;
     }
-    requireNonNull(value, nullMessage);
+    return variableSubstitution(value, "unknown null value");
+  }
+
+  protected String variableSubstitution(String value, @NotNull String nullMessage) {
+    requireNonNull(value, requireNonNull(nullMessage, "null message not defined"));
     Matcher matcher = VARIABLE_PATTERN.matcher(value);
     String out = matcher.replaceAll(ContainerBase::environmentReplacer);
     ifNotTrueThen(value.equals(out), () -> debug("Replaced value %s with '%s'", value, out));
@@ -71,6 +109,16 @@ public abstract class ContainerBase {
   protected void setExecutionContext(String newContext) {
     trace("Setting execution context %s", newContext);
     executionContext.set(newContext);
+  }
+
+  @NotNull
+  private String getReflectRegistry() {
+    return getPodNamespacePrefix() + REFLECT_BASE;
+  }
+
+  @NotNull
+  protected String getPodNamespacePrefix() {
+    return ofNullable(basePodConfig.udmi_prefix).map(this::variableSubstitution).orElse("");
   }
 
   @NotNull

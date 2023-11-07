@@ -56,10 +56,6 @@ import udmi.schema.Envelope.SubType;
  */
 public abstract class ProcessorBase extends ContainerBase {
 
-  public static final Integer FUNCTIONS_VERSION_MIN = 9;
-  public static final Integer FUNCTIONS_VERSION_MAX = 9;
-  public static final String EMPTY_JSON = "{}";
-  public static final String REFLECT_REGISTRY = "UDMI-REFLECT";
   public static final String IOT_ACCESS_COMPONENT = "iot-access";
   private static final String RESET_CONFIG_VALUE = "reset_config";
   private static final String BREAK_CONFIG_VALUE = "break_json";
@@ -149,7 +145,7 @@ public abstract class ProcessorBase extends ContainerBase {
 
     // If the error comes from the reflect registry, then don't use the registry as the device,
     // so revert the default behavior (otherwise the message goes nowhere!).
-    if (REFLECT_REGISTRY.equals(errorMap.get(REGISTRY_ID_PROPERTY_KEY))) {
+    if (reflectRegistry.equals(errorMap.get(REGISTRY_ID_PROPERTY_KEY))) {
       errorMap.put(REGISTRY_ID_PROPERTY_KEY, errorMap.get(DEVICE_ID_PROPERTY_KEY));
       errorMap.put(DEVICE_ID_PROPERTY_KEY, null);
     }
@@ -216,7 +212,7 @@ public abstract class ProcessorBase extends ContainerBase {
 
   private void reflectString(String deviceRegistryId, String commandString) {
     ifNotNullThen(iotAccess, () ->
-        iotAccess.sendCommand(REFLECT_REGISTRY, deviceRegistryId, SubFolder.UDMI, commandString));
+        iotAccess.sendCommand(reflectRegistry, deviceRegistryId, SubFolder.UDMI, commandString));
   }
 
   private String updateConfig(String previous, Envelope attributes,
@@ -361,8 +357,10 @@ public abstract class ProcessorBase extends ContainerBase {
     }
 
     try {
+      String serialNo = message.system.serial_no;
       Date newLastStart = message.system.operation.last_start;
-      debug("Checking config last_start against state last_start %s", getTimestamp(newLastStart));
+      debug("Checking config last_start for %s/%s sn:%s against state last_start %s",
+          envelope.deviceRegistryId, envelope.deviceId, serialNo, getTimestamp(newLastStart));
       processConfigChange(envelope, new HashMap<>(), newLastStart);
     } catch (Exception e) {
       debug("Could not process config last_state update, skipping: "

@@ -3,6 +3,10 @@
 UDMI_ROOT=$(realpath $(dirname $0)/..)
 source $UDMI_ROOT/etc/shell_common.sh
 
+OUT_DIR=$UDMI_ROOT/out
+mkdir -p $OUT_DIR
+echo $(date --utc +%Y%m%d-%H%M%S) $0 $@ >> $OUT_DIR/cmd_history.log
+
 [[ $# == 0 ]] && usage 'SITE_{PATH/FILE}' [PROJECT_ID] [SUBSCRIPTION_ID]
 
 site_path=$(realpath $1)
@@ -18,17 +22,26 @@ if [[ -n $1 && ! $1 =~ ^- ]]; then
     shift
 fi
 
+quoted_namespace=null
+quoted_bridge=null
+iot_provider=null
+if [[ $project_id =~ ^// ]]; then
+    no_prefix=${project_id#//}
+    iot_provider=\"${no_prefix%%/*}\"
+    no_provider=${no_prefix#*/}
+    project_id=${no_provider%/*}
+    udmi_namespace=${no_provider#$project_id}
+    [[ -n $udmi_namespace ]] && quoted_namespace=\"${udmi_namespace#/}\"
+elif [[ $project_id =~ @ ]]; then
+    iot_provider=\"jwt\"
+    quoted_bridge=\"${project_id#*@}\"
+    project_id=${project_id%@*}
+fi
+
 if [[ -n $project_id ]]; then
     quoted_id=\"${project_id##*/}\"
 else
     quoted_id=null
-fi
-
-if [[ $project_id =~ ^// ]]; then
-    sans_project=${project_id%/*}
-    iot_provider=\"${sans_project#//}\"
-else
-    iot_provider=null
 fi
 
 if [[ -f $site_path ]]; then
@@ -48,6 +61,8 @@ elif [[ -n $project_id ]]; then
 {
   "iot_provider": $iot_provider,
   "project_id": $quoted_id,
+  "bridge_host": $quoted_bridge,
+  "udmi_namespace": $quoted_namespace,
   "site_model": "$site_path",
   "feed_name": "$subscription"
 }
@@ -56,8 +71,11 @@ else
     fail unknown configuration options
 fi
 
+echo Using site file $site_file:
+cat $site_file
+
 echo Running tools version $udmi_version
 
-$UDMI_ROOT/validator/bin/validate $site_file $*
+$UDMI_ROOT/validator/bin/validate $site_file $* 2>&1 | tee $OUT_DIR/validator.log
 
 bin/check_version

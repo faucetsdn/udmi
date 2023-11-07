@@ -1,19 +1,29 @@
 package com.google.bos.iot.core.proxy;
 
 import static com.google.bos.iot.core.proxy.ProxyTarget.STATE_TOPIC;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.udmi.util.GeneralUtils.catchOrElse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.SiteModel.DEFAULT_CLEARBLADE_HOSTNAME;
+import static com.google.udmi.util.SiteModel.DEFAULT_GBOS_HOSTNAME;
+import static com.google.udmi.util.SiteModel.DEFAULT_GCP_HOSTNAME;
 import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
-import static udmi.schema.IotAccess.IotProvider.CLEARBLADE;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.validator.Validator;
+import com.google.udmi.util.SiteModel;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -24,10 +34,13 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttClient;
@@ -38,16 +51,17 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import udmi.schema.Credential;
+import udmi.schema.Credential.Key_format;
 import udmi.schema.ExecutionConfiguration;
 import udmi.schema.IotAccess.IotProvider;
 
 /**
  * Handle publishing sensor data to a Cloud IoT MQTT endpoint.
  */
-class MqttPublisher implements MessagePublisher {
+public class MqttPublisher implements MessagePublisher {
 
-  static final String GCP_BRIDGE_HOSTNAME = "mqtt.googleapis.com";
-  static final String DEFAULT_CLEARBLADE_HOSTNAME = "us-central1-mqtt.clearblade.com";
+  public static final String EMPTY_JSON = "{}";
   static final String BRIDGE_PORT = "8883";
   private static final Logger LOG = LoggerFactory.getLogger(MqttPublisher.class);
   private static final boolean MQTT_SHOULD_RETAIN = false;
@@ -65,7 +79,10 @@ class MqttPublisher implements MessagePublisher {
   private static final int PUBLISH_THREAD_COUNT = 10;
   private static final String ATTACH_MESSAGE_FORMAT = "/devices/%s/attach";
   private static final int TOKEN_EXPIRATION_SEC = 60 * 60;
-  private static final int TOKEN_EXPIRATION_MS = TOKEN_EXPIRATION_SEC * 1000;
+  static final int TOKEN_EXPIRATION_MS = TOKEN_EXPIRATION_SEC * 1000;
+  private static final String TICKLE_TOPIC = "events/tickle";
+  private static final long TICKLE_PERIOD_SEC = 10;
+  private static final String REFLECTOR_PUBLIC_KEY = "reflector/rsa_public.pem";
   private final ExecutorService publisherExecutor =
       Executors.newFixedThreadPool(PUBLISH_THREAD_COUNT);
   private final Semaphore connectWait = new Semaphore(0);
@@ -75,7 +92,7 @@ class MqttPublisher implements MessagePublisher {
   private final MqttClient mqttClient;
   private final Set<String> attachedClients = new ConcurrentSkipListSet<>();
   private final BiConsumer<String, String> onMessage;
-  private final BiConsumer<MqttPublisher, Throwable> onError;
+  private final Consumer<Throwable> onError;
   private final String deviceId;
   private final byte[] keyBytes;
   private final String algorithm;
@@ -84,26 +101,118 @@ class MqttPublisher implements MessagePublisher {
   private final String cloudRegion;
   private final String providerHostname;
   private final String clientId;
+  private final ScheduledFuture<?> tickler;
+  private final String siteModel;
+  long mqttTokenSetTimeMs;
   private MqttConnectOptions mqttConnectOptions;
-  private long mqttTokenSetTimeMs;
+  private boolean shutdown;
 
   MqttPublisher(ExecutionConfiguration executionConfiguration, byte[] keyBytes, String algorithm,
-      BiConsumer<String, String> onMessage, BiConsumer<MqttPublisher, Throwable> onError) {
+      BiConsumer<String, String> onMessage, Consumer<Throwable> onError) {
     this.onMessage = onMessage;
     this.onError = onError;
     this.projectId = executionConfiguration.project_id;
     this.cloudRegion = executionConfiguration.cloud_region;
-    this.registryId = executionConfiguration.registry_id;
+    this.registryId = MessagePublisher.getRegistryId(executionConfiguration);
     this.deviceId = executionConfiguration.device_id;
+    this.siteModel = executionConfiguration.site_model;
     this.algorithm = algorithm;
     this.keyBytes = keyBytes;
-    IotProvider iotProvider = executionConfiguration.iot_provider;
-    this.providerHostname = catchOrElse(() -> executionConfiguration.reflector_endpoint.hostname,
-            () -> iotProvider == CLEARBLADE ? DEFAULT_CLEARBLADE_HOSTNAME : GCP_BRIDGE_HOSTNAME);
+    this.providerHostname = getProviderHostname(executionConfiguration);
     this.clientId = catchToNull(() -> executionConfiguration.reflector_endpoint.client_id);
     LOG.info(deviceId + " token expiration sec " + TOKEN_EXPIRATION_SEC);
     mqttClient = newMqttClient(deviceId);
     connectMqttClient(deviceId);
+    tickler = scheduleTickler();
+  }
+
+  private static ThreadFactory getDaemonThreadFactory() {
+    return runnable -> {
+      Thread thread = Executors.defaultThreadFactory().newThread(runnable);
+      thread.setDaemon(true);
+      return thread;
+    };
+  }
+
+  private static String getProviderHostname(ExecutionConfiguration executionConfiguration) {
+    IotProvider iotProvider =
+        ofNullable(executionConfiguration.iot_provider).orElse(IotProvider.IMPLICIT);
+    return catchOrElse(() -> executionConfiguration.reflector_endpoint.hostname,
+        () -> switch (iotProvider) {
+          case JWT -> requireNonNull(executionConfiguration.bridge_host, "missing bridge_host");
+          case GBOS -> DEFAULT_GBOS_HOSTNAME;
+          case GCP -> DEFAULT_GCP_HOSTNAME;
+          case CLEARBLADE -> DEFAULT_CLEARBLADE_HOSTNAME;
+          default -> throw new RuntimeException("Unsupported iot provider " + iotProvider);
+        }
+    );
+  }
+
+  /**
+   * Construct a new instance with the given configuration and handlers.
+   *
+   * @param iotConfig      publisher configuration
+   * @param messageHandler handler for received messages
+   * @param errorHandler   handler for errors/exceptions
+   */
+  public static MqttPublisher from(ExecutionConfiguration iotConfig,
+      BiConsumer<String, String> messageHandler, Consumer<Throwable> errorHandler) {
+    final byte[] keyBytes;
+    checkNotNull(iotConfig.key_file, "missing key file in config");
+    try {
+      System.err.println("Loading key bytes from " + iotConfig.key_file);
+      keyBytes = getFileBytes(iotConfig.key_file);
+    } catch (Exception e) {
+      throw new RuntimeException(
+          "While loading key file " + new File(iotConfig.key_file).getAbsolutePath(), e);
+    }
+    String registryActual = SiteModel.getRegistryActual(iotConfig);
+
+    MqttPublisher mqttPublisher = new MqttPublisher(
+        IotReflectorClient.makeReflectConfiguration(iotConfig, registryActual), keyBytes,
+        IotReflectorClient.REFLECTOR_KEY_ALGORITHM, messageHandler, errorHandler);
+    return mqttPublisher;
+  }
+
+  @Override
+  public Credential getCredential() {
+    Credential credential = new Credential();
+    credential.key_data = new String(getFileBytes(getReflectorPublicKeyFile()));
+    credential.key_format = Key_format.fromValue(algorithm);
+    return credential;
+  }
+
+  private String getReflectorPublicKeyFile() {
+    return new File(siteModel, REFLECTOR_PUBLIC_KEY).getAbsolutePath();
+  }
+
+  private static byte[] getFileBytes(String dataFile) {
+    Path dataPath = Paths.get(dataFile);
+    try {
+      return Files.readAllBytes(dataPath);
+    } catch (Exception e) {
+      throw new RuntimeException("While getting data from " + dataPath.toAbsolutePath(), e);
+    }
+  }
+
+  private ScheduledFuture<?> scheduleTickler() {
+    return Executors.newSingleThreadScheduledExecutor(getDaemonThreadFactory())
+        .scheduleWithFixedDelay(this::tickleConnection,
+            TICKLE_PERIOD_SEC, TICKLE_PERIOD_SEC, TimeUnit.SECONDS);
+  }
+
+  private void tickleConnection() {
+    LOG.debug("Tickle " + mqttClient.getClientId());
+    if (shutdown) {
+      try {
+        LOG.info("Tickler closing connection due to shutdown request");
+        close();
+      } catch (Exception e) {
+        throw new RuntimeException("While shutting down connection", e);
+      }
+      return;
+    }
+    publish(deviceId, TICKLE_TOPIC, EMPTY_JSON);
   }
 
   @Override
@@ -111,6 +220,9 @@ class MqttPublisher implements MessagePublisher {
     Preconditions.checkNotNull(deviceId, "publish deviceId");
     LOG.debug(this.deviceId + " publishing in background " + registryId + "/" + deviceId);
     try {
+      if (shutdown) {
+        LOG.error("Publishing to shutdown connection");
+      }
       Instant now = Instant.now();
       publisherExecutor.submit(() -> publishCore(deviceId, topic, data, now));
     } catch (Exception e) {
@@ -119,7 +231,8 @@ class MqttPublisher implements MessagePublisher {
     return null;
   }
 
-  private void publishCore(String deviceId, String topic, String payload, Instant start) {
+  private synchronized void publishCore(String deviceId, String topic, String payload,
+      Instant start) {
     try {
       if (!connectWait.tryAcquire(INITIALIZE_TIME_MS, TimeUnit.MILLISECONDS)) {
         throw new RuntimeException("Timeout waiting for connection");
@@ -180,6 +293,7 @@ class MqttPublisher implements MessagePublisher {
   public void close() {
     try {
       LOG.debug(format("Shutting down executor %x", publisherExecutor.hashCode()));
+      ifNotNullThen(tickler, () -> tickler.cancel(false));
       publisherExecutor.shutdownNow();
       if (!publisherExecutor.awaitTermination(INITIALIZE_TIME_MS, TimeUnit.MILLISECONDS)) {
         LOG.error("Executor tasks still remaining");
@@ -257,19 +371,23 @@ class MqttPublisher implements MessagePublisher {
     }
   }
 
-  private void connectAndSetupMqtt() throws Exception {
-    LOG.info(deviceId + " creating new jwt");
-    mqttConnectOptions.setPassword(createJwt());
-    mqttTokenSetTimeMs = System.currentTimeMillis();
-    LOG.info(deviceId + " connecting to mqtt server " + getBrokerUrl());
-    mqttClient.connect(mqttConnectOptions);
-    attachedClients.clear();
-    attachedClients.add(deviceId);
-    LOG.info(deviceId + " adding subscriptions");
-    subscribeToUpdates(deviceId);
-    subscribeToErrors(deviceId);
-    subscribeToCommands(deviceId);
-    LOG.info(deviceId + " done with setup connection");
+  private void connectAndSetupMqtt() {
+    try {
+      LOG.info(deviceId + " creating new jwt");
+      mqttConnectOptions.setPassword(createJwt());
+      mqttTokenSetTimeMs = System.currentTimeMillis();
+      LOG.info(deviceId + " connecting to mqtt server " + getBrokerUrl());
+      mqttClient.connect(mqttConnectOptions);
+      attachedClients.clear();
+      attachedClients.add(deviceId);
+      LOG.info(deviceId + " adding subscriptions");
+      subscribeToUpdates(deviceId);
+      subscribeToErrors(deviceId);
+      subscribeToCommands(deviceId);
+      LOG.info(deviceId + " done with setup connection");
+    } catch (Exception e) {
+      throw new RuntimeException("While setting up new mqtt connection to " + deviceId, e);
+    }
   }
 
   private void maybeRefreshJwt() {
@@ -282,7 +400,7 @@ class MqttPublisher implements MessagePublisher {
         LOG.info(deviceId + " handling token refresh");
         mqttClient.disconnect();
         long disconnectTime = System.currentTimeMillis() - currentTimeMillis;
-        LOG.info(deviceId + " disconnect took " + disconnectTime);
+        LOG.debug(deviceId + " disconnect took " + disconnectTime);
         connectAndSetupMqtt();
       } catch (Exception e) {
         throw new RuntimeException("While processing disconnect", e);
@@ -383,6 +501,14 @@ class MqttPublisher implements MessagePublisher {
     }
   }
 
+  public String getBridgeHost() {
+    return providerHostname;
+  }
+
+  public void shutdown() {
+    shutdown = true;
+  }
+
   private class MqttCallbackHandler implements MqttCallback {
 
     MqttCallbackHandler() {
@@ -392,7 +518,7 @@ class MqttPublisher implements MessagePublisher {
     public void connectionLost(Throwable cause) {
       LOG.warn("MQTT connection lost " + deviceId, cause);
       connectWait.release();
-      onError.accept(MqttPublisher.this, cause);
+      onError.accept(cause);
     }
 
     @Override
@@ -404,7 +530,7 @@ class MqttPublisher implements MessagePublisher {
       try {
         onMessage.accept(topic, message.toString());
       } catch (Exception e) {
-        onError.accept(MqttPublisher.this, e);
+        onError.accept(e);
       }
     }
   }

@@ -1,6 +1,7 @@
 package com.google.daq.mqtt.validator;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.daq.mqtt.registrar.Registrar.BASE_DIR;
 import static com.google.daq.mqtt.sequencer.SequenceBase.EMPTY_MESSAGE;
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_TOOLS;
@@ -12,17 +13,20 @@ import static com.google.udmi.util.Common.EXCEPTION_KEY;
 import static com.google.udmi.util.Common.GCP_REFLECT_KEY_PKCS8;
 import static com.google.udmi.util.Common.MESSAGE_KEY;
 import static com.google.udmi.util.Common.NO_SITE;
-import static com.google.udmi.util.Common.STATE_QUERY_TOPIC;
+import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
-import static com.google.udmi.util.Common.VERSION_KEY;
+import static com.google.udmi.util.Common.UPDATE_QUERY_TOPIC;
+import static com.google.udmi.util.Common.getNamespacePrefix;
 import static com.google.udmi.util.Common.removeNextArg;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.JSON_SUFFIX;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
+import static com.google.udmi.util.JsonUtil.getTimestamp;
+import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -30,6 +34,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.github.fge.jsonschema.core.load.configuration.LoadingConfiguration;
 import com.github.fge.jsonschema.core.load.download.URIDownloader;
+import com.github.fge.jsonschema.core.report.LogLevel;
+import com.github.fge.jsonschema.core.report.ProcessingMessage;
 import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
@@ -62,6 +68,7 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -82,6 +89,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 import org.apache.commons.io.FileUtils;
 import udmi.schema.Category;
 import udmi.schema.DeviceValidationEvent;
@@ -105,10 +113,12 @@ import udmi.schema.ValidationSummary;
  */
 public class Validator {
 
-  public static final int REQUIRED_FUNCTION_VER = 9;
+  public static final int REQUIRED_FUNCTION_VER = 11;
   public static final String CONFIG_PREFIX = "config_";
   public static final String STATE_PREFIX = "state_";
   public static final String PROJECT_PROVIDER_PREFIX = "//";
+  public static final String TIMESTAMP_ZULU_SUFFIX = "Z";
+  public static final String TIMESTAMP_UTC_SUFFIX = "+00:00";
   private static final String ERROR_FORMAT_INDENT = "  ";
   private static final String SCHEMA_VALIDATION_FORMAT = "Validating %d schemas";
   private static final String TARGET_VALIDATION_FORMAT = "Validating %d files against %s";
@@ -142,6 +152,7 @@ public class Validator {
   private static final String VALIDATION_STATE_TOPIC = "validation/state";
   private static final String POINTSET_SUBFOLDER = "pointset";
   private static final Date START_TIME = new Date();
+  private static final int TIMESTAMP_JITTER_SEC = 30;
   private final Map<String, ReportingDevice> reportingDevices = new TreeMap<>();
   private final Set<String> extraDevices = new TreeSet<>();
   private final Set<String> processedDevices = new TreeSet<>();
@@ -214,6 +225,30 @@ public class Validator {
     if (message.get(EXCEPTION_KEY) instanceof Exception exception) {
       message.put(EXCEPTION_KEY, friendlyStackTrace(exception));
     }
+  }
+
+  /**
+   * From an external processing report.
+   *
+   * @param report Report to convert
+   * @return Converted exception.
+   */
+  public static ValidationException fromProcessingReport(ProcessingReport report) {
+    checkArgument(!report.isSuccess(), "Report must not be successful");
+    ImmutableList<ValidationException> causingExceptions =
+        StreamSupport.stream(report.spliterator(), false)
+            .filter(
+                processingMessage -> processingMessage.getLogLevel().compareTo(LogLevel.ERROR) >= 0)
+            .map(Validator::convertMessage).collect(toImmutableList());
+    return new ValidationException(
+        format("%d schema violations found", causingExceptions.size()), causingExceptions);
+  }
+
+  private static ValidationException convertMessage(ProcessingMessage processingMessage) {
+    String pointer = processingMessage.asJson().get("instance").get("pointer").asText();
+    String prefix =
+        com.google.api.client.util.Strings.isNullOrEmpty(pointer) ? "" : (pointer + ": ");
+    return new ValidationException(prefix + processingMessage.getMessage());
   }
 
   private List<String> parseArgs(List<String> argList) {
@@ -310,7 +345,7 @@ public class Validator {
   }
 
   private void validateMessageTrace(String messageDir) {
-    client = new MessageReadingClient(config.registry_id, messageDir);
+    client = new MessageReadingClient(getRegistryId(), messageDir);
     dataSinks.add(client);
     prepForMock();
   }
@@ -421,7 +456,12 @@ public class Validator {
   }
 
   private String getRegistryId() {
-    return config.registry_id;
+    if (config == null) {
+      return null;
+    }
+    String prefix = getNamespacePrefix(config.udmi_namespace);
+    String suffix = ofNullable(config.registry_suffix).orElse("");
+    return prefix + config.registry_id + suffix;
   }
 
   private void validateReflector() {
@@ -461,7 +501,7 @@ public class Validator {
   private void sendInitializationQuery() {
     for (String deviceId : targetDevices) {
       System.err.println("Sending initialization query messages for device " + deviceId);
-      client.publish(deviceId, STATE_QUERY_TOPIC, EMPTY_MESSAGE);
+      client.publish(deviceId, UPDATE_QUERY_TOPIC, EMPTY_MESSAGE);
     }
   }
 
@@ -505,13 +545,6 @@ public class Validator {
       validateJsonNode(schema, OBJECT_MAPPER.valueToTree(message));
     } catch (Exception e) {
       throw new RuntimeException("While converting to json node: " + e.getMessage(), e);
-    }
-  }
-
-  private void sanitizeMessage(String schemaName, Map<String, Object> message) {
-    if (schemaName.startsWith(CONFIG_PREFIX) || schemaName.startsWith(STATE_PREFIX)) {
-      message.remove(VERSION_KEY);
-      message.remove(TIMESTAMP_KEY);
     }
   }
 
@@ -575,19 +608,45 @@ public class Validator {
     }
 
     upgradeMessage(schemaName, message);
-    sanitizeMessage(schemaName, message);
 
-    String timeString = (String) message.get(TIMESTAMP_KEY);
-    String subTypeRaw = ofNullable(attributes.get(SUBTYPE_PROPERTY_KEY))
-        .orElse(UNKNOWN_TYPE_DEFAULT);
-    if (timeString != null && LAST_SEEN_SUBTYPES.contains(SubType.fromValue(subTypeRaw))) {
-      device.updateLastSeen(Date.from(Instant.parse(timeString)));
+    String timestampRaw = (String) message.get("timestamp");
+    Instant timestamp = ifNotNullGet(timestampRaw, Instant::parse);
+    String publishRaw = attributes.get(PUBLISH_TIME_KEY);
+    Instant publishTime = ifNotNullGet(publishRaw, Instant::parse);
+    try {
+      // TODO: Validate message contests to make sure state sub-blocks don't also have timestamp.
+
+      String subTypeRaw = ofNullable(attributes.get(SUBTYPE_PROPERTY_KEY))
+          .orElse(UNKNOWN_TYPE_DEFAULT);
+      boolean lastSeenValid = LAST_SEEN_SUBTYPES.contains(SubType.fromValue(subTypeRaw));
+      if (lastSeenValid) {
+        if (publishTime != null) {
+          device.updateLastSeen(Date.from(publishTime));
+        }
+        if (timestamp == null) {
+          throw new RuntimeException("Missing message timestamp");
+        }
+        if (publishTime != null) {
+          if (!timestampRaw.endsWith(TIMESTAMP_ZULU_SUFFIX)
+              && !timestampRaw.endsWith(TIMESTAMP_UTC_SUFFIX)) {
+            throw new RuntimeException("Invalid timestamp timezone " + timestampRaw);
+          }
+          long between = Duration.between(publishTime, timestamp).getSeconds();
+          if (between > TIMESTAMP_JITTER_SEC || between < -TIMESTAMP_JITTER_SEC) {
+            throw new RuntimeException(format(
+                "Timestamp jitter %ds (%s to %s) exceeds %ds threshold",
+                between, publishRaw, timestampRaw, TIMESTAMP_JITTER_SEC));
+          }
+        }
+      }
+    } catch (Exception e) {
+      System.err.println("Timestamp validation error: " + friendlyStackTrace(e));
+      device.addError(e, attributes, Category.VALIDATION_DEVICE_CONTENT);
     }
 
     try {
       if (!schemaMap.containsKey(schemaName)) {
-        throw new IllegalArgumentException(
-            String.format(SCHEMA_SKIP_FORMAT, schemaName, deviceId));
+        throw new IllegalArgumentException(format(SCHEMA_SKIP_FORMAT, schemaName, deviceId));
       }
     } catch (Exception e) {
       System.err.println("Missing schema entry " + schemaName);
@@ -597,7 +656,7 @@ public class Validator {
     try {
       validateMessage(schemaMap.get(ENVELOPE_SCHEMA_ID), attributes);
     } catch (Exception e) {
-      System.err.println("Error validating attributes: " + e);
+      System.err.println("Error validating attributes: " + friendlyStackTrace(e));
       device.addError(e, attributes, Category.VALIDATION_DEVICE_RECEIVE);
     }
 
@@ -605,7 +664,8 @@ public class Validator {
       try {
         validateMessage(schemaMap.get(schemaName), message);
       } catch (Exception e) {
-        System.err.printf("Error validating schema %s: %s%n", schemaName, e.getMessage());
+        System.err.printf("Error validating schema %s: %s%n", schemaName,
+            friendlyStackTrace(e));
         device.addError(e, attributes, Category.VALIDATION_DEVICE_SCHEMA);
       }
     }
@@ -616,10 +676,10 @@ public class Validator {
       try {
         ifNotNullThen(CONTENT_VALIDATORS.get(schemaName), targetClass -> {
           Object messageObject = OBJECT_MAPPER.convertValue(message, targetClass);
-          device.validateMessageType(messageObject, JsonUtil.getDate(timeString), attributes);
+          device.validateMessageType(messageObject, JsonUtil.getDate(publishRaw), attributes);
         });
       } catch (Exception e) {
-        System.err.println("Error validating contents: " + e.getMessage());
+        System.err.println("Error validating contents: " + friendlyStackTrace(e));
         device.addError(e, attributes, Category.VALIDATION_DEVICE_CONTENT);
       }
     } else {
@@ -635,11 +695,10 @@ public class Validator {
       event.timestamp = new Date();
       String subFolder = origAttributes.get(SUBFOLDER_PROPERTY_KEY);
       event.sub_folder = subFolder;
-      event.sub_type = ofNullable(origAttributes.get(SUBTYPE_PROPERTY_KEY))
-          .orElse(UNKNOWN_TYPE_DEFAULT);
+      String subType = origAttributes.get(SUBTYPE_PROPERTY_KEY);
+      event.sub_type = ofNullable(subType).orElse(UNKNOWN_TYPE_DEFAULT);
       event.status = ReportingDevice.getSummaryEntry(reportingDevice.getMessageEntries());
-      String prefix = String.format("%s:",
-          typeFolderPairKey(origAttributes.get(SUBTYPE_PROPERTY_KEY), subFolder));
+      String prefix = format("%s:", typeFolderPairKey(subType, subFolder));
       event.errors = reportingDevice.getErrors(now, prefix);
       if (POINTSET_SUBFOLDER.equals(subFolder)) {
         PointsetSummary pointsSummary = new PointsetSummary();
@@ -677,7 +736,7 @@ public class Validator {
     AtomicInteger messageIndex = deviceMessageIndex.computeIfAbsent(deviceId,
         key -> new AtomicInteger());
     int index = messageIndex.incrementAndGet();
-    String filename = String.format("%03d_%s.json", index, typeFolderPairKey(type, folder));
+    String filename = format("%03d_%s.json", index, typeFolderPairKey(type, folder));
     File deviceDir = new File(traceDir, deviceId);
     File messageFile = new File(deviceDir, filename);
     try {
@@ -693,7 +752,7 @@ public class Validator {
   private boolean shouldConsiderMessage(Map<String, String> attributes) {
     String registryId = attributes.get(DEVICE_REGISTRY_ID_KEY);
 
-    if (config != null && !config.registry_id.equals(registryId)) {
+    if (!registryId.equals(getRegistryId())) {
       if (ignoredRegistries.add(registryId)) {
         System.err.println("Ignoring data for not-configured registry " + registryId);
       }
@@ -727,7 +786,7 @@ public class Validator {
 
     File deviceDir = makeDeviceDir(deviceId);
 
-    File messageFile = new File(deviceDir, String.format(MESSAGE_FILE_FORMAT, schemaName));
+    File messageFile = new File(deviceDir, format(MESSAGE_FILE_FORMAT, schemaName));
 
     // OBJECT_MAPPER can't handle an Exception class object, so do a swap-and-restore.
     Exception saved = (Exception) message.get(EXCEPTION_KEY);
@@ -735,12 +794,12 @@ public class Validator {
     OBJECT_MAPPER.writeValue(messageFile, message);
     message.put(EXCEPTION_KEY, saved);
 
-    File attributesFile = new File(deviceDir, String.format(ATTRIBUTE_FILE_FORMAT, schemaName));
+    File attributesFile = new File(deviceDir, format(ATTRIBUTE_FILE_FORMAT, schemaName));
     OBJECT_MAPPER.writeValue(attributesFile, attributes);
   }
 
   private File makeDeviceDir(String deviceId) {
-    File deviceDir = new File(outBaseDir, String.format(DEVICE_FILE_FORMAT, deviceId));
+    File deviceDir = new File(outBaseDir, format(DEVICE_FILE_FORMAT, deviceId));
     deviceDir.mkdirs();
     return deviceDir;
   }
@@ -856,13 +915,13 @@ public class Validator {
       throw new RuntimeException("Cowardly refusing to validate against zero targets");
     }
     ExceptionMap schemaExceptions =
-        new ExceptionMap(String.format(SCHEMA_VALIDATION_FORMAT, schemaFiles.size()));
+        new ExceptionMap(format(SCHEMA_VALIDATION_FORMAT, schemaFiles.size()));
     for (File schemaFile : schemaFiles) {
       try {
         JsonSchema schema = getSchema(schemaFile);
         String fileName = schemaFile.getName();
         ExceptionMap validateExceptions =
-            new ExceptionMap(String.format(TARGET_VALIDATION_FORMAT, targetFiles.size(), fileName));
+            new ExceptionMap(format(TARGET_VALIDATION_FORMAT, targetFiles.size(), fileName));
         for (File targetFile : targetFiles) {
           try {
             System.out.println(
@@ -941,7 +1000,6 @@ public class Validator {
     try (OutputStream outputStream = Files.newOutputStream(outputFile.toPath())) {
       copyFileHeader(inputFile, outputStream);
       Map<String, Object> message = JsonUtil.loadMap(inputFile);
-      sanitizeMessage(schemaName, message);
       JsonNode jsonNode = OBJECT_MAPPER.valueToTree(message);
       MessageUpgrader messageUpgrader = new MessageUpgrader(schemaName, jsonNode);
       messageUpgrader.upgrade(forceUpgrade);
@@ -1006,7 +1064,7 @@ public class Validator {
   private void validateJsonNode(JsonSchema schema, JsonNode jsonNode) throws ProcessingException {
     ProcessingReport report = schema.validate(jsonNode, true);
     if (!report.isSuccess()) {
-      throw ValidationException.fromProcessingReport(report);
+      throw fromProcessingReport(report);
     }
   }
 

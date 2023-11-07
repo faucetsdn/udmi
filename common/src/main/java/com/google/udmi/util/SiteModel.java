@@ -1,10 +1,13 @@
 package com.google.udmi.util;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.udmi.util.Common.getNamespacePrefix;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.JsonUtil.loadFileStrict;
 import static java.util.Objects.requireNonNull;
+import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
+import static udmi.schema.IotAccess.IotProvider.GCP;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -19,7 +22,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -32,10 +34,14 @@ import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
 import udmi.schema.ExecutionConfiguration;
 import udmi.schema.GatewayModel;
+import udmi.schema.IotAccess.IotProvider;
 import udmi.schema.Metadata;
 
 public class SiteModel {
 
+  public static final String DEFAULT_GCP_HOSTNAME = "mqtt.googleapis.com";
+  public static final String DEFAULT_CLEARBLADE_HOSTNAME = "us-central1-mqtt.clearblade.com";
+  public static final String DEFAULT_GBOS_HOSTNAME = "mqtt.bos.goog";
   public static final String MOCK_PROJECT = "mock-project";
   private static final String ID_FORMAT = "projects/%s/locations/%s/registries/%s/devices/%s";
   private static final String KEY_SITE_PATH_FORMAT = "%s/devices/%s/%s_private.pkcs8";
@@ -43,7 +49,6 @@ public class SiteModel {
       .enable(SerializationFeature.INDENT_OUTPUT)
       .setDateFormat(new ISO8601DateFormat())
       .setSerializationInclusion(JsonInclude.Include.NON_NULL);
-  private static final String DEFAULT_ENDPOINT_HOSTNAME = "mqtt.googleapis.com";
   private static final Pattern ID_PATTERN = Pattern.compile(
       "projects/(.*)/locations/(.*)/registries/(.*)/devices/(.*)");
 
@@ -56,18 +61,32 @@ public class SiteModel {
     this.sitePath = sitePath;
   }
 
-  public static EndpointConfiguration makeEndpointConfig(String projectId,
+  public static EndpointConfiguration makeEndpointConfig(String iotProject,
       ExecutionConfiguration executionConfig, String deviceId) {
     EndpointConfiguration endpoint = new EndpointConfiguration();
-    endpoint.client_id = getClientId(projectId,
+    endpoint.client_id = getClientId(iotProject,
         executionConfig.cloud_region, getRegistryActual(executionConfig), deviceId);
-    endpoint.hostname = DEFAULT_ENDPOINT_HOSTNAME;
+    endpoint.hostname = getEndpointHostname(executionConfig);
     return endpoint;
   }
 
-  public static String getClientId(String projectId, String cloudRegion, String registryId,
+  private static String getEndpointHostname(ExecutionConfiguration executionConfig) {
+    IotProvider iotProvider = ofNullable(executionConfig.iot_provider).orElse(GCP);
+    return switch (iotProvider) {
+      case CLEARBLADE -> DEFAULT_CLEARBLADE_HOSTNAME;
+      case GBOS -> DEFAULT_GBOS_HOSTNAME;
+      case GCP -> DEFAULT_GCP_HOSTNAME;
+      default -> throw new RuntimeException("Unsupported iot_provider " + iotProvider);
+    };
+  }
+
+  public static String getClientId(String iotProject, String cloudRegion, String registryId,
       String deviceId) {
-    return String.format(ID_FORMAT, projectId, cloudRegion, registryId, deviceId);
+    return String.format(ID_FORMAT,
+        requireNonNull(iotProject, "iot project not defined"),
+        requireNonNull(cloudRegion, "cloud region not defined"),
+        requireNonNull(registryId, "registry id not defined"),
+        requireNonNull(deviceId, "device id not defined"));
   }
 
   private static ExecutionConfiguration makeExecutionConfiguration(Envelope attributes) {
@@ -101,7 +120,7 @@ public class SiteModel {
           String.format("client_id %s does not match pattern %s", clientId, ID_PATTERN.pattern()));
     }
     ClientInfo clientInfo = new ClientInfo();
-    clientInfo.projectId = matcher.group(1);
+    clientInfo.iotProject = matcher.group(1);
     clientInfo.cloudRegion = matcher.group(2);
     clientInfo.registryId = matcher.group(3);
     clientInfo.deviceId = matcher.group(4);
@@ -157,18 +176,20 @@ public class SiteModel {
   }
 
   public static String getRegistryActual(ExecutionConfiguration iotConfig) {
-    return getRegistryActual(iotConfig.registry_id, iotConfig.registry_suffix);
+    return getRegistryActual(iotConfig.udmi_namespace, iotConfig.registry_id,
+        iotConfig.registry_suffix);
   }
 
-  public static String getRegistryActual(String registry_id, String registry_suffix) {
+  public static String getRegistryActual(String namespace,
+      String registry_id, String registry_suffix) {
     if (registry_id == null) {
       return null;
     }
-    return registry_id + Optional.ofNullable(registry_suffix).orElse("");
+    return getNamespacePrefix(namespace) + registry_id + ofNullable(registry_suffix).orElse("");
   }
 
-  public EndpointConfiguration makeEndpointConfig(String projectId, String deviceId) {
-    return makeEndpointConfig(projectId, executionConfiguration, deviceId);
+  public EndpointConfiguration makeEndpointConfig(String iotProject, String deviceId) {
+    return makeEndpointConfig(iotProject, executionConfiguration, deviceId);
   }
 
   private Set<String> getDeviceIds() {
@@ -332,8 +353,8 @@ public class SiteModel {
 
   public static class ClientInfo {
 
+    public String iotProject;
     public String cloudRegion;
-    public String projectId;
     public String registryId;
     public String deviceId;
   }

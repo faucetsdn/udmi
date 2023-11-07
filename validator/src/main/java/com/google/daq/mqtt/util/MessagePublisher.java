@@ -1,12 +1,47 @@
 package com.google.daq.mqtt.util;
 
+import static com.google.udmi.util.Common.getNamespacePrefix;
+import static java.util.Optional.ofNullable;
+import static udmi.schema.IotAccess.IotProvider.IMPLICIT;
+import static udmi.schema.IotAccess.IotProvider.PUBSUB;
+
+import com.google.bos.iot.core.proxy.MqttPublisher;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
+import com.google.udmi.util.PubSubReflector;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import udmi.schema.Credential;
+import udmi.schema.ExecutionConfiguration;
+import udmi.schema.IotAccess;
 import udmi.schema.SetupUdmiConfig;
 
 /**
  * Interface for publishing messages as raw maps.
  */
 public interface MessagePublisher {
+
+  static String getRegistryId(ExecutionConfiguration config) {
+    return getNamespacePrefix(config.udmi_namespace) + config.registry_id;
+  }
+
+  /**
+   * Factory to create an instance with the given provider and handlers.
+   *
+   * @param iotConfig      configuration to use
+   * @param messageHandler received message handler
+   * @param errorHandler   error/exception handler
+   */
+  static MessagePublisher from(ExecutionConfiguration iotConfig,
+      BiConsumer<String, String> messageHandler, Consumer<Throwable> errorHandler) {
+    IotAccess.IotProvider iotProvider = ofNullable(iotConfig.iot_provider).orElse(IMPLICIT);
+    if (iotConfig.reflector_endpoint != null && iotProvider != IMPLICIT) {
+      throw new RuntimeException("Explicit endpoint conflicts with iot_provider " + iotProvider);
+    }
+    if (PUBSUB == iotConfig.iot_provider) {
+      return PubSubReflector.from(iotConfig, messageHandler, errorHandler);
+    }
+    return MqttPublisher.from(iotConfig, messageHandler, errorHandler);
+  }
 
   String publish(String deviceId, String topic, String data);
 
@@ -27,6 +62,14 @@ public interface MessagePublisher {
     return setupUdmiConfig;
   }
 
+  default String getBridgeHost() {
+    throw new RuntimeException("getBridgeHost not implemented");
+  }
+
+  default Credential getCredential() {
+    throw new RuntimeException("getCredential not implemented");
+  }
+
   /**
    * Speed of a query -- how long to wait before a timeout.
    */
@@ -36,6 +79,7 @@ public interface MessagePublisher {
     LONG(30);
 
     private final int seconds;
+
     QuerySpeed(int seconds) {
       this.seconds = seconds;
     }

@@ -36,17 +36,26 @@ echo Setting config timestamp ${now_date}
 jq < ${src_config} .timestamp=\"${now_date}\" |\
     jq .system.testing.sequence_name=\"${config_file%.json}\" > ${dst_config}
 
+quoted_namespace=null
+quoted_bridge=null
+iot_provider=null
+if [[ $project_id =~ ^// ]]; then
+    no_prefix=${project_id#//}
+    iot_provider=\"${no_prefix%%/*}\"
+    no_provider=${no_prefix#*/}
+    project_id=${no_provider%/*}
+    udmi_namespace=${no_provider#$project_id}
+    [[ -n $udmi_namespace ]] && quoted_namespace=\"${udmi_namespace#/}\"
+elif [[ $project_id =~ @ ]]; then
+    iot_provider=\"jwt\"
+    quoted_bridge=\"${project_id#*@}\"
+    project_id=${project_id%@*}
+fi
+
 if [[ -n $project_id ]]; then
     quoted_id=\"${project_id##*/}\"
 else
     quoted_id=null
-fi
-
-if [[ $project_id =~ ^// ]]; then
-    sans_project=${project_id%/*}
-    iot_provider=\"${sans_project#//}\"
-else
-    iot_provider=null
 fi
 
 echo Resetting device ${device_id} config...
@@ -55,6 +64,8 @@ cat <<EOF > $REFLECTOR_CONFIG
 {
   "iot_provider": $iot_provider,
   "project_id": $quoted_id,
+  "udmi_namespace": $quoted_namespace,
+  "bridge_host": $quoted_bridge,
   "site_model": "$site_dir",
   "device_id": "$device_id",
   "registry_suffix": $registry_suffix

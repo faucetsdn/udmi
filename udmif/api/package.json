@@ -10,7 +10,7 @@
     "dataloader": "^2.1.0",
     "dotenv": "^16.0.0",
     "google-auth-library": "^7.14.1",
-    "graphql": "^16.2.0",
+    "graphql": "^16.8.1",
     "knex": "^2.4.0",
     "lodash": "^4.17.21",
     "pg": "^8.8.0",

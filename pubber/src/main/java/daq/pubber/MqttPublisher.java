@@ -1,6 +1,8 @@
 package daq.pubber;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.udmi.util.GeneralUtils.isTrue;
+import static java.lang.String.format;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -10,6 +12,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.base.Preconditions;
 import com.google.common.hash.Hashing;
+import com.google.udmi.util.NanSerializer;
 import com.google.udmi.util.SiteModel;
 import com.google.udmi.util.SiteModel.ClientInfo;
 import io.jsonwebtoken.JwtBuilder;
@@ -51,7 +54,6 @@ import udmi.schema.Basic;
 import udmi.schema.EndpointConfiguration.Transport;
 import udmi.schema.Jwt;
 import udmi.schema.PubberConfiguration;
-import udmi.schema.State;
 
 /**
  * Handle publishing sensor data to a Cloud IoT MQTT endpoint.
@@ -64,7 +66,9 @@ public class MqttPublisher implements Publisher {
       .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
       .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
       .setDateFormat(new ISO8601DateFormat())
+      .registerModule(NanSerializer.TO_NAN)
       .setSerializationInclusion(JsonInclude.Include.NON_NULL);
+
   // Indicate if this message should be a MQTT 'retained' message.
   private static final boolean SHOULD_RETAIN = false;
   private static final String UNUSED_ACCOUNT_NAME = "unused";
@@ -105,7 +109,7 @@ public class MqttPublisher implements Publisher {
     this.configuration = configuration;
     if (isGcpIotCore(configuration)) {
       ClientInfo clientIdParts = SiteModel.parseClientId(configuration.endpoint.client_id);
-      this.projectId = clientIdParts.projectId;
+      this.projectId = clientIdParts.iotProject;
       this.cloudRegion = clientIdParts.cloudRegion;
       this.registryId = clientIdParts.registryId;
     } else {
@@ -127,7 +131,7 @@ public class MqttPublisher implements Publisher {
     // Google Cloud IoT, it must be in the format below.
     if (isGcpIotCore(configuration)) {
       ClientInfo clientInfo = SiteModel.parseClientId(configuration.endpoint.client_id);
-      return SiteModel.getClientId(clientInfo.projectId, clientInfo.cloudRegion,
+      return SiteModel.getClientId(clientInfo.iotProject, clientInfo.cloudRegion,
           clientInfo.registryId, deviceId);
     } else if (configuration.endpoint.client_id != null) {
       return configuration.endpoint.client_id;
@@ -160,7 +164,7 @@ public class MqttPublisher implements Publisher {
       String timestamp = (String) mapped.get("timestamp");
       int serialNo = EVENT_SERIAL
           .computeIfAbsent(topic, key -> new AtomicInteger()).incrementAndGet();
-      mapped.put("timestamp", timestamp.replace("Z", String.format(".%03dZ", serialNo % 1000)));
+      mapped.put("timestamp", timestamp.replace("Z", format(".%03dZ", serialNo % 1000)));
       return mapped;
     } catch (Exception e) {
       throw new RuntimeException("While decorating message", e);
@@ -183,7 +187,7 @@ public class MqttPublisher implements Publisher {
       }
     } catch (Exception e) {
       errorCounter.incrementAndGet();
-      warn(String.format("Publish failed for %s: %s", deviceId, e));
+      warn(format("Publish failed for %s: %s", deviceId, e));
       if (configuration.gatewayId == null) {
         closeMqttClient(deviceId);
         if (mqttClients.isEmpty()) {
@@ -198,7 +202,7 @@ public class MqttPublisher implements Publisher {
 
   private String getMessageTopic(String deviceId, String topic) {
     return
-        topicPrefixMap.computeIfAbsent(deviceId, key -> String.format(TOPIC_PREFIX_FMT, deviceId))
+        topicPrefixMap.computeIfAbsent(deviceId, key -> format(TOPIC_PREFIX_FMT, deviceId))
             + "/" + topic;
   }
 
@@ -272,7 +276,7 @@ public class MqttPublisher implements Publisher {
       String topic = getMessageTopic(deviceId, MqttDevice.ATTACH_TOPIC);
       String payload = "";
       info("Publishing attach message " + topic);
-      mqttClient.publish(topic, payload.getBytes(StandardCharsets.UTF_8.name()), QOS_AT_LEAST_ONCE,
+      mqttClient.publish(topic, payload.getBytes(StandardCharsets.UTF_8), QOS_AT_LEAST_ONCE,
           SHOULD_RETAIN);
       subscribeToUpdates(mqttClient, deviceId);
       return mqttClient;
@@ -402,27 +406,25 @@ public class MqttPublisher implements Publisher {
     // Build the connection string for Google's Cloud IoT MQTT server. Only SSL connections are
     // accepted. For server authentication, the JVM's root certificates are used.
     Transport trans = Optional.ofNullable(configuration.endpoint.transport).orElse(Transport.SSL);
-    return String.format(BROKER_URL_FORMAT, trans, configuration.endpoint.hostname,
+    return format(BROKER_URL_FORMAT, trans, configuration.endpoint.hostname,
         configuration.endpoint.port);
   }
 
   private void subscribeToUpdates(MqttClient client, String deviceId) {
-    boolean noConfigAck = (configuration.options.noConfigAck != null
-        && configuration.options.noConfigAck);
-    int configQos = noConfigAck ? QOS_AT_MOST_ONCE : QOS_AT_LEAST_ONCE;
+    int configQos =
+        isTrue(configuration.options.noConfigAck) ? QOS_AT_MOST_ONCE : QOS_AT_LEAST_ONCE;
     if (configuration.endpoint.recv_id == null) {
       subscribeTopic(client, getMessageTopic(deviceId, MqttDevice.CONFIG_TOPIC), configQos);
       subscribeTopic(client, getMessageTopic(deviceId, MqttDevice.ERRORS_TOPIC), QOS_AT_MOST_ONCE);
     } else {
       subscribeTopic(client, configuration.endpoint.recv_id, configQos);
     }
-
-    info("Updates subscribed");
   }
 
   private void subscribeTopic(MqttClient client, String updateTopic, int mqttQos) {
     try {
       client.subscribe(updateTopic, mqttQos);
+      info(format("Subscribed to mqtt topic %s (qos %d)", updateTopic, mqttQos));
     } catch (MqttException e) {
       throw new RuntimeException("While subscribing to MQTT topic " + updateTopic, e);
     }
@@ -453,7 +455,7 @@ public class MqttPublisher implements Publisher {
   }
 
   private String getHandlerKey(String topic) {
-    return String.format(HANDLER_KEY_FORMAT, registryId, topic);
+    return format(HANDLER_KEY_FORMAT, registryId, topic);
   }
 
   private String getMessageType(String topic) {
@@ -600,20 +602,19 @@ public class MqttPublisher implements Publisher {
 
   static class InjectedMessage {
 
+    private static final String REPLACE_MESSAGE_KEY = "REPLACE_MESSAGE_WITH";
+    private static final String REPLACE_TOPIC_KEY = "REPLACE_TOPIC_WITH";
     public String version;
     public Date timestamp;
     public String field;
-
     @SuppressWarnings({"MemberName", "AbbreviationAsWordInName"})
     public String REPLACE_MESSAGE_WITH;
-    private static final String REPLACE_MESSAGE_KEY = "REPLACE_MESSAGE_WITH";
-
     @SuppressWarnings({"MemberName", "AbbreviationAsWordInName"})
     public String REPLACE_TOPIC_WITH;
-    private static final String REPLACE_TOPIC_KEY = "REPLACE_TOPIC_WITH";
   }
 
   static class InjectedState extends InjectedMessage {
+
   }
 
   private class MqttCallbackHandler implements MqttCallback {

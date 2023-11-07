@@ -50,16 +50,14 @@ public class UdmiServicePod extends ContainerBase {
       TargetProcessor.class, ReflectProcessor.class, StateProcessor.class);
   private static final Map<String, Class<? extends ProcessorBase>> PROCESSORS =
       PROCESSOR_CLASSES.stream().collect(Collectors.toMap(ContainerBase::getName, clazz -> clazz));
-  private final PodConfiguration podConfiguration;
 
   /**
    * Core pod to instantiate all the other components as necessary based on configuration.
    */
   public UdmiServicePod(String[] args) {
+    super(loadFileStrictRequired(PodConfiguration.class, args[0]));
     try {
       checkState(args.length == 1, "expected exactly one argument: configuration_file");
-
-      podConfiguration = loadFileStrictRequired(PodConfiguration.class, args[0]);
 
       ifNotNullThen(podConfiguration.flows, flows -> flows.forEach(this::createFlow));
       ifNotNullThen(podConfiguration.bridges, bridges -> bridges.forEach(this::createBridge));
@@ -107,8 +105,8 @@ public class UdmiServicePod extends ContainerBase {
     copyFields(getDeployedConfig(), udmiConfig.setup, false);
     udmiConfig.setup.hostname = HOSTNAME;
     udmiConfig.setup.udmi_version = UDMI_VERSION;
-    udmiConfig.setup.functions_min = ProcessorBase.FUNCTIONS_VERSION_MIN;
-    udmiConfig.setup.functions_max = ProcessorBase.FUNCTIONS_VERSION_MAX;
+    udmiConfig.setup.functions_min = ContainerBase.FUNCTIONS_VERSION_MIN;
+    udmiConfig.setup.functions_max = ContainerBase.FUNCTIONS_VERSION_MAX;
     return udmiConfig;
   }
 
@@ -122,6 +120,7 @@ public class UdmiServicePod extends ContainerBase {
       udmiServicePod.activate();
     } catch (Exception e) {
       System.err.println("Exception activating pod: " + friendlyStackTrace(e));
+      e.printStackTrace();
       System.exit(FATAL_ERROR_CODE);
     }
   }
@@ -189,7 +188,7 @@ public class UdmiServicePod extends ContainerBase {
     String absolutePath = READY_INDICATOR.getAbsolutePath();
     try {
       forAllComponents(ContainerBase::activate);
-      checkState(READY_INDICATOR.createNewFile(), "ready file already exists");
+      checkState(READY_INDICATOR.createNewFile(), "ready file already exists: " + absolutePath);
       READY_INDICATOR.deleteOnExit();
     } catch (Exception e) {
       throw new RuntimeException("While activating pod", e);

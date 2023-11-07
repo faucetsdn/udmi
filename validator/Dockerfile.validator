@@ -1,0 +1,20 @@
+FROM alpine:latest
+
+WORKDIR /root
+
+RUN apk add openjdk17 bash gcompat curl jq python3 git
+
+RUN curl -sSL https://sdk.cloud.google.com | bash
+
+ENV PATH=$PATH:/root/google-cloud-sdk/bin
+
+# Workaround for https://github.com/grpc/grpc-java/issues/8751
+ENV LD_PRELOAD=/lib/libgcompat.so.0
+
+ADD tmp/schema/ schema/
+
+ADD build/ validator/build/
+
+ADD bin/ validator/bin/
+
+CMD ["/root/validator/bin/automate"]

@@ -1,9 +1,11 @@
 package com.google.udmi.util;
 
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
+import static java.util.Optional.ofNullable;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
 import com.google.common.reflect.ClassPath;
 import com.google.common.reflect.ClassPath.ClassInfo;
 import java.util.ArrayList;
@@ -19,25 +21,36 @@ import java.util.stream.Collectors;
  */
 public abstract class Common {
 
-  public static final String STATE_QUERY_TOPIC = "update/query";
+  public static final String UPDATE_QUERY_TOPIC = "update/query";
   public static final String EXCEPTION_KEY = "exception";
   public static final String ERROR_KEY = "error";
+  public static final String DETAIL_KEY = "detail";
   public static final String TRANSACTION_KEY = "transactionId";
+  public static final String PUBLISH_TIME_KEY = "publishTime";
   public static final String MESSAGE_KEY = "message";
   public static final String TIMESTAMP_KEY = "timestamp";
   public static final String VERSION_KEY = "version";
+  public static final String UPGRADED_FROM = "upgraded_from";
+  public static final String DOWNGRADED_FROM = "downgraded_from";
   public static final String CLOUD_VERSION_KEY = "cloud_version";
   public static final String UDMI_VERSION_KEY = "udmi_version";
   public static final String SUBTYPE_PROPERTY_KEY = "subType";
   public static final String SUBFOLDER_PROPERTY_KEY = "subFolder";
-  public static final String DEVICE_ID_PROPERTY_KEY = "deviceId";
+  public static final String PROJECT_ID_PROPERTY_KEY = "projectId";
   public static final String REGISTRY_ID_PROPERTY_KEY = "deviceRegistryId";
+  public static final String DEVICE_ID_PROPERTY_KEY = "deviceId";
+  public static final String MESSAGE_SOURCE_PROPERTY_KEY = "source";
   public static final String NO_SITE = "--";
   public static final String GCP_REFLECT_KEY_PKCS8 = "reflector/rsa_private.pkcs8";
-  private static final String UDMI_VERSION_ENV = "UDMI_VERSION";
+  public static final String CONDENSER_STRING = "^^";
   public static final char DETAIL_SEPARATOR_CHAR = ';';
   public static final String DETAIL_SEPARATOR = DETAIL_SEPARATOR_CHAR + " ";
   public static final Joiner DETAIL_JOINER = Joiner.on(DETAIL_SEPARATOR);
+  public static final String CONFIG_CATEGORY = "config";
+  public static final String COMMANDS_CATEGORY = "commands";
+  public static final String CATEGORY_PROPERTY_KEY = "category";
+  private static final String PREFIX_SEPARATOR = "~";
+  private static final String UDMI_VERSION_ENV = "UDMI_VERSION";
 
   /**
    * Remove the next item from the list in an exception-safe way.
@@ -105,8 +118,8 @@ public abstract class Common {
   }
 
   /**
-   * Load a java class given the name. Converts ClassNotFoundException to
-   * RuntimeException for convenience.
+   * Load a java class given the name. Converts ClassNotFoundException to RuntimeException for
+   * convenience.
    *
    * @param className class to load
    * @return loaded class
@@ -119,7 +132,8 @@ public abstract class Common {
     }
   }
 
-  public static String getExceptionDetail(Throwable exception, Class<?> container, Function<Throwable, String> customFilter) {
+  public static String getExceptionDetail(Throwable exception, Class<?> container,
+      Function<Throwable, String> customFilter) {
     List<String> messages = new ArrayList<>();
     String previousMessage = null;
     while (exception != null) {
@@ -137,13 +151,17 @@ public abstract class Common {
   private static String getExceptionMessage(Throwable exception, Class<?> container,
       Function<Throwable, String> customFilter) {
     if (customFilter != null) {
-       String customMessage = customFilter.apply(exception);
-       if (customMessage != null) {
-         return customMessage;
-       }
+      String customMessage = customFilter.apply(exception);
+      if (customMessage != null) {
+        return customMessage;
+      }
     }
     String message = getExceptionMessage(exception);
     String line = getExceptionLine(exception, container);
     return message + (line == null ? "" : " @" + line);
+  }
+
+  public static String getNamespacePrefix(String udmiNamespace) {
+    return Strings.isNullOrEmpty(udmiNamespace) ? "" : udmiNamespace + PREFIX_SEPARATOR;
   }
 }

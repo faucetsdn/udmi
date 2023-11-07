@@ -15,7 +15,7 @@ where [step] is one of:
   registrar_tests
   udmis_tests
   util_tests
-  all_tests (except udmis_tests and util_tests)
+  all_tests (except util_tests)
 EOF
   false
 }
@@ -80,7 +80,7 @@ case "$1" in
     run_wrap schema_tests
     run_wrap trace_tests
     run_wrap registrar_tests
-    echo Not including util_tests and udmis_tests
+    run_wrap udmis_tests
     ;;
   *)
     usage unrecognized step $1

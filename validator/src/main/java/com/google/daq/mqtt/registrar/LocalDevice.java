@@ -3,9 +3,10 @@ package com.google.daq.mqtt.registrar;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.registrar.Registrar.DEVICE_ERRORS_MAP;
-import static com.google.daq.mqtt.registrar.Registrar.ENVELOPE_JSON;
+import static com.google.daq.mqtt.registrar.Registrar.ENVELOPE_SCHEMA_JSON;
 import static com.google.daq.mqtt.registrar.Registrar.GENERATED_CONFIG_JSON;
 import static com.google.daq.mqtt.registrar.Registrar.METADATA_JSON;
+import static com.google.daq.mqtt.registrar.Registrar.METADATA_SCHEMA_JSON;
 import static com.google.daq.mqtt.registrar.Registrar.NORMALIZED_JSON;
 import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_STRICT;
@@ -16,6 +17,7 @@ import static com.google.udmi.util.GeneralUtils.writeString;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
 import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.MessageUpgrader.METADATA_SCHEMA;
+import static java.lang.String.format;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -33,6 +35,7 @@ import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.ValidationException;
+import com.google.daq.mqtt.validator.Validator;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.MessageDowngrader;
@@ -222,7 +225,7 @@ class LocalDevice {
 
     for (ProcessingMessage msg : report) {
       if (msg.getLogLevel().compareTo(LogLevel.ERROR) >= 0) {
-        throw ValidationException.fromProcessingReport(report);
+        throw Validator.fromProcessingReport(report);
       }
     }
   }
@@ -286,7 +289,7 @@ class LocalDevice {
     JsonNode mergedMetadata = getMergedMetadata(instance);
 
     try {
-      ProcessingReport report = schemas.get(METADATA_JSON).validate(mergedMetadata);
+      ProcessingReport report = schemas.get(METADATA_SCHEMA_JSON).validate(mergedMetadata);
       if (validate) {
         parseMetadataValidateProcessingReport(report);
       }
@@ -339,7 +342,7 @@ class LocalDevice {
       metadata.hash = null;
       metadata.timestamp = null;
       String json = deviceMetadataString();
-      return String.format("%08x", Objects.hash(json));
+      return format("%08x", Objects.hash(json));
     } catch (Exception e) {
       throw new RuntimeException("Converting object to string", e);
     } finally {
@@ -390,7 +393,7 @@ class LocalDevice {
       }
       int numCredentials = deviceCredentials.size();
       if (numCredentials == 0 || numCredentials > 3) {
-        throw new RuntimeException(String.format("Found %d credentials", numCredentials));
+        throw new RuntimeException(format("Found %d credentials", numCredentials));
       }
     } catch (Exception e) {
       throw new RuntimeException("While loading credentials for local device " + deviceId, e);
@@ -402,7 +405,7 @@ class LocalDevice {
     if (!deviceKeyFile.exists()) {
       return null;
     }
-    return CloudIotManager.makeCredentials(
+    return CloudIotManager.makeCredential(
         getAuthType(),
         IOUtils.toString(new FileInputStream(deviceKeyFile), Charset.defaultCharset()));
   }
@@ -618,11 +621,11 @@ class LocalDevice {
       envelope.projectId = fakeProjectId();
       envelope.deviceNumId = makeNumId(envelope);
       String envelopeJson = OBJECT_MAPPER_STRICT.writeValueAsString(envelope);
-      ProcessingReport processingReport = schemas.get(ENVELOPE_JSON)
+      ProcessingReport processingReport = schemas.get(ENVELOPE_SCHEMA_JSON)
           .validate(OBJECT_MAPPER.readTree(envelopeJson));
       if (!processingReport.isSuccess()) {
         processingReport.forEach(action -> {
-          throw new RuntimeException("against schema", action.asException());
+          throw new RuntimeException("Against envelope schema", action.asException());
         });
       }
     } catch (Exception e) {
@@ -648,12 +651,12 @@ class LocalDevice {
     if (metadata.system.physical_tag != null) {
       String assetName = metadata.system.physical_tag.asset.name;
       checkState(deviceId.equals(assetName),
-          String.format("system.physical_tag.asset.name %s does not match expected %s", assetName,
+          format("system.physical_tag.asset.name %s does not match expected %s", assetName,
               deviceId));
 
       String assetSite = metadata.system.physical_tag.asset.site;
       checkState(expectedSite.equals(assetSite),
-          String.format(
+          format(
               "system.physical_tag.asset.site %s does not match expected %s",
               assetSite, expectedSite));
     }
@@ -661,7 +664,7 @@ class LocalDevice {
     if (metadata.system.location != null) {
       String siteName = metadata.system.location.site;
       checkState(expectedSite.equals(siteName),
-          String.format(
+          format(
               "system.location.site %s does not match expected %s", siteName, expectedSite));
     }
   }
@@ -748,6 +751,8 @@ class LocalDevice {
   }
 
   public void setDeviceNumId(String numId) {
+    checkState(deviceNumId == null || deviceNumId.equals(numId),
+        format("deviceNumId %s != %s", numId, deviceNumId));
     deviceNumId = numId;
   }
 
@@ -759,6 +764,9 @@ class LocalDevice {
           PrintWriter printWriter = new PrintWriter(fileWriter)) {
         printWriter.println(exceptionType);
         exception.printStackTrace(printWriter);
+        if (exception instanceof ExceptionMap exceptionMap) {
+          exceptionMap.forEach(mapped -> mapped.printStackTrace(printWriter));
+        }
       }
     } catch (Exception e) {
       throw new RuntimeException("Writing exception log file " + exceptionLog.getAbsolutePath(), e);

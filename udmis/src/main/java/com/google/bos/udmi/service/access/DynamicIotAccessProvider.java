@@ -5,12 +5,10 @@ import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.sortedMapCollector;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.graph.ImmutableNetwork;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -21,6 +19,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import udmi.schema.CloudModel;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.IotAccess;
@@ -30,6 +29,7 @@ import udmi.schema.IotAccess;
  */
 public class DynamicIotAccessProvider extends IotAccessBase {
 
+  private static final long INDEX_ORDERING_MULTIPLIER_MS = 10000L;
   private final Map<String, String> registryProviders = new ConcurrentHashMap<>();
   private final List<String> providerList;
   private final Map<String, IotAccessBase> providers = new HashMap<>();
@@ -39,7 +39,23 @@ public class DynamicIotAccessProvider extends IotAccessBase {
    */
   public DynamicIotAccessProvider(IotAccess iotAccess) {
     super(iotAccess);
-    providerList = Arrays.asList(iotAccess.project_id.split(","));
+    providerList = Arrays.stream(iotAccess.project_id.split(",")).map(String::trim)
+        .collect(Collectors.toList());
+  }
+
+  @Override
+  protected Map<String, String> fetchRegistryRegions() {
+    return ImmutableMap.of();
+  }
+
+  @Override
+  protected Set<String> getRegistriesForRegion(String region) {
+    throw new RuntimeException("Should not be called!");
+  }
+
+  @Override
+  protected boolean isEnabled() {
+    return true;
   }
 
   @Override
@@ -51,35 +67,26 @@ public class DynamicIotAccessProvider extends IotAccessBase {
     TreeMap<String, String> sortedMap = providers.entrySet().stream()
         .collect(sortedMapCollector(entry -> registryPriority(registryId, entry)));
     String providerId = sortedMap.lastEntry().getValue();
-    debug("Registry mapping for " + registryId + " is " + providerId);
+    debug("Registry affinity mapping for " + registryId + " is " + providerId);
     return providerId;
   }
 
   private IotAccessBase getProviderFor(String registryId) {
-    return providers.get(registryProviders.computeIfAbsent(registryId, this::determineProvider));
+    IotAccessBase provider =
+        providers.get(registryProviders.computeIfAbsent(registryId, this::determineProvider));
+    return requireNonNull(
+        provider,
+        "could not determine provider for " + registryId);
   }
 
   private String registryPriority(String registryId, Entry<String, IotAccessBase> provider) {
+    int providerIndex = providerList.size() - providerList.indexOf(provider.getKey());
     String provisionedAt = ofNullable(
         provider.getValue().fetchRegistryMetadata(registryId, "udmi_provisioned")).orElse(
-        getTimestamp(new Date(0)));
-    debug(format("Provider %s provisioned %s at %s", provider.getKey(), registryId, provisionedAt));
+        getTimestamp(new Date(providerIndex * INDEX_ORDERING_MULTIPLIER_MS)));
+    debug(format("Registry %s provider %s provisioned %s", registryId, provider.getKey(),
+        provisionedAt));
     return provisionedAt;
-  }
-
-  @Override
-  protected boolean isEnabled() {
-    return true;
-  }
-
-  @Override
-  protected Map<String, String> fetchRegistryRegions() {
-    return ImmutableMap.of();
-  }
-
-  @Override
-  protected Set<String> getRegistriesForRegion(String region) {
-    throw new RuntimeException("Should not be called!");
   }
 
   @Override
@@ -121,8 +128,8 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public CloudModel modelDevice(String deviceRegistryId, String deviceId, CloudModel cloudModel) {
-    return getProviderFor(deviceRegistryId).modelDevice(deviceRegistryId, deviceId, cloudModel);
+  public CloudModel modelResource(String deviceRegistryId, String deviceId, CloudModel cloudModel) {
+    return getProviderFor(deviceRegistryId).modelResource(deviceRegistryId, deviceId, cloudModel);
   }
 
   @Override
@@ -137,11 +144,6 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public void updateRegistryRegions(Map<String, String> regions) {
-    providers.values().forEach(provider -> provider.updateRegistryRegions(regions));
-  }
-
-  @Override
   public void setProviderAffinity(String registryId, String deviceId, String providerId) {
     if (providerId != null) {
       String previous = registryProviders.put(registryId, providerId);
@@ -151,5 +153,10 @@ public class DynamicIotAccessProvider extends IotAccessBase {
       }
     }
     super.setProviderAffinity(registryId, deviceId, providerId);
+  }
+
+  @Override
+  public void updateRegistryRegions(Map<String, String> regions) {
+    providers.values().forEach(provider -> provider.updateRegistryRegions(regions));
   }
 }

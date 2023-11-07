@@ -14,6 +14,7 @@ rm -rf $prefix/test_*
 
 echo Updating $SEQUENCE_MD:
 
+
 # Clear out existing generated sequences
 sed -i '/<!-- START GENERATED,/q' $SEQUENCE_MD
 
@@ -43,8 +44,9 @@ for sequence in $sequences; do
     echo "$sequence: skipping alpha test"
     continue
   fi
-  description=": $(sed -n -n '/^1\./q;p' $seqfile | fgrep -v \#\# | xargs echo)"
-  echo "* [${sequence}](#${sequence})${description%: }" >> $SEQUENCE_MD
+  stage=$(echo $header | sed 's/.*(\(.*\))/\1/' | tr A-Z a-z)
+  description=": $(sed -n '/^1\./q;p' $seqfile | fgrep -v \#\# | xargs echo)"
+  echo "* [${sequence}](#${sequence}-${stage})${description%: }" >> $SEQUENCE_MD
   to_add+=" $sequence"
 done
 
@@ -56,10 +58,12 @@ for sequence in $to_add; do
         base=$altfix
     fi
     seqfile=$base/$sequence/sequence.md
-    description="$(sed -n -n '/^1\./q;p' $seqfile | fgrep -v \#\# | xargs echo)"
+    description="$(sed -n '/^1\./q;p' $seqfile | fgrep -v \#\# | xargs echo)"
     echo $sequence: $description
     cat $seqfile >> $SEQUENCE_MD
 done
+
+mkdir -p out && cp $SEQUENCE_MD out/
 
 echo
 echo Done with $SEQUENCE_MD generation.

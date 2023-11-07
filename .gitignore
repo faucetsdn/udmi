@@ -1,7 +1,7 @@
 *~
 \#*
 
-udmi-support_*.tgz
+/udmi-support_*/
 udmi_site_model/
 gcp_reflect_key.pkcs8
 workspace.xml
@@ -16,6 +16,7 @@ udmis/public/deploy_version.js
 firebase-debug.log
 credentials.json
 /out/
+/out_*/
 /validator/build/
 /validator/out/
 /validator/.idea/libraries/
@@ -23,6 +24,7 @@ credentials.json
 /udmis/out/
 /udmis/var/
 /udmis/.idea/libraries/
+/selfie/build/
 /pubber/build/
 /pubber/out/
 /pubber/pubber/out/

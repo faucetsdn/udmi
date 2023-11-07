@@ -10,6 +10,7 @@ import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.getDate;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
+import static udmi.schema.CloudModel.Resource_type.GATEWAY;
 
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.HttpRequestInitializer;
@@ -51,6 +52,7 @@ import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
+import udmi.schema.CloudModel.Resource_type;
 import udmi.schema.Credential;
 import udmi.schema.Credential.Key_format;
 import udmi.schema.Envelope.SubFolder;
@@ -103,7 +105,7 @@ public class GcpIotAccessProvider extends IotAccessBase {
       return;
     }
 
-    projectId = variableSubstitution(iotAccess.project_id, "gcp project id not specified");
+    projectId = getProjectId(iotAccess);
     cloudIotService = createCloudIotService();
     registries = cloudIotService.projects().locations().registries();
     ifTrueThen(isEnabled(), this::fetchRegistryRegions);
@@ -165,8 +167,7 @@ public class GcpIotAccessProvider extends IotAccessBase {
     cloudModel.blocked = device.getBlocked();
     cloudModel.metadata = device.getMetadata();
     cloudModel.last_event_time = getDate(device.getLastEventTime());
-    cloudModel.is_gateway = ifNotNullGet(device.getGatewayConfig(),
-        config -> GATEWAY_TYPE.equals(config.getGatewayType()));
+    cloudModel.resource_type = resourceType(device);
     cloudModel.credentials = convertIot(device.getCredentials());
     cloudModel.operation = operation;
     return cloudModel;
@@ -176,7 +177,7 @@ public class GcpIotAccessProvider extends IotAccessBase {
     return new Device()
         .setBlocked(cloudModel.blocked)
         .setCredentials(convertUdmi(cloudModel.credentials))
-        .setGatewayConfig(isTrue(cloudModel.is_gateway) ? GATEWAY_CONFIG : null)
+        .setGatewayConfig(cloudModel.resource_type == GATEWAY ? GATEWAY_CONFIG : null)
         .setMetadata(cloudModel.metadata);
   }
 
@@ -185,6 +186,14 @@ public class GcpIotAccessProvider extends IotAccessBase {
     cloudModel.operation = operation;
     cloudModel.num_id = EMPTY_RETURN_RECEIPT;
     return cloudModel;
+  }
+
+  private Resource_type resourceType(Device device) {
+    GatewayConfig gatewayConfig = device.getGatewayConfig();
+    if (gatewayConfig != null && GATEWAY_TYPE.equals(gatewayConfig.getGatewayType())) {
+      return GATEWAY;
+    }
+    return Resource_type.DEVICE;
   }
 
   private List<Credential> convertIot(List<DeviceCredential> credentials) {
@@ -229,6 +238,10 @@ public class GcpIotAccessProvider extends IotAccessBase {
 
   @NotNull
   protected Set<String> getRegistriesForRegion(String region) {
+    if (region == null) {
+      return CLOUD_REGIONS;
+    }
+
     String locationPath = getLocationPath(region);
     try {
       ListDeviceRegistriesResponse response = cloudIotService
@@ -356,10 +369,10 @@ public class GcpIotAccessProvider extends IotAccessBase {
   @Override
   public String fetchRegistryMetadata(String registryId, String metadataKey) {
     try {
-      CloudModel cloudModel = fetchDevice(UDMI_REGISTRY, registryId);
+      CloudModel cloudModel = fetchDevice(reflectRegistry, registryId);
       return cloudModel.metadata.get(metadataKey);
     } catch (Exception e) {
-      debug(format("No device entry for %s/%s", UDMI_REGISTRY, registryId));
+      debug(format("No device entry for %s/%s", reflectRegistry, registryId));
       return null;
     }
   }
@@ -385,7 +398,7 @@ public class GcpIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public CloudModel modelDevice(String registryId, String deviceId, CloudModel cloudModel) {
+  public CloudModel modelResource(String registryId, String deviceId, CloudModel cloudModel) {
     String devicePath = getDevicePath(registryId, deviceId);
     Operation operation = cloudModel.operation;
     try {

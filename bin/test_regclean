@@ -7,7 +7,7 @@ ROOT_DIR=$(dirname $0)/..
 cd $ROOT_DIR
 
 if [[ $# -ne 1 ]]; then
-    echo Usage: $0 PROJECT_ID
+    echo Usage: $0 PROJECT_ID[@BROKER]
     false
 fi
 
@@ -16,15 +16,14 @@ shift
 
 [[ -n $GITHUB_RUN_NUMBER ]] && echo "Workflow run number $GITHUB_RUN_NUMBER" || true
 echo "Run as: $0 $project_id"
+echo "export TARGET_PROJECT=$TARGET_PROJECT"
 echo "export UDMI_REGISTRY_SUFFIX=$UDMI_REGISTRY_SUFFIX"
 echo "export UDMI_ALT_REGISTRY=$UDMI_ALT_REGISTRY"
-echo "export UDMI_REFLECTOR_ENDPOINT='$UDMI_REFLECTOR_ENDPOINT'"
-echo "export UDMI_PUBBER_ENDPOINT='$UDMI_PUBBER_ENDPOINT'"
 
 site_path=sites/udmi_site_model
 output_file=$site_path/out/registration_summary.json
 pubber_config=/tmp/pubber_config.json
-serial_no=$RANDOM
+serial_no=clean-$RANDOM
 device_id=AHU-1
 
 pubber/bin/build
@@ -44,33 +43,32 @@ fi
 registry_id=`jq -r .registry_id $site_path/cloud_iot_config.json`
 cloud_region=`jq -r .cloud_region $site_path/cloud_iot_config.json`
 
-if [[ -n $UDMI_REFLECTOR_ENDPOINT ]]; then
-    endpoint=$(tr -d ' \n\r' <<< $UDMI_REFLECTOR_ENDPOINT | base64 --decode)
-    echo $endpoint
-    site_arg=out/cloud_iot_config-reflect.json
-    jq --argjson endpoint "$endpoint" '.reflector_endpoint = $endpoint' \
-       $site_path/cloud_iot_config.json > $site_arg
-    jq ".project_id = \"$project_id\"" $site_arg | sponge $site_arg
-    jq ".site_model = \"$site_path\"" $site_arg | sponge $site_arg
-    echo $site_arg:
-    cat $site_arg
-    registrar_project=
-else
-    site_arg=$site_path
-    registrar_project=$project_id
-fi
+site_arg=$site_path
+registrar_project=$project_id
 
+registry_prefix=
 project_target=${project_id##*/}
 if [[ $project_id =~ ^// ]]; then
-    no_project=${project_id%/*}
-    iot_provider=${no_project#//}
+    no_prefix=${project_id#//}
+    iot_provider=${no_prefix%%/*}
+    no_provider=${no_prefix#*/}
+    project_target=${no_provider%/*}
+    udmi_namespace=${no_provider#$project_target}
+    [[ -n $udmi_namespace ]] && registry_prefix=${udmi_namespace#/}~
+elif [[ $project_id =~ @ ]]; then
+    iot_provider=\"jwt\"
+    broker_hostname=${project_id#*@}
+    project_id=${project_id%@*}
+    project_target=${project_id}
 else
     iot_provider=gcp
 fi
 
 if [[ $iot_provider == clearblade ]]; then
     broker_hostname=${cloud_region}-mqtt.clearblade.com
-else
+elif [[ $iot_provider == gbos ]]; then
+    broker_hostname=mqtt.bos.goog
+elif [[ -z $broker_hostname ]]; then
     broker_hostname=mqtt.googleapis.com
 fi
 
@@ -78,7 +76,7 @@ cat <<EOF > $pubber_config
 {
     "endpoint": {
       "protocol": "mqtt",
-      "client_id": "projects/$project_target/locations/$cloud_region/registries/$registry_id$registry_suffix/devices/$device_id",
+      "client_id": "projects/$project_target/locations/$cloud_region/registries/$registry_prefix$registry_id$registry_suffix/devices/$device_id",
       "hostname": "$broker_hostname"
     },
     "sitePath": "$site_path",
@@ -91,16 +89,6 @@ cat <<EOF > $pubber_config
 }
 EOF
 
-if [[ -n $UDMI_PUBBER_ENDPOINT ]]; then
-    endpoint=$(tr -d ' \n\r' <<< $UDMI_PUBBER_ENDPOINT | base64 --decode)
-    echo $endpoint
-    jq --argjson endpoint "$endpoint" '.endpoint = $endpoint' \
-       $pubber_config | sponge $pubber_config
-fi
-
-echo $pubber_config:
-cat $pubber_config
-
 echo Corrupting site model to check error handling...
 mkdir -p $site_path/devices/XXX-1
 echo { > $site_path/devices/XXX-1/metadata.json
@@ -108,19 +96,34 @@ mkdir -p $site_path/devices/XXX-2/out
 echo hello > $site_path/devices/XXX-2/out/exceptions.txt
 
 echo Clean out the registry to make sure devices get removed...
+echo bin/registrar $site_arg $registrar_project -d
 bin/registrar $site_arg $registrar_project -d
 
 echo Checking reported cloud version info
 jq .cloud_version.udmi_ref $output_file
 
+echo Pubber config from $pubber_config:
+cat $pubber_config
+
 echo Check for failure in running pubber...
-RESULT=0
-pubber/bin/run $pubber_config || RESULT=$?
+echo pubber/bin/run $pubber_config
+! pubber/bin/run $pubber_config
 
 echo Now recreate the registry from scratch!
+echo bin/registrar $site_arg $registrar_project -u
 bin/registrar $site_arg $registrar_project -u
 
 echo And check again, but this time with success...
+echo pubber/bin/run $pubber_config
 pubber/bin/run $pubber_config
 
 echo Successful pubber check passed on clean registry.
+
+if [[ -n $UDMI_ALT_REGISTRY ]]; then
+    echo Registering alt registry...
+    site_file=$site_arg/cloud_iot_config.json
+    cp $site_file $site_file-tmp
+    jq ".registry_id = \"$UDMI_ALT_REGISTRY\"" $site_file-tmp > $site_file
+    bin/registrar $site_arg $registrar_project -u
+    mv $site_file-tmp $site_file
+fi

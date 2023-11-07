@@ -13,6 +13,7 @@ import static udmi.schema.FeatureEnumeration.FeatureStage.ALPHA;
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.Summary;
+import com.google.daq.mqtt.sequencer.ValidateSchema;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
 import java.util.Date;
@@ -41,7 +42,6 @@ public class BlobsetSequences extends SequenceBase {
   public static final String IOT_BLOB_KEY = SystemBlobsets.IOT_ENDPOINT_CONFIG.value();
   private static final String ENDPOINT_CONFIG_CLIENT_ID =
       "projects/%s/locations/%s/registries/%s/devices/%s";
-  private static final String GOOGLE_ENDPOINT_HOSTNAME = "mqtt.googleapis.com";
   private static final String BOGUS_ENDPOINT_HOSTNAME = "twiddily.fiddily.fog";
 
   private String generateEndpointConfigClientId(String registryId) {
@@ -153,16 +153,17 @@ public class BlobsetSequences extends SequenceBase {
   @Summary("Check a successful reconnect to the same endpoint.")
   @Test
   public void endpoint_connection_success_reconnect() {
-    setDeviceConfigEndpointBlob(GOOGLE_ENDPOINT_HOSTNAME, registryId, false);
+    setDeviceConfigEndpointBlob(getAlternateEndpointHostname(), registryId, false);
     untilSuccessfulRedirect(BlobPhase.FINAL);
     untilClearedRedirect();
   }
 
   @Feature(stage = ALPHA, bucket = ENDPOINT)
   @Summary("Failed connection because of bad hash.")
+  @ValidateSchema
   @Test
   public void endpoint_connection_bad_hash() {
-    setDeviceConfigEndpointBlob(GOOGLE_ENDPOINT_HOSTNAME, registryId, true);
+    setDeviceConfigEndpointBlob(getAlternateEndpointHostname(), registryId, true);
     untilTrue("blobset status is ERROR", () -> {
       BlobBlobsetState blobBlobsetState = deviceState.blobset.blobs.get(IOT_BLOB_KEY);
       BlobBlobsetConfig blobBlobsetConfig = deviceConfig.blobset.blobs.get(IOT_BLOB_KEY);
@@ -198,11 +199,9 @@ public class BlobsetSequences extends SequenceBase {
   }
 
   private void check_endpoint_connection_success(boolean doRestart) {
-    ifNullSkipTest(altClient, "No functional alternate registry defined");
-
     // Phase one: initiate connection to alternate registry.
     untilTrue("initial last_config matches config timestamp", this::stateMatchesConfigTimestamp);
-    setDeviceConfigEndpointBlob(GOOGLE_ENDPOINT_HOSTNAME, altRegistry, false);
+    setDeviceConfigEndpointBlob(getAlternateEndpointHostname(), altRegistry, false);
     untilSuccessfulRedirect(BlobPhase.APPLY);
 
     withAlternateClient(() -> {
@@ -219,7 +218,7 @@ public class BlobsetSequences extends SequenceBase {
 
       // Phase three: initiate connection back to initial registry.
       // Phase 3/4 test the same thing as phase 1/2, included to restore system to initial state.
-      setDeviceConfigEndpointBlob(GOOGLE_ENDPOINT_HOSTNAME, registryId, false);
+      setDeviceConfigEndpointBlob(getAlternateEndpointHostname(), registryId, false);
       untilSuccessfulRedirect(BlobPhase.APPLY);
     });
 

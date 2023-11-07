@@ -89,7 +89,41 @@
             />
         </svg>
     <a href="#version" onclick="anchorLink('version')">version</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
-<span class="description"><p>Version of the UDMI schema</p>
+<span class="description"><p>Version of the UDMI schema for this file</p>
+</span>
+            
+
+            
+            
+
+            
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionupgraded_from">
+    <div class="card">
+        <div class="card-header" id="headingupgraded_from">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#upgraded_from"
+                        aria-expanded="" aria-controls="upgraded_from" onclick="setAnchor('#upgraded_from')"><span class="property-name">upgraded_from</span></button>
+            </h2>
+        </div>
+
+        <div id="upgraded_from"
+             class="collapse property-definition-div" aria-labelledby="headingupgraded_from"
+             data-parent="#accordionupgraded_from">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#upgraded_from" onclick="anchorLink('upgraded_from')">upgraded_from</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>Original version of the UDMI schema for this file</p>
 </span>
             
 
@@ -159,6 +193,40 @@
     <a href="#hash" onclick="anchorLink('hash')">hash</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="description"><p>Automatically generated field that contains the hash of file contents.</p>
 </span><span class="pattern-value" id="hash_pattern">Must match regular expression: <code>^[0-9a-z]{8}$</code></span>
+            
+
+            
+            
+
+            
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiondevice_version">
+    <div class="card">
+        <div class="card-header" id="headingdevice_version">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#device_version"
+                        aria-expanded="" aria-controls="device_version" onclick="setAnchor('#device_version')"><span class="property-name">device_version</span></button>
+            </h2>
+        </div>
+
+        <div id="device_version"
+             class="collapse property-definition-div" aria-labelledby="headingdevice_version"
+             data-parent="#accordiondevice_version">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#device_version" onclick="anchorLink('device_version')">device_version</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>Version of schema supported by the device</p>
+</span>
             
 
             
@@ -372,18 +440,18 @@
         </div>
     </div>
 </div>
-<div class="accordion" id="accordioncloud_is_gateway">
+<div class="accordion" id="accordioncloud_resource_type">
     <div class="card">
-        <div class="card-header" id="headingcloud_is_gateway">
+        <div class="card-header" id="headingcloud_resource_type">
             <h2 class="mb-0">
-                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#cloud_is_gateway"
-                        aria-expanded="" aria-controls="cloud_is_gateway" onclick="setAnchor('#cloud_is_gateway')"><span class="property-name">is_gateway</span></button>
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#cloud_resource_type"
+                        aria-expanded="" aria-controls="cloud_resource_type" onclick="setAnchor('#cloud_resource_type')"><span class="property-name">resource_type</span></button>
             </h2>
         </div>
 
-        <div id="cloud_is_gateway"
-             class="collapse property-definition-div" aria-labelledby="headingcloud_is_gateway"
-             data-parent="#accordioncloud_is_gateway">
+        <div id="cloud_resource_type"
+             class="collapse property-definition-div" aria-labelledby="headingcloud_resource_type"
+             data-parent="#accordioncloud_resource_type">
             <div class="card-body pl-5">
 
     <div class="breadcrumbs">root
@@ -400,9 +468,12 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#cloud_is_gateway" onclick="anchorLink('cloud_is_gateway')">is_gateway</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
-<span class="description"><p>If the device functions as an IoT Gateway, proxying for other devices using a single logical connection</p>
-</span>
+    <a href="#cloud_resource_type" onclick="anchorLink('cloud_resource_type')">resource_type</a></div><span class="badge badge-dark value-type">Type: enum (of string)</span><br/>
+<span class="description"><p>The resource type of this model</p>
+</span><div class="enum-value" id="cloud_resource_type_enum">
+                <h4>Must be one of:</h4>
+                <ul class="list-group"><li class="list-group-item enum-item">"DEVICE"</li><li class="list-group-item enum-item">"GATEWAY"</li><li class="list-group-item enum-item">"REGISTRY"</li></ul>
+                </div>
             
 
             
@@ -669,6 +740,46 @@
             />
         </svg>
     <a href="#cloud_last_event_time" onclick="anchorLink('cloud_last_event_time')">last_event_time</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+
+            
+
+            
+            
+
+            
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordioncloud_last_config_ack">
+    <div class="card">
+        <div class="card-header" id="headingcloud_last_config_ack">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#cloud_last_config_ack"
+                        aria-expanded="" aria-controls="cloud_last_config_ack" onclick="setAnchor('#cloud_last_config_ack')"><span class="property-name">last_config_ack</span></button>
+            </h2>
+        </div>
+
+        <div id="cloud_last_config_ack"
+             class="collapse property-definition-div" aria-labelledby="headingcloud_last_config_ack"
+             data-parent="#accordioncloud_last_config_ack">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#cloud" onclick="anchorLink('cloud')">cloud</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#cloud_last_config_ack" onclick="anchorLink('cloud_last_config_ack')">last_config_ack</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 
             
 
@@ -2727,6 +2838,46 @@
             
 
             
+<div class="accordion" id="accordiontesting_nostate">
+    <div class="card">
+        <div class="card-header" id="headingtesting_nostate">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#testing_nostate"
+                        aria-expanded="" aria-controls="testing_nostate" onclick="setAnchor('#testing_nostate')"><span class="property-name">nostate</span></button>
+            </h2>
+        </div>
+
+        <div id="testing_nostate"
+             class="collapse property-definition-div" aria-labelledby="headingtesting_nostate"
+             data-parent="#accordiontesting_nostate">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#testing" onclick="anchorLink('testing')">testing</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#testing_nostate" onclick="anchorLink('testing_nostate')">nostate</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
+
+            
+
+            
+            
+
+            
+            </div>
+        </div>
+    </div>
+</div>
 <div class="accordion" id="accordiontesting_targets">
     <div class="card">
         <div class="card-header" id="headingtesting_targets">

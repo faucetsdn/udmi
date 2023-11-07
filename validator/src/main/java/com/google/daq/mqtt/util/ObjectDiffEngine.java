@@ -8,6 +8,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -18,6 +19,8 @@ import udmi.schema.State;
  */
 public class ObjectDiffEngine {
 
+  private final Map<String, String> descriptions = new HashMap<>();
+  private final Map<String, String> describedValues = new HashMap<>();
   private Map<String, Object> previous;
   private boolean ignoreSemantics;
 
@@ -46,6 +49,8 @@ public class ObjectDiffEngine {
    * @param updatedObject new object state
    */
   public void resetState(Object updatedObject) {
+    descriptions.clear();
+    describedValues.clear();
     previous = extractDefinitions(updatedObject);
   }
 
@@ -65,11 +70,13 @@ public class ObjectDiffEngine {
       @SuppressWarnings("unchecked")
       Map<String, Object> asMap = (Map<String, Object>) thing;
       return asMap.keySet().stream()
-          .collect(Collectors.toMap(key -> key, key -> traverseExtract(asMap.get(key), asValues)));
+          .collect(Collectors.toMap(key -> key,
+              key -> traverseExtract(asMap.get(key), asValues)));
     }
     return Arrays.stream(thing.getClass().getFields())
         .filter(field -> isNotNull(thing, field)).collect(
-            Collectors.toMap(Field::getName, field -> extractField(thing, field, asValues)));
+            Collectors.toMap(Field::getName,
+                field -> extractField(thing, field, asValues)));
   }
 
   private Object extractField(Object thing, Field field, boolean asValue) {
@@ -108,29 +115,43 @@ public class ObjectDiffEngine {
   void accumulateDifference(String prefix, Map<String, Object> left, Map<String, Object> right,
       List<String> updates) {
     right.forEach((key, value) -> {
+      String describedKey = describedKey(prefix, key);
+      String describedValue = describeValue(prefix, key, semanticValue(value));
       if (left != null && left.containsKey(key)) {
         Object leftValue = left.get(key);
         if (SemanticValue.equals(value, leftValue)) {
           return;
         }
         if (isBaseType(value)) {
-          updates.add(String.format("Set `%s%s` = %s", prefix, key, semanticValue(value)));
+          updates.add(String.format("Set `%s` = %s", describedKey, describedValue));
         } else {
-          String newPrefix = prefix + key + ".";
-          accumulateDifference(newPrefix, (Map<String, Object>) leftValue,
+          accumulateDifference((prefix + key) + ".", (Map<String, Object>) leftValue,
               (Map<String, Object>) value, updates);
         }
       } else {
-        updates.add(String.format("Add `%s%s` = %s", prefix, key, semanticValue(value)));
+        updates.add(String.format("Add `%s` = %s", describedKey, describedValue));
       }
     });
     if (left != null) {
       left.forEach((key, value) -> {
         if (!right.containsKey(key)) {
-          updates.add(String.format("Remove `%s%s`", prefix, key));
+          String describedKey = describedKey(prefix, key);
+          updates.add(String.format("Remove `%s`", describedKey));
         }
       });
     }
+  }
+
+  private String describeValue(String prefix, String key, String value) {
+    String fullKey = prefix + key;
+    return descriptions.containsKey(fullKey) ? describedValues.get(fullKey) : value;
+  }
+
+  private String describedKey(String prefix, String key) {
+    String fullKey = prefix + key;
+    String keyPath = prefix.endsWith(".") ? prefix.substring(0, prefix.length() - 1) : prefix;
+    String formattedKey = String.format("%s[%s]", keyPath, descriptions.get(fullKey));
+    return descriptions.containsKey(fullKey) ? formattedKey : fullKey;
   }
 
   private String singleLine(String toJsonString) {
@@ -192,5 +213,24 @@ public class ObjectDiffEngine {
     List<String> updates = new ArrayList<>();
     accumulateDifference("", left, right, updates);
     return updates;
+  }
+
+  /**
+   * Set up a semantic mapping for a key/value pair.
+   *
+   * @param keyPath        path to container
+   * @param keyName        key name
+   * @param description    semantic description of key
+   * @param describedValue semantic description of value
+   */
+  public void mapSemanticKey(String keyPath, String keyName, String description,
+      String describedValue) {
+    String fullKey = keyPath + "." + keyName;
+    descriptions.put(fullKey, description);
+    describedValues.put(fullKey, describedValue);
+  }
+
+  public boolean isInitialized() {
+    return previous != null;
   }
 }

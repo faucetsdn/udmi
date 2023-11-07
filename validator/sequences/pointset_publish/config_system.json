@@ -1,0 +1,12 @@
+{
+  "metrics_rate_sec" : 600,
+  "min_loglevel" : 200,
+  "operation" : {
+    "last_start" : "2023-10-09T15:06:06Z"
+  },
+  "testing" : {
+    "sequence_name" : "pointset_publish"
+  },
+  "timestamp" : "2023-10-09T15:08:43.726Z",
+  "version" : "1.4.2-7-g54546bc5"
+}

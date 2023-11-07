@@ -4,7 +4,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Objects.requireNonNull;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonParser.Feature;
+import com.fasterxml.jackson.core.json.JsonReadFeature;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -29,6 +31,8 @@ public abstract class JsonUtil {
       .enable(SerializationFeature.INDENT_OUTPUT)
       .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
       .setDateFormat(new CleanDateFormat())
+      .enable(JsonReadFeature.ALLOW_NON_NUMERIC_NUMBERS.mappedFeature())
+      .registerModule(NanSerializer.TO_NULL) // NaN is not valid JSON, so squash it now.
       .setSerializationInclusion(Include.NON_NULL);
   public static final ObjectMapper OBJECT_MAPPER = STRICT_MAPPER.copy()
       .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
@@ -334,6 +338,18 @@ public abstract class JsonUtil {
   public static Map<String, String> toStringMap(Object message) {
     @SuppressWarnings("unchecked")
     Map<String, String> map = convertTo(TreeMap.class, message);
+    return map;
+  }
+
+  /**
+   * Convert the pojo to a mapped representation of strings only.
+   *
+   * @param message input object to convert
+   * @return object-as-map
+   */
+  public static Map<String, String> toStringMap(String message) {
+    @SuppressWarnings("unchecked")
+    Map<String, String> map = fromString(TreeMap.class, message);
     return map;
   }
 

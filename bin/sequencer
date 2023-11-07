@@ -8,22 +8,27 @@ UDMI_ROOT=$(realpath $(dirname $0)/..)
 source $UDMI_ROOT/etc/shell_common.sh
 
 OUT_DIR=$UDMI_ROOT/out
-TEST_LOG=$OUT_DIR/sequencer.out
+mkdir -p $OUT_DIR
+echo $(date --utc +%Y%m%d-%H%M%S) $0 $@ >> $OUT_DIR/cmd_history.log
+
+SEQUENCER_LOG=$OUT_DIR/sequencer.log
+SEQUENCER_OUT=$OUT_DIR/sequencer.out
 SCHEMA_OUT=$OUT_DIR/schema.out
-SEQUENCER_RES=$OUT_DIR/sequencer.res
+DEFAULT_SERIAL=//
 log_level=INFO
-alt_registry=\"${UDMI_ALT_REGISTRY:-ZZ-REDIRECT-NA}\"
 min_stage=PREVIEW
 export UDMI_VERSION=$udmi_version
 
 # For cross-env sort stability
 export LC_ALL=C
 
-rm -f $TEST_LOG $SCHEMA_OUT
+rm -f $SEQUENCER_LOG $SEQUENCER_OUT $SCHEMA_OUT
 
 while [[ $1 =~ ^- ]]; do
     if [[ $1 == '-a' ]]; then
         min_stage=ALPHA
+    elif [[ $1 == '-x' ]]; then
+        min_stage="=ALPHA"
     elif [[ $1 == '-v' ]]; then
         log_level=DEBUG
     elif [[ $1 == '-vv' ]]; then
@@ -36,7 +41,7 @@ while [[ $1 =~ ^- ]]; do
 done
 
 if [[ $# == 0 ]]; then
-    usage [-v] [-vv] [-a] SITE_MODEL PROJECT_ID DEVICE_ID [SERIAL_NO] [TEST_NAMES...]
+    usage [-v] [-vv] [-a] [-x] SITE_MODEL PROJECT_ID DEVICE_ID [SERIAL_NO] [TEST_NAMES...]
 fi
 
 site_path=$(realpath $1)
@@ -46,6 +51,9 @@ if [[ -d $site_path ]]; then
     project_id=$1
     device_id=$2
     shift 2 || fail Missing configuration command line parameters.
+
+    serial_no=${1:-$DEFAULT_SERIAL}
+    shift || true
 fi
 
 if [[ -n $UDMI_REGISTRY_SUFFIX ]]; then
@@ -55,9 +63,10 @@ else
     registry_suffix=null
 fi
 
-DEFAULT_SERIAL=//
-serial_no=${1:-$DEFAULT_SERIAL}
-shift || true
+alt_registry=null
+if [[ -n $UDMI_ALT_REGISTRY ]]; then
+    alt_registry=\"${UDMI_ALT_REGISTRY}\"
+fi
 
 if [[ $project_id == -- ]]; then
     echo Configuring for mock project use...
@@ -69,12 +78,13 @@ test_names="$@"
 udmi_version=`git describe --always --dirty`
 
 cd $UDMI_ROOT
-mkdir -p $OUT_DIR
 
 if ! bin/which_venv_pip3; then
     echo ERROR venv pip3 not installed, please run bin/setup_base and try again
     false
 fi
+
+source venv/bin/activate
 
 if [[ -d $site_path ]]; then
     echo Using site model directory $site_path
@@ -103,30 +113,44 @@ validator/bin/build
 # Format of cmdline project_id is {//PROVIDER/}PROJECT (optional PROVIDER)
 # e.g. bos-testing-dev or //gcp/bos-testing-dev
 
+quoted_namespace=null
+quoted_bridge=null
+iot_provider=null
+if [[ $project_id =~ ^// ]]; then
+    no_prefix=${project_id#//}
+    iot_provider=\"${no_prefix%%/*}\"
+    no_provider=${no_prefix#*/}
+    project_id=${no_provider%/*}
+    udmi_namespace=${no_provider#$project_id}
+    [[ -n $udmi_namespace ]] && quoted_namespace=\"${udmi_namespace#/}\"
+elif [[ $project_id =~ @ ]]; then
+    iot_provider=\"jwt\"
+    quoted_bridge=\"${project_id#*@}\"
+    project_id=${project_id%@*}
+fi
+
 if [[ -n $project_id ]]; then
     quoted_id=\"${project_id##*/}\"
 else
     quoted_id=null
 fi
 
-if [[ $project_id =~ ^// ]]; then
-    sans_project=${project_id%/*}
-    iot_provider=\"${sans_project#//}\"
-else
-    iot_provider=null
-fi
-
 export SEQUENCER_CONFIG=/tmp/sequencer_config.json
 
-echo Writing config to $SEQUENCER_CONFIG:
-cat <<EOF > $SEQUENCER_CONFIG
+if [[ ! $site_path -ef $SEQUENCER_CONFIG ]]; then
+    echo Writing config to $SEQUENCER_CONFIG:
+    cat <<EOF > $SEQUENCER_CONFIG
 {
   "iot_provider": $iot_provider,
   "project_id": $quoted_id,
+  "bridge_host": $quoted_bridge,
+  "udmi_namespace": $quoted_namespace,
   "site_model": "$site_model",
   "device_id": "$device_id",
   "alt_registry": $alt_registry,
   "registry_suffix": $registry_suffix,
+  "shard_count": ${MATRIX_SHARD_COUNT:-null},
+  "shard_index": ${MATRIX_SHARD_INDEX:-null},
   "serial_no": "$serial_no",
   "log_level": "$log_level",
   "min_stage": "$min_stage",
@@ -136,6 +160,7 @@ cat <<EOF > $SEQUENCER_CONFIG
   "key_file": "$site_model/reflector/rsa_private.pkcs8"
 }
 EOF
+fi
 
 cat $SEQUENCER_CONFIG
 
@@ -143,21 +168,24 @@ JARFILE=validator/build/libs/validator-1.0-SNAPSHOT-all.jar
 JAVA_CMD="java -cp $JARFILE com.google.daq.mqtt.sequencer.SequenceRunner"
 echo $JAVA_CMD $test_names
 result=0
-$JAVA_CMD $test_names 2>&1 | tee $TEST_LOG
+$JAVA_CMD $test_names 2>&1 | tee $SEQUENCER_LOG
 
 echo
+echo Extracting sequence results:
 # Sort by test name (6th field)
-fgrep 'RESULT ' $TEST_LOG | fgrep NOTICE | sort -k 6 | tee $SEQUENCER_RES
+fgrep 'RESULT ' $SEQUENCER_LOG | fgrep NOTICE | sort -k 6 | \
+    sed -e 's/.* NOTICE //' | tee $SEQUENCER_OUT
 
-if [[ $(wc -l < $SEQUENCER_RES) -eq 0 ]]; then
+if [[ $(wc -l < $SEQUENCER_OUT) -eq 0 ]]; then
     echo No test results found.
     exit 1
 fi
 
-# Sort by test name (4th field)
+# Sort by test name (3th field)
 fgrep RESULT $site_model/out/devices/$device_id/RESULT.log | \
     fgrep ' schemas ' | sort -k 3 | tee $SCHEMA_OUT
+more $site_model/out/devices/$device_id/RESULT.log $SCHEMA_OUT | cat
 
-(source venv/bin/activate && bin/sequencer_report $site_model $device_id)
+bin/sequencer_report $site_model $device_id
 
 bin/check_version

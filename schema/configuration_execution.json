@@ -31,6 +31,12 @@
     "registry_suffix": {
       "type": "string"
     },
+    "shard_count": {
+      "type": "integer"
+    },
+    "shard_index": {
+      "type": "integer"
+    },
     "device_id": {
       "type": "string"
     },
@@ -44,6 +50,12 @@
       "$ref": "file:configuration_endpoint.json"
     },
     "project_id": {
+      "type": "string"
+    },
+    "udmi_namespace": {
+      "type": "string"
+    },
+    "bridge_host": {
       "type": "string"
     },
     "key_file": {

@@ -1,4 +1,7 @@
 {
+  "base": {
+    "udmi_prefix": "${UDMI_PREFIX}"
+  },
   "flow_defaults": {
     "protocol": "pubsub",
     "hostname": "${GCP_PROJECT}",
@@ -6,21 +9,21 @@
   },
   "flows": {
     "target": {
-      "recv_id": "udmi_target-udmis"
+      "recv_id": "${UDMI_PREFIX}udmi_target-udmis"
     },
     "state": {
-      "recv_id": "udmi_state-udmis",
-      "send_id": "udmi_target"
+      "recv_id": "${UDMI_PREFIX}udmi_state-udmis",
+      "send_id": "${UDMI_PREFIX}udmi_target"
     },
     "reflect": {
-      "recv_id": "udmi_reflect-udmis",
-      "send_id": "udmi_target"
+      "recv_id": "${UDMI_PREFIX}udmi_reflect-udmis",
+      "send_id": "${UDMI_PREFIX}udmi_target"
     }
   },
   "iot_access": {
     "iot-access": {
       "provider": "dynamic",
-      "project_id": "gcp-iot-core,clearblade-iot-core"
+      "project_id": "gcp-iot-core, clearblade-iot-core, UDMI-REFLECT"
     },
     "clearblade-iot-core": {
       "provider": "clearblade",
@@ -31,6 +34,11 @@
       "provider": "gcp",
       "project_id": "${GCP_PROJECT}",
       "options": "${GCP_IOT_OPTIONS},distributor=stately"
+    },
+    "UDMI-REFLECT": {
+      "provider": "pubsub",
+      "project_id": "${GCP_PROJECT}",
+      "options": "topic=${UDMI_PREFIX}udmi_reply"
     }
   },
   "distributors": {

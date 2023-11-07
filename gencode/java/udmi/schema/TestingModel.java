@@ -16,11 +16,14 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "nostate",
     "targets"
 })
 @Generated("jsonschema2pojo")
 public class TestingModel {
 
+    @JsonProperty("nostate")
+    public Boolean nostate;
     @JsonProperty("targets")
     public HashMap<String, TargetTestingModel> targets;
 
@@ -28,6 +31,7 @@ public class TestingModel {
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.targets == null)? 0 :this.targets.hashCode()));
+        result = ((result* 31)+((this.nostate == null)? 0 :this.nostate.hashCode()));
         return result;
     }
 
@@ -40,7 +44,7 @@ public class TestingModel {
             return false;
         }
         TestingModel rhs = ((TestingModel) other);
-        return ((this.targets == rhs.targets)||((this.targets!= null)&&this.targets.equals(rhs.targets)));
+        return (((this.targets == rhs.targets)||((this.targets!= null)&&this.targets.equals(rhs.targets)))&&((this.nostate == rhs.nostate)||((this.nostate!= null)&&this.nostate.equals(rhs.nostate))));
     }
 
 }
