@@ -48,7 +48,8 @@ while read -u 7 action test_name pubber_opts; do
     fi
 
     if [[ $action == WITH ]]; then
-        echo $test_name $pubber_opts > $AUGMENT_OPTS
+        DEVICE_ID=$test_name
+        echo $pubber_opts > $AUGMENT_OPTS
         continue
     elif [[ -z $action || $action =~ ^# ]]; then
         continue
