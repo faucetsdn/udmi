@@ -410,7 +410,7 @@ public class Pubber {
   static void augmentDeviceMessage(Object message, Date now) {
     try {
       Field version = message.getClass().getField("version");
-      version.set(message, UDMI_VERSION);
+      version.set(message, isTrue(pubberOptions.badVersion) ? BROKEN_VERSION : UDMI_VERSION);
       Field timestamp = message.getClass().getField("timestamp");
       timestamp.set(message, now);
     } catch (Throwable e) {
@@ -454,7 +454,6 @@ public class Pubber {
     ifNotNullThen(configuration.sitePath, SupportedFeatures::writeFeatureFile);
     SupportedFeatures.setFeatureSwap(configuration.options.featureEnableSwap);
 
-    deviceState.version = isTrue(pubberOptions.badVersion) ? BROKEN_VERSION : UDMI_VERSION;
     deviceState.system = new SystemState();
     deviceState.system.operation = new StateSystemOperation();
     if (!isTrue(configuration.options.noLastStart)) {
