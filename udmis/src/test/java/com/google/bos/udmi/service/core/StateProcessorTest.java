@@ -150,7 +150,7 @@ public class StateProcessorTest extends ProcessorTestBase {
     terminateAndWait();
 
     assertEquals(3, captured.size(), "unexpected received message count");
-    assertTrue(capturedMatches(message -> message instanceof StateUpdate), "has SystemState");
+    assertTrue(capturedMatches(message -> message instanceof StateUpdate), "has StateUpdate");
     assertTrue(capturedMatches(message -> message instanceof SystemState), "has SystemState");
     assertTrue(capturedMatches(message -> message instanceof GatewayState), "has GatewayState");
     assertEquals(0, getExceptionCount(), "exception count");
