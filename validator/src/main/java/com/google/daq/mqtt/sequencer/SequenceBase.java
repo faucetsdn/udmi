@@ -1834,6 +1834,10 @@ public class SequenceBase {
     SENT_CONFIG_DIFFERNATOR.mapSemanticKey(keyPath, keyName, description, describedValue);
   }
 
+  public Map<SubFolder, List<Map<String, Object>>> getReceivedEvents(String deviceId) {
+    return receivedEvents;
+  }
+
   public Map<SubFolder, List<Map<String, Object>>> getReceivedEvents() {
     return receivedEvents;
   }
