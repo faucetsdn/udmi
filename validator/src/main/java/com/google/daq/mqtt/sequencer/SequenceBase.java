@@ -972,7 +972,7 @@ public class SequenceBase {
     debug(format("stage done %s at %s", condition, timeSinceStart()));
     recordSequence = false;
 
-    checkThatHasInterestingSystemStatus(false);
+    //checkThatHasInterestingSystemStatus(false);
 
     recordMessages = false;
     configAcked = false;
@@ -1731,13 +1731,13 @@ public class SequenceBase {
   }
 
   private Boolean hasInterestingSystemStatus() {
-    if (deviceState.system.status != null) {
-      debug("Status level: " + deviceState.system.status.level);
-    }
-
     // State missing is neither interesting nor not-interesting...
     if (deviceState == null || deviceState.system == null) {
       return null;
+    }
+
+    if (deviceState.system.status != null) {
+      debug("Status level: " + deviceState.system.status.level);
     }
 
     return deviceState.system.status != null
