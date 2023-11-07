@@ -22,10 +22,13 @@ import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
+import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.loadFileRequired;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static com.google.udmi.util.JsonUtil.toMap;
+import static com.google.udmi.util.JsonUtil.toStringMap;
 import static java.lang.String.format;
 import static java.nio.file.Files.newOutputStream;
 import static java.util.Objects.requireNonNull;
@@ -107,6 +110,7 @@ import udmi.schema.Bucket;
 import udmi.schema.Config;
 import udmi.schema.DiscoveryEvent;
 import udmi.schema.Entry;
+import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
 import udmi.schema.ExecutionConfiguration;
@@ -422,11 +426,11 @@ public class SequenceBase {
     enableAllTargets = enabled;
   }
 
-  private static String makeMessageBase(Map<String, String> attributes) {
-    String subType = attributes.get("subType");
-    String subFolder = attributes.get("subFolder");
-    String gatewayId = attributes.get(GATEWAY_ID_KEY);
-    String deviceSuffix = ifNotNullGet(gatewayId, () -> "_" + attributes.get(DEVICE_ID_KEY));
+  private static String makeMessageBase(Envelope attributes) {
+    SubType subType = attributes.subType;
+    SubFolder subFolder = attributes.subFolder;
+    String gatewayId = attributes.gatewayId;
+    String deviceSuffix = ifNotNullGet(gatewayId, () -> "_" + attributes.deviceId);
     return format("%s_%s%s", subType, subFolder, deviceSuffix);
   }
 
@@ -820,7 +824,7 @@ public class SequenceBase {
     return implicit == UNKNOWN_DEFAULT ? explicit : implicit;
   }
 
-  private void recordRawMessage(Map<String, String> attributes, Map<String, Object> message) {
+  private void recordRawMessage(Envelope attributes, Map<String, Object> message) {
     if (testName == null) {
       return;
     }
@@ -894,7 +898,7 @@ public class SequenceBase {
   private void logSystemEvent(String messageBase, Map<String, Object> message) {
     try {
       checkArgument(!messageBase.startsWith(LOCAL_PREFIX));
-      SystemEvent event = JsonUtil.convertTo(SystemEvent.class, message);
+      SystemEvent event = convertTo(SystemEvent.class, message);
       String prefix = "received " + messageBase + " ";
       if (event.logentries == null || event.logentries.isEmpty()) {
         debug(prefix + "(no logs)");
@@ -1354,12 +1358,14 @@ public class SequenceBase {
       return;
     }
 
+    Envelope envelope = convertTo(Envelope.class, attributes);
+
     try {
-      recordRawMessage(attributes, message);
+      recordRawMessage(envelope, message);
 
-      preprocessMessage(attributes, message);
+      preprocessMessage(envelope, message);
 
-      validateMessage(attributes, message);
+      validateMessage(envelope, message);
 
       if (SubFolder.UPDATE.value().equals(subFolderRaw)) {
         handleUpdateMessage(subTypeRaw, message, transactionId);
@@ -1372,19 +1378,19 @@ public class SequenceBase {
     }
   }
 
-  private void validateMessage(Map<String, String> attributes, Map<String, Object> message) {
-    String schemaName = format("%s_%s", attributes.get("subType"), attributes.get("subFolder"));
+  private void validateMessage(Envelope attributes, Map<String, Object> message) {
+    String schemaName = format("%s_%s", attributes.subType, attributes.subFolder);
     if (!isInterestingValidation(schemaName)) {
       return;
     }
 
-    String deviceId = attributes.get(DEVICE_ID_KEY);
+    String deviceId = attributes.deviceId;
     ReportingDevice reportingDevice = new ReportingDevice(deviceId);
 
-    Map<String, String> modified = new HashMap<>(attributes);
-    modified.put(DEVICE_ID_KEY, FAKE_DEVICE_ID); // Allow for non-standard device IDs.
+    Envelope modified = GeneralUtils.deepCopy(attributes);
+    modified.deviceId = FAKE_DEVICE_ID; // Allow for non-standard device IDs.
 
-    messageValidator.validateDeviceMessage(reportingDevice, message, modified);
+    messageValidator.validateDeviceMessage(reportingDevice, message, toStringMap(modified));
     validationResults.computeIfAbsent(makeMessageBase(attributes), key -> new ArrayList<>())
         .addAll(reportingDevice.getMessageEntries());
   }
@@ -1400,19 +1406,12 @@ public class SequenceBase {
     SubType subType = SubType.fromValue(requireNonNull(subTypeRaw, "missing subType"));
     SubFolder subFolder = SubFolder.fromValue(requireNonNull(subFolderRaw, "missing subFolder"));
     switch (subType) {
-      case CONFIG:
-        // These are echos of sent partial config messages, so do nothing.
-        trace("Ignoring echo configTransaction " + transactionId);
-        break;
-      case STATE:
-        // State updates are handled as a monolithic block with a state reflector update.
-        trace("Ignoring partial state update");
-        break;
-      case EVENT:
-        handleEventMessage(subFolder, message);
-        break;
-      default:
-        info("Encountered unexpected subType " + subTypeRaw);
+      // These are echos of sent partial config messages, so do nothing.
+      case CONFIG -> trace("Ignoring echo configTransaction " + transactionId);
+      // State updates are handled as a monolithic block with a state reflector update.
+      case STATE -> trace("Ignoring partial state update");
+      case EVENT -> handleEventMessage(subFolder, message);
+      default -> info("Encountered unexpected subType " + subTypeRaw);
     }
   }
 
@@ -1446,7 +1445,7 @@ public class SequenceBase {
         debug("Ignoring unexpected update type " + subTypeRaw);
         return;
       }
-      Object converted = JsonUtil.convertTo(EXPECTED_UPDATES.get(subTypeRaw), message);
+      Object converted = convertTo(EXPECTED_UPDATES.get(subTypeRaw), message);
       getReceivedUpdates().put(subTypeRaw, converted);
       int updateCount = getUpdateCount(subTypeRaw).incrementAndGet();
       if (converted instanceof Config config) {
@@ -1520,11 +1519,9 @@ public class SequenceBase {
     return RECV_CONFIG_DIFFERNATOR.computeChanges(deviceConfig);
   }
 
-  private void preprocessMessage(Map<String, String> attributes, Map<String, Object> message) {
-    if (getDeviceId().equals(attributes.get(DEVICE_ID_KEY))) {
-      if (SubType.STATE.value().equals(attributes.get(Common.SUBTYPE_PROPERTY_KEY))) {
-        updateConfigAcked(message);
-      }
+  private void preprocessMessage(Envelope attributes, Map<String, Object> message) {
+    if (getDeviceId().equals(attributes.deviceId) && SubType.STATE == attributes.subType) {
+      updateConfigAcked(message);
     }
   }
 
@@ -1553,7 +1550,7 @@ public class SequenceBase {
   private void handleEventMessage(SubFolder subFolder, Map<String, Object> message) {
     getReceivedEvents().computeIfAbsent(subFolder, key -> new ArrayList<>()).add(message);
     if (SubFolder.SYSTEM.equals(subFolder)) {
-      writeSystemLogs(JsonUtil.convertTo(SystemEvent.class, message));
+      writeSystemLogs(convertTo(SystemEvent.class, message));
     }
   }
 
@@ -1664,7 +1661,7 @@ public class SequenceBase {
     if (events == null) {
       return ImmutableList.of();
     }
-    return events.stream().map(message -> JsonUtil.convertTo(clazz, message))
+    return events.stream().map(message -> convertTo(clazz, message))
         .collect(Collectors.toList());
   }
 
