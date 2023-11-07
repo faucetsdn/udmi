@@ -669,7 +669,7 @@ public class SequenceBase {
     // Do this late in the sequence to make sure any state is cleared out from previous test.
     startStateCount = getStateUpdateCount();
     startCaptureTime = System.currentTimeMillis();
-    getReceivedEvents().clear();
+    clearReceivedEvents();
     validationResults.clear();
 
     recordSequence = true;
@@ -1548,7 +1548,7 @@ public class SequenceBase {
   }
 
   private void handleEventMessage(SubFolder subFolder, Map<String, Object> message) {
-    getReceivedEvents().computeIfAbsent(subFolder, key -> new ArrayList<>()).add(message);
+    getReceivedEvents(subFolder).add(message);
     if (SubFolder.SYSTEM.equals(subFolder)) {
       writeSystemLogs(convertTo(SystemEvent.class, message));
     }
@@ -1648,7 +1648,7 @@ public class SequenceBase {
    */
   protected int countReceivedEvents(Class clazz) {
     SubFolder subFolder = CLASS_SUBFOLDER_MAP.get(clazz);
-    List<Map<String, Object>> events = getReceivedEvents().get(subFolder);
+    List<Map<String, Object>> events = getReceivedEvents(subFolder);
     if (events == null) {
       return 0;
     }
@@ -1837,16 +1837,24 @@ public class SequenceBase {
     SENT_CONFIG_DIFFERNATOR.mapSemanticKey(keyPath, keyName, description, describedValue);
   }
 
-  public List<Map<String, Object>> getReceivedEvents(String deviceId, SubFolder subType) {
-    return getReceivedEvents(deviceId).computeIfAbsent(subType, key -> new ArrayList<>());
+  public List<Map<String, Object>> getReceivedEvents(String deviceId, SubFolder subFolder) {
+    return getReceivedEvents(deviceId).computeIfAbsent(subFolder, key -> new ArrayList<>());
+  }
+
+  public List<Map<String, Object> getReceivedEvents(SubFolder subFolder) {
+    return getReceivedEvents(getDeviceId(), subFolder);
+  }
+
+  public Map<SubFolder, List<Map<String, Object>>> getReceivedEvents() {
+    return getReceivedEvents(getDeviceId());
   }
 
   public Map<SubFolder, List<Map<String, Object>>> getReceivedEvents(String deviceId) {
     return receivedEvents.computeIfAbsent(deviceId, key -> new HashMap<>());
   }
 
-  public Map<SubFolder, List<Map<String, Object>>> getReceivedEvents() {
-    return getReceivedEvents(getDeviceId());
+  private void clearReceivedEvents() {
+    receivedEvents.clear();
   }
 
   public Map<String, Object> getReceivedUpdates() {
