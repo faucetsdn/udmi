@@ -144,7 +144,7 @@ public class PointsetSequences extends PointsetBase {
    */
   @Test(timeout = THREE_MINUTES_MS)
   @Feature(stage = BETA, bucket = POINTSET)
-  @Summary("Check that a device publishes pointset events at a rate of no more than config sample_rate_sec")
+  @Summary("Check that a device publishes pointset events not faster than config sample_rate_sec")
   public void pointset_sample_rate() {
     ifNullSkipTest(deviceConfig.pointset, "no pointset found in config");
 

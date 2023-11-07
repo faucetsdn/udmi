@@ -27,7 +27,6 @@ import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.loadFileRequired;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.stringify;
-import static com.google.udmi.util.JsonUtil.toMap;
 import static com.google.udmi.util.JsonUtil.toStringMap;
 import static java.lang.String.format;
 import static java.nio.file.Files.newOutputStream;
@@ -1367,6 +1366,7 @@ public class SequenceBase {
 
       validateMessage(envelope, message);
 
+      // TODO: Need to handle proxied devices specially here.
       if (SubFolder.UPDATE.value().equals(subFolderRaw)) {
         handleUpdateMessage(subTypeRaw, message, transactionId);
       } else {
@@ -1837,8 +1837,12 @@ public class SequenceBase {
     SENT_CONFIG_DIFFERNATOR.mapSemanticKey(keyPath, keyName, description, describedValue);
   }
 
+  public List<Map<String, Object>> getReceivedEvents(String deviceId, SubFolder subType) {
+    return getReceivedEvents(deviceId).computeIfAbsent(subType, key -> new ArrayList<>());
+  }
+
   public Map<SubFolder, List<Map<String, Object>>> getReceivedEvents(String deviceId) {
-    return receivedEvents.get(deviceId);
+    return receivedEvents.computeIfAbsent(deviceId, key -> new HashMap<>());
   }
 
   public Map<SubFolder, List<Map<String, Object>>> getReceivedEvents() {

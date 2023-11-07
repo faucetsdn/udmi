@@ -1,5 +1,7 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
+import static udmi.schema.Envelope.SubFolder.POINTSET;
+
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.Summary;
@@ -10,6 +12,9 @@ import udmi.schema.Bucket;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.FeatureEnumeration.FeatureStage;
 
+/**
+ * Specific tests for gateway functionality.
+ */
 public class GatewaySequences extends SequenceBase {
 
   @Feature(stage = FeatureStage.ALPHA, bucket = Bucket.GATEWAY)
@@ -25,7 +30,7 @@ public class GatewaySequences extends SequenceBase {
   }
 
   private boolean hasReceivedPointset(String deviceId) {
-    return !catchToTrue(() -> getReceivedEvents(deviceId).get(SubFolder.POINTSET).isEmpty());
+    return !getReceivedEvents(deviceId, POINTSET).isEmpty());
   }
 
   private void skipIfNotGateway() {
