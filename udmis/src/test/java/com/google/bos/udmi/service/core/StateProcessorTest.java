@@ -14,11 +14,13 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import com.google.bos.udmi.service.messaging.StateUpdate;
 import com.google.bos.udmi.service.messaging.impl.MessageBase;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.udmi.util.CleanDateFormat;
 import java.util.Date;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -42,6 +44,10 @@ public class StateProcessorTest extends ProcessorTestBase {
   @NotNull
   protected Class<? extends ProcessorBase> getProcessorClass() {
     return StateProcessor.class;
+  }
+
+  private boolean capturedMatches(Predicate<Object> objectPredicate) {
+    return captured.stream().anyMatch(objectPredicate);
   }
 
   private Config getTestConfig() {
@@ -123,6 +129,15 @@ public class StateProcessorTest extends ProcessorTestBase {
     assertNull(newConfig, "new last_start");
   }
 
+  @Test
+  public void legacyStateMessage() {
+    StateProcessor processor = initializeTestInstance(StateProcessor.class);
+    Object message = loadFileRequired(Object.class, LEGACY_STATE_MESSAGE_FILE);
+    dispatcher.withEnvelopeFor(new Envelope(), message, () -> processor.defaultHandler(message));
+    getReverseDispatcher().waitForMessageProcessed(SystemState.class);
+    terminateAndWait();
+  }
+
   /**
    * Test that a state update with multiple sub-blocks results in the expected two messages.
    */
@@ -134,22 +149,12 @@ public class StateProcessorTest extends ProcessorTestBase {
     getReverseDispatcher().waitForMessageProcessed(GatewayState.class);
     terminateAndWait();
 
-    assertEquals(2, captured.size(), "unexpected received message count");
-    assertTrue(captured.stream().anyMatch(message -> message instanceof SystemState),
-        "has SystemState");
-    assertTrue(captured.stream().anyMatch(message -> message instanceof GatewayState),
-        "has GatewayState");
+    assertEquals(3, captured.size(), "unexpected received message count");
+    assertTrue(capturedMatches(message -> message instanceof StateUpdate), "has SystemState");
+    assertTrue(capturedMatches(message -> message instanceof SystemState), "has SystemState");
+    assertTrue(capturedMatches(message -> message instanceof GatewayState), "has GatewayState");
     assertEquals(0, getExceptionCount(), "exception count");
     assertEquals(1, getDefaultCount(), "default handler count");
-  }
-
-  @Test
-  public void legacyStateMessage() {
-    StateProcessor processor = initializeTestInstance(StateProcessor.class);
-    Object message = loadFileRequired(Object.class, LEGACY_STATE_MESSAGE_FILE);
-    dispatcher.withEnvelopeFor(new Envelope(), message, () -> processor.defaultHandler(message));
-    getReverseDispatcher().waitForMessageProcessed(SystemState.class);
-    terminateAndWait();
   }
 
   /**
@@ -162,9 +167,9 @@ public class StateProcessorTest extends ProcessorTestBase {
     safeSleep(ASYNC_PROCESSING_DELAY_MS);
     terminateAndWait();
 
-    assertEquals(1, captured.size(), "unexpected received message count");
-    Object received = captured.get(0);
-    assertTrue(received instanceof SystemState, "expected SystemState message");
+    assertEquals(2, captured.size(), "unexpected received message count");
+    assertTrue(capturedMatches(message -> message instanceof SystemState), "expected SystemState message");
+    assertTrue(capturedMatches(message -> message instanceof StateUpdate), "expected StateUpdate message");
     assertEquals(0, getExceptionCount(), "exception count");
     assertEquals(1, getDefaultCount(), "default handler count");
 
