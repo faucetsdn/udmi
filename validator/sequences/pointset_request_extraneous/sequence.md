@@ -1,7 +1,7 @@
 
 ## pointset_request_extraneous (ALPHA)
 
-pointset configuration contains extraneous point
+Check error when pointset configuration contains extraneous point
 
 1. Wait for pointset state reports same points as defined in config
 1. Wait for pointset event contains correct points with present_value

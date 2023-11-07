@@ -7,13 +7,13 @@
   "localnet" : {
     "families" : {
       "ether" : {
-        "addr" : "60:45:bd:e3:36:e3"
+        "addr" : "00:22:48:09:fa:c8"
       },
       "ipv4" : {
-        "addr" : "10.1.1.78"
+        "addr" : "10.1.140.0"
       },
       "ipv6" : {
-        "addr" : "fe80::6245:bdff:fee3:36e3"
+        "addr" : "fe80::222:48ff:fe09:fac8"
       }
     }
   },
@@ -30,14 +30,14 @@
     }
   },
   "system" : {
-    "last_config" : "2023-10-28T13:38:46Z",
+    "last_config" : "2023-11-07T14:31:34Z",
     "operation" : {
       "operational" : true,
-      "last_start" : "2023-10-28T13:27:58Z",
-      "restart_count" : 4,
+      "last_start" : "2023-11-07T14:30:01Z",
+      "restart_count" : 2,
       "mode" : "active"
     },
-    "serial_no" : "sequencer-22510",
+    "serial_no" : "sequencer-5543",
     "hardware" : {
       "make" : "BOS",
       "model" : "pubber"
@@ -48,10 +48,10 @@
     "status" : {
       "message" : "success",
       "category" : "system.config.apply",
-      "timestamp" : "2023-10-28T13:38:46Z",
+      "timestamp" : "2023-11-07T14:31:34Z",
       "level" : 300
     }
   },
-  "timestamp" : "2023-10-28T13:38:48Z",
+  "timestamp" : "2023-11-07T14:31:36Z",
   "version" : "1.4.2"
 }
