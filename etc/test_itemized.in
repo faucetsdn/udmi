@@ -13,6 +13,7 @@ TEST broken_config configStateDelay
 TEST broken_config noState
 TEST system_last_update extraField=fnooz
 TEST config_logging badCategory
+TEST config_logging badVersion
 
 # Test with various device metadata.json options
 WITH noState

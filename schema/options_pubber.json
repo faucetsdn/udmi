@@ -22,6 +22,9 @@
     "badCategory": {
       "type": "boolean"
     },
+    "badVersion": {
+      "type": "boolean"
+    },
     "barfConfig": {
       "type": "boolean"
     },
