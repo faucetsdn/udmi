@@ -19,6 +19,9 @@
     "noLastStart": {
       "type": "boolean"
     },
+    "badCategory": {
+      "type": "boolean"
+    },
     "barfConfig": {
       "type": "boolean"
     },
