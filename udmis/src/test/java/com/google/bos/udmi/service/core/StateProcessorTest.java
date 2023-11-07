@@ -46,7 +46,7 @@ public class StateProcessorTest extends ProcessorTestBase {
     return StateProcessor.class;
   }
 
-  private boolean capturedMatches(Predicate<Object> objectPredicate) {
+  private boolean contains(Predicate<Object> objectPredicate) {
     return captured.stream().anyMatch(objectPredicate);
   }
 
@@ -150,9 +150,9 @@ public class StateProcessorTest extends ProcessorTestBase {
     terminateAndWait();
 
     assertEquals(3, captured.size(), "unexpected received message count");
-    assertTrue(capturedMatches(message -> message instanceof StateUpdate), "has StateUpdate");
-    assertTrue(capturedMatches(message -> message instanceof SystemState), "has SystemState");
-    assertTrue(capturedMatches(message -> message instanceof GatewayState), "has GatewayState");
+    assertTrue(contains(message -> message instanceof StateUpdate), "has StateUpdate");
+    assertTrue(contains(message -> message instanceof SystemState), "has SystemState");
+    assertTrue(contains(message -> message instanceof GatewayState), "has GatewayState");
     assertEquals(0, getExceptionCount(), "exception count");
     assertEquals(1, getDefaultCount(), "default handler count");
   }
@@ -168,8 +168,8 @@ public class StateProcessorTest extends ProcessorTestBase {
     terminateAndWait();
 
     assertEquals(2, captured.size(), "unexpected received message count");
-    assertTrue(capturedMatches(message -> message instanceof SystemState), "expected SystemState message");
-    assertTrue(capturedMatches(message -> message instanceof StateUpdate), "expected StateUpdate message");
+    assertTrue(contains(msg -> msg instanceof SystemState), "expected SystemState message");
+    assertTrue(contains(msg -> msg instanceof StateUpdate), "expected StateUpdate message");
     assertEquals(0, getExceptionCount(), "exception count");
     assertEquals(1, getDefaultCount(), "default handler count");
 
