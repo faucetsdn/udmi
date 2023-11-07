@@ -17,7 +17,6 @@ import static com.google.udmi.util.GeneralUtils.changedLines;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
-import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
@@ -666,7 +665,7 @@ public class SequenceBase {
     // Do this late in the sequence to make sure any state is cleared out from previous test.
     startStateCount = getStateUpdateCount();
     startCaptureTime = System.currentTimeMillis();
-    receivedEvents.clear();
+    getReceivedEvents().clear();
     validationResults.clear();
 
     recordSequence = true;
@@ -1444,7 +1443,7 @@ public class SequenceBase {
         return;
       }
       Object converted = JsonUtil.convertTo(EXPECTED_UPDATES.get(subTypeRaw), message);
-      receivedUpdates.put(subTypeRaw, converted);
+      getReceivedUpdates().put(subTypeRaw, converted);
       int updateCount = getUpdateCount(subTypeRaw).incrementAndGet();
       if (converted instanceof Config config) {
         String extraField = getExtraField(message);
@@ -1546,7 +1545,7 @@ public class SequenceBase {
   }
 
   private void handleEventMessage(SubFolder subFolder, Map<String, Object> message) {
-    receivedEvents.computeIfAbsent(subFolder, key -> new ArrayList<>()).add(message);
+    getReceivedEvents().computeIfAbsent(subFolder, key -> new ArrayList<>()).add(message);
     if (SubFolder.SYSTEM.equals(subFolder)) {
       writeSystemLogs(JsonUtil.convertTo(SystemEvent.class, message));
     }
@@ -1646,7 +1645,7 @@ public class SequenceBase {
    */
   protected int countReceivedEvents(Class clazz) {
     SubFolder subFolder = CLASS_SUBFOLDER_MAP.get(clazz);
-    List<Map<String, Object>> events = receivedEvents.get(subFolder);
+    List<Map<String, Object>> events = getReceivedEvents().get(subFolder);
     if (events == null) {
       return 0;
     }
@@ -1655,7 +1654,7 @@ public class SequenceBase {
 
   protected <T> List<T> popReceivedEvents(Class<T> clazz) {
     SubFolder subFolder = CLASS_SUBFOLDER_MAP.get(clazz);
-    List<Map<String, Object>> events = receivedEvents.remove(subFolder);
+    List<Map<String, Object>> events = getReceivedEvents().remove(subFolder);
     if (events == null) {
       return ImmutableList.of();
     }
@@ -1691,8 +1690,8 @@ public class SequenceBase {
     // First make sure the current config is up-to-date with any local changes.
     updateConfig("mirroring config " + useAlternateClient);
 
-    // Grab the as-reported current config, to get a copy of the actual values uesd.
-    Config target = (Config) receivedUpdates.get(CONFIG_SUBTYPE);
+    // Grab the as-reported current config, to get a copy of the actual values used.
+    Config target = (Config) getReceivedUpdates().get(CONFIG_SUBTYPE);
 
     // Modify the config with the alternate endpoint_type, prefetching the actual change.
     target.system.testing.endpoint_type = useAlternateClient ? null : "alternate";
@@ -1833,6 +1832,14 @@ public class SequenceBase {
   protected void mapSemanticKey(String keyPath, String keyName, String description,
       String describedValue) {
     SENT_CONFIG_DIFFERNATOR.mapSemanticKey(keyPath, keyName, description, describedValue);
+  }
+
+  public Map<SubFolder, List<Map<String, Object>>> getReceivedEvents() {
+    return receivedEvents;
+  }
+
+  public Map<String, Object> getReceivedUpdates() {
+    return receivedUpdates;
   }
 
   /**
