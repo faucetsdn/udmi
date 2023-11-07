@@ -431,7 +431,7 @@ public class SequenceBase {
     SubType subType = attributes.subType;
     SubFolder subFolder = attributes.subFolder;
     String gatewayId = attributes.gatewayId;
-    String deviceSuffix = ifNotNullGet(gatewayId, () -> "_" + attributes.deviceId);
+    String deviceSuffix = ofNullable(gatewayId).map(x -> "_" + attributes.deviceId).orElse("");
     return format("%s_%s%s", subType, subFolder, deviceSuffix);
   }
 
