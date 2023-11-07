@@ -229,7 +229,9 @@ public class SequenceBase {
         "ALPHA functions version should not be > BETA");
   }
 
-  private final Map<String, Map<SubFolder, List<Map<String, Object>>>> receivedEvents = new HashMap<>();
+  static class CaptureMap extends HashMap<SubFolder, List<Map<String, Object>>> {}
+
+  private final Map<String, CaptureMap> receivedEvents = new HashMap<>();
   private final Map<String, Object> receivedUpdates = new HashMap<>();
   private final Queue<Entry> logEntryQueue = new LinkedBlockingDeque<>();
   private final Stack<String> waitingCondition = new Stack<>();
@@ -1841,16 +1843,16 @@ public class SequenceBase {
     return getReceivedEvents(deviceId).computeIfAbsent(subFolder, key -> new ArrayList<>());
   }
 
-  public List<Map<String, Object> getReceivedEvents(SubFolder subFolder) {
+  public List<Map<String, Object>> getReceivedEvents(SubFolder subFolder) {
     return getReceivedEvents(getDeviceId(), subFolder);
   }
 
-  public Map<SubFolder, List<Map<String, Object>>> getReceivedEvents() {
+  public CaptureMap getReceivedEvents() {
     return getReceivedEvents(getDeviceId());
   }
 
-  public Map<SubFolder, List<Map<String, Object>>> getReceivedEvents(String deviceId) {
-    return receivedEvents.computeIfAbsent(deviceId, key -> new HashMap<>());
+  public CaptureMap getReceivedEvents(String deviceId) {
+    return receivedEvents.computeIfAbsent(deviceId, key -> new CaptureMap());
   }
 
   private void clearReceivedEvents() {

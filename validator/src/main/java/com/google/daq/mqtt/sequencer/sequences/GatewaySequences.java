@@ -30,7 +30,7 @@ public class GatewaySequences extends SequenceBase {
   }
 
   private boolean hasReceivedPointset(String deviceId) {
-    return !getReceivedEvents(deviceId, POINTSET).isEmpty());
+    return !getReceivedEvents(deviceId, POINTSET).isEmpty();
   }
 
   private void skipIfNotGateway() {
