@@ -50,6 +50,7 @@ while read -u 7 action test_name pubber_opts; do
     if [[ $action == WITH ]]; then
         DEVICE_ID=$test_name
         echo $pubber_opts > $AUGMENT_OPTS
+        echo Executing itemized tests as $DEVICE_ID with $pubber_opts
         continue
     elif [[ -z $action || $action =~ ^# ]]; then
         continue
@@ -61,9 +62,9 @@ while read -u 7 action test_name pubber_opts; do
     ((test_index++)) || true
     test_marker=$(printf %02d $test_index)
     if [[ -z $MATRIX_SHARD_COUNT || $((test_index % MATRIX_SHARD_COUNT)) == $MATRIX_SHARD_INDEX ]]; then
-        echo Executing shard test index $test_index
+        echo Executing $test_name shard test index $test_index
     else
-        echo Skipping non-shard test index $test_index
+        echo Skipping $test_name non-shard test index $test_index
         continue
     fi
 
