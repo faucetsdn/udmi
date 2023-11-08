@@ -24,7 +24,7 @@ public class SequenceRunnerTest {
   // Minimum number of tests expected. This is a "low-water mark" to be increased as appropriate
   // when new tests are added. Only tracks tests marked as non-ALPHA.
   // TODO: Dynamically pull this count from the etc/sequencer.out file.
-  private static final int TEST_COUNT_MIN = 5;
+  private static final int TEST_COUNT_MIN = 7;
   private static final int SITE_COUNT_MIN = TEST_COUNT_MIN * MODEL_DEVICE_COUNT;
 
   private static void assertTestCount(int runCount, int countMin) {
