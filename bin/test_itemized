@@ -16,9 +16,6 @@ DEVICE_ID=AHU-1
 seq_opts=-v
 serial_no=sequencer-$RANDOM
 
-PUBBER_LOG=out/pubber.log
-SEQUENCER_LOG=out/sequencer.log
-SEQUENCER_OUT=out/sequencer.out
 INPUT_FILE=etc/test_itemized.in
 RESULTS_OUT=out/test_itemized.out
 GOLDEN_FILE=etc/test_itemized.out
@@ -26,7 +23,7 @@ SCHEMA_OUT=out/schema_itemized.out
 GOLDEN_SCHEMAS=etc/schema_itemized.out
 AUGMENT_OPTS=out/augment_opts.txt
 
-rm -rf out $SITE_PATH/out
+rm -rf out $SITE_PATH/out out/*_itemized.out
 mkdir -p out
 echo > $AUGMENT_OPTS
 
@@ -39,9 +36,12 @@ echo "export MATRIX_SHARD_INDEX=$MATRIX_SHARD_INDEX"
 pubber/bin/build
 validator/bin/build
 
-test_index=-1
+test_index=0
 while read -u 7 action test_name pubber_opts; do
-    rm -f $RESULTS_OUT $SEQUENCER_OUT $PUBBER_LOG $SCHEMA_OUT $SEQUENCER_LOG
+    test_marker=$(printf %02d $test_index)
+    PUBBER_LOG=out/pubber.log-$test_marker
+    SEQUENCER_LOG=out/sequencer.log-$test_marker
+    SEQUENCER_OUT=out/sequencer.out-$test_marker
     mkdir -p out
 
     if [[ $action == TEST && -n $TARGET_TEST && $TARGET_TEST != $test_name ]]; then
@@ -60,8 +60,6 @@ while read -u 7 action test_name pubber_opts; do
         false
     fi
 
-    ((test_index++)) || true
-    test_marker=$(printf %02d $test_index)
     if [[ -z $MATRIX_SHARD_COUNT || $((test_index % MATRIX_SHARD_COUNT)) == $MATRIX_SHARD_INDEX ]]; then
         echo Executing $test_name shard test index $test_index
     else
@@ -115,8 +113,7 @@ while read -u 7 action test_name pubber_opts; do
     cat out/schema.out >> $SCHEMA_OUT
     mv out/schema.out $SCHEMA_OUT-$test_marker
 
-    sleep 2
-
+    ((test_index++)) || true
 done 7< $INPUT_FILE
 
 if [[ -z $TARGET_TEST && -z $MATRIX_SHARD_COUNT ]]; then
