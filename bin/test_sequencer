@@ -63,7 +63,7 @@ test_out_base=$device_out_base/tests
 
 if [[ -n $clean_cache ]]; then
     echo Cleaning out/ $test_out_base/
-    rm -rf out/ $test_out_base/
+    rm -rf out/ $test_out_base/ out-seq/ $site_path/out $site_path/out-seq
 fi
 
 mkdir -p $test_out_base out/
@@ -127,14 +127,18 @@ else
     false
 fi
 
-echo Combining partial-run output files...
-ls -l out/schema.out out/sequencer.log
-
-cat out/schema.out >> out/schema.out.combined
-cat out/sequencer.log >> out/sequencer.log.combined
-cat out/sequencer.out >> out/sequencer.out.combined
-echo Combined to:
-ls -l out/schema.out.combined out/sequencer.log.combined || true
+if [[ -d out-seq ]]; then
+    echo Combining partial-run output files...
+    ls -l out*/*.out out*/*.log
+    files=$(ls -1 out-seq/)
+    echo Merging $files
+    for file in $files; do
+        cat out-seq/$file >> out/$file
+    done
+    rm -rf out-seq
+    echo Combined to:
+    ls -l out*/*.out out*/*.log
+fi
 
 if [[ -n $out_check ]]; then
     if [[ -n $clean_cache ]]; then
@@ -144,16 +148,10 @@ if [[ -n $out_check ]]; then
 
     bin/test_sequcheck $suffix
 else
-    if [[ -n $clean_cache ]]; then
-        echo Cleaning sequencer out archive...
-        rm -rf out/ $site_path/out-seq
-    fi
-
     echo Archiving out/ to out-seq/
-    mkdir -p out-seq/ $site_path/out-seq/
-    rsync -ah out/ out-seq/
-    rsync -ah $site_path/out/ $site_path/out-seq/
-    rm -rf $site_path/out/ out/
+    rm -rf out-seq/ $site_path/out-seq
+    mv out/ out-seq/
+    mv $site_path/out/ $site_path/out-seq/
 fi
 
 echo Done with $suffix test_sequencer run.
