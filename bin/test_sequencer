@@ -146,12 +146,13 @@ if [[ -n $out_check ]]; then
 else
     if [[ -n $clean_cache ]]; then
         echo Cleaning sequencer out archive...
-        rm -rf $site_path/out-seq
+        rm -rf out/ $site_path/out-seq
     fi
 
-    echo Archiving $site_path/out to $site_path/out-seq
+    echo Archiving out/ to out-seq/
+    rsync -ah out/ out-seq/
     rsync -ah $site_path/out/ $site_path/out-seq/
-    rm -rf $site_path/out
+    rm -rf $site_path/out/ out/
 fi
 
 echo Done with $suffix test_sequencer run.
