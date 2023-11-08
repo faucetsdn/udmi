@@ -121,9 +121,4 @@ done 7< $INPUT_FILE
 
 if [[ -z $TARGET_TEST && -z $MATRIX_SHARD_COUNT ]]; then
     bin/test_itemcheck
-else
-    echo Archiving out/ to out-itm/
-    rm -rf out/ $SITE_PATH/out-itm/
-    mv out/ out-itm/
-    mv $SITE_PATH/out/ $SITE_PATH/out-itm/
 fi

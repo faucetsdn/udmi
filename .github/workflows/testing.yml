@@ -149,23 +149,31 @@ jobs:
         run: bin/test_sequencer clean nocheck $TARGET_PROJECT
       - name: sequence tests alpha
         run: bin/test_sequencer alpha nocheck $TARGET_PROJECT
-      - name: sequence test timing
+      - name: sequence test cleanup
         if: ${{ always() }}
-        run: egrep ' test .* after .*s ' out/sequencer.log.combined
+        run: |
+          egrep ' test .* after .*s ' out/sequencer.log | out/seq_timing.out
+          mv out out-seq
+          mv sites/udmi_site_model/out sites/udmi_site_model/out-seq
       - name: itemized sequencer tests
         run: bin/test_itemized $TARGET_PROJECT
-      - name: itemized test timing
-        if: ${{ always() }}
-        run: egrep ' test .* after .*s ' out/sequencer.log-*
       - name: output files
         if: ${{ always() }}
-        run: more out*/*.out* | cat
+        run: more out/*.out* | cat
       - name: pubber logs
         if: ${{ always() }}
         run: more out/pubber.log* pubber/out/*.json | cat
+      - name: itemized test cleanup
+        if: ${{ always() }}
+        run: |
+          egrep ' test .* after .*s ' out/sequencer.log-*
+          mv out out-itm
+          mv sites/udmi_site_model/out sites/udmi_site_model/out-itm
       - name: support bundle
         if: ${{ always() }}
-        run: bin/support ${{ github.repository_owner }}_${{ github.job }}_
+        run: |
+          ls -l out*/ sites/udmi_site_model/out*/
+          bin/support ${{ github.repository_owner }}_${{ github.job }}_
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
