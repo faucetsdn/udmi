@@ -133,8 +133,8 @@ ls -l out
 files=$(cd out; ls -1 *.out *.log)
 echo Merging $files
 for file in $files; do
-    cat $file >> $file.combined
-    cp $file.combined $file
+    cat out/$file >> out/$file.combined
+    cp out/$file.combined out/$file
 done
 ls -l out
 
