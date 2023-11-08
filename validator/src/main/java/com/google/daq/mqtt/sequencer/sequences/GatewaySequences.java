@@ -19,6 +19,7 @@ public class GatewaySequences extends SequenceBase {
   @Override
   public void setUp() {
     ifTrueSkipTest(catchToTrue(() -> deviceMetadata.gateway.proxy_ids.isEmpty()), "Not a gateway");
+    super.setUp();
   }
 
   @Feature(stage = FeatureStage.ALPHA, bucket = Bucket.GATEWAY)
