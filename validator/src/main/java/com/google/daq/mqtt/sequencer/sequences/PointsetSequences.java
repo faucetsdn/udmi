@@ -96,7 +96,7 @@ public class PointsetSequences extends PointsetBase {
   public void pointset_remove_point() {
     untilPointsetSanity();
 
-    List<String> candidatePoints = new ArrayList<>(deviceState.pointset.points.keySet());
+    List<String> candidatePoints = new ArrayList<>(deviceConfig.pointset.points.keySet());
     ifTrueThen(candidatePoints.isEmpty(), () -> skipTest("No points to remove"));
     String name = candidatePoints.get((int) Math.floor(Math.random() * candidatePoints.size()));
 

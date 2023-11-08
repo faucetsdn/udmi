@@ -27,19 +27,19 @@ Some caveats:
 -->
 
 <!-- START GENERATED, do not edit anything after this line! -->
-* [config_logging](#config_logging): Check that the device publishes minimum required log entries when receiving config
-* [device_config_acked](#device_config_acked): Check that the device MQTT-acknowledges a sent config.
-* [empty_enumeration](#empty_enumeration): check enumeration of nothing at all
-* [extra_config](#extra_config): Check that the device correctly handles an extra out-of-schema field
-* [feature_enumeration](#feature_enumeration): check enumeration of device features
-* [pointset_publish](#pointset_publish): device publishes pointset events
-* [pointset_publish_interval](#pointset_publish_interval): test sample rate and sample limit sec
-* [pointset_remove_point](#pointset_remove_point): pointset state does not report unconfigured point
-* [pointset_request_extraneous](#pointset_request_extraneous): pointset configuration contains extraneous point
-* [pointset_sample_rate](#pointset_sample_rate): device publishes pointset events at a rate of no more than config sample_rate_sec
-* [state_make_model](#state_make_model): device publishes correct make and model information in state messages
-* [state_software](#state_software): device publishes correct software information in state messages
-* [system_last_update](#system_last_update): Check that last_update state is correctly set in response to a config update.
+* [config_logging](#config_logging-beta): Check that the device publishes minimum required log entries when receiving config
+* [device_config_acked](#device_config_acked-beta): Check that the device MQTT-acknowledges a sent config.
+* [empty_enumeration](#empty_enumeration-preview): check enumeration of nothing at all
+* [extra_config](#extra_config-beta): Check that the device correctly handles an extra out-of-schema field
+* [feature_enumeration](#feature_enumeration-preview): check enumeration of device features
+* [pointset_publish](#pointset_publish-beta): device publishes pointset events
+* [pointset_publish_interval](#pointset_publish_interval-beta): test sample rate and sample limit sec
+* [pointset_remove_point](#pointset_remove_point-beta): pointset state does not report unconfigured point
+* [pointset_request_extraneous](#pointset_request_extraneous-beta): pointset configuration contains extraneous point
+* [pointset_sample_rate](#pointset_sample_rate-beta): device publishes pointset events at a rate of no more than config sample_rate_sec
+* [state_make_model](#state_make_model-beta): device publishes correct make and model information in state messages
+* [state_software](#state_software-beta): device publishes correct software information in state messages
+* [system_last_update](#system_last_update-stable): Check that last_update state is correctly set in response to a config update.
 
 ## config_logging (BETA)
 
@@ -142,12 +142,12 @@ pointset state does not report unconfigured point
 1. Wait for pointset state reports same points as defined in config
 1. Wait for pointset event contains correct points with present_value
 1. Update config before pointset status does not contain removed point:
-    * Remove `pointset.points.filter_differential_pressure_setpoint`
+    * Remove `pointset.points[random_point]`
 1. Wait for pointset status does not contain removed point
 1. Wait for pointset state reports same points as defined in config
 1. Wait for pointset event contains correct points with present_value
 1. Update config before pointset status contains removed point:
-    * Add `pointset.points.filter_differential_pressure_setpoint` = { "set_value": `98`, "units": `Bars` }
+    * Add `pointset.points[random_point]` = point configuration
 1. Wait for pointset status contains removed point
 1. Wait for pointset state reports same points as defined in config
 1. Wait for pointset event contains correct points with present_value
@@ -159,12 +159,12 @@ pointset configuration contains extraneous point
 1. Wait for pointset state reports same points as defined in config
 1. Wait for pointset event contains correct points with present_value
 1. Update config before pointset status contains extraneous point error:
-    * Add `pointset.points.extraneous_point` = {  }
+    * Add `pointset.points[extraneous_point]` = point configuration
 1. Wait for pointset status contains extraneous point error
 1. Wait for pointset state reports same points as defined in config
 1. Wait for pointset event contains correct points with present_value
 1. Update config before pointset status removes extraneous point error:
-    * Remove `pointset.points.extraneous_point`
+    * Remove `pointset.points[extraneous_point]`
 1. Wait for pointset status removes extraneous point error
 1. Wait for pointset state reports same points as defined in config
 1. Wait for pointset event contains correct points with present_value
