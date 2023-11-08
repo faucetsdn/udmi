@@ -26,6 +26,7 @@ SCHEMA_OUT=out/schema_itemized.out
 GOLDEN_SCHEMAS=etc/schema_itemized.out
 AUGMENT_OPTS=out/augment_opts.txt
 
+rm -rf out
 mkdir -p out
 echo > $AUGMENT_OPTS
 

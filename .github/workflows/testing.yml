@@ -159,7 +159,7 @@ jobs:
         run: egrep ' test .* after .*s ' out/sequencer.log-*
       - name: output files
         if: ${{ always() }}
-        run: more out/*.out* | cat
+        run: more out*/*.out* | cat
       - name: pubber logs
         if: ${{ always() }}
         run: more out/pubber.log* pubber/out/*.json | cat
