@@ -149,7 +149,7 @@ jobs:
         run: bin/test_sequencer clean nocheck $TARGET_PROJECT
       - name: sequence tests alpha
         run: bin/test_sequencer alpha nocheck $TARGET_PROJECT
-      - name: sequence test cleanup
+      - name: sequence test post-process
         if: ${{ always() }}
         run: egrep ' test .* after .*s ' out/sequencer.log > out/seq_timing.out
       - name: itemized sequencer tests
@@ -160,7 +160,7 @@ jobs:
       - name: pubber logs
         if: ${{ always() }}
         run: more out/pubber.log* pubber/out/*.json | cat
-      - name: itemized test cleanup
+      - name: itemized test post-process
         if: ${{ always() }}
         run: egrep ' test .* after .*s ' out/sequencer.log-* > out/itm_timing.out
       - name: support bundle

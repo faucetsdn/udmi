@@ -23,7 +23,7 @@ SCHEMA_ITEMIZED=out/schema_itemized.out
 GOLDEN_SCHEMAS=etc/schema_itemized.out
 AUGMENT_OPTS=out/augment_opts.txt
 
-rm -rf out $SITE_PATH/out out/*_itemized.out
+rm -rf out/*_itemized.out
 mkdir -p out
 echo > $AUGMENT_OPTS
 
@@ -45,7 +45,6 @@ while read -u 7 action test_name pubber_opts; do
     SEQUENCER_LOG=out/sequencer.log
     SEQUENCER_OUT=out/sequencer.out
     SCHEMA_OUT=out/schema.out
-    mkdir -p out
 
     if [[ $action == TEST && -n $TARGET_TEST && $TARGET_TEST != $test_name ]]; then
         continue
