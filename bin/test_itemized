@@ -39,6 +39,8 @@ validator/bin/build
 test_index=0
 while read -u 7 action test_name pubber_opts; do
     test_marker=$(printf %02d $test_index)
+    ((test_index++)) || true
+
     PUBBER_LOG=out/pubber.log-$test_marker
     SEQUENCER_LOG=out/sequencer.log
     SEQUENCER_OUT=out/sequencer.out
@@ -62,9 +64,9 @@ while read -u 7 action test_name pubber_opts; do
     fi
 
     if [[ -z $MATRIX_SHARD_COUNT || $((test_index % MATRIX_SHARD_COUNT)) == $MATRIX_SHARD_INDEX ]]; then
-        echo Executing $test_name shard test index $test_index
+        echo Executing $test_name shard test index $test_marker
     else
-        echo Skipping $test_name non-shard test index $test_index
+        echo Skipping $test_name non-shard test index $test_marker
         continue
     fi
 
@@ -111,8 +113,6 @@ while read -u 7 action test_name pubber_opts; do
 
     echo =========== $test_name >> $SCHEMA_ITEMIZED
     cat $SCHEMA_OUT >> $SCHEMA_ITEMIZED
-
-    ((test_index++)) || true
 done 7< $INPUT_FILE
 
 if [[ -z $TARGET_TEST && -z $MATRIX_SHARD_COUNT ]]; then
