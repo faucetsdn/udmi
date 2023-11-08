@@ -150,6 +150,7 @@ else
     fi
 
     echo Archiving out/ to out-seq/
+    mkdir -p out-seq/ $site_path/out-seq/
     rsync -ah out/ out-seq/
     rsync -ah $site_path/out/ $site_path/out-seq/
     rm -rf $site_path/out/ out/
