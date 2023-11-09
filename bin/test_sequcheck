@@ -3,6 +3,11 @@
 suffix=$1
 shift || true
 
+UDMI_ROOT=$(dirname $0)/..
+cd $UDMI_ROOT
+
+source $UDMI_ROOT/etc/shell_common.sh
+
 if [[ -z $suffix ]]; then
     bin/sequencer_cache -t
 fi
@@ -24,9 +29,11 @@ diff -u out/generated.tmp docs/specs/sequences/generated.md || (
     false
 )
 
-SAMPLE_TEST_ROW="| discovery.scan | single_scan | alpha | pass | Sequence complete |"
-echo Checking for expected entry in generated results.md
-fgrep "$SAMPLE_TEST_ROW" sites/udmi_site_model/out/devices/AHU-1/results.md
+SAMPLE_TEST_ROW="| system | system_min_loglevel | alpha | pass | Sequence complete |"
+target=sites/udmi_site_model/out/devices/AHU-1/results.md
+echo Checking for expected entry in $target:
+echo "$SAMPLE_TEST_ROW"
+fgrep "$SAMPLE_TEST_ROW" $target || fail expected line not found
 
 echo Checking for duplication in out/sequencer.out and etc/sequencer_planning.txt
 bin/test_sequencer_plan

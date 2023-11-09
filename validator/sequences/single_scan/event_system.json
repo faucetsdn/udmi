@@ -1,51 +1,21 @@
 {
-  "event_count" : 38,
-  "last_config" : "2023-07-28T20:29:35Z",
+  "event_count" : 3,
+  "last_config" : "2023-11-07T14:31:41Z",
   "logentries" : [ {
-    "message" : "update state 2023-07-28T20:29:34Z last_config 2023-07-28T20:29:33Z",
+    "message" : "Discovery scan starting virtual as 2023-11-07T14:31:50Z",
     "category" : "device.log",
-    "timestamp" : "2023-07-28T20:29:34Z",
+    "timestamp" : "2023-11-07T14:31:50Z",
     "level" : 200
   }, {
-    "message" : "Config handler",
+    "message" : "update state 2023-11-07T14:31:50Z last_config 2023-11-07T14:31:41Z",
     "category" : "device.log",
-    "timestamp" : "2023-07-28T20:29:35Z",
-    "level" : 200
-  }, {
-    "message" : "2023-07-28T20:29:35Z received config 2023-07-28T20:29:35Z",
-    "category" : "device.log",
-    "timestamp" : "2023-07-28T20:29:35Z",
-    "level" : 200
-  }, {
-    "message" : "Discovery scan generation virtual is 2023-07-28T20:29:43Z",
-    "category" : "device.log",
-    "timestamp" : "2023-07-28T20:29:35Z",
-    "level" : 200
-  }, {
-    "message" : "success",
-    "category" : "system.config.apply",
-    "timestamp" : "2023-07-28T20:29:35Z",
-    "level" : 300
-  }, {
-    "message" : "update state 2023-07-28T20:29:36Z last_config 2023-07-28T20:29:35Z",
-    "category" : "device.log",
-    "timestamp" : "2023-07-28T20:29:36Z",
-    "level" : 200
-  }, {
-    "message" : "Discovery scan starting virtual as 2023-07-28T20:29:43Z",
-    "category" : "device.log",
-    "timestamp" : "2023-07-28T20:29:43Z",
-    "level" : 200
-  }, {
-    "message" : "update state 2023-07-28T20:29:43Z last_config 2023-07-28T20:29:35Z",
-    "category" : "device.log",
-    "timestamp" : "2023-07-28T20:29:43Z",
+    "timestamp" : "2023-11-07T14:31:50Z",
     "level" : 200
   } ],
   "metrics" : {
-    "mem_total_mb" : 250.0,
-    "mem_free_mb" : 199.45263671875
+    "mem_total_mb" : 112.0,
+    "mem_free_mb" : 85.26438903808594
   },
-  "timestamp" : "2023-07-28T20:29:44Z",
-  "version" : "1.4.1"
+  "timestamp" : "2023-11-07T14:31:54Z",
+  "version" : "1.4.2"
 }

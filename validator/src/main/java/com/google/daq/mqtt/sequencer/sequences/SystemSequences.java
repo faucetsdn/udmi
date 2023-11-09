@@ -22,7 +22,7 @@ public class SystemSequences extends SequenceBase {
    */
   @Test(timeout = THREE_MINUTES_MS)
   @Feature(stage = BETA, bucket = SYSTEM)
-  @Summary("device publishes correct make and model information in state messages")
+  @Summary("Check that a device publishes correct make and model information in state messages")
   public void state_make_model() {
 
     String expectedMake = ifCatchNullSkipTest(
@@ -53,7 +53,7 @@ public class SystemSequences extends SequenceBase {
    */
   @Test(timeout = THREE_MINUTES_MS)
   @Feature(stage = BETA, bucket = SYSTEM)
-  @Summary("device publishes correct software information in state messages")
+  @Summary("Check that a device publishes correct software information in state messages")
   public void state_software() {
 
     Map expectedSoftware = ifCatchNullSkipTest(

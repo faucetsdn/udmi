@@ -10,6 +10,7 @@ class PubberOptions:
     self.noConfigAck = None
     self.noPersist = None
     self.noLastStart = None
+    self.noProxy = None
     self.barfConfig = None
     self.messageTrace = None
     self.extraPoint = None
@@ -38,6 +39,7 @@ class PubberOptions:
     result.noConfigAck = source.get('noConfigAck')
     result.noPersist = source.get('noPersist')
     result.noLastStart = source.get('noLastStart')
+    result.noProxy = source.get('noProxy')
     result.barfConfig = source.get('barfConfig')
     result.messageTrace = source.get('messageTrace')
     result.extraPoint = source.get('extraPoint')
@@ -85,6 +87,8 @@ class PubberOptions:
       result['noPersist'] = self.noPersist # 5
     if self.noLastStart:
       result['noLastStart'] = self.noLastStart # 5
+    if self.noProxy:
+      result['noProxy'] = self.noProxy # 5
     if self.barfConfig:
       result['barfConfig'] = self.barfConfig # 5
     if self.messageTrace:
