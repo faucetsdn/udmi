@@ -57,8 +57,9 @@ fi
 echo Restored $dst_count test output files to $sites_out
 
 cat out_*/sequencer.out.combined | sort -k 4 > out/sequencer.out
-cat out_*/schema.out.combined | sort -k 4 | uniq > out/schema.out
+cat out_*/schema.out.combined | fgrep RESULT | sort -k 4 | uniq > out/schema.out
 cat out_*/test_itemized.out | sort -k 4 > out/test_itemized.out
+cat out_*/schema_itemized.out | fgrep RESLUT | sort -k 4 | uniq > out/schema_itemized.out
 
 echo Restored combined schema.out files.
 

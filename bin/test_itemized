@@ -110,9 +110,12 @@ while read -u 7 action test_name pubber_opts; do
     mv $SEQUENCER_OUT $SEQUENCER_OUT-$test_marker
     mv $SEQUENCER_LOG $SEQUENCER_LOG-$test_marker
     mv $SITE_PATH/out $SITE_PATH/out-$test_marker
+    if [[ -s $SCHEMA_OUT ]]; then
+        cat $SCHEMA_OUT | sed -e "s/^/$test_name /" >> $SCHEMA_ITEMIZED
+    else
+        echo $test_name >> $SCHEMA_ITEMIZED
+    fi
 
-    echo =========== $test_name >> $SCHEMA_ITEMIZED
-    cat $SCHEMA_OUT >> $SCHEMA_ITEMIZED
 done 7< $INPUT_FILE
 
 if [[ -z $TARGET_TEST && -z $MATRIX_SHARD_COUNT ]]; then
