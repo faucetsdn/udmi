@@ -1,7 +1,7 @@
 
 ## pointset_publish_interval (BETA)
 
-test sample rate and sample limit sec
+Check handling of sample rate and sample limit sec
 
 1. Update config before receive at least 4 pointset events:
     * Add `pointset.sample_rate_sec` = `8`

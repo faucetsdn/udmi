@@ -1,106 +1,51 @@
 {
-  "event_count" : 35,
-  "last_config" : "2023-07-28T20:29:12Z",
+  "event_count" : 3,
+  "last_config" : "2023-11-07T14:30:56Z",
   "logentries" : [ {
-    "message" : "Sent 1 discovery events from virtual for Fri Jul 28 13:28:58 PDT 2023",
+    "message" : "update state 2023-11-07T14:30:47Z last_config 2023-11-07T14:30:42Z",
     "category" : "device.log",
-    "timestamp" : "2023-07-28T20:29:04Z",
+    "timestamp" : "2023-11-07T14:30:47Z",
+    "level" : 200
+  }, {
+    "message" : "update state 2023-11-07T14:30:56Z last_config 2023-11-07T14:30:42Z",
+    "category" : "device.log",
+    "timestamp" : "2023-11-07T14:30:56Z",
     "level" : 200
   }, {
     "message" : "Config handler",
     "category" : "device.log",
-    "timestamp" : "2023-07-28T20:29:08Z",
+    "timestamp" : "2023-11-07T14:30:56Z",
     "level" : 200
   }, {
-    "message" : "update state 2023-07-28T20:29:08Z last_config 2023-07-28T20:28:39Z",
+    "message" : "2023-11-07T14:30:56Z received config 2023-11-07T14:30:56Z",
     "category" : "device.log",
-    "timestamp" : "2023-07-28T20:29:08Z",
-    "level" : 200
-  }, {
-    "message" : "2023-07-28T20:29:08Z received config 2023-07-28T20:29:08Z",
-    "category" : "device.log",
-    "timestamp" : "2023-07-28T20:29:08Z",
-    "level" : 200
-  }, {
-    "message" : "Discovery scan generation virtual is 2023-07-28T20:28:58Z",
-    "category" : "device.log",
-    "timestamp" : "2023-07-28T20:29:08Z",
+    "timestamp" : "2023-11-07T14:30:56Z",
     "level" : 200
   }, {
     "message" : "success",
     "category" : "system.config.apply",
-    "timestamp" : "2023-07-28T20:29:08Z",
-    "level" : 300
-  }, {
-    "message" : "Discovery scan starting virtual as 2023-07-28T20:29:08Z",
-    "category" : "device.log",
-    "timestamp" : "2023-07-28T20:29:09Z",
-    "level" : 200
-  }, {
-    "message" : "Config handler",
-    "category" : "device.log",
-    "timestamp" : "2023-07-28T20:29:09Z",
-    "level" : 200
-  }, {
-    "message" : "2023-07-28T20:29:09Z received config 2023-07-28T20:29:09Z",
-    "category" : "device.log",
-    "timestamp" : "2023-07-28T20:29:09Z",
-    "level" : 200
-  }, {
-    "message" : "Clearing scheduled discovery family virtual",
-    "category" : "device.log",
-    "timestamp" : "2023-07-28T20:29:09Z",
-    "level" : 200
-  }, {
-    "message" : "success",
-    "category" : "system.config.apply",
-    "timestamp" : "2023-07-28T20:29:09Z",
-    "level" : 300
-  }, {
-    "message" : "update state 2023-07-28T20:29:10Z last_config 2023-07-28T20:29:09Z",
-    "category" : "device.log",
-    "timestamp" : "2023-07-28T20:29:10Z",
-    "level" : 200
-  }, {
-    "message" : "Config handler",
-    "category" : "device.log",
-    "timestamp" : "2023-07-28T20:29:11Z",
-    "level" : 200
-  }, {
-    "message" : "2023-07-28T20:29:11Z received config 2023-07-28T20:29:09Z",
-    "category" : "device.log",
-    "timestamp" : "2023-07-28T20:29:11Z",
-    "level" : 200
-  }, {
-    "message" : "success",
-    "category" : "system.config.apply",
-    "timestamp" : "2023-07-28T20:29:11Z",
+    "timestamp" : "2023-11-07T14:30:56Z",
     "level" : 300
   }, {
     "message" : "Config handler",
     "category" : "device.log",
-    "timestamp" : "2023-07-28T20:29:12Z",
+    "timestamp" : "2023-11-07T14:30:56Z",
     "level" : 200
   }, {
-    "message" : "2023-07-28T20:29:12Z received config 2023-07-28T20:29:12Z",
+    "message" : "2023-11-07T14:30:56Z received config 2023-11-07T14:30:56Z",
     "category" : "device.log",
-    "timestamp" : "2023-07-28T20:29:12Z",
+    "timestamp" : "2023-11-07T14:30:56Z",
     "level" : 200
   }, {
     "message" : "success",
     "category" : "system.config.apply",
-    "timestamp" : "2023-07-28T20:29:12Z",
+    "timestamp" : "2023-11-07T14:30:56Z",
     "level" : 300
-  }, {
-    "message" : "update state 2023-07-28T20:29:12Z last_config 2023-07-28T20:29:12Z",
-    "category" : "device.log",
-    "timestamp" : "2023-07-28T20:29:12Z",
-    "level" : 200
   } ],
   "metrics" : {
-    "mem_total_mb" : 250.0,
-    "mem_free_mb" : 201.45263671875
+    "mem_total_mb" : 112.0,
+    "mem_free_mb" : 81.23696899414062
   },
-  "timestamp" : "2023-07-28T20:29:14Z",
-  "version" : "1.4.1"
+  "timestamp" : "2023-11-07T14:30:57Z",
+  "version" : "1.4.2"
 }

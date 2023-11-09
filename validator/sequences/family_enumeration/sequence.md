@@ -1,7 +1,7 @@
 
 ## family_enumeration (ALPHA)
 
-check enumeration of network families
+Check enumeration of network families
 
 1. Update config before enumeration not active:
     * Add `discovery` = { "enumerate": { "families": `true` } }
