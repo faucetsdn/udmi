@@ -3,7 +3,7 @@
 # Automation of tools using PubSub triggers.
 #
 
-UDMI_PREFIX=${UDMI_NAMESPACE}~
+[[ -n $UDMI_NAMESPACE ]] && UDMI_PREFIX="${UDMI_NAMESPACE}~"
 
 PUBSUB_FILE=pubsub.json
 MESSAGE_FILE=message.json
@@ -38,7 +38,7 @@ else
 fi
 
 git config --global user.email $GCP_SERVICE_ACCOUNT
-git config --global user.name "UDMIS automation runner $UDMI_PREFIX"
+git config --global user.name "UDMIS automation runner ${UDMI_PREFIX#\~}"
 
 echo
 
