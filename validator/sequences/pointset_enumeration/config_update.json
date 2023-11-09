@@ -1,4 +1,5 @@
 {
+  "blobset" : { },
   "discovery" : {
     "enumerate" : {
       "uniqs" : true
@@ -20,13 +21,13 @@
         "ref" : "BV11.present_value",
         "units" : "No-units"
       },
-      "filter_differential_pressure_setpoint" : {
-        "units" : "Bars",
-        "set_value" : 98
-      },
       "filter_differential_pressure_sensor" : {
         "ref" : "AV12.present_value",
         "units" : "Degrees-Celsius"
+      },
+      "filter_differential_pressure_setpoint" : {
+        "set_value" : 98,
+        "units" : "Bars"
       }
     }
   },
@@ -34,12 +35,12 @@
     "metrics_rate_sec" : 600,
     "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2023-07-28T20:23:12Z"
+      "last_start" : "2023-11-07T14:30:16Z"
     },
     "testing" : {
       "sequence_name" : "pointset_enumeration"
     }
   },
-  "timestamp" : "2023-07-28T20:29:18Z",
-  "version" : "1.4.1"
+  "timestamp" : "2023-11-07T14:31:04Z",
+  "version" : "1.4.2-40-gdeae740b"
 }

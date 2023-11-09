@@ -1,11 +1,11 @@
 {
-  "timestamp" : "2023-10-28T13:38:16Z",
-  "version" : "@@@cloud udmi version###1.4.2-51-g50234ecc",
+  "timestamp" : "2023-11-07T14:30:41Z",
+  "version" : "@@@cloud udmi version###1.4.2-40-gdeae740b",
   "system" : {
     "min_loglevel" : 200,
     "metrics_rate_sec" : 600,
     "operation" : {
-      "last_start" : "2023-10-28T13:27:58Z"
+      "last_start" : "2023-11-07T14:29:19Z"
     },
     "testing" : {
       "sequence_name" : "pointset_remove_point"
