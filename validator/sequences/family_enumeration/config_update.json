@@ -1,4 +1,5 @@
 {
+  "blobset" : { },
   "discovery" : {
     "enumerate" : {
       "families" : true
@@ -14,32 +15,16 @@
       }
     }
   },
-  "pointset" : {
-    "points" : {
-      "filter_alarm_pressure_status" : {
-        "ref" : "BV11.present_value",
-        "units" : "No-units"
-      },
-      "filter_differential_pressure_setpoint" : {
-        "units" : "Bars",
-        "set_value" : 98
-      },
-      "filter_differential_pressure_sensor" : {
-        "ref" : "AV12.present_value",
-        "units" : "Degrees-Celsius"
-      }
-    }
-  },
   "system" : {
     "metrics_rate_sec" : 600,
     "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2023-07-28T20:23:12Z"
+      "last_start" : "2023-11-07T14:28:04Z"
     },
     "testing" : {
       "sequence_name" : "family_enumeration"
     }
   },
-  "timestamp" : "2023-07-28T20:27:42Z",
-  "version" : "1.4.1"
+  "timestamp" : "2023-11-07T14:29:14Z",
+  "version" : "1.4.2-40-gdeae740b"
 }

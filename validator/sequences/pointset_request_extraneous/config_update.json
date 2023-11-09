@@ -1,4 +1,5 @@
 {
+  "blobset" : { },
   "discovery" : { },
   "localnet" : {
     "families" : {
@@ -30,12 +31,12 @@
     "metrics_rate_sec" : 600,
     "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2023-10-28T13:27:58Z"
+      "last_start" : "2023-11-07T14:30:01Z"
     },
     "testing" : {
       "sequence_name" : "pointset_request_extraneous"
     }
   },
-  "timestamp" : "2023-10-28T13:38:46Z",
-  "version" : "1.4.2-51-g50234ecc0"
+  "timestamp" : "2023-11-07T14:31:34Z",
+  "version" : "1.4.2-40-gdeae740b"
 }

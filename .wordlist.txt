@@ -153,6 +153,7 @@ UDMIF
 UDMI's
 UDMIS
 UI
+unconfigured
 underspecified
 uniqs
 unwriteable

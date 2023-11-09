@@ -57,16 +57,16 @@ echo "export MATRIX_SHARD_INDEX=$MATRIX_SHARD_INDEX"
 
 site_path=sites/udmi_site_model
 device_id=AHU-1
-output_file=$site_path/out/sequencer_$device_id.json
-device_out_base=$site_path/out/devices/$device_id
-test_out_base=$device_out_base/tests
+site_out=$site_path/out
+output_file=$site_out/sequencer_$device_id.json
+device_out_base=$site_out/devices/$device_id
+tests_out_base=$device_out_base/tests
 
 if [[ -n $clean_cache ]]; then
-    echo Cleaning out/ $test_out_base/
-    rm -rf out/ $test_out_base/
+    rm -rf out/ $site_path/out-seq $site_out
 fi
 
-mkdir -p $test_out_base out/
+mkdir -p out/ $tests_out_base/
 
 serial_no=sequencer-$RANDOM
 echo Using pubber with serial $serial_no
@@ -84,7 +84,7 @@ bin/clone_model # Clone, and check that version is correct.
 bin/reset_config $site_path $project_id $device_id
 
 # Clean out the persistant data store to ensure a clean state each time.
-rm -rf $site_path/out/devices/${device_id}/persistent_data.json
+rm -rf $site_out/devices/${device_id}/persistent_data.json
 
 pubber/bin/build
 
@@ -128,13 +128,14 @@ else
 fi
 
 echo Combining partial-run output files...
-ls -l out/schema.out out/sequencer.log
-
-cat out/schema.out >> out/schema.out.combined
-cat out/sequencer.log >> out/sequencer.log.combined
-cat out/sequencer.out >> out/sequencer.out.combined
-echo Combined to:
-ls -l out/schema.out.combined out/sequencer.log.combined || true
+ls -l out
+files=$(cd out; ls -1 *.out *.log)
+echo Merging $files
+for file in $files; do
+    cat out/$file >> out/$file.combined
+    cp out/$file.combined out/$file
+done
+ls -l out
 
 if [[ -n $out_check ]]; then
     if [[ -n $clean_cache ]]; then
@@ -144,12 +145,8 @@ if [[ -n $out_check ]]; then
 
     bin/test_sequcheck $suffix
 else
-    if [[ -n $clean_cache ]]; then
-        echo Cleaning sequencer out archive...
-        rm -rf $site_path/out-seq
-    fi
-
-    echo Archiving $site_path/out to $site_path/out-seq
+    echo Preparing stuff for shard reconcilliation
+    mkdir -p $site_path/out-seq
     rsync -ah $site_path/out/ $site_path/out-seq/
     rm -rf $site_path/out
 fi

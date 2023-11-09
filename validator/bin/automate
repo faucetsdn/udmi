@@ -3,7 +3,7 @@
 # Automation of tools using PubSub triggers.
 #
 
-UDMI_PREFIX=${UDMI_NAMESPACE}~
+[[ -n $UDMI_NAMESPACE ]] && UDMI_PREFIX="${UDMI_NAMESPACE}~"
 
 PUBSUB_FILE=pubsub.json
 MESSAGE_FILE=message.json
@@ -13,7 +13,7 @@ MODEL_SUBDIR=udmi/
 CONFIG_FILE=registrar_config.json
 REGISTRAR_TRIGGER=run-registrar
 
-SUBSCRIPTION=${UDMI_PREFIX#\~}source_repo-udmis
+SUBSCRIPTION=${UDMI_PREFIX}source_repo-udmis
 echo Pulling from PubSub subscription $SUBSCRIPTION
 
 export GCP_PROJECT=$(curl -s "http://metadata.google.internal/computeMetadata/v1/project/project-id" -H "Metadata-Flavor: Google" || true)
@@ -38,7 +38,7 @@ else
 fi
 
 git config --global user.email $GCP_SERVICE_ACCOUNT
-git config --global user.name "UDMIS automation runner $UDMI_PREFIX"
+git config --global user.name "UDMIS automation runner ${UDMI_PREFIX#\~}"
 
 echo
 

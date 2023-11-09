@@ -65,8 +65,8 @@ public class PointsetSequences extends PointsetBase {
   }
 
   @Test(timeout = ONE_MINUTE_MS)
-  @Summary("pointset configuration contains extraneous point")
-  @Feature(stage = ALPHA, bucket = POINTSET)
+  @Summary("Check error when pointset configuration contains extraneous point")
+  @Feature(stage = BETA, bucket = POINTSET)
   public void pointset_request_extraneous() {
     untilPointsetSanity();
 
@@ -91,12 +91,12 @@ public class PointsetSequences extends PointsetBase {
   }
 
   @Test(timeout = ONE_MINUTE_MS)
-  @Summary("pointset state does not report unconfigured point")
-  @Feature(stage = ALPHA, bucket = POINTSET)
+  @Summary("Check when pointset state does not report an unconfigured point")
+  @Feature(stage = BETA, bucket = POINTSET)
   public void pointset_remove_point() {
     untilPointsetSanity();
 
-    List<String> candidatePoints = new ArrayList<>(deviceState.pointset.points.keySet());
+    List<String> candidatePoints = new ArrayList<>(deviceConfig.pointset.points.keySet());
     ifTrueThen(candidatePoints.isEmpty(), () -> skipTest("No points to remove"));
     String name = candidatePoints.get((int) Math.floor(Math.random() * candidatePoints.size()));
 
@@ -122,8 +122,8 @@ public class PointsetSequences extends PointsetBase {
    * Simple check that device publishes pointset events.
    */
   @Test(timeout = THREE_MINUTES_MS)
-  @Feature(stage = BETA, bucket = POINTSET)
-  @Summary("device publishes pointset events")
+  @Summary("Check that a device publishes pointset events")
+  @Feature(stage = BETA, bucket = POINTSET, nostate = true)
   public void pointset_publish() {
     ifNullSkipTest(deviceConfig.pointset, "no pointset found in config");
 
@@ -144,7 +144,7 @@ public class PointsetSequences extends PointsetBase {
    */
   @Test(timeout = THREE_MINUTES_MS)
   @Feature(stage = BETA, bucket = POINTSET)
-  @Summary("device publishes pointset events at a rate of no more than config sample_rate_sec")
+  @Summary("Check that a device publishes pointset events not faster than config sample_rate_sec")
   public void pointset_sample_rate() {
     ifNullSkipTest(deviceConfig.pointset, "no pointset found in config");
 
@@ -199,7 +199,7 @@ public class PointsetSequences extends PointsetBase {
    * of both parameters, and ensuring telemetry is within this range.
    */
   @Test(timeout = THREE_MINUTES_MS)
-  @Summary("test sample rate and sample limit sec")
+  @Summary("Check handling of sample rate and sample limit sec")
   @Feature(stage = BETA, bucket = POINTSET, nostate = true)
   @ValidateSchema
   public void pointset_publish_interval() {

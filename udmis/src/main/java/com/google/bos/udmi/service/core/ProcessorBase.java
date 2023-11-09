@@ -4,7 +4,7 @@ import static com.google.bos.udmi.service.access.IotAccessBase.MAX_CONFIG_LENGTH
 import static com.google.bos.udmi.service.messaging.MessageDispatcher.messageHandlerFor;
 import static com.google.bos.udmi.service.pod.UdmiServicePod.UDMI_VERSION;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.udmi.util.Common.DEVICE_ID_PROPERTY_KEY;
+import static com.google.udmi.util.Common.DEVICE_ID_KEY;
 import static com.google.udmi.util.Common.REGISTRY_ID_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
@@ -146,8 +146,8 @@ public abstract class ProcessorBase extends ContainerBase {
     // If the error comes from the reflect registry, then don't use the registry as the device,
     // so revert the default behavior (otherwise the message goes nowhere!).
     if (reflectRegistry.equals(errorMap.get(REGISTRY_ID_PROPERTY_KEY))) {
-      errorMap.put(REGISTRY_ID_PROPERTY_KEY, errorMap.get(DEVICE_ID_PROPERTY_KEY));
-      errorMap.put(DEVICE_ID_PROPERTY_KEY, null);
+      errorMap.put(REGISTRY_ID_PROPERTY_KEY, errorMap.get(DEVICE_ID_KEY));
+      errorMap.put(DEVICE_ID_KEY, null);
     }
 
     errorMap.put(SUBTYPE_PROPERTY_KEY, subType.value());
@@ -160,7 +160,7 @@ public abstract class ProcessorBase extends ContainerBase {
     errorMap.put("payload", encodeBase64(stringify(errorMessage)));
     error(format("Reflecting error %s/%s for %s", errorMap.get(SUBTYPE_PROPERTY_KEY),
         errorMap.get(SUBFOLDER_PROPERTY_KEY),
-        errorMap.get(DEVICE_ID_PROPERTY_KEY)));
+        errorMap.get(DEVICE_ID_KEY)));
     reflectString(errorMap.get(REGISTRY_ID_PROPERTY_KEY), stringify(errorMap));
   }
 
@@ -204,7 +204,7 @@ public abstract class ProcessorBase extends ContainerBase {
     Map<String, String> envelopeMap = bundleException.bundle.attributesMap;
     error(format("Reflecting invalid %s/%s for %s", envelopeMap.get(SUBTYPE_PROPERTY_KEY),
         envelopeMap.get(SUBFOLDER_PROPERTY_KEY),
-        envelopeMap.get(DEVICE_ID_PROPERTY_KEY)));
+        envelopeMap.get(DEVICE_ID_KEY)));
     String deviceRegistryId = envelopeMap.get(REGISTRY_ID_PROPERTY_KEY);
     envelopeMap.put("payload", encodeBase64(bundleException.bundle.payload));
     reflectString(deviceRegistryId, stringify(envelopeMap));

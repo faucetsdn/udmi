@@ -14,8 +14,17 @@ TEST broken_config noState
 TEST system_last_update extraField=fnooz
 
 # Test with various device metadata.json options
-WITH noState
+WITH AHU-1 noState
 TEST valid_serial_no
 TEST system_last_update noState
 TEST system_min_loglevel
 TEST system_min_loglevel noState
+
+# Test gateway configurations
+WITH GAT-123
+TEST gateway_proxy_events
+TEST gateway_proxy_events noProxy
+
+# Test proxy device configurations
+WITH AHU-22
+TEST device_config_acked

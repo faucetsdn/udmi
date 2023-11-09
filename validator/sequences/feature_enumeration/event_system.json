@@ -1,41 +1,111 @@
 {
-  "event_count" : 27,
-  "last_config" : "2023-07-28T20:27:53Z",
+  "event_count" : 1,
+  "last_config" : "2023-11-07T14:28:57Z",
   "logentries" : [ {
-    "message" : "update state 2023-07-28T20:27:52Z last_config 2023-07-28T20:27:42Z",
+    "message" : "2023-11-07T14:28:51Z received config 2023-11-07T14:28:51Z",
     "category" : "device.log",
-    "timestamp" : "2023-07-28T20:27:52Z",
-    "level" : 200
-  }, {
-    "message" : "2023-07-28T20:27:52Z received config 2023-07-28T20:27:52Z",
-    "category" : "device.log",
-    "timestamp" : "2023-07-28T20:27:52Z",
+    "timestamp" : "2023-11-07T14:28:51Z",
     "level" : 200
   }, {
     "message" : "success",
     "category" : "system.config.apply",
-    "timestamp" : "2023-07-28T20:27:52Z",
+    "timestamp" : "2023-11-07T14:28:51Z",
     "level" : 300
   }, {
     "message" : "Config handler",
     "category" : "device.log",
-    "timestamp" : "2023-07-28T20:27:54Z",
+    "timestamp" : "2023-11-07T14:28:53Z",
     "level" : 200
   }, {
-    "message" : "2023-07-28T20:27:54Z received config 2023-07-28T20:27:53Z",
+    "message" : "2023-11-07T14:28:53Z received config 2023-11-07T14:28:53Z",
     "category" : "device.log",
-    "timestamp" : "2023-07-28T20:27:54Z",
+    "timestamp" : "2023-11-07T14:28:53Z",
     "level" : 200
   }, {
     "message" : "success",
     "category" : "system.config.apply",
-    "timestamp" : "2023-07-28T20:27:54Z",
+    "timestamp" : "2023-11-07T14:28:53Z",
     "level" : 300
+  }, {
+    "message" : "update state 2023-11-07T14:28:54Z last_config 2023-11-07T14:28:53Z",
+    "category" : "device.log",
+    "timestamp" : "2023-11-07T14:28:54Z",
+    "level" : 200
+  }, {
+    "message" : "Config handler",
+    "category" : "device.log",
+    "timestamp" : "2023-11-07T14:28:54Z",
+    "level" : 200
+  }, {
+    "message" : "2023-11-07T14:28:54Z received config 2023-11-07T14:28:54Z",
+    "category" : "device.log",
+    "timestamp" : "2023-11-07T14:28:54Z",
+    "level" : 200
+  }, {
+    "message" : "success",
+    "category" : "system.config.apply",
+    "timestamp" : "2023-11-07T14:28:54Z",
+    "level" : 300
+  }, {
+    "message" : "Config handler",
+    "category" : "device.log",
+    "timestamp" : "2023-11-07T14:28:54Z",
+    "level" : 200
+  }, {
+    "message" : "2023-11-07T14:28:54Z received config 2023-11-07T14:28:54Z",
+    "category" : "device.log",
+    "timestamp" : "2023-11-07T14:28:54Z",
+    "level" : 200
+  }, {
+    "message" : "success",
+    "category" : "system.config.apply",
+    "timestamp" : "2023-11-07T14:28:54Z",
+    "level" : 300
+  }, {
+    "message" : "Config handler",
+    "category" : "device.log",
+    "timestamp" : "2023-11-07T14:28:54Z",
+    "level" : 200
+  }, {
+    "message" : "2023-11-07T14:28:54Z received config 2023-11-07T14:28:54Z",
+    "category" : "device.log",
+    "timestamp" : "2023-11-07T14:28:54Z",
+    "level" : 200
+  }, {
+    "message" : "success",
+    "category" : "system.config.apply",
+    "timestamp" : "2023-11-07T14:28:54Z",
+    "level" : 300
+  }, {
+    "message" : "update state 2023-11-07T14:28:56Z last_config 2023-11-07T14:28:54Z",
+    "category" : "device.log",
+    "timestamp" : "2023-11-07T14:28:56Z",
+    "level" : 200
+  }, {
+    "message" : "Config handler",
+    "category" : "device.log",
+    "timestamp" : "2023-11-07T14:28:57Z",
+    "level" : 200
+  }, {
+    "message" : "2023-11-07T14:28:57Z received config 2023-11-07T14:28:57Z",
+    "category" : "device.log",
+    "timestamp" : "2023-11-07T14:28:57Z",
+    "level" : 200
+  }, {
+    "message" : "success",
+    "category" : "system.config.apply",
+    "timestamp" : "2023-11-07T14:28:57Z",
+    "level" : 300
+  }, {
+    "message" : "update state 2023-11-07T14:28:58Z last_config 2023-11-07T14:28:57Z",
+    "category" : "device.log",
+    "timestamp" : "2023-11-07T14:28:58Z",
+    "level" : 200
   } ],
   "metrics" : {
-    "mem_total_mb" : 250.0,
-    "mem_free_mb" : 208.7124481201172
+    "mem_total_mb" : 112.0,
+    "mem_free_mb" : 86.98758697509766
   },
-  "timestamp" : "2023-07-28T20:27:54Z",
-  "version" : "1.4.1"
+  "timestamp" : "2023-11-07T14:28:59Z",
+  "version" : "1.4.2"
 }
