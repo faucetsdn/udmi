@@ -37,16 +37,13 @@ elif [[ ! -d $archive ]]; then
 fi
 
 ls -l $archive_dir/
+echo Extracting test archives...
 ls $archive_dir/*sequencer*.tgz | xargs -n 1 tar -xzf
 
+echo Consolidating device tests...
 devices=$(ls -d $sites_in/out-seq/devices)
 for devices_dir in $devices; do
-    echo rsync -ah $devices_dir/ $sites_out/devices/
     rsync -ah $devices_dir/ $sites_out/devices/
-    ls -l $sites_out/devices/AHU-1/tests
-    src_count=$(find $sites_in/out-seq -name sequence.md | wc -l)
-    dst_count=$(find $sites_out -name sequence.md | wc -l)
-    echo $src_count $dst_count
 done
 
 src_count=$(find $sites_in/out-seq -name sequence.md | wc -l)
@@ -61,6 +58,7 @@ echo Restored $dst_count test output files to $sites_out
 
 cat out_*/sequencer.out.combined | sort -k 4 > out/sequencer.out
 cat out_*/schema.out.combined | sort -k 4 | uniq > out/schema.out
+cat out_*/test_itemized.out | sort -k 4 > out/test_itemized.out
 
 echo Restored combined schema.out files.
 
