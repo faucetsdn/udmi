@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
   pull_request:
   schedule:
-    - cron: '40 */1 * * *'
+    - cron: '40 */6 * * *'
 
 concurrency:
   group: ci-${{ github.repository }}
