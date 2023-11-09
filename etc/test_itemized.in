@@ -23,6 +23,7 @@ TEST system_min_loglevel noState
 # Test gateway configurations
 WITH GAT-123
 TEST gateway_proxy_events
+TEST gateway_proxy_events noProxy
 
 # Test proxy device configurations
 WITH AHU-22
