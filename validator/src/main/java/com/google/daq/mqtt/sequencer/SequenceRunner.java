@@ -233,6 +233,10 @@ public class SequenceRunner {
       Class<?> clazz = Common.classForName(className);
       List<Request> requests = new ArrayList<>();
       List<String> runMethods = getRunMethods(clazz);
+      if (runMethods.isEmpty()) {
+        System.err.println("Found target methods: none for class " + className);
+        continue;
+      }
       System.err.printf("Found target methods: %s%n", CSV_JOINER.join(runMethods));
       for (String method : runMethods) {
         System.err.println("Running target " + clazz.getName() + "#" + method);
