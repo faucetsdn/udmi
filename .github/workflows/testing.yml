@@ -151,7 +151,7 @@ jobs:
         run: bin/test_sequencer alpha nocheck $TARGET_PROJECT
       - name: sequence test post-process
         if: ${{ always() }}
-        run: egrep ' test .* after .*s ' out/sequencer.log > out/seq_timing.out
+        run: egrep ' test .* after .*s ' out/sequencer.log > out/timing_sequencer.out
       - name: itemized sequencer tests
         run: bin/test_itemized $TARGET_PROJECT
       - name: output files
@@ -162,7 +162,7 @@ jobs:
         run: more out/pubber.log* pubber/out/*.json | cat
       - name: itemized test post-process
         if: ${{ always() }}
-        run: egrep ' test .* after .*s ' out/sequencer.log-* > out/itm_timing.out
+        run: egrep ' test .* after .*s ' out/sequencer.log-* > out/timing_itemized.out
       - name: support bundle
         if: ${{ always() }}
         run: |
