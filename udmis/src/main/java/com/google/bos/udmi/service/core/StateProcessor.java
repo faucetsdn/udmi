@@ -54,6 +54,7 @@ public class StateProcessor extends ProcessorBase {
     envelope.subType = SubType.STATE;
     envelope.subFolder = UPDATE;
     reflectMessage(envelope, stringify(message));
+    continuation.publish(message);
     String originalTransaction = envelope.transactionId;
     AtomicInteger txnSuffix = new AtomicInteger();
     info("Sharding state message for %s/%s %s", envelope.deviceRegistryId, envelope.deviceId,

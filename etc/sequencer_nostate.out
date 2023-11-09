@@ -3,8 +3,10 @@ RESULT skip system device_config_acked BETA 5 State testing disabled
 RESULT skip enumeration empty_enumeration PREVIEW 5 State testing disabled
 RESULT skip system extra_config BETA 5 State testing disabled
 RESULT skip enumeration.features feature_enumeration PREVIEW 5 State testing disabled
-RESULT skip pointset pointset_publish BETA 5 State testing disabled
+RESULT pass pointset pointset_publish BETA 5 Sequence complete
 RESULT pass pointset pointset_publish_interval BETA 5 Sequence complete
+RESULT skip pointset pointset_remove_point BETA 5 State testing disabled
+RESULT skip pointset pointset_request_extraneous BETA 5 State testing disabled
 RESULT skip pointset pointset_sample_rate BETA 5 State testing disabled
 RESULT skip system state_make_model BETA 5 State testing disabled
 RESULT skip system state_software BETA 5 State testing disabled

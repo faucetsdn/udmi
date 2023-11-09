@@ -1,5 +1,5 @@
 
-## pointset_remove_point (ALPHA)
+## pointset_remove_point (BETA)
 
 Check when pointset state does not report an unconfigured point
 
