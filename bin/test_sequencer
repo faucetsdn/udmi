@@ -63,8 +63,7 @@ device_out_base=$site_out/devices/$device_id
 tests_out_base=$device_out_base/tests
 
 if [[ -n $clean_cache ]]; then
-    echo Cleaning out/ $tests_out_base/
-    rm -rf out/ $device_out_base
+    rm -rf out/ $site_path/out-seq $site_out
 fi
 
 mkdir -p out/ $tests_out_base/
@@ -147,7 +146,8 @@ if [[ -n $out_check ]]; then
     bin/test_sequcheck $suffix
 else
     echo Preparing stuff for shard reconcilliation
-    mv $site_path/out $site_path/out-seq
+    mkdir -p $site_path/out-seq
+    rsync -ah $site_path/out $site_path/out-seq
 fi
 
 echo Done with $suffix test_sequencer run.

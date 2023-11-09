@@ -39,12 +39,17 @@ fi
 ls -l $archive_dir/
 ls $archive_dir/*sequencer*.tgz | xargs -n 1 tar -xzf
 
-devices=$(ls -d $sites_in/out/devices)
+devices=$(ls -d $sites_in/out-seq/devices)
 for devices_dir in $devices; do
-    rsync -ah $devices_dir $sites_out
+    echo rsync -ah $devices_dir/ $sites_out/devices/
+    rsync -ah $devices_dir/ $sites_out/devices/
+    ls -l $sites_out/devices/AHU-1/tests
+    src_count=$(find $sites_in/out-seq -name sequence.md | wc -l)
+    dst_count=$(find $sites_out -name sequence.md | wc -l)
+    echo $src_count $dst_count
 done
 
-src_count=$(find $sites_in/out -name sequence.md | wc -l)
+src_count=$(find $sites_in/out-seq -name sequence.md | wc -l)
 dst_count=$(find $sites_out -name sequence.md | wc -l)
 
 if [[ $src_count != $dst_count ]]; then
