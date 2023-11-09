@@ -45,17 +45,24 @@ public class MessageUpgrader {
     this.original = message.deepCopy();
 
     JsonNode version = message.get(VERSION_KEY);
-    String versionString = convertVersion(version);
-    String[] components = versionString.split("-", 2);
-    String[] parts = components[0].split("\\.", 4);
-    major = Integer.parseInt(parts[0]);
-    minor = parts.length >= 2 ? Integer.parseInt(parts[1]) : -1;
-    patch = parts.length >= 3 ? Integer.parseInt(parts[2]) : -1;
+    originalVersion = convertVersion(version);
 
-    if (parts.length >= 4) {
-      throw new IllegalArgumentException("Unexpected src version " + versionString);
+    try {
+      String[] components = originalVersion.split("-", 2);
+      String[] parts = components[0].split("\\.", 4);
+      if (parts.length >= 4) {
+        throw new IllegalArgumentException("More than 3 version components");
+      }
+      try {
+        major = Integer.parseInt(parts[0]);
+        minor = parts.length >= 2 ? Integer.parseInt(parts[1]) : -1;
+        patch = parts.length >= 3 ? Integer.parseInt(parts[2]) : -1;
+      } catch (NumberFormatException e) {
+        throw new RuntimeException("Bad version string number format");
+      }
+    } catch (Exception e) {
+      throw new RuntimeException("While parsing version string " + originalVersion, e);
     }
-    originalVersion = versionString;
   }
 
   public MessageUpgrader(String schemaName, Object originalMessage) {

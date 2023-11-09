@@ -967,7 +967,9 @@ public class SequenceBase {
     debug(format("stage done %s at %s", condition, timeSinceStart()));
     recordSequence = false;
 
-    checkThatHasInterestingSystemStatus(false);
+    if (testResult == SequenceResult.PASS) {
+      checkThatHasInterestingSystemStatus(false);
+    }
 
     recordMessages = false;
     configAcked = false;
@@ -1941,7 +1943,7 @@ public class SequenceBase {
         while (cause.getCause() != null) {
           cause = cause.getCause();
         }
-        message = getExceptionMessage(cause);
+        message = friendlyStackTrace(cause);
         failureType = SequenceResult.FAIL;
       }
       debug("exception message: " + friendlyStackTrace(e));
