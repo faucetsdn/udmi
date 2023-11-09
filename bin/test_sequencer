@@ -49,6 +49,9 @@ fi
 project_id=$1
 shift
 targets=$*
+if [[ -n $targets ]]; then
+    clean_cache=
+fi
 
 [[ -n $GITHUB_RUN_NUMBER ]] && echo "Workflow run number $GITHUB_RUN_NUMBER" || true
 echo "export TARGET_PROJECT=$project_id"
