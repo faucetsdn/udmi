@@ -12,5 +12,4 @@ echo Comparing diff $RESULTS_OUT $GOLDEN_FILE
 diff -bu $RESULTS_OUT $GOLDEN_FILE
 
 echo Comparing diff $SCHEMA_OUT $GOLDEN_SCHEMAS
-uniq < $SCHEMA_OUT | sponge $SCHEMA_OUT
 diff -bu $SCHEMA_OUT $GOLDEN_SCHEMAS
