@@ -12,6 +12,7 @@ class PubberOptions:
     self.noLastStart = None
     self.badCategory = None
     self.badVersion = None
+    self.noProxy = None
     self.barfConfig = None
     self.messageTrace = None
     self.extraPoint = None
@@ -42,6 +43,7 @@ class PubberOptions:
     result.noLastStart = source.get('noLastStart')
     result.badCategory = source.get('badCategory')
     result.badVersion = source.get('badVersion')
+    result.noProxy = source.get('noProxy')
     result.barfConfig = source.get('barfConfig')
     result.messageTrace = source.get('messageTrace')
     result.extraPoint = source.get('extraPoint')
@@ -93,6 +95,8 @@ class PubberOptions:
       result['badCategory'] = self.badCategory # 5
     if self.badVersion:
       result['badVersion'] = self.badVersion # 5
+    if self.noProxy:
+      result['noProxy'] = self.noProxy # 5
     if self.barfConfig:
       result['barfConfig'] = self.barfConfig # 5
     if self.messageTrace:

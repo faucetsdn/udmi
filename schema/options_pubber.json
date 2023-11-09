@@ -25,6 +25,9 @@
     "badVersion": {
       "type": "boolean"
     },
+    "noProxy": {
+      "type": "boolean"
+    },
     "barfConfig": {
       "type": "boolean"
     },

@@ -2,15 +2,12 @@ package com.google.udmi.util;
 
 import static com.google.api.client.util.Preconditions.checkNotNull;
 import static com.google.bos.iot.core.proxy.IotReflectorClient.UDMI_REFLECT;
-import static com.google.bos.iot.core.proxy.MqttPublisher.EMPTY_JSON;
 import static com.google.bos.iot.core.proxy.ProxyTarget.STATE_TOPIC;
 import static com.google.udmi.util.Common.CATEGORY_PROPERTY_KEY;
-import static com.google.udmi.util.Common.DEVICE_ID_PROPERTY_KEY;
+import static com.google.udmi.util.Common.DEVICE_ID_KEY;
 import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
-import static com.google.udmi.util.Common.UPDATE_QUERY_TOPIC;
 import static com.google.udmi.util.Common.getNamespacePrefix;
-import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toStringMap;
@@ -24,7 +21,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.api.client.util.Base64;
-import com.google.api.core.AbstractApiService;
 import com.google.api.core.ApiFuture;
 import com.google.api.gax.rpc.NotFoundException;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
@@ -45,8 +41,6 @@ import com.google.pubsub.v1.SeekRequest;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -304,7 +298,7 @@ public class PubSubReflector implements MessagePublisher {
         Map<String, String> attributes = messageBundle.attributes;
         String subFolder = attributes.get(SUBFOLDER_PROPERTY_KEY);
         String suffix = ofNullable(subFolder).map(folder -> "/" + folder).orElse("");
-        String topic = format("/devices/%s/%s%s", attributes.get(DEVICE_ID_PROPERTY_KEY),
+        String topic = format("/devices/%s/%s%s", attributes.get(DEVICE_ID_KEY),
             attributes.get(CATEGORY_PROPERTY_KEY),
             suffix);
         messageHandler.accept(topic, stringify(messageBundle.message));

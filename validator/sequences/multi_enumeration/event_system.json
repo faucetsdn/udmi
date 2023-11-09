@@ -1,46 +1,51 @@
 {
-  "event_count" : 29,
-  "last_config" : "2023-07-28T20:28:13Z",
+  "event_count" : 4,
+  "last_config" : "2023-11-07T14:30:10Z",
   "logentries" : [ {
-    "message" : "update state 2023-07-28T20:28:12Z last_config 2023-07-28T20:28:02Z",
+    "message" : "update state 2023-11-07T14:30:00Z last_config 2023-11-07T14:29:54Z",
     "category" : "device.log",
-    "timestamp" : "2023-07-28T20:28:12Z",
+    "timestamp" : "2023-11-07T14:30:00Z",
     "level" : 200
   }, {
     "message" : "Config handler",
     "category" : "device.log",
-    "timestamp" : "2023-07-28T20:28:12Z",
+    "timestamp" : "2023-11-07T14:30:10Z",
     "level" : 200
   }, {
-    "message" : "2023-07-28T20:28:12Z received config 2023-07-28T20:28:12Z",
+    "message" : "2023-11-07T14:30:10Z received config 2023-11-07T14:30:10Z",
     "category" : "device.log",
-    "timestamp" : "2023-07-28T20:28:12Z",
+    "timestamp" : "2023-11-07T14:30:10Z",
     "level" : 200
   }, {
     "message" : "success",
     "category" : "system.config.apply",
-    "timestamp" : "2023-07-28T20:28:12Z",
+    "timestamp" : "2023-11-07T14:30:10Z",
     "level" : 300
   }, {
-    "message" : "Config handler",
+    "message" : "update state 2023-11-07T14:30:10Z last_config 2023-11-07T14:30:10Z",
     "category" : "device.log",
-    "timestamp" : "2023-07-28T20:28:13Z",
+    "timestamp" : "2023-11-07T14:30:10Z",
     "level" : 200
   }, {
-    "message" : "2023-07-28T20:28:13Z received config 2023-07-28T20:28:13Z",
+    "message" : "Config handler",
     "category" : "device.log",
-    "timestamp" : "2023-07-28T20:28:13Z",
+    "timestamp" : "2023-11-07T14:30:10Z",
+    "level" : 200
+  }, {
+    "message" : "2023-11-07T14:30:10Z received config 2023-11-07T14:30:10Z",
+    "category" : "device.log",
+    "timestamp" : "2023-11-07T14:30:10Z",
     "level" : 200
   }, {
     "message" : "success",
     "category" : "system.config.apply",
-    "timestamp" : "2023-07-28T20:28:13Z",
+    "timestamp" : "2023-11-07T14:30:10Z",
     "level" : 300
   } ],
   "metrics" : {
-    "mem_total_mb" : 250.0,
-    "mem_free_mb" : 207.45263671875
+    "mem_total_mb" : 112.0,
+    "mem_free_mb" : 81.49522399902344
   },
-  "timestamp" : "2023-07-28T20:28:14Z",
-  "version" : "1.4.1"
+  "timestamp" : "2023-11-07T14:30:10Z",
+  "version" : "1.4.2"
 }

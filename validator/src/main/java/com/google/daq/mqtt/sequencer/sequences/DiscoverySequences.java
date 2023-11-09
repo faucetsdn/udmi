@@ -135,7 +135,7 @@ public class DiscoverySequences extends SequenceBase {
 
   @Test
   @Feature(bucket = ENUMERATION, stage = PREVIEW)
-  @Summary("check enumeration of nothing at all")
+  @Summary("Check enumeration of nothing at all")
   public void empty_enumeration() {
     Enumerate enumerate = new Enumerate();
     DiscoveryEvent event = runEnumeration(enumerate);
@@ -144,7 +144,7 @@ public class DiscoverySequences extends SequenceBase {
 
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(bucket = ENUMERATION_POINTSET, stage = ALPHA)
-  @Summary("check enumeration of device points")
+  @Summary("Check enumeration of device points")
   public void pointset_enumeration() {
     if (!catchToFalse(() -> deviceMetadata.pointset.points != null)) {
       skipTest("No metadata pointset points defined");
@@ -157,7 +157,7 @@ public class DiscoverySequences extends SequenceBase {
 
   @Test
   @Feature(bucket = ENUMERATION_FEATURES, stage = PREVIEW)
-  @Summary("check enumeration of device features")
+  @Summary("Check enumeration of device features")
   public void feature_enumeration() {
     Enumerate enumerate = new Enumerate();
     enumerate.features = true;
@@ -166,7 +166,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   @Test
-  @Summary("check enumeration of network families")
+  @Summary("Check enumeration of network families")
   @Feature(bucket = ENUMERATION_FAMILIES, stage = ALPHA)
   public void family_enumeration() {
     Enumerate enumerate = new Enumerate();
@@ -177,7 +177,7 @@ public class DiscoverySequences extends SequenceBase {
 
   @Test
   @Feature(bucket = ENUMERATION, stage = ALPHA)
-  @Summary("check enumeration of multiple categories")
+  @Summary("Check enumeration of multiple categories")
   public void multi_enumeration() {
     Enumerate enumerate = new Enumerate();
     enumerate.families = isBucketEnabled(ENUMERATION_FAMILIES);
@@ -189,7 +189,7 @@ public class DiscoverySequences extends SequenceBase {
 
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA)
-  @Summary("check results of a single network family scan")
+  @Summary("Check results of a single network family scan")
   public void single_scan() {
     initializeDiscovery();
     Date startTime = CleanDateFormat.cleanDate(
@@ -231,7 +231,7 @@ public class DiscoverySequences extends SequenceBase {
 
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA)
-  @Summary("check periodic scan of address families")
+  @Summary("Check periodic scan of address families")
   public void periodic_scan() {
     initializeDiscovery();
     Date startTime = CleanDateFormat.cleanDate();
