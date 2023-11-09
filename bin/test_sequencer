@@ -10,14 +10,14 @@ source etc/shell_common.sh
 
 debug_opts=-v
 seq_opts=
-clean_cache=
+clean_cache=y
 pubber_opts=
 suffix=
 out_check=y
 
-if [[ $1 == 'clean' ]]; then
+if [[ $1 == 'noclean' ]]; then
     shift
-    clean_cache=y
+    clean_cache=
 fi
 
 if [[ $1 == 'alpha' ]]; then
