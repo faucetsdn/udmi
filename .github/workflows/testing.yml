@@ -165,7 +165,9 @@ jobs:
         run: egrep ' test .* after .*s ' out/sequencer.log-* > out/timing_itemized.out
       - name: support bundle
         if: ${{ always() }}
-        run: bin/support ${{ github.repository_owner }}_${{ github.job }}_
+        run: |
+          ls -lrt out*/ sites/udmi_site_model/out*/
+          bin/support ${{ github.repository_owner }}_${{ github.job }}_
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
