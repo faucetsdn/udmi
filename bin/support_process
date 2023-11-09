@@ -39,9 +39,12 @@ fi
 ls -l $archive_dir/
 ls $archive_dir/*sequencer*.tgz | xargs -n 1 tar -xzf
 
-find $sites_in -name out-seq -print -exec rsync -ah {}/ $sites_out/ \;
+devices=$(ls -d $sites_in/out/devices)
+for devices_dir in $devices; do
+    rsync -ah $devices_dir $sites_out
+done
 
-src_count=$(find $sites_in/out-seq -name sequence.md | wc -l)
+src_count=$(find $sites_in/out -name sequence.md | wc -l)
 dst_count=$(find $sites_out -name sequence.md | wc -l)
 
 if [[ $src_count != $dst_count ]]; then
@@ -51,8 +54,8 @@ fi
 
 echo Restored $dst_count test output files to $sites_out
 
-cat out_*/sequencer.out | sort -k 4 > out/sequencer.out
-cat out_*/schema.out | sort -k 4 | uniq > out/schema.out
+cat out_*/sequencer.out.combined | sort -k 4 > out/sequencer.out
+cat out_*/schema.out.combined | sort -k 4 | uniq > out/schema.out
 
 echo Restored combined schema.out files.
 

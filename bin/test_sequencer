@@ -145,6 +145,9 @@ if [[ -n $out_check ]]; then
     fi
 
     bin/test_sequcheck $suffix
+else
+    echo Preparing stuff for shard reconcilliation
+    mv $site_path/out $site_path/out-seq
 fi
 
 echo Done with $suffix test_sequencer run.
