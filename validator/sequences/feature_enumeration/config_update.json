@@ -20,13 +20,13 @@
         "ref" : "BV11.present_value",
         "units" : "No-units"
       },
-      "filter_differential_pressure_setpoint" : {
-        "units" : "Bars",
-        "set_value" : 98
-      },
       "filter_differential_pressure_sensor" : {
         "ref" : "AV12.present_value",
         "units" : "Degrees-Celsius"
+      },
+      "filter_differential_pressure_setpoint" : {
+        "set_value" : 98,
+        "units" : "Bars"
       }
     }
   },
@@ -34,12 +34,12 @@
     "metrics_rate_sec" : 600,
     "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2023-07-28T20:23:12Z"
+      "last_start" : "2023-11-07T14:28:37Z"
     },
     "testing" : {
       "sequence_name" : "feature_enumeration"
     }
   },
-  "timestamp" : "2023-07-28T20:28:02Z",
-  "version" : "1.4.1"
+  "timestamp" : "2023-11-07T14:29:01Z",
+  "version" : "1.4.2-40-gdeae740b"
 }

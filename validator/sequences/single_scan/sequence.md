@@ -1,7 +1,7 @@
 
 ## single_scan (ALPHA)
 
-check results of a single network family scan
+Check results of a single network family scan
 
 1. Update config before all scans not active:
     * Add `discovery` = { "families": {  } }
