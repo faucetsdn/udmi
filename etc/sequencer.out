@@ -20,8 +20,8 @@ RESULT pass discovery.scan periodic_scan ALPHA 5 Sequence complete
 RESULT pass enumeration.pointset pointset_enumeration ALPHA 5 Sequence complete
 RESULT pass pointset pointset_publish BETA 5 Sequence complete
 RESULT pass pointset pointset_publish_interval BETA 5 Sequence complete
-RESULT pass pointset pointset_remove_point ALPHA 5 Sequence complete
-RESULT pass pointset pointset_request_extraneous ALPHA 5 Sequence complete
+RESULT pass pointset pointset_remove_point BETA 5 Sequence complete
+RESULT pass pointset pointset_request_extraneous BETA 5 Sequence complete
 RESULT pass pointset pointset_sample_rate BETA 5 Sequence complete
 RESULT pass discovery.scan single_scan ALPHA 5 Sequence complete
 RESULT pass system state_make_model BETA 5 Sequence complete

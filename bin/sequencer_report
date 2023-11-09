@@ -39,7 +39,7 @@ class TestResult:
   score: int = DEFAULT_SCORE
 
   def passed(self):
-    if self.esult == "pass":
+    if self.result == "pass":
       return True
     if self.result == "fail":
       return False
@@ -371,7 +371,7 @@ class SequencerReport:
             name,
             result["result"],
             result["stage"],
-            result["status"]["message"],
+            self.sanitize(result["status"]["message"]),
         )
         features[feature][result["stage"]].add(result["result"], DEFAULT_SCORE)
         features[feature][result["stage"]].tests.append(result)
@@ -404,6 +404,11 @@ class SequencerReport:
         for f in self.features
     }
 
+  def sanitize(self, string: str):
+    """ Sanitize string for safe displaying """
+    sanitized = string.replace("\n", ";")
+    return sanitized
+
   def __repr__(self):
     return str(self.results)
 
@@ -429,7 +434,7 @@ def main():
 
   report = SequencerReport(site_model, device_id)
 
-  environment = jinja2.Environment()
+  environment = jinja2.Environment(autoescape=False)
   environment.filters["pretty_dict"] = TemplateHelper.pretty_dict
   environment.filters["md_table_header"] = TemplateHelper.md_table_header
   environment.filters["result_icon"] = TemplateHelper.result_icon

@@ -66,7 +66,7 @@ public class PointsetSequences extends PointsetBase {
 
   @Test(timeout = ONE_MINUTE_MS)
   @Summary("pointset configuration contains extraneous point")
-  @Feature(stage = ALPHA, bucket = POINTSET)
+  @Feature(stage = BETA, bucket = POINTSET)
   public void pointset_request_extraneous() {
     untilPointsetSanity();
 
@@ -92,11 +92,11 @@ public class PointsetSequences extends PointsetBase {
 
   @Test(timeout = ONE_MINUTE_MS)
   @Summary("pointset state does not report unconfigured point")
-  @Feature(stage = ALPHA, bucket = POINTSET)
+  @Feature(stage = BETA, bucket = POINTSET)
   public void pointset_remove_point() {
     untilPointsetSanity();
 
-    List<String> candidatePoints = new ArrayList<>(deviceState.pointset.points.keySet());
+    List<String> candidatePoints = new ArrayList<>(deviceConfig.pointset.points.keySet());
     ifTrueThen(candidatePoints.isEmpty(), () -> skipTest("No points to remove"));
     String name = candidatePoints.get((int) Math.floor(Math.random() * candidatePoints.size()));
 
@@ -122,8 +122,9 @@ public class PointsetSequences extends PointsetBase {
    * Simple check that device publishes pointset events.
    */
   @Test(timeout = THREE_MINUTES_MS)
-  @Feature(stage = BETA, bucket = POINTSET)
+  @Feature(stage = BETA, bucket = POINTSET, nostate = true)
   @Summary("device publishes pointset events")
+  @ValidateSchema
   public void pointset_publish() {
     ifNullSkipTest(deviceConfig.pointset, "no pointset found in config");
 
