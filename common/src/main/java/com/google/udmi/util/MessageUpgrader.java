@@ -3,6 +3,7 @@ package com.google.udmi.util;
 import static com.google.udmi.util.Common.UPGRADED_FROM;
 import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_RAW;
+import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.MessageDowngrader.convertVersion;
 
@@ -86,6 +87,14 @@ public class MessageUpgrader {
    * @param forceUpgrade true to force a complete upgrade pass irrespective of original version
    */
   public Object upgrade(boolean forceUpgrade) {
+    try {
+      return upgradeRaw(forceUpgrade);
+    } catch (Exception e) {
+      message.put(UPGRADED_FROM, friendlyStackTrace(e));
+    }
+  }
+
+  private Object upgradeRaw(boolean forceUpgrade) {
     if (major != 1) {
       throw new IllegalArgumentException("Starting major version " + major);
     }
