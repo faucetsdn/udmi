@@ -123,7 +123,7 @@ jobs:
         if: ${{ env.UDMI_UPDATE_UDMIS != '' }}
         run: |
           bin/clone_model
-          bin/update_udmis sites/udmi_site_model/ $TARGET_PROJECT
+          bin/update_udmis sites/udmi_site_model/ $TARGET_PROJECT $PUSH_TAG
 
   sequencer:
     name: Sequencer Tests
