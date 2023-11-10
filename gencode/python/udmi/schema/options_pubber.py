@@ -10,6 +10,8 @@ class PubberOptions:
     self.noConfigAck = None
     self.noPersist = None
     self.noLastStart = None
+    self.badCategory = None
+    self.badVersion = None
     self.noProxy = None
     self.barfConfig = None
     self.messageTrace = None
@@ -39,6 +41,8 @@ class PubberOptions:
     result.noConfigAck = source.get('noConfigAck')
     result.noPersist = source.get('noPersist')
     result.noLastStart = source.get('noLastStart')
+    result.badCategory = source.get('badCategory')
+    result.badVersion = source.get('badVersion')
     result.noProxy = source.get('noProxy')
     result.barfConfig = source.get('barfConfig')
     result.messageTrace = source.get('messageTrace')
@@ -87,6 +91,10 @@ class PubberOptions:
       result['noPersist'] = self.noPersist # 5
     if self.noLastStart:
       result['noLastStart'] = self.noLastStart # 5
+    if self.badCategory:
+      result['badCategory'] = self.badCategory # 5
+    if self.badVersion:
+      result['badVersion'] = self.badVersion # 5
     if self.noProxy:
       result['noProxy'] = self.noProxy # 5
     if self.barfConfig:
