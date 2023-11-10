@@ -91,6 +91,7 @@ public class MessageUpgrader {
       return upgradeRaw(forceUpgrade);
     } catch (Exception e) {
       message.put(UPGRADED_FROM, friendlyStackTrace(e));
+      return message;
     }
   }
 
