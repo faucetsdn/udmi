@@ -8,9 +8,11 @@ TEST writeback_success noWriteback
 TEST writeback_success noPointState
 TEST pointset_sample_rate fixedSampleRate=10
 TEST system_mode_restart noPersist
+TEST config_logging badVersion
 TEST broken_config barfConfig
 TEST broken_config configStateDelay
 TEST broken_config noState
+TEST broken_config badCategory
 TEST system_last_update extraField=fnooz
 
 # Test with various device metadata.json options

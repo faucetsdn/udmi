@@ -3,19 +3,21 @@
 # Force consistent sort order
 export LC_ALL=C
 
-ROOT_DIR=$(dirname $0)/..
-cd $ROOT_DIR
+UDMI_ROOT=$(dirname $0)/..
+cd $UDMI_ROOT
+
+source etc/shell_common.sh
 
 debug_opts=-v
 seq_opts=
-clean_cache=
+clean_cache=y
 pubber_opts=
 suffix=
 out_check=y
 
-if [[ $1 == 'clean' ]]; then
+if [[ $1 == 'noclean' ]]; then
     shift
-    clean_cache=y
+    clean_cache=
 fi
 
 if [[ $1 == 'alpha' ]]; then
@@ -47,6 +49,9 @@ fi
 project_id=$1
 shift
 targets=$*
+if [[ -n $targets ]]; then
+    clean_cache=
+fi
 
 [[ -n $GITHUB_RUN_NUMBER ]] && echo "Workflow run number $GITHUB_RUN_NUMBER" || true
 echo "export TARGET_PROJECT=$project_id"
@@ -114,6 +119,13 @@ bin/augment_metadata $site_path $device_id $pubber_opts
 echo bin/sequencer $debug_opts $seq_opts $site_path $project_id $device_id $serial_no $targets
 bin/sequencer $debug_opts $seq_opts $site_path $project_id $device_id $serial_no $targets
 echo Completed execution of sequencer test run.
+
+echo Sanity check for completed tests...
+target_count=$(fgrep "Running target" out/sequencer.log | wc -l)
+result_count=$(cat out/sequencer.out | wc -l)
+if [[ $target_count != $result_count ]]; then
+    fail Only $result_count results found for expected $target_count targets.
+fi
 
 echo Checking reported cloud version info
 jq .cloud_version.udmi_ref $output_file

@@ -15,8 +15,10 @@
 #
 
 RUNDIR=$PWD
-ROOT_DIR=$(realpath $(dirname $0)/..)
-cd $ROOT_DIR
+UDMI_ROOT=$(realpath $(dirname $0)/..)
+cd $UDMI_ROOT
+
+source etc/shell_common.sh
 
 mkdir -p $RUNDIR/out
 TEST_LIST=$RUNDIR/out/sequencer_tests.txt
@@ -108,12 +110,9 @@ if [[ -n $validate_saved ]]; then
         | xargs -I% diff -u \
             $TEST_ROOT/tests/%/sequence.md \
             $CACHE_ROOT/%/sequence.md
-    root_count=$(ls -1 $TEST_ROOT/tests/ | wc -l)
-    cache_count=$(ls -1 $CACHE_ROOT/ | wc -l)
-    if [[ $root_count != $cache_count ]]; then
-        echo Test count mismatch, was $root_count expected $cache_count
-        false
-    fi
+    ls $CACHE_ROOT/ > out/cached_sequences.out
+    ls $TEST_ROOT/tests/ > out/device_sequences.out
+    diff -u out/cached_sequences.out out/device_sequences.out || fail Unexpected difference with cached results.
     echo Verification successful for $root_count tests.
 fi
 

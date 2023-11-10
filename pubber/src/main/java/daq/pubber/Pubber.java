@@ -12,6 +12,8 @@ import static com.google.udmi.util.GeneralUtils.fromJsonString;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueGet;
+import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isGetTrue;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.optionsString;
@@ -136,6 +138,7 @@ public class Pubber {
   public static final String PUBBER_LOG_CATEGORY = "device.log";
   public static final String DATA_URL_JSON_BASE64 = "data:application/json;base64,";
   static final String UDMI_VERSION = SchemaVersion.CURRENT.key();
+  private static final String BROKEN_VERSION = "1.4.";
   private static final Logger LOG = LoggerFactory.getLogger(Pubber.class);
   private static final String HOSTNAME = System.getenv("HOSTNAME");
   private static final int MIN_REPORT_MS = 200;
@@ -145,7 +148,7 @@ public class Pubber {
   private static final String PUBSUB_SITE = "PubSub";
   private static final Set<String> BOOLEAN_UNITS = ImmutableSet.of("No-units");
   private static final double DEFAULT_BASELINE_VALUE = 50;
-  private static final String MESSAGE_CATEGORY_FORMAT = "system.%s.%s";
+  private static final String SYSTEM_CATEGORY_FORMAT = "system.%s.%s";
   private static final ImmutableMap<Class<?>, String> MESSAGE_TOPIC_SUFFIX_MAP =
       new ImmutableMap.Builder<Class<?>, String>()
           .put(State.class, MqttDevice.STATE_TOPIC)
@@ -407,7 +410,7 @@ public class Pubber {
   static void augmentDeviceMessage(Object message, Date now) {
     try {
       Field version = message.getClass().getField("version");
-      version.set(message, UDMI_VERSION);
+      version.set(message, isTrue(pubberOptions.badVersion) ? BROKEN_VERSION : UDMI_VERSION);
       Field timestamp = message.getClass().getField("timestamp");
       timestamp.set(message, now);
     } catch (Throwable e) {
@@ -1045,7 +1048,8 @@ public class Pubber {
         systemLifecycle(SystemMode.RESTART);
       }
     }
-    String category = format(MESSAGE_CATEGORY_FORMAT, type, phase);
+    String usePhase = isTrue(pubberOptions.badCategory) ? "apply" : phase;
+    String category = format(SYSTEM_CATEGORY_FORMAT, type, usePhase);
     Entry report = entryFromException(category, cause);
     localLog(report);
     publishLogMessage(report);
