@@ -1,6 +1,8 @@
 RESULT pass system broken_config ALPHA 5 Sequence complete
-RESULT fail system broken_config ALPHA 5 timeout waiting for has interesting system status
-RESULT fail system broken_config ALPHA 5 timeout waiting for no interesting system status
+RESULT fail system broken_config ALPHA 5 timeout waiting for has applicable system status
+RESULT fail system broken_config ALPHA 5 timeout waiting for log category `system.config.receive` level `DEBUG` was logged
+RESULT fail system broken_config ALPHA 5 timeout waiting for no applicable system status
+RESULT fail system config_logging BETA 5 Bad version string number format
 RESULT skip system device_config_acked BETA 5 No config check for proxy device
 RESULT fail system device_config_acked BETA 5 timeout waiting for config acked
 RESULT fail enumeration.features feature_enumeration PREVIEW 5 Failed check that feature enumeration matches metadata; missing { enumeration }, extra { unknown }

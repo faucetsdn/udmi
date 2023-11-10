@@ -1,4 +1,5 @@
 broken_config
+config_logging
 device_config_acked
 feature_enumeration
 gateway_proxy_events
