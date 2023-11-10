@@ -146,9 +146,9 @@ jobs:
       - name: registrar clean
         run: bin/test_regclean $TARGET_PROJECT
       - name: sequence tests clean
-        run: bin/test_sequencer clean nocheck $TARGET_PROJECT
+        run: bin/test_sequencer nocheck $TARGET_PROJECT
       - name: sequence tests alpha
-        run: bin/test_sequencer alpha nocheck $TARGET_PROJECT
+        run: bin/test_sequencer noclean alpha nocheck $TARGET_PROJECT
       - name: sequence test post-process
         if: ${{ always() }}
         run: egrep ' test .* after .*s ' out/sequencer.log > out/timing_sequencer.out
@@ -206,7 +206,7 @@ jobs:
           find . -type f | sort | xargs ls -l
           find . -type f | sort | xargs more | cat
       - name: nostate sequences
-        run: bin/test_sequencer clean nostate full $TARGET_PROJECT
+        run: bin/test_sequencer nostate full $TARGET_PROJECT
       - name: support bundle
         if: ${{ always() }}
         run: UDMI_REGISTRY_SUFFIX=_b bin/support ${{ github.repository_owner }}_${{ github.job }}_

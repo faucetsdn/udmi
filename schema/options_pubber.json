@@ -19,6 +19,12 @@
     "noLastStart": {
       "type": "boolean"
     },
+    "badCategory": {
+      "type": "boolean"
+    },
+    "badVersion": {
+      "type": "boolean"
+    },
     "noProxy": {
       "type": "boolean"
     },
