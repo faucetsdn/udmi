@@ -127,7 +127,12 @@ if [[ $target_count != $result_count ]]; then
     fail Only $result_count results found for expected $target_count targets.
 fi
 
-echo Checking reported cloud version info
+echo Checking for correctness of completed tests...
+while read result; do
+    fgrep "$result" etc/sequencer.out || fail Expected result not found for $result
+done < out/sequencer.out
+
+echo Checking reported cloud version info...
 jq .cloud_version.udmi_ref $output_file
 
 pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
@@ -140,23 +145,21 @@ else
 fi
 
 echo Combining partial-run output files...
-ls -l out
 files=$(cd out; ls -1 *.out *.log)
 echo Merging $files
 for file in $files; do
     cat out/$file >> out/$file.combined
     cp out/$file.combined out/$file
 done
-ls -l out
 
-if [[ -n $out_check ]]; then
+if [[ -n $out_check && -z $targets ]]; then
     if [[ -n $clean_cache ]]; then
         echo Cleaning sequencer result cache...
         rm -rf validator/sequences
     fi
 
     bin/test_sequcheck $suffix
-else
+elif [[ -n $MATRIX_SHARD_COUNT ]]; then
     echo Preparing stuff for shard reconcilliation
     mkdir -p $site_path/out-seq
     rsync -ah $site_path/out/ $site_path/out-seq/
