@@ -129,7 +129,8 @@ fi
 
 echo Checking for correctness of completed tests...
 while read result; do
-    fgrep "$result" etc/sequencer.out || fail Expected result not found for $result
+    fgrep "$result" etc/sequencer${suffix}.out ||
+        fail Expected result not found for $result
 done < out/sequencer.out
 
 echo Checking reported cloud version info...

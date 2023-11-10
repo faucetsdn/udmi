@@ -377,7 +377,7 @@ public class GeneralUtils {
         return reader.lines().collect(Collectors.toList());
       }
     } catch (Exception e) {
-      throw new RuntimeException("While executing subprocess " + String.join(" ", command));
+      throw new RuntimeException("While executing subprocess " + String.join(" ", command), e);
     }
   }
 
