@@ -42,7 +42,7 @@ if [[ $1 == 'full' ]]; then
 fi
 
 if [[ $# -lt 1 ]]; then
-    echo Usage: $0 [clean] [alpha] [nostate] [full] PROJECT_ID [tests...]
+    echo Usage: $0 [noclean] [alpha] [nostate] [full] PROJECT_ID [tests...]
     false
 fi
 
