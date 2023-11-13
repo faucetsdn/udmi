@@ -153,6 +153,9 @@ for file in $files; do
     cp out/$file.combined out/$file
 done
 
+ls -l out/
+fgrep RESULT out/sequencer.out*
+
 if [[ -n $out_check && -z $targets ]]; then
     if [[ -n $clean_cache ]]; then
         echo Cleaning sequencer result cache...
