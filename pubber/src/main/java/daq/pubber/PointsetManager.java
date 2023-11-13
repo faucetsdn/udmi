@@ -185,7 +185,7 @@ public class PointsetManager {
   private void updateState(AbstractPoint point) {
     String pointName = point.getName();
 
-    if (pointName.equals(options.missingPoint)) {
+    if (!pointsetState.points.containsKey(pointName)) {
       return;
     }
 
@@ -313,7 +313,8 @@ public class PointsetManager {
 
   private void sendDevicePoints() {
     if (pointsetUpdateCount % Pubber.MESSAGE_REPORT_INTERVAL == 0) {
-      info(format("%s sending test message #%d", getTimestamp(), pointsetUpdateCount));
+      info(format("%s sending test message #%d with %d points",
+          getTimestamp(), pointsetUpdateCount, pointsetEvent.points.size()));
     }
     host.publish(pointsetEvent);
   }
