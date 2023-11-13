@@ -211,10 +211,10 @@ public class PointsetManager {
     }
 
     ifNullThen(pointsetState, () -> {
-          pointsetState = new PointsetState();
-          pointsetState.points = new HashMap<>();
-          pointsetEvent.points = new HashMap<>();
-        });
+      pointsetState = new PointsetState();
+      pointsetState.points = new HashMap<>();
+      pointsetEvent.points = new HashMap<>();
+    });
 
     PointsetConfig useConfig = ofNullable(pointsetConfig).orElseGet(PointsetConfig::new);
     Map<String, PointPointsetConfig> points = ofNullable(useConfig.points).orElseGet(HashMap::new);
