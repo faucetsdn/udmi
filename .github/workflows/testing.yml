@@ -105,7 +105,7 @@ jobs:
         if: ${{ github.event_name == 'push' }}
         run: |
           revhash=$(git log -n 1 --pretty=format:"%h" udmis)
-          IMAGE_TAG=s${revhash:0:9}
+          IMAGE_TAG=U${revhash:0:9}
           PUSH_REPO=$PUSH_REGISTRY/${{ github.repository }}
           PUSH_TAG=$PUSH_REPO:udmis-$IMAGE_TAG
           echo PUSH_TAG=$PUSH_TAG >> $GITHUB_ENV
