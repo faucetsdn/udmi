@@ -1,5 +1,7 @@
 package daq.pubber;
 
+import static com.google.udmi.util.GeneralUtils.getNow;
+
 import com.google.udmi.util.JsonUtil;
 import java.util.Date;
 import org.checkerframework.checker.units.qual.C;
@@ -99,7 +101,7 @@ public abstract class BasicPoint implements AbstractPoint {
   private Entry getEntry() {
     Entry entry = new Entry();
     entry.detail = getPointDetail();
-    entry.timestamp = Pubber.getNow();
+    entry.timestamp = getNow();
     return entry;
   }
 
