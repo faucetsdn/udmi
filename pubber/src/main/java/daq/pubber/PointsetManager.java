@@ -32,7 +32,6 @@ import udmi.schema.PointPointsetEvent;
 import udmi.schema.PointPointsetModel;
 import udmi.schema.PointPointsetState;
 import udmi.schema.PointsetConfig;
-import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetModel;
 import udmi.schema.PointsetState;
 import udmi.schema.PubberOptions;
@@ -203,8 +202,8 @@ public class PointsetManager {
     });
   }
 
-  private void updatePointsetPointsConfig(PointsetConfig pointsetConfig) {
-    if (pointsetConfig == null) {
+  private void updatePointsetPointsConfig(PointsetConfig config) {
+    if (config == null) {
       pointsetState = null;
       host.update((PointsetState) null);
       return;
@@ -216,23 +215,22 @@ public class PointsetManager {
       pointsetEvent.points = new HashMap<>();
     });
 
-    PointsetConfig useConfig = ofNullable(pointsetConfig).orElseGet(PointsetConfig::new);
-    Map<String, PointPointsetConfig> points = ofNullable(useConfig.points).orElseGet(HashMap::new);
+    Map<String, PointPointsetConfig> points = ofNullable(config.points).orElseGet(HashMap::new);
     managedPoints.forEach((name, point) -> updatePointConfig(point, points.get(name)));
-    pointsetState.state_etag = useConfig.state_etag;
+    pointsetState.state_etag = config.state_etag;
 
-    Set<String> configuredPoints = pointsetConfig.points.keySet();
+    Set<String> configuredPoints = config.points.keySet();
     Set<String> statePoints = pointsetState.points.keySet();
     Set<String> missingPoints = Sets.difference(configuredPoints, statePoints).immutableCopy();
     final Set<String> clearPoints = Sets.difference(statePoints, configuredPoints).immutableCopy();
 
     missingPoints.forEach(name -> {
-      debug("Restoring mismatched point " + name);
+      debug("Restoring unknown point " + name);
       restorePoint(name);
     });
 
     clearPoints.forEach(key -> {
-      debug("Clearing mismatched point " + key);
+      debug("Clearing extraneous point " + key);
       suspendPoint(key);
     });
 
@@ -246,6 +244,8 @@ public class PointsetManager {
             maxStatus.set(status);
           }
         }));
+
+    host.update(pointsetState);
   }
 
   private void debug(String message) {

@@ -627,6 +627,7 @@ public class Pubber implements ManagerHost {
 
   private void periodicUpdate() {
     try {
+      deviceUpdateCount++;
       checkSmokyFailure();
       deferredConfigActions();
       sendSystemEvent();
@@ -1010,22 +1011,32 @@ public class Pubber implements ManagerHost {
   }
 
   private void processConfigUpdate(Config config) {
-    final int actualInterval;
-    if (config != null) {
-      if (config.system == null && isTrue(configuration.options.barfConfig)) {
-        error("Empty config system block and configured to restart on bad config!");
-        systemLifecycle(SystemMode.RESTART);
-      }
-      GeneralUtils.copyFields(config, deviceConfig, true);
-      info(format("%s received config %s", getTimestamp(), isoConvert(config.timestamp)));
-      deviceState.system.last_config = config.timestamp;
-      pointsetManager.updatePointsetConfig(config.pointset);
-      updateDiscoveryConfig(config.discovery);
-      extractEndpointBlobConfig();
-    } else {
-      info(getTimestamp() + " defaulting empty config");
+    try {
+      // Grab this to make state-after-config updates monolithic.
+      stateLock.acquire();
+    } catch (Exception e) {
+      throw new RuntimeException("While acquiting state lock", e);
     }
-    maybeRestartExecutor(DEFAULT_REPORT_SEC);
+
+    try {
+      if (config != null) {
+        if (config.system == null && isTrue(configuration.options.barfConfig)) {
+          error("Empty config system block and configured to restart on bad config!");
+          systemLifecycle(SystemMode.RESTART);
+        }
+        GeneralUtils.copyFields(config, deviceConfig, true);
+        info(format("%s received config %s", getTimestamp(), isoConvert(config.timestamp)));
+        deviceState.system.last_config = config.timestamp;
+        pointsetManager.updatePointsetConfig(config.pointset);
+        updateDiscoveryConfig(config.discovery);
+        extractEndpointBlobConfig();
+      } else {
+        info(getTimestamp() + " defaulting empty config");
+      }
+      maybeRestartExecutor(DEFAULT_REPORT_SEC);
+    } finally {
+      stateLock.release();
+    }
   }
 
   // TODO: Consider refactoring this to either return or change an instance variable, not both.
@@ -1516,6 +1527,11 @@ public class Pubber implements ManagerHost {
   }
 
   private void publishStateMessage(Object stateToSend) {
+    if (configLatch.getCount() > 0) {
+      warn("Dropping state update until config received...");
+      return;
+    }
+
     long delay = lastStateTimeMs + STATE_THROTTLE_MS - System.currentTimeMillis();
     if (delay > 0) {
       warn(format("State update delay %dms", delay));
