@@ -187,7 +187,7 @@ public class Pubber implements ManagerHost {
   private final Date deviceStartTime;
   private final File outDir;
   private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
-  private final AtomicInteger messageDelayMs = new AtomicInteger(DEFAULT_REPORT_SEC * 1000);
+  private final AtomicInteger messageDelaySec = new AtomicInteger(DEFAULT_REPORT_SEC);
   private final CountDownLatch configLatch = new CountDownLatch(1);
   private final AtomicBoolean stateDirty = new AtomicBoolean();
   private final Semaphore stateLock = new Semaphore(1);
@@ -596,20 +596,20 @@ public class Pubber implements ManagerHost {
 
   }
 
-  private synchronized void maybeRestartExecutor(int intervalMs) {
-    if (periodicSender == null || intervalMs != messageDelayMs.get()) {
+  private synchronized void maybeRestartExecutor(int intervalSec) {
+    if (periodicSender == null || intervalSec != messageDelaySec.get()) {
       cancelPeriodicSend();
-      messageDelayMs.set(intervalMs);
+      messageDelaySec.set(intervalSec);
       startPeriodicSend();
     }
   }
 
   private synchronized void startPeriodicSend() {
     checkState(periodicSender == null);
-    int delay = messageDelayMs.get();
-    info("Starting executor with send message delay " + delay);
+    int delay = messageDelaySec.get();
+    info(format("Starting executor with send message delay %ds", delay));
     periodicSender = executor.scheduleAtFixedRate(this::periodicUpdate, delay, delay,
-        TimeUnit.MILLISECONDS);
+        TimeUnit.SECONDS);
   }
 
   private synchronized void cancelPeriodicSend() {
@@ -1503,21 +1503,14 @@ public class Pubber implements ManagerHost {
   }
 
   private void publishStateMessage() {
-    deviceState.timestamp = getNow();
-    info(format("update state %s last_config %s", isoConvert(deviceState.timestamp),
-        isoConvert(deviceState.system.last_config)));
-    try {
-      debug(format("State update%s", getTestingTag(deviceConfig)),
-          toJsonString(deviceState));
-    } catch (Exception e) {
-      throw new RuntimeException("While converting new device state", e);
-    }
-
     if (deviceTarget == null) {
       markStateDirty(-1);
       return;
     }
     stateDirty.set(false);
+    deviceState.timestamp = getNow();
+    info(format("update state %s last_config %s", isoConvert(deviceState.timestamp),
+        isoConvert(deviceState.system.last_config)));
     publishStateMessage(deviceState);
   }
 
@@ -1527,8 +1520,17 @@ public class Pubber implements ManagerHost {
       warn(format("State update delay %dms", delay));
       safeSleep(delay);
     }
+
     lastStateTimeMs = System.currentTimeMillis();
     CountDownLatch latch = new CountDownLatch(1);
+
+    try {
+      debug(format("State update%s", getTestingTag(deviceConfig)),
+          toJsonString(stateToSend));
+    } catch (Exception e) {
+      throw new RuntimeException("While converting new device state", e);
+    }
+
     publishDeviceMessage(stateToSend, () -> {
       lastStateTimeMs = System.currentTimeMillis();
       latch.countDown();
