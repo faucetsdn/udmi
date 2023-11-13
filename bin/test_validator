@@ -23,7 +23,9 @@ proxy_id=AHU-22
 mkdir -p out
 
 PUBBER_LOG=out/pubber.log
+VALIDATOR_LOG=out/validator.log
 VALIDATOR_OUT=out/validator.out
+GOLDEN_OUT=etc/validator.out
 TRACE_DIR=out/validator_trace
 WAITING=10
 
@@ -43,10 +45,10 @@ bin/reset_config $site_path $project_id $device_id
 echo bin/reset_config $site_path $project_id $proxy_id
 bin/reset_config $site_path $project_id $proxy_id
 
-echo Starting validator, output in $VALIDATOR_OUT
+echo Starting validator, output in $VALIDATOR_LOG, trace in $TRACE_DIR
 rm -rf $TRACE_DIR
 echo bin/validator $site_path $project_id -w $TRACE_DIR
-bin/validator $site_path $project_id -w $TRACE_DIR > $VALIDATOR_OUT 2>&1 &
+bin/validator $site_path $project_id -w $TRACE_DIR > $VALIDATOR_LOG 2>&1 &
 vpid=$!
 echo Started validator pid $vpid
 
@@ -54,7 +56,7 @@ echo Waiting for validator to startup...
 sleep 10
 
 for i in `seq 1 $WAITING`; do
-    if fgrep "Entering message loop" $VALIDATOR_OUT; then
+    if fgrep "Entering message loop" $VALIDATOR_LOG; then
         break
     fi
     echo Waiting for validator startup $((WAITING - i))...
@@ -63,7 +65,7 @@ done
 
 if [[ $i -eq $WAITING ]]; then
     echo validator startup failed:
-    cat $VALIDATOR_OUT
+    cat $VALIDATOR_LOG
     false
 fi
 
@@ -105,16 +107,14 @@ pubber_bg AHU-1 extraField=prlagle
 pubber_bg AHU-22 emptyMissing skewClock
 
 echo Waiting for system to run for a bit...
-cat $VALIDATOR_OUT && timeout 60s tail -f $VALIDATOR_OUT || true
+cat $VALIDATOR_LOG && timeout 60s tail -f $VALIDATOR_LOG || true
 
 echo Killing running pubber/validator instances...
 ps ax | fgrep pubber | fgrep java | awk '{print $1}' | xargs kill || true
 ps ax | fgrep validator | fgrep java | awk '{print $1}' | xargs kill || true
 
-TMP_VALIDATOR=/tmp/validator.out
-
-find $site_path/out/devices -name \*.json | sort > $TMP_VALIDATOR
-echo Found `wc -l $TMP_VALIDATOR` json output files.
+find $site_path/out/devices -name \*.json | sort > $VALIDATOR_OUT
+echo Found `wc -l $VALIDATOR_OUT` json output files.
 
 echo Out files for AHU-1:
 (cd $site_path/out/devices/AHU-1; ls -lrt *.out)
@@ -126,14 +126,14 @@ if [[ -z $outfiles ]]; then
     false
 fi
 
-echo Pre-REDACTED output available in $TMP_VALIDATOR.raw
-more $outfiles > $TMP_VALIDATOR.raw
-sed -E < $TMP_VALIDATOR.raw >> $TMP_VALIDATOR \
+echo Pre-REDACTED output available in $VALIDATOR_OUT.raw
+more $outfiles > $VALIDATOR_OUT.raw
+sed -E < $VALIDATOR_OUT.raw >> $VALIDATOR_OUT \
     -e 's/[0-9-]{10}T[0-9:.]+Z/REDACTED_TIMESTAMP/g' \
     -e 's/ [0-9]+s / REDACTED_DURATION /g' \
     -e 's/@[^)]+\)/REDACTED_ERROR/' \
     -e 's/Validator.java:[0-9]+/REDACTED_FILE/' \
     -e 's/\\t[a-zA-Z .()$0-9]+\.java:[0-9]+\)\\n/\\tREDACTED_STACK\\n/g'
 
-echo diff -u $TMP_VALIDATOR etc/validator.out
-diff -u $TMP_VALIDATOR etc/validator.out && echo No mismatch from golden file.
+echo diff -u $VALIDATOR_OUT $GOLDEN_OUT
+diff -u $VALIDATOR_OUT $GOLDEN_OUT && echo No mismatch from golden file.

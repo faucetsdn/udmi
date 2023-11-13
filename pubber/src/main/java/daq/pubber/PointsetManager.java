@@ -5,6 +5,7 @@ import static com.google.udmi.util.GeneralUtils.getNow;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
+import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -31,6 +32,7 @@ import udmi.schema.PointPointsetEvent;
 import udmi.schema.PointPointsetModel;
 import udmi.schema.PointPointsetState;
 import udmi.schema.PointsetConfig;
+import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetModel;
 import udmi.schema.PointsetState;
 import udmi.schema.PubberOptions;
@@ -52,7 +54,7 @@ public class PointsetManager {
   );
 
   private ScheduledFuture<?> periodicSender;
-  private final PointsetState pointsetState;
+  private PointsetState pointsetState;
   private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
   private final AtomicInteger messageDelayMs = new AtomicInteger(DEFAULT_REPORT_SEC * 1000);
   private final ExtraPointsetEvent pointsetEvent = new ExtraPointsetEvent();
@@ -70,11 +72,7 @@ public class PointsetManager {
     this.host = host;
     this.options = host.getOptions();
 
-    pointsetState = new PointsetState();
-    pointsetState.points = new HashMap<>();
     host.update(pointsetState);
-
-    pointsetEvent.points = new HashMap<>();
   }
 
   private static PointPointsetModel makePointPointsetModel(boolean writable, int value,
@@ -146,21 +144,11 @@ public class PointsetManager {
   }
 
   private void addPoint(AbstractPoint point) {
-    String pointName = point.getName();
-
-    if (pointName.equals(options.missingPoint)) {
-      return;
-    }
-
-    if (pointsetEvent.points.put(pointName, point.getData()) != null) {
-      throw new IllegalStateException("Duplicate pointName " + pointName);
-    }
-    updateState(point);
-    managedPoints.put(pointName, point);
+    managedPoints.put(point.getName(), point);
   }
 
   private void restorePoint(String pointName) {
-    if (pointName.equals(options.missingPoint)) {
+    if (pointsetState == null || pointName.equals(options.missingPoint)) {
       return;
     }
 
@@ -216,14 +204,22 @@ public class PointsetManager {
   }
 
   private void updatePointsetPointsConfig(PointsetConfig pointsetConfig) {
+    if (pointsetConfig == null) {
+      pointsetState = null;
+      host.update((PointsetState) null);
+      return;
+    }
+
+    ifNullThen(pointsetState, () -> {
+          pointsetState = new PointsetState();
+          pointsetState.points = new HashMap<>();
+          pointsetEvent.points = new HashMap<>();
+        });
+
     PointsetConfig useConfig = ofNullable(pointsetConfig).orElseGet(PointsetConfig::new);
     Map<String, PointPointsetConfig> points = ofNullable(useConfig.points).orElseGet(HashMap::new);
     managedPoints.forEach((name, point) -> updatePointConfig(point, points.get(name)));
     pointsetState.state_etag = useConfig.state_etag;
-
-    if (pointsetConfig == null || pointsetConfig.points == null) {
-      return;
-    }
 
     Set<String> configuredPoints = pointsetConfig.points.keySet();
     Set<String> statePoints = pointsetState.points.keySet();
@@ -304,8 +300,10 @@ public class PointsetManager {
 
   private void periodicUpdate() {
     try {
-      updatePoints();
-      sendDevicePoints();
+      if (pointsetState != null) {
+        updatePoints();
+        sendDevicePoints();
+      }
     } catch (Exception e) {
       error("Fatal error during execution", e);
     }

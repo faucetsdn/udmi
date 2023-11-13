@@ -286,6 +286,7 @@ public class Pubber implements ManagerHost {
       LOG.info("Done with main");
     } catch (Exception e) {
       LOG.error("Exception starting pubber: " + friendlyStackTrace(e));
+      e.printStackTrace();
       System.exit(-1);
     }
   }
