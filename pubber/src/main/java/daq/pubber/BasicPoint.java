@@ -2,9 +2,6 @@ package daq.pubber;
 
 import static com.google.udmi.util.GeneralUtils.getNow;
 
-import com.google.udmi.util.JsonUtil;
-import java.util.Date;
-import org.checkerframework.checker.units.qual.C;
 import udmi.schema.Category;
 import udmi.schema.Entry;
 import udmi.schema.PointEnumerationEvent;
@@ -71,29 +68,25 @@ public abstract class BasicPoint implements AbstractPoint {
    * @param config Configuration to set
    */
   public void setConfig(PointPointsetConfig config) {
-
+    Value_state previous = state.value_state;
     state.status = null;
 
     if (config == null || config.set_value == null) {
       written = false;
       state.value_state = null;
       updateData();
-      return;
-    }
-
-    if (!validateValue(config.set_value)) {
+    } else if (!validateValue(config.set_value)) {
       state.status = invalidValueStatus();
       state.value_state = Value_state.INVALID;
-      dirty = true;
     } else if (!writable) {
       state.status = notWritableStatus();
       state.value_state = Value_state.FAILURE;
-      dirty = true;
     } else {
       state.value_state = Value_state.APPLIED;
       written = true;
       data.present_value = config.set_value;
     }
+    dirty = state.value_state != previous;
   }
 
   protected abstract boolean validateValue(Object setValue);
