@@ -6,6 +6,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -176,11 +177,11 @@ public class PointsetManager {
       return;
     }
 
-    ifNotTrueThen(options.noPointState,
-        () -> pointsetState.points.put(pointName, new PointPointsetState()));
-
     if (point.isDirty()) {
-      pointsetState.points.put(pointName, point.getState());
+      PointPointsetState state = point.getState(); // Always call to clear the dirty bit
+      PointPointsetState useState =
+          ifTrueGet(options.noPointState, PointPointsetState::new, () -> state);
+      pointsetState.points.put(pointName, useState);
       host.update(pointsetState);
     }
   }

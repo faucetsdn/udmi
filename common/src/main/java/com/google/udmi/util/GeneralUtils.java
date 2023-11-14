@@ -267,6 +267,10 @@ public class GeneralUtils {
     return null;
   }
 
+  public static <T> T ifTrueGet(Object conditional, Supplier<T> action, Supplier<T> alternate) {
+    return isTrue(conditional) ? action.get() : alternate.get();
+  }
+
   public static <T> void ifTrueThen(Object conditional, Runnable action) {
     if (isTrue(conditional)) {
       action.run();
