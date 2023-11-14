@@ -36,7 +36,7 @@ if [[ $1 == "--no-check" ]]; then
 fi
 
 if [[ -n $1 ]]; then
-    REPOSITORY=$1
+    PUSH_TAG=$1
     shift
 fi
 
@@ -70,7 +70,12 @@ revparse=`git rev-parse HEAD`
 
 udmi_ver=g${revparse:0:9}
 udmi_tag=$target-$udmi_ver
-udmi_ref=$REPOSITORY:$udmi_tag
+
+if [[ -n $PUSH_TAG ]]; then
+    udmi_ref=$PUSH_TAG
+else
+    udmi_ref=$REPOSITORY:$udmi_tag
+fi
 
 version=`git describe`
 
