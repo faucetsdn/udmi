@@ -2,8 +2,8 @@
 
 ROOT=$(realpath $(dirname $0)/..)
 
-if [[ $# != 2 ]]; then
-    echo Usage: $0 SITE_MODEL PROJECT_ID
+if (( $# < 2 || $# > 3 )); then
+    echo Usage: $0 SITE_MODEL PROJECT_ID [IMAGE_TAG]
     false
 fi
 
@@ -12,18 +12,24 @@ project_id=$2
 shift 2
 REFLECTOR_CONFIG=/tmp/reflector_config.json
 
+if [[ -n $1 ]]; then
+    update_to=$1
+    shift
+fi
+
 cd $ROOT
 
 full_hash=$(git rev-parse HEAD)
 
-git_branch=$(git rev-parse --abbrev-ref HEAD)
-git_remote=$(git config --get branch.$git_branch.remote)
-git_url=$(git config --get remote.$git_remote.url)
-git_prefix=${git_url%.*}
-git_prefix=${git_prefix#*.com/}
-git_repo=${git_prefix#*.com:}
-
-update_to=ghcr.io/${git_repo}:udmis-g${full_hash:0:9}
+if [[ -z $update_to ]]; then
+    git_branch=$(git rev-parse --abbrev-ref HEAD)
+    git_remote=$(git config --get branch.$git_branch.remote)
+    git_url=$(git config --get remote.$git_remote.url)
+    git_prefix=${git_url%.*}
+    git_prefix=${git_prefix#*.com/}
+    git_repo=${git_prefix#*.com:}
+    update_to=ghcr.io/${git_repo}:udmis-g${full_hash:0:9}
+fi
 
 echo Updating udmis install to $update_to
 

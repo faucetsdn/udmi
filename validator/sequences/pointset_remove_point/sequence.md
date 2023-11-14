@@ -1,7 +1,7 @@
 
 ## pointset_remove_point (BETA)
 
-Check when pointset state does not report an unconfigured point
+Check that pointset state does not report an unconfigured point
 
 1. Wait for pointset state reports same points as defined in config
 1. Wait for pointset event contains correct points with present_value
