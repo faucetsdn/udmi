@@ -34,7 +34,7 @@ Some caveats:
 * [feature_enumeration](#feature_enumeration-preview): Check enumeration of device features
 * [pointset_publish](#pointset_publish-beta): Check that a device publishes pointset events
 * [pointset_publish_interval](#pointset_publish_interval-beta): Check handling of sample rate and sample limit sec
-* [pointset_remove_point](#pointset_remove_point-beta): Check when pointset state does not report an unconfigured point
+* [pointset_remove_point](#pointset_remove_point-beta): Check that pointset state does not report an unconfigured point
 * [pointset_request_extraneous](#pointset_request_extraneous-beta): Check error when pointset configuration contains extraneous point
 * [pointset_sample_rate](#pointset_sample_rate-beta): Check that a device publishes pointset events not faster than config sample_rate_sec
 * [state_make_model](#state_make_model-beta): Check that a device publishes correct make and model information in state messages
@@ -137,7 +137,7 @@ Check handling of sample rate and sample limit sec
 
 ## pointset_remove_point (BETA)
 
-Check when pointset state does not report an unconfigured point
+Check that pointset state does not report an unconfigured point
 
 1. Wait for pointset state reports same points as defined in config
 1. Wait for pointset event contains correct points with present_value

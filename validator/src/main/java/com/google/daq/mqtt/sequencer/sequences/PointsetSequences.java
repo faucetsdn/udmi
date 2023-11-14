@@ -47,16 +47,18 @@ public class PointsetSequences extends PointsetBase {
   }
 
   private void untilPointsetSanity() {
-    untilTrue("pointset state reports same points as defined in config", () ->
-        deviceState.pointset.points.keySet().equals(deviceConfig.pointset.points.keySet()));
-    untilTrue("pointset event contains correct points with present_value",
-        () -> {
-          List<PointsetEvent> pointsetEvents = popReceivedEvents(PointsetEvent.class);
-          return pointsetEvents.get(pointsetEvents.size() - 1).points.entrySet().stream()
-              .filter(this::validPointEntry).map(Entry::getKey).collect(Collectors.toSet())
-              .equals(deviceConfig.pointset.points.keySet());
-        }
-    );
+    whileDoing("checking pointset sanity", () -> {
+      untilTrue("pointset state reports same points as defined in config", () ->
+          deviceState.pointset.points.keySet().equals(deviceConfig.pointset.points.keySet()));
+      untilTrue("pointset event contains correct points with present_value",
+          () -> {
+            List<PointsetEvent> pointsetEvents = popReceivedEvents(PointsetEvent.class);
+            return pointsetEvents.get(pointsetEvents.size() - 1).points.entrySet().stream()
+                .filter(this::validPointEntry).map(Entry::getKey).collect(Collectors.toSet())
+                .equals(deviceConfig.pointset.points.keySet());
+          }
+      );
+    });
   }
 
   private boolean validPointEntry(Entry<String, PointPointsetEvent> point) {
@@ -91,7 +93,7 @@ public class PointsetSequences extends PointsetBase {
   }
 
   @Test(timeout = ONE_MINUTE_MS)
-  @Summary("Check when pointset state does not report an unconfigured point")
+  @Summary("Check that pointset state does not report an unconfigured point")
   @Feature(stage = BETA, bucket = POINTSET)
   public void pointset_remove_point() {
     untilPointsetSanity();

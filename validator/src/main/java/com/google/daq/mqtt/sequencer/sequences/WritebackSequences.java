@@ -38,7 +38,7 @@ public class WritebackSequences extends PointsetBase {
     Value_state rawState = deviceState.pointset.points.get(pointName).value_state;
     String valueState = rawState == null ? null : rawState.value();
     boolean equals = Objects.equals(expected, valueState);
-    debug(String.format("Value state %s equals %s = %s", expected, valueState, equals));
+    debug(String.format("Value state %s == %s (%s)", valueState, expected, equals));
     return equals;
   }
 
