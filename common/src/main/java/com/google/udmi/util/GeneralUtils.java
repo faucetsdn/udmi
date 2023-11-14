@@ -28,9 +28,12 @@ import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.charset.Charset;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,6 +68,7 @@ public class GeneralUtils {
 
   private static final String SEPARATOR = "\n  ";
   private static final Joiner INDENTED_LINES = Joiner.on(SEPARATOR);
+  private static Duration clockSkew = Duration.ZERO;
 
   public static String[] arrayOf(String... args) {
     return args;
@@ -263,6 +267,10 @@ public class GeneralUtils {
     return null;
   }
 
+  public static <T> T ifTrueGet(Object conditional, Supplier<T> action, Supplier<T> alternate) {
+    return isTrue(conditional) ? action.get() : alternate.get();
+  }
+
   public static <T> void ifTrueThen(Object conditional, Runnable action) {
     if (isTrue(conditional)) {
       action.run();
@@ -377,7 +385,7 @@ public class GeneralUtils {
         return reader.lines().collect(Collectors.toList());
       }
     } catch (Exception e) {
-      throw new RuntimeException("While executing subprocess " + String.join(" ", command));
+      throw new RuntimeException("While executing subprocess " + String.join(" ", command), e);
     }
   }
 
@@ -447,5 +455,13 @@ public class GeneralUtils {
   public static String multiTrim(String message, String delimiter) {
     return Arrays.stream(ofNullable(message).orElse("").split("\n"))
         .map(String::trim).collect(Collectors.joining(delimiter));
+  }
+
+  public static void setClockSkew(Duration skew) {
+    clockSkew = skew;
+  }
+
+  public static Date getNow() {
+    return Date.from(Instant.now().plus(clockSkew));
   }
 }

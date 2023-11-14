@@ -78,6 +78,7 @@ jobs:
       PUSH_REGISTRY: ghcr.io
       TARGET_PROJECT: ${{ vars.TARGET_PROJECT }}
       UDMI_ALT_REGISTRY: ZZ-REDIRECT-NA
+      UDMI_UPDATE_UDMIS: ${{ vars.UDMI_UPDATE_UDMIS }}
       IMAGE_NAME: ${{ github.repository }}
       GITHUB_REF: ${{ github.ref }}
     steps:
@@ -103,12 +104,12 @@ jobs:
       - name: Setup udmis container build
         if: ${{ github.event_name == 'push' }}
         run: |
-          revhash=$(git rev-parse $GITHUB_REF)
-          IMAGE_TAG=g${revhash:0:9}
+          revhash=$(git log -n 1 --pretty=format:"%h" udmis)
+          IMAGE_TAG=U${revhash:0:9}
           PUSH_REPO=$PUSH_REGISTRY/${{ github.repository }}
           PUSH_TAG=$PUSH_REPO:udmis-$IMAGE_TAG
           echo PUSH_TAG=$PUSH_TAG >> $GITHUB_ENV
-          bin/container udmis prep --no-check $PUSH_REPO
+          bin/container udmis prep --no-check $PUSH_TAG
           echo Pushing built container as $PUSH_TAG | tee -a $GITHUB_STEP_SUMMARY
       - name: Build and push docker image
         if: ${{ github.event_name == 'push' }}
@@ -118,6 +119,11 @@ jobs:
           context: udmis
           push: true
           tags: ${{ env.PUSH_TAG }}
+      - name: Update udmis deployment
+        if: ${{ env.UDMI_UPDATE_UDMIS != '' }}
+        run: |
+          bin/clone_model
+          bin/update_udmis sites/udmi_site_model/ $TARGET_PROJECT $PUSH_TAG
 
   sequencer:
     name: Sequencer Tests
@@ -236,7 +242,7 @@ jobs:
       - name: base setup
         run: bin/run_tests install_dependencies
       - name: bin/test_proxy
-        if: "${{ env.MQTT_PROXY_HOST != '' }}"
+        if: ${{ env.MQTT_PROXY_HOST != '' }}
         run: bin/test_proxy $TARGET_PROJECT $MQTT_PROXY_HOST
       - name: bin/test_redirect
         run: bin/test_redirect $TARGET_PROJECT
