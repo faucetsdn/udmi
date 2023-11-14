@@ -72,7 +72,7 @@ public class SystemManager extends ManagerBase {
   private boolean publishingLog;
 
   /**
-   * New instance!
+   * New instance.
    */
   public SystemManager(ManagerHost host, String serialNo) {
     super(host);
