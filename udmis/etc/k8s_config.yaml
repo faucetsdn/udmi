@@ -5,4 +5,4 @@ metadata:
 data:
   GCP_IOT_OPTIONS: disabled
   UDMI_NAMESPACE: @UDMI_NAMESPACE@
-  PIPE_SHUNT: obd_shunt,dbo-rews-dev,bos-platform-dev
+  PIPE_SHUNT: obd_shunt,bos-platform-dev,dbo-rews-dev
