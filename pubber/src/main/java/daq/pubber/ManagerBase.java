@@ -27,6 +27,10 @@ public abstract class ManagerBase {
     this.host = host;
   }
 
+  protected void updateState(Object state) {
+    host.update(state);
+  }
+
   protected void debug(String message) {
     host.debug(message);
   }

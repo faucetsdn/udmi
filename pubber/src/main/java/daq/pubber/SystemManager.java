@@ -103,7 +103,7 @@ public class SystemManager extends ManagerBase {
     systemState.serial_no = serialNo;
     systemState.last_config = new Date(0);
 
-    host.update(systemState);
+    updateState();
   }
 
   void closeLogWriter() {
@@ -153,7 +153,7 @@ public class SystemManager extends ManagerBase {
 
     if (SystemMode.ACTIVE.equals(configMode)) {
       systemState.operation.mode = SystemMode.ACTIVE;
-      host.update(systemState);
+      updateState();
     }
 
     Date configLastStart = operation.last_start;
@@ -169,6 +169,10 @@ public class SystemManager extends ManagerBase {
         systemLifecycle(SystemMode.SHUTDOWN);
       }
     }
+  }
+
+  private void updateState() {
+    host.update(systemState);
   }
 
   private void sendSystemEvent() {
@@ -209,8 +213,10 @@ public class SystemManager extends ManagerBase {
     systemState.operation.restart_count = persistentData.restart_count;
   }
 
-  public void updateConfig(SystemConfig system) {
+  void updateConfig(SystemConfig system, Date timestamp) {
     systemConfig = system;
+    systemState.last_config = timestamp;
+    updateState();
   }
 
   void publishLogMessage(Entry report) {

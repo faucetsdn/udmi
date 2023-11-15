@@ -3,7 +3,6 @@ package daq.pubber;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.udmi.util.GeneralUtils.catchOrElse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
@@ -65,7 +64,6 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -119,8 +117,10 @@ public class Pubber implements ManagerHost {
   public static final String PERSISTENT_TMP_FORMAT = "/tmp/pubber_%s_" + PERSISTENT_STORE_FILE;
   public static final String DATA_URL_JSON_BASE64 = "data:application/json;base64,";
   static final String UDMI_VERSION = SchemaVersion.CURRENT.key();
-  private static final String BROKEN_VERSION = "1.4.";
   static final Logger LOG = LoggerFactory.getLogger(Pubber.class);
+  static final Date deviceStartTime = getRoundedStartTime();
+  static final int MESSAGE_REPORT_INTERVAL = 10;
+  private static final String BROKEN_VERSION = "1.4.";
   private static final String HOSTNAME = System.getenv("HOSTNAME");
   private static final int WAIT_TIME_SEC = 10;
   private static final int STATE_THROTTLE_MS = 2000;
@@ -152,8 +152,6 @@ public class Pubber implements ManagerHost {
   private static final int FORCED_STATE_TIME_MS = 10000;
   private static final Duration CLOCK_SKEW = Duration.ofMinutes(30);
   private static final Duration SMOKE_CHECK_TIME = Duration.ofMinutes(5);
-  static final Date deviceStartTime = getRoundedStartTime();
-  static final int MESSAGE_REPORT_INTERVAL = 10;
   private static PubberOptions pubberOptions;
   protected final PubberConfiguration configuration;
   final State deviceState = new State();
@@ -459,14 +457,24 @@ public class Pubber implements ManagerHost {
 
   @Override
   public void update(Object update) {
-    if (update == this) {
+    requireNonNull(update, "null update message");
+    boolean markerClass = update instanceof Class<?>;
+    final Object checkValue = markerClass ? null : update;
+    final Object checkTarget;
+    try {
+      checkTarget = markerClass ? ((Class<?>) update).getConstructor().newInstance() : update;
+    } catch (Exception e) {
+      throw new RuntimeException("Could not create marker instance of class " + update.getClass());
+    }
+    if (checkTarget == this) {
       publishSynchronousState();
-    } else if (update instanceof PointsetState pointsetState) {
-      deviceState.pointset = pointsetState;
-    } else if (update instanceof SystemState systemState) {
-      deviceState.system = systemState;
+    } else if (checkTarget instanceof PointsetState) {
+      deviceState.pointset = (PointsetState) checkValue;
+    } else if (checkTarget instanceof SystemState) {
+      deviceState.system = (SystemState) checkValue;
     } else {
-      throw new RuntimeException("Unrecognized update type " + update.getClass().getSimpleName());
+      throw new RuntimeException(
+          "Unrecognized update type " + checkTarget.getClass().getSimpleName());
     }
     markStateDirty();
   }
@@ -884,9 +892,8 @@ public class Pubber implements ManagerHost {
         }
         GeneralUtils.copyFields(config, deviceConfig, true);
         info(format("%s received config %s", getTimestamp(), isoConvert(config.timestamp)));
-        deviceState.system.last_config = config.timestamp;
         pointsetManager.updateConfig(config.pointset);
-        systemManager.updateConfig(config.system);
+        systemManager.updateConfig(config.system, config.timestamp);
         updateDiscoveryConfig(config.discovery);
         extractEndpointBlobConfig();
       } else {

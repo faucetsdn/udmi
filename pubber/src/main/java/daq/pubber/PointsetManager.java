@@ -1,6 +1,5 @@
 package daq.pubber;
 
-import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.getNow;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
@@ -44,11 +43,10 @@ public class PointsetManager extends ManagerBase {
       "faulty_finding", makePointPointsetModel(true, 40, 0, "deg"),
       "superimposition_reading", makePointPointsetModel(false)
   );
-
-  private PointsetState pointsetState;
   private final ExtraPointsetEvent pointsetEvent = new ExtraPointsetEvent();
   private final Map<String, AbstractPoint> managedPoints = new HashMap<>();
-  private int pointsetUpdateCount = -1;
+  private final int pointsetUpdateCount = -1;
+  private PointsetState pointsetState;
 
   /**
    * Create a new instance attached to the given host.
@@ -58,7 +56,7 @@ public class PointsetManager extends ManagerBase {
   public PointsetManager(ManagerHost host) {
     super(host);
 
-    host.update(pointsetState);
+    updateState();
   }
 
   private static PointPointsetModel makePointPointsetModel(boolean writable, int value,
@@ -156,6 +154,10 @@ public class PointsetManager extends ManagerBase {
     });
   }
 
+  private void updateState() {
+    updateState(ofNullable((Object) pointsetState).orElse(PointsetState.class));
+  }
+
   private void updateState(AbstractPoint point) {
     String pointName = point.getName();
 
@@ -168,7 +170,7 @@ public class PointsetManager extends ManagerBase {
       PointPointsetState useState =
           ifTrueGet(options.noPointState, PointPointsetState::new, () -> state);
       pointsetState.points.put(pointName, useState);
-      host.update(pointsetState);
+      updateState();
     }
   }
 
@@ -192,7 +194,7 @@ public class PointsetManager extends ManagerBase {
   private void updatePointsetPointsConfig(PointsetConfig config) {
     if (config == null) {
       pointsetState = null;
-      host.update((PointsetState) null);
+      updateState();
       return;
     }
 
@@ -232,7 +234,7 @@ public class PointsetManager extends ManagerBase {
           }
         }));
 
-    host.update(pointsetState);
+    updateState();
   }
 
   void updateConfig(PointsetConfig pointsetConfig) {
