@@ -215,17 +215,8 @@ public class SystemManager extends ManagerBase {
   void updateConfig(SystemConfig system, Date timestamp) {
     systemConfig = system;
     systemState.last_config = timestamp;
-    updateSamplingInterval();
+    updateInterval(ifNotNullGet(system, config -> config.metrics_rate_sec, DISABLED_INTERVAL));
     updateState();
-  }
-
-  private void updateSamplingInterval() {
-    int rateSec = ofNullable(systemConfig.metrics_rate_sec).orElse(DEFAULT_REPORT_SEC);
-    if (periodicSender == null || rateSec != sendRateSec.get()) {
-      cancelPeriodicSend();
-      sendRateSec.set(rateSec);
-      startPeriodicSend();
-    }
   }
 
   void publishLogMessage(Entry report) {

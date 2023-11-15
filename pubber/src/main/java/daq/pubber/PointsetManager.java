@@ -46,7 +46,7 @@ public class PointsetManager extends ManagerBase {
   );
   private final ExtraPointsetEvent pointsetEvent = new ExtraPointsetEvent();
   private final Map<String, AbstractPoint> managedPoints = new HashMap<>();
-  private final int pointsetUpdateCount = -1;
+  private int pointsetUpdateCount = -1;
   private PointsetState pointsetState;
 
   /**
@@ -235,25 +235,15 @@ public class PointsetManager extends ManagerBase {
     updateState();
   }
 
-  void updateConfig(PointsetConfig pointsetConfig) {
-    updateSamplingInterval(pointsetConfig);
-    updatePointsetPointsConfig(pointsetConfig);
-  }
-
-  private void updateSamplingInterval(PointsetConfig pointsetConfig) {
-    int reportInterval = ifNotNullGet(pointsetConfig,
-        config -> ofNullable(config.sample_rate_sec).orElse(DEFAULT_REPORT_SEC), 0);
-    int intervalSec = ofNullable(options.fixedSampleRate).orElse(reportInterval);
-    if (periodicSender == null || intervalSec != sendRateSec.get()) {
-      cancelPeriodicSend();
-      sendRateSec.set(intervalSec);
-      startPeriodicSend();
-    }
+  void updateConfig(PointsetConfig config) {
+    updateInterval(ifNotNullGet(config, c -> c.sample_rate_sec, DISABLED_INTERVAL));
+    updatePointsetPointsConfig(config);
   }
 
   @Override
   protected void periodicUpdate() {
     try {
+      pointsetUpdateCount++;
       if (pointsetState != null) {
         updatePoints();
         sendDevicePoints();

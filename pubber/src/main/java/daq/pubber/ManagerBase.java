@@ -1,13 +1,14 @@
 package daq.pubber;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static java.lang.String.format;
+import static java.util.Optional.ofNullable;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import com.google.daq.mqtt.util.CatchingScheduledThreadPoolExecutor;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import udmi.schema.PubberOptions;
 
@@ -16,7 +17,7 @@ import udmi.schema.PubberOptions;
  */
 public abstract class ManagerBase {
 
-  protected static final int MIN_REPORT_MS = 200;
+  public static final int DISABLED_INTERVAL = 0;
   protected static final int DEFAULT_REPORT_SEC = 10;
   protected final AtomicInteger sendRateSec = new AtomicInteger(DEFAULT_REPORT_SEC);
   protected final PubberOptions options;
@@ -51,6 +52,16 @@ public abstract class ManagerBase {
 
   protected void error(String message) {
     host.error(message, null);
+  }
+
+  protected void updateInterval(Integer sampleRateSec) {
+    int reportInterval = ofNullable(sampleRateSec).orElse(DEFAULT_REPORT_SEC);
+    int intervalSec = ofNullable(options.fixedSampleRate).orElse(reportInterval);
+    if (periodicSender == null || intervalSec != sendRateSec.get()) {
+      cancelPeriodicSend();
+      sendRateSec.set(intervalSec);
+      startPeriodicSend();
+    }
   }
 
   protected abstract void periodicUpdate();
