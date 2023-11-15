@@ -230,8 +230,8 @@ public class SystemManager extends ManagerBase {
       return level >= options.fixedLogLevel;
     }
 
-    Integer minLoglevel = systemConfig == null ? null : systemConfig.min_loglevel;
-    return level >= (minLoglevel == null ? Level.INFO.value() : minLoglevel);
+    Integer minLoglevel = ifNotNullGet(systemConfig, config -> systemConfig.min_loglevel);
+    return level >= ofNullable(minLoglevel).orElse(Level.INFO.value());
   }
 
   void cloudLog(String message, Level level, String detail) {
