@@ -150,6 +150,7 @@ public class SystemManager extends ManagerBase {
 
     if (SystemMode.ACTIVE.equals(stateMode)
         && SystemMode.RESTART.equals(configMode)) {
+      error("System mode requesting device restart");
       systemLifecycle(SystemMode.RESTART);
     }
 
@@ -161,12 +162,12 @@ public class SystemManager extends ManagerBase {
     Date configLastStart = operation.last_start;
     if (configLastStart != null) {
       if (DEVICE_START_TIME.before(configLastStart)) {
-        warn(format("Device start time %s before last config start %s, terminating.",
+        error(format("Device start time %s before last config start %s, terminating.",
             getTimestamp(DEVICE_START_TIME), getTimestamp(configLastStart)));
         systemLifecycle(SystemMode.TERMINATE);
       } else if (isTrue(options.smokeCheck)
           && CleanDateFormat.dateEquals(DEVICE_START_TIME, configLastStart)) {
-        warn(format("Device start time %s matches, smoke check indicating success!",
+        error(format("Device start time %s matches, smoke check indicating success!",
             getTimestamp(configLastStart)));
         systemLifecycle(SystemMode.SHUTDOWN);
       }

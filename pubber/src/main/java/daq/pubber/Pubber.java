@@ -746,11 +746,13 @@ public class Pubber extends ManagerBase implements ManagerHost {
     } else if (toReport instanceof ConnectionClosedException) {
       error("Connection closed, attempting reconnect...");
       while (retriesRemaining.getAndDecrement() > 0) {
+        error("TAP2");
         if (attemptConnection()) {
           return;
         }
       }
       shutdown();
+      error("Connection retry failed, giving up.");
       deviceManager.systemLifecycle(SystemMode.TERMINATE);
     } else {
       error("Unknown exception type " + toReport.getClass(), toReport);
