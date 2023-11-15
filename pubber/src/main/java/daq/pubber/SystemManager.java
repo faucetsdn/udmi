@@ -220,6 +220,7 @@ public class SystemManager extends ManagerBase {
     systemState.last_config = timestamp;
     updateInterval(ifNotNullGet(system, config -> config.metrics_rate_sec));
     updateState();
+    maybeRestartSystem();
   }
 
   void publishLogMessage(Entry report) {
