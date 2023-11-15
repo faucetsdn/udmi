@@ -2,6 +2,7 @@ package daq.pubber;
 
 import static com.google.udmi.util.GeneralUtils.catchOrElse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static java.lang.String.format;
@@ -214,7 +215,17 @@ public class SystemManager extends ManagerBase {
   void updateConfig(SystemConfig system, Date timestamp) {
     systemConfig = system;
     systemState.last_config = timestamp;
+    updateSamplingInterval();
     updateState();
+  }
+
+  private void updateSamplingInterval() {
+    int rateSec = ofNullable(systemConfig.metrics_rate_sec).orElse(DEFAULT_REPORT_SEC);
+    if (periodicSender == null || rateSec != sendRateSec.get()) {
+      cancelPeriodicSend();
+      sendRateSec.set(rateSec);
+      startPeriodicSend();
+    }
   }
 
   void publishLogMessage(Entry report) {

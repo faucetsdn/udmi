@@ -241,14 +241,12 @@ public class PointsetManager extends ManagerBase {
   }
 
   private void updateSamplingInterval(PointsetConfig pointsetConfig) {
-    boolean hasSampleRate = pointsetConfig != null && pointsetConfig.sample_rate_sec != null;
-    int reportInterval = hasSampleRate ? pointsetConfig.sample_rate_sec : DEFAULT_REPORT_SEC;
-    int actualInterval = Integer.max(MIN_REPORT_MS, reportInterval * 1000);
-    int intervalMs = ifNotNullGet(options.fixedSampleRate, fixed -> fixed * 1000, actualInterval);
-
-    if (periodicSender == null || intervalMs != messageDelayMs.get()) {
+    int reportInterval = ifNotNullGet(pointsetConfig,
+        config -> ofNullable(config.sample_rate_sec).orElse(DEFAULT_REPORT_SEC), 0);
+    int intervalSec = ofNullable(options.fixedSampleRate).orElse(reportInterval);
+    if (periodicSender == null || intervalSec != sendRateSec.get()) {
       cancelPeriodicSend();
-      messageDelayMs.set(intervalMs);
+      sendRateSec.set(intervalSec);
       startPeriodicSend();
     }
   }

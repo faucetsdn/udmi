@@ -1,6 +1,7 @@
 package daq.pubber;
 
 import static com.google.common.base.Preconditions.checkState;
+import static java.lang.String.format;
 
 import com.google.daq.mqtt.util.CatchingScheduledThreadPoolExecutor;
 import java.util.concurrent.ScheduledExecutorService;
@@ -16,7 +17,7 @@ public abstract class ManagerBase {
 
   protected static final int MIN_REPORT_MS = 200;
   protected static final int DEFAULT_REPORT_SEC = 10;
-  protected final AtomicInteger messageDelayMs = new AtomicInteger(DEFAULT_REPORT_SEC * 1000);
+  protected final AtomicInteger sendRateSec = new AtomicInteger(DEFAULT_REPORT_SEC);
   protected final PubberOptions options;
   protected final ManagerHost host;
   private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
@@ -55,10 +56,15 @@ public abstract class ManagerBase {
 
   protected synchronized void startPeriodicSend() {
     checkState(periodicSender == null);
-    int delay = messageDelayMs.get();
-    info("Starting executor with send message delay " + delay);
-    periodicSender = executor.scheduleAtFixedRate(this::periodicUpdate, delay, delay,
-        TimeUnit.MILLISECONDS);
+    int delay = sendRateSec.get();
+    if (delay == 0) {
+      info(format("Disabling %s sender because delay is 0", this.getClass().getSimpleName()));
+    } else {
+      info(format("Enabling %s sender because with delay %d", this.getClass().getSimpleName(),
+          delay));
+      periodicSender = executor.scheduleAtFixedRate(this::periodicUpdate, delay, delay,
+          TimeUnit.MILLISECONDS);
+    }
   }
 
   protected synchronized void cancelPeriodicSend() {
