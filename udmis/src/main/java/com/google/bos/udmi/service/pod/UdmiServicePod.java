@@ -159,10 +159,12 @@ public class UdmiServicePod extends ContainerBase {
   }
 
   private void createBridge(String name, BridgePodConfiguration config) {
-    if (config.enabled != null && config.enabled.isEmpty()) {
+    String enabled = variableSubstitution(config.enabled);
+    if (enabled != null && enabled.isEmpty()) {
       warn("Skipping not-enabled bridge " + name);
       return;
     }
+    info(format("Creating bridge %s with enabled %s", name, config.enabled));
     EndpointConfiguration from = makeConfig(config.from);
     EndpointConfiguration to = makeConfig(config.to);
     putComponent(name, () -> new BridgeProcessor(from, to));

@@ -45,11 +45,11 @@ spec:
             configMapKeyRef:
               name: config
               key: GCP_IOT_OPTIONS
-        - name: UDMI_SHUNT
+        - name: PIPE_SHUNT
           valueFrom:
             configMapKeyRef:
               name: config
-              key: UDMI_SHUNT
+              key: PIPE_SHUNT
               optional: true
       volumes:
       - name: secret-volume
