@@ -19,6 +19,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
 import udmi.schema.DevicePersistent;
@@ -233,7 +234,7 @@ public class SystemManager extends ManagerBase {
     }
 
     Integer minLoglevel = ifNotNullGet(systemConfig, config -> systemConfig.min_loglevel);
-    return level >= ofNullable(minLoglevel).orElse(Level.INFO.value());
+    return level >= Objects.requireNonNullElse(minLoglevel, Level.INFO.value());
   }
 
   void cloudLog(String message, Level level, String detail) {

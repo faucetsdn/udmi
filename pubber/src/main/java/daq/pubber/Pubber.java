@@ -23,6 +23,7 @@ import static daq.pubber.MqttDevice.ERRORS_TOPIC;
 import static daq.pubber.MqttDevice.STATE_TOPIC;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
+import static java.util.Objects.requireNonNullElse;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
 import static udmi.schema.BlobsetConfig.SystemBlobsets.IOT_ENDPOINT_CONFIG;
@@ -184,8 +185,8 @@ public class Pubber extends ManagerBase implements ManagerHost {
   public Pubber(String configPath) {
     super(null, loadConfigurationReturnOptions(configPath));
     setClockSkew(isTrue(options.skewClock) ? CLOCK_SKEW : Duration.ZERO);
-    Protocol protocol = ofNullable(
-        ifNotNullGet(configuration.endpoint, endpoint -> endpoint.protocol)).orElse(MQTT);
+    Protocol protocol = requireNonNullElse(
+        ifNotNullGet(configuration.endpoint, endpoint -> endpoint.protocol), MQTT);
     checkArgument(MQTT.equals(protocol), "protocol mismatch");
     deviceId = requireNonNull(configuration.deviceId, "device id not defined");
     outDir = new File(PUBBER_OUT);
@@ -399,8 +400,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
               : newDevicePersistent();
     }
 
-    persistentData.restart_count = Objects.requireNonNullElse(persistentData.restart_count, 0) + 1;
-    deviceManager.setPersistentData(persistentData);
+    persistentData.restart_count = requireNonNullElse(persistentData.restart_count, 0) + 1;
 
     // If the persistentData contains endpoint configuration, prioritize using that.
     // Otherwise, use the endpoint configuration that came from the Pubber config file on start.
@@ -421,6 +421,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
   private void writePersistentStore() {
     checkState(persistentData != null, "persistent data not defined");
     toJsonFile(getPersistentStore(), persistentData);
+    deviceManager.setPersistentData(persistentData);
   }
 
   private File getPersistentStore() {
