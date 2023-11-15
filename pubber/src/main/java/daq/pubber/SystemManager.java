@@ -215,7 +215,7 @@ public class SystemManager extends ManagerBase {
   void updateConfig(SystemConfig system, Date timestamp) {
     systemConfig = system;
     systemState.last_config = timestamp;
-    updateInterval(ifNotNullGet(system, config -> config.metrics_rate_sec, DISABLED_INTERVAL));
+    updateInterval(ifNotNullGet(system, config -> config.metrics_rate_sec));
     updateState();
   }
 
