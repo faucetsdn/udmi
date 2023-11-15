@@ -105,7 +105,9 @@ public class SystemManager extends ManagerBase {
     updateState();
   }
 
-  void closeLogWriter() {
+  @Override
+  public void shutdown() {
+    super.shutdown();
     if (logPrintWriter != null) {
       logPrintWriter.close();
       logPrintWriter = null;
@@ -204,7 +206,7 @@ public class SystemManager extends ManagerBase {
     System.exit(exitCode);
   }
 
-  public void setSystemMetadata(Metadata metadata) {
+  public void setMetadata(Metadata metadata) {
     setHardwareSoftware(metadata);
   }
 

@@ -54,6 +54,7 @@ public class PointsetManager extends ManagerBase {
    */
   public PointsetManager(ManagerHost host, PubberOptions options) {
     super(host, options);
+    setExtraField(options.extraField);
     updateState();
   }
 

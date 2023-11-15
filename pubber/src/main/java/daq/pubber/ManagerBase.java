@@ -87,4 +87,8 @@ public abstract class ManagerBase {
       }
     }
   }
+
+  protected void shutdown() {
+    cancelPeriodicSend();
+  }
 }
