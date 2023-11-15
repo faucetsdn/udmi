@@ -22,8 +22,8 @@ public abstract class ManagerBase {
   private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
   protected ScheduledFuture<?> periodicSender;
 
-  public ManagerBase(ManagerHost host) {
-    this.options = host.getOptions();
+  public ManagerBase(ManagerHost host, PubberOptions pubberOptions) {
+    this.options = pubberOptions;
     this.host = host;
   }
 

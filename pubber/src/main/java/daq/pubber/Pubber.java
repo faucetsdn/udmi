@@ -351,8 +351,8 @@ public class Pubber implements ManagerHost {
     ifNotNullThen(configuration.sitePath, SupportedFeatures::writeFeatureFile);
     SupportedFeatures.setFeatureSwap(configuration.options.featureEnableSwap);
 
-    systemManager = new SystemManager(this, configuration.serialNo);
-    pointsetManager = new PointsetManager(this);
+    systemManager = new SystemManager(this, configuration.options, configuration.serialNo);
+    pointsetManager = new PointsetManager(this, configuration.options);
 
     if (configuration.sitePath != null) {
       siteModel = new SiteModel(configuration.sitePath);
@@ -482,11 +482,6 @@ public class Pubber implements ManagerHost {
   @Override
   public void publish(Object message) {
     publishDeviceMessage(message);
-  }
-
-  @Override
-  public PubberOptions getOptions() {
-    return pubberOptions;
   }
 
   private void pullDeviceMessage() {

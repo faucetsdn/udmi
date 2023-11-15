@@ -65,7 +65,6 @@ public class SystemManager extends ManagerBase {
   private final List<Entry> logentries = new ArrayList<>();
   private final SystemState systemState;
   private final ManagerHost host;
-  private final PubberOptions options;
   private int systemEventCount;
   private SystemConfig systemConfig;
   private PrintStream logPrintWriter;
@@ -74,10 +73,9 @@ public class SystemManager extends ManagerBase {
   /**
    * New instance.
    */
-  public SystemManager(ManagerHost host, String serialNo) {
-    super(host);
+  public SystemManager(ManagerHost host, PubberOptions options, String serialNo) {
+    super(host, options);
     this.host = host;
-    options = host.getOptions();
     File outDir = new File(Pubber.PUBBER_OUT);
 
     try {

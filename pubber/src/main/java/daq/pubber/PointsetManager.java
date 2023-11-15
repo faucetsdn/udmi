@@ -29,6 +29,7 @@ import udmi.schema.PointPointsetState;
 import udmi.schema.PointsetConfig;
 import udmi.schema.PointsetModel;
 import udmi.schema.PointsetState;
+import udmi.schema.PubberOptions;
 
 /**
  * Helper class to manage the operation of a pointset block.
@@ -50,12 +51,9 @@ public class PointsetManager extends ManagerBase {
 
   /**
    * Create a new instance attached to the given host.
-   *
-   * @param host host for management functions
    */
-  public PointsetManager(ManagerHost host) {
-    super(host);
-
+  public PointsetManager(ManagerHost host, PubberOptions options) {
+    super(host, options);
     updateState();
   }
 

@@ -8,8 +8,6 @@ import udmi.schema.PubberOptions;
 public interface ManagerHost {
   void update(Object update);
 
-  PubberOptions getOptions();
-
   void debug(String message);
 
   void info(String message);
