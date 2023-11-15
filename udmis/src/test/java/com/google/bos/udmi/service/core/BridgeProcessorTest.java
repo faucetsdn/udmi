@@ -19,7 +19,7 @@ class BridgeProcessorTest extends MessageTestCore {
   Map<String, List<Bundle>> results = new ConcurrentHashMap<>();
 
   @Test
-  public void basicTest() {
+  public void basic_bridge() {
     EndpointConfiguration from = getConfiguration(false, "from");
     EndpointConfiguration to = getConfiguration(false, "to");
     BridgeProcessor bridgeProcessor = new BridgeProcessor(from, to);

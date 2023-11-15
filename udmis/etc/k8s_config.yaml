@@ -5,3 +5,4 @@ metadata:
 data:
   GCP_IOT_OPTIONS: disabled
   UDMI_NAMESPACE: @UDMI_NAMESPACE@
+  PIPE_SHUNT: obd,projectA,projectB

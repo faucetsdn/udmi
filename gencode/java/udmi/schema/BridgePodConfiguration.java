@@ -16,12 +16,15 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "enabled",
     "from",
     "to"
 })
 @Generated("jsonschema2pojo")
 public class BridgePodConfiguration {
 
+    @JsonProperty("enabled")
+    public String enabled;
     /**
      * Endpoint Configuration
      * <p>
@@ -46,6 +49,7 @@ public class BridgePodConfiguration {
         int result = 1;
         result = ((result* 31)+((this.from == null)? 0 :this.from.hashCode()));
         result = ((result* 31)+((this.to == null)? 0 :this.to.hashCode()));
+        result = ((result* 31)+((this.enabled == null)? 0 :this.enabled.hashCode()));
         return result;
     }
 
@@ -58,7 +62,7 @@ public class BridgePodConfiguration {
             return false;
         }
         BridgePodConfiguration rhs = ((BridgePodConfiguration) other);
-        return (((this.from == rhs.from)||((this.from!= null)&&this.from.equals(rhs.from)))&&((this.to == rhs.to)||((this.to!= null)&&this.to.equals(rhs.to))));
+        return ((((this.from == rhs.from)||((this.from!= null)&&this.from.equals(rhs.from)))&&((this.to == rhs.to)||((this.to!= null)&&this.to.equals(rhs.to))))&&((this.enabled == rhs.enabled)||((this.enabled!= null)&&this.enabled.equals(rhs.enabled))));
     }
 
 }

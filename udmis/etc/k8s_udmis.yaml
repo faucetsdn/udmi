@@ -45,6 +45,12 @@ spec:
             configMapKeyRef:
               name: config
               key: GCP_IOT_OPTIONS
+        - name: UDMI_SHUNT
+          valueFrom:
+            configMapKeyRef:
+              name: config
+              key: UDMI_SHUNT
+              optional: true
       volumes:
       - name: secret-volume
         projected:

@@ -7,6 +7,7 @@ class BridgePodConfiguration:
   """Generated schema class"""
 
   def __init__(self):
+    self.enabled = None
     self.from = None
     self.to = None
 
@@ -15,6 +16,7 @@ class BridgePodConfiguration:
     if not source:
       return None
     result = BridgePodConfiguration()
+    result.enabled = source.get('enabled')
     result.from = EndpointConfiguration.from_dict(source.get('from'))
     result.to = EndpointConfiguration.from_dict(source.get('to'))
     return result
@@ -37,6 +39,8 @@ class BridgePodConfiguration:
 
   def to_dict(self):
     result = {}
+    if self.enabled:
+      result['enabled'] = self.enabled # 5
     if self.from:
       result['from'] = self.from.to_dict() # 4
     if self.to:
