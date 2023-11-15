@@ -60,11 +60,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -160,7 +159,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
   private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
   private final CountDownLatch configLatch = new CountDownLatch(1);
   private final AtomicBoolean stateDirty = new AtomicBoolean();
-  private final Semaphore stateLock = new Semaphore(1);
+  private final ReentrantLock stateLock = new ReentrantLock();
   private final String deviceId;
   protected DevicePersistent persistentData;
   private MqttDevice deviceTarget;
@@ -842,7 +841,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
   private void processConfigUpdate(Config config) {
     try {
       // Grab this to make state-after-config updates monolithic.
-      stateLock.acquire();
+      stateLock.lock();
     } catch (Exception e) {
       throw new RuntimeException("While acquiting state lock", e);
     }
@@ -863,7 +862,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
       }
       updateInterval(DEFAULT_REPORT_SEC);
     } finally {
-      stateLock.release();
+      stateLock.unlock();
     }
   }
 
@@ -1300,7 +1299,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
   }
 
   private void publishAsynchronousState() {
-    if (stateLock.tryAcquire()) {
+    if (stateLock.tryLock()) {
       try {
         long soonestAllowedStateUpdate = lastStateTimeMs + STATE_THROTTLE_MS;
         long delay = soonestAllowedStateUpdate - System.currentTimeMillis();
@@ -1311,7 +1310,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
           publishStateMessage();
         }
       } finally {
-        stateLock.release();
+        stateLock.unlock();
       }
     } else {
       markStateDirty(-1);
@@ -1320,12 +1319,12 @@ public class Pubber extends ManagerBase implements ManagerHost {
 
   void publishSynchronousState() {
     try {
-      stateLock.acquire();
+      stateLock.lock();
       publishStateMessage();
     } catch (Exception e) {
       throw new RuntimeException("While sending synchronous state", e);
     } finally {
-      stateLock.release();
+      stateLock.unlock();
     }
   }
 
