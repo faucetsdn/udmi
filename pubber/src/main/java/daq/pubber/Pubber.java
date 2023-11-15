@@ -745,7 +745,6 @@ public class Pubber extends ManagerBase implements ManagerHost {
           toReport.getCause());
     } else if (toReport instanceof ConnectionClosedException) {
       error("Connection closed, attempting reconnect...");
-      shutdown();
       while (retriesRemaining.getAndDecrement() > 0) {
         if (attemptConnection()) {
           return;
