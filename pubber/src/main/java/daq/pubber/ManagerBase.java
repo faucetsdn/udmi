@@ -2,6 +2,7 @@ package daq.pubber;
 
 import static com.google.common.base.Preconditions.checkState;
 import static java.lang.String.format;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import com.google.daq.mqtt.util.CatchingScheduledThreadPoolExecutor;
 import java.util.concurrent.ScheduledExecutorService;
@@ -56,14 +57,13 @@ public abstract class ManagerBase {
 
   protected synchronized void startPeriodicSend() {
     checkState(periodicSender == null);
-    int delay = sendRateSec.get();
-    if (delay == 0) {
-      info(format("Disabling %s sender because delay is 0", this.getClass().getSimpleName()));
+    int sec = sendRateSec.get();
+    String simpleName = this.getClass().getSimpleName();
+    if (sec == 0) {
+      info(format("Disabling %s sender because delay is 0", simpleName));
     } else {
-      info(format("Enabling %s sender because with delay %d", this.getClass().getSimpleName(),
-          delay));
-      periodicSender = executor.scheduleAtFixedRate(this::periodicUpdate, delay, delay,
-          TimeUnit.MILLISECONDS);
+      info(format("Enabling %s sender because with delay %d", simpleName, sec));
+      periodicSender = executor.scheduleAtFixedRate(this::periodicUpdate, sec, sec, SECONDS);
     }
   }
 
