@@ -221,6 +221,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
 
   private static PubberOptions getExplicitOptions(String iotProject, String sitePath,
       String deviceId, String serialNo) {
+    configuration = new PubberConfiguration();
     configuration.iotProject = iotProject;
     configuration.sitePath = sitePath;
     configuration.deviceId = deviceId;
