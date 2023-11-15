@@ -70,10 +70,8 @@ public abstract class ManagerBase {
     checkState(periodicSender == null);
     int sec = sendRateSec.get();
     String simpleName = this.getClass().getSimpleName();
-    if (sec == 0) {
-      info(format("Disabling %s sender because delay is 0", simpleName));
-    } else {
-      info(format("Enabling %s sender because with delay %d", simpleName, sec));
+    info(format("Setting %s sender with delay %ds", simpleName, sec));
+    if (sec != 0) {
       periodicSender = executor.scheduleAtFixedRate(this::periodicUpdate, sec, sec, SECONDS);
     }
   }

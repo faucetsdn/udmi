@@ -32,12 +32,12 @@ public class SystemConfig {
     @JsonPropertyDescription("The minimum loglevel for reporting log messages below which log entries should not be sent. Default to 300.")
     public Integer min_loglevel = 300;
     /**
-     * The rate at which the system should send system event metric updates. 0 indicates no updates.
+     * The rate at which the system should send system event updates. 0 indicates no updates.
      * 
      */
     @JsonProperty("metrics_rate_sec")
-    @JsonPropertyDescription("The rate at which the system should send system event metric updates. 0 indicates no updates.")
-    public Integer metrics_rate_sec = 600;
+    @JsonPropertyDescription("The rate at which the system should send system event updates. 0 indicates no updates.")
+    public Integer metrics_rate_sec = 10;
     @JsonProperty("operation")
     public Operation operation;
     /**
