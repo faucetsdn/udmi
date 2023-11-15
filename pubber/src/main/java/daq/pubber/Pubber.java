@@ -163,7 +163,6 @@ public class Pubber extends ManagerBase implements ManagerHost {
   private final String deviceId;
   protected DevicePersistent persistentData;
   private MqttDevice deviceTarget;
-  private ScheduledFuture<?> periodicSender;
   private long lastStateTimeMs;
   private PubSubClient pubSubClient;
   private Function<String, Boolean> connectionDone;
