@@ -19,6 +19,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
 import udmi.schema.DevicePersistent;
@@ -105,7 +106,9 @@ public class SystemManager extends ManagerBase {
     updateState();
   }
 
-  void closeLogWriter() {
+  @Override
+  public void shutdown() {
+    super.shutdown();
     if (logPrintWriter != null) {
       logPrintWriter.close();
       logPrintWriter = null;
@@ -147,6 +150,7 @@ public class SystemManager extends ManagerBase {
 
     if (SystemMode.ACTIVE.equals(stateMode)
         && SystemMode.RESTART.equals(configMode)) {
+      error("System mode requesting device restart");
       systemLifecycle(SystemMode.RESTART);
     }
 
@@ -158,12 +162,12 @@ public class SystemManager extends ManagerBase {
     Date configLastStart = operation.last_start;
     if (configLastStart != null) {
       if (DEVICE_START_TIME.before(configLastStart)) {
-        warn(format("Device start time %s before last config start %s, terminating.",
+        error(format("Device start time %s before last config start %s, terminating.",
             getTimestamp(DEVICE_START_TIME), getTimestamp(configLastStart)));
         systemLifecycle(SystemMode.TERMINATE);
       } else if (isTrue(options.smokeCheck)
           && CleanDateFormat.dateEquals(DEVICE_START_TIME, configLastStart)) {
-        warn(format("Device start time %s matches, smoke check indicating success!",
+        error(format("Device start time %s matches, smoke check indicating success!",
             getTimestamp(configLastStart)));
         systemLifecycle(SystemMode.SHUTDOWN);
       }
@@ -204,7 +208,7 @@ public class SystemManager extends ManagerBase {
     System.exit(exitCode);
   }
 
-  public void setSystemMetadata(Metadata metadata) {
+  public void setMetadata(Metadata metadata) {
     setHardwareSoftware(metadata);
   }
 
@@ -217,6 +221,7 @@ public class SystemManager extends ManagerBase {
     systemState.last_config = timestamp;
     updateInterval(ifNotNullGet(system, config -> config.metrics_rate_sec));
     updateState();
+    maybeRestartSystem();
   }
 
   void publishLogMessage(Entry report) {
@@ -231,7 +236,7 @@ public class SystemManager extends ManagerBase {
     }
 
     Integer minLoglevel = ifNotNullGet(systemConfig, config -> systemConfig.min_loglevel);
-    return level >= ofNullable(minLoglevel).orElse(Level.INFO.value());
+    return level >= Objects.requireNonNullElse(minLoglevel, Level.INFO.value());
   }
 
   void cloudLog(String message, Level level, String detail) {
