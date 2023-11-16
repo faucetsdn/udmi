@@ -1133,16 +1133,6 @@ public class Pubber extends ManagerBase implements ManagerHost {
         family, key -> new FamilyDiscoveryState());
   }
 
-  private long scheduleFuture(Date futureTime, Runnable futureTask) {
-    if (executor.isShutdown() || executor.isTerminated()) {
-      throw new RuntimeException("Executor shutdown/terminated, not scheduling");
-    }
-    long delay = futureTime.getTime() - getNow().getTime();
-    debug(format("Scheduling future in %dms", delay));
-    executor.schedule(futureTask, delay, TimeUnit.MILLISECONDS);
-    return delay;
-  }
-
   private void checkDiscoveryScan(String family, Date scanGeneration) {
     try {
       FamilyDiscoveryState familyDiscoveryState = getFamilyDiscoveryState(family);

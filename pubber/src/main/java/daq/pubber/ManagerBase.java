@@ -1,11 +1,13 @@
 package daq.pubber;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.udmi.util.GeneralUtils.getNow;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import com.google.daq.mqtt.util.CatchingScheduledThreadPoolExecutor;
+import java.util.Date;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -33,6 +35,15 @@ public abstract class ManagerBase {
 
   protected void updateState(Object state) {
     host.update(state);
+  }
+
+  protected ScheduledFuture<?> scheduleFuture(Date futureTime, Runnable futureTask) {
+    if (executor.isShutdown() || executor.isTerminated()) {
+      throw new RuntimeException("Executor shutdown/terminated, not scheduling");
+    }
+    long delay = futureTime.getTime() - getNow().getTime();
+    debug(format("Scheduling future in %dms", delay));
+    return executor.schedule(futureTask, delay, TimeUnit.MILLISECONDS);
   }
 
   protected void debug(String message) {
