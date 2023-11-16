@@ -122,7 +122,6 @@ public class Pubber extends ManagerBase implements ManagerHost {
   static final int MESSAGE_REPORT_INTERVAL = 10;
   private static final String BROKEN_VERSION = "1.4.";
   private static final String HOSTNAME = System.getenv("HOSTNAME");
-  private static final int WAIT_TIME_SEC = 10;
   private static final int STATE_THROTTLE_MS = 2000;
   private static final String PUBSUB_SITE = "PubSub";
   private static final int DEFAULT_REPORT_SEC = 10;
@@ -305,17 +304,19 @@ public class Pubber extends ManagerBase implements ManagerHost {
 
   private static void startFeedListener(String projectId, String siteName, String feedName,
       String serialNo) {
+    Pubber pubber = new Pubber(projectId, siteName, feedName, serialNo);
     try {
       LOG.info("Starting feed listener " + serialNo);
-      Pubber pubber = new Pubber(projectId, siteName, feedName, serialNo);
       pubber.initialize();
       pubber.startConnection(deviceId -> {
         LOG.error("Connection terminated, restarting listener");
         startFeedListener(projectId, siteName, feedName, serialNo);
         return false;
       });
+      pubber.shutdown();
     } catch (Exception e) {
       LOG.error("Exception starting instance " + serialNo, e);
+      pubber.shutdown();
       startFeedListener(projectId, siteName, feedName, serialNo);
     }
   }
@@ -634,7 +635,6 @@ public class Pubber extends ManagerBase implements ManagerHost {
       }
       throw new RuntimeException("Failed connection attempt after retries");
     } catch (Exception e) {
-      shutdown();
       throw new RuntimeException("While attempting to start connection", e);
     }
   }
@@ -668,27 +668,16 @@ public class Pubber extends ManagerBase implements ManagerHost {
   @Override
   public void shutdown() {
     warn("Initiating shutdown");
+    new RuntimeException("Hello").printStackTrace();
 
     if (deviceState.system != null && deviceState.system.operation != null) {
       deviceState.system.operation.mode = SystemMode.SHUTDOWN;
     }
 
     super.shutdown();
-    captureExceptions("executor flush", this::stopExecutor);
     captureExceptions("device manager shutdown", deviceManager::shutdown);
     captureExceptions("publishing shutdown state", this::publishSynchronousState);
     captureExceptions("disconnecting mqtt", this::disconnectMqtt);
-  }
-
-  private void stopExecutor() {
-    try {
-      executor.shutdown();
-      if (!executor.awaitTermination(WAIT_TIME_SEC, TimeUnit.SECONDS)) {
-        throw new RuntimeException("Failed to shutdown scheduled tasks");
-      }
-    } catch (Exception e) {
-      throw new RuntimeException("While stopping executor", e);
-    }
   }
 
   private void disconnectMqtt() {
@@ -751,7 +740,6 @@ public class Pubber extends ManagerBase implements ManagerHost {
           return;
         }
       }
-      shutdown();
       error("Connection retry failed, giving up.");
       deviceManager.systemLifecycle(SystemMode.TERMINATE);
     } else {
@@ -987,7 +975,6 @@ public class Pubber extends ManagerBase implements ManagerHost {
       retriesRemaining.set(CONNECT_RETRIES);
       startConnection(connectionDone);
     } catch (Exception e) {
-      shutdown();
       throw new RuntimeException("While resetting connection", e);
     }
   }
