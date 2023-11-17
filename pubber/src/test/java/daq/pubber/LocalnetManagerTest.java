@@ -55,19 +55,19 @@ public class LocalnetManagerTest {
 
   @Test
   public void testGetDefaultInterfaceOne() {
-    String defaultInterface = LocalnetManager.getDefaultInterface(IP_ROUTE_BASIC);
+    String defaultInterface = LocalnetManager.getDefaultInterfaceStatic(IP_ROUTE_BASIC);
     assertEquals("default interface", "eth0", defaultInterface);
   }
 
   @Test
   public void testGetDefaultInterfaceTwo() {
-    String defaultInterface = LocalnetManager.getDefaultInterface(IP_ROUTE_DUAL);
+    String defaultInterface = LocalnetManager.getDefaultInterfaceStatic(IP_ROUTE_DUAL);
     assertEquals("default interface", "enp0s31f6", defaultInterface);
   }
 
   @Test
   public void testGetInterfaceAddresses() {
-    Map<String, String> interfaceAddresses = LocalnetManager.getInterfaceAddresses(
+    Map<String, String> interfaceAddresses = LocalnetManager.getInterfaceAddressesStatic(
         INTERFACE_STRINGS_DEBIAN);
     ImmutableMap<String, String> expectedInterfaces = ImmutableMap.of(
         "ether", "8c:8c:aa:50:bc:72",
@@ -79,9 +79,9 @@ public class LocalnetManagerTest {
 
   @Test
   public void testAlternateInputs() {
-    String defaultInterface = LocalnetManager.getDefaultInterface(IP_ROUTE_ALTERNATE);
+    String defaultInterface = LocalnetManager.getDefaultInterfaceStatic(IP_ROUTE_ALTERNATE);
     assertEquals("expected alternate default interface", "ethX", defaultInterface);
-    Map<String, String> interfaceAddresses = LocalnetManager.getInterfaceAddresses(
+    Map<String, String> interfaceAddresses = LocalnetManager.getInterfaceAddressesStatic(
         IP_ADDR_ALTERNATE);
     ImmutableMap<String, String> expectedInterfaces = ImmutableMap.of(
         "ipv4", "192.168.1.141",

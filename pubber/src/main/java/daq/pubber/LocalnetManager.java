@@ -50,7 +50,7 @@ public class LocalnetManager extends ManagerBase {
   }
 
   @VisibleForTesting
-  static String getDefaultInterface(List<String> routeLines) {
+  static String getDefaultInterfaceStatic(List<String> routeLines) {
     AtomicReference<String> currentInterface = new AtomicReference<>();
     AtomicInteger currentMaxMetric = new AtomicInteger(Integer.MAX_VALUE);
     routeLines.forEach(line -> {
@@ -73,7 +73,7 @@ public class LocalnetManager extends ManagerBase {
   }
 
   @VisibleForTesting
-  static Map<String, String> getInterfaceAddresses(List<String> strings) {
+  static Map<String, String> getInterfaceAddressesStatic(List<String> strings) {
     Map<String, String> interfaceMap = new HashMap<>();
     strings.forEach(line -> {
       for (Pattern pattern : familyPatterns) {
@@ -84,6 +84,22 @@ public class LocalnetManager extends ManagerBase {
       }
     });
     return interfaceMap;
+  }
+
+  private String getDefaultInterface() {
+    final List<String> routeLines;
+    try {
+      routeLines = runtimeExec("ip", "route");
+    } catch (Exception e) {
+      error("Could not execute ip route command: " + friendlyStackTrace(e));
+      return null;
+    }
+    try {
+      return getDefaultInterfaceStatic(routeLines);
+    } catch (Exception e) {
+      error("Could not infer default interface: " + friendlyStackTrace(e));
+      return null;
+    }
   }
 
   /**
@@ -126,22 +142,6 @@ public class LocalnetManager extends ManagerBase {
     localnetState.families.put(family, stateEntry);
   }
 
-  private String getDefaultInterface() {
-    final List<String> routeLines;
-    try {
-      routeLines = runtimeExec("ip", "route");
-    } catch (Exception e) {
-      error("Could not execute ip route command: " + friendlyStackTrace(e));
-      return null;
-    }
-    try {
-      return getDefaultInterface(routeLines);
-    } catch (Exception e) {
-      error("Could not infer default interface: " + friendlyStackTrace(e));
-      return null;
-    }
-  }
-
   private Map<String, String> getInterfaceAddresses(String defaultInterface) {
     if (defaultInterface == null) {
       return null;
@@ -155,7 +155,7 @@ public class LocalnetManager extends ManagerBase {
     }
 
     try {
-      return getInterfaceAddresses(strings);
+      return getInterfaceAddressesStatic(strings);
     } catch (Exception e) {
       error("Could not infer interface addresses: " + friendlyStackTrace(e));
       return null;

@@ -97,6 +97,7 @@ import udmi.schema.FamilyDiscoveryEvent;
 import udmi.schema.FamilyDiscoveryState;
 import udmi.schema.FamilyLocalnetModel;
 import udmi.schema.Level;
+import udmi.schema.LocalnetState;
 import udmi.schema.Metadata;
 import udmi.schema.Operation.SystemMode;
 import udmi.schema.PointEnumerationEvent;
@@ -193,16 +194,6 @@ public class Pubber extends ManagerBase implements ManagerHost {
     outDir = new File(PUBBER_OUT);
   }
 
-  private static PubberConfiguration loadConfiguration(String configPath) {
-    File configFile = new File(configPath);
-    try {
-      configuration = sanitizeConfiguration(fromJsonFile(configFile, PubberConfiguration.class));
-      return configuration;
-    } catch (Exception e) {
-      throw new RuntimeException("While configuring from " + configFile.getAbsolutePath(), e);
-    }
-  }
-
   /**
    * Start an instance from explicit args.
    *
@@ -217,6 +208,16 @@ public class Pubber extends ManagerBase implements ManagerHost {
     outDir = new File(PUBBER_OUT + "/" + serialNo);
     if (PUBSUB_SITE.equals(sitePath)) {
       pubSubClient = new PubSubClient(iotProject, deviceId);
+    }
+  }
+
+  private static PubberConfiguration loadConfiguration(String configPath) {
+    File configFile = new File(configPath);
+    try {
+      configuration = sanitizeConfiguration(fromJsonFile(configFile, PubberConfiguration.class));
+      return configuration;
+    } catch (Exception e) {
+      throw new RuntimeException("While configuring from " + configFile.getAbsolutePath(), e);
     }
   }
 
@@ -490,10 +491,12 @@ public class Pubber extends ManagerBase implements ManagerHost {
     }
     if (checkTarget == this) {
       publishSynchronousState();
-    } else if (checkTarget instanceof PointsetState) {
-      deviceState.pointset = (PointsetState) checkValue;
     } else if (checkTarget instanceof SystemState) {
       deviceState.system = (SystemState) checkValue;
+    } else if (checkTarget instanceof PointsetState) {
+      deviceState.pointset = (PointsetState) checkValue;
+    } else if (checkTarget instanceof LocalnetState) {
+      deviceState.localnet = (LocalnetState) checkValue;
     } else {
       throw new RuntimeException(
           "Unrecognized update type " + checkTarget.getClass().getSimpleName());
@@ -704,7 +707,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
     }
 
     super.shutdown();
-    captureExceptions("device manager shutdown", deviceManager::shutdown);
+    ifNotNullThen(deviceManager, dm -> captureExceptions("device manager shutdown", dm::shutdown));
     captureExceptions("publishing shutdown state", this::publishSynchronousState);
     captureExceptions("disconnecting mqtt", this::disconnectMqtt);
   }
@@ -1461,11 +1464,15 @@ public class Pubber extends ManagerBase implements ManagerHost {
   }
 
   private void cloudLog(String message, Level level) {
-    deviceManager.cloudLog(message, level, null);
+    cloudLog(message, level, null);
   }
 
   private void cloudLog(String message, Level level, String detail) {
-    deviceManager.cloudLog(message, level, detail);
+    if (deviceManager != null) {
+      deviceManager.cloudLog(message, level, detail);
+    } else {
+      SystemManager.localLog(message, level, getTimestamp(), detail);
+    }
   }
 
   private void trace(String message) {
