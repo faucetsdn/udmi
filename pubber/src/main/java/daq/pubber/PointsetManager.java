@@ -29,7 +29,7 @@ import udmi.schema.PointPointsetState;
 import udmi.schema.PointsetConfig;
 import udmi.schema.PointsetModel;
 import udmi.schema.PointsetState;
-import udmi.schema.PubberOptions;
+import udmi.schema.PubberConfiguration;
 
 /**
  * Helper class to manage the operation of a pointset block.
@@ -52,8 +52,9 @@ public class PointsetManager extends ManagerBase {
   /**
    * Create a new instance attached to the given host.
    */
-  public PointsetManager(ManagerHost host, PubberOptions options) {
-    super(host, options);
+  public PointsetManager(ManagerHost host, PubberConfiguration configuration) {
+    super(host, configuration);
+    setExtraField(options.extraField);
     updateState();
   }
 
@@ -243,8 +244,8 @@ public class PointsetManager extends ManagerBase {
   @Override
   protected void periodicUpdate() {
     try {
-      pointsetUpdateCount++;
       if (pointsetState != null) {
+        pointsetUpdateCount++;
         updatePoints();
         sendDevicePoints();
       }
@@ -255,8 +256,8 @@ public class PointsetManager extends ManagerBase {
 
   private void sendDevicePoints() {
     if (pointsetUpdateCount % Pubber.MESSAGE_REPORT_INTERVAL == 0) {
-      info(format("%s sending test message #%d with %d points",
-          getTimestamp(), pointsetUpdateCount, pointsetEvent.points.size()));
+      info(format("%s sending %s message #%d with %d points",
+          getTimestamp(), deviceId, pointsetUpdateCount, pointsetEvent.points.size()));
     }
     host.publish(pointsetEvent);
   }

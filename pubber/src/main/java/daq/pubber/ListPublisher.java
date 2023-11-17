@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import udmi.schema.PubberConfiguration;
 
@@ -22,6 +23,10 @@ public class ListPublisher implements Publisher {
   public ListPublisher(PubberConfiguration configuration, Consumer<Exception> onError) {
     this.configuration = configuration;
     usePrefix = configuration.endpoint.msg_prefix;
+  }
+
+  static String getMessageString(String deviceId, String topic, Object message) {
+    return String.format("%s/%s/%s", deviceId, topic, JsonUtil.stringify(message));
   }
 
   /**
@@ -41,8 +46,8 @@ public class ListPublisher implements Publisher {
   }
 
   @Override
-  public <T> void registerHandler(String deviceId, String topicSuffix, Consumer<T> handler,
-      Class<T> messageType) {
+  public <T> void registerHandler(String deviceId, String topicSuffix,
+      Consumer<T> handler, Class<T> messageType) {
 
   }
 
@@ -56,10 +61,6 @@ public class ListPublisher implements Publisher {
     String useTopic = usePrefix + "/" + topicSuffix;
     messages.add(getMessageString(deviceId, useTopic, message));
     publisherExecutor.submit(callback);
-  }
-
-  static String getMessageString(String deviceId, String topic, Object message) {
-    return String.format("%s/%s/%s", deviceId, topic, JsonUtil.stringify(message));
   }
 
   @Override

@@ -50,8 +50,11 @@ public class Reflector {
   public static void main(String[] args) {
     Reflector reflector = new Reflector(Arrays.asList(args));
     reflector.initialize();
-    reflector.reflect();
-    reflector.shutdown();
+    try {
+      reflector.reflect();
+    } finally {
+      reflector.shutdown();
+    }
   }
 
   private void shutdown() {

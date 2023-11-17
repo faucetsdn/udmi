@@ -10,14 +10,14 @@ source etc/shell_common.sh
 
 debug_opts=-v
 seq_opts=
-clean_cache=y
+clean_cache=
 pubber_opts=
 suffix=
 out_check=y
 
-if [[ $1 == 'noclean' ]]; then
+if [[ $1 == 'clean' ]]; then
     shift
-    clean_cache=
+    clean_cache=y
 fi
 
 if [[ $1 == 'alpha' ]]; then
@@ -42,16 +42,13 @@ if [[ $1 == 'full' ]]; then
 fi
 
 if [[ $# -lt 1 ]]; then
-    echo Usage: $0 [noclean] [alpha] [nostate] [full] PROJECT_ID [tests...]
+    echo Usage: $0 [clean] [alpha] [nostate] [full] PROJECT_ID [tests...]
     false
 fi
 
 project_id=$1
 shift
 targets=$*
-if [[ -n $targets ]]; then
-    clean_cache=
-fi
 
 [[ -n $GITHUB_RUN_NUMBER ]] && echo "Workflow run number $GITHUB_RUN_NUMBER" || true
 echo "export TARGET_PROJECT=$project_id"
