@@ -173,7 +173,6 @@ public class Pubber extends ManagerBase implements ManagerHost {
   private EndpointConfiguration extractedEndpoint;
   private SiteModel siteModel;
   private MqttDevice gatewayTarget;
-  private LocalnetManager localnetManager;
   private SchemaVersion targetSchema;
   private int deviceUpdateCount = -1;
   private DeviceManager deviceManager;
@@ -388,8 +387,6 @@ public class Pubber extends ManagerBase implements ManagerHost {
     info(format("Starting pubber %s, serial %s, mac %s, gateway %s, options %s",
         configuration.deviceId, configuration.serialNo, configuration.macAddr,
         configuration.gatewayId, optionsString(configuration.options)));
-
-    localnetManager = new LocalnetManager(this);
 
     markStateDirty();
   }
@@ -1100,7 +1097,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
     Enumerate enumerate = config.enumerate;
     discoveryEvent.uniqs = ifTrue(enumerate.uniqs, () -> enumeratePoints(configuration.deviceId));
     discoveryEvent.features = ifTrue(enumerate.features, SupportedFeatures::getFeatures);
-    discoveryEvent.families = ifTrue(enumerate.families, () -> localnetManager.enumerateFamilies());
+    discoveryEvent.families = ifTrue(enumerate.families, () -> deviceManager.enumerateFamilies());
     publishDeviceMessage(discoveryEvent);
   }
 

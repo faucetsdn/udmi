@@ -1,6 +1,8 @@
 package daq.pubber;
 
+import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.runtimeExec;
+import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -17,11 +19,12 @@ import java.util.regex.Pattern;
 import udmi.schema.FamilyDiscoveryEvent;
 import udmi.schema.FamilyLocalnetState;
 import udmi.schema.LocalnetState;
+import udmi.schema.PubberConfiguration;
 
 /**
  * Container class for dealing with the localnet subblock of UDMI.
  */
-public class LocalnetManager {
+public class LocalnetManager extends ManagerBase {
 
   public static final int DEFAULT_METRIC = 0;
   private static final List<Pattern> familyPatterns = ImmutableList.of(
@@ -34,21 +37,16 @@ public class LocalnetManager {
       "inet", "ipv4",
       "inet6", "ipv6"
   );
-  private final Pubber parent;
+  private final LocalnetState localnetState;
 
   /**
-   * Create a new container with the given Pubber parent.
-   *
-   * @param parent parent pubber class
+   * Create a new container with the given host.
    */
-  public LocalnetManager(Pubber parent) {
-    this.parent = parent;
-    parent.deviceState.localnet = new LocalnetState();
-    try {
-      populateInterfaceAddresses();
-    } catch (Exception e) {
-      throw new RuntimeException("While populating interface addresses", e);
-    }
+  public LocalnetManager(ManagerHost host, PubberConfiguration configuration) {
+    super(host, configuration);
+    localnetState = new LocalnetState();
+    populateInterfaceAddresses();
+    host.update(localnetState);
   }
 
   /**
@@ -74,10 +72,10 @@ public class LocalnetManager {
    * </pre>
    */
   private void populateInterfaceAddresses() {
-    parent.deviceState.localnet.families = new HashMap<>();
+    localnetState.families = new HashMap<>();
     String defaultInterface = getDefaultInterface();
-    parent.info("Using addresses from default interface " + defaultInterface);
-    Map<String, String> interfaceAddresses = getInterfaceAddresses(defaultInterface);
+    info("Using addresses from default interface " + defaultInterface);
+    Map<String, String> interfaceAddresses = ofNullable(getInterfaceAddresses(defaultInterface)).orElse(ImmutableMap.of());
     interfaceAddresses.entrySet().forEach(this::addStateMapEntry);
     HashMap<String, FamilyLocalnetState> stateMap = new HashMap<>();
   }
@@ -86,12 +84,24 @@ public class LocalnetManager {
     FamilyLocalnetState stateEntry = new FamilyLocalnetState();
     stateEntry.addr = entry.getValue();
     String family = entry.getKey();
-    parent.info("Family " + family + " address is " + stateEntry.addr);
-    parent.deviceState.localnet.families.put(family, stateEntry);
+    info("Family " + family + " address is " + stateEntry.addr);
+    localnetState.families.put(family, stateEntry);
   }
 
   private String getDefaultInterface() {
-    return getDefaultInterface(runtimeExec("ip", "route"));
+    final List<String> routeLines;
+    try {
+      routeLines = runtimeExec("ip", "route");
+    } catch (Exception e) {
+      error("Could not execute ip route command: " + friendlyStackTrace(e));
+      return null;
+    }
+    try {
+      return getDefaultInterface(routeLines);
+    } catch (Exception e) {
+      error("Could not infer default interface: " + friendlyStackTrace(e));
+      return null;
+    }
   }
 
   @VisibleForTesting
@@ -116,7 +126,23 @@ public class LocalnetManager {
   }
 
   private Map<String, String> getInterfaceAddresses(String defaultInterface) {
-    return getInterfaceAddresses(runtimeExec("ip", "addr", "show", "dev", defaultInterface));
+    if (defaultInterface == null) {
+      return null;
+    }
+    final List<String> strings;
+    try {
+      strings = runtimeExec("ip", "addr", "show", "dev", defaultInterface);
+    } catch (Exception e) {
+      error("Could not execute ip addr command: " + friendlyStackTrace(e));
+      return null;
+    }
+
+    try {
+      return getInterfaceAddresses(strings);
+    } catch (Exception e) {
+      error("Could not infer interface addresses: " + friendlyStackTrace(e));
+      return null;
+    }
   }
 
   @VisibleForTesting
@@ -134,13 +160,13 @@ public class LocalnetManager {
   }
 
   Map<String, FamilyDiscoveryEvent> enumerateFamilies() {
-    return parent.deviceState.localnet.families.keySet().stream()
+    return localnetState.families.keySet().stream()
         .collect(toMap(key -> key, this::makeFamilyDiscoveryEvent));
   }
 
   private FamilyDiscoveryEvent makeFamilyDiscoveryEvent(String key) {
     FamilyDiscoveryEvent familyDiscoveryEvent = new FamilyDiscoveryEvent();
-    familyDiscoveryEvent.addr = parent.deviceState.localnet.families.get(key).addr;
+    familyDiscoveryEvent.addr = localnetState.families.get(key).addr;
     return familyDiscoveryEvent;
   }
 }
