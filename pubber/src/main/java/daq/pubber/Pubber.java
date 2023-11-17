@@ -11,6 +11,8 @@ import static com.google.udmi.util.GeneralUtils.fromJsonString;
 import static com.google.udmi.util.GeneralUtils.getNow;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueGet;
+import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isGetTrue;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.optionsString;
@@ -25,6 +27,7 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Objects.requireNonNullElse;
 import static java.util.Optional.ofNullable;
+import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.toMap;
 import static udmi.schema.BlobsetConfig.SystemBlobsets.IOT_ENDPOINT_CONFIG;
 import static udmi.schema.EndpointConfiguration.Protocol.MQTT;
@@ -174,6 +177,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
   private SchemaVersion targetSchema;
   private int deviceUpdateCount = -1;
   private DeviceManager deviceManager;
+  private Map<String, ProxyDevice> proxyDevices = new HashMap<>();
 
   /**
    * Start an instance from a configuration file.
@@ -181,7 +185,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
    * @param configPath Path to configuration file.
    */
   public Pubber(String configPath) {
-    super(null, loadConfigurationReturnOptions(configPath));
+    super(null, loadConfiguration(configPath));
     setClockSkew(isTrue(options.skewClock) ? CLOCK_SKEW : Duration.ZERO);
     Protocol protocol = requireNonNullElse(
         ifNotNullGet(configuration.endpoint, endpoint -> endpoint.protocol), MQTT);
@@ -190,11 +194,11 @@ public class Pubber extends ManagerBase implements ManagerHost {
     outDir = new File(PUBBER_OUT);
   }
 
-  private static PubberOptions loadConfigurationReturnOptions(String configPath) {
+  private static PubberConfiguration loadConfiguration(String configPath) {
     File configFile = new File(configPath);
     try {
       configuration = sanitizeConfiguration(fromJsonFile(configFile, PubberConfiguration.class));
-      return configuration.options;
+      return configuration;
     } catch (Exception e) {
       throw new RuntimeException("While configuring from " + configFile.getAbsolutePath(), e);
     }
@@ -209,7 +213,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
    * @param serialNo   Serial number of the device
    */
   public Pubber(String iotProject, String sitePath, String deviceId, String serialNo) {
-    super(null, getExplicitOptions(iotProject, sitePath, deviceId, serialNo));
+    super(null, makeExplicitConfiguration(iotProject, sitePath, deviceId, serialNo));
     this.deviceId = deviceId;
     outDir = new File(PUBBER_OUT + "/" + serialNo);
     if (PUBSUB_SITE.equals(sitePath)) {
@@ -217,7 +221,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
     }
   }
 
-  private static PubberOptions getExplicitOptions(String iotProject, String sitePath,
+  private static PubberConfiguration makeExplicitConfiguration(String iotProject, String sitePath,
       String deviceId, String serialNo) {
     configuration = new PubberConfiguration();
     configuration.iotProject = iotProject;
@@ -225,7 +229,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
     configuration.deviceId = deviceId;
     configuration.serialNo = serialNo;
     configuration.options = new PubberOptions();
-    return configuration.options;
+    return configuration;
   }
 
   private static String getEventsSuffix(String suffixSuffix) {
@@ -351,11 +355,16 @@ public class Pubber extends ManagerBase implements ManagerHost {
     }
   }
 
+  static String getGatewayId(String targetId, PubberConfiguration configuration) {
+    return ofNullable(configuration.gatewayId).orElse(
+        targetId.equals(configuration.deviceId) ? null : configuration.deviceId);
+  }
+
   private void initializeDevice() {
     ifNotNullThen(configuration.sitePath, SupportedFeatures::writeFeatureFile);
     SupportedFeatures.setFeatureSwap(configuration.options.featureEnableSwap);
 
-    deviceManager = new DeviceManager(this, configuration.options, configuration.serialNo);
+    deviceManager = new DeviceManager(this, configuration);
 
     if (configuration.sitePath != null) {
       siteModel = new SiteModel(configuration.sitePath);
@@ -367,7 +376,9 @@ public class Pubber extends ManagerBase implements ManagerHost {
         throw new IllegalArgumentException(
             "Device ID " + configuration.deviceId + " not found in site model");
       }
-      processDeviceMetadata(siteModel.getMetadata(configuration.deviceId));
+      Metadata metadata = siteModel.getMetadata(configuration.deviceId);
+      processDeviceMetadata(metadata);
+      ifNotNullThen(metadata.gateway, g -> createProxyDevices(g.proxy_ids));
     } else if (pubSubClient != null) {
       pullDeviceMessage();
     }
@@ -379,7 +390,20 @@ public class Pubber extends ManagerBase implements ManagerHost {
         configuration.gatewayId, optionsString(configuration.options)));
 
     localnetManager = new LocalnetManager(this);
+
     markStateDirty();
+  }
+
+  private void createProxyDevices(List<String> proxyIds) {
+    if (proxyIds == null) {
+      proxyDevices = new HashMap<>();
+      return;
+    }
+    String firstId = proxyIds.stream().sorted().findFirst().orElseThrow();
+    String noProxyId = ifTrueGet(isTrue(options.noProxy), () -> firstId);
+    ifNotNullThen(noProxyId, id -> warn(format("Not proxying device " + noProxyId)));
+    proxyDevices = proxyIds.stream().filter(not(id -> id.equals(noProxyId)))
+        .collect(toMap(k -> k, v -> new ProxyDevice(this, siteModel, v)));
   }
 
   protected DevicePersistent newDevicePersistent() {
@@ -483,6 +507,10 @@ public class Pubber extends ManagerBase implements ManagerHost {
   @Override
   public void publish(Object message) {
     publishDeviceMessage(message);
+  }
+
+  public void publish(String targetId, Object message) {
+    publishDeviceMessage(targetId, message);
   }
 
   private void pullDeviceMessage() {
@@ -659,16 +687,20 @@ public class Pubber extends ManagerBase implements ManagerHost {
     try {
       initializeDevice();
       initializeMqtt();
+      proxyDevices.values().forEach(this::initializeProxyDevice);
     } catch (Exception e) {
       shutdown();
       throw new RuntimeException("While initializing main pubber class", e);
     }
   }
 
+  private void initializeProxyDevice(ProxyDevice proxyDevice) {
+    deviceTarget.connect(proxyDevice.deviceId);
+  }
+
   @Override
   public void shutdown() {
-    warn("Initiating shutdown");
-    new RuntimeException("Hello").printStackTrace();
+    warn("Initiating device shutdown");
 
     if (deviceState.system != null && deviceState.system.operation != null) {
       deviceState.system.operation.mode = SystemMode.SHUTDOWN;
@@ -695,14 +727,31 @@ public class Pubber extends ManagerBase implements ManagerHost {
     checkState(deviceTarget == null, "mqttPublisher already defined");
     ensureKeyBytes();
     deviceTarget = new MqttDevice(configuration, this::publisherException);
-    if (configuration.gatewayId != null) {
-      gatewayTarget = new MqttDevice(configuration.gatewayId, deviceTarget);
-      gatewayTarget.registerHandler(CONFIG_TOPIC, this::gatewayHandler, Config.class);
-      gatewayTarget.registerHandler(ERRORS_TOPIC, this::errorHandler, GatewayError.class);
-    }
-    deviceTarget.registerHandler(CONFIG_TOPIC, this::configHandler, Config.class);
+    ifTrueThen(isGateway(), () -> registerGatewayHandlers(deviceId), this::registerDeviceHandlers);
+    String gatewayId = getGatewayId(deviceId, configuration);
+    ifNotNullThen(gatewayId, this::registerGatewayHandlers);
+    proxyDevices.values().forEach(ProxyDevice::initialize);
     publishDirtyState();
   }
+
+  private boolean isGateway() {
+    return !proxyDevices.isEmpty();
+  }
+
+  private void registerDeviceHandlers() {
+    deviceTarget.registerHandler(CONFIG_TOPIC, this::configHandler, Config.class);
+  }
+
+  private void registerGatewayHandlers(String gatewayId) {
+    gatewayTarget = getMqttDevice(gatewayId);
+    gatewayTarget.registerHandler(CONFIG_TOPIC, this::configHandler, Config.class);
+    gatewayTarget.registerHandler(ERRORS_TOPIC, this::errorHandler, GatewayError.class);
+  }
+
+  public MqttDevice getMqttDevice(String proxyId) {
+    return new MqttDevice(proxyId, deviceTarget);
+  }
+
 
   private void ensureKeyBytes() {
     if (configuration.keyBytes != null) {
@@ -809,15 +858,9 @@ public class Pubber extends ManagerBase implements ManagerHost {
     return buffer.toString();
   }
 
-  private void gatewayHandler(Config config) {
-    info(format("%s gateway config %s", getTimestamp(), isoConvert(config.timestamp)));
-  }
-
   private void configHandler(Config config) {
     try {
-      info("Config handler");
-      File configOut = new File(outDir, traceTimestamp("config") + ".json");
-      toJsonFile(configOut, config);
+      configPreprocess(deviceId, config);
       debug(format("Config update%s", deviceManager.getTestingTag()), toJsonString(config));
       processConfigUpdate(config);
       configLatch.countDown();
@@ -826,6 +869,14 @@ public class Pubber extends ManagerBase implements ManagerHost {
       publisherConfigLog("apply", e);
     }
     publishConfigStateUpdate();
+  }
+
+  void configPreprocess(String targetId, Config config) {
+    info(format("Device %s config handler", deviceId));
+    String gatewayId = getGatewayId(targetId, configuration);
+    String suffix = ifNotNullGet(gatewayId, x -> "_" + targetId, "");
+    File configOut = new File(outDir, format("%s%s.json", traceTimestamp("config"), suffix));
+    toJsonFile(configOut, config);
   }
 
   private void processConfigUpdate(Config config) {
@@ -1345,7 +1396,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
       throw new RuntimeException("While converting new device state", e);
     }
 
-    publishDeviceMessage(stateToSend, () -> {
+    publishDeviceMessage(deviceId, stateToSend, () -> {
       lastStateTimeMs = System.currentTimeMillis();
       latch.countDown();
     });
@@ -1363,10 +1414,14 @@ public class Pubber extends ManagerBase implements ManagerHost {
   }
 
   private void publishDeviceMessage(Object message) {
-    publishDeviceMessage(message, null);
+    publishDeviceMessage(deviceId, message);
   }
 
-  private void publishDeviceMessage(Object message, Runnable callback) {
+  private void publishDeviceMessage(String targetId, Object message) {
+    publishDeviceMessage(targetId, message, null);
+  }
+
+  private void publishDeviceMessage(String targetId, Object message, Runnable callback) {
     String topicSuffix = MESSAGE_TOPIC_SUFFIX_MAP.get(message.getClass());
     if (topicSuffix == null) {
       error("Unknown message class " + message.getClass());
@@ -1385,7 +1440,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
 
     augmentDeviceMessage(message, getNow(), isTrue(options.badVersion));
     Object downgraded = downgradeMessage(message);
-    deviceTarget.publish(topicSuffix, downgraded, callback);
+    deviceTarget.publish(targetId, topicSuffix, downgraded, callback);
     String messageBase = topicSuffix.replace("/", "_");
     String fileName = traceTimestamp(messageBase) + ".json";
     File messageOut = new File(outDir, fileName);

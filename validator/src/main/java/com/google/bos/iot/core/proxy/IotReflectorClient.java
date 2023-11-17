@@ -4,8 +4,13 @@ import static com.google.bos.iot.core.proxy.ProxyTarget.STATE_TOPIC;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.validator.Validator.REQUIRED_FUNCTION_VER;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
+import static com.google.udmi.util.Common.DEVICE_ID_KEY;
+import static com.google.udmi.util.Common.GATEWAY_ID_KEY;
 import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
+import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
+import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
+import static com.google.udmi.util.Common.TRANSACTION_KEY;
 import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.Common.getNamespacePrefix;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -20,6 +25,7 @@ import static java.util.Objects.requireNonNull;
 
 import com.google.api.client.util.Base64;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.validator.Validator;
 import com.google.daq.mqtt.validator.Validator.ErrorContainer;
@@ -29,6 +35,7 @@ import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -63,6 +70,8 @@ public class IotReflectorClient implements MessagePublisher {
   private static final String UDMI_TOPIC = "events/" + UDMI_FOLDER;
   private static final long CONFIG_TIMEOUT_SEC = 10;
   private static final int UPDATE_RETRIES = 6;
+  private static final Collection<String> COPY_IDS = ImmutableSet.of(DEVICE_ID_KEY, GATEWAY_ID_KEY,
+      SUBTYPE_PROPERTY_KEY, SUBFOLDER_PROPERTY_KEY, TRANSACTION_KEY, PUBLISH_TIME_KEY);
   private static String prevTransactionId;
   private final String udmiVersion;
   private final CountDownLatch initialConfigReceived = new CountDownLatch(1);
@@ -257,12 +266,8 @@ public class IotReflectorClient implements MessagePublisher {
     Map<String, String> attributes = new TreeMap<>();
     attributes.put("projectId", projectId);
     attributes.put("deviceRegistryId", registryId);
-    attributes.put("deviceId", (String) messageMap.get("deviceId"));
-    attributes.put("subType", (String) messageMap.get("subType"));
-    attributes.put("subFolder", (String) messageMap.get("subFolder"));
-    attributes.put("transactionId", (String) messageMap.get("transactionId"));
+    COPY_IDS.forEach(key -> attributes.put(key, (String) messageMap.get(key)));
     attributes.put("deviceNumId", MOCK_DEVICE_NUM_ID);
-    attributes.put(PUBLISH_TIME_KEY, (String) messageMap.get("publishTime"));
     return attributes;
   }
 

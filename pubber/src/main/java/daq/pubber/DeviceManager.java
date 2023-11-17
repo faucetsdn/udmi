@@ -6,7 +6,7 @@ import udmi.schema.Entry;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.Operation.SystemMode;
-import udmi.schema.PubberOptions;
+import udmi.schema.PubberConfiguration;
 
 /**
  * Uber-manager for a complete device.
@@ -19,15 +19,10 @@ public class DeviceManager extends ManagerBase {
   /**
    * Create a new instance.
    */
-  public DeviceManager(ManagerHost host, PubberOptions options, String serialNo) {
-    super(host, options);
-    systemManager = new SystemManager(host, options, serialNo);
-    pointsetManager = new PointsetManager(host, options);
-  }
-
-  @Override
-  protected void periodicUpdate() {
-
+  public DeviceManager(ManagerHost host, PubberConfiguration configuration) {
+    super(host, configuration);
+    systemManager = new SystemManager(host, configuration);
+    pointsetManager = new PointsetManager(host, configuration);
   }
 
   public void setPersistentData(DevicePersistent persistentData) {
