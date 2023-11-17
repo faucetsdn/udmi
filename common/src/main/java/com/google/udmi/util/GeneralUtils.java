@@ -272,8 +272,14 @@ public class GeneralUtils {
   }
 
   public static <T> void ifTrueThen(Object conditional, Runnable action) {
+    ifTrueThen(conditional, action, null);
+  }
+
+  public static <T> void ifTrueThen(Object conditional, Runnable action, Runnable alternative) {
     if (isTrue(conditional)) {
       action.run();
+    } else if (alternative != null) {
+      alternative.run();
     }
   }
 

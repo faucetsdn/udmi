@@ -36,7 +36,7 @@ if [[ $gcp_project != $current_project ]]; then
 fi
 
 saved=$(kubectl config current-context)
-kcontexts=$(kubectl config get-contexts -o name | fgrep _${gcp_project}_)
+kcontexts=$(kubectl config get-contexts -o name | fgrep _${gcp_project}_) || true
 
 if [[ -z $kcontexts ]]; then
     echo No kubectl context defined for project $gcp_project
