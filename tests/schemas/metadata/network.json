@@ -46,7 +46,7 @@
   },
   "localnet": {
     "families": {
-      "ipv4": {
+      "inet": {
         "addr": "192.168.2.1"
       },
       "ether": {
