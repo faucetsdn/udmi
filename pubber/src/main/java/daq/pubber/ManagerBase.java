@@ -2,6 +2,7 @@ package daq.pubber;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.getNow;
+import static daq.pubber.Pubber.configuration;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -12,6 +13,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import udmi.schema.PubberConfiguration;
 import udmi.schema.PubberOptions;
 
 /**
@@ -26,10 +28,15 @@ public abstract class ManagerBase {
   protected final PubberOptions options;
   protected final ManagerHost host;
   private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
+  final String deviceId;
   protected ScheduledFuture<?> periodicSender;
 
-  public ManagerBase(ManagerHost host, PubberOptions pubberOptions) {
-    this.options = pubberOptions;
+  /**
+   * New instance.
+   */
+  public ManagerBase(ManagerHost host, PubberConfiguration configuration) {
+    options = configuration.options;
+    deviceId = configuration.deviceId;
     this.host = host;
   }
 
@@ -46,23 +53,23 @@ public abstract class ManagerBase {
     return executor.schedule(futureTask, delay, TimeUnit.MILLISECONDS);
   }
 
-  protected void debug(String message) {
+  public void debug(String message) {
     host.debug(message);
   }
 
-  protected void info(String message) {
+  public void info(String message) {
     host.info(message);
   }
 
-  protected void warn(String message) {
+  public void warn(String message) {
     host.warn(message);
   }
 
-  protected void error(String message, Throwable e) {
+  public void error(String message, Throwable e) {
     host.error(message, e);
   }
 
-  protected void error(String message) {
+  public void error(String message) {
     host.error(message, null);
   }
 
@@ -76,13 +83,16 @@ public abstract class ManagerBase {
     }
   }
 
-  protected abstract void periodicUpdate();
+  protected void periodicUpdate() {
+    throw new IllegalStateException("No periodic update handler defined");
+  }
 
   protected synchronized void startPeriodicSend() {
     checkState(periodicSender == null);
     int sec = sendRateSec.get();
     warn(format("Starting %s sender with delay %ds", this.getClass().getSimpleName(), sec));
     if (sec != 0) {
+      periodicUpdate(); // To this now to synchronously raise any obvious exceptions.
       periodicSender = executor.scheduleAtFixedRate(this::periodicUpdate, sec, sec, SECONDS);
     }
   }

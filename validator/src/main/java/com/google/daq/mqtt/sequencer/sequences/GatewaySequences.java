@@ -1,5 +1,7 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
+import static com.google.daq.mqtt.util.TimePeriodConstants.ONE_MINUTE_MS;
+import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static udmi.schema.Envelope.SubFolder.POINTSET;
 
 import com.google.daq.mqtt.sequencer.Feature;
@@ -24,13 +26,13 @@ public class GatewaySequences extends SequenceBase {
 
   @Feature(stage = FeatureStage.ALPHA, bucket = Bucket.GATEWAY)
   @Summary("Check that a gateway proxies pointsets for indicated devices")
-  @Test
+  @Test(timeout = ONE_MINUTE_MS)
   public void gateway_proxy_events() {
-    Set<String> proxyIds = new HashSet<>(deviceMetadata.gateway.proxy_ids);
+    Set<String> remaining = new HashSet<>(deviceMetadata.gateway.proxy_ids);
     untilTrue("All proxy devices received data", () -> {
-      proxyIds.stream().filter(this::hasReceivedPointset).toList().forEach(proxyIds::remove);
-      return proxyIds.isEmpty();
-    });
+      remaining.stream().filter(this::hasReceivedPointset).toList().forEach(remaining::remove);
+      return remaining.isEmpty();
+    }, () -> "Missing data from " + CSV_JOINER.join(remaining));
   }
 
   private boolean hasReceivedPointset(String deviceId) {
