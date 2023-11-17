@@ -6,6 +6,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static java.lang.String.format;
+import static java.util.Objects.requireNonNullElse;
 import static java.util.Optional.ofNullable;
 
 import com.google.common.collect.ImmutableList;
@@ -29,7 +30,7 @@ import udmi.schema.Metadata;
 import udmi.schema.Metrics;
 import udmi.schema.Operation;
 import udmi.schema.Operation.SystemMode;
-import udmi.schema.PubberOptions;
+import udmi.schema.PubberConfiguration;
 import udmi.schema.StateSystemHardware;
 import udmi.schema.StateSystemOperation;
 import udmi.schema.SystemConfig;
@@ -75,8 +76,8 @@ public class SystemManager extends ManagerBase {
   /**
    * New instance.
    */
-  public SystemManager(ManagerHost host, PubberOptions options, String serialNo) {
-    super(host, options);
+  public SystemManager(ManagerHost host, PubberConfiguration configuration) {
+    super(host, configuration);
     this.host = host;
     File outDir = new File(Pubber.PUBBER_OUT);
 
@@ -100,7 +101,7 @@ public class SystemManager extends ManagerBase {
 
     systemState.operation.operational = true;
     systemState.operation.mode = SystemMode.INITIAL;
-    systemState.serial_no = serialNo;
+    systemState.serial_no = configuration.serialNo;
     systemState.last_config = new Date(0);
 
     updateState();
@@ -236,7 +237,7 @@ public class SystemManager extends ManagerBase {
     }
 
     Integer minLoglevel = ifNotNullGet(systemConfig, config -> systemConfig.min_loglevel);
-    return level >= Objects.requireNonNullElse(minLoglevel, Level.INFO.value());
+    return level >= requireNonNullElse(minLoglevel, Level.INFO.value());
   }
 
   void cloudLog(String message, Level level, String detail) {

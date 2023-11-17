@@ -16,7 +16,7 @@ public class MqttDeviceTest extends TestBase {
     final CountDownLatch sent = new CountDownLatch(1);
     MqttDevice mqttDevice = new MqttDevice(getTestConfiguration(), exception -> sent.countDown());
 
-    mqttDevice.publish(TEST_TOPIC, TEST_MESSAGE, sent::countDown);
+    mqttDevice.publish(TEST_DEVICE, TEST_TOPIC, TEST_MESSAGE, sent::countDown);
     sent.await();
 
     ListPublisher mockPublisher = mqttDevice.getMockPublisher();

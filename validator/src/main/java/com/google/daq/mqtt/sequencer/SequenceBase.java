@@ -13,7 +13,6 @@ import static com.google.udmi.util.Common.DEVICE_ID_KEY;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
 import static com.google.udmi.util.Common.GATEWAY_ID_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
-import static com.google.udmi.util.Common.getExceptionMessage;
 import static com.google.udmi.util.GeneralUtils.changedLines;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -228,8 +227,6 @@ public class SequenceBase {
     checkState(FUNCTIONS_VERSION_ALPHA >= FUNCTIONS_VERSION_BETA,
         "ALPHA functions version should not be > BETA");
   }
-
-  static class CaptureMap extends HashMap<SubFolder, List<Map<String, Object>>> {}
 
   private final Map<String, CaptureMap> receivedEvents = new HashMap<>();
   private final Map<String, Object> receivedUpdates = new HashMap<>();
@@ -1203,19 +1200,29 @@ public class SequenceBase {
     logEntryQueue.removeAll(toRemove);
   }
 
-  protected void whileDoing(String condition, Runnable action) {
-    whileDoing(condition, action, e -> debug("Caught " + friendlyStackTrace(e)));
+  protected void whileDoing(String description, Runnable action) {
+    whileDoing(description, action, e -> debug("Caught " + friendlyStackTrace(e)));
   }
 
-  protected void whileDoing(String condition, Runnable action, Consumer<Exception> catcher) {
+  private void whileDoing(String description, Runnable action, Supplier<String> detail) {
+    whileDoing(description, action, e -> debug("Caught " + friendlyStackTrace(e)), detail);
+  }
+
+  protected void whileDoing(String description, Runnable action, Consumer<Exception> catcher) {
+    whileDoing(description, action, catcher, null);
+  }
+
+  private void whileDoing(String description, Runnable action, Consumer<Exception> catcher,
+      Supplier<String> detail) {
     final Instant startTime = Instant.now();
 
-    waitingConditionPush(condition);
+    waitingConditionPush(description);
 
     try {
       action.run();
     } catch (Exception e) {
       catcher.accept(e);
+      ifNotNullThen(detail, d -> waitingConditionPush(d.get()));
       throw e;
     }
 
@@ -1242,12 +1249,16 @@ public class SequenceBase {
     return waitingCondition.peek();
   }
 
-  private void untilLoop(Supplier<Boolean> evaluator, String description) {
+  private void untilLoop(String description, Supplier<Boolean> evaluator) {
+    untilLoop(description, evaluator, null);
+  }
+
+  private void untilLoop(String description, Supplier<Boolean> evaluator, Supplier<String> detail) {
     whileDoing(description, () -> {
       updateConfig("before " + description);
       recordSequence("Wait for " + description);
       messageEvaluateLoop(evaluator);
-    });
+    }, detail);
   }
 
   private void messageEvaluateLoop(Supplier<Boolean> evaluator) {
@@ -1282,15 +1293,20 @@ public class SequenceBase {
   }
 
   protected void untilTrue(String description, Supplier<Boolean> evaluator) {
-    untilLoop(() -> !catchToFalse(evaluator), description);
+    untilTrue(description, evaluator, null);
+  }
+
+  protected void untilTrue(String description, Supplier<Boolean> evaluator,
+      Supplier<String> detail) {
+    untilLoop(description, () -> !catchToFalse(evaluator), detail);
   }
 
   protected void untilFalse(String description, Supplier<Boolean> evaluator) {
-    untilLoop(() -> catchToTrue(evaluator), description);
+    untilLoop(description, () -> catchToTrue(evaluator));
   }
 
   protected void untilUntrue(String description, Supplier<Boolean> evaluator) {
-    untilLoop(() -> catchToFalse(evaluator), description);
+    untilLoop(description, () -> catchToFalse(evaluator));
   }
 
   /**
@@ -1370,8 +1386,9 @@ public class SequenceBase {
 
       validateMessage(envelope, message);
 
-      // TODO: Need to handle proxied devices specially here.
-      if (SubFolder.UPDATE.value().equals(subFolderRaw)) {
+      if (proxiedDevice) {
+        handleProxyMessage(deviceId, envelope, message);
+      } else if (SubFolder.UPDATE.value().equals(subFolderRaw)) {
         handleUpdateMessage(subTypeRaw, message, transactionId);
       } else {
         handleDeviceMessage(message, subTypeRaw, subFolderRaw, transactionId);
@@ -1380,6 +1397,11 @@ public class SequenceBase {
       throw new RuntimeException(
           format("While processing message %s_%s %s", subTypeRaw, subFolderRaw, transactionId), e);
     }
+  }
+
+  private void handleProxyMessage(String deviceId, Envelope envelope, Map<String, Object> message) {
+    info(format("Handling proxy %s message %s", deviceId, envelope.subFolder.value()));
+    getReceivedEvents(deviceId, envelope.subFolder).add(message);
   }
 
   private void validateMessage(Envelope attributes, Map<String, Object> message) {
@@ -1863,6 +1885,10 @@ public class SequenceBase {
 
   public Map<String, Object> getReceivedUpdates() {
     return receivedUpdates;
+  }
+
+  static class CaptureMap extends HashMap<SubFolder, List<Map<String, Object>>> {
+
   }
 
   /**
