@@ -149,12 +149,14 @@ jobs:
           java-version: '17'
       - name: base setup
         run: bin/run_tests install_dependencies
+      - name: stagger workload
+        run: sleep $(($MATRIX_SHARD_INDEX * 20 + 20))
       - name: registrar clean
         run: bin/test_regclean $TARGET_PROJECT
       - name: sequence tests clean
-        run: bin/test_sequencer nocheck $TARGET_PROJECT
+        run: bin/test_sequencer clean nocheck $TARGET_PROJECT
       - name: sequence tests alpha
-        run: bin/test_sequencer noclean alpha nocheck $TARGET_PROJECT
+        run: bin/test_sequencer alpha nocheck $TARGET_PROJECT
       - name: sequence test post-process
         if: ${{ always() }}
         run: egrep ' test .* after .*s ' out/sequencer.log > out/timing_sequencer.out

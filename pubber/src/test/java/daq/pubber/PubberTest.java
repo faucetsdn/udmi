@@ -143,7 +143,7 @@ public class PubberTest extends TestBase {
   @After
   public void terminatePubber() {
     if (pubber != null) {
-      pubber.terminate();
+      pubber.shutdown();
       pubber = null;
     }
   }
@@ -211,12 +211,12 @@ public class PubberTest extends TestBase {
     State testMessage = new State();
 
     assertNull(testMessage.timestamp);
-    Pubber.augmentDeviceMessage(testMessage, new Date());
+    Pubber.augmentDeviceMessage(testMessage, new Date(), false);
     assertEquals(testMessage.version, Pubber.UDMI_VERSION);
     assertNotEquals(testMessage.timestamp, null);
 
     testMessage.timestamp = new Date(1241);
-    Pubber.augmentDeviceMessage(testMessage, new Date());
+    Pubber.augmentDeviceMessage(testMessage, new Date(), false);
     assertEquals(testMessage.version, Pubber.UDMI_VERSION);
     assertNotEquals(testMessage.timestamp, new Date(1241));
   }
@@ -235,7 +235,7 @@ public class PubberTest extends TestBase {
 
     // Prepare test.
     testPersistentData.endpoint = null;
-    pubber.configuration.endpoint = null;
+    Pubber.configuration.endpoint = null;
 
     // Now test.
     testFeatures.put(PubberUnderTestFeatures.noInitializePersistentStore, false);
@@ -256,7 +256,7 @@ public class PubberTest extends TestBase {
 
     // Prepare test.
     testPersistentData.endpoint = null;
-    pubber.configuration.endpoint = getEndpointConfiguration("from_config");
+    Pubber.configuration.endpoint = getEndpointConfiguration("from_config");
 
     // Now test.
     testFeatures.put(PubberUnderTestFeatures.noInitializePersistentStore, false);
@@ -276,12 +276,12 @@ public class PubberTest extends TestBase {
 
     // Prepare test.
     testPersistentData.endpoint = getEndpointConfiguration("persistent");
-    pubber.configuration.endpoint = null;
+    Pubber.configuration.endpoint = null;
 
     // Now test.
     testFeatures.put(PubberUnderTestFeatures.noInitializePersistentStore, false);
     pubber.initializePersistentStore();
     assertEquals(pubber.persistentData.endpoint.hostname, "persistent");
-    assertEquals(pubber.configuration.endpoint.hostname, "persistent");
+    assertEquals(Pubber.configuration.endpoint.hostname, "persistent");
   }
 }
