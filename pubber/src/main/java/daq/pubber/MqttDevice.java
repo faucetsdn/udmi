@@ -46,7 +46,11 @@ public class MqttDevice {
     publisher.connect(deviceId);
   }
 
-  public void publish(String topicSuffix, Object message, Runnable callback) {
+  public void connect(String targetId) {
+    publisher.connect(targetId);
+  }
+
+  public void publish(String deviceId, String topicSuffix, Object message, Runnable callback) {
     publisher.publish(deviceId, topicSuffix, message, callback);
   }
 

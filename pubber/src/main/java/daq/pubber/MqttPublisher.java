@@ -1,8 +1,10 @@
 package daq.pubber;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static java.lang.String.format;
+import static java.util.Optional.ofNullable;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -28,7 +30,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -37,6 +38,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.apache.http.ConnectionClosedException;
@@ -103,7 +105,8 @@ public class MqttPublisher implements Publisher {
   private final Map<String, Consumer<Object>> handlers = new ConcurrentHashMap<>();
   private final Map<String, Class<Object>> handlersType = new ConcurrentHashMap<>();
   private final Consumer<Exception> onError;
-  private CountDownLatch gatewayLatch;
+  private final String deviceId;
+  private CountDownLatch connectionLatch;
 
   MqttPublisher(PubberConfiguration configuration, Consumer<Exception> onError) {
     this.configuration = configuration;
@@ -112,10 +115,12 @@ public class MqttPublisher implements Publisher {
       this.projectId = clientIdParts.iotProject;
       this.cloudRegion = clientIdParts.cloudRegion;
       this.registryId = clientIdParts.registryId;
+      this.deviceId = clientIdParts.deviceId;
     } else {
       this.projectId = null;
       this.cloudRegion = null;
       this.registryId = null;
+      this.deviceId = null;
     }
     this.onError = onError;
     validateCloudIotOptions();
@@ -126,17 +131,17 @@ public class MqttPublisher implements Publisher {
         GCP_CLIENT_PREFIX);
   }
 
-  private String getClientId(String deviceId) {
+  private String getClientId(String targetId) {
     // Create our MQTT client. The mqttClientId is a unique string that identifies this device. For
     // Google Cloud IoT, it must be in the format below.
     if (isGcpIotCore(configuration)) {
       ClientInfo clientInfo = SiteModel.parseClientId(configuration.endpoint.client_id);
       return SiteModel.getClientId(clientInfo.iotProject, clientInfo.cloudRegion,
-          clientInfo.registryId, deviceId);
+          clientInfo.registryId, targetId);
     } else if (configuration.endpoint.client_id != null) {
       return configuration.endpoint.client_id;
     }
-    return SiteModel.getClientId(projectId, cloudRegion, registryId, deviceId);
+    return SiteModel.getClientId(projectId, cloudRegion, registryId, targetId);
   }
 
   @Override
@@ -188,7 +193,7 @@ public class MqttPublisher implements Publisher {
     } catch (Exception e) {
       errorCounter.incrementAndGet();
       warn(format("Publish failed for %s: %s", deviceId, e));
-      if (configuration.gatewayId == null) {
+      if (getGatewayId(deviceId) == null) {
         closeMqttClient(deviceId);
         if (mqttClients.isEmpty()) {
           warn("Last client closed, shutting down connection.");
@@ -230,7 +235,7 @@ public class MqttPublisher implements Publisher {
   }
 
   private void closeMqttClient(String deviceId) {
-    MqttClient removed = mqttClients.remove(deviceId);
+    MqttClient removed = cleanClients(deviceId);
     if (removed != null) {
       try {
         if (removed.isConnected()) {
@@ -241,6 +246,13 @@ public class MqttPublisher implements Publisher {
         error("Error closing MQTT client: " + e, null, "stop", e);
       }
     }
+  }
+
+  private MqttClient cleanClients(String deviceId) {
+    MqttClient remove = mqttClients.remove(deviceId);
+    mqttClients.entrySet().stream().filter(entry -> entry.getValue() == remove).map(Entry::getKey)
+        .toList().forEach(mqttClients::remove);
+    return remove;
   }
 
   @Override
@@ -268,11 +280,10 @@ public class MqttPublisher implements Publisher {
 
   private MqttClient newBoundClient(String deviceId) {
     try {
-      String gatewayId = configuration.gatewayId;
-      debug("Connecting through gateway " + gatewayId);
-      gatewayLatch = new CountDownLatch(1);
+      String gatewayId = getGatewayId(deviceId);
+      debug(format("Connecting device %s through gateway %s", deviceId, gatewayId));
       MqttClient mqttClient = getConnectedClient(gatewayId);
-      startupLatchWait(gatewayLatch, "gateway startup exchange");
+      startupLatchWait(connectionLatch, "gateway startup exchange");
       String topic = getMessageTopic(deviceId, MqttDevice.ATTACH_TOPIC);
       String payload = "";
       info("Publishing attach message " + topic);
@@ -288,7 +299,7 @@ public class MqttPublisher implements Publisher {
   @Override
   public void startupLatchWait(CountDownLatch gatewayLatch, String designator) {
     try {
-      int waitTimeSec = Optional.ofNullable(configuration.endpoint.config_sync_sec)
+      int waitTimeSec = ofNullable(configuration.endpoint.config_sync_sec)
           .orElse(DEFAULT_CONFIG_WAIT_SEC);
       int useWaitTime = waitTimeSec == 0 ? DEFAULT_CONFIG_WAIT_SEC : waitTimeSec;
       if (useWaitTime > 0 && !gatewayLatch.await(useWaitTime, TimeUnit.SECONDS)) {
@@ -335,6 +346,7 @@ public class MqttPublisher implements Publisher {
 
       configureAuth(options);
       reauthTimes.put(deviceId, Instant.now().plusSeconds(TOKEN_EXPIRY_MINUTES * 60 / 2));
+      connectionLatch = new CountDownLatch(1);
 
       mqttClient.connect(options);
 
@@ -405,7 +417,7 @@ public class MqttPublisher implements Publisher {
   private String getBrokerUrl() {
     // Build the connection string for Google's Cloud IoT MQTT server. Only SSL connections are
     // accepted. For server authentication, the JVM's root certificates are used.
-    Transport trans = Optional.ofNullable(configuration.endpoint.transport).orElse(Transport.SSL);
+    Transport trans = ofNullable(configuration.endpoint.transport).orElse(Transport.SSL);
     return format(BROKER_URL_FORMAT, trans, configuration.endpoint.hostname,
         configuration.endpoint.port);
   }
@@ -468,8 +480,8 @@ public class MqttPublisher implements Publisher {
     return topic.split("/")[2];
   }
 
-  public void connect(String deviceId) {
-    getConnectedClient(deviceId);
+  public void connect(String targetId) {
+    getConnectedClient(targetId);
   }
 
   private void success(String message, String type, String phase) {
@@ -500,10 +512,10 @@ public class MqttPublisher implements Publisher {
     publishCounter.incrementAndGet();
   }
 
-  private MqttClient getActiveClient(String deviceId) {
+  private MqttClient getActiveClient(String targetId) {
     while (true) {
-      checkAuthentication(deviceId);
-      MqttClient connectedClient = getConnectedClient(deviceId);
+      checkAuthentication(targetId);
+      MqttClient connectedClient = getConnectedClient(targetId);
       if (connectedClient.isConnected()) {
         return connectedClient;
       }
@@ -520,8 +532,8 @@ public class MqttPublisher implements Publisher {
     }
   }
 
-  private void checkAuthentication(String deviceId) {
-    String authId = isProxyDevice(deviceId) ? configuration.gatewayId : deviceId;
+  private void checkAuthentication(String targetId) {
+    String authId = ofNullable(getGatewayId(targetId)).orElse(targetId);
     Instant reauthTime = reauthTimes.get(authId);
     if (reauthTime == null || (reauthTime != null && Instant.now().isBefore(reauthTime))) {
       return;
@@ -529,7 +541,7 @@ public class MqttPublisher implements Publisher {
     warn("Authentication retry time reached for " + authId);
     reauthTimes.remove(authId);
     synchronized (mqttClients) {
-      MqttClient client = mqttClients.remove(authId);
+      MqttClient client = cleanClients(authId);
       if (client == null) {
         return;
       }
@@ -559,9 +571,13 @@ public class MqttPublisher implements Publisher {
     }
   }
 
-  private boolean isProxyDevice(String deviceId) {
-    String gatewayId = configuration.gatewayId;
-    return gatewayId != null && !gatewayId.equals(deviceId);
+  private boolean isProxyDevice(String targetId) {
+    String gatewayId = getGatewayId(targetId);
+    return gatewayId != null && !gatewayId.equals(targetId);
+  }
+
+  private String getGatewayId(String targetId) {
+    return Pubber.getGatewayId(targetId, configuration);
   }
 
   /**
@@ -627,7 +643,7 @@ public class MqttPublisher implements Publisher {
 
     @Override
     public void connectionLost(Throwable cause) {
-      boolean connected = mqttClients.remove(deviceId).isConnected();
+      boolean connected = cleanClients(deviceId).isConnected();
       warn("MQTT Connection Lost: " + connected + cause);
       onError.accept(new ConnectionClosedException());
       close();
@@ -643,8 +659,8 @@ public class MqttPublisher implements Publisher {
         String messageType = getMessageType(topic);
         String handlerKey = getHandlerKey(topic);
         String deviceId = getDeviceId(topic);
-        if (deviceId.equals(configuration.gatewayId)) {
-          gatewayLatch.countDown();
+        if (getGatewayId(deviceId) == null) {
+          connectionLatch.countDown();
         }
         Consumer<Object> handler = handlers.get(handlerKey);
         Class<Object> type = handlersType.get(handlerKey);

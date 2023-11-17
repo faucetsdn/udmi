@@ -3,7 +3,7 @@
   "version": 1,
   "system": {
     "min_loglevel": 300,
-    "metrics_rate_sec": 600
+    "metrics_rate_sec": 10
   },
   "gateway": {
     "proxy_ids": [ "SNS-4", "AHU-22" ]

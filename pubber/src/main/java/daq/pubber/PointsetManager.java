@@ -1,6 +1,5 @@
 package daq.pubber;
 
-import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.getNow;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
@@ -17,15 +16,10 @@ import static udmi.schema.Category.POINTSET_POINT_INVALID_VALUE;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import com.google.daq.mqtt.util.CatchingScheduledThreadPoolExecutor;
 import daq.pubber.Pubber.ExtraPointsetEvent;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import udmi.schema.Entry;
 import udmi.schema.PointPointsetConfig;
@@ -35,44 +29,33 @@ import udmi.schema.PointPointsetState;
 import udmi.schema.PointsetConfig;
 import udmi.schema.PointsetModel;
 import udmi.schema.PointsetState;
-import udmi.schema.PubberOptions;
+import udmi.schema.PubberConfiguration;
 
 /**
  * Helper class to manage the operation of a pointset block.
  */
-public class PointsetManager {
+public class PointsetManager extends ManagerBase {
 
   private static final Set<String> BOOLEAN_UNITS = ImmutableSet.of("No-units");
   private static final double DEFAULT_BASELINE_VALUE = 50;
-  private static final int MIN_REPORT_MS = 200;
-  private static final int DEFAULT_REPORT_SEC = 10;
 
   private static final Map<String, PointPointsetModel> DEFAULT_POINTS = ImmutableMap.of(
       "recalcitrant_angle", makePointPointsetModel(true, 50, 50, "Celsius"),
       "faulty_finding", makePointPointsetModel(true, 40, 0, "deg"),
       "superimposition_reading", makePointPointsetModel(false)
   );
-
-  private ScheduledFuture<?> periodicSender;
-  private PointsetState pointsetState;
-  private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
-  private final AtomicInteger messageDelayMs = new AtomicInteger(DEFAULT_REPORT_SEC * 1000);
   private final ExtraPointsetEvent pointsetEvent = new ExtraPointsetEvent();
   private final Map<String, AbstractPoint> managedPoints = new HashMap<>();
-  private final PubberOptions options;
-  private final ManagerHost host;
   private int pointsetUpdateCount = -1;
+  private PointsetState pointsetState;
 
   /**
    * Create a new instance attached to the given host.
-   *
-   * @param host host for management functions
    */
-  public PointsetManager(ManagerHost host) {
-    this.host = host;
-    this.options = host.getOptions();
-
-    host.update(pointsetState);
+  public PointsetManager(ManagerHost host, PubberConfiguration configuration) {
+    super(host, configuration);
+    setExtraField(options.extraField);
+    updateState();
   }
 
   private static PointPointsetModel makePointPointsetModel(boolean writable, int value,
@@ -170,6 +153,10 @@ public class PointsetManager {
     });
   }
 
+  private void updateState() {
+    updateState(ofNullable((Object) pointsetState).orElse(PointsetState.class));
+  }
+
   private void updateState(AbstractPoint point) {
     String pointName = point.getName();
 
@@ -182,7 +169,7 @@ public class PointsetManager {
       PointPointsetState useState =
           ifTrueGet(options.noPointState, PointPointsetState::new, () -> state);
       pointsetState.points.put(pointName, useState);
-      host.update(pointsetState);
+      updateState();
     }
   }
 
@@ -206,7 +193,7 @@ public class PointsetManager {
   private void updatePointsetPointsConfig(PointsetConfig config) {
     if (config == null) {
       pointsetState = null;
-      host.update((PointsetState) null);
+      updateState();
       return;
     }
 
@@ -246,62 +233,19 @@ public class PointsetManager {
           }
         }));
 
-    host.update(pointsetState);
+    updateState();
   }
 
-  private void debug(String message) {
-    host.debug(message);
+  void updateConfig(PointsetConfig config) {
+    updateInterval(ifNotNullGet(config, c -> c.sample_rate_sec, DISABLED_INTERVAL));
+    updatePointsetPointsConfig(config);
   }
 
-  private void info(String message) {
-    host.info(message);
-  }
-
-  private void error(String message, Throwable e) {
-    host.error(message, e);
-  }
-
-  void updatePointsetConfig(PointsetConfig pointsetConfig) {
-    updateSamplingInterval(pointsetConfig);
-    updatePointsetPointsConfig(pointsetConfig);
-  }
-
-  private void updateSamplingInterval(PointsetConfig pointsetConfig) {
-    boolean hasSampleRate = pointsetConfig != null && pointsetConfig.sample_rate_sec != null;
-    int reportInterval = hasSampleRate ? pointsetConfig.sample_rate_sec : DEFAULT_REPORT_SEC;
-    int actualInterval = Integer.max(MIN_REPORT_MS, reportInterval * 1000);
-    int intervalMs = ifNotNullGet(options.fixedSampleRate, fixed -> fixed * 1000, actualInterval);
-
-    if (periodicSender == null || intervalMs != messageDelayMs.get()) {
-      cancelPeriodicSend();
-      messageDelayMs.set(intervalMs);
-      startPeriodicSend();
-    }
-  }
-
-  private synchronized void startPeriodicSend() {
-    checkState(periodicSender == null);
-    int delay = messageDelayMs.get();
-    info("Starting executor with send message delay " + delay);
-    periodicSender = executor.scheduleAtFixedRate(this::periodicUpdate, delay, delay,
-        TimeUnit.MILLISECONDS);
-  }
-
-  private synchronized void cancelPeriodicSend() {
-    if (periodicSender != null) {
-      try {
-        periodicSender.cancel(false);
-      } catch (Exception e) {
-        throw new RuntimeException("While cancelling executor", e);
-      } finally {
-        periodicSender = null;
-      }
-    }
-  }
-
-  private void periodicUpdate() {
+  @Override
+  protected void periodicUpdate() {
     try {
       if (pointsetState != null) {
+        pointsetUpdateCount++;
         updatePoints();
         sendDevicePoints();
       }
@@ -312,8 +256,8 @@ public class PointsetManager {
 
   private void sendDevicePoints() {
     if (pointsetUpdateCount % Pubber.MESSAGE_REPORT_INTERVAL == 0) {
-      info(format("%s sending test message #%d with %d points",
-          getTimestamp(), pointsetUpdateCount, pointsetEvent.points.size()));
+      info(format("%s sending %s message #%d with %d points",
+          getTimestamp(), deviceId, pointsetUpdateCount, pointsetEvent.points.size()));
     }
     host.publish(pointsetEvent);
   }
