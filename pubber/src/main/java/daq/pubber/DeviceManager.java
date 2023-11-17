@@ -72,6 +72,9 @@ public class DeviceManager extends ManagerBase {
     systemManager.cloudLog(message, level, detail);
   }
 
+  /**
+   * Shutdown everything, including sub-managers.
+   */
   public void shutdown() {
     systemManager.shutdown();
     pointsetManager.shutdown();

@@ -49,6 +49,43 @@ public class LocalnetManager extends ManagerBase {
     host.update(localnetState);
   }
 
+  @VisibleForTesting
+  static String getDefaultInterface(List<String> routeLines) {
+    AtomicReference<String> currentInterface = new AtomicReference<>();
+    AtomicInteger currentMaxMetric = new AtomicInteger(Integer.MAX_VALUE);
+    routeLines.forEach(line -> {
+      try {
+        String[] parts = line.split(" ", 13);
+        int baseIndex = parts[0].equals("none") ? 1 : 0;
+        if (parts[baseIndex].equals("default")) {
+          int metric = parts.length < (baseIndex + 11) ? DEFAULT_METRIC
+              : Integer.parseInt(parts[baseIndex + 10]);
+          if (metric < currentMaxMetric.get()) {
+            currentMaxMetric.set(metric);
+            currentInterface.set(parts[baseIndex + 4]);
+          }
+        }
+      } catch (Exception e) {
+        throw new RuntimeException("While processing ip route line: " + line, e);
+      }
+    });
+    return currentInterface.get();
+  }
+
+  @VisibleForTesting
+  static Map<String, String> getInterfaceAddresses(List<String> strings) {
+    Map<String, String> interfaceMap = new HashMap<>();
+    strings.forEach(line -> {
+      for (Pattern pattern : familyPatterns) {
+        Matcher matcher = pattern.matcher(line);
+        if (matcher.matches()) {
+          interfaceMap.put(ifaceMap.get(matcher.group(1)), matcher.group(2));
+        }
+      }
+    });
+    return interfaceMap;
+  }
+
   /**
    * Parse the output of ip route/addr and turn it into a family addr map.
    *
@@ -75,7 +112,8 @@ public class LocalnetManager extends ManagerBase {
     localnetState.families = new HashMap<>();
     String defaultInterface = getDefaultInterface();
     info("Using addresses from default interface " + defaultInterface);
-    Map<String, String> interfaceAddresses = ofNullable(getInterfaceAddresses(defaultInterface)).orElse(ImmutableMap.of());
+    Map<String, String> interfaceAddresses = ofNullable(
+        getInterfaceAddresses(defaultInterface)).orElse(ImmutableMap.of());
     interfaceAddresses.entrySet().forEach(this::addStateMapEntry);
     HashMap<String, FamilyLocalnetState> stateMap = new HashMap<>();
   }
@@ -104,27 +142,6 @@ public class LocalnetManager extends ManagerBase {
     }
   }
 
-  @VisibleForTesting
-  static String getDefaultInterface(List<String> routeLines) {
-    AtomicReference<String> currentInterface = new AtomicReference<>();
-    AtomicInteger currentMaxMetric = new AtomicInteger(Integer.MAX_VALUE);
-    routeLines.forEach(line -> {
-      try {
-        String[] parts = line.split(" ", 12);
-        if (parts[0].equals("default")) {
-          int metric = parts.length < 11 ? DEFAULT_METRIC : Integer.parseInt(parts[10]);
-          if (metric < currentMaxMetric.get()) {
-            currentMaxMetric.set(metric);
-            currentInterface.set(parts[4]);
-          }
-        }
-      } catch (Exception e) {
-        throw new RuntimeException("While processing ip route line: " + line, e);
-      }
-    });
-    return currentInterface.get();
-  }
-
   private Map<String, String> getInterfaceAddresses(String defaultInterface) {
     if (defaultInterface == null) {
       return null;
@@ -143,20 +160,6 @@ public class LocalnetManager extends ManagerBase {
       error("Could not infer interface addresses: " + friendlyStackTrace(e));
       return null;
     }
-  }
-
-  @VisibleForTesting
-  static Map<String, String> getInterfaceAddresses(List<String> strings) {
-    Map<String, String> interfaceMap = new HashMap<>();
-    strings.forEach(line -> {
-      for (Pattern pattern : familyPatterns) {
-        Matcher matcher = pattern.matcher(line);
-        if (matcher.matches()) {
-          interfaceMap.put(ifaceMap.get(matcher.group(1)), matcher.group(2));
-        }
-      }
-    });
-    return interfaceMap;
   }
 
   Map<String, FamilyDiscoveryEvent> enumerateFamilies() {
