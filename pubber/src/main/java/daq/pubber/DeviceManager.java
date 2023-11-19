@@ -1,8 +1,10 @@
 package daq.pubber;
 
+import java.util.Map;
 import udmi.schema.Config;
 import udmi.schema.DevicePersistent;
 import udmi.schema.Entry;
+import udmi.schema.FamilyDiscoveryEvent;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.Operation.SystemMode;
@@ -13,8 +15,10 @@ import udmi.schema.PubberConfiguration;
  */
 public class DeviceManager extends ManagerBase {
 
-  private PointsetManager pointsetManager;
-  private SystemManager systemManager;
+  private final PointsetManager pointsetManager;
+  private final SystemManager systemManager;
+  private final LocalnetManager localnetManager;
+
 
   /**
    * Create a new instance.
@@ -23,6 +27,7 @@ public class DeviceManager extends ManagerBase {
     super(host, configuration);
     systemManager = new SystemManager(host, configuration);
     pointsetManager = new PointsetManager(host, configuration);
+    localnetManager = new LocalnetManager(host, configuration);
   }
 
   public void setPersistentData(DevicePersistent persistentData) {
@@ -32,13 +37,6 @@ public class DeviceManager extends ManagerBase {
   public void setMetadata(Metadata metadata) {
     pointsetManager.setPointsetModel(metadata.pointset);
     systemManager.setMetadata(metadata);
-  }
-
-  @Override
-  public void cancelPeriodicSend() {
-    super.cancelPeriodicSend();
-    pointsetManager.cancelPeriodicSend();
-    systemManager.cancelPeriodicSend();
   }
 
   public void systemLifecycle(SystemMode mode) {
@@ -74,8 +72,16 @@ public class DeviceManager extends ManagerBase {
     systemManager.cloudLog(message, level, detail);
   }
 
+  /**
+   * Shutdown everything, including sub-managers.
+   */
   public void shutdown() {
     systemManager.shutdown();
     pointsetManager.shutdown();
+    localnetManager.shutdown();
+  }
+
+  public Map<String, FamilyDiscoveryEvent> enumerateFamilies() {
+    return localnetManager.enumerateFamilies();
   }
 }
