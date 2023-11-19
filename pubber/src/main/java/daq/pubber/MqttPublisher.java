@@ -283,6 +283,7 @@ public class MqttPublisher implements Publisher {
       String gatewayId = getGatewayId(deviceId);
       debug(format("Connecting device %s through gateway %s", deviceId, gatewayId));
       MqttClient mqttClient = getConnectedClient(gatewayId);
+      debug("TAP waiting connection latch " + deviceId);
       startupLatchWait(connectionLatch, "gateway startup exchange");
       String topic = getMessageTopic(deviceId, MqttDevice.ATTACH_TOPIC);
       String payload = "";
@@ -346,6 +347,7 @@ public class MqttPublisher implements Publisher {
 
       configureAuth(options);
       reauthTimes.put(deviceId, Instant.now().plusSeconds(TOKEN_EXPIRY_MINUTES * 60 / 2));
+      debug("TAP starting connection latch " + deviceId);
       connectionLatch = new CountDownLatch(1);
 
       mqttClient.connect(options);
@@ -660,6 +662,7 @@ public class MqttPublisher implements Publisher {
         String handlerKey = getHandlerKey(topic);
         String deviceId = getDeviceId(topic);
         if (getGatewayId(deviceId) == null) {
+          debug("TAP release connection latch " + deviceId);
           connectionLatch.countDown();
         }
         Consumer<Object> handler = handlers.get(handlerKey);

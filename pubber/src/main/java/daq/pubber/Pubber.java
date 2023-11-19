@@ -860,7 +860,8 @@ public class Pubber extends ManagerBase implements ManagerHost {
   private void configHandler(Config config) {
     try {
       configPreprocess(deviceId, config);
-      debug(format("Config update%s", deviceManager.getTestingTag()), toJsonString(config));
+      debug(format("Config update %s%s", deviceId, deviceManager.getTestingTag()),
+          toJsonString(config));
       processConfigUpdate(config);
       configLatch.countDown();
       publisherConfigLog("apply", null);
@@ -1368,7 +1369,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
     }
     stateDirty.set(false);
     deviceState.timestamp = getNow();
-    info(format("update state %s last_config %s", isoConvert(deviceState.timestamp),
+    info(format("Update state %s last_config %s", isoConvert(deviceState.timestamp),
         isoConvert(deviceState.system.last_config)));
     publishStateMessage(deviceState);
   }
@@ -1389,7 +1390,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
     CountDownLatch latch = new CountDownLatch(1);
 
     try {
-      debug(format("State update%s", deviceManager.getTestingTag()),
+      debug(format("State update %s%s", deviceId, deviceManager.getTestingTag()),
           toJsonString(stateToSend));
     } catch (Exception e) {
       throw new RuntimeException("While converting new device state", e);
