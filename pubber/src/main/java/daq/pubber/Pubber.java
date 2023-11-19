@@ -884,7 +884,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
       // Grab this to make state-after-config updates monolithic.
       stateLock.lock();
     } catch (Exception e) {
-      throw new RuntimeException("While acquiting state lock", e);
+      throw new RuntimeException("While acquiring state lock", e);
     }
 
     try {

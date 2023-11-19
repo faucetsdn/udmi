@@ -85,6 +85,7 @@ public class MqttPublisher implements Publisher {
   private static final String EVENT_MARK_PREFIX = "events/";
   private static final Map<String, AtomicInteger> EVENT_SERIAL = new HashMap<>();
   private static final String GCP_CLIENT_PREFIX = "projects/";
+  public static final String EMPTY_STRING = "";
 
   private final Semaphore connectionLock = new Semaphore(1);
 
@@ -282,13 +283,11 @@ public class MqttPublisher implements Publisher {
     try {
       String gatewayId = getGatewayId(deviceId);
       debug(format("Connecting device %s through gateway %s", deviceId, gatewayId));
-      MqttClient mqttClient = getConnectedClient(gatewayId);
-      debug("TAP waiting connection latch " + deviceId);
+      final MqttClient mqttClient = getConnectedClient(gatewayId);
       startupLatchWait(connectionLatch, "gateway startup exchange");
       String topic = getMessageTopic(deviceId, MqttDevice.ATTACH_TOPIC);
-      String payload = "";
       info("Publishing attach message " + topic);
-      mqttClient.publish(topic, payload.getBytes(StandardCharsets.UTF_8), QOS_AT_LEAST_ONCE,
+      mqttClient.publish(topic, EMPTY_STRING.getBytes(StandardCharsets.UTF_8), QOS_AT_LEAST_ONCE,
           SHOULD_RETAIN);
       subscribeToUpdates(mqttClient, deviceId);
       return mqttClient;
@@ -347,7 +346,6 @@ public class MqttPublisher implements Publisher {
 
       configureAuth(options);
       reauthTimes.put(deviceId, Instant.now().plusSeconds(TOKEN_EXPIRY_MINUTES * 60 / 2));
-      debug("TAP starting connection latch " + deviceId);
       connectionLatch = new CountDownLatch(1);
 
       mqttClient.connect(options);
@@ -661,10 +659,7 @@ public class MqttPublisher implements Publisher {
         String messageType = getMessageType(topic);
         String handlerKey = getHandlerKey(topic);
         String deviceId = getDeviceId(topic);
-        if (getGatewayId(deviceId) == null) {
-          debug("TAP release connection latch " + deviceId);
-          connectionLatch.countDown();
-        }
+        connectionLatch.countDown();
         Consumer<Object> handler = handlers.get(handlerKey);
         Class<Object> type = handlersType.get(handlerKey);
         if (handler == null) {
