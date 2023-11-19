@@ -116,7 +116,8 @@ public class ObjectDiffEngine {
       List<String> updates) {
     right.forEach((key, value) -> {
       String describedKey = describedKey(prefix, key);
-      String describedValue = describeValue(prefix, key, semanticValue(value));
+      String describedRaw = describeValue(prefix, key, semanticValue(value));
+      String describedValue = describedRaw.replaceFirst("\n.*", "...");
       if (left != null && left.containsKey(key)) {
         Object leftValue = left.get(key);
         if (SemanticValue.equals(value, leftValue)) {
