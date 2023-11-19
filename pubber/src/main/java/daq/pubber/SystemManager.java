@@ -20,7 +20,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
 import udmi.schema.DevicePersistent;
@@ -65,12 +64,24 @@ public class SystemManager extends ManagerBase {
           .put(Level.WARNING, LOG::warn)
           .put(Level.ERROR, LOG::error)
           .build();
+  private static final PrintStream logPrintWriter;
+
+  static {
+    File outDir = new File(Pubber.PUBBER_OUT);
+    try {
+      outDir.mkdirs();
+      logPrintWriter = new PrintStream(new File(outDir, PUBBER_LOG));
+      logPrintWriter.println("Pubber log started at " + getTimestamp());
+    } catch (Exception e) {
+      throw new RuntimeException("While initializing out dir " + outDir.getAbsolutePath(), e);
+    }
+  }
+
   private final List<Entry> logentries = new ArrayList<>();
   private final SystemState systemState;
   private final ManagerHost host;
   private int systemEventCount;
   private SystemConfig systemConfig;
-  private PrintStream logPrintWriter;
   private boolean publishingLog;
 
   /**
@@ -79,16 +90,6 @@ public class SystemManager extends ManagerBase {
   public SystemManager(ManagerHost host, PubberConfiguration configuration) {
     super(host, configuration);
     this.host = host;
-    File outDir = new File(Pubber.PUBBER_OUT);
-
-    try {
-      outDir.mkdirs();
-      File logOut = new File(outDir, PUBBER_LOG);
-      logPrintWriter = new PrintStream(logOut);
-      logPrintWriter.println("Pubber log started at " + getTimestamp());
-    } catch (Exception e) {
-      throw new RuntimeException("While initializing out dir " + outDir.getAbsolutePath(), e);
-    }
 
     systemState = new SystemState();
     systemState.operation = new StateSystemOperation();
@@ -110,10 +111,7 @@ public class SystemManager extends ManagerBase {
   @Override
   public void shutdown() {
     super.shutdown();
-    if (logPrintWriter != null) {
-      logPrintWriter.close();
-      logPrintWriter = null;
-    }
+    logPrintWriter.close();
   }
 
   private void setHardwareSoftware(Metadata metadata) {
@@ -272,15 +270,13 @@ public class SystemManager extends ManagerBase {
     localLog(message, Level.fromValue(entry.level), getTimestamp(entry.timestamp), null);
   }
 
-  void localLog(String message, Level level, String timestamp, String detail) {
+  static void localLog(String message, Level level, String timestamp, String detail) {
     String detailPostfix = detail == null ? "" : ":\n" + detail;
     String logMessage = format("%s %s%s", timestamp, message, detailPostfix);
     LOG_MAP.get(level).accept(logMessage);
     try {
-      if (logPrintWriter != null) {
-        logPrintWriter.println(logMessage);
-        logPrintWriter.flush();
-      }
+      logPrintWriter.println(logMessage);
+      logPrintWriter.flush();
     } catch (Exception e) {
       throw new RuntimeException("While writing log output file", e);
     }

@@ -1,6 +1,8 @@
 package daq.pubber;
 
+import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.runtimeExec;
+import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -17,11 +19,12 @@ import java.util.regex.Pattern;
 import udmi.schema.FamilyDiscoveryEvent;
 import udmi.schema.FamilyLocalnetState;
 import udmi.schema.LocalnetState;
+import udmi.schema.PubberConfiguration;
 
 /**
  * Container class for dealing with the localnet subblock of UDMI.
  */
-public class LocalnetManager {
+public class LocalnetManager extends ManagerBase {
 
   public static final int DEFAULT_METRIC = 0;
   private static final List<Pattern> familyPatterns = ImmutableList.of(
@@ -34,20 +37,68 @@ public class LocalnetManager {
       "inet", "ipv4",
       "inet6", "ipv6"
   );
-  private final Pubber parent;
+  private final LocalnetState localnetState;
 
   /**
-   * Create a new container with the given Pubber parent.
-   *
-   * @param parent parent pubber class
+   * Create a new container with the given host.
    */
-  public LocalnetManager(Pubber parent) {
-    this.parent = parent;
-    parent.deviceState.localnet = new LocalnetState();
+  public LocalnetManager(ManagerHost host, PubberConfiguration configuration) {
+    super(host, configuration);
+    localnetState = new LocalnetState();
+    populateInterfaceAddresses();
+    host.update(localnetState);
+  }
+
+  @VisibleForTesting
+  static String getDefaultInterfaceStatic(List<String> routeLines) {
+    AtomicReference<String> currentInterface = new AtomicReference<>();
+    AtomicInteger currentMaxMetric = new AtomicInteger(Integer.MAX_VALUE);
+    routeLines.forEach(line -> {
+      try {
+        String[] parts = line.split(" ", 13);
+        int baseIndex = parts[0].equals("none") ? 1 : 0;
+        if (parts[baseIndex].equals("default")) {
+          int metric = parts.length < (baseIndex + 11) ? DEFAULT_METRIC
+              : Integer.parseInt(parts[baseIndex + 10]);
+          if (metric < currentMaxMetric.get()) {
+            currentMaxMetric.set(metric);
+            currentInterface.set(parts[baseIndex + 4]);
+          }
+        }
+      } catch (Exception e) {
+        throw new RuntimeException("While processing ip route line: " + line, e);
+      }
+    });
+    return currentInterface.get();
+  }
+
+  @VisibleForTesting
+  static Map<String, String> getInterfaceAddressesStatic(List<String> strings) {
+    Map<String, String> interfaceMap = new HashMap<>();
+    strings.forEach(line -> {
+      for (Pattern pattern : familyPatterns) {
+        Matcher matcher = pattern.matcher(line);
+        if (matcher.matches()) {
+          interfaceMap.put(ifaceMap.get(matcher.group(1)), matcher.group(2));
+        }
+      }
+    });
+    return interfaceMap;
+  }
+
+  private String getDefaultInterface() {
+    final List<String> routeLines;
     try {
-      populateInterfaceAddresses();
+      routeLines = runtimeExec("ip", "route");
     } catch (Exception e) {
-      throw new RuntimeException("While populating interface addresses", e);
+      error("Could not execute ip route command: " + friendlyStackTrace(e));
+      return null;
+    }
+    try {
+      return getDefaultInterfaceStatic(routeLines);
+    } catch (Exception e) {
+      error("Could not infer default interface: " + friendlyStackTrace(e));
+      return null;
     }
   }
 
@@ -74,10 +125,11 @@ public class LocalnetManager {
    * </pre>
    */
   private void populateInterfaceAddresses() {
-    parent.deviceState.localnet.families = new HashMap<>();
+    localnetState.families = new HashMap<>();
     String defaultInterface = getDefaultInterface();
-    parent.info("Using addresses from default interface " + defaultInterface);
-    Map<String, String> interfaceAddresses = getInterfaceAddresses(defaultInterface);
+    info("Using addresses from default interface " + defaultInterface);
+    Map<String, String> interfaceAddresses = ofNullable(
+        getInterfaceAddresses(defaultInterface)).orElse(ImmutableMap.of());
     interfaceAddresses.entrySet().forEach(this::addStateMapEntry);
     HashMap<String, FamilyLocalnetState> stateMap = new HashMap<>();
   }
@@ -86,61 +138,38 @@ public class LocalnetManager {
     FamilyLocalnetState stateEntry = new FamilyLocalnetState();
     stateEntry.addr = entry.getValue();
     String family = entry.getKey();
-    parent.info("Family " + family + " address is " + stateEntry.addr);
-    parent.deviceState.localnet.families.put(family, stateEntry);
-  }
-
-  private String getDefaultInterface() {
-    return getDefaultInterface(runtimeExec("ip", "route"));
-  }
-
-  @VisibleForTesting
-  static String getDefaultInterface(List<String> routeLines) {
-    AtomicReference<String> currentInterface = new AtomicReference<>();
-    AtomicInteger currentMaxMetric = new AtomicInteger(Integer.MAX_VALUE);
-    routeLines.forEach(line -> {
-      try {
-        String[] parts = line.split(" ", 12);
-        if (parts[0].equals("default")) {
-          int metric = parts.length < 11 ? DEFAULT_METRIC : Integer.parseInt(parts[10]);
-          if (metric < currentMaxMetric.get()) {
-            currentMaxMetric.set(metric);
-            currentInterface.set(parts[4]);
-          }
-        }
-      } catch (Exception e) {
-        throw new RuntimeException("While processing ip route line: " + line, e);
-      }
-    });
-    return currentInterface.get();
+    info("Family " + family + " address is " + stateEntry.addr);
+    localnetState.families.put(family, stateEntry);
   }
 
   private Map<String, String> getInterfaceAddresses(String defaultInterface) {
-    return getInterfaceAddresses(runtimeExec("ip", "addr", "show", "dev", defaultInterface));
-  }
+    if (defaultInterface == null) {
+      return null;
+    }
+    final List<String> strings;
+    try {
+      strings = runtimeExec("ip", "addr", "show", "dev", defaultInterface);
+    } catch (Exception e) {
+      error("Could not execute ip addr command: " + friendlyStackTrace(e));
+      return null;
+    }
 
-  @VisibleForTesting
-  static Map<String, String> getInterfaceAddresses(List<String> strings) {
-    Map<String, String> interfaceMap = new HashMap<>();
-    strings.forEach(line -> {
-      for (Pattern pattern : familyPatterns) {
-        Matcher matcher = pattern.matcher(line);
-        if (matcher.matches()) {
-          interfaceMap.put(ifaceMap.get(matcher.group(1)), matcher.group(2));
-        }
-      }
-    });
-    return interfaceMap;
+    try {
+      return getInterfaceAddressesStatic(strings);
+    } catch (Exception e) {
+      error("Could not infer interface addresses: " + friendlyStackTrace(e));
+      return null;
+    }
   }
 
   Map<String, FamilyDiscoveryEvent> enumerateFamilies() {
-    return parent.deviceState.localnet.families.keySet().stream()
+    return localnetState.families.keySet().stream()
         .collect(toMap(key -> key, this::makeFamilyDiscoveryEvent));
   }
 
   private FamilyDiscoveryEvent makeFamilyDiscoveryEvent(String key) {
     FamilyDiscoveryEvent familyDiscoveryEvent = new FamilyDiscoveryEvent();
-    familyDiscoveryEvent.addr = parent.deviceState.localnet.families.get(key).addr;
+    familyDiscoveryEvent.addr = localnetState.families.get(key).addr;
     return familyDiscoveryEvent;
   }
 }
