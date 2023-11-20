@@ -303,7 +303,7 @@ public class MqttPublisher implements Publisher {
     }
   }
 
-  public void startupLatchWait(CountDownLatch gatewayLatch, String designator) {
+  private void startupLatchWait(CountDownLatch gatewayLatch, String designator) {
     try {
       int waitTimeSec = ofNullable(configuration.endpoint.config_sync_sec)
           .orElse(DEFAULT_CONFIG_WAIT_SEC);

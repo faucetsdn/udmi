@@ -695,7 +695,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
     return false;
   }
 
-  public void configLatchWait() {
+  private void configLatchWait() {
     try {
       int waitTimeSec = ofNullable(configuration.endpoint.config_sync_sec)
           .orElse(DEFAULT_CONFIG_WAIT_SEC);
