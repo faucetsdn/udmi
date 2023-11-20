@@ -700,7 +700,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
       int waitTimeSec = ofNullable(configuration.endpoint.config_sync_sec)
           .orElse(DEFAULT_CONFIG_WAIT_SEC);
       int useWaitTime = waitTimeSec == 0 ? DEFAULT_CONFIG_WAIT_SEC : waitTimeSec;
-      warn(format("Start waiting for config latch for %ds", useWaitTime));
+      warn(format("Start waiting %ds for config latch for %s", useWaitTime, deviceId));
       if (useWaitTime > 0 && !configLatch.await(useWaitTime, TimeUnit.SECONDS)) {
         throw new RuntimeException("Config latch timeout");
       }
@@ -791,7 +791,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
 
   private void connect() {
     try {
-      warn("Creating new config latch");
+      warn("Creating new config latch for " + deviceId);
       configLatch = new CountDownLatch(1);
       deviceTarget.connect();
       info("Connection complete.");
@@ -892,7 +892,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
           toJsonString(config));
       processConfigUpdate(config);
       if (configLatch.getCount() > 0) {
-        warn("Received config for config latch");
+        warn("Received config for config latch " + deviceId);
       }
       configLatch.countDown();
       publisherConfigLog("apply", null);
@@ -1410,7 +1410,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
   }
 
   private void publishStateMessage(Object stateToSend) {
-    if (configLatch.getCount() > 0) {
+    if (configLatch == null || configLatch.getCount() > 0) {
       warn("Dropping state update until config received...");
       return;
     }
