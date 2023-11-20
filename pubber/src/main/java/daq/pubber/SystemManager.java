@@ -91,6 +91,8 @@ public class SystemManager extends ManagerBase {
     super(host, configuration);
     this.host = host;
 
+    info("Device start time is " + getTimestamp(DEVICE_START_TIME));
+
     systemState = new SystemState();
     systemState.operation = new StateSystemOperation();
 
@@ -221,7 +223,6 @@ public class SystemManager extends ManagerBase {
     systemState.last_config = timestamp;
     updateInterval(ifNotNullGet(system, config -> config.metrics_rate_sec));
     updateState();
-    maybeRestartSystem();
   }
 
   void publishLogMessage(Entry report) {

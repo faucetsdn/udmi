@@ -637,6 +637,10 @@ public class Pubber extends ManagerBase implements ManagerHost {
   }
 
   private void deferredConfigActions() {
+    if (!isConnected) {
+      return;
+    }
+
     deviceManager.maybeRestartSystem();
 
     // Do redirect after restart system check, since this might take a long time.
@@ -971,10 +975,6 @@ public class Pubber extends ManagerBase implements ManagerHost {
   }
 
   void maybeRedirectEndpoint() {
-    if (!isConnected) {
-      return;
-    }
-
     String redirectRegistry = configuration.options.redirectRegistry;
     String currentSignature = toJsonString(configuration.endpoint);
     String extractedSignature =
