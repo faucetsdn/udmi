@@ -3,10 +3,8 @@ package daq.pubber;
 import com.google.udmi.util.JsonUtil;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import udmi.schema.PubberConfiguration;
 
@@ -52,7 +50,7 @@ public class ListPublisher implements Publisher {
   }
 
   @Override
-  public void connect(String deviceId) {
+  public void connect(String deviceId, boolean clean) {
 
   }
 
@@ -66,11 +64,6 @@ public class ListPublisher implements Publisher {
   @Override
   public boolean isActive() {
     return false;
-  }
-
-  @Override
-  public void startupLatchWait(CountDownLatch configLatch, String message) {
-
   }
 
   @Override

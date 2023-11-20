@@ -20,9 +20,11 @@ import static com.google.udmi.util.GeneralUtils.setClockSkew;
 import static com.google.udmi.util.GeneralUtils.toJsonFile;
 import static com.google.udmi.util.GeneralUtils.toJsonString;
 import static com.google.udmi.util.JsonUtil.safeSleep;
+import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static daq.pubber.MqttDevice.CONFIG_TOPIC;
 import static daq.pubber.MqttDevice.ERRORS_TOPIC;
 import static daq.pubber.MqttDevice.STATE_TOPIC;
+import static daq.pubber.MqttPublisher.DEFAULT_CONFIG_WAIT_SEC;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Objects.requireNonNullElse;
@@ -160,7 +162,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
   final Config deviceConfig = new Config();
   private final File outDir;
   private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
-  private final CountDownLatch configLatch = new CountDownLatch(1);
+  private CountDownLatch configLatch;
   private final AtomicBoolean stateDirty = new AtomicBoolean();
   private final ReentrantLock stateLock = new ReentrantLock();
   private final String deviceId;
@@ -178,6 +180,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
   private int deviceUpdateCount = -1;
   private DeviceManager deviceManager;
   private Map<String, ProxyDevice> proxyDevices = new HashMap<>();
+  private boolean isConnected;
 
   /**
    * Start an instance from a configuration file.
@@ -443,6 +446,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
   private void writePersistentStore() {
     checkState(persistentData != null, "persistent data not defined");
     toJsonFile(getPersistentStore(), persistentData);
+    warn("Updating persistent store: " + stringifyTerse(persistentData));
     deviceManager.setPersistentData(persistentData);
   }
 
@@ -654,6 +658,8 @@ public class Pubber extends ManagerBase implements ManagerHost {
   }
 
   protected void startConnection(Function<String, Boolean> connectionDone) {
+    String nonce = String.valueOf(System.currentTimeMillis());
+    warn(format("TAP starting startConnection %s with %d", nonce, retriesRemaining.get()));
     try {
       this.connectionDone = connectionDone;
       while (retriesRemaining.getAndDecrement() > 0) {
@@ -664,16 +670,22 @@ public class Pubber extends ManagerBase implements ManagerHost {
       throw new RuntimeException("Failed connection attempt after retries");
     } catch (Exception e) {
       throw new RuntimeException("While attempting to start connection", e);
+    } finally {
+      warn(format("TAP ending startConnection %s with %d", nonce, retriesRemaining.get()));
     }
   }
 
   private boolean attemptConnection() {
     try {
+      warn("TAP setting disconnected");
+      isConnected = false;
       if (deviceTarget == null) {
         throw new RuntimeException("Mqtt publisher not initialized");
       }
       connect();
-      deviceTarget.startupLatchWait(configLatch, "initial config sync");
+      configLatchWait();
+      warn("TAP connection complete");
+      isConnected = true;
       return true;
     } catch (Exception e) {
       error("While waiting for connection start", e);
@@ -681,6 +693,20 @@ public class Pubber extends ManagerBase implements ManagerHost {
     error("Attempt failed, retries remaining: " + retriesRemaining.get());
     safeSleep(RESTART_DELAY_MS);
     return false;
+  }
+
+  public void configLatchWait() {
+    try {
+      int waitTimeSec = ofNullable(configuration.endpoint.config_sync_sec)
+          .orElse(DEFAULT_CONFIG_WAIT_SEC);
+      int useWaitTime = waitTimeSec == 0 ? DEFAULT_CONFIG_WAIT_SEC : waitTimeSec;
+      warn(format("Start waiting for config latch for %ds", useWaitTime));
+      if (useWaitTime > 0 && !configLatch.await(useWaitTime, TimeUnit.SECONDS)) {
+        throw new RuntimeException("Config latch timeout");
+      }
+    } catch (Exception e) {
+      throw new RuntimeException("While waiting for config latch", e);
+    }
   }
 
   protected void initialize() {
@@ -765,6 +791,8 @@ public class Pubber extends ManagerBase implements ManagerHost {
 
   private void connect() {
     try {
+      warn("Creating new config latch");
+      configLatch = new CountDownLatch(1);
       deviceTarget.connect();
       info("Connection complete.");
       workingEndpoint = toJsonString(configuration.endpoint);
@@ -863,6 +891,9 @@ public class Pubber extends ManagerBase implements ManagerHost {
       debug(format("Config update %s%s", deviceId, deviceManager.getTestingTag()),
           toJsonString(config));
       processConfigUpdate(config);
+      if (configLatch.getCount() > 0) {
+        warn("Received config for config latch");
+      }
       configLatch.countDown();
       publisherConfigLog("apply", null);
     } catch (Exception e) {
@@ -940,6 +971,10 @@ public class Pubber extends ManagerBase implements ManagerHost {
   }
 
   void maybeRedirectEndpoint() {
+    if (!isConnected) {
+      return;
+    }
+
     String redirectRegistry = configuration.options.redirectRegistry;
     String currentSignature = toJsonString(configuration.endpoint);
     String extractedSignature =

@@ -2,6 +2,7 @@ package daq.pubber;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
+import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
@@ -38,7 +39,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.apache.http.ConnectionClosedException;
@@ -81,7 +81,7 @@ public class MqttPublisher implements Publisher {
   private static final int TOKEN_EXPIRY_MINUTES = 60;
   private static final int QOS_AT_MOST_ONCE = 0;
   private static final int QOS_AT_LEAST_ONCE = 1;
-  private static final int DEFAULT_CONFIG_WAIT_SEC = 10;
+  static final int DEFAULT_CONFIG_WAIT_SEC = 10;
   private static final String EVENT_MARK_PREFIX = "events/";
   private static final Map<String, AtomicInteger> EVENT_SERIAL = new HashMap<>();
   private static final String GCP_CLIENT_PREFIX = "projects/";
@@ -236,21 +236,26 @@ public class MqttPublisher implements Publisher {
   }
 
   private void closeMqttClient(String deviceId) {
-    MqttClient removed = cleanClients(deviceId);
-    if (removed != null) {
-      try {
-        if (removed.isConnected()) {
-          removed.disconnect();
+    synchronized (mqttClients) {
+      MqttClient removed = cleanClients(deviceId);
+      if (removed != null) {
+        try {
+          if (removed.isConnected()) {
+            removed.disconnect();
+          }
+          removed.close();
+        } catch (Exception e) {
+          error("Error closing MQTT client: " + e, null, "stop", e);
         }
-        removed.close();
-      } catch (Exception e) {
-        error("Error closing MQTT client: " + e, null, "stop", e);
       }
     }
   }
 
   private MqttClient cleanClients(String deviceId) {
     MqttClient remove = mqttClients.remove(deviceId);
+    if (remove != null) {
+      new RuntimeException("TAP cleanClients " + deviceId).printStackTrace();
+    }
     mqttClients.entrySet().stream().filter(entry -> entry.getValue() == remove).map(Entry::getKey)
         .toList().forEach(mqttClients::remove);
     return remove;
@@ -260,6 +265,7 @@ public class MqttPublisher implements Publisher {
   public void close() {
     try {
       warn("Closing publisher connection");
+      new RuntimeException("TAP close").printStackTrace();
       publisherExecutor.shutdown();
       mqttClients.keySet().forEach(this::closeMqttClient);
     } catch (Exception e) {
@@ -281,6 +287,7 @@ public class MqttPublisher implements Publisher {
 
   private MqttClient newBoundClient(String deviceId) {
     try {
+      new RuntimeException("TAP newBoundClient " + deviceId).printStackTrace();
       String gatewayId = getGatewayId(deviceId);
       debug(format("Connecting device %s through gateway %s", deviceId, gatewayId));
       final MqttClient mqttClient = getConnectedClient(gatewayId);
@@ -296,7 +303,6 @@ public class MqttPublisher implements Publisher {
     }
   }
 
-  @Override
   public void startupLatchWait(CountDownLatch gatewayLatch, String designator) {
     try {
       int waitTimeSec = ofNullable(configuration.endpoint.config_sync_sec)
@@ -316,6 +322,7 @@ public class MqttPublisher implements Publisher {
       String clientId = getClientId(deviceId);
       String brokerUrl = getBrokerUrl();
       MqttClient mqttClient = getMqttClient(clientId, brokerUrl);
+      new RuntimeException("MONKEY").printStackTrace();
       info("Creating new client to " + brokerUrl + " as " + clientId);
       return mqttClient;
     } catch (Exception e) {
@@ -330,6 +337,7 @@ public class MqttPublisher implements Publisher {
 
   private MqttClient connectMqttClient(String deviceId) {
     try {
+      new RuntimeException("TAP connectMqttClient " + deviceId).printStackTrace();
       if (!connectionLock.tryAcquire(INITIALIZE_TIME_MS, TimeUnit.MILLISECONDS)) {
         throw new RuntimeException("Timeout waiting for connection lock");
       }
@@ -480,7 +488,8 @@ public class MqttPublisher implements Publisher {
     return topic.split("/")[2];
   }
 
-  public void connect(String targetId) {
+  public void connect(String targetId, boolean clean) {
+    ifTrueThen(clean, () -> closeMqttClient(targetId));
     getConnectedClient(targetId);
   }
 
@@ -542,13 +551,6 @@ public class MqttPublisher implements Publisher {
     reauthTimes.remove(authId);
     synchronized (mqttClients) {
       MqttClient client = cleanClients(authId);
-      if (client == null) {
-        return;
-      }
-      Set<String> removeSet = mqttClients.entrySet().stream()
-          .filter(entry -> entry.getValue() == client).map(Entry::getKey)
-          .collect(Collectors.toSet());
-      removeSet.forEach(mqttClients::remove);
       try {
         client.disconnect();
         client.close();
