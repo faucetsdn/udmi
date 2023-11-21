@@ -1863,6 +1863,10 @@ public class SequenceBase {
     SENT_CONFIG_DIFFERNATOR.mapSemanticKey(keyPath, keyName, description, describedValue);
   }
 
+  public Set<String> getReceivedDevices() {
+    return receivedEvents.keySet();
+  }
+
   public List<Map<String, Object>> getReceivedEvents(String deviceId, SubFolder subFolder) {
     return getReceivedEvents(deviceId).computeIfAbsent(subFolder, key -> new ArrayList<>());
   }
