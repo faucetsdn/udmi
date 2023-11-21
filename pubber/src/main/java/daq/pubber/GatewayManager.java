@@ -48,7 +48,7 @@ public class GatewayManager extends ManagerBase {
     return devices;
   }
 
-  private ProxyDevice configExtraDevice() {
+  private void configExtraDevice() {
     Config config = new Config();
     config.pointset = new PointsetConfig();
     config.pointset.points = new HashMap<>();
