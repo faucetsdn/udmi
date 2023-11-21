@@ -209,6 +209,9 @@ public class Pubber extends ManagerBase implements ManagerHost {
     super(null, makeExplicitConfiguration(iotProject, sitePath, deviceId, serialNo));
     this.deviceId = deviceId;
     outDir = new File(PUBBER_OUT + "/" + serialNo);
+    if (!outDir.exists()) {
+      checkState(outDir.mkdirs(), "could not make out dir " + outDir.getAbsolutePath());
+    }
     if (PUBSUB_SITE.equals(sitePath)) {
       pubSubClient = new PubSubClient(iotProject, deviceId);
     }
