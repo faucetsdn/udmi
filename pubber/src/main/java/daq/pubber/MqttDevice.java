@@ -1,6 +1,5 @@
 package daq.pubber;
 
-import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
 import udmi.schema.PubberConfiguration;
 
@@ -43,11 +42,11 @@ public class MqttDevice {
   }
 
   public void connect() {
-    publisher.connect(deviceId);
+    publisher.connect(deviceId, true);
   }
 
   public void connect(String targetId) {
-    publisher.connect(targetId);
+    publisher.connect(targetId, false);
   }
 
   public void publish(String deviceId, String topicSuffix, Object message, Runnable callback) {
@@ -56,10 +55,6 @@ public class MqttDevice {
 
   public boolean isActive() {
     return publisher.isActive();
-  }
-
-  public void startupLatchWait(CountDownLatch configLatch, String message) {
-    publisher.startupLatchWait(configLatch, message);
   }
 
   public void close() {

@@ -1,6 +1,5 @@
 package daq.pubber;
 
-import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
 
 interface Publisher {
@@ -29,14 +28,13 @@ interface Publisher {
    * Connect the given device id.
    *
    * @param deviceId device to connect
+   * @param clean    true to clean previous connections
    */
-  void connect(String deviceId);
+  void connect(String deviceId, boolean clean);
 
   void publish(String deviceId, String topicSuffix, Object message, Runnable callback);
 
   boolean isActive();
-
-  void startupLatchWait(CountDownLatch configLatch, String message);
 
   void close();
 }
