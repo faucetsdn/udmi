@@ -20,12 +20,15 @@ import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointsetConfig;
 import udmi.schema.PubberConfiguration;
 
+/**
+ * Manager for UDMI gateway functionality.
+ */
 public class GatewayManager extends ManagerBase {
 
-  private final Pubber pubberHost;
-  private Map<String, ProxyDevice> proxyDevices;
   private static final String EXTRA_PROXY_DEVICE = "XXX-1";
   private static final String EXTRA_PROXY_POINT = "xxx_conflagration";
+  private final Pubber pubberHost;
+  private Map<String, ProxyDevice> proxyDevices;
 
   public GatewayManager(Pubber host, PubberConfiguration configuration) {
     super(host, configuration);
@@ -48,19 +51,12 @@ public class GatewayManager extends ManagerBase {
     return devices;
   }
 
-  public void setMetadata (GatewayModel gateway){
+  public void setMetadata(GatewayModel gateway) {
     proxyDevices = ifNotNullGet(gateway, g -> createProxyDevices(g.proxy_ids));
   }
 
   ProxyDevice makeExtraDevice() {
-    ProxyDevice proxyDevice = new ProxyDevice(this, EXTRA_PROXY_DEVICE);
-    Config config = new Config();
-    config.pointset = new PointsetConfig();
-    config.pointset.points = new HashMap<>();
-    PointPointsetConfig pointPointsetConfig = new PointPointsetConfig();
-    config.pointset.points.put(EXTRA_PROXY_POINT, pointPointsetConfig);
-    proxyDevice.configHandler(config);
-    return proxyDevice;
+    return new ProxyDevice(pubberHost, EXTRA_PROXY_DEVICE);
   }
 
   public void updateConfig(GatewayConfig gateway) {

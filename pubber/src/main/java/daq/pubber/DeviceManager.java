@@ -1,15 +1,5 @@
 package daq.pubber;
 
-import static com.google.common.base.Preconditions.checkState;
-import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
-import static com.google.udmi.util.GeneralUtils.ifTrueGet;
-import static com.google.udmi.util.GeneralUtils.isTrue;
-import static java.lang.String.format;
-import static java.util.function.Predicate.not;
-import static java.util.stream.Collectors.toMap;
-
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import udmi.schema.Config;
 import udmi.schema.DevicePersistent;
@@ -18,8 +8,6 @@ import udmi.schema.FamilyDiscoveryEvent;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.Operation.SystemMode;
-import udmi.schema.PointPointsetConfig;
-import udmi.schema.PointsetConfig;
 import udmi.schema.PubberConfiguration;
 
 /**
@@ -49,6 +37,9 @@ public class DeviceManager extends ManagerBase {
     systemManager.setPersistentData(persistentData);
   }
 
+  /**
+   * Set the metadata for this device.
+   */
   public void setMetadata(Metadata metadata) {
     pointsetManager.setPointsetModel(metadata.pointset);
     systemManager.setMetadata(metadata);
@@ -75,6 +66,9 @@ public class DeviceManager extends ManagerBase {
     return systemManager.getTestingTag();
   }
 
+  /**
+   * Update the config of this device.
+   */
   public void updateConfig(Config config) {
     pointsetManager.updateConfig(config.pointset);
     systemManager.updateConfig(config.system, config.timestamp);

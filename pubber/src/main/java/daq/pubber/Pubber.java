@@ -11,7 +11,6 @@ import static com.google.udmi.util.GeneralUtils.fromJsonString;
 import static com.google.udmi.util.GeneralUtils.getNow;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
-import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isGetTrue;
 import static com.google.udmi.util.GeneralUtils.isTrue;
@@ -97,6 +96,7 @@ import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyDiscoveryEvent;
 import udmi.schema.FamilyDiscoveryState;
 import udmi.schema.FamilyLocalnetModel;
+import udmi.schema.GatewayState;
 import udmi.schema.Level;
 import udmi.schema.LocalnetState;
 import udmi.schema.Metadata;
@@ -490,6 +490,8 @@ public class Pubber extends ManagerBase implements ManagerHost {
       deviceState.pointset = (PointsetState) checkValue;
     } else if (checkTarget instanceof LocalnetState) {
       deviceState.localnet = (LocalnetState) checkValue;
+    } else if (checkTarget instanceof GatewayState) {
+      deviceState.gateway = (GatewayState) checkValue;
     } else {
       throw new RuntimeException(
           "Unrecognized update type " + checkTarget.getClass().getSimpleName());
