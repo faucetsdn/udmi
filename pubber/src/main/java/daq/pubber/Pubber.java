@@ -157,6 +157,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
   private static final int FORCED_STATE_TIME_MS = 10000;
   private static final Duration CLOCK_SKEW = Duration.ofMinutes(30);
   private static final Duration SMOKE_CHECK_TIME = Duration.ofMinutes(5);
+  private static final int STATE_SPAM_SEC = 10;
   static PubberConfiguration configuration;
   final State deviceState = new State();
   final Config deviceConfig = new Config();
@@ -195,6 +196,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
     checkArgument(MQTT.equals(protocol), "protocol mismatch");
     deviceId = requireNonNull(configuration.deviceId, "device id not defined");
     outDir = new File(PUBBER_OUT);
+    ifTrueThen(options.spamState, () -> schedulePeriodic(STATE_SPAM_SEC, this::markStateDirty));
   }
 
   /**
@@ -587,6 +589,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
       checkSmokyFailure();
       deferredConfigActions();
       sendEmptyMissingBadEvents();
+      maybeTweakState();
       flushDirtyState();
     } catch (Exception e) {
       error("Fatal error during execution", e);
@@ -637,6 +640,16 @@ public class Pubber extends ManagerBase implements ManagerHost {
       publishDeviceMessage(replacedEvent);
     }
     safeSleep(INJECT_MESSAGE_DELAY_MS);
+  }
+
+  private void maybeTweakState() {
+    int phase = deviceUpdateCount % 2;
+    String randomValue = format("%04x", System.currentTimeMillis() % 0xffff);
+    if (phase == 0) {
+      catchToNull(() -> deviceState.system.software.put("random", randomValue));
+    } else if (phase == 1) {
+      ifNotNullThen(deviceState.pointset, state -> state.state_etag = randomValue);
+    }
   }
 
   private void deferredConfigActions() {
