@@ -149,7 +149,7 @@ jobs:
           java-version: '17'
       - name: base setup
         run: bin/run_tests install_dependencies
-      - name: stagger workload
+      - name: stagger startup
         run: sleep $(($MATRIX_SHARD_INDEX * 20 + 20))
       - name: registrar clean
         run: bin/test_regclean $TARGET_PROJECT

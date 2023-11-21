@@ -15,7 +15,6 @@ sites/udmi_site_model/out/devices/AHU-22/event_pointset.json
 sites/udmi_site_model/out/devices/AHU-22/event_system.json
 sites/udmi_site_model/out/devices/AHU-22/persistent_data.json
 sites/udmi_site_model/out/devices/AHU-22/state.json
-sites/udmi_site_model/out/devices/AHU-22/state_error.json
 sites/udmi_site_model/out/devices/AHU-22/state_localnet.json
 sites/udmi_site_model/out/devices/AHU-22/state_pointset.json
 sites/udmi_site_model/out/devices/AHU-22/state_system.json
@@ -325,9 +324,9 @@ sites/udmi_site_model/out/devices/AHU-22/state.out
   "sub_folder" : "update",
   "sub_type" : "state",
   "status" : {
-    "message" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
-    "detail" : "state_update: Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
-    "category" : "validation.device.schema",
+    "message" : "Multiple validation errors",
+    "detail" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold; Device has missing points: filter_alarm_pressure_status, filter_differential_pressure, filter_differential_pressure_sensor; Device has extra points: globulating_globar",
+    "category" : "validation.device.multiple",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   },
@@ -337,26 +336,15 @@ sites/udmi_site_model/out/devices/AHU-22/state.out
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
-  } ]
-}
-::::::::::::::
-sites/udmi_site_model/out/devices/AHU-22/state_error.out
-::::::::::::::
-{
-  "timestamp" : "REDACTED_TIMESTAMP",
-  "version" : "1.4.2",
-  "sub_folder" : "error",
-  "sub_type" : "state",
-  "status" : {
-    "message" : "Error in message pipeline: While parsing json object, Unexpected character ('!' (code 33)): expected a valid value (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')  at [Source: (String)\"!&*@(!*&@!\"; line: 1, column: 2]",
-    "detail" : "state_error: Error in message pipeline: While parsing json object, Unexpected character ('!' (code 33)): expected a valid value (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')  at [Source: (String)\"!&*REDACTED_ERROR",
+  }, {
+    "message" : "Device has missing points: filter_alarm_pressure_status, filter_differential_pressure, filter_differential_pressure_sensor",
+    "detail" : "state_update: Device has missing points: filter_alarm_pressure_status, filter_differential_pressure, filter_differential_pressure_sensor",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
-  },
-  "errors" : [ {
-    "message" : "Error in message pipeline: While parsing json object, Unexpected character ('!' (code 33)): expected a valid value (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')  at [Source: (String)\"!&*@(!*&@!\"; line: 1, column: 2]",
-    "detail" : "state_error: Error in message pipeline: While parsing json object, Unexpected character ('!' (code 33)): expected a valid value (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')  at [Source: (String)\"!&*REDACTED_ERROR",
+  }, {
+    "message" : "Device has extra points: globulating_globar",
+    "detail" : "state_update: Device has extra points: globulating_globar",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
@@ -394,19 +382,31 @@ sites/udmi_site_model/out/devices/AHU-22/state_pointset.out
   "sub_folder" : "pointset",
   "sub_type" : "state",
   "status" : {
+    "message" : "Multiple validation errors",
+    "detail" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold; Device has missing points: filter_alarm_pressure_status, filter_differential_pressure, filter_differential_pressure_sensor; Device has extra points: globulating_globar",
+    "category" : "validation.device.multiple",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 500
+  },
+  "pointset" : {
+    "missing" : [ "filter_alarm_pressure_status", "filter_differential_pressure", "filter_differential_pressure_sensor" ],
+    "extra" : [ "globulating_globar" ]
+  },
+  "errors" : [ {
     "message" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
     "detail" : "state_pointset: Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
-  },
-  "pointset" : {
-    "missing" : [ ],
-    "extra" : [ ]
-  },
-  "errors" : [ {
-    "message" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
-    "detail" : "state_pointset: Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
+  }, {
+    "message" : "Device has missing points: filter_alarm_pressure_status, filter_differential_pressure, filter_differential_pressure_sensor",
+    "detail" : "state_pointset: Device has missing points: filter_alarm_pressure_status, filter_differential_pressure, filter_differential_pressure_sensor",
+    "category" : "validation.device.schema",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 500
+  }, {
+    "message" : "Device has extra points: globulating_globar",
+    "detail" : "state_pointset: Device has extra points: globulating_globar",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500

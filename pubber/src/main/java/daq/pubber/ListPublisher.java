@@ -1,14 +1,21 @@
 package daq.pubber;
 
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+
+import com.google.api.client.util.ArrayMap;
 import com.google.udmi.util.JsonUtil;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import udmi.schema.Config;
 import udmi.schema.PubberConfiguration;
+import udmi.schema.SystemConfig;
 
 /**
  * Publishes message to an in-memory list.
@@ -19,6 +26,7 @@ public class ListPublisher implements Publisher {
   private final PubberConfiguration configuration;
   private List<String> messages = new ArrayList<>();
   private String usePrefix;
+  private final Map<String, Entry<Consumer<Object>, Class<Object>>> handlers = new HashMap<>();
 
   public ListPublisher(PubberConfiguration configuration, Consumer<Exception> onError) {
     this.configuration = configuration;
@@ -48,29 +56,27 @@ public class ListPublisher implements Publisher {
   @Override
   public <T> void registerHandler(String deviceId, String topicSuffix,
       Consumer<T> handler, Class<T> messageType) {
-
+    Consumer<Object> foo = (Consumer<Object>) handler;
+    Class<Object> clazz = (Class<Object>) messageType;
+    handlers.put(topicSuffix, new SimpleEntry<>(foo, clazz));
   }
 
   @Override
-  public void connect(String deviceId) {
-
+  public void connect(String deviceId, boolean clean) {
+    Consumer<Object> handler = handlers.get("config").getKey();
+    handler.accept(new Config());
   }
 
   @Override
   public void publish(String deviceId, String topicSuffix, Object message, Runnable callback) {
     String useTopic = usePrefix + "/" + topicSuffix;
     messages.add(getMessageString(deviceId, useTopic, message));
-    publisherExecutor.submit(callback);
+    ifNotNullThen(callback, () -> publisherExecutor.submit(callback));
   }
 
   @Override
   public boolean isActive() {
     return false;
-  }
-
-  @Override
-  public void startupLatchWait(CountDownLatch configLatch, String message) {
-
   }
 
   @Override

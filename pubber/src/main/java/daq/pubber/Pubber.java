@@ -20,9 +20,11 @@ import static com.google.udmi.util.GeneralUtils.setClockSkew;
 import static com.google.udmi.util.GeneralUtils.toJsonFile;
 import static com.google.udmi.util.GeneralUtils.toJsonString;
 import static com.google.udmi.util.JsonUtil.safeSleep;
+import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static daq.pubber.MqttDevice.CONFIG_TOPIC;
 import static daq.pubber.MqttDevice.ERRORS_TOPIC;
 import static daq.pubber.MqttDevice.STATE_TOPIC;
+import static daq.pubber.MqttPublisher.DEFAULT_CONFIG_WAIT_SEC;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Objects.requireNonNullElse;
@@ -160,7 +162,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
   final Config deviceConfig = new Config();
   private final File outDir;
   private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
-  private final CountDownLatch configLatch = new CountDownLatch(1);
+  private CountDownLatch configLatch;
   private final AtomicBoolean stateDirty = new AtomicBoolean();
   private final ReentrantLock stateLock = new ReentrantLock();
   private final String deviceId;
@@ -178,6 +180,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
   private int deviceUpdateCount = -1;
   private DeviceManager deviceManager;
   private Map<String, ProxyDevice> proxyDevices = new HashMap<>();
+  private boolean isConnected;
 
   /**
    * Start an instance from a configuration file.
@@ -206,6 +209,9 @@ public class Pubber extends ManagerBase implements ManagerHost {
     super(null, makeExplicitConfiguration(iotProject, sitePath, deviceId, serialNo));
     this.deviceId = deviceId;
     outDir = new File(PUBBER_OUT + "/" + serialNo);
+    if (!outDir.exists()) {
+      checkState(outDir.mkdirs(), "could not make out dir " + outDir.getAbsolutePath());
+    }
     if (PUBSUB_SITE.equals(sitePath)) {
       pubSubClient = new PubSubClient(iotProject, deviceId);
     }
@@ -443,6 +449,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
   private void writePersistentStore() {
     checkState(persistentData != null, "persistent data not defined");
     toJsonFile(getPersistentStore(), persistentData);
+    warn("Updating persistent store: " + stringifyTerse(persistentData));
     deviceManager.setPersistentData(persistentData);
   }
 
@@ -633,6 +640,10 @@ public class Pubber extends ManagerBase implements ManagerHost {
   }
 
   private void deferredConfigActions() {
+    if (!isConnected) {
+      return;
+    }
+
     deviceManager.maybeRestartSystem();
 
     // Do redirect after restart system check, since this might take a long time.
@@ -654,6 +665,8 @@ public class Pubber extends ManagerBase implements ManagerHost {
   }
 
   protected void startConnection(Function<String, Boolean> connectionDone) {
+    String nonce = String.valueOf(System.currentTimeMillis());
+    warn(format("Starting connection %s with %d", nonce, retriesRemaining.get()));
     try {
       this.connectionDone = connectionDone;
       while (retriesRemaining.getAndDecrement() > 0) {
@@ -664,16 +677,20 @@ public class Pubber extends ManagerBase implements ManagerHost {
       throw new RuntimeException("Failed connection attempt after retries");
     } catch (Exception e) {
       throw new RuntimeException("While attempting to start connection", e);
+    } finally {
+      warn(format("Ending connection %s with %d", nonce, retriesRemaining.get()));
     }
   }
 
   private boolean attemptConnection() {
     try {
+      isConnected = false;
       if (deviceTarget == null) {
         throw new RuntimeException("Mqtt publisher not initialized");
       }
       connect();
-      deviceTarget.startupLatchWait(configLatch, "initial config sync");
+      configLatchWait();
+      isConnected = true;
       return true;
     } catch (Exception e) {
       error("While waiting for connection start", e);
@@ -681,6 +698,20 @@ public class Pubber extends ManagerBase implements ManagerHost {
     error("Attempt failed, retries remaining: " + retriesRemaining.get());
     safeSleep(RESTART_DELAY_MS);
     return false;
+  }
+
+  private void configLatchWait() {
+    try {
+      int waitTimeSec = ofNullable(configuration.endpoint.config_sync_sec)
+          .orElse(DEFAULT_CONFIG_WAIT_SEC);
+      int useWaitTime = waitTimeSec == 0 ? DEFAULT_CONFIG_WAIT_SEC : waitTimeSec;
+      warn(format("Start waiting %ds for config latch for %s", useWaitTime, deviceId));
+      if (useWaitTime > 0 && !configLatch.await(useWaitTime, TimeUnit.SECONDS)) {
+        throw new RuntimeException("Config latch timeout");
+      }
+    } catch (Exception e) {
+      throw new RuntimeException("While waiting for config latch", e);
+    }
   }
 
   protected void initialize() {
@@ -765,6 +796,8 @@ public class Pubber extends ManagerBase implements ManagerHost {
 
   private void connect() {
     try {
+      warn("Creating new config latch for " + deviceId);
+      configLatch = new CountDownLatch(1);
       deviceTarget.connect();
       info("Connection complete.");
       workingEndpoint = toJsonString(configuration.endpoint);
@@ -784,7 +817,6 @@ public class Pubber extends ManagerBase implements ManagerHost {
     } else if (toReport instanceof ConnectionClosedException) {
       error("Connection closed, attempting reconnect...");
       while (retriesRemaining.getAndDecrement() > 0) {
-        error("TAP2");
         if (attemptConnection()) {
           return;
         }
@@ -861,8 +893,12 @@ public class Pubber extends ManagerBase implements ManagerHost {
   private void configHandler(Config config) {
     try {
       configPreprocess(deviceId, config);
-      debug(format("Config update%s", deviceManager.getTestingTag()), toJsonString(config));
+      debug(format("Config update %s%s", deviceId, deviceManager.getTestingTag()),
+          toJsonString(config));
       processConfigUpdate(config);
+      if (configLatch.getCount() > 0) {
+        warn("Received config for config latch " + deviceId);
+      }
       configLatch.countDown();
       publisherConfigLog("apply", null);
     } catch (Exception e) {
@@ -884,7 +920,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
       // Grab this to make state-after-config updates monolithic.
       stateLock.lock();
     } catch (Exception e) {
-      throw new RuntimeException("While acquiting state lock", e);
+      throw new RuntimeException("While acquiring state lock", e);
     }
 
     try {
@@ -1369,13 +1405,13 @@ public class Pubber extends ManagerBase implements ManagerHost {
     }
     stateDirty.set(false);
     deviceState.timestamp = getNow();
-    info(format("update state %s last_config %s", isoConvert(deviceState.timestamp),
+    info(format("Update state %s last_config %s", isoConvert(deviceState.timestamp),
         isoConvert(deviceState.system.last_config)));
     publishStateMessage(deviceState);
   }
 
   private void publishStateMessage(Object stateToSend) {
-    if (configLatch.getCount() > 0) {
+    if (configLatch == null || configLatch.getCount() > 0) {
       warn("Dropping state update until config received...");
       return;
     }
@@ -1390,7 +1426,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
     CountDownLatch latch = new CountDownLatch(1);
 
     try {
-      debug(format("State update%s", deviceManager.getTestingTag()),
+      debug(format("State update %s%s", deviceId, deviceManager.getTestingTag()),
           toJsonString(stateToSend));
     } catch (Exception e) {
       throw new RuntimeException("While converting new device state", e);
