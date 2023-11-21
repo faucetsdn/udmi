@@ -60,7 +60,8 @@ public class GatewayManager extends ManagerBase {
   }
 
   public void updateConfig(GatewayConfig gateway) {
-    ifTrueThen(proxyDevices.containsKey(EXTRA_PROXY_DEVICE), this::configExtraDevice);
+    ifNotNullThen(proxyDevices,
+        p -> ifTrueThen(p.containsKey(EXTRA_PROXY_DEVICE), this::configExtraDevice));
   }
 
   private void configExtraDevice() {
