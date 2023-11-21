@@ -64,6 +64,12 @@
     "noState": {
       "type": "boolean"
     },
+    "spamState": {
+      "type": "boolean"
+    },
+    "tweakState": {
+      "type": "boolean"
+    },
     "featureEnableSwap": {
       "type": "boolean"
     },
