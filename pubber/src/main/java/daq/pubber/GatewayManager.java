@@ -48,13 +48,8 @@ public class GatewayManager extends ManagerBase {
     return devices;
   }
 
-  private void configExtraDevice() {
-    Config config = new Config();
-    config.pointset = new PointsetConfig();
-    config.pointset.points = new HashMap<>();
-    PointPointsetConfig pointPointsetConfig = new PointPointsetConfig();
-    config.pointset.points.put(EXTRA_PROXY_POINT, pointPointsetConfig);
-    proxyDevices.get(EXTRA_PROXY_DEVICE).configHandler(config);
+  public void setMetadata (GatewayModel gateway){
+    proxyDevices = ifNotNullGet(gateway, g -> createProxyDevices(g.proxy_ids));
   }
 
   ProxyDevice makeExtraDevice() {
@@ -68,11 +63,16 @@ public class GatewayManager extends ManagerBase {
     return proxyDevice;
   }
 
-  public void setMetadata (GatewayModel gateway){
-    proxyDevices = ifNotNullGet(gateway, g -> createProxyDevices(g.proxy_ids));
-  }
-
   public void updateConfig(GatewayConfig gateway) {
     ifTrueThen(proxyDevices.containsKey(EXTRA_PROXY_DEVICE), this::configExtraDevice);
+  }
+
+  private void configExtraDevice() {
+    Config config = new Config();
+    config.pointset = new PointsetConfig();
+    config.pointset.points = new HashMap<>();
+    PointPointsetConfig pointPointsetConfig = new PointPointsetConfig();
+    config.pointset.points.put(EXTRA_PROXY_POINT, pointPointsetConfig);
+    proxyDevices.get(EXTRA_PROXY_DEVICE).configHandler(config);
   }
 }
