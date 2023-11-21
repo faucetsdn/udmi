@@ -13,6 +13,10 @@ fi
 project_id=$1
 shift
 
+echo "export TARGET_PROJECT=$project_id"
+echo "export UDMI_REGISTRY_SUFFIX=$UDMI_REGISTRY_SUFFIX"
+echo "export UDMI_ALT_REGISTRY=$UDMI_ALT_REGISTRY"
+
 [[ -n $GITHUB_RUN_NUMBER ]] && echo "Workflow run number $GITHUB_RUN_NUMBER" || true
 echo 'Using target project:' $project_id
 
