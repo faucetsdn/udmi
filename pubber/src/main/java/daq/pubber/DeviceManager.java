@@ -1,5 +1,15 @@
 package daq.pubber;
 
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueGet;
+import static com.google.udmi.util.GeneralUtils.isTrue;
+import static java.lang.String.format;
+import static java.util.function.Predicate.not;
+import static java.util.stream.Collectors.toMap;
+
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import udmi.schema.Config;
 import udmi.schema.DevicePersistent;
@@ -8,6 +18,8 @@ import udmi.schema.FamilyDiscoveryEvent;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.Operation.SystemMode;
+import udmi.schema.PointPointsetConfig;
+import udmi.schema.PointsetConfig;
 import udmi.schema.PubberConfiguration;
 
 /**
@@ -18,16 +30,19 @@ public class DeviceManager extends ManagerBase {
   private final PointsetManager pointsetManager;
   private final SystemManager systemManager;
   private final LocalnetManager localnetManager;
+  private final GatewayManager gatewayManager;
 
 
   /**
    * Create a new instance.
    */
-  public DeviceManager(ManagerHost host, PubberConfiguration configuration) {
+  public DeviceManager(Pubber host, PubberConfiguration configuration) {
     super(host, configuration);
+
     systemManager = new SystemManager(host, configuration);
     pointsetManager = new PointsetManager(host, configuration);
     localnetManager = new LocalnetManager(host, configuration);
+    gatewayManager = new GatewayManager(host, configuration);
   }
 
   public void setPersistentData(DevicePersistent persistentData) {
@@ -37,6 +52,7 @@ public class DeviceManager extends ManagerBase {
   public void setMetadata(Metadata metadata) {
     pointsetManager.setPointsetModel(metadata.pointset);
     systemManager.setMetadata(metadata);
+    gatewayManager.setMetadata(metadata.gateway);
   }
 
   public void systemLifecycle(SystemMode mode) {
@@ -62,6 +78,7 @@ public class DeviceManager extends ManagerBase {
   public void updateConfig(Config config) {
     pointsetManager.updateConfig(config.pointset);
     systemManager.updateConfig(config.system, config.timestamp);
+    gatewayManager.updateConfig(config.gateway);
   }
 
   public void publishLogMessage(Entry logEntry) {
@@ -79,6 +96,7 @@ public class DeviceManager extends ManagerBase {
     systemManager.shutdown();
     pointsetManager.shutdown();
     localnetManager.shutdown();
+    gatewayManager.shutdown();
   }
 
   public Map<String, FamilyDiscoveryEvent> enumerateFamilies() {

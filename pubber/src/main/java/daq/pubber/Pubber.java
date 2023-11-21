@@ -29,7 +29,6 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Objects.requireNonNullElse;
 import static java.util.Optional.ofNullable;
-import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.toMap;
 import static udmi.schema.BlobsetConfig.SystemBlobsets.IOT_ENDPOINT_CONFIG;
 import static udmi.schema.EndpointConfiguration.Protocol.MQTT;
@@ -163,11 +162,11 @@ public class Pubber extends ManagerBase implements ManagerHost {
   final Config deviceConfig = new Config();
   private final File outDir;
   private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
-  private CountDownLatch configLatch;
   private final AtomicBoolean stateDirty = new AtomicBoolean();
   private final ReentrantLock stateLock = new ReentrantLock();
   private final String deviceId;
   protected DevicePersistent persistentData;
+  private CountDownLatch configLatch;
   private MqttDevice deviceTarget;
   private long lastStateTimeMs;
   private PubSubClient pubSubClient;
@@ -176,11 +175,9 @@ public class Pubber extends ManagerBase implements ManagerHost {
   private String attemptedEndpoint;
   private EndpointConfiguration extractedEndpoint;
   private SiteModel siteModel;
-  private MqttDevice gatewayTarget;
   private SchemaVersion targetSchema;
   private int deviceUpdateCount = -1;
   private DeviceManager deviceManager;
-  private Map<String, ProxyDevice> proxyDevices = new HashMap<>();
   private boolean isConnected;
 
   /**
@@ -386,7 +383,6 @@ public class Pubber extends ManagerBase implements ManagerHost {
       }
       Metadata metadata = siteModel.getMetadata(configuration.deviceId);
       processDeviceMetadata(metadata);
-      ifNotNullThen(metadata.gateway, g -> createProxyDevices(g.proxy_ids));
     } else if (pubSubClient != null) {
       pullDeviceMessage();
     }
@@ -398,18 +394,6 @@ public class Pubber extends ManagerBase implements ManagerHost {
         configuration.gatewayId, optionsString(configuration.options)));
 
     markStateDirty();
-  }
-
-  private void createProxyDevices(List<String> proxyIds) {
-    if (proxyIds == null) {
-      proxyDevices = new HashMap<>();
-      return;
-    }
-    String firstId = proxyIds.stream().sorted().findFirst().orElseThrow();
-    String noProxyId = ifTrueGet(isTrue(options.noProxy), () -> firstId);
-    ifNotNullThen(noProxyId, id -> warn(format("Not proxying device " + noProxyId)));
-    proxyDevices = proxyIds.stream().filter(not(id -> id.equals(noProxyId)))
-        .collect(toMap(k -> k, v -> new ProxyDevice(this, siteModel, v)));
   }
 
   protected DevicePersistent newDevicePersistent() {
@@ -731,15 +715,10 @@ public class Pubber extends ManagerBase implements ManagerHost {
     try {
       initializeDevice();
       initializeMqtt();
-      proxyDevices.values().forEach(this::initializeProxyDevice);
     } catch (Exception e) {
       shutdown();
       throw new RuntimeException("While initializing main pubber class", e);
     }
-  }
-
-  private void initializeProxyDevice(ProxyDevice proxyDevice) {
-    deviceTarget.connect(proxyDevice.deviceId);
   }
 
   @Override
@@ -771,31 +750,18 @@ public class Pubber extends ManagerBase implements ManagerHost {
     checkState(deviceTarget == null, "mqttPublisher already defined");
     ensureKeyBytes();
     deviceTarget = new MqttDevice(configuration, this::publisherException);
-    ifTrueThen(isGateway(), () -> registerGatewayHandlers(deviceId), this::registerDeviceHandlers);
-    String gatewayId = getGatewayId(deviceId, configuration);
-    ifNotNullThen(gatewayId, this::registerGatewayHandlers);
-    proxyDevices.values().forEach(ProxyDevice::initialize);
+    registerMessageHandlers();
     publishDirtyState();
   }
 
-  private boolean isGateway() {
-    return !proxyDevices.isEmpty();
-  }
-
-  private void registerDeviceHandlers() {
+  private void registerMessageHandlers() {
     deviceTarget.registerHandler(CONFIG_TOPIC, this::configHandler, Config.class);
-  }
-
-  private void registerGatewayHandlers(String gatewayId) {
-    gatewayTarget = getMqttDevice(gatewayId);
-    gatewayTarget.registerHandler(CONFIG_TOPIC, this::configHandler, Config.class);
-    gatewayTarget.registerHandler(ERRORS_TOPIC, this::errorHandler, GatewayError.class);
+    deviceTarget.registerHandler(ERRORS_TOPIC, this::errorHandler, GatewayError.class);
   }
 
   public MqttDevice getMqttDevice(String proxyId) {
     return new MqttDevice(proxyId, deviceTarget);
   }
-
 
   private void ensureKeyBytes() {
     if (configuration.keyBytes != null) {
