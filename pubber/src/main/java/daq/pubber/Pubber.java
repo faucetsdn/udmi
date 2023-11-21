@@ -666,7 +666,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
 
   protected void startConnection(Function<String, Boolean> connectionDone) {
     String nonce = String.valueOf(System.currentTimeMillis());
-    warn(format("TAP starting startConnection %s with %d", nonce, retriesRemaining.get()));
+    warn(format("Starting connection %s with %d", nonce, retriesRemaining.get()));
     try {
       this.connectionDone = connectionDone;
       while (retriesRemaining.getAndDecrement() > 0) {
@@ -678,20 +678,18 @@ public class Pubber extends ManagerBase implements ManagerHost {
     } catch (Exception e) {
       throw new RuntimeException("While attempting to start connection", e);
     } finally {
-      warn(format("TAP ending startConnection %s with %d", nonce, retriesRemaining.get()));
+      warn(format("Ending connection %s with %d", nonce, retriesRemaining.get()));
     }
   }
 
   private boolean attemptConnection() {
     try {
-      warn("TAP setting disconnected");
       isConnected = false;
       if (deviceTarget == null) {
         throw new RuntimeException("Mqtt publisher not initialized");
       }
       connect();
       configLatchWait();
-      warn("TAP connection complete");
       isConnected = true;
       return true;
     } catch (Exception e) {

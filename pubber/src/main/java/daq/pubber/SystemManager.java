@@ -206,7 +206,6 @@ public class SystemManager extends ManagerBase {
     }
     int exitCode = EXIT_CODE_MAP.getOrDefault(mode, UNKNOWN_MODE_EXIT_CODE);
     error("Stopping system with extreme prejudice, restart " + mode + " with code " + exitCode);
-    new RuntimeException("TAP exit").printStackTrace();;
     System.exit(exitCode);
   }
 

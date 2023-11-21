@@ -253,9 +253,6 @@ public class MqttPublisher implements Publisher {
 
   private MqttClient cleanClients(String deviceId) {
     MqttClient remove = mqttClients.remove(deviceId);
-    if (remove != null) {
-      new RuntimeException("TAP cleanClients " + deviceId).printStackTrace();
-    }
     mqttClients.entrySet().stream().filter(entry -> entry.getValue() == remove).map(Entry::getKey)
         .toList().forEach(mqttClients::remove);
     return remove;
@@ -265,7 +262,6 @@ public class MqttPublisher implements Publisher {
   public void close() {
     try {
       warn("Closing publisher connection");
-      new RuntimeException("TAP close").printStackTrace();
       publisherExecutor.shutdown();
       mqttClients.keySet().forEach(this::closeMqttClient);
     } catch (Exception e) {
@@ -287,7 +283,6 @@ public class MqttPublisher implements Publisher {
 
   private MqttClient newBoundClient(String deviceId) {
     try {
-      new RuntimeException("TAP newBoundClient " + deviceId).printStackTrace();
       String gatewayId = getGatewayId(deviceId);
       debug(format("Connecting device %s through gateway %s", deviceId, gatewayId));
       final MqttClient mqttClient = getConnectedClient(gatewayId);
@@ -322,7 +317,6 @@ public class MqttPublisher implements Publisher {
       String clientId = getClientId(deviceId);
       String brokerUrl = getBrokerUrl();
       MqttClient mqttClient = getMqttClient(clientId, brokerUrl);
-      new RuntimeException("MONKEY").printStackTrace();
       info("Creating new client to " + brokerUrl + " as " + clientId);
       return mqttClient;
     } catch (Exception e) {
@@ -337,7 +331,6 @@ public class MqttPublisher implements Publisher {
 
   private MqttClient connectMqttClient(String deviceId) {
     try {
-      new RuntimeException("TAP connectMqttClient " + deviceId).printStackTrace();
       if (!connectionLock.tryAcquire(INITIALIZE_TIME_MS, TimeUnit.MILLISECONDS)) {
         throw new RuntimeException("Timeout waiting for connection lock");
       }
