@@ -3,8 +3,10 @@
 # Force consistent sort order
 export LC_ALL=C
 
-ROOT_DIR=$(realpath $(dirname $0)/..)
-cd $ROOT_DIR
+UDMI_ROOT=$(realpath $(dirname $0)/..)
+cd $UDMI_ROOT
+
+source etc/shell_common.sh
 
 if [[ $# != 1 ]]; then
     echo Usage: $0 PROJECT_ID
@@ -141,4 +143,5 @@ sed -E < $VALIDATOR_OUT.raw >> $VALIDATOR_OUT \
     -e 's/\\t[a-zA-Z .()$0-9]+\.java:[0-9]+\)\\n/\\tREDACTED_STACK\\n/g'
 
 echo diff -u $VALIDATOR_OUT $GOLDEN_OUT
-diff -u $VALIDATOR_OUT $GOLDEN_OUT && echo No mismatch from golden file.
+diff -u $VALIDATOR_OUT $GOLDEN_OUT ||
+    fail Mismatch from golden file comparison: $VALIDATOR_OUT $GOLDEN_OUT

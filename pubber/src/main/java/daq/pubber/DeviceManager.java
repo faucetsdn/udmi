@@ -24,9 +24,8 @@ public class DeviceManager extends ManagerBase {
   /**
    * Create a new instance.
    */
-  public DeviceManager(Pubber host, PubberConfiguration configuration) {
+  public DeviceManager(ManagerHost host, PubberConfiguration configuration) {
     super(host, configuration);
-
     systemManager = new SystemManager(host, configuration);
     pointsetManager = new PointsetManager(host, configuration);
     localnetManager = new LocalnetManager(host, configuration);
@@ -46,8 +45,8 @@ public class DeviceManager extends ManagerBase {
     gatewayManager.setMetadata(metadata.gateway);
   }
 
-  public void initialize() {
-    gatewayManager.initialize();
+  public void activate() {
+    gatewayManager.activate();
   }
 
   public void systemLifecycle(SystemMode mode) {

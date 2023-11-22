@@ -27,12 +27,10 @@ public class GatewayManager extends ManagerBase {
 
   private static final String EXTRA_PROXY_DEVICE = "XXX-1";
   private static final String EXTRA_PROXY_POINT = "xxx_conflagration";
-  private final Pubber pubberHost;
   private Map<String, ProxyDevice> proxyDevices;
 
-  public GatewayManager(Pubber host, PubberConfiguration configuration) {
+  public GatewayManager(ManagerHost host, PubberConfiguration configuration) {
     super(host, configuration);
-    pubberHost = host;
   }
 
   private Map<String, ProxyDevice> createProxyDevices(List<String> proxyIds) {
@@ -44,7 +42,7 @@ public class GatewayManager extends ManagerBase {
     String noProxyId = ifTrueGet(isTrue(options.noProxy), () -> firstId);
     ifNotNullThen(noProxyId, id -> warn(format("Not proxying device " + noProxyId)));
     Map<String, ProxyDevice> devices = proxyIds.stream().filter(not(id -> id.equals(noProxyId)))
-        .collect(toMap(k -> k, v -> new ProxyDevice(pubberHost, v)));
+        .collect(toMap(k -> k, v -> new ProxyDevice(host, v)));
 
     ifTrueThen(options.extraDevice, () -> devices.put(EXTRA_PROXY_DEVICE, makeExtraDevice()));
 
@@ -55,12 +53,12 @@ public class GatewayManager extends ManagerBase {
     proxyDevices = ifNotNullGet(gateway, g -> createProxyDevices(g.proxy_ids));
   }
 
-  public void initialize() {
-    ifNotNullThen(proxyDevices, p -> p.values().forEach(ProxyDevice::initialize));
+  public void activate() {
+    ifNotNullThen(proxyDevices, p -> p.values().forEach(ProxyDevice::activate));
   }
 
   ProxyDevice makeExtraDevice() {
-    return new ProxyDevice(pubberHost, EXTRA_PROXY_DEVICE);
+    return new ProxyDevice(host, EXTRA_PROXY_DEVICE);
   }
 
   public void updateConfig(GatewayConfig gateway) {

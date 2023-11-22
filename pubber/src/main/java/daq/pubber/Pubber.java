@@ -690,6 +690,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
       connect();
       configLatchWait();
       isConnected = true;
+      deviceManager.activate();
       return true;
     } catch (Exception e) {
       error("While waiting for connection start", e);
@@ -717,7 +718,6 @@ public class Pubber extends ManagerBase implements ManagerHost {
     try {
       initializeDevice();
       initializeMqtt();
-      deviceManager.initialize();
     } catch (Exception e) {
       shutdown();
       throw new RuntimeException("While initializing main pubber class", e);

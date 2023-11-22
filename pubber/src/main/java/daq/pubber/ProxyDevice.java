@@ -18,10 +18,12 @@ public class ProxyDevice extends ManagerBase implements ManagerHost {
   /**
    * New instance.
    */
-  public ProxyDevice(Pubber host, String id) {
+  public ProxyDevice(ManagerHost host, String id) {
     super(host, makeProxyConfiguration(id));
-    pubberHost = host;
-    deviceManager = new DeviceManager(host, makeProxyConfiguration(id));
+    deviceManager = new DeviceManager(this, makeProxyConfiguration(id));
+
+    // Simple shortcut to get access to some foundational mechanisms inside of Pubber.
+    pubberHost = (Pubber) host;
   }
 
   private static PubberConfiguration makeProxyConfiguration(String id) {
@@ -30,7 +32,7 @@ public class ProxyDevice extends ManagerBase implements ManagerHost {
     return proxyConfiguration;
   }
 
-  protected void initialize() {
+  protected void activate() {
     MqttDevice mqttDevice = pubberHost.getMqttDevice(deviceId);
     mqttDevice.registerHandler(MqttDevice.CONFIG_TOPIC, this::configHandler, Config.class);
     mqttDevice.connect(deviceId);
