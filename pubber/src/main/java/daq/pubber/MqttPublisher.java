@@ -640,8 +640,8 @@ public class MqttPublisher implements Publisher {
     public void connectionLost(Throwable cause) {
       boolean connected = cleanClients(deviceId).isConnected();
       warn("MQTT Connection Lost: " + connected + cause);
-      onError.accept(new ConnectionClosedException());
       close();
+      onError.accept(new ConnectionClosedException());
     }
 
     @Override

@@ -633,6 +633,9 @@ public class Pubber extends ManagerBase implements ManagerHost {
   }
 
   private void maybeTweakState() {
+    if (!isTrue(options.tweakState)) {
+      return;
+    }
     int phase = deviceUpdateCount % 2;
     String randomValue = format("%04x", System.currentTimeMillis() % 0xffff);
     if (phase == 0) {
