@@ -107,7 +107,7 @@ function pubber_bg {
     fi
 }
 
-pubber_bg AHU-1 extraField=prlagle
+pubber_bg AHU-1 extraField=prlagle extraPoint=llama
 pubber_bg AHU-22 emptyMissing skewClock
 
 echo Waiting for system to run for a bit...
