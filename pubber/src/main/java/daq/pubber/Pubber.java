@@ -758,7 +758,12 @@ public class Pubber extends ManagerBase implements ManagerHost {
 
   private void registerMessageHandlers() {
     deviceTarget.registerHandler(CONFIG_TOPIC, this::configHandler, Config.class);
-    deviceTarget.registerHandler(ERRORS_TOPIC, this::errorHandler, GatewayError.class);
+    String gatewayId = getGatewayId(deviceId, configuration);
+    if (gatewayId != null) {
+      MqttDevice mqttDevice = new MqttDevice(gatewayId, deviceTarget);
+      mqttDevice.registerHandler(CONFIG_TOPIC, this::gatewayHandler, Config.class);
+      mqttDevice.registerHandler(ERRORS_TOPIC, this::errorHandler, GatewayError.class);
+    }
   }
 
   public MqttDevice getMqttDevice(String proxyId) {
@@ -886,6 +891,14 @@ public class Pubber extends ManagerBase implements ManagerHost {
       publisherConfigLog("apply", e);
     }
     publishConfigStateUpdate();
+  }
+
+  private void gatewayHandler(Config config) {
+    warn("Ignoring configuration for gateway " + getGatewayId(deviceId, configuration));
+  }
+
+  private void errorHandler(GatewayError error) {
+    warn(format("%s for %s: %s", error.error_type, error.device_id, error.description));
   }
 
   void configPreprocess(String targetId, Config config) {
@@ -1326,10 +1339,6 @@ public class Pubber extends ManagerBase implements ManagerHost {
     } catch (Exception e) {
       throw new RuntimeException("Creating timestamp", e);
     }
-  }
-
-  private void errorHandler(GatewayError error) {
-    info(format("%s for %s: %s", error.error_type, error.device_id, error.description));
   }
 
   private byte[] getFileBytes(String dataFile) {
