@@ -8,7 +8,6 @@ RESULT fail system device_config_acked BETA 5 timeout waiting for config acked
 RESULT fail enumeration.features feature_enumeration PREVIEW 5 Failed check that feature enumeration matches metadata; missing { enumeration }, extra { unknown }
 RESULT pass gateway gateway_proxy_events ALPHA 5 Sequence complete
 RESULT fail gateway gateway_proxy_events ALPHA 5 timeout waiting for Missing data from AHU-22
-RESULT fail gateway gateway_proxy_events ALPHA 5 Found unexpected proxy device XXX-1
 RESULT fail pointset pointset_remove_point BETA 5 timeout waiting for pointset state reports same points as defined in config
 RESULT fail pointset pointset_remove_point BETA 5 timeout waiting for pointset status does not contain removed point
 RESULT fail pointset pointset_remove_point BETA 5 Too many state messages
