@@ -1,13 +1,18 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
+import static com.google.daq.mqtt.util.TimePeriodConstants.ONE_MINUTE_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.THREE_MINUTES_MS;
+import static com.google.udmi.util.JsonUtil.safeSleep;
 import static java.lang.String.format;
 import static udmi.schema.Bucket.SYSTEM;
+import static udmi.schema.FeatureEnumeration.FeatureStage.ALPHA;
 import static udmi.schema.FeatureEnumeration.FeatureStage.BETA;
 
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.Summary;
+import com.google.udmi.util.GeneralUtils;
+import com.google.udmi.util.JsonUtil;
 import java.util.Map;
 import org.junit.Test;
 
@@ -16,10 +21,14 @@ import org.junit.Test;
  */
 public class SystemSequences extends SequenceBase {
 
+  private static final long STATE_COLLECT_TIME_MS = 60 * 1000;
+  private static final int STATE_LIMIT_THRESHOLD = 6;
+
+
   /**
    * Simple check that device contains appropriate make/model descriptions.
    */
-  @Test(timeout = THREE_MINUTES_MS)
+  @Test(timeout = ONE_MINUTE_MS)
   @Feature(stage = BETA, bucket = SYSTEM)
   @Summary("Check that a device publishes correct make and model information in state messages")
   public void state_make_model() {
@@ -47,7 +56,7 @@ public class SystemSequences extends SequenceBase {
    *  (1) in state message
    *  (2) match
    */
-  @Test(timeout = THREE_MINUTES_MS)
+  @Test(timeout = ONE_MINUTE_MS)
   @Feature(stage = BETA, bucket = SYSTEM)
   @Summary("Check that a device publishes correct software information in state messages")
   public void state_software() {
@@ -62,6 +71,17 @@ public class SystemSequences extends SequenceBase {
         () -> actualSoftware.entrySet().equals(expectedSoftware.entrySet()));
   }
 
+  @Test(timeout = THREE_MINUTES_MS)
+  @Feature(stage = ALPHA, bucket = SYSTEM)
+  @Summary("Check that state messages aren't spuriously reported too frequently")
+  public void too_much_state() {
+    safeSleep(STATE_COLLECT_TIME_MS);
+    int numStateUpdates = getNumStateUpdates();
+    info("TAP found state updates " + numStateUpdates);
+    checkThat(format("No more than %d state updates", numStateUpdates),
+        () -> numStateUpdates <= STATE_LIMIT_THRESHOLD);
+    // TODO: Check that the state timestamp is close to current time.
+  }
 }
 
 

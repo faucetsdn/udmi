@@ -39,7 +39,6 @@ public class PointsetSequences extends PointsetBase {
   private static final String EXTRANEOUS_POINT = "extraneous_point";
   private static final int DEFAULT_SAMPLE_RATE_SEC = 10;
   private static final String POINTS_MAP_PATH = "pointset.points";
-  private static final int STATE_LIMIT_THRESHOLD = 6;
 
   private boolean isErrorState(PointPointsetState pointState) {
     return ofNullable(catchToNull(() -> pointState.status.level)).orElse(Level.INFO.value())
@@ -118,12 +117,6 @@ public class PointsetSequences extends PointsetBase {
         () -> deviceState.pointset.points.containsKey(name));
 
     untilPointsetSanity();
-
-    int numStateUpdates = getNumStateUpdates();
-    info("TAP found state updates " + numStateUpdates);
-    checkThat(format("No more than %d state updates", numStateUpdates),
-        () -> numStateUpdates <= STATE_LIMIT_THRESHOLD);
-    // TODO: Check that the state timestamp is close to current time.
   }
 
   /**
