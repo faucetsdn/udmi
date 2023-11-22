@@ -2,6 +2,7 @@ TEST device_config_acked noConfigAck
 TEST pointset_request_extraneous extraPoint=llama
 TEST pointset_remove_point missingPoint=filter_alarm_pressure_status
 TEST pointset_remove_point noState
+TEST pointset_remote_point spamState
 TEST feature_enumeration featureEnableSwap
 TEST valid_serial_no noLastStart
 TEST writeback_success noWriteback
@@ -14,8 +15,6 @@ TEST broken_config configStateDelay
 TEST broken_config noState
 TEST broken_config badCategory
 TEST system_last_update extraField=fnooz
-TEST system_last_update spamState
-TEST system_last_update tweakState
 
 # Test with various device metadata.json options
 WITH AHU-1 noState

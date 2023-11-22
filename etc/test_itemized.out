@@ -11,11 +11,10 @@ RESULT fail gateway gateway_proxy_events ALPHA 5 timeout waiting for Missing dat
 RESULT fail gateway gateway_proxy_events ALPHA 5 Found unexpected proxy device XXX-1
 RESULT fail pointset pointset_remove_point BETA 5 timeout waiting for pointset state reports same points as defined in config
 RESULT fail pointset pointset_remove_point BETA 5 timeout waiting for pointset status does not contain removed point
+RESULT fail pointset pointset_remove_point BETA 5 Too many state messages
 RESULT fail pointset pointset_request_extraneous BETA 5 timeout waiting for pointset event contains correct points with present_value
 RESULT fail pointset pointset_sample_rate BETA 5 Failed check that time period between successive pointset events is between 1 and 5 seconds
 RESULT pass system system_last_update STABLE 5 Sequence complete
-RESULT fail system system_last_update ALPHA 5 State messages too spammy
-RESULT fail system system_last_update ALPHA 5 Unexpected state change
 RESULT fail system system_last_update STABLE 5 timeout waiting for state last_config matches config timestamp
 RESULT fail system system_min_loglevel ALPHA 5 Received state update with no-state device
 RESULT pass system system_min_loglevel ALPHA 5 Sequence complete
