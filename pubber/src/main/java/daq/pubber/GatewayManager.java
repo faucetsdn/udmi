@@ -55,6 +55,10 @@ public class GatewayManager extends ManagerBase {
     proxyDevices = ifNotNullGet(gateway, g -> createProxyDevices(g.proxy_ids));
   }
 
+  public void initialize() {
+    ifNotNullThen(proxyDevices, p -> p.values().forEach(ProxyDevice::initialize));
+  }
+
   ProxyDevice makeExtraDevice() {
     return new ProxyDevice(pubberHost, EXTRA_PROXY_DEVICE);
   }

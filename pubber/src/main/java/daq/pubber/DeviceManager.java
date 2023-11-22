@@ -46,6 +46,10 @@ public class DeviceManager extends ManagerBase {
     gatewayManager.setMetadata(metadata.gateway);
   }
 
+  public void initialize() {
+    gatewayManager.initialize();
+  }
+
   public void systemLifecycle(SystemMode mode) {
     systemManager.systemLifecycle(mode);
   }

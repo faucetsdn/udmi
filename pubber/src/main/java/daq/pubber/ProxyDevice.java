@@ -33,6 +33,7 @@ public class ProxyDevice extends ManagerBase implements ManagerHost {
   protected void initialize() {
     MqttDevice mqttDevice = pubberHost.getMqttDevice(deviceId);
     mqttDevice.registerHandler(MqttDevice.CONFIG_TOPIC, this::configHandler, Config.class);
+    mqttDevice.connect(deviceId);
   }
 
   void configHandler(Config config) {

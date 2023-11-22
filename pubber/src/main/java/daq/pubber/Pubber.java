@@ -717,6 +717,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
     try {
       initializeDevice();
       initializeMqtt();
+      deviceManager.initialize();
     } catch (Exception e) {
       shutdown();
       throw new RuntimeException("While initializing main pubber class", e);
@@ -1416,7 +1417,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
     CountDownLatch latch = new CountDownLatch(1);
 
     try {
-      debug(format("State update %s%s", deviceId, deviceManager.getTestingTag()),
+        debug(format("State update %s%s", deviceId, deviceManager.getTestingTag()),
           toJsonString(stateToSend));
     } catch (Exception e) {
       throw new RuntimeException("While converting new device state", e);

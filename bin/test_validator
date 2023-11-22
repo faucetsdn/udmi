@@ -106,7 +106,7 @@ function pubber_bg {
 }
 
 pubber_bg AHU-1 extraField=prlagle skewClock
-pubber_bg AHU-22 emptyMissing extraPoint=llama
+pubber_bg GAT-123 emptyMissing extraPoint=llama
 
 echo Waiting for system to run for a bit...
 cat $VALIDATOR_LOG && timeout 60s tail -f $VALIDATOR_LOG || true
@@ -119,9 +119,11 @@ find $site_path/out/devices -name \*.json | sort > $VALIDATOR_OUT
 echo Found `wc -l $VALIDATOR_OUT` json output files.
 
 echo Out files for AHU-1:
-(cd $site_path/out/devices/AHU-1; ls -lrt *.out)
+(cd $site_path/out/devices/AHU-1; ls -lrt *.out) || true
 echo Out files for AHU-22:
-(cd $site_path/out/devices/AHU-22; ls -lrt *.out)
+(cd $site_path/out/devices/AHU-22; ls -lrt *.out) || true
+echo Out files for GAT-123:
+(cd $site_path/out/devices/GAT-123; ls -lrt *.out) || true
 
 outfiles=`find $site_path/out/devices -name \*.out | sort` || true
 if [[ -z $outfiles ]]; then
