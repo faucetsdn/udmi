@@ -765,11 +765,13 @@ public class Pubber extends ManagerBase implements ManagerHost {
     deviceTarget.registerHandler(CONFIG_TOPIC, this::configHandler, Config.class);
     String gatewayId = getGatewayId(deviceId, configuration);
     if (isGatewayDevice) {
+      // In this case, this is the gateway so register the appropriate error handler directly.
       deviceTarget.registerHandler(ERRORS_TOPIC, this::errorHandler, GatewayError.class);
     } else if (gatewayId != null) {
-      MqttDevice mqttDevice = new MqttDevice(gatewayId, deviceTarget);
-      mqttDevice.registerHandler(CONFIG_TOPIC, this::gatewayHandler, Config.class);
-      mqttDevice.registerHandler(ERRORS_TOPIC, this::errorHandler, GatewayError.class);
+      // In this case, this is a proxy device with a gateway, so register handlers accordingly.
+      MqttDevice gatewayTarget = new MqttDevice(gatewayId, deviceTarget);
+      gatewayTarget.registerHandler(CONFIG_TOPIC, this::gatewayHandler, Config.class);
+      gatewayTarget.registerHandler(ERRORS_TOPIC, this::errorHandler, GatewayError.class);
     }
   }
 
