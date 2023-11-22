@@ -3,6 +3,7 @@ package daq.pubber;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.udmi.util.GeneralUtils.catchToFalse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
@@ -179,6 +180,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
   private int deviceUpdateCount = -1;
   private DeviceManager deviceManager;
   private boolean isConnected;
+  private boolean isGatewayDevice;
 
   /**
    * Start an instance from a configuration file.
@@ -565,6 +567,8 @@ public class Pubber extends ManagerBase implements ManagerHost {
 
     info("Configured with auth_type " + configuration.algorithm);
 
+    isGatewayDevice = catchToFalse(() -> !metadata.gateway.proxy_ids.isEmpty());
+
     deviceManager.setMetadata(metadata);
   }
 
@@ -760,7 +764,9 @@ public class Pubber extends ManagerBase implements ManagerHost {
   private void registerMessageHandlers() {
     deviceTarget.registerHandler(CONFIG_TOPIC, this::configHandler, Config.class);
     String gatewayId = getGatewayId(deviceId, configuration);
-    if (gatewayId != null) {
+    if (isGatewayDevice) {
+      deviceTarget.registerHandler(ERRORS_TOPIC, this::errorHandler, GatewayError.class);
+    } else if (gatewayId != null) {
       MqttDevice mqttDevice = new MqttDevice(gatewayId, deviceTarget);
       mqttDevice.registerHandler(CONFIG_TOPIC, this::gatewayHandler, Config.class);
       mqttDevice.registerHandler(ERRORS_TOPIC, this::errorHandler, GatewayError.class);
