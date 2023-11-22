@@ -44,24 +44,24 @@ sites/udmi_site_model/out/devices/AHU-1/event_pointset.out
   "sub_type" : "event",
   "status" : {
     "message" : "Multiple validation errors",
-    "detail" : "While converting to json node: 1 schema violations found; Device has extra points: llama",
+    "detail" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold; While converting to json node: 1 schema violations found",
     "category" : "validation.device.multiple",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   },
   "pointset" : {
     "missing" : [ ],
-    "extra" : [ "llama" ]
+    "extra" : [ ]
   },
   "errors" : [ {
-    "message" : "While converting to json node: 1 schema violations found",
-    "detail" : "event_pointset: While converting to json node: 1 schema violations found REDACTED_ERROR; 1 schema violations found; object instance has properties which are not allowed by the schema: [\"extraField\"]",
+    "message" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
+    "detail" : "event_pointset: Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   }, {
-    "message" : "Device has extra points: llama",
-    "detail" : "event_pointset: Device has extra points: llama",
+    "message" : "While converting to json node: 1 schema violations found",
+    "detail" : "event_pointset: While converting to json node: 1 schema violations found REDACTED_ERROR; 1 schema violations found; object instance has properties which are not allowed by the schema: [\"extraField\"]",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
@@ -76,12 +76,19 @@ sites/udmi_site_model/out/devices/AHU-1/event_system.out
   "sub_folder" : "system",
   "sub_type" : "event",
   "status" : {
-    "message" : "Successful validation",
-    "category" : "validation.device.receive",
+    "message" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
+    "detail" : "event_system: Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
+    "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
-    "level" : 200
+    "level" : 500
   },
-  "errors" : [ ]
+  "errors" : [ {
+    "message" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
+    "detail" : "event_system: Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
+    "category" : "validation.device.schema",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 500
+  } ]
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/AHU-1/state.out
@@ -92,12 +99,19 @@ sites/udmi_site_model/out/devices/AHU-1/state.out
   "sub_folder" : "update",
   "sub_type" : "state",
   "status" : {
-    "message" : "Successful validation",
-    "category" : "validation.device.receive",
+    "message" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
+    "detail" : "state_update: Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
+    "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
-    "level" : 200
+    "level" : 500
   },
-  "errors" : [ ]
+  "errors" : [ {
+    "message" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
+    "detail" : "state_update: Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
+    "category" : "validation.device.schema",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 500
+  } ]
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/AHU-1/state_localnet.out
@@ -108,12 +122,19 @@ sites/udmi_site_model/out/devices/AHU-1/state_localnet.out
   "sub_folder" : "localnet",
   "sub_type" : "state",
   "status" : {
-    "message" : "Successful validation",
-    "category" : "validation.device.receive",
+    "message" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
+    "detail" : "state_localnet: Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
+    "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
-    "level" : 200
+    "level" : 500
   },
-  "errors" : [ ]
+  "errors" : [ {
+    "message" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
+    "detail" : "state_localnet: Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
+    "category" : "validation.device.schema",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 500
+  } ]
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/AHU-1/state_pointset.out
@@ -124,16 +145,23 @@ sites/udmi_site_model/out/devices/AHU-1/state_pointset.out
   "sub_folder" : "pointset",
   "sub_type" : "state",
   "status" : {
-    "message" : "Successful validation",
-    "category" : "validation.device.receive",
+    "message" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
+    "detail" : "state_pointset: Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
+    "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
-    "level" : 200
+    "level" : 500
   },
   "pointset" : {
     "missing" : [ ],
     "extra" : [ ]
   },
-  "errors" : [ ]
+  "errors" : [ {
+    "message" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
+    "detail" : "state_pointset: Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
+    "category" : "validation.device.schema",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 500
+  } ]
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/AHU-1/state_system.out
@@ -144,12 +172,19 @@ sites/udmi_site_model/out/devices/AHU-1/state_system.out
   "sub_folder" : "system",
   "sub_type" : "state",
   "status" : {
-    "message" : "Successful validation",
-    "category" : "validation.device.receive",
+    "message" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
+    "detail" : "state_system: Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
+    "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
-    "level" : 200
+    "level" : 500
   },
-  "errors" : [ ]
+  "errors" : [ {
+    "message" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
+    "detail" : "state_system: Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
+    "category" : "validation.device.schema",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 500
+  } ]
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/AHU-22/config.out
@@ -246,18 +281,12 @@ sites/udmi_site_model/out/devices/AHU-22/event_invalid.out
   "sub_type" : "event",
   "status" : {
     "message" : "Multiple validation errors",
-    "detail" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold; Unknown schema subFolder 'event_invalid' for AHU-22; While converting to json node: 1 schema violations found",
+    "detail" : "Unknown schema subFolder 'event_invalid' for AHU-22; While converting to json node: 1 schema violations found",
     "category" : "validation.device.multiple",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   },
   "errors" : [ {
-    "message" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
-    "detail" : "event_invalid: Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
-    "category" : "validation.device.schema",
-    "timestamp" : "REDACTED_TIMESTAMP",
-    "level" : 500
-  }, {
     "message" : "Unknown schema subFolder 'event_invalid' for AHU-22",
     "detail" : "event_invalid: Unknown schema subFolder 'event_invalid' for AHU-22 REDACTED_ERROR",
     "category" : "validation.device.schema",
@@ -280,19 +309,19 @@ sites/udmi_site_model/out/devices/AHU-22/event_pointset.out
   "sub_folder" : "pointset",
   "sub_type" : "event",
   "status" : {
-    "message" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
-    "detail" : "event_pointset: Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
+    "message" : "Device has extra points: llama",
+    "detail" : "event_pointset: Device has extra points: llama",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   },
   "pointset" : {
     "missing" : [ ],
-    "extra" : [ ]
+    "extra" : [ "llama" ]
   },
   "errors" : [ {
-    "message" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
-    "detail" : "event_pointset: Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
+    "message" : "Device has extra points: llama",
+    "detail" : "event_pointset: Device has extra points: llama",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
@@ -307,19 +336,12 @@ sites/udmi_site_model/out/devices/AHU-22/event_system.out
   "sub_folder" : "system",
   "sub_type" : "event",
   "status" : {
-    "message" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
-    "detail" : "event_system: Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
-    "category" : "validation.device.schema",
+    "message" : "Successful validation",
+    "category" : "validation.device.receive",
     "timestamp" : "REDACTED_TIMESTAMP",
-    "level" : 500
+    "level" : 200
   },
-  "errors" : [ {
-    "message" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
-    "detail" : "event_system: Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
-    "category" : "validation.device.schema",
-    "timestamp" : "REDACTED_TIMESTAMP",
-    "level" : 500
-  } ]
+  "errors" : [ ]
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/AHU-22/state.out
@@ -330,19 +352,12 @@ sites/udmi_site_model/out/devices/AHU-22/state.out
   "sub_folder" : "update",
   "sub_type" : "state",
   "status" : {
-    "message" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
-    "detail" : "state_update: Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
-    "category" : "validation.device.schema",
+    "message" : "Successful validation",
+    "category" : "validation.device.receive",
     "timestamp" : "REDACTED_TIMESTAMP",
-    "level" : 500
+    "level" : 200
   },
-  "errors" : [ {
-    "message" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
-    "detail" : "state_update: Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
-    "category" : "validation.device.schema",
-    "timestamp" : "REDACTED_TIMESTAMP",
-    "level" : 500
-  } ]
+  "errors" : [ ]
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/AHU-22/state_localnet.out
@@ -353,19 +368,12 @@ sites/udmi_site_model/out/devices/AHU-22/state_localnet.out
   "sub_folder" : "localnet",
   "sub_type" : "state",
   "status" : {
-    "message" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
-    "detail" : "state_localnet: Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
-    "category" : "validation.device.schema",
+    "message" : "Successful validation",
+    "category" : "validation.device.receive",
     "timestamp" : "REDACTED_TIMESTAMP",
-    "level" : 500
+    "level" : 200
   },
-  "errors" : [ {
-    "message" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
-    "detail" : "state_localnet: Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
-    "category" : "validation.device.schema",
-    "timestamp" : "REDACTED_TIMESTAMP",
-    "level" : 500
-  } ]
+  "errors" : [ ]
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/AHU-22/state_pointset.out
@@ -376,23 +384,16 @@ sites/udmi_site_model/out/devices/AHU-22/state_pointset.out
   "sub_folder" : "pointset",
   "sub_type" : "state",
   "status" : {
-    "message" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
-    "detail" : "state_pointset: Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
-    "category" : "validation.device.schema",
+    "message" : "Successful validation",
+    "category" : "validation.device.receive",
     "timestamp" : "REDACTED_TIMESTAMP",
-    "level" : 500
+    "level" : 200
   },
   "pointset" : {
     "missing" : [ ],
     "extra" : [ ]
   },
-  "errors" : [ {
-    "message" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
-    "detail" : "state_pointset: Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
-    "category" : "validation.device.schema",
-    "timestamp" : "REDACTED_TIMESTAMP",
-    "level" : 500
-  } ]
+  "errors" : [ ]
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/AHU-22/state_system.out
@@ -403,17 +404,10 @@ sites/udmi_site_model/out/devices/AHU-22/state_system.out
   "sub_folder" : "system",
   "sub_type" : "state",
   "status" : {
-    "message" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
-    "detail" : "state_system: Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
-    "category" : "validation.device.schema",
+    "message" : "Successful validation",
+    "category" : "validation.device.receive",
     "timestamp" : "REDACTED_TIMESTAMP",
-    "level" : 500
+    "level" : 200
   },
-  "errors" : [ {
-    "message" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
-    "detail" : "state_system: Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
-    "category" : "validation.device.schema",
-    "timestamp" : "REDACTED_TIMESTAMP",
-    "level" : 500
-  } ]
+  "errors" : [ ]
 }
