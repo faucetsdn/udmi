@@ -41,7 +41,8 @@ public class GatewaySequences extends SequenceBase {
     }, () -> "Missing data from " + CSV_JOINER.join(remaining));
 
     Set<String> receivedDevices = getReceivedDevices();
-    SetView<String> difference = Sets.difference(receivedDevices, original);
+    SetView<String> difference =
+        Sets.difference(Sets.difference(receivedDevices, original), ImmutableSet.of(getDeviceId()));
     assertTrue("unexpected proxy device: " + CSV_JOINER.join(difference), difference.isEmpty());
   }
 
