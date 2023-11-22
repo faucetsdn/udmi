@@ -1829,6 +1829,10 @@ public class SequenceBase {
     return getStateUpdateCount() > startStateCount;
   }
 
+  protected int getNumStateUpdates() {
+    return getStateUpdateCount() - startStateCount;
+  }
+
   protected void ensureStateUpdate() {
     updateConfig("ensure state update", true);
     withRecordSequence(false,

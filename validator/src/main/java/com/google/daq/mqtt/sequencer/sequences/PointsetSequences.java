@@ -10,7 +10,6 @@ import static java.util.Optional.ofNullable;
 import static udmi.schema.Bucket.POINTSET;
 import static udmi.schema.Category.POINTSET_POINT_INVALID;
 import static udmi.schema.Category.POINTSET_POINT_INVALID_VALUE;
-import static udmi.schema.FeatureEnumeration.FeatureStage.ALPHA;
 import static udmi.schema.FeatureEnumeration.FeatureStage.BETA;
 
 import com.google.daq.mqtt.sequencer.Feature;
@@ -37,9 +36,10 @@ import udmi.schema.PointsetEvent;
  */
 public class PointsetSequences extends PointsetBase {
 
-  public static final String EXTRANEOUS_POINT = "extraneous_point";
+  private static final String EXTRANEOUS_POINT = "extraneous_point";
   private static final int DEFAULT_SAMPLE_RATE_SEC = 10;
-  public static final String POINTS_MAP_PATH = "pointset.points";
+  private static final String POINTS_MAP_PATH = "pointset.points";
+  private static final int STATE_LIMIT_THRESHOLD = 6;
 
   private boolean isErrorState(PointPointsetState pointState) {
     return ofNullable(catchToNull(() -> pointState.status.level)).orElse(Level.INFO.value())
@@ -118,6 +118,12 @@ public class PointsetSequences extends PointsetBase {
         () -> deviceState.pointset.points.containsKey(name));
 
     untilPointsetSanity();
+
+    int numStateUpdates = getNumStateUpdates();
+    info("TAP found state updates " + numStateUpdates);
+    checkThat(format("No more than %d state updates", numStateUpdates),
+        () -> numStateUpdates <= STATE_LIMIT_THRESHOLD);
+    // TODO: Check that the state timestamp is close to current time.
   }
 
   /**
@@ -131,7 +137,7 @@ public class PointsetSequences extends PointsetBase {
 
     untilTrue("receive a pointset event",
         () -> (countReceivedEvents(PointsetEvent.class) > 1
-    ));
+        ));
   }
 
   /**
