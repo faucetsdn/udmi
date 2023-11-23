@@ -1423,8 +1423,12 @@ public class SequenceBase {
   }
 
   private void handlePipelineError(String subTypeRaw, Map<String, Object> message) {
-    throw new RuntimeException(
-        format("Pipeline type %s error: %s", subTypeRaw, message.get("error")));
+    String detail = format("Pipeline type %s error: %s", subTypeRaw, message.get("error"));
+    if (deviceSupportsState()) {
+      throw new RuntimeException(detail);
+    } else {
+      error(detail);
+    }
   }
 
   private void handleDeviceMessage(Map<String, Object> message, String subTypeRaw,
