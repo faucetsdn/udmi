@@ -135,6 +135,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
   private static final ImmutableMap<Class<?>, String> MESSAGE_TOPIC_SUFFIX_MAP =
       new ImmutableMap.Builder<Class<?>, String>()
           .put(State.class, MqttDevice.STATE_TOPIC)
+          .put(SystemState.class, MqttDevice.STATE_TOPIC) // Used for badState option
           .put(SystemEvent.class, getEventsSuffix("system"))
           .put(PointsetEvent.class, getEventsSuffix("pointset"))
           .put(ExtraPointsetEvent.class, getEventsSuffix("pointset"))
@@ -1407,7 +1408,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
     deviceState.timestamp = getNow();
     info(format("Update state %s last_config %s", isoConvert(deviceState.timestamp),
         isoConvert(deviceState.system.last_config)));
-    publishStateMessage(deviceState);
+    publishStateMessage(isTrue(options.badState) ? deviceState.system : deviceState);
   }
 
   private void publishStateMessage(Object stateToSend) {
