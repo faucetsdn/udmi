@@ -15,6 +15,7 @@ TEST broken_config configStateDelay
 TEST broken_config noState
 TEST broken_config badCategory
 TEST system_last_update extraField=fnooz
+TEST state_make_model badState
 
 # Test with various device metadata.json options
 WITH AHU-1 noState
@@ -27,6 +28,11 @@ TEST system_min_loglevel noState
 WITH GAT-123
 TEST gateway_proxy_events
 TEST gateway_proxy_events noProxy
+
+# Test gateway configurations that doesn't do state
+WITH GAT-123 noState
+TEST gateway_proxy_events noState
+TEST gateway_proxy_events badState
 
 # Test proxy device configurations
 WITH AHU-22

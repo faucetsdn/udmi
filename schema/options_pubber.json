@@ -73,6 +73,9 @@
     "tweakState": {
       "type": "boolean"
     },
+    "badState": {
+      "type": "boolean"
+    },
     "featureEnableSwap": {
       "type": "boolean"
     },

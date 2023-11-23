@@ -193,7 +193,7 @@ public class MqttPublisher implements Publisher {
       }
     } catch (Exception e) {
       errorCounter.incrementAndGet();
-      warn(format("Publish failed for %s: %s", deviceId, e));
+      warn(format("Publish %s failed for %s: %s", topicSuffix, deviceId, e));
       if (getGatewayId(deviceId) == null) {
         closeMqttClient(deviceId);
         if (mqttClients.isEmpty()) {

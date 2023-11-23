@@ -630,7 +630,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       ListDeviceStatesResponse response = requireNonNull(
           deviceManagerClient.listDeviceStates(request), "Null response returned");
       List<DeviceState> deviceStatesList = response.getDeviceStatesList();
-      return deviceStatesList.isEmpty() ? "" : (String) deviceStatesList.get(0).getBinaryData();
+      return deviceStatesList.isEmpty() ? null : (String) deviceStatesList.get(0).getBinaryData();
     } catch (Exception e) {
       throw new RuntimeException("While fetching state for device " + devicePath, e);
     }

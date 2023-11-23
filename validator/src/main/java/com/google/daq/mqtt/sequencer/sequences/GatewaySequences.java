@@ -28,8 +28,8 @@ public class GatewaySequences extends SequenceBase {
     super.setUp();
   }
 
-  @Feature(stage = FeatureStage.ALPHA, bucket = Bucket.GATEWAY)
-  @Summary("Check that a gateway proxies pointsets for indicated devices")
+  @Feature(stage = FeatureStage.ALPHA, bucket = Bucket.GATEWAY, nostate = true)
+  @Summary("Check that a gateway proxies pointset events for indicated devices")
   @Test(timeout = ONE_MINUTE_MS)
   public void gateway_proxy_events() {
     Set<String> remaining = new HashSet<>(deviceMetadata.gateway.proxy_ids);

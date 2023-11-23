@@ -125,6 +125,7 @@ import udmi.schema.SequenceValidationState.SequenceResult;
 import udmi.schema.State;
 import udmi.schema.SystemConfig;
 import udmi.schema.SystemEvent;
+import udmi.schema.SystemState;
 import udmi.schema.TestingSystemConfig;
 import udmi.schema.ValidationState;
 
@@ -583,6 +584,9 @@ public class SequenceBase {
   }
 
   private void resetDeviceConfig(boolean clean) {
+    debug("Clear configTransactions and reset device config");
+    configTransactions.clear();
+    sentConfig.clear();
     deviceConfig = clean ? new Config() : readGeneratedConfig();
     deviceConfig.timestamp = null;
     sanitizeConfig(deviceConfig);
@@ -655,11 +659,11 @@ public class SequenceBase {
     recordMessages = true;
     recordSequence = false;
 
-    queryState();
-
     resetConfig(resetRequired);
 
     updateConfig("initial setup");
+
+    queryState();
 
     ifTrueThen(deviceSupportsState(),
         () -> untilTrue("device state update", () -> deviceState != null));
@@ -705,9 +709,6 @@ public class SequenceBase {
         resetDeviceConfig(true);
         setExtraField(RESET_CONFIG_MARKER);
         deviceConfig.system.testing.sequence_name = RESET_CONFIG_MARKER;
-        sentConfig.clear();
-        debug("configTransactions clear");
-        configTransactions.clear();
         SENT_CONFIG_DIFFERNATOR.resetState(deviceConfig);
         updateConfig("full reset");
         untilHasInterestingSystemStatus(false);
@@ -1422,8 +1423,12 @@ public class SequenceBase {
   }
 
   private void handlePipelineError(String subTypeRaw, Map<String, Object> message) {
-    throw new RuntimeException(
-        format("Pipeline type %s error: %s", subTypeRaw, message.get("error")));
+    String detail = format("Pipeline type %s error: %s", subTypeRaw, message.get("error"));
+    if (deviceSupportsState()) {
+      throw new RuntimeException(detail);
+    } else {
+      error(detail);
+    }
   }
 
   private void handleDeviceMessage(Map<String, Object> message, String subTypeRaw,
@@ -1520,7 +1525,7 @@ public class SequenceBase {
         deviceState = convertedState;
         validSerialNo();
         debug(format("Updated state has last_config %s (expecting %s)",
-            getTimestamp(deviceState.system.last_config),
+            getTimestamp((Date) ifNotNullGet(deviceState.system, x -> x.last_config)),
             getTimestamp((Date) ifNotNullGet(deviceConfig, config -> config.timestamp))));
       } else {
         error("Unknown update type " + converted.getClass().getSimpleName());
