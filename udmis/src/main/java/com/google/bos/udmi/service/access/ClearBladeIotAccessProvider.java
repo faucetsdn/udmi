@@ -34,6 +34,7 @@ import com.clearblade.cloud.iot.v1.devicetypes.Device;
 import com.clearblade.cloud.iot.v1.devicetypes.DeviceConfig;
 import com.clearblade.cloud.iot.v1.devicetypes.DeviceCredential;
 import com.clearblade.cloud.iot.v1.devicetypes.DeviceName;
+import com.clearblade.cloud.iot.v1.devicetypes.DeviceState;
 import com.clearblade.cloud.iot.v1.devicetypes.FieldMask;
 import com.clearblade.cloud.iot.v1.devicetypes.GatewayAuthMethod;
 import com.clearblade.cloud.iot.v1.devicetypes.GatewayConfig;
@@ -628,8 +629,8 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
           .setNumStates(1).build();
       ListDeviceStatesResponse response = requireNonNull(
           deviceManagerClient.listDeviceStates(request), "Null response returned");
-      String state = (String) response.getDeviceStatesList().get(0).getBinaryData();
-      return state;
+      List<DeviceState> deviceStatesList = response.getDeviceStatesList();
+      return deviceStatesList.isEmpty() ? null : (String) deviceStatesList.get(0).getBinaryData();
     } catch (Exception e) {
       throw new RuntimeException("While fetching state for device " + devicePath, e);
     }

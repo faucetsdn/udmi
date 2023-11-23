@@ -64,6 +64,9 @@
     "noState": {
       "type": "boolean"
     },
+    "badState": {
+      "type": "boolean"
+    },
     "featureEnableSwap": {
       "type": "boolean"
     },
