@@ -123,7 +123,12 @@ while read -u 7 action test_name pubber_opts; do
 
 done 7< $INPUT_FILE
 
-if [[ -z $TARGET_TEST && -z $MATRIX_SHARD_COUNT ]]; then
+sed -E -i $RESULTS_OUT \
+    -e 's/(Pipeline type event error: While processing message ).*/\1REDACTED/'
+
+redact_file $RESULTS_OUT
+
+    if [[ -z $TARGET_TEST && -z $MATRIX_SHARD_COUNT ]]; then
     bin/test_itemcheck
 else
     echo Checking for correctness of completed tests...
