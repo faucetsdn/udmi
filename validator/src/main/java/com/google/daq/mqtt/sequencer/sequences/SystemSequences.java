@@ -13,6 +13,8 @@ import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.Summary;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Map;
 import org.junit.Test;
 
@@ -21,8 +23,8 @@ import org.junit.Test;
  */
 public class SystemSequences extends SequenceBase {
 
-  private static final long STATE_COLLECT_TIME_MS = 60 * 1000;
   private static final int STATE_LIMIT_THRESHOLD = 6;
+  private static final Duration STATE_COLLECT_TIME = Duration.ofSeconds(10);
 
 
   /**
@@ -75,11 +77,13 @@ public class SystemSequences extends SequenceBase {
   @Feature(stage = ALPHA, bucket = SYSTEM)
   @Summary("Check that state messages aren't spuriously reported too frequently")
   public void too_much_state() {
-    safeSleep(STATE_COLLECT_TIME_MS);
+    Instant end = Instant.now().plus(STATE_COLLECT_TIME);
+    untilTrue("system accumulating state events", () -> end.isAfter(Instant.now()));
     int numStateUpdates = getNumStateUpdates();
     info("TAP found state updates " + numStateUpdates);
-    checkThat(format("No more than %d state updates", numStateUpdates),
-        () -> numStateUpdates <= STATE_LIMIT_THRESHOLD);
+    String checkString = format("No more than %d state updates in %ds", STATE_LIMIT_THRESHOLD,
+        STATE_COLLECT_TIME.getSeconds());
+    checkThat(checkString, () -> numStateUpdates <= STATE_LIMIT_THRESHOLD);
     // TODO: Check that the state timestamp is close to current time.
   }
 }
