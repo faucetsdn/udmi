@@ -55,12 +55,12 @@
       "from": {
         "hostname": "${SHUNT_FROM}",
         "recv_id": "${SHUNT_NAME}-take",
-        "send_id": "${SHUNT_NAME}"
+        "send_id": "${SHUNT_NAME}-put"
       },
-      "to": {
+      "morf": {
         "hostname": "${SHUNT_MORF}",
         "recv_id": "${SHUNT_NAME}-take",
-        "send_id": "${SHUNT_NAME}"
+        "send_id": "${SHUNT_NAME}-put"
       }
     }
   }

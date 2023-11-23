@@ -50,7 +50,7 @@ fi
 
 if [[ -n $PIPE_SHUNT ]]; then
     readarray -td, a <<<"$PIPE_SHUNT,"; unset 'a[-1]'; declare -p a;
-    export SHUNT_NAME=$(echo ${a[0]})
+    export SHUNT_NAME=${UDMI_PREFIX}$(echo ${a[0]})
     export SHUNT_FROM=$(echo ${a[1]})
     export SHUNT_MORF=$(echo ${a[2]})
     echo Configured udmi shunt $SHUNT_NAME between $SHUNT_FROM and $SHUNT_MORF
@@ -84,4 +84,3 @@ echo
 java -jar $POD_JAR $POD_CONFIG || true
 
 tail -f /dev/null
-
