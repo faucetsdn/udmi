@@ -583,6 +583,9 @@ public class SequenceBase {
   }
 
   private void resetDeviceConfig(boolean clean) {
+    debug("Clear configTransactions and reset device config");
+    configTransactions.clear();
+    sentConfig.clear();
     deviceConfig = clean ? new Config() : readGeneratedConfig();
     deviceConfig.timestamp = null;
     sanitizeConfig(deviceConfig);
@@ -705,9 +708,6 @@ public class SequenceBase {
         resetDeviceConfig(true);
         setExtraField(RESET_CONFIG_MARKER);
         deviceConfig.system.testing.sequence_name = RESET_CONFIG_MARKER;
-        sentConfig.clear();
-        debug("configTransactions clear");
-        configTransactions.clear();
         SENT_CONFIG_DIFFERNATOR.resetState(deviceConfig);
         updateConfig("full reset");
         untilHasInterestingSystemStatus(false);
