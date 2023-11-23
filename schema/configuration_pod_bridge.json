@@ -12,7 +12,7 @@
     "from": {
       "$ref": "file:configuration_endpoint.json"
     },
-    "to": {
+    "morf": {
       "$ref": "file:configuration_endpoint.json"
     }
   }

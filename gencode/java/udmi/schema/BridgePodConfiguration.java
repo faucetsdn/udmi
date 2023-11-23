@@ -18,7 +18,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder({
     "enabled",
     "from",
-    "to"
+    "morf"
 })
 @Generated("jsonschema2pojo")
 public class BridgePodConfiguration {
@@ -40,15 +40,15 @@ public class BridgePodConfiguration {
      * Parameters to define a message endpoint
      * 
      */
-    @JsonProperty("to")
+    @JsonProperty("morf")
     @JsonPropertyDescription("Parameters to define a message endpoint")
-    public EndpointConfiguration to;
+    public EndpointConfiguration morf;
 
     @Override
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.from == null)? 0 :this.from.hashCode()));
-        result = ((result* 31)+((this.to == null)? 0 :this.to.hashCode()));
+        result = ((result* 31)+((this.morf == null)? 0 :this.morf.hashCode()));
         result = ((result* 31)+((this.enabled == null)? 0 :this.enabled.hashCode()));
         return result;
     }
@@ -62,7 +62,7 @@ public class BridgePodConfiguration {
             return false;
         }
         BridgePodConfiguration rhs = ((BridgePodConfiguration) other);
-        return ((((this.from == rhs.from)||((this.from!= null)&&this.from.equals(rhs.from)))&&((this.to == rhs.to)||((this.to!= null)&&this.to.equals(rhs.to))))&&((this.enabled == rhs.enabled)||((this.enabled!= null)&&this.enabled.equals(rhs.enabled))));
+        return ((((this.from == rhs.from)||((this.from!= null)&&this.from.equals(rhs.from)))&&((this.morf == rhs.morf)||((this.morf!= null)&&this.morf.equals(rhs.morf))))&&((this.enabled == rhs.enabled)||((this.enabled!= null)&&this.enabled.equals(rhs.enabled))));
     }
 
 }

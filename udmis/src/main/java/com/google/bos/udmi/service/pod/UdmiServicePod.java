@@ -166,8 +166,8 @@ public class UdmiServicePod extends ContainerBase {
     }
     info(format("Creating bridge %s with enabled %s", name, config.enabled));
     EndpointConfiguration from = makeConfig(config.from);
-    EndpointConfiguration to = makeConfig(config.to);
-    putComponent(name, () -> new BridgeProcessor(from, to));
+    EndpointConfiguration morf = makeConfig(config.morf);
+    putComponent(name, () -> new BridgeProcessor(from, morf));
   }
 
   private void createDistributor(String name, EndpointConfiguration config) {
