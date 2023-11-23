@@ -125,6 +125,7 @@ import udmi.schema.SequenceValidationState.SequenceResult;
 import udmi.schema.State;
 import udmi.schema.SystemConfig;
 import udmi.schema.SystemEvent;
+import udmi.schema.SystemState;
 import udmi.schema.TestingSystemConfig;
 import udmi.schema.ValidationState;
 
@@ -658,11 +659,11 @@ public class SequenceBase {
     recordMessages = true;
     recordSequence = false;
 
-    queryState();
-
     resetConfig(resetRequired);
 
     updateConfig("initial setup");
+
+    queryState();
 
     ifTrueThen(deviceSupportsState(),
         () -> untilTrue("device state update", () -> deviceState != null));
@@ -1520,7 +1521,7 @@ public class SequenceBase {
         deviceState = convertedState;
         validSerialNo();
         debug(format("Updated state has last_config %s (expecting %s)",
-            getTimestamp(deviceState.system.last_config),
+            getTimestamp((Date) ifNotNullGet(deviceState.system, x -> x.last_config)),
             getTimestamp((Date) ifNotNullGet(deviceConfig, config -> config.timestamp))));
       } else {
         error("Unknown update type " + converted.getClass().getSimpleName());

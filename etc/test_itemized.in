@@ -14,6 +14,7 @@ TEST broken_config configStateDelay
 TEST broken_config noState
 TEST broken_config badCategory
 TEST system_last_update extraField=fnooz
+TEST state_make_model badState
 
 # Test with various device metadata.json options
 WITH AHU-1 noState
