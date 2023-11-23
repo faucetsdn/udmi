@@ -286,6 +286,8 @@ jobs:
           ls -d sites/udmi_site_model*/out*/devices/AHU-1/tests/*
           find out* -name 'schema*.out*' -size +0 | xargs more | cat
       - name: Sequencer validation
+        if: ${{ always() }}
         run: bin/test_sequcheck
       - name: Itemized validation
+        if: ${{ always() }}
         run: bin/test_itemcheck
