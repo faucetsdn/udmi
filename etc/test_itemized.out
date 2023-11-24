@@ -20,7 +20,7 @@ RESULT fail system system_last_update STABLE 5 timeout waiting for state last_co
 RESULT fail system system_min_loglevel ALPHA 5 Received state update with no-state device
 RESULT pass system system_min_loglevel ALPHA 5 Sequence complete
 RESULT fail system.mode system_mode_restart ALPHA 5 Failed check that restart count increased by one
-RESULT fail system too_much_state ALPHA 5 Sequence complete should fail
+RESULT fail system too_much_state ALPHA 5 Failed check that No more than 6 state updates
 RESULT pass system valid_serial_no ALPHA 5 Sequence complete
 RESULT skip system valid_serial_no ALPHA 5 State testing disabled
 RESULT fail writeback writeback_success ALPHA 5 timeout waiting for point filter_differential_pressure_setpoint to have value_state applied

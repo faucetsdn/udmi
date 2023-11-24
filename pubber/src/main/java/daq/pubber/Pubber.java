@@ -158,7 +158,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
   private static final int FORCED_STATE_TIME_MS = 10000;
   private static final Duration CLOCK_SKEW = Duration.ofMinutes(30);
   private static final Duration SMOKE_CHECK_TIME = Duration.ofMinutes(5);
-  private static final int STATE_SPAM_SEC = 5; // Fast enough to pass config-response tests.
+  private static final int STATE_SPAM_SEC = 5; // Expected config-state response time.
   static PubberConfiguration configuration;
   final State deviceState = new State();
   final Config deviceConfig = new Config();
