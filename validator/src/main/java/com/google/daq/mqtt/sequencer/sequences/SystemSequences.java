@@ -81,7 +81,6 @@ public class SystemSequences extends SequenceBase {
     untilTrue(format("system accumulating state events for %ds", STATE_COLLECT_TIME.getSeconds()),
         () -> end.isBefore(Instant.now()));
     int numStateUpdates = getNumStateUpdates();
-    info("TAP found state updates " + numStateUpdates);
     checkThat(format("No more than %d state updates", STATE_LIMIT_THRESHOLD),
         () -> numStateUpdates <= STATE_LIMIT_THRESHOLD);
     // TODO: Check that the state timestamp is close to current time.
