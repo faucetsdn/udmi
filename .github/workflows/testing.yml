@@ -175,7 +175,7 @@ jobs:
         if: ${{ always() }}
         run: |
           bin/support ${{ github.repository_owner }}_${{ github.job }}_
-          tar -tzvf *udmi_support*.tgz
+          tar -tzvf *udmi-support*.tgz
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
