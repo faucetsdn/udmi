@@ -24,7 +24,7 @@ import org.junit.Test;
 public class SystemSequences extends SequenceBase {
 
   private static final int STATE_LIMIT_THRESHOLD = 6;
-  private static final Duration STATE_COLLECT_TIME = Duration.ofSeconds(30);
+  private static final Duration STATE_COLLECT_TIME = Duration.ofSeconds(60);
 
 
   /**
