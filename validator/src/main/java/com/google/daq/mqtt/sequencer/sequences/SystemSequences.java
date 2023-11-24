@@ -78,12 +78,12 @@ public class SystemSequences extends SequenceBase {
   @Summary("Check that state messages aren't spuriously reported too frequently")
   public void too_much_state() {
     Instant end = Instant.now().plus(STATE_COLLECT_TIME);
-    untilTrue("system accumulating state events", () -> end.isAfter(Instant.now()));
+    untilTrue(format("system accumulating state events for %ds", STATE_COLLECT_TIME.getSeconds()),
+        () -> end.isBefore(Instant.now()));
     int numStateUpdates = getNumStateUpdates();
     info("TAP found state updates " + numStateUpdates);
-    String checkString = format("No more than %d state updates in %ds", STATE_LIMIT_THRESHOLD,
-        STATE_COLLECT_TIME.getSeconds());
-    checkThat(checkString, () -> numStateUpdates <= STATE_LIMIT_THRESHOLD);
+    checkThat(format("No more than %d state updates", STATE_LIMIT_THRESHOLD),
+        () -> numStateUpdates <= STATE_LIMIT_THRESHOLD);
     // TODO: Check that the state timestamp is close to current time.
   }
 }
