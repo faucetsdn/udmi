@@ -42,8 +42,7 @@ if [[ $1 == 'full' ]]; then
 fi
 
 if [[ $# -lt 1 ]]; then
-    echo Usage: $0 [clean] [alpha] [nostate] [full] PROJECT_ID [tests...]
-    false
+    fail Usage: $0 [clean] [alpha] [nostate] [full] PROJECT_ID [tests...]
 fi
 
 project_id=$1
@@ -104,9 +103,9 @@ for i in `seq 1 $WAITING`; do
 done
 
 if [[ $i -eq $WAITING ]]; then
-    echo pubber startup failed:
+    echo Pubber log $PUBBER_LOG:
     cat $PUBBER_LOG
-    false
+    fail Pubber startup failed.
 fi
 
 # Augment the device metadata to that tests know what to expect...
@@ -114,8 +113,9 @@ bin/augment_metadata $site_path $device_id $pubber_opts
 
 # Run in debug mode for fail-fast when things go wrong!
 echo bin/sequencer $debug_opts $seq_opts $site_path $project_id $device_id $serial_no $targets
-bin/sequencer $debug_opts $seq_opts $site_path $project_id $device_id $serial_no $targets
-echo Completed execution of sequencer test run.
+seq_fail=0
+bin/sequencer $debug_opts $seq_opts $site_path $project_id $device_id $serial_no $targets || seq_fail=$?
+echo Completed execution of sequencer test run, exit code $seq_fail
 
 echo Reported cloud version info: $(jq .cloud_version.udmi_ref $output_file)
 
@@ -127,15 +127,6 @@ for file in $files; do
     cp out/$file.combined out/$file
 done
 
-pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
-if [[ -n $pids ]]; then
-    echo Killing pubber pids $pids
-    kill $pids
-else
-    echo No pubber pids found, likely due to premature termination: failing test run.
-    false
-fi
-
 if [[ -n $out_check && -z $targets ]]; then
     if [[ -n $clean_cache ]]; then
         echo Cleaning sequencer result cache...
@@ -144,10 +135,20 @@ if [[ -n $out_check && -z $targets ]]; then
 
     bin/test_sequcheck $suffix
 elif [[ -n $MATRIX_SHARD_COUNT ]]; then
-    echo Preparing stuff for shard reconcilliation
+    echo Copying results to out-seq for matrix reconciliation...
     mkdir -p $site_path/out-seq
     rsync -ah $site_path/out/ $site_path/out-seq/
     rm -rf $site_path/out
+fi
+
+[[ $seq_fail == 0 ]] || fail Primary squencer run exited with errors, aborting.
+
+pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
+if [[ -n $pids ]]; then
+    echo Killing pubber pids $pids
+    kill $pids
+else
+    fail No pubber pids found, likely due to premature termination: failing test run.
 fi
 
 echo Sanity check for completed tests...
