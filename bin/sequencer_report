@@ -76,6 +76,7 @@ class Sequence:
     with open(self.act_path, encoding="utf-8") as f:
       self.act_text = f.read()
 
+    # TODO: Better error handling when ref_path is not defined (for new test)
     with open(self.ref_path, encoding="utf-8") as f:
       self.ref_text = f.read()
 
