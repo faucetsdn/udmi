@@ -4,7 +4,6 @@ import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static daq.pubber.Pubber.configuration;
 import static java.lang.String.format;
 
-import com.google.udmi.util.SiteModel;
 import udmi.schema.Config;
 import udmi.schema.PubberConfiguration;
 
@@ -19,10 +18,12 @@ public class ProxyDevice extends ManagerBase implements ManagerHost {
   /**
    * New instance.
    */
-  public ProxyDevice(Pubber host, SiteModel siteModel, String id) {
+  public ProxyDevice(ManagerHost host, String id) {
     super(host, makeProxyConfiguration(id));
-    pubberHost = host;
     deviceManager = new DeviceManager(this, makeProxyConfiguration(id));
+
+    // Simple shortcut to get access to some foundational mechanisms inside of Pubber.
+    pubberHost = (Pubber) host;
   }
 
   private static PubberConfiguration makeProxyConfiguration(String id) {
@@ -31,12 +32,13 @@ public class ProxyDevice extends ManagerBase implements ManagerHost {
     return proxyConfiguration;
   }
 
-  protected void initialize() {
+  protected void activate() {
     MqttDevice mqttDevice = pubberHost.getMqttDevice(deviceId);
     mqttDevice.registerHandler(MqttDevice.CONFIG_TOPIC, this::configHandler, Config.class);
+    mqttDevice.connect(deviceId);
   }
 
-  private void configHandler(Config config) {
+  void configHandler(Config config) {
     info(format("Proxy %s config handler", deviceId));
     pubberHost.configPreprocess(deviceId, config);
     deviceManager.updateConfig(config);

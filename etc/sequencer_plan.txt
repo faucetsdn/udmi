@@ -13,6 +13,5 @@ RESULT skip endpoint endpoint_connection_success_hostname PLANNED 5 b/281660320
 RESULT skip endpoint endpoint_connection_error_hostname PLANNED 5 b/281660719
 RESULT skip system system_timestamp_accurate PLANNED 5 b/283100586
 RESULT skip system system_state_time PLANNED 5 
-RESULT skip gateway gateway_proxy PLANNED 5 b/283102300
 RESULT skip pointset pointset_config PLANNED 5 b/234440363
 RESULT skip pointset pointset_publish PLANNED 5 b/283268244

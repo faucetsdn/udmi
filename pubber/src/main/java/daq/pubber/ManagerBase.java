@@ -53,6 +53,10 @@ public abstract class ManagerBase {
     return executor.schedule(futureTask, delay, TimeUnit.MILLISECONDS);
   }
 
+  ScheduledFuture<?> schedulePeriodic(int sec, Runnable periodicUpdate) {
+    return executor.scheduleAtFixedRate(periodicUpdate, sec, sec, SECONDS);
+  }
+
   public void debug(String message) {
     host.debug(message);
   }
@@ -93,7 +97,7 @@ public abstract class ManagerBase {
     warn(format("Starting %s sender with delay %ds", this.getClass().getSimpleName(), sec));
     if (sec != 0) {
       periodicUpdate(); // To this now to synchronously raise any obvious exceptions.
-      periodicSender = executor.scheduleAtFixedRate(this::periodicUpdate, sec, sec, SECONDS);
+      periodicSender = schedulePeriodic(sec, this::periodicUpdate);
     }
   }
 
