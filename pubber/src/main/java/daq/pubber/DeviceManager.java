@@ -18,6 +18,7 @@ public class DeviceManager extends ManagerBase {
   private final PointsetManager pointsetManager;
   private final SystemManager systemManager;
   private final LocalnetManager localnetManager;
+  private final GatewayManager gatewayManager;
 
 
   /**
@@ -28,15 +29,24 @@ public class DeviceManager extends ManagerBase {
     systemManager = new SystemManager(host, configuration);
     pointsetManager = new PointsetManager(host, configuration);
     localnetManager = new LocalnetManager(host, configuration);
+    gatewayManager = new GatewayManager(host, configuration);
   }
 
   public void setPersistentData(DevicePersistent persistentData) {
     systemManager.setPersistentData(persistentData);
   }
 
+  /**
+   * Set the metadata for this device.
+   */
   public void setMetadata(Metadata metadata) {
     pointsetManager.setPointsetModel(metadata.pointset);
     systemManager.setMetadata(metadata);
+    gatewayManager.setMetadata(metadata.gateway);
+  }
+
+  public void activate() {
+    gatewayManager.activate();
   }
 
   public void systemLifecycle(SystemMode mode) {
@@ -59,9 +69,13 @@ public class DeviceManager extends ManagerBase {
     return systemManager.getTestingTag();
   }
 
+  /**
+   * Update the config of this device.
+   */
   public void updateConfig(Config config) {
     pointsetManager.updateConfig(config.pointset);
     systemManager.updateConfig(config.system, config.timestamp);
+    gatewayManager.updateConfig(config.gateway);
   }
 
   public void publishLogMessage(Entry logEntry) {
@@ -79,6 +93,7 @@ public class DeviceManager extends ManagerBase {
     systemManager.shutdown();
     pointsetManager.shutdown();
     localnetManager.shutdown();
+    gatewayManager.shutdown();
   }
 
   public Map<String, FamilyDiscoveryEvent> enumerateFamilies() {

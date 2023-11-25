@@ -3,8 +3,10 @@
 # Force consistent sort order
 export LC_ALL=C
 
-ROOT_DIR=$(realpath $(dirname $0)/..)
-cd $ROOT_DIR
+UDMI_ROOT=$(realpath $(dirname $0)/..)
+cd $UDMI_ROOT
+
+source etc/shell_common.sh
 
 if [[ $# != 1 ]]; then
     echo Usage: $0 PROJECT_ID
@@ -22,8 +24,6 @@ echo 'Using target project:' $project_id
 
 site_path=sites/udmi_site_model
 output_file=$site_path/out/validation_report.json
-device_id=AHU-1
-proxy_id=AHU-22
 mkdir -p out
 
 PUBBER_LOG=out/pubber.log
@@ -44,10 +44,10 @@ validator/bin/build
 pubber/bin/build
 
 # Have to reset pubber configs before running validator to avoid reflector registry conflict
-echo bin/reset_config $site_path $project_id $device_id
-bin/reset_config $site_path $project_id $device_id
-echo bin/reset_config $site_path $project_id $proxy_id
-bin/reset_config $site_path $project_id $proxy_id
+for device in AHU-1 AHU-22 GAT-123; do
+    echo bin/reset_config $site_path $project_id $device
+    bin/reset_config $site_path $project_id $device
+done
 
 echo Starting validator, output in $VALIDATOR_LOG, trace in $TRACE_DIR
 rm -rf $TRACE_DIR
@@ -107,8 +107,8 @@ function pubber_bg {
     fi
 }
 
-pubber_bg AHU-1 extraField=prlagle
-pubber_bg AHU-22 emptyMissing skewClock
+pubber_bg AHU-1 extraField=prlagle skewClock
+pubber_bg GAT-123 emptyMissing extraPoint=llama
 
 echo Waiting for system to run for a bit...
 cat $VALIDATOR_LOG && timeout 60s tail -f $VALIDATOR_LOG || true
@@ -121,9 +121,12 @@ find $site_path/out/devices -name \*.json | sort > $VALIDATOR_OUT
 echo Found `wc -l $VALIDATOR_OUT` json output files.
 
 echo Out files for AHU-1:
-(cd $site_path/out/devices/AHU-1; ls -lrt *.out)
+(cd $site_path/out/devices/AHU-1; ls -lrt *.out) || true
 echo Out files for AHU-22:
-(cd $site_path/out/devices/AHU-22; ls -lrt *.out)
+(cd $site_path/out/devices/AHU-22; ls -lrt *.out) || true
+echo Out files for GAT-123:
+(cd $site_path/out/devices/GAT-123; ls -lrt *.out) || true
+
 outfiles=`find $site_path/out/devices -name \*.out | sort` || true
 if [[ -z $outfiles ]]; then
     echo No .out files found in $site_path/out/devices
@@ -140,4 +143,5 @@ sed -E < $VALIDATOR_OUT.raw >> $VALIDATOR_OUT \
     -e 's/\\t[a-zA-Z .()$0-9]+\.java:[0-9]+\)\\n/\\tREDACTED_STACK\\n/g'
 
 echo diff -u $VALIDATOR_OUT $GOLDEN_OUT
-diff -u $VALIDATOR_OUT $GOLDEN_OUT && echo No mismatch from golden file.
+diff -u $VALIDATOR_OUT $GOLDEN_OUT ||
+    fail Mismatch from golden file comparison: $VALIDATOR_OUT $GOLDEN_OUT

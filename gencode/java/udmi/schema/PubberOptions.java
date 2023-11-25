@@ -24,6 +24,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "badCategory",
     "badVersion",
     "noProxy",
+    "extraDevice",
     "barfConfig",
     "messageTrace",
     "extraPoint",
@@ -36,6 +37,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "skewClock",
     "noPointState",
     "noState",
+    "spamState",
+    "tweakState",
     "badState",
     "featureEnableSwap",
     "disableWriteback",
@@ -62,6 +65,8 @@ public class PubberOptions {
     public Boolean badVersion;
     @JsonProperty("noProxy")
     public Boolean noProxy;
+    @JsonProperty("extraDevice")
+    public Boolean extraDevice;
     @JsonProperty("barfConfig")
     public Boolean barfConfig;
     @JsonProperty("messageTrace")
@@ -86,6 +91,10 @@ public class PubberOptions {
     public Boolean noPointState;
     @JsonProperty("noState")
     public Boolean noState;
+    @JsonProperty("spamState")
+    public Boolean spamState;
+    @JsonProperty("tweakState")
+    public Boolean tweakState;
     @JsonProperty("badState")
     public Boolean badState;
     @JsonProperty("featureEnableSwap")
@@ -119,6 +128,8 @@ public class PubberOptions {
         result = ((result* 31)+((this.softwareFirmwareValue == null)? 0 :this.softwareFirmwareValue.hashCode()));
         result = ((result* 31)+((this.noWriteback == null)? 0 :this.noWriteback.hashCode()));
         result = ((result* 31)+((this.noLastStart == null)? 0 :this.noLastStart.hashCode()));
+        result = ((result* 31)+((this.tweakState == null)? 0 :this.tweakState.hashCode()));
+        result = ((result* 31)+((this.spamState == null)? 0 :this.spamState.hashCode()));
         result = ((result* 31)+((this.noState == null)? 0 :this.noState.hashCode()));
         result = ((result* 31)+((this.badState == null)? 0 :this.badState.hashCode()));
         result = ((result* 31)+((this.noProxy == null)? 0 :this.noProxy.hashCode()));
@@ -134,6 +145,7 @@ public class PubberOptions {
         result = ((result* 31)+((this.emptyMissing == null)? 0 :this.emptyMissing.hashCode()));
         result = ((result* 31)+((this.fixedSampleRate == null)? 0 :this.fixedSampleRate.hashCode()));
         result = ((result* 31)+((this.featureEnableSwap == null)? 0 :this.featureEnableSwap.hashCode()));
+        result = ((result* 31)+((this.extraDevice == null)? 0 :this.extraDevice.hashCode()));
         result = ((result* 31)+((this.noConfigAck == null)? 0 :this.noConfigAck.hashCode()));
         result = ((result* 31)+((this.badVersion == null)? 0 :this.badVersion.hashCode()));
         result = ((result* 31)+((this.fixedLogLevel == null)? 0 :this.fixedLogLevel.hashCode()));
@@ -150,7 +162,7 @@ public class PubberOptions {
             return false;
         }
         PubberOptions rhs = ((PubberOptions) other);
-        return (((((((((((((((((((((((((((this.skewClock == rhs.skewClock)||((this.skewClock!= null)&&this.skewClock.equals(rhs.skewClock)))&&((this.noPersist == rhs.noPersist)||((this.noPersist!= null)&&this.noPersist.equals(rhs.noPersist))))&&((this.noHardware == rhs.noHardware)||((this.noHardware!= null)&&this.noHardware.equals(rhs.noHardware))))&&((this.messageTrace == rhs.messageTrace)||((this.messageTrace!= null)&&this.messageTrace.equals(rhs.messageTrace))))&&((this.softwareFirmwareValue == rhs.softwareFirmwareValue)||((this.softwareFirmwareValue!= null)&&this.softwareFirmwareValue.equals(rhs.softwareFirmwareValue))))&&((this.noWriteback == rhs.noWriteback)||((this.noWriteback!= null)&&this.noWriteback.equals(rhs.noWriteback))))&&((this.noLastStart == rhs.noLastStart)||((this.noLastStart!= null)&&this.noLastStart.equals(rhs.noLastStart))))&&((this.noState == rhs.noState)||((this.noState!= null)&&this.noState.equals(rhs.noState))))&&((this.badState == rhs.badState)||((this.badState!= null)&&this.badState.equals(rhs.badState))))&&((this.noProxy == rhs.noProxy)||((this.noProxy!= null)&&this.noProxy.equals(rhs.noProxy))))&&((this.missingPoint == rhs.missingPoint)||((this.missingPoint!= null)&&this.missingPoint.equals(rhs.missingPoint))))&&((this.badCategory == rhs.badCategory)||((this.badCategory!= null)&&this.badCategory.equals(rhs.badCategory))))&&((this.extraPoint == rhs.extraPoint)||((this.extraPoint!= null)&&this.extraPoint.equals(rhs.extraPoint))))&&((this.smokeCheck == rhs.smokeCheck)||((this.smokeCheck!= null)&&this.smokeCheck.equals(rhs.smokeCheck))))&&((this.redirectRegistry == rhs.redirectRegistry)||((this.redirectRegistry!= null)&&this.redirectRegistry.equals(rhs.redirectRegistry))))&&((this.noPointState == rhs.noPointState)||((this.noPointState!= null)&&this.noPointState.equals(rhs.noPointState))))&&((this.disableWriteback == rhs.disableWriteback)||((this.disableWriteback!= null)&&this.disableWriteback.equals(rhs.disableWriteback))))&&((this.barfConfig == rhs.barfConfig)||((this.barfConfig!= null)&&this.barfConfig.equals(rhs.barfConfig))))&&((this.extraField == rhs.extraField)||((this.extraField!= null)&&this.extraField.equals(rhs.extraField))))&&((this.emptyMissing == rhs.emptyMissing)||((this.emptyMissing!= null)&&this.emptyMissing.equals(rhs.emptyMissing))))&&((this.fixedSampleRate == rhs.fixedSampleRate)||((this.fixedSampleRate!= null)&&this.fixedSampleRate.equals(rhs.fixedSampleRate))))&&((this.featureEnableSwap == rhs.featureEnableSwap)||((this.featureEnableSwap!= null)&&this.featureEnableSwap.equals(rhs.featureEnableSwap))))&&((this.noConfigAck == rhs.noConfigAck)||((this.noConfigAck!= null)&&this.noConfigAck.equals(rhs.noConfigAck))))&&((this.badVersion == rhs.badVersion)||((this.badVersion!= null)&&this.badVersion.equals(rhs.badVersion))))&&((this.fixedLogLevel == rhs.fixedLogLevel)||((this.fixedLogLevel!= null)&&this.fixedLogLevel.equals(rhs.fixedLogLevel))))&&((this.configStateDelay == rhs.configStateDelay)||((this.configStateDelay!= null)&&this.configStateDelay.equals(rhs.configStateDelay))));
+        return ((((((((((((((((((((((((((((((this.skewClock == rhs.skewClock)||((this.skewClock!= null)&&this.skewClock.equals(rhs.skewClock)))&&((this.noPersist == rhs.noPersist)||((this.noPersist!= null)&&this.noPersist.equals(rhs.noPersist))))&&((this.noHardware == rhs.noHardware)||((this.noHardware!= null)&&this.noHardware.equals(rhs.noHardware))))&&((this.messageTrace == rhs.messageTrace)||((this.messageTrace!= null)&&this.messageTrace.equals(rhs.messageTrace))))&&((this.softwareFirmwareValue == rhs.softwareFirmwareValue)||((this.softwareFirmwareValue!= null)&&this.softwareFirmwareValue.equals(rhs.softwareFirmwareValue))))&&((this.noWriteback == rhs.noWriteback)||((this.noWriteback!= null)&&this.noWriteback.equals(rhs.noWriteback))))&&((this.noLastStart == rhs.noLastStart)||((this.noLastStart!= null)&&this.noLastStart.equals(rhs.noLastStart))))&&((this.tweakState == rhs.tweakState)||((this.tweakState!= null)&&this.tweakState.equals(rhs.tweakState))))&&((this.spamState == rhs.spamState)||((this.spamState!= null)&&this.spamState.equals(rhs.spamState))))&&((this.noState == rhs.noState)||((this.noState!= null)&&this.noState.equals(rhs.noState))))&&((this.badState == rhs.badState)||((this.badState!= null)&&this.badState.equals(rhs.badState))))&&((this.noProxy == rhs.noProxy)||((this.noProxy!= null)&&this.noProxy.equals(rhs.noProxy))))&&((this.missingPoint == rhs.missingPoint)||((this.missingPoint!= null)&&this.missingPoint.equals(rhs.missingPoint))))&&((this.badCategory == rhs.badCategory)||((this.badCategory!= null)&&this.badCategory.equals(rhs.badCategory))))&&((this.extraPoint == rhs.extraPoint)||((this.extraPoint!= null)&&this.extraPoint.equals(rhs.extraPoint))))&&((this.smokeCheck == rhs.smokeCheck)||((this.smokeCheck!= null)&&this.smokeCheck.equals(rhs.smokeCheck))))&&((this.redirectRegistry == rhs.redirectRegistry)||((this.redirectRegistry!= null)&&this.redirectRegistry.equals(rhs.redirectRegistry))))&&((this.noPointState == rhs.noPointState)||((this.noPointState!= null)&&this.noPointState.equals(rhs.noPointState))))&&((this.disableWriteback == rhs.disableWriteback)||((this.disableWriteback!= null)&&this.disableWriteback.equals(rhs.disableWriteback))))&&((this.barfConfig == rhs.barfConfig)||((this.barfConfig!= null)&&this.barfConfig.equals(rhs.barfConfig))))&&((this.extraField == rhs.extraField)||((this.extraField!= null)&&this.extraField.equals(rhs.extraField))))&&((this.emptyMissing == rhs.emptyMissing)||((this.emptyMissing!= null)&&this.emptyMissing.equals(rhs.emptyMissing))))&&((this.fixedSampleRate == rhs.fixedSampleRate)||((this.fixedSampleRate!= null)&&this.fixedSampleRate.equals(rhs.fixedSampleRate))))&&((this.featureEnableSwap == rhs.featureEnableSwap)||((this.featureEnableSwap!= null)&&this.featureEnableSwap.equals(rhs.featureEnableSwap))))&&((this.extraDevice == rhs.extraDevice)||((this.extraDevice!= null)&&this.extraDevice.equals(rhs.extraDevice))))&&((this.noConfigAck == rhs.noConfigAck)||((this.noConfigAck!= null)&&this.noConfigAck.equals(rhs.noConfigAck))))&&((this.badVersion == rhs.badVersion)||((this.badVersion!= null)&&this.badVersion.equals(rhs.badVersion))))&&((this.fixedLogLevel == rhs.fixedLogLevel)||((this.fixedLogLevel!= null)&&this.fixedLogLevel.equals(rhs.fixedLogLevel))))&&((this.configStateDelay == rhs.configStateDelay)||((this.configStateDelay!= null)&&this.configStateDelay.equals(rhs.configStateDelay))));
     }
 
 }

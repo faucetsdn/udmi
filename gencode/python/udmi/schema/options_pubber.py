@@ -13,6 +13,7 @@ class PubberOptions:
     self.badCategory = None
     self.badVersion = None
     self.noProxy = None
+    self.extraDevice = None
     self.barfConfig = None
     self.messageTrace = None
     self.extraPoint = None
@@ -25,6 +26,8 @@ class PubberOptions:
     self.skewClock = None
     self.noPointState = None
     self.noState = None
+    self.spamState = None
+    self.tweakState = None
     self.badState = None
     self.featureEnableSwap = None
     self.disableWriteback = None
@@ -45,6 +48,7 @@ class PubberOptions:
     result.badCategory = source.get('badCategory')
     result.badVersion = source.get('badVersion')
     result.noProxy = source.get('noProxy')
+    result.extraDevice = source.get('extraDevice')
     result.barfConfig = source.get('barfConfig')
     result.messageTrace = source.get('messageTrace')
     result.extraPoint = source.get('extraPoint')
@@ -57,6 +61,8 @@ class PubberOptions:
     result.skewClock = source.get('skewClock')
     result.noPointState = source.get('noPointState')
     result.noState = source.get('noState')
+    result.spamState = source.get('spamState')
+    result.tweakState = source.get('tweakState')
     result.badState = source.get('badState')
     result.featureEnableSwap = source.get('featureEnableSwap')
     result.disableWriteback = source.get('disableWriteback')
@@ -99,6 +105,8 @@ class PubberOptions:
       result['badVersion'] = self.badVersion # 5
     if self.noProxy:
       result['noProxy'] = self.noProxy # 5
+    if self.extraDevice:
+      result['extraDevice'] = self.extraDevice # 5
     if self.barfConfig:
       result['barfConfig'] = self.barfConfig # 5
     if self.messageTrace:
@@ -123,6 +131,10 @@ class PubberOptions:
       result['noPointState'] = self.noPointState # 5
     if self.noState:
       result['noState'] = self.noState # 5
+    if self.spamState:
+      result['spamState'] = self.spamState # 5
+    if self.tweakState:
+      result['tweakState'] = self.tweakState # 5
     if self.badState:
       result['badState'] = self.badState # 5
     if self.featureEnableSwap:

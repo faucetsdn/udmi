@@ -28,6 +28,9 @@
     "noProxy": {
       "type": "boolean"
     },
+    "extraDevice": {
+      "type": "boolean"
+    },
     "barfConfig": {
       "type": "boolean"
     },
@@ -62,6 +65,12 @@
       "type": "boolean"
     },
     "noState": {
+      "type": "boolean"
+    },
+    "spamState": {
+      "type": "boolean"
+    },
+    "tweakState": {
       "type": "boolean"
     },
     "badState": {
