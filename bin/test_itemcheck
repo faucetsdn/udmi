@@ -9,14 +9,14 @@ GOLDEN_FILE=$UDMI_ROOT/etc/test_itemized.out
 SCHEMA_OUT=out/schema_itemized.out
 GOLDEN_SCHEMAS=$UDMI_ROOT/etc/schema_itemized.out
 
-failure=
+failures=
 
 echo Comparing diff $RESULTS_OUT $GOLDEN_FILE
-diff -bu $RESULTS_OUT $GOLDEN_FILE || failure+="results "
+diff -bu $RESULTS_OUT $GOLDEN_FILE || failures+="results "
 
 echo Comparing diff $SCHEMA_OUT $GOLDEN_SCHEMAS
-diff -bu $SCHEMA_OUT $GOLDEN_SCHEMAS || failure+="schema "
+diff -bu $SCHEMA_OUT $GOLDEN_SCHEMAS || failures+="schema "
 
-[[ -z failure ]] || fail izemized checks failied because of $failure
+[[ -z $failures ]] || fail itemized checks failied because of $failures
 
 echo Done with itemized checks.
