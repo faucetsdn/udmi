@@ -1834,6 +1834,10 @@ public class SequenceBase {
     return getStateUpdateCount() > startStateCount;
   }
 
+  protected int getNumStateUpdates() {
+    return getStateUpdateCount() - startStateCount;
+  }
+
   protected void ensureStateUpdate() {
     updateConfig("ensure state update", true);
     withRecordSequence(false,
@@ -1866,6 +1870,10 @@ public class SequenceBase {
   protected void mapSemanticKey(String keyPath, String keyName, String description,
       String describedValue) {
     SENT_CONFIG_DIFFERNATOR.mapSemanticKey(keyPath, keyName, description, describedValue);
+  }
+
+  public Set<String> getReceivedDevices() {
+    return receivedEvents.keySet();
   }
 
   public List<Map<String, Object>> getReceivedEvents(String deviceId, SubFolder subFolder) {

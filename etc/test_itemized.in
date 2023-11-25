@@ -2,6 +2,7 @@ TEST device_config_acked noConfigAck
 TEST pointset_request_extraneous extraPoint=llama
 TEST pointset_remove_point missingPoint=filter_alarm_pressure_status
 TEST pointset_remove_point noState
+TEST too_much_state spamState
 TEST feature_enumeration featureEnableSwap
 TEST valid_serial_no noLastStart
 TEST writeback_success noWriteback

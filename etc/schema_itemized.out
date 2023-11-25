@@ -13,6 +13,7 @@ system_last_update RESULT pass schemas event_system_stable STABLE 5 All schema v
 system_last_update RESULT pass schemas state_update_stable STABLE 5 All schema validations passed
 system_min_loglevel
 system_mode_restart
+too_much_state
 valid_serial_no
 valid_serial_no RESULT pass schemas event_pointset_alpha ALPHA 5 All schema validations passed
 valid_serial_no RESULT pass schemas event_system_alpha ALPHA 5 All schema validations passed
