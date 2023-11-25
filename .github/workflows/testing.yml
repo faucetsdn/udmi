@@ -154,13 +154,16 @@ jobs:
       - name: registrar clean
         run: bin/test_regclean $TARGET_PROJECT
       - name: sequence tests clean
+        if: ${{ always() }}
         run: bin/test_sequencer clean nocheck $TARGET_PROJECT
       - name: sequence tests alpha
+        if: ${{ always() }}
         run: bin/test_sequencer alpha nocheck $TARGET_PROJECT
       - name: sequence test post-process
         if: ${{ always() }}
-        run: egrep ' test .* after .*s ' out/sequencer.log > out/timing_sequencer.out
+        run: egrep ' test .* after .*s ' out/sequencer.log | tee out/timing_sequencer.out
       - name: itemized sequencer tests
+        if: ${{ always() }}
         run: bin/test_itemized $TARGET_PROJECT
       - name: output files
         if: ${{ always() }}
@@ -170,12 +173,12 @@ jobs:
         run: more out/pubber.log* pubber/out/*.json | cat
       - name: itemized test post-process
         if: ${{ always() }}
-        run: egrep ' test .* after .*s ' out/sequencer.log-* > out/timing_itemized.out
+        run: egrep ' test .* after .*s ' out/sequencer.log-* | tee out/timing_itemized.out
       - name: support bundle
         if: ${{ always() }}
         run: |
-          ls -lrt out*/ sites/udmi_site_model/out*/
           bin/support ${{ github.repository_owner }}_${{ github.job }}_
+          tar -tzvf *udmi-support*.tgz
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
@@ -266,7 +269,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     needs: [ baseline, sequencer, redirect ]
-    if: vars.TARGET_PROJECT != '' && ${{ always() }}
+    if: ${{ !cancelled() && vars.TARGET_PROJECT != '' }}
     env:
       TARGET_PROJECT: ${{ vars.TARGET_PROJECT }}
       UDMI_ALT_REGISTRY: ZZ-REDIRECT-NA

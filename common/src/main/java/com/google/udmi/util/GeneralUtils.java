@@ -315,6 +315,14 @@ public class GeneralUtils {
     return alternate.get();
   }
 
+  public static boolean catchToFalse(Supplier<Boolean> provider) {
+    try {
+      return provider.get();
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
   public static <T> T catchToNull(Supplier<T> provider) {
     try {
       return provider.get();
