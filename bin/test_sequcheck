@@ -9,34 +9,35 @@ mkdir -p out
 
 source $UDMI_ROOT/etc/shell_common.sh
 
+failure=
+
 if [[ -z $suffix ]]; then
-    $UDMI_ROOT/bin/sequencer_cache -t
+    $UDMI_ROOT/bin/sequencer_cache -t || failure+="cache "
 fi
 
 echo Comparing diff out/sequencer.out etc/sequencer${suffix}.out
-diff -u out/sequencer.out $UDMI_ROOT/etc/sequencer${suffix}.out
+diff -u out/sequencer.out $UDMI_ROOT/etc/sequencer${suffix}.out || failure+="sequencer "
 
 echo Comparing diff out/schema.out etc/schema${suffix}.out
-diff -u out/schema.out $UDMI_ROOT/etc/schema${suffix}.out
+diff -u out/schema.out $UDMI_ROOT/etc/schema${suffix}.out || failure+="schema "
 
 [[ -n $suffix ]] && echo Done with suffix test checks. && exit 0
 
 cp $UDMI_ROOT/docs/specs/sequences/generated.md out/generated.tmp  # Save for test/comparison
-bin/gencode_seq
+bin/gencode_seq || failure+="gencode "
 
 echo Comparing diff out/generated.tmp docs/specs/sequences/generated.md
-diff -u out/generated.tmp $UDMI_ROOT/docs/specs/sequences/generated.md || (
-    echo Run bin/gencode_seq to regenerate output, if necessary.
-    false
-)
+diff -u out/generated.tmp $UDMI_ROOT/docs/specs/sequences/generated.md || failure+="gencode_seq "
 
 SAMPLE_TEST_ROW="| system | system_min_loglevel | alpha | pass | Sequence complete |"
 target=sites/udmi_site_model/out/devices/AHU-1/results.md
 echo Checking for expected entry in $target:
 echo "$SAMPLE_TEST_ROW"
-fgrep "$SAMPLE_TEST_ROW" $target || fail expected line not found
+fgrep "$SAMPLE_TEST_ROW" $target || failure+="expected "
 
 echo Checking for duplication in out/sequencer.out and etc/sequencer_planning.txt
-bin/test_sequencer_plan
+bin/test_sequencer_plan || failure+="plan "
+
+[[ -z failure ]] || fail sequencer checks failed because of $failure
 
 echo Done with sequencer checks.
