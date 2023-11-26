@@ -116,6 +116,7 @@ public class Envelope {
 
         UDMI("udmi"),
         UPDATE("update"),
+        UNKNOWN("unknown"),
         ERROR("error"),
         CLOUD("cloud"),
         DISCOVERY("discovery"),
@@ -166,6 +167,7 @@ public class Envelope {
     @Generated("jsonschema2pojo")
     public enum SubType {
 
+        UNKNOWN("unknown"),
         EVENT("event"),
         COMMAND("command"),
         CONFIG("config"),

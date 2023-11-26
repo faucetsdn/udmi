@@ -6,7 +6,6 @@ import static java.lang.String.format;
 
 import com.google.bos.udmi.service.messaging.MessagePipe;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -46,6 +45,10 @@ public class LocalMessagePipe extends MessageBase {
     return new LocalMessagePipe(config);
   }
 
+  public static void resetForTestStatic() {
+    NAMESPACES.clear();
+  }
+
   private BlockingQueue<QueueEntry> getQueueForScope(String name) {
     checkNotNull(name, "pipe name is null");
     Map<String, BlockingQueue<QueueEntry>> namedQueues =
@@ -75,13 +78,10 @@ public class LocalMessagePipe extends MessageBase {
     resetForTestStatic();
   }
 
-  public static void resetForTestStatic() {
-    NAMESPACES.clear();
-  }
-
   @Override
   public String toString() {
     String isActive = isActive() ? "*" : "O";
-    return format("%s >-%s-> %s", super.toString(), isActive, queueIdentifier(destinationQueue));
+    return format("%s >-%s-> %s", super.toString(), isActive,
+        queueIdentifierStatic(destinationQueue));
   }
 }

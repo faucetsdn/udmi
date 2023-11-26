@@ -1,14 +1,15 @@
 package com.google.bos.udmi.service.messaging.impl;
 
-import static com.google.bos.udmi.service.pod.UdmiServicePod.HOSTNAME;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
+import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
+import static com.google.udmi.util.GeneralUtils.catchToElse;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.mergeObject;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
-import static com.google.udmi.util.JsonUtil.convertToStrict;
+import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.fromString;
 import static com.google.udmi.util.JsonUtil.parseJson;
 import static com.google.udmi.util.JsonUtil.stringify;
@@ -48,14 +49,13 @@ import udmi.schema.UdmiConfig;
 public abstract class MessageBase extends ContainerBase implements MessagePipe {
 
   public static final String INVALID_ENVELOPE_KEY = "invalid";
+  public static final int EXECUTION_THREADS = 4;
+  public static final String ERROR_MESSAGE_MARKER = "error-mark";
   static final String TERMINATE_MARKER = "terminate";
   private static final String DEFAULT_NAMESPACE = "default-namespace";
   private static final Set<Object> HANDLED_QUEUES = new HashSet<>();
   private static final long DEFAULT_POLL_TIME_SEC = 1;
   private static final long AWAIT_TERMINATION_SEC = 10;
-  public static final int EXECUTION_THREADS = 4;
-  public static final String ERROR_MESSAGE_MARKER = "error-mark";
-
   private final ExecutorService executor = Executors.newFixedThreadPool(EXECUTION_THREADS);
   private BlockingQueue<QueueEntry> sourceQueue;
   private Consumer<Bundle> dispatcher;
@@ -66,17 +66,20 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
    */
   public static EndpointConfiguration combineConfig(EndpointConfiguration defaults,
       EndpointConfiguration defined) {
-    EndpointConfiguration useDefaults = ofNullable(defaults).orElseGet(
-        EndpointConfiguration::new);
+    EndpointConfiguration useDefaults = ofNullable(defaults).orElseGet(EndpointConfiguration::new);
     return ifNotNullGet(defined, () -> mergeObject(deepCopy(useDefaults), defined));
   }
 
   static Bundle extractBundle(String bundleString) {
-    return ifNotNullGet(bundleString, b -> fromString(Bundle.class,  b));
+    return ifNotNullGet(bundleString, b -> fromString(Bundle.class, b));
   }
 
   static String normalizeNamespace(String configSpace) {
     return ofNullable(configSpace).orElse(DEFAULT_NAMESPACE);
+  }
+
+  protected static String queueIdentifierStatic(BlockingQueue<QueueEntry> queue) {
+    return format("%08x", Objects.hash(queue));
   }
 
   protected Bundle makeExceptionBundle(Envelope envelope, Exception exception) {
@@ -104,8 +107,8 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     }
   }
 
-  protected void receiveMessage(Envelope envelope, Map<?, ?> messageMap) {
-    receiveMessage(toStringMap(envelope), stringify(messageMap));
+  protected String queueIdentifier() {
+    return queueIdentifierStatic(sourceQueue);
   }
 
   protected void receiveMessage(Map<String, String> envelopeMap, Map<?, ?> messageMap) {
@@ -125,7 +128,8 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     final Envelope envelope;
 
     try {
-      envelope = convertToStrict(Envelope.class, attributesMap);
+      sanitizeAttributeMap(attributesMap);
+      envelope = convertTo(Envelope.class, attributesMap);
     } catch (Exception e) {
       attributesMap.put(INVALID_ENVELOPE_KEY, "true");
       receiveException(attributesMap, messageString, e, null);
@@ -140,6 +144,10 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     } catch (Exception e) {
       receiveException(attributesMap, messageString, e, null);
     }
+  }
+
+  protected void receiveMessage(Envelope envelope, Map<?, ?> messageMap) {
+    receiveMessage(toStringMap(envelope), stringify(messageMap));
   }
 
   protected void setSourceQueue(BlockingQueue<QueueEntry> queueForScope) {
@@ -226,19 +234,6 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     }
   }
 
-  private void shutdownExecutor() {
-    debug("Shutdown of %s", this);
-    executor.shutdown();
-  }
-
-  protected String queueIdentifier() {
-    return queueIdentifier(sourceQueue);
-  }
-
-  protected static String queueIdentifier(BlockingQueue<QueueEntry> queue) {
-    return format("%08x", Objects.hash(queue));
-  }
-
   private void receiveBundle(Bundle bundle) {
     receiveBundle(stringify(bundle));
   }
@@ -257,6 +252,29 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     bundle.attributesMap = mutableMap;
     ifNotNullThen(forceFolder, folder -> mutableMap.put(SUBFOLDER_PROPERTY_KEY, folder.value()));
     receiveBundle(stringify(bundle));
+  }
+
+  private void sanitizeAttributeMap(Map<String, String> attributesMap) {
+    String subFolderRaw = attributesMap.get(SUBFOLDER_PROPERTY_KEY);
+    if (subFolderRaw != null) {
+      SubFolder subFolder = catchToElse(() -> SubFolder.fromValue(subFolderRaw), SubFolder.UNKNOWN);
+      if (!subFolder.value().equals(subFolderRaw)) {
+        attributesMap.put(SUBFOLDER_PROPERTY_KEY, subFolder.value());
+      }
+    }
+
+    String subTypeRaw = attributesMap.get(SUBTYPE_PROPERTY_KEY);
+    if (subTypeRaw != null) {
+      SubType subType = catchToElse(() -> SubType.fromValue(subTypeRaw), SubType.UNKNOWN);
+      if (!subType.value().equals(subTypeRaw)) {
+        attributesMap.put(SUBTYPE_PROPERTY_KEY, subType.value());
+      }
+    }
+  }
+
+  private void shutdownExecutor() {
+    debug("Shutdown of %s", this);
+    executor.shutdown();
   }
 
   @Override
