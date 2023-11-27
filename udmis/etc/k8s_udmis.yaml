@@ -57,8 +57,6 @@ spec:
           sources:
           - secret:
               name: clearblade.json
-          - secret:
-              name: dbo-rews-dev.json
       - name: tmp
         emptyDir:
           medium: Memory
