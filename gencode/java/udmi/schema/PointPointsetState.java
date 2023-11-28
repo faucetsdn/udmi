@@ -79,6 +79,7 @@ public class PointPointsetState {
     @Generated("jsonschema2pojo")
     public enum Value_state {
 
+        INITIALIZING("initializing"),
         APPLIED("applied"),
         UPDATING("updating"),
         OVERRIDDEN("overridden"),
