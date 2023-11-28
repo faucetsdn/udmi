@@ -18,6 +18,7 @@ import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
@@ -125,7 +126,6 @@ import udmi.schema.SequenceValidationState.SequenceResult;
 import udmi.schema.State;
 import udmi.schema.SystemConfig;
 import udmi.schema.SystemEvent;
-import udmi.schema.SystemState;
 import udmi.schema.TestingSystemConfig;
 import udmi.schema.ValidationState;
 
@@ -1145,16 +1145,21 @@ public class SequenceBase {
     recordSequence("Check that " + notDescription);
   }
 
+  protected void waitForLog(String category, Level exactLevel) {
+    untilNull(format("log category `%s` level `%s` to be logged", category, exactLevel.name()),
+        () -> checkLogged(category, exactLevel));
+  }
+
   protected void untilLogged(String category, Level exactLevel) {
-    final List<Entry> entries = new ArrayList<>();
-    untilTrue(format("log category `%s` level `%s` was logged", category, exactLevel),
-        () -> {
-          processLogMessages();
-          entries.addAll(matchingLogQueueEntries(
-              entry -> category.equals(entry.category) && entry.level == exactLevel.value()));
-          return !entries.isEmpty();
-        });
+    waitForLog(category, exactLevel);
+  }
+
+  private String checkLogged(String category, Level exactLevel) {
+    processLogMessages();
+    List<Entry> entries = matchingLogQueueEntries(
+        entry -> category.equals(entry.category) && entry.level == exactLevel.value());
     entries.forEach(entry -> debug("matching " + entryMessage(entry)));
+    return entries.isEmpty() ? "" : null;
   }
 
   protected void checkNotLogged(String category, Level minLevel) {
@@ -1252,6 +1257,19 @@ public class SequenceBase {
 
   private void untilLoop(String description, Supplier<Boolean> evaluator) {
     untilLoop(description, evaluator, null);
+  }
+
+  private void untilNull(String description, Supplier<String> evaluator) {
+    AtomicReference<String> detail = new AtomicReference<>();
+    whileDoing(description, () -> {
+      updateConfig("Before " + description);
+      recordSequence("Wait for " + description);
+      messageEvaluateLoop(() -> {
+        String result = evaluator.get();
+        detail.set(result);
+        return result == null;
+      });
+    }, detail::get);
   }
 
   private void untilLoop(String description, Supplier<Boolean> evaluator, Supplier<String> detail) {

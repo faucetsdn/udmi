@@ -8,6 +8,7 @@ import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.safeSleep;
+import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static udmi.schema.Bucket.SYSTEM;
@@ -30,6 +31,7 @@ import java.time.Instant;
 import java.time.temporal.TemporalAmount;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 import org.junit.Test;
 import udmi.schema.Entry;
 import udmi.schema.Level;
@@ -77,7 +79,7 @@ public class ConfigSequences extends SequenceBase {
     deviceConfig.system.min_loglevel = Level.INFO.value();
     untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
     checkNotLogged(SYSTEM_CONFIG_APPLY, Level.WARNING);
-    checkThat(String.format("device config resolved within %ss", CONFIG_THRESHOLD_SEC), () ->
+    checkThat(format("device config resolved within %ss", CONFIG_THRESHOLD_SEC), () ->
         Instant.now().isBefore(startTime.plusSeconds(CONFIG_THRESHOLD_SEC)));
 
     deviceConfig.system.min_loglevel = Level.WARNING.value();
@@ -126,7 +128,8 @@ public class ConfigSequences extends SequenceBase {
     info("initial last_config " + getTimestamp(deviceState.system.last_config));
     checkThat("initial stable_config matches last_config",
         () -> dateEquals(stableConfig, deviceState.system.last_config));
-    untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
+
+    waitForLog(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
 
     setExtraField("break_json");
     untilHasInterestingSystemStatus(true);
