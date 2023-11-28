@@ -3,6 +3,7 @@ package com.google.daq.mqtt.sequencer;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Strings.emptyToNull;
 import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
 import static com.google.daq.mqtt.util.IotReflectorClient.REFLECTOR_PREFIX;
 import static com.google.daq.mqtt.validator.Validator.CONFIG_PREFIX;
@@ -94,6 +95,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import joptsimple.internal.Strings;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
 import org.junit.After;
@@ -1151,8 +1153,8 @@ public class SequenceBase {
       recordSequence("Wait for " + description);
       messageEvaluateLoop(() -> {
         String result = evaluator.get();
-        detail.set(result);
-        return result == null;
+        detail.set(emptyToNull(result));
+        return result != null;
       });
     }, detail::get);
   }
@@ -1168,10 +1170,13 @@ public class SequenceBase {
 
   private String checkLogged(String category, Level exactLevel) {
     processLogMessages();
-    List<Entry> entries = matchingLogQueueEntries(
-        entry -> category.equals(entry.category) && entry.level == exactLevel.value());
-    entries.forEach(entry -> debug("matching " + entryMessage(entry)));
-    return entries.isEmpty() ? "" : null;
+    List<Entry> entries = matchingLogQueue(entry -> isMatchingEntry(category, exactLevel, entry));
+    entries.forEach(entry -> debug("Matched entry " + entryMessage(entry)));
+    return entries.isEmpty() ? "No matching log entry found" : null;
+  }
+
+  private static boolean isMatchingEntry(String category, Level exactLevel, Entry entry) {
+    return category.equals(entry.category) && entry.level == exactLevel.value();
   }
 
   protected void checkNotLogged(String category, Level minLevel) {
@@ -1182,7 +1187,7 @@ public class SequenceBase {
       processLogMessages();
     });
     final Instant endTime = lastConfigUpdate.plusSeconds(LOG_TIMEOUT_SEC);
-    List<Entry> entries = matchingLogQueueEntries(
+    List<Entry> entries = matchingLogQueue(
         entry -> category.equals(entry.category) && entry.level >= minLevel.value());
     checkThat(format("log category `%s` level `%s` not logged", category, minLevel), () -> {
       if (!entries.isEmpty()) {
@@ -1194,7 +1199,7 @@ public class SequenceBase {
     });
   }
 
-  private List<Entry> matchingLogQueueEntries(Function<Entry, Boolean> predicate) {
+  private List<Entry> matchingLogQueue(Function<Entry, Boolean> predicate) {
     return logEntryQueue.stream().filter(predicate::apply).collect(Collectors.toList());
   }
 
@@ -1240,7 +1245,7 @@ public class SequenceBase {
       action.run();
     } catch (Exception e) {
       catcher.accept(e);
-      ifNotNullThen(detail, d -> waitingConditionPush(d.get()));
+      ifNotNullThen(detail, d -> ifNotNullThen(d.get(), this::waitingConditionPush));
       throw e;
     }
 
