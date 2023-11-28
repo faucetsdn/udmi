@@ -549,7 +549,7 @@ public class SequenceBase {
     SequenceResult result = pass ? SequenceResult.PASS : SequenceResult.FAIL;
     String stage = capabilityFeatureStages.get(capability).value().toUpperCase();
     String message = state.getMessage();
-    String capabilityName = methodName + "." + capability.name();
+    String capabilityName = methodName + "." + capability.name().toLowerCase();
     emitSequencerOut(
         format(CAPABILITY_FORMAT, result, bucket, capabilityName, stage, CAPABILITY_SCORE,
             message));
