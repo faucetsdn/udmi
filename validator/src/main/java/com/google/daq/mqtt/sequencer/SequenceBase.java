@@ -550,9 +550,8 @@ public class SequenceBase {
     String stage = capabilityFeatureStages.get(capability).value().toUpperCase();
     String message = state.getMessage();
     String capabilityName = methodName + "." + capability.name().toLowerCase();
-    emitSequencerOut(
-        format(CAPABILITY_FORMAT, result, bucket, capabilityName, stage, CAPABILITY_SCORE,
-            message));
+    emitSequencerOut(format(CAPABILITY_FORMAT,
+        result, bucket.value(), capabilityName, stage, CAPABILITY_SCORE, message));
   }
 
   protected String getAlternateEndpointHostname() {
@@ -1962,6 +1961,9 @@ public class SequenceBase {
     }
   }
 
+  /**
+   * Master list of test capabilities.
+   */
   public enum Capability {
     LOGGING
   }

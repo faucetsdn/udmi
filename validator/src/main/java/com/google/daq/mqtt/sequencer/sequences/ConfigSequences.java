@@ -128,12 +128,11 @@ public class ConfigSequences extends SequenceBase {
     checkThat("initial stable_config matches last_config",
         () -> dateEquals(stableConfig, deviceState.system.last_config));
 
-    asSubtest(LOGGING, BETA,
-        () -> waitForLog(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL));
+    asSubtest(LOGGING, BETA, () -> waitForLog(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL));
 
     setExtraField("break_json");
     untilHasInterestingSystemStatus(true);
-    untilLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
+    asSubtest(LOGGING, BETA, () -> waitForLog(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL));
     Entry stateStatus = deviceState.system.status;
     info("Error message: " + stateStatus.message);
     debug("Error detail: " + stateStatus.detail);
@@ -145,26 +144,32 @@ public class ConfigSequences extends SequenceBase {
     assertTrue("following stable_config matches last_config",
         dateEquals(stableConfig, deviceState.system.last_config));
     assertTrue("system operational", deviceState.system.operation.operational);
-    untilLogged(SYSTEM_CONFIG_PARSE, Level.ERROR);
-    safeSleep(LOG_APPLY_DELAY_MS);
-    checkNotLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
+    asSubtest(LOGGING, BETA, () -> {
+      untilLogged(SYSTEM_CONFIG_PARSE, Level.ERROR);
+      safeSleep(LOG_APPLY_DELAY_MS);
+      checkNotLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
+    });
 
     // Will restore min_loglevel to the default of INFO.
     resetConfig(); // clears extra_field and interesting status checks
 
-    untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
-    untilTrue("restored state synchronized",
-        () -> dateEquals(deviceConfig.timestamp, deviceState.system.last_config));
+    asSubtest(LOGGING, BETA, () -> {
+      untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
+      untilTrue("restored state synchronized",
+          () -> dateEquals(deviceConfig.timestamp, deviceState.system.last_config));
+    });
 
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
     untilTrue("last_config updated",
         () -> !dateEquals(stableConfig, deviceState.system.last_config)
     );
     assertTrue("system operational", deviceState.system.operation.operational);
-    untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
-    // These should not be logged since the level was at INFO until the new config is applied.
-    checkNotLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
-    checkNotLogged(SYSTEM_CONFIG_PARSE, SYSTEM_CONFIG_PARSE_LEVEL);
+    asSubtest(LOGGING, BETA, () -> {
+      untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
+      // These should not be logged since the level was at INFO until the new config is applied.
+      checkNotLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
+      checkNotLogged(SYSTEM_CONFIG_PARSE, SYSTEM_CONFIG_PARSE_LEVEL);
+    });
   }
 
   @Test(timeout = ONE_MINUTE_MS)
