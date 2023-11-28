@@ -18,7 +18,6 @@ import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
-import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
@@ -1145,8 +1144,21 @@ public class SequenceBase {
     recordSequence("Check that " + notDescription);
   }
 
+  private void waitFor(String description, Supplier<String> evaluator) {
+    AtomicReference<String> detail = new AtomicReference<>();
+    whileDoing(description, () -> {
+      updateConfig("Before " + description);
+      recordSequence("Wait for " + description);
+      messageEvaluateLoop(() -> {
+        String result = evaluator.get();
+        detail.set(result);
+        return result == null;
+      });
+    }, detail::get);
+  }
+
   protected void waitForLog(String category, Level exactLevel) {
-    untilNull(format("log category `%s` level `%s` to be logged", category, exactLevel.name()),
+    waitFor(format("log category `%s` level `%s` to be logged", category, exactLevel.name()),
         () -> checkLogged(category, exactLevel));
   }
 
@@ -1257,19 +1269,6 @@ public class SequenceBase {
 
   private void untilLoop(String description, Supplier<Boolean> evaluator) {
     untilLoop(description, evaluator, null);
-  }
-
-  private void untilNull(String description, Supplier<String> evaluator) {
-    AtomicReference<String> detail = new AtomicReference<>();
-    whileDoing(description, () -> {
-      updateConfig("Before " + description);
-      recordSequence("Wait for " + description);
-      messageEvaluateLoop(() -> {
-        String result = evaluator.get();
-        detail.set(result);
-        return result == null;
-      });
-    }, detail::get);
   }
 
   private void untilLoop(String description, Supplier<Boolean> evaluator, Supplier<String> detail) {
