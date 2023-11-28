@@ -14,7 +14,6 @@ import static com.google.udmi.util.Common.DEVICE_ID_KEY;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
 import static com.google.udmi.util.Common.GATEWAY_ID_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
-import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.changedLines;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -33,6 +32,7 @@ import static java.lang.String.format;
 import static java.nio.file.Files.newOutputStream;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 import static udmi.schema.Bucket.SYSTEM;
@@ -146,11 +146,15 @@ public class SequenceBase {
   public static final String SYSTEM_STATUS_MESSAGE = "applicable system status";
   public static final String HAS_STATUS_PREFIX = "has ";
   public static final String NOT_STATUS_PREFIX = "no ";
+  public static final String SCHEMA_BUCKET = "schemas";
+  public static final int SCHEMA_SCORE = 5;
+  public static final int CAPABILITY_SCORE = 1;
   private static final int FUNCTIONS_VERSION_BETA = 11;
   private static final int FUNCTIONS_VERSION_ALPHA = FUNCTIONS_VERSION_BETA;
   private static final long CONFIG_BARRIER_MS = 1000;
   private static final String START_END_MARKER = "################################";
   private static final String RESULT_FORMAT = "RESULT %s %s %s %s %s %s";
+  private static final String CAPABILITY_FORMAT = "CPBLTY %s %s %s %s %s %s";
   private static final String SCHEMA_FORMAT = "SCHEMA %s %s %s %s %s %s";
   private static final String TESTS_OUT_DIR = "tests";
   private static final String EVENT_PREFIX = "event_";
@@ -237,6 +241,8 @@ public class SequenceBase {
   private final Queue<Entry> logEntryQueue = new LinkedBlockingDeque<>();
   private final Stack<String> waitingCondition = new Stack<>();
   private final SortedMap<String, List<Entry>> validationResults = new TreeMap<>();
+  private final Map<Capability, Exception> capabilityExceptions = new ConcurrentHashMap<>();
+  private final Map<Capability, FeatureStage> capabilityFeatureStages = new ConcurrentHashMap<>();
   @Rule
   public Timeout globalTimeout = new Timeout(NORM_TIMEOUT_MS, TimeUnit.MILLISECONDS);
   @Rule
@@ -265,7 +271,6 @@ public class SequenceBase {
   private int startStateCount;
   private Boolean expectedSystemStatus;
   private Description testDescription;
-  private Map<Capability, Exception> capabilityExceptions = new ConcurrentHashMap<>();
 
   private static void setupSequencer() {
     exeConfig = SequenceRunner.ensureExecutionConfig();
@@ -481,8 +486,8 @@ public class SequenceBase {
         SequenceResult result = RESULT_LEVEL_MAP.inverse().get(Level.fromValue(entry.level));
         String stageValue = stage.value();
         String schemaStage = schema + "_" + stageValue;
-        emitSequenceResult(result, "schemas", schemaStage, stageValue.toUpperCase(), 5,
-            entry.message);
+        emitSequenceResult(result, SCHEMA_BUCKET, schemaStage, stageValue.toUpperCase(),
+            SCHEMA_SCORE, entry.message);
       });
     });
   }
@@ -532,6 +537,22 @@ public class SequenceBase {
 
   private static MessagePublisher reflector(boolean useAlternateClient) {
     return useAlternateClient ? altClient : client;
+  }
+
+  private static boolean isMatchingEntry(String category, Level exactLevel, Entry entry) {
+    return category.equals(entry.category) && entry.level == exactLevel.value();
+  }
+
+  private void emitCapabilityResult(Capability capability, Exception state, Bucket bucket,
+      String methodName) {
+    boolean pass = state instanceof CapabilitySuccess;
+    SequenceResult result = pass ? SequenceResult.PASS : SequenceResult.FAIL;
+    String stage = capabilityFeatureStages.get(capability).value().toUpperCase();
+    String message = state.getMessage();
+    String capabilityName = methodName + "." + capability.name();
+    emitSequencerOut(
+        format(CAPABILITY_FORMAT, result, bucket, capabilityName, stage, CAPABILITY_SCORE,
+            message));
   }
 
   protected String getAlternateEndpointHostname() {
@@ -744,6 +765,12 @@ public class SequenceBase {
     String stage = (feature == null ? Feature.DEFAULT_STAGE : feature.stage()).name();
     int score = (feature == null ? Feature.DEFAULT_SCORE : feature.score());
     emitSequenceResult(result, bucket.value(), methodName, stage, score, message);
+    capabilityExceptions.forEach(
+        (key, value) -> emitCapabilityResult(key, value, bucket, methodName));
+  }
+
+  private void processCapabilityResult(Map.Entry<Capability, Exception> entry) {
+    info("TAP processing capability result " + entry.toString());
   }
 
   private void recordSchemaValidations(Description description) {
@@ -1180,10 +1207,6 @@ public class SequenceBase {
     return entries.isEmpty() ? "No matching log entry found" : null;
   }
 
-  private static boolean isMatchingEntry(String category, Level exactLevel, Entry entry) {
-    return category.equals(entry.category) && entry.level == exactLevel.value();
-  }
-
   protected void checkNotLogged(String category, Level minLevel) {
     withRecordSequence(false, () -> {
       ifTrueThen(deviceSupportsState(), () ->
@@ -1211,8 +1234,9 @@ public class SequenceBase {
   private void processLogMessages() {
     List<SystemEvent> receivedEvents = popReceivedEvents(SystemEvent.class);
     receivedEvents.forEach(systemEvent -> {
-      int eventCount = ofNullable(systemEvent.event_count).orElse(previousEventCount + 1);
-      if (eventCount != previousEventCount + 1) {
+      int eventCount = ofNullable(systemEvent.event_count).orElse(
+          previousEventCount + CAPABILITY_SCORE);
+      if (eventCount != previousEventCount + CAPABILITY_SCORE) {
         debug("Missing system events " + previousEventCount + " -> " + eventCount);
       }
       previousEventCount = eventCount;
@@ -1516,7 +1540,7 @@ public class SequenceBase {
         }
         List<String> changes = updateDeviceConfig(config);
         debug(format("Updated config %s %s", getTimestamp(config.timestamp), txnId));
-        if (updateCount == 1) {
+        if (updateCount == CAPABILITY_SCORE) {
           info(format("Initial config #%03d", updateCount), stringify(deviceConfig));
         } else {
           info(format("Updated config #%03d", updateCount), changedLines(changes));
@@ -1927,8 +1951,10 @@ public class SequenceBase {
     return receivedUpdates;
   }
 
-  protected void asSubtest(Capability capability, Runnable action) {
-    capabilityExceptions.computeIfAbsent(capability, SuccessException::new);
+  protected void asSubtest(Capability capability, FeatureStage stage, Runnable action) {
+    capabilityExceptions.computeIfAbsent(capability, CapabilitySuccess::new);
+    FeatureStage previous = capabilityFeatureStages.put(capability, stage);
+    ifNotNullThen(previous, p -> assertEquals(previous, stage));
     try {
       action.run();
     } catch (Exception e) {
@@ -1936,7 +1962,7 @@ public class SequenceBase {
     }
   }
 
-  protected enum Capability {
+  public enum Capability {
     LOGGING
   }
 
@@ -1958,10 +1984,9 @@ public class SequenceBase {
     }
   }
 
-  private static class SuccessException extends RuntimeException {
-    final Capability capability;
-    public SuccessException(Capability capability) {
-      this.capability = capability;
+  private static class CapabilitySuccess extends RuntimeException {
+    public CapabilitySuccess(Capability capability) {
+      super("Capability functional");
     }
   }
 
@@ -2014,9 +2039,8 @@ public class SequenceBase {
       if (testResult == SequenceResult.PASS) {
         ValidateSchema annotation = description.getAnnotation(ValidateSchema.class);
         ifNotNullThen(annotation, a -> recordSchemaValidations(description));
+        capabilityExceptions.entrySet().forEach(SequenceBase.this::processCapabilityResult);
       }
-
-      info("TAP feature exceptions: " + CSV_JOINER.join(capabilityExceptions.entrySet()));
 
       notice("ending test " + testName + " after " + timeSinceStart() + " " + START_END_MARKER);
       testName = null;
