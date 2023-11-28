@@ -28,10 +28,8 @@ import com.google.daq.mqtt.sequencer.Summary;
 import com.google.daq.mqtt.sequencer.ValidateSchema;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.TemporalAmount;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Supplier;
 import org.junit.Test;
 import udmi.schema.Entry;
 import udmi.schema.Level;
@@ -129,7 +127,7 @@ public class ConfigSequences extends SequenceBase {
     checkThat("initial stable_config matches last_config",
         () -> dateEquals(stableConfig, deviceState.system.last_config));
 
-    waitForLog(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
+    asSubtest(Capability.LOGGING, () -> waitForLog(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL));
 
     setExtraField("break_json");
     untilHasInterestingSystemStatus(true);

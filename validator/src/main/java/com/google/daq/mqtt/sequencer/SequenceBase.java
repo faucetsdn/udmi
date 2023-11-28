@@ -14,6 +14,7 @@ import static com.google.udmi.util.Common.DEVICE_ID_KEY;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
 import static com.google.udmi.util.Common.GATEWAY_ID_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
+import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.changedLines;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -32,6 +33,7 @@ import static java.lang.String.format;
 import static java.nio.file.Files.newOutputStream;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 import static udmi.schema.Bucket.SYSTEM;
 import static udmi.schema.Bucket.UNKNOWN_DEFAULT;
@@ -84,6 +86,7 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.Stack;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
@@ -95,7 +98,6 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import joptsimple.internal.Strings;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
 import org.junit.After;
@@ -263,6 +265,7 @@ public class SequenceBase {
   private int startStateCount;
   private Boolean expectedSystemStatus;
   private Description testDescription;
+  private Map<Capability, Exception> capabilityExceptions = new ConcurrentHashMap<>();
 
   private static void setupSequencer() {
     exeConfig = SequenceRunner.ensureExecutionConfig();
@@ -640,6 +643,8 @@ public class SequenceBase {
     }
 
     assumeTrue("Feature bucket not enabled", isBucketEnabled(testBucket));
+
+    assertTrue("exceptions map should be empty", capabilityExceptions.isEmpty());
 
     if (!deviceSupportsState()) {
       boolean featureDisabled = ifNotNullGet(testDescription.getAnnotation(Feature.class),
@@ -1922,6 +1927,19 @@ public class SequenceBase {
     return receivedUpdates;
   }
 
+  protected void asSubtest(Capability capability, Runnable action) {
+    capabilityExceptions.computeIfAbsent(capability, SuccessException::new);
+    try {
+      action.run();
+    } catch (Exception e) {
+      capabilityExceptions.put(capability, e);
+    }
+  }
+
+  protected enum Capability {
+    LOGGING
+  }
+
   static class CaptureMap extends HashMap<SubFolder, List<Map<String, Object>>> {
 
   }
@@ -1937,6 +1955,13 @@ public class SequenceBase {
 
     public AbortMessageLoop(String message, Exception e) {
       super(message, e);
+    }
+  }
+
+  private static class SuccessException extends RuntimeException {
+    final Capability capability;
+    public SuccessException(Capability capability) {
+      this.capability = capability;
     }
   }
 
@@ -1990,6 +2015,8 @@ public class SequenceBase {
         ValidateSchema annotation = description.getAnnotation(ValidateSchema.class);
         ifNotNullThen(annotation, a -> recordSchemaValidations(description));
       }
+
+      info("TAP feature exceptions: " + CSV_JOINER.join(capabilityExceptions.entrySet()));
 
       notice("ending test " + testName + " after " + timeSinceStart() + " " + START_END_MARKER);
       testName = null;
