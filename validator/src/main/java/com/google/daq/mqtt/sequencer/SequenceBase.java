@@ -93,6 +93,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
@@ -218,6 +219,8 @@ public class SequenceBase {
       STATE_QUERY_CUTOFF_SEC));
   private static final String FAKE_DEVICE_ID = "TAP-1";
   public static final String NO_EXTRA_DETAIL = "";
+  public static final Duration LOG_WAIT_TIME = Duration.ofSeconds(30);
+  public static final Duration NEARLY_FOREVER = Duration.ofHours(10);
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -1233,12 +1236,12 @@ public class SequenceBase {
     recordSequence("Check that " + notDescription);
   }
 
-  private void waitFor(String description, Supplier<String> evaluator) {
+  private void waitFor(String description, Duration maxWait, Supplier<String> evaluator) {
     AtomicReference<String> detail = new AtomicReference<>();
     whileDoing(description, () -> {
       updateConfig("Before " + description);
       recordSequence("Wait for " + description);
-      messageEvaluateLoop(() -> {
+      messageEvaluateLoop(maxWait, () -> {
         String result = evaluator.get();
         detail.set(emptyToNull(result));
         return result != null;
@@ -1248,7 +1251,7 @@ public class SequenceBase {
 
   protected void waitForLog(String category, Level exactLevel) {
     waitFor(format("log category `%s` level `%s` to be logged", category, exactLevel.name()),
-        () -> checkLogged(category, exactLevel));
+        LOG_WAIT_TIME, () -> checkLogged(category, exactLevel));
   }
 
   protected void untilLogged(String category, Level exactLevel) {
@@ -1369,7 +1372,15 @@ public class SequenceBase {
   }
 
   private void messageEvaluateLoop(Supplier<Boolean> evaluator) {
+    messageEvaluateLoop(NEARLY_FOREVER, evaluator);
+  }
+
+  private void messageEvaluateLoop(Duration maxWait, Supplier<Boolean> evaluator) {
+    Instant end = Instant.now().plus(maxWait);
     while (evaluator.get()) {
+      if (Instant.now().isAfter(end)) {
+        throw new RuntimeException(format("Timeout after waiting for %ss", maxWait.getSeconds()));
+      }
       processNextMessage();
     }
     if (expectedSystemStatus != null) {
