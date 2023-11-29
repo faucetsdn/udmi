@@ -1,4 +1,4 @@
-package com.google.daq.mqtt.sequencer.sequences;
+package com.google.daq.mqtt.sequencer;
 
 import com.google.daq.mqtt.sequencer.SequenceBase.Capabilities;
 import java.lang.annotation.ElementType;
@@ -8,6 +8,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import udmi.schema.FeatureEnumeration.FeatureStage;
 
+/**
+ * Singular annotation for a sequence test capability.
+ */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD})
 @Repeatable(AllCapabilities.class)
