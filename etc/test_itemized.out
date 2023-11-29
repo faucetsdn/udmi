@@ -3,7 +3,7 @@ RESULT fail system broken_config ALPHA 0/5 timeout waiting for has applicable sy
 RESULT fail system broken_config ALPHA 0/5 timeout waiting for log category `system.config.receive` level `DEBUG` was logged
 RESULT fail system broken_config ALPHA 0/5 timeout waiting for no applicable system status
 RESULT fail system config_logging BETA 0/5 Bad version string number format
-RESULT skip system device_config_acked BETA 0/5 No config check for proxy device
+RESULT skip system device_config_acked BETA 0/0 No config check for proxy device
 RESULT fail system device_config_acked BETA 0/5 timeout waiting for config acked
 RESULT fail enumeration.features feature_enumeration PREVIEW 0/5 Failed check that feature enumeration matches metadata; missing { enumeration }, extra { unknown }
 RESULT pass gateway gateway_proxy_events ALPHA 5/5 Sequence complete
@@ -22,6 +22,6 @@ RESULT pass system system_min_loglevel ALPHA 5/5 Sequence complete
 RESULT fail system.mode system_mode_restart ALPHA 0/5 Failed check that restart count increased by one
 RESULT fail system too_much_state ALPHA 0/5 Failed check that No more than 6 state updates in 60s
 RESULT pass system valid_serial_no ALPHA 5/5 Sequence complete
-RESULT skip system valid_serial_no ALPHA 0/5 State testing disabled
+RESULT skip system valid_serial_no ALPHA 0/0 State testing disabled
 RESULT fail writeback writeback_success ALPHA 0/5 timeout waiting for point filter_differential_pressure_setpoint to have value_state applied
 RESULT fail writeback writeback_success ALPHA 0/5 timeout waiting for point filter_differential_pressure_setpoint to have value_state applied
