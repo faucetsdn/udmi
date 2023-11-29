@@ -1,4 +1,4 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 #
 # Command line wrapper to create a config file, and pass off
 # to sequence looper for complete sequence run.
@@ -175,6 +175,12 @@ echo Extracting sequence results:
 # Sort by test name (6th field)
 egrep 'RESULT |CPBLTY ' $SEQUENCER_LOG | fgrep NOTICE | sort -k 6 | \
     sed -e 's/.* NOTICE //' | tee $SEQUENCER_OUT
+
+echo TAP1
+fgrep 'RESULT ' $SEQUENCER_LOG || true
+echo TAP2
+fgrep 'CPBLTY ' $SEQUENCER_LOG || true
+echo TAP3
 
 [[ -s $SEQUENCER_OUT ]] || fail No test results found.
 
