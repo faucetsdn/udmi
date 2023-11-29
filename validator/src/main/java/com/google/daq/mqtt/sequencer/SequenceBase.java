@@ -19,6 +19,7 @@ import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
@@ -216,6 +217,7 @@ public class SequenceBase {
   private static final Date stateCutoffThreshold = Date.from(Instant.now().minusSeconds(
       STATE_QUERY_CUTOFF_SEC));
   private static final String FAKE_DEVICE_ID = "TAP-1";
+  public static final String NO_EXTRA_DETAIL = "";
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -1257,7 +1259,7 @@ public class SequenceBase {
     processLogMessages();
     List<Entry> entries = matchingLogQueue(entry -> isMatchingEntry(category, exactLevel, entry));
     entries.forEach(entry -> debug("Matched entry " + entryMessage(entry)));
-    return entries.isEmpty() ? "No matching log entry found" : null;
+    return ifTrueGet(entries.isEmpty(), NO_EXTRA_DETAIL);
   }
 
   protected void checkNotLogged(String category, Level minLevel) {
@@ -2007,9 +2009,9 @@ public class SequenceBase {
   }
 
   protected void forCapability(Capabilities capability, Runnable action) {
-    capabilityExceptions.computeIfAbsent(capability, CapabilitySuccess::new);
     try {
-      action.run();
+      Exception was = capabilityExceptions.computeIfAbsent(capability, CapabilitySuccess::new);
+      ifTrueThen(was instanceof CapabilitySuccess, action);
     } catch (Exception e) {
       capabilityExceptions.put(capability, e);
     }
