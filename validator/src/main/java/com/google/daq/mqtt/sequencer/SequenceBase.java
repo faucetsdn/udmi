@@ -800,10 +800,6 @@ public class SequenceBase {
     emitSequenceResult(result, bucket.value(), method, stage, score.get(), total.get(), message);
   }
 
-  private void processCapabilityResult(Map.Entry<Capabilities, Exception> entry) {
-    info("TAP processing capability result " + entry.toString());
-  }
-
   private void recordSchemaValidations(Description description) {
     // Ensure that enough time has passed to capture event messages for schema validation.
     info(format("waiting %ds for more messages...", waitTimeRemainingSec()));
@@ -826,6 +822,10 @@ public class SequenceBase {
 
   private String uniqueKey(Entry entry) {
     return format("%s_%s_%s", entry.category, entry.message, entry.detail);
+  }
+
+  private void collectCapabilityResult(Map.Entry<Capabilities, Exception> entry) {
+    info("TAP processing capability result " + entry.toString());
   }
 
   private void collectSchemaResult(Description description, String schemaName,
@@ -2074,7 +2074,8 @@ public class SequenceBase {
       if (testResult == SequenceResult.PASS) {
         ValidateSchema annotation = description.getAnnotation(ValidateSchema.class);
         ifNotNullThen(annotation, a -> recordSchemaValidations(description));
-        capabilityExceptions.entrySet().forEach(SequenceBase.this::processCapabilityResult);
+        // TODO: Figure out where this should happen, this is likely the wrong place.
+        capabilityExceptions.entrySet().forEach(SequenceBase.this::collectCapabilityResult);
       }
 
       notice("ending test " + testName + " after " + timeSinceStart() + " " + START_END_MARKER);
