@@ -781,20 +781,21 @@ public class SequenceBase {
     Bucket bucket = getBucket(feature);
     String stage = (feature == null ? Feature.DEFAULT_STAGE : feature.stage()).name();
     int base = (feature == null ? Feature.DEFAULT_SCORE : feature.score());
-    AtomicInteger total = new AtomicInteger(base);
+    AtomicInteger total = new AtomicInteger(result == SequenceResult.SKIP ? 0 : base);
     AtomicInteger score = new AtomicInteger(result == SequenceResult.PASS ? base : 0);
 
     assertEquals("executed test capabilities", capabilities.keySet(),
         capabilityExceptions.keySet());
 
     String method = description.getMethodName();
-    capabilityExceptions.forEach(
-        (key, value) -> {
-          Map.Entry<Integer, Integer> scoreAndTotal = emitCapabilityResult(key, value,
-              capabilities.get(key), bucket, method);
-          score.addAndGet(scoreAndTotal.getKey());
-          total.addAndGet(scoreAndTotal.getValue());
-        });
+    ifTrueThen(result == SequenceResult.PASS, () ->
+      capabilityExceptions.keySet().stream()
+          .map(key -> emitCapabilityResult(key, capabilityExceptions.get(key),
+              capabilities.get(key), bucket, method))
+          .forEach(scoreAndTotal -> {
+            score.addAndGet(scoreAndTotal.getKey());
+            total.addAndGet(scoreAndTotal.getValue());
+          }));
 
     emitSequenceResult(result, bucket.value(), method, stage, score.get(), total.get(), message);
   }
