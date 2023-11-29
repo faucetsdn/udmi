@@ -155,6 +155,11 @@ echo Sanity check for completed tests...
 target_count=$(fgrep "Running target" out/sequencer.log | wc -l)
 result_count=$(cat out/sequencer.out | wc -l)
 if [[ $target_count != $result_count ]]; then
+    echo TAP1
+    fgrep "Running target" out/sequencer.log
+    echo TAP2
+    cat out/sequencer.out
+    echo TAP3
     fail Only $result_count results found for expected $target_count targets.
 fi
 
