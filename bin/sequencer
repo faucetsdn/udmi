@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash -ex
 #
 # Command line wrapper to create a config file, and pass off
 # to sequence looper for complete sequence run.
@@ -176,10 +176,7 @@ echo Extracting sequence results:
 egrep 'RESULT |CPBLTY ' $SEQUENCER_LOG | fgrep NOTICE | sort -k 6 | \
     sed -e 's/.* NOTICE //' | tee $SEQUENCER_OUT
 
-if [[ $(wc -l < $SEQUENCER_OUT) -eq 0 ]]; then
-    echo No test results found.
-    exit 1
-fi
+[[ -s $SEQUENCER_OUT ]] || fail No test results found.
 
 # Sort by test name (3th field)
 fgrep RESULT $site_model/out/devices/$device_id/RESULT.log | \
