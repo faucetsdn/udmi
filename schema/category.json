@@ -37,6 +37,7 @@
     { "pattern": "^validation\\.summary\\.report$" },
     { "pattern": "^validation\\.feature\\.sequence$" },
     { "pattern": "^validation\\.feature\\.schema$" },
+    { "pattern": "^validation\\.feature\\.capability$" },
     { "pattern": "^device(\\.[a-z]+((_[a-z]+))*)+$" }
     ]
 }

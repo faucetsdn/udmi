@@ -37,6 +37,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 import static udmi.schema.Bucket.SYSTEM;
 import static udmi.schema.Bucket.UNKNOWN_DEFAULT;
+import static udmi.schema.Category.VALIDATION_FEATURE_CAPABILITY;
 import static udmi.schema.Category.VALIDATION_FEATURE_SCHEMA;
 import static udmi.schema.Category.VALIDATION_FEATURE_SEQUENCE;
 import static udmi.schema.FeatureEnumeration.FeatureStage.ALPHA;
@@ -113,6 +114,7 @@ import org.junit.runner.Description;
 import org.junit.runners.model.TestTimedOutException;
 import udmi.schema.Bucket;
 import udmi.schema.CapabilityValidationState;
+import udmi.schema.CapabilityValidationState.CapabilityResult;
 import udmi.schema.Config;
 import udmi.schema.DiscoveryEvent;
 import udmi.schema.Entry;
@@ -197,7 +199,12 @@ public class SequenceBase {
       SequenceResult.START, Level.INFO,
       SequenceResult.SKIP, Level.WARNING,
       SequenceResult.PASS, Level.NOTICE,
-      SequenceResult.FAIL, ERROR
+      SequenceResult.FAIL, Level.ERROR
+  );
+  private static final String SYSTEM_TESTING_MARKER = " `system.testing";
+  private static final BiMap<CapabilityResult, Level> CAPABILITY_RESULT_MAP = ImmutableBiMap.of(
+      CapabilityResult.PASS, Level.NOTICE,
+      CapabilityResult.FAIL, Level.ERROR
   );
   private static final Map<SubFolder, String> sentConfig = new HashMap<>();
   private static final ObjectDiffEngine SENT_CONFIG_DIFFERNATOR = new ObjectDiffEngine();
@@ -830,8 +837,20 @@ public class SequenceBase {
   }
 
   private CapabilityValidationState collectCapabilityResult(Capabilities key) {
+    CapabilityValidationState capabilityValidationState = new CapabilityValidationState();
     Exception exception = capabilityExceptions.get(key);
-    return new CapabilityValidationState();
+    boolean isPass = exception instanceof CapabilitySuccess;
+    capabilityValidationState.result = isPass ? CapabilityResult.PASS : CapabilityResult.FAIL;
+    if (!isPass) {
+      Entry entry = new Entry();
+      entry.category = VALIDATION_FEATURE_CAPABILITY;
+      entry.message = exception.getMessage();
+      entry.level = CAPABILITY_RESULT_MAP.get(capabilityValidationState.result).value();
+      entry.timestamp = cleanDate();
+      capabilityValidationState.status = entry;
+    }
+
+    return capabilityValidationState;
   }
 
   private void collectSchemaResult(Description description, String schemaName,

@@ -212,4 +212,10 @@ public class Category {
     public static final Level VALIDATION_FEATURE_SCHEMA_LEVEL = INFO;
     public static final int VALIDATION_FEATURE_SCHEMA_VALUE = INFO.value();
     static { LEVEL.put(VALIDATION_FEATURE_SCHEMA, INFO); }
+
+    // Sequence test capability.
+    public static final String VALIDATION_FEATURE_CAPABILITY = "validation.feature.capability";
+    public static final Level VALIDATION_FEATURE_CAPABILITY_LEVEL = INFO;
+    public static final int VALIDATION_FEATURE_CAPABILITY_VALUE = INFO.value();
+    static { LEVEL.put(VALIDATION_FEATURE_CAPABILITY, INFO); }
 }
