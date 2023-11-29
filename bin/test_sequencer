@@ -158,10 +158,10 @@ if [[ $target_count != $result_count ]]; then
     fail Only $result_count results found for expected $target_count targets.
 fi
 
-echo Checking for correctness of completed tests...
+GOLDEN_FILE=etc/sequencer${suffix}.out
+echo Checking for correctness of completed tests in $GOLDEN_FILE...
 while read result; do
-    fgrep "$result" etc/sequencer${suffix}.out ||
-        fail Expected result not found for $result
+    fgrep "$result" $GOLDEN_FILE || fail Expected result not found for $result
 done < out/sequencer.out
 
 echo Done with $suffix test_sequencer run.

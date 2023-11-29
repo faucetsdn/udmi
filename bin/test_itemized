@@ -129,7 +129,7 @@ sed -E -i $RESULTS_OUT \
 if [[ -z $TARGET_TEST && -z $MATRIX_SHARD_COUNT ]]; then
     bin/test_itemcheck
 else
-    echo Checking for correctness of completed tests...
+    echo Checking for correctness of completed tests in $GOLDEN_FILE...
     while read result; do
         fgrep "$result" $GOLDEN_FILE || fail Expected result not found for $result
     done < $RESULTS_OUT
