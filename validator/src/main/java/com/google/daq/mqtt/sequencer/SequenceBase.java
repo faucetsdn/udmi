@@ -789,13 +789,13 @@ public class SequenceBase {
 
     String method = description.getMethodName();
     ifTrueThen(result == SequenceResult.PASS, () ->
-      capabilityExceptions.keySet().stream()
-          .map(key -> emitCapabilityResult(key, capabilityExceptions.get(key),
-              capabilities.get(key), bucket, method))
-          .forEach(scoreAndTotal -> {
-            score.addAndGet(scoreAndTotal.getKey());
-            total.addAndGet(scoreAndTotal.getValue());
-          }));
+        capabilityExceptions.keySet().stream()
+            .map(key -> emitCapabilityResult(key, capabilityExceptions.get(key),
+                capabilities.get(key), bucket, method))
+            .forEach(scoreAndTotal -> {
+              score.addAndGet(scoreAndTotal.getKey());
+              total.addAndGet(scoreAndTotal.getValue());
+            }));
 
     emitSequenceResult(result, bucket.value(), method, stage, score.get(), total.get(), message);
   }
