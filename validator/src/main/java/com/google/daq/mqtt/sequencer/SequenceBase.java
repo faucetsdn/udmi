@@ -781,21 +781,24 @@ public class SequenceBase {
     Bucket bucket = getBucket(feature);
     String stage = (feature == null ? Feature.DEFAULT_STAGE : feature.stage()).name();
     int base = (feature == null ? Feature.DEFAULT_SCORE : feature.score());
-    AtomicInteger total = new AtomicInteger(result == SequenceResult.SKIP ? 0 : base);
-    AtomicInteger score = new AtomicInteger(result == SequenceResult.PASS ? base : 0);
+
+    boolean isSkip = result == SequenceResult.SKIP;
+    boolean isPass = result == SequenceResult.PASS;
+
+    AtomicInteger total = new AtomicInteger(isSkip ? 0 : base);
+    AtomicInteger score = new AtomicInteger(isPass ? base : 0);
 
     assertEquals("executed test capabilities", capabilities.keySet(),
         capabilityExceptions.keySet());
 
     String method = description.getMethodName();
-    ifTrueThen(result == SequenceResult.PASS, () ->
-        capabilityExceptions.keySet().stream()
-            .map(key -> emitCapabilityResult(key, capabilityExceptions.get(key),
-                capabilities.get(key), bucket, method))
-            .forEach(scoreAndTotal -> {
-              score.addAndGet(scoreAndTotal.getKey());
-              total.addAndGet(scoreAndTotal.getValue());
-            }));
+    capabilityExceptions.keySet().stream()
+        .map(key -> emitCapabilityResult(key, capabilityExceptions.get(key),
+            capabilities.get(key), bucket, method))
+        .forEach(scoreAndTotal -> {
+          ifTrueThen(isPass, () -> score.addAndGet(scoreAndTotal.getKey()));
+          total.addAndGet(scoreAndTotal.getValue());
+        });
 
     emitSequenceResult(result, bucket.value(), method, stage, score.get(), total.get(), message);
   }
@@ -830,20 +833,20 @@ public class SequenceBase {
 
   private void collectSchemaResult(Description description, String schemaName,
       SequenceResult result, String detail) {
-    String sequence = description.getMethodName();
+    String name = description.getMethodName();
     Feature feature = description.getAnnotation(Feature.class);
     String bucket = getBucket(feature).value();
     String stage = (feature == null ? Feature.DEFAULT_STAGE : feature.stage()).name();
-    emitSchemaResult(schemaName, result, detail, sequence, bucket, stage);
+    emitSchemaResult(schemaName, result, detail, name, bucket, stage);
 
-    SchemaValidationState schemaValidationState = validationState.schemas.computeIfAbsent(
+    SchemaValidationState schema = validationState.schemas.computeIfAbsent(
         schemaName, this::newSchemaValidationState);
 
-    SequenceValidationState state = schemaValidationState.sequences.computeIfAbsent(
-        sequence, key -> new SequenceValidationState());
+    SequenceValidationState sequence = schema.sequences.computeIfAbsent(
+        name, key -> new SequenceValidationState());
 
-    state.result = result;
-    state.stage = getTestStage(description);
+    sequence.result = result;
+    sequence.stage = getTestStage(description);
 
     if (!result.equals(SequenceResult.PASS)) {
       Entry logEntry = new Entry();
@@ -851,7 +854,7 @@ public class SequenceBase {
       logEntry.message = detail;
       logEntry.level = RESULT_LEVEL_MAP.get(result).value();
       logEntry.timestamp = cleanDate();
-      state.status = logEntry;
+      sequence.status = logEntry;
     }
 
     updateValidationState();
