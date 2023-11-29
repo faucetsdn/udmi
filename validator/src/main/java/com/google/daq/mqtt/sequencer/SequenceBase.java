@@ -56,6 +56,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
+import com.google.daq.mqtt.sequencer.sequences.AllCapabilities;
+import com.google.daq.mqtt.sequencer.sequences.Capability;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.util.MessagePublisher.QuerySpeed;
 import com.google.daq.mqtt.util.ObjectDiffEngine;
@@ -73,6 +75,7 @@ import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -100,6 +103,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.After;
 import org.junit.AssumptionViolatedException;
 import org.junit.Before;
@@ -153,8 +157,8 @@ public class SequenceBase {
   private static final int FUNCTIONS_VERSION_ALPHA = FUNCTIONS_VERSION_BETA;
   private static final long CONFIG_BARRIER_MS = 1000;
   private static final String START_END_MARKER = "################################";
-  private static final String RESULT_FORMAT = "RESULT %s %s %s %s %s %s";
-  private static final String CAPABILITY_FORMAT = "CPBLTY %s %s %s %s %s %s";
+  private static final String RESULT_FORMAT = "RESULT %s %s %s %s %s/%s %s";
+  private static final String CAPABILITY_FORMAT = "CPBLTY %s %s %s %s %s/%s %s";
   private static final String SCHEMA_FORMAT = "SCHEMA %s %s %s %s %s %s";
   private static final String TESTS_OUT_DIR = "tests";
   private static final String EVENT_PREFIX = "event_";
@@ -241,8 +245,7 @@ public class SequenceBase {
   private final Queue<Entry> logEntryQueue = new LinkedBlockingDeque<>();
   private final Stack<String> waitingCondition = new Stack<>();
   private final SortedMap<String, List<Entry>> validationResults = new TreeMap<>();
-  private final Map<Capability, Exception> capabilityExceptions = new ConcurrentHashMap<>();
-  private final Map<Capability, FeatureStage> capabilityFeatureStages = new ConcurrentHashMap<>();
+  private final Map<Capabilities, Exception> capabilityExceptions = new ConcurrentHashMap<>();
   @Rule
   public Timeout globalTimeout = new Timeout(NORM_TIMEOUT_MS, TimeUnit.MILLISECONDS);
   @Rule
@@ -452,9 +455,9 @@ public class SequenceBase {
         && (!schemaName.startsWith(STATE_PREFIX) || schemaName.equals(STATE_UPDATE_MESSAGE_TYPE));
   }
 
-  private static void emitSequenceResult(SequenceResult result, String bucket, String methodName,
-      String stage, int score, String message) {
-    emitSequencerOut(format(RESULT_FORMAT, result, bucket, methodName, stage, score, message));
+  private static void emitSequenceResult(SequenceResult result, String bucket, String name,
+      String stage, int score, int total, String message) {
+    emitSequencerOut(format(RESULT_FORMAT, result, bucket, name, stage, score, total, message));
   }
 
   private static void emitSequencerOut(String resultString) {
@@ -487,7 +490,7 @@ public class SequenceBase {
         String stageValue = stage.value();
         String schemaStage = schema + "_" + stageValue;
         emitSequenceResult(result, SCHEMA_BUCKET, schemaStage, stageValue.toUpperCase(),
-            SCHEMA_SCORE, entry.message);
+            SCHEMA_SCORE, SCHEMA_SCORE, entry.message);
       });
     });
   }
@@ -543,15 +546,31 @@ public class SequenceBase {
     return category.equals(entry.category) && entry.level == exactLevel.value();
   }
 
-  private void emitCapabilityResult(Capability capability, Exception state, Bucket bucket,
-      String methodName) {
+  @Nullable
+  private static Map<Capabilities, Capability> getCapabilities(Description desc) {
+    try {
+      AllCapabilities all = desc.getAnnotation(AllCapabilities.class);
+      List<Capability> list = ofNullable(all).map(array -> Arrays.asList(all.value()))
+          .orElseGet(ArrayList::new);
+      ifNotNullThen(desc.getAnnotation(Capability.class), list::add);
+      return list.stream().collect(Collectors.toMap(Capability::value, cap -> cap));
+    } catch (Exception e) {
+      throw new RuntimeException("While extracting capabilities for " + desc.getMethodName(), e);
+    }
+  }
+
+  private Map.Entry<Integer, Integer> emitCapabilityResult(Capabilities capability, Exception state,
+      Capability cap, Bucket bucket, String methodName) {
     boolean pass = state instanceof CapabilitySuccess;
     SequenceResult result = pass ? SequenceResult.PASS : SequenceResult.FAIL;
-    String stage = capabilityFeatureStages.get(capability).value().toUpperCase();
     String message = state.getMessage();
     String capabilityName = methodName + "." + capability.name().toLowerCase();
+    String stage = cap.stage().value().toUpperCase();
+    int total = CAPABILITY_SCORE;
+    int score = pass ? total : 0;
     emitSequencerOut(format(CAPABILITY_FORMAT,
-        result, bucket.value(), capabilityName, stage, CAPABILITY_SCORE, message));
+        result, bucket.value(), capabilityName, stage, score, total, message));
+    return new SimpleEntry<>(score, total);
   }
 
   protected String getAlternateEndpointHostname() {
@@ -758,17 +777,31 @@ public class SequenceBase {
 
   private void recordResult(SequenceResult result, Description description, String message) {
     putSequencerResult(description, result);
-    String methodName = description.getMethodName();
+
     Feature feature = description.getAnnotation(Feature.class);
+    Map<Capabilities, Capability> capabilities = getCapabilities(description);
     Bucket bucket = getBucket(feature);
     String stage = (feature == null ? Feature.DEFAULT_STAGE : feature.stage()).name();
-    int score = (feature == null ? Feature.DEFAULT_SCORE : feature.score());
-    emitSequenceResult(result, bucket.value(), methodName, stage, score, message);
+    int base = (feature == null ? Feature.DEFAULT_SCORE : feature.score());
+    AtomicInteger total = new AtomicInteger(base);
+    AtomicInteger score = new AtomicInteger(result == SequenceResult.PASS ? base : 0);
+
+    assertEquals("executed test capabilities", capabilities.keySet(),
+        capabilityExceptions.keySet());
+
+    String method = description.getMethodName();
     capabilityExceptions.forEach(
-        (key, value) -> emitCapabilityResult(key, value, bucket, methodName));
+        (key, value) -> {
+          Map.Entry<Integer, Integer> scoreAndTotal = emitCapabilityResult(key, value,
+              capabilities.get(key), bucket, method);
+          score.addAndGet(scoreAndTotal.getKey());
+          total.addAndGet(scoreAndTotal.getValue());
+        });
+
+    emitSequenceResult(result, bucket.value(), method, stage, score.get(), total.get(), message);
   }
 
-  private void processCapabilityResult(Map.Entry<Capability, Exception> entry) {
+  private void processCapabilityResult(Map.Entry<Capabilities, Exception> entry) {
     info("TAP processing capability result " + entry.toString());
   }
 
@@ -1950,10 +1983,8 @@ public class SequenceBase {
     return receivedUpdates;
   }
 
-  protected void asSubtest(Capability capability, FeatureStage stage, Runnable action) {
+  protected void forCapability(Capabilities capability, Runnable action) {
     capabilityExceptions.computeIfAbsent(capability, CapabilitySuccess::new);
-    FeatureStage previous = capabilityFeatureStages.put(capability, stage);
-    ifNotNullThen(previous, p -> assertEquals(previous, stage));
     try {
       action.run();
     } catch (Exception e) {
@@ -1964,8 +1995,10 @@ public class SequenceBase {
   /**
    * Master list of test capabilities.
    */
-  public enum Capability {
-    LOGGING
+  public enum Capabilities {
+    DEVICE_STATE,
+    LOGGING,
+    ACKNOWLEDGE
   }
 
   static class CaptureMap extends HashMap<SubFolder, List<Map<String, Object>>> {
@@ -1987,7 +2020,8 @@ public class SequenceBase {
   }
 
   private static class CapabilitySuccess extends RuntimeException {
-    public CapabilitySuccess(Capability capability) {
+
+    public CapabilitySuccess(Capabilities capability) {
       super("Capability functional");
     }
   }

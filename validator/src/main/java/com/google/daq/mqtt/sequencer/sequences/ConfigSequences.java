@@ -2,7 +2,8 @@ package com.google.daq.mqtt.sequencer.sequences;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
-import static com.google.daq.mqtt.sequencer.SequenceBase.Capability.LOGGING;
+import static com.google.daq.mqtt.sequencer.SequenceBase.Capabilities.DEVICE_STATE;
+import static com.google.daq.mqtt.sequencer.SequenceBase.Capabilities.LOGGING;
 import static com.google.daq.mqtt.util.TimePeriodConstants.ONE_MINUTE_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.THREE_MINUTES_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
@@ -115,8 +116,9 @@ public class ConfigSequences extends SequenceBase {
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Feature(stage = ALPHA, bucket = SYSTEM)
+  @Feature(stage = ALPHA, bucket = SYSTEM, score = 4)
   @Summary("Check that the device correctly handles a broken (non-json) config message.")
+  @Capability(value = LOGGING, stage = ALPHA)
   public void broken_config() {
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
     updateConfig("starting broken_config");
@@ -128,11 +130,11 @@ public class ConfigSequences extends SequenceBase {
     checkThat("initial stable_config matches last_config",
         () -> dateEquals(stableConfig, deviceState.system.last_config));
 
-    asSubtest(LOGGING, BETA, () -> waitForLog(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL));
+    forCapability(LOGGING, () -> waitForLog(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL));
 
     setExtraField("break_json");
     untilHasInterestingSystemStatus(true);
-    asSubtest(LOGGING, BETA, () -> waitForLog(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL));
+    forCapability(LOGGING, () -> waitForLog(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL));
     Entry stateStatus = deviceState.system.status;
     info("Error message: " + stateStatus.message);
     debug("Error detail: " + stateStatus.detail);
@@ -144,7 +146,7 @@ public class ConfigSequences extends SequenceBase {
     assertTrue("following stable_config matches last_config",
         dateEquals(stableConfig, deviceState.system.last_config));
     assertTrue("system operational", deviceState.system.operation.operational);
-    asSubtest(LOGGING, BETA, () -> {
+    forCapability(LOGGING, () -> {
       untilLogged(SYSTEM_CONFIG_PARSE, Level.ERROR);
       safeSleep(LOG_APPLY_DELAY_MS);
       checkNotLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
@@ -153,7 +155,7 @@ public class ConfigSequences extends SequenceBase {
     // Will restore min_loglevel to the default of INFO.
     resetConfig(); // clears extra_field and interesting status checks
 
-    asSubtest(LOGGING, BETA, () -> {
+    forCapability(LOGGING, () -> {
       untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
       untilTrue("restored state synchronized",
           () -> dateEquals(deviceConfig.timestamp, deviceState.system.last_config));
@@ -164,7 +166,7 @@ public class ConfigSequences extends SequenceBase {
         () -> !dateEquals(stableConfig, deviceState.system.last_config)
     );
     assertTrue("system operational", deviceState.system.operation.operational);
-    asSubtest(LOGGING, BETA, () -> {
+    forCapability(LOGGING, () -> {
       untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
       // These should not be logged since the level was at INFO until the new config is applied.
       checkNotLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
