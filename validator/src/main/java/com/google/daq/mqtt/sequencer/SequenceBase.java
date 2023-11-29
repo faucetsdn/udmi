@@ -201,7 +201,6 @@ public class SequenceBase {
       SequenceResult.PASS, Level.NOTICE,
       SequenceResult.FAIL, Level.ERROR
   );
-  private static final String SYSTEM_TESTING_MARKER = " `system.testing";
   private static final BiMap<CapabilityResult, Level> CAPABILITY_RESULT_MAP = ImmutableBiMap.of(
       CapabilityResult.PASS, Level.NOTICE,
       CapabilityResult.FAIL, Level.ERROR
