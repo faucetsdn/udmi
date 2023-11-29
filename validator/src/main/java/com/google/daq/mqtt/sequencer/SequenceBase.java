@@ -101,7 +101,6 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
-import org.checkerframework.checker.units.qual.C;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.After;
@@ -570,12 +569,11 @@ public class SequenceBase {
     boolean pass = state instanceof CapabilitySuccess;
     SequenceResult result = pass ? SequenceResult.PASS : SequenceResult.FAIL;
     String message = state.getMessage();
-    String capabilityName = methodName + "." + capability.name().toLowerCase();
-    String stage = cap.stage().value().toUpperCase();
+    String capabilityName = methodName + "." + capability.value();
     int total = CAPABILITY_SCORE;
     int score = pass ? total : 0;
     emitSequencerOut(format(CAPABILITY_FORMAT,
-        result, bucket.value(), capabilityName, stage, score, total, message));
+        result, bucket.value(), capabilityName, cap.stage().name(), score, total, message));
     return new SimpleEntry<>(score, total);
   }
 
@@ -1928,7 +1926,7 @@ public class SequenceBase {
     sequenceValidationState.summary = getTestSummary(description);
     sequenceValidationState.stage = getTestStage(description);
     sequenceValidationState.capabilities = capabilityExceptions.keySet().stream()
-        .collect(Collectors.toMap(Enum::name, this::collectCapabilityResult));
+        .collect(Collectors.toMap(Capabilities::value, this::collectCapabilityResult));
     updateValidationState();
   }
 
@@ -2021,9 +2019,19 @@ public class SequenceBase {
    * Master list of test capabilities.
    */
   public enum Capabilities {
-    DEVICE_STATE,
-    LOGGING,
-    ACKNOWLEDGE
+    DEVICE_STATE("device_state"),
+    LOGGING("logging"),
+    ACKNOWLEDGE("acknowledge");
+
+    private final String value;
+
+    Capabilities(String value) {
+      this.value = value;
+    }
+
+    public String value() {
+      return this.value;
+    }
   }
 
   static class CaptureMap extends HashMap<SubFolder, List<Map<String, Object>>> {
