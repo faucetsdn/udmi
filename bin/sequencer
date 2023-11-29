@@ -176,12 +176,6 @@ echo Extracting sequence results:
 egrep 'RESULT |CPBLTY ' $SEQUENCER_LOG | fgrep NOTICE | sort -k 6 | \
     sed -e 's/.* NOTICE //' | tee $SEQUENCER_OUT
 
-echo TAP1
-fgrep 'RESULT ' $SEQUENCER_LOG || true
-echo TAP2
-fgrep 'CPBLTY ' $SEQUENCER_LOG || true
-echo TAP3
-
 [[ -s $SEQUENCER_OUT ]] || fail No test results found.
 
 # Sort by test name (3th field)
