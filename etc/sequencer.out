@@ -1,4 +1,5 @@
 RESULT pass system broken_config ALPHA 5/5 Sequence complete
+CPBLTY pass system broken_config.logging ALPHA 1/1 Capability functional
 RESULT pass system config_logging BETA 5/5 Sequence complete
 RESULT pass system device_config_acked BETA 5/5 Sequence complete
 RESULT pass enumeration empty_enumeration PREVIEW 5/5 Sequence complete
