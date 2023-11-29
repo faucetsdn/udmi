@@ -48,9 +48,9 @@ Check that the device publishes minimum required log entries when receiving conf
 1. Update config set min_loglevel to debug:
     * Set `system.min_loglevel` = `100`
 1. Force config update to resend config to device
-1. Wait for log category `system.config.receive` level `DEBUG` was logged
-1. Wait for log category `system.config.parse` level `DEBUG` was logged
-1. Wait for log category `system.config.apply` level `NOTICE` was logged
+1. Wait for log category `system.config.receive` level `DEBUG` to be logged
+1. Wait for log category `system.config.parse` level `DEBUG` to be logged
+1. Wait for log category `system.config.apply` level `NOTICE` to be logged
 
 ## device_config_acked (BETA)
 
@@ -84,17 +84,17 @@ Check that the device correctly handles an extra out-of-schema field
 1. Wait for last_config not null
 1. Wait for system operational
 1. Check that no applicable system status
-1. Wait for log category `system.config.receive` level `DEBUG` was logged
+1. Wait for log category `system.config.receive` level `DEBUG` to be logged
 1. Wait for last_config updated
 1. Wait for system operational
 1. Check that no applicable system status
-1. Wait for log category `system.config.parse` level `DEBUG` was logged
-1. Wait for log category `system.config.apply` level `NOTICE` was logged
-1. Wait for log category `system.config.receive` level `DEBUG` was logged
+1. Wait for log category `system.config.parse` level `DEBUG` to be logged
+1. Wait for log category `system.config.apply` level `NOTICE` to be logged
+1. Wait for log category `system.config.receive` level `DEBUG` to be logged
 1. Wait for last_config updated again
 1. Wait for system operational
-1. Wait for log category `system.config.parse` level `DEBUG` was logged
-1. Wait for log category `system.config.apply` level `NOTICE` was logged
+1. Wait for log category `system.config.parse` level `DEBUG` to be logged
+1. Wait for log category `system.config.apply` level `NOTICE` to be logged
 
 ## feature_enumeration (PREVIEW)
 

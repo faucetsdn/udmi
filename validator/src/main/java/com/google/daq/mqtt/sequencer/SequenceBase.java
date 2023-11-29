@@ -100,6 +100,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
+import org.checkerframework.checker.units.qual.C;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.After;
@@ -111,6 +112,7 @@ import org.junit.rules.Timeout;
 import org.junit.runner.Description;
 import org.junit.runners.model.TestTimedOutException;
 import udmi.schema.Bucket;
+import udmi.schema.CapabilityValidationState;
 import udmi.schema.Config;
 import udmi.schema.DiscoveryEvent;
 import udmi.schema.Entry;
@@ -827,8 +829,9 @@ public class SequenceBase {
     return format("%s_%s_%s", entry.category, entry.message, entry.detail);
   }
 
-  private void collectCapabilityResult(Map.Entry<Capabilities, Exception> entry) {
-    info("TAP processing capability result " + entry.toString());
+  private CapabilityValidationState collectCapabilityResult(Capabilities key) {
+    Exception exception = capabilityExceptions.get(key);
+    return new CapabilityValidationState();
   }
 
   private void collectSchemaResult(Description description, String schemaName,
@@ -1906,6 +1909,8 @@ public class SequenceBase {
     sequenceValidationState.result = result;
     sequenceValidationState.summary = getTestSummary(description);
     sequenceValidationState.stage = getTestStage(description);
+    sequenceValidationState.capabilities = capabilityExceptions.keySet().stream()
+        .collect(Collectors.toMap(Enum::name, this::collectCapabilityResult));
     updateValidationState();
   }
 
@@ -2077,8 +2082,6 @@ public class SequenceBase {
       if (testResult == SequenceResult.PASS) {
         ValidateSchema annotation = description.getAnnotation(ValidateSchema.class);
         ifNotNullThen(annotation, a -> recordSchemaValidations(description));
-        // TODO: Figure out where this should happen, this is likely the wrong place.
-        capabilityExceptions.entrySet().forEach(SequenceBase.this::collectCapabilityResult);
       }
 
       notice("ending test " + testName + " after " + timeSinceStart() + " " + START_END_MARKER);
