@@ -1,7 +1,7 @@
 RESULT fail system broken_config ALPHA 0/5 timeout waiting for has applicable system status
 RESULT fail system broken_config ALPHA 0/5 timeout waiting for has applicable system status
 RESULT fail system broken_config ALPHA 0/5 timeout waiting for log category `system.config.apply` level `NOTICE` to be logged
-RESULT pass system broken_config ALPHA 5/5 Sequence complete
+RESULT pass system broken_config ALPHA 4/5 Sequence complete
 RESULT fail system config_logging BETA 0/5 Bad version string number format
 RESULT skip system device_config_acked BETA 0/0 No config check for proxy device
 RESULT fail system device_config_acked BETA 0/5 timeout waiting for config acked
