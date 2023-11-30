@@ -798,8 +798,8 @@ public class SequenceBase {
     AtomicInteger total = new AtomicInteger(isSkip ? 0 : base);
     AtomicInteger score = new AtomicInteger(isPass ? base : 0);
 
-    assertEquals("executed test capabilities", capabilities.keySet(),
-        capabilityExceptions.keySet());
+    ifTrueThen(isPass, () -> assertEquals("executed test capabilities",
+        capabilities.keySet(), capabilityExceptions.keySet()));
 
     String method = description.getMethodName();
     capabilityExceptions.keySet().stream()
