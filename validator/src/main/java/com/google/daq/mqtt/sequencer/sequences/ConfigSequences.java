@@ -2,12 +2,14 @@ package com.google.daq.mqtt.sequencer.sequences;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static com.google.daq.mqtt.sequencer.SequenceBase.Capabilities.LOGGING;
 import static com.google.daq.mqtt.util.TimePeriodConstants.ONE_MINUTE_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.THREE_MINUTES_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.safeSleep;
+import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static udmi.schema.Bucket.SYSTEM;
@@ -21,13 +23,13 @@ import static udmi.schema.FeatureEnumeration.FeatureStage.ALPHA;
 import static udmi.schema.FeatureEnumeration.FeatureStage.BETA;
 import static udmi.schema.FeatureEnumeration.FeatureStage.STABLE;
 
+import com.google.daq.mqtt.sequencer.Capability;
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.Summary;
 import com.google.daq.mqtt.sequencer.ValidateSchema;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.TemporalAmount;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Test;
@@ -77,7 +79,7 @@ public class ConfigSequences extends SequenceBase {
     deviceConfig.system.min_loglevel = Level.INFO.value();
     untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
     checkNotLogged(SYSTEM_CONFIG_APPLY, Level.WARNING);
-    checkThat(String.format("device config resolved within %ss", CONFIG_THRESHOLD_SEC), () ->
+    checkThat(format("device config resolved within %ss", CONFIG_THRESHOLD_SEC), () ->
         Instant.now().isBefore(startTime.plusSeconds(CONFIG_THRESHOLD_SEC)));
 
     deviceConfig.system.min_loglevel = Level.WARNING.value();
@@ -114,7 +116,8 @@ public class ConfigSequences extends SequenceBase {
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Feature(stage = ALPHA, bucket = SYSTEM)
+  @Feature(stage = ALPHA, bucket = SYSTEM, score = 4)
+  @Capability(value = LOGGING, stage = ALPHA)
   @Summary("Check that the device correctly handles a broken (non-json) config message.")
   public void broken_config() {
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
@@ -126,11 +129,12 @@ public class ConfigSequences extends SequenceBase {
     info("initial last_config " + getTimestamp(deviceState.system.last_config));
     checkThat("initial stable_config matches last_config",
         () -> dateEquals(stableConfig, deviceState.system.last_config));
-    untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
+
+    forCapability(LOGGING, () -> waitForLog(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL));
 
     setExtraField("break_json");
     untilHasInterestingSystemStatus(true);
-    untilLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
+    forCapability(LOGGING, () -> waitForLog(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL));
     Entry stateStatus = deviceState.system.status;
     info("Error message: " + stateStatus.message);
     debug("Error detail: " + stateStatus.detail);
@@ -142,26 +146,32 @@ public class ConfigSequences extends SequenceBase {
     assertTrue("following stable_config matches last_config",
         dateEquals(stableConfig, deviceState.system.last_config));
     assertTrue("system operational", deviceState.system.operation.operational);
-    untilLogged(SYSTEM_CONFIG_PARSE, Level.ERROR);
-    safeSleep(LOG_APPLY_DELAY_MS);
-    checkNotLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
+    forCapability(LOGGING, () -> {
+      untilLogged(SYSTEM_CONFIG_PARSE, Level.ERROR);
+      safeSleep(LOG_APPLY_DELAY_MS);
+      checkNotLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
+    });
 
     // Will restore min_loglevel to the default of INFO.
     resetConfig(); // clears extra_field and interesting status checks
 
-    untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
-    untilTrue("restored state synchronized",
-        () -> dateEquals(deviceConfig.timestamp, deviceState.system.last_config));
+    forCapability(LOGGING, () -> {
+      untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
+      untilTrue("restored state synchronized",
+          () -> dateEquals(deviceConfig.timestamp, deviceState.system.last_config));
+    });
 
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
     untilTrue("last_config updated",
         () -> !dateEquals(stableConfig, deviceState.system.last_config)
     );
     assertTrue("system operational", deviceState.system.operation.operational);
-    untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
-    // These should not be logged since the level was at INFO until the new config is applied.
-    checkNotLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
-    checkNotLogged(SYSTEM_CONFIG_PARSE, SYSTEM_CONFIG_PARSE_LEVEL);
+    forCapability(LOGGING, () -> {
+      untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
+      // These should not be logged since the level was at INFO until the new config is applied.
+      checkNotLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
+      checkNotLogged(SYSTEM_CONFIG_PARSE, SYSTEM_CONFIG_PARSE_LEVEL);
+    });
   }
 
   @Test(timeout = ONE_MINUTE_MS)

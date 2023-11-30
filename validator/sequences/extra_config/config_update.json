@@ -1,14 +1,4 @@
 {
-  "localnet" : {
-    "families" : {
-      "ether" : {
-        "addr" : "00:50:b6:ed:5f:77"
-      },
-      "ipv4" : {
-        "addr" : "192.168.2.1"
-      }
-    }
-  },
   "pointset" : {
     "points" : {
       "filter_alarm_pressure_status" : {
@@ -26,15 +16,15 @@
     }
   },
   "system" : {
-    "metrics_rate_sec" : 600,
+    "metrics_rate_sec" : 10,
     "min_loglevel" : 100,
     "operation" : {
-      "last_start" : "2023-10-28T13:27:58Z"
+      "last_start" : "2023-11-29T20:08:20Z"
     },
     "testing" : {
       "sequence_name" : "extra_config"
     }
   },
-  "timestamp" : "2023-10-28T13:29:54Z",
-  "version" : "1.4.2-51-g50234ecc"
+  "timestamp" : "2023-11-29T20:08:56Z",
+  "version" : "1.4.2-57-gbb3a0154e"
 }

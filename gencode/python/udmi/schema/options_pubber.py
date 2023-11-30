@@ -29,6 +29,7 @@ class PubberOptions:
     self.spamState = None
     self.tweakState = None
     self.badState = None
+    self.noLog = None
     self.featureEnableSwap = None
     self.disableWriteback = None
     self.noWriteback = None
@@ -64,6 +65,7 @@ class PubberOptions:
     result.spamState = source.get('spamState')
     result.tweakState = source.get('tweakState')
     result.badState = source.get('badState')
+    result.noLog = source.get('noLog')
     result.featureEnableSwap = source.get('featureEnableSwap')
     result.disableWriteback = source.get('disableWriteback')
     result.noWriteback = source.get('noWriteback')
@@ -137,6 +139,8 @@ class PubberOptions:
       result['tweakState'] = self.tweakState # 5
     if self.badState:
       result['badState'] = self.badState # 5
+    if self.noLog:
+      result['noLog'] = self.noLog # 5
     if self.featureEnableSwap:
       result['featureEnableSwap'] = self.featureEnableSwap # 5
     if self.disableWriteback:

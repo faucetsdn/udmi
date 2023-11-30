@@ -2,17 +2,19 @@ package com.google.daq.mqtt.validator;
 
 import static com.google.daq.mqtt.util.FileDataSink.REPORT_JSON_FILENAME;
 import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
+import static com.google.udmi.util.JsonUtil.getDate;
 
 import com.google.daq.mqtt.TestCommon;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
-import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicLong;
+import org.jetbrains.annotations.NotNull;
 import udmi.schema.PointPointsetEvent;
 import udmi.schema.PointPointsetState;
 import udmi.schema.PointsetEvent;
@@ -32,10 +34,11 @@ public class TestBase {
       "filter_differential_pressure_sensor";
   private static final File REPORT_BASE = new File(TestCommon.SITE_DIR, "/out");
   private static final File REPORT_FILE = new File(REPORT_BASE, REPORT_JSON_FILENAME);
+  private AtomicLong testTime = new AtomicLong(298374214L);
 
   protected PointsetEvent basePointsetEvent() {
     PointsetEvent pointsetEvent = new PointsetEvent();
-    pointsetEvent.timestamp = new Date();
+    pointsetEvent.timestamp = getDate(getTestTimestamp());
     pointsetEvent.version = TestCommon.UDMI_VERSION;
     HashMap<String, PointPointsetEvent> points = new HashMap<>();
     points.put(FILTER_ALARM_PRESSURE_STATUS, pointsetEventPoint(Boolean.TRUE));
@@ -76,7 +79,7 @@ public class TestBase {
     try {
       String messageStr = TestCommon.OBJECT_MAPPER.writeValueAsString(messageObject);
       bundle.message = TestCommon.OBJECT_MAPPER.readValue(messageStr, TreeMap.class);
-      bundle.message.put("timestamp", Instant.now().toString());
+      bundle.message.put("timestamp", getTestTimestamp());
     } catch (Exception e) {
       throw new RuntimeException("While converting message bundle object", e);
     }
@@ -101,6 +104,10 @@ public class TestBase {
     }
   }
 
+  protected void advanceClockSec(int seconds) {
+    testTime.addAndGet(seconds);
+  }
+
   private Map<String, String> messageAttributes(String subType, String subFolder) {
     Map<String, String> attributes = new HashMap<>();
     attributes.put("deviceRegistryId", TestCommon.REGISTRY_ID);
@@ -109,7 +116,12 @@ public class TestBase {
     attributes.put("subType", subType);
     attributes.put("deviceNumId", TestCommon.DEVICE_NUM_ID);
     attributes.put("projectId", SiteModel.MOCK_PROJECT);
-    attributes.put(PUBLISH_TIME_KEY, JsonUtil.getTimestamp());
+    attributes.put(PUBLISH_TIME_KEY, getTestTimestamp());
     return attributes;
+  }
+
+  @NotNull
+  private String getTestTimestamp() {
+    return JsonUtil.getTimestamp(new Date(testTime.get()));
   }
 }

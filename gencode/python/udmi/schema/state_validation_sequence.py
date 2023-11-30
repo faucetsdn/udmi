@@ -1,4 +1,5 @@
 """Generated class for state_validation_sequence.json"""
+from .state_validation_capability import CapabilityValidationState
 from .entry import Entry
 
 
@@ -8,8 +9,11 @@ class SequenceValidationState:
   def __init__(self):
     self.summary = None
     self.stage = None
+    self.capabilities = None
     self.result = None
     self.status = None
+    self.score = None
+    self.total = None
 
   @staticmethod
   def from_dict(source):
@@ -18,8 +22,11 @@ class SequenceValidationState:
     result = SequenceValidationState()
     result.summary = source.get('summary')
     result.stage = source.get('stage')
+    result.capabilities = CapabilityValidationState.map_from(source.get('capabilities'))
     result.result = source.get('result')
     result.status = Entry.from_dict(source.get('status'))
+    result.score = source.get('score')
+    result.total = source.get('total')
     return result
 
   @staticmethod
@@ -44,8 +51,14 @@ class SequenceValidationState:
       result['summary'] = self.summary # 5
     if self.stage:
       result['stage'] = self.stage # 5
+    if self.capabilities:
+      result['capabilities'] = CapabilityValidationState.expand_dict(self.capabilities) # 2
     if self.result:
       result['result'] = self.result # 5
     if self.status:
       result['status'] = self.status.to_dict() # 4
+    if self.score:
+      result['score'] = self.score # 5
+    if self.total:
+      result['total'] = self.total # 5
     return result

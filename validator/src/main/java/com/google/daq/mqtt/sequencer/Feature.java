@@ -14,8 +14,7 @@ import udmi.schema.FeatureEnumeration.FeatureStage;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD})
-public @interface
-Feature {
+public @interface Feature {
   FeatureStage DEFAULT_STAGE = FeatureStage.ALPHA;
   int DEFAULT_SCORE = 5;
 
@@ -34,7 +33,7 @@ Feature {
   Bucket value() default Bucket.UNKNOWN_DEFAULT;
 
   /**
-   * Default value is REQUIRED which should be the end-state for all tests.
+   * Default value is ALPHA for initial test development.
    *
    * @return annotated release stage of this test
    */

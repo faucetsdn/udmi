@@ -1,11 +1,11 @@
 {
-  "timestamp" : "2023-10-28T13:29:54Z",
-  "version" : "@@@cloud udmi version###1.4.2-51-g50234ecc",
+  "timestamp" : "2023-11-29T20:08:56Z",
+  "version" : "@@@cloud udmi version###1.4.2-57-gbb3a0154e",
   "system" : {
     "min_loglevel" : 100,
-    "metrics_rate_sec" : 600,
+    "metrics_rate_sec" : 10,
     "operation" : {
-      "last_start" : "2023-10-28T13:27:58Z"
+      "last_start" : "2023-11-29T20:08:20Z"
     },
     "testing" : {
       "sequence_name" : "extra_config"

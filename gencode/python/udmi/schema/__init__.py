@@ -77,6 +77,7 @@ from .state_system_hardware import StateSystemHardware
 from .state_system_operation import StateSystemOperation
 from .state_udmi import UdmiState
 from .state_validation import ValidationState
+from .state_validation_capability import CapabilityValidationState
 from .state_validation_feature import FeatureValidationState
 from .state_validation_schema import SchemaValidationState
 from .state_validation_sequence import SequenceValidationState
