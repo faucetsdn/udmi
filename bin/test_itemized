@@ -106,8 +106,9 @@ while read -u 7 action test_name pubber_opts; do
 
     kill $(ps ax | fgrep pubber | fgrep java | awk '{print $1}') || true
 
-    result=$(egrep -E "(RESULT|CPBLTY) [a-z]+ [a-z.]+ $test_name[^ ]* " $SEQUENCER_OUT)
-    echo ${result/* NOTICE /} >> $RESULTS_OUT
+    egrep "(RESULT|CPBLTY) [a-z]+ [a-z.]+ $test_name[^ ]* " $SEQUENCER_OUT | while read result; do
+        echo ${result/* NOTICE /} >> $RESULTS_OUT
+    done
 
     mv $SEQUENCER_OUT $SEQUENCER_OUT-$test_marker
     mv $SEQUENCER_LOG $SEQUENCER_LOG-$test_marker

@@ -93,7 +93,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
@@ -220,7 +219,7 @@ public class SequenceBase {
   private static final String FAKE_DEVICE_ID = "TAP-1";
   public static final String NO_EXTRA_DETAIL = "";
   public static final Duration LOG_WAIT_TIME = Duration.ofSeconds(30);
-  public static final Duration NEARLY_FOREVER = Duration.ofHours(10);
+  public static final Duration DEFAULT_WAIT_TIMEOUT = Duration.ofSeconds(30);
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -1372,14 +1371,15 @@ public class SequenceBase {
   }
 
   private void messageEvaluateLoop(Supplier<Boolean> evaluator) {
-    messageEvaluateLoop(NEARLY_FOREVER, evaluator);
+    messageEvaluateLoop(DEFAULT_WAIT_TIMEOUT, evaluator);
   }
 
   private void messageEvaluateLoop(Duration maxWait, Supplier<Boolean> evaluator) {
     Instant end = Instant.now().plus(maxWait);
     while (evaluator.get()) {
       if (Instant.now().isAfter(end)) {
-        throw new RuntimeException(format("Timeout after waiting for %ss", maxWait.getSeconds()));
+        throw new RuntimeException(format("Timeout after %ss waiting for %s",
+            maxWait.getSeconds(), waitingConditionPeek()));
       }
       processNextMessage();
     }
@@ -2152,9 +2152,9 @@ public class SequenceBase {
       final String message;
       final SequenceResult failureType;
       if (e instanceof TestTimedOutException) {
-        waitingCondition.forEach(condition -> warning("while " + condition));
+        waitingCondition.forEach(condition -> warning("While " + condition));
         error(format("stage timeout %s at %s", waitingConditionPeek(), timeSinceStart()));
-        message = "timeout " + waitingConditionPeek();
+        message = "Timeout waiting for " + waitingConditionPeek();
         failureType = SequenceResult.FAIL;
       } else if (e instanceof AssumptionViolatedException) {
         message = e.getMessage();
