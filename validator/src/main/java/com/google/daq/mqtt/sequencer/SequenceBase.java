@@ -217,9 +217,9 @@ public class SequenceBase {
   private static final Date stateCutoffThreshold = Date.from(Instant.now().minusSeconds(
       STATE_QUERY_CUTOFF_SEC));
   private static final String FAKE_DEVICE_ID = "TAP-1";
-  public static final String NO_EXTRA_DETAIL = "";
-  public static final Duration LOG_WAIT_TIME = Duration.ofSeconds(30);
-  public static final Duration DEFAULT_WAIT_TIMEOUT = Duration.ofSeconds(30);
+  private static final String NO_EXTRA_DETAIL = "";
+  private static final Duration LOG_WAIT_TIME = Duration.ofSeconds(30);
+  private static final Duration DEFAULT_WAIT_TIMEOUT = Duration.ofHours(30);
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -1378,8 +1378,8 @@ public class SequenceBase {
     Instant end = Instant.now().plus(maxWait);
     while (evaluator.get()) {
       if (Instant.now().isAfter(end)) {
-        throw new RuntimeException(format("Timeout after %ss waiting for %s",
-            maxWait.getSeconds(), waitingConditionPeek()));
+        throw new RuntimeException(
+            format("Timeout after %ss %s", maxWait.getSeconds(), waitingConditionPeek()));
       }
       processNextMessage();
     }
