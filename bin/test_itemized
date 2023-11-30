@@ -107,7 +107,7 @@ while read -u 7 action test_name pubber_opts; do
     kill $(ps ax | fgrep pubber | fgrep java | awk '{print $1}') || true
 
     egrep "(RESULT|CPBLTY) [a-z]+ [a-z.]+ $test_name[^ ]* " $SEQUENCER_OUT | while read result; do
-        echo ${result/* NOTICE /} >> $RESULTS_OUT
+        echo $test_marker ${result/* NOTICE /} >> $RESULTS_OUT
     done
 
     mv $SEQUENCER_OUT $SEQUENCER_OUT-$test_marker
@@ -132,7 +132,8 @@ if [[ -z $TARGET_TEST && -z $MATRIX_SHARD_COUNT ]]; then
 else
     echo Checking for correctness of completed tests in $GOLDEN_FILE...
     while read result; do
-        fgrep "$result" $GOLDEN_FILE || fail Expected result not found for $result
+        expected=${result/[0-9]* /}
+        fgrep "$expected" $GOLDEN_FILE || fail Expected result not found for $expected
     done < $RESULTS_OUT
 fi
 
