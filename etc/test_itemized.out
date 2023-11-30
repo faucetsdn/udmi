@@ -1,7 +1,11 @@
+RESULT fail system broken_config ALPHA 0/5 expected:<system.config.[parse]> but was:<system.config.[apply]>
 RESULT fail system broken_config ALPHA 0/5 Timeout waiting for has applicable system status
-RESULT fail system broken_config ALPHA 0/5 Timeout waiting for has applicable system status
-RESULT fail system broken_config ALPHA 0/5 Timeout waiting for log category `system.config.apply` level `NOTICE` to be logged
 RESULT pass system broken_config ALPHA 4/5 Sequence complete
+RESULT pass system broken_config ALPHA 5/5 Sequence complete
+CPBLTY fail system broken_config.logging ALPHA 0/1 Timeout after 30s waiting for log category `system.config.apply` level `NOTICE` to be logged
+CPBLTY fail system broken_config.logging ALPHA 0/1 Timeout after 30s waiting for log category `system.config.receive` level `DEBUG` to be logged
+CPBLTY pass system broken_config.logging ALPHA 1/1 Capability functional
+CPBLTY pass system broken_config.logging ALPHA 1/1 Capability functional
 RESULT fail system config_logging BETA 0/5 Bad version string number format
 RESULT skip system device_config_acked BETA 0/0 No config check for proxy device
 RESULT fail system device_config_acked BETA 0/5 Timeout waiting for config acked
