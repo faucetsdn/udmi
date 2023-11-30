@@ -117,8 +117,8 @@ public class ConfigSequences extends SequenceBase {
 
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = ALPHA, bucket = SYSTEM, score = 4)
-  @Summary("Check that the device correctly handles a broken (non-json) config message.")
   @Capability(value = LOGGING, stage = ALPHA)
+  @Summary("Check that the device correctly handles a broken (non-json) config message.")
   public void broken_config() {
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
     updateConfig("starting broken_config");

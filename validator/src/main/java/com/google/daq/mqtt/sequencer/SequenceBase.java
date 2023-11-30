@@ -47,6 +47,9 @@ import static udmi.schema.FeatureEnumeration.FeatureStage.STABLE;
 import static udmi.schema.Level.ERROR;
 import static udmi.schema.Level.NOTICE;
 import static udmi.schema.Level.WARNING;
+import static udmi.schema.SequenceValidationState.SequenceResult.FAIL;
+import static udmi.schema.SequenceValidationState.SequenceResult.PASS;
+import static udmi.schema.SequenceValidationState.SequenceResult.SKIP;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
@@ -197,9 +200,9 @@ public class SequenceBase {
   private static final String SYSTEM_TESTING_MARKER = " `system.testing";
   private static final BiMap<SequenceResult, Level> RESULT_LEVEL_MAP = ImmutableBiMap.of(
       SequenceResult.START, Level.INFO,
-      SequenceResult.SKIP, Level.WARNING,
-      SequenceResult.PASS, Level.NOTICE,
-      SequenceResult.FAIL, Level.ERROR
+      SKIP, Level.WARNING,
+      PASS, Level.NOTICE,
+      FAIL, Level.ERROR
   );
   private static final BiMap<CapabilityResult, Level> CAPABILITY_RESULT_MAP = ImmutableBiMap.of(
       CapabilityResult.PASS, Level.NOTICE,
@@ -508,7 +511,7 @@ public class SequenceBase {
       Map.Entry<FeatureStage, List<SequenceValidationState>> entry) {
     List<SequenceValidationState> values = entry.getValue();
     Set<SequenceValidationState> failures = values.stream()
-        .filter(state -> state.result != SequenceResult.PASS).collect(Collectors.toSet());
+        .filter(state -> state.result != PASS).collect(Collectors.toSet());
 
     Entry logEntry = new Entry();
     logEntry.category = VALIDATION_FEATURE_SCHEMA;
@@ -571,8 +574,8 @@ public class SequenceBase {
   private Map.Entry<Integer, Integer> emitCapabilityResult(Capabilities capability, Exception state,
       Capability cap, Bucket bucket, String methodName) {
     boolean pass = state instanceof CapabilitySuccess;
-    SequenceResult result = pass ? SequenceResult.PASS : SequenceResult.FAIL;
-    String message = state.getMessage();
+    SequenceResult result = state == null ? SKIP : pass ? PASS : FAIL;
+    String message = ifNotNullGet(state, Throwable::getMessage, "Never executed");
     String capabilityName = methodName + "." + capability.value();
     int total = CAPABILITY_SCORE;
     int score = pass ? total : 0;
@@ -792,8 +795,8 @@ public class SequenceBase {
     String stage = (feature == null ? Feature.DEFAULT_STAGE : feature.stage()).name();
     int base = (feature == null ? Feature.DEFAULT_SCORE : feature.score());
 
-    boolean isSkip = result == SequenceResult.SKIP;
-    boolean isPass = result == SequenceResult.PASS;
+    boolean isSkip = result == SKIP;
+    boolean isPass = result == PASS;
 
     AtomicInteger total = new AtomicInteger(isSkip ? 0 : base);
     AtomicInteger score = new AtomicInteger(isPass ? base : 0);
@@ -802,7 +805,7 @@ public class SequenceBase {
         capabilities.keySet(), capabilityExceptions.keySet()));
 
     String method = description.getMethodName();
-    capabilityExceptions.keySet().stream()
+    capabilities.keySet().stream()
         .map(key -> emitCapabilityResult(key, capabilityExceptions.get(key),
             capabilities.get(key), bucket, method))
         .forEach(scoreAndTotal -> {
@@ -824,11 +827,11 @@ public class SequenceBase {
           String schemaName = entry.getKey();
           List<Entry> values = entry.getValue();
           if (values.isEmpty()) {
-            collectSchemaResult(description, schemaName, SequenceResult.PASS, SCHEMA_PASS_DETAIL);
+            collectSchemaResult(description, schemaName, PASS, SCHEMA_PASS_DETAIL);
           } else {
             Set<String> duplicates = new HashSet<>();
             values.stream().filter(item -> duplicates.add(uniqueKey(item))).forEach(result ->
-                collectSchemaResult(description, schemaName, SequenceResult.FAIL, result.detail));
+                collectSchemaResult(description, schemaName, FAIL, result.detail));
           }
         });
   }
@@ -871,7 +874,7 @@ public class SequenceBase {
     sequence.result = result;
     sequence.stage = getTestStage(description);
 
-    if (!result.equals(SequenceResult.PASS)) {
+    if (!result.equals(PASS)) {
       Entry logEntry = new Entry();
       logEntry.category = VALIDATION_FEATURE_SEQUENCE;
       logEntry.message = detail;
@@ -1060,7 +1063,7 @@ public class SequenceBase {
     debug(format("stage done %s at %s", condition, timeSinceStart()));
     recordSequence = false;
 
-    if (testResult == SequenceResult.PASS) {
+    if (testResult == PASS) {
       checkThatHasInterestingSystemStatus(false);
     }
 
@@ -2119,7 +2122,7 @@ public class SequenceBase {
         throw new IllegalStateException("Unexpected test method name");
       }
 
-      if (testResult == SequenceResult.PASS) {
+      if (testResult == PASS) {
         ValidateSchema annotation = description.getAnnotation(ValidateSchema.class);
         ifNotNullThen(annotation, a -> recordSchemaValidations(description));
       }
@@ -2137,7 +2140,7 @@ public class SequenceBase {
 
     @Override
     protected void succeeded(Description description) {
-      recordCompletion(SequenceResult.PASS, description, "Sequence complete");
+      recordCompletion(PASS, description, "Sequence complete");
     }
 
     @Override
@@ -2156,24 +2159,24 @@ public class SequenceBase {
         waitingCondition.forEach(condition -> warning("While " + condition));
         error(format("stage timeout %s at %s", currentWaitingCondition(), timeSinceStart()));
         message = "Timeout " + currentWaitingCondition();
-        failureType = SequenceResult.FAIL;
+        failureType = FAIL;
       } else if (e instanceof AssumptionViolatedException) {
         message = e.getMessage();
-        failureType = SequenceResult.SKIP;
+        failureType = SKIP;
       } else {
         Throwable cause = e;
         while (cause.getCause() != null) {
           cause = cause.getCause();
         }
         message = friendlyStackTrace(cause);
-        failureType = SequenceResult.FAIL;
+        failureType = FAIL;
       }
       debug("exception message: " + friendlyStackTrace(e));
       trace("ending stack trace", stackTraceString(e));
       recordCompletion(failureType, description, message);
-      String action = failureType == SequenceResult.SKIP ? "skipped" : "failed";
+      String action = failureType == SKIP ? "skipped" : "failed";
       withRecordSequence(true, () -> recordSequence("Test " + action + ": " + message));
-      if (failureType != SequenceResult.SKIP) {
+      if (failureType != SKIP) {
         resetRequired = true;
         if (debugLogLevel()) {
           error("terminating test " + testName + " after " + timeSinceStart() + " "
