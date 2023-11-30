@@ -1,11 +1,11 @@
 {
-  "timestamp" : "2023-07-28T20:26:28Z",
-  "version" : "@@@cloud udmi version###1.4.1",
+  "timestamp" : "2023-11-29T20:12:15Z",
+  "version" : "@@@cloud udmi version###1.4.2-57-gbb3a0154e",
   "system" : {
     "min_loglevel" : 200,
-    "metrics_rate_sec" : 600,
+    "metrics_rate_sec" : 10,
     "operation" : {
-      "last_start" : "2023-07-28T20:23:12Z"
+      "last_start" : "2023-11-29T20:11:29Z"
     },
     "testing" : {
       "sequence_name" : "system_min_loglevel"

@@ -22,14 +22,17 @@ import com.fasterxml.jackson.annotation.JsonValue;
 @JsonPropertyOrder({
     "summary",
     "stage",
+    "capabilities",
     "result",
-    "status"
+    "status",
+    "score",
+    "total"
 })
 @Generated("jsonschema2pojo")
 public class SequenceValidationState {
 
     @JsonProperty("summary")
-    public String summary;
+    public java.lang.String summary;
     /**
      * FeatureStage
      * <p>
@@ -39,6 +42,8 @@ public class SequenceValidationState {
     @JsonProperty("stage")
     @JsonPropertyDescription("Stage of a feature implemenation")
     public udmi.schema.FeatureEnumeration.FeatureStage stage;
+    @JsonProperty("capabilities")
+    public Map<String, CapabilityValidationState> capabilities;
     /**
      * Sequence Result
      * <p>
@@ -55,12 +60,19 @@ public class SequenceValidationState {
      */
     @JsonProperty("status")
     public Entry status;
+    @JsonProperty("score")
+    public Integer score;
+    @JsonProperty("total")
+    public Integer total;
 
     @Override
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.summary == null)? 0 :this.summary.hashCode()));
         result = ((result* 31)+((this.result == null)? 0 :this.result.hashCode()));
+        result = ((result* 31)+((this.score == null)? 0 :this.score.hashCode()));
+        result = ((result* 31)+((this.total == null)? 0 :this.total.hashCode()));
+        result = ((result* 31)+((this.capabilities == null)? 0 :this.capabilities.hashCode()));
         result = ((result* 31)+((this.stage == null)? 0 :this.stage.hashCode()));
         result = ((result* 31)+((this.status == null)? 0 :this.status.hashCode()));
         return result;
@@ -75,7 +87,7 @@ public class SequenceValidationState {
             return false;
         }
         SequenceValidationState rhs = ((SequenceValidationState) other);
-        return (((((this.summary == rhs.summary)||((this.summary!= null)&&this.summary.equals(rhs.summary)))&&((this.result == rhs.result)||((this.result!= null)&&this.result.equals(rhs.result))))&&((this.stage == rhs.stage)||((this.stage!= null)&&this.stage.equals(rhs.stage))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
+        return ((((((((this.summary == rhs.summary)||((this.summary!= null)&&this.summary.equals(rhs.summary)))&&((this.result == rhs.result)||((this.result!= null)&&this.result.equals(rhs.result))))&&((this.score == rhs.score)||((this.score!= null)&&this.score.equals(rhs.score))))&&((this.total == rhs.total)||((this.total!= null)&&this.total.equals(rhs.total))))&&((this.capabilities == rhs.capabilities)||((this.capabilities!= null)&&this.capabilities.equals(rhs.capabilities))))&&((this.stage == rhs.stage)||((this.stage!= null)&&this.stage.equals(rhs.stage))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
     }
 
 
@@ -92,8 +104,8 @@ public class SequenceValidationState {
         SKIP("skip"),
         PASS("pass"),
         FAIL("fail");
-        private final String value;
-        private final static Map<String, SequenceValidationState.SequenceResult> CONSTANTS = new HashMap<String, SequenceValidationState.SequenceResult>();
+        private final java.lang.String value;
+        private final static Map<java.lang.String, SequenceValidationState.SequenceResult> CONSTANTS = new HashMap<java.lang.String, SequenceValidationState.SequenceResult>();
 
         static {
             for (SequenceValidationState.SequenceResult c: values()) {
@@ -101,22 +113,22 @@ public class SequenceValidationState {
             }
         }
 
-        SequenceResult(String value) {
+        SequenceResult(java.lang.String value) {
             this.value = value;
         }
 
         @Override
-        public String toString() {
+        public java.lang.String toString() {
             return this.value;
         }
 
         @JsonValue
-        public String value() {
+        public java.lang.String value() {
             return this.value;
         }
 
         @JsonCreator
-        public static SequenceValidationState.SequenceResult fromValue(String value) {
+        public static SequenceValidationState.SequenceResult fromValue(java.lang.String value) {
             SequenceValidationState.SequenceResult constant = CONSTANTS.get(value);
             if (constant == null) {
                 throw new IllegalArgumentException(value);

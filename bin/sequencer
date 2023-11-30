@@ -173,13 +173,10 @@ $JAVA_CMD $test_names 2>&1 | tee $SEQUENCER_LOG
 echo
 echo Extracting sequence results:
 # Sort by test name (6th field)
-fgrep 'RESULT ' $SEQUENCER_LOG | fgrep NOTICE | sort -k 6 | \
+egrep 'RESULT |CPBLTY ' $SEQUENCER_LOG | fgrep NOTICE | sort -k 6 | \
     sed -e 's/.* NOTICE //' | tee $SEQUENCER_OUT
 
-if [[ $(wc -l < $SEQUENCER_OUT) -eq 0 ]]; then
-    echo No test results found.
-    exit 1
-fi
+[[ -s $SEQUENCER_OUT ]] || fail No test results found.
 
 # Sort by test name (3th field)
 fgrep RESULT $site_model/out/devices/$device_id/RESULT.log | \

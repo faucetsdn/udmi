@@ -13,6 +13,7 @@
     "value_state": {
       "description": "Optional enumeration indicating the state of the points value.",
       "enum": [
+        "initializing",
         "applied",
         "updating",
         "overridden",

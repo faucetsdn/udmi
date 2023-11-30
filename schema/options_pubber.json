@@ -76,6 +76,9 @@
     "badState": {
       "type": "boolean"
     },
+    "noLog": {
+      "type": "boolean"
+    },
     "featureEnableSwap": {
       "type": "boolean"
     },
