@@ -1,65 +1,93 @@
-2023-10-28T13:28:09Z INFO update state 2023-10-28T13:28:09Z last_config 2023-10-28T13:28:00Z
-2023-10-28T13:28:10Z INFO Config handler
-2023-10-28T13:28:10Z INFO 2023-10-28T13:28:10Z received config 2023-10-28T13:28:10Z
-2023-10-28T13:28:10Z NOTICE success
-2023-10-28T13:28:11Z INFO update state 2023-10-28T13:28:11Z last_config 2023-10-28T13:28:10Z
-2023-10-28T13:28:19Z INFO update state 2023-10-28T13:28:19Z last_config 2023-10-28T13:28:10Z
-2023-10-28T13:28:22Z INFO update state 2023-10-28T13:28:22Z last_config 2023-10-28T13:28:10Z
-2023-10-28T13:28:22Z INFO Config handler
-2023-10-28T13:28:22Z INFO 2023-10-28T13:28:22Z received config 2023-10-28T13:28:22Z
-2023-10-28T13:28:22Z NOTICE success
-2023-10-28T13:28:25Z INFO update state 2023-10-28T13:28:25Z last_config 2023-10-28T13:28:22Z
-2023-10-28T13:28:25Z INFO Config handler
-2023-10-28T13:28:25Z INFO 2023-10-28T13:28:25Z received config 2023-10-28T13:28:25Z
-2023-10-28T13:28:25Z NOTICE success
-2023-10-28T13:28:25Z DEBUG State update defer 2000ms
-2023-10-28T13:28:25Z DEBUG State update defer 1999ms
-2023-10-28T13:28:27Z DEBUG State update defer 0ms
-2023-10-28T13:28:27Z INFO update state 2023-10-28T13:28:27Z last_config 2023-10-28T13:28:25Z
-2023-10-28T13:28:27Z DEBUG State update (broken_config)
-2023-10-28T13:28:29Z DEBUG operation.mode state=active / config=null
-2023-10-28T13:28:30Z DEBUG success
-2023-10-28T13:28:30Z DEBUG State update defer -1255ms
-2023-10-28T13:28:30Z ERROR Error receiving message config: Unexpected character ('b' (code 98)): was expecting double-quote to start field name
+2023-11-29T20:11:20Z WARNING Start waiting 10s for config latch for AHU-1
+2023-11-29T20:11:20Z WARNING Starting Pubber sender with delay 10s
+2023-11-29T20:11:20Z WARNING Dropping state update until config received...
+2023-11-29T20:11:20Z WARNING Received config for config latch AHU-1
+2023-11-29T20:11:20Z NOTICE success
+2023-11-29T20:11:20Z WARNING Ending connection 1701288679095 with 9
+2023-11-29T20:11:20Z NOTICE success
+2023-11-29T20:11:31Z WARNING Terminating PointsetManager sender
+2023-11-29T20:11:31Z WARNING Starting PointsetManager sender with delay 0s
+2023-11-29T20:11:31Z NOTICE success
+2023-11-29T20:11:32Z INFO Device AHU-1 config handler
+2023-11-29T20:11:32Z INFO 2023-11-29T20:11:32Z received config 2023-11-29T20:11:31Z
+2023-11-29T20:11:32Z WARNING Starting PointsetManager sender with delay 0s
+2023-11-29T20:11:32Z NOTICE success
+2023-11-29T20:11:33Z INFO Device AHU-1 config handler
+2023-11-29T20:11:33Z INFO 2023-11-29T20:11:33Z received config 2023-11-29T20:11:33Z
+2023-11-29T20:11:33Z WARNING Starting PointsetManager sender with delay 0s
+2023-11-29T20:11:33Z NOTICE success
+2023-11-29T20:11:33Z INFO Update state 2023-11-29T20:11:33Z last_config 2023-11-29T20:11:33Z
+2023-11-29T20:11:34Z INFO Device AHU-1 config handler
+2023-11-29T20:11:34Z INFO 2023-11-29T20:11:34Z received config 2023-11-29T20:11:34Z
+2023-11-29T20:11:34Z WARNING Starting PointsetManager sender with delay 0s
+2023-11-29T20:11:34Z NOTICE success
+2023-11-29T20:11:34Z INFO Device AHU-1 config handler
+2023-11-29T20:11:34Z INFO 2023-11-29T20:11:34Z received config 2023-11-29T20:11:34Z
+2023-11-29T20:11:34Z WARNING Starting PointsetManager sender with delay 10s
+2023-11-29T20:11:34Z NOTICE success
+2023-11-29T20:11:35Z INFO Device AHU-1 config handler
+2023-11-29T20:11:35Z INFO 2023-11-29T20:11:35Z received config 2023-11-29T20:11:35Z
+2023-11-29T20:11:35Z NOTICE success
+2023-11-29T20:11:35Z INFO Update state 2023-11-29T20:11:35Z last_config 2023-11-29T20:11:35Z
+2023-11-29T20:11:38Z INFO Update state 2023-11-29T20:11:38Z last_config 2023-11-29T20:11:35Z
+2023-11-29T20:11:38Z INFO Device AHU-1 config handler
+2023-11-29T20:11:38Z INFO 2023-11-29T20:11:38Z received config 2023-11-29T20:11:38Z
+2023-11-29T20:11:38Z DEBUG State update defer 1999ms
+2023-11-29T20:11:38Z NOTICE success
+2023-11-29T20:11:38Z DEBUG State update defer 1999ms
+2023-11-29T20:11:40Z DEBUG State update defer 825ms
+2023-11-29T20:11:40Z DEBUG State update defer 0ms
+2023-11-29T20:11:40Z INFO Update state 2023-11-29T20:11:40Z last_config 2023-11-29T20:11:38Z
+2023-11-29T20:11:40Z DEBUG State update AHU-1 (broken_config)
+2023-11-29T20:11:43Z DEBUG success
+2023-11-29T20:11:43Z DEBUG State update defer -200ms
+2023-11-29T20:11:43Z INFO Update state 2023-11-29T20:11:43Z last_config 2023-11-29T20:11:38Z
+2023-11-29T20:11:43Z ERROR Error receiving message config: Unexpected character ('b' (code 98)): was expecting double-quote to start field name
  at [Source: (String)"{ broken by extra_field == break_json"; line: 1, column: 4]
-2023-10-28T13:28:30Z INFO update state 2023-10-28T13:28:30Z last_config 2023-10-28T13:28:25Z
-2023-10-28T13:28:30Z DEBUG State update (broken_config)
-2023-10-28T13:28:30Z ERROR Unexpected character ('b' (code 98)): was expecting double-quote to start field name
+2023-11-29T20:11:43Z DEBUG State update AHU-1 (broken_config)
+2023-11-29T20:11:43Z ERROR Unexpected character ('b' (code 98)): was expecting double-quote to start field name
  at [Source: (String)"{ broken by extra_field == break_json"; line: 1, column: 4]
-2023-10-28T13:28:31Z DEBUG State update defer 2000ms
-2023-10-28T13:28:33Z DEBUG State update defer -1ms
-2023-10-28T13:28:33Z INFO update state 2023-10-28T13:28:33Z last_config 2023-10-28T13:28:25Z
-2023-10-28T13:28:33Z DEBUG State update (broken_config)
-2023-10-28T13:28:39Z DEBUG operation.mode state=active / config=null
-2023-10-28T13:28:43Z DEBUG success
-2023-10-28T13:28:43Z DEBUG success
-2023-10-28T13:28:43Z INFO Config handler
-2023-10-28T13:28:43Z INFO update state 2023-10-28T13:28:43Z last_config 2023-10-28T13:28:25Z
-2023-10-28T13:28:43Z DEBUG Config update (reset_config)
-2023-10-28T13:28:43Z INFO 2023-10-28T13:28:43Z received config 2023-10-28T13:28:43Z
-2023-10-28T13:28:43Z NOTICE success
-2023-10-28T13:28:45Z INFO Config handler
-2023-10-28T13:28:45Z INFO 2023-10-28T13:28:45Z received config 2023-10-28T13:28:44Z
-2023-10-28T13:28:45Z NOTICE success
-2023-10-28T13:28:46Z INFO update state 2023-10-28T13:28:46Z last_config 2023-10-28T13:28:44Z
-2023-10-28T13:28:46Z INFO Config handler
-2023-10-28T13:28:46Z INFO 2023-10-28T13:28:46Z received config 2023-10-28T13:28:46Z
-2023-10-28T13:28:46Z NOTICE success
-2023-10-28T13:28:46Z INFO Config handler
-2023-10-28T13:28:46Z INFO 2023-10-28T13:28:46Z received config 2023-10-28T13:28:46Z
-2023-10-28T13:28:46Z NOTICE success
-2023-10-28T13:28:47Z INFO Config handler
-2023-10-28T13:28:47Z INFO 2023-10-28T13:28:47Z received config 2023-10-28T13:28:47Z
-2023-10-28T13:28:47Z NOTICE success
-2023-10-28T13:28:48Z INFO update state 2023-10-28T13:28:48Z last_config 2023-10-28T13:28:47Z
-2023-10-28T13:28:51Z INFO update state 2023-10-28T13:28:51Z last_config 2023-10-28T13:28:47Z
-2023-10-28T13:28:51Z INFO Config handler
-2023-10-28T13:28:51Z INFO 2023-10-28T13:28:51Z received config 2023-10-28T13:28:51Z
-2023-10-28T13:28:51Z NOTICE success
-2023-10-28T13:28:51Z DEBUG State update defer 2000ms
-2023-10-28T13:28:51Z DEBUG State update defer 1999ms
-2023-10-28T13:28:53Z DEBUG State update defer 0ms
-2023-10-28T13:28:53Z INFO update state 2023-10-28T13:28:53Z last_config 2023-10-28T13:28:51Z
-2023-10-28T13:28:53Z DEBUG State update (broken_config)
-2023-10-28T13:28:59Z DEBUG operation.mode state=active / config=null
-2023-10-28T13:29:01Z NOTICE Sequence complete
+2023-11-29T20:11:43Z DEBUG State update defer 2000ms
+2023-11-29T20:11:45Z DEBUG State update defer 0ms
+2023-11-29T20:11:45Z INFO Update state 2023-11-29T20:11:45Z last_config 2023-11-29T20:11:38Z
+2023-11-29T20:11:45Z DEBUG State update AHU-1 (broken_config)
+2023-11-29T20:11:54Z DEBUG success
+2023-11-29T20:11:54Z DEBUG State update defer -7045ms
+2023-11-29T20:11:54Z INFO Update state 2023-11-29T20:11:54Z last_config 2023-11-29T20:11:38Z
+2023-11-29T20:11:54Z DEBUG success
+2023-11-29T20:11:54Z INFO Device AHU-1 config handler
+2023-11-29T20:11:54Z DEBUG State update AHU-1 (broken_config)
+2023-11-29T20:11:54Z DEBUG Config update AHU-1 (broken_config)
+2023-11-29T20:11:54Z INFO 2023-11-29T20:11:54Z received config 2023-11-29T20:11:54Z
+2023-11-29T20:11:54Z WARNING Terminating PointsetManager sender
+2023-11-29T20:11:54Z WARNING Starting PointsetManager sender with delay 0s
+2023-11-29T20:11:54Z NOTICE success
+2023-11-29T20:11:55Z INFO Device AHU-1 config handler
+2023-11-29T20:11:55Z INFO 2023-11-29T20:11:55Z received config 2023-11-29T20:11:55Z
+2023-11-29T20:11:55Z WARNING Starting PointsetManager sender with delay 0s
+2023-11-29T20:11:55Z NOTICE success
+2023-11-29T20:11:56Z INFO Update state 2023-11-29T20:11:56Z last_config 2023-11-29T20:11:55Z
+2023-11-29T20:11:56Z INFO Device AHU-1 config handler
+2023-11-29T20:11:56Z INFO 2023-11-29T20:11:56Z received config 2023-11-29T20:11:56Z
+2023-11-29T20:11:56Z WARNING Starting PointsetManager sender with delay 0s
+2023-11-29T20:11:56Z NOTICE success
+2023-11-29T20:11:56Z INFO Device AHU-1 config handler
+2023-11-29T20:11:56Z INFO 2023-11-29T20:11:56Z received config 2023-11-29T20:11:56Z
+2023-11-29T20:11:56Z WARNING Starting PointsetManager sender with delay 0s
+2023-11-29T20:11:56Z NOTICE success
+2023-11-29T20:11:56Z INFO Device AHU-1 config handler
+2023-11-29T20:11:56Z INFO 2023-11-29T20:11:56Z received config 2023-11-29T20:11:56Z
+2023-11-29T20:11:56Z WARNING Starting PointsetManager sender with delay 10s
+2023-11-29T20:11:56Z NOTICE success
+2023-11-29T20:11:58Z INFO Update state 2023-11-29T20:11:58Z last_config 2023-11-29T20:11:56Z
+2023-11-29T20:12:02Z INFO Update state 2023-11-29T20:12:02Z last_config 2023-11-29T20:11:56Z
+2023-11-29T20:12:02Z INFO Device AHU-1 config handler
+2023-11-29T20:12:02Z INFO 2023-11-29T20:12:02Z received config 2023-11-29T20:12:02Z
+2023-11-29T20:12:02Z NOTICE success
+2023-11-29T20:12:02Z DEBUG State update defer 1999ms
+2023-11-29T20:12:02Z DEBUG State update defer 1999ms
+2023-11-29T20:12:02Z DEBUG State update defer 1999ms
+2023-11-29T20:12:04Z DEBUG State update defer 0ms
+2023-11-29T20:12:04Z INFO Update state 2023-11-29T20:12:04Z last_config 2023-11-29T20:12:02Z
+2023-11-29T20:12:04Z DEBUG State update AHU-1 (broken_config)
+2023-11-29T20:12:12Z NOTICE Sequence complete

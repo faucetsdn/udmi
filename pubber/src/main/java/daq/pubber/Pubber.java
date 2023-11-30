@@ -1468,7 +1468,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
     }
 
     if (!shouldSendState() && topicSuffix.equals(STATE_TOPIC)) {
-      info("Squelching state update as per configuration");
+      warn("Squelching state update as per configuration");
       return;
     }
 

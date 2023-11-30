@@ -135,8 +135,8 @@ public class BasicTest extends TestBase {
         new DiscoveryEvent());
     validator.validateMessage(eventBundle);
 
-    // Add enough of a delay to ensure that a seconds-based timestamp is different.
-    safeSleep(TWO_SECONDS_MS);
+    advanceClockSec(10);
+
     Validator.MessageBundle configBundle = getMessageBundle(CONFIG_SUBTYPE, UPDATE_SUBFOLDER,
         new Config());
     validator.validateMessage(configBundle);

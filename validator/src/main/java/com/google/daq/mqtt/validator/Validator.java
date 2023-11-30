@@ -553,6 +553,10 @@ public class Validator {
       Map<String, String> attributes) {
 
     String deviceId = attributes.get("deviceId");
+    if (deviceId == null) {
+      return null;
+    }
+
     ReportingDevice device = reportingDevices.computeIfAbsent(deviceId, ReportingDevice::new);
 
     try {

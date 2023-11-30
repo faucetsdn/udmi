@@ -260,6 +260,10 @@ public class GeneralUtils {
     }
   }
 
+  public static <T> T ifTrueGet(Object conditional, T value) {
+    return ifTrueGet(conditional, () -> value);
+  }
+
   public static <T> T ifTrueGet(Object conditional, Supplier<T> action) {
     if (isTrue(conditional)) {
       return action.get();
