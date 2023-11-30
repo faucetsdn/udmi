@@ -38,7 +38,7 @@ echo "export MATRIX_SHARD_INDEX=$MATRIX_SHARD_INDEX"
 pubber/bin/build
 validator/bin/build
 
-test_index=0
+test_index=1
 while read -u 7 action test_name pubber_opts; do
     test_marker=$(printf %02d $test_index)
     ((test_index++)) || true
@@ -134,7 +134,7 @@ else
     while read result; do
         # Two ?s matches the printf %02d above.
         expected=${result/#?? /}
-        fgrep "$expected" $GOLDEN_FILE || fail Expected result not found for $expected
+        fgrep "$expected" $GOLDEN_FILE || fail Expected result not found for $result
     done < $RESULTS_OUT
 fi
 
