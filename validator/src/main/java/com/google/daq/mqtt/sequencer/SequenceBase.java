@@ -731,7 +731,7 @@ public class SequenceBase {
     recordSequence = true;
     waitingConditionPush("executing test");
 
-    debug(format("stage begin %s at %s", waitingConditionPeek(), timeSinceStart()));
+    debug(format("stage begin %s at %s", currentWaitingCondition(), timeSinceStart()));
   }
 
   private boolean deviceSupportsState() {
@@ -1056,7 +1056,7 @@ public class SequenceBase {
     if (activeInstance == null) {
       return;
     }
-    String condition = waitingCondition.isEmpty() ? "initialize" : waitingConditionPeek();
+    String condition = waitingCondition.isEmpty() ? "initialize" : currentWaitingCondition();
     debug(format("stage done %s at %s", condition, timeSinceStart()));
     recordSequence = false;
 
@@ -1197,7 +1197,8 @@ public class SequenceBase {
       return evaluator.get();
     } catch (AbortMessageLoop e) {
       error(
-          "Aborting message loop while " + waitingConditionPeek() + " because " + e.getMessage());
+          "Aborting message loop while " + currentWaitingCondition() + " because "
+              + e.getMessage());
       throw e;
     } catch (Exception e) {
       if (traceLogLevel()) {
@@ -1340,21 +1341,21 @@ public class SequenceBase {
 
   private void waitingConditionPop(Instant startTime) {
     Duration between = Duration.between(startTime, Instant.now());
-    debug(format("stage finished %s at %s after %ss", waitingConditionPeek(),
+    debug(format("stage finished %s at %s after %ss", currentWaitingCondition(),
         timeSinceStart(), between.toSeconds()));
     waitingCondition.pop();
     ifTrueThen(!waitingCondition.isEmpty(),
-        () -> trace(format("stage resume %s at %s", waitingConditionPeek(), timeSinceStart())));
+        () -> trace(format("stage resume %s at %s", currentWaitingCondition(), timeSinceStart())));
   }
 
   private void waitingConditionPush(String condition) {
     ifTrueThen(!waitingCondition.isEmpty(),
-        () -> trace(format("stage suspend %s at %s", waitingConditionPeek(), timeSinceStart())));
+        () -> trace(format("stage suspend %s at %s", currentWaitingCondition(), timeSinceStart())));
     waitingCondition.push("waiting for " + condition);
-    info(format("stage start %s at %s", waitingConditionPeek(), timeSinceStart()));
+    info(format("stage start %s at %s", currentWaitingCondition(), timeSinceStart()));
   }
 
-  private String waitingConditionPeek() {
+  private String currentWaitingCondition() {
     return waitingCondition.peek();
   }
 
@@ -1379,7 +1380,7 @@ public class SequenceBase {
     while (evaluator.get()) {
       if (Instant.now().isAfter(end)) {
         throw new RuntimeException(
-            format("Timeout after %ss %s", maxWait.getSeconds(), waitingConditionPeek()));
+            format("Timeout after %ss %s", maxWait.getSeconds(), currentWaitingCondition()));
       }
       processNextMessage();
     }
@@ -2153,8 +2154,8 @@ public class SequenceBase {
       final SequenceResult failureType;
       if (e instanceof TestTimedOutException) {
         waitingCondition.forEach(condition -> warning("While " + condition));
-        error(format("stage timeout %s at %s", waitingConditionPeek(), timeSinceStart()));
-        message = "Timeout waiting for " + waitingConditionPeek();
+        error(format("stage timeout %s at %s", currentWaitingCondition(), timeSinceStart()));
+        message = "Timeout " + currentWaitingCondition();
         failureType = SequenceResult.FAIL;
       } else if (e instanceof AssumptionViolatedException) {
         message = e.getMessage();
