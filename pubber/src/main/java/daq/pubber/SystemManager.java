@@ -3,6 +3,7 @@ package daq.pubber;
 import static com.google.udmi.util.GeneralUtils.catchOrElse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static java.lang.String.format;
@@ -187,7 +188,7 @@ public class SystemManager extends ManagerBase {
     systemEvent.metrics.mem_total_mb = (double) runtime.totalMemory() / BYTES_PER_MEGABYTE;
     systemEvent.metrics.store_total_mb = Double.NaN;
     systemEvent.event_count = systemEventCount++;
-    systemEvent.logentries = ImmutableList.copyOf(logentries);
+    ifNotTrueThen(options.noLog, () -> systemEvent.logentries = ImmutableList.copyOf(logentries));
     logentries.clear();
     host.publish(systemEvent);
   }

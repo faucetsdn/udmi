@@ -26,15 +26,15 @@
     }
   },
   "system" : {
-    "metrics_rate_sec" : 600,
+    "metrics_rate_sec" : 10,
     "min_loglevel" : 100,
     "operation" : {
-      "last_start" : "2023-10-28T13:27:58Z"
+      "last_start" : "2023-11-29T20:07:39Z"
     },
     "testing" : {
       "sequence_name" : "config_logging"
     }
   },
-  "timestamp" : "2023-10-28T13:29:15Z",
-  "version" : "1.4.2-51-g50234ecc0"
+  "timestamp" : "2023-11-29T20:08:01Z",
+  "version" : "1.4.2-57-gbb3a0154e"
 }

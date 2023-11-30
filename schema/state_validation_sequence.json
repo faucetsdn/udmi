@@ -12,6 +12,16 @@
     "stage": {
       "$ref": "file:common.json#/definitions/stage"
     },
+    "capabilities": {
+      "type": "object",
+      "existingJavaType": "java.util.Map<String, CapabilityValidationState>",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[.a-z]+$": {
+          "$ref": "file:state_validation_capability.json"
+        }
+      }
+    },
     "result": {
       "title": "Sequence Result",
       "enum": [
@@ -23,6 +33,12 @@
     },
     "status": {
       "$ref": "file:entry.json"
+    },
+    "score": {
+      "type": "integer"
+    },
+    "total": {
+      "type": "integer"
     }
   }
 }

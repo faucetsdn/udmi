@@ -1,27 +1,33 @@
-RESULT pass system broken_config ALPHA 5 Sequence complete
-RESULT fail system broken_config ALPHA 5 timeout waiting for has applicable system status
-RESULT fail system broken_config ALPHA 5 timeout waiting for log category `system.config.receive` level `DEBUG` was logged
-RESULT fail system broken_config ALPHA 5 timeout waiting for no applicable system status
-RESULT fail system config_logging BETA 5 Bad version string number format
-RESULT skip system device_config_acked BETA 5 No config check for proxy device
-RESULT fail system device_config_acked BETA 5 timeout waiting for config acked
-RESULT fail enumeration.features feature_enumeration PREVIEW 5 Failed check that feature enumeration matches metadata; missing { enumeration }, extra { unknown }
-RESULT pass gateway gateway_proxy_events ALPHA 5 Sequence complete
-RESULT pass gateway gateway_proxy_events ALPHA 5 Sequence complete
-RESULT pass gateway gateway_proxy_events ALPHA 5 Sequence complete
-RESULT fail gateway gateway_proxy_events ALPHA 5 timeout waiting for Missing data from AHU-22
-RESULT fail pointset pointset_remove_point BETA 5 timeout waiting for no applicable system status
-RESULT fail pointset pointset_remove_point BETA 5 timeout waiting for pointset state reports same points as defined in config
-RESULT fail pointset pointset_request_extraneous BETA 5 timeout waiting for pointset event contains correct points with present_value
-RESULT fail pointset pointset_sample_rate BETA 5 Failed check that time period between successive pointset events is between 1 and 5 seconds
-RESULT fail system state_make_model BETA 5 Pipeline type event error: While processing message REDACTED
-RESULT pass system system_last_update STABLE 5 Sequence complete
-RESULT fail system system_last_update STABLE 5 timeout waiting for state last_config matches config timestamp
-RESULT fail system system_min_loglevel ALPHA 5 Received state update with no-state device
-RESULT pass system system_min_loglevel ALPHA 5 Sequence complete
-RESULT fail system.mode system_mode_restart ALPHA 5 Failed check that restart count increased by one
-RESULT fail system too_much_state ALPHA 5 Failed check that No more than 6 state updates in 60s
-RESULT pass system valid_serial_no ALPHA 5 Sequence complete
-RESULT skip system valid_serial_no ALPHA 5 State testing disabled
-RESULT fail writeback writeback_success ALPHA 5 timeout waiting for point filter_differential_pressure_setpoint to have value_state applied
-RESULT fail writeback writeback_success ALPHA 5 timeout waiting for point filter_differential_pressure_setpoint to have value_state applied
+01 RESULT fail system device_config_acked BETA 0/5 Timeout waiting for config acked
+02 RESULT fail pointset pointset_request_extraneous BETA 0/5 Timeout waiting for pointset event contains correct points with present_value
+03 RESULT fail pointset pointset_remove_point BETA 0/5 Timeout waiting for pointset state reports same points as defined in config
+04 RESULT fail pointset pointset_remove_point BETA 0/5 Timeout waiting for no applicable system status
+05 RESULT fail system too_much_state ALPHA 0/5 Failed check that No more than 6 state updates in 60s
+06 RESULT fail enumeration.features feature_enumeration PREVIEW 0/5 Failed check that feature enumeration matches metadata; missing { enumeration }, extra { unknown }
+07 RESULT pass system valid_serial_no ALPHA 5/5 Sequence complete
+08 RESULT fail writeback writeback_success ALPHA 0/5 Timeout waiting for point filter_differential_pressure_setpoint to have value_state applied
+09 RESULT fail writeback writeback_success ALPHA 0/5 Timeout waiting for point filter_differential_pressure_setpoint to have value_state applied
+10 RESULT fail pointset pointset_sample_rate BETA 0/5 Failed check that time period between successive pointset events is between 1 and 5 seconds
+11 RESULT fail system.mode system_mode_restart ALPHA 0/5 Failed check that restart count increased by one
+12 RESULT fail system config_logging BETA 0/5 Bad version string number format
+13 CPBLTY pass system broken_config.logging ALPHA 1/1 Capability functional
+13 RESULT fail system broken_config ALPHA 0/5 Timeout waiting for has applicable system status
+14 CPBLTY pass system broken_config.logging ALPHA 1/1 Capability functional
+14 RESULT pass system broken_config ALPHA 5/5 Sequence complete
+15 CPBLTY skip system broken_config.logging ALPHA 0/1 Never executed
+15 RESULT fail system broken_config ALPHA 0/5 Timeout waiting for no applicable system status
+16 CPBLTY fail system broken_config.logging ALPHA 0/1 Timeout after 30s waiting for log category `system.config.apply` level `NOTICE` to be logged
+16 RESULT pass system broken_config ALPHA 4/5 Sequence complete
+17 CPBLTY fail system broken_config.logging ALPHA 0/1 Timeout after 30s waiting for log category `system.config.receive` level `DEBUG` to be logged
+17 RESULT fail system broken_config ALPHA 0/5 expected:<system.config.[parse]> but was:<system.config.[apply]>
+18 RESULT pass system system_last_update STABLE 5/5 Sequence complete
+19 RESULT fail system state_make_model BETA 0/5 Pipeline type event error: While processing message REDACTED
+23 RESULT skip system valid_serial_no ALPHA 0/0 State testing disabled
+24 RESULT fail system system_last_update STABLE 0/5 Timeout waiting for state last_config matches config timestamp
+25 RESULT fail system system_min_loglevel ALPHA 0/5 Received state update with no-state device
+26 RESULT pass system system_min_loglevel ALPHA 5/5 Sequence complete
+30 RESULT pass gateway gateway_proxy_events ALPHA 5/5 Sequence complete
+31 RESULT fail gateway gateway_proxy_events ALPHA 0/5 Timeout waiting for Missing data from AHU-22
+35 RESULT pass gateway gateway_proxy_events ALPHA 5/5 Sequence complete
+36 RESULT pass gateway gateway_proxy_events ALPHA 5/5 Sequence complete
+40 RESULT skip system device_config_acked BETA 0/0 No config check for proxy device

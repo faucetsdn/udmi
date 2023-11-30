@@ -3,6 +3,7 @@ package com.google.daq.mqtt.sequencer;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Strings.emptyToNull;
 import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
 import static com.google.daq.mqtt.util.IotReflectorClient.REFLECTOR_PREFIX;
 import static com.google.daq.mqtt.validator.Validator.CONFIG_PREFIX;
@@ -18,6 +19,7 @@ import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
@@ -31,9 +33,12 @@ import static java.lang.String.format;
 import static java.nio.file.Files.newOutputStream;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 import static udmi.schema.Bucket.SYSTEM;
 import static udmi.schema.Bucket.UNKNOWN_DEFAULT;
+import static udmi.schema.Category.VALIDATION_FEATURE_CAPABILITY;
 import static udmi.schema.Category.VALIDATION_FEATURE_SCHEMA;
 import static udmi.schema.Category.VALIDATION_FEATURE_SEQUENCE;
 import static udmi.schema.FeatureEnumeration.FeatureStage.ALPHA;
@@ -42,6 +47,9 @@ import static udmi.schema.FeatureEnumeration.FeatureStage.STABLE;
 import static udmi.schema.Level.ERROR;
 import static udmi.schema.Level.NOTICE;
 import static udmi.schema.Level.WARNING;
+import static udmi.schema.SequenceValidationState.SequenceResult.FAIL;
+import static udmi.schema.SequenceValidationState.SequenceResult.PASS;
+import static udmi.schema.SequenceValidationState.SequenceResult.SKIP;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
@@ -70,6 +78,7 @@ import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -83,6 +92,7 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.Stack;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
@@ -96,6 +106,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.After;
 import org.junit.AssumptionViolatedException;
 import org.junit.Before;
@@ -105,6 +116,8 @@ import org.junit.rules.Timeout;
 import org.junit.runner.Description;
 import org.junit.runners.model.TestTimedOutException;
 import udmi.schema.Bucket;
+import udmi.schema.CapabilityValidationState;
+import udmi.schema.CapabilityValidationState.CapabilityResult;
 import udmi.schema.Config;
 import udmi.schema.DiscoveryEvent;
 import udmi.schema.Entry;
@@ -125,7 +138,6 @@ import udmi.schema.SequenceValidationState.SequenceResult;
 import udmi.schema.State;
 import udmi.schema.SystemConfig;
 import udmi.schema.SystemEvent;
-import udmi.schema.SystemState;
 import udmi.schema.TestingSystemConfig;
 import udmi.schema.ValidationState;
 
@@ -143,11 +155,15 @@ public class SequenceBase {
   public static final String SYSTEM_STATUS_MESSAGE = "applicable system status";
   public static final String HAS_STATUS_PREFIX = "has ";
   public static final String NOT_STATUS_PREFIX = "no ";
+  public static final String SCHEMA_BUCKET = "schemas";
+  public static final int SCHEMA_SCORE = 5;
+  public static final int CAPABILITY_SCORE = 1;
   private static final int FUNCTIONS_VERSION_BETA = 11;
   private static final int FUNCTIONS_VERSION_ALPHA = FUNCTIONS_VERSION_BETA;
   private static final long CONFIG_BARRIER_MS = 1000;
   private static final String START_END_MARKER = "################################";
-  private static final String RESULT_FORMAT = "RESULT %s %s %s %s %s %s";
+  private static final String RESULT_FORMAT = "RESULT %s %s %s %s %s/%s %s";
+  private static final String CAPABILITY_FORMAT = "CPBLTY %s %s %s %s %s/%s %s";
   private static final String SCHEMA_FORMAT = "SCHEMA %s %s %s %s %s %s";
   private static final String TESTS_OUT_DIR = "tests";
   private static final String EVENT_PREFIX = "event_";
@@ -184,9 +200,13 @@ public class SequenceBase {
   private static final String SYSTEM_TESTING_MARKER = " `system.testing";
   private static final BiMap<SequenceResult, Level> RESULT_LEVEL_MAP = ImmutableBiMap.of(
       SequenceResult.START, Level.INFO,
-      SequenceResult.SKIP, Level.WARNING,
-      SequenceResult.PASS, Level.NOTICE,
-      SequenceResult.FAIL, ERROR
+      SKIP, Level.WARNING,
+      PASS, Level.NOTICE,
+      FAIL, Level.ERROR
+  );
+  private static final BiMap<CapabilityResult, Level> CAPABILITY_RESULT_MAP = ImmutableBiMap.of(
+      CapabilityResult.PASS, Level.NOTICE,
+      CapabilityResult.FAIL, Level.ERROR
   );
   private static final Map<SubFolder, String> sentConfig = new HashMap<>();
   private static final ObjectDiffEngine SENT_CONFIG_DIFFERNATOR = new ObjectDiffEngine();
@@ -200,6 +220,9 @@ public class SequenceBase {
   private static final Date stateCutoffThreshold = Date.from(Instant.now().minusSeconds(
       STATE_QUERY_CUTOFF_SEC));
   private static final String FAKE_DEVICE_ID = "TAP-1";
+  private static final String NO_EXTRA_DETAIL = "";
+  private static final Duration LOG_WAIT_TIME = Duration.ofSeconds(30);
+  private static final Duration DEFAULT_WAIT_TIMEOUT = Duration.ofHours(30);
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -234,6 +257,7 @@ public class SequenceBase {
   private final Queue<Entry> logEntryQueue = new LinkedBlockingDeque<>();
   private final Stack<String> waitingCondition = new Stack<>();
   private final SortedMap<String, List<Entry>> validationResults = new TreeMap<>();
+  private final Map<Capabilities, Exception> capabilityExceptions = new ConcurrentHashMap<>();
   @Rule
   public Timeout globalTimeout = new Timeout(NORM_TIMEOUT_MS, TimeUnit.MILLISECONDS);
   @Rule
@@ -443,9 +467,9 @@ public class SequenceBase {
         && (!schemaName.startsWith(STATE_PREFIX) || schemaName.equals(STATE_UPDATE_MESSAGE_TYPE));
   }
 
-  private static void emitSequenceResult(SequenceResult result, String bucket, String methodName,
-      String stage, int score, String message) {
-    emitSequencerOut(format(RESULT_FORMAT, result, bucket, methodName, stage, score, message));
+  private static void emitSequenceResult(SequenceResult result, String bucket, String name,
+      String stage, int score, int total, String message) {
+    emitSequencerOut(format(RESULT_FORMAT, result, bucket, name, stage, score, total, message));
   }
 
   private static void emitSequencerOut(String resultString) {
@@ -477,8 +501,8 @@ public class SequenceBase {
         SequenceResult result = RESULT_LEVEL_MAP.inverse().get(Level.fromValue(entry.level));
         String stageValue = stage.value();
         String schemaStage = schema + "_" + stageValue;
-        emitSequenceResult(result, "schemas", schemaStage, stageValue.toUpperCase(), 5,
-            entry.message);
+        emitSequenceResult(result, SCHEMA_BUCKET, schemaStage, stageValue.toUpperCase(),
+            SCHEMA_SCORE, SCHEMA_SCORE, entry.message);
       });
     });
   }
@@ -487,7 +511,7 @@ public class SequenceBase {
       Map.Entry<FeatureStage, List<SequenceValidationState>> entry) {
     List<SequenceValidationState> values = entry.getValue();
     Set<SequenceValidationState> failures = values.stream()
-        .filter(state -> state.result != SequenceResult.PASS).collect(Collectors.toSet());
+        .filter(state -> state.result != PASS).collect(Collectors.toSet());
 
     Entry logEntry = new Entry();
     logEntry.category = VALIDATION_FEATURE_SCHEMA;
@@ -528,6 +552,36 @@ public class SequenceBase {
 
   private static MessagePublisher reflector(boolean useAlternateClient) {
     return useAlternateClient ? altClient : client;
+  }
+
+  private static boolean isMatchingEntry(String category, Level exactLevel, Entry entry) {
+    return category.equals(entry.category) && entry.level == exactLevel.value();
+  }
+
+  @Nullable
+  private static Map<Capabilities, Capability> getCapabilities(Description desc) {
+    try {
+      AllCapabilities all = desc.getAnnotation(AllCapabilities.class);
+      List<Capability> list = ofNullable(all).map(array -> Arrays.asList(all.value()))
+          .orElseGet(ArrayList::new);
+      ifNotNullThen(desc.getAnnotation(Capability.class), list::add);
+      return list.stream().collect(Collectors.toMap(Capability::value, cap -> cap));
+    } catch (Exception e) {
+      throw new RuntimeException("While extracting capabilities for " + desc.getMethodName(), e);
+    }
+  }
+
+  private Map.Entry<Integer, Integer> emitCapabilityResult(Capabilities capability, Exception state,
+      Capability cap, Bucket bucket, String methodName) {
+    boolean pass = state instanceof CapabilitySuccess;
+    SequenceResult result = state == null ? SKIP : pass ? PASS : FAIL;
+    String message = ifNotNullGet(state, Throwable::getMessage, "Never executed");
+    String capabilityName = methodName + "." + capability.value();
+    int total = CAPABILITY_SCORE;
+    int score = pass ? total : 0;
+    emitSequencerOut(format(CAPABILITY_FORMAT,
+        result, bucket.value(), capabilityName, cap.stage().name(), score, total, message));
+    return new SimpleEntry<>(score, total);
   }
 
   protected String getAlternateEndpointHostname() {
@@ -640,6 +694,8 @@ public class SequenceBase {
 
     assumeTrue("Feature bucket not enabled", isBucketEnabled(testBucket));
 
+    assertTrue("exceptions map should be empty", capabilityExceptions.isEmpty());
+
     if (!deviceSupportsState()) {
       boolean featureDisabled = ifNotNullGet(testDescription.getAnnotation(Feature.class),
           feature -> !feature.nostate(), true);
@@ -678,7 +734,7 @@ public class SequenceBase {
     recordSequence = true;
     waitingConditionPush("executing test");
 
-    debug(format("stage begin %s at %s", waitingConditionPeek(), timeSinceStart()));
+    debug(format("stage begin %s at %s", currentWaitingCondition(), timeSinceStart()));
   }
 
   private boolean deviceSupportsState() {
@@ -732,12 +788,32 @@ public class SequenceBase {
 
   private void recordResult(SequenceResult result, Description description, String message) {
     putSequencerResult(description, result);
-    String methodName = description.getMethodName();
+
     Feature feature = description.getAnnotation(Feature.class);
+    Map<Capabilities, Capability> capabilities = getCapabilities(description);
     Bucket bucket = getBucket(feature);
     String stage = (feature == null ? Feature.DEFAULT_STAGE : feature.stage()).name();
-    int score = (feature == null ? Feature.DEFAULT_SCORE : feature.score());
-    emitSequenceResult(result, bucket.value(), methodName, stage, score, message);
+    int base = (feature == null ? Feature.DEFAULT_SCORE : feature.score());
+
+    boolean isSkip = result == SKIP;
+    boolean isPass = result == PASS;
+
+    AtomicInteger total = new AtomicInteger(isSkip ? 0 : base);
+    AtomicInteger score = new AtomicInteger(isPass ? base : 0);
+
+    ifTrueThen(isPass, () -> assertEquals("executed test capabilities",
+        capabilities.keySet(), capabilityExceptions.keySet()));
+
+    String method = description.getMethodName();
+    capabilities.keySet().stream()
+        .map(key -> emitCapabilityResult(key, capabilityExceptions.get(key),
+            capabilities.get(key), bucket, method))
+        .forEach(scoreAndTotal -> {
+          ifTrueThen(isPass, () -> score.addAndGet(scoreAndTotal.getKey()));
+          total.addAndGet(scoreAndTotal.getValue());
+        });
+
+    emitSequenceResult(result, bucket.value(), method, stage, score.get(), total.get(), message);
   }
 
   private void recordSchemaValidations(Description description) {
@@ -751,11 +827,11 @@ public class SequenceBase {
           String schemaName = entry.getKey();
           List<Entry> values = entry.getValue();
           if (values.isEmpty()) {
-            collectSchemaResult(description, schemaName, SequenceResult.PASS, SCHEMA_PASS_DETAIL);
+            collectSchemaResult(description, schemaName, PASS, SCHEMA_PASS_DETAIL);
           } else {
             Set<String> duplicates = new HashSet<>();
             values.stream().filter(item -> duplicates.add(uniqueKey(item))).forEach(result ->
-                collectSchemaResult(description, schemaName, SequenceResult.FAIL, result.detail));
+                collectSchemaResult(description, schemaName, FAIL, result.detail));
           }
         });
   }
@@ -764,30 +840,47 @@ public class SequenceBase {
     return format("%s_%s_%s", entry.category, entry.message, entry.detail);
   }
 
+  private CapabilityValidationState collectCapabilityResult(Capabilities key) {
+    CapabilityValidationState capabilityValidationState = new CapabilityValidationState();
+    Exception exception = capabilityExceptions.get(key);
+    boolean isPass = exception instanceof CapabilitySuccess;
+    capabilityValidationState.result = isPass ? CapabilityResult.PASS : CapabilityResult.FAIL;
+    if (!isPass) {
+      Entry entry = new Entry();
+      entry.category = VALIDATION_FEATURE_CAPABILITY;
+      entry.message = exception.getMessage();
+      entry.level = CAPABILITY_RESULT_MAP.get(capabilityValidationState.result).value();
+      entry.timestamp = cleanDate();
+      capabilityValidationState.status = entry;
+    }
+
+    return capabilityValidationState;
+  }
+
   private void collectSchemaResult(Description description, String schemaName,
       SequenceResult result, String detail) {
-    String sequence = description.getMethodName();
+    String name = description.getMethodName();
     Feature feature = description.getAnnotation(Feature.class);
     String bucket = getBucket(feature).value();
     String stage = (feature == null ? Feature.DEFAULT_STAGE : feature.stage()).name();
-    emitSchemaResult(schemaName, result, detail, sequence, bucket, stage);
+    emitSchemaResult(schemaName, result, detail, name, bucket, stage);
 
-    SchemaValidationState schemaValidationState = validationState.schemas.computeIfAbsent(
+    SchemaValidationState schema = validationState.schemas.computeIfAbsent(
         schemaName, this::newSchemaValidationState);
 
-    SequenceValidationState state = schemaValidationState.sequences.computeIfAbsent(
-        sequence, key -> new SequenceValidationState());
+    SequenceValidationState sequence = schema.sequences.computeIfAbsent(
+        name, key -> new SequenceValidationState());
 
-    state.result = result;
-    state.stage = getTestStage(description);
+    sequence.result = result;
+    sequence.stage = getTestStage(description);
 
-    if (!result.equals(SequenceResult.PASS)) {
+    if (!result.equals(PASS)) {
       Entry logEntry = new Entry();
       logEntry.category = VALIDATION_FEATURE_SEQUENCE;
       logEntry.message = detail;
       logEntry.level = RESULT_LEVEL_MAP.get(result).value();
       logEntry.timestamp = cleanDate();
-      state.status = logEntry;
+      sequence.status = logEntry;
     }
 
     updateValidationState();
@@ -966,11 +1059,11 @@ public class SequenceBase {
     if (activeInstance == null) {
       return;
     }
-    String condition = waitingCondition.isEmpty() ? "initialize" : waitingConditionPeek();
+    String condition = waitingCondition.isEmpty() ? "initialize" : currentWaitingCondition();
     debug(format("stage done %s at %s", condition, timeSinceStart()));
     recordSequence = false;
 
-    if (testResult == SequenceResult.PASS) {
+    if (testResult == PASS) {
       checkThatHasInterestingSystemStatus(false);
     }
 
@@ -1107,7 +1200,8 @@ public class SequenceBase {
       return evaluator.get();
     } catch (AbortMessageLoop e) {
       error(
-          "Aborting message loop while " + waitingConditionPeek() + " because " + e.getMessage());
+          "Aborting message loop while " + currentWaitingCondition() + " because "
+              + e.getMessage());
       throw e;
     } catch (Exception e) {
       if (traceLogLevel()) {
@@ -1145,16 +1239,33 @@ public class SequenceBase {
     recordSequence("Check that " + notDescription);
   }
 
+  private void waitFor(String description, Duration maxWait, Supplier<String> evaluator) {
+    AtomicReference<String> detail = new AtomicReference<>();
+    whileDoing(description, () -> {
+      updateConfig("Before " + description);
+      recordSequence("Wait for " + description);
+      messageEvaluateLoop(maxWait, () -> {
+        String result = evaluator.get();
+        detail.set(emptyToNull(result));
+        return result != null;
+      });
+    }, detail::get);
+  }
+
+  protected void waitForLog(String category, Level exactLevel) {
+    waitFor(format("log category `%s` level `%s` to be logged", category, exactLevel.name()),
+        LOG_WAIT_TIME, () -> checkLogged(category, exactLevel));
+  }
+
   protected void untilLogged(String category, Level exactLevel) {
-    final List<Entry> entries = new ArrayList<>();
-    untilTrue(format("log category `%s` level `%s` was logged", category, exactLevel),
-        () -> {
-          processLogMessages();
-          entries.addAll(matchingLogQueueEntries(
-              entry -> category.equals(entry.category) && entry.level == exactLevel.value()));
-          return !entries.isEmpty();
-        });
-    entries.forEach(entry -> debug("matching " + entryMessage(entry)));
+    waitForLog(category, exactLevel);
+  }
+
+  private String checkLogged(String category, Level exactLevel) {
+    processLogMessages();
+    List<Entry> entries = matchingLogQueue(entry -> isMatchingEntry(category, exactLevel, entry));
+    entries.forEach(entry -> debug("Matched entry " + entryMessage(entry)));
+    return ifTrueGet(entries.isEmpty(), NO_EXTRA_DETAIL);
   }
 
   protected void checkNotLogged(String category, Level minLevel) {
@@ -1165,7 +1276,7 @@ public class SequenceBase {
       processLogMessages();
     });
     final Instant endTime = lastConfigUpdate.plusSeconds(LOG_TIMEOUT_SEC);
-    List<Entry> entries = matchingLogQueueEntries(
+    List<Entry> entries = matchingLogQueue(
         entry -> category.equals(entry.category) && entry.level >= minLevel.value());
     checkThat(format("log category `%s` level `%s` not logged", category, minLevel), () -> {
       if (!entries.isEmpty()) {
@@ -1177,15 +1288,16 @@ public class SequenceBase {
     });
   }
 
-  private List<Entry> matchingLogQueueEntries(Function<Entry, Boolean> predicate) {
+  private List<Entry> matchingLogQueue(Function<Entry, Boolean> predicate) {
     return logEntryQueue.stream().filter(predicate::apply).collect(Collectors.toList());
   }
 
   private void processLogMessages() {
     List<SystemEvent> receivedEvents = popReceivedEvents(SystemEvent.class);
     receivedEvents.forEach(systemEvent -> {
-      int eventCount = ofNullable(systemEvent.event_count).orElse(previousEventCount + 1);
-      if (eventCount != previousEventCount + 1) {
+      int eventCount = ofNullable(systemEvent.event_count).orElse(
+          previousEventCount + CAPABILITY_SCORE);
+      if (eventCount != previousEventCount + CAPABILITY_SCORE) {
         debug("Missing system events " + previousEventCount + " -> " + eventCount);
       }
       previousEventCount = eventCount;
@@ -1223,7 +1335,7 @@ public class SequenceBase {
       action.run();
     } catch (Exception e) {
       catcher.accept(e);
-      ifNotNullThen(detail, d -> waitingConditionPush(d.get()));
+      ifNotNullThen(detail, d -> ifNotNullThen(d.get(), this::waitingConditionPush));
       throw e;
     }
 
@@ -1232,21 +1344,21 @@ public class SequenceBase {
 
   private void waitingConditionPop(Instant startTime) {
     Duration between = Duration.between(startTime, Instant.now());
-    debug(format("stage finished %s at %s after %ss", waitingConditionPeek(),
+    debug(format("stage finished %s at %s after %ss", currentWaitingCondition(),
         timeSinceStart(), between.toSeconds()));
     waitingCondition.pop();
     ifTrueThen(!waitingCondition.isEmpty(),
-        () -> trace(format("stage resume %s at %s", waitingConditionPeek(), timeSinceStart())));
+        () -> trace(format("stage resume %s at %s", currentWaitingCondition(), timeSinceStart())));
   }
 
   private void waitingConditionPush(String condition) {
     ifTrueThen(!waitingCondition.isEmpty(),
-        () -> trace(format("stage suspend %s at %s", waitingConditionPeek(), timeSinceStart())));
+        () -> trace(format("stage suspend %s at %s", currentWaitingCondition(), timeSinceStart())));
     waitingCondition.push("waiting for " + condition);
-    info(format("stage start %s at %s", waitingConditionPeek(), timeSinceStart()));
+    info(format("stage start %s at %s", currentWaitingCondition(), timeSinceStart()));
   }
 
-  private String waitingConditionPeek() {
+  private String currentWaitingCondition() {
     return waitingCondition.peek();
   }
 
@@ -1263,7 +1375,16 @@ public class SequenceBase {
   }
 
   private void messageEvaluateLoop(Supplier<Boolean> evaluator) {
+    messageEvaluateLoop(DEFAULT_WAIT_TIMEOUT, evaluator);
+  }
+
+  private void messageEvaluateLoop(Duration maxWait, Supplier<Boolean> evaluator) {
+    Instant end = Instant.now().plus(maxWait);
     while (evaluator.get()) {
+      if (Instant.now().isAfter(end)) {
+        throw new RuntimeException(
+            format("Timeout after %ss %s", maxWait.getSeconds(), currentWaitingCondition()));
+      }
       processNextMessage();
     }
     if (expectedSystemStatus != null) {
@@ -1489,7 +1610,7 @@ public class SequenceBase {
         }
         List<String> changes = updateDeviceConfig(config);
         debug(format("Updated config %s %s", getTimestamp(config.timestamp), txnId));
-        if (updateCount == 1) {
+        if (updateCount == CAPABILITY_SCORE) {
           info(format("Initial config #%03d", updateCount), stringify(deviceConfig));
         } else {
           info(format("Updated config #%03d", updateCount), changedLines(changes));
@@ -1821,6 +1942,8 @@ public class SequenceBase {
     sequenceValidationState.result = result;
     sequenceValidationState.summary = getTestSummary(description);
     sequenceValidationState.stage = getTestStage(description);
+    sequenceValidationState.capabilities = capabilityExceptions.keySet().stream()
+        .collect(Collectors.toMap(Capabilities::value, this::collectCapabilityResult));
     updateValidationState();
   }
 
@@ -1900,6 +2023,34 @@ public class SequenceBase {
     return receivedUpdates;
   }
 
+  protected void forCapability(Capabilities capability, Runnable action) {
+    try {
+      Exception was = capabilityExceptions.computeIfAbsent(capability, CapabilitySuccess::new);
+      ifTrueThen(was instanceof CapabilitySuccess, action);
+    } catch (Exception e) {
+      capabilityExceptions.put(capability, e);
+    }
+  }
+
+  /**
+   * Master list of test capabilities.
+   */
+  public enum Capabilities {
+    DEVICE_STATE("device_state"),
+    LOGGING("logging"),
+    ACKNOWLEDGE("acknowledge");
+
+    private final String value;
+
+    Capabilities(String value) {
+      this.value = value;
+    }
+
+    public String value() {
+      return this.value;
+    }
+  }
+
   static class CaptureMap extends HashMap<SubFolder, List<Map<String, Object>>> {
 
   }
@@ -1915,6 +2066,13 @@ public class SequenceBase {
 
     public AbortMessageLoop(String message, Exception e) {
       super(message, e);
+    }
+  }
+
+  private static class CapabilitySuccess extends RuntimeException {
+
+    public CapabilitySuccess(Capabilities capability) {
+      super("Capability functional");
     }
   }
 
@@ -1964,7 +2122,7 @@ public class SequenceBase {
         throw new IllegalStateException("Unexpected test method name");
       }
 
-      if (testResult == SequenceResult.PASS) {
+      if (testResult == PASS) {
         ValidateSchema annotation = description.getAnnotation(ValidateSchema.class);
         ifNotNullThen(annotation, a -> recordSchemaValidations(description));
       }
@@ -1982,7 +2140,7 @@ public class SequenceBase {
 
     @Override
     protected void succeeded(Description description) {
-      recordCompletion(SequenceResult.PASS, description, "Sequence complete");
+      recordCompletion(PASS, description, "Sequence complete");
     }
 
     @Override
@@ -1998,27 +2156,27 @@ public class SequenceBase {
       final String message;
       final SequenceResult failureType;
       if (e instanceof TestTimedOutException) {
-        waitingCondition.forEach(condition -> warning("while " + condition));
-        error(format("stage timeout %s at %s", waitingConditionPeek(), timeSinceStart()));
-        message = "timeout " + waitingConditionPeek();
-        failureType = SequenceResult.FAIL;
+        waitingCondition.forEach(condition -> warning("While " + condition));
+        error(format("stage timeout %s at %s", currentWaitingCondition(), timeSinceStart()));
+        message = "Timeout " + currentWaitingCondition();
+        failureType = FAIL;
       } else if (e instanceof AssumptionViolatedException) {
         message = e.getMessage();
-        failureType = SequenceResult.SKIP;
+        failureType = SKIP;
       } else {
         Throwable cause = e;
         while (cause.getCause() != null) {
           cause = cause.getCause();
         }
         message = friendlyStackTrace(cause);
-        failureType = SequenceResult.FAIL;
+        failureType = FAIL;
       }
       debug("exception message: " + friendlyStackTrace(e));
       trace("ending stack trace", stackTraceString(e));
       recordCompletion(failureType, description, message);
-      String action = failureType == SequenceResult.SKIP ? "skipped" : "failed";
+      String action = failureType == SKIP ? "skipped" : "failed";
       withRecordSequence(true, () -> recordSequence("Test " + action + ": " + message));
-      if (failureType != SequenceResult.SKIP) {
+      if (failureType != SKIP) {
         resetRequired = true;
         if (debugLogLevel()) {
           error("terminating test " + testName + " after " + timeSinceStart() + " "
