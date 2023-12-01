@@ -259,6 +259,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     if (subFolderRaw != null) {
       SubFolder subFolder = catchToElse(() -> SubFolder.fromValue(subFolderRaw), SubFolder.INVALID);
       if (!subFolder.value().equals(subFolderRaw)) {
+        debug("Coerced subFolder " + subFolderRaw + " to " + subFolder.value());
         attributesMap.put(SUBFOLDER_PROPERTY_KEY, subFolder.value());
       }
     }
@@ -266,6 +267,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     String subTypeRaw = attributesMap.get(SUBTYPE_PROPERTY_KEY);
     if (subTypeRaw != null) {
       SubType subType = catchToElse(() -> SubType.fromValue(subTypeRaw), SubType.INVALID);
+      debug("Coerced subFolder " + subTypeRaw + " to " + subType.value());
       if (!subType.value().equals(subTypeRaw)) {
         attributesMap.put(SUBTYPE_PROPERTY_KEY, subType.value());
       }
