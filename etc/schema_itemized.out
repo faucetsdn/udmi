@@ -1,21 +1,32 @@
-broken_config
-config_logging
-device_config_acked
-feature_enumeration
-gateway_proxy_events
-pointset_remove_point
-pointset_request_extraneous
-pointset_sample_rate
-state_make_model
-system_last_update
-system_last_update RESULT fail schemas event_pointset_stable STABLE 5/5 Schema violations found
-system_last_update RESULT pass schemas event_system_stable STABLE 5/5 All schema validations passed
-system_last_update RESULT pass schemas state_update_stable STABLE 5/5 All schema validations passed
-system_min_loglevel
-system_mode_restart
-too_much_state
-valid_serial_no
-valid_serial_no RESULT pass schemas event_pointset_alpha ALPHA 5/5 All schema validations passed
-valid_serial_no RESULT pass schemas event_system_alpha ALPHA 5/5 All schema validations passed
-valid_serial_no RESULT pass schemas state_update_alpha ALPHA 5/5 All schema validations passed
-writeback_success
+01 device_config_acked
+02 pointset_request_extraneous
+03 pointset_remove_point
+04 pointset_remove_point
+05 too_much_state
+06 feature_enumeration
+07 valid_serial_no RESULT pass schemas event_pointset_alpha ALPHA 5/5 All schema validations passed
+07 valid_serial_no RESULT pass schemas event_system_alpha ALPHA 5/5 All schema validations passed
+07 valid_serial_no RESULT pass schemas state_update_alpha ALPHA 5/5 All schema validations passed
+08 writeback_success
+09 writeback_success
+10 pointset_sample_rate
+11 system_mode_restart
+12 config_logging
+13 broken_config
+14 broken_config
+15 broken_config
+16 broken_config
+17 broken_config
+18 system_last_update RESULT fail schemas event_pointset_stable STABLE 5/5 Schema violations found
+18 system_last_update RESULT fail schemas state_update_stable STABLE 5/5 Schema violations found
+18 system_last_update RESULT pass schemas event_system_stable STABLE 5/5 All schema validations passed
+19 state_make_model
+23 valid_serial_no
+24 system_last_update
+25 system_min_loglevel
+26 system_min_loglevel
+30 gateway_proxy_events
+31 gateway_proxy_events
+35 gateway_proxy_events
+36 gateway_proxy_events
+40 device_config_acked

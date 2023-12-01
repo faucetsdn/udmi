@@ -119,7 +119,7 @@ while read -u 7 action test_name pubber_opts; do
     if [[ -s $SCHEMA_OUT ]]; then
         sed -e "s/^/$test_marker $test_name /" < $SCHEMA_OUT >> $SCHEMA_ITEMIZED
     else
-        echo $test_marker $test_name schema ok >> $SCHEMA_ITEMIZED
+        echo $test_marker $test_name >> $SCHEMA_ITEMIZED
     fi
 
 done 7< $INPUT_FILE
