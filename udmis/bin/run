@@ -72,8 +72,6 @@ if nslookup metadata.google.internal; then
     echo Configured with GCP service account $GCP_SERVICE_ACCOUNT
 fi
 
-gcloud config set account $GCP_SERVICE_ACCOUNT
-
 echo
 echo Final java env:
 env
@@ -81,4 +79,3 @@ echo
 
 # Run with exec to replace shell so java receives SIGTERM signal.
 exec java -jar $POD_JAR $POD_CONFIG
-
