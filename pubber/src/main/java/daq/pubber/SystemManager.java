@@ -3,6 +3,7 @@ package daq.pubber;
 import static com.google.udmi.util.GeneralUtils.catchOrElse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
@@ -13,6 +14,7 @@ import static java.util.Optional.ofNullable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.udmi.util.CleanDateFormat;
+import com.google.udmi.util.GeneralUtils;
 import java.io.File;
 import java.io.PrintStream;
 import java.time.Instant;
@@ -31,6 +33,7 @@ import udmi.schema.Metrics;
 import udmi.schema.Operation;
 import udmi.schema.Operation.SystemMode;
 import udmi.schema.PubberConfiguration;
+import udmi.schema.State;
 import udmi.schema.StateSystemHardware;
 import udmi.schema.StateSystemOperation;
 import udmi.schema.SystemConfig;
@@ -79,7 +82,7 @@ public class SystemManager extends ManagerBase {
   }
 
   private final List<Entry> logentries = new ArrayList<>();
-  private final SystemState systemState;
+  private final ExtraSystemState systemState;
   private final ManagerHost host;
   private int systemEventCount;
   private SystemConfig systemConfig;
@@ -94,7 +97,7 @@ public class SystemManager extends ManagerBase {
 
     info("Device start time is " + getTimestamp(DEVICE_START_TIME));
 
-    systemState = new SystemState();
+    systemState = new ExtraSystemState();
     systemState.operation = new StateSystemOperation();
 
     if (!isTrue(options.noLastStart)) {
@@ -107,6 +110,8 @@ public class SystemManager extends ManagerBase {
     systemState.operation.mode = SystemMode.INITIAL;
     systemState.serial_no = configuration.serialNo;
     systemState.last_config = new Date(0);
+
+    ifNotNullThen(options.extraField, value -> systemState.extra_field = value);
 
     updateState();
   }
@@ -295,5 +300,9 @@ public class SystemManager extends ManagerBase {
     logEntry.message = logMessage;
     logEntry.detail = detail;
     publishLogMessage(logEntry);
+  }
+
+  class ExtraSystemState extends SystemState {
+    public String extra_field;
   }
 }

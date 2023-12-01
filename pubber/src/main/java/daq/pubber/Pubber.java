@@ -44,6 +44,7 @@ import com.google.udmi.util.SiteModel.MetadataException;
 import daq.pubber.MqttPublisher.InjectedMessage;
 import daq.pubber.MqttPublisher.InjectedState;
 import daq.pubber.MqttPublisher.PublisherException;
+import daq.pubber.PointsetManager.ExtraPointsetEvent;
 import daq.pubber.PubSubClient.Bundle;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -1557,9 +1558,4 @@ public class Pubber extends ManagerBase implements ManagerHost {
     deviceManager.localLog(message, Level.TRACE, getTimestamp(), stackTraceString(e));
   }
 
-  static class ExtraPointsetEvent extends PointsetEvent {
-
-    // This extraField exists only to trigger schema parsing errors.
-    public Object extraField;
-  }
 }
