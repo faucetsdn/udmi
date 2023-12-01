@@ -1,7 +1,7 @@
 package com.google.bos.udmi.service.core;
 
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
-import static com.google.udmi.util.JsonUtil.convertToStrict;
+import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static com.google.udmi.util.MessageUpgrader.STATE_SCHEMA;
@@ -33,9 +33,17 @@ public class StateProcessor extends ProcessorBase {
 
   @Override
   protected void defaultHandler(Object originalMessage) {
+    MessageContinuation continuation = getContinuation(originalMessage);
+    Envelope envelope = continuation.getEnvelope();
+    envelope.subType = SubType.STATE;
+    envelope.subFolder = UPDATE;
+
+    reflectMessage(envelope, stringify(originalMessage));
+
     Object upgradedMessage = new MessageUpgrader(STATE_SCHEMA, originalMessage).upgrade();
-    StateUpdate stateMessage = convertToStrict(StateUpdate.class, upgradedMessage);
-    shardStateUpdate(getContinuation(originalMessage), stateMessage);
+    StateUpdate stateMessage = convertTo(StateUpdate.class, upgradedMessage);
+    shardStateUpdate(continuation, envelope, stateMessage);
+
     updateLastStart(getContinuation(originalMessage).getEnvelope(), stateMessage);
   }
 
@@ -49,11 +57,7 @@ public class StateProcessor extends ProcessorBase {
     registerHandler(StateUpdate.class, this::stateHandler);
   }
 
-  private void shardStateUpdate(MessageContinuation continuation, StateUpdate message) {
-    Envelope envelope = continuation.getEnvelope();
-    envelope.subType = SubType.STATE;
-    envelope.subFolder = UPDATE;
-    reflectMessage(envelope, stringify(message));
+  private void shardStateUpdate(MessageContinuation continuation, Envelope envelope, StateUpdate message) {
     continuation.publish(message);
     String originalTransaction = envelope.transactionId;
     AtomicInteger txnSuffix = new AtomicInteger();
@@ -80,7 +84,8 @@ public class StateProcessor extends ProcessorBase {
   }
 
   private void stateHandler(StateUpdate message) {
-    shardStateUpdate(getContinuation(message), message);
+    MessageContinuation continuation = getContinuation(message);
+    shardStateUpdate(continuation, continuation.getEnvelope(), message);
   }
 
 }
