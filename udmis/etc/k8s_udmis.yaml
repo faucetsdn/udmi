@@ -45,18 +45,15 @@ spec:
             configMapKeyRef:
               name: config
               key: GCP_IOT_OPTIONS
-        - name: PIPE_SHUNT
-          valueFrom:
-            configMapKeyRef:
-              name: config
-              key: PIPE_SHUNT
-              optional: true
       volumes:
       - name: secret-volume
         projected:
           sources:
           - secret:
               name: clearblade.json
+          - secret:
+              name: shunt-config.json
+              optional: true
       - name: tmp
         emptyDir:
           medium: Memory

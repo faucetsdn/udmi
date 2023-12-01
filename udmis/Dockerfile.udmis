@@ -20,5 +20,6 @@ ADD bin/ bin/
 ADD var/ var/
 
 ENV CLEARBLADE_CONFIGURATION=/udmi/clearblade.json
+ENV SHUNT_CONFIGURATION=/udmi/shunt-config.json
 
 CMD ["/root/bin/run", "var/prod_pod.json"]
