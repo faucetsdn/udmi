@@ -257,7 +257,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   private void sanitizeAttributeMap(Map<String, String> attributesMap) {
     String subFolderRaw = attributesMap.get(SUBFOLDER_PROPERTY_KEY);
     if (subFolderRaw != null) {
-      SubFolder subFolder = catchToElse(() -> SubFolder.fromValue(subFolderRaw), SubFolder.UNKNOWN);
+      SubFolder subFolder = catchToElse(() -> SubFolder.fromValue(subFolderRaw), SubFolder.INVALID);
       if (!subFolder.value().equals(subFolderRaw)) {
         attributesMap.put(SUBFOLDER_PROPERTY_KEY, subFolder.value());
       }
@@ -265,7 +265,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
 
     String subTypeRaw = attributesMap.get(SUBTYPE_PROPERTY_KEY);
     if (subTypeRaw != null) {
-      SubType subType = catchToElse(() -> SubType.fromValue(subTypeRaw), SubType.UNKNOWN);
+      SubType subType = catchToElse(() -> SubType.fromValue(subTypeRaw), SubType.INVALID);
       if (!subType.value().equals(subTypeRaw)) {
         attributesMap.put(SUBTYPE_PROPERTY_KEY, subType.value());
       }
