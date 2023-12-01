@@ -46,6 +46,7 @@ import daq.pubber.MqttPublisher.InjectedState;
 import daq.pubber.MqttPublisher.PublisherException;
 import daq.pubber.PointsetManager.ExtraPointsetEvent;
 import daq.pubber.PubSubClient.Bundle;
+import daq.pubber.SystemManager.ExtraSystemState;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.OutputStream;
@@ -136,7 +137,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
   private static final ImmutableMap<Class<?>, String> MESSAGE_TOPIC_SUFFIX_MAP =
       new ImmutableMap.Builder<Class<?>, String>()
           .put(State.class, MqttDevice.STATE_TOPIC)
-          .put(SystemState.class, MqttDevice.STATE_TOPIC) // Used for badState option
+          .put(ExtraSystemState.class, MqttDevice.STATE_TOPIC) // Used for badState option
           .put(SystemEvent.class, getEventsSuffix("system"))
           .put(PointsetEvent.class, getEventsSuffix("pointset"))
           .put(ExtraPointsetEvent.class, getEventsSuffix("pointset"))
