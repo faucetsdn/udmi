@@ -57,7 +57,8 @@ public class StateProcessor extends ProcessorBase {
     registerHandler(StateUpdate.class, this::stateHandler);
   }
 
-  private void shardStateUpdate(MessageContinuation continuation, Envelope envelope, StateUpdate message) {
+  private void shardStateUpdate(MessageContinuation continuation, Envelope envelope,
+      StateUpdate message) {
     continuation.publish(message);
     String originalTransaction = envelope.transactionId;
     AtomicInteger txnSuffix = new AtomicInteger();
@@ -85,7 +86,9 @@ public class StateProcessor extends ProcessorBase {
 
   private void stateHandler(StateUpdate message) {
     MessageContinuation continuation = getContinuation(message);
-    shardStateUpdate(continuation, continuation.getEnvelope(), message);
+    Envelope envelope = continuation.getEnvelope();
+    reflectMessage(envelope, stringify(message));
+    shardStateUpdate(continuation, envelope, message);
   }
 
 }
