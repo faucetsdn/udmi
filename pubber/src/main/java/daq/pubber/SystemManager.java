@@ -14,7 +14,6 @@ import static java.util.Optional.ofNullable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.udmi.util.CleanDateFormat;
-import com.google.udmi.util.GeneralUtils;
 import java.io.File;
 import java.io.PrintStream;
 import java.time.Instant;
@@ -33,7 +32,6 @@ import udmi.schema.Metrics;
 import udmi.schema.Operation;
 import udmi.schema.Operation.SystemMode;
 import udmi.schema.PubberConfiguration;
-import udmi.schema.State;
 import udmi.schema.StateSystemHardware;
 import udmi.schema.StateSystemOperation;
 import udmi.schema.SystemConfig;
@@ -111,7 +109,7 @@ public class SystemManager extends ManagerBase {
     systemState.serial_no = configuration.serialNo;
     systemState.last_config = new Date(0);
 
-    ifNotNullThen(options.extraField, value -> systemState.extra_field = value);
+    ifNotNullThen(options.extraField, value -> systemState.extraField = value);
 
     updateState();
   }
@@ -303,6 +301,6 @@ public class SystemManager extends ManagerBase {
   }
 
   class ExtraSystemState extends SystemState {
-    public String extra_field;
+    public String extraField;
   }
 }
