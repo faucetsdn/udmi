@@ -33,6 +33,7 @@ import static java.util.stream.Collectors.toMap;
 import static udmi.schema.BlobsetConfig.SystemBlobsets.IOT_ENDPOINT_CONFIG;
 import static udmi.schema.EndpointConfiguration.Protocol.MQTT;
 
+import com.google.api.services.cloudiot.v1.model.DeviceState;
 import com.google.common.collect.ImmutableMap;
 import com.google.daq.mqtt.util.CatchingScheduledThreadPoolExecutor;
 import com.google.udmi.util.GeneralUtils;
@@ -491,6 +492,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
       publishSynchronousState();
     } else if (checkTarget instanceof SystemState) {
       deviceState.system = (SystemState) checkValue;
+      ifTrueThen(options.dupeState, () -> sendDupeState());
     } else if (checkTarget instanceof PointsetState) {
       deviceState.pointset = (PointsetState) checkValue;
     } else if (checkTarget instanceof LocalnetState) {
@@ -502,6 +504,14 @@ public class Pubber extends ManagerBase implements ManagerHost {
           "Unrecognized update type " + checkTarget.getClass().getSimpleName());
     }
     markStateDirty();
+  }
+
+  private void sendDupeState() {
+    State dupeState = new State();
+    dupeState.system = deviceState.system;
+    dupeState.timestamp = deviceState.timestamp;
+    dupeState.version = deviceState.version;
+    publishStateMessage(dupeState);
   }
 
   @Override
@@ -1416,6 +1426,15 @@ public class Pubber extends ManagerBase implements ManagerHost {
   }
 
   private void publishStateMessage(Object stateToSend) {
+    try {
+      stateLock.lock();
+      publishStateMessageRaw(stateToSend);
+    } finally {
+      stateLock.unlock();
+    }
+  }
+
+  private void publishStateMessageRaw(Object stateToSend) {
     if (configLatch == null || configLatch.getCount() > 0) {
       warn("Dropping state update until config received...");
       return;
