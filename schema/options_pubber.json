@@ -76,6 +76,9 @@
     "badState": {
       "type": "boolean"
     },
+    "dupeState": {
+      "type": "boolean"
+    },
     "noLog": {
       "type": "boolean"
     },
