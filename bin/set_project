@@ -23,9 +23,9 @@ cd $ROOT
 echo Configuring for GCP project $gcp_project...
 
 current_project=$(gcloud config get project)
-quota_project=$(jq -r .quota_project_id $HOME/.config/gcloud/application_default_credentials.json)
+quota_project=$(jq -r .quota_project_id $HOME/.config/gcloud/application_default_credentials.json) || true
 
-if [[ $quota_project != $gcp_project ]]; then
+if [[ $quota_project != $gcp_project && -n $quota_project ]]; then
     echo Setting gcloud quota project to $gcp_project
     gcloud auth application-default set-quota-project $gcp_project
 fi

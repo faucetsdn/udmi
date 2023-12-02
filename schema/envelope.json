@@ -46,6 +46,7 @@
       "enum": [
         "udmi",
         "update",
+        "invalid",
         "error",
         "cloud",
         "discovery",
@@ -62,6 +63,7 @@
     },
     "subType": {
       "enum": [
+        "invalid",
         "event",
         "command",
         "config",
