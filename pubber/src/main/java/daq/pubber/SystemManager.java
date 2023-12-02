@@ -3,6 +3,7 @@ package daq.pubber;
 import static com.google.udmi.util.GeneralUtils.catchOrElse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
@@ -79,7 +80,7 @@ public class SystemManager extends ManagerBase {
   }
 
   private final List<Entry> logentries = new ArrayList<>();
-  private final SystemState systemState;
+  private final ExtraSystemState systemState;
   private final ManagerHost host;
   private int systemEventCount;
   private SystemConfig systemConfig;
@@ -94,7 +95,7 @@ public class SystemManager extends ManagerBase {
 
     info("Device start time is " + getTimestamp(DEVICE_START_TIME));
 
-    systemState = new SystemState();
+    systemState = new ExtraSystemState();
     systemState.operation = new StateSystemOperation();
 
     if (!isTrue(options.noLastStart)) {
@@ -107,6 +108,8 @@ public class SystemManager extends ManagerBase {
     systemState.operation.mode = SystemMode.INITIAL;
     systemState.serial_no = configuration.serialNo;
     systemState.last_config = new Date(0);
+
+    ifNotNullThen(options.extraField, value -> systemState.extraField = value);
 
     updateState();
   }
@@ -295,5 +298,9 @@ public class SystemManager extends ManagerBase {
     logEntry.message = logMessage;
     logEntry.detail = detail;
     publishLogMessage(logEntry);
+  }
+
+  class ExtraSystemState extends SystemState {
+    public String extraField;
   }
 }

@@ -1,6 +1,7 @@
 package com.google.bos.udmi.service.messaging.impl;
 
 import static com.google.udmi.util.Common.DEVICE_ID_KEY;
+import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
 import static com.google.udmi.util.GeneralUtils.decodeBase64;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -35,15 +36,6 @@ import udmi.schema.Envelope.SubType;
  */
 public class TraceMessagePipe extends MessageBase {
 
-  private static final String DEVICES_DIR_NAME = "devices";
-  private static final Map<String, String> FOLDER_HACKS = new HashMap<>();
-
-  static {
-    // Some egregious hacks for dealing with legacy corner-cases data streams.
-    FOLDER_HACKS.put("discover", "discovery");
-    FOLDER_HACKS.put("", null);
-  }
-
   private final Map<File, AtomicInteger> traceCounts = new HashMap<>();
   private File traceOutFile;
 
@@ -62,33 +54,21 @@ public class TraceMessagePipe extends MessageBase {
   private void consumeTrace(File file) {
     try {
       Map<String, Object> traceBundle = asMap(file);
-      Envelope envelope = makeEnvelope(traceBundle);
+      Map<String, String> envelopeMap = makeEnvelope(traceBundle);
       Map<String, Object> message = asMap(decodeBase64((String) traceBundle.get("data")));
-      receiveMessage(envelope, message);
+      receiveMessage(envelopeMap, message);
     } catch (Exception e) {
       e.printStackTrace();
     }
   }
 
-  @Nullable
-  private SubFolder getBundleSubfolder(Map<String, String> attributes) {
-    String subFolder = attributes.get("subFolder");
-    return ifNotNullGet(FOLDER_HACKS.getOrDefault(subFolder, subFolder), SubFolder::fromValue);
-  }
-
-  private Envelope makeEnvelope(Map<String, Object> bundle) {
+  private Map<String, String> makeEnvelope(Map<String, Object> bundle) {
     try {
       @SuppressWarnings("unchecked")
       Map<String, String> attributes = (Map<String, String>) bundle.get("attributes");
-      Envelope envelope = new Envelope();
-      envelope.subFolder = getBundleSubfolder(attributes);
-      envelope.subType = ifNotNullGet(attributes.get("subType"), SubType::fromValue);
-      envelope.deviceId = attributes.get(DEVICE_ID_KEY);
-      envelope.projectId = attributes.get("projectId");
-      envelope.deviceRegistryId = attributes.get("deviceRegistryId");
-      envelope.publishTime = ifNotNullGet(ofNullable(attributes.get(Common.PUBLISH_TIME_KEY))
-          .orElse((String) bundle.get("publish_time")), JsonUtil::getDate);
-      return envelope;
+      attributes.put(PUBLISH_TIME_KEY,
+          ofNullable(attributes.get(PUBLISH_TIME_KEY)).orElse((String) bundle.get("publish_time")));
+      return attributes;
     } catch (Exception e) {
       throw new RuntimeException("While extracting envelope from bundle", e);
     }

@@ -319,20 +319,28 @@ public class GeneralUtils {
     return alternate.get();
   }
 
-  public static boolean catchToFalse(Supplier<Boolean> provider) {
+  public static <T> T catchToElse(Supplier<T> provider, Function<Exception, T> alternate) {
     try {
       return provider.get();
     } catch (Exception e) {
-      return false;
+      return alternate.apply(e);
     }
   }
 
-  public static <T> T catchToNull(Supplier<T> provider) {
+  public static <T> T catchToElse(Supplier<T> provider, T alternate) {
     try {
       return provider.get();
     } catch (Exception e) {
-      return null;
+      return alternate;
     }
+  }
+
+  public static boolean catchToFalse(Supplier<Boolean> provider) {
+    return catchToElse(provider, false);
+  }
+
+  public static <T> T catchToNull(Supplier<T> provider) {
+    return catchToElse(provider, (T) null);
   }
 
   public static <U> U mapReplace(U previous, U added) {

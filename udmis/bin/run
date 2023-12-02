@@ -44,8 +44,18 @@ export UDMI_PREFIX=
 if [[ -n $UDMI_NAMESPACE ]]; then
     UDMI_PREFIX=${UDMI_NAMESPACE}~
     echo Using UDMI_PREFIX $UDMI_PREFIX
+else
+    echo No UDMI_NAMESPACE defined, so no UDMI_PREFIX
 fi
 
+if [[ -n $SHUNT_CONFIGURATION && -s $SHUNT_CONFIGURATION ]]; then
+    export SHUNT_NAME=${UDMI_PREFIX}$(jq -r .name $SHUNT_CONFIGURATION)
+    export SHUNT_FROM=$(jq -r .from $SHUNT_CONFIGURATION)
+    export SHUNT_MORF=$(jq -r .morf $SHUNT_CONFIGURATION)
+    echo Configured udmi shunt $SHUNT_NAME between $SHUNT_FROM and $SHUNT_MORF
+else
+    echo No SHUNT_CONFIGURATION defined, so no SHUNT_NAME configured.
+fi
 
 if [[ -n $CLEARBLADE_PROJECT ]]; then
     echo CLEARBLADE_PROJECT defined, would be clobbered by value from CLEARBLADE_CONFIGURATION

@@ -9,7 +9,7 @@
         "recv_id": "from",
         "send_id": "to"
       },
-      "to": {
+      "morf": {
         "recv_id": "mark",
         "send_id": "mend"
       }

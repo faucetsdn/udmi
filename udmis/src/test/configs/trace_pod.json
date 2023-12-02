@@ -16,7 +16,7 @@
         "recv_id": "../tests/traces/simple/devices",
         "send_id": "out/simple.trace"
       },
-      "to": {
+      "morf": {
         "recv_id": "mark",
         "send_id": "mend"
       }

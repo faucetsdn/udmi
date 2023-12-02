@@ -107,8 +107,7 @@ public class TraceMessagePipeTest {
 
     List<String> errors =
         consumed.stream().filter(bundle -> bundle.envelope.subFolder == SubFolder.ERROR)
-            .map(bundle -> (String) bundle.message)
-            .collect(Collectors.toList());
+            .map(bundle -> (String) bundle.message).toList();
     assertEquals(0, errors.size(), "expected message errors");
 
     Set<String> devices =
