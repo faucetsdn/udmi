@@ -142,7 +142,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
           .put(SystemEvent.class, getEventsSuffix("system"))
           .put(PointsetEvent.class, getEventsSuffix("pointset"))
           .put(ExtraPointsetEvent.class, getEventsSuffix("pointset"))
-          .put(InjectedMessage.class, getEventsSuffix("invalid"))
+          .put(InjectedMessage.class, getEventsSuffix("racoon"))
           .put(InjectedState.class, MqttDevice.STATE_TOPIC)
           .put(DiscoveryEvent.class, getEventsSuffix("discovery"))
           .build();
