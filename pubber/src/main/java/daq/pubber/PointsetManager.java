@@ -16,7 +16,6 @@ import static udmi.schema.Category.POINTSET_POINT_INVALID_VALUE;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import daq.pubber.Pubber.ExtraPointsetEvent;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -27,6 +26,7 @@ import udmi.schema.PointPointsetEvent;
 import udmi.schema.PointPointsetModel;
 import udmi.schema.PointPointsetState;
 import udmi.schema.PointsetConfig;
+import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetModel;
 import udmi.schema.PointsetState;
 import udmi.schema.PubberConfiguration;
@@ -262,4 +262,9 @@ public class PointsetManager extends ManagerBase {
     host.publish(pointsetEvent);
   }
 
+  static class ExtraPointsetEvent extends PointsetEvent {
+
+    // This extraField exists only to trigger schema parsing errors.
+    public Object extraField;
+  }
 }

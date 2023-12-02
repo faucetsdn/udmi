@@ -62,8 +62,6 @@ fi
 echo Using GCP project $GCP_PROJECT
 echo Using udmi namespace $UDMI_NAMESPACE
 
-LIBFILE=build/libs/${target}-1.0-SNAPSHOT-all.jar
-
 current_user=$USER@$HOSTNAME
 
 revparse=`git rev-parse HEAD`
@@ -103,6 +101,8 @@ if [[ -n $prep ]]; then
 
     bin/build
 
+    LIBFILE=build/libs/*-1.0-SNAPSHOT-all.jar
+
     build_time=`date --utc -Imin -r $LIBFILE`
     cat <<EOF > var/deployed_version.json
 {
@@ -128,7 +128,8 @@ if [[ -n $push ]]; then
     for file in $TEMPLATES; do
         cp etc/$file tmp/$file
         sed -i tmp/$file \
-            -e "s^@IMAGE-$target@^$ihash^" \
+            -e "s^@IMAGE@^$ihash^" \
+            -e "s^@TARGET@^$target^" \
             -e "s^@UDMI_NAMESPACE@^$UDMI_NAMESPACE^" \
             -e "s^@GCP_PROJECT@^$GCP_PROJECT^"
         if diff etc/$file tmp/$file; then

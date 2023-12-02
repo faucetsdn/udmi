@@ -116,21 +116,21 @@ public class UdmiServicePodTest {
     EndpointConfiguration reversedFrom =
         combineConfig(podConfig.flow_defaults, reverseFlow(podConfig.bridges.get("test").from));
     final MessageDispatcherImpl fromDispatcher = MessagePipeTestBase.getDispatcherFor(reversedFrom);
-    EndpointConfiguration reversedTo =
-        combineConfig(podConfig.flow_defaults, reverseFlow(podConfig.bridges.get("test").to));
-    final MessageDispatcherImpl toDispatcher = MessagePipeTestBase.getDispatcherFor(reversedTo);
+    EndpointConfiguration reversedMorf =
+        combineConfig(podConfig.flow_defaults, reverseFlow(podConfig.bridges.get("test").morf));
+    final MessageDispatcherImpl morfDispatcher = MessagePipeTestBase.getDispatcherFor(reversedMorf);
 
     CompletableFuture<LocalnetModel> received = new CompletableFuture<>();
     fromDispatcher.registerHandler(LocalnetModel.class, received::complete);
     BlockingQueue<Object> defaulted = new LinkedBlockingQueue<>();
-    toDispatcher.registerHandler(Object.class, defaulted::add);
+    morfDispatcher.registerHandler(Object.class, defaulted::add);
 
     pod.activate();
     fromDispatcher.activate();
-    toDispatcher.activate();
+    morfDispatcher.activate();
 
     fromDispatcher.publish(new StateUpdate());
-    toDispatcher.publish(new LocalnetModel());
+    morfDispatcher.publish(new LocalnetModel());
 
     Object polled = defaulted.poll(RECEIVE_TIMEOUT_SEC, TimeUnit.SECONDS);
     assertTrue(polled instanceof StateUpdate, "expected pointset state in default");
