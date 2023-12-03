@@ -61,9 +61,9 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
-import com.google.udmi.util.DiffEntry;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.util.MessagePublisher.QuerySpeed;
 import com.google.daq.mqtt.util.ObjectDiffEngine;
@@ -73,6 +73,7 @@ import com.google.daq.mqtt.validator.Validator;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
 import com.google.udmi.util.CleanDateFormat;
 import com.google.udmi.util.Common;
+import com.google.udmi.util.DiffEntry;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
@@ -261,6 +262,8 @@ public class SequenceBase {
   private final Stack<String> waitingCondition = new Stack<>();
   private final SortedMap<String, List<Entry>> validationResults = new TreeMap<>();
   private final Map<Capabilities, Exception> capabilityExceptions = new ConcurrentHashMap<>();
+  private final Set<String> SYSTEM_STATE_CHANGES = ImmutableSet.of("timestamp",
+      "system.last_config", "system.status.timestamp");
   @Rule
   public Timeout globalTimeout = new Timeout(NORM_TIMEOUT_MS, TimeUnit.MILLISECONDS);
   @Rule
@@ -1665,12 +1668,14 @@ public class SequenceBase {
   }
 
   private void validateIntermediateState(State convertedState, List<DiffEntry> stateChanges) {
-    List<DiffEntry> badChanges = stateChanges.stream().filter(not(this::changeAllowed)).toList();
-    checkState(badChanges.isEmpty(),"Disallowed state changes: " + CSV_JOINER.join(badChanges));
+    List<String> badChanges = stateChanges.stream()
+        .filter(not(this::changeAllowed)).map(DiffEntry::key).toList();
+    checkState(badChanges.isEmpty(), "Disallowed state changes: " + CSV_JOINER.join(badChanges));
   }
 
   private boolean changeAllowed(DiffEntry change) {
-    return false;
+    String key = change.key();
+    return SYSTEM_STATE_CHANGES.stream().filter(key::startsWith).anyMatch();
   }
 
   private List<DiffEntry> updateDeviceConfig(Config config) {
