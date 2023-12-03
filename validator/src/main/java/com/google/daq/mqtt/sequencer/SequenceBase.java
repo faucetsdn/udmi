@@ -227,6 +227,8 @@ public class SequenceBase {
   private static final String NO_EXTRA_DETAIL = "";
   private static final Duration LOG_WAIT_TIME = Duration.ofSeconds(30);
   private static final Duration DEFAULT_WAIT_TIMEOUT = Duration.ofHours(30);
+  private static final Set<String> SYSTEM_STATE_CHANGES = ImmutableSet.of("timestamp",
+      "system.last_config", "system.status.timestamp");
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -262,8 +264,6 @@ public class SequenceBase {
   private final Stack<String> waitingCondition = new Stack<>();
   private final SortedMap<String, List<Entry>> validationResults = new TreeMap<>();
   private final Map<Capabilities, Exception> capabilityExceptions = new ConcurrentHashMap<>();
-  private final Set<String> SYSTEM_STATE_CHANGES = ImmutableSet.of("timestamp",
-      "system.last_config", "system.status.timestamp");
   @Rule
   public Timeout globalTimeout = new Timeout(NORM_TIMEOUT_MS, TimeUnit.MILLISECONDS);
   @Rule
@@ -1675,7 +1675,7 @@ public class SequenceBase {
 
   private boolean changeAllowed(DiffEntry change) {
     String key = change.key();
-    return SYSTEM_STATE_CHANGES.stream().filter(key::startsWith).anyMatch();
+    return SYSTEM_STATE_CHANGES.stream().anyMatch(key::startsWith);
   }
 
   private List<DiffEntry> updateDeviceConfig(Config config) {
