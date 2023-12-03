@@ -74,8 +74,8 @@ public class GeneralUtils {
     return args;
   }
 
-  public static String changedLines(List<String> nullableChanges) {
-    List<String> changes = ofNullable(nullableChanges).orElse(ImmutableList.of());
+  public static String changedLines(List<DiffEntry> nullableChanges) {
+    List<DiffEntry> changes = ofNullable(nullableChanges).orElse(ImmutableList.of());
     String terminator = changes.size() == 0 ? "." : ":";
     String header = format("Changed %d fields%s%s", changes.size(), terminator, SEPARATOR);
     return (header + INDENTED_LINES.join(changes)).trim();

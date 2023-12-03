@@ -3,6 +3,7 @@ package com.google.daq.mqtt.sequencer;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Predicates.not;
 import static com.google.common.base.Strings.emptyToNull;
 import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
 import static com.google.daq.mqtt.util.IotReflectorClient.REFLECTOR_PREFIX;
@@ -14,6 +15,7 @@ import static com.google.udmi.util.Common.DEVICE_ID_KEY;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
 import static com.google.udmi.util.Common.GATEWAY_ID_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
+import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.changedLines;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -61,6 +63,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
+import com.google.udmi.util.DiffEntry;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.util.MessagePublisher.QuerySpeed;
 import com.google.daq.mqtt.util.ObjectDiffEngine;
@@ -197,7 +200,7 @@ public class SequenceBase {
   private static final int LOG_TIMEOUT_SEC = 10;
   private static final long ONE_SECOND_MS = 1000;
   private static final int EXIT_CODE_PRESERVE = -9;
-  private static final String SYSTEM_TESTING_MARKER = " `system.testing";
+  private static final String SYSTEM_TESTING_MARKER = "system.testing";
   private static final BiMap<SequenceResult, Level> RESULT_LEVEL_MAP = ImmutableBiMap.of(
       SequenceResult.START, Level.INFO,
       SKIP, Level.WARNING,
@@ -1138,8 +1141,8 @@ public class SequenceBase {
       String header = format("Update config%s: ", suffix);
       debug(header + getTimestamp(deviceConfig.timestamp));
       recordRawMessage(deviceConfig, LOCAL_CONFIG_UPDATE);
-      List<String> allDiffs = SENT_CONFIG_DIFFERNATOR.computeChanges(deviceConfig);
-      List<String> filteredDiffs = filterTesting(allDiffs);
+      List<DiffEntry> allDiffs = SENT_CONFIG_DIFFERNATOR.computeChanges(deviceConfig);
+      List<DiffEntry> filteredDiffs = filterTesting(allDiffs);
       if (!filteredDiffs.isEmpty()) {
         recordSequence(header);
         filteredDiffs.forEach(this::recordBullet);
@@ -1399,6 +1402,10 @@ public class SequenceBase {
     }
   }
 
+  private void recordBullet(DiffEntry step) {
+    recordBullet(step.toString());
+  }
+
   private void recordBullet(String step) {
     if (recordSequence) {
       info("Device config " + step);
@@ -1608,7 +1615,7 @@ public class SequenceBase {
           error("Shouldn't be seeing this!");
           return;
         }
-        List<String> changes = updateDeviceConfig(config);
+        List<DiffEntry> changes = updateDeviceConfig(config);
         debug(format("Updated config %s %s", getTimestamp(config.timestamp), txnId));
         if (updateCount == CAPABILITY_SCORE) {
           info(format("Initial config #%03d", updateCount), stringify(deviceConfig));
@@ -1634,12 +1641,13 @@ public class SequenceBase {
         }
         checkState(deviceSupportsState(), "Received state update with no-state device");
         boolean deltaState = RECV_STATE_DIFFERNATOR.isInitialized();
-        List<String> stateChanges = RECV_STATE_DIFFERNATOR.computeChanges(converted);
+        List<DiffEntry> stateChanges = RECV_STATE_DIFFERNATOR.computeChanges(converted);
         Instant start = ofNullable(convertedState.timestamp).orElseGet(Date::new).toInstant();
         long delta = Duration.between(start, Instant.now()).getSeconds();
         debug(format("Updated state after %ds %s %s", delta, timestamp, txnId));
         if (deltaState) {
           info(format("Updated state #%03d", updateCount), changedLines(stateChanges));
+          validateIntermediateState(convertedState, stateChanges);
         } else {
           info(format("Initial state #%03d", updateCount), stringify(converted));
         }
@@ -1656,7 +1664,16 @@ public class SequenceBase {
     }
   }
 
-  private List<String> updateDeviceConfig(Config config) {
+  private void validateIntermediateState(State convertedState, List<DiffEntry> stateChanges) {
+    List<DiffEntry> badChanges = stateChanges.stream().filter(not(this::changeAllowed)).toList();
+    checkState(badChanges.isEmpty(),"Disallowed state changes: " + CSV_JOINER.join(badChanges));
+  }
+
+  private boolean changeAllowed(DiffEntry change) {
+    return false;
+  }
+
+  private List<DiffEntry> updateDeviceConfig(Config config) {
     if (deviceConfig == null) {
       return null;
     }
@@ -1731,8 +1748,8 @@ public class SequenceBase {
   /**
    * Filter out any testing-oriented messages, since they should not impact behavior.
    */
-  private List<String> filterTesting(List<String> allDiffs) {
-    return allDiffs.stream().filter(message -> !message.contains(SYSTEM_TESTING_MARKER))
+  private List<DiffEntry> filterTesting(List<DiffEntry> allDiffs) {
+    return allDiffs.stream().filter(message -> !message.key().startsWith(SYSTEM_TESTING_MARKER))
         .collect(Collectors.toList());
   }
 
