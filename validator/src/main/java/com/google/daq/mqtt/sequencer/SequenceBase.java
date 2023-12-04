@@ -267,6 +267,8 @@ public class SequenceBase {
   private final Stack<String> waitingCondition = new Stack<>();
   private final SortedMap<String, List<Entry>> validationResults = new TreeMap<>();
   private final Map<Capabilities, Exception> capabilityExceptions = new ConcurrentHashMap<>();
+  private final Set<String> allowedDeviceStateChanges = new HashSet<>();
+
   @Rule
   public Timeout globalTimeout = new Timeout(NORM_TIMEOUT_MS, TimeUnit.MILLISECONDS);
   @Rule
@@ -706,6 +708,7 @@ public class SequenceBase {
     assumeTrue("Feature bucket not enabled", isBucketEnabled(testBucket));
 
     assertTrue("exceptions map should be empty", capabilityExceptions.isEmpty());
+    assertTrue("allowed changes map should be empty", allowedDeviceStateChanges.isEmpty());
 
     if (!deviceSupportsState()) {
       boolean featureDisabled = ifNotNullGet(testDescription.getAnnotation(Feature.class),
@@ -1706,7 +1709,13 @@ public class SequenceBase {
 
   private boolean changeAllowed(DiffEntry change) {
     String key = change.key();
-    return SYSTEM_STATE_CHANGES.stream().anyMatch(key::startsWith);
+    return SYSTEM_STATE_CHANGES.stream().anyMatch(key::startsWith) ||
+        allowedDeviceStateChanges.stream().anyMatch(key::startsWith);
+  }
+
+  protected void allowDeviceStateChange(String changePrefix) {
+    debug("Allowing device state change: " + changePrefix);
+    allowedDeviceStateChanges.add(changePrefix);
   }
 
   private List<DiffEntry> updateDeviceConfig(Config config) {

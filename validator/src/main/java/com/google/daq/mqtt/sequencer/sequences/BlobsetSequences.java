@@ -18,6 +18,7 @@ import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
 import java.util.Date;
 import java.util.HashMap;
+import org.junit.Before;
 import org.junit.Test;
 import udmi.schema.BlobBlobsetConfig;
 import udmi.schema.BlobBlobsetConfig.BlobPhase;
@@ -43,6 +44,11 @@ public class BlobsetSequences extends SequenceBase {
   private static final String ENDPOINT_CONFIG_CLIENT_ID =
       "projects/%s/locations/%s/registries/%s/devices/%s";
   private static final String BOGUS_ENDPOINT_HOSTNAME = "twiddily.fiddily.fog";
+
+  @Before
+  public void setupExpectedParameters() {
+    allowDeviceStateChange("blobset.");
+  }
 
   private String generateEndpointConfigClientId(String registryId) {
     return String.format(

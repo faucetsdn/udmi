@@ -24,6 +24,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
+import org.junit.Before;
 import org.junit.Test;
 import udmi.schema.Level;
 import udmi.schema.PointPointsetConfig;
@@ -39,6 +40,11 @@ public class PointsetSequences extends PointsetBase {
   private static final String EXTRANEOUS_POINT = "extraneous_point";
   private static final int DEFAULT_SAMPLE_RATE_SEC = 10;
   private static final String POINTS_MAP_PATH = "pointset.points";
+
+  @Before
+  public void setupExpectedParameters() {
+    allowDeviceStateChange("pointset.");
+  }
 
   private boolean isErrorState(PointPointsetState pointState) {
     return ofNullable(catchToNull(() -> pointState.status.level)).orElse(Level.INFO.value())
