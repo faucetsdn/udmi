@@ -164,6 +164,7 @@ public class SequenceBase {
   public static final String SCHEMA_BUCKET = "schemas";
   public static final int SCHEMA_SCORE = 5;
   public static final int CAPABILITY_SCORE = 1;
+  public static final String STATUS_LEVEL_VIOLATION = "STATUS_LEVEL";
   private static final int FUNCTIONS_VERSION_BETA = 11;
   private static final int FUNCTIONS_VERSION_ALPHA = FUNCTIONS_VERSION_BETA;
   private static final long CONFIG_BARRIER_MS = 1000;
@@ -232,6 +233,7 @@ public class SequenceBase {
   private static final Duration DEFAULT_LOOP_TIMEOUT = Duration.ofHours(30);
   private static final Set<String> SYSTEM_STATE_CHANGES = ImmutableSet.of("timestamp",
       "system.last_config", "system.status");
+  public static final String DEVICE_STATE_SCHEMA = "device_state";
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -266,6 +268,7 @@ public class SequenceBase {
   private final Queue<Entry> logEntryQueue = new LinkedBlockingDeque<>();
   private final Stack<String> waitingCondition = new Stack<>();
   private final SortedMap<String, List<Entry>> validationResults = new TreeMap<>();
+  private final Map<String, String> deviceStateViolations = new ConcurrentHashMap<>();
   private final Map<Capabilities, Exception> capabilityExceptions = new ConcurrentHashMap<>();
   private final Set<String> allowedDeviceStateChanges = new HashSet<>();
 
@@ -857,6 +860,12 @@ public class SequenceBase {
                 collectSchemaResult(description, schemaName, FAIL, result.detail));
           }
         });
+
+    SequenceResult result = deviceStateViolations.isEmpty() ? PASS : FAIL;
+    String message = result == PASS
+        ? "Only expected device state changes observed"
+        : "Unexpected device state changes: " + CSV_JOINER.join(deviceStateViolations.keySet());
+    collectSchemaResult(description, DEVICE_STATE_SCHEMA, result, message);
   }
 
   private String uniqueKey(Entry entry) {
@@ -1693,18 +1702,18 @@ public class SequenceBase {
   }
 
   private void validateIntermediateState(State convertedState, List<DiffEntry> stateChanges) {
-    if (!recordSequence) {
+    if (!recordSequence || !shouldValidateSchema(testDescription)) {
       return;
     }
 
     int statusLevel = catchToElse(() -> convertedState.system.status.level, Level.TRACE.value());
     if (statusLevel > maxAllowedStatusLevel) {
-      throw new RuntimeException(format("System status level %d exceeded allowed threshold %d",
-          statusLevel, maxAllowedStatusLevel));
+      String message = format("System status level %d exceeded allowed threshold %d", statusLevel,
+          maxAllowedStatusLevel);
+      deviceStateViolations.put(STATUS_LEVEL_VIOLATION, message);
     }
-    List<String> badChanges = stateChanges.stream()
-        .filter(not(this::changeAllowed)).map(DiffEntry::key).toList();
-    checkState(badChanges.isEmpty(), "Disallowed state changes: " + CSV_JOINER.join(badChanges));
+    deviceStateViolations.putAll(stateChanges.stream().filter(not(this::changeAllowed)).collect(
+        Collectors.toMap(DiffEntry::key, DiffEntry::toString)));
   }
 
   private boolean changeAllowed(DiffEntry change) {
@@ -2099,6 +2108,10 @@ public class SequenceBase {
     }
   }
 
+  private boolean shouldValidateSchema(Description description) {
+    return description.getAnnotation(ValidateSchema.class) != null;
+  }
+
   /**
    * Master list of test capabilities.
    */
@@ -2189,10 +2202,8 @@ public class SequenceBase {
         throw new IllegalStateException("Unexpected test method name");
       }
 
-      if (testResult == PASS) {
-        ValidateSchema annotation = description.getAnnotation(ValidateSchema.class);
-        ifNotNullThen(annotation, a -> recordSchemaValidations(description));
-      }
+      ifTrueThen(testResult == PASS && shouldValidateSchema(description),
+          () -> recordSchemaValidations(description));
 
       notice("ending test " + testName + " after " + timeSinceStart() + " " + START_END_MARKER);
       testName = null;

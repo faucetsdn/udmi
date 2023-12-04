@@ -119,6 +119,7 @@ public class ConfigSequences extends SequenceBase {
   @Feature(stage = ALPHA, bucket = SYSTEM, score = 4)
   @Capability(value = LOGGING, stage = ALPHA)
   @Summary("Check that the device correctly handles a broken (non-json) config message.")
+  @ValidateSchema
   public void broken_config() {
     expectedStatusLevel(Level.ERROR);
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
