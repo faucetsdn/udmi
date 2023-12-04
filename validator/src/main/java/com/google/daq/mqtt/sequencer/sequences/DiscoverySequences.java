@@ -38,6 +38,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import org.junit.AssumptionViolatedException;
+import org.junit.Before;
 import org.junit.Test;
 import udmi.schema.Bucket;
 import udmi.schema.DiscoveryConfig;
@@ -56,6 +57,11 @@ public class DiscoverySequences extends SequenceBase {
   private static final int SCAN_ITERATIONS = 2;
   private HashMap<String, Date> previousGenerations;
   private Set<String> families;
+
+  @Before
+  public void setupExpectedParameters() {
+    allowDeviceStateChange("discovery");
+  }
 
   private static boolean isActive(Entry<String, FeatureEnumeration> entry) {
     return Optional.ofNullable(entry.getValue().stage).orElse(STABLE).compareTo(BETA) >= 0;
