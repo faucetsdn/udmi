@@ -47,7 +47,7 @@ public class BlobsetSequences extends SequenceBase {
 
   @Before
   public void setupExpectedParameters() {
-    allowDeviceStateChange("blobset.");
+    allowDeviceStateChange("blobset");
   }
 
   private String generateEndpointConfigClientId(String registryId) {
