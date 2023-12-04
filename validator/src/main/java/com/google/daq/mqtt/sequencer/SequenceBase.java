@@ -276,7 +276,7 @@ public class SequenceBase {
   protected State deviceState;
   protected boolean configAcked;
   protected String lastSerialNo;
-  private int disallowedStatusLevel;
+  private int maxAllowedStatusLevel;
   private String extraField;
   private Instant lastConfigUpdate;
   private boolean enforceSerial;
@@ -728,7 +728,7 @@ public class SequenceBase {
     enforceSerial = false;
     recordMessages = true;
     recordSequence = false;
-    disallowedStatusLevel = WARNING.value();
+    maxAllowedStatusLevel = NOTICE.value();
 
     resetConfig(resetRequired);
 
@@ -1689,7 +1689,7 @@ public class SequenceBase {
   }
 
   protected void expectedStatusLevel(Level level) {
-    disallowedStatusLevel = level.value();
+    maxAllowedStatusLevel = level.value();
   }
 
   private void validateIntermediateState(State convertedState, List<DiffEntry> stateChanges) {
@@ -1698,9 +1698,9 @@ public class SequenceBase {
     }
 
     int statusLevel = catchToElse(() -> convertedState.system.status.level, Level.TRACE.value());
-    if (statusLevel >= disallowedStatusLevel) {
+    if (statusLevel > maxAllowedStatusLevel) {
       throw new RuntimeException(format("System status level %d exceeded allowed threshold %d",
-          statusLevel, disallowedStatusLevel));
+          statusLevel, maxAllowedStatusLevel));
     }
     List<String> badChanges = stateChanges.stream()
         .filter(not(this::changeAllowed)).map(DiffEntry::key).toList();
