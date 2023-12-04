@@ -124,13 +124,25 @@ public abstract class JsonUtil {
   }
 
   /**
-   * Get a date object parsed from a string representation.
+   * Get a Date object parsed from a string representation.
    *
    * @param timestamp string representation
    * @return Date object
    */
   public static Date getDate(String timestamp) {
-    return timestamp == null ? null : Date.from(Instant.parse(timestamp));
+    return timestamp == null ? null : Date.from(getInstant(timestamp));
+  }
+
+  /**
+   * Get an Instant object parsed from a string representation. Also perform some munging on the
+   * input string to handle standard-yet-not-supported formats.
+   *
+   * @param timestamp string representation
+   * @return Instant object
+   */
+  public static Instant getInstant(String timestamp) {
+    String replaced = timestamp.replaceFirst("\\+0000$", "Z");
+    return timestamp == null ? null : Instant.parse(replaced);
   }
 
   /**
