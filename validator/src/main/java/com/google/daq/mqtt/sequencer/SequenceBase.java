@@ -575,9 +575,22 @@ public class SequenceBase {
       List<Capability> list = ofNullable(all).map(array -> Arrays.asList(all.value()))
           .orElseGet(ArrayList::new);
       ifNotNullThen(desc.getAnnotation(Capability.class), list::add);
-      return list.stream().collect(Collectors.toMap(Capability::value, cap -> cap));
+      Map<Capabilities, Capability> collect = list.stream()
+          .collect(Collectors.toMap(Capability::value, cap -> cap));
+      collect.put(LAST_CONFIG, defaultLastConfig());
+      return collect;
     } catch (Exception e) {
       throw new RuntimeException("While extracting capabilities for " + desc.getMethodName(), e);
+    }
+  }
+
+  @Capability(LAST_CONFIG)
+  private static Capability defaultLastConfig() {
+    try {
+      return requireNonNull(
+          SequenceBase.class.getDeclaredMethod("defaultLastConfig").getAnnotation(Capability.class));
+    } catch (Exception e) {
+      throw new RuntimeException("While getting default capability for LAST_CONFIG", e);
     }
   }
 
