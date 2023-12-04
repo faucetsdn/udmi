@@ -1709,8 +1709,8 @@ public class SequenceBase {
 
   private boolean changeAllowed(DiffEntry change) {
     String key = change.key();
-    return SYSTEM_STATE_CHANGES.stream().anyMatch(key::startsWith) ||
-        allowedDeviceStateChanges.stream().anyMatch(key::startsWith);
+    return SYSTEM_STATE_CHANGES.stream().anyMatch(key::startsWith)
+        || allowedDeviceStateChanges.stream().anyMatch(key::startsWith);
   }
 
   protected void allowDeviceStateChange(String changePrefix) {
