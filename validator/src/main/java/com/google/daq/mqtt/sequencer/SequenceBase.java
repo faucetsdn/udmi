@@ -575,22 +575,10 @@ public class SequenceBase {
       List<Capability> list = ofNullable(all).map(array -> Arrays.asList(all.value()))
           .orElseGet(ArrayList::new);
       ifNotNullThen(desc.getAnnotation(Capability.class), list::add);
-      Map<Capabilities, Capability> collect = list.stream()
+      return list.stream()
           .collect(Collectors.toMap(Capability::value, cap -> cap));
-      collect.put(LAST_CONFIG, defaultLastConfig());
-      return collect;
     } catch (Exception e) {
       throw new RuntimeException("While extracting capabilities for " + desc.getMethodName(), e);
-    }
-  }
-
-  @Capability(LAST_CONFIG)
-  private static Capability defaultLastConfig() {
-    try {
-      return requireNonNull(
-          SequenceBase.class.getDeclaredMethod("defaultLastConfig").getAnnotation(Capability.class));
-    } catch (Exception e) {
-      throw new RuntimeException("While getting default capability for LAST_CONFIG", e);
     }
   }
 
@@ -827,6 +815,11 @@ public class SequenceBase {
 
     AtomicInteger total = new AtomicInteger(isSkip ? 0 : base);
     AtomicInteger score = new AtomicInteger(isPass ? base : 0);
+
+    if (!capabilities.containsKey(LAST_CONFIG)) {
+      debug("Removing implicit system capability LAST_CONFIG");
+      capabilityExceptions.remove(LAST_CONFIG);
+    }
 
     ifTrueThen(isPass, () -> assertEquals("executed test capabilities",
         capabilities.keySet(), capabilityExceptions.keySet()));
