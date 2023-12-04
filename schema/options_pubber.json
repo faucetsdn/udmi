@@ -19,6 +19,9 @@
     "noLastStart": {
       "type": "boolean"
     },
+    "noLastConfig": {
+      "type": "boolean"
+    },
     "badCategory": {
       "type": "boolean"
     },

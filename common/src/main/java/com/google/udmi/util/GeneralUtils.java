@@ -287,6 +287,10 @@ public class GeneralUtils {
     }
   }
 
+  public static <T> T ifNotTrueGet(Object conditional, Supplier<T> supplier) {
+    return isTrue(conditional) : null ? supplier.get();
+  }
+
   public static boolean isTrue(Object value) {
     return Boolean.TRUE.equals(value);
   }
