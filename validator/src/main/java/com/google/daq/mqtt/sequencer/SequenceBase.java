@@ -230,7 +230,7 @@ public class SequenceBase {
   private static final Duration DEFAULT_WAIT_TIMEOUT = Duration.ofHours(30);
   private static final Set<String> SYSTEM_STATE_CHANGES = ImmutableSet.of("timestamp",
       "system.last_config", "system.status");
-  private static final int DISALLOWED_SYSTAM_STATUS_LEVEL = NOTICE.value();
+  private static final int DISALLOWED_STATUS_LEVEL = WARNING.value();
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -1670,10 +1670,10 @@ public class SequenceBase {
   }
 
   private void validateIntermediateState(State convertedState, List<DiffEntry> stateChanges) {
-    int stateStatusLevel = catchToElse(() -> convertedState.system.status.level, Level.TRACE.value());
-    if (stateStatusLevel >= DISALLOWED_SYSTAM_STATUS_LEVEL) {
-      throw new RuntimeException(format("Status level %d exceeded allowed threshold %d",
-          stateStatusLevel, DISALLOWED_SYSTAM_STATUS_LEVEL));
+    int statusLevel = catchToElse(() -> convertedState.system.status.level, Level.TRACE.value());
+    if (statusLevel >= DISALLOWED_STATUS_LEVEL) {
+      throw new RuntimeException(format("System status level %d exceeded allowed threshold %d",
+          statusLevel, DISALLOWED_STATUS_LEVEL));
     }
     List<String> badChanges = stateChanges.stream()
         .filter(not(this::changeAllowed)).map(DiffEntry::key).toList();
