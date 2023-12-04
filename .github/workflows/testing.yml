@@ -154,16 +154,13 @@ jobs:
       - name: registrar clean
         run: bin/test_regclean $TARGET_PROJECT
       - name: sequence tests clean
-        if: ${{ always() }}
         run: bin/test_sequencer clean nocheck $TARGET_PROJECT
       - name: sequence tests alpha
-        if: ${{ always() }}
         run: bin/test_sequencer alpha nocheck $TARGET_PROJECT
       - name: sequence test post-process
         if: ${{ always() }}
         run: egrep ' test .* after .*s ' out/sequencer.log | tee out/timing_sequencer.out
       - name: itemized sequencer tests
-        if: ${{ always() }}
         run: bin/test_itemized $TARGET_PROJECT
       - name: output files
         if: ${{ always() }}
