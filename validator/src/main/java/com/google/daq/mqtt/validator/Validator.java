@@ -25,6 +25,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.JSON_SUFFIX;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
+import static com.google.udmi.util.JsonUtil.getInstant;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
@@ -118,7 +119,8 @@ public class Validator {
   public static final String STATE_PREFIX = "state_";
   public static final String PROJECT_PROVIDER_PREFIX = "//";
   public static final String TIMESTAMP_ZULU_SUFFIX = "Z";
-  public static final String TIMESTAMP_UTC_SUFFIX = "+00:00";
+  public static final String TIMESTAMP_UTC_SUFFIX_1 = "+00:00";
+  public static final String TIMESTAMP_UTC_SUFFIX_2 = "+0000";
   private static final String ERROR_FORMAT_INDENT = "  ";
   private static final String SCHEMA_VALIDATION_FORMAT = "Validating %d schemas";
   private static final String TARGET_VALIDATION_FORMAT = "Validating %d files against %s";
@@ -527,7 +529,7 @@ public class Validator {
     }
 
     if (simulatedMessages) {
-      mockNow = Instant.parse((String) message.get(TIMESTAMP_KEY));
+      mockNow = getInstant((String) message.get(TIMESTAMP_KEY));
       ReportingDevice.setMockNow(mockNow);
     }
     ReportingDevice reportingDevice = validateMessageCore(message, attributes);
@@ -614,9 +616,9 @@ public class Validator {
     upgradeMessage(schemaName, message);
 
     String timestampRaw = (String) message.get("timestamp");
-    Instant timestamp = ifNotNullGet(timestampRaw, Instant::parse);
+    Instant timestamp = ifNotNullGet(timestampRaw, JsonUtil::getInstant);
     String publishRaw = attributes.get(PUBLISH_TIME_KEY);
-    Instant publishTime = ifNotNullGet(publishRaw, Instant::parse);
+    Instant publishTime = ifNotNullGet(publishRaw, JsonUtil::getInstant);
     try {
       // TODO: Validate message contests to make sure state sub-blocks don't also have timestamp.
 
@@ -632,7 +634,8 @@ public class Validator {
         }
         if (publishTime != null) {
           if (!timestampRaw.endsWith(TIMESTAMP_ZULU_SUFFIX)
-              && !timestampRaw.endsWith(TIMESTAMP_UTC_SUFFIX)) {
+              && !timestampRaw.endsWith(TIMESTAMP_UTC_SUFFIX_1)
+              && !timestampRaw.endsWith(TIMESTAMP_UTC_SUFFIX_2)) {
             throw new RuntimeException("Invalid timestamp timezone " + timestampRaw);
           }
           long between = Duration.between(publishTime, timestamp).getSeconds();
