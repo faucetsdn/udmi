@@ -1,6 +1,7 @@
 package com.google.daq.mqtt.validator;
 
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
+import static com.google.udmi.util.JsonUtil.getInstant;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static org.junit.Assert.assertEquals;
@@ -145,7 +146,7 @@ public class BasicTest extends TestBase {
     ValidationState report = getValidationReport();
     DeviceValidationEvent deviceValidationEvent = report.devices.get(TestCommon.DEVICE_ID);
     Date lastSeen = deviceValidationEvent.last_seen;
-    Instant parse = Instant.parse((String) eventBundle.message.get(TIMESTAMP_KEY));
+    Instant parse = getInstant((String) eventBundle.message.get(TIMESTAMP_KEY));
     assertEquals("device last seen", getTimestamp(Date.from(parse)), getTimestamp(lastSeen));
   }
 
