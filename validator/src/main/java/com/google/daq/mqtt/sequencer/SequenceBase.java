@@ -1670,6 +1670,10 @@ public class SequenceBase {
   }
 
   private void validateIntermediateState(State convertedState, List<DiffEntry> stateChanges) {
+    if (!recordSequence) {
+      return;
+    }
+
     int statusLevel = catchToElse(() -> convertedState.system.status.level, Level.TRACE.value());
     if (statusLevel >= DISALLOWED_STATUS_LEVEL) {
       throw new RuntimeException(format("System status level %d exceeded allowed threshold %d",
