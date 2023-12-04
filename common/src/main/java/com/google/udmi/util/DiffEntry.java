@@ -18,6 +18,6 @@ public record DiffEntry(DiffAction action, String key, String value) {
   @Override
   public String toString() {
     return action == DiffAction.REMOVE ? format("%s `%s`", action().value, key)
-        : format("%s `%s` = `%s`", action().value, key, value);
+        : format("%s `%s` = %s", action().value, key, value);
   }
 }
