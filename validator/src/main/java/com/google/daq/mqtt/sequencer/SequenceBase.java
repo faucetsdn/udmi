@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Predicates.not;
 import static com.google.common.base.Strings.emptyToNull;
+import static com.google.daq.mqtt.sequencer.SequenceBase.Capabilities.LAST_CONFIG;
 import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
 import static com.google.daq.mqtt.util.IotReflectorClient.REFLECTOR_PREFIX;
 import static com.google.daq.mqtt.validator.Validator.CONFIG_PREFIX;
@@ -226,11 +227,11 @@ public class SequenceBase {
       STATE_QUERY_CUTOFF_SEC));
   private static final String FAKE_DEVICE_ID = "TAP-1";
   private static final String NO_EXTRA_DETAIL = "";
+  private static final Duration DEFAULT_WAIT_TIME = Duration.ofSeconds(10);
   private static final Duration LOG_WAIT_TIME = Duration.ofSeconds(30);
-  private static final Duration DEFAULT_WAIT_TIMEOUT = Duration.ofHours(30);
+  private static final Duration DEFAULT_LOOP_TIMEOUT = Duration.ofHours(30);
   private static final Set<String> SYSTEM_STATE_CHANGES = ImmutableSet.of("timestamp",
       "system.last_config", "system.status");
-  private static final int DISALLOWED_STATUS_LEVEL = WARNING.value();
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -273,6 +274,7 @@ public class SequenceBase {
   protected State deviceState;
   protected boolean configAcked;
   protected String lastSerialNo;
+  private int disallowedStatusLevel;
   private String extraField;
   private Instant lastConfigUpdate;
   private boolean enforceSerial;
@@ -722,6 +724,7 @@ public class SequenceBase {
     enforceSerial = false;
     recordMessages = true;
     recordSequence = false;
+    disallowedStatusLevel = WARNING.value();
 
     resetConfig(resetRequired);
 
@@ -738,6 +741,9 @@ public class SequenceBase {
     startCaptureTime = System.currentTimeMillis();
     clearReceivedEvents();
     validationResults.clear();
+
+    forCapability(LAST_CONFIG,
+        () -> waitFor("state last_config sync", this::lastConfigUpdatedString));
 
     recordSequence = true;
     waitingConditionPush("executing test");
@@ -1247,6 +1253,11 @@ public class SequenceBase {
     recordSequence("Check that " + notDescription);
   }
 
+  private void waitFor(String description, Supplier<String> evaluator) {
+    waitFor(description, DEFAULT_WAIT_TIME, evaluator);
+
+  }
+
   private void waitFor(String description, Duration maxWait, Supplier<String> evaluator) {
     AtomicReference<String> detail = new AtomicReference<>();
     whileDoing(description, () -> {
@@ -1279,8 +1290,7 @@ public class SequenceBase {
   protected void checkNotLogged(String category, Level minLevel) {
     withRecordSequence(false, () -> {
       ifTrueThen(deviceSupportsState(), () ->
-          untilTrue("last_config synchronized",
-              () -> dateEquals(deviceConfig.timestamp, deviceState.system.last_config)));
+          untilTrue("last_config synchronized", this::lastConfigUpdated));
       processLogMessages();
     });
     final Instant endTime = lastConfigUpdate.plusSeconds(LOG_TIMEOUT_SEC);
@@ -1383,7 +1393,7 @@ public class SequenceBase {
   }
 
   private void messageEvaluateLoop(Supplier<Boolean> evaluator) {
-    messageEvaluateLoop(DEFAULT_WAIT_TIMEOUT, evaluator);
+    messageEvaluateLoop(DEFAULT_LOOP_TIMEOUT, evaluator);
   }
 
   private void messageEvaluateLoop(Duration maxWait, Supplier<Boolean> evaluator) {
@@ -1669,15 +1679,19 @@ public class SequenceBase {
     }
   }
 
+  protected void expectedStatusLevel(Level level) {
+    disallowedStatusLevel = level.value();
+  }
+
   private void validateIntermediateState(State convertedState, List<DiffEntry> stateChanges) {
     if (!recordSequence) {
       return;
     }
 
     int statusLevel = catchToElse(() -> convertedState.system.status.level, Level.TRACE.value());
-    if (statusLevel >= DISALLOWED_STATUS_LEVEL) {
+    if (statusLevel >= disallowedStatusLevel) {
       throw new RuntimeException(format("System status level %d exceeded allowed threshold %d",
-          statusLevel, DISALLOWED_STATUS_LEVEL));
+          statusLevel, disallowedStatusLevel));
     }
     List<String> badChanges = stateChanges.stream()
         .filter(not(this::changeAllowed)).map(DiffEntry::key).toList();
@@ -1907,7 +1921,11 @@ public class SequenceBase {
     }
   }
 
-  protected boolean stateMatchesConfigTimestamp() {
+  protected String lastConfigUpdatedString() {
+    return lastConfigUpdated() ? null : "";
+  }
+
+  protected boolean lastConfigUpdated() {
     Date expectedConfig = deviceConfig.timestamp;
     Date lastConfig = deviceState.system.last_config;
     return dateEquals(expectedConfig, lastConfig);
@@ -2071,7 +2089,7 @@ public class SequenceBase {
   public enum Capabilities {
     DEVICE_STATE("device_state"),
     LOGGING("logging"),
-    ACKNOWLEDGE("acknowledge");
+    LAST_CONFIG("last_config");
 
     private final String value;
 

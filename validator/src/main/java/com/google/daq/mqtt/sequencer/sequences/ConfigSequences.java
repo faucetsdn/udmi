@@ -53,7 +53,7 @@ public class ConfigSequences extends SequenceBase {
   @Summary("Check that last_update state is correctly set in response to a config update.")
   @ValidateSchema
   public void system_last_update() {
-    untilTrue("state last_config matches config timestamp", this::stateMatchesConfigTimestamp);
+    untilTrue("state last_config matches config timestamp", this::lastConfigUpdated);
     ensureStateUpdate();
   }
 
@@ -120,6 +120,7 @@ public class ConfigSequences extends SequenceBase {
   @Capability(value = LOGGING, stage = ALPHA)
   @Summary("Check that the device correctly handles a broken (non-json) config message.")
   public void broken_config() {
+    expectedStatusLevel(Level.ERROR);
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
     updateConfig("starting broken_config");
     Date stableConfig = deviceConfig.timestamp;
