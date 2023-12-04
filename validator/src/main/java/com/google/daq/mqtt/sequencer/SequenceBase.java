@@ -1714,8 +1714,9 @@ public class SequenceBase {
   }
 
   protected void allowDeviceStateChange(String changePrefix) {
-    debug("Allowing device state change: " + changePrefix);
-    allowedDeviceStateChanges.add(changePrefix);
+    if (allowedDeviceStateChanges.add(changePrefix)) {
+      debug("Allowing device state change: " + changePrefix);
+    }
   }
 
   private List<DiffEntry> updateDeviceConfig(Config config) {

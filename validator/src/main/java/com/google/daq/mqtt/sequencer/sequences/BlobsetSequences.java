@@ -244,6 +244,8 @@ public class BlobsetSequences extends SequenceBase {
   }
 
   private void check_system_restart() {
+    allowDeviceStateChange("system.operation.");
+
     // Prepare for the restart.
     final Date dateZero = new Date(0);
     untilTrue("last_start is not zero",
