@@ -807,8 +807,8 @@ public class SequenceBase {
     Feature feature = description.getAnnotation(Feature.class);
     Map<Capabilities, Capability> capabilities = getCapabilities(description);
     Bucket bucket = getBucket(feature);
-    String stage = (feature == null ? Feature.DEFAULT_STAGE : feature.stage()).name();
-    int base = (feature == null ? Feature.DEFAULT_SCORE : feature.score());
+    final String stage = (feature == null ? Feature.DEFAULT_STAGE : feature.stage()).name();
+    final int base = (feature == null ? Feature.DEFAULT_SCORE : feature.score());
 
     boolean isSkip = result == SKIP;
     boolean isPass = result == PASS;
