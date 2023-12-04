@@ -135,8 +135,7 @@ public class PointsetSequences extends PointsetBase {
     ifNullSkipTest(deviceConfig.pointset, "no pointset found in config");
 
     untilTrue("receive a pointset event",
-        () -> (countReceivedEvents(PointsetEvent.class) > 1
-        ));
+        () -> (countReceivedEvents(PointsetEvent.class) > 1));
   }
 
   /**

@@ -53,8 +53,8 @@ public class ConfigSequences extends SequenceBase {
   @Summary("Check that last_update state is correctly set in response to a config update.")
   @ValidateSchema
   public void system_last_update() {
-    untilTrue("state last_config matches config timestamp", this::lastConfigUpdated);
     ensureStateUpdate();
+    untilTrue("state last_config matches config timestamp", this::lastConfigUpdated);
   }
 
   @Test
@@ -62,8 +62,8 @@ public class ConfigSequences extends SequenceBase {
   @ValidateSchema
   public void valid_serial_no() {
     ifNullSkipTest(serialNo, "No test serial number provided");
-    untilTrue("received serial number matches", () -> serialNo.equals(lastSerialNo));
     ensureStateUpdate();
+    untilTrue("received serial number matches", () -> serialNo.equals(lastSerialNo));
   }
 
   @Test(timeout = TWO_MINUTES_MS)

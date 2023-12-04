@@ -4,6 +4,7 @@
 04 pointset_remove_point
 05 too_much_state
 06 feature_enumeration
+07 valid_serial_no RESULT pass schemas device_state_alpha ALPHA 5/5 All schema validations passed
 07 valid_serial_no RESULT pass schemas event_pointset_alpha ALPHA 5/5 All schema validations passed
 07 valid_serial_no RESULT pass schemas event_system_alpha ALPHA 5/5 All schema validations passed
 07 valid_serial_no RESULT pass schemas state_update_alpha ALPHA 5/5 All schema validations passed
@@ -13,13 +14,21 @@
 11 system_mode_restart
 12 config_logging
 13 broken_config
-14 broken_config
+14 broken_config RESULT pass schemas device_state_alpha ALPHA 5/5 All schema validations passed
+14 broken_config RESULT pass schemas event_pointset_alpha ALPHA 5/5 All schema validations passed
+14 broken_config RESULT pass schemas event_system_alpha ALPHA 5/5 All schema validations passed
+14 broken_config RESULT pass schemas state_update_alpha ALPHA 5/5 All schema validations passed
 15 broken_config
-16 broken_config
+16 broken_config RESULT pass schemas device_state_alpha ALPHA 5/5 All schema validations passed
+16 broken_config RESULT pass schemas event_pointset_alpha ALPHA 5/5 All schema validations passed
+16 broken_config RESULT pass schemas event_system_alpha ALPHA 5/5 All schema validations passed
+16 broken_config RESULT pass schemas state_update_alpha ALPHA 5/5 All schema validations passed
 17 broken_config
 18 system_last_update RESULT fail schemas event_pointset_stable STABLE 5/5 Schema violations found
 18 system_last_update RESULT fail schemas state_update_stable STABLE 5/5 Schema violations found
+18 system_last_update RESULT pass schemas device_state_stable STABLE 5/5 All schema validations passed
 18 system_last_update RESULT pass schemas event_system_stable STABLE 5/5 All schema validations passed
+19 system_last_update RESULT pass schemas device_state_stable STABLE 5/5 All schema validations passed
 19 system_last_update RESULT pass schemas event_pointset_stable STABLE 5/5 All schema validations passed
 19 system_last_update RESULT pass schemas event_system_stable STABLE 5/5 All schema validations passed
 19 system_last_update RESULT pass schemas state_update_stable STABLE 5/5 All schema validations passed
