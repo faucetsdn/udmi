@@ -49,8 +49,14 @@ quoted_namespace=null
 quoted_bridge=null
 iot_provider=null
 if [[ -f $site_path ]]; then
+    if [[ $1 =~ ^// || $1 =~ @ ]]; then
+        project_id=$1
+        shift
+    fi
     echo Project_id is $project_id
-elif [[ $project_id =~ ^// ]]; then
+fi
+
+if [[ $project_id =~ ^// ]]; then
     no_prefix=${project_id#//}
     iot_provider=\"${no_prefix%%/*}\"
     no_provider=${no_prefix#*/}
@@ -70,8 +76,7 @@ else
 fi
 
 if [[ -f $site_path ]]; then
-    [[ $site_path -ef $config_file ]] || rm -f $config_file
-    config_file=$site_path
+    [[ ! $site_path -ef $config_file ]] || cp $site_path $config_file
 else
     echo Writing config to $config_file
     cat <<EOF > $config_file

@@ -35,7 +35,7 @@ public interface MessagePublisher {
       BiConsumer<String, String> messageHandler, Consumer<Throwable> errorHandler) {
     IotAccess.IotProvider iotProvider = ofNullable(iotConfig.iot_provider).orElse(IMPLICIT);
     if (iotConfig.reflector_endpoint != null && iotProvider != IMPLICIT) {
-      throw new RuntimeException("Explicit endpoint conflicts with iot_provider " + iotProvider);
+      iotConfig.reflector_endpoint = null;
     }
     if (PUBSUB == iotConfig.iot_provider) {
       return PubSubReflector.from(iotConfig, messageHandler, errorHandler);
