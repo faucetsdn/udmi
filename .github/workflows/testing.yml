@@ -204,7 +204,7 @@ jobs:
       - name: base setup
         run: bin/run_tests install_dependencies
       - name: registrar clean
-        run: bin/test_regclean $TARGET_PROJECT
+        run: bin/test_regclean solo $TARGET_PROJECT
       - name: telemetry validator
         run: bin/test_validator $TARGET_PROJECT
       - name: validator result
