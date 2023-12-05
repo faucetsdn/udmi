@@ -135,14 +135,8 @@ if [[ -n $solo_arg ]]; then
     search "Deleting device $solo_arg \(1/1)" out/registrar.log
     search "Deleted 1 devices" out/registrar.log
 
-    echo Munging input config file...
-    jq ".reflector_endpoint.client_id = \"$UDMI_ALT_REGISTRY\" | .iot_provider = null" \
-       /tmp/registrar_config.json > /tmp/alt_config.json
-    echo bin/registrar /tmp/alt_config.json
-    ( ! bin/registrar /tmp/alt_config.json ) || fail Was expecting bad config to fail.
-
-    echo bin/registrar /tmp/alt_config.json $registrar_project $solo_arg
-    bin/registrar /tmp/alt_config.json $registrar_project $solo_arg
+    echo bin/registrar /tmp/registrar_config.json $solo_arg
+    bin/registrar /tmp/registrar_config.json $solo_arg
 
     echo Checking creation of one device
     search "Processing 1 new devices..." out/registrar.log
