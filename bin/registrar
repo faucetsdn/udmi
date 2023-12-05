@@ -76,7 +76,8 @@ else
 fi
 
 if [[ -f $site_path ]]; then
-    [[ $site_path -ef $config_file ]] || cp $site_path $config_file
+    [[ $site_path -ef $config_file ]] || rm -f $config_file
+    config_file=$site_path
 else
     echo Writing config to $config_file
     cat <<EOF > $config_file
