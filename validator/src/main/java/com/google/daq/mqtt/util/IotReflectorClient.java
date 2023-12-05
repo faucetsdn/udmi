@@ -148,7 +148,7 @@ public class IotReflectorClient implements IotProvider {
   private CloudModel fetchCloudModel(String deviceId) {
     try {
       Map<String, Object> message = transaction(deviceId, CLOUD_QUERY_TOPIC, EMPTY_MESSAGE,
-          MessagePublisher.QuerySpeed.LONG);
+          QuerySpeed.ETERNITY);
       return convertToStrict(CloudModel.class, message);
     } catch (Exception e) {
       if (e.getMessage().contains("NOT_FOUND")) {
