@@ -6,9 +6,16 @@ export LC_ALL=C
 ROOT_DIR=$(dirname $0)/..
 cd $ROOT_DIR
 
-if [[ $# -ne 1 ]]; then
+solo_arg=
+
+if [[ $# -lt 1 ]]; then
     echo Usage: $0 PROJECT_ID[@BROKER]
     false
+fi
+
+if [[ $1 == solo ]]; then
+    solo_arg=AHU-1
+    shift
 fi
 
 project_id=$1
@@ -118,6 +125,18 @@ echo pubber/bin/run $pubber_config
 pubber/bin/run $pubber_config
 
 echo Successful pubber check passed on clean registry.
+
+if [[ -n $solo_arg ]]; then
+    echo Deleting singular entry...
+    echo bin/registrar $site_arg $registrar_project -d $solo_arg
+    bin/registrar $site_arg $registrar_project -d $solo_arg | tee out/registrar.log
+    fgrep "Deleted 1 devices" out/registrar.log
+    cp /tmp/registrar_config.json /tmp/alt_config.json
+    bin/registrar /tmp/alt_config.json $solo_arg | tee out/registrar.log
+    fgrep "Updating 0 existing devices" out/registrar.log
+fi
+
+false
 
 if [[ -n $UDMI_ALT_REGISTRY ]]; then
     echo Registering alt registry...
