@@ -135,6 +135,9 @@ if [[ -n $solo_arg ]]; then
     search "Deleting device $solo_arg \(1/1)" out/registrar.log
     search "Deleted 1 devices" out/registrar.log
 
+    echo Sleeping to avoid IoT Core race condition...
+    sleep 20
+
     echo bin/registrar /tmp/registrar_config.json $solo_arg
     bin/registrar /tmp/registrar_config.json $solo_arg
 
