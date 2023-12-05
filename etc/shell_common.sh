@@ -14,6 +14,10 @@ function find_site_model_root {
     done
 }
 
+function search {
+    egrep "$1" $2 || fail Could not find in $2: $1
+}
+
 function fail {
     echo error: $*
     false
