@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash -ex
 
 # Force consistent sort order
 export LC_ALL=C
@@ -129,13 +129,22 @@ pubber/bin/run $pubber_config
 echo Successful pubber check passed on clean registry.
 
 if [[ -n $solo_arg ]]; then
-    echo Deleting singular entry...
+    echo Deleting singular entry $solo_arg...
     echo bin/registrar $site_arg $registrar_project -d $solo_arg
     bin/registrar $site_arg $registrar_project -d $solo_arg
     search "Deleting device $solo_arg \(1/1)" out/registrar.log
     search "Deleted 1 devices" out/registrar.log
-    cp /tmp/registrar_config.json /tmp/alt_config.json
-    bin/registrar /tmp/alt_config.json $solo_arg
+
+    echo Munging input config file...
+    jq ".reflector_endpoint.client_id = \"$UDMI_ALT_REGISTRY\" | .iot_provider = null" \
+       /tmp/registrar_config.json > /tmp/alt_config.json
+    echo bin/registrar /tmp/alt_config.json
+    ( ! bin/registrar /tmp/alt_config.json ) || fail Was expecting bad config to fail.
+
+    echo bin/registrar /tmp/alt_config.json $registrar_project $solo_arg
+    bin/registrar /tmp/alt_config.json $registrar_project $solo_arg
+
+    echo Checking creation of one device
     search "Processing 1 new devices..." out/registrar.log
     search "Processed $solo_arg \(1/1) in [0-9.]+s \(add)" out/registrar.log
     search "Processed 1 \(skipped 0) devices in " out/registrar.log
