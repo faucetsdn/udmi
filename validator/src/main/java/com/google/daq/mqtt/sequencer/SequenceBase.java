@@ -231,8 +231,8 @@ public class SequenceBase {
   private static final Duration DEFAULT_WAIT_TIME = Duration.ofSeconds(10);
   private static final Duration LOG_WAIT_TIME = Duration.ofSeconds(30);
   private static final Duration DEFAULT_LOOP_TIMEOUT = Duration.ofHours(30);
-  private static final Set<String> SYSTEM_STATE_CHANGES = ImmutableSet.of("timestamp",
-      "system.last_config", "system.status");
+  private static final Set<String> SYSTEM_STATE_CHANGES = ImmutableSet.of(
+      "timestamp", "system.last_config", "system.status");
   public static final String DEVICE_STATE_SCHEMA = "device_state";
   protected static Metadata deviceMetadata;
   protected static String projectId;
