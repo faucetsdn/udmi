@@ -132,15 +132,15 @@ if [[ -n $solo_arg ]]; then
     echo Deleting singular entry...
     echo bin/registrar $site_arg $registrar_project -d $solo_arg
     bin/registrar $site_arg $registrar_project -d $solo_arg
-    search "Deleting device $solo_arg (1/1)" out/registrar.log
+    search "Deleting device $solo_arg \(1/1)" out/registrar.log
     search "Deleted 1 devices" out/registrar.log
     cp /tmp/registrar_config.json /tmp/alt_config.json
     bin/registrar /tmp/alt_config.json $solo_arg
     search "Processing 1 new devices..." out/registrar.log
-    search "Processed $solo_arg (1/1) " out/registrar.log
-    search "Processed 1 (skipped 0) devices in " out/registrar.log
+    search "Processed $solo_arg \(1/1) in [0-9.]+s \(add)" out/registrar.log
+    search "Processed 1 \(skipped 0) devices in " out/registrar.log
     search "Updating 0 existing devices" out/registrar.log
-    search "Processed 0 (skipped 0) devices in " out/registrar.log
+    search "Processed 0 \(skipped 0) devices in " out/registrar.log
     echo Done with solo update test for $solo_arg
 fi
 

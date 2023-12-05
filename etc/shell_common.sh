@@ -15,7 +15,7 @@ function find_site_model_root {
 }
 
 function search {
-    fgrep "$1" $2 || fail Could not find in $2: $1
+    egrep "$1" $2 || fail Could not find in $2: $1
 }
 
 function fail {
