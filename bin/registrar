@@ -16,7 +16,7 @@ shift
 
 cd $UDMI_ROOT
 
-if [[ -z $1 || $1 =~ ^- ]]; then
+if [[ -z $1 || $1 =~ ^- || -f $site_path ]]; then
     [[ -f $site_path ]] || echo No project ID supplied with site directory.
 else
     project_id=$1
@@ -25,8 +25,7 @@ fi
 
 iot_config=$site_path/cloud_iot_config.json
 if [[ -d $site_path && ! -f $iot_config ]]; then
-    echo Config file not found: $iot_config
-    false
+    fail Config file not found: $iot_config
 elif [[ -d $site_path && -z $project_id ]]; then
     echo No project defined, dry run only.
 fi
@@ -49,6 +48,14 @@ echo Running tools version `git describe`
 quoted_namespace=null
 quoted_bridge=null
 iot_provider=null
+if [[ -f $site_path ]]; then
+    if [[ $1 =~ ^// || $1 =~ @ ]]; then
+        project_id=$1
+        shift
+    fi
+    echo Project_id is $project_id
+fi
+
 if [[ $project_id =~ ^// ]]; then
     no_prefix=${project_id#//}
     iot_provider=\"${no_prefix%%/*}\"
@@ -92,3 +99,5 @@ echo
 validator/bin/registrar $config_file $* 2>&1 | tee $OUT_DIR/registrar.log
 
 bin/check_version
+
+search "Registrar complete, exit 0" $OUT_DIR/registrar.log

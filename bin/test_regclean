@@ -3,12 +3,21 @@
 # Force consistent sort order
 export LC_ALL=C
 
-ROOT_DIR=$(dirname $0)/..
-cd $ROOT_DIR
+UDMI_ROOT=$(dirname $0)/..
+cd $UDMI_ROOT
 
-if [[ $# -ne 1 ]]; then
+source etc/shell_common.sh
+
+solo_arg=
+
+if [[ $# -lt 1 ]]; then
     echo Usage: $0 PROJECT_ID[@BROKER]
     false
+fi
+
+if [[ $1 == solo ]]; then
+    solo_arg=AHU-1
+    shift
 fi
 
 project_id=$1
@@ -119,11 +128,35 @@ pubber/bin/run $pubber_config
 
 echo Successful pubber check passed on clean registry.
 
+if [[ -n $solo_arg ]]; then
+    echo Deleting singular entry $solo_arg...
+    echo bin/registrar $site_arg $registrar_project -d $solo_arg
+    bin/registrar $site_arg $registrar_project -d $solo_arg
+    search "Deleting device $solo_arg \(1/1)" out/registrar.log
+    search "Deleted 1 devices" out/registrar.log
+
+    echo Sleeping to avoid IoT Core race condition...
+    sleep 20
+
+    echo bin/registrar /tmp/registrar_config.json $solo_arg
+    bin/registrar /tmp/registrar_config.json $solo_arg
+
+    echo Checking creation of one device
+    search "Processing 1 new devices..." out/registrar.log
+    search "Processed $solo_arg \(1/1) in [0-9.]+s \(add)" out/registrar.log
+    search "Processed 1 \(skipped 0) devices in " out/registrar.log
+    search "Updating 0 existing devices" out/registrar.log
+    search "Processed 0 \(skipped 0) devices in " out/registrar.log
+    echo Done with solo update test for $solo_arg
+fi
+
 if [[ -n $UDMI_ALT_REGISTRY ]]; then
-    echo Registering alt registry...
+    echo Registering alt registry $UDMI_ALT_REGISTRY...
     site_file=$site_arg/cloud_iot_config.json
     cp $site_file $site_file-tmp
     jq ".registry_id = \"$UDMI_ALT_REGISTRY\"" $site_file-tmp > $site_file
+    echo bin/registrar $site_arg $registrar_project -u
     bin/registrar $site_arg $registrar_project -u
     mv $site_file-tmp $site_file
+    echo Done with registering alt registry
 fi
