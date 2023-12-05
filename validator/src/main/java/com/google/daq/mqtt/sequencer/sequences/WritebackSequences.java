@@ -9,6 +9,7 @@ import com.google.daq.mqtt.sequencer.PointsetBase;
 import com.google.daq.mqtt.sequencer.Summary;
 import java.util.List;
 import java.util.Objects;
+import org.junit.Before;
 import org.junit.Test;
 import udmi.schema.PointPointsetState.Value_state;
 import udmi.schema.PointsetEvent;
@@ -23,6 +24,11 @@ public class WritebackSequences extends PointsetBase {
   public static final String FAILURE_STATE = "failure";
   public static final String APPLIED_STATE = "applied";
   public static final String DEFAULT_STATE = null;
+
+  @Before
+  public void setupExpectedParameters() {
+    allowDeviceStateChange("pointset.points.");
+  }
 
   /**
    * Checks `value_state` for the point in the state matches the provided string.

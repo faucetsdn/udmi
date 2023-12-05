@@ -4,6 +4,7 @@ import static com.google.udmi.util.GeneralUtils.catchOrElse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifNotTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
@@ -223,7 +224,7 @@ public class SystemManager extends ManagerBase {
 
   void updateConfig(SystemConfig system, Date timestamp) {
     systemConfig = system;
-    systemState.last_config = timestamp;
+    systemState.last_config = ifNotTrueGet(options.noLastConfig, () -> timestamp);
     updateInterval(ifNotNullGet(system, config -> config.metrics_rate_sec));
     updateState();
   }

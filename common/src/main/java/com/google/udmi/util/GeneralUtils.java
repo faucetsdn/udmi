@@ -74,8 +74,8 @@ public class GeneralUtils {
     return args;
   }
 
-  public static String changedLines(List<String> nullableChanges) {
-    List<String> changes = ofNullable(nullableChanges).orElse(ImmutableList.of());
+  public static String changedLines(List<DiffEntry> nullableChanges) {
+    List<DiffEntry> changes = ofNullable(nullableChanges).orElse(ImmutableList.of());
     String terminator = changes.size() == 0 ? "." : ":";
     String header = format("Changed %d fields%s%s", changes.size(), terminator, SEPARATOR);
     return (header + INDENTED_LINES.join(changes)).trim();
@@ -285,6 +285,10 @@ public class GeneralUtils {
     } else if (alternative != null) {
       alternative.run();
     }
+  }
+
+  public static <T> T ifNotTrueGet(Object conditional, Supplier<T> supplier) {
+    return isTrue(conditional) ? null : supplier.get();
   }
 
   public static boolean isTrue(Object value) {

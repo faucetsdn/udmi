@@ -3,7 +3,9 @@ package com.google.daq.mqtt.sequencer;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Predicates.not;
 import static com.google.common.base.Strings.emptyToNull;
+import static com.google.daq.mqtt.sequencer.SequenceBase.Capabilities.LAST_CONFIG;
 import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
 import static com.google.daq.mqtt.util.IotReflectorClient.REFLECTOR_PREFIX;
 import static com.google.daq.mqtt.validator.Validator.CONFIG_PREFIX;
@@ -14,6 +16,8 @@ import static com.google.udmi.util.Common.DEVICE_ID_KEY;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
 import static com.google.udmi.util.Common.GATEWAY_ID_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
+import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
+import static com.google.udmi.util.GeneralUtils.catchToElse;
 import static com.google.udmi.util.GeneralUtils.changedLines;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -59,6 +63,7 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
 import com.google.daq.mqtt.util.MessagePublisher;
@@ -70,6 +75,7 @@ import com.google.daq.mqtt.validator.Validator;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
 import com.google.udmi.util.CleanDateFormat;
 import com.google.udmi.util.Common;
+import com.google.udmi.util.DiffEntry;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
@@ -158,6 +164,7 @@ public class SequenceBase {
   public static final String SCHEMA_BUCKET = "schemas";
   public static final int SCHEMA_SCORE = 5;
   public static final int CAPABILITY_SCORE = 1;
+  public static final String STATUS_LEVEL_VIOLATION = "STATUS_LEVEL";
   private static final int FUNCTIONS_VERSION_BETA = 11;
   private static final int FUNCTIONS_VERSION_ALPHA = FUNCTIONS_VERSION_BETA;
   private static final long CONFIG_BARRIER_MS = 1000;
@@ -197,7 +204,7 @@ public class SequenceBase {
   private static final int LOG_TIMEOUT_SEC = 10;
   private static final long ONE_SECOND_MS = 1000;
   private static final int EXIT_CODE_PRESERVE = -9;
-  private static final String SYSTEM_TESTING_MARKER = " `system.testing";
+  private static final String SYSTEM_TESTING_MARKER = "system.testing";
   private static final BiMap<SequenceResult, Level> RESULT_LEVEL_MAP = ImmutableBiMap.of(
       SequenceResult.START, Level.INFO,
       SKIP, Level.WARNING,
@@ -221,8 +228,12 @@ public class SequenceBase {
       STATE_QUERY_CUTOFF_SEC));
   private static final String FAKE_DEVICE_ID = "TAP-1";
   private static final String NO_EXTRA_DETAIL = "";
+  private static final Duration DEFAULT_WAIT_TIME = Duration.ofSeconds(10);
   private static final Duration LOG_WAIT_TIME = Duration.ofSeconds(30);
-  private static final Duration DEFAULT_WAIT_TIMEOUT = Duration.ofHours(30);
+  private static final Duration DEFAULT_LOOP_TIMEOUT = Duration.ofHours(30);
+  private static final Set<String> SYSTEM_STATE_CHANGES = ImmutableSet.of(
+      "timestamp", "system.last_config", "system.status");
+  public static final String DEVICE_STATE_SCHEMA = "device_state";
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -257,7 +268,10 @@ public class SequenceBase {
   private final Queue<Entry> logEntryQueue = new LinkedBlockingDeque<>();
   private final Stack<String> waitingCondition = new Stack<>();
   private final SortedMap<String, List<Entry>> validationResults = new TreeMap<>();
+  private final Map<String, String> deviceStateViolations = new ConcurrentHashMap<>();
   private final Map<Capabilities, Exception> capabilityExceptions = new ConcurrentHashMap<>();
+  private final Set<String> allowedDeviceStateChanges = new HashSet<>();
+
   @Rule
   public Timeout globalTimeout = new Timeout(NORM_TIMEOUT_MS, TimeUnit.MILLISECONDS);
   @Rule
@@ -265,6 +279,7 @@ public class SequenceBase {
   protected State deviceState;
   protected boolean configAcked;
   protected String lastSerialNo;
+  private int maxAllowedStatusLevel;
   private String extraField;
   private Instant lastConfigUpdate;
   private boolean enforceSerial;
@@ -565,7 +580,8 @@ public class SequenceBase {
       List<Capability> list = ofNullable(all).map(array -> Arrays.asList(all.value()))
           .orElseGet(ArrayList::new);
       ifNotNullThen(desc.getAnnotation(Capability.class), list::add);
-      return list.stream().collect(Collectors.toMap(Capability::value, cap -> cap));
+      return list.stream()
+          .collect(Collectors.toMap(Capability::value, cap -> cap));
     } catch (Exception e) {
       throw new RuntimeException("While extracting capabilities for " + desc.getMethodName(), e);
     }
@@ -695,6 +711,7 @@ public class SequenceBase {
     assumeTrue("Feature bucket not enabled", isBucketEnabled(testBucket));
 
     assertTrue("exceptions map should be empty", capabilityExceptions.isEmpty());
+    assertTrue("allowed changes map should be empty", allowedDeviceStateChanges.isEmpty());
 
     if (!deviceSupportsState()) {
       boolean featureDisabled = ifNotNullGet(testDescription.getAnnotation(Feature.class),
@@ -714,6 +731,7 @@ public class SequenceBase {
     enforceSerial = false;
     recordMessages = true;
     recordSequence = false;
+    maxAllowedStatusLevel = NOTICE.value();
 
     resetConfig(resetRequired);
 
@@ -730,6 +748,9 @@ public class SequenceBase {
     startCaptureTime = System.currentTimeMillis();
     clearReceivedEvents();
     validationResults.clear();
+
+    forCapability(LAST_CONFIG,
+        () -> waitFor("state last_config sync", this::lastConfigUpdatedString));
 
     recordSequence = true;
     waitingConditionPush("executing test");
@@ -792,14 +813,19 @@ public class SequenceBase {
     Feature feature = description.getAnnotation(Feature.class);
     Map<Capabilities, Capability> capabilities = getCapabilities(description);
     Bucket bucket = getBucket(feature);
-    String stage = (feature == null ? Feature.DEFAULT_STAGE : feature.stage()).name();
-    int base = (feature == null ? Feature.DEFAULT_SCORE : feature.score());
+    final String stage = (feature == null ? Feature.DEFAULT_STAGE : feature.stage()).name();
+    final int base = (feature == null ? Feature.DEFAULT_SCORE : feature.score());
 
     boolean isSkip = result == SKIP;
     boolean isPass = result == PASS;
 
     AtomicInteger total = new AtomicInteger(isSkip ? 0 : base);
     AtomicInteger score = new AtomicInteger(isPass ? base : 0);
+
+    if (!capabilities.containsKey(LAST_CONFIG)) {
+      debug("Removing implicit system capability LAST_CONFIG");
+      capabilityExceptions.remove(LAST_CONFIG);
+    }
 
     ifTrueThen(isPass, () -> assertEquals("executed test capabilities",
         capabilities.keySet(), capabilityExceptions.keySet()));
@@ -834,6 +860,12 @@ public class SequenceBase {
                 collectSchemaResult(description, schemaName, FAIL, result.detail));
           }
         });
+
+    SequenceResult result = deviceStateViolations.isEmpty() ? PASS : FAIL;
+    String message = result == PASS
+        ? "Only expected device state changes observed"
+        : "Unexpected device state changes: " + CSV_JOINER.join(deviceStateViolations.keySet());
+    collectSchemaResult(description, DEVICE_STATE_SCHEMA, result, message);
   }
 
   private String uniqueKey(Entry entry) {
@@ -1138,8 +1170,8 @@ public class SequenceBase {
       String header = format("Update config%s: ", suffix);
       debug(header + getTimestamp(deviceConfig.timestamp));
       recordRawMessage(deviceConfig, LOCAL_CONFIG_UPDATE);
-      List<String> allDiffs = SENT_CONFIG_DIFFERNATOR.computeChanges(deviceConfig);
-      List<String> filteredDiffs = filterTesting(allDiffs);
+      List<DiffEntry> allDiffs = SENT_CONFIG_DIFFERNATOR.computeChanges(deviceConfig);
+      List<DiffEntry> filteredDiffs = filterTesting(allDiffs);
       if (!filteredDiffs.isEmpty()) {
         recordSequence(header);
         filteredDiffs.forEach(this::recordBullet);
@@ -1239,6 +1271,11 @@ public class SequenceBase {
     recordSequence("Check that " + notDescription);
   }
 
+  private void waitFor(String description, Supplier<String> evaluator) {
+    waitFor(description, DEFAULT_WAIT_TIME, evaluator);
+
+  }
+
   private void waitFor(String description, Duration maxWait, Supplier<String> evaluator) {
     AtomicReference<String> detail = new AtomicReference<>();
     whileDoing(description, () -> {
@@ -1271,8 +1308,7 @@ public class SequenceBase {
   protected void checkNotLogged(String category, Level minLevel) {
     withRecordSequence(false, () -> {
       ifTrueThen(deviceSupportsState(), () ->
-          untilTrue("last_config synchronized",
-              () -> dateEquals(deviceConfig.timestamp, deviceState.system.last_config)));
+          untilTrue("last_config synchronized", this::lastConfigUpdated));
       processLogMessages();
     });
     final Instant endTime = lastConfigUpdate.plusSeconds(LOG_TIMEOUT_SEC);
@@ -1375,7 +1411,7 @@ public class SequenceBase {
   }
 
   private void messageEvaluateLoop(Supplier<Boolean> evaluator) {
-    messageEvaluateLoop(DEFAULT_WAIT_TIMEOUT, evaluator);
+    messageEvaluateLoop(DEFAULT_LOOP_TIMEOUT, evaluator);
   }
 
   private void messageEvaluateLoop(Duration maxWait, Supplier<Boolean> evaluator) {
@@ -1397,6 +1433,10 @@ public class SequenceBase {
       sequenceMd.println("1. " + step.trim());
       sequenceMd.flush();
     }
+  }
+
+  private void recordBullet(DiffEntry step) {
+    recordBullet(step.toString());
   }
 
   private void recordBullet(String step) {
@@ -1608,7 +1648,7 @@ public class SequenceBase {
           error("Shouldn't be seeing this!");
           return;
         }
-        List<String> changes = updateDeviceConfig(config);
+        List<DiffEntry> changes = updateDeviceConfig(config);
         debug(format("Updated config %s %s", getTimestamp(config.timestamp), txnId));
         if (updateCount == CAPABILITY_SCORE) {
           info(format("Initial config #%03d", updateCount), stringify(deviceConfig));
@@ -1634,12 +1674,13 @@ public class SequenceBase {
         }
         checkState(deviceSupportsState(), "Received state update with no-state device");
         boolean deltaState = RECV_STATE_DIFFERNATOR.isInitialized();
-        List<String> stateChanges = RECV_STATE_DIFFERNATOR.computeChanges(converted);
+        List<DiffEntry> stateChanges = RECV_STATE_DIFFERNATOR.computeChanges(converted);
         Instant start = ofNullable(convertedState.timestamp).orElseGet(Date::new).toInstant();
         long delta = Duration.between(start, Instant.now()).getSeconds();
         debug(format("Updated state after %ds %s %s", delta, timestamp, txnId));
         if (deltaState) {
           info(format("Updated state #%03d", updateCount), changedLines(stateChanges));
+          validateIntermediateState(convertedState, stateChanges);
         } else {
           info(format("Initial state #%03d", updateCount), stringify(converted));
         }
@@ -1656,7 +1697,38 @@ public class SequenceBase {
     }
   }
 
-  private List<String> updateDeviceConfig(Config config) {
+  protected void expectedStatusLevel(Level level) {
+    maxAllowedStatusLevel = level.value();
+  }
+
+  private void validateIntermediateState(State convertedState, List<DiffEntry> stateChanges) {
+    if (!recordSequence || !shouldValidateSchema(testDescription)) {
+      return;
+    }
+
+    int statusLevel = catchToElse(() -> convertedState.system.status.level, Level.TRACE.value());
+    if (statusLevel > maxAllowedStatusLevel) {
+      String message = format("System status level %d exceeded allowed threshold %d", statusLevel,
+          maxAllowedStatusLevel);
+      deviceStateViolations.put(STATUS_LEVEL_VIOLATION, message);
+    }
+    deviceStateViolations.putAll(stateChanges.stream().filter(not(this::changeAllowed)).collect(
+        Collectors.toMap(DiffEntry::key, DiffEntry::toString)));
+  }
+
+  private boolean changeAllowed(DiffEntry change) {
+    String key = change.key();
+    return SYSTEM_STATE_CHANGES.stream().anyMatch(key::startsWith)
+        || allowedDeviceStateChanges.stream().anyMatch(key::startsWith);
+  }
+
+  protected void allowDeviceStateChange(String changePrefix) {
+    if (allowedDeviceStateChanges.add(changePrefix)) {
+      debug("Allowing device state change: " + changePrefix);
+    }
+  }
+
+  private List<DiffEntry> updateDeviceConfig(Config config) {
     if (deviceConfig == null) {
       return null;
     }
@@ -1731,8 +1803,8 @@ public class SequenceBase {
   /**
    * Filter out any testing-oriented messages, since they should not impact behavior.
    */
-  private List<String> filterTesting(List<String> allDiffs) {
-    return allDiffs.stream().filter(message -> !message.contains(SYSTEM_TESTING_MARKER))
+  private List<DiffEntry> filterTesting(List<DiffEntry> allDiffs) {
+    return allDiffs.stream().filter(message -> !message.key().startsWith(SYSTEM_TESTING_MARKER))
         .collect(Collectors.toList());
   }
 
@@ -1874,7 +1946,11 @@ public class SequenceBase {
     }
   }
 
-  protected boolean stateMatchesConfigTimestamp() {
+  protected String lastConfigUpdatedString() {
+    return lastConfigUpdated() ? null : "";
+  }
+
+  protected boolean lastConfigUpdated() {
     Date expectedConfig = deviceConfig.timestamp;
     Date lastConfig = deviceState.system.last_config;
     return dateEquals(expectedConfig, lastConfig);
@@ -2032,13 +2108,17 @@ public class SequenceBase {
     }
   }
 
+  private boolean shouldValidateSchema(Description description) {
+    return description.getAnnotation(ValidateSchema.class) != null;
+  }
+
   /**
    * Master list of test capabilities.
    */
   public enum Capabilities {
     DEVICE_STATE("device_state"),
     LOGGING("logging"),
-    ACKNOWLEDGE("acknowledge");
+    LAST_CONFIG("last_config");
 
     private final String value;
 
@@ -2122,10 +2202,8 @@ public class SequenceBase {
         throw new IllegalStateException("Unexpected test method name");
       }
 
-      if (testResult == PASS) {
-        ValidateSchema annotation = description.getAnnotation(ValidateSchema.class);
-        ifNotNullThen(annotation, a -> recordSchemaValidations(description));
-      }
+      ifTrueThen(testResult == PASS && shouldValidateSchema(description),
+          () -> recordSchemaValidations(description));
 
       notice("ending test " + testName + " after " + timeSinceStart() + " " + START_END_MARKER);
       testName = null;

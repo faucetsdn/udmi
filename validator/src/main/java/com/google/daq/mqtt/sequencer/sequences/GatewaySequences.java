@@ -13,6 +13,7 @@ import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.Summary;
 import java.util.HashSet;
 import java.util.Set;
+import org.junit.Before;
 import org.junit.Test;
 import udmi.schema.Bucket;
 import udmi.schema.FeatureEnumeration.FeatureStage;
@@ -21,6 +22,11 @@ import udmi.schema.FeatureEnumeration.FeatureStage;
  * Specific tests for gateway functionality.
  */
 public class GatewaySequences extends SequenceBase {
+
+  @Before
+  public void setupExpectedParameters() {
+    allowDeviceStateChange("gateway");
+  }
 
   @Override
   public void setUp() {

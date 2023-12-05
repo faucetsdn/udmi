@@ -35,7 +35,7 @@ jobs:
       - name: bin/run_tests all_tests
         run: bin/run_tests all_tests
       - name: all test output
-        if: ${{ always() }}
+        if: ${{ !cancelled() }}
         run: more out/test_*
 
   spelling:
@@ -154,33 +154,33 @@ jobs:
       - name: registrar clean
         run: bin/test_regclean $TARGET_PROJECT
       - name: sequence tests clean
-        if: ${{ always() }}
+        if: ${{ !cancelled() }}
         run: bin/test_sequencer clean nocheck $TARGET_PROJECT
       - name: sequence tests alpha
-        if: ${{ always() }}
+        if: ${{ !cancelled() }}
         run: bin/test_sequencer alpha nocheck $TARGET_PROJECT
       - name: sequence test post-process
-        if: ${{ always() }}
+        if: ${{ !cancelled() }}
         run: egrep ' test .* after .*s ' out/sequencer.log | tee out/timing_sequencer.out
       - name: itemized sequencer tests
-        if: ${{ always() }}
+        if: ${{ !cancelled() }}
         run: bin/test_itemized $TARGET_PROJECT
       - name: output files
-        if: ${{ always() }}
+        if: ${{ !cancelled() }}
         run: more out/*.out* | cat
       - name: pubber logs
-        if: ${{ always() }}
+        if: ${{ !cancelled() }}
         run: more out/pubber.log* pubber/out/*.json | cat
       - name: itemized test post-process
-        if: ${{ always() }}
+        if: ${{ !cancelled() }}
         run: egrep ' test .* after .*s ' out/sequencer.log-* | tee out/timing_itemized.out
       - name: support bundle
-        if: ${{ always() }}
+        if: ${{ !cancelled() }}
         run: |
           bin/support ${{ github.repository_owner }}_${{ github.job }}_
           tar -tzvf *udmi-support*.tgz
       - uses: actions/upload-artifact@v3
-        if: ${{ always() }}
+        if: ${{ !cancelled() }}
         with:
           if-no-files-found: error
           name: udmi-support_${{ github.run_id }}
@@ -206,23 +206,25 @@ jobs:
       - name: registrar clean
         run: bin/test_regclean solo $TARGET_PROJECT
       - name: telemetry validator
+        if: ${{ !cancelled() }}
         run: bin/test_validator $TARGET_PROJECT
       - name: validator result
-        if: ${{ always() }}
+        if: ${{ !cancelled() }}
         run: cat /tmp/validator.out || true
       - name: message captures
-        if: ${{ always() }}
+        if: ${{ !cancelled() }}
         run: |
           cd sites/udmi_site_model/out
           find . -type f | sort | xargs ls -l
           find . -type f | sort | xargs more | cat
       - name: nostate sequences
+        if: ${{ !cancelled() }}
         run: bin/test_sequencer nostate full $TARGET_PROJECT
       - name: support bundle
-        if: ${{ always() }}
+        if: ${{ !cancelled() }}
         run: UDMI_REGISTRY_SUFFIX=_b bin/support ${{ github.repository_owner }}_${{ github.job }}_
       - uses: actions/upload-artifact@v3
-        if: ${{ always() }}
+        if: ${{ !cancelled() }}
         with:
           if-no-files-found: error
           name: udmi-support_${{ github.run_id }}
@@ -252,13 +254,13 @@ jobs:
       - name: bin/test_redirect
         run: bin/test_redirect $TARGET_PROJECT
       - name: pubber.log
-        if: ${{ always() }}
+        if: ${{ !cancelled() }}
         run: more out/pubber.log* | cat
       - name: support bundle
-        if: ${{ always() }}
+        if: ${{ !cancelled() }}
         run: UDMI_REGISTRY_SUFFIX=_r bin/support ${{ github.repository_owner }}_${{ github.job }}_
       - uses: actions/upload-artifact@v3
-        if: ${{ always() }}
+        if: ${{ !cancelled() }}
         with:
           if-no-files-found: error
           name: udmi-support_${{ github.run_id }}
@@ -289,8 +291,8 @@ jobs:
           ls -d sites/udmi_site_model*/out*/devices/AHU-1/tests/*
           find out* -name 'schema*.out*' -size +0 | xargs more | cat
       - name: Sequencer validation
-        if: ${{ always() }}
+        if: ${{ !cancelled() }}
         run: bin/test_sequcheck
       - name: Itemized validation
-        if: ${{ always() }}
+        if: ${{ !cancelled() }}
         run: bin/test_itemcheck
