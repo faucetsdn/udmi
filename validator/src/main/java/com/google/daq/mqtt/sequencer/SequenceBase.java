@@ -1722,8 +1722,14 @@ public class SequenceBase {
   }
 
   protected void allowDeviceStateChange(String changePrefix) {
-    if (allowedDeviceStateChanges.add(changePrefix)) {
-      debug("Allowing device state change: " + changePrefix);
+    if (!allowedDeviceStateChanges.add(changePrefix)) {
+      throw new AbortMessageLoop("State change prefix already allowed: " + changePrefix);
+    }
+  }
+
+  protected void disallowDeviceStateChange(String changePrefix) {
+    if (!allowedDeviceStateChanges.remove(changePrefix)) {
+      throw new AbortMessageLoop("Unexpected state change removal: " + changePrefix);
     }
   }
 

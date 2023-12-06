@@ -48,6 +48,7 @@ public class ConfigSequences extends SequenceBase {
   private static final long LOG_APPLY_DELAY_MS = 1000;
   // How frequently to send out confg queries for device config acked check.
   private static final Duration CONFIG_QUERY_INTERVAL = Duration.ofSeconds(30);
+  public static final String ALL_CHANGES = "";
 
   @Test(timeout = ONE_MINUTE_MS)
   @Feature(stage = STABLE, bucket = SYSTEM, nostate = true)
@@ -124,6 +125,7 @@ public class ConfigSequences extends SequenceBase {
   @ValidateSchema(SubFolder.SYSTEM)
   public void broken_config() {
     expectedStatusLevel(Level.ERROR);
+
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
     updateConfig("starting broken_config");
     Date stableConfig = deviceConfig.timestamp;
@@ -156,6 +158,8 @@ public class ConfigSequences extends SequenceBase {
       checkNotLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
     });
 
+    // When resetting a config, all sorts of things can change so allow everything.
+    allowDeviceStateChange(ALL_CHANGES);
     // Will restore min_loglevel to the default of INFO.
     resetConfig(); // clears extra_field and interesting status checks
 
@@ -164,6 +168,8 @@ public class ConfigSequences extends SequenceBase {
       untilTrue("restored state synchronized",
           () -> dateEquals(deviceConfig.timestamp, deviceState.system.last_config));
     });
+
+    disallowDeviceStateChange(ALL_CHANGES);
 
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
     untilTrue("last_config updated",
