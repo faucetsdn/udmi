@@ -1,6 +1,5 @@
 package com.google.bos.udmi.service.pod;
 
-import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -8,13 +7,16 @@ import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.core.ComponentName;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.udmi.util.JsonUtil;
 import java.io.PrintStream;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.TestOnly;
 import udmi.schema.BasePodConfiguration;
@@ -59,12 +61,16 @@ public abstract class ContainerBase {
     info("Configured with reflect registry " + reflectRegistry);
   }
 
-  private static String environmentReplacer(MatchResult match) {
-    String replacement = ofNullable(System.getenv(match.group(1))).orElse("");
+  private String environmentReplacer(MatchResult match) {
+    String replacement = ofNullable(getEnv(match.group(1))).orElse("");
     if (replacement.startsWith("!")) {
       return format("!{%s}", replacement.substring(1));
     }
     return replacement;
+  }
+
+  protected String getEnv(String group) {
+    return System.getenv(group);
   }
 
   @TestOnly
@@ -92,21 +98,21 @@ public abstract class ContainerBase {
     return previous;
   }
 
-  protected List<String> multiSubstitution(String value) {
+  protected Set<String> multiSubstitution(String value) {
     String raw = variableSubstitution(value);
     if (raw == null) {
-      return ImmutableList.of();
+      return ImmutableSet.of();
     }
     Matcher matcher = MULTI_PATTERN.matcher(raw);
-    if (matcher.groupCount() == 0) {
-      return ImmutableList.of(raw);
+    if (!matcher.find()) {
+      return ImmutableSet.of(raw);
     }
-    if (matcher.groupCount() != 1) {
-      throw new RuntimeException(format("Multi multiexpansions not supported, found %d: %s",
-          matcher.groupCount(), raw));
+    String group = matcher.group(1);
+    if (matcher.find()) {
+      throw new RuntimeException(format("Multi multi-expansions not supported: %s", raw));
     }
-    List<String> results = new ArrayList<>();
-    return results;
+    String[] parts = group.split(",");
+    return Arrays.stream(parts).map(matcher::replaceFirst).collect(Collectors.toSet());
   }
 
   protected String variableSubstitution(String value) {
@@ -119,7 +125,7 @@ public abstract class ContainerBase {
   protected String variableSubstitution(String value, @NotNull String nullMessage) {
     requireNonNull(value, requireNonNull(nullMessage, "null message not defined"));
     Matcher matcher = VARIABLE_PATTERN.matcher(value);
-    String out = matcher.replaceAll(ContainerBase::environmentReplacer);
+    String out = matcher.replaceAll(this::environmentReplacer);
     ifNotTrueThen(value.equals(out), () -> debug("Replaced value %s with '%s'", value, out));
     return out;
   }
