@@ -4,6 +4,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toSet;
 
 import com.google.bos.udmi.service.core.ComponentName;
 import com.google.common.collect.ImmutableList;
@@ -112,7 +113,9 @@ public abstract class ContainerBase {
       throw new RuntimeException(format("Multi multi-expansions not supported: %s", raw));
     }
     String[] parts = group.split(",");
-    return Arrays.stream(parts).map(matcher::replaceFirst).collect(Collectors.toSet());
+    Set<String> expanded = Arrays.stream(parts).map(matcher::replaceFirst).collect(toSet());
+    expanded.forEach(set -> debug("Expanded intermediate %s with '%s'", raw, set));
+    return expanded;
   }
 
   protected String variableSubstitution(String value) {
