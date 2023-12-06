@@ -124,6 +124,7 @@ public class ConfigSequences extends SequenceBase {
   @ValidateSchema(SubFolder.SYSTEM)
   public void broken_config() {
     expectedStatusLevel(Level.ERROR);
+
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
     updateConfig("starting broken_config");
     Date stableConfig = deviceConfig.timestamp;
