@@ -17,7 +17,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvent;
-import udmi.schema.DiscoveryModel;
 import udmi.schema.DiscoveryState;
 import udmi.schema.Enumerate;
 import udmi.schema.FamilyDiscoveryConfig;
