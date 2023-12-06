@@ -7,8 +7,11 @@ import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.core.ComponentName;
+import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.JsonUtil;
 import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -31,7 +34,8 @@ public abstract class ContainerBase {
   public static final String EMPTY_JSON = "{}";
   public static final String REFLECT_BASE = "UDMI-REFLECT";
   private static final ThreadLocal<String> executionContext = new ThreadLocal<>();
-  private static final Pattern VARIABLE_PATTERN = Pattern.compile("\\$\\{([A-Z_]+)\\}");
+  private static final Pattern VARIABLE_PATTERN = Pattern.compile("\\$\\{([A-Z_]+)}");
+  private static final Pattern MULTI_PATTERN = Pattern.compile("!\\{([,a-zA-Z_]+)}");
   private static BasePodConfiguration basePodConfig = new BasePodConfiguration();
   protected static String reflectRegistry = REFLECT_BASE;
   protected final PodConfiguration podConfiguration;
@@ -56,7 +60,11 @@ public abstract class ContainerBase {
   }
 
   private static String environmentReplacer(MatchResult match) {
-    return ofNullable(System.getenv(match.group(1))).orElse("");
+    String replacement = ofNullable(System.getenv(match.group(1))).orElse("");
+    if (replacement.startsWith("!")) {
+      return format("!{%s}", replacement.substring(1));
+    }
+    return replacement;
   }
 
   @TestOnly
@@ -82,6 +90,23 @@ public abstract class ContainerBase {
     String context = format("%08x", (long) (Math.random() * 0x100000000L));
     setExecutionContext(context);
     return previous;
+  }
+
+  protected List<String> multiSubstitution(String value) {
+    String raw = variableSubstitution(value);
+    if (raw == null) {
+      return ImmutableList.of();
+    }
+    Matcher matcher = MULTI_PATTERN.matcher(raw);
+    if (matcher.groupCount() == 0) {
+      return ImmutableList.of(raw);
+    }
+    if (matcher.groupCount() != 1) {
+      throw new RuntimeException(format("Multi multiexpansions not supported, found %d: %s",
+          matcher.groupCount(), raw));
+    }
+    List<String> results = new ArrayList<>();
+    return results;
   }
 
   protected String variableSubstitution(String value) {

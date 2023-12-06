@@ -6,6 +6,7 @@ import static org.apache.commons.io.FileUtils.deleteDirectory;
 import com.google.bos.udmi.service.core.ProcessorTestBase;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import java.io.File;
+import org.jetbrains.annotations.NotNull;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.EndpointConfiguration.Protocol;
 import udmi.schema.SetupUdmiConfig;
@@ -51,7 +52,7 @@ public abstract class MessageTestCore {
     }
   }
 
-  protected void augmentConfig(EndpointConfiguration configuration) {
+  protected void augmentConfig(@NotNull EndpointConfiguration configuration) {
     configuration.protocol = Protocol.LOCAL;
   }
 

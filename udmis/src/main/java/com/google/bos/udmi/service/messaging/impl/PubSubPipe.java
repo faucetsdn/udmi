@@ -67,7 +67,7 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
           "no project id defined in configuration as 'hostname'");
       publisher = ifNotNullGet(variableSubstitution(configuration.send_id), this::getPublisher);
       ifNotNullThen(publisher, this::checkPublisher);
-      subscriber = ifNotNullGet(variableSubstitution(configuration.recv_id), this::getSubscriber);
+      subscriber = ifNotNullGet(multiSubstitution(configuration.recv_id), this::getSubscriber);
       String subscriptionName = ifNotNullGet(subscriber, Subscriber::getSubscriptionNameString);
       String topicName = ifNotNullGet(publisher, Publisher::getTopicNameString);
       debug("PubSub %s s -> %s", super.toString(), subscriptionName, topicName);
