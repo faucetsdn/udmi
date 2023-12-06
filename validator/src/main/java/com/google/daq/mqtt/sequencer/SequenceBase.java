@@ -163,6 +163,7 @@ public class SequenceBase {
   public static final int SCHEMA_SCORE = 5;
   public static final int CAPABILITY_SCORE = 1;
   public static final String STATUS_LEVEL_VIOLATION = "STATUS_LEVEL";
+  private static final String ALL_CHANGES = "";
   private static final int FUNCTIONS_VERSION_BETA = 11;
   private static final int FUNCTIONS_VERSION_ALPHA = FUNCTIONS_VERSION_BETA;
   private static final long CONFIG_BARRIER_MS = 1000;
@@ -777,6 +778,8 @@ public class SequenceBase {
   }
 
   protected void resetConfig(boolean fullReset) {
+    allowDeviceStateChange(ALL_CHANGES);
+
     recordSequence("Force reset config");
     withRecordSequence(false, () -> {
       debug("Starting reset_config full reset " + fullReset);
@@ -794,6 +797,8 @@ public class SequenceBase {
       debug("Done with reset_config");
       resetRequired = false;
     });
+
+    disallowDeviceStateChange(ALL_CHANGES);
   }
 
   private void waitForConfigSync() {
