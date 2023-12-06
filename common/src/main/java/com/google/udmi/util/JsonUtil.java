@@ -149,7 +149,7 @@ public abstract class JsonUtil {
    *
    * @return current ISO timestamp
    */
-  public static String getTimestamp() {
+  public static String isoConvert() {
     return isoConvert(CleanDateFormat.cleanDate());
   }
 

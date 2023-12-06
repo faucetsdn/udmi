@@ -128,7 +128,7 @@ public abstract class ContainerBase {
 
   private void output(Level level, String message) {
     PrintStream printStream = level.value() >= Level.WARNING.value() ? System.err : System.out;
-    printStream.printf("%s %s %s: %s %s%n", JsonUtil.getTimestamp(), getExecutionContext(),
+    printStream.printf("%s %s %s: %s %s%n", JsonUtil.isoConvert(), getExecutionContext(),
         level.name().charAt(0), getSimpleName(), message);
     printStream.flush();
   }

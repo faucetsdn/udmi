@@ -6,7 +6,7 @@ import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
-import static com.google.udmi.util.JsonUtil.getTimestamp;
+import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static java.lang.String.format;
@@ -153,7 +153,7 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
     reply.ack();
     String messageId = message.getMessageId();
     attributesMap.computeIfAbsent("publishTime",
-        key -> getTimestamp(ofEpochSecond(message.getPublishTime().getSeconds())));
+        key -> isoConvert(ofEpochSecond(message.getPublishTime().getSeconds())));
     attributesMap.computeIfAbsent(Common.TRANSACTION_KEY, key -> PS_TXN_PREFIX + messageId);
     receiveMessage(attributesMap, message.getData().toStringUtf8());
     Instant end = Instant.now();
