@@ -19,6 +19,7 @@ public class DeviceManager extends ManagerBase {
   private final SystemManager systemManager;
   private final LocalnetManager localnetManager;
   private final GatewayManager gatewayManager;
+  private final DiscoveryManager discoveryManager;
 
 
   /**
@@ -30,6 +31,7 @@ public class DeviceManager extends ManagerBase {
     pointsetManager = new PointsetManager(host, configuration);
     localnetManager = new LocalnetManager(host, configuration);
     gatewayManager = new GatewayManager(host, configuration);
+    discoveryManager = new DiscoveryManager(host, configuration);
   }
 
   public void setPersistentData(DevicePersistent persistentData) {
@@ -76,6 +78,7 @@ public class DeviceManager extends ManagerBase {
     pointsetManager.updateConfig(config.pointset);
     systemManager.updateConfig(config.system, config.timestamp);
     gatewayManager.updateConfig(config.gateway);
+    discoveryManager.updateConfig(config.discovery);
   }
 
   public void publishLogMessage(Entry logEntry) {
