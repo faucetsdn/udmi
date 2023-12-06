@@ -9,6 +9,7 @@ import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.getNamespacePrefix;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
+import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toStringMap;
 import static java.lang.String.format;
@@ -209,7 +210,7 @@ public class PubSubReflector implements MessagePublisher {
 
     HashMap<String, String> attributes = new HashMap<>(message.getAttributesMap());
     attributes.computeIfAbsent(PUBLISH_TIME_KEY,
-        key -> getTimestamp(ofEpochSecond(message.getPublishTime().getSeconds())));
+        key -> isoConvert(ofEpochSecond(message.getPublishTime().getSeconds())));
     attributes.put(WAS_BASE_64, "" + base64);
 
     MessageBundle bundle = new MessageBundle();

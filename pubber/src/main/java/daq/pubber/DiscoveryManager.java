@@ -50,7 +50,7 @@ public class DiscoveryManager extends ManagerBase {
     DiscoveryEvent discoveryEvent = new DiscoveryEvent();
     discoveryEvent.generation = enumerationGeneration;
     Enumerate enumerate = config.enumerate;
-    discoveryEvent.uniqs = ifTrue(enumerate.uniqs, () -> enumeratePoints(configuration.deviceId));
+    discoveryEvent.uniqs = ifTrue(enumerate.uniqs, () -> enumeratePoints(deviceId));
     discoveryEvent.features = ifTrue(enumerate.features, SupportedFeatures::getFeatures);
     discoveryEvent.families = ifTrue(enumerate.families, () -> deviceManager.enumerateFamilies());
     publishDeviceMessage(discoveryEvent);

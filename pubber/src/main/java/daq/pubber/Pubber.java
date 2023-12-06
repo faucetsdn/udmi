@@ -19,7 +19,10 @@ import static com.google.udmi.util.GeneralUtils.optionsString;
 import static com.google.udmi.util.GeneralUtils.setClockSkew;
 import static com.google.udmi.util.GeneralUtils.toJsonFile;
 import static com.google.udmi.util.GeneralUtils.toJsonString;
+import static com.google.udmi.util.JsonUtil.getTimestamp;
+import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.safeSleep;
+import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static daq.pubber.MqttDevice.CONFIG_TOPIC;
 import static daq.pubber.MqttDevice.ERRORS_TOPIC;
@@ -47,10 +50,7 @@ import daq.pubber.MqttPublisher.PublisherException;
 import daq.pubber.PointsetManager.ExtraPointsetEvent;
 import daq.pubber.PubSubClient.Bundle;
 import daq.pubber.SystemManager.ExtraSystemState;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.OutputStream;
-import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -71,8 +71,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import org.apache.http.ConnectionClosedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,27 +83,18 @@ import udmi.schema.Category;
 import udmi.schema.CloudModel.Auth_type;
 import udmi.schema.Config;
 import udmi.schema.DevicePersistent;
-import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvent;
-import udmi.schema.DiscoveryState;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.EndpointConfiguration.Protocol;
 import udmi.schema.Entry;
-import udmi.schema.Enumerate;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
-import udmi.schema.FamilyDiscoveryConfig;
-import udmi.schema.FamilyDiscoveryEvent;
-import udmi.schema.FamilyDiscoveryState;
-import udmi.schema.FamilyLocalnetModel;
 import udmi.schema.GatewayState;
 import udmi.schema.Level;
 import udmi.schema.LocalnetState;
 import udmi.schema.Metadata;
 import udmi.schema.Operation.SystemMode;
-import udmi.schema.PointEnumerationEvent;
-import udmi.schema.PointPointsetModel;
 import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetState;
 import udmi.schema.PubberConfiguration;
@@ -1112,41 +1101,6 @@ public class Pubber extends ManagerBase implements ManagerHost {
       EndpointConfiguration endpointConfiguration = new EndpointConfiguration();
       endpointConfiguration.error = e.toString();
       return JsonUtil.stringify(endpointConfiguration);
-    }
-  }
-
-
-  private String stackTraceString(Throwable e) {
-    OutputStream outputStream = new ByteArrayOutputStream();
-    try (PrintStream ps = new PrintStream(outputStream)) {
-      e.printStackTrace(ps);
-    }
-    return outputStream.toString();
-  }
-
-  private String getTimestamp() {
-    return isoConvert(getNow());
-  }
-
-  private Date isoConvert(String timestamp) {
-    try {
-      String wrappedString = "\"" + timestamp + "\"";
-      return fromJsonString(wrappedString, Date.class);
-    } catch (Exception e) {
-      throw new RuntimeException("Creating date", e);
-    }
-  }
-
-  private String isoConvert(Date timestamp) {
-    try {
-      if (timestamp == null) {
-        return "null";
-      }
-      String dateString = toJsonString(timestamp);
-      // Strip off the leading and trailing quotes from the JSON string-as-string representation.
-      return dateString.substring(1, dateString.length() - 1);
-    } catch (Exception e) {
-      throw new RuntimeException("Creating timestamp", e);
     }
   }
 

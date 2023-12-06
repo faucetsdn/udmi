@@ -18,6 +18,7 @@ import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.getDate;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
+import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static java.lang.String.format;
@@ -194,7 +195,7 @@ public class IotReflectorClient implements MessagePublisher {
     try {
       reflectorStateTimestamp = new Date();
       System.err.printf("Setting state version %s timestamp %s%n",
-          udmiVersion, getTimestamp(reflectorStateTimestamp));
+          udmiVersion, isoConvert(reflectorStateTimestamp));
       setReflectorState(udmiState);
     } catch (Exception e) {
       throw new RuntimeException("Could not set reflector state", e);
@@ -306,8 +307,8 @@ public class IotReflectorClient implements MessagePublisher {
       }
       System.err.println("UDMI received reflectorConfig: " + stringify(reflectorConfig));
       Date lastState = reflectorConfig.last_state;
-      System.err.println("UDMI matching against expected state timestamp " + getTimestamp(
-          reflectorStateTimestamp));
+      System.err.println("UDMI matching against expected state timestamp "
+          + isoConvert(reflectorStateTimestamp));
 
       udmiInfo = reflectorConfig.setup;
       boolean timestampMatch = dateEquals(lastState, reflectorStateTimestamp);
@@ -337,7 +338,7 @@ public class IotReflectorClient implements MessagePublisher {
       } else if (!versionMatch) {
         System.err.println("UDMI update version mismatch... waiting for retry...");
       } else {
-        System.err.println("UDMI ignoring mismatching timestamp " + getTimestamp(lastState));
+        System.err.println("UDMI ignoring mismatching timestamp " + isoConvert(lastState));
       }
     } catch (Exception e) {
       syncFailure = e;

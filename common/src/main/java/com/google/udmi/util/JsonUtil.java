@@ -1,10 +1,11 @@
 package com.google.udmi.util;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.udmi.util.GeneralUtils.fromJsonString;
+import static com.google.udmi.util.GeneralUtils.toJsonString;
 import static java.util.Objects.requireNonNull;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.core.json.JsonReadFeature;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -12,11 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import java.io.File;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Map;
-import java.util.Objects;
 import java.util.TreeMap;
 
 /**
@@ -146,41 +145,12 @@ public abstract class JsonUtil {
   }
 
   /**
-   * Get a proper JSON string representation of the given Date.
-   *
-   * @param date thing to convert
-   * @return converted to a string
-   */
-  public static String getTimestamp(Date date) {
-    try {
-      if (date == null) {
-        return "null";
-      }
-      String dateString = stringify(date);
-      // Remove the encapsulating quotes included because it's a JSON string-in-a-string.
-      return dateString.substring(1, dateString.length() - 1);
-    } catch (Exception e) {
-      throw new RuntimeException("Creating timestamp", e);
-    }
-  }
-
-  /**
-   * Get a proper JSON string representation of the given Instant.
-   *
-   * @param timestamp thing to convert
-   * @return converted to string
-   */
-  public static String getTimestamp(Instant timestamp) {
-    return getTimestamp(Date.from(timestamp));
-  }
-
-  /**
    * Get a current timestamp string.
    *
    * @return current ISO timestamp
    */
   public static String getTimestamp() {
-    return getTimestamp(CleanDateFormat.cleanDate());
+    return isoConvert(CleanDateFormat.cleanDate());
   }
 
   /**
@@ -400,6 +370,32 @@ public abstract class JsonUtil {
       OBJECT_MAPPER.writeValue(file, target);
     } catch (Exception e) {
       throw new RuntimeException("While writing " + file.getAbsolutePath(), e);
+    }
+  }
+
+  private static Date isoConvert(String timestamp) {
+    try {
+      String wrappedString = "\"" + timestamp + "\"";
+      return fromJsonString(wrappedString, Date.class);
+    } catch (Exception e) {
+      throw new RuntimeException("Creating date", e);
+    }
+  }
+
+  public static String isoConvert(Instant timestamp) {
+    return isoConvert(Date.from(timestamp));
+  }
+
+  public static String isoConvert(Date timestamp) {
+    try {
+      if (timestamp == null) {
+        return "null";
+      }
+      String dateString = toJsonString(timestamp);
+      // Strip off the leading and trailing quotes from the JSON string-as-string representation.
+      return dateString.substring(1, dateString.length() - 1);
+    } catch (Exception e) {
+      throw new RuntimeException("Creating timestamp", e);
     }
   }
 }
