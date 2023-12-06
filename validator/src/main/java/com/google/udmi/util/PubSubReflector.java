@@ -8,7 +8,6 @@ import static com.google.udmi.util.Common.DEVICE_ID_KEY;
 import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.getNamespacePrefix;
-import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toStringMap;
@@ -205,7 +204,7 @@ public class PubSubReflector implements MessagePublisher {
       Map<String, Object> dataMap = OBJECT_MAPPER.readValue(data, TreeMap.class);
       asMap = dataMap;
     } catch (JsonProcessingException e) {
-      asMap = new ErrorContainer(e, getSubscriptionId(), JsonUtil.getTimestamp());
+      asMap = new ErrorContainer(e, getSubscriptionId(), GeneralUtils.getTimestamp());
     }
 
     HashMap<String, String> attributes = new HashMap<>(message.getAttributesMap());

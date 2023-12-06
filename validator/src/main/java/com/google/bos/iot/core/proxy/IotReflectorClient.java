@@ -13,11 +13,11 @@ import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.Common.TRANSACTION_KEY;
 import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.Common.getNamespacePrefix;
+import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.getDate;
-import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
@@ -244,7 +244,7 @@ public class IotReflectorClient implements MessagePublisher {
     } catch (Exception e) {
       if (isInstallValid) {
         handleReceivedMessage(extractAttributes(messageMap),
-            new ErrorContainer(e, payload, JsonUtil.getTimestamp()));
+            new ErrorContainer(e, payload, getTimestamp()));
       } else {
         throw e;
       }

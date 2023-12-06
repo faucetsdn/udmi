@@ -1,6 +1,5 @@
 package com.google.daq.mqtt.util;
 
-import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static java.lang.Boolean.TRUE;
 import static java.util.Optional.ofNullable;

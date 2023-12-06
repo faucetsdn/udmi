@@ -7,7 +7,6 @@ import static com.google.daq.mqtt.util.TimePeriodConstants.ONE_MINUTE_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.THREE_MINUTES_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
-import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static java.lang.String.format;

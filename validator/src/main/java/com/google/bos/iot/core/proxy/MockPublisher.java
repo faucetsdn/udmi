@@ -1,9 +1,11 @@
 package com.google.bos.iot.core.proxy;
 
+import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static java.lang.String.format;
 
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.validator.Validator;
+import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
 import java.util.HashMap;
@@ -29,7 +31,7 @@ public class MockPublisher implements MessagePublisher {
       Validator.MessageBundle bundle = new Validator.MessageBundle();
       bundle.message = JsonUtil.asMap(message);
       bundle.attributes = new HashMap<>();
-      bundle.timestamp = JsonUtil.getTimestamp();
+      bundle.timestamp = getTimestamp();
       messages.put(bundle);
       return format("%08x", System.currentTimeMillis());
     } catch (Exception e) {
