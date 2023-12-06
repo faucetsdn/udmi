@@ -51,7 +51,7 @@ public class SystemManager extends ManagerBase {
   private static final String DEFAULT_MODEL = "pubber";
   private static final String DEFAULT_SOFTWARE_KEY = "firmware";
   private static final String DEFAULT_SOFTWARE_VALUE = "v1";
-  private static final Date DEVICE_START_TIME = Pubber.deviceStartTime;
+  private static final Date DEVICE_START_TIME = Pubber.DEVICE_START_TIME;
   private static final Map<SystemMode, Integer> EXIT_CODE_MAP = ImmutableMap.of(
       SystemMode.SHUTDOWN, 0, // Indicates expected clean shutdown (success).
       SystemMode.RESTART, 192, // Indicate process to be explicitly restarted.

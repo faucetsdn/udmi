@@ -1,5 +1,6 @@
 package daq.pubber;
 
+import com.google.udmi.util.SiteModel;
 import java.util.Map;
 import udmi.schema.Config;
 import udmi.schema.DevicePersistent;
@@ -64,7 +65,7 @@ public class DeviceManager extends ManagerBase {
   }
 
   public void localLog(String message, Level trace, String timestamp, String detail) {
-    systemManager.localLog(message, trace, timestamp, detail);
+    SystemManager.localLog(message, trace, timestamp, detail);
   }
 
   public String getTestingTag() {
@@ -101,5 +102,9 @@ public class DeviceManager extends ManagerBase {
 
   public Map<String, FamilyDiscoveryEvent> enumerateFamilies() {
     return localnetManager.enumerateFamilies();
+  }
+
+  public void setSiteModel(SiteModel siteModel) {
+    discoveryManager.setSiteModel(siteModel);
   }
 }

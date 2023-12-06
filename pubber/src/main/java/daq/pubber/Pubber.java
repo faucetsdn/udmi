@@ -17,12 +17,12 @@ import static com.google.udmi.util.GeneralUtils.isGetTrue;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.optionsString;
 import static com.google.udmi.util.GeneralUtils.setClockSkew;
+import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.GeneralUtils.toJsonFile;
 import static com.google.udmi.util.GeneralUtils.toJsonString;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.safeSleep;
-import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static daq.pubber.MqttDevice.CONFIG_TOPIC;
 import static daq.pubber.MqttDevice.ERRORS_TOPIC;
@@ -32,7 +32,6 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Objects.requireNonNullElse;
 import static java.util.Optional.ofNullable;
-import static java.util.stream.Collectors.toMap;
 import static udmi.schema.BlobsetConfig.SystemBlobsets.IOT_ENDPOINT_CONFIG;
 import static udmi.schema.EndpointConfiguration.Protocol.MQTT;
 
@@ -108,14 +107,13 @@ import udmi.schema.SystemState;
  */
 public class Pubber extends ManagerBase implements ManagerHost {
 
-  public static final int SCAN_DURATION_SEC = 10;
   public static final String PUBBER_OUT = "pubber/out";
   public static final String PERSISTENT_STORE_FILE = "persistent_data.json";
   public static final String PERSISTENT_TMP_FORMAT = "/tmp/pubber_%s_" + PERSISTENT_STORE_FILE;
   public static final String DATA_URL_JSON_BASE64 = "data:application/json;base64,";
   static final String UDMI_VERSION = SchemaVersion.CURRENT.key();
   static final Logger LOG = LoggerFactory.getLogger(Pubber.class);
-  static final Date deviceStartTime = getRoundedStartTime();
+  static final Date DEVICE_START_TIME = getRoundedStartTime();
   static final int MESSAGE_REPORT_INTERVAL = 10;
   private static final String BROKEN_VERSION = "1.4.";
   private static final String HOSTNAME = System.getenv("HOSTNAME");
@@ -172,6 +170,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
   private int deviceUpdateCount = -1;
   private DeviceManager deviceManager;
   private boolean isConnected;
+
   private boolean isGatewayDevice;
 
   /**
@@ -208,6 +207,11 @@ public class Pubber extends ManagerBase implements ManagerHost {
     if (PUBSUB_SITE.equals(sitePath)) {
       pubSubClient = new PubSubClient(iotProject, deviceId);
     }
+  }
+
+  @Override
+  public DeviceManager getDeviceManager() {
+    return deviceManager;
   }
 
   private static PubberConfiguration loadConfiguration(String configPath) {
@@ -368,6 +372,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
     if (configuration.sitePath != null) {
       siteModel = new SiteModel(configuration.sitePath);
       siteModel.initialize();
+      deviceManager.setSiteModel(siteModel);
       if (configuration.endpoint == null) {
         configuration.endpoint = siteModel.makeEndpointConfig(configuration.iotProject, deviceId);
       }
@@ -580,7 +585,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
 
   private void checkSmokyFailure() {
     if (isTrue(configuration.options.smokeCheck)
-        && Instant.now().minus(SMOKE_CHECK_TIME).isAfter(deviceStartTime.toInstant())) {
+        && Instant.now().minus(SMOKE_CHECK_TIME).isAfter(DEVICE_START_TIME.toInstant())) {
       error(format("Smoke check failed after %sm, terminating run.",
           SMOKE_CHECK_TIME.getSeconds() / 60));
       deviceManager.systemLifecycle(SystemMode.TERMINATE);

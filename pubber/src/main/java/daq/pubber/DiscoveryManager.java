@@ -1,10 +1,13 @@
 package daq.pubber;
 
 import static com.google.udmi.util.GeneralUtils.isGetTrue;
+import static com.google.udmi.util.JsonUtil.isoConvert;
+import static daq.pubber.Pubber.DEVICE_START_TIME;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
 
+import com.google.udmi.util.SiteModel;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
@@ -14,6 +17,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvent;
+import udmi.schema.DiscoveryModel;
 import udmi.schema.DiscoveryState;
 import udmi.schema.Enumerate;
 import udmi.schema.FamilyDiscoveryConfig;
@@ -26,13 +30,21 @@ import udmi.schema.PointPointsetModel;
 import udmi.schema.PointsetState;
 import udmi.schema.PubberConfiguration;
 
+/**
+ * Manager wrapper for discovery functionality in pubber.
+ */
 public class DiscoveryManager extends ManagerBase {
 
+  public static final int SCAN_DURATION_SEC = 10;
+
+  private final DeviceManager deviceManager;
   private DiscoveryState discoveryState;
   private DiscoveryConfig discoveryConfig;
+  private SiteModel siteModel;
 
   public DiscoveryManager(ManagerHost host, PubberConfiguration configuration) {
     super(host, configuration);
+    deviceManager = host.getDeviceManager();
   }
 
   private void updateDiscoveryEnumeration(DiscoveryConfig config) {
@@ -52,8 +64,8 @@ public class DiscoveryManager extends ManagerBase {
     Enumerate enumerate = config.enumerate;
     discoveryEvent.uniqs = ifTrue(enumerate.uniqs, () -> enumeratePoints(deviceId));
     discoveryEvent.features = ifTrue(enumerate.features, SupportedFeatures::getFeatures);
-    discoveryEvent.families = ifTrue(enumerate.families, () -> deviceManager.enumerateFamilies());
-    publishDeviceMessage(discoveryEvent);
+    discoveryEvent.families = ifTrue(enumerate.families, deviceManager::enumerateFamilies);
+    host.publish(discoveryEvent);
   }
 
   private void updateDiscoveryScan(HashMap<String, FamilyDiscoveryConfig> familiesRaw) {
@@ -82,7 +94,7 @@ public class DiscoveryManager extends ManagerBase {
       }
 
       Date previousGeneration = getFamilyDiscoveryState(family).generation;
-      Date baseGeneration = previousGeneration == null ? deviceStartTime : previousGeneration;
+      Date baseGeneration = previousGeneration == null ? DEVICE_START_TIME : previousGeneration;
       final Date startGeneration;
       if (configGeneration.before(baseGeneration)) {
         int interval = getScanInterval(family);
@@ -131,7 +143,7 @@ public class DiscoveryManager extends ManagerBase {
     scheduleFuture(stopTime, () -> discoveryScanComplete(family, scanGeneration));
     familyDiscoveryState.generation = scanGeneration;
     familyDiscoveryState.active = true;
-    publishAsynchronousState();
+    updateState();
     Date sendTime = Date.from(Instant.now().plusSeconds(SCAN_DURATION_SEC / 2));
     scheduleFuture(sendTime, () -> sendDiscoveryEvent(family, scanGeneration));
   }
@@ -155,7 +167,7 @@ public class DiscoveryManager extends ManagerBase {
           if (isGetTrue(() -> discoveryConfig.families.get(family).enumerate)) {
             discoveryEvent.uniqs = enumeratePoints(deviceId);
           }
-          publishDeviceMessage(discoveryEvent);
+          host.publish(discoveryEvent);
           sentEvents.incrementAndGet();
         }
       });
@@ -189,7 +201,7 @@ public class DiscoveryManager extends ManagerBase {
         } else {
           info("Discovery scan stopping " + family + " from " + isoConvert(scanGeneration));
           familyDiscoveryState.active = false;
-          publishAsynchronousState();
+          updateState();
         }
       }
     } catch (Exception e) {
@@ -233,6 +245,9 @@ public class DiscoveryManager extends ManagerBase {
     updateState(ofNullable((Object) discoveryState).orElse(PointsetState.class));
   }
 
+  /**
+   * Update the discovery config.
+   */
   public void updateConfig(DiscoveryConfig discovery) {
     discoveryConfig = discovery;
     if (discovery == null) {
@@ -246,5 +261,9 @@ public class DiscoveryManager extends ManagerBase {
     updateDiscoveryEnumeration(discovery);
     updateDiscoveryScan(discovery.families);
     updateState();
+  }
+
+  public void setSiteModel(SiteModel siteModel) {
+    this.siteModel = siteModel;
   }
 }

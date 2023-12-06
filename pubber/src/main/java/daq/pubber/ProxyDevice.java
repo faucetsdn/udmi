@@ -26,6 +26,11 @@ public class ProxyDevice extends ManagerBase implements ManagerHost {
     pubberHost = (Pubber) host;
   }
 
+  @Override
+  public DeviceManager getDeviceManager() {
+    return deviceManager;
+  }
+
   private static PubberConfiguration makeProxyConfiguration(String id) {
     PubberConfiguration proxyConfiguration = deepCopy(configuration);
     proxyConfiguration.deviceId = id;
