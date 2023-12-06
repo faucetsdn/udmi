@@ -163,6 +163,7 @@ public class SequenceBase {
   public static final int SCHEMA_SCORE = 5;
   public static final int CAPABILITY_SCORE = 1;
   public static final String STATUS_LEVEL_VIOLATION = "STATUS_LEVEL";
+  public static final String DEVICE_STATE_SCHEMA = "device_state";
   private static final String ALL_CHANGES = "";
   private static final int FUNCTIONS_VERSION_BETA = 11;
   private static final int FUNCTIONS_VERSION_ALPHA = FUNCTIONS_VERSION_BETA;
@@ -232,7 +233,6 @@ public class SequenceBase {
   private static final Duration DEFAULT_LOOP_TIMEOUT = Duration.ofHours(30);
   private static final Set<String> SYSTEM_STATE_CHANGES = ImmutableSet.of(
       "timestamp", "system.last_config", "system.status");
-  public static final String DEVICE_STATE_SCHEMA = "device_state";
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -472,16 +472,6 @@ public class SequenceBase {
     return format("%s_%s%s", subType, subFolder, deviceSuffix);
   }
 
-  @NotNull
-  private Predicate<Map.Entry<String, List<Entry>>> isInterestingValidation() {
-    return entry -> isInterestingValidation(entry.getKey());
-  }
-
-  private boolean isInterestingValidation(String schemaName) {
-    String targetSchema = format("event_%s", ifNotNullGet(testSchema, SubFolder::value));
-    return schemaName.equals(targetSchema) || schemaName.equals(STATE_UPDATE_MESSAGE_TYPE);
-  }
-
   private static void emitSequenceResult(SequenceResult result, String bucket, String name,
       String stage, int score, int total, String message) {
     emitSequencerOut(format(RESULT_FORMAT, result, bucket, name, stage, score, total, message));
@@ -585,6 +575,16 @@ public class SequenceBase {
     } catch (Exception e) {
       throw new RuntimeException("While extracting capabilities for " + desc.getMethodName(), e);
     }
+  }
+
+  @NotNull
+  private Predicate<Map.Entry<String, List<Entry>>> isInterestingValidation() {
+    return entry -> isInterestingValidation(entry.getKey());
+  }
+
+  private boolean isInterestingValidation(String schemaName) {
+    String targetSchema = format("event_%s", ifNotNullGet(testSchema, SubFolder::value));
+    return schemaName.equals(targetSchema) || schemaName.equals(STATE_UPDATE_MESSAGE_TYPE);
   }
 
   private Map.Entry<Integer, Integer> emitCapabilityResult(Capabilities capability, Exception state,
@@ -1715,9 +1715,12 @@ public class SequenceBase {
       String message = format("System status level %d exceeded allowed threshold %d", statusLevel,
           maxAllowedStatusLevel);
       deviceStateViolations.put(STATUS_LEVEL_VIOLATION, message);
+      warning(message);
     }
-    deviceStateViolations.putAll(stateChanges.stream().filter(not(this::changeAllowed)).collect(
-        Collectors.toMap(DiffEntry::key, DiffEntry::toString)));
+    Map<String, String> badChanges = stateChanges.stream().filter(not(this::changeAllowed))
+        .collect(Collectors.toMap(DiffEntry::key, DiffEntry::toString));
+    badChanges.values().stream().map(x -> "Unexpected state change: " + x).forEach(this::warning);
+    deviceStateViolations.putAll(badChanges);
   }
 
   private boolean changeAllowed(DiffEntry change) {
