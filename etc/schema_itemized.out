@@ -17,7 +17,7 @@
 14 broken_config RESULT pass schemas event_system_alpha ALPHA 5/5 Schema validation passed
 14 broken_config RESULT pass schemas state_update_alpha ALPHA 5/5 Schema validation passed
 15 broken_config
-16 broken_config RESULT fail schemas device_state_alpha ALPHA 5/5 Schema validation passed
+16 broken_config RESULT pass schemas device_state_alpha ALPHA 5/5 Schema validation passed
 16 broken_config RESULT pass schemas event_system_alpha ALPHA 5/5 Schema validation passed
 16 broken_config RESULT pass schemas state_update_alpha ALPHA 5/5 Schema validation passed
 17 broken_config
