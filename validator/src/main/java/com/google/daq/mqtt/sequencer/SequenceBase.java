@@ -8,8 +8,6 @@ import static com.google.common.base.Strings.emptyToNull;
 import static com.google.daq.mqtt.sequencer.SequenceBase.Capabilities.LAST_CONFIG;
 import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
 import static com.google.daq.mqtt.util.IotReflectorClient.REFLECTOR_PREFIX;
-import static com.google.daq.mqtt.validator.Validator.CONFIG_PREFIX;
-import static com.google.daq.mqtt.validator.Validator.STATE_PREFIX;
 import static com.google.udmi.util.CleanDateFormat.cleanDate;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.Common.DEVICE_ID_KEY;
@@ -301,6 +299,7 @@ public class SequenceBase {
   private int startStateCount;
   private Boolean expectedSystemStatus;
   private Description testDescription;
+  private SubFolder testSchema;
 
   private static void setupSequencer() {
     exeConfig = SequenceRunner.ensureExecutionConfig();
@@ -473,13 +472,13 @@ public class SequenceBase {
   }
 
   @NotNull
-  private static Predicate<Map.Entry<String, List<Entry>>> isInterestingValidation() {
+  private Predicate<Map.Entry<String, List<Entry>>> isInterestingValidation() {
     return entry -> isInterestingValidation(entry.getKey());
   }
 
-  private static boolean isInterestingValidation(String schemaName) {
-    return !schemaName.startsWith(CONFIG_PREFIX)
-        && (!schemaName.startsWith(STATE_PREFIX) || schemaName.equals(STATE_UPDATE_MESSAGE_TYPE));
+  private boolean isInterestingValidation(String schemaName) {
+    String targetSchema = format("event_%s", ifNotNullGet(testSchema, SubFolder::value));
+    return schemaName.equals(targetSchema) || schemaName.equals(STATE_UPDATE_MESSAGE_TYPE);
   }
 
   private static void emitSequenceResult(SequenceResult result, String bucket, String name,
@@ -535,7 +534,7 @@ public class SequenceBase {
       logEntry.message = "No messages validated";
       logEntry.level = WARNING.value();
     } else if (failures.isEmpty()) {
-      logEntry.message = "All schema validations passed";
+      logEntry.message = "Schema validation passed";
       logEntry.level = NOTICE.value();
     } else {
       logEntry.message = "Schema violations found";
@@ -1702,7 +1701,7 @@ public class SequenceBase {
   }
 
   private void validateIntermediateState(State convertedState, List<DiffEntry> stateChanges) {
-    if (!recordSequence || !shouldValidateSchema(testDescription)) {
+    if (!recordSequence || !shouldValidateSchema(SubFolder.VALIDATION)) {
       return;
     }
 
@@ -2108,8 +2107,8 @@ public class SequenceBase {
     }
   }
 
-  private boolean shouldValidateSchema(Description description) {
-    return description.getAnnotation(ValidateSchema.class) != null;
+  private boolean shouldValidateSchema(SubFolder folder) {
+    return testSchema != null && (testSchema == folder || folder == SubFolder.VALIDATION);
   }
 
   /**
@@ -2171,6 +2170,8 @@ public class SequenceBase {
         testStage = getTestStage(description);
         testBucket = getBucket(description);
         testResult = SequenceResult.START;
+        testSchema = ifNotNullGet(description.getAnnotation(ValidateSchema.class),
+            ValidateSchema::value);
 
         testDir = new File(new File(deviceOutputDir, TESTS_OUT_DIR), testName);
         FileUtils.deleteDirectory(testDir);
@@ -2202,7 +2203,7 @@ public class SequenceBase {
         throw new IllegalStateException("Unexpected test method name");
       }
 
-      ifTrueThen(testResult == PASS && shouldValidateSchema(description),
+      ifTrueThen(testResult == PASS && shouldValidateSchema(SubFolder.VALIDATION),
           () -> recordSchemaValidations(description));
 
       notice("ending test " + testName + " after " + timeSinceStart() + " " + START_END_MARKER);

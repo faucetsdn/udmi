@@ -28,6 +28,7 @@ import udmi.schema.BlobsetConfig.SystemBlobsets;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.EndpointConfiguration.Protocol;
 import udmi.schema.Entry;
+import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Level;
 import udmi.schema.Operation.SystemMode;
 
@@ -166,7 +167,7 @@ public class BlobsetSequences extends SequenceBase {
 
   @Feature(stage = ALPHA, bucket = ENDPOINT)
   @Summary("Failed connection because of bad hash.")
-  @ValidateSchema
+  @ValidateSchema(SubFolder.BLOBSET)
   @Test
   public void endpoint_connection_bad_hash() {
     setDeviceConfigEndpointBlob(getAlternateEndpointHostname(), registryId, true);

@@ -34,6 +34,7 @@ import java.util.Date;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Test;
 import udmi.schema.Entry;
+import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Level;
 
 /**
@@ -51,7 +52,7 @@ public class ConfigSequences extends SequenceBase {
   @Test(timeout = ONE_MINUTE_MS)
   @Feature(stage = STABLE, bucket = SYSTEM, nostate = true)
   @Summary("Check that last_update state is correctly set in response to a config update.")
-  @ValidateSchema
+  @ValidateSchema(SubFolder.SYSTEM)
   public void system_last_update() {
     ensureStateUpdate();
     untilTrue("state last_config matches config timestamp", this::lastConfigUpdated);
@@ -59,7 +60,7 @@ public class ConfigSequences extends SequenceBase {
 
   @Test
   @Feature(stage = ALPHA, bucket = SYSTEM)
-  @ValidateSchema
+  @ValidateSchema(SubFolder.SYSTEM)
   public void valid_serial_no() {
     ifNullSkipTest(serialNo, "No test serial number provided");
     ensureStateUpdate();
@@ -69,6 +70,7 @@ public class ConfigSequences extends SequenceBase {
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = ALPHA, bucket = SYSTEM, nostate = true)
   @Summary("Check that the min log-level config is honored by the device.")
+  @ValidateSchema(SubFolder.SYSTEM)
   public void system_min_loglevel() {
     Integer savedLevel = deviceConfig.system.min_loglevel;
     checkState(SYSTEM_CONFIG_APPLY_LEVEL.value() >= savedLevel, "invalid saved level");
@@ -119,7 +121,7 @@ public class ConfigSequences extends SequenceBase {
   @Feature(stage = ALPHA, bucket = SYSTEM, score = 4)
   @Capability(value = LOGGING, stage = ALPHA)
   @Summary("Check that the device correctly handles a broken (non-json) config message.")
-  @ValidateSchema
+  @ValidateSchema(SubFolder.SYSTEM)
   public void broken_config() {
     expectedStatusLevel(Level.ERROR);
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
