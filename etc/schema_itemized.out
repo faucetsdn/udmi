@@ -24,7 +24,7 @@
 18 system_last_update RESULT fail schemas state_update_stable STABLE 5/5 Schema violations found
 18 system_last_update RESULT pass schemas device_state_stable STABLE 5/5 Schema validation passed
 18 system_last_update RESULT pass schemas event_system_stable STABLE 5/5 Schema validation passed
-19 system_last_update RESULT pass schemas device_state_stable STABLE 5/5 Schema validation passed
+19 system_last_update RESULT fail schemas device_state_stable STABLE 5/5 Schema violations found
 19 system_last_update RESULT pass schemas event_system_stable STABLE 5/5 Schema validation passed
 19 system_last_update RESULT pass schemas state_update_stable STABLE 5/5 Schema validation passed
 20 state_make_model
