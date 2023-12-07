@@ -749,13 +749,17 @@ public class SequenceBase {
     clearReceivedEvents();
     validationResults.clear();
 
-    forCapability(LAST_CONFIG,
-        () -> waitFor("state last_config sync", this::lastConfigUpdatedString));
+    waitForStateConfigSync();
 
     recordSequence = true;
     waitingConditionPush("executing test");
 
     debug(format("stage begin %s at %s", currentWaitingCondition(), timeSinceStart()));
+  }
+
+  private void waitForStateConfigSync() {
+    forCapability(LAST_CONFIG,
+        () -> waitFor("state last_config sync", this::lastConfigUpdatedString));
   }
 
   private boolean deviceSupportsState() {
@@ -798,6 +802,7 @@ public class SequenceBase {
       resetRequired = false;
     });
 
+    waitForStateConfigSync();
     disallowDeviceStateChange(ALL_CHANGES);
   }
 
@@ -1730,12 +1735,14 @@ public class SequenceBase {
   }
 
   protected void allowDeviceStateChange(String changePrefix) {
+    info("Allowing device state change " + changePrefix);
     if (!allowedDeviceStateChanges.add(changePrefix)) {
       throw new AbortMessageLoop("State change prefix already allowed: " + changePrefix);
     }
   }
 
   protected void disallowDeviceStateChange(String changePrefix) {
+    info("Disallowing device state change " + changePrefix);
     if (!allowedDeviceStateChanges.remove(changePrefix)) {
       throw new AbortMessageLoop("Unexpected state change removal: " + changePrefix);
     }
