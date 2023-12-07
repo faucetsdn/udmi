@@ -1283,7 +1283,6 @@ public class SequenceBase {
 
   private void waitFor(String description, Supplier<String> evaluator) {
     waitFor(description, DEFAULT_WAIT_TIME, evaluator);
-
   }
 
   private void waitFor(String description, Duration maxWait, Supplier<String> evaluator) {
@@ -1390,18 +1389,18 @@ public class SequenceBase {
 
   private void waitingConditionPop(Instant startTime) {
     Duration between = Duration.between(startTime, Instant.now());
-    debug(format("stage finished %s at %s after %ss", currentWaitingCondition(),
+    debug(format("Stage finished %s at %s after %ss", currentWaitingCondition(),
         timeSinceStart(), between.toSeconds()));
     waitingCondition.pop();
     ifTrueThen(!waitingCondition.isEmpty(),
-        () -> trace(format("stage resume %s at %s", currentWaitingCondition(), timeSinceStart())));
+        () -> trace(format("Stage resume %s at %s", currentWaitingCondition(), timeSinceStart())));
   }
 
   private void waitingConditionPush(String condition) {
     ifTrueThen(!waitingCondition.isEmpty(),
         () -> trace(format("stage suspend %s at %s", currentWaitingCondition(), timeSinceStart())));
     waitingCondition.push("waiting for " + condition);
-    info(format("stage start %s at %s", currentWaitingCondition(), timeSinceStart()));
+    info(format("Stage start %s at %s", currentWaitingCondition(), timeSinceStart()));
   }
 
   private String currentWaitingCondition() {
