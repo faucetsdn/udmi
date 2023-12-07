@@ -24,7 +24,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
+import org.junit.Before;
 import org.junit.Test;
+import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Level;
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetEvent;
@@ -39,6 +41,11 @@ public class PointsetSequences extends PointsetBase {
   private static final String EXTRANEOUS_POINT = "extraneous_point";
   private static final int DEFAULT_SAMPLE_RATE_SEC = 10;
   private static final String POINTS_MAP_PATH = "pointset.points";
+
+  @Before
+  public void setupExpectedParameters() {
+    allowDeviceStateChange("pointset.");
+  }
 
   private boolean isErrorState(PointPointsetState pointState) {
     return ofNullable(catchToNull(() -> pointState.status.level)).orElse(Level.INFO.value())
@@ -130,8 +137,7 @@ public class PointsetSequences extends PointsetBase {
     ifNullSkipTest(deviceConfig.pointset, "no pointset found in config");
 
     untilTrue("receive a pointset event",
-        () -> (countReceivedEvents(PointsetEvent.class) > 1
-        ));
+        () -> (countReceivedEvents(PointsetEvent.class) > 1));
   }
 
   /**
@@ -203,7 +209,7 @@ public class PointsetSequences extends PointsetBase {
   @Test(timeout = THREE_MINUTES_MS)
   @Summary("Check handling of sample rate and sample limit sec")
   @Feature(stage = BETA, bucket = POINTSET, nostate = true)
-  @ValidateSchema
+  @ValidateSchema(SubFolder.POINTSET)
   public void pointset_publish_interval() {
     ifNullSkipTest(deviceConfig.pointset, "no pointset found in config");
 

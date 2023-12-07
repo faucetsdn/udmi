@@ -26,8 +26,11 @@ diff -u out/schema.out $UDMI_ROOT/etc/schema${suffix}.out || failures+="schema "
 cp $UDMI_ROOT/docs/specs/sequences/generated.md out/generated.tmp  # Save for test/comparison
 bin/gencode_seq || failures+="gencode "
 
-echo Comparing diff out/generated.tmp docs/specs/sequences/generated.md
-diff -u out/generated.tmp $UDMI_ROOT/docs/specs/sequences/generated.md || failures+="gencode_seq "
+mv $UDMI_ROOT/docs/specs/sequences/generated.md out/generated.out
+mv out/generated.tmp $UDMI_ROOT/docs/specs/sequences/generated.md
+
+echo Comparing diff out/generated.out docs/specs/sequences/generated.md
+diff -u out/generated.out $UDMI_ROOT/docs/specs/sequences/generated.md || failures+="gencode_seq "
 
 SAMPLE_TEST_ROW="| system | system_min_loglevel | alpha | pass | Sequence complete |"
 target=sites/udmi_site_model/out/devices/AHU-1/results.md

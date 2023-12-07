@@ -4,6 +4,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import udmi.schema.Envelope.SubFolder;
 
 /**
  * Indicate that test post-processing should apply schema validation. Don't include by
@@ -12,5 +13,10 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD})
 public @interface ValidateSchema {
+
+  /**
+   * Limit the subFolder that should be validated.
+   */
+  SubFolder value();
 
 }
