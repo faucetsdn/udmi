@@ -260,7 +260,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     if (subFolderRaw == null) {
       // Do nothing!
     } else if (subFolderRaw.equals("")) {
-      debug("Coerced empty subFolder " + subFolderRaw + " to undefined");
+      debug("Coerced empty subFolder to undefined");
       attributesMap.remove(SUBFOLDER_PROPERTY_KEY);
     } else {
       SubFolder subFolder = catchToElse(() -> SubFolder.fromValue(subFolderRaw), SubFolder.INVALID);
@@ -274,7 +274,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     if (subTypeRaw == null) {
       // Do nothing!
     } else if (subTypeRaw.equals("")) {
-      debug("Coerced empty subType " + subTypeRaw + " to undefined");
+      debug("Coerced empty subType to undefined");
       attributesMap.remove(SUBTYPE_PROPERTY_KEY);
     } else if (!Strings.isNullOrEmpty(subTypeRaw)) {
       SubType subType = catchToElse(() -> SubType.fromValue(subTypeRaw), SubType.INVALID);
