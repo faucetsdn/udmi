@@ -242,7 +242,7 @@ public class DiscoveryManager extends ManagerBase {
   }
 
   private void updateState() {
-    updateState(ofNullable((Object) discoveryState).orElse(PointsetState.class));
+    updateState(ofNullable((Object) discoveryState).orElse(DiscoveryState.class));
   }
 
   /**
