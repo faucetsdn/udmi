@@ -8,6 +8,7 @@ class PointPointsetConfig:
     self.ref = None
     self.units = None
     self.set_value = None
+    self.stop_time = None
     self.cov_increment = None
 
   @staticmethod
@@ -18,6 +19,7 @@ class PointPointsetConfig:
     result.ref = source.get('ref')
     result.units = source.get('units')
     result.set_value = source.get('set_value')
+    result.stop_time = source.get('stop_time')
     result.cov_increment = source.get('cov_increment')
     return result
 
@@ -45,6 +47,8 @@ class PointPointsetConfig:
       result['units'] = self.units # 5
     if self.set_value:
       result['set_value'] = self.set_value # 5
+    if self.stop_time:
+      result['stop_time'] = self.stop_time # 5
     if self.cov_increment:
       result['cov_increment'] = self.cov_increment # 5
     return result

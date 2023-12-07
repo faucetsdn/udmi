@@ -3,13 +3,12 @@ package com.google.daq.mqtt.util;
 import static com.google.udmi.util.DiffEntry.DiffAction.ADD;
 import static com.google.udmi.util.DiffEntry.DiffAction.REMOVE;
 import static com.google.udmi.util.DiffEntry.DiffAction.SET;
+import static com.google.udmi.util.JsonUtil.isoConvert;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
 import com.google.udmi.util.DiffEntry;
-import com.google.udmi.util.DiffEntry.DiffAction;
-import com.google.udmi.util.JsonUtil;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -176,7 +175,7 @@ public class ObjectDiffEngine {
     String wrapper = isSemantic ? "_" : "`";
     if (value instanceof Date && !isSemantic) {
       if (ignoreSemantics) {
-        return wrapper + JsonUtil.getTimestamp((Date) value) + wrapper;
+        return wrapper + isoConvert((Date) value) + wrapper;
       } else {
         throw new IllegalArgumentException(
             "Unexpected non-semantic Date in semantic value calculation");

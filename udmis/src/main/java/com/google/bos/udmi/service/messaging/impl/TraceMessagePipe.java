@@ -1,13 +1,12 @@
 package com.google.bos.udmi.service.messaging.impl;
 
-import static com.google.udmi.util.Common.DEVICE_ID_KEY;
 import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
 import static com.google.udmi.util.GeneralUtils.decodeBase64;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
-import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.asMap;
-import static com.google.udmi.util.JsonUtil.getTimestamp;
+import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.writeFile;
 import static java.lang.String.format;
@@ -15,7 +14,7 @@ import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.common.collect.ImmutableMap;
-import com.google.udmi.util.Common;
+import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import java.io.File;
 import java.util.HashMap;
@@ -23,11 +22,8 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.jetbrains.annotations.Nullable;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
-import udmi.schema.Envelope.SubFolder;
-import udmi.schema.Envelope.SubType;
 
 /**
  * Basic file message pipe that reads from simple json files encoded with type/folder in the
@@ -96,7 +92,7 @@ public class TraceMessagePipe extends MessageBase {
     }
     Envelope envelope = bundle.envelope;
     String publishTime =
-        envelope.publishTime == null ? getTimestamp() : getTimestamp(envelope.publishTime);
+        envelope.publishTime == null ? getTimestamp() : isoConvert(envelope.publishTime);
     int endMark = publishTime.lastIndexOf(".");
     String useTime = publishTime.substring(0, endMark >= 0 ? endMark : publishTime.length());
     String timePath = useTime.replaceAll("[T:Z]", "/");

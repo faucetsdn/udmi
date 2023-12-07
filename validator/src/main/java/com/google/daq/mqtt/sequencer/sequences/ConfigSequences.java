@@ -7,7 +7,7 @@ import static com.google.daq.mqtt.util.TimePeriodConstants.ONE_MINUTE_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.THREE_MINUTES_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
-import static com.google.udmi.util.JsonUtil.getTimestamp;
+import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
@@ -129,10 +129,10 @@ public class ConfigSequences extends SequenceBase {
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
     updateConfig("starting broken_config");
     Date stableConfig = deviceConfig.timestamp;
-    info("initial stable_config " + getTimestamp(stableConfig));
+    info("initial stable_config " + isoConvert(stableConfig));
     untilTrue("initial state synchronized",
         () -> dateEquals(stableConfig, deviceState.system.last_config));
-    info("initial last_config " + getTimestamp(deviceState.system.last_config));
+    info("initial last_config " + isoConvert(deviceState.system.last_config));
     checkThat("initial stable_config matches last_config",
         () -> dateEquals(stableConfig, deviceState.system.last_config));
 
@@ -146,8 +146,8 @@ public class ConfigSequences extends SequenceBase {
     debug("Error detail: " + stateStatus.detail);
     assertEquals(SYSTEM_CONFIG_PARSE, stateStatus.category);
     assertEquals(Level.ERROR.value(), (int) stateStatus.level);
-    info("following stable_config " + getTimestamp(stableConfig));
-    info("following last_config " + getTimestamp(deviceState.system.last_config));
+    info("following stable_config " + isoConvert(stableConfig));
+    info("following last_config " + isoConvert(deviceState.system.last_config));
     // The last_config should not be updated to not reflect the broken config.
     assertTrue("following stable_config matches last_config",
         dateEquals(stableConfig, deviceState.system.last_config));
