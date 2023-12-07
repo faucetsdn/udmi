@@ -2,6 +2,7 @@ package com.google.daq.mqtt.sequencer.sequences;
 
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
+import static com.google.udmi.util.JsonUtil.isoConvert;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static org.junit.Assert.assertEquals;
@@ -25,7 +26,6 @@ import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.Summary;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
 import com.google.udmi.util.CleanDateFormat;
-import com.google.udmi.util.JsonUtil;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
@@ -37,7 +37,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import org.junit.AssumptionViolatedException;
 import org.junit.Test;
 import udmi.schema.Bucket;
 import udmi.schema.DiscoveryConfig;
@@ -68,7 +67,7 @@ public class DiscoverySequences extends SequenceBase {
 
     Date startTime = SemanticDate.describe("generation start time", CleanDateFormat.cleanDate());
     deviceConfig.discovery.generation = startTime;
-    info("Starting empty enumeration at " + JsonUtil.getTimestamp(startTime));
+    info("Starting empty enumeration at " + isoConvert(startTime));
     untilTrue("matching enumeration generation",
         () -> deviceState.discovery.generation.equals(startTime));
 
@@ -81,7 +80,7 @@ public class DiscoverySequences extends SequenceBase {
         .collect(Collectors.toList());
     assertEquals("a single discovery event received", 1, enumEvents.size());
     DiscoveryEvent event = enumEvents.get(0);
-    info("Received discovery generation " + JsonUtil.getTimestamp(event.generation));
+    info("Received discovery generation " + isoConvert(event.generation));
     assertEquals("matching event generation", startTime, event.generation);
     return event;
   }

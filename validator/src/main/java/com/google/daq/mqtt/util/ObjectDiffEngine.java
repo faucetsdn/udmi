@@ -1,5 +1,7 @@
 package com.google.daq.mqtt.util;
 
+import static com.google.udmi.util.JsonUtil.isoConvert;
+
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
@@ -170,7 +172,7 @@ public class ObjectDiffEngine {
     String wrapper = isSemantic ? "_" : "`";
     if (value instanceof Date && !isSemantic) {
       if (ignoreSemantics) {
-        return wrapper + JsonUtil.getTimestamp((Date) value) + wrapper;
+        return wrapper + isoConvert((Date) value) + wrapper;
       } else {
         throw new IllegalArgumentException(
             "Unexpected non-semantic Date in semantic value calculation");

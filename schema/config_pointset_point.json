@@ -18,6 +18,12 @@
       "description": "Used for cloud writeback functionality, this field specifies the value for a given point in the device's current units.",
       "examples": [22.4]
     },
+    "stop_time": {
+      "description": "RFC 3339 timestamp for the specified point write easing to stop",
+      "type": "string",
+      "format": "date-time",
+      "examples": ["2019-01-17T14:02:29.364Z"]
+    },
     "cov_increment": {
       "type": "number",
       "description": "The CoV (change of value) increment, which when set, enables CoV on the point and defines the minimum change in present value of the respective point before an update is published",

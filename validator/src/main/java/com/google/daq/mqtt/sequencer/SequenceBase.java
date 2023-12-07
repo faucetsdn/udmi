@@ -16,6 +16,7 @@ import static com.google.udmi.util.Common.GATEWAY_ID_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.GeneralUtils.changedLines;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
+import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
@@ -24,7 +25,7 @@ import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.JsonUtil.convertTo;
-import static com.google.udmi.util.JsonUtil.getTimestamp;
+import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.loadFileRequired;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.stringify;
@@ -607,7 +608,7 @@ public class SequenceBase {
    */
   public void setLastStart(Date use) {
     boolean changed = !stringify(deviceConfig.system.operation.last_start).equals(stringify(use));
-    debug("last_start changed " + changed + ", last_start " + getTimestamp(use));
+    debug("last_start changed " + changed + ", last_start " + isoConvert(use));
     deviceConfig.system.operation.last_start = use;
   }
 
@@ -647,7 +648,7 @@ public class SequenceBase {
     deviceConfig.system.min_loglevel = Level.INFO.value();
     Date resetDate = ofNullable(catchToNull(() -> deviceState.system.operation.last_start))
         .orElse(RESET_LAST_START);
-    debug("Configuring device last_start to be " + getTimestamp(resetDate));
+    debug("Configuring device last_start to be " + isoConvert(resetDate));
     setLastStart(SemanticDate.describe("device reported", resetDate));
     setExtraField(null);
   }
@@ -1005,7 +1006,7 @@ public class SequenceBase {
   }
 
   private String entryMessage(Entry logEntry) {
-    return format("%s %s %s: %s", getTimestamp(logEntry.timestamp),
+    return format("%s %s %s: %s", isoConvert(logEntry.timestamp),
         Level.fromValue(logEntry.level).name(), logEntry.category, logEntry.message);
   }
 
@@ -1026,7 +1027,7 @@ public class SequenceBase {
     if (logEntry.timestamp == null) {
       throw new RuntimeException("log entry timestamp is null");
     }
-    String messageStr = format("%s %s %s", getTimestamp(logEntry.timestamp),
+    String messageStr = format("%s %s %s", isoConvert(logEntry.timestamp),
         Level.fromValue(logEntry.level), logEntry.message);
 
     printWriter.println(messageStr);
@@ -1136,7 +1137,7 @@ public class SequenceBase {
     try {
       String suffix = reason == null ? "" : (" " + reason);
       String header = format("Update config%s: ", suffix);
-      debug(header + getTimestamp(deviceConfig.timestamp));
+      debug(header + isoConvert(deviceConfig.timestamp));
       recordRawMessage(deviceConfig, LOCAL_CONFIG_UPDATE);
       List<String> allDiffs = SENT_CONFIG_DIFFERNATOR.computeChanges(deviceConfig);
       List<String> filteredDiffs = filterTesting(allDiffs);
@@ -1280,8 +1281,8 @@ public class SequenceBase {
         entry -> category.equals(entry.category) && entry.level >= minLevel.value());
     checkThat(format("log category `%s` level `%s` not logged", category, minLevel), () -> {
       if (!entries.isEmpty()) {
-        warning(format("Filtered config between %s and %s", getTimestamp(lastConfigUpdate),
-            getTimestamp(endTime)));
+        warning(format("Filtered config between %s and %s", isoConvert(lastConfigUpdate),
+            isoConvert(endTime)));
         entries.forEach(entry -> error("undesirable " + entryMessage(entry)));
       }
       return entries.isEmpty();
@@ -1609,14 +1610,14 @@ public class SequenceBase {
           return;
         }
         List<String> changes = updateDeviceConfig(config);
-        debug(format("Updated config %s %s", getTimestamp(config.timestamp), txnId));
+        debug(format("Updated config %s %s", isoConvert(config.timestamp), txnId));
         if (updateCount == CAPABILITY_SCORE) {
           info(format("Initial config #%03d", updateCount), stringify(deviceConfig));
         } else {
           info(format("Updated config #%03d", updateCount), changedLines(changes));
         }
       } else if (converted instanceof State convertedState) {
-        String timestamp = getTimestamp(convertedState.timestamp);
+        String timestamp = isoConvert(convertedState.timestamp);
         if (convertedState.timestamp == null) {
           warning("No timestamp in state message, rejecting.");
           return;
@@ -1626,10 +1627,10 @@ public class SequenceBase {
           return;
         }
         if (deviceState == null && convertedState.timestamp.before(stateCutoffThreshold)) {
-          String lastStart = getTimestamp(
+          String lastStart = isoConvert(
               catchToNull(() -> convertedState.system.operation.last_start));
           warning(format("Ignoring stale state update %s %s %s %s", timestamp,
-              getTimestamp(stateCutoffThreshold), lastStart, txnId));
+              isoConvert(stateCutoffThreshold), lastStart, txnId));
           return;
         }
         checkState(deviceSupportsState(), "Received state update with no-state device");
@@ -1646,8 +1647,8 @@ public class SequenceBase {
         deviceState = convertedState;
         validSerialNo();
         debug(format("Updated state has last_config %s (expecting %s)",
-            getTimestamp((Date) ifNotNullGet(deviceState.system, x -> x.last_config)),
-            getTimestamp((Date) ifNotNullGet(deviceConfig, config -> config.timestamp))));
+            isoConvert((Date) ifNotNullGet(deviceState.system, x -> x.last_config)),
+            isoConvert((Date) ifNotNullGet(deviceConfig, config -> config.timestamp))));
       } else {
         error("Unknown update type " + converted.getClass().getSimpleName());
       }
@@ -1717,7 +1718,7 @@ public class SequenceBase {
     boolean pending = !(synced && configTransactions.isEmpty());
     if (debugOut && pending) {
       notice(format("last_start synchronized %s: state/%s =? config/%s", synced,
-          getTimestamp(stateLast), getTimestamp(configLast)));
+          isoConvert(stateLast), isoConvert(configLast)));
       notice(format("pending configTransactions: %s", configTransactionsListString()));
     }
     return pending;

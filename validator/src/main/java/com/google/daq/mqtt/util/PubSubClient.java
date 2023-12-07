@@ -4,7 +4,8 @@ import static com.google.api.client.util.Preconditions.checkNotNull;
 import static com.google.bos.iot.core.proxy.IotReflectorClient.UDMI_FOLDER;
 import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
-import static com.google.udmi.util.JsonUtil.getTimestamp;
+import static com.google.udmi.util.GeneralUtils.getTimestamp;
+import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static java.time.Instant.ofEpochSecond;
 
@@ -16,7 +17,6 @@ import com.google.api.client.util.Base64;
 import com.google.api.core.ApiFuture;
 import com.google.api.gax.rpc.NotFoundException;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
-import com.google.bos.iot.core.proxy.MqttPublisher;
 import com.google.cloud.pubsub.v1.AckReplyConsumer;
 import com.google.cloud.pubsub.v1.MessageReceiver;
 import com.google.cloud.pubsub.v1.Publisher;
@@ -45,11 +45,9 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
-import udmi.schema.ExecutionConfiguration;
 import udmi.schema.SetupUdmiConfig;
 import udmi.schema.SystemState;
 
@@ -217,12 +215,12 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
         Map<String, Object> dataMap = OBJECT_MAPPER.readValue(data, TreeMap.class);
         asMap = dataMap;
       } catch (JsonProcessingException e) {
-        asMap = new ErrorContainer(e, getSubscriptionId(), JsonUtil.getTimestamp());
+        asMap = new ErrorContainer(e, getSubscriptionId(), getTimestamp());
       }
 
       HashMap<String, String> attributes = new HashMap<>(message.getAttributesMap());
       attributes.computeIfAbsent(PUBLISH_TIME_KEY,
-          key -> getTimestamp(ofEpochSecond(message.getPublishTime().getSeconds())));
+          key -> isoConvert(ofEpochSecond(message.getPublishTime().getSeconds())));
       attributes.put(WAS_BASE_64, "" + base64);
 
       MessageBundle bundle = new MessageBundle();

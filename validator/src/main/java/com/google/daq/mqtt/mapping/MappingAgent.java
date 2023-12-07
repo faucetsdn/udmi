@@ -1,5 +1,7 @@
 package com.google.daq.mqtt.mapping;
 
+import static com.google.udmi.util.JsonUtil.isoConvert;
+
 import com.google.common.collect.ImmutableList;
 import com.google.daq.mqtt.util.MessageHandler;
 import com.google.daq.mqtt.util.MessageHandler.HandlerSpecification;
@@ -72,7 +74,7 @@ public class MappingAgent extends MappingBase {
     FamilyDiscoveryState previous = familyStates.put(family, state);
     if (previous == null || !Objects.equals(previous.generation, state.generation)) {
       System.err.printf("Received family %s generation %s active %s%n", family,
-          JsonUtil.getTimestamp(state.generation), state.active);
+          isoConvert(state.generation), state.active);
     }
   }
 

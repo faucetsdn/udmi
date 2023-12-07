@@ -3,7 +3,7 @@ package com.google.bos.udmi.service.access;
 import static com.google.bos.udmi.service.pod.UdmiServicePod.getComponent;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.sortedMapCollector;
-import static com.google.udmi.util.JsonUtil.getTimestamp;
+import static com.google.udmi.util.JsonUtil.isoConvert;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
@@ -83,7 +83,7 @@ public class DynamicIotAccessProvider extends IotAccessBase {
     int providerIndex = providerList.size() - providerList.indexOf(provider.getKey());
     String provisionedAt = ofNullable(
         provider.getValue().fetchRegistryMetadata(registryId, "udmi_provisioned")).orElse(
-        getTimestamp(new Date(providerIndex * INDEX_ORDERING_MULTIPLIER_MS)));
+        isoConvert(new Date(providerIndex * INDEX_ORDERING_MULTIPLIER_MS)));
     debug(format("Registry %s provider %s provisioned %s", registryId, provider.getKey(),
         provisionedAt));
     return provisionedAt;

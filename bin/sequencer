@@ -102,7 +102,7 @@ elif [[ -f $site_path ]]; then
     serial_no=`jq -r .serial_no $site_path`
     [[ $serial_no == null ]] && serial_no=$DEFAULT_SERIAL
     endpoint=`jq .reflector_endpoint $site_path`
-    alt_registry=null
+    alt_registry=`jq .alt_registry $site_path`
 else
     echo Site model $site_path not found.
     false
