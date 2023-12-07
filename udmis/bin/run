@@ -51,8 +51,9 @@ fi
 if [[ -n $SHUNT_CONFIGURATION && -s $SHUNT_CONFIGURATION ]]; then
     export SHUNT_NAME=${UDMI_PREFIX}$(jq -r .name $SHUNT_CONFIGURATION)
     export SHUNT_FROM=$(jq -r .from $SHUNT_CONFIGURATION)
+    export SHUNT_RECV=$(jq -r .recv $SHUNT_CONFIGURATION)
     export SHUNT_MORF=$(jq -r .morf $SHUNT_CONFIGURATION)
-    echo Configured udmi shunt $SHUNT_NAME between $SHUNT_FROM and $SHUNT_MORF
+    echo Configured udmi shunt $SHUNT_NAME between $SHUNT_FROM $SHUNT_RECV and $SHUNT_MORF
 else
     echo No SHUNT_CONFIGURATION defined, so no SHUNT_NAME configured.
 fi
