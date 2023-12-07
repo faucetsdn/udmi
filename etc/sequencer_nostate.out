@@ -10,4 +10,4 @@ RESULT skip pointset pointset_request_extraneous BETA 0/0 State testing disabled
 RESULT skip pointset pointset_sample_rate BETA 0/0 State testing disabled
 RESULT skip system state_make_model BETA 0/0 State testing disabled
 RESULT skip system state_software BETA 0/0 State testing disabled
-RESULT fail system system_last_update STABLE 0/5 Timeout waiting for received at least one state update
+RESULT fail system system_last_update STABLE 0/5 Timeout waiting for state last_config matches first config timestamp
