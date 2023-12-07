@@ -1,11 +1,14 @@
 package com.google.daq.mqtt.util;
 
+import static com.google.udmi.util.DiffEntry.DiffAction.ADD;
+import static com.google.udmi.util.DiffEntry.DiffAction.REMOVE;
+import static com.google.udmi.util.DiffEntry.DiffAction.SET;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
-import com.google.udmi.util.JsonUtil;
+import com.google.udmi.util.DiffEntry;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,11 +38,11 @@ public class ObjectDiffEngine {
    * @param updatedObject new object
    * @return list of differences against the previous object
    */
-  public List<String> computeChanges(Object updatedObject) {
+  public List<DiffEntry> computeChanges(Object updatedObject) {
     // TODO: Hack alert! State should be handled semantically, but for now show raw changes.
     ignoreSemantics = updatedObject instanceof State;
     Map<String, Object> updated = extractDefinitions(updatedObject);
-    List<String> updates = new ArrayList<>();
+    List<DiffEntry> updates = new ArrayList<>();
     accumulateDifference("", previous, updated, updates);
     previous = updated;
     return updates;
@@ -115,7 +118,7 @@ public class ObjectDiffEngine {
 
   @SuppressWarnings("unchecked")
   void accumulateDifference(String prefix, Map<String, Object> left, Map<String, Object> right,
-      List<String> updates) {
+      List<DiffEntry> updates) {
     right.forEach((key, value) -> {
       String describedKey = describedKey(prefix, key);
       String raw = describeValue(prefix, key, semanticValue(value));
@@ -127,20 +130,20 @@ public class ObjectDiffEngine {
           return;
         }
         if (isBaseType(value)) {
-          updates.add(String.format("Set `%s` = %s", describedKey, describedValue));
+          updates.add(new DiffEntry(SET, describedKey, describedValue));
         } else {
           accumulateDifference((prefix + key) + ".", (Map<String, Object>) leftValue,
               (Map<String, Object>) value, updates);
         }
       } else {
-        updates.add(String.format("Add `%s` = %s", describedKey, describedValue));
+        updates.add(new DiffEntry(ADD, describedKey, describedValue));
       }
     });
     if (left != null) {
       left.forEach((key, value) -> {
         if (!right.containsKey(key)) {
           String describedKey = describedKey(prefix, key);
-          updates.add(String.format("Remove `%s`", describedKey));
+          updates.add(new DiffEntry(REMOVE, describedKey, null));
         }
       });
     }
@@ -211,10 +214,10 @@ public class ObjectDiffEngine {
    * @param endObject   ending object
    * @return list of differences going from start to end objects
    */
-  public List<String> diff(Object startObject, Object endObject) {
+  public List<DiffEntry> diff(Object startObject, Object endObject) {
     Map<String, Object> left = extractValues(startObject);
     Map<String, Object> right = extractValues(endObject);
-    List<String> updates = new ArrayList<>();
+    List<DiffEntry> updates = new ArrayList<>();
     accumulateDifference("", left, right, updates);
     return updates;
   }

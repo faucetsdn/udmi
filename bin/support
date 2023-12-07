@@ -37,6 +37,10 @@ if [[ -n $UDMI_REGISTRY_SUFFIX && -n $site_model ]]; then
     site_model=$site_model${UDMI_REGISTRY_SUFFIX}
 fi
 
+echo Lingering pubber processes:
+ps ax | fgrep pubber | fgrep java || true
+echo
+
 echo tar --exclude-vcs -czf /tmp/$ARCHIVE $site_model $OUT_DIR
 tar --exclude-vcs -czf /tmp/$ARCHIVE $site_model $OUT_DIR
 mv /tmp/$ARCHIVE .

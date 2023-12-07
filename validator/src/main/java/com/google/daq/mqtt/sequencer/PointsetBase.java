@@ -53,5 +53,4 @@ public abstract class PointsetBase extends SequenceBase {
     }
     return testingMetadata;
   }
-
 }

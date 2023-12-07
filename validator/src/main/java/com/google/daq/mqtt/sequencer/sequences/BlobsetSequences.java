@@ -18,6 +18,7 @@ import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
 import java.util.Date;
 import java.util.HashMap;
+import org.junit.Before;
 import org.junit.Test;
 import udmi.schema.BlobBlobsetConfig;
 import udmi.schema.BlobBlobsetConfig.BlobPhase;
@@ -27,6 +28,7 @@ import udmi.schema.BlobsetConfig.SystemBlobsets;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.EndpointConfiguration.Protocol;
 import udmi.schema.Entry;
+import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Level;
 import udmi.schema.Operation.SystemMode;
 
@@ -43,6 +45,11 @@ public class BlobsetSequences extends SequenceBase {
   private static final String ENDPOINT_CONFIG_CLIENT_ID =
       "projects/%s/locations/%s/registries/%s/devices/%s";
   private static final String BOGUS_ENDPOINT_HOSTNAME = "twiddily.fiddily.fog";
+
+  @Before
+  public void setupExpectedParameters() {
+    allowDeviceStateChange("blobset");
+  }
 
   private String generateEndpointConfigClientId(String registryId) {
     return String.format(
@@ -160,7 +167,7 @@ public class BlobsetSequences extends SequenceBase {
 
   @Feature(stage = ALPHA, bucket = ENDPOINT)
   @Summary("Failed connection because of bad hash.")
-  @ValidateSchema
+  @ValidateSchema(SubFolder.BLOBSET)
   @Test
   public void endpoint_connection_bad_hash() {
     setDeviceConfigEndpointBlob(getAlternateEndpointHostname(), registryId, true);
@@ -200,7 +207,7 @@ public class BlobsetSequences extends SequenceBase {
 
   private void check_endpoint_connection_success(boolean doRestart) {
     // Phase one: initiate connection to alternate registry.
-    untilTrue("initial last_config matches config timestamp", this::stateMatchesConfigTimestamp);
+    untilTrue("initial last_config matches config timestamp", this::lastConfigUpdated);
     setDeviceConfigEndpointBlob(getAlternateEndpointHostname(), altRegistry, false);
     untilSuccessfulRedirect(BlobPhase.APPLY);
 
@@ -208,7 +215,7 @@ public class BlobsetSequences extends SequenceBase {
       // Phase two: verify connection to alternate registry.
       untilSuccessfulRedirect(BlobPhase.FINAL);
       untilTrue("alternate last_config matches config timestamp",
-          this::stateMatchesConfigTimestamp);
+          this::lastConfigUpdated);
       untilClearedRedirect();
 
       if (doRestart) {
@@ -225,7 +232,7 @@ public class BlobsetSequences extends SequenceBase {
     // Phase four: verify restoration of initial registry connection.
     whileDoing("restoring main connection", () -> {
       untilSuccessfulRedirect(BlobPhase.FINAL);
-      untilTrue("restored last_config matches config timestamp", this::stateMatchesConfigTimestamp);
+      untilTrue("restored last_config matches config timestamp", this::lastConfigUpdated);
       untilClearedRedirect();
     });
   }
@@ -238,6 +245,8 @@ public class BlobsetSequences extends SequenceBase {
   }
 
   private void check_system_restart() {
+    allowDeviceStateChange("system.operation.");
+
     // Prepare for the restart.
     final Date dateZero = new Date(0);
     untilTrue("last_start is not zero",
