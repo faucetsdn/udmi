@@ -21,6 +21,7 @@ import static java.util.Optional.ofNullable;
 import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
+import com.google.common.base.Strings;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
@@ -256,7 +257,12 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
 
   private void sanitizeAttributeMap(Map<String, String> attributesMap) {
     String subFolderRaw = attributesMap.get(SUBFOLDER_PROPERTY_KEY);
-    if (subFolderRaw != null) {
+    if (subFolderRaw == null) {
+      // Do nothing!
+    } else if (subFolderRaw.equals("")) {
+      debug("Coerced empty subFolder " + subFolderRaw + " to undefined");
+      attributesMap.remove(SUBFOLDER_PROPERTY_KEY);
+    } else {
       SubFolder subFolder = catchToElse(() -> SubFolder.fromValue(subFolderRaw), SubFolder.INVALID);
       if (!subFolder.value().equals(subFolderRaw)) {
         debug("Coerced subFolder " + subFolderRaw + " to " + subFolder.value());
@@ -265,10 +271,15 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     }
 
     String subTypeRaw = attributesMap.get(SUBTYPE_PROPERTY_KEY);
-    if (subTypeRaw != null) {
+    if (subTypeRaw == null) {
+      // Do nothing!
+    } else if (subTypeRaw.equals("")) {
+      debug("Coerced empty subType " + subTypeRaw + " to undefined");
+      attributesMap.remove(SUBTYPE_PROPERTY_KEY);
+    } else if (!Strings.isNullOrEmpty(subTypeRaw)) {
       SubType subType = catchToElse(() -> SubType.fromValue(subTypeRaw), SubType.INVALID);
-      debug("Coerced subFolder " + subTypeRaw + " to " + subType.value());
       if (!subType.value().equals(subTypeRaw)) {
+        debug("Coerced subFolder " + subTypeRaw + " to " + subType.value());
         attributesMap.put(SUBTYPE_PROPERTY_KEY, subType.value());
       }
     }
