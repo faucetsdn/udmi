@@ -10,6 +10,7 @@ import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.fromJsonFile;
 import static com.google.udmi.util.GeneralUtils.fromJsonString;
 import static com.google.udmi.util.GeneralUtils.getNow;
+import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
@@ -17,8 +18,10 @@ import static com.google.udmi.util.GeneralUtils.isGetTrue;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.optionsString;
 import static com.google.udmi.util.GeneralUtils.setClockSkew;
+import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.GeneralUtils.toJsonFile;
 import static com.google.udmi.util.GeneralUtils.toJsonString;
+import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static daq.pubber.MqttDevice.CONFIG_TOPIC;
@@ -29,7 +32,6 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Objects.requireNonNullElse;
 import static java.util.Optional.ofNullable;
-import static java.util.stream.Collectors.toMap;
 import static udmi.schema.BlobsetConfig.SystemBlobsets.IOT_ENDPOINT_CONFIG;
 import static udmi.schema.EndpointConfiguration.Protocol.MQTT;
 
@@ -48,10 +50,7 @@ import daq.pubber.MqttPublisher.PublisherException;
 import daq.pubber.PointsetManager.ExtraPointsetEvent;
 import daq.pubber.PubSubClient.Bundle;
 import daq.pubber.SystemManager.ExtraSystemState;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.OutputStream;
-import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -72,8 +71,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import org.apache.http.ConnectionClosedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,27 +83,19 @@ import udmi.schema.Category;
 import udmi.schema.CloudModel.Auth_type;
 import udmi.schema.Config;
 import udmi.schema.DevicePersistent;
-import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvent;
 import udmi.schema.DiscoveryState;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.EndpointConfiguration.Protocol;
 import udmi.schema.Entry;
-import udmi.schema.Enumerate;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
-import udmi.schema.FamilyDiscoveryConfig;
-import udmi.schema.FamilyDiscoveryEvent;
-import udmi.schema.FamilyDiscoveryState;
-import udmi.schema.FamilyLocalnetModel;
 import udmi.schema.GatewayState;
 import udmi.schema.Level;
 import udmi.schema.LocalnetState;
 import udmi.schema.Metadata;
 import udmi.schema.Operation.SystemMode;
-import udmi.schema.PointEnumerationEvent;
-import udmi.schema.PointPointsetModel;
 import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetState;
 import udmi.schema.PubberConfiguration;
@@ -120,14 +109,13 @@ import udmi.schema.SystemState;
  */
 public class Pubber extends ManagerBase implements ManagerHost {
 
-  public static final int SCAN_DURATION_SEC = 10;
   public static final String PUBBER_OUT = "pubber/out";
   public static final String PERSISTENT_STORE_FILE = "persistent_data.json";
   public static final String PERSISTENT_TMP_FORMAT = "/tmp/pubber_%s_" + PERSISTENT_STORE_FILE;
   public static final String DATA_URL_JSON_BASE64 = "data:application/json;base64,";
   static final String UDMI_VERSION = SchemaVersion.CURRENT.key();
   static final Logger LOG = LoggerFactory.getLogger(Pubber.class);
-  static final Date deviceStartTime = getRoundedStartTime();
+  static final Date DEVICE_START_TIME = getRoundedStartTime();
   static final int MESSAGE_REPORT_INTERVAL = 10;
   private static final String BROKEN_VERSION = "1.4.";
   private static final String HOSTNAME = System.getenv("HOSTNAME");
@@ -184,6 +172,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
   private int deviceUpdateCount = -1;
   private DeviceManager deviceManager;
   private boolean isConnected;
+
   private boolean isGatewayDevice;
 
   /**
@@ -380,6 +369,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
     if (configuration.sitePath != null) {
       siteModel = new SiteModel(configuration.sitePath);
       siteModel.initialize();
+      deviceManager.setSiteModel(siteModel);
       if (configuration.endpoint == null) {
         configuration.endpoint = siteModel.makeEndpointConfig(configuration.iotProject, deviceId);
       }
@@ -499,6 +489,8 @@ public class Pubber extends ManagerBase implements ManagerHost {
       deviceState.localnet = (LocalnetState) checkValue;
     } else if (checkTarget instanceof GatewayState) {
       deviceState.gateway = (GatewayState) checkValue;
+    } else if (checkTarget instanceof DiscoveryState) {
+      deviceState.discovery = (DiscoveryState) checkValue;
     } else {
       throw new RuntimeException(
           "Unrecognized update type " + checkTarget.getClass().getSimpleName());
@@ -601,7 +593,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
 
   private void checkSmokyFailure() {
     if (isTrue(configuration.options.smokeCheck)
-        && Instant.now().minus(SMOKE_CHECK_TIME).isAfter(deviceStartTime.toInstant())) {
+        && Instant.now().minus(SMOKE_CHECK_TIME).isAfter(DEVICE_START_TIME.toInstant())) {
       error(format("Smoke check failed after %sm, terminating run.",
           SMOKE_CHECK_TIME.getSeconds() / 60));
       deviceManager.systemLifecycle(SystemMode.TERMINATE);
@@ -951,7 +943,6 @@ public class Pubber extends ManagerBase implements ManagerHost {
         GeneralUtils.copyFields(config, deviceConfig, true);
         info(format("%s received config %s", getTimestamp(), isoConvert(config.timestamp)));
         deviceManager.updateConfig(config);
-        updateDiscoveryConfig(config.discovery);
         extractEndpointBlobConfig();
       } else {
         info(getTimestamp() + " defaulting empty config");
@@ -1123,246 +1114,6 @@ public class Pubber extends ManagerBase implements ManagerHost {
       EndpointConfiguration endpointConfiguration = new EndpointConfiguration();
       endpointConfiguration.error = e.toString();
       return JsonUtil.stringify(endpointConfiguration);
-    }
-  }
-
-  private void updateDiscoveryConfig(DiscoveryConfig config) {
-    if (config == null) {
-      deviceState.discovery = null;
-      return;
-    }
-    if (deviceState.discovery == null) {
-      deviceState.discovery = new DiscoveryState();
-    }
-    updateDiscoveryEnumeration(config);
-    updateDiscoveryScan(config.families);
-  }
-
-  private void updateDiscoveryEnumeration(DiscoveryConfig config) {
-    Date enumerationGeneration = config.generation;
-    if (enumerationGeneration == null) {
-      deviceState.discovery.generation = null;
-      return;
-    }
-    if (deviceState.discovery.generation != null
-        && !enumerationGeneration.after(deviceState.discovery.generation)) {
-      return;
-    }
-    deviceState.discovery.generation = enumerationGeneration;
-    info("Discovery enumeration at " + isoConvert(enumerationGeneration));
-    DiscoveryEvent discoveryEvent = new DiscoveryEvent();
-    discoveryEvent.generation = enumerationGeneration;
-    Enumerate enumerate = config.enumerate;
-    discoveryEvent.uniqs = ifTrue(enumerate.uniqs, () -> enumeratePoints(configuration.deviceId));
-    discoveryEvent.features = ifTrue(enumerate.features, SupportedFeatures::getFeatures);
-    discoveryEvent.families = ifTrue(enumerate.families, () -> deviceManager.enumerateFamilies());
-    publishDeviceMessage(discoveryEvent);
-  }
-
-  private <T> T ifTrue(Boolean condition, Supplier<T> supplier) {
-    return isGetTrue(() -> condition) ? supplier.get() : null;
-  }
-
-  private Map<String, PointEnumerationEvent> enumeratePoints(String deviceId) {
-    return siteModel.getMetadata(deviceId).pointset.points.entrySet().stream().collect(
-        Collectors.toMap(this::getPointUniqKey, this::getPointEnumerationEvent));
-  }
-
-  private String getPointUniqKey(Map.Entry<String, PointPointsetModel> entry) {
-    return format("%08x", entry.getKey().hashCode());
-  }
-
-  private PointEnumerationEvent getPointEnumerationEvent(
-      Map.Entry<String, PointPointsetModel> entry) {
-    PointEnumerationEvent pointEnumerationEvent = new PointEnumerationEvent();
-    PointPointsetModel model = entry.getValue();
-    pointEnumerationEvent.writable = model.writable;
-    pointEnumerationEvent.units = model.units;
-    pointEnumerationEvent.ref = model.ref;
-    pointEnumerationEvent.name = entry.getKey();
-    return pointEnumerationEvent;
-  }
-
-  private void updateDiscoveryScan(HashMap<String, FamilyDiscoveryConfig> familiesRaw) {
-    HashMap<String, FamilyDiscoveryConfig> families =
-        familiesRaw == null ? new HashMap<>() : familiesRaw;
-    if (deviceState.discovery.families == null) {
-      deviceState.discovery.families = new HashMap<>();
-    }
-
-    deviceState.discovery.families.keySet().forEach(family -> {
-      if (!families.containsKey(family)) {
-        FamilyDiscoveryState familyDiscoveryState = deviceState.discovery.families.get(family);
-        if (familyDiscoveryState.generation != null) {
-          info("Clearing scheduled discovery family " + family);
-          familyDiscoveryState.generation = null;
-          familyDiscoveryState.active = null;
-        }
-      }
-    });
-    families.keySet().forEach(family -> {
-      FamilyDiscoveryConfig familyDiscoveryConfig = families.get(family);
-      Date configGeneration = familyDiscoveryConfig.generation;
-      if (configGeneration == null) {
-        deviceState.discovery.families.remove(family);
-        return;
-      }
-
-      Date previousGeneration = getFamilyDiscoveryState(family).generation;
-      Date baseGeneration = previousGeneration == null ? deviceStartTime : previousGeneration;
-      final Date startGeneration;
-      if (configGeneration.before(baseGeneration)) {
-        int interval = getScanInterval(family);
-        if (interval > 0) {
-          long deltaSec = (baseGeneration.getTime() - configGeneration.getTime() + 999) / 1000;
-          long intervals = (deltaSec + interval - 1) / interval;
-          startGeneration = Date.from(
-              configGeneration.toInstant().plusSeconds(intervals * interval));
-        } else {
-          return;
-        }
-      } else {
-        startGeneration = configGeneration;
-      }
-
-      info("Discovery scan generation " + family + " is " + isoConvert(startGeneration));
-      scheduleFuture(startGeneration, () -> checkDiscoveryScan(family, startGeneration));
-    });
-
-    if (deviceState.discovery.families.isEmpty()) {
-      deviceState.discovery.families = null;
-    }
-  }
-
-  private FamilyDiscoveryState getFamilyDiscoveryState(String family) {
-    return deviceState.discovery.families.computeIfAbsent(
-        family, key -> new FamilyDiscoveryState());
-  }
-
-  private void checkDiscoveryScan(String family, Date scanGeneration) {
-    try {
-      FamilyDiscoveryState familyDiscoveryState = getFamilyDiscoveryState(family);
-      if (familyDiscoveryState.generation == null
-          || familyDiscoveryState.generation.before(scanGeneration)) {
-        scheduleDiscoveryScan(family, scanGeneration);
-      }
-    } catch (Exception e) {
-      throw new RuntimeException("While checking for discovery scan start", e);
-    }
-  }
-
-  private void scheduleDiscoveryScan(String family, Date scanGeneration) {
-    info("Discovery scan starting " + family + " as " + isoConvert(scanGeneration));
-    Date stopTime = Date.from(Instant.now().plusSeconds(SCAN_DURATION_SEC));
-    FamilyDiscoveryState familyDiscoveryState = getFamilyDiscoveryState(family);
-    scheduleFuture(stopTime, () -> discoveryScanComplete(family, scanGeneration));
-    familyDiscoveryState.generation = scanGeneration;
-    familyDiscoveryState.active = true;
-    publishAsynchronousState();
-    Date sendTime = Date.from(Instant.now().plusSeconds(SCAN_DURATION_SEC / 2));
-    scheduleFuture(sendTime, () -> sendDiscoveryEvent(family, scanGeneration));
-  }
-
-  private void sendDiscoveryEvent(String family, Date scanGeneration) {
-    FamilyDiscoveryState familyDiscoveryState = getFamilyDiscoveryState(family);
-    if (scanGeneration.equals(familyDiscoveryState.generation)
-        && familyDiscoveryState.active) {
-      AtomicInteger sentEvents = new AtomicInteger();
-      siteModel.forEachMetadata((deviceId, targetMetadata) -> {
-        FamilyLocalnetModel familyLocalnetModel = getFamilyLocalnetModel(family, targetMetadata);
-        if (familyLocalnetModel != null && familyLocalnetModel.addr != null) {
-          DiscoveryEvent discoveryEvent = new DiscoveryEvent();
-          discoveryEvent.generation = scanGeneration;
-          discoveryEvent.scan_family = family;
-          discoveryEvent.scan_addr = deviceId;
-          discoveryEvent.families = targetMetadata.localnet.families.entrySet().stream()
-              .collect(toMap(Map.Entry::getKey, this::eventForTarget));
-          discoveryEvent.families.computeIfAbsent("iot",
-              key -> new FamilyDiscoveryEvent()).addr = deviceId;
-          if (isGetTrue(() -> deviceConfig.discovery.families.get(family).enumerate)) {
-            discoveryEvent.uniqs = enumeratePoints(deviceId);
-          }
-          publishDeviceMessage(discoveryEvent);
-          sentEvents.incrementAndGet();
-        }
-      });
-      info("Sent " + sentEvents.get() + " discovery events from " + family + " for "
-          + scanGeneration);
-    }
-  }
-
-  private FamilyDiscoveryEvent eventForTarget(Map.Entry<String, FamilyLocalnetModel> target) {
-    FamilyDiscoveryEvent event = new FamilyDiscoveryEvent();
-    event.addr = target.getValue().addr;
-    return event;
-  }
-
-  private FamilyLocalnetModel getFamilyLocalnetModel(String family, Metadata targetMetadata) {
-    try {
-      return targetMetadata.localnet.families.get(family);
-    } catch (Exception e) {
-      return null;
-    }
-  }
-
-  private void discoveryScanComplete(String family, Date scanGeneration) {
-    try {
-      FamilyDiscoveryState familyDiscoveryState = getFamilyDiscoveryState(family);
-      if (scanGeneration.equals(familyDiscoveryState.generation)) {
-        int interval = getScanInterval(family);
-        if (interval > 0) {
-          Date newGeneration = Date.from(scanGeneration.toInstant().plusSeconds(interval));
-          scheduleFuture(newGeneration, () -> checkDiscoveryScan(family, newGeneration));
-        } else {
-          info("Discovery scan stopping " + family + " from " + isoConvert(scanGeneration));
-          familyDiscoveryState.active = false;
-          publishAsynchronousState();
-        }
-      }
-    } catch (Exception e) {
-      throw new RuntimeException("While checking for discovery scan complete", e);
-    }
-  }
-
-  private int getScanInterval(String family) {
-    try {
-      return deviceConfig.discovery.families.get(family).scan_interval_sec;
-    } catch (Exception e) {
-      return 0;
-    }
-  }
-
-  private String stackTraceString(Throwable e) {
-    OutputStream outputStream = new ByteArrayOutputStream();
-    try (PrintStream ps = new PrintStream(outputStream)) {
-      e.printStackTrace(ps);
-    }
-    return outputStream.toString();
-  }
-
-  private String getTimestamp() {
-    return isoConvert(getNow());
-  }
-
-  private Date isoConvert(String timestamp) {
-    try {
-      String wrappedString = "\"" + timestamp + "\"";
-      return fromJsonString(wrappedString, Date.class);
-    } catch (Exception e) {
-      throw new RuntimeException("Creating date", e);
-    }
-  }
-
-  private String isoConvert(Date timestamp) {
-    try {
-      if (timestamp == null) {
-        return "null";
-      }
-      String dateString = toJsonString(timestamp);
-      // Strip off the leading and trailing quotes from the JSON string-as-string representation.
-      return dateString.substring(1, dateString.length() - 1);
-    } catch (Exception e) {
-      throw new RuntimeException("Creating timestamp", e);
     }
   }
 

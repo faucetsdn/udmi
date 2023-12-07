@@ -1,6 +1,6 @@
 package com.google.daq.mqtt.util;
 
-import static com.google.udmi.util.JsonUtil.getTimestamp;
+import static com.google.udmi.util.JsonUtil.isoConvert;
 import static java.lang.Boolean.TRUE;
 import static java.util.Optional.ofNullable;
 import static udmi.schema.CloudModel.Resource_type.DEVICE;
@@ -174,7 +174,7 @@ class IotCoreProvider implements IotProvider {
         .map(credentials -> credentials.stream()
             .map(IotCoreProvider::convert).collect(Collectors.toList())).orElse(null);
     BigInteger numId = device.num_id == null ? null : new BigInteger(device.num_id);
-    String timestamp = device.last_event_time == null ? null : getTimestamp(device.last_event_time);
+    String timestamp = device.last_event_time == null ? null : isoConvert(device.last_event_time);
     return new Device()
         .setNumId(numId)
         .setBlocked(device.blocked)

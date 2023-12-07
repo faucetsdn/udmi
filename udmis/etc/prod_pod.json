@@ -54,7 +54,7 @@
       "enabled": "${SHUNT_NAME}",
       "from": {
         "hostname": "${SHUNT_FROM}",
-        "recv_id": "${SHUNT_NAME}-take",
+        "recv_id": "${SHUNT_NAME}-${SHUNT_RECV}",
         "send_id": "${SHUNT_NAME}-put"
       },
       "morf": {

@@ -3,7 +3,7 @@ package com.google.bos.udmi.service.access;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
-import static com.google.udmi.util.JsonUtil.getTimestamp;
+import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static java.lang.String.format;
@@ -289,7 +289,7 @@ public abstract class IotAccessBase extends ContainerBase {
         error("Exception sending command to %s: %s", backoffKey, friendlyStackTrace(e));
         ifNotNullThen(registryBackoffInhibit(registryId, deviceId),
             until -> debug("Setting registry backoff for %s until %s",
-                backoffKey, getTimestamp(until)));
+                backoffKey, isoConvert(until)));
       }
     } else {
       debug("Dropping message because registry backoff for %s", backoffKey);

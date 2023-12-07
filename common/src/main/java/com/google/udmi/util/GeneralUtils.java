@@ -1,5 +1,6 @@
 package com.google.udmi.util;
 
+import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.ProperPrinter.OutputFormat.COMPRESSED;
 import static com.google.udmi.util.ProperPrinter.OutputFormat.VERBOSE;
 import static java.lang.String.format;
@@ -493,5 +494,9 @@ public class GeneralUtils {
 
   public static Date getNow() {
     return Date.from(Instant.now().plus(clockSkew));
+  }
+
+  public static String getTimestamp() {
+    return isoConvert(getNow());
   }
 }

@@ -19,7 +19,7 @@ import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.fromString;
-import static com.google.udmi.util.JsonUtil.getTimestamp;
+import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static com.google.udmi.util.JsonUtil.toMap;
@@ -82,7 +82,7 @@ public class ReflectProcessor extends ProcessorBase {
     CloudModel cloudModel = iotAccess.fetchDevice(attributes.deviceRegistryId, attributes.deviceId);
     Date lastConfigAck = cleanDate(cloudModel.last_config_ack);
     Date lastConfig = cleanDate(ifNotNullGet(stateUpdate.system, system -> system.last_config));
-    debug("Check last config ack %s >= %s", getTimestamp(lastConfigAck), getTimestamp(lastConfig));
+    debug("Check last config ack %s >= %s", isoConvert(lastConfigAck), isoConvert(lastConfig));
     if (lastConfig == null || lastConfigAck == null) {
       return false;
     }
@@ -140,7 +140,7 @@ public class ReflectProcessor extends ProcessorBase {
   private void processReflection(Envelope reflection, Envelope envelope,
       Map<String, Object> payload) {
     debug("Processing reflection %s/%s %s %s", envelope.subType, envelope.subFolder,
-        getTimestamp(envelope.publishTime), envelope.transactionId);
+        isoConvert(envelope.publishTime), envelope.transactionId);
     CloudModel result = getReflectionResult(envelope, payload);
     ifNotNullThen(result,
         v -> debug("Reflection result %s: %s", envelope.transactionId, envelope.subType));
@@ -222,7 +222,7 @@ public class ReflectProcessor extends ProcessorBase {
 
     Map<String, Object> configMap = new HashMap<>();
     configMap.put(SubFolder.UDMI.value(), udmiConfig);
-    configMap.put(TIMESTAMP_KEY, getTimestamp());
+    configMap.put(TIMESTAMP_KEY, isoConvert());
     String contents = stringifyTerse(configMap);
     debug("Setting reflector config %s %s: %s", registryId, deviceId, contents);
     iotAccess.modifyConfig(registryId, deviceId, previous -> contents);

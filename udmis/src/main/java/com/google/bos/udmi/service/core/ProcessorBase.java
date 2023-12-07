@@ -20,7 +20,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.getDate;
-import static com.google.udmi.util.JsonUtil.getTimestamp;
+import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toStringMap;
 import static java.lang.String.format;
@@ -130,7 +130,7 @@ public abstract class ProcessorBase extends ContainerBase {
     useAttributes.subFolder = UPDATE;
     checkState(useAttributes.subType == SubType.CONFIG);
     debug("Acknowledging config/%s %s %s", subFolder, useAttributes.transactionId,
-        getTimestamp(newLastStart));
+        isoConvert(newLastStart));
     reflectMessage(useAttributes, configUpdate);
   }
 
@@ -156,7 +156,7 @@ public abstract class ProcessorBase extends ContainerBase {
     errorMessage.error = (String) bundle.message;
     errorMessage.data = encodeBase64(bundle.payload);
     errorMessage.version = UdmiServicePod.getDeployedConfig().udmi_version;
-    errorMessage.timestamp = getTimestamp();
+    errorMessage.timestamp = isoConvert();
     errorMap.put("payload", encodeBase64(stringify(errorMessage)));
     error(format("Reflecting error %s/%s for %s", errorMap.get(SUBTYPE_PROPERTY_KEY),
         errorMap.get(SUBFOLDER_PROPERTY_KEY),
@@ -257,7 +257,7 @@ public abstract class ProcessorBase extends ContainerBase {
       payload.put(attributes.subFolder.value(), updatePayload);
     }
 
-    String updateTimestamp = getTimestamp();
+    String updateTimestamp = isoConvert();
     payload.put(TIMESTAMP_KEY, updateTimestamp);
     payload.put(VERSION_KEY, UDMI_VERSION);
 
@@ -274,8 +274,8 @@ public abstract class ProcessorBase extends ContainerBase {
 
     Date oldLastStart = getDate((String) oldOperation.get("last_start"));
     boolean shouldUpdate = oldLastStart == null || oldLastStart.before(newLastStart);
-    debug("Last start was %s, now %s, updating %s", getTimestamp(oldLastStart),
-        getTimestamp(newLastStart), shouldUpdate);
+    debug("Last start was %s, now %s, updating %s", isoConvert(oldLastStart),
+        isoConvert(newLastStart), shouldUpdate);
     if (!shouldUpdate) {
       return null;
     }
@@ -360,7 +360,7 @@ public abstract class ProcessorBase extends ContainerBase {
       String serialNo = message.system.serial_no;
       Date newLastStart = message.system.operation.last_start;
       debug("Checking config last_start for %s/%s sn:%s against state last_start %s",
-          envelope.deviceRegistryId, envelope.deviceId, serialNo, getTimestamp(newLastStart));
+          envelope.deviceRegistryId, envelope.deviceId, serialNo, isoConvert(newLastStart));
       processConfigChange(envelope, new HashMap<>(), newLastStart);
     } catch (Exception e) {
       debug("Could not process config last_state update, skipping: "

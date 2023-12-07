@@ -59,7 +59,8 @@ public class PointsetSequences extends PointsetBase {
       untilTrue("pointset event contains correct points with present_value",
           () -> {
             List<PointsetEvent> pointsetEvents = popReceivedEvents(PointsetEvent.class);
-            return pointsetEvents.get(pointsetEvents.size() - 1).points.entrySet().stream()
+            return !pointsetEvents.isEmpty()
+                && pointsetEvents.get(pointsetEvents.size() - 1).points.entrySet().stream()
                 .filter(this::validPointEntry).map(Entry::getKey).collect(Collectors.toSet())
                 .equals(deviceConfig.pointset.points.keySet());
           }

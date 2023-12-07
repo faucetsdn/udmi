@@ -3,6 +3,7 @@ package com.google.daq.mqtt.validator;
 import static com.google.daq.mqtt.util.FileDataSink.REPORT_JSON_FILENAME;
 import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
 import static com.google.udmi.util.JsonUtil.getDate;
+import static com.google.udmi.util.JsonUtil.isoConvert;
 
 import com.google.daq.mqtt.TestCommon;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
@@ -122,6 +123,6 @@ public class TestBase {
 
   @NotNull
   private String getTestTimestamp() {
-    return JsonUtil.getTimestamp(new Date(testTime.get()));
+    return isoConvert(new Date(testTime.get()));
   }
 }
