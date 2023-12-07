@@ -83,6 +83,7 @@ import udmi.schema.CloudModel.Auth_type;
 import udmi.schema.Config;
 import udmi.schema.DevicePersistent;
 import udmi.schema.DiscoveryEvent;
+import udmi.schema.DiscoveryState;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.EndpointConfiguration.Protocol;
 import udmi.schema.Entry;
@@ -491,6 +492,8 @@ public class Pubber extends ManagerBase implements ManagerHost {
       deviceState.localnet = (LocalnetState) checkValue;
     } else if (checkTarget instanceof GatewayState) {
       deviceState.gateway = (GatewayState) checkValue;
+    } else if (checkTarget instanceof DiscoveryState) {
+      deviceState.discovery = (DiscoveryState) checkValue;
     } else {
       throw new RuntimeException(
           "Unrecognized update type " + checkTarget.getClass().getSimpleName());
