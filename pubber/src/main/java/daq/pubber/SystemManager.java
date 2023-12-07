@@ -2,11 +2,12 @@ package daq.pubber;
 
 import static com.google.udmi.util.GeneralUtils.catchOrElse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
+import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
-import static com.google.udmi.util.JsonUtil.getTimestamp;
+import static com.google.udmi.util.JsonUtil.isoConvert;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNullElse;
 import static java.util.Optional.ofNullable;
@@ -50,7 +51,7 @@ public class SystemManager extends ManagerBase {
   private static final String DEFAULT_MODEL = "pubber";
   private static final String DEFAULT_SOFTWARE_KEY = "firmware";
   private static final String DEFAULT_SOFTWARE_VALUE = "v1";
-  private static final Date DEVICE_START_TIME = Pubber.deviceStartTime;
+  private static final Date DEVICE_START_TIME = Pubber.DEVICE_START_TIME;
   private static final Map<SystemMode, Integer> EXIT_CODE_MAP = ImmutableMap.of(
       SystemMode.SHUTDOWN, 0, // Indicates expected clean shutdown (success).
       SystemMode.RESTART, 192, // Indicate process to be explicitly restarted.
@@ -93,7 +94,7 @@ public class SystemManager extends ManagerBase {
     super(host, configuration);
     this.host = host;
 
-    info("Device start time is " + getTimestamp(DEVICE_START_TIME));
+    info("Device start time is " + isoConvert(DEVICE_START_TIME));
 
     systemState = new ExtraSystemState();
     systemState.operation = new StateSystemOperation();
@@ -168,12 +169,12 @@ public class SystemManager extends ManagerBase {
     if (configLastStart != null) {
       if (DEVICE_START_TIME.before(configLastStart)) {
         error(format("Device start time %s before last config start %s, terminating.",
-            getTimestamp(DEVICE_START_TIME), getTimestamp(configLastStart)));
+            isoConvert(DEVICE_START_TIME), isoConvert(configLastStart)));
         systemLifecycle(SystemMode.TERMINATE);
       } else if (isTrue(options.smokeCheck)
           && CleanDateFormat.dateEquals(DEVICE_START_TIME, configLastStart)) {
         error(format("Device start time %s matches, smoke check indicating success!",
-            getTimestamp(configLastStart)));
+            isoConvert(configLastStart)));
         systemLifecycle(SystemMode.SHUTDOWN);
       }
     }
@@ -271,8 +272,8 @@ public class SystemManager extends ManagerBase {
   void localLog(Entry entry) {
     String message = format("Log %s%s %s %s %s%s", Level.fromValue(entry.level).name(),
         shouldLogLevel(entry.level) ? "" : "*",
-        entry.category, entry.message, getTimestamp(entry.timestamp), getTestingTag());
-    localLog(message, Level.fromValue(entry.level), getTimestamp(entry.timestamp), null);
+        entry.category, entry.message, isoConvert(entry.timestamp), getTestingTag());
+    localLog(message, Level.fromValue(entry.level), isoConvert(entry.timestamp), null);
   }
 
   static void localLog(String message, Level level, String timestamp, String detail) {

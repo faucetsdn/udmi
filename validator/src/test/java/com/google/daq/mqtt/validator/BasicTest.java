@@ -2,10 +2,8 @@ package com.google.daq.mqtt.validator;
 
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.JsonUtil.getInstant;
-import static com.google.udmi.util.JsonUtil.getTimestamp;
-import static com.google.udmi.util.JsonUtil.safeSleep;
+import static com.google.udmi.util.JsonUtil.isoConvert;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static udmi.schema.Level.INFO;
 
@@ -20,7 +18,6 @@ import org.junit.Test;
 import udmi.schema.Config;
 import udmi.schema.DeviceValidationEvent;
 import udmi.schema.DiscoveryEvent;
-import udmi.schema.Level;
 import udmi.schema.PointPointsetEvent;
 import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetState;
@@ -78,8 +75,8 @@ public class BasicTest extends TestBase {
     DeviceValidationEvent deviceValidationEvent = report.devices.get(TestCommon.DEVICE_ID);
     assertEquals("report status level", (Object) INFO.value(),
         deviceValidationEvent.status.level);
-    String expected = getTimestamp(messageObject.timestamp);
-    String lastSeen = getTimestamp(deviceValidationEvent.last_seen);
+    String expected = isoConvert(messageObject.timestamp);
+    String lastSeen = isoConvert(deviceValidationEvent.last_seen);
     assertEquals("status last_seen", expected, lastSeen);
   }
 
@@ -147,7 +144,7 @@ public class BasicTest extends TestBase {
     DeviceValidationEvent deviceValidationEvent = report.devices.get(TestCommon.DEVICE_ID);
     Date lastSeen = deviceValidationEvent.last_seen;
     Instant parse = getInstant((String) eventBundle.message.get(TIMESTAMP_KEY));
-    assertEquals("device last seen", getTimestamp(Date.from(parse)), getTimestamp(lastSeen));
+    assertEquals("device last seen", isoConvert(Date.from(parse)), isoConvert(lastSeen));
   }
 
 }

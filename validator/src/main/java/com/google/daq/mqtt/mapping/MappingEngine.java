@@ -1,5 +1,7 @@
 package com.google.daq.mqtt.mapping;
 
+import static com.google.udmi.util.JsonUtil.isoConvert;
+
 import com.google.common.collect.ImmutableList;
 import com.google.daq.mqtt.util.MessageHandler;
 import com.google.daq.mqtt.util.MessageHandler.HandlerSpecification;
@@ -59,7 +61,7 @@ public class MappingEngine extends MappingBase {
   private void discoveryEventHandler(Envelope envelope, DiscoveryEvent message) {
     String deviceId = message.scan_addr;
     System.err.printf("Processing device %s generation %s%n", deviceId,
-        JsonUtil.getTimestamp(message.generation));
+        isoConvert(message.generation));
 
     getDeviceState(deviceId).discovered = message.timestamp;
     updateTranslation(deviceId, message.uniqs);
@@ -78,8 +80,8 @@ public class MappingEngine extends MappingBase {
     result.entities = new HashMap<>();
     final MappingEventEntity entity = new MappingEventEntity();
     entity.translation = uniqs.entrySet()
-            .stream().map(this::makeTranslation).collect(Collectors.toMap(SimpleEntry::getKey,
-                    SimpleEntry::getValue, (existing, replacement) -> replacement, HashMap::new));
+        .stream().map(this::makeTranslation).collect(Collectors.toMap(SimpleEntry::getKey,
+            SimpleEntry::getValue, (existing, replacement) -> replacement, HashMap::new));
     result.entities.put(deviceGuid(deviceId), entity);
     result.timestamp = new Date();
     publishMessage(deviceId, result);
