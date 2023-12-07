@@ -41,9 +41,10 @@ public class DiscoveryManager extends ManagerBase {
   private DiscoveryConfig discoveryConfig;
   private SiteModel siteModel;
 
-  public DiscoveryManager(ManagerHost host, PubberConfiguration configuration) {
+  public DiscoveryManager(ManagerHost host, PubberConfiguration configuration,
+      DeviceManager deviceManager) {
     super(host, configuration);
-    deviceManager = host.getDeviceManager();
+    this.deviceManager = deviceManager;
   }
 
   private void updateDiscoveryEnumeration(DiscoveryConfig config) {

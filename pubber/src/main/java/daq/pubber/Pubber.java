@@ -210,11 +210,6 @@ public class Pubber extends ManagerBase implements ManagerHost {
     }
   }
 
-  @Override
-  public DeviceManager getDeviceManager() {
-    return deviceManager;
-  }
-
   private static PubberConfiguration loadConfiguration(String configPath) {
     File configFile = new File(configPath);
     try {

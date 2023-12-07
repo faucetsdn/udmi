@@ -15,6 +15,4 @@ public interface ManagerHost {
   void error(String message, Throwable e);
 
   void publish(Object message);
-
-  DeviceManager getDeviceManager();
 }

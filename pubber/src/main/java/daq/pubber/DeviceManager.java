@@ -32,7 +32,7 @@ public class DeviceManager extends ManagerBase {
     pointsetManager = new PointsetManager(host, configuration);
     localnetManager = new LocalnetManager(host, configuration);
     gatewayManager = new GatewayManager(host, configuration);
-    discoveryManager = new DiscoveryManager(host, configuration);
+    discoveryManager = new DiscoveryManager(host, configuration, this);
   }
 
   public void setPersistentData(DevicePersistent persistentData) {
