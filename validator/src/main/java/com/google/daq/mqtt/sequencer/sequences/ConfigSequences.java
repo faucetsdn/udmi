@@ -54,8 +54,9 @@ public class ConfigSequences extends SequenceBase {
   @Summary("Check that last_update state is correctly set in response to a config update.")
   @ValidateSchema(SubFolder.SYSTEM)
   public void system_last_update() {
-    ensureStateUpdate();
-    untilTrue("state last_config matches config timestamp", this::lastConfigUpdated);
+    untilTrue("state last_config matches first config timestamp", this::lastConfigUpdated);
+    forceConfigUpdate("trigger another config update");
+    untilTrue("state last_config matches new config timestamp", this::lastConfigUpdated);
   }
 
   @Test
