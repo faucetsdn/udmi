@@ -1970,6 +1970,10 @@ public class SequenceBase {
     return lastConfigUpdated() ? null : "";
   }
 
+  protected boolean deviceStateComplete() {
+    return deviceState.system != null && deviceState.pointset != null;
+  }
+
   protected boolean lastConfigUpdated() {
     Date expectedConfig = deviceConfig.timestamp;
     Date lastConfig = deviceState.system.last_config;
