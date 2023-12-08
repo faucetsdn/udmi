@@ -57,6 +57,8 @@ public class ConfigSequences extends SequenceBase {
     untilTrue("state last_config matches first config timestamp", this::lastConfigUpdated);
     forceConfigUpdate("trigger another config update");
     untilTrue("state last_config matches new config timestamp", this::lastConfigUpdated);
+    forceConfigUpdate("trigger another config update");
+    untilTrue("state last_config matches last config timestamp", this::lastConfigUpdated);
   }
 
   @Test
