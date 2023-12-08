@@ -5,10 +5,10 @@
         "addr" : "40:1c:83:ca:77:54"
       },
       "ipv4" : {
-        "addr" : "10.0.0.142"
+        "addr" : "10.132.154.140"
       },
       "ipv6" : {
-        "addr" : "fe80::134f:c1f5:f225:a441"
+        "addr" : "fe80::f9e9:cab2:e374:401d"
       }
     }
   },
@@ -25,14 +25,14 @@
     }
   },
   "system" : {
-    "last_config" : "2023-07-28T20:25:20Z",
+    "last_config" : "2023-12-08T05:50:06Z",
     "operation" : {
       "operational" : true,
-      "last_start" : "2023-07-28T20:23:12Z",
-      "restart_count" : 3,
-      "mode" : "active"
+      "last_start" : "2023-12-08T05:49:34Z",
+      "restart_count" : 1,
+      "mode" : "initial"
     },
-    "serial_no" : "sequencer-13214",
+    "serial_no" : "sequencer-20544",
     "hardware" : {
       "make" : "BOS",
       "model" : "pubber"
@@ -43,10 +43,10 @@
     "status" : {
       "message" : "success",
       "category" : "system.config.apply",
-      "timestamp" : "2023-07-28T20:25:20Z",
+      "timestamp" : "2023-12-08T05:50:06Z",
       "level" : 300
     }
   },
-  "timestamp" : "2023-07-28T20:25:21Z",
-  "version" : "1.4.1"
+  "timestamp" : "2023-12-08T05:50:08Z",
+  "version" : "1.4.2"
 }
