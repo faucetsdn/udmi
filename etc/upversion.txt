@@ -108,3 +108,5 @@ y tests/schemas/state_validation/sequencer.json
 n tests/schemas/configuration_pubber/mosquitto.json
 y tests/schemas/metadata/network.json
 y tests/schemas/state/networks.json
+y tests/schemas/config/easing.json
+y tests/schemas/config_pointset/easing.json
