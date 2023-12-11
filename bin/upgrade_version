@@ -82,6 +82,7 @@ for test_file in tests/schemas/*/*.json; do
 done
 if [[ -n $err_upversion_list ]]; then
     echo ERROR .. above files not found in upversion list or listed more than once
+    echo $UPVERSION_LIST
     touch $ERROR_MARKER
 fi
 
@@ -105,7 +106,7 @@ while read action file comment; do
 done <$UPVERSION_LIST
 if [[ -n $err_stale_file ]]; then
     touch $ERROR_MARKER
-    echo ERROR .. above files etc/upversion.txt no longer exist
+    echo ERROR .. above files $UPVERSION_LIST no longer exist
 fi
 
 
