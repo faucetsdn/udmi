@@ -30,7 +30,7 @@ section
 
 The `bin/upgrade_version` tool updates :
 * the `$udmi_version` field in schema files,
-* the version in `version` of of manually curated payloads in `tests/*.tests`
+* the version in `version` in `tests/**/*.json` according to manually curated file 
 * documentation inline message examples.
 * the `UDMI_VERSION` constant in specific JAVA files.
 
@@ -42,10 +42,10 @@ which are preceded by a `y` in `upversion.txt` will have their version upgraded.
 
 `bin/upgrade_version` does not update any generated files (e.g. for CI testing).
 
-The following files need to be update:
+The below files need to be updated. Do not blindly copy! Inspect all diffs and confirm they are expected
 * After `bin/test_trace simple`, contents of `sites/udmi_site_model/sites/out`
   into `tests/traces/simple/expected` 
-* After `bin/test_validator`, `/tmp/validator.out` into `/etc/validator.out` (reset any changes to sites/udmi_site_model before running) 
+* After `bin/test_validator`, `/tmp/validator.out` into `/etc/validator.out` (reset any changes to sites/udmi_site_model before running but run `bin/registrar`) 
 * After `bin/test_registrar && bin/test_sites`, the `out` directory for each device in `tests/downgrade.site/devices/` into the `expected` subdirectory
   (note these files are ignored by git, but must still be committed)
 
