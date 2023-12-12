@@ -65,7 +65,7 @@ public class ConfigSequences extends SequenceBase {
   }
 
   @Test
-  @Feature(stage = ALPHA, bucket = SYSTEM)
+  @Feature(stage = BETA, bucket = SYSTEM)
   @ValidateSchema(SubFolder.SYSTEM)
   public void valid_serial_no() {
     ifNullSkipTest(serialNo, "No test serial number provided");
@@ -124,7 +124,7 @@ public class ConfigSequences extends SequenceBase {
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Feature(stage = ALPHA, bucket = SYSTEM, score = 4)
+  @Feature(stage = BETA, bucket = SYSTEM, score = 4)
   @Capability(value = LOGGING, stage = ALPHA)
   @Summary("Check that the device correctly handles a broken (non-json) config message.")
   @ValidateSchema(SubFolder.SYSTEM)

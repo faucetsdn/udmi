@@ -9,6 +9,7 @@ import static udmi.schema.Bucket.ENDPOINT;
 import static udmi.schema.Bucket.SYSTEM_MODE;
 import static udmi.schema.Category.BLOBSET_BLOB_APPLY;
 import static udmi.schema.FeatureEnumeration.FeatureStage.ALPHA;
+import static udmi.schema.FeatureEnumeration.FeatureStage.PREVIEW;
 
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
@@ -130,7 +131,7 @@ public class BlobsetSequences extends SequenceBase {
     return String.format(DATA_URL_FORMAT, JSON_MIME_TYPE, encodeBase64(payload));
   }
 
-  @Feature(stage = ALPHA, bucket = ENDPOINT)
+  @Feature(stage = PREVIEW, bucket = ENDPOINT)
   @Summary("Push endpoint config message to device that results in a connection error.")
   @Test
   public void endpoint_connection_error() {
@@ -139,7 +140,7 @@ public class BlobsetSequences extends SequenceBase {
     untilClearedRedirect();
   }
 
-  @Feature(stage = ALPHA, bucket = ENDPOINT)
+  @Feature(stage = PREVIEW, bucket = ENDPOINT)
   @Summary("Check repeated endpoint with same information gets retried.")
   @Test
   public void endpoint_connection_retry() {
@@ -156,7 +157,7 @@ public class BlobsetSequences extends SequenceBase {
     untilClearedRedirect();
   }
 
-  @Feature(stage = ALPHA, bucket = ENDPOINT)
+  @Feature(stage = PREVIEW, bucket = ENDPOINT)
   @Summary("Check a successful reconnect to the same endpoint.")
   @Test
   public void endpoint_connection_success_reconnect() {
@@ -184,20 +185,20 @@ public class BlobsetSequences extends SequenceBase {
   }
 
   @Test
-  @Feature(stage = ALPHA, bucket = ENDPOINT)
+  @Feature(stage = PREVIEW, bucket = ENDPOINT)
   @Summary("Check connection to an alternate project.")
   public void endpoint_connection_success_alternate() {
     check_endpoint_connection_success(false);
   }
 
   @Test
-  @Feature(stage = ALPHA, bucket = ENDPOINT)
+  @Feature(stage = PREVIEW, bucket = ENDPOINT)
   public void endpoint_redirect_and_restart() {
     check_endpoint_connection_success(true);
   }
 
   @Test(timeout = THREE_MINUTES_MS)
-  @Feature(stage = ALPHA, bucket = ENDPOINT)
+  @Feature(stage = PREVIEW, bucket = ENDPOINT)
   public void endpoint_failure_and_restart() {
     setDeviceConfigEndpointBlob(BOGUS_ENDPOINT_HOSTNAME, registryId, false);
     untilErrorReported();
