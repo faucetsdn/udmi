@@ -224,7 +224,9 @@ public class SequenceRunner {
     }
     System.err.println("Target sequence classes:\n  " + Joiner.on("\n  ").join(sequenceClasses));
     ensureExecutionConfig();
-    boolean enableAllBuckets = shouldExecuteAll() || !targets.isEmpty();
+    //TODO execConfig.shard_count is a hacky fix to prevent some tests skipping
+    // if they don't run after the sequencer sessions which does feature enumeration
+    boolean enableAllBuckets = shouldExecuteAll() || !targets.isEmpty() || (exeConfig.shard_count != null);
     SequenceBase.enableAllBuckets(enableAllBuckets);
     String deviceId = exeConfig.device_id;
     Set<String> remainingMethods = new HashSet<>(targets);
