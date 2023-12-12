@@ -108,3 +108,89 @@ y tests/schemas/state_validation/sequencer.json
 n tests/schemas/configuration_pubber/mosquitto.json
 y tests/schemas/metadata/network.json
 y tests/schemas/state/networks.json
+y tests/schemas/config/easing.json
+y tests/schemas/config_pointset/easing.json
+
+y tests/traces/simple/devices/AHU-1/001_event_pointset.json
+y tests/traces/simple/devices/AHU-1/002_event_system.json
+y tests/traces/simple/devices/AHU-1/003_event_pointset.json
+n tests/traces/simple/devices/AHU-22/001_event_pointset.json # has no version field
+y tests/traces/simple/devices/AHU-22/002_event_pointset.json
+y tests/traces/simple/devices/AHU-22/003_event_system.json
+y tests/traces/simple/devices/AHU-22/004_event_pointset.json
+y tests/traces/simple/devices/GAT-123/001_state_update.json
+y tests/traces/simple/devices/GAT-123/002_state_gateway.json
+n tests/traces/simple/devices/GAT-123/004_state_system.json # has no version field
+y tests/traces/simple/devices/SNS-4/001_event_pointset.json
+y tests/traces/simple/devices/SNS-4/002_event_discovery.json
+y tests/traces/simple/devices/SNS-4/003_event_system.json
+
+# The following are updated manually by running `test_traces simple` and inspecting + copying the output  
+n tests/traces/simple/expected/devices/AHU-1/event_pointset.json 
+n tests/traces/simple/expected/devices/AHU-1/event_system.json 
+n tests/traces/simple/expected/devices/AHU-22/event_pointset.json 
+n tests/traces/simple/expected/devices/AHU-22/event_system.json 
+n tests/traces/simple/expected/devices/GAT-123/state_gateway.json 
+n tests/traces/simple/expected/devices/GAT-123/state.json 
+n tests/traces/simple/expected/devices/GAT-123/state_system.json 
+n tests/traces/simple/expected/devices/SNS-4/event_discovery.json 
+n tests/traces/simple/expected/devices/SNS-4/event_pointset.json 
+n tests/traces/simple/expected/devices/SNS-4/event_system.json 
+n tests/traces/simple/expected/validation_report.json
+
+# The following are not updated because they test update/downgrade functionalities
+n tests/traces/upgrade/devices/AHU-1/001_state_update.json
+n tests/traces/upgrade/devices/AHU-1/002_state_system.json
+n tests/traces/upgrade/devices/AHU-22/001_state_update.json
+n tests/traces/upgrade/devices/NON-1/001_state_update.json
+n tests/traces/upgrade/devices/NON-2/001_state_update.json
+n tests/traces/upgrade/devices/SNS-4/001_state_update.json
+n tests/traces/upgrade/expected/devices/AHU-1/state.json
+n tests/traces/upgrade/expected/devices/AHU-1/state_system.json
+n tests/traces/upgrade/expected/devices/AHU-22/state.json
+n tests/traces/upgrade/expected/devices/NON-1/state.json
+n tests/traces/upgrade/expected/devices/NON-2/state.json
+n tests/traces/upgrade/expected/devices/SNS-4/state.json
+n tests/traces/upgrade/expected/validation_report.json
+n tests/sites/downgrade/cloud_iot_config.json
+n tests/sites/downgrade/devices/DWN-1/expected/generated_config.json
+n tests/sites/downgrade/devices/DWN-1/expected/metadata_norm.json
+n tests/sites/downgrade/devices/DWN-1/metadata.json
+n tests/sites/downgrade/devices/DWN-1/out/errors.json
+n tests/sites/downgrade/devices/DWN-1/out/generated_config.json
+n tests/sites/downgrade/devices/DWN-1/out/metadata_norm.json
+n tests/sites/downgrade/devices/DWN-2/metadata.json
+n tests/sites/downgrade/devices/DWN-2/out/errors.json
+n tests/sites/downgrade/devices/DWN-2/out/generated_config.json
+n tests/sites/downgrade/devices/DWN-2/out/metadata_norm.json
+n tests/sites/downgrade/out/registration_summary.json
+n tests/sites/downgrade/registration_summary.json
+n tests/sites/downgrade/site_metadata.json
+
+# These files appear to be related to the downgrade testing capability
+n tests/sites/missing/cloud_iot_config.json
+n tests/sites/missing/devices/AHU-1/expected/generated_config.json
+n tests/sites/missing/devices/AHU-1/expected/metadata_norm.json
+n tests/sites/missing/devices/AHU-1/metadata.json
+n tests/sites/missing/devices/AHU-1/out/errors.json
+n tests/sites/missing/devices/AHU-1/out/generated_config.json
+n tests/sites/missing/devices/AHU-1/out/metadata_norm.json
+n tests/sites/missing/devices/AHU-22/expected/generated_config.json
+n tests/sites/missing/devices/AHU-22/expected/metadata_norm.json
+n tests/sites/missing/devices/AHU-22/metadata.json
+n tests/sites/missing/devices/AHU-22/out/generated_config.json
+n tests/sites/missing/devices/AHU-22/out/metadata_norm.json
+n tests/sites/missing/devices/GAT-123/expected/generated_config.json
+n tests/sites/missing/devices/GAT-123/expected/metadata_norm.json
+n tests/sites/missing/devices/GAT-123/metadata.json
+n tests/sites/missing/devices/GAT-123/out/errors.json
+n tests/sites/missing/devices/GAT-123/out/generated_config.json
+n tests/sites/missing/devices/GAT-123/out/metadata_norm.json
+n tests/sites/missing/devices/SNS-4/expected/generated_config.json
+n tests/sites/missing/devices/SNS-4/expected/metadata_norm.json
+n tests/sites/missing/devices/SNS-4/metadata.json
+n tests/sites/missing/devices/SNS-4/out/generated_config.json
+n tests/sites/missing/devices/SNS-4/out/metadata_norm.json
+n tests/sites/missing/out/registration_summary.json
+n tests/sites/missing/registration_summary.json
+n tests/sites/missing/site_metadata.json
