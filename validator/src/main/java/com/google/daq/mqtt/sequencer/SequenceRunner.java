@@ -224,8 +224,9 @@ public class SequenceRunner {
     }
     System.err.println("Target sequence classes:\n  " + Joiner.on("\n  ").join(sequenceClasses));
     ensureExecutionConfig();
-    //TODO execConfig.shard_count is a hacky fix to prevent some tests skipping
-    // if they don't run after the sequencer sessions which does feature enumeration
+    //TODO (execConfig.shard_count != null) is a hacky fix to prevent some tests skipping in CI
+    // because they don't run after the sequencer sessions which does feature enumeration
+    // This occurred when the endpoint redirection tests moved out of Alpha
     boolean enableAllBuckets = shouldExecuteAll() || !targets.isEmpty() || (exeConfig.shard_count != null);
     SequenceBase.enableAllBuckets(enableAllBuckets);
     String deviceId = exeConfig.device_id;
