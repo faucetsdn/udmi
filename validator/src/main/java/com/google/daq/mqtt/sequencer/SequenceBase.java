@@ -801,7 +801,7 @@ public class SequenceBase {
       resetDeviceConfig(false);
       updateConfig("soft reset");
       debug("Done with reset_config");
-      resetRequired = false;
+      // resetRequired = false;
     });
 
     waitForStateConfigSync();

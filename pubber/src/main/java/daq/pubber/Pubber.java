@@ -28,6 +28,7 @@ import static daq.pubber.MqttDevice.CONFIG_TOPIC;
 import static daq.pubber.MqttDevice.ERRORS_TOPIC;
 import static daq.pubber.MqttDevice.STATE_TOPIC;
 import static daq.pubber.MqttPublisher.DEFAULT_CONFIG_WAIT_SEC;
+import static daq.pubber.SystemManager.LOG_MAP;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Objects.requireNonNullElse;
@@ -35,7 +36,6 @@ import static java.util.Optional.ofNullable;
 import static udmi.schema.BlobsetConfig.SystemBlobsets.IOT_ENDPOINT_CONFIG;
 import static udmi.schema.EndpointConfiguration.Protocol.MQTT;
 
-import com.google.api.services.cloudiot.v1.model.DeviceState;
 import com.google.common.collect.ImmutableMap;
 import com.google.daq.mqtt.util.CatchingScheduledThreadPoolExecutor;
 import com.google.udmi.util.GeneralUtils;
@@ -51,6 +51,7 @@ import daq.pubber.PointsetManager.ExtraPointsetEvent;
 import daq.pubber.PubSubClient.Bundle;
 import daq.pubber.SystemManager.ExtraSystemState;
 import java.io.File;
+import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -172,8 +173,8 @@ public class Pubber extends ManagerBase implements ManagerHost {
   private int deviceUpdateCount = -1;
   private DeviceManager deviceManager;
   private boolean isConnected;
-
   private boolean isGatewayDevice;
+  public PrintStream logPrintWriter;
 
   /**
    * Start an instance from a configuration file.
@@ -369,7 +370,6 @@ public class Pubber extends ManagerBase implements ManagerHost {
     if (configuration.sitePath != null) {
       siteModel = new SiteModel(configuration.sitePath);
       siteModel.initialize();
-      deviceManager.setSiteModel(siteModel);
       if (configuration.endpoint == null) {
         configuration.endpoint = siteModel.makeEndpointConfig(configuration.iotProject, deviceId);
       }
@@ -379,6 +379,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
       }
       Metadata metadata = siteModel.getMetadata(configuration.deviceId);
       processDeviceMetadata(metadata);
+      deviceManager.setSiteModel(siteModel);
     } else if (pubSubClient != null) {
       pullDeviceMessage();
     }
@@ -696,6 +697,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
   private boolean attemptConnection() {
     try {
       isConnected = false;
+      deviceManager.pause();
       if (deviceTarget == null) {
         throw new RuntimeException("Mqtt publisher not initialized");
       }
@@ -814,9 +816,10 @@ public class Pubber extends ManagerBase implements ManagerHost {
   }
 
   private void publisherException(Exception toReport) {
-    if (toReport instanceof PublisherException) {
-      publisherHandler(((PublisherException) toReport).type, ((PublisherException) toReport).phase,
-          toReport.getCause());
+    if (toReport instanceof PublisherException report) {
+      if (report.deviceId.equals(deviceId)) {
+        publisherHandler(report.type, report.phase, report.getCause());
+      }
     } else if (toReport instanceof ConnectionClosedException) {
       error("Connection closed, attempting reconnect...");
       while (retriesRemaining.getAndDecrement() > 0) {
@@ -919,9 +922,10 @@ public class Pubber extends ManagerBase implements ManagerHost {
   }
 
   void configPreprocess(String targetId, Config config) {
-    info(format("Device %s config handler", deviceId));
     String gatewayId = getGatewayId(targetId, configuration);
     String suffix = ifNotNullGet(gatewayId, x -> "_" + targetId, "");
+    String deviceType = ifNotNullGet(gatewayId, x -> "Proxy", "Device");
+    info(format("%s %s config handler", deviceType, targetId));
     File configOut = new File(outDir, format("%s%s.json", traceTimestamp("config"), suffix));
     toJsonFile(configOut, config);
   }
@@ -1253,8 +1257,9 @@ public class Pubber extends ManagerBase implements ManagerHost {
     Object downgraded = downgradeMessage(message);
     deviceTarget.publish(targetId, topicSuffix, downgraded, callback);
     String messageBase = topicSuffix.replace("/", "_");
-    String fileName = traceTimestamp(messageBase) + ".json";
-    File messageOut = new File(outDir, fileName);
+    String gatewayId = getGatewayId(targetId, configuration);
+    String suffix = ifNotNullGet(gatewayId, x -> "_" + targetId, "");
+    File messageOut = new File(outDir,  format("%s%s.json", traceTimestamp(messageBase), suffix));
     try {
       toJsonFile(messageOut, downgraded);
     } catch (Exception e) {
@@ -1282,7 +1287,9 @@ public class Pubber extends ManagerBase implements ManagerHost {
     if (deviceManager != null) {
       deviceManager.cloudLog(message, level, detail);
     } else {
-      SystemManager.localLog(message, level, getTimestamp(), detail);
+      String detailPostfix = detail == null ? "" : ":\n" + detail;
+      String logMessage = format("%s%s", message, detailPostfix);
+      LOG_MAP.get(level).accept(logMessage);
     }
   }
 

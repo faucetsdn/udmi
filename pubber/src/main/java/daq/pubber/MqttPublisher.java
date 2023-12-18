@@ -245,7 +245,7 @@ public class MqttPublisher implements Publisher {
           }
           removed.close();
         } catch (Exception e) {
-          error("Error closing MQTT client: " + e, null, "stop", e);
+          error("Error closing MQTT client: " + e, deviceId, null, "stop", e);
         }
       }
     }
@@ -265,7 +265,7 @@ public class MqttPublisher implements Publisher {
       publisherExecutor.shutdown();
       mqttClients.keySet().forEach(this::closeMqttClient);
     } catch (Exception e) {
-      error("While closing publisher", null, "close", e);
+      error("While closing publisher", deviceId, null, "close", e);
     }
   }
 
@@ -486,13 +486,13 @@ public class MqttPublisher implements Publisher {
     getConnectedClient(targetId);
   }
 
-  private void success(String message, String type, String phase) {
-    onError.accept(new PublisherException(message, type, phase, null));
+  private void success(String message, String deviceId, String type, String phase) {
+    onError.accept(new PublisherException(message, deviceId, type, phase, null));
   }
 
-  private void error(String message, String type, String phase, Exception e) {
+  private void error(String message, String deviceId, String type, String phase, Exception e) {
     LOG.error(message, e);
-    onError.accept(new PublisherException(message, type, phase, e));
+    onError.accept(new PublisherException(message, deviceId, type, phase, e));
   }
 
   private void warn(String message) {
@@ -593,6 +593,7 @@ public class MqttPublisher implements Publisher {
    */
   public static class PublisherException extends RuntimeException {
 
+    final String deviceId;
     final String type;
     final String phase;
 
@@ -600,12 +601,15 @@ public class MqttPublisher implements Publisher {
      * Exception encountered during publishing a message.
      *
      * @param message Error message
+     * @param deviceId Target deviceId
      * @param type    Type of message being published
      * @param phase   Which phase of execution
      * @param cause   Cause of the exception
      */
-    public PublisherException(String message, String type, String phase, Throwable cause) {
+    public PublisherException(String message, String deviceId, String type, String phase,
+            Throwable cause) {
       super(message, cause);
+      this.deviceId = deviceId;
       this.type = type;
       this.phase = phase;
     }
@@ -658,13 +662,13 @@ public class MqttPublisher implements Publisher {
         Consumer<Object> handler = handlers.get(handlerKey);
         Class<Object> type = handlersType.get(handlerKey);
         if (handler == null) {
-          error("Missing handler", messageType, "receive",
+          error("Missing handler", deviceId, messageType, "receive",
               new RuntimeException("No registered handler for topic " + topic));
           handlersType.put(handlerKey, Object.class);
           handlers.put(handlerKey, this::ignoringHandler);
           return;
         }
-        success("Received config", messageType, "receive");
+        success("Received config", deviceId, messageType, "receive");
 
         final Object payload;
         try {
@@ -674,10 +678,10 @@ public class MqttPublisher implements Publisher {
             payload = OBJECT_MAPPER.readValue(message.toString(), type);
           }
         } catch (Exception e) {
-          error("Processing message", messageType, "parse", e);
+          error("Processing message", deviceId, messageType, "parse", e);
           return;
         }
-        success("Parsed message", messageType, "parse");
+        success("Parsed message", deviceId, messageType, "parse");
         handler.accept(payload);
       }
     }

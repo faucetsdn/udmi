@@ -65,7 +65,7 @@ public class DeviceManager extends ManagerBase {
   }
 
   public void localLog(String message, Level trace, String timestamp, String detail) {
-    SystemManager.localLog(message, trace, timestamp, detail);
+    systemManager.localLog(message, trace, timestamp, detail);
   }
 
   public String getTestingTag() {
@@ -100,11 +100,22 @@ public class DeviceManager extends ManagerBase {
     gatewayManager.shutdown();
   }
 
+  /**
+   * Pause periodic senders.
+   */
+  public void pause() {
+    pointsetManager.pause();
+    localnetManager.pause();
+    gatewayManager.pause();
+    systemManager.pause();
+  }
+
   public Map<String, FamilyDiscoveryEvent> enumerateFamilies() {
     return localnetManager.enumerateFamilies();
   }
 
   public void setSiteModel(SiteModel siteModel) {
     discoveryManager.setSiteModel(siteModel);
+    gatewayManager.setSiteModel(siteModel);
   }
 }

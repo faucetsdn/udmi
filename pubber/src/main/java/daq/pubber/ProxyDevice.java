@@ -5,6 +5,7 @@ import static daq.pubber.Pubber.configuration;
 import static java.lang.String.format;
 
 import udmi.schema.Config;
+import udmi.schema.Metadata;
 import udmi.schema.PubberConfiguration;
 
 /**
@@ -13,7 +14,7 @@ import udmi.schema.PubberConfiguration;
 public class ProxyDevice extends ManagerBase implements ManagerHost {
 
   private final DeviceManager deviceManager;
-  private final Pubber pubberHost;
+  public final Pubber pubberHost;
 
   /**
    * New instance.
@@ -39,13 +40,16 @@ public class ProxyDevice extends ManagerBase implements ManagerHost {
   }
 
   void configHandler(Config config) {
-    info(format("Proxy %s config handler", deviceId));
     pubberHost.configPreprocess(deviceId, config);
     deviceManager.updateConfig(config);
   }
 
   protected void shutdown() {
     deviceManager.shutdown();
+  }
+
+  protected void pause() {
+    deviceManager.pause();
   }
 
   @Override
@@ -59,4 +63,7 @@ public class ProxyDevice extends ManagerBase implements ManagerHost {
     warn(format("Ignoring proxy device %s update for %s", deviceId, simpleName));
   }
 
+  public void setMetadata(Metadata metadata) {
+    deviceManager.setMetadata(metadata);
+  }
 }

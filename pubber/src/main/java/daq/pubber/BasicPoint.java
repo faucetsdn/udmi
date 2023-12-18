@@ -36,7 +36,11 @@ public abstract class BasicPoint implements AbstractPoint {
     dirty = true;
   }
 
-  abstract Object getValue();
+  protected abstract Object getValue() throws IllegalStateException;
+
+  protected abstract Object setValue(Object setValue) throws IllegalStateException;
+
+  protected abstract boolean validateValue(Object setValue) throws IllegalStateException;
 
   @Override
   public void updateData() {
@@ -75,47 +79,41 @@ public abstract class BasicPoint implements AbstractPoint {
       written = false;
       state.value_state = null;
       updateData();
-    } else if (!validateValue(config.set_value)) {
-      state.status = invalidValueStatus();
-      state.value_state = Value_state.INVALID;
-    } else if (!writable) {
-      state.status = notWritableStatus();
+      dirty = state.value_state != previous;
+      return;
+    }
+
+    try {
+      if (!validateValue(config.set_value)) {
+        state.status = createEntryFrom(Category.POINTSET_POINT_INVALID,
+                "Written value is not valid");
+        state.value_state = Value_state.INVALID;
+        dirty = state.value_state != previous;
+        return;
+      }
+    } catch (IllegalStateException ex) {
+      state.status = createEntryFrom(Category.POINTSET_POINT_FAILURE, ex.getMessage());
       state.value_state = Value_state.FAILURE;
-    } else {
+      dirty = state.value_state != previous;
+      return;
+    }
+
+    if (!writable) {
+      state.status = createEntryFrom(Category.POINTSET_POINT_FAILURE, "Point is not writable");
+      state.value_state = Value_state.FAILURE;
+      dirty = state.value_state != previous;
+      return;
+    }
+
+    try {
+      data.present_value = setValue(config.set_value);
       state.value_state = Value_state.APPLIED;
       written = true;
-      data.present_value = config.set_value;
+    } catch (IllegalStateException ex) {
+      state.status = createEntryFrom(Category.POINTSET_POINT_FAILURE, ex.getMessage());
+      state.value_state = Value_state.FAILURE;
     }
     dirty = state.value_state != previous;
-  }
-
-  protected abstract boolean validateValue(Object setValue);
-
-  private Entry getEntry() {
-    Entry entry = new Entry();
-    entry.detail = getPointDetail();
-    entry.timestamp = getNow();
-    return entry;
-  }
-
-  private String getPointDetail() {
-    return String.format("Point %s (writable %s)", name, writable);
-  }
-
-  private Entry invalidValueStatus() {
-    Entry entry = getEntry();
-    entry.message = "Written value is not valid";
-    entry.category = Category.POINTSET_POINT_INVALID;
-    entry.level = Category.POINTSET_POINT_INVALID_VALUE;
-    return entry;
-  }
-
-  private Entry notWritableStatus() {
-    Entry entry = getEntry();
-    entry.message = "Point is not writable";
-    entry.category = Category.POINTSET_POINT_FAILURE;
-    entry.level = Category.POINTSET_POINT_FAILURE_VALUE;
-    return entry;
   }
 
   @Override
@@ -125,6 +123,16 @@ public abstract class BasicPoint implements AbstractPoint {
     point.writable = writable ? true : null;
     populateEnumeration(point);
     return point;
+  }
+
+  private Entry createEntryFrom(String category, String message) {
+    Entry entry = new Entry();
+    entry.detail = String.format("Point %s (writable %s)", name, writable);
+    entry.timestamp = getNow();
+    entry.message = message;
+    entry.category = category;
+    entry.level = Category.LEVEL.get(category).value();
+    return entry;
   }
 
   protected abstract void populateEnumeration(PointEnumerationEvent point);

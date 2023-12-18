@@ -59,7 +59,7 @@ public class SystemManager extends ManagerBase {
       SystemMode.TERMINATE, 193); // Indicates expected shutdown (failure code).
   private static final Integer UNKNOWN_MODE_EXIT_CODE = -1;
   private static final Logger LOG = Pubber.LOG;
-  private static final Map<Level, Consumer<String>> LOG_MAP =
+  public static final Map<Level, Consumer<String>> LOG_MAP =
       ImmutableMap.<Level, Consumer<String>>builder()
           .put(Level.TRACE, LOG::info) // TODO: Make debug/trace programmatically visible.
           .put(Level.DEBUG, LOG::info)
@@ -68,19 +68,6 @@ public class SystemManager extends ManagerBase {
           .put(Level.WARNING, LOG::warn)
           .put(Level.ERROR, LOG::error)
           .build();
-  private static final PrintStream logPrintWriter;
-
-  static {
-    File outDir = new File(Pubber.PUBBER_OUT);
-    try {
-      outDir.mkdirs();
-      logPrintWriter = new PrintStream(new File(outDir, PUBBER_LOG));
-      logPrintWriter.println("Pubber log started at " + getTimestamp());
-    } catch (Exception e) {
-      throw new RuntimeException("While initializing out dir " + outDir.getAbsolutePath(), e);
-    }
-  }
-
   private final List<Entry> logentries = new ArrayList<>();
   private final ExtraSystemState systemState;
   private final ManagerHost host;
@@ -94,6 +81,10 @@ public class SystemManager extends ManagerBase {
   public SystemManager(ManagerHost host, PubberConfiguration configuration) {
     super(host, configuration);
     this.host = host;
+
+    if (host instanceof Pubber pubberHost) {
+      initializeLogger(pubberHost);
+    }
 
     info("Device start time is " + isoConvert(DEVICE_START_TIME));
 
@@ -116,10 +107,23 @@ public class SystemManager extends ManagerBase {
     updateState();
   }
 
+  private void initializeLogger(Pubber host) {
+    File outDir = new File(Pubber.PUBBER_OUT);
+    try {
+      outDir.mkdirs();
+      host.logPrintWriter = new PrintStream(new File(outDir, PUBBER_LOG));
+      host.logPrintWriter.println("Pubber log started at " + getTimestamp());
+    } catch (Exception e) {
+      throw new RuntimeException("While initializing out dir " + outDir.getAbsolutePath(), e);
+    }
+  }
+
   @Override
   public void shutdown() {
     super.shutdown();
-    logPrintWriter.close();
+    if (host instanceof Pubber pubberHost && pubberHost.logPrintWriter != null) {
+      pubberHost.logPrintWriter.close();
+    }
   }
 
   private void setHardwareSoftware(Metadata metadata) {
@@ -277,13 +281,21 @@ public class SystemManager extends ManagerBase {
     localLog(message, Level.fromValue(entry.level), isoConvert(entry.timestamp), null);
   }
 
-  static void localLog(String message, Level level, String timestamp, String detail) {
+  void localLog(String message, Level level, String timestamp, String detail) {
     String detailPostfix = detail == null ? "" : ":\n" + detail;
     String logMessage = format("%s %s%s", timestamp, message, detailPostfix);
     LOG_MAP.get(level).accept(logMessage);
     try {
-      logPrintWriter.println(logMessage);
-      logPrintWriter.flush();
+      PrintStream stream;
+      if (host instanceof Pubber pubberHost) {
+        stream = pubberHost.logPrintWriter;
+      } else if (host instanceof ProxyDevice proxyHost) {
+        stream = proxyHost.pubberHost.logPrintWriter;
+      } else {
+        throw new RuntimeException("While writing log output file: Unknown host");
+      }
+      stream.println(logMessage);
+      stream.flush();
     } catch (Exception e) {
       throw new RuntimeException("While writing log output file", e);
     }

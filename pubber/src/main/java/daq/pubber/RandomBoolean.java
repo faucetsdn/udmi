@@ -11,8 +11,14 @@ public class RandomBoolean extends BasicPoint implements AbstractPoint {
     super(name, writable, null);
   }
 
-  Object getValue() {
+  @Override
+  protected Object getValue() {
     return Math.random() < 0.5;
+  }
+
+  @Override
+  protected Object setValue(Object setValue) {
+    return setValue;
   }
 
   @Override

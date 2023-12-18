@@ -30,7 +30,12 @@ public class RandomPoint extends BasicPoint implements AbstractPoint {
   }
 
   @Override
-  Object getValue() {
+  protected Object setValue(Object setValue) {
+    return setValue;
+  }
+
+  @Override
+  protected Object getValue() {
     return Math.round(Math.random() * (max - min) + min);
   }
 
