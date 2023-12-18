@@ -1,5 +1,5 @@
 
-## endpoint_failure_and_restart (ALPHA)
+## endpoint_failure_and_restart (PREVIEW)
 
 1. Update config before blobset entry config status is error:
     * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `endpoint data` } } }

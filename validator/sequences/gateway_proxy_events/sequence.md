@@ -1,5 +1,5 @@
 
-## gateway_proxy_events (ALPHA)
+## gateway_proxy_events (BETA)
 
 Check that a gateway proxies pointset events for indicated devices
 
