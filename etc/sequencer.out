@@ -11,7 +11,7 @@ RESULT pass endpoint endpoint_connection_success_reconnect PREVIEW 5/5 Sequence 
 RESULT pass endpoint endpoint_failure_and_restart PREVIEW 5/5 Sequence complete
 RESULT pass endpoint endpoint_redirect_and_restart PREVIEW 5/5 Sequence complete
 RESULT pass system extra_config BETA 5/5 Sequence complete
-RESULT pass enumeration.families family_enumeration PREVIEW 5/5 Sequence complete
+RESULT pass enumeration.families family_enumeration ALPHA 5/5 Sequence complete
 RESULT pass system family_ether_addr PREVIEW 5/5 Sequence complete
 RESULT pass system family_ipv4_addr PREVIEW 5/5 Sequence complete
 RESULT pass system family_ipv6_addr PREVIEW 5/5 Sequence complete
