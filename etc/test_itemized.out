@@ -2,13 +2,13 @@
 02 RESULT fail pointset pointset_request_extraneous BETA 0/5 Timeout waiting for pointset event contains correct points with present_value
 03 RESULT fail pointset pointset_remove_point BETA 0/5 Timeout waiting for pointset state reports same points as defined in config
 04 RESULT fail pointset pointset_remove_point BETA 0/5 Timeout waiting for no applicable system status
-05 RESULT fail system too_much_state PREVIEW 0/5 Failed check that No more than 6 state updates in 60s
+05 RESULT fail system too_much_state ALPHA 0/5 Failed check that No more than 6 state updates in 60s
 06 RESULT fail enumeration.features feature_enumeration PREVIEW 0/5 Failed check that feature enumeration matches metadata; missing { enumeration }, extra { unknown }
 07 RESULT pass system valid_serial_no BETA 5/5 Sequ ence complete
 08 RESULT fail writeback writeback_success ALPHA    0/5 Timeout waiting for point filter_differential_pressure_setpoint to have value_state applied
 09 RESULT fail writeback writeback_success ALPHA 0/5 Timeout waiting for point filter_differential_pressure_setpoint to have value_state applied
 10 RESULT fail pointset pointset_sample_rate BETA 0/5 Failed check that time period between successive pointset events is between 1 and 5 seconds
-11 RESULT fail system.mode system_mode_restart PREVIEW 0/5 Failed check that restart count increased by one
+11 RESULT fail system.mode system_mode_restart ALPHA 0/5 Failed check that restart count increased by one
 12 RESULT fail system config_logging BETA 0/5 Bad version string number format
 13 CPBLTY pass system broken_config.logging ALPHA 1/1 Capability functional
 13 RESULT fail system broken_config BETA 0/5 Timeout waiting for has applicable system status
