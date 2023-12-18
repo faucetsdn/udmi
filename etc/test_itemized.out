@@ -15,7 +15,7 @@
 14 CPBLTY pass system broken_config.logging ALPHA 1/1 Capability functional
 14 RESULT pass system broken_config BETA 5/5 Sequence complete
 15 CPBLTY skip system broken_config.logging ALPHA 0/1 Never executed
-15 RESULT fail system broken_config PREVBETAIEW 0/5 Timeout waiting for no applicable system status
+15 RESULT fail system broken_config BETA 0/5 Timeout waiting for no applicable system status
 16 CPBLTY fail system broken_config.logging ALPHA 0/1 Timeout after 30s waiting for log category `system.config.apply` level `NOTICE` to be logged
 16 RESULT pass system broken_config BETA 4/5 Sequence complete
 17 CPBLTY fail system broken_config.logging ALPHA 0/1 Timeout after 30s waiting for log category `system.config.receive` level `DEBUG` to be logged

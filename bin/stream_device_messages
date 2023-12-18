@@ -105,8 +105,8 @@ print(f'Subscribing to messages from'
 
 while True:
   try:
-    future.result(timeout=5)
-  except (futures.CancelledError, KeyboardInterrupt, futures.TimeoutError):
+    future.result()
+  except (futures.CancelledError, KeyboardInterrupt):
     future.cancel()
     future.result()
     break

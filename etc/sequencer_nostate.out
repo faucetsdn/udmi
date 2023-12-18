@@ -18,3 +18,9 @@ RESULT skip gateway gateway_proxy_events BETA 0/0 Not a gateway
 RESULT pass pointset pointset_publish BETA 5/5 Sequence complete
 RESULT pass pointset pointset_publish_interval BETA 5/5 Sequence complete
 RESULT skip pointset pointset_remove_point BETA 0/0 State testing disabled
+RESULT skip pointset pointset_request_extraneous BETA 0/0 State testing disabled
+RESULT skip pointset pointset_sample_rate BETA 0/0 State testing disabled
+RESULT skip system state_make_model BETA 0/0 State testing disabled
+RESULT skip system state_software BETA 0/0 State testing disabled
+RESULT fail system system_last_update STABLE 0/5 Timeout waiting for state last_config matches first config timestamp
+RESULT skip system valid_serial_no BETA 0/0 State testing disabled
