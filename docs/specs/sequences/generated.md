@@ -24,6 +24,10 @@ Some caveats:
   as needed, e.g. "bin/sequencer sites/udmi_site/model target-gcp-project AHU-1 21632 system_last_update"
   (you will need to run an instance of pubber separately).
 
+* Test resuts in sites/udmi_site_model` take`` precedence
+  over files in the sequencer cache. If using imported 
+  github artifacts, remove the `sites/udmi_site_model`
+  directory to generate the document
 -->
 
 <!-- START GENERATED, do not edit anything after this line! -->
@@ -68,6 +72,7 @@ Check that the device correctly handles a broken (non-json) config message.
 1. Wait for log category `system.config.parse` level `ERROR` to be logged
 1. Check that log category `system.config.apply` level `NOTICE` not logged
 1. Force reset config
+1. Wait for state last_config sync
 1. Wait for log category `system.config.apply` level `NOTICE` to be logged
 1. Wait for restored state synchronized
 1. Update config before last_config updated:
@@ -115,33 +120,118 @@ Check enumeration of nothing at all
 
 Push endpoint config message to device that results in a connection error.
 
-1. Test skipped: Feature bucket not enabled
+1. Update config before blobset entry config status is error:
+    * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `endpoint data` } } }
+1. Wait for blobset entry config status is error
+1. Update config before endpoint config blobset state not defined:
+    * Remove `blobset.blobs._iot_endpoint_config`
+1. Wait for endpoint config blobset state not defined
 
 ## endpoint_connection_retry (PREVIEW)
 
 Check repeated endpoint with same information gets retried.
 
-1. Test skipped: Feature bucket not enabled
+1. Update config before blobset entry config status is error:
+    * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `endpoint data` } } }
+1. Wait for blobset entry config status is error
+1. Update config before blobset entry config status is error:
+    * Set `blobset.blobs._iot_endpoint_config.generation` = `new generation`
+1. Wait for blobset entry config status is error
+1. Update config before endpoint config blobset state not defined:
+    * Remove `blobset.blobs._iot_endpoint_config`
+1. Wait for endpoint config blobset state not defined
 
 ## endpoint_connection_success_alternate (PREVIEW)
 
 Check connection to an alternate project.
 
-1. Test skipped: Feature bucket not enabled
+1. Wait for initial last_config matches config timestamp
+1. Update config mirroring config false:
+    * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `endpoint data` } } }
+1. Wait for blobset phase is apply and stateStatus is null
+1. Wait for blobset phase is final and stateStatus is null
+1. Wait for alternate last_config matches config timestamp
+1. Update config before endpoint config blobset state not defined:
+    * Remove `blobset.blobs._iot_endpoint_config`
+1. Wait for endpoint config blobset state not defined
+1. Update config mirroring config true:
+    * Add `blobset.blobs._iot_endpoint_config` = { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `endpoint data` }
+1. Wait for blobset phase is apply and stateStatus is null
+1. Wait for blobset phase is final and stateStatus is null
+1. Wait for restored last_config matches config timestamp
+1. Update config before endpoint config blobset state not defined:
+    * Remove `blobset.blobs._iot_endpoint_config`
+1. Wait for endpoint config blobset state not defined
 
 ## endpoint_connection_success_reconnect (PREVIEW)
 
 Check a successful reconnect to the same endpoint.
 
-1. Test skipped: Feature bucket not enabled
+1. Update config before blobset phase is final and stateStatus is null:
+    * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `endpoint data` } } }
+1. Wait for blobset phase is final and stateStatus is null
+1. Update config before endpoint config blobset state not defined:
+    * Remove `blobset.blobs._iot_endpoint_config`
+1. Wait for endpoint config blobset state not defined
 
 ## endpoint_failure_and_restart (PREVIEW)
 
-1. Test skipped: Feature bucket not enabled
+1. Update config before blobset entry config status is error:
+    * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `endpoint data` } } }
+1. Wait for blobset entry config status is error
+1. Wait for last_start is not zero
+1. Check that initial count is greater than 0
+1. Update config before system mode is ACTIVE:
+    * Add `system.operation.mode` = `active`
+1. Wait for system mode is ACTIVE
+1. Update config before system mode is INITIAL:
+    * Set `system.operation.mode` = `restart`
+1. Wait for system mode is INITIAL
+1. Check that restart count increased by one
+1. Update config before system mode is ACTIVE:
+    * Set `system.operation.mode` = `active`
+1. Wait for system mode is ACTIVE
+1. Wait for last_config is newer than previous last_config before abort
+1. Wait for last_config is newer than previous last_config after abort
+1. Wait for last_start is newer than previous last_start
+1. Update config before endpoint config blobset state not defined:
+    * Remove `blobset.blobs._iot_endpoint_config`
+1. Wait for endpoint config blobset state not defined
 
 ## endpoint_redirect_and_restart (PREVIEW)
 
-1. Test skipped: Feature bucket not enabled
+1. Wait for initial last_config matches config timestamp
+1. Update config mirroring config false:
+    * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `endpoint data` } } }
+1. Wait for blobset phase is apply and stateStatus is null
+1. Wait for blobset phase is final and stateStatus is null
+1. Wait for alternate last_config matches config timestamp
+1. Update config before endpoint config blobset state not defined:
+    * Remove `blobset.blobs._iot_endpoint_config`
+1. Wait for endpoint config blobset state not defined
+1. Wait for last_start is not zero
+1. Check that initial count is greater than 0
+1. Update config before system mode is ACTIVE:
+    * Add `system.operation.mode` = `active`
+1. Wait for system mode is ACTIVE
+1. Update config before system mode is INITIAL:
+    * Set `system.operation.mode` = `restart`
+1. Wait for system mode is INITIAL
+1. Check that restart count increased by one
+1. Update config before system mode is ACTIVE:
+    * Set `system.operation.mode` = `active`
+1. Wait for system mode is ACTIVE
+1. Wait for last_config is newer than previous last_config before abort
+1. Wait for last_config is newer than previous last_config after abort
+1. Wait for last_start is newer than previous last_start
+1. Update config mirroring config true:
+    * Add `blobset.blobs._iot_endpoint_config` = { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `endpoint data` }
+1. Wait for blobset phase is apply and stateStatus is null
+1. Wait for blobset phase is final and stateStatus is null
+1. Wait for restored last_config matches config timestamp
+1. Update config before endpoint config blobset state not defined:
+    * Remove `blobset.blobs._iot_endpoint_config`
+1. Wait for endpoint config blobset state not defined
 
 ## extra_config (BETA)
 
