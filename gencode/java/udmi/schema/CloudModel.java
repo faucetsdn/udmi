@@ -41,11 +41,11 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public class CloudModel {
 
     /**
-     * RFC 3339 Timestamp the state payload was generated
+     * Not published by devices which publish , appended to message subblocks within cloud pipeline. RFC 3339 Timestamp the payload was generated
      * 
      */
     @JsonProperty("timestamp")
-    @JsonPropertyDescription("RFC 3339 Timestamp the state payload was generated")
+    @JsonPropertyDescription("Not published by devices which publish , appended to message subblocks within cloud pipeline. RFC 3339 Timestamp the payload was generated")
     public Date timestamp;
     /**
      * Version of the UDMI schema

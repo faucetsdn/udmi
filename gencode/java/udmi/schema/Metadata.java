@@ -37,12 +37,12 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class Metadata {
 
     /**
-     * RFC 3339 timestamp the message was generated
+     * RFC 3339 timestamp UTC the data was generated
      * (Required)
      * 
      */
     @JsonProperty("timestamp")
-    @JsonPropertyDescription("RFC 3339 timestamp the message was generated")
+    @JsonPropertyDescription("RFC 3339 timestamp UTC the data was generated")
     public Date timestamp;
     /**
      * Version of the UDMI schema for this file
