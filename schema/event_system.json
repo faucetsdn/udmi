@@ -8,7 +8,7 @@
   "additionalProperties": false,
   "properties": {
     "timestamp": {
-      "description": "RFC 3339 timestamp the event payload was generated",
+      "description": "RFC 3339 UTC timestamp the event payload was generated",
       "type": "string",
       "format": "date-time",
       "examples": ["2019-01-17T14:02:29.364Z"]

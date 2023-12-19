@@ -6,48 +6,19 @@
 # 
 # <unspecified> (default)
 #   Generate HTML documentation from JSON schema. Stored in gencode/docs
-#
-# gen_bucket [input_file] [output_file]
-#   Takes a tab delimited text file containing the list of feature buckets
-#   as copied from Google Sheets and convert into an MD list
-#
+#a
 
 ROOT_DIR=$(realpath $(dirname $0)/..)
 cd $ROOT_DIR
 
-OP=
-if [[ -n $1 ]]; then
-    OP=$1
-    shift
-fi
-
+HIDEME_LIST=etc/schema_hideme.txt
 OUTPUT_DIR=gencode/docs
 TMP_DIR=tmp/schema
 
-if [ "$OP" == gen_bucket ]; then
-
-    input_file=$1
-    output_file=$2
-    tmp_file=$output_file.tmp
-    
-    rm -f $tmp_file
-    cp $input_file $tmp_file
-
-    # Blank Lines
-    sed -E -i '/^\s*$/d' $tmp_file
-    # Top level headings
-    sed -E -i 's;^([a-zA-Z0-9 .\-_\/]+)\t+$;*\t**\1**;g' $tmp_file
-    # Subheadings
-    sed -E -i 's;^\t(\t*)([a-zA-Z0-9 .\-_\/]+)\t+$;\t\1*\t**\2**;g' $tmp_file
-    # List Items
-    sed -E -i 's;^\t(\t*)([a-zA-Z0-9 .\-_\/]+)\t+([^\t\n].*)$;\t\1*\t_`\2`_ - \3;g' $tmp_file
-    # Convert tabs to spaces (comply with style guide)
-    expand -t 4 $tmp_file > $output_file
-    
-    rm $tmp_file
-    exit 0
-fi
-
+error() {
+  echo "ERROR $*" >&2
+  exit 1
+}
 
 # Generate schema documentation (default)
 
@@ -67,6 +38,19 @@ find $TMP_DIR -type f -exec sed -i 's/file://' {} \;
 # Redirect links to internal documentation for the hosted as the output folder 
 # is one level down
 find $TMP_DIR -type f -exec sed -i 's;(../docs/;(../../docs/;' {} \;
+
+# Hide properties according to the hide me list
+echo Processing schema hide me list ...
+while read file property; do
+    [[ -n $file ]] && [[ $file != "#" ]] || continue
+    actual_file=$TMP_DIR/$file
+    actual_property=.properties$property
+    if ! jq -e "$actual_property" $actual_file >/dev/null 2>&1; then
+        error file $actual_file or property .properties$property do not exist
+    fi
+    echo removing $property from $file
+    jq -r "del($actual_property)" $actual_file | sponge $actual_file
+done <$HIDEME_LIST
 
 schemas=$(bin/gencode_root_schemas schema/)
 echo Processing schemas $schemas
@@ -96,7 +80,6 @@ for schema in $schemas; do
     fi
     sed -i "s@## $section@## $section\n* [**$schema**]($schema.html)$description@" $OUTPUT_DIR/readme.md
 done
-
 
 # Add navbar
 navbar=$(cat etc/schema_navbar.html)

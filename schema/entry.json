@@ -20,7 +20,7 @@
       "$ref": "file:category.json"
     },
     "timestamp": {
-      "description": "Timestamp the condition was triggered, or most recently updated",
+      "description": "FC 3339 UTC timestamp the condition was triggered, or most recently updated",
       "type": "string",
       "format": "date-time",
       "examples": [
