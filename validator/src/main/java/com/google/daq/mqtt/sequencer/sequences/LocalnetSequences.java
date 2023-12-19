@@ -1,7 +1,11 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
 import static java.lang.String.format;
+import static udmi.schema.Bucket.ENDPOINT;
+import static udmi.schema.Bucket.SYSTEM;
+import static udmi.schema.FeatureEnumeration.FeatureStage.PREVIEW;
 
+import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import org.junit.Test;
 
@@ -21,16 +25,19 @@ public class LocalnetSequences extends SequenceBase {
   }
 
   @Test
+  @Feature(stage = PREVIEW, bucket = SYSTEM)
   public void family_ether_addr() {
     familyAddr("ether");
   }
 
   @Test
+  @Feature(stage = PREVIEW, bucket = SYSTEM)
   public void family_ipv4_addr() {
     familyAddr("ipv4");
   }
 
   @Test
+  @Feature(stage = PREVIEW, bucket = SYSTEM)
   public void family_ipv6_addr() {
     familyAddr("ipv6");
   }

@@ -2,16 +2,6 @@
   "blobset" : {
     "blobs" : { }
   },
-  "localnet" : {
-    "families" : {
-      "ether" : {
-        "addr" : "00:50:b6:ed:5f:77"
-      },
-      "ipv4" : {
-        "addr" : "192.168.2.1"
-      }
-    }
-  },
   "pointset" : {
     "points" : {
       "filter_alarm_pressure_status" : {
@@ -29,15 +19,15 @@
     }
   },
   "system" : {
-    "metrics_rate_sec" : 600,
+    "metrics_rate_sec" : 10,
     "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2023-10-28T13:21:39Z"
+      "last_start" : "2023-12-18T11:43:06Z"
     },
     "testing" : {
       "sequence_name" : "endpoint_connection_retry"
     }
   },
-  "timestamp" : "2023-10-28T13:23:33Z",
-  "version" : "1.4.2-51-g50234ecc0"
+  "timestamp" : "2023-12-18T11:44:08Z",
+  "version" : "1.4.2-67-g3decfc99"
 }

@@ -1,11 +1,11 @@
 {
-  "timestamp" : "2023-07-28T20:30:19Z",
-  "version" : "@@@cloud udmi version###1.4.1",
+  "timestamp" : "2023-12-18T11:46:04Z",
+  "version" : "@@@cloud udmi version###1.4.2-67-g3decfc99",
   "system" : {
     "min_loglevel" : 200,
-    "metrics_rate_sec" : 600,
+    "metrics_rate_sec" : 10,
     "operation" : {
-      "last_start" : "2023-07-28T20:23:12Z"
+      "last_start" : "2023-12-18T11:44:50Z"
     },
     "testing" : {
       "sequence_name" : "family_ipv4_addr"

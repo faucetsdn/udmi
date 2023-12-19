@@ -34,7 +34,7 @@ public class GatewaySequences extends SequenceBase {
     super.setUp();
   }
 
-  @Feature(stage = FeatureStage.ALPHA, bucket = Bucket.GATEWAY, nostate = true)
+  @Feature(stage = FeatureStage.BETA, bucket = Bucket.GATEWAY, nostate = true)
   @Summary("Check that a gateway proxies pointset events for indicated devices")
   @Test(timeout = ONE_MINUTE_MS)
   public void gateway_proxy_events() {

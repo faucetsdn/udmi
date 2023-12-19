@@ -32,7 +32,7 @@ mv out/generated.tmp $UDMI_ROOT/docs/specs/sequences/generated.md
 echo Comparing diff out/generated.out docs/specs/sequences/generated.md
 diff -u out/generated.out $UDMI_ROOT/docs/specs/sequences/generated.md || failures+="gencode_seq "
 
-SAMPLE_TEST_ROW="| system | system_min_loglevel | alpha | pass | Sequence complete |"
+SAMPLE_TEST_ROW="| writeback | writeback_failure | alpha | pass | Sequence complete |"
 target=sites/udmi_site_model/out/devices/AHU-1/results.md
 echo Checking for expected entry in $target:
 echo "$SAMPLE_TEST_ROW"

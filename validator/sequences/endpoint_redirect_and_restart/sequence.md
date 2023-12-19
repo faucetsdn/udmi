@@ -1,5 +1,5 @@
 
-## endpoint_redirect_and_restart (ALPHA)
+## endpoint_redirect_and_restart (PREVIEW)
 
 1. Wait for initial last_config matches config timestamp
 1. Update config mirroring config false:

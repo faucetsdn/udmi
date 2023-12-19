@@ -129,7 +129,7 @@ if [[ -n $validate_archive ]]; then
         | xargs -I% diff -u \
             $TEST_ROOT/tests/%/sequence.md \
             $ARCHIVE_ROOT/%/sequence.md
-    echo Verification successful
+    echo Verification successful    
 fi
 
 if [[ -n $import_cache ]]; then
@@ -141,17 +141,23 @@ if [[ -n $import_cache ]]; then
     TMP_DIR=/tmp/import_cache
     rm -rf $TMP_DIR && mkdir -p $TMP_DIR
 
-    SEQUENCER_OUT=$(zipinfo -1 $github_artifact | grep sequencer)
-    unzip -p $github_artifact $SEQUENCER_OUT | tar -zxC $TMP_DIR
+    while read -r zipfile ; do
+        mkdir -p $TMP_DIR/$zipfile
+        unzip -p $github_artifact $zipfile | tar -zxC $TMP_DIR/$zipfile
+        # there is one site model which is udmi_site_model-{prefix}
+        unzip_path="$TMP_DIR/$zipfile"
+        site_model_dir=$(ls -1 $unzip_path/sites| head -n 1)
+        import_dir="$unzip_path/sites/$site_model_dir/out-seq/devices/AHU-1/tests"
+        for directory in $import_dir/* ; do
+            test_name=$(basename "$directory")
+            if ! diff "$directory/sequence.md" "$CACHE_ROOT/$test_name/sequence.md" >/dev/null 2>&1; then
+                echo Updating $test_name from $zipfile
+                rm -rf "$CACHE_ROOT/$test_name/"
+                cp -r "$directory" "$CACHE_ROOT/$test_name"
+            fi
+        done
+    done < <(zipinfo -1 $github_artifact | grep sequencer)
+    exit
     IMPORT_DIR="$TMP_DIR/$TEST_ROOT/tests"
-
-    for directory in $IMPORT_DIR/* ; do
-        test_name=$(basename "$directory")
-        if ! diff "$IMPORT_DIR/$test_name/sequence.md" "$CACHE_ROOT/$test_name/sequence.md" >/dev/null 2>&1; then
-            echo Updating $test_name
-            rm -rf "$CACHE_ROOT/$test_name/"
-            cp -r "$IMPORT_DIR/$test_name" "$CACHE_ROOT/$test_name"
-        fi
-    done
     echo Completed update
 fi

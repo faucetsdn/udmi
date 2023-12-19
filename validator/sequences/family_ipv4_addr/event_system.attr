@@ -1,9 +1,10 @@
 {
   "deviceId" : "AHU-1",
   "deviceNumId" : "123456789101112",
-  "deviceRegistryId" : "ZZ-TRI-FECTA",
-  "projectId" : "bos-peringknife-dev",
+  "deviceRegistryId" : "pisuke~ZZ-TRI-FECTA_6",
+  "projectId" : "bos-platform-dev",
+  "transactionId" : "PS:9876485598966549",
+  "publishTime" : "2023-12-18T11:46:01Z",
   "subFolder" : "system",
-  "subType" : "event",
-  "transactionId" : "PS:8733158398521362"
+  "subType" : "event"
 }

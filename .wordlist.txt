@@ -1,4 +1,5 @@
 acked
+addr
 AHU
 anagement
 api
@@ -81,6 +82,7 @@ kube
 kubectl
 Kubernetes
 localhost
+localnet
 logentry
 loglevel
 macos
@@ -163,4 +165,3 @@ validator
 writeback
 Writeback
 yaml
-localnet

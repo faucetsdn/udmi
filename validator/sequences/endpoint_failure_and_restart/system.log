@@ -1,98 +1,73 @@
-2023-10-28T13:25:02Z INFO update state 2023-10-28T13:25:02Z last_config 2023-10-28T13:24:56Z
-2023-10-28T13:25:11Z INFO update state 2023-10-28T13:25:11Z last_config 2023-10-28T13:24:56Z
-2023-10-28T13:25:11Z INFO Config handler
-2023-10-28T13:25:11Z INFO 2023-10-28T13:25:11Z received config 2023-10-28T13:25:11Z
-2023-10-28T13:25:11Z NOTICE success
-2023-10-28T13:25:13Z INFO Config handler
-2023-10-28T13:25:13Z INFO 2023-10-28T13:25:13Z received config 2023-10-28T13:25:12Z
-2023-10-28T13:25:13Z NOTICE success
-2023-10-28T13:25:14Z INFO update state 2023-10-28T13:25:14Z last_config 2023-10-28T13:25:12Z
-2023-10-28T13:25:16Z INFO Config handler
-2023-10-28T13:25:16Z INFO 2023-10-28T13:25:16Z received config 2023-10-28T13:25:16Z
-2023-10-28T13:25:16Z NOTICE success
-2023-10-28T13:25:16Z INFO update state 2023-10-28T13:25:16Z last_config 2023-10-28T13:25:16Z
-2023-10-28T13:25:22Z NOTICE Starting new endpoint generation
-2023-10-28T13:25:22Z INFO New config blob endpoint detected
-2023-10-28T13:25:22Z INFO update state 2023-10-28T13:25:22Z last_config 2023-10-28T13:25:16Z
-2023-10-28T13:25:22Z ERROR While waiting for connection start: Connection error
-2023-10-28T13:25:22Z ERROR Attempt failed, retries remaining: 9
-2023-10-28T13:25:23Z ERROR While waiting for connection start: Connection error
-2023-10-28T13:25:23Z ERROR Attempt failed, retries remaining: 8
-2023-10-28T13:25:24Z ERROR While waiting for connection start: Connection error
-2023-10-28T13:25:24Z ERROR Attempt failed, retries remaining: 7
-2023-10-28T13:25:25Z ERROR While waiting for connection start: Connection error
-2023-10-28T13:25:25Z ERROR Attempt failed, retries remaining: 6
-2023-10-28T13:25:26Z ERROR While waiting for connection start: Connection error
-2023-10-28T13:25:26Z ERROR Attempt failed, retries remaining: 5
-2023-10-28T13:25:27Z ERROR While waiting for connection start: Connection error
-2023-10-28T13:25:27Z ERROR Attempt failed, retries remaining: 4
-2023-10-28T13:25:28Z ERROR While waiting for connection start: Connection error
-2023-10-28T13:25:28Z ERROR Attempt failed, retries remaining: 3
-2023-10-28T13:25:29Z ERROR While waiting for connection start: Connection error
-2023-10-28T13:25:29Z ERROR Attempt failed, retries remaining: 2
-2023-10-28T13:25:30Z ERROR While waiting for connection start: Connection error
-2023-10-28T13:25:30Z ERROR Attempt failed, retries remaining: 1
-2023-10-28T13:25:31Z ERROR While waiting for connection start: Connection error
-2023-10-28T13:25:31Z ERROR Attempt failed, retries remaining: 0
-2023-10-28T13:25:32Z INFO Config handler
-2023-10-28T13:25:32Z INFO 2023-10-28T13:25:32Z received config 2023-10-28T13:25:16Z
-2023-10-28T13:25:32Z INFO Starting executor with send message delay 10000
-2023-10-28T13:25:32Z NOTICE success
-2023-10-28T13:25:32Z INFO update state 2023-10-28T13:25:32Z last_config 2023-10-28T13:25:16Z
-2023-10-28T13:25:33Z INFO Connection complete.
-2023-10-28T13:25:33Z NOTICE Endpoint connection restored to last working endpoint
-2023-10-28T13:25:33Z ERROR While redirecting connection endpoint: While resetting connection
-2023-10-28T13:25:35Z INFO Config handler
-2023-10-28T13:25:35Z INFO 2023-10-28T13:25:35Z received config 2023-10-28T13:25:35Z
-2023-10-28T13:25:35Z NOTICE success
-2023-10-28T13:25:35Z INFO update state 2023-10-28T13:25:35Z last_config 2023-10-28T13:25:35Z
-2023-10-28T13:25:54Z INFO Config handler
-2023-10-28T13:25:54Z INFO Connection complete.
-2023-10-28T13:25:54Z INFO 2023-10-28T13:25:54Z received config 2023-10-28T13:25:44Z
-2023-10-28T13:25:54Z INFO Starting executor with send message delay 10000
-2023-10-28T13:25:54Z NOTICE success
-2023-10-28T13:25:55Z INFO Config handler
-2023-10-28T13:25:55Z INFO 2023-10-28T13:25:55Z received config 2023-10-28T13:25:44Z
-2023-10-28T13:25:55Z NOTICE success
-2023-10-28T13:25:56Z INFO Config handler
-2023-10-28T13:25:56Z INFO 2023-10-28T13:25:56Z received config 2023-10-28T13:25:56Z
-2023-10-28T13:25:56Z NOTICE success
-2023-10-28T13:25:57Z INFO update state 2023-10-28T13:25:57Z last_config 2023-10-28T13:25:56Z
-2023-10-28T13:25:57Z INFO Config handler
-2023-10-28T13:25:57Z INFO 2023-10-28T13:25:57Z received config 2023-10-28T13:25:56Z
-2023-10-28T13:25:57Z NOTICE success
-2023-10-28T13:25:59Z INFO update state 2023-10-28T13:25:59Z last_config 2023-10-28T13:25:56Z
-2023-10-28T13:26:04Z NOTICE Starting new endpoint generation
-2023-10-28T13:26:04Z INFO New config blob endpoint detected
-2023-10-28T13:26:04Z INFO update state 2023-10-28T13:26:04Z last_config 2023-10-28T13:25:56Z
-2023-10-28T13:26:05Z ERROR While waiting for connection start: Connection error
-2023-10-28T13:26:05Z ERROR Attempt failed, retries remaining: 9
-2023-10-28T13:26:06Z ERROR While waiting for connection start: Connection error
-2023-10-28T13:26:06Z ERROR Attempt failed, retries remaining: 8
-2023-10-28T13:26:07Z ERROR While waiting for connection start: Connection error
-2023-10-28T13:26:07Z ERROR Attempt failed, retries remaining: 7
-2023-10-28T13:26:08Z ERROR While waiting for connection start: Connection error
-2023-10-28T13:26:08Z ERROR Attempt failed, retries remaining: 6
-2023-10-28T13:26:09Z ERROR While waiting for connection start: Connection error
-2023-10-28T13:26:09Z ERROR Attempt failed, retries remaining: 5
-2023-10-28T13:26:10Z ERROR While waiting for connection start: Connection error
-2023-10-28T13:26:10Z ERROR Attempt failed, retries remaining: 4
-2023-10-28T13:26:11Z ERROR While waiting for connection start: Connection error
-2023-10-28T13:26:11Z ERROR Attempt failed, retries remaining: 3
-2023-10-28T13:26:12Z ERROR While waiting for connection start: Connection error
-2023-10-28T13:26:12Z ERROR Attempt failed, retries remaining: 2
-2023-10-28T13:26:13Z ERROR While waiting for connection start: Connection error
-2023-10-28T13:26:13Z ERROR Attempt failed, retries remaining: 1
-2023-10-28T13:26:14Z ERROR While waiting for connection start: Connection error
-2023-10-28T13:26:14Z ERROR Attempt failed, retries remaining: 0
-2023-10-28T13:26:15Z INFO Config handler
-2023-10-28T13:26:15Z INFO 2023-10-28T13:26:15Z received config 2023-10-28T13:26:09Z
-2023-10-28T13:26:15Z INFO Starting executor with send message delay 10000
-2023-10-28T13:26:15Z NOTICE success
-2023-10-28T13:26:15Z INFO update state 2023-10-28T13:26:15Z last_config 2023-10-28T13:26:09Z
-2023-10-28T13:26:15Z INFO Connection complete.
-2023-10-28T13:26:15Z NOTICE Endpoint connection restored to last working endpoint
-2023-10-28T13:26:15Z ERROR While redirecting connection endpoint: While resetting connection
-2023-10-28T13:26:15Z INFO 2023-10-28T13:26:15Z sending test message #0
-2023-10-28T13:26:17Z INFO update state 2023-10-28T13:26:17Z last_config 2023-10-28T13:26:09Z
-2023-10-28T13:26:25Z NOTICE Sequence complete
+2023-12-18T11:44:04Z WARNING Starting Pubber sender with delay 10s
+2023-12-18T11:44:04Z WARNING Dropping state update until config received...
+2023-12-18T11:44:04Z WARNING Received config for config latch AHU-1
+2023-12-18T11:44:04Z NOTICE success
+2023-12-18T11:44:04Z WARNING Ending connection 1702899843554 with 9
+2023-12-18T11:44:04Z NOTICE success
+2023-12-18T11:44:16Z WARNING Terminating PointsetManager sender
+2023-12-18T11:44:16Z WARNING Starting PointsetManager sender with delay 0s
+2023-12-18T11:44:16Z NOTICE success
+2023-12-18T11:44:16Z INFO Device AHU-1 config handler
+2023-12-18T11:44:16Z INFO 2023-12-18T11:44:16Z received config 2023-12-18T11:44:16Z
+2023-12-18T11:44:16Z WARNING Starting PointsetManager sender with delay 0s
+2023-12-18T11:44:16Z NOTICE success
+2023-12-18T11:44:17Z INFO Device AHU-1 config handler
+2023-12-18T11:44:17Z INFO 2023-12-18T11:44:17Z received config 2023-12-18T11:44:17Z
+2023-12-18T11:44:17Z WARNING Starting PointsetManager sender with delay 0s
+2023-12-18T11:44:17Z NOTICE success
+2023-12-18T11:44:18Z INFO Update state 2023-12-18T11:44:18Z last_config 2023-12-18T11:44:17Z
+2023-12-18T11:44:18Z INFO Device AHU-1 config handler
+2023-12-18T11:44:18Z INFO 2023-12-18T11:44:18Z received config 2023-12-18T11:44:18Z
+2023-12-18T11:44:18Z WARNING Starting PointsetManager sender with delay 0s
+2023-12-18T11:44:18Z NOTICE success
+2023-12-18T11:44:18Z INFO Device AHU-1 config handler
+2023-12-18T11:44:18Z INFO 2023-12-18T11:44:18Z received config 2023-12-18T11:44:18Z
+2023-12-18T11:44:18Z WARNING Starting PointsetManager sender with delay 0s
+2023-12-18T11:44:18Z NOTICE success
+2023-12-18T11:44:19Z INFO Device AHU-1 config handler
+2023-12-18T11:44:19Z INFO 2023-12-18T11:44:19Z received config 2023-12-18T11:44:19Z
+2023-12-18T11:44:19Z WARNING Starting PointsetManager sender with delay 10s
+2023-12-18T11:44:19Z NOTICE success
+2023-12-18T11:44:20Z INFO Update state 2023-12-18T11:44:20Z last_config 2023-12-18T11:44:19Z
+2023-12-18T11:44:25Z INFO Update state 2023-12-18T11:44:25Z last_config 2023-12-18T11:44:19Z
+2023-12-18T11:44:25Z INFO Device AHU-1 config handler
+2023-12-18T11:44:25Z INFO 2023-12-18T11:44:25Z received config 2023-12-18T11:44:25Z
+2023-12-18T11:44:25Z NOTICE success
+2023-12-18T11:44:27Z INFO Update state 2023-12-18T11:44:27Z last_config 2023-12-18T11:44:25Z
+2023-12-18T11:45:05Z INFO Configured with auth_type RS256
+2023-12-18T11:45:05Z INFO Initializing from persistent store /home/runner/work/udmi/udmi/sites/udmi_site_model/out/devices/AHU-1/persistent_data.json
+2023-12-18T11:45:05Z INFO Loading endpoint from persistent data
+2023-12-18T11:45:05Z WARNING Updating persistent store: {"endpoint":{"hostname":"mqtt.bos.goog","port":8883,"client_id":"projects/bos-platform-dev/locations/us-central1/registries/pisuke~ZZ-TRI-FECTA_4/devices/AHU-1"},"restart_count":2}
+2023-12-18T11:45:05Z INFO Starting pubber AHU-1, serial sequencer-19337, mac null, gateway null, options 
+2023-12-18T11:45:05Z WARNING Starting connection 1702899905286 with 10
+2023-12-18T11:45:05Z WARNING Creating new config latch for AHU-1
+2023-12-18T11:45:05Z INFO Update state 2023-12-18T11:45:05Z last_config 1970-01-01T00:00:00Z
+2023-12-18T11:45:05Z WARNING Dropping state update until config received...
+2023-12-18T11:45:06Z INFO Update state 2023-12-18T11:45:06Z last_config 1970-01-01T00:00:00Z
+2023-12-18T11:45:06Z WARNING Dropping state update until config received...
+2023-12-18T11:45:06Z INFO Device AHU-1 config handler
+2023-12-18T11:45:06Z INFO Update state 2023-12-18T11:45:06Z last_config 1970-01-01T00:00:00Z
+2023-12-18T11:45:06Z WARNING Dropping state update until config received...
+2023-12-18T11:45:06Z INFO 2023-12-18T11:45:06Z received config 2023-12-18T11:44:55Z
+2023-12-18T11:45:06Z WARNING Starting PointsetManager sender with delay 10s
+2023-12-18T11:45:06Z WARNING Starting SystemManager sender with delay 10s
+2023-12-18T11:45:06Z WARNING Start waiting 10s for config latch for AHU-1
+2023-12-18T11:45:06Z WARNING Starting Pubber sender with delay 10s
+2023-12-18T11:45:06Z INFO Update state 2023-12-18T11:45:06Z last_config 2023-12-18T11:44:55Z
+2023-12-18T11:45:06Z WARNING Dropping state update until config received...
+2023-12-18T11:45:06Z WARNING Received config for config latch AHU-1
+2023-12-18T11:45:06Z NOTICE success
+2023-12-18T11:45:06Z WARNING Ending connection 1702899905286 with 9
+2023-12-18T11:45:06Z INFO Update state 2023-12-18T11:45:06Z last_config 2023-12-18T11:44:55Z
+2023-12-18T11:45:06Z INFO Device AHU-1 config handler
+2023-12-18T11:45:06Z INFO 2023-12-18T11:45:06Z received config 2023-12-18T11:44:55Z
+2023-12-18T11:45:06Z NOTICE success
+2023-12-18T11:45:07Z INFO 2023-12-18T11:45:07Z received config 2023-12-18T11:45:07Z
+2023-12-18T11:45:07Z NOTICE success
+2023-12-18T11:45:08Z INFO Update state 2023-12-18T11:45:08Z last_config 2023-12-18T11:45:07Z
+2023-12-18T11:45:08Z INFO Device AHU-1 config handler
+2023-12-18T11:45:08Z INFO 2023-12-18T11:45:08Z received config 2023-12-18T11:45:07Z
+2023-12-18T11:45:08Z NOTICE success
+2023-12-18T11:45:10Z INFO Update state 2023-12-18T11:45:10Z last_config 2023-12-18T11:45:07Z
+2023-12-18T11:45:16Z INFO 2023-12-18T11:45:16Z sending AHU-1 message #0 with 3 points
+2023-12-18T11:45:31Z NOTICE Sequence complete

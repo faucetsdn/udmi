@@ -1,15 +1,15 @@
 {
   "families" : {
     "ether" : {
-      "addr" : "40:1c:83:ca:77:54"
+      "addr" : "00:0d:3a:5d:5a:59"
     },
     "ipv4" : {
-      "addr" : "10.0.0.142"
+      "addr" : "10.1.0.63"
     },
     "ipv6" : {
-      "addr" : "fe80::134f:c1f5:f225:a441"
+      "addr" : "fe80::20d:3aff:fe5d:5a59"
     }
   },
-  "timestamp" : "2023-07-28T20:30:19Z",
-  "version" : "1.4.1"
+  "timestamp" : "2023-12-18T11:46:04Z",
+  "version" : "1.4.2"
 }

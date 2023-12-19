@@ -12,7 +12,5 @@
       "ref" : "AV12.present_value",
       "units" : "Degrees-Celsius"
     }
-  },
-  "timestamp" : "2023-03-13T06:08:49.857Z",
-  "version" : "1.4.0-205-g15f9a1f2"
+  }
 }
