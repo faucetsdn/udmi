@@ -36,6 +36,7 @@ SAMPLE_TEST_ROW="| system | system_min_loglevel | alpha | pass | Sequence comple
 target=sites/udmi_site_model/out/devices/AHU-1/results.md
 echo Checking for expected entry in $target:
 echo "$SAMPLE_TEST_ROW"
+cat $target
 fgrep "$SAMPLE_TEST_ROW" $target || failures+="expected "
 
 echo Checking for duplication in out/sequencer.out and etc/sequencer_planning.txt
