@@ -31,12 +31,12 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class SystemEvent {
 
     /**
-     * RFC 3339 timestamp the event payload was generated
+     * RFC 3339 UTC timestamp the event payload was generated
      * (Required)
      * 
      */
     @JsonProperty("timestamp")
-    @JsonPropertyDescription("RFC 3339 timestamp the event payload was generated")
+    @JsonPropertyDescription("RFC 3339 UTC timestamp the event payload was generated")
     public Date timestamp;
     /**
      * Version of the UDMI schema

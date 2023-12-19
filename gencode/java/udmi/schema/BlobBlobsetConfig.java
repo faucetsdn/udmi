@@ -55,12 +55,12 @@ public class BlobBlobsetConfig {
     @JsonPropertyDescription("Expected hash of the retrieved resource")
     public String sha256;
     /**
-     * The timestamp of the blob generation
+     * RFC 3339 UTC timestamp of the blob generation
      * (Required)
      * 
      */
     @JsonProperty("generation")
-    @JsonPropertyDescription("The timestamp of the blob generation")
+    @JsonPropertyDescription("RFC 3339 UTC timestamp of the blob generation")
     public Date generation;
 
     @Override

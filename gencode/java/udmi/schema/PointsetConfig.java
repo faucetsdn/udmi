@@ -30,11 +30,11 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class PointsetConfig {
 
     /**
-     * RFC 3339 timestamp the configuration was generated
+     * RFC 3339 UTC timestamp the configuration was generated
      * 
      */
     @JsonProperty("timestamp")
-    @JsonPropertyDescription("RFC 3339 timestamp the configuration was generated")
+    @JsonPropertyDescription("RFC 3339 UTC timestamp the configuration was generated")
     public Date timestamp;
     /**
      * Version of the UDMI schema
