@@ -109,13 +109,11 @@ class Sequence:
   def post_process_actual_results(cls, results: list[SequenceStep]):
     """post processing of loaded results"""
     # remove the last item if it's a failed test
-    print(results)
     try:
       if results[-1][0][:14] == "1. Test failed":
         results.pop(-1)
     except:
       pass
-    print(results)
     return results
 
   @classmethod
