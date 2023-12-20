@@ -190,7 +190,6 @@ class Sequence:
         ref, act, result.result
     )
 
-    print(completed, failing, not_done)
     for step in completed:
       step_count += 1
       unnumbered_line = step.pop(0)[len(Sequence.STEP_PREFIX) :]
@@ -243,7 +242,7 @@ class TemplateHelper:
 
   @staticmethod
   def pretty_dict(thing: dict):
-    """Pretty print dictionary, e.g. key1: value1, key2: value2."""
+    """Pretty string repr of dictionary, e.g. key1: value1, key2: value2."""
     if not isinstance(thing, dict):
       return ""
     return ", ".join([": ".join([k, v]) for k, v in thing.items()])
