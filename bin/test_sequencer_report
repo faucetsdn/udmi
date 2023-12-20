@@ -114,10 +114,10 @@ class TestSequencerReport(unittest.TestCase):
     # so just use a fixed list
     ref = ["Step 1", "Step 2", "Step 3", "Step 4"]
     act = ["Step 1", "Step 2"]
-    failing_step = seq.Sequence.failing_step(act, 'fail')
+    failing_step = seq.Sequence.failing_step(act, "fail")
     self.assertEqual(failing_step, 1)
 
-    passed_all = seq.Sequence.failing_step(ref, 'pass')
+    passed_all = seq.Sequence.failing_step(ref, "pass")
     self.assertEqual(passed_all, 4)
 
   def test_classed_steps(self):
