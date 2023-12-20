@@ -30,11 +30,12 @@ CROSS = "✕"
 
 
 def first_occurence(iteratable: Iterable, predicate: Callable) -> int:
-  """Returns the index at which the value of an iteratable matches the predicate."""
+  """Returns the index at which an iteratable matches the predicate."""
   for i, v in enumerate(iteratable):
     try:
       if predicate(v):
         return i
+    # pylint: disable-next=bare-except
     except:
       pass
   raise ValueError()
@@ -112,7 +113,7 @@ class Sequence:
     try:
       if results[-1][0][:14] == "1. Test failed":
         results.pop(-1)
-    except:
+    except IndexError:
       pass
     return results
 
