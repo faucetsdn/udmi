@@ -3,6 +3,7 @@ package com.google.daq.mqtt.sequencer.sequences;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.daq.mqtt.sequencer.SequenceBase.Capabilities.LOGGING;
+import static com.google.daq.mqtt.util.TimePeriodConstants.NINETY_SECONDS_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.ONE_MINUTE_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.THREE_MINUTES_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
@@ -64,7 +65,7 @@ public class ConfigSequences extends SequenceBase {
     untilTrue("state update complete", this::deviceStateComplete);
   }
 
-  @Test
+  @Test(timeout = ONE_MINUTE_MS)
   @Feature(stage = BETA, bucket = SYSTEM)
   @ValidateSchema(SubFolder.SYSTEM)
   public void valid_serial_no() {
@@ -123,7 +124,7 @@ public class ConfigSequences extends SequenceBase {
     });
   }
 
-  @Test(timeout = TWO_MINUTES_MS)
+  @Test(timeout = NINETY_SECONDS_MS)
   @Feature(stage = BETA, bucket = SYSTEM, score = 4)
   @Capability(value = LOGGING, stage = ALPHA)
   @Summary("Check that the device correctly handles a broken (non-json) config message.")

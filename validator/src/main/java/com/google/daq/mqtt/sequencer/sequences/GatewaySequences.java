@@ -1,5 +1,6 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
+import static com.google.daq.mqtt.util.TimePeriodConstants.NINETY_SECONDS_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.ONE_MINUTE_MS;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static org.junit.Assert.assertTrue;
@@ -36,7 +37,7 @@ public class GatewaySequences extends SequenceBase {
 
   @Feature(stage = FeatureStage.BETA, bucket = Bucket.GATEWAY, nostate = true)
   @Summary("Check that a gateway proxies pointset events for indicated devices")
-  @Test(timeout = ONE_MINUTE_MS)
+  @Test(timeout = NINETY_SECONDS_MS)
   public void gateway_proxy_events() {
     Set<String> remaining = new HashSet<>(deviceMetadata.gateway.proxy_ids);
     Set<String> original = ImmutableSet.copyOf(remaining);
