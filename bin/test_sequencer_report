@@ -33,6 +33,7 @@ Check that the device correctly handles an extra out-of-schema field
     * Substep 1
     * Substep 2
 1. Step 2
+1. Test failed: Step 2 
 """
 
 SAMPLE_EXPECTED = """✓   1. Step 1
@@ -85,7 +86,6 @@ check enumeration of multiple categories
 
 """
 
-
 @dataclass
 class SampleTestResult:
   result: str = "fail"
@@ -112,14 +112,13 @@ class TestSequencerReport(unittest.TestCase):
   def test_failing_step(self):
     # method doesn't actually care what the contents of the list
     # so just use a fixed list
-    ref = ["Step 1", "Step 2", "Step 3", " Step 4"]
+    ref = ["Step 1", "Step 2", "Step 3", "Step 4"]
     act = ["Step 1", "Step 2"]
-    failing_step = seq.Sequence.failing_step(ref, act)
+    failing_step = seq.Sequence.failing_step(act, "fail")
     self.assertEqual(failing_step, 1)
 
-    passed_all = seq.Sequence.failing_step(ref, ref)
-    # if non failed is the index of the last step
-    self.assertEqual(passed_all, 3)
+    passed_all = seq.Sequence.failing_step(ref, "pass")
+    self.assertEqual(passed_all, 4)
 
   def test_classed_steps(self):
     ref = ["Step 1", "Step 2", "Step 3", " Step 4"]
