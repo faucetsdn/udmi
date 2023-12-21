@@ -1,9 +1,15 @@
 [**UDMI**](../../) / [**Docs**](../) / [**Tools**](./) / [Sequencer](#)
 
-# Sequencer Setup
+# Sequencer
 
 The UDMI _sequencer_ tool monitors a sequence of messages from a device's stream and
 validates that the composition of sequential messages is compliant with the UDMI Schema
+
+# Complete Testing with Sequencer
+
+A [guide is given for using sequencer for complete device testing.](../guides/device_testing.md)
+
+# Sequencer Setup
 
 1.  Ensure you have [deployed the necessary cloud functions](../cloud/gcp/udmis.md) to your GCP project
 2.  Add a new GCP IoT Core registry with a registry ID of `UDMI-REFLECT`.
@@ -17,7 +23,7 @@ validates that the composition of sequential messages is compliant with the UDMI
     *   device_id: Use the `<Registry ID>` as defined in Site Model for the devices to be tested.
     *   auth_key: Use the public key you just created from `validator/rsa_public.pem`
 
-## Running Sequencer
+# Running Sequencer
 
 To run the _sequencer_, run the command from the top-level of the _site_model_ directory, with
 an optional device serial number:
