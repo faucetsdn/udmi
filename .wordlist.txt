@@ -162,6 +162,7 @@ unwriteable
 uplink
 url
 validator
+writeable
 writeback
 Writeback
 yaml
