@@ -12,6 +12,7 @@ class PointsetState:
     self.state_etag = None
     self.status = None
     self.points = None
+    self.upgraded_from = None
 
   @staticmethod
   def from_dict(source):
@@ -23,6 +24,7 @@ class PointsetState:
     result.state_etag = source.get('state_etag')
     result.status = Entry.from_dict(source.get('status'))
     result.points = PointPointsetState.map_from(source.get('points'))
+    result.upgraded_from = source.get('upgraded_from')
     return result
 
   @staticmethod
@@ -53,4 +55,6 @@ class PointsetState:
       result['status'] = self.status.to_dict() # 4
     if self.points:
       result['points'] = PointPointsetState.expand_dict(self.points) # 2
+    if self.upgraded_from:
+      result['upgraded_from'] = self.upgraded_from # 5
     return result
