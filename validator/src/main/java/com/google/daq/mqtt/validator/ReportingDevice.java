@@ -2,7 +2,6 @@ package com.google.daq.mqtt.validator;
 
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
-import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static java.util.Optional.ofNullable;
 import static org.junit.Assert.assertTrue;
 
@@ -199,7 +198,6 @@ public class ReportingDevice {
     if (missingPoints == null) {
       addError(new ValidationException("missing pointset subblock"), attributes,
           Category.VALIDATION_DEVICE_CONTENT);
-      System.err.println("Timestamp validation error: " + friendlyStackTrace(e));
     } else if (!missingPoints.isEmpty()) {
       addError(pointValidationError("missing points", missingPoints), attributes,
           Category.VALIDATION_DEVICE_CONTENT);
