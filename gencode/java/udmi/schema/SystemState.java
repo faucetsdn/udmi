@@ -26,7 +26,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "hardware",
     "software",
     "params",
-    "status"
+    "status",
+    "upgraded_from"
 })
 @Generated("jsonschema2pojo")
 public class SystemState {
@@ -99,11 +100,19 @@ public class SystemState {
      */
     @JsonProperty("status")
     public Entry status;
+    /**
+     * Original version of schema pre-upgrade
+     * 
+     */
+    @JsonProperty("upgraded_from")
+    @JsonPropertyDescription("Original version of schema pre-upgrade")
+    public java.lang.String upgraded_from;
 
     @Override
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.software == null)? 0 :this.software.hashCode()));
+        result = ((result* 31)+((this.upgraded_from == null)? 0 :this.upgraded_from.hashCode()));
         result = ((result* 31)+((this.params == null)? 0 :this.params.hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
         result = ((result* 31)+((this.operation == null)? 0 :this.operation.hashCode()));
@@ -124,7 +133,7 @@ public class SystemState {
             return false;
         }
         SystemState rhs = ((SystemState) other);
-        return ((((((((((this.software == rhs.software)||((this.software!= null)&&this.software.equals(rhs.software)))&&((this.params == rhs.params)||((this.params!= null)&&this.params.equals(rhs.params))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.operation == rhs.operation)||((this.operation!= null)&&this.operation.equals(rhs.operation))))&&((this.serial_no == rhs.serial_no)||((this.serial_no!= null)&&this.serial_no.equals(rhs.serial_no))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.last_config == rhs.last_config)||((this.last_config!= null)&&this.last_config.equals(rhs.last_config))))&&((this.hardware == rhs.hardware)||((this.hardware!= null)&&this.hardware.equals(rhs.hardware))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
+        return (((((((((((this.software == rhs.software)||((this.software!= null)&&this.software.equals(rhs.software)))&&((this.upgraded_from == rhs.upgraded_from)||((this.upgraded_from!= null)&&this.upgraded_from.equals(rhs.upgraded_from))))&&((this.params == rhs.params)||((this.params!= null)&&this.params.equals(rhs.params))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.operation == rhs.operation)||((this.operation!= null)&&this.operation.equals(rhs.operation))))&&((this.serial_no == rhs.serial_no)||((this.serial_no!= null)&&this.serial_no.equals(rhs.serial_no))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.last_config == rhs.last_config)||((this.last_config!= null)&&this.last_config.equals(rhs.last_config))))&&((this.hardware == rhs.hardware)||((this.hardware!= null)&&this.hardware.equals(rhs.hardware))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
     }
 
 }

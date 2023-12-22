@@ -1149,7 +1149,7 @@ public class SequenceBase {
     captureConfigChange(reason);
   }
 
-  private boolean updateConfig(SubFolder subBlock, Object data) {
+  private boolean   updateConfig(SubFolder subBlock, Object data) {
     try {
       String messageData = stringify(data);
       String sentBlockConfig = String.valueOf(

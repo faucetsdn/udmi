@@ -57,6 +57,10 @@
     },
     "status": {
       "$ref": "file:entry.json"
+    },
+    "upgraded_from": {
+      "description": "Original version of schema pre-upgrade",
+      "type": "string"
     }
   },
   "required": [
