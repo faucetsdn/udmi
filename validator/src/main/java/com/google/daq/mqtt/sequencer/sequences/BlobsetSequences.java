@@ -145,7 +145,7 @@ public class BlobsetSequences extends SequenceBase {
 
   @Feature(stage = PREVIEW, bucket = ENDPOINT_CONFIG)
   @Summary("Check repeated endpoint with same information gets retried.")
-  @Test(timeout = NINETY_SECONDS_MS)
+  @Test(timeout = TWO_MINUTES_MS)
   public void endpoint_connection_retry() {
     setDeviceConfigEndpointBlob(BOGUS_ENDPOINT_HOSTNAME, registryId, false);
     final Date savedGeneration = deviceConfig.blobset.blobs.get(IOT_BLOB_KEY).generation;

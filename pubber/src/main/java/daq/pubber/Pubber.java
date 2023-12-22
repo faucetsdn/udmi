@@ -158,7 +158,6 @@ public class Pubber extends ManagerBase implements ManagerHost {
   private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
   private final AtomicBoolean stateDirty = new AtomicBoolean();
   private final ReentrantLock stateLock = new ReentrantLock();
-  private final String deviceId;
   protected DevicePersistent persistentData;
   private CountDownLatch configLatch;
   private MqttDevice deviceTarget;
@@ -187,7 +186,6 @@ public class Pubber extends ManagerBase implements ManagerHost {
     Protocol protocol = requireNonNullElse(
         ifNotNullGet(configuration.endpoint, endpoint -> endpoint.protocol), MQTT);
     checkArgument(MQTT.equals(protocol), "protocol mismatch");
-    deviceId = requireNonNull(configuration.deviceId, "device id not defined");
     outDir = new File(PUBBER_OUT);
     ifTrueThen(options.spamState, () -> schedulePeriodic(STATE_SPAM_SEC, this::markStateDirty));
   }
@@ -202,7 +200,6 @@ public class Pubber extends ManagerBase implements ManagerHost {
    */
   public Pubber(String iotProject, String sitePath, String deviceId, String serialNo) {
     super(null, makeExplicitConfiguration(iotProject, sitePath, deviceId, serialNo));
-    this.deviceId = deviceId;
     outDir = new File(PUBBER_OUT + "/" + serialNo);
     if (!outDir.exists()) {
       checkState(outDir.mkdirs(), "could not make out dir " + outDir.getAbsolutePath());
@@ -811,15 +808,13 @@ public class Pubber extends ManagerBase implements ManagerHost {
     }
   }
 
-  private void publisherConfigLog(String phase, Exception e) {
-    publisherHandler("config", phase, e);
+  public void publisherConfigLog(String phase, Exception e, String targetId) {
+    publisherHandler("config", phase, e, targetId);
   }
 
   private void publisherException(Exception toReport) {
     if (toReport instanceof PublisherException report) {
-      if (report.deviceId.equals(deviceId)) {
-        publisherHandler(report.type, report.phase, report.getCause());
-      }
+      publisherHandler(report.type, report.phase, report.getCause(), report.deviceId);
     } else if (toReport instanceof ConnectionClosedException) {
       error("Connection closed, attempting reconnect...");
       while (retriesRemaining.getAndDecrement() > 0) {
@@ -834,7 +829,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
     }
   }
 
-  private void publisherHandler(String type, String phase, Throwable cause) {
+  private void publisherHandler(String type, String phase, Throwable cause, String targetId) {
     if (cause != null) {
       error("Error receiving message " + type, cause);
       if (isTrue(configuration.options.barfConfig)) {
@@ -846,8 +841,8 @@ public class Pubber extends ManagerBase implements ManagerHost {
     String category = format(SYSTEM_CATEGORY_FORMAT, type, usePhase);
     Entry report = entryFromException(category, cause);
     deviceManager.localLog(report);
-    publishLogMessage(report);
-    registerSystemStatus(report);
+    publishLogMessage(report, targetId);
+    ifTrueThen(deviceId.equals(targetId), () -> registerSystemStatus(report));
   }
 
   private void registerSystemStatus(Entry report) {
@@ -906,9 +901,9 @@ public class Pubber extends ManagerBase implements ManagerHost {
         warn("Received config for config latch " + deviceId);
       }
       configLatch.countDown();
-      publisherConfigLog("apply", null);
+      publisherConfigLog("apply", null, deviceId);
     } catch (Exception e) {
-      publisherConfigLog("apply", e);
+      publisherConfigLog("apply", e, deviceId);
     }
     publishConfigStateUpdate();
   }
@@ -926,7 +921,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
     String suffix = ifNotNullGet(gatewayId, x -> "_" + targetId, "");
     String deviceType = ifNotNullGet(gatewayId, x -> "Proxy", "Device");
     info(format("%s %s config handler", deviceType, targetId));
-    File configOut = new File(outDir, format("%s%s.json", traceTimestamp("config"), suffix));
+    File configOut = new File(outDir, format("%s.json", traceTimestamp("config" + suffix)));
     toJsonFile(configOut, config);
   }
 
@@ -1130,8 +1125,8 @@ public class Pubber extends ManagerBase implements ManagerHost {
     }
   }
 
-  private void publishLogMessage(Entry logEntry) {
-    deviceManager.publishLogMessage(logEntry);
+  private void publishLogMessage(Entry logEntry, String targetId) {
+    deviceManager.publishLogMessage(logEntry, targetId);
   }
 
   private void publishAsynchronousState() {
@@ -1259,7 +1254,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
     String messageBase = topicSuffix.replace("/", "_");
     String gatewayId = getGatewayId(targetId, configuration);
     String suffix = ifNotNullGet(gatewayId, x -> "_" + targetId, "");
-    File messageOut = new File(outDir,  format("%s%s.json", traceTimestamp(messageBase), suffix));
+    File messageOut = new File(outDir,  format("%s.json", traceTimestamp(messageBase + suffix)));
     try {
       toJsonFile(messageOut, downgraded);
     } catch (Exception e) {

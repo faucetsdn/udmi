@@ -5,6 +5,7 @@ import static daq.pubber.Pubber.configuration;
 import static java.lang.String.format;
 
 import udmi.schema.Config;
+import udmi.schema.Entry;
 import udmi.schema.Metadata;
 import udmi.schema.PubberConfiguration;
 
@@ -13,7 +14,7 @@ import udmi.schema.PubberConfiguration;
  */
 public class ProxyDevice extends ManagerBase implements ManagerHost {
 
-  private final DeviceManager deviceManager;
+  public final DeviceManager deviceManager;
   public final Pubber pubberHost;
 
   /**
@@ -21,10 +22,9 @@ public class ProxyDevice extends ManagerBase implements ManagerHost {
    */
   public ProxyDevice(ManagerHost host, String id) {
     super(host, makeProxyConfiguration(id));
-    deviceManager = new DeviceManager(this, makeProxyConfiguration(id));
-
     // Simple shortcut to get access to some foundational mechanisms inside of Pubber.
     pubberHost = (Pubber) host;
+    deviceManager = new DeviceManager(this, makeProxyConfiguration(id));
   }
 
   private static PubberConfiguration makeProxyConfiguration(String id) {
@@ -42,12 +42,15 @@ public class ProxyDevice extends ManagerBase implements ManagerHost {
   void configHandler(Config config) {
     pubberHost.configPreprocess(deviceId, config);
     deviceManager.updateConfig(config);
+    pubberHost.publisherConfigLog("apply", null, deviceId);
   }
 
+  @Override
   protected void shutdown() {
     deviceManager.shutdown();
   }
 
+  @Override
   protected void pause() {
     deviceManager.pause();
   }

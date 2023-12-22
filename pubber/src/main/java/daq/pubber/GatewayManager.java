@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import udmi.schema.Config;
+import udmi.schema.Entry;
 import udmi.schema.GatewayConfig;
 import udmi.schema.GatewayModel;
 import udmi.schema.Metadata;
@@ -51,6 +52,17 @@ public class GatewayManager extends ManagerBase {
     ifTrueThen(options.extraDevice, () -> devices.put(EXTRA_PROXY_DEVICE, makeExtraDevice()));
 
     return devices;
+  }
+
+  /**
+   * Publish log message for target device.
+   */
+  public void publishLogMessage(Entry logEntry, String targetId) {
+    ifNotNullThen(proxyDevices, p -> p.values().forEach(pd -> {
+      if (pd.deviceId.equals(targetId)) {
+        pd.deviceManager.publishLogMessage(logEntry, targetId);
+      }
+    }));
   }
 
   public void setMetadata(GatewayModel gateway) {

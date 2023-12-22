@@ -150,7 +150,11 @@ public class PointsetManager extends ManagerBase {
 
   private void updatePoints() {
     managedPoints.values().forEach(point -> {
-      point.updateData();
+      try {
+        point.updateData();
+      } catch (IllegalStateException ex) {
+        error("Unable to update point data", ex);
+      }
       updateState(point);
     });
   }
