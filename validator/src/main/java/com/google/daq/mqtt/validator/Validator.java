@@ -660,7 +660,7 @@ public class Validator {
     }
 
     try {
-      validateMessage(schemaMap.get   (ENVELOPE_SCHEMA_ID), attributes);
+      validateMessage(schemaMap.get(ENVELOPE_SCHEMA_ID), attributes);
     } catch (Exception e) {
       System.err.println("Error validating attributes: " + friendlyStackTrace(e));
       device.addError(e, attributes, Category.VALIDATION_DEVICE_RECEIVE);
