@@ -3,7 +3,6 @@ package daq.pubber;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.udmi.util.GeneralUtils.catchToFalse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
@@ -558,6 +557,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
       configuration.algorithm = catchToNull(() -> metadata.cloud.auth_type.value());
     }
 
+    isGatewayDevice = false;
     if (metadata.gateway != null) {
       configuration.gatewayId = metadata.gateway.gateway_id;
       if (configuration.gatewayId != null) {
@@ -566,11 +566,10 @@ public class Pubber extends ManagerBase implements ManagerHost {
           configuration.algorithm = authType.value();
         }
       }
+      isGatewayDevice = ifNotNullGet(metadata.gateway.proxy_ids, p -> true, false);
     }
 
     info("Configured with auth_type " + configuration.algorithm);
-
-    isGatewayDevice = catchToFalse(() -> !metadata.gateway.proxy_ids.isEmpty());
 
     deviceManager.setMetadata(metadata);
   }

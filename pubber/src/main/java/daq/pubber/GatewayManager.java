@@ -8,7 +8,6 @@ import static com.google.udmi.util.GeneralUtils.isTrue;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static java.util.function.Predicate.not;
-import static java.util.stream.Collectors.toMap;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.udmi.util.SiteModel;
@@ -40,14 +39,20 @@ public class GatewayManager extends ManagerBase {
 
   private Map<String, ProxyDevice> createProxyDevices(List<String> proxyIds) {
     if (proxyIds == null) {
-      return ImmutableMap.of();
+      return Map.of();
     }
 
-    String firstId = proxyIds.stream().sorted().findFirst().orElseThrow();
-    String noProxyId = ifTrueGet(isTrue(options.noProxy), () -> firstId);
-    ifNotNullThen(noProxyId, id -> warn(format("Not proxying device " + noProxyId)));
-    Map<String, ProxyDevice> devices = proxyIds.stream().filter(not(id -> id.equals(noProxyId)))
-        .collect(toMap(k -> k, v -> new ProxyDevice(host, v)));
+    Map<String, ProxyDevice> devices = new HashMap<>();
+    if (!proxyIds.isEmpty()) {
+      String firstId = proxyIds.stream().sorted().findFirst().orElseThrow();
+      String noProxyId = ifTrueGet(isTrue(options.noProxy), () -> firstId);
+      ifNotNullThen(noProxyId, id -> warn(format("Not proxying device %s", noProxyId)));
+      proxyIds.forEach(id -> {
+        if (!id.equals(noProxyId)) {
+          devices.put(id, new ProxyDevice(host, id));
+        }
+      });
+    }
 
     ifTrueThen(options.extraDevice, () -> devices.put(EXTRA_PROXY_DEVICE, makeExtraDevice()));
 
