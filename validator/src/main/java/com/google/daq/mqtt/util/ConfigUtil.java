@@ -3,6 +3,7 @@ package com.google.daq.mqtt.util;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
+import com.google.udmi.util.SchemaVersion;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,7 +17,7 @@ import udmi.schema.ExecutionConfiguration;
 public abstract class ConfigUtil {
 
   public static final String EXCEPTIONS_JSON = "exceptions.json";
-  public static final String UDMI_VERSION = "1.4.2";
+  public static final String UDMI_VERSION = SchemaVersion.CURRENT.key();
   public static final String UDMI_TOOLS = System.getenv("UDMI_TOOLS");
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
