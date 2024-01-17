@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.4.2",
+  "$udmi_version": "1.5.0",
   "title": "System State",
   "description": "[System State Documentation](../docs/messages/system.md#state)",
   "type": "object",
@@ -7,7 +7,7 @@
   "additionalProperties": false,
   "properties": {
     "timestamp": {
-      "description": "RFC 3339 timestamp the configuration was generated",
+      "description": "Not included in messages published by devices. Part of message subblocks within cloud pipeline. RFC 3339 Timestamp the payload was generated",
       "type": "string",
       "format": "date-time",
       "examples": ["2019-01-17T14:02:29.364Z"]
@@ -57,6 +57,10 @@
     },
     "status": {
       "$ref": "file:entry.json"
+    },
+    "upgraded_from": {
+      "description": "Original version of schema pre-upgrade",
+      "type": "string"
     }
   },
   "required": [

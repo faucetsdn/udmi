@@ -1,5 +1,6 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
+import static com.google.daq.mqtt.util.TimePeriodConstants.NINETY_SECONDS_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.JsonUtil.isoConvert;
@@ -138,7 +139,7 @@ public class DiscoverySequences extends SequenceBase {
     return Optional.ofNullable(condition).orElse(false);
   }
 
-  @Test
+  @Test(timeout = NINETY_SECONDS_MS)
   @Feature(bucket = ENUMERATION, stage = PREVIEW)
   @Summary("Check enumeration of nothing at all")
   public void empty_enumeration() {
@@ -147,7 +148,7 @@ public class DiscoverySequences extends SequenceBase {
     checkSelfEnumeration(event, enumerate);
   }
 
-  @Test(timeout = TWO_MINUTES_MS)
+  @Test(timeout = NINETY_SECONDS_MS)
   @Feature(bucket = ENUMERATION_POINTSET, stage = ALPHA)
   @Summary("Check enumeration of device points")
   public void pointset_enumeration() {
@@ -160,7 +161,7 @@ public class DiscoverySequences extends SequenceBase {
     checkSelfEnumeration(event, enumerate);
   }
 
-  @Test
+  @Test(timeout = NINETY_SECONDS_MS)
   @Feature(bucket = ENUMERATION_FEATURES, stage = PREVIEW)
   @Summary("Check enumeration of device features")
   public void feature_enumeration() {

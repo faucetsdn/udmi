@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.4.2",
+  "$udmi_version": "1.5.0",
   "title": "Blob Blobset Config",
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
@@ -17,7 +17,7 @@
       "pattern": "^[0-9a-f]{64}$"
     },
     "generation": {
-      "description": "The timestamp of the blob generation",
+      "description": "RFC 3339 UTC timestamp of the blob generation",
       "type": "string",
       "format": "date-time",
       "examples": ["2019-01-17T14:02:29.364Z"]

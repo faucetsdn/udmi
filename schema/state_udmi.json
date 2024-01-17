@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.4.2",
+  "$udmi_version": "1.5.0",
   "title": "Udmi State",
   "description": "State of a UDMI reflector client",
   "type": "object",

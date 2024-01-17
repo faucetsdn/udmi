@@ -1,0 +1,40 @@
+# Properties to hide from human readable schema documentation
+#
+# There are some properties in the schema now which are part of the 
+# cloud sub-block processing, but are not expected to be published by devices.
+# Prime examples include `timestamp` and `version` fields within each 
+# sub-block within the state message, for example `state.pointset.version`.
+# 
+# The schema docunmentation then becomes very confusing when these fields
+# are included, so this is a short term mitigation to just hide the following properties
+#
+# Usage:
+# 
+# {FILE} {PROPERTY TO HIDE (dot notation address)}
+# e.g. state_pointset.json .timestamp
+
+state_pointset.json .timestamp
+state_pointset.json .version
+
+state_gateway.json .timestamp
+state_gateway.json .version
+
+state_localnet.json .timestamp
+state_localnet.json .version
+
+state_mapping.json .timestamp
+state_mapping.json .version
+
+state_system.json .timestamp
+state_system.json .version
+
+state.json .upgraded_from
+state_system.json .upgraded_from
+state_pointset.json .upgraded_from
+
+model_cloud.json .timestamp
+model_cloud.json .version
+model_cloud.json .credentials
+model_cloud.json .last_event_time
+model_cloud.json .last_config_ack
+model_cloud.json .metadata

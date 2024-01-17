@@ -1,10 +1,10 @@
 {
   "deviceId" : "AHU-1",
   "deviceNumId" : "123456789101112",
-  "deviceRegistryId" : "ZZ-TRI-FECTA_A",
+  "deviceRegistryId" : "pisuke~ZZ-TRI-FECTA_2",
   "projectId" : "bos-platform-dev",
-  "publishTime" : "2023-10-28T13:24:32Z",
+  "transactionId" : "PS:9877551983488701",
+  "publishTime" : "2023-12-18T11:44:25Z",
   "subFolder" : "update",
-  "subType" : "state",
-  "transactionId" : "PS:9512210531348708"
+  "subType" : "state"
 }

@@ -22,17 +22,18 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "version",
     "state_etag",
     "status",
-    "points"
+    "points",
+    "upgraded_from"
 })
 @Generated("jsonschema2pojo")
 public class PointsetState {
 
     /**
-     * RFC 3339 timestamp the configuration was generated
+     * Not included in messages published by devices. Part of message subblocks within cloud pipeline. RFC 3339 Timestamp the payload was generated
      * 
      */
     @JsonProperty("timestamp")
-    @JsonPropertyDescription("RFC 3339 timestamp the configuration was generated")
+    @JsonPropertyDescription("Not included in messages published by devices. Part of message subblocks within cloud pipeline. RFC 3339 Timestamp the payload was generated")
     public Date timestamp;
     /**
      * Version of the UDMI schema
@@ -64,10 +65,18 @@ public class PointsetState {
     @JsonProperty("points")
     @JsonPropertyDescription("Collection of point names, defining the representative point set for this device.")
     public HashMap<String, PointPointsetState> points;
+    /**
+     * Original version of schema pre-upgrade
+     * 
+     */
+    @JsonProperty("upgraded_from")
+    @JsonPropertyDescription("Original version of schema pre-upgrade")
+    public java.lang.String upgraded_from;
 
     @Override
     public int hashCode() {
         int result = 1;
+        result = ((result* 31)+((this.upgraded_from == null)? 0 :this.upgraded_from.hashCode()));
         result = ((result* 31)+((this.state_etag == null)? 0 :this.state_etag.hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
         result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
@@ -85,7 +94,7 @@ public class PointsetState {
             return false;
         }
         PointsetState rhs = ((PointsetState) other);
-        return ((((((this.state_etag == rhs.state_etag)||((this.state_etag!= null)&&this.state_etag.equals(rhs.state_etag)))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))))&&((this.points == rhs.points)||((this.points!= null)&&this.points.equals(rhs.points))));
+        return (((((((this.upgraded_from == rhs.upgraded_from)||((this.upgraded_from!= null)&&this.upgraded_from.equals(rhs.upgraded_from)))&&((this.state_etag == rhs.state_etag)||((this.state_etag!= null)&&this.state_etag.equals(rhs.state_etag))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))))&&((this.points == rhs.points)||((this.points!= null)&&this.points.equals(rhs.points))));
     }
 
 }

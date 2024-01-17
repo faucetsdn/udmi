@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """Generate markdown report from sequencer results."""
 import argparse
+from collections.abc import Iterable
 import copy
 from dataclasses import dataclass, field
 import json
 import os
 import re
 import sys
+from typing import Callable
 import jinja2
 
 TEMPLATE_PATH = "etc/sequencer_report.md.template"
@@ -27,12 +29,25 @@ CHECKMARK = "✓"
 CROSS = "✕"
 
 
+def first_occurence(iteratable: Iterable, predicate: Callable) -> int:
+  """Returns the index at which an iteratable matches the predicate."""
+  for i, v in enumerate(iteratable):
+    try:
+      if predicate(v):
+        return i
+    # pylint: disable-next=bare-except
+    except:
+      pass
+  raise ValueError()
+
+
 @dataclass(unsafe_hash=True, eq=True, order=True)
 class TestResult:
   """Container for test result."""
 
   bucket: str = ""
   name: str = ""
+  description: str = ""
   result: str = ""
   stage: str = ""
   message: str = ""
@@ -52,6 +67,7 @@ class SequenceStep(list):
 
 class Sequence:
   """Loads the sequence steps for a given testresults"""
+
   # The line number inside the sequence.md file where the first sequence starts
   START_LINE = 5
 
@@ -79,7 +95,10 @@ class Sequence:
     with open(self.ref_path, encoding="utf-8") as f:
       self.ref_text = f.read()
 
-    self.act = Sequence.get_steps(self.act_text)
+    self.act = Sequence.post_process_actual_results(
+        Sequence.get_steps(self.act_text)
+    )
+
     self.ref = Sequence.get_steps(self.ref_text)
 
     self.formatted = Sequence.format(self.ref, self.act, test)
@@ -88,11 +107,26 @@ class Sequence:
     return self.formatted
 
   @classmethod
+  def post_process_actual_results(cls, results: list[SequenceStep]):
+    """post processing of loaded results"""
+    # remove the last item if it's a failed test
+    try:
+      if results[-1][0][:14] == "1. Test failed":
+        results.pop(-1)
+    except IndexError:
+      pass
+    return results
+
+  @classmethod
   def get_steps(cls, text: str) -> list[SequenceStep]:
     """returns steps from the contents of a sequence.md file."""
     buffer = []
     steps = []
-    sequence_lines = text.splitlines()[cls.START_LINE :]
+
+    file_lines = text.splitlines()
+    start_index = first_occurence(file_lines, lambda x: x[:2] == "1.")
+    sequence_lines = file_lines[start_index:]
+
     for line in reversed(sequence_lines):
       buffer.insert(0, line)
       if re.match(cls.STEP_PREFIX, line):
@@ -103,7 +137,6 @@ class Sequence:
   @staticmethod
   def indent(line: str, indent: int, prefix: str = "") -> str:
     """Adds a fixed width indent of length 'indent' with an optional prefix"""
-    # return f"{{0: <{indent}}}{line}".format(prefix)
     return prefix.ljust(indent, " ") + line
 
   @staticmethod
@@ -183,7 +216,7 @@ class Sequence:
       )
       for l in failing:
         f.append(
-            #pylint: disable-next=line-too-long
+            # pylint: disable-next=line-too-long
             f"{Sequence.indent(l.ljust(longest_line_length, ' '), 4, CROSS)} {CROSS}"
         )
       f.append("-" * dash_width)
@@ -209,7 +242,7 @@ class TemplateHelper:
 
   @staticmethod
   def pretty_dict(thing: dict):
-    """Pretty print dictionary, e.g. key1: value1, key2: value2."""
+    """Pretty string repr of dictionary, e.g. key1: value1, key2: value2."""
     if not isinstance(thing, dict):
       return ""
     return ", ".join([": ".join([k, v]) for k, v in thing.items()])
@@ -369,6 +402,7 @@ class SequencerReport:
         results[name] = TestResult(
             feature,
             name,
+            result.get("summary", ""),
             result["result"],
             result["stage"],
             self.sanitize(result["status"]["message"]),
@@ -387,13 +421,11 @@ class SequencerReport:
 
     # overall result for feature (pass, fail, n/a)
     self.overall_features = {
-        k: all_or_none(
-            [
-                results.passed()
-                for stage, results in features.items()
-                if stage in STAGES_FOR_PASS and results.has()
-            ]
-        )
+        k: all_or_none([
+            results.passed()
+            for stage, results in features.items()
+            if stage in STAGES_FOR_PASS and results.has()
+        ])
         for k, features in self.features.items()
     }
 
@@ -405,7 +437,7 @@ class SequencerReport:
     }
 
   def sanitize(self, string: str):
-    """ Sanitize string for safe displaying """
+    """Sanitize string for safe displaying"""
     sanitized = string.replace("\n", ";")
     return sanitized
 

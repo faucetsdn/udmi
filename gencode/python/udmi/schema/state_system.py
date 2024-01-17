@@ -17,6 +17,7 @@ class SystemState:
     self.software = None
     self.params = None
     self.status = None
+    self.upgraded_from = None
 
   @staticmethod
   def from_dict(source):
@@ -32,6 +33,7 @@ class SystemState:
     result.software = source.get('software')
     result.params = source.get('params')
     result.status = Entry.from_dict(source.get('status'))
+    result.upgraded_from = source.get('upgraded_from')
     return result
 
   @staticmethod
@@ -70,4 +72,6 @@ class SystemState:
       result['params'] = self.params # 1
     if self.status:
       result['status'] = self.status.to_dict() # 4
+    if self.upgraded_from:
+      result['upgraded_from'] = self.upgraded_from # 5
     return result

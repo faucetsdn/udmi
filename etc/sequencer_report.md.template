@@ -45,9 +45,15 @@
 {% for result in results %}
 #### {{result.name}}
 
+| | |
+|---|---|
+| Description | {{result.description}} |
+| Result | {{result.result}} |
+| Summary | {{result.message}} |
+
 ```
 {{report.sequences[result.name]}}
 ```
 
 {% endfor -%}
-{% endfor -%}
+{%- endfor -%}

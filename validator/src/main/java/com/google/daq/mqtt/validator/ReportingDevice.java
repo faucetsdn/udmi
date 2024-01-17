@@ -201,12 +201,24 @@ public class ReportingDevice {
     } else if (!missingPoints.isEmpty()) {
       addError(pointValidationError("missing points", missingPoints), attributes,
           Category.VALIDATION_DEVICE_CONTENT);
+      System.err.println(
+          String.format(
+              "Device has missing points: %s",
+              Joiner.on(", ").join(missingPoints)
+          )
+      );
     }
 
     extraPoints = metadataDiff.extraPoints;
     if (extraPoints != null && !extraPoints.isEmpty()) {
       addError(pointValidationError("extra points", extraPoints), attributes,
           Category.VALIDATION_DEVICE_CONTENT);
+      System.err.println(
+          String.format(
+              "Device has extra points: %s",
+              Joiner.on(", ").join(extraPoints)
+          )
+      );
     }
   }
 

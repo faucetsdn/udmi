@@ -1,9 +1,9 @@
 {
   "min_loglevel" : 200,
-  "metrics_rate_sec" : 600,
+  "metrics_rate_sec" : 10,
   "operation" : {
     "mode" : "active",
-    "last_start" : "2023-10-28T13:27:06Z"
+    "last_start" : "2023-12-18T11:45:26Z"
   },
   "testing" : {
     "sequence_name" : "endpoint_redirect_and_restart"

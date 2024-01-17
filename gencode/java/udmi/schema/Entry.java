@@ -51,12 +51,12 @@ public class Entry {
     @JsonProperty("category")
     public String category;
     /**
-     * Timestamp the condition was triggered, or most recently updated
+     * FC 3339 UTC timestamp the condition was triggered, or most recently updated
      * (Required)
      * 
      */
     @JsonProperty("timestamp")
-    @JsonPropertyDescription("Timestamp the condition was triggered, or most recently updated")
+    @JsonPropertyDescription("FC 3339 UTC timestamp the condition was triggered, or most recently updated")
     public Date timestamp;
     /**
      * The status `level` should conform to the numerical [Stackdriver LogEntry](https://cloud.google.com/logging/docs/reference/v2/rest/v2/LogEntry#logseverity) levels. The `DEFAULT` value of 0 is not allowed (lowest value is 100, maximum 800).https://cloud.google.com/logging/docs/reference/v2/rest/v2/LogEntry#logseverity

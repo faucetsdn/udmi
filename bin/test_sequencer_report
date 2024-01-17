@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-""" Unit testing for sequence report generator """
-import unittest
-from importlib import util, machinery
+"""Unit testing for sequence report generator"""
 from dataclasses import dataclass
+from importlib import machinery, util
+import unittest
 
 spec = util.spec_from_loader(
-    "sequence_report", 
+    "sequence_report",
     machinery.SourceFileLoader("sequence_report", "bin/sequencer_report"),
 )
 seq = util.module_from_spec(spec)
@@ -33,6 +33,7 @@ Check that the device correctly handles an extra out-of-schema field
     * Substep 1
     * Substep 2
 1. Step 2
+1. Test failed: Step 2 
 """
 
 SAMPLE_EXPECTED = """✓   1. Step 1
@@ -78,7 +79,7 @@ check enumeration of nothing at all
 1. Wait for matching enumeration generation
 """
 
-EMPTY_SEQUENCE="""
+EMPTY_SEQUENCE = """
 ## multi_enumeration (ALPHA)
 
 check enumeration of multiple categories
@@ -92,7 +93,7 @@ class SampleTestResult:
 
 
 class TestSequencerReport(unittest.TestCase):
-  """ Unit tests for sequence report generation """
+  """Unit tests for sequence report generation"""
 
   def test_sequence_get_steps(self):
     steps = seq.Sequence.get_steps(SAMPLE_SEQUENCE)
@@ -111,14 +112,13 @@ class TestSequencerReport(unittest.TestCase):
   def test_failing_step(self):
     # method doesn't actually care what the contents of the list
     # so just use a fixed list
-    ref = ["Step 1", "Step 2", "Step 3", " Step 4"]
+    ref = ["Step 1", "Step 2", "Step 3", "Step 4"]
     act = ["Step 1", "Step 2"]
-    failing_step = seq.Sequence.failing_step(ref, act)
+    failing_step = seq.Sequence.failing_step(act, "fail")
     self.assertEqual(failing_step, 1)
 
-    passed_all = seq.Sequence.failing_step(ref, ref)
-    # if non failed is the index of the last step
-    self.assertEqual(passed_all, 3)
+    passed_all = seq.Sequence.failing_step(ref, "pass")
+    self.assertEqual(passed_all, 4)
 
   def test_classed_steps(self):
     ref = ["Step 1", "Step 2", "Step 3", " Step 4"]
@@ -143,9 +143,13 @@ class TestSequencerReport(unittest.TestCase):
         ["1. Step 1"],
         ["1. Multistep 2", "  * line a", "  * line b"],
         ["1. Step 3"],
-        ["1. Step 4"]
+        ["1. Step 4"],
     ]
-    act = [["1. Step 1"], ["1. Multistep 2", "  * line a", "  * line b"], ["1. Step 3"]]
+    act = [
+        ["1. Step 1"],
+        ["1. Multistep 2", "  * line a", "  * line b"],
+        ["1. Step 3"],
+    ]
 
     formatted = seq.Sequence.format(ref, act, SampleTestResult())
     print(formatted)

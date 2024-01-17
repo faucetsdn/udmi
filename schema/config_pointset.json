@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.4.2",
+  "$udmi_version": "1.5.0",
   "title": "Pointset Config",
   "description": "[Pointset Config Documentation](../docs/messages/pointset.md#config)",
   "type": "object",
@@ -7,7 +7,7 @@
   "additionalProperties": false,
   "properties": {
     "timestamp": {
-      "description": "RFC 3339 timestamp the configuration was generated",
+      "description": "RFC 3339 UTC timestamp the configuration was generated",
       "type": "string",
       "format": "date-time",
       "examples": ["2019-01-17T14:02:29.364Z"]

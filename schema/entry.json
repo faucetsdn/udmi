@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.4.2",
+  "$udmi_version": "1.5.0",
   "title": "Entry",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
@@ -20,7 +20,7 @@
       "$ref": "file:category.json"
     },
     "timestamp": {
-      "description": "Timestamp the condition was triggered, or most recently updated",
+      "description": "FC 3339 UTC timestamp the condition was triggered, or most recently updated",
       "type": "string",
       "format": "date-time",
       "examples": [

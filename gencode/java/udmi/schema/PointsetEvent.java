@@ -28,12 +28,12 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class PointsetEvent {
 
     /**
-     * RFC 3339 timestamp the telemetry event was generated
+     * RFC 3339 UTC timestamp the telemetry event was generated
      * (Required)
      * 
      */
     @JsonProperty("timestamp")
-    @JsonPropertyDescription("RFC 3339 timestamp the telemetry event was generated")
+    @JsonPropertyDescription("RFC 3339 UTC timestamp the telemetry event was generated")
     public Date timestamp;
     /**
      * Version of the UDMI schema

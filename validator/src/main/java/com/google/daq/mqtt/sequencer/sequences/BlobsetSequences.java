@@ -1,6 +1,9 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
+import static com.google.daq.mqtt.util.TimePeriodConstants.NINETY_SECONDS_MS;
+import static com.google.daq.mqtt.util.TimePeriodConstants.ONE_MINUTE_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.THREE_MINUTES_MS;
+import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.sha256;
 import static com.google.udmi.util.JsonUtil.stringify;
@@ -9,6 +12,7 @@ import static udmi.schema.Bucket.ENDPOINT;
 import static udmi.schema.Bucket.SYSTEM_MODE;
 import static udmi.schema.Category.BLOBSET_BLOB_APPLY;
 import static udmi.schema.FeatureEnumeration.FeatureStage.ALPHA;
+import static udmi.schema.FeatureEnumeration.FeatureStage.PREVIEW;
 
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
@@ -130,18 +134,18 @@ public class BlobsetSequences extends SequenceBase {
     return String.format(DATA_URL_FORMAT, JSON_MIME_TYPE, encodeBase64(payload));
   }
 
-  @Feature(stage = ALPHA, bucket = ENDPOINT)
+  @Feature(stage = PREVIEW, bucket = ENDPOINT)
   @Summary("Push endpoint config message to device that results in a connection error.")
-  @Test
+  @Test(timeout = NINETY_SECONDS_MS) // TODO Is this enough? Does a client try X times?
   public void endpoint_connection_error() {
     setDeviceConfigEndpointBlob(BOGUS_ENDPOINT_HOSTNAME, registryId, false);
     untilErrorReported();
     untilClearedRedirect();
   }
 
-  @Feature(stage = ALPHA, bucket = ENDPOINT)
+  @Feature(stage = PREVIEW, bucket = ENDPOINT)
   @Summary("Check repeated endpoint with same information gets retried.")
-  @Test
+  @Test(timeout = NINETY_SECONDS_MS)
   public void endpoint_connection_retry() {
     setDeviceConfigEndpointBlob(BOGUS_ENDPOINT_HOSTNAME, registryId, false);
     final Date savedGeneration = deviceConfig.blobset.blobs.get(IOT_BLOB_KEY).generation;
@@ -156,9 +160,9 @@ public class BlobsetSequences extends SequenceBase {
     untilClearedRedirect();
   }
 
-  @Feature(stage = ALPHA, bucket = ENDPOINT)
+  @Feature(stage = PREVIEW, bucket = ENDPOINT)
   @Summary("Check a successful reconnect to the same endpoint.")
-  @Test
+  @Test(timeout = NINETY_SECONDS_MS)
   public void endpoint_connection_success_reconnect() {
     setDeviceConfigEndpointBlob(getAlternateEndpointHostname(), registryId, false);
     untilSuccessfulRedirect(BlobPhase.FINAL);
@@ -168,7 +172,7 @@ public class BlobsetSequences extends SequenceBase {
   @Feature(stage = ALPHA, bucket = ENDPOINT)
   @Summary("Failed connection because of bad hash.")
   @ValidateSchema(SubFolder.BLOBSET)
-  @Test
+  @Test(timeout = ONE_MINUTE_MS)
   public void endpoint_connection_bad_hash() {
     setDeviceConfigEndpointBlob(getAlternateEndpointHostname(), registryId, true);
     untilTrue("blobset status is ERROR", () -> {
@@ -183,21 +187,21 @@ public class BlobsetSequences extends SequenceBase {
     });
   }
 
-  @Test
-  @Feature(stage = ALPHA, bucket = ENDPOINT)
+  @Test(timeout = NINETY_SECONDS_MS)
+  @Feature(stage = PREVIEW, bucket = ENDPOINT)
   @Summary("Check connection to an alternate project.")
   public void endpoint_connection_success_alternate() {
     check_endpoint_connection_success(false);
   }
 
-  @Test
-  @Feature(stage = ALPHA, bucket = ENDPOINT)
+  @Test(timeout = THREE_MINUTES_MS)
+  @Feature(stage = PREVIEW, bucket = ENDPOINT)
   public void endpoint_redirect_and_restart() {
     check_endpoint_connection_success(true);
   }
 
-  @Test(timeout = THREE_MINUTES_MS)
-  @Feature(stage = ALPHA, bucket = ENDPOINT)
+  @Test(timeout = TWO_MINUTES_MS)
+  @Feature(stage = PREVIEW, bucket = ENDPOINT)
   public void endpoint_failure_and_restart() {
     setDeviceConfigEndpointBlob(BOGUS_ENDPOINT_HOSTNAME, registryId, false);
     untilErrorReported();

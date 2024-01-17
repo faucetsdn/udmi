@@ -33,12 +33,12 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class DiscoveryEvent {
 
     /**
-     * RFC 3339 timestamp the discover telemetry event was generated
+     * RFC 3339 UTC timestamp the discover telemetry event was generated
      * (Required)
      * 
      */
     @JsonProperty("timestamp")
-    @JsonPropertyDescription("RFC 3339 timestamp the discover telemetry event was generated")
+    @JsonPropertyDescription("RFC 3339 UTC timestamp the discover telemetry event was generated")
     public Date timestamp;
     /**
      * Version of the UDMI schema

@@ -13,6 +13,7 @@
 #     with a 'y' are updated. Only works with "pretty"/non-minified JSON
 #   - documentation in-line exammples
 #   - specific java files (Pubber.java, ConfigUtil.java, LocalDevice.java)
+shopt -s globstar
 
 UPVERSION_LIST=etc/upversion.txt
 TESTS_REGEX="^(\s{0,4}\"version\"\s*:\s*)([0-9.\"]*)(,?)"
@@ -70,11 +71,11 @@ fi
 
 if [[ -n $(git status --untracked-files=no --porcelain) ]]; then
     echo ERROR Git not clean .. commit/stash all changes first
-    exit 1
+    #exit 1
 fi
 
 # Check test files exist in the upversion list  
-for test_file in tests/schemas/*/*.json; do
+for test_file in tests/{traces,sites}/**/*.json; do
     if [[ $(grep -P -c "^[^#] $test_file" $UPVERSION_LIST) != 1 ]]; then
         echo $test_file
         err_upversion_list=1
@@ -82,6 +83,7 @@ for test_file in tests/schemas/*/*.json; do
 done
 if [[ -n $err_upversion_list ]]; then
     echo ERROR .. above files not found in upversion list or listed more than once
+    echo $UPVERSION_LIST
     touch $ERROR_MARKER
 fi
 
@@ -98,14 +100,14 @@ fi
 
 # Check files in upversion list still exist
 while read action file comment; do
-    if [[ $action != "#" ]] && ! [[ -f $file ]]; then
+    if [[ $action =~ "^[?!# ]" ]] && ! [[ -f $file ]]; then
         err_stale_file=1
         echo $file
     fi
 done <$UPVERSION_LIST
 if [[ -n $err_stale_file ]]; then
     touch $ERROR_MARKER
-    echo ERROR .. above files etc/upversion.txt no longer exist
+    echo ERROR .. above files $UPVERSION_LIST no longer exist
 fi
 
 

@@ -29,15 +29,15 @@
     }
   },
   "system" : {
-    "metrics_rate_sec" : 600,
+    "metrics_rate_sec" : 10,
     "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2023-10-28T13:21:39Z"
+      "last_start" : "2023-12-18T11:43:24Z"
     },
     "testing" : {
       "sequence_name" : "endpoint_connection_success_alternate"
     }
   },
-  "timestamp" : "2023-10-28T13:24:27Z",
-  "version" : "1.4.2-51-g50234ecc0"
+  "timestamp" : "2023-12-18T11:44:20Z",
+  "version" : "1.4.2-67-g3decfc99"
 }
