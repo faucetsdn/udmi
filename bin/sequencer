@@ -56,23 +56,8 @@ if [[ -d $site_path ]]; then
     shift || true
 fi
 
-if [[ -n $UDMI_REGISTRY_SUFFIX ]]; then
-    echo Using registry suffix $UDMI_REGISTRY_SUFFIX
-    registry_suffix=\"$UDMI_REGISTRY_SUFFIX\"
-else
-    registry_suffix=null
-fi
-
+registry_suffix=null
 alt_registry=null
-if [[ -n $UDMI_ALT_REGISTRY ]]; then
-    alt_registry=\"${UDMI_ALT_REGISTRY}\"
-fi
-
-if [[ $project_id == -- ]]; then
-    echo Configuring for mock project use...
-    project_id=mock-project
-    alt_registry=null
-fi
 
 test_names="$@"
 udmi_version=`git describe --always --dirty`
@@ -108,7 +93,21 @@ else
     false
 fi
 
-validator/bin/build
+if [[ -n $UDMI_REGISTRY_SUFFIX ]]; then
+    echo Using registry suffix $UDMI_REGISTRY_SUFFIX
+    registry_suffix=\"$UDMI_REGISTRY_SUFFIX\"
+fi
+
+if [[ -n $UDMI_ALT_REGISTRY ]]; then
+    echo Using alt registry $UDMI_ALT_REGISTRY
+    alt_registry=\"${UDMI_ALT_REGISTRY}\"
+fi
+
+if [[ $project_id == -- ]]; then
+    echo Configuring for mock project use...
+    project_id=mock-project
+    alt_registry=null
+fi
 
 # Format of cmdline project_id is {//PROVIDER/}PROJECT (optional PROVIDER)
 # e.g. bos-testing-dev or //gcp/bos-testing-dev
@@ -163,6 +162,8 @@ EOF
 fi
 
 cat $SEQUENCER_CONFIG
+
+validator/bin/build
 
 JARFILE=validator/build/libs/validator-1.0-SNAPSHOT-all.jar
 JAVA_CMD="java -cp $JARFILE com.google.daq.mqtt.sequencer.SequenceRunner"
