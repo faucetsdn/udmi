@@ -74,6 +74,9 @@ source venv/bin/activate
 if [[ -d $site_path ]]; then
     echo Using site model directory $site_path
     site_model=$site_path
+    iot_config=$site_model/cloud_iot_config.json
+    alt_registry=`jq .alt_registry $iot_config`
+    registry_suffix=`jq .registry_suffix $iot_config`
     endpoint=null
 elif [[ -f $site_path ]]; then
     echo Using site config file $site_path
