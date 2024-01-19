@@ -93,8 +93,6 @@ if [[ -n $UDMI_ALT_REGISTRY ]]; then
     jq ".alt_registry = \"$UDMI_ALT_REGISTRY\"" $iot_config | sponge $iot_config
 fi
 
-more $iot_config | cat
-
 bin/reset_config $site_path $project_id $device_id
 
 # Clean out the persistant data store to ensure a clean state each time.
