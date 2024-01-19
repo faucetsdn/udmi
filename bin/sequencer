@@ -88,19 +88,10 @@ elif [[ -f $site_path ]]; then
     [[ $serial_no == null ]] && serial_no=$DEFAULT_SERIAL
     endpoint=`jq .reflector_endpoint $site_path`
     alt_registry=`jq .alt_registry $site_path`
+    registry_suffix=`jq .registry_suffix $site_path`
 else
     echo Site model $site_path not found.
     false
-fi
-
-if [[ -n $UDMI_REGISTRY_SUFFIX ]]; then
-    echo Using registry suffix $UDMI_REGISTRY_SUFFIX
-    registry_suffix=\"$UDMI_REGISTRY_SUFFIX\"
-fi
-
-if [[ -n $UDMI_ALT_REGISTRY ]]; then
-    echo Using alt registry $UDMI_ALT_REGISTRY
-    alt_registry=\"${UDMI_ALT_REGISTRY}\"
 fi
 
 if [[ $project_id == -- ]]; then

@@ -57,6 +57,7 @@ echo "export MATRIX_SHARD_COUNT=$MATRIX_SHARD_COUNT"
 echo "export MATRIX_SHARD_INDEX=$MATRIX_SHARD_INDEX"
 
 site_path=sites/udmi_site_model
+iot_config=$site_path/cloud_iot_config.json
 device_id=AHU-1
 site_out=$site_path/out
 output_file=$site_out/sequencer_$device_id.json
@@ -81,6 +82,18 @@ if [[ -n $pids ]]; then
 fi
 
 bin/clone_model # Clone, and check that version is correct.
+
+if [[ -n $UDMI_REGISTRY_SUFFIX ]]; then
+    echo Using registry suffix $UDMI_REGISTRY_SUFFIX
+    jq ".registry_suffix = \"$UDMI_REGISTRY_SUFFIX\"" $iot_config | sponge $iot_config
+fi
+
+if [[ -n $UDMI_ALT_REGISTRY ]]; then
+    echo Using alt registry $UDMI_ALT_REGISTRY
+    jq ".alt_registry = \"$UDMI_ALT_REGISTRY\"" $iot_config | sponge $iot_config
+fi
+
+more $iot_config | cat
 
 bin/reset_config $site_path $project_id $device_id
 
