@@ -56,23 +56,8 @@ if [[ -d $site_path ]]; then
     shift || true
 fi
 
-if [[ -n $UDMI_REGISTRY_SUFFIX ]]; then
-    echo Using registry suffix $UDMI_REGISTRY_SUFFIX
-    registry_suffix=\"$UDMI_REGISTRY_SUFFIX\"
-else
-    registry_suffix=null
-fi
-
+registry_suffix=null
 alt_registry=null
-if [[ -n $UDMI_ALT_REGISTRY ]]; then
-    alt_registry=\"${UDMI_ALT_REGISTRY}\"
-fi
-
-if [[ $project_id == -- ]]; then
-    echo Configuring for mock project use...
-    project_id=mock-project
-    alt_registry=null
-fi
 
 test_names="$@"
 udmi_version=`git describe --always --dirty`
@@ -89,6 +74,8 @@ source venv/bin/activate
 if [[ -d $site_path ]]; then
     echo Using site model directory $site_path
     site_model=$site_path
+    iot_config=$site_model/cloud_iot_config.json
+    alt_registry=`jq .alt_registry $iot_config`
     endpoint=null
 elif [[ -f $site_path ]]; then
     echo Using site config file $site_path
@@ -103,12 +90,17 @@ elif [[ -f $site_path ]]; then
     [[ $serial_no == null ]] && serial_no=$DEFAULT_SERIAL
     endpoint=`jq .reflector_endpoint $site_path`
     alt_registry=`jq .alt_registry $site_path`
+    registry_suffix=`jq .registry_suffix $site_path`
 else
     echo Site model $site_path not found.
     false
 fi
 
-validator/bin/build
+if [[ $project_id == -- ]]; then
+    echo Configuring for mock project use...
+    project_id=mock-project
+    alt_registry=null
+fi
 
 # Format of cmdline project_id is {//PROVIDER/}PROJECT (optional PROVIDER)
 # e.g. bos-testing-dev or //gcp/bos-testing-dev
@@ -163,6 +155,8 @@ EOF
 fi
 
 cat $SEQUENCER_CONFIG
+
+validator/bin/build
 
 JARFILE=validator/build/libs/validator-1.0-SNAPSHOT-all.jar
 JAVA_CMD="java -cp $JARFILE com.google.daq.mqtt.sequencer.SequenceRunner"
