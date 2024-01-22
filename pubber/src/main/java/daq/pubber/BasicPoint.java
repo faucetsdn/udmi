@@ -36,11 +36,11 @@ public abstract class BasicPoint implements AbstractPoint {
     dirty = true;
   }
 
-  protected abstract Object getValue() throws IllegalStateException;
+  protected abstract Object getValue();
 
-  protected abstract Object setValue(Object setValue) throws IllegalStateException;
+  protected abstract Object setValue(Object setValue);
 
-  protected abstract boolean validateValue(Object setValue) throws IllegalStateException;
+  protected abstract boolean validateValue(Object setValue);
 
   @Override
   public void updateData() {
@@ -91,7 +91,7 @@ public abstract class BasicPoint implements AbstractPoint {
         dirty = state.value_state != previous;
         return;
       }
-    } catch (IllegalStateException ex) {
+    } catch (Exception ex) {
       state.status = createEntryFrom(Category.POINTSET_POINT_FAILURE, ex.getMessage());
       state.value_state = Value_state.FAILURE;
       dirty = state.value_state != previous;
@@ -109,7 +109,7 @@ public abstract class BasicPoint implements AbstractPoint {
       data.present_value = setValue(config.set_value);
       state.value_state = Value_state.APPLIED;
       written = true;
-    } catch (IllegalStateException ex) {
+    } catch (Exception ex) {
       state.status = createEntryFrom(Category.POINTSET_POINT_FAILURE, ex.getMessage());
       state.value_state = Value_state.FAILURE;
     }

@@ -81,7 +81,8 @@ public abstract class ManagerBase {
     int reportInterval = ofNullable(sampleRateSec).orElse(DEFAULT_REPORT_SEC);
     int intervalSec = ofNullable(options.fixedSampleRate).orElse(reportInterval);
     if (intervalSec < DISABLED_INTERVAL) {
-      error(format("Dropping update interval, negative sample rate %ds", intervalSec));
+      error(format("Dropping update interval, sample rate %ds is less then DISABLED_INTERVAL",
+              intervalSec));
       return;
     }
     if (periodicSender == null || intervalSec != sendRateSec.get()) {

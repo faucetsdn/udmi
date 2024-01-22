@@ -253,7 +253,7 @@ public class SequenceBase {
   private static MessagePublisher client;
   private static SequenceBase activeInstance;
   private static MessageBundle stashedBundle;
-  private static boolean resetRequired = true;
+  private boolean resetRequired = true;
   private static boolean enableAllTargets = true;
   private static boolean useAlternateClient;
 
@@ -801,7 +801,7 @@ public class SequenceBase {
       resetDeviceConfig(false);
       updateConfig("soft reset");
       debug("Done with reset_config");
-      // resetRequired = false;
+      resetRequired = false;
     });
 
     waitForStateConfigSync();
