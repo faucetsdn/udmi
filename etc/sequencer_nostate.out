@@ -22,5 +22,5 @@ RESULT skip pointset pointset_request_extraneous BETA 0/0 State testing disabled
 RESULT skip pointset pointset_sample_rate BETA 0/0 State testing disabled
 RESULT skip system state_make_model BETA 0/0 State testing disabled
 RESULT skip system state_software BETA 0/0 State testing disabled
-RESULT fail system system_last_update STABLE 0/0 State testing disabled
+RESULT skip system system_last_update STABLE 0/0 State testing disabled
 RESULT skip system valid_serial_no BETA 0/0 State testing disabled
