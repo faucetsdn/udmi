@@ -1,7 +1,9 @@
 package daq.pubber;
 
+import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.writeFile;
+import static udmi.schema.Bucket.ENDPOINT_CONFIG;
 import static udmi.schema.Bucket.ENUMERATION;
 import static udmi.schema.Bucket.ENUMERATION_FAMILIES;
 import static udmi.schema.Bucket.ENUMERATION_FEATURES;
@@ -20,6 +22,7 @@ import java.util.Map;
 import udmi.schema.Bucket;
 import udmi.schema.FeatureEnumeration;
 import udmi.schema.FeatureEnumeration.FeatureStage;
+import udmi.schema.Level;
 
 /**
  * Static class to represent the features supported by this implementation.
@@ -31,6 +34,7 @@ public abstract class SupportedFeatures {
   private static final Map<String, FeatureEnumeration> FEATURES_MAP = new HashMap<>();
 
   static {
+    add(ENDPOINT_CONFIG, BETA);
     add(ENUMERATION, STABLE);
     add(ENUMERATION_FEATURES, BETA);
     add(ENUMERATION_FAMILIES, PREVIEW);
@@ -51,6 +55,8 @@ public abstract class SupportedFeatures {
   public static void writeFeatureFile(String sitePath) {
     File path = new File(sitePath, PUBBER_FEATURES_JSON);
     try {
+      String message = "Writing pubber feature file to " + path.getAbsolutePath();
+      SystemManager.localLog(message, Level.NOTICE, getTimestamp(), null);
       path.getParentFile().mkdirs();
       writeFile(FEATURES_MAP, path);
     } catch (Exception e) {
