@@ -51,7 +51,7 @@ public class ConfigSequences extends SequenceBase {
   private static final Duration CONFIG_QUERY_INTERVAL = Duration.ofSeconds(30);
 
   @Test(timeout = ONE_MINUTE_MS)
-  @Feature(stage = STABLE, bucket = SYSTEM, nostate = true)
+  @Feature(stage = STABLE, bucket = SYSTEM)
   @Summary("Check that last_update state is correctly set in response to a config update.")
   @ValidateSchema(SubFolder.SYSTEM)
   public void system_last_update() {
