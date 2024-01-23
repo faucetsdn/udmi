@@ -133,7 +133,7 @@ public abstract class ManagerBase {
     }
   }
 
-  protected void pause() {
+  protected void stop() {
     cancelPeriodicSend();
   }
 

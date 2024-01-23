@@ -109,14 +109,14 @@ public class DeviceManager extends ManagerBase {
   }
 
   /**
-   * Pause periodic senders.
+   * Stop periodic senders.
    */
   @Override
-  public void pause() {
-    pointsetManager.pause();
-    localnetManager.pause();
-    gatewayManager.pause();
-    systemManager.pause();
+  public void stop() {
+    pointsetManager.stop();
+    localnetManager.stop();
+    gatewayManager.stop();
+    systemManager.stop();
   }
 
   public Map<String, FamilyDiscoveryEvent> enumerateFamilies() {

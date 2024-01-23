@@ -694,7 +694,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
   private boolean attemptConnection() {
     try {
       isConnected = false;
-      deviceManager.pause();
+      deviceManager.stop();
       if (deviceTarget == null) {
         throw new RuntimeException("Mqtt publisher not initialized");
       }

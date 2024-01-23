@@ -103,9 +103,9 @@ public class GatewayManager extends ManagerBase {
   }
 
   @Override
-  public void pause() {
-    super.pause();
-    ifNotNullThen(proxyDevices, p -> p.values().forEach(ProxyDevice::pause));
+  public void stop() {
+    super.stop();
+    ifNotNullThen(proxyDevices, p -> p.values().forEach(ProxyDevice::stop));
   }
 
   public void setSiteModel(SiteModel siteModel) {

@@ -51,8 +51,8 @@ public class ProxyDevice extends ManagerBase implements ManagerHost {
   }
 
   @Override
-  protected void pause() {
-    deviceManager.pause();
+  protected void stop() {
+    deviceManager.stop();
   }
 
   @Override
