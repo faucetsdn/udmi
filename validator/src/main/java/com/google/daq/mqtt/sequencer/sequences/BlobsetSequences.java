@@ -8,7 +8,7 @@ import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.sha256;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static org.junit.Assert.assertNotEquals;
-import static udmi.schema.Bucket.ENDPOINT;
+import static udmi.schema.Bucket.ENDPOINT_CONFIG;
 import static udmi.schema.Bucket.SYSTEM_MODE;
 import static udmi.schema.Category.BLOBSET_BLOB_APPLY;
 import static udmi.schema.FeatureEnumeration.FeatureStage.ALPHA;
@@ -134,7 +134,7 @@ public class BlobsetSequences extends SequenceBase {
     return String.format(DATA_URL_FORMAT, JSON_MIME_TYPE, encodeBase64(payload));
   }
 
-  @Feature(stage = PREVIEW, bucket = ENDPOINT)
+  @Feature(stage = PREVIEW, bucket = ENDPOINT_CONFIG)
   @Summary("Push endpoint config message to device that results in a connection error.")
   @Test(timeout = NINETY_SECONDS_MS) // TODO Is this enough? Does a client try X times?
   public void endpoint_connection_error() {
@@ -143,7 +143,7 @@ public class BlobsetSequences extends SequenceBase {
     untilClearedRedirect();
   }
 
-  @Feature(stage = PREVIEW, bucket = ENDPOINT)
+  @Feature(stage = PREVIEW, bucket = ENDPOINT_CONFIG)
   @Summary("Check repeated endpoint with same information gets retried.")
   @Test(timeout = NINETY_SECONDS_MS)
   public void endpoint_connection_retry() {
@@ -160,7 +160,7 @@ public class BlobsetSequences extends SequenceBase {
     untilClearedRedirect();
   }
 
-  @Feature(stage = PREVIEW, bucket = ENDPOINT)
+  @Feature(stage = PREVIEW, bucket = ENDPOINT_CONFIG)
   @Summary("Check a successful reconnect to the same endpoint.")
   @Test(timeout = NINETY_SECONDS_MS)
   public void endpoint_connection_success_reconnect() {
@@ -169,7 +169,7 @@ public class BlobsetSequences extends SequenceBase {
     untilClearedRedirect();
   }
 
-  @Feature(stage = ALPHA, bucket = ENDPOINT)
+  @Feature(stage = ALPHA, bucket = ENDPOINT_CONFIG)
   @Summary("Failed connection because of bad hash.")
   @ValidateSchema(SubFolder.BLOBSET)
   @Test(timeout = ONE_MINUTE_MS)
@@ -188,20 +188,20 @@ public class BlobsetSequences extends SequenceBase {
   }
 
   @Test(timeout = NINETY_SECONDS_MS)
-  @Feature(stage = PREVIEW, bucket = ENDPOINT)
+  @Feature(stage = PREVIEW, bucket = ENDPOINT_CONFIG)
   @Summary("Check connection to an alternate project.")
   public void endpoint_connection_success_alternate() {
     check_endpoint_connection_success(false);
   }
 
   @Test(timeout = THREE_MINUTES_MS)
-  @Feature(stage = PREVIEW, bucket = ENDPOINT)
+  @Feature(stage = PREVIEW, bucket = ENDPOINT_CONFIG)
   public void endpoint_redirect_and_restart() {
     check_endpoint_connection_success(true);
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Feature(stage = PREVIEW, bucket = ENDPOINT)
+  @Feature(stage = PREVIEW, bucket = ENDPOINT_CONFIG)
   public void endpoint_failure_and_restart() {
     setDeviceConfigEndpointBlob(BOGUS_ENDPOINT_HOSTNAME, registryId, false);
     untilErrorReported();
