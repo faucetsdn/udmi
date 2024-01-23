@@ -359,12 +359,10 @@ public class Pubber extends ManagerBase implements ManagerHost {
   }
 
   private void initializeDevice() {
-    ifNotNullThen(configuration.sitePath, SupportedFeatures::writeFeatureFile);
-    SupportedFeatures.setFeatureSwap(configuration.options.featureEnableSwap);
-
     deviceManager = new DeviceManager(this, configuration);
 
     if (configuration.sitePath != null) {
+      SupportedFeatures.writeFeatureFile(configuration.sitePath, deviceManager);
       siteModel = new SiteModel(configuration.sitePath);
       siteModel.initialize();
       if (configuration.endpoint == null) {
@@ -381,6 +379,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
       pullDeviceMessage();
     }
 
+    SupportedFeatures.setFeatureSwap(configuration.options.featureEnableSwap);
     initializePersistentStore();
 
     info(format("Starting pubber %s, serial %s, mac %s, gateway %s, options %s",

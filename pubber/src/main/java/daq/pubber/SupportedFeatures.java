@@ -52,11 +52,11 @@ public abstract class SupportedFeatures {
   /**
    * Write out the current set of supported features for testability.
    */
-  public static void writeFeatureFile(String sitePath) {
+  public static void writeFeatureFile(String sitePath, DeviceManager deviceManager) {
     File path = new File(sitePath, PUBBER_FEATURES_JSON);
     try {
       String message = "Writing pubber feature file to " + path.getAbsolutePath();
-      SystemManager.localLog(message, Level.NOTICE, getTimestamp(), null);
+      deviceManager.localLog(message, Level.NOTICE, getTimestamp(), null);
       path.getParentFile().mkdirs();
       writeFile(FEATURES_MAP, path);
     } catch (Exception e) {
