@@ -3,12 +3,12 @@ CPBLTY skip system broken_config.logging ALPHA 0/1 Never executed
 RESULT skip system config_logging BETA 0/0 State testing disabled
 RESULT skip system device_config_acked BETA 0/0 State testing disabled
 RESULT skip enumeration empty_enumeration PREVIEW 0/0 State testing disabled
-RESULT skip endpoint endpoint_connection_error PREVIEW 0/0 Feature bucket not enabled
-RESULT skip endpoint endpoint_connection_retry PREVIEW 0/0 Feature bucket not enabled
-RESULT skip endpoint endpoint_connection_success_alternate PREVIEW 0/0 Feature bucket not enabled
-RESULT skip endpoint endpoint_connection_success_reconnect PREVIEW 0/0 Feature bucket not enabled
-RESULT skip endpoint endpoint_failure_and_restart PREVIEW 0/0 Feature bucket not enabled
-RESULT skip endpoint endpoint_redirect_and_restart PREVIEW 0/0 Feature bucket not enabled
+RESULT skip endpoint.config endpoint_connection_error PREVIEW 0/0 State testing disabled
+RESULT skip endpoint.config endpoint_connection_retry PREVIEW 0/0 State testing disabled
+RESULT skip endpoint.config endpoint_connection_success_alternate PREVIEW 0/0 State testing disabled
+RESULT skip endpoint.config endpoint_connection_success_reconnect PREVIEW 0/0 State testing disabled
+RESULT skip endpoint.config endpoint_failure_and_restart PREVIEW 0/0 State testing disabled
+RESULT skip endpoint.config endpoint_redirect_and_restart PREVIEW 0/0 State testing disabled
 RESULT skip system extra_config BETA 0/0 State testing disabled
 RESULT skip system family_ether_addr PREVIEW 0/0 State testing disabled
 RESULT skip system family_ipv4_addr PREVIEW 0/0 State testing disabled
@@ -22,5 +22,5 @@ RESULT skip pointset pointset_request_extraneous BETA 0/0 State testing disabled
 RESULT skip pointset pointset_sample_rate BETA 0/0 State testing disabled
 RESULT skip system state_make_model BETA 0/0 State testing disabled
 RESULT skip system state_software BETA 0/0 State testing disabled
-RESULT fail system system_last_update STABLE 0/5 Timeout waiting for state last_config matches first config timestamp
+RESULT skip system system_last_update STABLE 0/0 State testing disabled
 RESULT skip system valid_serial_no BETA 0/0 State testing disabled

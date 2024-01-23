@@ -709,7 +709,8 @@ public class SequenceBase {
       throw new RuntimeException("Active sequencer instance not setup, aborting");
     }
 
-    assumeTrue("Feature bucket not enabled", isBucketEnabled(testBucket));
+    assumeTrue(format("Feature bucket %s not enabled", testBucket.key()),
+        isBucketEnabled(testBucket));
 
     assertTrue("exceptions map should be empty", capabilityExceptions.isEmpty());
     assertTrue("allowed changes map should be empty", allowedDeviceStateChanges.isEmpty());
@@ -1149,7 +1150,7 @@ public class SequenceBase {
     captureConfigChange(reason);
   }
 
-  private boolean   updateConfig(SubFolder subBlock, Object data) {
+  private boolean updateConfig(SubFolder subBlock, Object data) {
     try {
       String messageData = stringify(data);
       String sentBlockConfig = String.valueOf(
