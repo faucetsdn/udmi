@@ -253,7 +253,7 @@ public class SequenceBase {
   private static MessagePublisher client;
   private static SequenceBase activeInstance;
   private static MessageBundle stashedBundle;
-  private boolean resetRequired = true;
+  private static boolean resetRequired = true;
   private static boolean enableAllTargets = true;
   private static boolean useAlternateClient;
 
