@@ -204,9 +204,9 @@ sites/udmi_site_model/out/devices/AHU-22/event_pointset.out
   "sub_folder" : "pointset",
   "sub_type" : "event",
   "status" : {
-    "message" : "Multiple validation errors",
-    "detail" : "While converting to json node: 3 schema violations found; Device has extra points: llama",
-    "category" : "validation.device.multiple",
+    "message" : "Device has extra points: llama",
+    "detail" : "event_pointset: Device has extra points: llama",
+    "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   },
@@ -215,12 +215,6 @@ sites/udmi_site_model/out/devices/AHU-22/event_pointset.out
     "extra" : [ "llama" ]
   },
   "errors" : [ {
-    "message" : "While converting to json node: 3 schema violations found",
-    "detail" : "event_pointset: While converting to json node: 3 schema violations found REDACTED_ERROR; 3 schema violations found; /points/filter_alarm_pressure_status: object has missing required properties ([\"present_value\"]); /points/filter_differential_pressure: object has missing required properties ([\"present_value\"]); /points/filter_differential_pressure_sensor: object has missing required properties ([\"present_value\"])",
-    "category" : "validation.device.schema",
-    "timestamp" : "REDACTED_TIMESTAMP",
-    "level" : 500
-  }, {
     "message" : "Device has extra points: llama",
     "detail" : "event_pointset: Device has extra points: llama",
     "category" : "validation.device.schema",
@@ -456,9 +450,9 @@ sites/udmi_site_model/out/devices/SNS-4/event_pointset.out
   "sub_folder" : "pointset",
   "sub_type" : "event",
   "status" : {
-    "message" : "Multiple validation errors",
-    "detail" : "While converting to json node: 2 schema violations found; Device has extra points: llama",
-    "category" : "validation.device.multiple",
+    "message" : "Device has extra points: llama",
+    "detail" : "event_pointset: Device has extra points: llama",
+    "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   },
@@ -467,12 +461,6 @@ sites/udmi_site_model/out/devices/SNS-4/event_pointset.out
     "extra" : [ "llama" ]
   },
   "errors" : [ {
-    "message" : "While converting to json node: 2 schema violations found",
-    "detail" : "event_pointset: While converting to json node: 2 schema violations found REDACTED_ERROR; 2 schema violations found; /points/split_threshold: object has missing required properties ([\"present_value\"]); /points/triangulating_axis: object has missing required properties ([\"present_value\"])",
-    "category" : "validation.device.schema",
-    "timestamp" : "REDACTED_TIMESTAMP",
-    "level" : 500
-  }, {
     "message" : "Device has extra points: llama",
     "detail" : "event_pointset: Device has extra points: llama",
     "category" : "validation.device.schema",
