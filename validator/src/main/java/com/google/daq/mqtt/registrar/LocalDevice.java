@@ -2,12 +2,12 @@ package com.google.daq.mqtt.registrar;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.daq.mqtt.registrar.ConfigGenerator.configFrom;
 import static com.google.daq.mqtt.registrar.Registrar.DEVICE_ERRORS_MAP;
 import static com.google.daq.mqtt.registrar.Registrar.ENVELOPE_SCHEMA_JSON;
 import static com.google.daq.mqtt.registrar.Registrar.METADATA_JSON;
 import static com.google.daq.mqtt.registrar.Registrar.METADATA_SCHEMA_JSON;
 import static com.google.daq.mqtt.registrar.Registrar.NORMALIZED_JSON;
+import static com.google.daq.mqtt.util.ConfigGenerator.configFrom;
 import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_STRICT;
 import static com.google.udmi.util.GeneralUtils.compressJsonString;
@@ -31,6 +31,7 @@ import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import com.google.daq.mqtt.util.CloudDeviceSettings;
 import com.google.daq.mqtt.util.CloudIotManager;
+import com.google.daq.mqtt.util.ConfigGenerator;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.ValidationException;
@@ -55,7 +56,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -71,11 +71,7 @@ import udmi.schema.Credential;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
-import udmi.schema.LocalnetConfig;
 import udmi.schema.Metadata;
-import udmi.schema.PointPointsetConfig;
-import udmi.schema.PointPointsetModel;
-import udmi.schema.PointsetConfig;
 
 class LocalDevice {
 

@@ -1,4 +1,4 @@
-package com.google.daq.mqtt.registrar;
+package com.google.daq.mqtt.util;
 
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.getTimestampString;
@@ -93,22 +93,22 @@ public class ConfigGenerator {
     return localnetConfig;
   }
 
-  boolean isGateway() {
+  public boolean isGateway() {
     return metadata != null
         && metadata.gateway != null
         && metadata.gateway.proxy_ids != null
         && !metadata.gateway.proxy_ids.isEmpty();
   }
 
-  boolean hasGateway() {
+  public boolean hasGateway() {
     return metadata != null && metadata.gateway != null && metadata.gateway.gateway_id != null;
   }
 
-  List<String> getProxyDevicesList() {
+  public List<String> getProxyDevicesList() {
     return isGateway() ? metadata.gateway.proxy_ids : null;
   }
 
-  String getUpdatedTimestamp() {
+  public String getUpdatedTimestamp() {
     return getTimestampString(metadata.timestamp);
   }
 
