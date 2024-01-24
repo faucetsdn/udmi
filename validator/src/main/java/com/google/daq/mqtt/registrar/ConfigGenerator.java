@@ -15,6 +15,9 @@ import udmi.schema.PointPointsetModel;
 import udmi.schema.PointsetConfig;
 import udmi.schema.SystemConfig;
 
+/**
+ * Container class for working with generated UDMI configs (from device metadata).
+ */
 public class ConfigGenerator {
 
   public static final String GENERATED_CONFIG_JSON = "generated_config.json";
@@ -29,6 +32,9 @@ public class ConfigGenerator {
     return new ConfigGenerator(metadata);
   }
 
+  /**
+   * Return a complete UDMI Config message object.
+   */
   public Config deviceConfig() {
     Config config = new Config();
     config.timestamp = metadata.timestamp;

@@ -66,6 +66,7 @@ import java.util.TreeSet;
 import java.util.regex.Pattern;
 import org.apache.commons.io.IOUtils;
 import udmi.schema.CloudModel.Auth_type;
+import udmi.schema.Config;
 import udmi.schema.Credential;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
@@ -175,6 +176,7 @@ class LocalDevice {
   private final List<Credential> deviceCredentials = new ArrayList<>();
   private final Map<String, Object> siteMetadata;
   private final boolean validateMetadata;
+  private final ConfigGenerator config;
 
   private String deviceNumId;
 
@@ -196,6 +198,7 @@ class LocalDevice {
       outDir = new File(deviceDir, OUT_DIR);
       prepareOutDir();
       metadata = readMetadata();
+      config = configFrom(metadata);
     } catch (Exception e) {
       throw new RuntimeException("While loading local device " + deviceId, e);
     }
@@ -448,11 +451,11 @@ class LocalDevice {
   }
 
   boolean isGateway() {
-    return configFrom(metadata).isGateway();
+    return config.isGateway();
   }
 
   boolean hasGateway() {
-    return configFrom(metadata).hasGateway();
+    return config.hasGateway();
   }
 
   boolean isDirectConnect() {
@@ -473,10 +476,10 @@ class LocalDevice {
         return;
       }
 
-      settings.updated = configFrom(metadata).getUpdatedTimestamp();
+      settings.updated = config.getUpdatedTimestamp();
       settings.metadata = deviceMetadataString();
       settings.deviceNumId = ifNotNullGet(metadata.cloud, cloud -> cloud.num_id);
-      settings.proxyDevices = configFrom(metadata).getProxyDevicesList();
+      settings.proxyDevices = config.getProxyDevicesList();
       settings.keyAlgorithm = getAuthType();
       settings.keyBytes = getKeyBytes();
       settings.config = deviceConfigString();
@@ -511,7 +514,7 @@ class LocalDevice {
 
   private String deviceConfigString() {
     try {
-      JsonNode configJson = OBJECT_MAPPER_STRICT.valueToTree(configFrom(metadata).deviceConfig());
+      JsonNode configJson = OBJECT_MAPPER_STRICT.valueToTree(deviceConfigObject());
       new MessageDowngrader("config", configJson).downgrade(baseVersion);
       return compressJsonString(configJson, MAX_JSON_LENGTH);
     } catch (Exception e) {
@@ -733,4 +736,7 @@ class LocalDevice {
     return metadata;
   }
 
+  public Config deviceConfigObject() {
+    return config.deviceConfig();
+  }
 }
