@@ -457,18 +457,18 @@ sites/udmi_site_model/out/devices/SNS-4/event_pointset.out
   "sub_type" : "event",
   "status" : {
     "message" : "Multiple validation errors",
-    "detail" : "While converting to json node: 2 schema violations found; Device has extra points: llama",
+    "detail" : "Device has missing points: split_threshold, triangulating_axis; Device has extra points: llama",
     "category" : "validation.device.multiple",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   },
   "pointset" : {
-    "missing" : [ ],
+    "missing" : [ "split_threshold", "triangulating_axis" ],
     "extra" : [ "llama" ]
   },
   "errors" : [ {
-    "message" : "While converting to json node: 2 schema violations found",
-    "detail" : "event_pointset: While converting to json node: 2 schema violations found REDACTED_ERROR; 2 schema violations found; /points/split_threshold: object has missing required properties ([\"present_value\"]); /points/triangulating_axis: object has missing required properties ([\"present_value\"])",
+    "message" : "Device has missing points: split_threshold, triangulating_axis",
+    "detail" : "event_pointset: Device has missing points: split_threshold, triangulating_axis",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500

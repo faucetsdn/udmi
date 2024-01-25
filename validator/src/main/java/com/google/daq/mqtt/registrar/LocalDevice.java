@@ -4,10 +4,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.registrar.Registrar.DEVICE_ERRORS_MAP;
 import static com.google.daq.mqtt.registrar.Registrar.ENVELOPE_SCHEMA_JSON;
-import static com.google.daq.mqtt.registrar.Registrar.GENERATED_CONFIG_JSON;
 import static com.google.daq.mqtt.registrar.Registrar.METADATA_JSON;
 import static com.google.daq.mqtt.registrar.Registrar.METADATA_SCHEMA_JSON;
 import static com.google.daq.mqtt.registrar.Registrar.NORMALIZED_JSON;
+import static com.google.daq.mqtt.util.ConfigGenerator.configFrom;
 import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_STRICT;
 import static com.google.udmi.util.GeneralUtils.compressJsonString;
@@ -19,7 +19,6 @@ import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.MessageUpgrader.METADATA_SCHEMA;
 import static java.lang.String.format;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.github.fge.jsonschema.core.report.LogLevel;
@@ -32,6 +31,7 @@ import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import com.google.daq.mqtt.util.CloudDeviceSettings;
 import com.google.daq.mqtt.util.CloudIotManager;
+import com.google.daq.mqtt.util.ConfigGenerator;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.ValidationException;
@@ -56,7 +56,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -72,14 +71,7 @@ import udmi.schema.Credential;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
-import udmi.schema.GatewayConfig;
-import udmi.schema.LocalnetConfig;
 import udmi.schema.Metadata;
-import udmi.schema.Operation;
-import udmi.schema.PointPointsetConfig;
-import udmi.schema.PointPointsetModel;
-import udmi.schema.PointsetConfig;
-import udmi.schema.SystemConfig;
 
 class LocalDevice {
 
@@ -154,6 +146,7 @@ class LocalDevice {
           AUX_DIR,
           EXPECTED_DIR,
           OUT_DIR);
+  private static final String GENERATED_CONFIG_JSON = ConfigGenerator.GENERATED_CONFIG_JSON;
   private static final Set<String> OUT_FILES = ImmutableSet.of(
       GENERATED_CONFIG_JSON, DEVICE_ERRORS_MAP, NORMALIZED_JSON, EXCEPTION_LOG_FILE);
   private static final Set<String> ALL_KEY_FILES =
@@ -179,6 +172,7 @@ class LocalDevice {
   private final List<Credential> deviceCredentials = new ArrayList<>();
   private final Map<String, Object> siteMetadata;
   private final boolean validateMetadata;
+  private final ConfigGenerator config;
 
   private String deviceNumId;
 
@@ -200,6 +194,7 @@ class LocalDevice {
       outDir = new File(deviceDir, OUT_DIR);
       prepareOutDir();
       metadata = readMetadata();
+      config = configFrom(metadata);
     } catch (Exception e) {
       throw new RuntimeException("While loading local device " + deviceId, e);
     }
@@ -452,14 +447,11 @@ class LocalDevice {
   }
 
   boolean isGateway() {
-    return metadata != null
-        && metadata.gateway != null
-        && metadata.gateway.proxy_ids != null
-        && !metadata.gateway.proxy_ids.isEmpty();
+    return config.isGateway();
   }
 
   boolean hasGateway() {
-    return metadata != null && metadata.gateway != null && metadata.gateway.gateway_id != null;
+    return config.hasGateway();
   }
 
   boolean isDirectConnect() {
@@ -480,10 +472,10 @@ class LocalDevice {
         return;
       }
 
-      settings.updated = getUpdatedTimestamp();
+      settings.updated = config.getUpdatedTimestamp();
       settings.metadata = deviceMetadataString();
       settings.deviceNumId = ifNotNullGet(metadata.cloud, cloud -> cloud.num_id);
-      settings.proxyDevices = getProxyDevicesList();
+      settings.proxyDevices = config.getProxyDevicesList();
       settings.keyAlgorithm = getAuthType();
       settings.keyBytes = getKeyBytes();
       settings.config = deviceConfigString();
@@ -516,23 +508,6 @@ class LocalDevice {
     }
   }
 
-  private List<String> getProxyDevicesList() {
-    return isGateway() ? metadata.gateway.proxy_ids : null;
-  }
-
-  private String getUpdatedTimestamp() {
-    return getTimestampString(metadata.timestamp);
-  }
-
-  private String getTimestampString(Date timestamp) {
-    try {
-      String quotedString = OBJECT_MAPPER_STRICT.writeValueAsString(timestamp);
-      return quotedString.substring(1, quotedString.length() - 1);
-    } catch (JsonProcessingException e) {
-      throw new RuntimeException("While generating updated timestamp", e);
-    }
-  }
-
   private String deviceConfigString() {
     try {
       JsonNode configJson = OBJECT_MAPPER_STRICT.valueToTree(deviceConfigObject());
@@ -541,64 +516,6 @@ class LocalDevice {
     } catch (Exception e) {
       throw new RuntimeException("While converting device config", e);
     }
-  }
-
-  public Config deviceConfigObject() {
-    Config config = new Config();
-    config.timestamp = metadata.timestamp;
-    config.version = UDMI_VERSION;
-    config.system = new SystemConfig();
-    config.system.operation = new Operation();
-    if (isGateway()) {
-      config.gateway = new GatewayConfig();
-      config.gateway.proxy_ids = getProxyDevicesList();
-    }
-    if (metadata.pointset != null) {
-      config.pointset = getDevicePointsetConfig();
-    }
-    if (metadata.localnet != null) {
-      config.localnet = getDeviceLocalnetConfig();
-    }
-    // Copy selected MetadataSystem properties into device config.
-    if (metadata.system.min_loglevel != null) {
-      config.system.min_loglevel = metadata.system.min_loglevel;
-    }
-    return config;
-  }
-
-  private LocalnetConfig getDeviceLocalnetConfig() {
-    LocalnetConfig localnetConfig = new LocalnetConfig();
-    localnetConfig.families = metadata.localnet.families;
-    return localnetConfig;
-  }
-
-  private PointsetConfig getDevicePointsetConfig() {
-    PointsetConfig pointsetConfig = new PointsetConfig();
-    pointsetConfig.points = new HashMap<>();
-    boolean excludeUnits = isTrue(metadata.pointset.exclude_units_from_config);
-    metadata.pointset.points.forEach(
-        (metadataKey, value) ->
-            pointsetConfig.points.computeIfAbsent(
-                metadataKey, configKey -> configFromMetadata(value, excludeUnits)));
-
-    // Copy selected MetadataPointset properties into PointsetConfig.
-    if (metadata.pointset.sample_limit_sec != null) {
-      pointsetConfig.sample_limit_sec = metadata.pointset.sample_limit_sec;
-    }
-    if (metadata.pointset.sample_rate_sec != null) {
-      pointsetConfig.sample_rate_sec = metadata.pointset.sample_rate_sec;
-    }
-    return pointsetConfig;
-  }
-
-  PointPointsetConfig configFromMetadata(PointPointsetModel metadata, boolean excludeUnits) {
-    PointPointsetConfig pointConfig = new PointPointsetConfig();
-    pointConfig.units = excludeUnits ? null : metadata.units;
-    pointConfig.ref = metadata.ref;
-    if (Boolean.TRUE.equals(metadata.writable)) {
-      pointConfig.set_value = metadata.baseline_value;
-    }
-    return pointConfig;
   }
 
   private String deviceMetadataString() {
@@ -699,7 +616,7 @@ class LocalDevice {
   }
 
   String getNormalizedTimestamp() {
-    return getTimestampString(metadata.timestamp);
+    return JsonUtil.getTimestampString(metadata.timestamp);
   }
 
   void writeNormalized() {
@@ -815,4 +732,7 @@ class LocalDevice {
     return metadata;
   }
 
+  public Config deviceConfigObject() {
+    return config.deviceConfig();
+  }
 }

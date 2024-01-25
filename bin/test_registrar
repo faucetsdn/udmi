@@ -70,6 +70,13 @@ sm_devices=$(check_norm)
 echo Devices with correct no-defaults site_metadata: ${sm_devices}
 [ "${sm_devices}" == "${base_devices}" ] || exit_status=no_defaults
 
+
+config_points=`jq '.pointset.points | length' $TEST_SITE/devices/AHU-22/out/generated_config.json`
+[[ $config_points == 3 ]] || exit_status=missing_points
+
+config_points=`jq .pointset.points $TEST_SITE/devices/SNS-4/out/generated_config.json`
+[[ $config_points == null ]] || exit_status=configured_points
+
 mv ${TEST_SITE}/_site_metadata.json ${TEST_SITE}/site_metadata.json
 
 echo Done with registrar tests, results are \'$exit_status\' \(expected to be \'clean\'\)
