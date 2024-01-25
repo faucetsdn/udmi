@@ -9,6 +9,7 @@ import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
+import static java.util.Objects.requireNonNullElseGet;
 import static java.util.Optional.ofNullable;
 import static udmi.schema.Category.POINTSET_POINT_INVALID;
 import static udmi.schema.Category.POINTSET_POINT_INVALID_VALUE;
@@ -117,13 +118,13 @@ public class PointsetManager extends ManagerBase {
    * @param model pointset model
    */
   public void setPointsetModel(PointsetModel model) {
-    Map<String, PointPointsetModel> points = ifNotNullGet(model, x -> x.points, DEFAULT_POINTS);
+    Map<String, PointPointsetModel> points =
+        ifNotNullGet(model, m -> requireNonNullElseGet(model.points, HashMap::new), DEFAULT_POINTS);
 
     ifNotNullThen(options.missingPoint,
         x -> requireNonNull(points.remove(x), "missing point not in pointset metadata"));
 
     points.forEach((name, point) -> addPoint(makePoint(name, point)));
-
   }
 
   private void addPoint(AbstractPoint point) {
@@ -207,7 +208,7 @@ public class PointsetManager extends ManagerBase {
     managedPoints.forEach((name, point) -> updatePointConfig(point, points.get(name)));
     pointsetState.state_etag = config.state_etag;
 
-    Set<String> configuredPoints = config.points.keySet();
+    Set<String> configuredPoints = points.keySet();
     Set<String> statePoints = pointsetState.points.keySet();
     Set<String> missingPoints = Sets.difference(configuredPoints, statePoints).immutableCopy();
     final Set<String> clearPoints = Sets.difference(statePoints, configuredPoints).immutableCopy();

@@ -24,7 +24,7 @@
 19 RESULT pass system system_last_update STABLE 5/5 Sequence complete
 20 RESULT fail system state_make_model BETA 0/5 Timeout waiting for no applicable system status
 24 RESULT skip system valid_serial_no BETA 0/0 State testing disabled
-25 RESULT fail system system_last_update STABLE 0/5 Timeout waiting for state last_config matches first config timestamp
+25 RESULT skip system system_last_update STABLE 0/0 State testing disabled
 26 RESULT fail system system_min_loglevel ALPHA 0/5 Received state update with no-state device
 27 RESULT pass system system_min_loglevel ALPHA 5/5 Sequence complete
 31 RESULT pass gateway gateway_proxy_events BETA 5/5 Sequence complete

@@ -20,6 +20,9 @@
     "exclude_units_from_config": {
       "type": "boolean"
     },
+    "exclude_points_from_config": {
+      "type": "boolean"
+    },
     "sample_limit_sec": {
       "description": "Minimum time between sample updates for the device (including complete and COV updates). Updates more frequent than this should be coalesced into one update.",
       "type": "integer",
