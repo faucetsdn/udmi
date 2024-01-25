@@ -208,7 +208,7 @@ public class PointsetManager extends ManagerBase {
     managedPoints.forEach((name, point) -> updatePointConfig(point, points.get(name)));
     pointsetState.state_etag = config.state_etag;
 
-    Set<String> configuredPoints = config.points.keySet();
+    Set<String> configuredPoints = points.keySet();
     Set<String> statePoints = pointsetState.points.keySet();
     Set<String> missingPoints = Sets.difference(configuredPoints, statePoints).immutableCopy();
     final Set<String> clearPoints = Sets.difference(statePoints, configuredPoints).immutableCopy();
