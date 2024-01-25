@@ -8,6 +8,7 @@ class PointsetModel:
   def __init__(self):
     self.points = None
     self.exclude_units_from_config = None
+    self.exclude_points_from_config = None
     self.sample_limit_sec = None
     self.sample_rate_sec = None
 
@@ -18,6 +19,7 @@ class PointsetModel:
     result = PointsetModel()
     result.points = PointPointsetModel.map_from(source.get('points'))
     result.exclude_units_from_config = source.get('exclude_units_from_config')
+    result.exclude_points_from_config = source.get('exclude_points_from_config')
     result.sample_limit_sec = source.get('sample_limit_sec')
     result.sample_rate_sec = source.get('sample_rate_sec')
     return result
@@ -44,6 +46,8 @@ class PointsetModel:
       result['points'] = PointPointsetModel.expand_dict(self.points) # 2
     if self.exclude_units_from_config:
       result['exclude_units_from_config'] = self.exclude_units_from_config # 5
+    if self.exclude_points_from_config:
+      result['exclude_points_from_config'] = self.exclude_points_from_config # 5
     if self.sample_limit_sec:
       result['sample_limit_sec'] = self.sample_limit_sec # 5
     if self.sample_rate_sec:

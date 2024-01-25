@@ -60,12 +60,15 @@ public class ConfigGenerator {
 
   private PointsetConfig getDevicePointsetConfig() {
     PointsetConfig pointsetConfig = new PointsetConfig();
-    pointsetConfig.points = new HashMap<>();
     boolean excludeUnits = isTrue(metadata.pointset.exclude_units_from_config);
-    metadata.pointset.points.forEach(
-        (metadataKey, value) ->
-            pointsetConfig.points.computeIfAbsent(
-                metadataKey, configKey -> configFromMetadata(value, excludeUnits)));
+    boolean excludePoints = isTrue(metadata.pointset.exclude_points_from_config);
+    if (!excludePoints) {
+      pointsetConfig.points = new HashMap<>();
+      metadata.pointset.points.forEach(
+          (metadataKey, value) ->
+              pointsetConfig.points.computeIfAbsent(
+                  metadataKey, configKey -> configFromMetadata(value, excludeUnits)));
+    }
 
     // Copy selected MetadataPointset properties into PointsetConfig.
     if (metadata.pointset.sample_limit_sec != null) {
