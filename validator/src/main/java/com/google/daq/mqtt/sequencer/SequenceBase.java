@@ -13,7 +13,6 @@ import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.Common.DEVICE_ID_KEY;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
 import static com.google.udmi.util.Common.GATEWAY_ID_KEY;
-import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.catchToElse;
 import static com.google.udmi.util.GeneralUtils.changedLines;
@@ -65,6 +64,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
+import com.google.daq.mqtt.util.ConfigGenerator;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.util.MessagePublisher.QuerySpeed;
 import com.google.daq.mqtt.util.ObjectDiffEngine;
@@ -111,7 +111,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.junit.After;
 import org.junit.AssumptionViolatedException;
 import org.junit.Before;
@@ -181,7 +180,6 @@ public class SequenceBase {
   private static final String RESULT_LOG_FILE = "RESULT.log";
   private static final String DEVICE_MODDATA = "%s/out/devices/%s/metadata_mod.json";
   private static final String DEVICE_METADATA = "%s/devices/%s/metadata.json";
-  private static final String DEVICE_CONFIG_FORMAT = "%s/devices/%s/out/generated_config.json";
   private static final String SUMMARY_OUTPUT_FORMAT = "%s/out/sequencer_%s.json";
   private static final Map<Class<?>, SubFolder> CLASS_SUBFOLDER_MAP = ImmutableMap.of(
       SystemEvent.class, SubFolder.SYSTEM,
@@ -197,7 +195,6 @@ public class SequenceBase {
   private static final String UPDATE_SUBFOLDER = SubFolder.UPDATE.value();
   private static final String STATE_SUBTYPE = SubType.STATE.value();
   private static final String CONFIG_SUBTYPE = SubType.CONFIG.value();
-  private static final String REPLY_SUBTYPE = SubType.REPLY.value();
   private static final String LOCAL_CONFIG_UPDATE = LOCAL_PREFIX + UPDATE_SUBFOLDER;
   private static final String SEQUENCER_LOG = "sequencer.log";
   private static final String SYSTEM_LOG = "system.log";
@@ -245,7 +242,6 @@ public class SequenceBase {
   static ExecutionConfiguration exeConfig;
   private static Validator messageValidator;
   private static ValidationState validationState;
-  private static String udmiVersion;
   private static String siteModel;
   private static int logLevel;
   private static File deviceOutputDir;
@@ -256,6 +252,7 @@ public class SequenceBase {
   private boolean resetRequired = true;
   private static boolean enableAllTargets = true;
   private static boolean useAlternateClient;
+  private static Config generatedConfig;
 
   static {
     // Sanity check to make sure ALPHA version is increased if forced by increased BETA.
@@ -296,7 +293,6 @@ public class SequenceBase {
   private boolean recordMessages;
   private boolean recordSequence;
   private int previousEventCount;
-  private String configExceptionTimestamp;
   private SequenceResult testResult;
   private int startStateCount;
   private Boolean expectedSystemStatus;
@@ -313,7 +309,7 @@ public class SequenceBase {
       messageValidator = new Validator(exeConfig);
       siteModel = checkNotNull(exeConfig.site_model, "site_model not defined");
       projectId = checkNotNull(exeConfig.project_id, "project_id not defined");
-      udmiVersion = checkNotNull(exeConfig.udmi_version, "udmi_version not defined");
+      checkNotNull(exeConfig.udmi_version, "udmi_version not defined");
       String serial = checkNotNull(exeConfig.serial_no, "serial_no not defined");
       serialNo = serial.equals(SERIAL_NO_MISSING) ? null : serial;
       logLevel = Level.valueOf(checkNotNull(exeConfig.log_level, "log_level not defined"))
@@ -328,6 +324,7 @@ public class SequenceBase {
     registryId = SiteModel.getRegistryActual(exeConfig);
 
     deviceMetadata = readDeviceMetadata();
+    generatedConfig = ConfigGenerator.configFrom(deviceMetadata).deviceConfig();
 
     File baseOutputDir = new File(SequenceBase.siteModel, "out");
     deviceOutputDir = new File(baseOutputDir, "devices/" + getDeviceId());
@@ -564,7 +561,6 @@ public class SequenceBase {
     return category.equals(entry.category) && entry.level == exactLevel.value();
   }
 
-  @Nullable
   private static Map<Capabilities, Capability> getCapabilities(Description desc) {
     try {
       AllCapabilities all = desc.getAnnotation(AllCapabilities.class);
@@ -658,7 +654,7 @@ public class SequenceBase {
     debug("Clear configTransactions and reset device config");
     configTransactions.clear();
     sentConfig.clear();
-    deviceConfig = clean ? new Config() : readGeneratedConfig();
+    deviceConfig = clean ? new Config() : generatedConfig;
     deviceConfig.timestamp = null;
     sanitizeConfig(deviceConfig);
     deviceConfig.system.min_loglevel = Level.INFO.value();
@@ -687,17 +683,6 @@ public class SequenceBase {
     }
     config.system.testing.sequence_name = testName;
     return config;
-  }
-
-  private Config readGeneratedConfig() {
-    File deviceConfigFile = new File(format(DEVICE_CONFIG_FORMAT, siteModel, getDeviceId()));
-    try {
-      debug("Reading generated config file " + deviceConfigFile.getPath());
-      Config generatedConfig = JsonUtil.OBJECT_MAPPER.readValue(deviceConfigFile, Config.class);
-      return ofNullable(generatedConfig).orElse(new Config());
-    } catch (Exception e) {
-      throw new RuntimeException("While loading " + deviceConfigFile.getAbsolutePath(), e);
-    }
   }
 
   /**
@@ -1350,8 +1335,7 @@ public class SequenceBase {
       logEntryQueue.addAll(ofNullable(systemEvent.logentries).orElse(ImmutableList.of()));
     });
     List<Entry> toRemove = logEntryQueue.stream()
-        .filter(entry -> entry.timestamp.toInstant().isBefore(lastConfigUpdate))
-        .collect(Collectors.toList());
+        .filter(entry -> entry.timestamp.toInstant().isBefore(lastConfigUpdate)).toList();
     if (!toRemove.isEmpty()) {
       debug("ignoring log entries before lastConfigUpdate " + lastConfigUpdate);
     }
@@ -1639,10 +1623,9 @@ public class SequenceBase {
 
       if (message.containsKey(EXCEPTION_KEY)) {
         debug("Ignoring reflector exception:\n" + message.get(EXCEPTION_KEY).toString());
-        configExceptionTimestamp = (String) message.get(TIMESTAMP_KEY);
         return;
       }
-      configExceptionTimestamp = null;
+
       if (!EXPECTED_UPDATES.containsKey(subTypeRaw)) {
         debug("Ignoring unexpected update type " + subTypeRaw);
         return;
@@ -1891,7 +1874,7 @@ public class SequenceBase {
    * @param clazz Event type
    * @return Number of messages
    */
-  protected int countReceivedEvents(Class clazz) {
+  protected int countReceivedEvents(Class<?> clazz) {
     SubFolder subFolder = CLASS_SUBFOLDER_MAP.get(clazz);
     List<Map<String, Object>> events = getReceivedEvents(subFolder);
     if (events == null) {
@@ -1908,10 +1891,6 @@ public class SequenceBase {
     }
     return events.stream().map(message -> convertTo(clazz, message))
         .collect(Collectors.toList());
-  }
-
-  protected boolean isAlternateClient() {
-    return useAlternateClient;
   }
 
   protected void withAlternateClient(Runnable evaluator) {
