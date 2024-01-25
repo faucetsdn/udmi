@@ -252,7 +252,7 @@ public class SequenceBase {
   private static boolean resetRequired = true;
   private static boolean enableAllTargets = true;
   private static boolean useAlternateClient;
-  private static ConfigGenerator configGenerator;
+  private static Config generatedConfig;
 
   static {
     // Sanity check to make sure ALPHA version is increased if forced by increased BETA.
@@ -324,7 +324,7 @@ public class SequenceBase {
     registryId = SiteModel.getRegistryActual(exeConfig);
 
     deviceMetadata = readDeviceMetadata();
-    generateConfig(deviceMetadata);
+    generatedConfig = ConfigGenerator.configFrom(deviceMetadata).deviceConfig();
 
     File baseOutputDir = new File(SequenceBase.siteModel, "out");
     deviceOutputDir = new File(baseOutputDir, "devices/" + getDeviceId());
@@ -345,10 +345,6 @@ public class SequenceBase {
     altClient = getAlternateClient();
 
     initializeValidationState();
-  }
-
-  private static void generateConfig(Metadata deviceMetadata) {
-    configGenerator = ConfigGenerator.configFrom(deviceMetadata);
   }
 
   private static void initializeValidationState() {
@@ -658,7 +654,7 @@ public class SequenceBase {
     debug("Clear configTransactions and reset device config");
     configTransactions.clear();
     sentConfig.clear();
-    deviceConfig = clean ? new Config() : getGeneratedConfig();
+    deviceConfig = clean ? new Config() : generatedConfig;
     deviceConfig.timestamp = null;
     sanitizeConfig(deviceConfig);
     deviceConfig.system.min_loglevel = Level.INFO.value();
@@ -687,10 +683,6 @@ public class SequenceBase {
     }
     config.system.testing.sequence_name = testName;
     return config;
-  }
-
-  private Config getGeneratedConfig() {
-    return configGenerator.deviceConfig();
   }
 
   /**
