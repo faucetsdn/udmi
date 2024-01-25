@@ -658,7 +658,7 @@ public class SequenceBase {
     debug("Clear configTransactions and reset device config");
     configTransactions.clear();
     sentConfig.clear();
-    deviceConfig = clean ? new Config() : readGeneratedConfig();
+    deviceConfig = clean ? new Config() : getGeneratedConfig();
     deviceConfig.timestamp = null;
     sanitizeConfig(deviceConfig);
     deviceConfig.system.min_loglevel = Level.INFO.value();
@@ -689,7 +689,7 @@ public class SequenceBase {
     return config;
   }
 
-  private Config readGeneratedConfig() {
+  private Config getGeneratedConfig() {
     File deviceConfigFile = new File(format(DEVICE_CONFIG_FORMAT, siteModel, getDeviceId()));
     try {
       debug("Reading generated config file " + deviceConfigFile.getPath());
