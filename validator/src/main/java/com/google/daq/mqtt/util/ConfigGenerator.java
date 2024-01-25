@@ -96,6 +96,9 @@ public class ConfigGenerator {
     return localnetConfig;
   }
 
+  /**
+   * Indicate if this is a gateway device.
+   */
   public boolean isGateway() {
     return metadata != null
         && metadata.gateway != null
