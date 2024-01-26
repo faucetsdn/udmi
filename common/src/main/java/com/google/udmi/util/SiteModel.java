@@ -2,8 +2,10 @@ package com.google.udmi.util;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.udmi.util.Common.getNamespacePrefix;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.JsonUtil.loadFileStrict;
+import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
@@ -41,6 +43,7 @@ public class SiteModel {
 
   public static final String DEFAULT_GCP_HOSTNAME = "mqtt.googleapis.com";
   public static final String DEFAULT_CLEARBLADE_HOSTNAME = "us-central1-mqtt.clearblade.com";
+  public static final String DEFAULT_CLEARBLADE_HOSTNAME_FORMAT = "%s-mqtt.clearblade.com";
   public static final String DEFAULT_GBOS_HOSTNAME = "mqtt.bos.goog";
   public static final String MOCK_PROJECT = "mock-project";
   private static final String ID_FORMAT = "projects/%s/locations/%s/registries/%s/devices/%s";
@@ -73,7 +76,8 @@ public class SiteModel {
   private static String getEndpointHostname(ExecutionConfiguration executionConfig) {
     IotProvider iotProvider = ofNullable(executionConfig.iot_provider).orElse(GCP);
     return switch (iotProvider) {
-      case CLEARBLADE -> DEFAULT_CLEARBLADE_HOSTNAME;
+      case CLEARBLADE -> ifNotNullGet(executionConfig.cloud_region,
+              region -> format(DEFAULT_CLEARBLADE_HOSTNAME_FORMAT, region), DEFAULT_CLEARBLADE_HOSTNAME);
       case GBOS -> DEFAULT_GBOS_HOSTNAME;
       case GCP -> DEFAULT_GCP_HOSTNAME;
       default -> throw new RuntimeException("Unsupported iot_provider " + iotProvider);
@@ -82,7 +86,7 @@ public class SiteModel {
 
   public static String getClientId(String iotProject, String cloudRegion, String registryId,
       String deviceId) {
-    return String.format(ID_FORMAT,
+    return format(ID_FORMAT,
         requireNonNull(iotProject, "iot project not defined"),
         requireNonNull(cloudRegion, "cloud region not defined"),
         requireNonNull(registryId, "registry id not defined"),
@@ -117,7 +121,7 @@ public class SiteModel {
     Matcher matcher = ID_PATTERN.matcher(clientId);
     if (!matcher.matches()) {
       throw new IllegalArgumentException(
-          String.format("client_id %s does not match pattern %s", clientId, ID_PATTERN.pattern()));
+          format("client_id %s does not match pattern %s", clientId, ID_PATTERN.pattern()));
     }
     ClientInfo clientInfo = new ClientInfo();
     clientInfo.iotProject = matcher.group(1);
@@ -261,7 +265,7 @@ public class SiteModel {
   public String getDeviceKeyFile(String deviceId) {
     String gatewayId = findGateway(deviceId);
     String keyDevice = gatewayId != null ? gatewayId : deviceId;
-    return String.format(KEY_SITE_PATH_FORMAT, sitePath,
+    return format(KEY_SITE_PATH_FORMAT, sitePath,
         keyDevice, getDeviceKeyPrefix(keyDevice));
   }
 

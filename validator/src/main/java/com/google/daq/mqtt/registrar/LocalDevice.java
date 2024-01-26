@@ -40,6 +40,7 @@ import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.MessageDowngrader;
 import com.google.udmi.util.MessageUpgrader;
+import com.google.udmi.util.SchemaVersion;
 import com.google.udmi.util.SiteModel;
 import com.google.udmi.util.SiteModel.MetadataException;
 import java.io.File;
@@ -161,6 +162,7 @@ class LocalDevice {
   private static final String ERROR_FORMAT_INDENT = "  ";
   private static final int MAX_JSON_LENGTH = 32767;
   private static final String UDMI_VERSION = "1.4.2";
+  // private static final String UDMI_VERSION = SchemaVersion.CURRENT.key();
   private final String deviceId;
   private final Map<String, JsonSchema> schemas;
   private final File siteDir;

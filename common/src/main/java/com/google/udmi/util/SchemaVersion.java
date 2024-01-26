@@ -10,6 +10,7 @@ import java.util.Map;
  * Formalized enums of the UDMI schema version.
  */
 public enum SchemaVersion {
+  VERSION_1_5_0("1.5.0", 105000),
   VERSION_1_4_2("1.4.2", 104020),
   VERSION_1_4_0("1.4.0", 104000);
 

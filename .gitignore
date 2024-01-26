@@ -32,6 +32,7 @@ credentials.json
 /sites/
 /attributes.json
 /venv/
+/venv
 /local/
 .pubber.pid
 __pycache__/

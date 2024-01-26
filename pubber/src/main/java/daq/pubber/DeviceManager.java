@@ -65,7 +65,7 @@ public class DeviceManager extends ManagerBase {
   }
 
   public void localLog(String message, Level trace, String timestamp, String detail) {
-    SystemManager.localLog(message, trace, timestamp, detail);
+    systemManager.localLog(message, trace, timestamp, detail);
   }
 
   public String getTestingTag() {
@@ -82,8 +82,15 @@ public class DeviceManager extends ManagerBase {
     discoveryManager.updateConfig(config.discovery);
   }
 
-  public void publishLogMessage(Entry logEntry) {
-    systemManager.publishLogMessage(logEntry);
+  /**
+   * Publish log message for target device.
+   */
+  public void publishLogMessage(Entry logEntry, String targetId) {
+    if (deviceId.equals(targetId)) {
+      systemManager.publishLogMessage(logEntry);
+    } else {
+      gatewayManager.publishLogMessage(logEntry, targetId);
+    }
   }
 
   public void cloudLog(String message, Level level, String detail) {
@@ -93,11 +100,23 @@ public class DeviceManager extends ManagerBase {
   /**
    * Shutdown everything, including sub-managers.
    */
+  @Override
   public void shutdown() {
     systemManager.shutdown();
     pointsetManager.shutdown();
     localnetManager.shutdown();
     gatewayManager.shutdown();
+  }
+
+  /**
+   * Stop periodic senders.
+   */
+  @Override
+  public void stop() {
+    pointsetManager.stop();
+    localnetManager.stop();
+    gatewayManager.stop();
+    systemManager.stop();
   }
 
   public Map<String, FamilyDiscoveryEvent> enumerateFamilies() {
@@ -106,5 +125,6 @@ public class DeviceManager extends ManagerBase {
 
   public void setSiteModel(SiteModel siteModel) {
     discoveryManager.setSiteModel(siteModel);
+    gatewayManager.setSiteModel(siteModel);
   }
 }
