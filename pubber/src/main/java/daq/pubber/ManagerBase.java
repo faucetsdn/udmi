@@ -2,8 +2,8 @@ package daq.pubber;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.getNow;
-import static daq.pubber.Pubber.configuration;
 import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -36,7 +36,7 @@ public abstract class ManagerBase {
    */
   public ManagerBase(ManagerHost host, PubberConfiguration configuration) {
     options = configuration.options;
-    deviceId = configuration.deviceId;
+    deviceId = requireNonNull(configuration.deviceId, "device id not defined");
     this.host = host;
   }
 
@@ -80,10 +80,17 @@ public abstract class ManagerBase {
   protected void updateInterval(Integer sampleRateSec) {
     int reportInterval = ofNullable(sampleRateSec).orElse(DEFAULT_REPORT_SEC);
     int intervalSec = ofNullable(options.fixedSampleRate).orElse(reportInterval);
+    if (intervalSec < DISABLED_INTERVAL) {
+      error(format("Dropping update interval, sample rate %ds is less then DISABLED_INTERVAL",
+              intervalSec));
+      return;
+    }
     if (periodicSender == null || intervalSec != sendRateSec.get()) {
       cancelPeriodicSend();
       sendRateSec.set(intervalSec);
-      startPeriodicSend();
+      if (intervalSec > DISABLED_INTERVAL) {
+        startPeriodicSend();
+      }
     }
   }
 
@@ -94,7 +101,8 @@ public abstract class ManagerBase {
   protected synchronized void startPeriodicSend() {
     checkState(periodicSender == null);
     int sec = sendRateSec.get();
-    warn(format("Starting %s sender with delay %ds", this.getClass().getSimpleName(), sec));
+    warn(format("Starting %s %s sender with delay %ds",
+            deviceId, this.getClass().getSimpleName(), sec));
     if (sec != 0) {
       periodicUpdate(); // To this now to synchronously raise any obvious exceptions.
       periodicSender = schedulePeriodic(sec, this::periodicUpdate);
@@ -104,7 +112,7 @@ public abstract class ManagerBase {
   protected synchronized void cancelPeriodicSend() {
     if (periodicSender != null) {
       try {
-        warn(format("Terminating %s sender", this.getClass().getSimpleName()));
+        warn(format("Terminating %s %s sender", deviceId, this.getClass().getSimpleName()));
         periodicSender.cancel(false);
       } catch (Exception e) {
         throw new RuntimeException("While cancelling executor", e);
@@ -125,6 +133,9 @@ public abstract class ManagerBase {
     }
   }
 
+  protected void stop() {
+    cancelPeriodicSend();
+  }
 
   protected void shutdown() {
     cancelPeriodicSend();

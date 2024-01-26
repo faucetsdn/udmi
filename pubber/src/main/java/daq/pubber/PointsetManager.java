@@ -19,8 +19,10 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Stream;
 import udmi.schema.Entry;
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetEvent;
@@ -149,7 +151,11 @@ public class PointsetManager extends ManagerBase {
 
   private void updatePoints() {
     managedPoints.values().forEach(point -> {
-      point.updateData();
+      try {
+        point.updateData();
+      } catch (Exception ex) {
+        error("Unable to update point data", ex);
+      }
       updateState(point);
     });
   }
@@ -238,7 +244,10 @@ public class PointsetManager extends ManagerBase {
   }
 
   void updateConfig(PointsetConfig config) {
-    updateInterval(ifNotNullGet(config, c -> c.sample_rate_sec, DISABLED_INTERVAL));
+    Integer rate = ifNotNullGet(config, c -> c.sample_rate_sec);
+    Integer limit = ifNotNullGet(config, c -> c.sample_limit_sec);
+    Integer max = Stream.of(rate, limit).filter(Objects::nonNull).reduce(Math::max).orElse(null);
+    updateInterval(max);
     updatePointsetPointsConfig(config);
   }
 

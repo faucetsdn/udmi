@@ -6,16 +6,19 @@ import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static java.lang.String.format;
+import static java.util.Optional.ofNullable;
 import static java.util.function.Predicate.not;
-import static java.util.stream.Collectors.toMap;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.udmi.util.SiteModel;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import udmi.schema.Config;
+import udmi.schema.Entry;
 import udmi.schema.GatewayConfig;
 import udmi.schema.GatewayModel;
+import udmi.schema.Metadata;
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointsetConfig;
 import udmi.schema.PubberConfiguration;
@@ -28,6 +31,7 @@ public class GatewayManager extends ManagerBase {
   private static final String EXTRA_PROXY_DEVICE = "XXX-1";
   private static final String EXTRA_PROXY_POINT = "xxx_conflagration";
   private Map<String, ProxyDevice> proxyDevices;
+  private SiteModel siteModel;
 
   public GatewayManager(ManagerHost host, PubberConfiguration configuration) {
     super(host, configuration);
@@ -35,18 +39,35 @@ public class GatewayManager extends ManagerBase {
 
   private Map<String, ProxyDevice> createProxyDevices(List<String> proxyIds) {
     if (proxyIds == null) {
-      return ImmutableMap.of();
+      return Map.of();
     }
 
-    String firstId = proxyIds.stream().sorted().findFirst().orElseThrow();
-    String noProxyId = ifTrueGet(isTrue(options.noProxy), () -> firstId);
-    ifNotNullThen(noProxyId, id -> warn(format("Not proxying device " + noProxyId)));
-    Map<String, ProxyDevice> devices = proxyIds.stream().filter(not(id -> id.equals(noProxyId)))
-        .collect(toMap(k -> k, v -> new ProxyDevice(host, v)));
+    Map<String, ProxyDevice> devices = new HashMap<>();
+    if (!proxyIds.isEmpty()) {
+      String firstId = proxyIds.stream().sorted().findFirst().orElseThrow();
+      String noProxyId = ifTrueGet(isTrue(options.noProxy), () -> firstId);
+      ifNotNullThen(noProxyId, id -> warn(format("Not proxying device %s", noProxyId)));
+      proxyIds.forEach(id -> {
+        if (!id.equals(noProxyId)) {
+          devices.put(id, new ProxyDevice(host, id));
+        }
+      });
+    }
 
     ifTrueThen(options.extraDevice, () -> devices.put(EXTRA_PROXY_DEVICE, makeExtraDevice()));
 
     return devices;
+  }
+
+  /**
+   * Publish log message for target device.
+   */
+  public void publishLogMessage(Entry logEntry, String targetId) {
+    ifNotNullThen(proxyDevices, p -> p.values().forEach(pd -> {
+      if (pd.deviceId.equals(targetId)) {
+        pd.deviceManager.publishLogMessage(logEntry, targetId);
+      }
+    }));
   }
 
   public void setMetadata(GatewayModel gateway) {
@@ -73,5 +94,30 @@ public class GatewayManager extends ManagerBase {
     PointPointsetConfig pointPointsetConfig = new PointPointsetConfig();
     config.pointset.points.put(EXTRA_PROXY_POINT, pointPointsetConfig);
     proxyDevices.get(EXTRA_PROXY_DEVICE).configHandler(config);
+  }
+
+  @Override
+  public void shutdown() {
+    super.shutdown();
+    ifNotNullThen(proxyDevices, p -> p.values().forEach(ProxyDevice::shutdown));
+  }
+
+  @Override
+  public void stop() {
+    super.stop();
+    ifNotNullThen(proxyDevices, p -> p.values().forEach(ProxyDevice::stop));
+  }
+
+  public void setSiteModel(SiteModel siteModel) {
+    this.siteModel = siteModel;
+    processMetadata();
+  }
+
+  private void processMetadata() {
+    ifNotNullThen(proxyDevices, p -> p.values().forEach(proxy -> {
+      Metadata metadata = ifNotNullGet(siteModel, s -> s.getMetadata(proxy.deviceId));
+      metadata = ofNullable(metadata).orElse(new Metadata());
+      proxy.setMetadata(metadata);
+    }));
   }
 }
