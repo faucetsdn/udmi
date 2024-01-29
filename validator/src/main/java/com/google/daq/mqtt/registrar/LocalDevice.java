@@ -32,6 +32,7 @@ import com.google.common.collect.Sets.SetView;
 import com.google.daq.mqtt.util.CloudDeviceSettings;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ConfigGenerator;
+import com.google.daq.mqtt.util.DeviceExceptionManager;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.ValidationException;
@@ -66,6 +67,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
 import org.apache.commons.io.IOUtils;
+import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Auth_type;
 import udmi.schema.Config;
 import udmi.schema.Credential;
@@ -175,11 +177,14 @@ class LocalDevice {
   private final Map<String, Object> siteMetadata;
   private final boolean validateMetadata;
   private final ConfigGenerator config;
+  private final DeviceExceptionManager exceptionManager;
 
   private String deviceNumId;
 
   private CloudDeviceSettings settings;
   private JsonNode baseVersion;
+  private Date lastActive;
+  private boolean blocked;
 
   LocalDevice(
       File siteDir, File devicesDir, String deviceId, Map<String, JsonSchema> schemas,
@@ -197,6 +202,7 @@ class LocalDevice {
       prepareOutDir();
       metadata = readMetadata();
       config = configFrom(metadata);
+      exceptionManager = new DeviceExceptionManager(siteDir);
     } catch (Exception e) {
       throw new RuntimeException("While loading local device " + deviceId, e);
     }
@@ -206,12 +212,6 @@ class LocalDevice {
       File siteDir, File devicesDir, String deviceId, Map<String, JsonSchema> schemas,
       String generation, Metadata siteMetadata) {
     this(siteDir, devicesDir, deviceId, schemas, generation, siteMetadata, false);
-  }
-
-  LocalDevice(
-      File siteDir, File devicesDir, String deviceId, Map<String, JsonSchema> schemas,
-      String generation) {
-    this(siteDir, devicesDir, deviceId, schemas, generation, null);
   }
 
   public static void parseMetadataValidateProcessingReport(ProcessingReport report)
@@ -486,6 +486,19 @@ class LocalDevice {
     }
   }
 
+  public void updateModel(CloudModel device) {
+    setDeviceNumId(checkNotNull(device.num_id, "missing deviceNumId for " + deviceId));
+    setLastActive(device.last_event_time);
+  }
+
+  private void setLastActive(Date lastEventTime) {
+    this.lastActive = lastEventTime;
+  }
+
+  public String getLastActive() {
+    return JsonUtil.isoConvert(lastActive);
+  }
+
   public byte[] getKeyBytes() {
     if (!isDirectConnect()) {
       return null;
@@ -593,7 +606,8 @@ class LocalDevice {
     return Integer.toString(hash < 0 ? -hash : hash);
   }
 
-  public void writeErrors(List<Pattern> ignoreErrors) {
+  public void writeErrors() {
+    List<Pattern> ignoreErrors = exceptionManager.forDevice(getDeviceId());
     File errorsFile = new File(outDir, DEVICE_ERRORS_MAP);
     ErrorTree errorTree = getErrorTree(ignoreErrors);
     if (errorTree != null) {
@@ -666,7 +680,24 @@ class LocalDevice {
   }
 
   public String getDeviceNumId() {
-    return checkNotNull(deviceNumId, "deviceNumId not set");
+    return checkNotNull(getDeviceNumIdRaw(), "deviceNumId not set");
+  }
+
+  public String getDeviceNumIdRaw() {
+    return deviceNumId;
+  }
+
+  public DeviceStatus getStatus() {
+    if (blocked) {
+      return DeviceStatus.BLOCKED;
+    }
+    if (metadata == null) {
+      return DeviceStatus.INVALID;
+    }
+    if (getTreeChildren().isEmpty()) {
+      return DeviceStatus.CLEAN;
+    }
+    return DeviceStatus.ERRORS;
   }
 
   public void setDeviceNumId(String numId) {
@@ -722,7 +753,8 @@ class LocalDevice {
     samplesMap.throwIfNotEmpty();
   }
 
-  public Set<Entry<String, ErrorTree>> getTreeChildren(List<Pattern> ignoreErrors) {
+  public Set<Entry<String, ErrorTree>> getTreeChildren() {
+    List<Pattern> ignoreErrors = exceptionManager.forDevice(getDeviceId());
     ErrorTree errorTree = getErrorTree(ignoreErrors);
     if (errorTree != null && errorTree.children != null) {
       return errorTree.children.entrySet();
@@ -736,5 +768,16 @@ class LocalDevice {
 
   public Config deviceConfigObject() {
     return config.deviceConfig();
+  }
+
+  public void setBlocked(boolean blocked) {
+    this.blocked = blocked;
+  }
+
+  public enum DeviceStatus {
+    CLEAN,
+    ERRORS,
+    INVALID,
+    BLOCKED
   }
 }

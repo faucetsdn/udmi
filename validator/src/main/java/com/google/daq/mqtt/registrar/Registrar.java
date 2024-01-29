@@ -26,8 +26,10 @@ import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import com.google.daq.mqtt.registrar.LocalDevice.DeviceStatus;
 import com.google.daq.mqtt.util.CloudDeviceSettings;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.DeviceExceptionManager;
@@ -89,7 +91,7 @@ public class Registrar {
   static final String DEVICE_ERRORS_MAP = "errors.map";
   private static final String DEVICES_DIR = "devices";
   private static final String SCHEMA_SUFFIX = ".json";
-  private static final String REGISTRATION_SUMMARY_JSON = "out/registration_summary.json";
+  private static final String REGISTRATION_SUMMARY_BASE = "out/registration_summary";
   private static final String SCHEMA_NAME = "UDMI";
   private static final String SITE_METADATA_JSON = "site_metadata.json";
   private static final String SWARM_SUBFOLDER = "swarm";
@@ -98,14 +100,17 @@ public class Registrar {
   private static final boolean DEFAULT_BLOCK_UNKNOWN = true;
   private static final int EACH_ITEM_TIMEOUT_SEC = 30;
   private static final int EXIT_CODE_ERROR = 1;
+  private static final Map<String, Class<? extends Summarizer>> SUMMARIZERS = ImmutableMap.of(
+      ".json", Summarizer.JsonSummarizer.class,
+      ".csv", Summarizer.CsvSummarizer.class);
   private final Map<String, JsonSchema> schemas = new HashMap<>();
   private final String generation = getGenerationString();
+  private final Set<Summarizer> summarizers = new HashSet<>();
   private CloudIotManager cloudIotManager;
   private File schemaBase;
   private PubSubPusher updatePusher;
   private PubSubPusher feedPusher;
   private Map<String, LocalDevice> localDevices;
-  private File summaryFile;
   private ExceptionMap blockErrors;
   private String projectId;
   private boolean updateCloudIoT;
@@ -347,26 +352,19 @@ public class Registrar {
     }
 
     Map<String, Object> errorSummary = new TreeMap<>();
-    DeviceExceptionManager dem = new DeviceExceptionManager(siteDir);
-    localDevices
-        .values()
-        .forEach(device -> device.writeErrors(dem.forDevice(device.getDeviceId())));
-    localDevices
-        .values()
-        .forEach(
-            device -> {
-              Set<Entry<String, ErrorTree>> entries =
-                  device.getTreeChildren(dem.forDevice(device.getDeviceId()));
-              if (entries.isEmpty()) {
-                getErrorKeyMap(errorSummary, "Clean")
-                    .put(device.getDeviceId(), device.getNormalizedTimestamp());
-              } else {
-                entries
-                    .forEach(
-                        error -> getErrorKeyMap(errorSummary, error.getKey())
-                            .put(device.getDeviceId(), error.getValue().message));
-              }
-            });
+    localDevices.values().forEach(LocalDevice::writeErrors);
+    localDevices.values().forEach(device -> {
+      Set<Entry<String, ErrorTree>> entries = getDeviceErrorEntries(device);
+      if (entries.isEmpty()) {
+        getErrorKeyMap(errorSummary, "Clean")
+            .put(device.getDeviceId(), device.getNormalizedTimestamp());
+      } else {
+        entries
+            .forEach(
+                error -> getErrorKeyMap(errorSummary, error.getKey())
+                    .put(device.getDeviceId(), error.getValue().message));
+      }
+    });
     if (blockErrors != null && !blockErrors.isEmpty()) {
       errorSummary.put(
           "Block",
@@ -378,10 +376,21 @@ public class Registrar {
         "  Device " + key + ": " + getErrorSummaryDetail(value)));
     System.err.println("Out of " + localDevices.size() + " total.");
     errorSummary.put(CLOUD_VERSION_KEY, getCloudVersionInfo());
-    errorSummary.put(UDMI_VERSION_KEY, Common.getUdmiVersion());
-    OBJECT_MAPPER.writeValue(summaryFile, errorSummary);
     lastErrorSummary = errorSummary;
-    System.err.println("Registration summary available in " + summaryFile.getAbsolutePath());
+    errorSummary.put(UDMI_VERSION_KEY, Common.getUdmiVersion());
+    summarizers.forEach(summarizer -> {
+      File outFile = summarizer.outFile;
+      try {
+        summarizer.summarize(localDevices, errorSummary);
+        System.err.println("Registration summary available in " + outFile.getAbsolutePath());
+      } catch (Exception e) {
+        throw new RuntimeException("While summarizing output to " + outFile.getAbsolutePath(), e);
+      }
+    });
+  }
+
+  private Set<Entry<String, ErrorTree>> getDeviceErrorEntries(LocalDevice device) {
+    return device.getTreeChildren();
   }
 
   private SetupUdmiConfig getCloudVersionInfo() {
@@ -391,12 +400,22 @@ public class Registrar {
   protected void setSitePath(String sitePath) {
     checkNotNull(SCHEMA_NAME, "schemaName not set yet");
     siteDir = new File(sitePath);
-    summaryFile = new File(siteDir, REGISTRATION_SUMMARY_JSON);
-    File parentFile = summaryFile.getParentFile();
+    File summaryBase = new File(siteDir, REGISTRATION_SUMMARY_BASE);
+    File parentFile = summaryBase.getParentFile();
     if (!parentFile.isDirectory() && !parentFile.mkdirs()) {
       throw new IllegalStateException("Could not create directory " + parentFile.getAbsolutePath());
     }
-    summaryFile.delete();
+
+    summarizers.addAll(SUMMARIZERS.entrySet().stream().map(factory -> {
+      try {
+        Summarizer summarizer = factory.getValue().getDeclaredConstructor().newInstance();
+        summarizer.outFile = new File(siteDir, REGISTRATION_SUMMARY_BASE + factory.getKey());
+        summarizer.outFile.delete();
+        return summarizer;
+      } catch (Exception e) {
+        throw new RuntimeException("While creating summarizer " + factory.getValue().getName());
+      }
+    }).collect(Collectors.toSet()));
   }
 
   private void initializeCloudProject() {
@@ -660,10 +679,7 @@ public class Registrar {
     boolean created = updateCloudIoT(localDevice);
     CloudModel device =
         checkNotNull(fetchDevice(localName, created), "missing device " + localName);
-    String numId =
-        checkNotNull(
-            device.num_id, "missing deviceNumId for " + localName);
-    localDevice.setDeviceNumId(numId);
+    localDevice.updateModel(device);
     return created;
   }
 
@@ -713,6 +729,7 @@ public class Registrar {
       try {
         System.err.println("Blocking extra device " + extraName);
         cloudIotManager.blockDevice(extraName, true);
+        localDevices.get(extraName).setBlocked(true);
       } catch (Exception e) {
         exceptionMap.put(extraName, e);
       }
