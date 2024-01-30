@@ -1,7 +1,6 @@
 package com.google.daq.mqtt.registrar;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Sets.intersection;
 import static com.google.daq.mqtt.util.ConfigUtil.readExeConfig;
 import static com.google.udmi.util.Common.CLOUD_VERSION_KEY;
@@ -14,7 +13,6 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
 import static com.google.udmi.util.JsonUtil.safeSleep;
-import static com.google.udmi.util.JsonUtil.toMap;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
@@ -368,7 +366,8 @@ public class Registrar {
     });
     if (blockedDevices != null && !blockedDevices.isEmpty()) {
       errorSummary.put("Blocked", blockedDevices.entrySet().stream()
-          .collect(Collectors.toMap(Entry::getKey, entry -> entry.getValue().operation.toString())));
+          .collect(
+              Collectors.toMap(Entry::getKey, entry -> entry.getValue().operation.toString())));
     }
     System.err.println("\nSummary:");
     errorSummary.forEach((key, value) -> System.err.println(

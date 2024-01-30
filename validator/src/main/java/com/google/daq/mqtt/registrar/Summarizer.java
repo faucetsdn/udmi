@@ -5,7 +5,7 @@ import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
 import static java.util.Optional.ofNullable;
 
 import com.google.common.collect.ImmutableList;
-import com.google.daq.mqtt.registrar.LocalDevice.DeviceStatus;
+import com.google.common.collect.ImmutableMap;
 import com.google.udmi.util.JsonUtil;
 import java.io.File;
 import java.io.PrintWriter;
@@ -53,10 +53,10 @@ abstract class Summarizer {
               device.getLastActive());
           writer.println(CSV_JOINER.join(values));
         });
-        blockedDevices.entrySet().forEach(entry -> {
-          CloudModel value = entry.getValue();
+        Map<String, CloudModel> devices = ofNullable(blockedDevices).orElse(ImmutableMap.of());
+        devices.forEach((key, value) -> {
           List<String> row = ImmutableList.of(
-              entry.getKey(),
+              key,
               ofNullable(value.num_id).orElse(UNKNOWN_NUM_ID),
               value.operation.toString(),
               JsonUtil.isoConvert(value.last_event_time));
