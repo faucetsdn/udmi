@@ -80,7 +80,7 @@ public class MqttPublisher implements MessagePublisher {
   private static final String ATTACH_MESSAGE_FORMAT = "/devices/%s/attach";
   private static final int TOKEN_EXPIRATION_SEC = 60 * 60;
   static final int TOKEN_EXPIRATION_MS = TOKEN_EXPIRATION_SEC * 1000;
-  private static final String TICKLE_TOPIC = "events/tickle";
+  private static final String TICKLE_TOPIC = "events/udmi";
   private static final long TICKLE_PERIOD_SEC = 10;
   private static final String REFLECTOR_PUBLIC_KEY = "reflector/rsa_public.pem";
   private final ExecutorService publisherExecutor =

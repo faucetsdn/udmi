@@ -312,7 +312,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
               .build();
       requireNonNull(deviceManagerClient.createDevice(request),
           "create device failed for " + parent);
-      cloudModel.num_id = extractNumId(device);
+      cloudModel.num_id = hashedDeviceId(registryId, device.toBuilder().getId());
       return cloudModel;
     } catch (ApplicationException applicationException) {
       if (applicationException.getMessage().contains("ALREADY_EXISTS")) {
@@ -498,7 +498,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       deviceManagerClient.deleteDevice(request);
       CloudModel cloudModel = new CloudModel();
       cloudModel.operation = DELETE;
-      cloudModel.num_id = extractNumId(device);
+      cloudModel.num_id = hashedDeviceId(registryId, deviceId);
       return cloudModel;
     } catch (Exception e) {
       throw new RuntimeException(format("While deleting %s/%s", registryId, deviceId), e);
