@@ -103,6 +103,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   );
   private static final String EMPTY_RETURN_RECEIPT = "-1";
   private static final String RESOURCE_EXISTS = "-2";
+  private static final String BLOCKED_FIELD_MASK = "blocked";
   private static final String UPDATE_FIELD_MASK = "blocked,credentials,metadata";
   private static final GatewayConfig NON_GATEWAY_CONFIG = new GatewayConfig();
   private static final GatewayConfig GATEWAY_CONFIG = GatewayConfig.newBuilder()
@@ -149,13 +150,8 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     return new SimpleEntry<>(deviceBuilder.getId(), cloudModel);
   }
 
-  /**
-   * Get a numerical ID for ths device. This field is a legacy from the deprecated GCP IoT Core
-   * system, and so this provides a stable replacement value based off a hash of the device name
-   * (including project and registry) for systems that require it to exist.
-   */
   private static String extractNumId(Device device) {
-    return format("%d", Math.abs(Objects.hash(device.toBuilder().getName())));
+    return device.toBuilder().getNumId();
   }
 
   @Nullable
@@ -420,7 +416,8 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
         case UPDATE -> updateDevice(registryId, device);
         case DELETE -> unbindAndDelete(registryId, device);
         case BIND -> bindDeviceToGateway(registryId, deviceId, cloudModel);
-        default -> throw new RuntimeException("Unknown operation " + operation);
+        case BLOCK -> blockDevice(registryId, device);
+        default -> throw new RuntimeException("Unknown device operation " + operation);
       };
     } catch (Exception e) {
       throw new RuntimeException("While " + operation + "ing " + devicePath, e);
@@ -533,6 +530,25 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     }
   }
 
+  private CloudModel blockDevice(String registryId, Device device) {
+    DeviceManagerClient deviceManagerClient = getDeviceManagerClient();
+    String deviceId = device.toBuilder().getId();
+    String name = getDeviceName(registryId, deviceId);
+    Device fullDevice = device.toBuilder().setName(name).setBlocked(true).build();
+    try {
+      UpdateDeviceRequest request =
+          UpdateDeviceRequest.Builder.newBuilder().setDevice(fullDevice).setName(name)
+              .setUpdateMask(BLOCKED_FIELD_MASK).build();
+      requireNonNull(deviceManagerClient.updateDevice(request), "Invalid RPC response");
+      CloudModel cloudModel = new CloudModel();
+      cloudModel.operation = Operation.BLOCK;
+      cloudModel.num_id = hashedDeviceId(registryId, deviceId);
+      return cloudModel;
+    } catch (Exception e) {
+      throw new RuntimeException("While updating " + deviceId, e);
+    }
+  }
+
   private CloudModel updateDevice(String registryId, Device device) {
     DeviceManagerClient deviceManagerClient = getDeviceManagerClient();
     String deviceId = device.toBuilder().getId();
@@ -545,11 +561,18 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       requireNonNull(deviceManagerClient.updateDevice(request), "Invalid RPC response");
       CloudModel cloudModel = new CloudModel();
       cloudModel.operation = Operation.UPDATE;
-      cloudModel.num_id = extractNumId(device);
+      cloudModel.num_id = hashedDeviceId(registryId, deviceId);
       return cloudModel;
     } catch (Exception e) {
       throw new RuntimeException("While updating " + deviceId, e);
     }
+  }
+
+  /**
+   * Create pseudo device numerical id that can be used for operation verification.
+   */
+  private String hashedDeviceId(String registryId, String deviceId) {
+    return String.valueOf(Objects.hash(registryId, deviceId));
   }
 
   @Override

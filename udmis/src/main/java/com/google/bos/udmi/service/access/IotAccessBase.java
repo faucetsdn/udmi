@@ -41,7 +41,7 @@ import udmi.schema.UdmiState;
  */
 public abstract class IotAccessBase extends ContainerBase {
 
-  public static final int MAX_CONFIG_LENGTH = 65535;
+  public static final int MAX_CONFIG_LENGTH = 262144;
   public static final TemporalAmount REGION_RETRY_BACKOFF = Duration.ofSeconds(30);
   protected static final String EMPTY_JSON = "{}";
   private static final long REGISTRY_COMMAND_BACKOFF_SEC = 60;

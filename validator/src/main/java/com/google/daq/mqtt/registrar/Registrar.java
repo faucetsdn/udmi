@@ -368,7 +368,7 @@ public class Registrar {
     });
     if (blockedDevices != null && !blockedDevices.isEmpty()) {
       errorSummary.put("Blocked", blockedDevices.entrySet().stream()
-          .collect(Collectors.toMap(Entry::getKey, entry -> entry.getValue().detail)));
+          .collect(Collectors.toMap(Entry::getKey, entry -> entry.getValue().operation.toString())));
     }
     System.err.println("\nSummary:");
     errorSummary.forEach((key, value) -> System.err.println(
