@@ -31,7 +31,7 @@ abstract class Summarizer {
 
     List<String> headers = ImmutableList.of(
         "Device Id",
-        "Device NumI d",
+        "Device Num Id",
         "Status",
         "Last Active");
 
