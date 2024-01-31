@@ -33,9 +33,6 @@ import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.StateUpdate;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.udmi.util.JsonUtil;
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalAmount;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -72,13 +69,12 @@ public class ReflectProcessor extends ProcessorBase {
         reflectStateHandler(reflection, extractUdmiState(message));
       } else if (reflection.subFolder != SubFolder.UDMI) {
         throw new IllegalStateException("Unexpected reflect subfolder " + reflection.subFolder);
-      } else if (reflection.payload == null) {
-        debug("Ignoring null payload for " + reflection.transactionId);
       } else {
-        Map<String, Object> payload = extractMessagePayload(objectMap);
+        Map<String, Object> payload =
+            ofNullable(extractMessagePayload(objectMap)).orElseGet(HashMap::new);
         Envelope envelope = extractMessageEnvelope(objectMap);
         reflection.transactionId = firstNonNull(envelope.transactionId, reflection.transactionId,
-                ReflectProcessor::makeTransactionId);
+            ReflectProcessor::makeTransactionId);
         processReflection(reflection, envelope, payload);
       }
     } catch (Exception e) {
