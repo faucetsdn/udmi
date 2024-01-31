@@ -23,6 +23,10 @@ function fail {
     false
 }
 
+function warn {
+    echo warning: $*
+}
+
 function usage {
     echo usage: $0 $*
     false
