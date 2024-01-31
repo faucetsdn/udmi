@@ -72,6 +72,8 @@ public class ReflectProcessor extends ProcessorBase {
         reflectStateHandler(reflection, extractUdmiState(message));
       } else if (reflection.subFolder != SubFolder.UDMI) {
         throw new IllegalStateException("Unexpected reflect subfolder " + reflection.subFolder);
+      } else if (reflection.payload == null) {
+        debug("Ignoring null payload for " + reflection.transactionId);
       } else {
         Map<String, Object> payload = extractMessagePayload(objectMap);
         Envelope envelope = extractMessageEnvelope(objectMap);
