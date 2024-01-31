@@ -1,5 +1,6 @@
 package com.google.bos.udmi.service.access;
 
+import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
@@ -103,9 +104,9 @@ public abstract class IotAccessBase extends ContainerBase {
     if (cloudRegions == null) {
       return null;
     }
-
+    info("Fetching registries for: " + CSV_JOINER.join(cloudRegions));
     Map<String, String> regionMap = cloudRegions.stream().flatMap(
-        region -> getRegistriesForRegion(region).stream()
+        region -> getRegistriesForRegionLog(region).stream()
             .collect(Collectors.toMap(x -> x, x -> region)).entrySet()
             .stream()).collect(Collectors.toMap(Entry::getKey, Entry::getValue));
     debug(format("Fetched %s registry regions", regionMap.size()));
@@ -113,6 +114,11 @@ public abstract class IotAccessBase extends ContainerBase {
       throw new RuntimeException("Region map is empty, assuming project misconfiguration.");
     }
     return regionMap;
+  }
+
+  private Set<String> getRegistriesForRegionLog(String region) {
+    debug("Fetching region registries for " + region);
+    return getRegistriesForRegion(region);
   }
 
   protected abstract Set<String> getRegistriesForRegion(String region);
