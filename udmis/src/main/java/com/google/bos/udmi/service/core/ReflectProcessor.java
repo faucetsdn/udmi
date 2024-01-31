@@ -70,12 +70,11 @@ public class ReflectProcessor extends ProcessorBase {
       } else if (reflection.subFolder != SubFolder.UDMI) {
         throw new IllegalStateException("Unexpected reflect subfolder " + reflection.subFolder);
       } else {
-        Map<String, Object> payload =
-            ofNullable(extractMessagePayload(objectMap)).orElseGet(HashMap::new);
+        Map<String, Object> payload = extractMessagePayload(objectMap);
         Envelope envelope = extractMessageEnvelope(objectMap);
         reflection.transactionId = firstNonNull(envelope.transactionId, reflection.transactionId,
             ReflectProcessor::makeTransactionId);
-        processReflection(reflection, envelope, payload);
+        ifNotNullThen(payload, p -> processReflection(reflection, envelope, payload));
       }
     } catch (Exception e) {
       processException(reflection, objectMap, e);
