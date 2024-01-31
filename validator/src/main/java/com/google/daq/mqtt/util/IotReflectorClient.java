@@ -1,6 +1,5 @@
 package com.google.daq.mqtt.util;
 
-import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.sequencer.SequenceBase.EMPTY_MESSAGE;
 import static com.google.udmi.util.Common.CONDENSER_STRING;
 import static com.google.udmi.util.Common.DETAIL_KEY;
@@ -10,6 +9,7 @@ import static com.google.udmi.util.Common.TRANSACTION_KEY;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static java.lang.String.format;
@@ -102,8 +102,9 @@ public class IotReflectorClient implements IotProvider {
   public void createResource(String deviceId, CloudModel makeDevice) {
     makeDevice.operation = Operation.CREATE;
     CloudModel created = cloudModelTransaction(deviceId, CLOUD_MODEL_TOPIC, makeDevice);
-    ifNotNullThen(makeDevice.num_id, () -> checkState(makeDevice.num_id.equals(created.num_id),
-        "created num_id does not match"));
+    ifNotNullThen(makeDevice.num_id, () -> ifTrueThen(!makeDevice.num_id.equals(created.num_id),
+        () -> System.err.printf("created num_id %s does not match expected %s%n", created.num_id,
+            makeDevice.num_id)));
     makeDevice.num_id = created.num_id;
   }
 

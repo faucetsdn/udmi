@@ -31,6 +31,7 @@ echo "export UDMI_ALT_REGISTRY=$UDMI_ALT_REGISTRY"
 
 site_path=sites/udmi_site_model
 output_file=$site_path/out/registration_summary.json
+csv_file=$site_path/out/registration_summary.csv
 pubber_config=/tmp/pubber_config.json
 serial_no=clean-$RANDOM
 device_id=AHU-1
@@ -127,6 +128,10 @@ echo pubber/bin/run $pubber_config
 pubber/bin/run $pubber_config
 
 echo Successful pubber check passed on clean registry.
+
+expected_num_id=1234567890
+device_num_id=`fgrep AHU-22 $csv_file | cut -d, -f2`
+[[ $device_num_id == $expected_num_id ]] || echo Device num_id $device_num_id does not match expected $expected_num_id
 
 if [[ -n $solo_arg ]]; then
     echo Deleting singular entry $solo_arg...
