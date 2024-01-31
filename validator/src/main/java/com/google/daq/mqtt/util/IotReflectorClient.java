@@ -15,6 +15,7 @@ import static com.google.udmi.util.JsonUtil.stringify;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static udmi.schema.CloudModel.Operation.BIND;
+import static udmi.schema.CloudModel.Operation.BLOCK;
 
 import com.google.common.base.Preconditions;
 import com.google.daq.mqtt.util.MessagePublisher.QuerySpeed;
@@ -86,7 +87,9 @@ public class IotReflectorClient implements IotProvider {
 
   @Override
   public void setBlocked(String deviceId, boolean blocked) {
-    throw new IllegalStateException("Not yet implemented");
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.operation = BLOCK;
+    cloudModelTransaction(deviceId, CLOUD_MODEL_TOPIC, cloudModel);
   }
 
   @Override

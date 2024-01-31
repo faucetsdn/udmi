@@ -420,7 +420,7 @@ public class GcpIotAccessProvider extends IotAccessBase {
         case BIND:
           return bindDeviceToGateway(registryId, deviceId, cloudModel);
         default:
-          throw new RuntimeException("Unknown operation " + operation);
+          throw new RuntimeException("Unknown resource operation " + operation);
       }
     } catch (Exception e) {
       throw new RuntimeException("While " + operation + "ing " + devicePath, e);

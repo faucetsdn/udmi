@@ -40,6 +40,9 @@
     "blocked": {
       "type": "boolean"
     },
+    "detail": {
+      "type": "string"
+    },
     "credentials": {
       "type": "array",
       "items": {
@@ -72,11 +75,13 @@
     },
     "operation": {
       "enum": [
+        "ERROR",
         "FETCH",
         "CREATE",
         "UPDATE",
         "DELETE",
         "BIND",
+        "ALLOW",
         "BLOCK"
       ]
     },

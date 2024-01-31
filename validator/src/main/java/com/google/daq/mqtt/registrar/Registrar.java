@@ -29,10 +29,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import com.google.daq.mqtt.registrar.LocalDevice.DeviceStatus;
 import com.google.daq.mqtt.util.CloudDeviceSettings;
 import com.google.daq.mqtt.util.CloudIotManager;
-import com.google.daq.mqtt.util.DeviceExceptionManager;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.PubSubPusher;
@@ -68,6 +66,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import udmi.schema.CloudModel;
+import udmi.schema.CloudModel.Operation;
 import udmi.schema.CloudModel.Resource_type;
 import udmi.schema.Credential;
 import udmi.schema.Envelope.SubFolder;
@@ -111,7 +110,7 @@ public class Registrar {
   private PubSubPusher updatePusher;
   private PubSubPusher feedPusher;
   private Map<String, LocalDevice> localDevices;
-  private ExceptionMap blockErrors;
+  private Map<String, CloudModel> blockedDevices;
   private String projectId;
   private boolean updateCloudIoT;
   private Duration idleLimit;
@@ -365,11 +364,10 @@ public class Registrar {
                     .put(device.getDeviceId(), error.getValue().message));
       }
     });
-    if (blockErrors != null && !blockErrors.isEmpty()) {
-      errorSummary.put(
-          "Block",
-          blockErrors.stream()
-              .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().toString())));
+    if (blockedDevices != null && !blockedDevices.isEmpty()) {
+      errorSummary.put("Blocked", blockedDevices.entrySet().stream()
+          .collect(
+              Collectors.toMap(Entry::getKey, entry -> entry.getValue().operation.toString())));
     }
     System.err.println("\nSummary:");
     errorSummary.forEach((key, value) -> System.err.println(
@@ -381,7 +379,7 @@ public class Registrar {
     summarizers.forEach(summarizer -> {
       File outFile = summarizer.outFile;
       try {
-        summarizer.summarize(localDevices, errorSummary);
+        summarizer.summarize(localDevices, errorSummary, blockedDevices);
         System.err.println("Registration summary available in " + outFile.getAbsolutePath());
       } catch (Exception e) {
         throw new RuntimeException("While summarizing output to " + outFile.getAbsolutePath(), e);
@@ -483,7 +481,7 @@ public class Registrar {
         bindGatewayDevices(localDevices);
         Set<String> extraDevices = Sets.difference(cloudDevices, deviceSet);
         System.err.printf("Blocking %d extra devices.%n", extraDevices.size());
-        blockErrors = blockExtraDevices(extraDevices);
+        blockedDevices = blockExtraDevices(extraDevices);
       }
     } catch (Exception e) {
       throw new RuntimeException("While processing devices", e);
@@ -720,21 +718,26 @@ public class Registrar {
     return device;
   }
 
-  private ExceptionMap blockExtraDevices(Set<String> extraDevices) {
-    ExceptionMap exceptionMap = new ExceptionMap("Block devices errors");
+  private Map<String, CloudModel> blockExtraDevices(Set<String> extraDevices) {
+    Map<String, CloudModel> blockedDevices = new HashMap<>();
     if (!blockUnknown) {
-      return exceptionMap;
+      return blockedDevices;
     }
     for (String extraName : extraDevices) {
       try {
         System.err.println("Blocking extra device " + extraName);
         cloudIotManager.blockDevice(extraName, true);
-        localDevices.get(extraName).setBlocked(true);
+        CloudModel cloudModel = cloudIotManager.fetchDevice(extraName);
+        cloudModel.operation = cloudModel.blocked ? Operation.BLOCK : Operation.ALLOW;
+        blockedDevices.put(extraName, cloudModel);
       } catch (Exception e) {
-        exceptionMap.put(extraName, e);
+        CloudModel errorModel = new CloudModel();
+        errorModel.detail = e.toString();
+        errorModel.operation = Operation.ERROR;
+        blockedDevices.put(extraName, errorModel);
       }
     }
-    return exceptionMap;
+    return blockedDevices;
   }
 
   private CloudModel fetchDevice(String localName, boolean newDevice) {

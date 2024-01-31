@@ -133,6 +133,13 @@ public class GeneralUtils {
   }
 
   /**
+   * TODO: Update to use varargs, and create non-supplier version.
+   */
+  public static <T> T firstNonNull(T obj1, T obj2, Supplier<T> supplier) {
+    return ofNullable(ofNullable(obj1).orElse(obj2)).orElseGet(supplier);
+  }
+
+  /**
    * Get a "friendly" (cause messages only) stack trace string.  There is no science to this, it's
    * just a hacky algorithm that turns a pedantically detailed Java stack trace into something
    * hopefully somewhat meaningful. Real debuggers will need to dig out the full stack trace!

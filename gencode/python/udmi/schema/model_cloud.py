@@ -45,6 +45,7 @@ class CloudModel:
     self.device_key = None
     self.resource_type = None
     self.blocked = None
+    self.detail = None
     self.credentials = None
     self.last_event_time = None
     self.last_config_ack = None
@@ -64,6 +65,7 @@ class CloudModel:
     result.device_key = source.get('device_key')
     result.resource_type = source.get('resource_type')
     result.blocked = source.get('blocked')
+    result.detail = source.get('detail')
     result.credentials = source.get('credentials')
     result.last_event_time = source.get('last_event_time')
     result.last_config_ack = source.get('last_config_ack')
@@ -103,6 +105,8 @@ class CloudModel:
       result['resource_type'] = self.resource_type # 5
     if self.blocked:
       result['blocked'] = self.blocked # 5
+    if self.detail:
+      result['detail'] = self.detail # 5
     if self.credentials:
       result['credentials'] = self.credentials # 1
     if self.last_event_time:
