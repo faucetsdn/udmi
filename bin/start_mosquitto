@@ -1,0 +1,22 @@
+#!/bin/bash -e
+
+UDMI_ROOT=$(dirname $0)/..
+cd $UDMI_ROOT
+source etc/shell_common.sh
+
+PASSWORD_FILE=/etc/mosquitto/test_mosquitto.passwd
+
+USERNAME=$1
+PASSWORD=$2
+shift 2 || usage username password
+
+echo password_file ${PASSWORD_FILE} | sudo tee /etc/mosquitto/conf.d/udmi_test.conf
+sudo sed -i 's/allow_anonymous true/allow_anonymous false/' /etc/mosquitto/mosquitto.conf
+sudo sed -i 's/#listener/listener/' /etc/mosquitto/mosquitto.conf
+
+sudo touch ${PASSWORD_FILE}
+sudo mosquitto_passwd -b ${PASSWORD_FILE} ${USERNAME} ${PASSWORD}
+sudo chmod 666 ${PASSWORD_FILE}
+
+sudo systemctl restart mosquitto
+systemctl status mosquitto
