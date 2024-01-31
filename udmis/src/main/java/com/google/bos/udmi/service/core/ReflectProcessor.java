@@ -11,6 +11,7 @@ import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.GeneralUtils.decodeBase64;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
+import static com.google.udmi.util.GeneralUtils.firstNonNull;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
@@ -32,12 +33,10 @@ import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.StateUpdate;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.udmi.util.JsonUtil;
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalAmount;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
@@ -55,7 +54,10 @@ public class ReflectProcessor extends ProcessorBase {
 
   public static final String PAYLOAD_KEY = "payload";
   private static final Date START_TIME = new Date();
-  private static final TemporalAmount CONFIG_ACK_FUDGE = Duration.of(5, ChronoUnit.MINUTES);
+
+  private static String makeTransactionId() {
+    return format("RP:%08x", Objects.hash(System.currentTimeMillis(), Thread.currentThread()));
+  }
 
   @Override
   protected void defaultHandler(Object message) {
@@ -68,9 +70,11 @@ public class ReflectProcessor extends ProcessorBase {
       } else if (reflection.subFolder != SubFolder.UDMI) {
         throw new IllegalStateException("Unexpected reflect subfolder " + reflection.subFolder);
       } else {
-        Map<String, Object> payload = extractMessagePayload(objectMap);
+        Map<String, Object> payload =
+            ofNullable(extractMessagePayload(objectMap)).orElseGet(HashMap::new);
         Envelope envelope = extractMessageEnvelope(objectMap);
-        reflection.transactionId = envelope.transactionId;
+        reflection.transactionId = firstNonNull(envelope.transactionId, reflection.transactionId,
+            ReflectProcessor::makeTransactionId);
         processReflection(reflection, envelope, payload);
       }
     } catch (Exception e) {
