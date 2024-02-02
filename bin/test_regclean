@@ -133,6 +133,9 @@ expected_num_id=1234567890
 device_num_id=`fgrep AHU-22 $csv_file | cut -d, -f2`
 [[ $device_num_id == $expected_num_id ]] || warn Device num_id $device_num_id does not match expected $expected_num_id
 
+sns_line=`fgrep -n SNS-4 sites/udmi_site_model/out/registration_summary.csv | cut -d: -f1`
+[[ $sns_line == 6 ]] || fail Device SNS-4 not found on expected output line
+
 if [[ -n $solo_arg ]]; then
     echo Deleting singular entry $solo_arg...
     echo bin/registrar $site_arg $registrar_project -d $solo_arg
