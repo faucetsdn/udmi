@@ -35,6 +35,9 @@ csv_file=$site_path/out/registration_summary.csv
 pubber_config=/tmp/pubber_config.json
 serial_no=clean-$RANDOM
 device_id=AHU-1
+fake_id=ACME-2301
+fake_device=$site_path/devices/$fake_id
+clone_device=$site_path/devices/$device_id
 
 pubber/bin/build
 validator/bin/build
@@ -105,6 +108,9 @@ echo { > $site_path/devices/XXX-1/metadata.json
 mkdir -p $site_path/devices/XXX-2/out
 echo hello > $site_path/devices/XXX-2/out/exceptions.txt
 
+echo Create fake device for testing blocked device case.
+rm -rf $fake_device && cp -a $clone_device $fake_device
+
 echo Clean out the registry to make sure devices get removed...
 echo bin/registrar $site_arg $registrar_project -d
 bin/registrar $site_arg $registrar_project -d
@@ -120,18 +126,32 @@ echo pubber/bin/run $pubber_config
 ! pubber/bin/run $pubber_config
 
 echo Now recreate the registry from scratch!
-echo bin/registrar $site_arg $registrar_project -u
-bin/registrar $site_arg $registrar_project -u
+echo bin/registrar $site_arg $registrar_project
+bin/registrar $site_arg $registrar_project
 
-echo And check again, but this time with success...
+echo Remove fake device from site model, so it will be blocked
+rm -rf $fake_device
+bin/registrar $site_arg $registrar_project
+
+echo Check $device_id again, but this time with success...
 echo pubber/bin/run $pubber_config
 pubber/bin/run $pubber_config
 
 echo Successful pubber check passed on clean registry.
 
+more sites/udmi_site_model/out/registration_summary.csv | cat
+
+expected_num_id=1234567890
+fake_state=`fgrep $fake_id $csv_file | cut -d, -f3`
+[[ ${fake_state# } == BLOCK ]] || fail Device $fake_id not blocked
+[[ `fgrep BLOCK $csv_file | wc -l` == 1 ]] || fail More than one blocked device
+
 expected_num_id=1234567890
 device_num_id=`fgrep AHU-22 $csv_file | cut -d, -f2`
 [[ $device_num_id == $expected_num_id ]] || warn Device num_id $device_num_id does not match expected $expected_num_id
+
+sns_line=`fgrep -n SNS-4 sites/udmi_site_model/out/registration_summary.csv | cut -d: -f1`
+[[ $sns_line == 6 ]] || fail Device SNS-4 not found on expected output line, was $sns_line expected 6
 
 if [[ -n $solo_arg ]]; then
     echo Deleting singular entry $solo_arg...
