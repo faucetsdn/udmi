@@ -27,7 +27,7 @@ quota_project=$(jq -r .quota_project_id $HOME/.config/gcloud/application_default
 
 if [[ $quota_project != $gcp_project && -n $quota_project ]]; then
     echo Setting gcloud quota project to $gcp_project
-    gcloud auth application-default set-quota-project $gcp_project
+    gcloud auth application-default set-quota-project $gcp_project || true
 fi
 
 if [[ $gcp_project != $current_project ]]; then
