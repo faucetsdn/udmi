@@ -93,7 +93,7 @@
       "additionalProperties": false,
       "existingJavaType": "java.util.Map<String, DeviceValidationEvent>",
       "patternProperties": {
-        "^[A-Z]{2,6}-[0-9]{1,6}$": {
+        "^[A-Z]{2,6}-[1-9][0-9]*$": {
           "$ref": "file:event_validation_device.json"
         }
       }
