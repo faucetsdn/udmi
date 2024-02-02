@@ -115,6 +115,9 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   private static final String UDMI_STATE_TOPIC = "udmi_state"; // TODO: Make this not hardcoded.
   private static final String TOPIC_NAME_FORMAT = "projects/%s/topics/%s";
 
+  // TODO: Use a proper parameter call when it's (eventually) available in the Java API.
+  private static final String FIELD_MASK_HACK = "&fieldMask=id%2Cname";
+
   private final String projectId;
 
   /**
@@ -185,9 +188,9 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
 
     try {
       DeviceManagerClient deviceManagerClient = getDeviceManagerClient();
+      String parent = LocationName.of(projectId, region).getLocationFullName() + FIELD_MASK_HACK;
       ListDeviceRegistriesRequest request = ListDeviceRegistriesRequest.Builder.newBuilder()
-          .setParent(LocationName.of(projectId, region).getLocationFullName())
-          .build();
+          .setParent(parent).build();
       ListDeviceRegistriesResponse response = deviceManagerClient.listDeviceRegistries(request);
       requireNonNull(response, "get registries response is null");
       List<DeviceRegistry> deviceRegistries = response.getDeviceRegistriesList();
