@@ -181,7 +181,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   }
 
   @NotNull
-  protected Set<String> getRegistriesForRegion(String region) {
+  public Set<String> getRegistriesForRegion(String region) {
     if (region == null) {
       return CLOUD_REGIONS;
     }
@@ -206,11 +206,11 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  protected boolean isEnabled() {
+  public boolean isEnabled() {
     return !isNullOrEmpty(projectId);
   }
 
-  protected String updateConfig(String registryId, String deviceId, String config, Long version) {
+  public String updateConfig(String registryId, String deviceId, String config, Long version) {
     try {
       DeviceManagerClient deviceManagerClient = getDeviceManagerClient();
       ByteString binaryData = new ByteString(encodeBase64(config));

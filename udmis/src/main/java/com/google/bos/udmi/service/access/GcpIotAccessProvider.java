@@ -127,7 +127,7 @@ public class GcpIotAccessProvider extends IotAccessBase {
     }
   }
 
-  protected String updateConfig(String registryId, String deviceId, String config, Long version) {
+  public String updateConfig(String registryId, String deviceId, String config, Long version) {
     try {
       String useConfig = ofNullable(config).orElse("");
       registries.devices().modifyCloudToDeviceConfig(
@@ -237,7 +237,7 @@ public class GcpIotAccessProvider extends IotAccessBase {
   }
 
   @NotNull
-  protected Set<String> getRegistriesForRegion(String region) {
+  public Set<String> getRegistriesForRegion(String region) {
     if (region == null) {
       return CLOUD_REGIONS;
     }
@@ -322,7 +322,7 @@ public class GcpIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  protected boolean isEnabled() {
+  public boolean isEnabled() {
     return projectId != null;
   }
 

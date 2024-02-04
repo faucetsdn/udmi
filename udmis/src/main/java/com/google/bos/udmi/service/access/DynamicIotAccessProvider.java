@@ -49,17 +49,17 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  protected Set<String> getRegistriesForRegion(String region) {
+  public Set<String> getRegistriesForRegion(String region) {
     throw new RuntimeException("Should not be called!");
   }
 
   @Override
-  protected boolean isEnabled() {
+  public boolean isEnabled() {
     return true;
   }
 
   @Override
-  protected String updateConfig(String registryId, String deviceId, String config, Long version) {
+  public String updateConfig(String registryId, String deviceId, String config, Long version) {
     throw new RuntimeException("Shouldn't be called for dynamic provider");
   }
 

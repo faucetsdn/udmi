@@ -30,17 +30,15 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import udmi.schema.CloudModel;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.IotAccess;
-import udmi.schema.IotAccess.IotProvider;
 import udmi.schema.UdmiState;
 
 /**
  * Generic interface for accessing iot device management.
  */
-public abstract class IotAccessBase extends ContainerBase {
+public abstract class IotAccessBase extends ContainerBase implements IotAccessProvider {
 
   public static final int MAX_CONFIG_LENGTH = 262144;
   public static final TemporalAmount REGION_RETRY_BACKOFF = Duration.ofSeconds(30);
@@ -49,13 +47,6 @@ public abstract class IotAccessBase extends ContainerBase {
   private static final Map<String, Instant> BACKOFF_MAP = new ConcurrentHashMap<>();
   private static final long CONFIG_UPDATE_BACKOFF_MS = 1000;
   private static final int CONFIG_UPDATE_MAX_RETRIES = 10;
-  private static final Map<IotProvider, Class<? extends IotAccessBase>> PROVIDERS = ImmutableMap.of(
-      IotProvider.DYNAMIC, DynamicIotAccessProvider.class,
-      IotProvider.CLEARBLADE, ClearBladeIotAccessProvider.class,
-      IotProvider.GCP, GcpIotAccessProvider.class,
-      IotProvider.PUBSUB, PubSubIotAccessProvider.class,
-      IotProvider.LOCAL, LocalIotAccessProvider.class
-  );
   final Map<String, Object> options;
   private CompletableFuture<Map<String, String>> registryRegions;
   private Instant regionRetry = Instant.now();
@@ -65,19 +56,6 @@ public abstract class IotAccessBase extends ContainerBase {
     options = parseOptions(iotAccess);
   }
 
-  /**
-   * Factory constructor for new instances.
-   */
-  public static IotAccessBase from(IotAccess iotAccess) {
-    try {
-      return PROVIDERS.get(iotAccess.provider).getDeclaredConstructor(IotAccess.class)
-          .newInstance(iotAccess);
-    } catch (Exception e) {
-      throw new RuntimeException(
-          format("While instantiating access provider type %s", iotAccess.provider), e);
-    }
-  }
-
   private static Instant getBackoff(String registryId, String deviceId) {
     return BACKOFF_MAP.get(getBackoffKey(registryId, deviceId));
   }
@@ -85,8 +63,6 @@ public abstract class IotAccessBase extends ContainerBase {
   private static String getBackoffKey(String registryId, String deviceId) {
     return format("%s/%s", registryId, deviceId);
   }
-
-  protected abstract Entry<Long, String> fetchConfig(String registryId, String deviceId);
 
   /**
    * Update the cached registry regions with any incremental updates.
@@ -121,16 +97,12 @@ public abstract class IotAccessBase extends ContainerBase {
     return getRegistriesForRegion(region);
   }
 
-  protected abstract Set<String> getRegistriesForRegion(String region);
-
   @NotNull
   protected String getRegistryRegion(String registryId) {
     String region = ofNullable(getCompletedRegistryRegion(registryId)).orElseGet(
         () -> populateRegistryRegions(registryId));
     return requireNonNull(region, "unknown region for registry " + registryId);
   }
-
-  protected abstract boolean isEnabled();
 
   protected synchronized String populateRegistryRegions(String registryId) {
     if (regionRetry.isBefore(Instant.now())) {
@@ -144,12 +116,6 @@ public abstract class IotAccessBase extends ContainerBase {
     }
     return getCompletedRegistryRegion(registryId);
   }
-
-  protected abstract void sendCommandBase(String registryId, String deviceId, SubFolder folder,
-      String message);
-
-  protected abstract String updateConfig(String registryId, String deviceId, String config,
-      Long version);
 
   private String checkedUpdate(String registryId, String deviceId, Long version, String updated) {
     int configLength = updated.length();
@@ -229,15 +195,6 @@ public abstract class IotAccessBase extends ContainerBase {
       populateRegistryRegions(reflectRegistry);
     }
   }
-
-  public abstract CloudModel fetchDevice(String deviceRegistryId, String deviceId);
-
-  public abstract String fetchState(String deviceRegistryId, String deviceId);
-
-  public abstract CloudModel listDevices(String deviceRegistryId);
-
-  public abstract CloudModel modelResource(String deviceRegistryId, String deviceId,
-      CloudModel cloudModel);
 
   /**
    * Modify a device configuration. Return the full/complete update that was actually written.
@@ -322,7 +279,5 @@ public abstract class IotAccessBase extends ContainerBase {
     return Arrays.stream(parts).map(String::trim).map(option -> option.split("=", 2))
         .collect(Collectors.toMap(x -> x[0], x -> x.length > 1 ? x[1] : true));
   }
-
-  abstract String fetchRegistryMetadata(String registryId, String metadataKey);
 
 }
