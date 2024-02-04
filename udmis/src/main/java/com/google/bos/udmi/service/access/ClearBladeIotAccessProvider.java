@@ -71,7 +71,6 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -458,7 +457,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     cloudModel.num_id = registryId;
     try {
       String location = getRegistryLocation(reflectRegistry);
-      DeviceManagerClient client = new DeviceManagerClient();
+      DeviceManagerClient deviceManagerClient = getDeviceManagerClient();
       DeviceRegistry.Builder registry = DeviceRegistry.newBuilder()
           .setId(registryId)
           .setEventNotificationConfigs(ImmutableList.of(eventNotificationConfig()))
@@ -467,7 +466,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       CreateDeviceRegistryRequest request = CreateDeviceRegistryRequest.Builder.newBuilder()
           .setParent(LocationName.of(projectId, location).toString())
           .setDeviceRegistry(registry.build()).build();
-      client.createDeviceRegistry(request);
+      deviceManagerClient.createDeviceRegistry(request);
     } catch (ApplicationException applicationException) {
       if (!applicationException.getMessage().contains("ALREADY_EXISTS")) {
         throw applicationException;
@@ -593,7 +592,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   @Override
   public Entry<Long, String> fetchConfig(String registryId, String deviceId) {
     try {
-      DeviceManagerClient deviceManagerClient = new DeviceManagerClient();
+      DeviceManagerClient deviceManagerClient = getDeviceManagerClient();
       String location = getRegistryLocation(registryId);
       ListDeviceConfigVersionsRequest request = ListDeviceConfigVersionsRequest.Builder.newBuilder()
           .setName(DeviceName.of(projectId, location, registryId, deviceId)
@@ -648,7 +647,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   public String fetchState(String deviceRegistryId, String deviceId) {
     String devicePath = getDeviceName(deviceRegistryId, deviceId);
     try {
-      DeviceManagerClient deviceManagerClient = new DeviceManagerClient();
+      DeviceManagerClient deviceManagerClient = getDeviceManagerClient();
       String location = getRegistryLocation(deviceRegistryId);
       DeviceName name = DeviceName.of(projectId, location, deviceRegistryId, deviceId);
 

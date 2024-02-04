@@ -1,7 +1,6 @@
 package com.google.bos.udmi.service.access;
 
 import static java.lang.String.format;
-import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.pod.ContainerProvider;
 import com.google.common.collect.ImmutableMap;
@@ -32,10 +31,8 @@ public interface IotAccessProvider extends ContainerProvider {
    */
   static IotAccessProvider from(IotAccess iotAccess) {
     try {
-      IotAccessProvider provider = PROVIDERS.get(iotAccess.provider)
-          .getDeclaredConstructor(IotAccess.class).newInstance(iotAccess);
-      boolean createProxy = ofNullable(iotAccess.profile_sec).orElse(0) > 0;
-      return createProxy ? ProfilingProxy.create(provider, iotAccess.profile_sec) : provider;
+      return PROVIDERS.get(iotAccess.provider).getDeclaredConstructor(IotAccess.class)
+          .newInstance(iotAccess);
     } catch (Exception e) {
       throw new RuntimeException(
           format("While instantiating access provider type %s", iotAccess.provider), e);
@@ -44,13 +41,26 @@ public interface IotAccessProvider extends ContainerProvider {
 
   Entry<Long, String> fetchConfig(String registryId, String deviceId);
 
+  CloudModel fetchDevice(String deviceRegistryId, String deviceId);
+
+  String fetchRegistryMetadata(String registryId, String metadataKey);
+
+  String fetchState(String deviceRegistryId, String deviceId);
+
   /**
-   * Get all the registries that exist in a given region.  If region is null, then return
-   * all available regions.
+   * Get all the registries that exist in a given region.  If region is null, then return all
+   * available regions.
    */
   Set<String> getRegistriesForRegion(String region);
 
   boolean isEnabled();
+
+  CloudModel listDevices(String deviceRegistryId);
+
+  CloudModel modelResource(String deviceRegistryId, String deviceId,
+      CloudModel cloudModel);
+
+  String modifyConfig(String registryId, String deviceId, Function<String, String> munger);
 
   void sendCommandBase(String registryId, String deviceId, SubFolder folder,
       String message);
@@ -58,18 +68,5 @@ public interface IotAccessProvider extends ContainerProvider {
   String updateConfig(String registryId, String deviceId, String config,
       Long version);
 
-  CloudModel fetchDevice(String deviceRegistryId, String deviceId);
-
-  String fetchState(String deviceRegistryId, String deviceId);
-
-  CloudModel listDevices(String deviceRegistryId);
-
-  CloudModel modelResource(String deviceRegistryId, String deviceId,
-      CloudModel cloudModel);
-
-  String fetchRegistryMetadata(String registryId, String metadataKey);
-
   void updateRegistryRegions(Map<String, String> regions);
-
-  String modifyConfig(String registryId, String deviceId, Function<String, String> munger);
 }
