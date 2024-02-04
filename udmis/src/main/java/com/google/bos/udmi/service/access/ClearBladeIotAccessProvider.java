@@ -181,6 +181,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   }
 
   @NotNull
+  @Override
   public Set<String> getRegistriesForRegion(String region) {
     if (region == null) {
       return CLOUD_REGIONS;
@@ -210,6 +211,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     return !isNullOrEmpty(projectId);
   }
 
+  @Override
   public String updateConfig(String registryId, String deviceId, String config, Long version) {
     try {
       DeviceManagerClient deviceManagerClient = getDeviceManagerClient();

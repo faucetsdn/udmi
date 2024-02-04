@@ -67,6 +67,7 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
   /**
    * Update the cached registry regions with any incremental updates.
    */
+  @Override
   public void updateRegistryRegions(Map<String, String> regions) {
     try {
       registryRegions.get().putAll(regions);
@@ -199,6 +200,7 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
   /**
    * Modify a device configuration. Return the full/complete update that was actually written.
    */
+  @Override
   public String modifyConfig(String registryId, String deviceId, Function<String, String> munger) {
     int retryCount = CONFIG_UPDATE_MAX_RETRIES;
     try {

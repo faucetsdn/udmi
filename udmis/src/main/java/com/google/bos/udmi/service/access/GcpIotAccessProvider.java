@@ -127,6 +127,7 @@ public class GcpIotAccessProvider extends IotAccessBase {
     }
   }
 
+  @Override
   public String updateConfig(String registryId, String deviceId, String config, Long version) {
     try {
       String useConfig = ofNullable(config).orElse("");
@@ -237,6 +238,7 @@ public class GcpIotAccessProvider extends IotAccessBase {
   }
 
   @NotNull
+  @Override
   public Set<String> getRegistriesForRegion(String region) {
     if (region == null) {
       return CLOUD_REGIONS;

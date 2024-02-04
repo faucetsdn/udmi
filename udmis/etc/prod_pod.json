@@ -28,6 +28,7 @@
     "clearblade-iot-core": {
       "provider": "clearblade",
       "project_id": "${CLEARBLADE_PROJECT}",
+      "profile_sec": 10,
       "options": "distributor=stately"
     },
     "gcp-iot-core": {
