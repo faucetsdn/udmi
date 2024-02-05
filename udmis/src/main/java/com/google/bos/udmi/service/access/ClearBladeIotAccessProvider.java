@@ -177,7 +177,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
 
   @VisibleForTesting
   protected DeviceManagerInterface getDeviceManager(int monitorSec) {
-    return ProfilingProxy.create(new DeviceManagerWrapper(), monitorSec);
+    return ProfilingProxy.create(this, new DeviceManagerWrapper(), monitorSec);
   }
 
   @NotNull
