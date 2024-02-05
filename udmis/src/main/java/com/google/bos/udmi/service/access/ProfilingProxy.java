@@ -1,7 +1,9 @@
 package com.google.bos.udmi.service.access;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 
+import com.google.common.base.Preconditions;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -24,6 +26,11 @@ public class ProfilingProxy<T> implements InvocationHandler {
    * Create a new profiling instance for the given actual provider object.
    */
   public static <T> T create(T provider, int profileSec) {
+    checkArgument(profileSec >= 0, "Illegal profile period " + profileSec);
+    if (profileSec == 0) {
+      return provider;
+    }
+
     Object[] objects = getAllInterfaces(provider.getClass()).toArray();
     Class<?>[] interfaces = Arrays.copyOf(objects, objects.length, Class[].class);
     //noinspection unchecked

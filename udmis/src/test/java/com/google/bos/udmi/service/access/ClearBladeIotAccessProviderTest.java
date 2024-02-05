@@ -44,7 +44,7 @@ class ClearBladeIotAccessProviderTest extends MessageTestCore {
     }
 
     @Override
-    protected DeviceManagerInterface getDeviceManagerInterface() {
+    protected DeviceManagerInterface getDeviceManager(int monitor_sec) {
       return mockClient;
     }
   }

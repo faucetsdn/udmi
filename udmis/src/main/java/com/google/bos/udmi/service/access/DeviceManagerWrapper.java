@@ -5,6 +5,6 @@ import com.clearblade.cloud.iot.v1.DeviceManagerClient;
 /**
  * Shell wrapper class to provide an interface attached (without src access).
  */
-public class DeviceWrapperInterface extends DeviceManagerClient implements DeviceManagerInterface {
+public class DeviceManagerWrapper extends DeviceManagerClient implements DeviceManagerInterface {
 
 }

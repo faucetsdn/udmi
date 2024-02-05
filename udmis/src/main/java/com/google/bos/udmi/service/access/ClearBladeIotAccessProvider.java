@@ -117,12 +117,14 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   private static final String FIELD_MASK_HACK = "&fieldMask=id%2Cname";
 
   private final String projectId;
+  private final DeviceManagerInterface deviceManager;
 
   /**
    * Create a new instance for interfacing with GCP IoT Core.
    */
   public ClearBladeIotAccessProvider(IotAccess iotAccess) {
     super(iotAccess);
+    deviceManager = getDeviceManager(ofNullable(iotAccess.profile_sec).orElse(0));
     projectId = getProjectId(iotAccess);
     info("Fetching registry regions...");
     ifTrueThen(isEnabled(), this::fetchRegistryRegions);
@@ -174,8 +176,8 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   }
 
   @VisibleForTesting
-  protected DeviceManagerInterface getDeviceManagerInterface() {
-    return new DeviceWrapperInterface();
+  protected DeviceManagerInterface getDeviceManager(int monitor_sec) {
+    return ProfilingProxy.create(new DeviceManagerWrapper(), monitor_sec);
   }
 
   @NotNull
@@ -186,11 +188,10 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     }
 
     try {
-      DeviceManagerInterface clearbladeManager = getDeviceManagerInterface();
       String parent = LocationName.of(projectId, region).getLocationFullName() + FIELD_MASK_HACK;
       ListDeviceRegistriesRequest request = ListDeviceRegistriesRequest.Builder.newBuilder()
           .setParent(parent).build();
-      ListDeviceRegistriesResponse response = clearbladeManager.listDeviceRegistries(request);
+      ListDeviceRegistriesResponse response = deviceManager.listDeviceRegistries(request);
       requireNonNull(response, "get registries response is null");
       List<DeviceRegistry> deviceRegistries = response.getDeviceRegistriesList();
       Set<String> registries =
@@ -212,7 +213,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   @Override
   public String updateConfig(String registryId, String deviceId, String config, Long version) {
     try {
-      DeviceManagerInterface clearbladeManager = getDeviceManagerInterface();
       ByteString binaryData = new ByteString(encodeBase64(config));
       String updateVersion = ifNotNullGet(version, v -> Long.toString(version));
       String location = getRegistryLocation(registryId);
@@ -220,7 +220,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
           ModifyCloudToDeviceConfigRequest.Builder.newBuilder()
               .setName(DeviceName.of(projectId, location, registryId, deviceId).toString())
               .setBinaryData(binaryData).setVersionToUpdate(updateVersion).build();
-      DeviceConfig response = clearbladeManager.modifyCloudToDeviceConfig(request);
+      DeviceConfig response = deviceManager.modifyCloudToDeviceConfig(request);
       debug("Modified %s/%s config version %s", registryId, deviceId, response.getVersion());
       return config;
     } catch (Exception e) {
@@ -246,8 +246,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
                 .setDevice(id)
                 .setGateway(gatewayId)
                 .build();
-        DeviceManagerInterface clearbladeManager = getDeviceManagerInterface();
-        requireNonNull(clearbladeManager.bindDeviceToGateway(request),
+        requireNonNull(deviceManager.bindDeviceToGateway(request),
             "binding device to gateway");
       } catch (Exception e) {
         throw new RuntimeException(format("While binding %s to gateway %s", id, gatewayId), e);
@@ -307,13 +306,12 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     CloudModel cloudModel = new CloudModel();
     cloudModel.operation = CREATE;
     try {
-      DeviceManagerInterface clearbladeManager = getDeviceManagerInterface();
       String location = getRegistryLocation(registryId);
       String parent = RegistryName.of(projectId, location, registryId).toString();
       CreateDeviceRequest request =
           CreateDeviceRequest.Builder.newBuilder().setParent(parent).setDevice(device)
               .build();
-      requireNonNull(clearbladeManager.createDevice(request),
+      requireNonNull(deviceManager.createDevice(request),
           "create device failed for " + parent);
       cloudModel.num_id = hashedDeviceId(registryId, device.toBuilder().getId());
       return cloudModel;
@@ -329,7 +327,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   @NotNull
   private HashMap<String, CloudModel> fetchDevices(String deviceRegistryId, String gatewayId) {
     String location = getRegistryLocation(deviceRegistryId);
-    DeviceManagerInterface clearbladeManager = getDeviceManagerInterface();
     GatewayListOptions gatewayListOptions = ifNotNullGet(gatewayId, this::getGatewayListOptions);
     String registryFullName =
         RegistryName.of(projectId, location, deviceRegistryId).getRegistryFullName();
@@ -341,7 +338,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
           .setGatewayListOptions(gatewayListOptions)
           .setPageToken(pageToken)
           .build();
-      DevicesListResponse response = clearbladeManager.listDevices(request);
+      DevicesListResponse response = deviceManager.listDevices(request);
       requireNonNull(response, "DeviceRegistriesList fetch failed");
       Map<String, CloudModel> responseMap =
           response.getDevicesList().stream().map(ClearBladeIotAccessProvider::convertToEntry)
@@ -376,7 +373,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   private Entry<String, HashMap<String, CloudModel>> listDevicesPage(String deviceRegistryId,
       String gatewayId, String pageToken) {
     String location = getRegistryLocation(deviceRegistryId);
-    DeviceManagerInterface clearbladeManager = getDeviceManagerInterface();
     GatewayListOptions gatewayListOptions =
         ifNotNullGet(gatewayId, this::getGatewayListOptions);
     String registryFullName =
@@ -386,7 +382,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
         .setGatewayListOptions(gatewayListOptions)
         .setPageToken(pageToken)
         .build();
-    DevicesListResponse response = clearbladeManager.listDevices(request);
+    DevicesListResponse response = deviceManager.listDevices(request);
     requireNonNull(response, "DeviceRegistriesList fetch failed");
     HashMap<String, CloudModel> devices =
         response.getDevicesList().stream().map(ClearBladeIotAccessProvider::convertToEntry)
@@ -456,7 +452,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     cloudModel.num_id = registryId;
     try {
       String location = getRegistryLocation(reflectRegistry);
-      DeviceManagerInterface clearbladeManager = getDeviceManagerInterface();
       DeviceRegistry.Builder registry = DeviceRegistry.newBuilder()
           .setId(registryId)
           .setEventNotificationConfigs(ImmutableList.of(eventNotificationConfig()))
@@ -465,7 +460,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       CreateDeviceRegistryRequest request = CreateDeviceRegistryRequest.Builder.newBuilder()
           .setParent(LocationName.of(projectId, location).toString())
           .setDeviceRegistry(registry.build()).build();
-      clearbladeManager.createDeviceRegistry(request);
+      deviceManager.createDeviceRegistry(request);
     } catch (ApplicationException applicationException) {
       if (!applicationException.getMessage().contains("ALREADY_EXISTS")) {
         throw applicationException;
@@ -493,12 +488,11 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     String deviceId = requireNonNull(device.toBuilder().getId(), "unspecified device id");
     try {
       unbindGatewayDevices(registryId, device);
-      DeviceManagerInterface clearbladeManager = getDeviceManagerInterface();
       String location = getRegistryLocation(registryId);
       DeviceName deviceName = DeviceName.of(projectId, location, registryId, deviceId);
       DeleteDeviceRequest request =
           DeleteDeviceRequest.Builder.newBuilder().setName(deviceName).build();
-      clearbladeManager.deleteDevice(request);
+      deviceManager.deleteDevice(request);
       CloudModel cloudModel = new CloudModel();
       cloudModel.operation = DELETE;
       cloudModel.num_id = hashedDeviceId(registryId, deviceId);
@@ -511,12 +505,11 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   private void unbindDevice(String registryId, String gatewayId, String proxyId) {
     try {
       debug(format("Unbind %s: %s from %s", registryId, proxyId, gatewayId));
-      DeviceManagerInterface clearbladeManager = getDeviceManagerInterface();
       String location = getRegistryLocation(registryId);
       UnbindDeviceFromGatewayRequest request = UnbindDeviceFromGatewayRequest.Builder.newBuilder()
           .setParent(RegistryName.of(projectId, location, registryId).getRegistryFullName())
           .setGateway(gatewayId).setDevice(proxyId).build();
-      requireNonNull(clearbladeManager.unbindDeviceFromGateway(request), "invalid response");
+      requireNonNull(deviceManager.unbindDeviceFromGateway(request), "invalid response");
     } catch (Exception e) {
       throw new RuntimeException("While unbinding " + proxyId + " from " + gatewayId, e);
     }
@@ -534,7 +527,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   }
 
   private CloudModel blockDevice(String registryId, Device device) {
-    DeviceManagerInterface clearbladeManager = getDeviceManagerInterface();
     String deviceId = device.toBuilder().getId();
     String name = getDeviceName(registryId, deviceId);
     Device fullDevice = device.toBuilder().setName(name).setBlocked(true).build();
@@ -542,7 +534,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       UpdateDeviceRequest request =
           UpdateDeviceRequest.Builder.newBuilder().setDevice(fullDevice).setName(name)
               .setUpdateMask(BLOCKED_FIELD_MASK).build();
-      requireNonNull(clearbladeManager.updateDevice(request), "Invalid RPC response");
+      requireNonNull(deviceManager.updateDevice(request), "Invalid RPC response");
       CloudModel cloudModel = new CloudModel();
       cloudModel.operation = Operation.BLOCK;
       cloudModel.num_id = hashedDeviceId(registryId, deviceId);
@@ -553,7 +545,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   }
 
   private CloudModel updateDevice(String registryId, Device device) {
-    DeviceManagerInterface clearbladeManager = getDeviceManagerInterface();
     String deviceId = device.toBuilder().getId();
     String name = getDeviceName(registryId, deviceId);
     Device fullDevice = device.toBuilder().setName(name).build();
@@ -561,7 +552,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       UpdateDeviceRequest request =
           UpdateDeviceRequest.Builder.newBuilder().setDevice(fullDevice).setName(name)
               .setUpdateMask(UPDATE_FIELD_MASK).build();
-      requireNonNull(clearbladeManager.updateDevice(request), "Invalid RPC response");
+      requireNonNull(deviceManager.updateDevice(request), "Invalid RPC response");
       CloudModel cloudModel = new CloudModel();
       cloudModel.operation = Operation.UPDATE;
       cloudModel.num_id = hashedDeviceId(registryId, deviceId);
@@ -591,13 +582,12 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   @Override
   public Entry<Long, String> fetchConfig(String registryId, String deviceId) {
     try {
-      DeviceManagerInterface clearbladeManager = getDeviceManagerInterface();
       String location = getRegistryLocation(registryId);
       ListDeviceConfigVersionsRequest request = ListDeviceConfigVersionsRequest.Builder.newBuilder()
           .setName(DeviceName.of(projectId, location, registryId, deviceId)
               .toString()).setNumVersions(1).build();
       ListDeviceConfigVersionsResponse listDeviceConfigVersionsResponse =
-          clearbladeManager.listDeviceConfigVersions(request);
+          deviceManager.listDeviceConfigVersions(request);
       List<DeviceConfig> deviceConfigs = listDeviceConfigVersionsResponse.getDeviceConfigList();
       if (deviceConfigs.isEmpty()) {
         return new SimpleEntry<>(null, EMPTY_JSON);
@@ -616,11 +606,10 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     String devicePath = getDeviceName(deviceRegistryId, deviceId);
     try {
       String location = getRegistryLocation(deviceRegistryId);
-      DeviceManagerInterface clearbladeManager = getDeviceManagerInterface();
       DeviceName name = DeviceName.of(projectId, location, deviceRegistryId, deviceId);
       GetDeviceRequest request = GetDeviceRequest.Builder.newBuilder().setName(name)
           .setFieldMask(FieldMask.newBuilder().build()).build();
-      Device device = clearbladeManager.getDevice(request);
+      Device device = deviceManager.getDevice(request);
       requireNonNull(device, "GetDeviceRequest failed");
       CloudModel cloudModel = convert(device, Operation.FETCH);
       cloudModel.device_ids = listRegistryDevices(deviceRegistryId, deviceId).device_ids;
@@ -646,7 +635,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   public String fetchState(String deviceRegistryId, String deviceId) {
     String devicePath = getDeviceName(deviceRegistryId, deviceId);
     try {
-      DeviceManagerInterface clearbladeManager = getDeviceManagerInterface();
       String location = getRegistryLocation(deviceRegistryId);
       DeviceName name = DeviceName.of(projectId, location, deviceRegistryId, deviceId);
 
@@ -654,7 +642,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
           .setName(name.toString())
           .setNumStates(1).build();
       ListDeviceStatesResponse response = requireNonNull(
-          clearbladeManager.listDeviceStates(request), "Null response returned");
+          deviceManager.listDeviceStates(request), "Null response returned");
       List<DeviceState> deviceStatesList = response.getDeviceStatesList();
       return deviceStatesList.isEmpty() ? null : (String) deviceStatesList.get(0).getBinaryData();
     } catch (Exception e) {
@@ -682,14 +670,13 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     try {
       ByteString binaryData = new ByteString(encodeBase64(message));
       String location = getRegistryLocation(registryId);
-      DeviceManagerInterface clearbladeManager = getDeviceManagerInterface();
       String deviceName = DeviceName.of(projectId, location, registryId, deviceId).toString();
       SendCommandToDeviceRequest request = SendCommandToDeviceRequest.Builder.newBuilder()
           .setName(deviceName)
           .setBinaryData(binaryData)
           .setSubfolder(subFolder)
           .build();
-      SendCommandToDeviceResponse response = clearbladeManager.sendCommandToDevice(request);
+      SendCommandToDeviceResponse response = deviceManager.sendCommandToDevice(request);
       if (response == null) {
         throw new RuntimeException("SendCommandToDevice execution failed for " + deviceName);
       }
