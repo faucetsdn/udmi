@@ -1950,7 +1950,8 @@ public class SequenceBase {
   }
 
   protected boolean deviceStateComplete() {
-    return deviceState.system != null && deviceState.pointset != null;
+    boolean requirePointset = deviceMetadata.pointset != null;
+    return deviceState.system != null && (!requirePointset || deviceState.pointset != null);
   }
 
   protected boolean lastConfigUpdated() {
