@@ -67,7 +67,7 @@ public class LocalIotAccessProvider extends IotAccessBase {
 
   @Override
   public Entry<Long, String> fetchConfig(String registryId, String deviceId) {
-    return DEVICE_CONFIGS.get(deviceId);
+    return DEVICE_CONFIGS.getOrDefault(deviceId, new SimpleEntry<>(null, EMPTY_JSON));
   }
 
   @Override
