@@ -2,6 +2,7 @@ package com.google.bos.udmi.service.access;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.pod.ContainerProvider;
 import java.lang.reflect.InvocationHandler;
@@ -20,7 +21,7 @@ public class ProfilingProxy<T> implements InvocationHandler {
 
   private final T provider;
   private final ContainerProvider container;
-  private String providerName;
+  private final String providerName;
 
   private ProfilingProxy(ContainerProvider container, T provider) {
     this.provider = provider;
@@ -44,17 +45,6 @@ public class ProfilingProxy<T> implements InvocationHandler {
         interfaces, new ProfilingProxy<T>(container, provider));
   }
 
-  @Override
-  public Object invoke(Object proxy, Method method, Object[] objects) throws Throwable {
-    Instant start = Instant.now();
-    try {
-      return method.invoke(provider, objects);
-    } finally {
-      double durationSec = Duration.between(start, Instant.now()).toMillis() / 1000.0;
-      container.debug("Method %s#%s took %.03f", providerName, method.getName(), durationSec);
-    }
-  }
-
   private static Set<Class<?>> getAllInterfaces(Class<?> clazz) {
     Class<?>[] interfaces = clazz.getInterfaces();
 
@@ -66,4 +56,20 @@ public class ProfilingProxy<T> implements InvocationHandler {
     return result;
   }
 
+  @Override
+  public Object invoke(Object proxy, Method method, Object[] objects) throws Throwable {
+    Instant start = Instant.now();
+    Throwable caught = null;
+    try {
+      return method.invoke(provider, objects);
+    } catch (Throwable throwable) {
+      caught = throwable;
+      throw throwable;
+    } finally {
+      double durationSec = Duration.between(start, Instant.now()).toMillis() / 1000.0;
+      String message = ofNullable(caught).map(Throwable::getMessage).orElse("success");
+      container.debug("Method %s#%s took %.03f (%s)", providerName, method.getName(), durationSec,
+          message);
+    }
+  }
 }
