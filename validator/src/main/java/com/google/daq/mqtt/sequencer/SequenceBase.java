@@ -7,6 +7,7 @@ import static com.google.common.base.Predicates.not;
 import static com.google.common.base.Strings.emptyToNull;
 import static com.google.daq.mqtt.sequencer.SequenceBase.Capabilities.LAST_CONFIG;
 import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
+import static com.google.daq.mqtt.util.ConfigGenerator.configFrom;
 import static com.google.daq.mqtt.util.IotReflectorClient.REFLECTOR_PREFIX;
 import static com.google.udmi.util.CleanDateFormat.cleanDate;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
@@ -236,7 +237,7 @@ public class SequenceBase {
   protected static String cloudRegion;
   protected static String registryId;
   protected static String altRegistry;
-  protected static Config deviceConfig;
+  protected Config deviceConfig;
   protected static IotReflectorClient altClient;
   protected static String serialNo;
   static ExecutionConfiguration exeConfig;
@@ -252,7 +253,6 @@ public class SequenceBase {
   private boolean resetRequired = true;
   private static boolean enableAllTargets = true;
   private static boolean useAlternateClient;
-  private static Config generatedConfig;
 
   static {
     // Sanity check to make sure ALPHA version is increased if forced by increased BETA.
@@ -324,7 +324,6 @@ public class SequenceBase {
     registryId = SiteModel.getRegistryActual(exeConfig);
 
     deviceMetadata = readDeviceMetadata();
-    generatedConfig = ConfigGenerator.configFrom(deviceMetadata).deviceConfig();
 
     File baseOutputDir = new File(SequenceBase.siteModel, "out");
     deviceOutputDir = new File(baseOutputDir, "devices/" + getDeviceId());
@@ -654,7 +653,7 @@ public class SequenceBase {
     debug("Clear configTransactions and reset device config");
     configTransactions.clear();
     sentConfig.clear();
-    deviceConfig = clean ? new Config() : generatedConfig;
+    deviceConfig = clean ? new Config() : configFrom(deviceMetadata).deviceConfig();
     deviceConfig.timestamp = null;
     sanitizeConfig(deviceConfig);
     deviceConfig.system.min_loglevel = Level.INFO.value();
@@ -1951,7 +1950,8 @@ public class SequenceBase {
   }
 
   protected boolean deviceStateComplete() {
-    return deviceState.system != null && deviceState.pointset != null;
+    boolean requirePointset = deviceMetadata.pointset != null;
+    return deviceState.system != null && (!requirePointset || deviceState.pointset != null);
   }
 
   protected boolean lastConfigUpdated() {
