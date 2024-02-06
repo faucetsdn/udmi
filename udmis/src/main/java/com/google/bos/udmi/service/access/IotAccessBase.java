@@ -207,6 +207,7 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
       while (true) {
         try {
           Entry<Long, String> configPair = fetchConfig(registryId, deviceId);
+          debug("Fetched config version %s for %s", configPair.getKey(), deviceId);
           Long version = ifNotNullGet(configPair, Entry::getKey);
           return ifNotNullGet(safeMunge(munger, configPair),
               updated -> checkedUpdate(registryId, deviceId, version, updated));
