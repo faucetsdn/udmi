@@ -39,7 +39,7 @@ public class LocalIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  protected String updateConfig(String registryId, String deviceId, String config, Long version) {
+  public String updateConfig(String registryId, String deviceId, String config, Long version) {
     Entry<Long, String> entry = DEVICE_CONFIGS.get(deviceId);
     if (version != null && !entry.getKey().equals(version)) {
       throw new IllegalStateException("Config version mismatch");
@@ -50,12 +50,12 @@ public class LocalIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  protected boolean isEnabled() {
+  public boolean isEnabled() {
     return true;
   }
 
   @Override
-  protected Set<String> getRegistriesForRegion(String region) {
+  public Set<String> getRegistriesForRegion(String region) {
     return ImmutableSet.of();
   }
 
@@ -67,7 +67,7 @@ public class LocalIotAccessProvider extends IotAccessBase {
 
   @Override
   public Entry<Long, String> fetchConfig(String registryId, String deviceId) {
-    return DEVICE_CONFIGS.get(deviceId);
+    return DEVICE_CONFIGS.getOrDefault(deviceId, new SimpleEntry<>(null, EMPTY_JSON));
   }
 
   @Override
@@ -111,7 +111,7 @@ public class LocalIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  String fetchRegistryMetadata(String registryId, String metadataKey) {
+  public String fetchRegistryMetadata(String registryId, String metadataKey) {
     throw new RuntimeException("Not yet implemented");
   }
 }
