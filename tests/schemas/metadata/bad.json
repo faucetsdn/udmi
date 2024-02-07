@@ -22,7 +22,7 @@
     "auth_type": "RS256"
   },
   "gateway": {
-    "proxy_ids": ["AHU-22"]
+    "proxy_ids": ["AHU-001", "A-1", "TPS-5000000005"]
   },
   "pointset": {
     "exclude_units_from_config": true,
