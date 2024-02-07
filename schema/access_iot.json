@@ -10,6 +10,9 @@
     "project_id": {
       "type": "string"
     },
+    "profile_sec": {
+      "type": "integer"
+    },
     "options": {
       "type": "string"
     }

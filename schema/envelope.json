@@ -7,7 +7,7 @@
   "properties": {
     "deviceId": {
       "type": "string",
-      "pattern": "^[A-Z]{2,6}-[0-9]{1,6}$"
+      "pattern": "^[A-Z]{2,6}-[1-9][0-9]*$"
     },
     "deviceNumId": {
       "type": "string",
@@ -33,7 +33,7 @@
     },
     "gatewayId": {
       "type": "string",
-      "pattern": "^[A-Z]{2,6}-[0-9]{1,6}$"
+      "pattern": "^[A-Z]{2,6}-[1-9][0-9]*$"
     },
     "transactionId": {
       "type": "string"

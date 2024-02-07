@@ -7,6 +7,7 @@ class IotAccess:
   def __init__(self):
     self.provider = None
     self.project_id = None
+    self.profile_sec = None
     self.options = None
 
   @staticmethod
@@ -16,6 +17,7 @@ class IotAccess:
     result = IotAccess()
     result.provider = source.get('provider')
     result.project_id = source.get('project_id')
+    result.profile_sec = source.get('profile_sec')
     result.options = source.get('options')
     return result
 
@@ -41,6 +43,8 @@ class IotAccess:
       result['provider'] = self.provider # 5
     if self.project_id:
       result['project_id'] = self.project_id # 5
+    if self.profile_sec:
+      result['profile_sec'] = self.profile_sec # 5
     if self.options:
       result['options'] = self.options # 5
     return result

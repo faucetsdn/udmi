@@ -7,17 +7,14 @@ import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toSet;
 
 import com.google.bos.udmi.service.core.ComponentName;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.udmi.util.JsonUtil;
 import java.io.PrintStream;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.TestOnly;
 import udmi.schema.BasePodConfiguration;
@@ -29,7 +26,7 @@ import udmi.schema.PodConfiguration;
  * convenience and abstraction to keep the main component code more clear.
  * TODO: Implement facilities for other loggers, including structured-to-cloud.
  */
-public abstract class ContainerBase {
+public abstract class ContainerBase implements ContainerProvider {
 
   public static final String INITIAL_EXECUTION_CONTEXT = "xxxxxxxx";
   public static final Integer FUNCTIONS_VERSION_MIN = 11;
@@ -167,9 +164,11 @@ public abstract class ContainerBase {
     printStream.flush();
   }
 
+  @Override
   public void activate() {
   }
 
+  @Override
   public void debug(String format, Object... args) {
     debug(format(format, args));
   }
@@ -198,6 +197,7 @@ public abstract class ContainerBase {
     output(Level.NOTICE, message);
   }
 
+  @Override
   public void shutdown() {
   }
 

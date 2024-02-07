@@ -11,7 +11,7 @@ import static com.google.udmi.util.JsonUtil.loadFileStrictRequired;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
-import com.google.bos.udmi.service.access.IotAccessBase;
+import com.google.bos.udmi.service.access.IotAccessProvider;
 import com.google.bos.udmi.service.core.BridgeProcessor;
 import com.google.bos.udmi.service.core.DistributorPipe;
 import com.google.bos.udmi.service.core.ProcessorBase;
@@ -45,7 +45,7 @@ public class UdmiServicePod extends ContainerBase {
   public static final String UDMI_VERSION = requireNonNull(getDeployedConfig().udmi_version);
   public static final int FATAL_ERROR_CODE = -1;
   static final File READY_INDICATOR = new File("/tmp/pod_ready.txt");
-  private static final Map<String, ContainerBase> COMPONENT_MAP = new ConcurrentHashMap<>();
+  private static final Map<String, ContainerProvider> COMPONENT_MAP = new ConcurrentHashMap<>();
   private static final Set<Class<? extends ProcessorBase>> PROCESSOR_CLASSES = ImmutableSet.of(
       TargetProcessor.class, ReflectProcessor.class, StateProcessor.class);
   private static final Map<String, Class<? extends ProcessorBase>> PROCESSORS =
@@ -71,7 +71,7 @@ public class UdmiServicePod extends ContainerBase {
   /**
    * Loop through all the registered components and apply the given action.
    */
-  public static void forAllComponents(Consumer<ContainerBase> action) {
+  public static void forAllComponents(Consumer<ContainerProvider> action) {
     COMPONENT_MAP.forEach((key, value) -> {
       try {
         action.accept(value);
@@ -133,9 +133,9 @@ public class UdmiServicePod extends ContainerBase {
   /**
    * Put this component into the central component registry.
    */
-  public static void putComponent(String componentName, Supplier<ContainerBase> component) {
+  public static void putComponent(String componentName, Supplier<ContainerProvider> component) {
     try {
-      ContainerBase container = component.get();
+      ContainerProvider container = component.get();
       ifNotNullThen(COMPONENT_MAP.put(componentName, container),
           replaced -> {
             throw new IllegalStateException(
@@ -155,7 +155,7 @@ public class UdmiServicePod extends ContainerBase {
   }
 
   private void createAccess(String name, IotAccess config) {
-    putComponent(name, () -> IotAccessBase.from(config));
+    putComponent(name, () -> IotAccessProvider.from(config));
   }
 
   private void createBridge(String name, BridgePodConfiguration config) {
@@ -193,7 +193,7 @@ public class UdmiServicePod extends ContainerBase {
     notice("Starting activation of container components");
     String absolutePath = READY_INDICATOR.getAbsolutePath();
     try {
-      forAllComponents(ContainerBase::activate);
+      forAllComponents(ContainerProvider::activate);
       checkState(READY_INDICATOR.createNewFile(), "ready file already exists: " + absolutePath);
       READY_INDICATOR.deleteOnExit();
     } catch (Exception e) {
@@ -212,7 +212,7 @@ public class UdmiServicePod extends ContainerBase {
   @Override
   public void shutdown() {
     notice("Starting shutdown of container components");
-    forAllComponents(ContainerBase::shutdown);
+    forAllComponents(ContainerProvider::shutdown);
     notice("Finished shutdown of container components");
     super.shutdown();
   }
