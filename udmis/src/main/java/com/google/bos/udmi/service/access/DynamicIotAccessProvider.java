@@ -32,7 +32,7 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   private static final long INDEX_ORDERING_MULTIPLIER_MS = 10000L;
   private final Map<String, String> registryProviders = new ConcurrentHashMap<>();
   private final List<String> providerList;
-  private final Map<String, IotAccessBase> providers = new HashMap<>();
+  private final Map<String, IotAccessProvider> providers = new HashMap<>();
 
   /**
    * Create a new instance for interfacing with multiple providers.
@@ -49,17 +49,17 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  protected Set<String> getRegistriesForRegion(String region) {
+  public Set<String> getRegistriesForRegion(String region) {
     throw new RuntimeException("Should not be called!");
   }
 
   @Override
-  protected boolean isEnabled() {
+  public boolean isEnabled() {
     return true;
   }
 
   @Override
-  protected String updateConfig(String registryId, String deviceId, String config, Long version) {
+  public String updateConfig(String registryId, String deviceId, String config, Long version) {
     throw new RuntimeException("Shouldn't be called for dynamic provider");
   }
 
@@ -71,15 +71,15 @@ public class DynamicIotAccessProvider extends IotAccessBase {
     return providerId;
   }
 
-  private IotAccessBase getProviderFor(String registryId) {
-    IotAccessBase provider =
+  private IotAccessProvider getProviderFor(String registryId) {
+    IotAccessProvider provider =
         providers.get(registryProviders.computeIfAbsent(registryId, this::determineProvider));
     return requireNonNull(
         provider,
         "could not determine provider for " + registryId);
   }
 
-  private String registryPriority(String registryId, Entry<String, IotAccessBase> provider) {
+  private String registryPriority(String registryId, Entry<String, IotAccessProvider> provider) {
     int providerIndex = providerList.size() - providerList.indexOf(provider.getKey());
     String provisionedAt = ofNullable(
         provider.getValue().fetchRegistryMetadata(registryId, "udmi_provisioned")).orElse(
@@ -94,7 +94,7 @@ public class DynamicIotAccessProvider extends IotAccessBase {
     super.activate();
     providerList.forEach(
         providerId -> {
-          IotAccessBase component = getComponent(providerId);
+          IotAccessProvider component = getComponent(providerId);
           ifTrueThen(component.isEnabled(), () -> providers.put(providerId, component));
         });
     if (providerList.isEmpty()) {

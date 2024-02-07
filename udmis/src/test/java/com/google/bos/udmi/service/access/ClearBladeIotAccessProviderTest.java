@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.clearblade.cloud.iot.v1.DeviceManagerClient;
 import com.clearblade.cloud.iot.v1.deviceslist.DevicesListRequest;
 import com.clearblade.cloud.iot.v1.deviceslist.DevicesListResponse;
 import com.clearblade.cloud.iot.v1.devicetypes.Device;
@@ -22,7 +21,7 @@ import udmi.schema.IotAccess;
 
 class ClearBladeIotAccessProviderTest extends MessageTestCore {
 
-  private final DeviceManagerClient mockClient = mock(DeviceManagerClient.class);
+  private final DeviceManagerInterface mockClient = mock(DeviceManagerInterface.class);
 
   @NotNull
   private ClearBladeIotAccessProvider getProvider() {
@@ -45,7 +44,7 @@ class ClearBladeIotAccessProviderTest extends MessageTestCore {
     }
 
     @Override
-    protected DeviceManagerClient getDeviceManagerClient() {
+    protected DeviceManagerInterface getDeviceManager(int monitorSec) {
       return mockClient;
     }
   }

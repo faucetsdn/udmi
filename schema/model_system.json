@@ -78,7 +78,7 @@
             },
             "name": {
               "type": "string",
-              "pattern": "^[A-Z]{2,6}-[0-9]{1,6}$"
+              "pattern": "^[A-Z]{2,6}-[1-9][0-9]*$"
             }
           },
           "required": [

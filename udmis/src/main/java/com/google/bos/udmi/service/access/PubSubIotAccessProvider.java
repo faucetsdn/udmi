@@ -47,29 +47,29 @@ public class PubSubIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  protected Entry<Long, String> fetchConfig(String registryId, String deviceId) {
+  public Entry<Long, String> fetchConfig(String registryId, String deviceId) {
     // Sticky config isn't supported (nor required) for PubSub reflector, so always return empty.
     return new SimpleEntry<>(1L, "{}");
   }
 
   @Override
-  protected Set<String> getRegistriesForRegion(String region) {
+  public Set<String> getRegistriesForRegion(String region) {
     return null;
   }
 
   @Override
-  protected boolean isEnabled() {
+  public boolean isEnabled() {
     return true;
   }
 
   @Override
-  protected void sendCommandBase(String registryId, String deviceId, SubFolder folder,
+  public void sendCommandBase(String registryId, String deviceId, SubFolder folder,
       String message) {
     publish(registryId, deviceId, COMMANDS_CATEGORY, folder, message);
   }
 
   @Override
-  protected String updateConfig(String registryId, String deviceId, String config, Long version) {
+  public String updateConfig(String registryId, String deviceId, String config, Long version) {
     publish(registryId, deviceId, CONFIG_CATEGORY, null, config);
     return config;
   }
@@ -131,7 +131,7 @@ public class PubSubIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  String fetchRegistryMetadata(String registryId, String metadataKey) {
+  public String fetchRegistryMetadata(String registryId, String metadataKey) {
     // Metadata is not supported by PubSub, so just pretend there is none.
     return null;
   }

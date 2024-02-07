@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 @JsonPropertyOrder({
     "provider",
     "project_id",
+    "profile_sec",
     "options"
 })
 @Generated("jsonschema2pojo")
@@ -36,6 +37,8 @@ public class IotAccess {
     public IotAccess.IotProvider provider;
     @JsonProperty("project_id")
     public String project_id;
+    @JsonProperty("profile_sec")
+    public Integer profile_sec;
     @JsonProperty("options")
     public String options;
 
@@ -45,6 +48,7 @@ public class IotAccess {
         result = ((result* 31)+((this.options == null)? 0 :this.options.hashCode()));
         result = ((result* 31)+((this.provider == null)? 0 :this.provider.hashCode()));
         result = ((result* 31)+((this.project_id == null)? 0 :this.project_id.hashCode()));
+        result = ((result* 31)+((this.profile_sec == null)? 0 :this.profile_sec.hashCode()));
         return result;
     }
 
@@ -57,7 +61,7 @@ public class IotAccess {
             return false;
         }
         IotAccess rhs = ((IotAccess) other);
-        return ((((this.options == rhs.options)||((this.options!= null)&&this.options.equals(rhs.options)))&&((this.provider == rhs.provider)||((this.provider!= null)&&this.provider.equals(rhs.provider))))&&((this.project_id == rhs.project_id)||((this.project_id!= null)&&this.project_id.equals(rhs.project_id))));
+        return (((((this.options == rhs.options)||((this.options!= null)&&this.options.equals(rhs.options)))&&((this.provider == rhs.provider)||((this.provider!= null)&&this.provider.equals(rhs.provider))))&&((this.project_id == rhs.project_id)||((this.project_id!= null)&&this.project_id.equals(rhs.project_id))))&&((this.profile_sec == rhs.profile_sec)||((this.profile_sec!= null)&&this.profile_sec.equals(rhs.profile_sec))));
     }
 
 

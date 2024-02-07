@@ -9,7 +9,7 @@
     "gateway_id": {
       "description": "The device ID of the gateway the device is bound to",
       "type": "string",
-      "pattern": "^[A-Z]{2,6}-[0-9]{1,6}$",
+      "pattern": "^[A-Z]{2,6}-[1-9][0-9]*$",
       "examples": ["GAT-100"]
     },
     "family": {
@@ -21,7 +21,7 @@
       "type": "array",
       "items": {
         "type": "string",
-        "pattern": "^[A-Z]{2,6}-[0-9]{1,6}$"
+        "pattern": "^[A-Z]{2,6}-[1-9][0-9]*$"
       },
       "examples": [["AHU-22"]]
     }
