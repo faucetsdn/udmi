@@ -143,6 +143,7 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
           .putAllAttributes(stringMap)
           .setData(ByteString.copyFromUtf8(stringify(bundle.message)))
           .build();
+      randomlyFail();
       ApiFuture<String> publish = publisher.publish(message);
       String publishedId = publish.get();
       debug(format("Published PubSub %s/%s to %s as %s", stringMap.get(SUBTYPE_PROPERTY_KEY),

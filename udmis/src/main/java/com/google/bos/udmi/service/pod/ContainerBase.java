@@ -39,12 +39,14 @@ public abstract class ContainerBase implements ContainerProvider {
   private static BasePodConfiguration basePodConfig = new BasePodConfiguration();
   protected static String reflectRegistry = REFLECT_BASE;
   protected final PodConfiguration podConfiguration;
+  private final double failureRate;
 
   /**
    * Create a basic pod container.
    */
   public ContainerBase() {
     podConfiguration = null;
+    failureRate = getPodFailureRate();
   }
 
   /**
@@ -55,6 +57,7 @@ public abstract class ContainerBase implements ContainerProvider {
   public ContainerBase(PodConfiguration config) {
     podConfiguration = config;
     basePodConfig = ofNullable(podConfiguration.base).orElseGet(BasePodConfiguration::new);
+    failureRate = getPodFailureRate();
     reflectRegistry = getReflectRegistry();
     info("Configured with reflect registry " + reflectRegistry);
   }
@@ -142,6 +145,12 @@ public abstract class ContainerBase implements ContainerProvider {
     executionContext.set(newContext);
   }
 
+  protected void randomlyFail() {
+    if (Math.random() < failureRate) {
+      throw new IllegalStateException("Randomly failing to test error handling");
+    }
+  }
+
   @NotNull
   private String getReflectRegistry() {
     return getPodNamespacePrefix() + REFLECT_BASE;
@@ -150,6 +159,10 @@ public abstract class ContainerBase implements ContainerProvider {
   @NotNull
   protected String getPodNamespacePrefix() {
     return ofNullable(basePodConfig.udmi_prefix).map(this::variableSubstitution).orElse("");
+  }
+
+  private double getPodFailureRate() {
+    return ofNullable(basePodConfig.failure_rate).orElse(0.0);
   }
 
   @NotNull
