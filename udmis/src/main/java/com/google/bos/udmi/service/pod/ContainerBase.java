@@ -1,6 +1,7 @@
 package com.google.bos.udmi.service.pod;
 
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
@@ -36,8 +37,8 @@ public abstract class ContainerBase implements ContainerProvider {
   private static final ThreadLocal<String> executionContext = new ThreadLocal<>();
   private static final Pattern VARIABLE_PATTERN = Pattern.compile("\\$\\{([A-Z_]+)}");
   private static final Pattern MULTI_PATTERN = Pattern.compile("!\\{([,a-zA-Z_]+)}");
-  private static BasePodConfiguration basePodConfig = new BasePodConfiguration();
   protected static String reflectRegistry = REFLECT_BASE;
+  private static BasePodConfiguration basePodConfig = new BasePodConfiguration();
   protected final PodConfiguration podConfiguration;
   private final double failureRate;
 
@@ -60,24 +61,7 @@ public abstract class ContainerBase implements ContainerProvider {
     failureRate = getPodFailureRate();
     reflectRegistry = getReflectRegistry();
     info("Configured with reflect registry " + reflectRegistry);
-  }
-
-  private String environmentReplacer(MatchResult match) {
-    String replacement = ofNullable(getEnv(match.group(1))).orElse("");
-    if (replacement.startsWith("!")) {
-      return format("!{%s}", replacement.substring(1));
-    }
-    return replacement;
-  }
-
-  protected String getEnv(String group) {
-    return System.getenv(group);
-  }
-
-  @TestOnly
-  static void resetForTest() {
-    basePodConfig = null;
-    reflectRegistry = null;
+    ifTrueThen(failureRate > 0, () -> warn("Random failure rate configured at " + failureRate));
   }
 
   /**
@@ -90,6 +74,21 @@ public abstract class ContainerBase implements ContainerProvider {
     } catch (Exception e) {
       throw new RuntimeException("While extracting component name for " + clazz.getSimpleName(), e);
     }
+  }
+
+  @TestOnly
+  static void resetForTest() {
+    basePodConfig = null;
+    reflectRegistry = null;
+  }
+
+  protected String getEnv(String group) {
+    return System.getenv(group);
+  }
+
+  @NotNull
+  protected String getPodNamespacePrefix() {
+    return ofNullable(basePodConfig.udmi_prefix).map(this::variableSubstitution).orElse("");
   }
 
   protected synchronized String grabExecutionContext() {
@@ -118,6 +117,12 @@ public abstract class ContainerBase implements ContainerProvider {
     return expanded;
   }
 
+  protected void randomlyFail() {
+    if (Math.random() < failureRate) {
+      throw new IllegalStateException("Randomly failing to test error handling");
+    }
+  }
+
   protected String variableSubstitution(String value) {
     if (value == null) {
       return null;
@@ -133,6 +138,14 @@ public abstract class ContainerBase implements ContainerProvider {
     return out;
   }
 
+  private String environmentReplacer(MatchResult match) {
+    String replacement = ofNullable(getEnv(match.group(1))).orElse("");
+    if (replacement.startsWith("!")) {
+      return format("!{%s}", replacement.substring(1));
+    }
+    return replacement;
+  }
+
   private String getExecutionContext() {
     if (executionContext.get() == null) {
       executionContext.set(INITIAL_EXECUTION_CONTEXT);
@@ -145,24 +158,13 @@ public abstract class ContainerBase implements ContainerProvider {
     executionContext.set(newContext);
   }
 
-  protected void randomlyFail() {
-    if (Math.random() < failureRate) {
-      throw new IllegalStateException("Randomly failing to test error handling");
-    }
+  private double getPodFailureRate() {
+    return ofNullable(basePodConfig.failure_rate).orElse(0.0);
   }
 
   @NotNull
   private String getReflectRegistry() {
     return getPodNamespacePrefix() + REFLECT_BASE;
-  }
-
-  @NotNull
-  protected String getPodNamespacePrefix() {
-    return ofNullable(basePodConfig.udmi_prefix).map(this::variableSubstitution).orElse("");
-  }
-
-  private double getPodFailureRate() {
-    return ofNullable(basePodConfig.failure_rate).orElse(0.0);
   }
 
   @NotNull
