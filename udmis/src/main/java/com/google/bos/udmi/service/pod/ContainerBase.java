@@ -78,7 +78,7 @@ public abstract class ContainerBase implements ContainerProvider {
 
   @TestOnly
   static void resetForTest() {
-    basePodConfig = null;
+    basePodConfig = new BasePodConfiguration();
     reflectRegistry = null;
   }
 
