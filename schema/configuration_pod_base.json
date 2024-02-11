@@ -9,6 +9,10 @@
     "udmi_prefix": {
       "description": "prefix for udmi namespacing",
       "type": "string"
+    },
+    "failure_rate": {
+      "description": "chance of random failure in various bits of the system",
+      "type": "number"
     }
   }
 }
