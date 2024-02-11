@@ -6,6 +6,7 @@ class BasePodConfiguration:
 
   def __init__(self):
     self.udmi_prefix = None
+    self.failure_rate = None
 
   @staticmethod
   def from_dict(source):
@@ -13,6 +14,7 @@ class BasePodConfiguration:
       return None
     result = BasePodConfiguration()
     result.udmi_prefix = source.get('udmi_prefix')
+    result.failure_rate = source.get('failure_rate')
     return result
 
   @staticmethod
@@ -35,4 +37,6 @@ class BasePodConfiguration:
     result = {}
     if self.udmi_prefix:
       result['udmi_prefix'] = self.udmi_prefix # 5
+    if self.failure_rate:
+      result['failure_rate'] = self.failure_rate # 5
     return result
