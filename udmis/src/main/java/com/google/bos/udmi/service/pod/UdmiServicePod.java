@@ -50,7 +50,6 @@ public class UdmiServicePod extends ContainerBase {
       TargetProcessor.class, ReflectProcessor.class, StateProcessor.class);
   private static final Map<String, Class<? extends ProcessorBase>> PROCESSORS =
       PROCESSOR_CLASSES.stream().collect(Collectors.toMap(ContainerBase::getName, clazz -> clazz));
-  private static UdmiServicePod POD_INSTANCE;
 
   /**
    * Core pod to instantiate all the other components as necessary based on configuration.
@@ -95,10 +94,6 @@ public class UdmiServicePod extends ContainerBase {
     return loadFileStrictRequired(SetupUdmiConfig.class, new File(DEPLOY_FILE));
   }
 
-  public static UdmiServicePod getInstance() {
-    return POD_INSTANCE;
-  }
-
   /**
    * Create a new UdmiConfig object for reporting system setup.
    */
@@ -120,9 +115,9 @@ public class UdmiServicePod extends ContainerBase {
    */
   public static void main(String[] args) {
     try {
-      POD_INSTANCE = new UdmiServicePod(args);
-      Runtime.getRuntime().addShutdownHook(new Thread(POD_INSTANCE::shutdown));
-      POD_INSTANCE.activate();
+      UdmiServicePod udmiServicePod = new UdmiServicePod(args);
+      Runtime.getRuntime().addShutdownHook(new Thread(udmiServicePod::shutdown));
+      udmiServicePod.activate();
     } catch (Exception e) {
       System.err.println("Exception activating pod: " + friendlyStackTrace(e));
       e.printStackTrace();
