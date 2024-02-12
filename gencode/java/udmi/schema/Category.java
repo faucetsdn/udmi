@@ -51,18 +51,6 @@ public class Category {
     public static final int SYSTEM_CONFIG_APPLY_VALUE = NOTICE.value();
     static { LEVEL.put(SYSTEM_CONFIG_APPLY, NOTICE); }
 
-    // Connected to the network
-    public static final String SYSTEM_NETWORK_CONNECTION = "system.network.connection";
-    public static final Level SYSTEM_NETWORK_CONNECTION_LEVEL = NOTICE;
-    public static final int SYSTEM_NETWORK_CONNECTION_VALUE = NOTICE.value();
-    static { LEVEL.put(SYSTEM_NETWORK_CONNECTION, NOTICE); }
-
-    // Disconnected from a network
-    public static final String SYSTEM_NETWORK_DISCONNECT = "system.network.disconnect";
-    public static final Level SYSTEM_NETWORK_DISCONNECT_LEVEL = NOTICE;
-    public static final int SYSTEM_NETWORK_DISCONNECT_VALUE = NOTICE.value();
-    static { LEVEL.put(SYSTEM_NETWORK_DISCONNECT, NOTICE); }
-
     // Successful login. The entry message should include the username and application
     public static final String SYSTEM_AUTH_LOGIN = "system.auth.login";
     public static final Level SYSTEM_AUTH_LOGIN_LEVEL = NOTICE;
@@ -123,11 +111,23 @@ public class Category {
     public static final int LOCALNET_NETWORK_VALUE = INFO.value();
     static { LEVEL.put(LOCALNET_NETWORK, INFO); }
 
-    // Expected status for attachment failures
+    // Connected status of the device on 
+    public static final String LOCALNET_NETWORK_CONNECT = "localnet.network.connect";
+    public static final Level LOCALNET_NETWORK_CONNECT_LEVEL = NOTICE;
+    public static final int LOCALNET_NETWORK_CONNECT_VALUE = NOTICE.value();
+    static { LEVEL.put(LOCALNET_NETWORK_CONNECT, NOTICE); }
+
+    // Expected status for attachment failures between gateway and cloud
     public static final String GATEWAY_PROXIED_ATTACH = "gateway.proxied.attach";
     public static final Level GATEWAY_PROXIED_ATTACH_LEVEL = ERROR;
     public static final int GATEWAY_PROXIED_ATTACH_VALUE = ERROR.value();
     static { LEVEL.put(GATEWAY_PROXIED_ATTACH, ERROR); }
+
+    // Expected status for connection between gateway and proxied device
+    public static final String GATEWAY_PROXIED_CONNECT = "gateway.proxied.connect";
+    public static final Level GATEWAY_PROXIED_CONNECT_LEVEL = INFO;
+    public static final int GATEWAY_PROXIED_CONNECT_VALUE = INFO.value();
+    static { LEVEL.put(GATEWAY_PROXIED_CONNECT, INFO); }
 
     // Relating to scanning a particular address family
     public static final String DISCOVERY_FAMILY_SCAN = "discovery.family.scan";

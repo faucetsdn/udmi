@@ -24,6 +24,14 @@
       "level": 600
     }
   },
+  "gateway": {
+    "status": {
+      "message": "Connection complete",
+      "category": "gateway.proxied.connect",
+      "timestamp": "2018-08-26T21:39:30.364Z",
+      "level": 200
+    }
+  },
   "pointset": {
     "points": {
       "return_air_temperature_sensor": {

@@ -23,9 +23,6 @@ could be used with a **WARNING** level for a warning case during normal operatio
     * _receive_: (**DEBUG**) Receiving a config message
     * _parse_: (**DEBUG**) Parsing a received message
     * _apply_: (**NOTICE**) Application of a parsed config message
-  * _network_: Network (IP) message handling
-    * _connection_: (**NOTICE**) Connected to the network
-    * _disconnect_: (**NOTICE**) Disconnected from a network
   * _auth_: Authentication to local application (e.g. web server, SSH)
     * _login_: (**NOTICE**) Successful login. The entry message should include the username and application
     * _logout_: (**NOTICE**) Successful logout 
@@ -40,9 +37,11 @@ could be used with a **WARNING** level for a warning case during normal operatio
     * _invalid_: (**ERROR**) A `config` parameter for the point is invalid in some way
 * _localnet_: Aspects of working with various local networks
   * _network_: (**INFO**) Aspects of a specific network
+    * _connect_: (**NOTICE**) Connected status of the device on 
 * _gateway_: Aspects of managing gateway connections
   * _proxied_: Relating to proxied devices
-    * _attach_: (**ERROR**) Expected status for attachment failures
+    * _attach_: (**ERROR**) Expected status for attachment failures between gateway and cloud
+    * _connect_: (**INFO**) Expected status for connection between gateway and proxied device
 * _discovery_: Handling on-prem discovery flow
   * _family_: Conditions specific to an entire address family (e.g. bacnet)
     * _scan_: (**INFO**) Relating to scanning a particular address family

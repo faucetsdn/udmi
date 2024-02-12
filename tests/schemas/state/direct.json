@@ -41,5 +41,13 @@
         "addr": "192.168.8.3"
       }
     }
+  },
+  "pointset": {
+    "points": {
+      "return_air_temperature_sensor": {
+      },
+      "nexus_sensor": {
+      }
+    }
   }
 }
