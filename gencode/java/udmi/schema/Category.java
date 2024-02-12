@@ -123,6 +123,12 @@ public class Category {
     public static final int LOCALNET_NETWORK_VALUE = INFO.value();
     static { LEVEL.put(LOCALNET_NETWORK, INFO); }
 
+    // Expected status for attachment failures
+    public static final String GATEWAY_PROXIED_ATTACH = "gateway.proxied.attach";
+    public static final Level GATEWAY_PROXIED_ATTACH_LEVEL = ERROR;
+    public static final int GATEWAY_PROXIED_ATTACH_VALUE = ERROR.value();
+    static { LEVEL.put(GATEWAY_PROXIED_ATTACH, ERROR); }
+
     // Relating to scanning a particular address family
     public static final String DISCOVERY_FAMILY_SCAN = "discovery.family.scan";
     public static final Level DISCOVERY_FAMILY_SCAN_LEVEL = INFO;

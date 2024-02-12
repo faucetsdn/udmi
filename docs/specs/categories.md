@@ -40,6 +40,9 @@ could be used with a **WARNING** level for a warning case during normal operatio
     * _invalid_: (**ERROR**) A `config` parameter for the point is invalid in some way
 * _localnet_: Aspects of working with various local networks
   * _network_: (**INFO**) Aspects of a specific network
+* _gateway_: Aspects of managing gateway connections
+  * _proxied_: Relating to proxied devices
+    * _attach_: (**ERROR**) Expected status for attachment failures
 * _discovery_: Handling on-prem discovery flow
   * _family_: Conditions specific to an entire address family (e.g. bacnet)
     * _scan_: (**INFO**) Relating to scanning a particular address family

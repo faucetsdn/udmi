@@ -91,9 +91,7 @@ public class ConfigGenerator {
   }
 
   private LocalnetConfig getDeviceLocalnetConfig() {
-    LocalnetConfig localnetConfig = new LocalnetConfig();
-    localnetConfig.families = metadata.localnet.families;
-    return localnetConfig;
+    return null;
   }
 
   /**

@@ -1,21 +1,24 @@
+// Minimal example showing what a direct device state message might look like. In
+// this case, there is no gateway block, and the localnet block only shows its
+// address on the local ipv4 network (i.e. it doesn't have a fieldbus address).
 {
   "version": "1.5.0",
   "timestamp": "2018-08-26T21:39:29.364Z",
   "system": {
-    "hardware": {  // Fixed set of keys with arbitrary values indicating hardware items.
+    "hardware": {
       "make": "ACME",
-      "model": "Gateway",
+      "model": "Direct device",
       "sku": "A9BB-F",
       "rev": "2183147c"
     },
-    "software": {  // Keys and expected values defined by hardware type lookup.
+    "software": {
       "firmware": "3.2a",
       "baseband": "1287ab787e98df01",
       "application": "4.13.0.347 (4130-001) D",
       "python": "3.8",
       "monkey_rabbits": "These are all arbitrary key/value pairs"
     },
-    "params": {  // Keys defined by hardwre type lookup, values are per-device.
+    "params": {
       "wpa_key_hash": "ab7879e2873c871e",
       "iot_config_hash": "cc8d93e8f87a7ec9",
       "user_login": "hacker012"
@@ -32,12 +35,11 @@
       "level": 600
     }
   },
-  "gateway": {
-    "status": {
-      "message": "Error attaching devices: AHU-1",
-      "category": "gateway.proxied.attach",
-      "timestamp": "2018-08-26T21:39:30.364Z",
-      "level": 600
+  "localnet": {
+    "families": {
+      "ipv4": {
+        "addr": "192.168.8.3"
+      }
     }
   }
 }
