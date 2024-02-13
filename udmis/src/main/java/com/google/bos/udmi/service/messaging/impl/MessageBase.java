@@ -176,7 +176,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     }
   }
 
-  private Entry<Integer, Double> extractStats(Entry<AtomicInteger, AtomicDouble> stats) {
+  private Entry<Integer, Double> extractStat(Entry<AtomicInteger, AtomicDouble> stats) {
     return new SimpleEntry<>(stats.getKey().getAndSet(0), stats.getValue().getAndSet(0));
   }
 
@@ -362,8 +362,8 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   @Override
   public synchronized Map<String, Entry<Integer, Double>> extractStats() {
     return ImmutableMap.of(
-        PUBLISH_STATS, extractStats(publishStats),
-        RECEIVE_STATS, extractStats(receiveStats));
+        PUBLISH_STATS, extractStat(publishStats),
+        RECEIVE_STATS, extractStat(receiveStats));
   }
 
   @Override
@@ -386,6 +386,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     }
   }
 
+  @Override
   public final void publish(Bundle bundle) {
     Instant start = Instant.now();
     try {

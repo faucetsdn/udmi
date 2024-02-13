@@ -4,7 +4,6 @@ import static com.google.bos.udmi.service.messaging.impl.MessageBase.PUBLISH_STA
 import static com.google.bos.udmi.service.messaging.impl.MessageBase.RECEIVE_STATS;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
-import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
@@ -79,7 +78,8 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   private final String projectId;
   private final ThreadLocal<Envelope> threadEnvelope = new ThreadLocal<>();
   private final int monitorSec;
-  private final ScheduledExecutorService monitorExecutor = Executors.newSingleThreadScheduledExecutor();
+  private final ScheduledExecutorService monitorExecutor =
+      Executors.newSingleThreadScheduledExecutor();
 
   /**
    * Create a new instance of the message dispatcher.
@@ -142,31 +142,44 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   protected void devNullHandler(Object message) {
   }
 
-  /**
-   * Execute the runnable with the envelope mapped for the message.
-   */
-  @VisibleForTesting
-  public void withEnvelopeFor(Envelope envelope, Object message, Runnable run) {
-    try {
-      messageEnvelopes.put(message, envelope);
-      setThreadEnvelope(envelope);
-      run.run();
-    } finally {
-      messageEnvelopes.remove(message);
-      setThreadEnvelope(null);
-    }
-  }
-
-  private void processHandler(Envelope envelope, Class<?> handlerType, Object messageObject) {
-    withEnvelopeFor(envelope, messageObject, () -> executeHandler(handlerType, messageObject));
-  }
-
   private void executeHandler(Class<?> handlerType, Object messageObject) {
     handlers.get(handlerType).accept(messageObject);
     synchronized (handlerCounts) {
       handlerCounts.computeIfAbsent(handlerType, key -> new AtomicInteger()).incrementAndGet();
       handlerCounts.notify();
     }
+  }
+
+  private void extractAndLog(Map<String, Entry<Integer, Double>> countSum, String key) {
+    Entry<Integer, Double> stats = countSum.get(key);
+    double rate = stats.getKey() / (double) monitorSec;
+    double average = stats.getValue() / stats.getKey();
+    debug("Pipe %s %s count %.3f/s latency %.03fs", messagePipe, key, rate, average);
+  }
+
+  private Envelope getThreadEnvelope() {
+    return requireNonNull(threadEnvelope.get(), "thread envelope not defined");
+  }
+
+  /**
+   * Set the message envelope to use for published messages from the current thread.
+   */
+  public void setThreadEnvelope(Envelope envelope) {
+    Envelope previous = threadEnvelope.get();
+    threadEnvelope.set(envelope);
+    if (previous != null && envelope != null) {
+      throw new RuntimeException("Overwriting existing thread envelope");
+    }
+  }
+
+  private void periodicMonitor() {
+    Map<String, Entry<Integer, Double>> countSum = messagePipe.extractStats();
+    extractAndLog(countSum, RECEIVE_STATS);
+    extractAndLog(countSum, PUBLISH_STATS);
+  }
+
+  private void processHandler(Envelope envelope, Class<?> handlerType, Object messageObject) {
+    withEnvelopeFor(envelope, messageObject, () -> executeHandler(handlerType, messageObject));
   }
 
   /**
@@ -202,21 +215,9 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     info(format("%s activating %s with %08x", this, messagePipe, Objects.hash(processMessage)));
     messagePipe.activate(processMessage);
     if (monitorSec > 0) {
-      monitorExecutor.scheduleAtFixedRate(this::periodicMonitor, monitorSec, monitorSec, TimeUnit.SECONDS);
+      monitorExecutor.scheduleAtFixedRate(this::periodicMonitor, monitorSec, monitorSec,
+          TimeUnit.SECONDS);
     }
-  }
-
-  private void periodicMonitor() {
-    Map<String, Entry<Integer, Double>> countSum = messagePipe.extractStats();
-    extractAndLog(countSum, RECEIVE_STATS);
-    extractAndLog(countSum, PUBLISH_STATS);
-  }
-
-  private void extractAndLog(Map<String, Entry<Integer, Double>> countSum, String key) {
-    Entry<Integer, Double> stats = countSum.get(key);
-    double rate = stats.getKey() / (double) monitorSec;
-    double average = stats.getValue() / stats.getKey();
-    debug("Pipe %s %s count %.3f/s latency %.03fs", messagePipe, key, rate, average);
   }
 
   @TestOnly
@@ -243,48 +244,6 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     }
   }
 
-  /**
-   * Set the message envelope to use for published messages from the current thread.
-   */
-  public void setThreadEnvelope(Envelope envelope) {
-    Envelope previous = threadEnvelope.get();
-    threadEnvelope.set(envelope);
-    if (previous != null && envelope != null) {
-      throw new RuntimeException("Overwriting existing thread envelope");
-    }
-  }
-
-  /**
-   * Wait for a message of the given handler type to be processed. Primarily for testing.
-   */
-  public void waitForMessageProcessed(Class<?> clazz) {
-    synchronized (handlerCounts) {
-      try {
-        Instant endTime = Instant.now().plusMillis(HANDLER_TIMEOUT_MS);
-        do {
-          handlerCounts.wait(HANDLER_TIMEOUT_MS);
-        } while (getHandlerCount(clazz) == 0 && Instant.now().isBefore(endTime));
-      } catch (InterruptedException e) {
-        throw new RuntimeException("While waiting for handler count update", e);
-      }
-    }
-  }
-
-  @Override
-  public MessageContinuation withEnvelope(Envelope envelope) {
-    return new MessageContinuation() {
-      @Override
-      public Envelope getEnvelope() {
-        return envelope;
-      }
-
-      @Override
-      public void publish(Object message) {
-        publishBundle(makeMessageBundle(envelope, message));
-      }
-    };
-  }
-
   @Override
   public MessageContinuation getContinuation(Object message) {
     Envelope messageEnvelope = messageEnvelopes.get(message);
@@ -307,10 +266,6 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
         publishBundle(makeMessageBundle(continuationEnvelope, message));
       }
     };
-  }
-
-  private Envelope getThreadEnvelope() {
-    return requireNonNull(threadEnvelope.get(), "thread envelope not defined");
   }
 
   @Override
@@ -392,6 +347,52 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   @Override
   public String toString() {
     return format("Dispatcher %08x", Objects.hash(this));
+  }
+
+  /**
+   * Wait for a message of the given handler type to be processed. Primarily for testing.
+   */
+  public void waitForMessageProcessed(Class<?> clazz) {
+    synchronized (handlerCounts) {
+      try {
+        Instant endTime = Instant.now().plusMillis(HANDLER_TIMEOUT_MS);
+        do {
+          handlerCounts.wait(HANDLER_TIMEOUT_MS);
+        } while (getHandlerCount(clazz) == 0 && Instant.now().isBefore(endTime));
+      } catch (InterruptedException e) {
+        throw new RuntimeException("While waiting for handler count update", e);
+      }
+    }
+  }
+
+  @Override
+  public MessageContinuation withEnvelope(Envelope envelope) {
+    return new MessageContinuation() {
+      @Override
+      public Envelope getEnvelope() {
+        return envelope;
+      }
+
+      @Override
+      public void publish(Object message) {
+        publishBundle(makeMessageBundle(envelope, message));
+      }
+    };
+  }
+
+  /**
+   * Execute the runnable with the envelope mapped for the message.
+   */
+  @VisibleForTesting
+  public void withEnvelopeFor(Envelope envelope, Object message, Runnable run) {
+    try {
+      messageEnvelopes.put(message, envelope);
+      setThreadEnvelope(envelope);
+      run.run();
+    } finally {
+      messageEnvelopes.remove(message);
+      setThreadEnvelope(null);
+    }
   }
 
 }
