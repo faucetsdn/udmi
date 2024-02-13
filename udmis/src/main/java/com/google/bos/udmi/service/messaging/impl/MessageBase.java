@@ -22,6 +22,7 @@ import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.AtomicDouble;
 import java.time.Duration;
 import java.time.Instant;
@@ -32,6 +33,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
@@ -56,17 +58,29 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   public static final String INVALID_ENVELOPE_KEY = "invalid";
   public static final int EXECUTION_THREADS = 4;
   public static final String ERROR_MESSAGE_MARKER = "error-mark";
+  public static final String PUBLISH_STATS = "publish";
+  public static final String RECEIVE_STATS = "receive";
   static final String TERMINATE_MARKER = "terminate";
   private static final String DEFAULT_NAMESPACE = "default-namespace";
   private static final Set<Object> HANDLED_QUEUES = new HashSet<>();
   private static final long DEFAULT_POLL_TIME_SEC = 1;
   private static final long AWAIT_TERMINATION_SEC = 10;
   private final ExecutorService executor = Executors.newFixedThreadPool(EXECUTION_THREADS);
+  private final Entry<AtomicInteger, AtomicDouble> publishStats = makeEmptyStats();
+  private final Entry<AtomicInteger, AtomicDouble> receiveStats = makeEmptyStats();
+  private final String pipeId;
   private BlockingQueue<QueueEntry> sourceQueue;
   private Consumer<Bundle> dispatcher;
   private boolean activated;
-  private final AtomicInteger publishCount = new AtomicInteger();
-  private final AtomicDouble publishDuration = new AtomicDouble();
+
+  public MessageBase() {
+    pipeId = getClass().getSimpleName();
+  }
+
+  public MessageBase(EndpointConfiguration configuration) {
+    pipeId = Optional.ofNullable(configuration.error).map(flow -> "flow:" + flow)
+        .orElse(getClass().getSimpleName());
+  }
 
   /**
    * Combine two message configurations together (for applying defaults).
@@ -89,12 +103,6 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     return format("%08x", Objects.hash(queue));
   }
 
-  protected synchronized void accumulateDuration(Duration duration) {
-    double seconds = duration.getSeconds() + duration.toMillisPart() / 1000.0;
-    publishCount.incrementAndGet();
-    publishDuration.addAndGet(seconds);
-  }
-
   protected Bundle makeExceptionBundle(Envelope envelope, Exception exception) {
     Bundle bundle = new Bundle(envelope, exception);
     bundle.envelope.subType = SubType.EVENT;
@@ -109,10 +117,6 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     bundle.envelope.subFolder = SubFolder.UDMI;
     bundle.envelope.publishTime = new Date();
     return bundle;
-  }
-
-  protected String pipeId() {
-    return "";
   }
 
   protected abstract void publishRaw(Bundle bundle);
@@ -136,32 +140,11 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
 
   protected void receiveMessage(Map<String, String> attributesMap, String messageString) {
     grabExecutionContext();
-
-    final Object messageObject;
+    final Instant start = Instant.now();
     try {
-      messageObject = parseJson(messageString);
-    } catch (Exception e) {
-      receiveException(attributesMap, messageString, e, SubFolder.ERROR);
-      return;
-    }
-    final Envelope envelope;
-
-    try {
-      sanitizeAttributeMap(attributesMap);
-      envelope = convertTo(Envelope.class, attributesMap);
-    } catch (Exception e) {
-      attributesMap.put(INVALID_ENVELOPE_KEY, "true");
-      receiveException(attributesMap, messageString, e, null);
-      return;
-    }
-
-    try {
-      Bundle bundle = new Bundle(envelope, messageObject);
-      debug("Received %s/%s -> %s %s", bundle.envelope.subType, bundle.envelope.subFolder,
-          queueIdentifier(), bundle.envelope.transactionId);
-      receiveBundle(bundle);
-    } catch (Exception e) {
-      receiveException(attributesMap, messageString, e, null);
+      receiveMessageRaw(attributesMap, messageString);
+    } finally {
+      accumulateStats(receiveStats, Duration.between(start, Instant.now()));
     }
   }
 
@@ -180,10 +163,21 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     }
   }
 
+  private synchronized void accumulateStats(Entry<AtomicInteger, AtomicDouble> stats,
+      Duration duration) {
+    double seconds = duration.getSeconds() + duration.toMillisPart() / 1000.0;
+    stats.getKey().incrementAndGet();
+    stats.getValue().addAndGet(seconds);
+  }
+
   private synchronized void ensureSourceQueue() {
     if (sourceQueue == null) {
       sourceQueue = new LinkedBlockingDeque<>();
     }
+  }
+
+  private Entry<Integer, Double> extractStats(Entry<AtomicInteger, AtomicDouble> stats) {
+    return new SimpleEntry<>(stats.getKey().getAndSet(0), stats.getValue().getAndSet(0));
   }
 
   @Nullable
@@ -212,6 +206,10 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
       String id = format("%s:%02d", queueIdentifier(), i);
       executor.submit(() -> messageLoop(id));
     }
+  }
+
+  private Entry<AtomicInteger, AtomicDouble> makeEmptyStats() {
+    return new SimpleEntry<>(new AtomicInteger(), new AtomicDouble());
   }
 
   private void messageLoop(String id) {
@@ -271,6 +269,35 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     bundle.attributesMap = mutableMap;
     ifNotNullThen(forceFolder, folder -> mutableMap.put(SUBFOLDER_PROPERTY_KEY, folder.value()));
     receiveBundle(stringify(bundle));
+  }
+
+  private void receiveMessageRaw(Map<String, String> attributesMap, String messageString) {
+    final Object messageObject;
+    try {
+      messageObject = parseJson(messageString);
+    } catch (Exception e) {
+      receiveException(attributesMap, messageString, e, SubFolder.ERROR);
+      return;
+    }
+    final Envelope envelope;
+
+    try {
+      sanitizeAttributeMap(attributesMap);
+      envelope = convertTo(Envelope.class, attributesMap);
+    } catch (Exception e) {
+      attributesMap.put(INVALID_ENVELOPE_KEY, "true");
+      receiveException(attributesMap, messageString, e, null);
+      return;
+    }
+
+    try {
+      Bundle bundle = new Bundle(envelope, messageObject);
+      debug("Received %s/%s -> %s %s", bundle.envelope.subType, bundle.envelope.subFolder,
+          queueIdentifier(), bundle.envelope.transactionId);
+      receiveBundle(bundle);
+    } catch (Exception e) {
+      receiveException(attributesMap, messageString, e, null);
+    }
   }
 
   private void sanitizeAttributeMap(Map<String, String> attributesMap) {
@@ -333,8 +360,10 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   }
 
   @Override
-  public synchronized Entry<Integer, Double> extractDuration() {
-    return new SimpleEntry<>(publishCount.getAndSet(0), publishDuration.getAndSet(0));
+  public synchronized Map<String, Entry<Integer, Double>> extractStats() {
+    return ImmutableMap.of(
+        PUBLISH_STATS, extractStats(publishStats),
+        RECEIVE_STATS, extractStats(receiveStats));
   }
 
   @Override
@@ -362,7 +391,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     try {
       publishRaw(bundle);
     } finally {
-      accumulateDuration(Duration.between(start, Instant.now()));
+      accumulateStats(publishStats, Duration.between(start, Instant.now()));
     }
   }
 
@@ -385,8 +414,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
 
   @Override
   public String toString() {
-    return format("%s%s %s => %s", getClass().getSimpleName(), pipeId(), queueIdentifier(),
-        Objects.hash(dispatcher));
+    return format("%s %s => %s", pipeId, queueIdentifier(), Objects.hash(dispatcher));
   }
 
   /**

@@ -1,5 +1,7 @@
 package com.google.bos.udmi.service.messaging.impl;
 
+import static com.google.bos.udmi.service.messaging.impl.MessageBase.PUBLISH_STATS;
+import static com.google.bos.udmi.service.messaging.impl.MessageBase.RECEIVE_STATS;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
@@ -32,11 +34,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -207,10 +207,16 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   }
 
   private void periodicMonitor() {
-    Entry<Integer, Double> countSum = messagePipe.extractDuration();
-    double rate = countSum.getKey() / (double) monitorSec;
-    double average = countSum.getValue() / countSum.getKey();
-    debug("Pipe %s publish count %.3f/s latency %.03fs", messagePipe, rate, average);
+    Map<String, Entry<Integer, Double>> countSum = messagePipe.extractStats();
+    extractAndLog(countSum, RECEIVE_STATS);
+    extractAndLog(countSum, PUBLISH_STATS);
+  }
+
+  private void extractAndLog(Map<String, Entry<Integer, Double>> countSum, String key) {
+    Entry<Integer, Double> stats = countSum.get(key);
+    double rate = stats.getKey() / (double) monitorSec;
+    double average = stats.getValue() / stats.getKey();
+    debug("Pipe %s %s count %.3f/s latency %.03fs", messagePipe, key, rate, average);
   }
 
   @TestOnly

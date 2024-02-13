@@ -65,6 +65,7 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
    * Create a new instance based off the configuration.
    */
   public PubSubPipe(EndpointConfiguration configuration) {
+    super(configuration);
     try {
       projectId = variableSubstitution(configuration.hostname,
           "no project id defined in configuration as 'hostname'");
@@ -79,11 +80,6 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
     } catch (Exception e) {
       throw new RuntimeException("While creating PubSub pipe", e);
     }
-  }
-
-  @Override
-  protected String pipeId() {
-    return format("(%s)", topicId);
   }
 
   private List<Subscriber> getSubscribers(Set<String> names) {
@@ -161,7 +157,6 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
 
   @Override
   public void receiveMessage(PubsubMessage message, AckReplyConsumer reply) {
-    final Instant start = Instant.now();
     Map<String, String> attributesMap = new HashMap<>(message.getAttributesMap());
     // Ack first to prevent a recurring loop of processing a faulty message.
     reply.ack();
@@ -170,11 +165,6 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
         key -> isoConvert(ofEpochSecond(message.getPublishTime().getSeconds())));
     attributesMap.computeIfAbsent(Common.TRANSACTION_KEY, key -> PS_TXN_PREFIX + messageId);
     receiveMessage(attributesMap, message.getData().toStringUtf8());
-    Instant end = Instant.now();
-    long seconds = Duration.between(start, end).getSeconds();
-    if (seconds > 1) {
-      warn("Receive message took %ss", seconds);
-    }
   }
 
   private void stopAndWait(Subscriber subscriber) {

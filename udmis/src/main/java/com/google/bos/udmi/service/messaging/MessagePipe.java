@@ -67,5 +67,5 @@ public interface MessagePipe {
   /**
    * Atomically extract a count/sum pair of message publish durations.
    */
-  Entry<Integer, Double> extractDuration();
+  Map<String, Entry<Integer, Double>> extractStats();
 }
