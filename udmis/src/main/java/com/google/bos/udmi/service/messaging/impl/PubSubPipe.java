@@ -2,7 +2,6 @@ package com.google.bos.udmi.service.messaging.impl;
 
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
-import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
@@ -60,21 +59,24 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
   private final List<Subscriber> subscribers;
   private final Publisher publisher;
   private final String projectId;
+  private final String topicId;
 
   /**
    * Create a new instance based off the configuration.
    */
   public PubSubPipe(EndpointConfiguration configuration) {
+    super(configuration);
     try {
       projectId = variableSubstitution(configuration.hostname,
           "no project id defined in configuration as 'hostname'");
-      publisher = ifNotNullGet(variableSubstitution(configuration.send_id), this::getPublisher);
+      topicId = variableSubstitution(configuration.send_id);
+      publisher = ifNotNullGet(topicId, this::getPublisher);
       ifNotNullThen(publisher, this::checkPublisher);
       subscribers = ifNotNullGet(multiSubstitution(configuration.recv_id), this::getSubscribers);
       String subscriptionNames = subscribers.stream().map(Subscriber::getSubscriptionNameString)
           .collect(Collectors.joining(", "));
       String topicName = ifNotNullGet(publisher, Publisher::getTopicNameString);
-      debug("PubSub %s -> %s", super.toString(), subscriptionNames, topicName);
+      debug("PubSub %s %s -> %s", super.toString(), subscriptionNames, topicName);
     } catch (Exception e) {
       throw new RuntimeException("While creating PubSub pipe", e);
     }
@@ -130,7 +132,7 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
   }
 
   @Override
-  public void publish(Bundle bundle) {
+  protected void publishRaw(Bundle bundle) {
     if (publisher == null) {
       trace("Dropping message because publisher is null");
       return;
@@ -147,8 +149,7 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
       ApiFuture<String> publish = publisher.publish(message);
       String publishedId = publish.get();
       debug(format("Published PubSub %s/%s to %s as %s", stringMap.get(SUBTYPE_PROPERTY_KEY),
-          stringMap.get(SUBFOLDER_PROPERTY_KEY), publisher.getTopicNameString(),
-          PS_TXN_PREFIX + publishedId));
+          stringMap.get(SUBFOLDER_PROPERTY_KEY), topicId, PS_TXN_PREFIX + publishedId));
     } catch (Exception e) {
       throw new RuntimeException("While publishing bundle to " + publisher.getTopicNameString(), e);
     }
@@ -156,7 +157,6 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
 
   @Override
   public void receiveMessage(PubsubMessage message, AckReplyConsumer reply) {
-    final Instant start = Instant.now();
     Map<String, String> attributesMap = new HashMap<>(message.getAttributesMap());
     // Ack first to prevent a recurring loop of processing a faulty message.
     reply.ack();
@@ -165,11 +165,6 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
         key -> isoConvert(ofEpochSecond(message.getPublishTime().getSeconds())));
     attributesMap.computeIfAbsent(Common.TRANSACTION_KEY, key -> PS_TXN_PREFIX + messageId);
     receiveMessage(attributesMap, message.getData().toStringUtf8());
-    Instant end = Instant.now();
-    long seconds = Duration.between(start, end).getSeconds();
-    if (seconds > 1) {
-      warn("Receive message took %ss", seconds);
-    }
   }
 
   private void stopAndWait(Subscriber subscriber) {
