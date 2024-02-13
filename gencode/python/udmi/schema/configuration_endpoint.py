@@ -56,6 +56,7 @@ class EndpointConfiguration:
     self.msg_prefix = None
     self.recv_id = None
     self.send_id = None
+    self.monitor_sec = None
     self.distributor = None
     self.auth_provider = None
     self.generation = None
@@ -75,6 +76,7 @@ class EndpointConfiguration:
     result.msg_prefix = source.get('msg_prefix')
     result.recv_id = source.get('recv_id')
     result.send_id = source.get('send_id')
+    result.monitor_sec = source.get('monitor_sec')
     result.distributor = source.get('distributor')
     result.auth_provider = ObjectA90DCC28.from_dict(source.get('auth_provider'))
     result.generation = source.get('generation')
@@ -118,6 +120,8 @@ class EndpointConfiguration:
       result['recv_id'] = self.recv_id # 5
     if self.send_id:
       result['send_id'] = self.send_id # 5
+    if self.monitor_sec:
+      result['monitor_sec'] = self.monitor_sec # 5
     if self.distributor:
       result['distributor'] = self.distributor # 5
     if self.auth_provider:

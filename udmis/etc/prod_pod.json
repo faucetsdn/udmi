@@ -6,6 +6,7 @@
   "flow_defaults": {
     "protocol": "pubsub",
     "hostname": "${GCP_PROJECT}",
+    "monitor_sec": 60,
     "distributor": "stately"
   },
   "flows": {

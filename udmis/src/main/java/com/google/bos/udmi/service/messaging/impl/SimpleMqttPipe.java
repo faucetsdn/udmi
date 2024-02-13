@@ -173,7 +173,7 @@ public class SimpleMqttPipe extends MessageBase {
   }
 
   @Override
-  public void publish(Bundle bundle) {
+  protected void publishRaw(Bundle bundle) {
     try {
       mqttClient.publish(makeMqttTopic(bundle), makeMqttMessage(bundle));
     } catch (Exception e) {
