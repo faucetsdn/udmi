@@ -9,11 +9,13 @@
   "properties": {
     "addr": {
       "type": "string",
-      "description": "The address of a device on the local network",
+      "description": "The address of a device on the fieldbus/local network",
       "examples": ["0x414889"]
+    },
+    "family": {
+      "type": "string",
+      "description": "The family associated with this entry (when not in a map)",
+      "examples": ["bacnet"]
     }
-  },
-  "required": [
-    "addr"
-  ]
+  }
 }

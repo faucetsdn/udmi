@@ -1,10 +1,18 @@
 package com.google.daq.mqtt.util;
 
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.udmi.util.GeneralUtils.*;
+import static com.google.udmi.util.GeneralUtils.catchOrElse;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.getTimestampString;
+import static java.util.Objects.requireNonNull;
+import static java.util.Optional.ofNullable;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.udmi.util.GeneralUtils;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import udmi.schema.Config;
 import udmi.schema.GatewayConfig;
 import udmi.schema.LocalnetConfig;
@@ -21,6 +29,7 @@ import udmi.schema.SystemConfig;
 public class ConfigGenerator {
 
   public static final String GENERATED_CONFIG_JSON = "generated_config.json";
+  private static final Map<String, NetworkFamily> FAMILIES = ImmutableMap.of();
 
   private final Metadata metadata;
 
@@ -83,11 +92,24 @@ public class ConfigGenerator {
   PointPointsetConfig configFromMetadata(PointPointsetModel metadata, boolean excludeUnits) {
     PointPointsetConfig pointConfig = new PointPointsetConfig();
     pointConfig.units = excludeUnits ? null : metadata.units;
-    pointConfig.ref = metadata.ref;
+    pointConfig.ref = getGatewayPointRef(metadata);
     if (Boolean.TRUE.equals(metadata.writable)) {
       pointConfig.set_value = metadata.baseline_value;
     }
     return pointConfig;
+  }
+
+  private String getGatewayPointRef(PointPointsetModel model) {
+    String metadataRef = model.ref;
+    if (metadataRef == null) {
+      return null;
+    }
+    String family = catchOrElse(() -> metadata.gateway.target.family, null);
+    requireNonNull(family, "point ref indicated without gateway.target.family designation");
+    checkState(FAMILIES.containsKey(family), "gateway.target.family unknown: " + family);
+    checkState(metadata.gateway.target.addr == null, "gateway.target.addr should not be defined");
+    FAMILIES.get(family).refValidator(metadataRef);
+    return metadataRef;
   }
 
   private LocalnetConfig getDeviceLocalnetConfig() {
@@ -117,3 +139,45 @@ public class ConfigGenerator {
   }
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
