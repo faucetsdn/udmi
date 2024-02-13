@@ -65,8 +65,8 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   private BlockingQueue<QueueEntry> sourceQueue;
   private Consumer<Bundle> dispatcher;
   private boolean activated;
-  private AtomicInteger publishCount = new AtomicInteger();
-  private AtomicDouble publishDuration = new AtomicDouble();
+  private final AtomicInteger publishCount = new AtomicInteger();
+  private final AtomicDouble publishDuration = new AtomicDouble();
 
   /**
    * Combine two message configurations together (for applying defaults).
@@ -89,6 +89,12 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     return format("%08x", Objects.hash(queue));
   }
 
+  protected synchronized void accumulateDuration(Duration duration) {
+    double seconds = duration.getSeconds() + duration.toMillisPart() / 1000.0;
+    publishCount.incrementAndGet();
+    publishDuration.addAndGet(seconds);
+  }
+
   protected Bundle makeExceptionBundle(Envelope envelope, Exception exception) {
     Bundle bundle = new Bundle(envelope, exception);
     bundle.envelope.subType = SubType.EVENT;
@@ -104,6 +110,12 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     bundle.envelope.publishTime = new Date();
     return bundle;
   }
+
+  protected String pipeId() {
+    return "";
+  }
+
+  protected abstract void publishRaw(Bundle bundle);
 
   protected void pushQueueEntry(BlockingQueue<QueueEntry> queue, String stringBundle) {
     try {
@@ -321,6 +333,11 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   }
 
   @Override
+  public synchronized Entry<Integer, Double> extractDuration() {
+    return new SimpleEntry<>(publishCount.getAndSet(0), publishDuration.getAndSet(0));
+  }
+
+  @Override
   public boolean isActive() {
     return activated;
   }
@@ -349,18 +366,6 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     }
   }
 
-  protected abstract void publishRaw(Bundle bundle);
-
-  protected synchronized void accumulateDuration(Duration duration) {
-    double seconds = duration.getSeconds() + duration.toMillisPart() / 1000.0;
-    publishCount.incrementAndGet();
-    publishDuration.addAndGet(seconds);
-  }
-
-  private synchronized Entry<Integer, Double> extractDuration() {
-    return new SimpleEntry<>(publishCount.getAndSet(0), publishDuration.getAndSet(0));
-  }
-
   @Override
   public void shutdown() {
     try {
@@ -380,7 +385,8 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
 
   @Override
   public String toString() {
-    return format("MessagePipe %s => %s", queueIdentifier(), Objects.hash(dispatcher));
+    return format("%s%s %s => %s", getClass().getSimpleName(), pipeId(), queueIdentifier(),
+        Objects.hash(dispatcher));
   }
 
   /**

@@ -59,6 +59,7 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
   private final List<Subscriber> subscribers;
   private final Publisher publisher;
   private final String projectId;
+  private final String topicId;
 
   /**
    * Create a new instance based off the configuration.
@@ -67,16 +68,22 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
     try {
       projectId = variableSubstitution(configuration.hostname,
           "no project id defined in configuration as 'hostname'");
-      publisher = ifNotNullGet(variableSubstitution(configuration.send_id), this::getPublisher);
+      topicId = variableSubstitution(configuration.send_id);
+      publisher = ifNotNullGet(topicId, this::getPublisher);
       ifNotNullThen(publisher, this::checkPublisher);
       subscribers = ifNotNullGet(multiSubstitution(configuration.recv_id), this::getSubscribers);
       String subscriptionNames = subscribers.stream().map(Subscriber::getSubscriptionNameString)
           .collect(Collectors.joining(", "));
       String topicName = ifNotNullGet(publisher, Publisher::getTopicNameString);
-      debug("PubSub %s -> %s", super.toString(), subscriptionNames, topicName);
+      debug("PubSub %s %s -> %s", super.toString(), subscriptionNames, topicName);
     } catch (Exception e) {
       throw new RuntimeException("While creating PubSub pipe", e);
     }
+  }
+
+  @Override
+  protected String pipeId() {
+    return format("(%s)", topicId);
   }
 
   private List<Subscriber> getSubscribers(Set<String> names) {
@@ -146,8 +153,7 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
       ApiFuture<String> publish = publisher.publish(message);
       String publishedId = publish.get();
       debug(format("Published PubSub %s/%s to %s as %s", stringMap.get(SUBTYPE_PROPERTY_KEY),
-          stringMap.get(SUBFOLDER_PROPERTY_KEY), publisher.getTopicNameString(),
-          PS_TXN_PREFIX + publishedId));
+          stringMap.get(SUBFOLDER_PROPERTY_KEY), topicId, PS_TXN_PREFIX + publishedId));
     } catch (Exception e) {
       throw new RuntimeException("While publishing bundle to " + publisher.getTopicNameString(), e);
     }

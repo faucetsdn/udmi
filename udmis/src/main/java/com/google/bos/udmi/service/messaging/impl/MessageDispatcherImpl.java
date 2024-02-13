@@ -2,11 +2,13 @@ package com.google.bos.udmi.service.messaging.impl;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
+import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.messaging.ConfigUpdate;
 import com.google.bos.udmi.service.messaging.MessageContinuation;
@@ -28,9 +30,14 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import org.jetbrains.annotations.NotNull;
@@ -71,6 +78,8 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   private final Map<Class<?>, AtomicInteger> handlerCounts = new ConcurrentHashMap<>();
   private final String projectId;
   private final ThreadLocal<Envelope> threadEnvelope = new ThreadLocal<>();
+  private final int monitorSec;
+  private final ScheduledExecutorService monitorExecutor = Executors.newSingleThreadScheduledExecutor();
 
   /**
    * Create a new instance of the message dispatcher.
@@ -78,6 +87,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   public MessageDispatcherImpl(EndpointConfiguration configuration) {
     messagePipe = MessagePipe.from(configuration);
     projectId = variableSubstitution(configuration.hostname, "project_id/hostname not defined");
+    monitorSec = ofNullable(configuration.monitor_sec).orElse(0);
   }
 
   @Nullable
@@ -90,7 +100,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   }
 
   private static String getMapKey(SubType subType, SubFolder subFolder) {
-    SubType useType = Optional.ofNullable(subType).orElse(SubType.EVENT);
+    SubType useType = ofNullable(subType).orElse(SubType.EVENT);
     return format("%s/%s", useType, subFolder);
   }
 
@@ -191,6 +201,16 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     Consumer<Bundle> processMessage = this::processMessage;
     info(format("%s activating %s with %08x", this, messagePipe, Objects.hash(processMessage)));
     messagePipe.activate(processMessage);
+    if (monitorSec > 0) {
+      monitorExecutor.scheduleAtFixedRate(this::periodicMonitor, monitorSec, monitorSec, TimeUnit.SECONDS);
+    }
+  }
+
+  private void periodicMonitor() {
+    Entry<Integer, Double> countSum = messagePipe.extractDuration();
+    double rate = countSum.getKey() / (double) monitorSec;
+    double average = countSum.getValue() / countSum.getKey();
+    debug("Pipe %s publish count %.3f/s latency %.03fs", messagePipe, rate, average);
   }
 
   @TestOnly
@@ -356,6 +376,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   @Override
   public void shutdown() {
     messagePipe.shutdown();
+    monitorExecutor.shutdown();
   }
 
   public void terminate() {

@@ -10,6 +10,7 @@ import com.google.bos.udmi.service.messaging.impl.SimpleMqttPipe;
 import com.google.bos.udmi.service.messaging.impl.TraceMessagePipe;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import udmi.schema.EndpointConfiguration;
@@ -62,4 +63,9 @@ public interface MessagePipe {
    * Shutdown an active pipe so that it no longer processes received messages.
    */
   void shutdown();
+
+  /**
+   * Atomically extract a count/sum pair of message publish durations.
+   */
+  Entry<Integer, Double> extractDuration();
 }
