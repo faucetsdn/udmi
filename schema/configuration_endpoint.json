@@ -55,6 +55,10 @@
       "type": "string",
       "pattern": "^[-_/a-zA-Z0-9#]+$"
     },
+    "monitor_sec": {
+      "description": "Period for monitoring sampling",
+      "type": "integer"
+    },
     "distributor": {
       "description": "processor designation for a distributor channel",
       "type": "string",

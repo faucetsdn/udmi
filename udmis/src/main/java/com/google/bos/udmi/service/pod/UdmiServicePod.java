@@ -18,6 +18,7 @@ import com.google.bos.udmi.service.core.ProcessorBase;
 import com.google.bos.udmi.service.core.ReflectProcessor;
 import com.google.bos.udmi.service.core.StateProcessor;
 import com.google.bos.udmi.service.core.TargetProcessor;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.util.Map;
@@ -171,12 +172,16 @@ public class UdmiServicePod extends ContainerBase {
   }
 
   private void createDistributor(String name, EndpointConfiguration config) {
+    checkState(config.error == null, "config error/name already set");
+    config.error = name;
     putComponent(name, () -> DistributorPipe.from(config));
   }
 
   private void createFlow(String name, EndpointConfiguration config) {
     checkState(PROCESSORS.containsKey(name), "unknown flow key " + name);
     Class<? extends ProcessorBase> clazz = PROCESSORS.get(name);
+    Preconditions.checkState(config.error == null, "config error/name already set");
+    config.error = name;
     putComponent(name, () -> ProcessorBase.create(clazz, makeConfig(config)));
   }
 
