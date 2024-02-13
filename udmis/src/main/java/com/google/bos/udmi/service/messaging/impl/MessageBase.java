@@ -22,12 +22,15 @@ import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.common.base.Strings;
+import com.google.common.util.concurrent.AtomicDouble;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
@@ -35,6 +38,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.TestOnly;
@@ -61,6 +65,8 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   private BlockingQueue<QueueEntry> sourceQueue;
   private Consumer<Bundle> dispatcher;
   private boolean activated;
+  private AtomicInteger publishCount = new AtomicInteger();
+  private AtomicDouble publishDuration = new AtomicDouble();
 
   /**
    * Combine two message configurations together (for applying defaults).
@@ -334,7 +340,26 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     }
   }
 
-  public abstract void publish(Bundle bundle);
+  public final void publish(Bundle bundle) {
+    Instant start = Instant.now();
+    try {
+      publishRaw(bundle);
+    } finally {
+      accumulateDuration(Duration.between(start, Instant.now()));
+    }
+  }
+
+  protected abstract void publishRaw(Bundle bundle);
+
+  protected synchronized void accumulateDuration(Duration duration) {
+    double seconds = duration.getSeconds() + duration.toMillisPart() / 1000.0;
+    publishCount.incrementAndGet();
+    publishDuration.addAndGet(seconds);
+  }
+
+  private synchronized Entry<Integer, Double> extractDuration() {
+    return new SimpleEntry<>(publishCount.getAndSet(0), publishDuration.getAndSet(0));
+  }
 
   @Override
   public void shutdown() {

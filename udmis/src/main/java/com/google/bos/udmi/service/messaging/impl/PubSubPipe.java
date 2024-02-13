@@ -2,7 +2,6 @@ package com.google.bos.udmi.service.messaging.impl;
 
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
-import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
@@ -130,7 +129,7 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
   }
 
   @Override
-  public void publish(Bundle bundle) {
+  protected void publishRaw(Bundle bundle) {
     if (publisher == null) {
       trace("Dropping message because publisher is null");
       return;

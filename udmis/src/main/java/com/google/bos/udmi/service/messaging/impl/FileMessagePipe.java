@@ -96,7 +96,7 @@ public class FileMessagePipe extends MessageBase {
   }
 
   @Override
-  public void publish(Bundle bundle) {
+  protected void publishRaw(Bundle bundle) {
     if (outFileRoot == null) {
       throw new IllegalStateException("trace out file not defined, no send_id");
     }
