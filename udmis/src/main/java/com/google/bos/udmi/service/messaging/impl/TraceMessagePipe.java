@@ -86,7 +86,7 @@ public class TraceMessagePipe extends MessageBase {
   }
 
   @Override
-  public void publish(Bundle bundle) {
+  protected void publishRaw(Bundle bundle) {
     if (traceOutFile == null) {
       throw new IllegalStateException("trace out file not defined, no send_id");
     }
