@@ -298,6 +298,7 @@ public class SequenceBase {
   private Boolean expectedSystemStatus;
   private Description testDescription;
   private SubFolder testSchema;
+  private int lastStatusLevel;
 
   private static void setupSequencer() {
     exeConfig = SequenceRunner.ensureExecutionConfig();
@@ -1963,15 +1964,18 @@ public class SequenceBase {
   private Boolean hasInterestingSystemStatus() {
     // State missing is neither interesting nor not-interesting...
     if (deviceState == null || deviceState.system == null) {
+      lastStatusLevel = 0;
       return null;
     }
 
-    if (deviceState.system.status != null) {
-      debug("Status level: " + deviceState.system.status.level);
+    int statusLevel = GeneralUtils.catchToElse(() -> deviceState.system.status.level, 0);
+
+    if (statusLevel != lastStatusLevel) {
+      debug("State system Status level: " + statusLevel);
+      lastStatusLevel = statusLevel;
     }
 
-    return deviceState.system.status != null
-        && deviceState.system.status.level >= Level.WARNING.value();
+    return statusLevel >= Level.WARNING.value();
   }
 
   protected void checkThatHasInterestingSystemStatus(boolean isInteresting) {
@@ -2186,6 +2190,7 @@ public class SequenceBase {
         sequenceMd = new PrintWriter(newOutputStream(new File(testDir, SEQUENCE_MD).toPath()));
         writeSequenceMdHeader();
 
+        lastStatusLevel = 0;
         startSequenceStatus(description);
 
         startCaptureTime = 0;
