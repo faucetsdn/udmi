@@ -125,7 +125,7 @@ public class GeneralUtils {
   }
 
   public static String encodeBase64(String payload) {
-    return encodeBase64(payload.getBytes());
+    return ifNotNullGet(payload, raw -> encodeBase64(raw.getBytes()));
   }
 
   public static String encodeBase64(byte[] payload) {

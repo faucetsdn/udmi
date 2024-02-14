@@ -1,18 +1,14 @@
 package com.google.daq.mqtt.util;
 
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.udmi.util.GeneralUtils.*;
+import static com.google.daq.mqtt.util.NetworkFamily.FAMILIES;
 import static com.google.udmi.util.GeneralUtils.catchOrElse;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.getTimestampString;
 import static java.util.Objects.requireNonNull;
-import static java.util.Optional.ofNullable;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.udmi.util.GeneralUtils;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import udmi.schema.Config;
 import udmi.schema.GatewayConfig;
 import udmi.schema.LocalnetConfig;
@@ -29,7 +25,6 @@ import udmi.schema.SystemConfig;
 public class ConfigGenerator {
 
   public static final String GENERATED_CONFIG_JSON = "generated_config.json";
-  private static final Map<String, NetworkFamily> FAMILIES = ImmutableMap.of();
 
   private final Metadata metadata;
 
