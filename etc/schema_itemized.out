@@ -38,3 +38,5 @@
 36 gateway_proxy_events
 37 gateway_proxy_events
 41 device_config_acked
+42 pointset_publish
+43 pointset_publish
