@@ -44,6 +44,7 @@ public class CloudIotManager {
   private static final String UDMI_UPDATED = "udmi_updated";
   private static final String KEY_BYTES_KEY = "key_bytes";
   private static final String KEY_ALGORITHM_KEY = "key_algorithm";
+  public static final String EMPTY_CONFIG = "{}";
   public final ExecutionConfiguration executionConfiguration;
 
   private final String registryId;
@@ -204,7 +205,8 @@ public class CloudIotManager {
     } else {
       exceptions.capture("updating", () -> updateDevice(deviceId, settings, device));
     }
-    exceptions.capture("configuring", () -> writeDeviceConfig(deviceId, settings.config));
+    String config = ofNullable(settings.config).orElse(EMPTY_CONFIG);
+    exceptions.capture("configuring", () -> writeDeviceConfig(deviceId, config));
     exceptions.throwIfNotEmpty();
     return device == null;
   }

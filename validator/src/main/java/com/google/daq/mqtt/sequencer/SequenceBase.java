@@ -7,6 +7,7 @@ import static com.google.common.base.Predicates.not;
 import static com.google.common.base.Strings.emptyToNull;
 import static com.google.daq.mqtt.sequencer.SequenceBase.Capabilities.LAST_CONFIG;
 import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
+import static com.google.daq.mqtt.util.CloudIotManager.EMPTY_CONFIG;
 import static com.google.daq.mqtt.util.ConfigGenerator.configFrom;
 import static com.google.daq.mqtt.util.IotReflectorClient.REFLECTOR_PREFIX;
 import static com.google.udmi.util.CleanDateFormat.cleanDate;
@@ -1934,7 +1935,7 @@ public class SequenceBase {
    */
   protected void clearOtherConfig() {
     // No need to be fancy here, just clear out the other config with an empty blob.
-    updateMirrorConfig("{}");
+    updateMirrorConfig(EMPTY_CONFIG);
   }
 
   private void updateMirrorConfig(String receivedConfig) {
