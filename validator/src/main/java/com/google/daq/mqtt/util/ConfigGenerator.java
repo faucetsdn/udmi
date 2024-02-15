@@ -57,7 +57,7 @@ public class ConfigGenerator {
       } else {
         config.gateway.proxy_ids = null;
         ifNotNullThen(metadata.gateway.target, target -> {
-          ifNotNullThrow(target.addr,"metadata.gateway.target.addr should not be defined");
+          ifNotNullThrow(target.addr, "metadata.gateway.target.addr should not be defined");
           config.gateway.target = deepCopy(target);
           config.gateway.target.addr = "TODO: NEED TO IMPORT FROM LOCALNET";
         });
