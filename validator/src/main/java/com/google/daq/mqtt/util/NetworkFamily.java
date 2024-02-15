@@ -3,12 +3,15 @@ package com.google.daq.mqtt.util;
 import com.google.common.collect.ImmutableSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public interface NetworkFamily {
 
-  Set<Class<? extends NetworkFamily>> NETWORK_FAMILIES = ImmutableSet.of(VirtualFamily.class);
+  Set<Class<? extends NetworkFamily>> NETWORK_FAMILIES = ImmutableSet.of(
+      VirtualFamily.class,
+      VendorFamily.class,
+      BacnetFamily.class);
+
   Map<String, NetworkFamily> NAMED_FAMILIES = generateFamilyMap(NETWORK_FAMILIES);
 
   static Map<String, NetworkFamily> generateFamilyMap(

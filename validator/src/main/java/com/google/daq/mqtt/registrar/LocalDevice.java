@@ -666,6 +666,7 @@ class LocalDevice {
     String config = getSettings().config;
     if (config != null) {
       File configFile = new File(outDir, GENERATED_CONFIG_JSON);
+      configFile.delete();
       try (OutputStream outputStream = Files.newOutputStream(configFile.toPath())) {
         outputStream.write(config.getBytes());
       } catch (Exception e) {

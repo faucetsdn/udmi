@@ -87,14 +87,14 @@ public class ConfigGenerator {
   PointPointsetConfig configFromMetadata(PointPointsetModel metadata, boolean excludeUnits) {
     PointPointsetConfig pointConfig = new PointPointsetConfig();
     pointConfig.units = excludeUnits ? null : metadata.units;
-    pointConfig.ref = getGatewayPointRef(metadata);
+    pointConfig.ref = pointConfigRef(metadata);
     if (Boolean.TRUE.equals(metadata.writable)) {
       pointConfig.set_value = metadata.baseline_value;
     }
     return pointConfig;
   }
 
-  private String getGatewayPointRef(PointPointsetModel model) {
+  private String pointConfigRef(PointPointsetModel model) {
     String metadataRef = model.ref;
     if (metadataRef == null) {
       return null;
