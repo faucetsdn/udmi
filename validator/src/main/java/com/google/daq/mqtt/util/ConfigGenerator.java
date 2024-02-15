@@ -5,6 +5,7 @@ import static com.google.daq.mqtt.util.NetworkFamily.NAMED_FAMILIES;
 import static com.google.udmi.util.GeneralUtils.catchToElse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThrow;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.getTimestampString;
@@ -55,10 +56,11 @@ public class ConfigGenerator {
         config.gateway.proxy_ids = getProxyDevicesList();
       } else {
         config.gateway.proxy_ids = null;
-        ifNotNullThrow(metadata.gateway.target.addr,
-            "metadata.gateway.target.addr should not be defined");
-        config.gateway.target = deepCopy(metadata.gateway.target);
-        config.gateway.target.addr = "TODO: NEED TO IMPORT FROM LOCALNET";
+        ifNotNullThen(metadata.gateway.target, target -> {
+          ifNotNullThrow(target.addr,"metadata.gateway.target.addr should not be defined");
+          config.gateway.target = deepCopy(target);
+          config.gateway.target.addr = "TODO: NEED TO IMPORT FROM LOCALNET";
+        });
       }
     }
     if (metadata.pointset != null) {
