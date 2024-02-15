@@ -100,7 +100,7 @@ public class Registrar {
   private static final String CONFIG_SUB_TYPE = "config";
   private static final String MODEL_SUB_TYPE = "model";
   private static final boolean DEFAULT_BLOCK_UNKNOWN = true;
-  private static final int EACH_ITEM_TIMEOUT_SEC = 30;
+  private static final int EACH_ITEM_TIMEOUT_SEC = 60;
   private static final int EXIT_CODE_ERROR = 1;
   private static final Map<String, Class<? extends Summarizer>> SUMMARIZERS = ImmutableMap.of(
       ".json", Summarizer.JsonSummarizer.class,
@@ -825,14 +825,14 @@ public class Registrar {
     }
   }
 
-  private synchronized void dynamicTerminate(int expectedCount) throws InterruptedException {
+  private synchronized void dynamicTerminate(int expected) throws InterruptedException {
     try {
       if (executor == null) {
         return;
       }
       executor.shutdown();
-      int timeout = (int) (Math.ceil(expectedCount / (double) runnerThreads) * EACH_ITEM_TIMEOUT_SEC * 2);
-      System.err.printf("Waiting %ds for %d tasks to complete...%n", timeout, expectedCount);
+      int timeout = (int) (Math.ceil(expected / (double) runnerThreads) * EACH_ITEM_TIMEOUT_SEC);
+      System.err.printf("Waiting %ds for %d tasks to complete...%n", timeout, expected);
       if (!executor.awaitTermination(timeout, TimeUnit.SECONDS)) {
         throw new RuntimeException("Incomplete executor termination after " + timeout + "s");
       }

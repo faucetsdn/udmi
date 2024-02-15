@@ -4,9 +4,12 @@ import static java.lang.String.format;
 
 import java.util.regex.Pattern;
 
+/**
+ * General family of bacnet addresses.
+ */
 public class BacnetFamily implements NetworkFamily {
 
-  Pattern BACNET_REF = Pattern.compile("([A-Z]{2})([0-9]+)\\.([a-z_]+)");
+  private static final Pattern BACNET_REF = Pattern.compile("([A-Z]{2})([0-9]+)\\.([a-z_]+)");
 
   @Override
   public String familyName() {
