@@ -5,6 +5,7 @@
     "min_loglevel": 300,
     "metrics_rate_sec": 10
   },
+  "gateway": { },
   "pointset": {
     "points": {
       "split_threshold": {

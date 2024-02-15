@@ -6,11 +6,10 @@
     "metrics_rate_sec": 10,
     "operation": { }
   },
-  "localnet": {
-    "families": {
-      "virtual": {
-        "addr": "0x65"
-      }
+  "gateway": {
+    "target": {
+      "addr": "TODO: NEED TO IMPORT FROM LOCALNET",
+      "family": "vendor"
     }
   },
   "pointset": {

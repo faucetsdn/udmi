@@ -31,11 +31,14 @@
     }
   },
   "gateway": {
-    "gateway_id": "GAT-123"
+    "gateway_id": "GAT-123",
+    "target": {
+      "family": "vendor"
+    }
   },
   "localnet": {
     "families": {
-      "virtual": {
+      "vendor": {
         "addr": "0x65"
       }
     }
