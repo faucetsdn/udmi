@@ -1,8 +1,7 @@
 package com.google.daq.mqtt.util;
 
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.daq.mqtt.util.NetworkFamily.FAMILIES;
-import static com.google.udmi.util.GeneralUtils.catchOrElse;
+import static com.google.daq.mqtt.util.NetworkFamily.NAMED_FAMILIES;
 import static com.google.udmi.util.GeneralUtils.catchToElse;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.getTimestampString;
@@ -102,9 +101,9 @@ public class ConfigGenerator {
     }
     String family = catchToElse(() -> metadata.gateway.target.family, (String) null);
     requireNonNull(family, "point ref indicated without gateway.target.family designation");
-    checkState(FAMILIES.containsKey(family), "gateway.target.family unknown: " + family);
+    checkState(NAMED_FAMILIES.containsKey(family), "gateway.target.family unknown: " + family);
     checkState(metadata.gateway.target.addr == null, "gateway.target.addr should not be defined");
-    FAMILIES.get(family).refValidator(metadataRef);
+    NAMED_FAMILIES.get(family).refValidator(metadataRef);
     return metadataRef;
   }
 
