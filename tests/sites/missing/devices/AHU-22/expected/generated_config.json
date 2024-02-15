@@ -9,7 +9,7 @@
   "gateway": {
     "target": {
       "addr": "TODO: NEED TO IMPORT FROM LOCALNET",
-      "family": "vendor"
+      "family": "bacnet"
     }
   },
   "pointset": {
