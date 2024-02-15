@@ -250,6 +250,12 @@ public class GeneralUtils {
     }
   }
 
+  public static <T> void ifNotNullThrow(T value, String message) {
+    if (value != null) {
+      throw new RuntimeException(message);
+    }
+  }
+
   public static <T> void ifNotNullThen(T value, Consumer<T> consumer) {
     ofNullable(value).ifPresent(consumer);
   }

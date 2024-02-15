@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 public interface NetworkFamily {
 
   Set<Class<? extends NetworkFamily>> NETWORK_FAMILIES = ImmutableSet.of(
-      VirtualFamily.class,
       VendorFamily.class,
       BacnetFamily.class);
 

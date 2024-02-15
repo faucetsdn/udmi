@@ -41,7 +41,6 @@ import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.MessageDowngrader;
 import com.google.udmi.util.MessageUpgrader;
-import com.google.udmi.util.SchemaVersion;
 import com.google.udmi.util.SiteModel;
 import com.google.udmi.util.SiteModel.MetadataException;
 import java.io.File;
@@ -367,7 +366,7 @@ class LocalDevice {
       if (metadata == null) {
         return;
       }
-      if (hasGateway() && hasAuthType()) {
+      if (isProxied() && hasAuthType()) {
         throw new RuntimeException("Proxied devices should not have cloud.auth_type defined");
       }
       if (!isDirectConnect()) {
@@ -452,12 +451,12 @@ class LocalDevice {
     return config.isGateway();
   }
 
-  boolean hasGateway() {
-    return config.hasGateway();
+  boolean isProxied() {
+    return config.isProxied();
   }
 
   boolean isDirectConnect() {
-    return isGateway() || !hasGateway();
+    return isGateway() || !isProxied();
   }
 
   CloudDeviceSettings getSettings() {

@@ -3,8 +3,12 @@ package com.google.daq.mqtt.util;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.util.NetworkFamily.NAMED_FAMILIES;
 import static com.google.udmi.util.GeneralUtils.catchToElse;
+import static com.google.udmi.util.GeneralUtils.catchToNull;
+import static com.google.udmi.util.GeneralUtils.deepCopy;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThrow;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.getTimestampString;
+import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 import java.util.HashMap;
@@ -45,9 +49,17 @@ public class ConfigGenerator {
     config.version = metadata.version;
     config.system = new SystemConfig();
     config.system.operation = new Operation();
-    if (isGateway()) {
+    if (isGateway() || isProxied()) {
       config.gateway = new GatewayConfig();
-      config.gateway.proxy_ids = getProxyDevicesList();
+      if (isGateway()) {
+        config.gateway.proxy_ids = getProxyDevicesList();
+      } else {
+        config.gateway.proxy_ids = null;
+        ifNotNullThrow(metadata.gateway.target.addr,
+            "metadata.gateway.target.addr should not be defined");
+        config.gateway.target = deepCopy(metadata.gateway.target);
+        config.gateway.target.addr = "TODO: NEED TO IMPORT FROM LOCALNET";
+      }
     }
     if (metadata.pointset != null) {
       config.pointset = getDevicePointsetConfig();
@@ -96,13 +108,16 @@ public class ConfigGenerator {
 
   private String pointConfigRef(PointPointsetModel model) {
     String metadataRef = model.ref;
-    if (metadataRef == null) {
-      return null;
+    String gatewayId = catchToNull(() -> metadata.gateway.gateway_id);
+    if (metadataRef == null || gatewayId == null) {
+      return metadataRef;
     }
     String family = catchToElse(() -> metadata.gateway.target.family, (String) null);
     requireNonNull(family, "point ref indicated without gateway.target.family designation");
     checkState(NAMED_FAMILIES.containsKey(family), "gateway.target.family unknown: " + family);
-    checkState(metadata.gateway.target.addr == null, "gateway.target.addr should not be defined");
+    ifNotNullThrow(metadata.gateway.target.addr, "gateway.target.addr field should not be defined");
+    requireNonNull(catchToNull(() -> metadata.localnet.families.get(family).addr),
+        format("metadata.localnet.families.[%s].addr not defined", family));
     NAMED_FAMILIES.get(family).refValidator(metadataRef);
     return metadataRef;
   }
@@ -121,7 +136,7 @@ public class ConfigGenerator {
         && !metadata.gateway.proxy_ids.isEmpty();
   }
 
-  public boolean hasGateway() {
+  public boolean isProxied() {
     return metadata != null && metadata.gateway != null && metadata.gateway.gateway_id != null;
   }
 

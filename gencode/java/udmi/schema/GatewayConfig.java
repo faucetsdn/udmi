@@ -32,12 +32,14 @@ public class GatewayConfig {
     @JsonPropertyDescription("An array of all the device IDs which are bound to the device")
     public List<String> proxy_ids = new ArrayList<String>();
     /**
-     * For proxied devices, this represents the target proxy device address for use by the gateway
+     * Family Localnet Model
+     * <p>
+     * The type of network
      * 
      */
     @JsonProperty("target")
-    @JsonPropertyDescription("For proxied devices, this represents the target proxy device address for use by the gateway")
-    public Target target;
+    @JsonPropertyDescription("The type of network")
+    public FamilyLocalnetModel target;
 
     @Override
     public int hashCode() {

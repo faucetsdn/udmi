@@ -17,12 +17,7 @@
     },
     "target": {
       "description": "For proxied devices, this represents the target proxy device address for use by the gateway",
-      "type": "object",
-      "properties": {
-        "family": {
-          "type": "string"
-        }
-      }
+      "$ref": "file:model_localnet_family.json"
     }
   }
 }
