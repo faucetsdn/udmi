@@ -118,7 +118,8 @@ public class ConfigGenerator {
     return pointsetConfig;
   }
 
-  PointPointsetConfig configFromMetadata(String configKey, PointPointsetModel metadata, boolean excludeUnits) {
+  PointPointsetConfig configFromMetadata(String configKey, PointPointsetModel metadata,
+      boolean excludeUnits) {
     try {
       PointPointsetConfig pointConfig = new PointPointsetConfig();
       pointConfig.units = excludeUnits ? null : metadata.units;

@@ -1,7 +1,7 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.4.1",
-  "hash": "f3c7d336",
+  "hash": "0d8a1f34",
   "system": {
     "location": {
       "site": "ZZ-TRI-FECTA",
@@ -41,7 +41,8 @@
         "ref": "MCN8.present_value"
       },
       "filter_differential_pressure": {
-        "units": "Bars"
+        "units": "Bars",
+        "ref": "AI2.differential"
       },
       "filter_differential_pressure_sensor": {
         "units": "Degrees-Celsius",
