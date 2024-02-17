@@ -17,6 +17,7 @@ RESULT pass system family_ipv4_addr PREVIEW 5/5 Sequence complete
 RESULT pass system family_ipv6_addr PREVIEW 5/5 Sequence complete
 RESULT pass enumeration.features feature_enumeration PREVIEW 5/5 Sequence complete
 RESULT skip gateway gateway_proxy_events BETA 0/0 Not a gateway
+RESULT skip gateway proxied_setup ALPHA 0/0 Not a proxied device
 RESULT pass enumeration multi_enumeration ALPHA 5/5 Sequence complete
 RESULT pass discovery.scan periodic_scan ALPHA 5/5 Sequence complete
 RESULT pass enumeration.pointset pointset_enumeration ALPHA 5/5 Sequence complete
