@@ -2,10 +2,11 @@
   "pointset": {
     "points": {
       "triangulating_axis": {
+        "ref": "AI2.present_value",
         "units": "Degrees-phase"
       },
       "split_threshold": {
-        "ref": "ai8.present_value",
+        "ref": "MET2.present_value",
         "units": "Imperial-gallons-per-minute"
       }
     }
@@ -26,6 +27,13 @@
     "gateway_id": "GAT-123",
     "target": {
       "family": "bacnet"
+    }
+  },
+  "localnet": {
+    "families": {
+      "bacnet": {
+        "addr": "12642174"
+      }
     }
   },
   "version": 1,

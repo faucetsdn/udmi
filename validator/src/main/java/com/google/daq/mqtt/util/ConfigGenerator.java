@@ -2,7 +2,6 @@ package com.google.daq.mqtt.util;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.util.NetworkFamily.NAMED_FAMILIES;
-import static com.google.udmi.util.GeneralUtils.catchToElse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
@@ -14,6 +13,7 @@ import static java.util.Objects.requireNonNull;
 
 import java.util.HashMap;
 import java.util.List;
+import org.jetbrains.annotations.NotNull;
 import udmi.schema.Config;
 import udmi.schema.GatewayConfig;
 import udmi.schema.LocalnetConfig;
@@ -48,35 +48,55 @@ public class ConfigGenerator {
     Config config = new Config();
     config.timestamp = metadata.timestamp;
     config.version = metadata.version;
-    config.system = new SystemConfig();
-    config.system.operation = new Operation();
-    if (isGateway() || isProxied()) {
-      config.gateway = new GatewayConfig();
-      if (isGateway()) {
-        config.gateway.proxy_ids = getProxyDevicesList();
-      } else {
-        config.gateway.proxy_ids = null;
-        ifNotNullThen(metadata.gateway.target, target -> {
-          ifNotNullThrow(target.addr, "metadata.gateway.target.addr should not be defined");
-          config.gateway.target = deepCopy(target);
-          config.gateway.target.addr = "TODO: NEED TO IMPORT FROM LOCALNET";
-        });
-      }
-    }
-    if (metadata.pointset != null) {
-      config.pointset = getDevicePointsetConfig();
-    }
-    if (metadata.localnet != null) {
-      config.localnet = getDeviceLocalnetConfig();
-    }
-    // Copy selected MetadataSystem properties into device config.
-    if (metadata.system.min_loglevel != null) {
-      config.system.min_loglevel = metadata.system.min_loglevel;
-    }
+    config.system = getSystemConfig();
+    config.gateway = getGatewayConfig();
+    config.pointset = getDevicePointsetConfig();
+    config.localnet = getDeviceLocalnetConfig();
     return config;
   }
 
+  @NotNull
+  private SystemConfig getSystemConfig() {
+    SystemConfig system;
+    system = new SystemConfig();
+    system.operation = new Operation();
+    system.min_loglevel = metadata.system.min_loglevel;
+    return system;
+  }
+
+  @NotNull
+  private GatewayConfig getGatewayConfig() {
+    if (metadata.gateway == null) {
+      return null;
+    }
+
+    GatewayConfig gatewayConfig = new GatewayConfig();
+    gatewayConfig.proxy_ids = null;
+    if (isGateway()) {
+      gatewayConfig.proxy_ids = getProxyDevicesList();
+    } else if (isProxied()) {
+      final GatewayConfig configVar = gatewayConfig;
+      ifNotNullThen(metadata.gateway.target, target -> {
+        ifNotNullThrow(target.addr, "metadata.gateway.target.addr should not be defined");
+        configVar.target = deepCopy(target);
+        configVar.target.addr = getLocalnetAddr(target.family);
+      });
+    } else {
+      throw new RuntimeException("gateway block is neither gateway nor proxied");
+    }
+    return gatewayConfig;
+  }
+
+  private String getLocalnetAddr(String family) {
+    String address = catchToNull(() -> metadata.localnet.families.get(family).addr);
+    return requireNonNull(address, format("metadata.localnet.families[%s].addr undefined", family));
+  }
+
   private PointsetConfig getDevicePointsetConfig() {
+    if (metadata.pointset == null) {
+      return null;
+    }
+
     PointsetConfig pointsetConfig = new PointsetConfig();
     boolean excludeUnits = isTrue(metadata.pointset.exclude_units_from_config);
     boolean excludePoints = isTrue(metadata.pointset.exclude_points_from_config);
@@ -85,7 +105,7 @@ public class ConfigGenerator {
       metadata.pointset.points.forEach(
           (metadataKey, value) ->
               pointsetConfig.points.computeIfAbsent(
-                  metadataKey, configKey -> configFromMetadata(value, excludeUnits)));
+                  metadataKey, configKey -> configFromMetadata(configKey, value, excludeUnits)));
     }
 
     // Copy selected MetadataPointset properties into PointsetConfig.
@@ -98,30 +118,39 @@ public class ConfigGenerator {
     return pointsetConfig;
   }
 
-  PointPointsetConfig configFromMetadata(PointPointsetModel metadata, boolean excludeUnits) {
-    PointPointsetConfig pointConfig = new PointPointsetConfig();
-    pointConfig.units = excludeUnits ? null : metadata.units;
-    pointConfig.ref = pointConfigRef(metadata);
-    if (Boolean.TRUE.equals(metadata.writable)) {
-      pointConfig.set_value = metadata.baseline_value;
+  PointPointsetConfig configFromMetadata(String configKey, PointPointsetModel metadata, boolean excludeUnits) {
+    try {
+      PointPointsetConfig pointConfig = new PointPointsetConfig();
+      pointConfig.units = excludeUnits ? null : metadata.units;
+      pointConfig.ref = pointConfigRef(metadata);
+      if (Boolean.TRUE.equals(metadata.writable)) {
+        pointConfig.set_value = metadata.baseline_value;
+      }
+      return pointConfig;
+    } catch (Exception e) {
+      throw new RuntimeException("While converting point " + configKey, e);
     }
-    return pointConfig;
   }
 
   private String pointConfigRef(PointPointsetModel model) {
-    String metadataRef = model.ref;
-    String gatewayId = catchToNull(() -> metadata.gateway.gateway_id);
-    if (metadataRef == null || gatewayId == null) {
-      return metadataRef;
+    String pointRef = model.ref;
+    String family = catchToNull(() -> metadata.gateway.target.family);
+
+    if (!isProxied()) {
+      return pointRef;
     }
-    String family = catchToElse(() -> metadata.gateway.target.family, (String) null);
-    requireNonNull(family, "point ref indicated without gateway.target.family designation");
+
+    requireNonNull(family, "missing gateway.target.family designation");
     checkState(NAMED_FAMILIES.containsKey(family), "gateway.target.family unknown: " + family);
     ifNotNullThrow(metadata.gateway.target.addr, "gateway.target.addr field should not be defined");
     requireNonNull(catchToNull(() -> metadata.localnet.families.get(family).addr),
         format("metadata.localnet.families.[%s].addr not defined", family));
-    NAMED_FAMILIES.get(family).refValidator(metadataRef);
-    return metadataRef;
+    NAMED_FAMILIES.get(family).refValidator(pointRef);
+    return pointRef;
+  }
+
+  private String getGatewayId() {
+    return catchToNull(() -> metadata.gateway.gateway_id);
   }
 
   private LocalnetConfig getDeviceLocalnetConfig() {
@@ -139,7 +168,7 @@ public class ConfigGenerator {
   }
 
   public boolean isProxied() {
-    return metadata != null && metadata.gateway != null && metadata.gateway.gateway_id != null;
+    return getGatewayId() != null;
   }
 
   public List<String> getProxyDevicesList() {

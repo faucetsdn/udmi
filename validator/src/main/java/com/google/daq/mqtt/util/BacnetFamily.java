@@ -1,6 +1,7 @@
 package com.google.daq.mqtt.util;
 
 import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 
 import java.util.regex.Pattern;
 
@@ -21,7 +22,7 @@ public class BacnetFamily implements NetworkFamily {
 
   @Override
   public void refValidator(String metadataRef) {
-    System.err.println("Evaluating bacnet " + metadataRef);
+    requireNonNull(metadataRef, "missing required bacnet point ref");
     boolean matches = BACNET_REF.matcher(metadataRef).matches();
     if (!matches) {
       throw new RuntimeException(

@@ -10,6 +10,7 @@
         "ref": "FAXLE12.present_value"
       },
       "filter_differential_pressure": {
+        "ref": "AI2.differential",
         "units": "Bars"
       }
     }
