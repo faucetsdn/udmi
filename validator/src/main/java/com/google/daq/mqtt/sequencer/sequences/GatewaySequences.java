@@ -20,7 +20,8 @@ import udmi.schema.Bucket;
 import udmi.schema.FeatureEnumeration.FeatureStage;
 
 /**
- * Specific tests for gateway functionality.
+ * Specific tests for logical gateway devices. This is not the same as proxied
+ * devices (devices that are proxied through a gateway).
  */
 public class GatewaySequences extends SequenceBase {
 
