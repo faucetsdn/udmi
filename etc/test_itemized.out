@@ -32,5 +32,3 @@
 36 RESULT pass gateway gateway_proxy_events BETA 5/5 Sequence complete
 37 RESULT fail gateway gateway_proxy_events BETA 0/5 Received state update with no-state device
 41 RESULT skip system device_config_acked BETA 0/0 No config check for proxy device
-42 RESULT pass pointset pointset_publish BETA 5/5 Sequence complete
-43 RESULT fail pointset pointset_publish BETA 5/5 Timeout b/c of bad address

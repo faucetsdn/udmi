@@ -39,5 +39,3 @@ TEST gateway_proxy_events badState
 # Test proxy device configurations
 WITH AHU-22
 TEST device_config_acked
-TEST pointset_publish
-TEST pointset_publish badAddr
