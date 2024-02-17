@@ -13,7 +13,7 @@
         "units": "No-units"
       },
       "filter_differential_pressure_sensor": {
-        "ref": "AV12.present_value",
+        "ref": "FAXLE12.present_value",
         "units": "Degrees-Celsius"
       },
       "filter_differential_pressure_setpoint": {

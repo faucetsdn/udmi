@@ -5,6 +5,7 @@
         "units": "Degrees-phase"
       },
       "split_threshold": {
+        "ref": "ai8.present_value",
         "units": "Imperial-gallons-per-minute"
       }
     }
@@ -22,7 +23,10 @@
     }
   },
   "gateway": {
-    "gateway_id": "GAT-123"
+    "gateway_id": "GAT-123",
+    "target": {
+      "family": "bacnet"
+    }
   },
   "version": 1,
   "timestamp": "2020-05-01T13:39:07Z",

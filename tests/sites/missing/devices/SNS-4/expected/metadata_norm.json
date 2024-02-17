@@ -2,7 +2,7 @@
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.4.1",
   "upgraded_from": "1",
-  "hash": "302d594c",
+  "hash": "3fa840aa",
   "system": {
     "location": {
       "site": "ZZ-TRI-FECTA",
@@ -19,12 +19,16 @@
   },
   "gateway": {
     "gateway_id": "GAT-123",
+    "target": {
+      "family": "bacnet"
+    },
     "proxy_ids": [ ]
   },
   "pointset": {
     "points": {
       "split_threshold": {
-        "units": "Imperial-gallons-per-minute"
+        "units": "Imperial-gallons-per-minute",
+        "ref": "ai8.present_value"
       },
       "triangulating_axis": {
         "units": "Degrees-phase"

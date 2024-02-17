@@ -1,0 +1,3 @@
+Exceptions for AHU-22
+  While converting device config
+    point ref FAXLE12.present_value does not match expression ([A-Z]{2,4})([0-9]+)\.([a-z_]+)

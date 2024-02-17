@@ -3,11 +3,11 @@
     "points": {
       "filter_alarm_pressure_status": {
         "units": "No-units",
-        "ref": "BV11.present_value"
+        "ref": "MCN8.present_value"
       },
       "filter_differential_pressure_sensor": {
         "units": "Degrees-Celsius",
-        "ref": "AV12.present_value"
+        "ref": "FAXLE12.present_value"
       },
       "filter_differential_pressure": {
         "units": "Bars"

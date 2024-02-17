@@ -9,7 +9,10 @@ import java.util.regex.Pattern;
  */
 public class BacnetFamily implements NetworkFamily {
 
-  private static final Pattern BACNET_REF = Pattern.compile("([A-Z]{2})([0-9]+)\\.([a-z_]+)");
+  // TODO: Make something that validates a bacnet addr against a decimal integer.
+
+  // TODO: Fix this so it can include all the different forms.
+  private static final Pattern BACNET_REF = Pattern.compile("([A-Z]{2,4})([0-9]+)\\.([a-z_]+)");
 
   @Override
   public String familyName() {
@@ -18,6 +21,7 @@ public class BacnetFamily implements NetworkFamily {
 
   @Override
   public void refValidator(String metadataRef) {
+    System.err.println("Evaluating bacnet " + metadataRef);
     boolean matches = BACNET_REF.matcher(metadataRef).matches();
     if (!matches) {
       throw new RuntimeException(

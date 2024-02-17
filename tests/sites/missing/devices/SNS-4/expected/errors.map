@@ -1,0 +1,3 @@
+Exceptions for SNS-4
+  While converting device config
+    metadata.localnet.families.[bacnet].addr not defined

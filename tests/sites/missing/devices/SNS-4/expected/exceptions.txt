@@ -1,0 +1,4 @@
+Initializing
+java.lang.RuntimeException: While converting device config
+	REDACTED
+Caused by: java.lang.NullPointerException: metadata.localnet.families.[bacnet].addr not defined
