@@ -1,4 +1,5 @@
 //
+// Self enumeration event (a device is describing itself)
 // Sent on MQTT topic: /devices/{device_id}/events/discovery
 // where {device_id} is that of the enumerated node.
 //

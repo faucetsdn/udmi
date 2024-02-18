@@ -1,9 +1,9 @@
 package daq.pubber;
 
-import udmi.schema.PointEnumerationEvent;
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetEvent;
 import udmi.schema.PointPointsetState;
+import udmi.schema.UniqEnumerationEvent;
 
 /**
  * Interface representing a point reading.
@@ -22,5 +22,5 @@ public interface AbstractPoint {
 
   void setConfig(PointPointsetConfig config);
 
-  PointEnumerationEvent enumerate();
+  UniqEnumerationEvent enumerate();
 }

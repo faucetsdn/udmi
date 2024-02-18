@@ -4,11 +4,12 @@ import static com.google.udmi.util.GeneralUtils.getNow;
 
 import udmi.schema.Category;
 import udmi.schema.Entry;
-import udmi.schema.PointEnumerationEvent;
+import udmi.schema.UniqEnumerationEvent;
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetEvent;
 import udmi.schema.PointPointsetState;
 import udmi.schema.PointPointsetState.Value_state;
+import udmi.schema.UniqEnumerationEvent;
 
 /**
  * Abstract representation of a basic data point.
@@ -117,8 +118,8 @@ public abstract class BasicPoint implements AbstractPoint {
   }
 
   @Override
-  public PointEnumerationEvent enumerate() {
-    PointEnumerationEvent point = new PointEnumerationEvent();
+  public UniqEnumerationEvent enumerate() {
+    UniqEnumerationEvent point = new UniqEnumerationEvent();
     point.description = getClass().getSimpleName() + " " + getName();
     point.writable = writable ? true : null;
     populateEnumeration(point);
@@ -135,5 +136,5 @@ public abstract class BasicPoint implements AbstractPoint {
     return entry;
   }
 
-  protected abstract void populateEnumeration(PointEnumerationEvent point);
+  protected abstract void populateEnumeration(UniqEnumerationEvent point);
 }
