@@ -36,6 +36,9 @@ public class GatewaySequences extends SequenceBase {
     super.setUp();
   }
 
+  // TODO: Add test for attach error logging
+  // TODO: Add test for removing/restoring proxied device
+
   @Feature(stage = FeatureStage.BETA, bucket = Bucket.GATEWAY, nostate = true)
   @Summary("Check that a gateway proxies pointset events for indicated devices")
   @Test(timeout = NINETY_SECONDS_MS)

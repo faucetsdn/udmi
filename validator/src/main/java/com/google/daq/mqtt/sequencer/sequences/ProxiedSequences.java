@@ -21,6 +21,8 @@ public class ProxiedSequences extends PointsetBase {
     super.setUp();
   }
 
+  // TODO: Add test for missing target/wrong address
+  // TODO: Add test for missing target/wrong family
   @Feature(stage = FeatureStage.ALPHA, bucket = Bucket.GATEWAY, nostate = true)
   @Summary("Basic check for proxied device proxying points")
   @Test(timeout = ONE_MINUTE_MS)
