@@ -222,7 +222,7 @@ public class DiscoveryManager extends ManagerBase {
 
   private Map<String, PointEnumerationEvent> enumeratePoints(String deviceId) {
     return siteModel.getMetadata(deviceId).pointset.points.entrySet().stream().collect(
-        Collectors.toMap(this::getPointPointKey, this::getPointEnumerationEvent));
+        Collectors.toMap(this::getPointUniqKey, this::getPointEnumerationEvent));
   }
 
   private String getPointUniqKey(Map.Entry<String, PointPointsetModel> entry) {

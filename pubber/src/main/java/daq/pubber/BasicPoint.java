@@ -4,11 +4,11 @@ import static com.google.udmi.util.GeneralUtils.getNow;
 
 import udmi.schema.Category;
 import udmi.schema.Entry;
+import udmi.schema.PointEnumerationEvent;
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetEvent;
 import udmi.schema.PointPointsetState;
 import udmi.schema.PointPointsetState.Value_state;
-import udmi.schema.PointEnumerationEvent;
 
 /**
  * Abstract representation of a basic data point.

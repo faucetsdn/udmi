@@ -108,12 +108,12 @@ public class DiscoverySequences extends SequenceBase {
       checkThat("no feature enumeration", () -> event.features == null);
     }
 
-    if (isTrue(enumerate.uniqs)) {
+    if (isTrue(enumerate.points)) {
       int expectedSize = Optional.ofNullable(deviceMetadata.pointset.points).map(HashMap::size)
           .orElse(0);
-      checkThat("enumerated point count matches", () -> event.uniqs.size() == expectedSize);
+      checkThat("enumerated point count matches", () -> event.points.size() == expectedSize);
     } else {
-      checkThat("no point enumeration", () -> event.uniqs == null);
+      checkThat("no point enumeration", () -> event.points == null);
     }
   }
 
@@ -156,7 +156,7 @@ public class DiscoverySequences extends SequenceBase {
       skipTest("No metadata pointset points defined");
     }
     Enumerate enumerate = new Enumerate();
-    enumerate.uniqs = true;
+    enumerate.points = true;
     DiscoveryEvent event = runEnumeration(enumerate);
     checkSelfEnumeration(event, enumerate);
   }
@@ -188,7 +188,7 @@ public class DiscoverySequences extends SequenceBase {
     Enumerate enumerate = new Enumerate();
     enumerate.families = isBucketEnabled(ENUMERATION_FAMILIES);
     enumerate.features = isBucketEnabled(ENUMERATION_FEATURES);
-    enumerate.uniqs = isBucketEnabled(ENUMERATION_POINTSET);
+    enumerate.points = isBucketEnabled(ENUMERATION_POINTSET);
     DiscoveryEvent event = runEnumeration(enumerate);
     checkSelfEnumeration(event, enumerate);
   }
@@ -226,8 +226,8 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   private void checkEnumeration(List<DiscoveryEvent> receivedEvents, boolean shouldEnumerate) {
-    Predicate<DiscoveryEvent> hasPoints = event -> event.uniqs != null
-        && !event.uniqs.isEmpty();
+    Predicate<DiscoveryEvent> hasPoints = event -> event.points != null
+        && !event.points.isEmpty();
     if (shouldEnumerate) {
       assertTrue("with enumeration", receivedEvents.stream().allMatch(hasPoints));
     } else {
