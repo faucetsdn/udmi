@@ -1,7 +1,7 @@
 {
   "enumerate" : {
     "families" : true,
-    "uniqs" : true,
+    "points" : true,
     "features" : true
   }
 }

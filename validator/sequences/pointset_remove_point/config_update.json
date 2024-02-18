@@ -1,6 +1,17 @@
 {
-  "blobset" : { },
-  "discovery" : { },
+  "localnet" : {
+    "families" : {
+      "ether" : {
+        "addr" : "00:22:48:09:9b:0f"
+      },
+      "ipv4" : {
+        "addr" : "10.1.0.48"
+      },
+      "ipv6" : {
+        "addr" : "fe80::222:48ff:fe09:9b0f"
+      }
+    }
+  },
   "pointset" : {
     "points" : {
       "filter_alarm_pressure_status" : {
@@ -18,15 +29,15 @@
     }
   },
   "system" : {
-    "metrics_rate_sec" : 600,
+    "metrics_rate_sec" : 10,
     "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2023-11-07T14:29:19Z"
+      "last_start" : "2024-02-18T18:44:36Z"
     },
     "testing" : {
-      "sequence_name" : "multi_enumeration"
+      "sequence_name" : "pointset_remove_point"
     }
   },
-  "timestamp" : "2023-11-07T14:30:41Z",
-  "version" : "1.4.2-40-gdeae740b"
+  "timestamp" : "2024-02-18T18:46:40Z",
+  "version" : "1.5.0-16-g48397c75b"
 }
