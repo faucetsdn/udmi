@@ -46,12 +46,12 @@
       }
     },
     "uniqs": {
-      "description": "Collection of unique data points available for this device.",
+      "description": "Collection of unique data sources (uniqs) available for this device.",
       "additionalProperties": false,
-      "existingJavaType": "java.util.Map<String, PointEnumerationEvent>",
+      "existingJavaType": "java.util.Map<String, UniqEnumerationEvent>",
       "patternProperties": {
         "^[-_.:/a-zA-Z0-9]+$": {
-          "$ref": "file:event_discovery_point.json#"
+          "$ref": "file:event_discovery_uniq.json#"
         }
       }
     },
