@@ -1,6 +1,6 @@
 package daq.pubber;
 
-import udmi.schema.UniqEnumerationEvent;
+import udmi.schema.PointEnumerationEvent;
 
 /**
  * Represents a randomly generated numerical point.
@@ -53,7 +53,7 @@ public class RandomPoint extends BasicPoint implements AbstractPoint {
   }
 
   @Override
-  protected void populateEnumeration(UniqEnumerationEvent point) {
+  protected void populateEnumeration(PointEnumerationEvent point) {
     point.units = units;
   }
 }

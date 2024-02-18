@@ -8,7 +8,7 @@ import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetEvent;
 import udmi.schema.PointPointsetState;
 import udmi.schema.PointPointsetState.Value_state;
-import udmi.schema.UniqEnumerationEvent;
+import udmi.schema.PointEnumerationEvent;
 
 /**
  * Abstract representation of a basic data point.
@@ -117,8 +117,8 @@ public abstract class BasicPoint implements AbstractPoint {
   }
 
   @Override
-  public UniqEnumerationEvent enumerate() {
-    UniqEnumerationEvent point = new UniqEnumerationEvent();
+  public PointEnumerationEvent enumerate() {
+    PointEnumerationEvent point = new PointEnumerationEvent();
     point.description = getClass().getSimpleName() + " " + getName();
     point.writable = writable ? true : null;
     populateEnumeration(point);
@@ -135,5 +135,5 @@ public abstract class BasicPoint implements AbstractPoint {
     return entry;
   }
 
-  protected abstract void populateEnumeration(UniqEnumerationEvent point);
+  protected abstract void populateEnumeration(PointEnumerationEvent point);
 }

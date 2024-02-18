@@ -12,9 +12,9 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Uniq Enumeration Event
+ * Point Enumeration Event
  * <p>
- * Object representation for for a single uniq enumeration
+ * Object representation for for a single point enumeration
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -30,56 +30,56 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "ancillary"
 })
 @Generated("jsonschema2pojo")
-public class UniqEnumerationEvent {
+public class PointEnumerationEvent {
 
     /**
-     * Friendly name for the uniq, if known
+     * Friendly name for the point, if known
      * 
      */
     @JsonProperty("name")
-    @JsonPropertyDescription("Friendly name for the uniq, if known")
+    @JsonPropertyDescription("Friendly name for the point, if known")
     public java.lang.String name;
     /**
-     * List of possible enumerated values for the uniq
+     * List of possible enumerated values for the point
      * 
      */
     @JsonProperty("possible_values")
-    @JsonPropertyDescription("List of possible enumerated values for the uniq")
+    @JsonPropertyDescription("List of possible enumerated values for the point")
     public List<java.lang.String> possible_values = new ArrayList<java.lang.String>();
     /**
-     * Current or default unit for this uniq
+     * Current or default unit for this point
      * 
      */
     @JsonProperty("units")
-    @JsonPropertyDescription("Current or default unit for this uniq")
+    @JsonPropertyDescription("Current or default unit for this point")
     public java.lang.String units;
     /**
-     * Current or default type for this uniq
+     * Current or default type for this point
      * 
      */
     @JsonProperty("type")
-    @JsonPropertyDescription("Current or default type for this uniq")
+    @JsonPropertyDescription("Current or default type for this point")
     public java.lang.String type;
     /**
-     * Reference parameter for this uniq (e.g. BACnet object)
+     * Reference parameter for this point (e.g. BACnet object)
      * 
      */
     @JsonProperty("ref")
-    @JsonPropertyDescription("Reference parameter for this uniq (e.g. BACnet object)")
+    @JsonPropertyDescription("Reference parameter for this point (e.g. BACnet object)")
     public java.lang.String ref;
     /**
-     * Indicates if this uniq is writable or not
+     * Indicates if this point is writable or not
      * 
      */
     @JsonProperty("writable")
-    @JsonPropertyDescription("Indicates if this uniq is writable or not")
+    @JsonPropertyDescription("Indicates if this point is writable or not")
     public Boolean writable;
     /**
-     * Human-readable description of this uniq
+     * Human-readable description of this point
      * 
      */
     @JsonProperty("description")
-    @JsonPropertyDescription("Human-readable description of this uniq")
+    @JsonPropertyDescription("Human-readable description of this point")
     public java.lang.String description;
     /**
      * Entry
@@ -119,10 +119,10 @@ public class UniqEnumerationEvent {
         if (other == this) {
             return true;
         }
-        if ((other instanceof UniqEnumerationEvent) == false) {
+        if ((other instanceof PointEnumerationEvent) == false) {
             return false;
         }
-        UniqEnumerationEvent rhs = ((UniqEnumerationEvent) other);
+        PointEnumerationEvent rhs = ((PointEnumerationEvent) other);
         return ((((((((((this.ref == rhs.ref)||((this.ref!= null)&&this.ref.equals(rhs.ref)))&&((this.possible_values == rhs.possible_values)||((this.possible_values!= null)&&this.possible_values.equals(rhs.possible_values))))&&((this.name == rhs.name)||((this.name!= null)&&this.name.equals(rhs.name))))&&((this.description == rhs.description)||((this.description!= null)&&this.description.equals(rhs.description))))&&((this.units == rhs.units)||((this.units!= null)&&this.units.equals(rhs.units))))&&((this.type == rhs.type)||((this.type!= null)&&this.type.equals(rhs.type))))&&((this.ancillary == rhs.ancillary)||((this.ancillary!= null)&&this.ancillary.equals(rhs.ancillary))))&&((this.writable == rhs.writable)||((this.writable!= null)&&this.writable.equals(rhs.writable))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
     }
 

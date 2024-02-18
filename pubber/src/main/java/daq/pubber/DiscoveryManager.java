@@ -24,9 +24,9 @@ import udmi.schema.FamilyDiscoveryEvent;
 import udmi.schema.FamilyDiscoveryState;
 import udmi.schema.FamilyLocalnetModel;
 import udmi.schema.Metadata;
+import udmi.schema.PointEnumerationEvent;
 import udmi.schema.PointPointsetModel;
 import udmi.schema.PubberConfiguration;
-import udmi.schema.UniqEnumerationEvent;
 
 /**
  * Manager wrapper for discovery functionality in pubber.
@@ -61,7 +61,7 @@ public class DiscoveryManager extends ManagerBase {
     DiscoveryEvent discoveryEvent = new DiscoveryEvent();
     discoveryEvent.generation = enumerationGeneration;
     Enumerate enumerate = config.enumerate;
-    discoveryEvent.uniqs = ifTrue(enumerate.uniqs, () -> enumeratePoints(deviceId));
+    discoveryEvent.points = ifTrue(enumerate.points, () -> enumeratePoints(deviceId));
     discoveryEvent.features = ifTrue(enumerate.features, SupportedFeatures::getFeatures);
     discoveryEvent.families = ifTrue(enumerate.families, deviceManager::enumerateFamilies);
     host.publish(discoveryEvent);
@@ -164,7 +164,7 @@ public class DiscoveryManager extends ManagerBase {
           discoveryEvent.families.computeIfAbsent("iot",
               key -> new FamilyDiscoveryEvent()).addr = deviceId;
           if (isGetTrue(() -> discoveryConfig.families.get(family).enumerate)) {
-            discoveryEvent.uniqs = enumeratePoints(deviceId);
+            discoveryEvent.points = enumeratePoints(deviceId);
           }
           host.publish(discoveryEvent);
           sentEvents.incrementAndGet();
@@ -220,24 +220,24 @@ public class DiscoveryManager extends ManagerBase {
     return isGetTrue(() -> condition) ? supplier.get() : null;
   }
 
-  private Map<String, UniqEnumerationEvent> enumeratePoints(String deviceId) {
+  private Map<String, PointEnumerationEvent> enumeratePoints(String deviceId) {
     return siteModel.getMetadata(deviceId).pointset.points.entrySet().stream().collect(
-        Collectors.toMap(this::getPointUniqKey, this::getUniqEnumerationEvent));
+        Collectors.toMap(this::getPointPointKey, this::getPointEnumerationEvent));
   }
 
   private String getPointUniqKey(Map.Entry<String, PointPointsetModel> entry) {
     return format("%08x", entry.getKey().hashCode());
   }
 
-  private UniqEnumerationEvent getUniqEnumerationEvent(
+  private PointEnumerationEvent getPointEnumerationEvent(
       Map.Entry<String, PointPointsetModel> entry) {
-    UniqEnumerationEvent uniqEnumerationEvent = new UniqEnumerationEvent();
+    PointEnumerationEvent pointEnumerationEvent = new PointEnumerationEvent();
     PointPointsetModel model = entry.getValue();
-    uniqEnumerationEvent.writable = model.writable;
-    uniqEnumerationEvent.units = model.units;
-    uniqEnumerationEvent.ref = model.ref;
-    uniqEnumerationEvent.name = entry.getKey();
-    return uniqEnumerationEvent;
+    pointEnumerationEvent.writable = model.writable;
+    pointEnumerationEvent.units = model.units;
+    pointEnumerationEvent.ref = model.ref;
+    pointEnumerationEvent.name = entry.getKey();
+    return pointEnumerationEvent;
   }
 
   private void updateState() {

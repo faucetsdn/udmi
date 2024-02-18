@@ -1,9 +1,9 @@
-"""Generated class for event_discovery_uniq.json"""
+"""Generated class for event_discovery_point.json"""
 from .entry import Entry
 from .ancillary_properties import AncillaryProperties
 
 
-class UniqEnumerationEvent:
+class PointEnumerationEvent:
   """Generated schema class"""
 
   def __init__(self):
@@ -21,7 +21,7 @@ class UniqEnumerationEvent:
   def from_dict(source):
     if not source:
       return None
-    result = UniqEnumerationEvent()
+    result = PointEnumerationEvent()
     result.name = source.get('name')
     result.possible_values = source.get('possible_values')
     result.units = source.get('units')
@@ -39,7 +39,7 @@ class UniqEnumerationEvent:
       return None
     result = {}
     for key in source:
-      result[key] = UniqEnumerationEvent.from_dict(source[key])
+      result[key] = PointEnumerationEvent.from_dict(source[key])
     return result
 
   @staticmethod

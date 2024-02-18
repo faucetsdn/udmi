@@ -2,7 +2,7 @@
 from .entry import Entry
 from .event_discovery_family import FamilyDiscoveryEvent
 from .event_discovery_device import DeviceDiscoveryEvent
-from .event_discovery_uniq import UniqEnumerationEvent
+from .event_discovery_point import PointEnumerationEvent
 from .enumeration_feature import FeatureEnumeration
 from .ancillary_properties import AncillaryProperties
 from .state_system_hardware import StateSystemHardware
@@ -65,7 +65,7 @@ class DiscoveryEvent:
     self.scan_addr = None
     self.families = None
     self.devices = None
-    self.uniqs = None
+    self.points = None
     self.features = None
     self.system = None
 
@@ -82,7 +82,7 @@ class DiscoveryEvent:
     result.scan_addr = source.get('scan_addr')
     result.families = FamilyDiscoveryEvent.map_from(source.get('families'))
     result.devices = DeviceDiscoveryEvent.map_from(source.get('devices'))
-    result.uniqs = UniqEnumerationEvent.map_from(source.get('uniqs'))
+    result.points = PointEnumerationEvent.map_from(source.get('points'))
     result.features = FeatureEnumeration.map_from(source.get('features'))
     result.system = SystemDiscoveryEvent.from_dict(source.get('system'))
     return result
@@ -121,8 +121,8 @@ class DiscoveryEvent:
       result['families'] = FamilyDiscoveryEvent.expand_dict(self.families) # 2
     if self.devices:
       result['devices'] = DeviceDiscoveryEvent.expand_dict(self.devices) # 2
-    if self.uniqs:
-      result['uniqs'] = UniqEnumerationEvent.expand_dict(self.uniqs) # 2
+    if self.points:
+      result['points'] = PointEnumerationEvent.expand_dict(self.points) # 2
     if self.features:
       result['features'] = FeatureEnumeration.expand_dict(self.features) # 2
     if self.system:
