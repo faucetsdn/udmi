@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "scan_family",
     "scan_addr",
     "families",
+    "devices",
     "uniqs",
     "features",
     "system"
@@ -79,12 +80,19 @@ public class DiscoveryEvent {
     @JsonPropertyDescription("The primary address of the device (for scan_family)")
     public java.lang.String scan_addr;
     /**
-     * Address family discovery results.
+     * Address family discovery enumeration results.
      * 
      */
     @JsonProperty("families")
-    @JsonPropertyDescription("Address family discovery results.")
+    @JsonPropertyDescription("Address family discovery enumeration results.")
     public Map<String, FamilyDiscoveryEvent> families;
+    /**
+     * Device discovery scan results.
+     * 
+     */
+    @JsonProperty("devices")
+    @JsonPropertyDescription("Device discovery scan results.")
+    public Map<String, DeviceDiscoveryEvent> devices;
     /**
      * Collection of unique data sources (uniqs) available for this device.
      * 
@@ -114,6 +122,7 @@ public class DiscoveryEvent {
         result = ((result* 31)+((this.generation == null)? 0 :this.generation.hashCode()));
         result = ((result* 31)+((this.features == null)? 0 :this.features.hashCode()));
         result = ((result* 31)+((this.system == null)? 0 :this.system.hashCode()));
+        result = ((result* 31)+((this.devices == null)? 0 :this.devices.hashCode()));
         result = ((result* 31)+((this.uniqs == null)? 0 :this.uniqs.hashCode()));
         result = ((result* 31)+((this.scan_family == null)? 0 :this.scan_family.hashCode()));
         result = ((result* 31)+((this.families == null)? 0 :this.families.hashCode()));
@@ -133,7 +142,7 @@ public class DiscoveryEvent {
             return false;
         }
         DiscoveryEvent rhs = ((DiscoveryEvent) other);
-        return (((((((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.features == rhs.features)||((this.features!= null)&&this.features.equals(rhs.features))))&&((this.system == rhs.system)||((this.system!= null)&&this.system.equals(rhs.system))))&&((this.uniqs == rhs.uniqs)||((this.uniqs!= null)&&this.uniqs.equals(rhs.uniqs))))&&((this.scan_family == rhs.scan_family)||((this.scan_family!= null)&&this.scan_family.equals(rhs.scan_family))))&&((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))))&&((this.scan_addr == rhs.scan_addr)||((this.scan_addr!= null)&&this.scan_addr.equals(rhs.scan_addr))));
+        return ((((((((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.features == rhs.features)||((this.features!= null)&&this.features.equals(rhs.features))))&&((this.system == rhs.system)||((this.system!= null)&&this.system.equals(rhs.system))))&&((this.devices == rhs.devices)||((this.devices!= null)&&this.devices.equals(rhs.devices))))&&((this.uniqs == rhs.uniqs)||((this.uniqs!= null)&&this.uniqs.equals(rhs.uniqs))))&&((this.scan_family == rhs.scan_family)||((this.scan_family!= null)&&this.scan_family.equals(rhs.scan_family))))&&((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))))&&((this.scan_addr == rhs.scan_addr)||((this.scan_addr!= null)&&this.scan_addr.equals(rhs.scan_addr))));
     }
 
 }

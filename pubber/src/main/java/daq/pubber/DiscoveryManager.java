@@ -24,9 +24,9 @@ import udmi.schema.FamilyDiscoveryEvent;
 import udmi.schema.FamilyDiscoveryState;
 import udmi.schema.FamilyLocalnetModel;
 import udmi.schema.Metadata;
-import udmi.schema.UniqEnumerationEvent;
 import udmi.schema.PointPointsetModel;
 import udmi.schema.PubberConfiguration;
+import udmi.schema.UniqEnumerationEvent;
 
 /**
  * Manager wrapper for discovery functionality in pubber.

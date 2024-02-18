@@ -4,7 +4,6 @@ import static com.google.udmi.util.GeneralUtils.getNow;
 
 import udmi.schema.Category;
 import udmi.schema.Entry;
-import udmi.schema.UniqEnumerationEvent;
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetEvent;
 import udmi.schema.PointPointsetState;
@@ -87,7 +86,7 @@ public abstract class BasicPoint implements AbstractPoint {
     try {
       if (!validateValue(config.set_value)) {
         state.status = createEntryFrom(Category.POINTSET_POINT_INVALID,
-                "Written value is not valid");
+            "Written value is not valid");
         state.value_state = Value_state.INVALID;
         dirty = state.value_state != previous;
         return;

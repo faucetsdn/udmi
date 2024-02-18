@@ -6,6 +6,5 @@
   "additionalProperties": false,
   "description": "Information about an individual device scan result.",
   "properties": {
-    // Currently empty, just a placeholder for future additional information.
   }
 }

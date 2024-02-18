@@ -11,7 +11,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 /**
  * Family Discovery Event
  * <p>
- * Discovery information for an individual protocol family.
+ * Discovery enumeration information for a protocol family.
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)

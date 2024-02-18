@@ -22,7 +22,7 @@ import udmi.schema.MappingConfig;
 import udmi.schema.MappingEvent;
 import udmi.schema.MappingEventEntity;
 import udmi.schema.MappingState;
-import udmi.schema.PointEnumerationEvent;
+import udmi.schema.UniqEnumerationEvent;
 
 /**
  * Engine for mapping discovery results to point names.
@@ -75,7 +75,7 @@ public class MappingEngine extends MappingBase {
     return state;
   }
 
-  private void updateTranslation(String deviceId, Map<String, PointEnumerationEvent> uniqs) {
+  private void updateTranslation(String deviceId, Map<String, UniqEnumerationEvent> uniqs) {
     MappingEvent result = new MappingEvent();
     result.entities = new HashMap<>();
     final MappingEventEntity entity = new MappingEventEntity();
@@ -89,9 +89,9 @@ public class MappingEngine extends MappingBase {
   }
 
   private SimpleEntry<String, BuildingTranslation> makeTranslation(
-      Entry<String, PointEnumerationEvent> entry) {
+      Entry<String, UniqEnumerationEvent> entry) {
     BuildingTranslation buildingTranslation = new BuildingTranslation();
-    PointEnumerationEvent value = entry.getValue();
+    UniqEnumerationEvent value = entry.getValue();
     buildingTranslation.present_value = value.name;
     buildingTranslation.units = value.units;
     return new SimpleEntry<>(entry.getKey(), buildingTranslation);

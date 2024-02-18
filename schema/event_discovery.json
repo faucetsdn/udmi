@@ -51,7 +51,7 @@
       "additionalProperties": false,
       "existingJavaType": "java.util.Map<String, DeviceDiscoveryEvent>",
       "patternProperties": {
-        "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
+        "^[A-Z]{2,6}-[1-9][0-9]*$": {
           "$ref": "file:event_discovery_device.json"
         }
       }
