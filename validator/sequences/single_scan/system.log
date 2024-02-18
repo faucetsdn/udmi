@@ -1,23 +1,58 @@
-2023-11-07T14:31:24Z INFO update state 2023-11-07T14:31:24Z last_config 2023-11-07T14:31:15Z
-2023-11-07T14:31:26Z INFO Config handler
-2023-11-07T14:31:26Z INFO 2023-11-07T14:31:26Z received config 2023-11-07T14:31:25Z
-2023-11-07T14:31:26Z NOTICE success
-2023-11-07T14:31:26Z INFO update state 2023-11-07T14:31:26Z last_config 2023-11-07T14:31:25Z
-2023-11-07T14:31:34Z INFO update state 2023-11-07T14:31:34Z last_config 2023-11-07T14:31:25Z
-2023-11-07T14:31:37Z INFO Config handler
-2023-11-07T14:31:37Z INFO update state 2023-11-07T14:31:37Z last_config 2023-11-07T14:31:25Z
-2023-11-07T14:31:37Z INFO 2023-11-07T14:31:37Z received config 2023-11-07T14:31:37Z
-2023-11-07T14:31:37Z NOTICE success
-2023-11-07T14:31:39Z INFO update state 2023-11-07T14:31:39Z last_config 2023-11-07T14:31:37Z
-2023-11-07T14:31:40Z INFO Config handler
-2023-11-07T14:31:40Z INFO 2023-11-07T14:31:40Z received config 2023-11-07T14:31:40Z
-2023-11-07T14:31:40Z NOTICE success
-2023-11-07T14:31:41Z INFO update state 2023-11-07T14:31:41Z last_config 2023-11-07T14:31:40Z
-2023-11-07T14:31:41Z INFO Config handler
-2023-11-07T14:31:41Z INFO 2023-11-07T14:31:41Z received config 2023-11-07T14:31:41Z
-2023-11-07T14:31:41Z INFO Discovery scan generation virtual is 2023-11-07T14:31:50Z
-2023-11-07T14:31:41Z NOTICE success
-2023-11-07T14:31:43Z INFO update state 2023-11-07T14:31:43Z last_config 2023-11-07T14:31:41Z
-2023-11-07T14:31:50Z INFO Discovery scan starting virtual as 2023-11-07T14:31:50Z
-2023-11-07T14:31:50Z INFO update state 2023-11-07T14:31:50Z last_config 2023-11-07T14:31:41Z
-2023-11-07T14:32:00Z NOTICE Sequence complete
+2024-02-18T16:55:54Z WARNING Start waiting 10s for config latch for AHU-1
+2024-02-18T16:55:54Z WARNING Starting AHU-1 Pubber sender with delay 10s
+2024-02-18T16:55:54Z WARNING Dropping state update until config received...
+2024-02-18T16:55:54Z WARNING Received config for config latch AHU-1
+2024-02-18T16:55:54Z NOTICE success
+2024-02-18T16:55:54Z WARNING Ending connection 1708275353990 with 9
+2024-02-18T16:55:55Z NOTICE success
+2024-02-18T16:56:15Z NOTICE success
+2024-02-18T16:56:16Z INFO Device AHU-1 config handler
+2024-02-18T16:56:16Z INFO 2024-02-18T16:56:16Z received config 2024-02-18T16:56:15Z
+2024-02-18T16:56:16Z NOTICE success
+2024-02-18T16:56:17Z INFO Device AHU-1 config handler
+2024-02-18T16:56:17Z INFO 2024-02-18T16:56:17Z received config 2024-02-18T16:56:17Z
+2024-02-18T16:56:17Z NOTICE success
+2024-02-18T16:56:17Z INFO Update state 2024-02-18T16:56:17Z last_config 2024-02-18T16:56:17Z
+2024-02-18T16:56:18Z INFO Device AHU-1 config handler
+2024-02-18T16:56:18Z INFO 2024-02-18T16:56:18Z received config 2024-02-18T16:56:17Z
+2024-02-18T16:56:18Z NOTICE success
+2024-02-18T16:56:19Z INFO 2024-02-18T16:56:19Z received config 2024-02-18T16:56:19Z
+2024-02-18T16:56:19Z NOTICE success
+2024-02-18T16:56:19Z INFO Update state 2024-02-18T16:56:19Z last_config 2024-02-18T16:56:19Z
+2024-02-18T16:56:21Z INFO 2024-02-18T16:56:21Z received config 2024-02-18T16:56:21Z
+2024-02-18T16:56:21Z NOTICE success
+2024-02-18T16:56:21Z INFO Update state 2024-02-18T16:56:21Z last_config 2024-02-18T16:56:21Z
+2024-02-18T16:56:31Z INFO Update state 2024-02-18T16:56:31Z last_config 2024-02-18T16:56:21Z
+2024-02-18T16:56:31Z INFO Device AHU-1 config handler
+2024-02-18T16:56:31Z INFO 2024-02-18T16:56:31Z received config 2024-02-18T16:56:24Z
+2024-02-18T16:56:31Z NOTICE success
+2024-02-18T16:56:33Z INFO Update state 2024-02-18T16:56:33Z last_config 2024-02-18T16:56:24Z
+2024-02-18T16:55:53Z INFO Configured with auth_type RS256
+2024-02-18T16:55:53Z INFO Resetting persistent store /home/runner/work/udmi/udmi/sites/udmi_site_model/out/devices/AHU-1/persistent_data.json
+2024-02-18T16:55:53Z INFO Loading endpoint into persistent data from configuration
+2024-02-18T16:55:53Z WARNING Updating persistent store: {"endpoint":{"hostname":"mqtt.bos.goog","port":8883,"client_id":"projects/bos-platform-dev/locations/us-central1/registries/grafnu~ZZ-TRI-FECTA_7/devices/AHU-1"},"restart_count":1}
+2024-02-18T16:55:53Z INFO Starting pubber AHU-1, serial sequencer-4652, mac null, gateway null, options noPersist
+2024-02-18T16:55:53Z INFO Loading device key bytes from /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8
+2024-02-18T16:55:53Z WARNING Creating new config latch for AHU-1
+2024-02-18T16:55:53Z INFO Update state 2024-02-18T16:55:53Z last_config 1970-01-01T00:00:00Z
+2024-02-18T16:55:53Z WARNING Dropping state update until config received...
+2024-02-18T16:55:54Z INFO Update state 2024-02-18T16:55:54Z last_config 1970-01-01T00:00:00Z
+2024-02-18T16:55:54Z WARNING Dropping state update until config received...
+2024-02-18T16:55:54Z INFO Device AHU-1 config handler
+2024-02-18T16:55:54Z INFO Update state 2024-02-18T16:55:54Z last_config 1970-01-01T00:00:00Z
+2024-02-18T16:55:54Z WARNING Dropping state update until config received...
+2024-02-18T16:55:54Z INFO 2024-02-18T16:55:54Z received config 2024-02-18T16:55:53Z
+2024-02-18T16:55:54Z WARNING Starting AHU-1 PointsetManager sender with delay 10s
+2024-02-18T16:55:54Z WARNING Starting AHU-1 SystemManager sender with delay 10s
+2024-02-18T16:56:58Z INFO Update state 2024-02-18T16:56:58Z last_config 2024-02-18T16:56:24Z
+2024-02-18T16:56:58Z INFO Device AHU-1 config handler
+2024-02-18T16:56:58Z INFO 2024-02-18T16:56:58Z received config 2024-02-18T16:56:58Z
+2024-02-18T16:56:58Z NOTICE success
+2024-02-18T16:56:59Z INFO 2024-02-18T16:56:59Z received config 2024-02-18T16:56:59Z
+2024-02-18T16:56:59Z INFO Discovery scan generation virtual is 2024-02-18T16:57:08Z
+2024-02-18T16:56:59Z NOTICE success
+2024-02-18T16:57:00Z INFO Update state 2024-02-18T16:57:00Z last_config 2024-02-18T16:56:59Z
+2024-02-18T16:57:08Z INFO Discovery scan starting virtual as 2024-02-18T16:57:08Z
+2024-02-18T16:57:08Z INFO Update state 2024-02-18T16:57:08Z last_config 2024-02-18T16:56:59Z
+2024-02-18T16:57:13Z INFO Sent 1 discovery events from virtual for Sun Feb 18 16:57:08 UTC 2024
+2024-02-18T16:57:18Z NOTICE Sequence complete

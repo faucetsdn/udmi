@@ -4,10 +4,11 @@ suffix=$1
 shift || true
 
 RUN_ROOT=$PWD
-UDMI_ROOT=$(dirname $0)/..
-mkdir -p out
+UDMI_ROOT=$(realpath $(dirname $0))/..
 
 source $UDMI_ROOT/etc/shell_common.sh
+
+mkdir -p out
 
 failures=
 

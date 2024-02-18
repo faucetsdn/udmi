@@ -1,10 +1,9 @@
 {
-  "blobset" : { },
   "discovery" : {
     "families" : {
       "virtual" : {
         "enumerate" : true,
-        "generation" : "2023-11-07T14:30:47Z",
+        "generation" : "2024-02-18T16:57:31Z",
         "scan_interval_sec" : 10
       }
     }
@@ -12,39 +11,26 @@
   "localnet" : {
     "families" : {
       "ether" : {
-        "addr" : "00:50:b6:ed:5f:77"
+        "addr" : "00:22:48:8e:d9:c9"
       },
       "ipv4" : {
-        "addr" : "192.168.2.1"
-      }
-    }
-  },
-  "pointset" : {
-    "points" : {
-      "filter_alarm_pressure_status" : {
-        "ref" : "BV11.present_value",
-        "units" : "No-units"
+        "addr" : "10.1.0.116"
       },
-      "filter_differential_pressure_sensor" : {
-        "ref" : "AV12.present_value",
-        "units" : "Degrees-Celsius"
-      },
-      "filter_differential_pressure_setpoint" : {
-        "set_value" : 98,
-        "units" : "Bars"
+      "ipv6" : {
+        "addr" : "fe80::222:48ff:fe8e:d9c9"
       }
     }
   },
   "system" : {
-    "metrics_rate_sec" : 600,
+    "metrics_rate_sec" : 10,
     "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2023-11-07T14:30:01Z"
+      "last_start" : "2024-02-18T16:57:09Z"
     },
     "testing" : {
       "sequence_name" : "periodic_scan"
     }
   },
-  "timestamp" : "2023-11-07T14:30:48Z",
-  "version" : "1.4.2-40-gdeae740b"
+  "timestamp" : "2024-02-18T16:57:32Z",
+  "version" : "1.5.0-16-g48397c75b"
 }

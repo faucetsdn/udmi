@@ -9,7 +9,5 @@
     "ipv6" : {
       "addr" : "fe80::20d:3aff:fe0e:fa8a"
     }
-  },
-  "timestamp" : "2024-02-18T16:57:08Z",
-  "version" : "1.5.0"
+  }
 }

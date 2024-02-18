@@ -1,33 +1,80 @@
-2023-12-18T11:42:54Z WARNING Starting Pubber sender with delay 10s
-2023-12-18T11:42:54Z WARNING Dropping state update until config received...
-2023-12-18T11:42:54Z WARNING Received config for config latch AHU-1
-2023-12-18T11:42:54Z NOTICE success
-2023-12-18T11:42:54Z WARNING Ending connection 1702899773479 with 9
-2023-12-18T11:42:55Z NOTICE success
-2023-12-18T11:43:05Z WARNING Terminating PointsetManager sender
-2023-12-18T11:43:05Z WARNING Starting PointsetManager sender with delay 0s
-2023-12-18T11:43:05Z NOTICE success
-2023-12-18T11:43:06Z INFO Device AHU-1 config handler
-2023-12-18T11:43:06Z INFO 2023-12-18T11:43:06Z received config 2023-12-18T11:43:05Z
-2023-12-18T11:43:06Z WARNING Starting PointsetManager sender with delay 0s
-2023-12-18T11:43:06Z NOTICE success
-2023-12-18T11:43:07Z INFO Device AHU-1 config handler
-2023-12-18T11:43:07Z INFO 2023-12-18T11:43:07Z received config 2023-12-18T11:43:07Z
-2023-12-18T11:43:07Z WARNING Starting PointsetManager sender with delay 0s
-2023-12-18T11:43:07Z NOTICE success
-2023-12-18T11:43:07Z INFO Update state 2023-12-18T11:43:07Z last_config 2023-12-18T11:43:07Z
-2023-12-18T11:43:08Z INFO Device AHU-1 config handler
-2023-12-18T11:43:08Z INFO 2023-12-18T11:43:08Z received config 2023-12-18T11:43:08Z
-2023-12-18T11:43:08Z WARNING Starting PointsetManager sender with delay 10s
-2023-12-18T11:43:08Z NOTICE success
-2023-12-18T11:43:09Z INFO 2023-12-18T11:43:09Z received config 2023-12-18T11:43:09Z
-2023-12-18T11:43:09Z NOTICE success
-2023-12-18T11:43:09Z INFO Device AHU-1 config handler
-2023-12-18T11:43:09Z INFO 2023-12-18T11:43:09Z received config 2023-12-18T11:43:09Z
-2023-12-18T11:43:09Z NOTICE success
-2023-12-18T11:43:10Z INFO Update state 2023-12-18T11:43:10Z last_config 2023-12-18T11:43:09Z
-2023-12-18T11:43:14Z INFO Update state 2023-12-18T11:43:14Z last_config 2023-12-18T11:43:09Z
-2023-12-18T11:43:14Z INFO 2023-12-18T11:43:14Z received config 2023-12-18T11:43:14Z
-2023-12-18T11:43:14Z NOTICE success
-2023-12-18T11:43:16Z INFO Update state 2023-12-18T11:43:16Z last_config 2023-12-18T11:43:14Z
-2023-12-18T11:43:44Z NOTICE Sequence complete
+2024-02-18T17:42:57Z WARNING Start waiting 10s for config latch for AHU-1
+2024-02-18T17:42:57Z WARNING Starting AHU-1 Pubber sender with delay 10s
+2024-02-18T17:42:57Z WARNING Dropping state update until config received...
+2024-02-18T17:42:57Z WARNING Received config for config latch AHU-1
+2024-02-18T17:42:57Z NOTICE success
+2024-02-18T17:42:57Z WARNING Ending connection 1708278176999 with 9
+2024-02-18T17:42:58Z NOTICE success
+2024-02-18T17:43:09Z NOTICE success
+2024-02-18T17:43:11Z INFO Device AHU-1 config handler
+2024-02-18T17:43:11Z INFO 2024-02-18T17:43:11Z received config 2024-02-18T17:43:09Z
+2024-02-18T17:43:11Z NOTICE success
+2024-02-18T17:43:11Z INFO Update state 2024-02-18T17:43:11Z last_config 2024-02-18T17:43:09Z
+2024-02-18T17:43:12Z INFO Device AHU-1 config handler
+2024-02-18T17:43:12Z INFO 2024-02-18T17:43:12Z received config 2024-02-18T17:43:12Z
+2024-02-18T17:43:12Z NOTICE success
+2024-02-18T17:43:13Z INFO Device AHU-1 config handler
+2024-02-18T17:43:13Z INFO 2024-02-18T17:43:13Z received config 2024-02-18T17:43:13Z
+2024-02-18T17:43:13Z NOTICE success
+2024-02-18T17:43:13Z INFO Device AHU-1 config handler
+2024-02-18T17:43:13Z INFO 2024-02-18T17:43:13Z received config 2024-02-18T17:43:13Z
+2024-02-18T17:43:13Z NOTICE success
+2024-02-18T17:43:13Z INFO Update state 2024-02-18T17:43:13Z last_config 2024-02-18T17:43:13Z
+2024-02-18T17:43:14Z INFO Device AHU-1 config handler
+2024-02-18T17:43:14Z INFO 2024-02-18T17:43:14Z received config 2024-02-18T17:43:14Z
+2024-02-18T17:43:14Z NOTICE success
+2024-02-18T17:43:15Z INFO Update state 2024-02-18T17:43:15Z last_config 2024-02-18T17:43:14Z
+2024-02-18T17:43:20Z INFO Update state 2024-02-18T17:43:20Z last_config 2024-02-18T17:43:14Z
+2024-02-18T17:43:20Z INFO Device AHU-1 config handler
+2024-02-18T17:43:20Z INFO 2024-02-18T17:43:20Z received config 2024-02-18T17:43:20Z
+2024-02-18T17:43:20Z NOTICE success
+2024-02-18T17:43:22Z INFO Update state 2024-02-18T17:43:22Z last_config 2024-02-18T17:43:20Z
+2024-02-18T17:43:27Z NOTICE Starting new endpoint generation
+2024-02-18T17:43:27Z INFO New config blob endpoint detected
+2024-02-18T17:43:27Z INFO Update state 2024-02-18T17:43:27Z last_config 2024-02-18T17:43:20Z
+2024-02-18T17:43:28Z WARNING Starting connection 1708278208012 with 10
+2024-02-18T17:43:28Z WARNING Terminating AHU-1 PointsetManager sender
+2024-02-18T17:43:28Z WARNING Terminating AHU-1 SystemManager sender
+2024-02-18T17:43:28Z WARNING Creating new config latch for AHU-1
+2024-02-18T17:43:28Z ERROR While waiting for connection start: Connection error
+2024-02-18T17:43:28Z ERROR Attempt failed, retries remaining: 9
+2024-02-18T17:43:29Z WARNING Creating new config latch for AHU-1
+2024-02-18T17:43:29Z ERROR While waiting for connection start: Connection error
+2024-02-18T17:43:29Z ERROR Attempt failed, retries remaining: 8
+2024-02-18T17:43:30Z WARNING Creating new config latch for AHU-1
+2024-02-18T17:43:30Z ERROR While waiting for connection start: Connection error
+2024-02-18T17:43:30Z ERROR Attempt failed, retries remaining: 7
+2024-02-18T17:43:31Z WARNING Creating new config latch for AHU-1
+2024-02-18T17:43:31Z ERROR While waiting for connection start: Connection error
+2024-02-18T17:43:31Z ERROR Attempt failed, retries remaining: 6
+2024-02-18T17:43:32Z WARNING Creating new config latch for AHU-1
+2024-02-18T17:43:32Z ERROR While waiting for connection start: Connection error
+2024-02-18T17:43:32Z ERROR Attempt failed, retries remaining: 5
+2024-02-18T17:43:33Z WARNING Creating new config latch for AHU-1
+2024-02-18T17:43:33Z ERROR While waiting for connection start: Connection error
+2024-02-18T17:43:33Z ERROR Attempt failed, retries remaining: 4
+2024-02-18T17:43:34Z WARNING Creating new config latch for AHU-1
+2024-02-18T17:43:34Z ERROR While waiting for connection start: Connection error
+2024-02-18T17:43:34Z ERROR Attempt failed, retries remaining: 3
+2024-02-18T17:43:35Z WARNING Creating new config latch for AHU-1
+2024-02-18T17:43:35Z ERROR While waiting for connection start: Connection error
+2024-02-18T17:43:35Z ERROR Attempt failed, retries remaining: 2
+2024-02-18T17:43:36Z WARNING Creating new config latch for AHU-1
+2024-02-18T17:43:36Z ERROR While waiting for connection start: Connection error
+2024-02-18T17:43:36Z ERROR Attempt failed, retries remaining: 1
+2024-02-18T17:43:37Z WARNING Creating new config latch for AHU-1
+2024-02-18T17:43:37Z ERROR While waiting for connection start: Connection error
+2024-02-18T17:43:37Z ERROR Attempt failed, retries remaining: 0
+2024-02-18T17:43:38Z WARNING Ending connection 1708278208012 with -1
+2024-02-18T17:43:38Z ERROR Reconfigure failed, attempting connection to last working endpoint: While resetting connection
+2024-02-18T17:43:38Z WARNING Starting connection 1708278218326 with 10
+2024-02-18T17:43:38Z WARNING Creating new config latch for AHU-1
+2024-02-18T17:43:38Z INFO Update state 2024-02-18T17:43:38Z last_config 2024-02-18T17:43:20Z
+2024-02-18T17:43:38Z WARNING Dropping state update until config received...
+2024-02-18T17:43:38Z INFO Device AHU-1 config handler
+2024-02-18T17:43:38Z INFO Update state 2024-02-18T17:43:38Z last_config 2024-02-18T17:43:20Z
+2024-02-18T17:43:38Z WARNING Dropping state update until config received...
+2024-02-18T17:43:38Z INFO 2024-02-18T17:43:38Z received config 2024-02-18T17:43:20Z
+2024-02-18T17:43:38Z WARNING Starting AHU-1 PointsetManager sender with delay 10s
+2024-02-18T17:43:38Z WARNING Starting AHU-1 SystemManager sender with delay 10s
+2024-02-18T17:43:48Z NOTICE Sequence complete
