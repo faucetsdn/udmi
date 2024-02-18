@@ -86,12 +86,12 @@ public class DiscoveryEvent {
     @JsonPropertyDescription("Address family discovery results.")
     public Map<String, FamilyDiscoveryEvent> families;
     /**
-     * Collection of unique data points available for this device.
+     * Collection of unique data sources (uniqs) available for this device.
      * 
      */
     @JsonProperty("uniqs")
-    @JsonPropertyDescription("Collection of unique data points available for this device.")
-    public Map<String, PointEnumerationEvent> uniqs;
+    @JsonPropertyDescription("Collection of unique data sources (uniqs) available for this device.")
+    public Map<String, UniqEnumerationEvent> uniqs;
     /**
      * Enumeration of features supported by this device.
      * 

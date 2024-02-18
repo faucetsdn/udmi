@@ -32,7 +32,7 @@ from .equipment_translation import BuildingConfig
 from .event import Event
 from .event_discovery import DiscoveryEvent
 from .event_discovery_family import FamilyDiscoveryEvent
-from .event_discovery_point import PointEnumerationEvent
+from .event_discovery_uniq import UniqEnumerationEvent
 from .event_mapping import MappingEvent
 from .event_mapping_entities import MappingEventEntities
 from .event_mapping_entity import MappingEventEntity
