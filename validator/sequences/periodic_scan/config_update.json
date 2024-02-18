@@ -1,23 +1,26 @@
 {
   "discovery" : {
     "families" : {
-      "virtual" : {
+      "vendor" : {
         "enumerate" : true,
-        "generation" : "2024-02-18T16:57:31Z",
+        "generation" : "2024-02-18T18:17:57Z",
         "scan_interval_sec" : 10
       }
     }
   },
-  "localnet" : {
-    "families" : {
-      "ether" : {
-        "addr" : "00:22:48:8e:d9:c9"
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : {
+        "ref" : "BV11.present_value",
+        "units" : "No-units"
       },
-      "ipv4" : {
-        "addr" : "10.1.0.116"
+      "filter_differential_pressure_sensor" : {
+        "ref" : "AV12.present_value",
+        "units" : "Degrees-Celsius"
       },
-      "ipv6" : {
-        "addr" : "fe80::222:48ff:fe8e:d9c9"
+      "filter_differential_pressure_setpoint" : {
+        "set_value" : 98,
+        "units" : "Bars"
       }
     }
   },
@@ -25,12 +28,12 @@
     "metrics_rate_sec" : 10,
     "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2024-02-18T16:57:09Z"
+      "last_start" : "2024-02-18T18:17:35Z"
     },
     "testing" : {
       "sequence_name" : "periodic_scan"
     }
   },
-  "timestamp" : "2024-02-18T16:57:32Z",
+  "timestamp" : "2024-02-18T18:17:58Z",
   "version" : "1.5.0-16-g48397c75b"
 }

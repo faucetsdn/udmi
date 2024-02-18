@@ -1,7 +1,7 @@
 {
   "families" : {
-    "virtual" : {
-      "generation" : "2024-02-18T16:57:31Z",
+    "vendor" : {
+      "generation" : "2024-02-18T18:17:57Z",
       "scan_interval_sec" : 10,
       "enumerate" : true
     }

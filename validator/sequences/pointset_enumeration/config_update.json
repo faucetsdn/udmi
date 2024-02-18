@@ -1,20 +1,7 @@
 {
   "discovery" : {
     "enumerate" : {
-      "points" : true
-    }
-  },
-  "localnet" : {
-    "families" : {
-      "ether" : {
-        "addr" : "00:0d:3a:4e:6b:14"
-      },
-      "ipv4" : {
-        "addr" : "10.1.0.44"
-      },
-      "ipv6" : {
-        "addr" : "fe80::20d:3aff:fe4e:6b14"
-      }
+      "uniqs" : true
     }
   },
   "pointset" : {
@@ -37,12 +24,12 @@
     "metrics_rate_sec" : 10,
     "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2024-02-18T16:56:48Z"
+      "last_start" : "2024-02-18T18:16:52Z"
     },
     "testing" : {
       "sequence_name" : "pointset_enumeration"
     }
   },
-  "timestamp" : "2024-02-18T16:57:18Z",
+  "timestamp" : "2024-02-18T18:17:20Z",
   "version" : "1.5.0-16-g48397c75b"
 }

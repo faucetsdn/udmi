@@ -1,11 +1,11 @@
 {
-  "timestamp" : "2024-02-18T16:57:32Z",
+  "timestamp" : "2024-02-18T18:17:58Z",
   "version" : "@@@cloud udmi version###1.5.0-16-g48397c75b",
   "system" : {
     "min_loglevel" : 200,
     "metrics_rate_sec" : 10,
     "operation" : {
-      "last_start" : "2024-02-18T16:57:09Z"
+      "last_start" : "2024-02-18T18:17:35Z"
     },
     "testing" : {
       "sequence_name" : "periodic_scan"
@@ -13,23 +13,10 @@
   },
   "discovery" : {
     "families" : {
-      "virtual" : {
-        "generation" : "2024-02-18T16:57:31Z",
+      "vendor" : {
+        "generation" : "2024-02-18T18:17:57Z",
         "scan_interval_sec" : 10,
         "enumerate" : true
-      }
-    }
-  },
-  "localnet" : {
-    "families" : {
-      "ether" : {
-        "addr" : "00:22:48:8e:d9:c9"
-      },
-      "ipv4" : {
-        "addr" : "10.1.0.116"
-      },
-      "ipv6" : {
-        "addr" : "fe80::222:48ff:fe8e:d9c9"
       }
     }
   },
