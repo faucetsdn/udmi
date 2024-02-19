@@ -63,6 +63,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   private static final Map<Class<?>, SimpleEntry<SubType, SubFolder>> CLASS_TYPES = new HashMap<>();
   private static final BiMap<String, Class<?>> TYPE_CLASSES = HashBiMap.create();
   private static final long HANDLER_TIMEOUT_MS = 2000;
+  private static final double LATENCY_WARNING_THRESHOLD = 1.0;
 
   static {
     Arrays.stream(SubType.values()).forEach(type -> Arrays.stream(SubFolder.values())
@@ -154,7 +155,9 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     Entry<Integer, Double> stats = countSum.get(key);
     double rate = stats.getKey() / (double) monitorSec;
     double average = stats.getValue() / stats.getKey();
-    debug("Pipe %s %s count %.3f/s latency %.03fs", messagePipe, key, rate, average);
+    String message = format("Pipe %s %s count %.3f/s latency %.03fs", messagePipe, key, rate, average);
+    Consumer<String> logger = (average >= LATENCY_WARNING_THRESHOLD ? this::warn : this::debug);
+    logger.accept(message);
   }
 
   private Envelope getThreadEnvelope() {

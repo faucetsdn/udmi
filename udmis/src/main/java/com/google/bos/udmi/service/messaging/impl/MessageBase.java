@@ -177,6 +177,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
 
   private synchronized void ensureSourceQueue() {
     if (sourceQueue == null) {
+      notice(format("Creating new source queue with capacity " + queueCapacity));
       sourceQueue = new LinkedBlockingDeque<>(queueCapacity);
     }
   }
