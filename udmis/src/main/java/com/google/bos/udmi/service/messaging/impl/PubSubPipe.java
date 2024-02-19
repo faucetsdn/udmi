@@ -157,9 +157,9 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
 
   @Override
   public void receiveMessage(PubsubMessage message, AckReplyConsumer reply) {
-    Map<String, String> attributesMap = new HashMap<>(message.getAttributesMap());
     // Ack first to prevent a recurring loop of processing a faulty message.
     reply.ack();
+    Map<String, String> attributesMap = new HashMap<>(message.getAttributesMap());
     String messageId = message.getMessageId();
     attributesMap.computeIfAbsent("publishTime",
         key -> isoConvert(ofEpochSecond(message.getPublishTime().getSeconds())));

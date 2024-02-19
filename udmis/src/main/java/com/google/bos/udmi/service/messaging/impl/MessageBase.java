@@ -65,21 +65,25 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   private static final Set<Object> HANDLED_QUEUES = new HashSet<>();
   private static final long DEFAULT_POLL_TIME_SEC = 1;
   private static final long AWAIT_TERMINATION_SEC = 10;
+  private static final int DEFAULT_CAPACITY = 1000;
   private final ExecutorService executor = Executors.newFixedThreadPool(EXECUTION_THREADS);
   private final Entry<AtomicInteger, AtomicDouble> publishStats = makeEmptyStats();
   private final Entry<AtomicInteger, AtomicDouble> receiveStats = makeEmptyStats();
   private final String pipeId;
+  private final int queueCapacity;
   private BlockingQueue<QueueEntry> sourceQueue;
   private Consumer<Bundle> dispatcher;
   private boolean activated;
 
   public MessageBase() {
     pipeId = getClass().getSimpleName();
+    queueCapacity = DEFAULT_CAPACITY;
   }
 
   public MessageBase(EndpointConfiguration configuration) {
     pipeId = Optional.ofNullable(configuration.error).map(flow -> "flow:" + flow)
         .orElse(getClass().getSimpleName());
+    queueCapacity = ofNullable(configuration.capacity).orElse(DEFAULT_CAPACITY);
   }
 
   /**
@@ -124,9 +128,10 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   protected void pushQueueEntry(BlockingQueue<QueueEntry> queue, String stringBundle) {
     try {
       requireNonNull(stringBundle, "missing queue bundle");
-      queue.put(new QueueEntry(grabExecutionContext(), stringBundle));
+      randomlyFail();
+      queue.add(new QueueEntry(grabExecutionContext(), stringBundle));
     } catch (Exception e) {
-      throw new RuntimeException("While pushing queue entry", e);
+      throw new RuntimeException("While adding queue entry", e);
     }
   }
 
@@ -172,7 +177,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
 
   private synchronized void ensureSourceQueue() {
     if (sourceQueue == null) {
-      sourceQueue = new LinkedBlockingDeque<>();
+      sourceQueue = new LinkedBlockingDeque<>(queueCapacity);
     }
   }
 

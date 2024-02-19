@@ -119,7 +119,7 @@ public abstract class ContainerBase implements ContainerProvider {
 
   protected void randomlyFail() {
     if (Math.random() < failureRate) {
-      throw new IllegalStateException("Randomly failing to test error handling");
+      throw new IllegalStateException("Randomly induced failure");
     }
   }
 
