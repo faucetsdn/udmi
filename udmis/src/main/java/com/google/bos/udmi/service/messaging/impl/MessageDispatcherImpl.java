@@ -144,10 +144,14 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   }
 
   private void executeHandler(Class<?> handlerType, Object messageObject) {
-    handlers.get(handlerType).accept(messageObject);
-    synchronized (handlerCounts) {
-      handlerCounts.computeIfAbsent(handlerType, key -> new AtomicInteger()).incrementAndGet();
-      handlerCounts.notify();
+    try {
+      handlers.get(handlerType).accept(messageObject);
+      synchronized (handlerCounts) {
+        handlerCounts.computeIfAbsent(handlerType, key -> new AtomicInteger()).incrementAndGet();
+        handlerCounts.notify();
+      }
+    } catch (Exception e) {
+      throw new RuntimeException("While evaluating handler type " + handlerType.getSimpleName(), e);
     }
   }
 
