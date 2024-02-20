@@ -66,6 +66,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   private static final long DEFAULT_POLL_TIME_SEC = 1;
   private static final long AWAIT_TERMINATION_SEC = 10;
   private static final int DEFAULT_CAPACITY = 1000;
+  public static final double MESSAGE_WARN_THRESHOLD_SEC = 1.0;
   private final ExecutorService executor = Executors.newFixedThreadPool(EXECUTION_THREADS);
   private final Entry<AtomicInteger, AtomicDouble> publishStats = makeEmptyStats();
   private final Entry<AtomicInteger, AtomicDouble> receiveStats = makeEmptyStats();
@@ -159,7 +160,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     try {
       receiveMessageRaw(attributesMap, messageString);
     } finally {
-      accumulateStats(receiveStats, Duration.between(start, Instant.now()));
+      accumulateStats(RECEIVE_STATS, receiveStats, Duration.between(start, Instant.now()));
     }
   }
 
@@ -178,11 +179,14 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     }
   }
 
-  private synchronized void accumulateStats(Entry<AtomicInteger, AtomicDouble> stats,
+  private synchronized void accumulateStats(String statsBucket, Entry<AtomicInteger, AtomicDouble> stats,
       Duration duration) {
     double seconds = duration.getSeconds() + duration.toMillisPart() / 1000.0;
     stats.getKey().incrementAndGet();
     stats.getValue().addAndGet(seconds);
+    if (seconds >= MESSAGE_WARN_THRESHOLD_SEC) {
+      warn("Message %s took %.03fs", statsBucket, seconds);
+    }
   }
 
   private synchronized void ensureSourceQueue() {
@@ -417,7 +421,8 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     try {
       publishRaw(bundle);
     } finally {
-      accumulateStats(publishStats, Duration.between(start, Instant.now()));
+      Duration between = Duration.between(start, Instant.now());
+      accumulateStats(PUBLISH_STATS, publishStats, between);
     }
   }
 

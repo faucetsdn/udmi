@@ -1,14 +1,14 @@
 {
   "base": {
     "udmi_prefix": "${UDMI_PREFIX}",
-    "failure_rate": "0.00",
-    "publish_delay_sec": 10,
-    "capacity": null,
+    "failure_rate": "0.00"
   },
   "flow_defaults": {
     "protocol": "pubsub",
     "hostname": "${GCP_PROJECT}",
     "monitor_sec": 60,
+    "publish_delay_sec": 10,
+    "capacity": null,
     "distributor": "stately"
   },
   "flows": {

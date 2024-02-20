@@ -97,6 +97,7 @@ cat <<EOF > $pubber_config
     "projectId": "$project_target",
     "serialNo": "$serial_no",
     "options": {
+      "spamState": true,
       "smokeCheck": true
     }
 }
