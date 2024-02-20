@@ -12,7 +12,9 @@ import static com.google.udmi.util.JsonUtil.toMap;
 import static java.lang.String.format;
 import static java.time.Instant.ofEpochSecond;
 
+import com.google.api.core.AbstractApiService;
 import com.google.api.core.ApiFuture;
+import com.google.api.core.ApiService;
 import com.google.api.core.ApiService.Listener;
 import com.google.api.core.ApiService.State;
 import com.google.api.gax.core.NoCredentialsProvider;
@@ -43,6 +45,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.VisibleForTesting;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
 
@@ -129,6 +132,11 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
   @Override
   public void activate(Consumer<Bundle> bundleConsumer) {
     super.activate(bundleConsumer);
+    resumeSubscribers();
+  }
+
+  @Override
+  protected void resumeSubscribers() {
     subscribers.forEach(Subscriber::startAsync);
   }
 
@@ -138,7 +146,7 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
       trace("Dropping message because publisher is null");
       return;
     }
-    checkPublishQueueSize();
+    throttleQueue();
     try {
       publisherQueueSize.incrementAndGet();
       Envelope envelope = Optional.ofNullable(bundle.envelope).orElse(new Envelope());
@@ -158,25 +166,14 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
       throw new RuntimeException("While publishing bundle to " + publisher.getTopicNameString(), e);
     } finally {
       publisherQueueSize.decrementAndGet();
-      checkPublishQueueSize();
-    }
-  }
-
-  private void checkPublishQueueSize() {
-    int size = publisherQueueSize.get();
-    if (size > 3 * queueCapacity / 5) {
-      warn("Queue is above threshold");
-      // TODO TAP -- suspend subscribers here.
-    } else if (size < 2 * queueCapacity / 5) {
-      // TODO TAP -- resume subscribers here.
-    } else {
-      notice("Queue is in warning zone");
+      throttleQueue();
     }
   }
 
   @Override
-  protected int getPublishQueueSize() {
-    return publisherQueueSize.get();
+  protected double getPublishQueueSize() {
+    // TODO: Ensure parity with actual pubSub publisher queue size.
+    return publisherQueueSize.get() / (double) queueCapacity;
   }
 
   @Override
@@ -191,14 +188,23 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
     receiveMessage(attributesMap, message.getData().toStringUtf8());
   }
 
-  private void stopAndWait(Subscriber subscriber) {
-    subscriber.stopAsync().awaitTerminated();
-  }
-
   @Override
   public void shutdown() {
-    subscribers.forEach(this::stopAndWait);
+    awaitTerminated();
     super.shutdown();
+  }
+
+  @VisibleForTesting
+  protected void pauseSubscribers() {
+    stopAsyncSubscribers();
+  }
+
+  private List<ApiService> stopAsyncSubscribers() {
+    return subscribers.stream().map(AbstractApiService::stopAsync).toList();
+  }
+
+  private void awaitTerminated() {
+    stopAsyncSubscribers().forEach(ApiService::awaitTerminated);
   }
 
   Publisher getPublisher(String topicName) {
@@ -242,7 +248,7 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
   void resetForTest() {
     super.resetForTest();
     try {
-      subscribers.forEach(this::stopAndWait);
+      awaitTerminated();
       publisher.shutdown();
     } catch (Exception e) {
       throw new RuntimeException("While shutting down connections", e);

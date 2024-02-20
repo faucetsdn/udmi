@@ -40,6 +40,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import org.jetbrains.annotations.Nullable;
@@ -67,6 +68,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   private static final long AWAIT_TERMINATION_SEC = 10;
   private static final int DEFAULT_CAPACITY = 1000;
   public static final double MESSAGE_WARN_THRESHOLD_SEC = 1.0;
+  public static final double QUEUE_THROTTLE_MARK = 0.6;
   private final ExecutorService executor = Executors.newFixedThreadPool(EXECUTION_THREADS);
   private final Entry<AtomicInteger, AtomicDouble> publishStats = makeEmptyStats();
   private final Entry<AtomicInteger, AtomicDouble> receiveStats = makeEmptyStats();
@@ -76,6 +78,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   private BlockingQueue<QueueEntry> sourceQueue;
   private Consumer<Bundle> dispatcher;
   private boolean activated;
+  private AtomicBoolean subscriptionsThrottled = new AtomicBoolean();
 
   public MessageBase() {
     pipeId = getClass().getSimpleName();
@@ -138,12 +141,37 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   protected void pushQueueEntry(BlockingQueue<QueueEntry> queue, String stringBundle) {
     try {
       requireNonNull(stringBundle, "missing queue bundle");
+      throttleQueue();
       randomlyFail();
-      // TODO TAP: Throw rejected publish exception.
       queue.add(new QueueEntry(grabExecutionContext(), stringBundle));
     } catch (Exception e) {
       throw new RuntimeException("While adding queue entry", e);
     }
+  }
+
+  protected void throttleQueue() {
+    boolean blockReceiver = getReceiveQueueSize() > QUEUE_THROTTLE_MARK;
+    boolean blockPublisher = getPublishQueueSize() > QUEUE_THROTTLE_MARK;
+    boolean releaseReceiver = getPublishQueueSize() < QUEUE_THROTTLE_MARK / 2.0;
+    boolean releasePublisher = getPublishQueueSize() < QUEUE_THROTTLE_MARK / 2.0;
+
+    if (blockPublisher || blockReceiver) {
+      if (!subscriptionsThrottled.getAndSet(true)) {
+        warn("Message queues blocked %s/%s, pausing subscribers", blockReceiver, blockPublisher);
+        pauseSubscribers();
+      }
+    } else if (releasePublisher && releaseReceiver) {
+      if (subscriptionsThrottled.getAndSet(false)) {
+        warn("Message queues cleared, resuming subscribers");
+        resumeSubscribers();
+      }
+    }
+  }
+
+  protected void pauseSubscribers() {
+  }
+
+  protected void resumeSubscribers() {
   }
 
   protected String queueIdentifier() {
@@ -196,17 +224,18 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     }
   }
 
-  private PipeStats extractStat(Entry<AtomicInteger, AtomicDouble> stats, int size) {
+  private PipeStats extractStat(Entry<AtomicInteger, AtomicDouble> stats, double size) {
     PipeStats pipeStats = new PipeStats();
     pipeStats.count = stats.getKey().getAndSet(0);
     pipeStats.latency = stats.getValue().getAndSet(0);
-    pipeStats.size = size / (double) queueCapacity;
+    pipeStats.size = size;
     return pipeStats;
   }
 
   @Nullable
   private String getFromSourceQueue() throws InterruptedException {
     QueueEntry poll = sourceQueue.poll(DEFAULT_POLL_TIME_SEC, TimeUnit.SECONDS);
+    throttleQueue();
     ifNotNullThen(poll, p -> setExecutionContext(p.context));
     return ifNotNullGet(poll, p -> p.message);
   }
@@ -387,12 +416,16 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   public synchronized Map<String, PipeStats> extractStats() {
     return ImmutableMap.of(
         PUBLISH_STATS, extractStat(publishStats, getPublishQueueSize()),
-        RECEIVE_STATS, extractStat(receiveStats, sourceQueue.size()));
+        RECEIVE_STATS, extractStat(receiveStats, getReceiveQueueSize()));
   }
 
-  protected int getPublishQueueSize() {
+  private double getReceiveQueueSize() {
+    return sourceQueue.size() / (double) queueCapacity;
+  }
+
+  protected double getPublishQueueSize() {
     // Marker value for undefined.
-    return -queueCapacity;
+    return -1.0;
   }
 
   @Override
