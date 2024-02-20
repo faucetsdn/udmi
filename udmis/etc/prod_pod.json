@@ -1,7 +1,9 @@
 {
   "base": {
     "udmi_prefix": "${UDMI_PREFIX}",
-    "failure_rate": "0.01"
+    "failure_rate": "0.00",
+    "publish_delay_sec": 10,
+    "capacity": null,
   },
   "flow_defaults": {
     "protocol": "pubsub",

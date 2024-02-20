@@ -59,6 +59,10 @@
       "description": "Queue capacity for limiting pipes",
       "type": "integer"
     },
+    "publish_delay_sec": {
+      "description": "Artifical publish delay for testing",
+      "type": "integer"
+    },
     "monitor_sec": {
       "description": "Period for monitoring sampling",
       "type": "integer"

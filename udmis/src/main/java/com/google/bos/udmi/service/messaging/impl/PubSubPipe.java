@@ -55,7 +55,7 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
   public static final String EMULATOR_HOST = System.getenv(EMULATOR_HOST_ENV);
   public static final String GCP_HOST = "gcp";
   public static final String PS_TXN_PREFIX = "PS:";
-  private static final long PUBLISH_DELAY_MS = 10 * 1000;
+  public static final int MS_PER_SEC = 1000;
   private final List<Subscriber> subscribers;
   private final Publisher publisher;
   private final String projectId;
@@ -150,6 +150,7 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
           .build();
       randomlyFail();
       ApiFuture<String> publish = publisher.publish(message);
+      Thread.sleep(publishDelaySec * MS_PER_SEC);
       String publishedId = publish.get();
       debug(format("Published PubSub %s/%s to %s as %s", stringMap.get(SUBTYPE_PROPERTY_KEY),
           stringMap.get(SUBFOLDER_PROPERTY_KEY), topicId, PS_TXN_PREFIX + publishedId));
@@ -163,10 +164,13 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
 
   private void checkPublishQueueSize() {
     int size = publisherQueueSize.get();
-    if (size > 2 * queueCapacity / 3) {
+    if (size > 3 * queueCapacity / 5) {
+      warn("Queue is above threshold");
       // TODO TAP -- suspend subscribers here.
-    } else if (size < queueCapacity / 3) {
+    } else if (size < 2 * queueCapacity / 5) {
       // TODO TAP -- resume subscribers here.
+    } else {
+      notice("Queue is in warning zone");
     }
   }
 

@@ -71,6 +71,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   private final Entry<AtomicInteger, AtomicDouble> receiveStats = makeEmptyStats();
   private final String pipeId;
   protected final int queueCapacity;
+  protected final long publishDelaySec;
   private BlockingQueue<QueueEntry> sourceQueue;
   private Consumer<Bundle> dispatcher;
   private boolean activated;
@@ -78,6 +79,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   public MessageBase() {
     pipeId = getClass().getSimpleName();
     queueCapacity = DEFAULT_CAPACITY;
+    publishDelaySec = 0;
   }
 
   /**
@@ -87,6 +89,10 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     pipeId = Optional.ofNullable(configuration.error).map(flow -> "flow:" + flow)
         .orElse(getClass().getSimpleName());
     queueCapacity = ofNullable(configuration.capacity).orElse(DEFAULT_CAPACITY);
+    publishDelaySec = ofNullable(configuration.publish_delay_sec).orElse(0);
+    if (publishDelaySec > 0) {
+      warn("Artificially delaying message published by %ds", publishDelaySec);
+    }
   }
 
   /**
