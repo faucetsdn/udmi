@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "proxy_ids",
+    "family",
     "target"
 })
 @Generated("jsonschema2pojo")
@@ -31,6 +32,8 @@ public class GatewayConfig {
     @JsonProperty("proxy_ids")
     @JsonPropertyDescription("An array of all the device IDs which are bound to the device")
     public List<String> proxy_ids = new ArrayList<String>();
+    @JsonProperty("family")
+    public String family;
     /**
      * Family Localnet Model
      * <p>
@@ -45,6 +48,7 @@ public class GatewayConfig {
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.proxy_ids == null)? 0 :this.proxy_ids.hashCode()));
+        result = ((result* 31)+((this.family == null)? 0 :this.family.hashCode()));
         result = ((result* 31)+((this.target == null)? 0 :this.target.hashCode()));
         return result;
     }
@@ -58,7 +62,7 @@ public class GatewayConfig {
             return false;
         }
         GatewayConfig rhs = ((GatewayConfig) other);
-        return (((this.proxy_ids == rhs.proxy_ids)||((this.proxy_ids!= null)&&this.proxy_ids.equals(rhs.proxy_ids)))&&((this.target == rhs.target)||((this.target!= null)&&this.target.equals(rhs.target))));
+        return ((((this.proxy_ids == rhs.proxy_ids)||((this.proxy_ids!= null)&&this.proxy_ids.equals(rhs.proxy_ids)))&&((this.family == rhs.family)||((this.family!= null)&&this.family.equals(rhs.family))))&&((this.target == rhs.target)||((this.target!= null)&&this.target.equals(rhs.target))));
     }
 
 }

@@ -10,6 +10,7 @@ import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.getTimestampString;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
+import static java.util.Optional.ofNullable;
 
 import java.util.HashMap;
 import java.util.List;
@@ -30,6 +31,7 @@ import udmi.schema.SystemConfig;
 public class ConfigGenerator {
 
   public static final String GENERATED_CONFIG_JSON = "generated_config.json";
+  public static final String DEFAULT_FAMILY = "vendor";
 
   private final Metadata metadata;
 
@@ -79,7 +81,7 @@ public class ConfigGenerator {
       ifNotNullThen(metadata.gateway.target, target -> {
         ifNotNullThrow(target.addr, "metadata.gateway.target.addr should not be defined");
         configVar.target = deepCopy(target);
-        configVar.target.addr = getLocalnetAddr(target.family);
+        configVar.target.addr = getLocalnetAddr(metadata.gateway.family);
       });
     } else {
       throw new RuntimeException("gateway block is neither gateway nor proxied");
@@ -87,7 +89,8 @@ public class ConfigGenerator {
     return gatewayConfig;
   }
 
-  private String getLocalnetAddr(String family) {
+  private String getLocalnetAddr(String rawFamily) {
+    String family = ofNullable(rawFamily).orElse(DEFAULT_FAMILY);
     String address = catchToNull(() -> metadata.localnet.families.get(family).addr);
     return requireNonNull(address, format("metadata.localnet.families[%s].addr undefined", family));
   }
@@ -135,7 +138,7 @@ public class ConfigGenerator {
 
   private String pointConfigRef(PointPointsetModel model) {
     String pointRef = model.ref;
-    String family = catchToNull(() -> metadata.gateway.target.family);
+    String family = catchToNull(() -> metadata.gateway.family);
 
     if (!isProxied()) {
       return pointRef;
