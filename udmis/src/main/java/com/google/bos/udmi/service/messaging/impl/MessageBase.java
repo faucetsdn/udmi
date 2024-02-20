@@ -80,6 +80,9 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     queueCapacity = DEFAULT_CAPACITY;
   }
 
+  /**
+   * Create a configuration based instance.
+   */
   public MessageBase(EndpointConfiguration configuration) {
     pipeId = Optional.ofNullable(configuration.error).map(flow -> "flow:" + flow)
         .orElse(getClass().getSimpleName());
