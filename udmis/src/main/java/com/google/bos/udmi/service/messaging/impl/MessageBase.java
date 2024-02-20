@@ -182,8 +182,12 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     }
   }
 
-  private Entry<Integer, Double> extractStat(Entry<AtomicInteger, AtomicDouble> stats) {
-    return new SimpleEntry<>(stats.getKey().getAndSet(0), stats.getValue().getAndSet(0));
+  private PipeStats extractStat(Entry<AtomicInteger, AtomicDouble> stats, int size) {
+    PipeStats pipeStats = new PipeStats();
+    pipeStats.count = stats.getKey().getAndSet(0);
+    pipeStats.latency = stats.getValue().getAndSet(0);
+    pipeStats.size = size / (double) queueCapacity;
+    return pipeStats;
   }
 
   @Nullable
@@ -366,10 +370,15 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   }
 
   @Override
-  public synchronized Map<String, Entry<Integer, Double>> extractStats() {
+  public synchronized Map<String, PipeStats> extractStats() {
     return ImmutableMap.of(
-        PUBLISH_STATS, extractStat(publishStats),
-        RECEIVE_STATS, extractStat(receiveStats));
+        PUBLISH_STATS, extractStat(publishStats, getPublishQueueSize()),
+        RECEIVE_STATS, extractStat(receiveStats, sourceQueue.size()));
+  }
+
+  protected int getPublishQueueSize() {
+    // Marker value for undefined.
+    return -queueCapacity;
   }
 
   @Override

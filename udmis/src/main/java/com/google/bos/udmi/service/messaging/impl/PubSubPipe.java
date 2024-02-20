@@ -32,8 +32,6 @@ import com.google.pubsub.v1.PubsubMessage;
 import com.google.udmi.util.Common;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +39,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
@@ -60,6 +59,7 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
   private final Publisher publisher;
   private final String projectId;
   private final String topicId;
+  private AtomicInteger publisherQueueSize = new AtomicInteger();
 
   /**
    * Create a new instance based off the configuration.
@@ -138,6 +138,7 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
       return;
     }
     try {
+      publisherQueueSize.incrementAndGet();
       Envelope envelope = Optional.ofNullable(bundle.envelope).orElse(new Envelope());
       Map<String, String> stringMap = toMap(envelope).entrySet().stream()
           .collect(Collectors.toMap(Entry::getKey, entry -> (String) entry.getValue()));
@@ -152,7 +153,14 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
           stringMap.get(SUBFOLDER_PROPERTY_KEY), topicId, PS_TXN_PREFIX + publishedId));
     } catch (Exception e) {
       throw new RuntimeException("While publishing bundle to " + publisher.getTopicNameString(), e);
+    } finally {
+      publisherQueueSize.decrementAndGet();
     }
+  }
+
+  @Override
+  protected int getPublishQueueSize() {
+    return publisherQueueSize.get();
   }
 
   @Override
