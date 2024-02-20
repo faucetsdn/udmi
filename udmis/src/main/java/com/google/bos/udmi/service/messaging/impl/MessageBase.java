@@ -70,7 +70,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   private final Entry<AtomicInteger, AtomicDouble> publishStats = makeEmptyStats();
   private final Entry<AtomicInteger, AtomicDouble> receiveStats = makeEmptyStats();
   private final String pipeId;
-  private final int queueCapacity;
+  protected final int queueCapacity;
   private BlockingQueue<QueueEntry> sourceQueue;
   private Consumer<Bundle> dispatcher;
   private boolean activated;
@@ -132,6 +132,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     try {
       requireNonNull(stringBundle, "missing queue bundle");
       randomlyFail();
+      // TODO TAP: Throw rejected publish exception.
       queue.add(new QueueEntry(grabExecutionContext(), stringBundle));
     } catch (Exception e) {
       throw new RuntimeException("While adding queue entry", e);

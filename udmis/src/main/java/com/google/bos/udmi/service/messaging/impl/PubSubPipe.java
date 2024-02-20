@@ -55,6 +55,7 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
   public static final String EMULATOR_HOST = System.getenv(EMULATOR_HOST_ENV);
   public static final String GCP_HOST = "gcp";
   public static final String PS_TXN_PREFIX = "PS:";
+  private static final long PUBLISH_DELAY_MS = 10 * 1000;
   private final List<Subscriber> subscribers;
   private final Publisher publisher;
   private final String projectId;
@@ -137,6 +138,7 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
       trace("Dropping message because publisher is null");
       return;
     }
+    checkPublishQueueSize();
     try {
       publisherQueueSize.incrementAndGet();
       Envelope envelope = Optional.ofNullable(bundle.envelope).orElse(new Envelope());
@@ -155,6 +157,16 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
       throw new RuntimeException("While publishing bundle to " + publisher.getTopicNameString(), e);
     } finally {
       publisherQueueSize.decrementAndGet();
+      checkPublishQueueSize();
+    }
+  }
+
+  private void checkPublishQueueSize() {
+    int size = publisherQueueSize.get();
+    if (size > 2 * queueCapacity / 3) {
+      // TODO TAP -- suspend subscribers here.
+    } else if (size < queueCapacity / 3) {
+      // TODO TAP -- resume subscribers here.
     }
   }
 
