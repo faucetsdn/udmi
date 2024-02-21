@@ -7,7 +7,6 @@ class GatewayConfig:
 
   def __init__(self):
     self.proxy_ids = None
-    self.family = None
     self.target = None
 
   @staticmethod
@@ -16,7 +15,6 @@ class GatewayConfig:
       return None
     result = GatewayConfig()
     result.proxy_ids = source.get('proxy_ids')
-    result.family = source.get('family')
     result.target = FamilyLocalnetModel.from_dict(source.get('target'))
     return result
 
@@ -40,8 +38,6 @@ class GatewayConfig:
     result = {}
     if self.proxy_ids:
       result['proxy_ids'] = self.proxy_ids # 1
-    if self.family:
-      result['family'] = self.family # 5
     if self.target:
       result['target'] = self.target.to_dict() # 4
     return result

@@ -15,11 +15,8 @@
       },
       "examples": [["AHU-22"]]
     },
-    "family": {
-      "type": "string"
-    },
     "target": {
-      "description": "For proxied devices, this represents the target proxy device address for use by the gateway",
+      "description": "For proxied devices, this represents the target proxy device address for use by its gateway",
       "$ref": "file:model_localnet_family.json"
     }
   }
