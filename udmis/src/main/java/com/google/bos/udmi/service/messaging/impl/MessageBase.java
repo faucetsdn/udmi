@@ -81,6 +81,9 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   private Consumer<Bundle> dispatcher;
   private boolean activated;
 
+  /**
+   * Default message base with basic default parameters.
+   */
   public MessageBase() {
     pipeId = getClass().getSimpleName();
     queueCapacity = DEFAULT_CAPACITY;
@@ -96,7 +99,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     queueCapacity = ofNullable(configuration.capacity).orElse(DEFAULT_CAPACITY);
     publishDelaySec = ofNullable(configuration.publish_delay_sec).orElse(0);
     if (publishDelaySec > 0) {
-      warn("Artificially delaying message published by %ds", publishDelaySec);
+      warn("Artificially delaying message publishing by %ds", publishDelaySec);
     }
   }
 
