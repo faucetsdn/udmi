@@ -69,10 +69,11 @@ public class ProfilingProxy<T> implements InvocationHandler {
       throw throwable;
     } finally {
       double durationSec = Duration.between(start, Instant.now()).toMillis() / 1000.0;
-      String result = ofNullable(caught).map(Throwable::toString).orElse("success");
+      Level level = caught == null ? Level.DEBUG : Level.WARNING;
+      String result = caught == null ? "success" : "exception";
       String message = format("Method %s#%s took %.03f (%s)",
           providerName, method.getName(), durationSec, result);
-      container.output(caught == null ? Level.DEBUG : Level.WARNING, message);
+      container.output(level, message);
     }
   }
 }
