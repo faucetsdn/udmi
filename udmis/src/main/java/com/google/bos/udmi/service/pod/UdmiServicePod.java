@@ -31,6 +31,7 @@ import org.jetbrains.annotations.NotNull;
 import udmi.schema.BridgePodConfiguration;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.IotAccess;
+import udmi.schema.Level;
 import udmi.schema.PodConfiguration;
 import udmi.schema.SetupUdmiConfig;
 import udmi.schema.UdmiConfig;
@@ -143,8 +144,8 @@ public class UdmiServicePod extends ContainerBase {
                 format("Conflicting objects for component %s: %s replacing %s",
                     componentName, component.getClass(), replaced.getClass()));
           });
-      container.debug("Added component %s of type %s", componentName,
-          container.getClass().getSimpleName());
+      container.output(Level.DEBUG, format("Added component %s of type %s",
+          componentName, container.getClass().getSimpleName()));
     } catch (Exception e) {
       throw new RuntimeException("While creating component " + componentName, e);
     }
