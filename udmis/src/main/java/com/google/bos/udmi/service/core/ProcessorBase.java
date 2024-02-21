@@ -150,7 +150,7 @@ public abstract class ProcessorBase extends ContainerBase {
       errorMap.put(DEVICE_ID_KEY, null);
     }
 
-    errorMap.put(SUBTYPE_PROPERTY_KEY, subType.value());
+    errorMap.put(SUBTYPE_PROPERTY_KEY, ifNotNullGet(subType, SubType::value));
     errorMap.computeIfAbsent(SUBFOLDER_PROPERTY_KEY, k -> SubFolder.ERROR.value());
     ErrorMessage errorMessage = new ErrorMessage();
     errorMessage.error = (String) bundle.message;

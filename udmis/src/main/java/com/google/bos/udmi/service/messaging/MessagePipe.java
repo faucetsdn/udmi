@@ -65,7 +65,16 @@ public interface MessagePipe {
   void shutdown();
 
   /**
-   * Atomically extract a count/sum pair of message publish durations.
+   * Atomically extract a count/sum of message statistics.
    */
-  Map<String, Entry<Integer, Double>> extractStats();
+  Map<String, PipeStats> extractStats();
+
+  /**
+   * Simple class to hold pipe statistics values.
+   */
+  class PipeStats {
+    public int count;
+    public double latency;
+    public double size;
+  }
 }

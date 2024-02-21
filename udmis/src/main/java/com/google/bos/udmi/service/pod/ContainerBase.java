@@ -119,7 +119,7 @@ public abstract class ContainerBase implements ContainerProvider {
 
   protected void randomlyFail() {
     if (Math.random() < failureRate) {
-      throw new IllegalStateException("Randomly failing to test error handling");
+      throw new IllegalStateException("Randomly induced failure");
     }
   }
 
@@ -172,7 +172,8 @@ public abstract class ContainerBase implements ContainerProvider {
     return getClass().getSimpleName();
   }
 
-  private void output(Level level, String message) {
+  @Override
+  public void output(Level level, String message) {
     PrintStream printStream = level.value() >= Level.WARNING.value() ? System.err : System.out;
     printStream.printf("%s %s %s: %s %s%n", JsonUtil.isoConvert(), getExecutionContext(),
         level.name().charAt(0), getSimpleName(), message);
@@ -183,7 +184,6 @@ public abstract class ContainerBase implements ContainerProvider {
   public void activate() {
   }
 
-  @Override
   public void debug(String format, Object... args) {
     debug(format(format, args));
   }
