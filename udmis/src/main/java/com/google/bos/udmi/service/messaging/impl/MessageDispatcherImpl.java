@@ -15,6 +15,7 @@ import com.google.bos.udmi.service.messaging.ConfigUpdate;
 import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.MessageDispatcher;
 import com.google.bos.udmi.service.messaging.MessagePipe;
+import com.google.bos.udmi.service.messaging.MessagePipe.PipeStats;
 import com.google.bos.udmi.service.messaging.StateUpdate;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.BundleException;
@@ -31,7 +32,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -63,6 +63,8 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   private static final Map<Class<?>, SimpleEntry<SubType, SubFolder>> CLASS_TYPES = new HashMap<>();
   private static final BiMap<String, Class<?>> TYPE_CLASSES = HashBiMap.create();
   private static final long HANDLER_TIMEOUT_MS = 2000;
+  private static final double LATENCY_WARNING_THRESHOLD = 1.0;
+  private static final double SIZE_WARNING_THRESHOLD = 0.5;
 
   static {
     Arrays.stream(SubType.values()).forEach(type -> Arrays.stream(SubFolder.values())
@@ -143,18 +145,26 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   }
 
   private void executeHandler(Class<?> handlerType, Object messageObject) {
-    handlers.get(handlerType).accept(messageObject);
-    synchronized (handlerCounts) {
-      handlerCounts.computeIfAbsent(handlerType, key -> new AtomicInteger()).incrementAndGet();
-      handlerCounts.notify();
+    try {
+      handlers.get(handlerType).accept(messageObject);
+      synchronized (handlerCounts) {
+        handlerCounts.computeIfAbsent(handlerType, key -> new AtomicInteger()).incrementAndGet();
+        handlerCounts.notify();
+      }
+    } catch (Exception e) {
+      throw new RuntimeException("While evaluating handler type " + handlerType.getSimpleName(), e);
     }
   }
 
-  private void extractAndLog(Map<String, Entry<Integer, Double>> countSum, String key) {
-    Entry<Integer, Double> stats = countSum.get(key);
-    double rate = stats.getKey() / (double) monitorSec;
-    double average = stats.getValue() / stats.getKey();
-    debug("Pipe %s %s count %.3f/s latency %.03fs", messagePipe, key, rate, average);
+  private void extractAndLog(Map<String, PipeStats> countSum, String key) {
+    PipeStats stats = countSum.get(key);
+    double rate = stats.count / (double) monitorSec;
+    double average = stats.latency / stats.count;
+    String message = format("Pipe %s %s count %.3f/s latency %.03fs, queue %.03f",
+        messagePipe, key, rate, average, stats.size);
+    boolean asWarn = average >= LATENCY_WARNING_THRESHOLD || stats.size >= SIZE_WARNING_THRESHOLD;
+    Consumer<String> logger = asWarn ? this::warn : this::debug;
+    logger.accept(message);
   }
 
   private Envelope getThreadEnvelope() {
@@ -173,7 +183,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   }
 
   private void periodicMonitor() {
-    Map<String, Entry<Integer, Double>> countSum = messagePipe.extractStats();
+    Map<String, PipeStats> countSum = messagePipe.extractStats();
     extractAndLog(countSum, RECEIVE_STATS);
     extractAndLog(countSum, PUBLISH_STATS);
   }

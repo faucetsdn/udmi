@@ -21,7 +21,6 @@ public interface IotAccessProvider extends ContainerProvider {
   Map<IotProvider, Class<? extends IotAccessBase>> PROVIDERS = ImmutableMap.of(
       IotProvider.DYNAMIC, DynamicIotAccessProvider.class,
       IotProvider.CLEARBLADE, ClearBladeIotAccessProvider.class,
-      IotProvider.GCP, GcpIotAccessProvider.class,
       IotProvider.PUBSUB, PubSubIotAccessProvider.class,
       IotProvider.LOCAL, LocalIotAccessProvider.class
   );

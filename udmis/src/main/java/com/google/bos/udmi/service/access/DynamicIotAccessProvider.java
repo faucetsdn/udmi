@@ -48,23 +48,9 @@ public class DynamicIotAccessProvider extends IotAccessBase {
     return ImmutableMap.of();
   }
 
-  @Override
-  public Set<String> getRegistriesForRegion(String region) {
-    throw new RuntimeException("Should not be called!");
-  }
-
-  @Override
-  public boolean isEnabled() {
-    return true;
-  }
-
-  @Override
-  public String updateConfig(String registryId, String deviceId, String config, Long version) {
-    throw new RuntimeException("Shouldn't be called for dynamic provider");
-  }
-
   private String determineProvider(String registryId) {
     TreeMap<String, String> sortedMap = providers.entrySet().stream()
+        .filter(access -> access.getValue().isEnabled())
         .collect(sortedMapCollector(entry -> registryPriority(registryId, entry)));
     String providerId = sortedMap.lastEntry().getValue();
     debug("Registry affinity mapping for " + registryId + " is " + providerId);
@@ -74,9 +60,7 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   private IotAccessProvider getProviderFor(String registryId) {
     IotAccessProvider provider =
         providers.get(registryProviders.computeIfAbsent(registryId, this::determineProvider));
-    return requireNonNull(
-        provider,
-        "could not determine provider for " + registryId);
+    return requireNonNull(provider, "could not determine provider for " + registryId);
   }
 
   private String registryPriority(String registryId, Entry<String, IotAccessProvider> provider) {
@@ -123,6 +107,16 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   @Override
+  public Set<String> getRegistriesForRegion(String region) {
+    throw new RuntimeException("Should not be called!");
+  }
+
+  @Override
+  public boolean isEnabled() {
+    return true;
+  }
+
+  @Override
   public CloudModel listDevices(String deviceRegistryId) {
     return getProviderFor(deviceRegistryId).listDevices(deviceRegistryId);
   }
@@ -153,6 +147,11 @@ public class DynamicIotAccessProvider extends IotAccessBase {
       }
     }
     super.setProviderAffinity(registryId, deviceId, providerId);
+  }
+
+  @Override
+  public String updateConfig(String registryId, String deviceId, String config, Long version) {
+    throw new RuntimeException("Shouldn't be called for dynamic provider");
   }
 
   @Override
