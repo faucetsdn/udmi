@@ -10,8 +10,11 @@ import static com.google.daq.mqtt.registrar.Registrar.NORMALIZED_JSON;
 import static com.google.daq.mqtt.util.ConfigGenerator.configFrom;
 import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_STRICT;
+import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.compressJsonString;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.writeString;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
@@ -292,7 +295,11 @@ class LocalDevice {
     } catch (ProcessingException | ValidationException e) {
       exceptionMap.put(EXCEPTION_VALIDATING, e);
     }
-    return JsonUtil.convertTo(Metadata.class, mergedMetadata);
+    Metadata converted = JsonUtil.convertTo(Metadata.class, mergedMetadata);
+    List<String> proxyIds = catchToNull(() -> converted.gateway.proxy_ids);
+    ifNotNullThen(proxyIds,
+        ids -> ifTrueThen(ids.isEmpty(), () -> converted.gateway.proxy_ids = null));
+    return converted;
   }
 
   JsonNode getMergedMetadata(JsonNode instance) {
@@ -490,12 +497,12 @@ class LocalDevice {
     setLastActive(device.last_event_time);
   }
 
-  private void setLastActive(Date lastEventTime) {
-    this.lastActive = lastEventTime;
-  }
-
   public String getLastActive() {
     return JsonUtil.isoConvert(lastActive);
+  }
+
+  private void setLastActive(Date lastEventTime) {
+    this.lastActive = lastEventTime;
   }
 
   public byte[] getKeyBytes() {
@@ -683,6 +690,12 @@ class LocalDevice {
     return checkNotNull(getDeviceNumIdRaw(), "deviceNumId not set");
   }
 
+  public void setDeviceNumId(String numId) {
+    checkState(deviceNumId == null || deviceNumId.equals(numId),
+        format("deviceNumId %s != %s", numId, deviceNumId));
+    deviceNumId = numId;
+  }
+
   public String getDeviceNumIdRaw() {
     return deviceNumId;
   }
@@ -698,12 +711,6 @@ class LocalDevice {
       return DeviceStatus.CLEAN;
     }
     return DeviceStatus.ERRORS;
-  }
-
-  public void setDeviceNumId(String numId) {
-    checkState(deviceNumId == null || deviceNumId.equals(numId),
-        format("deviceNumId %s != %s", numId, deviceNumId));
-    deviceNumId = numId;
   }
 
   public void captureError(String exceptionType, Exception exception) {
