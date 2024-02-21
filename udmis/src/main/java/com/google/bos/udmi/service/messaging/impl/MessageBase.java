@@ -27,6 +27,7 @@ import com.google.common.util.concurrent.AtomicDouble;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.AbstractMap.SimpleEntry;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -420,7 +421,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   }
 
   private double getReceiveQueueSize() {
-    return sourceQueue.size() / (double) queueCapacity;
+    return ofNullable(sourceQueue).map(Collection::size).orElse(0) / (double) queueCapacity;
   }
 
   protected double getPublishQueueSize() {
