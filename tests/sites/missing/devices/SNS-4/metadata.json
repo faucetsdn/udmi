@@ -2,11 +2,11 @@
   "pointset": {
     "points": {
       "triangulating_axis": {
-        "ref": "AI2.present_value",
+        "ref": "anything-goes!",
         "units": "Degrees-phase"
       },
       "split_threshold": {
-        "ref": "MET2.present_value",
+        "ref": "vendor-ref can be anything",
         "units": "Imperial-gallons-per-minute"
       }
     }
@@ -26,13 +26,13 @@
   "gateway": {
     "gateway_id": "GAT-123",
     "target": {
-      "family": "bacnet"
+      "family": "vendor"
     }
   },
   "localnet": {
     "families": {
-      "bacnet": {
-        "addr": "12642174"
+      "vendor": {
+        "addr": "whatEVERyouWANT!!!#!#!"
       }
     }
   },
