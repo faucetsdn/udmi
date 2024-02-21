@@ -21,6 +21,8 @@ import static udmi.schema.CloudModel.Resource_type.DEVICE;
 import static udmi.schema.CloudModel.Resource_type.GATEWAY;
 import static udmi.schema.CloudModel.Resource_type.REGISTRY;
 
+import com.clearblade.cloud.iot.v1.DeviceManagerClient;
+import com.clearblade.cloud.iot.v1.DeviceManagerInterface;
 import com.clearblade.cloud.iot.v1.binddevicetogateway.BindDeviceToGatewayRequest;
 import com.clearblade.cloud.iot.v1.createdevice.CreateDeviceRequest;
 import com.clearblade.cloud.iot.v1.createdeviceregistry.CreateDeviceRegistryRequest;
@@ -175,7 +177,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
 
   @VisibleForTesting
   protected DeviceManagerInterface getDeviceManager(int monitorSec) {
-    return ProfilingProxy.create(this, new DeviceManagerWrapper(), monitorSec);
+    return ProfilingProxy.create(this, new DeviceManagerClient(), monitorSec);
   }
 
   @NotNull

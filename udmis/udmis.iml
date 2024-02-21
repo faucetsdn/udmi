@@ -33,7 +33,7 @@
     <orderEntry type="library" name="Gradle: commons-io:commons-io:2.5" level="project" />
     <orderEntry type="library" name="Gradle: commons-cli:commons-cli:1.5.0" level="project" />
     <orderEntry type="library" name="Gradle: com.google.cloud:google-cloud-logging:3.14.9" level="project" />
-    <orderEntry type="library" name="Gradle: io.github.clearblade:clearblade-cloud-iot:1.0.4" level="project" />
+    <orderEntry type="library" name="Gradle: io.github.clearblade:clearblade-cloud-iot:1.0.5" level="project" />
     <orderEntry type="library" name="Gradle: com.google.cloud:google-cloud-pubsub:1.66.0" level="project" />
     <orderEntry type="library" name="Gradle: com.google.api.grpc:grpc-google-cloud-pubsub-v1:1.48.0" level="project" />
     <orderEntry type="library" name="Gradle: com.google.cloud:google-cloud-core-grpc:2.16.0" level="project" />

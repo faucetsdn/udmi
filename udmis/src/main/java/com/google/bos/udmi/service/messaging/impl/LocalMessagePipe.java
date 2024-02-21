@@ -58,7 +58,7 @@ public class LocalMessagePipe extends MessageBase {
 
   @NotNull
   private Function<String, BlockingQueue<QueueEntry>> trackedQueue(String name) {
-    return key -> new LinkedBlockingQueue<>();
+    return key -> new LinkedBlockingQueue<>(queueCapacity);
   }
 
   /**

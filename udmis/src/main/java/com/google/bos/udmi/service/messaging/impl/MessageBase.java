@@ -27,6 +27,7 @@ import com.google.common.util.concurrent.AtomicDouble;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.AbstractMap.SimpleEntry;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -40,6 +41,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import org.jetbrains.annotations.Nullable;
@@ -60,26 +62,45 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   public static final String ERROR_MESSAGE_MARKER = "error-mark";
   public static final String PUBLISH_STATS = "publish";
   public static final String RECEIVE_STATS = "receive";
+  public static final double MESSAGE_WARN_THRESHOLD_SEC = 1.0;
+  public static final double QUEUE_THROTTLE_MARK = 0.6;
   static final String TERMINATE_MARKER = "terminate";
   private static final String DEFAULT_NAMESPACE = "default-namespace";
   private static final Set<Object> HANDLED_QUEUES = new HashSet<>();
   private static final long DEFAULT_POLL_TIME_SEC = 1;
   private static final long AWAIT_TERMINATION_SEC = 10;
+  private static final int DEFAULT_CAPACITY = 1000;
+  protected final int queueCapacity;
+  protected final long publishDelaySec;
   private final ExecutorService executor = Executors.newFixedThreadPool(EXECUTION_THREADS);
   private final Entry<AtomicInteger, AtomicDouble> publishStats = makeEmptyStats();
   private final Entry<AtomicInteger, AtomicDouble> receiveStats = makeEmptyStats();
   private final String pipeId;
+  private final AtomicBoolean subscriptionsThrottled = new AtomicBoolean();
   private BlockingQueue<QueueEntry> sourceQueue;
   private Consumer<Bundle> dispatcher;
   private boolean activated;
 
+  /**
+   * Default message base with basic default parameters.
+   */
   public MessageBase() {
     pipeId = getClass().getSimpleName();
+    queueCapacity = DEFAULT_CAPACITY;
+    publishDelaySec = 0;
   }
 
+  /**
+   * Create a configuration based instance.
+   */
   public MessageBase(EndpointConfiguration configuration) {
     pipeId = Optional.ofNullable(configuration.error).map(flow -> "flow:" + flow)
         .orElse(getClass().getSimpleName());
+    queueCapacity = ofNullable(configuration.capacity).orElse(DEFAULT_CAPACITY);
+    publishDelaySec = ofNullable(configuration.publish_delay_sec).orElse(0);
+    if (publishDelaySec > 0) {
+      warn("Artificially delaying message publishing by %ds", publishDelaySec);
+    }
   }
 
   /**
@@ -103,6 +124,11 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     return format("%08x", Objects.hash(queue));
   }
 
+  protected double getPublishQueueSize() {
+    // Marker value for undefined.
+    return -1.0;
+  }
+
   protected Bundle makeExceptionBundle(Envelope envelope, Exception exception) {
     Bundle bundle = new Bundle(envelope, exception);
     bundle.envelope.subType = SubType.EVENT;
@@ -119,14 +145,19 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     return bundle;
   }
 
+  protected void pauseSubscribers() {
+  }
+
   protected abstract void publishRaw(Bundle bundle);
 
   protected void pushQueueEntry(BlockingQueue<QueueEntry> queue, String stringBundle) {
     try {
       requireNonNull(stringBundle, "missing queue bundle");
-      queue.put(new QueueEntry(grabExecutionContext(), stringBundle));
+      throttleQueue();
+      randomlyFail();
+      queue.add(new QueueEntry(grabExecutionContext(), stringBundle));
     } catch (Exception e) {
-      throw new RuntimeException("While pushing queue entry", e);
+      throw new RuntimeException("While adding queue entry", e);
     }
   }
 
@@ -144,12 +175,15 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     try {
       receiveMessageRaw(attributesMap, messageString);
     } finally {
-      accumulateStats(receiveStats, Duration.between(start, Instant.now()));
+      accumulateStats(RECEIVE_STATS, receiveStats, Duration.between(start, Instant.now()));
     }
   }
 
   protected void receiveMessage(Envelope envelope, Map<?, ?> messageMap) {
     receiveMessage(toStringMap(envelope), stringify(messageMap));
+  }
+
+  protected void resumeSubscribers() {
   }
 
   protected void setSourceQueue(BlockingQueue<QueueEntry> queueForScope) {
@@ -163,28 +197,65 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     }
   }
 
-  private synchronized void accumulateStats(Entry<AtomicInteger, AtomicDouble> stats,
+  protected void throttleQueue() {
+    double receiveQueueSize = getReceiveQueueSize();
+    double publishQueueSize = getPublishQueueSize();
+
+    boolean blockReceiver = receiveQueueSize > QUEUE_THROTTLE_MARK;
+    boolean blockPublisher = publishQueueSize > QUEUE_THROTTLE_MARK;
+    boolean releaseReceiver = receiveQueueSize < QUEUE_THROTTLE_MARK / 2.0;
+    boolean releasePublisher = publishQueueSize < QUEUE_THROTTLE_MARK / 2.0;
+
+    String message = format("Message queues at %.03f/%.03f", receiveQueueSize, publishQueueSize);
+    if (blockReceiver || blockPublisher) {
+      if (!subscriptionsThrottled.getAndSet(true)) {
+        warn(message + ", pausing subscribers");
+        pauseSubscribers();
+      }
+    } else if (releaseReceiver && releasePublisher) {
+      if (subscriptionsThrottled.getAndSet(false)) {
+        warn(message + ", resuming subscribers");
+        resumeSubscribers();
+      }
+    }
+  }
+
+  private synchronized void accumulateStats(String statsBucket,
+      Entry<AtomicInteger, AtomicDouble> stats,
       Duration duration) {
     double seconds = duration.getSeconds() + duration.toMillisPart() / 1000.0;
     stats.getKey().incrementAndGet();
     stats.getValue().addAndGet(seconds);
+    if (seconds >= MESSAGE_WARN_THRESHOLD_SEC) {
+      warn("Message %s took %.03fs", statsBucket, seconds);
+    }
   }
 
   private synchronized void ensureSourceQueue() {
     if (sourceQueue == null) {
-      sourceQueue = new LinkedBlockingDeque<>();
+      notice(format("Creating new source queue with capacity " + queueCapacity));
+      sourceQueue = new LinkedBlockingDeque<>(queueCapacity);
     }
   }
 
-  private Entry<Integer, Double> extractStat(Entry<AtomicInteger, AtomicDouble> stats) {
-    return new SimpleEntry<>(stats.getKey().getAndSet(0), stats.getValue().getAndSet(0));
+  private PipeStats extractStat(Entry<AtomicInteger, AtomicDouble> stats, double size) {
+    PipeStats pipeStats = new PipeStats();
+    pipeStats.count = stats.getKey().getAndSet(0);
+    pipeStats.latency = stats.getValue().getAndSet(0);
+    pipeStats.size = size;
+    return pipeStats;
   }
 
   @Nullable
   private String getFromSourceQueue() throws InterruptedException {
     QueueEntry poll = sourceQueue.poll(DEFAULT_POLL_TIME_SEC, TimeUnit.SECONDS);
+    throttleQueue();
     ifNotNullThen(poll, p -> setExecutionContext(p.context));
     return ifNotNullGet(poll, p -> p.message);
+  }
+
+  private double getReceiveQueueSize() {
+    return ofNullable(sourceQueue).map(Collection::size).orElse(0) / (double) queueCapacity;
   }
 
   private void handleDispatchException(Envelope envelope, Exception e) {
@@ -360,10 +431,15 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   }
 
   @Override
-  public synchronized Map<String, Entry<Integer, Double>> extractStats() {
+  public synchronized Map<String, PipeStats> extractStats() {
+    double receiveQueue = getReceiveQueueSize();
+    double publishQueue = getPublishQueueSize();
+    if (subscriptionsThrottled.get()) {
+      warn("Message queues at %.03f/%.03f, currently paused", receiveQueue, publishQueue);
+    }
     return ImmutableMap.of(
-        PUBLISH_STATS, extractStat(publishStats),
-        RECEIVE_STATS, extractStat(receiveStats));
+        RECEIVE_STATS, extractStat(receiveStats, receiveQueue),
+        PUBLISH_STATS, extractStat(publishStats, publishQueue));
   }
 
   @Override
@@ -392,7 +468,8 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     try {
       publishRaw(bundle);
     } finally {
-      accumulateStats(publishStats, Duration.between(start, Instant.now()));
+      Duration between = Duration.between(start, Instant.now());
+      accumulateStats(PUBLISH_STATS, publishStats, between);
     }
   }
 

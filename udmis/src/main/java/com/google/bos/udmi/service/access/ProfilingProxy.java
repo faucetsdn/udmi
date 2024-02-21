@@ -2,6 +2,7 @@ package com.google.bos.udmi.service.access;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.pod.ContainerProvider;
@@ -13,6 +14,7 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import udmi.schema.Level;
 
 /**
  * Class to handling profiling execution through a use of a java proxy.
@@ -67,9 +69,11 @@ public class ProfilingProxy<T> implements InvocationHandler {
       throw throwable;
     } finally {
       double durationSec = Duration.between(start, Instant.now()).toMillis() / 1000.0;
-      String message = ofNullable(caught).map(Throwable::getMessage).orElse("success");
-      container.debug("Method %s#%s took %.03f (%s)", providerName, method.getName(), durationSec,
-          message);
+      Level level = caught == null ? Level.DEBUG : Level.WARNING;
+      String result = caught == null ? "success" : "exception";
+      String message = format("Method %s#%s took %.03f (%s)",
+          providerName, method.getName(), durationSec, result);
+      container.output(level, message);
     }
   }
 }
