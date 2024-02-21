@@ -18,7 +18,7 @@ output_file=${TEST_SITE}/out/registration_summary.json
 clean_devices=$(jq -r .Clean[] $output_file | wc -l)
 EXPECTED_CLEAN=3  # AHU-1 has a bad site location, so does not match as clean.
 
-echo Found ${clean_devices} clean devices.
+echo Found ${clean_devices} clean devices, expecting $EXPECTED_CLEAN.
 [ "${clean_devices}" == $EXPECTED_CLEAN ] || exit_status=expected_clean
 echo '###################################' end test section expected_clean: $exit_status
 

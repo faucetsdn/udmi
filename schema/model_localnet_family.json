@@ -11,6 +11,10 @@
       "type": "string",
       "description": "The address of a device on the fieldbus/local network",
       "examples": ["0x414889"]
+    },
+    "family": {
+      "description": "Associated address family (not used when part of a map)",
+      "type": "string"
     }
   }
 }

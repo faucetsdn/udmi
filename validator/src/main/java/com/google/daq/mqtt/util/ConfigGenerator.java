@@ -81,7 +81,7 @@ public class ConfigGenerator {
       ifNotNullThen(metadata.gateway.target, target -> {
         ifNotNullThrow(target.addr, "metadata.gateway.target.addr should not be defined");
         configVar.target = deepCopy(target);
-        configVar.target.addr = getLocalnetAddr(metadata.gateway.family);
+        configVar.target.addr = getLocalnetAddr(target.family);
       });
     } else {
       throw new RuntimeException("gateway block is neither gateway nor proxied");
@@ -138,7 +138,8 @@ public class ConfigGenerator {
 
   private String pointConfigRef(PointPointsetModel model) {
     String pointRef = model.ref;
-    String family = catchToNull(() -> metadata.gateway.family);
+    String family = ofNullable(catchToNull(() -> metadata.gateway.target.family)).orElse(
+        DEFAULT_FAMILY);
 
     if (!isProxied()) {
       return pointRef;
@@ -146,7 +147,8 @@ public class ConfigGenerator {
 
     requireNonNull(family, "missing gateway.target.family designation");
     checkState(NAMED_FAMILIES.containsKey(family), "gateway.target.family unknown: " + family);
-    ifNotNullThrow(metadata.gateway.target.addr, "gateway.target.addr field should not be defined");
+    ifNotNullThrow(catchToNull(() -> metadata.gateway.target.addr),
+        "gateway.target.addr field should not be defined");
     requireNonNull(catchToNull(() -> metadata.localnet.families.get(family).addr),
         format("metadata.localnet.families.[%s].addr not defined", family));
     NAMED_FAMILIES.get(family).refValidator(pointRef);

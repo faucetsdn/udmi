@@ -24,8 +24,7 @@
     "gateway_id": "GAT-123",
     "target": {
       "family": "bacnet"
-    },
-    "proxy_ids": [ ]
+    }
   },
   "localnet": {
     "families": {
