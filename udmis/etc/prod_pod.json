@@ -8,7 +8,7 @@
     "hostname": "${GCP_PROJECT}",
     "monitor_sec": 60,
     "publish_delay_sec": 10,
-    "capacity": null,
+    "capacity": 100,
     "distributor": "stately"
   },
   "flows": {

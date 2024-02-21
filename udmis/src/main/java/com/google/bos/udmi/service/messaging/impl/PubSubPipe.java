@@ -59,10 +59,11 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
   public static final String GCP_HOST = "gcp";
   public static final String PS_TXN_PREFIX = "PS:";
   public static final int MS_PER_SEC = 1000;
-  private final List<Subscriber> subscribers;
+  private List<Subscriber> subscribers;
   private final Publisher publisher;
   private final String projectId;
   private final String topicId;
+  private final Set<String> subscriberSet;
   private AtomicInteger publisherQueueSize = new AtomicInteger();
 
   /**
@@ -76,7 +77,8 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
       topicId = variableSubstitution(configuration.send_id);
       publisher = ifNotNullGet(topicId, this::getPublisher);
       ifNotNullThen(publisher, this::checkPublisher);
-      subscribers = ifNotNullGet(multiSubstitution(configuration.recv_id), this::getSubscribers);
+      subscriberSet = multiSubstitution(configuration.recv_id);
+      initializeSubscribers();
       String subscriptionNames = subscribers.stream().map(Subscriber::getSubscriptionNameString)
           .collect(Collectors.joining(", "));
       String topicName = ifNotNullGet(publisher, Publisher::getTopicNameString);
@@ -84,6 +86,10 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
     } catch (Exception e) {
       throw new RuntimeException("While creating PubSub pipe", e);
     }
+  }
+
+  private void initializeSubscribers() {
+    subscribers = ifNotNullGet(subscriberSet, this::getSubscribers);
   }
 
   private List<Subscriber> getSubscribers(Set<String> names) {
@@ -137,6 +143,9 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
 
   @Override
   protected void resumeSubscribers() {
+    if (subscribers == null) {
+      initializeSubscribers();
+    }
     subscribers.forEach(Subscriber::startAsync);
   }
 
@@ -200,7 +209,9 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
   }
 
   private List<ApiService> stopAsyncSubscribers() {
-    return subscribers.stream().map(AbstractApiService::stopAsync).toList();
+    List<ApiService> apiServices = subscribers.stream().map(AbstractApiService::stopAsync).toList();
+    subscribers = null;
+    return apiServices;
   }
 
   private void awaitTerminated() {

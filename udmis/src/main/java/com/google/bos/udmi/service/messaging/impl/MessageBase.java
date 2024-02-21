@@ -62,24 +62,24 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   public static final String ERROR_MESSAGE_MARKER = "error-mark";
   public static final String PUBLISH_STATS = "publish";
   public static final String RECEIVE_STATS = "receive";
+  public static final double MESSAGE_WARN_THRESHOLD_SEC = 1.0;
+  public static final double QUEUE_THROTTLE_MARK = 0.6;
   static final String TERMINATE_MARKER = "terminate";
   private static final String DEFAULT_NAMESPACE = "default-namespace";
   private static final Set<Object> HANDLED_QUEUES = new HashSet<>();
   private static final long DEFAULT_POLL_TIME_SEC = 1;
   private static final long AWAIT_TERMINATION_SEC = 10;
   private static final int DEFAULT_CAPACITY = 1000;
-  public static final double MESSAGE_WARN_THRESHOLD_SEC = 1.0;
-  public static final double QUEUE_THROTTLE_MARK = 0.6;
+  protected final int queueCapacity;
+  protected final long publishDelaySec;
   private final ExecutorService executor = Executors.newFixedThreadPool(EXECUTION_THREADS);
   private final Entry<AtomicInteger, AtomicDouble> publishStats = makeEmptyStats();
   private final Entry<AtomicInteger, AtomicDouble> receiveStats = makeEmptyStats();
   private final String pipeId;
-  protected final int queueCapacity;
-  protected final long publishDelaySec;
+  private final AtomicBoolean subscriptionsThrottled = new AtomicBoolean();
   private BlockingQueue<QueueEntry> sourceQueue;
   private Consumer<Bundle> dispatcher;
   private boolean activated;
-  private AtomicBoolean subscriptionsThrottled = new AtomicBoolean();
 
   public MessageBase() {
     pipeId = getClass().getSimpleName();
@@ -121,6 +121,11 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     return format("%08x", Objects.hash(queue));
   }
 
+  protected double getPublishQueueSize() {
+    // Marker value for undefined.
+    return -1.0;
+  }
+
   protected Bundle makeExceptionBundle(Envelope envelope, Exception exception) {
     Bundle bundle = new Bundle(envelope, exception);
     bundle.envelope.subType = SubType.EVENT;
@@ -137,6 +142,9 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     return bundle;
   }
 
+  protected void pauseSubscribers() {
+  }
+
   protected abstract void publishRaw(Bundle bundle);
 
   protected void pushQueueEntry(BlockingQueue<QueueEntry> queue, String stringBundle) {
@@ -148,31 +156,6 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     } catch (Exception e) {
       throw new RuntimeException("While adding queue entry", e);
     }
-  }
-
-  protected void throttleQueue() {
-    boolean blockReceiver = getReceiveQueueSize() > QUEUE_THROTTLE_MARK;
-    boolean blockPublisher = getPublishQueueSize() > QUEUE_THROTTLE_MARK;
-    boolean releaseReceiver = getPublishQueueSize() < QUEUE_THROTTLE_MARK / 2.0;
-    boolean releasePublisher = getPublishQueueSize() < QUEUE_THROTTLE_MARK / 2.0;
-
-    if (blockPublisher || blockReceiver) {
-      if (!subscriptionsThrottled.getAndSet(true)) {
-        warn("Message queues blocked %s/%s, pausing subscribers", blockReceiver, blockPublisher);
-        pauseSubscribers();
-      }
-    } else if (releasePublisher && releaseReceiver) {
-      if (subscriptionsThrottled.getAndSet(false)) {
-        warn("Message queues cleared, resuming subscribers");
-        resumeSubscribers();
-      }
-    }
-  }
-
-  protected void pauseSubscribers() {
-  }
-
-  protected void resumeSubscribers() {
   }
 
   protected String queueIdentifier() {
@@ -197,6 +180,9 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     receiveMessage(toStringMap(envelope), stringify(messageMap));
   }
 
+  protected void resumeSubscribers() {
+  }
+
   protected void setSourceQueue(BlockingQueue<QueueEntry> queueForScope) {
     sourceQueue = queueForScope;
   }
@@ -208,7 +194,31 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     }
   }
 
-  private synchronized void accumulateStats(String statsBucket, Entry<AtomicInteger, AtomicDouble> stats,
+  protected void throttleQueue() {
+    double receiveQueueSize = getReceiveQueueSize();
+    double publishQueueSize = getPublishQueueSize();
+
+    boolean blockReceiver = receiveQueueSize > QUEUE_THROTTLE_MARK;
+    boolean blockPublisher = publishQueueSize > QUEUE_THROTTLE_MARK;
+    boolean releaseReceiver = receiveQueueSize < QUEUE_THROTTLE_MARK / 2.0;
+    boolean releasePublisher = publishQueueSize < QUEUE_THROTTLE_MARK / 2.0;
+
+    String message = format("Message queues at %.03f/%.03f", receiveQueueSize, publishQueueSize);
+    if (blockReceiver || blockPublisher) {
+      if (!subscriptionsThrottled.getAndSet(true)) {
+        warn(message + ", pausing subscribers");
+        pauseSubscribers();
+      }
+    } else if (releaseReceiver && releasePublisher) {
+      if (subscriptionsThrottled.getAndSet(false)) {
+        warn(message + ", resuming subscribers");
+        resumeSubscribers();
+      }
+    }
+  }
+
+  private synchronized void accumulateStats(String statsBucket,
+      Entry<AtomicInteger, AtomicDouble> stats,
       Duration duration) {
     double seconds = duration.getSeconds() + duration.toMillisPart() / 1000.0;
     stats.getKey().incrementAndGet();
@@ -239,6 +249,10 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     throttleQueue();
     ifNotNullThen(poll, p -> setExecutionContext(p.context));
     return ifNotNullGet(poll, p -> p.message);
+  }
+
+  private double getReceiveQueueSize() {
+    return ofNullable(sourceQueue).map(Collection::size).orElse(0) / (double) queueCapacity;
   }
 
   private void handleDispatchException(Envelope envelope, Exception e) {
@@ -415,18 +429,14 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
 
   @Override
   public synchronized Map<String, PipeStats> extractStats() {
+    double receiveQueue = getReceiveQueueSize();
+    double publishQueue = getPublishQueueSize();
+    if (subscriptionsThrottled.get()) {
+      warn("Message queues at %.03f/%.03f, currently paused", receiveQueue, publishQueue);
+    }
     return ImmutableMap.of(
-        PUBLISH_STATS, extractStat(publishStats, getPublishQueueSize()),
-        RECEIVE_STATS, extractStat(receiveStats, getReceiveQueueSize()));
-  }
-
-  private double getReceiveQueueSize() {
-    return ofNullable(sourceQueue).map(Collection::size).orElse(0) / (double) queueCapacity;
-  }
-
-  protected double getPublishQueueSize() {
-    // Marker value for undefined.
-    return -1.0;
+        RECEIVE_STATS, extractStat(receiveStats, receiveQueue),
+        PUBLISH_STATS, extractStat(publishStats, publishQueue));
   }
 
   @Override
