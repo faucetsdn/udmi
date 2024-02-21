@@ -12,7 +12,9 @@ import static com.google.udmi.util.JsonUtil.toMap;
 import static java.lang.String.format;
 import static java.time.Instant.ofEpochSecond;
 
+import com.google.api.core.AbstractApiService;
 import com.google.api.core.ApiFuture;
+import com.google.api.core.ApiService;
 import com.google.api.core.ApiService.Listener;
 import com.google.api.core.ApiService.State;
 import com.google.api.gax.core.NoCredentialsProvider;
@@ -32,8 +34,6 @@ import com.google.pubsub.v1.PubsubMessage;
 import com.google.udmi.util.Common;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,9 +41,11 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.VisibleForTesting;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
 
@@ -56,10 +58,13 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
   public static final String EMULATOR_HOST = System.getenv(EMULATOR_HOST_ENV);
   public static final String GCP_HOST = "gcp";
   public static final String PS_TXN_PREFIX = "PS:";
-  private final List<Subscriber> subscribers;
+  public static final int MS_PER_SEC = 1000;
+  private List<Subscriber> subscribers;
   private final Publisher publisher;
   private final String projectId;
   private final String topicId;
+  private final Set<String> subscriberSet;
+  private AtomicInteger publisherQueueSize = new AtomicInteger();
 
   /**
    * Create a new instance based off the configuration.
@@ -72,7 +77,8 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
       topicId = variableSubstitution(configuration.send_id);
       publisher = ifNotNullGet(topicId, this::getPublisher);
       ifNotNullThen(publisher, this::checkPublisher);
-      subscribers = ifNotNullGet(multiSubstitution(configuration.recv_id), this::getSubscribers);
+      subscriberSet = multiSubstitution(configuration.recv_id);
+      initializeSubscribers();
       String subscriptionNames = subscribers.stream().map(Subscriber::getSubscriptionNameString)
           .collect(Collectors.joining(", "));
       String topicName = ifNotNullGet(publisher, Publisher::getTopicNameString);
@@ -80,6 +86,10 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
     } catch (Exception e) {
       throw new RuntimeException("While creating PubSub pipe", e);
     }
+  }
+
+  private void initializeSubscribers() {
+    subscribers = ifNotNullGet(subscriberSet, this::getSubscribers);
   }
 
   private List<Subscriber> getSubscribers(Set<String> names) {
@@ -128,6 +138,14 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
   @Override
   public void activate(Consumer<Bundle> bundleConsumer) {
     super.activate(bundleConsumer);
+    resumeSubscribers();
+  }
+
+  @Override
+  protected void resumeSubscribers() {
+    if (subscribers == null) {
+      initializeSubscribers();
+    }
     subscribers.forEach(Subscriber::startAsync);
   }
 
@@ -137,7 +155,9 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
       trace("Dropping message because publisher is null");
       return;
     }
+    throttleQueue();
     try {
+      publisherQueueSize.incrementAndGet();
       Envelope envelope = Optional.ofNullable(bundle.envelope).orElse(new Envelope());
       Map<String, String> stringMap = toMap(envelope).entrySet().stream()
           .collect(Collectors.toMap(Entry::getKey, entry -> (String) entry.getValue()));
@@ -147,19 +167,29 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
           .build();
       randomlyFail();
       ApiFuture<String> publish = publisher.publish(message);
+      Thread.sleep(publishDelaySec * MS_PER_SEC);
       String publishedId = publish.get();
       debug(format("Published PubSub %s/%s to %s as %s", stringMap.get(SUBTYPE_PROPERTY_KEY),
           stringMap.get(SUBFOLDER_PROPERTY_KEY), topicId, PS_TXN_PREFIX + publishedId));
     } catch (Exception e) {
       throw new RuntimeException("While publishing bundle to " + publisher.getTopicNameString(), e);
+    } finally {
+      publisherQueueSize.decrementAndGet();
+      throttleQueue();
     }
   }
 
   @Override
+  protected double getPublishQueueSize() {
+    // TODO: Ensure parity with actual pubSub publisher queue size.
+    return publisherQueueSize.get() / (double) queueCapacity;
+  }
+
+  @Override
   public void receiveMessage(PubsubMessage message, AckReplyConsumer reply) {
-    Map<String, String> attributesMap = new HashMap<>(message.getAttributesMap());
     // Ack first to prevent a recurring loop of processing a faulty message.
     reply.ack();
+    Map<String, String> attributesMap = new HashMap<>(message.getAttributesMap());
     String messageId = message.getMessageId();
     attributesMap.computeIfAbsent("publishTime",
         key -> isoConvert(ofEpochSecond(message.getPublishTime().getSeconds())));
@@ -167,14 +197,25 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
     receiveMessage(attributesMap, message.getData().toStringUtf8());
   }
 
-  private void stopAndWait(Subscriber subscriber) {
-    subscriber.stopAsync().awaitTerminated();
-  }
-
   @Override
   public void shutdown() {
-    subscribers.forEach(this::stopAndWait);
+    awaitTerminated();
     super.shutdown();
+  }
+
+  @VisibleForTesting
+  protected void pauseSubscribers() {
+    stopAsyncSubscribers();
+  }
+
+  private List<ApiService> stopAsyncSubscribers() {
+    List<ApiService> apiServices = subscribers.stream().map(AbstractApiService::stopAsync).toList();
+    subscribers = null;
+    return apiServices;
+  }
+
+  private void awaitTerminated() {
+    stopAsyncSubscribers().forEach(ApiService::awaitTerminated);
   }
 
   Publisher getPublisher(String topicName) {
@@ -218,7 +259,7 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
   void resetForTest() {
     super.resetForTest();
     try {
-      subscribers.forEach(this::stopAndWait);
+      awaitTerminated();
       publisher.shutdown();
     } catch (Exception e) {
       throw new RuntimeException("While shutting down connections", e);
