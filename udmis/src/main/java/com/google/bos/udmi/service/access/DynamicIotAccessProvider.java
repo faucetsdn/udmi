@@ -65,6 +65,7 @@ public class DynamicIotAccessProvider extends IotAccessBase {
 
   private String determineProvider(String registryId) {
     TreeMap<String, String> sortedMap = providers.entrySet().stream()
+        .filter(access -> access.getValue().isEnabled())
         .collect(sortedMapCollector(entry -> registryPriority(registryId, entry)));
     String providerId = sortedMap.lastEntry().getValue();
     debug("Registry affinity mapping for " + registryId + " is " + providerId);
@@ -74,15 +75,14 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   private IotAccessProvider getProviderFor(String registryId) {
     IotAccessProvider provider =
         providers.get(registryProviders.computeIfAbsent(registryId, this::determineProvider));
-    return requireNonNull(
-        provider,
-        "could not determine provider for " + registryId);
+    return requireNonNull(provider, "could not determine provider for " + registryId);
   }
 
   private String registryPriority(String registryId, Entry<String, IotAccessProvider> provider) {
     int providerIndex = providerList.size() - providerList.indexOf(provider.getKey());
+    IotAccessProvider access = provider.getValue();
     String provisionedAt = ofNullable(
-        provider.getValue().fetchRegistryMetadata(registryId, "udmi_provisioned")).orElse(
+        access.fetchRegistryMetadata(registryId, "udmi_provisioned")).orElse(
         isoConvert(new Date(providerIndex * INDEX_ORDERING_MULTIPLIER_MS)));
     debug(format("Registry %s provider %s provisioned %s", registryId, provider.getKey(),
         provisionedAt));

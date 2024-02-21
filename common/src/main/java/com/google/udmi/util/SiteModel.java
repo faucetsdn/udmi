@@ -9,7 +9,6 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
-import static udmi.schema.IotAccess.IotProvider.GCP;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -41,7 +40,6 @@ import udmi.schema.Metadata;
 
 public class SiteModel {
 
-  public static final String DEFAULT_GCP_HOSTNAME = "mqtt.googleapis.com";
   public static final String DEFAULT_CLEARBLADE_HOSTNAME = "us-central1-mqtt.clearblade.com";
   public static final String DEFAULT_CLEARBLADE_HOSTNAME_FORMAT = "%s-mqtt.clearblade.com";
   public static final String DEFAULT_GBOS_HOSTNAME = "mqtt.bos.goog";
@@ -74,12 +72,11 @@ public class SiteModel {
   }
 
   private static String getEndpointHostname(ExecutionConfiguration executionConfig) {
-    IotProvider iotProvider = ofNullable(executionConfig.iot_provider).orElse(GCP);
+    IotProvider iotProvider = ofNullable(executionConfig.iot_provider).orElse(IotProvider.IMPLICIT);
     return switch (iotProvider) {
       case CLEARBLADE -> ifNotNullGet(executionConfig.cloud_region,
               region -> format(DEFAULT_CLEARBLADE_HOSTNAME_FORMAT, region), DEFAULT_CLEARBLADE_HOSTNAME);
       case GBOS -> DEFAULT_GBOS_HOSTNAME;
-      case GCP -> DEFAULT_GCP_HOSTNAME;
       default -> throw new RuntimeException("Unsupported iot_provider " + iotProvider);
     };
   }
