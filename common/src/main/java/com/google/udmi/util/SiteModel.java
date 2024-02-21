@@ -44,6 +44,7 @@ public class SiteModel {
   public static final String DEFAULT_CLEARBLADE_HOSTNAME_FORMAT = "%s-mqtt.clearblade.com";
   public static final String DEFAULT_GBOS_HOSTNAME = "mqtt.bos.goog";
   public static final String MOCK_PROJECT = "mock-project";
+  public static final String LOCALHOST_HOSTNAME = "localhost";
   private static final String ID_FORMAT = "projects/%s/locations/%s/registries/%s/devices/%s";
   private static final String KEY_SITE_PATH_FORMAT = "%s/devices/%s/%s_private.pkcs8";
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
@@ -77,6 +78,7 @@ public class SiteModel {
       case CLEARBLADE -> ifNotNullGet(executionConfig.cloud_region,
               region -> format(DEFAULT_CLEARBLADE_HOSTNAME_FORMAT, region), DEFAULT_CLEARBLADE_HOSTNAME);
       case GBOS -> DEFAULT_GBOS_HOSTNAME;
+      case IMPLICIT -> LOCALHOST_HOSTNAME;
       default -> throw new RuntimeException("Unsupported iot_provider " + iotProvider);
     };
   }
