@@ -18,6 +18,7 @@ breakpoint
 buildingsiot
 centric
 CLA
+Clearblade
 CLI
 CloudRun
 CoAP
