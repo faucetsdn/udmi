@@ -13,7 +13,7 @@ import udmi.schema.FeatureEnumeration.FeatureStage;
  * Feature designation for line-item tests.
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.METHOD})
+@Target({ElementType.TYPE, ElementType.METHOD})
 public @interface Feature {
   FeatureStage DEFAULT_STAGE = FeatureStage.ALPHA;
   int DEFAULT_SCORE = 5;

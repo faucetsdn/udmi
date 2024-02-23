@@ -12,6 +12,7 @@ import udmi.schema.FeatureEnumeration.FeatureStage;
 /**
  * Validate pointset related functionality for proxied devices.
  */
+@Feature(bucket = Bucket.GATEWAY)
 public class ProxiedSequences extends PointsetBase {
 
   @Override
