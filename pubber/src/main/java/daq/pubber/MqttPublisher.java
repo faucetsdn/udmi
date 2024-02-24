@@ -678,7 +678,7 @@ public class MqttPublisher implements Publisher {
             payload = null;
           } else {
             payload = OBJECT_MAPPER.readValue(message.toString(), type);
-            nukeProxyIdsIfNull(messageType, message.toString(), payload);
+            nukeProxyIdsIfNull(message.toString(), payload);
           }
         } catch (Exception e) {
           error("Processing message", deviceId, messageType, "parse", e);
@@ -692,7 +692,7 @@ public class MqttPublisher implements Publisher {
     /**
      * Hack of a function to clean up annoying Jackson POJO implicit empty collection creation.
      */
-    private void nukeProxyIdsIfNull(String messageType, String message, Object payload) {
+    private void nukeProxyIdsIfNull(String message, Object payload) {
       try {
         if (payload instanceof Config configPayload) {
           JsonNode jsonNode = OBJECT_MAPPER.readTree(message);

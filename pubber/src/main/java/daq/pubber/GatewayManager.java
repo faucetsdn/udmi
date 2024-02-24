@@ -1,23 +1,26 @@
 package daq.pubber;
 
+import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
-import static java.util.function.Predicate.not;
+import static udmi.schema.Category.GATEWAY_PROXY_TARGET;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.udmi.util.SiteModel;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import udmi.schema.Config;
 import udmi.schema.Entry;
 import udmi.schema.GatewayConfig;
-import udmi.schema.GatewayModel;
+import udmi.schema.GatewayState;
+import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointsetConfig;
@@ -32,6 +35,8 @@ public class GatewayManager extends ManagerBase {
   private static final String EXTRA_PROXY_POINT = "xxx_conflagration";
   private Map<String, ProxyDevice> proxyDevices;
   private SiteModel siteModel;
+  private Metadata metadata;
+  private GatewayState gatewayState;
 
   public GatewayManager(ManagerHost host, PubberConfiguration configuration) {
     super(host, configuration);
@@ -70,8 +75,9 @@ public class GatewayManager extends ManagerBase {
     }));
   }
 
-  public void setMetadata(GatewayModel gateway) {
-    proxyDevices = ifNotNullGet(gateway, g -> createProxyDevices(g.proxy_ids));
+  public void setMetadata(Metadata metadata) {
+    this.metadata = metadata;
+    proxyDevices = ifNotNullGet(metadata.gateway, g -> createProxyDevices(g.proxy_ids));
   }
 
   public void activate() {
@@ -83,8 +89,45 @@ public class GatewayManager extends ManagerBase {
   }
 
   public void updateConfig(GatewayConfig gateway) {
+    if (gateway == null) {
+      gatewayState = null;
+      updateState();
+      return;
+    }
+    ifNullThen(gatewayState, () -> gatewayState = new GatewayState());
+
     ifNotNullThen(proxyDevices,
         p -> ifTrueThen(p.containsKey(EXTRA_PROXY_DEVICE), this::configExtraDevice));
+
+    try {
+      String family = validateGatewayFamily(catchToNull(() -> gateway.target.family));
+      setGatewayStatus(GATEWAY_PROXY_TARGET, Level.DEBUG, "gateway target family " + family);
+    } catch (Exception e) {
+      setGatewayStatus(GATEWAY_PROXY_TARGET, Level.ERROR, e.getMessage());
+    }
+    updateState();
+  }
+
+  private void setGatewayStatus(String category, Level level, String message) {
+    // TODO: Implement a map or tree or something to properly handle different error sources.
+    gatewayState.status = new Entry();
+    gatewayState.status.category = category;
+    gatewayState.status.level = level.value();
+    gatewayState.status.message = message;
+  }
+
+  private void updateState() {
+    updateState(ofNullable((Object) gatewayState).orElse(GatewayState.class));
+  }
+
+  private String validateGatewayFamily(String family) {
+    if (family == null) {
+      return null;
+    }
+    debug("Validating gateway family " + family);
+    Objects.requireNonNull(catchToNull(() -> metadata.localnet.families.get(family).addr),
+        format("Address family %s addr is null or undefined", family));
+    return family;
   }
 
   private void configExtraDevice() {
