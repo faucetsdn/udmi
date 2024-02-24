@@ -34,17 +34,17 @@ public class ProxiedSequences extends PointsetBase {
   @Summary("Basic check for proxied device proxying points")
   @Test(timeout = ONE_MINUTE_MS)
   public void bad_target_family() {
-    initialStatusCheck();
+    cleanStatusCheck();
     GatewayConfig gatewayConfig = deviceConfig.gateway;
     FamilyLocalnetModel savedTarget = deepCopy(gatewayConfig.target);
     ifNullThen(gatewayConfig.target, () -> gatewayConfig.target = new FamilyLocalnetModel());
     gatewayConfig.target.family = SemanticValue.describe("random family", getRandomFamily());
     untilTrue("gateway status has target error", this::hasTargetError);
     gatewayConfig.target = savedTarget;
-    initialStatusCheck();
+    cleanStatusCheck();
   }
 
-  private void initialStatusCheck() {
+  private void cleanStatusCheck() {
     checkNotThat("no significant gateway status", this::hasGatewayStatus);
   }
 
@@ -54,7 +54,9 @@ public class ProxiedSequences extends PointsetBase {
   }
 
   private boolean hasTargetError() {
-    return hasGatewayStatus() && GATEWAY_PROXY_TARGET.equals(deviceState.gateway.status.category);
+    return hasGatewayStatus()
+        && GATEWAY_PROXY_TARGET.equals(deviceState.gateway.status.category)
+        && Level.ERROR == Level.fromValue(deviceState.gateway.status.level);
   }
 
   private String getRandomFamily() {
