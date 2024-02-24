@@ -2,6 +2,7 @@ package com.google.daq.mqtt.sequencer.sequences;
 
 import static com.google.daq.mqtt.util.TimePeriodConstants.ONE_MINUTE_MS;
 import static com.google.udmi.util.GeneralUtils.catchToElse;
+import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static udmi.schema.Category.GATEWAY_PROXY_TARGET;
 
@@ -13,6 +14,7 @@ import org.junit.Test;
 import udmi.schema.Bucket;
 import udmi.schema.FamilyLocalnetModel;
 import udmi.schema.FeatureEnumeration.FeatureStage;
+import udmi.schema.GatewayConfig;
 import udmi.schema.Level;
 
 /**
@@ -28,15 +30,22 @@ public class ProxiedSequences extends PointsetBase {
   }
 
   // TODO: Add test for missing target/wrong address
-  // TODO: Add test for missing target/wrong family
   @Feature(stage = FeatureStage.ALPHA, bucket = Bucket.GATEWAY, nostate = true)
   @Summary("Basic check for proxied device proxying points")
   @Test(timeout = ONE_MINUTE_MS)
   public void bad_target_family() {
-    checkNotThat("no signficant gateway status", this::hasGatewayStatus);
-    ifNullThen(deviceConfig.gateway.target, () -> deviceConfig.gateway.target = new FamilyLocalnetModel());
-    deviceConfig.gateway.target.family = SemanticValue.describe("random family", getRandomFamily());
+    initialStatusCheck();
+    GatewayConfig gatewayConfig = deviceConfig.gateway;
+    FamilyLocalnetModel savedTarget = deepCopy(gatewayConfig.target);
+    ifNullThen(gatewayConfig.target, () -> gatewayConfig.target = new FamilyLocalnetModel());
+    gatewayConfig.target.family = SemanticValue.describe("random family", getRandomFamily());
     untilTrue("gateway status has target error", this::hasTargetError);
+    gatewayConfig.target = savedTarget;
+    initialStatusCheck();
+  }
+
+  private void initialStatusCheck() {
+    checkNotThat("no significant gateway status", this::hasGatewayStatus);
   }
 
   private boolean hasGatewayStatus() {
