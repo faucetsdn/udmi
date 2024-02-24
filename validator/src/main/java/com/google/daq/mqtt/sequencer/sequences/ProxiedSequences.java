@@ -29,9 +29,8 @@ public class ProxiedSequences extends PointsetBase {
     super.setUp();
   }
 
-  // TODO: Add test for missing target/wrong address
   @Feature(stage = FeatureStage.ALPHA, bucket = Bucket.GATEWAY, nostate = true)
-  @Summary("Basic check for proxied device proxying points")
+  @Summary("Error handling for badly formed target address family")
   @Test(timeout = ONE_MINUTE_MS)
   public void bad_target_family() {
     cleanStatusCheck();

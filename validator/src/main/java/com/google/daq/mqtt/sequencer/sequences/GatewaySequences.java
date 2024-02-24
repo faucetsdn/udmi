@@ -36,8 +36,21 @@ public class GatewaySequences extends SequenceBase {
     super.setUp();
   }
 
-  // TODO: Add test for attach error logging
-  // TODO: Add test for removing/restoring proxied device
+  @Feature(stage = FeatureStage.PREVIEW, bucket = Bucket.GATEWAY)
+  @Summary("Check adequate logging for gateway detach, errors, and reattach")
+  @Test(timeout = NINETY_SECONDS_MS)
+  public void gateway_attach_handling() {
+    ifTrueSkipTest(true, "Not yet implemented");
+    // * Verify that proxied device is sending data.
+    // * Remove proxied device from gateway list
+    // * Verify that proper detach logging occured
+    // * Verify that device is no longer sending data
+    // * Add a bad (random) device to the list of proxied devices
+    // * Check for status and logging of bsad attach request
+    // * Remove bad device, replace with original good device
+    // * Check for proper attach logging, and clear status
+    // * Verify that device is sending data
+  }
 
   @Feature(stage = FeatureStage.BETA, bucket = Bucket.GATEWAY, nostate = true)
   @Summary("Check that a gateway proxies pointset events for indicated devices")
