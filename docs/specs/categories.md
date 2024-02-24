@@ -42,7 +42,7 @@ could be used with a **WARNING** level for a warning case during normal operatio
   * _setup_: Relating to initial device setup, reported in the gateway.status field
     * _attach_: (**ERROR**) Expected status for attachment failures between gateway and cloud
   * _proxy_: Relating to proxied devices, reported as part of the proxied device state
-    * _target_: (**WARNING**) Basic target block specificaiton, missing (warning) or unprocessable (error)
+    * _target_: (**WARNING**) Basic target block specification, missing (warning) or unprocessable (error)
     * _connect_: (**ERROR**) Fieldbus connection between gateway and proxied device (error on failure)
 * _discovery_: Handling on-prem discovery flow
   * _family_: Conditions specific to an entire address family (e.g. bacnet)
