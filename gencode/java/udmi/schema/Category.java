@@ -118,16 +118,22 @@ public class Category {
     static { LEVEL.put(LOCALNET_NETWORK_CONNECT, NOTICE); }
 
     // Expected status for attachment failures between gateway and cloud
-    public static final String GATEWAY_PROXIED_ATTACH = "gateway.proxied.attach";
-    public static final Level GATEWAY_PROXIED_ATTACH_LEVEL = ERROR;
-    public static final int GATEWAY_PROXIED_ATTACH_VALUE = ERROR.value();
-    static { LEVEL.put(GATEWAY_PROXIED_ATTACH, ERROR); }
+    public static final String GATEWAY_SETUP_ATTACH = "gateway.setup.attach";
+    public static final Level GATEWAY_SETUP_ATTACH_LEVEL = ERROR;
+    public static final int GATEWAY_SETUP_ATTACH_VALUE = ERROR.value();
+    static { LEVEL.put(GATEWAY_SETUP_ATTACH, ERROR); }
 
-    // Expected status for connection between gateway and proxied device
-    public static final String GATEWAY_PROXIED_CONNECT = "gateway.proxied.connect";
-    public static final Level GATEWAY_PROXIED_CONNECT_LEVEL = INFO;
-    public static final int GATEWAY_PROXIED_CONNECT_VALUE = INFO.value();
-    static { LEVEL.put(GATEWAY_PROXIED_CONNECT, INFO); }
+    // Basic target block specificaiton, missing (warning) or unprocessable (error)
+    public static final String GATEWAY_PROXY_TARGET = "gateway.proxy.target";
+    public static final Level GATEWAY_PROXY_TARGET_LEVEL = WARNING;
+    public static final int GATEWAY_PROXY_TARGET_VALUE = WARNING.value();
+    static { LEVEL.put(GATEWAY_PROXY_TARGET, WARNING); }
+
+    // Fieldbus connection between gateway and proxied device (error on failure)
+    public static final String GATEWAY_PROXY_CONNECT = "gateway.proxy.connect";
+    public static final Level GATEWAY_PROXY_CONNECT_LEVEL = ERROR;
+    public static final int GATEWAY_PROXY_CONNECT_VALUE = ERROR.value();
+    static { LEVEL.put(GATEWAY_PROXY_CONNECT, ERROR); }
 
     // Relating to scanning a particular address family
     public static final String DISCOVERY_FAMILY_SCAN = "discovery.family.scan";

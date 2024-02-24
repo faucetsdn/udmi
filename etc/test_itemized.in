@@ -39,3 +39,4 @@ TEST gateway_proxy_events badState
 # Test proxy device configurations
 WITH AHU-22
 TEST device_config_acked
+TEST bad_target_family

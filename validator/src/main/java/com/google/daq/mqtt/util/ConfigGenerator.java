@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import org.jetbrains.annotations.NotNull;
 import udmi.schema.Config;
+import udmi.schema.FamilyLocalnetModel;
 import udmi.schema.GatewayConfig;
 import udmi.schema.LocalnetConfig;
 import udmi.schema.Metadata;
