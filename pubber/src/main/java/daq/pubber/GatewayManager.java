@@ -88,6 +88,9 @@ public class GatewayManager extends ManagerBase {
     return new ProxyDevice(host, EXTRA_PROXY_DEVICE);
   }
 
+  /**
+   * Update gateway operation based off of a gateway configuration block.
+   */
   public void updateConfig(GatewayConfig gateway) {
     if (gateway == null) {
       gatewayState = null;

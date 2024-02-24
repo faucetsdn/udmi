@@ -98,7 +98,7 @@ class Sequence:
 
     if not os.path.isfile(self.ref_path):
       print(f"Missing reference file: {self.ref_path}")
-      self.ref_text = '1. Missing input file'
+      self.ref_text = "1. Missing input file"
     else:
       with open(self.ref_path, encoding="utf-8") as f:
         self.ref_text = f.read()
