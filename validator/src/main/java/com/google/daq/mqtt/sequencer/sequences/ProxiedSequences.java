@@ -11,7 +11,6 @@ import com.google.daq.mqtt.sequencer.Summary;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
 import org.junit.Test;
 import udmi.schema.Bucket;
-import udmi.schema.Entry;
 import udmi.schema.FamilyLocalnetModel;
 import udmi.schema.FeatureEnumeration.FeatureStage;
 import udmi.schema.Level;
