@@ -39,7 +39,7 @@ import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -145,9 +145,6 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     return bundle;
   }
 
-  protected void pauseSubscribers() {
-  }
-
   protected abstract void publishRaw(Bundle bundle);
 
   protected void pushQueueEntry(BlockingQueue<QueueEntry> queue, String stringBundle) {
@@ -183,9 +180,6 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     receiveMessage(toStringMap(envelope), stringify(messageMap));
   }
 
-  protected void resumeSubscribers() {
-  }
-
   protected void setSourceQueue(BlockingQueue<QueueEntry> queueForScope) {
     sourceQueue = queueForScope;
   }
@@ -209,13 +203,11 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     String message = format("Message queues at %.03f/%.03f", receiveQueueSize, publishQueueSize);
     if (blockReceiver || blockPublisher) {
       if (!subscriptionsThrottled.getAndSet(true)) {
-        warn(message + ", pausing subscribers");
-        pauseSubscribers();
+        warn(message + ", crossing high-water mark");
       }
     } else if (releaseReceiver && releasePublisher) {
       if (subscriptionsThrottled.getAndSet(false)) {
-        warn(message + ", resuming subscribers");
-        resumeSubscribers();
+        warn(message + ", below high-water mark");
       }
     }
   }
@@ -234,7 +226,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   private synchronized void ensureSourceQueue() {
     if (sourceQueue == null) {
       notice(format("Creating new source queue with capacity " + queueCapacity));
-      sourceQueue = new LinkedBlockingDeque<>(queueCapacity);
+      sourceQueue = new LinkedBlockingQueue<>(queueCapacity);
     }
   }
 
