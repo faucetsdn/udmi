@@ -123,7 +123,7 @@ public class Category {
     public static final int GATEWAY_SETUP_ATTACH_VALUE = ERROR.value();
     static { LEVEL.put(GATEWAY_SETUP_ATTACH, ERROR); }
 
-    // Basic target block specificaiton, missing (warning) or unprocessable (error)
+    // Basic target block specification, missing (warning) or unprocessable (error)
     public static final String GATEWAY_PROXY_TARGET = "gateway.proxy.target";
     public static final Level GATEWAY_PROXY_TARGET_LEVEL = WARNING;
     public static final int GATEWAY_PROXY_TARGET_VALUE = WARNING.value();
