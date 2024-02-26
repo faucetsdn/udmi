@@ -200,7 +200,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     boolean releaseReceiver = receiveQueueSize < QUEUE_THROTTLE_MARK / 2.0;
     boolean releasePublisher = publishQueueSize < QUEUE_THROTTLE_MARK / 2.0;
 
-    String message = format("Message queues at %.03f/%.03f", receiveQueueSize, publishQueueSize);
+    String message = messageQueueMessage();
     if (blockReceiver || blockPublisher) {
       if (!subscriptionsThrottled.getAndSet(true)) {
         warn(message + ", crossing high-water mark");
@@ -225,7 +225,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
 
   private synchronized void ensureSourceQueue() {
     if (sourceQueue == null) {
-      notice(format("Creating new source queue with capacity " + queueCapacity));
+      notice(format("Creating new source queue %s with capacity %s", pipeId, queueCapacity));
       sourceQueue = new LinkedBlockingQueue<>(queueCapacity);
     }
   }
@@ -314,6 +314,12 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     }
   }
 
+  private String messageQueueMessage() {
+    double receiveQueue = getReceiveQueueSize();
+    double publishQueue = getPublishQueueSize();
+    return format("Message queue %s at %.03f/%.03f", pipeId, receiveQueue, publishQueue);
+  }
+
   private void receiveBundle(Bundle bundle) {
     receiveBundle(stringify(bundle));
   }
@@ -400,6 +406,8 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
 
   @Override
   public void activate(Consumer<Bundle> bundleConsumer) {
+    debug("Activating message pipe %s as %s => %s", pipeId, queueIdentifier(),
+        Objects.hash(dispatcher));
     dispatcher = bundleConsumer;
     ensureSourceQueue();
     debug("Handling %s", this);
@@ -427,7 +435,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     double receiveQueue = getReceiveQueueSize();
     double publishQueue = getPublishQueueSize();
     if (subscriptionsThrottled.get()) {
-      warn("Message queues at %.03f/%.03f, currently paused", receiveQueue, publishQueue);
+      warn(messageQueueMessage() + ", currently paused");
     }
     return ImmutableMap.of(
         RECEIVE_STATS, extractStat(receiveStats, receiveQueue),
@@ -484,7 +492,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
 
   @Override
   public String toString() {
-    return format("%s %s => %s", pipeId, queueIdentifier(), Objects.hash(dispatcher));
+    return pipeId;
   }
 
   /**
