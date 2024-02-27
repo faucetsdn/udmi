@@ -27,7 +27,6 @@ RESULT pass pointset pointset_publish_interval BETA 5/5 Sequence complete
 RESULT pass pointset pointset_remove_point BETA 5/5 Sequence complete
 RESULT pass pointset pointset_request_extraneous BETA 5/5 Sequence complete
 RESULT pass pointset pointset_sample_rate BETA 5/5 Sequence complete
-RESULT skip gateway proxied_setup ALPHA 0/0 Not a proxied device
 RESULT pass discovery.scan single_scan ALPHA 5/5 Sequence complete
 RESULT pass system state_make_model BETA 5/5 Sequence complete
 RESULT pass system state_software BETA 5/5 Sequence complete
