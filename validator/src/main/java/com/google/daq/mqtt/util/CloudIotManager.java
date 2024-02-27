@@ -5,7 +5,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.util.ConfigUtil.readExeConfig;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.mergeObject;
-import static com.google.udmi.util.GeneralUtils.optionsString;
+import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
@@ -28,6 +28,7 @@ import udmi.schema.Credential;
 import udmi.schema.Credential.Key_format;
 import udmi.schema.ExecutionConfiguration;
 import udmi.schema.IotAccess;
+import udmi.schema.Metadata;
 import udmi.schema.SetupUdmiConfig;
 
 /**
@@ -244,6 +245,7 @@ public class CloudIotManager {
     cloudModel.credentials = getCredentials(settings);
     cloudModel.metadata = metadataMap;
     cloudModel.num_id = settings.deviceNumId;
+    cloudModel.device_model = convertToStrict(Metadata.class, settings.metadata);
     return cloudModel;
   }
 

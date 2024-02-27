@@ -1,4 +1,5 @@
 """Generated class for model_cloud.json"""
+from .metadata import Metadata
 
 
 class Object18ECC5EE:
@@ -46,6 +47,7 @@ class CloudModel:
     self.resource_type = None
     self.blocked = None
     self.detail = None
+    self.device_model = None
     self.credentials = None
     self.last_event_time = None
     self.last_config_ack = None
@@ -66,6 +68,7 @@ class CloudModel:
     result.resource_type = source.get('resource_type')
     result.blocked = source.get('blocked')
     result.detail = source.get('detail')
+    result.device_model = Metadata.from_dict(source.get('device_model'))
     result.credentials = source.get('credentials')
     result.last_event_time = source.get('last_event_time')
     result.last_config_ack = source.get('last_config_ack')
@@ -107,6 +110,8 @@ class CloudModel:
       result['blocked'] = self.blocked # 5
     if self.detail:
       result['detail'] = self.detail # 5
+    if self.device_model:
+      result['device_model'] = self.device_model.to_dict() # 4
     if self.credentials:
       result['credentials'] = self.credentials # 1
     if self.last_event_time:
