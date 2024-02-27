@@ -131,13 +131,18 @@ echo Completed execution of sequencer test run, exit code $seq_fail
 echo Reported cloud version info: $(jq .cloud_version.udmi_ref $output_file)
 
 echo Combining partial-run output files...
-files=$(cd out; ls -1 *.out *.log)
-echo Merging $files
-for file in $files; do
-    cp out/$file out/$file.save
-    cat out/$file >> out/$file.combined
-    cp out/$file.combined out/$file
-done
+(
+    cd out
+    files=$(ls -1 *.out *.log)
+    echo Merging $files
+    for file in $files; do
+        nfile=$(echo $file | sed -E -r "s/\.(.*)\$/$suffix.\1/")
+        echo Rename $file to $nfile
+        [[ $file != $nfile ]] && mv $file $nfile
+        cat $nfile >> $nfile.combined
+        cp $nfile.combined $nfile
+    done
+)
 
 if [[ -n $out_check && -z $targets ]]; then
     if [[ -n $clean_cache ]]; then
