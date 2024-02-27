@@ -17,6 +17,7 @@ import com.google.api.core.ApiFuture;
 import com.google.api.core.ApiService;
 import com.google.api.core.ApiService.Listener;
 import com.google.api.core.ApiService.State;
+import com.google.api.gax.batching.FlowControlSettings;
 import com.google.api.gax.core.NoCredentialsProvider;
 import com.google.api.gax.grpc.GrpcTransportChannel;
 import com.google.api.gax.rpc.FixedTransportChannelProvider;
@@ -138,14 +139,6 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
   @Override
   public void activate(Consumer<Bundle> bundleConsumer) {
     super.activate(bundleConsumer);
-    resumeSubscribers();
-  }
-
-  @Override
-  protected void resumeSubscribers() {
-    if (subscribers == null) {
-      initializeSubscribers();
-    }
     subscribers.forEach(Subscriber::startAsync);
   }
 
@@ -203,11 +196,6 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
     super.shutdown();
   }
 
-  @VisibleForTesting
-  protected void pauseSubscribers() {
-    stopAsyncSubscribers();
-  }
-
   private List<ApiService> stopAsyncSubscribers() {
     List<ApiService> apiServices = subscribers.stream().map(AbstractApiService::stopAsync).toList();
     subscribers = null;
@@ -235,12 +223,15 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
   Subscriber getSubscriber(String subName) {
     try {
       ProjectSubscriptionName subscriptionName = ProjectSubscriptionName.of(projectId, subName);
-      Subscriber.Builder builder = Subscriber.newBuilder(subscriptionName, this);
+      FlowControlSettings flowControlSettings = FlowControlSettings.newBuilder()
+          .setMaxOutstandingElementCount((long) queueCapacity).build();
+      Subscriber.Builder builder = Subscriber.newBuilder(subscriptionName, this)
+          .setParallelPullCount(EXECUTION_THREADS)
+          .setFlowControlSettings(flowControlSettings);
       String emu = getEmulatorHost();
       ifNullThen(emu, () -> checkSubscription(subscriptionName));
       ifNotNullThen(emu, host -> builder.setChannelProvider(getTransportChannelProvider(host)));
       ifNotNullThen(emu, host -> builder.setCredentialsProvider(NoCredentialsProvider.create()));
-      builder.setParallelPullCount(EXECUTION_THREADS);
       Subscriber built = builder.build();
       info(format("Subscriber %s:%s", Optional.ofNullable(emu).orElse(GCP_HOST), subscriptionName));
       built.addListener(new Listener() {

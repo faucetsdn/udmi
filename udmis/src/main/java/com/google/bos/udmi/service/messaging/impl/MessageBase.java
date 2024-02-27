@@ -39,7 +39,7 @@ import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -145,9 +145,6 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     return bundle;
   }
 
-  protected void pauseSubscribers() {
-  }
-
   protected abstract void publishRaw(Bundle bundle);
 
   protected void pushQueueEntry(BlockingQueue<QueueEntry> queue, String stringBundle) {
@@ -183,9 +180,6 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     receiveMessage(toStringMap(envelope), stringify(messageMap));
   }
 
-  protected void resumeSubscribers() {
-  }
-
   protected void setSourceQueue(BlockingQueue<QueueEntry> queueForScope) {
     sourceQueue = queueForScope;
   }
@@ -206,16 +200,14 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     boolean releaseReceiver = receiveQueueSize < QUEUE_THROTTLE_MARK / 2.0;
     boolean releasePublisher = publishQueueSize < QUEUE_THROTTLE_MARK / 2.0;
 
-    String message = format("Message queues at %.03f/%.03f", receiveQueueSize, publishQueueSize);
+    String message = messageQueueMessage();
     if (blockReceiver || blockPublisher) {
       if (!subscriptionsThrottled.getAndSet(true)) {
-        warn(message + ", pausing subscribers");
-        pauseSubscribers();
+        warn(message + ", crossing high-water mark");
       }
     } else if (releaseReceiver && releasePublisher) {
       if (subscriptionsThrottled.getAndSet(false)) {
-        warn(message + ", resuming subscribers");
-        resumeSubscribers();
+        warn(message + ", below high-water mark");
       }
     }
   }
@@ -233,8 +225,8 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
 
   private synchronized void ensureSourceQueue() {
     if (sourceQueue == null) {
-      notice(format("Creating new source queue with capacity " + queueCapacity));
-      sourceQueue = new LinkedBlockingDeque<>(queueCapacity);
+      notice(format("Creating new source queue %s with capacity %s", pipeId, queueCapacity));
+      sourceQueue = new LinkedBlockingQueue<>(queueCapacity);
     }
   }
 
@@ -320,6 +312,12 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
         error(stackTraceString(loopException));
       }
     }
+  }
+
+  private String messageQueueMessage() {
+    double receiveQueue = getReceiveQueueSize();
+    double publishQueue = getPublishQueueSize();
+    return format("Message queue %s at %.03f/%.03f", pipeId, receiveQueue, publishQueue);
   }
 
   private void receiveBundle(Bundle bundle) {
@@ -408,6 +406,8 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
 
   @Override
   public void activate(Consumer<Bundle> bundleConsumer) {
+    debug("Activating message pipe %s as %s => %s", pipeId, queueIdentifier(),
+        Objects.hash(dispatcher));
     dispatcher = bundleConsumer;
     ensureSourceQueue();
     debug("Handling %s", this);
@@ -435,7 +435,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     double receiveQueue = getReceiveQueueSize();
     double publishQueue = getPublishQueueSize();
     if (subscriptionsThrottled.get()) {
-      warn("Message queues at %.03f/%.03f, currently paused", receiveQueue, publishQueue);
+      warn(messageQueueMessage() + ", currently paused");
     }
     return ImmutableMap.of(
         RECEIVE_STATS, extractStat(receiveStats, receiveQueue),
@@ -492,7 +492,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
 
   @Override
   public String toString() {
-    return format("%s %s => %s", pipeId, queueIdentifier(), Objects.hash(dispatcher));
+    return pipeId;
   }
 
   /**
