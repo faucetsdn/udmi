@@ -102,11 +102,13 @@ public class GatewayManager extends ManagerBase {
     ifNotNullThen(proxyDevices,
         p -> ifTrueThen(p.containsKey(EXTRA_PROXY_DEVICE), this::configExtraDevice));
 
-    try {
-      String family = validateGatewayFamily(catchToNull(() -> gateway.target.family));
-      setGatewayStatus(GATEWAY_PROXY_TARGET, Level.DEBUG, "gateway target family " + family);
-    } catch (Exception e) {
-      setGatewayStatus(GATEWAY_PROXY_TARGET, Level.ERROR, e.getMessage());
+    if (gateway.proxy_ids == null || gateway.target != null) {
+      try {
+        String family = validateGatewayFamily(catchToNull(() -> gateway.target.family));
+        setGatewayStatus(GATEWAY_PROXY_TARGET, Level.DEBUG, "gateway target family " + family);
+      } catch (Exception e) {
+        setGatewayStatus(GATEWAY_PROXY_TARGET, Level.ERROR, e.getMessage());
+      }
     }
     updateState();
   }
