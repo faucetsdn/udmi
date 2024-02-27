@@ -43,6 +43,7 @@ import udmi.schema.CloudModel.Operation;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
+import udmi.schema.Metadata;
 import udmi.schema.UdmiConfig;
 import udmi.schema.UdmiState;
 
@@ -183,6 +184,8 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private CloudModel reflectModel(Envelope attributes, CloudModel request) {
+    Metadata metadata = request.device_model;
+    debug("TEMP Received device metadata: " + stringifyTerse(metadata));
     return iotAccess.modelResource(attributes.deviceRegistryId, attributes.deviceId, request);
   }
 
