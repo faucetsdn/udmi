@@ -30,6 +30,7 @@ import static java.util.Optional.ofNullable;
 import static udmi.schema.Envelope.SubFolder.UPDATE;
 
 import com.google.bos.udmi.service.messaging.MessageContinuation;
+import com.google.bos.udmi.service.messaging.ModelUpdate;
 import com.google.bos.udmi.service.messaging.StateUpdate;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.udmi.util.JsonUtil;
@@ -189,9 +190,9 @@ public class ReflectProcessor extends ProcessorBase {
     return iotAccess.modelResource(attributes.deviceRegistryId, attributes.deviceId, request);
   }
 
-  private Metadata extractDeviceModel(CloudModel request) {
+  private ModelUpdate extractDeviceModel(CloudModel request) {
     return ofNullable(request.metadata.get(MetadataMapKeys.UDMI_METADATA))
-        .map(metadata -> JsonUtil.fromStringStrict(Metadata.class, metadata))
+        .map(metadata -> JsonUtil.fromStringStrict(ModelUpdate.class, metadata))
         .orElse(null);
   }
 

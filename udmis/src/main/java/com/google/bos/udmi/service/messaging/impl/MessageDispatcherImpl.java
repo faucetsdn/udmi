@@ -16,6 +16,7 @@ import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.MessageDispatcher;
 import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.bos.udmi.service.messaging.MessagePipe.PipeStats;
+import com.google.bos.udmi.service.messaging.ModelUpdate;
 import com.google.bos.udmi.service.messaging.StateUpdate;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.BundleException;
@@ -72,7 +73,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
         .forEach(folder -> registerHandlerType(type, folder)));
     registerMessageClass(SubType.STATE, SubFolder.UPDATE, StateUpdate.class);
     registerMessageClass(SubType.CONFIG, SubFolder.UPDATE, ConfigUpdate.class);
-    registerMessageClass(SubType.MODEL, SubFolder.UPDATE, Metadata.class);
+    registerMessageClass(SubType.MODEL, SubFolder.UPDATE, ModelUpdate.class);
   }
 
   private final MessagePipe messagePipe;
