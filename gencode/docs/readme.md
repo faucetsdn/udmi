@@ -13,6 +13,7 @@
 * [**state**](state.html) - [State](../../docs/messages/state.md) message, defined by [`state.json`]
 
 ## Site Model
+* [**metadata**](metadata.html) - [Metadata](../../docs/specs/metadata.md) is a description about the device: a specification about how the device should be configured and expectations about what the device should be doing. Defined by `metadata.json`
 
 ## Blobs
 * [**configuration_endpoint**](configuration_endpoint.html) - Parameters to define a message endpoint

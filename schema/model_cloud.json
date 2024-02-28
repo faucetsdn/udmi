@@ -43,9 +43,6 @@
     "detail": {
       "type": "string"
     },
-    "device_model": {
-      "$ref": "file:metadata.json#"
-    },
     "credentials": {
       "type": "array",
       "items": {
