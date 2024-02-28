@@ -46,7 +46,6 @@ import udmi.schema.CloudModel.Operation;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
-import udmi.schema.Metadata;
 import udmi.schema.UdmiConfig;
 import udmi.schema.UdmiState;
 
@@ -176,7 +175,7 @@ public class ReflectProcessor extends ProcessorBase {
       StateUpdate stateUpdate = fromString(StateUpdate.class, state);
       stateUpdate.configAcked = checkConfigAckTime(attributes, stateUpdate);
       processStateUpdate(attributes, stateUpdate);
-      publish(stateUpdate);
+      publish(attributes, stateUpdate);
       reflectStateUpdate(attributes, stringify(stateUpdate));
       CloudModel cloudModel = new CloudModel();
       cloudModel.operation = Operation.FETCH;
@@ -187,7 +186,7 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private CloudModel reflectModel(Envelope attributes, CloudModel request) {
-    ifNotNullThen(extractDeviceModel(request), this::publish);
+    ifNotNullThen(extractDeviceModel(request), model -> publish(attributes, model));
     return iotAccess.modelResource(attributes.deviceRegistryId, attributes.deviceId, request);
   }
 
@@ -204,7 +203,7 @@ public class ReflectProcessor extends ProcessorBase {
     }
     Class<?> messageClass = getMessageClassFor(attributes);
     debug("Propagating message %s: %s", attributes.transactionId, messageClass.getSimpleName());
-    publish(convertTo(messageClass, payload));
+    publish(attributes, convertTo(messageClass, payload));
     return null;
   }
 
