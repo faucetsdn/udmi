@@ -38,7 +38,7 @@ fi
 
 ls -l $archive_dir/
 echo Extracting test archives...
-ls $archive_dir/*sequencer*.tgz | xargs -n 1 tar -xzf
+ls $archive_dir/*_udmi-support_*.tgz | xargs -n 1 tar -xzf
 
 echo Consolidating device tests...
 devices=$(ls -d $sites_in/out-seq/devices)

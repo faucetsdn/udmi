@@ -3,7 +3,6 @@ package com.google.bos.udmi.service.access;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static java.lang.String.format;
-import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.pod.ContainerProvider;
 import java.lang.reflect.InvocationHandler;

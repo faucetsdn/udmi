@@ -20,6 +20,7 @@ jarfile=build/libs/udmis-1.0-SNAPSHOT-all.jar
 
 newer_files=$([[ -f $jarfile ]] && find src/ $BASE/gencode/java -type f -newer $jarfile || echo missing)
 if [[ -z $check && -z $covg && -z $newer_files ]]; then
+    ls -l $jarfile
     echo $jarfile up-to-date, skipping build.
     exit 0
 fi

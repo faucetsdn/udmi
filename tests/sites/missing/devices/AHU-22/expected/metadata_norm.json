@@ -1,7 +1,7 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.4.1",
-  "hash": "2a72b8e7",
+  "hash": "fc0a1987",
   "system": {
     "location": {
       "site": "ZZ-TRI-FECTA",
@@ -22,11 +22,13 @@
   },
   "gateway": {
     "gateway_id": "GAT-123",
-    "proxy_ids": [ ]
+    "target": {
+      "family": "bacnet"
+    }
   },
   "localnet": {
     "families": {
-      "virtual": {
+      "bacnet": {
         "addr": "0x65"
       }
     }
@@ -35,14 +37,15 @@
     "points": {
       "filter_alarm_pressure_status": {
         "units": "No-units",
-        "ref": "BV11.present_value"
+        "ref": "MCN8.present_value"
       },
       "filter_differential_pressure": {
-        "units": "Bars"
+        "units": "Bars",
+        "ref": "AI2.differential"
       },
       "filter_differential_pressure_sensor": {
         "units": "Degrees-Celsius",
-        "ref": "AV12.present_value"
+        "ref": "FAXLE12.present_value"
       }
     }
   }

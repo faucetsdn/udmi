@@ -25,6 +25,9 @@ trace_out=$trace_in/expected/
 site_model=sites/udmi_site_model
 site_out=$site_model/out
 
+# Clean up from other unit testing
+rm -rf $site_model/devices/ACME-2301
+
 # Use a static/constant value to make output stable.
 export UDMI_TOOLS=test_trace
 

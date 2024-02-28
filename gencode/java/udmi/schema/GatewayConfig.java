@@ -18,7 +18,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "proxy_ids"
+    "proxy_ids",
+    "target"
 })
 @Generated("jsonschema2pojo")
 public class GatewayConfig {
@@ -30,11 +31,21 @@ public class GatewayConfig {
     @JsonProperty("proxy_ids")
     @JsonPropertyDescription("An array of all the device IDs which are bound to the device")
     public List<String> proxy_ids = new ArrayList<String>();
+    /**
+     * Family Localnet Model
+     * <p>
+     * The type of network
+     * 
+     */
+    @JsonProperty("target")
+    @JsonPropertyDescription("The type of network")
+    public FamilyLocalnetModel target;
 
     @Override
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.proxy_ids == null)? 0 :this.proxy_ids.hashCode()));
+        result = ((result* 31)+((this.target == null)? 0 :this.target.hashCode()));
         return result;
     }
 
@@ -47,7 +58,7 @@ public class GatewayConfig {
             return false;
         }
         GatewayConfig rhs = ((GatewayConfig) other);
-        return ((this.proxy_ids == rhs.proxy_ids)||((this.proxy_ids!= null)&&this.proxy_ids.equals(rhs.proxy_ids)));
+        return (((this.proxy_ids == rhs.proxy_ids)||((this.proxy_ids!= null)&&this.proxy_ids.equals(rhs.proxy_ids)))&&((this.target == rhs.target)||((this.target!= null)&&this.target.equals(rhs.target))));
     }
 
 }

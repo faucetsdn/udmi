@@ -1,7 +1,7 @@
 package daq.pubber;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.udmi.util.GeneralUtils.ifTrueGet;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static java.lang.String.format;
@@ -10,6 +10,7 @@ import static java.util.Optional.ofNullable;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
@@ -31,7 +32,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -40,7 +40,6 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import org.apache.http.ConnectionClosedException;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
@@ -53,6 +52,7 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import udmi.schema.Basic;
+import udmi.schema.Config;
 import udmi.schema.EndpointConfiguration.Transport;
 import udmi.schema.Jwt;
 import udmi.schema.PubberConfiguration;
@@ -676,6 +676,7 @@ public class MqttPublisher implements Publisher {
             payload = null;
           } else {
             payload = OBJECT_MAPPER.readValue(message.toString(), type);
+            nukeProxyIdsIfNull(message.toString(), payload);
           }
         } catch (Exception e) {
           error("Processing message", deviceId, messageType, "parse", e);
@@ -683,6 +684,24 @@ public class MqttPublisher implements Publisher {
         }
         success("Parsed message", deviceId, messageType, "parse");
         handler.accept(payload);
+      }
+    }
+
+    /**
+     * Hack of a function to clean up annoying Jackson POJO implicit empty collection creation.
+     */
+    private void nukeProxyIdsIfNull(String message, Object payload) {
+      try {
+        if (payload instanceof Config configPayload) {
+          JsonNode jsonNode = OBJECT_MAPPER.readTree(message);
+          JsonNode gateway = jsonNode.get("gateway");
+          JsonNode proxyIds = ifNotNullGet(gateway, g -> g.get("proxy_ids"));
+          if (gateway != null && proxyIds == null) {
+            configPayload.gateway.proxy_ids = null;
+          }
+        }
+      } catch (Exception e) {
+        throw new RuntimeException("Error nuking null gateway proxy_id", e);
       }
     }
 

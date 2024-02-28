@@ -45,7 +45,7 @@ public class DeviceManager extends ManagerBase {
   public void setMetadata(Metadata metadata) {
     pointsetManager.setPointsetModel(metadata.pointset);
     systemManager.setMetadata(metadata);
-    gatewayManager.setMetadata(metadata.gateway);
+    gatewayManager.setMetadata(metadata);
   }
 
   public void activate() {
