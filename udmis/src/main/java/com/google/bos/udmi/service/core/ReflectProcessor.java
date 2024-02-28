@@ -33,6 +33,7 @@ import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.StateUpdate;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.udmi.util.JsonUtil;
+import com.google.udmi.util.MetadataMapKeys;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -55,7 +56,6 @@ public class ReflectProcessor extends ProcessorBase {
 
   public static final String PAYLOAD_KEY = "payload";
   private static final Date START_TIME = new Date();
-  private static final String METADATA_MODEL_KEY = "udmi_metadata";
 
   private static String makeTransactionId() {
     return format("RP:%08x", Objects.hash(System.currentTimeMillis(), Thread.currentThread()));
@@ -191,7 +191,7 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private Metadata extractDeviceModel(CloudModel request) {
-    return ofNullable(request.metadata.get(METADATA_MODEL_KEY))
+    return ofNullable(request.metadata.get(MetadataMapKeys.UDMI_METADATA))
         .map(metadata -> JsonUtil.fromStringStrict(Metadata.class, metadata))
         .orElse(null);
   }
