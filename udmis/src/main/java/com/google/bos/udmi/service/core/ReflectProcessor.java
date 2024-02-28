@@ -55,6 +55,7 @@ public class ReflectProcessor extends ProcessorBase {
 
   public static final String PAYLOAD_KEY = "payload";
   private static final Date START_TIME = new Date();
+  private static final String METADATA_MODEL_KEY = "udmi_metadata";
 
   private static String makeTransactionId() {
     return format("RP:%08x", Objects.hash(System.currentTimeMillis(), Thread.currentThread()));
@@ -184,9 +185,15 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private CloudModel reflectModel(Envelope attributes, CloudModel request) {
-    Metadata metadata = request.device_model;
-    debug("TEMP Received device metadata: " + stringifyTerse(metadata));
+    Metadata deviceModel = extractDeviceModel(request);
+    debug("TEMP Received device model: " + stringifyTerse(deviceModel));
     return iotAccess.modelResource(attributes.deviceRegistryId, attributes.deviceId, request);
+  }
+
+  private Metadata extractDeviceModel(CloudModel request) {
+    return ofNullable(request.metadata.get(METADATA_MODEL_KEY))
+        .map(metadata -> JsonUtil.fromStringStrict(Metadata.class, metadata))
+        .orElse(null);
   }
 
   private CloudModel reflectPropagate(Envelope attributes, Map<String, Object> payload) {
