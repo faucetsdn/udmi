@@ -20,6 +20,7 @@ import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.fromString;
+import static com.google.udmi.util.JsonUtil.fromStringStrict;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
@@ -191,9 +192,10 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private ModelUpdate extractDeviceModel(CloudModel request) {
-    return ofNullable(request.metadata.get(MetadataMapKeys.UDMI_METADATA))
-        .map(metadata -> JsonUtil.fromStringStrict(ModelUpdate.class, metadata))
-        .orElse(null);
+    return ifNotNullGet(request.metadata,
+        metadata -> ofNullable(metadata.get(MetadataMapKeys.UDMI_METADATA))
+            .map(modelString -> fromStringStrict(ModelUpdate.class, modelString))
+            .orElse(null));
   }
 
   private CloudModel reflectPropagate(Envelope attributes, Map<String, Object> payload) {
