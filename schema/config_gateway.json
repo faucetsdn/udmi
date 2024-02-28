@@ -14,6 +14,10 @@
         "pattern": "^[A-Z]{2,6}-[1-9][0-9]*$"
       },
       "examples": [["AHU-22"]]
+    },
+    "target": {
+      "description": "For proxied devices, this represents the target proxy device address for use by its gateway",
+      "$ref": "file:model_localnet_family.json"
     }
   }
 }

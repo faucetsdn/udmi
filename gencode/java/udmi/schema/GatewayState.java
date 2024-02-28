@@ -19,7 +19,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder({
     "timestamp",
     "version",
-    "devices"
+    "status"
 })
 @Generated("jsonschema2pojo")
 public class GatewayState {
@@ -38,15 +38,21 @@ public class GatewayState {
     @JsonProperty("version")
     @JsonPropertyDescription("Version of the UDMI schema")
     public String version;
-    @JsonProperty("devices")
-    public Object devices;
+    /**
+     * Entry
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("status")
+    public Entry status;
 
     @Override
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
-        result = ((result* 31)+((this.devices == null)? 0 :this.devices.hashCode()));
         result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
+        result = ((result* 31)+((this.status == null)? 0 :this.status.hashCode()));
         return result;
     }
 
@@ -59,7 +65,7 @@ public class GatewayState {
             return false;
         }
         GatewayState rhs = ((GatewayState) other);
-        return ((((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version)))&&((this.devices == rhs.devices)||((this.devices!= null)&&this.devices.equals(rhs.devices))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
+        return ((((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version)))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
     }
 
 }

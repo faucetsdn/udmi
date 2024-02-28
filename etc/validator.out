@@ -16,6 +16,7 @@ sites/udmi_site_model/out/devices/GAT-123/event_pointset.json
 sites/udmi_site_model/out/devices/GAT-123/event_system.json
 sites/udmi_site_model/out/devices/GAT-123/persistent_data.json
 sites/udmi_site_model/out/devices/GAT-123/state.json
+sites/udmi_site_model/out/devices/GAT-123/state_gateway.json
 sites/udmi_site_model/out/devices/GAT-123/state_localnet.json
 sites/udmi_site_model/out/devices/GAT-123/state_pointset.json
 sites/udmi_site_model/out/devices/GAT-123/state_system.json
@@ -380,6 +381,22 @@ sites/udmi_site_model/out/devices/GAT-123/state.out
   "timestamp" : "REDACTED_TIMESTAMP",
   "version" : "1.4.2",
   "sub_folder" : "update",
+  "sub_type" : "state",
+  "status" : {
+    "message" : "Successful validation",
+    "category" : "validation.device.receive",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 200
+  },
+  "errors" : [ ]
+}
+::::::::::::::
+sites/udmi_site_model/out/devices/GAT-123/state_gateway.out
+::::::::::::::
+{
+  "timestamp" : "REDACTED_TIMESTAMP",
+  "version" : "1.4.2",
+  "sub_folder" : "gateway",
   "sub_type" : "state",
   "status" : {
     "message" : "Successful validation",

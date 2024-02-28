@@ -7,7 +7,7 @@
       },
       "filter_differential_pressure_sensor": {
         "units": "Degrees-Celsius",
-        "ref": "AV12.present_value",
+        "ref": "FAXLE12.present_value",
         "baseline_value": 10,
         "baseline_tolerance": 2
       },

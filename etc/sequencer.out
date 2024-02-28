@@ -1,3 +1,4 @@
+RESULT skip gateway bad_target_family ALPHA 0/0 Not a proxied device
 RESULT pass system broken_config BETA 5/5 Sequence complete
 CPBLTY pass system broken_config.logging ALPHA 1/1 Capability functional
 RESULT pass system config_logging BETA 5/5 Sequence complete
@@ -16,6 +17,7 @@ RESULT pass system family_ether_addr PREVIEW 5/5 Sequence complete
 RESULT pass system family_ipv4_addr PREVIEW 5/5 Sequence complete
 RESULT pass system family_ipv6_addr PREVIEW 5/5 Sequence complete
 RESULT pass enumeration.features feature_enumeration PREVIEW 5/5 Sequence complete
+RESULT skip gateway gateway_attach_handling PREVIEW 0/0 Not a gateway
 RESULT skip gateway gateway_proxy_events BETA 0/0 Not a gateway
 RESULT pass enumeration multi_enumeration ALPHA 5/5 Sequence complete
 RESULT pass discovery.scan periodic_scan ALPHA 5/5 Sequence complete

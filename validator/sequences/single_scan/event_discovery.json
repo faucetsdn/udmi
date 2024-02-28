@@ -1,16 +1,16 @@
 {
   "families" : {
-    "virtual" : {
+    "vendor" : {
       "addr" : "0x65"
     },
     "iot" : {
       "addr" : "AHU-22"
     }
   },
-  "generation" : "2023-11-07T14:31:50Z",
+  "generation" : "2024-02-18T18:17:44Z",
   "scan_addr" : "AHU-22",
-  "scan_family" : "virtual",
-  "timestamp" : "2023-11-07T14:31:55Z",
+  "scan_family" : "vendor",
+  "timestamp" : "2024-02-18T18:17:49Z",
   "uniqs" : {
     "9b291597" : {
       "name" : "filter_differential_pressure_sensor",
@@ -30,5 +30,5 @@
       "ref" : "BV11.present_value"
     }
   },
-  "version" : "1.4.2"
+  "version" : "1.5.0"
 }

@@ -7,9 +7,11 @@ import static com.google.udmi.util.Common.CLOUD_VERSION_KEY;
 import static com.google.udmi.util.Common.NO_SITE;
 import static com.google.udmi.util.Common.UDMI_VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
+import static com.google.udmi.util.GeneralUtils.catchToElse;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
 import static com.google.udmi.util.JsonUtil.safeSleep;
@@ -61,6 +63,7 @@ import java.util.TreeMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -97,7 +100,7 @@ public class Registrar {
   private static final String CONFIG_SUB_TYPE = "config";
   private static final String MODEL_SUB_TYPE = "model";
   private static final boolean DEFAULT_BLOCK_UNKNOWN = true;
-  private static final int EACH_ITEM_TIMEOUT_SEC = 30;
+  private static final int EACH_ITEM_TIMEOUT_SEC = 60;
   private static final int EXIT_CODE_ERROR = 1;
   private static final Map<String, Class<? extends Summarizer>> SUMMARIZERS = ImmutableMap.of(
       ".json", Summarizer.JsonSummarizer.class,
@@ -129,6 +132,8 @@ public class Registrar {
   private File profile;
   private int createRegistries = -1;
   private int runnerThreads = 5;
+  private ExecutorService executor;
+  private List<Future<?>> executing = new ArrayList<>();
 
   /**
    * Main entry point for registrar.
@@ -529,14 +534,13 @@ public class Registrar {
   }
 
   private void synchronizedDelete(Set<String> devices) throws InterruptedException {
-    ExecutorService executor = Executors.newFixedThreadPool(runnerThreads);
     AtomicInteger count = new AtomicInteger();
-    devices.forEach(id -> executor.execute(() -> {
+    devices.forEach(id -> parallelExecute(() -> {
       int incremented = count.incrementAndGet();
       System.err.printf("Deleting device %s (%d/%d)%n", id, incremented, devices.size());
       deleteDevice(id);
     }));
-    dynamicTerminate(executor, devices.size());
+    dynamicTerminate(devices.size());
   }
 
   private void deleteDevice(String deviceId) {
@@ -549,7 +553,6 @@ public class Registrar {
 
   private int processLocalDevices(Set<String> deviceSet) {
     try {
-      ExecutorService executor = Executors.newFixedThreadPool(runnerThreads);
       AtomicInteger queued = new AtomicInteger();
       final Instant start = Instant.now();
       Set<String> newDevices = new ConcurrentSkipListSet<>();
@@ -557,13 +560,13 @@ public class Registrar {
       AtomicInteger processedCount = new AtomicInteger();
       deviceSet.forEach(localName -> {
         queued.incrementAndGet();
-        executor.execute(() -> {
+        parallelExecute(() -> {
           ifTrueThen(processLocalDevice(localName, processedCount, deviceCount),
               () -> newDevices.add(localName));
           queued.decrementAndGet();
         });
       });
-      dynamicTerminate(executor, queued.get());
+      dynamicTerminate(queued.get());
 
       ifNotNullThen(cloudDevices, set -> set.addAll(newDevices));
 
@@ -576,15 +579,6 @@ public class Registrar {
       return finalCount;
     } catch (Exception e) {
       throw new RuntimeException("While processing local devices", e);
-    }
-  }
-
-  private void dynamicTerminate(ExecutorService executor, int count) throws InterruptedException {
-    executor.shutdown();
-    int timeout = (count / runnerThreads + 1) * EACH_ITEM_TIMEOUT_SEC;
-    System.err.printf("Waiting %ds for %d tasks to complete...%n", timeout, count);
-    if (!executor.awaitTermination(timeout, TimeUnit.SECONDS)) {
-      throw new RuntimeException("Incomplete executor termination after " + timeout + "s");
     }
   }
 
@@ -797,7 +791,6 @@ public class Registrar {
 
   private void bindGatewayDevices(Map<String, LocalDevice> localDevices) {
     try {
-      ExecutorService executor = Executors.newFixedThreadPool(runnerThreads);
       final Instant start = Instant.now();
       Set<LocalDevice> gateways = localDevices.values().stream().filter(LocalDevice::isGateway)
           .collect(Collectors.toSet());
@@ -807,20 +800,22 @@ public class Registrar {
       AtomicInteger bindingCount = new AtomicInteger();
       System.err.printf("Binding %d unbound devices to %d gateways...%n", bindings.size(),
           gateways.size());
-      bindings.forEach(binding -> executor.execute(() -> {
-        try {
-          String proxyDeviceId = binding.getKey();
-          String gatewayId = binding.getValue();
-          int count = bindingCount.incrementAndGet();
-          System.err.printf("Binding %s to %s (%d/%d)%n", proxyDeviceId, gatewayId, count,
-              bindings.size());
-          cloudIotManager.bindDevice(proxyDeviceId, gatewayId);
-        } catch (Exception e) {
-          localDevices.get(binding.getKey()).captureError(LocalDevice.EXCEPTION_BINDING, e);
-        }
-      }));
+      bindings.forEach(binding -> {
+        parallelExecute(() -> {
+          try {
+            String proxyDeviceId = binding.getKey();
+            String gatewayId = binding.getValue();
+            int count = bindingCount.incrementAndGet();
+            System.err.printf("Binding %s to %s (%d/%d)%n", proxyDeviceId, gatewayId, count,
+                bindings.size());
+            cloudIotManager.bindDevice(proxyDeviceId, gatewayId);
+          } catch (Exception e) {
+            localDevices.get(binding.getKey()).captureError(LocalDevice.EXCEPTION_BINDING, e);
+          }
+        });
+      });
 
-      dynamicTerminate(executor, bindings.size());
+      dynamicTerminate(bindings.size());
 
       Duration between = Duration.between(start, Instant.now());
       double seconds = between.getSeconds() + between.getNano() / 1e9;
@@ -828,6 +823,29 @@ public class Registrar {
     } catch (Exception e) {
       throw new RuntimeException("While binding gateways", e);
     }
+  }
+
+  private synchronized void dynamicTerminate(int expected) throws InterruptedException {
+    try {
+      if (executor == null) {
+        return;
+      }
+      executor.shutdown();
+      int timeout = (int) (Math.ceil(expected / (double) runnerThreads) * EACH_ITEM_TIMEOUT_SEC);
+      System.err.printf("Waiting %ds for %d tasks to complete...%n", timeout, expected);
+      if (!executor.awaitTermination(timeout, TimeUnit.SECONDS)) {
+        throw new RuntimeException("Incomplete executor termination after " + timeout + "s");
+      }
+    } finally {
+      executor = null;
+      executing = null;
+    }
+  }
+
+  private synchronized void parallelExecute(Runnable runnable) {
+    ifNullThen(executor, () -> executor = Executors.newFixedThreadPool(runnerThreads));
+    ifNullThen(executing, () -> executing = new ArrayList<>());
+    executing.add(executor.submit(runnable));
   }
 
   private Set<Entry<String, String>> getBindings(Set<String> deviceSet, LocalDevice localDevice) {
