@@ -137,8 +137,8 @@ echo Combining partial-run output files...
     echo Merging $files
     for file in $files; do
         nfile=$(echo $file | sed -E -r "s/\.(.*)\$/$suffix.\1/")
-        echo Rename $file to $nfile
-        [[ $file != $nfile ]] && mv $file $nfile
+        [[ $file != $nfile ]] && mv $file $nfile && echo Renamed $file to $nfile
+        cp $nfile $nfile.save
         cat $nfile >> $nfile.combined
         cp $nfile.combined $nfile
     done
