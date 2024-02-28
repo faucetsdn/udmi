@@ -46,6 +46,7 @@ Some caveats:
 * [family_ipv4_addr](#family_ipv4_addr-preview)
 * [family_ipv6_addr](#family_ipv6_addr-preview)
 * [feature_enumeration](#feature_enumeration-preview): Check enumeration of device features
+* [gateway_attach_handling](#gateway_attach_handling-preview): Check adequate logging for gateway detach, errors, and reattach
 * [gateway_proxy_events](#gateway_proxy_events-beta): Check that a gateway proxies pointset events for indicated devices
 * [pointset_publish](#pointset_publish-beta): Check that a device publishes pointset events
 * [pointset_publish_interval](#pointset_publish_interval-beta): Check handling of sample rate and sample limit sec
@@ -286,6 +287,12 @@ Check enumeration of device features
 1. Check that feature enumeration matches metadata
 1. Check that all enumerated features are official buckets
 1. Check that no point enumeration
+
+## gateway_attach_handling (PREVIEW)
+
+Check adequate logging for gateway detach, errors, and reattach
+
+1. Test skipped: Not a gateway
 
 ## gateway_proxy_events (BETA)
 

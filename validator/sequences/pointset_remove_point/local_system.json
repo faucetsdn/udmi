@@ -2,7 +2,7 @@
   "min_loglevel" : 200,
   "metrics_rate_sec" : 10,
   "operation" : {
-    "last_start" : "2024-02-18T18:44:36Z"
+    "last_start" : "2024-02-18T19:33:01Z"
   },
   "testing" : {
     "sequence_name" : "pointset_remove_point"

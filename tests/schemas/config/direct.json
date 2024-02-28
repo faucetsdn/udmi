@@ -1,0 +1,16 @@
+// Generic config block for a direct connect device. In this case, the config is
+// indicating which points the device should be publishing. Since there's no
+// ref field for these points, the names themselves must be meaningful to the device
+// (e.g. match an internal database). There is no gateway block.
+{
+  "version": "1.5.0",
+  "timestamp": "2018-08-26T21:39:29.364Z",
+  "pointset": {
+    "points": {
+      "return_air_temperature_sensor": {
+      },
+      "nexus_sensor": {
+      }
+    }
+  }
+}

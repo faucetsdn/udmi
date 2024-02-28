@@ -83,11 +83,11 @@ public class Config {
     /**
      * Localnet Config
      * <p>
-     * Used to describe device local network parameters
+     * Currently unused: request local network configuration
      * 
      */
     @JsonProperty("localnet")
-    @JsonPropertyDescription("Used to describe device local network parameters")
+    @JsonPropertyDescription("Currently unused: request local network configuration")
     public LocalnetConfig localnet;
     /**
      * Blobset Config

@@ -13,6 +13,7 @@ class PubberOptions:
     self.noLastConfig = None
     self.badCategory = None
     self.badVersion = None
+    self.badAddr = None
     self.noProxy = None
     self.extraDevice = None
     self.barfConfig = None
@@ -51,6 +52,7 @@ class PubberOptions:
     result.noLastConfig = source.get('noLastConfig')
     result.badCategory = source.get('badCategory')
     result.badVersion = source.get('badVersion')
+    result.badAddr = source.get('badAddr')
     result.noProxy = source.get('noProxy')
     result.extraDevice = source.get('extraDevice')
     result.barfConfig = source.get('barfConfig')
@@ -111,6 +113,8 @@ class PubberOptions:
       result['badCategory'] = self.badCategory # 5
     if self.badVersion:
       result['badVersion'] = self.badVersion # 5
+    if self.badAddr:
+      result['badAddr'] = self.badAddr # 5
     if self.noProxy:
       result['noProxy'] = self.noProxy # 5
     if self.extraDevice:

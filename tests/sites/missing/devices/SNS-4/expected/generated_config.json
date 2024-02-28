@@ -5,12 +5,20 @@
     "min_loglevel": 300,
     "metrics_rate_sec": 10
   },
+  "gateway": {
+    "target": {
+      "addr": "whatEVERyouWANT!!!#!#!",
+      "family": "vendor"
+    }
+  },
   "pointset": {
     "points": {
       "split_threshold": {
+        "ref": "vendor-ref can be anything",
         "units": "Imperial-gallons-per-minute"
       },
       "triangulating_axis": {
+        "ref": "anything-goes!",
         "units": "Degrees-phase"
       }
     }

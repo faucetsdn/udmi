@@ -16,16 +16,8 @@
       "description": "Version of the UDMI schema",
       "type": "string"
     },
-    "devices": {
-      "additionalProperties": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "status": {
-            "$ref": "file:entry.json"
-          }
-        }
-      }
+    "status": {
+      "$ref": "file:entry.json"
     }
   }
 }

@@ -21,13 +21,6 @@
       "suffix": "extention11-optional"
     }
   },
-  "localnet": {
-    "families": {
-      "bacnet": {
-        "addr": "82eecd"
-      }
-    }
-  },
   "pointset": {
     "points": {
       "return_air_temperature_sensor": {
@@ -37,7 +30,9 @@
     }
   },
   "gateway": {
-    "family": "bacnet",
+    "target": {
+      "family": "bacnet"
+    },
     "gateway_id": "LTGW-123"
   }
 }
