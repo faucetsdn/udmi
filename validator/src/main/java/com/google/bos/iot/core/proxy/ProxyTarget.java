@@ -1,7 +1,7 @@
 package com.google.bos.iot.core.proxy;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static MetadataMapKeys.UDMI_METADATA;
+import static com.google.udmi.util.MetadataMapKeys.UDMI_METADATA;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;

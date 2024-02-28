@@ -185,8 +185,7 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private CloudModel reflectModel(Envelope attributes, CloudModel request) {
-    Metadata deviceModel = extractDeviceModel(request);
-    debug("TEMP Received device model: " + stringifyTerse(deviceModel));
+    ifNotNullThen(extractDeviceModel(request), this::publish);
     return iotAccess.modelResource(attributes.deviceRegistryId, attributes.deviceId, request);
   }
 

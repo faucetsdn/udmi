@@ -47,6 +47,7 @@ import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
+import udmi.schema.Metadata;
 import udmi.schema.SystemState;
 
 /**
@@ -71,6 +72,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
         .forEach(folder -> registerHandlerType(type, folder)));
     registerMessageClass(SubType.STATE, SubFolder.UPDATE, StateUpdate.class);
     registerMessageClass(SubType.CONFIG, SubFolder.UPDATE, ConfigUpdate.class);
+    registerMessageClass(SubType.MODEL, SubFolder.UPDATE, Metadata.class);
   }
 
   private final MessagePipe messagePipe;
