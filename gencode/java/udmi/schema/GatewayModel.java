@@ -19,7 +19,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "gateway_id",
-    "family",
+    "target",
     "proxy_ids"
 })
 @Generated("jsonschema2pojo")
@@ -33,12 +33,14 @@ public class GatewayModel {
     @JsonPropertyDescription("The device ID of the gateway the device is bound to")
     public String gateway_id;
     /**
-     * Protocol family used for connecting to the proxy device
+     * Family Localnet Model
+     * <p>
+     * The type of network
      * 
      */
-    @JsonProperty("family")
-    @JsonPropertyDescription("Protocol family used for connecting to the proxy device")
-    public String family;
+    @JsonProperty("target")
+    @JsonPropertyDescription("The type of network")
+    public FamilyLocalnetModel target;
     /**
      * An array of all the device IDs which are bound to the device
      * 
@@ -51,8 +53,8 @@ public class GatewayModel {
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.proxy_ids == null)? 0 :this.proxy_ids.hashCode()));
-        result = ((result* 31)+((this.family == null)? 0 :this.family.hashCode()));
         result = ((result* 31)+((this.gateway_id == null)? 0 :this.gateway_id.hashCode()));
+        result = ((result* 31)+((this.target == null)? 0 :this.target.hashCode()));
         return result;
     }
 
@@ -65,7 +67,7 @@ public class GatewayModel {
             return false;
         }
         GatewayModel rhs = ((GatewayModel) other);
-        return ((((this.proxy_ids == rhs.proxy_ids)||((this.proxy_ids!= null)&&this.proxy_ids.equals(rhs.proxy_ids)))&&((this.family == rhs.family)||((this.family!= null)&&this.family.equals(rhs.family))))&&((this.gateway_id == rhs.gateway_id)||((this.gateway_id!= null)&&this.gateway_id.equals(rhs.gateway_id))));
+        return ((((this.proxy_ids == rhs.proxy_ids)||((this.proxy_ids!= null)&&this.proxy_ids.equals(rhs.proxy_ids)))&&((this.gateway_id == rhs.gateway_id)||((this.gateway_id!= null)&&this.gateway_id.equals(rhs.gateway_id))))&&((this.target == rhs.target)||((this.target!= null)&&this.target.equals(rhs.target))));
     }
 
 }

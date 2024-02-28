@@ -3,13 +3,14 @@
     "points": {
       "filter_alarm_pressure_status": {
         "units": "No-units",
-        "ref": "BV11.present_value"
+        "ref": "MCN8.present_value"
       },
       "filter_differential_pressure_sensor": {
         "units": "Degrees-Celsius",
-        "ref": "AV12.present_value"
+        "ref": "FAXLE12.present_value"
       },
       "filter_differential_pressure": {
+        "ref": "AI2.differential",
         "units": "Bars"
       }
     }
@@ -31,11 +32,14 @@
     }
   },
   "gateway": {
-    "gateway_id": "GAT-123"
+    "gateway_id": "GAT-123",
+    "target": {
+      "family": "bacnet"
+    }
   },
   "localnet": {
     "families": {
-      "virtual": {
+      "bacnet": {
         "addr": "0x65"
       }
     }

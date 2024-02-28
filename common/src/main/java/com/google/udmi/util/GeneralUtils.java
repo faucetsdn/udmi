@@ -125,7 +125,7 @@ public class GeneralUtils {
   }
 
   public static String encodeBase64(String payload) {
-    return encodeBase64(payload.getBytes());
+    return ifNotNullGet(payload, raw -> encodeBase64(raw.getBytes()));
   }
 
   public static String encodeBase64(byte[] payload) {
@@ -247,6 +247,12 @@ public class GeneralUtils {
   public static void ifNullThen(Object value, Runnable action) {
     if (value == null) {
       action.run();
+    }
+  }
+
+  public static <T> void ifNotNullThrow(T value, String message) {
+    if (value != null) {
+      throw new RuntimeException(message);
     }
   }
 

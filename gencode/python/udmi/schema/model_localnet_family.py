@@ -6,6 +6,7 @@ class FamilyLocalnetModel:
 
   def __init__(self):
     self.addr = None
+    self.family = None
 
   @staticmethod
   def from_dict(source):
@@ -13,6 +14,7 @@ class FamilyLocalnetModel:
       return None
     result = FamilyLocalnetModel()
     result.addr = source.get('addr')
+    result.family = source.get('family')
     return result
 
   @staticmethod
@@ -35,4 +37,6 @@ class FamilyLocalnetModel:
     result = {}
     if self.addr:
       result['addr'] = self.addr # 5
+    if self.family:
+      result['family'] = self.family # 5
     return result

@@ -4,16 +4,13 @@
   "system": {
     "min_loglevel": 500
   },
-  "localnet": {
-    "families": {
-      "bacnet": {
-        "addr": "78ce19"
-      }
+  "gateway": {
+    "target": {
+      "family": "bacnet",
+      "addr": "78ce19"
     }
   },
   "pointset": {
-    "sample_limit_sec": 2,
-    "sample_rate_sec": 500,
     "points": {
       "return_air_temperature_sensor": {
         "ref": "BV23.present_value"

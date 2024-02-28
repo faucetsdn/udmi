@@ -14,6 +14,12 @@ import udmi.schema.TargetTestingModel;
  */
 public abstract class PointsetBase extends SequenceBase {
 
+  @Override
+  public void setUp() {
+    ifTrueSkipTest(catchToTrue(() -> deviceMetadata.pointset == null), "Does not support pointset");
+    super.setUp();
+  }
+
   /**
    * Make the required set of points in the config block.
    */
