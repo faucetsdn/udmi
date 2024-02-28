@@ -29,7 +29,7 @@ public class ProxiedSequences extends PointsetBase {
     super.setUp();
   }
 
-  @Feature(stage = FeatureStage.ALPHA, bucket = Bucket.GATEWAY, nostate = true)
+  @Feature(stage = FeatureStage.ALPHA, bucket = Bucket.GATEWAY)
   @Summary("Error handling for badly formed target address family")
   @Test(timeout = ONE_MINUTE_MS)
   public void bad_target_family() {
@@ -40,7 +40,7 @@ public class ProxiedSequences extends PointsetBase {
     gatewayConfig.target.family = SemanticValue.describe("random family", getRandomFamily());
     untilTrue("gateway status has target error", this::hasTargetError);
     gatewayConfig.target = savedTarget;
-    cleanStatusCheck();
+    untilFalse("restored original target config", this::hasGatewayStatus);
   }
 
   private void cleanStatusCheck() {

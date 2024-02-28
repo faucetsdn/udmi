@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.util.NetworkFamily.NAMED_FAMILIES;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThrow;
 import static com.google.udmi.util.GeneralUtils.isTrue;
@@ -12,11 +13,11 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
+import com.google.udmi.util.GeneralUtils;
 import java.util.HashMap;
 import java.util.List;
 import org.jetbrains.annotations.NotNull;
 import udmi.schema.Config;
-import udmi.schema.FamilyLocalnetModel;
 import udmi.schema.GatewayConfig;
 import udmi.schema.LocalnetConfig;
 import udmi.schema.Metadata;
@@ -82,7 +83,7 @@ public class ConfigGenerator {
       ifNotNullThen(metadata.gateway.target, target -> {
         ifNotNullThrow(target.addr, "metadata.gateway.target.addr should not be defined");
         configVar.target = deepCopy(target);
-        configVar.target.addr = getLocalnetAddr(target.family);
+        configVar.target.addr = ifNotNullGet(target.family, this::getLocalnetAddr);
       });
     } else {
       throw new RuntimeException("gateway block is neither gateway nor proxied");
@@ -139,8 +140,8 @@ public class ConfigGenerator {
 
   private String pointConfigRef(PointPointsetModel model) {
     String pointRef = model.ref;
-    String family = ofNullable(catchToNull(() -> metadata.gateway.target.family)).orElse(
-        DEFAULT_FAMILY);
+    String rawFamily = catchToNull(() -> metadata.gateway.target.family);
+    String family = ofNullable(rawFamily).orElse(DEFAULT_FAMILY);
 
     if (!isProxied()) {
       return pointRef;
@@ -150,8 +151,9 @@ public class ConfigGenerator {
     checkState(NAMED_FAMILIES.containsKey(family), "gateway.target.family unknown: " + family);
     ifNotNullThrow(catchToNull(() -> metadata.gateway.target.addr),
         "gateway.target.addr field should not be defined");
-    requireNonNull(catchToNull(() -> metadata.localnet.families.get(family).addr),
-        format("metadata.localnet.families.[%s].addr not defined", family));
+    ifNotNullThen(rawFamily, raw ->
+        requireNonNull(catchToNull(() -> metadata.localnet.families.get(family).addr),
+            format("metadata.localnet.families.[%s].addr not defined", family)));
     NAMED_FAMILIES.get(family).refValidator(pointRef);
     return pointRef;
   }
