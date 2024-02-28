@@ -69,6 +69,7 @@ public class Operation {
 
         INITIAL("initial"),
         ACTIVE("active"),
+        UPDATING("updating"),
         RESTART("restart"),
         TERMINATE("terminate"),
         SHUTDOWN("shutdown");

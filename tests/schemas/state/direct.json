@@ -1,0 +1,53 @@
+// Minimal example showing what a direct device state message might look like. In
+// this case, there is no gateway block, and the localnet block only shows its
+// address on the local ipv4 network (i.e. it doesn't have a fieldbus address).
+{
+  "version": "1.5.0",
+  "timestamp": "2018-08-26T21:39:29.364Z",
+  "system": {
+    "hardware": {
+      "make": "ACME",
+      "model": "Direct device",
+      "sku": "A9BB-F",
+      "rev": "2183147c"
+    },
+    "software": {
+      "firmware": "3.2a",
+      "baseband": "1287ab787e98df01",
+      "application": "4.13.0.347 (4130-001) D",
+      "python": "3.8",
+      "monkey_rabbits": "These are all arbitrary key/value pairs"
+    },
+    "params": {
+      "wpa_key_hash": "ab7879e2873c871e",
+      "iot_config_hash": "cc8d93e8f87a7ec9",
+      "user_login": "hacker012"
+    },
+    "serial_no": "182732142",
+    "last_config": "2018-08-26T21:49:29.364Z",
+    "operation": {
+      "operational": true
+    },
+    "status": {
+      "message": "Tickity Boo",
+      "category": "system.config.apply",
+      "timestamp": "2018-08-26T21:39:30.364Z",
+      "level": 600
+    }
+  },
+  "localnet": {
+    "families": {
+      "ipv4": {
+        "addr": "192.168.8.3"
+      }
+    }
+  },
+  "pointset": {
+    "points": {
+      "return_air_temperature_sensor": {
+      },
+      "nexus_sensor": {
+      }
+    }
+  }
+}

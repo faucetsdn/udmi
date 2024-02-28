@@ -1,6 +1,12 @@
 #!/bin/bash -e
-PLAN_FILE=etc/sequencer_plan.txt
-SEQUENCER_OUT=etc/sequencer.out
+
+RUN_ROOT=$PWD
+UDMI_ROOT=$(dirname $0)/..
+
+source $UDMI_ROOT/etc/shell_common.sh
+
+PLAN_FILE=$UDMI_ROOT/etc/sequencer_plan.txt
+SEQUENCER_OUT=$UDMI_ROOT/etc/sequencer.out
 
 exit=0
 while read -u 7 line; do

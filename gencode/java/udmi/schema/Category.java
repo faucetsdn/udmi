@@ -51,18 +51,6 @@ public class Category {
     public static final int SYSTEM_CONFIG_APPLY_VALUE = NOTICE.value();
     static { LEVEL.put(SYSTEM_CONFIG_APPLY, NOTICE); }
 
-    // Connected to the network
-    public static final String SYSTEM_NETWORK_CONNECTION = "system.network.connection";
-    public static final Level SYSTEM_NETWORK_CONNECTION_LEVEL = NOTICE;
-    public static final int SYSTEM_NETWORK_CONNECTION_VALUE = NOTICE.value();
-    static { LEVEL.put(SYSTEM_NETWORK_CONNECTION, NOTICE); }
-
-    // Disconnected from a network
-    public static final String SYSTEM_NETWORK_DISCONNECT = "system.network.disconnect";
-    public static final Level SYSTEM_NETWORK_DISCONNECT_LEVEL = NOTICE;
-    public static final int SYSTEM_NETWORK_DISCONNECT_VALUE = NOTICE.value();
-    static { LEVEL.put(SYSTEM_NETWORK_DISCONNECT, NOTICE); }
-
     // Successful login. The entry message should include the username and application
     public static final String SYSTEM_AUTH_LOGIN = "system.auth.login";
     public static final Level SYSTEM_AUTH_LOGIN_LEVEL = NOTICE;
@@ -122,6 +110,30 @@ public class Category {
     public static final Level LOCALNET_NETWORK_LEVEL = INFO;
     public static final int LOCALNET_NETWORK_VALUE = INFO.value();
     static { LEVEL.put(LOCALNET_NETWORK, INFO); }
+
+    // Connected status of the device on 
+    public static final String LOCALNET_NETWORK_CONNECT = "localnet.network.connect";
+    public static final Level LOCALNET_NETWORK_CONNECT_LEVEL = NOTICE;
+    public static final int LOCALNET_NETWORK_CONNECT_VALUE = NOTICE.value();
+    static { LEVEL.put(LOCALNET_NETWORK_CONNECT, NOTICE); }
+
+    // Expected status for attachment failures between gateway and cloud
+    public static final String GATEWAY_SETUP_ATTACH = "gateway.setup.attach";
+    public static final Level GATEWAY_SETUP_ATTACH_LEVEL = ERROR;
+    public static final int GATEWAY_SETUP_ATTACH_VALUE = ERROR.value();
+    static { LEVEL.put(GATEWAY_SETUP_ATTACH, ERROR); }
+
+    // Basic target block specification, missing (warning) or unprocessable (error)
+    public static final String GATEWAY_PROXY_TARGET = "gateway.proxy.target";
+    public static final Level GATEWAY_PROXY_TARGET_LEVEL = WARNING;
+    public static final int GATEWAY_PROXY_TARGET_VALUE = WARNING.value();
+    static { LEVEL.put(GATEWAY_PROXY_TARGET, WARNING); }
+
+    // Fieldbus connection between gateway and proxied device (error on failure)
+    public static final String GATEWAY_PROXY_CONNECT = "gateway.proxy.connect";
+    public static final Level GATEWAY_PROXY_CONNECT_LEVEL = ERROR;
+    public static final int GATEWAY_PROXY_CONNECT_VALUE = ERROR.value();
+    static { LEVEL.put(GATEWAY_PROXY_CONNECT, ERROR); }
 
     // Relating to scanning a particular address family
     public static final String DISCOVERY_FAMILY_SCAN = "discovery.family.scan";

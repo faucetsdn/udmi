@@ -1,16 +1,19 @@
 {
   "families" : {
     "ether" : {
-      "addr" : "00:0d:3a:96:2a:eb"
+      "addr" : "00:22:48:8f:70:f3"
     },
     "ipv4" : {
-      "addr" : "10.1.68.4"
+      "addr" : "10.1.0.219"
     },
     "ipv6" : {
-      "addr" : "fe80::20d:3aff:fe96:2aeb"
+      "addr" : "fe80::222:48ff:fe8f:70f3"
     }
   },
   "features" : {
+    "endpoint.config" : {
+      "stage" : "beta"
+    },
     "enumeration.families" : {
       "stage" : "preview"
     },
@@ -30,8 +33,8 @@
       "stage" : "stable"
     }
   },
-  "generation" : "2023-11-07T14:30:14Z",
-  "timestamp" : "2023-11-07T14:30:15Z",
+  "generation" : "2024-02-18T18:17:46Z",
+  "timestamp" : "2024-02-18T18:17:47Z",
   "uniqs" : {
     "9b291597" : {
       "name" : "filter_differential_pressure_sensor",
@@ -52,5 +55,5 @@
       "writable" : true
     }
   },
-  "version" : "1.4.2"
+  "version" : "1.5.0"
 }

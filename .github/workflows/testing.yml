@@ -56,7 +56,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: 20.9.0
       - name: Install Angular CLI
@@ -96,7 +96,7 @@ jobs:
           [[ -n $TARGET_PROJECT ]]
       - name: Log in to the github registry
         if: ${{ github.event_name == 'push' }}
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           registry: ${{ env.PUSH_REGISTRY }}
           username: ${{ github.actor }}
@@ -113,7 +113,7 @@ jobs:
           echo Pushing built container as $PUSH_TAG | tee -a $GITHUB_STEP_SUMMARY
       - name: Build and push docker image
         if: ${{ github.event_name == 'push' }}
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           file: udmis/Dockerfile.udmis
           context: udmis
