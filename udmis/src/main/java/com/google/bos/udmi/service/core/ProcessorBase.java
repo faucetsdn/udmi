@@ -39,12 +39,14 @@ import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.Common;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.TestOnly;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
@@ -71,6 +73,9 @@ public abstract class ProcessorBase extends ContainerBase {
   protected DistributorPipe distributor;
   String distributorName;
 
+  public ProcessorBase() {
+  }
+
   public ProcessorBase(EndpointConfiguration config) {
     super(config);
   }
@@ -80,12 +85,25 @@ public abstract class ProcessorBase extends ContainerBase {
    */
   public static <T extends ProcessorBase> T create(Class<T> clazz, EndpointConfiguration config) {
     try {
-      T object = clazz.getDeclaredConstructor(EndpointConfiguration.class).newInstance(config);
+      T object = makeProcessor(clazz, config);
       object.dispatcher = MessageDispatcher.from(config);
       object.distributorName = config.distributor;
       return object;
     } catch (Exception e) {
       throw new RuntimeException("While instantiating class " + clazz.getName(), e);
+    }
+  }
+
+  @NotNull
+  private static <T extends ProcessorBase> T makeProcessor(Class<T> clazz, EndpointConfiguration config) {
+    try {
+      try {
+        return clazz.getDeclaredConstructor(EndpointConfiguration.class).newInstance(config);
+      } catch (NoSuchMethodException e) {
+        return clazz.getDeclaredConstructor().newInstance();
+      }
+    } catch (Exception e) {
+      throw new RuntimeException("While creating processor for " + clazz.getSimpleName(), e);
     }
   }
 

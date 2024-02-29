@@ -13,7 +13,7 @@
   },
   "crons": {
     "reglist": {
-      "payload": "model/query/{}",
+      "payload": "query/cloud:{}",
       "send_id": "${UDMI_PREFIX}udmi_control"
     }
   },
