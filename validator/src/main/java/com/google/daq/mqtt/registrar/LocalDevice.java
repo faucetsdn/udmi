@@ -116,7 +116,7 @@ class LocalDevice {
           ES_AUTH_TYPE, ES_PRIVATE_PKCS8,
           ES_CERT_TYPE, ES_PRIVATE_PKCS8);
   private static final String SAMPLES_DIR = "samples";
-  private static final String AUX_DIR = "aux";
+  private static final String ADJUNCT_DIR = "adjunct";
   private static final String OUT_DIR = "out";
   private static final String EXPECTED_DIR = "expected";
   private static final String EXCEPTION_LOG_FILE = "exceptions.txt";
@@ -148,7 +148,7 @@ class LocalDevice {
           ES2_PUBLIC_PEM,
           ES3_PUBLIC_PEM,
           SAMPLES_DIR,
-          AUX_DIR,
+          ADJUNCT_DIR,
           EXPECTED_DIR,
           OUT_DIR);
   private static final String GENERATED_CONFIG_JSON = ConfigGenerator.GENERATED_CONFIG_JSON;

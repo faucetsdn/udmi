@@ -11,7 +11,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "suffix"
 })
 @Generated("jsonschema2pojo")
-public class Aux {
+public class Adjunct {
 
     @JsonProperty("suffix")
     public String suffix;
@@ -28,10 +28,10 @@ public class Aux {
         if (other == this) {
             return true;
         }
-        if ((other instanceof Aux) == false) {
+        if ((other instanceof Adjunct) == false) {
             return false;
         }
-        Aux rhs = ((Aux) other);
+        Adjunct rhs = ((Adjunct) other);
         return ((this.suffix == rhs.suffix)||((this.suffix!= null)&&this.suffix.equals(rhs.suffix)));
     }
 

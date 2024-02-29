@@ -17,6 +17,8 @@ if [[ -z $suffix ]]; then
     echo '####################' Finished sequencer cache test: $failures
 fi
 
+cat out/sequencer${suffix}.out | sort -k 3,4 | sponge out/sequencer{$suffix}.out
+
 echo Comparing diff out/sequencer${suffix}.out etc/sequencer${suffix}.out
 diff -u out/sequencer${suffix}.out $UDMI_ROOT/etc/sequencer${suffix}.out || failures+="sequencer "
 
