@@ -66,7 +66,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
-import com.google.daq.mqtt.util.ConfigGenerator;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.util.MessagePublisher.QuerySpeed;
 import com.google.daq.mqtt.util.ObjectDiffEngine;
@@ -308,7 +307,7 @@ public class SequenceBase {
     }
     final String key_file;
     try {
-      messageValidator = new Validator(exeConfig);
+      messageValidator = new Validator(exeConfig, logger);
       siteModel = checkNotNull(exeConfig.site_model, "site_model not defined");
       projectId = checkNotNull(exeConfig.project_id, "project_id not defined");
       checkNotNull(exeConfig.udmi_version, "udmi_version not defined");

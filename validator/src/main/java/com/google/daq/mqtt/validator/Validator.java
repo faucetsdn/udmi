@@ -65,6 +65,7 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
@@ -88,6 +89,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import org.apache.commons.io.FileUtils;
@@ -114,13 +116,10 @@ import udmi.schema.ValidationSummary;
 public class Validator {
 
   public static final int REQUIRED_FUNCTION_VER = 11;
-  public static final String CONFIG_PREFIX = "config_";
-  public static final String STATE_PREFIX = "state_";
   public static final String PROJECT_PROVIDER_PREFIX = "//";
   public static final String TIMESTAMP_ZULU_SUFFIX = "Z";
   public static final String TIMESTAMP_UTC_SUFFIX_1 = "+00:00";
   public static final String TIMESTAMP_UTC_SUFFIX_2 = "+0000";
-  private static final String ERROR_FORMAT_INDENT = "  ";
   private static final String SCHEMA_VALIDATION_FORMAT = "Validating %d schemas";
   private static final String TARGET_VALIDATION_FORMAT = "Validating %d files against %s";
   private static final String DEVICE_FILE_FORMAT = "devices/%s";
@@ -163,6 +162,7 @@ public class Validator {
   private final Map<String, AtomicInteger> deviceMessageIndex = new HashMap<>();
   private final List<MessagePublisher> dataSinks = new ArrayList<>();
   private final Set<String> targetDevices;
+  private final BiConsumer<Level, String> outputLogger;
   private ImmutableSet<String> expectedDevices;
   private File outBaseDir;
   private File schemaRoot;
@@ -178,11 +178,12 @@ public class Validator {
   /**
    * Create a simplistic validator for encapsulated use.
    */
-  public Validator(ExecutionConfiguration validatorConfig) {
+  public Validator(ExecutionConfiguration validatorConfig, BiConsumer<Level, String> logger) {
     config = validatorConfig;
     setSchemaSpec("schema");
     client = new NullPublisher();
     targetDevices = ImmutableSet.of();
+    outputLogger = logger;
   }
 
   /**
@@ -201,6 +202,7 @@ public class Validator {
       validateReflector();
     }
     targetDevices = Set.copyOf(listCopy);
+    outputLogger = this::systemLogger;
   }
 
   /**
@@ -407,7 +409,7 @@ public class Validator {
           Metadata metadata = SiteModel.loadDeviceMetadata(siteDir, device, Validator.class);
           reportingDevice.setMetadata(metadata);
         } catch (Exception e) {
-          info("Error while loading device %s: %s%n", device, e);
+          info("Error while loading device %s: %s", device, e);
           reportingDevice.addError(e, Category.VALIDATION_DEVICE_SCHEMA, "loading device");
         }
         reportingDevices.put(device, reportingDevice);
@@ -566,9 +568,8 @@ public class Validator {
         return null;
       }
 
-      info(
-          "Processing device #%d/%d: %s/%s%n",
-          processedDevices.size(), reportingDevices.size(), deviceId, schemaName);
+      info("Processing device #%d/%d: %s/%s", processedDevices.size(), reportingDevices.size(),
+          deviceId, schemaName);
 
       if ("true".equals(attributes.get("wasBase64"))) {
         base64Devices.add(deviceId);
@@ -578,10 +579,10 @@ public class Validator {
       validateDeviceMessage(device, message, attributes);
 
       if (!device.hasErrors()) {
-        info("Validation clean %s/%s%n", deviceId, schemaName);
+        info("Validation clean %s/%s", deviceId, schemaName);
       }
     } catch (Exception e) {
-      info("Error processing %s: %s%n", deviceId, friendlyStackTrace(e));
+      info("Error processing %s: %s", deviceId, friendlyStackTrace(e));
       device.addError(e, attributes, Category.VALIDATION_DEVICE_RECEIVE);
     }
     return device;
@@ -669,8 +670,7 @@ public class Validator {
       try {
         validateMessage(schemaMap.get(schemaName), message);
       } catch (Exception e) {
-        info("Error validating schema %s: %s%n", schemaName,
-            friendlyStackTrace(e));
+        info("Error validating schema %s: %s", schemaName, friendlyStackTrace(e));
         device.addError(e, attributes, Category.VALIDATION_DEVICE_SCHEMA);
       }
     }
@@ -747,7 +747,7 @@ public class Validator {
     try {
       deviceDir.mkdir();
       String timestamp = (String) message.get(TIMESTAMP_KEY);
-      System.out.printf("Capture %s at %s for %s%n", filename, timestamp, deviceId);
+      info("Capture %s at %s for %s", filename, timestamp, deviceId);
       OBJECT_MAPPER.writeValue(messageFile, message);
     } catch (Exception e) {
       throw new RuntimeException("While writing message file " + messageFile.getAbsolutePath(), e);
@@ -782,8 +782,13 @@ public class Validator {
     return !CONFIG_CATEGORY.equals(category) && isInteresting;
   }
 
+  private void systemLogger(Level level, String message) {
+    PrintStream printStream = level.value() >= Level.WARNING.value() ? System.err : System.out;
+    printStream.println(message);
+  }
+
   private void info(String message) {
-    System.err.println(message);
+    outputLogger.accept(Level.INFO, message);
   }
 
   private void info(String format, Object... args) {
