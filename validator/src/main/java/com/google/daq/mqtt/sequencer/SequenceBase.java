@@ -307,7 +307,7 @@ public class SequenceBase {
     }
     final String key_file;
     try {
-      messageValidator = new Validator(exeConfig, logger);
+      messageValidator = new Validator(exeConfig, SequenceBase::validatorLogger);
       siteModel = checkNotNull(exeConfig.site_model, "site_model not defined");
       projectId = checkNotNull(exeConfig.project_id, "project_id not defined");
       checkNotNull(exeConfig.udmi_version, "udmi_version not defined");
@@ -345,6 +345,10 @@ public class SequenceBase {
     altClient = getAlternateClient();
 
     initializeValidationState();
+  }
+
+  private static void validatorLogger(Level level, String message) {
+    activeInstance.log(message, level);
   }
 
   private static void initializeValidationState() {
