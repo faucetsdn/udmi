@@ -91,7 +91,7 @@
         "asset"
       ]
     },
-    "aux": {
+    "adjuct": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
