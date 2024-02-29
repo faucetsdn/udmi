@@ -219,7 +219,7 @@ class SystemModel:
     self.hardware = None
     self.software = None
     self.physical_tag = None
-    self.aux = None
+    self.adjunct = None
     self.min_loglevel = None
 
   @staticmethod
@@ -231,7 +231,7 @@ class SystemModel:
     result.hardware = SystemHardware.from_dict(source.get('hardware'))
     result.software = source.get('software')
     result.physical_tag = ObjectB03D37EB.from_dict(source.get('physical_tag'))
-    result.aux = Object734A44BA.from_dict(source.get('aux'))
+    result.adjunct = Object734A44BA.from_dict(source.get('adjunct'))
     result.min_loglevel = source.get('min_loglevel')
     return result
 
@@ -261,8 +261,8 @@ class SystemModel:
       result['software'] = self.software # 1
     if self.physical_tag:
       result['physical_tag'] = self.physical_tag.to_dict() # 4
-    if self.aux:
-      result['aux'] = self.aux.to_dict() # 4
+    if self.adjunct:
+      result['adjunct'] = self.adjunct.to_dict() # 4
     if self.min_loglevel:
       result['min_loglevel'] = self.min_loglevel # 5
     return result
