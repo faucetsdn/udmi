@@ -38,21 +38,14 @@ but also, e.g., augmented _state_ messages, _config_, etc... Subscribing to this
 a reasonably complete stream of all device-related traffic.
 * __udmi\_state__: Interstitial topic used for augmenting incoming _state_ messages with aux information,
 followed by a simple re-publish to the _udmi\_target_ topic. No need to pay much attention to this one.
-* __udmi\_config__: Used for processing incremental _config_ message updates. I.e., for a given subblock
-such as _pointset_, this will process it appropriately so that it is combined into a complete top-level
-_config_ block.
+* __udmi\_command__: Used for application interface into the UDMIS layer. Command messages can be published
+to this topic to trigger appropriate things (like updating device config, query state, etc...)
 * __udmi\_reflect__: Used internally by the reflection capability (see below). Not something to pay much
 attention to.
 
-## Cloud Functions
+## GKE Workloads
 
-The first set of [Cloud Functions](https://cloud.google.com/functions/docs/) handle the ingest traffic
-from a device. The [source code](../../udmis/functions/) for these functions can be published
-to the cloud project by the `udmis/deploy_udmis_gcloud` command (see below).
-
-* __udmi\_target__: Central handling of all messages.
-* __udmi\_state__: Processes incoming device _state_ messages and re-writes them to the _udmi\_target_
-topic.
+A GKE workload called UDMIS is used to support various server-side operation.
 
 ## Validator
 
