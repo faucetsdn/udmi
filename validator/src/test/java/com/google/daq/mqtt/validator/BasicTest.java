@@ -1,3 +1,4 @@
+
 package com.google.daq.mqtt.validator;
 
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
