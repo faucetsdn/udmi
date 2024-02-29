@@ -1,5 +1,6 @@
 package com.google.bos.udmi.service.pod;
 
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
@@ -50,7 +51,7 @@ public abstract class ContainerBase implements ContainerProvider {
   protected final int periodicSec;
   private final ScheduledExecutorService scheduledExecutor;
   private final double failureRate;
-  private final String containerId;
+  protected final String containerId;
 
   /**
    * Create a basic pod container.
@@ -60,15 +61,15 @@ public abstract class ContainerBase implements ContainerProvider {
     failureRate = getPodFailureRate();
     periodicSec = 0;
     scheduledExecutor = null;
-    containerId = getSimpleId();
+    containerId = getSimpleName();
   }
 
-  public ContainerBase(int executorSec, String containerId) {
+  public ContainerBase(int executorSec, String useId) {
     podConfiguration = null;
     failureRate = getPodFailureRate();
     periodicSec = executorSec;
     scheduledExecutor = ifTrueGet(periodicSec > 0, Executors::newSingleThreadScheduledExecutor);
-    containerId = getSimpleId();
+    containerId = ifNotNullGet(useId, id -> id, getSimpleName());
   }
 
   /**
@@ -85,20 +86,15 @@ public abstract class ContainerBase implements ContainerProvider {
     ifTrueThen(failureRate > 0, () -> warn("Random failure rate configured at " + failureRate));
     periodicSec = 0;
     scheduledExecutor = null;
-    containerId = getSimpleId();
+    containerId = getSimpleName();
   }
 
   public ContainerBase(EndpointConfiguration configuration) {
-    this(ofNullable(configuration.periodic_sec).orElse(0),
-        ofNullable(configuration.name).map(ContainerBase::getFlowTag).orElse(getClass().getSimpleName()));
-  }
-
-  private String getSimpleId() {
-    return getClass().getSimpleName();
+    this(ofNullable(configuration.periodic_sec).orElse(0), getFlowTag(configuration.name));
   }
 
   private static String getFlowTag(String name) {
-    return "flow:" + name;
+    return ifNotNullGet(name, value -> "flow:" + value);
   }
 
   /**
@@ -210,7 +206,7 @@ public abstract class ContainerBase implements ContainerProvider {
 
   @NotNull
   private String getSimpleName() {
-    return getSimpleId();
+    return getClass().getSimpleName();
   }
 
   @Override

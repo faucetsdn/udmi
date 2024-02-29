@@ -1,5 +1,6 @@
 package com.google.bos.udmi.service.messaging.impl;
 
+import static com.google.udmi.util.JsonUtil.parseJson;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 import static com.google.udmi.util.GeneralUtils.catchToElse;
@@ -11,7 +12,6 @@ import static com.google.udmi.util.GeneralUtils.mergeObject;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.fromString;
-import static cmonitor_secom.google.udmi.util.JsonUtil.parseJson;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toStringMap;
 import static java.lang.String.format;
@@ -221,7 +221,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
 
   private synchronized void ensureSourceQueue() {
     if (sourceQueue == null) {
-      notice(format("Creating new source queue %s with capacity %s", pipeId, queueCapacity));
+      notice(format("Creating new source queue %s with capacity %s", containerId, queueCapacity));
       sourceQueue = new LinkedBlockingQueue<>(queueCapacity);
     }
   }
@@ -313,7 +313,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   private String messageQueueMessage() {
     double receiveQueue = getReceiveQueueSize();
     double publishQueue = getPublishQueueSize();
-    return format("Message queue %s at %.03f/%.03f", pipeId, receiveQueue, publishQueue);
+    return format("Message queue %s at %.03f/%.03f", containerId, receiveQueue, publishQueue);
   }
 
   private void receiveBundle(Bundle bundle) {
@@ -402,7 +402,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
 
   @Override
   public void activate(Consumer<Bundle> bundleConsumer) {
-    debug("Activating message pipe %s as %s => %s", pipeId, queueIdentifier(),
+    debug("Activating message pipe %s as %s => %s", containerId, queueIdentifier(),
         Objects.hash(dispatcher));
     dispatcher = bundleConsumer;
     ensureSourceQueue();
@@ -488,7 +488,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
 
   @Override
   public String toString() {
-    return pipeId;
+    return containerId;
   }
 
   /**
