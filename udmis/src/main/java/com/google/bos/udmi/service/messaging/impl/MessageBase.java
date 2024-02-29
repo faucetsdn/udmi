@@ -94,7 +94,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
    * Create a configuration based instance.
    */
   public MessageBase(EndpointConfiguration configuration) {
-    pipeId = Optional.ofNullable(configuration.error).map(flow -> "flow:" + flow)
+    pipeId = ofNullable(configuration.name).map(flow -> "flow:" + flow)
         .orElse(getClass().getSimpleName());
     queueCapacity = ofNullable(configuration.capacity).orElse(DEFAULT_CAPACITY);
     publishDelaySec = ofNullable(configuration.publish_delay_sec).orElse(0);

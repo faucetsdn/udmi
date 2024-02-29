@@ -21,9 +21,11 @@ import com.fasterxml.jackson.annotation.JsonValue;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "name",
     "protocol",
     "transport",
     "hostname",
+    "payload",
     "error",
     "port",
     "config_sync_sec",
@@ -42,6 +44,13 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public class EndpointConfiguration {
 
     /**
+     * Friendly name for this flow (debugging and diagnostics)
+     * 
+     */
+    @JsonProperty("name")
+    @JsonPropertyDescription("Friendly name for this flow (debugging and diagnostics)")
+    public String name;
+    /**
      * 
      * (Required)
      * 
@@ -57,6 +66,13 @@ public class EndpointConfiguration {
      */
     @JsonProperty("hostname")
     public String hostname;
+    /**
+     * Simple payload template for simple injection use cases
+     * 
+     */
+    @JsonProperty("payload")
+    @JsonPropertyDescription("Simple payload template for simple injection use cases")
+    public String payload;
     /**
      * Error message container for capturing errors during parsing/handling
      * 
@@ -155,7 +171,9 @@ public class EndpointConfiguration {
         result = ((result* 31)+((this.send_id == null)? 0 :this.send_id.hashCode()));
         result = ((result* 31)+((this.protocol == null)? 0 :this.protocol.hashCode()));
         result = ((result* 31)+((this.hostname == null)? 0 :this.hostname.hashCode()));
+        result = ((result* 31)+((this.payload == null)? 0 :this.payload.hashCode()));
         result = ((result* 31)+((this.port == null)? 0 :this.port.hashCode()));
+        result = ((result* 31)+((this.name == null)? 0 :this.name.hashCode()));
         result = ((result* 31)+((this.recv_id == null)? 0 :this.recv_id.hashCode()));
         result = ((result* 31)+((this.auth_provider == null)? 0 :this.auth_provider.hashCode()));
         return result;
@@ -170,7 +188,7 @@ public class EndpointConfiguration {
             return false;
         }
         EndpointConfiguration rhs = ((EndpointConfiguration) other);
-        return (((((((((((((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.monitor_sec == rhs.monitor_sec)||((this.monitor_sec!= null)&&this.monitor_sec.equals(rhs.monitor_sec))))&&((this.transport == rhs.transport)||((this.transport!= null)&&this.transport.equals(rhs.transport))))&&((this.publish_delay_sec == rhs.publish_delay_sec)||((this.publish_delay_sec!= null)&&this.publish_delay_sec.equals(rhs.publish_delay_sec))))&&((this.error == rhs.error)||((this.error!= null)&&this.error.equals(rhs.error))))&&((this.config_sync_sec == rhs.config_sync_sec)||((this.config_sync_sec!= null)&&this.config_sync_sec.equals(rhs.config_sync_sec))))&&((this.distributor == rhs.distributor)||((this.distributor!= null)&&this.distributor.equals(rhs.distributor))))&&((this.client_id == rhs.client_id)||((this.client_id!= null)&&this.client_id.equals(rhs.client_id))))&&((this.capacity == rhs.capacity)||((this.capacity!= null)&&this.capacity.equals(rhs.capacity))))&&((this.msg_prefix == rhs.msg_prefix)||((this.msg_prefix!= null)&&this.msg_prefix.equals(rhs.msg_prefix))))&&((this.send_id == rhs.send_id)||((this.send_id!= null)&&this.send_id.equals(rhs.send_id))))&&((this.protocol == rhs.protocol)||((this.protocol!= null)&&this.protocol.equals(rhs.protocol))))&&((this.hostname == rhs.hostname)||((this.hostname!= null)&&this.hostname.equals(rhs.hostname))))&&((this.port == rhs.port)||((this.port!= null)&&this.port.equals(rhs.port))))&&((this.recv_id == rhs.recv_id)||((this.recv_id!= null)&&this.recv_id.equals(rhs.recv_id))))&&((this.auth_provider == rhs.auth_provider)||((this.auth_provider!= null)&&this.auth_provider.equals(rhs.auth_provider))));
+        return (((((((((((((((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.monitor_sec == rhs.monitor_sec)||((this.monitor_sec!= null)&&this.monitor_sec.equals(rhs.monitor_sec))))&&((this.transport == rhs.transport)||((this.transport!= null)&&this.transport.equals(rhs.transport))))&&((this.publish_delay_sec == rhs.publish_delay_sec)||((this.publish_delay_sec!= null)&&this.publish_delay_sec.equals(rhs.publish_delay_sec))))&&((this.error == rhs.error)||((this.error!= null)&&this.error.equals(rhs.error))))&&((this.config_sync_sec == rhs.config_sync_sec)||((this.config_sync_sec!= null)&&this.config_sync_sec.equals(rhs.config_sync_sec))))&&((this.distributor == rhs.distributor)||((this.distributor!= null)&&this.distributor.equals(rhs.distributor))))&&((this.client_id == rhs.client_id)||((this.client_id!= null)&&this.client_id.equals(rhs.client_id))))&&((this.capacity == rhs.capacity)||((this.capacity!= null)&&this.capacity.equals(rhs.capacity))))&&((this.msg_prefix == rhs.msg_prefix)||((this.msg_prefix!= null)&&this.msg_prefix.equals(rhs.msg_prefix))))&&((this.send_id == rhs.send_id)||((this.send_id!= null)&&this.send_id.equals(rhs.send_id))))&&((this.protocol == rhs.protocol)||((this.protocol!= null)&&this.protocol.equals(rhs.protocol))))&&((this.hostname == rhs.hostname)||((this.hostname!= null)&&this.hostname.equals(rhs.hostname))))&&((this.payload == rhs.payload)||((this.payload!= null)&&this.payload.equals(rhs.payload))))&&((this.port == rhs.port)||((this.port!= null)&&this.port.equals(rhs.port))))&&((this.name == rhs.name)||((this.name!= null)&&this.name.equals(rhs.name))))&&((this.recv_id == rhs.recv_id)||((this.recv_id!= null)&&this.recv_id.equals(rhs.recv_id))))&&((this.auth_provider == rhs.auth_provider)||((this.auth_provider!= null)&&this.auth_provider.equals(rhs.auth_provider))));
     }
 
     @Generated("jsonschema2pojo")

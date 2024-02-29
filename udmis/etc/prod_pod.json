@@ -11,6 +11,12 @@
     "capacity": null,
     "distributor": "stately"
   },
+  "crons": {
+    "reglist": {
+      "payload": "model/query/{}",
+      "send_id": "${UDMI_PREFIX}udmi_control"
+    }
+  },
   "flows": {
     "target": {
       "recv_id": "${UDMI_PREFIX}udmi_target-udmis"
@@ -21,6 +27,10 @@
     },
     "reflect": {
       "recv_id": "${UDMI_PREFIX}udmi_reflect-udmis",
+      "send_id": "${UDMI_PREFIX}udmi_target"
+    },
+    "control": {
+      "recv_id": "${UDMI_PREFIX}udmi_control-udmis",
       "send_id": "${UDMI_PREFIX}udmi_target"
     }
   },

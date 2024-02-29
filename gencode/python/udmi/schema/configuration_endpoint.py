@@ -46,9 +46,11 @@ class EndpointConfiguration:
   """Generated schema class"""
 
   def __init__(self):
+    self.name = None
     self.protocol = None
     self.transport = None
     self.hostname = None
+    self.payload = None
     self.error = None
     self.port = None
     self.config_sync_sec = None
@@ -68,9 +70,11 @@ class EndpointConfiguration:
     if not source:
       return None
     result = EndpointConfiguration()
+    result.name = source.get('name')
     result.protocol = source.get('protocol')
     result.transport = source.get('transport')
     result.hostname = source.get('hostname')
+    result.payload = source.get('payload')
     result.error = source.get('error')
     result.port = source.get('port')
     result.config_sync_sec = source.get('config_sync_sec')
@@ -104,12 +108,16 @@ class EndpointConfiguration:
 
   def to_dict(self):
     result = {}
+    if self.name:
+      result['name'] = self.name # 5
     if self.protocol:
       result['protocol'] = self.protocol # 5
     if self.transport:
       result['transport'] = self.transport # 5
     if self.hostname:
       result['hostname'] = self.hostname # 5
+    if self.payload:
+      result['payload'] = self.payload # 5
     if self.error:
       result['error'] = self.error # 5
     if self.port:
