@@ -58,12 +58,12 @@ public class DistributorPipe extends ContainerBase {
   /**
    * Distribute a message (broadcast).
    */
-  public void distribute(Envelope envelope, Object toolState) {
+  public void distribute(Envelope envelope, Object message) {
     try {
-      debug("Distributing %s for %s/%s", toolState.getClass().getSimpleName(),
+      debug("Distributing %s for %s/%s", message.getClass().getSimpleName(),
           envelope.deviceRegistryId, envelope.deviceId);
       envelope.gatewayId = clientId;
-      dispatcher.publish(dispatcher.makeMessageBundle(envelope, toolState));
+      dispatcher.publish(dispatcher.makeMessageBundle(envelope, message));
     } catch (Exception e) {
       error("Error distributing update: " + friendlyStackTrace(e));
     }
