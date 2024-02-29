@@ -4,7 +4,6 @@ import static com.google.bos.udmi.service.messaging.impl.MessageBase.PUBLISH_STA
 import static com.google.bos.udmi.service.messaging.impl.MessageBase.RECEIVE_STATS;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
-import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
@@ -35,7 +34,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import org.jetbrains.annotations.NotNull;
@@ -112,8 +110,9 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     }
   }
 
-  public static Class<?> getMessageClassFor(Envelope envelope) {
+  public static Class<?> getMessageClassFor(Envelope envelope, boolean allowDefault) {
     String mapKey = getMapKey(envelope.subType, envelope.subFolder);
+    checkState(allowDefault || TYPE_CLASSES.containsKey(mapKey), "missing class for " + mapKey);
     return TYPE_CLASSES.getOrDefault(mapKey, SPECIAL_CLASSES.getOrDefault(mapKey, DEFAULT_CLASS));
   }
 
@@ -138,6 +137,13 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
 
   @VisibleForTesting
   protected void devNullHandler(Object message) {
+  }
+
+  @Override
+  protected void periodicTask() {
+    Map<String, PipeStats> countSum = messagePipe.extractStats();
+    extractAndLog(countSum, RECEIVE_STATS);
+    extractAndLog(countSum, PUBLISH_STATS);
   }
 
   private void executeHandler(Class<?> handlerType, Object messageObject) {
@@ -178,13 +184,6 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     }
   }
 
-  @Override
-  protected void periodicTask() {
-    Map<String, PipeStats> countSum = messagePipe.extractStats();
-    extractAndLog(countSum, RECEIVE_STATS);
-    extractAndLog(countSum, PUBLISH_STATS);
-  }
-
   private void processHandler(Envelope envelope, Class<?> handlerType, Object messageObject) {
     withEnvelopeFor(envelope, messageObject, () -> executeHandler(handlerType, messageObject));
   }
@@ -199,7 +198,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
       message = new BundleException((String) message, bundle.attributesMap, bundle.payload);
     }
     boolean isException = message instanceof Exception;
-    Class<?> handlerType = isException ? EXCEPTION_CLASS : getMessageClassFor(envelope);
+    Class<?> handlerType = isException ? EXCEPTION_CLASS : getMessageClassFor(envelope, true);
     try {
       handlers.computeIfAbsent(handlerType, key -> {
         notice("Defaulting messages of type/folder " + key.getName());

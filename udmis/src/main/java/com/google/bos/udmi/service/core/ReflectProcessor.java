@@ -190,7 +190,7 @@ public class ReflectProcessor extends ProcessorBase {
     if (requireNonNull(attributes.subType) == SubType.CONFIG) {
       processConfigChange(attributes, payload, null);
     }
-    Class<?> messageClass = getMessageClassFor(attributes);
+    Class<?> messageClass = getMessageClassFor(attributes, true);
     debug("Propagating message %s: %s", attributes.transactionId, messageClass.getSimpleName());
     publish(convertTo(messageClass, payload));
     return null;

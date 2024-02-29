@@ -7,6 +7,8 @@ import com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl;
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.udmi.util.GeneralUtils;
+import com.google.udmi.util.JsonUtil;
+import udmi.schema.CloudQuery;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
 import udmi.schema.UdmiState;
@@ -26,12 +28,17 @@ public class DistributorPipe extends ContainerBase {
   public DistributorPipe(EndpointConfiguration config) {
     dispatcher = new MessageDispatcherImpl(config);
     dispatcher.registerHandler(UdmiState.class, this::handleUdmiState);
+    dispatcher.registerHandler(CloudQuery.class, this::handleCloudQuery);
     debug("Distributing to dispatcher %s as client %s", dispatcher, clientId);
     reflectProcessor = UdmiServicePod.getComponent(ReflectProcessor.class);
   }
 
   public static ContainerBase from(EndpointConfiguration config) {
     return new DistributorPipe(config);
+  }
+
+  private void handleCloudQuery(CloudQuery query) {
+    debug("Received cloud query " + JsonUtil.stringifyTerse(query));
   }
 
   private void handleUdmiState(UdmiState message) {

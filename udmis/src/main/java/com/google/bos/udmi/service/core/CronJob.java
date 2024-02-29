@@ -16,15 +16,15 @@ import udmi.schema.Envelope.SubType;
  */
 public class CronJob extends ProcessorBase {
 
-  private final String payload;
   private final Envelope envelope;
   private final Object message;
 
   public CronJob(EndpointConfiguration config) {
     super(config);
 
+    distributorName = config.distributor;
+
     String[] targetMessage = config.payload.split(":", 2);
-    payload = ifTrueGet(targetMessage.length > 1, () -> targetMessage[1], EMPTY_JSON);
 
     String[] parts = targetMessage[0].split("/");
     envelope = new Envelope();
@@ -32,11 +32,13 @@ public class CronJob extends ProcessorBase {
     envelope.subFolder = SubFolder.fromValue(parts[1]);
     envelope.deviceRegistryId = ifTrueGet(parts.length >= 3, () -> parts[3]);
     envelope.deviceId = ifTrueGet(parts.length >= 4, () -> parts[4]);
+    envelope.source = config.name;
 
-    Class<?> messageClass = MessageDispatcherImpl.getMessageClassFor(envelope);
+    Class<?> messageClass = MessageDispatcherImpl.getMessageClassFor(envelope, false);
+    String payload = ifTrueGet(targetMessage.length > 1, () -> targetMessage[1], EMPTY_JSON);
     message = fromStringStrict(messageClass, payload);
 
-    info("Set-up cron job for %s/%s to %s/%s", envelope.subType, envelope.subFolder,
+    info("Set-up cron job for %s %s/%s to %s/%s", containerId, envelope.subType, envelope.subFolder,
         envelope.deviceRegistryId, envelope.deviceId);
   }
 
@@ -46,8 +48,9 @@ public class CronJob extends ProcessorBase {
 
   @Override
   protected void periodicTask() {
-    distributor.distribute(envelope, payload);
-    publish(message);
+    info("Distributing %s %s/%s to %s/%s", containerId, envelope.subType, envelope.subFolder,
+        envelope.deviceRegistryId, envelope.deviceId);
+    distributor.distribute(envelope, message);
   }
 }
 

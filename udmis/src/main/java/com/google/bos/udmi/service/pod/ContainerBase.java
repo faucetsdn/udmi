@@ -1,5 +1,6 @@
 package com.google.bos.udmi.service.pod;
 
+import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
@@ -90,11 +91,7 @@ public abstract class ContainerBase implements ContainerProvider {
   }
 
   public ContainerBase(EndpointConfiguration configuration) {
-    this(ofNullable(configuration.periodic_sec).orElse(0), getFlowTag(configuration.name));
-  }
-
-  private static String getFlowTag(String name) {
-    return ifNotNullGet(name, value -> "flow:" + value);
+    this(ofNullable(configuration.periodic_sec).orElse(0), configuration.name);
   }
 
   /**
@@ -148,6 +145,14 @@ public abstract class ContainerBase implements ContainerProvider {
     Set<String> expanded = Arrays.stream(parts).map(matcher::replaceFirst).collect(toSet());
     expanded.forEach(set -> debug("Expanded intermediate %s with '%s'", raw, set));
     return expanded;
+  }
+
+  private void periodicTaskWrapper() {
+    try {
+      periodicTask();;
+    } catch (Exception e) {
+      error("Exception executing periodic task: " + friendlyStackTrace(e));
+    }
   }
 
   protected void periodicTask() {
@@ -213,8 +218,8 @@ public abstract class ContainerBase implements ContainerProvider {
   public void activate() {
     info("Activating");
     ifTrueThen(periodicSec > 0, () -> {
-      notice("Scheduling periodic task execution every %ss", periodicSec);
-      scheduledExecutor.scheduleAtFixedRate(this::periodicTask, periodicSec, periodicSec,
+      notice("Scheduling periodic task %s execution every %ss", containerId, periodicSec);
+      scheduledExecutor.scheduleAtFixedRate(this::periodicTaskWrapper, periodicSec, periodicSec,
           TimeUnit.SECONDS);
     });
   }
