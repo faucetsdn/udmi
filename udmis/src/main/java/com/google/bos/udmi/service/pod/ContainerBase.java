@@ -211,6 +211,7 @@ public abstract class ContainerBase implements ContainerProvider {
 
   @Override
   public void activate() {
+    info("Activating");
     ifTrueThen(periodicSec > 0, () -> {
       notice("Scheduling periodic task execution every %ss", periodicSec);
       scheduledExecutor.scheduleAtFixedRate(this::periodicTask, periodicSec, periodicSec,

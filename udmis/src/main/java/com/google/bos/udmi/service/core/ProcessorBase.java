@@ -71,12 +71,16 @@ public abstract class ProcessorBase extends ContainerBase {
   protected DistributorPipe distributor;
   String distributorName;
 
+  public ProcessorBase(EndpointConfiguration config) {
+    super(config);
+  }
+
   /**
    * Create a new instance of the given target class with the provided configuration.
    */
   public static <T extends ProcessorBase> T create(Class<T> clazz, EndpointConfiguration config) {
     try {
-      T object = clazz.getDeclaredConstructor().newInstance();
+      T object = clazz.getDeclaredConstructor(EndpointConfiguration.class).newInstance(config);
       object.dispatcher = MessageDispatcher.from(config);
       object.distributorName = config.distributor;
       return object;
@@ -290,7 +294,7 @@ public abstract class ProcessorBase extends ContainerBase {
    * Activate this component.
    */
   public void activate() {
-    info("Activating");
+    super.activate();
     iotAccess = UdmiServicePod.getComponent(IOT_ACCESS_COMPONENT);
     distributor = UdmiServicePod.maybeGetComponent(distributorName);
     if (dispatcher != null) {
