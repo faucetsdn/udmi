@@ -1,6 +1,8 @@
 package com.google.bos.udmi.service.pod;
 
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -13,12 +15,17 @@ import com.google.udmi.util.JsonUtil;
 import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.TestOnly;
 import udmi.schema.BasePodConfiguration;
+import udmi.schema.EndpointConfiguration;
 import udmi.schema.Level;
 import udmi.schema.PodConfiguration;
 
@@ -40,7 +47,10 @@ public abstract class ContainerBase implements ContainerProvider {
   protected static String reflectRegistry = REFLECT_BASE;
   private static BasePodConfiguration basePodConfig = new BasePodConfiguration();
   protected final PodConfiguration podConfiguration;
+  protected final int periodicSec;
+  private final ScheduledExecutorService scheduledExecutor;
   private final double failureRate;
+  private final String containerId;
 
   /**
    * Create a basic pod container.
@@ -48,6 +58,17 @@ public abstract class ContainerBase implements ContainerProvider {
   public ContainerBase() {
     podConfiguration = null;
     failureRate = getPodFailureRate();
+    periodicSec = 0;
+    scheduledExecutor = null;
+    containerId = getSimpleId();
+  }
+
+  public ContainerBase(int executorSec, String containerId) {
+    podConfiguration = null;
+    failureRate = getPodFailureRate();
+    periodicSec = executorSec;
+    scheduledExecutor = ifTrueGet(periodicSec > 0, Executors::newSingleThreadScheduledExecutor);
+    containerId = getSimpleId();
   }
 
   /**
@@ -62,6 +83,22 @@ public abstract class ContainerBase implements ContainerProvider {
     reflectRegistry = getReflectRegistry();
     info("Configured with reflect registry " + reflectRegistry);
     ifTrueThen(failureRate > 0, () -> warn("Random failure rate configured at " + failureRate));
+    periodicSec = 0;
+    scheduledExecutor = null;
+    containerId = getSimpleId();
+  }
+
+  public ContainerBase(EndpointConfiguration configuration) {
+    this(ofNullable(configuration.periodic_sec).orElse(0),
+        ofNullable(configuration.name).map(ContainerBase::getFlowTag).orElse(getClass().getSimpleName()));
+  }
+
+  private String getSimpleId() {
+    return getClass().getSimpleName();
+  }
+
+  private static String getFlowTag(String name) {
+    return "flow:" + name;
   }
 
   /**
@@ -117,17 +154,14 @@ public abstract class ContainerBase implements ContainerProvider {
     return expanded;
   }
 
+  protected void periodicTask() {
+    throw new IllegalStateException("Unexpected periodic task execution");
+  }
+
   protected void randomlyFail() {
     if (Math.random() < failureRate) {
       throw new IllegalStateException("Randomly induced failure");
     }
-  }
-
-  protected String variableSubstitution(String value) {
-    if (value == null) {
-      return null;
-    }
-    return variableSubstitution(value, "unknown null value");
   }
 
   protected String variableSubstitution(String value, @NotNull String nullMessage) {
@@ -136,6 +170,13 @@ public abstract class ContainerBase implements ContainerProvider {
     String out = matcher.replaceAll(this::environmentReplacer);
     ifNotTrueThen(value.equals(out), () -> debug("Replaced value %s with '%s'", value, out));
     return out;
+  }
+
+  protected String variableSubstitution(String value) {
+    if (value == null) {
+      return null;
+    }
+    return variableSubstitution(value, "unknown null value");
   }
 
   private String environmentReplacer(MatchResult match) {
@@ -169,19 +210,16 @@ public abstract class ContainerBase implements ContainerProvider {
 
   @NotNull
   private String getSimpleName() {
-    return getClass().getSimpleName();
-  }
-
-  @Override
-  public void output(Level level, String message) {
-    PrintStream printStream = level.value() >= Level.WARNING.value() ? System.err : System.out;
-    printStream.printf("%s %s %s: %s %s%n", JsonUtil.isoConvert(), getExecutionContext(),
-        level.name().charAt(0), getSimpleName(), message);
-    printStream.flush();
+    return getSimpleId();
   }
 
   @Override
   public void activate() {
+    ifTrueThen(periodicSec > 0, () -> {
+      notice("Scheduling periodic task execution every %ss", periodicSec);
+      scheduledExecutor.scheduleAtFixedRate(this::periodicTask, periodicSec, periodicSec,
+          TimeUnit.SECONDS);
+    });
   }
 
   public void debug(String format, Object... args) {
@@ -212,8 +250,21 @@ public abstract class ContainerBase implements ContainerProvider {
     output(Level.NOTICE, message);
   }
 
+  public void notice(String message, Object... args) {
+    notice(format(message, args));
+  }
+
+  @Override
+  public void output(Level level, String message) {
+    PrintStream printStream = level.value() >= Level.WARNING.value() ? System.err : System.out;
+    printStream.printf("%s %s %s: %s %s%n", JsonUtil.isoConvert(), getExecutionContext(),
+        level.name().charAt(0), getSimpleName(), message);
+    printStream.flush();
+  }
+
   @Override
   public void shutdown() {
+    ifNotNullThen(scheduledExecutor, ExecutorService::shutdown);
   }
 
   public void trace(String message) {

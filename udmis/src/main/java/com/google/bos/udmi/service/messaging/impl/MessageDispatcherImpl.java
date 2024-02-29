@@ -4,6 +4,7 @@ import static com.google.bos.udmi.service.messaging.impl.MessageBase.PUBLISH_STA
 import static com.google.bos.udmi.service.messaging.impl.MessageBase.RECEIVE_STATS;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
+import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
@@ -34,8 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -79,17 +78,14 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   private final Map<Class<?>, AtomicInteger> handlerCounts = new ConcurrentHashMap<>();
   private final String projectId;
   private final ThreadLocal<Envelope> threadEnvelope = new ThreadLocal<>();
-  private final int monitorSec;
-  private final ScheduledExecutorService monitorExecutor =
-      Executors.newSingleThreadScheduledExecutor();
 
   /**
    * Create a new instance of the message dispatcher.
    */
   public MessageDispatcherImpl(EndpointConfiguration configuration) {
+    super(configuration);
     messagePipe = MessagePipe.from(configuration);
     projectId = variableSubstitution(configuration.hostname, "project_id/hostname not defined");
-    monitorSec = ofNullable(configuration.monitor_sec).orElse(0);
   }
 
   @Nullable
@@ -158,7 +154,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
 
   private void extractAndLog(Map<String, PipeStats> countSum, String key) {
     PipeStats stats = countSum.get(key);
-    double rate = stats.count / (double) monitorSec;
+    double rate = stats.count / (double) periodicSec;
     double average = stats.latency / stats.count;
     String message = format("Pipe %s %s count %.3f/s latency %.03fs, queue %.03f",
         messagePipe, key, rate, average, stats.size);
@@ -182,7 +178,8 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     }
   }
 
-  private void periodicMonitor() {
+  @Override
+  protected void periodicTask() {
     Map<String, PipeStats> countSum = messagePipe.extractStats();
     extractAndLog(countSum, RECEIVE_STATS);
     extractAndLog(countSum, PUBLISH_STATS);
@@ -221,13 +218,10 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
 
   @Override
   public void activate() {
+    super.activate();
     Consumer<Bundle> processMessage = this::processMessage;
     info(format("%s activating %s with %08x", this, messagePipe, Objects.hash(processMessage)));
     messagePipe.activate(processMessage);
-    if (monitorSec > 0) {
-      monitorExecutor.scheduleAtFixedRate(this::periodicMonitor, monitorSec, monitorSec,
-          TimeUnit.SECONDS);
-    }
   }
 
   @TestOnly
@@ -347,7 +341,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   @Override
   public void shutdown() {
     messagePipe.shutdown();
-    monitorExecutor.shutdown();
+    super.shutdown();
   }
 
   public void terminate() {

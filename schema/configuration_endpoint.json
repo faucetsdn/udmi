@@ -71,8 +71,8 @@
       "description": "Artifical publish delay for testing",
       "type": "integer"
     },
-    "monitor_sec": {
-      "description": "Period for monitoring sampling",
+    "periodic_sec": {
+      "description": "Rate for periodic task execution",
       "type": "integer"
     },
     "distributor": {

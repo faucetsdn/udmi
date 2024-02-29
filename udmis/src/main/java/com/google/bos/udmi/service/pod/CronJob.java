@@ -1,5 +1,7 @@
 package com.google.bos.udmi.service.pod;
 
+import static java.util.Objects.requireNonNull;
+
 import udmi.schema.EndpointConfiguration;
 
 /**
@@ -7,7 +9,18 @@ import udmi.schema.EndpointConfiguration;
  */
 public class CronJob extends ContainerBase {
 
+  private final String jobId;
+
+  public CronJob(EndpointConfiguration config) {
+    super(config);
+  }
+
   public static ContainerProvider from(EndpointConfiguration config) {
-    return null;
+    return new CronJob(config);
+  }
+
+  @Override
+  protected void periodicTask() {
+    notice("Cron execution");
   }
 }

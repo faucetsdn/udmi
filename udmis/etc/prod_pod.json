@@ -6,7 +6,7 @@
   "flow_defaults": {
     "protocol": "pubsub",
     "hostname": "${GCP_PROJECT}",
-    "monitor_sec": 60,
+    "periodic_sec": 60,
     "publish_delay_sec": 0,
     "capacity": null,
     "distributor": "stately"

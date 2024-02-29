@@ -60,7 +60,7 @@ class EndpointConfiguration:
     self.send_id = None
     self.capacity = None
     self.publish_delay_sec = None
-    self.monitor_sec = None
+    self.periodic_sec = None
     self.distributor = None
     self.auth_provider = None
     self.generation = None
@@ -84,7 +84,7 @@ class EndpointConfiguration:
     result.send_id = source.get('send_id')
     result.capacity = source.get('capacity')
     result.publish_delay_sec = source.get('publish_delay_sec')
-    result.monitor_sec = source.get('monitor_sec')
+    result.periodic_sec = source.get('periodic_sec')
     result.distributor = source.get('distributor')
     result.auth_provider = ObjectA90DCC28.from_dict(source.get('auth_provider'))
     result.generation = source.get('generation')
@@ -136,8 +136,8 @@ class EndpointConfiguration:
       result['capacity'] = self.capacity # 5
     if self.publish_delay_sec:
       result['publish_delay_sec'] = self.publish_delay_sec # 5
-    if self.monitor_sec:
-      result['monitor_sec'] = self.monitor_sec # 5
+    if self.periodic_sec:
+      result['periodic_sec'] = self.periodic_sec # 5
     if self.distributor:
       result['distributor'] = self.distributor # 5
     if self.auth_provider:

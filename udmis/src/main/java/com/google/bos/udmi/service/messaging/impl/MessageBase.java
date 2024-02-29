@@ -11,7 +11,7 @@ import static com.google.udmi.util.GeneralUtils.mergeObject;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.fromString;
-import static com.google.udmi.util.JsonUtil.parseJson;
+import static cmonitor_secom.google.udmi.util.JsonUtil.parseJson;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toStringMap;
 import static java.lang.String.format;
@@ -34,7 +34,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
@@ -75,7 +74,6 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   private final ExecutorService executor = Executors.newFixedThreadPool(EXECUTION_THREADS);
   private final Entry<AtomicInteger, AtomicDouble> publishStats = makeEmptyStats();
   private final Entry<AtomicInteger, AtomicDouble> receiveStats = makeEmptyStats();
-  private final String pipeId;
   private final AtomicBoolean subscriptionsThrottled = new AtomicBoolean();
   private BlockingQueue<QueueEntry> sourceQueue;
   private Consumer<Bundle> dispatcher;
@@ -85,7 +83,6 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
    * Default message base with basic default parameters.
    */
   public MessageBase() {
-    pipeId = getClass().getSimpleName();
     queueCapacity = DEFAULT_CAPACITY;
     publishDelaySec = 0;
   }
@@ -94,8 +91,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
    * Create a configuration based instance.
    */
   public MessageBase(EndpointConfiguration configuration) {
-    pipeId = ofNullable(configuration.name).map(flow -> "flow:" + flow)
-        .orElse(getClass().getSimpleName());
+    super(configuration);
     queueCapacity = ofNullable(configuration.capacity).orElse(DEFAULT_CAPACITY);
     publishDelaySec = ofNullable(configuration.publish_delay_sec).orElse(0);
     if (publishDelaySec > 0) {

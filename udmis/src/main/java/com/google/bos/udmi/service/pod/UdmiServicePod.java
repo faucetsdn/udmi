@@ -177,7 +177,7 @@ public class UdmiServicePod extends ContainerBase {
   private void createCron(String name, EndpointConfiguration config) {
     ifNotNullThrow(config.name, "config error/name already set");
     config.name = name;
-    putComponent(name, () -> CronJob.from(config));
+    putComponent(name, () -> CronJob.from(makeConfig(config)));
   }
 
   private void createDistributor(String name, EndpointConfiguration config) {
