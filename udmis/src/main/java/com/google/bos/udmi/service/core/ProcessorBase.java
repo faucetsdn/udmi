@@ -359,6 +359,10 @@ public abstract class ProcessorBase extends ContainerBase {
     dispatcher.registerHandler(clazz, handler);
   }
 
+  protected void publish(Envelope attributes, Object message) {
+    dispatcher.withEnvelope(attributes).publish(message);
+  }
+
   void publish(Object message) {
     dispatcher.publish(message);
   }

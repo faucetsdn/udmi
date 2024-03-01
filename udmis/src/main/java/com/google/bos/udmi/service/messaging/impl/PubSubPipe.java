@@ -149,8 +149,11 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
       ApiFuture<String> publish = publisher.publish(message);
       Thread.sleep(publishDelaySec * MS_PER_SEC);
       String publishedId = publish.get();
-      debug(format("Published PubSub %s/%s to %s as %s", stringMap.get(SUBTYPE_PROPERTY_KEY),
-          stringMap.get(SUBFOLDER_PROPERTY_KEY), topicId, PS_TXN_PREFIX + publishedId));
+      String publishedTransactionId = PS_TXN_PREFIX + publishedId;
+      debug(format("Published PubSub %s/%s to %s as %s/%s %s -> %s",
+          stringMap.get(SUBTYPE_PROPERTY_KEY), stringMap.get(SUBFOLDER_PROPERTY_KEY),
+          topicId, envelope.deviceRegistryId, envelope.deviceId, envelope.transactionId,
+          publishedTransactionId));
     } catch (Exception e) {
       throw new RuntimeException("While publishing bundle to " + publisher.getTopicNameString(), e);
     } finally {
