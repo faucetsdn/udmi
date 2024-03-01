@@ -289,8 +289,9 @@ jobs:
       - name: Upload merged support package
         uses: actions/upload-artifact@v4
         with:
+          if-no-files-found: error
           name: udmi-support_${{ github.run_id }}
-          path: '*_udmi-support_*.tgz'
+          path: 'udmi-support_${{ github.run_id }}/*_udmi-support_*.tgz'
       - name: Processing support package
         run: bin/support_process udmi-support_*
       - name: Test run index
