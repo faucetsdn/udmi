@@ -172,26 +172,30 @@ public class UdmiServicePod extends ContainerBase {
     info(format("Creating bridge %s with enabled %s", name, config.enabled));
     EndpointConfiguration from = makeConfig(config.from);
     EndpointConfiguration morf = makeConfig(config.morf);
+    setConfigName(from, name);
     putComponent(name, () -> new BridgeProcessor(from, morf));
   }
 
-  private void createCron(String name, EndpointConfiguration config) {
-    ifNotNullThrow(config.name, "config error/name already set");
+  private static void setConfigName(EndpointConfiguration config, String name) {
+    boolean notSetOrEqual = config.name == null || config.name.equals(name);
+    checkState(notSetOrEqual, "config name already set, was " + config.name);
     config.name = name;
+  }
+
+  private void createCron(String name, EndpointConfiguration config) {
+    setConfigName(config, name);
     putComponent(name, () -> ProcessorBase.create(CronJob.class, makeConfig(config)));
   }
 
   private void createDistributor(String name, EndpointConfiguration config) {
-    ifNotNullThrow(config.name, "config error/name already set");
-    config.name = name;
+    setConfigName(config, name);
     putComponent(name, () -> ProcessorBase.create(DistributorPipe.class, makeConfig(config)));
   }
 
   private void createFlow(String name, EndpointConfiguration config) {
     checkState(PROCESSORS.containsKey(name), "unknown flow key " + name);
     Class<? extends ProcessorBase> clazz = PROCESSORS.get(name);
-    ifNotNullThrow(config.name, "config error/name already set");
-    config.name = name;
+    setConfigName(config, name);
     putComponent(name, () -> ProcessorBase.create(clazz, makeConfig(config)));
   }
 
