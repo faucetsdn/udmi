@@ -2,6 +2,7 @@ package com.google.bos.udmi.service.core;
 
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.JsonUtil.fromStringStrict;
+import static com.google.udmi.util.JsonUtil.stringifyTerse;
 
 import com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl;
 import com.google.bos.udmi.service.pod.ContainerProvider;
@@ -15,6 +16,7 @@ import udmi.schema.Envelope.SubType;
  */
 public class CronJob extends ProcessorBase {
 
+  private static final String SELF_ID = "groot";
   private final Envelope envelope;
   private final Object message;
 
@@ -31,7 +33,7 @@ public class CronJob extends ProcessorBase {
     envelope.subFolder = SubFolder.fromValue(parts[1]);
     envelope.deviceRegistryId = ifTrueGet(parts.length >= 3, () -> parts[3]);
     envelope.deviceId = ifTrueGet(parts.length >= 4, () -> parts[4]);
-    envelope.source = config.name;
+    envelope.gatewayId = SELF_ID + DistributorPipe.ROUTE_SEPERATOR + config.name;
 
     Class<?> messageClass = MessageDispatcherImpl.getMessageClassFor(envelope, false);
     String payload = ifTrueGet(targetMessage.length > 1, () -> targetMessage[1], EMPTY_JSON);
@@ -50,12 +52,15 @@ public class CronJob extends ProcessorBase {
     info("Distributing %s %s/%s to %s/%s", containerId, envelope.subType, envelope.subFolder,
         envelope.deviceRegistryId, envelope.deviceId);
     distributor.publish(envelope, message, containerId);
-    defaultHandler(message);
+    handleTick(envelope, message);
   }
 
   @Override
-  protected void defaultHandler(Object defaultedMessage) {
-    super.defaultHandler(defaultedMessage);
+  protected void defaultHandler(Object message) {
+    handleTick(getContinuation(message).getEnvelope(), message);
+  }
+
+  private void handleTick(Envelope envelope, Object message) {
+    debug("Cron Job update " + stringifyTerse(envelope) + " " + stringifyTerse(message));
   }
 }
-

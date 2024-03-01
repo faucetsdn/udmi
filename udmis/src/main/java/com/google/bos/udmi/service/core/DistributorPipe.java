@@ -14,6 +14,7 @@ import udmi.schema.Envelope;
  */
 public class DistributorPipe extends ProcessorBase {
 
+  public static final String ROUTE_SEPERATOR = "/";
   private final String clientId = format("distributor-%08x", System.currentTimeMillis());
 
   /**
@@ -28,7 +29,7 @@ public class DistributorPipe extends ProcessorBase {
   protected void defaultHandler(Object message) {
     Envelope envelope = getContinuation(message).getEnvelope();
     try {
-      String[] routeId = envelope.gatewayId.split("/", 2);
+      String[] routeId = envelope.gatewayId.split(ROUTE_SEPERATOR, 2);
       if (clientId.equals(routeId[0])) {
         return;
       }
@@ -49,7 +50,7 @@ public class DistributorPipe extends ProcessorBase {
   public void publish(Envelope rawEnvelope, Object message, String source) {
     try {
       Envelope envelope = deepCopy(rawEnvelope);
-      String routeId = format("%s/%s", clientId, source);
+      String routeId = format("%s%s%s", clientId, ROUTE_SEPERATOR, source);
       debug("Distributing %s for %s/%s as %s", message.getClass().getSimpleName(),
           envelope.deviceRegistryId, envelope.deviceId, routeId);
       envelope.gatewayId = routeId;
