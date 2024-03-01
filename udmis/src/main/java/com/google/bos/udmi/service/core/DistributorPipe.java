@@ -15,8 +15,20 @@ import udmi.schema.Envelope;
 public class DistributorPipe extends ProcessorBase {
 
   public static final String ROUTE_SEPERATOR = "/";
-  // TODO: Change client_id to include container/pod hostname.
-  private final String clientId = format("distributor-%08x", System.currentTimeMillis());
+  private final String clientId = makeClientId();
+
+  private static String makeClientId() {
+    final String podId;
+    // Quick heuristic to see if we're running in k8s or not...
+    if (System.getenv("UDMIS_BROKER_SERVICE_PORT") != null) {
+      String hostname = System.getenv("HOSTNAME");
+      int index = hostname.lastIndexOf('-');
+      podId = hostname.substring(index + 1);
+    } else {
+      podId = format("%05x", (long) (Math.random() * 0x100000));
+    }
+    return "distributor-" + podId;
+  }
 
   /**
    * Create a new distributor given the endpoint configuration.
