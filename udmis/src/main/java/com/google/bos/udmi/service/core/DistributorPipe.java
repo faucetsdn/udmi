@@ -15,6 +15,7 @@ import udmi.schema.Envelope;
 public class DistributorPipe extends ProcessorBase {
 
   public static final String ROUTE_SEPERATOR = "/";
+  // TODO: Change client_id to include container/pod hostname.
   private final String clientId = format("distributor-%08x", System.currentTimeMillis());
 
   /**
