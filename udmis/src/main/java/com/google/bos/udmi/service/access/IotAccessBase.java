@@ -135,7 +135,7 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
     UdmiState udmiState = new UdmiState();
     udmiState.regions = newRegions;
     Envelope envelope = new Envelope();
-    distributor.distribute(envelope, udmiState);
+    distributor.publish(envelope, udmiState, containerId);
   }
 
   private String getCompletedRegistryRegion(String registryId) {

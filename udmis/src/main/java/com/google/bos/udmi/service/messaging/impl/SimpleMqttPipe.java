@@ -20,7 +20,6 @@ import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
-import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import udmi.schema.Basic;
@@ -35,7 +34,7 @@ public class SimpleMqttPipe extends MessageBase {
 
   private static final int INITIALIZE_TIME_MS = 1000;
   private static final int PUBLISH_THREAD_COUNT = 2;
-  private static final String TOPIC_FORMAT = "%s/%s/%s";
+  private static final String TOPIC_FORMAT = "%s/%s/%s/%s";
   private static final Object TOPIC_WILDCARD = "+";
   private static final String BROKER_URL_FORMAT = "%s://%s:%s";
   private static final Object EXCEPTION_TYPE = "exception";
@@ -87,7 +86,7 @@ public class SimpleMqttPipe extends MessageBase {
       }
     } catch (Exception e) {
       // Sometimes a forced disconnect is necessary else the connection attempt gets stuck somehow.
-      ifTrueThen(forceDisconnect, this::forcedisconnect);
+      ifTrueThen(forceDisconnect, this::forceDisconnect);
       throw new RuntimeException("While connecting mqtt client", e);
     }
   }
@@ -105,7 +104,7 @@ public class SimpleMqttPipe extends MessageBase {
     }
   }
 
-  private void forcedisconnect() {
+  private void forceDisconnect() {
     try {
       mqttClient.disconnectForcibly();
     } catch (Exception e) {
@@ -127,12 +126,12 @@ public class SimpleMqttPipe extends MessageBase {
   private String makeMqttTopic(Bundle bundle) {
     Envelope envelope = bundle.envelope;
     return envelope == null
-        ? format(TOPIC_FORMAT, namespace, EXCEPTION_TYPE, EXCEPTION_TYPE)
-        : format(TOPIC_FORMAT, namespace, envelope.subType, envelope.subFolder);
+        ? format(TOPIC_FORMAT, namespace, EXCEPTION_TYPE, EXCEPTION_TYPE, EXCEPTION_TYPE)
+        : format(TOPIC_FORMAT, namespace, envelope.subType, envelope.subFolder, envelope.source);
   }
 
   private void subscribeToMessages() {
-    String topic = format(TOPIC_FORMAT, namespace, TOPIC_WILDCARD, TOPIC_WILDCARD);
+    String topic = format(TOPIC_FORMAT, namespace, TOPIC_WILDCARD, TOPIC_WILDCARD, TOPIC_WILDCARD);
     try {
       synchronized (mqttClient) {
         boolean connected = mqttClient.isConnected();
