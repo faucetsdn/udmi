@@ -2,8 +2,11 @@ package com.google.daq.mqtt.sequencer.sequences;
 
 import static com.google.daq.mqtt.util.TimePeriodConstants.ONE_MINUTE_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.THREE_MINUTES_MS;
+import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
+import static com.google.udmi.util.JsonUtil.isoConvert;
+import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
@@ -12,17 +15,21 @@ import static udmi.schema.Category.POINTSET_POINT_INVALID;
 import static udmi.schema.Category.POINTSET_POINT_INVALID_VALUE;
 import static udmi.schema.FeatureEnumeration.FeatureStage.BETA;
 
+import com.google.common.collect.Sets;
+import com.google.common.collect.Sets.SetView;
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.PointsetBase;
 import com.google.daq.mqtt.sequencer.Summary;
 import com.google.daq.mqtt.sequencer.ValidateSchema;
 import com.google.daq.mqtt.util.SamplingRange;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,9 +45,17 @@ import udmi.schema.PointsetEvent;
  */
 public class PointsetSequences extends PointsetBase {
 
+  private static final Duration EVENT_WAIT_DURATION = Duration.ofMinutes(1);
   private static final String EXTRANEOUS_POINT = "extraneous_point";
   private static final int DEFAULT_SAMPLE_RATE_SEC = 10;
   private static final String POINTS_MAP_PATH = "pointset.points";
+
+  private static String differenceOrNull(String prefix, Set<String> setA, Set<String> setB) {
+    SetView<String> diffAB = Sets.difference(setA, setB);
+    SetView<String> diffBA = Sets.difference(setB, setA);
+    SetView<String> differences = Sets.union(diffAB, diffBA);
+    return differences.isEmpty() ? null : prefix + CSV_JOINER.join(differences);
+  }
 
   @Before
   public void setupExpectedParameters() {
@@ -54,29 +69,52 @@ public class PointsetSequences extends PointsetBase {
 
   private void untilPointsetSanity() {
     whileDoing("checking pointset sanity", () -> {
-      untilTrue("pointset state reports same points as defined in config", () ->
-          deviceState.pointset.points.keySet().equals(deviceConfig.pointset.points.keySet()));
-      untilTrue("pointset event contains correct points with present_value",
-          () -> {
-            List<PointsetEvent> pointsetEvents = popReceivedEvents(PointsetEvent.class);
-            return !pointsetEvents.isEmpty()
-                && pointsetEvents.get(pointsetEvents.size() - 1).points.entrySet().stream()
-                .filter(this::validPointEntry).map(Entry::getKey).collect(Collectors.toSet())
-                .equals(deviceConfig.pointset.points.keySet());
-          }
-      );
+
+      waitFor("pointset state matches config", EVENT_WAIT_DURATION, () -> {
+        Set<String> configPoints = deviceConfig.pointset.points.keySet();
+        Set<String> statePoints = deviceState.pointset.points.keySet();
+        String prefix = format("config %s state %s differences: ",
+            isoConvert(deviceConfig.timestamp), isoConvert(deviceState.timestamp));
+        return differenceOrNull(prefix, configPoints, statePoints);
+      });
+
+      waitFor("pointset event contains correct points", EVENT_WAIT_DURATION, () -> {
+        List<PointsetEvent> pointsetEvents = popReceivedEvents(PointsetEvent.class);
+        if (pointsetEvents.isEmpty()) {
+          return "received pointset event";
+        }
+        PointsetEvent lastEvent = pointsetEvents.get(pointsetEvents.size() - 1);
+        debug("last event is " + stringifyTerse(lastEvent));
+        Set<Entry<String, PointPointsetEvent>> lastPoints = lastEvent.points.entrySet();
+        Set<String> eventPoints = lastPoints.stream().filter(this::validPointEntry)
+            .map(Entry::getKey).collect(Collectors.toSet());
+        Set<String> errorPoints = deviceState.pointset.points.entrySet().stream()
+            .filter(this::errorPointEntry).map(Entry::getKey).collect(Collectors.toSet());
+        Set<String> receivedPoints = Sets.union(eventPoints, errorPoints);
+        debug(" event points are " + CSV_JOINER.join(eventPoints));
+        String prefix = format("config %s event %s differences: ",
+            isoConvert(deviceConfig.timestamp), isoConvert(lastEvent.timestamp));
+        Set<String> configPoints = deviceConfig.pointset.points.keySet();
+        debug("config points are " + CSV_JOINER.join(configPoints));
+        return differenceOrNull(prefix, configPoints, receivedPoints);
+      });
     });
   }
 
+  private boolean errorPointEntry(Entry<String, PointPointsetState> point) {
+    return isErrorState(point.getValue());
+  }
+
   private boolean validPointEntry(Entry<String, PointPointsetEvent> point) {
-    PointPointsetState pointState = deviceState.pointset.points.get(point.getKey());
-    return point.getValue().present_value != null || isErrorState(pointState);
+    return point.getValue().present_value != null;
   }
 
   @Test(timeout = ONE_MINUTE_MS)
   @Summary("Check error when pointset configuration contains extraneous point")
   @Feature(stage = BETA, bucket = POINTSET)
   public void pointset_request_extraneous() {
+    deviceConfig.pointset.sample_rate_sec = DEFAULT_SAMPLE_RATE_SEC;
+
     untilPointsetSanity();
 
     mapSemanticKey(POINTS_MAP_PATH, EXTRANEOUS_POINT, "extraneous_point", "point configuration");

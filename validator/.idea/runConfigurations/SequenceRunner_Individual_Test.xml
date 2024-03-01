@@ -5,7 +5,7 @@
     </envs>
     <option name="MAIN_CLASS_NAME" value="com.google.daq.mqtt.sequencer.SequenceRunner" />
     <module name="validator" />
-    <option name="PROGRAM_PARAMETERS" value="broken_config" />
+    <option name="PROGRAM_PARAMETERS" value="pointset_request_extraneous" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/.." />
     <extension name="coverage">
       <pattern>
