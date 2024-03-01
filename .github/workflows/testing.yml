@@ -280,12 +280,17 @@ jobs:
           python-version: '3.10'
       - name: Base setup
         run: bin/setup_base
-      - name: Download all workflow run artifacts
+      - name: Download all sharded support packages
         uses: actions/download-artifact@v4
         with:
           path: udmi-support_${{ github.run_id }}
           pattern: udmi-support_${{ github.run_id }}-*
           merge-multiple: true
+      - name: Upload merged support package
+        uses: actions/upload-artifact@v4
+        with:
+          name: udmi-support_${{ github.run_id }}
+          path: *_udmi-support_*.tgz
       - name: Processing support package
         run: bin/support_process udmi-support_*
       - name: Test run index
