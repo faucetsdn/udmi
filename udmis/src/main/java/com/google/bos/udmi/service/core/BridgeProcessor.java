@@ -1,6 +1,7 @@
 package com.google.bos.udmi.service.core;
 
 import com.google.bos.udmi.service.messaging.MessagePipe;
+import com.google.udmi.util.GeneralUtils;
 import udmi.schema.EndpointConfiguration;
 
 /**
@@ -25,9 +26,8 @@ public class BridgeProcessor extends ProcessorBase {
     this.pipeB = MessagePipe.from(to);
   }
 
-  private static EndpointConfiguration makeSimpleConfiguration(EndpointConfiguration from) {
-    EndpointConfiguration config = new EndpointConfiguration();
-    config.name = from.name;
+  private static EndpointConfiguration makeSimpleConfiguration(EndpointConfiguration base) {
+    EndpointConfiguration config = GeneralUtils.deepCopy(base);
     return config;
   }
 
