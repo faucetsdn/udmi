@@ -72,6 +72,9 @@ public abstract class ProcessorBase extends ContainerBase {
   protected DistributorPipe distributor;
   String distributorName;
 
+  /**
+   * Create a new configured component.
+   */
   public ProcessorBase(EndpointConfiguration config) {
     super(config);
     distributorName = config.distributor;
@@ -145,6 +148,13 @@ public abstract class ProcessorBase extends ContainerBase {
 
   protected void publish(Envelope attributes, Object message) {
     dispatcher.withEnvelope(attributes).publish(message);
+  }
+
+  /**
+   * Publish a message (using the internal dispatcher).
+   */
+  void publish(Object message) {
+    dispatcher.publish(message);
   }
 
   protected void reflectError(SubType subType, BundleException bundleException) {
@@ -348,10 +358,6 @@ public abstract class ProcessorBase extends ContainerBase {
 
   <T> void registerHandler(Class<T> clazz, Consumer<T> handler) {
     dispatcher.registerHandler(clazz, handler);
-  }
-
-  void publish(Object message) {
-    dispatcher.publish(message);
   }
 
   MessageContinuation getContinuation(Object message) {

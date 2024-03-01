@@ -113,6 +113,9 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     }
   }
 
+  /**
+   * Get the associated message class for the indicated envelope.
+   */
   public static Class<?> getMessageClassFor(Envelope envelope, boolean allowDefault) {
     String mapKey = getMapKey(envelope.subType, envelope.subFolder);
     checkState(allowDefault || TYPE_CLASSES.containsKey(mapKey), "missing class for " + mapKey);

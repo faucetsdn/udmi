@@ -20,6 +20,9 @@ public class CronJob extends ProcessorBase {
   private final Envelope envelope;
   private final Object message;
 
+  /**
+   * Create an instance with the given config.
+   */
   public CronJob(EndpointConfiguration config) {
     super(config);
 

@@ -65,6 +65,9 @@ public abstract class ContainerBase implements ContainerProvider {
     containerId = getSimpleName();
   }
 
+  /**
+   * Create an instance with specific parameters.
+   */
   public ContainerBase(int executorSec, String useId) {
     podConfiguration = null;
     failureRate = getPodFailureRate();
@@ -75,8 +78,6 @@ public abstract class ContainerBase implements ContainerProvider {
 
   /**
    * Construct a new instance given a configuration file. Only used once for the pod itself.
-   *
-   * @param config pod configuration
    */
   public ContainerBase(PodConfiguration config) {
     podConfiguration = config;
