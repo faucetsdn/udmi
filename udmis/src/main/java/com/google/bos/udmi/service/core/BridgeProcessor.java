@@ -20,10 +20,15 @@ public class BridgeProcessor extends ProcessorBase {
    * New instance for two message configurations.
    */
   public BridgeProcessor(EndpointConfiguration from, EndpointConfiguration to) {
-    // TODO: This probably doesn't need ProcessorBase, or pass in empty configuration.
-    super(from);
+    super(makeSimpleConfiguration(from));
     this.pipeA = MessagePipe.from(from);
     this.pipeB = MessagePipe.from(to);
+  }
+
+  private static EndpointConfiguration makeSimpleConfiguration(EndpointConfiguration from) {
+    EndpointConfiguration config = new EndpointConfiguration();
+    config.name = from.name;
+    return config;
   }
 
   @Override

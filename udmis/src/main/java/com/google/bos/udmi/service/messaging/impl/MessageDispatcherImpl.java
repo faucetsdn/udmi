@@ -151,8 +151,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
 
   private void executeHandler(Class<?> handlerType, Object messageObject) {
     try {
-      Consumer<Object> objectConsumer = handlers.get(handlerType);
-      objectConsumer.accept(messageObject);
+      handlers.get(handlerType).accept(messageObject);
       synchronized (handlerCounts) {
         handlerCounts.computeIfAbsent(handlerType, key -> new AtomicInteger()).incrementAndGet();
         handlerCounts.notify();

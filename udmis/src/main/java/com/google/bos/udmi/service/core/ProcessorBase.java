@@ -46,7 +46,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.TestOnly;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
@@ -84,32 +83,9 @@ public abstract class ProcessorBase extends ContainerBase {
    */
   public static <T extends ProcessorBase> T create(Class<T> clazz, EndpointConfiguration config) {
     try {
-      return makeProcessor(clazz, config);
+      return clazz.getDeclaredConstructor(EndpointConfiguration.class).newInstance(config);
     } catch (Exception e) {
       throw new RuntimeException("While instantiating class " + clazz.getName(), e);
-    }
-  }
-
-  @NotNull
-  private static <T extends ProcessorBase> T newProcessorInstance(Class<T> clazz, EndpointConfiguration config) {
-    try {
-      try {
-        return clazz.getDeclaredConstructor(EndpointConfiguration.class).newInstance(config);
-      } catch (NoSuchMethodException e) {
-        return clazz.getDeclaredConstructor().newInstance();
-      }
-    } catch (Exception e) {
-      throw new RuntimeException("While creating new processor instance " + clazz.getSimpleName(), e);
-    }
-  }
-
-  @NotNull
-  private static <T extends ProcessorBase> T makeProcessor(Class<T> clazz, EndpointConfiguration config) {
-    try {
-      T processor = newProcessorInstance(clazz, config);
-      return processor;
-    } catch (Exception e) {
-      throw new RuntimeException("While initializing processor", e);
     }
   }
 
@@ -165,6 +141,10 @@ public abstract class ProcessorBase extends ContainerBase {
 
   protected void processMessage(Envelope envelope, Object message) {
     ((MessageDispatcherImpl) dispatcher).processMessage(envelope, message);
+  }
+
+  protected void publish(Envelope attributes, Object message) {
+    dispatcher.withEnvelope(attributes).publish(message);
   }
 
   protected void reflectError(SubType subType, BundleException bundleException) {
@@ -368,10 +348,6 @@ public abstract class ProcessorBase extends ContainerBase {
 
   <T> void registerHandler(Class<T> clazz, Consumer<T> handler) {
     dispatcher.registerHandler(clazz, handler);
-  }
-
-  protected void publish(Envelope attributes, Object message) {
-    dispatcher.withEnvelope(attributes).publish(message);
   }
 
   void publish(Object message) {
