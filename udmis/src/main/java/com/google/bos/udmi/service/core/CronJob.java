@@ -1,6 +1,5 @@
 package com.google.bos.udmi.service.core;
 
-import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.JsonUtil.fromStringStrict;
 
@@ -50,7 +49,13 @@ public class CronJob extends ProcessorBase {
   protected void periodicTask() {
     info("Distributing %s %s/%s to %s/%s", containerId, envelope.subType, envelope.subFolder,
         envelope.deviceRegistryId, envelope.deviceId);
-    distributor.distribute(envelope, message);
+    distributor.publish(envelope, message, containerId);
+    defaultHandler(message);
+  }
+
+  @Override
+  protected void defaultHandler(Object defaultedMessage) {
+    super.defaultHandler(defaultedMessage);
   }
 }
 

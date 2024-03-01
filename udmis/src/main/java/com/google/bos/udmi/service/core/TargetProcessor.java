@@ -11,6 +11,7 @@ import static java.lang.String.format;
 import com.google.bos.udmi.service.messaging.MessageContinuation;
 import java.util.Date;
 import java.util.Map;
+import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
@@ -22,6 +23,10 @@ import udmi.schema.Envelope.SubType;
  */
 @ComponentName("target")
 public class TargetProcessor extends ProcessorBase {
+
+  public TargetProcessor(EndpointConfiguration config) {
+    super(config);
+  }
 
   @Override
   protected void defaultHandler(Object defaultedMessage) {

@@ -151,7 +151,8 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
 
   private void executeHandler(Class<?> handlerType, Object messageObject) {
     try {
-      handlers.get(handlerType).accept(messageObject);
+      Consumer<Object> objectConsumer = handlers.get(handlerType);
+      objectConsumer.accept(messageObject);
       synchronized (handlerCounts) {
         handlerCounts.computeIfAbsent(handlerType, key -> new AtomicInteger()).incrementAndGet();
         handlerCounts.notify();
@@ -192,8 +193,12 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   }
 
   /**
-   * Process a received message bundle.
+   * Process a received message.
    */
+  public void processMessage(Envelope envelope, Object message) {
+    processMessage(makeMessageBundle(envelope, message));
+  }
+
   private void processMessage(Bundle bundle) {
     Envelope envelope = Preconditions.checkNotNull(bundle.envelope, "bundle envelope is null");
     Object message = bundle.message;

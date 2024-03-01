@@ -35,11 +35,11 @@ import com.google.bos.udmi.service.messaging.StateUpdate;
 import com.google.bos.udmi.service.messaging.impl.MessageBase;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.BundleException;
+import com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl;
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.Common;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -73,11 +73,10 @@ public abstract class ProcessorBase extends ContainerBase {
   protected DistributorPipe distributor;
   String distributorName;
 
-  public ProcessorBase() {
-  }
-
   public ProcessorBase(EndpointConfiguration config) {
     super(config);
+    distributorName = config.distributor;
+    dispatcher = MessageDispatcher.from(config);
   }
 
   /**
@@ -85,17 +84,14 @@ public abstract class ProcessorBase extends ContainerBase {
    */
   public static <T extends ProcessorBase> T create(Class<T> clazz, EndpointConfiguration config) {
     try {
-      T object = makeProcessor(clazz, config);
-      object.dispatcher = MessageDispatcher.from(config);
-      object.distributorName = config.distributor;
-      return object;
+      return makeProcessor(clazz, config);
     } catch (Exception e) {
       throw new RuntimeException("While instantiating class " + clazz.getName(), e);
     }
   }
 
   @NotNull
-  private static <T extends ProcessorBase> T makeProcessor(Class<T> clazz, EndpointConfiguration config) {
+  private static <T extends ProcessorBase> T newProcessorInstance(Class<T> clazz, EndpointConfiguration config) {
     try {
       try {
         return clazz.getDeclaredConstructor(EndpointConfiguration.class).newInstance(config);
@@ -103,7 +99,17 @@ public abstract class ProcessorBase extends ContainerBase {
         return clazz.getDeclaredConstructor().newInstance();
       }
     } catch (Exception e) {
-      throw new RuntimeException("While creating processor for " + clazz.getSimpleName(), e);
+      throw new RuntimeException("While creating new processor instance " + clazz.getSimpleName(), e);
+    }
+  }
+
+  @NotNull
+  private static <T extends ProcessorBase> T makeProcessor(Class<T> clazz, EndpointConfiguration config) {
+    try {
+      T processor = newProcessorInstance(clazz, config);
+      return processor;
+    } catch (Exception e) {
+      throw new RuntimeException("While initializing processor", e);
     }
   }
 
@@ -137,6 +143,7 @@ public abstract class ProcessorBase extends ContainerBase {
 
   protected void processConfigChange(Envelope envelope, Map<String, Object> payload,
       Date newLastStart) {
+    // TODO: This should really be pushed down to ReflectProcessor, not sure why it's here.
     SubFolder subFolder = envelope.subFolder;
     debug(format("Modifying device config %s/%s/%s %s", envelope.deviceRegistryId,
         envelope.deviceId, subFolder, envelope.transactionId));
@@ -154,6 +161,10 @@ public abstract class ProcessorBase extends ContainerBase {
     debug("Acknowledging config/%s %s %s", subFolder, useAttributes.transactionId,
         isoConvert(newLastStart));
     reflectMessage(useAttributes, configUpdate);
+  }
+
+  protected void processMessage(Envelope envelope, Object message) {
+    ((MessageDispatcherImpl) dispatcher).processMessage(envelope, message);
   }
 
   protected void reflectError(SubType subType, BundleException bundleException) {
