@@ -281,7 +281,11 @@ jobs:
       - name: Base setup
         run: bin/setup_base
       - name: Download all workflow run artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
+        with:
+          path: udmi-support_${{ github.run_id }}
+          pattern: udmi-support_${{ github.run_id }}-*
+          merge-multiple: true
       - name: Processing support package
         run: bin/support_process udmi-support_*
       - name: Test run index
