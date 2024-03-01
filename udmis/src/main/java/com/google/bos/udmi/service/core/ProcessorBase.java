@@ -35,6 +35,7 @@ import com.google.bos.udmi.service.messaging.StateUpdate;
 import com.google.bos.udmi.service.messaging.impl.MessageBase;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.BundleException;
+import com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl;
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.common.collect.ImmutableList;
@@ -72,14 +73,20 @@ public abstract class ProcessorBase extends ContainerBase {
   String distributorName;
 
   /**
+   * Create a new configured component.
+   */
+  public ProcessorBase(EndpointConfiguration config) {
+    super(config);
+    distributorName = config.distributor;
+    dispatcher = MessageDispatcher.from(config);
+  }
+
+  /**
    * Create a new instance of the given target class with the provided configuration.
    */
   public static <T extends ProcessorBase> T create(Class<T> clazz, EndpointConfiguration config) {
     try {
-      T object = clazz.getDeclaredConstructor().newInstance();
-      object.dispatcher = MessageDispatcher.from(config);
-      object.distributorName = config.distributor;
-      return object;
+      return clazz.getDeclaredConstructor(EndpointConfiguration.class).newInstance(config);
     } catch (Exception e) {
       throw new RuntimeException("While instantiating class " + clazz.getName(), e);
     }
@@ -115,6 +122,7 @@ public abstract class ProcessorBase extends ContainerBase {
 
   protected void processConfigChange(Envelope envelope, Map<String, Object> payload,
       Date newLastStart) {
+    // TODO: This should really be pushed down to ReflectProcessor, not sure why it's here.
     SubFolder subFolder = envelope.subFolder;
     debug(format("Modifying device config %s/%s/%s %s", envelope.deviceRegistryId,
         envelope.deviceId, subFolder, envelope.transactionId));
@@ -132,6 +140,21 @@ public abstract class ProcessorBase extends ContainerBase {
     debug("Acknowledging config/%s %s %s", subFolder, useAttributes.transactionId,
         isoConvert(newLastStart));
     reflectMessage(useAttributes, configUpdate);
+  }
+
+  protected void processMessage(Envelope envelope, Object message) {
+    ((MessageDispatcherImpl) dispatcher).processMessage(envelope, message);
+  }
+
+  protected void publish(Envelope attributes, Object message) {
+    dispatcher.withEnvelope(attributes).publish(message);
+  }
+
+  /**
+   * Publish a message (using the internal dispatcher).
+   */
+  void publish(Object message) {
+    dispatcher.publish(message);
   }
 
   protected void reflectError(SubType subType, BundleException bundleException) {
@@ -290,7 +313,7 @@ public abstract class ProcessorBase extends ContainerBase {
    * Activate this component.
    */
   public void activate() {
-    info("Activating");
+    super.activate();
     iotAccess = UdmiServicePod.getComponent(IOT_ACCESS_COMPONENT);
     distributor = UdmiServicePod.maybeGetComponent(distributorName);
     if (dispatcher != null) {
@@ -335,14 +358,6 @@ public abstract class ProcessorBase extends ContainerBase {
 
   <T> void registerHandler(Class<T> clazz, Consumer<T> handler) {
     dispatcher.registerHandler(clazz, handler);
-  }
-
-  protected void publish(Envelope attributes, Object message) {
-    dispatcher.withEnvelope(attributes).publish(message);
-  }
-
-  void publish(Object message) {
-    dispatcher.publish(message);
   }
 
   MessageContinuation getContinuation(Object message) {

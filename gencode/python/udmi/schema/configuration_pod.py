@@ -2,6 +2,7 @@
 from .configuration_pod_base import BasePodConfiguration
 from .configuration_endpoint import EndpointConfiguration
 from .configuration_endpoint import EndpointConfiguration
+from .configuration_endpoint import EndpointConfiguration
 from .configuration_pod_bridge import BridgePodConfiguration
 from .access_iot import IotAccess
 from .configuration_endpoint import EndpointConfiguration
@@ -13,6 +14,7 @@ class PodConfiguration:
   def __init__(self):
     self.base = None
     self.flow_defaults = None
+    self.crons = None
     self.flows = None
     self.bridges = None
     self.iot_access = None
@@ -25,6 +27,7 @@ class PodConfiguration:
     result = PodConfiguration()
     result.base = BasePodConfiguration.from_dict(source.get('base'))
     result.flow_defaults = EndpointConfiguration.from_dict(source.get('flow_defaults'))
+    result.crons = EndpointConfiguration.map_from(source.get('crons'))
     result.flows = EndpointConfiguration.map_from(source.get('flows'))
     result.bridges = BridgePodConfiguration.map_from(source.get('bridges'))
     result.iot_access = IotAccess.map_from(source.get('iot_access'))
@@ -53,6 +56,8 @@ class PodConfiguration:
       result['base'] = self.base.to_dict() # 4
     if self.flow_defaults:
       result['flow_defaults'] = self.flow_defaults.to_dict() # 4
+    if self.crons:
+      result['crons'] = EndpointConfiguration.expand_dict(self.crons) # 2
     if self.flows:
       result['flows'] = EndpointConfiguration.expand_dict(self.flows) # 2
     if self.bridges:

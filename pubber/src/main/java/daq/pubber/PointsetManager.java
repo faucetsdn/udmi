@@ -173,8 +173,7 @@ public class PointsetManager extends ManagerBase {
 
     if (point.isDirty()) {
       PointPointsetState state = point.getState(); // Always call to clear the dirty bit
-      PointPointsetState useState =
-          ifTrueGet(options.noPointState, PointPointsetState::new, () -> state);
+      PointPointsetState useState = ifTrueGet(options.noPointState, PointPointsetState::new, state);
       pointsetState.points.put(pointName, useState);
       updateState();
     }

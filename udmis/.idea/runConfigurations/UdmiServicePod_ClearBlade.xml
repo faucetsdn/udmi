@@ -14,7 +14,7 @@
     <option name="PROGRAM_PARAMETERS" value="etc/prod_pod.json" />
     <extension name="coverage">
       <pattern>
-        <option name="PATTERN" value="com.google.bos.udmi.service.pod.*" />
+        <option name="PATTERN" value="com.google.bos.udmi.service.core.*" />
         <option name="ENABLED" value="true" />
       </pattern>
     </extension>
