@@ -177,11 +177,11 @@ jobs:
         run: |
           bin/support ${{ github.repository_owner }}_${{ github.job }}_
           tar -tzvf *udmi-support*.tgz
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
           if-no-files-found: error
-          name: udmi-support_${{ github.run_id }}
+          name: udmi-support_${{ github.run_id }}-${{ matrix.shard }}
           path: '*_udmi-support_*.tgz'
 
   baseline:
@@ -221,11 +221,11 @@ jobs:
       - name: support bundle
         if: ${{ !cancelled() }}
         run: UDMI_REGISTRY_SUFFIX=_b bin/support ${{ github.repository_owner }}_${{ github.job }}_
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
           if-no-files-found: error
-          name: udmi-support_${{ github.run_id }}
+          name: udmi-support_${{ github.run_id }}-b
           path: '*_udmi-support_*.tgz'
 
   redirect:
@@ -257,11 +257,11 @@ jobs:
       - name: support bundle
         if: ${{ !cancelled() }}
         run: UDMI_REGISTRY_SUFFIX=_r bin/support ${{ github.repository_owner }}_${{ github.job }}_
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
           if-no-files-found: error
-          name: udmi-support_${{ github.run_id }}
+          name: udmi-support_${{ github.run_id }}-r
           path: '*_udmi-support_*.tgz'
 
   posttest:
