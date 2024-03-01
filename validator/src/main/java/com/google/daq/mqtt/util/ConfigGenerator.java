@@ -102,6 +102,8 @@ public class ConfigGenerator {
       return null;
     }
 
+    //NES
+
     PointsetConfig pointsetConfig = new PointsetConfig();
     boolean excludeUnits = isTrue(metadata.pointset.exclude_units_from_config);
     boolean excludePoints = isTrue(metadata.pointset.exclude_points_from_config);
