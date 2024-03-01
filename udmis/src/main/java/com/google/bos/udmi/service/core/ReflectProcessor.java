@@ -43,6 +43,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
+import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
@@ -58,6 +59,10 @@ public class ReflectProcessor extends ProcessorBase {
   public static final String PAYLOAD_KEY = "payload";
   private static final Date START_TIME = new Date();
 
+  public ReflectProcessor(EndpointConfiguration config) {
+    super(config);
+  }
+
   private static String makeTransactionId() {
     return format("RP:%08x", Objects.hash(System.currentTimeMillis(), Thread.currentThread()));
   }
@@ -72,6 +77,8 @@ public class ReflectProcessor extends ProcessorBase {
         reflectStateHandler(reflection, extractUdmiState(message));
       } else if (reflection.subFolder != SubFolder.UDMI) {
         throw new IllegalStateException("Unexpected reflect subfolder " + reflection.subFolder);
+      } else if (message instanceof UdmiState distributedUpdate) {
+        updateAwareness(reflection, distributedUpdate);
       } else {
         Map<String, Object> payload = extractMessagePayload(objectMap);
         Envelope envelope = extractMessageEnvelope(objectMap);
@@ -201,7 +208,7 @@ public class ReflectProcessor extends ProcessorBase {
     if (requireNonNull(attributes.subType) == SubType.CONFIG) {
       processConfigChange(attributes, payload, null);
     }
-    Class<?> messageClass = getMessageClassFor(attributes);
+    Class<?> messageClass = getMessageClassFor(attributes, true);
     debug("Propagating message %s: %s", attributes.transactionId, messageClass.getSimpleName());
     publish(attributes, convertTo(messageClass, payload));
     return null;
@@ -229,7 +236,7 @@ public class ReflectProcessor extends ProcessorBase {
     final String registryId = envelope.deviceRegistryId;
     final String deviceId = envelope.deviceId;
 
-    ifNotNullThen(distributor, d -> d.distribute(envelope, toolState));
+    ifNotNullThen(distributor, d -> d.publish(envelope, toolState, containerId));
     updateAwareness(envelope, toolState);
 
     UdmiConfig udmiConfig = UdmiServicePod.getUdmiConfig(toolState);

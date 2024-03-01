@@ -7,6 +7,10 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "properties": {
+    "name": {
+      "description": "Friendly name for this flow (debugging and diagnostics)",
+      "type": "string"
+    },
     "protocol": {
       "enum": [
         "local",
@@ -23,6 +27,10 @@
       ]
     },
     "hostname": {
+      "type": "string"
+    },
+    "payload": {
+      "description": "Simple payload template for simple injection use cases",
       "type": "string"
     },
     "error": {
@@ -63,8 +71,8 @@
       "description": "Artifical publish delay for testing",
       "type": "integer"
     },
-    "monitor_sec": {
-      "description": "Period for monitoring sampling",
+    "periodic_sec": {
+      "description": "Rate for periodic task execution",
       "type": "integer"
     },
     "distributor": {

@@ -61,6 +61,7 @@ from .monitoring_metric import Monitoringmetric
 from .options_pubber import PubberOptions
 from .persistent_device import DevicePersistent
 from .properties import Properties
+from .query_cloud import CloudQuery
 from .state import State
 from .state_blobset import BlobsetState
 from .state_blobset_blob import BlobBlobsetState

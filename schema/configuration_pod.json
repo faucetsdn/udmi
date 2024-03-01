@@ -13,6 +13,14 @@
     "flow_defaults": {
       "$ref": "file:configuration_endpoint.json"
     },
+    "crons": {
+      "existingJavaType": "java.util.HashMap<String, EndpointConfiguration>",
+      "patternProperties": {
+        "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
+          "$ref": "file:configuration_endpoint.json"
+        }
+      }
+    },
     "flows": {
       "existingJavaType": "java.util.HashMap<String, EndpointConfiguration>",
       "patternProperties": {

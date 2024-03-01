@@ -21,9 +21,6 @@ log_level=INFO
 min_stage=PREVIEW
 export UDMI_VERSION=$udmi_version
 
-# For cross-env sort stability
-export LC_ALL=C
-
 rm -f $SEQUENCER_LOG $SEQUENCER_OUT $SCHEMA_OUT
 
 # Shortcut to run sequencer with a fixed config and cmd-line tests.
