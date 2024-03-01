@@ -63,8 +63,8 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
   private final String projectId;
   private final String topicId;
   private final Set<String> subscriberSet;
-  private final AtomicInteger publisherQueueSize = new AtomicInteger();
   private List<Subscriber> subscribers;
+  private final AtomicInteger publisherQueueSize = new AtomicInteger();
 
   /**
    * Create a new instance based off the configuration.
@@ -215,7 +215,8 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
       String emu = getEmulatorHost();
       ifNotNullThen(emu, host -> builder.setChannelProvider(getTransportChannelProvider(host)));
       ifNotNullThen(emu, host -> builder.setCredentialsProvider(NoCredentialsProvider.create()));
-      info(format("Publisher %s:%s", Optional.ofNullable(emu).orElse(GCP_HOST), projectTopicName));
+      info(format("Publisher %s to %s:%s", containerId, Optional.ofNullable(emu).orElse(GCP_HOST),
+          projectTopicName));
       return builder.build();
     } catch (Exception e) {
       throw new RuntimeException("While creating publisher", e);

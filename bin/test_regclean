@@ -1,8 +1,5 @@
 #!/bin/bash -e
 
-# Force consistent sort order
-export LC_ALL=C
-
 UDMI_ROOT=$(dirname $0)/..
 cd $UDMI_ROOT
 
