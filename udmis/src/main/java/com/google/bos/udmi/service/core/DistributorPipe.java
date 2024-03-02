@@ -41,6 +41,7 @@ public class DistributorPipe extends ProcessorBase {
   @Override
   protected void defaultHandler(Object message) {
     Envelope envelope = getContinuation(message).getEnvelope();
+    debug("Handling distribution from " + stringifyTerse(envelope));
     try {
       String[] routeId = envelope.gatewayId.split(ROUTE_SEPERATOR, 2);
       if (clientId.equals(routeId[0])) {

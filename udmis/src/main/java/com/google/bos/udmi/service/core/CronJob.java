@@ -1,5 +1,6 @@
 package com.google.bos.udmi.service.core;
 
+import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.JsonUtil.fromStringStrict;
@@ -7,6 +8,7 @@ import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
 
 import com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl;
+import com.google.udmi.util.JsonUtil;
 import java.time.Duration;
 import java.util.Date;
 import java.util.SortedMap;
@@ -26,7 +28,7 @@ public class CronJob extends ProcessorBase {
   public static final String PATH_SEPARATOR = "/";
   private final Envelope srcEnvelope;
   private final Object message;
-  private final SortedMap<String, Date> podReceiveTime = new ConcurrentSkipListMap<>();
+  private final SortedMap<String, Date> received = new ConcurrentSkipListMap<>();
   private final Duration waitAndListen;
   private final AtomicReference<Date> previousTick = new AtomicReference<>();
 
@@ -83,9 +85,11 @@ public class CronJob extends ProcessorBase {
       return false;
     }
 
-    podReceiveTime.entrySet().removeIf(entry -> entry.getValue().before(cutoffTime));
-    debug("Result %s is groot out of %s", podReceiveTime.firstKey(), podReceiveTime.size());
-    return srcEnvelope.gatewayId.equals(podReceiveTime.firstKey());
+    debug("Received values: " + received.size() + " " +
+        CSV_JOINER.join(received.values().stream().map(JsonUtil::isoConvert).toList()));
+    received.entrySet().removeIf(entry -> entry.getValue().before(cutoffTime));
+    debug("Received %s is groot: %s", received.firstKey(), CSV_JOINER.join(received.keySet()));
+    return srcEnvelope.gatewayId.equals(received.firstKey());
   }
 
   private void processGroot() {
@@ -95,7 +99,9 @@ public class CronJob extends ProcessorBase {
 
   private void trackPod(Envelope envelope) {
     debug("Pod timestamp update %s to %s", envelope.gatewayId, isoConvert(envelope.publishTime));
-    podReceiveTime.put(envelope.gatewayId, envelope.publishTime);
+    received.put(envelope.gatewayId, envelope.publishTime);
+    debug("Received values: " + received.size() + " " +
+        CSV_JOINER.join(received.values().stream().map(JsonUtil::isoConvert).toList()));
   }
 
   @Override
