@@ -63,14 +63,17 @@ public class DistributorPipe extends ProcessorBase {
   public void publish(Envelope rawEnvelope, Object message, String source) {
     try {
       Envelope envelope = deepCopy(rawEnvelope);
-      String routeId = format("%s%s%s", clientId, ROUTE_SEPERATOR, source);
+      String routeId = getRouteId(source);
       debug("Distributing %s for %s/%s as %s", message.getClass().getSimpleName(),
           envelope.deviceRegistryId, envelope.deviceId, routeId);
       envelope.gatewayId = routeId;
-      super.publish(envelope, message);
+      publish(envelope, message);
     } catch (Exception e) {
-      error("Error distributing update: " + friendlyStackTrace(e));
+      throw new RuntimeException("Error distributing update", e);
     }
   }
 
+  public String getRouteId(String source) {
+    return format("%s%s%s", clientId, ROUTE_SEPERATOR, source);
+  }
 }

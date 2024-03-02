@@ -7,7 +7,6 @@ import static com.google.udmi.util.GeneralUtils.copyFields;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
-import static com.google.udmi.util.GeneralUtils.ifNotNullThrow;
 import static com.google.udmi.util.JsonUtil.loadFileStrictRequired;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -63,10 +62,10 @@ public class UdmiServicePod extends ContainerBase {
     try {
       checkState(args.length == 1, "expected exactly one argument: configuration_file");
 
+      ifNotNullThen(podConfiguration.distributors, dist -> dist.forEach(this::createDistributor));
+      ifNotNullThen(podConfiguration.iot_access, access -> access.forEach(this::createAccess));
       ifNotNullThen(podConfiguration.flows, flows -> flows.forEach(this::createFlow));
       ifNotNullThen(podConfiguration.bridges, bridges -> bridges.forEach(this::createBridge));
-      ifNotNullThen(podConfiguration.iot_access, access -> access.forEach(this::createAccess));
-      ifNotNullThen(podConfiguration.distributors, dist -> dist.forEach(this::createDistributor));
       ifNotNullThen(podConfiguration.crons, dist -> dist.forEach(this::createCron));
     } catch (Exception e) {
       throw new RuntimeException("Fatal error instantiating pod " + CSV_JOINER.join(args), e);

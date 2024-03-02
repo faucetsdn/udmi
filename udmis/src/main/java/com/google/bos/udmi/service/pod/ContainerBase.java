@@ -15,6 +15,7 @@ import com.google.bos.udmi.service.core.ComponentName;
 import com.google.common.collect.ImmutableSet;
 import com.google.udmi.util.JsonUtil;
 import java.io.PrintStream;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -223,6 +224,10 @@ public abstract class ContainerBase implements ContainerProvider {
       scheduledExecutor.scheduleAtFixedRate(this::periodicTaskWrapper, periodicSec, periodicSec,
           TimeUnit.SECONDS);
     });
+  }
+
+  protected void scheduleIn(Duration duration, Runnable task) {
+    scheduledExecutor.schedule(task, duration.getSeconds(), TimeUnit.SECONDS);
   }
 
   public void debug(String format, Object... args) {
