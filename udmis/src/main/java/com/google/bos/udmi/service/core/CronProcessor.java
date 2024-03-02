@@ -22,7 +22,7 @@ import udmi.schema.Envelope.SubType;
 /**
  * Simple clas to manage a distributed cron execution environment.
  */
-public class CronJob extends ProcessorBase {
+public class CronProcessor extends ProcessorBase {
 
   public static final String PAYLOAD_SEPARATOR = ":";
   public static final String PATH_SEPARATOR = "/";
@@ -35,7 +35,7 @@ public class CronJob extends ProcessorBase {
   /**
    * Create an instance with the given config.
    */
-  public CronJob(EndpointConfiguration config) {
+  public CronProcessor(EndpointConfiguration config) {
     super(config);
 
     distributorName = config.distributor;
@@ -75,18 +75,18 @@ public class CronJob extends ProcessorBase {
     Date before = previousTick.getAndSet(publishTime);
 
     // Wait for half the window, to make sure everybody has a chance to report in.
-    scheduleIn(waitAndListen, () -> ifTrueThen(iAmGroot(before), this::processGroot));
+    scheduleIn(waitAndListen, () -> ifTrueThen(isAmGroot(before), this::processGroot));
   }
 
-  private boolean iAmGroot(Date cutoffTime) {
+  private boolean isAmGroot(Date cutoffTime) {
     debug("Check grootness for %s after %s", srcEnvelope.gatewayId, isoConvert(cutoffTime));
 
     if (cutoffTime == null) {
       return false;
     }
 
-    debug("Received values: " + received.size() + " " +
-        CSV_JOINER.join(received.values().stream().map(JsonUtil::isoConvert).toList()));
+    debug("Received values: " + received.size() + " " + CSV_JOINER.join(
+        received.values().stream().map(JsonUtil::isoConvert).toList()));
     received.entrySet().removeIf(entry -> entry.getValue().before(cutoffTime));
     debug("Received %s is groot: %s", received.firstKey(), CSV_JOINER.join(received.keySet()));
     return srcEnvelope.gatewayId.equals(received.firstKey());
@@ -100,8 +100,8 @@ public class CronJob extends ProcessorBase {
   private void trackPod(Envelope envelope) {
     debug("Pod timestamp update %s to %s", envelope.gatewayId, isoConvert(envelope.publishTime));
     received.put(envelope.gatewayId, envelope.publishTime);
-    debug("Received values: " + received.size() + " " +
-        CSV_JOINER.join(received.values().stream().map(JsonUtil::isoConvert).toList()));
+    debug("Received values: " + received.size() + " " + CSV_JOINER.join(
+        received.values().stream().map(JsonUtil::isoConvert).toList()));
   }
 
   @Override

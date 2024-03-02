@@ -14,7 +14,7 @@ import static java.util.Objects.requireNonNull;
 import com.google.bos.udmi.service.access.IotAccessProvider;
 import com.google.bos.udmi.service.core.BridgeProcessor;
 import com.google.bos.udmi.service.core.ControlProcessor;
-import com.google.bos.udmi.service.core.CronJob;
+import com.google.bos.udmi.service.core.CronProcessor;
 import com.google.bos.udmi.service.core.DistributorPipe;
 import com.google.bos.udmi.service.core.ProcessorBase;
 import com.google.bos.udmi.service.core.ReflectProcessor;
@@ -183,7 +183,7 @@ public class UdmiServicePod extends ContainerBase {
 
   private void createCron(String name, EndpointConfiguration config) {
     setConfigName(config, name);
-    putComponent(name, () -> ProcessorBase.create(CronJob.class, makeConfig(config)));
+    putComponent(name, () -> ProcessorBase.create(CronProcessor.class, makeConfig(config)));
   }
 
   private void createDistributor(String name, EndpointConfiguration config) {
