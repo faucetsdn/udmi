@@ -1,7 +1,6 @@
 package com.google.bos.udmi.service.core;
 
 import static com.google.udmi.util.GeneralUtils.deepCopy;
-import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static java.lang.String.format;
 
@@ -41,12 +40,15 @@ public class DistributorPipe extends ProcessorBase {
   @Override
   protected void defaultHandler(Object message) {
     Envelope envelope = getContinuation(message).getEnvelope();
+    debug("Handling distribution from " + stringifyTerse(envelope));
     try {
       String[] routeId = envelope.gatewayId.split(ROUTE_SEPERATOR, 2);
       if (clientId.equals(routeId[0])) {
+        debug("Rejecting loopback client " + clientId);
         return;
       }
       Object component = UdmiServicePod.getComponent(routeId[1]);
+      debug("Routing result to " + component.getClass().getSimpleName());
       if (component instanceof ProcessorBase processorBase) {
         processorBase.processMessage(envelope, message);
       } else {
@@ -63,14 +65,17 @@ public class DistributorPipe extends ProcessorBase {
   public void publish(Envelope rawEnvelope, Object message, String source) {
     try {
       Envelope envelope = deepCopy(rawEnvelope);
-      String routeId = format("%s%s%s", clientId, ROUTE_SEPERATOR, source);
+      String routeId = getRouteId(source);
       debug("Distributing %s for %s/%s as %s", message.getClass().getSimpleName(),
           envelope.deviceRegistryId, envelope.deviceId, routeId);
       envelope.gatewayId = routeId;
-      super.publish(envelope, message);
+      publish(envelope, message);
     } catch (Exception e) {
-      error("Error distributing update: " + friendlyStackTrace(e));
+      throw new RuntimeException("Error distributing update", e);
     }
   }
 
+  public String getRouteId(String source) {
+    return format("%s%s%s", clientId, ROUTE_SEPERATOR, source);
+  }
 }

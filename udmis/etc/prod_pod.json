@@ -13,6 +13,7 @@
   },
   "crons": {
     "reglist": {
+      "periodic_sec": 10,
       "payload": "query/cloud:{}",
       "send_id": "${UDMI_PREFIX}udmi_control"
     }
