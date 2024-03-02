@@ -45,9 +45,11 @@ public class DistributorPipe extends ProcessorBase {
     try {
       String[] routeId = envelope.gatewayId.split(ROUTE_SEPERATOR, 2);
       if (clientId.equals(routeId[0])) {
+        debug("Rejecting loopback client " + clientId);
         return;
       }
       Object component = UdmiServicePod.getComponent(routeId[1]);
+      debug("Routing result to " + component.getClass().getSimpleName());
       if (component instanceof ProcessorBase processorBase) {
         processorBase.processMessage(envelope, message);
       } else {
