@@ -1,7 +1,6 @@
 package com.google.bos.udmi.service.core;
 
 import static com.google.udmi.util.GeneralUtils.deepCopy;
-import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static java.lang.String.format;
 
