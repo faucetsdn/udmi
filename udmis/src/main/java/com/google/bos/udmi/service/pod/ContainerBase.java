@@ -158,6 +158,11 @@ public abstract class ContainerBase implements ContainerProvider {
   }
 
   protected void periodicTask() {
+    if (scheduledExecutor != null && !scheduledExecutor.isShutdown()) {
+      debug("Shutting down unused scheduled executor");
+      scheduledExecutor.shutdown();
+      return;
+    }
     throw new IllegalStateException("Unexpected periodic task execution");
   }
 
