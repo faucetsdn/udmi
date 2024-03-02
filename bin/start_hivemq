@@ -1,5 +1,5 @@
 #!/bin/bash -e
 
-systemctl stop mosquitto || true
+sudo systemctl stop mosquitto || true
 
 docker run -p 1883:1883 hivemq/hivemq-ce

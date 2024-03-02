@@ -89,7 +89,8 @@ public class CronJob extends ProcessorBase {
   }
 
   private void processGroot() {
-    warn("I am groot %s, so do cron stuff here", srcEnvelope.gatewayId);
+    debug("Publishing as %s: %s", stringifyTerse(srcEnvelope), stringifyTerse(message));
+    publish(srcEnvelope, message);
   }
 
   private void trackPod(Envelope envelope) {
@@ -99,8 +100,8 @@ public class CronJob extends ProcessorBase {
 
   @Override
   public void activate() {
-    srcEnvelope.gatewayId = distributor.getRouteId(containerId);
     super.activate();
+    srcEnvelope.gatewayId = distributor.getRouteId(containerId);
     info("Activated cron as %s", stringifyTerse(srcEnvelope));
   }
 }
