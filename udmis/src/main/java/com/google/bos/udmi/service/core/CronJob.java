@@ -4,10 +4,9 @@ import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.JsonUtil.fromStringStrict;
 import static com.google.udmi.util.JsonUtil.isoConvert;
+import static com.google.udmi.util.JsonUtil.stringifyTerse;
 
 import com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl;
-import com.google.bos.udmi.service.pod.ContainerProvider;
-import com.google.bos.udmi.service.pod.UdmiServicePod;
 import java.time.Duration;
 import java.util.Date;
 import java.util.SortedMap;
@@ -23,6 +22,8 @@ import udmi.schema.Envelope.SubType;
  */
 public class CronJob extends ProcessorBase {
 
+  public static final String PAYLOAD_SEPARATOR = ":";
+  public static final String PATH_SEPARATOR = "/";
   private final Envelope srcEnvelope;
   private final Object message;
   private final SortedMap<String, Date> podReceiveTime = new ConcurrentSkipListMap<>();
@@ -38,29 +39,18 @@ public class CronJob extends ProcessorBase {
     distributorName = config.distributor;
     waitAndListen = Duration.ofSeconds(periodicSec / 2);
 
-    String[] targetMessage = config.payload.split(":", 2);
+    String[] targetMessage = config.payload.split(PAYLOAD_SEPARATOR, 2);
 
-    String[] parts = targetMessage[0].split("/");
+    String[] parts = targetMessage[0].split(PATH_SEPARATOR, 4);
     srcEnvelope = new Envelope();
     srcEnvelope.subType = SubType.fromValue(parts[0]);
     srcEnvelope.subFolder = SubFolder.fromValue(parts[1]);
     srcEnvelope.deviceRegistryId = ifTrueGet(parts.length >= 3, () -> parts[3]);
     srcEnvelope.deviceId = ifTrueGet(parts.length >= 4, () -> parts[4]);
 
-    DistributorPipe distributor = UdmiServicePod.maybeGetComponent(distributorName);
-    srcEnvelope.gatewayId = distributor.getRouteId(containerId);
-
     Class<?> messageClass = MessageDispatcherImpl.getMessageClassFor(srcEnvelope, false);
     String payload = ifTrueGet(targetMessage.length > 1, () -> targetMessage[1], EMPTY_JSON);
     message = fromStringStrict(messageClass, payload);
-
-    info("Set-up cron job for %s %s/%s to %s/%s", containerId, srcEnvelope.subType,
-        srcEnvelope.subFolder,
-        srcEnvelope.deviceRegistryId, srcEnvelope.deviceId);
-  }
-
-  public static ContainerProvider from(EndpointConfiguration config) {
-    return new CronJob(config);
   }
 
   @Override
@@ -105,5 +95,12 @@ public class CronJob extends ProcessorBase {
   private void trackPod(Envelope envelope) {
     debug("Pod timestamp update %s to %s", envelope.gatewayId, isoConvert(envelope.publishTime));
     podReceiveTime.put(envelope.gatewayId, envelope.publishTime);
+  }
+
+  @Override
+  public void activate() {
+    srcEnvelope.gatewayId = distributor.getRouteId(containerId);
+    super.activate();
+    info("Activated cron as %s", stringifyTerse(srcEnvelope));
   }
 }
