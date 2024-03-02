@@ -1,5 +1,6 @@
 package com.google.bos.udmi.service.core;
 
+import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static java.lang.String.format;
 
 import java.util.Objects;
@@ -17,5 +18,11 @@ public class ControlProcessor extends ProcessorBase {
 
   private static String makeTransactionId() {
     return format("CP:%08x", Objects.hash(System.currentTimeMillis(), Thread.currentThread()));
+  }
+
+  @Override
+  protected void defaultHandler(Object message) {
+    debug("Received defaulted control message type %s: %s", message.getClass().getSimpleName(),
+        stringifyTerse(message));
   }
 }
