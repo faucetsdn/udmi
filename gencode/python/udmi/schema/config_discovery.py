@@ -1,7 +1,7 @@
 """Generated class for config_discovery.json"""
 
 
-class Object35F5CC41:
+class ObjectA88FC30E:
   """Generated schema class"""
 
   def __init__(self):
@@ -14,7 +14,7 @@ class Object35F5CC41:
   def from_dict(source):
     if not source:
       return None
-    result = Object35F5CC41()
+    result = ObjectA88FC30E()
     result.families = source.get('families')
     result.devices = source.get('devices')
     result.points = source.get('points')
@@ -27,7 +27,7 @@ class Object35F5CC41:
       return None
     result = {}
     for key in source:
-      result[key] = Object35F5CC41.from_dict(source[key])
+      result[key] = ObjectA88FC30E.from_dict(source[key])
     return result
 
   @staticmethod
@@ -65,7 +65,7 @@ class DiscoveryConfig:
       return None
     result = DiscoveryConfig()
     result.generation = source.get('generation')
-    result.enumerate = Object35F5CC41.from_dict(source.get('enumerate'))
+    result.enumerate = ObjectA88FC30E.from_dict(source.get('enumerate'))
     result.families = FamilyDiscoveryConfig.map_from(source.get('families'))
     return result
 

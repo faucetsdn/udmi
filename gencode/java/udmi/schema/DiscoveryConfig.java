@@ -32,7 +32,12 @@ public class DiscoveryConfig {
     @JsonProperty("generation")
     @JsonPropertyDescription("Generational marker for controlling enumeration")
     public Date generation;
+    /**
+     * Indicates which discovery sub-categories to activate
+     * 
+     */
     @JsonProperty("enumerate")
+    @JsonPropertyDescription("Indicates which discovery sub-categories to activate")
     public Enumerate enumerate;
     /**
      * Address family config for a scan.
