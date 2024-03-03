@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import udmi.schema.FamilyDiscoveryEvent;
+import udmi.schema.FamilyDiscovery;
 import udmi.schema.FamilyLocalnetState;
 import udmi.schema.LocalnetState;
 import udmi.schema.PubberConfiguration;
@@ -162,14 +162,14 @@ public class LocalnetManager extends ManagerBase {
     }
   }
 
-  Map<String, FamilyDiscoveryEvent> enumerateFamilies() {
+  Map<String, FamilyDiscovery> enumerateFamilies() {
     return localnetState.families.keySet().stream()
-        .collect(toMap(key -> key, this::makeFamilyDiscoveryEvent));
+        .collect(toMap(key -> key, this::makeFamilyDiscovery));
   }
 
-  private FamilyDiscoveryEvent makeFamilyDiscoveryEvent(String key) {
-    FamilyDiscoveryEvent familyDiscoveryEvent = new FamilyDiscoveryEvent();
-    familyDiscoveryEvent.addr = localnetState.families.get(key).addr;
-    return familyDiscoveryEvent;
+  private FamilyDiscovery makeFamilyDiscovery(String key) {
+    FamilyDiscovery familyDiscovery = new FamilyDiscovery();
+    familyDiscovery.addr = localnetState.families.get(key).addr;
+    return familyDiscovery;
   }
 }

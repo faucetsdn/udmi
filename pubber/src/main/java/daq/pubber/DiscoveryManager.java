@@ -19,12 +19,12 @@ import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvent;
 import udmi.schema.DiscoveryState;
 import udmi.schema.Enumerate;
+import udmi.schema.FamilyDiscovery;
 import udmi.schema.FamilyDiscoveryConfig;
-import udmi.schema.FamilyDiscoveryEvent;
 import udmi.schema.FamilyDiscoveryState;
 import udmi.schema.FamilyLocalnetModel;
 import udmi.schema.Metadata;
-import udmi.schema.PointEnumerationEvent;
+import udmi.schema.PointDiscovery;
 import udmi.schema.PointPointsetModel;
 import udmi.schema.PubberConfiguration;
 
@@ -162,7 +162,7 @@ public class DiscoveryManager extends ManagerBase {
           discoveryEvent.families = targetMetadata.localnet.families.entrySet().stream()
               .collect(toMap(Map.Entry::getKey, this::eventForTarget));
           discoveryEvent.families.computeIfAbsent("iot",
-              key -> new FamilyDiscoveryEvent()).addr = deviceId;
+              key -> new FamilyDiscovery()).addr = deviceId;
           if (isGetTrue(() -> discoveryConfig.families.get(family).enumerate)) {
             discoveryEvent.points = enumeratePoints(deviceId);
           }
@@ -175,8 +175,8 @@ public class DiscoveryManager extends ManagerBase {
     }
   }
 
-  private FamilyDiscoveryEvent eventForTarget(Map.Entry<String, FamilyLocalnetModel> target) {
-    FamilyDiscoveryEvent event = new FamilyDiscoveryEvent();
+  private FamilyDiscovery eventForTarget(Map.Entry<String, FamilyLocalnetModel> target) {
+    FamilyDiscovery event = new FamilyDiscovery();
     event.addr = target.getValue().addr;
     return event;
   }
@@ -220,24 +220,24 @@ public class DiscoveryManager extends ManagerBase {
     return isGetTrue(() -> condition) ? supplier.get() : null;
   }
 
-  private Map<String, PointEnumerationEvent> enumeratePoints(String deviceId) {
+  private Map<String, PointDiscovery> enumeratePoints(String deviceId) {
     return siteModel.getMetadata(deviceId).pointset.points.entrySet().stream().collect(
-        Collectors.toMap(this::getPointUniqKey, this::getPointEnumerationEvent));
+        Collectors.toMap(this::getPointUniqKey, this::getPointDiscovery));
   }
 
   private String getPointUniqKey(Map.Entry<String, PointPointsetModel> entry) {
     return format("%08x", entry.getKey().hashCode());
   }
 
-  private PointEnumerationEvent getPointEnumerationEvent(
+  private PointDiscovery getPointDiscovery(
       Map.Entry<String, PointPointsetModel> entry) {
-    PointEnumerationEvent pointEnumerationEvent = new PointEnumerationEvent();
+    PointDiscovery pointDiscovery = new PointDiscovery();
     PointPointsetModel model = entry.getValue();
-    pointEnumerationEvent.writable = model.writable;
-    pointEnumerationEvent.units = model.units;
-    pointEnumerationEvent.ref = model.ref;
-    pointEnumerationEvent.name = entry.getKey();
-    return pointEnumerationEvent;
+    pointDiscovery.writable = model.writable;
+    pointDiscovery.units = model.units;
+    pointDiscovery.ref = model.ref;
+    pointDiscovery.name = entry.getKey();
+    return pointDiscovery;
   }
 
   private void updateState() {
