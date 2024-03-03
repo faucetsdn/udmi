@@ -15,10 +15,10 @@ import static udmi.schema.Bucket.ENUMERATION;
 import static udmi.schema.Bucket.ENUMERATION_FAMILIES;
 import static udmi.schema.Bucket.ENUMERATION_FEATURES;
 import static udmi.schema.Bucket.ENUMERATION_POINTSET;
-import static udmi.schema.FeatureEnumeration.FeatureStage.ALPHA;
-import static udmi.schema.FeatureEnumeration.FeatureStage.BETA;
-import static udmi.schema.FeatureEnumeration.FeatureStage.PREVIEW;
-import static udmi.schema.FeatureEnumeration.FeatureStage.STABLE;
+import static udmi.schema.FeatureDiscovery.FeatureStage.ALPHA;
+import static udmi.schema.FeatureDiscovery.FeatureStage.BETA;
+import static udmi.schema.FeatureDiscovery.FeatureStage.PREVIEW;
+import static udmi.schema.FeatureDiscovery.FeatureStage.STABLE;
 
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
@@ -46,7 +46,7 @@ import udmi.schema.DiscoveryEvent;
 import udmi.schema.Enumerate;
 import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyDiscoveryState;
-import udmi.schema.FeatureEnumeration;
+import udmi.schema.FeatureDiscovery;
 
 /**
  * Validation tests for discovery scan and enumeration capabilities.
@@ -63,7 +63,7 @@ public class DiscoverySequences extends SequenceBase {
     allowDeviceStateChange("discovery");
   }
 
-  private static boolean isActive(Entry<String, FeatureEnumeration> entry) {
+  private static boolean isActive(Entry<String, FeatureDiscovery> entry) {
     return Optional.ofNullable(entry.getValue().stage).orElse(STABLE).compareTo(BETA) >= 0;
   }
 
@@ -103,7 +103,7 @@ public class DiscoverySequences extends SequenceBase {
     }
 
     if (isTrue(enumerate.features)) {
-      checkFeatureEnumeration(event.features);
+      checkFeatureDiscovery(event.features);
     } else {
       checkThat("no feature enumeration", () -> event.features == null);
     }
@@ -117,7 +117,7 @@ public class DiscoverySequences extends SequenceBase {
     }
   }
 
-  private void checkFeatureEnumeration(Map<String, FeatureEnumeration> features) {
+  private void checkFeatureDiscovery(Map<String, FeatureDiscovery> features) {
     Set<String> enumeratedFeatures = features.entrySet().stream()
         .filter(DiscoverySequences::isActive).map(Entry::getKey).collect(Collectors.toSet());
     requireNonNull(deviceMetadata.features, "device metadata features missing");
