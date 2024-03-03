@@ -1,17 +1,18 @@
-"""Generated class for event_discovery_device.json"""
+"""Generated class for discovery_feature.json"""
 
 
-class DeviceDiscoveryEvent:
+class FeatureDiscovery:
   """Generated schema class"""
 
   def __init__(self):
-    pass
+    self.stage = None
 
   @staticmethod
   def from_dict(source):
     if not source:
       return None
-    result = DeviceDiscoveryEvent()
+    result = FeatureDiscovery()
+    result.stage = source.get('stage')
     return result
 
   @staticmethod
@@ -20,7 +21,7 @@ class DeviceDiscoveryEvent:
       return None
     result = {}
     for key in source:
-      result[key] = DeviceDiscoveryEvent.from_dict(source[key])
+      result[key] = FeatureDiscovery.from_dict(source[key])
     return result
 
   @staticmethod
@@ -32,4 +33,6 @@ class DeviceDiscoveryEvent:
 
   def to_dict(self):
     result = {}
+    if self.stage:
+      result['stage'] = self.stage # 5
     return result

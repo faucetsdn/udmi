@@ -13,7 +13,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 /**
  * Discovery Event
  * <p>
- * [Discovery result](../docs/specs/discovery.md) with implicit enumeration
+ * [Discovery result](../docs/specs/discovery.md) with implicit discovery
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -81,40 +81,40 @@ public class DiscoveryEvent {
     @JsonPropertyDescription("The primary address of the device (for scan_family)")
     public java.lang.String scan_addr;
     /**
-     * Address family discovery enumeration results.
+     * Address family discovery discovery results.
      * 
      */
     @JsonProperty("families")
-    @JsonPropertyDescription("Address family discovery enumeration results.")
-    public Map<String, FamilyDiscoveryEvent> families;
+    @JsonPropertyDescription("Address family discovery discovery results.")
+    public Map<String, FamilyDiscovery> families;
     /**
      * Registry discovery results.
      * 
      */
     @JsonProperty("registries")
     @JsonPropertyDescription("Registry discovery results.")
-    public Map<String, RegistryDiscoveryEvent> registries;
+    public Map<String, RegistryDiscovery> registries;
     /**
      * Device discovery scan results.
      * 
      */
     @JsonProperty("devices")
     @JsonPropertyDescription("Device discovery scan results.")
-    public Map<String, DeviceDiscoveryEvent> devices;
+    public Map<String, DeviceDiscovery> devices;
     /**
      * Collection of data points available for this device.
      * 
      */
     @JsonProperty("points")
     @JsonPropertyDescription("Collection of data points available for this device.")
-    public Map<String, PointEnumerationEvent> points;
+    public Map<String, PointDiscovery> points;
     /**
-     * Enumeration of features supported by this device.
+     * Discovery of features supported by this device.
      * 
      */
     @JsonProperty("features")
-    @JsonPropertyDescription("Enumeration of features supported by this device.")
-    public Map<String, FeatureEnumeration> features;
+    @JsonPropertyDescription("Discovery of features supported by this device.")
+    public Map<String, FeatureDiscovery> features;
     /**
      * System Discovery Event
      * <p>

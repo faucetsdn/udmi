@@ -44,11 +44,11 @@ public class Event {
     /**
      * Discovery Event
      * <p>
-     * [Discovery result](../docs/specs/discovery.md) with implicit enumeration
+     * [Discovery result](../docs/specs/discovery.md) with implicit discovery
      * 
      */
     @JsonProperty("discovery")
-    @JsonPropertyDescription("[Discovery result](../docs/specs/discovery.md) with implicit enumeration")
+    @JsonPropertyDescription("[Discovery result](../docs/specs/discovery.md) with implicit discovery")
     public DiscoveryEvent discovery;
 
     @Override

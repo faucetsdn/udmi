@@ -1,18 +1,18 @@
-"""Generated class for enumeration_feature.json"""
+"""Generated class for discovery_family.json"""
 
 
-class FeatureEnumeration:
+class FamilyDiscovery:
   """Generated schema class"""
 
   def __init__(self):
-    self.stage = None
+    self.addr = None
 
   @staticmethod
   def from_dict(source):
     if not source:
       return None
-    result = FeatureEnumeration()
-    result.stage = source.get('stage')
+    result = FamilyDiscovery()
+    result.addr = source.get('addr')
     return result
 
   @staticmethod
@@ -21,7 +21,7 @@ class FeatureEnumeration:
       return None
     result = {}
     for key in source:
-      result[key] = FeatureEnumeration.from_dict(source[key])
+      result[key] = FamilyDiscovery.from_dict(source[key])
     return result
 
   @staticmethod
@@ -33,6 +33,6 @@ class FeatureEnumeration:
 
   def to_dict(self):
     result = {}
-    if self.stage:
-      result['stage'] = self.stage # 5
+    if self.addr:
+      result['addr'] = self.addr # 5
     return result

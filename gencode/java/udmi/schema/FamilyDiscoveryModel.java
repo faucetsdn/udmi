@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Family Discovery Testing Model
+ * Family Discovery Model
  * <p>
  * 
  * 
@@ -17,7 +17,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 })
 @Generated("jsonschema2pojo")
-public class FamilyDiscoveryTestingModel {
+public class FamilyDiscoveryModel {
 
 
     @Override
@@ -31,10 +31,10 @@ public class FamilyDiscoveryTestingModel {
         if (other == this) {
             return true;
         }
-        if ((other instanceof FamilyDiscoveryTestingModel) == false) {
+        if ((other instanceof FamilyDiscoveryModel) == false) {
             return false;
         }
-        FamilyDiscoveryTestingModel rhs = ((FamilyDiscoveryTestingModel) other);
+        FamilyDiscoveryModel rhs = ((FamilyDiscoveryModel) other);
         return true;
     }
 

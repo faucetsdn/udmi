@@ -22,7 +22,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class DiscoveryModel {
 
     @JsonProperty("families")
-    public HashMap<String, FamilyDiscoveryTestingModel> families;
+    public HashMap<String, FamilyDiscoveryModel> families;
 
     @Override
     public int hashCode() {

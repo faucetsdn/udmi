@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Family Discovery Event
+ * Family Discovery
  * <p>
  * Discovery enumeration information for a protocol family.
  * 
@@ -19,7 +19,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "addr"
 })
 @Generated("jsonschema2pojo")
-public class FamilyDiscoveryEvent {
+public class FamilyDiscovery {
 
     /**
      * Device addr in the namespace of the given family
@@ -42,10 +42,10 @@ public class FamilyDiscoveryEvent {
         if (other == this) {
             return true;
         }
-        if ((other instanceof FamilyDiscoveryEvent) == false) {
+        if ((other instanceof FamilyDiscovery) == false) {
             return false;
         }
-        FamilyDiscoveryEvent rhs = ((FamilyDiscoveryEvent) other);
+        FamilyDiscovery rhs = ((FamilyDiscovery) other);
         return ((this.addr == rhs.addr)||((this.addr!= null)&&this.addr.equals(rhs.addr)));
     }
 

@@ -1,20 +1,17 @@
-"""Generated class for event_discovery_registry.json"""
+"""Generated class for discovery_device.json"""
 
 
-class RegistryDiscoveryEvent:
+class DeviceDiscovery:
   """Generated schema class"""
 
   def __init__(self):
-    self.last_seen = None
-    self.last_update = None
+    pass
 
   @staticmethod
   def from_dict(source):
     if not source:
       return None
-    result = RegistryDiscoveryEvent()
-    result.last_seen = source.get('last_seen')
-    result.last_update = source.get('last_update')
+    result = DeviceDiscovery()
     return result
 
   @staticmethod
@@ -23,7 +20,7 @@ class RegistryDiscoveryEvent:
       return None
     result = {}
     for key in source:
-      result[key] = RegistryDiscoveryEvent.from_dict(source[key])
+      result[key] = DeviceDiscovery.from_dict(source[key])
     return result
 
   @staticmethod
@@ -35,8 +32,4 @@ class RegistryDiscoveryEvent:
 
   def to_dict(self):
     result = {}
-    if self.last_seen:
-      result['last_seen'] = self.last_seen # 5
-    if self.last_update:
-      result['last_update'] = self.last_update # 5
     return result

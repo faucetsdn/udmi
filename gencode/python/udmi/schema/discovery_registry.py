@@ -1,18 +1,20 @@
-"""Generated class for event_discovery_family.json"""
+"""Generated class for discovery_registry.json"""
 
 
-class FamilyDiscoveryEvent:
+class RegistryDiscovery:
   """Generated schema class"""
 
   def __init__(self):
-    self.addr = None
+    self.last_seen = None
+    self.last_update = None
 
   @staticmethod
   def from_dict(source):
     if not source:
       return None
-    result = FamilyDiscoveryEvent()
-    result.addr = source.get('addr')
+    result = RegistryDiscovery()
+    result.last_seen = source.get('last_seen')
+    result.last_update = source.get('last_update')
     return result
 
   @staticmethod
@@ -21,7 +23,7 @@ class FamilyDiscoveryEvent:
       return None
     result = {}
     for key in source:
-      result[key] = FamilyDiscoveryEvent.from_dict(source[key])
+      result[key] = RegistryDiscovery.from_dict(source[key])
     return result
 
   @staticmethod
@@ -33,6 +35,8 @@ class FamilyDiscoveryEvent:
 
   def to_dict(self):
     result = {}
-    if self.addr:
-      result['addr'] = self.addr # 5
+    if self.last_seen:
+      result['last_seen'] = self.last_seen # 5
+    if self.last_update:
+      result['last_update'] = self.last_update # 5
     return result

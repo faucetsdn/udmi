@@ -1,10 +1,10 @@
 """Generated class for event_discovery.json"""
 from .entry import Entry
-from .event_discovery_family import FamilyDiscoveryEvent
-from .event_discovery_registry import RegistryDiscoveryEvent
-from .event_discovery_device import DeviceDiscoveryEvent
-from .event_discovery_point import PointEnumerationEvent
-from .enumeration_feature import FeatureEnumeration
+from .discovery_family import FamilyDiscovery
+from .discovery_registry import RegistryDiscovery
+from .discovery_device import DeviceDiscovery
+from .discovery_point import PointDiscovery
+from .discovery_feature import FeatureDiscovery
 from .ancillary_properties import AncillaryProperties
 from .state_system_hardware import StateSystemHardware
 
@@ -82,11 +82,11 @@ class DiscoveryEvent:
     result.status = Entry.from_dict(source.get('status'))
     result.scan_family = source.get('scan_family')
     result.scan_addr = source.get('scan_addr')
-    result.families = FamilyDiscoveryEvent.map_from(source.get('families'))
-    result.registries = RegistryDiscoveryEvent.map_from(source.get('registries'))
-    result.devices = DeviceDiscoveryEvent.map_from(source.get('devices'))
-    result.points = PointEnumerationEvent.map_from(source.get('points'))
-    result.features = FeatureEnumeration.map_from(source.get('features'))
+    result.families = FamilyDiscovery.map_from(source.get('families'))
+    result.registries = RegistryDiscovery.map_from(source.get('registries'))
+    result.devices = DeviceDiscovery.map_from(source.get('devices'))
+    result.points = PointDiscovery.map_from(source.get('points'))
+    result.features = FeatureDiscovery.map_from(source.get('features'))
     result.system = SystemDiscoveryEvent.from_dict(source.get('system'))
     return result
 
@@ -121,15 +121,15 @@ class DiscoveryEvent:
     if self.scan_addr:
       result['scan_addr'] = self.scan_addr # 5
     if self.families:
-      result['families'] = FamilyDiscoveryEvent.expand_dict(self.families) # 2
+      result['families'] = FamilyDiscovery.expand_dict(self.families) # 2
     if self.registries:
-      result['registries'] = RegistryDiscoveryEvent.expand_dict(self.registries) # 2
+      result['registries'] = RegistryDiscovery.expand_dict(self.registries) # 2
     if self.devices:
-      result['devices'] = DeviceDiscoveryEvent.expand_dict(self.devices) # 2
+      result['devices'] = DeviceDiscovery.expand_dict(self.devices) # 2
     if self.points:
-      result['points'] = PointEnumerationEvent.expand_dict(self.points) # 2
+      result['points'] = PointDiscovery.expand_dict(self.points) # 2
     if self.features:
-      result['features'] = FeatureEnumeration.expand_dict(self.features) # 2
+      result['features'] = FeatureDiscovery.expand_dict(self.features) # 2
     if self.system:
       result['system'] = self.system.to_dict() # 4
     return result

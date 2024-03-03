@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Device Discovery Event
+ * Device Discovery
  * <p>
  * Information about an individual device scan result.
  * 
@@ -17,7 +17,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 })
 @Generated("jsonschema2pojo")
-public class DeviceDiscoveryEvent {
+public class DeviceDiscovery {
 
 
     @Override
@@ -31,10 +31,10 @@ public class DeviceDiscoveryEvent {
         if (other == this) {
             return true;
         }
-        if ((other instanceof DeviceDiscoveryEvent) == false) {
+        if ((other instanceof DeviceDiscovery) == false) {
             return false;
         }
-        DeviceDiscoveryEvent rhs = ((DeviceDiscoveryEvent) other);
+        DeviceDiscovery rhs = ((DeviceDiscovery) other);
         return true;
     }
 

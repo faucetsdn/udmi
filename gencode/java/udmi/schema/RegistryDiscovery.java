@@ -10,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Registry Discovery Event
+ * Registry Discovery
  * <p>
  * Information about an individual registry.
  * 
@@ -21,7 +21,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "last_update"
 })
 @Generated("jsonschema2pojo")
-public class RegistryDiscoveryEvent {
+public class RegistryDiscovery {
 
     /**
      * Timestamp of when a message was last seen for this registry
@@ -51,10 +51,10 @@ public class RegistryDiscoveryEvent {
         if (other == this) {
             return true;
         }
-        if ((other instanceof RegistryDiscoveryEvent) == false) {
+        if ((other instanceof RegistryDiscovery) == false) {
             return false;
         }
-        RegistryDiscoveryEvent rhs = ((RegistryDiscoveryEvent) other);
+        RegistryDiscovery rhs = ((RegistryDiscovery) other);
         return (((this.last_seen == rhs.last_seen)||((this.last_seen!= null)&&this.last_seen.equals(rhs.last_seen)))&&((this.last_update == rhs.last_update)||((this.last_update!= null)&&this.last_update.equals(rhs.last_update))));
     }
 

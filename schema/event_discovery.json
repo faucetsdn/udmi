@@ -1,7 +1,7 @@
 {
   "$udmi_version": "1.5.0",
   "title": "Discovery Event",
-  "description": "[Discovery result](../docs/specs/discovery.md) with implicit enumeration",
+  "description": "[Discovery result](../docs/specs/discovery.md) with implicit discovery",
   "$section": "Messages",
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
@@ -35,13 +35,13 @@
       "type": "string"
     },
     "families": {
-      "description": "Address family discovery enumeration results.",
+      "description": "Address family discovery discovery results.",
       "type": "object",
       "additionalProperties": false,
-      "existingJavaType": "java.util.Map<String, FamilyDiscoveryEvent>",
+      "existingJavaType": "java.util.Map<String, FamilyDiscovery>",
       "patternProperties": {
         "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
-          "$ref": "file:event_discovery_family.json"
+          "$ref": "file:discovery_family.json"
         }
       }
     },
@@ -49,10 +49,10 @@
       "description": "Registry discovery results.",
       "type": "object",
       "additionalProperties": false,
-      "existingJavaType": "java.util.Map<String, RegistryDiscoveryEvent>",
+      "existingJavaType": "java.util.Map<String, RegistryDiscovery>",
       "patternProperties": {
         "^[A-Z]{2,6}-[1-9][0-9]*$": {
-          "$ref": "file:event_discovery_registry.json"
+          "$ref": "file:discovery_registry.json"
         }
       }
     },
@@ -60,30 +60,30 @@
       "description": "Device discovery scan results.",
       "type": "object",
       "additionalProperties": false,
-      "existingJavaType": "java.util.Map<String, DeviceDiscoveryEvent>",
+      "existingJavaType": "java.util.Map<String, DeviceDiscovery>",
       "patternProperties": {
         "^[A-Z]{2,6}-[1-9][0-9]*$": {
-          "$ref": "file:event_discovery_device.json"
+          "$ref": "file:discovery_device.json"
         }
       }
     },
     "points": {
       "description": "Collection of data points available for this device.",
       "additionalProperties": false,
-      "existingJavaType": "java.util.Map<String, PointEnumerationEvent>",
+      "existingJavaType": "java.util.Map<String, PointDiscovery>",
       "patternProperties": {
         "^[-_.:/a-zA-Z0-9]+$": {
-          "$ref": "file:event_discovery_point.json#"
+          "$ref": "file:discovery_point.json#"
         }
       }
     },
     "features": {
-      "description": "Enumeration of features supported by this device.",
+      "description": "Discovery of features supported by this device.",
       "additionalProperties": false,
-      "existingJavaType": "java.util.Map<String, FeatureEnumeration>",
+      "existingJavaType": "java.util.Map<String, FeatureDiscovery>",
       "patternProperties": {
         "^[._a-zA-Z]+$": {
-          "$ref": "file:enumeration_feature.json"
+          "$ref": "file:discovery_feature.json"
         }
       }
     },

@@ -12,9 +12,9 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Point Enumeration Event
+ * Point Discovery
  * <p>
- * Object representation for for a single point enumeration
+ * Object representation for for a single point discovery
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -30,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "ancillary"
 })
 @Generated("jsonschema2pojo")
-public class PointEnumerationEvent {
+public class PointDiscovery {
 
     /**
      * Friendly name for the point, if known
@@ -119,10 +119,10 @@ public class PointEnumerationEvent {
         if (other == this) {
             return true;
         }
-        if ((other instanceof PointEnumerationEvent) == false) {
+        if ((other instanceof PointDiscovery) == false) {
             return false;
         }
-        PointEnumerationEvent rhs = ((PointEnumerationEvent) other);
+        PointDiscovery rhs = ((PointDiscovery) other);
         return ((((((((((this.ref == rhs.ref)||((this.ref!= null)&&this.ref.equals(rhs.ref)))&&((this.possible_values == rhs.possible_values)||((this.possible_values!= null)&&this.possible_values.equals(rhs.possible_values))))&&((this.name == rhs.name)||((this.name!= null)&&this.name.equals(rhs.name))))&&((this.description == rhs.description)||((this.description!= null)&&this.description.equals(rhs.description))))&&((this.units == rhs.units)||((this.units!= null)&&this.units.equals(rhs.units))))&&((this.type == rhs.type)||((this.type!= null)&&this.type.equals(rhs.type))))&&((this.ancillary == rhs.ancillary)||((this.ancillary!= null)&&this.ancillary.equals(rhs.ancillary))))&&((this.writable == rhs.writable)||((this.writable!= null)&&this.writable.equals(rhs.writable))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
     }
 

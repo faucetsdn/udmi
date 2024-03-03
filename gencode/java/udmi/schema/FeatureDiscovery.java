@@ -13,9 +13,9 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 
 /**
- * Feature Enumeration
+ * Feature Discovery
  * <p>
- * Object representation for for a single feature enumeration
+ * Object representation for for a single feature
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -23,7 +23,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
     "stage"
 })
 @Generated("jsonschema2pojo")
-public class FeatureEnumeration {
+public class FeatureDiscovery {
 
     /**
      * FeatureStage
@@ -33,7 +33,7 @@ public class FeatureEnumeration {
      */
     @JsonProperty("stage")
     @JsonPropertyDescription("Stage of a feature implemenation")
-    public FeatureEnumeration.FeatureStage stage;
+    public FeatureDiscovery.FeatureStage stage;
 
     @Override
     public int hashCode() {
@@ -47,10 +47,10 @@ public class FeatureEnumeration {
         if (other == this) {
             return true;
         }
-        if ((other instanceof FeatureEnumeration) == false) {
+        if ((other instanceof FeatureDiscovery) == false) {
             return false;
         }
-        FeatureEnumeration rhs = ((FeatureEnumeration) other);
+        FeatureDiscovery rhs = ((FeatureDiscovery) other);
         return ((this.stage == rhs.stage)||((this.stage!= null)&&this.stage.equals(rhs.stage)));
     }
 
@@ -70,10 +70,10 @@ public class FeatureEnumeration {
         BETA("beta"),
         STABLE("stable");
         private final String value;
-        private final static Map<String, FeatureEnumeration.FeatureStage> CONSTANTS = new HashMap<String, FeatureEnumeration.FeatureStage>();
+        private final static Map<String, FeatureDiscovery.FeatureStage> CONSTANTS = new HashMap<String, FeatureDiscovery.FeatureStage>();
 
         static {
-            for (FeatureEnumeration.FeatureStage c: values()) {
+            for (FeatureDiscovery.FeatureStage c: values()) {
                 CONSTANTS.put(c.value, c);
             }
         }
@@ -93,8 +93,8 @@ public class FeatureEnumeration {
         }
 
         @JsonCreator
-        public static FeatureEnumeration.FeatureStage fromValue(String value) {
-            FeatureEnumeration.FeatureStage constant = CONSTANTS.get(value);
+        public static FeatureDiscovery.FeatureStage fromValue(String value) {
+            FeatureDiscovery.FeatureStage constant = CONSTANTS.get(value);
             if (constant == null) {
                 throw new IllegalArgumentException(value);
             } else {
