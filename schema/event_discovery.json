@@ -45,6 +45,17 @@
         }
       }
     },
+    "registries": {
+      "description": "Registry discovery results.",
+      "type": "object",
+      "additionalProperties": false,
+      "existingJavaType": "java.util.Map<String, RegistryDiscoveryEvent>",
+      "patternProperties": {
+        "^[A-Z]{2,6}-[1-9][0-9]*$": {
+          "$ref": "file:event_discovery_registry.json"
+        }
+      }
+    },
     "devices": {
       "description": "Device discovery scan results.",
       "type": "object",

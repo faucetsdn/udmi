@@ -1,6 +1,7 @@
 """Generated class for event_discovery.json"""
 from .entry import Entry
 from .event_discovery_family import FamilyDiscoveryEvent
+from .event_discovery_registry import RegistryDiscoveryEvent
 from .event_discovery_device import DeviceDiscoveryEvent
 from .event_discovery_point import PointEnumerationEvent
 from .enumeration_feature import FeatureEnumeration
@@ -64,6 +65,7 @@ class DiscoveryEvent:
     self.scan_family = None
     self.scan_addr = None
     self.families = None
+    self.registries = None
     self.devices = None
     self.points = None
     self.features = None
@@ -81,6 +83,7 @@ class DiscoveryEvent:
     result.scan_family = source.get('scan_family')
     result.scan_addr = source.get('scan_addr')
     result.families = FamilyDiscoveryEvent.map_from(source.get('families'))
+    result.registries = RegistryDiscoveryEvent.map_from(source.get('registries'))
     result.devices = DeviceDiscoveryEvent.map_from(source.get('devices'))
     result.points = PointEnumerationEvent.map_from(source.get('points'))
     result.features = FeatureEnumeration.map_from(source.get('features'))
@@ -119,6 +122,8 @@ class DiscoveryEvent:
       result['scan_addr'] = self.scan_addr # 5
     if self.families:
       result['families'] = FamilyDiscoveryEvent.expand_dict(self.families) # 2
+    if self.registries:
+      result['registries'] = RegistryDiscoveryEvent.expand_dict(self.registries) # 2
     if self.devices:
       result['devices'] = DeviceDiscoveryEvent.expand_dict(self.devices) # 2
     if self.points:

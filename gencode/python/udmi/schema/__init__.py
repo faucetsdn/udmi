@@ -34,6 +34,7 @@ from .event_discovery import DiscoveryEvent
 from .event_discovery_device import DeviceDiscoveryEvent
 from .event_discovery_family import FamilyDiscoveryEvent
 from .event_discovery_point import PointEnumerationEvent
+from .event_discovery_registry import RegistryDiscoveryEvent
 from .event_mapping import MappingEvent
 from .event_mapping_entities import MappingEventEntities
 from .event_mapping_entity import MappingEventEntity
