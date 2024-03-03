@@ -12,6 +12,7 @@
       "format": "date-time"
     },
     "enumerate": {
+      "description": "Indicates which discovery sub-categories to activate",
       "type": "object",
       "additionalProperties": false,
       "properties": {

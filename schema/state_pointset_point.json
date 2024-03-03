@@ -11,7 +11,7 @@
       "type": "string"
     },
     "value_state": {
-      "description": "Optional enumeration indicating the state of the points value.",
+      "description": "State of the individual point",
       "enum": [
         "initializing",
         "applied",
