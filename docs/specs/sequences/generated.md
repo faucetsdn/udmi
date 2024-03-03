@@ -49,7 +49,7 @@ Some caveats:
 * [gateway_attach_handling](#gateway_attach_handling-preview): Check adequate logging for gateway detach, errors, and reattach
 * [gateway_proxy_events](#gateway_proxy_events-beta): Check that a gateway proxies pointset events for indicated devices
 * [pointset_publish](#pointset_publish-beta): Check that a device publishes pointset events
-* [pointset_publish_interval](#pointset_publish_interval-beta): Check handling of sample rate and sample limit sec
+* [pointset_publish_interval](#pointset_publish_interval-beta): Check handling of sample_rate_sec and sample_limit_sec
 * [pointset_remove_point](#pointset_remove_point-beta): Check that pointset state does not report an unconfigured point
 * [pointset_request_extraneous](#pointset_request_extraneous-beta): Check error when pointset configuration contains extraneous point
 * [pointset_sample_rate](#pointset_sample_rate-beta): Check that a device publishes pointset events not faster than config sample_rate_sec
@@ -308,7 +308,7 @@ Check that a device publishes pointset events
 
 ## pointset_publish_interval (BETA)
 
-Check handling of sample rate and sample limit sec
+Check handling of sample_rate_sec and sample_limit_sec
 
 1. Update config before receive at least 4 pointset events:
     * Add `pointset.sample_rate_sec` = `8`
