@@ -1,18 +1,19 @@
 package com.google.bos.udmi.service.core;
 
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
-import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.JsonUtil.fromStringStrict;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
 
+import com.github.mustachejava.DefaultMustacheFactory;
+import com.github.mustachejava.Mustache;
 import com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl;
 import com.google.udmi.util.JsonUtil;
-import java.lang.reflect.Field;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.time.Duration;
-import java.time.Instant;
 import java.util.Date;
 import java.util.SortedMap;
 import java.util.concurrent.ConcurrentSkipListMap;
@@ -21,6 +22,7 @@ import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
+import udmi.schema.MessageTemplateData;
 
 /**
  * Simple clas to manage a distributed cron execution environment.
@@ -29,11 +31,14 @@ public class CronProcessor extends ProcessorBase {
 
   public static final String PAYLOAD_SEPARATOR = ":";
   public static final String PATH_SEPARATOR = "/";
+  private static final DefaultMustacheFactory MUSTACHE_FACTORY = new DefaultMustacheFactory();
   private final Envelope srcEnvelope;
-  private final Object message;
   private final SortedMap<String, Date> received = new ConcurrentSkipListMap<>();
   private final Duration waitAndListen;
   private final AtomicReference<Date> previousTick = new AtomicReference<>();
+  private final Mustache template;
+  private final Class<?> messageClass;
+  private final MessageTemplateData dataModel = new MessageTemplateData();
 
   /**
    * Create an instance with the given config.
@@ -53,9 +58,9 @@ public class CronProcessor extends ProcessorBase {
     srcEnvelope.deviceRegistryId = ifTrueGet(parts.length >= 3, () -> parts[3]);
     srcEnvelope.deviceId = ifTrueGet(parts.length >= 4, () -> parts[4]);
 
-    Class<?> messageClass = MessageDispatcherImpl.getMessageClassFor(srcEnvelope, false);
+    messageClass = MessageDispatcherImpl.getMessageClassFor(srcEnvelope, false);
     String payload = ifTrueGet(targetMessage.length > 1, () -> targetMessage[1], EMPTY_JSON);
-    message = fromStringStrict(messageClass, payload);
+    template = MUSTACHE_FACTORY.compile(new StringReader(payload), "payload_template");
   }
 
   @Override
@@ -68,17 +73,26 @@ public class CronProcessor extends ProcessorBase {
     info("Distributing %s %s/%s to %s/%s", containerId, srcEnvelope.subType, srcEnvelope.subFolder,
         srcEnvelope.deviceRegistryId, srcEnvelope.deviceId);
 
-    Date publishTime = new Date();
-    srcEnvelope.publishTime = publishTime;
+    try {
+      Date publishTime = new Date();
+      srcEnvelope.publishTime = publishTime;
+      dataModel.timestamp = publishTime;
 
-    distributor.publish(srcEnvelope, message, containerId);
+      StringWriter stringWriter = new StringWriter();
+      template.execute(stringWriter, dataModel).flush();
+      Object message = fromStringStrict(messageClass, stringWriter.toString());
 
-    trackPod(srcEnvelope);
+      distributor.publish(srcEnvelope, message, containerId);
 
-    Date before = previousTick.getAndSet(publishTime);
+      trackPod(srcEnvelope);
 
-    // Wait for half the window, to make sure everybody has a chance to report in.
-    scheduleIn(waitAndListen, () -> ifTrueThen(isAmGroot(before), this::processGroot));
+      Date before = previousTick.getAndSet(publishTime);
+
+      // Wait for half the window, to make sure everybody has a chance to report in.
+      scheduleIn(waitAndListen, () -> ifTrueThen(isAmGroot(before), () -> processGroot(message)));
+    } catch (Exception e) {
+      throw new RuntimeException("While executing cron task", e);
+    }
   }
 
   private boolean isAmGroot(Date cutoffTime) {
@@ -95,7 +109,7 @@ public class CronProcessor extends ProcessorBase {
     return srcEnvelope.gatewayId.equals(received.firstKey());
   }
 
-  private void processGroot() {
+  private void processGroot(Object message) {
     debug("Publishing as %s: %s", stringifyTerse(srcEnvelope), stringifyTerse(message));
     publish(srcEnvelope, message);
   }
