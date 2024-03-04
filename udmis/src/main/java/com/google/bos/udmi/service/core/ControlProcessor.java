@@ -1,8 +1,12 @@
 package com.google.bos.udmi.service.core;
 
+import static com.google.udmi.util.GeneralUtils.toDate;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static java.lang.String.format;
 
+import com.google.bos.udmi.service.pod.UdmiServicePod;
+import com.google.udmi.util.GeneralUtils;
+import java.sql.Date;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -18,6 +22,7 @@ import udmi.schema.RegistryDiscovery;
 public class ControlProcessor extends ProcessorBase {
 
   public static final String IOT_SCAN_FAMILY = "iot";
+  private TargetProcessor targetProcessor;
 
   public ControlProcessor(EndpointConfiguration config) {
     super(config);
@@ -28,13 +33,21 @@ public class ControlProcessor extends ProcessorBase {
   }
 
   @Override
+  public void activate() {
+    super.activate();
+    targetProcessor = UdmiServicePod.getComponent(TargetProcessor.class);
+  }
+
+  @Override
   protected void defaultHandler(Object message) {
     debug("Received defaulted control message type %s: %s", message.getClass().getSimpleName(),
         stringifyTerse(message));
   }
 
   private RegistryDiscovery makeRegistryDiscovery(String registryId) {
-    return new RegistryDiscovery();
+    RegistryDiscovery registryDiscovery = new RegistryDiscovery();
+    registryDiscovery.last_seen = toDate(targetProcessor.getLastSeen(registryId));
+    return registryDiscovery;
   }
 
   @DispatchHandler

@@ -194,6 +194,10 @@ public class GeneralUtils {
     }
   }
 
+  public static Date toDate(Instant lastSeen) {
+    return ifNotNullGet(lastSeen, Date::from);
+  }
+
   private static String writeToPrettyString(Object data, OutputFormat indent) {
     try {
       ByteArrayOutputStream outputString = new ByteArrayOutputStream();
