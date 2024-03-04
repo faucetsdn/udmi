@@ -17,7 +17,7 @@ import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 import udmi.schema.Bucket;
-import udmi.schema.FeatureEnumeration.FeatureStage;
+import udmi.schema.FeatureDiscovery.FeatureStage;
 
 /**
  * Specific tests for logical gateway devices. This is not the same as proxied

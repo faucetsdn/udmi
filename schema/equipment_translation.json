@@ -1,7 +1,7 @@
 {
   "$udmi_version": "1.5.0",
   "title": "Building Config",
-  "description": "[Discovery result](../docs/specs/discovery.md) with implicit enumeration",
+  "description": "[Discovery result](../docs/specs/discovery.md) with implicit results",
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,

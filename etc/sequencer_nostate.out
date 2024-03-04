@@ -12,7 +12,6 @@ RESULT pass pointset pointset_publish BETA 5/5 Sequence complete
 RESULT pass pointset pointset_publish_interval BETA 5/5 Sequence complete
 RESULT skip pointset pointset_remove_point BETA 0/0 State testing disabled
 RESULT skip pointset pointset_request_extraneous BETA 0/0 State testing disabled
-RESULT skip pointset pointset_sample_rate BETA 0/0 State testing disabled
 RESULT skip system broken_config BETA 0/1 State testing disabled
 CPBLTY skip system broken_config.logging ALPHA 0/1 Never executed
 RESULT skip system config_logging BETA 0/0 State testing disabled

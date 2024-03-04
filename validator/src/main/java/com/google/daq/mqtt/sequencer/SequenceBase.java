@@ -45,9 +45,9 @@ import static udmi.schema.Bucket.UNKNOWN_DEFAULT;
 import static udmi.schema.Category.VALIDATION_FEATURE_CAPABILITY;
 import static udmi.schema.Category.VALIDATION_FEATURE_SCHEMA;
 import static udmi.schema.Category.VALIDATION_FEATURE_SEQUENCE;
-import static udmi.schema.FeatureEnumeration.FeatureStage.ALPHA;
-import static udmi.schema.FeatureEnumeration.FeatureStage.PREVIEW;
-import static udmi.schema.FeatureEnumeration.FeatureStage.STABLE;
+import static udmi.schema.FeatureDiscovery.FeatureStage.ALPHA;
+import static udmi.schema.FeatureDiscovery.FeatureStage.PREVIEW;
+import static udmi.schema.FeatureDiscovery.FeatureStage.STABLE;
 import static udmi.schema.Level.ERROR;
 import static udmi.schema.Level.NOTICE;
 import static udmi.schema.Level.WARNING;
@@ -130,8 +130,8 @@ import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
 import udmi.schema.ExecutionConfiguration;
-import udmi.schema.FeatureEnumeration;
-import udmi.schema.FeatureEnumeration.FeatureStage;
+import udmi.schema.FeatureDiscovery;
+import udmi.schema.FeatureDiscovery.FeatureStage;
 import udmi.schema.FeatureValidationState;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
@@ -761,7 +761,7 @@ public class SequenceBase {
     if (bucket == SYSTEM || enableAllTargets || deviceMetadata.features == null) {
       return true;
     }
-    FeatureEnumeration metadata = deviceMetadata.features.get(bucket.value());
+    FeatureDiscovery metadata = deviceMetadata.features.get(bucket.value());
     if (metadata == null) {
       return false;
     }

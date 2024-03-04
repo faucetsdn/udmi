@@ -4,7 +4,7 @@ import static com.google.udmi.util.GeneralUtils.getNow;
 
 import udmi.schema.Category;
 import udmi.schema.Entry;
-import udmi.schema.PointEnumerationEvent;
+import udmi.schema.PointDiscovery;
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetEvent;
 import udmi.schema.PointPointsetState;
@@ -86,7 +86,7 @@ public abstract class BasicPoint implements AbstractPoint {
     try {
       if (!validateValue(config.set_value)) {
         state.status = createEntryFrom(Category.POINTSET_POINT_INVALID,
-                "Written value is not valid");
+            "Written value is not valid");
         state.value_state = Value_state.INVALID;
         dirty = state.value_state != previous;
         return;
@@ -117,8 +117,8 @@ public abstract class BasicPoint implements AbstractPoint {
   }
 
   @Override
-  public PointEnumerationEvent enumerate() {
-    PointEnumerationEvent point = new PointEnumerationEvent();
+  public PointDiscovery enumerate() {
+    PointDiscovery point = new PointDiscovery();
     point.description = getClass().getSimpleName() + " " + getName();
     point.writable = writable ? true : null;
     populateEnumeration(point);
@@ -135,5 +135,5 @@ public abstract class BasicPoint implements AbstractPoint {
     return entry;
   }
 
-  protected abstract void populateEnumeration(PointEnumerationEvent point);
+  protected abstract void populateEnumeration(PointDiscovery point);
 }

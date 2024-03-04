@@ -67,11 +67,11 @@ public class MappingCommand {
     /**
      * Building Config
      * <p>
-     * [Discovery result](../docs/specs/discovery.md) with implicit enumeration
+     * [Discovery result](../docs/specs/discovery.md) with implicit results
      * 
      */
     @JsonProperty("translation")
-    @JsonPropertyDescription("[Discovery result](../docs/specs/discovery.md) with implicit enumeration")
+    @JsonPropertyDescription("[Discovery result](../docs/specs/discovery.md) with implicit results")
     public HashMap<String, BuildingTranslation> translation;
 
     @Override
