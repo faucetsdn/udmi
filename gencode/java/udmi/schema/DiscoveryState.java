@@ -25,11 +25,11 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class DiscoveryState {
 
     /**
-     * Generational marker for enumeration
+     * Generational marker to group results together
      * 
      */
     @JsonProperty("generation")
-    @JsonPropertyDescription("Generational marker for enumeration")
+    @JsonPropertyDescription("Generational marker to group results together")
     public Date generation;
     /**
      * Discovery protocol families

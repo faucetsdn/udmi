@@ -7,7 +7,7 @@ import java.lang.annotation.Target;
 import java.lang.reflect.Method;
 import java.util.function.Supplier;
 import udmi.schema.Bucket;
-import udmi.schema.FeatureEnumeration.FeatureStage;
+import udmi.schema.FeatureDiscovery.FeatureStage;
 
 /**
  * Feature designation for line-item tests.

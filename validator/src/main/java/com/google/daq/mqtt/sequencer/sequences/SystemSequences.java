@@ -5,8 +5,8 @@ import static com.google.daq.mqtt.util.TimePeriodConstants.THREE_MINUTES_MS;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static java.lang.String.format;
 import static udmi.schema.Bucket.SYSTEM;
-import static udmi.schema.FeatureEnumeration.FeatureStage.ALPHA;
-import static udmi.schema.FeatureEnumeration.FeatureStage.BETA;
+import static udmi.schema.FeatureDiscovery.FeatureStage.ALPHA;
+import static udmi.schema.FeatureDiscovery.FeatureStage.BETA;
 
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;

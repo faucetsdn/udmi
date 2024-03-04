@@ -20,9 +20,9 @@ import static udmi.schema.Category.SYSTEM_CONFIG_PARSE;
 import static udmi.schema.Category.SYSTEM_CONFIG_PARSE_LEVEL;
 import static udmi.schema.Category.SYSTEM_CONFIG_RECEIVE;
 import static udmi.schema.Category.SYSTEM_CONFIG_RECEIVE_LEVEL;
-import static udmi.schema.FeatureEnumeration.FeatureStage.ALPHA;
-import static udmi.schema.FeatureEnumeration.FeatureStage.BETA;
-import static udmi.schema.FeatureEnumeration.FeatureStage.STABLE;
+import static udmi.schema.FeatureDiscovery.FeatureStage.ALPHA;
+import static udmi.schema.FeatureDiscovery.FeatureStage.BETA;
+import static udmi.schema.FeatureDiscovery.FeatureStage.STABLE;
 
 import com.google.daq.mqtt.sequencer.Capability;
 import com.google.daq.mqtt.sequencer.Feature;

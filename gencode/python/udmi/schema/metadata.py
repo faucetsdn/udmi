@@ -45,7 +45,7 @@ class Metadata:
     result.discovery = DiscoveryModel.from_dict(source.get('discovery'))
     result.localnet = LocalnetModel.from_dict(source.get('localnet'))
     result.testing = TestingModel.from_dict(source.get('testing'))
-    result.features = FeatureEnumeration.map_from(source.get('features'))
+    result.features = FeatureDiscovery.map_from(source.get('features'))
     result.pointset = PointsetModel.from_dict(source.get('pointset'))
     return result
 
@@ -92,7 +92,7 @@ class Metadata:
     if self.testing:
       result['testing'] = self.testing.to_dict() # 4
     if self.features:
-      result['features'] = FeatureEnumeration.expand_dict(self.features) # 2
+      result['features'] = FeatureDiscovery.expand_dict(self.features) # 2
     if self.pointset:
       result['pointset'] = self.pointset.to_dict() # 4
     return result

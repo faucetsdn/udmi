@@ -2,6 +2,6 @@
   /families/bacnet: object has missing required properties (["addr"])
   /families/bacnet: object instance has properties which are not allowed by the schema: ["id"]
   /families/mac: object instance has properties which are not allowed by the schema: ["group"]
-  /uniqs/bad_entity_name_: object instance has properties which are not allowed by the schema: ["present_value"]
+  /points/bad_entity_name_: object instance has properties which are not allowed by the schema: ["present_value"]
   object has missing required properties (["generation"])
-  object instance has properties which are not allowed by the schema: ["addr","id","points"]
+  object instance has properties which are not allowed by the schema: ["addr","id","uniqs"]
