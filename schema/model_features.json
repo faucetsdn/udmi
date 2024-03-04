@@ -5,10 +5,10 @@
   "type": "object",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "additionalProperties": false,
-  "existingJavaType": "java.util.Map<String, FeatureEnumeration>",
+  "existingJavaType": "java.util.Map<String, FeatureDiscovery>",
   "patternProperties": {
     "^[._a-zA-Z]+$": {
-      "$ref": "file:enumeration_feature.json"
+      "$ref": "file:discovery_feature.json"
     }
   }
 }

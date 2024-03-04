@@ -47,8 +47,9 @@ public interface IotAccessProvider extends ContainerProvider {
   String fetchState(String deviceRegistryId, String deviceId);
 
   /**
-   * Get all the registries that exist in a given region.  If region is null, then return all
-   * available regions.
+   * Get all the registries that exist in a given region. If region is null, then return all
+   * available regions. The term "region" here is used lightly, and really just means subdivisions
+   * of where the resource might be (so different backend systems or databases).
    */
   Set<String> getRegistriesForRegion(String region);
 

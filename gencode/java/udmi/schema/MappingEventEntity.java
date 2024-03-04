@@ -70,11 +70,11 @@ public class MappingEventEntity {
     /**
      * Building Config
      * <p>
-     * [Discovery result](../docs/specs/discovery.md) with implicit enumeration
+     * [Discovery result](../docs/specs/discovery.md) with implicit results
      * 
      */
     @JsonProperty("translation")
-    @JsonPropertyDescription("[Discovery result](../docs/specs/discovery.md) with implicit enumeration")
+    @JsonPropertyDescription("[Discovery result](../docs/specs/discovery.md) with implicit results")
     public HashMap<String, BuildingTranslation> translation;
     /**
      * DBO fields which are required by the type but absent from the translation

@@ -1,4 +1,5 @@
 //
+// Self enumeration event (a device is describing itself)
 // Sent on MQTT topic: /devices/{device_id}/events/discovery
 // where {device_id} is that of the enumerated node.
 //
@@ -6,7 +7,7 @@
   "version": "1.5.0",
   "timestamp": "2018-08-26T21:42:12.237Z",
   "generation": "2018-08-26T21:37:12Z",
-  "uniqs": {
+  "points": {
     // Numerical value with an articulated unit
     "sup_flow_actual_avo_1": {
       "units": "percent",  // with units, type typically defaults to 'number'

@@ -1,21 +1,23 @@
 """Generated class for config_discovery.json"""
 
 
-class ObjectB9C13F4B:
+class ObjectA88FC30E:
   """Generated schema class"""
 
   def __init__(self):
     self.families = None
-    self.uniqs = None
+    self.devices = None
+    self.points = None
     self.features = None
 
   @staticmethod
   def from_dict(source):
     if not source:
       return None
-    result = ObjectB9C13F4B()
+    result = ObjectA88FC30E()
     result.families = source.get('families')
-    result.uniqs = source.get('uniqs')
+    result.devices = source.get('devices')
+    result.points = source.get('points')
     result.features = source.get('features')
     return result
 
@@ -25,7 +27,7 @@ class ObjectB9C13F4B:
       return None
     result = {}
     for key in source:
-      result[key] = ObjectB9C13F4B.from_dict(source[key])
+      result[key] = ObjectA88FC30E.from_dict(source[key])
     return result
 
   @staticmethod
@@ -39,8 +41,10 @@ class ObjectB9C13F4B:
     result = {}
     if self.families:
       result['families'] = self.families # 5
-    if self.uniqs:
-      result['uniqs'] = self.uniqs # 5
+    if self.devices:
+      result['devices'] = self.devices # 5
+    if self.points:
+      result['points'] = self.points # 5
     if self.features:
       result['features'] = self.features # 5
     return result
@@ -61,7 +65,7 @@ class DiscoveryConfig:
       return None
     result = DiscoveryConfig()
     result.generation = source.get('generation')
-    result.enumerate = ObjectB9C13F4B.from_dict(source.get('enumerate'))
+    result.enumerate = ObjectA88FC30E.from_dict(source.get('enumerate'))
     result.families = FamilyDiscoveryConfig.map_from(source.get('families'))
     return result
 

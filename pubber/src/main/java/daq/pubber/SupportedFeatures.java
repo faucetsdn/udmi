@@ -11,17 +11,17 @@ import static udmi.schema.Bucket.ENUMERATION_POINTSET;
 import static udmi.schema.Bucket.POINTSET;
 import static udmi.schema.Bucket.SYSTEM;
 import static udmi.schema.Bucket.UNKNOWN_DEFAULT;
-import static udmi.schema.FeatureEnumeration.FeatureStage.ALPHA;
-import static udmi.schema.FeatureEnumeration.FeatureStage.BETA;
-import static udmi.schema.FeatureEnumeration.FeatureStage.PREVIEW;
-import static udmi.schema.FeatureEnumeration.FeatureStage.STABLE;
+import static udmi.schema.FeatureDiscovery.FeatureStage.ALPHA;
+import static udmi.schema.FeatureDiscovery.FeatureStage.BETA;
+import static udmi.schema.FeatureDiscovery.FeatureStage.PREVIEW;
+import static udmi.schema.FeatureDiscovery.FeatureStage.STABLE;
 
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import udmi.schema.Bucket;
-import udmi.schema.FeatureEnumeration;
-import udmi.schema.FeatureEnumeration.FeatureStage;
+import udmi.schema.FeatureDiscovery;
+import udmi.schema.FeatureDiscovery.FeatureStage;
 import udmi.schema.Level;
 
 /**
@@ -31,7 +31,7 @@ public abstract class SupportedFeatures {
 
   private static final String PUBBER_FEATURES_JSON = "out/pubber_features.json";
 
-  private static final Map<String, FeatureEnumeration> FEATURES_MAP = new HashMap<>();
+  private static final Map<String, FeatureDiscovery> FEATURES_MAP = new HashMap<>();
 
   static {
     add(ENDPOINT_CONFIG, BETA);
@@ -44,9 +44,9 @@ public abstract class SupportedFeatures {
   }
 
   private static void add(Bucket featureBucket, FeatureStage stage) {
-    FeatureEnumeration featureEnumeration = new FeatureEnumeration();
-    featureEnumeration.stage = stage;
-    FEATURES_MAP.put(featureBucket.value(), featureEnumeration);
+    FeatureDiscovery featureDiscovery = new FeatureDiscovery();
+    featureDiscovery.stage = stage;
+    FEATURES_MAP.put(featureBucket.value(), featureDiscovery);
   }
 
   /**
@@ -64,7 +64,7 @@ public abstract class SupportedFeatures {
     }
   }
 
-  public static Map<String, FeatureEnumeration> getFeatures() {
+  public static Map<String, FeatureDiscovery> getFeatures() {
     return FEATURES_MAP;
   }
 

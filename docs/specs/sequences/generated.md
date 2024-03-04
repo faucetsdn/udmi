@@ -49,10 +49,9 @@ Some caveats:
 * [gateway_attach_handling](#gateway_attach_handling-preview): Check adequate logging for gateway detach, errors, and reattach
 * [gateway_proxy_events](#gateway_proxy_events-beta): Check that a gateway proxies pointset events for indicated devices
 * [pointset_publish](#pointset_publish-beta): Check that a device publishes pointset events
-* [pointset_publish_interval](#pointset_publish_interval-beta): Check handling of sample rate and sample limit sec
+* [pointset_publish_interval](#pointset_publish_interval-beta): Check handling of sample_rate_sec and sample_limit_sec
 * [pointset_remove_point](#pointset_remove_point-beta): Check that pointset state does not report an unconfigured point
 * [pointset_request_extraneous](#pointset_request_extraneous-beta): Check error when pointset configuration contains extraneous point
-* [pointset_sample_rate](#pointset_sample_rate-beta): Check that a device publishes pointset events not faster than config sample_rate_sec
 * [state_make_model](#state_make_model-beta): Check that a device publishes correct make and model information in state messages
 * [state_software](#state_software-beta): Check that a device publishes correct software information in state messages
 * [system_last_update](#system_last_update-stable): Check that last_update state is correctly set in response to a config update.
@@ -308,7 +307,7 @@ Check that a device publishes pointset events
 
 ## pointset_publish_interval (BETA)
 
-Check handling of sample rate and sample limit sec
+Check handling of sample_rate_sec and sample_limit_sec
 
 1. Update config before receive at least 4 pointset events:
     * Add `pointset.sample_rate_sec` = `8`
@@ -354,17 +353,6 @@ Check error when pointset configuration contains extraneous point
 1. Wait for pointset status removes extraneous point error
 1. Wait for pointset state reports same points as defined in config
 1. Wait for pointset event contains correct points with present_value
-
-## pointset_sample_rate (BETA)
-
-Check that a device publishes pointset events not faster than config sample_rate_sec
-
-1. Wait for measure initial sample rate
-1. Update config before receive at least 5 pointset events:
-    * Add `pointset.sample_rate_sec` = `5`
-    * Add `pointset.sample_limit_sec` = `1`
-1. Wait for receive at least 5 pointset events
-1. Check that time period between successive pointset events is between 1 and 5 seconds
 
 ## state_make_model (BETA)
 

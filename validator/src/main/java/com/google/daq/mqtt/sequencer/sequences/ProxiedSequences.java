@@ -13,7 +13,7 @@ import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
 import org.junit.Test;
 import udmi.schema.Bucket;
 import udmi.schema.FamilyLocalnetModel;
-import udmi.schema.FeatureEnumeration.FeatureStage;
+import udmi.schema.FeatureDiscovery.FeatureStage;
 import udmi.schema.GatewayConfig;
 import udmi.schema.Level;
 

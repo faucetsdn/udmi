@@ -1,5 +1,5 @@
 """Generated class for model_discovery.json"""
-from .model_discovery_family import FamilyDiscoveryTestingModel
+from .model_discovery_family import FamilyDiscoveryModel
 
 
 class DiscoveryModel:
@@ -13,7 +13,7 @@ class DiscoveryModel:
     if not source:
       return None
     result = DiscoveryModel()
-    result.families = FamilyDiscoveryTestingModel.map_from(source.get('families'))
+    result.families = FamilyDiscoveryModel.map_from(source.get('families'))
     return result
 
   @staticmethod
@@ -35,5 +35,5 @@ class DiscoveryModel:
   def to_dict(self):
     result = {}
     if self.families:
-      result['families'] = FamilyDiscoveryTestingModel.expand_dict(self.families) # 2
+      result['families'] = FamilyDiscoveryModel.expand_dict(self.families) # 2
     return result

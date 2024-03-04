@@ -13,7 +13,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 /**
  * Discovery Event
  * <p>
- * [Discovery result](../docs/specs/discovery.md) with implicit enumeration
+ * [Discovery result](../docs/specs/discovery.md) with implicit discovery
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -25,7 +25,9 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "scan_family",
     "scan_addr",
     "families",
-    "uniqs",
+    "registries",
+    "devices",
+    "points",
     "features",
     "system"
 })
@@ -79,26 +81,40 @@ public class DiscoveryEvent {
     @JsonPropertyDescription("The primary address of the device (for scan_family)")
     public java.lang.String scan_addr;
     /**
-     * Address family discovery results.
+     * Address family discovery discovery results.
      * 
      */
     @JsonProperty("families")
-    @JsonPropertyDescription("Address family discovery results.")
-    public Map<String, FamilyDiscoveryEvent> families;
+    @JsonPropertyDescription("Address family discovery discovery results.")
+    public Map<String, FamilyDiscovery> families;
     /**
-     * Collection of unique data points available for this device.
+     * Registry discovery results.
      * 
      */
-    @JsonProperty("uniqs")
-    @JsonPropertyDescription("Collection of unique data points available for this device.")
-    public Map<String, PointEnumerationEvent> uniqs;
+    @JsonProperty("registries")
+    @JsonPropertyDescription("Registry discovery results.")
+    public Map<String, RegistryDiscovery> registries;
     /**
-     * Enumeration of features supported by this device.
+     * Device discovery scan results.
+     * 
+     */
+    @JsonProperty("devices")
+    @JsonPropertyDescription("Device discovery scan results.")
+    public Map<String, DeviceDiscovery> devices;
+    /**
+     * Collection of data points available for this device.
+     * 
+     */
+    @JsonProperty("points")
+    @JsonPropertyDescription("Collection of data points available for this device.")
+    public Map<String, PointDiscovery> points;
+    /**
+     * Discovery of features supported by this device.
      * 
      */
     @JsonProperty("features")
-    @JsonPropertyDescription("Enumeration of features supported by this device.")
-    public Map<String, FeatureEnumeration> features;
+    @JsonPropertyDescription("Discovery of features supported by this device.")
+    public Map<String, FeatureDiscovery> features;
     /**
      * System Discovery Event
      * <p>
@@ -112,12 +128,14 @@ public class DiscoveryEvent {
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.generation == null)? 0 :this.generation.hashCode()));
-        result = ((result* 31)+((this.features == null)? 0 :this.features.hashCode()));
-        result = ((result* 31)+((this.system == null)? 0 :this.system.hashCode()));
-        result = ((result* 31)+((this.uniqs == null)? 0 :this.uniqs.hashCode()));
-        result = ((result* 31)+((this.scan_family == null)? 0 :this.scan_family.hashCode()));
+        result = ((result* 31)+((this.devices == null)? 0 :this.devices.hashCode()));
+        result = ((result* 31)+((this.registries == null)? 0 :this.registries.hashCode()));
         result = ((result* 31)+((this.families == null)? 0 :this.families.hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
+        result = ((result* 31)+((this.points == null)? 0 :this.points.hashCode()));
+        result = ((result* 31)+((this.features == null)? 0 :this.features.hashCode()));
+        result = ((result* 31)+((this.system == null)? 0 :this.system.hashCode()));
+        result = ((result* 31)+((this.scan_family == null)? 0 :this.scan_family.hashCode()));
         result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
         result = ((result* 31)+((this.status == null)? 0 :this.status.hashCode()));
         result = ((result* 31)+((this.scan_addr == null)? 0 :this.scan_addr.hashCode()));
@@ -133,7 +151,7 @@ public class DiscoveryEvent {
             return false;
         }
         DiscoveryEvent rhs = ((DiscoveryEvent) other);
-        return (((((((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.features == rhs.features)||((this.features!= null)&&this.features.equals(rhs.features))))&&((this.system == rhs.system)||((this.system!= null)&&this.system.equals(rhs.system))))&&((this.uniqs == rhs.uniqs)||((this.uniqs!= null)&&this.uniqs.equals(rhs.uniqs))))&&((this.scan_family == rhs.scan_family)||((this.scan_family!= null)&&this.scan_family.equals(rhs.scan_family))))&&((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))))&&((this.scan_addr == rhs.scan_addr)||((this.scan_addr!= null)&&this.scan_addr.equals(rhs.scan_addr))));
+        return (((((((((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.devices == rhs.devices)||((this.devices!= null)&&this.devices.equals(rhs.devices))))&&((this.registries == rhs.registries)||((this.registries!= null)&&this.registries.equals(rhs.registries))))&&((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.points == rhs.points)||((this.points!= null)&&this.points.equals(rhs.points))))&&((this.features == rhs.features)||((this.features!= null)&&this.features.equals(rhs.features))))&&((this.system == rhs.system)||((this.system!= null)&&this.system.equals(rhs.system))))&&((this.scan_family == rhs.scan_family)||((this.scan_family!= null)&&this.scan_family.equals(rhs.scan_family))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))))&&((this.scan_addr == rhs.scan_addr)||((this.scan_addr!= null)&&this.scan_addr.equals(rhs.scan_addr))));
     }
 
 }
