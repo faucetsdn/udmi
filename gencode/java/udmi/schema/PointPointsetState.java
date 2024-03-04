@@ -35,11 +35,11 @@ public class PointPointsetState {
     @JsonPropertyDescription("If specified, indicates a programmed point unit. If empty, means unspecified or matches configured point.")
     public String units;
     /**
-     * Optional enumeration indicating the state of the points value.
+     * State of the individual point
      * 
      */
     @JsonProperty("value_state")
-    @JsonPropertyDescription("Optional enumeration indicating the state of the points value.")
+    @JsonPropertyDescription("State of the individual point")
     public PointPointsetState.Value_state value_state;
     /**
      * Entry
@@ -73,7 +73,7 @@ public class PointPointsetState {
 
 
     /**
-     * Optional enumeration indicating the state of the points value.
+     * State of the individual point
      * 
      */
     @Generated("jsonschema2pojo")

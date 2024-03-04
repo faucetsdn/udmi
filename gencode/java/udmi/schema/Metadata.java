@@ -143,7 +143,7 @@ public class Metadata {
      */
     @JsonProperty("features")
     @JsonPropertyDescription("Model of supported features")
-    public Map<String, FeatureEnumeration> features;
+    public Map<String, FeatureDiscovery> features;
     /**
      * Pointset Model
      * <p>

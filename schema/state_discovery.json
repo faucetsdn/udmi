@@ -7,7 +7,7 @@
   "additionalProperties": false,
   "properties": {
     "generation": {
-      "description": "Generational marker for enumeration",
+      "description": "Generational marker to group results together",
       "type": "string",
       "format": "date-time"
     },

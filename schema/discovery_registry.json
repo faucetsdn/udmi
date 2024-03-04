@@ -1,0 +1,22 @@
+{
+  "$udmi_version": "1.5.0",
+  "title": "Registry Discovery",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "description": "Information about an individual registry.",
+  "properties": {
+    "last_seen": {
+      "description": "Timestamp of when a message was last seen for this registry",
+      "type": "string",
+      "format": "date-time",
+      "examples": ["2019-01-17T14:02:29.364Z"]
+    },
+    "last_update": {
+      "description": "Last update of the registry information",
+      "type": "string",
+      "format": "date-time",
+      "examples": ["2019-01-17T14:02:29.364Z"]
+    }
+  }
+}

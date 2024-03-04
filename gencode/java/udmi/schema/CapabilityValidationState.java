@@ -40,7 +40,7 @@ public class CapabilityValidationState {
      */
     @JsonProperty("stage")
     @JsonPropertyDescription("Stage of a feature implemenation")
-    public udmi.schema.FeatureEnumeration.FeatureStage stage;
+    public udmi.schema.FeatureDiscovery.FeatureStage stage;
     /**
      * Capability result
      * <p>

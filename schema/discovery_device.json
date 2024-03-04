@@ -1,0 +1,10 @@
+{
+  "$udmi_version": "1.5.0",
+  "title": "Device Discovery",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "description": "Information about an individual device scan result.",
+  "properties": {
+  }
+}

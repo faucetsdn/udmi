@@ -3,7 +3,7 @@ package com.google.daq.mqtt.sequencer.sequences;
 import static com.google.daq.mqtt.util.TimePeriodConstants.ONE_MINUTE_MS;
 import static java.lang.String.format;
 import static udmi.schema.Bucket.SYSTEM;
-import static udmi.schema.FeatureEnumeration.FeatureStage.PREVIEW;
+import static udmi.schema.FeatureDiscovery.FeatureStage.PREVIEW;
 
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;

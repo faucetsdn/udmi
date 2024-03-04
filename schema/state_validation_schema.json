@@ -7,7 +7,7 @@
   "additionalProperties": false,
   "properties": {
     "stages": {
-      "existingJavaType": "java.util.Map<udmi.schema.FeatureEnumeration.FeatureStage, Entry>",
+      "existingJavaType": "java.util.Map<udmi.schema.FeatureDiscovery.FeatureStage, Entry>",
       "additionalProperties": false,
       "patternProperties": {
         "^[_a-z]+$": {

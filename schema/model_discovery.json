@@ -7,7 +7,7 @@
   "additionalProperties": false,
   "properties": {
     "families": {
-      "existingJavaType": "java.util.HashMap<String, FamilyDiscoveryTestingModel>",
+      "existingJavaType": "java.util.HashMap<String, FamilyDiscoveryModel>",
       "patternProperties": {
         "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
           "$ref": "file:model_discovery_family.json#"
@@ -16,4 +16,3 @@
     }
   }
 }
-
