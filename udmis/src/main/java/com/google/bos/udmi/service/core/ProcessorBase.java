@@ -40,6 +40,7 @@ import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.Common;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -150,13 +151,6 @@ public abstract class ProcessorBase extends ContainerBase {
     dispatcher.withEnvelope(attributes).publish(message);
   }
 
-  /**
-   * Publish a message (using the internal dispatcher).
-   */
-  void publish(Object message) {
-    dispatcher.publish(message);
-  }
-
   protected void reflectError(SubType subType, BundleException bundleException) {
     Bundle bundle = bundleException.bundle;
     Map<String, String> errorMap = bundle.attributesMap;
@@ -206,9 +200,27 @@ public abstract class ProcessorBase extends ContainerBase {
   }
 
   /**
-   * Register component specific handlers. Should be overridden by subclass to change behaviors.
+   * Register component specific handlers. Default implementation will scan methods for the
+   * `@ProcessMessage` annotation.
    */
   protected void registerHandlers() {
+    Arrays.stream(getClass().getMethods()).forEach(method -> {
+      DispatchHandler annotation = method.getAnnotation(DispatchHandler.class);
+      if (annotation != null) {
+        Class<?>[] parameterTypes = method.getParameterTypes();
+        checkState(parameterTypes.length == 1,
+            "dispatch handlers should have exactly one argument");
+        Class<?> messageType = parameterTypes[0];
+        dispatcher.registerHandler(messageType, message -> {
+          try {
+            method.invoke(this, messageType.cast(message));
+          } catch (Exception e) {
+            throw new RuntimeException(
+                "While invoking message annotation on " + getClass().getSimpleName(), e);
+          }
+        });
+      }
+    });
   }
 
   /**
@@ -354,6 +366,13 @@ public abstract class ProcessorBase extends ContainerBase {
     public String version;
     public String error;
     public String data;
+  }
+
+  /**
+   * Publish a message (using the internal dispatcher).
+   */
+  void publish(Object message) {
+    dispatcher.publish(message);
   }
 
   <T> void registerHandler(Class<T> clazz, Consumer<T> handler) {
