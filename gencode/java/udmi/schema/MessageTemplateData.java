@@ -1,7 +1,6 @@
 
 package udmi.schema;
 
-import java.util.Date;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -28,7 +27,7 @@ public class MessageTemplateData {
      */
     @JsonProperty("timestamp")
     @JsonPropertyDescription("Message timestamp")
-    public Date timestamp;
+    public String timestamp;
 
     @Override
     public int hashCode() {

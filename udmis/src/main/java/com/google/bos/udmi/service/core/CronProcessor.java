@@ -76,7 +76,7 @@ public class CronProcessor extends ProcessorBase {
     try {
       Date publishTime = new Date();
       srcEnvelope.publishTime = publishTime;
-      dataModel.timestamp = publishTime;
+      dataModel.timestamp = isoConvert(publishTime);
 
       StringWriter stringWriter = new StringWriter();
       template.execute(stringWriter, dataModel).flush();
