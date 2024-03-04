@@ -7,6 +7,7 @@ class CloudQuery:
   def __init__(self):
     self.timestamp = None
     self.version = None
+    self.generation = None
 
   @staticmethod
   def from_dict(source):
@@ -15,6 +16,7 @@ class CloudQuery:
     result = CloudQuery()
     result.timestamp = source.get('timestamp')
     result.version = source.get('version')
+    result.generation = source.get('generation')
     return result
 
   @staticmethod
@@ -39,4 +41,6 @@ class CloudQuery:
       result['timestamp'] = self.timestamp # 5
     if self.version:
       result['version'] = self.version # 5
+    if self.generation:
+      result['generation'] = self.generation # 5
     return result

@@ -14,7 +14,7 @@
   "crons": {
     "reglist": {
       "periodic_sec": 10,
-      "payload": "query/cloud:{}",
+      "payload": "query/cloud:{\"version\":\"2.2\"}",
       "send_id": "${UDMI_PREFIX}udmi_control"
     }
   },

@@ -127,7 +127,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     deviceManager = getDeviceManager(ofNullable(iotAccess.profile_sec).orElse(0));
     projectId = getProjectId(iotAccess);
     info("Fetching registry regions...");
-    ifTrueThen(isEnabled(), this::fetchRegistryRegions);
+    ifTrueThen(isEnabled(), this::populateRegistryRegions);
     ifNotTrueThen(isEnabled(),
         () -> warn("Clearblade access provided disabled because project id is null or empty"));
   }

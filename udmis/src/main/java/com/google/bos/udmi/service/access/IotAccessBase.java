@@ -26,6 +26,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
@@ -49,7 +50,7 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
   private static final int CONFIG_UPDATE_MAX_RETRIES = 10;
   final Map<String, Object> options;
   private CompletableFuture<Map<String, String>> registryRegions;
-  private Instant regionRetry = Instant.now();
+  private AtomicReference<Instant> regionRetry = new AtomicReference<>(Instant.now());
   private DistributorPipe distributor;
 
   public IotAccessBase(IotAccess iotAccess) {
@@ -65,12 +66,31 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
   }
 
   /**
+   * Return a list of all the registries.
+   */
+  public synchronized Set<String> listRegistries() {
+    try {
+      populateRegistryRegions();
+      Set<String> strings = registryRegions.get().keySet();
+      return strings;
+    } catch (Exception e) {
+      throw new RuntimeException("While getting list of all registries", e);
+    }
+  }
+
+  /**
    * Update the cached registry regions with any incremental updates.
    */
   @Override
   public void updateRegistryRegions(Map<String, String> regions) {
     try {
-      registryRegions.get().putAll(regions);
+      Map<String, String> result;
+      try {
+        result = registryRegions.get();
+      } catch (Exception e) {
+        throw new RuntimeException("Getting completed registry regions", e);
+      }
+      result.putAll(regions);
     } catch (Exception e) {
       throw new RuntimeException("While updating registry regions", e);
     }
@@ -87,9 +107,9 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
             .collect(Collectors.toMap(x -> x, x -> region)).entrySet()
             .stream()).collect(Collectors.toMap(Entry::getKey, Entry::getValue));
     debug(format("Fetched %s registry regions", regionMap.size()));
-    if (regionMap.isEmpty()) {
-      throw new RuntimeException("Region map is empty, assuming project misconfiguration.");
-    }
+    // if (regionMap.isEmpty()) {
+    //   throw new RuntimeException("Region map is empty, assuming project misconfiguration.");
+    // }
     return regionMap;
   }
 
@@ -98,24 +118,35 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
     return getRegistriesForRegion(region);
   }
 
+  public Set<String> getRegistriesForRegion(String region) {
+    throw new RuntimeException("Not implemented");
+  }
+
   @NotNull
   protected String getRegistryRegion(String registryId) {
     String region = ofNullable(getCompletedRegistryRegion(registryId)).orElseGet(
-        () -> populateRegistryRegions(registryId));
+        () -> getRefreshedRegistryRegion(registryId));
     return requireNonNull(region, "unknown region for registry " + registryId);
   }
 
-  protected synchronized String populateRegistryRegions(String registryId) {
-    if (regionRetry.isBefore(Instant.now())) {
-      regionRetry = Instant.now().plus(REGION_RETRY_BACKOFF);
+  protected String getRefreshedRegistryRegion(String registryId) {
+    populateRegistryRegions();
+    return getCompletedRegistryRegion(registryId);
+  }
+
+  protected void populateRegistryRegions() {
+    Instant now = Instant.now();
+    Instant future = now.plus(REGION_RETRY_BACKOFF);
+    Instant updated = regionRetry.updateAndGet(update -> update.isBefore(now) ? future : update);
+    if (updated.equals(future)) {
       Map<String, String> previousRegions =
           ifNotNullGet(registryRegions, regions -> regions.getNow(ImmutableMap.of()));
       registryRegions = new CompletableFuture<>();
       registryRegions.complete(fetchRegistryRegions());
       Map<String, String> currentRegions = registryRegions.getNow(ImmutableMap.of());
-      ifNotNullThen(previousRegions, () -> disseminateDifference(previousRegions, currentRegions));
+      ifNotNullThen(previousRegions,
+          () -> disseminateDifference(previousRegions, currentRegions));
     }
-    return getCompletedRegistryRegion(registryId);
   }
 
   private String checkedUpdate(String registryId, String deviceId, Long version, String updated) {
@@ -135,12 +166,18 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
     UdmiState udmiState = new UdmiState();
     udmiState.regions = newRegions;
     Envelope envelope = new Envelope();
-    distributor.publish(envelope, udmiState, containerId);
+    ifNotNullThen(distributor, d -> d.publish(envelope, udmiState, containerId));
   }
 
-  private String getCompletedRegistryRegion(String registryId) {
+  private synchronized String getCompletedRegistryRegion(String registryId) {
     try {
-      return ifNotNullGet(registryRegions.get(), regions -> regions.get(registryId));
+      Map<String, String> result;
+      try {
+        result = registryRegions.get();
+      } catch (Exception e) {
+        throw new RuntimeException("Getting completed registry regions", e);
+      }
+      return ifNotNullGet(result, regions -> regions.get(registryId));
     } catch (Exception e) {
       throw new RuntimeException("While getting region for registry " + registryId, e);
     }
@@ -192,9 +229,9 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
   public void activate() {
     super.activate();
     distributor = UdmiServicePod.maybeGetComponent((String) options.get("distributor"));
-    if (isEnabled()) {
-      populateRegistryRegions(reflectRegistry);
-    }
+    // if (isEnabled()) {
+    //   getRefreshedRegistryRegion(reflectRegistry);
+    // }
   }
 
   /**

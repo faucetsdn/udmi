@@ -18,17 +18,13 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "timestamp",
-    "version"
+    "version",
+    "generation"
 })
 @Generated("jsonschema2pojo")
 public class CloudQuery {
 
-    /**
-     * Not published by devices, appended to message subblocks within cloud pipeline. RFC 3339 Timestamp the payload was generated
-     * 
-     */
     @JsonProperty("timestamp")
-    @JsonPropertyDescription("Not published by devices, appended to message subblocks within cloud pipeline. RFC 3339 Timestamp the payload was generated")
     public Date timestamp;
     /**
      * Version of the UDMI schema
@@ -37,10 +33,18 @@ public class CloudQuery {
     @JsonProperty("version")
     @JsonPropertyDescription("Version of the UDMI schema")
     public String version;
+    /**
+     * generational marker for this query
+     * 
+     */
+    @JsonProperty("generation")
+    @JsonPropertyDescription("generational marker for this query")
+    public Date generation;
 
     @Override
     public int hashCode() {
         int result = 1;
+        result = ((result* 31)+((this.generation == null)? 0 :this.generation.hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
         result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
         return result;
@@ -55,7 +59,7 @@ public class CloudQuery {
             return false;
         }
         CloudQuery rhs = ((CloudQuery) other);
-        return (((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version)))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
+        return ((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
     }
 
 }
