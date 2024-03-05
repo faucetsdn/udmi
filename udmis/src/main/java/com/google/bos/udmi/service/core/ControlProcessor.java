@@ -50,6 +50,9 @@ public class ControlProcessor extends ProcessorBase {
     return registryDiscovery;
   }
 
+  /**
+   * Handle a cloud query command.
+   */
   @DispatchHandler
   public void cloudQueryHandler(CloudQuery query) {
     Set<String> registries = iotAccess.listRegistries();

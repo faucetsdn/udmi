@@ -147,10 +147,6 @@ public abstract class ProcessorBase extends ContainerBase {
     ((MessageDispatcherImpl) dispatcher).processMessage(envelope, message);
   }
 
-  protected void publish(Envelope attributes, Object message) {
-    dispatcher.withEnvelope(attributes).publish(message);
-  }
-
   protected void reflectError(SubType subType, BundleException bundleException) {
     Bundle bundle = bundleException.bundle;
     Map<String, String> errorMap = bundle.attributesMap;
@@ -366,6 +362,10 @@ public abstract class ProcessorBase extends ContainerBase {
     public String version;
     public String error;
     public String data;
+  }
+
+  void publish(Envelope attributes, Object message) {
+    dispatcher.withEnvelope(attributes).publish(message);
   }
 
   /**

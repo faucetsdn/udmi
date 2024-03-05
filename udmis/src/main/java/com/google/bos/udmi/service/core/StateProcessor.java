@@ -84,6 +84,9 @@ public class StateProcessor extends ProcessorBase {
     });
   }
 
+  /**
+   * Handle state update messages.
+   */
   @DispatchHandler
   public void stateHandler(StateUpdate message) {
     MessageContinuation continuation = getContinuation(message);
