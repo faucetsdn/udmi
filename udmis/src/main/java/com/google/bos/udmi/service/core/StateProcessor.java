@@ -57,11 +57,6 @@ public class StateProcessor extends ProcessorBase {
     return SubType.STATE;
   }
 
-  @Override
-  protected void registerHandlers() {
-    registerHandler(StateUpdate.class, this::stateHandler);
-  }
-
   private void shardStateUpdate(MessageContinuation continuation, Envelope envelope,
       StateUpdate message) {
     continuation.publish(message);
@@ -89,7 +84,11 @@ public class StateProcessor extends ProcessorBase {
     });
   }
 
-  private void stateHandler(StateUpdate message) {
+  /**
+   * Handle state update messages.
+   */
+  @DispatchHandler
+  public void stateHandler(StateUpdate message) {
     MessageContinuation continuation = getContinuation(message);
     Envelope envelope = continuation.getEnvelope();
     reflectMessage(envelope, stringify(message));

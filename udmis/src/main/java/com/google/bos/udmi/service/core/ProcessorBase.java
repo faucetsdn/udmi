@@ -37,9 +37,11 @@ import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.BundleException;
 import com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl;
 import com.google.bos.udmi.service.pod.ContainerBase;
+import com.google.bos.udmi.service.pod.SimpleHandler;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.Common;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -55,7 +57,7 @@ import udmi.schema.Envelope.SubType;
 /**
  * Base class for UDMIS components.
  */
-public abstract class ProcessorBase extends ContainerBase {
+public abstract class ProcessorBase extends ContainerBase implements SimpleHandler {
 
   public static final String IOT_ACCESS_COMPONENT = "iot-access";
   private static final String RESET_CONFIG_VALUE = "reset_config";
@@ -142,19 +144,9 @@ public abstract class ProcessorBase extends ContainerBase {
     reflectMessage(useAttributes, configUpdate);
   }
 
-  protected void processMessage(Envelope envelope, Object message) {
+  @Override
+  public void processMessage(Envelope envelope, Object message) {
     ((MessageDispatcherImpl) dispatcher).processMessage(envelope, message);
-  }
-
-  protected void publish(Envelope attributes, Object message) {
-    dispatcher.withEnvelope(attributes).publish(message);
-  }
-
-  /**
-   * Publish a message (using the internal dispatcher).
-   */
-  void publish(Object message) {
-    dispatcher.publish(message);
   }
 
   protected void reflectError(SubType subType, BundleException bundleException) {
@@ -206,9 +198,27 @@ public abstract class ProcessorBase extends ContainerBase {
   }
 
   /**
-   * Register component specific handlers. Should be overridden by subclass to change behaviors.
+   * Register component specific handlers. Default implementation will scan methods for the
+   * `@ProcessMessage` annotation.
    */
   protected void registerHandlers() {
+    Arrays.stream(getClass().getMethods()).forEach(method -> {
+      DispatchHandler annotation = method.getAnnotation(DispatchHandler.class);
+      if (annotation != null) {
+        Class<?>[] parameterTypes = method.getParameterTypes();
+        checkState(parameterTypes.length == 1,
+            "dispatch handlers should have exactly one argument");
+        Class<?> messageType = parameterTypes[0];
+        dispatcher.registerHandler(messageType, message -> {
+          try {
+            method.invoke(this, messageType.cast(message));
+          } catch (Exception e) {
+            throw new RuntimeException(
+                "While invoking message annotation on " + getClass().getSimpleName(), e);
+          }
+        });
+      }
+    });
   }
 
   /**
@@ -354,6 +364,17 @@ public abstract class ProcessorBase extends ContainerBase {
     public String version;
     public String error;
     public String data;
+  }
+
+  void publish(Envelope attributes, Object message) {
+    dispatcher.withEnvelope(attributes).publish(message);
+  }
+
+  /**
+   * Publish a message (using the internal dispatcher).
+   */
+  void publish(Object message) {
+    dispatcher.publish(message);
   }
 
   <T> void registerHandler(Class<T> clazz, Consumer<T> handler) {

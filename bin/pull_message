@@ -23,7 +23,14 @@ subFolder=$(jq -r '.[0].message.attributes.subFolder' $out_file 2> /dev/null)
 deviceId=$(jq -r '.[0].message.attributes.deviceId' $out_file 2> /dev/null)
 registryId=$(jq -r '.[0].message.attributes.deviceRegistryId' $out_file 2> /dev/null)
 timestamp=$(jq -r '.[0].message.publishTime' $out_file 2> /dev/null)
-data=$(jq -r .[0].message.data $out_file | base64 --decode)
+raw_data=$(jq -r .[0].message.data $out_file)
+# There's two different base64 formats, so replace - with + to handle both.
+data=$(echo $raw_data | tr - + | base64 --decode)
+
+if [[ -z $data ]]; then
+    echo Bad/empty message data: $raw_data
+    false
+fi
 
 if [[ $subType == null ]]; then
     subType=event
