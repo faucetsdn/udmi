@@ -197,7 +197,13 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
    * Process a received message.
    */
   public void processMessage(Envelope envelope, Object message) {
-    processMessage(makeMessageBundle(envelope, message));
+    Envelope savedEnvelope = threadEnvelope.get();
+    try {
+      threadEnvelope.set(null);
+      processMessage(makeMessageBundle(envelope, message));
+    } finally {
+      threadEnvelope.set(savedEnvelope);
+    }
   }
 
   private void processMessage(Bundle bundle) {

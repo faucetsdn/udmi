@@ -5,16 +5,13 @@
 #
 
 ROOT=$(realpath $(dirname $0)/..)
-subscription=$USER-debug
+
+kubectl config current-context | tr _ ' ' > /tmp/namespace_tmp
+# Result is something like: gke bos-platform-dev us-central1 main grafnu
+read < /tmp/namespace_tmp gcp project_id region cluster namespace
+
+subscription=$namespace~debug
 out_file=/tmp/captured.json
-
-if [[ $# -ne 1 ]]; then
-    echo $0 project_id
-    false
-fi
-
-project_id=$1
-shift
 
 gcloud --format=json --project=$project_id pubsub subscriptions pull $subscription --auto-ack > $out_file || true
 
