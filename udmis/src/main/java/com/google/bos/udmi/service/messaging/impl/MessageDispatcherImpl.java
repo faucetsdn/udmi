@@ -300,12 +300,12 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
    * Make a new message bundle for the given object, inferring the type and folder from the class
    * itself (using the predefined lookup map).
    */
-  public Bundle makeMessageBundle(Envelope prototype, Object message) {
+  public Bundle makeMessageBundle(Envelope envelope, Object message) {
     if (message instanceof Bundle || message == null) {
       return (Bundle) message;
     }
 
-    Bundle bundle = new Bundle(deepCopy(prototype), message);
+    Bundle bundle = new Bundle(deepCopy(envelope), message);
 
     if (message instanceof Exception || message instanceof String) {
       bundle.envelope.subType = SubType.EVENT;
