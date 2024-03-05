@@ -16,7 +16,7 @@ echo Initial env:
 env
 echo
 
-more /etc/os-release $POD_CONFIG | cat
+more /etc/os-release $POD_CONFIG $LOCAL_CONFIGURATION | cat
 
 java -version
 
@@ -79,4 +79,4 @@ env
 echo
 
 # Run with exec to replace shell so java receives SIGTERM signal.
-exec java -jar $POD_JAR $POD_CONFIG
+exec java -jar $POD_JAR $POD_CONFIG $LOCAL_CONFIGURATION
