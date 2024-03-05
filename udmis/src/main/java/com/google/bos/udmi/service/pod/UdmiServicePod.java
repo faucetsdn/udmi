@@ -64,8 +64,6 @@ public class UdmiServicePod extends ContainerBase {
   public UdmiServicePod(String[] args) {
     super(makePodConfiguration(args));
     try {
-      checkState(args.length == 1, "expected exactly one argument: configuration_file");
-
       ifNotNullThen(podConfiguration.distributors, dist -> dist.forEach(this::createDistributor));
       ifNotNullThen(podConfiguration.iot_access, access -> access.forEach(this::createAccess));
       ifNotNullThen(podConfiguration.flows, flows -> flows.forEach(this::createFlow));
@@ -179,6 +177,7 @@ public class UdmiServicePod extends ContainerBase {
   }
 
   private void createAccess(String name, IotAccess config) {
+    config.name = name;
     putComponent(name, () -> IotAccessProvider.from(config));
   }
 

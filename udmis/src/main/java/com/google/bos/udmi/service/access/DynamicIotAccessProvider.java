@@ -110,7 +110,7 @@ public class DynamicIotAccessProvider extends IotAccessBase {
 
   @Override
   public Set<String> getRegistriesForRegion(String region) {
-    throw new RuntimeException("Should not be called!");
+    return null;
   }
 
   @Override
