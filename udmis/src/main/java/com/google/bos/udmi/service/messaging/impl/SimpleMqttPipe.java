@@ -51,6 +51,7 @@ public class SimpleMqttPipe extends MessageBase {
    * Create new pipe instance for the given config.
    */
   public SimpleMqttPipe(EndpointConfiguration config) {
+    super(config);
     namespace = config.hostname;
     endpoint = config;
     mqttClient = createMqttClient();

@@ -138,7 +138,7 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
         .filter(entry -> !previousRegions.containsKey(entry.getKey())).collect(
             Collectors.toMap(Entry::getKey, Entry::getValue));
     Envelope envelope = new Envelope();
-    distributor.publish(envelope, udmiState, containerId);
+    ifNotNullThen(distributor, derp -> derp.publish(envelope, udmiState, containerId));
   }
 
   private Set<String> getRegistriesForRegionLog(String region) {
