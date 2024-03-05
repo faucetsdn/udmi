@@ -11,34 +11,38 @@ kubectl config current-context | tr _ ' ' > /tmp/namespace_tmp
 read < /tmp/namespace_tmp gcp project_id region cluster namespace
 
 subscription=$namespace~debug
-out_file=/tmp/captured.json
+tmp_file=/tmp/captured.json
 
-gcloud --format=json --project=$project_id pubsub subscriptions pull $subscription --auto-ack > $out_file || true
+while true; do
+    gcloud --format=json --project=$project_id pubsub subscriptions pull $subscription --auto-ack > $tmp_file || true
 
-subType=$(jq -r '.[0].message.attributes.subType' $out_file 2> /dev/null)
-subFolder=$(jq -r '.[0].message.attributes.subFolder' $out_file 2> /dev/null)
-deviceId=$(jq -r '.[0].message.attributes.deviceId' $out_file 2> /dev/null)
-registryId=$(jq -r '.[0].message.attributes.deviceRegistryId' $out_file 2> /dev/null)
-timestamp=$(jq -r '.[0].message.publishTime' $out_file 2> /dev/null)
-raw_data=$(jq -r .[0].message.data $out_file)
-# There's two different base64 formats, so replace - with + to handle both.
-data=$(echo $raw_data | tr - + | base64 --decode)
+    subType=$(jq -r '.[0].message.attributes.subType' $tmp_file 2> /dev/null)
+    subFolder=$(jq -r '.[0].message.attributes.subFolder' $tmp_file 2> /dev/null)
+    deviceId=$(jq -r '.[0].message.attributes.deviceId' $tmp_file 2> /dev/null)
+    registryId=$(jq -r '.[0].message.attributes.deviceRegistryId' $tmp_file 2> /dev/null)
+    timestamp=$(jq -r '.[0].message.publishTime' $tmp_file 2> /dev/null)
+    raw_data=$(jq -r .[0].message.data $tmp_file)
+    # There's two different base64 formats, so replace - with + to handle both.
+    data=$(echo $raw_data | tr - + | base64 --decode)
 
-if [[ -z $data ]]; then
-    echo Bad/empty message data: $raw_data
-    false
-fi
+    if [[ $raw_data == null ]]; then
+        continue
+    fi
 
-if [[ $subType == null ]]; then
-    subType=event
-fi
+    if [[ -z $data ]]; then
+        echo Bad/empty message data: $raw_data
+    fi
 
-if [[ $subFolder != null ]]; then
-    out_file=$ROOT/out/registries/$registryId/devices/$deviceId/${timestamp}_${subFolder}_${subType}.json
-    echo $out_file
-    mkdir -p $(dirname $out_file)
-    echo $data | jq . > $out_file
-else
-    echo No matching messages found.
-    false
-fi
+    if [[ $subType == null ]]; then
+        subType=event
+    fi
+
+    if [[ $subFolder != null ]]; then
+        out_file=$ROOT/out/registries/$registryId/devices/$deviceId/${timestamp}_${subFolder}_${subType}.json
+        echo $out_file
+        mkdir -p $(dirname $out_file)
+        echo $data | jq . > $out_file
+    else
+        echo No matching messages found.
+    fi
+done
