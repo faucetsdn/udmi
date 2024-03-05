@@ -15,6 +15,5 @@ ADD var/ var/
 
 ENV CLEARBLADE_CONFIGURATION=/udmi/clearblade.json
 ENV SHUNT_CONFIGURATION=/udmi/shunt-config.json
-ENV LOCAL_CONFIGURATION
 
 CMD ["/root/bin/run", "var/prod_pod.json"]
