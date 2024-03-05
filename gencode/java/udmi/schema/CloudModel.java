@@ -78,14 +78,14 @@ public class CloudModel {
     @JsonPropertyDescription("The resource type of this model")
     public CloudModel.Resource_type resource_type;
     /**
-     * Cloud Model
+     * Cloud Config Model
      * <p>
      * Information specific to how the device communicates with the cloud.
      * 
      */
     @JsonProperty("config")
     @JsonPropertyDescription("Information specific to how the device communicates with the cloud.")
-    public CloudModel config;
+    public CloudConfigModel config;
     @JsonProperty("blocked")
     public Boolean blocked;
     @JsonProperty("detail")
