@@ -7,7 +7,9 @@ import static com.google.udmi.util.GeneralUtils.copyFields;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.mergeObject;
 import static com.google.udmi.util.JsonUtil.loadFileStrictRequired;
+import static com.google.udmi.util.JsonUtil.stringify;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
@@ -22,9 +24,11 @@ import com.google.bos.udmi.service.core.StateProcessor;
 import com.google.bos.udmi.service.core.TargetProcessor;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -58,7 +62,7 @@ public class UdmiServicePod extends ContainerBase {
    * Core pod to instantiate all the other components as necessary based on configuration.
    */
   public UdmiServicePod(String[] args) {
-    super(loadFileStrictRequired(PodConfiguration.class, args[0]));
+    super(makePodConfiguration(args));
     try {
       checkState(args.length == 1, "expected exactly one argument: configuration_file");
 
@@ -129,6 +133,16 @@ public class UdmiServicePod extends ContainerBase {
     }
   }
 
+  private static PodConfiguration makePodConfiguration(String[] args) {
+    AtomicReference<PodConfiguration> config = new AtomicReference<>(new PodConfiguration());
+    Arrays.stream(args).forEach(arg -> {
+      System.err.println("Processing config file " + arg);
+      config.set(mergeObject(config.get(), loadFileStrictRequired(PodConfiguration.class, arg)));
+    });
+    System.err.println(stringify(config.get()));
+    return config.get();
+  }
+
   @SuppressWarnings("unchecked")
   public static <T> T maybeGetComponent(String name) {
     return ifNotNullGet(name, x -> (T) COMPONENT_MAP.get(name));
@@ -158,6 +172,12 @@ public class UdmiServicePod extends ContainerBase {
     READY_INDICATOR.delete();
   }
 
+  private static void setConfigName(EndpointConfiguration config, String name) {
+    boolean notSetOrEqual = config.name == null || config.name.equals(name);
+    checkState(notSetOrEqual, "config name already set, was " + config.name);
+    config.name = name;
+  }
+
   private void createAccess(String name, IotAccess config) {
     putComponent(name, () -> IotAccessProvider.from(config));
   }
@@ -173,12 +193,6 @@ public class UdmiServicePod extends ContainerBase {
     EndpointConfiguration morf = makeConfig(config.morf);
     setConfigName(from, name);
     putComponent(name, () -> new BridgeProcessor(from, morf));
-  }
-
-  private static void setConfigName(EndpointConfiguration config, String name) {
-    boolean notSetOrEqual = config.name == null || config.name.equals(name);
-    checkState(notSetOrEqual, "config name already set, was " + config.name);
-    config.name = name;
   }
 
   private void createCron(String name, EndpointConfiguration config) {

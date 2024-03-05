@@ -8,6 +8,7 @@ import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static com.google.udmi.util.JsonUtil.toStringMap;
 import static java.lang.String.format;
+import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.messaging.MessagePipe;
 import java.util.Map;
@@ -39,6 +40,7 @@ public class SimpleMqttPipe extends MessageBase {
   private static final String BROKER_URL_FORMAT = "%s://%s:%s";
   private static final Object EXCEPTION_TYPE = "exception";
   private static final long RECONNECT_SEC = 10;
+  public static final int DEFAULT_PORT = 8883;
   private final String clientId = format("mqtt-%08x", System.currentTimeMillis());
   private final String namespace;
   private final EndpointConfiguration endpoint;
@@ -113,8 +115,9 @@ public class SimpleMqttPipe extends MessageBase {
   }
 
   private String makeBrokerUrl(EndpointConfiguration endpoint) {
-    Transport transport = Optional.ofNullable(endpoint.transport).orElse(Transport.SSL);
-    return format(BROKER_URL_FORMAT, transport, endpoint.hostname, endpoint.port);
+    Transport transport = ofNullable(endpoint.transport).orElse(Transport.SSL);
+    int port = ofNullable(endpoint.port).orElse(DEFAULT_PORT);
+    return format(BROKER_URL_FORMAT, transport, endpoint.hostname, port);
   }
 
   private MqttMessage makeMqttMessage(Bundle bundle) {
