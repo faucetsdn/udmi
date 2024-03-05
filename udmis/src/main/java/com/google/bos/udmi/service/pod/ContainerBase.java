@@ -29,7 +29,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.TestOnly;
 import udmi.schema.BasePodConfiguration;
 import udmi.schema.EndpointConfiguration;
-import udmi.schema.Envelope;
 import udmi.schema.Level;
 import udmi.schema.PodConfiguration;
 
