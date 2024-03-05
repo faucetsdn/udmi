@@ -38,8 +38,7 @@
       "type": "string"
     },
     "port": {
-      "type": "integer",
-      "default": 8883
+      "type": "integer"
     },
     "config_sync_sec": {
       "description": "Delay waiting for config message on start, 0 for default, <0 to disable",

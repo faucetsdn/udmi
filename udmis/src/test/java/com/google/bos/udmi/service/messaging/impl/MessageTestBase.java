@@ -2,17 +2,14 @@ package com.google.bos.udmi.service.messaging.impl;
 
 import static com.google.bos.udmi.service.messaging.MessageDispatcher.messageHandlerFor;
 import static com.google.bos.udmi.service.messaging.impl.MessagePipeTestBase.makeTestEnvelope;
-import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import com.google.bos.udmi.service.messaging.MessageDispatcher;
 import com.google.bos.udmi.service.messaging.MessageDispatcher.HandlerSpecification;
 import com.google.common.collect.ImmutableList;
-import com.google.udmi.util.GeneralUtils;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
 import org.junit.jupiter.api.AfterEach;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.LocalnetModel;

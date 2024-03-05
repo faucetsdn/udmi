@@ -61,6 +61,7 @@ import com.clearblade.cloud.iot.v1.unbinddevicefromgateway.UnbindDeviceFromGatew
 import com.clearblade.cloud.iot.v1.updatedevice.UpdateDeviceRequest;
 import com.clearblade.cloud.iot.v1.utils.ByteString;
 import com.clearblade.cloud.iot.v1.utils.LogLevel;
+import com.google.bos.udmi.service.pod.SimpleHandler;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
@@ -126,8 +127,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     super(iotAccess);
     deviceManager = getDeviceManager(ofNullable(iotAccess.profile_sec).orElse(0));
     projectId = getProjectId(iotAccess);
-    info("Fetching registry regions...");
-    ifTrueThen(isEnabled(), this::fetchRegistryRegions);
     ifNotTrueThen(isEnabled(),
         () -> warn("Clearblade access provided disabled because project id is null or empty"));
   }

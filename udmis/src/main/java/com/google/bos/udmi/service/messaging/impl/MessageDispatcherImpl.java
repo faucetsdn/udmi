@@ -45,7 +45,6 @@ import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
-import udmi.schema.Metadata;
 import udmi.schema.SystemState;
 
 /**
@@ -336,7 +335,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   @Override
   @SuppressWarnings("unchecked")
   public <T> void registerHandler(Class<T> clazz, Consumer<T> handler) {
-    debug("Registering handler for %s in %s", clazz.getName(), this);
+    debug("Registering handler for %s in %s", clazz.getSimpleName(), this);
     if (handlers.put(clazz, (Consumer<Object>) handler) != null) {
       throw new RuntimeException("Type handler already defined for " + clazz.getName());
     }
@@ -359,7 +358,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
 
   @Override
   public String toString() {
-    return format("Dispatcher %08x", Objects.hash(this));
+    return format("dispatcher/%s", containerId);
   }
 
   /**

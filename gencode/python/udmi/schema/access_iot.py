@@ -5,6 +5,7 @@ class IotAccess:
   """Generated schema class"""
 
   def __init__(self):
+    self.name = None
     self.provider = None
     self.project_id = None
     self.profile_sec = None
@@ -15,6 +16,7 @@ class IotAccess:
     if not source:
       return None
     result = IotAccess()
+    result.name = source.get('name')
     result.provider = source.get('provider')
     result.project_id = source.get('project_id')
     result.profile_sec = source.get('profile_sec')
@@ -39,6 +41,8 @@ class IotAccess:
 
   def to_dict(self):
     result = {}
+    if self.name:
+      result['name'] = self.name # 5
     if self.provider:
       result['provider'] = self.provider # 5
     if self.project_id:

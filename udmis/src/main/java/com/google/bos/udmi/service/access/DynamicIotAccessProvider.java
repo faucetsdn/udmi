@@ -12,6 +12,7 @@ import com.google.common.collect.ImmutableMap;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -44,8 +45,9 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  protected Map<String, String> fetchRegistryRegions() {
-    return ImmutableMap.of();
+  public Set<String> listRegistries() {
+    return providers.values().stream().map(IotAccessProvider::listRegistries)
+        .collect(HashSet::new, HashSet::addAll, HashSet::addAll);
   }
 
   private String determineProvider(String registryId) {
@@ -108,7 +110,7 @@ public class DynamicIotAccessProvider extends IotAccessBase {
 
   @Override
   public Set<String> getRegistriesForRegion(String region) {
-    throw new RuntimeException("Should not be called!");
+    return null;
   }
 
   @Override

@@ -113,7 +113,7 @@ public abstract class Common {
           .collect(Collectors.toSet());
       return new TreeSet<>(classes);
     } catch (Exception e) {
-      throw new RuntimeException("While loading classes for package " + packageName);
+      throw new RuntimeException("While loading classes for package " + packageName, e);
     }
   }
 
