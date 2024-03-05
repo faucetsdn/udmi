@@ -7,7 +7,6 @@
   "additionalProperties": false,
   "properties": {
     "timestamp": {
-      "description": "Not published by devices, appended to message subblocks within cloud pipeline. RFC 3339 Timestamp the payload was generated",
       "type": "string",
       "format": "date-time",
       "examples": ["2019-01-17T14:02:29.364Z"]
@@ -15,6 +14,12 @@
     "version": {
       "description": "Version of the UDMI schema",
       "type": "string"
+    },
+    "generation": {
+      "description": "generational marker for this query",
+      "type": "string",
+      "format": "date-time",
+      "examples": ["2019-01-17T14:02:29.364Z"]
     }
   }
 }

@@ -25,6 +25,7 @@
 * [**configuration_execution**](configuration_execution.html) - Parameters for configuring the execution run of a UDMI tool
 * [**configuration_pod**](configuration_pod.html) - Parameters for configuring the execution run of a UDMIS pod
 * [**configuration_pubber**](configuration_pubber.html) - Parameters to define a pubber runtime instance
+* [**data_template**](data_template.html) - Information container for simple template substitution.
 * [**event**](event.html) - Container object for all event schemas, not directly used.
 * [**event_mapping**](event_mapping.html) - [Mapping result](../../docs/specs/mapping.md) with implicit enumeration
 * [**event_validation**](event_validation.html) - Validation device result

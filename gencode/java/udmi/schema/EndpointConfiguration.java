@@ -81,7 +81,7 @@ public class EndpointConfiguration {
     @JsonPropertyDescription("Error message container for capturing errors during parsing/handling")
     public String error;
     @JsonProperty("port")
-    public Integer port = 8883;
+    public Integer port;
     /**
      * Delay waiting for config message on start, 0 for default, <0 to disable
      * 

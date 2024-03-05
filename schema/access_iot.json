@@ -4,6 +4,9 @@
   "title": "Iot Access",
   "additionalProperties": false,
   "properties": {
+    "name": {
+      "type": "string"
+    },
     "provider": {
       "$ref": "file:common.json#/definitions/provider"
     },

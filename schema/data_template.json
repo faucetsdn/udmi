@@ -1,0 +1,14 @@
+{
+  "$udmi_version": "1.5.0",
+  "title": "Message Template Data",
+  "description": "Information container for simple template substitution.",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "timestamp": {
+      "description": "Message timestamp",
+      "type": "string"
+    }
+  }
+}

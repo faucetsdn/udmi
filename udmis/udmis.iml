@@ -31,6 +31,7 @@
     <orderEntry type="library" name="Gradle: com.fasterxml.jackson.core:jackson-core:2.12.4" level="project" />
     <orderEntry type="library" name="Gradle: com.fasterxml.jackson.core:jackson-databind:2.12.4" level="project" />
     <orderEntry type="library" name="Gradle: commons-io:commons-io:2.5" level="project" />
+    <orderEntry type="library" name="Gradle: com.github.spullara.mustache.java:compiler:0.9.10" level="project" />
     <orderEntry type="library" name="Gradle: commons-cli:commons-cli:1.5.0" level="project" />
     <orderEntry type="library" name="Gradle: com.google.cloud:google-cloud-logging:3.14.9" level="project" />
     <orderEntry type="library" name="Gradle: io.github.clearblade:clearblade-cloud-iot:1.0.5" level="project" />
