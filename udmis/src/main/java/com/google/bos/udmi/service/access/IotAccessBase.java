@@ -107,9 +107,6 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
             .collect(Collectors.toMap(x -> x, x -> region)).entrySet()
             .stream()).collect(Collectors.toMap(Entry::getKey, Entry::getValue));
     debug(format("Fetched %s registry regions", regionMap.size()));
-    // if (regionMap.isEmpty()) {
-    //   throw new RuntimeException("Region map is empty, assuming project misconfiguration.");
-    // }
     return regionMap;
   }
 
