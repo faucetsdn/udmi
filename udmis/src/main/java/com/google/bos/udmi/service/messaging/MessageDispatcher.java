@@ -1,5 +1,6 @@
 package com.google.bos.udmi.service.messaging;
 
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 
 import com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl;
@@ -25,7 +26,7 @@ public interface MessageDispatcher {
   Class<?> EXCEPTION_CLASS = Exception.class;
 
   static MessageDispatcher from(EndpointConfiguration configuration) {
-    return new MessageDispatcherImpl(configuration);
+    return ifNotNullGet(configuration, MessageDispatcherImpl::new);
   }
 
   static MessageDispatcher from(EndpointConfiguration from, EndpointConfiguration to) {

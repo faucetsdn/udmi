@@ -32,7 +32,8 @@
     },
     "control": {
       "recv_id": "${UDMI_PREFIX}udmi_control-udmis",
-      "send_id": "${UDMI_PREFIX}udmi_target"
+      "send_id": "${UDMI_PREFIX}udmi_target",
+      "side_id": "${UDMI_PREFIX}udmi_control"
     }
   },
   "iot_access": {

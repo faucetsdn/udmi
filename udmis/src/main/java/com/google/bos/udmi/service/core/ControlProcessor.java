@@ -111,6 +111,6 @@ public class ControlProcessor extends ProcessorBase {
     CloudQuery cloudQuery = new CloudQuery();
     cloudQuery.generation = origin.generation;
     envelope.deviceRegistryId = registryId;
-    processMessage(envelope, cloudQuery);
+    sideProcess(envelope, cloudQuery);
   }
 }
