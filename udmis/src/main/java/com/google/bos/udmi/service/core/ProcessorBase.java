@@ -37,6 +37,7 @@ import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.BundleException;
 import com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl;
 import com.google.bos.udmi.service.pod.ContainerBase;
+import com.google.bos.udmi.service.pod.SimpleHandler;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.Common;
@@ -56,7 +57,7 @@ import udmi.schema.Envelope.SubType;
 /**
  * Base class for UDMIS components.
  */
-public abstract class ProcessorBase extends ContainerBase {
+public abstract class ProcessorBase extends ContainerBase implements SimpleHandler {
 
   public static final String IOT_ACCESS_COMPONENT = "iot-access";
   private static final String RESET_CONFIG_VALUE = "reset_config";
@@ -143,7 +144,8 @@ public abstract class ProcessorBase extends ContainerBase {
     reflectMessage(useAttributes, configUpdate);
   }
 
-  protected void processMessage(Envelope envelope, Object message) {
+  @Override
+  public void processMessage(Envelope envelope, Object message) {
     ((MessageDispatcherImpl) dispatcher).processMessage(envelope, message);
   }
 

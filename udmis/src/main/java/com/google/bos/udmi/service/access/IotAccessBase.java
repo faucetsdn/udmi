@@ -13,6 +13,7 @@ import static java.util.Objects.requireNonNull;
 import com.google.bos.udmi.service.core.DistributorPipe;
 import com.google.bos.udmi.service.core.ProcessorBase.PreviousParseException;
 import com.google.bos.udmi.service.pod.ContainerBase;
+import com.google.bos.udmi.service.pod.SimpleHandler;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.common.collect.ImmutableMap;
 import java.time.Duration;
@@ -38,7 +39,8 @@ import udmi.schema.UdmiState;
 /**
  * Generic interface for accessing iot device management.
  */
-public abstract class IotAccessBase extends ContainerBase implements IotAccessProvider {
+public abstract class IotAccessBase extends ContainerBase implements IotAccessProvider,
+    SimpleHandler {
 
   public static final int MAX_CONFIG_LENGTH = 262144;
   public static final TemporalAmount REGION_RETRY_BACKOFF = Duration.ofSeconds(30);
@@ -280,6 +282,14 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
       registryRegions.get().putAll(requireNonNull(regions, "additional regions is null"));
     } catch (Exception e) {
       throw new RuntimeException("Getting completed registry regions", e);
+    }
+  }
+
+  @Override
+  public void processMessage(Envelope envelope, Object message) {
+    debug("Handing distributed update " + message.getClass().getSimpleName());
+    if (message instanceof UdmiState udmiState) {
+      updateRegistryRegions(udmiState.regions);
     }
   }
 

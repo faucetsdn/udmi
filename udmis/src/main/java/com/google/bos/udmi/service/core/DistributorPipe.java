@@ -4,6 +4,7 @@ import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static java.lang.String.format;
 
+import com.google.bos.udmi.service.pod.SimpleHandler;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
@@ -49,8 +50,8 @@ public class DistributorPipe extends ProcessorBase {
       }
       Object component = UdmiServicePod.getComponent(routeId[1]);
       debug("Routing result to " + component.getClass().getSimpleName());
-      if (component instanceof ProcessorBase processorBase) {
-        processorBase.processMessage(envelope, message);
+      if (component instanceof SimpleHandler handler) {
+        handler.processMessage(envelope, message);
       } else {
         throw new RuntimeException("Unknown component class " + component.getClass().getName());
       }
