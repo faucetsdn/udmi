@@ -5,7 +5,7 @@ Caused by: java.lang.RuntimeException: Found 0 credentials
 Config
 java.lang.RuntimeException: While reading config file: non-existant.file
 	REDACTED
-Caused by: java.io.FileNotFoundException: File '/usr/local/google/home/elsaidi/udmifork/tests/sites/configs/./devices/AHU-1/config/non-existant.file' does not exist
+Caused by: java.io.FileNotFoundException: REDACTED/sites/configs/./devices/AHU-1/config/non-existant.file' does not exist
 Files
 com.google.daq.mqtt.util.ExceptionMap: expected files
 	REDACTED

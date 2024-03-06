@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash -ex
 
 ROOT=$(dirname $0)/..
 cd $ROOT
@@ -10,7 +10,7 @@ build=y
 force=n
 
 schemadir=schema
-sitesdir=tests/sites/
+sitesdir=tests/sites
 
 while getopts "d:" opt; do
     case $opt in
@@ -23,13 +23,14 @@ while getopts "d:" opt; do
             ;;
     esac
 done
-
+# File '/usr/local/google/home/elsaidi/udmi/tests/sites/
 shift $((OPTIND-1))
 
 function redact_files {
     for file in $@; do
         sed -E -i \
             -e 's-oading .*udmi/tests/-REDACTED/-' \
+            -e 's-File .*udmi/tests/-REDACTED/-' \
             -e 's/at .*main\(.*\.java:[0-9]+\)/REDACTED/' \
             -e '/at .*\(.*\.java:[0-9]+\)/d' \
             -e '/\.\.\. [0-9]+ more/d' \
