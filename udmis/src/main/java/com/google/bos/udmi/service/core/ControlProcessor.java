@@ -1,5 +1,6 @@
 package com.google.bos.udmi.service.core;
 
+import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.toDate;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
@@ -16,6 +17,7 @@ import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudQuery;
+import udmi.schema.CloudQuery.Depth;
 import udmi.schema.DiscoveryEvent;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
@@ -77,7 +79,17 @@ public class ControlProcessor extends ProcessorBase {
 
     debug("Found %d registries (%d active)", registries.size(), active.size());
 
-    active.forEach(id -> issueModifiedQuery(envelope, query, e -> e.deviceRegistryId = id));
+    if (shouldTraverseRegistries(query)) {
+      active.forEach(id -> issueModifiedQuery(envelope, query, e -> e.deviceRegistryId = id));
+    }
+  }
+
+  private boolean shouldTraverseRegistries(CloudQuery query) {
+    return (Depth.DEVICES == query.depth) || shouldDetailDevices(query);
+  }
+
+  private boolean shouldDetailDevices(CloudQuery query) {
+    return Depth.DETAILS == query.depth;
   }
 
   private void queryDeviceDetails(Envelope envelope, CloudQuery query) {
@@ -88,6 +100,7 @@ public class ControlProcessor extends ProcessorBase {
     discoveryEvent.scan_family = IOT_SCAN_FAMILY;
     discoveryEvent.generation = query.generation;
     discoveryEvent.cloud_model = iotAccess.fetchDevice(deviceRegistryId, deviceId);
+    discoveryEvent.cloud_model.operation = null;
 
     debug("Detailed device %s/%s", deviceRegistryId, deviceId);
 
@@ -97,6 +110,7 @@ public class ControlProcessor extends ProcessorBase {
   private void queryRegistryDevices(Envelope envelope, CloudQuery query) {
     String deviceRegistryId = requireNonNull(envelope.deviceRegistryId, "registry id");
     CloudModel cloudModel = iotAccess.listDevices(deviceRegistryId);
+
     DiscoveryEvent discoveryEvent = new DiscoveryEvent();
     discoveryEvent.scan_family = IOT_SCAN_FAMILY;
     discoveryEvent.generation = query.generation;
@@ -110,7 +124,9 @@ public class ControlProcessor extends ProcessorBase {
     debug("Registry %s had %d devices (%d active)", deviceRegistryId, discoveryEvent.devices.size(),
         active.size());
 
-    active.forEach(id -> issueModifiedQuery(envelope, query, e -> e.deviceId = id));
+    if (shouldDetailDevices(query)) {
+      active.forEach(id -> issueModifiedQuery(envelope, query, e -> e.deviceId = id));
+    }
   }
 
   @Override
@@ -126,9 +142,12 @@ public class ControlProcessor extends ProcessorBase {
   public void cloudQueryHandler(CloudQuery query) {
     Envelope envelope = getContinuation(query).getEnvelope();
 
+    // If the depth is not defined, recurse down one level.
     if (envelope.deviceRegistryId == null) {
+      ifNullThen(query.depth, () -> query.depth = Depth.DEVICES);
       queryAllRegistries(envelope, query);
     } else if (envelope.deviceId == null) {
+      ifNullThen(query.depth, () -> query.depth = Depth.DETAILS);
       queryRegistryDevices(envelope, query);
     } else {
       queryDeviceDetails(envelope, query);
