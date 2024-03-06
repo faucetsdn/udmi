@@ -13,11 +13,9 @@ import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudQuery;
-import udmi.schema.DeviceDiscovery;
 import udmi.schema.DiscoveryEvent;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
-import udmi.schema.RegistryDiscovery;
 
 /**
  * Handle the control processor stream for UDMI utility tool clients.
@@ -42,10 +40,10 @@ public class ControlProcessor extends ProcessorBase {
         stringifyTerse(message));
   }
 
-  private RegistryDiscovery makeRegistryDiscovery(String registryId) {
-    RegistryDiscovery registryDiscovery = new RegistryDiscovery();
-    registryDiscovery.last_seen = toDate(targetProcessor.getLastSeen(registryId));
-    return registryDiscovery;
+  private CloudModel makeCloudModel(String registryId) {
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.last_event_time = toDate(targetProcessor.getLastSeen(registryId));
+    return cloudModel;
   }
 
   @Override
@@ -86,8 +84,8 @@ public class ControlProcessor extends ProcessorBase {
   }
 
   @NotNull
-  private DeviceDiscovery convertDeviceEntry(CloudModel entry) {
-    return new DeviceDiscovery();
+  private CloudModel convertDeviceEntry(CloudModel entry) {
+    return entry;
   }
 
   private void processListRegistries(Envelope envelope, CloudQuery query) {
@@ -96,11 +94,11 @@ public class ControlProcessor extends ProcessorBase {
     discoveryEvent.scan_family = IOT_SCAN_FAMILY;
     discoveryEvent.generation = query.generation;
     discoveryEvent.registries = registries.stream()
-        .collect(Collectors.toMap(registryId -> registryId, this::makeRegistryDiscovery));
+        .collect(Collectors.toMap(registryId -> registryId, this::makeCloudModel));
     publish(discoveryEvent);
 
     List<String> active = discoveryEvent.registries.entrySet().stream()
-        .filter(entry -> entry.getValue().last_seen != null).map(Entry::getKey).toList();
+        .filter(entry -> entry.getValue().last_event_time != null).map(Entry::getKey).toList();
 
     debug("Query resulted in %d registries (%d active)", registries.size(), active.size());
 
