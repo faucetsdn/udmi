@@ -21,6 +21,9 @@ import udmi.schema.CloudQuery.Depth;
 import udmi.schema.DiscoveryEvent;
 import udmi.schema.Envelope;
 
+/**
+ * Container for handling CloudQuery messages.
+ */
 public class CloudQueryHandler {
 
   private static final String IOT_SCAN_FAMILY = "iot";
@@ -30,10 +33,13 @@ public class CloudQueryHandler {
   private CloudQuery query;
   private Envelope envelope;
 
-  public CloudQueryHandler(ControlProcessor controlProcessor, TargetProcessor targetProcessor) {
+  /**
+   * Create a query handler for cloud queries.
+   */
+  public CloudQueryHandler(ControlProcessor controlProcessor) {
     controller = controlProcessor;
     iotAccess = controller.iotAccess;
-    target = targetProcessor;
+    target = controller.targetProcessor;
   }
 
   private static String makeTransactionId() {
@@ -136,7 +142,10 @@ public class CloudQueryHandler {
     return (Depth.DEVICES == query.depth) || shouldDetailDevices();
   }
 
-  public void process(CloudQuery query) {
+  /**
+   * Process an individual cloud query.
+   */
+  public synchronized void process(CloudQuery query) {
     this.query = query;
     envelope = controller.getContinuation(query).getEnvelope();
 
@@ -150,6 +159,6 @@ public class CloudQueryHandler {
     } else {
       queryDeviceDetails();
     }
-
+    this.query = null;
   }
 }

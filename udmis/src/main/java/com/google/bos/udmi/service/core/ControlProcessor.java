@@ -10,15 +10,18 @@ import udmi.schema.EndpointConfiguration;
 @ComponentName("control")
 public class ControlProcessor extends ProcessorBase {
 
-  private TargetProcessor targetProcessor;
+  TargetProcessor targetProcessor;
+  private CloudQueryHandler cloudQueryHandler;
 
   public ControlProcessor(EndpointConfiguration config) {
     super(config);
   }
 
+  @Override
   public void activate() {
     super.activate();
     targetProcessor = UdmiServicePod.getComponent(TargetProcessor.class);
+    cloudQueryHandler = new CloudQueryHandler(this);
   }
 
   /**
@@ -26,6 +29,6 @@ public class ControlProcessor extends ProcessorBase {
    */
   @DispatchHandler
   public void cloudQueryHandler(CloudQuery query) {
-    new CloudQueryHandler(this, targetProcessor).process(query);
+    cloudQueryHandler.process(query);
   }
 }
