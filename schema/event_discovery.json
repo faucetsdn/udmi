@@ -87,8 +87,11 @@
         }
       }
     },
+    "cloud_model": {
+      "$ref": "file:model_cloud.json"
+    },
     "system": {
-      "title": "System Discovery Event",
+      "title": "System Discovery Data",
       "type": "object",
       "additionalProperties": false,
       "properties": {

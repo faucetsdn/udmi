@@ -245,8 +245,9 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     Device.Builder device = deviceRaw.toBuilder();
     CloudModel cloudModel = new CloudModel();
     cloudModel.num_id = device.getNumId();
-    cloudModel.last_event_time = getSafeDate(device.getLastEventTime());
     cloudModel.resource_type = resourceType(deviceRaw);
+    cloudModel.last_event_time = getSafeDate(device.getLastEventTime());
+    cloudModel.blocked = device.isBlocked() ? true : null;
     cloudModel.credentials = null;
     return new SimpleEntry<>(device.getId(), cloudModel);
   }
@@ -255,11 +256,14 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     Device.Builder device = deviceRaw.toBuilder();
     CloudModel cloudModel = new CloudModel();
     cloudModel.num_id = device.getNumId();
+    cloudModel.resource_type = resourceType(deviceRaw);
     cloudModel.blocked = device.isBlocked();
     cloudModel.metadata = device.getMetadata();
     cloudModel.last_event_time = getSafeDate(device.getLastEventTime());
-    cloudModel.resource_type = resourceType(deviceRaw);
+    cloudModel.last_state_time = getSafeDate(device.getLastStateTime());
+    cloudModel.last_config_time = getSafeDate(device.getLastConfigSendTime());
     cloudModel.last_config_ack = getSafeDate(device.getLastConfigAckTime());
+    cloudModel.last_event_time = getSafeDate(device.getLastErrorTime());
     cloudModel.credentials = convertIot(device.getCredentials());
     return cloudModel;
   }
