@@ -194,6 +194,7 @@ class LocalDevice {
   private boolean blocked;
   private ConfigGenerator config;
   private String staticConfig;
+
   LocalDevice(
       File siteDir, File devicesDir, String deviceId, Map<String, JsonSchema> schemas,
       String generation, Metadata siteMetadata, boolean validateMetadata) {
@@ -373,16 +374,16 @@ class LocalDevice {
     return metadata != null && (metadata.cloud != null && isTrue(metadata.cloud.device_key));
   }
 
-  public void loadConfig(){
-    if ( catchToNull(() -> metadata.cloud.config.static_file) != null ) {
+  public void loadConfig() {
+    if (catchToNull(() -> metadata.cloud.config.static_file) != null) {
       staticConfig = readStaticConfigFromFile(metadata.cloud.config.static_file);
       config = null;
     } else {
       config = configFrom(metadata);
       staticConfig = null;
     }
-
   }
+  
   public void loadCredentials() {
     try {
       deviceCredentials.clear();
