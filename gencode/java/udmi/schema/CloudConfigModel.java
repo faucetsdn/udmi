@@ -16,23 +16,23 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "file"
+    "static_file"
 })
 @Generated("jsonschema2pojo")
 public class CloudConfigModel {
 
     /**
-     * Config file to use, relative to the device's metadata file
+     * Config file to use. Within the `config` directory in the device's metadata directory
      * 
      */
-    @JsonProperty("file")
-    @JsonPropertyDescription("Config file to use, relative to the device's metadata file")
-    public String file;
+    @JsonProperty("static_file")
+    @JsonPropertyDescription("Config file to use. Within the `config` directory in the device's metadata directory")
+    public String static_file;
 
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.file == null)? 0 :this.file.hashCode()));
+        result = ((result* 31)+((this.static_file == null)? 0 :this.static_file.hashCode()));
         return result;
     }
 
@@ -45,7 +45,7 @@ public class CloudConfigModel {
             return false;
         }
         CloudConfigModel rhs = ((CloudConfigModel) other);
-        return ((this.file == rhs.file)||((this.file!= null)&&this.file.equals(rhs.file)));
+        return ((this.static_file == rhs.static_file)||((this.static_file!= null)&&this.static_file.equals(rhs.static_file)));
     }
 
 }

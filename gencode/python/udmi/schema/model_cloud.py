@@ -1,5 +1,5 @@
 """Generated class for model_cloud.json"""
-from .model_cloud_config import CloudModel
+from .model_cloud_config import CloudConfigModel
 
 
 class Object18ECC5EE:
@@ -66,7 +66,7 @@ class CloudModel:
     result.auth_type = source.get('auth_type')
     result.device_key = source.get('device_key')
     result.resource_type = source.get('resource_type')
-    result.config = CloudModel.from_dict(source.get('config'))
+    result.config = CloudConfigModel.from_dict(source.get('config'))
     result.blocked = source.get('blocked')
     result.detail = source.get('detail')
     result.credentials = source.get('credentials')

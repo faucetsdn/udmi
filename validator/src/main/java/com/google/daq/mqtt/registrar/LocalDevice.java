@@ -374,9 +374,9 @@ class LocalDevice {
   }
 
   public void loadConfig(){
-    if ( catchToNull(() -> metadata.cloud.config.file) != null ) {
+    if ( catchToNull(() -> metadata.cloud.config.static_file) != null ) {
+      staticConfig = readStaticConfigFromFile(metadata.cloud.config.static_file);
       config = null;
-      staticConfig = readStaticConfigFromFile(metadata.cloud.config.file);
     } else {
       config = configFrom(metadata);
       staticConfig = null;
@@ -529,7 +529,8 @@ class LocalDevice {
       File configDir = new File(deviceDir, CONFIG_DIR);
       File configFile = new File(configDir, fileName);
       String canonicalPath = configFile.getCanonicalPath();
-      if (!canonicalPath.startsWith(configDir.getAbsolutePath())) {
+      String configDirPath = configDir.getCanonicalPath();
+      if (!canonicalPath.startsWith(configDirPath)) {
         throw new IllegalArgumentException();
       }
       return readFileToString(configFile, StandardCharsets.UTF_8);
@@ -830,7 +831,6 @@ class LocalDevice {
     return metadata;
   }
 
-  //
   public Config deviceConfigObject() {
     return config.deviceConfig();
   }
