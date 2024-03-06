@@ -1,8 +1,8 @@
 """Generated class for event_discovery.json"""
 from .entry import Entry
 from .discovery_family import FamilyDiscovery
-from .discovery_registry import RegistryDiscovery
-from .discovery_device import DeviceDiscovery
+from .model_cloud import CloudModel
+from .model_cloud import CloudModel
 from .discovery_point import PointDiscovery
 from .discovery_feature import FeatureDiscovery
 from .ancillary_properties import AncillaryProperties
@@ -83,8 +83,8 @@ class DiscoveryEvent:
     result.scan_family = source.get('scan_family')
     result.scan_addr = source.get('scan_addr')
     result.families = FamilyDiscovery.map_from(source.get('families'))
-    result.registries = RegistryDiscovery.map_from(source.get('registries'))
-    result.devices = DeviceDiscovery.map_from(source.get('devices'))
+    result.registries = CloudModel.map_from(source.get('registries'))
+    result.devices = CloudModel.map_from(source.get('devices'))
     result.points = PointDiscovery.map_from(source.get('points'))
     result.features = FeatureDiscovery.map_from(source.get('features'))
     result.system = SystemDiscoveryEvent.from_dict(source.get('system'))
@@ -123,9 +123,9 @@ class DiscoveryEvent:
     if self.families:
       result['families'] = FamilyDiscovery.expand_dict(self.families) # 2
     if self.registries:
-      result['registries'] = RegistryDiscovery.expand_dict(self.registries) # 2
+      result['registries'] = CloudModel.expand_dict(self.registries) # 2
     if self.devices:
-      result['devices'] = DeviceDiscovery.expand_dict(self.devices) # 2
+      result['devices'] = CloudModel.expand_dict(self.devices) # 2
     if self.points:
       result['points'] = PointDiscovery.expand_dict(self.points) # 2
     if self.features:

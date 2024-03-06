@@ -93,14 +93,14 @@ public class DiscoveryEvent {
      */
     @JsonProperty("registries")
     @JsonPropertyDescription("Registry discovery results.")
-    public Map<String, RegistryDiscovery> registries;
+    public Map<String, CloudModel> registries;
     /**
-     * Device discovery scan results.
+     * Device iot discovery scan results.
      * 
      */
     @JsonProperty("devices")
-    @JsonPropertyDescription("Device discovery scan results.")
-    public Map<String, DeviceDiscovery> devices;
+    @JsonPropertyDescription("Device iot discovery scan results.")
+    public Map<String, CloudModel> devices;
     /**
      * Collection of data points available for this device.
      * 

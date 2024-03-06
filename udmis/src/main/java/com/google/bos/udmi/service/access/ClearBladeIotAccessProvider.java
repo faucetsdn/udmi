@@ -368,28 +368,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     return RegistryName.of(projectId, getRegistryLocation(registryId), registryId).toString();
   }
 
-  @NotNull
-  private Entry<String, HashMap<String, CloudModel>> listDevicesPage(String deviceRegistryId,
-      String gatewayId, String pageToken) {
-    String location = getRegistryLocation(deviceRegistryId);
-    GatewayListOptions gatewayListOptions =
-        ifNotNullGet(gatewayId, this::getGatewayListOptions);
-    String registryFullName =
-        RegistryName.of(projectId, location, deviceRegistryId).getRegistryFullName();
-    DevicesListRequest request = DevicesListRequest.Builder.newBuilder().setParent(
-            registryFullName)
-        .setGatewayListOptions(gatewayListOptions)
-        .setPageToken(pageToken)
-        .build();
-    DevicesListResponse response = deviceManager.listDevices(request);
-    requireNonNull(response, "DeviceRegistriesList fetch failed");
-    HashMap<String, CloudModel> devices =
-        response.getDevicesList().stream().map(ClearBladeIotAccessProvider::convertToEntry)
-            .collect(Collectors.toMap(Entry::getKey, Entry::getValue, GeneralUtils::mapReplace,
-                HashMap::new));
-    return new SimpleEntry<>(response.getNextPageToken(), devices);
-  }
-
   private CloudModel listRegistryDevices(String deviceRegistryId, String gatewayId) {
     try {
       CloudModel cloudModel = new CloudModel();
