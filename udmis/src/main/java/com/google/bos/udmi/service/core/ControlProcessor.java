@@ -43,6 +43,7 @@ public class ControlProcessor extends ProcessorBase {
   private CloudModel makeCloudModel(String registryId) {
     CloudModel cloudModel = new CloudModel();
     cloudModel.last_event_time = toDate(targetProcessor.getLastSeen(registryId));
+    cloudModel.credentials = null;
     return cloudModel;
   }
 
