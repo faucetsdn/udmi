@@ -11,10 +11,10 @@
     <output_file path="out/console.log" is_save="true" />
     <option name="MAIN_CLASS_NAME" value="com.google.bos.udmi.service.pod.UdmiServicePod" />
     <module name="udmis" />
-    <option name="PROGRAM_PARAMETERS" value="etc/prod_pod.json" />
+    <option name="PROGRAM_PARAMETERS" value="etc/prod_pod.json /tmp/udmis_dev.json" />
     <extension name="coverage">
       <pattern>
-        <option name="PATTERN" value="com.google.bos.udmi.service.pod.*" />
+        <option name="PATTERN" value="com.google.bos.udmi.service.core.*" />
         <option name="ENABLED" value="true" />
       </pattern>
     </extension>

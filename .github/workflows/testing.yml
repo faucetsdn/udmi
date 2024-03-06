@@ -21,7 +21,7 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.10'
       - name: Checkout source
@@ -177,11 +177,11 @@ jobs:
         run: |
           bin/support ${{ github.repository_owner }}_${{ github.job }}_
           tar -tzvf *udmi-support*.tgz
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
           if-no-files-found: error
-          name: udmi-support_${{ github.run_id }}
+          name: udmi-support_${{ github.run_id }}-${{ matrix.shard }}
           path: '*_udmi-support_*.tgz'
 
   baseline:
@@ -221,11 +221,11 @@ jobs:
       - name: support bundle
         if: ${{ !cancelled() }}
         run: UDMI_REGISTRY_SUFFIX=_b bin/support ${{ github.repository_owner }}_${{ github.job }}_
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
           if-no-files-found: error
-          name: udmi-support_${{ github.run_id }}
+          name: udmi-support_${{ github.run_id }}-b
           path: '*_udmi-support_*.tgz'
 
   redirect:
@@ -257,11 +257,11 @@ jobs:
       - name: support bundle
         if: ${{ !cancelled() }}
         run: UDMI_REGISTRY_SUFFIX=_r bin/support ${{ github.repository_owner }}_${{ github.job }}_
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
           if-no-files-found: error
-          name: udmi-support_${{ github.run_id }}
+          name: udmi-support_${{ github.run_id }}-r
           path: '*_udmi-support_*.tgz'
 
   posttest:
@@ -275,13 +275,23 @@ jobs:
       UDMI_ALT_REGISTRY: ZZ-REDIRECT-NA
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.10'
       - name: Base setup
         run: bin/setup_base
-      - name: Download all workflow run artifacts
-        uses: actions/download-artifact@v3
+      - name: Download all sharded support packages
+        uses: actions/download-artifact@v4
+        with:
+          path: udmi-support_${{ github.run_id }}
+          pattern: udmi-support_${{ github.run_id }}-*
+          merge-multiple: true
+      - name: Upload merged support package
+        uses: actions/upload-artifact@v4
+        with:
+          if-no-files-found: error
+          name: udmi-support_${{ github.run_id }}
+          path: 'udmi-support_${{ github.run_id }}/*_udmi-support_*.tgz'
       - name: Processing support package
         run: bin/support_process udmi-support_*
       - name: Test run index

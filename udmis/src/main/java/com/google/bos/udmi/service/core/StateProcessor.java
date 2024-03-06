@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
@@ -30,6 +31,10 @@ public class StateProcessor extends ProcessorBase {
 
   private static final Set<String> STATE_SUB_FOLDERS =
       Arrays.stream(SubFolder.values()).map(SubFolder::value).collect(Collectors.toSet());
+
+  public StateProcessor(EndpointConfiguration config) {
+    super(config);
+  }
 
   @Override
   protected void defaultHandler(Object originalMessage) {
@@ -50,11 +55,6 @@ public class StateProcessor extends ProcessorBase {
   @Override
   protected SubType getExceptionSubType() {
     return SubType.STATE;
-  }
-
-  @Override
-  protected void registerHandlers() {
-    registerHandler(StateUpdate.class, this::stateHandler);
   }
 
   private void shardStateUpdate(MessageContinuation continuation, Envelope envelope,
@@ -84,7 +84,11 @@ public class StateProcessor extends ProcessorBase {
     });
   }
 
-  private void stateHandler(StateUpdate message) {
+  /**
+   * Handle state update messages.
+   */
+  @DispatchHandler
+  public void stateHandler(StateUpdate message) {
     MessageContinuation continuation = getContinuation(message);
     Envelope envelope = continuation.getEnvelope();
     reflectMessage(envelope, stringify(message));

@@ -27,9 +27,6 @@ CACHE_ROOT=validator/sequences
 TEST_ROOT=$RUNDIR/sites/udmi_site_model/out/devices/AHU-1
 ARCHIVE_ROOT=/tmp/$CACHE_ROOT
 
-# Fix sort order difference on different platforms.
-export LC_ALL=C
-
 function usage(){
     echo "Usage: $0 [OPTION]"
     echo

@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "name",
     "provider",
     "project_id",
     "profile_sec",
@@ -27,6 +28,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
 @Generated("jsonschema2pojo")
 public class IotAccess {
 
+    @JsonProperty("name")
+    public String name;
     /**
      * Iot Provider
      * <p>
@@ -45,6 +48,7 @@ public class IotAccess {
     @Override
     public int hashCode() {
         int result = 1;
+        result = ((result* 31)+((this.name == null)? 0 :this.name.hashCode()));
         result = ((result* 31)+((this.options == null)? 0 :this.options.hashCode()));
         result = ((result* 31)+((this.provider == null)? 0 :this.provider.hashCode()));
         result = ((result* 31)+((this.project_id == null)? 0 :this.project_id.hashCode()));
@@ -61,7 +65,7 @@ public class IotAccess {
             return false;
         }
         IotAccess rhs = ((IotAccess) other);
-        return (((((this.options == rhs.options)||((this.options!= null)&&this.options.equals(rhs.options)))&&((this.provider == rhs.provider)||((this.provider!= null)&&this.provider.equals(rhs.provider))))&&((this.project_id == rhs.project_id)||((this.project_id!= null)&&this.project_id.equals(rhs.project_id))))&&((this.profile_sec == rhs.profile_sec)||((this.profile_sec!= null)&&this.profile_sec.equals(rhs.profile_sec))));
+        return ((((((this.name == rhs.name)||((this.name!= null)&&this.name.equals(rhs.name)))&&((this.options == rhs.options)||((this.options!= null)&&this.options.equals(rhs.options))))&&((this.provider == rhs.provider)||((this.provider!= null)&&this.provider.equals(rhs.provider))))&&((this.project_id == rhs.project_id)||((this.project_id!= null)&&this.project_id.equals(rhs.project_id))))&&((this.profile_sec == rhs.profile_sec)||((this.profile_sec!= null)&&this.profile_sec.equals(rhs.profile_sec))));
     }
 
 

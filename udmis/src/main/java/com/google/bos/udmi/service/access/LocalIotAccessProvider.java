@@ -42,7 +42,7 @@ public class LocalIotAccessProvider extends IotAccessBase {
 
   @Override
   public void activate() {
-    debug("activate");
+    super.activate();
     checkState(!failActivation, "failing activation for test");
   }
 

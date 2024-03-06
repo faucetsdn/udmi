@@ -194,6 +194,10 @@ public class GeneralUtils {
     }
   }
 
+  public static Date toDate(Instant lastSeen) {
+    return ifNotNullGet(lastSeen, Date::from);
+  }
+
   private static String writeToPrettyString(Object data, OutputFormat indent) {
     try {
       ByteArrayOutputStream outputString = new ByteArrayOutputStream();
@@ -287,6 +291,10 @@ public class GeneralUtils {
 
   public static <T> T ifTrueGet(Object conditional, Supplier<T> action, Supplier<T> alternate) {
     return isTrue(conditional) ? action.get() : alternate.get();
+  }
+
+  public static <T> T ifTrueGet(Object conditional, Supplier<T> action, T alternate) {
+    return isTrue(conditional) ? action.get() : alternate;
   }
 
   public static <T> void ifTrueThen(Object conditional, Runnable action) {

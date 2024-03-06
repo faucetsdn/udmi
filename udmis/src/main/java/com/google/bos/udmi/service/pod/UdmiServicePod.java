@@ -7,23 +7,28 @@ import static com.google.udmi.util.GeneralUtils.copyFields;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.mergeObject;
 import static com.google.udmi.util.JsonUtil.loadFileStrictRequired;
+import static com.google.udmi.util.JsonUtil.stringify;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 import com.google.bos.udmi.service.access.IotAccessProvider;
 import com.google.bos.udmi.service.core.BridgeProcessor;
+import com.google.bos.udmi.service.core.ControlProcessor;
+import com.google.bos.udmi.service.core.CronProcessor;
 import com.google.bos.udmi.service.core.DistributorPipe;
 import com.google.bos.udmi.service.core.ProcessorBase;
 import com.google.bos.udmi.service.core.ReflectProcessor;
 import com.google.bos.udmi.service.core.StateProcessor;
 import com.google.bos.udmi.service.core.TargetProcessor;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -49,7 +54,7 @@ public class UdmiServicePod extends ContainerBase {
   static final File READY_INDICATOR = new File("/tmp/pod_ready.txt");
   private static final Map<String, ContainerProvider> COMPONENT_MAP = new ConcurrentHashMap<>();
   private static final Set<Class<? extends ProcessorBase>> PROCESSOR_CLASSES = ImmutableSet.of(
-      TargetProcessor.class, ReflectProcessor.class, StateProcessor.class);
+      TargetProcessor.class, ReflectProcessor.class, StateProcessor.class, ControlProcessor.class);
   private static final Map<String, Class<? extends ProcessorBase>> PROCESSORS =
       PROCESSOR_CLASSES.stream().collect(Collectors.toMap(ContainerBase::getName, clazz -> clazz));
 
@@ -57,14 +62,13 @@ public class UdmiServicePod extends ContainerBase {
    * Core pod to instantiate all the other components as necessary based on configuration.
    */
   public UdmiServicePod(String[] args) {
-    super(loadFileStrictRequired(PodConfiguration.class, args[0]));
+    super(makePodConfiguration(args));
     try {
-      checkState(args.length == 1, "expected exactly one argument: configuration_file");
-
+      ifNotNullThen(podConfiguration.distributors, dist -> dist.forEach(this::createDistributor));
+      ifNotNullThen(podConfiguration.iot_access, access -> access.forEach(this::createAccess));
       ifNotNullThen(podConfiguration.flows, flows -> flows.forEach(this::createFlow));
       ifNotNullThen(podConfiguration.bridges, bridges -> bridges.forEach(this::createBridge));
-      ifNotNullThen(podConfiguration.iot_access, access -> access.forEach(this::createAccess));
-      ifNotNullThen(podConfiguration.distributors, dist -> dist.forEach(this::createDistributor));
+      ifNotNullThen(podConfiguration.crons, dist -> dist.forEach(this::createCron));
     } catch (Exception e) {
       throw new RuntimeException("Fatal error instantiating pod " + CSV_JOINER.join(args), e);
     }
@@ -127,6 +131,16 @@ public class UdmiServicePod extends ContainerBase {
     }
   }
 
+  private static PodConfiguration makePodConfiguration(String[] args) {
+    AtomicReference<PodConfiguration> config = new AtomicReference<>(new PodConfiguration());
+    Arrays.stream(args).forEach(arg -> {
+      System.err.println("Processing config file " + arg);
+      config.set(mergeObject(config.get(), loadFileStrictRequired(PodConfiguration.class, arg)));
+    });
+    System.err.println(stringify(config.get()));
+    return config.get();
+  }
+
   @SuppressWarnings("unchecked")
   public static <T> T maybeGetComponent(String name) {
     return ifNotNullGet(name, x -> (T) COMPONENT_MAP.get(name));
@@ -156,7 +170,14 @@ public class UdmiServicePod extends ContainerBase {
     READY_INDICATOR.delete();
   }
 
+  private static void setConfigName(EndpointConfiguration config, String name) {
+    boolean notSetOrEqual = config.name == null || config.name.equals(name);
+    checkState(notSetOrEqual, "config name already set, was " + config.name);
+    config.name = name;
+  }
+
   private void createAccess(String name, IotAccess config) {
+    config.name = name;
     putComponent(name, () -> IotAccessProvider.from(config));
   }
 
@@ -169,20 +190,24 @@ public class UdmiServicePod extends ContainerBase {
     info(format("Creating bridge %s with enabled %s", name, config.enabled));
     EndpointConfiguration from = makeConfig(config.from);
     EndpointConfiguration morf = makeConfig(config.morf);
+    setConfigName(from, name);
     putComponent(name, () -> new BridgeProcessor(from, morf));
   }
 
+  private void createCron(String name, EndpointConfiguration config) {
+    setConfigName(config, name);
+    putComponent(name, () -> ProcessorBase.create(CronProcessor.class, makeConfig(config)));
+  }
+
   private void createDistributor(String name, EndpointConfiguration config) {
-    checkState(config.error == null, "config error/name already set");
-    config.error = name;
-    putComponent(name, () -> DistributorPipe.from(config));
+    setConfigName(config, name);
+    putComponent(name, () -> ProcessorBase.create(DistributorPipe.class, makeConfig(config)));
   }
 
   private void createFlow(String name, EndpointConfiguration config) {
     checkState(PROCESSORS.containsKey(name), "unknown flow key " + name);
     Class<? extends ProcessorBase> clazz = PROCESSORS.get(name);
-    Preconditions.checkState(config.error == null, "config error/name already set");
-    config.error = name;
+    setConfigName(config, name);
     putComponent(name, () -> ProcessorBase.create(clazz, makeConfig(config)));
   }
 

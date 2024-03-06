@@ -86,6 +86,7 @@ public class MqttPublisher implements Publisher {
   private static final Map<String, AtomicInteger> EVENT_SERIAL = new HashMap<>();
   private static final String GCP_CLIENT_PREFIX = "projects/";
   public static final String EMPTY_STRING = "";
+  private static final Integer DEFAULT_MQTT_PORT = 8883;
 
   private final Semaphore connectionLock = new Semaphore(1);
 
@@ -272,7 +273,6 @@ public class MqttPublisher implements Publisher {
   private void validateCloudIotOptions() {
     try {
       checkNotNull(configuration.endpoint.hostname, "endpoint hostname");
-      checkNotNull(configuration.endpoint.port, "endpoint port");
       checkNotNull(configuration.endpoint.client_id, "endpoint client_id");
       checkNotNull(configuration.keyBytes, "keyBytes");
       checkNotNull(configuration.algorithm, "algorithm");
@@ -420,7 +420,7 @@ public class MqttPublisher implements Publisher {
     // accepted. For server authentication, the JVM's root certificates are used.
     Transport trans = ofNullable(configuration.endpoint.transport).orElse(Transport.SSL);
     return format(BROKER_URL_FORMAT, trans, configuration.endpoint.hostname,
-        configuration.endpoint.port);
+        ofNullable(configuration.endpoint.port).orElse(DEFAULT_MQTT_PORT));
   }
 
   private void subscribeToUpdates(MqttClient client, String deviceId) {
