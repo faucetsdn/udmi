@@ -233,6 +233,7 @@ public abstract class ContainerBase implements ContainerProvider {
 
   private void periodicWrapper() {
     try {
+      grabExecutionContext();
       periodicTask();
     } catch (Exception e) {
       error("Exception executing periodic task: " + friendlyStackTrace(e));
