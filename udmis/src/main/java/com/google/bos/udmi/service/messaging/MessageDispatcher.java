@@ -27,8 +27,7 @@ public interface MessageDispatcher {
   Class<?> EXCEPTION_CLASS = Exception.class;
 
   static MessageDispatcher from(EndpointConfiguration config) {
-    boolean isValid = config != null && (config.send_id != null || config.recv_id != null);
-    return ifTrueGet(isValid, () -> new MessageDispatcherImpl(config));
+    return ifNotNullGet(config, MessageDispatcherImpl::new);
   }
 
   static MessageDispatcher from(EndpointConfiguration from, EndpointConfiguration to) {

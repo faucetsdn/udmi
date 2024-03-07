@@ -36,6 +36,7 @@ public class CronProcessor extends ProcessorBase {
   private final static SortedMap<String, Instant> TRACKER = new ConcurrentSkipListMap<>();
   private static final String HEARTBEAT_NAME = "heartbeat";
   private final static String HEARTBEAT_SUFFIX = PATH_SEPARATOR + HEARTBEAT_NAME;
+  public static final long CUTOFF_INTERVALS = 3;
   private static Integer HEARTBEAT_SEC;
   private final Envelope srcEnvelope;
   private final AtomicReference<Date> previousTick = new AtomicReference<>();
@@ -121,8 +122,9 @@ public class CronProcessor extends ProcessorBase {
       return;
     }
     debug("Pod timestamp update %s to %s", envelope.gatewayId, isoConvert(envelope.publishTime));
+
     TRACKER.put(getContainerId(envelope), envelope.publishTime.toInstant());
-    Instant cutoffTime = Instant.now().minusSeconds(HEARTBEAT_SEC * 2);
+    Instant cutoffTime = Instant.now().minusSeconds(HEARTBEAT_SEC * CUTOFF_INTERVALS);
     TRACKER.entrySet().removeIf(entry -> entry.getValue().isBefore(cutoffTime));
     debug("Received values: " + TRACKER.size() + " " + CSV_JOINER.join(
         TRACKER.values().stream().map(JsonUtil::isoConvert).toList()));

@@ -62,7 +62,6 @@
       "protocol": "mqtt",
       "transport": "tcp",
       "hostname": "udmis-broker",
-      "send_id": "distributor",
       "port": "1883"
     }
   },
