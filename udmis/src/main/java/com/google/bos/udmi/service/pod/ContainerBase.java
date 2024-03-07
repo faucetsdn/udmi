@@ -7,6 +7,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.instantNow;
+import static java.lang.Math.floorMod;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
@@ -226,7 +227,7 @@ public abstract class ContainerBase implements ContainerProvider {
 
   private long initialDelaySec() {
     return ifNotNullGet(executorGeneration, generation ->
-        Duration.between(instantNow(), generation).getSeconds() % periodicSec, periodicSec);
+        floorMod(Duration.between(instantNow(), generation).getSeconds(), periodicSec), periodicSec);
   }
 
   private void periodicWrapper() {
