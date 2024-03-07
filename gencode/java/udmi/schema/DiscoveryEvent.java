@@ -29,6 +29,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "devices",
     "points",
     "features",
+    "cloud_model",
     "system"
 })
 @Generated("jsonschema2pojo")
@@ -93,14 +94,14 @@ public class DiscoveryEvent {
      */
     @JsonProperty("registries")
     @JsonPropertyDescription("Registry discovery results.")
-    public Map<String, RegistryDiscovery> registries;
+    public Map<String, CloudModel> registries;
     /**
-     * Device discovery scan results.
+     * Device iot discovery scan results.
      * 
      */
     @JsonProperty("devices")
-    @JsonPropertyDescription("Device discovery scan results.")
-    public Map<String, DeviceDiscovery> devices;
+    @JsonPropertyDescription("Device iot discovery scan results.")
+    public Map<String, CloudModel> devices;
     /**
      * Collection of data points available for this device.
      * 
@@ -116,13 +117,22 @@ public class DiscoveryEvent {
     @JsonPropertyDescription("Discovery of features supported by this device.")
     public Map<String, FeatureDiscovery> features;
     /**
-     * System Discovery Event
+     * Cloud Model
+     * <p>
+     * Information specific to how the device communicates with the cloud.
+     * 
+     */
+    @JsonProperty("cloud_model")
+    @JsonPropertyDescription("Information specific to how the device communicates with the cloud.")
+    public udmi.schema.CloudModel cloud_model;
+    /**
+     * System Discovery Data
      * <p>
      * 
      * 
      */
     @JsonProperty("system")
-    public SystemDiscoveryEvent system;
+    public SystemDiscoveryData system;
 
     @Override
     public int hashCode() {
@@ -136,6 +146,7 @@ public class DiscoveryEvent {
         result = ((result* 31)+((this.features == null)? 0 :this.features.hashCode()));
         result = ((result* 31)+((this.system == null)? 0 :this.system.hashCode()));
         result = ((result* 31)+((this.scan_family == null)? 0 :this.scan_family.hashCode()));
+        result = ((result* 31)+((this.cloud_model == null)? 0 :this.cloud_model.hashCode()));
         result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
         result = ((result* 31)+((this.status == null)? 0 :this.status.hashCode()));
         result = ((result* 31)+((this.scan_addr == null)? 0 :this.scan_addr.hashCode()));
@@ -151,7 +162,7 @@ public class DiscoveryEvent {
             return false;
         }
         DiscoveryEvent rhs = ((DiscoveryEvent) other);
-        return (((((((((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.devices == rhs.devices)||((this.devices!= null)&&this.devices.equals(rhs.devices))))&&((this.registries == rhs.registries)||((this.registries!= null)&&this.registries.equals(rhs.registries))))&&((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.points == rhs.points)||((this.points!= null)&&this.points.equals(rhs.points))))&&((this.features == rhs.features)||((this.features!= null)&&this.features.equals(rhs.features))))&&((this.system == rhs.system)||((this.system!= null)&&this.system.equals(rhs.system))))&&((this.scan_family == rhs.scan_family)||((this.scan_family!= null)&&this.scan_family.equals(rhs.scan_family))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))))&&((this.scan_addr == rhs.scan_addr)||((this.scan_addr!= null)&&this.scan_addr.equals(rhs.scan_addr))));
+        return ((((((((((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.devices == rhs.devices)||((this.devices!= null)&&this.devices.equals(rhs.devices))))&&((this.registries == rhs.registries)||((this.registries!= null)&&this.registries.equals(rhs.registries))))&&((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.points == rhs.points)||((this.points!= null)&&this.points.equals(rhs.points))))&&((this.features == rhs.features)||((this.features!= null)&&this.features.equals(rhs.features))))&&((this.system == rhs.system)||((this.system!= null)&&this.system.equals(rhs.system))))&&((this.scan_family == rhs.scan_family)||((this.scan_family!= null)&&this.scan_family.equals(rhs.scan_family))))&&((this.cloud_model == rhs.cloud_model)||((this.cloud_model!= null)&&this.cloud_model.equals(rhs.cloud_model))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))))&&((this.scan_addr == rhs.scan_addr)||((this.scan_addr!= null)&&this.scan_addr.equals(rhs.scan_addr))));
     }
 
 }

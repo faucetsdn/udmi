@@ -65,7 +65,8 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
   private static final String EXTRA_FIELD_KEY = "extra_field";
   private static final String BROKEN_CONFIG_JSON =
       format("{ broken by %s == %s", EXTRA_FIELD_KEY, BREAK_CONFIG_VALUE);
-  protected MessageDispatcher dispatcher;
+  protected final MessageDispatcher dispatcher;
+  private final MessageDispatcher sidecar;
   protected IotAccessBase iotAccess;
   private final ImmutableList<HandlerSpecification> baseHandlers = ImmutableList.of(
       messageHandlerFor(Object.class, this::defaultHandler),
@@ -81,6 +82,7 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
     super(config);
     distributorName = config.distributor;
     dispatcher = MessageDispatcher.from(config);
+    sidecar = MessageDispatcher.from(makeSidecarConfig(config));
   }
 
   /**
@@ -92,6 +94,17 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
     } catch (Exception e) {
       throw new RuntimeException("While instantiating class " + clazz.getName(), e);
     }
+  }
+
+  private static EndpointConfiguration makeSidecarConfig(EndpointConfiguration config) {
+    if (config.side_id == null) {
+      return null;
+    }
+    EndpointConfiguration sidecar = deepCopy(config);
+    sidecar.recv_id = null;
+    sidecar.send_id = sidecar.side_id;
+    sidecar.side_id = null;
+    return sidecar;
   }
 
   /**
@@ -142,11 +155,6 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
     debug("Acknowledging config/%s %s %s", subFolder, useAttributes.transactionId,
         isoConvert(newLastStart));
     reflectMessage(useAttributes, configUpdate);
-  }
-
-  @Override
-  public void processMessage(Envelope envelope, Object message) {
-    ((MessageDispatcherImpl) dispatcher).processMessage(envelope, message);
   }
 
   protected void reflectError(SubType subType, BundleException bundleException) {
@@ -226,6 +234,11 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
    */
   protected void registerHandlers(Collection<HandlerSpecification> messageHandlers) {
     dispatcher.registerHandlers(messageHandlers);
+  }
+
+  protected void sideProcess(Envelope envelope, Object message) {
+    ifNotNullThen(sidecar, car -> car.withEnvelope(envelope).publish(message),
+        () -> processMessage(envelope, message));
   }
 
   private void mungeConfigDebug(Envelope attributes, Object lastConfig, String reason) {
@@ -335,6 +348,11 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
 
   public int getMessageCount(Class<?> clazz) {
     return dispatcher.getHandlerCount(clazz);
+  }
+
+  @Override
+  public void processMessage(Envelope envelope, Object message) {
+    ((MessageDispatcherImpl) dispatcher).processMessage(envelope, message);
   }
 
   /**

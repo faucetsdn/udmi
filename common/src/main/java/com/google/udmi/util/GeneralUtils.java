@@ -514,7 +514,11 @@ public class GeneralUtils {
   }
 
   public static Date getNow() {
-    return Date.from(Instant.now().plus(clockSkew));
+    return Date.from(instantNow());
+  }
+
+  public static Instant instantNow() {
+    return Instant.now().plus(clockSkew);
   }
 
   public static String getTimestamp() {

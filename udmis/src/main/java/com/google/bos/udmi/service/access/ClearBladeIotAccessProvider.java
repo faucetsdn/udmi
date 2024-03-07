@@ -9,7 +9,6 @@ import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
-import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.getDate;
 import static java.lang.String.format;
@@ -61,13 +60,11 @@ import com.clearblade.cloud.iot.v1.unbinddevicefromgateway.UnbindDeviceFromGatew
 import com.clearblade.cloud.iot.v1.updatedevice.UpdateDeviceRequest;
 import com.clearblade.cloud.iot.v1.utils.ByteString;
 import com.clearblade.cloud.iot.v1.utils.LogLevel;
-import com.google.bos.udmi.service.pod.SimpleHandler;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.udmi.util.GeneralUtils;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Base64;
 import java.util.Date;
@@ -143,17 +140,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     return ifNotNullGet(credentials,
         list -> list.stream().map(ClearBladeIotAccessProvider::convertIot)
             .collect(Collectors.toList()));
-  }
-
-  private static Entry<String, CloudModel> convertToEntry(Device device) {
-    CloudModel cloudModel = new CloudModel();
-    Device.Builder deviceBuilder = device.toBuilder();
-    cloudModel.num_id = extractNumId(device);
-    return new SimpleEntry<>(deviceBuilder.getId(), cloudModel);
-  }
-
-  private static String extractNumId(Device device) {
-    return device.toBuilder().getNumId();
   }
 
   @Nullable
@@ -254,17 +240,30 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     return reply;
   }
 
-  private CloudModel convert(Device deviceRaw, Operation operation) {
+  private static Entry<String, CloudModel> convertPartial(Device deviceRaw) {
     Device.Builder device = deviceRaw.toBuilder();
     CloudModel cloudModel = new CloudModel();
-    cloudModel.num_id = extractNumId(deviceRaw);
+    cloudModel.num_id = device.getNumId();
+    cloudModel.resource_type = resourceType(deviceRaw);
+    cloudModel.last_event_time = getSafeDate(device.getLastEventTime());
+    cloudModel.blocked = device.isBlocked() ? true : null;
+    cloudModel.credentials = null;
+    return new SimpleEntry<>(device.getId(), cloudModel);
+  }
+
+  private CloudModel convertFull(Device deviceRaw) {
+    Device.Builder device = deviceRaw.toBuilder();
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.num_id = device.getNumId();
+    cloudModel.resource_type = resourceType(deviceRaw);
     cloudModel.blocked = device.isBlocked();
     cloudModel.metadata = device.getMetadata();
     cloudModel.last_event_time = getSafeDate(device.getLastEventTime());
-    cloudModel.resource_type = resourceType(deviceRaw);
+    cloudModel.last_state_time = getSafeDate(device.getLastStateTime());
+    cloudModel.last_config_time = getSafeDate(device.getLastConfigSendTime());
     cloudModel.last_config_ack = getSafeDate(device.getLastConfigAckTime());
+    cloudModel.last_event_time = getSafeDate(device.getLastErrorTime());
     cloudModel.credentials = convertIot(device.getCredentials());
-    cloudModel.operation = operation;
     return cloudModel;
   }
 
@@ -340,7 +339,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       DevicesListResponse response = deviceManager.listDevices(request);
       requireNonNull(response, "DeviceRegistriesList fetch failed");
       Map<String, CloudModel> responseMap =
-          response.getDevicesList().stream().map(ClearBladeIotAccessProvider::convertToEntry)
+          response.getDevicesList().stream().map(ClearBladeIotAccessProvider::convertPartial)
               .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
       collect.putAll(responseMap);
       pageToken = response.getNextPageToken();
@@ -366,28 +365,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
 
   private String getRegistryName(String registryId) {
     return RegistryName.of(projectId, getRegistryLocation(registryId), registryId).toString();
-  }
-
-  @NotNull
-  private Entry<String, HashMap<String, CloudModel>> listDevicesPage(String deviceRegistryId,
-      String gatewayId, String pageToken) {
-    String location = getRegistryLocation(deviceRegistryId);
-    GatewayListOptions gatewayListOptions =
-        ifNotNullGet(gatewayId, this::getGatewayListOptions);
-    String registryFullName =
-        RegistryName.of(projectId, location, deviceRegistryId).getRegistryFullName();
-    DevicesListRequest request = DevicesListRequest.Builder.newBuilder().setParent(
-            registryFullName)
-        .setGatewayListOptions(gatewayListOptions)
-        .setPageToken(pageToken)
-        .build();
-    DevicesListResponse response = deviceManager.listDevices(request);
-    requireNonNull(response, "DeviceRegistriesList fetch failed");
-    HashMap<String, CloudModel> devices =
-        response.getDevicesList().stream().map(ClearBladeIotAccessProvider::convertToEntry)
-            .collect(Collectors.toMap(Entry::getKey, Entry::getValue, GeneralUtils::mapReplace,
-                HashMap::new));
-    return new SimpleEntry<>(response.getNextPageToken(), devices);
   }
 
   private CloudModel listRegistryDevices(String deviceRegistryId, String gatewayId) {
@@ -610,7 +587,8 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
           .setFieldMask(FieldMask.newBuilder().build()).build();
       Device device = deviceManager.getDevice(request);
       requireNonNull(device, "GetDeviceRequest failed");
-      CloudModel cloudModel = convert(device, Operation.FETCH);
+      CloudModel cloudModel = convertFull(device);
+      cloudModel.operation = Operation.FETCH;
       cloudModel.device_ids = listRegistryDevices(deviceRegistryId, deviceId).device_ids;
       return cloudModel;
     } catch (Exception e) {

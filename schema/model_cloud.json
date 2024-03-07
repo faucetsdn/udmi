@@ -66,6 +66,18 @@
       "type": "string",
       "format": "date-time"
     },
+    "last_state_time": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "last_config_time": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "last_error_time": {
+      "type": "string",
+      "format": "date-time"
+    },
     "last_config_ack": {
       "type": "string",
       "format": "date-time"

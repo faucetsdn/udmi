@@ -48,6 +48,9 @@ class CloudModel:
     self.detail = None
     self.credentials = None
     self.last_event_time = None
+    self.last_state_time = None
+    self.last_config_time = None
+    self.last_error_time = None
     self.last_config_ack = None
     self.num_id = None
     self.operation = None
@@ -68,6 +71,9 @@ class CloudModel:
     result.detail = source.get('detail')
     result.credentials = source.get('credentials')
     result.last_event_time = source.get('last_event_time')
+    result.last_state_time = source.get('last_state_time')
+    result.last_config_time = source.get('last_config_time')
+    result.last_error_time = source.get('last_error_time')
     result.last_config_ack = source.get('last_config_ack')
     result.num_id = source.get('num_id')
     result.operation = source.get('operation')
@@ -111,6 +117,12 @@ class CloudModel:
       result['credentials'] = self.credentials # 1
     if self.last_event_time:
       result['last_event_time'] = self.last_event_time # 5
+    if self.last_state_time:
+      result['last_state_time'] = self.last_state_time # 5
+    if self.last_config_time:
+      result['last_config_time'] = self.last_config_time # 5
+    if self.last_error_time:
+      result['last_error_time'] = self.last_error_time # 5
     if self.last_config_ack:
       result['last_config_ack'] = self.last_config_ack # 5
     if self.num_id:

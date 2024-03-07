@@ -58,6 +58,7 @@ class EndpointConfiguration:
     self.msg_prefix = None
     self.recv_id = None
     self.send_id = None
+    self.side_id = None
     self.capacity = None
     self.publish_delay_sec = None
     self.periodic_sec = None
@@ -82,6 +83,7 @@ class EndpointConfiguration:
     result.msg_prefix = source.get('msg_prefix')
     result.recv_id = source.get('recv_id')
     result.send_id = source.get('send_id')
+    result.side_id = source.get('side_id')
     result.capacity = source.get('capacity')
     result.publish_delay_sec = source.get('publish_delay_sec')
     result.periodic_sec = source.get('periodic_sec')
@@ -132,6 +134,8 @@ class EndpointConfiguration:
       result['recv_id'] = self.recv_id # 5
     if self.send_id:
       result['send_id'] = self.send_id # 5
+    if self.side_id:
+      result['side_id'] = self.side_id # 5
     if self.capacity:
       result['capacity'] = self.capacity # 5
     if self.publish_delay_sec:

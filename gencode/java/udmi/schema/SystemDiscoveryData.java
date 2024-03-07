@@ -10,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * System Discovery Event
+ * System Discovery Data
  * <p>
  * 
  * 
@@ -22,7 +22,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "hardware"
 })
 @Generated("jsonschema2pojo")
-public class SystemDiscoveryEvent {
+public class SystemDiscoveryData {
 
     /**
      * The serial number of the physical device
@@ -64,10 +64,10 @@ public class SystemDiscoveryEvent {
         if (other == this) {
             return true;
         }
-        if ((other instanceof SystemDiscoveryEvent) == false) {
+        if ((other instanceof SystemDiscoveryData) == false) {
             return false;
         }
-        SystemDiscoveryEvent rhs = ((SystemDiscoveryEvent) other);
+        SystemDiscoveryData rhs = ((SystemDiscoveryData) other);
         return ((((this.ancillary == rhs.ancillary)||((this.ancillary!= null)&&this.ancillary.equals(rhs.ancillary)))&&((this.serial_no == rhs.serial_no)||((this.serial_no!= null)&&this.serial_no.equals(rhs.serial_no))))&&((this.hardware == rhs.hardware)||((this.hardware!= null)&&this.hardware.equals(rhs.hardware))));
     }
 

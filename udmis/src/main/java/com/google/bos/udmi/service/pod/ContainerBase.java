@@ -6,9 +6,13 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
+import static com.google.udmi.util.GeneralUtils.instantNow;
+import static java.lang.Math.floorMod;
 import static java.lang.String.format;
+import static java.time.Duration.between;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toSet;
 
 import com.google.bos.udmi.service.core.ComponentName;
@@ -16,12 +20,13 @@ import com.google.common.collect.ImmutableSet;
 import com.google.udmi.util.JsonUtil;
 import java.io.PrintStream;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -50,10 +55,11 @@ public abstract class ContainerBase implements ContainerProvider {
   protected static String reflectRegistry = REFLECT_BASE;
   private static BasePodConfiguration basePodConfig = new BasePodConfiguration();
   protected final PodConfiguration podConfiguration;
-  protected final int periodicSec;
+  protected final long periodicSec;
+  protected final String containerId;
   private final ScheduledExecutorService scheduledExecutor;
   private final double failureRate;
-  protected final String containerId;
+  private final Instant executorGeneration;
 
   /**
    * Create a basic pod container.
@@ -64,15 +70,17 @@ public abstract class ContainerBase implements ContainerProvider {
     periodicSec = 0;
     scheduledExecutor = null;
     containerId = getSimpleName();
+    executorGeneration = null;
   }
 
   /**
    * Create an instance with specific parameters.
    */
-  public ContainerBase(int executorSec, String useId) {
+  public ContainerBase(String useId, Integer executorSec, Date generation) {
     podConfiguration = null;
     failureRate = getPodFailureRate();
-    periodicSec = executorSec;
+    periodicSec = ofNullable(executorSec).orElse(0);
+    executorGeneration = ifNotNullGet(generation, Date::toInstant);
     scheduledExecutor = ifTrueGet(periodicSec > 0, Executors::newSingleThreadScheduledExecutor);
     containerId = ifNotNullGet(useId, id -> id, getSimpleName());
   }
@@ -90,10 +98,11 @@ public abstract class ContainerBase implements ContainerProvider {
     periodicSec = 0;
     scheduledExecutor = null;
     containerId = getSimpleName();
+    executorGeneration = null;
   }
 
   public ContainerBase(EndpointConfiguration configuration) {
-    this(ofNullable(configuration.periodic_sec).orElse(0), configuration.name);
+    this(configuration.name, configuration.periodic_sec, configuration.generation);
   }
 
   /**
@@ -149,14 +158,6 @@ public abstract class ContainerBase implements ContainerProvider {
     return expanded;
   }
 
-  private void periodicTaskWrapper() {
-    try {
-      periodicTask();;
-    } catch (Exception e) {
-      error("Exception executing periodic task: " + friendlyStackTrace(e));
-    }
-  }
-
   protected void periodicTask() {
     if (scheduledExecutor != null && !scheduledExecutor.isShutdown()) {
       debug("Shutting down unused scheduled executor");
@@ -172,12 +173,8 @@ public abstract class ContainerBase implements ContainerProvider {
     }
   }
 
-  protected String variableSubstitution(String value, @NotNull String nullMessage) {
-    requireNonNull(value, requireNonNull(nullMessage, "null message not defined"));
-    Matcher matcher = VARIABLE_PATTERN.matcher(value);
-    String out = matcher.replaceAll(this::environmentReplacer);
-    ifNotTrueThen(value.equals(out), () -> debug("Replaced value %s with '%s'", value, out));
-    return out;
+  protected void scheduleIn(Duration duration, Runnable task) {
+    scheduledExecutor.schedule(task, duration.getSeconds(), SECONDS);
   }
 
   protected String variableSubstitution(String value) {
@@ -185,6 +182,14 @@ public abstract class ContainerBase implements ContainerProvider {
       return null;
     }
     return variableSubstitution(value, "unknown null value");
+  }
+
+  protected String variableSubstitution(String value, @NotNull String nullMessage) {
+    requireNonNull(value, requireNonNull(nullMessage, "null message not defined"));
+    Matcher matcher = VARIABLE_PATTERN.matcher(value);
+    String out = matcher.replaceAll(this::environmentReplacer);
+    ifNotTrueThen(value.equals(out), () -> debug("Replaced value %s with '%s'", value, out));
+    return out;
   }
 
   private String environmentReplacer(MatchResult match) {
@@ -221,18 +226,27 @@ public abstract class ContainerBase implements ContainerProvider {
     return getClass().getSimpleName();
   }
 
+  private long initialDelaySec() {
+    return ifNotNullGet(executorGeneration, generation ->
+        floorMod(between(instantNow(), generation).getSeconds(), periodicSec), periodicSec);
+  }
+
+  private void periodicWrapper() {
+    try {
+      periodicTask();
+    } catch (Exception e) {
+      error("Exception executing periodic task: " + friendlyStackTrace(e));
+    }
+  }
+
   @Override
   public void activate() {
     info("Activating");
     ifTrueThen(periodicSec > 0, () -> {
-      notice("Scheduling periodic task %s execution every %ss", containerId, periodicSec);
-      scheduledExecutor.scheduleAtFixedRate(this::periodicTaskWrapper, periodicSec, periodicSec,
-          TimeUnit.SECONDS);
+      long initial = initialDelaySec();
+      notice("Scheduling task %s execution after %ss every %ss", containerId, initial, periodicSec);
+      scheduledExecutor.scheduleAtFixedRate(this::periodicWrapper, initial, periodicSec, SECONDS);
     });
-  }
-
-  protected void scheduleIn(Duration duration, Runnable task) {
-    scheduledExecutor.schedule(task, duration.getSeconds(), TimeUnit.SECONDS);
   }
 
   public void debug(String format, Object... args) {
