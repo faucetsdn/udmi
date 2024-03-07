@@ -21,6 +21,11 @@
           "type": "string",
           "pattern": "^[A-Z0-9-]+$"
         },
+        "floor": {
+          "type": "string",
+          "pattern": "^[A-Z0-9-]+$",
+          "examples": ["1", "1A", "G", "B1M", "RF"]
+        },
         "position": {
           "type": "object",
           "additionalProperties": false,
@@ -35,6 +40,20 @@
             },
             "z": {
               "description": "The `z` (height) coordinate of the device location in a project specific coordinate system",
+              "type": "number"
+            }
+          }
+        },
+        "coordinates": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "lat": {
+              "description": "The `lattitude` coordinate of the device in the WSG84 coordinate system",
+              "type": "number"
+            },
+            "lon": {
+              "description": "The `longitude` coordinate of the device in the WSG84 coordinate system",
               "type": "number"
             }
           }
