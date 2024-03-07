@@ -7,6 +7,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.instantNow;
+import static com.google.udmi.util.JsonUtil.safeSleep;
 import static java.lang.Math.floorMod;
 import static java.lang.String.format;
 import static java.time.Duration.between;
@@ -52,6 +53,7 @@ public abstract class ContainerBase implements ContainerProvider {
   private static final ThreadLocal<String> executionContext = new ThreadLocal<>();
   private static final Pattern VARIABLE_PATTERN = Pattern.compile("\\$\\{([A-Z_]+)}");
   private static final Pattern MULTI_PATTERN = Pattern.compile("!\\{([,a-zA-Z_]+)}");
+  private static final long SCHEDULED_PREFETCH_SEC = 1;
   protected static String reflectRegistry = REFLECT_BASE;
   private static BasePodConfiguration basePodConfig = new BasePodConfiguration();
   protected final PodConfiguration podConfiguration;
@@ -234,6 +236,11 @@ public abstract class ContainerBase implements ContainerProvider {
   private void periodicWrapper() {
     try {
       grabExecutionContext();
+      if (executorGeneration != null) {
+        // The initial delay will often be slightly before the intended time due to rounding down.
+        // Add in a quick (<1s) delay to the start of the next second for dynamic alignment.
+        safeSleep(Duration.ofSeconds(1).minusNanos(Instant.now().getNano()).toMillis());
+      }
       periodicTask();
     } catch (Exception e) {
       error("Exception executing periodic task: " + friendlyStackTrace(e));
