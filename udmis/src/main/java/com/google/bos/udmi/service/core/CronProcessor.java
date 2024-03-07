@@ -35,6 +35,7 @@ public class CronProcessor extends ProcessorBase {
   private static final DefaultMustacheFactory MUSTACHE_FACTORY = new DefaultMustacheFactory();
   private final static SortedMap<String, Instant> TRACKER = new ConcurrentSkipListMap<>();
   private static final String HEARTBEAT_NAME = "heartbeat";
+  private final static String HEARTBEAT_SUFFIX = PATH_SEPARATOR + HEARTBEAT_NAME;
   private static Integer HEARTBEAT_SEC;
   private final Envelope srcEnvelope;
   private final AtomicReference<Date> previousTick = new AtomicReference<>();
@@ -79,8 +80,9 @@ public class CronProcessor extends ProcessorBase {
 
   @Override
   protected void periodicTask() {
-    info("Distributing %s %s/%s to %s/%s", containerId, srcEnvelope.subType, srcEnvelope.subFolder,
-        srcEnvelope.deviceRegistryId, srcEnvelope.deviceId);
+    ifNotNullThen(srcEnvelope.subType, () ->
+        info("Distributing %s %s/%s to %s/%s", containerId, srcEnvelope.subType,
+            srcEnvelope.subFolder, srcEnvelope.deviceRegistryId, srcEnvelope.deviceId));
 
     try {
       Date publishTime = new Date();
@@ -102,30 +104,32 @@ public class CronProcessor extends ProcessorBase {
   }
 
   private boolean isAmGroot(Date cutoffTime) {
-    debug("Check grootness for %s after %s", srcEnvelope.gatewayId, isoConvert(cutoffTime));
-
-    if (cutoffTime == null) {
+    if (srcEnvelope.subType == null || cutoffTime == null) {
       return false;
     }
-
     debug("Received %s is groot: %s", TRACKER.firstKey(), CSV_JOINER.join(TRACKER.keySet()));
-    return srcEnvelope.gatewayId.equals(TRACKER.firstKey());
+    return getContainerId(srcEnvelope).equals(TRACKER.firstKey());
   }
 
   private void processGroot(Object message) {
-    if (srcEnvelope.subType != null) {
-      debug("Publishing as %s: %s", stringifyTerse(srcEnvelope), stringifyTerse(message));
-      publish(srcEnvelope, message);
-    }
+    debug("Publishing as %s: %s", stringifyTerse(srcEnvelope), stringifyTerse(message));
+    publish(srcEnvelope, message);
   }
 
   private void trackPod(Envelope envelope) {
+    if (envelope.gatewayId == null || !envelope.gatewayId.endsWith(HEARTBEAT_SUFFIX)) {
+      return;
+    }
     debug("Pod timestamp update %s to %s", envelope.gatewayId, isoConvert(envelope.publishTime));
-    TRACKER.put(envelope.gatewayId, envelope.publishTime.toInstant());
+    TRACKER.put(getContainerId(envelope), envelope.publishTime.toInstant());
     Instant cutoffTime = Instant.now().minusSeconds(HEARTBEAT_SEC * 2);
     TRACKER.entrySet().removeIf(entry -> entry.getValue().isBefore(cutoffTime));
     debug("Received values: " + TRACKER.size() + " " + CSV_JOINER.join(
         TRACKER.values().stream().map(JsonUtil::isoConvert).toList()));
+  }
+
+  private static String getContainerId(Envelope envelope) {
+    return envelope.gatewayId.split(PATH_SEPARATOR, 2)[0];
   }
 
   @Override

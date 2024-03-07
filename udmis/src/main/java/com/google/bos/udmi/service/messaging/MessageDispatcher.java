@@ -2,6 +2,7 @@ package com.google.bos.udmi.service.messaging;
 
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 
 import com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl;
 import java.util.AbstractMap.SimpleEntry;
@@ -25,8 +26,9 @@ public interface MessageDispatcher {
    */
   Class<?> EXCEPTION_CLASS = Exception.class;
 
-  static MessageDispatcher from(EndpointConfiguration configuration) {
-    return ifNotNullGet(configuration, MessageDispatcherImpl::new);
+  static MessageDispatcher from(EndpointConfiguration config) {
+    boolean isValid = config != null && (config.send_id != null || config.recv_id != null);
+    return ifTrueGet(isValid, () -> new MessageDispatcherImpl(config));
   }
 
   static MessageDispatcher from(EndpointConfiguration from, EndpointConfiguration to) {
