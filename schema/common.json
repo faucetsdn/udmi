@@ -54,9 +54,6 @@
       "enum": [
         "_iot_endpoint_config"
       ]
-    },
-    "entry": {
-      "$ref": "file:entry.json"
     }
   }
 }

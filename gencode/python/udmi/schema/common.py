@@ -1,5 +1,4 @@
 """Generated class for common.json"""
-from .entry import Entry
 
 
 class Common:

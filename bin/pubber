@@ -107,6 +107,8 @@ elif [[ -z $broker_hostname ]]; then
     broker_hostname=mqtt.googleapis.com
 fi
 
+[[ $registry_id == null ]] && fail registry_id not defined
+
 registry_actual=${udmi_prefix}${registry_id}${registry_suffix}
 
 if [[ ! -f /tmp/endpoint.json ]]; then
