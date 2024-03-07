@@ -27,8 +27,7 @@
       "$ref": "file:entry.json"
     },
     "scan_family": {
-      "description": "The primary scan discovery address family",
-      "type": "string"
+      "$ref": "file:common.json#/definitions/family"
     },
     "scan_addr": {
       "description": "The primary address of the device (for scan_family)",

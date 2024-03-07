@@ -29,6 +29,15 @@
         "clearblade"
       ]
     },
+    "family": {
+      "title": "Protocol Family",
+      "enum": [
+        "vendor",
+        "iot",
+        "bacnet",
+        "modbus"
+      ]
+    },
     "stage": {
       "title": "FeatureStage",
       "description": "Stage of a feature implemenation",
