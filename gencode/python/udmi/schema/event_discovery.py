@@ -1,15 +1,16 @@
 """Generated class for event_discovery.json"""
 from .entry import Entry
 from .discovery_family import FamilyDiscovery
-from .discovery_registry import RegistryDiscovery
-from .discovery_device import DeviceDiscovery
+from .model_cloud import CloudModel
+from .model_cloud import CloudModel
 from .discovery_point import PointDiscovery
 from .discovery_feature import FeatureDiscovery
+from .model_cloud import CloudModel
 from .ancillary_properties import AncillaryProperties
 from .state_system_hardware import StateSystemHardware
 
 
-class SystemDiscoveryEvent:
+class SystemDiscoveryData:
   """Generated schema class"""
 
   def __init__(self):
@@ -21,7 +22,7 @@ class SystemDiscoveryEvent:
   def from_dict(source):
     if not source:
       return None
-    result = SystemDiscoveryEvent()
+    result = SystemDiscoveryData()
     result.serial_no = source.get('serial_no')
     result.ancillary = AncillaryProperties.from_dict(source.get('ancillary'))
     result.hardware = StateSystemHardware.from_dict(source.get('hardware'))
@@ -33,7 +34,7 @@ class SystemDiscoveryEvent:
       return None
     result = {}
     for key in source:
-      result[key] = SystemDiscoveryEvent.from_dict(source[key])
+      result[key] = SystemDiscoveryData.from_dict(source[key])
     return result
 
   @staticmethod
@@ -69,6 +70,7 @@ class DiscoveryEvent:
     self.devices = None
     self.points = None
     self.features = None
+    self.cloud_model = None
     self.system = None
 
   @staticmethod
@@ -83,11 +85,12 @@ class DiscoveryEvent:
     result.scan_family = source.get('scan_family')
     result.scan_addr = source.get('scan_addr')
     result.families = FamilyDiscovery.map_from(source.get('families'))
-    result.registries = RegistryDiscovery.map_from(source.get('registries'))
-    result.devices = DeviceDiscovery.map_from(source.get('devices'))
+    result.registries = CloudModel.map_from(source.get('registries'))
+    result.devices = CloudModel.map_from(source.get('devices'))
     result.points = PointDiscovery.map_from(source.get('points'))
     result.features = FeatureDiscovery.map_from(source.get('features'))
-    result.system = SystemDiscoveryEvent.from_dict(source.get('system'))
+    result.cloud_model = CloudModel.from_dict(source.get('cloud_model'))
+    result.system = SystemDiscoveryData.from_dict(source.get('system'))
     return result
 
   @staticmethod
@@ -123,13 +126,15 @@ class DiscoveryEvent:
     if self.families:
       result['families'] = FamilyDiscovery.expand_dict(self.families) # 2
     if self.registries:
-      result['registries'] = RegistryDiscovery.expand_dict(self.registries) # 2
+      result['registries'] = CloudModel.expand_dict(self.registries) # 2
     if self.devices:
-      result['devices'] = DeviceDiscovery.expand_dict(self.devices) # 2
+      result['devices'] = CloudModel.expand_dict(self.devices) # 2
     if self.points:
       result['points'] = PointDiscovery.expand_dict(self.points) # 2
     if self.features:
       result['features'] = FeatureDiscovery.expand_dict(self.features) # 2
+    if self.cloud_model:
+      result['cloud_model'] = self.cloud_model.to_dict() # 4
     if self.system:
       result['system'] = self.system.to_dict() # 4
     return result
