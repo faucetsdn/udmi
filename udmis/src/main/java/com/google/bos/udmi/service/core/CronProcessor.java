@@ -30,13 +30,13 @@ import udmi.schema.MessageTemplateData;
  */
 public class CronProcessor extends ProcessorBase {
 
-  public static final String PAYLOAD_SEPARATOR = ":";
-  public static final String PATH_SEPARATOR = "/";
+  private static final String PAYLOAD_SEPARATOR = ":";
+  private static final String PATH_SEPARATOR = "/";
+  private static final long CUTOFF_INTERVALS = 3;
   private static final DefaultMustacheFactory MUSTACHE_FACTORY = new DefaultMustacheFactory();
-  private final static SortedMap<String, Instant> TRACKER = new ConcurrentSkipListMap<>();
+  private static final SortedMap<String, Instant> TRACKER = new ConcurrentSkipListMap<>();
   private static final String HEARTBEAT_NAME = "heartbeat";
-  private final static String HEARTBEAT_SUFFIX = PATH_SEPARATOR + HEARTBEAT_NAME;
-  public static final long CUTOFF_INTERVALS = 3;
+  private static final String HEARTBEAT_SUFFIX = PATH_SEPARATOR + HEARTBEAT_NAME;
   private static Integer HEARTBEAT_SEC;
   private final Envelope srcEnvelope;
   private final AtomicReference<Date> previousTick = new AtomicReference<>();
@@ -72,6 +72,10 @@ public class CronProcessor extends ProcessorBase {
       String payload = ifTrueGet(targetMessage.length > 1, () -> targetMessage[1], EMPTY_JSON);
       template = MUSTACHE_FACTORY.compile(new StringReader(payload), "payload template");
     }
+  }
+
+  private static String getContainerId(Envelope envelope) {
+    return envelope.gatewayId.split(PATH_SEPARATOR, 2)[0];
   }
 
   @Override
@@ -128,10 +132,6 @@ public class CronProcessor extends ProcessorBase {
     TRACKER.entrySet().removeIf(entry -> entry.getValue().isBefore(cutoffTime));
     debug("Received values: " + TRACKER.size() + " " + CSV_JOINER.join(
         TRACKER.values().stream().map(JsonUtil::isoConvert).toList()));
-  }
-
-  private static String getContainerId(Envelope envelope) {
-    return envelope.gatewayId.split(PATH_SEPARATOR, 2)[0];
   }
 
   @Override

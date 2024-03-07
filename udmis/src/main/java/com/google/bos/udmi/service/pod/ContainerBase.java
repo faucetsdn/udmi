@@ -9,6 +9,7 @@ import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.instantNow;
 import static java.lang.Math.floorMod;
 import static java.lang.String.format;
+import static java.time.Duration.between;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -227,7 +228,7 @@ public abstract class ContainerBase implements ContainerProvider {
 
   private long initialDelaySec() {
     return ifNotNullGet(executorGeneration, generation ->
-        floorMod(Duration.between(instantNow(), generation).getSeconds(), periodicSec), periodicSec);
+        floorMod(between(instantNow(), generation).getSeconds(), periodicSec), periodicSec);
   }
 
   private void periodicWrapper() {
