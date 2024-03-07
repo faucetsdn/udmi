@@ -41,7 +41,7 @@ site_metadata=$site_path/site_metadata.json
 if [[ -f $site_metadata ]] && jq -er '.system' $site_metadata 2>&1 >/dev/null; then
   fail legacy site_metadata.json found. Rename to site_defaults.json
 fi
-exit
+
 echo Building validator...
 validator/bin/build > /dev/null
 
