@@ -49,21 +49,21 @@
       "description": "Registry discovery results.",
       "type": "object",
       "additionalProperties": false,
-      "existingJavaType": "java.util.Map<String, RegistryDiscovery>",
+      "existingJavaType": "java.util.Map<String, CloudModel>",
       "patternProperties": {
         "^[A-Z]{2,6}-[1-9][0-9]*$": {
-          "$ref": "file:discovery_registry.json"
+          "$ref": "file:model_cloud.json"
         }
       }
     },
     "devices": {
-      "description": "Device discovery scan results.",
+      "description": "Device iot discovery scan results.",
       "type": "object",
       "additionalProperties": false,
-      "existingJavaType": "java.util.Map<String, DeviceDiscovery>",
+      "existingJavaType": "java.util.Map<String, CloudModel>",
       "patternProperties": {
         "^[A-Z]{2,6}-[1-9][0-9]*$": {
-          "$ref": "file:discovery_device.json"
+          "$ref": "file:model_cloud.json"
         }
       }
     },
@@ -87,8 +87,11 @@
         }
       }
     },
+    "cloud_model": {
+      "$ref": "file:model_cloud.json"
+    },
     "system": {
-      "title": "System Discovery Event",
+      "title": "System Discovery Data",
       "type": "object",
       "additionalProperties": false,
       "properties": {

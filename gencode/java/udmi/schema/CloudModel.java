@@ -32,6 +32,9 @@ import com.fasterxml.jackson.annotation.JsonValue;
     "detail",
     "credentials",
     "last_event_time",
+    "last_state_time",
+    "last_config_time",
+    "last_error_time",
     "last_config_ack",
     "num_id",
     "operation",
@@ -84,6 +87,12 @@ public class CloudModel {
     public List<Credential> credentials = new ArrayList<Credential>();
     @JsonProperty("last_event_time")
     public Date last_event_time;
+    @JsonProperty("last_state_time")
+    public Date last_state_time;
+    @JsonProperty("last_config_time")
+    public Date last_config_time;
+    @JsonProperty("last_error_time")
+    public Date last_error_time;
     @JsonProperty("last_config_ack")
     public Date last_config_ack;
     @JsonProperty("num_id")
@@ -107,11 +116,14 @@ public class CloudModel {
         result = ((result* 31)+((this.device_key == null)? 0 :this.device_key.hashCode()));
         result = ((result* 31)+((this.metadata == null)? 0 :this.metadata.hashCode()));
         result = ((result* 31)+((this.last_event_time == null)? 0 :this.last_event_time.hashCode()));
+        result = ((result* 31)+((this.last_config_time == null)? 0 :this.last_config_time.hashCode()));
         result = ((result* 31)+((this.credentials == null)? 0 :this.credentials.hashCode()));
+        result = ((result* 31)+((this.last_state_time == null)? 0 :this.last_state_time.hashCode()));
         result = ((result* 31)+((this.resource_type == null)? 0 :this.resource_type.hashCode()));
         result = ((result* 31)+((this.num_id == null)? 0 :this.num_id.hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
         result = ((result* 31)+((this.blocked == null)? 0 :this.blocked.hashCode()));
+        result = ((result* 31)+((this.last_error_time == null)? 0 :this.last_error_time.hashCode()));
         result = ((result* 31)+((this.detail == null)? 0 :this.detail.hashCode()));
         result = ((result* 31)+((this.device_ids == null)? 0 :this.device_ids.hashCode()));
         result = ((result* 31)+((this.last_config_ack == null)? 0 :this.last_config_ack.hashCode()));
@@ -129,7 +141,7 @@ public class CloudModel {
             return false;
         }
         CloudModel rhs = ((CloudModel) other);
-        return (((((((((((((((this.auth_type == rhs.auth_type)||((this.auth_type!= null)&&this.auth_type.equals(rhs.auth_type)))&&((this.device_key == rhs.device_key)||((this.device_key!= null)&&this.device_key.equals(rhs.device_key))))&&((this.metadata == rhs.metadata)||((this.metadata!= null)&&this.metadata.equals(rhs.metadata))))&&((this.last_event_time == rhs.last_event_time)||((this.last_event_time!= null)&&this.last_event_time.equals(rhs.last_event_time))))&&((this.credentials == rhs.credentials)||((this.credentials!= null)&&this.credentials.equals(rhs.credentials))))&&((this.resource_type == rhs.resource_type)||((this.resource_type!= null)&&this.resource_type.equals(rhs.resource_type))))&&((this.num_id == rhs.num_id)||((this.num_id!= null)&&this.num_id.equals(rhs.num_id))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.blocked == rhs.blocked)||((this.blocked!= null)&&this.blocked.equals(rhs.blocked))))&&((this.detail == rhs.detail)||((this.detail!= null)&&this.detail.equals(rhs.detail))))&&((this.device_ids == rhs.device_ids)||((this.device_ids!= null)&&this.device_ids.equals(rhs.device_ids))))&&((this.last_config_ack == rhs.last_config_ack)||((this.last_config_ack!= null)&&this.last_config_ack.equals(rhs.last_config_ack))))&&((this.operation == rhs.operation)||((this.operation!= null)&&this.operation.equals(rhs.operation))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
+        return ((((((((((((((((((this.auth_type == rhs.auth_type)||((this.auth_type!= null)&&this.auth_type.equals(rhs.auth_type)))&&((this.device_key == rhs.device_key)||((this.device_key!= null)&&this.device_key.equals(rhs.device_key))))&&((this.metadata == rhs.metadata)||((this.metadata!= null)&&this.metadata.equals(rhs.metadata))))&&((this.last_event_time == rhs.last_event_time)||((this.last_event_time!= null)&&this.last_event_time.equals(rhs.last_event_time))))&&((this.last_config_time == rhs.last_config_time)||((this.last_config_time!= null)&&this.last_config_time.equals(rhs.last_config_time))))&&((this.credentials == rhs.credentials)||((this.credentials!= null)&&this.credentials.equals(rhs.credentials))))&&((this.last_state_time == rhs.last_state_time)||((this.last_state_time!= null)&&this.last_state_time.equals(rhs.last_state_time))))&&((this.resource_type == rhs.resource_type)||((this.resource_type!= null)&&this.resource_type.equals(rhs.resource_type))))&&((this.num_id == rhs.num_id)||((this.num_id!= null)&&this.num_id.equals(rhs.num_id))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.blocked == rhs.blocked)||((this.blocked!= null)&&this.blocked.equals(rhs.blocked))))&&((this.last_error_time == rhs.last_error_time)||((this.last_error_time!= null)&&this.last_error_time.equals(rhs.last_error_time))))&&((this.detail == rhs.detail)||((this.detail!= null)&&this.detail.equals(rhs.detail))))&&((this.device_ids == rhs.device_ids)||((this.device_ids!= null)&&this.device_ids.equals(rhs.device_ids))))&&((this.last_config_ack == rhs.last_config_ack)||((this.last_config_ack!= null)&&this.last_config_ack.equals(rhs.last_config_ack))))&&((this.operation == rhs.operation)||((this.operation!= null)&&this.operation.equals(rhs.operation))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
     }
 
 
