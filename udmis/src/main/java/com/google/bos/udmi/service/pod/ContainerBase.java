@@ -53,7 +53,7 @@ public abstract class ContainerBase implements ContainerProvider {
   private static final ThreadLocal<String> executionContext = new ThreadLocal<>();
   private static final Pattern VARIABLE_PATTERN = Pattern.compile("\\$\\{([A-Z_]+)}");
   private static final Pattern MULTI_PATTERN = Pattern.compile("!\\{([,a-zA-Z_]+)}");
-  private static final long SCHEDULED_PREFETCH_SEC = 1;
+  private static final int JITTER_ADJ_MS = 1200;
   protected static String reflectRegistry = REFLECT_BASE;
   private static BasePodConfiguration basePodConfig = new BasePodConfiguration();
   protected final PodConfiguration podConfiguration;
@@ -237,9 +237,9 @@ public abstract class ContainerBase implements ContainerProvider {
     try {
       grabExecutionContext();
       if (executorGeneration != null) {
-        // The initial delay will often be slightly before the intended time due to rounding down.
-        // Add in a quick (<1s) delay to the start of the next second for dynamic alignment.
-        safeSleep(Duration.ofSeconds(1).minusNanos(Instant.now().getNano()).toMillis());
+        // The initial delay will often be slightly off the intended time due to rounding errors.
+        // Add in a quick delay to the start of the next second for dynamic alignment.
+        safeSleep(Duration.ofMillis(JITTER_ADJ_MS).minusNanos(Instant.now().getNano()).toMillis());
       }
       periodicTask();
     } catch (Exception e) {
