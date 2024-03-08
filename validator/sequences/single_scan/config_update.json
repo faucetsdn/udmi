@@ -3,7 +3,7 @@
     "families" : {
       "vendor" : {
         "enumerate" : true,
-        "generation" : "2024-02-18T18:17:44Z"
+        "generation" : "2024-03-08T21:36:39Z"
       }
     }
   },
@@ -27,12 +27,12 @@
     "metrics_rate_sec" : 10,
     "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2024-02-18T18:17:11Z"
+      "last_start" : "2024-03-08T21:36:06Z"
     },
     "testing" : {
       "sequence_name" : "single_scan"
     }
   },
-  "timestamp" : "2024-02-18T18:17:35Z",
-  "version" : "1.5.0-16-g48397c75b"
+  "timestamp" : "2024-03-08T21:36:30Z",
+  "version" : "1.5.0-39-g488908935"
 }

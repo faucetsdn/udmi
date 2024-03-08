@@ -7,11 +7,8 @@
       "addr" : "AHU-22"
     }
   },
-  "generation" : "2024-02-18T18:17:44Z",
-  "scan_addr" : "AHU-22",
-  "scan_family" : "vendor",
-  "timestamp" : "2024-02-18T18:17:49Z",
-  "uniqs" : {
+  "generation" : "2024-03-08T21:36:39Z",
+  "points" : {
     "9b291597" : {
       "name" : "filter_differential_pressure_sensor",
       "possible_values" : [ ],
@@ -30,5 +27,8 @@
       "ref" : "BV11.present_value"
     }
   },
+  "scan_addr" : "AHU-22",
+  "scan_family" : "vendor",
+  "timestamp" : "2024-03-08T21:36:44Z",
   "version" : "1.5.0"
 }
