@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudQuery;
+import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.DiscoveryEvent;
 import udmi.schema.Envelope;
 
@@ -52,7 +53,7 @@ class CloudQueryHandlerTest implements MessageContinuation {
     List<Object> targetMessages = targetCapture.getAllValues();
     assertEquals(1, targetMessages.size(), "published messages");
     DiscoveryEvent registryDiscovery = (DiscoveryEvent) targetMessages.get(0);
-    assertEquals("iot", registryDiscovery.scan_family);
+    assertEquals(ProtocolFamily.IOT, registryDiscovery.scan_family);
     assertEquals(1, registryDiscovery.registries.size(), "discovered registries");
     assertEquals(QUERY_GENERATION, registryDiscovery.generation, "discovery generation");
     CloudModel cloudModel = registryDiscovery.registries.get(TEST_REGISTRY);
