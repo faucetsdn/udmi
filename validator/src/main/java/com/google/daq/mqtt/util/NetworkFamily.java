@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import udmi.schema.DiscoveryEvent.ProtocolFamily;
+import udmi.schema.Common.ProtocolFamily;
 
 /**
  * Abstract collection of stuff for managing vendor families.

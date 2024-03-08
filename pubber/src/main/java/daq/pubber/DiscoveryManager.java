@@ -182,7 +182,8 @@ public class DiscoveryManager extends ManagerBase {
     return event;
   }
 
-  private FamilyLocalnetModel getFamilyLocalnetModel(ProtocolFamily family, Metadata targetMetadata) {
+  private FamilyLocalnetModel getFamilyLocalnetModel(ProtocolFamily family,
+      Metadata targetMetadata) {
     try {
       return targetMetadata.localnet.families.get(family);
     } catch (Exception e) {

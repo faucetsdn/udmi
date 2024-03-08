@@ -4,7 +4,7 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 import java.util.regex.Pattern;
-import udmi.schema.DiscoveryEvent.ProtocolFamily;
+import udmi.schema.Common.ProtocolFamily;
 
 /**
  * General family of bacnet addresses.

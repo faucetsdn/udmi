@@ -62,6 +62,7 @@ public class Common {
     @Generated("jsonschema2pojo")
     public enum ProtocolFamily {
 
+        INVALID("invalid"),
         VENDOR("vendor"),
         IOT("iot"),
         ETHER("ether"),

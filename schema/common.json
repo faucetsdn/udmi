@@ -24,6 +24,7 @@
     "family": {
       "title": "Protocol Family",
       "enum": [
+        "invalid",
         "vendor",
         "iot",
         "ether",

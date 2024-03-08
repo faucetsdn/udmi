@@ -1,6 +1,7 @@
 package com.google.daq.mqtt.util;
 
-import udmi.schema.DiscoveryEvent.ProtocolFamily;
+
+import udmi.schema.Common.ProtocolFamily;
 
 /**
  * No-validation family with no semantics, available for open use.

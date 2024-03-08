@@ -41,6 +41,7 @@ import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Test;
 import udmi.schema.Bucket;
+import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvent;
 import udmi.schema.Enumerate;
@@ -55,16 +56,16 @@ public class DiscoverySequences extends SequenceBase {
 
   public static final int SCAN_START_DELAY_SEC = 10;
   private static final int SCAN_ITERATIONS = 2;
-  private HashMap<String, Date> previousGenerations;
-  private Set<String> families;
+  private HashMap<ProtocolFamily, Date> previousGenerations;
+  private Set<ProtocolFamily> families;
+
+  private static boolean isActive(Entry<String, FeatureDiscovery> entry) {
+    return Optional.ofNullable(entry.getValue().stage).orElse(STABLE).compareTo(BETA) >= 0;
+  }
 
   @Before
   public void setupExpectedParameters() {
     allowDeviceStateChange("discovery");
-  }
-
-  private static boolean isActive(Entry<String, FeatureDiscovery> entry) {
-    return Optional.ofNullable(entry.getValue().stage).orElse(STABLE).compareTo(BETA) >= 0;
   }
 
   private DiscoveryEvent runEnumeration(Enumerate enumerate) {
@@ -94,9 +95,10 @@ public class DiscoverySequences extends SequenceBase {
 
   private void checkSelfEnumeration(DiscoveryEvent event, Enumerate enumerate) {
     if (isTrue(enumerate.families)) {
-      Set<String> models = Optional.ofNullable(deviceMetadata.localnet)
+      Set<ProtocolFamily> models = Optional.ofNullable(deviceMetadata.localnet)
           .map(localnet -> localnet.families.keySet()).orElse(null);
-      Set<String> events = Optional.ofNullable(event.families).map(Map::keySet).orElse(null);
+      Set<ProtocolFamily> events = Optional.ofNullable(event.families).map(Map::keySet)
+          .orElse(null);
       checkThat("family enumeration matches", () -> models.size() == events.size());
     } else {
       checkThat("no family enumeration", () -> event.families == null);
@@ -219,7 +221,7 @@ public class DiscoverySequences extends SequenceBase {
     List<DiscoveryEvent> receivedEvents = popReceivedEvents(
         DiscoveryEvent.class);
     checkEnumeration(receivedEvents, shouldEnumerate);
-    Set<String> eventFamilies = receivedEvents.stream()
+    Set<ProtocolFamily> eventFamilies = receivedEvents.stream()
         .flatMap(event -> event.families.keySet().stream())
         .collect(Collectors.toSet());
     assertTrue("all requested families present", eventFamilies.containsAll(families));
@@ -245,13 +247,13 @@ public class DiscoverySequences extends SequenceBase {
     scheduleScan(startTime, SCAN_START_DELAY_SEC, shouldEnumerate);
     Instant endTime = Instant.now().plusSeconds(SCAN_START_DELAY_SEC * SCAN_ITERATIONS);
     untilUntrue("scan iterations", () -> Instant.now().isBefore(endTime));
-    String oneFamily = families.iterator().next();
+    ProtocolFamily oneFamily = families.iterator().next();
     Date finishTime = deviceState.discovery.families.get(oneFamily).generation;
     assertTrue("premature termination",
         families.stream().noneMatch(familyScanComplete(finishTime)));
     List<DiscoveryEvent> receivedEvents = popReceivedEvents(DiscoveryEvent.class);
     checkEnumeration(receivedEvents, shouldEnumerate);
-    Set<String> eventFamilies = receivedEvents.stream()
+    Set<ProtocolFamily> eventFamilies = receivedEvents.stream()
         .flatMap(event -> event.families.keySet().stream())
         .collect(Collectors.toSet());
     assertTrue("all requested families present", eventFamilies.containsAll(families));
@@ -283,34 +285,34 @@ public class DiscoverySequences extends SequenceBase {
     popReceivedEvents(DiscoveryEvent.class);  // Clear out any previously received events
   }
 
-  private FamilyDiscoveryConfig getConfigFamily(String family) {
+  private FamilyDiscoveryConfig getConfigFamily(ProtocolFamily family) {
     return deviceConfig.discovery.families.computeIfAbsent(family,
         adding -> new FamilyDiscoveryConfig());
   }
 
-  private Date getStateFamilyGeneration(String family) {
+  private Date getStateFamilyGeneration(ProtocolFamily family) {
     return catchToNull(() -> getStateFamily(family).generation);
   }
 
-  private boolean stateGenerationMismatch(String family) {
+  private boolean stateGenerationMismatch(ProtocolFamily family) {
     return !Objects.equals(previousGenerations.get(family), getStateFamilyGeneration(family));
   }
 
-  private FamilyDiscoveryState getStateFamily(String family) {
+  private FamilyDiscoveryState getStateFamily(ProtocolFamily family) {
     return deviceState.discovery.families.get(family);
   }
 
-  private Predicate<String> familyScanActive(Date startTime) {
+  private Predicate<ProtocolFamily> familyScanActive(Date startTime) {
     return family -> catchToFalse(() -> getStateFamily(family).active
         && CleanDateFormat.dateEquals(getStateFamily(family).generation, startTime));
   }
 
-  private Predicate<String> familyScanActivated(Date startTime) {
+  private Predicate<ProtocolFamily> familyScanActivated(Date startTime) {
     return family -> catchToFalse(() -> getStateFamily(family).active
         || CleanDateFormat.dateEquals(getStateFamily(family).generation, startTime));
   }
 
-  private Predicate<? super String> familyScanComplete(Date startTime) {
+  private Predicate<? super ProtocolFamily> familyScanComplete(Date startTime) {
     return familyScanActivated(startTime).and(familyScanActive(startTime).negate());
   }
 }
