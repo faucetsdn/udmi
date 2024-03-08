@@ -2,7 +2,7 @@
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.4.1",
   "upgraded_from": "1",
-  "hash": "e6712083",
+  "hash": "729482fe",
   "cloud": {
     "auth_type": "RS256"
   },
@@ -26,7 +26,7 @@
   },
   "localnet": {
     "families": {
-      "virtual": {
+      "vendor": {
         "addr": "0x65"
       }
     }
