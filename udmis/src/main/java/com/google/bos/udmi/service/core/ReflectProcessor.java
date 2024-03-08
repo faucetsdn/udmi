@@ -8,6 +8,7 @@ import static com.google.udmi.util.Common.DETAIL_KEY;
 import static com.google.udmi.util.Common.DEVICE_ID_KEY;
 import static com.google.udmi.util.Common.ERROR_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
+import static com.google.udmi.util.Common.TRANSACTION_KEY;
 import static com.google.udmi.util.GeneralUtils.decodeBase64;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
@@ -136,17 +137,18 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private void processException(Envelope reflection, Map<String, Object> objectMap, Exception e) {
+    String transactionId = (String) objectMap.get(TRANSACTION_KEY);
     String stackMessage = friendlyStackTrace(e);
     String detailString = multiTrim(stackTraceString(e), CONDENSER_STRING);
-    warn("Processing exception %s: %s", reflection.transactionId, stackMessage);
-    debug("Stack trace details %s: %s", reflection.transactionId, detailString);
+    warn("Processing exception %s: %s", transactionId, stackMessage);
+    debug("Stack trace details %s: %s", transactionId, detailString);
     Map<String, Object> message = new HashMap<>();
     message.put(ERROR_KEY, stackMessage);
     message.put(DETAIL_KEY, detailString);
     Envelope envelope = new Envelope();
     envelope.subFolder = SubFolder.ERROR;
     envelope.deviceId = (String) objectMap.get(DEVICE_ID_KEY);
-    envelope.transactionId = reflection.transactionId;
+    envelope.transactionId = transactionId;
     sendReflectCommand(reflection, envelope, message);
   }
 
