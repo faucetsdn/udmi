@@ -16,6 +16,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import udmi.schema.State;
 
@@ -73,8 +75,11 @@ public class ObjectDiffEngine {
     }
     if (thing instanceof Map) {
       @SuppressWarnings("unchecked")
+      Set<String> stringKeys = ((Map<Object, Object>) thing).keySet().stream()
+          .map(Objects::toString).collect(Collectors.toSet());
+      @SuppressWarnings("unchecked")
       Map<String, Object> asMap = (Map<String, Object>) thing;
-      return asMap.keySet().stream()
+      return stringKeys.stream()
           .collect(Collectors.toMap(key -> key,
               key -> traverseExtract(asMap.get(key), asValues)));
     }
