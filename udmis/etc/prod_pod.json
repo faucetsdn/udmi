@@ -20,6 +20,12 @@
       "payload": "query/cloud:{\"generation\":\"{{timestamp}}\", \"depth\":\"registries\"}",
       "send_id": "${UDMI_PREFIX}udmi_control",
       "generation": "2024-03-06T00:00:00Z"
+    },
+    "regdive": {
+      "periodic_sec": 86400,
+      "payload": "query/cloud:{\"generation\":\"{{timestamp}}\", \"depth\":\"devices\"}",
+      "send_id": "${UDMI_PREFIX}udmi_control",
+      "generation": "2024-03-06T00:15:00Z"
     }
   },
   "flows": {

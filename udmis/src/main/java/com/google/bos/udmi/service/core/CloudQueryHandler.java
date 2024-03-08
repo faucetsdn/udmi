@@ -4,13 +4,11 @@ import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.toDate;
-import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 import com.google.bos.udmi.service.access.IotAccessBase;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -40,10 +38,6 @@ public class CloudQueryHandler {
     controller = controlProcessor;
     iotAccess = controller.iotAccess;
     target = controller.targetProcessor;
-  }
-
-  private static String makeTransactionId() {
-    return format("CP:%08x", Objects.hash(System.currentTimeMillis(), Thread.currentThread()));
   }
 
   @NotNull
@@ -145,20 +139,20 @@ public class CloudQueryHandler {
   /**
    * Process an individual cloud query.
    */
-  public synchronized void process(CloudQuery query) {
-    this.query = query;
-    envelope = controller.getContinuation(query).getEnvelope();
+  public synchronized void process(CloudQuery newQuery) {
+    query = newQuery;
+    envelope = controller.getContinuation(newQuery).getEnvelope();
 
     // If the query.depth is not defined then default to recursing down one level.
     if (envelope.deviceRegistryId == null) {
-      ifNullThen(query.depth, () -> query.depth = Depth.DEVICES);
+      ifNullThen(newQuery.depth, () -> newQuery.depth = Depth.DEVICES);
       queryAllRegistries();
     } else if (envelope.deviceId == null) {
-      ifNullThen(query.depth, () -> query.depth = Depth.DETAILS);
+      ifNullThen(newQuery.depth, () -> newQuery.depth = Depth.DETAILS);
       queryRegistryDevices();
     } else {
       queryDeviceDetails();
     }
-    this.query = null;
+    query = null;
   }
 }
