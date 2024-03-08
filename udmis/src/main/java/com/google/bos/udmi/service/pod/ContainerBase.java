@@ -7,6 +7,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.instantNow;
+import static com.google.udmi.util.JsonUtil.safeSleep;
 import static java.lang.Math.floorMod;
 import static java.lang.String.format;
 import static java.time.Duration.between;
@@ -45,13 +46,14 @@ import udmi.schema.PodConfiguration;
 public abstract class ContainerBase implements ContainerProvider {
 
   public static final String INITIAL_EXECUTION_CONTEXT = "xxxxxxxx";
-  public static final Integer FUNCTIONS_VERSION_MIN = 11;
-  public static final Integer FUNCTIONS_VERSION_MAX = 11;
+  public static final Integer FUNCTIONS_VERSION_MIN = 12;
+  public static final Integer FUNCTIONS_VERSION_MAX = 12;
   public static final String EMPTY_JSON = "{}";
   public static final String REFLECT_BASE = "UDMI-REFLECT";
   private static final ThreadLocal<String> executionContext = new ThreadLocal<>();
   private static final Pattern VARIABLE_PATTERN = Pattern.compile("\\$\\{([A-Z_]+)}");
   private static final Pattern MULTI_PATTERN = Pattern.compile("!\\{([,a-zA-Z_]+)}");
+  private static final int JITTER_ADJ_MS = 1200;
   protected static String reflectRegistry = REFLECT_BASE;
   private static BasePodConfiguration basePodConfig = new BasePodConfiguration();
   protected final PodConfiguration podConfiguration;
@@ -233,6 +235,12 @@ public abstract class ContainerBase implements ContainerProvider {
 
   private void periodicWrapper() {
     try {
+      grabExecutionContext();
+      if (executorGeneration != null) {
+        // The initial delay will often be slightly off the intended time due to rounding errors.
+        // Add in a quick delay to the start of the next second for dynamic alignment.
+        safeSleep(Duration.ofMillis(JITTER_ADJ_MS).minusNanos(Instant.now().getNano()).toMillis());
+      }
       periodicTask();
     } catch (Exception e) {
       error("Exception executing periodic task: " + friendlyStackTrace(e));

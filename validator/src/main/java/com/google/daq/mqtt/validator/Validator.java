@@ -115,7 +115,7 @@ import udmi.schema.ValidationSummary;
  */
 public class Validator {
 
-  public static final int REQUIRED_FUNCTION_VER = 11;
+  public static final int REQUIRED_FUNCTION_VER = 12;
   public static final String PROJECT_PROVIDER_PREFIX = "//";
   public static final String TIMESTAMP_ZULU_SUFFIX = "Z";
   public static final String TIMESTAMP_UTC_SUFFIX_1 = "+00:00";

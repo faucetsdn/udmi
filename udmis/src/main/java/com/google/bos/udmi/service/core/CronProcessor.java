@@ -39,7 +39,6 @@ public class CronProcessor extends ProcessorBase {
   private static final String HEARTBEAT_SUFFIX = PATH_SEPARATOR + HEARTBEAT_NAME;
   private static Integer HEARTBEAT_SEC;
   private final Envelope srcEnvelope;
-  private final AtomicReference<Date> previousTick = new AtomicReference<>();
   private final Mustache template;
   private final Class<?> messageClass;
   private final MessageTemplateData dataModel = new MessageTemplateData();
@@ -93,7 +92,6 @@ public class CronProcessor extends ProcessorBase {
       Date publishTime = new Date();
       srcEnvelope.publishTime = publishTime;
       dataModel.timestamp = isoConvert(publishTime);
-      Date before = previousTick.getAndSet(publishTime);
 
       trackPod(srcEnvelope);
 
@@ -101,15 +99,15 @@ public class CronProcessor extends ProcessorBase {
       template.execute(stringWriter, dataModel).flush();
       Object message = fromStringStrict(messageClass, stringWriter.toString());
 
-      ifTrueThen(isAmGroot(before), () -> processGroot(message));
+      ifTrueThen(isAmGroot(), () -> processGroot(message));
       distributor.publish(srcEnvelope, message, containerId);
     } catch (Exception e) {
       throw new RuntimeException("While executing cron task", e);
     }
   }
 
-  private boolean isAmGroot(Date cutoffTime) {
-    if (srcEnvelope.subType == null || cutoffTime == null) {
+  private boolean isAmGroot() {
+    if (srcEnvelope.gatewayId == null || srcEnvelope.subFolder == null) {
       return false;
     }
     debug("Received %s is groot: %s", TRACKER.firstKey(), CSV_JOINER.join(TRACKER.keySet()));
