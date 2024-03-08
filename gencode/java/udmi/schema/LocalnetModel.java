@@ -6,6 +6,7 @@ import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import udmi.schema.Common.ProtocolFamily;
 
 
 /**
@@ -27,7 +28,7 @@ public class LocalnetModel {
      * 
      */
     @JsonProperty("families")
-    public HashMap<String, FamilyLocalnetModel> families;
+    public HashMap<ProtocolFamily, FamilyLocalnetModel> families;
 
     @Override
     public int hashCode() {

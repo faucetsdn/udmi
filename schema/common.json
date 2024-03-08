@@ -2,6 +2,12 @@
   "$udmi_version": "1.5.0",
   "title": "Common",
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "family": {
+      "$ref": "#/definitions/family"
+    }
+  },
   "definitions": {
     "mode": {
       "title": "System Mode",
@@ -13,6 +19,18 @@
         "restart",
         "terminate",
         "shutdown"
+      ]
+    },
+    "family": {
+      "title": "Protocol Family",
+      "enum": [
+        "vendor",
+        "iot",
+        "ether",
+        "ipv4",
+        "ipv6",
+        "bacnet",
+        "modbus"
       ]
     },
     "provider": {
@@ -27,15 +45,6 @@
         "gbos",
         "clearblade_native",
         "clearblade"
-      ]
-    },
-    "family": {
-      "title": "Protocol Family",
-      "enum": [
-        "vendor",
-        "iot",
-        "bacnet",
-        "modbus"
       ]
     },
     "stage": {

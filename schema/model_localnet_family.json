@@ -12,8 +12,8 @@
       "examples": ["0x414889"]
     },
     "family": {
-      "description": "Associated address family (not used when part of a map)",
-      "type": "string"
+      "type": "string",
+      "existingJavaType": "udmi.schema.Common.ProtocolFamily"
     }
   }
 }

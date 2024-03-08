@@ -27,7 +27,7 @@
       "$ref": "file:entry.json"
     },
     "scan_family": {
-      "$ref": "file:common.json#/definitions/family"
+      "existingJavaType": "udmi.schema.Common.ProtocolFamily"
     },
     "scan_addr": {
       "description": "The primary address of the device (for scan_family)",
@@ -37,7 +37,7 @@
       "description": "Address family discovery discovery results.",
       "type": "object",
       "additionalProperties": false,
-      "existingJavaType": "java.util.Map<String, FamilyDiscovery>",
+      "existingJavaType": "java.util.Map<udmi.schema.Common.ProtocolFamily, FamilyDiscovery>",
       "patternProperties": {
         "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
           "$ref": "file:discovery_family.json"

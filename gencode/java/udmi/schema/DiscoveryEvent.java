@@ -2,15 +2,12 @@
 package udmi.schema;
 
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.processing.Generated;
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.annotation.JsonValue;
 
 
 /**
@@ -70,14 +67,8 @@ public class DiscoveryEvent {
      */
     @JsonProperty("status")
     public Entry status;
-    /**
-     * Protocol Family
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("scan_family")
-    public DiscoveryEvent.ProtocolFamily scan_family;
+    public udmi.schema.Common.ProtocolFamily scan_family;
     /**
      * The primary address of the device (for scan_family)
      * 
@@ -91,7 +82,7 @@ public class DiscoveryEvent {
      */
     @JsonProperty("families")
     @JsonPropertyDescription("Address family discovery discovery results.")
-    public Map<String, FamilyDiscovery> families;
+    public Map<udmi.schema.Common.ProtocolFamily, FamilyDiscovery> families;
     /**
      * Registry discovery results.
      * 
@@ -167,55 +158,6 @@ public class DiscoveryEvent {
         }
         DiscoveryEvent rhs = ((DiscoveryEvent) other);
         return ((((((((((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.devices == rhs.devices)||((this.devices!= null)&&this.devices.equals(rhs.devices))))&&((this.registries == rhs.registries)||((this.registries!= null)&&this.registries.equals(rhs.registries))))&&((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.points == rhs.points)||((this.points!= null)&&this.points.equals(rhs.points))))&&((this.features == rhs.features)||((this.features!= null)&&this.features.equals(rhs.features))))&&((this.system == rhs.system)||((this.system!= null)&&this.system.equals(rhs.system))))&&((this.scan_family == rhs.scan_family)||((this.scan_family!= null)&&this.scan_family.equals(rhs.scan_family))))&&((this.cloud_model == rhs.cloud_model)||((this.cloud_model!= null)&&this.cloud_model.equals(rhs.cloud_model))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))))&&((this.scan_addr == rhs.scan_addr)||((this.scan_addr!= null)&&this.scan_addr.equals(rhs.scan_addr))));
-    }
-
-
-    /**
-     * Protocol Family
-     * <p>
-     * 
-     * 
-     */
-    @Generated("jsonschema2pojo")
-    public enum ProtocolFamily {
-
-        VENDOR("vendor"),
-        IOT("iot"),
-        BACNET("bacnet"),
-        MODBUS("modbus");
-        private final java.lang.String value;
-        private final static Map<java.lang.String, DiscoveryEvent.ProtocolFamily> CONSTANTS = new HashMap<java.lang.String, DiscoveryEvent.ProtocolFamily>();
-
-        static {
-            for (DiscoveryEvent.ProtocolFamily c: values()) {
-                CONSTANTS.put(c.value, c);
-            }
-        }
-
-        ProtocolFamily(java.lang.String value) {
-            this.value = value;
-        }
-
-        @Override
-        public java.lang.String toString() {
-            return this.value;
-        }
-
-        @JsonValue
-        public java.lang.String value() {
-            return this.value;
-        }
-
-        @JsonCreator
-        public static DiscoveryEvent.ProtocolFamily fromValue(java.lang.String value) {
-            DiscoveryEvent.ProtocolFamily constant = CONSTANTS.get(value);
-            if (constant == null) {
-                throw new IllegalArgumentException(value);
-            } else {
-                return constant;
-            }
-        }
-
     }
 
 }
