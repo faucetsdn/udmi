@@ -15,10 +15,10 @@ import static udmi.schema.Bucket.ENUMERATION;
 import static udmi.schema.Bucket.ENUMERATION_FAMILIES;
 import static udmi.schema.Bucket.ENUMERATION_FEATURES;
 import static udmi.schema.Bucket.ENUMERATION_POINTSET;
-import static udmi.schema.FeatureEnumeration.FeatureStage.ALPHA;
-import static udmi.schema.FeatureEnumeration.FeatureStage.BETA;
-import static udmi.schema.FeatureEnumeration.FeatureStage.PREVIEW;
-import static udmi.schema.FeatureEnumeration.FeatureStage.STABLE;
+import static udmi.schema.FeatureDiscovery.FeatureStage.ALPHA;
+import static udmi.schema.FeatureDiscovery.FeatureStage.BETA;
+import static udmi.schema.FeatureDiscovery.FeatureStage.PREVIEW;
+import static udmi.schema.FeatureDiscovery.FeatureStage.STABLE;
 
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
@@ -46,7 +46,7 @@ import udmi.schema.DiscoveryEvent;
 import udmi.schema.Enumerate;
 import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyDiscoveryState;
-import udmi.schema.FeatureEnumeration;
+import udmi.schema.FeatureDiscovery;
 
 /**
  * Validation tests for discovery scan and enumeration capabilities.
@@ -63,7 +63,7 @@ public class DiscoverySequences extends SequenceBase {
     allowDeviceStateChange("discovery");
   }
 
-  private static boolean isActive(Entry<String, FeatureEnumeration> entry) {
+  private static boolean isActive(Entry<String, FeatureDiscovery> entry) {
     return Optional.ofNullable(entry.getValue().stage).orElse(STABLE).compareTo(BETA) >= 0;
   }
 
@@ -103,21 +103,21 @@ public class DiscoverySequences extends SequenceBase {
     }
 
     if (isTrue(enumerate.features)) {
-      checkFeatureEnumeration(event.features);
+      checkFeatureDiscovery(event.features);
     } else {
       checkThat("no feature enumeration", () -> event.features == null);
     }
 
-    if (isTrue(enumerate.uniqs)) {
+    if (isTrue(enumerate.points)) {
       int expectedSize = Optional.ofNullable(deviceMetadata.pointset.points).map(HashMap::size)
           .orElse(0);
-      checkThat("enumerated point count matches", () -> event.uniqs.size() == expectedSize);
+      checkThat("enumerated point count matches", () -> event.points.size() == expectedSize);
     } else {
-      checkThat("no point enumeration", () -> event.uniqs == null);
+      checkThat("no point enumeration", () -> event.points == null);
     }
   }
 
-  private void checkFeatureEnumeration(Map<String, FeatureEnumeration> features) {
+  private void checkFeatureDiscovery(Map<String, FeatureDiscovery> features) {
     Set<String> enumeratedFeatures = features.entrySet().stream()
         .filter(DiscoverySequences::isActive).map(Entry::getKey).collect(Collectors.toSet());
     requireNonNull(deviceMetadata.features, "device metadata features missing");
@@ -156,7 +156,7 @@ public class DiscoverySequences extends SequenceBase {
       skipTest("No metadata pointset points defined");
     }
     Enumerate enumerate = new Enumerate();
-    enumerate.uniqs = true;
+    enumerate.points = true;
     DiscoveryEvent event = runEnumeration(enumerate);
     checkSelfEnumeration(event, enumerate);
   }
@@ -188,7 +188,7 @@ public class DiscoverySequences extends SequenceBase {
     Enumerate enumerate = new Enumerate();
     enumerate.families = isBucketEnabled(ENUMERATION_FAMILIES);
     enumerate.features = isBucketEnabled(ENUMERATION_FEATURES);
-    enumerate.uniqs = isBucketEnabled(ENUMERATION_POINTSET);
+    enumerate.points = isBucketEnabled(ENUMERATION_POINTSET);
     DiscoveryEvent event = runEnumeration(enumerate);
     checkSelfEnumeration(event, enumerate);
   }
@@ -226,8 +226,8 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   private void checkEnumeration(List<DiscoveryEvent> receivedEvents, boolean shouldEnumerate) {
-    Predicate<DiscoveryEvent> hasPoints = event -> event.uniqs != null
-        && !event.uniqs.isEmpty();
+    Predicate<DiscoveryEvent> hasPoints = event -> event.points != null
+        && !event.points.isEmpty();
     if (shouldEnumerate) {
       assertTrue("with enumeration", receivedEvents.stream().allMatch(hasPoints));
     } else {

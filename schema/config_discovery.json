@@ -12,13 +12,17 @@
       "format": "date-time"
     },
     "enumerate": {
+      "description": "Indicates which discovery sub-categories to activate",
       "type": "object",
       "additionalProperties": false,
       "properties": {
         "families": {
           "type": "boolean"
         },
-        "uniqs": {
+        "devices": {
+          "type": "boolean"
+        },
+        "points": {
           "type": "boolean"
         },
         "features": {
@@ -27,7 +31,7 @@
       }
     },
     "families": {
-      "description": "Address family config for a scan. Not included for device enumeration messages.",
+      "description": "Address family config for a scan.",
       "existingJavaType": "java.util.HashMap<String, FamilyDiscoveryConfig>",
       "additionalProperties": false,
       "patternProperties": {

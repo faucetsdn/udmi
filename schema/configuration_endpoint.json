@@ -7,6 +7,10 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "properties": {
+    "name": {
+      "description": "Friendly name for this flow (debugging and diagnostics)",
+      "type": "string"
+    },
     "protocol": {
       "enum": [
         "local",
@@ -25,13 +29,16 @@
     "hostname": {
       "type": "string"
     },
+    "payload": {
+      "description": "Simple payload template for simple injection use cases",
+      "type": "string"
+    },
     "error": {
       "description": "Error message container for capturing errors during parsing/handling",
       "type": "string"
     },
     "port": {
-      "type": "integer",
-      "default": 8883
+      "type": "integer"
     },
     "config_sync_sec": {
       "description": "Delay waiting for config message on start, 0 for default, <0 to disable",
@@ -55,6 +62,11 @@
       "type": "string",
       "pattern": "^[-_/a-zA-Z0-9#]+$"
     },
+    "side_id": {
+      "description": "Id for a side-car message channel",
+      "type": "string",
+      "pattern": "^[-_/a-zA-Z0-9#]+$"
+    },
     "capacity": {
       "description": "Queue capacity for limiting pipes",
       "type": "integer"
@@ -63,8 +75,8 @@
       "description": "Artifical publish delay for testing",
       "type": "integer"
     },
-    "monitor_sec": {
-      "description": "Period for monitoring sampling",
+    "periodic_sec": {
+      "description": "Rate for periodic task execution",
       "type": "integer"
     },
     "distributor": {

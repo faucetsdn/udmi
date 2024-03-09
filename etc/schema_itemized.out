@@ -9,7 +9,7 @@
 07 valid_serial_no RESULT pass schemas state_update_beta BETA 5/5 Schema validation passed
 08 writeback_success
 09 writeback_success
-10 pointset_sample_rate
+10 pointset_publish_interval
 11 system_mode_restart
 12 config_logging
 13 broken_config
@@ -38,3 +38,4 @@
 36 gateway_proxy_events
 37 gateway_proxy_events
 41 device_config_acked
+42 bad_target_family

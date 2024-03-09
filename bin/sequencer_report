@@ -89,11 +89,19 @@ class Sequence:
     self.act_path = os.path.join(results_dir, test.name, Sequence.FILE_NAME)
     self.ref_path = os.path.join(reference_dir, test.name, Sequence.FILE_NAME)
 
+    if not os.path.isfile(self.act_path):
+      print(f"Missing input file: {self.act_path}")
+      sys.exit(1)
+
     with open(self.act_path, encoding="utf-8") as f:
       self.act_text = f.read()
 
-    with open(self.ref_path, encoding="utf-8") as f:
-      self.ref_text = f.read()
+    if not os.path.isfile(self.ref_path):
+      print(f"Missing reference file: {self.ref_path}")
+      self.ref_text = "1. Missing input file"
+    else:
+      with open(self.ref_path, encoding="utf-8") as f:
+        self.ref_text = f.read()
 
     self.act = Sequence.post_process_actual_results(
         Sequence.get_steps(self.act_text)

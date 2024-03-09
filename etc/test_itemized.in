@@ -7,7 +7,7 @@ TEST feature_enumeration featureEnableSwap
 TEST valid_serial_no noLastStart
 TEST writeback_success noWriteback
 TEST writeback_success noPointState
-TEST pointset_sample_rate fixedSampleRate=10
+TEST pointset_publish_interval fixedSampleRate=10
 TEST system_mode_restart noPersist
 TEST config_logging badVersion
 TEST broken_config barfConfig
@@ -39,3 +39,4 @@ TEST gateway_proxy_events badState
 # Test proxy device configurations
 WITH AHU-22
 TEST device_config_acked
+TEST bad_target_family

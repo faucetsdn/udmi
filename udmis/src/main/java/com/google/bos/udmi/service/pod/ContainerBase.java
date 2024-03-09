@@ -1,24 +1,40 @@
 package com.google.bos.udmi.service.pod;
 
+import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
+import static com.google.udmi.util.GeneralUtils.instantNow;
+import static com.google.udmi.util.JsonUtil.safeSleep;
+import static java.lang.Math.floorMod;
 import static java.lang.String.format;
+import static java.time.Duration.between;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toSet;
 
 import com.google.bos.udmi.service.core.ComponentName;
 import com.google.common.collect.ImmutableSet;
 import com.google.udmi.util.JsonUtil;
 import java.io.PrintStream;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.TestOnly;
 import udmi.schema.BasePodConfiguration;
+import udmi.schema.EndpointConfiguration;
 import udmi.schema.Level;
 import udmi.schema.PodConfiguration;
 
@@ -30,17 +46,22 @@ import udmi.schema.PodConfiguration;
 public abstract class ContainerBase implements ContainerProvider {
 
   public static final String INITIAL_EXECUTION_CONTEXT = "xxxxxxxx";
-  public static final Integer FUNCTIONS_VERSION_MIN = 11;
-  public static final Integer FUNCTIONS_VERSION_MAX = 11;
+  public static final Integer FUNCTIONS_VERSION_MIN = 12;
+  public static final Integer FUNCTIONS_VERSION_MAX = 12;
   public static final String EMPTY_JSON = "{}";
   public static final String REFLECT_BASE = "UDMI-REFLECT";
   private static final ThreadLocal<String> executionContext = new ThreadLocal<>();
   private static final Pattern VARIABLE_PATTERN = Pattern.compile("\\$\\{([A-Z_]+)}");
   private static final Pattern MULTI_PATTERN = Pattern.compile("!\\{([,a-zA-Z_]+)}");
+  private static final int JITTER_ADJ_MS = 1200;
   protected static String reflectRegistry = REFLECT_BASE;
   private static BasePodConfiguration basePodConfig = new BasePodConfiguration();
   protected final PodConfiguration podConfiguration;
+  protected final long periodicSec;
+  protected final String containerId;
+  private final ScheduledExecutorService scheduledExecutor;
   private final double failureRate;
+  private final Instant executorGeneration;
 
   /**
    * Create a basic pod container.
@@ -48,12 +69,26 @@ public abstract class ContainerBase implements ContainerProvider {
   public ContainerBase() {
     podConfiguration = null;
     failureRate = getPodFailureRate();
+    periodicSec = 0;
+    scheduledExecutor = null;
+    containerId = getSimpleName();
+    executorGeneration = null;
+  }
+
+  /**
+   * Create an instance with specific parameters.
+   */
+  public ContainerBase(String useId, Integer executorSec, Date generation) {
+    podConfiguration = null;
+    failureRate = getPodFailureRate();
+    periodicSec = ofNullable(executorSec).orElse(0);
+    executorGeneration = ifNotNullGet(generation, Date::toInstant);
+    scheduledExecutor = ifTrueGet(periodicSec > 0, Executors::newSingleThreadScheduledExecutor);
+    containerId = ifNotNullGet(useId, id -> id, getSimpleName());
   }
 
   /**
    * Construct a new instance given a configuration file. Only used once for the pod itself.
-   *
-   * @param config pod configuration
    */
   public ContainerBase(PodConfiguration config) {
     podConfiguration = config;
@@ -62,6 +97,14 @@ public abstract class ContainerBase implements ContainerProvider {
     reflectRegistry = getReflectRegistry();
     info("Configured with reflect registry " + reflectRegistry);
     ifTrueThen(failureRate > 0, () -> warn("Random failure rate configured at " + failureRate));
+    periodicSec = 0;
+    scheduledExecutor = null;
+    containerId = getSimpleName();
+    executorGeneration = null;
+  }
+
+  public ContainerBase(EndpointConfiguration configuration) {
+    this(configuration.name, configuration.periodic_sec, configuration.generation);
   }
 
   /**
@@ -117,10 +160,23 @@ public abstract class ContainerBase implements ContainerProvider {
     return expanded;
   }
 
+  protected void periodicTask() {
+    if (scheduledExecutor != null && !scheduledExecutor.isShutdown()) {
+      debug("Shutting down unused scheduled executor");
+      scheduledExecutor.shutdown();
+      return;
+    }
+    throw new IllegalStateException("Unexpected periodic task execution");
+  }
+
   protected void randomlyFail() {
     if (Math.random() < failureRate) {
       throw new IllegalStateException("Randomly induced failure");
     }
+  }
+
+  protected void scheduleIn(Duration duration, Runnable task) {
+    scheduledExecutor.schedule(task, duration.getSeconds(), SECONDS);
   }
 
   protected String variableSubstitution(String value) {
@@ -172,16 +228,33 @@ public abstract class ContainerBase implements ContainerProvider {
     return getClass().getSimpleName();
   }
 
-  @Override
-  public void output(Level level, String message) {
-    PrintStream printStream = level.value() >= Level.WARNING.value() ? System.err : System.out;
-    printStream.printf("%s %s %s: %s %s%n", JsonUtil.isoConvert(), getExecutionContext(),
-        level.name().charAt(0), getSimpleName(), message);
-    printStream.flush();
+  private long initialDelaySec() {
+    return ifNotNullGet(executorGeneration, generation ->
+        floorMod(between(instantNow(), generation).getSeconds(), periodicSec), periodicSec);
+  }
+
+  private void periodicWrapper() {
+    try {
+      grabExecutionContext();
+      if (executorGeneration != null) {
+        // The initial delay will often be slightly off the intended time due to rounding errors.
+        // Add in a quick delay to the start of the next second for dynamic alignment.
+        safeSleep(Duration.ofMillis(JITTER_ADJ_MS).minusNanos(Instant.now().getNano()).toMillis());
+      }
+      periodicTask();
+    } catch (Exception e) {
+      error("Exception executing periodic task: " + friendlyStackTrace(e));
+    }
   }
 
   @Override
   public void activate() {
+    info("Activating");
+    ifTrueThen(periodicSec > 0, () -> {
+      long initial = initialDelaySec();
+      notice("Scheduling task %s execution after %ss every %ss", containerId, initial, periodicSec);
+      scheduledExecutor.scheduleAtFixedRate(this::periodicWrapper, initial, periodicSec, SECONDS);
+    });
   }
 
   public void debug(String format, Object... args) {
@@ -212,8 +285,21 @@ public abstract class ContainerBase implements ContainerProvider {
     output(Level.NOTICE, message);
   }
 
+  public void notice(String message, Object... args) {
+    notice(format(message, args));
+  }
+
+  @Override
+  public void output(Level level, String message) {
+    PrintStream printStream = level.value() >= Level.WARNING.value() ? System.err : System.out;
+    printStream.printf("%s %s %s: %s %s%n", JsonUtil.isoConvert(), getExecutionContext(),
+        level.name().charAt(0), getSimpleName(), message);
+    printStream.flush();
+  }
+
   @Override
   public void shutdown() {
+    ifNotNullThen(scheduledExecutor, ExecutorService::shutdown);
   }
 
   public void trace(String message) {

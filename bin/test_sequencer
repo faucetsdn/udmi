@@ -1,8 +1,5 @@
 #!/bin/bash -e
 
-# Force consistent sort order
-export LC_ALL=C
-
 UDMI_ROOT=$(dirname $0)/..
 cd $UDMI_ROOT
 
@@ -131,13 +128,18 @@ echo Completed execution of sequencer test run, exit code $seq_fail
 echo Reported cloud version info: $(jq .cloud_version.udmi_ref $output_file)
 
 echo Combining partial-run output files...
-files=$(cd out; ls -1 *.out *.log)
-echo Merging $files
-for file in $files; do
-    cp out/$file out/$file.save
-    cat out/$file >> out/$file.combined
-    cp out/$file.combined out/$file
-done
+(
+    cd out
+    files=$(ls -1 *.out *.log)
+    echo Merging $files
+    for file in $files; do
+        nfile=$(echo $file | sed -E -r "s/\.(.*)\$/$suffix.\1/")
+        [[ $file != $nfile ]] && mv $file $nfile && echo Renamed $file to $nfile
+        cp $nfile $nfile.save
+        cat $nfile >> $nfile.combined
+        cp $nfile.combined $nfile
+    done
+)
 
 if [[ -n $out_check && -z $targets ]]; then
     if [[ -n $clean_cache ]]; then
@@ -164,8 +166,8 @@ else
 fi
 
 echo Sanity check for completed tests...
-target_count=$(fgrep "Running target" out/sequencer.log.save | wc -l)
-result_count=$(fgrep RESULT out/sequencer.out.save | wc -l)
+target_count=$(fgrep "Running target" out/sequencer$suffix.log.save | wc -l)
+result_count=$(fgrep RESULT out/sequencer$suffix.out.save | wc -l)
 if [[ $target_count != $result_count ]]; then
     fail Only $result_count results found for expected $target_count targets.
 fi
@@ -174,6 +176,6 @@ GOLDEN_FILE=etc/sequencer${suffix}.out
 echo Checking for correctness of completed tests in $GOLDEN_FILE...
 while read result; do
     fgrep "$result" $GOLDEN_FILE || fail Expected result not found for $result
-done < out/sequencer.out.save
+done < out/sequencer${suffix}.out.save
 
 echo Done with $suffix test_sequencer run.

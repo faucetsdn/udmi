@@ -13,7 +13,7 @@ import static java.util.Optional.ofNullable;
 import static udmi.schema.Bucket.POINTSET;
 import static udmi.schema.Category.POINTSET_POINT_INVALID;
 import static udmi.schema.Category.POINTSET_POINT_INVALID_VALUE;
-import static udmi.schema.FeatureEnumeration.FeatureStage.BETA;
+import static udmi.schema.FeatureDiscovery.FeatureStage.BETA;
 
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
@@ -23,7 +23,6 @@ import com.google.daq.mqtt.sequencer.Summary;
 import com.google.daq.mqtt.sequencer.ValidateSchema;
 import com.google.daq.mqtt.util.SamplingRange;
 import java.time.Duration;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -179,61 +178,7 @@ public class PointsetSequences extends PointsetBase {
   }
 
   /**
-   * Tests sample_rate_min by measuring the initial interval between the last two messages received,
-   * then setting the config.pointset.sample_rate_min to match half the initial interval and
-   * measuring the final interval between several messages and ensuring it is less than the new
-   * interval (with a tolerance of 1.5s).
-   *
-   * <p>Pass if: final interval < new sample_rate_min + tolerance
-   * Fail if: final interval > new sample_rate_min + tolerance Skip if: initial interval < 5s (too
-   * fast for automated test)
-   */
-  @Test(timeout = THREE_MINUTES_MS)
-  @Feature(stage = BETA, bucket = POINTSET)
-  @Summary("Check that a device publishes pointset events not faster than config sample_rate_sec")
-  public void pointset_sample_rate() {
-    ifNullSkipTest(deviceConfig.pointset, "no pointset found in config");
-
-    // Clear received events because this could contain messages from a previous sample rate test
-    popReceivedEvents(PointsetEvent.class);
-
-    Instant endTime = Instant.now().plusSeconds(DEFAULT_SAMPLE_RATE_SEC * 3);
-    // To pick the test sample rate, either measure the devices
-    // given sampling rate from its last 2 messages and half it or use
-    // a value if long
-    untilTrue("measure initial sample rate",
-        () -> (countReceivedEvents(PointsetEvent.class) > 1
-            || Instant.now().isAfter(endTime))
-    );
-
-    final int testSampleRate;
-    if (countReceivedEvents(PointsetEvent.class) < 2) {
-      // 2 messages not seen, assume interval is longer than wait period, pick a small number
-      testSampleRate = DEFAULT_SAMPLE_RATE_SEC;
-    } else {
-      List<PointsetEvent> receivedEvents = popReceivedEvents(PointsetEvent.class);
-      List<Long> telemetryDelta = intervalFromEvents(receivedEvents);
-      int nominalInterval = telemetryDelta.get(0).intValue();
-      info(format("initial sample rate is %d seconds", nominalInterval));
-
-      ifTrueThen(nominalInterval < 5,
-          () -> skipTest("measured sample rate is too low for automated test"));
-
-      // Use an interval smaller than the devices last interval
-      testSampleRate = Math.floorDiv(nominalInterval, 2);
-    }
-
-    info(format("setting sample rate to %d seconds", testSampleRate));
-    SamplingRange testSampleRange = new SamplingRange(1, testSampleRate, 1.5);
-
-    testPointsetWithSamplingRange(testSampleRange, 5, 2);
-  }
-
-  /**
    * Generates message for checking the time periods are within the sampling range.
-   *
-   * @param samplingRange sampling range to produce message for
-   * @return message
    */
   private String samplingMessagesCheckMessage(SamplingRange samplingRange) {
     return format("time period between successive pointset events is %s",
@@ -245,7 +190,7 @@ public class PointsetSequences extends PointsetBase {
    * of both parameters, and ensuring telemetry is within this range.
    */
   @Test(timeout = THREE_MINUTES_MS)
-  @Summary("Check handling of sample rate and sample limit sec")
+  @Summary("Check handling of sample_rate_sec and sample_limit_sec")
   @Feature(stage = BETA, bucket = POINTSET, nostate = true)
   @ValidateSchema(SubFolder.POINTSET)
   public void pointset_publish_interval() {
@@ -262,9 +207,6 @@ public class PointsetSequences extends PointsetBase {
   /**
    * Given a list of events, sorts these in timestamp order and returns a list of the the intervals
    * between each pair of successive messages based on the in-payload timestamp.
-   *
-   * @param receivedEvents list of PointsetEvents
-   * @return list of the intervals between successive messages
    */
   private List<Long> intervalFromEvents(List<PointsetEvent> receivedEvents) {
     ArrayList<Long> intervals = new ArrayList<>();
@@ -285,10 +227,6 @@ public class PointsetSequences extends PointsetBase {
   /**
    * Updating the sample_limit_sec and sample_rate_sec according to provided SamplingRange and
    * checks if the interval between subsequent pointset events are within this range.
-   *
-   * @param sampleRange       sample range to test with
-   * @param messagesToSample  number of messages to sample (must be greater than 2)
-   * @param intervalsToIgnore number of intervals to ignore at start (to allow system to settle)
    */
   private void testPointsetWithSamplingRange(SamplingRange sampleRange, Integer messagesToSample,
       Integer intervalsToIgnore) {

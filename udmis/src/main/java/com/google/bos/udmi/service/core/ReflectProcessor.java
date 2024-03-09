@@ -20,6 +20,7 @@ import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.fromString;
+import static com.google.udmi.util.JsonUtil.fromStringStrict;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
@@ -30,9 +31,11 @@ import static java.util.Optional.ofNullable;
 import static udmi.schema.Envelope.SubFolder.UPDATE;
 
 import com.google.bos.udmi.service.messaging.MessageContinuation;
+import com.google.bos.udmi.service.messaging.ModelUpdate;
 import com.google.bos.udmi.service.messaging.StateUpdate;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.udmi.util.JsonUtil;
+import com.google.udmi.util.MetadataMapKeys;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -40,6 +43,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
+import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
@@ -55,6 +59,10 @@ public class ReflectProcessor extends ProcessorBase {
   public static final String PAYLOAD_KEY = "payload";
   private static final Date START_TIME = new Date();
 
+  public ReflectProcessor(EndpointConfiguration config) {
+    super(config);
+  }
+
   private static String makeTransactionId() {
     return format("RP:%08x", Objects.hash(System.currentTimeMillis(), Thread.currentThread()));
   }
@@ -69,6 +77,8 @@ public class ReflectProcessor extends ProcessorBase {
         reflectStateHandler(reflection, extractUdmiState(message));
       } else if (reflection.subFolder != SubFolder.UDMI) {
         throw new IllegalStateException("Unexpected reflect subfolder " + reflection.subFolder);
+      } else if (message instanceof UdmiState distributedUpdate) {
+        updateAwareness(reflection, distributedUpdate);
       } else {
         Map<String, Object> payload = extractMessagePayload(objectMap);
         Envelope envelope = extractMessageEnvelope(objectMap);
@@ -172,7 +182,7 @@ public class ReflectProcessor extends ProcessorBase {
       StateUpdate stateUpdate = fromString(StateUpdate.class, state);
       stateUpdate.configAcked = checkConfigAckTime(attributes, stateUpdate);
       processStateUpdate(attributes, stateUpdate);
-      publish(stateUpdate);
+      publish(attributes, stateUpdate);
       reflectStateUpdate(attributes, stringify(stateUpdate));
       CloudModel cloudModel = new CloudModel();
       cloudModel.operation = Operation.FETCH;
@@ -183,16 +193,24 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private CloudModel reflectModel(Envelope attributes, CloudModel request) {
+    ifNotNullThen(extractDeviceModel(request), model -> publish(attributes, model));
     return iotAccess.modelResource(attributes.deviceRegistryId, attributes.deviceId, request);
+  }
+
+  private ModelUpdate extractDeviceModel(CloudModel request) {
+    return ifNotNullGet(request.metadata,
+        metadata -> ofNullable(metadata.get(MetadataMapKeys.UDMI_METADATA))
+            .map(modelString -> fromStringStrict(ModelUpdate.class, modelString))
+            .orElse(null));
   }
 
   private CloudModel reflectPropagate(Envelope attributes, Map<String, Object> payload) {
     if (requireNonNull(attributes.subType) == SubType.CONFIG) {
       processConfigChange(attributes, payload, null);
     }
-    Class<?> messageClass = getMessageClassFor(attributes);
+    Class<?> messageClass = getMessageClassFor(attributes, true);
     debug("Propagating message %s: %s", attributes.transactionId, messageClass.getSimpleName());
-    publish(convertTo(messageClass, payload));
+    publish(attributes, convertTo(messageClass, payload));
     return null;
   }
 
@@ -218,7 +236,7 @@ public class ReflectProcessor extends ProcessorBase {
     final String registryId = envelope.deviceRegistryId;
     final String deviceId = envelope.deviceId;
 
-    ifNotNullThen(distributor, d -> d.distribute(envelope, toolState));
+    ifNotNullThen(distributor, d -> d.publish(envelope, toolState, containerId));
     updateAwareness(envelope, toolState);
 
     UdmiConfig udmiConfig = UdmiServicePod.getUdmiConfig(toolState);

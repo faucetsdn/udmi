@@ -40,6 +40,7 @@ public class StateProcessorTest extends ProcessorTestBase {
 
   public static final Date INITIAL_LAST_START = CleanDateFormat.cleanDate(new Date(12981837));
   private static final String LEGACY_STATE_MESSAGE_FILE = "src/test/messages/legacy_state.json";
+  private static final long SHUTDOWN_PAUSE_MS = 1000;
 
   @NotNull
   protected Class<? extends ProcessorBase> getProcessorClass() {
@@ -148,6 +149,8 @@ public class StateProcessorTest extends ProcessorTestBase {
     getReverseDispatcher().waitForMessageProcessed(SystemState.class);
     getReverseDispatcher().waitForMessageProcessed(GatewayState.class);
     terminateAndWait();
+
+    safeSleep(SHUTDOWN_PAUSE_MS); // Extra insurance against flaky tests.
 
     assertEquals(3, captured.size(), "unexpected received message count");
     assertTrue(contains(message -> message instanceof StateUpdate), "has StateUpdate");

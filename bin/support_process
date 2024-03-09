@@ -3,6 +3,9 @@
 archive=$1
 shift || true
 
+# Force consistent sort order
+export LC_ALL=C
+
 if [[ -z $archive ]]; then
     archive=$(ls -t ~/Downloads/udmi-support_*.zip ~/Downloads/udmi-support_*.tgz | head -n 1)
     echo Auto-detected archive $archive
@@ -38,7 +41,7 @@ fi
 
 ls -l $archive_dir/
 echo Extracting test archives...
-ls $archive_dir/*sequencer*.tgz | xargs -n 1 tar -xzf
+ls $archive_dir/*_udmi-support_*.tgz | xargs -n 1 tar -xzf
 
 echo Consolidating device tests...
 devices=$(ls -d $sites_in/out-seq/devices)
@@ -56,8 +59,8 @@ fi
 
 echo Restored $dst_count test output files to $sites_out
 
-cat out_*/sequencer.out.combined | sort -k 4 > out/sequencer.out
-cat out_*/schema.out.combined | fgrep RESULT | sort -k 4 | uniq > out/schema.out
+cat out_*/sequencer.out.combined | sort -k 3,4 > out/sequencer.out
+cat out_*/schema.out.combined | fgrep RESULT | sort -k 3,4 | uniq > out/schema.out
 cat out_*/test_itemized.out | sort > out/test_itemized.out
 cat out_*/schema_itemized.out | sort | uniq > out/schema_itemized.out
 

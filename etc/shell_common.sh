@@ -3,6 +3,9 @@
 # executing scripts.
 #
 
+# Force consistent sort order
+export LC_ALL=C
+
 #
 # Walk up the directory tree looking for the cloud_iot_config.json site model marker.
 # If not found, just return empty.

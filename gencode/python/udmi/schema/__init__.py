@@ -25,14 +25,15 @@ from .configuration_pod import PodConfiguration
 from .configuration_pod_base import BasePodConfiguration
 from .configuration_pod_bridge import BridgePodConfiguration
 from .configuration_pubber import PubberConfiguration
+from .data_template import MessageTemplateData
+from .discovery_family import FamilyDiscovery
+from .discovery_feature import FeatureDiscovery
+from .discovery_point import PointDiscovery
 from .entry import Entry
-from .enumeration_feature import FeatureEnumeration
 from .envelope import Envelope
 from .equipment_translation import BuildingConfig
 from .event import Event
 from .event_discovery import DiscoveryEvent
-from .event_discovery_family import FamilyDiscoveryEvent
-from .event_discovery_point import PointEnumerationEvent
 from .event_mapping import MappingEvent
 from .event_mapping_entities import MappingEventEntities
 from .event_mapping_entity import MappingEventEntity
@@ -44,7 +45,7 @@ from .event_validation_device import DeviceValidationEvent
 from .metadata import Metadata
 from .model_cloud import CloudModel
 from .model_discovery import DiscoveryModel
-from .model_discovery_family import FamilyDiscoveryTestingModel
+from .model_discovery_family import FamilyDiscoveryModel
 from .model_features import TestingModel
 from .model_gateway import GatewayModel
 from .model_localnet import LocalnetModel
@@ -60,6 +61,7 @@ from .monitoring_metric import Monitoringmetric
 from .options_pubber import PubberOptions
 from .persistent_device import DevicePersistent
 from .properties import Properties
+from .query_cloud import CloudQuery
 from .state import State
 from .state_blobset import BlobsetState
 from .state_blobset_blob import BlobBlobsetState

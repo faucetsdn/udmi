@@ -125,7 +125,7 @@ public class GeneralUtils {
   }
 
   public static String encodeBase64(String payload) {
-    return encodeBase64(payload.getBytes());
+    return ifNotNullGet(payload, raw -> encodeBase64(raw.getBytes()));
   }
 
   public static String encodeBase64(byte[] payload) {
@@ -194,6 +194,10 @@ public class GeneralUtils {
     }
   }
 
+  public static Date toDate(Instant lastSeen) {
+    return ifNotNullGet(lastSeen, Date::from);
+  }
+
   private static String writeToPrettyString(Object data, OutputFormat indent) {
     try {
       ByteArrayOutputStream outputString = new ByteArrayOutputStream();
@@ -250,6 +254,12 @@ public class GeneralUtils {
     }
   }
 
+  public static <T> void ifNotNullThrow(T value, String message) {
+    if (value != null) {
+      throw new RuntimeException(message);
+    }
+  }
+
   public static <T> void ifNotNullThen(T value, Consumer<T> consumer) {
     ofNullable(value).ifPresent(consumer);
   }
@@ -281,6 +291,10 @@ public class GeneralUtils {
 
   public static <T> T ifTrueGet(Object conditional, Supplier<T> action, Supplier<T> alternate) {
     return isTrue(conditional) ? action.get() : alternate.get();
+  }
+
+  public static <T> T ifTrueGet(Object conditional, Supplier<T> action, T alternate) {
+    return isTrue(conditional) ? action.get() : alternate;
   }
 
   public static <T> void ifTrueThen(Object conditional, Runnable action) {
@@ -500,7 +514,11 @@ public class GeneralUtils {
   }
 
   public static Date getNow() {
-    return Date.from(Instant.now().plus(clockSkew));
+    return Date.from(instantNow());
+  }
+
+  public static Instant instantNow() {
+    return Instant.now().plus(clockSkew);
   }
 
   public static String getTimestamp() {

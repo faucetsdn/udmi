@@ -46,9 +46,11 @@ class EndpointConfiguration:
   """Generated schema class"""
 
   def __init__(self):
+    self.name = None
     self.protocol = None
     self.transport = None
     self.hostname = None
+    self.payload = None
     self.error = None
     self.port = None
     self.config_sync_sec = None
@@ -56,9 +58,10 @@ class EndpointConfiguration:
     self.msg_prefix = None
     self.recv_id = None
     self.send_id = None
+    self.side_id = None
     self.capacity = None
     self.publish_delay_sec = None
-    self.monitor_sec = None
+    self.periodic_sec = None
     self.distributor = None
     self.auth_provider = None
     self.generation = None
@@ -68,9 +71,11 @@ class EndpointConfiguration:
     if not source:
       return None
     result = EndpointConfiguration()
+    result.name = source.get('name')
     result.protocol = source.get('protocol')
     result.transport = source.get('transport')
     result.hostname = source.get('hostname')
+    result.payload = source.get('payload')
     result.error = source.get('error')
     result.port = source.get('port')
     result.config_sync_sec = source.get('config_sync_sec')
@@ -78,9 +83,10 @@ class EndpointConfiguration:
     result.msg_prefix = source.get('msg_prefix')
     result.recv_id = source.get('recv_id')
     result.send_id = source.get('send_id')
+    result.side_id = source.get('side_id')
     result.capacity = source.get('capacity')
     result.publish_delay_sec = source.get('publish_delay_sec')
-    result.monitor_sec = source.get('monitor_sec')
+    result.periodic_sec = source.get('periodic_sec')
     result.distributor = source.get('distributor')
     result.auth_provider = ObjectA90DCC28.from_dict(source.get('auth_provider'))
     result.generation = source.get('generation')
@@ -104,12 +110,16 @@ class EndpointConfiguration:
 
   def to_dict(self):
     result = {}
+    if self.name:
+      result['name'] = self.name # 5
     if self.protocol:
       result['protocol'] = self.protocol # 5
     if self.transport:
       result['transport'] = self.transport # 5
     if self.hostname:
       result['hostname'] = self.hostname # 5
+    if self.payload:
+      result['payload'] = self.payload # 5
     if self.error:
       result['error'] = self.error # 5
     if self.port:
@@ -124,12 +134,14 @@ class EndpointConfiguration:
       result['recv_id'] = self.recv_id # 5
     if self.send_id:
       result['send_id'] = self.send_id # 5
+    if self.side_id:
+      result['side_id'] = self.side_id # 5
     if self.capacity:
       result['capacity'] = self.capacity # 5
     if self.publish_delay_sec:
       result['publish_delay_sec'] = self.publish_delay_sec # 5
-    if self.monitor_sec:
-      result['monitor_sec'] = self.monitor_sec # 5
+    if self.periodic_sec:
+      result['periodic_sec'] = self.periodic_sec # 5
     if self.distributor:
       result['distributor'] = self.distributor # 5
     if self.auth_provider:

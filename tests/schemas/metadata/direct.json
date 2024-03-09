@@ -1,0 +1,28 @@
+// Simple metadata entry for a directly connected device. Note there's no gateway block.
+// The cloud field indicates that this device has a direct MQTT connection of the indicated
+// auth_type.
+{
+  "version": "1.5.0",
+  "timestamp": "2018-08-26T21:39:29.364Z",
+  "description": "Generic direct device metadata file",
+  "system": {
+  },
+  "cloud": {
+    "auth_type": "ES256"
+  },
+  "pointset": {
+    "points": {
+      "return_air_temperature_sensor": {
+        "units": "Degrees-Celsius",
+        "baseline_value": 20,
+        "baseline_tolerance": 2
+      },
+      "room_setpoint": {
+        "writable": true,
+        "units": "Degrees-Celsius",
+        "baseline_value": 20,
+        "baseline_state": "applied"
+      }
+    }
+  }
+}

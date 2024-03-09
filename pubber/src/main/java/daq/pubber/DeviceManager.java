@@ -5,7 +5,7 @@ import java.util.Map;
 import udmi.schema.Config;
 import udmi.schema.DevicePersistent;
 import udmi.schema.Entry;
-import udmi.schema.FamilyDiscoveryEvent;
+import udmi.schema.FamilyDiscovery;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.Operation.SystemMode;
@@ -45,7 +45,7 @@ public class DeviceManager extends ManagerBase {
   public void setMetadata(Metadata metadata) {
     pointsetManager.setPointsetModel(metadata.pointset);
     systemManager.setMetadata(metadata);
-    gatewayManager.setMetadata(metadata.gateway);
+    gatewayManager.setMetadata(metadata);
   }
 
   public void activate() {
@@ -119,7 +119,7 @@ public class DeviceManager extends ManagerBase {
     systemManager.stop();
   }
 
-  public Map<String, FamilyDiscoveryEvent> enumerateFamilies() {
+  public Map<String, FamilyDiscovery> enumerateFamilies() {
     return localnetManager.enumerateFamilies();
   }
 

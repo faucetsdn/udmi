@@ -7,6 +7,7 @@ import static com.google.common.base.Predicates.not;
 import static com.google.common.base.Strings.emptyToNull;
 import static com.google.daq.mqtt.sequencer.SequenceBase.Capabilities.LAST_CONFIG;
 import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
+import static com.google.daq.mqtt.util.CloudIotManager.EMPTY_CONFIG;
 import static com.google.daq.mqtt.util.ConfigGenerator.configFrom;
 import static com.google.daq.mqtt.util.IotReflectorClient.REFLECTOR_PREFIX;
 import static com.google.udmi.util.CleanDateFormat.cleanDate;
@@ -44,9 +45,9 @@ import static udmi.schema.Bucket.UNKNOWN_DEFAULT;
 import static udmi.schema.Category.VALIDATION_FEATURE_CAPABILITY;
 import static udmi.schema.Category.VALIDATION_FEATURE_SCHEMA;
 import static udmi.schema.Category.VALIDATION_FEATURE_SEQUENCE;
-import static udmi.schema.FeatureEnumeration.FeatureStage.ALPHA;
-import static udmi.schema.FeatureEnumeration.FeatureStage.PREVIEW;
-import static udmi.schema.FeatureEnumeration.FeatureStage.STABLE;
+import static udmi.schema.FeatureDiscovery.FeatureStage.ALPHA;
+import static udmi.schema.FeatureDiscovery.FeatureStage.PREVIEW;
+import static udmi.schema.FeatureDiscovery.FeatureStage.STABLE;
 import static udmi.schema.Level.ERROR;
 import static udmi.schema.Level.NOTICE;
 import static udmi.schema.Level.WARNING;
@@ -65,7 +66,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
-import com.google.daq.mqtt.util.ConfigGenerator;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.util.MessagePublisher.QuerySpeed;
 import com.google.daq.mqtt.util.ObjectDiffEngine;
@@ -130,8 +130,8 @@ import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
 import udmi.schema.ExecutionConfiguration;
-import udmi.schema.FeatureEnumeration;
-import udmi.schema.FeatureEnumeration.FeatureStage;
+import udmi.schema.FeatureDiscovery;
+import udmi.schema.FeatureDiscovery.FeatureStage;
 import udmi.schema.FeatureValidationState;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
@@ -166,7 +166,7 @@ public class SequenceBase {
   public static final String STATUS_LEVEL_VIOLATION = "STATUS_LEVEL";
   public static final String DEVICE_STATE_SCHEMA = "device_state";
   private static final String ALL_CHANGES = "";
-  private static final int FUNCTIONS_VERSION_BETA = 11;
+  private static final int FUNCTIONS_VERSION_BETA = 12;
   private static final int FUNCTIONS_VERSION_ALPHA = FUNCTIONS_VERSION_BETA;
   private static final long CONFIG_BARRIER_MS = 1000;
   private static final String START_END_MARKER = "################################";
@@ -298,6 +298,7 @@ public class SequenceBase {
   private Boolean expectedSystemStatus;
   private Description testDescription;
   private SubFolder testSchema;
+  private int lastStatusLevel;
 
   private static void setupSequencer() {
     exeConfig = SequenceRunner.ensureExecutionConfig();
@@ -306,7 +307,7 @@ public class SequenceBase {
     }
     final String key_file;
     try {
-      messageValidator = new Validator(exeConfig);
+      messageValidator = new Validator(exeConfig, SequenceBase::validatorLogger);
       siteModel = checkNotNull(exeConfig.site_model, "site_model not defined");
       projectId = checkNotNull(exeConfig.project_id, "project_id not defined");
       checkNotNull(exeConfig.udmi_version, "udmi_version not defined");
@@ -344,6 +345,10 @@ public class SequenceBase {
     altClient = getAlternateClient();
 
     initializeValidationState();
+  }
+
+  private static void validatorLogger(Level level, String message) {
+    activeInstance.log(message, level);
   }
 
   private static void initializeValidationState() {
@@ -756,7 +761,7 @@ public class SequenceBase {
     if (bucket == SYSTEM || enableAllTargets || deviceMetadata.features == null) {
       return true;
     }
-    FeatureEnumeration metadata = deviceMetadata.features.get(bucket.value());
+    FeatureDiscovery metadata = deviceMetadata.features.get(bucket.value());
     if (metadata == null) {
       return false;
     }
@@ -1933,7 +1938,7 @@ public class SequenceBase {
    */
   protected void clearOtherConfig() {
     // No need to be fancy here, just clear out the other config with an empty blob.
-    updateMirrorConfig("{}");
+    updateMirrorConfig(EMPTY_CONFIG);
   }
 
   private void updateMirrorConfig(String receivedConfig) {
@@ -1963,15 +1968,18 @@ public class SequenceBase {
   private Boolean hasInterestingSystemStatus() {
     // State missing is neither interesting nor not-interesting...
     if (deviceState == null || deviceState.system == null) {
+      lastStatusLevel = 0;
       return null;
     }
 
-    if (deviceState.system.status != null) {
-      debug("Status level: " + deviceState.system.status.level);
+    int statusLevel = GeneralUtils.catchToElse(() -> deviceState.system.status.level, 0);
+
+    if (statusLevel != lastStatusLevel) {
+      debug("State system Status level: " + statusLevel);
+      lastStatusLevel = statusLevel;
     }
 
-    return deviceState.system.status != null
-        && deviceState.system.status.level >= Level.WARNING.value();
+    return statusLevel >= Level.WARNING.value();
   }
 
   protected void checkThatHasInterestingSystemStatus(boolean isInteresting) {
@@ -2186,6 +2194,7 @@ public class SequenceBase {
         sequenceMd = new PrintWriter(newOutputStream(new File(testDir, SEQUENCE_MD).toPath()));
         writeSequenceMdHeader();
 
+        lastStatusLevel = 0;
         startSequenceStatus(description);
 
         startCaptureTime = 0;

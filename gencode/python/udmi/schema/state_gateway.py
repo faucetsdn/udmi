@@ -1,4 +1,5 @@
 """Generated class for state_gateway.json"""
+from .entry import Entry
 
 
 class GatewayState:
@@ -7,7 +8,7 @@ class GatewayState:
   def __init__(self):
     self.timestamp = None
     self.version = None
-    self.devices = None
+    self.status = None
 
   @staticmethod
   def from_dict(source):
@@ -16,7 +17,7 @@ class GatewayState:
     result = GatewayState()
     result.timestamp = source.get('timestamp')
     result.version = source.get('version')
-    result.devices = source.get('devices')
+    result.status = Entry.from_dict(source.get('status'))
     return result
 
   @staticmethod
@@ -41,6 +42,6 @@ class GatewayState:
       result['timestamp'] = self.timestamp # 5
     if self.version:
       result['version'] = self.version # 5
-    if self.devices:
-      result['devices'] = self.devices # 5
+    if self.status:
+      result['status'] = self.status.to_dict() # 4
     return result

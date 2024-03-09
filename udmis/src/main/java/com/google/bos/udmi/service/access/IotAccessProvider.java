@@ -47,10 +47,9 @@ public interface IotAccessProvider extends ContainerProvider {
   String fetchState(String deviceRegistryId, String deviceId);
 
   /**
-   * Get all the registries that exist in a given region.  If region is null, then return all
-   * available regions.
+   * Get all registries associated with this provider.
    */
-  Set<String> getRegistriesForRegion(String region);
+  Set<String> listRegistries();
 
   boolean isEnabled();
 

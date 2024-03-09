@@ -1,5 +1,4 @@
 {
-  "blobset" : { },
   "discovery" : {
     "enumerate" : {
       "families" : true,
@@ -24,15 +23,15 @@
     }
   },
   "system" : {
-    "metrics_rate_sec" : 600,
+    "metrics_rate_sec" : 10,
     "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2023-11-07T14:29:19Z"
+      "last_start" : "2024-02-18T18:17:22Z"
     },
     "testing" : {
       "sequence_name" : "multi_enumeration"
     }
   },
-  "timestamp" : "2023-11-07T14:30:17Z",
-  "version" : "1.4.2-40-gdeae740b"
+  "timestamp" : "2024-02-18T18:17:49Z",
+  "version" : "1.5.0-16-g48397c75b"
 }

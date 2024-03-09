@@ -16,6 +16,7 @@ import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.MessageDispatcher;
 import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.bos.udmi.service.messaging.MessagePipe.PipeStats;
+import com.google.bos.udmi.service.messaging.ModelUpdate;
 import com.google.bos.udmi.service.messaging.StateUpdate;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.BundleException;
@@ -34,9 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import org.jetbrains.annotations.NotNull;
@@ -71,6 +69,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
         .forEach(folder -> registerHandlerType(type, folder)));
     registerMessageClass(SubType.STATE, SubFolder.UPDATE, StateUpdate.class);
     registerMessageClass(SubType.CONFIG, SubFolder.UPDATE, ConfigUpdate.class);
+    registerMessageClass(SubType.MODEL, SubFolder.UPDATE, ModelUpdate.class);
   }
 
   private final MessagePipe messagePipe;
@@ -79,17 +78,14 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   private final Map<Class<?>, AtomicInteger> handlerCounts = new ConcurrentHashMap<>();
   private final String projectId;
   private final ThreadLocal<Envelope> threadEnvelope = new ThreadLocal<>();
-  private final int monitorSec;
-  private final ScheduledExecutorService monitorExecutor =
-      Executors.newSingleThreadScheduledExecutor();
 
   /**
    * Create a new instance of the message dispatcher.
    */
   public MessageDispatcherImpl(EndpointConfiguration configuration) {
+    super(configuration);
     messagePipe = MessagePipe.from(configuration);
     projectId = variableSubstitution(configuration.hostname, "project_id/hostname not defined");
-    monitorSec = ofNullable(configuration.monitor_sec).orElse(0);
   }
 
   @Nullable
@@ -116,8 +112,12 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     }
   }
 
-  public static Class<?> getMessageClassFor(Envelope envelope) {
+  /**
+   * Get the associated message class for the indicated envelope.
+   */
+  public static Class<?> getMessageClassFor(Envelope envelope, boolean allowDefault) {
     String mapKey = getMapKey(envelope.subType, envelope.subFolder);
+    checkState(allowDefault || TYPE_CLASSES.containsKey(mapKey), "missing class for " + mapKey);
     return TYPE_CLASSES.getOrDefault(mapKey, SPECIAL_CLASSES.getOrDefault(mapKey, DEFAULT_CLASS));
   }
 
@@ -144,6 +144,13 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   protected void devNullHandler(Object message) {
   }
 
+  @Override
+  protected void periodicTask() {
+    Map<String, PipeStats> countSum = messagePipe.extractStats();
+    extractAndLog(countSum, RECEIVE_STATS);
+    extractAndLog(countSum, PUBLISH_STATS);
+  }
+
   private void executeHandler(Class<?> handlerType, Object messageObject) {
     try {
       handlers.get(handlerType).accept(messageObject);
@@ -158,7 +165,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
 
   private void extractAndLog(Map<String, PipeStats> countSum, String key) {
     PipeStats stats = countSum.get(key);
-    double rate = stats.count / (double) monitorSec;
+    double rate = stats.count / (double) periodicSec;
     double average = stats.latency / stats.count;
     String message = format("Pipe %s %s count %.3f/s latency %.03fs, queue %.03f",
         messagePipe, key, rate, average, stats.size);
@@ -182,19 +189,23 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     }
   }
 
-  private void periodicMonitor() {
-    Map<String, PipeStats> countSum = messagePipe.extractStats();
-    extractAndLog(countSum, RECEIVE_STATS);
-    extractAndLog(countSum, PUBLISH_STATS);
-  }
-
   private void processHandler(Envelope envelope, Class<?> handlerType, Object messageObject) {
     withEnvelopeFor(envelope, messageObject, () -> executeHandler(handlerType, messageObject));
   }
 
   /**
-   * Process a received message bundle.
+   * Process a received message.
    */
+  public void processMessage(Envelope envelope, Object message) {
+    Envelope savedEnvelope = threadEnvelope.get();
+    try {
+      threadEnvelope.set(null);
+      processMessage(makeMessageBundle(envelope, message));
+    } finally {
+      threadEnvelope.set(savedEnvelope);
+    }
+  }
+
   private void processMessage(Bundle bundle) {
     Envelope envelope = Preconditions.checkNotNull(bundle.envelope, "bundle envelope is null");
     Object message = bundle.message;
@@ -202,7 +213,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
       message = new BundleException((String) message, bundle.attributesMap, bundle.payload);
     }
     boolean isException = message instanceof Exception;
-    Class<?> handlerType = isException ? EXCEPTION_CLASS : getMessageClassFor(envelope);
+    Class<?> handlerType = isException ? EXCEPTION_CLASS : getMessageClassFor(envelope, true);
     try {
       handlers.computeIfAbsent(handlerType, key -> {
         notice("Defaulting messages of type/folder " + key.getName());
@@ -221,13 +232,10 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
 
   @Override
   public void activate() {
+    super.activate();
     Consumer<Bundle> processMessage = this::processMessage;
     info(format("%s activating %s with %08x", this, messagePipe, Objects.hash(processMessage)));
     messagePipe.activate(processMessage);
-    if (monitorSec > 0) {
-      monitorExecutor.scheduleAtFixedRate(this::periodicMonitor, monitorSec, monitorSec,
-          TimeUnit.SECONDS);
-    }
   }
 
   @TestOnly
@@ -292,12 +300,12 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
    * Make a new message bundle for the given object, inferring the type and folder from the class
    * itself (using the predefined lookup map).
    */
-  public Bundle makeMessageBundle(Envelope prototype, Object message) {
+  public Bundle makeMessageBundle(Envelope envelope, Object message) {
     if (message instanceof Bundle || message == null) {
       return (Bundle) message;
     }
 
-    Bundle bundle = new Bundle(deepCopy(prototype), message);
+    Bundle bundle = new Bundle(deepCopy(envelope), message);
 
     if (message instanceof Exception || message instanceof String) {
       bundle.envelope.subType = SubType.EVENT;
@@ -333,7 +341,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   @Override
   @SuppressWarnings("unchecked")
   public <T> void registerHandler(Class<T> clazz, Consumer<T> handler) {
-    debug("Registering handler for %s in %s", clazz.getName(), this);
+    debug("Registering handler for %s in %s", clazz.getSimpleName(), this);
     if (handlers.put(clazz, (Consumer<Object>) handler) != null) {
       throw new RuntimeException("Type handler already defined for " + clazz.getName());
     }
@@ -347,7 +355,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   @Override
   public void shutdown() {
     messagePipe.shutdown();
-    monitorExecutor.shutdown();
+    super.shutdown();
   }
 
   public void terminate() {
@@ -356,7 +364,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
 
   @Override
   public String toString() {
-    return format("Dispatcher %08x", Objects.hash(this));
+    return format("dispatcher/%s", containerId);
   }
 
   /**

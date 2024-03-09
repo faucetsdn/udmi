@@ -17,10 +17,11 @@ import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 import udmi.schema.Bucket;
-import udmi.schema.FeatureEnumeration.FeatureStage;
+import udmi.schema.FeatureDiscovery.FeatureStage;
 
 /**
- * Specific tests for gateway functionality.
+ * Specific tests for logical gateway devices. This is not the same as proxied
+ * devices (devices that are proxied through a gateway).
  */
 public class GatewaySequences extends SequenceBase {
 
@@ -33,6 +34,22 @@ public class GatewaySequences extends SequenceBase {
   public void setUp() {
     ifTrueSkipTest(catchToTrue(() -> deviceMetadata.gateway.proxy_ids.isEmpty()), "Not a gateway");
     super.setUp();
+  }
+
+  @Feature(stage = FeatureStage.PREVIEW, bucket = Bucket.GATEWAY)
+  @Summary("Check adequate logging for gateway detach, errors, and reattach")
+  @Test(timeout = NINETY_SECONDS_MS)
+  public void gateway_attach_handling() {
+    ifTrueSkipTest(true, "Not yet implemented");
+    // * Verify that proxied device is sending data.
+    // * Remove proxied device from gateway list
+    // * Verify that proper detach logging occured
+    // * Verify that device is no longer sending data
+    // * Add a bad (random) device to the list of proxied devices
+    // * Check for status and logging of bsad attach request
+    // * Remove bad device, replace with original good device
+    // * Check for proper attach logging, and clear status
+    // * Verify that device is sending data
   }
 
   @Feature(stage = FeatureStage.BETA, bucket = Bucket.GATEWAY, nostate = true)

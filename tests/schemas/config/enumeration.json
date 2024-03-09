@@ -10,7 +10,7 @@
     "enumerate": {
       "families": true,
       "features": true,
-      "uniqs": false
+      "points": false
     }
   }
 }

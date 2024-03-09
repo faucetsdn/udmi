@@ -46,7 +46,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.VisibleForTesting;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
 
@@ -60,12 +59,12 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
   public static final String GCP_HOST = "gcp";
   public static final String PS_TXN_PREFIX = "PS:";
   public static final int MS_PER_SEC = 1000;
-  private List<Subscriber> subscribers;
   private final Publisher publisher;
   private final String projectId;
   private final String topicId;
   private final Set<String> subscriberSet;
-  private AtomicInteger publisherQueueSize = new AtomicInteger();
+  private List<Subscriber> subscribers;
+  private final AtomicInteger publisherQueueSize = new AtomicInteger();
 
   /**
    * Create a new instance based off the configuration.
@@ -87,14 +86,6 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
     } catch (Exception e) {
       throw new RuntimeException("While creating PubSub pipe", e);
     }
-  }
-
-  private void initializeSubscribers() {
-    subscribers = ifNotNullGet(subscriberSet, this::getSubscribers);
-  }
-
-  private List<Subscriber> getSubscribers(Set<String> names) {
-    return names.stream().map(this::getSubscriber).toList();
   }
 
   private static void checkSubscription(ProjectSubscriptionName subscriptionName) {
@@ -132,14 +123,10 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
     return FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel));
   }
 
-  private void checkPublisher() {
-    publish(makeHelloBundle());
-  }
-
   @Override
-  public void activate(Consumer<Bundle> bundleConsumer) {
-    super.activate(bundleConsumer);
-    subscribers.forEach(Subscriber::startAsync);
+  protected double getPublishQueueSize() {
+    // TODO: Ensure parity with actual pubSub publisher queue size.
+    return publisherQueueSize.get() / (double) queueCapacity;
   }
 
   @Override
@@ -162,8 +149,11 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
       ApiFuture<String> publish = publisher.publish(message);
       Thread.sleep(publishDelaySec * MS_PER_SEC);
       String publishedId = publish.get();
-      debug(format("Published PubSub %s/%s to %s as %s", stringMap.get(SUBTYPE_PROPERTY_KEY),
-          stringMap.get(SUBFOLDER_PROPERTY_KEY), topicId, PS_TXN_PREFIX + publishedId));
+      String publishedTransactionId = PS_TXN_PREFIX + publishedId;
+      debug(format("Published PubSub %s/%s to %s as %s/%s %s -> %s",
+          stringMap.get(SUBTYPE_PROPERTY_KEY), stringMap.get(SUBFOLDER_PROPERTY_KEY),
+          topicId, envelope.deviceRegistryId, envelope.deviceId, envelope.transactionId,
+          publishedTransactionId));
     } catch (Exception e) {
       throw new RuntimeException("While publishing bundle to " + publisher.getTopicNameString(), e);
     } finally {
@@ -172,10 +162,32 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
     }
   }
 
+  private void awaitTerminated() {
+    stopAsyncSubscribers().forEach(ApiService::awaitTerminated);
+  }
+
+  private void checkPublisher() {
+    publish(makeHelloBundle());
+  }
+
+  private List<Subscriber> getSubscribers(Set<String> names) {
+    return names.stream().map(this::getSubscriber).toList();
+  }
+
+  private void initializeSubscribers() {
+    subscribers = ifNotNullGet(subscriberSet, this::getSubscribers);
+  }
+
+  private List<ApiService> stopAsyncSubscribers() {
+    List<ApiService> apiServices = subscribers.stream().map(AbstractApiService::stopAsync).toList();
+    subscribers = null;
+    return apiServices;
+  }
+
   @Override
-  protected double getPublishQueueSize() {
-    // TODO: Ensure parity with actual pubSub publisher queue size.
-    return publisherQueueSize.get() / (double) queueCapacity;
+  public void activate(Consumer<Bundle> bundleConsumer) {
+    super.activate(bundleConsumer);
+    subscribers.forEach(Subscriber::startAsync);
   }
 
   @Override
@@ -196,16 +208,6 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
     super.shutdown();
   }
 
-  private List<ApiService> stopAsyncSubscribers() {
-    List<ApiService> apiServices = subscribers.stream().map(AbstractApiService::stopAsync).toList();
-    subscribers = null;
-    return apiServices;
-  }
-
-  private void awaitTerminated() {
-    stopAsyncSubscribers().forEach(ApiService::awaitTerminated);
-  }
-
   Publisher getPublisher(String topicName) {
     try {
       ProjectTopicName projectTopicName = ProjectTopicName.of(projectId, topicName);
@@ -213,7 +215,8 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
       String emu = getEmulatorHost();
       ifNotNullThen(emu, host -> builder.setChannelProvider(getTransportChannelProvider(host)));
       ifNotNullThen(emu, host -> builder.setCredentialsProvider(NoCredentialsProvider.create()));
-      info(format("Publisher %s:%s", Optional.ofNullable(emu).orElse(GCP_HOST), projectTopicName));
+      info(format("Publisher %s to %s:%s", containerId, Optional.ofNullable(emu).orElse(GCP_HOST),
+          projectTopicName));
       return builder.build();
     } catch (Exception e) {
       throw new RuntimeException("While creating publisher", e);

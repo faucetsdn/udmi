@@ -35,10 +35,13 @@ import com.google.bos.udmi.service.messaging.StateUpdate;
 import com.google.bos.udmi.service.messaging.impl.MessageBase;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.BundleException;
+import com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl;
 import com.google.bos.udmi.service.pod.ContainerBase;
+import com.google.bos.udmi.service.pod.SimpleHandler;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.Common;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -54,7 +57,7 @@ import udmi.schema.Envelope.SubType;
 /**
  * Base class for UDMIS components.
  */
-public abstract class ProcessorBase extends ContainerBase {
+public abstract class ProcessorBase extends ContainerBase implements SimpleHandler {
 
   public static final String IOT_ACCESS_COMPONENT = "iot-access";
   private static final String RESET_CONFIG_VALUE = "reset_config";
@@ -62,7 +65,8 @@ public abstract class ProcessorBase extends ContainerBase {
   private static final String EXTRA_FIELD_KEY = "extra_field";
   private static final String BROKEN_CONFIG_JSON =
       format("{ broken by %s == %s", EXTRA_FIELD_KEY, BREAK_CONFIG_VALUE);
-  protected MessageDispatcher dispatcher;
+  protected final MessageDispatcher dispatcher;
+  private final MessageDispatcher sidecar;
   protected IotAccessBase iotAccess;
   private final ImmutableList<HandlerSpecification> baseHandlers = ImmutableList.of(
       messageHandlerFor(Object.class, this::defaultHandler),
@@ -72,17 +76,35 @@ public abstract class ProcessorBase extends ContainerBase {
   String distributorName;
 
   /**
+   * Create a new configured component.
+   */
+  public ProcessorBase(EndpointConfiguration config) {
+    super(config);
+    distributorName = config.distributor;
+    dispatcher = MessageDispatcher.from(config);
+    sidecar = MessageDispatcher.from(makeSidecarConfig(config));
+  }
+
+  /**
    * Create a new instance of the given target class with the provided configuration.
    */
   public static <T extends ProcessorBase> T create(Class<T> clazz, EndpointConfiguration config) {
     try {
-      T object = clazz.getDeclaredConstructor().newInstance();
-      object.dispatcher = MessageDispatcher.from(config);
-      object.distributorName = config.distributor;
-      return object;
+      return clazz.getDeclaredConstructor(EndpointConfiguration.class).newInstance(config);
     } catch (Exception e) {
       throw new RuntimeException("While instantiating class " + clazz.getName(), e);
     }
+  }
+
+  private static EndpointConfiguration makeSidecarConfig(EndpointConfiguration config) {
+    if (config.side_id == null) {
+      return null;
+    }
+    EndpointConfiguration sidecar = deepCopy(config);
+    sidecar.recv_id = null;
+    sidecar.send_id = sidecar.side_id;
+    sidecar.side_id = null;
+    return sidecar;
   }
 
   /**
@@ -115,6 +137,7 @@ public abstract class ProcessorBase extends ContainerBase {
 
   protected void processConfigChange(Envelope envelope, Map<String, Object> payload,
       Date newLastStart) {
+    // TODO: This should really be pushed down to ReflectProcessor, not sure why it's here.
     SubFolder subFolder = envelope.subFolder;
     debug(format("Modifying device config %s/%s/%s %s", envelope.deviceRegistryId,
         envelope.deviceId, subFolder, envelope.transactionId));
@@ -183,9 +206,27 @@ public abstract class ProcessorBase extends ContainerBase {
   }
 
   /**
-   * Register component specific handlers. Should be overridden by subclass to change behaviors.
+   * Register component specific handlers. Default implementation will scan methods for the
+   * `@ProcessMessage` annotation.
    */
   protected void registerHandlers() {
+    Arrays.stream(getClass().getMethods()).forEach(method -> {
+      DispatchHandler annotation = method.getAnnotation(DispatchHandler.class);
+      if (annotation != null) {
+        Class<?>[] parameterTypes = method.getParameterTypes();
+        checkState(parameterTypes.length == 1,
+            "dispatch handlers should have exactly one argument");
+        Class<?> messageType = parameterTypes[0];
+        dispatcher.registerHandler(messageType, message -> {
+          try {
+            method.invoke(this, messageType.cast(message));
+          } catch (Exception e) {
+            throw new RuntimeException(
+                "While invoking message annotation on " + getClass().getSimpleName(), e);
+          }
+        });
+      }
+    });
   }
 
   /**
@@ -193,6 +234,11 @@ public abstract class ProcessorBase extends ContainerBase {
    */
   protected void registerHandlers(Collection<HandlerSpecification> messageHandlers) {
     dispatcher.registerHandlers(messageHandlers);
+  }
+
+  protected void sideProcess(Envelope envelope, Object message) {
+    ifNotNullThen(sidecar, car -> car.withEnvelope(envelope).publish(message),
+        () -> processMessage(envelope, message));
   }
 
   private void mungeConfigDebug(Envelope attributes, Object lastConfig, String reason) {
@@ -290,7 +336,7 @@ public abstract class ProcessorBase extends ContainerBase {
    * Activate this component.
    */
   public void activate() {
-    info("Activating");
+    super.activate();
     iotAccess = UdmiServicePod.getComponent(IOT_ACCESS_COMPONENT);
     distributor = UdmiServicePod.maybeGetComponent(distributorName);
     if (dispatcher != null) {
@@ -302,6 +348,11 @@ public abstract class ProcessorBase extends ContainerBase {
 
   public int getMessageCount(Class<?> clazz) {
     return dispatcher.getHandlerCount(clazz);
+  }
+
+  @Override
+  public void processMessage(Envelope envelope, Object message) {
+    ((MessageDispatcherImpl) dispatcher).processMessage(envelope, message);
   }
 
   /**
@@ -333,12 +384,19 @@ public abstract class ProcessorBase extends ContainerBase {
     public String data;
   }
 
-  <T> void registerHandler(Class<T> clazz, Consumer<T> handler) {
-    dispatcher.registerHandler(clazz, handler);
+  void publish(Envelope attributes, Object message) {
+    dispatcher.withEnvelope(attributes).publish(message);
   }
 
+  /**
+   * Publish a message (using the internal dispatcher).
+   */
   void publish(Object message) {
     dispatcher.publish(message);
+  }
+
+  <T> void registerHandler(Class<T> clazz, Consumer<T> handler) {
+    dispatcher.registerHandler(clazz, handler);
   }
 
   MessageContinuation getContinuation(Object message) {

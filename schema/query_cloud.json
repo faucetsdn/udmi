@@ -1,0 +1,32 @@
+{
+  "$udmi_version": "1.5.0",
+  "title": "Cloud Query",
+  "description": "Information specific to how the device communicates with the cloud.",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "examples": ["2019-01-17T14:02:29.364Z"]
+    },
+    "version": {
+      "description": "Version of the UDMI schema",
+      "type": "string"
+    },
+    "generation": {
+      "description": "generational marker for this query",
+      "type": "string",
+      "format": "date-time",
+      "examples": ["2019-01-17T14:02:29.364Z"]
+    },
+    "depth": {
+      "enum": [
+        "registries",
+        "devices",
+        "details"
+      ]
+    }
+  }
+}

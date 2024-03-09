@@ -21,9 +21,11 @@ import com.fasterxml.jackson.annotation.JsonValue;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "name",
     "protocol",
     "transport",
     "hostname",
+    "payload",
     "error",
     "port",
     "config_sync_sec",
@@ -31,9 +33,10 @@ import com.fasterxml.jackson.annotation.JsonValue;
     "msg_prefix",
     "recv_id",
     "send_id",
+    "side_id",
     "capacity",
     "publish_delay_sec",
-    "monitor_sec",
+    "periodic_sec",
     "distributor",
     "auth_provider",
     "generation"
@@ -41,6 +44,13 @@ import com.fasterxml.jackson.annotation.JsonValue;
 @Generated("jsonschema2pojo")
 public class EndpointConfiguration {
 
+    /**
+     * Friendly name for this flow (debugging and diagnostics)
+     * 
+     */
+    @JsonProperty("name")
+    @JsonPropertyDescription("Friendly name for this flow (debugging and diagnostics)")
+    public String name;
     /**
      * 
      * (Required)
@@ -58,6 +68,13 @@ public class EndpointConfiguration {
     @JsonProperty("hostname")
     public String hostname;
     /**
+     * Simple payload template for simple injection use cases
+     * 
+     */
+    @JsonProperty("payload")
+    @JsonPropertyDescription("Simple payload template for simple injection use cases")
+    public String payload;
+    /**
      * Error message container for capturing errors during parsing/handling
      * 
      */
@@ -65,7 +82,7 @@ public class EndpointConfiguration {
     @JsonPropertyDescription("Error message container for capturing errors during parsing/handling")
     public String error;
     @JsonProperty("port")
-    public Integer port = 8883;
+    public Integer port;
     /**
      * Delay waiting for config message on start, 0 for default, <0 to disable
      * 
@@ -102,6 +119,13 @@ public class EndpointConfiguration {
     @JsonPropertyDescription("Id for the sending messages channel")
     public String send_id;
     /**
+     * Id for a side-car message channel
+     * 
+     */
+    @JsonProperty("side_id")
+    @JsonPropertyDescription("Id for a side-car message channel")
+    public String side_id;
+    /**
      * Queue capacity for limiting pipes
      * 
      */
@@ -116,12 +140,12 @@ public class EndpointConfiguration {
     @JsonPropertyDescription("Artifical publish delay for testing")
     public Integer publish_delay_sec;
     /**
-     * Period for monitoring sampling
+     * Rate for periodic task execution
      * 
      */
-    @JsonProperty("monitor_sec")
-    @JsonPropertyDescription("Period for monitoring sampling")
-    public Integer monitor_sec;
+    @JsonProperty("periodic_sec")
+    @JsonPropertyDescription("Rate for periodic task execution")
+    public Integer periodic_sec;
     /**
      * processor designation for a distributor channel
      * 
@@ -143,7 +167,7 @@ public class EndpointConfiguration {
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.generation == null)? 0 :this.generation.hashCode()));
-        result = ((result* 31)+((this.monitor_sec == null)? 0 :this.monitor_sec.hashCode()));
+        result = ((result* 31)+((this.side_id == null)? 0 :this.side_id.hashCode()));
         result = ((result* 31)+((this.transport == null)? 0 :this.transport.hashCode()));
         result = ((result* 31)+((this.publish_delay_sec == null)? 0 :this.publish_delay_sec.hashCode()));
         result = ((result* 31)+((this.error == null)? 0 :this.error.hashCode()));
@@ -155,7 +179,10 @@ public class EndpointConfiguration {
         result = ((result* 31)+((this.send_id == null)? 0 :this.send_id.hashCode()));
         result = ((result* 31)+((this.protocol == null)? 0 :this.protocol.hashCode()));
         result = ((result* 31)+((this.hostname == null)? 0 :this.hostname.hashCode()));
+        result = ((result* 31)+((this.payload == null)? 0 :this.payload.hashCode()));
         result = ((result* 31)+((this.port == null)? 0 :this.port.hashCode()));
+        result = ((result* 31)+((this.name == null)? 0 :this.name.hashCode()));
+        result = ((result* 31)+((this.periodic_sec == null)? 0 :this.periodic_sec.hashCode()));
         result = ((result* 31)+((this.recv_id == null)? 0 :this.recv_id.hashCode()));
         result = ((result* 31)+((this.auth_provider == null)? 0 :this.auth_provider.hashCode()));
         return result;
@@ -170,7 +197,7 @@ public class EndpointConfiguration {
             return false;
         }
         EndpointConfiguration rhs = ((EndpointConfiguration) other);
-        return (((((((((((((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.monitor_sec == rhs.monitor_sec)||((this.monitor_sec!= null)&&this.monitor_sec.equals(rhs.monitor_sec))))&&((this.transport == rhs.transport)||((this.transport!= null)&&this.transport.equals(rhs.transport))))&&((this.publish_delay_sec == rhs.publish_delay_sec)||((this.publish_delay_sec!= null)&&this.publish_delay_sec.equals(rhs.publish_delay_sec))))&&((this.error == rhs.error)||((this.error!= null)&&this.error.equals(rhs.error))))&&((this.config_sync_sec == rhs.config_sync_sec)||((this.config_sync_sec!= null)&&this.config_sync_sec.equals(rhs.config_sync_sec))))&&((this.distributor == rhs.distributor)||((this.distributor!= null)&&this.distributor.equals(rhs.distributor))))&&((this.client_id == rhs.client_id)||((this.client_id!= null)&&this.client_id.equals(rhs.client_id))))&&((this.capacity == rhs.capacity)||((this.capacity!= null)&&this.capacity.equals(rhs.capacity))))&&((this.msg_prefix == rhs.msg_prefix)||((this.msg_prefix!= null)&&this.msg_prefix.equals(rhs.msg_prefix))))&&((this.send_id == rhs.send_id)||((this.send_id!= null)&&this.send_id.equals(rhs.send_id))))&&((this.protocol == rhs.protocol)||((this.protocol!= null)&&this.protocol.equals(rhs.protocol))))&&((this.hostname == rhs.hostname)||((this.hostname!= null)&&this.hostname.equals(rhs.hostname))))&&((this.port == rhs.port)||((this.port!= null)&&this.port.equals(rhs.port))))&&((this.recv_id == rhs.recv_id)||((this.recv_id!= null)&&this.recv_id.equals(rhs.recv_id))))&&((this.auth_provider == rhs.auth_provider)||((this.auth_provider!= null)&&this.auth_provider.equals(rhs.auth_provider))));
+        return ((((((((((((((((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.side_id == rhs.side_id)||((this.side_id!= null)&&this.side_id.equals(rhs.side_id))))&&((this.transport == rhs.transport)||((this.transport!= null)&&this.transport.equals(rhs.transport))))&&((this.publish_delay_sec == rhs.publish_delay_sec)||((this.publish_delay_sec!= null)&&this.publish_delay_sec.equals(rhs.publish_delay_sec))))&&((this.error == rhs.error)||((this.error!= null)&&this.error.equals(rhs.error))))&&((this.config_sync_sec == rhs.config_sync_sec)||((this.config_sync_sec!= null)&&this.config_sync_sec.equals(rhs.config_sync_sec))))&&((this.distributor == rhs.distributor)||((this.distributor!= null)&&this.distributor.equals(rhs.distributor))))&&((this.client_id == rhs.client_id)||((this.client_id!= null)&&this.client_id.equals(rhs.client_id))))&&((this.capacity == rhs.capacity)||((this.capacity!= null)&&this.capacity.equals(rhs.capacity))))&&((this.msg_prefix == rhs.msg_prefix)||((this.msg_prefix!= null)&&this.msg_prefix.equals(rhs.msg_prefix))))&&((this.send_id == rhs.send_id)||((this.send_id!= null)&&this.send_id.equals(rhs.send_id))))&&((this.protocol == rhs.protocol)||((this.protocol!= null)&&this.protocol.equals(rhs.protocol))))&&((this.hostname == rhs.hostname)||((this.hostname!= null)&&this.hostname.equals(rhs.hostname))))&&((this.payload == rhs.payload)||((this.payload!= null)&&this.payload.equals(rhs.payload))))&&((this.port == rhs.port)||((this.port!= null)&&this.port.equals(rhs.port))))&&((this.name == rhs.name)||((this.name!= null)&&this.name.equals(rhs.name))))&&((this.periodic_sec == rhs.periodic_sec)||((this.periodic_sec!= null)&&this.periodic_sec.equals(rhs.periodic_sec))))&&((this.recv_id == rhs.recv_id)||((this.recv_id!= null)&&this.recv_id.equals(rhs.recv_id))))&&((this.auth_provider == rhs.auth_provider)||((this.auth_provider!= null)&&this.auth_provider.equals(rhs.auth_provider))));
     }
 
     @Generated("jsonschema2pojo")

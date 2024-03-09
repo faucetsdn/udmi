@@ -10,8 +10,11 @@ import static com.google.daq.mqtt.registrar.Registrar.NORMALIZED_JSON;
 import static com.google.daq.mqtt.util.ConfigGenerator.configFrom;
 import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_STRICT;
+import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.compressJsonString;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.writeString;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
@@ -41,7 +44,6 @@ import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.MessageDowngrader;
 import com.google.udmi.util.MessageUpgrader;
-import com.google.udmi.util.SchemaVersion;
 import com.google.udmi.util.SiteModel;
 import com.google.udmi.util.SiteModel.MetadataException;
 import java.io.File;
@@ -114,7 +116,7 @@ class LocalDevice {
           ES_AUTH_TYPE, ES_PRIVATE_PKCS8,
           ES_CERT_TYPE, ES_PRIVATE_PKCS8);
   private static final String SAMPLES_DIR = "samples";
-  private static final String AUX_DIR = "aux";
+  private static final String ADJUNCT_DIR = "adjunct";
   private static final String OUT_DIR = "out";
   private static final String EXPECTED_DIR = "expected";
   private static final String EXCEPTION_LOG_FILE = "exceptions.txt";
@@ -146,7 +148,7 @@ class LocalDevice {
           ES2_PUBLIC_PEM,
           ES3_PUBLIC_PEM,
           SAMPLES_DIR,
-          AUX_DIR,
+          ADJUNCT_DIR,
           EXPECTED_DIR,
           OUT_DIR);
   private static final String GENERATED_CONFIG_JSON = ConfigGenerator.GENERATED_CONFIG_JSON;
@@ -293,7 +295,11 @@ class LocalDevice {
     } catch (ProcessingException | ValidationException e) {
       exceptionMap.put(EXCEPTION_VALIDATING, e);
     }
-    return JsonUtil.convertTo(Metadata.class, mergedMetadata);
+    Metadata converted = JsonUtil.convertTo(Metadata.class, mergedMetadata);
+    List<String> proxyIds = catchToNull(() -> converted.gateway.proxy_ids);
+    ifNotNullThen(proxyIds,
+        ids -> ifTrueThen(ids.isEmpty(), () -> converted.gateway.proxy_ids = null));
+    return converted;
   }
 
   JsonNode getMergedMetadata(JsonNode instance) {
@@ -367,7 +373,7 @@ class LocalDevice {
       if (metadata == null) {
         return;
       }
-      if (hasGateway() && hasAuthType()) {
+      if (isProxied() && hasAuthType()) {
         throw new RuntimeException("Proxied devices should not have cloud.auth_type defined");
       }
       if (!isDirectConnect()) {
@@ -452,12 +458,12 @@ class LocalDevice {
     return config.isGateway();
   }
 
-  boolean hasGateway() {
-    return config.hasGateway();
+  boolean isProxied() {
+    return config.isProxied();
   }
 
   boolean isDirectConnect() {
-    return isGateway() || !hasGateway();
+    return isGateway() || !isProxied();
   }
 
   CloudDeviceSettings getSettings() {
@@ -491,12 +497,12 @@ class LocalDevice {
     setLastActive(device.last_event_time);
   }
 
-  private void setLastActive(Date lastEventTime) {
-    this.lastActive = lastEventTime;
-  }
-
   public String getLastActive() {
     return JsonUtil.isoConvert(lastActive);
+  }
+
+  private void setLastActive(Date lastEventTime) {
+    this.lastActive = lastEventTime;
   }
 
   public byte[] getKeyBytes() {
@@ -666,6 +672,7 @@ class LocalDevice {
     String config = getSettings().config;
     if (config != null) {
       File configFile = new File(outDir, GENERATED_CONFIG_JSON);
+      configFile.delete();
       try (OutputStream outputStream = Files.newOutputStream(configFile.toPath())) {
         outputStream.write(config.getBytes());
       } catch (Exception e) {
@@ -683,6 +690,12 @@ class LocalDevice {
     return checkNotNull(getDeviceNumIdRaw(), "deviceNumId not set");
   }
 
+  public void setDeviceNumId(String numId) {
+    checkState(deviceNumId == null || deviceNumId.equals(numId),
+        format("deviceNumId %s != %s", numId, deviceNumId));
+    deviceNumId = numId;
+  }
+
   public String getDeviceNumIdRaw() {
     return deviceNumId;
   }
@@ -698,12 +711,6 @@ class LocalDevice {
       return DeviceStatus.CLEAN;
     }
     return DeviceStatus.ERRORS;
-  }
-
-  public void setDeviceNumId(String numId) {
-    checkState(deviceNumId == null || deviceNumId.equals(numId),
-        format("deviceNumId %s != %s", numId, deviceNumId));
-    deviceNumId = numId;
   }
 
   public void captureError(String exceptionType, Exception exception) {

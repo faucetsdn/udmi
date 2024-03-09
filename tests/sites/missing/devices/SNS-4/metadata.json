@@ -2,9 +2,11 @@
   "pointset": {
     "points": {
       "triangulating_axis": {
+        "ref": "anything-goes!",
         "units": "Degrees-phase"
       },
       "split_threshold": {
+        "ref": "vendor-ref can be anything",
         "units": "Imperial-gallons-per-minute"
       }
     }
@@ -22,7 +24,17 @@
     }
   },
   "gateway": {
-    "gateway_id": "GAT-123"
+    "gateway_id": "GAT-123",
+    "target": {
+      "family": "vendor"
+    }
+  },
+  "localnet": {
+    "families": {
+      "vendor": {
+        "addr": "whatEVERyouWANT!!!#!#!"
+      }
+    }
   },
   "version": 1,
   "timestamp": "2020-05-01T13:39:07Z",

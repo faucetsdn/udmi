@@ -7,7 +7,7 @@
 
 ## Messages
 * [**config**](config.html) - The config block controls a device's intended behavior. [Config Documentation](../../docs/messages/config.md)
-* [**event_discovery**](event_discovery.html) - [Discovery result](../../docs/specs/discovery.md) with implicit enumeration
+* [**event_discovery**](event_discovery.html) - [Discovery result](../../docs/specs/discovery.md) with implicit discovery
 * [**event_pointset**](event_pointset.html) - A set of points reporting telemetry data. [Pointset Event Documentation](../../docs/messages/pointset.md#telemetry)
 * [**event_system**](event_system.html) - Used for system events such as logging. [System Event Documentation](../../docs/messages/system.md#event)
 * [**state**](state.html) - [State](../../docs/messages/state.md) message, defined by [`state.json`]
@@ -25,12 +25,14 @@
 * [**configuration_execution**](configuration_execution.html) - Parameters for configuring the execution run of a UDMI tool
 * [**configuration_pod**](configuration_pod.html) - Parameters for configuring the execution run of a UDMIS pod
 * [**configuration_pubber**](configuration_pubber.html) - Parameters to define a pubber runtime instance
+* [**data_template**](data_template.html) - Information container for simple template substitution.
 * [**event**](event.html) - Container object for all event schemas, not directly used.
 * [**event_mapping**](event_mapping.html) - [Mapping result](../../docs/specs/mapping.md) with implicit enumeration
 * [**event_validation**](event_validation.html) - Validation device result
 * [**monitoring**](monitoring.html) - Output from UDMIS monitoring
 * [**persistent_device**](persistent_device.html) - Device persistent data
 * [**properties**](properties.html)
+* [**query_cloud**](query_cloud.html) - Information specific to how the device communicates with the cloud.
 * [**state_mapping**](state_mapping.html) - State for [mapping](../../docs/specs/mapping.md)
 * [**state_udmi**](state_udmi.html) - State of a UDMI reflector client
 * [**state_validation**](state_validation.html) - Validation state summary

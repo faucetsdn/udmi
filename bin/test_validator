@@ -1,8 +1,5 @@
 #!/bin/bash -e
 
-# Force consistent sort order
-export LC_ALL=C
-
 UDMI_ROOT=$(realpath $(dirname $0)/..)
 cd $UDMI_ROOT
 
@@ -128,10 +125,7 @@ echo Out files for GAT-123:
 (cd $site_path/out/devices/GAT-123; ls -lrt *.out) || true
 
 outfiles=`find $site_path/out/devices -name \*.out | sort` || true
-if [[ -z $outfiles ]]; then
-    echo No .out files found in $site_path/out/devices
-    false
-fi
+[[ -n $outfiles ]] || fail No .out files found in $site_path/out/devices
 
 echo Pre-REDACTED output available in $VALIDATOR_OUT.raw
 more $outfiles > $VALIDATOR_OUT.raw

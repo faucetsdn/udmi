@@ -17,15 +17,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/setup-java@v3
+      - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.10'
       - name: Checkout source
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: start and test local servers
         run: |
           bin/setup_base
@@ -43,7 +43,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 1
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Check Spelling
         uses: rojopolis/spellcheck-github-actions@0.35.0
         with:
@@ -55,8 +55,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20.9.0
       - name: Install Angular CLI
@@ -82,11 +82,11 @@ jobs:
       IMAGE_NAME: ${{ github.repository }}
       GITHUB_REF: ${{ github.ref }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           fetch-tags: true
-      - uses: actions/setup-java@v3
+      - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
@@ -96,7 +96,7 @@ jobs:
           [[ -n $TARGET_PROJECT ]]
       - name: Log in to the github registry
         if: ${{ github.event_name == 'push' }}
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           registry: ${{ env.PUSH_REGISTRY }}
           username: ${{ github.actor }}
@@ -113,7 +113,7 @@ jobs:
           echo Pushing built container as $PUSH_TAG | tee -a $GITHUB_STEP_SUMMARY
       - name: Build and push docker image
         if: ${{ github.event_name == 'push' }}
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           file: udmis/Dockerfile.udmis
           context: udmis
@@ -142,8 +142,8 @@ jobs:
       MATRIX_SHARD_COUNT: 10
       MATRIX_SHARD_INDEX: ${{ matrix.shard }}
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-java@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
@@ -177,11 +177,11 @@ jobs:
         run: |
           bin/support ${{ github.repository_owner }}_${{ github.job }}_
           tar -tzvf *udmi-support*.tgz
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
           if-no-files-found: error
-          name: udmi-support_${{ github.run_id }}
+          name: udmi-support_${{ github.run_id }}-${{ matrix.shard }}
           path: '*_udmi-support_*.tgz'
 
   baseline:
@@ -194,8 +194,8 @@ jobs:
       TARGET_PROJECT: ${{ vars.TARGET_PROJECT }}
       UDMI_ALT_REGISTRY: ZZ-REDIRECT-NA
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-java@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
@@ -221,11 +221,11 @@ jobs:
       - name: support bundle
         if: ${{ !cancelled() }}
         run: UDMI_REGISTRY_SUFFIX=_b bin/support ${{ github.repository_owner }}_${{ github.job }}_
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
           if-no-files-found: error
-          name: udmi-support_${{ github.run_id }}
+          name: udmi-support_${{ github.run_id }}-b
           path: '*_udmi-support_*.tgz'
 
   redirect:
@@ -239,8 +239,8 @@ jobs:
       UDMI_ALT_REGISTRY: ZZ-REDIRECT-NA
       MQTT_PROXY_HOST: ${{ vars.MQTT_PROXY_HOST }}
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-java@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
@@ -257,11 +257,11 @@ jobs:
       - name: support bundle
         if: ${{ !cancelled() }}
         run: UDMI_REGISTRY_SUFFIX=_r bin/support ${{ github.repository_owner }}_${{ github.job }}_
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
           if-no-files-found: error
-          name: udmi-support_${{ github.run_id }}
+          name: udmi-support_${{ github.run_id }}-r
           path: '*_udmi-support_*.tgz'
 
   posttest:
@@ -274,14 +274,24 @@ jobs:
       TARGET_PROJECT: ${{ vars.TARGET_PROJECT }}
       UDMI_ALT_REGISTRY: ZZ-REDIRECT-NA
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.10'
       - name: Base setup
         run: bin/setup_base
-      - name: Download all workflow run artifacts
-        uses: actions/download-artifact@v3
+      - name: Download all sharded support packages
+        uses: actions/download-artifact@v4
+        with:
+          path: udmi-support_${{ github.run_id }}
+          pattern: udmi-support_${{ github.run_id }}-*
+          merge-multiple: true
+      - name: Upload merged support package
+        uses: actions/upload-artifact@v4
+        with:
+          if-no-files-found: error
+          name: udmi-support_${{ github.run_id }}
+          path: 'udmi-support_${{ github.run_id }}/*_udmi-support_*.tgz'
       - name: Processing support package
         run: bin/support_process udmi-support_*
       - name: Test run index

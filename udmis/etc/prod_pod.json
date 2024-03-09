@@ -6,10 +6,27 @@
   "flow_defaults": {
     "protocol": "pubsub",
     "hostname": "${GCP_PROJECT}",
-    "monitor_sec": 60,
+    "periodic_sec": 60,
     "publish_delay_sec": 0,
     "capacity": null,
     "distributor": "stately"
+  },
+  "crons": {
+    "heartbeat": {
+      "periodic_sec": 10
+    },
+    "reglist": {
+      "periodic_sec": 3600,
+      "payload": "query/cloud:{\"generation\":\"{{timestamp}}\", \"depth\":\"registries\"}",
+      "send_id": "${UDMI_PREFIX}udmi_control",
+      "generation": "2024-03-06T00:00:00Z"
+    },
+    "regdive": {
+      "periodic_sec": 86400,
+      "payload": "query/cloud:{\"generation\":\"{{timestamp}}\", \"depth\":\"devices\"}",
+      "send_id": "${UDMI_PREFIX}udmi_control",
+      "generation": "2024-03-06T00:15:00Z"
+    }
   },
   "flows": {
     "target": {
@@ -22,6 +39,11 @@
     "reflect": {
       "recv_id": "${UDMI_PREFIX}udmi_reflect-udmis",
       "send_id": "${UDMI_PREFIX}udmi_target"
+    },
+    "control": {
+      "recv_id": "${UDMI_PREFIX}udmi_control-udmis",
+      "send_id": "${UDMI_PREFIX}udmi_target",
+      "side_id": "${UDMI_PREFIX}udmi_control"
     }
   },
   "iot_access": {

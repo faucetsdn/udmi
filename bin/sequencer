@@ -11,6 +11,8 @@ OUT_DIR=$UDMI_ROOT/out
 mkdir -p $OUT_DIR
 echo $(date --utc +%Y%m%d-%H%M%S) $0 $@ >> $OUT_DIR/cmd_history.log
 
+JARFILE=validator/build/libs/validator-1.0-SNAPSHOT-all.jar
+JAVA_CMD="java -cp $JARFILE com.google.daq.mqtt.sequencer.SequenceRunner"
 SEQUENCER_LOG=$OUT_DIR/sequencer.log
 SEQUENCER_OUT=$OUT_DIR/sequencer.out
 SCHEMA_OUT=$OUT_DIR/schema.out
@@ -19,10 +21,15 @@ log_level=INFO
 min_stage=PREVIEW
 export UDMI_VERSION=$udmi_version
 
-# For cross-env sort stability
-export LC_ALL=C
-
 rm -f $SEQUENCER_LOG $SEQUENCER_OUT $SCHEMA_OUT
+
+# Shortcut to run sequencer with a fixed config and cmd-line tests.
+# TODO: Make this a better (more standard) command line format in-line with other tools.
+if [[ $1 == -- ]]; then
+    shift
+    $JAVA_CMD $@
+    exit 0
+fi
 
 while [[ $1 =~ ^- ]]; do
     if [[ $1 == '-a' ]]; then
@@ -158,8 +165,6 @@ cat $SEQUENCER_CONFIG
 
 validator/bin/build
 
-JARFILE=validator/build/libs/validator-1.0-SNAPSHOT-all.jar
-JAVA_CMD="java -cp $JARFILE com.google.daq.mqtt.sequencer.SequenceRunner"
 echo $JAVA_CMD $test_names
 result=0
 $JAVA_CMD $test_names 2>&1 | tee $SEQUENCER_LOG

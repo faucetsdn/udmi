@@ -18,6 +18,7 @@ import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.Common.UPDATE_QUERY_TOPIC;
+import static com.google.udmi.util.Common.getExceptionMessage;
 import static com.google.udmi.util.Common.getNamespacePrefix;
 import static com.google.udmi.util.Common.removeNextArg;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
@@ -88,6 +89,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import org.apache.commons.io.FileUtils;
@@ -113,14 +115,11 @@ import udmi.schema.ValidationSummary;
  */
 public class Validator {
 
-  public static final int REQUIRED_FUNCTION_VER = 11;
-  public static final String CONFIG_PREFIX = "config_";
-  public static final String STATE_PREFIX = "state_";
+  public static final int REQUIRED_FUNCTION_VER = 12;
   public static final String PROJECT_PROVIDER_PREFIX = "//";
   public static final String TIMESTAMP_ZULU_SUFFIX = "Z";
   public static final String TIMESTAMP_UTC_SUFFIX_1 = "+00:00";
   public static final String TIMESTAMP_UTC_SUFFIX_2 = "+0000";
-  private static final String ERROR_FORMAT_INDENT = "  ";
   private static final String SCHEMA_VALIDATION_FORMAT = "Validating %d schemas";
   private static final String TARGET_VALIDATION_FORMAT = "Validating %d files against %s";
   private static final String DEVICE_FILE_FORMAT = "devices/%s";
@@ -163,6 +162,7 @@ public class Validator {
   private final Map<String, AtomicInteger> deviceMessageIndex = new HashMap<>();
   private final List<MessagePublisher> dataSinks = new ArrayList<>();
   private final Set<String> targetDevices;
+  private final LoggingHandler outputLogger;
   private ImmutableSet<String> expectedDevices;
   private File outBaseDir;
   private File schemaRoot;
@@ -178,7 +178,8 @@ public class Validator {
   /**
    * Create a simplistic validator for encapsulated use.
    */
-  public Validator(ExecutionConfiguration validatorConfig) {
+  public Validator(ExecutionConfiguration validatorConfig, BiConsumer<Level, String> logger) {
+    outputLogger = new LoggingHandler(logger);
     config = validatorConfig;
     setSchemaSpec("schema");
     client = new NullPublisher();
@@ -191,6 +192,7 @@ public class Validator {
    * @param argList Argument list
    */
   public Validator(List<String> argList) {
+    outputLogger = new LoggingHandler();
     List<String> listCopy = new ArrayList<>(argList);
     parseArgs(listCopy);
 
@@ -322,7 +324,7 @@ public class Validator {
     String updateTopic = parts.length > 1 ? parts[1] : cloudIotManager.getUpdateTopic();
     client = new PubSubClient(config.project_id, registryId, instName, updateTopic);
     if (updateTopic == null) {
-      System.err.println("Not sending to update topic because PubSub update_topic not defined");
+      outputLogger.warn("Not sending to update topic because PubSub update_topic not defined");
     } else {
       dataSinks.add(client);
     }
@@ -389,7 +391,7 @@ public class Validator {
 
   private void setMessageTraceDir(String writeDirArg) {
     traceDir = new File(writeDirArg);
-    System.err.println("Tracing message capture to " + traceDir.getAbsolutePath());
+    outputLogger.info("Tracing message capture to " + traceDir.getAbsolutePath());
     if (traceDir.exists()) {
       throw new RuntimeException("Trace directory already exists " + traceDir.getAbsolutePath());
     }
@@ -407,12 +409,12 @@ public class Validator {
           Metadata metadata = SiteModel.loadDeviceMetadata(siteDir, device, Validator.class);
           reportingDevice.setMetadata(metadata);
         } catch (Exception e) {
-          System.err.printf("Error while loading device %s: %s%n", device, e);
+          outputLogger.error("Error while loading device %s: %s", device, e);
           reportingDevice.addError(e, Category.VALIDATION_DEVICE_SCHEMA, "loading device");
         }
         reportingDevices.put(device, reportingDevice);
       }
-      System.err.println("Loaded " + reportingDevices.size() + " expected devices");
+      outputLogger.info("Loaded " + reportingDevices.size() + " expected devices");
     } catch (Exception e) {
       throw new RuntimeException(
           "While loading devices directory " + devicesDir.getAbsolutePath(), e);
@@ -467,7 +469,7 @@ public class Validator {
 
   private void validateReflector() {
     String keyFile = new File(config.site_model, GCP_REFLECT_KEY_PKCS8).getAbsolutePath();
-    System.err.println("Loading reflector key file from " + keyFile);
+    outputLogger.info("Loading reflector key file from " + keyFile);
     config.key_file = keyFile;
     client = new IotReflectorClient(config, REQUIRED_FUNCTION_VER);
   }
@@ -477,8 +479,8 @@ public class Validator {
       return;
     }
     sendInitializationQuery();
-    System.err.println("Running udmi tools version " + UDMI_TOOLS);
-    System.err.println("Entering message loop on " + client.getSubscriptionId());
+    outputLogger.info("Running udmi tools version " + UDMI_TOOLS);
+    outputLogger.debug("Entering message loop on " + client.getSubscriptionId());
     processValidationReport();
     ScheduledFuture<?> reportSender =
         simulatedMessages ? null : executor.scheduleAtFixedRate(this::processValidationReport,
@@ -492,7 +494,7 @@ public class Validator {
         }
       }
     } finally {
-      System.err.println("Message loop complete");
+      outputLogger.debug("Message loop complete");
       if (reportSender != null) {
         reportSender.cancel(true);
       }
@@ -501,7 +503,7 @@ public class Validator {
 
   private void sendInitializationQuery() {
     for (String deviceId : targetDevices) {
-      System.err.println("Sending initialization query messages for device " + deviceId);
+      outputLogger.debug("Sending initialization query messages for device " + deviceId);
       client.publish(deviceId, UPDATE_QUERY_TOPIC, EMPTY_MESSAGE);
     }
   }
@@ -566,9 +568,8 @@ public class Validator {
         return null;
       }
 
-      System.err.printf(
-          "Processing device #%d/%d: %s/%s%n",
-          processedDevices.size(), reportingDevices.size(), deviceId, schemaName);
+      outputLogger.info("Processing device #%d/%d: %s/%s", processedDevices.size(),
+          reportingDevices.size(), deviceId, schemaName);
 
       if ("true".equals(attributes.get("wasBase64"))) {
         base64Devices.add(deviceId);
@@ -578,10 +579,10 @@ public class Validator {
       validateDeviceMessage(device, message, attributes);
 
       if (!device.hasErrors()) {
-        System.err.printf("Validation clean %s/%s%n", deviceId, schemaName);
+        outputLogger.info("Validation clean %s/%s", deviceId, schemaName);
       }
     } catch (Exception e) {
-      System.err.printf("Error processing %s: %s%n", deviceId, friendlyStackTrace(e));
+      outputLogger.error("Error processing %s: %s", deviceId, friendlyStackTrace(e));
       device.addError(e, attributes, Category.VALIDATION_DEVICE_RECEIVE);
     }
     return device;
@@ -597,15 +598,14 @@ public class Validator {
     String schemaName = messageSchema(attributes);
 
     if (message.get(EXCEPTION_KEY) instanceof Exception exception) {
-      System.err.println(
-          "Pipeline exception " + deviceId + ": " + Common.getExceptionMessage(exception));
+      outputLogger.error("Pipeline exception " + deviceId + ": " + getExceptionMessage(exception));
       device.addError(exception, attributes, Category.VALIDATION_DEVICE_RECEIVE);
       return;
     }
 
     if (message.containsKey(ERROR_KEY)) {
       String error = (String) message.get(ERROR_KEY);
-      System.err.println("Pipeline error " + deviceId + ": " + error);
+      outputLogger.error("Pipeline error " + deviceId + ": " + error);
       IllegalArgumentException exception = new IllegalArgumentException(
           "Error in message pipeline: " + error);
       device.addError(exception, attributes, Category.VALIDATION_DEVICE_RECEIVE);
@@ -646,7 +646,7 @@ public class Validator {
         }
       }
     } catch (Exception e) {
-      System.err.println("Timestamp validation error: " + friendlyStackTrace(e));
+      outputLogger.error("Timestamp validation error: " + friendlyStackTrace(e));
       device.addError(e, attributes, Category.VALIDATION_DEVICE_CONTENT);
     }
 
@@ -655,14 +655,14 @@ public class Validator {
         throw new IllegalArgumentException(format(SCHEMA_SKIP_FORMAT, schemaName, deviceId));
       }
     } catch (Exception e) {
-      System.err.println("Missing schema entry " + schemaName);
+      outputLogger.error("Missing schema entry " + schemaName);
       device.addError(e, attributes, Category.VALIDATION_DEVICE_RECEIVE);
     }
 
     try {
       validateMessage(schemaMap.get(ENVELOPE_SCHEMA_ID), attributes);
     } catch (Exception e) {
-      System.err.println("Error validating attributes: " + friendlyStackTrace(e));
+      outputLogger.error("Error validating attributes: " + friendlyStackTrace(e));
       device.addError(e, attributes, Category.VALIDATION_DEVICE_RECEIVE);
     }
 
@@ -670,8 +670,7 @@ public class Validator {
       try {
         validateMessage(schemaMap.get(schemaName), message);
       } catch (Exception e) {
-        System.err.printf("Error validating schema %s: %s%n", schemaName,
-            friendlyStackTrace(e));
+        outputLogger.error("Error validating schema %s: %s", schemaName, friendlyStackTrace(e));
         device.addError(e, attributes, Category.VALIDATION_DEVICE_SCHEMA);
       }
     }
@@ -685,7 +684,7 @@ public class Validator {
           device.validateMessageType(messageObject, JsonUtil.getDate(publishRaw), attributes);
         });
       } catch (Exception e) {
-        System.err.println("Error validating contents: " + friendlyStackTrace(e));
+        outputLogger.error("Error validating contents: " + friendlyStackTrace(e));
         device.addError(e, attributes, Category.VALIDATION_DEVICE_CONTENT);
       }
     } else {
@@ -748,7 +747,7 @@ public class Validator {
     try {
       deviceDir.mkdir();
       String timestamp = (String) message.get(TIMESTAMP_KEY);
-      System.out.printf("Capture %s at %s for %s%n", filename, timestamp, deviceId);
+      outputLogger.debug("Capture %s at %s for %s", filename, timestamp, deviceId);
       OBJECT_MAPPER.writeValue(messageFile, message);
     } catch (Exception e) {
       throw new RuntimeException("While writing message file " + messageFile.getAbsolutePath(), e);
@@ -760,7 +759,7 @@ public class Validator {
 
     if (!registryId.equals(getRegistryId())) {
       if (ignoredRegistries.add(registryId)) {
-        System.err.println("Ignoring data for not-configured registry " + registryId);
+        outputLogger.warn("Ignoring data for not-configured registry " + registryId);
       }
       return false;
     }

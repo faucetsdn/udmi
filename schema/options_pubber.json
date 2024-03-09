@@ -28,6 +28,9 @@
     "badVersion": {
       "type": "boolean"
     },
+    "badAddr": {
+      "type": "boolean"
+    },
     "noProxy": {
       "type": "boolean"
     },

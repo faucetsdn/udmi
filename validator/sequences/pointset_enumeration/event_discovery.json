@@ -1,6 +1,6 @@
 {
-  "generation" : "2023-11-07T14:31:00Z",
-  "timestamp" : "2023-11-07T14:31:02Z",
+  "generation" : "2024-02-18T18:17:17Z",
+  "timestamp" : "2024-02-18T18:17:18Z",
   "uniqs" : {
     "9b291597" : {
       "name" : "filter_differential_pressure_sensor",
@@ -21,5 +21,5 @@
       "writable" : true
     }
   },
-  "version" : "1.4.2"
+  "version" : "1.5.0"
 }

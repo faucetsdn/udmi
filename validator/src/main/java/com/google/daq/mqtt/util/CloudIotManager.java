@@ -3,9 +3,9 @@ package com.google.daq.mqtt.util;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.util.ConfigUtil.readExeConfig;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.mergeObject;
-import static com.google.udmi.util.GeneralUtils.optionsString;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
@@ -13,6 +13,7 @@ import static udmi.schema.IotAccess.IotProvider.GCP_NATIVE;
 import static udmi.schema.IotAccess.IotProvider.IMPLICIT;
 
 import com.google.common.collect.ImmutableList;
+import com.google.udmi.util.MetadataMapKeys;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
 import java.util.Base64;
@@ -35,15 +36,10 @@ import udmi.schema.SetupUdmiConfig;
  */
 public class CloudIotManager {
 
-  public static final String UDMI_METADATA = "udmi_metadata";
   public static final String CLOUD_IOT_CONFIG_JSON = "cloud_iot_config.json";
   public static final int METADATA_SIZE_LIMIT = 32767;
   public static final String REDACTED_MESSAGE = "REDACTED DUE TO SIZE LIMIT";
-  private static final String UDMI_CONFIG = "udmi_config";
-  private static final String UDMI_GENERATION = "udmi_generation";
-  private static final String UDMI_UPDATED = "udmi_updated";
-  private static final String KEY_BYTES_KEY = "key_bytes";
-  private static final String KEY_ALGORITHM_KEY = "key_algorithm";
+  public static final String EMPTY_CONFIG = "{}";
   public final ExecutionConfiguration executionConfiguration;
 
   private final String registryId;
@@ -162,6 +158,10 @@ public class CloudIotManager {
     return deviceCredential;
   }
 
+  private static Resource_type gatewayIfTrue(boolean isGateway) {
+    return isGateway ? Resource_type.GATEWAY : Resource_type.DEVICE;
+  }
+
   private void initializeIotProvider() {
     try {
       iotProvider = makeIotProvider();
@@ -200,7 +200,8 @@ public class CloudIotManager {
     } else {
       exceptions.capture("updating", () -> updateDevice(deviceId, settings, device));
     }
-    exceptions.capture("configuring", () -> writeDeviceConfig(deviceId, settings.config));
+    String config = ofNullable(settings.config).orElse(EMPTY_CONFIG);
+    exceptions.capture("configuring", () -> writeDeviceConfig(deviceId, config));
     exceptions.throwIfNotEmpty();
     return device == null;
   }
@@ -227,17 +228,17 @@ public class CloudIotManager {
   private CloudModel makeDevice(CloudDeviceSettings settings, CloudModel oldDevice) {
     Map<String, String> metadataMap = ofNullable(oldDevice)
         .map(device -> device.metadata).orElse(new HashMap<>());
-    metadataMap.put(UDMI_METADATA, settings.metadata);
-    metadataMap.put(UDMI_UPDATED, settings.updated);
-    metadataMap.put(UDMI_GENERATION, settings.generation);
-    metadataMap.put(UDMI_CONFIG, settings.config);
+    metadataMap.put(MetadataMapKeys.UDMI_METADATA, settings.metadata);
+    metadataMap.put(MetadataMapKeys.UDMI_UPDATED, settings.updated);
+    metadataMap.put(MetadataMapKeys.UDMI_GENERATION, settings.generation);
+    metadataMap.put(MetadataMapKeys.UDMI_CONFIG, settings.config);
     if (settings.keyBytes == null) {
-      metadataMap.remove(KEY_BYTES_KEY);
-      metadataMap.remove(KEY_ALGORITHM_KEY);
+      metadataMap.remove(MetadataMapKeys.KEY_BYTES_KEY);
+      metadataMap.remove(MetadataMapKeys.KEY_ALGORITHM_KEY);
     } else {
       String keyBase64 = Base64.getEncoder().encodeToString(settings.keyBytes);
-      metadataMap.put(KEY_BYTES_KEY, keyBase64);
-      metadataMap.put(KEY_ALGORITHM_KEY, settings.keyAlgorithm);
+      metadataMap.put(MetadataMapKeys.KEY_BYTES_KEY, keyBase64);
+      metadataMap.put(MetadataMapKeys.KEY_ALGORITHM_KEY, settings.keyAlgorithm);
     }
     CloudModel cloudModel = new CloudModel();
     cloudModel.resource_type = gatewayIfTrue(settings.proxyDevices != null);
@@ -245,10 +246,6 @@ public class CloudIotManager {
     cloudModel.metadata = metadataMap;
     cloudModel.num_id = settings.deviceNumId;
     return cloudModel;
-  }
-
-  private static Resource_type gatewayIfTrue(boolean isGateway) {
-    return isGateway ? Resource_type.GATEWAY : Resource_type.DEVICE;
   }
 
   private List<Credential> getCredentials(CloudDeviceSettings settings) {
@@ -269,8 +266,9 @@ public class CloudIotManager {
   }
 
   private void limitValueSizes(Map<String, String> metadata) {
-    metadata.keySet().forEach(key -> ifTrueThen(metadata.get(key).length() > METADATA_SIZE_LIMIT,
-        () -> metadata.put(key, REDACTED_MESSAGE)));
+    metadata.keySet().forEach(key -> ifNotNullThen(metadata.get(key),
+        value -> ifTrueThen(value.length() > METADATA_SIZE_LIMIT,
+            () -> metadata.put(key, REDACTED_MESSAGE))));
   }
 
   public SetupUdmiConfig getVersionInformation() {

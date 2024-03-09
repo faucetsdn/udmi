@@ -4,7 +4,7 @@
 Check enumeration of device points
 
 1. Update config before enumeration not active:
-    * Add `discovery` = { "enumerate": { "uniqs": `true` } }
+    * Add `discovery` = { "enumerate": { "points": `true` } }
 1. Wait for enumeration not active
 1. Update config before matching enumeration generation:
     * Add `discovery.generation` = `generation start time`

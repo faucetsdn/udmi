@@ -8,6 +8,7 @@ import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static com.google.udmi.util.JsonUtil.toStringMap;
 import static java.lang.String.format;
+import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.messaging.MessagePipe;
 import java.util.Map;
@@ -20,7 +21,6 @@ import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
-import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import udmi.schema.Basic;
@@ -35,11 +35,12 @@ public class SimpleMqttPipe extends MessageBase {
 
   private static final int INITIALIZE_TIME_MS = 1000;
   private static final int PUBLISH_THREAD_COUNT = 2;
-  private static final String TOPIC_FORMAT = "%s/%s/%s";
+  private static final String TOPIC_FORMAT = "%s/%s/%s/%s";
   private static final Object TOPIC_WILDCARD = "+";
   private static final String BROKER_URL_FORMAT = "%s://%s:%s";
   private static final Object EXCEPTION_TYPE = "exception";
   private static final long RECONNECT_SEC = 10;
+  public static final int DEFAULT_PORT = 8883;
   private final String clientId = format("mqtt-%08x", System.currentTimeMillis());
   private final String namespace;
   private final EndpointConfiguration endpoint;
@@ -50,6 +51,7 @@ public class SimpleMqttPipe extends MessageBase {
    * Create new pipe instance for the given config.
    */
   public SimpleMqttPipe(EndpointConfiguration config) {
+    super(config);
     namespace = config.hostname;
     endpoint = config;
     mqttClient = createMqttClient();
@@ -87,7 +89,7 @@ public class SimpleMqttPipe extends MessageBase {
       }
     } catch (Exception e) {
       // Sometimes a forced disconnect is necessary else the connection attempt gets stuck somehow.
-      ifTrueThen(forceDisconnect, this::forcedisconnect);
+      ifTrueThen(forceDisconnect, this::forceDisconnect);
       throw new RuntimeException("While connecting mqtt client", e);
     }
   }
@@ -105,7 +107,7 @@ public class SimpleMqttPipe extends MessageBase {
     }
   }
 
-  private void forcedisconnect() {
+  private void forceDisconnect() {
     try {
       mqttClient.disconnectForcibly();
     } catch (Exception e) {
@@ -114,8 +116,9 @@ public class SimpleMqttPipe extends MessageBase {
   }
 
   private String makeBrokerUrl(EndpointConfiguration endpoint) {
-    Transport transport = Optional.ofNullable(endpoint.transport).orElse(Transport.SSL);
-    return format(BROKER_URL_FORMAT, transport, endpoint.hostname, endpoint.port);
+    Transport transport = ofNullable(endpoint.transport).orElse(Transport.SSL);
+    int port = ofNullable(endpoint.port).orElse(DEFAULT_PORT);
+    return format(BROKER_URL_FORMAT, transport, endpoint.hostname, port);
   }
 
   private MqttMessage makeMqttMessage(Bundle bundle) {
@@ -127,12 +130,12 @@ public class SimpleMqttPipe extends MessageBase {
   private String makeMqttTopic(Bundle bundle) {
     Envelope envelope = bundle.envelope;
     return envelope == null
-        ? format(TOPIC_FORMAT, namespace, EXCEPTION_TYPE, EXCEPTION_TYPE)
-        : format(TOPIC_FORMAT, namespace, envelope.subType, envelope.subFolder);
+        ? format(TOPIC_FORMAT, namespace, EXCEPTION_TYPE, EXCEPTION_TYPE, EXCEPTION_TYPE)
+        : format(TOPIC_FORMAT, namespace, envelope.subType, envelope.subFolder, envelope.source);
   }
 
   private void subscribeToMessages() {
-    String topic = format(TOPIC_FORMAT, namespace, TOPIC_WILDCARD, TOPIC_WILDCARD);
+    String topic = format(TOPIC_FORMAT, namespace, TOPIC_WILDCARD, TOPIC_WILDCARD, TOPIC_WILDCARD);
     try {
       synchronized (mqttClient) {
         boolean connected = mqttClient.isConnected();
