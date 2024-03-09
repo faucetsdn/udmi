@@ -48,7 +48,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
-import udmi.schema.Common.ProtocolFamily;
 
 public class GeneralUtils {
 
@@ -380,14 +379,9 @@ public class GeneralUtils {
     return catchToElse(provider, (T) null);
   }
 
-
-  public static String joinOrNull(String prefix, Set<ProtocolFamily> setDifference) {
+  public static String joinOrNull(String prefix, Set<Object> setDifference) {
     return ifTrueGet(setDifference == null || setDifference.isEmpty(), (String) null,
         () -> prefix + CSV_JOINER.join(setDifference));
-  }
-
-  public static <T> Set<T> setDifference(Set<T> setOne, Set<T> setTwo) {
-    return Sets.symmetricDifference(setOne, setTwo);
   }
 
   public static <U> U mapReplace(U previous, U added) {

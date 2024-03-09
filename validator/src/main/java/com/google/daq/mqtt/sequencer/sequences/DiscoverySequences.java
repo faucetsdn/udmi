@@ -1,5 +1,6 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
+import static com.google.common.collect.Sets.symmetricDifference;
 import static com.google.daq.mqtt.util.TimePeriodConstants.NINETY_SECONDS_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.ONE_MINUTE_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
@@ -12,7 +13,6 @@ import static com.google.udmi.util.GeneralUtils.ifNotTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.isNotTrue;
 import static com.google.udmi.util.GeneralUtils.joinOrNull;
-import static com.google.udmi.util.GeneralUtils.setDifference;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static java.lang.String.format;
@@ -36,7 +36,6 @@ import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.Summary;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
-import com.google.udmi.util.GeneralUtils;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
@@ -307,7 +306,7 @@ public class DiscoverySequences extends SequenceBase {
     HashMap<ProtocolFamily, FamilyDiscoveryConfig> configFamilies = deviceConfig.discovery.families;
     HashMap<ProtocolFamily, FamilyDiscoveryState> stateFamilies = deviceState.discovery.families;
     untilReady("discovery family keys match", () -> joinOrNull("mismatch: ",
-        setDifference(configFamilies.keySet(), stateFamilies.keySet())
+        symmetricDifference(configFamilies.keySet(), stateFamilies.keySet())
     ));
     untilTrue("no scans active",
         () -> stateFamilies.keySet().stream().noneMatch(familyScanActive(null)));

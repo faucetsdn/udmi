@@ -32,7 +32,6 @@ import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.loadFileRequired;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.stringify;
-import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static com.google.udmi.util.JsonUtil.toStringMap;
 import static java.lang.String.format;
 import static java.nio.file.Files.newOutputStream;
@@ -1272,11 +1271,11 @@ public class SequenceBase {
     recordSequence("Check that " + notDescription);
   }
 
-  private void waitFor(String description, Supplier<String> evaluator) {
+  protected void waitFor(String description, Supplier<String> evaluator) {
     waitFor(description, DEFAULT_WAIT_TIME, evaluator);
   }
 
-  private void waitFor(String description, Duration maxWait, Supplier<String> evaluator) {
+  protected void waitFor(String description, Duration maxWait, Supplier<String> evaluator) {
     AtomicReference<String> detail = new AtomicReference<>();
     whileDoing(description, () -> {
       updateConfig("Before " + description);
