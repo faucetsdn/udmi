@@ -5,6 +5,7 @@ import static com.google.daq.mqtt.util.TimePeriodConstants.THREE_MINUTES_MS;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
+import static com.google.udmi.util.GeneralUtils.prefixedDifference;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static java.lang.String.format;
@@ -16,12 +17,12 @@ import static udmi.schema.Category.POINTSET_POINT_INVALID_VALUE;
 import static udmi.schema.FeatureDiscovery.FeatureStage.BETA;
 
 import com.google.common.collect.Sets;
-import com.google.common.collect.Sets.SetView;
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.PointsetBase;
 import com.google.daq.mqtt.sequencer.Summary;
 import com.google.daq.mqtt.sequencer.ValidateSchema;
 import com.google.daq.mqtt.util.SamplingRange;
+import com.google.udmi.util.GeneralUtils;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -49,13 +50,6 @@ public class PointsetSequences extends PointsetBase {
   private static final int DEFAULT_SAMPLE_RATE_SEC = 10;
   private static final String POINTS_MAP_PATH = "pointset.points";
 
-  private static String differenceOrNull(String prefix, Set<String> setA, Set<String> setB) {
-    SetView<String> diffAB = Sets.difference(setA, setB);
-    SetView<String> diffBA = Sets.difference(setB, setA);
-    SetView<String> differences = Sets.union(diffAB, diffBA);
-    return differences.isEmpty() ? null : prefix + CSV_JOINER.join(differences);
-  }
-
   @Before
   public void setupExpectedParameters() {
     allowDeviceStateChange("pointset.");
@@ -74,7 +68,7 @@ public class PointsetSequences extends PointsetBase {
         Set<String> statePoints = deviceState.pointset.points.keySet();
         String prefix = format("config %s state %s differences: ",
             isoConvert(deviceConfig.timestamp), isoConvert(deviceState.timestamp));
-        return differenceOrNull(prefix, configPoints, statePoints);
+        return prefixedDifference(prefix, configPoints, statePoints);
       });
 
       waitFor("pointset event contains correct points", EVENT_WAIT_DURATION, () -> {
@@ -95,7 +89,7 @@ public class PointsetSequences extends PointsetBase {
             isoConvert(deviceConfig.timestamp), isoConvert(lastEvent.timestamp));
         Set<String> configPoints = deviceConfig.pointset.points.keySet();
         debug("config points are " + CSV_JOINER.join(configPoints));
-        return differenceOrNull(prefix, configPoints, receivedPoints);
+        return prefixedDifference(prefix, configPoints, receivedPoints);
       });
     });
   }
