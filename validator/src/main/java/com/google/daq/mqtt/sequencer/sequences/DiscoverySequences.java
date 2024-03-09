@@ -95,7 +95,7 @@ public class DiscoverySequences extends SequenceBase {
     List<DiscoveryEvent> allEvents = popReceivedEvents(DiscoveryEvent.class);
     // Filter for enumeration events, since there will sometimes be lingering scan events.
     List<DiscoveryEvent> enumEvents = allEvents.stream().filter(event -> event.scan_addr == null)
-        .collect(Collectors.toList());
+        .toList();
     assertEquals("a single discovery event received", 1, enumEvents.size());
     DiscoveryEvent event = enumEvents.get(0);
     info("Received discovery generation " + isoConvert(event.generation));
@@ -310,7 +310,8 @@ public class DiscoverySequences extends SequenceBase {
     ));
     untilTrue("no scans active",
         () -> stateFamilies.keySet().stream().noneMatch(familyScanActive(null)));
-    stateFamilies.forEach((key, value) -> previousGenerations.put(key, value.generation));
+    previousGenerations = new HashMap<>(stateFamilies.entrySet().stream().collect(Collectors.toMap(
+        Entry::getKey, entry -> entry.getValue().generation));
   }
 
   private void configureScan(Date startTime, Integer scanIntervalSec, Boolean enumerate) {
