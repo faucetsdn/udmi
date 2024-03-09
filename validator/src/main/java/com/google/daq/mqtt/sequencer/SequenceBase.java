@@ -1376,20 +1376,6 @@ public class SequenceBase {
     waitingConditionPop(startTime);
   }
 
-  protected void untilReady(String description, Supplier<String> detailer) {
-    final Instant startTime = Instant.now();
-
-    AtomicReference<String> detail = new AtomicReference<>();
-    waitingConditionPush(description);
-
-    messageEvaluateLoop(() -> {
-      detail.set(detailer.get());
-      return detail.get();
-    });
-
-    waitingConditionPop(startTime);
-  }
-
   private void waitingConditionPop(Instant startTime) {
     Duration between = Duration.between(startTime, Instant.now());
     debug(format("Stage finished %s at %s after %ss", currentWaitingCondition(),

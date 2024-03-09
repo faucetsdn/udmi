@@ -220,7 +220,7 @@ public class DiscoverySequences extends SequenceBase {
     Date startTime = cleanInstantDate(Instant.now().plusSeconds(SCAN_START_DELAY_SEC));
     boolean shouldEnumerate = false;
     configureScan(startTime, null, shouldEnumerate);
-    untilReady("scheduled scan start",
+    waitFor("scheduled scan start",
         () -> {
           FamilyDiscoveryState familyDiscoveryState = getFamilyDiscoveryState();
           return ifNotTrueGet(familyDiscoveryState.active,
@@ -229,7 +229,7 @@ public class DiscoverySequences extends SequenceBase {
         });
     assertFalse("scan started before activation: " + stringifyTerse(getFamilyDiscoveryState()),
         deviceState.timestamp.before(startTime));
-    untilReady("scheduled scan stop",
+    waitFor("scheduled scan stop",
         () -> {
           FamilyDiscoveryState familyDiscoveryState = getFamilyDiscoveryState();
           return ifTrueGet(familyDiscoveryState.active,
@@ -305,7 +305,7 @@ public class DiscoverySequences extends SequenceBase {
     untilTrue("discovery families reported", () -> deviceState.discovery.families != null);
     HashMap<ProtocolFamily, FamilyDiscoveryConfig> configFamilies = deviceConfig.discovery.families;
     HashMap<ProtocolFamily, FamilyDiscoveryState> stateFamilies = deviceState.discovery.families;
-    untilReady("discovery family keys match", () -> joinOrNull("mismatch: ",
+    waitFor("discovery family keys match", () -> joinOrNull("mismatch: ",
         symmetricDifference(configFamilies.keySet(), stateFamilies.keySet())
     ));
     untilTrue("no scans active",
