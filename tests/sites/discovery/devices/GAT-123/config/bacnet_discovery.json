@@ -18,7 +18,7 @@
   "discovery": {
     "families": {
       "bacnet": {
-        "generation": "2023-08-26T00:00:00Z"
+        "scan_interval_sec": 10
       }
     }
   }

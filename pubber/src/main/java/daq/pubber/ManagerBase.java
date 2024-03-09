@@ -48,7 +48,7 @@ public abstract class ManagerBase {
     if (executor.isShutdown() || executor.isTerminated()) {
       throw new RuntimeException("Executor shutdown/terminated, not scheduling");
     }
-    long delay = futureTime.getTime() - getNow().getTime();
+    long delay = Math.max(futureTime.getTime() - getNow().getTime(), 0);
     debug(format("Scheduling future in %dms", delay));
     return executor.schedule(futureTask, delay, TimeUnit.MILLISECONDS);
   }
