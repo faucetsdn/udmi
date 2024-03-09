@@ -5,9 +5,14 @@ import static com.google.daq.mqtt.util.TimePeriodConstants.ONE_MINUTE_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.CleanDateFormat.cleanDate;
 import static com.google.udmi.util.CleanDateFormat.cleanInstantDate;
+import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
+import static com.google.udmi.util.GeneralUtils.isNotTrue;
+import static com.google.udmi.util.GeneralUtils.joinOrNull;
+import static com.google.udmi.util.GeneralUtils.setDifference;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static java.lang.String.format;
@@ -31,7 +36,7 @@ import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.Summary;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
-import com.google.udmi.util.CleanDateFormat;
+import com.google.udmi.util.GeneralUtils;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
@@ -63,7 +68,7 @@ public class DiscoverySequences extends SequenceBase {
   private static final int SCAN_ITERATIONS = 2;
   private static final ProtocolFamily scanFamily = ProtocolFamily.VENDOR;
   private HashMap<ProtocolFamily, Date> previousGenerations;
-  private Set<ProtocolFamily> families;
+  private Set<ProtocolFamily> metaFamilies;
 
   private static boolean isActive(Entry<String, FeatureDiscovery> entry) {
     return Optional.ofNullable(entry.getValue().stage).orElse(STABLE).compareTo(BETA) >= 0;
@@ -238,8 +243,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   private FamilyDiscoveryState getFamilyDiscoveryState() {
-    return deviceState.discovery.families.get(
-        scanFamily);
+    return ifNotNullGet(deviceState.discovery.families, map -> map.get(scanFamily));
   }
 
   private void checkEnumeration(List<DiscoveryEvent> receivedEvents, boolean shouldEnumerate) {
@@ -262,16 +266,16 @@ public class DiscoverySequences extends SequenceBase {
     configureScan(startTime, SCAN_START_DELAY_SEC, shouldEnumerate);
     Instant endTime = Instant.now().plusSeconds(SCAN_START_DELAY_SEC * SCAN_ITERATIONS);
     untilUntrue("scan iterations", () -> Instant.now().isBefore(endTime));
-    ProtocolFamily oneFamily = families.iterator().next();
+    ProtocolFamily oneFamily = metaFamilies.iterator().next();
     Date finishTime = deviceState.discovery.families.get(oneFamily).generation;
     assertTrue("premature termination",
-        families.stream().noneMatch(familyScanComplete(finishTime)));
+        metaFamilies.stream().noneMatch(familyScanComplete(finishTime)));
     List<DiscoveryEvent> receivedEvents = popReceivedEvents(DiscoveryEvent.class);
     checkEnumeration(receivedEvents, shouldEnumerate);
     Set<ProtocolFamily> eventFamilies = receivedEvents.stream()
         .flatMap(event -> event.families.keySet().stream())
         .collect(Collectors.toSet());
-    assertTrue("all requested families present", eventFamilies.containsAll(families));
+    assertTrue("all requested families present", eventFamilies.containsAll(metaFamilies));
     Map<String, List<DiscoveryEvent>> receivedEventsGrouped = receivedEvents.stream()
         .collect(Collectors.groupingBy(e -> e.scan_family + "." + e.scan_addr));
     assertTrue("scan iteration",
@@ -293,15 +297,21 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   private void initializeDiscovery() {
-    families = catchToNull(() -> deviceMetadata.discovery.families.keySet());
-    if (families == null || families.isEmpty()) {
+    metaFamilies = catchToNull(() -> deviceMetadata.discovery.families.keySet());
+    if (metaFamilies == null || metaFamilies.isEmpty()) {
       skipTest("No discovery families configured");
     }
     deviceConfig.discovery = new DiscoveryConfig();
     deviceConfig.discovery.families = new HashMap<>();
-    untilTrue("all scans not active", () -> families.stream().noneMatch(familyScanActivated(null)));
-    previousGenerations = new HashMap<>();
-    families.forEach(family -> previousGenerations.put(family, getStateFamilyGeneration(family)));
+    untilTrue("discovery families reported", () -> deviceState.discovery.families != null);
+    HashMap<ProtocolFamily, FamilyDiscoveryConfig> configFamilies = deviceConfig.discovery.families;
+    HashMap<ProtocolFamily, FamilyDiscoveryState> stateFamilies = deviceState.discovery.families;
+    untilReady("discovery family keys match", () -> joinOrNull("mismatch: ",
+        setDifference(configFamilies.keySet(), stateFamilies.keySet())
+    ));
+    untilTrue("no scans active",
+        () -> stateFamilies.keySet().stream().noneMatch(familyScanActive(null)));
+    stateFamilies.forEach((key, value) -> previousGenerations.put(key, value.generation));
   }
 
   private void configureScan(Date startTime, Integer scanIntervalSec, Boolean enumerate) {
@@ -331,17 +341,20 @@ public class DiscoverySequences extends SequenceBase {
     return deviceState.discovery.families.get(family);
   }
 
+  private Predicate<ProtocolFamily> familyScanReady(Date startTime) {
+    return family -> dateEquals(getStateFamily(family).generation, startTime)
+        && isNotTrue(getStateFamily(family).active)
+        && deviceState.timestamp.before(startTime);
+  }
+
   private Predicate<ProtocolFamily> familyScanActive(Date startTime) {
-    return family -> catchToFalse(() -> getStateFamily(family).active
-        && CleanDateFormat.dateEquals(getStateFamily(family).generation, startTime));
+    return family -> (startTime == null || dateEquals(getStateFamily(family).generation, startTime))
+        && isTrue(getStateFamily(family).active);
   }
 
-  private Predicate<ProtocolFamily> familyScanActivated(Date startTime) {
-    return family -> catchToFalse(() -> getStateFamily(family).active
-        || CleanDateFormat.dateEquals(getStateFamily(family).generation, startTime));
-  }
-
-  private Predicate<? super ProtocolFamily> familyScanComplete(Date startTime) {
-    return familyScanActivated(startTime).and(familyScanActive(startTime).negate());
+  private Predicate<ProtocolFamily> familyScanComplete(Date startTime) {
+    return family -> dateEquals(getStateFamily(family).generation, startTime)
+        && isNotTrue(getStateFamily(family).active)
+        && deviceState.timestamp.after(startTime);
   }
 }

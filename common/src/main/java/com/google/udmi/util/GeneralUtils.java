@@ -16,6 +16,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
 import com.google.common.hash.Hashing;
 import com.google.daq.mqtt.util.ValidationException;
 import com.google.udmi.util.ProperPrinter.OutputFormat;
@@ -39,6 +40,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -46,6 +48,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
+import udmi.schema.Common.ProtocolFamily;
 
 public class GeneralUtils {
 
@@ -297,6 +300,10 @@ public class GeneralUtils {
     return isTrue(conditional) ? action.get() : alternate;
   }
 
+  public static <T> T ifTrueGet(Object conditional, T value, Supplier<T> alternate) {
+    return isTrue(conditional) ? value : alternate.get();
+  }
+
   public static <T> void ifTrueThen(Object conditional, Runnable action) {
     ifTrueThen(conditional, action, null);
   }
@@ -311,6 +318,10 @@ public class GeneralUtils {
 
   public static <T> T ifNotTrueGet(Object conditional, Supplier<T> supplier) {
     return isTrue(conditional) ? null : supplier.get();
+  }
+
+  public static boolean isNotTrue(Boolean value) {
+    return !isTrue(value);
   }
 
   public static boolean isTrue(Object value) {
@@ -367,6 +378,16 @@ public class GeneralUtils {
 
   public static <T> T catchToNull(Supplier<T> provider) {
     return catchToElse(provider, (T) null);
+  }
+
+
+  public static String joinOrNull(String prefix, Set<ProtocolFamily> setDifference) {
+    return ifTrueGet(setDifference == null || setDifference.isEmpty(), (String) null,
+        () -> prefix + CSV_JOINER.join(setDifference));
+  }
+
+  public static <T> Set<T> setDifference(Set<T> setOne, Set<T> setTwo) {
+    return Sets.symmetricDifference(setOne, setTwo);
   }
 
   public static <U> U mapReplace(U previous, U added) {
@@ -524,4 +545,5 @@ public class GeneralUtils {
   public static String getTimestamp() {
     return isoConvert(getNow());
   }
+
 }
