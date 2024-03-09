@@ -56,6 +56,10 @@ public class CleanDateFormat extends ISO8601DateFormat {
     return cleanDate(dateBase).equals(cleanDate(dateTarget));
   }
 
+  public static Date cleanInstantDate(Instant instant) {
+    return cleanDate(Date.from(instant));
+  }
+
   @Override
   public Date parse(String source) throws ParseException {
     return cleanDate(super.parse(source));

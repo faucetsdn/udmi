@@ -32,6 +32,7 @@ import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.loadFileRequired;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static com.google.udmi.util.JsonUtil.toStringMap;
 import static java.lang.String.format;
 import static java.nio.file.Files.newOutputStream;
@@ -1376,6 +1377,20 @@ public class SequenceBase {
     waitingConditionPop(startTime);
   }
 
+  protected void untilReady(String description, Supplier<String> detailer) {
+    final Instant startTime = Instant.now();
+
+    AtomicReference<String> detail = new AtomicReference<>();
+    waitingConditionPush(description);
+
+    messageEvaluateLoop(() -> {
+      detail.set(detailer.get());
+      return detail.get();
+    });
+
+    waitingConditionPop(startTime);
+  }
+
   private void waitingConditionPop(Instant startTime) {
     Duration between = Duration.between(startTime, Instant.now());
     debug(format("Stage finished %s at %s after %ss", currentWaitingCondition(),
@@ -1408,19 +1423,31 @@ public class SequenceBase {
     }, detail);
   }
 
-  private void messageEvaluateLoop(Supplier<Boolean> evaluator) {
+  private void messageEvaluateLoop(Supplier<? extends Object> evaluator) {
     messageEvaluateLoop(DEFAULT_LOOP_TIMEOUT, evaluator);
   }
 
-  private void messageEvaluateLoop(Duration maxWait, Supplier<Boolean> evaluator) {
+  private void messageEvaluateLoop(Duration maxWait, Supplier<? extends Object> evaluator) {
     Instant end = Instant.now().plus(maxWait);
-    while (evaluator.get()) {
+    while (true) {
+      Object result = evaluator.get();
+      final String detail;
+      if (result instanceof String stringResult) {
+        detail = stringResult;
+      } else if (result instanceof Boolean booleanResult) {
+        detail = ifTrueGet(booleanResult, "waiting for condition");
+      } else {
+        throw new RuntimeException("Unexpected result type " + result.getClass());
+      }
+      if (detail == null) {
+        break;
+      }
       if (Instant.now().isAfter(end)) {
-        throw new RuntimeException(
-            format("Timeout after %ss %s", maxWait.getSeconds(), currentWaitingCondition()));
+        throw new RuntimeException(format("Timeout after %ss: %s", maxWait.getSeconds(), detail));
       }
       processNextMessage();
     }
+
     if (expectedSystemStatus != null) {
       withRecordSequence(false, () -> checkThatHasInterestingSystemStatus(expectedSystemStatus));
     }
