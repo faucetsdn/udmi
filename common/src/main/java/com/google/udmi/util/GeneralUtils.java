@@ -16,6 +16,8 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
+import com.google.common.collect.Sets.SetView;
 import com.google.common.hash.Hashing;
 import com.google.daq.mqtt.util.ValidationException;
 import com.google.udmi.util.ProperPrinter.OutputFormat;
@@ -39,6 +41,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -523,5 +526,10 @@ public class GeneralUtils {
 
   public static String getTimestamp() {
     return isoConvert(getNow());
+  }
+
+  public static String prefixedDifference(String prefix, Set<String> setA, Set<String> setB) {
+    SetView<String> differences = Sets.symmetricDifference(setA, setB);
+    return differences.isEmpty() ? null : prefix + CSV_JOINER.join(differences);
   }
 }
