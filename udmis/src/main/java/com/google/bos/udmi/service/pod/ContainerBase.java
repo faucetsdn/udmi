@@ -236,16 +236,21 @@ public abstract class ContainerBase implements ContainerProvider {
   private void periodicWrapper() {
     try {
       grabExecutionContext();
-      if (executorGeneration != null) {
-        // The initial delay will often be slightly off the intended time due to rounding errors.
-        // Add in a quick delay to the start of the next second for dynamic alignment.
-        Duration duration = Duration.ofMillis(JITTER_ADJ_MS).plusSeconds(intervalDelaySec());
-        safeSleep(duration.minusNanos(Instant.now().getNano()).toMillis());
-      }
+      ifNotNullThen(executorGeneration, this::alignWithGeneration);
       periodicTask();
     } catch (Exception e) {
       error("Exception executing periodic task: " + friendlyStackTrace(e));
     }
+  }
+
+  private void alignWithGeneration() {
+    // The initial delay will often be slightly off the intended time due to rounding errors.
+    // Add in a quick/bounded delay to the start of the next second for dynamic alignment.
+    // Mostly this is just to make the output timestamps look pretty, but has no functional impact.
+    long intervalDelaySec = intervalDelaySec();
+    long secondsToAdd = intervalDelaySec < periodicSec / 2 ? intervalDelaySec : 0;
+    Duration duration = Duration.ofMillis(JITTER_ADJ_MS).plusSeconds(secondsToAdd);
+    safeSleep(duration.minusNanos(Instant.now().getNano()).toMillis());
   }
 
   @Override
