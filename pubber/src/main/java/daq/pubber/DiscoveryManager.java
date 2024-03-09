@@ -166,7 +166,8 @@ public class DiscoveryManager extends ManagerBase {
   }
 
   private void sendDiscoveryEvent(ProtocolFamily family, Date scanGeneration) {
-    FamilyDiscoveryState familyDiscoveryState = catchToNull(() -> discoveryState.families.get(family));
+    FamilyDiscoveryState familyDiscoveryState = catchToNull(
+        () -> discoveryState.families.get(family));
     if (familyDiscoveryState != null && scanGeneration.equals(familyDiscoveryState.generation)
         && familyDiscoveryState.active) {
       AtomicInteger sentEvents = new AtomicInteger();
