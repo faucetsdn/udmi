@@ -228,7 +228,7 @@ public abstract class ContainerBase implements ContainerProvider {
     return getClass().getSimpleName();
   }
 
-  private long initialDelaySec() {
+  private long intervalDelaySec() {
     return ifNotNullGet(executorGeneration, generation ->
         floorMod(between(instantNow(), generation).getSeconds(), periodicSec), periodicSec);
   }
@@ -239,7 +239,8 @@ public abstract class ContainerBase implements ContainerProvider {
       if (executorGeneration != null) {
         // The initial delay will often be slightly off the intended time due to rounding errors.
         // Add in a quick delay to the start of the next second for dynamic alignment.
-        safeSleep(Duration.ofMillis(JITTER_ADJ_MS).minusNanos(Instant.now().getNano()).toMillis());
+        Duration duration = Duration.ofMillis(JITTER_ADJ_MS).plusSeconds(intervalDelaySec());
+        safeSleep(duration.minusNanos(Instant.now().getNano()).toMillis());
       }
       periodicTask();
     } catch (Exception e) {
@@ -251,7 +252,7 @@ public abstract class ContainerBase implements ContainerProvider {
   public void activate() {
     info("Activating");
     ifTrueThen(periodicSec > 0, () -> {
-      long initial = initialDelaySec();
+      long initial = intervalDelaySec();
       notice("Scheduling task %s execution after %ss every %ss", containerId, initial, periodicSec);
       scheduledExecutor.scheduleAtFixedRate(this::periodicWrapper, initial, periodicSec, SECONDS);
     });
