@@ -47,7 +47,6 @@ Some caveats:
 * [family_ipv4_addr](#family_ipv4_addr-preview)
 * [family_ipv6_addr](#family_ipv6_addr-preview)
 * [feature_enumeration](#feature_enumeration-preview): Check enumeration of device features
-* [gateway_attach_handling](#gateway_attach_handling-preview): Check adequate logging for gateway detach, errors, and reattach
 * [gateway_proxy_events](#gateway_proxy_events-beta): Check that a gateway proxies pointset events for indicated devices
 * [pointset_publish](#pointset_publish-beta): Check that a device publishes pointset events
 * [pointset_publish_interval](#pointset_publish_interval-beta): Check handling of sample_rate_sec and sample_limit_sec
