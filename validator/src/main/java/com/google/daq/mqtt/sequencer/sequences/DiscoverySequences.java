@@ -217,6 +217,7 @@ public class DiscoverySequences extends SequenceBase {
     Date startTime = cleanInstantDate(Instant.now().plusSeconds(SCAN_START_DELAY_SEC));
     boolean shouldEnumerate = false;
     configureScan(startTime, null, shouldEnumerate);
+    // TODO: Fix sequence.md generation to properly reflect added discovery family.
     waitFor("scheduled scan start", () -> ifNotTrueGet(() -> familyScanActive(startTime).test(scanFamily),
         this::describeFamilyDiscoveryState));
     checkThat("scan not started before activation", !deviceState.timestamp.before(startTime),
@@ -292,7 +293,7 @@ public class DiscoverySequences extends SequenceBase {
     }
     deviceConfig.discovery = new DiscoveryConfig();
     deviceConfig.discovery.families = new HashMap<>();
-    untilTrue("discovery families reported", () -> deviceState.discovery.families != null);
+    untilTrue("discovery families defined", () -> deviceState.discovery.families != null);
     HashMap<ProtocolFamily, FamilyDiscoveryConfig> configFamilies = deviceConfig.discovery.families;
     HashMap<ProtocolFamily, FamilyDiscoveryState> stateFamilies = deviceState.discovery.families;
     waitFor("discovery family keys match", () -> joinOrNull("mismatch: ",
