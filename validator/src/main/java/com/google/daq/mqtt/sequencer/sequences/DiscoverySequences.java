@@ -36,6 +36,7 @@ import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.Summary;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
@@ -61,12 +62,13 @@ import udmi.schema.FeatureDiscovery;
  */
 public class DiscoverySequences extends SequenceBase {
 
-  public static final int SCAN_START_DELAY_SEC = 10;
+  public static final Duration SCAN_START_DELAY = Duration.ofSeconds(10);
+  public static final int SCAN_START_DELAY_SEC = (int) SCAN_START_DELAY.getSeconds();
   private static final int SCAN_ITERATIONS = 2;
   private static final ProtocolFamily scanFamily = ProtocolFamily.VENDOR;
   private static final Date LONG_TIME_AGO = new Date(12897321);
-  private Set<ProtocolFamily> metaFamilies;
   public static boolean checkConfigDiff;
+  private Set<ProtocolFamily> metaFamilies;
 
   private static boolean isActive(Entry<String, FeatureDiscovery> entry) {
     return ofNullable(entry.getValue().stage).orElse(STABLE).compareTo(BETA) >= 0;
@@ -206,14 +208,19 @@ public class DiscoverySequences extends SequenceBase {
 
   @Test(timeout = ONE_MINUTE_MS)
   @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA)
-  @Summary("Check results of a single scheduled in the past")
+  @Summary("Check that a scan scheduled in the past never starts")
   public void single_scan_past() {
     initializeDiscovery();
     Date startTime = LONG_TIME_AGO;
     boolean shouldEnumerate = false;
     configureScan(startTime, null, shouldEnumerate);
-    waitFor("scan schedule ready", () -> ifNotTrueGet(() -> scanReady(startTime).test(scanFamily),
-        this::describeFamilyDiscoveryState));
+    waitFor("scan schedule initially pending",
+        () -> ifNotTrueGet(() -> scanComplete(startTime).test(scanFamily),
+            this::describedFamilyState));
+    sleepFor("false start check delay", SCAN_START_DELAY);
+    waitFor("scan schedule still pending",
+        () -> ifNotTrueGet(() -> scanComplete(startTime).test(scanFamily),
+            this::describedFamilyState));
   }
 
   @Test(timeout = ONE_MINUTE_MS)
@@ -221,23 +228,23 @@ public class DiscoverySequences extends SequenceBase {
   @Summary("Check results of a single scan scheduled immediately")
   public void single_scan_future() {
     initializeDiscovery();
-    Date startTime = cleanInstantDate(Instant.now().plusSeconds(SCAN_START_DELAY_SEC));
+    Date startTime = cleanInstantDate(Instant.now().plus(SCAN_START_DELAY));
     boolean shouldEnumerate = false;
     configureScan(startTime, null, shouldEnumerate);
     checkConfigDiff = true;
-    // TODO: Fix sequence.md generation to properly reflect added discovery family.
-    waitFor("scheduled scan start", () -> ifNotTrueGet(() -> scanActive(startTime).test(scanFamily),
-        this::describeFamilyDiscoveryState));
+    Duration waitingPeriod = SCAN_START_DELAY.plus(SCAN_START_DELAY);
+    waitFor("scheduled scan start", waitingPeriod,
+        () -> ifNotTrueGet(() -> scanActive(startTime).test(scanFamily), this::describedFamilyState));
     checkThat("scan not started before activation", !deviceState.timestamp.before(startTime),
-        describeFamilyDiscoveryState());
-    waitFor("scheduled scan stop", () -> ifTrueGet(scanComplete(startTime).test(scanFamily),
-        this::describeFamilyDiscoveryState));
+        describedFamilyState());
+    waitFor("scheduled scan stop", waitingPeriod,
+        () -> ifTrueGet(scanComplete(startTime).test(scanFamily), this::describedFamilyState));
     List<DiscoveryEvent> receivedEvents = popReceivedEvents(DiscoveryEvent.class);
     checkThat("discovery events were received", receivedEvents.isEmpty());
     checkEnumeration(receivedEvents, shouldEnumerate);
   }
 
-  private String describeFamilyDiscoveryState() {
+  private String describedFamilyState() {
     return stringifyTerse(getFamilyDiscoveryState());
   }
 
@@ -261,8 +268,8 @@ public class DiscoverySequences extends SequenceBase {
     initializeDiscovery();
     Date startTime = cleanDate();
     boolean shouldEnumerate = true;
-    configureScan(startTime, SCAN_START_DELAY_SEC, shouldEnumerate);
-    Instant endTime = Instant.now().plusSeconds(SCAN_START_DELAY_SEC * SCAN_ITERATIONS);
+    configureScan(startTime, SCAN_START_DELAY, shouldEnumerate);
+    Instant endTime = Instant.now().plusSeconds(SCAN_START_DELAY.getSeconds() * SCAN_ITERATIONS);
     untilUntrue("scan iterations", () -> Instant.now().isBefore(endTime));
     ProtocolFamily oneFamily = metaFamilies.iterator().next();
     Date finishTime = deviceState.discovery.families.get(oneFamily).generation;
@@ -308,16 +315,20 @@ public class DiscoverySequences extends SequenceBase {
         symmetricDifference(configFamilies.keySet(), stateFamilies.keySet())
     ));
     untilTrue("no scans active",
-        () -> stateFamilies.keySet().stream().noneMatch(scanActive(null)));
+        () -> stateFamilies.keySet().stream().noneMatch(scanActive()));
   }
 
-  private void configureScan(Date startTime, Integer scanIntervalSec, Boolean enumerate) {
+  private void configureScan(Date startTime, Duration scanInterval, Boolean enumerate) {
+    Integer intervalSec = ofNullable(scanInterval).map(Duration::getSeconds).map(Long::intValue)
+        .orElse(null);
     info(format("%s configured for family %s starting at %s evey %ss",
-        isTrue(enumerate) ? "Enumeration" : "Scan", scanFamily, startTime, scanIntervalSec));
+        isTrue(enumerate) ? "Enumeration" : "Scan", scanFamily, startTime,
+        intervalSec));
     FamilyDiscoveryConfig configFamily = getConfigFamily(scanFamily);
     configFamily.generation = SemanticDate.describe("family generation", startTime);
     configFamily.enumerate = enumerate;
-    configFamily.scan_interval_sec = scanIntervalSec;
+    configFamily.scan_interval_sec = intervalSec;
+    configFamily.scan_duration_sec = ofNullable(intervalSec).orElse(SCAN_START_DELAY_SEC);
     popReceivedEvents(DiscoveryEvent.class);
   }
 
@@ -334,14 +345,18 @@ public class DiscoverySequences extends SequenceBase {
     return deviceState.discovery.families.get(family);
   }
 
-  private Predicate<ProtocolFamily> scanReady(Date startTime) {
+  private Predicate<ProtocolFamily> scanPending(Date startTime) {
     return family -> dateEquals(getStateFamily(family).generation, startTime)
         && isNotTrue(getStateFamily(family).active)
         && deviceState.timestamp.before(startTime);
   }
 
+  private Predicate<ProtocolFamily> scanActive() {
+    return family -> isTrue(getStateFamily(family).active);
+  }
+
   private Predicate<ProtocolFamily> scanActive(Date startTime) {
-    return family -> (startTime == null || dateEquals(getStateFamily(family).generation, startTime))
+    return family -> dateEquals(getStateFamily(family).generation, startTime)
         && isTrue(getStateFamily(family).active);
   }
 

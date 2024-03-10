@@ -1296,6 +1296,11 @@ public class SequenceBase {
     }, detail::get);
   }
 
+  protected void sleepFor(String delayReason, Duration sleepTime) {
+    String message = format("sleeping %ss for %s", sleepTime.getSeconds(), delayReason);
+    whileDoing(message, () -> safeSleep(sleepTime.getSeconds() * ONE_SECOND_MS));
+  }
+
   protected void checkFor(String description, Supplier<String> detailer) {
     String result = detailer.get();
     checkThat(description, () -> result == null, result);
