@@ -130,7 +130,7 @@ done 7< $INPUT_FILE
 
 sed -E -i $RESULTS_OUT \
     -e 's/(Pipeline type event error: While processing message ).*/\1REDACTED/' \
-    -e 's/ [-0-9T:Z]+ / TIMESTAMP /g'
+    -e 's/ 202[-0-9T:]+Z / TIMESTAMP /g'
 
 if [[ -z $TARGET_INDEX && -z $MATRIX_SHARD_COUNT ]]; then
     bin/test_itemcheck
