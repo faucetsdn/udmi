@@ -42,7 +42,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -66,7 +65,6 @@ public class DiscoverySequences extends SequenceBase {
   public static final int SCAN_START_DELAY_SEC = 10;
   private static final int SCAN_ITERATIONS = 2;
   private static final ProtocolFamily scanFamily = ProtocolFamily.VENDOR;
-  private HashMap<ProtocolFamily, Date> previousGenerations;
   private Set<ProtocolFamily> metaFamilies;
 
   private static boolean isActive(Entry<String, FeatureDiscovery> entry) {
@@ -310,8 +308,6 @@ public class DiscoverySequences extends SequenceBase {
     ));
     untilTrue("no scans active",
         () -> stateFamilies.keySet().stream().noneMatch(familyScanActive(null)));
-    previousGenerations = new HashMap<>(stateFamilies.entrySet().stream().collect(Collectors.toMap(
-        Entry::getKey, entry -> entry.getValue().generation));
   }
 
   private void configureScan(Date startTime, Integer scanIntervalSec, Boolean enumerate) {
@@ -321,7 +317,7 @@ public class DiscoverySequences extends SequenceBase {
     configFamily.generation = SemanticDate.describe("family generation", startTime);
     configFamily.enumerate = enumerate;
     configFamily.scan_interval_sec = scanIntervalSec;
-    popReceivedEvents(DiscoveryEvent.class);  // Clear out any previously received events
+    popReceivedEvents(DiscoveryEvent.class);
   }
 
   private FamilyDiscoveryConfig getConfigFamily(ProtocolFamily family) {
@@ -331,10 +327,6 @@ public class DiscoverySequences extends SequenceBase {
 
   private Date getStateFamilyGeneration(ProtocolFamily family) {
     return catchToNull(() -> getStateFamily(family).generation);
-  }
-
-  private boolean stateGenerationMismatch(ProtocolFamily family) {
-    return !Objects.equals(previousGenerations.get(family), getStateFamilyGeneration(family));
   }
 
   private FamilyDiscoveryState getStateFamily(ProtocolFamily family) {
