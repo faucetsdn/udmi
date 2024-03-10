@@ -1,5 +1,5 @@
 01 RESULT fail system device_config_acked BETA 0/5 Timeout waiting for config acked
-02 RESULT fail pointset pointset_request_extraneous BETA 0/5 Timeout waiting for pointset event contains correct points with present_value
+02 RESULT fail pointset pointset_request_extraneous BETA 0/5 Timeout waiting for config TIMESTAMP event TIMESTAMP differences: llama
 03 RESULT fail pointset pointset_remove_point BETA 0/5 Timeout waiting for config TIMESTAMP state TIMESTAMP differences: filter_alarm_pressure_status
 04 RESULT fail pointset pointset_remove_point BETA 0/5 Timeout waiting for no applicable system status
 05 RESULT fail system too_much_state ALPHA 0/5 Failed check that No more than 6 state updates in 60s
