@@ -19,7 +19,6 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static udmi.schema.Bucket.DISCOVERY_SCAN;
 import static udmi.schema.Bucket.ENUMERATION;
@@ -43,7 +42,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -219,25 +217,19 @@ public class DiscoverySequences extends SequenceBase {
     Date startTime = cleanInstantDate(Instant.now().plusSeconds(SCAN_START_DELAY_SEC));
     boolean shouldEnumerate = false;
     configureScan(startTime, null, shouldEnumerate);
-    waitFor("scheduled scan start",
-        () -> {
-          FamilyDiscoveryState familyDiscoveryState = getFamilyDiscoveryState();
-          Boolean active = ofNullable(familyDiscoveryState).map(x -> x.active).orElse(false);
-          return ifNotTrueGet(active, () -> format("Waiting for %s scan start: %s ", scanFamily,
-                  stringifyTerse(familyDiscoveryState)));
-        });
-    assertFalse("scan started before activation: " + stringifyTerse(getFamilyDiscoveryState()),
-        deviceState.timestamp.before(startTime));
-    waitFor("scheduled scan stop",
-        () -> {
-          FamilyDiscoveryState familyDiscoveryState = getFamilyDiscoveryState();
-          return ifTrueGet(familyDiscoveryState.active,
-              () -> format("Waiting for %s scan stop: %s ", scanFamily,
-                  stringifyTerse(familyDiscoveryState)));
-        });
+    waitFor("scheduled scan start", () -> ifNotTrueGet(() -> familyScanActive(startTime).test(scanFamily),
+        this::describeFamilyDiscoveryState));
+    checkThat("scan not started before activation", !deviceState.timestamp.before(startTime),
+        describeFamilyDiscoveryState());
+    waitFor("scheduled scan stop", () -> ifTrueGet(familyScanComplete(startTime).test(scanFamily),
+        this::describeFamilyDiscoveryState));
     List<DiscoveryEvent> receivedEvents = popReceivedEvents(DiscoveryEvent.class);
-    assertFalse("received discovery events", receivedEvents.isEmpty());
+    checkThat("discovery events were received", receivedEvents.isEmpty());
     checkEnumeration(receivedEvents, shouldEnumerate);
+  }
+
+  private String describeFamilyDiscoveryState() {
+    return stringifyTerse(getFamilyDiscoveryState());
   }
 
   private FamilyDiscoveryState getFamilyDiscoveryState() {
@@ -245,12 +237,11 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   private void checkEnumeration(List<DiscoveryEvent> receivedEvents, boolean shouldEnumerate) {
-    Predicate<DiscoveryEvent> hasPoints = event -> event.points != null
-        && !event.points.isEmpty();
+    Predicate<DiscoveryEvent> hasPoints = event -> event.points != null && !event.points.isEmpty();
     if (shouldEnumerate) {
-      assertTrue("with enumeration", receivedEvents.stream().allMatch(hasPoints));
+      checkThat("all events have points", receivedEvents.stream().allMatch(hasPoints));
     } else {
-      assertTrue("sans enumeration", receivedEvents.stream().noneMatch(hasPoints));
+      checkThat("no events have points", receivedEvents.stream().noneMatch(hasPoints));
     }
   }
 

@@ -1249,8 +1249,16 @@ public class SequenceBase {
     return Common.getExceptionLine(e, SequenceBase.class);
   }
 
+  protected void checkThat(String description, Boolean condition) {
+    checkThat(description, condition, null);
+  }
+
   protected void checkThat(String description, Supplier<Boolean> condition) {
     checkThat(description, condition, null);
+  }
+
+  protected void checkThat(String description, Boolean condition, String details) {
+    checkThat(description, () -> condition, details);
   }
 
   protected void checkThat(String description, Supplier<Boolean> condition, String details) {
@@ -1286,6 +1294,11 @@ public class SequenceBase {
         return result != null;
       });
     }, detail::get);
+  }
+
+  protected void checkFor(String description, Supplier<String> detailer) {
+    String result = detailer.get();
+    checkThat(description, () -> result == null, result);
   }
 
   protected void waitForLog(String category, Level exactLevel) {

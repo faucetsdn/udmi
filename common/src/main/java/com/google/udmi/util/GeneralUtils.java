@@ -280,11 +280,18 @@ public class GeneralUtils {
     }
   }
 
-  public static <T> T ifTrueGet(Object conditional, T value) {
+  public static <T> T ifTrueGet(Boolean conditional, T value) {
     return ifTrueGet(conditional, () -> value);
   }
 
-  public static <T> T ifTrueGet(Object conditional, Supplier<T> action) {
+  public static <T> T ifTrueGet(Boolean conditional, Supplier<T> action) {
+    if (isTrue(conditional)) {
+      return action.get();
+    }
+    return null;
+  }
+
+  public static <T> T ifTrueGet(Supplier<Boolean> conditional, Supplier<T> action) {
     if (isTrue(conditional)) {
       return action.get();
     }
@@ -315,8 +322,12 @@ public class GeneralUtils {
     }
   }
 
-  public static <T> T ifNotTrueGet(Object conditional, Supplier<T> supplier) {
+  public static <T> T ifNotTrueGet(Boolean conditional, Supplier<T> supplier) {
     return isTrue(conditional) ? null : supplier.get();
+  }
+
+  public static <T> T ifNotTrueGet(Supplier<Boolean> conditional, Supplier<T> supplier) {
+    return isTrue(catchToNull(conditional)) ? null : supplier.get();
   }
 
   public static boolean isNotTrue(Boolean value) {
