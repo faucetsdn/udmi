@@ -2285,7 +2285,7 @@ public class SequenceBase {
       if (failureType != SKIP) {
         resetRequired = true;
         if (debugLogLevel()) {
-          e.printStackTrace();
+          trace("Stack trace:", stackTraceString(e));
           error("terminating test " + testName + " after " + timeSinceStart() + " "
               + START_END_MARKER);
           System.exit(EXIT_CODE_PRESERVE);
