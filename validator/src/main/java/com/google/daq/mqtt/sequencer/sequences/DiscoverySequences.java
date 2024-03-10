@@ -64,6 +64,7 @@ public class DiscoverySequences extends SequenceBase {
   public static final int SCAN_START_DELAY_SEC = 10;
   private static final int SCAN_ITERATIONS = 2;
   private static final ProtocolFamily scanFamily = ProtocolFamily.VENDOR;
+  private static final Date LONG_TIME_AGO = new Date(12897321);
   private Set<ProtocolFamily> metaFamilies;
   public static boolean checkConfigDiff;
 
@@ -205,9 +206,14 @@ public class DiscoverySequences extends SequenceBase {
 
   @Test(timeout = ONE_MINUTE_MS)
   @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA)
-  @Summary("Check results of a single scan scheduled right now")
+  @Summary("Check results of a single scheduled in the past")
   public void single_scan_past() {
-    ifTrueSkipTest(true, "Not yet implemented");
+    initializeDiscovery();
+    Date startTime = LONG_TIME_AGO;
+    boolean shouldEnumerate = false;
+    configureScan(startTime, null, shouldEnumerate);
+    waitFor("scan schedule ready", () -> ifNotTrueGet(() -> scanReady(startTime).test(scanFamily),
+        this::describeFamilyDiscoveryState));
   }
 
   @Test(timeout = ONE_MINUTE_MS)
