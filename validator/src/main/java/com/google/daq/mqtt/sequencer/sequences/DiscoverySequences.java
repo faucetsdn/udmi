@@ -17,6 +17,7 @@ import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
+import static java.util.Optional.ofNullable;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -68,7 +69,7 @@ public class DiscoverySequences extends SequenceBase {
   private Set<ProtocolFamily> metaFamilies;
 
   private static boolean isActive(Entry<String, FeatureDiscovery> entry) {
-    return Optional.ofNullable(entry.getValue().stage).orElse(STABLE).compareTo(BETA) >= 0;
+    return ofNullable(entry.getValue().stage).orElse(STABLE).compareTo(BETA) >= 0;
   }
 
   @Before
@@ -103,9 +104,9 @@ public class DiscoverySequences extends SequenceBase {
 
   private void checkSelfEnumeration(DiscoveryEvent event, Enumerate enumerate) {
     if (isTrue(enumerate.families)) {
-      Set<ProtocolFamily> models = Optional.ofNullable(deviceMetadata.localnet)
+      Set<ProtocolFamily> models = ofNullable(deviceMetadata.localnet)
           .map(localnet -> localnet.families.keySet()).orElse(null);
-      Set<ProtocolFamily> events = Optional.ofNullable(event.families).map(Map::keySet)
+      Set<ProtocolFamily> events = ofNullable(event.families).map(Map::keySet)
           .orElse(null);
       checkThat("family enumeration matches", () -> models.size() == events.size());
     } else {
@@ -119,7 +120,7 @@ public class DiscoverySequences extends SequenceBase {
     }
 
     if (isTrue(enumerate.points)) {
-      int expectedSize = Optional.ofNullable(deviceMetadata.pointset.points).map(HashMap::size)
+      int expectedSize = ofNullable(deviceMetadata.pointset.points).map(HashMap::size)
           .orElse(0);
       checkThat("enumerated point count matches", () -> event.points.size() == expectedSize);
     } else {
@@ -146,7 +147,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   private boolean isTrue(Boolean condition) {
-    return Optional.ofNullable(condition).orElse(false);
+    return ofNullable(condition).orElse(false);
   }
 
   @Test(timeout = NINETY_SECONDS_MS)
@@ -221,8 +222,8 @@ public class DiscoverySequences extends SequenceBase {
     waitFor("scheduled scan start",
         () -> {
           FamilyDiscoveryState familyDiscoveryState = getFamilyDiscoveryState();
-          return ifNotTrueGet(familyDiscoveryState.active,
-              () -> format("Waiting for %s scan start: %s ", scanFamily,
+          Boolean active = ofNullable(familyDiscoveryState).map(x -> x.active).orElse(false);
+          return ifNotTrueGet(active, () -> format("Waiting for %s scan start: %s ", scanFamily,
                   stringifyTerse(familyDiscoveryState)));
         });
     assertFalse("scan started before activation: " + stringifyTerse(getFamilyDiscoveryState()),

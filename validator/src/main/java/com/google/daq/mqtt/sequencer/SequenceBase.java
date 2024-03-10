@@ -1408,31 +1408,19 @@ public class SequenceBase {
     }, detail);
   }
 
-  private void messageEvaluateLoop(Supplier<? extends Object> evaluator) {
+  private void messageEvaluateLoop(Supplier<Boolean> evaluator) {
     messageEvaluateLoop(DEFAULT_LOOP_TIMEOUT, evaluator);
   }
 
-  private void messageEvaluateLoop(Duration maxWait, Supplier<? extends Object> evaluator) {
+  private void messageEvaluateLoop(Duration maxWait, Supplier<Boolean> evaluator) {
     Instant end = Instant.now().plus(maxWait);
-    while (true) {
-      Object result = evaluator.get();
-      final String detail;
-      if (result instanceof String stringResult) {
-        detail = stringResult;
-      } else if (result instanceof Boolean booleanResult) {
-        detail = ifTrueGet(booleanResult, "waiting for condition");
-      } else {
-        throw new RuntimeException("Unexpected result type " + result.getClass());
-      }
-      if (detail == null) {
-        break;
-      }
+    while (evaluator.get()) {
       if (Instant.now().isAfter(end)) {
-        throw new RuntimeException(format("Timeout after %ss: %s", maxWait.getSeconds(), detail));
+        throw new RuntimeException(
+            format("Timeout after %ss %s", maxWait.getSeconds(), currentWaitingCondition()));
       }
       processNextMessage();
     }
-
     if (expectedSystemStatus != null) {
       withRecordSequence(false, () -> checkThatHasInterestingSystemStatus(expectedSystemStatus));
     }
