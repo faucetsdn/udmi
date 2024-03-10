@@ -21,7 +21,7 @@ RESULT skip gateway gateway_proxy_events BETA 0/0 Not a gateway
 RESULT pass pointset pointset_publish BETA 5/5 Sequence complete
 RESULT pass pointset pointset_publish_interval BETA 5/5 Sequence complete
 RESULT pass pointset pointset_remove_point BETA 5/5 Sequence complete
-RESULT fail pointset pointset_request_extraneous BETA 0/5 Cannot read field "points" because "this.deviceState.pointset" is null
+RESULT pass pointset pointset_request_extraneous BETA 5/5 Sequence complete
 RESULT pass system broken_config BETA 5/5 Sequence complete
 CPBLTY pass system broken_config.logging ALPHA 1/1 Capability functional
 RESULT pass system config_logging BETA 5/5 Sequence complete

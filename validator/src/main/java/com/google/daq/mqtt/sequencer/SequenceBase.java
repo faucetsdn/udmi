@@ -2216,7 +2216,7 @@ public class SequenceBase {
 
         activeInstance = SequenceBase.this;
       } catch (Exception e) {
-        e.printStackTrace();
+        trace("Exception stack:", stackTraceString(e));
         throw new RuntimeException("While starting " + testName, e);
       }
     }
