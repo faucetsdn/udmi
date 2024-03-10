@@ -65,6 +65,7 @@ public class DiscoverySequences extends SequenceBase {
   private static final int SCAN_ITERATIONS = 2;
   private static final ProtocolFamily scanFamily = ProtocolFamily.VENDOR;
   private Set<ProtocolFamily> metaFamilies;
+  public static boolean checkConfigDiff;
 
   private static boolean isActive(Entry<String, FeatureDiscovery> entry) {
     return ofNullable(entry.getValue().stage).orElse(STABLE).compareTo(BETA) >= 0;
@@ -217,6 +218,7 @@ public class DiscoverySequences extends SequenceBase {
     Date startTime = cleanInstantDate(Instant.now().plusSeconds(SCAN_START_DELAY_SEC));
     boolean shouldEnumerate = false;
     configureScan(startTime, null, shouldEnumerate);
+    checkConfigDiff = true;
     // TODO: Fix sequence.md generation to properly reflect added discovery family.
     waitFor("scheduled scan start", () -> ifNotTrueGet(() -> scanActive(startTime).test(scanFamily),
         this::describeFamilyDiscoveryState));
