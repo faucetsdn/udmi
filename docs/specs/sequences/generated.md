@@ -31,6 +31,7 @@ Some caveats:
 -->
 
 <!-- START GENERATED, do not edit anything after this line! -->
+* [bad_target_family](#bad_target_family-preview): Error handling for badly formed target address family
 * [broken_config](#broken_config-beta): Check that the device correctly handles a broken (non-json) config message.
 * [config_logging](#config_logging-beta): Check that the device publishes minimum required log entries when receiving config
 * [device_config_acked](#device_config_acked-beta): Check that the device MQTT-acknowledges a sent config.
@@ -56,6 +57,12 @@ Some caveats:
 * [state_software](#state_software-beta): Check that a device publishes correct software information in state messages
 * [system_last_update](#system_last_update-stable): Check that last_update state is correctly set in response to a config update.
 * [valid_serial_no](#valid_serial_no-beta)
+
+## bad_target_family (PREVIEW)
+
+Error handling for badly formed target address family
+
+1. Test skipped: Not a proxied device
 
 ## broken_config (BETA)
 
@@ -286,12 +293,6 @@ Check enumeration of device features
 1. Check that feature enumeration matches metadata
 1. Check that all enumerated features are official buckets
 1. Check that no point enumeration
-
-## gateway_attach_handling (PREVIEW)
-
-Check adequate logging for gateway detach, errors, and reattach
-
-1. Test skipped: Not a gateway
 
 ## gateway_proxy_events (BETA)
 
