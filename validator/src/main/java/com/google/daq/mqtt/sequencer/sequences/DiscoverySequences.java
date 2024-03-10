@@ -218,11 +218,11 @@ public class DiscoverySequences extends SequenceBase {
     boolean shouldEnumerate = false;
     configureScan(startTime, null, shouldEnumerate);
     // TODO: Fix sequence.md generation to properly reflect added discovery family.
-    waitFor("scheduled scan start", () -> ifNotTrueGet(() -> familyScanActive(startTime).test(scanFamily),
+    waitFor("scheduled scan start", () -> ifNotTrueGet(() -> scanActive(startTime).test(scanFamily),
         this::describeFamilyDiscoveryState));
     checkThat("scan not started before activation", !deviceState.timestamp.before(startTime),
         describeFamilyDiscoveryState());
-    waitFor("scheduled scan stop", () -> ifTrueGet(familyScanComplete(startTime).test(scanFamily),
+    waitFor("scheduled scan stop", () -> ifTrueGet(scanComplete(startTime).test(scanFamily),
         this::describeFamilyDiscoveryState));
     List<DiscoveryEvent> receivedEvents = popReceivedEvents(DiscoveryEvent.class);
     checkThat("discovery events were received", receivedEvents.isEmpty());
@@ -259,7 +259,7 @@ public class DiscoverySequences extends SequenceBase {
     ProtocolFamily oneFamily = metaFamilies.iterator().next();
     Date finishTime = deviceState.discovery.families.get(oneFamily).generation;
     assertTrue("premature termination",
-        metaFamilies.stream().noneMatch(familyScanComplete(finishTime)));
+        metaFamilies.stream().noneMatch(scanComplete(finishTime)));
     List<DiscoveryEvent> receivedEvents = popReceivedEvents(DiscoveryEvent.class);
     checkEnumeration(receivedEvents, shouldEnumerate);
     Set<ProtocolFamily> eventFamilies = receivedEvents.stream()
@@ -300,7 +300,7 @@ public class DiscoverySequences extends SequenceBase {
         symmetricDifference(configFamilies.keySet(), stateFamilies.keySet())
     ));
     untilTrue("no scans active",
-        () -> stateFamilies.keySet().stream().noneMatch(familyScanActive(null)));
+        () -> stateFamilies.keySet().stream().noneMatch(scanActive(null)));
   }
 
   private void configureScan(Date startTime, Integer scanIntervalSec, Boolean enumerate) {
@@ -326,18 +326,18 @@ public class DiscoverySequences extends SequenceBase {
     return deviceState.discovery.families.get(family);
   }
 
-  private Predicate<ProtocolFamily> familyScanReady(Date startTime) {
+  private Predicate<ProtocolFamily> scanReady(Date startTime) {
     return family -> dateEquals(getStateFamily(family).generation, startTime)
         && isNotTrue(getStateFamily(family).active)
         && deviceState.timestamp.before(startTime);
   }
 
-  private Predicate<ProtocolFamily> familyScanActive(Date startTime) {
+  private Predicate<ProtocolFamily> scanActive(Date startTime) {
     return family -> (startTime == null || dateEquals(getStateFamily(family).generation, startTime))
         && isTrue(getStateFamily(family).active);
   }
 
-  private Predicate<ProtocolFamily> familyScanComplete(Date startTime) {
+  private Predicate<ProtocolFamily> scanComplete(Date startTime) {
     return family -> dateEquals(getStateFamily(family).generation, startTime)
         && isNotTrue(getStateFamily(family).active)
         && deviceState.timestamp.after(startTime);
