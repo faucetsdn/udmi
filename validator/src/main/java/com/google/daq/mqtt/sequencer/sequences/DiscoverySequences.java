@@ -25,6 +25,9 @@ import static udmi.schema.Bucket.ENUMERATION;
 import static udmi.schema.Bucket.ENUMERATION_FAMILIES;
 import static udmi.schema.Bucket.ENUMERATION_FEATURES;
 import static udmi.schema.Bucket.ENUMERATION_POINTSET;
+import static udmi.schema.FamilyDiscoveryState.Phase.ACTIVE;
+import static udmi.schema.FamilyDiscoveryState.Phase.DONE;
+import static udmi.schema.FamilyDiscoveryState.Phase.PENDING;
 import static udmi.schema.FeatureDiscovery.FeatureStage.ALPHA;
 import static udmi.schema.FeatureDiscovery.FeatureStage.BETA;
 import static udmi.schema.FeatureDiscovery.FeatureStage.PREVIEW;
@@ -55,6 +58,7 @@ import udmi.schema.DiscoveryEvent;
 import udmi.schema.Enumerate;
 import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyDiscoveryState;
+import udmi.schema.FamilyDiscoveryState.Phase;
 import udmi.schema.FeatureDiscovery;
 
 /**
@@ -348,22 +352,22 @@ public class DiscoverySequences extends SequenceBase {
 
   private Predicate<ProtocolFamily> scanPending(Date startTime) {
     return family -> dateEquals(getStateFamily(family).generation, startTime)
-        && isNotTrue(getStateFamily(family).active)
+        && getStateFamily(family).phase == PENDING
         && deviceState.timestamp.before(startTime);
   }
 
   private Predicate<ProtocolFamily> scanActive() {
-    return family -> isTrue(getStateFamily(family).active);
+    return family -> getStateFamily(family).phase == ACTIVE;
   }
 
   private Predicate<ProtocolFamily> scanActive(Date startTime) {
     return family -> dateEquals(getStateFamily(family).generation, startTime)
-        && isTrue(getStateFamily(family).active);
+        && getStateFamily(family).phase == ACTIVE;
   }
 
   private Predicate<ProtocolFamily> scanComplete(Date startTime) {
     return family -> dateEquals(getStateFamily(family).generation, startTime)
-        && isNotTrue(getStateFamily(family).active)
+        && getStateFamily(family).phase == DONE
         && deviceState.timestamp.after(startTime);
   }
 }

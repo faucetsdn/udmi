@@ -19,6 +19,7 @@ import udmi.schema.DiscoveryState;
 import udmi.schema.Envelope;
 import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyDiscoveryState;
+import udmi.schema.FamilyDiscoveryState.Phase;
 import udmi.schema.MappingCommand;
 import udmi.schema.MappingEvent;
 
@@ -74,8 +75,8 @@ public class MappingAgent extends MappingBase {
   private void processFamilyState(ProtocolFamily family, FamilyDiscoveryState state) {
     FamilyDiscoveryState previous = familyStates.put(family, state);
     if (previous == null || !Objects.equals(previous.generation, state.generation)) {
-      System.err.printf("Received family %s generation %s active %s%n", family,
-          isoConvert(state.generation), state.active);
+      System.err.printf("Received family %s generation %s phase %s%n", family,
+          isoConvert(state.generation), state.phase);
     }
   }
 
