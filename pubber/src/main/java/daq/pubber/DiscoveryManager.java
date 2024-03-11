@@ -15,6 +15,7 @@ import static java.util.stream.Collectors.toMap;
 import static udmi.schema.FamilyDiscoveryState.Phase.ACTIVE;
 import static udmi.schema.FamilyDiscoveryState.Phase.DONE;
 import static udmi.schema.FamilyDiscoveryState.Phase.PENDING;
+import static udmi.schema.FamilyDiscoveryState.Phase.STOPPED;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.udmi.util.SiteModel;
@@ -33,6 +34,7 @@ import udmi.schema.Enumerate;
 import udmi.schema.FamilyDiscovery;
 import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyDiscoveryState;
+import udmi.schema.FamilyDiscoveryState.Phase;
 import udmi.schema.FamilyLocalnetModel;
 import udmi.schema.Metadata;
 import udmi.schema.PointDiscovery;
@@ -91,13 +93,13 @@ public class DiscoveryManager extends ManagerBase {
     }
   }
 
-  private boolean scheduleDiscoveryScan(ProtocolFamily family) {
+  private void scheduleDiscoveryScan(ProtocolFamily family) {
     FamilyDiscoveryConfig familyDiscoveryConfig = discoveryConfig.families.get(family);
     Date rawGeneration = familyDiscoveryConfig.generation;
     int interval = getScanInterval(family);
     if (rawGeneration == null && interval == 0) {
-      cancelDiscoveryScan(family);
-      return false;
+      cancelDiscoveryScan(family, null, null);
+      return;
     }
 
     Date configGeneration = ofNullable(rawGeneration).orElse(DEVICE_START_TIME);
@@ -109,33 +111,35 @@ public class DiscoveryManager extends ManagerBase {
       Instant now = Instant.now();
       long deltaSec = floorMod(configGeneration.getTime() / 1000 - now.getEpochSecond(), interval);
       startGeneration = Date.from(now.plusSeconds(deltaSec));
-    } else if (!configGeneration.after(baseGeneration)) {
-      return false;
+    } else if (configGeneration.before(baseGeneration)) {
+      cancelDiscoveryScan(family, configGeneration, STOPPED);
+      return;
     } else {
       startGeneration = configGeneration;
     }
 
-    info("Discovery scan generation " + family + " future is " + isoConvert(startGeneration));
+    if (startGeneration.equals(baseGeneration)) {
+      return;
+    }
+
+    info("Discovery scan generation " + family + " pending at " + isoConvert(startGeneration));
     familyDiscoveryState.generation = startGeneration;
     familyDiscoveryState.phase = PENDING;
     updateState();
 
     scheduleFuture(startGeneration, () -> checkDiscoveryScan(family, startGeneration));
-
-    return true;
   }
 
   private void removeDiscoveryScan(ProtocolFamily family) {
-    cancelDiscoveryScan(family);
-    discoveryState.families.remove(family);
-    updateState();
+    FamilyDiscoveryState removed = discoveryState.families.remove(family);
+    ifNotNullThen(removed, was -> cancelDiscoveryScan(family, was.generation, STOPPED));
   }
 
-  private void cancelDiscoveryScan(ProtocolFamily family) {
+  private void cancelDiscoveryScan(ProtocolFamily family, Date configGeneration, Phase phase) {
     FamilyDiscoveryState familyDiscoveryState = discoveryState.families.get(family);
-    if (familyDiscoveryState != null && familyDiscoveryState.phase != DONE) {
-      stopDiscoveryScan(family);
-    }
+    info(format("Discovery scan %s phase %s as %s", family, phase, isoConvert(configGeneration)));
+    familyDiscoveryState.phase = phase;
+    familyDiscoveryState.generation = configGeneration;
     updateState();
   }
 
@@ -147,7 +151,7 @@ public class DiscoveryManager extends ManagerBase {
   private void checkDiscoveryScan(ProtocolFamily family, Date scanGeneration) {
     try {
       FamilyDiscoveryState familyDiscoveryState = ensureFamilyDiscoveryState(family);
-      ifTrueThen(familyDiscoveryState.phase != ACTIVE,
+      ifTrueThen(familyDiscoveryState.phase == PENDING,
           () -> startDiscoveryScan(family, scanGeneration));
     } catch (Exception e) {
       throw new RuntimeException("While checking for discovery scan start", e);
@@ -214,21 +218,14 @@ public class DiscoveryManager extends ManagerBase {
   private void discoveryScanComplete(ProtocolFamily family, Date scanGeneration) {
     try {
       FamilyDiscoveryState familyDiscoveryState = ensureFamilyDiscoveryState(family);
-      if (scanGeneration.equals(familyDiscoveryState.generation)) {
-        if (!scheduleDiscoveryScan(family)) {
-          stopDiscoveryScan(family);
-        }
-      }
+      ifTrueThen(scanGeneration.equals(familyDiscoveryState.generation),
+          () -> {
+            familyDiscoveryState.phase = DONE;
+            scheduleDiscoveryScan(family);
+          });
     } catch (Exception e) {
-      throw new RuntimeException("While checking for discovery scan complete", e);
+      throw new RuntimeException("While completing discovery scan " + family, e);
     }
-  }
-
-  private void stopDiscoveryScan(ProtocolFamily family) {
-    FamilyDiscoveryState familyDiscoveryState = discoveryState.families.get(family);
-    info("Discovery scan " + family + " done as " + isoConvert(familyDiscoveryState.generation));
-    familyDiscoveryState.phase = DONE;
-    updateState();
   }
 
   private int getScanInterval(ProtocolFamily family) {

@@ -82,6 +82,7 @@ public class FamilyDiscoveryState {
 
         PENDING("pending"),
         ACTIVE("active"),
+        STOPPED("stopped"),
         DONE("done");
         private final String value;
         private final static Map<String, FamilyDiscoveryState.Phase> CONSTANTS = new HashMap<String, FamilyDiscoveryState.Phase>();

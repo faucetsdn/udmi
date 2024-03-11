@@ -50,7 +50,15 @@ public abstract class ManagerBase {
     }
     long delay = Math.max(futureTime.getTime() - getNow().getTime(), 0);
     debug(format("Scheduling future in %dms", delay));
-    return executor.schedule(futureTask, delay, TimeUnit.MILLISECONDS);
+    return executor.schedule(() -> wrappedRunnable(futureTask), delay, TimeUnit.MILLISECONDS);
+  }
+
+  private void wrappedRunnable(Runnable futureTask) {
+    try {
+      futureTask.run();
+    } catch (Exception e) {
+      error("Error while executing scheduled future", e);
+    }
   }
 
   ScheduledFuture<?> schedulePeriodic(int sec, Runnable periodicUpdate) {

@@ -28,6 +28,7 @@ import static udmi.schema.Bucket.ENUMERATION_POINTSET;
 import static udmi.schema.FamilyDiscoveryState.Phase.ACTIVE;
 import static udmi.schema.FamilyDiscoveryState.Phase.DONE;
 import static udmi.schema.FamilyDiscoveryState.Phase.PENDING;
+import static udmi.schema.FamilyDiscoveryState.Phase.STOPPED;
 import static udmi.schema.FeatureDiscovery.FeatureStage.ALPHA;
 import static udmi.schema.FeatureDiscovery.FeatureStage.BETA;
 import static udmi.schema.FeatureDiscovery.FeatureStage.PREVIEW;
@@ -218,7 +219,7 @@ public class DiscoverySequences extends SequenceBase {
     Date startTime = LONG_TIME_AGO;
     boolean shouldEnumerate = false;
     configureScan(startTime, null, shouldEnumerate);
-    waitFor("scan schedule initially pending",
+    waitFor("scan schedule initially complete",
         () -> ifNotTrueGet(() -> scanComplete(startTime).test(scanFamily),
             this::describedFamilyState));
     sleepFor("false start check delay", SCAN_START_DELAY);
@@ -366,8 +367,11 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   private Predicate<ProtocolFamily> scanComplete(Date startTime) {
-    return family -> dateEquals(getStateFamily(family).generation, startTime)
-        && getStateFamily(family).phase == DONE
-        && deviceState.timestamp.after(startTime);
+    return family -> {
+      FamilyDiscoveryState stateFamily = getStateFamily(family);
+      return dateEquals(stateFamily.generation, startTime)
+          && (stateFamily.phase == DONE || stateFamily.phase == STOPPED)
+          && deviceState.timestamp.after(startTime);
+    };
   }
 }
