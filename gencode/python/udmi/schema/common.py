@@ -1,5 +1,4 @@
 """Generated class for common.json"""
-from .entry import Entry
 
 
 class Common:
@@ -7,19 +6,21 @@ class Common:
 
 
   SystemMode = SystemMode
+  ProtocolFamily = ProtocolFamily
   IotProvider = IotProvider
   FeatureStage = FeatureStage
   BlobPhase = BlobPhase
   SystemBlobsets = SystemBlobsets
 
   def __init__(self):
-    pass
+    self.family = None
 
   @staticmethod
   def from_dict(source):
     if not source:
       return None
     result = Common()
+    result.family = source.get('family')
     return result
 
   @staticmethod
@@ -40,4 +41,6 @@ class Common:
 
   def to_dict(self):
     result = {}
+    if self.family:
+      result['family'] = self.family # 5
     return result

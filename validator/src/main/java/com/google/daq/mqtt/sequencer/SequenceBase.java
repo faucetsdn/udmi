@@ -1248,8 +1248,16 @@ public class SequenceBase {
     return Common.getExceptionLine(e, SequenceBase.class);
   }
 
+  protected void checkThat(String description, Boolean condition) {
+    checkThat(description, condition, null);
+  }
+
   protected void checkThat(String description, Supplier<Boolean> condition) {
     checkThat(description, condition, null);
+  }
+
+  protected void checkThat(String description, Boolean condition, String details) {
+    checkThat(description, () -> condition, details);
   }
 
   protected void checkThat(String description, Supplier<Boolean> condition, String details) {
@@ -1287,6 +1295,16 @@ public class SequenceBase {
         return result != null;
       });
     }, detail::get);
+  }
+
+  protected void sleepFor(String delayReason, Duration sleepTime) {
+    String message = format("sleeping %ss for %s", sleepTime.getSeconds(), delayReason);
+    whileDoing(message, () -> safeSleep(sleepTime.getSeconds() * ONE_SECOND_MS));
+  }
+
+  protected void checkFor(String description, Supplier<String> detailer) {
+    String result = detailer.get();
+    checkThat(description, () -> result == null, result);
   }
 
   protected void waitForLog(String category, Level exactLevel) {
@@ -2204,7 +2222,7 @@ public class SequenceBase {
 
         activeInstance = SequenceBase.this;
       } catch (Exception e) {
-        e.printStackTrace();
+        trace("Exception stack:", stackTraceString(e));
         throw new RuntimeException("While starting " + testName, e);
       }
     }
@@ -2273,6 +2291,7 @@ public class SequenceBase {
       if (failureType != SKIP) {
         resetRequired = true;
         if (debugLogLevel()) {
+          trace("Stack trace:", stackTraceString(e));
           error("terminating test " + testName + " after " + timeSinceStart() + " "
               + START_END_MARKER);
           System.exit(EXIT_CODE_PRESERVE);

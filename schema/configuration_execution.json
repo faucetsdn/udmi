@@ -88,6 +88,12 @@
     },
     "block_unknown": {
       "type": "boolean"
+    },
+    "sequences": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     }
   }
 }

@@ -1,0 +1,46 @@
+{
+  "event_count" : 7,
+  "last_config" : "2024-03-11T17:51:12Z",
+  "logentries" : [ {
+    "message" : "Update state 2024-03-11T17:51:08Z last_config 2024-03-11T17:51:06Z",
+    "category" : "device.log",
+    "timestamp" : "2024-03-11T17:51:08Z",
+    "level" : 200
+  }, {
+    "message" : "Update state 2024-03-11T17:51:12Z last_config 2024-03-11T17:51:06Z",
+    "category" : "device.log",
+    "timestamp" : "2024-03-11T17:51:12Z",
+    "level" : 200
+  }, {
+    "message" : "Device AHU-1 config handler",
+    "category" : "device.log",
+    "timestamp" : "2024-03-11T17:51:12Z",
+    "level" : 200
+  }, {
+    "message" : "2024-03-11T17:51:12Z received config 2024-03-11T17:51:12Z",
+    "category" : "device.log",
+    "timestamp" : "2024-03-11T17:51:12Z",
+    "level" : 200
+  }, {
+    "message" : "Discovery scan generation vendor pending at 2024-03-11T17:51:20Z",
+    "category" : "device.log",
+    "timestamp" : "2024-03-11T17:51:12Z",
+    "level" : 200
+  }, {
+    "message" : "success",
+    "category" : "system.config.apply",
+    "timestamp" : "2024-03-11T17:51:12Z",
+    "level" : 300
+  }, {
+    "message" : "Update state 2024-03-11T17:51:14Z last_config 2024-03-11T17:51:12Z",
+    "category" : "device.log",
+    "timestamp" : "2024-03-11T17:51:14Z",
+    "level" : 200
+  } ],
+  "metrics" : {
+    "mem_total_mb" : 254.0,
+    "mem_free_mb" : 221.1526870727539
+  },
+  "timestamp" : "2024-03-11T17:51:17Z",
+  "version" : "1.5.0"
+}

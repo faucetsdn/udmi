@@ -27,6 +27,7 @@ if [[ -d $config_file ]]; then
     site_model=$config_file
     site_config=$site_model/cloud_iot_config.json
     cloud_region=$(jq -r .cloud_region $site_config)
+    [[ $cloud_region == null ]] && cloud_region=us-central1
     registry_id=$(jq -r .registry_id $site_config)
 elif [[ ! -f $config_file ]]; then
     fail Missing config file $(realpath $config_file)
@@ -105,6 +106,8 @@ elif [[ $iot_provider == gbos ]]; then
 elif [[ -z $broker_hostname ]]; then
     broker_hostname=mqtt.googleapis.com
 fi
+
+[[ $registry_id == null ]] && fail registry_id not defined
 
 registry_actual=${udmi_prefix}${registry_id}${registry_suffix}
 

@@ -67,13 +67,8 @@ public class DiscoveryEvent {
      */
     @JsonProperty("status")
     public Entry status;
-    /**
-     * The primary scan discovery address family
-     * 
-     */
     @JsonProperty("scan_family")
-    @JsonPropertyDescription("The primary scan discovery address family")
-    public java.lang.String scan_family;
+    public udmi.schema.Common.ProtocolFamily scan_family;
     /**
      * The primary address of the device (for scan_family)
      * 
@@ -87,7 +82,7 @@ public class DiscoveryEvent {
      */
     @JsonProperty("families")
     @JsonPropertyDescription("Address family discovery discovery results.")
-    public Map<String, FamilyDiscovery> families;
+    public Map<udmi.schema.Common.ProtocolFamily, FamilyDiscovery> families;
     /**
      * Registry discovery results.
      * 

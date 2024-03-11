@@ -34,6 +34,7 @@ class ExecutionConfiguration:
     self.alt_project = None
     self.alt_registry = None
     self.block_unknown = None
+    self.sequences = None
 
   @staticmethod
   def from_dict(source):
@@ -67,6 +68,7 @@ class ExecutionConfiguration:
     result.alt_project = source.get('alt_project')
     result.alt_registry = source.get('alt_registry')
     result.block_unknown = source.get('block_unknown')
+    result.sequences = source.get('sequences')
     return result
 
   @staticmethod
@@ -141,4 +143,6 @@ class ExecutionConfiguration:
       result['alt_registry'] = self.alt_registry # 5
     if self.block_unknown:
       result['block_unknown'] = self.block_unknown # 5
+    if self.sequences:
+      result['sequences'] = self.sequences # 1
     return result
