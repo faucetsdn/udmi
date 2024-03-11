@@ -1,0 +1,9 @@
+{
+  "families" : {
+    "vendor" : {
+      "generation" : "2024-03-11T17:51:20Z",
+      "scan_duration_sec" : 10,
+      "enumerate" : false
+    }
+  }
+}
