@@ -36,7 +36,7 @@ public class GatewaySequences extends SequenceBase {
     super.setUp();
   }
 
-  @Feature(stage = FeatureStage.PREVIEW, bucket = Bucket.GATEWAY)
+  @Feature(stage = FeatureStage.ALPHA, bucket = Bucket.GATEWAY)
   @Summary("Check adequate logging for gateway detach, errors, and reattach")
   @Test(timeout = NINETY_SECONDS_MS)
   public void gateway_attach_handling() {
