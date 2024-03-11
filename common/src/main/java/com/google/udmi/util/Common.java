@@ -37,6 +37,7 @@ public abstract class Common {
   public static final String SUBFOLDER_PROPERTY_KEY = "subFolder";
   public static final String PROJECT_ID_PROPERTY_KEY = "projectId";
   public static final String REGISTRY_ID_PROPERTY_KEY = "deviceRegistryId";
+  public static final String DEFAULT_REGION = "us-central1";
   public static final String DEVICE_ID_KEY = "deviceId";
   public static final String GATEWAY_ID_KEY = "gatewayId";
   public static final String MESSAGE_SOURCE_PROPERTY_KEY = "source";

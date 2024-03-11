@@ -12,6 +12,7 @@ import com.google.daq.mqtt.sequencer.Summary;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
 import org.junit.Test;
 import udmi.schema.Bucket;
+import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.FamilyLocalnetModel;
 import udmi.schema.FeatureDiscovery.FeatureStage;
 import udmi.schema.GatewayConfig;
@@ -37,7 +38,7 @@ public class ProxiedSequences extends PointsetBase {
     GatewayConfig gatewayConfig = deviceConfig.gateway;
     final FamilyLocalnetModel savedTarget = deepCopy(gatewayConfig.target);
     ifNullThen(gatewayConfig.target, () -> gatewayConfig.target = new FamilyLocalnetModel());
-    gatewayConfig.target.family = SemanticValue.describe("random family", getRandomFamily());
+    gatewayConfig.target.family = ProtocolFamily.INVALID;
     untilTrue("gateway status has target error", this::hasTargetError);
     gatewayConfig.target = savedTarget;
     untilFalse("restored original target config", this::hasGatewayStatus);

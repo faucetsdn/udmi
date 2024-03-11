@@ -10,6 +10,7 @@ import static udmi.schema.FeatureDiscovery.FeatureStage.ALPHA;
 import static udmi.schema.FeatureDiscovery.FeatureStage.BETA;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.daq.mqtt.WebServerRunner;
 import com.google.daq.mqtt.sequencer.sequences.ConfigSequences;
 import com.google.daq.mqtt.util.ConfigUtil;
@@ -78,8 +79,8 @@ public class SequenceRunner {
    * @return status code
    */
   public static int processResult(List<String> targets) {
+    checkState(targets.isEmpty(), "unrecognized command line arguments");
     SequenceRunner sequenceRunner = new SequenceRunner();
-    sequenceRunner.setTargets(targets);
     sequenceRunner.process();
     return sequenceRunner.resultCode();
   }
@@ -224,6 +225,7 @@ public class SequenceRunner {
     }
     System.err.println("Target sequence classes:\n  " + Joiner.on("\n  ").join(sequenceClasses));
     ensureExecutionConfig();
+    targets = ofNullable(exeConfig.sequences).orElseGet(ImmutableList::of);
     boolean enableAllBuckets = shouldExecuteAll() || !targets.isEmpty();
     SequenceBase.enableAllBuckets(enableAllBuckets);
     String deviceId = exeConfig.device_id;
@@ -314,9 +316,5 @@ public class SequenceRunner {
     }
     Feature annotation = method.getAnnotation(Feature.class);
     return processStage(annotation == null ? Feature.DEFAULT_STAGE : annotation.stage());
-  }
-
-  public void setTargets(List<String> targets) {
-    this.targets = targets;
   }
 }

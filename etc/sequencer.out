@@ -1,5 +1,9 @@
-RESULT pass discovery.scan periodic_scan ALPHA 5/5 Sequence complete
-RESULT pass discovery.scan single_scan ALPHA 5/5 Sequence complete
+RESULT skip discovery.scan cancel_before_start ALPHA 0/0 Not yet implemented
+RESULT skip discovery.scan cancel_periodic ALPHA 0/0 Not yet implemented
+RESULT fail discovery.scan periodic_scan_fixed ALPHA 0/5 scan iteration
+RESULT skip discovery.scan periodic_scan_floating ALPHA 0/0 Not yet implemented
+RESULT pass discovery.scan single_scan_future ALPHA 5/5 Sequence complete
+RESULT pass discovery.scan single_scan_past ALPHA 5/5 Sequence complete
 RESULT pass endpoint.config endpoint_connection_bad_hash ALPHA 5/5 Sequence complete
 RESULT pass endpoint.config endpoint_connection_error PREVIEW 5/5 Sequence complete
 RESULT pass endpoint.config endpoint_connection_retry PREVIEW 5/5 Sequence complete

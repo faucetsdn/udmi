@@ -2,6 +2,7 @@ package com.google.bos.iot.core.proxy;
 
 import static com.google.bos.iot.core.proxy.ProxyTarget.STATE_TOPIC;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.udmi.util.Common.DEFAULT_REGION;
 import static com.google.udmi.util.GeneralUtils.catchOrElse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
@@ -111,7 +112,7 @@ public class MqttPublisher implements MessagePublisher {
     this.onMessage = onMessage;
     this.onError = onError;
     this.projectId = executionConfiguration.project_id;
-    this.cloudRegion = executionConfiguration.cloud_region;
+    this.cloudRegion = ofNullable(executionConfiguration.cloud_region).orElse(DEFAULT_REGION);
     this.registryId = MessagePublisher.getRegistryId(executionConfiguration);
     this.deviceId = executionConfiguration.device_id;
     this.siteModel = executionConfiguration.site_model;

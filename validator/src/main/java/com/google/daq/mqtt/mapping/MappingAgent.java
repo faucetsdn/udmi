@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.DeviceMappingConfig;
 import udmi.schema.DeviceMappingState;
 import udmi.schema.DiscoveryConfig;
@@ -18,6 +19,7 @@ import udmi.schema.DiscoveryState;
 import udmi.schema.Envelope;
 import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyDiscoveryState;
+import udmi.schema.FamilyDiscoveryState.Phase;
 import udmi.schema.MappingCommand;
 import udmi.schema.MappingEvent;
 
@@ -27,8 +29,8 @@ import udmi.schema.MappingEvent;
 public class MappingAgent extends MappingBase {
 
   private static final int SCAN_INTERVAL_SEC = 60;
-  private static final String DISCOVERY_FAMILY = "virtual";
-  private final Map<String, FamilyDiscoveryState> familyStates = new HashMap<>();
+  private static final ProtocolFamily DISCOVERY_FAMILY = ProtocolFamily.VENDOR;
+  private final Map<ProtocolFamily, FamilyDiscoveryState> familyStates = new HashMap<>();
   private MappingSink mappingSink;
   private final List<HandlerSpecification> handlers = ImmutableList.of(
       MessageHandler.handlerSpecification(DiscoveryState.class, this::discoveryStateHandler),
@@ -70,11 +72,11 @@ public class MappingAgent extends MappingBase {
     System.err.println("Started discovery generation " + generation);
   }
 
-  private void processFamilyState(String family, FamilyDiscoveryState state) {
+  private void processFamilyState(ProtocolFamily family, FamilyDiscoveryState state) {
     FamilyDiscoveryState previous = familyStates.put(family, state);
     if (previous == null || !Objects.equals(previous.generation, state.generation)) {
-      System.err.printf("Received family %s generation %s active %s%n", family,
-          isoConvert(state.generation), state.active);
+      System.err.printf("Received family %s generation %s phase %s%n", family,
+          isoConvert(state.generation), state.phase);
     }
   }
 

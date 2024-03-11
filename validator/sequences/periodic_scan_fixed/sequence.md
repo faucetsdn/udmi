@@ -1,0 +1,15 @@
+
+## periodic_scan_fixed (ALPHA)
+
+Check periodic scan on a fixed schedule
+
+1. Update config before discovery families defined:
+    * Add `discovery` = { "families": {  } }
+1. Wait for discovery families defined
+1. Wait for discovery family keys match
+1. Wait for no scans active
+1. Update config before scan iterations:
+    * Add `discovery.families.vendor` = { "generation": `family generation`, "scan_interval_sec": `10`, "scan_duration_sec": `10`, "enumerate": `true` }
+1. Wait for scan iterations
+1. Check that all events have points
+1. Test failed: scan iteration

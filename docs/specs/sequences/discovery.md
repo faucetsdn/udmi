@@ -27,7 +27,7 @@ a _sporadic scan_ is used to trigger an on-prem agent (often an IoT Gateway) to 
 Depending on the system, this might encompass a number of different network protocols (e.g. BACnet, IPv4, etc...).
 
 * [_start config_](../../../tests/schemas/config/discovery.json): Starts a discovery scan, triggered
-  by the `generation` timestamp (defined and not-the-same as the previous scan generation).
+  by the `generation` timestamp (defined, not-the-same as the previous scan generation, and after the device's last start time).
 * [_start state_](../../../tests/schemas/state/discovery.json): Indicates the device is actively
   scanning, with `generation` should match that of _config_, and the `active` as `true`.
 * [_discovery event_](../../../tests/schemas/event_discovery/discovery.json): Streaming results

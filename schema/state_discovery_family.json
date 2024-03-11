@@ -11,9 +11,14 @@
       "type": "string",
       "format": "date-time"
     },
-    "active": {
-      "type": "boolean",
-      "description": "Indicates if the discovery process is currently active"
+    "phase": {
+      "description": "Current phase of the discovery process",
+      "enum": [
+        "pending",
+        "active",
+        "stopped",
+        "done"
+      ]
     },
     "status": {
       "description": "Status information about the discovery operation",

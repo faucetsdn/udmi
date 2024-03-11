@@ -13,10 +13,10 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
-import com.google.udmi.util.GeneralUtils;
 import java.util.HashMap;
 import java.util.List;
 import org.jetbrains.annotations.NotNull;
+import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.Config;
 import udmi.schema.GatewayConfig;
 import udmi.schema.LocalnetConfig;
@@ -33,7 +33,7 @@ import udmi.schema.SystemConfig;
 public class ConfigGenerator {
 
   public static final String GENERATED_CONFIG_JSON = "generated_config.json";
-  public static final String DEFAULT_FAMILY = "vendor";
+  public static final ProtocolFamily DEFAULT_FAMILY = ProtocolFamily.VENDOR;
 
   private final Metadata metadata;
 
@@ -91,10 +91,11 @@ public class ConfigGenerator {
     return gatewayConfig;
   }
 
-  private String getLocalnetAddr(String rawFamily) {
-    String family = ofNullable(rawFamily).orElse(DEFAULT_FAMILY);
+  private String getLocalnetAddr(ProtocolFamily rawFamily) {
+    ProtocolFamily family = ofNullable(rawFamily).orElse(DEFAULT_FAMILY);
     String address = catchToNull(() -> metadata.localnet.families.get(family).addr);
-    return requireNonNull(address, format("metadata.localnet.families[%s].addr undefined", family));
+    return requireNonNull(address,
+        format("metadata.localnet.families[%s].addr undefined", family.value()));
   }
 
   private PointsetConfig getDevicePointsetConfig() {
@@ -140,8 +141,8 @@ public class ConfigGenerator {
 
   private String pointConfigRef(PointPointsetModel model) {
     String pointRef = model.ref;
-    String rawFamily = catchToNull(() -> metadata.gateway.target.family);
-    String family = ofNullable(rawFamily).orElse(DEFAULT_FAMILY);
+    ProtocolFamily rawFamily = catchToNull(() -> metadata.gateway.target.family);
+    ProtocolFamily family = ofNullable(rawFamily).orElse(DEFAULT_FAMILY);
 
     if (!isProxied()) {
       return pointRef;
