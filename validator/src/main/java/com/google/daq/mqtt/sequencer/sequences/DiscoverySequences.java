@@ -234,7 +234,8 @@ public class DiscoverySequences extends SequenceBase {
     checkConfigDiff = true;
     Duration waitingPeriod = SCAN_START_DELAY.plus(SCAN_START_DELAY);
     waitFor("scheduled scan start", waitingPeriod,
-        () -> ifNotTrueGet(() -> scanActive(startTime).test(scanFamily), this::describedFamilyState));
+        () -> ifNotTrueGet(() -> scanActive(startTime).test(scanFamily),
+            this::describedFamilyState));
     checkThat("scan not started before activation", !deviceState.timestamp.before(startTime),
         describedFamilyState());
     waitFor("scheduled scan stop", waitingPeriod,

@@ -30,7 +30,7 @@ public class ProxiedSequences extends PointsetBase {
     super.setUp();
   }
 
-  @Feature(stage = FeatureStage.ALPHA, bucket = Bucket.GATEWAY)
+  @Feature(stage = FeatureStage.PREVIEW, bucket = Bucket.GATEWAY)
   @Summary("Error handling for badly formed target address family")
   @Test(timeout = ONE_MINUTE_MS)
   public void bad_target_family() {

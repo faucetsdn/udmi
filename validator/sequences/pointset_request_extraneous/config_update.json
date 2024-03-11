@@ -1,16 +1,4 @@
 {
-  "blobset" : { },
-  "discovery" : { },
-  "localnet" : {
-    "families" : {
-      "ether" : {
-        "addr" : "00:50:b6:ed:5f:77"
-      },
-      "ipv4" : {
-        "addr" : "192.168.2.1"
-      }
-    }
-  },
   "pointset" : {
     "points" : {
       "filter_alarm_pressure_status" : {
@@ -25,18 +13,19 @@
         "set_value" : 98,
         "units" : "Bars"
       }
-    }
+    },
+    "sample_rate_sec" : 10
   },
   "system" : {
-    "metrics_rate_sec" : 600,
+    "metrics_rate_sec" : 10,
     "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2023-11-07T14:30:01Z"
+      "last_start" : "2024-03-10T18:06:45Z"
     },
     "testing" : {
       "sequence_name" : "pointset_request_extraneous"
     }
   },
-  "timestamp" : "2023-11-07T14:31:34Z",
-  "version" : "1.4.2-40-gdeae740b"
+  "timestamp" : "2024-03-10T18:09:18Z",
+  "version" : "1.5.0-33-gddfe90847"
 }

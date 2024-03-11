@@ -1,12 +1,13 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
-import static com.google.common.collect.Sets.symmetricDifference;
 import static com.google.daq.mqtt.util.TimePeriodConstants.ONE_MINUTE_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.THREE_MINUTES_MS;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifNotTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
-import static com.google.udmi.util.GeneralUtils.joinOrNull;
+import static com.google.udmi.util.GeneralUtils.prefixedDifference;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static java.lang.String.format;
@@ -30,6 +31,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Test;
@@ -68,28 +70,29 @@ public class PointsetSequences extends PointsetBase {
         Set<String> statePoints = deviceState.pointset.points.keySet();
         String prefix = format("config %s state %s differences: ",
             isoConvert(deviceConfig.timestamp), isoConvert(deviceState.timestamp));
-        return joinOrNull(prefix, symmetricDifference(configPoints, statePoints));
+        return prefixedDifference(prefix, configPoints, statePoints);
       });
 
+      final AtomicReference<String> message = new AtomicReference<>("any received pointset event");
       waitFor("pointset event contains correct points", EVENT_WAIT_DURATION, () -> {
-        List<PointsetEvent> pointsetEvents = popReceivedEvents(PointsetEvent.class);
-        if (pointsetEvents.isEmpty()) {
-          return "received pointset event";
-        }
-        PointsetEvent lastEvent = pointsetEvents.get(pointsetEvents.size() - 1);
-        debug("last event is " + stringifyTerse(lastEvent));
-        Set<Entry<String, PointPointsetEvent>> lastPoints = lastEvent.points.entrySet();
-        Set<String> eventPoints = lastPoints.stream().filter(this::validPointEntry)
-            .map(Entry::getKey).collect(Collectors.toSet());
-        Set<String> errorPoints = deviceState.pointset.points.entrySet().stream()
-            .filter(this::errorPointEntry).map(Entry::getKey).collect(Collectors.toSet());
-        Set<String> receivedPoints = Sets.union(eventPoints, errorPoints);
-        debug(" event points are " + CSV_JOINER.join(eventPoints));
-        String prefix = format("config %s event %s differences: ",
-            isoConvert(deviceConfig.timestamp), isoConvert(lastEvent.timestamp));
-        Set<String> configPoints = deviceConfig.pointset.points.keySet();
-        debug("config points are " + CSV_JOINER.join(configPoints));
-        return joinOrNull(prefix, symmetricDifference(configPoints, receivedPoints));
+        List<PointsetEvent> events = popReceivedEvents(PointsetEvent.class);
+        ifNotNullThen(ifNotTrueGet(events.isEmpty(), () -> events.get(events.size() - 1)),
+            lastEvent -> {
+              debug("last event is " + stringifyTerse(lastEvent));
+              Set<Entry<String, PointPointsetEvent>> lastPoints = lastEvent.points.entrySet();
+              Set<String> eventPoints = lastPoints.stream().filter(this::validPointEntry)
+                  .map(Entry::getKey).collect(Collectors.toSet());
+              Set<String> errorPoints = deviceState.pointset.points.entrySet().stream()
+                  .filter(this::errorPointEntry).map(Entry::getKey).collect(Collectors.toSet());
+              Set<String> receivedPoints = Sets.union(eventPoints, errorPoints);
+              debug(" event points are " + CSV_JOINER.join(eventPoints));
+              String prefix = format("config %s event %s differences: ",
+                  isoConvert(deviceConfig.timestamp), isoConvert(lastEvent.timestamp));
+              Set<String> configPoints = deviceConfig.pointset.points.keySet();
+              debug("config points are " + CSV_JOINER.join(configPoints));
+              message.set(prefixedDifference(prefix, configPoints, receivedPoints));
+            });
+        return message.get();
       });
     });
   }

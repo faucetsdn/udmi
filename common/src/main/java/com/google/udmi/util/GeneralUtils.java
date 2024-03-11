@@ -1,5 +1,6 @@
 package com.google.udmi.util;
 
+import static com.google.common.collect.Sets.symmetricDifference;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.ProperPrinter.OutputFormat.COMPRESSED;
 import static com.google.udmi.util.ProperPrinter.OutputFormat.VERBOSE;
@@ -551,4 +552,7 @@ public class GeneralUtils {
     return isoConvert(getNow());
   }
 
+  public static String prefixedDifference(String prefix, Set<String> a, Set<String> b) {
+    return joinOrNull(prefix, symmetricDifference(a, b));
+  }
 }
