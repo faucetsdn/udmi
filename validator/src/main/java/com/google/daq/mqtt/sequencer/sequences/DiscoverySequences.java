@@ -230,7 +230,7 @@ public class DiscoverySequences extends SequenceBase {
 
   @Test(timeout = ONE_MINUTE_MS)
   @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA)
-  @Summary("Check results of a single scan scheduled immediately")
+  @Summary("Check results of a single scan scheduled soon")
   public void single_scan_future() {
     initializeDiscovery();
     Date startTime = cleanInstantDate(Instant.now().plus(SCAN_START_DELAY));
@@ -295,15 +295,22 @@ public class DiscoverySequences extends SequenceBase {
 
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA)
-  @Summary("Check periodic scan of address families")
+  @Summary("Check periodic scan on a floating schedule")
   public void periodic_scan_floating() {
     ifTrueSkipTest(true, "Not yet implemented");
   }
 
   @Test(timeout = ONE_MINUTE_MS)
   @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA)
-  @Summary("Check results of a single scan scheduled right now")
+  @Summary("Check results of cancelling a pending scan")
   public void cancel_before_start() {
+    ifTrueSkipTest(true, "Not yet implemented");
+  }
+
+  @Test(timeout = ONE_MINUTE_MS)
+  @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA)
+  @Summary("Check results of cancelling a periodic scan")
+  public void cancel_periodic() {
     ifTrueSkipTest(true, "Not yet implemented");
   }
 

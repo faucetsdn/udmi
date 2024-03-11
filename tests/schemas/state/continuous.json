@@ -22,7 +22,7 @@
   "discovery": {
     "families": {
       "bacnet": {
-        "active": true
+        "phase": "active"
       }
     }
   }
