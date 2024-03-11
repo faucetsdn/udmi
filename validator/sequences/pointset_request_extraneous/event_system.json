@@ -1,36 +1,36 @@
 {
-  "event_count" : 7,
-  "last_config" : "2023-11-07T14:31:24Z",
+  "event_count" : 14,
+  "last_config" : "2024-03-10T18:09:09Z",
   "logentries" : [ {
-    "message" : "Config handler",
+    "message" : "Update state 2024-03-10T18:09:09Z last_config 2024-03-10T18:09:07Z",
     "category" : "device.log",
-    "timestamp" : "2023-11-07T14:31:24Z",
+    "timestamp" : "2024-03-10T18:09:09Z",
     "level" : 200
   }, {
-    "message" : "2023-11-07T14:31:24Z received config 2023-11-07T14:31:24Z",
+    "message" : "Device AHU-1 config handler",
     "category" : "device.log",
-    "timestamp" : "2023-11-07T14:31:24Z",
+    "timestamp" : "2024-03-10T18:09:09Z",
     "level" : 200
   }, {
-    "message" : "update state 2023-11-07T14:31:24Z last_config 2023-11-07T14:31:18Z",
+    "message" : "2024-03-10T18:09:09Z received config 2024-03-10T18:09:09Z",
     "category" : "device.log",
-    "timestamp" : "2023-11-07T14:31:24Z",
+    "timestamp" : "2024-03-10T18:09:09Z",
     "level" : 200
   }, {
     "message" : "success",
     "category" : "system.config.apply",
-    "timestamp" : "2023-11-07T14:31:24Z",
+    "timestamp" : "2024-03-10T18:09:09Z",
     "level" : 300
   }, {
-    "message" : "update state 2023-11-07T14:31:26Z last_config 2023-11-07T14:31:24Z",
+    "message" : "Update state 2024-03-10T18:09:11Z last_config 2024-03-10T18:09:09Z",
     "category" : "device.log",
-    "timestamp" : "2023-11-07T14:31:26Z",
+    "timestamp" : "2024-03-10T18:09:11Z",
     "level" : 200
   } ],
   "metrics" : {
-    "mem_total_mb" : 112.0,
-    "mem_free_mb" : 74.99584197998047
+    "mem_total_mb" : 254.0,
+    "mem_free_mb" : 190.19576263427734
   },
-  "timestamp" : "2023-11-07T14:31:33Z",
-  "version" : "1.4.2"
+  "timestamp" : "2024-03-10T18:09:17Z",
+  "version" : "1.5.0"
 }
