@@ -1,0 +1,39 @@
+{
+  "timestamp" : "2024-03-11T17:51:12Z",
+  "version" : "@@@cloud udmi version###1.5.0-33-gddfe90847",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 10,
+    "operation" : {
+      "last_start" : "2024-03-11T17:50:06Z"
+    },
+    "testing" : {
+      "sequence_name" : "single_scan_future"
+    }
+  },
+  "discovery" : {
+    "families" : {
+      "vendor" : {
+        "generation" : "2024-03-11T17:51:20Z",
+        "scan_duration_sec" : 10,
+        "enumerate" : false
+      }
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_differential_pressure_setpoint" : {
+        "units" : "Bars",
+        "set_value" : 98
+      },
+      "filter_alarm_pressure_status" : {
+        "ref" : "BV11.present_value",
+        "units" : "No-units"
+      },
+      "filter_differential_pressure_sensor" : {
+        "ref" : "AV12.present_value",
+        "units" : "Degrees-Celsius"
+      }
+    }
+  }
+}

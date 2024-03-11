@@ -8,7 +8,7 @@
   "properties": {
     "families": {
       "additionalProperties": false,
-      "existingJavaType": "java.util.HashMap<String, FamilyLocalnetModel>",
+      "existingJavaType": "java.util.HashMap<udmi.schema.Common.ProtocolFamily, FamilyLocalnetModel>",
       "patternProperties": {
         "^[a-z0-9-]+$": {
           "$ref": "file:model_localnet_family.json"

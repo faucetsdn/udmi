@@ -16,6 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.FamilyDiscovery;
 import udmi.schema.FamilyLocalnetState;
 import udmi.schema.LocalnetState;
@@ -32,7 +33,7 @@ public class LocalnetManager extends ManagerBase {
       Pattern.compile(" +(inet6) ([:\\da-f]+)/.+"),
       Pattern.compile(" +link/(ether) ([:\\da-f]+) .+")
   );
-  private static final Map<String, String> ifaceMap = ImmutableMap.of(
+  private static final Map<String, String> IFACE_MAP = ImmutableMap.of(
       "ether", "ether",
       "inet", "ipv4",
       "inet6", "ipv6"
@@ -73,13 +74,14 @@ public class LocalnetManager extends ManagerBase {
   }
 
   @VisibleForTesting
-  static Map<String, String> getInterfaceAddressesStatic(List<String> strings) {
-    Map<String, String> interfaceMap = new HashMap<>();
+  static Map<ProtocolFamily, String> getInterfaceAddressesStatic(List<String> strings) {
+    Map<ProtocolFamily, String> interfaceMap = new HashMap<>();
     strings.forEach(line -> {
       for (Pattern pattern : familyPatterns) {
         Matcher matcher = pattern.matcher(line);
         if (matcher.matches()) {
-          interfaceMap.put(ifaceMap.get(matcher.group(1)), matcher.group(2));
+          ProtocolFamily family = ProtocolFamily.fromValue(IFACE_MAP.get(matcher.group(1)));
+          interfaceMap.put(family, matcher.group(2));
         }
       }
     });
@@ -128,21 +130,21 @@ public class LocalnetManager extends ManagerBase {
     localnetState.families = new HashMap<>();
     String defaultInterface = getDefaultInterface();
     info("Using addresses from default interface " + defaultInterface);
-    Map<String, String> interfaceAddresses = ofNullable(
+    Map<ProtocolFamily, String> interfaceAddresses = ofNullable(
         getInterfaceAddresses(defaultInterface)).orElse(ImmutableMap.of());
     interfaceAddresses.entrySet().forEach(this::addStateMapEntry);
     HashMap<String, FamilyLocalnetState> stateMap = new HashMap<>();
   }
 
-  private void addStateMapEntry(Entry<String, String> entry) {
+  private void addStateMapEntry(Entry<ProtocolFamily, String> entry) {
     FamilyLocalnetState stateEntry = new FamilyLocalnetState();
     stateEntry.addr = entry.getValue();
-    String family = entry.getKey();
+    ProtocolFamily family = entry.getKey();
     info("Family " + family + " address is " + stateEntry.addr);
     localnetState.families.put(family, stateEntry);
   }
 
-  private Map<String, String> getInterfaceAddresses(String defaultInterface) {
+  private Map<ProtocolFamily, String> getInterfaceAddresses(String defaultInterface) {
     if (defaultInterface == null) {
       return null;
     }
@@ -162,12 +164,12 @@ public class LocalnetManager extends ManagerBase {
     }
   }
 
-  Map<String, FamilyDiscovery> enumerateFamilies() {
+  Map<ProtocolFamily, FamilyDiscovery> enumerateFamilies() {
     return localnetState.families.keySet().stream()
         .collect(toMap(key -> key, this::makeFamilyDiscovery));
   }
 
-  private FamilyDiscovery makeFamilyDiscovery(String key) {
+  private FamilyDiscovery makeFamilyDiscovery(ProtocolFamily key) {
     FamilyDiscovery familyDiscovery = new FamilyDiscovery();
     familyDiscovery.addr = localnetState.families.get(key).addr;
     return familyDiscovery;

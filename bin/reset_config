@@ -30,6 +30,9 @@ cd ${ROOT}
 
 dst_config=/tmp/${device_id}_config.json
 src_config=${site_dir}/devices/${device_id}/out/$config_file
+if [[ ! -f $src_config ]]; then
+    src_config=${site_dir}/devices/${device_id}/config/$config_file
+fi
 ls -l ${src_config}
 now_date=$(python3 -c 'import datetime; print(datetime.datetime.utcnow().isoformat() + "Z")')
 echo Setting config timestamp ${now_date}

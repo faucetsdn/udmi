@@ -1,0 +1,15 @@
+{
+  "families" : {
+    "ether" : {
+      "addr" : "60:45:bd:4a:55:8e"
+    },
+    "ipv4" : {
+      "addr" : "10.1.0.62"
+    },
+    "ipv6" : {
+      "addr" : "fe80::6245:bdff:fe4a:558e"
+    }
+  },
+  "timestamp" : "2024-03-11T17:51:14Z",
+  "version" : "1.5.0"
+}

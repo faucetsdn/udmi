@@ -1,0 +1,48 @@
+{
+  "discovery" : {
+    "families" : {
+      "vendor" : {
+        "generation" : "1970-01-01T03:34:57Z",
+        "phase" : "stopped"
+      }
+    }
+  },
+  "localnet" : {
+    "families" : {
+      "ether" : {
+        "addr" : "00:0d:3a:61:a3:b4"
+      },
+      "ipv4" : {
+        "addr" : "10.1.0.77"
+      },
+      "ipv6" : {
+        "addr" : "fe80::20d:3aff:fe61:a3b4"
+      }
+    }
+  },
+  "system" : {
+    "last_config" : "2024-03-11T17:51:34Z",
+    "operation" : {
+      "operational" : true,
+      "last_start" : "2024-03-11T17:50:56Z",
+      "restart_count" : 2,
+      "mode" : "active"
+    },
+    "serial_no" : "sequencer-9023",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1"
+    },
+    "status" : {
+      "message" : "success",
+      "category" : "system.config.apply",
+      "timestamp" : "2024-03-11T17:51:34Z",
+      "level" : 300
+    }
+  },
+  "timestamp" : "2024-03-11T17:51:36Z",
+  "version" : "1.5.0"
+}

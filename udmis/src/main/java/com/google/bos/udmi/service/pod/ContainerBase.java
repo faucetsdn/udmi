@@ -53,7 +53,7 @@ public abstract class ContainerBase implements ContainerProvider {
   private static final ThreadLocal<String> executionContext = new ThreadLocal<>();
   private static final Pattern VARIABLE_PATTERN = Pattern.compile("\\$\\{([A-Z_]+)}");
   private static final Pattern MULTI_PATTERN = Pattern.compile("!\\{([,a-zA-Z_]+)}");
-  private static final int JITTER_ADJ_MS = 1200;
+  private static final int JITTER_ADJ_MS = 1000; // Empirically determined to be good.
   protected static String reflectRegistry = REFLECT_BASE;
   private static BasePodConfiguration basePodConfig = new BasePodConfiguration();
   protected final PodConfiguration podConfiguration;
@@ -194,6 +194,16 @@ public abstract class ContainerBase implements ContainerProvider {
     return out;
   }
 
+  private void alignWithGeneration() {
+    // The initial delay will often be slightly off the intended time due to rounding errors.
+    // Add in a quick/bounded delay to the start of the next second for dynamic alignment.
+    // Mostly this is just to make the output timestamps look pretty, but has no functional impact.
+    long intervalDelaySec = intervalDelaySec();
+    long secondsToAdd = intervalDelaySec < periodicSec / 2 ? intervalDelaySec : 0;
+    Duration duration = Duration.ofMillis(JITTER_ADJ_MS).plusSeconds(secondsToAdd);
+    safeSleep(duration.minusNanos(Instant.now().getNano()).toMillis());
+  }
+
   private String environmentReplacer(MatchResult match) {
     String replacement = ofNullable(getEnv(match.group(1))).orElse("");
     if (replacement.startsWith("!")) {
@@ -228,7 +238,7 @@ public abstract class ContainerBase implements ContainerProvider {
     return getClass().getSimpleName();
   }
 
-  private long initialDelaySec() {
+  private long intervalDelaySec() {
     return ifNotNullGet(executorGeneration, generation ->
         floorMod(between(instantNow(), generation).getSeconds(), periodicSec), periodicSec);
   }
@@ -236,11 +246,7 @@ public abstract class ContainerBase implements ContainerProvider {
   private void periodicWrapper() {
     try {
       grabExecutionContext();
-      if (executorGeneration != null) {
-        // The initial delay will often be slightly off the intended time due to rounding errors.
-        // Add in a quick delay to the start of the next second for dynamic alignment.
-        safeSleep(Duration.ofMillis(JITTER_ADJ_MS).minusNanos(Instant.now().getNano()).toMillis());
-      }
+      ifNotNullThen(executorGeneration, this::alignWithGeneration);
       periodicTask();
     } catch (Exception e) {
       error("Exception executing periodic task: " + friendlyStackTrace(e));
@@ -251,7 +257,7 @@ public abstract class ContainerBase implements ContainerProvider {
   public void activate() {
     info("Activating");
     ifTrueThen(periodicSec > 0, () -> {
-      long initial = initialDelaySec();
+      long initial = intervalDelaySec();
       notice("Scheduling task %s execution after %ss every %ss", containerId, initial, periodicSec);
       scheduledExecutor.scheduleAtFixedRate(this::periodicWrapper, initial, periodicSec, SECONDS);
     });

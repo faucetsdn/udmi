@@ -1,7 +1,7 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.4.1",
-  "hash": "2d09c587",
+  "hash": "f167cd94",
   "cloud": {
     "auth_type": "RS256"
   },
@@ -25,7 +25,7 @@
   },
   "discovery": {
     "families": {
-      "virtual": { }
+      "vendor": { }
     }
   },
   "localnet": {

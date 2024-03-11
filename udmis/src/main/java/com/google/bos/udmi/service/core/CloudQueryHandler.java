@@ -16,6 +16,7 @@ import org.jetbrains.annotations.NotNull;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudQuery;
 import udmi.schema.CloudQuery.Depth;
+import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.DiscoveryEvent;
 import udmi.schema.Envelope;
 
@@ -24,7 +25,6 @@ import udmi.schema.Envelope;
  */
 public class CloudQueryHandler {
 
-  private static final String IOT_SCAN_FAMILY = "iot";
   private final ControlProcessor controller;
   private final IotAccessBase iotAccess;
   private final TargetProcessor target;
@@ -78,7 +78,7 @@ public class CloudQueryHandler {
   private void queryAllRegistries() {
     Set<String> registries = iotAccess.listRegistries();
     DiscoveryEvent discoveryEvent = new DiscoveryEvent();
-    discoveryEvent.scan_family = IOT_SCAN_FAMILY;
+    discoveryEvent.scan_family = ProtocolFamily.IOT;
     discoveryEvent.generation = query.generation;
     discoveryEvent.registries = registries.stream()
         .collect(Collectors.toMap(registryId -> registryId, this::makeCloudModel));
@@ -98,7 +98,7 @@ public class CloudQueryHandler {
     String deviceId = requireNonNull(envelope.deviceId, "device id");
 
     DiscoveryEvent discoveryEvent = new DiscoveryEvent();
-    discoveryEvent.scan_family = IOT_SCAN_FAMILY;
+    discoveryEvent.scan_family = ProtocolFamily.IOT;
     discoveryEvent.generation = query.generation;
     discoveryEvent.cloud_model = iotAccess.fetchDevice(deviceRegistryId, deviceId);
     discoveryEvent.cloud_model.operation = null;
@@ -113,7 +113,7 @@ public class CloudQueryHandler {
     CloudModel cloudModel = iotAccess.listDevices(deviceRegistryId);
 
     DiscoveryEvent discoveryEvent = new DiscoveryEvent();
-    discoveryEvent.scan_family = IOT_SCAN_FAMILY;
+    discoveryEvent.scan_family = ProtocolFamily.IOT;
     discoveryEvent.generation = query.generation;
     discoveryEvent.devices = cloudModel.device_ids.entrySet().stream().collect(Collectors.toMap(
         Entry::getKey, entry -> convertDeviceEntry(entry.getValue())));

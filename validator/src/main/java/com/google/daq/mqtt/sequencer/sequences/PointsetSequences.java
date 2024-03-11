@@ -49,8 +49,8 @@ public class PointsetSequences extends PointsetBase {
 
   private static final Duration EVENT_WAIT_DURATION = Duration.ofMinutes(1);
   private static final String EXTRANEOUS_POINT = "extraneous_point";
-  private static final int DEFAULT_SAMPLE_RATE_SEC = 10;
   private static final String POINTS_MAP_PATH = "pointset.points";
+  private static final int DEFAULT_SAMPLE_RATE_SEC = 10;
 
   @Before
   public void setupExpectedParameters() {
