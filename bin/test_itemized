@@ -6,12 +6,12 @@ cd $UDMI_ROOT
 source etc/shell_common.sh
 
 if [[ $# != 1 && $# != 2 ]]; then
-    echo Usage: $0 PROJECT_ID [target test]
+    echo Usage: $0 PROJECT_ID [target_index]
     false
 fi
 PROJECT_ID=$1
 shift 1
-TARGET_TEST=$1
+TARGET_INDEX=$1
 
 SITE_PATH=sites/udmi_site_model
 DEVICE_ID=AHU-1
@@ -48,9 +48,7 @@ while read -u 7 action test_name pubber_opts; do
     SEQUENCER_OUT=out/sequencer.out
     SCHEMA_OUT=out/schema.out
 
-    if [[ $action == TEST && -n $TARGET_TEST && $TARGET_TEST != $test_name ]]; then
-        continue
-    fi
+    [[ -n $TARGET_INDEX && $action == TEST && $TARGET_INDEX != $test_marker ]] && continue
 
     if [[ $action == WITH ]]; then
         DEVICE_ID=$test_name
@@ -128,10 +126,13 @@ while read -u 7 action test_name pubber_opts; do
 
 done 7< $INPUT_FILE
 
-sed -E -i $RESULTS_OUT \
-    -e 's/(Pipeline type event error: While processing message ).*/\1REDACTED/'
+[[ ! -f $RESULTS_OUT ]] && fail Not output file, likely no tests executed.
 
-if [[ -z $TARGET_TEST && -z $MATRIX_SHARD_COUNT ]]; then
+sed -E -i $RESULTS_OUT \
+    -e 's/(Pipeline type event error: While processing message ).*/\1REDACTED/' \
+    -e 's/ 202[-0-9T:]+Z / TIMESTAMP /g'
+
+if [[ -z $TARGET_INDEX && -z $MATRIX_SHARD_COUNT ]]; then
     bin/test_itemcheck
 else
     echo Checking for correctness of completed tests in $GOLDEN_FILE...

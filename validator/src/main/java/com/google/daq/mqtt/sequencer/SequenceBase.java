@@ -237,7 +237,6 @@ public class SequenceBase {
   protected static String cloudRegion;
   protected static String registryId;
   protected static String altRegistry;
-  protected Config deviceConfig;
   protected static IotReflectorClient altClient;
   protected static String serialNo;
   static ExecutionConfiguration exeConfig;
@@ -250,7 +249,6 @@ public class SequenceBase {
   private static MessagePublisher client;
   private static SequenceBase activeInstance;
   private static MessageBundle stashedBundle;
-  private boolean resetRequired = true;
   private static boolean enableAllTargets = true;
   private static boolean useAlternateClient;
 
@@ -268,14 +266,15 @@ public class SequenceBase {
   private final Map<String, String> deviceStateViolations = new ConcurrentHashMap<>();
   private final Map<Capabilities, Exception> capabilityExceptions = new ConcurrentHashMap<>();
   private final Set<String> allowedDeviceStateChanges = new HashSet<>();
-
   @Rule
   public Timeout globalTimeout = new Timeout(NORM_TIMEOUT_MS, TimeUnit.MILLISECONDS);
   @Rule
   public SequenceTestWatcher testWatcher = new SequenceTestWatcher();
+  protected Config deviceConfig;
   protected State deviceState;
   protected boolean configAcked;
   protected String lastSerialNo;
+  private boolean resetRequired = true;
   private int maxAllowedStatusLevel;
   private String extraField;
   private Instant lastConfigUpdate;
@@ -1271,18 +1270,20 @@ public class SequenceBase {
     recordSequence("Check that " + notDescription);
   }
 
-  private void waitFor(String description, Supplier<String> evaluator) {
+  protected void waitFor(String description, Supplier<String> evaluator) {
     waitFor(description, DEFAULT_WAIT_TIME, evaluator);
   }
 
-  private void waitFor(String description, Duration maxWait, Supplier<String> evaluator) {
+  protected void waitFor(String description, Duration maxWait, Supplier<String> evaluator) {
     AtomicReference<String> detail = new AtomicReference<>();
     whileDoing(description, () -> {
       updateConfig("Before " + description);
       recordSequence("Wait for " + description);
       messageEvaluateLoop(maxWait, () -> {
         String result = evaluator.get();
-        detail.set(emptyToNull(result));
+        String previous = detail.getAndSet(emptyToNull(result));
+        ifTrueThen(!Objects.equals(previous, result),
+            () -> debug(format("Detail %s is now %s", description, result)));
         return result != null;
       });
     }, detail::get);
@@ -1370,7 +1371,7 @@ public class SequenceBase {
     } catch (Exception e) {
       catcher.accept(e);
       ifNotNullThen(detail, d -> ifNotNullThen(d.get(), this::waitingConditionPush));
-      throw e;
+      throw new RuntimeException("While " + description, e);
     }
 
     waitingConditionPop(startTime);
