@@ -8,7 +8,7 @@ RESULT skip enumeration empty_enumeration PREVIEW 0/0 State testing disabled
 RESULT skip enumeration.features feature_enumeration PREVIEW 0/0 State testing disabled
 RESULT skip gateway bad_target_family PREVIEW 0/0 Not a proxied device
 RESULT skip gateway gateway_proxy_events BETA 0/0 Not a gateway
-RESULT fail pointset pointset_publish BETA 0/5 Timeout waiting for receive a pointset event
+RESULT pass pointset pointset_publish BETA 5/5 Sequence complete
 RESULT pass pointset pointset_publish_interval BETA 5/5 Sequence complete
 RESULT skip pointset pointset_remove_point BETA 0/0 State testing disabled
 RESULT skip pointset pointset_request_extraneous BETA 0/0 State testing disabled
