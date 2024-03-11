@@ -16,9 +16,9 @@
 14 RESULT pass system broken_config BETA 5/5 Sequence complete
 15 CPBLTY skip system broken_config.logging ALPHA 0/1 Never executed
 15 RESULT fail system broken_config BETA 0/5 Timeout waiting for no applicable system status
-16 CPBLTY fail system broken_config.logging ALPHA 0/1 Timeout after 30s waiting for log category `system.config.apply` level `NOTICE` to be logged
+16 CPBLTY fail system broken_config.logging ALPHA 0/1 While log category `system.config.apply` level `NOTICE` to be logged
 16 RESULT pass system broken_config BETA 4/5 Sequence complete
-17 CPBLTY fail system broken_config.logging ALPHA 0/1 Timeout after 30s waiting for log category `system.config.receive` level `DEBUG` to be logged
+17 CPBLTY fail system broken_config.logging ALPHA 0/1 While log category `system.config.receive` level `DEBUG` to be logged
 17 RESULT fail system broken_config BETA 0/5 expected:<system.config.[parse]> but was:<system.config.[apply]>
 18 RESULT pass system system_last_update STABLE 5/5 Sequence complete
 19 RESULT pass system system_last_update STABLE 5/5 Sequence complete
