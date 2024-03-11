@@ -269,7 +269,7 @@ public class DiscoverySequences extends SequenceBase {
 
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA)
-  @Summary("Check periodic scan of address families")
+  @Summary("Check periodic scan on a fixed schedule")
   public void periodic_scan_fixed() {
     initializeDiscovery();
     Date startTime = cleanDate();
