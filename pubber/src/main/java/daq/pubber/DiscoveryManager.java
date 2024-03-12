@@ -166,8 +166,6 @@ public class DiscoveryManager extends ManagerBase {
     familyDiscoveryState.generation = scanGeneration;
     familyDiscoveryState.phase = ACTIVE;
     updateState();
-    Date sendTime = Date.from(Instant.now().plusSeconds(SCAN_DURATION_SEC / 2));
-
     discoveryProvider(family).startScan();
   }
 
@@ -225,6 +223,7 @@ public class DiscoveryManager extends ManagerBase {
       FamilyDiscoveryState familyDiscoveryState = ensureFamilyDiscoveryState(family);
       ifTrueThen(scanGeneration.equals(familyDiscoveryState.generation),
           () -> {
+            discoveryProvider(family).stopScan();
             familyDiscoveryState.phase = DONE;
             scheduleDiscoveryScan(family);
           });

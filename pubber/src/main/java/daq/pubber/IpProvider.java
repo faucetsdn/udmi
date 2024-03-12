@@ -42,11 +42,6 @@ public class IpProvider extends ManagerBase implements LocalnetProvider {
     populateInterfaceAddresses();
   }
 
-  @Override
-  public void startScan() {
-    throw new RuntimeException("Not yet implemented");
-  }
-
   @VisibleForTesting
   static String getDefaultInterfaceStatic(List<String> routeLines) {
     AtomicReference<String> currentInterface = new AtomicReference<>();
