@@ -1,29 +1,54 @@
 package daq.pubber;
 
-import static java.lang.Math.floor;
-import static java.lang.Math.random;
-import static java.lang.String.format;
+import static com.google.udmi.util.GeneralUtils.catchToNull;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static java.util.Objects.requireNonNull;
 import static udmi.schema.Common.ProtocolFamily.VENDOR;
 
+import com.google.udmi.util.SiteModel;
+import java.util.Objects;
 import udmi.schema.Common.ProtocolFamily;
+import udmi.schema.DiscoveryEvent;
 import udmi.schema.FamilyLocalnetState;
 import udmi.schema.PubberConfiguration;
 
 public class VendorProvider extends ManagerBase implements LocalnetProvider {
 
-  public static final String RANDOM_ID = format("%08x", (long) floor(random() * 0x100000000L));
   private final LocalnetManager localnetHost;
+  private SiteModel siteModel;
+  private String selfAddr;
 
   public VendorProvider(ManagerHost host, ProtocolFamily family,
       PubberConfiguration pubberConfiguration) {
     super(host, pubberConfiguration);
     localnetHost = (LocalnetManager) host;
-    updateStateAddress();
   }
 
   private void updateStateAddress() {
-    FamilyLocalnetState stateEntry = new FamilyLocalnetState();
-    stateEntry.addr = RANDOM_ID;
-    localnetHost.update(VENDOR, stateEntry);
+    selfAddr = catchToNull(
+        () -> siteModel.getMetadata(config.deviceId).localnet.families.get(VENDOR).addr);
+    ifNotNullThen(selfAddr, x -> {
+      FamilyLocalnetState stateEntry = new FamilyLocalnetState();
+      stateEntry.addr = selfAddr;
+      localnetHost.update(VENDOR, stateEntry);
+    });
+  }
+
+  void setSiteModel(SiteModel siteModel) {
+    this.siteModel = siteModel;
+    updateStateAddress();
+  }
+
+  @Override
+  public void startScan(DiscoveryEvent event) {
+    requireNonNull(selfAddr, "no local address defined for family " + VENDOR);
+    siteModel.forEachMetadata((id, metadata) -> {
+      event.scan_addr = catchToNull(() -> metadata.localnet.families.get(VENDOR).addr);
+      ifNotNullThen(event.scan_addr, () -> host.publish(event));
+    });
+  }
+
+  @Override
+  public void stopScan() {
   }
 }

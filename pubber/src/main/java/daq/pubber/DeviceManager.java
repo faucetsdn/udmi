@@ -127,6 +127,7 @@ public class DeviceManager extends ManagerBase {
   public void setSiteModel(SiteModel siteModel) {
     discoveryManager.setSiteModel(siteModel);
     gatewayManager.setSiteModel(siteModel);
+    localnetManager.setSiteModel(siteModel);
   }
 
   public LocalnetProvider getLocalnetProvider(ProtocolFamily family) {

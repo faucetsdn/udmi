@@ -1,8 +1,10 @@
 package daq.pubber;
 
+import udmi.schema.DiscoveryEvent;
+
 public interface LocalnetProvider {
 
-  default void startScan() {
+  default void startScan(DiscoveryEvent event) {
     throw new RuntimeException("Not yet implemented");
   }
 

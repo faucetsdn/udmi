@@ -166,7 +166,10 @@ public class DiscoveryManager extends ManagerBase {
     familyDiscoveryState.generation = scanGeneration;
     familyDiscoveryState.phase = ACTIVE;
     updateState();
-    discoveryProvider(family).startScan();
+    DiscoveryEvent discoveryEvent = new DiscoveryEvent();
+    discoveryEvent.scan_family = family;
+    discoveryEvent.generation = scanGeneration;
+    discoveryProvider(family).startScan(discoveryEvent);
   }
 
   private LocalnetProvider discoveryProvider(ProtocolFamily family) {

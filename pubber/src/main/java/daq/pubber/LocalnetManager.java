@@ -3,9 +3,9 @@ package daq.pubber;
 import static java.util.stream.Collectors.toMap;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.udmi.util.SiteModel;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.FamilyDiscovery;
@@ -74,5 +74,9 @@ public class LocalnetManager extends ManagerBase implements ManagerHost {
   protected void update(ProtocolFamily family, FamilyLocalnetState stateEntry) {
     localnetState.families.put(family, stateEntry);
     updateState(localnetState);
+  }
+
+  public void setSiteModel(SiteModel siteModel) {
+    ((VendorProvider) localnetProviders.get(ProtocolFamily.VENDOR)).setSiteModel(siteModel);
   }
 }
