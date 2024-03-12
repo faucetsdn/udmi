@@ -7,7 +7,6 @@ import udmi.schema.Config;
 import udmi.schema.DevicePersistent;
 import udmi.schema.Entry;
 import udmi.schema.FamilyDiscovery;
-import udmi.schema.FamilyLocalnetModel;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.Operation.SystemMode;
@@ -128,5 +127,9 @@ public class DeviceManager extends ManagerBase {
   public void setSiteModel(SiteModel siteModel) {
     discoveryManager.setSiteModel(siteModel);
     gatewayManager.setSiteModel(siteModel);
+  }
+
+  public LocalnetProvider getLocalnetProvider(ProtocolFamily family) {
+    return localnetManager.getLocalnetProvider(family);
   }
 }

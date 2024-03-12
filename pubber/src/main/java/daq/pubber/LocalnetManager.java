@@ -16,6 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.FamilyDiscovery;
 import udmi.schema.FamilyLocalnetState;
@@ -25,8 +26,11 @@ import udmi.schema.PubberConfiguration;
 /**
  * Container class for dealing with the localnet subblock of UDMI.
  */
-public class LocalnetManager extends ManagerBase {
+public class LocalnetManager extends ManagerBase implements ManagerHost {
 
+  private static final Map<ProtocolFamily, Class<? extends LocalnetProvider>> LOCALNET_PROVIDERS = ImmutableMap.of(
+      ProtocolFamily.VENDOR, VendorProvider.class
+  );
   public static final int DEFAULT_METRIC = 0;
   private static final List<Pattern> familyPatterns = ImmutableList.of(
       Pattern.compile(" +(inet) ([.\\d]+)/.+"),
@@ -39,6 +43,7 @@ public class LocalnetManager extends ManagerBase {
       "inet6", "ipv6"
   );
   private final LocalnetState localnetState;
+  private final Map<ProtocolFamily, LocalnetProvider> localnetProviders;
 
   /**
    * Create a new container with the given host.
@@ -48,6 +53,18 @@ public class LocalnetManager extends ManagerBase {
     localnetState = new LocalnetState();
     populateInterfaceAddresses();
     host.update(localnetState);
+    localnetProviders = LOCALNET_PROVIDERS
+        .keySet().stream().collect(Collectors.toMap(family -> family, this::instantiateProvider));
+  }
+
+  private LocalnetProvider instantiateProvider(ProtocolFamily family) {
+    try {
+      return LOCALNET_PROVIDERS.get(family)
+          .getDeclaredConstructor(ManagerHost.class, PubberConfiguration.class)
+          .newInstance(this, config);
+    } catch (Exception e) {
+      throw new RuntimeException("While creating instance of " + LOCALNET_PROVIDERS.get(family));
+    }
   }
 
   @VisibleForTesting
@@ -173,5 +190,19 @@ public class LocalnetManager extends ManagerBase {
     FamilyDiscovery familyDiscovery = new FamilyDiscovery();
     familyDiscovery.addr = localnetState.families.get(key).addr;
     return familyDiscovery;
+  }
+
+  public LocalnetProvider getLocalnetProvider(ProtocolFamily family) {
+    return localnetProviders.get(family);
+  }
+
+  @Override
+  public void update(Object update) {
+    throw new RuntimeException("Not yet implemented");
+  }
+
+  @Override
+  public void publish(Object message) {
+    throw new RuntimeException("Not yet implemented");
   }
 }
