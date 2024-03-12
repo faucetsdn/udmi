@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Predicates.not;
 import static com.google.common.base.Strings.emptyToNull;
+import static com.google.daq.mqtt.registrar.Registrar.METADATA_JSON;
 import static com.google.daq.mqtt.sequencer.SequenceBase.Capabilities.LAST_CONFIG;
 import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
 import static com.google.daq.mqtt.util.CloudIotManager.EMPTY_CONFIG;
@@ -179,9 +180,8 @@ public class SequenceBase {
   private static final int CONFIG_UPDATE_DELAY_MS = 8 * 1000;
   private static final int NORM_TIMEOUT_MS = 300 * 1000;
   private static final String RESULT_LOG_FILE = "RESULT.log";
-  private static final String DEVICE_MODDATA = "%s/out/devices/%s/metadata_mod.json";
-  private static final String DEVICE_METADATA = "%s/devices/%s/metadata.json";
-  private static final String SUMMARY_OUTPUT_FORMAT = "%s/out/sequencer_%s.json";
+  private static final String MODDATA_FILE = "metadata_mod.json";
+  private static final String SUMMARY_OUTPUT_FORMAT = "out/sequencer_%s.json";
   private static final Map<Class<?>, SubFolder> CLASS_SUBFOLDER_MAP = ImmutableMap.of(
       SystemEvent.class, SubFolder.SYSTEM,
       PointsetEvent.class, SubFolder.POINTSET,
@@ -242,7 +242,6 @@ public class SequenceBase {
   static ExecutionConfiguration exeConfig;
   private static Validator messageValidator;
   private static ValidationState validationState;
-  private static String siteModel;
   private static int logLevel;
   private static File deviceOutputDir;
   private static File resultSummary;
@@ -251,6 +250,7 @@ public class SequenceBase {
   private static MessageBundle stashedBundle;
   private static boolean enableAllTargets = true;
   private static boolean useAlternateClient;
+  protected static SiteModel siteModel;
 
   static {
     // Sanity check to make sure ALPHA version is increased if forced by increased BETA.
@@ -307,7 +307,7 @@ public class SequenceBase {
     final String key_file;
     try {
       messageValidator = new Validator(exeConfig, SequenceBase::validatorLogger);
-      siteModel = checkNotNull(exeConfig.site_model, "site_model not defined");
+      siteModel = new SiteModel(checkNotNull(exeConfig.site_model, "site_model not defined"));
       projectId = checkNotNull(exeConfig.project_id, "project_id not defined");
       checkNotNull(exeConfig.udmi_version, "udmi_version not defined");
       String serial = checkNotNull(exeConfig.serial_no, "serial_no not defined");
@@ -325,7 +325,8 @@ public class SequenceBase {
 
     deviceMetadata = readDeviceMetadata();
 
-    File baseOutputDir = new File(SequenceBase.siteModel, "out");
+
+    File baseOutputDir = siteModel.getSubdirectory("out");
     deviceOutputDir = new File(baseOutputDir, "devices/" + getDeviceId());
     deviceOutputDir.mkdirs();
 
@@ -410,8 +411,8 @@ public class SequenceBase {
   }
 
   private static Metadata readDeviceMetadata() {
-    File moddataFile = new File(format(DEVICE_MODDATA, siteModel, getDeviceId()));
-    File metadataFile = new File(format(DEVICE_METADATA, siteModel, getDeviceId()));
+    File moddataFile = siteModel.getDeviceFile(getDeviceId(), MODDATA_FILE);
+    File metadataFile = siteModel.getDeviceFile(getDeviceId(), METADATA_JSON);
     System.err.println("Checking for modified metadata file " + moddataFile.getAbsolutePath());
     File useFile = moddataFile.exists() ? moddataFile : metadataFile;
     System.err.println("Reading device metadata file " + useFile.getPath());
@@ -444,7 +445,7 @@ public class SequenceBase {
   }
 
   static File getSequencerStateFile() {
-    return new File(format(SUMMARY_OUTPUT_FORMAT, siteModel, getDeviceId()));
+    return siteModel.getSubdirectory(format(SUMMARY_OUTPUT_FORMAT, getDeviceId()));
   }
 
   static void processComplete(Exception e) {

@@ -11,7 +11,6 @@ import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
-import static com.google.udmi.util.GeneralUtils.isNotTrue;
 import static com.google.udmi.util.GeneralUtils.joinOrNull;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
@@ -19,6 +18,7 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static udmi.schema.Bucket.DISCOVERY_SCAN;
 import static udmi.schema.Bucket.ENUMERATION;
@@ -47,7 +47,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import org.junit.Before;
@@ -59,7 +61,6 @@ import udmi.schema.DiscoveryEvent;
 import udmi.schema.Enumerate;
 import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyDiscoveryState;
-import udmi.schema.FamilyDiscoveryState.Phase;
 import udmi.schema.FeatureDiscovery;
 
 /**
@@ -226,6 +227,8 @@ public class DiscoverySequences extends SequenceBase {
     waitFor("scan schedule still pending",
         () -> ifNotTrueGet(() -> scanComplete(startTime).test(scanFamily),
             this::describedFamilyState));
+    List<DiscoveryEvent> receivedEvents = popReceivedEvents(DiscoveryEvent.class);
+    checkThat("there were no received discovery events", receivedEvents.isEmpty());
   }
 
   @Test(timeout = ONE_MINUTE_MS)
@@ -245,9 +248,43 @@ public class DiscoverySequences extends SequenceBase {
         describedFamilyState());
     waitFor("scheduled scan stop", waitingPeriod,
         () -> ifTrueGet(scanComplete(startTime).test(scanFamily), this::describedFamilyState));
-    List<DiscoveryEvent> receivedEvents = popReceivedEvents(DiscoveryEvent.class);
-    checkThat("discovery events were received", receivedEvents.isEmpty());
-    checkEnumeration(receivedEvents, shouldEnumerate);
+
+    List<DiscoveryEvent> events = popReceivedEvents(DiscoveryEvent.class);
+
+    Date generation = deviceConfig.discovery.families.get(scanFamily).generation;
+    Function<DiscoveryEvent, String> invalidator = event -> invalidReasons(event, generation);
+    checkThat("discovery events were received", !events.isEmpty());
+    Set<String> reasons = events.stream().map(invalidator).filter(Objects::nonNull)
+        .collect(Collectors.toSet());
+    checkThat("discovery events were valid", reasons.isEmpty(), CSV_JOINER.join(reasons));
+
+    Set<String> duplicates = events.stream().map(x -> x.scan_addr)
+        .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
+        .entrySet().stream().filter(p -> p.getValue() > 1).map(Map.Entry::getKey)
+        .collect(Collectors.toSet());
+    checkThat("all scan addresses are unique", duplicates.isEmpty(), CSV_JOINER.join(duplicates));
+
+    Set<String> discoveredAddresses = events.stream().map(x -> x.scan_addr)
+        .collect(Collectors.toSet());
+    Set<String> expectedAddresses = siteModel.metadataStream()
+        .map(e -> catchToNull(() -> e.getValue().localnet.families.get(scanFamily).addr))
+        .filter(Objects::nonNull).collect(Collectors.toSet());
+    SetView<String> differences = symmetricDifference(discoveredAddresses, expectedAddresses);
+    checkThat("all expected addresses were found", differences.isEmpty(),
+        CSV_JOINER.join(differences));
+
+    checkEnumeration(events, shouldEnumerate);
+  }
+
+  private String invalidReasons(DiscoveryEvent discoveryEvent, Date scanGeneration) {
+    try {
+      assertEquals("bad scan family", scanFamily, discoveryEvent.scan_family);
+      assertEquals("bad generation", scanGeneration, discoveryEvent.generation);
+      assertNotNull("empty scan address", discoveryEvent.scan_addr);
+    } catch (Exception e) {
+      return e.getMessage();
+    }
+    return null;
   }
 
   private String describedFamilyState() {

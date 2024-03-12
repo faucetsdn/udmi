@@ -86,7 +86,7 @@ public class Registrar {
   public static final String SCHEMA_BASE_PATH = "schema";
   public static final Joiner JOIN_CSV = Joiner.on(", ");
   public static final File BASE_DIR = new File(".");
-  static final String METADATA_JSON = "metadata.json";
+  public static final String METADATA_JSON = "metadata.json";
   static final String ENVELOPE_SCHEMA_JSON = "envelope.json";
   static final String METADATA_SCHEMA_JSON = "metadata.json";
   static final String NORMALIZED_JSON = "metadata_norm.json";

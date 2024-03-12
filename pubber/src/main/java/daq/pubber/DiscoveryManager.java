@@ -143,6 +143,10 @@ public class DiscoveryManager extends ManagerBase {
   }
 
   private FamilyDiscoveryState ensureFamilyDiscoveryState(ProtocolFamily family) {
+    if (discoveryState.families == null) {
+      // If there is no need for family state, then return a floating bucket for results.
+      return new FamilyDiscoveryState();
+    }
     return discoveryState.families.computeIfAbsent(
         family, key -> new FamilyDiscoveryState());
   }
