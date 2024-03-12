@@ -6,7 +6,6 @@ import static java.util.Objects.requireNonNull;
 import static udmi.schema.Common.ProtocolFamily.VENDOR;
 
 import com.google.udmi.util.SiteModel;
-import java.util.Objects;
 import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.DiscoveryEvent;
 import udmi.schema.FamilyLocalnetState;
