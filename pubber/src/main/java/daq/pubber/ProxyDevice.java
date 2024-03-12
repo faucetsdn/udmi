@@ -67,7 +67,7 @@ public class ProxyDevice extends ManagerBase implements ManagerHost {
   }
 
   @Override
-  public LocalnetProvider getLocalnetProvider(ProtocolFamily family) {
+  public FamilyProvider getLocalnetProvider(ProtocolFamily family) {
     return host.getLocalnetProvider(family);
   }
 

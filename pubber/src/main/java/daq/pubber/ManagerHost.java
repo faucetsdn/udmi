@@ -18,5 +18,5 @@ public interface ManagerHost {
 
   void publish(Object message);
 
-  LocalnetProvider getLocalnetProvider(ProtocolFamily family);
+  FamilyProvider getLocalnetProvider(ProtocolFamily family);
 }

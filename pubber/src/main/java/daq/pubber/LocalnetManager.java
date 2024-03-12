@@ -18,12 +18,14 @@ import udmi.schema.PubberConfiguration;
  */
 public class LocalnetManager extends ManagerBase implements ManagerHost {
 
-  private static final Map<ProtocolFamily, Class<? extends LocalnetProvider>> LOCALNET_PROVIDERS = ImmutableMap.of(
-      ProtocolFamily.VENDOR, VendorProvider.class,
-      ProtocolFamily.IPV_4, IpProvider.class
-  );
+  private static final Map<ProtocolFamily, Class<? extends FamilyProvider>> LOCALNET_PROVIDERS =
+      ImmutableMap.of(
+          ProtocolFamily.VENDOR, VendorProvider.class,
+          ProtocolFamily.IPV_4, IpProvider.class,
+          ProtocolFamily.IPV_6, IpProvider.class,
+          ProtocolFamily.ETHER, IpProvider.class);
   private final LocalnetState localnetState;
-  private final Map<ProtocolFamily, LocalnetProvider> localnetProviders;
+  private final Map<ProtocolFamily, FamilyProvider> localnetProviders;
 
   /**
    * Create a new container with the given host.
@@ -36,7 +38,7 @@ public class LocalnetManager extends ManagerBase implements ManagerHost {
         .keySet().stream().collect(Collectors.toMap(family -> family, this::instantiateProvider));
   }
 
-  private LocalnetProvider instantiateProvider(ProtocolFamily family) {
+  private FamilyProvider instantiateProvider(ProtocolFamily family) {
     try {
       return LOCALNET_PROVIDERS.get(family).getDeclaredConstructor(
               ManagerHost.class, ProtocolFamily.class, PubberConfiguration.class)
@@ -57,7 +59,7 @@ public class LocalnetManager extends ManagerBase implements ManagerHost {
     return familyDiscovery;
   }
 
-  public LocalnetProvider getLocalnetProvider(ProtocolFamily family) {
+  public FamilyProvider getLocalnetProvider(ProtocolFamily family) {
     return localnetProviders.get(family);
   }
 
@@ -66,14 +68,14 @@ public class LocalnetManager extends ManagerBase implements ManagerHost {
     throw new RuntimeException("Not yet implemented");
   }
 
-  @Override
-  public void publish(Object message) {
-    host.publish(message);
-  }
-
   protected void update(ProtocolFamily family, FamilyLocalnetState stateEntry) {
     localnetState.families.put(family, stateEntry);
     updateState(localnetState);
+  }
+
+  @Override
+  public void publish(Object message) {
+    host.publish(message);
   }
 
   public void setSiteModel(SiteModel siteModel) {

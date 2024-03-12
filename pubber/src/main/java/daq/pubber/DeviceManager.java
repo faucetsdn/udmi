@@ -124,13 +124,16 @@ public class DeviceManager extends ManagerBase {
     return localnetManager.enumerateFamilies();
   }
 
+  /**
+   * Set the site model.
+   */
   public void setSiteModel(SiteModel siteModel) {
     discoveryManager.setSiteModel(siteModel);
     gatewayManager.setSiteModel(siteModel);
     localnetManager.setSiteModel(siteModel);
   }
 
-  public LocalnetProvider getLocalnetProvider(ProtocolFamily family) {
+  public FamilyProvider getLocalnetProvider(ProtocolFamily family) {
     return localnetManager.getLocalnetProvider(family);
   }
 }

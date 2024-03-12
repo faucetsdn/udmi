@@ -72,7 +72,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import org.apache.http.ConnectionClosedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -176,6 +175,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
   private DeviceManager deviceManager;
   private boolean isConnected;
   private boolean isGatewayDevice;
+
   /**
    * Start an instance from a configuration file.
    *
@@ -360,7 +360,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
   }
 
   @Override
-  public LocalnetProvider getLocalnetProvider(ProtocolFamily family) {
+  public FamilyProvider getLocalnetProvider(ProtocolFamily family) {
     return deviceManager.getLocalnetProvider(family);
   }
 

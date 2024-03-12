@@ -20,7 +20,10 @@ import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.FamilyLocalnetState;
 import udmi.schema.PubberConfiguration;
 
-public class IpProvider extends ManagerBase implements LocalnetProvider {
+/**
+ * Wrapper for family of IP-based protocols.
+ */
+public class IpProvider extends ManagerBase implements FamilyProvider {
 
   public static final int DEFAULT_METRIC = 0;
   private static final List<Pattern> familyPatterns = ImmutableList.of(
@@ -36,7 +39,11 @@ public class IpProvider extends ManagerBase implements LocalnetProvider {
   private final LocalnetManager localnetHost;
   private final Map<ProtocolFamily, FamilyLocalnetState> stateMap = new ConcurrentHashMap<>();
 
-  public IpProvider(ManagerHost host, ProtocolFamily family, PubberConfiguration pubberConfiguration) {
+  /**
+   * Create a basic provider instance.
+   */
+  public IpProvider(ManagerHost host, ProtocolFamily family,
+      PubberConfiguration pubberConfiguration) {
     super(host, pubberConfiguration);
     localnetHost = (LocalnetManager) host;
     populateInterfaceAddresses();

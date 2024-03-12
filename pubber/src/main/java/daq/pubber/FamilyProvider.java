@@ -2,7 +2,10 @@ package daq.pubber;
 
 import udmi.schema.DiscoveryEvent;
 
-public interface LocalnetProvider {
+/**
+ * Interface for a protocol family provider.
+ */
+public interface FamilyProvider {
 
   default void startScan(DiscoveryEvent event) {
     throw new RuntimeException("Not yet implemented");

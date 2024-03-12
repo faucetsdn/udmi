@@ -23,7 +23,6 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import udmi.schema.Common.ProtocolFamily;
@@ -172,40 +171,10 @@ public class DiscoveryManager extends ManagerBase {
     discoveryProvider(family).startScan(discoveryEvent);
   }
 
-  private LocalnetProvider discoveryProvider(ProtocolFamily family) {
+  private FamilyProvider discoveryProvider(ProtocolFamily family) {
     return host.getLocalnetProvider(family);
   }
 
-//  private void sendDiscoveryEvent(ProtocolFamily family, Date scanGeneration) {
-//    scheduleFuture(sendTime, () -> sendDiscoveryEvent(family, scanGeneration));
-//    FamilyDiscoveryState familyDiscoveryState = catchToNull(
-//        () -> discoveryState.families.get(family));
-//    if (familyDiscoveryState != null && scanGeneration.equals(familyDiscoveryState.generation)
-//        && familyDiscoveryState.phase == ACTIVE) {
-//      AtomicInteger sentEvents = new AtomicInteger();
-//      siteModel.forEachMetadata((deviceId, targetMetadata) -> {
-//        FamilyLocalnetModel familyLocalnetModel = getFamilyLocalnetModel(family, targetMetadata);
-//        if (familyLocalnetModel != null && familyLocalnetModel.addr != null) {
-//          DiscoveryEvent discoveryEvent = new DiscoveryEvent();
-//          discoveryEvent.generation = scanGeneration;
-//          discoveryEvent.scan_family = family;
-//          discoveryEvent.scan_addr = deviceId;
-//          discoveryEvent.families = targetMetadata.localnet.families.entrySet().stream()
-//              .collect(toMap(Map.Entry::getKey, this::eventForTarget));
-//          discoveryEvent.families.computeIfAbsent(ProtocolFamily.IOT,
-//              key -> new FamilyDiscovery()).addr = deviceId;
-//          if (isGetTrue(() -> discoveryConfig.families.get(family).enumerate)) {
-//            discoveryEvent.points = enumeratePoints(deviceId);
-//          }
-//          host.publish(discoveryEvent);
-//          sentEvents.incrementAndGet();
-//        }
-//      });
-//      info("Sent " + sentEvents.get() + " discovery events from " + family + " for "
-//          + scanGeneration);
-//    }
-//  }
-//
   private FamilyDiscovery eventForTarget(Map.Entry<ProtocolFamily, FamilyLocalnetModel> target) {
     FamilyDiscovery event = new FamilyDiscovery();
     event.addr = target.getValue().addr;

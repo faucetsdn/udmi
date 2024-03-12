@@ -11,7 +11,10 @@ import udmi.schema.DiscoveryEvent;
 import udmi.schema.FamilyLocalnetState;
 import udmi.schema.PubberConfiguration;
 
-public class VendorProvider extends ManagerBase implements LocalnetProvider {
+/**
+ * Basic provider for the Vendor protocol family.
+ */
+public class VendorProvider extends ManagerBase implements FamilyProvider {
 
   private final LocalnetManager localnetHost;
   private SiteModel siteModel;
