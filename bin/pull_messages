@@ -25,6 +25,7 @@ while true; do
         timestamp=$(jq -r .[$index].message.publishTime $tmp_file 2> /dev/null)
         raw_data=$(jq -r .[$index].message.data $tmp_file)
         # There's two different base64 formats, so replace - with + to handle both.
+        echo $raw_data > $tmp_file.raw
         data=$(echo $raw_data | tr - + | base64 --decode)
 
         if [[ $raw_data == null ]]; then
