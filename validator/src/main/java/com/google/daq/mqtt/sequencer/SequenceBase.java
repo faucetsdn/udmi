@@ -2153,7 +2153,7 @@ public class SequenceBase {
     try {
       Test annotation = requireNonNull(description.getAnnotation(Test.class), "missing annotation");
       long timeout = annotation.timeout();
-      if (timeout < TWO_MINUTES_MS) {
+      if (timeout > 0 && timeout < TWO_MINUTES_MS) {
         // The Junit test runner will default to ~5min for anything <2ms. Sigh.
         throw new RuntimeException(
             format("Test timeout less than minimum allowed %ss", TWO_MINUTES_MS / 1000));
