@@ -2147,10 +2147,7 @@ public class SequenceBase {
 
   private void validateTestSpecification(Description description) {
     try {
-      Test annotation = description.getAnnotation(Test.class);
-      if (annotation == null) {
-        return;
-      }
+      Test annotation = requireNonNull(description.getAnnotation(Test.class), "missing annotation");
       long timeout = annotation.timeout();
       if (timeout < TWO_MINUTES_MS) {
         // The Junit test runner will default to ~5min for anything <2ms. Sigh.
