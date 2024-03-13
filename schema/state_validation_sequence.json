@@ -25,7 +25,7 @@
     "result": {
       "title": "Sequence Result",
       "enum": [
-        "strt",
+        "start",
         "errr",
         "skip",
         "pass",

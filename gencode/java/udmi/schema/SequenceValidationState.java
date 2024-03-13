@@ -100,7 +100,7 @@ public class SequenceValidationState {
     @Generated("jsonschema2pojo")
     public enum SequenceResult {
 
-        STRT("strt"),
+        START("start"),
         ERRR("errr"),
         SKIP("skip"),
         PASS("pass"),

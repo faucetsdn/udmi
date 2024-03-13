@@ -56,7 +56,7 @@ import static udmi.schema.SequenceValidationState.SequenceResult.ERRR;
 import static udmi.schema.SequenceValidationState.SequenceResult.FAIL;
 import static udmi.schema.SequenceValidationState.SequenceResult.PASS;
 import static udmi.schema.SequenceValidationState.SequenceResult.SKIP;
-import static udmi.schema.SequenceValidationState.SequenceResult.STRT;
+import static udmi.schema.SequenceValidationState.SequenceResult.START;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
@@ -209,7 +209,7 @@ public class SequenceBase {
   private static final int EXIT_CODE_PRESERVE = -9;
   private static final String SYSTEM_TESTING_MARKER = "system.testing";
   private static final BiMap<SequenceResult, Level> RESULT_LEVEL_MAP = ImmutableBiMap.of(
-      STRT, Level.INFO,
+      START, Level.INFO,
       SKIP, Level.WARNING,
       PASS, Level.NOTICE,
       FAIL, Level.ERROR,
@@ -2039,7 +2039,7 @@ public class SequenceBase {
     Entry entry = new Entry();
     entry.message = "Starting test";
     entry.category = VALIDATION_FEATURE_SEQUENCE;
-    SequenceResult startResult = SequenceResult.STRT;
+    SequenceResult startResult = SequenceResult.START;
     entry.level = RESULT_LEVEL_MAP.get(startResult).value();
     entry.timestamp = new Date();
     setSequenceStatus(description, startResult, entry);
@@ -2215,14 +2215,14 @@ public class SequenceBase {
       testName = description.getMethodName();
       try {
         setupSequencer();
-        putSequencerResult(description, SequenceResult.STRT);
+        putSequencerResult(description, SequenceResult.START);
         checkState(reflector().isActive(), "Reflector is not currently active");
 
         testDescription = description;
         testSummary = getTestSummary(description);
         testStage = getTestStage(description);
         testBucket = getBucket(description);
-        testResult = SequenceResult.STRT;
+        testResult = SequenceResult.START;
         testSchema = ifNotNullGet(description.getAnnotation(ValidateSchema.class),
             ValidateSchema::value);
 
