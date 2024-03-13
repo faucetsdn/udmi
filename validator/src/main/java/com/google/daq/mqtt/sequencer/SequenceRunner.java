@@ -36,6 +36,7 @@ import org.junit.Test;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Request;
 import org.junit.runner.Result;
+import org.junit.runner.notification.Failure;
 import udmi.schema.ExecutionConfiguration;
 import udmi.schema.FeatureDiscovery.FeatureStage;
 import udmi.schema.Level;
@@ -55,7 +56,7 @@ public class SequenceRunner {
   private static final int EXIT_STATUS_SUCCESS = 0;
   private static final int EXIST_STATUS_FAILURE = 1;
   private static final String TOOL_ROOT = "..";
-  private static final Set<String> failures = new TreeSet<>();
+  private static final List<Failure> failures = new ArrayList<>();
   private static final Map<String, SequenceResult> allTestResults = new TreeMap<>();
   private static final List<String> SHARD_LIST = new ArrayList<>();
   static ExecutionConfiguration exeConfig;
@@ -134,7 +135,7 @@ public class SequenceRunner {
     }
   }
 
-  public static Set<String> getFailures() {
+  public static List<Failure> getFailures() {
     return failures;
   }
 
@@ -247,10 +248,7 @@ public class SequenceRunner {
       }
       for (Request request : requests) {
         Result result = new JUnitCore().run(request);
-        Set<String> failureNames = result.getFailures().stream()
-            .map(failure -> deviceId + "/" + failure.getDescription().getMethodName()).collect(
-                Collectors.toSet());
-        failures.addAll(failureNames);
+        failures.addAll(result.getFailures());
         runCount += result.getRunCount();
       }
     }
@@ -264,12 +262,18 @@ public class SequenceRunner {
     }
 
     System.err.println();
+    failures.stream().map(this::getFailureMessage).forEach(System.err::println);
     Map<SequenceResult, Long> resultCounts = allTestResults.entrySet().stream()
         .collect(Collectors.groupingBy(Entry::getValue, Collectors.counting()));
     resultCounts.forEach(
         (key, value) -> System.err.println("Sequencer result count " + key.name() + " = " + value));
     String stateAbsolutePath = getSequencerStateFile().getAbsolutePath();
     System.err.println("Sequencer state summary in " + stateAbsolutePath);
+  }
+
+  private String getFailureMessage(Failure failure) {
+    String failureKey = exeConfig.device_id + "/" + failure.getDescription().getMethodName();
+    return failureKey + ": " + friendlyStackTrace(failure.getException());
   }
 
   private boolean shouldShardMethod(String method) {

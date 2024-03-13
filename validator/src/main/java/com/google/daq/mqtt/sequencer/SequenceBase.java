@@ -10,6 +10,7 @@ import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
 import static com.google.daq.mqtt.util.CloudIotManager.EMPTY_CONFIG;
 import static com.google.daq.mqtt.util.ConfigGenerator.configFrom;
 import static com.google.daq.mqtt.util.IotReflectorClient.REFLECTOR_PREFIX;
+import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.CleanDateFormat.cleanDate;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.Common.DEVICE_ID_KEY;
@@ -116,6 +117,7 @@ import org.junit.After;
 import org.junit.AssumptionViolatedException;
 import org.junit.Before;
 import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.TestWatcher;
 import org.junit.rules.Timeout;
 import org.junit.runner.Description;
@@ -2143,6 +2145,24 @@ public class SequenceBase {
     return testSchema != null && (testSchema == folder || folder == SubFolder.VALIDATION);
   }
 
+  private void validateTestSpecification(Description description) {
+    try {
+      Test annotation = description.getAnnotation(Test.class);
+      if (annotation == null) {
+        return;
+      }
+      long timeout = annotation.timeout();
+      if (timeout < TWO_MINUTES_MS) {
+        // The Junit test runner will default to ~5min for anything <2ms. Sigh.
+        throw new RuntimeException(
+            format("Test timeout less than minimum allowed %sms", TWO_MINUTES_MS));
+
+      }
+    } catch (Exception e) {
+      throw new RuntimeException("While validating test specification", e);
+    }
+  }
+
   /**
    * Master list of test capabilities.
    */
@@ -2211,6 +2231,9 @@ public class SequenceBase {
         systemLog = new PrintWriter(newOutputStream(new File(testDir, SYSTEM_LOG).toPath()));
         sequencerLog = new PrintWriter(newOutputStream(new File(testDir, SEQUENCER_LOG).toPath()));
         sequenceMd = new PrintWriter(newOutputStream(new File(testDir, SEQUENCE_MD).toPath()));
+
+        validateTestSpecification(description);
+
         writeSequenceMdHeader();
 
         lastStatusLevel = 0;
@@ -2223,6 +2246,7 @@ public class SequenceBase {
         activeInstance = SequenceBase.this;
       } catch (Exception e) {
         trace("Exception stack:", stackTraceString(e));
+        putSequencerResult(description, SequenceResult.ERROR);
         throw new RuntimeException("While starting " + testName, e);
       }
     }
