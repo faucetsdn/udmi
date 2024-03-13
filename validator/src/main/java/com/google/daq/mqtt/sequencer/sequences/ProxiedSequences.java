@@ -1,5 +1,6 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
+import static com.google.daq.mqtt.util.TimePeriodConstants.ONE_MINUTE_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.GeneralUtils.catchToElse;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
@@ -31,7 +32,7 @@ public class ProxiedSequences extends PointsetBase {
 
   @Feature(stage = FeatureStage.PREVIEW, bucket = Bucket.GATEWAY)
   @Summary("Error handling for badly formed target address family")
-  @Test(timeout = TWO_MINUTES_MS)
+  @Test(timeout = ONE_MINUTE_MS)
   public void bad_target_family() {
     cleanStatusCheck();
     GatewayConfig gatewayConfig = deviceConfig.gateway;

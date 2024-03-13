@@ -262,7 +262,8 @@ public class SequenceRunner {
     }
 
     System.err.println();
-    failures.stream().map(this::getFailureMessage).forEach(System.err::println);
+    failures.stream().map(this::getFailureMessage).filter(Objects::nonNull)
+        .forEach(System.err::println);
     Map<SequenceResult, Long> resultCounts = allTestResults.entrySet().stream()
         .collect(Collectors.groupingBy(Entry::getValue, Collectors.counting()));
     resultCounts.forEach(
@@ -273,7 +274,11 @@ public class SequenceRunner {
 
   private String getFailureMessage(Failure failure) {
     String failureKey = exeConfig.device_id + "/" + failure.getDescription().getMethodName();
-    return failureKey + ": " + friendlyStackTrace(failure.getException());
+    Throwable exception = failure.getException();
+    if (exception instanceof IllegalStateException) {
+      return null;
+    }
+    return failureKey + ": " + friendlyStackTrace(exception);
   }
 
   private boolean shouldShardMethod(String method) {

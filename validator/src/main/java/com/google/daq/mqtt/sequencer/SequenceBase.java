@@ -52,9 +52,11 @@ import static udmi.schema.FeatureDiscovery.FeatureStage.STABLE;
 import static udmi.schema.Level.ERROR;
 import static udmi.schema.Level.NOTICE;
 import static udmi.schema.Level.WARNING;
+import static udmi.schema.SequenceValidationState.SequenceResult.ERRR;
 import static udmi.schema.SequenceValidationState.SequenceResult.FAIL;
 import static udmi.schema.SequenceValidationState.SequenceResult.PASS;
 import static udmi.schema.SequenceValidationState.SequenceResult.SKIP;
+import static udmi.schema.SequenceValidationState.SequenceResult.STRT;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
@@ -207,10 +209,11 @@ public class SequenceBase {
   private static final int EXIT_CODE_PRESERVE = -9;
   private static final String SYSTEM_TESTING_MARKER = "system.testing";
   private static final BiMap<SequenceResult, Level> RESULT_LEVEL_MAP = ImmutableBiMap.of(
-      SequenceResult.START, Level.INFO,
+      STRT, Level.INFO,
       SKIP, Level.WARNING,
       PASS, Level.NOTICE,
-      FAIL, Level.ERROR
+      FAIL, Level.ERROR,
+      ERRR, Level.CRITIAL
   );
   private static final BiMap<CapabilityResult, Level> CAPABILITY_RESULT_MAP = ImmutableBiMap.of(
       CapabilityResult.PASS, Level.NOTICE,
@@ -696,7 +699,7 @@ public class SequenceBase {
   @Before
   public void setUp() {
     if (activeInstance == null) {
-      throw new RuntimeException("Active sequencer instance not setup, aborting");
+      throw new IllegalStateException("Active sequencer instance not setup, aborting");
     }
 
     assumeTrue(format("Feature bucket %s not enabled", testBucket.key()),
@@ -2035,7 +2038,7 @@ public class SequenceBase {
     Entry entry = new Entry();
     entry.message = "Starting test";
     entry.category = VALIDATION_FEATURE_SEQUENCE;
-    SequenceResult startResult = SequenceResult.START;
+    SequenceResult startResult = SequenceResult.STRT;
     entry.level = RESULT_LEVEL_MAP.get(startResult).value();
     entry.timestamp = new Date();
     setSequenceStatus(description, startResult, entry);
@@ -2211,14 +2214,14 @@ public class SequenceBase {
       testName = description.getMethodName();
       try {
         setupSequencer();
-        putSequencerResult(description, SequenceResult.START);
+        putSequencerResult(description, SequenceResult.STRT);
         checkState(reflector().isActive(), "Reflector is not currently active");
 
         testDescription = description;
         testSummary = getTestSummary(description);
         testStage = getTestStage(description);
         testBucket = getBucket(description);
-        testResult = SequenceResult.START;
+        testResult = SequenceResult.STRT;
         testSchema = ifNotNullGet(description.getAnnotation(ValidateSchema.class),
             ValidateSchema::value);
 
@@ -2243,7 +2246,8 @@ public class SequenceBase {
         activeInstance = SequenceBase.this;
       } catch (Exception e) {
         trace("Exception stack:", stackTraceString(e));
-        putSequencerResult(description, SequenceResult.ERROR);
+        putSequencerResult(description, ERRR);
+        recordCompletion(ERRR, description, friendlyStackTrace(e));
         throw new RuntimeException("While starting " + testName, e);
       }
     }
