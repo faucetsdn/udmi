@@ -84,7 +84,7 @@ public class WritebackSequences extends PointsetBase {
     return false;
   }
 
-  @Test(timeout = 90000)
+  @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = ALPHA, bucket = WRITEBACK)
   @Summary("Implements UDMI writeback and can successfully writeback to a point")
   public void writeback_success() {
