@@ -201,6 +201,7 @@ public class DiscoveryManager extends ManagerBase {
           () -> {
             discoveryProvider(family).stopScan();
             familyDiscoveryState.phase = DONE;
+            updateState();
             scheduleDiscoveryScan(family);
           });
     } catch (Exception e) {
