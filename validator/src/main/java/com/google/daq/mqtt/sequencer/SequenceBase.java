@@ -715,7 +715,7 @@ public class SequenceBase {
       notice("Running test with state checks disabled");
     }
 
-    waitingConditionPush("starting test wrapper");
+    waitingConditionStart("starting test wrapper");
     checkState(reflector().isActive(), "Reflector is not currently active");
 
     // Old messages can sometimes take a while to clear out, so need some delay for stability.
@@ -747,7 +747,7 @@ public class SequenceBase {
     waitForStateConfigSync();
 
     recordSequence = true;
-    waitingConditionPush("executing test");
+    waitingConditionStart("executing test");
 
     debug(format("stage begin %s at %s", currentWaitingCondition(), timeSinceStart()));
   }
@@ -1388,13 +1388,17 @@ public class SequenceBase {
       Supplier<String> detail) {
     final Instant startTime = Instant.now();
 
-    waitingConditionPush(description);
+    waitingConditionStart(description);
 
     try {
-      action.run();
+      try {
+        action.run();
+      } catch (Exception e) {
+        catcher.accept(e);
+        String detailed = ifNotNullGet(detail, Supplier::get);
+        throw ifNotNullGet(detailed, message -> new RuntimeException("Because " + message), e);
+      }
     } catch (Exception e) {
-      catcher.accept(e);
-      ifNotNullThen(detail, d -> ifNotNullThen(d.get(), this::waitingConditionPush));
       throw new RuntimeException("While " + description, e);
     }
 
@@ -1410,11 +1414,20 @@ public class SequenceBase {
         () -> trace(format("Stage resume %s at %s", currentWaitingCondition(), timeSinceStart())));
   }
 
-  private void waitingConditionPush(String condition) {
+  private void waitingConditionStart(String condition) {
     ifTrueThen(!waitingCondition.isEmpty(),
         () -> trace(format("stage suspend %s at %s", currentWaitingCondition(), timeSinceStart())));
-    waitingCondition.push("waiting for " + condition);
+    waitingConditionPush(condition);
     info(format("Stage start %s at %s", currentWaitingCondition(), timeSinceStart()));
+  }
+
+  private void waitingConditionDetail(String detail) {
+    notice("Adding waiting condition detail: " + detail);
+    waitingConditionPush(detail);
+  }
+
+  private void waitingConditionPush(String condition) {
+    waitingCondition.push("waiting for " + condition);
   }
 
   private String currentWaitingCondition() {
