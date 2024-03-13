@@ -1,6 +1,6 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
-import static com.google.daq.mqtt.util.TimePeriodConstants.NINETY_SECONDS_MS;
+import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static udmi.schema.Bucket.WRITEBACK;
 import static udmi.schema.FeatureDiscovery.FeatureStage.ALPHA;
 

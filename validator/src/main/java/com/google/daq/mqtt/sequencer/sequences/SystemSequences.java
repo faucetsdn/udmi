@@ -1,8 +1,7 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
-import static com.google.daq.mqtt.util.TimePeriodConstants.ONE_MINUTE_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.THREE_MINUTES_MS;
-import static com.google.udmi.util.JsonUtil.safeSleep;
+import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static java.lang.String.format;
 import static udmi.schema.Bucket.SYSTEM;
 import static udmi.schema.FeatureDiscovery.FeatureStage.ALPHA;
@@ -11,8 +10,6 @@ import static udmi.schema.FeatureDiscovery.FeatureStage.BETA;
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.Summary;
-import com.google.udmi.util.GeneralUtils;
-import com.google.udmi.util.JsonUtil;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;

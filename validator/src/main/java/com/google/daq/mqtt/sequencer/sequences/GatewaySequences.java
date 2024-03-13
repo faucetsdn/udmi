@@ -1,7 +1,6 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
-import static com.google.daq.mqtt.util.TimePeriodConstants.NINETY_SECONDS_MS;
-import static com.google.daq.mqtt.util.TimePeriodConstants.ONE_MINUTE_MS;
+import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static org.junit.Assert.assertTrue;
 import static udmi.schema.Envelope.SubFolder.POINTSET;

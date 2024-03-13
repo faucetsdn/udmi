@@ -3,8 +3,6 @@ package com.google.daq.mqtt.sequencer.sequences;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.daq.mqtt.sequencer.SequenceBase.Capabilities.LOGGING;
-import static com.google.daq.mqtt.util.TimePeriodConstants.NINETY_SECONDS_MS;
-import static com.google.daq.mqtt.util.TimePeriodConstants.ONE_MINUTE_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.THREE_MINUTES_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
