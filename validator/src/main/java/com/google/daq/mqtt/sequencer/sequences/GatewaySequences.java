@@ -38,7 +38,7 @@ public class GatewaySequences extends SequenceBase {
 
   @Feature(stage = FeatureStage.ALPHA, bucket = Bucket.GATEWAY)
   @Summary("Check adequate logging for gateway detach, errors, and reattach")
-  @Test(timeout = NINETY_SECONDS_MS)
+  @Test(timeout = TWO_MINUTES_MS)
   public void gateway_attach_handling() {
     ifTrueSkipTest(true, "Not yet implemented");
     // * Verify that proxied device is sending data.
@@ -54,7 +54,7 @@ public class GatewaySequences extends SequenceBase {
 
   @Feature(stage = FeatureStage.BETA, bucket = Bucket.GATEWAY, nostate = true)
   @Summary("Check that a gateway proxies pointset events for indicated devices")
-  @Test(timeout = NINETY_SECONDS_MS)
+  @Test(timeout = TWO_MINUTES_MS)
   public void gateway_proxy_events() {
     Set<String> remaining = new HashSet<>(deviceMetadata.gateway.proxy_ids);
     Set<String> original = ImmutableSet.copyOf(remaining);

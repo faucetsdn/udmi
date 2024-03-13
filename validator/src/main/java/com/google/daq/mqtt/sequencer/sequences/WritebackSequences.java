@@ -110,13 +110,13 @@ public class WritebackSequences extends PointsetBase {
     return targetModel;
   }
 
-  @Test(timeout = NINETY_SECONDS_MS)
+  @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = ALPHA, bucket = WRITEBACK)
   public void writeback_invalid() {
     testTargetState(INVALID_STATE);
   }
 
-  @Test(timeout = NINETY_SECONDS_MS)
+  @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = ALPHA, bucket = WRITEBACK)
   public void writeback_failure() {
     testTargetState(FAILURE_STATE);

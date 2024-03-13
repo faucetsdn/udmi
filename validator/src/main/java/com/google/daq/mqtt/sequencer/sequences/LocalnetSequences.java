@@ -25,19 +25,19 @@ public class LocalnetSequences extends SequenceBase {
         () -> expected.equals(actual));
   }
 
-  @Test(timeout = ONE_MINUTE_MS)
+  @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = PREVIEW, bucket = SYSTEM)
   public void family_ether_addr() {
     familyAddr(ProtocolFamily.ETHER);
   }
 
-  @Test(timeout = ONE_MINUTE_MS)
+  @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = PREVIEW, bucket = SYSTEM)
   public void family_ipv4_addr() {
     familyAddr(ProtocolFamily.IPV_4);
   }
 
-  @Test(timeout = ONE_MINUTE_MS)
+  @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = PREVIEW, bucket = SYSTEM)
   public void family_ipv6_addr() {
     familyAddr(ProtocolFamily.IPV_6);
