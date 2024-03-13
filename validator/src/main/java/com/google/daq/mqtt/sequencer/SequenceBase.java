@@ -1065,8 +1065,9 @@ public class SequenceBase {
     String messageStr = format("%s %s %s", isoConvert(logEntry.timestamp),
         Level.fromValue(logEntry.level), logEntry.message);
 
-    printWriter.println(messageStr);
-    printWriter.flush();
+    PrintWriter output = ofNullable(printWriter).orElse(new PrintWriter(System.err));
+    output.println(messageStr);
+    output.flush();
     return messageStr;
   }
 

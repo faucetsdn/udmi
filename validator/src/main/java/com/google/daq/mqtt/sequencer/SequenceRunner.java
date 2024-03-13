@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.sequencer.SequenceBase.getSequencerStateFile;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
+import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static udmi.schema.FeatureDiscovery.FeatureStage.ALPHA;
@@ -21,6 +22,7 @@ import java.io.File;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -56,7 +58,7 @@ public class SequenceRunner {
   private static final int EXIT_STATUS_SUCCESS = 0;
   private static final int EXIST_STATUS_FAILURE = 1;
   private static final String TOOL_ROOT = "..";
-  private static final List<Failure> failures = new ArrayList<>();
+  private static final List<String> failures = new ArrayList<>();
   private static final Map<String, SequenceResult> allTestResults = new TreeMap<>();
   private static final List<String> SHARD_LIST = new ArrayList<>();
   static ExecutionConfiguration exeConfig;
@@ -135,7 +137,7 @@ public class SequenceRunner {
     }
   }
 
-  public static List<Failure> getFailures() {
+  public static List<String> getFailures() {
     return failures;
   }
 
@@ -248,7 +250,7 @@ public class SequenceRunner {
       }
       for (Request request : requests) {
         Result result = new JUnitCore().run(request);
-        failures.addAll(result.getFailures());
+        failures.addAll(summarizeFailures(result.getFailures()));
         runCount += result.getRunCount();
       }
     }
@@ -262,8 +264,7 @@ public class SequenceRunner {
     }
 
     System.err.println();
-    failures.stream().map(this::getFailureMessage).filter(Objects::nonNull)
-        .forEach(System.err::println);
+    failures.forEach(System.err::println);
     Map<SequenceResult, Long> resultCounts = allTestResults.entrySet().stream()
         .collect(Collectors.groupingBy(Entry::getValue, Collectors.counting()));
     resultCounts.forEach(
@@ -272,13 +273,14 @@ public class SequenceRunner {
     System.err.println("Sequencer state summary in " + stateAbsolutePath);
   }
 
+  private Collection<String> summarizeFailures(List<Failure> failures) {
+    return ifTrueGet(failures.isEmpty(), ImmutableList::of,
+        ImmutableList.of(CSV_JOINER.join(failures.stream().map(this::getFailureMessage).toList())));
+  }
+
   private String getFailureMessage(Failure failure) {
     String failureKey = exeConfig.device_id + "/" + failure.getDescription().getMethodName();
-    Throwable exception = failure.getException();
-    if (exception instanceof IllegalStateException) {
-      return null;
-    }
-    return failureKey + ": " + friendlyStackTrace(exception);
+    return failureKey + ": " + friendlyStackTrace(failure.getException());
   }
 
   private boolean shouldShardMethod(String method) {
