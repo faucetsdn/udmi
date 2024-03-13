@@ -232,6 +232,7 @@ public class SequenceBase {
   private static final Duration DEFAULT_LOOP_TIMEOUT = Duration.ofHours(30);
   private static final Set<String> SYSTEM_STATE_CHANGES = ImmutableSet.of(
       "timestamp", "system.last_config", "system.status");
+  public static final long EVENT_WAIT_DELAY_MS = 1000;
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -1909,6 +1910,7 @@ public class SequenceBase {
 
   protected <T> List<T> popReceivedEvents(Class<T> clazz) {
     SubFolder subFolder = CLASS_SUBFOLDER_MAP.get(clazz);
+    safeSleep(EVENT_WAIT_DELAY_MS);
     List<Map<String, Object>> events = getReceivedEvents().remove(subFolder);
     if (events == null) {
       return ImmutableList.of();
