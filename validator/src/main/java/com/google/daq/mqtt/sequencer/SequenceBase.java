@@ -180,7 +180,7 @@ public class SequenceBase {
   private static final int CONFIG_UPDATE_DELAY_MS = 8 * 1000;
   private static final int NORM_TIMEOUT_MS = 300 * 1000;
   private static final String RESULT_LOG_FILE = "RESULT.log";
-  private static final String MODDATA_FILE = "metadata_mod.json";
+  private static final String OUT_DEVICE_FORMAT = "out/devices/%s/metadata_mod.json";
   private static final String SUMMARY_OUTPUT_FORMAT = "out/sequencer_%s.json";
   private static final Map<Class<?>, SubFolder> CLASS_SUBFOLDER_MAP = ImmutableMap.of(
       SystemEvent.class, SubFolder.SYSTEM,
@@ -411,7 +411,7 @@ public class SequenceBase {
   }
 
   private static Metadata readDeviceMetadata() {
-    File moddataFile = siteModel.getDeviceFile(getDeviceId(), MODDATA_FILE);
+    File moddataFile = siteModel.getSubdirectory(format(OUT_DEVICE_FORMAT, getDeviceId()));
     File metadataFile = siteModel.getDeviceFile(getDeviceId(), METADATA_JSON);
     System.err.println("Checking for modified metadata file " + moddataFile.getAbsolutePath());
     File useFile = moddataFile.exists() ? moddataFile : metadataFile;
