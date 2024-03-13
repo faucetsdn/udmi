@@ -2155,7 +2155,7 @@ public class SequenceBase {
       if (timeout < TWO_MINUTES_MS) {
         // The Junit test runner will default to ~5min for anything <2ms. Sigh.
         throw new RuntimeException(
-            format("Test timeout less than minimum allowed %sms", TWO_MINUTES_MS));
+            format("Test timeout less than minimum allowed %ss", TWO_MINUTES_MS / 1000));
 
       }
     } catch (Exception e) {
