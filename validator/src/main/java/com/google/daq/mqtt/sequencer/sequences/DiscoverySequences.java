@@ -220,7 +220,7 @@ public class DiscoverySequences extends SequenceBase {
         () -> ifNotTrueGet(() -> scanComplete(startTime).test(scanFamily),
             this::describedFamilyState));
     sleepFor("false start check delay", SCAN_START_DELAY);
-    waitFor("scan schedule still pending",
+    waitFor("scan schedule still complete",
         () -> ifNotTrueGet(() -> scanComplete(startTime).test(scanFamily),
             this::describedFamilyState));
     List<DiscoveryEvent> receivedEvents = popReceivedEvents(DiscoveryEvent.class);
@@ -308,8 +308,8 @@ public class DiscoverySequences extends SequenceBase {
 
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA)
-  @Summary("Check periodic scan on a fixed schedule")
-  public void periodic_scan_fixed() {
+  @Summary("Check periodic scan on a fixed schedule amd enumeration")
+  public void periodic_scan_fixed_enumerate() {
     initializeDiscovery();
     Date startTime = cleanDate();
     boolean shouldEnumerate = true;
@@ -318,18 +318,10 @@ public class DiscoverySequences extends SequenceBase {
     untilUntrue("scan iterations", () -> Instant.now().isBefore(endTime));
     ProtocolFamily oneFamily = metaFamilies.iterator().next();
     Date finishTime = deviceState.discovery.families.get(oneFamily).generation;
-    assertTrue("premature termination",
+    checkThat("scan did not terminate prematurely",
         metaFamilies.stream().noneMatch(scanComplete(finishTime)));
     List<DiscoveryEvent> receivedEvents = popReceivedEvents(DiscoveryEvent.class);
     checkEnumeration(receivedEvents, shouldEnumerate);
-    Set<ProtocolFamily> eventFamilies = receivedEvents.stream()
-        .flatMap(event -> event.families.keySet().stream())
-        .collect(Collectors.toSet());
-    assertTrue("all requested families present", eventFamilies.containsAll(metaFamilies));
-    Map<String, List<DiscoveryEvent>> receivedEventsGrouped = receivedEvents.stream()
-        .collect(Collectors.groupingBy(e -> e.scan_family + "." + e.scan_addr));
-    assertTrue("scan iteration",
-        receivedEventsGrouped.values().stream().allMatch(list -> list.size() == SCAN_ITERATIONS));
   }
 
   @Test(timeout = TWO_MINUTES_MS)

@@ -8,7 +8,7 @@ import udmi.schema.DiscoveryEvent;
  */
 public interface FamilyProvider {
 
-  default void startScan(Consumer<DiscoveryEvent> publish) {
+  default void startScan(boolean enumerate, Consumer<DiscoveryEvent> publish) {
     throw new RuntimeException("Not yet implemented");
   }
 

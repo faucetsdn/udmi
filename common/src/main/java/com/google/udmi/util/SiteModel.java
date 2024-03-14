@@ -248,6 +248,11 @@ public class SiteModel {
     allMetadata.forEach(consumer);
   }
 
+  public void forEachMetadata(Consumer<Entry<String, Metadata>> consumer) {
+    ifNullThen(allMetadata, this::loadAllDeviceMetadata);
+    allMetadata.forEach((id, metadata) -> consumer.accept(Map.entry(id, metadata)));
+  }
+
   public Stream<Entry<String, Metadata>> metadataStream() {
     ifNullThen(allMetadata, this::loadAllDeviceMetadata);
     return allMetadata.entrySet().stream();

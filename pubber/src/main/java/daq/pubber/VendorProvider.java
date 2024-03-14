@@ -2,15 +2,22 @@ package daq.pubber;
 
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toMap;
 import static udmi.schema.Common.ProtocolFamily.VENDOR;
 
 import com.google.udmi.util.SiteModel;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.function.Consumer;
 import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.DiscoveryEvent;
 import udmi.schema.FamilyLocalnetState;
+import udmi.schema.Metadata;
+import udmi.schema.PointDiscovery;
+import udmi.schema.PointPointsetModel;
 import udmi.schema.PubberConfiguration;
 
 /**
@@ -28,11 +35,22 @@ public class VendorProvider extends ManagerBase implements FamilyProvider {
     localnetHost = (LocalnetManager) host;
   }
 
-  private DiscoveryEvent augmentSend(String id, String scanAddr) {
-    debug(format("Discovered device %s has address %s", id, scanAddr));
+  private DiscoveryEvent augmentSend(Entry<String, Metadata> entry, boolean enumerate) {
+    String addr = catchToNull(() -> entry.getValue().localnet.families.get(VENDOR).addr);
+    debug(format("Discovered device %s has address %s", entry.getKey(), addr));
     DiscoveryEvent event = new DiscoveryEvent();
-    event.scan_addr = scanAddr;
+    event.scan_addr = addr;
+    event.points = ifTrueGet(enumerate, () -> getDiscoverPoints(entry.getValue()));
     return event;
+  }
+
+  private Map<String, PointDiscovery> getDiscoverPoints(Metadata entry) {
+    return entry.pointset.points.entrySet().stream()
+        .collect(toMap(Entry::getKey, this::makePointDiscovery));
+  }
+
+  private PointDiscovery makePointDiscovery(Entry<String, PointPointsetModel> entry) {
+    return new PointDiscovery();
   }
 
   private void updateStateAddress() {
@@ -51,10 +69,9 @@ public class VendorProvider extends ManagerBase implements FamilyProvider {
   }
 
   @Override
-  public void startScan(Consumer<DiscoveryEvent> publisher) {
+  public void startScan(boolean enumerate, Consumer<DiscoveryEvent> publisher) {
     requireNonNull(selfAddr, "no local address defined for family " + VENDOR);
-    siteModel.forEachMetadata((id, metadata) -> publisher.accept(augmentSend(id,
-        catchToNull(() -> metadata.localnet.families.get(VENDOR).addr))));
+    siteModel.forEachMetadata(entry -> publisher.accept(augmentSend(entry, enumerate)));
   }
 
   @Override

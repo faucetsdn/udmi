@@ -5,6 +5,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isGetTrue;
+import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static daq.pubber.Pubber.DEVICE_START_TIME;
 import static java.lang.Math.floorMod;
@@ -93,7 +94,7 @@ public class DiscoveryManager extends ManagerBase {
   }
 
   private void scheduleDiscoveryScan(ProtocolFamily family) {
-    FamilyDiscoveryConfig familyDiscoveryConfig = discoveryConfig.families.get(family);
+    FamilyDiscoveryConfig familyDiscoveryConfig = getFamilyDiscoveryConfig(family);
     Date rawGeneration = familyDiscoveryConfig.generation;
     int interval = getScanInterval(family);
     if (rawGeneration == null && interval == 0) {
@@ -127,6 +128,10 @@ public class DiscoveryManager extends ManagerBase {
     updateState();
 
     scheduleFuture(startGeneration, () -> checkDiscoveryScan(family, startGeneration));
+  }
+
+  private FamilyDiscoveryConfig getFamilyDiscoveryConfig(ProtocolFamily family) {
+    return discoveryConfig.families.get(family);
   }
 
   private void removeDiscoveryScan(ProtocolFamily family) {
@@ -176,7 +181,7 @@ public class DiscoveryManager extends ManagerBase {
     familyDiscoveryState.record_count = sendCount.get();
     updateState();
     discoveryProvider(family).startScan(
-        discoveryEvent -> {
+        isTrue(getFamilyDiscoveryConfig(family).enumerate), discoveryEvent -> {
           ifNotNullThen(discoveryEvent.scan_addr, addr -> {
                 info(format("Discovered %s device %s for gen %s", family, addr, scanGeneration));
                 discoveryEvent.scan_family = family;
@@ -226,7 +231,7 @@ public class DiscoveryManager extends ManagerBase {
 
   private int getScanInterval(ProtocolFamily family) {
     return ofNullable(
-        catchToNull(() -> discoveryConfig.families.get(family).scan_interval_sec)).orElse(0);
+        catchToNull(() -> getFamilyDiscoveryConfig(family).scan_interval_sec)).orElse(0);
   }
 
   private <T> T ifTrue(Boolean condition, Supplier<T> supplier) {
