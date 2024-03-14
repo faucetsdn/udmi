@@ -1,0 +1,62 @@
+2024-03-14T17:07:46Z WARNING Starting AHU-1 Pubber sender with delay 10s
+2024-03-14T17:07:46Z WARNING Dropping state update until config received...
+2024-03-14T17:07:46Z WARNING Received config for config latch AHU-1
+2024-03-14T17:07:46Z NOTICE success
+2024-03-14T17:07:46Z WARNING Ending connection 1710436066053 with 9
+2024-03-14T17:07:54Z NOTICE success
+2024-03-14T17:07:46Z INFO Configured with auth_type RS256
+2024-03-14T17:07:46Z INFO Resetting persistent store /home/runner/work/udmi/udmi/sites/udmi_site_model/out/devices/AHU-1/persistent_data.json
+2024-03-14T17:07:46Z INFO Loading endpoint into persistent data from configuration
+2024-03-14T17:07:46Z WARNING Updating persistent store: {"endpoint":{"hostname":"mqtt.bos.goog","client_id":"projects/bos-platform-dev/locations/us-central1/registries/grafnu~ZZ-TRI-FECTA_7/devices/AHU-1"},"restart_count":1}
+2024-03-14T17:07:46Z INFO Starting pubber AHU-1, serial sequencer-26338, mac null, gateway null, options noPersist
+2024-03-14T17:07:46Z WARNING Starting connection 1710436066053 with 10
+2024-03-14T17:07:46Z INFO Update state 2024-03-14T17:07:46Z last_config 1970-01-01T00:00:00Z
+2024-03-14T17:07:46Z WARNING Dropping state update until config received...
+2024-03-14T17:07:46Z INFO Update state 2024-03-14T17:07:46Z last_config 1970-01-01T00:00:00Z
+2024-03-14T17:07:46Z WARNING Dropping state update until config received...
+2024-03-14T17:07:46Z INFO Connection complete.
+2024-03-14T17:07:46Z WARNING Start waiting 10s for config latch for AHU-1
+2024-03-14T17:07:46Z INFO Device AHU-1 config handler
+2024-03-14T17:07:46Z INFO Update state 2024-03-14T17:07:46Z last_config 1970-01-01T00:00:00Z
+2024-03-14T17:07:46Z WARNING Dropping state update until config received...
+2024-03-14T17:07:46Z INFO 2024-03-14T17:07:46Z received config 2024-03-14T17:07:45Z
+2024-03-14T17:07:46Z WARNING Starting AHU-1 PointsetManager sender with delay 10s
+2024-03-14T17:07:46Z WARNING Starting AHU-1 SystemManager sender with delay 10s
+2024-03-14T17:08:02Z NOTICE success
+2024-03-14T17:08:02Z INFO Device AHU-1 config handler
+2024-03-14T17:08:02Z INFO 2024-03-14T17:08:02Z received config 2024-03-14T17:08:02Z
+2024-03-14T17:08:02Z NOTICE success
+2024-03-14T17:08:04Z INFO Device AHU-1 config handler
+2024-03-14T17:08:04Z INFO 2024-03-14T17:08:04Z received config 2024-03-14T17:08:04Z
+2024-03-14T17:08:04Z NOTICE success
+2024-03-14T17:08:04Z INFO Update state 2024-03-14T17:08:04Z last_config 2024-03-14T17:08:04Z
+2024-03-14T17:08:05Z INFO Device AHU-1 config handler
+2024-03-14T17:08:05Z INFO 2024-03-14T17:08:05Z received config 2024-03-14T17:08:05Z
+2024-03-14T17:08:05Z NOTICE success
+2024-03-14T17:08:06Z INFO Device AHU-1 config handler
+2024-03-14T17:08:06Z INFO 2024-03-14T17:08:06Z received config 2024-03-14T17:08:06Z
+2024-03-14T17:08:06Z NOTICE success
+2024-03-14T17:08:06Z INFO Update state 2024-03-14T17:08:06Z last_config 2024-03-14T17:08:06Z
+2024-03-14T17:08:11Z INFO Update state 2024-03-14T17:08:11Z last_config 2024-03-14T17:08:06Z
+2024-03-14T17:08:11Z INFO Device AHU-1 config handler
+2024-03-14T17:08:11Z INFO 2024-03-14T17:08:11Z received config 2024-03-14T17:08:11Z
+2024-03-14T17:08:11Z NOTICE success
+2024-03-14T17:08:13Z INFO Update state 2024-03-14T17:08:13Z last_config 2024-03-14T17:08:11Z
+2024-03-14T17:08:18Z INFO Update state 2024-03-14T17:08:18Z last_config 2024-03-14T17:08:11Z
+2024-03-14T17:08:18Z INFO Device AHU-1 config handler
+2024-03-14T17:08:18Z INFO 2024-03-14T17:08:18Z received config 2024-03-14T17:08:18Z
+2024-03-14T17:08:18Z INFO Discovery scan generation vendor pending at 2024-03-14T17:08:25Z
+2024-03-14T17:08:18Z NOTICE success
+2024-03-14T17:08:20Z INFO Update state 2024-03-14T17:08:20Z last_config 2024-03-14T17:08:18Z
+2024-03-14T17:08:25Z INFO Discovery scan starting vendor as 2024-03-14T17:08:25Z
+2024-03-14T17:08:25Z INFO Update state 2024-03-14T17:08:25Z last_config 2024-03-14T17:08:18Z
+2024-03-14T17:08:25Z INFO Discovered vendor device 0x65 for gen Thu Mar 14 17:08:25 UTC 2024
+2024-03-14T17:08:25Z INFO Discovered vendor device 28179023 for gen Thu Mar 14 17:08:25 UTC 2024
+2024-03-14T17:08:25Z ERROR Error while executing scheduled future: While checking for discovery scan start
+2024-03-14T17:08:27Z INFO Update state 2024-03-14T17:08:27Z last_config 2024-03-14T17:08:18Z
+2024-03-14T17:08:35Z INFO Discovery scan generation vendor pending at 2024-03-14T17:08:35Z
+2024-03-14T17:08:35Z INFO Discovery scan starting vendor as 2024-03-14T17:08:35Z
+2024-03-14T17:08:35Z INFO Discovered vendor device 0x65 for gen Thu Mar 14 17:08:35 UTC 2024
+2024-03-14T17:08:35Z INFO Discovered vendor device 28179023 for gen Thu Mar 14 17:08:35 UTC 2024
+2024-03-14T17:08:35Z ERROR Error while executing scheduled future: While checking for discovery scan start
+2024-03-14T17:08:38Z NOTICE Sequence complete

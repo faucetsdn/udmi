@@ -82,6 +82,7 @@ import udmi.schema.BlobsetConfig.SystemBlobsets;
 import udmi.schema.BlobsetState;
 import udmi.schema.Category;
 import udmi.schema.CloudModel.Auth_type;
+import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.Config;
 import udmi.schema.DevicePersistent;
 import udmi.schema.DiscoveryEvent;
@@ -158,6 +159,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
   private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
   private final AtomicBoolean stateDirty = new AtomicBoolean();
   private final ReentrantLock stateLock = new ReentrantLock();
+  public PrintStream logPrintWriter;
   protected DevicePersistent persistentData;
   private CountDownLatch configLatch;
   private MqttDevice deviceTarget;
@@ -173,7 +175,6 @@ public class Pubber extends ManagerBase implements ManagerHost {
   private DeviceManager deviceManager;
   private boolean isConnected;
   private boolean isGatewayDevice;
-  public PrintStream logPrintWriter;
 
   /**
    * Start an instance from a configuration file.
@@ -358,6 +359,11 @@ public class Pubber extends ManagerBase implements ManagerHost {
         targetId.equals(configuration.deviceId) ? null : configuration.deviceId);
   }
 
+  @Override
+  public FamilyProvider getLocalnetProvider(ProtocolFamily family) {
+    return deviceManager.getLocalnetProvider(family);
+  }
+
   private void initializeDevice() {
     deviceManager = new DeviceManager(this, configuration);
 
@@ -479,7 +485,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
       publishSynchronousState();
     } else if (checkTarget instanceof SystemState) {
       deviceState.system = (SystemState) checkValue;
-      ifTrueThen(options.dupeState, () -> sendDupeState());
+      ifTrueThen(options.dupeState, this::sendDupeState);
     } else if (checkTarget instanceof PointsetState) {
       deviceState.pointset = (PointsetState) checkValue;
     } else if (checkTarget instanceof LocalnetState) {
@@ -1253,7 +1259,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
     String messageBase = topicSuffix.replace("/", "_");
     String gatewayId = getGatewayId(targetId, configuration);
     String suffix = ifNotNullGet(gatewayId, x -> "_" + targetId, "");
-    File messageOut = new File(outDir,  format("%s.json", traceTimestamp(messageBase + suffix)));
+    File messageOut = new File(outDir, format("%s.json", traceTimestamp(messageBase + suffix)));
     try {
       toJsonFile(messageOut, downgraded);
     } catch (Exception e) {

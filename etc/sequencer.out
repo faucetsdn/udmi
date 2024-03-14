@@ -1,6 +1,6 @@
 RESULT skip discovery.scan cancel_before_start ALPHA 0/0 Not yet implemented
 RESULT skip discovery.scan cancel_periodic ALPHA 0/0 Not yet implemented
-RESULT fail discovery.scan periodic_scan_fixed ALPHA 0/5 scan iteration
+RESULT pass discovery.scan periodic_scan_fixed_enumerate ALPHA 5/5 Sequence complete
 RESULT skip discovery.scan periodic_scan_floating ALPHA 0/0 Not yet implemented
 RESULT pass discovery.scan single_scan_future ALPHA 5/5 Sequence complete
 RESULT pass discovery.scan single_scan_past ALPHA 5/5 Sequence complete
