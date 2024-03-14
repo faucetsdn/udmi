@@ -46,6 +46,9 @@ jobs:
       - name: udmis test output
         if: ${{ !cancelled() }}
         run: more out/test_bin+test_udmis
+      - name: site test output
+        if: ${{ !cancelled() }}
+        run: more out/test_bin+test_sites
 
   spelling:
     name: Docs Spelling Checks
