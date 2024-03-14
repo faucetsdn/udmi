@@ -2,45 +2,37 @@
   "discovery" : {
     "families" : {
       "vendor" : {
-        "generation" : "2024-03-11T17:51:20Z",
-        "phase" : "active"
+        "generation" : "2024-03-14T17:09:53Z",
+        "phase" : "done",
+        "record_count" : 2
       }
     }
   },
   "localnet" : {
     "families" : {
-      "ether" : {
-        "addr" : "60:45:bd:4a:55:8e"
-      },
       "ipv4" : {
-        "addr" : "10.1.0.62"
+        "addr" : "10.1.1.115"
+      },
+      "vendor" : {
+        "addr" : "28179023"
+      },
+      "ether" : {
+        "addr" : "00:22:48:90:d8:fb"
       },
       "ipv6" : {
-        "addr" : "fe80::6245:bdff:fe4a:558e"
-      }
-    }
-  },
-  "pointset" : {
-    "points" : {
-      "filter_alarm_pressure_status" : { },
-      "filter_differential_pressure_setpoint" : {
-        "units" : "Bars",
-        "value_state" : "applied"
-      },
-      "filter_differential_pressure_sensor" : {
-        "units" : "Degrees-Celsius"
+        "addr" : "fe80::222:48ff:fe90:d8fb"
       }
     }
   },
   "system" : {
-    "last_config" : "2024-03-11T17:51:12Z",
+    "last_config" : "2024-03-14T17:09:45Z",
     "operation" : {
       "operational" : true,
-      "last_start" : "2024-03-11T17:50:06Z",
+      "last_start" : "2024-03-14T17:08:40Z",
       "restart_count" : 1,
       "mode" : "initial"
     },
-    "serial_no" : "sequencer-30414",
+    "serial_no" : "sequencer-8352",
     "hardware" : {
       "make" : "BOS",
       "model" : "pubber"
@@ -51,10 +43,10 @@
     "status" : {
       "message" : "success",
       "category" : "system.config.apply",
-      "timestamp" : "2024-03-11T17:51:12Z",
+      "timestamp" : "2024-03-14T17:09:45Z",
       "level" : 300
     }
   },
-  "timestamp" : "2024-03-11T17:51:20Z",
+  "timestamp" : "2024-03-14T17:10:03Z",
   "version" : "1.5.0"
 }

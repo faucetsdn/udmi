@@ -11,4 +11,5 @@ Check that a scan scheduled in the past never starts
 1. Update config Before scan schedule initially complete:
     * Add `discovery.families.vendor` = { "generation": `family generation`, "scan_duration_sec": `10`, "enumerate": `false` }
 1. Wait for scan schedule initially complete
-1. Wait for scan schedule still pending
+1. Wait for scan schedule still complete
+1. Check that there were no received discovery events

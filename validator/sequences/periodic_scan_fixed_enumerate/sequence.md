@@ -1,7 +1,7 @@
 
-## periodic_scan_fixed (ALPHA)
+## periodic_scan_fixed_enumerate (ALPHA)
 
-Check periodic scan on a fixed schedule
+Check periodic scan on a fixed schedule amd enumeration
 
 1. Update config before discovery families defined:
     * Add `discovery` = { "families": {  } }
@@ -11,5 +11,5 @@ Check periodic scan on a fixed schedule
 1. Update config before scan iterations:
     * Add `discovery.families.vendor` = { "generation": `family generation`, "scan_interval_sec": `10`, "scan_duration_sec": `10`, "enumerate": `true` }
 1. Wait for scan iterations
+1. Check that scan did not terminate prematurely
 1. Check that all events have points
-1. Test failed: scan iteration
