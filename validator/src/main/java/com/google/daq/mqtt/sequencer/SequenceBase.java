@@ -29,6 +29,7 @@ import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.JsonUtil.convertTo;
+import static com.google.udmi.util.JsonUtil.getNowInstant;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.loadFileRequired;
 import static com.google.udmi.util.JsonUtil.safeSleep;
@@ -237,6 +238,7 @@ public class SequenceBase {
   private static final Duration DEFAULT_LOOP_TIMEOUT = Duration.ofHours(30);
   private static final Set<String> SYSTEM_STATE_CHANGES = ImmutableSet.of(
       "timestamp", "system.last_config", "system.status");
+  private static final Duration STATE_TIMESTAMP_ERROR_THRESHOLD = Duration.ofMinutes(20);
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -1701,6 +1703,9 @@ public class SequenceBase {
           return;
         }
         if (deviceState == null && convertedState.timestamp.before(stateCutoffThreshold)) {
+          Date cutoff = Date.from(getNowInstant().minus(STATE_TIMESTAMP_ERROR_THRESHOLD));
+          checkState(convertedState.timestamp.after(cutoff),
+              format("State timestamp %s before error cutoff threshold", timestamp));
           String lastStart = isoConvert(
               catchToNull(() -> convertedState.system.operation.last_start));
           warning(format("Ignoring stale state update %s %s %s %s", timestamp,
