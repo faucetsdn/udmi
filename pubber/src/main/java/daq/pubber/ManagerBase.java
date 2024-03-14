@@ -29,12 +29,14 @@ public abstract class ManagerBase {
   protected final ManagerHost host;
   private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
   final String deviceId;
+  final PubberConfiguration config;
   protected ScheduledFuture<?> periodicSender;
 
   /**
    * New instance.
    */
   public ManagerBase(ManagerHost host, PubberConfiguration configuration) {
+    config = configuration;
     options = configuration.options;
     deviceId = requireNonNull(configuration.deviceId, "device id not defined");
     this.host = host;

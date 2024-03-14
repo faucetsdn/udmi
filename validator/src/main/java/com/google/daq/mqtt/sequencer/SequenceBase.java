@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Predicates.not;
 import static com.google.common.base.Strings.emptyToNull;
+import static com.google.daq.mqtt.registrar.Registrar.METADATA_JSON;
 import static com.google.daq.mqtt.sequencer.SequenceBase.Capabilities.LAST_CONFIG;
 import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
 import static com.google.daq.mqtt.util.CloudIotManager.EMPTY_CONFIG;
@@ -116,6 +117,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.VisibleForTesting;
 import org.junit.After;
 import org.junit.AssumptionViolatedException;
 import org.junit.Before;
@@ -184,9 +186,8 @@ public class SequenceBase {
   private static final int CONFIG_UPDATE_DELAY_MS = 8 * 1000;
   private static final int NORM_TIMEOUT_MS = 300 * 1000;
   private static final String RESULT_LOG_FILE = "RESULT.log";
-  private static final String DEVICE_MODDATA = "%s/out/devices/%s/metadata_mod.json";
-  private static final String DEVICE_METADATA = "%s/devices/%s/metadata.json";
-  private static final String SUMMARY_OUTPUT_FORMAT = "%s/out/sequencer_%s.json";
+  private static final String OUT_DEVICE_FORMAT = "out/devices/%s/metadata_mod.json";
+  private static final String SUMMARY_OUTPUT_FORMAT = "out/sequencer_%s.json";
   private static final Map<Class<?>, SubFolder> CLASS_SUBFOLDER_MAP = ImmutableMap.of(
       SystemEvent.class, SubFolder.SYSTEM,
       PointsetEvent.class, SubFolder.POINTSET,
@@ -238,6 +239,7 @@ public class SequenceBase {
   private static final Duration DEFAULT_LOOP_TIMEOUT = Duration.ofHours(30);
   private static final Set<String> SYSTEM_STATE_CHANGES = ImmutableSet.of(
       "timestamp", "system.last_config", "system.status");
+  private static final long EVENT_WAIT_DELAY_MS = 1000;
   private static final Duration STATE_TIMESTAMP_ERROR_THRESHOLD = Duration.ofMinutes(20);
   protected static Metadata deviceMetadata;
   protected static String projectId;
@@ -246,10 +248,10 @@ public class SequenceBase {
   protected static String altRegistry;
   protected static IotReflectorClient altClient;
   protected static String serialNo;
+  protected static SiteModel siteModel;
   static ExecutionConfiguration exeConfig;
   private static Validator messageValidator;
   private static ValidationState validationState;
-  private static String siteModel;
   private static int logLevel;
   private static File deviceOutputDir;
   private static File resultSummary;
@@ -314,7 +316,7 @@ public class SequenceBase {
     final String key_file;
     try {
       messageValidator = new Validator(exeConfig, SequenceBase::validatorLogger);
-      siteModel = checkNotNull(exeConfig.site_model, "site_model not defined");
+      siteModel = new SiteModel(checkNotNull(exeConfig.site_model, "site_model not defined"));
       projectId = checkNotNull(exeConfig.project_id, "project_id not defined");
       checkNotNull(exeConfig.udmi_version, "udmi_version not defined");
       String serial = checkNotNull(exeConfig.serial_no, "serial_no not defined");
@@ -332,7 +334,7 @@ public class SequenceBase {
 
     deviceMetadata = readDeviceMetadata();
 
-    File baseOutputDir = new File(SequenceBase.siteModel, "out");
+    File baseOutputDir = siteModel.getSubdirectory("out");
     deviceOutputDir = new File(baseOutputDir, "devices/" + getDeviceId());
     deviceOutputDir.mkdirs();
 
@@ -343,34 +345,17 @@ public class SequenceBase {
     System.err.printf("Loading reflector key file from %s%n", new File(key_file).getAbsolutePath());
     System.err.printf("Validating against device %s serial %s%n", getDeviceId(), serialNo);
     client = getPublisherClient();
+    ifNotNullThen(validationState, state -> state.cloud_version = client.getVersionInformation());
 
     String udmiNamespace = exeConfig.udmi_namespace;
     String altRegistryId = exeConfig.alt_registry;
     String registrySuffix = exeConfig.registry_suffix;
     altRegistry = SiteModel.getRegistryActual(udmiNamespace, altRegistryId, registrySuffix);
     altClient = getAlternateClient();
-
-    initializeValidationState();
   }
 
   private static void validatorLogger(Level level, String message) {
     activeInstance.log(message, level);
-  }
-
-  private static void initializeValidationState() {
-    validationState = new ValidationState();
-    validationState.features = new HashMap<>();
-    validationState.schemas = new HashMap<>();
-    validationState.start_time = new Date();
-    validationState.udmi_version = Common.getUdmiVersion();
-    validationState.cloud_version = client.getVersionInformation();
-    Entry statusEntry = new Entry();
-    statusEntry.category = VALIDATION_FEATURE_SEQUENCE;
-    statusEntry.message = "Starting sequence run for device " + getDeviceId();
-    statusEntry.level = Level.NOTICE.value();
-    statusEntry.timestamp = new Date();
-    validationState.status = statusEntry;
-    updateValidationState();
   }
 
   private static MessagePublisher getPublisherClient() {
@@ -411,14 +396,17 @@ public class SequenceBase {
     return SequenceRunner.processStage(ALPHA) ? FUNCTIONS_VERSION_ALPHA : FUNCTIONS_VERSION_BETA;
   }
 
+  @VisibleForTesting
   static void resetState() {
+    System.err.println("Resetting SequenceBase state for testing");
     exeConfig = null;
     client = null;
+    validationState = null;
   }
 
   private static Metadata readDeviceMetadata() {
-    File moddataFile = new File(format(DEVICE_MODDATA, siteModel, getDeviceId()));
-    File metadataFile = new File(format(DEVICE_METADATA, siteModel, getDeviceId()));
+    File moddataFile = siteModel.getSubdirectory(format(OUT_DEVICE_FORMAT, getDeviceId()));
+    File metadataFile = siteModel.getDeviceFile(getDeviceId(), METADATA_JSON);
     System.err.println("Checking for modified metadata file " + moddataFile.getAbsolutePath());
     File useFile = moddataFile.exists() ? moddataFile : metadataFile;
     System.err.println("Reading device metadata file " + useFile.getPath());
@@ -451,7 +439,7 @@ public class SequenceBase {
   }
 
   static File getSequencerStateFile() {
-    return new File(format(SUMMARY_OUTPUT_FORMAT, siteModel, getDeviceId()));
+    return siteModel.getSubdirectory(format(SUMMARY_OUTPUT_FORMAT, getDeviceId()));
   }
 
   static void processComplete(Exception e) {
@@ -461,11 +449,9 @@ public class SequenceBase {
     statusEntry.timestamp = cleanDate();
     statusEntry.message = wasError ? Common.getExceptionMessage(e) : "Run completed";
     statusEntry.category = VALIDATION_FEATURE_SEQUENCE;
-    if (validationState != null) {
-      validationState.status = statusEntry;
-      summarizeSchemaStages();
-      updateValidationState();
-    }
+    getValidationState().status = statusEntry;
+    summarizeSchemaStages();
+    updateValidationState();
   }
 
   static void enableAllBuckets(boolean enabled) {
@@ -582,6 +568,27 @@ public class SequenceBase {
     } catch (Exception e) {
       throw new RuntimeException("While extracting capabilities for " + desc.getMethodName(), e);
     }
+  }
+
+  private static ValidationState getValidationState() {
+    ifNullThen(validationState, SequenceBase::initializeValidationState);
+    return validationState;
+  }
+
+  private static void initializeValidationState() {
+    validationState = new ValidationState();
+    validationState.features = new HashMap<>();
+    validationState.schemas = new HashMap<>();
+    validationState.start_time = new Date();
+    validationState.udmi_version = Common.getUdmiVersion();
+    validationState.cloud_version = ifNotNullGet(client, MessagePublisher::getVersionInformation);
+    Entry statusEntry = new Entry();
+    statusEntry.category = VALIDATION_FEATURE_SEQUENCE;
+    statusEntry.message = "Starting sequence run for device " + getDeviceId();
+    statusEntry.level = Level.NOTICE.value();
+    statusEntry.timestamp = new Date();
+    validationState.status = statusEntry;
+    updateValidationState();
   }
 
   @NotNull
@@ -1933,6 +1940,7 @@ public class SequenceBase {
 
   protected <T> List<T> popReceivedEvents(Class<T> clazz) {
     SubFolder subFolder = CLASS_SUBFOLDER_MAP.get(clazz);
+    safeSleep(EVENT_WAIT_DELAY_MS);
     List<Map<String, Object>> events = getReceivedEvents().remove(subFolder);
     if (events == null) {
       return ImmutableList.of();
@@ -2067,7 +2075,7 @@ public class SequenceBase {
   private void setSequenceStatus(Description description, SequenceResult result, Entry logEntry) {
     String bucket = getBucket(description).value();
     String sequence = description.getMethodName();
-    SequenceValidationState sequenceValidationState = validationState.features.computeIfAbsent(
+    SequenceValidationState sequenceValidationState = getValidationState().features.computeIfAbsent(
         bucket, this::newFeatureValidationState).sequences.computeIfAbsent(
         sequence, key -> new SequenceValidationState());
     sequenceValidationState.status = logEntry;
@@ -2233,10 +2241,6 @@ public class SequenceBase {
     protected void starting(@NotNull Description description) {
       testName = description.getMethodName();
       try {
-        setupSequencer();
-        putSequencerResult(description, SequenceResult.START);
-        checkState(reflector().isActive(), "Reflector is not currently active");
-
         testDescription = description;
         testSummary = getTestSummary(description);
         testStage = getTestStage(description);
@@ -2245,12 +2249,19 @@ public class SequenceBase {
         testSchema = ifNotNullGet(description.getAnnotation(ValidateSchema.class),
             ValidateSchema::value);
 
+        setupSequencer();
+
+        requireNonNull(deviceOutputDir, "deviceOutputDir not defined");
         testDir = new File(new File(deviceOutputDir, TESTS_OUT_DIR), testName);
+        info("Cleaning test output dir " + testDir.getAbsolutePath());
         FileUtils.deleteDirectory(testDir);
         testDir.mkdirs();
         systemLog = new PrintWriter(newOutputStream(new File(testDir, SYSTEM_LOG).toPath()));
         sequencerLog = new PrintWriter(newOutputStream(new File(testDir, SEQUENCER_LOG).toPath()));
         sequenceMd = new PrintWriter(newOutputStream(new File(testDir, SEQUENCE_MD).toPath()));
+
+        putSequencerResult(description, SequenceResult.START);
+        checkState(reflector().isActive(), "Reflector is not currently active");
 
         validateTestSpecification(description);
 
@@ -2277,6 +2288,7 @@ public class SequenceBase {
       if (activeInstance == null) {
         return;
       }
+
       if (!testName.equals(description.getMethodName())) {
         throw new IllegalStateException("Unexpected test method name");
       }
@@ -2292,6 +2304,7 @@ public class SequenceBase {
       systemLog.close();
       sequencerLog.close();
       sequenceMd.close();
+
       activeInstance = null;
     }
 

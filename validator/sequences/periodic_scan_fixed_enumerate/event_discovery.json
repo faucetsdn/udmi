@@ -1,0 +1,18 @@
+{
+  "generation" : "2024-03-14T17:08:35Z",
+  "points" : {
+    "filter_alarm_pressure_status" : {
+      "possible_values" : [ ]
+    },
+    "filter_differential_pressure" : {
+      "possible_values" : [ ]
+    },
+    "filter_differential_pressure_sensor" : {
+      "possible_values" : [ ]
+    }
+  },
+  "scan_addr" : "0x65",
+  "scan_family" : "vendor",
+  "timestamp" : "2024-03-14T17:08:35Z",
+  "version" : "1.5.0"
+}

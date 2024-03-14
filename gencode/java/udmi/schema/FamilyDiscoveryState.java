@@ -23,6 +23,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 @JsonPropertyOrder({
     "generation",
     "phase",
+    "record_count",
     "status"
 })
 @Generated("jsonschema2pojo")
@@ -43,6 +44,13 @@ public class FamilyDiscoveryState {
     @JsonPropertyDescription("Current phase of the discovery process")
     public FamilyDiscoveryState.Phase phase;
     /**
+     * Number of records produced so far for this scan generation
+     * 
+     */
+    @JsonProperty("record_count")
+    @JsonPropertyDescription("Number of records produced so far for this scan generation")
+    public Integer record_count;
+    /**
      * Entry
      * <p>
      * 
@@ -56,6 +64,7 @@ public class FamilyDiscoveryState {
         int result = 1;
         result = ((result* 31)+((this.generation == null)? 0 :this.generation.hashCode()));
         result = ((result* 31)+((this.phase == null)? 0 :this.phase.hashCode()));
+        result = ((result* 31)+((this.record_count == null)? 0 :this.record_count.hashCode()));
         result = ((result* 31)+((this.status == null)? 0 :this.status.hashCode()));
         return result;
     }
@@ -69,7 +78,7 @@ public class FamilyDiscoveryState {
             return false;
         }
         FamilyDiscoveryState rhs = ((FamilyDiscoveryState) other);
-        return ((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.phase == rhs.phase)||((this.phase!= null)&&this.phase.equals(rhs.phase))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
+        return (((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.phase == rhs.phase)||((this.phase!= null)&&this.phase.equals(rhs.phase))))&&((this.record_count == rhs.record_count)||((this.record_count!= null)&&this.record_count.equals(rhs.record_count))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
     }
 
 

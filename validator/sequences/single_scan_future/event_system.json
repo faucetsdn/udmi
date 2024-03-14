@@ -1,46 +1,36 @@
 {
-  "event_count" : 7,
-  "last_config" : "2024-03-11T17:51:12Z",
+  "event_count" : 8,
+  "last_config" : "2024-03-14T17:09:45Z",
   "logentries" : [ {
-    "message" : "Update state 2024-03-11T17:51:08Z last_config 2024-03-11T17:51:06Z",
+    "message" : "Discovery scan starting vendor as 2024-03-14T17:09:53Z",
     "category" : "device.log",
-    "timestamp" : "2024-03-11T17:51:08Z",
+    "timestamp" : "2024-03-14T17:09:53Z",
     "level" : 200
   }, {
-    "message" : "Update state 2024-03-11T17:51:12Z last_config 2024-03-11T17:51:06Z",
+    "message" : "Update state 2024-03-14T17:09:53Z last_config 2024-03-14T17:09:45Z",
     "category" : "device.log",
-    "timestamp" : "2024-03-11T17:51:12Z",
+    "timestamp" : "2024-03-14T17:09:53Z",
     "level" : 200
   }, {
-    "message" : "Device AHU-1 config handler",
+    "message" : "Discovered vendor device 0x65 for gen Thu Mar 14 17:09:53 UTC 2024",
     "category" : "device.log",
-    "timestamp" : "2024-03-11T17:51:12Z",
+    "timestamp" : "2024-03-14T17:09:53Z",
     "level" : 200
   }, {
-    "message" : "2024-03-11T17:51:12Z received config 2024-03-11T17:51:12Z",
+    "message" : "Discovered vendor device 28179023 for gen Thu Mar 14 17:09:53 UTC 2024",
     "category" : "device.log",
-    "timestamp" : "2024-03-11T17:51:12Z",
+    "timestamp" : "2024-03-14T17:09:53Z",
     "level" : 200
   }, {
-    "message" : "Discovery scan generation vendor pending at 2024-03-11T17:51:20Z",
+    "message" : "Update state 2024-03-14T17:09:55Z last_config 2024-03-14T17:09:45Z",
     "category" : "device.log",
-    "timestamp" : "2024-03-11T17:51:12Z",
-    "level" : 200
-  }, {
-    "message" : "success",
-    "category" : "system.config.apply",
-    "timestamp" : "2024-03-11T17:51:12Z",
-    "level" : 300
-  }, {
-    "message" : "Update state 2024-03-11T17:51:14Z last_config 2024-03-11T17:51:12Z",
-    "category" : "device.log",
-    "timestamp" : "2024-03-11T17:51:14Z",
+    "timestamp" : "2024-03-14T17:09:55Z",
     "level" : 200
   } ],
   "metrics" : {
     "mem_total_mb" : 254.0,
-    "mem_free_mb" : 221.1526870727539
+    "mem_free_mb" : 219.23474884033203
   },
-  "timestamp" : "2024-03-11T17:51:17Z",
+  "timestamp" : "2024-03-14T17:10:01Z",
   "version" : "1.5.0"
 }
