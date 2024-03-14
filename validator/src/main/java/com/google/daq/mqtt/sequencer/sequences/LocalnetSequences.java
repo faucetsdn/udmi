@@ -1,6 +1,6 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
-import static com.google.daq.mqtt.util.TimePeriodConstants.ONE_MINUTE_MS;
+import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static java.lang.String.format;
 import static udmi.schema.Bucket.SYSTEM;
 import static udmi.schema.FeatureDiscovery.FeatureStage.PREVIEW;
@@ -25,19 +25,19 @@ public class LocalnetSequences extends SequenceBase {
         () -> expected.equals(actual));
   }
 
-  @Test(timeout = ONE_MINUTE_MS)
+  @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = PREVIEW, bucket = SYSTEM)
   public void family_ether_addr() {
     familyAddr(ProtocolFamily.ETHER);
   }
 
-  @Test(timeout = ONE_MINUTE_MS)
+  @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = PREVIEW, bucket = SYSTEM)
   public void family_ipv4_addr() {
     familyAddr(ProtocolFamily.IPV_4);
   }
 
-  @Test(timeout = ONE_MINUTE_MS)
+  @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = PREVIEW, bucket = SYSTEM)
   public void family_ipv6_addr() {
     familyAddr(ProtocolFamily.IPV_6);

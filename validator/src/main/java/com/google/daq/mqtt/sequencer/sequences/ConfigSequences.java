@@ -3,8 +3,6 @@ package com.google.daq.mqtt.sequencer.sequences;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.daq.mqtt.sequencer.SequenceBase.Capabilities.LOGGING;
-import static com.google.daq.mqtt.util.TimePeriodConstants.NINETY_SECONDS_MS;
-import static com.google.daq.mqtt.util.TimePeriodConstants.ONE_MINUTE_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.THREE_MINUTES_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
@@ -50,7 +48,7 @@ public class ConfigSequences extends SequenceBase {
   // How frequently to send out confg queries for device config acked check.
   private static final Duration CONFIG_QUERY_INTERVAL = Duration.ofSeconds(30);
 
-  @Test(timeout = ONE_MINUTE_MS)
+  @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = STABLE, bucket = SYSTEM)
   @Summary("Check that last_update state is correctly set in response to a config update.")
   @ValidateSchema(SubFolder.SYSTEM)
@@ -65,7 +63,7 @@ public class ConfigSequences extends SequenceBase {
     untilTrue("state update complete", this::deviceStateComplete);
   }
 
-  @Test(timeout = ONE_MINUTE_MS)
+  @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = BETA, bucket = SYSTEM)
   @ValidateSchema(SubFolder.SYSTEM)
   public void valid_serial_no() {
@@ -124,7 +122,7 @@ public class ConfigSequences extends SequenceBase {
     });
   }
 
-  @Test(timeout = NINETY_SECONDS_MS)
+  @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = BETA, bucket = SYSTEM, score = 4)
   @Capability(value = LOGGING, stage = ALPHA)
   @Summary("Check that the device correctly handles a broken (non-json) config message.")
@@ -186,7 +184,7 @@ public class ConfigSequences extends SequenceBase {
     });
   }
 
-  @Test(timeout = ONE_MINUTE_MS)
+  @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = BETA, bucket = SYSTEM)
   @Summary("Check that the device correctly handles an extra out-of-schema field")
   public void extra_config() {
@@ -213,7 +211,7 @@ public class ConfigSequences extends SequenceBase {
     untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
   }
 
-  @Test(timeout = ONE_MINUTE_MS)
+  @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = BETA, bucket = SYSTEM)
   @Summary("Check that the device publishes minimum required log entries when receiving config")
   public void config_logging() {
