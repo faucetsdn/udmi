@@ -345,6 +345,7 @@ public class SequenceBase {
     System.err.printf("Loading reflector key file from %s%n", new File(key_file).getAbsolutePath());
     System.err.printf("Validating against device %s serial %s%n", getDeviceId(), serialNo);
     client = getPublisherClient();
+    ifNotNullThen(validationState, state -> state.cloud_version = client.getVersionInformation());
 
     String udmiNamespace = exeConfig.udmi_namespace;
     String altRegistryId = exeConfig.alt_registry;
@@ -2073,7 +2074,7 @@ public class SequenceBase {
     validationState.schemas = new HashMap<>();
     validationState.start_time = new Date();
     validationState.udmi_version = Common.getUdmiVersion();
-    validationState.cloud_version = client.getVersionInformation();
+    validationState.cloud_version = ifNotNullGet(client, MessagePublisher::getVersionInformation);
     Entry statusEntry = new Entry();
     statusEntry.category = VALIDATION_FEATURE_SEQUENCE;
     statusEntry.message = "Starting sequence run for device " + getDeviceId();
