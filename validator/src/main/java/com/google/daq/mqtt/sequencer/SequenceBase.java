@@ -1387,7 +1387,7 @@ public class SequenceBase {
   }
 
   private void whileDoing(String description, Runnable action, Consumer<Exception> catcher,
-      Supplier<String> detail) {
+      Supplier<String> detailer) {
     final Instant startTime = Instant.now();
 
     waitingConditionStart(description);
@@ -1397,8 +1397,9 @@ public class SequenceBase {
         action.run();
       } catch (Exception e) {
         catcher.accept(e);
-        String detailed = ifNotNullGet(detail, Supplier::get);
-        throw ifNotNullGet(detailed, message -> new RuntimeException("Because " + message), e);
+        String detail = ifNotNullGet(detailer, Supplier::get);
+        ifNotNullThen(detail, this::waitingConditionDetail);
+        throw ifNotNullGet(detail, message -> new RuntimeException("Because " + message), e);
       }
     } catch (Exception e) {
       throw new RuntimeException("While " + description, e);
