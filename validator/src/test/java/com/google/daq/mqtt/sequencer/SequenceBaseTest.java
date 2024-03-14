@@ -4,7 +4,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import com.google.daq.mqtt.TestCommon;
+import com.google.daq.mqtt.util.TimePeriodConstants;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
+import java.lang.annotation.Annotation;
 import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
@@ -52,6 +54,23 @@ public class SequenceBaseTest {
   }
 
   private Description makeTestDescription(String testName) {
-    return Description.createTestDescription(SequenceBase.class, testName);
+    Test testAnnotation = new Test() {
+      @Override
+      public Class<? extends Throwable> expected() {
+        return null;
+      }
+
+      @Override
+      public long timeout() {
+        return TimePeriodConstants.TWO_MINUTES_MS;
+      }
+
+      @Override
+      public Class<? extends Annotation> annotationType() {
+        return Test.class;
+      }
+    };
+    return Description.createTestDescription(SequenceBase.class, testName, testAnnotation);
   }
+
 }

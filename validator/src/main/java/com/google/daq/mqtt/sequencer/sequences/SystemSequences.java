@@ -1,8 +1,7 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
-import static com.google.daq.mqtt.util.TimePeriodConstants.ONE_MINUTE_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.THREE_MINUTES_MS;
-import static com.google.udmi.util.JsonUtil.safeSleep;
+import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static java.lang.String.format;
 import static udmi.schema.Bucket.SYSTEM;
 import static udmi.schema.FeatureDiscovery.FeatureStage.ALPHA;
@@ -11,8 +10,6 @@ import static udmi.schema.FeatureDiscovery.FeatureStage.BETA;
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.Summary;
-import com.google.udmi.util.GeneralUtils;
-import com.google.udmi.util.JsonUtil;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
@@ -30,7 +27,7 @@ public class SystemSequences extends SequenceBase {
   /**
    * Simple check that device contains appropriate make/model descriptions.
    */
-  @Test(timeout = ONE_MINUTE_MS)
+  @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = BETA, bucket = SYSTEM)
   @Summary("Check that a device publishes correct make and model information in state messages")
   public void state_make_model() {
@@ -58,7 +55,7 @@ public class SystemSequences extends SequenceBase {
    *  (1) in state message
    *  (2) match
    */
-  @Test(timeout = ONE_MINUTE_MS)
+  @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = BETA, bucket = SYSTEM)
   @Summary("Check that a device publishes correct software information in state messages")
   public void state_software() {

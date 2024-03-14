@@ -12,7 +12,8 @@ public enum Level {
   INFO(200),
   NOTICE(300),
   WARNING(400),
-  ERROR(500);
+  ERROR(500),
+  CRITIAL(600);
 
   private final int value;
   private final static Map<Integer, Level> CONSTANTS = new HashMap<>();
