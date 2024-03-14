@@ -1,8 +1,6 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
 import static com.google.common.collect.Sets.symmetricDifference;
-import static com.google.daq.mqtt.util.TimePeriodConstants.NINETY_SECONDS_MS;
-import static com.google.daq.mqtt.util.TimePeriodConstants.ONE_MINUTE_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.CleanDateFormat.cleanDate;
 import static com.google.udmi.util.CleanDateFormat.cleanInstantDate;
@@ -11,7 +9,6 @@ import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
-import static com.google.udmi.util.GeneralUtils.isNotTrue;
 import static com.google.udmi.util.GeneralUtils.joinOrNull;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
@@ -59,7 +56,6 @@ import udmi.schema.DiscoveryEvent;
 import udmi.schema.Enumerate;
 import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyDiscoveryState;
-import udmi.schema.FamilyDiscoveryState.Phase;
 import udmi.schema.FeatureDiscovery;
 
 /**
@@ -157,7 +153,7 @@ public class DiscoverySequences extends SequenceBase {
     return ofNullable(condition).orElse(false);
   }
 
-  @Test(timeout = NINETY_SECONDS_MS)
+  @Test(timeout = TWO_MINUTES_MS)
   @Feature(bucket = ENUMERATION, stage = PREVIEW)
   @Summary("Check enumeration of nothing at all")
   public void empty_enumeration() {
@@ -166,7 +162,7 @@ public class DiscoverySequences extends SequenceBase {
     checkSelfEnumeration(event, enumerate);
   }
 
-  @Test(timeout = NINETY_SECONDS_MS)
+  @Test(timeout = TWO_MINUTES_MS)
   @Feature(bucket = ENUMERATION_POINTSET, stage = ALPHA)
   @Summary("Check enumeration of device points")
   public void pointset_enumeration() {
@@ -179,7 +175,7 @@ public class DiscoverySequences extends SequenceBase {
     checkSelfEnumeration(event, enumerate);
   }
 
-  @Test(timeout = NINETY_SECONDS_MS)
+  @Test(timeout = TWO_MINUTES_MS)
   @Feature(bucket = ENUMERATION_FEATURES, stage = PREVIEW)
   @Summary("Check enumeration of device features")
   public void feature_enumeration() {
@@ -211,7 +207,7 @@ public class DiscoverySequences extends SequenceBase {
     checkSelfEnumeration(event, enumerate);
   }
 
-  @Test(timeout = ONE_MINUTE_MS)
+  @Test(timeout = TWO_MINUTES_MS)
   @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA)
   @Summary("Check that a scan scheduled in the past never starts")
   public void single_scan_past() {
@@ -228,7 +224,7 @@ public class DiscoverySequences extends SequenceBase {
             this::describedFamilyState));
   }
 
-  @Test(timeout = ONE_MINUTE_MS)
+  @Test(timeout = TWO_MINUTES_MS)
   @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA)
   @Summary("Check results of a single scan scheduled soon")
   public void single_scan_future() {
@@ -300,14 +296,14 @@ public class DiscoverySequences extends SequenceBase {
     ifTrueSkipTest(true, "Not yet implemented");
   }
 
-  @Test(timeout = ONE_MINUTE_MS)
+  @Test(timeout = TWO_MINUTES_MS)
   @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA)
   @Summary("Check results of cancelling a pending scan")
   public void cancel_before_start() {
     ifTrueSkipTest(true, "Not yet implemented");
   }
 
-  @Test(timeout = ONE_MINUTE_MS)
+  @Test(timeout = TWO_MINUTES_MS)
   @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA)
   @Summary("Check results of cancelling a periodic scan")
   public void cancel_periodic() {

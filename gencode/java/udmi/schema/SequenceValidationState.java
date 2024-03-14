@@ -101,6 +101,7 @@ public class SequenceValidationState {
     public enum SequenceResult {
 
         START("start"),
+        ERRR("errr"),
         SKIP("skip"),
         PASS("pass"),
         FAIL("fail");

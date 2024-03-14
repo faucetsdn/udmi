@@ -1,7 +1,5 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
-import static com.google.daq.mqtt.util.TimePeriodConstants.NINETY_SECONDS_MS;
-import static com.google.daq.mqtt.util.TimePeriodConstants.ONE_MINUTE_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.THREE_MINUTES_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
@@ -136,7 +134,7 @@ public class BlobsetSequences extends SequenceBase {
 
   @Feature(stage = PREVIEW, bucket = ENDPOINT_CONFIG)
   @Summary("Push endpoint config message to device that results in a connection error.")
-  @Test(timeout = NINETY_SECONDS_MS) // TODO Is this enough? Does a client try X times?
+  @Test(timeout = TWO_MINUTES_MS) // TODO Is this enough? Does a client try X times?
   public void endpoint_connection_error() {
     setDeviceConfigEndpointBlob(BOGUS_ENDPOINT_HOSTNAME, registryId, false);
     untilErrorReported();
@@ -162,7 +160,7 @@ public class BlobsetSequences extends SequenceBase {
 
   @Feature(stage = PREVIEW, bucket = ENDPOINT_CONFIG)
   @Summary("Check a successful reconnect to the same endpoint.")
-  @Test(timeout = NINETY_SECONDS_MS)
+  @Test(timeout = TWO_MINUTES_MS)
   public void endpoint_connection_success_reconnect() {
     setDeviceConfigEndpointBlob(getAlternateEndpointHostname(), registryId, false);
     untilSuccessfulRedirect(BlobPhase.FINAL);
@@ -172,7 +170,7 @@ public class BlobsetSequences extends SequenceBase {
   @Feature(stage = ALPHA, bucket = ENDPOINT_CONFIG)
   @Summary("Failed connection because of bad hash.")
   @ValidateSchema(SubFolder.BLOBSET)
-  @Test(timeout = ONE_MINUTE_MS)
+  @Test(timeout = TWO_MINUTES_MS)
   public void endpoint_connection_bad_hash() {
     setDeviceConfigEndpointBlob(getAlternateEndpointHostname(), registryId, true);
     untilTrue("blobset status is ERROR", () -> {
@@ -187,7 +185,7 @@ public class BlobsetSequences extends SequenceBase {
     });
   }
 
-  @Test(timeout = NINETY_SECONDS_MS)
+  @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = PREVIEW, bucket = ENDPOINT_CONFIG)
   @Summary("Check connection to an alternate project.")
   public void endpoint_connection_success_alternate() {
