@@ -2,7 +2,7 @@
 
 while [[ $# -gt 0 ]]; do
   if [[ "$1" == "check" ]]; then
-    check=check
+    check="check -i"
     shift
   elif [[ "$1" == "covg" ]]; then
     covg=jacocoTestReport

@@ -1,5 +1,6 @@
 package com.google.daq.mqtt.sequencer;
 
+import static com.google.udmi.util.JsonUtil.stringify;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -17,8 +18,6 @@ import org.junit.runner.Description;
  */
 public class SequenceBaseTest {
 
-  private static final String TEST_TOPIC = "mock/topic";
-
   /**
    * Reset the state of the underlying infrastructure for each test.
    */
@@ -31,26 +30,33 @@ public class SequenceBaseTest {
 
   @Test
   public void messageInterrupted() {
-    final SequenceBase base1 = new SequenceBase();
-    base1.testWatcher.starting(makeTestDescription("test_one"));
+    final SequenceBase baseOne = new SequenceBase();
+    Description testOne = makeTestDescription("test_one");
+    baseOne.testWatcher.starting(testOne);
 
-    MessageBundle bundle1 = base1.nextMessageBundle();
-    Map<?, ?> features1 = (Map<?, ?>) bundle1.message.get("features");
-    assertEquals("first message contents", 0, features1.size());
+    MessageBundle bundleOne = baseOne.nextMessageBundle();
+    System.err.println(stringify(bundleOne));
+    Map<?, ?> featuresOne = (Map<?, ?>) bundleOne.message.get("features");
+    assertEquals("first message contents", 0, featuresOne.size());
 
-    final SequenceBase base2 = new SequenceBase();
-    base2.testWatcher.starting(makeTestDescription("test_two"));
+    baseOne.testWatcher.finished(testOne);
+
+    final SequenceBase baseTwo = new SequenceBase();
+    Description testTwo = makeTestDescription("test_two");
+    baseTwo.testWatcher.starting(testTwo);
 
     try {
-      base1.nextMessageBundle();
+      baseOne.nextMessageBundle();
       fail("shouldn't be a next message bundle to get!");
     } catch (RuntimeException e) {
       // This is expected, but then also preserve the message for the next call.
     }
 
-    MessageBundle bundle2 = base2.nextMessageBundle();
-    Map<?, ?> features2 = (Map<?, ?>) bundle2.message.get("features");
-    assertEquals("second message contents", 1, features2.size());
+    MessageBundle bundleTwo = baseTwo.nextMessageBundle();
+    Map<?, ?> featuresTwo = (Map<?, ?>) bundleTwo.message.get("features");
+    System.err.println(stringify(bundleTwo));
+    assertEquals("second message contents", 1, featuresTwo.size());
+    baseTwo.testWatcher.finished(testTwo);
   }
 
   private Description makeTestDescription(String testName) {

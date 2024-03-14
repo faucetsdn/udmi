@@ -34,6 +34,7 @@ serial_no=clean-$RANDOM
 device_id=AHU-1
 fake_id=ACME-2301
 fake_device=$site_path/devices/$fake_id
+fake_metadata=$fake_device/metadata.json
 clone_device=$site_path/devices/$device_id
 
 pubber/bin/build
@@ -108,6 +109,9 @@ echo hello > $site_path/devices/XXX-2/out/exceptions.txt
 echo Create fake device for testing blocked device case.
 rm -rf $fake_device && cp -a $clone_device $fake_device
 
+# Adjust discovery address so discovery sequence tests work properly.
+jq ".localnet.families.vendor.addr = \"2183213\"" $fake_metadata | sponge $fake_metadata
+
 echo Clean out the registry to make sure devices get removed...
 echo bin/registrar $site_arg $registrar_project -d
 bin/registrar $site_arg $registrar_project -d
@@ -138,13 +142,13 @@ echo Successful pubber check passed on clean registry.
 
 more sites/udmi_site_model/out/registration_summary.csv | cat
 
-expected_num_id=1234567890
 fake_state=`fgrep $fake_id $csv_file | cut -d, -f3`
 [[ ${fake_state# } == BLOCK ]] || fail Device $fake_id not blocked
 [[ `fgrep BLOCK $csv_file | wc -l` == 1 ]] || fail More than one blocked device
 
 expected_num_id=1234567890
 device_num_id=`fgrep AHU-22 $csv_file | cut -d, -f2`
+device_num_id=`echo $device_num_id`
 [[ $device_num_id == $expected_num_id ]] || warn Device num_id $device_num_id does not match expected $expected_num_id
 
 sns_line=`fgrep -n SNS-4 sites/udmi_site_model/out/registration_summary.csv | cut -d: -f1`

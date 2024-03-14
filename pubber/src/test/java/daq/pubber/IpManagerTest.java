@@ -12,7 +12,7 @@ import udmi.schema.Common.ProtocolFamily;
 /**
  * Basic interface parsing tests for pubber.
  */
-public class LocalnetManagerTest {
+public class IpManagerTest {
 
   private static final List<String> IP_ROUTE_BASIC = ImmutableList.of(
       "default via 172.17.0.1 dev eth0",
@@ -56,19 +56,19 @@ public class LocalnetManagerTest {
 
   @Test
   public void testGetDefaultInterfaceOne() {
-    String defaultInterface = LocalnetManager.getDefaultInterfaceStatic(IP_ROUTE_BASIC);
+    String defaultInterface = IpProvider.getDefaultInterfaceStatic(IP_ROUTE_BASIC);
     assertEquals("default interface", "eth0", defaultInterface);
   }
 
   @Test
   public void testGetDefaultInterfaceTwo() {
-    String defaultInterface = LocalnetManager.getDefaultInterfaceStatic(IP_ROUTE_DUAL);
+    String defaultInterface = IpProvider.getDefaultInterfaceStatic(IP_ROUTE_DUAL);
     assertEquals("default interface", "enp0s31f6", defaultInterface);
   }
 
   @Test
   public void testGetInterfaceAddresses() {
-    Map<ProtocolFamily, String> interfaceAddresses = LocalnetManager.getInterfaceAddressesStatic(
+    Map<ProtocolFamily, String> interfaceAddresses = IpProvider.getInterfaceAddressesStatic(
         INTERFACE_STRINGS_DEBIAN);
     ImmutableMap<ProtocolFamily, String> expectedInterfaces = ImmutableMap.of(
         ProtocolFamily.ETHER, "8c:8c:aa:50:bc:72",
@@ -80,9 +80,9 @@ public class LocalnetManagerTest {
 
   @Test
   public void testAlternateInputs() {
-    String defaultInterface = LocalnetManager.getDefaultInterfaceStatic(IP_ROUTE_ALTERNATE);
+    String defaultInterface = IpProvider.getDefaultInterfaceStatic(IP_ROUTE_ALTERNATE);
     assertEquals("expected alternate default interface", "ethX", defaultInterface);
-    Map<ProtocolFamily, String> interfaceAddresses = LocalnetManager.getInterfaceAddressesStatic(
+    Map<ProtocolFamily, String> interfaceAddresses = IpProvider.getInterfaceAddressesStatic(
         IP_ADDR_ALTERNATE);
     ImmutableMap<ProtocolFamily, String> expectedInterfaces = ImmutableMap.of(
         ProtocolFamily.IPV_4, "192.168.1.141",

@@ -2,9 +2,9 @@
   "min_loglevel" : 200,
   "metrics_rate_sec" : 10,
   "operation" : {
-    "last_start" : "2024-03-11T17:48:41Z"
+    "last_start" : "2024-03-14T17:07:45Z"
   },
   "testing" : {
-    "sequence_name" : "periodic_scan_fixed"
+    "sequence_name" : "periodic_scan_fixed_enumerate"
   }
 }

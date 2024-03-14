@@ -20,6 +20,10 @@
         "done"
       ]
     },
+    "record_count": {
+      "description": "Number of records produced so far for this scan generation",
+      "type": "integer"
+    },
     "status": {
       "description": "Status information about the discovery operation",
       "$ref": "file:entry.json"

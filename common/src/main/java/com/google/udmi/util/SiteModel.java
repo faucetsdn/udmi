@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiConsumer;
@@ -29,6 +30,7 @@ import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Auth_type;
 import udmi.schema.EndpointConfiguration;
@@ -221,6 +223,10 @@ public class SiteModel {
     return getDeviceDir(sitePath, deviceId);
   }
 
+  public File getDeviceFile(String deviceId, String path) {
+    return new File(getDeviceDir(deviceId), path);
+  }
+
   public Metadata getMetadata(String deviceId) {
     return allMetadata.get(deviceId);
   }
@@ -238,7 +244,18 @@ public class SiteModel {
   }
 
   public void forEachMetadata(BiConsumer<String, Metadata> consumer) {
+    ifNullThen(allMetadata, this::loadAllDeviceMetadata);
     allMetadata.forEach(consumer);
+  }
+
+  public void forEachMetadata(Consumer<Entry<String, Metadata>> consumer) {
+    ifNullThen(allMetadata, this::loadAllDeviceMetadata);
+    allMetadata.forEach((id, metadata) -> consumer.accept(Map.entry(id, metadata)));
+  }
+
+  public Stream<Entry<String, Metadata>> metadataStream() {
+    ifNullThen(allMetadata, this::loadAllDeviceMetadata);
+    return allMetadata.entrySet().stream();
   }
 
   private void loadSiteConfig() {
@@ -341,6 +358,10 @@ public class SiteModel {
   public ExecutionConfiguration getExecutionConfiguration() {
     ifNullThen(executionConfiguration, this::loadSiteConfig);
     return executionConfiguration;
+  }
+
+  public File getSubdirectory(String path) {
+    return new File(sitePath, path);
   }
 
   public static class MetadataException extends Metadata {

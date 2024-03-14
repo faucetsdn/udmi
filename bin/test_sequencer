@@ -38,6 +38,11 @@ if [[ $1 == 'full' ]]; then
     debug_opts=
 fi
 
+if [[ $1 == 'debug' ]]; then
+    shift
+    debug_opts=-vv
+fi
+
 if [[ $# -lt 1 ]]; then
     fail Usage: $0 [clean] [alpha] [nostate] [full] PROJECT_ID [tests...]
 fi
