@@ -2251,7 +2251,7 @@ public class SequenceBase {
 
         setupSequencer();
 
-        requireNonNull(deviceOutputDir,"deviceOutputDir not defined");
+        requireNonNull(deviceOutputDir, "deviceOutputDir not defined");
         testDir = new File(new File(deviceOutputDir, TESTS_OUT_DIR), testName);
         info("Cleaning test output dir " + testDir.getAbsolutePath());
         FileUtils.deleteDirectory(testDir);
