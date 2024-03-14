@@ -248,6 +248,7 @@ public class SequenceBase {
   protected static String altRegistry;
   protected static IotReflectorClient altClient;
   protected static String serialNo;
+  protected static SiteModel siteModel;
   static ExecutionConfiguration exeConfig;
   private static Validator messageValidator;
   private static ValidationState validationState;
@@ -259,7 +260,6 @@ public class SequenceBase {
   private static MessageBundle stashedBundle;
   private static boolean enableAllTargets = true;
   private static boolean useAlternateClient;
-  protected static SiteModel siteModel;
 
   static {
     // Sanity check to make sure ALPHA version is increased if forced by increased BETA.
@@ -333,7 +333,6 @@ public class SequenceBase {
     registryId = SiteModel.getRegistryActual(exeConfig);
 
     deviceMetadata = readDeviceMetadata();
-
 
     File baseOutputDir = siteModel.getSubdirectory("out");
     deviceOutputDir = new File(baseOutputDir, "devices/" + getDeviceId());
@@ -569,6 +568,27 @@ public class SequenceBase {
     } catch (Exception e) {
       throw new RuntimeException("While extracting capabilities for " + desc.getMethodName(), e);
     }
+  }
+
+  private static ValidationState getValidationState() {
+    ifNullThen(validationState, SequenceBase::initializeValidationState);
+    return validationState;
+  }
+
+  private static void initializeValidationState() {
+    validationState = new ValidationState();
+    validationState.features = new HashMap<>();
+    validationState.schemas = new HashMap<>();
+    validationState.start_time = new Date();
+    validationState.udmi_version = Common.getUdmiVersion();
+    validationState.cloud_version = ifNotNullGet(client, MessagePublisher::getVersionInformation);
+    Entry statusEntry = new Entry();
+    statusEntry.category = VALIDATION_FEATURE_SEQUENCE;
+    statusEntry.message = "Starting sequence run for device " + getDeviceId();
+    statusEntry.level = Level.NOTICE.value();
+    statusEntry.timestamp = new Date();
+    validationState.status = statusEntry;
+    updateValidationState();
   }
 
   @NotNull
@@ -2067,27 +2087,6 @@ public class SequenceBase {
     updateValidationState();
   }
 
-  private static ValidationState getValidationState() {
-    ifNullThen(validationState, SequenceBase::initializeValidationState);
-    return validationState;
-  }
-
-  private static void initializeValidationState() {
-    validationState = new ValidationState();
-    validationState.features = new HashMap<>();
-    validationState.schemas = new HashMap<>();
-    validationState.start_time = new Date();
-    validationState.udmi_version = Common.getUdmiVersion();
-    validationState.cloud_version = ifNotNullGet(client, MessagePublisher::getVersionInformation);
-    Entry statusEntry = new Entry();
-    statusEntry.category = VALIDATION_FEATURE_SEQUENCE;
-    statusEntry.message = "Starting sequence run for device " + getDeviceId();
-    statusEntry.level = Level.NOTICE.value();
-    statusEntry.timestamp = new Date();
-    validationState.status = statusEntry;
-    updateValidationState();
-  }
-
   private FeatureValidationState newFeatureValidationState(String key) {
     FeatureValidationState featureValidationState = new FeatureValidationState();
     featureValidationState.sequences = new HashMap<>();
@@ -2250,14 +2249,17 @@ public class SequenceBase {
         testSchema = ifNotNullGet(description.getAnnotation(ValidateSchema.class),
             ValidateSchema::value);
 
+        setupSequencer();
+
+        requireNonNull(deviceOutputDir,"deviceOutputDir not defined");
         testDir = new File(new File(deviceOutputDir, TESTS_OUT_DIR), testName);
+        info("Cleaning test output dir " + testDir.getAbsolutePath());
         FileUtils.deleteDirectory(testDir);
         testDir.mkdirs();
         systemLog = new PrintWriter(newOutputStream(new File(testDir, SYSTEM_LOG).toPath()));
         sequencerLog = new PrintWriter(newOutputStream(new File(testDir, SEQUENCER_LOG).toPath()));
         sequenceMd = new PrintWriter(newOutputStream(new File(testDir, SEQUENCE_MD).toPath()));
 
-        setupSequencer();
         putSequencerResult(description, SequenceResult.START);
         checkState(reflector().isActive(), "Reflector is not currently active");
 
