@@ -8,7 +8,6 @@ import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueGet;
-import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.joinOrNull;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
@@ -71,7 +70,6 @@ public class DiscoverySequences extends SequenceBase {
   private static final int SCAN_ITERATIONS = 2;
   private static final ProtocolFamily scanFamily = ProtocolFamily.VENDOR;
   private static final Date LONG_TIME_AGO = new Date(12897321);
-  public static boolean checkConfigDiff;
   private Set<ProtocolFamily> metaFamilies;
 
   private static boolean isActive(Entry<String, FeatureDiscovery> entry) {
@@ -237,15 +235,20 @@ public class DiscoverySequences extends SequenceBase {
     Date startTime = cleanInstantDate(Instant.now().plus(SCAN_START_DELAY));
     boolean shouldEnumerate = false;
     configureScan(startTime, null, shouldEnumerate);
-    checkConfigDiff = true;
     Duration waitingPeriod = SCAN_START_DELAY.plus(SCAN_START_DELAY);
+
+    waitFor("scheduled scan pending", waitingPeriod,
+        () -> ifNotTrueGet(scanPending(startTime).test(scanFamily), this::describedFamilyState));
+
     waitFor("scheduled scan start", waitingPeriod,
-        () -> ifNotTrueGet(() -> scanActive(startTime).test(scanFamily),
-            this::describedFamilyState));
-    checkThat("scan not started before activation", !deviceState.timestamp.before(startTime),
-        describedFamilyState());
-    waitFor("scheduled scan stop", waitingPeriod,
-        () -> ifTrueGet(scanComplete(startTime).test(scanFamily), this::describedFamilyState));
+        () -> ifNotTrueGet(scanActive(startTime).test(scanFamily), this::describedFamilyState));
+
+    long delta = Math.abs(Duration.between(Instant.now(), startTime.toInstant()).toSeconds());
+    checkThat("scan start near expected generation time", delta <= SCAN_START_DELAY_SEC / 3,
+        format("scan start %ss different from expected %s", delta, isoConvert(startTime)));
+
+    waitFor("scheduled scan complete", waitingPeriod,
+        () -> ifNotTrueGet(scanComplete(startTime).test(scanFamily), this::describedFamilyState));
 
     List<DiscoveryEvent> events = popReceivedEvents(DiscoveryEvent.class);
 
@@ -260,7 +263,8 @@ public class DiscoverySequences extends SequenceBase {
         .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
         .entrySet().stream().filter(p -> p.getValue() > 1).map(Map.Entry::getKey)
         .collect(Collectors.toSet());
-    checkThat("all scan addresses are unique", duplicates.isEmpty(), CSV_JOINER.join(duplicates));
+    checkThat("all scan addresses are unique", duplicates.isEmpty(),
+        "duplicates: " + CSV_JOINER.join(duplicates));
 
     Set<String> discoveredAddresses = events.stream().map(x -> x.scan_addr)
         .collect(Collectors.toSet());
@@ -393,10 +397,18 @@ public class DiscoverySequences extends SequenceBase {
     return deviceState.discovery.families.get(family);
   }
 
+  private Predicate<ProtocolFamily> scanAbsent() {
+    return family -> getStateFamily(family) == null;
+  }
+
   private Predicate<ProtocolFamily> scanPending(Date startTime) {
-    return family -> dateEquals(getStateFamily(family).generation, startTime)
-        && getStateFamily(family).phase == PENDING
-        && deviceState.timestamp.before(startTime);
+    return family -> {
+      FamilyDiscoveryState stateFamily = getStateFamily(family);
+      return stateFamily != null
+          && dateEquals(stateFamily.generation, startTime)
+          && stateFamily.phase == PENDING
+          && deviceState.timestamp.before(startTime);
+    };
   }
 
   private Predicate<ProtocolFamily> scanActive() {
