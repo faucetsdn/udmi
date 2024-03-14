@@ -15,6 +15,7 @@ import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
 import static com.google.udmi.util.JsonUtil.safeSleep;
+import static java.lang.Math.ceil;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
@@ -540,6 +541,7 @@ public class Registrar {
       System.err.printf("Deleting device %s (%d/%d)%n", id, incremented, devices.size());
       deleteDevice(id);
     }));
+    System.err.println("Waiting for device deletion...");
     dynamicTerminate(devices.size());
   }
 
@@ -566,6 +568,7 @@ public class Registrar {
           queued.decrementAndGet();
         });
       });
+      System.err.println("Waiting for device processing...");
       dynamicTerminate(queued.get());
 
       ifNotNullThen(cloudDevices, set -> set.addAll(newDevices));
@@ -815,6 +818,7 @@ public class Registrar {
         });
       });
 
+      System.err.println("Waiting for device binding...");
       dynamicTerminate(bindings.size());
 
       Duration between = Duration.between(start, Instant.now());
@@ -831,7 +835,7 @@ public class Registrar {
         return;
       }
       executor.shutdown();
-      int timeout = (int) (Math.ceil(expected / (double) runnerThreads) * EACH_ITEM_TIMEOUT_SEC);
+      int timeout = (int) (ceil(expected / (double) runnerThreads) * EACH_ITEM_TIMEOUT_SEC) + 1;
       System.err.printf("Waiting %ds for %d tasks to complete...%n", timeout, expected);
       if (!executor.awaitTermination(timeout, TimeUnit.SECONDS)) {
         throw new RuntimeException("Incomplete executor termination after " + timeout + "s");
