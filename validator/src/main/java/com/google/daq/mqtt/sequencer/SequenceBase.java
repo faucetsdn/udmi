@@ -117,6 +117,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.VisibleForTesting;
 import org.junit.After;
 import org.junit.AssumptionViolatedException;
 import org.junit.Before;
@@ -396,9 +397,12 @@ public class SequenceBase {
     return SequenceRunner.processStage(ALPHA) ? FUNCTIONS_VERSION_ALPHA : FUNCTIONS_VERSION_BETA;
   }
 
+  @VisibleForTesting
   static void resetState() {
+    System.err.println("Resetting SequenceBase state for testing");
     exeConfig = null;
     client = null;
+    validationState = null;
   }
 
   private static Metadata readDeviceMetadata() {
@@ -2283,9 +2287,6 @@ public class SequenceBase {
         return;
       }
 
-      activeInstance = null;
-      validationState = null;
-
       if (!testName.equals(description.getMethodName())) {
         throw new IllegalStateException("Unexpected test method name");
       }
@@ -2301,6 +2302,8 @@ public class SequenceBase {
       systemLog.close();
       sequencerLog.close();
       sequenceMd.close();
+
+      activeInstance = null;
     }
 
     @Override

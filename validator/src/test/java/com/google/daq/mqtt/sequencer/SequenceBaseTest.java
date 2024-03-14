@@ -1,5 +1,6 @@
 package com.google.daq.mqtt.sequencer;
 
+import static com.google.udmi.util.JsonUtil.stringify;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -34,6 +35,7 @@ public class SequenceBaseTest {
     baseOne.testWatcher.starting(testOne);
 
     MessageBundle bundleOne = baseOne.nextMessageBundle();
+    System.err.println(stringify(bundleOne));
     Map<?, ?> featuresOne = (Map<?, ?>) bundleOne.message.get("features");
     assertEquals("first message contents", 0, featuresOne.size());
 
@@ -52,6 +54,7 @@ public class SequenceBaseTest {
 
     MessageBundle bundleTwo = baseTwo.nextMessageBundle();
     Map<?, ?> featuresTwo = (Map<?, ?>) bundleTwo.message.get("features");
+    System.err.println(stringify(bundleTwo));
     assertEquals("second message contents", 1, featuresTwo.size());
     baseTwo.testWatcher.finished(testTwo);
   }
