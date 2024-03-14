@@ -2282,6 +2282,10 @@ public class SequenceBase {
       if (activeInstance == null) {
         return;
       }
+
+      activeInstance = null;
+      validationState = null;
+
       if (!testName.equals(description.getMethodName())) {
         throw new IllegalStateException("Unexpected test method name");
       }
@@ -2297,7 +2301,6 @@ public class SequenceBase {
       systemLog.close();
       sequencerLog.close();
       sequenceMd.close();
-      activeInstance = null;
     }
 
     @Override
