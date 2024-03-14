@@ -37,6 +37,15 @@ jobs:
       - name: all test output
         if: ${{ !cancelled() }}
         run: more out/test_*
+      - name: validator test output
+        if: ${{ !cancelled() }}
+        run: more out/test_validator+bin+build+check
+      - name: pubber test output
+        if: ${{ !cancelled() }}
+        run: more out/test_pubber+bin+build+check
+      - name: udmis test output
+        if: ${{ !cancelled() }}
+        run: more out/test_bin+test_udmis
 
   spelling:
     name: Docs Spelling Checks
