@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.sequencer.SequenceBase.getSequencerStateFile;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
+import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
@@ -266,6 +267,7 @@ public class SequenceRunner {
     }
 
     System.err.println();
+    System.err.printf("Found %d test execution failures.%n", failures.size());
     failures.forEach(System.err::println);
     Map<SequenceResult, Long> resultCounts = allTestResults.entrySet().stream()
         .collect(Collectors.groupingBy(Entry::getValue, Collectors.counting()));
