@@ -1,5 +1,6 @@
 package daq.pubber;
 
+import java.util.function.Consumer;
 import udmi.schema.DiscoveryEvent;
 
 /**
@@ -7,7 +8,7 @@ import udmi.schema.DiscoveryEvent;
  */
 public interface FamilyProvider {
 
-  default void startScan(DiscoveryEvent event) {
+  default void startScan(Consumer<DiscoveryEvent> publish) {
     throw new RuntimeException("Not yet implemented");
   }
 

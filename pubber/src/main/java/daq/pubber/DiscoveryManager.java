@@ -11,7 +11,6 @@ import static java.lang.Math.floorMod;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static java.util.function.Predicate.not;
-import static java.util.stream.Collectors.toMap;
 import static udmi.schema.FamilyDiscoveryState.Phase.ACTIVE;
 import static udmi.schema.FamilyDiscoveryState.Phase.DONE;
 import static udmi.schema.FamilyDiscoveryState.Phase.PENDING;
@@ -23,6 +22,7 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import udmi.schema.Common.ProtocolFamily;
@@ -135,11 +135,15 @@ public class DiscoveryManager extends ManagerBase {
   }
 
   private void cancelDiscoveryScan(ProtocolFamily family, Date configGeneration, Phase phase) {
-    FamilyDiscoveryState familyDiscoveryState = discoveryState.families.get(family);
+    FamilyDiscoveryState familyDiscoveryState = getFamilyDiscoveryState(family);
     info(format("Discovery scan %s phase %s as %s", family, phase, isoConvert(configGeneration)));
     familyDiscoveryState.phase = phase;
     familyDiscoveryState.generation = configGeneration;
     updateState();
+  }
+
+  private FamilyDiscoveryState getFamilyDiscoveryState(ProtocolFamily family) {
+    return discoveryState.families.get(family);
   }
 
   private FamilyDiscoveryState ensureFamilyDiscoveryState(ProtocolFamily family) {
@@ -164,15 +168,26 @@ public class DiscoveryManager extends ManagerBase {
   private void startDiscoveryScan(ProtocolFamily family, Date scanGeneration) {
     info("Discovery scan starting " + family + " as " + isoConvert(scanGeneration));
     Date stopTime = Date.from(scanGeneration.toInstant().plusSeconds(SCAN_DURATION_SEC));
-    FamilyDiscoveryState familyDiscoveryState = ensureFamilyDiscoveryState(family);
+    final FamilyDiscoveryState familyDiscoveryState = ensureFamilyDiscoveryState(family);
     scheduleFuture(stopTime, () -> discoveryScanComplete(family, scanGeneration));
     familyDiscoveryState.generation = scanGeneration;
     familyDiscoveryState.phase = ACTIVE;
+    AtomicInteger sendCount = new AtomicInteger();
+    familyDiscoveryState.record_count = sendCount.get();
     updateState();
-    DiscoveryEvent discoveryEvent = new DiscoveryEvent();
-    discoveryEvent.scan_family = family;
-    discoveryEvent.generation = scanGeneration;
-    discoveryProvider(family).startScan(discoveryEvent);
+    discoveryProvider(family).startScan(
+        discoveryEvent -> {
+          ifNotNullThen(discoveryEvent.scan_addr, addr -> {
+                info(format("Discovered %s device %s for gen %s", family, addr, scanGeneration));
+                discoveryEvent.scan_family = family;
+                discoveryEvent.generation = scanGeneration;
+                familyDiscoveryState.record_count = sendCount.incrementAndGet();
+                updateState();
+                host.publish(discoveryEvent);
+              }
+          );
+        }
+    );
   }
 
   private FamilyProvider discoveryProvider(ProtocolFamily family) {
