@@ -209,7 +209,9 @@ public class SequenceRunner {
     if (failures == null) {
       throw new RuntimeException("Sequences have not been processed");
     }
-    return failures.isEmpty() ? EXIT_STATUS_SUCCESS : EXIST_STATUS_FAILURE;
+    int exitCode = failures.isEmpty() ? EXIT_STATUS_SUCCESS : EXIST_STATUS_FAILURE;
+    System.err.println(format("Found %d test failures, exit code %d", failures.size(), exitCode));
+    return exitCode;
   }
 
   private void process() {
