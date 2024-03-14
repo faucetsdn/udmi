@@ -11,6 +11,7 @@ import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
 import static com.google.daq.mqtt.util.CloudIotManager.EMPTY_CONFIG;
 import static com.google.daq.mqtt.util.ConfigGenerator.configFrom;
 import static com.google.daq.mqtt.util.IotReflectorClient.REFLECTOR_PREFIX;
+import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.CleanDateFormat.cleanDate;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.Common.DEVICE_ID_KEY;
@@ -29,6 +30,7 @@ import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.JsonUtil.convertTo;
+import static com.google.udmi.util.JsonUtil.getNowInstant;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.loadFileRequired;
 import static com.google.udmi.util.JsonUtil.safeSleep;
@@ -52,9 +54,11 @@ import static udmi.schema.FeatureDiscovery.FeatureStage.STABLE;
 import static udmi.schema.Level.ERROR;
 import static udmi.schema.Level.NOTICE;
 import static udmi.schema.Level.WARNING;
+import static udmi.schema.SequenceValidationState.SequenceResult.ERRR;
 import static udmi.schema.SequenceValidationState.SequenceResult.FAIL;
 import static udmi.schema.SequenceValidationState.SequenceResult.PASS;
 import static udmi.schema.SequenceValidationState.SequenceResult.SKIP;
+import static udmi.schema.SequenceValidationState.SequenceResult.START;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
@@ -117,6 +121,7 @@ import org.junit.After;
 import org.junit.AssumptionViolatedException;
 import org.junit.Before;
 import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.TestWatcher;
 import org.junit.rules.Timeout;
 import org.junit.runner.Description;
@@ -205,10 +210,11 @@ public class SequenceBase {
   private static final int EXIT_CODE_PRESERVE = -9;
   private static final String SYSTEM_TESTING_MARKER = "system.testing";
   private static final BiMap<SequenceResult, Level> RESULT_LEVEL_MAP = ImmutableBiMap.of(
-      SequenceResult.START, Level.INFO,
+      START, Level.INFO,
       SKIP, Level.WARNING,
       PASS, Level.NOTICE,
-      FAIL, Level.ERROR
+      FAIL, Level.ERROR,
+      ERRR, Level.CRITIAL
   );
   private static final BiMap<CapabilityResult, Level> CAPABILITY_RESULT_MAP = ImmutableBiMap.of(
       CapabilityResult.PASS, Level.NOTICE,
@@ -232,7 +238,8 @@ public class SequenceBase {
   private static final Duration DEFAULT_LOOP_TIMEOUT = Duration.ofHours(30);
   private static final Set<String> SYSTEM_STATE_CHANGES = ImmutableSet.of(
       "timestamp", "system.last_config", "system.status");
-  public static final long EVENT_WAIT_DELAY_MS = 1000;
+  private static final long EVENT_WAIT_DELAY_MS = 1000;
+  private static final Duration STATE_TIMESTAMP_ERROR_THRESHOLD = Duration.ofMinutes(20);
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -696,7 +703,7 @@ public class SequenceBase {
   @Before
   public void setUp() {
     if (activeInstance == null) {
-      throw new RuntimeException("Active sequencer instance not setup, aborting");
+      throw new IllegalStateException("Active sequencer instance not setup, aborting");
     }
 
     assumeTrue(format("Feature bucket %s not enabled", testBucket.key()),
@@ -712,7 +719,7 @@ public class SequenceBase {
       notice("Running test with state checks disabled");
     }
 
-    waitingConditionPush("starting test wrapper");
+    waitingConditionStart("starting test wrapper");
     checkState(reflector().isActive(), "Reflector is not currently active");
 
     // Old messages can sometimes take a while to clear out, so need some delay for stability.
@@ -744,7 +751,7 @@ public class SequenceBase {
     waitForStateConfigSync();
 
     recordSequence = true;
-    waitingConditionPush("executing test");
+    waitingConditionStart("executing test");
 
     debug(format("stage begin %s at %s", currentWaitingCondition(), timeSinceStart()));
   }
@@ -1062,8 +1069,9 @@ public class SequenceBase {
     String messageStr = format("%s %s %s", isoConvert(logEntry.timestamp),
         Level.fromValue(logEntry.level), logEntry.message);
 
-    printWriter.println(messageStr);
-    printWriter.flush();
+    PrintWriter output = ofNullable(printWriter).orElse(new PrintWriter(System.err));
+    output.println(messageStr);
+    output.flush();
     return messageStr;
   }
 
@@ -1381,16 +1389,21 @@ public class SequenceBase {
   }
 
   private void whileDoing(String description, Runnable action, Consumer<Exception> catcher,
-      Supplier<String> detail) {
+      Supplier<String> detailer) {
     final Instant startTime = Instant.now();
 
-    waitingConditionPush(description);
+    waitingConditionStart(description);
 
     try {
-      action.run();
+      try {
+        action.run();
+      } catch (Exception e) {
+        catcher.accept(e);
+        String detail = ifNotNullGet(detailer, Supplier::get);
+        ifNotNullThen(detail, this::waitingConditionDetail);
+        throw ifNotNullGet(detail, message -> new RuntimeException("Because " + message), e);
+      }
     } catch (Exception e) {
-      catcher.accept(e);
-      ifNotNullThen(detail, d -> ifNotNullThen(d.get(), this::waitingConditionPush));
       throw new RuntimeException("While " + description, e);
     }
 
@@ -1406,11 +1419,20 @@ public class SequenceBase {
         () -> trace(format("Stage resume %s at %s", currentWaitingCondition(), timeSinceStart())));
   }
 
-  private void waitingConditionPush(String condition) {
+  private void waitingConditionStart(String condition) {
     ifTrueThen(!waitingCondition.isEmpty(),
         () -> trace(format("stage suspend %s at %s", currentWaitingCondition(), timeSinceStart())));
-    waitingCondition.push("waiting for " + condition);
+    waitingConditionPush(condition);
     info(format("Stage start %s at %s", currentWaitingCondition(), timeSinceStart()));
+  }
+
+  private void waitingConditionDetail(String detail) {
+    notice("Adding waiting condition detail: " + detail);
+    waitingConditionPush(detail);
+  }
+
+  private void waitingConditionPush(String condition) {
+    waitingCondition.push("waiting for " + condition);
   }
 
   private String currentWaitingCondition() {
@@ -1684,6 +1706,9 @@ public class SequenceBase {
           return;
         }
         if (deviceState == null && convertedState.timestamp.before(stateCutoffThreshold)) {
+          Date cutoff = Date.from(getNowInstant().minus(STATE_TIMESTAMP_ERROR_THRESHOLD));
+          checkState(convertedState.timestamp.after(cutoff),
+              format("State timestamp %s before error cutoff threshold", timestamp));
           String lastStart = isoConvert(
               catchToNull(() -> convertedState.system.operation.last_start));
           warning(format("Ignoring stale state update %s %s %s %s", timestamp,
@@ -2146,6 +2171,21 @@ public class SequenceBase {
     return testSchema != null && (testSchema == folder || folder == SubFolder.VALIDATION);
   }
 
+  private void validateTestSpecification(Description description) {
+    try {
+      Test annotation = requireNonNull(description.getAnnotation(Test.class), "missing annotation");
+      long timeout = annotation.timeout();
+      if (timeout > 0 && timeout < TWO_MINUTES_MS) {
+        // The Junit test runner will default to ~5min for anything <2ms. Sigh.
+        throw new RuntimeException(
+            format("Test timeout less than minimum allowed %ss", TWO_MINUTES_MS / 1000));
+
+      }
+    } catch (Exception e) {
+      throw new RuntimeException("While validating test specification", e);
+    }
+  }
+
   /**
    * Master list of test capabilities.
    */
@@ -2214,6 +2254,9 @@ public class SequenceBase {
         systemLog = new PrintWriter(newOutputStream(new File(testDir, SYSTEM_LOG).toPath()));
         sequencerLog = new PrintWriter(newOutputStream(new File(testDir, SEQUENCER_LOG).toPath()));
         sequenceMd = new PrintWriter(newOutputStream(new File(testDir, SEQUENCE_MD).toPath()));
+
+        validateTestSpecification(description);
+
         writeSequenceMdHeader();
 
         lastStatusLevel = 0;
@@ -2226,6 +2269,8 @@ public class SequenceBase {
         activeInstance = SequenceBase.this;
       } catch (Exception e) {
         trace("Exception stack:", stackTraceString(e));
+        putSequencerResult(description, ERRR);
+        recordCompletion(ERRR, description, friendlyStackTrace(e));
         throw new RuntimeException("While starting " + testName, e);
       }
     }

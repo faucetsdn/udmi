@@ -147,6 +147,13 @@ public abstract class JsonUtil {
   }
 
   /**
+   * Get an Instant object for the current time.
+   */
+  public static Instant getNowInstant() {
+    return Instant.now();
+  }
+
+  /**
    * Get a current timestamp string.
    *
    * @return current ISO timestamp

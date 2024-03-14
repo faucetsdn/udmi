@@ -285,20 +285,20 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
           }
           final Instant start = Instant.now();
           long waiting = Duration.between(before, start).getSeconds();
-          debug("Processing waited %ds on message loop %s", waiting, id);
+          trace("Processing waited %ds on message loop %s", waiting, id);
           if (TERMINATE_MARKER.equals(bundle.message)) {
             info("Terminating message loop %s", id);
             return;
           }
           envelope = bundle.envelope;
-          debug("Processing %s %s/%s %s", this, envelope.subType, envelope.subFolder,
+          trace("Processing %s %s/%s %s", this, envelope.subType, envelope.subFolder,
               envelope.transactionId);
           if (ERROR_MESSAGE_MARKER.equals(envelope.transactionId)) {
             throw new RuntimeException("Exception due to test-induced error");
           }
           dispatcher.accept(bundle);
           long seconds = Duration.between(start, Instant.now()).getSeconds();
-          debug("Processing took %ds for message loop %s", seconds, id);
+          trace("Processing took %ds for message loop %s", seconds, id);
         } catch (Exception e) {
           warn("Handling dispatch exception: " + friendlyStackTrace(e));
           handleDispatchException(envelope, e);
@@ -357,7 +357,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
 
     try {
       Bundle bundle = new Bundle(envelope, messageObject);
-      debug("Received %s/%s -> %s %s", bundle.envelope.subType, bundle.envelope.subFolder,
+      trace("Received %s/%s -> %s %s", bundle.envelope.subType, bundle.envelope.subFolder,
           queueIdentifier(), bundle.envelope.transactionId);
       receiveBundle(bundle);
     } catch (Exception e) {
