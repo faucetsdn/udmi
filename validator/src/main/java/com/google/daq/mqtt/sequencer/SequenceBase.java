@@ -2238,10 +2238,6 @@ public class SequenceBase {
     protected void starting(@NotNull Description description) {
       testName = description.getMethodName();
       try {
-        setupSequencer();
-        putSequencerResult(description, SequenceResult.START);
-        checkState(reflector().isActive(), "Reflector is not currently active");
-
         testDescription = description;
         testSummary = getTestSummary(description);
         testStage = getTestStage(description);
@@ -2256,6 +2252,10 @@ public class SequenceBase {
         systemLog = new PrintWriter(newOutputStream(new File(testDir, SYSTEM_LOG).toPath()));
         sequencerLog = new PrintWriter(newOutputStream(new File(testDir, SEQUENCER_LOG).toPath()));
         sequenceMd = new PrintWriter(newOutputStream(new File(testDir, SEQUENCE_MD).toPath()));
+
+        setupSequencer();
+        putSequencerResult(description, SequenceResult.START);
+        checkState(reflector().isActive(), "Reflector is not currently active");
 
         validateTestSpecification(description);
 

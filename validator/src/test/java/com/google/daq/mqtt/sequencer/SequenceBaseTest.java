@@ -17,8 +17,6 @@ import org.junit.runner.Description;
  */
 public class SequenceBaseTest {
 
-  private static final String TEST_TOPIC = "mock/topic";
-
   /**
    * Reset the state of the underlying infrastructure for each test.
    */
