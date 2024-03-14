@@ -351,28 +351,10 @@ public class SequenceBase {
     String registrySuffix = exeConfig.registry_suffix;
     altRegistry = SiteModel.getRegistryActual(udmiNamespace, altRegistryId, registrySuffix);
     altClient = getAlternateClient();
-
-    initializeValidationState();
   }
 
   private static void validatorLogger(Level level, String message) {
     activeInstance.log(message, level);
-  }
-
-  private static void initializeValidationState() {
-    validationState = new ValidationState();
-    validationState.features = new HashMap<>();
-    validationState.schemas = new HashMap<>();
-    validationState.start_time = new Date();
-    validationState.udmi_version = Common.getUdmiVersion();
-    validationState.cloud_version = client.getVersionInformation();
-    Entry statusEntry = new Entry();
-    statusEntry.category = VALIDATION_FEATURE_SEQUENCE;
-    statusEntry.message = "Starting sequence run for device " + getDeviceId();
-    statusEntry.level = Level.NOTICE.value();
-    statusEntry.timestamp = new Date();
-    validationState.status = statusEntry;
-    updateValidationState();
   }
 
   private static MessagePublisher getPublisherClient() {
@@ -463,11 +445,9 @@ public class SequenceBase {
     statusEntry.timestamp = cleanDate();
     statusEntry.message = wasError ? Common.getExceptionMessage(e) : "Run completed";
     statusEntry.category = VALIDATION_FEATURE_SEQUENCE;
-    if (validationState != null) {
-      validationState.status = statusEntry;
-      summarizeSchemaStages();
-      updateValidationState();
-    }
+    getValidationState().status = statusEntry;
+    summarizeSchemaStages();
+    updateValidationState();
   }
 
   static void enableAllBuckets(boolean enabled) {
@@ -2070,7 +2050,7 @@ public class SequenceBase {
   private void setSequenceStatus(Description description, SequenceResult result, Entry logEntry) {
     String bucket = getBucket(description).value();
     String sequence = description.getMethodName();
-    SequenceValidationState sequenceValidationState = validationState.features.computeIfAbsent(
+    SequenceValidationState sequenceValidationState = getValidationState().features.computeIfAbsent(
         bucket, this::newFeatureValidationState).sequences.computeIfAbsent(
         sequence, key -> new SequenceValidationState());
     sequenceValidationState.status = logEntry;
@@ -2079,6 +2059,27 @@ public class SequenceBase {
     sequenceValidationState.stage = getTestStage(description);
     sequenceValidationState.capabilities = capabilityExceptions.keySet().stream()
         .collect(Collectors.toMap(Capabilities::value, this::collectCapabilityResult));
+    updateValidationState();
+  }
+
+  private static ValidationState getValidationState() {
+    ifNullThen(validationState, SequenceBase::initializeValidationState);
+    return validationState;
+  }
+
+  private static void initializeValidationState() {
+    validationState = new ValidationState();
+    validationState.features = new HashMap<>();
+    validationState.schemas = new HashMap<>();
+    validationState.start_time = new Date();
+    validationState.udmi_version = Common.getUdmiVersion();
+    validationState.cloud_version = client.getVersionInformation();
+    Entry statusEntry = new Entry();
+    statusEntry.category = VALIDATION_FEATURE_SEQUENCE;
+    statusEntry.message = "Starting sequence run for device " + getDeviceId();
+    statusEntry.level = Level.NOTICE.value();
+    statusEntry.timestamp = new Date();
+    validationState.status = statusEntry;
     updateValidationState();
   }
 
