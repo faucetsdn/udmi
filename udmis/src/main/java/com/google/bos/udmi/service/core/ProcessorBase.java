@@ -211,7 +211,7 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
    */
   protected void registerHandlers() {
     Arrays.stream(getClass().getMethods()).forEach(method -> {
-      DispatchHandler annotation = method.getAnnotation(DispatchHandler.class);
+      MessageHandler annotation = method.getAnnotation(MessageHandler.class);
       if (annotation != null) {
         Class<?>[] parameterTypes = method.getParameterTypes();
         checkState(parameterTypes.length == 1,

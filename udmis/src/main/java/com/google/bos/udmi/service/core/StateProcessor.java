@@ -87,7 +87,7 @@ public class StateProcessor extends ProcessorBase {
   /**
    * Handle state update messages.
    */
-  @DispatchHandler
+  @MessageHandler
   public void stateHandler(StateUpdate message) {
     MessageContinuation continuation = getContinuation(message);
     Envelope envelope = continuation.getEnvelope();

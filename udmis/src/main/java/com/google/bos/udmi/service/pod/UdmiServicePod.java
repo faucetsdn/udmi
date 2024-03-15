@@ -18,6 +18,7 @@ import com.google.bos.udmi.service.core.BridgeProcessor;
 import com.google.bos.udmi.service.core.ControlProcessor;
 import com.google.bos.udmi.service.core.CronProcessor;
 import com.google.bos.udmi.service.core.DistributorPipe;
+import com.google.bos.udmi.service.core.MappingAgent;
 import com.google.bos.udmi.service.core.ProcessorBase;
 import com.google.bos.udmi.service.core.ReflectProcessor;
 import com.google.bos.udmi.service.core.StateProcessor;
@@ -54,7 +55,8 @@ public class UdmiServicePod extends ContainerBase {
   static final File READY_INDICATOR = new File("/tmp/pod_ready.txt");
   private static final Map<String, ContainerProvider> COMPONENT_MAP = new ConcurrentHashMap<>();
   private static final Set<Class<? extends ProcessorBase>> PROCESSOR_CLASSES = ImmutableSet.of(
-      TargetProcessor.class, ReflectProcessor.class, StateProcessor.class, ControlProcessor.class);
+      TargetProcessor.class, ReflectProcessor.class, StateProcessor.class, ControlProcessor.class,
+      MappingAgent.class);
   private static final Map<String, Class<? extends ProcessorBase>> PROCESSORS =
       PROCESSOR_CLASSES.stream().collect(Collectors.toMap(ContainerBase::getName, clazz -> clazz));
 
