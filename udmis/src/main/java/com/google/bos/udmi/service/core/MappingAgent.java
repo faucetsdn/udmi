@@ -33,6 +33,7 @@ public class MappingAgent extends ProcessorBase {
       notice("Creating missing device %s/%s through %s...", registryId, expectedId, gatewayId);
       CloudModel deviceModel = new CloudModel();
       deviceModel.operation = Operation.CREATE;
+      deviceModel.blocked = true;
       iotAccess.modelResource(registryId, expectedId, deviceModel);
     }
   }
