@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import udmi.schema.Common.ProtocolFamily;
 
 
 /**
@@ -38,14 +39,14 @@ public class LocalnetState {
      */
     @JsonProperty("version")
     @JsonPropertyDescription("Version of the UDMI schema")
-    public java.lang.String version;
+    public String version;
     /**
      * 
      * (Required)
      * 
      */
     @JsonProperty("families")
-    public HashMap<String, FamilyLocalnetState> families;
+    public HashMap<ProtocolFamily, FamilyLocalnetState> families;
 
     @Override
     public int hashCode() {

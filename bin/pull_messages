@@ -1,0 +1,48 @@
+#!/bin/bash -e
+#
+# For simple debugging, just run in a shell loop:
+#   while true; do bin/pull_message PROJECT_ID; done
+#
+
+ROOT=$(realpath $(dirname $0)/..)
+
+kubectl config current-context | tr _ ' ' > /tmp/namespace_tmp
+# Result is something like: gke bos-platform-dev us-central1 main grafnu
+read < /tmp/namespace_tmp gcp project_id region cluster namespace
+
+subscription=$namespace~debug
+tmp_file=/tmp/captured.json
+pull_limit=100
+
+while true; do
+    gcloud --format=json --project=$project_id pubsub subscriptions pull $subscription --limit $pull_limit --auto-ack > $tmp_file || true
+
+    for index in $(seq 0 $((pull_limit-1))); do
+        subType=$(jq -r .[$index].message.attributes.subType $tmp_file 2> /dev/null)
+        subFolder=$(jq -r .[$index].message.attributes.subFolder $tmp_file 2> /dev/null)
+        deviceId=$(jq -r .[$index].message.attributes.deviceId $tmp_file 2> /dev/null)
+        registryId=$(jq -r .[$index].message.attributes.deviceRegistryId $tmp_file 2> /dev/null)
+        timestamp=$(jq -r .[$index].message.publishTime $tmp_file 2> /dev/null)
+        raw_data=$(jq -r .[$index].message.data $tmp_file)
+        # There's two different base64 formats, so replace - with + to handle both.
+        echo $raw_data > $tmp_file.raw
+        data=$(echo $raw_data | tr - + | base64 --decode)
+
+        if [[ $raw_data == null ]]; then
+            break
+        fi
+
+        if [[ -z $data ]]; then
+            echo Bad/empty message data: $raw_data
+        fi
+
+        if [[ $subType == null ]]; then
+            subType=event
+        fi
+
+        out_file=$ROOT/out/registries/$registryId/devices/$deviceId/${timestamp}_${subFolder}_${subType}.json
+        echo $out_file
+        mkdir -p $(dirname $out_file)
+        echo $data | jq . > $out_file
+    done
+done

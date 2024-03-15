@@ -2081,9 +2081,8 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#scan_family" onclick="anchorLink('scan_family')">scan_family</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
-<span class="description"><p>The primary scan discovery address family</p>
-</span>
+    <a href="#scan_family" onclick="anchorLink('scan_family')">scan_family</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+
             
 
             
@@ -2321,8 +2320,8 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#registries_pattern1" onclick="anchorLink('registries_pattern1')">discovery_registry.json</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
-<span class="description"><p>Information about an individual registry.</p>
+    <a href="#registries_pattern1" onclick="anchorLink('registries_pattern1')">model_cloud.json</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>Information specific to how the device communicates with the cloud.</p>
 </span>
 
      <span class="badge badge-info no-additional">No Additional Properties</span>
@@ -2332,18 +2331,18 @@
             
 
             
-<div class="accordion" id="accordionregistries_pattern1_last_seen">
+<div class="accordion" id="accordionregistries_pattern1_auth_type">
     <div class="card">
-        <div class="card-header" id="headingregistries_pattern1_last_seen">
+        <div class="card-header" id="headingregistries_pattern1_auth_type">
             <h2 class="mb-0">
-                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#registries_pattern1_last_seen"
-                        aria-expanded="" aria-controls="registries_pattern1_last_seen" onclick="setAnchor('#registries_pattern1_last_seen')"><span class="property-name">last_seen</span></button>
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#registries_pattern1_auth_type"
+                        aria-expanded="" aria-controls="registries_pattern1_auth_type" onclick="setAnchor('#registries_pattern1_auth_type')"><span class="property-name">auth_type</span></button>
             </h2>
         </div>
 
-        <div id="registries_pattern1_last_seen"
-             class="collapse property-definition-div" aria-labelledby="headingregistries_pattern1_last_seen"
-             data-parent="#accordionregistries_pattern1_last_seen">
+        <div id="registries_pattern1_auth_type"
+             class="collapse property-definition-div" aria-labelledby="headingregistries_pattern1_auth_type"
+             data-parent="#accordionregistries_pattern1_auth_type">
             <div class="card-body pl-5">
 
     <div class="breadcrumbs">root
@@ -2360,42 +2359,41 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#registries_pattern1" onclick="anchorLink('registries_pattern1')">Registry Discovery</a>
+    <a href="#registries_pattern1" onclick="anchorLink('registries_pattern1')">Cloud Model</a>
         <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
             <path
                 fill-rule="evenodd"
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#registries_pattern1_last_seen" onclick="anchorLink('registries_pattern1_last_seen')">last_seen</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
-<span class="description"><p>Timestamp of when a message was last seen for this registry</p>
-</span>
+    <a href="#registries_pattern1_auth_type" onclick="anchorLink('registries_pattern1_auth_type')">auth_type</a></div><span class="badge badge-dark value-type">Type: enum (of string)</span><br/>
+<span class="description"><p>The key type used for cloud communication.</p>
+</span><div class="enum-value" id="registries_pattern1_auth_type_enum">
+                <h4>Must be one of:</h4>
+                <ul class="list-group"><li class="list-group-item enum-item">"ES256"</li><li class="list-group-item enum-item">"ES256_X509"</li><li class="list-group-item enum-item">"RS256"</li><li class="list-group-item enum-item">"RS256_X509"</li></ul>
+                </div>
             
 
             
             
 
-            <br/>
-<div class="badge badge-secondary">Example:</div>
-<br/><div id="registries_pattern1_last_seen_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;2019-01-17T14:02:29.364Z&quot;</span>
-</pre></div>
-</div>
+            
             </div>
         </div>
     </div>
 </div>
-<div class="accordion" id="accordionregistries_pattern1_last_update">
+<div class="accordion" id="accordionregistries_pattern1_device_key">
     <div class="card">
-        <div class="card-header" id="headingregistries_pattern1_last_update">
+        <div class="card-header" id="headingregistries_pattern1_device_key">
             <h2 class="mb-0">
-                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#registries_pattern1_last_update"
-                        aria-expanded="" aria-controls="registries_pattern1_last_update" onclick="setAnchor('#registries_pattern1_last_update')"><span class="property-name">last_update</span></button>
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#registries_pattern1_device_key"
+                        aria-expanded="" aria-controls="registries_pattern1_device_key" onclick="setAnchor('#registries_pattern1_device_key')"><span class="property-name">device_key</span></button>
             </h2>
         </div>
 
-        <div id="registries_pattern1_last_update"
-             class="collapse property-definition-div" aria-labelledby="headingregistries_pattern1_last_update"
-             data-parent="#accordionregistries_pattern1_last_update">
+        <div id="registries_pattern1_device_key"
+             class="collapse property-definition-div" aria-labelledby="headingregistries_pattern1_device_key"
+             data-parent="#accordionregistries_pattern1_device_key">
             <div class="card-body pl-5">
 
     <div class="breadcrumbs">root
@@ -2412,25 +2410,511 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#registries_pattern1" onclick="anchorLink('registries_pattern1')">Registry Discovery</a>
+    <a href="#registries_pattern1" onclick="anchorLink('registries_pattern1')">Cloud Model</a>
         <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
             <path
                 fill-rule="evenodd"
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#registries_pattern1_last_update" onclick="anchorLink('registries_pattern1_last_update')">last_update</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
-<span class="description"><p>Last update of the registry information</p>
+    <a href="#registries_pattern1_device_key" onclick="anchorLink('registries_pattern1_device_key')">device_key</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
+<span class="description"><p>Indicates if the device private key is provided in the site model.</p>
 </span>
             
 
             
             
 
-            <br/>
-<div class="badge badge-secondary">Example:</div>
-<br/><div id="registries_pattern1_last_update_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;2019-01-17T14:02:29.364Z&quot;</span>
-</pre></div>
+            
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionregistries_pattern1_resource_type">
+    <div class="card">
+        <div class="card-header" id="headingregistries_pattern1_resource_type">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#registries_pattern1_resource_type"
+                        aria-expanded="" aria-controls="registries_pattern1_resource_type" onclick="setAnchor('#registries_pattern1_resource_type')"><span class="property-name">resource_type</span></button>
+            </h2>
+        </div>
+
+        <div id="registries_pattern1_resource_type"
+             class="collapse property-definition-div" aria-labelledby="headingregistries_pattern1_resource_type"
+             data-parent="#accordionregistries_pattern1_resource_type">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#registries" onclick="anchorLink('registries')">registries</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#registries_pattern1" onclick="anchorLink('registries_pattern1')">Cloud Model</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#registries_pattern1_resource_type" onclick="anchorLink('registries_pattern1_resource_type')">resource_type</a></div><span class="badge badge-dark value-type">Type: enum (of string)</span><br/>
+<span class="description"><p>The resource type of this model</p>
+</span><div class="enum-value" id="registries_pattern1_resource_type_enum">
+                <h4>Must be one of:</h4>
+                <ul class="list-group"><li class="list-group-item enum-item">"DEVICE"</li><li class="list-group-item enum-item">"GATEWAY"</li><li class="list-group-item enum-item">"REGISTRY"</li></ul>
+                </div>
+            
+
+            
+            
+
+            
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionregistries_pattern1_blocked">
+    <div class="card">
+        <div class="card-header" id="headingregistries_pattern1_blocked">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#registries_pattern1_blocked"
+                        aria-expanded="" aria-controls="registries_pattern1_blocked" onclick="setAnchor('#registries_pattern1_blocked')"><span class="property-name">blocked</span></button>
+            </h2>
+        </div>
+
+        <div id="registries_pattern1_blocked"
+             class="collapse property-definition-div" aria-labelledby="headingregistries_pattern1_blocked"
+             data-parent="#accordionregistries_pattern1_blocked">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#registries" onclick="anchorLink('registries')">registries</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#registries_pattern1" onclick="anchorLink('registries_pattern1')">Cloud Model</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#registries_pattern1_blocked" onclick="anchorLink('registries_pattern1_blocked')">blocked</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
+
+            
+
+            
+            
+
+            
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionregistries_pattern1_detail">
+    <div class="card">
+        <div class="card-header" id="headingregistries_pattern1_detail">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#registries_pattern1_detail"
+                        aria-expanded="" aria-controls="registries_pattern1_detail" onclick="setAnchor('#registries_pattern1_detail')"><span class="property-name">detail</span></button>
+            </h2>
+        </div>
+
+        <div id="registries_pattern1_detail"
+             class="collapse property-definition-div" aria-labelledby="headingregistries_pattern1_detail"
+             data-parent="#accordionregistries_pattern1_detail">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#registries" onclick="anchorLink('registries')">registries</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#registries_pattern1" onclick="anchorLink('registries_pattern1')">Cloud Model</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#registries_pattern1_detail" onclick="anchorLink('registries_pattern1_detail')">detail</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+
+            
+
+            
+            
+
+            
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionregistries_pattern1_last_state_time">
+    <div class="card">
+        <div class="card-header" id="headingregistries_pattern1_last_state_time">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#registries_pattern1_last_state_time"
+                        aria-expanded="" aria-controls="registries_pattern1_last_state_time" onclick="setAnchor('#registries_pattern1_last_state_time')"><span class="property-name">last_state_time</span></button>
+            </h2>
+        </div>
+
+        <div id="registries_pattern1_last_state_time"
+             class="collapse property-definition-div" aria-labelledby="headingregistries_pattern1_last_state_time"
+             data-parent="#accordionregistries_pattern1_last_state_time">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#registries" onclick="anchorLink('registries')">registries</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#registries_pattern1" onclick="anchorLink('registries_pattern1')">Cloud Model</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#registries_pattern1_last_state_time" onclick="anchorLink('registries_pattern1_last_state_time')">last_state_time</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+
+            
+
+            
+            
+
+            
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionregistries_pattern1_last_config_time">
+    <div class="card">
+        <div class="card-header" id="headingregistries_pattern1_last_config_time">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#registries_pattern1_last_config_time"
+                        aria-expanded="" aria-controls="registries_pattern1_last_config_time" onclick="setAnchor('#registries_pattern1_last_config_time')"><span class="property-name">last_config_time</span></button>
+            </h2>
+        </div>
+
+        <div id="registries_pattern1_last_config_time"
+             class="collapse property-definition-div" aria-labelledby="headingregistries_pattern1_last_config_time"
+             data-parent="#accordionregistries_pattern1_last_config_time">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#registries" onclick="anchorLink('registries')">registries</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#registries_pattern1" onclick="anchorLink('registries_pattern1')">Cloud Model</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#registries_pattern1_last_config_time" onclick="anchorLink('registries_pattern1_last_config_time')">last_config_time</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+
+            
+
+            
+            
+
+            
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionregistries_pattern1_last_error_time">
+    <div class="card">
+        <div class="card-header" id="headingregistries_pattern1_last_error_time">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#registries_pattern1_last_error_time"
+                        aria-expanded="" aria-controls="registries_pattern1_last_error_time" onclick="setAnchor('#registries_pattern1_last_error_time')"><span class="property-name">last_error_time</span></button>
+            </h2>
+        </div>
+
+        <div id="registries_pattern1_last_error_time"
+             class="collapse property-definition-div" aria-labelledby="headingregistries_pattern1_last_error_time"
+             data-parent="#accordionregistries_pattern1_last_error_time">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#registries" onclick="anchorLink('registries')">registries</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#registries_pattern1" onclick="anchorLink('registries_pattern1')">Cloud Model</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#registries_pattern1_last_error_time" onclick="anchorLink('registries_pattern1_last_error_time')">last_error_time</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+
+            
+
+            
+            
+
+            
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionregistries_pattern1_num_id">
+    <div class="card">
+        <div class="card-header" id="headingregistries_pattern1_num_id">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#registries_pattern1_num_id"
+                        aria-expanded="" aria-controls="registries_pattern1_num_id" onclick="setAnchor('#registries_pattern1_num_id')"><span class="property-name">num_id</span></button>
+            </h2>
+        </div>
+
+        <div id="registries_pattern1_num_id"
+             class="collapse property-definition-div" aria-labelledby="headingregistries_pattern1_num_id"
+             data-parent="#accordionregistries_pattern1_num_id">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#registries" onclick="anchorLink('registries')">registries</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#registries_pattern1" onclick="anchorLink('registries_pattern1')">Cloud Model</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#registries_pattern1_num_id" onclick="anchorLink('registries_pattern1_num_id')">num_id</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+
+            
+
+            
+            
+
+            
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionregistries_pattern1_operation">
+    <div class="card">
+        <div class="card-header" id="headingregistries_pattern1_operation">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#registries_pattern1_operation"
+                        aria-expanded="" aria-controls="registries_pattern1_operation" onclick="setAnchor('#registries_pattern1_operation')"><span class="property-name">operation</span></button>
+            </h2>
+        </div>
+
+        <div id="registries_pattern1_operation"
+             class="collapse property-definition-div" aria-labelledby="headingregistries_pattern1_operation"
+             data-parent="#accordionregistries_pattern1_operation">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#registries" onclick="anchorLink('registries')">registries</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#registries_pattern1" onclick="anchorLink('registries_pattern1')">Cloud Model</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#registries_pattern1_operation" onclick="anchorLink('registries_pattern1_operation')">operation</a></div><span class="badge badge-dark value-type">Type: enum (of string)</span><br/>
+<div class="enum-value" id="registries_pattern1_operation_enum">
+                <h4>Must be one of:</h4>
+                <ul class="list-group"><li class="list-group-item enum-item">"ERROR"</li><li class="list-group-item enum-item">"FETCH"</li><li class="list-group-item enum-item">"CREATE"</li><li class="list-group-item enum-item">"UPDATE"</li><li class="list-group-item enum-item">"DELETE"</li><li class="list-group-item enum-item">"BIND"</li><li class="list-group-item enum-item">"ALLOW"</li><li class="list-group-item enum-item">"BLOCK"</li></ul>
+                </div>
+            
+
+            
+            
+
+            
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionregistries_pattern1_device_ids">
+    <div class="card">
+        <div class="card-header" id="headingregistries_pattern1_device_ids">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#registries_pattern1_device_ids"
+                        aria-expanded="" aria-controls="registries_pattern1_device_ids" onclick="setAnchor('#registries_pattern1_device_ids')"><span class="property-name">device_ids</span></button>
+            </h2>
+        </div>
+
+        <div id="registries_pattern1_device_ids"
+             class="collapse property-definition-div" aria-labelledby="headingregistries_pattern1_device_ids"
+             data-parent="#accordionregistries_pattern1_device_ids">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#registries" onclick="anchorLink('registries')">registries</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#registries_pattern1" onclick="anchorLink('registries_pattern1')">Cloud Model</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#registries_pattern1_device_ids" onclick="anchorLink('registries_pattern1_device_ids')">device_ids</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>If operating on the entire registry, then this manifests as a map of devices not just one device.</p>
+</span>
+            
+
+            
+            
+
+            
+<div class="accordion" id="accordionregistries_pattern1_device_ids_pattern1">
+    <div class="card">
+        <div class="card-header" id="headingregistries_pattern1_device_ids_pattern1">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#registries_pattern1_device_ids_pattern1"
+                        aria-expanded="" aria-controls="registries_pattern1_device_ids_pattern1" onclick="setAnchor('#registries_pattern1_device_ids_pattern1')"><span class="property-name">^[-_a-zA-Z0-9]+$</span> <span class="badge badge-info pattern-property">Pattern Property</span></button>
+            </h2>
+        </div>
+
+        <div id="registries_pattern1_device_ids_pattern1"
+             class="collapse property-definition-div" aria-labelledby="headingregistries_pattern1_device_ids_pattern1"
+             data-parent="#accordionregistries_pattern1_device_ids_pattern1">
+            <div class="card-body pl-5"><h2 class="handle">
+                        <label>Pattern Property</label>
+                    </h2>
+                    <p>All property whose name matches the following regular expression must respect the following conditions</p>
+                    <span class="pattern-value">Property name regular expression: <code>^[-_a-zA-Z0-9]+$</code></span>
+                    <br/>
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#registries" onclick="anchorLink('registries')">registries</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#registries_pattern1" onclick="anchorLink('registries_pattern1')">Cloud Model</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#registries_pattern1_device_ids" onclick="anchorLink('registries_pattern1_device_ids')">device_ids</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#registries_pattern1_device_ids_pattern1" onclick="anchorLink('registries_pattern1_device_ids_pattern1')">^[-_a-zA-Z0-9]+$</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+
+            
+
+            
+            
+
+            
+            </div>
+        </div>
+    </div>
 </div>
             </div>
         </div>
@@ -2466,7 +2950,7 @@
             />
         </svg>
     <a href="#devices" onclick="anchorLink('devices')">devices</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
-<span class="description"><p>Device discovery scan results.</p>
+<span class="description"><p>Device iot discovery scan results.</p>
 </span> <span class="badge badge-info no-additional">No Additional Properties</span>
             
 
@@ -2507,17 +2991,606 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#devices_pattern1" onclick="anchorLink('devices_pattern1')">discovery_device.json</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
-<span class="description"><p>Information about an individual device scan result.</p>
+    <a href="#devices_pattern1" onclick="anchorLink('devices_pattern1')">model_cloud.json</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>Information specific to how the device communicates with the cloud.</p>
 </span>
 
-    
+     <span class="badge badge-info no-additional">No Additional Properties</span>
             
 
             
             
 
             
+<div class="accordion" id="accordiondevices_pattern1_auth_type">
+    <div class="card">
+        <div class="card-header" id="headingdevices_pattern1_auth_type">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#devices_pattern1_auth_type"
+                        aria-expanded="" aria-controls="devices_pattern1_auth_type" onclick="setAnchor('#devices_pattern1_auth_type')"><span class="property-name">auth_type</span></button>
+            </h2>
+        </div>
+
+        <div id="devices_pattern1_auth_type"
+             class="collapse property-definition-div" aria-labelledby="headingdevices_pattern1_auth_type"
+             data-parent="#accordiondevices_pattern1_auth_type">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#devices" onclick="anchorLink('devices')">devices</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#devices_pattern1" onclick="anchorLink('devices_pattern1')">Cloud Model</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#devices_pattern1_auth_type" onclick="anchorLink('devices_pattern1_auth_type')">auth_type</a></div><span class="badge badge-dark value-type">Type: enum (of string)</span><br/>
+<span class="description"><p>The key type used for cloud communication.</p>
+</span><div class="enum-value" id="devices_pattern1_auth_type_enum">
+                <h4>Must be one of:</h4>
+                <ul class="list-group"><li class="list-group-item enum-item">"ES256"</li><li class="list-group-item enum-item">"ES256_X509"</li><li class="list-group-item enum-item">"RS256"</li><li class="list-group-item enum-item">"RS256_X509"</li></ul>
+                </div>
+            
+
+            
+            
+
+            
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiondevices_pattern1_device_key">
+    <div class="card">
+        <div class="card-header" id="headingdevices_pattern1_device_key">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#devices_pattern1_device_key"
+                        aria-expanded="" aria-controls="devices_pattern1_device_key" onclick="setAnchor('#devices_pattern1_device_key')"><span class="property-name">device_key</span></button>
+            </h2>
+        </div>
+
+        <div id="devices_pattern1_device_key"
+             class="collapse property-definition-div" aria-labelledby="headingdevices_pattern1_device_key"
+             data-parent="#accordiondevices_pattern1_device_key">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#devices" onclick="anchorLink('devices')">devices</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#devices_pattern1" onclick="anchorLink('devices_pattern1')">Cloud Model</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#devices_pattern1_device_key" onclick="anchorLink('devices_pattern1_device_key')">device_key</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
+<span class="description"><p>Indicates if the device private key is provided in the site model.</p>
+</span>
+            
+
+            
+            
+
+            
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiondevices_pattern1_resource_type">
+    <div class="card">
+        <div class="card-header" id="headingdevices_pattern1_resource_type">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#devices_pattern1_resource_type"
+                        aria-expanded="" aria-controls="devices_pattern1_resource_type" onclick="setAnchor('#devices_pattern1_resource_type')"><span class="property-name">resource_type</span></button>
+            </h2>
+        </div>
+
+        <div id="devices_pattern1_resource_type"
+             class="collapse property-definition-div" aria-labelledby="headingdevices_pattern1_resource_type"
+             data-parent="#accordiondevices_pattern1_resource_type">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#devices" onclick="anchorLink('devices')">devices</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#devices_pattern1" onclick="anchorLink('devices_pattern1')">Cloud Model</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#devices_pattern1_resource_type" onclick="anchorLink('devices_pattern1_resource_type')">resource_type</a></div><span class="badge badge-dark value-type">Type: enum (of string)</span><br/>
+<span class="description"><p>The resource type of this model</p>
+</span><div class="enum-value" id="devices_pattern1_resource_type_enum">
+                <h4>Must be one of:</h4>
+                <ul class="list-group"><li class="list-group-item enum-item">"DEVICE"</li><li class="list-group-item enum-item">"GATEWAY"</li><li class="list-group-item enum-item">"REGISTRY"</li></ul>
+                </div>
+            
+
+            
+            
+
+            
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiondevices_pattern1_blocked">
+    <div class="card">
+        <div class="card-header" id="headingdevices_pattern1_blocked">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#devices_pattern1_blocked"
+                        aria-expanded="" aria-controls="devices_pattern1_blocked" onclick="setAnchor('#devices_pattern1_blocked')"><span class="property-name">blocked</span></button>
+            </h2>
+        </div>
+
+        <div id="devices_pattern1_blocked"
+             class="collapse property-definition-div" aria-labelledby="headingdevices_pattern1_blocked"
+             data-parent="#accordiondevices_pattern1_blocked">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#devices" onclick="anchorLink('devices')">devices</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#devices_pattern1" onclick="anchorLink('devices_pattern1')">Cloud Model</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#devices_pattern1_blocked" onclick="anchorLink('devices_pattern1_blocked')">blocked</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
+
+            
+
+            
+            
+
+            
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiondevices_pattern1_detail">
+    <div class="card">
+        <div class="card-header" id="headingdevices_pattern1_detail">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#devices_pattern1_detail"
+                        aria-expanded="" aria-controls="devices_pattern1_detail" onclick="setAnchor('#devices_pattern1_detail')"><span class="property-name">detail</span></button>
+            </h2>
+        </div>
+
+        <div id="devices_pattern1_detail"
+             class="collapse property-definition-div" aria-labelledby="headingdevices_pattern1_detail"
+             data-parent="#accordiondevices_pattern1_detail">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#devices" onclick="anchorLink('devices')">devices</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#devices_pattern1" onclick="anchorLink('devices_pattern1')">Cloud Model</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#devices_pattern1_detail" onclick="anchorLink('devices_pattern1_detail')">detail</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+
+            
+
+            
+            
+
+            
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiondevices_pattern1_last_state_time">
+    <div class="card">
+        <div class="card-header" id="headingdevices_pattern1_last_state_time">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#devices_pattern1_last_state_time"
+                        aria-expanded="" aria-controls="devices_pattern1_last_state_time" onclick="setAnchor('#devices_pattern1_last_state_time')"><span class="property-name">last_state_time</span></button>
+            </h2>
+        </div>
+
+        <div id="devices_pattern1_last_state_time"
+             class="collapse property-definition-div" aria-labelledby="headingdevices_pattern1_last_state_time"
+             data-parent="#accordiondevices_pattern1_last_state_time">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#devices" onclick="anchorLink('devices')">devices</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#devices_pattern1" onclick="anchorLink('devices_pattern1')">Cloud Model</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#devices_pattern1_last_state_time" onclick="anchorLink('devices_pattern1_last_state_time')">last_state_time</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+
+            
+
+            
+            
+
+            
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiondevices_pattern1_last_config_time">
+    <div class="card">
+        <div class="card-header" id="headingdevices_pattern1_last_config_time">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#devices_pattern1_last_config_time"
+                        aria-expanded="" aria-controls="devices_pattern1_last_config_time" onclick="setAnchor('#devices_pattern1_last_config_time')"><span class="property-name">last_config_time</span></button>
+            </h2>
+        </div>
+
+        <div id="devices_pattern1_last_config_time"
+             class="collapse property-definition-div" aria-labelledby="headingdevices_pattern1_last_config_time"
+             data-parent="#accordiondevices_pattern1_last_config_time">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#devices" onclick="anchorLink('devices')">devices</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#devices_pattern1" onclick="anchorLink('devices_pattern1')">Cloud Model</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#devices_pattern1_last_config_time" onclick="anchorLink('devices_pattern1_last_config_time')">last_config_time</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+
+            
+
+            
+            
+
+            
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiondevices_pattern1_last_error_time">
+    <div class="card">
+        <div class="card-header" id="headingdevices_pattern1_last_error_time">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#devices_pattern1_last_error_time"
+                        aria-expanded="" aria-controls="devices_pattern1_last_error_time" onclick="setAnchor('#devices_pattern1_last_error_time')"><span class="property-name">last_error_time</span></button>
+            </h2>
+        </div>
+
+        <div id="devices_pattern1_last_error_time"
+             class="collapse property-definition-div" aria-labelledby="headingdevices_pattern1_last_error_time"
+             data-parent="#accordiondevices_pattern1_last_error_time">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#devices" onclick="anchorLink('devices')">devices</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#devices_pattern1" onclick="anchorLink('devices_pattern1')">Cloud Model</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#devices_pattern1_last_error_time" onclick="anchorLink('devices_pattern1_last_error_time')">last_error_time</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+
+            
+
+            
+            
+
+            
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiondevices_pattern1_num_id">
+    <div class="card">
+        <div class="card-header" id="headingdevices_pattern1_num_id">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#devices_pattern1_num_id"
+                        aria-expanded="" aria-controls="devices_pattern1_num_id" onclick="setAnchor('#devices_pattern1_num_id')"><span class="property-name">num_id</span></button>
+            </h2>
+        </div>
+
+        <div id="devices_pattern1_num_id"
+             class="collapse property-definition-div" aria-labelledby="headingdevices_pattern1_num_id"
+             data-parent="#accordiondevices_pattern1_num_id">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#devices" onclick="anchorLink('devices')">devices</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#devices_pattern1" onclick="anchorLink('devices_pattern1')">Cloud Model</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#devices_pattern1_num_id" onclick="anchorLink('devices_pattern1_num_id')">num_id</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+
+            
+
+            
+            
+
+            
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiondevices_pattern1_operation">
+    <div class="card">
+        <div class="card-header" id="headingdevices_pattern1_operation">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#devices_pattern1_operation"
+                        aria-expanded="" aria-controls="devices_pattern1_operation" onclick="setAnchor('#devices_pattern1_operation')"><span class="property-name">operation</span></button>
+            </h2>
+        </div>
+
+        <div id="devices_pattern1_operation"
+             class="collapse property-definition-div" aria-labelledby="headingdevices_pattern1_operation"
+             data-parent="#accordiondevices_pattern1_operation">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#devices" onclick="anchorLink('devices')">devices</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#devices_pattern1" onclick="anchorLink('devices_pattern1')">Cloud Model</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#devices_pattern1_operation" onclick="anchorLink('devices_pattern1_operation')">operation</a></div><span class="badge badge-dark value-type">Type: enum (of string)</span><br/>
+<div class="enum-value" id="devices_pattern1_operation_enum">
+                <h4>Must be one of:</h4>
+                <ul class="list-group"><li class="list-group-item enum-item">"ERROR"</li><li class="list-group-item enum-item">"FETCH"</li><li class="list-group-item enum-item">"CREATE"</li><li class="list-group-item enum-item">"UPDATE"</li><li class="list-group-item enum-item">"DELETE"</li><li class="list-group-item enum-item">"BIND"</li><li class="list-group-item enum-item">"ALLOW"</li><li class="list-group-item enum-item">"BLOCK"</li></ul>
+                </div>
+            
+
+            
+            
+
+            
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiondevices_pattern1_device_ids">
+    <div class="card">
+        <div class="card-header" id="headingdevices_pattern1_device_ids">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#devices_pattern1_device_ids"
+                        aria-expanded="" aria-controls="devices_pattern1_device_ids" onclick="setAnchor('#devices_pattern1_device_ids')"><span class="property-name">device_ids</span></button>
+            </h2>
+        </div>
+
+        <div id="devices_pattern1_device_ids"
+             class="collapse property-definition-div" aria-labelledby="headingdevices_pattern1_device_ids"
+             data-parent="#accordiondevices_pattern1_device_ids">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#devices" onclick="anchorLink('devices')">devices</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#devices_pattern1" onclick="anchorLink('devices_pattern1')">Cloud Model</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#devices_pattern1_device_ids" onclick="anchorLink('devices_pattern1_device_ids')">device_ids</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>If operating on the entire registry, then this manifests as a map of devices not just one device.</p>
+</span>
+            
+
+            
+            
+
+            
+<div class="accordion" id="accordiondevices_pattern1_device_ids_pattern1">
+    <div class="card">
+        <div class="card-header" id="headingdevices_pattern1_device_ids_pattern1">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#devices_pattern1_device_ids_pattern1"
+                        aria-expanded="" aria-controls="devices_pattern1_device_ids_pattern1" onclick="setAnchor('#devices_pattern1_device_ids_pattern1')"><span class="property-name">^[-_a-zA-Z0-9]+$</span> <span class="badge badge-info pattern-property">Pattern Property</span></button>
+            </h2>
+        </div>
+
+        <div id="devices_pattern1_device_ids_pattern1"
+             class="collapse property-definition-div" aria-labelledby="headingdevices_pattern1_device_ids_pattern1"
+             data-parent="#accordiondevices_pattern1_device_ids_pattern1">
+            <div class="card-body pl-5"><h2 class="handle">
+                        <label>Pattern Property</label>
+                    </h2>
+                    <p>All property whose name matches the following regular expression must respect the following conditions</p>
+                    <span class="pattern-value">Property name regular expression: <code>^[-_a-zA-Z0-9]+$</code></span>
+                    <br/>
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#devices" onclick="anchorLink('devices')">devices</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#devices_pattern1" onclick="anchorLink('devices_pattern1')">Cloud Model</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#devices_pattern1_device_ids" onclick="anchorLink('devices_pattern1_device_ids')">device_ids</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#devices_pattern1_device_ids_pattern1" onclick="anchorLink('devices_pattern1_device_ids_pattern1')">^[-_a-zA-Z0-9]+$</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+
+            
+
+            
+            
+
+            
+            </div>
+        </div>
+    </div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
             </div>
         </div>
     </div>
@@ -5676,6 +6749,547 @@
                 <h4>Must be one of:</h4>
                 <ul class="list-group"><li class="list-group-item enum-item">"disabled"</li><li class="list-group-item enum-item">"alpha"</li><li class="list-group-item enum-item">"preview"</li><li class="list-group-item enum-item">"beta"</li><li class="list-group-item enum-item">"stable"</li></ul>
                 </div>
+            
+
+            
+            
+
+            
+            </div>
+        </div>
+    </div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordioncloud_model">
+    <div class="card">
+        <div class="card-header" id="headingcloud_model">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#cloud_model"
+                        aria-expanded="" aria-controls="cloud_model" onclick="setAnchor('#cloud_model')"><span class="property-name">cloud_model</span></button>
+            </h2>
+        </div>
+
+        <div id="cloud_model"
+             class="collapse property-definition-div" aria-labelledby="headingcloud_model"
+             data-parent="#accordioncloud_model">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#cloud_model" onclick="anchorLink('cloud_model')">cloud_model</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>Information specific to how the device communicates with the cloud.</p>
+</span>
+
+     <span class="badge badge-info no-additional">No Additional Properties</span>
+            
+
+            
+            
+
+            
+<div class="accordion" id="accordioncloud_model_auth_type">
+    <div class="card">
+        <div class="card-header" id="headingcloud_model_auth_type">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#cloud_model_auth_type"
+                        aria-expanded="" aria-controls="cloud_model_auth_type" onclick="setAnchor('#cloud_model_auth_type')"><span class="property-name">auth_type</span></button>
+            </h2>
+        </div>
+
+        <div id="cloud_model_auth_type"
+             class="collapse property-definition-div" aria-labelledby="headingcloud_model_auth_type"
+             data-parent="#accordioncloud_model_auth_type">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#cloud_model" onclick="anchorLink('cloud_model')">cloud_model</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#cloud_model_auth_type" onclick="anchorLink('cloud_model_auth_type')">auth_type</a></div><span class="badge badge-dark value-type">Type: enum (of string)</span><br/>
+<span class="description"><p>The key type used for cloud communication.</p>
+</span><div class="enum-value" id="cloud_model_auth_type_enum">
+                <h4>Must be one of:</h4>
+                <ul class="list-group"><li class="list-group-item enum-item">"ES256"</li><li class="list-group-item enum-item">"ES256_X509"</li><li class="list-group-item enum-item">"RS256"</li><li class="list-group-item enum-item">"RS256_X509"</li></ul>
+                </div>
+            
+
+            
+            
+
+            
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordioncloud_model_device_key">
+    <div class="card">
+        <div class="card-header" id="headingcloud_model_device_key">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#cloud_model_device_key"
+                        aria-expanded="" aria-controls="cloud_model_device_key" onclick="setAnchor('#cloud_model_device_key')"><span class="property-name">device_key</span></button>
+            </h2>
+        </div>
+
+        <div id="cloud_model_device_key"
+             class="collapse property-definition-div" aria-labelledby="headingcloud_model_device_key"
+             data-parent="#accordioncloud_model_device_key">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#cloud_model" onclick="anchorLink('cloud_model')">cloud_model</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#cloud_model_device_key" onclick="anchorLink('cloud_model_device_key')">device_key</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
+<span class="description"><p>Indicates if the device private key is provided in the site model.</p>
+</span>
+            
+
+            
+            
+
+            
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordioncloud_model_resource_type">
+    <div class="card">
+        <div class="card-header" id="headingcloud_model_resource_type">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#cloud_model_resource_type"
+                        aria-expanded="" aria-controls="cloud_model_resource_type" onclick="setAnchor('#cloud_model_resource_type')"><span class="property-name">resource_type</span></button>
+            </h2>
+        </div>
+
+        <div id="cloud_model_resource_type"
+             class="collapse property-definition-div" aria-labelledby="headingcloud_model_resource_type"
+             data-parent="#accordioncloud_model_resource_type">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#cloud_model" onclick="anchorLink('cloud_model')">cloud_model</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#cloud_model_resource_type" onclick="anchorLink('cloud_model_resource_type')">resource_type</a></div><span class="badge badge-dark value-type">Type: enum (of string)</span><br/>
+<span class="description"><p>The resource type of this model</p>
+</span><div class="enum-value" id="cloud_model_resource_type_enum">
+                <h4>Must be one of:</h4>
+                <ul class="list-group"><li class="list-group-item enum-item">"DEVICE"</li><li class="list-group-item enum-item">"GATEWAY"</li><li class="list-group-item enum-item">"REGISTRY"</li></ul>
+                </div>
+            
+
+            
+            
+
+            
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordioncloud_model_blocked">
+    <div class="card">
+        <div class="card-header" id="headingcloud_model_blocked">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#cloud_model_blocked"
+                        aria-expanded="" aria-controls="cloud_model_blocked" onclick="setAnchor('#cloud_model_blocked')"><span class="property-name">blocked</span></button>
+            </h2>
+        </div>
+
+        <div id="cloud_model_blocked"
+             class="collapse property-definition-div" aria-labelledby="headingcloud_model_blocked"
+             data-parent="#accordioncloud_model_blocked">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#cloud_model" onclick="anchorLink('cloud_model')">cloud_model</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#cloud_model_blocked" onclick="anchorLink('cloud_model_blocked')">blocked</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
+
+            
+
+            
+            
+
+            
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordioncloud_model_detail">
+    <div class="card">
+        <div class="card-header" id="headingcloud_model_detail">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#cloud_model_detail"
+                        aria-expanded="" aria-controls="cloud_model_detail" onclick="setAnchor('#cloud_model_detail')"><span class="property-name">detail</span></button>
+            </h2>
+        </div>
+
+        <div id="cloud_model_detail"
+             class="collapse property-definition-div" aria-labelledby="headingcloud_model_detail"
+             data-parent="#accordioncloud_model_detail">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#cloud_model" onclick="anchorLink('cloud_model')">cloud_model</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#cloud_model_detail" onclick="anchorLink('cloud_model_detail')">detail</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+
+            
+
+            
+            
+
+            
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordioncloud_model_last_state_time">
+    <div class="card">
+        <div class="card-header" id="headingcloud_model_last_state_time">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#cloud_model_last_state_time"
+                        aria-expanded="" aria-controls="cloud_model_last_state_time" onclick="setAnchor('#cloud_model_last_state_time')"><span class="property-name">last_state_time</span></button>
+            </h2>
+        </div>
+
+        <div id="cloud_model_last_state_time"
+             class="collapse property-definition-div" aria-labelledby="headingcloud_model_last_state_time"
+             data-parent="#accordioncloud_model_last_state_time">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#cloud_model" onclick="anchorLink('cloud_model')">cloud_model</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#cloud_model_last_state_time" onclick="anchorLink('cloud_model_last_state_time')">last_state_time</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+
+            
+
+            
+            
+
+            
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordioncloud_model_last_config_time">
+    <div class="card">
+        <div class="card-header" id="headingcloud_model_last_config_time">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#cloud_model_last_config_time"
+                        aria-expanded="" aria-controls="cloud_model_last_config_time" onclick="setAnchor('#cloud_model_last_config_time')"><span class="property-name">last_config_time</span></button>
+            </h2>
+        </div>
+
+        <div id="cloud_model_last_config_time"
+             class="collapse property-definition-div" aria-labelledby="headingcloud_model_last_config_time"
+             data-parent="#accordioncloud_model_last_config_time">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#cloud_model" onclick="anchorLink('cloud_model')">cloud_model</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#cloud_model_last_config_time" onclick="anchorLink('cloud_model_last_config_time')">last_config_time</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+
+            
+
+            
+            
+
+            
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordioncloud_model_last_error_time">
+    <div class="card">
+        <div class="card-header" id="headingcloud_model_last_error_time">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#cloud_model_last_error_time"
+                        aria-expanded="" aria-controls="cloud_model_last_error_time" onclick="setAnchor('#cloud_model_last_error_time')"><span class="property-name">last_error_time</span></button>
+            </h2>
+        </div>
+
+        <div id="cloud_model_last_error_time"
+             class="collapse property-definition-div" aria-labelledby="headingcloud_model_last_error_time"
+             data-parent="#accordioncloud_model_last_error_time">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#cloud_model" onclick="anchorLink('cloud_model')">cloud_model</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#cloud_model_last_error_time" onclick="anchorLink('cloud_model_last_error_time')">last_error_time</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+
+            
+
+            
+            
+
+            
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordioncloud_model_num_id">
+    <div class="card">
+        <div class="card-header" id="headingcloud_model_num_id">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#cloud_model_num_id"
+                        aria-expanded="" aria-controls="cloud_model_num_id" onclick="setAnchor('#cloud_model_num_id')"><span class="property-name">num_id</span></button>
+            </h2>
+        </div>
+
+        <div id="cloud_model_num_id"
+             class="collapse property-definition-div" aria-labelledby="headingcloud_model_num_id"
+             data-parent="#accordioncloud_model_num_id">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#cloud_model" onclick="anchorLink('cloud_model')">cloud_model</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#cloud_model_num_id" onclick="anchorLink('cloud_model_num_id')">num_id</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+
+            
+
+            
+            
+
+            
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordioncloud_model_operation">
+    <div class="card">
+        <div class="card-header" id="headingcloud_model_operation">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#cloud_model_operation"
+                        aria-expanded="" aria-controls="cloud_model_operation" onclick="setAnchor('#cloud_model_operation')"><span class="property-name">operation</span></button>
+            </h2>
+        </div>
+
+        <div id="cloud_model_operation"
+             class="collapse property-definition-div" aria-labelledby="headingcloud_model_operation"
+             data-parent="#accordioncloud_model_operation">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#cloud_model" onclick="anchorLink('cloud_model')">cloud_model</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#cloud_model_operation" onclick="anchorLink('cloud_model_operation')">operation</a></div><span class="badge badge-dark value-type">Type: enum (of string)</span><br/>
+<div class="enum-value" id="cloud_model_operation_enum">
+                <h4>Must be one of:</h4>
+                <ul class="list-group"><li class="list-group-item enum-item">"ERROR"</li><li class="list-group-item enum-item">"FETCH"</li><li class="list-group-item enum-item">"CREATE"</li><li class="list-group-item enum-item">"UPDATE"</li><li class="list-group-item enum-item">"DELETE"</li><li class="list-group-item enum-item">"BIND"</li><li class="list-group-item enum-item">"ALLOW"</li><li class="list-group-item enum-item">"BLOCK"</li></ul>
+                </div>
+            
+
+            
+            
+
+            
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordioncloud_model_device_ids">
+    <div class="card">
+        <div class="card-header" id="headingcloud_model_device_ids">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#cloud_model_device_ids"
+                        aria-expanded="" aria-controls="cloud_model_device_ids" onclick="setAnchor('#cloud_model_device_ids')"><span class="property-name">device_ids</span></button>
+            </h2>
+        </div>
+
+        <div id="cloud_model_device_ids"
+             class="collapse property-definition-div" aria-labelledby="headingcloud_model_device_ids"
+             data-parent="#accordioncloud_model_device_ids">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#cloud_model" onclick="anchorLink('cloud_model')">cloud_model</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#cloud_model_device_ids" onclick="anchorLink('cloud_model_device_ids')">device_ids</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>If operating on the entire registry, then this manifests as a map of devices not just one device.</p>
+</span>
+            
+
+            
+            
+
+            
+<div class="accordion" id="accordioncloud_model_device_ids_pattern1">
+    <div class="card">
+        <div class="card-header" id="headingcloud_model_device_ids_pattern1">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#cloud_model_device_ids_pattern1"
+                        aria-expanded="" aria-controls="cloud_model_device_ids_pattern1" onclick="setAnchor('#cloud_model_device_ids_pattern1')"><span class="property-name">^[-_a-zA-Z0-9]+$</span> <span class="badge badge-info pattern-property">Pattern Property</span></button>
+            </h2>
+        </div>
+
+        <div id="cloud_model_device_ids_pattern1"
+             class="collapse property-definition-div" aria-labelledby="headingcloud_model_device_ids_pattern1"
+             data-parent="#accordioncloud_model_device_ids_pattern1">
+            <div class="card-body pl-5"><h2 class="handle">
+                        <label>Pattern Property</label>
+                    </h2>
+                    <p>All property whose name matches the following regular expression must respect the following conditions</p>
+                    <span class="pattern-value">Property name regular expression: <code>^[-_a-zA-Z0-9]+$</code></span>
+                    <br/>
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#cloud_model" onclick="anchorLink('cloud_model')">cloud_model</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#cloud_model_device_ids" onclick="anchorLink('cloud_model_device_ids')">device_ids</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#cloud_model_device_ids_pattern1" onclick="anchorLink('cloud_model_device_ids_pattern1')">^[-_a-zA-Z0-9]+$</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+
             
 
             

@@ -1,5 +1,9 @@
-RESULT pass discovery.scan periodic_scan ALPHA 5/5 Sequence complete
-RESULT pass discovery.scan single_scan ALPHA 5/5 Sequence complete
+RESULT skip discovery.scan cancel_before_start ALPHA 0/0 Not yet implemented
+RESULT skip discovery.scan cancel_periodic ALPHA 0/0 Not yet implemented
+RESULT pass discovery.scan periodic_scan_fixed_enumerate ALPHA 5/5 Sequence complete
+RESULT skip discovery.scan periodic_scan_floating ALPHA 0/0 Not yet implemented
+RESULT pass discovery.scan single_scan_future ALPHA 5/5 Sequence complete
+RESULT pass discovery.scan single_scan_past ALPHA 5/5 Sequence complete
 RESULT pass endpoint.config endpoint_connection_bad_hash ALPHA 5/5 Sequence complete
 RESULT pass endpoint.config endpoint_connection_error PREVIEW 5/5 Sequence complete
 RESULT pass endpoint.config endpoint_connection_retry PREVIEW 5/5 Sequence complete
@@ -12,8 +16,8 @@ RESULT pass enumeration multi_enumeration ALPHA 5/5 Sequence complete
 RESULT pass enumeration.families family_enumeration ALPHA 5/5 Sequence complete
 RESULT pass enumeration.features feature_enumeration PREVIEW 5/5 Sequence complete
 RESULT pass enumeration.pointset pointset_enumeration ALPHA 5/5 Sequence complete
-RESULT skip gateway bad_target_family ALPHA 0/0 Not a proxied device
-RESULT skip gateway gateway_attach_handling PREVIEW 0/0 Not a gateway
+RESULT skip gateway bad_target_family PREVIEW 0/0 Not a proxied device
+RESULT skip gateway gateway_attach_handling ALPHA 0/0 Not a gateway
 RESULT skip gateway gateway_proxy_events BETA 0/0 Not a gateway
 RESULT pass pointset pointset_publish BETA 5/5 Sequence complete
 RESULT pass pointset pointset_publish_interval BETA 5/5 Sequence complete

@@ -20,6 +20,13 @@
       "type": "string",
       "format": "date-time",
       "examples": ["2019-01-17T14:02:29.364Z"]
+    },
+    "depth": {
+      "enum": [
+        "registries",
+        "devices",
+        "details"
+      ]
     }
   }
 }

@@ -31,6 +31,7 @@ Some caveats:
 -->
 
 <!-- START GENERATED, do not edit anything after this line! -->
+* [bad_target_family](#bad_target_family-preview): Error handling for badly formed target address family
 * [broken_config](#broken_config-beta): Check that the device correctly handles a broken (non-json) config message.
 * [config_logging](#config_logging-beta): Check that the device publishes minimum required log entries when receiving config
 * [device_config_acked](#device_config_acked-beta): Check that the device MQTT-acknowledges a sent config.
@@ -46,7 +47,6 @@ Some caveats:
 * [family_ipv4_addr](#family_ipv4_addr-preview)
 * [family_ipv6_addr](#family_ipv6_addr-preview)
 * [feature_enumeration](#feature_enumeration-preview): Check enumeration of device features
-* [gateway_attach_handling](#gateway_attach_handling-preview): Check adequate logging for gateway detach, errors, and reattach
 * [gateway_proxy_events](#gateway_proxy_events-beta): Check that a gateway proxies pointset events for indicated devices
 * [pointset_publish](#pointset_publish-beta): Check that a device publishes pointset events
 * [pointset_publish_interval](#pointset_publish_interval-beta): Check handling of sample_rate_sec and sample_limit_sec
@@ -56,6 +56,12 @@ Some caveats:
 * [state_software](#state_software-beta): Check that a device publishes correct software information in state messages
 * [system_last_update](#system_last_update-stable): Check that last_update state is correctly set in response to a config update.
 * [valid_serial_no](#valid_serial_no-beta)
+
+## bad_target_family (PREVIEW)
+
+Error handling for badly formed target address family
+
+1. Test skipped: Not a proxied device
 
 ## broken_config (BETA)
 
@@ -287,12 +293,6 @@ Check enumeration of device features
 1. Check that all enumerated features are official buckets
 1. Check that no point enumeration
 
-## gateway_attach_handling (PREVIEW)
-
-Check adequate logging for gateway detach, errors, and reattach
-
-1. Test skipped: Not a gateway
-
 ## gateway_proxy_events (BETA)
 
 Check that a gateway proxies pointset events for indicated devices
@@ -324,35 +324,37 @@ Check handling of sample_rate_sec and sample_limit_sec
 
 Check that pointset state does not report an unconfigured point
 
-1. Wait for pointset state reports same points as defined in config
-1. Wait for pointset event contains correct points with present_value
+1. Wait for pointset state matches config
+1. Wait for pointset event contains correct points
 1. Update config before pointset status does not contain removed point:
     * Remove `pointset.points[random_point]`
 1. Wait for pointset status does not contain removed point
-1. Wait for pointset state reports same points as defined in config
-1. Wait for pointset event contains correct points with present_value
+1. Wait for pointset state matches config
+1. Wait for pointset event contains correct points
 1. Update config before pointset status contains removed point:
     * Add `pointset.points[random_point]` = point configuration
 1. Wait for pointset status contains removed point
-1. Wait for pointset state reports same points as defined in config
-1. Wait for pointset event contains correct points with present_value
+1. Wait for pointset state matches config
+1. Wait for pointset event contains correct points
 
 ## pointset_request_extraneous (BETA)
 
 Check error when pointset configuration contains extraneous point
 
-1. Wait for pointset state reports same points as defined in config
-1. Wait for pointset event contains correct points with present_value
+1. Update config Before pointset state matches config:
+    * Add `pointset.sample_rate_sec` = `10`
+1. Wait for pointset state matches config
+1. Wait for pointset event contains correct points
 1. Update config before pointset status contains extraneous point error:
     * Add `pointset.points[extraneous_point]` = point configuration
 1. Wait for pointset status contains extraneous point error
-1. Wait for pointset state reports same points as defined in config
-1. Wait for pointset event contains correct points with present_value
+1. Wait for pointset state matches config
+1. Wait for pointset event contains correct points
 1. Update config before pointset status removes extraneous point error:
     * Remove `pointset.points[extraneous_point]`
 1. Wait for pointset status removes extraneous point error
-1. Wait for pointset state reports same points as defined in config
-1. Wait for pointset event contains correct points with present_value
+1. Wait for pointset state matches config
+1. Wait for pointset event contains correct points
 
 ## state_make_model (BETA)
 

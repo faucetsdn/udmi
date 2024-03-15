@@ -33,6 +33,9 @@ import com.fasterxml.jackson.annotation.JsonValue;
     "detail",
     "credentials",
     "last_event_time",
+    "last_state_time",
+    "last_config_time",
+    "last_error_time",
     "last_config_ack",
     "num_id",
     "operation",
@@ -94,6 +97,12 @@ public class CloudModel {
     public List<Credential> credentials = new ArrayList<Credential>();
     @JsonProperty("last_event_time")
     public Date last_event_time;
+    @JsonProperty("last_state_time")
+    public Date last_state_time;
+    @JsonProperty("last_config_time")
+    public Date last_config_time;
+    @JsonProperty("last_error_time")
+    public Date last_error_time;
     @JsonProperty("last_config_ack")
     public Date last_config_ack;
     @JsonProperty("num_id")
@@ -117,11 +126,14 @@ public class CloudModel {
         result = ((result* 31)+((this.device_key == null)? 0 :this.device_key.hashCode()));
         result = ((result* 31)+((this.metadata == null)? 0 :this.metadata.hashCode()));
         result = ((result* 31)+((this.last_event_time == null)? 0 :this.last_event_time.hashCode()));
+        result = ((result* 31)+((this.last_config_time == null)? 0 :this.last_config_time.hashCode()));
         result = ((result* 31)+((this.credentials == null)? 0 :this.credentials.hashCode()));
+        result = ((result* 31)+((this.last_state_time == null)? 0 :this.last_state_time.hashCode()));
         result = ((result* 31)+((this.resource_type == null)? 0 :this.resource_type.hashCode()));
         result = ((result* 31)+((this.num_id == null)? 0 :this.num_id.hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
         result = ((result* 31)+((this.blocked == null)? 0 :this.blocked.hashCode()));
+        result = ((result* 31)+((this.last_error_time == null)? 0 :this.last_error_time.hashCode()));
         result = ((result* 31)+((this.detail == null)? 0 :this.detail.hashCode()));
         result = ((result* 31)+((this.device_ids == null)? 0 :this.device_ids.hashCode()));
         result = ((result* 31)+((this.config == null)? 0 :this.config.hashCode()));

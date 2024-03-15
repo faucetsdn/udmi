@@ -2,6 +2,7 @@ package daq.pubber;
 
 import com.google.udmi.util.SiteModel;
 import java.util.Map;
+import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.Config;
 import udmi.schema.DevicePersistent;
 import udmi.schema.Entry;
@@ -119,12 +120,20 @@ public class DeviceManager extends ManagerBase {
     systemManager.stop();
   }
 
-  public Map<String, FamilyDiscovery> enumerateFamilies() {
+  public Map<ProtocolFamily, FamilyDiscovery> enumerateFamilies() {
     return localnetManager.enumerateFamilies();
   }
 
+  /**
+   * Set the site model.
+   */
   public void setSiteModel(SiteModel siteModel) {
     discoveryManager.setSiteModel(siteModel);
     gatewayManager.setSiteModel(siteModel);
+    localnetManager.setSiteModel(siteModel);
+  }
+
+  public FamilyProvider getLocalnetProvider(ProtocolFamily family) {
+    return localnetManager.getLocalnetProvider(family);
   }
 }

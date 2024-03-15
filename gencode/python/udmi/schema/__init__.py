@@ -26,11 +26,9 @@ from .configuration_pod_base import BasePodConfiguration
 from .configuration_pod_bridge import BridgePodConfiguration
 from .configuration_pubber import PubberConfiguration
 from .data_template import MessageTemplateData
-from .discovery_device import DeviceDiscovery
 from .discovery_family import FamilyDiscovery
 from .discovery_feature import FeatureDiscovery
 from .discovery_point import PointDiscovery
-from .discovery_registry import RegistryDiscovery
 from .entry import Entry
 from .envelope import Envelope
 from .equipment_translation import BuildingConfig

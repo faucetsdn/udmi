@@ -1,0 +1,9 @@
+{
+  "families" : {
+    "vendor" : {
+      "generation" : "1970-01-01T03:34:57Z",
+      "scan_duration_sec" : 10,
+      "enumerate" : false
+    }
+  }
+}

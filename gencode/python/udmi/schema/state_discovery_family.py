@@ -7,7 +7,8 @@ class FamilyDiscoveryState:
 
   def __init__(self):
     self.generation = None
-    self.active = None
+    self.phase = None
+    self.record_count = None
     self.status = None
 
   @staticmethod
@@ -16,7 +17,8 @@ class FamilyDiscoveryState:
       return None
     result = FamilyDiscoveryState()
     result.generation = source.get('generation')
-    result.active = source.get('active')
+    result.phase = source.get('phase')
+    result.record_count = source.get('record_count')
     result.status = Entry.from_dict(source.get('status'))
     return result
 
@@ -40,8 +42,10 @@ class FamilyDiscoveryState:
     result = {}
     if self.generation:
       result['generation'] = self.generation # 5
-    if self.active:
-      result['active'] = self.active # 5
+    if self.phase:
+      result['phase'] = self.phase # 5
+    if self.record_count:
+      result['record_count'] = self.record_count # 5
     if self.status:
       result['status'] = self.status.to_dict() # 4
     return result

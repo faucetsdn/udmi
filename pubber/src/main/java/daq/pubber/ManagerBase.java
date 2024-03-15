@@ -29,12 +29,14 @@ public abstract class ManagerBase {
   protected final ManagerHost host;
   private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
   final String deviceId;
+  final PubberConfiguration config;
   protected ScheduledFuture<?> periodicSender;
 
   /**
    * New instance.
    */
   public ManagerBase(ManagerHost host, PubberConfiguration configuration) {
+    config = configuration;
     options = configuration.options;
     deviceId = requireNonNull(configuration.deviceId, "device id not defined");
     this.host = host;
@@ -48,9 +50,17 @@ public abstract class ManagerBase {
     if (executor.isShutdown() || executor.isTerminated()) {
       throw new RuntimeException("Executor shutdown/terminated, not scheduling");
     }
-    long delay = futureTime.getTime() - getNow().getTime();
+    long delay = Math.max(futureTime.getTime() - getNow().getTime(), 0);
     debug(format("Scheduling future in %dms", delay));
-    return executor.schedule(futureTask, delay, TimeUnit.MILLISECONDS);
+    return executor.schedule(() -> wrappedRunnable(futureTask), delay, TimeUnit.MILLISECONDS);
+  }
+
+  private void wrappedRunnable(Runnable futureTask) {
+    try {
+      futureTask.run();
+    } catch (Exception e) {
+      error("Error while executing scheduled future", e);
+    }
   }
 
   ScheduledFuture<?> schedulePeriodic(int sec, Runnable periodicUpdate) {

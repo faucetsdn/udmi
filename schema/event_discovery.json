@@ -27,8 +27,7 @@
       "$ref": "file:entry.json"
     },
     "scan_family": {
-      "description": "The primary scan discovery address family",
-      "type": "string"
+      "existingJavaType": "udmi.schema.Common.ProtocolFamily"
     },
     "scan_addr": {
       "description": "The primary address of the device (for scan_family)",
@@ -38,7 +37,7 @@
       "description": "Address family discovery discovery results.",
       "type": "object",
       "additionalProperties": false,
-      "existingJavaType": "java.util.Map<String, FamilyDiscovery>",
+      "existingJavaType": "java.util.Map<udmi.schema.Common.ProtocolFamily, FamilyDiscovery>",
       "patternProperties": {
         "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
           "$ref": "file:discovery_family.json"
@@ -49,21 +48,21 @@
       "description": "Registry discovery results.",
       "type": "object",
       "additionalProperties": false,
-      "existingJavaType": "java.util.Map<String, RegistryDiscovery>",
+      "existingJavaType": "java.util.Map<String, CloudModel>",
       "patternProperties": {
         "^[A-Z]{2,6}-[1-9][0-9]*$": {
-          "$ref": "file:discovery_registry.json"
+          "$ref": "file:model_cloud.json"
         }
       }
     },
     "devices": {
-      "description": "Device discovery scan results.",
+      "description": "Device iot discovery scan results.",
       "type": "object",
       "additionalProperties": false,
-      "existingJavaType": "java.util.Map<String, DeviceDiscovery>",
+      "existingJavaType": "java.util.Map<String, CloudModel>",
       "patternProperties": {
         "^[A-Z]{2,6}-[1-9][0-9]*$": {
-          "$ref": "file:discovery_device.json"
+          "$ref": "file:model_cloud.json"
         }
       }
     },
@@ -87,8 +86,11 @@
         }
       }
     },
+    "cloud_model": {
+      "$ref": "file:model_cloud.json"
+    },
     "system": {
-      "title": "System Discovery Event",
+      "title": "System Discovery Data",
       "type": "object",
       "additionalProperties": false,
       "properties": {

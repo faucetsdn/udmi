@@ -11,9 +11,18 @@
       "type": "string",
       "format": "date-time"
     },
-    "active": {
-      "type": "boolean",
-      "description": "Indicates if the discovery process is currently active"
+    "phase": {
+      "description": "Current phase of the discovery process",
+      "enum": [
+        "pending",
+        "active",
+        "stopped",
+        "done"
+      ]
+    },
+    "record_count": {
+      "description": "Number of records produced so far for this scan generation",
+      "type": "integer"
     },
     "status": {
       "description": "Status information about the discovery operation",
