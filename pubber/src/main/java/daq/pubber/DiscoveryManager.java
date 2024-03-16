@@ -27,10 +27,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import udmi.schema.Common.ProtocolFamily;
+import udmi.schema.Depths;
+import udmi.schema.Depths.Depth;
 import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvent;
 import udmi.schema.DiscoveryState;
-import udmi.schema.Enumerate;
 import udmi.schema.FamilyDiscovery;
 import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyDiscoveryState;
@@ -73,11 +74,18 @@ public class DiscoveryManager extends ManagerBase {
     info("Discovery enumeration at " + isoConvert(enumerationGeneration));
     DiscoveryEvent discoveryEvent = new DiscoveryEvent();
     discoveryEvent.generation = enumerationGeneration;
-    Enumerate enumerate = config.enumerate;
-    discoveryEvent.points = ifTrue(enumerate.points, () -> enumeratePoints(deviceId));
-    discoveryEvent.features = ifTrue(enumerate.features, SupportedFeatures::getFeatures);
-    discoveryEvent.families = ifTrue(enumerate.families, deviceManager::enumerateFamilies);
+    Depths depths = config.depths;
+    discoveryEvent.points = maybeEnumerate(depths.points, () -> enumeratePoints(deviceId));
+    discoveryEvent.features = maybeEnumerate(depths.features, SupportedFeatures::getFeatures);
+    discoveryEvent.families = maybeEnumerate(depths.families, deviceManager::enumerateFamilies);
     host.publish(discoveryEvent);
+  }
+
+  private <K, V> Map<K, V> maybeEnumerate(Depth depth, Supplier<Map<K, V>> supplier) {
+    return switch (depth) {
+      default -> null;
+      case ENTRIES, DETAILS -> supplier.get();
+    };
   }
 
   private void updateDiscoveryScan(Map<ProtocolFamily, FamilyDiscoveryConfig> raw) {
@@ -181,7 +189,7 @@ public class DiscoveryManager extends ManagerBase {
     familyDiscoveryState.record_count = sendCount.get();
     updateState();
     discoveryProvider(family).startScan(
-        isTrue(getFamilyDiscoveryConfig(family).enumerate), discoveryEvent -> {
+        isTrue(getFamilyDiscoveryConfig(family).depth), discoveryEvent -> {
           ifNotNullThen(discoveryEvent.scan_addr, addr -> {
                 info(format("Discovered %s device %s for gen %s", family, addr, scanGeneration));
                 discoveryEvent.scan_family = family;

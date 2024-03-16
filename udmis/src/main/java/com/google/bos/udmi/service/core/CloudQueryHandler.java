@@ -15,10 +15,10 @@ import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudQuery;
-import udmi.schema.CloudQuery.Depth;
 import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.DiscoveryEvent;
 import udmi.schema.Envelope;
+import udmi.schema.FamilyDiscoveryConfig.Depth;
 
 /**
  * Container for handling CloudQuery messages.
@@ -133,7 +133,7 @@ public class CloudQueryHandler {
   }
 
   private boolean shouldTraverseRegistries() {
-    return (Depth.DEVICES == query.depth) || shouldDetailDevices();
+    return (Depth.ENTRIES == query.depth) || shouldDetailDevices();
   }
 
   /**
@@ -145,7 +145,7 @@ public class CloudQueryHandler {
 
     // If the query.depth is not defined then default to recursing down one level.
     if (envelope.deviceRegistryId == null) {
-      ifNullThen(newQuery.depth, () -> newQuery.depth = Depth.DEVICES);
+      ifNullThen(newQuery.depth, () -> newQuery.depth = Depth.ENTRIES);
       queryAllRegistries();
     } else if (envelope.deviceId == null) {
       ifNullThen(newQuery.depth, () -> newQuery.depth = Depth.DETAILS);
