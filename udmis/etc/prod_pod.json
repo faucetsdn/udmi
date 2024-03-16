@@ -49,6 +49,11 @@
       "recv_id": "${UDMI_PREFIX}udmi_target-discovery",
       "send_id": "${UDMI_PREFIX}udmi_target",
       "side_id": "${UDMI_PREFIX}udmi_control"
+    },
+    "bitbox": {
+      "recv_id": "${UDMI_PREFIX}udmis_discover",
+      "send_id": "${UDMI_PREFIX}udmi_target",
+      "enabled": "${BITBOX_DISCOVERY}"
     }
   },
   "iot_access": {

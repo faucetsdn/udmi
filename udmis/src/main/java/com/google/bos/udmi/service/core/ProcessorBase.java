@@ -67,6 +67,7 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
       format("{ broken by %s == %s", EXTRA_FIELD_KEY, BREAK_CONFIG_VALUE);
   protected final MessageDispatcher dispatcher;
   private final MessageDispatcher sidecar;
+  private final boolean isEnabled;
   protected IotAccessBase iotAccess;
   private final ImmutableList<HandlerSpecification> baseHandlers = ImmutableList.of(
       messageHandlerFor(Object.class, this::defaultHandler),
@@ -80,6 +81,7 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
    */
   public ProcessorBase(EndpointConfiguration config) {
     super(config);
+    isEnabled = ifNotNullGet(config.enabled, enabled -> !enabled.isEmpty(), true);
     distributorName = config.distributor;
     dispatcher = MessageDispatcher.from(config);
     sidecar = MessageDispatcher.from(makeSidecarConfig(config));
@@ -348,6 +350,10 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
 
   public int getMessageCount(Class<?> clazz) {
     return dispatcher.getHandlerCount(clazz);
+  }
+
+  public boolean isEnabled() {
+    return isEnabled;
   }
 
   @Override
