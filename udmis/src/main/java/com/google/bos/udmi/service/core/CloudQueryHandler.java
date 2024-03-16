@@ -16,9 +16,9 @@ import org.jetbrains.annotations.NotNull;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudQuery;
 import udmi.schema.Common.ProtocolFamily;
+import udmi.schema.Depths.Depth;
 import udmi.schema.DiscoveryEvent;
 import udmi.schema.Envelope;
-import udmi.schema.FamilyDiscoveryConfig.Depth;
 
 /**
  * Container for handling CloudQuery messages.

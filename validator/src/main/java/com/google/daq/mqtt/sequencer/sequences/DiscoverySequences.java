@@ -16,12 +16,12 @@ import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static udmi.schema.Bucket.DISCOVERY_SCAN;
 import static udmi.schema.Bucket.ENUMERATION;
 import static udmi.schema.Bucket.ENUMERATION_FAMILIES;
 import static udmi.schema.Bucket.ENUMERATION_FEATURES;
 import static udmi.schema.Bucket.ENUMERATION_POINTSET;
+import static udmi.schema.Depths.Depth.ENTRIES;
 import static udmi.schema.FamilyDiscoveryState.Phase.ACTIVE;
 import static udmi.schema.FamilyDiscoveryState.Phase.DONE;
 import static udmi.schema.FamilyDiscoveryState.Phase.PENDING;
@@ -49,13 +49,15 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import org.jetbrains.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import udmi.schema.Bucket;
 import udmi.schema.Common.ProtocolFamily;
+import udmi.schema.Depths;
+import udmi.schema.Depths.Depth;
 import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvent;
-import udmi.schema.Enumerate;
 import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyDiscoveryState;
 import udmi.schema.FeatureDiscovery;
@@ -81,9 +83,9 @@ public class DiscoverySequences extends SequenceBase {
     allowDeviceStateChange("discovery");
   }
 
-  private DiscoveryEvent runEnumeration(Enumerate enumerate) {
+  private DiscoveryEvent runEnumeration(Depths depths) {
     deviceConfig.discovery = new DiscoveryConfig();
-    deviceConfig.discovery.enumerate = enumerate;
+    deviceConfig.discovery.depths = depths;
     untilTrue("enumeration not active", () -> deviceState.discovery.generation == null);
 
     Date startTime = SemanticDate.describe("generation start time", cleanDate());
@@ -106,8 +108,8 @@ public class DiscoverySequences extends SequenceBase {
     return event;
   }
 
-  private void checkSelfEnumeration(DiscoveryEvent event, Enumerate enumerate) {
-    if (isTrue(enumerate.families)) {
+  private void checkSelfEnumeration(DiscoveryEvent event, Depths depths) {
+    if (shouldEnumerate(depths.families)) {
       Set<ProtocolFamily> models = ofNullable(deviceMetadata.localnet)
           .map(localnet -> localnet.families.keySet()).orElse(null);
       Set<ProtocolFamily> events = ofNullable(event.families).map(Map::keySet)
@@ -117,19 +119,26 @@ public class DiscoverySequences extends SequenceBase {
       checkThat("no family enumeration", () -> event.families == null);
     }
 
-    if (isTrue(enumerate.features)) {
+    if (shouldEnumerate(depths.features)) {
       checkFeatureDiscovery(event.features);
     } else {
       checkThat("no feature enumeration", () -> event.features == null);
     }
 
-    if (isTrue(enumerate.points)) {
+    if (shouldEnumerate(depths.points)) {
       int expectedSize = ofNullable(deviceMetadata.pointset.points).map(HashMap::size)
           .orElse(0);
       checkThat("enumerated point count matches", () -> event.points.size() == expectedSize);
     } else {
       checkThat("no point enumeration", () -> event.points == null);
     }
+  }
+
+  private boolean shouldEnumerate(Depth depth) {
+    return switch (depth) {
+      default -> false;
+      case ENTRIES, DETAILS -> true;
+    };
   }
 
   private void checkFeatureDiscovery(Map<String, FeatureDiscovery> features) {
@@ -158,7 +167,7 @@ public class DiscoverySequences extends SequenceBase {
   @Feature(bucket = ENUMERATION, stage = PREVIEW)
   @Summary("Check enumeration of nothing at all")
   public void empty_enumeration() {
-    Enumerate enumerate = new Enumerate();
+    Depths enumerate = new Depths();
     DiscoveryEvent event = runEnumeration(enumerate);
     checkSelfEnumeration(event, enumerate);
   }
@@ -170,8 +179,8 @@ public class DiscoverySequences extends SequenceBase {
     if (!catchToFalse(() -> deviceMetadata.pointset.points != null)) {
       skipTest("No metadata pointset points defined");
     }
-    Enumerate enumerate = new Enumerate();
-    enumerate.points = true;
+    Depths enumerate = new Depths();
+    enumerate.points = ENTRIES;
     DiscoveryEvent event = runEnumeration(enumerate);
     checkSelfEnumeration(event, enumerate);
   }
@@ -180,8 +189,8 @@ public class DiscoverySequences extends SequenceBase {
   @Feature(bucket = ENUMERATION_FEATURES, stage = PREVIEW)
   @Summary("Check enumeration of device features")
   public void feature_enumeration() {
-    Enumerate enumerate = new Enumerate();
-    enumerate.features = true;
+    Depths enumerate = new Depths();
+    enumerate.features = ENTRIES;
     DiscoveryEvent event = runEnumeration(enumerate);
     checkSelfEnumeration(event, enumerate);
   }
@@ -190,8 +199,8 @@ public class DiscoverySequences extends SequenceBase {
   @Summary("Check enumeration of network families")
   @Feature(bucket = ENUMERATION_FAMILIES, stage = ALPHA)
   public void family_enumeration() {
-    Enumerate enumerate = new Enumerate();
-    enumerate.families = true;
+    Depths enumerate = new Depths();
+    enumerate.families = ENTRIES;
     DiscoveryEvent event = runEnumeration(enumerate);
     checkSelfEnumeration(event, enumerate);
   }
@@ -200,12 +209,21 @@ public class DiscoverySequences extends SequenceBase {
   @Feature(bucket = ENUMERATION, stage = ALPHA)
   @Summary("Check enumeration of multiple categories")
   public void multi_enumeration() {
-    Enumerate enumerate = new Enumerate();
-    enumerate.families = isBucketEnabled(ENUMERATION_FAMILIES);
-    enumerate.features = isBucketEnabled(ENUMERATION_FEATURES);
-    enumerate.points = isBucketEnabled(ENUMERATION_POINTSET);
+    Depths enumerate = new Depths();
+    enumerate.families = enumerateIfBucketEnabled(ENUMERATION_FAMILIES);
+    enumerate.features = enumerateIfBucketEnabled(ENUMERATION_FEATURES);
+    enumerate.points = enumerateIfBucketEnabled(ENUMERATION_POINTSET);
     DiscoveryEvent event = runEnumeration(enumerate);
     checkSelfEnumeration(event, enumerate);
+  }
+
+  private Depth enumerateIfBucketEnabled(Bucket bucket) {
+    return enumerationDepthIf(isBucketEnabled(bucket));
+  }
+
+  @Nullable
+  private static Depth enumerationDepthIf(boolean shouldEnumerate) {
+    return shouldEnumerate ? ENTRIES : null;
   }
 
   @Test(timeout = TWO_MINUTES_MS)
@@ -362,15 +380,15 @@ public class DiscoverySequences extends SequenceBase {
         () -> stateFamilies.keySet().stream().noneMatch(scanActive()));
   }
 
-  private void configureScan(Date startTime, Duration scanInterval, Boolean enumerate) {
+  private void configureScan(Date startTime, Duration scanInterval, boolean shouldEnumerate) {
     Integer intervalSec = ofNullable(scanInterval).map(Duration::getSeconds).map(Long::intValue)
         .orElse(null);
     info(format("%s configured for family %s starting at %s evey %ss",
-        isTrue(enumerate) ? "Enumeration" : "Scan", scanFamily, startTime,
+        isTrue(shouldEnumerate) ? "Enumeration" : "Scan", scanFamily, startTime,
         intervalSec));
     FamilyDiscoveryConfig configFamily = getConfigFamily(scanFamily);
     configFamily.generation = SemanticDate.describe("family generation", startTime);
-    configFamily.enumerate = enumerate;
+    configFamily.depth = enumerationDepthIf(shouldEnumerate);
     configFamily.scan_interval_sec = intervalSec;
     configFamily.scan_duration_sec = ofNullable(intervalSec).orElse(SCAN_START_DELAY_SEC);
     popReceivedEvents(DiscoveryEvent.class);
