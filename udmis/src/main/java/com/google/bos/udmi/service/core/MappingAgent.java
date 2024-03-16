@@ -9,6 +9,9 @@ import udmi.schema.DiscoveryEvent;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
 
+/**
+ * Simple agent to process discovery events and provision the iot provider.
+ */
 @ComponentName("mapping")
 public class MappingAgent extends ProcessorBase {
 
@@ -18,6 +21,9 @@ public class MappingAgent extends ProcessorBase {
     super(config);
   }
 
+  /**
+   * Process any discovery events floating around.
+   */
   @MessageHandler
   public void discoveryEvent(DiscoveryEvent discoveryEvent) {
     ProtocolFamily family = requireNonNull(discoveryEvent.scan_family, "missing scan_family");

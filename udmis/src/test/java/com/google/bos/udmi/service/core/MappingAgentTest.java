@@ -19,6 +19,9 @@ import udmi.schema.CloudModel.Operation;
 import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.DiscoveryEvent;
 
+/**
+ * Simple tests for the auto-mapping provisioning agent.
+ */
 public class MappingAgentTest extends ProcessorTestBase {
 
   private static final String SCAN_ADDR = "19273821";
@@ -39,9 +42,9 @@ public class MappingAgentTest extends ProcessorTestBase {
     when(provider.listDevices(eq(TEST_REGISTRY))).thenReturn(registryModel);
     when(provider.fetchDevice(eq(TEST_REGISTRY), eq(TEST_DEVICE))).thenReturn(deviceModel);
     when(provider.fetchDevice(eq(TEST_REGISTRY), not((eq(TEST_DEVICE))))).thenAnswer(query -> {
-          String deviceId = query.getArgument(1);
-          throw new RuntimeException("No such device " + deviceId);
-        });
+      String deviceId = query.getArgument(1);
+      throw new RuntimeException("No such device " + deviceId);
+    });
   }
 
   private DiscoveryEvent getDiscoveryScanEvent(String targetDeviceId) {
