@@ -1,5 +1,7 @@
 package com.google.bos.udmi.service.messaging.impl;
 
+import static com.google.api.client.util.Preconditions.checkState;
+import static com.google.udmi.util.Common.RAWFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 import static com.google.udmi.util.GeneralUtils.catchToElse;
@@ -15,6 +17,7 @@ import static com.google.udmi.util.JsonUtil.parseJson;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toStringMap;
 import static java.lang.String.format;
+import static java.util.Objects.isNull;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
@@ -172,8 +175,8 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     }
   }
 
-  protected void receiveMessage(Envelope envelope, Map<?, ?> messageMap) {
-    receiveMessage(toStringMap(envelope), stringify(messageMap));
+  protected void receiveMessage(Map<String, String> envelope, Object object) {
+    receiveMessage(envelope, stringify(object));
   }
 
   protected void setSourceQueue(BlockingQueue<QueueEntry> queueForScope) {
@@ -366,6 +369,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   }
 
   private void sanitizeAttributeMap(Map<String, String> attributesMap) {
+    checkState(isNull(attributesMap.get(RAWFOLDER_PROPERTY_KEY)), "found unexpected rawFolder");
     String subFolderRaw = attributesMap.get(SUBFOLDER_PROPERTY_KEY);
     if (subFolderRaw == null) {
       // Do nothing!
@@ -376,6 +380,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
       SubFolder subFolder = catchToElse(() -> SubFolder.fromValue(subFolderRaw), SubFolder.INVALID);
       if (!subFolder.value().equals(subFolderRaw)) {
         debug("Coerced subFolder " + subFolderRaw + " to " + subFolder.value());
+        attributesMap.put(RAWFOLDER_PROPERTY_KEY, subFolderRaw);
         attributesMap.put(SUBFOLDER_PROPERTY_KEY, subFolder.value());
       }
     }
@@ -512,6 +517,11 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
 
     public Bundle(Envelope envelope, Object message) {
       this.envelope = ofNullable(envelope).orElseGet(Envelope::new);
+      this.message = message;
+    }
+
+    public Bundle(Map<String, String> attributes, Object message) {
+      this.attributesMap = attributes;
       this.message = message;
     }
   }

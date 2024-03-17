@@ -153,6 +153,15 @@ public abstract class JsonUtil {
     return Instant.now();
   }
 
+  public static String getTimestampString(Date timestamp) {
+    try {
+      String quotedString = OBJECT_MAPPER_STRICT.writeValueAsString(timestamp);
+      return quotedString.substring(1, quotedString.length() - 1);
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException("While generating updated timestamp", e);
+    }
+  }
+
   /**
    * Get a current timestamp string.
    *
@@ -160,6 +169,32 @@ public abstract class JsonUtil {
    */
   public static String isoConvert() {
     return isoConvert(CleanDateFormat.cleanDate());
+  }
+
+  private static Date isoConvert(String timestamp) {
+    try {
+      String wrappedString = "\"" + timestamp + "\"";
+      return fromJsonString(wrappedString, Date.class);
+    } catch (Exception e) {
+      throw new RuntimeException("Creating date", e);
+    }
+  }
+
+  public static String isoConvert(Instant timestamp) {
+    return isoConvert(Date.from(timestamp));
+  }
+
+  public static String isoConvert(Date timestamp) {
+    try {
+      if (timestamp == null) {
+        return "null";
+      }
+      String dateString = toJsonString(timestamp);
+      // Strip off the leading and trailing quotes from the JSON string-as-string representation.
+      return dateString.substring(1, dateString.length() - 1);
+    } catch (Exception e) {
+      throw new RuntimeException("Creating timestamp", e);
+    }
   }
 
   /**
@@ -269,6 +304,27 @@ public abstract class JsonUtil {
   }
 
   /**
+   * Convert the given input path to a mapped representation.
+   */
+  public static Map<String, Object> loadMap(String inputFile) {
+    @SuppressWarnings("unchecked")
+    Map<String, Object> map =
+        convertTo(TreeMap.class, loadFile(TreeMap.class, new File(inputFile)));
+    return map;
+  }
+
+  /**
+   * Parse and get as any Java object from json.
+   */
+  public static Object parseJson(String message) {
+    try {
+      return OBJECT_MAPPER.readTree(message);
+    } catch (Exception e) {
+      throw new RuntimeException("While parsing json object", e);
+    }
+  }
+
+  /**
    * Sleep and catch-and-rethrow any exceptions.
    *
    * @param sleepTimeMs duration to sleep
@@ -310,14 +366,27 @@ public abstract class JsonUtil {
   }
 
   /**
-   * Parse and get as any Java object from json.
+   * Convert the pojo to a mapped representation.
+   *
+   * @param message input object to convert
+   * @return object-as-map
    */
-  public static Object parseJson(String message) {
-    try {
-      return OBJECT_MAPPER.readTree(message);
-    } catch (Exception e) {
-      throw new RuntimeException("While parsing json object", e);
-    }
+  public static Map<String, Object> toMap(Object message) {
+    @SuppressWarnings("unchecked")
+    Map<String, Object> map = convertTo(TreeMap.class, message);
+    return map;
+  }
+
+  /**
+   * Convert the string to a mapped representation.
+   *
+   * @param message input string to convert
+   * @return object-as-map
+   */
+  public static Map<String, Object> toMap(String message) {
+    @SuppressWarnings("unchecked")
+    Map<String, Object> map = fromString(TreeMap.class, message);
+    return map;
   }
 
   /**
@@ -345,30 +414,6 @@ public abstract class JsonUtil {
   }
 
   /**
-   * Convert the pojo to a mapped representation.
-   *
-   * @param message input object to convert
-   * @return object-as-map
-   */
-  public static Map<String, Object> toMap(Object message) {
-    @SuppressWarnings("unchecked")
-    Map<String, Object> map = convertTo(TreeMap.class, message);
-    return map;
-  }
-
-  /**
-   * Convert the string to a mapped representation.
-   *
-   * @param message input string to convert
-   * @return object-as-map
-   */
-  public static Map<String, Object> toMap(String message) {
-    @SuppressWarnings("unchecked")
-    Map<String, Object> map = fromString(TreeMap.class, message);
-    return map;
-  }
-
-  /**
    * Write json representation to a file.
    *
    * @param target object to write
@@ -379,41 +424,6 @@ public abstract class JsonUtil {
       OBJECT_MAPPER.writeValue(file, target);
     } catch (Exception e) {
       throw new RuntimeException("While writing " + file.getAbsolutePath(), e);
-    }
-  }
-
-  private static Date isoConvert(String timestamp) {
-    try {
-      String wrappedString = "\"" + timestamp + "\"";
-      return fromJsonString(wrappedString, Date.class);
-    } catch (Exception e) {
-      throw new RuntimeException("Creating date", e);
-    }
-  }
-
-  public static String isoConvert(Instant timestamp) {
-    return isoConvert(Date.from(timestamp));
-  }
-
-  public static String isoConvert(Date timestamp) {
-    try {
-      if (timestamp == null) {
-        return "null";
-      }
-      String dateString = toJsonString(timestamp);
-      // Strip off the leading and trailing quotes from the JSON string-as-string representation.
-      return dateString.substring(1, dateString.length() - 1);
-    } catch (Exception e) {
-      throw new RuntimeException("Creating timestamp", e);
-    }
-  }
-
-  public static String getTimestampString(Date timestamp) {
-    try {
-      String quotedString = OBJECT_MAPPER_STRICT.writeValueAsString(timestamp);
-      return quotedString.substring(1, quotedString.length() - 1);
-    } catch (JsonProcessingException e) {
-      throw new RuntimeException("While generating updated timestamp", e);
     }
   }
 }

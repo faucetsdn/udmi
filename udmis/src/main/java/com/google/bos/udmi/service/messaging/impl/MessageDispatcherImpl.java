@@ -3,11 +3,16 @@ package com.google.bos.udmi.service.messaging.impl;
 import static com.google.bos.udmi.service.messaging.impl.MessageBase.PUBLISH_STATS;
 import static com.google.bos.udmi.service.messaging.impl.MessageBase.RECEIVE_STATS;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.udmi.util.Common.RAWFOLDER_PROPERTY_KEY;
+import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
+import static com.google.udmi.util.JsonUtil.toStringMap;
 import static java.lang.String.format;
+import static java.util.Objects.isNull;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
@@ -193,19 +198,6 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     withEnvelopeFor(envelope, messageObject, () -> executeHandler(handlerType, messageObject));
   }
 
-  /**
-   * Process a received message.
-   */
-  public void processMessage(Envelope envelope, Object message) {
-    Envelope savedEnvelope = threadEnvelope.get();
-    try {
-      threadEnvelope.set(null);
-      processMessage(makeMessageBundle(envelope, message));
-    } finally {
-      threadEnvelope.set(savedEnvelope);
-    }
-  }
-
   private void processMessage(Bundle bundle) {
     Envelope envelope = Preconditions.checkNotNull(bundle.envelope, "bundle envelope is null");
     Object message = bundle.message;
@@ -300,6 +292,14 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
    * Make a new message bundle for the given object, inferring the type and folder from the class
    * itself (using the predefined lookup map).
    */
+  public Bundle makeMessageBundle(Map<String, String> attributes, Object message) {
+    return new Bundle(deepCopy(attributes), message);
+  }
+
+  /**
+   * Make a new message bundle for the given object, inferring the type and folder from the class
+   * itself (using the predefined lookup map).
+   */
   public Bundle makeMessageBundle(Envelope envelope, Object message) {
     if (message instanceof Bundle || message == null) {
       return (Bundle) message;
@@ -322,6 +322,19 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     return bundle;
   }
 
+  /**
+   * Process a received message.
+   */
+  public void processMessage(Envelope envelope, Object message) {
+    Envelope savedEnvelope = threadEnvelope.get();
+    try {
+      threadEnvelope.set(null);
+      processMessage(makeMessageBundle(envelope, message));
+    } finally {
+      threadEnvelope.set(savedEnvelope);
+    }
+  }
+
   @Override
   public void publish(Object message) {
     Bundle messageBundle = message instanceof Bundle ? (Bundle) message : makeMessageBundle(
@@ -336,6 +349,15 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   @VisibleForTesting
   public void publishBundle(Bundle bundle) {
     messagePipe.publish(bundle);
+  }
+
+  @VisibleForTesting
+  public void receiveMessage(Envelope envelope, Object message) {
+    Map<String, String> map = toStringMap(envelope);
+    String rawFolder = map.remove(RAWFOLDER_PROPERTY_KEY);
+    ifNotNullThen(rawFolder, f ->
+        checkState(isNull(map.put(SUBFOLDER_PROPERTY_KEY, rawFolder)), "unexpected subFolder"));
+    ((MessageBase) messagePipe).receiveMessage(map, message);
   }
 
   @Override
