@@ -110,7 +110,7 @@ Check that the device MQTT-acknowledges a sent config.
 Check enumeration of nothing at all
 
 1. Update config before enumeration not active:
-    * Add `discovery` = { "enumerate": {  } }
+    * Add `discovery` = { "depths": {  } }
 1. Wait for enumeration not active
 1. Update config before matching enumeration generation:
     * Add `discovery.generation` = `generation start time`
@@ -280,7 +280,7 @@ Check that the device correctly handles an extra out-of-schema field
 Check enumeration of device features
 
 1. Update config before enumeration not active:
-    * Add `discovery` = { "enumerate": { "features": `true` } }
+    * Add `discovery` = { "depths": { "features": `entries` } }
 1. Wait for enumeration not active
 1. Update config before matching enumeration generation:
     * Add `discovery.generation` = `generation start time`
