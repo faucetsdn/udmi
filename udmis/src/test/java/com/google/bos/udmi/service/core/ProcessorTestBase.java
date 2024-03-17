@@ -16,7 +16,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import org.jetbrains.annotations.NotNull;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.EndpointConfiguration.Protocol;
 import udmi.schema.Envelope;
@@ -84,10 +83,18 @@ public abstract class ProcessorTestBase extends MessageTestBase {
   }
 
   protected void terminateAndWait() {
+    // Put termination markers into the pipe.
     getTestDispatcher().terminate();
-    getReverseDispatcher().terminate();
+
+    // Wait for all outstanding messages to be processed.
     getTestDispatcher().awaitShutdown();
+
+    // Now put termination markers into the reversed pipe.
+    getReverseDispatcher().terminate();
+
+    // And wait for all of those outstanding messages to be processed.
     getReverseDispatcher().awaitShutdown();
+
     provider.shutdown();
     processor.shutdown();
   }

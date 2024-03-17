@@ -1,6 +1,7 @@
 package com.google.bos.udmi.service.core;
 
 import static com.google.udmi.util.JsonUtil.isoConvert;
+import static com.google.udmi.util.JsonUtil.safeSleep;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
@@ -33,9 +34,9 @@ public class BitboxAdapterTest extends ProcessorTestBase {
   @Test
   public void bitboxDiscoveryReformat() {
     initializeTestInstance();
-    getReverseDispatcher().receiveMessage(getLegacyEnvelope(), otherMessage);
-    getReverseDispatcher().receiveMessage(getLegacyEnvelope(), bitboxDiscovery);
-    getReverseDispatcher().waitForMessageProcessed(DiscoveryEvent.class);
+
+    dispatcher.receiveMessage(getLegacyEnvelope(), otherMessage);
+    dispatcher.receiveMessage(getLegacyEnvelope(), bitboxDiscovery);
     terminateAndWait();
 
     assertEquals(1, captured.size(), "expected only one captured event");

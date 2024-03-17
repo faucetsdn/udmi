@@ -294,7 +294,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
             return;
           }
           envelope = bundle.envelope;
-          trace("Processing %s %s/%s %s", this, envelope.subType, envelope.subFolder,
+          trace("Processing message loop %s %s/%s %s", id, envelope.subType, envelope.subFolder,
               envelope.transactionId);
           if (ERROR_MESSAGE_MARKER.equals(envelope.transactionId)) {
             throw new RuntimeException("Exception due to test-induced error");
