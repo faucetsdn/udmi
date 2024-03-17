@@ -8,6 +8,7 @@ import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueGet;
+import static com.google.udmi.util.GeneralUtils.ifNullElse;
 import static com.google.udmi.util.GeneralUtils.joinOrNull;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
@@ -135,10 +136,10 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   private boolean shouldEnumerate(Depth depth) {
-    return switch (depth) {
+    return ifNullElse(depth, false, d-> switch (d) {
       default -> false;
       case ENTRIES, DETAILS -> true;
-    };
+    });
   }
 
   private void checkFeatureDiscovery(Map<String, FeatureDiscovery> features) {

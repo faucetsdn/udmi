@@ -1,6 +1,7 @@
 package daq.pubber;
 
 import static com.google.udmi.util.GeneralUtils.catchToNull;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
@@ -82,10 +83,10 @@ public class DiscoveryManager extends ManagerBase {
   }
 
   private <K, V> Map<K, V> maybeEnumerate(Depth depth, Supplier<Map<K, V>> supplier) {
-    return switch (depth) {
+    return ifNotNullGet(depth, d -> switch (d) {
       default -> null;
       case ENTRIES, DETAILS -> supplier.get();
-    };
+    });
   }
 
   private void updateDiscoveryScan(Map<ProtocolFamily, FamilyDiscoveryConfig> raw) {

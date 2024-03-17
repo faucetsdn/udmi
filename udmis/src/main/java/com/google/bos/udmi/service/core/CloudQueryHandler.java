@@ -145,7 +145,7 @@ public class CloudQueryHandler {
 
     // If the query.depth is not defined then default to recursing down one level.
     if (envelope.deviceRegistryId == null) {
-      ifNullThen(newQuery.depth, () -> newQuery.depth = Depth.ENTRIES);
+      ifNullThen(newQuery.depth, () -> newQuery .depth = Depth.ENTRIES);
       queryAllRegistries();
     } else if (envelope.deviceId == null) {
       ifNullThen(newQuery.depth, () -> newQuery.depth = Depth.DETAILS);

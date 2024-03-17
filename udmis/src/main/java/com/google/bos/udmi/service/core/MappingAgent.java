@@ -26,11 +26,14 @@ public class MappingAgent extends ProcessorBase {
    */
   @MessageHandler
   public void discoveryEvent(DiscoveryEvent discoveryEvent) {
-    ProtocolFamily family = requireNonNull(discoveryEvent.scan_family, "missing scan_family");
-    String addr = requireNonNull(discoveryEvent.scan_addr, "missing scan_addr");
+    if (!shouldProcessEvent(discoveryEvent)) {
+      return;
+    }
     Envelope envelope = getContinuation(discoveryEvent).getEnvelope();
     String registryId = envelope.deviceRegistryId;
     String gatewayId = envelope.deviceId;
+    ProtocolFamily family = requireNonNull(discoveryEvent.scan_family, "missing scan_family");
+    String addr = requireNonNull(discoveryEvent.scan_addr, "missing scan_addr");
     String expectedId = String.format(EXPECTED_DEVICE_FORMAT, family, addr);
     try {
       CloudModel cloudModel = iotAccess.fetchDevice(registryId, expectedId);
@@ -42,5 +45,9 @@ public class MappingAgent extends ProcessorBase {
       deviceModel.blocked = true;
       iotAccess.modelResource(registryId, expectedId, deviceModel);
     }
+  }
+
+  private boolean shouldProcessEvent(DiscoveryEvent discoveryEvent) {
+    return false;
   }
 }

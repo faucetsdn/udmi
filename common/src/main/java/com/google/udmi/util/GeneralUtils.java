@@ -247,6 +247,10 @@ public class GeneralUtils {
     return value == null ? elseResult : converter.apply(value);
   }
 
+  public static <T, V> V ifNullElse(T value, V elseResult, Function<T, V> converter) {
+    return value == null ? elseResult : converter.apply(value);
+  }
+
   public static <T, V> V ifNotNullGet(T value, Supplier<V> converter) {
     return value == null ? null : converter.get();
   }
