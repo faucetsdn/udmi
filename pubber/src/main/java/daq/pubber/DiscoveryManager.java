@@ -3,7 +3,9 @@ package daq.pubber;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifNullElse;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isGetTrue;
 import static com.google.udmi.util.GeneralUtils.isTrue;
@@ -83,10 +85,7 @@ public class DiscoveryManager extends ManagerBase {
   }
 
   private <K, V> Map<K, V> maybeEnumerate(Depth depth, Supplier<Map<K, V>> supplier) {
-    return ifNotNullGet(depth, d -> switch (d) {
-      default -> null;
-      case ENTRIES, DETAILS -> supplier.get();
-    });
+    return ifTrueGet(shouldEnumerate(depth), supplier);
   }
 
   private void updateDiscoveryScan(Map<ProtocolFamily, FamilyDiscoveryConfig> raw) {
@@ -189,8 +188,7 @@ public class DiscoveryManager extends ManagerBase {
     AtomicInteger sendCount = new AtomicInteger();
     familyDiscoveryState.record_count = sendCount.get();
     updateState();
-    discoveryProvider(family).startScan(
-        isTrue(getFamilyDiscoveryConfig(family).depth), discoveryEvent -> {
+    discoveryProvider(family).startScan(shouldEnumerate(family), discoveryEvent -> {
           ifNotNullThen(discoveryEvent.scan_addr, addr -> {
                 info(format("Discovered %s device %s for gen %s", family, addr, scanGeneration));
                 discoveryEvent.scan_family = family;
@@ -202,6 +200,17 @@ public class DiscoveryManager extends ManagerBase {
           );
         }
     );
+  }
+
+  private boolean shouldEnumerate(ProtocolFamily family) {
+    return shouldEnumerate(getFamilyDiscoveryConfig(family).depth);
+  }
+
+  private static boolean shouldEnumerate(Depth depth) {
+    return ifNullElse(depth, false, d -> switch (d) {
+      default -> false;
+      case ENTRIES, DETAILS -> true;
+    });
   }
 
   private FamilyProvider discoveryProvider(ProtocolFamily family) {
