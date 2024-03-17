@@ -18,6 +18,7 @@ import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
 import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.DiscoveryEvent;
+import udmi.schema.EndpointConfiguration;
 
 /**
  * Simple tests for the auto-mapping provisioning agent.
@@ -28,9 +29,13 @@ public class MappingAgentTest extends ProcessorTestBase {
   private static final ProtocolFamily SCAN_FAMILY = ProtocolFamily.VENDOR;
   private static final String TARGET_DEVICE = format("%s-%s", SCAN_FAMILY, SCAN_ADDR);
 
-  @Override
-  protected @NotNull Class<? extends ProcessorBase> getProcessorClass() {
-    return MappingAgent.class;
+  protected ProcessorBase getProcessor(EndpointConfiguration config) {
+    return new MappingAgent(config) {
+      @Override
+      protected boolean shouldProcessEvent(DiscoveryEvent discoveryEvent) {
+        return true;
+      }
+    };
   }
 
   protected void initializeTestInstance() {

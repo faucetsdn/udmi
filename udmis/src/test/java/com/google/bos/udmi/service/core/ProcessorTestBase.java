@@ -65,7 +65,9 @@ public abstract class ProcessorTestBase extends MessageTestBase {
   }
 
   @NotNull
-  protected abstract Class<? extends ProcessorBase> getProcessorClass();
+  protected Class<? extends ProcessorBase> getProcessorClass() {
+    throw new RuntimeException("getProcessorClass not implement");
+  }
 
   protected <T> T initializeTestInstance(@SuppressWarnings("unused") Class<T> clazz) {
     initializeTestInstance();
@@ -76,7 +78,7 @@ public abstract class ProcessorTestBase extends MessageTestBase {
   protected void initializeTestInstance() {
     try {
       UdmiServicePod.resetForTest();
-      createProcessorInstance();
+      initializeProcessorInstance();
       activateReverseProcessor();
       getReverseDispatcher();
     } catch (Exception e) {
@@ -98,18 +100,22 @@ public abstract class ProcessorTestBase extends MessageTestBase {
     reverseDispatcher.activate();
   }
 
-  private void createProcessorInstance() {
+  private void initializeProcessorInstance() {
     EndpointConfiguration config = new EndpointConfiguration();
     config.protocol = Protocol.LOCAL;
     config.hostname = TEST_NAMESPACE;
     config.recv_id = TEST_SOURCE;
     config.send_id = TEST_DESTINATION;
-    processor = ProcessorBase.create(getProcessorClass(), config);
+    processor = getProcessor(config);
     setTestDispatcher(processor.getDispatcher());
     provider = mock(IotAccessBase.class);
     UdmiServicePod.putComponent(IOT_ACCESS_COMPONENT, () -> provider);
     processor.activate();
     provider.activate();
+  }
+
+  protected ProcessorBase getProcessor(EndpointConfiguration config) {
+    return ProcessorBase.create(getProcessorClass(), config);
   }
 
   protected void terminateAndWait() {

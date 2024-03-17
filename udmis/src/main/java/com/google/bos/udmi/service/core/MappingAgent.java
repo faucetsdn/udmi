@@ -47,7 +47,7 @@ public class MappingAgent extends ProcessorBase {
     }
   }
 
-  private boolean shouldProcessEvent(DiscoveryEvent discoveryEvent) {
+  protected boolean shouldProcessEvent(DiscoveryEvent discoveryEvent) {
     return false;
   }
 }
