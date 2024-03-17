@@ -3,7 +3,6 @@ package com.google.bos.udmi.service.core;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.JsonUtil.fromStringStrict;
 import static com.google.udmi.util.JsonUtil.loadFileRequired;
-import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -40,7 +39,6 @@ public class StateProcessorTest extends ProcessorTestBase {
 
   public static final Date INITIAL_LAST_START = CleanDateFormat.cleanDate(new Date(12981837));
   private static final String LEGACY_STATE_MESSAGE_FILE = "src/test/messages/legacy_state.json";
-  private static final long SHUTDOWN_PAUSE_MS = 1000;
 
   private boolean contains(Predicate<Object> objectPredicate) {
     return captured.stream().anyMatch(objectPredicate);
@@ -144,12 +142,10 @@ public class StateProcessorTest extends ProcessorTestBase {
   @Test
   public void multiExpansion() {
     initializeTestInstance();
-    getReverseDispatcher().publish(getTestStateBundle(true, false));
-    getReverseDispatcher().waitForMessageProcessed(SystemState.class);
-    getReverseDispatcher().waitForMessageProcessed(GatewayState.class);
-    terminateAndWait();
 
-    safeSleep(SHUTDOWN_PAUSE_MS); // Extra insurance against flaky tests.
+    getReverseDispatcher().publish(getTestStateBundle(true, false));
+
+    terminateAndWait();
 
     assertEquals(3, captured.size(), "unexpected received message count");
     assertTrue(contains(message -> message instanceof StateUpdate), "has StateUpdate");
@@ -165,8 +161,9 @@ public class StateProcessorTest extends ProcessorTestBase {
   @Test
   public void singleExpansion() {
     initializeTestInstance();
+
     getReverseDispatcher().publish(getTestStateBundle(false, false));
-    safeSleep(ASYNC_PROCESSING_DELAY_MS);
+
     terminateAndWait();
 
     assertEquals(2, captured.size(), "unexpected received message count");
