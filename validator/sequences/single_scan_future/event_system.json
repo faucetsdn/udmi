@@ -1,36 +1,36 @@
 {
   "event_count" : 8,
-  "last_config" : "2024-03-14T17:09:45Z",
+  "last_config" : "2024-03-17T16:40:30Z",
   "logentries" : [ {
-    "message" : "Discovery scan starting vendor as 2024-03-14T17:09:53Z",
+    "message" : "Discovery scan starting vendor as 2024-03-17T16:40:38Z",
     "category" : "device.log",
-    "timestamp" : "2024-03-14T17:09:53Z",
+    "timestamp" : "2024-03-17T16:40:38Z",
     "level" : 200
   }, {
-    "message" : "Update state 2024-03-14T17:09:53Z last_config 2024-03-14T17:09:45Z",
+    "message" : "Update state 2024-03-17T16:40:38Z last_config 2024-03-17T16:40:30Z",
     "category" : "device.log",
-    "timestamp" : "2024-03-14T17:09:53Z",
+    "timestamp" : "2024-03-17T16:40:38Z",
     "level" : 200
   }, {
-    "message" : "Discovered vendor device 0x65 for gen Thu Mar 14 17:09:53 UTC 2024",
+    "message" : "Discovered vendor device 0x65 for gen Sun Mar 17 16:40:38 UTC 2024",
     "category" : "device.log",
-    "timestamp" : "2024-03-14T17:09:53Z",
+    "timestamp" : "2024-03-17T16:40:38Z",
     "level" : 200
   }, {
-    "message" : "Discovered vendor device 28179023 for gen Thu Mar 14 17:09:53 UTC 2024",
+    "message" : "Discovered vendor device 28179023 for gen Sun Mar 17 16:40:38 UTC 2024",
     "category" : "device.log",
-    "timestamp" : "2024-03-14T17:09:53Z",
+    "timestamp" : "2024-03-17T16:40:38Z",
     "level" : 200
   }, {
-    "message" : "Update state 2024-03-14T17:09:55Z last_config 2024-03-14T17:09:45Z",
+    "message" : "Update state 2024-03-17T16:40:40Z last_config 2024-03-17T16:40:30Z",
     "category" : "device.log",
-    "timestamp" : "2024-03-14T17:09:55Z",
+    "timestamp" : "2024-03-17T16:40:40Z",
     "level" : 200
   } ],
   "metrics" : {
     "mem_total_mb" : 254.0,
-    "mem_free_mb" : 219.23474884033203
+    "mem_free_mb" : 219.11065673828125
   },
-  "timestamp" : "2024-03-14T17:10:01Z",
+  "timestamp" : "2024-03-17T16:40:45Z",
   "version" : "1.5.0"
 }

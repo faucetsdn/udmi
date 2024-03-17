@@ -198,7 +198,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     withEnvelopeFor(envelope, messageObject, () -> executeHandler(handlerType, messageObject));
   }
 
-  private void processMessage(Bundle bundle) {
+  private void processMessageBundle(Bundle bundle) {
     Envelope envelope = Preconditions.checkNotNull(bundle.envelope, "bundle envelope is null");
     Object message = bundle.message;
     if (bundle.payload != null) {
@@ -225,7 +225,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   @Override
   public void activate() {
     super.activate();
-    Consumer<Bundle> processMessage = this::processMessage;
+    Consumer<Bundle> processMessage = this::processMessageBundle;
     info(format("%s activating %s with %08x", this, messagePipe, Objects.hash(processMessage)));
     messagePipe.activate(processMessage);
   }
@@ -329,7 +329,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     Envelope savedEnvelope = threadEnvelope.get();
     try {
       threadEnvelope.set(null);
-      processMessage(makeMessageBundle(envelope, message));
+      processMessageBundle(makeMessageBundle(envelope, message));
     } finally {
       threadEnvelope.set(savedEnvelope);
     }
@@ -351,6 +351,9 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     messagePipe.publish(bundle);
   }
 
+  /**
+   * Receive a message and process it accordingly.
+   */
   @VisibleForTesting
   public void receiveMessage(Envelope envelope, Object message) {
     Map<String, String> map = toStringMap(envelope);
