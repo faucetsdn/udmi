@@ -64,26 +64,15 @@ public abstract class ProcessorTestBase extends MessageTestBase {
     return processor.getMessageCount(clazz);
   }
 
-  @NotNull
-  protected Class<? extends ProcessorBase> getProcessorClass() {
-    throw new RuntimeException("getProcessorClass not implement");
+  protected ProcessorBase getProcessor(EndpointConfiguration config,
+      Class<? extends ProcessorBase> clazz) {
+    return ProcessorBase.create(clazz, config);
   }
 
-  protected <T> T initializeTestInstance(@SuppressWarnings("unused") Class<T> clazz) {
-    initializeTestInstance();
+  protected <T extends ProcessorBase> T initializeTestInstance(Class<T> clazz) {
+    instantiateTestInstance(clazz);
     //noinspection unchecked
     return (T) processor;
-  }
-
-  protected void initializeTestInstance() {
-    try {
-      UdmiServicePod.resetForTest();
-      initializeProcessorInstance();
-      activateReverseProcessor();
-      getReverseDispatcher();
-    } catch (Exception e) {
-      throw new RuntimeException("While initializing test instance", e);
-    }
   }
 
   protected Bundle makeMessageBundle(Object message) {
@@ -94,30 +83,6 @@ public abstract class ProcessorTestBase extends MessageTestBase {
     return MessagePipeTestBase.makeTestEnvelope();
   }
 
-  private void activateReverseProcessor() {
-    MessageDispatcherImpl reverseDispatcher = getReverseDispatcher();
-    reverseDispatcher.registerHandler(Object.class, this::resultHandler);
-    reverseDispatcher.activate();
-  }
-
-  private void initializeProcessorInstance() {
-    EndpointConfiguration config = new EndpointConfiguration();
-    config.protocol = Protocol.LOCAL;
-    config.hostname = TEST_NAMESPACE;
-    config.recv_id = TEST_SOURCE;
-    config.send_id = TEST_DESTINATION;
-    processor = getProcessor(config);
-    setTestDispatcher(processor.getDispatcher());
-    provider = mock(IotAccessBase.class);
-    UdmiServicePod.putComponent(IOT_ACCESS_COMPONENT, () -> provider);
-    processor.activate();
-    provider.activate();
-  }
-
-  protected ProcessorBase getProcessor(EndpointConfiguration config) {
-    return ProcessorBase.create(getProcessorClass(), config);
-  }
-
   protected void terminateAndWait() {
     getTestDispatcher().terminate();
     getReverseDispatcher().terminate();
@@ -125,6 +90,37 @@ public abstract class ProcessorTestBase extends MessageTestBase {
     getReverseDispatcher().awaitShutdown();
     provider.shutdown();
     processor.shutdown();
+  }
+
+  private void activateReverseProcessor() {
+    MessageDispatcherImpl reverseDispatcher = getReverseDispatcher();
+    reverseDispatcher.registerHandler(Object.class, this::resultHandler);
+    reverseDispatcher.activate();
+  }
+
+  private void initializeProcessorInstance(Class<? extends ProcessorBase> clazz) {
+    EndpointConfiguration config = new EndpointConfiguration();
+    config.protocol = Protocol.LOCAL;
+    config.hostname = TEST_NAMESPACE;
+    config.recv_id = TEST_SOURCE;
+    config.send_id = TEST_DESTINATION;
+    processor = getProcessor(config, clazz);
+    setTestDispatcher(processor.getDispatcher());
+    provider = mock(IotAccessBase.class);
+    UdmiServicePod.putComponent(IOT_ACCESS_COMPONENT, () -> provider);
+    processor.activate();
+    provider.activate();
+  }
+
+  private void instantiateTestInstance(Class<? extends ProcessorBase> clazz) {
+    try {
+      UdmiServicePod.resetForTest();
+      initializeProcessorInstance(clazz);
+      activateReverseProcessor();
+      getReverseDispatcher();
+    } catch (Exception e) {
+      throw new RuntimeException("While initializing test instance", e);
+    }
   }
 
   private void resultHandler(Object message) {

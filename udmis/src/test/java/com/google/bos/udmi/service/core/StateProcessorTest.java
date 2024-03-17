@@ -42,11 +42,6 @@ public class StateProcessorTest extends ProcessorTestBase {
   private static final String LEGACY_STATE_MESSAGE_FILE = "src/test/messages/legacy_state.json";
   private static final long SHUTDOWN_PAUSE_MS = 1000;
 
-  @NotNull
-  protected Class<? extends ProcessorBase> getProcessorClass() {
-    return StateProcessor.class;
-  }
-
   private boolean contains(Predicate<Object> objectPredicate) {
     return captured.stream().anyMatch(objectPredicate);
   }
@@ -100,6 +95,10 @@ public class StateProcessorTest extends ProcessorTestBase {
     Function<String, String> configMunger = configCaptor.getValue();
     return ifNotNullGet(configMunger.apply(stringify(testConfig)),
         newConfig -> fromStringStrict(Config.class, newConfig));
+  }
+
+  private void initializeTestInstance() {
+    initializeTestInstance(StateProcessor.class);
   }
 
   @Test

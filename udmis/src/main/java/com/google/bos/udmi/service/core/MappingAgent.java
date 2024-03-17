@@ -26,9 +26,6 @@ public class MappingAgent extends ProcessorBase {
    */
   @MessageHandler
   public void discoveryEvent(DiscoveryEvent discoveryEvent) {
-    if (!shouldProcessEvent(discoveryEvent)) {
-      return;
-    }
     Envelope envelope = getContinuation(discoveryEvent).getEnvelope();
     String registryId = envelope.deviceRegistryId;
     String gatewayId = envelope.deviceId;
@@ -45,9 +42,5 @@ public class MappingAgent extends ProcessorBase {
       deviceModel.blocked = true;
       iotAccess.modelResource(registryId, expectedId, deviceModel);
     }
-  }
-
-  protected boolean shouldProcessEvent(DiscoveryEvent discoveryEvent) {
-    return false;
   }
 }

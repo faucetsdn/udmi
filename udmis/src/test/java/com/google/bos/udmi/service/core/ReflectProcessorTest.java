@@ -40,11 +40,6 @@ public class ReflectProcessorTest extends ProcessorTestBase {
 
   public final String transactionId = Long.toString(System.currentTimeMillis());
 
-  @Override
-  protected @NotNull Class<? extends ProcessorBase> getProcessorClass() {
-    return ReflectProcessor.class;
-  }
-
   private void activeTestInstance(Runnable action) {
     verify(provider, times(1)).activate();
     verify(provider, times(0)).shutdown();
@@ -123,7 +118,7 @@ public class ReflectProcessorTest extends ProcessorTestBase {
 
   @BeforeEach
   public void initializeInstance() {
-    initializeTestInstance();
+    initializeTestInstance(ReflectProcessor.class);
   }
 
   /**

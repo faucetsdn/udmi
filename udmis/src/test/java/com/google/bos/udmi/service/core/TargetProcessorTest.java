@@ -35,11 +35,6 @@ class TargetProcessorTest extends ProcessorTestBase {
   }
 
   @NotNull
-  protected Class<? extends ProcessorBase> getProcessorClass() {
-    return TargetProcessor.class;
-  }
-
-  @NotNull
   private Object getTestMessage(boolean isExtra) {
     return isExtra ? makeExtraFieldMessage() : new PointsetEvent();
   }
@@ -75,6 +70,10 @@ class TargetProcessorTest extends ProcessorTestBase {
     verify(provider, times(1)).sendCommand(eq(REFLECT_BASE),
         eq(TEST_REGISTRY), eq(SubFolder.UDMI), commandCaptor.capture());
     verifyCommand(commandCaptor, true);
+  }
+
+  private void initializeTestInstance() {
+    initializeTestInstance(TargetProcessor.class);
   }
 
   /**
