@@ -49,6 +49,10 @@ public class CloudQueryHandler {
     controller.debug(format, args);
   }
 
+  private void issueModifiedDevice(String id) {
+    issueModifiedQuery(e -> e.deviceId = id);
+  }
+
   private void issueModifiedQuery(Consumer<Envelope> mutator) {
     CloudQuery cloudQuery = new CloudQuery();
     cloudQuery.generation = query.generation;
@@ -58,10 +62,6 @@ public class CloudQueryHandler {
 
   private void issueModifiedRegistry(String registryId) {
     issueModifiedQuery(e -> e.deviceRegistryId = registryId);
-  }
-
-  private void issueModifiedDevice(String id) {
-    issueModifiedQuery(e -> e.deviceId = id);
   }
 
   private CloudModel makeCloudModel(String registryId) {
@@ -145,7 +145,7 @@ public class CloudQueryHandler {
 
     // If the query.depth is not defined then default to recursing down one level.
     if (envelope.deviceRegistryId == null) {
-      ifNullThen(newQuery.depth, () -> newQuery .depth = Depth.ENTRIES);
+      ifNullThen(newQuery.depth, () -> newQuery.depth = Depth.ENTRIES);
       queryAllRegistries();
     } else if (envelope.deviceId == null) {
       ifNullThen(newQuery.depth, () -> newQuery.depth = Depth.DETAILS);

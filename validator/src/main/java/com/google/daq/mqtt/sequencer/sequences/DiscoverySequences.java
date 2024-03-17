@@ -79,6 +79,11 @@ public class DiscoverySequences extends SequenceBase {
     return ofNullable(entry.getValue().stage).orElse(STABLE).compareTo(BETA) >= 0;
   }
 
+  @Nullable
+  private static Depth enumerationDepthIf(boolean shouldEnumerate) {
+    return shouldEnumerate ? ENTRIES : null;
+  }
+
   @Before
   public void setupExpectedParameters() {
     allowDeviceStateChange("discovery");
@@ -136,7 +141,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   private boolean shouldEnumerate(Depth depth) {
-    return ifNullElse(depth, false, d-> switch (d) {
+    return ifNullElse(depth, false, d -> switch (d) {
       default -> false;
       case ENTRIES, DETAILS -> true;
     });
@@ -220,11 +225,6 @@ public class DiscoverySequences extends SequenceBase {
 
   private Depth enumerateIfBucketEnabled(Bucket bucket) {
     return enumerationDepthIf(isBucketEnabled(bucket));
-  }
-
-  @Nullable
-  private static Depth enumerationDepthIf(boolean shouldEnumerate) {
-    return shouldEnumerate ? ENTRIES : null;
   }
 
   @Test(timeout = TWO_MINUTES_MS)
