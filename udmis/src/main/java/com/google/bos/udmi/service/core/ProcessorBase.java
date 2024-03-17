@@ -18,6 +18,7 @@ import static com.google.udmi.util.GeneralUtils.getSubMap;
 import static com.google.udmi.util.GeneralUtils.getSubMapDefault;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.getDate;
 import static com.google.udmi.util.JsonUtil.isoConvert;
@@ -81,10 +82,11 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
    */
   public ProcessorBase(EndpointConfiguration config) {
     super(config);
-    isEnabled = ifNotNullGet(config.enabled, enabled -> !enabled.isEmpty(), true);
+    isEnabled =
+        ifNotNullGet(variableSubstitution(config.enabled), enabled -> !enabled.isEmpty(), true);
     distributorName = config.distributor;
-    dispatcher = MessageDispatcher.from(config);
-    sidecar = MessageDispatcher.from(makeSidecarConfig(config));
+    dispatcher = ifTrueGet(isEnabled, () -> MessageDispatcher.from(config));
+    sidecar = ifTrueGet(isEnabled, () -> MessageDispatcher.from(makeSidecarConfig(config)));
   }
 
   /**
