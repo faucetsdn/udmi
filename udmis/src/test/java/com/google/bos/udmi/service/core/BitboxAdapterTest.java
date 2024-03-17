@@ -13,6 +13,9 @@ import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.DiscoveryEvent;
 import udmi.schema.Envelope;
 
+/**
+ * Test the basic bitbox legacy discovery adapter.
+ */
 public class BitboxAdapterTest extends ProcessorTestBase {
 
   private static final String BITBOX_DISCOVERY_JSON = "src/test/messages/bitbox_discovery.json";
