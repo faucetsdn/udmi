@@ -32,6 +32,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import com.google.common.collect.Sets.SetView;
 import com.google.daq.mqtt.util.CloudDeviceSettings;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ExceptionMap;
@@ -129,6 +130,7 @@ public class Registrar {
   private boolean useAltRegistry;
   private String altRegistry;
   private boolean deleteDevices;
+  private boolean expungeDevices;
   private IotProvider iotProvider;
   private File profile;
   private int createRegistries = -1;
@@ -207,6 +209,9 @@ public class Registrar {
         case "-d":
           setDeleteDevices(true);
           break;
+        case "-x":
+          setExpungeDevices(true);
+          break;
         case "-n":
           setRunnerThreads(argList.remove(0));
           break;
@@ -248,6 +253,12 @@ public class Registrar {
     this.deleteDevices = deleteDevices;
     checkNotNull(projectId, "delete devices specified with no target project");
     this.updateCloudIoT = deleteDevices;
+  }
+
+  private void setExpungeDevices(boolean expungeDevices) {
+    this.expungeDevices = expungeDevices;
+    checkNotNull(projectId, "expunge devices specified with no target project");
+    this.updateCloudIoT = expungeDevices;
   }
 
   private void setUseAltRegistry(boolean useAltRegistry) {
@@ -456,36 +467,38 @@ public class Registrar {
   }
 
   private void processDevices() {
-    Set<String> deviceSet = calculateDevices();
+    Set<String> explicitDevices = getExplicitDevices();
     try {
-      localDevices = loadLocalDevices(deviceSet);
-      if (deviceSet == null) {
-        deviceSet = localDevices.keySet();
-      }
+      localDevices = loadLocalDevices(explicitDevices);
       cloudDevices = ifNotNullGet(fetchCloudDevices(), devices -> new HashSet<>(devices));
-      if (deleteDevices) {
-        deleteCloudDevices(deviceSet);
+      if (deleteDevices || expungeDevices) {
+        deleteCloudDevices();
         return;
       }
 
-      Set<String> unknowns = Sets.difference(deviceSet, localDevices.keySet());
-      if (!unknowns.isEmpty()) {
-        throw new RuntimeException(
-            "Unknown specified devices: " + JOIN_CSV.join(unknowns));
+      if (explicitDevices != null) {
+        Set<String> unknownLocals = Sets.difference(explicitDevices, localDevices.keySet());
+        Set<String> unknownCloud = Sets.difference(explicitDevices, cloudDevices);
+        SetView<String> unknowns = Sets.union(unknownCloud, unknownLocals);
+        if (!unknowns.isEmpty()) {
+          throw new RuntimeException(
+              "Unknown specified devices: " + JOIN_CSV.join(unknowns));
+        }
       }
 
-      Set<String> oldDevices = deviceSet.stream().filter(this::alreadyRegistered)
+      Set<String> operatives = explicitDevices != null ? explicitDevices : localDevices.keySet();
+      Set<String> oldDevices = operatives.stream().filter(this::alreadyRegistered)
           .collect(Collectors.toSet());
-      Set<String> newDevices = Sets.difference(deviceSet, oldDevices);
+      Set<String> newDevices = Sets.difference(operatives, oldDevices);
       System.err.printf("Processing %d new devices...%n", newDevices.size());
       int total = processLocalDevices(newDevices);
       System.err.printf("Updating %d existing devices...%n", oldDevices.size());
       total += processLocalDevices(oldDevices);
-      System.err.printf("Finished registering %d/%d devices.%n", total, deviceSet.size());
+      System.err.printf("Finished registering %d/%d devices.%n", total, operatives.size());
 
       if (updateCloudIoT) {
         bindGatewayDevices(localDevices);
-        Set<String> extraDevices = Sets.difference(cloudDevices, deviceSet);
+        Set<String> extraDevices = Sets.difference(cloudDevices, operatives);
         System.err.printf("Blocking %d extra devices.%n", extraDevices.size());
         blockedDevices = blockExtraDevices(extraDevices);
       }
@@ -502,16 +515,35 @@ public class Registrar {
     return ifNotNullGet(cloudDevices, devices -> devices.contains(device), false);
   }
 
-  private void deleteCloudDevices(Set<String> deviceSet) {
+  private void deleteCloudDevices() {
+    if (cloudDevices.isEmpty()) {
+      System.err.println("No devices to delete, our work here is done!");
+      return;
+    }
+    Set<String> explicitDevices = getExplicitDevices();
+    if (explicitDevices != null) {
+      executeDelete(explicitDevices, "explicit");
+      return;
+    }
+    if (deleteDevices) {
+      SetView<String> devices = Sets.intersection(cloudDevices, localDevices.keySet());
+      executeDelete(devices, "registered");
+    }
+    if (expungeDevices) {
+      SetView<String> extras = Sets.difference(cloudDevices, localDevices.keySet());
+      executeDelete(extras, "unknown");
+    }
+  }
+
+  private void executeDelete(Set<String> deviceSet, String kind) {
     try {
-      if (cloudDevices.isEmpty()) {
-        System.err.println("No devices to delete, our work here is done!");
+      System.err.printf("Preparing to delete %s %s devices...%n", deviceSet.size(), kind);
+      if (deviceSet.isEmpty()) {
         return;
       }
-      Set<String> union = intersection(cloudDevices, ofNullable(deviceSet).orElse(cloudDevices));
-      Set<String> gateways = union.stream().filter(id -> ifNotNullGet(localDevices.get(id),
+      Set<String> gateways = deviceSet.stream().filter(id -> ifNotNullGet(localDevices.get(id),
           LocalDevice::isGateway, false)).collect(Collectors.toSet());
-      final Set<String> others = Sets.difference(union, gateways);
+      final Set<String> others = Sets.difference(deviceSet, gateways);
 
       final Instant start = Instant.now();
 
@@ -525,7 +557,7 @@ public class Registrar {
           (gateways.size() + others.size()), seconds);
 
       Set<String> deviceIds = fetchCloudDevices();
-      Set<String> remaining = intersection(deviceIds, ofNullable(deviceSet).orElse(deviceIds));
+      Set<String> remaining = intersection(deviceIds, deviceSet);
       if (!remaining.isEmpty()) {
         throw new RuntimeException("Did not delete all devices! " + CSV_JOINER.join(remaining));
       }
@@ -697,7 +729,7 @@ public class Registrar {
     return ifNotNullGet(registeredDevice, Registrar::isNotGateway, false);
   }
 
-  private Set<String> calculateDevices() {
+  private Set<String> getExplicitDevices() {
     if (deviceList == null) {
       return null;
     }
