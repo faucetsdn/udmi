@@ -57,7 +57,6 @@ class TargetProcessorTest extends ProcessorTestBase {
   public void unexpectedReceive() {
     initializeTestInstance();
     getReverseDispatcher().publish(getTestMessage(true));
-    getReverseDispatcher().waitForMessageProcessed(Object.class);
     terminateAndWait();
 
     assertEquals(1, captured.size(), "unexpected received message count");
@@ -83,7 +82,6 @@ class TargetProcessorTest extends ProcessorTestBase {
   public void simpleReceive() {
     initializeTestInstance();
     getReverseDispatcher().publish(getTestMessage(false));
-    getReverseDispatcher().waitForMessageProcessed(PointsetEvent.class);
     terminateAndWait();
 
     assertEquals(1, captured.size(), "unexpected received message count");

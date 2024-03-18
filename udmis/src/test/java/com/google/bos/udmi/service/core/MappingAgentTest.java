@@ -53,7 +53,6 @@ public class MappingAgentTest extends ProcessorTestBase {
   public void discoveryEventCreate() {
     initializeTestInstance();
     getReverseDispatcher().publish(getDiscoveryScanEvent(TARGET_DEVICE));
-    getReverseDispatcher().waitForMessageProcessed(DiscoveryEvent.class);
     terminateAndWait();
     ArgumentCaptor<String> deviceCaptor = ArgumentCaptor.forClass(String.class);
     ArgumentCaptor<CloudModel> modelCaptor = ArgumentCaptor.forClass(CloudModel.class);
@@ -68,7 +67,6 @@ public class MappingAgentTest extends ProcessorTestBase {
   public void discoveryEventExisting() {
     initializeTestInstance();
     getReverseDispatcher().publish(getDiscoveryScanEvent(TEST_DEVICE));
-    getReverseDispatcher().waitForMessageProcessed(DiscoveryEvent.class);
     terminateAndWait();
     verify(provider, never()).modelResource(eq(TEST_REGISTRY), any(), any());
   }

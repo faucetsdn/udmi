@@ -392,22 +392,6 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     return format("dispatcher/%s", containerId);
   }
 
-  /**
-   * Wait for a message of the given handler type to be processed. Primarily for testing.
-   */
-  public void waitForMessageProcessed(Class<?> clazz) {
-    synchronized (handlerCounts) {
-      try {
-        Instant endTime = Instant.now().plusMillis(HANDLER_TIMEOUT_MS);
-        do {
-          handlerCounts.wait(HANDLER_TIMEOUT_MS);
-        } while (getHandlerCount(clazz) == 0 && Instant.now().isBefore(endTime));
-      } catch (InterruptedException e) {
-        throw new RuntimeException("While waiting for handler count update", e);
-      }
-    }
-  }
-
   @Override
   public MessageContinuation withEnvelope(Envelope envelope) {
     return new MessageContinuation() {
