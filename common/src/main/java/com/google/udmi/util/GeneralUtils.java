@@ -49,6 +49,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
+import udmi.schema.CloudModel;
 
 public class GeneralUtils {
 
@@ -195,6 +196,10 @@ public class GeneralUtils {
     } catch (Exception e) {
       throw new RuntimeException("While converting to limited json string", e);
     }
+  }
+
+  public static Runnable ignoreValue(Object ignored) {
+    return () -> {};
   }
 
   public static Date toDate(Instant lastSeen) {
