@@ -77,7 +77,7 @@ public class MappingAgent extends ProcessorBase {
     Envelope envelope = getContinuation(discoveryEvent).getEnvelope();
     String registryId = envelope.deviceRegistryId;
     String gatewayId = envelope.deviceId;
-    Date generation = discoveryEvent.generation;
+    Date generation = requireNonNull(discoveryEvent.generation, "missing scan generation");
     Map<String, CloudModel> deviceIds = refreshModelDevices(registryId, gatewayId, generation);
     ProtocolFamily family = requireNonNull(discoveryEvent.scan_family, "missing scan_family");
     String addr = requireNonNull(discoveryEvent.scan_addr, "missing scan_addr");
