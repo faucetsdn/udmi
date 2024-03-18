@@ -200,12 +200,8 @@ public class CloudIotManager {
     } else {
       exceptions.capture("updating", () -> updateDevice(deviceId, settings, device));
     }
-    // No config because no config is no config?
-    // String config = ofNullable(settings.config).orElse(EMPTY_CONFIG);
-    if (settings.config != null) {
-      exceptions.capture("configuring", () -> writeDeviceConfig(deviceId, settings.config));
-    }
-
+    String config = ofNullable(settings.config).orElse(EMPTY_CONFIG);
+    exceptions.capture("configuring", () -> writeDeviceConfig(deviceId, config));
     exceptions.throwIfNotEmpty();
     return device == null;
   }

@@ -37,9 +37,6 @@
         "REGISTRY"
       ]
     },
-    "config": {
-      "$ref": "file:model_cloud_config.json#"
-    },
     "blocked": {
       "type": "boolean"
     },
