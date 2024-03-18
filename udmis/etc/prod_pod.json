@@ -52,7 +52,7 @@
       "enabled": "${BITBOX_DISCOVERY}"
     },
     "bitbox": {
-      "recv_id": "${BITBOX_DISDOVERY}",
+      "recv_id": "${BITBOX_DISCOVERY}",
       "send_id": "${UDMI_PREFIX}udmi_target",
       "enabled": "${BITBOX_DISCOVERY}"
     }

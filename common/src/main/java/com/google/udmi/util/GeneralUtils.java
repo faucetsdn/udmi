@@ -379,6 +379,23 @@ public class GeneralUtils {
     }
   }
 
+  public static <T> T catchToElse(Supplier<T> provider, Consumer<Exception> alternate) {
+    try {
+      return provider.get();
+    } catch (Exception e) {
+      alternate.accept(e);
+      return null;
+    }
+  }
+
+  public static void catchToElse(Runnable provider, Consumer<Exception> alternate) {
+    try {
+      provider.run();
+    } catch (Exception e) {
+      alternate.accept(e);
+    }
+  }
+
   public static <T> T catchToElse(Supplier<T> provider, T alternate) {
     try {
       return provider.get();
