@@ -2,7 +2,9 @@ package com.google.daq.mqtt.util;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.util.NetworkFamily.NAMED_FAMILIES;
+import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_STRICT;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
+import static com.google.udmi.util.GeneralUtils.compressJsonString;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
@@ -12,7 +14,13 @@ import static com.google.udmi.util.JsonUtil.getTimestampString;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
+import static org.apache.commons.io.FileUtils.readFileToString;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.google.udmi.util.GeneralUtils;
+import com.google.udmi.util.MessageDowngrader;
+import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import org.jetbrains.annotations.NotNull;
@@ -170,65 +178,19 @@ public class ConfigGenerator {
   /**
    * Indicate if this is a gateway device.
    */
-  public boolean isGateway() {
+  private boolean isGateway() {
     return metadata != null
         && metadata.gateway != null
         && metadata.gateway.proxy_ids != null
         && !metadata.gateway.proxy_ids.isEmpty();
   }
 
-  public boolean isProxied() {
+  private boolean isProxied() {
     return getGatewayId() != null;
   }
 
-  public List<String> getProxyDevicesList() {
+  private List<String> getProxyDevicesList() {
     return isGateway() ? metadata.gateway.proxy_ids : null;
   }
 
-  public String getUpdatedTimestamp() {
-    return getTimestampString(metadata.timestamp);
-  }
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

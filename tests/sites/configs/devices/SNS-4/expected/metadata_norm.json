@@ -1,0 +1,44 @@
+{
+  "timestamp": "2020-05-01T13:39:07Z",
+  "version": "1.4.1",
+  "upgraded_from": "1",
+  "hash": "d051e64d",
+  "system": {
+    "location": {
+      "section": "2-3N8C"
+    },
+    "physical_tag": {
+      "asset": {
+        "guid": "drw://TBA",
+        "site": "ZZ-TRI-FECTA",
+        "name": "SNS-4"
+      }
+    },
+    "min_loglevel": 300
+  },
+  "gateway": {
+    "gateway_id": "GAT-123",
+    "target": {
+      "family": "vendor"
+    }
+  },
+  "localnet": {
+    "families": {
+      "vendor": {
+        "addr": "whatEVERyouWANT!!!#!#!"
+      }
+    }
+  },
+  "pointset": {
+    "points": {
+      "split_threshold": {
+        "units": "Imperial-gallons-per-minute",
+        "ref": "vendor-ref can be anything"
+      },
+      "triangulating_axis": {
+        "units": "Degrees-phase",
+        "ref": "anything-goes!"
+      }
+    }
+  }
+}
