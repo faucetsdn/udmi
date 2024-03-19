@@ -18,7 +18,7 @@ import udmi.schema.LocalnetConfig;
 public class LocalnetSequences extends SequenceBase {
 
   private void familyAddr(ProtocolFamily family) {
-    String expected = ifNullSkipTest(
+    final String expected = ifNullSkipTest(
         catchToNull(() -> deviceMetadata.localnet.families.get(family).addr),
         format("No %s address defined in metadata", family));
     deviceConfig.localnet = new LocalnetConfig();
