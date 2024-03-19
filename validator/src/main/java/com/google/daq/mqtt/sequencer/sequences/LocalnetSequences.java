@@ -10,6 +10,7 @@ import com.google.daq.mqtt.sequencer.SequenceBase;
 import java.util.HashMap;
 import org.junit.Test;
 import udmi.schema.Common.ProtocolFamily;
+import udmi.schema.FamilyLocalnetConfig;
 import udmi.schema.LocalnetConfig;
 
 /**
@@ -23,7 +24,7 @@ public class LocalnetSequences extends SequenceBase {
         format("No %s address defined in metadata", family));
     deviceConfig.localnet = new LocalnetConfig();
     deviceConfig.localnet.families = new HashMap<>();
-    deviceConfig.localnet.families.computeIfAbsent(family, key -> new Object());
+    deviceConfig.localnet.families.computeIfAbsent(family, key -> new FamilyLocalnetConfig());
     untilTrue("localnet families available", () -> deviceState.localnet.families.size() > 0);
     String actual = catchToNull(() -> deviceState.localnet.families.get(family).addr);
     checkThat(format("device family %s address matches", family),

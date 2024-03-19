@@ -29,7 +29,7 @@ public class LocalnetConfig {
      */
     @JsonProperty("families")
     @JsonPropertyDescription("Address family config for reporting.")
-    public HashMap<ProtocolFamily, Object> families;
+    public HashMap<ProtocolFamily, FamilyLocalnetConfig> families;
 
     @Override
     public int hashCode() {
@@ -39,7 +39,7 @@ public class LocalnetConfig {
     }
 
     @Override
-    public boolean equals(java.lang.Object other) {
+    public boolean equals(Object other) {
         if (other == this) {
             return true;
         }
