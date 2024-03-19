@@ -1,23 +1,12 @@
 #!/bin/bash -e
 
-ROOT=$(dirname $0)/..
-
-function usage {
-    echo Error: $*
-    echo Usage: $0 target { prep, build, push, apply } [--no-check] [repo]
-    exit 1
-}
-
-function fail {
-    echo Error: $*
-    exit 1
-}
+UDMI_ROOT=$(dirname $0)/..
 
 target=$1
 cmd=$2
-shift 2 || usage missing arguments
+shift 2 || usage target { prep, build, push, apply } [--no-check] [repo]
 
-cd ${ROOT}/${target}
+source ${UDMI_ROOT}/etc/shell_common.sh
 
 git_branch=$(git rev-parse --abbrev-ref HEAD)
 git_remote=$(git config --get branch.$git_branch.remote) || fail missing git remote
@@ -75,8 +64,6 @@ else
     udmi_ref=$REPOSITORY:$udmi_tag
 fi
 
-version=`git describe`
-
 RUNARGS="--rm -ti -v $PWD/var:/udmi -v $HOME/.config:/root/.config --tmpfs /tmp"
 
 prep=
@@ -106,7 +93,7 @@ if [[ -n $prep ]]; then
     build_time=`date --utc -Imin -r $LIBFILE`
     cat <<EOF > var/deployed_version.json
 {
-  "udmi_version": "$version",
+  "udmi_version": "$udmi_version",
   "udmi_ref": "$udmi_ref",
   "built_at": "$build_time",
   "built_by": "$current_user"

@@ -297,17 +297,17 @@ public class DiscoverySequences extends SequenceBase {
 
   private String detailScanPending() {
     return ifNotTrueGet(scanPending(scanStartTime).test(scanFamily),
-        "Expected pending but " + describedFamilyState());
+        format("Expected pending %s but %s", scanStartTime, describedFamilyState()));
   }
 
   private String detailScanActive() {
     return ifNotTrueGet(scanActive(scanStartTime).test(scanFamily),
-        "Expected active but " + describedFamilyState());
+        format("Expected active %s but %s", scanStartTime, describedFamilyState()));
   }
 
   private String detailScanComplete() {
     return ifNotTrueGet(scanComplete(scanStartTime).test(scanFamily),
-        "Expected complete but " + describedFamilyState());
+        format("Expected complete %s but %s", scanStartTime, describedFamilyState()));
   }
 
   private String invalidReasons(DiscoveryEvent discoveryEvent, Date scanGeneration) {
