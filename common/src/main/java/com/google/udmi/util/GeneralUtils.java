@@ -336,8 +336,16 @@ public class GeneralUtils {
     return isTrue(conditional) ? null : supplier.get();
   }
 
+  public static <T> T ifNotTrueGet(Boolean conditional, T value) {
+    return isTrue(conditional) ? null : value;
+  }
+
   public static <T> T ifNotTrueGet(Supplier<Boolean> conditional, Supplier<T> supplier) {
     return isTrue(catchToNull(conditional)) ? null : supplier.get();
+  }
+
+  public static <T> T ifNotTrueGet(Supplier<Boolean> conditional, T value) {
+    return isTrue(catchToNull(conditional)) ? null : value;
   }
 
   public static boolean isNotTrue(Boolean value) {

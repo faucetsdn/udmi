@@ -1,5 +1,6 @@
 package com.google.bos.udmi.service.access;
 
+import static com.google.api.client.util.Preconditions.checkState;
 import static com.google.bos.udmi.service.pod.UdmiServicePod.getComponent;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.sortedMapCollector;
@@ -8,7 +9,6 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
-import com.google.common.collect.ImmutableMap;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -46,14 +46,16 @@ public class DynamicIotAccessProvider extends IotAccessBase {
 
   @Override
   public Set<String> listRegistries() {
-    return providers.values().stream().map(IotAccessProvider::listRegistries)
+    return getProviders().values().stream().map(IotAccessProvider::listRegistries)
         .collect(HashSet::new, HashSet::addAll, HashSet::addAll);
   }
 
   private String determineProvider(String registryId) {
-    TreeMap<String, String> sortedMap = providers.entrySet().stream()
+    getProviders();
+    TreeMap<String, String> sortedMap = getProviders().entrySet().stream()
         .filter(access -> access.getValue().isEnabled())
         .collect(sortedMapCollector(entry -> registryPriority(registryId, entry)));
+    checkState(!sortedMap.isEmpty(), "no viable iot providers found");
     String providerId = sortedMap.lastEntry().getValue();
     debug("Registry affinity mapping for " + registryId + " is " + providerId);
     return providerId;
@@ -61,7 +63,7 @@ public class DynamicIotAccessProvider extends IotAccessBase {
 
   private IotAccessProvider getProviderFor(String registryId) {
     IotAccessProvider provider =
-        providers.get(registryProviders.computeIfAbsent(registryId, this::determineProvider));
+        getProviders().get(registryProviders.computeIfAbsent(registryId, this::determineProvider));
     return requireNonNull(provider, "could not determine provider for " + registryId);
   }
 
@@ -78,14 +80,23 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   @Override
   public void activate() {
     super.activate();
+    getProviders();
+  }
+
+  private Map<String, IotAccessProvider> getProviders() {
+    if (!providers.isEmpty()) {
+      return providers;
+    }
     providerList.forEach(
         providerId -> {
           IotAccessProvider component = getComponent(providerId);
           ifTrueThen(component.isEnabled(), () -> providers.put(providerId, component));
         });
+    info("Populated providers list with %d out of %d", providers.size(), providerList.size());
     if (providerList.isEmpty()) {
       throw new RuntimeException("No providers enabled");
     }
+    return providers;
   }
 
   @Override
@@ -158,6 +169,6 @@ public class DynamicIotAccessProvider extends IotAccessBase {
 
   @Override
   public void updateRegistryRegions(Map<String, String> regions) {
-    providers.values().forEach(provider -> provider.updateRegistryRegions(regions));
+    getProviders().values().forEach(provider -> provider.updateRegistryRegions(regions));
   }
 }

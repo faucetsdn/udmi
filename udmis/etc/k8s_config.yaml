@@ -3,5 +3,5 @@ kind: ConfigMap
 metadata:
   name: config
 data:
-  BITBOX_DISCOVERY: prodev~udmi_target-discover
+  BITBOX_DISCOVERY:
   UDMI_NAMESPACE: @UDMI_NAMESPACE@

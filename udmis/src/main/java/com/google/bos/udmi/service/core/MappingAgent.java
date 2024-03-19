@@ -83,7 +83,10 @@ public class MappingAgent extends ProcessorBase {
     if (!generation.equals(cloudModel.timestamp)) {
       String gatewayKey = format(EXPECTED_DEVICE_FORMAT, deviceRegistryId, gatewayId);
       CloudModel fetchedModel = iotAccess.fetchDevice(deviceRegistryId, gatewayId);
-      checkState(fetchedModel.resource_type == Resource_type.GATEWAY, "Device is not a gateway");
+      if (fetchedModel.resource_type != Resource_type.GATEWAY) {
+          warn("Device %s is not a gateway", gatewayId);
+          return null;
+      }
       cloudModel.timestamp = generation;
       cloudModel.device_ids = fetchedModel.device_ids;
       cloudModel.metadata = fetchedModel.metadata;
@@ -103,6 +106,10 @@ public class MappingAgent extends ProcessorBase {
     String gatewayId = envelope.deviceId;
     Date generation = requireNonNull(discoveryEvent.generation, "missing scan generation");
     Map<String, CloudModel> deviceIds = refreshModelDevices(registryId, gatewayId, generation);
+    if (deviceIds == null) {
+      info("Onboarding disabled for %s/%s", registryId, gatewayId);
+      return;
+    }
     ProtocolFamily family = requireNonNull(discoveryEvent.scan_family, "missing scan_family");
     String addr = requireNonNull(discoveryEvent.scan_addr, "missing scan_addr");
     String expectedId = format(EXPECTED_DEVICE_FORMAT, family, addr);
