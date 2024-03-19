@@ -2016,8 +2016,8 @@ public class SequenceBase {
     addToParity(parity, "localnet", deviceConfig.localnet, deviceState.localnet);
     addToParity(parity, "discovery", deviceConfig.discovery, deviceState.discovery);
     addToParity(parity, "blobset", deviceConfig.blobset, deviceState.blobset);
-    return ifTrueGet(parity.isEmpty(), null,
-        "config/state subblock mismatch: " + CSV_JOINER.join(parity));
+    return ifTrueGet(parity.isEmpty(), (String) null,
+        () -> "config/state subblock mismatch: " + CSV_JOINER.join(parity));
   }
 
   private void addToParity(List<String> parity, String block, Object config, Object state) {
