@@ -53,14 +53,14 @@ public class ConfigSequences extends SequenceBase {
   @Summary("Check that last_update state is correctly set in response to a config update.")
   @ValidateSchema(SubFolder.SYSTEM)
   public void system_last_update() {
-    untilTrue("state last_config matches first config timestamp", this::lastConfigUpdated);
-    untilTrue("state update complete", this::deviceStateComplete);
+    waitFor("state last_config matches config timestamp", this::lastConfigUpdated);
+    waitFor("state update complete", this::stateMatchesConfig);
     forceConfigUpdate("trigger another config update");
-    untilTrue("state last_config matches new config timestamp", this::lastConfigUpdated);
-    untilTrue("state update complete", this::deviceStateComplete);
+    waitFor("state last_config matches config timestamp", this::lastConfigUpdated);
+    waitFor("state update complete", this::stateMatchesConfig);
     forceConfigUpdate("trigger another config update");
-    untilTrue("state last_config matches last config timestamp", this::lastConfigUpdated);
-    untilTrue("state update complete", this::deviceStateComplete);
+    waitFor("state last_config matches config timestamp", this::lastConfigUpdated);
+    waitFor("state update complete", this::stateMatchesConfig);
   }
 
   @Test(timeout = TWO_MINUTES_MS)
