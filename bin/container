@@ -7,6 +7,7 @@ cmd=$2
 shift 2 || usage target { prep, build, push, apply } [--no-check] [repo]
 
 source ${UDMI_ROOT}/etc/shell_common.sh
+cd ${UDMI_ROOT}/${target}
 
 git_branch=$(git rev-parse --abbrev-ref HEAD)
 git_remote=$(git config --get branch.$git_branch.remote) || fail missing git remote
