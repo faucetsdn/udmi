@@ -15,7 +15,6 @@ import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.fromString;
 import static com.google.udmi.util.JsonUtil.parseJson;
 import static com.google.udmi.util.JsonUtil.stringify;
-import static com.google.udmi.util.JsonUtil.toStringMap;
 import static java.lang.String.format;
 import static java.util.Objects.isNull;
 import static java.util.Objects.requireNonNull;
@@ -353,7 +352,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
       sanitizeAttributeMap(attributesMap);
       envelope = convertTo(Envelope.class, attributesMap);
     } catch (Exception e) {
-      attributesMap.put(INVALID_ENVELOPE_KEY, "true");
+      attributesMap.put(INVALID_ENVELOPE_KEY, friendlyStackTrace(e));
       receiveException(attributesMap, messageString, e, null);
       return;
     }
@@ -369,8 +368,10 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   }
 
   private void sanitizeAttributeMap(Map<String, String> attributesMap) {
-    checkState(isNull(attributesMap.get(RAWFOLDER_PROPERTY_KEY)), "found unexpected rawFolder");
     String subFolderRaw = attributesMap.get(SUBFOLDER_PROPERTY_KEY);
+    String rawFolder = attributesMap.get(RAWFOLDER_PROPERTY_KEY);
+    checkState(isNull(rawFolder) || "invalid".equals(subFolderRaw),
+        "found unexpected rawFolder " + rawFolder);
     if (subFolderRaw == null) {
       // Do nothing!
     } else if (subFolderRaw.equals("")) {

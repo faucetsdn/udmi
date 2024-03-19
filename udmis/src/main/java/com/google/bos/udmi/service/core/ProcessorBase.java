@@ -167,8 +167,9 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
     Bundle bundle = bundleException.bundle;
     Map<String, String> errorMap = bundle.attributesMap;
 
-    if (errorMap.containsKey(MessageBase.INVALID_ENVELOPE_KEY)) {
-      reflectInvalidEnvelope(bundleException);
+    String invalid = errorMap.get(MessageBase.INVALID_ENVELOPE_KEY);
+    if (invalid != null) {
+      reflectInvalidEnvelope(bundleException, invalid);
       return;
     }
 
@@ -252,11 +253,10 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
         attributes.deviceRegistryId, attributes.deviceId, lastConfig, attributes.transactionId);
   }
 
-  private void reflectInvalidEnvelope(BundleException bundleException) {
+  private void reflectInvalidEnvelope(BundleException bundleException, String invalid) {
     Map<String, String> envelopeMap = bundleException.bundle.attributesMap;
-    error(format("Reflecting invalid %s/%s for %s", envelopeMap.get(SUBTYPE_PROPERTY_KEY),
-        envelopeMap.get(SUBFOLDER_PROPERTY_KEY),
-        envelopeMap.get(DEVICE_ID_KEY)));
+    error(format("Reflecting invalid %s/%s for %s: %s", envelopeMap.get(SUBTYPE_PROPERTY_KEY),
+        envelopeMap.get(SUBFOLDER_PROPERTY_KEY), envelopeMap.get(DEVICE_ID_KEY), invalid));
     String deviceRegistryId = envelopeMap.get(REGISTRY_ID_PROPERTY_KEY);
     envelopeMap.put("payload", encodeBase64(bundleException.bundle.payload));
     reflectString(deviceRegistryId, stringify(envelopeMap));
