@@ -76,7 +76,7 @@ public class CloudQueryHandler {
   }
 
   private void queryAllRegistries() {
-    Set<String> registries = iotAccess.listRegistries();
+    Set<String> registries = iotAccess.getRegistries();
     DiscoveryEvent discoveryEvent = new DiscoveryEvent();
     discoveryEvent.scan_family = ProtocolFamily.IOT;
     discoveryEvent.generation = query.generation;

@@ -77,7 +77,7 @@ class CloudQueryHandlerTest implements MessageContinuation {
         .sideProcess(envelopeCapture.capture(), controlCapture.capture());
 
     IotAccessBase iotAccess = mock(IotAccessBase.class);
-    doReturn(mockRegistries).when(iotAccess).listRegistries();
+    doReturn(mockRegistries).when(iotAccess).getRegistries();
     controlProcessor.iotAccess = iotAccess;
 
     TargetProcessor targetProcessor = mock(TargetProcessor.class);

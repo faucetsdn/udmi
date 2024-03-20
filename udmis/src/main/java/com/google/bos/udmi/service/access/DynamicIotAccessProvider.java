@@ -45,8 +45,8 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public Set<String> listRegistries() {
-    return getProviders().values().stream().map(IotAccessProvider::listRegistries)
+  public Set<String> getRegistries() {
+    return getProviders().values().stream().map(IotAccessProvider::getRegistries)
         .collect(HashSet::new, HashSet::addAll, HashSet::addAll);
   }
 
