@@ -23,6 +23,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import org.jetbrains.annotations.Nullable;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
 import udmi.schema.CloudModel.Resource_type;
@@ -47,8 +48,13 @@ public class MappingAgent extends ProcessorBase {
     super(config);
   }
 
+  @Nullable
+  private static String getOnboardUntil(CloudModel cloudModel) {
+    return ifNotNullGet(cloudModel.metadata, m -> m.get(UDMI_ONBOARD_UNTIL));
+  }
+
   private static boolean shouldOnboard(Date generation, CloudModel cloudModel) {
-    String timestamp = ifNotNullGet(cloudModel.metadata, m -> m.get(UDMI_ONBOARD_UNTIL));
+    String timestamp = getOnboardUntil(cloudModel);
     Date latest = Date.from(ifNotNullGet(timestamp, JsonUtil::getInstant, DEFALUT_ONBOARD_MARKER));
     Date earliest = Date.from(latest.toInstant().minus(ONBOARDING_MAX_WINDOW));
     return !generation.after(latest) && !generation.before(earliest);
@@ -86,7 +92,8 @@ public class MappingAgent extends ProcessorBase {
     if (!generation.equals(cloudModel.timestamp)) {
       cloudModel.timestamp = generation;
       cloudModel.device_ids = null;
-      CloudModel fetchedModel = catchToNull(() -> iotAccess.fetchDevice(deviceRegistryId, gatewayId));
+      CloudModel fetchedModel =
+          catchToNull(() -> iotAccess.fetchDevice(deviceRegistryId, gatewayId));
       if (fetchedModel == null) {
         warn("Scan device %s/%s not found, ignoring results", deviceRegistryId, gatewayId);
         return null;
@@ -97,8 +104,9 @@ public class MappingAgent extends ProcessorBase {
       }
       cloudModel.metadata = fetchedModel.metadata;
       cloudModel.device_ids = fetchedModel.device_ids;
-      info("Scan device %s/%s generation %s, onboarding %s", deviceRegistryId, gatewayId,
-          isoConvert(generation), shouldOnboard(generation, cloudModel));
+      info("Scan device %s/%s generation %s, onboarding %s until %s", deviceRegistryId, gatewayId,
+          isoConvert(generation), shouldOnboard(generation, cloudModel),
+          getOnboardUntil(cloudModel));
     }
     return ifTrueGet(shouldOnboard(generation, cloudModel), cloudModel.device_ids);
   }
