@@ -1,8 +1,16 @@
 {
-  "configAcked" : true,
   "pointset" : {
     "points" : {
-      "filter_alarm_pressure_status" : { },
+      "filter_alarm_pressure_status" : {
+        "value_state" : "failure",
+        "status" : {
+          "message" : "Point is not writable",
+          "detail" : "Point filter_alarm_pressure_status (writable false)",
+          "category" : "pointset.point.failure",
+          "timestamp" : "2024-03-20T07:13:27Z",
+          "level" : 500
+        }
+      },
       "filter_differential_pressure_setpoint" : {
         "units" : "Bars",
         "value_state" : "applied"
@@ -13,14 +21,14 @@
     }
   },
   "system" : {
-    "last_config" : "2024-03-19T20:47:01Z",
+    "last_config" : "2024-03-20T07:13:26Z",
     "operation" : {
       "operational" : true,
-      "last_start" : "2024-03-19T20:46:43Z",
+      "last_start" : "2024-03-20T07:12:46Z",
       "restart_count" : 1,
       "mode" : "initial"
     },
-    "serial_no" : "sequencer-8373",
+    "serial_no" : "sequencer-7036",
     "hardware" : {
       "make" : "BOS",
       "model" : "pubber"
@@ -30,11 +38,11 @@
     },
     "status" : {
       "message" : "success",
-      "category" : "system.config.parse",
-      "timestamp" : "2024-03-19T20:47:15Z",
-      "level" : 100
+      "category" : "system.config.apply",
+      "timestamp" : "2024-03-20T07:13:27Z",
+      "level" : 300
     }
   },
-  "timestamp" : "2024-03-19T20:47:15Z",
+  "timestamp" : "2024-03-20T07:13:29Z",
   "version" : "1.5.0"
 }
