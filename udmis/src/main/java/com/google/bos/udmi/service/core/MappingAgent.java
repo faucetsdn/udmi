@@ -104,6 +104,10 @@ public class MappingAgent extends ProcessorBase {
       }
       cloudModel.metadata = fetchedModel.metadata;
       cloudModel.device_ids = fetchedModel.device_ids;
+      debug("Scan device %s/%s metadata has %s keys", deviceRegistryId, gatewayId,
+          catchToNull(() -> fetchedModel.metadata.size()));
+      debug("Scan device %s/%s metadata has %s device_ids", deviceRegistryId, gatewayId,
+          catchToNull(() -> fetchedModel.device_ids.size()));
       info("Scan device %s/%s generation %s, onboarding %s until %s", deviceRegistryId, gatewayId,
           isoConvert(generation), shouldOnboard(generation, cloudModel),
           getOnboardUntil(cloudModel));
