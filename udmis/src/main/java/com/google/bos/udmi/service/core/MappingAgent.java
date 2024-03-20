@@ -99,6 +99,10 @@ public class MappingAgent extends ProcessorBase {
     Envelope envelope = getContinuation(discoveryEvent).getEnvelope();
     String registryId = envelope.deviceRegistryId;
     String gatewayId = envelope.deviceId;
+    if (registryId == null || gatewayId == null) {
+      info("Skipping incomplete discovery event for %s/%s", registryId, gatewayId);
+      return;
+    }
     Date generation = requireNonNull(discoveryEvent.generation, "missing scan generation");
     Map<String, CloudModel> deviceIds = refreshModelDevices(registryId, gatewayId, generation);
     if (deviceIds == null) {
