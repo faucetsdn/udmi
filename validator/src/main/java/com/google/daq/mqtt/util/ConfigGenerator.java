@@ -177,19 +177,65 @@ public class ConfigGenerator {
   /**
    * Indicate if this is a gateway device.
    */
-  private boolean isGateway() {
+  public boolean isGateway() {
     return metadata != null
         && metadata.gateway != null
         && metadata.gateway.proxy_ids != null
         && !metadata.gateway.proxy_ids.isEmpty();
   }
 
-  private boolean isProxied() {
+  public boolean isProxied() {
     return getGatewayId() != null;
   }
 
-  private List<String> getProxyDevicesList() {
+  public List<String> getProxyDevicesList() {
     return isGateway() ? metadata.gateway.proxy_ids : null;
   }
 
+  public String getUpdatedTimestamp() {
+    return getTimestampString(metadata.timestamp);
+  }
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
