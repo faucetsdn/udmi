@@ -1,13 +1,13 @@
 package com.google.daq.mqtt.registrar;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.collect.Sets.difference;
 import static com.google.common.collect.Sets.intersection;
 import static com.google.daq.mqtt.util.ConfigUtil.readExeConfig;
 import static com.google.udmi.util.Common.CLOUD_VERSION_KEY;
 import static com.google.udmi.util.Common.NO_SITE;
 import static com.google.udmi.util.Common.UDMI_VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
-import static com.google.udmi.util.GeneralUtils.catchToElse;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
@@ -477,8 +477,9 @@ public class Registrar {
       }
 
       if (explicitDevices != null) {
-        Set<String> unknownLocals = Sets.difference(explicitDevices, localDevices.keySet());
-        Set<String> unknownCloud = Sets.difference(explicitDevices, cloudDevices);
+        Set<String> unknownLocals = difference(explicitDevices, localDevices.keySet());
+        Set<String> unknownCloud = ifNotNullGet(cloudDevices,
+            devices -> difference(explicitDevices, devices), ImmutableSet.of());
         SetView<String> unknowns = Sets.union(unknownCloud, unknownLocals);
         if (!unknowns.isEmpty()) {
           throw new RuntimeException(
@@ -489,7 +490,7 @@ public class Registrar {
       Set<String> operatives = explicitDevices != null ? explicitDevices : localDevices.keySet();
       Set<String> oldDevices = operatives.stream().filter(this::alreadyRegistered)
           .collect(Collectors.toSet());
-      Set<String> newDevices = Sets.difference(operatives, oldDevices);
+      Set<String> newDevices = difference(operatives, oldDevices);
       System.err.printf("Processing %d new devices...%n", newDevices.size());
       int total = processLocalDevices(newDevices);
       System.err.printf("Updating %d existing devices...%n", oldDevices.size());
@@ -498,7 +499,7 @@ public class Registrar {
 
       if (updateCloudIoT) {
         bindGatewayDevices(localDevices);
-        Set<String> extraDevices = Sets.difference(cloudDevices, operatives);
+        Set<String> extraDevices = difference(cloudDevices, operatives);
         System.err.printf("Blocking %d extra devices.%n", extraDevices.size());
         blockedDevices = blockExtraDevices(extraDevices);
       }
@@ -530,7 +531,7 @@ public class Registrar {
       executeDelete(devices, "registered");
     }
     if (expungeDevices) {
-      SetView<String> extras = Sets.difference(cloudDevices, localDevices.keySet());
+      SetView<String> extras = difference(cloudDevices, localDevices.keySet());
       executeDelete(extras, "unknown");
     }
   }
@@ -543,7 +544,7 @@ public class Registrar {
       }
       Set<String> gateways = deviceSet.stream().filter(id -> ifNotNullGet(localDevices.get(id),
           LocalDevice::isGateway, false)).collect(Collectors.toSet());
-      final Set<String> others = Sets.difference(deviceSet, gateways);
+      final Set<String> others = difference(deviceSet, gateways);
 
       final Instant start = Instant.now();
 
