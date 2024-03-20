@@ -1,5 +1,7 @@
 package com.google.bos.udmi.service.core;
 
+import static com.google.udmi.util.JsonUtil.isoConvert;
+import static com.google.udmi.util.MetadataMapKeys.UDMI_ONBOARD_UNTIL;
 import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -12,9 +14,15 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.udmi.util.JsonUtil;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.temporal.TemporalAmount;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -34,6 +42,7 @@ public class MappingAgentTest extends ProcessorTestBase {
   private static final ProtocolFamily SCAN_FAMILY = ProtocolFamily.VENDOR;
   private static final String TARGET_DEVICE = format("%s-%s", SCAN_FAMILY, SCAN_ADDR);
   private static final Date SCAN_GENERATION = new Date();
+  private static final Duration ONBOARDING_WINDOW = Duration.ofMinutes(5);
 
   protected void initializeTestInstance() {
     initializeTestInstance(MappingAgent.class);
@@ -51,6 +60,7 @@ public class MappingAgentTest extends ProcessorTestBase {
     gatewayModel.resource_type = Resource_type.GATEWAY;
     gatewayModel.device_ids = new HashMap<>();
     gatewayModel.device_ids.put(TEST_DEVICE, new CloudModel());
+    gatewayModel.metadata = getGatewayMetadata();
 
     when(provider.listDevices(eq(TEST_REGISTRY))).thenReturn(registryModel);
 
@@ -60,6 +70,10 @@ public class MappingAgentTest extends ProcessorTestBase {
     });
     when(provider.fetchDevice(eq(TEST_REGISTRY), eq(TEST_DEVICE))).thenReturn(deviceModel);
     when(provider.fetchDevice(eq(TEST_REGISTRY), eq(TEST_GATEWAY))).thenReturn(gatewayModel);
+  }
+
+  private Map<String, String> getGatewayMetadata() {
+    return ImmutableMap.of(UDMI_ONBOARD_UNTIL, isoConvert(Instant.now().plus(ONBOARDING_WINDOW)));
   }
 
   private DiscoveryEvent getDiscoveryScanEvent(String targetDeviceId) {

@@ -3,6 +3,7 @@ package com.google.bos.udmi.service.core;
 import static com.google.udmi.util.GeneralUtils.catchToElse;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ignoreValue;
 import static com.google.udmi.util.JsonUtil.isoConvert;
@@ -23,6 +24,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
+import udmi.schema.CloudModel.Resource_type;
 import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.DiscoveryEvent;
 import udmi.schema.EndpointConfiguration;
@@ -64,6 +66,7 @@ public class MappingAgent extends ProcessorBase {
     CloudModel deviceModel = new CloudModel();
     deviceModel.operation = Operation.CREATE;
     deviceModel.blocked = true;
+    ifNullThen(deviceModel.metadata, () -> deviceModel.metadata = new HashMap<>());
     deviceModel.metadata.put(UDMI_DISCOVERED_FROM, stringifyTerse(envelope));
     deviceModel.metadata.put(UDMI_DISCOVERED_WITH, stringifyTerse(discoveryEvent));
     catchToElse(ignoreValue(iotAccess.modelResource(registryId, expectedId, deviceModel)),
@@ -82,6 +85,11 @@ public class MappingAgent extends ProcessorBase {
     if (!generation.equals(cloudModel.timestamp)) {
       cloudModel.timestamp = generation;
       CloudModel fetchedModel = iotAccess.fetchDevice(deviceRegistryId, gatewayId);
+      if (fetchedModel.resource_type != Resource_type.GATEWAY) {
+        warn("Device %s/%s is not a gateway, ignoring results", deviceRegistryId, gatewayId);
+        cloudModel.device_ids = null;
+        return null;
+      }
       cloudModel.metadata = fetchedModel.metadata;
       cloudModel.device_ids = fetchedModel.device_ids;
       info("New scan %s/%s generation %s, onboarding %s", deviceRegistryId, gatewayId,
@@ -105,7 +113,7 @@ public class MappingAgent extends ProcessorBase {
     Date generation = requireNonNull(discoveryEvent.generation, "missing scan generation");
     Map<String, CloudModel> deviceIds = refreshModelDevices(registryId, gatewayId, generation);
     if (deviceIds == null) {
-      info("Onboarding disabled for %s/%s", registryId, gatewayId);
+      info("Scan device %s/%s onboarding disabled", registryId, gatewayId);
       return;
     }
     ProtocolFamily family = requireNonNull(discoveryEvent.scan_family, "missing scan_family");
