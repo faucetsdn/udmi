@@ -1,11 +1,11 @@
 package com.google.bos.udmi.service.core;
 
-import static com.google.api.client.util.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.catchToElse;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ignoreValue;
+import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static com.google.udmi.util.MetadataMapKeys.UDMI_DISCOVERED_FROM;
 import static com.google.udmi.util.MetadataMapKeys.UDMI_DISCOVERED_WITH;
@@ -23,7 +23,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
-import udmi.schema.CloudModel.Resource_type;
 import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.DiscoveryEvent;
 import udmi.schema.EndpointConfiguration;
@@ -46,7 +45,7 @@ public class MappingAgent extends ProcessorBase {
   }
 
   private static boolean shouldOnboard(Date generation, CloudModel cloudModel) {
-    String timestamp = cloudModel.metadata.get(UDMI_ONBOARD_UNTIL);
+    String timestamp = ifNotNullGet(cloudModel.metadata, m -> m.get(UDMI_ONBOARD_UNTIL));
     Date latest = Date.from(ifNotNullGet(timestamp, JsonUtil::getInstant, DEFALUT_ONBOARD_MARKER));
     Date earliest = Date.from(latest.toInstant().minus(ONBOARDING_MAX_WINDOW));
     return !generation.after(latest) && !generation.before(earliest);
@@ -85,10 +84,10 @@ public class MappingAgent extends ProcessorBase {
       CloudModel fetchedModel = iotAccess.fetchDevice(deviceRegistryId, gatewayId);
       cloudModel.metadata = fetchedModel.metadata;
       cloudModel.device_ids = fetchedModel.device_ids;
-      info("New scan %s/%s generation %s, onboarding %s", deviceRegistryId, gatewayId, generation,
-          shouldOnboard(generation, cloudModel));
+      info("New scan %s/%s generation %s, onboarding %s", deviceRegistryId, gatewayId,
+          isoConvert(generation), shouldOnboard(generation, cloudModel));
     }
-    return ifTrueGet(shouldOnboard(generation, cloudModel), cloudModel.device_ids, null);
+    return ifTrueGet(shouldOnboard(generation, cloudModel), cloudModel.device_ids);
   }
 
   /**

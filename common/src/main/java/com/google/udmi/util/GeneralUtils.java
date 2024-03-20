@@ -302,10 +302,7 @@ public class GeneralUtils {
   }
 
   public static <T> T ifTrueGet(Supplier<Boolean> conditional, Supplier<T> action) {
-    if (isTrue(conditional)) {
-      return action.get();
-    }
-    return null;
+    return isTrue(conditional) ? action.get() : null;
   }
 
   public static <T> T ifTrueGet(Object conditional, Supplier<T> action, Supplier<T> alternate) {
@@ -318,6 +315,10 @@ public class GeneralUtils {
 
   public static <T> T ifTrueGet(Object conditional, T value, Supplier<T> alternate) {
     return isTrue(conditional) ? value : alternate.get();
+  }
+
+  public static <T> T ifTrueGet(Object conditional, T value, T alternate) {
+    return isTrue(conditional) ? value : alternate;
   }
 
   public static <T> void ifTrueThen(Object conditional, Runnable action) {
