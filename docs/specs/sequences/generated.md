@@ -263,17 +263,17 @@ Check that the device correctly handles an extra out-of-schema field
 ## family_ether_addr (PREVIEW)
 
 1. Wait for localnet family state ether available
-1. Check that device family ether address matches
+1. Check that family ether address matches
 
 ## family_ipv4_addr (PREVIEW)
 
 1. Wait for localnet family state ipv4 available
-1. Check that device family ipv4 address matches
+1. Check that family ipv4 address matches
 
 ## family_ipv6_addr (PREVIEW)
 
 1. Wait for localnet family state ipv6 available
-1. Test failed: Timeout waiting for localnet family state ipv6 available
+1. Check that family ipv6 address matches
 
 ## feature_enumeration (PREVIEW)
 

@@ -1,4 +1,12 @@
 {
+  "localnet" : {
+    "families" : {
+      "ether" : { },
+      "ipv4" : { },
+      "ipv6" : { },
+      "vendor" : { }
+    }
+  },
   "pointset" : {
     "points" : {
       "filter_alarm_pressure_status" : {
@@ -19,12 +27,12 @@
     "metrics_rate_sec" : 10,
     "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2024-03-20T13:10:11Z"
+      "last_start" : "2024-03-20T17:30:55Z"
     },
     "testing" : {
       "sequence_name" : "family_ipv6_addr"
     }
   },
-  "timestamp" : "2024-03-20T13:11:02Z",
+  "timestamp" : "2024-03-20T17:31:47Z",
   "version" : "1.5.0-55-g604ba10b1"
 }

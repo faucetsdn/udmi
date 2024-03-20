@@ -1,14 +1,14 @@
 {
-  "configAcked" : false,
+  "configAcked" : true,
   "system" : {
-    "last_config" : "2024-03-20T09:18:47Z",
+    "last_config" : "2024-03-20T17:17:08Z",
     "operation" : {
       "operational" : true,
-      "last_start" : "2024-03-20T09:17:52Z",
+      "last_start" : "2024-03-20T17:16:04Z",
       "restart_count" : 2,
       "mode" : "active"
     },
-    "serial_no" : "sequencer-919",
+    "serial_no" : "sequencer-28949",
     "hardware" : {
       "make" : "BOS",
       "model" : "pubber"
@@ -19,10 +19,10 @@
     "status" : {
       "message" : "success",
       "category" : "system.config.apply",
-      "timestamp" : "2024-03-20T09:18:47Z",
+      "timestamp" : "2024-03-20T17:17:08Z",
       "level" : 300
     }
   },
-  "timestamp" : "2024-03-20T09:18:48Z",
+  "timestamp" : "2024-03-20T17:17:08Z",
   "version" : "1.5.0"
 }
