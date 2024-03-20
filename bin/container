@@ -114,16 +114,19 @@ if [[ -n $push ]]; then
     hash=$(docker images --digests ${udmi_ref%:*} | fgrep $udmi_tag | awk '{print $3}')
     ihash=$udmi_ref@$hash
     for file in $TEMPLATES; do
-        cp etc/$file tmp/$file
-        sed -i tmp/$file \
+        out_file=tmp/$file
+        src_file=etc/$file
+        alt_file=etc/${UDMI_NAMESPACE}~$file
+        [[ -f $alt_file ]] && src_file=$alt_file
+        sed < $src_file > $out_file \
             -e "s^@IMAGE@^$ihash^" \
             -e "s^@TARGET@^$target^" \
             -e "s^@UDMI_NAMESPACE@^$UDMI_NAMESPACE^" \
             -e "s^@GCP_PROJECT@^$GCP_PROJECT^"
-        if diff etc/$file tmp/$file; then
-            rm tmp/$file
+        if diff $src_file $out_file; then
+            rm $out_file
         else
-            echo Customized output in tmp/$file
+            echo Customized output in $out_file from $src_file
         fi
     done
     echo Done with container build.
