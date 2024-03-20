@@ -88,16 +88,16 @@ public class MappingAgent extends ProcessorBase {
       cloudModel.device_ids = null;
       CloudModel fetchedModel = catchToNull(() -> iotAccess.fetchDevice(deviceRegistryId, gatewayId));
       if (fetchedModel == null) {
-        warn("Device %s/%s not found, ignoring results", deviceRegistryId, gatewayId);
+        warn("Scan device %s/%s not found, ignoring results", deviceRegistryId, gatewayId);
         return null;
       }
       if (fetchedModel.resource_type != Resource_type.GATEWAY) {
-        warn("Device %s/%s is not a gateway, ignoring results", deviceRegistryId, gatewayId);
+        warn("Scan device %s/%s is not a gateway, ignoring results", deviceRegistryId, gatewayId);
         return null;
       }
       cloudModel.metadata = fetchedModel.metadata;
       cloudModel.device_ids = fetchedModel.device_ids;
-      info("New scan %s/%s generation %s, onboarding %s", deviceRegistryId, gatewayId,
+      info("Scan device %s/%s generation %s, onboarding %s", deviceRegistryId, gatewayId,
           isoConvert(generation), shouldOnboard(generation, cloudModel));
     }
     return ifTrueGet(shouldOnboard(generation, cloudModel), cloudModel.device_ids);
@@ -125,9 +125,9 @@ public class MappingAgent extends ProcessorBase {
     String addr = requireNonNull(discoveryEvent.scan_addr, "missing scan_addr");
     String expectedId = format(EXPECTED_DEVICE_FORMAT, family, addr);
     if (deviceIds.containsKey(expectedId)) {
-      debug("Scan %s/%s device %s already registered", registryId, gatewayId, expectedId);
+      debug("Scan device %s/%s target %s already registered", registryId, gatewayId, expectedId);
     } else {
-      notice("Scan %s/%s device %s missing, creating", registryId, expectedId, gatewayId);
+      notice("Scan device %s/%s target %s missing, creating", registryId, expectedId, gatewayId);
       createDeviceEntry(registryId, expectedId, gatewayId, envelope, discoveryEvent);
       deviceIds.put(expectedId, new CloudModel());
     }

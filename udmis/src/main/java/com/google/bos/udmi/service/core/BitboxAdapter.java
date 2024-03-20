@@ -40,7 +40,7 @@ public class BitboxAdapter extends ProcessorBase {
     }
 
     if (!iotAccess.getRegistries().contains(envelope.deviceRegistryId)) {
-      warn("Registry %s not found, ignoring.", envelope.deviceRegistryId);
+      warn("Registry for %s/%s not found, ignoring.", envelope.deviceRegistryId, envelope.deviceId);
       return;
     }
 
