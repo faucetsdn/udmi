@@ -262,16 +262,22 @@ Check that the device correctly handles an extra out-of-schema field
 
 ## family_ether_addr (PREVIEW)
 
+1. Update config before localnet families available:
+    * Add `localnet` = { "families": { "ether": {  } } }
 1. Wait for localnet families available
 1. Check that device family ether address matches
 
 ## family_ipv4_addr (PREVIEW)
 
+1. Update config before localnet families available:
+    * Add `localnet` = { "families": { "ipv4": {  } } }
 1. Wait for localnet families available
 1. Check that device family ipv4 address matches
 
 ## family_ipv6_addr (PREVIEW)
 
+1. Update config before localnet families available:
+    * Add `localnet` = { "families": { "ipv6": {  } } }
 1. Wait for localnet families available
 1. Check that device family ipv6 address matches
 
@@ -372,13 +378,13 @@ Check that a device publishes correct software information in state messages
 
 Check that last_update state is correctly set in response to a config update.
 
-1. Wait for state last_config matches first config timestamp
+1. Wait for state last_config matches config timestamp
 1. Wait for state update complete
 1. Force config update to trigger another config update
-1. Wait for state last_config matches new config timestamp
+1. Wait for state last_config matches config timestamp
 1. Wait for state update complete
 1. Force config update to trigger another config update
-1. Wait for state last_config matches last config timestamp
+1. Wait for state last_config matches config timestamp
 1. Wait for state update complete
 
 ## valid_serial_no (BETA)

@@ -1,11 +1,81 @@
 {
-  "event_count" : 7,
-  "last_config" : "2023-12-18T11:45:43Z",
-  "logentries" : [ ],
+  "event_count" : 10,
+  "last_config" : "2024-03-19T20:47:26Z",
+  "logentries" : [ {
+    "message" : "2024-03-19T20:47:19Z received config 2024-03-19T20:47:17Z",
+    "category" : "device.log",
+    "timestamp" : "2024-03-19T20:47:19Z",
+    "level" : 200
+  }, {
+    "message" : "success",
+    "category" : "system.config.apply",
+    "timestamp" : "2024-03-19T20:47:19Z",
+    "level" : 300
+  }, {
+    "message" : "Update state 2024-03-19T20:47:20Z last_config 2024-03-19T20:47:17Z",
+    "category" : "device.log",
+    "timestamp" : "2024-03-19T20:47:20Z",
+    "level" : 200
+  }, {
+    "message" : "Device AHU-1 config handler",
+    "category" : "device.log",
+    "timestamp" : "2024-03-19T20:47:20Z",
+    "level" : 200
+  }, {
+    "message" : "2024-03-19T20:47:20Z received config 2024-03-19T20:47:20Z",
+    "category" : "device.log",
+    "timestamp" : "2024-03-19T20:47:20Z",
+    "level" : 200
+  }, {
+    "message" : "success",
+    "category" : "system.config.apply",
+    "timestamp" : "2024-03-19T20:47:20Z",
+    "level" : 300
+  }, {
+    "message" : "Device AHU-1 config handler",
+    "category" : "device.log",
+    "timestamp" : "2024-03-19T20:47:21Z",
+    "level" : 200
+  }, {
+    "message" : "2024-03-19T20:47:21Z received config 2024-03-19T20:47:21Z",
+    "category" : "device.log",
+    "timestamp" : "2024-03-19T20:47:21Z",
+    "level" : 200
+  }, {
+    "message" : "success",
+    "category" : "system.config.apply",
+    "timestamp" : "2024-03-19T20:47:21Z",
+    "level" : 300
+  }, {
+    "message" : "Update state 2024-03-19T20:47:22Z last_config 2024-03-19T20:47:21Z",
+    "category" : "device.log",
+    "timestamp" : "2024-03-19T20:47:22Z",
+    "level" : 200
+  }, {
+    "message" : "Update state 2024-03-19T20:47:26Z last_config 2024-03-19T20:47:21Z",
+    "category" : "device.log",
+    "timestamp" : "2024-03-19T20:47:26Z",
+    "level" : 200
+  }, {
+    "message" : "Device AHU-1 config handler",
+    "category" : "device.log",
+    "timestamp" : "2024-03-19T20:47:26Z",
+    "level" : 200
+  }, {
+    "message" : "2024-03-19T20:47:26Z received config 2024-03-19T20:47:26Z",
+    "category" : "device.log",
+    "timestamp" : "2024-03-19T20:47:26Z",
+    "level" : 200
+  }, {
+    "message" : "success",
+    "category" : "system.config.apply",
+    "timestamp" : "2024-03-19T20:47:26Z",
+    "level" : 300
+  } ],
   "metrics" : {
     "mem_total_mb" : 254.0,
-    "mem_free_mb" : 222.65884399414062
+    "mem_free_mb" : 220.13382720947266
   },
-  "timestamp" : "2023-12-18T11:46:01Z",
-  "version" : "1.4.2"
+  "timestamp" : "2024-03-19T20:47:28Z",
+  "version" : "1.5.0"
 }

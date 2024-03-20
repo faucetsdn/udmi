@@ -1,34 +1,8 @@
 {
-  "discovery" : {
-    "families" : {
-      "virtual" : { }
-    }
-  },
-  "localnet" : {
-    "families" : {
-      "ether" : {
-        "addr" : "40:1c:83:ca:77:54"
-      },
-      "ipv4" : {
-        "addr" : "10.0.0.142"
-      },
-      "ipv6" : {
-        "addr" : "fe80::134f:c1f5:f225:a441"
-      }
-    }
-  },
+  "configAcked" : true,
   "pointset" : {
     "points" : {
-      "filter_alarm_pressure_status" : {
-        "value_state" : "failure",
-        "status" : {
-          "message" : "Point is not writable",
-          "detail" : "Point filter_alarm_pressure_status (writable false)",
-          "category" : "pointset.point.failure",
-          "timestamp" : "2023-07-28T20:35:38Z",
-          "level" : 500
-        }
-      },
+      "filter_alarm_pressure_status" : { },
       "filter_differential_pressure_setpoint" : {
         "units" : "Bars",
         "value_state" : "applied"
@@ -39,14 +13,14 @@
     }
   },
   "system" : {
-    "last_config" : "2023-07-28T20:35:38Z",
+    "last_config" : "2024-03-19T20:47:01Z",
     "operation" : {
       "operational" : true,
-      "last_start" : "2023-07-28T20:23:12Z",
-      "restart_count" : 3,
-      "mode" : "active"
+      "last_start" : "2024-03-19T20:46:43Z",
+      "restart_count" : 1,
+      "mode" : "initial"
     },
-    "serial_no" : "sequencer-13214",
+    "serial_no" : "sequencer-8373",
     "hardware" : {
       "make" : "BOS",
       "model" : "pubber"
@@ -56,11 +30,11 @@
     },
     "status" : {
       "message" : "success",
-      "category" : "system.config.apply",
-      "timestamp" : "2023-07-28T20:35:38Z",
-      "level" : 300
+      "category" : "system.config.parse",
+      "timestamp" : "2024-03-19T20:47:15Z",
+      "level" : 100
     }
   },
-  "timestamp" : "2023-07-28T20:35:40Z",
-  "version" : "1.4.1"
+  "timestamp" : "2024-03-19T20:47:15Z",
+  "version" : "1.5.0"
 }
