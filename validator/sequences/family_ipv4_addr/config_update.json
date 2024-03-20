@@ -1,7 +1,10 @@
 {
   "localnet" : {
     "families" : {
-      "ipv4" : { }
+      "ether" : { },
+      "ipv4" : { },
+      "ipv6" : { },
+      "vendor" : { }
     }
   },
   "pointset" : {
@@ -24,12 +27,12 @@
     "metrics_rate_sec" : 10,
     "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2024-03-19T20:45:47Z"
+      "last_start" : "2024-03-20T09:16:25Z"
     },
     "testing" : {
       "sequence_name" : "family_ipv4_addr"
     }
   },
-  "timestamp" : "2024-03-19T20:47:26Z",
+  "timestamp" : "2024-03-20T09:18:03Z",
   "version" : "1.5.0-55-g604ba10b1"
 }

@@ -262,24 +262,18 @@ Check that the device correctly handles an extra out-of-schema field
 
 ## family_ether_addr (PREVIEW)
 
-1. Update config before localnet families available:
-    * Add `localnet` = { "families": { "ether": {  } } }
-1. Wait for localnet families available
+1. Wait for localnet family state ether available
 1. Check that device family ether address matches
 
 ## family_ipv4_addr (PREVIEW)
 
-1. Update config before localnet families available:
-    * Add `localnet` = { "families": { "ipv4": {  } } }
-1. Wait for localnet families available
+1. Wait for localnet family state ipv4 available
 1. Check that device family ipv4 address matches
 
 ## family_ipv6_addr (PREVIEW)
 
-1. Update config before localnet families available:
-    * Add `localnet` = { "families": { "ipv6": {  } } }
-1. Wait for localnet families available
-1. Check that device family ipv6 address matches
+1. Wait for localnet family state ipv6 available
+1. Test failed: Timeout waiting for localnet family state ipv6 available
 
 ## feature_enumeration (PREVIEW)
 
