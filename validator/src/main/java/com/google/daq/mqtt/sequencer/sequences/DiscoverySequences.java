@@ -307,7 +307,7 @@ public class DiscoverySequences extends SequenceBase {
 
   private String detailScanComplete() {
     return ifNotTrueGet(scanComplete(scanStartTime).test(scanFamily),
-        format("Expected complete %s but %s", scanStartTime, describedFamilyState()));
+        format("Expected complete %s but %s", isoConvert(scanStartTime), describedFamilyState()));
   }
 
   private String invalidReasons(DiscoveryEvent discoveryEvent, Date scanGeneration) {
