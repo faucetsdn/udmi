@@ -26,10 +26,13 @@ public class BitboxAdapterTest extends ProcessorTestBase {
 
   protected void initializeTestInstance() {
     initializeTestInstance(BitboxAdapter.class);
+    MappingAgentTest.initializeProvider(provider);
   }
 
   private Envelope getLegacyEnvelope() {
     Envelope envelope = new Envelope();
+    envelope.deviceRegistryId = TEST_REGISTRY;
+    envelope.deviceId = TEST_GATEWAY;
     envelope.rawFolder = "discover"; // NB: not 'discovery' (ending in 'y')
     return envelope;
   }

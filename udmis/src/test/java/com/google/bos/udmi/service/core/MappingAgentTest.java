@@ -14,11 +14,11 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.google.bos.udmi.service.access.IotAccessBase;
 import com.google.common.collect.ImmutableMap;
-import com.google.udmi.util.JsonUtil;
+import com.google.common.collect.ImmutableSet;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.TemporalAmount;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -47,6 +47,10 @@ public class MappingAgentTest extends ProcessorTestBase {
   protected void initializeTestInstance() {
     initializeTestInstance(MappingAgent.class);
 
+    initializeProvider(provider);
+  }
+
+  static void initializeProvider(IotAccessBase provider) {
     CloudModel registryModel = new CloudModel();
     registryModel.device_ids = new HashMap<>();
 
@@ -62,6 +66,8 @@ public class MappingAgentTest extends ProcessorTestBase {
     gatewayModel.device_ids.put(TEST_DEVICE, new CloudModel());
     gatewayModel.metadata = getGatewayMetadata();
 
+    when(provider.getRegistries()).thenReturn(ImmutableSet.of(TEST_REGISTRY));
+    
     when(provider.listDevices(eq(TEST_REGISTRY))).thenReturn(registryModel);
 
     when(provider.fetchDevice(eq(TEST_REGISTRY), any())).thenAnswer(query -> {
@@ -72,7 +78,7 @@ public class MappingAgentTest extends ProcessorTestBase {
     when(provider.fetchDevice(eq(TEST_REGISTRY), eq(TEST_GATEWAY))).thenReturn(gatewayModel);
   }
 
-  private Map<String, String> getGatewayMetadata() {
+  private static Map<String, String> getGatewayMetadata() {
     return ImmutableMap.of(UDMI_ONBOARD_UNTIL, isoConvert(Instant.now().plus(ONBOARDING_WINDOW)));
   }
 
