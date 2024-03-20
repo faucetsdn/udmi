@@ -11,6 +11,11 @@
       "family": "vendor"
     }
   },
+  "localnet": {
+    "subsystem": {
+      "vendor": { }
+    }
+  },
   "pointset": {
     "points": {
       "split_threshold": {

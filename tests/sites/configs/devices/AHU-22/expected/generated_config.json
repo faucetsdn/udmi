@@ -12,6 +12,11 @@
       "family": "bacnet"
     }
   },
+  "localnet": {
+    "families": {
+      "bacnet": { }
+    }
+  },
   "pointset": {
     "points": {
       "filter_alarm_pressure_status": {
