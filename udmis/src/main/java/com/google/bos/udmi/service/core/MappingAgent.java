@@ -82,17 +82,9 @@ public class MappingAgent extends ProcessorBase {
     CloudModel cloudModel = getCloudModel(deviceRegistryId, gatewayId);
     if (!generation.equals(cloudModel.timestamp)) {
       cloudModel.timestamp = generation;
-      if (!iotAccess.getRegistries().contains(deviceRegistryId)) {
-        warn("Registry %s not found, ignoring.", deviceRegistryId);
-        return null;
-      }
       CloudModel fetchedModel = iotAccess.fetchDevice(deviceRegistryId, gatewayId);
-      if (fetchedModel.resource_type != Resource_type.GATEWAY) {
-        warn("Device %s is not a gateway, ignoring.", gatewayId);
-        return null;
-      }
-      cloudModel.device_ids = fetchedModel.device_ids;
       cloudModel.metadata = fetchedModel.metadata;
+      cloudModel.device_ids = fetchedModel.device_ids;
       info("New scan %s/%s generation %s, onboarding %s", deviceRegistryId, gatewayId, generation,
           shouldOnboard(generation, cloudModel));
     }

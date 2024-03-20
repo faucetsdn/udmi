@@ -38,6 +38,12 @@ public class BitboxAdapter extends ProcessorBase {
     if (!BACNET_PROTOCOL.equals(stringObjectMap.get("protocol"))) {
       return;
     }
+
+    if (!iotAccess.getRegistries().contains(envelope.deviceRegistryId)) {
+      warn("Registry %s not found, ignoring.", envelope.deviceRegistryId);
+      return;
+    }
+
     continuation.publish(convertDiscovery(defaultedMessage));
   }
 
