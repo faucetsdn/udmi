@@ -67,7 +67,7 @@ public class MappingAgentTest extends ProcessorTestBase {
     gatewayModel.metadata = getGatewayMetadata();
 
     when(provider.getRegistries()).thenReturn(ImmutableSet.of(TEST_REGISTRY));
-    
+
     when(provider.listDevices(eq(TEST_REGISTRY))).thenReturn(registryModel);
 
     when(provider.fetchDevice(eq(TEST_REGISTRY), any())).thenAnswer(query -> {

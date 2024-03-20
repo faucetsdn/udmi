@@ -1,6 +1,7 @@
 package com.google.bos.udmi.service.core;
 
 import static com.google.udmi.util.GeneralUtils.catchToElse;
+import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
@@ -84,10 +85,14 @@ public class MappingAgent extends ProcessorBase {
     CloudModel cloudModel = getCloudModel(deviceRegistryId, gatewayId);
     if (!generation.equals(cloudModel.timestamp)) {
       cloudModel.timestamp = generation;
-      CloudModel fetchedModel = iotAccess.fetchDevice(deviceRegistryId, gatewayId);
+      cloudModel.device_ids = null;
+      CloudModel fetchedModel = catchToNull(() -> iotAccess.fetchDevice(deviceRegistryId, gatewayId));
+      if (fetchedModel == null) {
+        warn("Device %s/%s not found, ignoring results");
+        return null;
+      }
       if (fetchedModel.resource_type != Resource_type.GATEWAY) {
         warn("Device %s/%s is not a gateway, ignoring results", deviceRegistryId, gatewayId);
-        cloudModel.device_ids = null;
         return null;
       }
       cloudModel.metadata = fetchedModel.metadata;
