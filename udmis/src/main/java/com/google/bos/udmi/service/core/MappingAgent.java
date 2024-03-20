@@ -88,7 +88,7 @@ public class MappingAgent extends ProcessorBase {
       cloudModel.device_ids = null;
       CloudModel fetchedModel = catchToNull(() -> iotAccess.fetchDevice(deviceRegistryId, gatewayId));
       if (fetchedModel == null) {
-        warn("Device %s/%s not found, ignoring results");
+        warn("Device %s/%s not found, ignoring results", deviceRegistryId, gatewayId);
         return null;
       }
       if (fetchedModel.resource_type != Resource_type.GATEWAY) {
