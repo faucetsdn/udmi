@@ -4,5 +4,18 @@
   "description": "Currently unused: request local network configuration",
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "additionalProperties": false
+  "additionalProperties": false,
+  "properties": {
+    "families": {
+      "description": "Address family config for reporting.",
+      "existingJavaType": "java.util.HashMap<udmi.schema.Common.ProtocolFamily, FamilyLocalnetConfig>",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
+          "$ref": "file:config_localnet_family.json"
+        }
+      }
+    }
+  }
 }
+

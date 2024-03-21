@@ -763,7 +763,7 @@ public class SequenceBase {
 
   private void waitForStateConfigSync() {
     forCapability(LAST_CONFIG,
-        () -> waitFor("state last_config sync", this::lastConfigUpdatedString));
+        () -> waitFor("state last_config sync", this::lastConfigUpdated));
   }
 
   private boolean deviceSupportsState() {
@@ -1341,7 +1341,7 @@ public class SequenceBase {
   protected void checkNotLogged(String category, Level minLevel) {
     withRecordSequence(false, () -> {
       ifTrueThen(deviceSupportsState(), () ->
-          untilTrue("last_config synchronized", this::lastConfigUpdated));
+          waitFor("last_config synchronized", this::lastConfigUpdated));
       processLogMessages();
     });
     final Instant endTime = lastConfigUpdate.plusSeconds(LOG_TIMEOUT_SEC);
@@ -2002,19 +2002,38 @@ public class SequenceBase {
     }
   }
 
-  protected String lastConfigUpdatedString() {
-    return lastConfigUpdated() ? null : "";
+  protected String stateMatchesConfig() {
+    List<String> parity = new ArrayList<>();
+    if (deviceConfig == null) {
+      return "device config is null";
+    }
+    if (deviceState == null) {
+      return "device state is null";
+    }
+    addToParity(parity, "system", deviceConfig.system, deviceState.system);
+    addToParity(parity, "pointset", deviceConfig.pointset, deviceState.pointset);
+    addToParity(parity, "gateway", deviceConfig.gateway, deviceState.gateway);
+    addToParity(parity, "localnet", deviceConfig.localnet, deviceState.localnet);
+    addToParity(parity, "discovery", deviceConfig.discovery, deviceState.discovery);
+    addToParity(parity, "blobset", deviceConfig.blobset, deviceState.blobset);
+    return ifTrueGet(parity.isEmpty(), (String) null,
+        () -> "config/state subblock mismatch: " + CSV_JOINER.join(parity));
   }
 
-  protected boolean deviceStateComplete() {
-    boolean requirePointset = deviceMetadata.pointset != null;
-    return deviceState.system != null && (!requirePointset || deviceState.pointset != null);
+  private void addToParity(List<String> parity, String block, Object config, Object state) {
+    boolean hasConfig = config != null;
+    boolean hasState = state != null;
+    if (hasConfig != hasState) {
+      parity.add(block);
+    }
   }
 
-  protected boolean lastConfigUpdated() {
-    Date expectedConfig = deviceConfig.timestamp;
+  protected String lastConfigUpdated() {
     Date lastConfig = deviceState.system.last_config;
-    return dateEquals(expectedConfig, lastConfig);
+    Date expectedConfig = deviceConfig.timestamp;
+    return dateEquals(expectedConfig, lastConfig) ? null :
+        format("state.system.last_config %s does not match expected config.timestamp %s",
+            isoConvert(lastConfig), isoConvert(expectedConfig));
   }
 
   private Boolean hasInterestingSystemStatus() {

@@ -1,19 +1,17 @@
-"""Generated class for config_localnet.json"""
-from .config_localnet_family import FamilyLocalnetConfig
+"""Generated class for config_localnet_family.json"""
 
 
-class LocalnetConfig:
+class FamilyLocalnetConfig:
   """Generated schema class"""
 
   def __init__(self):
-    self.families = None
+    pass
 
   @staticmethod
   def from_dict(source):
     if not source:
       return None
-    result = LocalnetConfig()
-    result.families = FamilyLocalnetConfig.map_from(source.get('families'))
+    result = FamilyLocalnetConfig()
     return result
 
   @staticmethod
@@ -22,7 +20,7 @@ class LocalnetConfig:
       return None
     result = {}
     for key in source:
-      result[key] = LocalnetConfig.from_dict(source[key])
+      result[key] = FamilyLocalnetConfig.from_dict(source[key])
     return result
 
   @staticmethod
@@ -34,6 +32,4 @@ class LocalnetConfig:
 
   def to_dict(self):
     result = {}
-    if self.families:
-      result['families'] = FamilyLocalnetConfig.expand_dict(self.families) # 2
     return result
