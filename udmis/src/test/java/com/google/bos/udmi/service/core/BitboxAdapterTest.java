@@ -2,11 +2,17 @@ package com.google.bos.udmi.service.core;
 
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.safeSleep;
+import static java.lang.Math.abs;
+import static java.lang.String.format;
+import static java.time.Duration.between;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.common.collect.ImmutableMap;
 import com.google.udmi.util.JsonUtil;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import udmi.schema.Common.ProtocolFamily;
@@ -48,5 +54,8 @@ public class BitboxAdapterTest extends ProcessorTestBase {
     assertEquals(1, captured.size(), "expected only one captured event");
     DiscoveryEvent discoveryEvent = (DiscoveryEvent) captured.get(0);
     assertEquals(ProtocolFamily.BACNET, discoveryEvent.scan_family, "scan_family");
+    long deltaSec = abs(between(discoveryEvent.generation.toInstant(), Instant.now()).toSeconds());
+    long deltaDays = deltaSec / 60 / 60 / 24;
+    assertTrue(deltaDays < 14, format("generation too far off, was %s days", deltaDays));
   }
 }

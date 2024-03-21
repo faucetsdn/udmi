@@ -59,6 +59,6 @@ public class BitboxAdapter extends ProcessorBase {
    */
   private Date fabricateGeneration() {
     long seconds = Instant.now().getEpochSecond();
-    return new Date(seconds - seconds % FAKE_GENERATION_SEC);
+    return Date.from(Instant.ofEpochSecond(seconds - seconds % FAKE_GENERATION_SEC));
   }
 }
