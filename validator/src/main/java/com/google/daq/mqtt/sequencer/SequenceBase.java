@@ -962,9 +962,10 @@ public class SequenceBase {
   }
 
   private void recordRawMessage(Envelope attributes, Map<String, Object> message) {
-    if (testName == null) {
+    if (testName == null || !recordMessages) {
       return;
     }
+
     String messageBase = makeMessageBase(attributes);
     String timestamp = message == null ? getTimestamp() : (String) message.get("timestamp");
     if (traceLogLevel()) {
@@ -1407,6 +1408,7 @@ public class SequenceBase {
       try {
         action.run();
       } catch (Exception e) {
+        recordMessages = false;
         catcher.accept(e);
         String detail = ifNotNullGet(detailer, Supplier::get);
         ifNotNullThen(detail, this::waitingConditionDetail);
