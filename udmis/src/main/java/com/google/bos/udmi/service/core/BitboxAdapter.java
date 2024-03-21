@@ -1,5 +1,7 @@
 package com.google.bos.udmi.service.core;
 
+import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
+
 import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.udmi.util.JsonUtil;
 import java.time.Instant;
@@ -34,11 +36,6 @@ public class BitboxAdapter extends ProcessorBase {
     Envelope envelope = continuation.getEnvelope();
     envelope.rawFolder = null;
 
-    Map<String, Object> stringObjectMap = JsonUtil.asMap(defaultedMessage);
-    if (!BACNET_PROTOCOL.equals(stringObjectMap.get("protocol"))) {
-      return;
-    }
-
     if (!iotAccess.getRegistries().contains(envelope.deviceRegistryId)) {
       warn("Registry for %s/%s not found, ignoring.", envelope.deviceRegistryId, envelope.deviceId);
       return;
@@ -48,10 +45,21 @@ public class BitboxAdapter extends ProcessorBase {
   }
 
   private DiscoveryEvent convertDiscovery(Object defaultedMessage) {
-    DiscoveryEvent discoveryEvent = new DiscoveryEvent();
-    discoveryEvent.scan_family = ProtocolFamily.BACNET;
-    discoveryEvent.generation = fabricateGeneration();
-    return discoveryEvent;
+    try {
+      Map<String, Object> map = JsonUtil.asMap(defaultedMessage);
+      if (!"bitbox_bacnet".equals(map.get("type"))) {
+        return null;
+      }
+
+      DiscoveryEvent discoveryEvent = new DiscoveryEvent();
+      discoveryEvent.scan_family = ProtocolFamily.fromValue((String) map.get("protocol"));
+      discoveryEvent.scan_addr = (String) map.get("id");
+      discoveryEvent.generation = fabricateGeneration();
+      return discoveryEvent;
+    } catch (Exception e) {
+      error("While converting legacy message to DiscoveryEvent: " + friendlyStackTrace(e));
+      return null;
+    }
   }
 
   /**
