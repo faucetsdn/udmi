@@ -241,7 +241,7 @@ public class SequenceBase {
       "timestamp", "system.last_config", "system.status");
   private static final long EVENT_WAIT_DELAY_MS = 1000;
   private static final Duration STATE_TIMESTAMP_ERROR_THRESHOLD = Duration.ofMinutes(20);
-  private static final boolean ALLOW_PARTIAL_UPDATE = false;
+  private boolean allowPartialUpdates;
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -732,6 +732,7 @@ public class SequenceBase {
     // TODO: Minimize time, or better yet find deterministic way to flush messages.
     safeSleep(CONFIG_UPDATE_DELAY_MS);
 
+    allowPartialUpdates = false;
     configAcked = false;
     enforceSerial = false;
     recordMessages = true;
@@ -756,6 +757,7 @@ public class SequenceBase {
 
     waitForStateConfigSync();
 
+    allowPartialUpdates = true;
     recordSequence = true;
     waitingConditionStart("executing test");
 
@@ -798,7 +800,7 @@ public class SequenceBase {
         setExtraField(RESET_CONFIG_MARKER);
         deviceConfig.system.testing.sequence_name = RESET_CONFIG_MARKER;
         SENT_CONFIG_DIFFERNATOR.resetState(deviceConfig);
-        if (ALLOW_PARTIAL_UPDATE) {
+        if (allowPartialUpdates) {
           updateConfig("full reset");
           untilHasInterestingSystemStatus(false);
         }
@@ -1136,7 +1138,7 @@ public class SequenceBase {
     assertConfigIsNotPending();
     // Add a forced sleep to make sure second-quantized timestamps are unique.
     safeSleep(CONFIG_BARRIER_MS);
-    if (ALLOW_PARTIAL_UPDATE) {
+    if (allowPartialUpdates) {
       updateConfig(SubFolder.SYSTEM, augmentConfig(deviceConfig.system));
       updateConfig(SubFolder.POINTSET, deviceConfig.pointset);
       updateConfig(SubFolder.GATEWAY, deviceConfig.gateway);
@@ -1144,7 +1146,7 @@ public class SequenceBase {
       updateConfig(SubFolder.BLOBSET, deviceConfig.blobset);
       updateConfig(SubFolder.DISCOVERY, deviceConfig.discovery);
     }
-    if (!ALLOW_PARTIAL_UPDATE || (!configIsPending() && force)) {
+    if (!allowPartialUpdates || (!configIsPending() && force)) {
       debug("Forcing config update");
       sentConfig.remove(SubFolder.UPDATE);
       updateConfig(SubFolder.UPDATE, deviceConfig);
