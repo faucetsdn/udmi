@@ -5,6 +5,11 @@
     "min_loglevel": 300,
     "metrics_rate_sec": 10
   },
+  "localnet": {
+    "subsystem": {
+      "vendor": { }
+    }
+  },
   "pointset": {
     "points": {
       "filter_alarm_pressure_status": {

@@ -59,7 +59,7 @@ rm -rf $UDMI_ROOT/pubber/out/$serial_no
 echo Building pubber...
 $UDMI_ROOT/pubber/bin/build
 
-echo Running tools version `(cd $UDMI_ROOT; git describe)`
+echo Running tools version $udmi_version
 
 for option in $*; do
     if [[ $option == *"="* ]]; then
