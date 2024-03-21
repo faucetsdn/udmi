@@ -4,11 +4,12 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.util.NetworkFamily.NAMED_FAMILIES;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
+import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThrow;
 import static com.google.udmi.util.GeneralUtils.isTrue;
-import static com.google.udmi.util.JsonUtil.getTimestampString;
+import static com.google.udmi.util.JsonUtil.isoConvert;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
@@ -18,6 +19,7 @@ import java.util.List;
 import org.jetbrains.annotations.NotNull;
 import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.Config;
+import udmi.schema.FamilyLocalnetConfig;
 import udmi.schema.GatewayConfig;
 import udmi.schema.LocalnetConfig;
 import udmi.schema.Metadata;
@@ -164,7 +166,14 @@ public class ConfigGenerator {
   }
 
   private LocalnetConfig getDeviceLocalnetConfig() {
-    return null;
+    if (metadata.localnet == null) {
+      return null;
+    }
+    LocalnetConfig localnetConfig = new LocalnetConfig();
+    localnetConfig.families = new HashMap<>();
+    metadata.localnet.families.keySet()
+        .forEach(family -> localnetConfig.families.put(family, new FamilyLocalnetConfig()));
+    return localnetConfig;
   }
 
   /**
@@ -186,7 +195,7 @@ public class ConfigGenerator {
   }
 
   public String getUpdatedTimestamp() {
-    return getTimestampString(metadata.timestamp);
+    return isoConvert(metadata.timestamp);
   }
 
 }

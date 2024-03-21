@@ -1,5 +1,7 @@
 package daq.pubber;
 
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
 
 import com.google.common.collect.ImmutableMap;
@@ -10,6 +12,7 @@ import java.util.stream.Collectors;
 import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.FamilyDiscovery;
 import udmi.schema.FamilyLocalnetState;
+import udmi.schema.LocalnetConfig;
 import udmi.schema.LocalnetState;
 import udmi.schema.PubberConfiguration;
 
@@ -26,6 +29,7 @@ public class LocalnetManager extends ManagerBase implements ManagerHost {
           ProtocolFamily.ETHER, IpProvider.class);
   private final LocalnetState localnetState;
   private final Map<ProtocolFamily, FamilyProvider> localnetProviders;
+  private LocalnetConfig localnetConfig;
 
   /**
    * Create a new container with the given host.
@@ -70,7 +74,11 @@ public class LocalnetManager extends ManagerBase implements ManagerHost {
 
   protected void update(ProtocolFamily family, FamilyLocalnetState stateEntry) {
     localnetState.families.put(family, stateEntry);
-    updateState(localnetState);
+    updateState();
+  }
+
+  private void updateState() {
+    updateState(ifNotNullGet(localnetConfig, c -> localnetState, LocalnetState.class));
   }
 
   @Override
@@ -80,5 +88,10 @@ public class LocalnetManager extends ManagerBase implements ManagerHost {
 
   public void setSiteModel(SiteModel siteModel) {
     ((VendorProvider) localnetProviders.get(ProtocolFamily.VENDOR)).setSiteModel(siteModel);
+  }
+
+  public void updateConfig(LocalnetConfig localnet) {
+    localnetConfig = localnet;
+    updateState();
   }
 }
