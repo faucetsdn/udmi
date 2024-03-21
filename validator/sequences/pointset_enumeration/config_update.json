@@ -1,7 +1,15 @@
 {
   "discovery" : {
     "enumerate" : {
-      "uniqs" : true
+      "points" : true
+    }
+  },
+  "localnet" : {
+    "families" : {
+      "ether" : { },
+      "ipv4" : { },
+      "ipv6" : { },
+      "vendor" : { }
     }
   },
   "pointset" : {
@@ -24,12 +32,12 @@
     "metrics_rate_sec" : 10,
     "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2024-02-18T18:16:52Z"
+      "last_start" : "2024-03-21T16:41:36Z"
     },
     "testing" : {
       "sequence_name" : "pointset_enumeration"
     }
   },
-  "timestamp" : "2024-02-18T18:17:20Z",
-  "version" : "1.5.0-16-g48397c75b"
+  "timestamp" : "2024-03-21T16:42:05Z",
+  "version" : "1.5.0-55-g604ba10b1"
 }

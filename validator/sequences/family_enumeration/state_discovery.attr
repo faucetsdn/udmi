@@ -1,10 +1,10 @@
 {
   "deviceId" : "AHU-1",
   "deviceNumId" : "123456789101112",
-  "deviceRegistryId" : "grafnu~ZZ-TRI-FECTA_3",
+  "deviceRegistryId" : "grafnu~ZZ-TRI-FECTA_5",
   "projectId" : "bos-platform-dev",
-  "transactionId" : "PS:9001729180133517-1",
-  "publishTime" : "2023-11-07T14:29:13Z",
+  "transactionId" : "PS:9536568564919922-1",
+  "publishTime" : "2024-03-21T16:40:50Z",
   "subFolder" : "discovery",
   "subType" : "state"
 }

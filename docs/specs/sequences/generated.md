@@ -72,8 +72,8 @@ Check that the device correctly handles a broken (non-json) config message.
 1. Wait for initial state synchronized
 1. Check that initial stable_config matches last_config
 1. Wait for log category `system.config.apply` level `NOTICE` to be logged
-1. Wait for has applicable system status
-1. Check that applicable system status
+1. Wait for has significant system status
+1. Check that significant system status exists
 1. Wait for log category `system.config.receive` level `DEBUG` to be logged
 1. Wait for log category `system.config.parse` level `ERROR` to be logged
 1. Check that log category `system.config.apply` level `NOTICE` not logged
@@ -118,9 +118,9 @@ Check enumeration of nothing at all
 1. Update config before cleared enumeration generation:
     * Remove `discovery.generation`
 1. Wait for cleared enumeration generation
-1. Check that no family enumeration
-1. Check that no feature enumeration
-1. Check that no point enumeration
+1. Check that no family enumeration exists
+1. Check that no feature enumeration exists
+1. Check that no point enumeration exists
 
 ## endpoint_connection_error (PREVIEW)
 
@@ -247,11 +247,11 @@ Check that the device correctly handles an extra out-of-schema field
     * Set `system.min_loglevel` = `100`
 1. Wait for last_config not null
 1. Wait for system operational
-1. Check that no applicable system status
+1. Check that no significant system status exists
 1. Wait for log category `system.config.receive` level `DEBUG` to be logged
 1. Wait for last_config updated
 1. Wait for system operational
-1. Check that no applicable system status
+1. Check that no significant system status exists
 1. Wait for log category `system.config.parse` level `DEBUG` to be logged
 1. Wait for log category `system.config.apply` level `NOTICE` to be logged
 1. Wait for log category `system.config.receive` level `DEBUG` to be logged
@@ -288,10 +288,10 @@ Check enumeration of device features
 1. Update config before cleared enumeration generation:
     * Remove `discovery.generation`
 1. Wait for cleared enumeration generation
-1. Check that no family enumeration
+1. Check that no family enumeration exists
 1. Check that feature enumeration matches metadata
 1. Check that all enumerated features are official buckets
-1. Check that no point enumeration
+1. Check that no point enumeration exists
 
 ## gateway_proxy_events (BETA)
 

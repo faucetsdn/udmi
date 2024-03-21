@@ -2,7 +2,7 @@
   "min_loglevel" : 100,
   "metrics_rate_sec" : 10,
   "operation" : {
-    "last_start" : "2023-11-29T20:08:20Z"
+    "last_start" : "2024-03-21T16:38:31Z"
   },
   "testing" : {
     "sequence_name" : "extra_config"
