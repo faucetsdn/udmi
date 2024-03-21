@@ -21,7 +21,7 @@ import udmi.schema.Envelope;
 public class BitboxAdapter extends ProcessorBase {
 
   private static final String BACNET_PROTOCOL = "bacnet";
-  private static final int FAKE_GENERATION_SEC = 10 * 60;
+  private static final int FAKE_GENERATION_SEC = 60 * 60;
 
   public BitboxAdapter(EndpointConfiguration config) {
     super(config);
