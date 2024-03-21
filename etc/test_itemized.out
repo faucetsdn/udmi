@@ -20,7 +20,7 @@
 16 RESULT pass system broken_config BETA 4/5 Sequence complete
 17 CPBLTY fail system broken_config.logging ALPHA 0/1 While log category `system.config.receive` level `DEBUG` to be logged
 17 RESULT fail system broken_config BETA 0/5 expected:<system.config.[parse]> but was:<system.config.[apply]>
-18 RESULT fail system system_last_update STABLE 0/5 Because config/state subblock mismatch: pointset
+18 RESULT pass system system_last_update STABLE 5/5 Sequence complete
 19 RESULT pass system system_last_update STABLE 5/5 Sequence complete
 20 RESULT fail system state_make_model BETA 0/5 Because deviceState.system not defined
 24 RESULT skip system valid_serial_no BETA 0/0 State testing disabled
