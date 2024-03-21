@@ -70,10 +70,13 @@ public abstract class JsonUtil {
    * @param input input object
    * @return input as map object
    */
+  @SuppressWarnings("unchecked")
   public static Map<String, Object> asMap(Object input) {
-    @SuppressWarnings("unchecked")
-    Map<String, Object> map = convertTo(TreeMap.class, input);
-    return map;
+    if (input instanceof Map) {
+      return (Map<String, Object>) input;
+    } else {
+      return convertTo(TreeMap.class, input);
+    }
   }
 
   /**

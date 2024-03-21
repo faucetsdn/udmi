@@ -5,15 +5,15 @@ import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.udmi.util.JsonUtil;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.time.temporal.Temporal;
-import java.time.temporal.TemporalUnit;
 import java.util.Date;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
 import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.DiscoveryEvent;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
+import udmi.schema.PointDiscovery;
 
 /**
  * Adapter class for consuming raw bitbox (non-UDMI format) messages and rejiggering them to conform
@@ -55,11 +55,18 @@ public class BitboxAdapter extends ProcessorBase {
       discoveryEvent.scan_family = ProtocolFamily.fromValue((String) map.get("protocol"));
       discoveryEvent.scan_addr = (String) map.get("id");
       discoveryEvent.generation = fabricateGeneration();
+      discoveryEvent.points = extractPoints(map.get("data"));
       return discoveryEvent;
     } catch (Exception e) {
       error("While converting legacy message to DiscoveryEvent: " + friendlyStackTrace(e));
       return null;
     }
+  }
+
+  private Map<String, PointDiscovery> extractPoints(Object data) {
+    Map<String, Object> map = JsonUtil.asMap(data);
+    return map.entrySet().stream().map(this::pointMapper)
+        .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
   }
 
   /**
@@ -68,5 +75,15 @@ public class BitboxAdapter extends ProcessorBase {
   private Date fabricateGeneration() {
     long seconds = Instant.now().getEpochSecond();
     return Date.from(Instant.ofEpochSecond(seconds - seconds % FAKE_GENERATION_SEC));
+  }
+
+  private Entry<String, PointDiscovery> pointMapper(Entry<String, Object> rawInput) {
+    String ref = rawInput.getKey();
+    Map<String, String> pointMap = JsonUtil.toStringMap(rawInput.getValue());
+    String pointName = pointMap.get("object-name");
+    PointDiscovery pointDiscovery = new PointDiscovery();
+    pointDiscovery.ref = ref;
+    pointDiscovery.ancillary = JsonUtil.toMap(rawInput.getValue());
+    return Map.entry(pointName, pointDiscovery);
   }
 }

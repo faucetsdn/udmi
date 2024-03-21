@@ -14,10 +14,12 @@ import com.google.udmi.util.JsonUtil;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
+import java.util.Map.Entry;
 import org.junit.jupiter.api.Test;
 import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.DiscoveryEvent;
 import udmi.schema.Envelope;
+import udmi.schema.PointDiscovery;
 
 /**
  * Test the basic bitbox legacy discovery adapter.
@@ -25,6 +27,8 @@ import udmi.schema.Envelope;
 public class BitboxAdapterTest extends ProcessorTestBase {
 
   private static final String BITBOX_DISCOVERY_JSON = "src/test/messages/bitbox_discovery.json";
+  private static final String POINT_NAME = "run_1";
+  private static final String POINT_REF = "binary-value_4";
   private final Map<String, Object> bitboxDiscovery = JsonUtil.loadMap(BITBOX_DISCOVERY_JSON);
   private final Map<String, Object> otherMessage = ImmutableMap.of(
       "timestamp", isoConvert(),
@@ -57,5 +61,8 @@ public class BitboxAdapterTest extends ProcessorTestBase {
     long deltaSec = abs(between(discoveryEvent.generation.toInstant(), Instant.now()).toSeconds());
     long deltaDays = deltaSec / 60 / 60 / 24;
     assertTrue(deltaDays < 14, format("generation too far off, was %s days", deltaDays));
+
+    PointDiscovery mapped = discoveryEvent.points.get(POINT_NAME);
+    assertEquals(POINT_REF, mapped.ref, "first extracted point ref");
   }
 }
