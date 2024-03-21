@@ -1,6 +1,5 @@
 package com.google.bos.udmi.service.core;
 
-import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.toDate;
@@ -125,15 +124,15 @@ public class CloudQueryHandler {
     debug("Registry %s had %d devices (%d active)", deviceRegistryId, discoveryEvent.devices.size(),
         active.size());
 
-    ifTrueThen(shouldDetailDevices(), () -> active.forEach(this::issueModifiedDevice));
+    ifTrueThen(shouldDetailEntries(), () -> active.forEach(this::issueModifiedDevice));
   }
 
-  private boolean shouldDetailDevices() {
+  private boolean shouldDetailEntries() {
     return Depth.DETAILS == query.depth;
   }
 
   private boolean shouldTraverseRegistries() {
-    return (Depth.ENTRIES == query.depth) || shouldDetailDevices();
+    return (Depth.ENTRIES == query.depth) || shouldDetailEntries();
   }
 
   /**
@@ -143,12 +142,9 @@ public class CloudQueryHandler {
     query = newQuery;
     envelope = controller.getContinuation(newQuery).getEnvelope();
 
-    // If the query.depth is not defined then default to recursing down one level.
     if (envelope.deviceRegistryId == null) {
-      ifNullThen(newQuery.depth, () -> newQuery.depth = Depth.ENTRIES);
       queryAllRegistries();
     } else if (envelope.deviceId == null) {
-      ifNullThen(newQuery.depth, () -> newQuery.depth = Depth.DETAILS);
       queryRegistryDevices();
     } else {
       queryDeviceDetails();
