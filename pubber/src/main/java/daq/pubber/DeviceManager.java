@@ -81,6 +81,7 @@ public class DeviceManager extends ManagerBase {
     systemManager.updateConfig(config.system, config.timestamp);
     gatewayManager.updateConfig(config.gateway);
     discoveryManager.updateConfig(config.discovery);
+    localnetManager.updateConfig(config.localnet);
   }
 
   /**

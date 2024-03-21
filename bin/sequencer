@@ -66,8 +66,6 @@ fi
 registry_suffix=null
 alt_registry=null
 
-udmi_version=`git describe --always --dirty`
-
 sequences=
 for test_name in "$@"; do
     sequences+=\"$test_name\",

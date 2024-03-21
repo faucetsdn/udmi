@@ -1,10 +1,10 @@
 {
   "deviceId" : "AHU-1",
   "deviceNumId" : "123456789101112",
-  "deviceRegistryId" : "peringknife~ZZ-TRI-FECTA",
+  "deviceRegistryId" : "grafnu~ZZ-TRI-FECTA_0",
   "projectId" : "bos-platform-dev",
-  "transactionId" : "PS:9792646882707524-0",
-  "publishTime" : "2023-12-08T05:50:09Z",
+  "transactionId" : "PS:10726586394941999-0",
+  "publishTime" : "2024-03-19T20:46:09Z",
   "subFolder" : "system",
   "subType" : "state"
 }
