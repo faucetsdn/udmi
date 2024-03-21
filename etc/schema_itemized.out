@@ -21,9 +21,7 @@
 16 broken_config RESULT pass schemas event_system_beta BETA 5/5 Schema validation passed
 16 broken_config RESULT pass schemas state_update_beta BETA 5/5 Schema validation passed
 17 broken_config
-18 system_last_update RESULT fail schemas state_update_stable STABLE 5/5 Schema violations found
-18 system_last_update RESULT pass schemas device_state_stable STABLE 5/5 Schema validation passed
-18 system_last_update RESULT pass schemas event_system_stable STABLE 5/5 Schema validation passed
+18 system_last_update
 19 system_last_update RESULT fail schemas device_state_stable STABLE 5/5 Schema violations found
 19 system_last_update RESULT pass schemas event_system_stable STABLE 5/5 Schema validation passed
 19 system_last_update RESULT pass schemas state_update_stable STABLE 5/5 Schema validation passed
