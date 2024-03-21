@@ -109,7 +109,6 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -164,7 +163,7 @@ public class SequenceBase {
   public static final String SCHEMA_PASS_DETAIL = "No schema violations found";
   public static final String STATE_UPDATE_MESSAGE_TYPE = "state_update";
   public static final String RESET_CONFIG_MARKER = "reset_config";
-  public static final String SYSTEM_STATUS_MESSAGE = "applicable system status";
+  public static final String SYSTEM_STATUS_MESSAGE = "significant system status";
   public static final String HAS_STATUS_PREFIX = "has ";
   public static final String NOT_STATUS_PREFIX = "no ";
   public static final String SCHEMA_BUCKET = "schemas";
@@ -1263,6 +1262,10 @@ public class SequenceBase {
     return Common.getExceptionLine(e, SequenceBase.class);
   }
 
+  protected void checkThat(String description, String detail) {
+    checkThat(description, detail == null, detail);
+  }
+
   protected void checkThat(String description, Boolean condition) {
     checkThat(description, condition, null);
   }
@@ -2036,11 +2039,19 @@ public class SequenceBase {
             isoConvert(lastConfig), isoConvert(expectedConfig));
   }
 
-  private Boolean hasInterestingSystemStatus() {
-    // State missing is neither interesting nor not-interesting...
+  private String notSignficantStatusDetail() {
     if (deviceState == null || deviceState.system == null) {
       lastStatusLevel = 0;
-      return null;
+      return "deviceState.system not defined";
+    }
+    String interesting = signficantStatusDetail();
+    return interesting == null ? "no status to report" : null;
+  }
+
+  private String signficantStatusDetail() {
+    if (deviceState == null || deviceState.system == null) {
+      lastStatusLevel = 0;
+      return "deviceState.system not defined";
     }
 
     int statusLevel = GeneralUtils.catchToElse(() -> deviceState.system.status.level, 0);
@@ -2050,30 +2061,35 @@ public class SequenceBase {
       lastStatusLevel = statusLevel;
     }
 
-    return statusLevel >= Level.WARNING.value();
+    return statusLevel >= Level.WARNING.value() ? ("system status is level " + statusLevel) : null;
   }
 
   protected void checkThatHasInterestingSystemStatus(boolean isInteresting) {
     if (!deviceSupportsState()) {
       return;
     }
-    BiConsumer<String, Supplier<Boolean>> check =
-        isInteresting ? this::checkThat : this::checkNotThat;
-    check.accept(SYSTEM_STATUS_MESSAGE, this::hasInterestingSystemStatus);
+    if (isInteresting) {
+      checkThat(SYSTEM_STATUS_MESSAGE, notSignficantStatusDetail());
+    } else {
+      String description = NOT_STATUS_PREFIX + SYSTEM_STATUS_MESSAGE;
+      checkThat(description, signficantStatusDetail());
+    }
   }
 
-  protected void untilHasInterestingSystemStatus(boolean isInteresting) {
+  protected void untilHasInterestingSystemStatus(boolean interesting) {
     if (!deviceSupportsState()) {
       return;
     }
     expectedSystemStatus = null;
-    BiConsumer<String, Supplier<Boolean>> until =
-        isInteresting ? this::untilTrue : this::untilFalse;
-    String message =
-        (isInteresting ? HAS_STATUS_PREFIX : NOT_STATUS_PREFIX) + SYSTEM_STATUS_MESSAGE;
-    until.accept(message, this::hasInterestingSystemStatus);
-    expectedSystemStatus = isInteresting;
-    checkThatHasInterestingSystemStatus(isInteresting);
+    String message = (interesting ? HAS_STATUS_PREFIX : NOT_STATUS_PREFIX) + SYSTEM_STATUS_MESSAGE;
+    if (interesting) {
+      waitFor(message, this::notSignficantStatusDetail);
+      expectedSystemStatus = true;
+    } else {
+      waitFor(message, this::signficantStatusDetail);
+      expectedSystemStatus = false;
+    }
+    checkThatHasInterestingSystemStatus(interesting);
   }
 
   private void putSequencerResult(Description description, SequenceResult result) {
