@@ -166,6 +166,7 @@ public class SequenceBase {
   public static final String SYSTEM_STATUS_MESSAGE = "significant system status";
   public static final String HAS_STATUS_PREFIX = "has ";
   public static final String NOT_STATUS_PREFIX = "no ";
+  public static final String STATUS_CHECK_SUFFIX = " exists";
   public static final String SCHEMA_BUCKET = "schemas";
   public static final int SCHEMA_SCORE = 5;
   public static final int CAPABILITY_SCORE = 1;
@@ -2068,11 +2069,11 @@ public class SequenceBase {
     if (!deviceSupportsState()) {
       return;
     }
+    String systemStatusMessage = SYSTEM_STATUS_MESSAGE + STATUS_CHECK_SUFFIX;
     if (isInteresting) {
-      checkThat(SYSTEM_STATUS_MESSAGE, notSignficantStatusDetail());
+      checkThat(systemStatusMessage, notSignficantStatusDetail());
     } else {
-      String description = NOT_STATUS_PREFIX + SYSTEM_STATUS_MESSAGE;
-      checkThat(description, signficantStatusDetail());
+      checkThat(NOT_STATUS_PREFIX + systemStatusMessage, signficantStatusDetail());
     }
   }
 
@@ -2082,13 +2083,10 @@ public class SequenceBase {
     }
     expectedSystemStatus = null;
     String message = (interesting ? HAS_STATUS_PREFIX : NOT_STATUS_PREFIX) + SYSTEM_STATUS_MESSAGE;
-    if (interesting) {
-      waitFor(message, this::notSignficantStatusDetail);
-      expectedSystemStatus = true;
-    } else {
-      waitFor(message, this::signficantStatusDetail);
-      expectedSystemStatus = false;
-    }
+    Supplier<String> detailer =
+        interesting ? this::notSignficantStatusDetail : this::signficantStatusDetail;
+    waitFor(message, detailer);
+    expectedSystemStatus = interesting;
     checkThatHasInterestingSystemStatus(interesting);
   }
 

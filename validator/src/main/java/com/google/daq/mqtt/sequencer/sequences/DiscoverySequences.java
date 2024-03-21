@@ -114,13 +114,13 @@ public class DiscoverySequences extends SequenceBase {
           .orElse(null);
       checkThat("family enumeration matches", () -> models.size() == events.size());
     } else {
-      checkThat("no family enumeration", () -> event.families == null);
+      checkThat("no family enumeration exists", () -> event.families == null);
     }
 
     if (isTrue(enumerate.features)) {
       checkFeatureDiscovery(event.features);
     } else {
-      checkThat("no feature enumeration", () -> event.features == null);
+      checkThat("no feature enumeration exists", () -> event.features == null);
     }
 
     if (isTrue(enumerate.points)) {
@@ -128,7 +128,7 @@ public class DiscoverySequences extends SequenceBase {
           .orElse(0);
       checkThat("enumerated point count matches", () -> event.points.size() == expectedSize);
     } else {
-      checkThat("no point enumeration", () -> event.points == null);
+      checkThat("no point enumeration exists", () -> event.points == null);
     }
   }
 
