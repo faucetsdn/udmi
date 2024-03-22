@@ -42,8 +42,8 @@ import udmi.schema.Level;
  */
 public class ConfigSequences extends SequenceBase {
 
-  // Delay to wait to let a device apply a new config.
-  private static final long CONFIG_THRESHOLD_SEC = 10;
+  // Delay to wait to let a device apply and log a new config.
+  private static final long CONFIG_THRESHOLD_SEC = 20;
   // Delay after receiving a parse error to ensure an apply entry has not been received.
   private static final long LOG_APPLY_DELAY_MS = 1000;
   // How frequently to send out confg queries for device config acked check.
