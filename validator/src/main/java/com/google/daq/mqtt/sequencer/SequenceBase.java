@@ -604,11 +604,11 @@ public class SequenceBase {
   private Map.Entry<Integer, Integer> emitCapabilityResult(Capabilities capability, Exception state,
       Capability cap, Bucket bucket, String methodName) {
     boolean pass = state instanceof CapabilitySuccess;
-    SequenceResult result = state == null ? SKIP : pass ? PASS : FAIL;
+    SequenceResult result = state == null ? SKIP : (pass ? PASS : FAIL);
     String message = ifNotNullGet(state, Throwable::getMessage, "Never executed");
     String capabilityName = methodName + "." + capability.value();
-    int total = CAPABILITY_SCORE;
-    int score = pass ? total : 0;
+    int total = result != SKIP ? CAPABILITY_SCORE : 0;
+    int score = result == PASS ? total : 0;
     emitSequencerOut(format(CAPABILITY_FORMAT,
         result, bucket.value(), capabilityName, cap.stage().name(), score, total, message));
     return new SimpleEntry<>(score, total);
@@ -1363,9 +1363,8 @@ public class SequenceBase {
   private void processLogMessages() {
     List<SystemEvent> receivedEvents = popReceivedEvents(SystemEvent.class);
     receivedEvents.forEach(systemEvent -> {
-      int eventCount = ofNullable(systemEvent.event_count).orElse(
-          previousEventCount + CAPABILITY_SCORE);
-      if (eventCount != previousEventCount + CAPABILITY_SCORE) {
+      int eventCount = ofNullable(systemEvent.event_count).orElse(previousEventCount + 1);
+      if (eventCount != previousEventCount + 1) {
         debug("Missing system events " + previousEventCount + " -> " + eventCount);
       }
       previousEventCount = eventCount;
@@ -1694,7 +1693,7 @@ public class SequenceBase {
         }
         List<DiffEntry> changes = updateDeviceConfig(config);
         debug(format("Updated config %s %s", isoConvert(config.timestamp), txnId));
-        if (updateCount == CAPABILITY_SCORE) {
+        if (updateCount == 1) {
           info(format("Initial config #%03d", updateCount), stringify(deviceConfig));
         } else {
           info(format("Updated config #%03d", updateCount), changedLines(changes));
