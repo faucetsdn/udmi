@@ -371,8 +371,8 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     try {
       CloudModel cloudModel = new CloudModel();
       cloudModel.device_ids = fetchDevices(deviceRegistryId, gatewayId);
-      ifNotNullThen(gatewayId, options -> debug(format("Bound devices for %s: %s",
-          gatewayId, CSV_JOINER.join(cloudModel.device_ids.keySet()))));
+      ifNotNullThen(gatewayId, options -> debug(format("Gateway %s has %d bound devices",
+          gatewayId, cloudModel.device_ids.size())));
       return cloudModel;
     } catch (Exception e) {
       throw new RuntimeException("While listing devices " + getRegistryName(deviceRegistryId), e);

@@ -139,7 +139,7 @@ public class MappingAgent extends ProcessorBase {
     if (deviceIds.containsKey(expectedId)) {
       debug("Scan device %s/%s target %s already registered", registryId, gatewayId, expectedId);
     } else {
-      notice("Scan device %s/%s target %s missing, creating", registryId, expectedId, gatewayId);
+      notice("Scan device %s/%s target %s missing, creating", registryId, gatewayId, expectedId);
       createDeviceEntry(registryId, expectedId, gatewayId, envelope, discoveryEvent);
       deviceIds.put(expectedId, new CloudModel());
     }
