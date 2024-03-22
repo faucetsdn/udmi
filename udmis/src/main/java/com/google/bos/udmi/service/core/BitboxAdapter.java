@@ -1,6 +1,7 @@
 package com.google.bos.udmi.service.core;
 
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 
 import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.udmi.util.JsonUtil;
@@ -41,7 +42,7 @@ public class BitboxAdapter extends ProcessorBase {
       return;
     }
 
-    continuation.publish(convertDiscovery(defaultedMessage));
+    ifNotNullThen(convertDiscovery(defaultedMessage), continuation::publish);
   }
 
   private DiscoveryEvent convertDiscovery(Object defaultedMessage) {
