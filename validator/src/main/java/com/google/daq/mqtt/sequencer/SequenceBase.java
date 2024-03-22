@@ -1139,7 +1139,7 @@ public class SequenceBase {
     // Add a forced sleep to make sure second-quantized timestamps are unique.
     safeSleep(CONFIG_BARRIER_MS);
 
-    if (doPartialUpdates) {
+    if (doPartialUpdates && !force) {
       updateConfig(SubFolder.SYSTEM, augmentConfig(deviceConfig.system));
       updateConfig(SubFolder.POINTSET, deviceConfig.pointset);
       updateConfig(SubFolder.GATEWAY, deviceConfig.gateway);
@@ -1147,11 +1147,16 @@ public class SequenceBase {
       updateConfig(SubFolder.BLOBSET, deviceConfig.blobset);
       updateConfig(SubFolder.DISCOVERY, deviceConfig.discovery);
     }
-    if (!doPartialUpdates || (!configIsPending() && force)) {
+
+    if (force) {
       debug("Forcing config update");
       sentConfig.remove(SubFolder.UPDATE);
+    }
+
+    if (!doPartialUpdates) {
       updateConfig(SubFolder.UPDATE, deviceConfig);
     }
+
     if (configIsPending()) {
       lastConfigUpdate = CleanDateFormat.clean(Instant.now());
       String debugReason = reason == null ? "" : (", because " + reason);
