@@ -4,6 +4,7 @@ import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.mapReplace;
+import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.udmi.util.JsonUtil;
@@ -84,7 +85,7 @@ public class BitboxAdapter extends ProcessorBase {
   private Entry<String, PointDiscovery> pointMapper(Entry<String, Object> rawInput) {
     String ref = rawInput.getKey();
     Map<String, String> pointMap = JsonUtil.toStringMap(rawInput.getValue());
-    String pointName = pointMap.get("object-name");
+    String pointName = ofNullable(pointMap.get("object-name")).orElse(ref);
     PointDiscovery pointDiscovery = new PointDiscovery();
     pointDiscovery.ref = ref;
     pointDiscovery.ancillary = JsonUtil.toMap(rawInput.getValue());
