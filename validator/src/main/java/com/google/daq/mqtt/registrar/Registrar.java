@@ -478,12 +478,9 @@ public class Registrar {
 
       if (explicitDevices != null) {
         Set<String> unknownLocals = difference(explicitDevices, localDevices.keySet());
-        Set<String> unknownCloud = ifNotNullGet(cloudDevices,
-            devices -> difference(explicitDevices, devices), ImmutableSet.of());
-        SetView<String> unknowns = Sets.union(unknownCloud, unknownLocals);
-        if (!unknowns.isEmpty()) {
+        if (!unknownLocals.isEmpty()) {
           throw new RuntimeException(
-              "Unknown specified devices: " + JOIN_CSV.join(unknowns));
+              "Unknown specified devices: " + JOIN_CSV.join(unknownLocals));
         }
       }
 
