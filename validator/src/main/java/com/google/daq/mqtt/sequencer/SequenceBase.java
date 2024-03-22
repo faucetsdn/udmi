@@ -732,7 +732,7 @@ public class SequenceBase {
     // TODO: Minimize time, or better yet find deterministic way to flush messages.
     safeSleep(CONFIG_UPDATE_DELAY_MS);
 
-    doPartialUpdates = false;
+    doPartialUpdates = true; // TODO: Set this to false and make sure everything still works.
     configAcked = false;
     enforceSerial = false;
     recordMessages = true;
