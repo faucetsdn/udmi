@@ -1723,9 +1723,6 @@ public class SequenceBase {
           return;
         }
         if (deviceState == null && convertedState.timestamp.before(stateCutoffThreshold)) {
-          Date cutoff = Date.from(getNowInstant().minus(STATE_TIMESTAMP_ERROR_THRESHOLD));
-          checkState(convertedState.timestamp.after(cutoff) || !deviceSupportsState(),
-              format("State timestamp %s before error cutoff threshold", timestamp));
           String lastStart = isoConvert(
               catchToNull(() -> convertedState.system.operation.last_start));
           warning(format("Ignoring stale state update %s %s %s %s", timestamp,
@@ -1744,8 +1741,15 @@ public class SequenceBase {
         } else {
           info(format("Initial state #%03d", updateCount), stringify(converted));
         }
+
+        Date cutoff = Date.from(getNowInstant().minus(STATE_TIMESTAMP_ERROR_THRESHOLD));
+        checkState(convertedState.timestamp.after(cutoff),
+            format("State timestamp %s before error cutoff threshold %s", timestamp,
+                isoConvert(cutoff)));
+
         deviceState = convertedState;
         validSerialNo();
+
         debug(format("Updated state has last_config %s (expecting %s)",
             isoConvert((Date) ifNotNullGet(deviceState.system, x -> x.last_config)),
             isoConvert((Date) ifNotNullGet(deviceConfig, config -> config.timestamp))));
