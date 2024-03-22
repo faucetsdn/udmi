@@ -762,8 +762,7 @@ public class SequenceBase {
   }
 
   private void waitForStateConfigSync() {
-    forCapability(LAST_CONFIG,
-        () -> waitFor("state last_config sync", this::lastConfigUpdated));
+    waitForCapability(LAST_CONFIG, "state last_config sync", this::lastConfigUpdated);
   }
 
   private boolean deviceSupportsState() {
@@ -2182,10 +2181,14 @@ public class SequenceBase {
     return receivedUpdates;
   }
 
+  protected void waitForCapability(Capabilities cap, String description, Supplier<String> action) {
+    forCapability(cap, () -> waitFor(description, action));
+  }
+
   protected void forCapability(Capabilities capability, Runnable action) {
     try {
-      Exception was = capabilityExceptions.computeIfAbsent(capability, CapabilitySuccess::new);
-      ifTrueThen(was instanceof CapabilitySuccess, action);
+      Exception current = capabilityExceptions.computeIfAbsent(capability, CapabilitySuccess::new);
+      ifTrueThen(current instanceof CapabilitySuccess, action);
     } catch (Exception e) {
       capabilityExceptions.put(capability, e);
     }
@@ -2216,7 +2219,8 @@ public class SequenceBase {
   public enum Capabilities {
     DEVICE_STATE("device_state"),
     LOGGING("logging"),
-    LAST_CONFIG("last_config");
+    LAST_CONFIG("last_config"),
+    MATCHING_SUBBLOCKS("subblocks");
 
     private final String value;
 
@@ -2250,7 +2254,7 @@ public class SequenceBase {
   private static class CapabilitySuccess extends RuntimeException {
 
     public CapabilitySuccess(Capabilities capability) {
-      super("Capability functional");
+      super("Capability supported");
     }
   }
 
