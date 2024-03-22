@@ -6,6 +6,7 @@ import static com.google.daq.mqtt.sequencer.SequenceBase.Capabilities.LOGGING;
 import static com.google.daq.mqtt.util.TimePeriodConstants.THREE_MINUTES_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
+import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static java.lang.String.format;
@@ -86,8 +87,12 @@ public class ConfigSequences extends SequenceBase {
     deviceConfig.system.min_loglevel = Level.INFO.value();
     untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
     checkNotLogged(SYSTEM_CONFIG_APPLY, Level.WARNING);
-    checkThat(format("device config resolved within %ss", CONFIG_THRESHOLD_SEC), () ->
-        Instant.now().isBefore(startTime.plusSeconds(CONFIG_THRESHOLD_SEC)));
+    Instant expectedFinish = startTime.plusSeconds(CONFIG_THRESHOLD_SEC);
+    Instant logFinished = Instant.now();
+    checkThat(format("device config resolved within %ss", CONFIG_THRESHOLD_SEC),
+        ifTrueGet(logFinished.isAfter(expectedFinish),
+            format("apply log took until %s, expected before %s", isoConvert(logFinished),
+                isoConvert(expectedFinish))));
 
     deviceConfig.system.min_loglevel = Level.WARNING.value();
     updateConfig("warning loglevel");
