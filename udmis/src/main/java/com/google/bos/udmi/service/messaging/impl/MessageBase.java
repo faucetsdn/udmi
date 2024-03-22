@@ -380,7 +380,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     } else {
       SubFolder subFolder = catchToElse(() -> SubFolder.fromValue(subFolderRaw), SubFolder.INVALID);
       if (!subFolder.value().equals(subFolderRaw)) {
-        debug("Coerced subFolder " + subFolderRaw + " to " + subFolder.value());
+        trace("Coerced subFolder " + subFolderRaw + " to " + subFolder.value());
         attributesMap.put(RAWFOLDER_PROPERTY_KEY, subFolderRaw);
         attributesMap.put(SUBFOLDER_PROPERTY_KEY, subFolder.value());
       }
@@ -395,7 +395,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     } else if (!Strings.isNullOrEmpty(subTypeRaw)) {
       SubType subType = catchToElse(() -> SubType.fromValue(subTypeRaw), SubType.INVALID);
       if (!subType.value().equals(subTypeRaw)) {
-        debug("Coerced subFolder " + subTypeRaw + " to " + subType.value());
+        trace("Coerced subType " + subTypeRaw + " to " + subType.value());
         attributesMap.put(SUBTYPE_PROPERTY_KEY, subType.value());
       }
     }
