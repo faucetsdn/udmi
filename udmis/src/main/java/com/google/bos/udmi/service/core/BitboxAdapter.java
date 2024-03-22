@@ -61,8 +61,8 @@ public class BitboxAdapter extends ProcessorBase {
       discoveryEvent.points = extractPoints(map.get("data"));
       return discoveryEvent;
     } catch (Exception e) {
-      error("Keys of defaulted message tree map: " + CSV_JOINER.join(map.keySet()));
       error("While converting legacy message to DiscoveryEvent: " + friendlyStackTrace(e));
+      e.printStackTrace();
       return null;
     }
   }
