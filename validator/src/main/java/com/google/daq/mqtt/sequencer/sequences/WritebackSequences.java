@@ -39,7 +39,7 @@ public class WritebackSequences extends PointsetBase {
    * @param expected  Expected `value_state`
    * @return true/false actual matches expected
    */
-  private boolean valueStateIs(String pointName, String expected) {
+  private String valueStateIs(String pointName, String expected) {
     if (deviceState.pointset == null || !deviceState.pointset.points.containsKey(pointName)) {
       throw new AbortMessageLoop("Missing pointset point " + pointName);
     }
@@ -47,15 +47,15 @@ public class WritebackSequences extends PointsetBase {
     String valueState = rawState == null ? null : rawState.value();
     boolean equals = Objects.equals(expected, valueState);
     debug(format("Value state %s == %s (%s)", valueState, expected, equals));
-    return equals;
+    return equals ? null : format("point %s is %s, expected %s", pointName, valueState, expected);
   }
 
   /**
    * Log string for value_state check.
    */
-  private String expectedValueState(String pointName, String expectedValue) {
+  private String expectedValueState(String expectedValue) {
     String targetState = expectedValue == null ? "default (null)" : expectedValue;
-    return format("point %s to have value_state %s", pointName, targetState);
+    return format("target point to have value_state %s", targetState);
   }
 
   /**
@@ -92,13 +92,11 @@ public class WritebackSequences extends PointsetBase {
 
     deviceConfig.pointset.points.get(targetPoint).set_value = null;
 
-    untilTrue(expectedValueState(targetPoint, DEFAULT_STATE),
-        () -> valueStateIs(targetPoint, DEFAULT_STATE));
+    waitFor(expectedValueState(DEFAULT_STATE), () -> valueStateIs(targetPoint, DEFAULT_STATE));
 
     deviceConfig.pointset.points.get(targetPoint).set_value = targetValue;
 
-    untilTrue(expectedValueState(targetPoint, targetState),
-        () -> valueStateIs(targetPoint, targetState));
+    waitFor(expectedValueState(targetState), () -> valueStateIs(targetPoint, targetState));
 
     return targetModel;
   }
