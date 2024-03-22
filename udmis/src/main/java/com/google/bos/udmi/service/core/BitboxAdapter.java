@@ -1,7 +1,9 @@
 package com.google.bos.udmi.service.core;
 
+import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.mapReplace;
 
 import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.udmi.util.JsonUtil;
@@ -46,12 +48,12 @@ public class BitboxAdapter extends ProcessorBase {
   }
 
   private DiscoveryEvent convertDiscovery(Object defaultedMessage) {
-    try {
-      Map<String, Object> map = JsonUtil.asMap(defaultedMessage);
-      if (!"bitbox_bacnet".equals(map.get("type"))) {
-        return null;
-      }
+    Map<String, Object> map = JsonUtil.asMap(defaultedMessage);
+    if (!"bitbox_bacnet".equals(map.get("type"))) {
+      return null;
+    }
 
+    try {
       DiscoveryEvent discoveryEvent = new DiscoveryEvent();
       discoveryEvent.scan_family = ProtocolFamily.fromValue((String) map.get("protocol"));
       discoveryEvent.scan_addr = (String) map.get("id");
@@ -59,6 +61,7 @@ public class BitboxAdapter extends ProcessorBase {
       discoveryEvent.points = extractPoints(map.get("data"));
       return discoveryEvent;
     } catch (Exception e) {
+      error("Keys of defaulted message tree map: " + CSV_JOINER.join(map.keySet()));
       error("While converting legacy message to DiscoveryEvent: " + friendlyStackTrace(e));
       return null;
     }
