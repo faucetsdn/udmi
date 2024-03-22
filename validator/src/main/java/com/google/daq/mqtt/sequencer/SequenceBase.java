@@ -732,7 +732,7 @@ public class SequenceBase {
     // TODO: Minimize time, or better yet find deterministic way to flush messages.
     safeSleep(CONFIG_UPDATE_DELAY_MS);
 
-    doPartialUpdates = true; // TODO: Set this to false and make sure everything still works.
+    doPartialUpdates = false;
     configAcked = false;
     enforceSerial = false;
     recordMessages = true;
@@ -1138,6 +1138,7 @@ public class SequenceBase {
     assertConfigIsNotPending();
     // Add a forced sleep to make sure second-quantized timestamps are unique.
     safeSleep(CONFIG_BARRIER_MS);
+
     if (doPartialUpdates) {
       updateConfig(SubFolder.SYSTEM, augmentConfig(deviceConfig.system));
       updateConfig(SubFolder.POINTSET, deviceConfig.pointset);
@@ -2368,6 +2369,9 @@ public class SequenceBase {
       if (activeInstance == null) {
         return;
       }
+
+      recordMessages = false;
+
       final String message;
       final SequenceResult failureType;
       if (e instanceof TestTimedOutException) {
