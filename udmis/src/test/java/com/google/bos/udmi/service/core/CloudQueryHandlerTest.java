@@ -20,6 +20,7 @@ import org.mockito.ArgumentCaptor;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudQuery;
 import udmi.schema.Common.ProtocolFamily;
+import udmi.schema.Depths.Depth;
 import udmi.schema.DiscoveryEvent;
 import udmi.schema.Envelope;
 
@@ -85,5 +86,6 @@ class CloudQueryHandlerTest implements MessageContinuation {
     doReturn(LAST_SEEN).when(targetProcessor).getLastSeen(eq(TEST_REGISTRY));
     queryHandler = new CloudQueryHandler(controlProcessor);
     query.generation = QUERY_GENERATION;
+    query.depth = Depth.ENTRIES;
   }
 }
