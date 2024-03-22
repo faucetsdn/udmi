@@ -19,6 +19,7 @@ import static com.google.udmi.util.GeneralUtils.getSubMapDefault;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.asMap;
+import static com.google.udmi.util.JsonUtil.getAsMap;
 import static com.google.udmi.util.JsonUtil.getDate;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringify;
@@ -41,6 +42,7 @@ import com.google.bos.udmi.service.pod.SimpleHandler;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.Common;
+import com.google.udmi.util.JsonUtil;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
@@ -307,8 +309,18 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
     payload.put(TIMESTAMP_KEY, updateTimestamp);
     payload.put(VERSION_KEY, UDMI_VERSION);
 
+    augmentTransactionId(payload, attributes.transactionId);
     mungeConfigDebug(attributes, updateTimestamp, reason);
     return compressJsonString(payload, MAX_CONFIG_LENGTH);
+  }
+
+  private void augmentTransactionId(Map<String, Object> payload, String transactionId) {
+    try {
+      Map<String, Object> asMap = getAsMap(getAsMap(payload, "system"), "testing");
+      ifNotNullThen(asMap, map -> map.put("transaction_id", transactionId));
+    } catch (Exception e) {
+      warn("Could not augment config with transactionId %s", transactionId);
+    }
   }
 
   private String updateWithLastStart(Map<String, Object> oldPayload, Date newLastStart) {

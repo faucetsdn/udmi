@@ -10,6 +10,10 @@
       "description": "The sequence name currently being tested (for debug logging)",
       "type": "string"
     },
+    "transaction_id": {
+      "description": "The transaction id used to generate this config update",
+      "type": "string"
+    },
     "endpoint_type": {
       "description": "Designator for the kind of endpoint being used for this test",
       "type": "string"
