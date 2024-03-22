@@ -59,7 +59,7 @@ public class MessageUpgrader {
         minor = parts.length >= 2 ? Integer.parseInt(parts[1]) : -1;
         patch = parts.length >= 3 ? Integer.parseInt(parts[2]) : -1;
       } catch (NumberFormatException e) {
-        throw new RuntimeException("Bad version string number format");
+        throw new RuntimeException("Bad message version string " + components[0]);
       }
     } catch (Exception e) {
       throw new RuntimeException("While parsing version string " + originalVersion, e);

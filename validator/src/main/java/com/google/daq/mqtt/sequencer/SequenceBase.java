@@ -755,18 +755,13 @@ public class SequenceBase {
     clearReceivedEvents();
     validationResults.clear();
 
-    waitForStateConfigSync();
+    waitForConfigSync();
 
     doPartialUpdates = true;
     recordSequence = true;
     waitingConditionStart("executing test");
 
     debug(format("stage begin %s at %s", currentWaitingCondition(), timeSinceStart()));
-  }
-
-  private void waitForStateConfigSync() {
-    forCapability(LAST_CONFIG,
-        () -> waitFor("state last_config sync", this::lastConfigUpdated));
   }
 
   private boolean deviceSupportsState() {
@@ -811,12 +806,15 @@ public class SequenceBase {
       resetRequired = false;
     });
 
-    waitForStateConfigSync();
+    waitForConfigSync();
+
     disallowDeviceStateChange(ALL_CHANGES);
   }
 
   private void waitForConfigSync() {
     try {
+      forCapability(LAST_CONFIG,
+          () -> waitFor("state last_config sync", this::lastConfigUpdated));
       whileDoing("config sync", () -> messageEvaluateLoop(this::configIsPending));
       Duration between = Duration.between(lastConfigUpdate, CleanDateFormat.clean(Instant.now()));
       debug(format("Configuration sync took %ss", between.getSeconds()));
@@ -1866,7 +1864,7 @@ public class SequenceBase {
   private boolean configIsPending(boolean debugOut) {
     Date stateLast = catchToNull(() -> deviceState.system.operation.last_start);
     Date configLast = catchToNull(() -> deviceConfig.system.operation.last_start);
-    boolean synced = stateLast == null || stateLast.equals(configLast);
+    boolean synced = stateLast == null || stateLast.equals(configLast) || !isCapableOf(LAST_CONFIG);
     boolean pending = !(synced && configTransactions.isEmpty());
     if (pending && debugOut) {
       notice(format("last_start synchronized %s: state/%s =? config/%s", synced,
@@ -2216,11 +2214,16 @@ public class SequenceBase {
 
   protected void forCapability(Capabilities capability, Runnable action) {
     try {
-      Exception was = capabilityExceptions.computeIfAbsent(capability, CapabilitySuccess::new);
-      ifTrueThen(was instanceof CapabilitySuccess, action);
+      ifTrueThen(isCapableOf(capability), action);
     } catch (Exception e) {
       capabilityExceptions.put(capability, e);
     }
+  }
+
+  private boolean isCapableOf(Capabilities capability) {
+    Exception was = capabilityExceptions.computeIfAbsent(capability, CapabilitySuccess::new);
+    boolean capable = was instanceof CapabilitySuccess;
+    return capable;
   }
 
   private boolean shouldValidateSchema(SubFolder folder) {
