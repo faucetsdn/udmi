@@ -229,9 +229,7 @@ public class SequenceBase {
   private static final AtomicReference<String> stateTransaction = new AtomicReference<>();
   private static final int MINIMUM_TEST_SEC = 15;
   private static final Date RESET_LAST_START = new Date(73642);
-  private static final long STATE_QUERY_CUTOFF_SEC = 60;
-  private static final Date stateCutoffThreshold = Date.from(Instant.now().minusSeconds(
-      STATE_QUERY_CUTOFF_SEC));
+  private static final Date stateCutoffThreshold = Date.from(Instant.now().minusSeconds(10));
   private static final String FAKE_DEVICE_ID = "TAP-1";
   private static final String NO_EXTRA_DETAIL = "";
   private static final Duration DEFAULT_WAIT_TIME = Duration.ofSeconds(10);
@@ -241,7 +239,6 @@ public class SequenceBase {
       "timestamp", "system.last_config", "system.status");
   private static final long EVENT_WAIT_DELAY_MS = 1000;
   private static final Duration STATE_TIMESTAMP_ERROR_THRESHOLD = Duration.ofMinutes(20);
-  private boolean doPartialUpdates;
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -284,6 +281,7 @@ public class SequenceBase {
   protected State deviceState;
   protected boolean configAcked;
   protected String lastSerialNo;
+  private boolean doPartialUpdates;
   private boolean resetRequired = true;
   private int maxAllowedStatusLevel;
   private String extraField;
