@@ -235,9 +235,9 @@ public class DiscoverySequences extends SequenceBase {
   @Summary("Check that a scan scheduled in the past never starts")
   public void single_scan_past() {
     initializeDiscovery();
-    Date startTime = LONG_TIME_AGO;
+    scanStartTime = LONG_TIME_AGO;
     boolean shouldEnumerate = false;
-    configureScan(startTime, null, shouldEnumerate);
+    configureScan(scanStartTime, null, shouldEnumerate);
     waitFor("scan schedule initially complete", this::detailScanComplete);
     sleepFor("false start check delay", SCAN_START_DELAY);
     waitFor("scan schedule still complete", this::detailScanComplete);
@@ -448,7 +448,8 @@ public class DiscoverySequences extends SequenceBase {
   private Predicate<ProtocolFamily> scanComplete(Date startTime) {
     return family -> {
       FamilyDiscoveryState stateFamily = getStateFamily(family);
-      return dateEquals(stateFamily.generation, startTime)
+      return stateFamily != null
+          && dateEquals(stateFamily.generation, startTime)
           && (stateFamily.phase == DONE || stateFamily.phase == STOPPED)
           && deviceState.timestamp.after(startTime);
     };
