@@ -1,10 +1,14 @@
 
 package udmi.schema;
 
+import java.util.HashMap;
+import java.util.Map;
 import javax.annotation.processing.Generated;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.annotation.JsonValue;
 
 
 /**
@@ -19,16 +23,16 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "features"
 })
 @Generated("jsonschema2pojo")
-public class Enumerate {
+public class Depths {
 
     @JsonProperty("families")
-    public Boolean families;
+    public Depths.Depth families;
     @JsonProperty("devices")
-    public Boolean devices;
+    public Depths.Depth devices;
     @JsonProperty("points")
-    public Boolean points;
+    public Depths.Depth points;
     @JsonProperty("features")
-    public Boolean features;
+    public Depths.Depth features;
 
     @Override
     public int hashCode() {
@@ -45,11 +49,52 @@ public class Enumerate {
         if (other == this) {
             return true;
         }
-        if ((other instanceof Enumerate) == false) {
+        if ((other instanceof Depths) == false) {
             return false;
         }
-        Enumerate rhs = ((Enumerate) other);
+        Depths rhs = ((Depths) other);
         return (((((this.features == rhs.features)||((this.features!= null)&&this.features.equals(rhs.features)))&&((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families))))&&((this.devices == rhs.devices)||((this.devices!= null)&&this.devices.equals(rhs.devices))))&&((this.points == rhs.points)||((this.points!= null)&&this.points.equals(rhs.points))));
+    }
+
+    @Generated("jsonschema2pojo")
+    public enum Depth {
+
+        REGISTRIES("registries"),
+        ENTRIES("entries"),
+        DETAILS("details");
+        private final String value;
+        private final static Map<String, Depths.Depth> CONSTANTS = new HashMap<String, Depths.Depth>();
+
+        static {
+            for (Depths.Depth c: values()) {
+                CONSTANTS.put(c.value, c);
+            }
+        }
+
+        Depth(String value) {
+            this.value = value;
+        }
+
+        @Override
+        public String toString() {
+            return this.value;
+        }
+
+        @JsonValue
+        public String value() {
+            return this.value;
+        }
+
+        @JsonCreator
+        public static Depths.Depth fromValue(String value) {
+            Depths.Depth constant = CONSTANTS.get(value);
+            if (constant == null) {
+                throw new IllegalArgumentException(value);
+            } else {
+                return constant;
+            }
+        }
+
     }
 
 }

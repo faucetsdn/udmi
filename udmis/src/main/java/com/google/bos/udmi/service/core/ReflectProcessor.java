@@ -3,13 +3,13 @@ package com.google.bos.udmi.service.core;
 import static com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl.getMessageClassFor;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.CleanDateFormat.cleanDate;
-import static com.google.udmi.util.CleanDateFormat.cleanInstantDate;
 import static com.google.udmi.util.Common.CONDENSER_STRING;
 import static com.google.udmi.util.Common.DETAIL_KEY;
 import static com.google.udmi.util.Common.DEVICE_ID_KEY;
 import static com.google.udmi.util.Common.ERROR_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.Common.TRANSACTION_KEY;
+import static com.google.udmi.util.GeneralUtils.catchToElse;
 import static com.google.udmi.util.GeneralUtils.decodeBase64;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
@@ -239,8 +239,7 @@ public class ReflectProcessor extends ProcessorBase {
     final String registryId = envelope.deviceRegistryId;
     final String deviceId = envelope.deviceId;
 
-    ifNotNullThen(distributor, d -> d.publish(envelope, toolState, containerId));
-    updateAwareness(envelope, toolState);
+    handleAwareness(envelope, toolState);
 
     UdmiConfig udmiConfig = UdmiServicePod.getUdmiConfig(toolState);
 
@@ -250,6 +249,12 @@ public class ReflectProcessor extends ProcessorBase {
     String contents = stringifyTerse(configMap);
     debug("Setting reflector config %s %s: %s", registryId, deviceId, contents);
     iotAccess.modifyConfig(registryId, deviceId, previous -> contents);
+  }
+
+  private void handleAwareness(Envelope envelope, UdmiState toolState) {
+    ifNotNullThen(distributor, d -> catchToElse(() -> d.publish(envelope, toolState, containerId),
+        e -> error("Error handling awareness: " + friendlyStackTrace(e))));
+    updateAwareness(envelope, toolState);
   }
 
   private void reflectStateUpdate(Envelope attributes, String state) {

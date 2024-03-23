@@ -1,8 +1,11 @@
 package daq.pubber;
 
 import static com.google.udmi.util.GeneralUtils.catchToNull;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifNullElse;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isGetTrue;
 import static com.google.udmi.util.GeneralUtils.isTrue;
@@ -27,10 +30,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import udmi.schema.Common.ProtocolFamily;
+import udmi.schema.Depths;
+import udmi.schema.Depths.Depth;
 import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvent;
 import udmi.schema.DiscoveryState;
-import udmi.schema.Enumerate;
 import udmi.schema.FamilyDiscovery;
 import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyDiscoveryState;
@@ -73,11 +77,15 @@ public class DiscoveryManager extends ManagerBase {
     info("Discovery enumeration at " + isoConvert(enumerationGeneration));
     DiscoveryEvent discoveryEvent = new DiscoveryEvent();
     discoveryEvent.generation = enumerationGeneration;
-    Enumerate enumerate = config.enumerate;
-    discoveryEvent.points = ifTrue(enumerate.points, () -> enumeratePoints(deviceId));
-    discoveryEvent.features = ifTrue(enumerate.features, SupportedFeatures::getFeatures);
-    discoveryEvent.families = ifTrue(enumerate.families, deviceManager::enumerateFamilies);
+    Depths depths = config.depths;
+    discoveryEvent.points = maybeEnumerate(depths.points, () -> enumeratePoints(deviceId));
+    discoveryEvent.features = maybeEnumerate(depths.features, SupportedFeatures::getFeatures);
+    discoveryEvent.families = maybeEnumerate(depths.families, deviceManager::enumerateFamilies);
     host.publish(discoveryEvent);
+  }
+
+  private <K, V> Map<K, V> maybeEnumerate(Depth depth, Supplier<Map<K, V>> supplier) {
+    return ifTrueGet(shouldEnumerate(depth), supplier);
   }
 
   private void updateDiscoveryScan(Map<ProtocolFamily, FamilyDiscoveryConfig> raw) {
@@ -180,8 +188,7 @@ public class DiscoveryManager extends ManagerBase {
     AtomicInteger sendCount = new AtomicInteger();
     familyDiscoveryState.record_count = sendCount.get();
     updateState();
-    discoveryProvider(family).startScan(
-        isTrue(getFamilyDiscoveryConfig(family).enumerate), discoveryEvent -> {
+    discoveryProvider(family).startScan(shouldEnumerate(family), discoveryEvent -> {
           ifNotNullThen(discoveryEvent.scan_addr, addr -> {
                 info(format("Discovered %s device %s for gen %s", family, addr, scanGeneration));
                 discoveryEvent.scan_family = family;
@@ -193,6 +200,17 @@ public class DiscoveryManager extends ManagerBase {
           );
         }
     );
+  }
+
+  private boolean shouldEnumerate(ProtocolFamily family) {
+    return shouldEnumerate(getFamilyDiscoveryConfig(family).depth);
+  }
+
+  private static boolean shouldEnumerate(Depth depth) {
+    return ifNullElse(depth, false, d -> switch (d) {
+      default -> false;
+      case ENTRIES, DETAILS -> true;
+    });
   }
 
   private FamilyProvider discoveryProvider(ProtocolFamily family) {

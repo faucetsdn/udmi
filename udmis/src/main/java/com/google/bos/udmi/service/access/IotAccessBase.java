@@ -203,7 +203,7 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
   /**
    * Return a list of all the registries.
    */
-  public Set<String> listRegistries() {
+  public Set<String> getRegistries() {
     try {
       populateRegistryRegions();
       return registryRegions.get().keySet();

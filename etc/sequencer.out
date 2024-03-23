@@ -24,7 +24,7 @@ RESULT pass pointset pointset_publish_interval BETA 5/5 Sequence complete
 RESULT pass pointset pointset_remove_point BETA 5/5 Sequence complete
 RESULT pass pointset pointset_request_extraneous BETA 5/5 Sequence complete
 RESULT pass system broken_config BETA 5/5 Sequence complete
-CPBLTY pass system broken_config.logging ALPHA 1/1 Capability functional
+CPBLTY pass system broken_config.logging ALPHA 1/1 Capability supported
 RESULT pass system config_logging BETA 5/5 Sequence complete
 RESULT pass system device_config_acked BETA 5/5 Sequence complete
 RESULT pass system extra_config BETA 5/5 Sequence complete
@@ -33,7 +33,8 @@ RESULT pass system family_ipv4_addr PREVIEW 5/5 Sequence complete
 RESULT pass system family_ipv6_addr PREVIEW 5/5 Sequence complete
 RESULT pass system state_make_model BETA 5/5 Sequence complete
 RESULT pass system state_software BETA 5/5 Sequence complete
-RESULT pass system system_last_update STABLE 5/5 Sequence complete
+RESULT pass system system_last_update STABLE 6/6 Sequence complete
+CPBLTY pass system system_last_update.subblocks ALPHA 1/1 Capability supported
 RESULT pass system system_min_loglevel ALPHA 5/5 Sequence complete
 RESULT pass system too_much_state ALPHA 5/5 Sequence complete
 RESULT pass system valid_serial_no BETA 5/5 Sequence complete
