@@ -1,11 +1,11 @@
 {
-  "timestamp" : "2024-03-14T17:10:24Z",
-  "version" : "@@@cloud udmi version###1.5.0-36-g3bcb6c626",
+  "timestamp" : "2024-03-17T17:07:12Z",
+  "version" : "@@@cloud udmi version###1.5.0-53-g394a976f9",
   "system" : {
     "min_loglevel" : 200,
     "metrics_rate_sec" : 10,
     "operation" : {
-      "last_start" : "2024-03-14T17:09:46Z"
+      "last_start" : "2024-03-17T17:06:33Z"
     },
     "testing" : {
       "sequence_name" : "single_scan_past"
@@ -15,8 +15,7 @@
     "families" : {
       "vendor" : {
         "generation" : "1970-01-01T03:34:57Z",
-        "scan_duration_sec" : 10,
-        "enumerate" : false
+        "scan_duration_sec" : 10
       }
     }
   },

@@ -1,5 +1,8 @@
 {
   "features" : {
+    "endpoint.config" : {
+      "stage" : "beta"
+    },
     "enumeration.families" : {
       "stage" : "preview"
     },
@@ -19,7 +22,7 @@
       "stage" : "stable"
     }
   },
-  "generation" : "2023-11-07T14:28:58Z",
-  "timestamp" : "2023-11-07T14:28:59Z",
-  "version" : "1.4.2"
+  "generation" : "2024-03-17T16:37:40Z",
+  "timestamp" : "2024-03-17T16:37:41Z",
+  "version" : "1.5.0"
 }

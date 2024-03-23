@@ -42,6 +42,9 @@
       "type": "string",
       "format": "date-time"
     },
+    "rawFolder": {
+      "type": "string"
+    },
     "subFolder": {
       "enum": [
         "udmi",

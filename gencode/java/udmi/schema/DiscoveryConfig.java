@@ -20,7 +20,7 @@ import udmi.schema.Common.ProtocolFamily;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "generation",
-    "enumerate",
+    "depths",
     "families"
 })
 @Generated("jsonschema2pojo")
@@ -37,9 +37,9 @@ public class DiscoveryConfig {
      * Indicates which discovery sub-categories to activate
      * 
      */
-    @JsonProperty("enumerate")
+    @JsonProperty("depths")
     @JsonPropertyDescription("Indicates which discovery sub-categories to activate")
-    public Enumerate enumerate;
+    public Depths depths;
     /**
      * Address family config for a scan.
      * 
@@ -52,7 +52,7 @@ public class DiscoveryConfig {
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.generation == null)? 0 :this.generation.hashCode()));
-        result = ((result* 31)+((this.enumerate == null)? 0 :this.enumerate.hashCode()));
+        result = ((result* 31)+((this.depths == null)? 0 :this.depths.hashCode()));
         result = ((result* 31)+((this.families == null)? 0 :this.families.hashCode()));
         return result;
     }
@@ -66,7 +66,7 @@ public class DiscoveryConfig {
             return false;
         }
         DiscoveryConfig rhs = ((DiscoveryConfig) other);
-        return ((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.enumerate == rhs.enumerate)||((this.enumerate!= null)&&this.enumerate.equals(rhs.enumerate))))&&((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families))));
+        return ((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.depths == rhs.depths)||((this.depths!= null)&&this.depths.equals(rhs.depths))))&&((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families))));
     }
 
 }

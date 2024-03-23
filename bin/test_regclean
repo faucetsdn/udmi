@@ -118,8 +118,8 @@ rm -rf $fake_device && cp -a $clone_device $fake_device
 jq ".localnet.families.vendor.addr = \"2183213\"" $fake_metadata | sponge $fake_metadata
 
 echo Clean out the registry to make sure devices get removed...
-echo bin/registrar $site_arg $registrar_project -d
-bin/registrar $site_arg $registrar_project -d
+echo bin/registrar $site_arg $registrar_project -d -x
+bin/registrar $site_arg $registrar_project -d -x
 
 echo Checking reported cloud version info
 jq .cloud_version.udmi_ref $output_file

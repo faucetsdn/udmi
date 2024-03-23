@@ -1,14 +1,22 @@
 {
-  "timestamp" : "2024-03-20T07:13:26Z",
-  "version" : "@@@cloud udmi version###1.5.0-55-g604ba10b1",
+  "timestamp" : "2024-03-22T19:01:39Z",
+  "version" : "@@@cloud udmi version###1.5.0-104-g994c7e410",
   "system" : {
     "min_loglevel" : 200,
     "metrics_rate_sec" : 10,
     "operation" : {
-      "last_start" : "2024-03-20T07:12:46Z"
+      "last_start" : "2024-03-22T19:00:57Z"
     },
     "testing" : {
       "sequence_name" : "writeback_failure"
+    }
+  },
+  "localnet" : {
+    "families" : {
+      "vendor" : { },
+      "ipv4" : { },
+      "ether" : { },
+      "ipv6" : { }
     }
   },
   "pointset" : {

@@ -1,6 +1,5 @@
 package com.google.bos.udmi.service.core;
 
-import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.toDate;
@@ -15,8 +14,8 @@ import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudQuery;
-import udmi.schema.CloudQuery.Depth;
 import udmi.schema.Common.ProtocolFamily;
+import udmi.schema.Depths.Depth;
 import udmi.schema.DiscoveryEvent;
 import udmi.schema.Envelope;
 
@@ -49,6 +48,10 @@ public class CloudQueryHandler {
     controller.debug(format, args);
   }
 
+  private void issueModifiedDevice(String id) {
+    issueModifiedQuery(e -> e.deviceId = id);
+  }
+
   private void issueModifiedQuery(Consumer<Envelope> mutator) {
     CloudQuery cloudQuery = new CloudQuery();
     cloudQuery.generation = query.generation;
@@ -58,10 +61,6 @@ public class CloudQueryHandler {
 
   private void issueModifiedRegistry(String registryId) {
     issueModifiedQuery(e -> e.deviceRegistryId = registryId);
-  }
-
-  private void issueModifiedDevice(String id) {
-    issueModifiedQuery(e -> e.deviceId = id);
   }
 
   private CloudModel makeCloudModel(String registryId) {
@@ -76,7 +75,7 @@ public class CloudQueryHandler {
   }
 
   private void queryAllRegistries() {
-    Set<String> registries = iotAccess.listRegistries();
+    Set<String> registries = iotAccess.getRegistries();
     DiscoveryEvent discoveryEvent = new DiscoveryEvent();
     discoveryEvent.scan_family = ProtocolFamily.IOT;
     discoveryEvent.generation = query.generation;
@@ -125,15 +124,15 @@ public class CloudQueryHandler {
     debug("Registry %s had %d devices (%d active)", deviceRegistryId, discoveryEvent.devices.size(),
         active.size());
 
-    ifTrueThen(shouldDetailDevices(), () -> active.forEach(this::issueModifiedDevice));
+    ifTrueThen(shouldDetailEntries(), () -> active.forEach(this::issueModifiedDevice));
   }
 
-  private boolean shouldDetailDevices() {
+  private boolean shouldDetailEntries() {
     return Depth.DETAILS == query.depth;
   }
 
   private boolean shouldTraverseRegistries() {
-    return (Depth.DEVICES == query.depth) || shouldDetailDevices();
+    return (Depth.ENTRIES == query.depth) || shouldDetailEntries();
   }
 
   /**
@@ -143,12 +142,9 @@ public class CloudQueryHandler {
     query = newQuery;
     envelope = controller.getContinuation(newQuery).getEnvelope();
 
-    // If the query.depth is not defined then default to recursing down one level.
     if (envelope.deviceRegistryId == null) {
-      ifNullThen(newQuery.depth, () -> newQuery.depth = Depth.DEVICES);
       queryAllRegistries();
     } else if (envelope.deviceId == null) {
-      ifNullThen(newQuery.depth, () -> newQuery.depth = Depth.DETAILS);
       queryRegistryDevices();
     } else {
       queryDeviceDetails();
