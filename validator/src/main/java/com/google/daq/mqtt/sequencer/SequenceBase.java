@@ -2215,21 +2215,15 @@ public class SequenceBase {
 
   protected void forCapability(Capabilities capability, Runnable action) {
     try {
-<<<<<<< HEAD
       ifTrueThen(isCapableOf(capability), action);
-=======
-      Exception current = capabilityExceptions.computeIfAbsent(capability, CapabilitySuccess::new);
-      ifTrueThen(current instanceof CapabilitySuccess, action);
->>>>>>> master
     } catch (Exception e) {
       capabilityExceptions.put(capability, e);
     }
   }
 
   private boolean isCapableOf(Capabilities capability) {
-    Exception was = capabilityExceptions.computeIfAbsent(capability, CapabilitySuccess::new);
-    boolean capable = was instanceof CapabilitySuccess;
-    return capable;
+    Exception previous = capabilityExceptions.computeIfAbsent(capability, CapabilitySuccess::new);
+    return previous instanceof CapabilitySuccess;
   }
 
   private boolean shouldValidateSchema(SubFolder folder) {
