@@ -5,25 +5,28 @@
 05 RESULT fail system too_much_state ALPHA 0/5 Failed check that No more than 6 state updates in 60s
 06 RESULT fail enumeration.features feature_enumeration PREVIEW 0/5 Failed check that feature enumeration matches metadata; missing { enumeration }, extra { unknown }
 07 RESULT pass system valid_serial_no BETA 5/5 Sequence complete
-08 RESULT fail writeback writeback_success ALPHA 0/5 Timeout waiting for point filter_differential_pressure_setpoint to have value_state applied
-09 RESULT fail writeback writeback_success ALPHA 0/5 Timeout waiting for point filter_differential_pressure_setpoint to have value_state applied
+08 RESULT fail writeback writeback_success ALPHA 0/5 Because point filter_differential_pressure_setpoint is null, expected applied
+09 RESULT fail writeback writeback_success ALPHA 0/5 Because point filter_differential_pressure_setpoint is null, expected applied
 10 RESULT fail pointset pointset_publish_interval BETA 0/5 Failed check that time period between successive pointset events is between 5 and 8 seconds
 11 RESULT fail system.mode system_mode_restart ALPHA 0/5 Failed check that restart count increased by one
 12 RESULT fail system config_logging BETA 0/5 Bad version string number format
-13 CPBLTY pass system broken_config.logging ALPHA 1/1 Capability functional
+13 CPBLTY pass system broken_config.logging ALPHA 1/1 Capability supported
 13 RESULT fail system broken_config BETA 0/5 Timeout waiting for has applicable system status
-14 CPBLTY pass system broken_config.logging ALPHA 1/1 Capability functional
+14 CPBLTY pass system broken_config.logging ALPHA 1/1 Capability supported
 14 RESULT pass system broken_config BETA 5/5 Sequence complete
-15 CPBLTY skip system broken_config.logging ALPHA 0/1 Never executed
-15 RESULT fail system broken_config BETA 0/5 Timeout waiting for no applicable system status
+15 CPBLTY skip system broken_config.logging ALPHA 0/0 Never executed
+15 RESULT fail system broken_config BETA 0/4 Timeout waiting for no applicable system status
 16 CPBLTY fail system broken_config.logging ALPHA 0/1 While log category `system.config.apply` level `NOTICE` to be logged
 16 RESULT pass system broken_config BETA 4/5 Sequence complete
 17 CPBLTY fail system broken_config.logging ALPHA 0/1 While log category `system.config.receive` level `DEBUG` to be logged
 17 RESULT fail system broken_config BETA 0/5 expected:<system.config.[parse]> but was:<system.config.[apply]>
-18 RESULT pass system system_last_update STABLE 5/5 Sequence complete
-19 RESULT pass system system_last_update STABLE 5/5 Sequence complete
+18 CPBLTY pass system system_last_update.subblocks ALPHA 1/1 Capability supported
+18 RESULT pass system system_last_update STABLE 6/6 Sequence complete
+19 CPBLTY pass system system_last_update.subblocks ALPHA 1/1 Capability supported
+19 RESULT pass system system_last_update STABLE 6/6 Sequence complete
 20 RESULT fail system state_make_model BETA 0/5 Timeout waiting for no applicable system status
 24 RESULT skip system valid_serial_no BETA 0/0 State testing disabled
+25 CPBLTY skip system system_last_update.subblocks ALPHA 0/0 Never executed
 25 RESULT skip system system_last_update STABLE 0/0 State testing disabled
 26 RESULT fail system system_min_loglevel ALPHA 0/5 Received state update with no-state device
 27 RESULT pass system system_min_loglevel ALPHA 5/5 Sequence complete

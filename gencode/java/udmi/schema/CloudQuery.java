@@ -2,15 +2,11 @@
 package udmi.schema;
 
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 import javax.annotation.processing.Generated;
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.annotation.JsonValue;
 
 
 /**
@@ -46,7 +42,7 @@ public class CloudQuery {
     @JsonPropertyDescription("generational marker for this query")
     public Date generation;
     @JsonProperty("depth")
-    public CloudQuery.Depth depth;
+    public udmi.schema.Depths.Depth depth;
 
     @Override
     public int hashCode() {
@@ -68,47 +64,6 @@ public class CloudQuery {
         }
         CloudQuery rhs = ((CloudQuery) other);
         return (((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.depth == rhs.depth)||((this.depth!= null)&&this.depth.equals(rhs.depth))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
-    }
-
-    @Generated("jsonschema2pojo")
-    public enum Depth {
-
-        REGISTRIES("registries"),
-        DEVICES("devices"),
-        DETAILS("details");
-        private final String value;
-        private final static Map<String, CloudQuery.Depth> CONSTANTS = new HashMap<String, CloudQuery.Depth>();
-
-        static {
-            for (CloudQuery.Depth c: values()) {
-                CONSTANTS.put(c.value, c);
-            }
-        }
-
-        Depth(String value) {
-            this.value = value;
-        }
-
-        @Override
-        public String toString() {
-            return this.value;
-        }
-
-        @JsonValue
-        public String value() {
-            return this.value;
-        }
-
-        @JsonCreator
-        public static CloudQuery.Depth fromValue(String value) {
-            CloudQuery.Depth constant = CONSTANTS.get(value);
-            if (constant == null) {
-                throw new IllegalArgumentException(value);
-            } else {
-                return constant;
-            }
-        }
-
     }
 
 }

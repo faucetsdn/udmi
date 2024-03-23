@@ -1,5 +1,7 @@
 package com.google.bos.udmi.service.messaging.impl;
 
+import static com.google.api.client.util.Preconditions.checkState;
+import static com.google.udmi.util.Common.RAWFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 import static com.google.udmi.util.GeneralUtils.catchToElse;
@@ -13,8 +15,8 @@ import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.fromString;
 import static com.google.udmi.util.JsonUtil.parseJson;
 import static com.google.udmi.util.JsonUtil.stringify;
-import static com.google.udmi.util.JsonUtil.toStringMap;
 import static java.lang.String.format;
+import static java.util.Objects.isNull;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
@@ -172,8 +174,8 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     }
   }
 
-  protected void receiveMessage(Envelope envelope, Map<?, ?> messageMap) {
-    receiveMessage(toStringMap(envelope), stringify(messageMap));
+  protected void receiveMessage(Map<String, String> envelope, Object object) {
+    receiveMessage(envelope, stringify(object));
   }
 
   protected void setSourceQueue(BlockingQueue<QueueEntry> queueForScope) {
@@ -291,7 +293,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
             return;
           }
           envelope = bundle.envelope;
-          trace("Processing %s %s/%s %s", this, envelope.subType, envelope.subFolder,
+          trace("Processing message loop %s %s/%s %s", id, envelope.subType, envelope.subFolder,
               envelope.transactionId);
           if (ERROR_MESSAGE_MARKER.equals(envelope.transactionId)) {
             throw new RuntimeException("Exception due to test-induced error");
@@ -350,7 +352,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
       sanitizeAttributeMap(attributesMap);
       envelope = convertTo(Envelope.class, attributesMap);
     } catch (Exception e) {
-      attributesMap.put(INVALID_ENVELOPE_KEY, "true");
+      attributesMap.put(INVALID_ENVELOPE_KEY, friendlyStackTrace(e));
       receiveException(attributesMap, messageString, e, null);
       return;
     }
@@ -367,6 +369,9 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
 
   private void sanitizeAttributeMap(Map<String, String> attributesMap) {
     String subFolderRaw = attributesMap.get(SUBFOLDER_PROPERTY_KEY);
+    String rawFolder = attributesMap.get(RAWFOLDER_PROPERTY_KEY);
+    checkState(isNull(rawFolder) || "invalid".equals(subFolderRaw),
+        "found unexpected rawFolder " + rawFolder);
     if (subFolderRaw == null) {
       // Do nothing!
     } else if (subFolderRaw.equals("")) {
@@ -375,7 +380,8 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     } else {
       SubFolder subFolder = catchToElse(() -> SubFolder.fromValue(subFolderRaw), SubFolder.INVALID);
       if (!subFolder.value().equals(subFolderRaw)) {
-        debug("Coerced subFolder " + subFolderRaw + " to " + subFolder.value());
+        trace("Coerced subFolder " + subFolderRaw + " to " + subFolder.value());
+        attributesMap.put(RAWFOLDER_PROPERTY_KEY, subFolderRaw);
         attributesMap.put(SUBFOLDER_PROPERTY_KEY, subFolder.value());
       }
     }
@@ -389,7 +395,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     } else if (!Strings.isNullOrEmpty(subTypeRaw)) {
       SubType subType = catchToElse(() -> SubType.fromValue(subTypeRaw), SubType.INVALID);
       if (!subType.value().equals(subTypeRaw)) {
-        debug("Coerced subFolder " + subTypeRaw + " to " + subType.value());
+        trace("Coerced subType " + subTypeRaw + " to " + subType.value());
         attributesMap.put(SUBTYPE_PROPERTY_KEY, subType.value());
       }
     }
@@ -512,6 +518,11 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
 
     public Bundle(Envelope envelope, Object message) {
       this.envelope = ofNullable(envelope).orElseGet(Envelope::new);
+      this.message = message;
+    }
+
+    public Bundle(Map<String, String> attributes, Object message) {
+      this.attributesMap = attributes;
       this.message = message;
     }
   }

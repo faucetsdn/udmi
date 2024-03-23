@@ -27,7 +27,7 @@ public class ControlProcessor extends ProcessorBase {
   /**
    * Handle a cloud query command.
    */
-  @DispatchHandler
+  @MessageHandler
   public void cloudQueryHandler(CloudQuery query) {
     cloudQueryHandler.process(query);
   }

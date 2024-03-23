@@ -1,5 +1,5 @@
 {
-  "enumerate" : {
-    "families" : true
+  "depths" : {
+    "families" : "entries"
   }
 }

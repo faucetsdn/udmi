@@ -1,7 +1,7 @@
 {
-  "enumerate" : {
-    "families" : true,
-    "points" : true,
-    "features" : true
+  "depths" : {
+    "families" : "entries",
+    "points" : "entries",
+    "features" : "entries"
   }
 }

@@ -49,6 +49,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
+import udmi.schema.CloudModel;
 
 public class GeneralUtils {
 
@@ -197,6 +198,10 @@ public class GeneralUtils {
     }
   }
 
+  public static Runnable ignoreValue(Object ignored) {
+    return () -> {};
+  }
+
   public static Date toDate(Instant lastSeen) {
     return ifNotNullGet(lastSeen, Date::from);
   }
@@ -247,6 +252,10 @@ public class GeneralUtils {
     return value == null ? elseResult : converter.apply(value);
   }
 
+  public static <T, V> V ifNullElse(T value, V elseResult, Function<T, V> converter) {
+    return value == null ? elseResult : converter.apply(value);
+  }
+
   public static <T, V> V ifNotNullGet(T value, Supplier<V> converter) {
     return value == null ? null : converter.get();
   }
@@ -293,10 +302,7 @@ public class GeneralUtils {
   }
 
   public static <T> T ifTrueGet(Supplier<Boolean> conditional, Supplier<T> action) {
-    if (isTrue(conditional)) {
-      return action.get();
-    }
-    return null;
+    return isTrue(conditional) ? action.get() : null;
   }
 
   public static <T> T ifTrueGet(Object conditional, Supplier<T> action, Supplier<T> alternate) {
@@ -309,6 +315,10 @@ public class GeneralUtils {
 
   public static <T> T ifTrueGet(Object conditional, T value, Supplier<T> alternate) {
     return isTrue(conditional) ? value : alternate.get();
+  }
+
+  public static <T> T ifTrueGet(Object conditional, T value, T alternate) {
+    return isTrue(conditional) ? value : alternate;
   }
 
   public static <T> void ifTrueThen(Object conditional, Runnable action) {
@@ -327,8 +337,16 @@ public class GeneralUtils {
     return isTrue(conditional) ? null : supplier.get();
   }
 
+  public static <T> T ifNotTrueGet(Boolean conditional, T value) {
+    return isTrue(conditional) ? null : value;
+  }
+
   public static <T> T ifNotTrueGet(Supplier<Boolean> conditional, Supplier<T> supplier) {
     return isTrue(catchToNull(conditional)) ? null : supplier.get();
+  }
+
+  public static <T> T ifNotTrueGet(Supplier<Boolean> conditional, T value) {
+    return isTrue(catchToNull(conditional)) ? null : value;
   }
 
   public static boolean isNotTrue(Boolean value) {
@@ -372,6 +390,23 @@ public class GeneralUtils {
       return provider.get();
     } catch (Exception e) {
       return alternate.apply(e);
+    }
+  }
+
+  public static <T> T catchToElse(Supplier<T> provider, Consumer<Exception> alternate) {
+    try {
+      return provider.get();
+    } catch (Exception e) {
+      alternate.accept(e);
+      return null;
+    }
+  }
+
+  public static void catchToElse(Runnable provider, Consumer<Exception> alternate) {
+    try {
+      provider.run();
+    } catch (Exception e) {
+      alternate.accept(e);
     }
   }
 

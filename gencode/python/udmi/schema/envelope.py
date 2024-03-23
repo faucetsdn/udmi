@@ -15,6 +15,7 @@ class Envelope:
     self.gatewayId = None
     self.transactionId = None
     self.publishTime = None
+    self.rawFolder = None
     self.subFolder = None
     self.subType = None
 
@@ -33,6 +34,7 @@ class Envelope:
     result.gatewayId = source.get('gatewayId')
     result.transactionId = source.get('transactionId')
     result.publishTime = source.get('publishTime')
+    result.rawFolder = source.get('rawFolder')
     result.subFolder = source.get('subFolder')
     result.subType = source.get('subType')
     return result
@@ -75,6 +77,8 @@ class Envelope:
       result['transactionId'] = self.transactionId # 5
     if self.publishTime:
       result['publishTime'] = self.publishTime # 5
+    if self.rawFolder:
+      result['rawFolder'] = self.rawFolder # 5
     if self.subFolder:
       result['subFolder'] = self.subFolder # 5
     if self.subType:

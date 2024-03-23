@@ -3,6 +3,7 @@ package com.google.daq.mqtt.sequencer.sequences;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.daq.mqtt.sequencer.SequenceBase.Capabilities.LOGGING;
+import static com.google.daq.mqtt.sequencer.SequenceBase.Capabilities.MATCHING_SUBBLOCKS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.THREE_MINUTES_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
@@ -52,15 +53,16 @@ public class ConfigSequences extends SequenceBase {
   @Feature(stage = STABLE, bucket = SYSTEM)
   @Summary("Check that last_update state is correctly set in response to a config update.")
   @ValidateSchema(SubFolder.SYSTEM)
+  @Capability(value = MATCHING_SUBBLOCKS, stage = ALPHA)
   public void system_last_update() {
     waitFor("state last_config matches config timestamp", this::lastConfigUpdated);
-    waitFor("state update complete", this::stateMatchesConfig);
+    waitForCapability(MATCHING_SUBBLOCKS, "state update complete", this::stateMatchesConfig);
     forceConfigUpdate("trigger another config update");
     waitFor("state last_config matches config timestamp", this::lastConfigUpdated);
-    waitFor("state update complete", this::stateMatchesConfig);
+    waitForCapability(MATCHING_SUBBLOCKS, "state update complete", this::stateMatchesConfig);
     forceConfigUpdate("trigger another config update");
     waitFor("state last_config matches config timestamp", this::lastConfigUpdated);
-    waitFor("state update complete", this::stateMatchesConfig);
+    waitForCapability(MATCHING_SUBBLOCKS, "state update complete", this::stateMatchesConfig);
   }
 
   @Test(timeout = TWO_MINUTES_MS)

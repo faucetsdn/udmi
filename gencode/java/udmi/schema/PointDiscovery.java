@@ -2,8 +2,8 @@
 package udmi.schema;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -97,7 +97,7 @@ public class PointDiscovery {
      */
     @JsonProperty("ancillary")
     @JsonPropertyDescription("Arbitrary blob of json associated with this point")
-    public HashMap<String, Object> ancillary;
+    public Map<String, Object> ancillary;
 
     @Override
     public int hashCode() {

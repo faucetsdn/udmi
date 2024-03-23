@@ -15,6 +15,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.EndpointConfiguration.Protocol;
+import udmi.schema.Envelope;
 
 /**
  * Basic message pipe interface that logically supports an in-source and out-destination. The pipe

@@ -49,7 +49,7 @@ public interface IotAccessProvider extends ContainerProvider {
   /**
    * Get all registries associated with this provider.
    */
-  Set<String> listRegistries();
+  Set<String> getRegistries();
 
   boolean isEnabled();
 

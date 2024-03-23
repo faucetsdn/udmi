@@ -11,22 +11,22 @@
       "type": "string",
       "format": "date-time"
     },
-    "enumerate": {
+    "depths": {
       "description": "Indicates which discovery sub-categories to activate",
       "type": "object",
       "additionalProperties": false,
       "properties": {
         "families": {
-          "type": "boolean"
+          "$ref": "file:common.json#/definitions/depth"
         },
         "devices": {
-          "type": "boolean"
+          "$ref": "file:common.json#/definitions/depth"
         },
         "points": {
-          "type": "boolean"
+          "$ref": "file:common.json#/definitions/depth"
         },
         "features": {
-          "type": "boolean"
+          "$ref": "file:common.json#/definitions/depth"
         }
       }
     },

@@ -2,6 +2,9 @@
 
 while [[ $# -gt 0 ]]; do
   if [[ "$1" == "check" ]]; then
+    check=check
+    shift
+  elif [[ "$1" == "debug" ]]; then
     check="check -i"
     shift
   elif [[ "$1" == "covg" ]]; then

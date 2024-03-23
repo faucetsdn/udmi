@@ -1,23 +1,13 @@
 #!/bin/bash -e
 
-ROOT=$(dirname $0)/..
-
-function usage {
-    echo Error: $*
-    echo Usage: $0 target { prep, build, push, apply } [--no-check] [repo]
-    exit 1
-}
-
-function fail {
-    echo Error: $*
-    exit 1
-}
+UDMI_ROOT=$(dirname $0)/..
 
 target=$1
 cmd=$2
-shift 2 || usage missing arguments
+shift 2 || usage target { prep, build, push, apply } [--no-check] [repo]
 
-cd ${ROOT}/${target}
+source ${UDMI_ROOT}/etc/shell_common.sh
+cd ${UDMI_ROOT}/${target}
 
 git_branch=$(git rev-parse --abbrev-ref HEAD)
 git_remote=$(git config --get branch.$git_branch.remote) || fail missing git remote
@@ -75,8 +65,6 @@ else
     udmi_ref=$REPOSITORY:$udmi_tag
 fi
 
-version=`git describe`
-
 RUNARGS="--rm -ti -v $PWD/var:/udmi -v $HOME/.config:/root/.config --tmpfs /tmp"
 
 prep=
@@ -106,7 +94,7 @@ if [[ -n $prep ]]; then
     build_time=`date --utc -Imin -r $LIBFILE`
     cat <<EOF > var/deployed_version.json
 {
-  "udmi_version": "$version",
+  "udmi_version": "$udmi_version",
   "udmi_ref": "$udmi_ref",
   "built_at": "$build_time",
   "built_by": "$current_user"
@@ -126,16 +114,19 @@ if [[ -n $push ]]; then
     hash=$(docker images --digests ${udmi_ref%:*} | fgrep $udmi_tag | awk '{print $3}')
     ihash=$udmi_ref@$hash
     for file in $TEMPLATES; do
-        cp etc/$file tmp/$file
-        sed -i tmp/$file \
+        out_file=tmp/$file
+        src_file=etc/$file
+        alt_file=etc/${UDMI_NAMESPACE}~$file
+        [[ -f $alt_file ]] && src_file=$alt_file
+        sed < $src_file > $out_file \
             -e "s^@IMAGE@^$ihash^" \
             -e "s^@TARGET@^$target^" \
             -e "s^@UDMI_NAMESPACE@^$UDMI_NAMESPACE^" \
             -e "s^@GCP_PROJECT@^$GCP_PROJECT^"
-        if diff etc/$file tmp/$file; then
-            rm tmp/$file
+        if diff $src_file $out_file; then
+            rm $out_file
         else
-            echo Customized output in tmp/$file
+            echo Customized output in $out_file from $src_file
         fi
     done
     echo Done with container build.
