@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import udmi.schema.Common.ProtocolFamily;
+import udmi.schema.Depths.Depth;
 import udmi.schema.DeviceMappingConfig;
 import udmi.schema.DeviceMappingState;
 import udmi.schema.DiscoveryConfig;
@@ -67,7 +68,7 @@ public class MappingAgent extends MappingBase {
         key -> new FamilyDiscoveryConfig());
     familyConfig.generation = generation;
     familyConfig.scan_interval_sec = SCAN_INTERVAL_SEC;
-    familyConfig.enumerate = true;
+    familyConfig.depth = Depth.ENTRIES;
     discoveryPublish(discoveryConfig);
     System.err.println("Started discovery generation " + generation);
   }

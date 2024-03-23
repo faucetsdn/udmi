@@ -35,11 +35,6 @@ class TargetProcessorTest extends ProcessorTestBase {
   }
 
   @NotNull
-  protected Class<? extends ProcessorBase> getProcessorClass() {
-    return TargetProcessor.class;
-  }
-
-  @NotNull
   private Object getTestMessage(boolean isExtra) {
     return isExtra ? makeExtraFieldMessage() : new PointsetEvent();
   }
@@ -62,7 +57,6 @@ class TargetProcessorTest extends ProcessorTestBase {
   public void unexpectedReceive() {
     initializeTestInstance();
     getReverseDispatcher().publish(getTestMessage(true));
-    getReverseDispatcher().waitForMessageProcessed(Object.class);
     terminateAndWait();
 
     assertEquals(1, captured.size(), "unexpected received message count");
@@ -77,6 +71,10 @@ class TargetProcessorTest extends ProcessorTestBase {
     verifyCommand(commandCaptor, true);
   }
 
+  private void initializeTestInstance() {
+    initializeTestInstance(TargetProcessor.class);
+  }
+
   /**
    * Test that a state update with multiple sub-blocks results in the expected defaulted message.
    */
@@ -84,7 +82,6 @@ class TargetProcessorTest extends ProcessorTestBase {
   public void simpleReceive() {
     initializeTestInstance();
     getReverseDispatcher().publish(getTestMessage(false));
-    getReverseDispatcher().waitForMessageProcessed(PointsetEvent.class);
     terminateAndWait();
 
     assertEquals(1, captured.size(), "unexpected received message count");

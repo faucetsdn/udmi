@@ -67,6 +67,10 @@
       "type": "string",
       "pattern": "^[-_/a-zA-Z0-9#]+$"
     },
+    "enabled": {
+      "description": "Indicator if this endpoint should be active (null or non-empty)",
+      "type": "string"
+    },
     "capacity": {
       "description": "Queue capacity for limiting pipes",
       "type": "integer"

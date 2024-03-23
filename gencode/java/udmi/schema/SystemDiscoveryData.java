@@ -1,7 +1,7 @@
 
 package udmi.schema;
 
-import java.util.HashMap;
+import java.util.Map;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -39,7 +39,7 @@ public class SystemDiscoveryData {
      */
     @JsonProperty("ancillary")
     @JsonPropertyDescription("Arbitrary blob of json associated with this point")
-    public HashMap<String, Object> ancillary;
+    public Map<String, Object> ancillary;
     /**
      * State System Hardware
      * <p>

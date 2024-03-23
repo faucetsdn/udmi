@@ -23,7 +23,7 @@
     },
     "regdive": {
       "periodic_sec": 86400,
-      "payload": "query/cloud:{\"generation\":\"{{timestamp}}\", \"depth\":\"devices\"}",
+      "payload": "query/cloud:{\"generation\":\"{{timestamp}}\", \"depth\":\"entries\"}",
       "send_id": "${UDMI_PREFIX}udmi_control",
       "generation": "2024-03-06T00:15:00Z"
     }
@@ -44,6 +44,17 @@
       "recv_id": "${UDMI_PREFIX}udmi_control-udmis",
       "send_id": "${UDMI_PREFIX}udmi_target",
       "side_id": "${UDMI_PREFIX}udmi_control"
+    },
+    "mapping": {
+      "recv_id": "${UDMI_PREFIX}udmi_target-discovery",
+      "send_id": "${UDMI_PREFIX}udmi_target",
+      "side_id": "${UDMI_PREFIX}udmi_control",
+      "enabled": "${BITBOX_DISCOVERY}"
+    },
+    "bitbox": {
+      "recv_id": "${BITBOX_DISCOVERY}",
+      "send_id": "${UDMI_PREFIX}udmi_target",
+      "enabled": "${BITBOX_DISCOVERY}"
     }
   },
   "iot_access": {

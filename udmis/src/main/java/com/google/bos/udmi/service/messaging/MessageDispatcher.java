@@ -7,6 +7,7 @@ import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Collection;
+import java.util.Map;
 import java.util.function.Consumer;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
@@ -46,7 +47,7 @@ public interface MessageDispatcher {
   /**
    * Make a new continuation with the given envelope.
    */
-  public MessageContinuation withEnvelope(Envelope envelope);
+  MessageContinuation withEnvelope(Envelope envelope);
 
   /**
    * Get a message continuation for the received message.

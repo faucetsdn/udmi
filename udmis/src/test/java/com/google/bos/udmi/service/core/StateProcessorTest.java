@@ -3,7 +3,6 @@ package com.google.bos.udmi.service.core;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.JsonUtil.fromStringStrict;
 import static com.google.udmi.util.JsonUtil.loadFileRequired;
-import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -40,12 +39,6 @@ public class StateProcessorTest extends ProcessorTestBase {
 
   public static final Date INITIAL_LAST_START = CleanDateFormat.cleanDate(new Date(12981837));
   private static final String LEGACY_STATE_MESSAGE_FILE = "src/test/messages/legacy_state.json";
-  private static final long SHUTDOWN_PAUSE_MS = 1000;
-
-  @NotNull
-  protected Class<? extends ProcessorBase> getProcessorClass() {
-    return StateProcessor.class;
-  }
 
   private boolean contains(Predicate<Object> objectPredicate) {
     return captured.stream().anyMatch(objectPredicate);
@@ -86,7 +79,7 @@ public class StateProcessorTest extends ProcessorTestBase {
   private Config processLastStart(Config testConfig) {
     initializeTestInstance();
     getReverseDispatcher().publish(getTestStateBundle(false, true));
-    getReverseDispatcher().waitForMessageProcessed(SystemState.class);
+
     terminateAndWait();
 
     @SuppressWarnings("rawtypes")
@@ -100,6 +93,10 @@ public class StateProcessorTest extends ProcessorTestBase {
     Function<String, String> configMunger = configCaptor.getValue();
     return ifNotNullGet(configMunger.apply(stringify(testConfig)),
         newConfig -> fromStringStrict(Config.class, newConfig));
+  }
+
+  private void initializeTestInstance() {
+    initializeTestInstance(StateProcessor.class);
   }
 
   @Test
@@ -135,8 +132,8 @@ public class StateProcessorTest extends ProcessorTestBase {
     StateProcessor processor = initializeTestInstance(StateProcessor.class);
     Object message = loadFileRequired(Object.class, LEGACY_STATE_MESSAGE_FILE);
     dispatcher.withEnvelopeFor(new Envelope(), message, () -> processor.defaultHandler(message));
-    getReverseDispatcher().waitForMessageProcessed(SystemState.class);
     terminateAndWait();
+    assertEquals(3, captured.size(), "expected captured messages");
   }
 
   /**
@@ -145,12 +142,10 @@ public class StateProcessorTest extends ProcessorTestBase {
   @Test
   public void multiExpansion() {
     initializeTestInstance();
-    getReverseDispatcher().publish(getTestStateBundle(true, false));
-    getReverseDispatcher().waitForMessageProcessed(SystemState.class);
-    getReverseDispatcher().waitForMessageProcessed(GatewayState.class);
-    terminateAndWait();
 
-    safeSleep(SHUTDOWN_PAUSE_MS); // Extra insurance against flaky tests.
+    getReverseDispatcher().publish(getTestStateBundle(true, false));
+
+    terminateAndWait();
 
     assertEquals(3, captured.size(), "unexpected received message count");
     assertTrue(contains(message -> message instanceof StateUpdate), "has StateUpdate");
@@ -166,8 +161,9 @@ public class StateProcessorTest extends ProcessorTestBase {
   @Test
   public void singleExpansion() {
     initializeTestInstance();
+
     getReverseDispatcher().publish(getTestStateBundle(false, false));
-    safeSleep(ASYNC_PROCESSING_DELAY_MS);
+
     terminateAndWait();
 
     assertEquals(2, captured.size(), "unexpected received message count");
@@ -190,7 +186,7 @@ public class StateProcessorTest extends ProcessorTestBase {
     bundle.envelope.transactionId = MessageBase.ERROR_MESSAGE_MARKER;
     bundle.message = "hello";
     getReverseDispatcher().publish(bundle);
-    getReverseDispatcher().waitForMessageProcessed(Exception.class);
+
     terminateAndWait();
 
     assertEquals(0, captured.size(), "unexpected received message count");
