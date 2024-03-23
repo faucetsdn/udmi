@@ -1,12 +1,10 @@
 {
   "localnet" : {
     "families" : {
-      "ether" : {
-        "addr" : "00:50:b6:ed:5f:77"
-      },
-      "ipv4" : {
-        "addr" : "192.168.2.1"
-      }
+      "ether" : { },
+      "ipv4" : { },
+      "ipv6" : { },
+      "vendor" : { }
     }
   },
   "pointset" : {
@@ -29,12 +27,12 @@
     "metrics_rate_sec" : 10,
     "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2023-11-29T20:11:29Z"
+      "last_start" : "2024-03-23T18:28:39Z"
     },
     "testing" : {
       "sequence_name" : "system_min_loglevel"
     }
   },
-  "timestamp" : "2023-11-29T20:12:15Z",
-  "version" : "1.4.2-57-gbb3a0154e"
+  "timestamp" : "2024-03-23T18:29:54Z",
+  "version" : "1.5.0-104-g994c7e410"
 }

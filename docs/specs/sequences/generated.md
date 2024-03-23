@@ -78,7 +78,6 @@ Check that the device correctly handles a broken (non-json) config message.
 1. Wait for log category `system.config.parse` level `ERROR` to be logged
 1. Check that log category `system.config.apply` level `NOTICE` not logged
 1. Force reset config
-1. Wait for state last_config sync
 1. Wait for log category `system.config.apply` level `NOTICE` to be logged
 1. Wait for restored state synchronized
 1. Update config before last_config updated:
