@@ -745,7 +745,7 @@ public class SequenceBase {
     queryState();
 
     ifTrueThen(deviceSupportsState(),
-        () -> untilTrue("device state update", () -> deviceState != null));
+        () -> untilTrue("initial device state", () -> deviceState != null));
     checkThatHasInterestingSystemStatus(false);
 
     // Do this late in the sequence to make sure any state is cleared out from previous test.

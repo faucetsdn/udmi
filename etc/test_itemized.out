@@ -1,7 +1,7 @@
 01 RESULT fail system device_config_acked BETA 0/5 Timeout waiting for config acked
 02 RESULT fail pointset pointset_request_extraneous BETA 0/5 Because config TIMESTAMP event TIMESTAMP differences: llama
 03 RESULT fail pointset pointset_remove_point BETA 0/5 Because config TIMESTAMP state TIMESTAMP differences: filter_alarm_pressure_status
-04 RESULT fail pointset pointset_remove_point BETA 0/5 Timeout waiting for device state update
+04 RESULT fail pointset pointset_remove_point BETA 0/5 Timeout waiting for initial device state
 05 RESULT fail system too_much_state ALPHA 0/5 Failed check that No more than 6 state updates in 60s
 06 RESULT fail enumeration.features feature_enumeration PREVIEW 0/5 Failed check that feature enumeration matches metadata; missing { enumeration }, extra { unknown }
 07 RESULT pass system valid_serial_no BETA 5/5 Sequence complete
@@ -15,7 +15,7 @@
 14 CPBLTY pass system broken_config.logging ALPHA 1/1 Capability supported
 14 RESULT pass system broken_config BETA 5/5 Sequence complete
 15 CPBLTY skip system broken_config.logging ALPHA 0/0 Never executed
-15 RESULT fail system broken_config BETA 0/4 Timeout waiting for initial state synchronized
+15 RESULT fail system broken_config BETA 0/4 Timeout waiting for initial device state
 16 CPBLTY fail system broken_config.logging ALPHA 0/1 While log category `system.config.apply` level `NOTICE` to be logged
 16 RESULT pass system broken_config BETA 4/5 Sequence complete
 17 CPBLTY fail system broken_config.logging ALPHA 0/1 While log category `system.config.receive` level `DEBUG` to be logged
