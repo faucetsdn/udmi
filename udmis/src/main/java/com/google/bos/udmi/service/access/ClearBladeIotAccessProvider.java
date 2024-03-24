@@ -91,6 +91,7 @@ import udmi.schema.IotAccess;
  */
 public class ClearBladeIotAccessProvider extends IotAccessBase {
 
+  public static final String REGISTRIES_FIELD_MASK = "id,name";
   private static final Set<String> CLOUD_REGIONS = ImmutableSet.of("us-central1");
   private static final String EMPTY_JSON = "{}";
   private static final BiMap<Key_format, PublicKeyFormat> AUTH_TYPE_MAP = ImmutableBiMap.of(
@@ -108,12 +109,9 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       .setGatewayType(GatewayType.GATEWAY)
       .setGatewayAuthMethod(GatewayAuthMethod.ASSOCIATION_ONLY)
       .build();
-
   private static final String UDMI_TARGET_TOPIC = "udmi_target"; // TODO: Make this not hardcoded.
   private static final String UDMI_STATE_TOPIC = "udmi_state"; // TODO: Make this not hardcoded.
   private static final String TOPIC_NAME_FORMAT = "projects/%s/topics/%s";
-  public static final String REGISTRIES_FIELD_MASK = "id,name";
-
   private final String projectId;
   private final DeviceManagerInterface deviceManager;
 
@@ -142,6 +140,17 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
             .collect(Collectors.toList()));
   }
 
+  private static Entry<String, CloudModel> convertPartial(Device deviceRaw) {
+    Device.Builder device = deviceRaw.toBuilder();
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.num_id = device.getNumId();
+    cloudModel.resource_type = resourceType(deviceRaw);
+    cloudModel.last_event_time = getSafeDate(device.getLastEventTime());
+    cloudModel.blocked = device.isBlocked() ? true : null;
+    cloudModel.credentials = null;
+    return new SimpleEntry<>(device.getId(), cloudModel);
+  }
+
   @Nullable
   private static Date getSafeDate(String lastEventTime) {
     return getDate(isNullOrEmpty(lastEventTime) ? null : lastEventTime);
@@ -163,55 +172,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   @VisibleForTesting
   protected DeviceManagerInterface getDeviceManager(int monitorSec) {
     return ProfilingProxy.create(this, new DeviceManagerClient(), monitorSec);
-  }
-
-  @NotNull
-  @Override
-  public Set<String> getRegistriesForRegion(String region) {
-    if (region == null) {
-      return CLOUD_REGIONS;
-    }
-
-    try {
-      String parent = LocationName.of(projectId, region).getLocationFullName();
-      ListDeviceRegistriesRequest request = ListDeviceRegistriesRequest.Builder.newBuilder()
-          .setParent(parent).setFieldMask(REGISTRIES_FIELD_MASK).build();
-      ListDeviceRegistriesResponse response = deviceManager.listDeviceRegistries(request);
-      requireNonNull(response, "get registries response is null");
-      List<DeviceRegistry> deviceRegistries = response.getDeviceRegistriesList();
-      Set<String> registries =
-          ofNullable(deviceRegistries).orElseGet(ImmutableList::of).stream()
-              .map(registry -> registry.toBuilder().getId())
-              .collect(Collectors.toSet());
-      debug("Fetched " + registries.size() + " registries for region " + region);
-      return registries;
-    } catch (Exception e) {
-      throw new RuntimeException("While fetching registries for region " + region, e);
-    }
-  }
-
-  @Override
-  public boolean isEnabled() {
-    return !isNullOrEmpty(projectId);
-  }
-
-  @Override
-  public String updateConfig(String registryId, String deviceId, String config, Long version) {
-    try {
-      ByteString binaryData = new ByteString(encodeBase64(config));
-      String updateVersion = ifNotNullGet(version, v -> Long.toString(version));
-      String location = getRegistryLocation(registryId);
-      ModifyCloudToDeviceConfigRequest request =
-          ModifyCloudToDeviceConfigRequest.Builder.newBuilder()
-              .setName(DeviceName.of(projectId, location, registryId, deviceId).toString())
-              .setBinaryData(binaryData).setVersionToUpdate(updateVersion).build();
-      DeviceConfig response = deviceManager.modifyCloudToDeviceConfig(request);
-      debug("Modified %s/%s config version %s", registryId, deviceId, response.getVersion());
-      return config;
-    } catch (Exception e) {
-      throw new RuntimeException(
-          format("While modifying device config %s/%s", registryId, deviceId), e);
-    }
   }
 
   private CloudModel bindDeviceToGateway(String registryId, String gatewayId,
@@ -240,31 +200,22 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     return reply;
   }
 
-  private static Entry<String, CloudModel> convertPartial(Device deviceRaw) {
-    Device.Builder device = deviceRaw.toBuilder();
-    CloudModel cloudModel = new CloudModel();
-    cloudModel.num_id = device.getNumId();
-    cloudModel.resource_type = resourceType(deviceRaw);
-    cloudModel.last_event_time = getSafeDate(device.getLastEventTime());
-    cloudModel.blocked = device.isBlocked() ? true : null;
-    cloudModel.credentials = null;
-    return new SimpleEntry<>(device.getId(), cloudModel);
-  }
-
-  private CloudModel convertFull(Device deviceRaw) {
-    Device.Builder device = deviceRaw.toBuilder();
-    CloudModel cloudModel = new CloudModel();
-    cloudModel.num_id = device.getNumId();
-    cloudModel.resource_type = resourceType(deviceRaw);
-    cloudModel.blocked = device.isBlocked();
-    cloudModel.metadata = device.getMetadata();
-    cloudModel.last_event_time = getSafeDate(device.getLastEventTime());
-    cloudModel.last_state_time = getSafeDate(device.getLastStateTime());
-    cloudModel.last_config_time = getSafeDate(device.getLastConfigSendTime());
-    cloudModel.last_config_ack = getSafeDate(device.getLastConfigAckTime());
-    cloudModel.last_event_time = getSafeDate(device.getLastErrorTime());
-    cloudModel.credentials = convertIot(device.getCredentials());
-    return cloudModel;
+  private CloudModel blockDevice(String registryId, Device device) {
+    String deviceId = device.toBuilder().getId();
+    String name = getDeviceName(registryId, deviceId);
+    Device fullDevice = device.toBuilder().setName(name).setBlocked(true).build();
+    try {
+      UpdateDeviceRequest request =
+          UpdateDeviceRequest.Builder.newBuilder().setDevice(fullDevice).setName(name)
+              .setUpdateMask(BLOCKED_FIELD_MASK).build();
+      requireNonNull(deviceManager.updateDevice(request), "Invalid RPC response");
+      CloudModel cloudModel = new CloudModel();
+      cloudModel.operation = Operation.BLOCK;
+      cloudModel.num_id = hashedDeviceId(registryId, deviceId);
+      return cloudModel;
+    } catch (Exception e) {
+      throw new RuntimeException("While updating " + deviceId, e);
+    }
   }
 
   private Device convert(CloudModel cloudModel, String deviceId) {
@@ -283,6 +234,22 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     CloudModel cloudModel = new CloudModel();
     cloudModel.operation = operation;
     cloudModel.num_id = EMPTY_RETURN_RECEIPT;
+    return cloudModel;
+  }
+
+  private CloudModel convertFull(Device deviceRaw) {
+    Device.Builder device = deviceRaw.toBuilder();
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.num_id = device.getNumId();
+    cloudModel.resource_type = resourceType(deviceRaw);
+    cloudModel.blocked = device.isBlocked();
+    cloudModel.metadata = device.getMetadata();
+    cloudModel.last_event_time = getSafeDate(device.getLastEventTime());
+    cloudModel.last_state_time = getSafeDate(device.getLastStateTime());
+    cloudModel.last_config_time = getSafeDate(device.getLastConfigSendTime());
+    cloudModel.last_config_ack = getSafeDate(device.getLastConfigAckTime());
+    cloudModel.last_event_time = getSafeDate(device.getLastErrorTime());
+    cloudModel.credentials = convertIot(device.getCredentials());
     return cloudModel;
   }
 
@@ -320,6 +287,35 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       }
       throw applicationException;
     }
+  }
+
+  private CloudModel createRegistry(String registryId, Device device) {
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.operation = CREATE;
+    cloudModel.resource_type = REGISTRY;
+    cloudModel.num_id = registryId;
+    try {
+      String location = getRegistryLocation(reflectRegistry);
+      DeviceRegistry.Builder registry = DeviceRegistry.newBuilder()
+          .setId(registryId)
+          .setEventNotificationConfigs(ImmutableList.of(eventNotificationConfig()))
+          .setStateNotificationConfig(stateNotificationConfig())
+          .setLogLevel(LogLevel.DEBUG);
+      CreateDeviceRegistryRequest request = CreateDeviceRegistryRequest.Builder.newBuilder()
+          .setParent(LocationName.of(projectId, location).toString())
+          .setDeviceRegistry(registry.build()).build();
+      deviceManager.createDeviceRegistry(request);
+    } catch (ApplicationException applicationException) {
+      if (!applicationException.getMessage().contains("ALREADY_EXISTS")) {
+        throw applicationException;
+      }
+    }
+    return cloudModel;
+  }
+
+  private EventNotificationConfig eventNotificationConfig() {
+    String topicName = getScopedTopic(UDMI_TARGET_TOPIC);
+    return EventNotificationConfig.newBuilder().setPubsubTopicName(topicName).build();
   }
 
   @NotNull
@@ -365,6 +361,17 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
 
   private String getRegistryName(String registryId) {
     return RegistryName.of(projectId, getRegistryLocation(registryId), registryId).toString();
+  }
+
+  private String getScopedTopic(String udmiTargetTopic) {
+    return format(TOPIC_NAME_FORMAT, projectId, getPodNamespacePrefix() + udmiTargetTopic);
+  }
+
+  /**
+   * Create pseudo device numerical id that can be used for operation verification.
+   */
+  private String hashedDeviceId(String registryId, String deviceId) {
+    return String.valueOf(Objects.hash(registryId, deviceId));
   }
 
   private CloudModel listRegistryDevices(String deviceRegistryId, String gatewayId) {
@@ -421,39 +428,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     }
   }
 
-  private CloudModel createRegistry(String registryId, Device device) {
-    CloudModel cloudModel = new CloudModel();
-    cloudModel.operation = CREATE;
-    cloudModel.resource_type = REGISTRY;
-    cloudModel.num_id = registryId;
-    try {
-      String location = getRegistryLocation(reflectRegistry);
-      DeviceRegistry.Builder registry = DeviceRegistry.newBuilder()
-          .setId(registryId)
-          .setEventNotificationConfigs(ImmutableList.of(eventNotificationConfig()))
-          .setStateNotificationConfig(stateNotificationConfig())
-          .setLogLevel(LogLevel.DEBUG);
-      CreateDeviceRegistryRequest request = CreateDeviceRegistryRequest.Builder.newBuilder()
-          .setParent(LocationName.of(projectId, location).toString())
-          .setDeviceRegistry(registry.build()).build();
-      deviceManager.createDeviceRegistry(request);
-    } catch (ApplicationException applicationException) {
-      if (!applicationException.getMessage().contains("ALREADY_EXISTS")) {
-        throw applicationException;
-      }
-    }
-    return cloudModel;
-  }
-
-  private String getScopedTopic(String udmiTargetTopic) {
-    return format(TOPIC_NAME_FORMAT, projectId, getPodNamespacePrefix() + udmiTargetTopic);
-  }
-
-  private EventNotificationConfig eventNotificationConfig() {
-    String topicName = getScopedTopic(UDMI_TARGET_TOPIC);
-    return EventNotificationConfig.newBuilder().setPubsubTopicName(topicName).build();
-  }
-
   private StateNotificationConfig stateNotificationConfig() {
     String topicName = getScopedTopic(UDMI_STATE_TOPIC);
     return StateNotificationConfig.newBuilder().setPubsubTopicName(topicName).build();
@@ -502,24 +476,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     }
   }
 
-  private CloudModel blockDevice(String registryId, Device device) {
-    String deviceId = device.toBuilder().getId();
-    String name = getDeviceName(registryId, deviceId);
-    Device fullDevice = device.toBuilder().setName(name).setBlocked(true).build();
-    try {
-      UpdateDeviceRequest request =
-          UpdateDeviceRequest.Builder.newBuilder().setDevice(fullDevice).setName(name)
-              .setUpdateMask(BLOCKED_FIELD_MASK).build();
-      requireNonNull(deviceManager.updateDevice(request), "Invalid RPC response");
-      CloudModel cloudModel = new CloudModel();
-      cloudModel.operation = Operation.BLOCK;
-      cloudModel.num_id = hashedDeviceId(registryId, deviceId);
-      return cloudModel;
-    } catch (Exception e) {
-      throw new RuntimeException("While updating " + deviceId, e);
-    }
-  }
-
   private CloudModel updateDevice(String registryId, Device device) {
     String deviceId = device.toBuilder().getId();
     String name = getDeviceName(registryId, deviceId);
@@ -536,13 +492,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     } catch (Exception e) {
       throw new RuntimeException("While updating " + deviceId, e);
     }
-  }
-
-  /**
-   * Create pseudo device numerical id that can be used for operation verification.
-   */
-  private String hashedDeviceId(String registryId, String deviceId) {
-    return String.valueOf(Objects.hash(registryId, deviceId));
   }
 
   @Override
@@ -627,6 +576,36 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     }
   }
 
+  @NotNull
+  @Override
+  public Set<String> getRegistriesForRegion(String region) {
+    if (region == null) {
+      return CLOUD_REGIONS;
+    }
+
+    try {
+      String parent = LocationName.of(projectId, region).getLocationFullName();
+      ListDeviceRegistriesRequest request = ListDeviceRegistriesRequest.Builder.newBuilder()
+          .setParent(parent).setFieldMask(REGISTRIES_FIELD_MASK).build();
+      ListDeviceRegistriesResponse response = deviceManager.listDeviceRegistries(request);
+      requireNonNull(response, "get registries response is null");
+      List<DeviceRegistry> deviceRegistries = response.getDeviceRegistriesList();
+      Set<String> registries =
+          ofNullable(deviceRegistries).orElseGet(ImmutableList::of).stream()
+              .map(registry -> registry.toBuilder().getId())
+              .collect(Collectors.toSet());
+      debug("Fetched " + registries.size() + " registries for region " + region);
+      return registries;
+    } catch (Exception e) {
+      throw new RuntimeException("While fetching registries for region " + region, e);
+    }
+  }
+
+  @Override
+  public boolean isEnabled() {
+    return !isNullOrEmpty(projectId);
+  }
+
   @Override
   public CloudModel listDevices(String deviceRegistryId) {
     return listRegistryDevices(deviceRegistryId, null);
@@ -660,6 +639,26 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     } catch (Exception e) {
       throw new RuntimeException(format("While sending command to ClearBlade %s/%s/%s",
           registryId, deviceId, subFolder), e);
+    }
+  }
+
+  @Override
+  public String updateConfig(String registryId, String deviceId, String config, Long version) {
+    try {
+      String updateVersion = ifNotNullGet(version, v -> Long.toString(version));
+      ByteString binaryData = new ByteString(encodeBase64(config));
+      String location = getRegistryLocation(registryId);
+      ModifyCloudToDeviceConfigRequest request =
+          ModifyCloudToDeviceConfigRequest.Builder.newBuilder()
+              .setName(DeviceName.of(projectId, location, registryId, deviceId).toString())
+              .setBinaryData(binaryData).setVersionToUpdate(updateVersion).build();
+      DeviceConfig response = deviceManager.modifyCloudToDeviceConfig(request);
+      debug("Modified %s/%s config version %s -> %s", registryId, deviceId, updateVersion,
+          response.getVersion());
+      return config;
+    } catch (Exception e) {
+      throw new RuntimeException(
+          format("While modifying %s/%s config version %s", registryId, deviceId, version), e);
     }
   }
 
