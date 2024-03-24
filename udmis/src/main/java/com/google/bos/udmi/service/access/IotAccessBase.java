@@ -137,7 +137,14 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
       throw new AbortLoopException(
           format("Config length %d exceeds maximum %d", configLength, MAX_CONFIG_LENGTH));
     }
-    return updateConfig(registryId, deviceId, updated, version);
+    String result = updateConfig(registryId, deviceId, updated, version);
+    try {
+      updateConfig(registryId, deviceId, updated, version);
+      warn("TAP updateConfig with same version did not fail");
+    } catch (Exception e) {
+      debug("TAP Update config exception thrown as expected");
+    }
+    return result;
   }
 
   private void disseminateDifference(Map<String, String> previousRegions,
