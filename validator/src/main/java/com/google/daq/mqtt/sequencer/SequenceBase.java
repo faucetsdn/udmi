@@ -231,7 +231,7 @@ public class SequenceBase {
   private static final Date RESET_LAST_START = new Date(73642);
   private static final Date stateCutoffThreshold = Date.from(Instant.now());
   private static final String FAKE_DEVICE_ID = "TAP-1";
-  private static final String NO_EXTRA_DETAIL = "";
+  private static final String NO_EXTRA_DETAIL = "no logs";
   private static final Duration DEFAULT_WAIT_TIME = Duration.ofSeconds(10);
   private static final Duration LOG_WAIT_TIME = Duration.ofSeconds(30);
   private static final Duration DEFAULT_LOOP_TIMEOUT = Duration.ofHours(30);
@@ -1321,7 +1321,7 @@ public class SequenceBase {
         String result = evaluator.get();
         String previous = detail.getAndSet(emptyToNull(result));
         ifTrueThen(!Objects.equals(previous, result),
-            () -> debug(format("Detail %s is now %s", description, result)));
+            () -> debug(format("Detail %s is now: %s", description, result)));
         return result != null;
       });
     }, detail::get);
