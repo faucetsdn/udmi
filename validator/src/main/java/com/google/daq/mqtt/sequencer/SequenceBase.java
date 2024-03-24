@@ -229,7 +229,7 @@ public class SequenceBase {
   private static final AtomicReference<String> stateTransaction = new AtomicReference<>();
   private static final int MINIMUM_TEST_SEC = 15;
   private static final Date RESET_LAST_START = new Date(73642);
-  private static final Date stateCutoffThreshold = Date.from(Instant.now().minusSeconds(10));
+  private static final Date stateCutoffThreshold = Date.from(Instant.now());
   private static final String FAKE_DEVICE_ID = "TAP-1";
   private static final String NO_EXTRA_DETAIL = "";
   private static final Duration DEFAULT_WAIT_TIME = Duration.ofSeconds(10);
@@ -741,6 +741,7 @@ public class SequenceBase {
 
     updateConfig("initial setup");
 
+    debug(format("Stale state cutoff threshold is %s", isoConvert(stateCutoffThreshold)));
     queryState();
 
     ifTrueThen(deviceSupportsState(),
