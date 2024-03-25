@@ -230,6 +230,11 @@ public class SystemManager extends ManagerBase {
   }
 
   void updateConfig(SystemConfig system, Date timestamp) {
+    Integer oldBase = catchToNull(() -> systemConfig.testing.config_base);
+    Integer newBase = catchToNull(() -> system.testing.config_base);
+    if (oldBase != null && oldBase.equals(newBase)) {
+      throw new IllegalStateException("Duplicate config_base detected: " + oldBase);
+    }
     systemConfig = system;
     systemState.last_config = ifNotTrueGet(options.noLastConfig, () -> timestamp);
     updateInterval(ifNotNullGet(system, config -> config.metrics_rate_sec));
