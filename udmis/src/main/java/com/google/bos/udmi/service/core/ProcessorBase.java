@@ -44,12 +44,12 @@ import com.google.bos.udmi.service.pod.SimpleHandler;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.Common;
-import com.google.udmi.util.JsonUtil;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.function.Consumer;
 import org.jetbrains.annotations.TestOnly;
@@ -269,7 +269,7 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
         iotAccess.sendCommand(reflectRegistry, deviceRegistryId, SubFolder.UDMI, commandString));
   }
 
-  private String updateConfig(String previous, Envelope attributes,
+  private String updateConfig(Entry<Long, String> previous, Envelope attributes,
       Map<String, Object> updatePayload, Date newLastStart) {
     Object extraField = ifNotNullGet(updatePayload, p -> p.remove(EXTRA_FIELD_KEY));
     boolean resetConfig = RESET_CONFIG_VALUE.equals(extraField);
@@ -285,7 +285,7 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
       mungeConfigDebug(attributes, "undefined", (String) extraField);
       return BROKEN_CONFIG_JSON;
     } else if (newLastStart != null) {
-      payload = asMap(ofNullable(previous).orElse(EMPTY_JSON));
+      payload = asMap(ofNullable(previous.getValue()).orElse(EMPTY_JSON));
       String update = updateWithLastStart(payload, newLastStart);
       ifNotNullThen(update,
           () -> mungeConfigDebug(attributes, payload.get(TIMESTAMP_KEY), "last_start"));
@@ -297,7 +297,7 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
       ifNotNullThen(extraField,
           field -> warn(format("Ignoring unknown %s value %s", EXTRA_FIELD_KEY, extraField)));
       try {
-        payload = asMap(ofNullable(previous).orElse(EMPTY_JSON));
+        payload = asMap(ofNullable(previous.getValue()).orElse(EMPTY_JSON));
         reason = ifNotNullGet(attributes.subFolder, SubFolder::value, null);
       } catch (Exception e) {
         throw new PreviousParseException("parsing previous config", e);
@@ -315,15 +315,16 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
     payload.put(TIMESTAMP_KEY, updateTimestamp);
     payload.put(VERSION_KEY, UDMI_VERSION);
 
-    augmentTransactionId(payload, attributes.transactionId);
+    augmentPayload(payload, attributes.transactionId, previous.getKey());
     mungeConfigDebug(attributes, updateTimestamp, reason);
     return compressJsonString(payload, MAX_CONFIG_LENGTH);
   }
 
-  private void augmentTransactionId(Map<String, Object> payload, String transactionId) {
+  private void augmentPayload(Map<String, Object> payload, String transactionId, Long version) {
     try {
       Map<String, Object> asMap = getAsMap(getAsMap(payload, "system"), "testing");
       ifNotNullThen(asMap, map -> map.put("transaction_id", transactionId));
+      ifNotNullThen(asMap, map -> map.put("config_base", version));
     } catch (Exception e) {
       warn("Could not augment config with transactionId %s", transactionId);
     }

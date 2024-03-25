@@ -44,12 +44,6 @@ public class DynamicIotAccessProvider extends IotAccessBase {
         .collect(Collectors.toList());
   }
 
-  @Override
-  public Set<String> getRegistries() {
-    return getProviders().values().stream().map(IotAccessProvider::getRegistries)
-        .collect(HashSet::new, HashSet::addAll, HashSet::addAll);
-  }
-
   private String determineProvider(String registryId) {
     getProviders();
     TreeMap<String, String> sortedMap = getProviders().entrySet().stream()
@@ -67,22 +61,6 @@ public class DynamicIotAccessProvider extends IotAccessBase {
     return requireNonNull(provider, "could not determine provider for " + registryId);
   }
 
-  private String registryPriority(String registryId, Entry<String, IotAccessProvider> provider) {
-    int providerIndex = providerList.size() - providerList.indexOf(provider.getKey());
-    String provisionedAt = ofNullable(
-        provider.getValue().fetchRegistryMetadata(registryId, "udmi_provisioned")).orElse(
-        isoConvert(new Date(providerIndex * INDEX_ORDERING_MULTIPLIER_MS)));
-    debug(format("Registry %s provider %s provisioned %s", registryId, provider.getKey(),
-        provisionedAt));
-    return provisionedAt;
-  }
-
-  @Override
-  public void activate() {
-    super.activate();
-    getProviders();
-  }
-
   private Map<String, IotAccessProvider> getProviders() {
     if (!providers.isEmpty()) {
       return providers;
@@ -97,6 +75,22 @@ public class DynamicIotAccessProvider extends IotAccessBase {
       throw new RuntimeException("No providers enabled");
     }
     return providers;
+  }
+
+  private String registryPriority(String registryId, Entry<String, IotAccessProvider> provider) {
+    int providerIndex = providerList.size() - providerList.indexOf(provider.getKey());
+    String provisionedAt = ofNullable(
+        provider.getValue().fetchRegistryMetadata(registryId, "udmi_provisioned")).orElse(
+        isoConvert(new Date(providerIndex * INDEX_ORDERING_MULTIPLIER_MS)));
+    debug(format("Registry %s provider %s provisioned %s", registryId, provider.getKey(),
+        provisionedAt));
+    return provisionedAt;
+  }
+
+  @Override
+  public void activate() {
+    super.activate();
+    getProviders();
   }
 
   @Override
@@ -120,6 +114,12 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   @Override
+  public Set<String> getRegistries() {
+    return getProviders().values().stream().map(IotAccessProvider::getRegistries)
+        .collect(HashSet::new, HashSet::addAll, HashSet::addAll);
+  }
+
+  @Override
   public Set<String> getRegistriesForRegion(String region) {
     return null;
   }
@@ -140,7 +140,8 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public String modifyConfig(String registryId, String deviceId, Function<String, String> munger) {
+  public String modifyConfig(String registryId, String deviceId,
+      Function<Entry<Long, String>, String> munger) {
     return getProviderFor(registryId).modifyConfig(registryId, deviceId, munger);
   }
 

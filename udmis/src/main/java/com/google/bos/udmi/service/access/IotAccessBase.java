@@ -175,9 +175,10 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
     return until;
   }
 
-  private String safeMunge(Function<String, String> munger, Entry<Long, String> configPair) {
+  private String safeMunge(Function<Entry<Long, String>, String> munger,
+      Entry<Long, String> configPair) {
     try {
-      return munger.apply(ifNotNullGet(configPair, Entry::getValue));
+      return munger.apply(configPair);
     } catch (PreviousParseException e) {
       error("Exception parsing previous config: " + friendlyStackTrace(e));
       throw e;
@@ -196,10 +197,6 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
     }
   }
 
-  public Set<String> getRegistriesForRegion(String region) {
-    throw new RuntimeException("Not implemented");
-  }
-
   /**
    * Return a list of all the registries.
    */
@@ -212,19 +209,24 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
     }
   }
 
+  public Set<String> getRegistriesForRegion(String region) {
+    throw new RuntimeException("Not implemented");
+  }
+
   /**
    * Modify a device configuration. Return the full/complete update that was actually written.
    */
   @Override
-  public String modifyConfig(String registryId, String deviceId, Function<String, String> munger) {
+  public String modifyConfig(String registryId, String deviceId,
+      Function<Entry<Long, String>, String> munger) {
     int retryCount = CONFIG_UPDATE_MAX_RETRIES;
     try {
       while (true) {
         try {
-          Entry<Long, String> configPair = fetchConfig(registryId, deviceId);
-          debug("Fetched config version %s for %s", configPair.getKey(), deviceId);
-          Long version = ifNotNullGet(configPair, Entry::getKey);
-          return ifNotNullGet(safeMunge(munger, configPair),
+          Entry<Long, String> currentConfig = fetchConfig(registryId, deviceId);
+          debug("Fetched config version %s for %s", currentConfig.getKey(), deviceId);
+          Long version = ifNotNullGet(currentConfig, Entry::getKey);
+          return ifNotNullGet(safeMunge(munger, currentConfig),
               updated -> checkedUpdate(registryId, deviceId, version, updated));
         } catch (AbortLoopException e) {
           throw e;

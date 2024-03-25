@@ -18,6 +18,7 @@ import com.google.bos.udmi.service.messaging.impl.MessageBase;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.udmi.util.CleanDateFormat;
 import java.util.Date;
+import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import org.jetbrains.annotations.NotNull;
@@ -87,7 +88,7 @@ public class StateProcessorTest extends ProcessorTestBase {
 
     //noinspection unchecked
     verify(provider, times(1)).modifyConfig(eq(TEST_REGISTRY), eq(TEST_DEVICE),
-        (Function<String, String>) configCaptor.capture());
+        (Function<Entry<Long, String>, String>) configCaptor.capture());
 
     //noinspection unchecked
     Function<String, String> configMunger = configCaptor.getValue();
