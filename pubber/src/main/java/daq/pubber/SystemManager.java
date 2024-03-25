@@ -235,7 +235,8 @@ public class SystemManager extends ManagerBase {
     Integer newBase = catchToNull(() -> system.testing.config_base);
     if (oldBase != null && oldBase.equals(newBase)
         && !stringify(systemConfig).equals(stringify(system))) {
-      error("Duplicate config_base detected: " + oldBase);
+      error("Panic! Duplicate config_base detected: " + oldBase);
+      System.exit(-22);
     }
     systemConfig = system;
     systemState.last_config = ifNotTrueGet(options.noLastConfig, () -> timestamp);
