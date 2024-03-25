@@ -1861,16 +1861,27 @@ public class SequenceBase {
   }
 
   private boolean configIsPending(boolean debugOut) {
-    Date stateLast = catchToNull(() -> deviceState.system.operation.last_start);
-    Date configLast = catchToNull(() -> deviceConfig.system.operation.last_start);
-    boolean synced = stateLast == null || stateLast.equals(configLast) || !isCapableOf(LAST_CONFIG);
-    boolean pending = !(synced && configTransactions.isEmpty());
-    if (pending && debugOut) {
-      notice(format("last_start synchronized %s: state/%s =? config/%s", synced,
-          isoConvert(stateLast), isoConvert(configLast)));
-      notice(format("pending configTransactions: %s", configTransactionsListString()));
+    Date stateLastStart = catchToNull(() -> deviceState.system.operation.last_start);
+    Date configLastStart = catchToNull(() -> deviceConfig.system.operation.last_start);
+    boolean lastStartSynced = stateLastStart == null || stateLastStart.equals(configLastStart);
+    Date stateLastConfig = catchToNull(() -> deviceState.system.last_config);
+    Date lastConfig = catchToNull(() -> deviceConfig.timestamp);
+    boolean lastConfigSynced = isCapableOf(LAST_CONFIG) && lastConfig.equals(stateLastConfig);
+    boolean transactionsClean = configTransactions.isEmpty();
+    boolean synced = lastStartSynced && lastConfigSynced && transactionsClean;
+    boolean pending = !synced;
+    if (debugOut) {
+      if (pending) {
+        notice(format("last_start synchronized %s: state/%s =? config/%s", lastStartSynced,
+            isoConvert(stateLastStart), isoConvert(configLastStart)));
+        notice(format("last_config synchronized %s: state/%s =? config/%s", lastConfigSynced,
+            isoConvert(stateLastConfig), isoConvert(lastConfig)));
+        notice(format("pending configTransactions: %s", configTransactionsListString()));
+      } else if (!pending && !isCapableOf(LAST_CONFIG)) {
+        debug("last_config synchronized check disabled due to lack of device capability");
+      }
     }
-    return pending;
+    return !synced;
   }
 
   @NotNull
