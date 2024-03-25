@@ -1781,7 +1781,8 @@ public class SequenceBase {
     }
     Map<String, String> badChanges = stateChanges.stream().filter(not(this::changeAllowed))
         .collect(Collectors.toMap(DiffEntry::key, DiffEntry::toString));
-    badChanges.values().stream().map(x -> "Unexpected state change: " + x).forEach(this::warning);
+    badChanges.values().stream().map(x -> "Unexpected device state change: " + x)
+        .forEach(this::warning);
     deviceStateViolations.putAll(badChanges);
   }
 
@@ -1794,14 +1795,14 @@ public class SequenceBase {
   protected void allowDeviceStateChange(String changePrefix) {
     info("Allowing device state change " + changePrefix);
     if (!allowedDeviceStateChanges.add(changePrefix)) {
-      throw new AbortMessageLoop("State change prefix already allowed: " + changePrefix);
+      throw new AbortMessageLoop("Device state change prefix already allowed: " + changePrefix);
     }
   }
 
   protected void disallowDeviceStateChange(String changePrefix) {
     info("Disallowing device state change " + changePrefix);
     if (!allowedDeviceStateChanges.remove(changePrefix)) {
-      throw new AbortMessageLoop("Unexpected state change removal: " + changePrefix);
+      throw new AbortMessageLoop("Unexpected device state change removal: " + changePrefix);
     }
   }
 
