@@ -120,28 +120,31 @@ public class MappingAgent extends ProcessorBase {
    */
   @MessageHandler
   public void discoveryEvent(DiscoveryEvent discoveryEvent) {
-    Envelope envelope = getContinuation(discoveryEvent).getEnvelope();
-    String registryId = envelope.deviceRegistryId;
-    String gatewayId = envelope.deviceId;
-    if (registryId == null || gatewayId == null) {
-      info("Skipping incomplete discovery event for %s/%s", registryId, gatewayId);
-      return;
-    }
-    Date generation = requireNonNull(discoveryEvent.generation, "missing scan generation");
-    Map<String, CloudModel> deviceIds = refreshModelDevices(registryId, gatewayId, generation);
-    if (deviceIds == null) {
-      info("Scan device %s/%s onboarding disabled", registryId, gatewayId);
-      return;
-    }
-    ProtocolFamily family = requireNonNull(discoveryEvent.scan_family, "missing scan_family");
-    String addr = requireNonNull(discoveryEvent.scan_addr, "missing scan_addr");
-    String expectedId = format(EXPECTED_DEVICE_FORMAT, family, addr);
-    if (deviceIds.containsKey(expectedId)) {
-      debug("Scan device %s/%s target %s already registered", registryId, gatewayId, expectedId);
-    } else {
-      notice("Scan device %s/%s target %s missing, creating", registryId, gatewayId, expectedId);
-      createDeviceEntry(registryId, expectedId, gatewayId, envelope, discoveryEvent);
-      deviceIds.put(expectedId, new CloudModel());
+    try {
+      Envelope envelope = getContinuation(discoveryEvent).getEnvelope();
+      String registryId = envelope.deviceRegistryId;
+      String gatewayId = envelope.deviceId;
+      if (registryId == null || gatewayId == null) {
+        info("Skipping incomplete discovery event for %s/%s", registryId, gatewayId);
+        return;
+      }
+      Date generation = requireNonNull(discoveryEvent.generation, "missing scan generation");
+      Map<String, CloudModel> deviceIds = refreshModelDevices(registryId, gatewayId, generation);
+      if (deviceIds == null) {
+        info("Scan device %s/%s onboarding disabled", registryId, gatewayId);
+        return;
+      }
+      ProtocolFamily family = requireNonNull(discoveryEvent.scan_family, "missing scan_family");
+      String addr = requireNonNull(discoveryEvent.scan_addr, "missing scan_addr");
+      String expectedId = format(EXPECTED_DEVICE_FORMAT, family, addr);
+      if (deviceIds.containsKey(expectedId)) {
+        debug("Scan device %s/%s target %s already registered", registryId, gatewayId, expectedId);
+      } else {
+        notice("Scan device %s/%s target %s missing, creating", registryId, gatewayId, expectedId);
+        createDeviceEntry(registryId, expectedId, gatewayId, envelope, discoveryEvent);
+        deviceIds.put(expectedId, new CloudModel());
+      }
+    } catch (Exception e) {
+      error("Error during discovery event processing: " + friendlyStackTrace(e));
     }
   }
-}
