@@ -1866,18 +1866,21 @@ public class SequenceBase {
     boolean lastStartSynced = stateLastStart == null || stateLastStart.equals(configLastStart);
     Date stateLastConfig = catchToNull(() -> deviceState.system.last_config);
     Date lastConfig = catchToNull(() -> deviceConfig.timestamp);
-    boolean lastConfigSynced = isCapableOf(LAST_CONFIG) && lastConfig.equals(stateLastConfig);
+    boolean lastConfigSynced = lastConfig != null && lastConfig.equals(stateLastConfig);
     boolean transactionsClean = configTransactions.isEmpty();
-    boolean synced = lastStartSynced && lastConfigSynced && transactionsClean;
+    boolean incapable = !isCapableOf(LAST_CONFIG);
+    boolean synced = lastStartSynced && transactionsClean && (lastConfigSynced || incapable);
     boolean pending = !synced;
     if (debugOut) {
       if (pending) {
         notice(format("last_start synchronized %s: state/%s =? config/%s", lastStartSynced,
             isoConvert(stateLastStart), isoConvert(configLastStart)));
-        notice(format("last_config synchronized %s: state/%s =? config/%s", lastConfigSynced,
-            isoConvert(stateLastConfig), isoConvert(lastConfig)));
         notice(format("pending configTransactions: %s", configTransactionsListString()));
-      } else if (!pending && !isCapableOf(LAST_CONFIG)) {
+        if (!incapable) {
+          notice(format("last_config synchronized %s: state/%s =? config/%s", lastConfigSynced,
+              isoConvert(stateLastConfig), isoConvert(lastConfig)));
+        }
+      } else if (incapable) {
         debug("last_config synchronized check disabled due to lack of device capability");
       }
     }
