@@ -148,3 +148,4 @@ public class MappingAgent extends ProcessorBase {
       error("Error during discovery event processing: " + friendlyStackTrace(e));
     }
   }
+}
