@@ -117,6 +117,7 @@ public class StateProcessorTest extends ProcessorTestBase {
     testConfig.system.operation.last_start = CleanDateFormat.cleanDate(new Date(0));
     Config newConfig = processLastStart(testConfig);
     assertEquals(INITIAL_LAST_START, newConfig.system.operation.last_start, "new last_start");
+    assertEquals((int) CONFIG_VERSION, newConfig.system.testing.config_base, "config_base");
   }
 
   @Test
