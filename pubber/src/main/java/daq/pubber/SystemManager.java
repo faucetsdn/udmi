@@ -233,7 +233,7 @@ public class SystemManager extends ManagerBase {
     Integer oldBase = catchToNull(() -> systemConfig.testing.config_base);
     Integer newBase = catchToNull(() -> system.testing.config_base);
     if (oldBase != null && oldBase.equals(newBase)) {
-      throw new IllegalStateException("Duplicate config_base detected: " + oldBase);
+      error("Duplicate config_base detected: " + oldBase);
     }
     systemConfig = system;
     systemState.last_config = ifNotTrueGet(options.noLastConfig, () -> timestamp);
