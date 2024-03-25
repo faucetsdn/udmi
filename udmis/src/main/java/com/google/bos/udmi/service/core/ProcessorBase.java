@@ -287,6 +287,7 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
     } else if (newLastStart != null) {
       payload = asMap(ofNullable(previous.getValue()).orElse(EMPTY_JSON));
       String update = updateWithLastStart(payload, newLastStart);
+      augmentPayload(payload, attributes.transactionId, previous.getKey());
       ifNotNullThen(update,
           () -> mungeConfigDebug(attributes, payload.get(TIMESTAMP_KEY), "last_start"));
       return update;
