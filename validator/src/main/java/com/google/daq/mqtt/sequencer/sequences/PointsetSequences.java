@@ -118,7 +118,7 @@ public class PointsetSequences extends PointsetBase {
     deviceConfig.pointset.points.put(EXTRANEOUS_POINT, new PointPointsetConfig());
 
     try {
-      untilTrue("pointset status contains extraneous point error",
+      untilTrue("pointset state contains extraneous point error",
           () -> ifNotNullGet(deviceState.pointset.points.get(EXTRANEOUS_POINT),
               state -> state.status.category.equals(POINTSET_POINT_INVALID)
                   && state.status.level.equals(POINTSET_POINT_INVALID_VALUE)));
@@ -127,7 +127,7 @@ public class PointsetSequences extends PointsetBase {
       deviceConfig.pointset.points.remove(EXTRANEOUS_POINT);
     }
 
-    untilTrue("pointset status removes extraneous point error",
+    untilTrue("pointset state removes extraneous point error",
         () -> !deviceState.pointset.points.containsKey(EXTRANEOUS_POINT));
 
     untilPointsetSanity();
@@ -148,14 +148,14 @@ public class PointsetSequences extends PointsetBase {
     PointPointsetConfig removed = requireNonNull(deviceConfig.pointset.points.remove(name));
 
     try {
-      untilFalse("pointset status does not contain removed point",
+      untilFalse("pointset state does not contain removed point",
           () -> deviceState.pointset.points.containsKey(name));
       untilPointsetSanity();
     } finally {
       deviceConfig.pointset.points.put(name, removed);
     }
 
-    untilFalse("pointset status contains removed point",
+    untilTrue("pointset state contains restored point",
         () -> deviceState.pointset.points.containsKey(name));
 
     untilPointsetSanity();
