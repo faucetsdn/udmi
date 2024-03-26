@@ -807,6 +807,13 @@ public class SequenceBase {
 
     waitForConfigSync();
 
+    if (!isCapableOf(LAST_CONFIG)) {
+      // If last config checking isn't supported by the device, then add in a fixed delay to
+      // give it time to adjust to the last sent config before proceeding. Otherwise, this will
+      // result in false positives (in terms of detecting state changes).
+      debug(format("Waiting %ds for state/config sync", CONFIG_UPDATE_DELAY_MS / ONE_SECOND_MS));
+      safeSleep(CONFIG_UPDATE_DELAY_MS);
+    }
     disallowDeviceStateChange(ALL_CHANGES);
   }
 
@@ -1793,16 +1800,18 @@ public class SequenceBase {
   }
 
   protected void allowDeviceStateChange(String changePrefix) {
-    info("Allowing device state change " + changePrefix);
+    String changeMessage = changePrefix.equals(ALL_CHANGES) ? "(everything)" : changePrefix;
+    debug("Allowing device state change %s" + changeMessage);
     if (!allowedDeviceStateChanges.add(changePrefix)) {
-      throw new AbortMessageLoop("Device state change prefix already allowed: " + changePrefix);
+      throw new AbortMessageLoop("Device state change prefix already allowed: " + changeMessage);
     }
   }
 
   protected void disallowDeviceStateChange(String changePrefix) {
-    info("Disallowing device state change " + changePrefix);
+    String changeMessage = changePrefix.equals(ALL_CHANGES) ? "(all_changes)" : changePrefix;
+    debug("Disallowing device state change " + changeMessage);
     if (!allowedDeviceStateChanges.remove(changePrefix)) {
-      throw new AbortMessageLoop("Unexpected device state change removal: " + changePrefix);
+      throw new AbortMessageLoop("Unexpected device state change removal: " + changeMessage);
     }
   }
 
