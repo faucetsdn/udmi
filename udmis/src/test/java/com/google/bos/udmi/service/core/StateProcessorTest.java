@@ -18,6 +18,8 @@ import com.google.bos.udmi.service.messaging.impl.MessageBase;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.udmi.util.CleanDateFormat;
 import java.util.Date;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import org.jetbrains.annotations.NotNull;
@@ -31,6 +33,7 @@ import udmi.schema.State;
 import udmi.schema.StateSystemOperation;
 import udmi.schema.SystemConfig;
 import udmi.schema.SystemState;
+import udmi.schema.TestingSystemConfig;
 
 /**
  * Tests for the StateHandler class, used by UDMIS to process device state updates.
@@ -38,6 +41,7 @@ import udmi.schema.SystemState;
 public class StateProcessorTest extends ProcessorTestBase {
 
   public static final Date INITIAL_LAST_START = CleanDateFormat.cleanDate(new Date(12981837));
+  public static final long CONFIG_VERSION = 23L;
   private static final String LEGACY_STATE_MESSAGE_FILE = "src/test/messages/legacy_state.json";
 
   private boolean contains(Predicate<Object> objectPredicate) {
@@ -48,6 +52,7 @@ public class StateProcessorTest extends ProcessorTestBase {
     Config config = new Config();
     config.system = new SystemConfig();
     config.system.operation = new Operation();
+    config.system.testing = new TestingSystemConfig();
     return config;
   }
 
@@ -76,6 +81,10 @@ public class StateProcessorTest extends ProcessorTestBase {
     return stateMessage;
   }
 
+  private void initializeTestInstance() {
+    initializeTestInstance(StateProcessor.class);
+  }
+
   private Config processLastStart(Config testConfig) {
     initializeTestInstance();
     getReverseDispatcher().publish(getTestStateBundle(false, true));
@@ -87,16 +96,12 @@ public class StateProcessorTest extends ProcessorTestBase {
 
     //noinspection unchecked
     verify(provider, times(1)).modifyConfig(eq(TEST_REGISTRY), eq(TEST_DEVICE),
-        (Function<String, String>) configCaptor.capture());
+        (Function<Entry<Long, String>, String>) configCaptor.capture());
 
     //noinspection unchecked
-    Function<String, String> configMunger = configCaptor.getValue();
-    return ifNotNullGet(configMunger.apply(stringify(testConfig)),
+    Function<Entry<Long, String>, String> configMunger = configCaptor.getValue();
+    return ifNotNullGet(configMunger.apply(Map.entry(CONFIG_VERSION, stringify(testConfig))),
         newConfig -> fromStringStrict(Config.class, newConfig));
-  }
-
-  private void initializeTestInstance() {
-    initializeTestInstance(StateProcessor.class);
   }
 
   @Test
@@ -112,6 +117,7 @@ public class StateProcessorTest extends ProcessorTestBase {
     testConfig.system.operation.last_start = CleanDateFormat.cleanDate(new Date(0));
     Config newConfig = processLastStart(testConfig);
     assertEquals(INITIAL_LAST_START, newConfig.system.operation.last_start, "new last_start");
+    assertEquals((int) CONFIG_VERSION, newConfig.system.testing.config_base, "config_base");
   }
 
   @Test

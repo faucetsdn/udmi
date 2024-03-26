@@ -13,5 +13,5 @@ Check enumeration of network families
     * Remove `discovery.generation`
 1. Wait for cleared enumeration generation
 1. Check that family enumeration matches
-1. Check that no feature enumeration
-1. Check that no point enumeration
+1. Check that no feature enumeration exists
+1. Check that no point enumeration exists

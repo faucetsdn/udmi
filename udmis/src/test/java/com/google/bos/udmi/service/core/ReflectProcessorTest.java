@@ -19,6 +19,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.udmi.util.JsonUtil;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.function.Function;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
@@ -105,7 +106,7 @@ public class ReflectProcessorTest extends ProcessorTestBase {
 
     //noinspection unchecked
     verify(provider, times(1)).modifyConfig(eq(TEST_REGISTRY), eq(TEST_DEVICE),
-        (Function<String, String>) configCaptor.capture());
+        (Function<Entry<Long, String>, String>) configCaptor.capture());
 
     @SuppressWarnings("unchecked")
     String newConfig = (String) configCaptor.getValue().apply(null);

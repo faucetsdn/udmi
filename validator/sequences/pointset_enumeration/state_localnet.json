@@ -3,16 +3,16 @@
     "vendor" : {
       "addr" : "28179023"
     },
+    "ether" : {
+      "addr" : "00:0d:3a:17:12:0e"
+    },
     "ipv6" : {
-      "addr" : "fe80::6245:bdff:fec7:d055"
+      "addr" : "fe80::20d:3aff:fe17:120e"
     },
     "ipv4" : {
-      "addr" : "10.1.0.87"
-    },
-    "ether" : {
-      "addr" : "60:45:bd:c7:d0:55"
+      "addr" : "10.1.1.165"
     }
   },
-  "timestamp" : "2024-03-17T16:40:28Z",
+  "timestamp" : "2024-03-21T16:42:04Z",
   "version" : "1.5.0"
 }

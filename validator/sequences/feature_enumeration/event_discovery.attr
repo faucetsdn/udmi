@@ -3,8 +3,8 @@
   "deviceNumId" : "123456789101112",
   "deviceRegistryId" : "grafnu~ZZ-TRI-FECTA_3",
   "projectId" : "bos-platform-dev",
-  "transactionId" : "PS:10707091746195913",
-  "publishTime" : "2024-03-17T16:37:41Z",
+  "transactionId" : "PS:10742195414171702",
+  "publishTime" : "2024-03-21T16:40:13Z",
   "subFolder" : "discovery",
   "subType" : "event"
 }

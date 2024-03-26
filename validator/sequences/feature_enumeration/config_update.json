@@ -1,7 +1,15 @@
 {
   "discovery" : {
-    "depths" : {
-      "features" : "entries"
+    "enumerate" : {
+      "features" : true
+    }
+  },
+  "localnet" : {
+    "families" : {
+      "ether" : { },
+      "ipv4" : { },
+      "ipv6" : { },
+      "vendor" : { }
     }
   },
   "pointset" : {
@@ -24,12 +32,12 @@
     "metrics_rate_sec" : 10,
     "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2024-03-17T16:36:37Z"
+      "last_start" : "2024-03-21T16:38:56Z"
     },
     "testing" : {
       "sequence_name" : "feature_enumeration"
     }
   },
-  "timestamp" : "2024-03-17T16:37:43Z",
-  "version" : "1.5.0-53-g394a976f9"
+  "timestamp" : "2024-03-21T16:40:15Z",
+  "version" : "1.5.0-55-g604ba10b1"
 }
