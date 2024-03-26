@@ -807,20 +807,17 @@ public class SequenceBase {
 
     waitForConfigSync();
 
-    if (!isCapableOf(LAST_CONFIG)) {
-      // If last config checking isn't supported by the device, then add in a fixed delay to
-      // give it time to adjust to the last sent config before proceeding. Otherwise, this will
-      // result in false positives (in terms of detecting state changes).
-      debug(format("Waiting %ds for state/config sync", CONFIG_UPDATE_DELAY_MS / ONE_SECOND_MS));
-      safeSleep(CONFIG_UPDATE_DELAY_MS);
-    }
+    // If last config isn't reported by the device, then add in a fixed delay to
+    // give it time to handle to the last sent config before proceeding. Otherwise, it would
+    // falsely detect the eventually-updated-state as an unexpected state change.
+    ifNullThen(catchToNull(() -> deviceState.system.last_config),
+        () -> delayAndProcess(Duration.ofMillis(CONFIG_UPDATE_DELAY_MS)));
+
     disallowDeviceStateChange(ALL_CHANGES);
   }
 
   private void waitForConfigSync() {
     try {
-      forCapability(LAST_CONFIG,
-          () -> waitFor("state last_config sync", this::lastConfigUpdated));
       whileDoing("config sync", () -> messageEvaluateLoop(this::configIsPending));
       Duration between = Duration.between(lastConfigUpdate, CleanDateFormat.clean(Instant.now()));
       debug(format("Configuration sync took %ss", between.getSeconds()));
@@ -1184,8 +1181,8 @@ public class SequenceBase {
         final String transactionId =
             requireNonNull(reflector().publish(getDeviceId(), topic, augmentedMessage),
                 "no transactionId returned for publish");
-        debug(
-            format("update %s_%s, configTransaction %s", CONFIG_SUBTYPE, subBlock, transactionId));
+        debug(format("update %s_%s, adding configTransaction %s",
+            CONFIG_SUBTYPE, subBlock, transactionId));
         recordRawMessage(data, LOCAL_PREFIX + subBlock.value());
         sentConfig.put(subBlock, messageData);
         configTransactions.add(transactionId);
@@ -1477,13 +1474,19 @@ public class SequenceBase {
     }, detail);
   }
 
-  private void messageEvaluateLoop(Supplier<Boolean> evaluator) {
-    messageEvaluateLoop(DEFAULT_LOOP_TIMEOUT, evaluator);
+  private void delayAndProcess(Duration duration) {
+    debug(format("Delaying sequence progression for %ss", duration.getSeconds()));
+    Instant end = Instant.now().plus(duration);
+    messageEvaluateLoop(duration.plus(DEFAULT_LOOP_TIMEOUT), () -> Instant.now().isBefore(end));
   }
 
-  private void messageEvaluateLoop(Duration maxWait, Supplier<Boolean> evaluator) {
+  private void messageEvaluateLoop(Supplier<Boolean> whileTrue) {
+    messageEvaluateLoop(DEFAULT_LOOP_TIMEOUT, whileTrue);
+  }
+
+  private void messageEvaluateLoop(Duration maxWait, Supplier<Boolean> whileTrue) {
     Instant end = Instant.now().plus(maxWait);
-    while (evaluator.get()) {
+    while (whileTrue.get()) {
       if (Instant.now().isAfter(end)) {
         throw new RuntimeException(
             format("Timeout after %ss %s", maxWait.getSeconds(), currentWaitingCondition()));
@@ -1801,14 +1804,14 @@ public class SequenceBase {
 
   protected void allowDeviceStateChange(String changePrefix) {
     String changeMessage = changePrefix.equals(ALL_CHANGES) ? "(everything)" : changePrefix;
-    debug("Allowing device state change %s" + changeMessage);
+    debug("Allowing device state change " + changeMessage);
     if (!allowedDeviceStateChanges.add(changePrefix)) {
       throw new AbortMessageLoop("Device state change prefix already allowed: " + changeMessage);
     }
   }
 
   protected void disallowDeviceStateChange(String changePrefix) {
-    String changeMessage = changePrefix.equals(ALL_CHANGES) ? "(all_changes)" : changePrefix;
+    String changeMessage = changePrefix.equals(ALL_CHANGES) ? "(everything)" : changePrefix;
     debug("Disallowing device state change " + changeMessage);
     if (!allowedDeviceStateChanges.remove(changePrefix)) {
       throw new AbortMessageLoop("Unexpected device state change removal: " + changeMessage);
@@ -1875,22 +1878,19 @@ public class SequenceBase {
     boolean lastStartSynced = stateLastStart == null || stateLastStart.equals(configLastStart);
     Date stateLastConfig = catchToNull(() -> deviceState.system.last_config);
     Date lastConfig = catchToNull(() -> deviceConfig.timestamp);
-    boolean lastConfigSynced = lastConfig != null && lastConfig.equals(stateLastConfig);
+    boolean lastConfigSynced = stateLastConfig == null || stateLastConfig.equals(lastConfig);
     boolean transactionsClean = configTransactions.isEmpty();
-    boolean incapable = !isCapableOf(LAST_CONFIG);
-    boolean synced = lastStartSynced && transactionsClean && (lastConfigSynced || incapable);
+    boolean synced = lastStartSynced && transactionsClean && lastConfigSynced;
     boolean pending = !synced;
     if (debugOut) {
       if (pending) {
         notice(format("last_start synchronized %s: state/%s =? config/%s", lastStartSynced,
             isoConvert(stateLastStart), isoConvert(configLastStart)));
         notice(format("pending configTransactions: %s", configTransactionsListString()));
-        if (!incapable) {
-          notice(format("last_config synchronized %s: state/%s =? config/%s", lastConfigSynced,
-              isoConvert(stateLastConfig), isoConvert(lastConfig)));
-        }
-      } else if (incapable) {
-        debug("last_config synchronized check disabled due to lack of device capability");
+        notice(format("last_config synchronized %s: state/%s =? config/%s", lastConfigSynced,
+            isoConvert(stateLastConfig), isoConvert(lastConfig)));
+      } else if (stateLastConfig == null) {
+        debug("last_config synchronized check disabled due to missing state.system.last_config");
       }
     }
     return !synced;
@@ -2242,6 +2242,8 @@ public class SequenceBase {
     try {
       ifTrueThen(isCapableOf(capability), action);
     } catch (Exception e) {
+      info("Failed capability check " + capability.value() + " because "
+          + friendlyStackTrace(e));
       capabilityExceptions.put(capability, e);
     }
   }
