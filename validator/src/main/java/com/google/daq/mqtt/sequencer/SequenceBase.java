@@ -1147,14 +1147,11 @@ public class SequenceBase {
       updateConfig(SubFolder.LOCALNET, deviceConfig.localnet);
       updateConfig(SubFolder.BLOBSET, deviceConfig.blobset);
       updateConfig(SubFolder.DISCOVERY, deviceConfig.discovery);
-    }
-
-    if (force) {
-      debug("Forcing config update");
-      sentConfig.remove(SubFolder.UPDATE);
-    }
-
-    if (!doPartialUpdates) {
+    } else {
+      if (force) {
+        debug("Forcing config update");
+        sentConfig.remove(SubFolder.UPDATE);
+      }
       updateConfig(SubFolder.UPDATE, deviceConfig);
     }
 
