@@ -109,7 +109,6 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -164,9 +163,10 @@ public class SequenceBase {
   public static final String SCHEMA_PASS_DETAIL = "No schema violations found";
   public static final String STATE_UPDATE_MESSAGE_TYPE = "state_update";
   public static final String RESET_CONFIG_MARKER = "reset_config";
-  public static final String SYSTEM_STATUS_MESSAGE = "applicable system status";
+  public static final String SYSTEM_STATUS_MESSAGE = "significant system status";
   public static final String HAS_STATUS_PREFIX = "has ";
   public static final String NOT_STATUS_PREFIX = "no ";
+  public static final String STATUS_CHECK_SUFFIX = " exists";
   public static final String SCHEMA_BUCKET = "schemas";
   public static final int SCHEMA_SCORE = 5;
   public static final int CAPABILITY_SCORE = 1;
@@ -229,11 +229,9 @@ public class SequenceBase {
   private static final AtomicReference<String> stateTransaction = new AtomicReference<>();
   private static final int MINIMUM_TEST_SEC = 15;
   private static final Date RESET_LAST_START = new Date(73642);
-  private static final long STATE_QUERY_CUTOFF_SEC = 60;
-  private static final Date stateCutoffThreshold = Date.from(Instant.now().minusSeconds(
-      STATE_QUERY_CUTOFF_SEC));
+  private static final Date stateCutoffThreshold = Date.from(Instant.now());
   private static final String FAKE_DEVICE_ID = "TAP-1";
-  private static final String NO_EXTRA_DETAIL = "";
+  private static final String NO_EXTRA_DETAIL = "no logs";
   private static final Duration DEFAULT_WAIT_TIME = Duration.ofSeconds(10);
   private static final Duration LOG_WAIT_TIME = Duration.ofSeconds(30);
   private static final Duration DEFAULT_LOOP_TIMEOUT = Duration.ofHours(30);
@@ -283,6 +281,7 @@ public class SequenceBase {
   protected State deviceState;
   protected boolean configAcked;
   protected String lastSerialNo;
+  private boolean doPartialUpdates;
   private boolean resetRequired = true;
   private int maxAllowedStatusLevel;
   private String extraField;
@@ -731,6 +730,7 @@ public class SequenceBase {
     // TODO: Minimize time, or better yet find deterministic way to flush messages.
     safeSleep(CONFIG_UPDATE_DELAY_MS);
 
+    doPartialUpdates = false;
     configAcked = false;
     enforceSerial = false;
     recordMessages = true;
@@ -741,10 +741,11 @@ public class SequenceBase {
 
     updateConfig("initial setup");
 
+    debug(format("Stale state cutoff threshold is %s", isoConvert(stateCutoffThreshold)));
     queryState();
 
     ifTrueThen(deviceSupportsState(),
-        () -> untilTrue("device state update", () -> deviceState != null));
+        () -> untilTrue("initial device state", () -> deviceState != null));
     checkThatHasInterestingSystemStatus(false);
 
     // Do this late in the sequence to make sure any state is cleared out from previous test.
@@ -753,16 +754,13 @@ public class SequenceBase {
     clearReceivedEvents();
     validationResults.clear();
 
-    waitForStateConfigSync();
+    waitForConfigSync();
 
+    doPartialUpdates = true;
     recordSequence = true;
     waitingConditionStart("executing test");
 
     debug(format("stage begin %s at %s", currentWaitingCondition(), timeSinceStart()));
-  }
-
-  private void waitForStateConfigSync() {
-    waitForCapability(LAST_CONFIG, "state last_config sync", this::lastConfigUpdated);
   }
 
   private boolean deviceSupportsState() {
@@ -796,8 +794,10 @@ public class SequenceBase {
         setExtraField(RESET_CONFIG_MARKER);
         deviceConfig.system.testing.sequence_name = RESET_CONFIG_MARKER;
         SENT_CONFIG_DIFFERNATOR.resetState(deviceConfig);
-        updateConfig("full reset");
-        untilHasInterestingSystemStatus(false);
+        if (doPartialUpdates) {
+          updateConfig("full reset");
+          untilHasInterestingSystemStatus(false);
+        }
       }
       resetDeviceConfig(false);
       updateConfig("soft reset");
@@ -805,7 +805,14 @@ public class SequenceBase {
       resetRequired = false;
     });
 
-    waitForStateConfigSync();
+    waitForConfigSync();
+
+    // If last config isn't reported by the device, then add in a fixed delay to
+    // give it time to handle to the last sent config before proceeding. Otherwise, it would
+    // falsely detect the eventually-updated-state as an unexpected state change.
+    ifNullThen(catchToNull(() -> deviceState.system.last_config),
+        () -> delayAndProcess(Duration.ofMillis(CONFIG_UPDATE_DELAY_MS)));
+
     disallowDeviceStateChange(ALL_CHANGES);
   }
 
@@ -961,9 +968,10 @@ public class SequenceBase {
   }
 
   private void recordRawMessage(Envelope attributes, Map<String, Object> message) {
-    if (testName == null) {
+    if (testName == null || !recordMessages) {
       return;
     }
+
     String messageBase = makeMessageBase(attributes);
     String timestamp = message == null ? getTimestamp() : (String) message.get("timestamp");
     if (traceLogLevel()) {
@@ -1131,17 +1139,22 @@ public class SequenceBase {
     assertConfigIsNotPending();
     // Add a forced sleep to make sure second-quantized timestamps are unique.
     safeSleep(CONFIG_BARRIER_MS);
-    updateConfig(SubFolder.SYSTEM, augmentConfig(deviceConfig.system));
-    updateConfig(SubFolder.POINTSET, deviceConfig.pointset);
-    updateConfig(SubFolder.GATEWAY, deviceConfig.gateway);
-    updateConfig(SubFolder.LOCALNET, deviceConfig.localnet);
-    updateConfig(SubFolder.BLOBSET, deviceConfig.blobset);
-    updateConfig(SubFolder.DISCOVERY, deviceConfig.discovery);
-    if (!configIsPending() && force) {
-      debug("Forcing config update");
-      sentConfig.remove(SubFolder.UPDATE);
+
+    if (doPartialUpdates && !force) {
+      updateConfig(SubFolder.SYSTEM, augmentConfig(deviceConfig.system));
+      updateConfig(SubFolder.POINTSET, deviceConfig.pointset);
+      updateConfig(SubFolder.GATEWAY, deviceConfig.gateway);
+      updateConfig(SubFolder.LOCALNET, deviceConfig.localnet);
+      updateConfig(SubFolder.BLOBSET, deviceConfig.blobset);
+      updateConfig(SubFolder.DISCOVERY, deviceConfig.discovery);
+    } else {
+      if (force) {
+        debug("Forcing config update");
+        sentConfig.remove(SubFolder.UPDATE);
+      }
       updateConfig(SubFolder.UPDATE, deviceConfig);
     }
+
     if (configIsPending()) {
       lastConfigUpdate = CleanDateFormat.clean(Instant.now());
       String debugReason = reason == null ? "" : (", because " + reason);
@@ -1160,13 +1173,18 @@ public class SequenceBase {
       boolean updated = !messageData.equals(sentBlockConfig);
       trace(format("updated check %s_%s: %s", CONFIG_SUBTYPE, subBlock, updated));
       if (updated) {
+        // TODO: Remove this once ClearBlade has fixed their stuff (DESK-3084).
+        if (configIsPending()) {
+          notice("Sleep for 1s to mitigate Cleablade IoT Core race condition");
+          safeSleep(ONE_SECOND_MS);
+        }
         String augmentedMessage = actualize(stringify(data));
         String topic = subBlock + "/config";
         final String transactionId =
             requireNonNull(reflector().publish(getDeviceId(), topic, augmentedMessage),
                 "no transactionId returned for publish");
-        debug(
-            format("update %s_%s, configTransaction %s", CONFIG_SUBTYPE, subBlock, transactionId));
+        debug(format("update %s_%s, adding configTransaction %s",
+            CONFIG_SUBTYPE, subBlock, transactionId));
         recordRawMessage(data, LOCAL_PREFIX + subBlock.value());
         sentConfig.put(subBlock, messageData);
         configTransactions.add(transactionId);
@@ -1262,6 +1280,10 @@ public class SequenceBase {
     return Common.getExceptionLine(e, SequenceBase.class);
   }
 
+  protected void checkThat(String description, String detail) {
+    checkThat(description, detail == null, detail);
+  }
+
   protected void checkThat(String description, Boolean condition) {
     checkThat(description, condition, null);
   }
@@ -1305,7 +1327,7 @@ public class SequenceBase {
         String result = evaluator.get();
         String previous = detail.getAndSet(emptyToNull(result));
         ifTrueThen(!Objects.equals(previous, result),
-            () -> debug(format("Detail %s is now %s", description, result)));
+            () -> debug(format("Detail %s is now: %s", description, result)));
         return result != null;
       });
     }, detail::get);
@@ -1454,13 +1476,19 @@ public class SequenceBase {
     }, detail);
   }
 
-  private void messageEvaluateLoop(Supplier<Boolean> evaluator) {
-    messageEvaluateLoop(DEFAULT_LOOP_TIMEOUT, evaluator);
+  private void delayAndProcess(Duration duration) {
+    debug(format("Delaying sequence progression for %ss", duration.getSeconds()));
+    Instant end = Instant.now().plus(duration);
+    messageEvaluateLoop(duration.plus(DEFAULT_LOOP_TIMEOUT), () -> Instant.now().isBefore(end));
   }
 
-  private void messageEvaluateLoop(Duration maxWait, Supplier<Boolean> evaluator) {
+  private void messageEvaluateLoop(Supplier<Boolean> whileTrue) {
+    messageEvaluateLoop(DEFAULT_LOOP_TIMEOUT, whileTrue);
+  }
+
+  private void messageEvaluateLoop(Duration maxWait, Supplier<Boolean> whileTrue) {
     Instant end = Instant.now().plus(maxWait);
-    while (evaluator.get()) {
+    while (whileTrue.get()) {
       if (Instant.now().isAfter(end)) {
         throw new RuntimeException(
             format("Timeout after %ss %s", maxWait.getSeconds(), currentWaitingCondition()));
@@ -1709,9 +1737,6 @@ public class SequenceBase {
           return;
         }
         if (deviceState == null && convertedState.timestamp.before(stateCutoffThreshold)) {
-          Date cutoff = Date.from(getNowInstant().minus(STATE_TIMESTAMP_ERROR_THRESHOLD));
-          checkState(convertedState.timestamp.after(cutoff),
-              format("State timestamp %s before error cutoff threshold", timestamp));
           String lastStart = isoConvert(
               catchToNull(() -> convertedState.system.operation.last_start));
           warning(format("Ignoring stale state update %s %s %s %s", timestamp,
@@ -1730,8 +1755,15 @@ public class SequenceBase {
         } else {
           info(format("Initial state #%03d", updateCount), stringify(converted));
         }
+
+        Date cutoff = Date.from(getNowInstant().minus(STATE_TIMESTAMP_ERROR_THRESHOLD));
+        checkState(convertedState.timestamp.after(cutoff),
+            format("State timestamp %s before error cutoff threshold %s", timestamp,
+                isoConvert(cutoff)));
+
         deviceState = convertedState;
         validSerialNo();
+
         debug(format("Updated state has last_config %s (expecting %s)",
             isoConvert((Date) ifNotNullGet(deviceState.system, x -> x.last_config)),
             isoConvert((Date) ifNotNullGet(deviceConfig, config -> config.timestamp))));
@@ -1761,7 +1793,8 @@ public class SequenceBase {
     }
     Map<String, String> badChanges = stateChanges.stream().filter(not(this::changeAllowed))
         .collect(Collectors.toMap(DiffEntry::key, DiffEntry::toString));
-    badChanges.values().stream().map(x -> "Unexpected state change: " + x).forEach(this::warning);
+    badChanges.values().stream().map(x -> "Unexpected device state change: " + x)
+        .forEach(this::warning);
     deviceStateViolations.putAll(badChanges);
   }
 
@@ -1772,16 +1805,18 @@ public class SequenceBase {
   }
 
   protected void allowDeviceStateChange(String changePrefix) {
-    info("Allowing device state change " + changePrefix);
+    String changeMessage = changePrefix.equals(ALL_CHANGES) ? "(everything)" : changePrefix;
+    debug("Allowing device state change " + changeMessage);
     if (!allowedDeviceStateChanges.add(changePrefix)) {
-      throw new AbortMessageLoop("State change prefix already allowed: " + changePrefix);
+      throw new AbortMessageLoop("Device state change prefix already allowed: " + changeMessage);
     }
   }
 
   protected void disallowDeviceStateChange(String changePrefix) {
-    info("Disallowing device state change " + changePrefix);
+    String changeMessage = changePrefix.equals(ALL_CHANGES) ? "(everything)" : changePrefix;
+    debug("Disallowing device state change " + changeMessage);
     if (!allowedDeviceStateChanges.remove(changePrefix)) {
-      throw new AbortMessageLoop("Unexpected state change removal: " + changePrefix);
+      throw new AbortMessageLoop("Unexpected device state change removal: " + changeMessage);
     }
   }
 
@@ -1840,16 +1875,27 @@ public class SequenceBase {
   }
 
   private boolean configIsPending(boolean debugOut) {
-    Date stateLast = catchToNull(() -> deviceState.system.operation.last_start);
-    Date configLast = catchToNull(() -> deviceConfig.system.operation.last_start);
-    boolean synced = stateLast == null || stateLast.equals(configLast);
-    boolean pending = !(synced && configTransactions.isEmpty());
-    if (debugOut && pending) {
-      notice(format("last_start synchronized %s: state/%s =? config/%s", synced,
-          isoConvert(stateLast), isoConvert(configLast)));
-      notice(format("pending configTransactions: %s", configTransactionsListString()));
+    Date stateLastStart = catchToNull(() -> deviceState.system.operation.last_start);
+    Date configLastStart = catchToNull(() -> deviceConfig.system.operation.last_start);
+    boolean lastStartSynced = stateLastStart == null || stateLastStart.equals(configLastStart);
+    Date stateLastConfig = catchToNull(() -> deviceState.system.last_config);
+    Date lastConfig = catchToNull(() -> deviceConfig.timestamp);
+    boolean lastConfigSynced = stateLastConfig == null || stateLastConfig.equals(lastConfig);
+    boolean transactionsClean = configTransactions.isEmpty();
+    boolean synced = lastStartSynced && transactionsClean && lastConfigSynced;
+    boolean pending = !synced;
+    if (debugOut) {
+      if (pending) {
+        notice(format("last_start synchronized %s: state/%s =? config/%s", lastStartSynced,
+            isoConvert(stateLastStart), isoConvert(configLastStart)));
+        notice(format("pending configTransactions: %s", configTransactionsListString()));
+        notice(format("last_config synchronized %s: state/%s =? config/%s", lastConfigSynced,
+            isoConvert(stateLastConfig), isoConvert(lastConfig)));
+      } else if (stateLastConfig == null) {
+        debug("last_config synchronized check disabled due to missing state.system.last_config");
+      }
     }
-    return pending;
+    return !synced;
   }
 
   @NotNull
@@ -2034,11 +2080,19 @@ public class SequenceBase {
             isoConvert(lastConfig), isoConvert(expectedConfig));
   }
 
-  private Boolean hasInterestingSystemStatus() {
-    // State missing is neither interesting nor not-interesting...
+  private String notSignficantStatusDetail() {
     if (deviceState == null || deviceState.system == null) {
       lastStatusLevel = 0;
-      return null;
+      return "deviceState.system not defined";
+    }
+    String interesting = signficantStatusDetail();
+    return interesting == null ? "no status to report" : null;
+  }
+
+  private String signficantStatusDetail() {
+    if (deviceState == null || deviceState.system == null) {
+      lastStatusLevel = 0;
+      return "deviceState.system not defined";
     }
 
     int statusLevel = GeneralUtils.catchToElse(() -> deviceState.system.status.level, 0);
@@ -2048,30 +2102,32 @@ public class SequenceBase {
       lastStatusLevel = statusLevel;
     }
 
-    return statusLevel >= Level.WARNING.value();
+    return statusLevel >= Level.WARNING.value() ? ("system status is level " + statusLevel) : null;
   }
 
   protected void checkThatHasInterestingSystemStatus(boolean isInteresting) {
     if (!deviceSupportsState()) {
       return;
     }
-    BiConsumer<String, Supplier<Boolean>> check =
-        isInteresting ? this::checkThat : this::checkNotThat;
-    check.accept(SYSTEM_STATUS_MESSAGE, this::hasInterestingSystemStatus);
+    String systemStatusMessage = SYSTEM_STATUS_MESSAGE + STATUS_CHECK_SUFFIX;
+    if (isInteresting) {
+      checkThat(systemStatusMessage, notSignficantStatusDetail());
+    } else {
+      checkThat(NOT_STATUS_PREFIX + systemStatusMessage, signficantStatusDetail());
+    }
   }
 
-  protected void untilHasInterestingSystemStatus(boolean isInteresting) {
+  protected void untilHasInterestingSystemStatus(boolean interesting) {
     if (!deviceSupportsState()) {
       return;
     }
     expectedSystemStatus = null;
-    BiConsumer<String, Supplier<Boolean>> until =
-        isInteresting ? this::untilTrue : this::untilFalse;
-    String message =
-        (isInteresting ? HAS_STATUS_PREFIX : NOT_STATUS_PREFIX) + SYSTEM_STATUS_MESSAGE;
-    until.accept(message, this::hasInterestingSystemStatus);
-    expectedSystemStatus = isInteresting;
-    checkThatHasInterestingSystemStatus(isInteresting);
+    String message = (interesting ? HAS_STATUS_PREFIX : NOT_STATUS_PREFIX) + SYSTEM_STATUS_MESSAGE;
+    Supplier<String> detailer =
+        interesting ? this::notSignficantStatusDetail : this::signficantStatusDetail;
+    waitFor(message, detailer);
+    expectedSystemStatus = interesting;
+    checkThatHasInterestingSystemStatus(interesting);
   }
 
   private void putSequencerResult(Description description, SequenceResult result) {
@@ -2186,11 +2242,17 @@ public class SequenceBase {
 
   protected void forCapability(Capabilities capability, Runnable action) {
     try {
-      Exception current = capabilityExceptions.computeIfAbsent(capability, CapabilitySuccess::new);
-      ifTrueThen(current instanceof CapabilitySuccess, action);
+      ifTrueThen(isCapableOf(capability), action);
     } catch (Exception e) {
+      info("Failed capability check " + capability.value() + " because "
+          + friendlyStackTrace(e));
       capabilityExceptions.put(capability, e);
     }
+  }
+
+  private boolean isCapableOf(Capabilities capability) {
+    Exception previous = capabilityExceptions.computeIfAbsent(capability, CapabilitySuccess::new);
+    return previous instanceof CapabilitySuccess;
   }
 
   private boolean shouldValidateSchema(SubFolder folder) {
@@ -2345,6 +2407,9 @@ public class SequenceBase {
       if (activeInstance == null) {
         return;
       }
+
+      recordMessages = false;
+
       final String message;
       final SequenceResult failureType;
       if (e instanceof TestTimedOutException) {

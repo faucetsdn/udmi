@@ -1,12 +1,10 @@
 {
   "localnet" : {
     "families" : {
-      "ether" : {
-        "addr" : "00:50:b6:ed:5f:77"
-      },
-      "ipv4" : {
-        "addr" : "192.168.2.1"
-      }
+      "ether" : { },
+      "ipv4" : { },
+      "ipv6" : { },
+      "vendor" : { }
     }
   },
   "pointset" : {
@@ -29,12 +27,12 @@
     "metrics_rate_sec" : 10,
     "min_loglevel" : 100,
     "operation" : {
-      "last_start" : "2023-12-18T11:44:50Z"
+      "last_start" : "2024-03-23T18:39:20Z"
     },
     "testing" : {
       "sequence_name" : "broken_config"
     }
   },
-  "timestamp" : "2023-12-18T11:45:43Z",
-  "version" : "1.4.2-67-g3decfc99"
+  "timestamp" : "2024-03-23T18:40:22Z",
+  "version" : "1.5.0-104-g994c7e410"
 }

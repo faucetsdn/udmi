@@ -1,4 +1,12 @@
 {
+  "localnet" : {
+    "families" : {
+      "ether" : { },
+      "ipv4" : { },
+      "ipv6" : { },
+      "vendor" : { }
+    }
+  },
   "pointset" : {
     "points" : {
       "filter_alarm_pressure_status" : {
@@ -19,12 +27,12 @@
     "metrics_rate_sec" : 10,
     "min_loglevel" : 100,
     "operation" : {
-      "last_start" : "2023-11-29T20:08:20Z"
+      "last_start" : "2024-03-21T16:38:31Z"
     },
     "testing" : {
       "sequence_name" : "extra_config"
     }
   },
-  "timestamp" : "2023-11-29T20:08:56Z",
-  "version" : "1.4.2-57-gbb3a0154e"
+  "timestamp" : "2024-03-21T16:39:14Z",
+  "version" : "1.5.0-55-g604ba10b1"
 }

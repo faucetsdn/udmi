@@ -72,13 +72,12 @@ Check that the device correctly handles a broken (non-json) config message.
 1. Wait for initial state synchronized
 1. Check that initial stable_config matches last_config
 1. Wait for log category `system.config.apply` level `NOTICE` to be logged
-1. Wait for has applicable system status
-1. Check that applicable system status
+1. Wait for has significant system status
+1. Check that significant system status exists
 1. Wait for log category `system.config.receive` level `DEBUG` to be logged
 1. Wait for log category `system.config.parse` level `ERROR` to be logged
 1. Check that log category `system.config.apply` level `NOTICE` not logged
 1. Force reset config
-1. Wait for state last_config sync
 1. Wait for log category `system.config.apply` level `NOTICE` to be logged
 1. Wait for restored state synchronized
 1. Update config before last_config updated:
@@ -118,9 +117,9 @@ Check enumeration of nothing at all
 1. Update config before cleared enumeration generation:
     * Remove `discovery.generation`
 1. Wait for cleared enumeration generation
-1. Check that no family enumeration
-1. Check that no feature enumeration
-1. Check that no point enumeration
+1. Check that no family enumeration exists
+1. Check that no feature enumeration exists
+1. Check that no point enumeration exists
 
 ## endpoint_connection_error (PREVIEW)
 
@@ -247,11 +246,11 @@ Check that the device correctly handles an extra out-of-schema field
     * Set `system.min_loglevel` = `100`
 1. Wait for last_config not null
 1. Wait for system operational
-1. Check that no applicable system status
+1. Check that no significant system status exists
 1. Wait for log category `system.config.receive` level `DEBUG` to be logged
 1. Wait for last_config updated
 1. Wait for system operational
-1. Check that no applicable system status
+1. Check that no significant system status exists
 1. Wait for log category `system.config.parse` level `DEBUG` to be logged
 1. Wait for log category `system.config.apply` level `NOTICE` to be logged
 1. Wait for log category `system.config.receive` level `DEBUG` to be logged
@@ -288,10 +287,10 @@ Check enumeration of device features
 1. Update config before cleared enumeration generation:
     * Remove `discovery.generation`
 1. Wait for cleared enumeration generation
-1. Check that no family enumeration
+1. Check that no family enumeration exists
 1. Check that feature enumeration matches metadata
 1. Check that all enumerated features are official buckets
-1. Check that no point enumeration
+1. Check that no point enumeration exists
 
 ## gateway_proxy_events (BETA)
 
@@ -326,14 +325,14 @@ Check that pointset state does not report an unconfigured point
 
 1. Wait for pointset state matches config
 1. Wait for pointset event contains correct points
-1. Update config before pointset status does not contain removed point:
+1. Update config before pointset state does not contain removed point:
     * Remove `pointset.points[random_point]`
-1. Wait for pointset status does not contain removed point
+1. Wait for pointset state does not contain removed point
 1. Wait for pointset state matches config
 1. Wait for pointset event contains correct points
-1. Update config before pointset status contains removed point:
+1. Update config before pointset state contains restored point:
     * Add `pointset.points[random_point]` = point configuration
-1. Wait for pointset status contains removed point
+1. Wait for pointset state contains restored point
 1. Wait for pointset state matches config
 1. Wait for pointset event contains correct points
 
@@ -345,14 +344,14 @@ Check error when pointset configuration contains extraneous point
     * Add `pointset.sample_rate_sec` = `10`
 1. Wait for pointset state matches config
 1. Wait for pointset event contains correct points
-1. Update config before pointset status contains extraneous point error:
+1. Update config before pointset state contains extraneous point error:
     * Add `pointset.points[extraneous_point]` = point configuration
-1. Wait for pointset status contains extraneous point error
+1. Wait for pointset state contains extraneous point error
 1. Wait for pointset state matches config
 1. Wait for pointset event contains correct points
-1. Update config before pointset status removes extraneous point error:
+1. Update config before pointset state removes extraneous point error:
     * Remove `pointset.points[extraneous_point]`
-1. Wait for pointset status removes extraneous point error
+1. Wait for pointset state removes extraneous point error
 1. Wait for pointset state matches config
 1. Wait for pointset event contains correct points
 

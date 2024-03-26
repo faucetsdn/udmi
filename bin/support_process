@@ -19,7 +19,7 @@ archive_dir=${archive_dir%% *}
 archive_dir=${archive_dir##*/}
 
 rm -rf out_* $sites_in
-rm -f *_udmi-support_*.tgz
+rm -f *udmi-support_*.tgz
 
 rm -rf out $sites_out
 mkdir -p out $sites_out
@@ -41,13 +41,17 @@ fi
 
 ls -l $archive_dir/
 echo Extracting test archives...
-ls $archive_dir/*_udmi-support_*.tgz | xargs -n 1 tar -xzf
+ls $archive_dir/*udmi-support_*.tgz | xargs -n 1 tar -xzf
 
 echo Consolidating device tests...
-devices=$(ls -d $sites_in/out-seq/devices)
-for devices_dir in $devices; do
-    rsync -ah $devices_dir/ $sites_out/devices/
-done
+devices=$(ls -d $sites_in/out-seq/devices) || true
+if [[ -n $devices ]]; then
+    for devices_dir in $devices; do
+        rsync -ah $devices_dir/ $sites_out/devices/
+    done
+else
+    echo Nothing to consolidate.
+fi
 
 src_count=$(find $sites_in/out-seq -name sequence.md | wc -l)
 dst_count=$(find $sites_out -name sequence.md | wc -l)

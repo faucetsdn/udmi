@@ -1,7 +1,7 @@
 {
   "discovery" : {
-    "depths" : {
-      "families" : "entries"
+    "enumerate" : {
+      "families" : true
     }
   },
   "pointset" : {
@@ -24,12 +24,12 @@
     "metrics_rate_sec" : 10,
     "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2024-03-17T16:38:48Z"
+      "last_start" : "2024-03-21T16:40:24Z"
     },
     "testing" : {
       "sequence_name" : "family_enumeration"
     }
   },
-  "timestamp" : "2024-03-17T16:39:16Z",
-  "version" : "1.5.0-53-g394a976f9"
+  "timestamp" : "2024-03-21T16:40:51Z",
+  "version" : "1.5.0-55-g604ba10b1"
 }
