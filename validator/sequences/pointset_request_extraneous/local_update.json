@@ -1,14 +1,22 @@
 {
-  "timestamp" : "2024-03-10T18:09:18Z",
-  "version" : "@@@cloud udmi version###1.5.0-33-gddfe90847",
+  "timestamp" : "2024-03-26T19:26:15Z",
+  "version" : "@@@cloud udmi version###1.5.0-87-g59604d2bb",
   "system" : {
     "min_loglevel" : 200,
     "metrics_rate_sec" : 10,
     "operation" : {
-      "last_start" : "2024-03-10T18:06:45Z"
+      "last_start" : "2024-03-26T19:23:16Z"
     },
     "testing" : {
       "sequence_name" : "pointset_request_extraneous"
+    }
+  },
+  "localnet" : {
+    "families" : {
+      "vendor" : { },
+      "ipv4" : { },
+      "ether" : { },
+      "ipv6" : { }
     }
   },
   "pointset" : {

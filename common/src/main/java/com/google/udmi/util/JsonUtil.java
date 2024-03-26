@@ -127,6 +127,10 @@ public abstract class JsonUtil {
     }
   }
 
+  public static Map<String, Object> getAsMap(Map<String, Object> map, String key) {
+    return (Map<String, Object>) map.get(key);
+  }
+
   /**
    * Get a Date object parsed from a string representation.
    *

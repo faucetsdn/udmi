@@ -982,10 +982,15 @@ public class Pubber extends ManagerBase implements ManagerHost {
     if (deviceState.blobset == null) {
       return;
     }
-    deviceState.blobset.blobs.remove(blobId.value());
+
+    if (deviceState.blobset.blobs.remove(blobId.value()) == null) {
+      return;
+    }
+
     if (deviceState.blobset.blobs.isEmpty()) {
       deviceState.blobset = null;
     }
+
     markStateDirty();
   }
 
@@ -1036,6 +1041,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
       resetConnection(extractedSignature);
       persistEndpoint(extractedEndpoint);
       endpointState.phase = BlobPhase.FINAL;
+      markStateDirty();
     } catch (Exception e) {
       try {
         error("Reconfigure failed, attempting connection to last working endpoint", e);
