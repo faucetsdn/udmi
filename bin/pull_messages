@@ -44,7 +44,7 @@ while true; do
         fi
 
         timepath=$(echo ${timestamp%.*} | tr T: //)
-        usetime=$(echo $timestamp | tr : ^)  # Colon is not allowed on Windows!
+        usetime=$(echo $timestamp | tr : x)  # Colon is not allowed on Windows!
         out_file=$ROOT/out/registries/$registryId/devices/$deviceId/${timepath}/${usetime}_${subFolder}_${subType}.json
         echo $out_file
         mkdir -p $(dirname $out_file)
