@@ -1,8 +1,4 @@
 #!/bin/bash -e
-#
-# For simple debugging, just run in a shell loop:
-#   while true; do bin/pull_message PROJECT_ID; done
-#
 
 ROOT=$(realpath $(dirname $0)/..)
 
@@ -10,11 +6,18 @@ kubectl config current-context | tr _ ' ' > /tmp/namespace_tmp
 # Result is something like: gke bos-platform-dev us-central1 main grafnu
 read < /tmp/namespace_tmp gcp project_id region cluster namespace
 
-subscription=$namespace~debug
+if [[ -n $1 ]]; then
+    subscription=$1
+else
+    subscription=$namespace~debug
+fi
+echo Pulling from subscription $subscription
+
 tmp_file=/tmp/captured.json
 pull_limit=100
 
 while true; do
+    date
     gcloud --format=json --project=$project_id pubsub subscriptions pull $subscription --limit $pull_limit --auto-ack > $tmp_file || true
 
     for index in $(seq 0 $((pull_limit-1))); do
@@ -40,7 +43,9 @@ while true; do
             subType=event
         fi
 
-        out_file=$ROOT/out/registries/$registryId/devices/$deviceId/${timestamp}_${subFolder}_${subType}.json
+        timepath=$(echo ${timestamp%.*} | tr T: //)
+        usetime=$(echo $timestamp | tr : ^)  # Colon is not allowed on Windows!
+        out_file=$ROOT/out/registries/$registryId/devices/$deviceId/${timepath}/${usetime}_${subFolder}_${subType}.json
         echo $out_file
         mkdir -p $(dirname $out_file)
         echo $data | jq . > $out_file
