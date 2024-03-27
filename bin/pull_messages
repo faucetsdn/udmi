@@ -43,7 +43,7 @@ while true; do
             subType=event
         fi
 
-        timepath=$(echo ${timestamp%.*} | tr T: //)
+        timepath=$(echo ${timestamp%:*} | tr T: //) # Bucket messages by minute
         usetime=$(echo $timestamp | tr : x)  # Colon is not allowed on Windows!
         out_file=$ROOT/out/registries/$registryId/devices/$deviceId/${timepath}/${usetime}_${subFolder}_${subType}.json
         echo $out_file
