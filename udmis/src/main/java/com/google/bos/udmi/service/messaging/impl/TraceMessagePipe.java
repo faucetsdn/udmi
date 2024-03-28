@@ -93,14 +93,15 @@ public class TraceMessagePipe extends MessageBase {
     Envelope envelope = bundle.envelope;
     String publishTime =
         envelope.publishTime == null ? getTimestamp() : isoConvert(envelope.publishTime);
-    int endMark = publishTime.lastIndexOf(".");
+    int endMark = publishTime.lastIndexOf(":");
     String useTime = publishTime.substring(0, endMark >= 0 ? endMark : publishTime.length());
     String timePath = useTime.replaceAll("[T:Z]", "/");
     File outDir = new File(traceOutFile, timePath);
     outDir.mkdirs();
     int messageCount =
         traceCounts.computeIfAbsent(outDir, key -> new AtomicInteger()).incrementAndGet();
-    File outFile = new File(outDir, format("%s_%06d.json", publishTime, messageCount));
+    String sanitized = publishTime.replaceAll(":", "x");
+    File outFile = new File(outDir, format("%s_%06d.json", sanitized, messageCount));
     Map<String, Object> outputMap = ImmutableMap.of(
         "data", encodeBase64(stringify(bundle.message)),
         "attributes", envelope
