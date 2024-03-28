@@ -14,8 +14,13 @@ import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
+import static com.google.udmi.util.GeneralUtils.writeString;
+import static com.google.udmi.util.JsonUtil.JSON_SUFFIX;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
+import static com.google.udmi.util.JsonUtil.loadFile;
 import static com.google.udmi.util.JsonUtil.safeSleep;
+import static com.google.udmi.util.JsonUtil.writeFile;
+import static com.google.udmi.util.MetadataMapKeys.UDMI_PREFIX;
 import static java.lang.Math.ceil;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -40,7 +45,6 @@ import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.PubSubPusher;
 import com.google.udmi.util.Common;
-import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
 import java.io.FileInputStream;
@@ -53,6 +57,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.Date;
@@ -70,6 +75,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
@@ -90,6 +96,7 @@ public class Registrar {
   public static final Joiner JOIN_CSV = Joiner.on(", ");
   public static final File BASE_DIR = new File(".");
   public static final String METADATA_JSON = "metadata.json";
+  public static final String EXTRA_DEVICES_BASE = "extras";
   static final String ENVELOPE_SCHEMA_JSON = "envelope.json";
   static final String METADATA_SCHEMA_JSON = "metadata.json";
   static final String NORMALIZED_JSON = "metadata_norm.json";
@@ -108,9 +115,10 @@ public class Registrar {
   private static final Map<String, Class<? extends Summarizer>> SUMMARIZERS = ImmutableMap.of(
       ".json", Summarizer.JsonSummarizer.class,
       ".csv", Summarizer.CsvSummarizer.class);
-  private static final String EXTRA_DEVICES_FORMAT = "extras/%s";
-  private final Map<String, JsonSchema> schemas = new HashMap<>();
+  private static final String EXTRA_DEVICES_FORMAT = EXTRA_DEVICES_BASE + "/%s";
+  private static final String METADATA_DIR = "cloud_metadata";
   private static final String CLOUD_MODEL_FILE = "cloud_model.json";
+  private final Map<String, JsonSchema> schemas = new HashMap<>();
   private final String generation = getGenerationString();
   private final Set<Summarizer> summarizers = new HashSet<>();
   private CloudIotManager cloudIotManager;
@@ -785,11 +793,29 @@ public class Registrar {
         errorModel.detail = e.toString();
         errorModel.operation = Operation.ERROR;
         extras.put(extraName, errorModel);
+        writeExtraDevice(extraName, errorModel);
       }
     }
     System.err.printf("There were %d/%d already blocked devices.", alreadyBlocked.get(),
         extraDevices.size());
+    reapExtraDevices(extras.keySet());
     return extras;
+  }
+
+  private void reapExtraDevices(Set<String> current) {
+    File extrasDir = new File(siteDir, EXTRA_DEVICES_BASE);
+    String[] existing = ofNullable(extrasDir.list()).orElse(new String[0]);
+    Set<String> previous = Arrays.stream(existing).collect(Collectors.toSet());
+    difference(previous, current).forEach(expired -> {
+      File file = new File(extrasDir, expired);
+      try {
+        FileUtils.deleteDirectory(file);
+        System.err.println("Deleted extraneous extra device directory " + expired);
+      } catch (Exception e) {
+        throw new RuntimeException("Error deleting extraneous directory " + file.getAbsolutePath(),
+            e);
+      }
+    });
   }
 
   private void writeExtraDevice(String extraName, CloudModel augmentedModel) {
@@ -797,11 +823,36 @@ public class Registrar {
     File extraDir = new File(siteDir, devPath);
     try {
       extraDir.mkdirs();
-      File cloudModelFile = new File(extraDir, CLOUD_MODEL_FILE);
-      System.err.println("Writing extra device model to " + devPath);
-      JsonUtil.writeFile(augmentedModel, cloudModelFile);
+      File modelFile = new File(extraDir, CLOUD_MODEL_FILE);
+      Date previous = ifTrueGet(modelFile.exists(),
+          () -> loadFile(CloudModel.class, modelFile).updated_time);
+      if (previous == null || !previous.equals(augmentedModel.updated_time)) {
+        System.err.println("Writing extra device model to " + devPath);
+        writeFile(augmentedModel, modelFile);
+        updateExtraMetadata(extraName, extraDir);
+      }
     } catch (Exception e) {
-      throw new RuntimeException("While writing extra device data " + extraDir.getAbsolutePath());
+      throw new RuntimeException("While writing extra device data " + extraDir.getAbsolutePath(), e);
+    }
+  }
+
+  private void updateExtraMetadata(String extraName, File extraDir) {
+    File metadataDir = new File(extraDir, METADATA_DIR);
+    try {
+      CloudModel cloudModel = cloudIotManager.fetchDevice(extraName);
+      FileUtils.deleteDirectory(metadataDir);
+      if (cloudModel.metadata != null && !cloudModel.metadata.isEmpty()) {
+        metadataDir.mkdirs();
+        cloudModel.metadata.entrySet().stream()
+            .filter(entry -> entry.getKey().startsWith(UDMI_PREFIX))
+            .forEach(entry -> {
+              File metadataFile = new File(metadataDir, entry.getKey() + JSON_SUFFIX);
+              writeString(metadataFile, entry.getValue());
+            });
+      }
+    } catch (Exception e) {
+      throw new RuntimeException(
+          "While extracting cloud metadata to " + metadataDir.getAbsolutePath(), e);
     }
   }
 
