@@ -40,6 +40,7 @@ import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.PubSubPusher;
 import com.google.udmi.util.Common;
+import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
 import java.io.FileInputStream;
@@ -107,7 +108,9 @@ public class Registrar {
   private static final Map<String, Class<? extends Summarizer>> SUMMARIZERS = ImmutableMap.of(
       ".json", Summarizer.JsonSummarizer.class,
       ".csv", Summarizer.CsvSummarizer.class);
+  private static final String EXTRA_DEVICES_FORMAT = "extras/%s";
   private final Map<String, JsonSchema> schemas = new HashMap<>();
+  private static final String CLOUD_MODEL_FILE = "cloud_model.json";
   private final String generation = getGenerationString();
   private final Set<Summarizer> summarizers = new HashSet<>();
   private CloudIotManager cloudIotManager;
@@ -766,14 +769,17 @@ public class Registrar {
     for (String extraName : extraDevices) {
       try {
         boolean isBlocked = isTrue(cloudModels.get(extraName).blocked);
+        final CloudModel augmentedModel;
         if (blockUnknown && !isBlocked) {
           System.err.println("Blocking extra device: " + extraName);
           cloudIotManager.blockDevice(extraName, true);
-          extras.put(extraName, augmentModel(cloudIotManager.fetchDevice(extraName)));
+          augmentedModel = augmentModel(cloudIotManager.fetchDevice(extraName));
         } else {
           ifTrueThen(isBlocked, alreadyBlocked::incrementAndGet);
-          extras.put(extraName, augmentModel(cloudModels.get(extraName)));
+          augmentedModel = augmentModel(cloudModels.get(extraName));
         }
+        extras.put(extraName, augmentedModel);
+        writeExtraDevice(extraName, augmentedModel);
       } catch (Exception e) {
         CloudModel errorModel = new CloudModel();
         errorModel.detail = e.toString();
@@ -784,6 +790,19 @@ public class Registrar {
     System.err.printf("There were %d/%d already blocked devices.", alreadyBlocked.get(),
         extraDevices.size());
     return extras;
+  }
+
+  private void writeExtraDevice(String extraName, CloudModel augmentedModel) {
+    String devPath = format(EXTRA_DEVICES_FORMAT, extraName);
+    File extraDir = new File(siteDir, devPath);
+    try {
+      extraDir.mkdirs();
+      File cloudModelFile = new File(extraDir, CLOUD_MODEL_FILE);
+      System.err.println("Writing extra device model to " + devPath);
+      JsonUtil.writeFile(augmentedModel, cloudModelFile);
+    } catch (Exception e) {
+      throw new RuntimeException("While writing extra device data " + extraDir.getAbsolutePath());
+    }
   }
 
   private CloudModel fetchDevice(String localName, boolean newDevice) {
