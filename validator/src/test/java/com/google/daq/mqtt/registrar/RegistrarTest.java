@@ -103,11 +103,17 @@ public class RegistrarTest {
 
   @Test
   public void noBlockDevicesTest() {
-    List<MockAction> mockActions = getMockedActions(ImmutableList.of("--", "AHU-1"));
-    mockActions.forEach(action -> assertEquals("Mocked device " + action.action, "AHU-1",
-        action.deviceId));
-    assertTrue("Device is not blocked", filterActions(mockActions, BLOCK_DEVICE_ACTION).stream()
-        .allMatch(action -> action.data.equals(TRUE)));
+    {
+      List<MockAction> mockActions = getMockedActions(ImmutableList.of("-u"));
+      List<MockAction> blockActions = filterActions(mockActions, BLOCK_DEVICE_ACTION);
+      assertEquals("block action count", 0, blockActions.size());
+    }
+
+    {
+      List<MockAction> mockActions = getMockedActions(ImmutableList.of("-u", "-b"));
+      List<MockAction> blockActions = filterActions(mockActions, BLOCK_DEVICE_ACTION);
+      assertEquals("block action count", 1, blockActions.size());
+    }
   }
 
   @Test
@@ -136,6 +142,7 @@ public class RegistrarTest {
   @Test
   public void basicUpdates() {
     List<MockAction> mockActions = getMockedActions(ImmutableList.of("-u", "-b"));
+
     List<MockAction> blockActions = filterActions(mockActions, BLOCK_DEVICE_ACTION);
     assertEquals("block action count", 1, blockActions.size());
     assertEquals("block action distinct devices", blockActions.size(),

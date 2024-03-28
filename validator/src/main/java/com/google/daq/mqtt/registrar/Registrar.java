@@ -510,7 +510,9 @@ public class Registrar {
         bindGatewayDevices(localDevices);
       }
 
-      extraDevices = processExtraDevices(difference(cloudModels.keySet(), operatives));
+      if (cloudModels != null) {
+        extraDevices = processExtraDevices(difference(cloudModels.keySet(), operatives));
+      }
     } catch (Exception e) {
       throw new RuntimeException("While processing devices", e);
     }
