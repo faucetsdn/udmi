@@ -1,7 +1,7 @@
 package com.google.daq.mqtt.util;
 
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import udmi.schema.CloudModel;
 import udmi.schema.Credential;
 import udmi.schema.SetupUdmiConfig;
@@ -75,7 +75,7 @@ public interface IotProvider {
    *
    * @return set of registered device ids
    */
-  Set<String> fetchDeviceIds(String forGatewayId);
+  Map<String, CloudModel> fetchCloudModels(String forGatewayId);
 
   /**
    * Get the device config blob for the indicated device.

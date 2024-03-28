@@ -10,12 +10,10 @@ import com.google.bos.udmi.service.messaging.impl.SimpleMqttPipe;
 import com.google.bos.udmi.service.messaging.impl.TraceMessagePipe;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.EndpointConfiguration.Protocol;
-import udmi.schema.Envelope;
 
 /**
  * Basic message pipe interface that logically supports an in-source and out-destination. The pipe

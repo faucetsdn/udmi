@@ -102,6 +102,4 @@ echo
 
 validator/bin/registrar $config_file $* 2>&1 | tee $OUT_DIR/registrar.log
 
-bin/check_version
-
 search "Registrar complete, exit 0" $OUT_DIR/registrar.log
