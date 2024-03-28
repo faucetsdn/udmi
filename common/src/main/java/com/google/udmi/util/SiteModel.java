@@ -208,10 +208,10 @@ public class SiteModel {
   private void loadAllDeviceMetadata() {
     Set<String> deviceIds = getDeviceIds();
     allMetadata = deviceIds.stream().collect(toMap(key -> key, this::loadDeviceMetadata));
-    allDevices = deviceIds.stream().collect(toMap(key -> key, this::newDevice));
+    allDevices = deviceIds.stream().collect(toMap(key -> key, this::newCloudModel));
   }
 
-  private CloudModel newDevice(String deviceId) {
+  private CloudModel newCloudModel(String deviceId) {
     return new CloudModel();
   }
 
@@ -233,6 +233,10 @@ public class SiteModel {
 
   public Collection<CloudModel> allDevices() {
     return allDevices.values();
+  }
+
+  public Map<String, Metadata> allMetadata() {
+    return allMetadata;
   }
 
   public Collection<String> allDeviceIds() {
