@@ -135,7 +135,7 @@ public class RegistrarTest {
 
   @Test
   public void basicUpdates() {
-    List<MockAction> mockActions = getMockedActions(ImmutableList.of("-u"));
+    List<MockAction> mockActions = getMockedActions(ImmutableList.of("-u", "-b"));
     List<MockAction> blockActions = filterActions(mockActions, BLOCK_DEVICE_ACTION);
     assertEquals("block action count", 1, blockActions.size());
     assertEquals("block action distinct devices", blockActions.size(),
