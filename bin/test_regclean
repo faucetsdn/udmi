@@ -132,7 +132,7 @@ bin/registrar $site_arg $registrar_project
 
 echo Remove fake device from site model, so it will be blocked
 rm -rf $fake_device
-bin/registrar $site_arg $registrar_project
+bin/registrar $site_arg $registrar_project -b
 
 echo Check $device_id again, but this time with success...
 echo pubber/bin/run $pubber_config

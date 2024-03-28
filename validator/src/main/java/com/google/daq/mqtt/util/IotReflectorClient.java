@@ -27,7 +27,6 @@ import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -143,9 +142,8 @@ public class IotReflectorClient implements IotProvider {
   }
 
   @Override
-  public Set<String> fetchDeviceIds(String forGatewayId) {
-    return ofNullable(fetchCloudModel(forGatewayId))
-        .map(model -> model.device_ids.keySet()).orElse(null);
+  public Map<String, CloudModel> fetchCloudModels(String forGatewayId) {
+    return ofNullable(fetchCloudModel(forGatewayId)).map(model -> model.device_ids).orElse(null);
   }
 
   @Nullable
