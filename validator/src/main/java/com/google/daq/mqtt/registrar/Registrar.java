@@ -69,6 +69,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -766,40 +767,52 @@ public class Registrar {
   }
 
   private Map<String, CloudModel> processExtraDevices(Set<String> extraDevices) {
-    Map<String, CloudModel> extras = new HashMap<>();
-    if (extraDevices.isEmpty()) {
-      return extras;
-    }
-    AtomicInteger alreadyBlocked = new AtomicInteger();
-    if (blockUnknown) {
-      System.err.printf("Blocking %d extra devices...", extraDevices.size());
-    }
-    for (String extraName : extraDevices) {
-      try {
-        boolean isBlocked = isTrue(cloudModels.get(extraName).blocked);
-        final CloudModel augmentedModel;
-        if (blockUnknown && !isBlocked) {
-          System.err.println("Blocking extra device: " + extraName);
-          cloudIotManager.blockDevice(extraName, true);
-          augmentedModel = augmentModel(cloudIotManager.fetchDevice(extraName));
-        } else {
-          ifTrueThen(isBlocked, alreadyBlocked::incrementAndGet);
-          augmentedModel = augmentModel(cloudModels.get(extraName));
-        }
-        extras.put(extraName, augmentedModel);
-        writeExtraDevice(extraName, augmentedModel);
-      } catch (Exception e) {
-        CloudModel errorModel = new CloudModel();
-        errorModel.detail = e.toString();
-        errorModel.operation = Operation.ERROR;
-        extras.put(extraName, errorModel);
-        writeExtraDevice(extraName, errorModel);
+    try {
+      Map<String, CloudModel> extras = new ConcurrentHashMap<>();
+      if (extraDevices.isEmpty()) {
+        return extras;
       }
+      AtomicInteger alreadyBlocked = new AtomicInteger();
+      if (blockUnknown) {
+        System.err.printf("Blocking %d extra devices...", extraDevices.size());
+      }
+      for (String extraName : extraDevices) {
+        parallelExecute(() -> {
+          processExtra(extras, alreadyBlocked, extraName);
+        });
+      }
+      dynamicTerminate(extraDevices.size());
+      System.err.printf("There were %d/%d already blocked devices.", alreadyBlocked.get(),
+          extraDevices.size());
+      reapExtraDevices(extras.keySet());
+      return extras;
+    } catch (Exception e) {
+      throw new RuntimeException(format("While processing %d extra devices", extraDevices.size()), e);
     }
-    System.err.printf("There were %d/%d already blocked devices.", alreadyBlocked.get(),
-        extraDevices.size());
-    reapExtraDevices(extras.keySet());
-    return extras;
+  }
+
+  private void processExtra(Map<String, CloudModel> extras, AtomicInteger alreadyBlocked,
+      String extraName) {
+    try {
+      boolean isBlocked = isTrue(cloudModels.get(extraName).blocked);
+      final CloudModel augmentedModel;
+      if (blockUnknown && !isBlocked) {
+        System.err.println("Blocking extra device: " + extraName);
+        cloudIotManager.blockDevice(extraName, true);
+        augmentedModel = augmentModel(cloudIotManager.fetchDevice(extraName));
+      } else {
+        ifTrueThen(isBlocked, alreadyBlocked::incrementAndGet);
+        augmentedModel = augmentModel(cloudModels.get(extraName));
+      }
+      extras.put(extraName, augmentedModel);
+      writeExtraDevice(extraName, augmentedModel);
+    } catch (Exception e) {
+      CloudModel errorModel = new CloudModel();
+      errorModel.detail = e.toString();
+      errorModel.operation = Operation.ERROR;
+      extras.put(extraName, errorModel);
+      writeExtraDevice(extraName, errorModel);
+    }
   }
 
   private void reapExtraDevices(Set<String> current) {
