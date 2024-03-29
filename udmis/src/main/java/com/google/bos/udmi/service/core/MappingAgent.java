@@ -11,7 +11,9 @@ import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static com.google.udmi.util.MetadataMapKeys.UDMI_DISCOVERED_FROM;
 import static com.google.udmi.util.MetadataMapKeys.UDMI_DISCOVERED_WITH;
+import static com.google.udmi.util.MetadataMapKeys.UDMI_GENERATION;
 import static com.google.udmi.util.MetadataMapKeys.UDMI_ONBOARD_UNTIL;
+import static com.google.udmi.util.MetadataMapKeys.UDMI_UPDATED;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static udmi.schema.CloudModel.Operation.BIND;
@@ -76,6 +78,8 @@ public class MappingAgent extends ProcessorBase {
     ifNullThen(deviceModel.metadata, () -> deviceModel.metadata = new HashMap<>());
     deviceModel.metadata.put(UDMI_DISCOVERED_FROM, stringifyTerse(envelope));
     deviceModel.metadata.put(UDMI_DISCOVERED_WITH, stringifyTerse(discoveryEvent));
+    deviceModel.metadata.put(UDMI_UPDATED, isoConvert());
+    deviceModel.metadata.put(UDMI_GENERATION, isoConvert(discoveryEvent.generation));
     catchToElse(ignoreValue(iotAccess.modelResource(registryId, expectedId, deviceModel)),
         e -> error("Error creating device (exists but not bound?): " + friendlyStackTrace(e)));
     bindDeviceToGateway(registryId, expectedId, gatewayId);
