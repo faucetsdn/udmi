@@ -5,7 +5,6 @@ import static com.google.udmi.util.JsonUtil.isoConvert;
 import com.google.common.collect.ImmutableList;
 import com.google.daq.mqtt.util.MessageHandler;
 import com.google.daq.mqtt.util.MessageHandler.HandlerSpecification;
-import com.google.udmi.util.JsonUtil;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -13,21 +12,17 @@ import java.util.Map;
 import java.util.Objects;
 import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.Depths.Depth;
-import udmi.schema.DeviceMappingConfig;
-import udmi.schema.DeviceMappingState;
 import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryState;
 import udmi.schema.Envelope;
 import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyDiscoveryState;
-import udmi.schema.FamilyDiscoveryState.Phase;
-import udmi.schema.MappingCommand;
 import udmi.schema.MappingEvent;
 
 /**
  * Agent that maps discovery results to mapping requests.
  */
-public class MappingAgent extends MappingBase {
+public class MappingAgent {
 
   private static final int SCAN_INTERVAL_SEC = 60;
   private static final ProtocolFamily DISCOVERY_FAMILY = ProtocolFamily.VENDOR;
@@ -88,25 +83,6 @@ public class MappingAgent extends MappingBase {
   private void mappingEventHandler(Envelope envelope, MappingEvent mappingEvent) {
     String deviceId = envelope.deviceId;
     System.err.println("Processing mapping event for " + deviceId);
-
-    mappingEvent.entities.forEach((guid, entity) -> {
-      DeviceMappingState state = mappingSink.ensureDeviceState(deviceId);
-      state.guid = guid;
-      state.exported = mappingEvent.timestamp;
-      mappingSink.updateState(envelope, state);
-
-      DeviceMappingConfig config = mappingSink.ensureDeviceConfig(deviceId);
-      config.applied = mappingEvent.timestamp;
-      config.guid = guid;
-      enginePublish(mappingSink.getMappingConfig());
-      mappingSink.updateConfig(envelope, config);
-
-      MappingCommand mappingCommand = new MappingCommand();
-      mappingCommand.guid = guid;
-      mappingCommand.timestamp = mappingEvent.timestamp;
-      mappingCommand.translation = entity.translation;
-      mappingSink.updateCommand(envelope, mappingCommand);
-    });
   }
 
 }
