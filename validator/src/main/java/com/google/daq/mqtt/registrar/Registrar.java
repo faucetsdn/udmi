@@ -787,7 +787,7 @@ public class Registrar {
       reapExtraDevices(extras.keySet());
       return extras;
     } catch (Exception e) {
-      throw new RuntimeException(format("While processing %d extra devices", extraDevices.size()), e);
+      throw new RuntimeException(format("Processing %d extra devices", extraDevices.size()), e);
     }
   }
 
@@ -845,7 +845,7 @@ public class Registrar {
         updateExtraMetadata(extraName, extraDir);
       }
     } catch (Exception e) {
-      throw new RuntimeException("While writing extra device data " + extraDir.getAbsolutePath(), e);
+      throw new RuntimeException("Writing extra device data " + extraDir.getAbsolutePath(), e);
     }
   }
 
