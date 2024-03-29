@@ -4,6 +4,7 @@ import static com.clearblade.cloud.iot.v1.devicetypes.GatewayType.NON_GATEWAY;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
+import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -11,6 +12,8 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.getDate;
+import static com.google.udmi.util.JsonUtil.isoConvert;
+import static com.google.udmi.util.MetadataMapKeys.UDMI_UPDATED;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
@@ -65,6 +68,7 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.udmi.util.JsonUtil;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Base64;
 import java.util.Date;
@@ -148,6 +152,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     cloudModel.last_event_time = getSafeDate(device.getLastEventTime());
     cloudModel.blocked = device.isBlocked() ? true : null;
     cloudModel.credentials = null;
+    cloudModel.updated_time = catchToNull(() -> getDate(device.getMetadata().get(UDMI_UPDATED)));
     return new SimpleEntry<>(device.getId(), cloudModel);
   }
 
@@ -250,6 +255,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     cloudModel.last_config_ack = getSafeDate(device.getLastConfigAckTime());
     cloudModel.last_event_time = getSafeDate(device.getLastErrorTime());
     cloudModel.credentials = convertIot(device.getCredentials());
+    cloudModel.updated_time = catchToNull(() -> getDate(device.getMetadata().get(UDMI_UPDATED)));
     return cloudModel;
   }
 

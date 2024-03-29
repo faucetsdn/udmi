@@ -62,6 +62,10 @@
         }
       }
     },
+    "updated_time": {
+      "type": "string",
+      "format": "date-time"
+    },
     "last_event_time": {
       "type": "string",
       "format": "date-time"
