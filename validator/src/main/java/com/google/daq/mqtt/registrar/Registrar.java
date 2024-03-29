@@ -772,15 +772,12 @@ public class Registrar {
       if (extraDevices.isEmpty()) {
         return extras;
       }
-      AtomicInteger alreadyBlocked = new AtomicInteger();
       if (blockUnknown) {
         System.err.printf("Blocking %d extra devices...", extraDevices.size());
       }
-      for (String extraName : extraDevices) {
-        parallelExecute(() -> {
-          processExtra(extras, alreadyBlocked, extraName);
-        });
-      }
+      AtomicInteger alreadyBlocked = new AtomicInteger();
+      extraDevices.forEach(extraName -> parallelExecute(
+          () -> extras.put(extraName, processExtra(extraName, alreadyBlocked))));
       dynamicTerminate(extraDevices.size());
       System.err.printf("There were %d/%d already blocked devices.", alreadyBlocked.get(),
           extraDevices.size());
@@ -791,8 +788,7 @@ public class Registrar {
     }
   }
 
-  private void processExtra(Map<String, CloudModel> extras, AtomicInteger alreadyBlocked,
-      String extraName) {
+  private CloudModel processExtra(String extraName, AtomicInteger alreadyBlocked) {
     try {
       boolean isBlocked = isTrue(cloudModels.get(extraName).blocked);
       final CloudModel augmentedModel;
@@ -804,14 +800,14 @@ public class Registrar {
         ifTrueThen(isBlocked, alreadyBlocked::incrementAndGet);
         augmentedModel = augmentModel(cloudModels.get(extraName));
       }
-      extras.put(extraName, augmentedModel);
       writeExtraDevice(extraName, augmentedModel);
+      return augmentedModel;
     } catch (Exception e) {
       CloudModel errorModel = new CloudModel();
       errorModel.detail = e.toString();
       errorModel.operation = Operation.ERROR;
-      extras.put(extraName, errorModel);
       writeExtraDevice(extraName, errorModel);
+      return errorModel;
     }
   }
 
