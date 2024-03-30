@@ -1,12 +1,11 @@
 package com.google.bos.udmi.service.core;
 
 import static com.google.udmi.util.JsonUtil.isoConvert;
-import static com.google.udmi.util.MetadataMapKeys.UDMI_ONBOARD_UNTIL;
+import static com.google.udmi.util.MetadataMapKeys.UDMI_PROVISION_UNTIL;
 import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.AdditionalMatchers.not;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
@@ -36,18 +35,25 @@ import udmi.schema.Envelope;
 /**
  * Simple tests for the auto-mapping provisioning agent.
  */
-public class MappingAgentTest extends ProcessorTestBase {
+public class ProvisioningAgentTest extends ProcessorTestBase {
 
   private static final String SCAN_ADDR = "19273821";
   private static final ProtocolFamily SCAN_FAMILY = ProtocolFamily.VENDOR;
   private static final String TARGET_DEVICE = format("%s-%s", SCAN_FAMILY, SCAN_ADDR);
   private static final Date SCAN_GENERATION = new Date();
-  private static final Duration ONBOARDING_WINDOW = Duration.ofMinutes(5);
+  private static final Duration PROVISIONING_WINDOW = Duration.ofMinutes(5);
 
-  protected void initializeTestInstance() {
-    initializeTestInstance(MappingAgent.class);
+  private static Map<String, String> getGatewayMetadata() {
+    return ImmutableMap.of(UDMI_PROVISION_UNTIL,
+        isoConvert(Instant.now().plus(PROVISIONING_WINDOW)));
+  }
 
-    initializeProvider(provider);
+  @NotNull
+  private static Envelope getScanEnvelope() {
+    Envelope envelope = new Envelope();
+    envelope.deviceId = TEST_GATEWAY;
+    envelope.deviceRegistryId = TEST_REGISTRY;
+    return envelope;
   }
 
   static void initializeProvider(IotAccessBase provider) {
@@ -78,8 +84,10 @@ public class MappingAgentTest extends ProcessorTestBase {
     when(provider.fetchDevice(eq(TEST_REGISTRY), eq(TEST_GATEWAY))).thenReturn(gatewayModel);
   }
 
-  private static Map<String, String> getGatewayMetadata() {
-    return ImmutableMap.of(UDMI_ONBOARD_UNTIL, isoConvert(Instant.now().plus(ONBOARDING_WINDOW)));
+  protected void initializeTestInstance() {
+    initializeTestInstance(DiscoverySink.class);
+
+    initializeProvider(provider);
   }
 
   private DiscoveryEvent getDiscoveryScanEvent(String targetDeviceId) {
@@ -115,14 +123,6 @@ public class MappingAgentTest extends ProcessorTestBase {
     assertEquals(TEST_GATEWAY, devices.get(1), "scanning gateway id");
     assertEquals(Operation.BIND, models.get(1).operation, "operation mismatch");
     assertNotNull(models.get(1).device_ids.get(TARGET_DEVICE), "binding device entry");
-  }
-
-  @NotNull
-  private static Envelope getScanEnvelope() {
-    Envelope envelope = new Envelope();
-    envelope.deviceId = TEST_GATEWAY;
-    envelope.deviceRegistryId = TEST_REGISTRY;
-    return envelope;
   }
 
   @Test
