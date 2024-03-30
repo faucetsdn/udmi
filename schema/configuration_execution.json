@@ -28,7 +28,7 @@
     "site_model": {
       "type": "string"
     },
-    "working_dir": {
+    "src_file": {
       "type": "string"
     },
     "registry_suffix": {

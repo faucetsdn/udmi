@@ -36,8 +36,7 @@ public abstract class ConfigUtil {
     try {
       ExecutionConfiguration executionConfiguration = OBJECT_MAPPER.readValue(configFile,
           ExecutionConfiguration.class);
-      ifNullThen(executionConfiguration.working_dir,
-          () -> executionConfiguration.working_dir = configFile.getParentFile().getAbsolutePath());
+      executionConfiguration.src_file = configFile.getAbsolutePath();
       return executionConfiguration;
     } catch (Exception e) {
       throw new RuntimeException("While reading config file " + configFile.getAbsolutePath(), e);

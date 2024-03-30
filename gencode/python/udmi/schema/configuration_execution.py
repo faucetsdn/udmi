@@ -14,7 +14,7 @@ class ExecutionConfiguration:
     self.feed_name = None
     self.reflect_region = None
     self.site_model = None
-    self.working_dir = None
+    self.src_file = None
     self.registry_suffix = None
     self.shard_count = None
     self.shard_index = None
@@ -49,7 +49,7 @@ class ExecutionConfiguration:
     result.feed_name = source.get('feed_name')
     result.reflect_region = source.get('reflect_region')
     result.site_model = source.get('site_model')
-    result.working_dir = source.get('working_dir')
+    result.src_file = source.get('src_file')
     result.registry_suffix = source.get('registry_suffix')
     result.shard_count = source.get('shard_count')
     result.shard_index = source.get('shard_index')
@@ -105,8 +105,8 @@ class ExecutionConfiguration:
       result['reflect_region'] = self.reflect_region # 5
     if self.site_model:
       result['site_model'] = self.site_model # 5
-    if self.working_dir:
-      result['working_dir'] = self.working_dir # 5
+    if self.src_file:
+      result['src_file'] = self.src_file # 5
     if self.registry_suffix:
       result['registry_suffix'] = self.registry_suffix # 5
     if self.shard_count:

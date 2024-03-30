@@ -27,20 +27,17 @@ public class MappingAgent {
   private static final int SCAN_INTERVAL_SEC = 60;
   private static final ProtocolFamily DISCOVERY_FAMILY = ProtocolFamily.VENDOR;
   private final ExecutionConfiguration executionConfiguration;
-  private final String exePath;
   private IotReflectorClient client;
   private SiteModel siteModel;
-  private File configFile;
   private CloudIotManager cloudIotManager;
 
-  public MappingAgent(ExecutionConfiguration exeConfig, String exePath) {
+  public MappingAgent(ExecutionConfiguration exeConfig) {
     executionConfiguration = exeConfig;
-    this.exePath = exePath;
     initialize();
   }
 
   public MappingAgent(String profilePath) {
-    this(ConfigUtil.readExeConfig(new File(profilePath)), profilePath);
+    this(ConfigUtil.readExeConfig(new File(profilePath)));
   }
 
   /**
@@ -56,12 +53,12 @@ public class MappingAgent {
     }
   }
 
-  private void process() {
+  void process() {
 
   }
 
   private void initialize() {
-    cloudIotManager = new CloudIotManager(executionConfiguration, exePath);
+    cloudIotManager = new CloudIotManager(executionConfiguration);
     siteModel = new SiteModel(cloudIotManager.getSiteDir());
   }
 
