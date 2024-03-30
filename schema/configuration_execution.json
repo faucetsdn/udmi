@@ -28,6 +28,9 @@
     "site_model": {
       "type": "string"
     },
+    "working_dir": {
+      "type": "string"
+    },
     "registry_suffix": {
       "type": "string"
     },

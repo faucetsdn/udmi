@@ -1,23 +1,23 @@
 package com.google.daq.mqtt.mapping;
 
-import static com.google.udmi.util.JsonUtil.isoConvert;
+import static com.google.udmi.util.Common.removeNextArg;
+import static com.google.udmi.util.JsonUtil.stringify;
 
-import com.google.common.collect.ImmutableList;
-import com.google.daq.mqtt.util.MessageHandler;
-import com.google.daq.mqtt.util.MessageHandler.HandlerSpecification;
+import com.google.bos.iot.core.proxy.IotReflectorClient;
+import com.google.daq.mqtt.util.CloudIotManager;
+import com.google.daq.mqtt.util.ConfigUtil;
+import com.google.udmi.util.SiteModel;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.Depths.Depth;
 import udmi.schema.DiscoveryConfig;
-import udmi.schema.DiscoveryState;
-import udmi.schema.Envelope;
+import udmi.schema.ExecutionConfiguration;
 import udmi.schema.FamilyDiscoveryConfig;
-import udmi.schema.FamilyDiscoveryState;
-import udmi.schema.MappingEvent;
 
 /**
  * Agent that maps discovery results to mapping requests.
@@ -26,33 +26,47 @@ public class MappingAgent {
 
   private static final int SCAN_INTERVAL_SEC = 60;
   private static final ProtocolFamily DISCOVERY_FAMILY = ProtocolFamily.VENDOR;
-  private final Map<ProtocolFamily, FamilyDiscoveryState> familyStates = new HashMap<>();
-  private MappingSink mappingSink;
-  private final List<HandlerSpecification> handlers = ImmutableList.of(
-      MessageHandler.handlerSpecification(DiscoveryState.class, this::discoveryStateHandler),
-      MessageHandler.handlerSpecification(MappingEvent.class, this::mappingEventHandler)
-  );
+  private final ExecutionConfiguration executionConfiguration;
+  private final String exePath;
+  private IotReflectorClient client;
+  private SiteModel siteModel;
+  private File configFile;
+  private CloudIotManager cloudIotManager;
+
+  public MappingAgent(ExecutionConfiguration exeConfig, String exePath) {
+    executionConfiguration = exeConfig;
+    this.exePath = exePath;
+    initialize();
+  }
+
+  public MappingAgent(String profilePath) {
+    this(ConfigUtil.readExeConfig(new File(profilePath)), profilePath);
+  }
 
   /**
-   * Main entry point for the mapping agent.
-   *
-   * @param args Standard command line arguments
+   * Let's go.
    */
   public static void main(String[] args) {
-    new MappingAgent().activate(args);
+    List<String> argsList = new ArrayList<>(Arrays.asList(args));
+    MappingAgent agent = new MappingAgent(removeNextArg(argsList, "execution profile"));
+    try {
+      agent.process();
+    } finally {
+      agent.shutdown();
+    }
   }
 
-  private void activate(String[] args) {
-    mappingEngineId = "_mapping_engine";
-    initialize("agent", args, handlers);
-    initializeSink();
-    startDiscovery();
-    messageLoop();
+  private void process() {
+
   }
 
-  private void initializeSink() {
-    mappingSink = new MappingSink(siteModel);
-    mappingSink.initialize();
+  private void initialize() {
+    cloudIotManager = new CloudIotManager(executionConfiguration, exePath);
+    siteModel = new SiteModel(cloudIotManager.getSiteDir());
+  }
+
+  private void shutdown() {
+    client.close();
   }
 
   private void startDiscovery() {
@@ -64,25 +78,13 @@ public class MappingAgent {
     familyConfig.generation = generation;
     familyConfig.scan_interval_sec = SCAN_INTERVAL_SEC;
     familyConfig.depth = Depth.ENTRIES;
-    discoveryPublish(discoveryConfig);
+    publish(discoveryConfig);
     System.err.println("Started discovery generation " + generation);
   }
 
-  private void processFamilyState(ProtocolFamily family, FamilyDiscoveryState state) {
-    FamilyDiscoveryState previous = familyStates.put(family, state);
-    if (previous == null || !Objects.equals(previous.generation, state.generation)) {
-      System.err.printf("Received family %s generation %s phase %s%n", family,
-          isoConvert(state.generation), state.phase);
-    }
+  private void publish(DiscoveryConfig discoveryConfig) {
+    String topic = "foo";
+    String sendId = client.publish(executionConfiguration.device_id, topic,
+        stringify(discoveryConfig));
   }
-
-  private void discoveryStateHandler(Envelope attributes, DiscoveryState message) {
-    message.families.forEach(this::processFamilyState);
-  }
-
-  private void mappingEventHandler(Envelope envelope, MappingEvent mappingEvent) {
-    String deviceId = envelope.deviceId;
-    System.err.println("Processing mapping event for " + deviceId);
-  }
-
 }

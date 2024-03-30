@@ -89,14 +89,16 @@ public class CloudIotManager {
    * Create a new iot manager using a full configuration file.
    */
   public CloudIotManager(File siteConfig) {
+    this(readExeConfig(siteConfig), siteConfig.getAbsolutePath());
+  }
+
+  public CloudIotManager(ExecutionConfiguration config, String configPath) {
     try {
-      System.err.println("Reading cloud config from " + siteConfig.getAbsolutePath());
-      ExecutionConfiguration config = readExeConfig(siteConfig);
       this.projectId = requireNonNull(config.project_id, "no project_id defined");
       this.useReflectClient = shouldUseReflectorClient(config);
       File model = new File(config.site_model != null ? config.site_model : ".");
       siteModel =
-          model.isAbsolute() ? model : new File(siteConfig.getParentFile(), model.getPath());
+          model.isAbsolute() ? model : new File(config.working_dir, model.getPath());
       File baseConfig = new File(siteModel, CLOUD_IOT_CONFIG_JSON);
       ExecutionConfiguration newConfig = mergeObject(readExeConfig(baseConfig), config);
       executionConfiguration = validate(newConfig, this.projectId);
@@ -110,9 +112,13 @@ public class CloudIotManager {
       cloudRegion = executionConfiguration.cloud_region;
       initializeIotProvider();
     } catch (Exception e) {
-      throw new RuntimeException(
-          format("While initializing project from file %s", siteConfig.getAbsolutePath()), e);
+      throw new RuntimeException(format("While initializing project from file %s", configPath), e);
     }
+  }
+
+  private static File debugString(File siteConfig, String message) {
+    System.err.println(message);
+    return siteConfig;
   }
 
   private static boolean shouldUseReflectorClient(ExecutionConfiguration config) {
@@ -372,5 +378,9 @@ public class CloudIotManager {
     settings.credentials = List.of(iotProvider.getCredential());
     iotProvider.createResource(suffix, settings);
     return requireNonNull(settings.num_id, "Missing registry name in reply");
+  }
+
+  public String getSiteDir() {
+    return executionConfiguration.site_model;
   }
 }
