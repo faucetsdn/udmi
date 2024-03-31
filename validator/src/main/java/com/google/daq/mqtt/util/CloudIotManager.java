@@ -25,9 +25,11 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import org.jetbrains.annotations.NotNull;
 import udmi.schema.CloudModel;
+import udmi.schema.CloudModel.Operation;
 import udmi.schema.CloudModel.Resource_type;
 import udmi.schema.Credential;
 import udmi.schema.Credential.Key_format;
+import udmi.schema.Envelope.SubFolder;
 import udmi.schema.ExecutionConfiguration;
 import udmi.schema.IotAccess;
 import udmi.schema.SetupUdmiConfig;
@@ -213,7 +215,11 @@ public class CloudIotManager {
   }
 
   private void writeDeviceConfig(String deviceId, String config) {
-    iotProvider.updateConfig(deviceId, config);
+    iotProvider.updateConfig(deviceId, SubFolder.UPDATE, config);
+  }
+
+  public void modifyConfig(String deviceId, SubFolder subFolder, String config) {
+    iotProvider.updateConfig(deviceId, subFolder, config);
   }
 
   /**
@@ -264,6 +270,12 @@ public class CloudIotManager {
     CloudModel device = makeDevice(settings, oldDevice);
     limitValueSizes(device.metadata);
     iotProvider.updateDevice(deviceId, device);
+  }
+
+  public void modifyDevice(String deviceId, CloudModel update) {
+    limitValueSizes(update.metadata);
+    update.operation = Operation.MODIFY;
+    iotProvider.updateDevice(deviceId, update);
   }
 
   private void limitValueSizes(Map<String, String> metadata) {

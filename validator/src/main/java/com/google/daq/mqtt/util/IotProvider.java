@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import udmi.schema.CloudModel;
 import udmi.schema.Credential;
+import udmi.schema.Envelope.SubFolder;
 import udmi.schema.SetupUdmiConfig;
 
 /**
@@ -15,11 +16,8 @@ public interface IotProvider {
 
   /**
    * Update the device config with the supplied block (usually JSON).
-   *
-   * @param deviceId device to update
-   * @param config   config data block
    */
-  void updateConfig(String deviceId, String config);
+  void updateConfig(String deviceId, SubFolder subFolder, String config);
 
   /**
    * Set the blocked (not receiving) status for a given device. This is a separate method without a

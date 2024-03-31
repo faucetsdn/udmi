@@ -96,6 +96,7 @@
         "CREATE",
         "UPDATE",
         "DELETE",
+        "MODIFY",
         "BIND",
         "ALLOW",
         "BLOCK"
