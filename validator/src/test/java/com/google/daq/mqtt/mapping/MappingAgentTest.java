@@ -1,13 +1,13 @@
 package com.google.daq.mqtt.mapping;
 
+import static com.google.daq.mqtt.TestCommon.GATEWAY_ID;
 import static com.google.udmi.util.SiteModel.MOCK_PROJECT;
+import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableList;
-import com.google.daq.mqtt.util.IotMockProvider;
 import com.google.daq.mqtt.util.IotMockProvider.MockAction;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 import org.junit.Test;
 import udmi.schema.ExecutionConfiguration;
 
@@ -17,16 +17,19 @@ public class MappingAgentTest {
 
   @Test
   public void initiate_discovery() {
-    ImmutableList<String> argsList = ImmutableList.of("discover");
+    List<String> argsList = new ArrayList<>(ImmutableList.of("discover"));
     MappingAgent mappingAgent = new MappingAgent(getExecutionConfig());
     mappingAgent.process(argsList);
     List<MockAction> actions = mappingAgent.getMockActions().stream().map(a -> (MockAction) a).toList();
-
+    assertEquals("number of iot operations", 2, actions.size());
+    MockAction configAction = actions.get(0);
+    MockAction metadataAction = actions.get(1);
   }
 
   private ExecutionConfiguration getExecutionConfig() {
     ExecutionConfiguration executionConfiguration = new ExecutionConfiguration();
     executionConfiguration.project_id = MOCK_PROJECT;
+    executionConfiguration.device_id = GATEWAY_ID;
     executionConfiguration.src_file = CONFIG_SOURCE;
     return executionConfiguration;
   }

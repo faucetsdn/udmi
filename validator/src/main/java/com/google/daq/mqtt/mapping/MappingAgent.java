@@ -97,26 +97,7 @@ public class MappingAgent {
   }
 
   private void shutdown() {
-    client.close();
-  }
-
-  private void startDiscovery() {
-    DiscoveryConfig discoveryConfig = new DiscoveryConfig();
-    Date generation = new Date();
-    discoveryConfig.families = new HashMap<>();
-    FamilyDiscoveryConfig familyConfig = discoveryConfig.families.computeIfAbsent(DISCOVERY_FAMILY,
-        key -> new FamilyDiscoveryConfig());
-    familyConfig.generation = generation;
-    familyConfig.scan_interval_sec = SCAN_INTERVAL_SEC;
-    familyConfig.depth = Depth.ENTRIES;
-    publish(discoveryConfig);
-    System.err.println("Started discovery generation " + generation);
-  }
-
-  private void publish(DiscoveryConfig discoveryConfig) {
-    String topic = "foo";
-    String sendId = client.publish(executionConfiguration.device_id, topic,
-        stringify(discoveryConfig));
+    cloudIotManager.shutdown();
   }
 
   public List<Object> getMockActions() {
