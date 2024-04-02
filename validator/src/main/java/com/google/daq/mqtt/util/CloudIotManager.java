@@ -94,6 +94,9 @@ public class CloudIotManager {
     this(readExeConfig(siteConfig));
   }
 
+  /**
+   * New instance from a configuration profile.
+   */
   public CloudIotManager(ExecutionConfiguration config) {
     try {
       this.projectId = requireNonNull(config.project_id, "no project_id defined");
@@ -272,6 +275,9 @@ public class CloudIotManager {
     iotProvider.updateDevice(deviceId, device);
   }
 
+  /**
+   * Modify some metadata of the target device (not a complete update).
+   */
   public void modifyDevice(String deviceId, CloudModel update) {
     limitValueSizes(update.metadata);
     update.operation = Operation.MODIFY;

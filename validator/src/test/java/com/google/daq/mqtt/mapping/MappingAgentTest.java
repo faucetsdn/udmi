@@ -11,6 +11,9 @@ import java.util.List;
 import org.junit.Test;
 import udmi.schema.ExecutionConfiguration;
 
+/**
+ * Test the mapping agent.
+ */
 public class MappingAgentTest {
 
   private static final String CONFIG_SOURCE = "../tests/sites/mapping/testing_placeholder.json";
@@ -20,7 +23,8 @@ public class MappingAgentTest {
     List<String> argsList = new ArrayList<>(ImmutableList.of("discover"));
     MappingAgent mappingAgent = new MappingAgent(getExecutionConfig());
     mappingAgent.process(argsList);
-    List<MockAction> actions = mappingAgent.getMockActions().stream().map(a -> (MockAction) a).toList();
+    List<MockAction> actions = mappingAgent.getMockActions().stream().map(a -> (MockAction) a)
+        .toList();
     assertEquals("number of iot operations", 2, actions.size());
     MockAction configAction = actions.get(0);
     MockAction metadataAction = actions.get(1);

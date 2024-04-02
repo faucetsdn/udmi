@@ -6,28 +6,22 @@ import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.MetadataMapKeys.UDMI_PROVISION_UNTIL;
 import static java.util.Objects.requireNonNull;
 
-import com.google.bos.iot.core.proxy.IotReflectorClient;
 import com.google.common.collect.ImmutableMap;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ConfigUtil;
-import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.TemporalAmount;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import udmi.schema.CloudModel;
 import udmi.schema.Common.ProtocolFamily;
-import udmi.schema.Depths.Depth;
 import udmi.schema.DiscoveryConfig;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.ExecutionConfiguration;
-import udmi.schema.FamilyDiscoveryConfig;
 
 /**
  * Agent that maps discovery results to mapping requests.
@@ -38,16 +32,22 @@ public class MappingAgent {
   private static final ProtocolFamily DISCOVERY_FAMILY = ProtocolFamily.VENDOR;
   private static final Duration PROVISIONING_WINDOW = Duration.ofMinutes(10);
   private final ExecutionConfiguration executionConfiguration;
+  private final String deviceId;
   private CloudIotManager cloudIotManager;
-  private String deviceId;
   private SiteModel siteModel;
 
+  /**
+   * Create an agent given the configuration.
+   */
   public MappingAgent(ExecutionConfiguration exeConfig) {
     executionConfiguration = exeConfig;
     deviceId = requireNonNull(exeConfig.device_id, "device id not specified");
     initialize();
   }
 
+  /**
+   * Create a simple agent from the given profile file.
+   */
   public MappingAgent(String profilePath) {
     this(ConfigUtil.readExeConfig(new File(profilePath)));
   }
@@ -81,7 +81,8 @@ public class MappingAgent {
     discoveryConfig.generation = new Date();
     cloudIotManager.modifyConfig(deviceId, SubFolder.DISCOVERY, stringify(discoveryConfig));
     Instant theFuture = discoveryConfig.generation.toInstant().plus(PROVISIONING_WINDOW);
-    ImmutableMap<String, String> update = ImmutableMap.of(UDMI_PROVISION_UNTIL, isoConvert(theFuture));
+    ImmutableMap<String, String> update = ImmutableMap.of(UDMI_PROVISION_UNTIL,
+        isoConvert(theFuture));
     CloudModel cloudModel = new CloudModel();
     cloudModel.metadata = update;
     cloudIotManager.modifyDevice(deviceId, cloudModel);
