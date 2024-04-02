@@ -37,8 +37,8 @@ import udmi.schema.Envelope;
 /**
  * Simple agent to process discovery events and provisionally provisions the iot provider.
  */
-@ComponentName("discover")
-public class DiscoverySink extends ProcessorBase {
+@ComponentName("provision")
+public class ProvisioningEngine extends ProcessorBase {
 
   private static final String EXPECTED_DEVICE_FORMAT = "%s-%s";
   private static final Instant DEFALUT_PROVISION_MARKER = Instant.ofEpochMilli(0);
@@ -46,7 +46,7 @@ public class DiscoverySink extends ProcessorBase {
 
   private final Map<String, CloudModel> scanAgent = new ConcurrentHashMap<>();
 
-  public DiscoverySink(EndpointConfiguration config) {
+  public ProvisioningEngine(EndpointConfiguration config) {
     super(config);
   }
 

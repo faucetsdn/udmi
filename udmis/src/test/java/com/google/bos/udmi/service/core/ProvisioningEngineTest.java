@@ -35,7 +35,7 @@ import udmi.schema.Envelope;
 /**
  * Simple tests for the auto-mapping provisioning agent.
  */
-public class ProvisioningAgentTest extends ProcessorTestBase {
+public class ProvisioningEngineTest extends ProcessorTestBase {
 
   private static final String SCAN_ADDR = "19273821";
   private static final ProtocolFamily SCAN_FAMILY = ProtocolFamily.VENDOR;
@@ -85,7 +85,7 @@ public class ProvisioningAgentTest extends ProcessorTestBase {
   }
 
   protected void initializeTestInstance() {
-    initializeTestInstance(DiscoverySink.class);
+    initializeTestInstance(ProvisioningEngine.class);
 
     initializeProvider(provider);
   }
