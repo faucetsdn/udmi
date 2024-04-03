@@ -21,6 +21,10 @@
           "type": "string",
           "pattern": "^[A-Z0-9-]+$"
         },
+        "room": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9-]+$"
+        },
         "floor": {
           "type": "string",
           "pattern": "^[A-Z0-9-]+$",
@@ -49,11 +53,11 @@
           "additionalProperties": false,
           "properties": {
             "lat": {
-              "description": "The `lattitude` coordinate of the device in the WSG84 coordinate system",
+              "description": "The `latitude` coordinate of the device in the WGS84 coordinate system",
               "type": "number"
             },
-            "lon": {
-              "description": "The `longitude` coordinate of the device in the WSG84 coordinate system",
+            "long": {
+              "description": "The `longitude` coordinate of the device in the WGS84 coordinate system",
               "type": "number"
             }
           }
