@@ -1,5 +1,6 @@
 package com.google.daq.mqtt.mapping;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.Common.removeNextArg;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringify;
@@ -66,6 +67,7 @@ public class MappingAgent {
   }
 
   void process(List<String> argsList) {
+    checkState(!argsList.isEmpty(), "no arguments found, no commands given!");
     while (!argsList.isEmpty()) {
       String mappingCommand = removeNextArg(argsList, "mapping command");
       switch (mappingCommand) {
@@ -77,8 +79,11 @@ public class MappingAgent {
   }
 
   private void initiateDiscover() {
+    Date generation = new Date();
+    System.err.printf("Initiating discovery on %s/%s at %s", siteModel.getRegistryId(), deviceId,
+        isoConvert(generation));
     DiscoveryConfig discoveryConfig = new DiscoveryConfig();
-    discoveryConfig.generation = new Date();
+    discoveryConfig.generation = generation;
     cloudIotManager.modifyConfig(deviceId, SubFolder.DISCOVERY, stringify(discoveryConfig));
     Instant theFuture = discoveryConfig.generation.toInstant().plus(PROVISIONING_WINDOW);
     ImmutableMap<String, String> update = ImmutableMap.of(UDMI_PROVISION_UNTIL,
@@ -95,6 +100,7 @@ public class MappingAgent {
   private void initialize() {
     cloudIotManager = new CloudIotManager(executionConfiguration);
     siteModel = new SiteModel(cloudIotManager.getSiteDir());
+    siteModel.initialize();
   }
 
   private void shutdown() {
