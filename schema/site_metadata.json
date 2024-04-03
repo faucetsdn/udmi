@@ -1,74 +1,54 @@
 {
-    "$udmi_version": "1.5.0",
-    "title": "Site Metadata",
-    "$section": "Site Model",
-    "type": "object",
-    "$schema": "http://json-schema.org/draft-07/schema#",
-    "additionalProperties": false,
-    "required": [
-      "timestamp",
-      "version"
-    ],
-    "properties": {
-      "timestamp": {
-        "description": "RFC 3339 timestamp the site metadata was last updated",
-        "type": "string",
-        "format": "date-time",
-        "examples": ["2019-01-17T14:02:29.364Z"]
-      },
-      "version": {
-        "description": "Version of the UDMI schema",
-        "type": "string"
-      },
-      "id": {
-        "description": "Identifier for the site or building",
-        "type": "string",
-        "examples": ["UK-LON-ABC", "US-NYC-HUD1"]
-      },
-      "name": {
-        "description": "Name of the site or building",
-        "type": "string",
-        "examples": ["Cheesegrater", "Mountain View"]
-      },
-      "location": {
-        "type": "object",
-        "properties": {
-            "address": {
-                "description": "Postal address of the site",
-                "type": "string",
-                "examples": ["1600 Amphitheatre Parkway, Mountain View, CA 94043, United States"]
-            },
-            "lat": {
-                "description": "Latitude of the site in WGS84 coordinates, as indicated by a map marker ",
-                "type": "number"
-            },
-            "lon": {
-                "description": "Longitude of the site in WGS84 coordinates, as indicated by a map marker",
-                "type": "number"
-            }
-          }
-      },
-      "origin": {
-        "type": "object",
-        "properties": {
-            "lat": {
-              "description": "Latitude of the site origin datum point in WGS84 coordinates",
-              "type": "number"
-            },
-            "long": {
-              "description": "Longitude of the site origin datum point in WGS84 coordinates",
-              "type": "number"
-            },
-            "alt": {
-              "description": "Altitude of the site origin datum point in meters",
-              "type": "number"
-            },
-            "orientation": {
-              "description": "Orientation of site measured clockwise from North",
-              "type": "number"
-            }
-          }
+  "$udmi_version": "1.5.0",
+  "title": "Site Metadata",
+  "$section": "Site Model",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "required": [
+    "timestamp",
+    "version"
+  ],
+  "properties": {
+    "timestamp": {
+      "description": "RFC 3339 timestamp the site metadata was last updated",
+      "type": "string",
+      "format": "date-time",
+      "examples": ["2019-01-17T14:02:29.364Z"]
+    },
+    "version": {
+      "description": "Version of the UDMI schema",
+      "type": "string"
+    },
+    "site_id": {
+      "description": "Identifier for the site or building",
+      "type": "string",
+      "examples": ["UK-LON-ABC", "US-NYC-HUD1"]
+    },
+    "name": {
+      "description": "Name of the site or building",
+      "type": "string",
+      "examples": ["Cheesegrater", "Mountain View"]
+    },
+    "location": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "address": {
+            "description": "Postal address of the site",
+            "type": "string",
+            "examples": ["1600 Amphitheatre Parkway, Mountain View, CA 94043, United States"]
+        },
+        "lat": {
+            "description": "Latitude of the site in WGS84 coordinates, as indicated by a map marker ",
+            "type": "number"
+        },
+        "long": {
+            "description": "Longitude of the site in WGS84 coordinates, as indicated by a map marker",
+            "type": "number"
+        }
       }
     }
   }
-  
+    
+}

@@ -19,10 +19,9 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder({
     "timestamp",
     "version",
-    "id",
+    "site_id",
     "name",
-    "location",
-    "origin"
+    "location"
 })
 @Generated("jsonschema2pojo")
 public class SiteMetadata {
@@ -47,9 +46,9 @@ public class SiteMetadata {
      * Identifier for the site or building
      * 
      */
-    @JsonProperty("id")
+    @JsonProperty("site_id")
     @JsonPropertyDescription("Identifier for the site or building")
-    public String id;
+    public String site_id;
     /**
      * Name of the site or building
      * 
@@ -59,16 +58,13 @@ public class SiteMetadata {
     public String name;
     @JsonProperty("location")
     public Location location;
-    @JsonProperty("origin")
-    public Origin origin;
 
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.origin == null)? 0 :this.origin.hashCode()));
+        result = ((result* 31)+((this.site_id == null)? 0 :this.site_id.hashCode()));
         result = ((result* 31)+((this.name == null)? 0 :this.name.hashCode()));
         result = ((result* 31)+((this.location == null)? 0 :this.location.hashCode()));
-        result = ((result* 31)+((this.id == null)? 0 :this.id.hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
         result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
         return result;
@@ -83,7 +79,7 @@ public class SiteMetadata {
             return false;
         }
         SiteMetadata rhs = ((SiteMetadata) other);
-        return (((((((this.origin == rhs.origin)||((this.origin!= null)&&this.origin.equals(rhs.origin)))&&((this.name == rhs.name)||((this.name!= null)&&this.name.equals(rhs.name))))&&((this.location == rhs.location)||((this.location!= null)&&this.location.equals(rhs.location))))&&((this.id == rhs.id)||((this.id!= null)&&this.id.equals(rhs.id))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
+        return ((((((this.site_id == rhs.site_id)||((this.site_id!= null)&&this.site_id.equals(rhs.site_id)))&&((this.name == rhs.name)||((this.name!= null)&&this.name.equals(rhs.name))))&&((this.location == rhs.location)||((this.location!= null)&&this.location.equals(rhs.location))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
     }
 
 }
