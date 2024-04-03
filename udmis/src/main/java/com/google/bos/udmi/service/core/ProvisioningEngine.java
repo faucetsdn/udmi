@@ -45,12 +45,6 @@ public class ProvisioningEngine extends ProcessorBase {
     super(config);
   }
 
-  private static boolean shouldProvision(Date generation, CloudModel cloudModel) {
-    Date provisioningGeneration = getDate(
-        ifNotNullGet(cloudModel.metadata, m -> m.get(UDMI_PROVISION_GENERATION)));
-    return generation.equals(provisioningGeneration);
-  }
-
   private void bindDeviceToGateway(String registryId, String proxyId, String gatewayId) {
     CloudModel model = new CloudModel();
     model.operation = BIND;
@@ -79,9 +73,11 @@ public class ProvisioningEngine extends ProcessorBase {
     return scanAgent.computeIfAbsent(gatewayKey, key -> new CloudModel());
   }
 
-  private Map<String, CloudModel> refreshModelDevices(String deviceRegistryId, String gatewayId,
+  private synchronized Map<String, CloudModel> refreshModelDevices(String deviceRegistryId, String gatewayId,
       Date generation) {
     CloudModel cloudModel = getCloudModel(deviceRegistryId, gatewayId);
+    debug(format("Initial check %s vs. %s", isoConvert(generation),
+        isoConvert(cloudModel.timestamp)));
     if (!generation.equals(cloudModel.timestamp)) {
       cloudModel.timestamp = generation;
       cloudModel.device_ids = null;
@@ -97,14 +93,18 @@ public class ProvisioningEngine extends ProcessorBase {
       }
       cloudModel.metadata = fetchedModel.metadata;
       cloudModel.device_ids = fetchedModel.device_ids;
-      debug("Scan device %s/%s metadata has %s keys", deviceRegistryId, gatewayId,
-          catchToNull(() -> fetchedModel.metadata.size()));
-      debug("Scan device %s/%s metadata has %s device_ids", deviceRegistryId, gatewayId,
-          catchToNull(() -> fetchedModel.device_ids.size()));
       info("Scan device %s/%s generation %s, provisioning %s", deviceRegistryId, gatewayId,
           isoConvert(generation), shouldProvision(generation, cloudModel));
     }
     return ifTrueGet(shouldProvision(generation, cloudModel), cloudModel.device_ids);
+  }
+
+  private boolean shouldProvision(Date generation, CloudModel cloudModel) {
+    Date provisioningGeneration = getDate(
+        ifNotNullGet(cloudModel.metadata, m -> m.get(UDMI_PROVISION_GENERATION)));
+    debug(format("Scan provisioning check %s vs. %s", isoConvert(generation),
+        isoConvert(provisioningGeneration)));
+    return generation.equals(provisioningGeneration);
   }
 
   /**

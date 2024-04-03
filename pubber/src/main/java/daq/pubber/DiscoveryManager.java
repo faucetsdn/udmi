@@ -1,14 +1,12 @@
 package daq.pubber;
 
 import static com.google.udmi.util.GeneralUtils.catchToNull;
-import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNullElse;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isGetTrue;
-import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static daq.pubber.Pubber.DEVICE_START_TIME;
 import static java.lang.Math.floorMod;
@@ -44,6 +42,7 @@ import udmi.schema.Metadata;
 import udmi.schema.PointDiscovery;
 import udmi.schema.PointPointsetModel;
 import udmi.schema.PubberConfiguration;
+import udmi.schema.SystemDiscoveryData;
 
 /**
  * Manager wrapper for discovery functionality in pubber.
@@ -61,6 +60,13 @@ public class DiscoveryManager extends ManagerBase {
       DeviceManager deviceManager) {
     super(host, configuration);
     this.deviceManager = deviceManager;
+  }
+
+  private static boolean shouldEnumerate(Depth depth) {
+    return ifNullElse(depth, false, d -> switch (d) {
+      default -> false;
+      case ENTRIES, DETAILS -> true;
+    });
   }
 
   private void updateDiscoveryEnumeration(DiscoveryConfig config) {
@@ -188,29 +194,24 @@ public class DiscoveryManager extends ManagerBase {
     AtomicInteger sendCount = new AtomicInteger();
     familyDiscoveryState.record_count = sendCount.get();
     updateState();
-    discoveryProvider(family).startScan(shouldEnumerate(family), discoveryEvent -> {
+    discoveryProvider(family).startScan(shouldEnumerate(family), (deviceId, discoveryEvent) -> {
           ifNotNullThen(discoveryEvent.scan_addr, addr -> {
-                info(format("Discovered %s device %s for gen %s", family, addr, scanGeneration));
-                discoveryEvent.scan_family = family;
-                discoveryEvent.generation = scanGeneration;
-                familyDiscoveryState.record_count = sendCount.incrementAndGet();
-                updateState();
-                host.publish(discoveryEvent);
-              }
-          );
-        }
-    );
+            info(format("Discovered %s device %s for gen %s", family, addr,
+                    isoConvert(scanGeneration)));
+            discoveryEvent.scan_family = family;
+            discoveryEvent.generation = scanGeneration;
+            discoveryEvent.system = new SystemDiscoveryData();
+            discoveryEvent.system.ancillary = new HashMap<>();
+            discoveryEvent.system.ancillary.put("device-name", deviceId);
+            familyDiscoveryState.record_count = sendCount.incrementAndGet();
+            updateState();
+            host.publish(discoveryEvent);
+          });
+    });
   }
 
   private boolean shouldEnumerate(ProtocolFamily family) {
     return shouldEnumerate(getFamilyDiscoveryConfig(family).depth);
-  }
-
-  private static boolean shouldEnumerate(Depth depth) {
-    return ifNullElse(depth, false, d -> switch (d) {
-      default -> false;
-      case ENTRIES, DETAILS -> true;
-    });
   }
 
   private FamilyProvider discoveryProvider(ProtocolFamily family) {

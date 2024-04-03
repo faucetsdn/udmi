@@ -80,15 +80,17 @@ public class MappingAgent {
     String generation = isoConvert(new Date());
     System.err.printf("Initiating discovery on %s/%s at %s%n", siteModel.getRegistryId(), deviceId,
         generation);
+
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.metadata = ImmutableMap.of(UDMI_PROVISION_GENERATION, generation);
+    cloudIotManager.modifyDevice(deviceId, cloudModel);
+
     FamilyDiscoveryConfig familyDiscoveryConfig = new FamilyDiscoveryConfig();
     familyDiscoveryConfig.generation = JsonUtil.getDate(generation);
     DiscoveryConfig discoveryConfig = new DiscoveryConfig();
     discoveryConfig.families = new HashMap<>();
     discoveryConfig.families.put(ProtocolFamily.VENDOR, familyDiscoveryConfig);
     cloudIotManager.modifyConfig(deviceId, SubFolder.DISCOVERY, stringify(discoveryConfig));
-    CloudModel cloudModel = new CloudModel();
-    cloudModel.metadata = ImmutableMap.of(UDMI_PROVISION_GENERATION, generation);
-    cloudIotManager.modifyDevice(deviceId, cloudModel);
   }
 
   private void reconcileDiscovery() {

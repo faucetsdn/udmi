@@ -1,7 +1,9 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 
 UDMI_ROOT=$(dirname $0)/..
 source $UDMI_ROOT/etc/shell_common.sh
 
 rm -rf tests/sites/discovery/reflector
 cp -a sites/udmi_site_model/reflector/ tests/sites/discovery/
+
+echo Done with mapping test setup.

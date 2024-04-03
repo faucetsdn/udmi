@@ -3,7 +3,6 @@ package daq.pubber;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
-import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toMap;
 import static udmi.schema.Common.ProtocolFamily.VENDOR;
@@ -11,7 +10,7 @@ import static udmi.schema.Common.ProtocolFamily.VENDOR;
 import com.google.udmi.util.SiteModel;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.DiscoveryEvent;
 import udmi.schema.FamilyLocalnetState;
@@ -68,9 +67,10 @@ public class VendorProvider extends ManagerBase implements FamilyProvider {
   }
 
   @Override
-  public void startScan(boolean enumerate, Consumer<DiscoveryEvent> publisher) {
+  public void startScan(boolean enumerate, BiConsumer<String, DiscoveryEvent> publisher) {
     requireNonNull(selfAddr, "no local address defined for family " + VENDOR);
-    siteModel.forEachMetadata(entry -> publisher.accept(augmentSend(entry, enumerate)));
+    siteModel.forEachMetadata(
+        entry -> publisher.accept(entry.getKey(), augmentSend(entry, enumerate)));
   }
 
   @Override
