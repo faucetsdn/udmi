@@ -1,7 +1,7 @@
 package com.google.bos.udmi.service.core;
 
 import static com.google.udmi.util.JsonUtil.isoConvert;
-import static com.google.udmi.util.MetadataMapKeys.UDMI_PROVISION_UNTIL;
+import static com.google.udmi.util.MetadataMapKeys.UDMI_PROVISION_GENERATION;
 import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -44,7 +44,7 @@ public class ProvisioningEngineTest extends ProcessorTestBase {
   private static final Duration PROVISIONING_WINDOW = Duration.ofMinutes(5);
 
   private static Map<String, String> getGatewayMetadata() {
-    return ImmutableMap.of(UDMI_PROVISION_UNTIL,
+    return ImmutableMap.of(UDMI_PROVISION_GENERATION,
         isoConvert(Instant.now().plus(PROVISIONING_WINDOW)));
   }
 

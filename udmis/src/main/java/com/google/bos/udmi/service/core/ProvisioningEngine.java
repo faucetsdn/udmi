@@ -7,25 +7,22 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ignoreValue;
+import static com.google.udmi.util.JsonUtil.getDate;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static com.google.udmi.util.MetadataMapKeys.UDMI_DISCOVERED_FROM;
 import static com.google.udmi.util.MetadataMapKeys.UDMI_DISCOVERED_WITH;
 import static com.google.udmi.util.MetadataMapKeys.UDMI_GENERATION;
-import static com.google.udmi.util.MetadataMapKeys.UDMI_PROVISION_UNTIL;
+import static com.google.udmi.util.MetadataMapKeys.UDMI_PROVISION_GENERATION;
 import static com.google.udmi.util.MetadataMapKeys.UDMI_UPDATED;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static udmi.schema.CloudModel.Operation.BIND;
 
-import com.google.udmi.util.JsonUtil;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import org.jetbrains.annotations.Nullable;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
 import udmi.schema.CloudModel.Resource_type;
@@ -41,8 +38,6 @@ import udmi.schema.Envelope;
 public class ProvisioningEngine extends ProcessorBase {
 
   private static final String EXPECTED_DEVICE_FORMAT = "%s-%s";
-  private static final Instant DEFALUT_PROVISION_MARKER = Instant.ofEpochMilli(0);
-  private static final Duration PROVISIONING_MAX_WINDOW = Duration.ofDays(7);
 
   private final Map<String, CloudModel> scanAgent = new ConcurrentHashMap<>();
 
@@ -50,17 +45,10 @@ public class ProvisioningEngine extends ProcessorBase {
     super(config);
   }
 
-  @Nullable
-  private static String getProvisionUntil(CloudModel cloudModel) {
-    return ifNotNullGet(cloudModel.metadata, m -> m.get(UDMI_PROVISION_UNTIL));
-  }
-
   private static boolean shouldProvision(Date generation, CloudModel cloudModel) {
-    String timestamp = getProvisionUntil(cloudModel);
-    Date latest =
-        Date.from(ifNotNullGet(timestamp, JsonUtil::getInstant, DEFALUT_PROVISION_MARKER));
-    Date earliest = Date.from(latest.toInstant().minus(PROVISIONING_MAX_WINDOW));
-    return !generation.after(latest) && !generation.before(earliest);
+    Date provisioningGeneration = getDate(
+        ifNotNullGet(cloudModel.metadata, m -> m.get(UDMI_PROVISION_GENERATION)));
+    return generation.equals(provisioningGeneration);
   }
 
   private void bindDeviceToGateway(String registryId, String proxyId, String gatewayId) {
@@ -113,9 +101,8 @@ public class ProvisioningEngine extends ProcessorBase {
           catchToNull(() -> fetchedModel.metadata.size()));
       debug("Scan device %s/%s metadata has %s device_ids", deviceRegistryId, gatewayId,
           catchToNull(() -> fetchedModel.device_ids.size()));
-      info("Scan device %s/%s generation %s, provisioning %s until %s", deviceRegistryId, gatewayId,
-          isoConvert(generation), shouldProvision(generation, cloudModel),
-          getProvisionUntil(cloudModel));
+      info("Scan device %s/%s generation %s, provisioning %s", deviceRegistryId, gatewayId,
+          isoConvert(generation), shouldProvision(generation, cloudModel));
     }
     return ifTrueGet(shouldProvision(generation, cloudModel), cloudModel.device_ids);
   }

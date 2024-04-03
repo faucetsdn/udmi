@@ -13,7 +13,6 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.getDate;
-import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.MetadataMapKeys.UDMI_UPDATED;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -108,6 +107,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   private static final String RESOURCE_EXISTS = "-2";
   private static final String BLOCKED_FIELD_MASK = "blocked";
   private static final String UPDATE_FIELD_MASK = "blocked,credentials,metadata";
+  private static final String METADATA_FIELD_MASK = "metadata";
   private static final GatewayConfig NON_GATEWAY_CONFIG = new GatewayConfig();
   private static final GatewayConfig GATEWAY_CONFIG = GatewayConfig.newBuilder()
       .setGatewayType(GatewayType.GATEWAY)
@@ -403,6 +403,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       return switch (operation) {
         case CREATE -> createDevice(registryId, device);
         case UPDATE -> updateDevice(registryId, device);
+        case MODIFY -> modifyDevice(registryId, device);
         case DELETE -> unbindAndDelete(registryId, device);
         case BIND -> bindDevicesToGateway(registryId, deviceId, cloudModel);
         case BLOCK -> blockDevice(registryId, device);
@@ -514,17 +515,34 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     }
   }
 
+  private CloudModel modifyDevice(String registryId, Device device) {
+    Device.Builder builder = device.toBuilder();
+    String deviceId = builder.getId();
+    CloudModel model = fetchDevice(registryId, deviceId);
+    model.metadata.putAll(builder.getMetadata());
+    builder.setMetadata(model.metadata);
+    CloudModel cloudModel = updateDevice(registryId, builder.build(), METADATA_FIELD_MASK);
+    cloudModel.operation = Operation.MODIFY;
+    return cloudModel;
+  }
+
   private CloudModel updateDevice(String registryId, Device device) {
+    CloudModel cloudModel = updateDevice(registryId, device, UPDATE_FIELD_MASK);
+    cloudModel.operation = Operation.UPDATE;
+    return cloudModel;
+  }
+
+  @NotNull
+  private CloudModel updateDevice(String registryId, Device device, String updateFieldMask) {
     String deviceId = device.toBuilder().getId();
     String name = getDeviceName(registryId, deviceId);
     Device fullDevice = device.toBuilder().setName(name).build();
     try {
       UpdateDeviceRequest request =
           UpdateDeviceRequest.Builder.newBuilder().setDevice(fullDevice).setName(name)
-              .setUpdateMask(UPDATE_FIELD_MASK).build();
+              .setUpdateMask(updateFieldMask).build();
       requireNonNull(deviceManager.updateDevice(request), "Invalid RPC response");
       CloudModel cloudModel = new CloudModel();
-      cloudModel.operation = Operation.UPDATE;
       cloudModel.num_id = hashedDeviceId(registryId, deviceId);
       return cloudModel;
     } catch (Exception e) {

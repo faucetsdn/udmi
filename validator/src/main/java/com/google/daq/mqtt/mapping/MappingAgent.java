@@ -80,7 +80,7 @@ public class MappingAgent {
 
   private void initiateDiscover() {
     Date generation = new Date();
-    System.err.printf("Initiating discovery on %s/%s at %s", siteModel.getRegistryId(), deviceId,
+    System.err.printf("Initiating discovery on %s/%s at %s%n", siteModel.getRegistryId(), deviceId,
         isoConvert(generation));
     DiscoveryConfig discoveryConfig = new DiscoveryConfig();
     discoveryConfig.generation = generation;
