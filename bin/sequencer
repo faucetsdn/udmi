@@ -66,9 +66,16 @@ fi
 registry_suffix=null
 alt_registry=null
 
-test_names="$@"
-udmi_version=`git describe --always --dirty`
-
+sequences=
+for test_name in "$@"; do
+    sequences+=\"$test_name\",
+done
+if [[ -n $sequences ]]; then
+    sequences=[${sequences%,}]
+else
+    sequences=null
+fi
+    
 cd $UDMI_ROOT
 
 if ! bin/which_venv_pip3; then
@@ -156,6 +163,7 @@ if [[ ! $site_path -ef $SEQUENCER_CONFIG ]]; then
   "udmi_version": "$udmi_version",
   "udmi_root": "$UDMI_ROOT",
   "reflector_endpoint": $endpoint,
+  "sequences": $sequences,
   "key_file": "$site_model/reflector/rsa_private.pkcs8"
 }
 EOF
@@ -165,9 +173,9 @@ cat $SEQUENCER_CONFIG
 
 validator/bin/build
 
-echo $JAVA_CMD $test_names
+echo $JAVA_CMD
 result=0
-$JAVA_CMD $test_names 2>&1 | tee $SEQUENCER_LOG
+$JAVA_CMD 2>&1 | tee $SEQUENCER_LOG
 
 echo
 echo Extracting sequence results:

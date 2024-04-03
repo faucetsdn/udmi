@@ -1,5 +1,6 @@
 package com.google.bos.udmi.service.access;
 
+import static com.google.api.client.util.Preconditions.checkState;
 import static com.google.bos.udmi.service.pod.UdmiServicePod.getComponent;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.sortedMapCollector;
@@ -8,7 +9,6 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
-import com.google.common.collect.ImmutableMap;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -44,16 +44,12 @@ public class DynamicIotAccessProvider extends IotAccessBase {
         .collect(Collectors.toList());
   }
 
-  @Override
-  public Set<String> listRegistries() {
-    return providers.values().stream().map(IotAccessProvider::listRegistries)
-        .collect(HashSet::new, HashSet::addAll, HashSet::addAll);
-  }
-
   private String determineProvider(String registryId) {
-    TreeMap<String, String> sortedMap = providers.entrySet().stream()
+    getProviders();
+    TreeMap<String, String> sortedMap = getProviders().entrySet().stream()
         .filter(access -> access.getValue().isEnabled())
         .collect(sortedMapCollector(entry -> registryPriority(registryId, entry)));
+    checkState(!sortedMap.isEmpty(), "no viable iot providers found");
     String providerId = sortedMap.lastEntry().getValue();
     debug("Registry affinity mapping for " + registryId + " is " + providerId);
     return providerId;
@@ -61,8 +57,24 @@ public class DynamicIotAccessProvider extends IotAccessBase {
 
   private IotAccessProvider getProviderFor(String registryId) {
     IotAccessProvider provider =
-        providers.get(registryProviders.computeIfAbsent(registryId, this::determineProvider));
+        getProviders().get(registryProviders.computeIfAbsent(registryId, this::determineProvider));
     return requireNonNull(provider, "could not determine provider for " + registryId);
+  }
+
+  private Map<String, IotAccessProvider> getProviders() {
+    if (!providers.isEmpty()) {
+      return providers;
+    }
+    providerList.forEach(
+        providerId -> {
+          IotAccessProvider component = getComponent(providerId);
+          ifTrueThen(component.isEnabled(), () -> providers.put(providerId, component));
+        });
+    info("Populated providers list with %d out of %d", providers.size(), providerList.size());
+    if (providerList.isEmpty()) {
+      throw new RuntimeException("No providers enabled");
+    }
+    return providers;
   }
 
   private String registryPriority(String registryId, Entry<String, IotAccessProvider> provider) {
@@ -78,14 +90,7 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   @Override
   public void activate() {
     super.activate();
-    providerList.forEach(
-        providerId -> {
-          IotAccessProvider component = getComponent(providerId);
-          ifTrueThen(component.isEnabled(), () -> providers.put(providerId, component));
-        });
-    if (providerList.isEmpty()) {
-      throw new RuntimeException("No providers enabled");
-    }
+    getProviders();
   }
 
   @Override
@@ -109,6 +114,12 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   @Override
+  public Set<String> getRegistries() {
+    return getProviders().values().stream().map(IotAccessProvider::getRegistries)
+        .collect(HashSet::new, HashSet::addAll, HashSet::addAll);
+  }
+
+  @Override
   public Set<String> getRegistriesForRegion(String region) {
     return null;
   }
@@ -129,7 +140,8 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public String modifyConfig(String registryId, String deviceId, Function<String, String> munger) {
+  public String modifyConfig(String registryId, String deviceId,
+      Function<Entry<Long, String>, String> munger) {
     return getProviderFor(registryId).modifyConfig(registryId, deviceId, munger);
   }
 
@@ -158,6 +170,6 @@ public class DynamicIotAccessProvider extends IotAccessBase {
 
   @Override
   public void updateRegistryRegions(Map<String, String> regions) {
-    providers.values().forEach(provider -> provider.updateRegistryRegions(regions));
+    getProviders().values().forEach(provider -> provider.updateRegistryRegions(regions));
   }
 }

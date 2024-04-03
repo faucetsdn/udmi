@@ -9,6 +9,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.isoConvert;
+import static com.google.udmi.util.JsonUtil.stringify;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNullElse;
 import static java.util.Optional.ofNullable;
@@ -230,6 +231,13 @@ public class SystemManager extends ManagerBase {
   }
 
   void updateConfig(SystemConfig system, Date timestamp) {
+    Integer oldBase = catchToNull(() -> systemConfig.testing.config_base);
+    Integer newBase = catchToNull(() -> system.testing.config_base);
+    if (oldBase != null && oldBase.equals(newBase)
+        && !stringify(systemConfig).equals(stringify(system))) {
+      error("Panic! Duplicate config_base detected: " + oldBase);
+      System.exit(-22);
+    }
     systemConfig = system;
     systemState.last_config = ifNotTrueGet(options.noLastConfig, () -> timestamp);
     updateInterval(ifNotNullGet(system, config -> config.metrics_rate_sec));
@@ -317,6 +325,7 @@ public class SystemManager extends ManagerBase {
   }
 
   class ExtraSystemState extends SystemState {
+
     public String extraField;
   }
 }

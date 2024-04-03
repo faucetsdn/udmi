@@ -21,9 +21,9 @@
       "type": "integer",
       "minimum": 0
     },
-    "enumerate": {
+    "depth": {
       "description": "Indicates implicit enumeration of discovered devices",
-      "type": "boolean"
+      "$ref": "file:common.json#/definitions/depth"
     }
   },
   "required": [

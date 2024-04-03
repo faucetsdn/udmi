@@ -12,6 +12,7 @@ from .config_discovery import DiscoveryConfig
 from .config_discovery_family import FamilyDiscoveryConfig
 from .config_gateway import GatewayConfig
 from .config_localnet import LocalnetConfig
+from .config_localnet_family import FamilyLocalnetConfig
 from .config_mapping import MappingConfig
 from .config_mapping_device import DeviceMappingConfig
 from .config_pointset import PointsetConfig

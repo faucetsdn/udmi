@@ -8,6 +8,7 @@ sites/udmi_site_model/out/devices/AHU-1/state_pointset.json
 sites/udmi_site_model/out/devices/AHU-1/state_system.json
 sites/udmi_site_model/out/devices/AHU-22/event_pointset.json
 sites/udmi_site_model/out/devices/AHU-22/event_system.json
+sites/udmi_site_model/out/devices/GAT-123/config.json
 sites/udmi_site_model/out/devices/GAT-123/event_blobset.json
 sites/udmi_site_model/out/devices/GAT-123/event_discovery.json
 sites/udmi_site_model/out/devices/GAT-123/event_error.json
@@ -231,6 +232,22 @@ sites/udmi_site_model/out/devices/AHU-22/event_system.out
   "version" : "1.4.2",
   "sub_folder" : "system",
   "sub_type" : "event",
+  "status" : {
+    "message" : "Successful validation",
+    "category" : "validation.device.receive",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 200
+  },
+  "errors" : [ ]
+}
+::::::::::::::
+sites/udmi_site_model/out/devices/GAT-123/config.out
+::::::::::::::
+{
+  "timestamp" : "REDACTED_TIMESTAMP",
+  "version" : "1.4.2",
+  "sub_folder" : "update",
+  "sub_type" : "config",
   "status" : {
     "message" : "Successful validation",
     "category" : "validation.device.receive",

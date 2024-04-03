@@ -1,8 +1,10 @@
 package com.google.daq.mqtt.validator;
 
 import static com.google.daq.mqtt.validator.Validator.REQUIRED_FUNCTION_VER;
+import static com.google.udmi.util.Common.ERROR_KEY;
 import static com.google.udmi.util.Common.GCP_REFLECT_KEY_PKCS8;
 import static com.google.udmi.util.Common.NO_SITE;
+import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.removeNextArg;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.mergeObject;
@@ -13,12 +15,13 @@ import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.util.MessagePublisher.QuerySpeed;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
 import com.google.udmi.util.Common;
-import com.google.udmi.util.GeneralUtils;
 import java.io.File;
 import java.io.FileInputStream;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import udmi.schema.Envelope.SubFolder;
 import udmi.schema.ExecutionConfiguration;
 
 /**
@@ -92,9 +95,14 @@ public class Reflector {
     int retryCount = RETRY_COUNT;
     String recvId = null;
     String sendId = client.publish(executionConfiguration.device_id, topic, data);
+    Instant endTime = Instant.now().plusSeconds(QuerySpeed.SHORT.seconds());
     System.err.println("Waiting for return transaction " + sendId);
+    MessageBundle messageBundle;
     do {
-      MessageBundle messageBundle = client.takeNextMessage(QuerySpeed.SHORT);
+      if (endTime.isBefore(Instant.now())) {
+        throw new RuntimeException("Timeout waiting for reflector response");
+      }
+      messageBundle = client.takeNextMessage(QuerySpeed.SHORT);
       if (messageBundle == null) {
         System.err.println("Receive timeout, retries left: " + --retryCount);
         if (retryCount == 0) {
@@ -104,6 +112,10 @@ public class Reflector {
         recvId = messageBundle.attributes.get("transactionId");
       }
     } while (!sendId.equals(recvId));
+    if (SubFolder.ERROR.value().equals(messageBundle.attributes.get(SUBFOLDER_PROPERTY_KEY))) {
+      throw new RuntimeException(
+          "Error processing request: " + messageBundle.message.get(ERROR_KEY));
+    }
   }
 
   private void initialize() {

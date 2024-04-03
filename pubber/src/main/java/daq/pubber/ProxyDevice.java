@@ -4,8 +4,8 @@ import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static daq.pubber.Pubber.configuration;
 import static java.lang.String.format;
 
+import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.Config;
-import udmi.schema.Entry;
 import udmi.schema.Metadata;
 import udmi.schema.PubberConfiguration;
 
@@ -64,6 +64,11 @@ public class ProxyDevice extends ManagerBase implements ManagerHost {
   public void update(Object update) {
     String simpleName = update.getClass().getSimpleName();
     warn(format("Ignoring proxy device %s update for %s", deviceId, simpleName));
+  }
+
+  @Override
+  public FamilyProvider getLocalnetProvider(ProtocolFamily family) {
+    return host.getLocalnetProvider(family);
   }
 
   public void setMetadata(Metadata metadata) {

@@ -1,19 +1,17 @@
 {
-  "discovery" : {
-    "families" : {
-      "virtual" : { }
-    }
-  },
   "localnet" : {
     "families" : {
-      "ether" : {
-        "addr" : "40:1c:83:ca:77:54"
-      },
       "ipv4" : {
-        "addr" : "10.0.0.142"
+        "addr" : "10.1.0.184"
+      },
+      "vendor" : {
+        "addr" : "28179023"
+      },
+      "ether" : {
+        "addr" : "60:45:bd:08:45:74"
       },
       "ipv6" : {
-        "addr" : "fe80::134f:c1f5:f225:a441"
+        "addr" : "fe80::6245:bdff:fe08:4574"
       }
     }
   },
@@ -31,21 +29,21 @@
           "message" : "Written value is not valid",
           "detail" : "Point filter_differential_pressure_sensor (writable false)",
           "category" : "pointset.point.invalid",
-          "timestamp" : "2023-07-28T20:35:56Z",
+          "timestamp" : "2024-03-22T19:01:55Z",
           "level" : 500
         }
       }
     }
   },
   "system" : {
-    "last_config" : "2023-07-28T20:35:56Z",
+    "last_config" : "2024-03-22T19:01:55Z",
     "operation" : {
       "operational" : true,
-      "last_start" : "2023-07-28T20:23:12Z",
-      "restart_count" : 3,
-      "mode" : "active"
+      "last_start" : "2024-03-22T19:01:05Z",
+      "restart_count" : 1,
+      "mode" : "initial"
     },
-    "serial_no" : "sequencer-13214",
+    "serial_no" : "sequencer-9164",
     "hardware" : {
       "make" : "BOS",
       "model" : "pubber"
@@ -56,10 +54,10 @@
     "status" : {
       "message" : "success",
       "category" : "system.config.apply",
-      "timestamp" : "2023-07-28T20:35:56Z",
+      "timestamp" : "2024-03-22T19:01:55Z",
       "level" : 300
     }
   },
-  "timestamp" : "2023-07-28T20:35:58Z",
-  "version" : "1.4.1"
+  "timestamp" : "2024-03-22T19:01:57Z",
+  "version" : "1.5.0"
 }

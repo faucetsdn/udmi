@@ -7,6 +7,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.instantNow;
+import static com.google.udmi.util.JsonUtil.safeSleep;
 import static java.lang.Math.floorMod;
 import static java.lang.String.format;
 import static java.time.Duration.between;
@@ -45,13 +46,14 @@ import udmi.schema.PodConfiguration;
 public abstract class ContainerBase implements ContainerProvider {
 
   public static final String INITIAL_EXECUTION_CONTEXT = "xxxxxxxx";
-  public static final Integer FUNCTIONS_VERSION_MIN = 11;
-  public static final Integer FUNCTIONS_VERSION_MAX = 11;
+  public static final Integer FUNCTIONS_VERSION_MIN = 12;
+  public static final Integer FUNCTIONS_VERSION_MAX = 12;
   public static final String EMPTY_JSON = "{}";
   public static final String REFLECT_BASE = "UDMI-REFLECT";
   private static final ThreadLocal<String> executionContext = new ThreadLocal<>();
   private static final Pattern VARIABLE_PATTERN = Pattern.compile("\\$\\{([A-Z_]+)}");
   private static final Pattern MULTI_PATTERN = Pattern.compile("!\\{([,a-zA-Z_]+)}");
+  private static final int JITTER_ADJ_MS = 1000; // Empirically determined to be good.
   protected static String reflectRegistry = REFLECT_BASE;
   private static BasePodConfiguration basePodConfig = new BasePodConfiguration();
   protected final PodConfiguration podConfiguration;
@@ -192,6 +194,16 @@ public abstract class ContainerBase implements ContainerProvider {
     return out;
   }
 
+  private void alignWithGeneration() {
+    // The initial delay will often be slightly off the intended time due to rounding errors.
+    // Add in a quick/bounded delay to the start of the next second for dynamic alignment.
+    // Mostly this is just to make the output timestamps look pretty, but has no functional impact.
+    long intervalDelaySec = intervalDelaySec();
+    long secondsToAdd = intervalDelaySec < periodicSec / 2 ? intervalDelaySec : 0;
+    Duration duration = Duration.ofMillis(JITTER_ADJ_MS).plusSeconds(secondsToAdd);
+    safeSleep(duration.minusNanos(Instant.now().getNano()).toMillis());
+  }
+
   private String environmentReplacer(MatchResult match) {
     String replacement = ofNullable(getEnv(match.group(1))).orElse("");
     if (replacement.startsWith("!")) {
@@ -226,13 +238,15 @@ public abstract class ContainerBase implements ContainerProvider {
     return getClass().getSimpleName();
   }
 
-  private long initialDelaySec() {
+  private long intervalDelaySec() {
     return ifNotNullGet(executorGeneration, generation ->
         floorMod(between(instantNow(), generation).getSeconds(), periodicSec), periodicSec);
   }
 
   private void periodicWrapper() {
     try {
+      grabExecutionContext();
+      ifNotNullThen(executorGeneration, this::alignWithGeneration);
       periodicTask();
     } catch (Exception e) {
       error("Exception executing periodic task: " + friendlyStackTrace(e));
@@ -243,7 +257,7 @@ public abstract class ContainerBase implements ContainerProvider {
   public void activate() {
     info("Activating");
     ifTrueThen(periodicSec > 0, () -> {
-      long initial = initialDelaySec();
+      long initial = intervalDelaySec();
       notice("Scheduling task %s execution after %ss every %ss", containerId, initial, periodicSec);
       scheduledExecutor.scheduleAtFixedRate(this::periodicWrapper, initial, periodicSec, SECONDS);
     });

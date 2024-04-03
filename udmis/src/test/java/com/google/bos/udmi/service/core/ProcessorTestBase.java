@@ -16,7 +16,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import org.jetbrains.annotations.NotNull;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.EndpointConfiguration.Protocol;
 import udmi.schema.Envelope;
@@ -64,24 +63,15 @@ public abstract class ProcessorTestBase extends MessageTestBase {
     return processor.getMessageCount(clazz);
   }
 
-  @NotNull
-  protected abstract Class<? extends ProcessorBase> getProcessorClass();
-
-  protected <T> T initializeTestInstance(@SuppressWarnings("unused") Class<T> clazz) {
-    initializeTestInstance();
-    //noinspection unchecked
-    return (T) processor;
+  protected ProcessorBase getProcessor(EndpointConfiguration config,
+      Class<? extends ProcessorBase> clazz) {
+    return ProcessorBase.create(clazz, config);
   }
 
-  protected void initializeTestInstance() {
-    try {
-      UdmiServicePod.resetForTest();
-      createProcessorInstance();
-      activateReverseProcessor();
-      getReverseDispatcher();
-    } catch (Exception e) {
-      throw new RuntimeException("While initializing test instance", e);
-    }
+  protected <T extends ProcessorBase> T initializeTestInstance(Class<T> clazz) {
+    instantiateTestInstance(clazz);
+    //noinspection unchecked
+    return (T) processor;
   }
 
   protected Bundle makeMessageBundle(Object message) {
@@ -92,19 +82,36 @@ public abstract class ProcessorTestBase extends MessageTestBase {
     return MessagePipeTestBase.makeTestEnvelope();
   }
 
+  protected void terminateAndWait() {
+    // Put termination markers into the pipe.
+    getTestDispatcher().terminate();
+
+    // Wait for all outstanding messages to be processed.
+    getTestDispatcher().awaitShutdown();
+
+    // Now put termination markers into the reversed pipe.
+    getReverseDispatcher().terminate();
+
+    // And wait for all of those outstanding messages to be processed.
+    getReverseDispatcher().awaitShutdown();
+
+    provider.shutdown();
+    processor.shutdown();
+  }
+
   private void activateReverseProcessor() {
     MessageDispatcherImpl reverseDispatcher = getReverseDispatcher();
     reverseDispatcher.registerHandler(Object.class, this::resultHandler);
     reverseDispatcher.activate();
   }
 
-  private void createProcessorInstance() {
+  private void initializeProcessorInstance(Class<? extends ProcessorBase> clazz) {
     EndpointConfiguration config = new EndpointConfiguration();
     config.protocol = Protocol.LOCAL;
     config.hostname = TEST_NAMESPACE;
     config.recv_id = TEST_SOURCE;
     config.send_id = TEST_DESTINATION;
-    processor = ProcessorBase.create(getProcessorClass(), config);
+    processor = getProcessor(config, clazz);
     setTestDispatcher(processor.getDispatcher());
     provider = mock(IotAccessBase.class);
     UdmiServicePod.putComponent(IOT_ACCESS_COMPONENT, () -> provider);
@@ -112,13 +119,15 @@ public abstract class ProcessorTestBase extends MessageTestBase {
     provider.activate();
   }
 
-  protected void terminateAndWait() {
-    getTestDispatcher().terminate();
-    getReverseDispatcher().terminate();
-    getTestDispatcher().awaitShutdown();
-    getReverseDispatcher().awaitShutdown();
-    provider.shutdown();
-    processor.shutdown();
+  private void instantiateTestInstance(Class<? extends ProcessorBase> clazz) {
+    try {
+      UdmiServicePod.resetForTest();
+      initializeProcessorInstance(clazz);
+      activateReverseProcessor();
+      getReverseDispatcher();
+    } catch (Exception e) {
+      throw new RuntimeException("While initializing test instance", e);
+    }
   }
 
   private void resultHandler(Object message) {

@@ -1,11 +1,11 @@
 {
-  "timestamp" : "2023-11-29T20:08:56Z",
-  "version" : "@@@cloud udmi version###1.4.2-57-gbb3a0154e",
+  "timestamp" : "2024-03-21T16:39:14Z",
+  "version" : "@@@cloud udmi version###1.5.0-55-g604ba10b1",
   "system" : {
     "min_loglevel" : 100,
     "metrics_rate_sec" : 10,
     "operation" : {
-      "last_start" : "2023-11-29T20:08:20Z"
+      "last_start" : "2024-03-21T16:38:31Z"
     },
     "testing" : {
       "sequence_name" : "extra_config"
@@ -13,23 +13,21 @@
   },
   "localnet" : {
     "families" : {
-      "ether" : {
-        "addr" : "00:50:b6:ed:5f:77"
-      },
-      "ipv4" : {
-        "addr" : "192.168.2.1"
-      }
+      "vendor" : { },
+      "ipv6" : { },
+      "ipv4" : { },
+      "ether" : { }
     }
   },
   "pointset" : {
     "points" : {
-      "filter_alarm_pressure_status" : {
-        "ref" : "BV11.present_value",
-        "units" : "No-units"
-      },
       "filter_differential_pressure_setpoint" : {
         "units" : "Bars",
         "set_value" : 98
+      },
+      "filter_alarm_pressure_status" : {
+        "ref" : "BV11.present_value",
+        "units" : "No-units"
       },
       "filter_differential_pressure_sensor" : {
         "ref" : "AV12.present_value",

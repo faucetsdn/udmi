@@ -12,13 +12,13 @@ import static udmi.schema.CloudModel.Resource_type.GATEWAY;
 import com.google.udmi.util.SiteModel;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 import udmi.schema.CloudModel;
+import udmi.schema.Metadata;
 import udmi.schema.SetupUdmiConfig;
 
 /**
@@ -111,14 +111,24 @@ public class IotMockProvider implements IotProvider {
   }
 
   @Override
-  public Set<String> fetchDeviceIds(String forGatewayId) {
-    HashSet<String> deviceIds = new HashSet<>(siteModel.allDeviceIds());
-    deviceIds.add(MOCK_DEVICE_ID);
+  public Map<String, CloudModel> fetchCloudModels(String forGatewayId) {
+    Map<String, CloudModel> siteDeviceModels = siteModel.allMetadata().entrySet().stream().collect(
+        Collectors.toMap(Entry::getKey, model -> makeCloudModel(model.getValue())));
+    Map<String, CloudModel> deviceModels = new HashMap<>(siteDeviceModels);
+    deviceModels.put(MOCK_DEVICE_ID, makeMockModel(MOCK_DEVICE_ID));
     if (forGatewayId != null) {
-      deviceIds.remove(forGatewayId);
-      deviceIds.remove(PROXY_DEVICE_ID);
+      deviceModels.remove(forGatewayId);
+      deviceModels.remove(PROXY_DEVICE_ID);
     }
-    return deviceIds;
+    return deviceModels;
+  }
+
+  private CloudModel makeCloudModel(Metadata value) {
+    return new CloudModel();
+  }
+
+  private CloudModel makeMockModel(String mockDeviceId) {
+    return new CloudModel();
   }
 
   @Override

@@ -1,14 +1,10 @@
 {
-  "blobset" : { },
-  "discovery" : { },
   "localnet" : {
     "families" : {
-      "ether" : {
-        "addr" : "00:50:b6:ed:5f:77"
-      },
-      "ipv4" : {
-        "addr" : "192.168.2.1"
-      }
+      "ether" : { },
+      "ipv4" : { },
+      "ipv6" : { },
+      "vendor" : { }
     }
   },
   "pointset" : {
@@ -25,18 +21,21 @@
         "set_value" : 98,
         "units" : "Bars"
       }
-    }
+    },
+    "sample_rate_sec" : 10
   },
   "system" : {
-    "metrics_rate_sec" : 600,
+    "metrics_rate_sec" : 10,
     "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2023-11-07T14:30:01Z"
+      "last_start" : "2024-03-26T19:23:16Z"
     },
     "testing" : {
-      "sequence_name" : "pointset_request_extraneous"
+      "config_base" : 31,
+      "sequence_name" : "pointset_request_extraneous",
+      "transaction_id" : "RC:1711481175635"
     }
   },
-  "timestamp" : "2023-11-07T14:31:34Z",
-  "version" : "1.4.2-40-gdeae740b"
+  "timestamp" : "2024-03-26T19:26:15Z",
+  "version" : "1.5.0-87-g59604d2bb"
 }

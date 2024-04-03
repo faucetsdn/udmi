@@ -1,6 +1,7 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
-import static com.google.daq.mqtt.util.TimePeriodConstants.NINETY_SECONDS_MS;
+import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
+import static java.lang.String.format;
 import static udmi.schema.Bucket.WRITEBACK;
 import static udmi.schema.FeatureDiscovery.FeatureStage.ALPHA;
 
@@ -24,6 +25,7 @@ public class WritebackSequences extends PointsetBase {
   public static final String FAILURE_STATE = "failure";
   public static final String APPLIED_STATE = "applied";
   public static final String DEFAULT_STATE = null;
+  private Object lastPresentValue;
 
   @Before
   public void setupExpectedParameters() {
@@ -37,59 +39,50 @@ public class WritebackSequences extends PointsetBase {
    * @param expected  Expected `value_state`
    * @return true/false actual matches expected
    */
-  private boolean valueStateIs(String pointName, String expected) {
+  private String valueStateIs(String pointName, String expected) {
     if (deviceState.pointset == null || !deviceState.pointset.points.containsKey(pointName)) {
       throw new AbortMessageLoop("Missing pointset point " + pointName);
     }
     Value_state rawState = deviceState.pointset.points.get(pointName).value_state;
     String valueState = rawState == null ? null : rawState.value();
     boolean equals = Objects.equals(expected, valueState);
-    debug(String.format("Value state %s == %s (%s)", valueState, expected, equals));
-    return equals;
+    debug(format("Value state %s == %s (%s)", valueState, expected, equals));
+    return equals ? null : format("point %s is %s, expected %s", pointName, valueState, expected);
   }
 
   /**
    * Log string for value_state check.
    */
-  private String expectedValueState(String pointName, String expectedValue) {
+  private String expectedValueState(String expectedValue) {
     String targetState = expectedValue == null ? "default (null)" : expectedValue;
-    return String.format("point %s to have value_state %s", pointName, targetState);
+    return format("target point to have value_state %s", targetState);
   }
 
   /**
-   * Log string for present_value check.
-   *
-   * @param targetModel Target point model
+   * Checks if the `present_value` for the target point matches the target value.
    */
-  private String expectedPresentValue(TargetTestingModel targetModel) {
-    return String.format("point `%s` to have present_value `%s`", targetModel.target_point,
-        targetModel.target_value);
-  }
-
-  /**
-   * Checks if the `present_value` for the given point matches the given value.
-   *
-   * @param targetModel Target point model
-   * @return true/false actual matches expected
-   */
-  private boolean presentValueIs(TargetTestingModel targetModel) {
+  private String presentValueIs(TargetTestingModel targetModel) {
     String pointName = targetModel.target_point;
+    Object targetValue = targetModel.target_value;
     List<PointsetEvent> messages = popReceivedEvents(PointsetEvent.class);
     for (PointsetEvent pointsetEvent : messages) {
-      if (pointsetEvent.points.get(pointName) != null
-          && pointsetEvent.points.get(pointName).present_value == targetModel.target_value) {
-        return true;
+      if (pointsetEvent.points.get(pointName) != null) {
+        lastPresentValue = pointsetEvent.points.get(pointName).present_value;
+        if (targetValue.equals(lastPresentValue)) {
+          return null;
+        }
       }
     }
-    return false;
+    return format("Point %s has present value %s, not target %s", pointName, lastPresentValue,
+        targetValue);
   }
 
-  @Test(timeout = 90000)
+  @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = ALPHA, bucket = WRITEBACK)
   @Summary("Implements UDMI writeback and can successfully writeback to a point")
   public void writeback_success() {
     TargetTestingModel targetModel = testTargetState(APPLIED_STATE);
-    untilTrue(expectedPresentValue(targetModel), () -> presentValueIs(targetModel));
+    waitFor("target point to have target expected value", () -> presentValueIs(targetModel));
   }
 
   private TargetTestingModel testTargetState(String targetState) {
@@ -99,24 +92,22 @@ public class WritebackSequences extends PointsetBase {
 
     deviceConfig.pointset.points.get(targetPoint).set_value = null;
 
-    untilTrue(expectedValueState(targetPoint, DEFAULT_STATE),
-        () -> valueStateIs(targetPoint, DEFAULT_STATE));
+    waitFor(expectedValueState(DEFAULT_STATE), () -> valueStateIs(targetPoint, DEFAULT_STATE));
 
     deviceConfig.pointset.points.get(targetPoint).set_value = targetValue;
 
-    untilTrue(expectedValueState(targetPoint, targetState),
-        () -> valueStateIs(targetPoint, targetState));
+    waitFor(expectedValueState(targetState), () -> valueStateIs(targetPoint, targetState));
 
     return targetModel;
   }
 
-  @Test(timeout = NINETY_SECONDS_MS)
+  @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = ALPHA, bucket = WRITEBACK)
   public void writeback_invalid() {
     testTargetState(INVALID_STATE);
   }
 
-  @Test(timeout = NINETY_SECONDS_MS)
+  @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = ALPHA, bucket = WRITEBACK)
   public void writeback_failure() {
     testTargetState(FAILURE_STATE);
