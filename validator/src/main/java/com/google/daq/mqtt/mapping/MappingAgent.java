@@ -16,11 +16,14 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import udmi.schema.CloudModel;
+import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.DiscoveryConfig;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.ExecutionConfiguration;
+import udmi.schema.FamilyDiscoveryConfig;
 
 /**
  * Agent that maps discovery results to mapping requests.
@@ -77,8 +80,11 @@ public class MappingAgent {
     String generation = isoConvert(new Date());
     System.err.printf("Initiating discovery on %s/%s at %s%n", siteModel.getRegistryId(), deviceId,
         generation);
+    FamilyDiscoveryConfig familyDiscoveryConfig = new FamilyDiscoveryConfig();
+    familyDiscoveryConfig.generation = JsonUtil.getDate(generation);
     DiscoveryConfig discoveryConfig = new DiscoveryConfig();
-    discoveryConfig.generation = JsonUtil.getDate(generation);
+    discoveryConfig.families = new HashMap<>();
+    discoveryConfig.families.put(ProtocolFamily.VENDOR, familyDiscoveryConfig);
     cloudIotManager.modifyConfig(deviceId, SubFolder.DISCOVERY, stringify(discoveryConfig));
     CloudModel cloudModel = new CloudModel();
     cloudModel.metadata = ImmutableMap.of(UDMI_PROVISION_GENERATION, generation);

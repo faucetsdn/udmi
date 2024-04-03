@@ -37,7 +37,6 @@ public class VendorProvider extends ManagerBase implements FamilyProvider {
 
   private DiscoveryEvent augmentSend(Entry<String, Metadata> entry, boolean enumerate) {
     String addr = catchToNull(() -> entry.getValue().localnet.families.get(VENDOR).addr);
-    debug(format("Discovered device %s has address %s", entry.getKey(), addr));
     DiscoveryEvent event = new DiscoveryEvent();
     event.scan_addr = addr;
     event.points = ifTrueGet(enumerate, () -> getDiscoverPoints(entry.getValue()));

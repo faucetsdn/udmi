@@ -726,7 +726,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
         throw new RuntimeException("Config latch timeout");
       }
     } catch (Exception e) {
-      throw new RuntimeException("While waiting for config latch", e);
+      throw new RuntimeException(format("While waiting for %s config latch", deviceId), e);
     }
   }
 
@@ -904,8 +904,8 @@ public class Pubber extends ManagerBase implements ManagerHost {
       processConfigUpdate(config);
       if (configLatch.getCount() > 0) {
         warn("Received config for config latch " + deviceId);
+        configLatch.countDown();
       }
-      configLatch.countDown();
       publisherConfigLog("apply", null, deviceId);
     } catch (Exception e) {
       publisherConfigLog("apply", e, deviceId);
@@ -1226,7 +1226,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
         throw new RuntimeException("Timeout waiting for state send");
       }
     } catch (Exception e) {
-      throw new RuntimeException("While waiting for state send latch", e);
+      throw new RuntimeException(format("While waiting for %s state send latch", deviceId), e);
     }
   }
 
