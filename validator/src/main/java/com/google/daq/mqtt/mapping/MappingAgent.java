@@ -4,22 +4,20 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.Common.removeNextArg;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringify;
-import static com.google.udmi.util.MetadataMapKeys.UDMI_PROVISION_UNTIL;
+import static com.google.udmi.util.MetadataMapKeys.UDMI_PROVISION_GENERATION;
 import static java.util.Objects.requireNonNull;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ConfigUtil;
+import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import udmi.schema.CloudModel;
-import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.DiscoveryConfig;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.ExecutionConfiguration;
@@ -29,9 +27,6 @@ import udmi.schema.ExecutionConfiguration;
  */
 public class MappingAgent {
 
-  private static final int SCAN_INTERVAL_SEC = 60;
-  private static final ProtocolFamily DISCOVERY_FAMILY = ProtocolFamily.VENDOR;
-  private static final Duration PROVISIONING_WINDOW = Duration.ofMinutes(10);
   private final ExecutionConfiguration executionConfiguration;
   private final String deviceId;
   private CloudIotManager cloudIotManager;
@@ -79,17 +74,14 @@ public class MappingAgent {
   }
 
   private void initiateDiscover() {
-    Date generation = new Date();
+    String generation = isoConvert(new Date());
     System.err.printf("Initiating discovery on %s/%s at %s%n", siteModel.getRegistryId(), deviceId,
-        isoConvert(generation));
+        generation);
     DiscoveryConfig discoveryConfig = new DiscoveryConfig();
-    discoveryConfig.generation = generation;
+    discoveryConfig.generation = JsonUtil.getDate(generation);
     cloudIotManager.modifyConfig(deviceId, SubFolder.DISCOVERY, stringify(discoveryConfig));
-    Instant theFuture = discoveryConfig.generation.toInstant().plus(PROVISIONING_WINDOW);
-    ImmutableMap<String, String> update = ImmutableMap.of(UDMI_PROVISION_UNTIL,
-        isoConvert(theFuture));
     CloudModel cloudModel = new CloudModel();
-    cloudModel.metadata = update;
+    cloudModel.metadata = ImmutableMap.of(UDMI_PROVISION_GENERATION, generation);
     cloudIotManager.modifyDevice(deviceId, cloudModel);
   }
 
