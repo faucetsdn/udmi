@@ -23,7 +23,7 @@
     "families": {
       "bacnet": {
         "generation": "2018-08-26T21:00:13Z",
-        "active": true
+        "phase": "pending"
       }
     }
   }

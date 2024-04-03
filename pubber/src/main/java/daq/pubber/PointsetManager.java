@@ -7,6 +7,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
+import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Objects.requireNonNullElseGet;
@@ -28,6 +29,7 @@ import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetEvent;
 import udmi.schema.PointPointsetModel;
 import udmi.schema.PointPointsetState;
+import udmi.schema.PointPointsetState.Value_state;
 import udmi.schema.PointsetConfig;
 import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetModel;
@@ -139,9 +141,17 @@ public class PointsetManager extends ManagerBase {
     }
 
     pointsetState.points.put(pointName, ifNotNullGet(managedPoints.get(pointName),
-        AbstractPoint::getState, invalidPoint(pointName)));
+        this::getTweakedPointState, invalidPoint(pointName)));
     pointsetEvent.points.put(pointName, ifNotNullGet(managedPoints.get(pointName),
         AbstractPoint::getData, new PointPointsetEvent()));
+  }
+
+  private PointPointsetState getTweakedPointState(AbstractPoint point) {
+    PointPointsetState state = point.getState();
+    // Tweak for testing: erroneously apply an applied state here.
+    ifTrueThen(point.getName().equals(options.extraPoint),
+        () -> state.value_state = ofNullable(state.value_state).orElse(Value_state.APPLIED));
+    return state;
   }
 
   private void suspendPoint(String pointName) {
@@ -172,7 +182,7 @@ public class PointsetManager extends ManagerBase {
     }
 
     if (point.isDirty()) {
-      PointPointsetState state = point.getState(); // Always call to clear the dirty bit
+      PointPointsetState state = getTweakedPointState(point); // Always call to clear the dirty bit
       PointPointsetState useState = ifTrueGet(options.noPointState, PointPointsetState::new, state);
       pointsetState.points.put(pointName, useState);
       updateState();

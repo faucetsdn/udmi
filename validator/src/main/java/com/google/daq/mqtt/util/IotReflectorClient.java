@@ -10,7 +10,7 @@ import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
-import static com.google.udmi.util.JsonUtil.convertToStrict;
+import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
@@ -27,7 +27,6 @@ import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -118,7 +117,7 @@ public class IotReflectorClient implements IotProvider {
   private CloudModel cloudModelTransaction(String deviceId, String topic, CloudModel model) {
     Operation operation = Preconditions.checkNotNull(model.operation, "no operation");
     Map<String, Object> message = transaction(deviceId, topic, stringify(model), QuerySpeed.LONG);
-    CloudModel cloudModel = convertToStrict(CloudModel.class, message);
+    CloudModel cloudModel = convertTo(CloudModel.class, message);
     String cloudNumId = ifNotNullGet(cloudModel, result -> result.num_id);
     Operation cloudOperation = ifNotNullGet(cloudModel, result -> result.operation);
     if (cloudModel == null || cloudNumId == null || cloudOperation != operation) {
@@ -143,9 +142,8 @@ public class IotReflectorClient implements IotProvider {
   }
 
   @Override
-  public Set<String> fetchDeviceIds(String forGatewayId) {
-    return ofNullable(fetchCloudModel(forGatewayId))
-        .map(model -> model.device_ids.keySet()).orElse(null);
+  public Map<String, CloudModel> fetchCloudModels(String forGatewayId) {
+    return ofNullable(fetchCloudModel(forGatewayId)).map(model -> model.device_ids).orElse(null);
   }
 
   @Nullable
@@ -153,7 +151,7 @@ public class IotReflectorClient implements IotProvider {
     try {
       Map<String, Object> message = transaction(deviceId, CLOUD_QUERY_TOPIC, EMPTY_MESSAGE,
           QuerySpeed.ETERNITY);
-      return convertToStrict(CloudModel.class, message);
+      return convertTo(CloudModel.class, message);
     } catch (Exception e) {
       if (e.getMessage().contains("NOT_FOUND")) {
         return null;

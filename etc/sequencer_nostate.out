@@ -6,14 +6,14 @@ RESULT skip endpoint.config endpoint_failure_and_restart PREVIEW 0/0 State testi
 RESULT skip endpoint.config endpoint_redirect_and_restart PREVIEW 0/0 State testing disabled
 RESULT skip enumeration empty_enumeration PREVIEW 0/0 State testing disabled
 RESULT skip enumeration.features feature_enumeration PREVIEW 0/0 State testing disabled
-RESULT skip gateway gateway_attach_handling PREVIEW 0/0 Not a gateway
+RESULT skip gateway bad_target_family PREVIEW 0/0 Not a proxied device
 RESULT skip gateway gateway_proxy_events BETA 0/0 Not a gateway
 RESULT pass pointset pointset_publish BETA 5/5 Sequence complete
 RESULT pass pointset pointset_publish_interval BETA 5/5 Sequence complete
 RESULT skip pointset pointset_remove_point BETA 0/0 State testing disabled
 RESULT skip pointset pointset_request_extraneous BETA 0/0 State testing disabled
-RESULT skip system broken_config BETA 0/1 State testing disabled
-CPBLTY skip system broken_config.logging ALPHA 0/1 Never executed
+RESULT skip system broken_config BETA 0/0 State testing disabled
+CPBLTY skip system broken_config.logging ALPHA 0/0 Never executed
 RESULT skip system config_logging BETA 0/0 State testing disabled
 RESULT skip system device_config_acked BETA 0/0 State testing disabled
 RESULT skip system extra_config BETA 0/0 State testing disabled
@@ -23,4 +23,5 @@ RESULT skip system family_ipv6_addr PREVIEW 0/0 State testing disabled
 RESULT skip system state_make_model BETA 0/0 State testing disabled
 RESULT skip system state_software BETA 0/0 State testing disabled
 RESULT skip system system_last_update STABLE 0/0 State testing disabled
+CPBLTY skip system system_last_update.subblocks ALPHA 0/0 Never executed
 RESULT skip system valid_serial_no BETA 0/0 State testing disabled

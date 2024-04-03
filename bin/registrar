@@ -40,7 +40,7 @@ fi
 echo Building validator...
 validator/bin/build > /dev/null
 
-echo Running tools version `git describe`
+echo Running tools version $udmi_version
 
 # Format of cmdline project_id is [//PROVIDER/]PROJECT[@BRIDGE] (optional PROVIDER and BRIDGE)
 # e.g. bos-testing-dev or //gcp/bos-testing-dev or bos-platform-dev@mqtt.bos.goog
@@ -101,7 +101,5 @@ cat $config_file
 echo
 
 validator/bin/registrar $config_file $* 2>&1 | tee $OUT_DIR/registrar.log
-
-bin/check_version
 
 search "Registrar complete, exit 0" $OUT_DIR/registrar.log

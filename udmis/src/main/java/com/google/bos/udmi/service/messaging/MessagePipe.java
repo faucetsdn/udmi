@@ -10,7 +10,6 @@ import com.google.bos.udmi.service.messaging.impl.SimpleMqttPipe;
 import com.google.bos.udmi.service.messaging.impl.TraceMessagePipe;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import udmi.schema.EndpointConfiguration;

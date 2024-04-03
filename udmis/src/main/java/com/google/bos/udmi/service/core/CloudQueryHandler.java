@@ -1,23 +1,21 @@
 package com.google.bos.udmi.service.core;
 
-import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.toDate;
-import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 import com.google.bos.udmi.service.access.IotAccessBase;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudQuery;
-import udmi.schema.CloudQuery.Depth;
+import udmi.schema.Common.ProtocolFamily;
+import udmi.schema.Depths.Depth;
 import udmi.schema.DiscoveryEvent;
 import udmi.schema.Envelope;
 
@@ -26,7 +24,6 @@ import udmi.schema.Envelope;
  */
 public class CloudQueryHandler {
 
-  private static final String IOT_SCAN_FAMILY = "iot";
   private final ControlProcessor controller;
   private final IotAccessBase iotAccess;
   private final TargetProcessor target;
@@ -42,10 +39,6 @@ public class CloudQueryHandler {
     target = controller.targetProcessor;
   }
 
-  private static String makeTransactionId() {
-    return format("CP:%08x", Objects.hash(System.currentTimeMillis(), Thread.currentThread()));
-  }
-
   @NotNull
   private CloudModel convertDeviceEntry(CloudModel entry) {
     return entry;
@@ -53,6 +46,10 @@ public class CloudQueryHandler {
 
   private void debug(String format, Object... args) {
     controller.debug(format, args);
+  }
+
+  private void issueModifiedDevice(String id) {
+    issueModifiedQuery(e -> e.deviceId = id);
   }
 
   private void issueModifiedQuery(Consumer<Envelope> mutator) {
@@ -64,10 +61,6 @@ public class CloudQueryHandler {
 
   private void issueModifiedRegistry(String registryId) {
     issueModifiedQuery(e -> e.deviceRegistryId = registryId);
-  }
-
-  private void issueModifiedDevice(String id) {
-    issueModifiedQuery(e -> e.deviceId = id);
   }
 
   private CloudModel makeCloudModel(String registryId) {
@@ -82,9 +75,9 @@ public class CloudQueryHandler {
   }
 
   private void queryAllRegistries() {
-    Set<String> registries = iotAccess.listRegistries();
+    Set<String> registries = iotAccess.getRegistries();
     DiscoveryEvent discoveryEvent = new DiscoveryEvent();
-    discoveryEvent.scan_family = IOT_SCAN_FAMILY;
+    discoveryEvent.scan_family = ProtocolFamily.IOT;
     discoveryEvent.generation = query.generation;
     discoveryEvent.registries = registries.stream()
         .collect(Collectors.toMap(registryId -> registryId, this::makeCloudModel));
@@ -104,7 +97,7 @@ public class CloudQueryHandler {
     String deviceId = requireNonNull(envelope.deviceId, "device id");
 
     DiscoveryEvent discoveryEvent = new DiscoveryEvent();
-    discoveryEvent.scan_family = IOT_SCAN_FAMILY;
+    discoveryEvent.scan_family = ProtocolFamily.IOT;
     discoveryEvent.generation = query.generation;
     discoveryEvent.cloud_model = iotAccess.fetchDevice(deviceRegistryId, deviceId);
     discoveryEvent.cloud_model.operation = null;
@@ -119,7 +112,7 @@ public class CloudQueryHandler {
     CloudModel cloudModel = iotAccess.listDevices(deviceRegistryId);
 
     DiscoveryEvent discoveryEvent = new DiscoveryEvent();
-    discoveryEvent.scan_family = IOT_SCAN_FAMILY;
+    discoveryEvent.scan_family = ProtocolFamily.IOT;
     discoveryEvent.generation = query.generation;
     discoveryEvent.devices = cloudModel.device_ids.entrySet().stream().collect(Collectors.toMap(
         Entry::getKey, entry -> convertDeviceEntry(entry.getValue())));
@@ -131,34 +124,31 @@ public class CloudQueryHandler {
     debug("Registry %s had %d devices (%d active)", deviceRegistryId, discoveryEvent.devices.size(),
         active.size());
 
-    ifTrueThen(shouldDetailDevices(), () -> active.forEach(this::issueModifiedDevice));
+    ifTrueThen(shouldDetailEntries(), () -> active.forEach(this::issueModifiedDevice));
   }
 
-  private boolean shouldDetailDevices() {
+  private boolean shouldDetailEntries() {
     return Depth.DETAILS == query.depth;
   }
 
   private boolean shouldTraverseRegistries() {
-    return (Depth.DEVICES == query.depth) || shouldDetailDevices();
+    return (Depth.ENTRIES == query.depth) || shouldDetailEntries();
   }
 
   /**
    * Process an individual cloud query.
    */
-  public synchronized void process(CloudQuery query) {
-    this.query = query;
-    envelope = controller.getContinuation(query).getEnvelope();
+  public synchronized void process(CloudQuery newQuery) {
+    query = newQuery;
+    envelope = controller.getContinuation(newQuery).getEnvelope();
 
-    // If the query.depth is not defined then default to recursing down one level.
     if (envelope.deviceRegistryId == null) {
-      ifNullThen(query.depth, () -> query.depth = Depth.DEVICES);
       queryAllRegistries();
     } else if (envelope.deviceId == null) {
-      ifNullThen(query.depth, () -> query.depth = Depth.DETAILS);
       queryRegistryDevices();
     } else {
       queryDeviceDetails();
     }
-    this.query = null;
+    query = null;
   }
 }

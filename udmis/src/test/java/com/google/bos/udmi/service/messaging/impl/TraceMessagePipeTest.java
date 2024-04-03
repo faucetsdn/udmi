@@ -14,6 +14,7 @@ import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.udmi.util.JsonUtil;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +40,7 @@ public class TraceMessagePipeTest {
   private static final String DEVICE_TWO = "two";
   private static final String VALUE_ONE = "value1";
   private static final String VALUE_TWO = "value2";
+  private static final Date FIRST_PUBLISHED = new Date(1681554607000L);
   private final List<Bundle> consumed = new ArrayList<>();
 
   @SuppressWarnings("unchecked")
@@ -118,5 +120,8 @@ public class TraceMessagePipeTest {
         consumed.stream().filter(bundle -> TEST_DEVICE.equals(extractMessage(bundle).get("device")))
             .count();
     assertEquals(2, deviceCount, "expected count of device " + TEST_DEVICE);
+
+    Bundle bundle = consumed.get(0);
+    assertEquals(FIRST_PUBLISHED, bundle.envelope.publishTime, "first message publish time");
   }
 }

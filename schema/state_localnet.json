@@ -17,7 +17,7 @@
     },
     "families": {
       "additionalProperties": false,
-      "existingJavaType": "java.util.HashMap<String, FamilyLocalnetState>",
+      "existingJavaType": "java.util.HashMap<udmi.schema.Common.ProtocolFamily, FamilyLocalnetState>",
       "patternProperties": {
         "^_?[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
           "$ref": "file:state_localnet_family.json"

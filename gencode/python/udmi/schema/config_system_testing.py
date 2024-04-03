@@ -6,6 +6,8 @@ class TestingSystemConfig:
 
   def __init__(self):
     self.sequence_name = None
+    self.transaction_id = None
+    self.config_base = None
     self.endpoint_type = None
 
   @staticmethod
@@ -14,6 +16,8 @@ class TestingSystemConfig:
       return None
     result = TestingSystemConfig()
     result.sequence_name = source.get('sequence_name')
+    result.transaction_id = source.get('transaction_id')
+    result.config_base = source.get('config_base')
     result.endpoint_type = source.get('endpoint_type')
     return result
 
@@ -37,6 +41,10 @@ class TestingSystemConfig:
     result = {}
     if self.sequence_name:
       result['sequence_name'] = self.sequence_name # 5
+    if self.transaction_id:
+      result['transaction_id'] = self.transaction_id # 5
+    if self.config_base:
+      result['config_base'] = self.config_base # 5
     if self.endpoint_type:
       result['endpoint_type'] = self.endpoint_type # 5
     return result

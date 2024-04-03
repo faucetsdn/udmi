@@ -4,6 +4,7 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 import java.util.regex.Pattern;
+import udmi.schema.Common.ProtocolFamily;
 
 /**
  * General family of bacnet addresses.
@@ -16,8 +17,8 @@ public class BacnetFamily implements NetworkFamily {
   private static final Pattern BACNET_REF = Pattern.compile("([A-Z]{2,4})([0-9]+)\\.([a-z_]+)");
 
   @Override
-  public String familyName() {
-    return "bacnet";
+  public ProtocolFamily familyKey() {
+    return ProtocolFamily.BACNET;
   }
 
   @Override

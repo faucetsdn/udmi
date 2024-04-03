@@ -4,20 +4,22 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.util.NetworkFamily.NAMED_FAMILIES;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
+import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThrow;
 import static com.google.udmi.util.GeneralUtils.isTrue;
-import static com.google.udmi.util.JsonUtil.getTimestampString;
+import static com.google.udmi.util.JsonUtil.isoConvert;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
-import com.google.udmi.util.GeneralUtils;
 import java.util.HashMap;
 import java.util.List;
 import org.jetbrains.annotations.NotNull;
+import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.Config;
+import udmi.schema.FamilyLocalnetConfig;
 import udmi.schema.GatewayConfig;
 import udmi.schema.LocalnetConfig;
 import udmi.schema.Metadata;
@@ -33,7 +35,7 @@ import udmi.schema.SystemConfig;
 public class ConfigGenerator {
 
   public static final String GENERATED_CONFIG_JSON = "generated_config.json";
-  public static final String DEFAULT_FAMILY = "vendor";
+  public static final ProtocolFamily DEFAULT_FAMILY = ProtocolFamily.VENDOR;
 
   private final Metadata metadata;
 
@@ -91,10 +93,11 @@ public class ConfigGenerator {
     return gatewayConfig;
   }
 
-  private String getLocalnetAddr(String rawFamily) {
-    String family = ofNullable(rawFamily).orElse(DEFAULT_FAMILY);
+  private String getLocalnetAddr(ProtocolFamily rawFamily) {
+    ProtocolFamily family = ofNullable(rawFamily).orElse(DEFAULT_FAMILY);
     String address = catchToNull(() -> metadata.localnet.families.get(family).addr);
-    return requireNonNull(address, format("metadata.localnet.families[%s].addr undefined", family));
+    return requireNonNull(address,
+        format("metadata.localnet.families[%s].addr undefined", family.value()));
   }
 
   private PointsetConfig getDevicePointsetConfig() {
@@ -140,8 +143,8 @@ public class ConfigGenerator {
 
   private String pointConfigRef(PointPointsetModel model) {
     String pointRef = model.ref;
-    String rawFamily = catchToNull(() -> metadata.gateway.target.family);
-    String family = ofNullable(rawFamily).orElse(DEFAULT_FAMILY);
+    ProtocolFamily rawFamily = catchToNull(() -> metadata.gateway.target.family);
+    ProtocolFamily family = ofNullable(rawFamily).orElse(DEFAULT_FAMILY);
 
     if (!isProxied()) {
       return pointRef;
@@ -163,7 +166,14 @@ public class ConfigGenerator {
   }
 
   private LocalnetConfig getDeviceLocalnetConfig() {
-    return null;
+    if (metadata.localnet == null) {
+      return null;
+    }
+    LocalnetConfig localnetConfig = new LocalnetConfig();
+    localnetConfig.families = new HashMap<>();
+    metadata.localnet.families.keySet()
+        .forEach(family -> localnetConfig.families.put(family, new FamilyLocalnetConfig()));
+    return localnetConfig;
   }
 
   /**
@@ -185,7 +195,7 @@ public class ConfigGenerator {
   }
 
   public String getUpdatedTimestamp() {
-    return getTimestampString(metadata.timestamp);
+    return isoConvert(metadata.timestamp);
   }
 
 }

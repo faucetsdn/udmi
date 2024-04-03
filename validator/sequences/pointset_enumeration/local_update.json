@@ -1,11 +1,11 @@
 {
-  "timestamp" : "2024-02-18T18:17:20Z",
-  "version" : "@@@cloud udmi version###1.5.0-16-g48397c75b",
+  "timestamp" : "2024-03-21T16:42:05Z",
+  "version" : "@@@cloud udmi version###1.5.0-55-g604ba10b1",
   "system" : {
     "min_loglevel" : 200,
     "metrics_rate_sec" : 10,
     "operation" : {
-      "last_start" : "2024-02-18T18:16:52Z"
+      "last_start" : "2024-03-21T16:41:36Z"
     },
     "testing" : {
       "sequence_name" : "pointset_enumeration"
@@ -13,7 +13,15 @@
   },
   "discovery" : {
     "enumerate" : {
-      "uniqs" : true
+      "points" : true
+    }
+  },
+  "localnet" : {
+    "families" : {
+      "vendor" : { },
+      "ipv4" : { },
+      "ether" : { },
+      "ipv6" : { }
     }
   },
   "pointset" : {

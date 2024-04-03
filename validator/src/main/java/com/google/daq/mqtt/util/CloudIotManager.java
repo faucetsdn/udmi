@@ -3,6 +3,7 @@ package com.google.daq.mqtt.util;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.util.ConfigUtil.readExeConfig;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.mergeObject;
@@ -181,8 +182,7 @@ public class CloudIotManager {
       System.err.println("Using reflector iot client");
       return new IotReflectorClient(executionConfiguration);
     }
-    System.err.println("Using standard iot client");
-    return new IotCoreProvider(projectId, registryId, cloudRegion);
+    throw new RuntimeException("Unknown IoT Core selection strategy");
   }
 
   /**
@@ -280,8 +280,8 @@ public class CloudIotManager {
    *
    * @return registered device list
    */
-  public Set<String> fetchDeviceIds() {
-    return iotProvider.fetchDeviceIds(null);
+  public Map<String, CloudModel> fetchCloudModels() {
+    return iotProvider.fetchCloudModels(null);
   }
 
   /**
@@ -290,7 +290,7 @@ public class CloudIotManager {
    * @return registered device list
    */
   public Set<String> fetchBoundDevices(String gatewayId) {
-    return iotProvider.fetchDeviceIds(gatewayId);
+    return ifNotNullGet(iotProvider.fetchCloudModels(gatewayId), Map::keySet);
   }
 
   public CloudModel fetchDevice(String deviceId) {

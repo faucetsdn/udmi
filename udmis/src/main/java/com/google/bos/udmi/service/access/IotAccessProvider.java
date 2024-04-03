@@ -49,7 +49,7 @@ public interface IotAccessProvider extends ContainerProvider {
   /**
    * Get all registries associated with this provider.
    */
-  Set<String> listRegistries();
+  Set<String> getRegistries();
 
   boolean isEnabled();
 
@@ -58,7 +58,8 @@ public interface IotAccessProvider extends ContainerProvider {
   CloudModel modelResource(String deviceRegistryId, String deviceId,
       CloudModel cloudModel);
 
-  String modifyConfig(String registryId, String deviceId, Function<String, String> munger);
+  String modifyConfig(String registryId, String deviceId,
+      Function<Entry<Long, String>, String> munger);
 
   void sendCommandBase(String registryId, String deviceId, SubFolder folder,
       String message);

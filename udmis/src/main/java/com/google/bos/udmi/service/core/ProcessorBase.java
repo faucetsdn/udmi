@@ -18,7 +18,10 @@ import static com.google.udmi.util.GeneralUtils.getSubMap;
 import static com.google.udmi.util.GeneralUtils.getSubMapDefault;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.JsonUtil.asMap;
+import static com.google.udmi.util.JsonUtil.getAsMap;
 import static com.google.udmi.util.JsonUtil.getDate;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringify;
@@ -46,6 +49,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.function.Consumer;
 import org.jetbrains.annotations.TestOnly;
@@ -67,6 +71,7 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
       format("{ broken by %s == %s", EXTRA_FIELD_KEY, BREAK_CONFIG_VALUE);
   protected final MessageDispatcher dispatcher;
   private final MessageDispatcher sidecar;
+  private final boolean isEnabled;
   protected IotAccessBase iotAccess;
   private final ImmutableList<HandlerSpecification> baseHandlers = ImmutableList.of(
       messageHandlerFor(Object.class, this::defaultHandler),
@@ -80,9 +85,12 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
    */
   public ProcessorBase(EndpointConfiguration config) {
     super(config);
+    isEnabled =
+        ifNotNullGet(variableSubstitution(config.enabled), enabled -> !enabled.isEmpty(), true);
+    ifNotTrueThen(isEnabled, () -> debug("Processor %s is disabled", containerId));
     distributorName = config.distributor;
-    dispatcher = MessageDispatcher.from(config);
-    sidecar = MessageDispatcher.from(makeSidecarConfig(config));
+    dispatcher = ifTrueGet(isEnabled, () -> MessageDispatcher.from(config));
+    sidecar = ifTrueGet(isEnabled, () -> MessageDispatcher.from(makeSidecarConfig(config)));
   }
 
   /**
@@ -161,8 +169,9 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
     Bundle bundle = bundleException.bundle;
     Map<String, String> errorMap = bundle.attributesMap;
 
-    if (errorMap.containsKey(MessageBase.INVALID_ENVELOPE_KEY)) {
-      reflectInvalidEnvelope(bundleException);
+    String invalid = errorMap.get(MessageBase.INVALID_ENVELOPE_KEY);
+    if (invalid != null) {
+      reflectInvalidEnvelope(bundleException, invalid);
       return;
     }
 
@@ -211,7 +220,7 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
    */
   protected void registerHandlers() {
     Arrays.stream(getClass().getMethods()).forEach(method -> {
-      DispatchHandler annotation = method.getAnnotation(DispatchHandler.class);
+      MessageHandler annotation = method.getAnnotation(MessageHandler.class);
       if (annotation != null) {
         Class<?>[] parameterTypes = method.getParameterTypes();
         checkState(parameterTypes.length == 1,
@@ -246,11 +255,10 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
         attributes.deviceRegistryId, attributes.deviceId, lastConfig, attributes.transactionId);
   }
 
-  private void reflectInvalidEnvelope(BundleException bundleException) {
+  private void reflectInvalidEnvelope(BundleException bundleException, String invalid) {
     Map<String, String> envelopeMap = bundleException.bundle.attributesMap;
-    error(format("Reflecting invalid %s/%s for %s", envelopeMap.get(SUBTYPE_PROPERTY_KEY),
-        envelopeMap.get(SUBFOLDER_PROPERTY_KEY),
-        envelopeMap.get(DEVICE_ID_KEY)));
+    error(format("Reflecting invalid %s/%s for %s: %s", envelopeMap.get(SUBTYPE_PROPERTY_KEY),
+        envelopeMap.get(SUBFOLDER_PROPERTY_KEY), envelopeMap.get(DEVICE_ID_KEY), invalid));
     String deviceRegistryId = envelopeMap.get(REGISTRY_ID_PROPERTY_KEY);
     envelopeMap.put("payload", encodeBase64(bundleException.bundle.payload));
     reflectString(deviceRegistryId, stringify(envelopeMap));
@@ -261,7 +269,7 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
         iotAccess.sendCommand(reflectRegistry, deviceRegistryId, SubFolder.UDMI, commandString));
   }
 
-  private String updateConfig(String previous, Envelope attributes,
+  private String updateConfig(Entry<Long, String> previous, Envelope attributes,
       Map<String, Object> updatePayload, Date newLastStart) {
     Object extraField = ifNotNullGet(updatePayload, p -> p.remove(EXTRA_FIELD_KEY));
     boolean resetConfig = RESET_CONFIG_VALUE.equals(extraField);
@@ -277,7 +285,8 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
       mungeConfigDebug(attributes, "undefined", (String) extraField);
       return BROKEN_CONFIG_JSON;
     } else if (newLastStart != null) {
-      payload = asMap(ofNullable(previous).orElse(EMPTY_JSON));
+      payload = asMap(ofNullable(previous.getValue()).orElse(EMPTY_JSON));
+      augmentPayload(payload, attributes.transactionId, previous.getKey());
       String update = updateWithLastStart(payload, newLastStart);
       ifNotNullThen(update,
           () -> mungeConfigDebug(attributes, payload.get(TIMESTAMP_KEY), "last_start"));
@@ -289,7 +298,7 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
       ifNotNullThen(extraField,
           field -> warn(format("Ignoring unknown %s value %s", EXTRA_FIELD_KEY, extraField)));
       try {
-        payload = asMap(ofNullable(previous).orElse(EMPTY_JSON));
+        payload = asMap(ofNullable(previous.getValue()).orElse(EMPTY_JSON));
         reason = ifNotNullGet(attributes.subFolder, SubFolder::value, null);
       } catch (Exception e) {
         throw new PreviousParseException("parsing previous config", e);
@@ -307,8 +316,19 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
     payload.put(TIMESTAMP_KEY, updateTimestamp);
     payload.put(VERSION_KEY, UDMI_VERSION);
 
+    augmentPayload(payload, attributes.transactionId, previous.getKey());
     mungeConfigDebug(attributes, updateTimestamp, reason);
     return compressJsonString(payload, MAX_CONFIG_LENGTH);
+  }
+
+  private void augmentPayload(Map<String, Object> payload, String transactionId, Long version) {
+    try {
+      Map<String, Object> asMap = getAsMap(getAsMap(payload, "system"), "testing");
+      ifNotNullThen(asMap, map -> map.put("transaction_id", transactionId));
+      ifNotNullThen(asMap, map -> map.put("config_base", version));
+    } catch (Exception e) {
+      warn("Could not augment config with transactionId %s", transactionId);
+    }
   }
 
   private String updateWithLastStart(Map<String, Object> oldPayload, Date newLastStart) {
@@ -348,6 +368,10 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
 
   public int getMessageCount(Class<?> clazz) {
     return dispatcher.getHandlerCount(clazz);
+  }
+
+  public boolean isEnabled() {
+    return isEnabled;
   }
 
   @Override
