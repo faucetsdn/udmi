@@ -24,7 +24,6 @@ import udmi.schema.PointDiscovery;
 @ComponentName("bitbox")
 public class BitboxAdapter extends ProcessorBase {
 
-  private static final String BACNET_PROTOCOL = "bacnet";
   private static final int FAKE_GENERATION_SEC = 60 * 60;
 
   public BitboxAdapter(EndpointConfiguration config) {
