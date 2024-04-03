@@ -46,20 +46,20 @@ class Object11D8FD30:
     return result
 
 
-class Object4F379DD5:
+class Object5437D086:
   """Generated schema class"""
 
   def __init__(self):
     self.lat = None
-    self.lon = None
+    self.long = None
 
   @staticmethod
   def from_dict(source):
     if not source:
       return None
-    result = Object4F379DD5()
+    result = Object5437D086()
     result.lat = source.get('lat')
-    result.lon = source.get('lon')
+    result.long = source.get('long')
     return result
 
   @staticmethod
@@ -68,7 +68,7 @@ class Object4F379DD5:
       return None
     result = {}
     for key in source:
-      result[key] = Object4F379DD5.from_dict(source[key])
+      result[key] = Object5437D086.from_dict(source[key])
     return result
 
   @staticmethod
@@ -82,17 +82,18 @@ class Object4F379DD5:
     result = {}
     if self.lat:
       result['lat'] = self.lat # 5
-    if self.lon:
-      result['lon'] = self.lon # 5
+    if self.long:
+      result['long'] = self.long # 5
     return result
 
 
-class Object5BEED7DE:
+class Object1F163D1E:
   """Generated schema class"""
 
   def __init__(self):
     self.site = None
     self.section = None
+    self.room = None
     self.floor = None
     self.position = None
     self.coordinates = None
@@ -101,12 +102,13 @@ class Object5BEED7DE:
   def from_dict(source):
     if not source:
       return None
-    result = ObjectE77CE318()
+    result = ObjectD01F3C0D()
     result.site = source.get('site')
     result.section = source.get('section')
+    result.room = source.get('room')
     result.floor = source.get('floor')
     result.position = Object11D8FD30.from_dict(source.get('position'))
-    result.coordinates = Object4F379DD5.from_dict(source.get('coordinates'))
+    result.coordinates = Object5437D086.from_dict(source.get('coordinates'))
     return result
 
   @staticmethod
@@ -115,7 +117,7 @@ class Object5BEED7DE:
       return None
     result = {}
     for key in source:
-      result[key] = ObjectE77CE318.from_dict(source[key])
+      result[key] = ObjectD01F3C0D.from_dict(source[key])
     return result
 
   @staticmethod
@@ -131,6 +133,8 @@ class Object5BEED7DE:
       result['site'] = self.site # 5
     if self.section:
       result['section'] = self.section # 5
+    if self.room:
+      result['room'] = self.room # 5
     if self.floor:
       result['floor'] = self.floor # 5
     if self.position:
@@ -276,7 +280,7 @@ class SystemModel:
     if not source:
       return None
     result = SystemModel()
-    result.location = ObjectE77CE318.from_dict(source.get('location'))
+    result.location = ObjectD01F3C0D.from_dict(source.get('location'))
     result.hardware = SystemHardware.from_dict(source.get('hardware'))
     result.software = source.get('software')
     result.physical_tag = ObjectB03D37EB.from_dict(source.get('physical_tag'))

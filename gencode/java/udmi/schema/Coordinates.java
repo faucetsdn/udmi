@@ -10,31 +10,31 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "lat",
-    "lon"
+    "long"
 })
 @Generated("jsonschema2pojo")
 public class Coordinates {
 
     /**
-     * The `lattitude` coordinate of the device in the WSG84 coordinate system
+     * The `latitude` coordinate of the device in the WGS84 coordinate system
      * 
      */
     @JsonProperty("lat")
-    @JsonPropertyDescription("The `lattitude` coordinate of the device in the WSG84 coordinate system")
+    @JsonPropertyDescription("The `latitude` coordinate of the device in the WGS84 coordinate system")
     public Double lat;
     /**
-     * The `longitude` coordinate of the device in the WSG84 coordinate system
+     * The `longitude` coordinate of the device in the WGS84 coordinate system
      * 
      */
-    @JsonProperty("lon")
-    @JsonPropertyDescription("The `longitude` coordinate of the device in the WSG84 coordinate system")
-    public Double lon;
+    @JsonProperty("long")
+    @JsonPropertyDescription("The `longitude` coordinate of the device in the WGS84 coordinate system")
+    public Double _long;
 
     @Override
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.lat == null)? 0 :this.lat.hashCode()));
-        result = ((result* 31)+((this.lon == null)? 0 :this.lon.hashCode()));
+        result = ((result* 31)+((this._long == null)? 0 :this._long.hashCode()));
         return result;
     }
 
@@ -47,7 +47,7 @@ public class Coordinates {
             return false;
         }
         Coordinates rhs = ((Coordinates) other);
-        return (((this.lat == rhs.lat)||((this.lat!= null)&&this.lat.equals(rhs.lat)))&&((this.lon == rhs.lon)||((this.lon!= null)&&this.lon.equals(rhs.lon))));
+        return (((this.lat == rhs.lat)||((this.lat!= null)&&this.lat.equals(rhs.lat)))&&((this._long == rhs._long)||((this._long!= null)&&this._long.equals(rhs._long))));
     }
 
 }
