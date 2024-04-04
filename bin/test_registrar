@@ -70,7 +70,7 @@ bin/registrar ${TEST_SITE}
 
 base_devices=sites/udmi_site_model/devices/AHU-1
 sm_devices=$(check_norm)
-echo Devices with correct no-defaults site_metadata: ${sm_devices}
+echo Devices with correct no-defaults site_defaults: ${sm_devices}
 echo Expecting: $base_devices
 [ "${sm_devices}" == "${base_devices}" ] || exit_status=no_defaults
 echo '###################################' end test section no_defaults: $exit_status
@@ -84,7 +84,7 @@ config_points=`jq .pointset.points $TEST_SITE/devices/SNS-4/out/generated_config
 [[ $config_points == null ]] || exit_status=configured_points
 echo '###################################' end test section configured_points: $exit_status
 
-mv ${TEST_SITE}/site_defaults.json ${TEST_SITE}/site_defaults.json
+mv ${TEST_SITE}/_site_defaults.json ${TEST_SITE}/site_defaults.json
 
 echo Done with registrar tests, results are \'$exit_status\' \(expected to be \'clean\'\)
 [[ $exit_status == clean ]]
