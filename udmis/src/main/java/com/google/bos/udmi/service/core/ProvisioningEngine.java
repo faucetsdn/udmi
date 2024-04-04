@@ -102,8 +102,6 @@ public class ProvisioningEngine extends ProcessorBase {
   private boolean shouldProvision(Date generation, CloudModel cloudModel) {
     Date provisioningGeneration = getDate(
         ifNotNullGet(cloudModel.metadata, m -> m.get(UDMI_PROVISION_GENERATION)));
-    debug(format("Scan provisioning check %s vs. %s", isoConvert(generation),
-        isoConvert(provisioningGeneration)));
     return generation.equals(provisioningGeneration);
   }
 

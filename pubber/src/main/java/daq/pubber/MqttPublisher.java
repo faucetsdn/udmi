@@ -305,7 +305,6 @@ public class MqttPublisher implements Publisher {
 
   private void mqttClientPublish(MqttClient mqttClient, String topic, byte[] mqttMessage)
       throws MqttException {
-    info(format("Publishing %s to %s", topic, mqttClient.getClientId()));
     mqttClient.publish(topic, mqttMessage, QOS_AT_LEAST_ONCE, DO_NOT_RETAIN);
   }
 
