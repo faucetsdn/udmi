@@ -84,7 +84,7 @@ config_points=`jq .pointset.points $TEST_SITE/devices/SNS-4/out/generated_config
 [[ $config_points == null ]] || exit_status=configured_points
 echo '###################################' end test section configured_points: $exit_status
 
-mv ${TEST_SITE}/_site_metadata.json ${TEST_SITE}/site_metadata.json
+mv ${TEST_SITE}/site_defaults.json ${TEST_SITE}/site_defaults.json
 
 echo Done with registrar tests, results are \'$exit_status\' \(expected to be \'clean\'\)
 [[ $exit_status == clean ]]
