@@ -38,9 +38,6 @@ credentials.json
 __pycache__/
 /tests/sites/*/out/
 /tests/sites/*/devices/*/out/
-/tests/sites/discovery/reflector/
-/tests/sites/discovery/devices/GAT-123/ec_*
-/tests/sites/discovery/extras/*
 /udmi_*.log
 
 .vscode
