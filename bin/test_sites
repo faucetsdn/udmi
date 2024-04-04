@@ -50,17 +50,19 @@ rm -f $FAILURES
 
 for subset in $subsets; do
     echo '##########################################' Testing site $subset
-    devicesdir=$sitesdir/$subset/devices
+    site_dir=$sitesdir/$subset
+    [[ -x $site_dir/cleanup_site ]] && echo Running cleanup_site in $site_dir && (cd $site_dir; ./cleanup_site)
+    devicesdir=$site_dir/devices
     rm -rf $devicesdir/*/out
     mkdir -p $devicesdir
     devices=$(cd $devicesdir; ls -d *)
 
     # Test the direct config-file variant of registrar.
-    bin/registrar $sitesdir/$subset/cloud_iot_config.json
+    bin/registrar $site_dir/cloud_iot_config.json
 
     for device in $devices; do
         if [[ -d $devicesdir/$device/out ]]; then
-            redact_files $devicesdir/$device/out/* $sitesdir/$subset/registration_summary.json
+            redact_files $devicesdir/$device/out/* $site_dir/registration_summary.json
             diffs=$(diff -rq $devicesdir/$device/out $devicesdir/$device/expected 2>&1) || true
             if [[ -n $diffs ]]; then
                 cat <<< $diffs >> $FAILURES

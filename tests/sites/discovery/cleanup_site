@@ -1,0 +1,4 @@
+#!/bin/bash -e
+
+rm -rf devices/GAT-123/externals
+rm -rf reflector
