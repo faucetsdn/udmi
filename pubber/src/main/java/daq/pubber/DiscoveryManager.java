@@ -62,7 +62,7 @@ public class DiscoveryManager extends ManagerBase {
     this.deviceManager = deviceManager;
   }
 
-  private static boolean shouldEnumerate(Depth depth) {
+  private static boolean shouldEnumerateTo(Depth depth) {
     return ifNullElse(depth, false, d -> switch (d) {
       default -> false;
       case ENTRIES, DETAILS -> true;
@@ -91,7 +91,7 @@ public class DiscoveryManager extends ManagerBase {
   }
 
   private <K, V> Map<K, V> maybeEnumerate(Depth depth, Supplier<Map<K, V>> supplier) {
-    return ifTrueGet(shouldEnumerate(depth), supplier);
+    return ifTrueGet(shouldEnumerateTo(depth), supplier);
   }
 
   private void updateDiscoveryScan(Map<ProtocolFamily, FamilyDiscoveryConfig> raw) {
@@ -194,24 +194,23 @@ public class DiscoveryManager extends ManagerBase {
     AtomicInteger sendCount = new AtomicInteger();
     familyDiscoveryState.record_count = sendCount.get();
     updateState();
-    discoveryProvider(family).startScan(shouldEnumerate(family), (deviceId, discoveryEvent) -> {
-          ifNotNullThen(discoveryEvent.scan_addr, addr -> {
-            info(format("Discovered %s device %s for gen %s", family, addr,
-                    isoConvert(scanGeneration)));
-            discoveryEvent.scan_family = family;
-            discoveryEvent.generation = scanGeneration;
-            discoveryEvent.system = new SystemDiscoveryData();
-            discoveryEvent.system.ancillary = new HashMap<>();
-            discoveryEvent.system.ancillary.put("device-name", deviceId);
-            familyDiscoveryState.record_count = sendCount.incrementAndGet();
-            updateState();
-            host.publish(discoveryEvent);
-          });
-    });
+    discoveryProvider(family).startScan(shouldEnumerate(family),
+        (deviceId, discoveryEvent) -> ifNotNullThen(discoveryEvent.scan_addr, addr -> {
+          info(format("Discovered %s device %s for gen %s", family, addr,
+              isoConvert(scanGeneration)));
+          discoveryEvent.scan_family = family;
+          discoveryEvent.generation = scanGeneration;
+          discoveryEvent.system = new SystemDiscoveryData();
+          discoveryEvent.system.ancillary = new HashMap<>();
+          discoveryEvent.system.ancillary.put("device-name", deviceId);
+          familyDiscoveryState.record_count = sendCount.incrementAndGet();
+          updateState();
+          host.publish(discoveryEvent);
+        }));
   }
 
   private boolean shouldEnumerate(ProtocolFamily family) {
-    return shouldEnumerate(getFamilyDiscoveryConfig(family).depth);
+    return shouldEnumerateTo(getFamilyDiscoveryConfig(family).depth);
   }
 
   private FamilyProvider discoveryProvider(ProtocolFamily family) {
