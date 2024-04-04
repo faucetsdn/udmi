@@ -5,9 +5,7 @@
     "min_loglevel": 300,
     "metrics_rate_sec": 10
   },
-  "gateway": {
-    "proxy_ids": [ "SNS-4", "AHU-22" ]
-  },
+  "gateway": { },
   "pointset": {
     "points": {
       "globulating_globar": {

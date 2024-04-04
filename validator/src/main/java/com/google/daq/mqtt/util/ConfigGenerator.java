@@ -2,6 +2,7 @@ package com.google.daq.mqtt.util;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.util.NetworkFamily.NAMED_FAMILIES;
+import static com.google.udmi.util.GeneralUtils.catchToElse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -190,7 +191,7 @@ public class ConfigGenerator {
   }
 
   public List<String> getProxyDevicesList() {
-    List<String> proxyIds = ofNullable(metadata.gateway.proxy_ids).orElse(ImmutableList.of());
+    List<String> proxyIds = catchToElse(() -> metadata.gateway.proxy_ids, ImmutableList.of());
     return isGateway() ? proxyIds : null;
   }
 

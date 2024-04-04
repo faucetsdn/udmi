@@ -148,13 +148,13 @@ public class MappingAgent {
     if (discoveryEvent == null) {
       return Map.entry(NO_DISCOVERY, new Metadata());
     }
-    String deviceName = (String) discoveryEvent.system.ancillary.get("device-name");
     Metadata metadata = new Metadata();
     metadata.version = UDMI_VERSION;
     metadata.timestamp = new Date();
     metadata.system = new SystemModel();
     metadata.gateway = new GatewayModel();
     metadata.gateway.gateway_id = deviceId;
+    String deviceName = (String) discoveryEvent.system.ancillary.get("device-name");
     return Map.entry(deviceName, metadata);
   }
 
