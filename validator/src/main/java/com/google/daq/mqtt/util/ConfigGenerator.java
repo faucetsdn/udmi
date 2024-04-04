@@ -189,6 +189,9 @@ public class ConfigGenerator {
     return getGatewayId() != null;
   }
 
+  /**
+   * Get a list of proxy devices as per configuration.
+   */
   public List<String> getProxyDevicesList() {
     List<String> proxyIds = ofNullable(catchToNull(() -> metadata.gateway.proxy_ids)).orElse(
         ImmutableList.of());
