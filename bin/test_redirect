@@ -119,7 +119,7 @@ log bin/reset_config $site_path $project_spec $device_id restart_config.json
 bin/reset_config $site_path $project_spec $device_id restart_config.json
 
 log And wait a stupid long time to test error recovery...
-sleep 80
+sleep 120
 
 tail out/pubber.log.2
 
@@ -134,7 +134,9 @@ log bin/reset_config $site_path $project_spec $device_id shutdown_config.json
 bin/reset_config $site_path $project_spec $device_id shutdown_config.json
 
 log And let it settle for last start...
-sleep 20
+sleep 30
+
+tail out/pubber.log.2
 
 restarts=$(jq .restart_count $work_base/persistent_data.json)
 [[ $restarts -eq 2 ]] || fail Shutdown restart count incorrect, was $restarts expected 2
