@@ -128,7 +128,6 @@ public class MappingAgent {
       }
     });
 
-    System.err.printf("Augmenting gateway %s metadata file with new proxyIds%n", deviceId);
     List<String> proxyIds = entries.stream().map(Entry::getKey).toList();
     File gatewayMetadata = siteModel.getDeviceFile(deviceId, METADATA_JSON);
     Metadata metadata = loadFileStrictRequired(Metadata.class, gatewayMetadata);
