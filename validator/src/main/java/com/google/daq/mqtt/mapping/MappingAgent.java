@@ -5,6 +5,7 @@ import static com.google.daq.mqtt.registrar.Registrar.METADATA_JSON;
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_VERSION;
 import static com.google.udmi.util.Common.removeNextArg;
 import static com.google.udmi.util.JsonUtil.isoConvert;
+import static com.google.udmi.util.JsonUtil.loadFileStrict;
 import static com.google.udmi.util.JsonUtil.loadFileStrictRequired;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.writeFile;
@@ -44,6 +45,7 @@ import udmi.schema.SystemModel;
  */
 public class MappingAgent {
 
+  private static final String NO_DISCOVERY = "not_discovered";
   private final ExecutionConfiguration executionConfiguration;
   private final String deviceId;
   private CloudIotManager cloudIotManager;
@@ -113,7 +115,8 @@ public class MappingAgent {
     if (extras == null || extras.length == 0) {
       throw new RuntimeException("No extras found to reconcile");
     }
-    List<Entry<String, Metadata>> entries = Arrays.stream(extras).map(this::convertExtra).toList();
+    List<Entry<String, Metadata>> entries = Arrays.stream(extras).map(this::convertExtra)
+        .filter(entry -> !entry.getKey().equals(NO_DISCOVERY)).toList();
     entries.forEach(entry -> {
       File metadataFile = siteModel.getDeviceFile(entry.getKey(), METADATA_JSON);
       if (metadataFile.exists()) {
@@ -141,8 +144,11 @@ public class MappingAgent {
 
   @SuppressWarnings("unchecked")
   private Entry<String, Metadata> convertExtra(File file) {
-    DiscoveryEvent discoveryEvent = loadFileStrictRequired(DiscoveryEvent.class,
+    DiscoveryEvent discoveryEvent = loadFileStrict(DiscoveryEvent.class,
         new File(file, "cloud_metadata/udmi_discovered_with.json"));
+    if (discoveryEvent == null) {
+      return Map.entry(NO_DISCOVERY, new Metadata());
+    }
     String deviceName = (String) discoveryEvent.system.ancillary.get("device-name");
     Metadata metadata = new Metadata();
     metadata.version = UDMI_VERSION;
