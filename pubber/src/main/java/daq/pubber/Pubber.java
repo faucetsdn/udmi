@@ -22,7 +22,9 @@ import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.GeneralUtils.toJsonFile;
 import static com.google.udmi.util.GeneralUtils.toJsonString;
 import static com.google.udmi.util.JsonUtil.isoConvert;
+import static com.google.udmi.util.JsonUtil.parseJson;
 import static com.google.udmi.util.JsonUtil.safeSleep;
+import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static daq.pubber.MqttDevice.CONFIG_TOPIC;
 import static daq.pubber.MqttDevice.ERRORS_TOPIC;
@@ -434,7 +436,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
   private void writePersistentStore() {
     checkState(persistentData != null, "persistent data not defined");
     toJsonFile(getPersistentStore(), persistentData);
-    warn("Updating persistent store: " + stringifyTerse(persistentData));
+    warn("Updating persistent store:\n" + stringify(persistentData));
     deviceManager.setPersistentData(persistentData);
   }
 
@@ -1032,7 +1034,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
       }
     }
 
-    info("New config blob endpoint detected");
+    info("New config blob endpoint detected:\n" + stringify(parseJson(extractedSignature)));
 
     try {
       attemptedEndpoint = extractedSignature;
@@ -1123,7 +1125,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
     } catch (Exception e) {
       EndpointConfiguration endpointConfiguration = new EndpointConfiguration();
       endpointConfiguration.error = e.toString();
-      return JsonUtil.stringify(endpointConfiguration);
+      return stringify(endpointConfiguration);
     }
   }
 

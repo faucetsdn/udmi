@@ -51,7 +51,6 @@ rm -f $FAILURES
 for subset in $subsets; do
     echo '##########################################' Testing site $subset
     site_dir=$sitesdir/$subset
-    [[ -x $site_dir/cleanup_site ]] && echo Running cleanup_site in $site_dir && (cd $site_dir; ./cleanup_site)
     devicesdir=$site_dir/devices
     rm -rf $devicesdir/*/out
     mkdir -p $devicesdir

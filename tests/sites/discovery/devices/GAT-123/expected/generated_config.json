@@ -5,7 +5,9 @@
     "min_loglevel": 300,
     "metrics_rate_sec": 10
   },
-  "gateway": { },
+  "gateway": {
+    "proxy_ids": [ ]
+  },
   "pointset": {
     "points": {
       "globulating_globar": {
