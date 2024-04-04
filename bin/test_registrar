@@ -37,7 +37,7 @@ fi
 echo '###################################' end test section generated_config: $exit_status
 
 # Test site_metadata settings for system.location.site.
-site=$(jq -r .system.location.site < ${TEST_SITE}/site_metadata.json)
+site=$(jq -r .system.location.site < ${TEST_SITE}/site_defaults.json)
 
 function check_norm {
     for name in ${device_files}; do

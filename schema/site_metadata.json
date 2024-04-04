@@ -19,6 +19,7 @@
     "version": {
       "description": "Version of the UDMI schema",
       "type": "string"
+      
     },
     "site_id": {
       "description": "Identifier for the site or building",
@@ -51,4 +52,4 @@
     }
   }
     
-}
+}.
