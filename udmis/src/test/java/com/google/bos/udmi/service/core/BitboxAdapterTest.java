@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.google.common.collect.ImmutableMap;
 import com.google.udmi.util.JsonUtil;
 import java.time.Instant;
+import java.util.Date;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import udmi.schema.Common.ProtocolFamily;
@@ -40,6 +41,7 @@ public class BitboxAdapterTest extends ProcessorTestBase {
     envelope.deviceRegistryId = TEST_REGISTRY;
     envelope.deviceId = TEST_GATEWAY;
     envelope.rawFolder = "discover"; // NB: not 'discovery' (ending in 'y')
+    envelope.publishTime = new Date();
     return envelope;
   }
 

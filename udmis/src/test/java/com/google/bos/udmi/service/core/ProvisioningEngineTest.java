@@ -44,8 +44,7 @@ public class ProvisioningEngineTest extends ProcessorTestBase {
   private static final Duration PROVISIONING_WINDOW = Duration.ofMinutes(5);
 
   private static Map<String, String> getGatewayMetadata() {
-    return ImmutableMap.of(UDMI_PROVISION_GENERATION,
-        isoConvert(Instant.now().plus(PROVISIONING_WINDOW)));
+    return ImmutableMap.of(UDMI_PROVISION_GENERATION, isoConvert(SCAN_GENERATION));
   }
 
   @NotNull
