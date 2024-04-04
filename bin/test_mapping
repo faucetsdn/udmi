@@ -9,5 +9,6 @@ cd tests/sites/discovery
 
 rm -rf reflector
 cp -a $UDMI_ROOT/sites/udmi_site_model/reflector/ .
+cp -a $UDMI_ROOT/sites/udmi_site_model/devices/GAT-123/ec* devices/GAT-123/
 
 echo Done with mapping test setup.
