@@ -1,9 +1,13 @@
 #!/bin/bash -e
 
-UDMI_ROOT=$(dirname $0)/..
+UDMI_ROOT=$(realpath $(dirname $0)/..)
 source $UDMI_ROOT/etc/shell_common.sh
 
-rm -rf tests/sites/discovery/reflector
-cp -a sites/udmi_site_model/reflector/ tests/sites/discovery/
+cd tests/sites/discovery
+
+./cleanup_site
+
+rm -rf reflector
+cp -a $UDMI_ROOT/sites/udmi_site_model/reflector/ .
 
 echo Done with mapping test setup.
