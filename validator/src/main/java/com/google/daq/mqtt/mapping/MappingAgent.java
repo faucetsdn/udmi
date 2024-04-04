@@ -1,12 +1,18 @@
 package com.google.daq.mqtt.mapping;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.daq.mqtt.registrar.Registrar.METADATA_JSON;
+import static com.google.daq.mqtt.util.ConfigUtil.UDMI_VERSION;
 import static com.google.udmi.util.Common.removeNextArg;
 import static com.google.udmi.util.JsonUtil.isoConvert;
+import static com.google.udmi.util.JsonUtil.loadFileStrictRequired;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static com.google.udmi.util.JsonUtil.writeFile;
 import static com.google.udmi.util.MetadataMapKeys.UDMI_PROVISION_GENERATION;
 import static java.util.Objects.requireNonNull;
+import static java.util.Optional.ofNullable;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ConfigUtil;
@@ -17,13 +23,21 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import udmi.schema.CloudModel;
 import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.DiscoveryConfig;
+import udmi.schema.DiscoveryEvent;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.ExecutionConfiguration;
 import udmi.schema.FamilyDiscoveryConfig;
+import udmi.schema.GatewayModel;
+import udmi.schema.Metadata;
+import udmi.schema.SystemModel;
 
 /**
  * Agent that maps discovery results to mapping requests.
@@ -94,7 +108,49 @@ public class MappingAgent {
   }
 
   private void reconcileDiscovery() {
-    throw new RuntimeException("Not yet implemented");
+    File extrasDir = siteModel.getExtrasDir();
+    File[] extras = extrasDir.listFiles();
+    if (extras == null || extras.length == 0) {
+      throw new RuntimeException("No extras found to reconcile");
+    }
+    List<Entry<String, Metadata>> entries = Arrays.stream(extras).map(this::convertExtra).toList();
+    entries.forEach(entry -> {
+      File metadataFile = siteModel.getDeviceFile(entry.getKey(), METADATA_JSON);
+      if (metadataFile.exists()) {
+        System.err.println("Skipping existing device file " + metadataFile);
+      } else {
+        System.err.println("Writing device metadata file " + metadataFile);
+        metadataFile.getParentFile().mkdirs();
+        JsonUtil.writeFile(entry.getValue(), metadataFile);
+      }
+    });
+
+    System.err.printf("Augmenting gateway %s metadata file with new proxyIds%n", deviceId);
+    List<String> proxyIds = entries.stream().map(Entry::getKey).toList();
+    File gatewayMetadata = siteModel.getDeviceFile(deviceId, METADATA_JSON);
+    Metadata metadata = loadFileStrictRequired(Metadata.class, gatewayMetadata);
+    List<String> idList = ofNullable(metadata.gateway.proxy_ids).orElse(ImmutableList.of());
+    Set<String> idSet = new HashSet<>(idList);
+    idSet.addAll(proxyIds);
+    idSet.remove(deviceId);
+    metadata.gateway.proxy_ids = new ArrayList<>(idSet);
+    System.err.printf("Augmenting gateway %s metadata file, %d -> %d%n", deviceId, idList.size(),
+        idSet.size());
+    writeFile(metadata, gatewayMetadata);
+  }
+
+  @SuppressWarnings("unchecked")
+  private Entry<String, Metadata> convertExtra(File file) {
+    DiscoveryEvent discoveryEvent = loadFileStrictRequired(DiscoveryEvent.class,
+        new File(file, "cloud_metadata/udmi_discovered_with.json"));
+    String deviceName = (String) discoveryEvent.system.ancillary.get("device-name");
+    Metadata metadata = new Metadata();
+    metadata.version = UDMI_VERSION;
+    metadata.timestamp = new Date();
+    metadata.system = new SystemModel();
+    metadata.gateway = new GatewayModel();
+    metadata.gateway.gateway_id = deviceId;
+    return Map.entry(deviceName, metadata);
   }
 
   private void initialize() {

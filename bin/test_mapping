@@ -7,8 +7,10 @@ cd tests/sites/discovery
 
 ./cleanup_site
 
-rm -rf reflector
+rm -rf reflector devices/AHU-1 devices/AHU-22
 cp -a $UDMI_ROOT/sites/udmi_site_model/reflector/ .
 cp -a $UDMI_ROOT/sites/udmi_site_model/devices/GAT-123/ec* devices/GAT-123/
+
+jq .gateway.proxy_ids=[] devices/GAT-123/metadata.json | sponge devices/GAT-123/metadata.json
 
 echo Done with mapping test setup.
