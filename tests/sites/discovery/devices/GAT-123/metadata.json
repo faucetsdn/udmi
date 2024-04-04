@@ -20,7 +20,7 @@
     "min_loglevel": 300
   },
   "gateway": {
-    "proxy_ids": [ ]
+    "proxy_ids": []
   },
   "pointset": {
     "points": {

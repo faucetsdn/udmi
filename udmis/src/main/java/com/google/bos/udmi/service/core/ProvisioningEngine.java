@@ -73,11 +73,9 @@ public class ProvisioningEngine extends ProcessorBase {
     return scanAgent.computeIfAbsent(gatewayKey, key -> new CloudModel());
   }
 
-  private synchronized Map<String, CloudModel> refreshModelDevices(String deviceRegistryId, String gatewayId,
-      Date generation) {
+  private synchronized Map<String, CloudModel> refreshModelDevices(String deviceRegistryId,
+      String gatewayId, Date generation) {
     CloudModel cloudModel = getCloudModel(deviceRegistryId, gatewayId);
-    debug(format("Initial check %s vs. %s", isoConvert(generation),
-        isoConvert(cloudModel.timestamp)));
     if (!generation.equals(cloudModel.timestamp)) {
       cloudModel.timestamp = generation;
       cloudModel.device_ids = null;
