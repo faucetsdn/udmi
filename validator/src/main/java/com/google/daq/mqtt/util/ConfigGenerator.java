@@ -4,7 +4,6 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.util.NetworkFamily.NAMED_FAMILIES;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
-import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThrow;
@@ -14,6 +13,7 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
+import com.google.common.collect.ImmutableList;
 import java.util.HashMap;
 import java.util.List;
 import org.jetbrains.annotations.NotNull;
@@ -182,8 +182,7 @@ public class ConfigGenerator {
   public boolean isGateway() {
     return metadata != null
         && metadata.gateway != null
-        && metadata.gateway.proxy_ids != null
-        && !metadata.gateway.proxy_ids.isEmpty();
+        && metadata.gateway.gateway_id == null;
   }
 
   public boolean isProxied() {
@@ -191,7 +190,8 @@ public class ConfigGenerator {
   }
 
   public List<String> getProxyDevicesList() {
-    return isGateway() ? metadata.gateway.proxy_ids : null;
+    List<String> proxyIds = ofNullable(metadata.gateway.proxy_ids).orElse(ImmutableList.of());
+    return isGateway() ? proxyIds : null;
   }
 
   public String getUpdatedTimestamp() {
