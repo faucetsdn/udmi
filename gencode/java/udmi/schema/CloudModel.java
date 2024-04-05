@@ -28,6 +28,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
     "auth_type",
     "device_key",
     "resource_type",
+    "config",
     "blocked",
     "detail",
     "credentials",
@@ -80,6 +81,15 @@ public class CloudModel {
     @JsonProperty("resource_type")
     @JsonPropertyDescription("The resource type of this model")
     public CloudModel.Resource_type resource_type;
+    /**
+     * Cloud Config Model
+     * <p>
+     * Information specific to how the device communicates with the cloud.
+     * 
+     */
+    @JsonProperty("config")
+    @JsonPropertyDescription("Information specific to how the device communicates with the cloud.")
+    public CloudConfigModel config;
     @JsonProperty("blocked")
     public Boolean blocked;
     @JsonProperty("detail")
@@ -130,6 +140,7 @@ public class CloudModel {
         result = ((result* 31)+((this.last_error_time == null)? 0 :this.last_error_time.hashCode()));
         result = ((result* 31)+((this.detail == null)? 0 :this.detail.hashCode()));
         result = ((result* 31)+((this.device_ids == null)? 0 :this.device_ids.hashCode()));
+        result = ((result* 31)+((this.config == null)? 0 :this.config.hashCode()));
         result = ((result* 31)+((this.last_config_ack == null)? 0 :this.last_config_ack.hashCode()));
         result = ((result* 31)+((this.operation == null)? 0 :this.operation.hashCode()));
         result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));

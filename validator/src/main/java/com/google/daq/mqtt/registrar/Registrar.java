@@ -885,6 +885,7 @@ public class Registrar {
     }
   }
 
+  //TODO this is now broken if device uses a file rather than automatically generated config
   private void sendUpdateMessage(LocalDevice localDevice, SubFolder subFolder) {
     sendUpdateMessage(localDevice, MODEL_SUB_TYPE, subFolder, localDevice.getMetadata());
     sendUpdateMessage(localDevice, CONFIG_SUB_TYPE, subFolder, localDevice.deviceConfigObject());
@@ -1067,7 +1068,7 @@ public class Registrar {
   private void validateExpected(Map<String, LocalDevice> localDevices) {
     for (LocalDevice device : localDevices.values()) {
       try {
-        device.validateExpected();
+        device.validateExpectedFiles();
       } catch (Exception e) {
         device.captureError(LocalDevice.EXCEPTION_FILES, e);
       }
@@ -1122,6 +1123,13 @@ public class Registrar {
       } catch (Exception e) {
         localDevice.captureError(LocalDevice.EXCEPTION_CREDENTIALS, e);
       }
+
+      try {
+        localDevice.loadConfig();
+      } catch (Exception e) {
+        localDevice.captureError(LocalDevice.EXCEPTION_CONFIG, e);
+      }
+
       if (cloudIotManager != null) {
         try {
           localDevice.validateEnvelope(
