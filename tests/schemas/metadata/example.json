@@ -7,6 +7,7 @@
       "site": "US-SFO-XYY",
       "section": "NW-2F",
       "floor": "2",
+      "room": "2F26",
       "position": {
         "x": 10,
         "y": 20,
