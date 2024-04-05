@@ -33,29 +33,29 @@ public class LocalDeviceTest {
   }
 
   @Test
-  public void getMergedSiteMetadata() {
-    Metadata siteMetadata = getSiteMetadata();
-    Metadata augmentedData = GeneralUtils.deepCopy(siteMetadata);
+  public void getMergedMetadata() {
+    Metadata siteDefaults = getSiteDefaults();
+    Metadata augmentedData = GeneralUtils.deepCopy(siteDefaults);
     Metadata toMerge = new Metadata();
     toMerge.timestamp = new Date(FAKE_TIME + 1);
     augmentedData.timestamp = toMerge.timestamp;
     toMerge.description = "testing";
     augmentedData.description = toMerge.description;
-    LocalDevice localDevice = getTestInstance(siteMetadata);
+    LocalDevice localDevice = getTestInstance(siteDefaults);
     Metadata result = convertTo(Metadata.class,
         localDevice.getMergedMetadata(convertTo(JsonNode.class, toMerge)));
     assertEquals("merged results with no side defaults", stringify(augmentedData),
         stringify(result));
   }
 
-  private Metadata getSiteMetadata() {
+  private Metadata getSiteDefaults() {
     Metadata metadata = new Metadata();
     metadata.timestamp = new Date(FAKE_TIME);
     metadata.version = "testing";
     return metadata;
   }
 
-  private LocalDevice getTestInstance(Metadata siteMetadata) {
-    return new LocalDevice(null, null, DEVICE_ID, SCHEMAS, null, siteMetadata);
+  private LocalDevice getTestInstance(Metadata siteDefaults) {
+    return new LocalDevice(null, null, DEVICE_ID, SCHEMAS, null, siteDefaults);
   }
 }

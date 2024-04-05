@@ -176,7 +176,7 @@ class LocalDevice {
   private final ExceptionMap exceptionMap;
   private final String generation;
   private final List<Credential> deviceCredentials = new ArrayList<>();
-  private final Map<String, Object> siteMetadata;
+  private final Map<String, Object> siteDefaults;
   private final boolean validateMetadata;
   private final ConfigGenerator config;
   private final DeviceExceptionManager exceptionManager;
@@ -190,14 +190,14 @@ class LocalDevice {
 
   LocalDevice(
       File siteDir, File devicesDir, String deviceId, Map<String, JsonSchema> schemas,
-      String generation, Metadata siteMetadata, boolean validateMetadata) {
+      String generation, Metadata siteDefaults, boolean validateMetadata) {
     try {
       this.deviceId = deviceId;
       this.schemas = schemas;
       this.generation = generation;
       this.siteDir = siteDir;
       this.validateMetadata = validateMetadata;
-      this.siteMetadata = siteMetadata == null ? null : JsonUtil.asMap(siteMetadata);
+      this.siteDefaults = siteDefaults == null ? null : JsonUtil.asMap(siteDefaults);
       exceptionMap = new ExceptionMap("Exceptions for " + deviceId);
       deviceDir = new File(devicesDir, deviceId);
       outDir = new File(deviceDir, OUT_DIR);
@@ -212,8 +212,8 @@ class LocalDevice {
 
   LocalDevice(
       File siteDir, File devicesDir, String deviceId, Map<String, JsonSchema> schemas,
-      String generation, Metadata siteMetadata) {
-    this(siteDir, devicesDir, deviceId, schemas, generation, siteMetadata, false);
+      String generation, Metadata siteDefaults) {
+    this(siteDir, devicesDir, deviceId, schemas, generation, siteDefaults, false);
   }
 
   public static void parseMetadataValidateProcessingReport(ProcessingReport report)
@@ -305,10 +305,10 @@ class LocalDevice {
   JsonNode getMergedMetadata(JsonNode instance) {
     try {
       String intermediary = JsonUtil.stringify(instance);
-      if (siteMetadata == null) {
+      if (siteDefaults == null) {
         return instance;
       } else {
-        Map<String, Object> mergedMetadata = GeneralUtils.deepCopy(siteMetadata);
+        Map<String, Object> mergedMetadata = GeneralUtils.deepCopy(siteDefaults);
         GeneralUtils.mergeObject(mergedMetadata, asMap(intermediary));
         return JsonUtil.convertTo(JsonNode.class, mergedMetadata);
       }
