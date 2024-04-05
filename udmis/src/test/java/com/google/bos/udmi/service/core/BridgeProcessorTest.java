@@ -12,7 +12,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.junit.jupiter.api.Test;
 import udmi.schema.EndpointConfiguration;
-import udmi.schema.EndpointConfiguration.Protocol;
 
 class BridgeProcessorTest extends MessageTestCore {
 

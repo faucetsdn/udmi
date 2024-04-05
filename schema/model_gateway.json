@@ -24,9 +24,5 @@
       },
       "examples": [["AHU-22"]]
     }
-  },
-  "oneOf": [
-    { "required": ["gateway_id"] },
-    { "required": ["proxy_ids"] }
-  ]
+  }
 }

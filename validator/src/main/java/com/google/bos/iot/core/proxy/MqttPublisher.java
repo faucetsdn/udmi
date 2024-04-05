@@ -6,6 +6,7 @@ import static com.google.udmi.util.Common.DEFAULT_REGION;
 import static com.google.udmi.util.GeneralUtils.catchOrElse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.sha256;
 import static com.google.udmi.util.SiteModel.DEFAULT_CLEARBLADE_HOSTNAME;
 import static com.google.udmi.util.SiteModel.DEFAULT_GBOS_HOSTNAME;
 import static java.lang.String.format;
@@ -159,8 +160,9 @@ public class MqttPublisher implements MessagePublisher {
     final byte[] keyBytes;
     checkNotNull(iotConfig.key_file, "missing key file in config");
     try {
-      System.err.println("Loading key bytes from " + iotConfig.key_file);
       keyBytes = getFileBytes(iotConfig.key_file);
+      System.err.printf("Loaded key %s as sha256 %s%n", iotConfig.key_file,
+          sha256(keyBytes).substring(0, 16));
     } catch (Exception e) {
       throw new RuntimeException(
           "While loading key file " + new File(iotConfig.key_file).getAbsolutePath(), e);
@@ -173,6 +175,15 @@ public class MqttPublisher implements MessagePublisher {
     return mqttPublisher;
   }
 
+  private static byte[] getFileBytes(String dataFile) {
+    Path dataPath = Paths.get(dataFile);
+    try {
+      return Files.readAllBytes(dataPath);
+    } catch (Exception e) {
+      throw new RuntimeException("While getting data from " + dataPath.toAbsolutePath(), e);
+    }
+  }
+
   @Override
   public Credential getCredential() {
     Credential credential = new Credential();
@@ -183,15 +194,6 @@ public class MqttPublisher implements MessagePublisher {
 
   private String getReflectorPublicKeyFile() {
     return new File(siteModel, REFLECTOR_PUBLIC_KEY).getAbsolutePath();
-  }
-
-  private static byte[] getFileBytes(String dataFile) {
-    Path dataPath = Paths.get(dataFile);
-    try {
-      return Files.readAllBytes(dataPath);
-    } catch (Exception e) {
-      throw new RuntimeException("While getting data from " + dataPath.toAbsolutePath(), e);
-    }
   }
 
   private ScheduledFuture<?> scheduleTickler() {
