@@ -4,11 +4,11 @@ ROOT_DIR=$(dirname $0)/..
 cd $ROOT_DIR
 
 if [[ $# != 1 ]]; then
-    echo Usage: $0 PROJECT_ID
+    echo Usage: $0 PROJECT_SPEC
     false
 fi
 
-project_id=$1
+project_spec=$1
 shift
 
 function log {
@@ -20,7 +20,9 @@ function fail {
     false
 }
 
-log 'Using target project:' $project_id
+log 'Using target project spec:' $project_spec
+project_id=${project_spec#//*/}
+project_id=${project_id%/*}
 
 site_path=sites/udmi_site_model
 device_id=AHU-1 # Static device for testing. Needs to be different than other tests scripts so as not to conflict during CI.
@@ -43,10 +45,10 @@ log Killing running pubber instances...
 ps ax | fgrep pubber | fgrep java | awk '{print $1}' | xargs kill || true
 
 bin/registrar $site_path
-bin/reset_config $site_path $project_id $device_id
+bin/reset_config $site_path $project_spec $device_id
 
 log Running pubber with redirectRegistry on timeout
-timeout 1m unbuffer bin/pubber $site_path $project_id $device_id $serial_no redirectRegistry=missing > $PUBBER_LOG.1 2>&1 || true
+timeout 1m unbuffer bin/pubber $site_path $project_spec $device_id $serial_no redirectRegistry=missing > $PUBBER_LOG.1 2>&1 || true
 
 log Checks that a redirect happened and failed...
 egrep -q 'registries/(.*~)?ZZ-TRI-FECTA(_.*)?/devices' $PUBBER_LOG.1 || bin/fail no ZZ-TRI-FECTA registry reference
@@ -55,7 +57,7 @@ fgrep -q 'While waiting for connection start: Connection error' $PUBBER_LOG.1 ||
 fgrep -q 'Endpoint connection restored to last working endpoint' $PUBBER_LOG.1 || bin/fail no restore log message
 
 log Done with timeout, running pubber in background...
-bin/pubber $site_path $project_id $device_id $serial_no > $PUBBER_LOG.2 2>&1 &
+bin/pubber $site_path $project_spec $device_id $serial_no > $PUBBER_LOG.2 2>&1 &
 
 # Wait for initial connection, then reset config to redirect
 sleep 20
@@ -103,8 +105,8 @@ jq '.system.operation.mode = "restart"' $out_base/redirect_config.json > $out_ba
 log New redirection config:
 cat /tmp/${device_id}_config.json
 
-log bin/reset_config $site_path $project_id $device_id redirect_config.json
-bin/reset_config $site_path $project_id $device_id redirect_config.json
+log bin/reset_config $site_path $project_spec $device_id redirect_config.json
+bin/reset_config $site_path $project_spec $device_id redirect_config.json
 
 log Let pubber react to the new configuration...
 sleep 20
@@ -113,11 +115,14 @@ restarts=$(jq .restart_count $work_base/persistent_data.json)
 [[ $restarts -eq 1 ]] || fail Initial restart count incorrect, was $restarts expected 1
 
 log Restart the system...
-log bin/reset_config $site_path $project_id $device_id restart_config.json
-bin/reset_config $site_path $project_id $device_id restart_config.json
+log bin/reset_config $site_path $project_spec $device_id restart_config.json
+bin/reset_config $site_path $project_spec $device_id restart_config.json
 
-log And let it settle for restart...
-sleep 20
+log And wait a stupid long time to test error recovery...
+sleep 120
+
+tail out/pubber.log.2
+
 restarts=$(jq .restart_count $work_base/persistent_data.json)
 [[ $restarts -eq 2 ]] || fail Reset restart count incorrect, was $restarts expected 2
 
@@ -125,11 +130,13 @@ restarts=$(jq .restart_count $work_base/persistent_data.json)
 now_date=$(python3 -c 'import datetime; print(datetime.datetime.utcnow().isoformat() + "Z")')
 log Setting last_start time to $now_date for pubber shutdown...
 jq ".system.operation.last_start = \"$now_date\"" $out_base/redirect_config.json > $out_base/shutdown_config.json
-log bin/reset_config $site_path $project_id $device_id shutdown_config.json
-bin/reset_config $site_path $project_id $device_id shutdown_config.json
+log bin/reset_config $site_path $project_spec $device_id shutdown_config.json
+bin/reset_config $site_path $project_spec $device_id shutdown_config.json
 
-log And let it settle for last start...
-sleep 30
+log And let it settle for last start termination...
+sleep 120
+
+tail out/pubber.log.2
 
 restarts=$(jq .restart_count $work_base/persistent_data.json)
 [[ $restarts -eq 2 ]] || fail Shutdown restart count incorrect, was $restarts expected 2

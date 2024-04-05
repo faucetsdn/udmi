@@ -1,0 +1,7 @@
+Credential
+java.lang.RuntimeException: While loading credentials for local device GAT-123
+	REDACTED
+Caused by: java.lang.RuntimeException: Credential cloud.auth_type definition missing
+Initializing
+java.lang.RuntimeException: Invalid auth type null
+	REDACTED

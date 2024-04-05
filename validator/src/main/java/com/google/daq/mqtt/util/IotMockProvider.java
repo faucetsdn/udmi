@@ -18,6 +18,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import udmi.schema.CloudModel;
+import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Metadata;
 import udmi.schema.SetupUdmiConfig;
 
@@ -45,7 +46,7 @@ public class IotMockProvider implements IotProvider {
         cloudRegion);
   }
 
-  private void mockAction(ActionType action, String deviceId, Object data) {
+  private void mockAction(ActionType action, String deviceId, Object data, String modifier) {
     MockAction mockAction = new MockAction();
     mockAction.client = client;
     mockAction.action = action;
@@ -55,21 +56,21 @@ public class IotMockProvider implements IotProvider {
   }
 
   @Override
-  public void updateConfig(String deviceId, String config) {
+  public void updateConfig(String deviceId, SubFolder subFolder, String config) {
     checkArgument(cloudDevices.containsKey(deviceId), "missing device");
-    mockAction(CONFIG_DEVICE_ACTION, deviceId, config);
+    mockAction(CONFIG_DEVICE_ACTION, deviceId, config, subFolder.value());
   }
 
   @Override
   public void setBlocked(String deviceId, boolean blocked) {
-    mockAction(BLOCK_DEVICE_ACTION, deviceId, blocked);
+    mockAction(BLOCK_DEVICE_ACTION, deviceId, blocked, null);
   }
 
   @Override
   public void updateDevice(String deviceId, CloudModel device) {
     checkArgument(cloudDevices.containsKey(deviceId), "missing device");
     device.num_id = populateCloudModel(deviceId).num_id;
-    mockAction(UPDATE_DEVICE_ACTION, deviceId, device);
+    mockAction(UPDATE_DEVICE_ACTION, deviceId, device, null);
   }
 
   @Override
@@ -78,14 +79,14 @@ public class IotMockProvider implements IotProvider {
     CloudModel cloudModel = populateCloudModel(deviceId);
     device.num_id = cloudModel.num_id;
     cloudModel.resource_type = device.resource_type;
-    mockAction(CREATE_DEVICE_ACTION, deviceId, device);
+    mockAction(CREATE_DEVICE_ACTION, deviceId, device, null);
   }
 
   @Override
   public void deleteDevice(String deviceId) {
     checkArgument(cloudDevices.containsKey(deviceId), "missing device");
     cloudDevices.remove(deviceId);
-    mockAction(DELETE_DEVICE_ACTION, deviceId, null);
+    mockAction(DELETE_DEVICE_ACTION, deviceId, null, null);
   }
 
   @Override
@@ -107,7 +108,7 @@ public class IotMockProvider implements IotProvider {
     checkArgument(cloudDevices.containsKey(proxyDeviceId), "missing proxy device");
     checkArgument(cloudDevices.containsKey(gatewayDeviceId), "missing gateway device");
     checkArgument(populateCloudModel(gatewayDeviceId).resource_type == GATEWAY, "not a gateway");
-    mockAction(BIND_DEVICE_ACTION, proxyDeviceId, gatewayDeviceId);
+    mockAction(BIND_DEVICE_ACTION, proxyDeviceId, gatewayDeviceId, null);
   }
 
   @Override
@@ -173,6 +174,7 @@ public class IotMockProvider implements IotProvider {
     public String client;
     public ActionType action;
     public String deviceId;
+    public String modifer;
     public Object data;
   }
 }

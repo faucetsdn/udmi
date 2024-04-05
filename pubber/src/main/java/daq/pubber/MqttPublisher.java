@@ -62,6 +62,8 @@ import udmi.schema.PubberConfiguration;
  */
 public class MqttPublisher implements Publisher {
 
+  public static final String EMPTY_STRING = "";
+  static final int DEFAULT_CONFIG_WAIT_SEC = 10;
   private static final String TOPIC_PREFIX_FMT = "/devices/%s";
   private static final Logger LOG = LoggerFactory.getLogger(MqttPublisher.class);
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
@@ -70,9 +72,8 @@ public class MqttPublisher implements Publisher {
       .setDateFormat(new ISO8601DateFormat())
       .registerModule(NanSerializer.TO_NAN)
       .setSerializationInclusion(JsonInclude.Include.NON_NULL);
-
   // Indicate if this message should be a MQTT 'retained' message.
-  private static final boolean SHOULD_RETAIN = false;
+  private static final boolean DO_NOT_RETAIN = false;
   private static final String UNUSED_ACCOUNT_NAME = "unused";
   private static final int INITIALIZE_TIME_MS = 20000;
   private static final String BROKER_URL_FORMAT = "%s://%s:%s";
@@ -81,12 +82,11 @@ public class MqttPublisher implements Publisher {
   private static final int TOKEN_EXPIRY_MINUTES = 60;
   private static final int QOS_AT_MOST_ONCE = 0;
   private static final int QOS_AT_LEAST_ONCE = 1;
-  static final int DEFAULT_CONFIG_WAIT_SEC = 10;
   private static final String EVENT_MARK_PREFIX = "events/";
   private static final Map<String, AtomicInteger> EVENT_SERIAL = new HashMap<>();
   private static final String GCP_CLIENT_PREFIX = "projects/";
-  public static final String EMPTY_STRING = "";
   private static final Integer DEFAULT_MQTT_PORT = 8883;
+  private static final long ATTACH_DELAY_MS = 1000;
 
   private final Semaphore connectionLock = new Semaphore(1);
 
@@ -281,21 +281,31 @@ public class MqttPublisher implements Publisher {
     }
   }
 
-  private MqttClient newBoundClient(String deviceId) {
+  private MqttClient newProxyClient(String deviceId) {
+    String gatewayId = getGatewayId(deviceId);
+    debug(format("Connecting device %s through gateway %s", deviceId, gatewayId));
+    final MqttClient mqttClient = getConnectedClient(gatewayId);
+    long timeToWait = mqttClient.getTimeToWait();
     try {
-      String gatewayId = getGatewayId(deviceId);
-      debug(format("Connecting device %s through gateway %s", deviceId, gatewayId));
-      final MqttClient mqttClient = getConnectedClient(gatewayId);
       startupLatchWait(connectionLatch, "gateway startup exchange");
       String topic = getMessageTopic(deviceId, MqttDevice.ATTACH_TOPIC);
       info("Publishing attach message " + topic);
-      mqttClient.publish(topic, EMPTY_STRING.getBytes(StandardCharsets.UTF_8), QOS_AT_LEAST_ONCE,
-          SHOULD_RETAIN);
+      byte[] mqttMessage = EMPTY_STRING.getBytes(StandardCharsets.UTF_8);
+      mqttClient.setTimeToWait(ATTACH_DELAY_MS);
+      mqttClientPublish(mqttClient, topic, mqttMessage);
       subscribeToUpdates(mqttClient, deviceId);
+      mqttClient.setTimeToWait(timeToWait);
       return mqttClient;
     } catch (Exception e) {
       throw new RuntimeException("While binding client " + deviceId, e);
+    } finally {
+      mqttClient.setTimeToWait(timeToWait);
     }
+  }
+
+  private void mqttClientPublish(MqttClient mqttClient, String topic, byte[] mqttMessage)
+      throws MqttException {
+    mqttClient.publish(topic, mqttMessage, QOS_AT_LEAST_ONCE, DO_NOT_RETAIN);
   }
 
   private void startupLatchWait(CountDownLatch gatewayLatch, String designator) {
@@ -329,7 +339,7 @@ public class MqttPublisher implements Publisher {
     return new MqttClient(brokerUrl, clientId, new MemoryPersistence());
   }
 
-  private MqttClient connectMqttClient(String deviceId) {
+  private MqttClient newDirectClient(String deviceId) {
     try {
       if (!connectionLock.tryAcquire(INITIALIZE_TIME_MS, TimeUnit.MILLISECONDS)) {
         throw new RuntimeException("Timeout waiting for connection lock");
@@ -510,7 +520,7 @@ public class MqttPublisher implements Publisher {
   private void sendMessage(String deviceId, String mqttTopic,
       byte[] mqttMessage) throws Exception {
     MqttClient connectedClient = getActiveClient(deviceId);
-    connectedClient.publish(mqttTopic, mqttMessage, QOS_AT_LEAST_ONCE, SHOULD_RETAIN);
+    mqttClientPublish(connectedClient, mqttTopic, mqttMessage);
     publishCounter.incrementAndGet();
   }
 
@@ -557,9 +567,9 @@ public class MqttPublisher implements Publisher {
     try {
       synchronized (mqttClients) {
         if (isProxyDevice(deviceId)) {
-          return mqttClients.computeIfAbsent(deviceId, this::newBoundClient);
+          return mqttClients.computeIfAbsent(deviceId, this::newProxyClient);
         }
-        return mqttClients.computeIfAbsent(deviceId, this::connectMqttClient);
+        return mqttClients.computeIfAbsent(deviceId, this::newDirectClient);
       }
     } catch (Exception e) {
       throw new RuntimeException("While getting mqtt client " + deviceId + ": " + e, e);
@@ -600,14 +610,14 @@ public class MqttPublisher implements Publisher {
     /**
      * Exception encountered during publishing a message.
      *
-     * @param message Error message
+     * @param message  Error message
      * @param deviceId Target deviceId
-     * @param type    Type of message being published
-     * @param phase   Which phase of execution
-     * @param cause   Cause of the exception
+     * @param type     Type of message being published
+     * @param phase    Which phase of execution
+     * @param cause    Cause of the exception
      */
     public PublisherException(String message, String deviceId, String type, String phase,
-            Throwable cause) {
+        Throwable cause) {
       super(message, cause);
       this.deviceId = deviceId;
       this.type = type;
@@ -655,36 +665,44 @@ public class MqttPublisher implements Publisher {
     @Override
     public void messageArrived(String topic, MqttMessage message) {
       synchronized (MqttPublisher.this) {
-        String messageType = getMessageType(topic);
-        String handlerKey = getHandlerKey(topic);
-        String deviceId = getDeviceId(topic);
-        connectionLatch.countDown();
-        Consumer<Object> handler = handlers.get(handlerKey);
-        Class<Object> type = handlersType.get(handlerKey);
-        if (handler == null) {
-          error("Missing handler", deviceId, messageType, "receive",
-              new RuntimeException("No registered handler for topic " + topic));
-          handlersType.put(handlerKey, Object.class);
-          handlers.put(handlerKey, this::ignoringHandler);
-          return;
-        }
-        success("Received config", deviceId, messageType, "receive");
-
-        final Object payload;
         try {
-          if (message.toString().length() == 0) {
-            payload = null;
-          } else {
-            payload = OBJECT_MAPPER.readValue(message.toString(), type);
-            nukeProxyIdsIfNull(message.toString(), payload);
-          }
+          messageArrivedCore(topic, message);
         } catch (Exception e) {
-          error("Processing message", deviceId, messageType, "parse", e);
-          return;
+          error("While processing message", deviceId, null, "handle", e);
         }
-        success("Parsed message", deviceId, messageType, "parse");
-        handler.accept(payload);
       }
+    }
+
+    private void messageArrivedCore(String topic, MqttMessage message) {
+      String messageType = getMessageType(topic);
+      String handlerKey = getHandlerKey(topic);
+      String deviceId = getDeviceId(topic);
+      connectionLatch.countDown();
+      Consumer<Object> handler = handlers.get(handlerKey);
+      Class<Object> type = handlersType.get(handlerKey);
+      if (handler == null) {
+        error("Missing handler", deviceId, messageType, "receive",
+            new RuntimeException("No registered handler for topic " + topic));
+        handlersType.put(handlerKey, Object.class);
+        handlers.put(handlerKey, this::ignoringHandler);
+        return;
+      }
+      success("Received config", deviceId, messageType, "receive");
+
+      final Object payload;
+      try {
+        if (message.toString().length() == 0) {
+          payload = null;
+        } else {
+          payload = OBJECT_MAPPER.readValue(message.toString(), type);
+          nukeProxyIdsIfNull(message.toString(), payload);
+        }
+      } catch (Exception e) {
+        error("Processing message", deviceId, messageType, "parse", e);
+        return;
+      }
+      success("Parsed message", deviceId, messageType, "parse");
+      handler.accept(payload);
     }
 
     /**

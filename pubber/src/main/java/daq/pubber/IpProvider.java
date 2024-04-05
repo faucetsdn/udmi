@@ -36,8 +36,8 @@ public class IpProvider extends ManagerBase implements FamilyProvider {
       "inet", "ipv4",
       "inet6", "ipv6"
   );
+
   private final LocalnetManager localnetHost;
-  private final Map<ProtocolFamily, FamilyLocalnetState> stateMap = new ConcurrentHashMap<>();
 
   /**
    * Create a basic provider instance.

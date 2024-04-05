@@ -203,6 +203,7 @@ public class CloudModel {
         CREATE("CREATE"),
         UPDATE("UPDATE"),
         DELETE("DELETE"),
+        MODIFY("MODIFY"),
         BIND("BIND"),
         ALLOW("ALLOW"),
         BLOCK("BLOCK");

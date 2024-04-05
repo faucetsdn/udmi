@@ -25,9 +25,11 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import org.jetbrains.annotations.NotNull;
 import udmi.schema.CloudModel;
+import udmi.schema.CloudModel.Operation;
 import udmi.schema.CloudModel.Resource_type;
 import udmi.schema.Credential;
 import udmi.schema.Credential.Key_format;
+import udmi.schema.Envelope.SubFolder;
 import udmi.schema.ExecutionConfiguration;
 import udmi.schema.IotAccess;
 import udmi.schema.SetupUdmiConfig;
@@ -89,14 +91,19 @@ public class CloudIotManager {
    * Create a new iot manager using a full configuration file.
    */
   public CloudIotManager(File siteConfig) {
+    this(readExeConfig(siteConfig));
+  }
+
+  /**
+   * New instance from a configuration profile.
+   */
+  public CloudIotManager(ExecutionConfiguration config) {
     try {
-      System.err.println("Reading cloud config from " + siteConfig.getAbsolutePath());
-      ExecutionConfiguration config = readExeConfig(siteConfig);
       this.projectId = requireNonNull(config.project_id, "no project_id defined");
       this.useReflectClient = shouldUseReflectorClient(config);
       File model = new File(config.site_model != null ? config.site_model : ".");
-      siteModel =
-          model.isAbsolute() ? model : new File(siteConfig.getParentFile(), model.getPath());
+      siteModel = model.isAbsolute() ? model
+          : new File(new File(config.src_file).getParentFile(), model.getPath());
       File baseConfig = new File(siteModel, CLOUD_IOT_CONFIG_JSON);
       ExecutionConfiguration newConfig = mergeObject(readExeConfig(baseConfig), config);
       executionConfiguration = validate(newConfig, this.projectId);
@@ -110,8 +117,7 @@ public class CloudIotManager {
       cloudRegion = executionConfiguration.cloud_region;
       initializeIotProvider();
     } catch (Exception e) {
-      throw new RuntimeException(
-          format("While initializing project from file %s", siteConfig.getAbsolutePath()), e);
+      throw new RuntimeException(format("While initializing from %s", config.src_file), e);
     }
   }
 
@@ -212,7 +218,11 @@ public class CloudIotManager {
   }
 
   private void writeDeviceConfig(String deviceId, String config) {
-    iotProvider.updateConfig(deviceId, config);
+    iotProvider.updateConfig(deviceId, SubFolder.UPDATE, config);
+  }
+
+  public void modifyConfig(String deviceId, SubFolder subFolder, String config) {
+    iotProvider.updateConfig(deviceId, subFolder, config);
   }
 
   /**
@@ -263,6 +273,15 @@ public class CloudIotManager {
     CloudModel device = makeDevice(settings, oldDevice);
     limitValueSizes(device.metadata);
     iotProvider.updateDevice(deviceId, device);
+  }
+
+  /**
+   * Modify some metadata of the target device (not a complete update).
+   */
+  public void modifyDevice(String deviceId, CloudModel update) {
+    limitValueSizes(update.metadata);
+    update.operation = Operation.MODIFY;
+    iotProvider.updateDevice(deviceId, update);
   }
 
   private void limitValueSizes(Map<String, String> metadata) {
@@ -372,5 +391,9 @@ public class CloudIotManager {
     settings.credentials = List.of(iotProvider.getCredential());
     iotProvider.createResource(suffix, settings);
     return requireNonNull(settings.num_id, "Missing registry name in reply");
+  }
+
+  public String getSiteDir() {
+    return executionConfiguration.site_model;
   }
 }
