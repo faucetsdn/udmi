@@ -19,7 +19,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder({
     "timestamp",
     "version",
-    "site_id",
+    "site",
     "name",
     "location"
 })
@@ -46,9 +46,9 @@ public class SiteMetadata {
      * Identifier for the site or building
      * 
      */
-    @JsonProperty("site_id")
+    @JsonProperty("site")
     @JsonPropertyDescription("Identifier for the site or building")
-    public String site_id;
+    public String site;
     /**
      * Name of the site or building
      * 
@@ -62,8 +62,8 @@ public class SiteMetadata {
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.site_id == null)? 0 :this.site_id.hashCode()));
         result = ((result* 31)+((this.name == null)? 0 :this.name.hashCode()));
+        result = ((result* 31)+((this.site == null)? 0 :this.site.hashCode()));
         result = ((result* 31)+((this.location == null)? 0 :this.location.hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
         result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
@@ -79,7 +79,7 @@ public class SiteMetadata {
             return false;
         }
         SiteMetadata rhs = ((SiteMetadata) other);
-        return ((((((this.site_id == rhs.site_id)||((this.site_id!= null)&&this.site_id.equals(rhs.site_id)))&&((this.name == rhs.name)||((this.name!= null)&&this.name.equals(rhs.name))))&&((this.location == rhs.location)||((this.location!= null)&&this.location.equals(rhs.location))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
+        return ((((((this.name == rhs.name)||((this.name!= null)&&this.name.equals(rhs.name)))&&((this.site == rhs.site)||((this.site!= null)&&this.site.equals(rhs.site))))&&((this.location == rhs.location)||((this.location!= null)&&this.location.equals(rhs.location))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
     }
 
 }

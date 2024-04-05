@@ -52,7 +52,7 @@ class SiteMetadata:
   def __init__(self):
     self.timestamp = None
     self.version = None
-    self.site_id = None
+    self.site = None
     self.name = None
     self.location = None
 
@@ -63,7 +63,7 @@ class SiteMetadata:
     result = SiteMetadata()
     result.timestamp = source.get('timestamp')
     result.version = source.get('version')
-    result.site_id = source.get('site_id')
+    result.site = source.get('site')
     result.name = source.get('name')
     result.location = Object7BC6817A.from_dict(source.get('location'))
     return result
@@ -90,8 +90,8 @@ class SiteMetadata:
       result['timestamp'] = self.timestamp # 5
     if self.version:
       result['version'] = self.version # 5
-    if self.site_id:
-      result['site_id'] = self.site_id # 5
+    if self.site:
+      result['site'] = self.site # 5
     if self.name:
       result['name'] = self.name # 5
     if self.location:
