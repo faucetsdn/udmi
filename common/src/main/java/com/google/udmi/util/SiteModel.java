@@ -55,6 +55,7 @@ public class SiteModel {
       .setSerializationInclusion(JsonInclude.Include.NON_NULL);
   private static final Pattern ID_PATTERN = Pattern.compile(
       "projects/(.*)/locations/(.*)/registries/(.*)/devices/(.*)");
+  private static final String EXTRAS_DIR = "extras";
 
   final String sitePath;
   private Map<String, Metadata> allMetadata;
@@ -366,6 +367,10 @@ public class SiteModel {
 
   public File getSubdirectory(String path) {
     return new File(sitePath, path);
+  }
+
+  public File getExtrasDir() {
+    return getSubdirectory(EXTRAS_DIR);
   }
 
   public static class MetadataException extends Metadata {

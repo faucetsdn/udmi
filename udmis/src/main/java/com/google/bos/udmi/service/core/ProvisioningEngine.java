@@ -7,25 +7,22 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ignoreValue;
+import static com.google.udmi.util.JsonUtil.getDate;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static com.google.udmi.util.MetadataMapKeys.UDMI_DISCOVERED_FROM;
 import static com.google.udmi.util.MetadataMapKeys.UDMI_DISCOVERED_WITH;
 import static com.google.udmi.util.MetadataMapKeys.UDMI_GENERATION;
-import static com.google.udmi.util.MetadataMapKeys.UDMI_ONBOARD_UNTIL;
+import static com.google.udmi.util.MetadataMapKeys.UDMI_PROVISION_GENERATION;
 import static com.google.udmi.util.MetadataMapKeys.UDMI_UPDATED;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static udmi.schema.CloudModel.Operation.BIND;
 
-import com.google.udmi.util.JsonUtil;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import org.jetbrains.annotations.Nullable;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
 import udmi.schema.CloudModel.Resource_type;
@@ -35,31 +32,17 @@ import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
 
 /**
- * Simple agent to process discovery events and provision the iot provider.
+ * Simple agent to process discovery events and provisionally provisions the iot provider.
  */
-@ComponentName("mapping")
-public class MappingAgent extends ProcessorBase {
+@ComponentName("provision")
+public class ProvisioningEngine extends ProcessorBase {
 
   private static final String EXPECTED_DEVICE_FORMAT = "%s-%s";
-  private static final Instant DEFALUT_ONBOARD_MARKER = Instant.ofEpochMilli(0);
-  private static final Duration ONBOARDING_MAX_WINDOW = Duration.ofDays(7);
 
   private final Map<String, CloudModel> scanAgent = new ConcurrentHashMap<>();
 
-  public MappingAgent(EndpointConfiguration config) {
+  public ProvisioningEngine(EndpointConfiguration config) {
     super(config);
-  }
-
-  @Nullable
-  private static String getOnboardUntil(CloudModel cloudModel) {
-    return ifNotNullGet(cloudModel.metadata, m -> m.get(UDMI_ONBOARD_UNTIL));
-  }
-
-  private static boolean shouldOnboard(Date generation, CloudModel cloudModel) {
-    String timestamp = getOnboardUntil(cloudModel);
-    Date latest = Date.from(ifNotNullGet(timestamp, JsonUtil::getInstant, DEFALUT_ONBOARD_MARKER));
-    Date earliest = Date.from(latest.toInstant().minus(ONBOARDING_MAX_WINDOW));
-    return !generation.after(latest) && !generation.before(earliest);
   }
 
   private void bindDeviceToGateway(String registryId, String proxyId, String gatewayId) {
@@ -90,8 +73,8 @@ public class MappingAgent extends ProcessorBase {
     return scanAgent.computeIfAbsent(gatewayKey, key -> new CloudModel());
   }
 
-  private Map<String, CloudModel> refreshModelDevices(String deviceRegistryId, String gatewayId,
-      Date generation) {
+  private synchronized Map<String, CloudModel> refreshModelDevices(String deviceRegistryId,
+      String gatewayId, Date generation) {
     CloudModel cloudModel = getCloudModel(deviceRegistryId, gatewayId);
     if (!generation.equals(cloudModel.timestamp)) {
       cloudModel.timestamp = generation;
@@ -108,15 +91,16 @@ public class MappingAgent extends ProcessorBase {
       }
       cloudModel.metadata = fetchedModel.metadata;
       cloudModel.device_ids = fetchedModel.device_ids;
-      debug("Scan device %s/%s metadata has %s keys", deviceRegistryId, gatewayId,
-          catchToNull(() -> fetchedModel.metadata.size()));
-      debug("Scan device %s/%s metadata has %s device_ids", deviceRegistryId, gatewayId,
-          catchToNull(() -> fetchedModel.device_ids.size()));
-      info("Scan device %s/%s generation %s, onboarding %s until %s", deviceRegistryId, gatewayId,
-          isoConvert(generation), shouldOnboard(generation, cloudModel),
-          getOnboardUntil(cloudModel));
+      info("Scan device %s/%s generation %s, provisioning %s", deviceRegistryId, gatewayId,
+          isoConvert(generation), shouldProvision(generation, cloudModel));
     }
-    return ifTrueGet(shouldOnboard(generation, cloudModel), cloudModel.device_ids);
+    return ifTrueGet(shouldProvision(generation, cloudModel), cloudModel.device_ids);
+  }
+
+  private boolean shouldProvision(Date generation, CloudModel cloudModel) {
+    Date provisioningGeneration = getDate(
+        ifNotNullGet(cloudModel.metadata, m -> m.get(UDMI_PROVISION_GENERATION)));
+    return generation.equals(provisioningGeneration);
   }
 
   /**
@@ -135,7 +119,7 @@ public class MappingAgent extends ProcessorBase {
       Date generation = requireNonNull(discoveryEvent.generation, "missing scan generation");
       Map<String, CloudModel> deviceIds = refreshModelDevices(registryId, gatewayId, generation);
       if (deviceIds == null) {
-        info("Scan device %s/%s onboarding disabled", registryId, gatewayId);
+        info("Scan device %s/%s provisioning disabled", registryId, gatewayId);
         return;
       }
       ProtocolFamily family = requireNonNull(discoveryEvent.scan_family, "missing scan_family");

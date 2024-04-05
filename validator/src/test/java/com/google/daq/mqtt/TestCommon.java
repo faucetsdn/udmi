@@ -22,6 +22,7 @@ public class TestCommon {
           .setDateFormat(new ISO8601DateFormat())
           .setSerializationInclusion(Include.NON_NULL);
   public static final String DEVICE_ID = "AHU-1";
+  public static final String GATEWAY_ID = "GAT-123";
   public static final String UDMI_VERSION = "1.3.14";
   public static final String DEVICE_NUM_ID = "97216312321";
   public static final String REGISTRY_ID = "ZZ-TRI-FECTA";

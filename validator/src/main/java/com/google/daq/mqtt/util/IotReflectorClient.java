@@ -36,6 +36,7 @@ import org.jetbrains.annotations.Nullable;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
 import udmi.schema.Credential;
+import udmi.schema.Envelope.SubFolder;
 import udmi.schema.ExecutionConfiguration;
 import udmi.schema.SetupUdmiConfig;
 
@@ -48,7 +49,7 @@ public class IotReflectorClient implements IotProvider {
   public static final String CLOUD_MODEL_TOPIC = "cloud/model";
   public static final String REFLECTOR_PREFIX = "RC:";
   // Requires functions that support cloud device manager support.
-  private static final String UPDATE_CONFIG_TOPIC = "update/config";
+  private static final String CONFIG_TOPIC_FORMAT = "%s/config";
   private static final File ERROR_DIR = new File("out");
   private final com.google.bos.iot.core.proxy.IotReflectorClient messageClient;
   private final Map<String, CompletableFuture<Map<String, Object>>> futures =
@@ -80,8 +81,8 @@ public class IotReflectorClient implements IotProvider {
   }
 
   @Override
-  public void updateConfig(String deviceId, String config) {
-    transaction(deviceId, UPDATE_CONFIG_TOPIC, config, QuerySpeed.LONG);
+  public void updateConfig(String deviceId, SubFolder subFolder, String config) {
+    transaction(deviceId, format(CONFIG_TOPIC_FORMAT, subFolder.value()), config, QuerySpeed.LONG);
   }
 
   @Override
@@ -93,7 +94,7 @@ public class IotReflectorClient implements IotProvider {
 
   @Override
   public void updateDevice(String deviceId, CloudModel device) {
-    device.operation = Operation.UPDATE;
+    device.operation = ofNullable(device.operation).orElse(Operation.UPDATE);
     cloudModelTransaction(deviceId, CLOUD_MODEL_TOPIC, device);
   }
 

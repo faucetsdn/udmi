@@ -165,7 +165,7 @@ n tests/sites/downgrade/devices/DWN-2/out/generated_config.json
 n tests/sites/downgrade/devices/DWN-2/out/metadata_norm.json
 n tests/sites/downgrade/out/registration_summary.json
 n tests/sites/downgrade/registration_summary.json
-n tests/sites/downgrade/site_metadata.json
+n tests/sites/downgrade/site_defaults.json
 
 # These files appear to be related to the downgrade testing capability
 n tests/sites/missing/cloud_iot_config.json
@@ -193,4 +193,4 @@ n tests/sites/missing/devices/SNS-4/out/generated_config.json
 n tests/sites/missing/devices/SNS-4/out/metadata_norm.json
 n tests/sites/missing/out/registration_summary.json
 n tests/sites/missing/registration_summary.json
-n tests/sites/missing/site_metadata.json
+n tests/sites/missing/site_defaultsjson

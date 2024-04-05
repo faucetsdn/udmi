@@ -1,20 +1,17 @@
 package com.google.bos.udmi.service.core;
 
 import static com.google.udmi.util.JsonUtil.isoConvert;
-import static com.google.udmi.util.JsonUtil.safeSleep;
 import static java.lang.Math.abs;
 import static java.lang.String.format;
 import static java.time.Duration.between;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.common.collect.ImmutableMap;
 import com.google.udmi.util.JsonUtil;
-import java.time.Duration;
 import java.time.Instant;
+import java.util.Date;
 import java.util.Map;
-import java.util.Map.Entry;
 import org.junit.jupiter.api.Test;
 import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.DiscoveryEvent;
@@ -36,7 +33,7 @@ public class BitboxAdapterTest extends ProcessorTestBase {
 
   protected void initializeTestInstance() {
     initializeTestInstance(BitboxAdapter.class);
-    MappingAgentTest.initializeProvider(provider);
+    ProvisioningEngineTest.initializeProvider(provider);
   }
 
   private Envelope getLegacyEnvelope() {
@@ -44,6 +41,7 @@ public class BitboxAdapterTest extends ProcessorTestBase {
     envelope.deviceRegistryId = TEST_REGISTRY;
     envelope.deviceId = TEST_GATEWAY;
     envelope.rawFolder = "discover"; // NB: not 'discovery' (ending in 'y')
+    envelope.publishTime = new Date();
     return envelope;
   }
 

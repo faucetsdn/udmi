@@ -106,7 +106,7 @@ public class Registrar {
   private static final String SCHEMA_SUFFIX = ".json";
   private static final String REGISTRATION_SUMMARY_BASE = "out/registration_summary";
   private static final String SCHEMA_NAME = "UDMI";
-  private static final String SITE_METADATA_JSON = "site_metadata.json";
+  private static final String SITE_DEFAULTS_FILE = "site_defaults.json";
   private static final String SWARM_SUBFOLDER = "swarm";
   private static final String CONFIG_SUB_TYPE = "config";
   private static final String MODEL_SUB_TYPE = "model";
@@ -131,8 +131,8 @@ public class Registrar {
   private String projectId;
   private boolean updateCloudIoT;
   private Duration idleLimit;
+  private Metadata siteDefaults;
   private Map<String, CloudModel> cloudModels;
-  private Metadata siteMetadata;
   private Map<String, Object> lastErrorSummary;
   private boolean validateMetadata = false;
   private List<String> deviceList;
@@ -320,7 +320,7 @@ public class Registrar {
       if (schemaBase == null) {
         setToolRoot(null);
       }
-      loadSiteMetadata();
+      loadSiteDefaults();
       if (createRegistries >= 0) {
         createRegistries();
       } else {
@@ -556,6 +556,7 @@ public class Registrar {
     if (expungeDevices) {
       SetView<String> extras = difference(cloudDevices, localDevices.keySet());
       executeDelete(extras, "unknown");
+      reapExtraDevices(ImmutableSet.of());
     }
   }
 
@@ -779,7 +780,7 @@ public class Registrar {
       extraDevices.forEach(extraName -> parallelExecute(
           () -> extras.put(extraName, processExtra(extraName, alreadyBlocked))));
       dynamicTerminate(extraDevices.size());
-      System.err.printf("There were %d/%d already blocked devices.", alreadyBlocked.get(),
+      System.err.printf("There were %d/%d already blocked devices.%n", alreadyBlocked.get(),
           extraDevices.size());
       reapExtraDevices(extras.keySet());
       return extras;
@@ -1115,7 +1116,7 @@ public class Registrar {
           localDevices.computeIfAbsent(
               deviceName,
               keyName -> new LocalDevice(siteDir, devicesDir, deviceName, schemas, generation,
-                  siteMetadata, validateMetadata));
+                  siteDefaults, validateMetadata));
       try {
         localDevice.loadCredentials();
       } catch (Exception e) {
@@ -1181,30 +1182,30 @@ public class Registrar {
     }
   }
 
-  private void loadSiteMetadata() {
-    this.siteMetadata = null;
+  private void loadSiteDefaults() {
+    this.siteDefaults = null;
 
     if (!schemas.containsKey(METADATA_JSON)) {
       return;
     }
 
-    File siteMetadataFile = new File(siteDir, SITE_METADATA_JSON);
-    try (InputStream targetStream = new FileInputStream(siteMetadataFile)) {
-      // At this time, do not validate the Metadata schema because, by its nature of being
+    File siteDefaultsFile = new File(siteDir, SITE_DEFAULTS_FILE);
+    try (InputStream targetStream = new FileInputStream(siteDefaultsFile)) {
+      // At this time, do not validate the site defaults schema because, by its nature of being
       // a partial overlay on each device Metadata, this Metadata will likely be incomplete
       // and fail validation.
       schemas.get(METADATA_SCHEMA_JSON).validate(OBJECT_MAPPER.readTree(targetStream));
     } catch (FileNotFoundException e) {
       return;
     } catch (Exception e) {
-      throw new RuntimeException("While validating " + SITE_METADATA_JSON, e);
+      throw new RuntimeException("While validating " + SITE_DEFAULTS_FILE, e);
     }
 
     try {
-      System.err.printf("Loading " + SITE_METADATA_JSON + "\n");
-      this.siteMetadata = OBJECT_MAPPER.readValue(siteMetadataFile, Metadata.class);
+      System.err.printf("Loading " + SITE_DEFAULTS_FILE + "\n");
+      this.siteDefaults = OBJECT_MAPPER.readValue(siteDefaultsFile, Metadata.class);
     } catch (Exception e) {
-      throw new RuntimeException("While loading " + SITE_METADATA_JSON, e);
+      throw new RuntimeException("While loading " + SITE_DEFAULTS_FILE, e);
     }
   }
 
