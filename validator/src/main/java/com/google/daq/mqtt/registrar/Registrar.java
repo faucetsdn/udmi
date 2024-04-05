@@ -556,6 +556,7 @@ public class Registrar {
     if (expungeDevices) {
       SetView<String> extras = difference(cloudDevices, localDevices.keySet());
       executeDelete(extras, "unknown");
+      reapExtraDevices(ImmutableSet.of());
     }
   }
 
@@ -779,7 +780,7 @@ public class Registrar {
       extraDevices.forEach(extraName -> parallelExecute(
           () -> extras.put(extraName, processExtra(extraName, alreadyBlocked))));
       dynamicTerminate(extraDevices.size());
-      System.err.printf("There were %d/%d already blocked devices.", alreadyBlocked.get(),
+      System.err.printf("There were %d/%d already blocked devices.%n", alreadyBlocked.get(),
           extraDevices.size());
       reapExtraDevices(extras.keySet());
       return extras;

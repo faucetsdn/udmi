@@ -1,9 +1,11 @@
 package daq.pubber;
 
 import static com.google.udmi.util.GeneralUtils.deepCopy;
+import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static daq.pubber.Pubber.configuration;
 import static java.lang.String.format;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.Config;
 import udmi.schema.Metadata;
@@ -16,6 +18,7 @@ public class ProxyDevice extends ManagerBase implements ManagerHost {
 
   public final DeviceManager deviceManager;
   public final Pubber pubberHost;
+  private AtomicBoolean active = new AtomicBoolean();
 
   /**
    * New instance.
@@ -34,9 +37,17 @@ public class ProxyDevice extends ManagerBase implements ManagerHost {
   }
 
   protected void activate() {
-    MqttDevice mqttDevice = pubberHost.getMqttDevice(deviceId);
-    mqttDevice.registerHandler(MqttDevice.CONFIG_TOPIC, this::configHandler, Config.class);
-    mqttDevice.connect(deviceId);
+    try {
+      active.set(false);
+      MqttDevice mqttDevice = pubberHost.getMqttDevice(deviceId);
+      mqttDevice.registerHandler(MqttDevice.CONFIG_TOPIC, this::configHandler, Config.class);
+      mqttDevice.connect(deviceId);
+      deviceManager.activate();
+      active.set(true);
+      info("Activated proxy device " + deviceId);
+    } catch (Exception e) {
+      error(format("Could not connect proxy device %s: %s", deviceId, friendlyStackTrace(e)));
+    }
   }
 
   void configHandler(Config config) {
@@ -57,7 +68,9 @@ public class ProxyDevice extends ManagerBase implements ManagerHost {
 
   @Override
   public void publish(Object message) {
-    pubberHost.publish(deviceId, message);
+    if (active.get()) {
+      pubberHost.publish(deviceId, message);
+    }
   }
 
   @Override

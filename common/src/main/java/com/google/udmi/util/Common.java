@@ -56,13 +56,20 @@ public abstract class Common {
 
   /**
    * Remove the next item from the list in an exception-safe way.
-   *
-   * @param argList list of arguments
-   * @return removed argument
    */
   public static String removeNextArg(List<String> argList) {
     if (argList.isEmpty()) {
       throw new MissingFormatArgumentException("Missing argument");
+    }
+    return argList.remove(0);
+  }
+
+  /**
+   * Remove the next item from the list in an exception-safe way.
+   */
+  public static String removeNextArg(List<String> argList, String descriptor) {
+    if (argList.isEmpty()) {
+      throw new MissingFormatArgumentException("Missing argument " + descriptor);
     }
     return argList.remove(0);
   }

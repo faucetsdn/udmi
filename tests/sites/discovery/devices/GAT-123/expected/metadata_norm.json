@@ -2,12 +2,13 @@
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.4.1",
   "upgraded_from": "1",
-  "hash": "ffb133c4",
+  "hash": "33035c1a",
   "cloud": {
     "auth_type": "ES256"
   },
   "system": {
     "location": {
+      "site": "ZZ-TRI-FECTA",
       "section": "2-3N8C"
     },
     "physical_tag": {
@@ -19,9 +20,7 @@
     },
     "min_loglevel": 300
   },
-  "gateway": {
-    "proxy_ids": [ "SNS-4", "AHU-22" ]
-  },
+  "gateway": { },
   "pointset": {
     "points": {
       "globulating_globar": {

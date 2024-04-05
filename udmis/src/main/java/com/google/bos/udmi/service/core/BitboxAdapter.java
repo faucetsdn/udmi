@@ -1,18 +1,21 @@
 package com.google.bos.udmi.service.core;
 
-import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
+import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
-import static com.google.udmi.util.GeneralUtils.mapReplace;
+import static com.google.udmi.util.JsonUtil.getDate;
+import static com.google.udmi.util.JsonUtil.isoConvert;
 import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.udmi.util.JsonUtil;
-import java.time.Instant;
+import com.google.udmi.util.MetadataMapKeys;
+import java.time.Duration;
 import java.util.Date;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
+import udmi.schema.CloudModel;
 import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.DiscoveryEvent;
 import udmi.schema.EndpointConfiguration;
@@ -26,8 +29,7 @@ import udmi.schema.PointDiscovery;
 @ComponentName("bitbox")
 public class BitboxAdapter extends ProcessorBase {
 
-  private static final String BACNET_PROTOCOL = "bacnet";
-  private static final int FAKE_GENERATION_SEC = 60 * 60;
+  private static final Duration PROVISIONING_WINDOW = Duration.ofMinutes(10);
 
   public BitboxAdapter(EndpointConfiguration config) {
     super(config);
@@ -38,17 +40,31 @@ public class BitboxAdapter extends ProcessorBase {
     MessageContinuation continuation = getContinuation(defaultedMessage);
 
     Envelope envelope = continuation.getEnvelope();
-    envelope.rawFolder = null;
+    envelope.rawFolder = null; // Remove original 'discover' subFolder.
 
-    if (!iotAccess.getRegistries().contains(envelope.deviceRegistryId)) {
-      warn("Registry for %s/%s not found, ignoring.", envelope.deviceRegistryId, envelope.deviceId);
+    String deviceRegistryId = envelope.deviceRegistryId;
+    if (!iotAccess.getRegistries().contains(deviceRegistryId)) {
+      warn("Registry %s not found, ignoring.", deviceRegistryId);
       return;
     }
-
-    ifNotNullThen(convertDiscovery(defaultedMessage), continuation::publish);
+    String deviceId = envelope.deviceId;
+    Date generation = getProvisioningGeneration(deviceRegistryId, deviceId);
+    if (generation == null) {
+      warn("Generation for %s/%s not found, ignoring.", deviceRegistryId, deviceId);
+      return;
+    }
+    Date publishTime = envelope.publishTime;
+    Date endTime = Date.from(generation.toInstant().plus(PROVISIONING_WINDOW));
+    if (publishTime.after(endTime)) {
+      warn("Discovery for %s/%s at %s expired %ss after %s, ignoring.",
+          isoConvert(publishTime), deviceRegistryId, deviceId,
+          PROVISIONING_WINDOW.getSeconds(), isoConvert(generation));
+      return;
+    }
+    ifNotNullThen(convertDiscovery(generation, defaultedMessage), continuation::publish);
   }
 
-  private DiscoveryEvent convertDiscovery(Object defaultedMessage) {
+  private DiscoveryEvent convertDiscovery(Date generation, Object defaultedMessage) {
     Map<String, Object> map = JsonUtil.asMap(defaultedMessage);
     if (!"bitbox_bacnet".equals(map.get("type"))) {
       return null;
@@ -58,7 +74,7 @@ public class BitboxAdapter extends ProcessorBase {
       DiscoveryEvent discoveryEvent = new DiscoveryEvent();
       discoveryEvent.scan_family = ProtocolFamily.fromValue((String) map.get("protocol"));
       discoveryEvent.scan_addr = (String) map.get("id");
-      discoveryEvent.generation = fabricateGeneration();
+      discoveryEvent.generation = generation;
       discoveryEvent.points = extractPoints(map.get("data"));
       return discoveryEvent;
     } catch (Exception e) {
@@ -74,12 +90,10 @@ public class BitboxAdapter extends ProcessorBase {
         .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
   }
 
-  /**
-   * Create a fake generation for bucketing discovery results.
-   */
-  private Date fabricateGeneration() {
-    long seconds = Instant.now().getEpochSecond();
-    return Date.from(Instant.ofEpochSecond(seconds - seconds % FAKE_GENERATION_SEC));
+  private Date getProvisioningGeneration(String registryId, String deviceId) {
+    CloudModel cloudModel = iotAccess.fetchDevice(registryId, deviceId);
+    return getDate(
+        catchToNull(() -> cloudModel.metadata.get(MetadataMapKeys.UDMI_PROVISION_GENERATION)));
   }
 
   private Entry<String, PointDiscovery> pointMapper(Entry<String, Object> rawInput) {
