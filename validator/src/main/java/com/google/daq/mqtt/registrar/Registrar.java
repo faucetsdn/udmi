@@ -409,7 +409,7 @@ public class Registrar {
   protected void setSitePath(String sitePath) {
     checkNotNull(SCHEMA_NAME, "schemaName not set yet");
     siteDir = new File(sitePath);
-    siteModel = new SiteModel(sitePath);
+    siteModel = ofNullable(siteModel).orElseGet(() -> new SiteModel(sitePath));
     File summaryBase = new File(siteDir, SiteModel.REGISTRATION_SUMMARY_BASE);
     File parentFile = summaryBase.getParentFile();
     if (!parentFile.isDirectory() && !parentFile.mkdirs()) {
@@ -430,11 +430,7 @@ public class Registrar {
   }
 
   private void initializeCloudProject() {
-    ExecutionConfiguration config = siteModel.getExecutionConfiguration();
-    ifNullUpdate(config.project_id, projectId, id -> config.project_id = id);
-    ifNullUpdate(config.alt_registry, altRegistry, id -> config.alt_registry = id);
-    ifNullUpdate(config.registry_suffix, registrySuffix, id -> config.registry_suffix = id);
-    cloudIotManager = new CloudIotManager(config);
+    cloudIotManager = new CloudIotManager(siteModel.getExecutionConfiguration());
     System.err.printf(
         "Working with project %s registry %s/%s%n",
         cloudIotManager.getProjectId(),

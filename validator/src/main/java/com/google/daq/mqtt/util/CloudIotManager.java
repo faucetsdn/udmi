@@ -55,19 +55,13 @@ public class CloudIotManager {
 
   /**
    * Create a new CloudIoTManager.
-   *
-   * @param projectId      project id
-   * @param siteDir        site model directory
-   * @param altRegistry    alternate registry to use (instead of site registry)
-   * @param registrySuffix suffix to append to model registry id
-   * @param iotProvider    indicates which iot provider type
    */
   public CloudIotManager(String projectId, File siteDir, String altRegistry,
       String registrySuffix, IotAccess.IotProvider iotProvider) {
     checkNotNull(projectId, "project id undefined");
     this.siteModel = checkNotNull(siteDir, "site directory undefined");
     checkState(siteDir.isDirectory(), "not a directory " + siteDir.getAbsolutePath());
-    this.useReflectClient = ofNullable(iotProvider).orElse(GCP_NATIVE) != GCP_NATIVE;
+    this.useReflectClient = iotProvider != null;
     this.projectId = projectId;
     File cloudConfig = new File(siteDir, CLOUD_IOT_CONFIG_JSON);
     try {
