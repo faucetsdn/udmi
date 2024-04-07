@@ -4,6 +4,7 @@ import static com.google.daq.mqtt.TestCommon.ALT_REGISTRY;
 import static com.google.daq.mqtt.TestCommon.REGISTRY_ID;
 import static com.google.daq.mqtt.TestCommon.SITE_DIR;
 import static com.google.daq.mqtt.TestCommon.SITE_REGION;
+import static com.google.daq.mqtt.registrar.LocalDevice.EXCEPTION_VALIDATING;
 import static com.google.daq.mqtt.util.IotMockProvider.ActionType.BIND_DEVICE_ACTION;
 import static com.google.daq.mqtt.util.IotMockProvider.ActionType.BLOCK_DEVICE_ACTION;
 import static com.google.daq.mqtt.util.IotMockProvider.ActionType.CREATE_DEVICE_ACTION;
@@ -39,19 +40,19 @@ public class RegistrarTest {
 
   @SuppressWarnings("unchecked")
   private static double getValidatingSize(Map<String, Object> summary) {
-    return ((Map<String, Object>) summary.get("Validating")).size();
+    return ((Map<String, Object>) summary.get(EXCEPTION_VALIDATING)).size();
   }
 
   private void assertErrorSummaryValidateSuccess(Map<String, Object> summary) {
-    if ((summary == null) || (summary.get("Validating") == null)
+    if ((summary == null) || (summary.get(EXCEPTION_VALIDATING) == null)
         || (getValidatingSize(summary) == 0)) {
       return;
     }
-    fail(summary.get("Validating").toString());
+    fail(summary.get(EXCEPTION_VALIDATING).toString());
   }
 
   private void assertErrorSummaryValidateFailure(Map<String, Object> summary) {
-    if ((summary == null) || (summary.get("Validating") == null)) {
+    if ((summary == null) || (summary.get(EXCEPTION_VALIDATING) == null)) {
       fail("Error summary for Validating key is null");
     }
     if (getValidatingSize(summary) == 0) {

@@ -7,9 +7,9 @@ import static com.google.udmi.util.Common.getNamespacePrefix;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
+import static com.google.udmi.util.GeneralUtils.removeArg;
 import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
-import static com.google.udmi.util.GeneralUtils.removeArg;
 import static com.google.udmi.util.JsonUtil.loadFileStrict;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -89,13 +89,6 @@ public class SiteModel {
   private Map<String, Metadata> allMetadata;
   private Map<String, CloudModel> allDevices;
 
-  public SiteModel(String sitePath) {
-    this.sitePath = sitePath;
-    siteDefaults = ofNullable(
-        asMap(loadFileStrict(Metadata.class, getSubdirectory(SITE_DEFAULTS_FILE))))
-        .orElseGet(HashMap::new);
-  }
-
   public SiteModel(String specPath) {
     this(specPath, (Supplier<String>) null);
   }
@@ -113,6 +106,9 @@ public class SiteModel {
     sitePath = specIsFile ? siteDir : specFile.getPath();
     exeConfig.site_model = new File(
         ofNullable(exeConfig.site_model).orElse(sitePath)).getAbsolutePath();
+    siteDefaults = ofNullable(
+        asMap(loadFileStrict(Metadata.class, getSubdirectory(SITE_DEFAULTS_FILE))))
+        .orElseGet(HashMap::new);
   }
 
   public SiteModel(String toolName, List<String> argList) {
@@ -136,7 +132,6 @@ public class SiteModel {
 
   private static File cloudConfigPath(File specFile) {
     return new File(specFile, CLOUD_IOT_CONFIG_JSON);
->>>>>>> 73038681d (Squashed commit)
   }
 
   public static EndpointConfiguration makeEndpointConfig(String iotProject,
@@ -220,28 +215,6 @@ public class SiteModel {
     return !(dirName.startsWith(".") || dirName.endsWith("~"));
   }
 
-  public static Metadata loadDeviceMetadata(String sitePath, String deviceId, Class<?> container) {
-    try {
-      checkState(sitePath != null, "sitePath not defined");
-      File deviceDir = getDeviceDir(sitePath, deviceId);
-      File deviceMetadataFile = new File(deviceDir, "metadata.json");
-      if (!deviceMetadataFile.exists()) {
-        return new MetadataException(deviceMetadataFile, new FileNotFoundException());
-      }
-      Metadata metadata = requireNonNull(captureLoadErrors(deviceMetadataFile), "bad metadata");
-
-      // Missing arrays are automatically parsed to an empty list, which is not what
-      // we want, so hacky go through and convert an empty list to null.
-      if (metadata.gateway != null && metadata.gateway.proxy_ids.isEmpty()) {
-        metadata.gateway.proxy_ids = null;
-      }
-
-      return metadata;
-    } catch (Exception e) {
-      throw new RuntimeException("While loading device metadata for " + deviceId, e);
-    }
-  }
-
   private static Metadata captureLoadErrors(File deviceMetadataFile) {
     try {
       return loadFileStrict(Metadata.class, deviceMetadataFile);
@@ -304,13 +277,13 @@ public class SiteModel {
     try {
       return loadDeviceMetadata(deviceId);
     } catch (Exception e) {
-      return new MetadataException(getDeviceFile(deviceId, METADATA_JSON) ,e);
+      return new MetadataException(getDeviceFile(deviceId, METADATA_JSON), e);
     }
   }
 
   public Metadata loadDeviceMetadata(String deviceId) {
     try {
-      Preconditions.checkState(sitePath != null, "sitePath not defined");
+      checkState(sitePath != null, "sitePath not defined");
       File deviceDir = getDeviceDir(deviceId);
       File deviceMetadataFile = new File(deviceDir, "metadata.json");
       if (!deviceMetadataFile.exists()) {

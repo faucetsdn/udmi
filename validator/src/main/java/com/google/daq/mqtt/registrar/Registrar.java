@@ -79,6 +79,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
@@ -130,7 +131,7 @@ public class Registrar {
   private Metadata siteDefaults;
   private Map<String, CloudModel> cloudModels;
   private Map<String, Object> lastErrorSummary;
-  private boolean doValidate = false;
+  private boolean doValidate = true;
   private List<String> deviceList;
   private Boolean blockUnknown;
   private File siteDir;
@@ -211,7 +212,7 @@ public class Registrar {
         case "-u" -> setUpdateFlag(true);
         case "-b" -> setBlockUnknown(true);
         case "-l" -> setIdleLimit(argList.remove(0));
-        case "-t" -> setValidateMetadata(true);
+        case "-t" -> setValidateMetadata(false);
         case "-d" -> setDeleteDevices(true);
         case "-x" -> setExpungeDevices(true);
         case "-n" -> setRunnerThreads(argList.remove(0));
@@ -429,10 +430,11 @@ public class Registrar {
   }
 
   private void initializeCloudProject() {
-    ExecutionConfiguration executionConfiguration = siteModel.getExecutionConfiguration();
-    executionConfiguration.alt_registry = altRegistry;
-    executionConfiguration.registry_suffix = registrySuffix;
-    cloudIotManager = new CloudIotManager(executionConfiguration);
+    ExecutionConfiguration config = siteModel.getExecutionConfiguration();
+    ifNullUpdate(config.project_id, projectId, id -> config.project_id = id);
+    ifNullUpdate(config.alt_registry, altRegistry, id -> config.alt_registry = id);
+    ifNullUpdate(config.registry_suffix, registrySuffix, id -> config.registry_suffix = id);
+    cloudIotManager = new CloudIotManager(config);
     System.err.printf(
         "Working with project %s registry %s/%s%n",
         cloudIotManager.getProjectId(),
@@ -445,6 +447,14 @@ public class Registrar {
     blockUnknown = ofNullable(blockUnknown)
         .orElse(Objects.requireNonNullElse(cloudIotManager.executionConfiguration.block_unknown,
             DEFAULT_BLOCK_UNKNOWN));
+  }
+
+  private <T> void ifNullUpdate(T old, T next, Consumer<T> update) {
+    if (old == null && next != null) {
+      update.accept(next);
+    } else if (old != null && !old.equals(next)) {
+      throw new RuntimeException(format("Trying to replace old %s with new %s", old, next));
+    }
   }
 
   private String getGenerationString() {
