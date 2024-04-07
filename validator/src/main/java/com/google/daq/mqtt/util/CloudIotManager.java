@@ -105,7 +105,12 @@ public class CloudIotManager {
       siteModel = model.isAbsolute() ? model
           : new File(new File(config.src_file).getParentFile(), model.getPath());
       File baseConfig = new File(siteModel, CLOUD_IOT_CONFIG_JSON);
-      ExecutionConfiguration newConfig = mergeObject(readExeConfig(baseConfig), config);
+      ExecutionConfiguration newConfig =
+          config.src_file == null ? mergeObject(readExeConfig(baseConfig), config) : config;
+      ifNotNullThen(newConfig.alt_registry, alt -> {
+        newConfig.registry_id = alt;
+        newConfig.alt_registry = null;
+      });
       executionConfiguration = validate(newConfig, this.projectId);
       executionConfiguration.iot_provider = ofNullable(executionConfiguration.iot_provider).orElse(
           IMPLICIT);

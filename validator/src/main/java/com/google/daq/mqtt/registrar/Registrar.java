@@ -3,7 +3,6 @@ package com.google.daq.mqtt.registrar;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Sets.difference;
 import static com.google.common.collect.Sets.intersection;
-import static com.google.daq.mqtt.util.ConfigUtil.readExeConfig;
 import static com.google.udmi.util.Common.CLOUD_VERSION_KEY;
 import static com.google.udmi.util.Common.NO_SITE;
 import static com.google.udmi.util.Common.UDMI_VERSION_KEY;
@@ -15,6 +14,7 @@ import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
+import static com.google.udmi.util.GeneralUtils.removeArg;
 import static com.google.udmi.util.GeneralUtils.writeString;
 import static com.google.udmi.util.JsonUtil.JSON_SUFFIX;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
@@ -24,6 +24,7 @@ import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.writeFile;
 import static com.google.udmi.util.MetadataMapKeys.UDMI_PREFIX;
 import static com.google.udmi.util.SiteModel.DEVICES_DIR;
+import static com.google.udmi.util.SiteModel.MOCK_PROJECT;
 import static java.lang.Math.ceil;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -113,6 +114,7 @@ public class Registrar {
   private static final Map<String, Class<? extends Summarizer>> SUMMARIZERS = ImmutableMap.of(
       ".json", Summarizer.JsonSummarizer.class,
       ".csv", Summarizer.CsvSummarizer.class);
+  private static final String TOOL_NAME = "registrar";
   private final Map<String, JsonSchema> schemas = new HashMap<>();
   private final String generation = getGenerationString();
   private final Set<Summarizer> summarizers = new HashSet<>();
@@ -133,12 +135,10 @@ public class Registrar {
   private Boolean blockUnknown;
   private File siteDir;
   private String registrySuffix;
-  private boolean useAltRegistry;
   private String altRegistry;
   private boolean deleteDevices;
   private boolean expungeDevices;
   private IotProvider iotProvider;
-  private File profile;
   private int createRegistries = -1;
   private int runnerThreads = 5;
   private ExecutorService executor;
@@ -188,55 +188,39 @@ public class Registrar {
 
   Registrar processArgs(List<String> argListRaw) {
     List<String> argList = new ArrayList<>(argListRaw);
-    if (!argList.isEmpty() && !argList.get(0).startsWith("-")) {
-      processProfile(new File(argList.remove(0)));
+    if (argList.size() == 1 && new File(argList.get(0)).isDirectory()) {
+      // Add implicit NO_SITE site spec for local-only site model processing.
+      argList.add(NO_SITE);
     }
+    siteModel = new SiteModel(TOOL_NAME, argList);
+    processProfile(siteModel.getExecutionConfiguration());
+    return postProcessArgs(argList);
+  }
+
+  Registrar postProcessArgs(List<String> argList) {
+    requireNonNull(siteModel, "siteModel not defined");
     while (argList.size() > 0) {
       String option = argList.remove(0);
       switch (option) {
-        case "-r":
-          setToolRoot(argList.remove(0));
-          break;
-        case "-p":
-          setProjectId(argList.remove(0), null);
-          break;
-        case "-s":
-          setSitePath(argList.remove(0));
-          break;
-        case "-a":
-          setUseAltRegistry(true);
-          break;
-        case "-f":
-          setFeedTopic(argList.remove(0));
-          break;
-        case "-u":
-          setUpdateFlag(true);
-          break;
-        case "-b":
-          setBlockUnknown(true);
-          break;
-        case "-l":
-          setIdleLimit(argList.remove(0));
-          break;
-        case "-t":
-          setValidateMetadata(true);
-          break;
-        case "-d":
-          setDeleteDevices(true);
-          break;
-        case "-x":
-          setExpungeDevices(true);
-          break;
-        case "-n":
-          setRunnerThreads(argList.remove(0));
-          break;
-        case "-c":
-          setCreateRegistries(argList.remove(0));
-          break;
-        case "--":
+        case "-r" -> setToolRoot(removeArg(argList, "tool root"));
+        case "-p" -> setProjectId(argList.remove(0), null);
+        case "-s" -> setSitePath(argList.remove(0));
+        case "-a" -> setAltRegistry(removeArg(argList, "alt registry"));
+        case "-e" -> setRegistrySuffix(removeArg(argList, "registry suffix"));
+        case "-f" -> setFeedTopic(argList.remove(0));
+        case "-u" -> setUpdateFlag(true);
+        case "-b" -> setBlockUnknown(true);
+        case "-l" -> setIdleLimit(argList.remove(0));
+        case "-t" -> setValidateMetadata(true);
+        case "-d" -> setDeleteDevices(true);
+        case "-x" -> setExpungeDevices(true);
+        case "-n" -> setRunnerThreads(argList.remove(0));
+        case "-c" -> setCreateRegistries(argList.remove(0));
+        case "--" -> {
           setDeviceList(argList);
           return this;
-        default:
+        }
+        default -> {
           if (option.startsWith("-")) {
             throw new RuntimeException("Unknown cmdline option " + option);
           }
@@ -244,6 +228,7 @@ public class Registrar {
           argList.add(0, option);
           setDeviceList(argList);
           return this;
+        }
       }
     }
     return this;
@@ -280,31 +265,19 @@ public class Registrar {
     this.updateCloudIoT |= expungeDevices;
   }
 
-  private void setUseAltRegistry(boolean useAltRegistry) {
-    this.useAltRegistry = useAltRegistry;
+  void setRegistrySuffix(String suffix) {
+    registrySuffix = suffix;
   }
 
-  private void processProfile(File profilePath) {
-    System.err.println("Reading registrar configuration from " + profilePath.getAbsolutePath());
-    profile = profilePath;
-    processProfile(readExeConfig(profilePath));
-  }
-
-  Registrar processProfile(ExecutionConfiguration config) {
-    String siteModel = ofNullable(config.site_model).orElse(BASE_DIR.getName());
-    File siteModelRaw = new File(siteModel);
-    File useModel = siteModelRaw.isAbsolute() ? siteModelRaw :
-        new File(ifNotNullGet(profile, File::getParentFile, BASE_DIR), siteModel);
-    config.site_model = useModel.getAbsolutePath();
+  private void processProfile(ExecutionConfiguration config) {
+    config.site_model = new File(siteModel.getSitePath()).getAbsolutePath();
     setSitePath(config.site_model);
     altRegistry = config.alt_registry;
     iotProvider = config.iot_provider;
     setProjectId(config.project_id, config.registry_suffix);
-    setValidateMetadata(true);
     if (config.project_id != null) {
       setUpdateFlag(true);
     }
-    return this;
   }
 
   void execute() {
@@ -313,7 +286,8 @@ public class Registrar {
         initializeCloudProject();
       }
       if (schemaBase == null) {
-        setToolRoot(null);
+        // Use the proper (relative) tool root directory for unit tests.
+        setToolRoot(MOCK_PROJECT.equals(projectId) ? ".." : null);
       }
       loadSiteDefaults();
       if (createRegistries >= 0) {
@@ -455,14 +429,10 @@ public class Registrar {
   }
 
   private void initializeCloudProject() {
-    String useRegistry = !useAltRegistry ? null
-        : requireNonNull(altRegistry, "No alt_registry supplied with useAltRegistry true");
-    if (profile != null) {
-      cloudIotManager = new CloudIotManager(profile);
-    } else {
-      cloudIotManager = new CloudIotManager(projectId, siteDir, useRegistry, registrySuffix,
-          iotProvider);
-    }
+    ExecutionConfiguration executionConfiguration = siteModel.getExecutionConfiguration();
+    executionConfiguration.alt_registry = altRegistry;
+    executionConfiguration.registry_suffix = registrySuffix;
+    cloudIotManager = new CloudIotManager(executionConfiguration);
     System.err.printf(
         "Working with project %s registry %s/%s%n",
         cloudIotManager.getProjectId(),
@@ -1142,14 +1112,21 @@ public class Registrar {
   }
 
   protected void setToolRoot(String toolRoot) {
-    schemaBase = new File(toolRoot, SCHEMA_BASE_PATH);
-    File[] schemaFiles = schemaBase.listFiles(file -> file.getName().endsWith(SCHEMA_SUFFIX));
-    for (File schemaFile : requireNonNull(schemaFiles)) {
-      loadSchema(schemaFile.getName());
-    }
-    if (schemas.isEmpty()) {
-      throw new RuntimeException(
-          "No schemas successfully loaded from " + schemaBase.getAbsolutePath());
+    try {
+      schemaBase = new File(toolRoot, SCHEMA_BASE_PATH);
+      if (!schemaBase.isDirectory()) {
+        throw new RuntimeException("Missing schema directory " + schemaBase.getAbsolutePath());
+      }
+      File[] schemaFiles = schemaBase.listFiles(file -> file.getName().endsWith(SCHEMA_SUFFIX));
+      for (File schemaFile : requireNonNull(schemaFiles, "schema files")) {
+        loadSchema(schemaFile.getName());
+      }
+      if (schemas.isEmpty()) {
+        throw new RuntimeException(
+            "No schemas successfully loaded from " + schemaBase.getAbsolutePath());
+      }
+    } catch (Exception e) {
+      throw new RuntimeException("While processing tool root " + toolRoot, e);
     }
   }
 
@@ -1212,6 +1189,10 @@ public class Registrar {
 
   public List<Object> getMockActions() {
     return cloudIotManager.getMockActions();
+  }
+
+  public void setAltRegistry(String altRegistry) {
+    this.altRegistry = altRegistry;
   }
 
   class RelativeDownloader implements URIDownloader {
