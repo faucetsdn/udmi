@@ -1,14 +1,17 @@
 package com.google.daq.mqtt.registrar;
 
-import static com.google.udmi.util.JsonUtil.convertTo;
+import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static com.google.udmi.util.SiteModel.METADATA_JSON;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.github.fge.jsonschema.main.JsonSchema;
-import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
-import java.util.Date;
+import com.google.udmi.util.SiteModel;
+import java.io.File;
 import java.util.Map;
 import org.junit.Test;
 import udmi.schema.Metadata;
@@ -18,44 +21,38 @@ import udmi.schema.Metadata;
  */
 public class LocalDeviceTest {
 
-  public static final String DEVICE_ID = "test_device";
-  public static final Map<String, JsonSchema> SCHEMAS = null;
-  public static final int FAKE_TIME = 1298213;
-  public static String MERGE_DATA = "{ \"testing\": 10 }";
+  private static final Map<String, JsonSchema> SCHEMAS = null;
+  private static final String EMPTY_DEFAULTS_SITE = "../tests/sites/discovery";
+  private static final String POPULATED_DEFAULTS_SITE = "../tests/sites/missing";
+  private static final String DEVICE_ID = "GAT-123";
+  private Metadata rawMetadata;
 
   @Test
   public void getMergedEmptyMetadata() {
-    LocalDevice localDevice = getTestInstance(null);
-    JsonNode toMerge = JsonUtil.fromString(JsonNode.class, MERGE_DATA);
-    String original = stringify(toMerge);
-    JsonNode result = localDevice.getMergedMetadata(toMerge);
-    assertEquals("merged results with no side defaults", original, stringify(result));
+    LocalDevice localDevice = getTestInstance(EMPTY_DEFAULTS_SITE);
+    Metadata metadata = localDevice.getMetadata();
+    metadata.version = null;
+    metadata.upgraded_from = null;
+    metadata.gateway = null;
+    assertEquals("metadata is same as raw metadata", stringify(rawMetadata), stringify(metadata));
   }
 
   @Test
-  public void getMergedSiteMetadata() {
-    Metadata siteMetadata = getSiteMetadata();
-    Metadata augmentedData = GeneralUtils.deepCopy(siteMetadata);
-    Metadata toMerge = new Metadata();
-    toMerge.timestamp = new Date(FAKE_TIME + 1);
-    augmentedData.timestamp = toMerge.timestamp;
-    toMerge.description = "testing";
-    augmentedData.description = toMerge.description;
-    LocalDevice localDevice = getTestInstance(siteMetadata);
-    Metadata result = convertTo(Metadata.class,
-        localDevice.getMergedMetadata(convertTo(JsonNode.class, toMerge)));
-    assertEquals("merged results with no side defaults", stringify(augmentedData),
-        stringify(result));
+  public void getMergedMetadata() {
+    LocalDevice localDevice = getTestInstance(POPULATED_DEFAULTS_SITE);
+    Metadata metadata = localDevice.getMetadata();
+    metadata.version = null;
+    assertNotNull("site default cloud detail not defined", metadata.cloud.detail);
+    assertNull("raw cloud detail is defined", catchToNull(() -> rawMetadata.cloud.detail));
   }
 
-  private Metadata getSiteMetadata() {
-    Metadata metadata = new Metadata();
-    metadata.timestamp = new Date(FAKE_TIME);
-    metadata.version = "testing";
-    return metadata;
-  }
-
-  private LocalDevice getTestInstance(Metadata siteMetadata) {
-    return new LocalDevice(null, null, DEVICE_ID, SCHEMAS, null, siteMetadata);
+  private LocalDevice getTestInstance(String sitePath) {
+    SiteModel siteModel = new SiteModel(sitePath);
+    assertTrue("test device exists: " + DEVICE_ID, siteModel.deviceExists(DEVICE_ID));
+    File rawMetadataFile = siteModel.getDeviceFile(DEVICE_ID, METADATA_JSON);
+    rawMetadata = JsonUtil.loadFileStrictRequired(Metadata.class, rawMetadataFile);
+    rawMetadata.version = null;
+    rawMetadata.gateway = null;
+    return new LocalDevice(siteModel, DEVICE_ID, SCHEMAS, null, false);
   }
 }

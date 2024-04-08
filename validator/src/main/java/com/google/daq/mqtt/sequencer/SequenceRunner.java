@@ -4,7 +4,6 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.sequencer.SequenceBase.getSequencerStateFile;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
-import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
@@ -62,7 +61,6 @@ public class SequenceRunner {
   private static final List<String> failures = new ArrayList<>();
   private static final Map<String, SequenceResult> allTestResults = new TreeMap<>();
   private static final List<String> SHARD_LIST = new ArrayList<>();
-  static ExecutionConfiguration exeConfig;
   private final Set<String> sequenceClasses = new TreeSet<>(
       Common.allClassesInPackage(ConfigSequences.class));
   private List<String> targets = List.of();
@@ -90,7 +88,7 @@ public class SequenceRunner {
   }
 
   private static SequenceRunner processConfig(ExecutionConfiguration config) {
-    exeConfig = config;
+    SequenceBase.exeConfig = config;
     SequenceRunner sequenceRunner = new SequenceRunner();
     SequenceBase.setDeviceId(config.device_id);
     sequenceRunner.process();
@@ -157,21 +155,20 @@ public class SequenceRunner {
 
   @TestOnly
   static boolean processStage(FeatureStage query, FeatureStage config) {
-    boolean exact = ofNullable(exeConfig.min_stage)
+    boolean exact = ofNullable(SequenceBase.exeConfig.min_stage)
         .map(value -> value.startsWith("=")).orElse(false);
     return exact ? query == config : query.compareTo(config) >= 0;
   }
 
   private static FeatureStage getFeatureMinStage() {
-    FeatureStage minStage = ofNullable(exeConfig.min_stage)
+    return ofNullable(SequenceBase.exeConfig.min_stage)
         .map(value -> value.startsWith("=") ? value.substring(1) : value)
         .map(FeatureStage::valueOf).orElse(DEFAULT_MIN_STAGE);
-    return minStage;
   }
 
   static ExecutionConfiguration ensureExecutionConfig() {
-    if (exeConfig != null) {
-      return exeConfig;
+    if (SequenceBase.exeConfig != null) {
+      return SequenceBase.exeConfig;
     }
     if (CONFIG_PATH == null || CONFIG_PATH.equals("")) {
       throw new RuntimeException(CONFIG_ENV + " env not defined.");
@@ -179,24 +176,23 @@ public class SequenceRunner {
     final File configFile = new File(CONFIG_PATH);
     try {
       System.err.println("Reading config file " + configFile.getAbsolutePath());
-      exeConfig = ConfigUtil.readValidatorConfig(configFile);
+      ExecutionConfiguration exeConfig = ConfigUtil.readValidatorConfig(configFile);
       SiteModel model = new SiteModel(exeConfig.site_model);
       model.initialize();
-      reportLoadingErrors(model);
+      reportLoadingErrors(model, exeConfig.device_id);
       exeConfig.cloud_region = ofNullable(exeConfig.cloud_region)
           .orElse(model.getCloudRegion());
       exeConfig.registry_id = ofNullable(exeConfig.registry_id)
           .orElse(model.getRegistryId());
       exeConfig.reflect_region = ofNullable(exeConfig.reflect_region)
           .orElse(model.getReflectRegion());
+      return exeConfig;
     } catch (Exception e) {
       throw new RuntimeException("While loading " + configFile, e);
     }
-    return exeConfig;
   }
 
-  private static void reportLoadingErrors(SiteModel model) {
-    String deviceId = exeConfig.device_id;
+  private static void reportLoadingErrors(SiteModel model, String deviceId) {
     checkState(model.allDeviceIds().contains(deviceId),
         format("device_id %s not found in site model", deviceId));
     Metadata metadata = model.getMetadata(deviceId);
@@ -211,7 +207,7 @@ public class SequenceRunner {
       throw new RuntimeException("Sequences have not been processed");
     }
     int exitCode = failures.isEmpty() ? EXIT_STATUS_SUCCESS : EXIST_STATUS_FAILURE;
-    System.err.println(format("Found %d test failures, exit code %d", failures.size(), exitCode));
+    System.err.printf("Found %d test failures, exit code %d%n", failures.size(), exitCode);
     return exitCode;
   }
 
@@ -230,11 +226,11 @@ public class SequenceRunner {
       throw new RuntimeException("No testing classes found");
     }
     System.err.println("Target sequence classes:\n  " + Joiner.on("\n  ").join(sequenceClasses));
-    ensureExecutionConfig();
-    targets = ofNullable(exeConfig.sequences).orElseGet(ImmutableList::of);
+    SequenceBase.exeConfig = ensureExecutionConfig();
+    SequenceBase.initializeValidationState();
+    targets = ofNullable(SequenceBase.exeConfig.sequences).orElseGet(ImmutableList::of);
     boolean enableAllBuckets = shouldExecuteAll() || !targets.isEmpty();
     SequenceBase.enableAllBuckets(enableAllBuckets);
-    String deviceId = exeConfig.device_id;
     Set<String> remainingMethods = new HashSet<>(targets);
     int runCount = 0;
     for (String className : sequenceClasses) {
@@ -283,11 +279,13 @@ public class SequenceRunner {
   }
 
   private String getFailureMessage(Failure failure) {
+    ExecutionConfiguration exeConfig = SequenceBase.exeConfig;
     String failureKey = exeConfig.device_id + "/" + failure.getDescription().getMethodName();
     return failureKey + ": " + friendlyStackTrace(failure.getException());
   }
 
   private boolean shouldShardMethod(String method) {
+    ExecutionConfiguration exeConfig = SequenceBase.exeConfig;
     if (exeConfig.shard_count == null) {
       return true;
     }

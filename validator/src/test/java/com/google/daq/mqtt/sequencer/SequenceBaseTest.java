@@ -24,8 +24,8 @@ public class SequenceBaseTest {
   @Before
   public void resetForTest() {
     SequenceBase.resetState();
-    SequenceRunner.exeConfig = TestCommon.testConfiguration();
-    SequenceRunner.exeConfig.device_id = TestCommon.DEVICE_ID;
+    SequenceBase.exeConfig = TestCommon.testConfiguration();
+    SequenceBase.exeConfig.device_id = TestCommon.DEVICE_ID;
   }
 
   @Test
