@@ -46,7 +46,7 @@ public class ConfigManager {
   private static final String CONFIG_DIR = "config";
   private final Metadata metadata;
   private final String deviceId;
-  private final File siteDir;
+  private final SiteModel siteModel;
 
   /**
    * Initiates ConfigManager for the given device at the given file location.
@@ -55,18 +55,18 @@ public class ConfigManager {
    * @param deviceId Device ID
    * @param siteDir Pathe to site model
    */
-  public ConfigManager(Metadata metadata, String deviceId, File siteDir) {
+  public ConfigManager(Metadata metadata, String deviceId, SiteModel siteModel) {
     this.metadata = metadata;
     this.deviceId = deviceId;
-    this.siteDir = siteDir;
+    this.siteModel = siteModel;
   }
 
   public static ConfigManager configFrom(Metadata metadata) {
     return new ConfigManager(metadata, null, null);
   }
 
-  public static ConfigManager configFrom(Metadata metadata, String deviceId, File siteDir) {
-    return new ConfigManager(metadata, deviceId, siteDir);
+  public static ConfigManager configFrom(Metadata metadata, String deviceId, SiteModel siteModel) {
+    return new ConfigManager(metadata, deviceId, siteModel);
   }
 
   private boolean isStaticConfig() {
@@ -75,7 +75,7 @@ public class ConfigManager {
 
   private String readStaticConfigFromFile(String fileName) {
     try {
-      File deviceDir = SiteModel.getDeviceDir(siteDir.getPath(), deviceId);
+      File deviceDir = siteModel.getDeviceDir(deviceId);
       File configDir = new File(deviceDir, CONFIG_DIR);
       File configFile = new File(configDir, fileName);
       String canonicalPath = configFile.getCanonicalPath();

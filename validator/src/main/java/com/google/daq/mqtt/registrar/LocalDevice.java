@@ -200,7 +200,7 @@ class LocalDevice {
       outDir = new File(deviceDir, OUT_DIR);
       prepareOutDir();
       metadata = readMetadata();
-      config = configFrom(metadata, deviceId, siteDir);
+      config = configFrom(metadata, deviceId, siteModel);
       exceptionManager = new DeviceExceptionManager(new File(siteModel.getSitePath()));
     } catch (Exception e) {
       throw new RuntimeException("While loading local device " + deviceId, e);
