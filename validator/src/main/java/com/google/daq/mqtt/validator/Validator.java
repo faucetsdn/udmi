@@ -27,6 +27,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.JSON_SUFFIX;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
 import static com.google.udmi.util.JsonUtil.getInstant;
+import static com.google.udmi.util.SiteModel.DEVICES_DIR;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 
@@ -399,14 +400,15 @@ public class Validator {
   }
 
   private void initializeExpectedDevices(String siteDir) {
-    File devicesDir = new File(siteDir, DEVICES_SUBDIR);
+    File devicesDir = new File(siteDir, DEVICES_DIR);
     List<String> siteDevices = SiteModel.listDevices(devicesDir);
     try {
       expectedDevices = ImmutableSet.copyOf(siteDevices);
+      SiteModel siteModel = new SiteModel(siteDir);
       for (String device : siteDevices) {
         ReportingDevice reportingDevice = new ReportingDevice(device);
         try {
-          Metadata metadata = SiteModel.loadDeviceMetadata(siteDir, device, Validator.class);
+          Metadata metadata = siteModel.loadDeviceMetadata(device);
           reportingDevice.setMetadata(metadata);
         } catch (Exception e) {
           outputLogger.error("Error while loading device %s: %s", device, e);
