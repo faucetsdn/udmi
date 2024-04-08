@@ -1115,7 +1115,6 @@ public class Registrar {
       
       try {
         localDevice.loadConfig();
-        System.err.printf("loaded config");
       } catch (Exception e) {
         localDevice.captureError(LocalDevice.EXCEPTION_CONFIG, e);
       }
