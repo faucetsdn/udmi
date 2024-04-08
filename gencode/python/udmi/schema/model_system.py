@@ -142,6 +142,7 @@ class Object1F163D1E:
     if self.coordinates:
       result['coordinates'] = self.coordinates.to_dict() # 4
     return result
+from .model_system_connection import SystemConnection
 from .model_system_hardware import SystemHardware
 
 
@@ -269,6 +270,7 @@ class SystemModel:
 
   def __init__(self):
     self.location = None
+    self.connection = None
     self.hardware = None
     self.software = None
     self.physical_tag = None
@@ -281,6 +283,7 @@ class SystemModel:
       return None
     result = SystemModel()
     result.location = ObjectD01F3C0D.from_dict(source.get('location'))
+    result.connection = SystemConnection.from_dict(source.get('connection'))
     result.hardware = SystemHardware.from_dict(source.get('hardware'))
     result.software = source.get('software')
     result.physical_tag = ObjectB03D37EB.from_dict(source.get('physical_tag'))
@@ -308,6 +311,8 @@ class SystemModel:
     result = {}
     if self.location:
       result['location'] = self.location.to_dict() # 4
+    if self.connection:
+      result['connection'] = self.connection.to_dict() # 4
     if self.hardware:
       result['hardware'] = self.hardware.to_dict() # 4
     if self.software:

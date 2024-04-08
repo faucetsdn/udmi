@@ -1,0 +1,29 @@
+{
+  "$udmi_version": "1.5.0",
+    "title": "SystemConnection",
+    "description": "A collection of fields which describe device connectivity",
+    "type": "object",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "additionalProperties": false,
+    "properties": {
+      "type": {
+        "description": "How the device connects to the cloud",
+        "enum": [
+          "DIRECT",
+          "PROXY",
+          "GATEWAY"
+        ]
+      },
+      "model": {
+        "description": "Model type classifier used for local network configuration",
+        "examples" : ["asset_models/BOS-DELTA-EBCON2"],
+        "type": "string",
+        "pattern": "^[-_/a-zA-Z0-9]+$"
+      },
+      "vlan_name": {
+        "description": "Name for the VLAN the device is connected into",
+        "type": "string",
+        "pattern": "^[-a-zA-Z0-9]+$"
+      }
+    }
+  }

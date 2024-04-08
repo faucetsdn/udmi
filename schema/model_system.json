@@ -67,6 +67,9 @@
         "site"
       ]
     },
+    "connection": {
+      "$ref": "file:model_system_connection.json"
+    },
     "hardware": {
       "$ref": "file:model_system_hardware.json"
     },
