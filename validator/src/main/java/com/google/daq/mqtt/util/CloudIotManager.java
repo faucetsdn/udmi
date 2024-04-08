@@ -101,10 +101,6 @@ public class CloudIotManager {
       File baseConfig = new File(siteModel, CLOUD_IOT_CONFIG_JSON);
       ExecutionConfiguration newConfig =
           config.src_file == null ? mergeObject(readExeConfig(baseConfig), config) : config;
-      ifNotNullThen(newConfig.alt_registry, alt -> {
-        newConfig.registry_id = alt;
-        newConfig.alt_registry = null;
-      });
       executionConfiguration = validate(newConfig, this.projectId);
       executionConfiguration.iot_provider = ofNullable(executionConfiguration.iot_provider).orElse(
           IMPLICIT);
@@ -181,7 +177,7 @@ public class CloudIotManager {
   private IotProvider makeIotProvider() {
     if (projectId.equals(SiteModel.MOCK_PROJECT)) {
       System.err.println("Using mock iot client for special client " + projectId);
-      return new IotMockProvider(projectId, registryId, cloudRegion);
+      return new IotMockProvider(executionConfiguration);
     }
     if (useReflectClient) {
       System.err.println("Using reflector iot client");

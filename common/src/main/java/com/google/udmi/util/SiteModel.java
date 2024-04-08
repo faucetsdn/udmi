@@ -120,6 +120,13 @@ public class SiteModel {
     JsonUtil.writeFile(executionConfiguration, outFile);
   }
 
+  public SiteModel(ExecutionConfiguration executionConfiguration) {
+    this(executionConfiguration.site_model);
+    // TODO: Fix this total hack.
+    exeConfig.registry_id = executionConfiguration.registry_id;
+    exeConfig.registry_suffix = executionConfiguration.registry_suffix;
+  }
+
   private static Supplier<String> projectSpecSupplier(List<String> argList) {
     return () -> {
       String nextArg = argList.isEmpty() ? "" : argList.get(0);

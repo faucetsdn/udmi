@@ -94,8 +94,8 @@ public class RegistrarTest {
   @Test
   public void registryVariantsTests() {
     checkRegistration(false, false, REGISTRY_ID);
-    checkRegistration(false, true, REGISTRY_ID + REGISTRY_SUFFIX);
     checkRegistration(true, false, ALT_REGISTRY);
+    checkRegistration(false, true, REGISTRY_ID + REGISTRY_SUFFIX);
     checkRegistration(true, true, ALT_REGISTRY + REGISTRY_SUFFIX);
   }
 

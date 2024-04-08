@@ -9,6 +9,7 @@ import static com.google.udmi.util.Common.UDMI_VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThrow;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
@@ -135,8 +136,6 @@ public class Registrar {
   private List<String> deviceList;
   private Boolean blockUnknown;
   private File siteDir;
-  private String registrySuffix;
-  private String altRegistry;
   private boolean deleteDevices;
   private boolean expungeDevices;
   private IotProvider iotProvider;
@@ -204,9 +203,9 @@ public class Registrar {
       String option = argList.remove(0);
       switch (option) {
         case "-r" -> setToolRoot(removeArg(argList, "tool root"));
-        case "-p" -> setProjectId(argList.remove(0), null);
+        case "-p" -> setProjectId(argList.remove(0));
         case "-s" -> setSitePath(argList.remove(0));
-        case "-a" -> setAltRegistry(removeArg(argList, "alt registry"));
+        case "-a" -> setTargetRegistry(removeArg(argList, "alt registry"));
         case "-e" -> setRegistrySuffix(removeArg(argList, "registry suffix"));
         case "-f" -> setFeedTopic(argList.remove(0));
         case "-u" -> setUpdateFlag(true);
@@ -267,15 +266,14 @@ public class Registrar {
   }
 
   void setRegistrySuffix(String suffix) {
-    registrySuffix = suffix;
+    siteModel.getExecutionConfiguration().registry_suffix = suffix;
   }
 
   private void processProfile(ExecutionConfiguration config) {
     config.site_model = new File(siteModel.getSitePath()).getAbsolutePath();
     setSitePath(config.site_model);
-    altRegistry = config.alt_registry;
     iotProvider = config.iot_provider;
-    setProjectId(config.project_id, config.registry_suffix);
+    setProjectId(config.project_id);
     if (config.project_id != null) {
       setUpdateFlag(true);
     }
@@ -1106,15 +1104,15 @@ public class Registrar {
     return localDevices;
   }
 
-  protected void setProjectId(String projectId, String registrySuffix) {
+  protected void setProjectId(String projectId) {
     if (NO_SITE.equals(projectId) || projectId == null) {
+      this.projectId = null;
       return;
     }
     if (projectId.startsWith("-")) {
       throw new IllegalArgumentException("Project id starts with dash options flag " + projectId);
     }
     this.projectId = projectId;
-    this.registrySuffix = registrySuffix;
   }
 
   protected void setToolRoot(String toolRoot) {
@@ -1197,8 +1195,9 @@ public class Registrar {
     return cloudIotManager.getMockActions();
   }
 
-  public void setAltRegistry(String altRegistry) {
-    this.altRegistry = altRegistry;
+  public void setTargetRegistry(String altRegistry) {
+    siteModel.getExecutionConfiguration().registry_id = altRegistry;
+    siteModel.getExecutionConfiguration().alt_registry = null;
   }
 
   class RelativeDownloader implements URIDownloader {
