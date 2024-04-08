@@ -147,8 +147,6 @@ public class Registrar {
 
   /**
    * Main entry point for registrar.
-   *
-   * @param args Standard command line arguments
    */
   public static void main(String[] args) {
     ArrayList<String> argList = new ArrayList<>(List.of(args));
