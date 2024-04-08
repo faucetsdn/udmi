@@ -9,7 +9,6 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThrow;
 import static com.google.udmi.util.GeneralUtils.isTrue;
-import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -49,7 +48,13 @@ public class ConfigManager {
   private final String deviceId;
   private final File siteDir;
 
-
+  /**
+   * Initiates ConfigManager for the given device at the given file location.
+   *
+   * @param metadata Device metadata
+   * @param deviceId Device ID
+   * @param siteDir Pathe to site model
+   */
   public ConfigManager(Metadata metadata, String deviceId, File siteDir) {
     this.metadata = metadata;
     this.deviceId = deviceId;
@@ -64,7 +69,7 @@ public class ConfigManager {
     return new ConfigManager(metadata, deviceId, siteDir);
   }
 
-  private boolean isStaticConfig(){
+  private boolean isStaticConfig() {
     return catchToNull(() -> metadata.cloud.config.static_file) != null;
   }
 
@@ -85,14 +90,24 @@ public class ConfigManager {
   }
 
   public Config deviceConfig() {
-      return generateDeviceConfig();
+    return generateDeviceConfig();
   }
 
-  public boolean canBeDowngraded(){
+  /**
+   * Whether the device config be downgraded.
+   *
+   * @return yes/no
+   */
+  public boolean canBeDowngraded() {
     return ! isStaticConfig();
   }
 
-  public JsonNode deviceConfigJson(){
+  /**
+   * Returns a JSON representation of the device config, allowing for any static config overrides.
+   *
+   * @return JSON Object of Device Config
+   */
+  public JsonNode deviceConfigJson() {
     if (isStaticConfig()) {
       String staticFileContents = readStaticConfigFromFile(metadata.cloud.config.static_file);
       try {

@@ -539,7 +539,7 @@ class LocalDevice {
   }
 
   private String deviceConfigString() {
-    if (configJson == null){
+    if (configJson == null) {
       return null;
     }
 
