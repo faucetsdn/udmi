@@ -2,9 +2,10 @@
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.4.1",
   "upgraded_from": "1",
-  "hash": "fdda202f",
+  "hash": "956fc372",
   "cloud": {
-    "auth_type": "ES256"
+    "auth_type": "ES256",
+    "detail": "site default for unit tests"
   },
   "system": {
     "location": {

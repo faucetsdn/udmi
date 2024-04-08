@@ -1,9 +1,10 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.4.1",
-  "hash": "f167cd94",
+  "hash": "47af7c01",
   "cloud": {
-    "auth_type": "RS256"
+    "auth_type": "RS256",
+    "detail": "site default for unit tests"
   },
   "system": {
     "location": {

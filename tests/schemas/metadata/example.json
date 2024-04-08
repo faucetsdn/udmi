@@ -6,9 +6,16 @@
     "location": {
       "site": "US-SFO-XYY",
       "section": "NW-2F",
+      "floor": "2",
+      "room": "2F26",
       "position": {
         "x": 10,
-        "y": 20
+        "y": 20,
+        "z": 3.7
+      },
+      "coordinates": {
+        "lat":  37.386051,
+        "long": -122.083855
       }
     },
     "physical_tag": {
