@@ -1,3 +1,6 @@
+Config
+java.lang.NullPointerException: Cannot read field "min_loglevel" because "this.metadata.system" is null
+	REDACTED
 Credential
 java.lang.RuntimeException: While loading credentials for local device GAT-123
 	REDACTED

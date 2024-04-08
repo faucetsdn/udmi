@@ -1,6 +1,7 @@
 Exceptions for GAT-123
   While loading credentials for local device GAT-123
     Credential cloud.auth_type definition missing
+  Cannot read field "min_loglevel" because "this.metadata.system" is null
   1 schema violations found
     object has missing required properties (["system","version"])
   Invalid auth type null

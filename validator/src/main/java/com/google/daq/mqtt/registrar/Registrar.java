@@ -1118,16 +1118,19 @@ public class Registrar {
               deviceName,
               keyName -> new LocalDevice(siteDir, devicesDir, deviceName, schemas, generation,
                   siteMetadata, validateMetadata));
+
+      // Note - config needs to be initialised first because other methods may require it
+      try {
+        localDevice.loadConfig();
+        System.err.printf("loaded config");
+      } catch (Exception e) {
+        localDevice.captureError(LocalDevice.EXCEPTION_CONFIG, e);
+      }
+
       try {
         localDevice.loadCredentials();
       } catch (Exception e) {
         localDevice.captureError(LocalDevice.EXCEPTION_CREDENTIALS, e);
-      }
-
-      try {
-        localDevice.loadConfig();
-      } catch (Exception e) {
-        localDevice.captureError(LocalDevice.EXCEPTION_CONFIG, e);
       }
 
       if (cloudIotManager != null) {

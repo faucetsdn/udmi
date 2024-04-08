@@ -4,24 +4,24 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.util.NetworkFamily.NAMED_FAMILIES;
 import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_STRICT;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
-import static com.google.udmi.util.GeneralUtils.compressJsonString;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThrow;
 import static com.google.udmi.util.GeneralUtils.isTrue;
+import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.io.FileUtils.readFileToString;
 
-import com.google.common.collect.ImmutableList;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.udmi.util.GeneralUtils;
-import com.google.udmi.util.MessageDowngrader;
+import com.google.common.collect.ImmutableList;
+import com.google.udmi.util.SiteModel;
 import java.io.File;
-import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import org.jetbrains.annotations.NotNull;
@@ -40,25 +40,77 @@ import udmi.schema.SystemConfig;
 /**
  * Container class for working with generated UDMI configs (from device metadata).
  */
-public class ConfigGenerator {
+public class ConfigManager {
 
   public static final String GENERATED_CONFIG_JSON = "generated_config.json";
   public static final ProtocolFamily DEFAULT_FAMILY = ProtocolFamily.VENDOR;
-
+  private static final String CONFIG_DIR = "config";
   private final Metadata metadata;
+  private final String deviceId;
+  private final File siteDir;
 
-  public ConfigGenerator(Metadata metadata) {
+
+  public ConfigManager(Metadata metadata, String deviceId, File siteDir) {
     this.metadata = metadata;
+    this.deviceId = deviceId;
+    this.siteDir = siteDir;
   }
 
-  public static ConfigGenerator configFrom(Metadata metadata) {
-    return new ConfigGenerator(metadata);
+  public static ConfigManager configFrom(Metadata metadata) {
+    return new ConfigManager(metadata, null, null);
   }
+
+  public static ConfigManager configFrom(Metadata metadata, String deviceId, File siteDir) {
+    return new ConfigManager(metadata, deviceId, siteDir);
+  }
+
+  private boolean isStaticConfig(){
+    return catchToNull(() -> metadata.cloud.config.static_file) != null;
+  }
+
+  private String readStaticConfigFromFile(String fileName) {
+    try {
+      File deviceDir = SiteModel.getDeviceDir(siteDir.getPath(), deviceId);
+      File configDir = new File(deviceDir, CONFIG_DIR);
+      File configFile = new File(configDir, fileName);
+      String canonicalPath = configFile.getCanonicalPath();
+      String configDirPath = configDir.getCanonicalPath();
+      if (!canonicalPath.startsWith(configDirPath)) {
+        throw new IllegalArgumentException();
+      }
+      return readFileToString(configFile, StandardCharsets.UTF_8);
+    } catch (Exception e) {
+      throw new RuntimeException(String.format("While reading config file: %s", fileName), e);
+    }
+  }
+
+  public Config deviceConfig() {
+      return generateDeviceConfig();
+  }
+
+  public boolean canBeDowngraded(){
+    return ! isStaticConfig();
+  }
+
+  public JsonNode deviceConfigJson(){
+    if (isStaticConfig()) {
+      String staticFileContents = readStaticConfigFromFile(metadata.cloud.config.static_file);
+      try {
+        return OBJECT_MAPPER_STRICT.readTree(staticFileContents);
+      } catch (JsonProcessingException e) {
+        throw new RuntimeException("could not parse static config JSON", e);
+      }
+
+    } else {
+      return OBJECT_MAPPER_STRICT.valueToTree(deviceConfig());
+    }
+  }
+
 
   /**
    * Return a complete UDMI Config message object.
    */
-  public Config deviceConfig() {
+  public Config generateDeviceConfig() {
     Config config = new Config();
     config.timestamp = metadata.timestamp;
     config.version = metadata.version;
@@ -187,13 +239,13 @@ public class ConfigGenerator {
   /**
    * Indicate if this is a gateway device.
    */
-  private boolean isGateway() {
+  public boolean isGateway() {
     return metadata != null
         && metadata.gateway != null
         && metadata.gateway.gateway_id == null;
   }
 
-  private boolean isProxied() {
+  public boolean isProxied() {
     return getGatewayId() != null;
   }
 

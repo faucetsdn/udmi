@@ -1,0 +1,3 @@
+Config
+java.lang.NullPointerException: Cannot read field "timestamp" because "this.metadata" is null
+	REDACTED

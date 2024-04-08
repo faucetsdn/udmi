@@ -7,7 +7,7 @@ import static com.google.daq.mqtt.registrar.Registrar.ENVELOPE_SCHEMA_JSON;
 import static com.google.daq.mqtt.registrar.Registrar.METADATA_JSON;
 import static com.google.daq.mqtt.registrar.Registrar.METADATA_SCHEMA_JSON;
 import static com.google.daq.mqtt.registrar.Registrar.NORMALIZED_JSON;
-import static com.google.daq.mqtt.util.ConfigGenerator.configFrom;
+import static com.google.daq.mqtt.util.ConfigManager.configFrom;
 import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_STRICT;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
@@ -19,10 +19,8 @@ import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.writeString;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
 import static com.google.udmi.util.JsonUtil.asMap;
-import static com.google.udmi.util.JsonUtil.getTimestampString;
 import static com.google.udmi.util.MessageUpgrader.METADATA_SCHEMA;
 import static java.lang.String.format;
-import static org.apache.commons.io.FileUtils.readFileToString;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
@@ -36,7 +34,7 @@ import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import com.google.daq.mqtt.util.CloudDeviceSettings;
 import com.google.daq.mqtt.util.CloudIotManager;
-import com.google.daq.mqtt.util.ConfigGenerator;
+import com.google.daq.mqtt.util.ConfigManager;
 import com.google.daq.mqtt.util.DeviceExceptionManager;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
@@ -57,7 +55,6 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -71,7 +68,6 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
-import org.apache.commons.io.Charsets;
 import org.apache.commons.io.IOUtils;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Auth_type;
@@ -158,7 +154,7 @@ class LocalDevice {
           EXPECTED_DIR,
           CONFIG_DIR,
           OUT_DIR);
-  private static final String GENERATED_CONFIG_JSON = ConfigGenerator.GENERATED_CONFIG_JSON;
+  private static final String GENERATED_CONFIG_JSON = ConfigManager.GENERATED_CONFIG_JSON;
   private static final Set<String> OUT_FILES = ImmutableSet.of(
       GENERATED_CONFIG_JSON, DEVICE_ERRORS_MAP, NORMALIZED_JSON, EXCEPTION_LOG_FILE);
   private static final Set<String> ALL_KEY_FILES =
@@ -185,6 +181,8 @@ class LocalDevice {
   private final List<Credential> deviceCredentials = new ArrayList<>();
   private final Map<String, Object> siteMetadata;
   private final boolean validateMetadata;
+  private ConfigManager config;
+  private JsonNode configJson;
   private final DeviceExceptionManager exceptionManager;
   private String deviceNumId;
 
@@ -192,7 +190,6 @@ class LocalDevice {
   private JsonNode baseVersion;
   private Date lastActive;
   private boolean blocked;
-  private ConfigGenerator config;
   private String staticConfig;
 
   LocalDevice(
@@ -210,6 +207,7 @@ class LocalDevice {
       outDir = new File(deviceDir, OUT_DIR);
       prepareOutDir();
       metadata = readMetadata();
+      config = configFrom(metadata, deviceId, siteDir);
       exceptionManager = new DeviceExceptionManager(siteDir);
     } catch (Exception e) {
       throw new RuntimeException("While loading local device " + deviceId, e);
@@ -375,15 +373,9 @@ class LocalDevice {
   }
 
   public void loadConfig() {
-    if (catchToNull(() -> metadata.cloud.config.static_file) != null) {
-      staticConfig = readStaticConfigFromFile(metadata.cloud.config.static_file);
-      config = null;
-    } else {
-      config = configFrom(metadata);
-      staticConfig = null;
-    }
+    configJson = config.deviceConfigJson();
   }
-  
+
   public void loadCredentials() {
     try {
       deviceCredentials.clear();
@@ -472,27 +464,11 @@ class LocalDevice {
   }
 
   boolean isGateway() {
-    return metadata != null
-        && metadata.gateway != null
-        && metadata.gateway.proxy_ids != null
-        && !metadata.gateway.proxy_ids.isEmpty();
+    return config.isGateway();
   }
-
-  private String getGatewayId() {
-    return catchToNull(() -> metadata.gateway.gateway_id);
-  }
-
 
   boolean isProxied() {
-    return getGatewayId() != null;
-  }
-
-  public List<String> getProxyDevicesList() {
-    return isGateway() ? metadata.gateway.proxy_ids : null;
-  }
-
-  public String getUpdatedTimestamp() {
-    return getTimestampString(metadata.timestamp);
+    return config.isProxied();
   }
 
   boolean isDirectConnect() {
@@ -513,30 +489,15 @@ class LocalDevice {
         return;
       }
 
-      settings.updated = getUpdatedTimestamp();
+      settings.updated = config.getUpdatedTimestamp();
       settings.metadata = deviceMetadataString();
       settings.deviceNumId = ifNotNullGet(metadata.cloud, cloud -> cloud.num_id);
-      settings.proxyDevices = getProxyDevicesList();
+      settings.proxyDevices = config.getProxyDevicesList();
       settings.keyAlgorithm = getAuthType();
       settings.keyBytes = getKeyBytes();
       settings.config = deviceConfigString();
     } catch (Exception e) {
       captureError(EXCEPTION_INITIALIZING, e);
-    }
-  }
-
-  private String readStaticConfigFromFile(String fileName) {
-    try {
-      File configDir = new File(deviceDir, CONFIG_DIR);
-      File configFile = new File(configDir, fileName);
-      String canonicalPath = configFile.getCanonicalPath();
-      String configDirPath = configDir.getCanonicalPath();
-      if (!canonicalPath.startsWith(configDirPath)) {
-        throw new IllegalArgumentException();
-      }
-      return readFileToString(configFile, StandardCharsets.UTF_8);
-    } catch (Exception e) {
-      throw new RuntimeException(String.format("While reading config file: %s", fileName), e);
     }
   }
 
@@ -578,18 +539,17 @@ class LocalDevice {
   }
 
   private String deviceConfigString() {
-    if (staticConfig != null) {
-      return staticConfig;
-    } else if (config != null) {
-      try {
-        JsonNode configJson = OBJECT_MAPPER_STRICT.valueToTree(deviceConfigObject());
-        new MessageDowngrader("config", configJson).downgrade(baseVersion);
-        return compressJsonString(configJson, MAX_JSON_LENGTH);
-      } catch (Exception e) {
-        throw e;
-      }
-    } else {
+    if (configJson == null){
       return null;
+    }
+
+    try {
+      if (config.canBeDowngraded()) {
+        new MessageDowngrader("config", configJson).downgrade(baseVersion);
+      }
+      return compressJsonString(configJson, MAX_JSON_LENGTH);
+    } catch (Exception e) {
+      throw new RuntimeException("While converting device config", e);
     }
   }
 

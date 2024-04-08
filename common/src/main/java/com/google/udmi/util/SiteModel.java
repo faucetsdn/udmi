@@ -176,7 +176,7 @@ public class SiteModel {
     }
   }
 
-  private static File getDeviceDir(String sitePath, String deviceId) {
+  public static File getDeviceDir(String sitePath, String deviceId) {
     File devicesFile = new File(new File(sitePath), "devices");
     return new File(devicesFile, deviceId);
   }
