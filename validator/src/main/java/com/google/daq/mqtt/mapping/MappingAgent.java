@@ -1,7 +1,6 @@
 package com.google.daq.mqtt.mapping;
 
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.daq.mqtt.registrar.Registrar.METADATA_JSON;
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_VERSION;
 import static com.google.udmi.util.Common.removeNextArg;
 import static com.google.udmi.util.JsonUtil.isoConvert;
@@ -10,6 +9,7 @@ import static com.google.udmi.util.JsonUtil.loadFileStrictRequired;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.writeFile;
 import static com.google.udmi.util.MetadataMapKeys.UDMI_PROVISION_GENERATION;
+import static com.google.udmi.util.SiteModel.METADATA_JSON;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
@@ -141,7 +141,6 @@ public class MappingAgent {
     writeFile(metadata, gatewayMetadata);
   }
 
-  @SuppressWarnings("unchecked")
   private Entry<String, Metadata> convertExtra(File file) {
     DiscoveryEvent discoveryEvent = loadFileStrict(DiscoveryEvent.class,
         new File(file, "cloud_metadata/udmi_discovered_with.json"));

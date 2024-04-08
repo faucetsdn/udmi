@@ -10,6 +10,7 @@ import static com.google.udmi.util.Common.UDMI_VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThrow;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
@@ -18,9 +19,11 @@ import static com.google.udmi.util.GeneralUtils.writeString;
 import static com.google.udmi.util.JsonUtil.JSON_SUFFIX;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
 import static com.google.udmi.util.JsonUtil.loadFile;
+import static com.google.udmi.util.JsonUtil.loadFileRequired;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.writeFile;
 import static com.google.udmi.util.MetadataMapKeys.UDMI_PREFIX;
+import static com.google.udmi.util.SiteModel.DEVICES_DIR;
 import static java.lang.Math.ceil;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -96,17 +99,11 @@ public class Registrar {
   public static final String SCHEMA_BASE_PATH = "schema";
   public static final Joiner JOIN_CSV = Joiner.on(", ");
   public static final File BASE_DIR = new File(".");
-  public static final String METADATA_JSON = "metadata.json";
-  public static final String EXTRA_DEVICES_BASE = "extras";
   static final String ENVELOPE_SCHEMA_JSON = "envelope.json";
   static final String METADATA_SCHEMA_JSON = "metadata.json";
-  static final String NORMALIZED_JSON = "metadata_norm.json";
   static final String DEVICE_ERRORS_MAP = "errors.map";
-  private static final String DEVICES_DIR = "devices";
   private static final String SCHEMA_SUFFIX = ".json";
-  private static final String REGISTRATION_SUMMARY_BASE = "out/registration_summary";
   private static final String SCHEMA_NAME = "UDMI";
-  private static final String SITE_METADATA_JSON = "site_metadata.json";
   private static final String SWARM_SUBFOLDER = "swarm";
   private static final String CONFIG_SUB_TYPE = "config";
   private static final String MODEL_SUB_TYPE = "model";
@@ -116,9 +113,6 @@ public class Registrar {
   private static final Map<String, Class<? extends Summarizer>> SUMMARIZERS = ImmutableMap.of(
       ".json", Summarizer.JsonSummarizer.class,
       ".csv", Summarizer.CsvSummarizer.class);
-  private static final String EXTRA_DEVICES_FORMAT = EXTRA_DEVICES_BASE + "/%s";
-  private static final String METADATA_DIR = "cloud_metadata";
-  private static final String CLOUD_MODEL_FILE = "cloud_model.json";
   private final Map<String, JsonSchema> schemas = new HashMap<>();
   private final String generation = getGenerationString();
   private final Set<Summarizer> summarizers = new HashSet<>();
@@ -131,10 +125,10 @@ public class Registrar {
   private String projectId;
   private boolean updateCloudIoT;
   private Duration idleLimit;
+  private Metadata siteDefaults;
   private Map<String, CloudModel> cloudModels;
-  private Metadata siteMetadata;
   private Map<String, Object> lastErrorSummary;
-  private boolean validateMetadata = false;
+  private boolean doValidate = false;
   private List<String> deviceList;
   private Boolean blockUnknown;
   private File siteDir;
@@ -149,6 +143,7 @@ public class Registrar {
   private int runnerThreads = 5;
   private ExecutorService executor;
   private List<Future<?>> executing = new ArrayList<>();
+  private SiteModel siteModel;
 
   /**
    * Main entry point for registrar.
@@ -320,7 +315,7 @@ public class Registrar {
       if (schemaBase == null) {
         setToolRoot(null);
       }
-      loadSiteMetadata();
+      loadSiteDefaults();
       if (createRegistries >= 0) {
         createRegistries();
       } else {
@@ -365,7 +360,7 @@ public class Registrar {
   }
 
   private void setValidateMetadata(boolean validateMetadata) {
-    this.validateMetadata = validateMetadata;
+    this.doValidate = validateMetadata;
   }
 
   private void setDeviceList(List<String> deviceList) {
@@ -439,7 +434,8 @@ public class Registrar {
   protected void setSitePath(String sitePath) {
     checkNotNull(SCHEMA_NAME, "schemaName not set yet");
     siteDir = new File(sitePath);
-    File summaryBase = new File(siteDir, REGISTRATION_SUMMARY_BASE);
+    siteModel = new SiteModel(sitePath);
+    File summaryBase = new File(siteDir, SiteModel.REGISTRATION_SUMMARY_BASE);
     File parentFile = summaryBase.getParentFile();
     if (!parentFile.isDirectory() && !parentFile.mkdirs()) {
       throw new IllegalStateException("Could not create directory " + parentFile.getAbsolutePath());
@@ -448,7 +444,8 @@ public class Registrar {
     summarizers.addAll(SUMMARIZERS.entrySet().stream().map(factory -> {
       try {
         Summarizer summarizer = factory.getValue().getDeclaredConstructor().newInstance();
-        summarizer.outFile = new File(siteDir, REGISTRATION_SUMMARY_BASE + factory.getKey());
+        summarizer.outFile = new File(siteDir,
+            SiteModel.REGISTRATION_SUMMARY_BASE + factory.getKey());
         summarizer.outFile.delete();
         return summarizer;
       } catch (Exception e) {
@@ -813,7 +810,7 @@ public class Registrar {
   }
 
   private void reapExtraDevices(Set<String> current) {
-    File extrasDir = new File(siteDir, EXTRA_DEVICES_BASE);
+    File extrasDir = new File(siteDir, SiteModel.EXTRA_DEVICES_BASE);
     String[] existing = ofNullable(extrasDir.list()).orElse(new String[0]);
     Set<String> previous = Arrays.stream(existing).collect(Collectors.toSet());
     difference(previous, current).forEach(expired -> {
@@ -829,11 +826,11 @@ public class Registrar {
   }
 
   private void writeExtraDevice(String extraName, CloudModel augmentedModel) {
-    String devPath = format(EXTRA_DEVICES_FORMAT, extraName);
+    String devPath = format(SiteModel.EXTRA_DEVICES_FORMAT, extraName);
     File extraDir = new File(siteDir, devPath);
     try {
       extraDir.mkdirs();
-      File modelFile = new File(extraDir, CLOUD_MODEL_FILE);
+      File modelFile = new File(extraDir, SiteModel.CLOUD_MODEL_FILE);
       Date previous = ifTrueGet(modelFile.exists(),
           () -> loadFile(CloudModel.class, modelFile).updated_time);
       if (previous == null || !previous.equals(augmentedModel.updated_time)) {
@@ -847,7 +844,7 @@ public class Registrar {
   }
 
   private void updateExtraMetadata(String extraName, File extraDir) {
-    File metadataDir = new File(extraDir, METADATA_DIR);
+    File metadataDir = new File(extraDir, SiteModel.METADATA_DIR);
     try {
       CloudModel cloudModel = cloudIotManager.fetchDevice(extraName);
       FileUtils.deleteDirectory(metadataDir);
@@ -1036,7 +1033,7 @@ public class Registrar {
     }
 
     List<String> deviceList = getDeviceList(specifiedDevices, devicesDir);
-    Map<String, LocalDevice> localDevices = loadDevices(siteDir, devicesDir, deviceList);
+    Map<String, LocalDevice> localDevices = loadDevices(deviceList);
     initializeSettings(localDevices);
     writeNormalized(localDevices);
     validateKeys(localDevices);
@@ -1106,27 +1103,23 @@ public class Registrar {
             });
   }
 
-  private Map<String, LocalDevice> loadDevices(File siteDir, File devicesDir,
-      List<String> devices) {
+  private Map<String, LocalDevice> loadDevices(List<String> devices) {
     HashMap<String, LocalDevice> localDevices = new HashMap<>();
     Set<String> actual = devices.stream()
-        .filter(deviceName -> LocalDevice.deviceExists(devicesDir, deviceName)).collect(
-            Collectors.toSet());
+        .filter(deviceName -> siteModel.deviceExists(deviceName)).collect(Collectors.toSet());
     actual.forEach(deviceName -> {
       LocalDevice localDevice =
           localDevices.computeIfAbsent(
               deviceName,
-              keyName -> new LocalDevice(siteDir, devicesDir, deviceName, schemas, generation,
-                  siteMetadata, validateMetadata));
-
-      // Note - config needs to be initialised first because other methods may require it
+              keyName -> new LocalDevice(siteModel, deviceName, schemas, generation, doValidate));
+      
       try {
         localDevice.loadConfig();
         System.err.printf("loaded config");
       } catch (Exception e) {
         localDevice.captureError(LocalDevice.EXCEPTION_CONFIG, e);
       }
-
+      
       try {
         localDevice.loadCredentials();
       } catch (Exception e) {
@@ -1193,30 +1186,37 @@ public class Registrar {
     }
   }
 
-  private void loadSiteMetadata() {
-    this.siteMetadata = null;
+  private void loadSiteDefaults() {
+    this.siteDefaults = null;
 
-    if (!schemas.containsKey(METADATA_JSON)) {
+    if (!schemas.containsKey(SiteModel.METADATA_JSON)) {
       return;
     }
 
-    File siteMetadataFile = new File(siteDir, SITE_METADATA_JSON);
-    try (InputStream targetStream = new FileInputStream(siteMetadataFile)) {
-      // At this time, do not validate the Metadata schema because, by its nature of being
+    File legacyMetadataFile = new File(siteDir, SiteModel.LEGACY_METADATA_FILE);
+    if (legacyMetadataFile.exists()) {
+      Metadata metadata = loadFileRequired(Metadata.class, legacyMetadataFile);
+      ifNotNullThrow(metadata.system, format("Legacy %s detected, please rename to %s",
+          SiteModel.LEGACY_METADATA_FILE, SiteModel.SITE_DEFAULTS_FILE));
+    }
+
+    File siteDefaultsFile = new File(siteDir, SiteModel.SITE_DEFAULTS_FILE);
+    try (InputStream targetStream = new FileInputStream(siteDefaultsFile)) {
+      // At this time, do not validate the site defaults schema because, by its nature of being
       // a partial overlay on each device Metadata, this Metadata will likely be incomplete
       // and fail validation.
       schemas.get(METADATA_SCHEMA_JSON).validate(OBJECT_MAPPER.readTree(targetStream));
     } catch (FileNotFoundException e) {
       return;
     } catch (Exception e) {
-      throw new RuntimeException("While validating " + SITE_METADATA_JSON, e);
+      throw new RuntimeException("While validating " + SiteModel.SITE_DEFAULTS_FILE, e);
     }
 
     try {
-      System.err.printf("Loading " + SITE_METADATA_JSON + "\n");
-      this.siteMetadata = OBJECT_MAPPER.readValue(siteMetadataFile, Metadata.class);
+      System.err.printf("Loading " + SiteModel.SITE_DEFAULTS_FILE + "\n");
+      this.siteDefaults = OBJECT_MAPPER.readValue(siteDefaultsFile, Metadata.class);
     } catch (Exception e) {
-      throw new RuntimeException("While loading " + SITE_METADATA_JSON, e);
+      throw new RuntimeException("While loading " + SiteModel.SITE_DEFAULTS_FILE, e);
     }
   }
 

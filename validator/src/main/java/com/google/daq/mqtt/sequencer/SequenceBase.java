@@ -5,7 +5,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Predicates.not;
 import static com.google.common.base.Strings.emptyToNull;
-import static com.google.daq.mqtt.registrar.Registrar.METADATA_JSON;
 import static com.google.daq.mqtt.sequencer.SequenceBase.Capabilities.LAST_CONFIG;
 import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
 import static com.google.daq.mqtt.util.CloudIotManager.EMPTY_CONFIG;
@@ -24,6 +23,7 @@ import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
@@ -36,6 +36,7 @@ import static com.google.udmi.util.JsonUtil.loadFileRequired;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toStringMap;
+import static com.google.udmi.util.SiteModel.METADATA_JSON;
 import static java.lang.String.format;
 import static java.nio.file.Files.newOutputStream;
 import static java.util.Objects.requireNonNull;
@@ -434,7 +435,8 @@ public class SequenceBase {
     validationState.timestamp = cleanDate();
     JsonUtil.writeFile(validationState, getSequencerStateFile());
     String validationString = stringify(validationState);
-    client.publish(getDeviceId(), VALIDATION_STATE_TOPIC, validationString);
+    ifNotNullThen(client,
+        () -> client.publish(getDeviceId(), VALIDATION_STATE_TOPIC, validationString));
   }
 
   static File getSequencerStateFile() {
@@ -450,7 +452,7 @@ public class SequenceBase {
     statusEntry.category = VALIDATION_FEATURE_SEQUENCE;
     getValidationState().status = statusEntry;
     summarizeSchemaStages();
-    updateValidationState();
+    ifTrueThen(exeConfig != null, SequenceBase::updateValidationState);
   }
 
   static void enableAllBuckets(boolean enabled) {
@@ -574,7 +576,7 @@ public class SequenceBase {
     return validationState;
   }
 
-  private static void initializeValidationState() {
+  static void initializeValidationState() {
     validationState = new ValidationState();
     validationState.features = new HashMap<>();
     validationState.schemas = new HashMap<>();
@@ -582,12 +584,14 @@ public class SequenceBase {
     validationState.udmi_version = Common.getUdmiVersion();
     validationState.cloud_version = ifNotNullGet(client, MessagePublisher::getVersionInformation);
     Entry statusEntry = new Entry();
+    boolean startupError = exeConfig == null || siteModel == null;
+    statusEntry.level = (startupError ? ERROR : NOTICE).value();
+    statusEntry.message = startupError ? "Error starting sequence run"
+        : "Starting sequence run for device " + getDeviceId();
     statusEntry.category = VALIDATION_FEATURE_SEQUENCE;
-    statusEntry.message = "Starting sequence run for device " + getDeviceId();
-    statusEntry.level = Level.NOTICE.value();
     statusEntry.timestamp = new Date();
     validationState.status = statusEntry;
-    updateValidationState();
+    ifNotTrueThen(startupError, SequenceBase::updateValidationState);
   }
 
   @NotNull
@@ -1016,7 +1020,7 @@ public class SequenceBase {
     File messageFile = new File(testDir, messageBase + ".json");
     Object savedException = message == null ? null : message.get(EXCEPTION_KEY);
     try {
-      // An actual exception here will cause the JSON seralizer to barf, so temporarily sanitize.
+      // An actual exception here will cause the JSON serializer to barf, so temporarily sanitize.
       if (savedException instanceof Exception) {
         message.put(EXCEPTION_KEY, ((Exception) savedException).getMessage());
       }
@@ -2009,7 +2013,7 @@ public class SequenceBase {
 
   /**
    * Mirrors the current config to the "other" config, where the current and other configs are
-   * defined by the useAlternateClient flag. This call is used to warm-up the new config before a
+   * defined by the useAlternateClient flag. This call is used to warmup the new config before a
    * switch, so that when the client is switched, it is ready with the right (up to date) config
    * contents.
    */
@@ -2028,7 +2032,7 @@ public class SequenceBase {
   }
 
   /**
-   * Clears out the "other" (not current) config, so that it can't be inadvertantly used for
+   * Clears out the "other" (not current) config, so that it can't be inadvertently used for
    * something. This is the simple version of the endpoint going down (actually turning down the
    * endpoint would be a lot more work).
    */
@@ -2080,16 +2084,16 @@ public class SequenceBase {
             isoConvert(lastConfig), isoConvert(expectedConfig));
   }
 
-  private String notSignficantStatusDetail() {
+  private String notSignificantStatusDetail() {
     if (deviceState == null || deviceState.system == null) {
       lastStatusLevel = 0;
       return "deviceState.system not defined";
     }
-    String interesting = signficantStatusDetail();
+    String interesting = significantStatusDetail();
     return interesting == null ? "no status to report" : null;
   }
 
-  private String signficantStatusDetail() {
+  private String significantStatusDetail() {
     if (deviceState == null || deviceState.system == null) {
       lastStatusLevel = 0;
       return "deviceState.system not defined";
@@ -2111,9 +2115,9 @@ public class SequenceBase {
     }
     String systemStatusMessage = SYSTEM_STATUS_MESSAGE + STATUS_CHECK_SUFFIX;
     if (isInteresting) {
-      checkThat(systemStatusMessage, notSignficantStatusDetail());
+      checkThat(systemStatusMessage, notSignificantStatusDetail());
     } else {
-      checkThat(NOT_STATUS_PREFIX + systemStatusMessage, signficantStatusDetail());
+      checkThat(NOT_STATUS_PREFIX + systemStatusMessage, significantStatusDetail());
     }
   }
 
@@ -2124,7 +2128,7 @@ public class SequenceBase {
     expectedSystemStatus = null;
     String message = (interesting ? HAS_STATUS_PREFIX : NOT_STATUS_PREFIX) + SYSTEM_STATUS_MESSAGE;
     Supplier<String> detailer =
-        interesting ? this::notSignficantStatusDetail : this::signficantStatusDetail;
+        interesting ? this::notSignificantStatusDetail : this::significantStatusDetail;
     waitFor(message, detailer);
     expectedSystemStatus = interesting;
     checkThatHasInterestingSystemStatus(interesting);
