@@ -171,14 +171,6 @@ public class SiteModel {
     }
   }
 
-<<<<<<< HEAD
-  public static File getDeviceDir(String sitePath, String deviceId) {
-    File devicesFile = new File(new File(sitePath), "devices");
-    return new File(devicesFile, deviceId);
-  }
-
-=======
->>>>>>> origin/master
   public static String getRegistryActual(ExecutionConfiguration iotConfig) {
     return getRegistryActual(iotConfig.udmi_namespace, iotConfig.registry_id,
         iotConfig.registry_suffix);
