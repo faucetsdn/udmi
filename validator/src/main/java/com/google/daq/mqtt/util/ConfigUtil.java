@@ -21,6 +21,7 @@ public abstract class ConfigUtil {
   public static final String UDMI_VERSION = "1.5.1";
   // public static final String UDMI_VERSION = SchemaVersion.CURRENT.key();
   public static final String UDMI_TOOLS = System.getenv("UDMI_TOOLS");
+  public static final File UDMI_ROOT = new File(System.getenv("UDMI_ROOT"));
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
       .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)

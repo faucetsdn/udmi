@@ -3,13 +3,13 @@ package com.google.daq.mqtt.registrar;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Sets.difference;
 import static com.google.common.collect.Sets.intersection;
+import static com.google.daq.mqtt.util.ConfigUtil.UDMI_ROOT;
 import static com.google.udmi.util.Common.CLOUD_VERSION_KEY;
 import static com.google.udmi.util.Common.NO_SITE;
 import static com.google.udmi.util.Common.UDMI_VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
-import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThrow;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
@@ -284,7 +284,7 @@ public class Registrar {
       }
       if (schemaBase == null) {
         // Use the proper (relative) tool root directory for unit tests.
-        setToolRoot(MOCK_PROJECT.equals(projectId) ? ".." : null);
+        setToolRoot(MOCK_PROJECT.equals(projectId) ? ".." : defaultToolRoot());
       }
       loadSiteDefaults();
       if (createRegistries >= 0) {
@@ -301,6 +301,10 @@ public class Registrar {
     } finally {
       shutdown();
     }
+  }
+
+  private static String defaultToolRoot() {
+    return UDMI_ROOT.getAbsolutePath();
   }
 
   private void createRegistries() {
