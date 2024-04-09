@@ -45,7 +45,7 @@ function test_wrap {
 }
 
 case "$1" in
-    install_dependencies)
+  install_dependencies)
     sudo true # Proactively update before test_wrap is called.
     test_wrap bin/setup_base
     test_wrap bin/clone_model

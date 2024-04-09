@@ -19,6 +19,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import udmi.schema.CloudModel;
 import udmi.schema.Envelope.SubFolder;
+import udmi.schema.ExecutionConfiguration;
 import udmi.schema.Metadata;
 import udmi.schema.SetupUdmiConfig;
 
@@ -34,11 +35,15 @@ public class IotMockProvider implements IotProvider {
   private final Map<String, CloudModel> cloudDevices = new HashMap<>();
   private List<MockAction> mockActions = new ArrayList<>();
 
-  IotMockProvider(String projectId, String registryId, String cloudRegion) {
-    siteModel = new SiteModel("../sites/udmi_site_model");
+  /**
+   * Create a mock provider used for unit testing.
+   */
+  public IotMockProvider(ExecutionConfiguration executionConfiguration) {
+    siteModel = new SiteModel(executionConfiguration);
     siteModel.initialize();
     siteModel.forEachDeviceId(this::populateCloudModel);
-    client = mockClientString(projectId, registryId, cloudRegion);
+    client = mockClientString(executionConfiguration.project_id, siteModel.getRegistryId(),
+        siteModel.getCloudRegion());
   }
 
   public static String mockClientString(String projectId, String registryId, String cloudRegion) {

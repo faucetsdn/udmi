@@ -21,7 +21,6 @@ project_id=$1
 shift
 
 [[ -n $GITHUB_RUN_NUMBER ]] && echo "Workflow run number $GITHUB_RUN_NUMBER" || true
-echo "Run as: $0 $project_id"
 echo "export TARGET_PROJECT=$TARGET_PROJECT"
 echo "export UDMI_REGISTRY_SUFFIX=$UDMI_REGISTRY_SUFFIX"
 echo "export UDMI_ALT_REGISTRY=$UDMI_ALT_REGISTRY"
@@ -48,15 +47,16 @@ mkdir -p out
 if [[ -n $UDMI_REGISTRY_SUFFIX ]]; then
     echo Using registry suffix $UDMI_REGISTRY_SUFFIX
     registry_suffix=$UDMI_REGISTRY_SUFFIX
+    registry_arg="-e $UDMI_REGISTRY_SUFFIX"
 else
     registry_suffix=
+    registry_arg=
 fi
 
 registry_id=`jq -r .registry_id $site_path/cloud_iot_config.json`
 cloud_region=`jq -r .cloud_region $site_path/cloud_iot_config.json`
 
-site_arg=$site_path
-registrar_project=$project_id
+site_args="$site_path $project_id $registry_arg"
 
 registry_prefix=
 project_target=${project_id##*/}
@@ -118,8 +118,8 @@ rm -rf $fake_device && cp -a $clone_device $fake_device
 jq ".localnet.families.vendor.addr = \"2183213\"" $fake_metadata | sponge $fake_metadata
 
 echo Clean out the registry to make sure devices get removed...
-echo bin/registrar $site_arg $registrar_project -d -x
-bin/registrar $site_arg $registrar_project -d -x
+echo bin/registrar $site_args -d -x
+bin/registrar $site_args -d -x
 
 echo Checking reported cloud version info
 jq .cloud_version.udmi_ref $output_file
@@ -132,12 +132,12 @@ echo pubber/bin/run $pubber_config
 ! pubber/bin/run $pubber_config
 
 echo Now recreate the registry from scratch!
-echo bin/registrar $site_arg $registrar_project
-bin/registrar $site_arg $registrar_project
+echo bin/registrar $site_args
+bin/registrar $site_args
 
 echo Remove fake device from site model, so it will be blocked
 rm -rf $fake_device
-bin/registrar $site_arg $registrar_project -b
+bin/registrar $site_args -b
 
 echo Check $device_id again, but this time with success...
 echo pubber/bin/run $pubber_config
@@ -161,16 +161,16 @@ sns_line=`fgrep -n SNS-4 sites/udmi_site_model/out/registration_summary.csv | cu
 
 if [[ -n $solo_arg ]]; then
     echo Deleting singular entry $solo_arg...
-    echo bin/registrar $site_arg $registrar_project -d $solo_arg
-    bin/registrar $site_arg $registrar_project -d $solo_arg
+    echo bin/registrar $site_args -d $solo_arg
+    bin/registrar $site_args -d $solo_arg
     search "Deleting device $solo_arg \(1/1)" out/registrar.log
     search "Deleted 1 devices" out/registrar.log
 
     echo Sleeping to avoid IoT Core race condition...
     sleep 20
 
-    echo bin/registrar /tmp/registrar_config.json $solo_arg
-    bin/registrar /tmp/registrar_config.json $solo_arg
+    echo bin/registrar $site_args $solo_arg
+    bin/registrar $site_args $solo_arg
 
     echo Checking creation of one device
     search "Processing 1 new devices..." out/registrar.log
@@ -183,13 +183,8 @@ fi
 
 if [[ -n $UDMI_ALT_REGISTRY ]]; then
     echo Registering alt registry $UDMI_ALT_REGISTRY...
-    site_file=$site_arg/cloud_iot_config.json
-    cp $site_file $site_file-tmp
-    jq ".registry_id = \"$UDMI_ALT_REGISTRY\"" $site_file-tmp > $site_file
-    echo bin/registrar $site_arg $registrar_project -u
-    bin/registrar $site_arg $registrar_project -u
-    mv $site_file-tmp $site_file
-    echo Done with registering alt registry
+    echo bin/registrar $site_args -a $UDMI_ALT_REGISTRY
+    bin/registrar $site_args -a $UDMI_ALT_REGISTRY
 fi
 
 echo Done with successful registry clean/create test
