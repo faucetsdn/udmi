@@ -1,6 +1,8 @@
 package com.google.daq.mqtt.mapping;
 
 import static com.google.daq.mqtt.TestCommon.GATEWAY_ID;
+import static com.google.daq.mqtt.TestCommon.REGISTRY_ID;
+import static com.google.daq.mqtt.TestCommon.SITE_DIR;
 import static com.google.udmi.util.SiteModel.MOCK_PROJECT;
 import static org.junit.Assert.assertEquals;
 
@@ -34,7 +36,9 @@ public class MappingAgentTest {
     ExecutionConfiguration executionConfiguration = new ExecutionConfiguration();
     executionConfiguration.project_id = MOCK_PROJECT;
     executionConfiguration.device_id = GATEWAY_ID;
+    executionConfiguration.registry_id = REGISTRY_ID;
     executionConfiguration.src_file = CONFIG_SOURCE;
+    executionConfiguration.site_name = REGISTRY_ID;
     return executionConfiguration;
   }
 }

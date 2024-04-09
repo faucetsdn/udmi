@@ -24,7 +24,7 @@ public class WebServerRunnerTest {
     WebServerRunner webServerRunner = new WebServerRunner(new ArrayList<>(SERVER_ARGS));
     Map<String, String> params = new HashMap<>();
     String sequencerResult = webServerRunner.tryHandler("sequencer", params);
-    assertTrue("sitePath exception", sequencerResult.contains("sitePath not defined"));
+    assertTrue("sitePath exception", sequencerResult.contains("site model not defined"));
   }
 
   @Test

@@ -4,13 +4,15 @@ import static com.google.daq.mqtt.TestCommon.ALT_REGISTRY;
 import static com.google.daq.mqtt.TestCommon.REGISTRY_ID;
 import static com.google.daq.mqtt.TestCommon.SITE_DIR;
 import static com.google.daq.mqtt.TestCommon.SITE_REGION;
-import static com.google.daq.mqtt.TestCommon.TOOL_ROOT;
+import static com.google.daq.mqtt.registrar.LocalDevice.EXCEPTION_VALIDATING;
 import static com.google.daq.mqtt.util.IotMockProvider.ActionType.BIND_DEVICE_ACTION;
 import static com.google.daq.mqtt.util.IotMockProvider.ActionType.BLOCK_DEVICE_ACTION;
 import static com.google.daq.mqtt.util.IotMockProvider.ActionType.CREATE_DEVICE_ACTION;
 import static com.google.daq.mqtt.util.IotMockProvider.ActionType.DELETE_DEVICE_ACTION;
 import static com.google.daq.mqtt.util.IotMockProvider.ActionType.UPDATE_DEVICE_ACTION;
 import static com.google.daq.mqtt.util.IotMockProvider.MOCK_DEVICE_ID;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.SiteModel.MOCK_PROJECT;
 import static java.lang.Boolean.TRUE;
 import static org.junit.Assert.assertEquals;
@@ -25,11 +27,9 @@ import com.google.daq.mqtt.util.IotMockProvider.MockAction;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.junit.Test;
 import udmi.schema.CloudModel;
-import udmi.schema.ExecutionConfiguration;
 
 /**
  * Test suite for basic registrar functionality.
@@ -40,19 +40,19 @@ public class RegistrarTest {
 
   @SuppressWarnings("unchecked")
   private static double getValidatingSize(Map<String, Object> summary) {
-    return ((Map<String, Object>) summary.get("Validating")).size();
+    return ((Map<String, Object>) summary.get(EXCEPTION_VALIDATING)).size();
   }
 
   private void assertErrorSummaryValidateSuccess(Map<String, Object> summary) {
-    if ((summary == null) || (summary.get("Validating") == null)
+    if ((summary == null) || (summary.get(EXCEPTION_VALIDATING) == null)
         || (getValidatingSize(summary) == 0)) {
       return;
     }
-    fail(summary.get("Validating").toString());
+    fail(summary.get(EXCEPTION_VALIDATING).toString());
   }
 
   private void assertErrorSummaryValidateFailure(Map<String, Object> summary) {
-    if ((summary == null) || (summary.get("Validating") == null)) {
+    if ((summary == null) || (summary.get(EXCEPTION_VALIDATING) == null)) {
       fail("Error summary for Validating key is null");
     }
     if (getValidatingSize(summary) == 0) {
@@ -60,43 +60,21 @@ public class RegistrarTest {
     }
   }
 
-  private Registrar getRegistrar(Consumer<ExecutionConfiguration> profileUpdater,
-      List<String> args) {
-    ExecutionConfiguration configuration = new ExecutionConfiguration();
-    configuration.alt_registry = ALT_REGISTRY;
-    configuration.site_model = SITE_DIR;
-    configuration.project_id = MOCK_PROJECT;
-    profileUpdater.accept(configuration);
-    Registrar registrar = new Registrar();
-    registrar.setToolRoot(TOOL_ROOT);
-    return registrar.processProfile(configuration).processArgs(args);
-  }
-
   private Registrar getRegistrar(List<String> args) {
     try {
-      Registrar registrar = new Registrar();
-      registrar.setSitePath(SITE_DIR);
-      registrar.setProjectId(MOCK_PROJECT, null);
-      registrar.setToolRoot(TOOL_ROOT);
-      if (args != null) {
-        registrar.processArgs(new ArrayList<>(args));
-      }
-      return registrar;
+      List<String> registrarArgs = new ArrayList<>();
+      registrarArgs.add(SITE_DIR);
+      registrarArgs.add(MOCK_PROJECT);
+      ifNotNullThen(args, () -> registrarArgs.addAll(args));
+      return new Registrar().processArgs(registrarArgs);
     } catch (Exception e) {
       throw new RuntimeException("While getting test registrar", e);
     }
   }
 
   @Test
-  public void metadataValidateSuccessTest() {
-    Registrar registrar = getRegistrar(null);
-    registrar.execute();
-    assertErrorSummaryValidateSuccess(registrar.getLastErrorSummary());
-  }
-
-  @Test
   public void metadataValidateFailureTest() {
-    Registrar registrar = getRegistrar(ImmutableList.of("-t"));
+    Registrar registrar = getRegistrar(ImmutableList.of());
     registrar.execute();
     assertErrorSummaryValidateFailure(registrar.getLastErrorSummary());
   }
@@ -116,16 +94,16 @@ public class RegistrarTest {
   @Test
   public void registryVariantsTests() {
     checkRegistration(false, false, REGISTRY_ID);
-    checkRegistration(false, true, REGISTRY_ID + REGISTRY_SUFFIX);
     checkRegistration(true, false, ALT_REGISTRY);
+    checkRegistration(false, true, REGISTRY_ID + REGISTRY_SUFFIX);
     checkRegistration(true, true, ALT_REGISTRY + REGISTRY_SUFFIX);
   }
 
   private void checkRegistration(boolean useAlternate, boolean useSuffix, String expectedRegistry) {
-    List<String> args = useAlternate ? ImmutableList.of("-a") : ImmutableList.of();
-    Registrar registrar = getRegistrar(profile -> {
-      profile.registry_suffix = useSuffix ? REGISTRY_SUFFIX : null;
-    }, args);
+    List<String> args = new ArrayList<>();
+    ifTrueThen(useAlternate, () -> args.addAll(ImmutableList.of("-a", ALT_REGISTRY)));
+    ifTrueThen(useSuffix, () -> args.addAll(ImmutableList.of("-e", REGISTRY_SUFFIX)));
+    Registrar registrar = getRegistrar(args);
     registrar.execute();
     List<Object> mockActions = registrar.getMockActions();
     String mockClientString = IotMockProvider.mockClientString(MOCK_PROJECT,

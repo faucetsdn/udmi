@@ -55,19 +55,13 @@ public class CloudIotManager {
 
   /**
    * Create a new CloudIoTManager.
-   *
-   * @param projectId      project id
-   * @param siteDir        site model directory
-   * @param altRegistry    alternate registry to use (instead of site registry)
-   * @param registrySuffix suffix to append to model registry id
-   * @param iotProvider    indicates which iot provider type
    */
   public CloudIotManager(String projectId, File siteDir, String altRegistry,
       String registrySuffix, IotAccess.IotProvider iotProvider) {
     checkNotNull(projectId, "project id undefined");
     this.siteModel = checkNotNull(siteDir, "site directory undefined");
     checkState(siteDir.isDirectory(), "not a directory " + siteDir.getAbsolutePath());
-    this.useReflectClient = ofNullable(iotProvider).orElse(GCP_NATIVE) != GCP_NATIVE;
+    this.useReflectClient = iotProvider != null;
     this.projectId = projectId;
     File cloudConfig = new File(siteDir, CLOUD_IOT_CONFIG_JSON);
     try {
@@ -105,7 +99,8 @@ public class CloudIotManager {
       siteModel = model.isAbsolute() ? model
           : new File(new File(config.src_file).getParentFile(), model.getPath());
       File baseConfig = new File(siteModel, CLOUD_IOT_CONFIG_JSON);
-      ExecutionConfiguration newConfig = mergeObject(readExeConfig(baseConfig), config);
+      ExecutionConfiguration newConfig =
+          config.src_file == null ? mergeObject(readExeConfig(baseConfig), config) : config;
       executionConfiguration = validate(newConfig, this.projectId);
       executionConfiguration.iot_provider = ofNullable(executionConfiguration.iot_provider).orElse(
           IMPLICIT);
@@ -182,7 +177,7 @@ public class CloudIotManager {
   private IotProvider makeIotProvider() {
     if (projectId.equals(SiteModel.MOCK_PROJECT)) {
       System.err.println("Using mock iot client for special client " + projectId);
-      return new IotMockProvider(projectId, registryId, cloudRegion);
+      return new IotMockProvider(executionConfiguration);
     }
     if (useReflectClient) {
       System.err.println("Using reflector iot client");
