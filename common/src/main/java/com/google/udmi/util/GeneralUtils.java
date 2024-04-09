@@ -17,7 +17,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Sets;
 import com.google.common.hash.Hashing;
 import com.google.daq.mqtt.util.ValidationException;
 import com.google.udmi.util.ProperPrinter.OutputFormat;
@@ -49,11 +48,11 @@ import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
-import udmi.schema.CloudModel;
 
 public class GeneralUtils {
 
   public static final Joiner CSV_JOINER = Joiner.on(", ");
+  public static final Joiner NEWLINE_JOINER = Joiner.on("\n");
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
       .enable(SerializationFeature.INDENT_OUTPUT)
       .setDateFormat(new ISO8601DateFormat())
@@ -149,6 +148,10 @@ public class GeneralUtils {
    * hopefully somewhat meaningful. Real debuggers will need to dig out the full stack trace!
    */
   public static String friendlyStackTrace(Throwable e) {
+    return CSV_JOINER.join(friendlyLineTrace(e)).replace('\n', ' ');
+  }
+
+  public static List<String> friendlyLineTrace(Throwable e) {
     List<String> messages = new ArrayList<>();
     while (e != null) {
       if (e instanceof ValidationException validationException) {
@@ -163,7 +166,7 @@ public class GeneralUtils {
       }
       e = e.getCause();
     }
-    return CSV_JOINER.join(messages).replace('\n', ' ');
+    return messages;
   }
 
   public static <T> T fromJsonFile(File path, Class<T> valueType) {
@@ -199,7 +202,8 @@ public class GeneralUtils {
   }
 
   public static Runnable ignoreValue(Object ignored) {
-    return () -> {};
+    return () -> {
+    };
   }
 
   public static Date toDate(Instant lastSeen) {
@@ -589,5 +593,12 @@ public class GeneralUtils {
 
   public static String prefixedDifference(String prefix, Set<String> a, Set<String> b) {
     return joinOrNull(prefix, symmetricDifference(a, b));
+  }
+
+  public static String removeArg(List<String> argList, String description) {
+    if (argList.isEmpty()) {
+      throw new RuntimeException(format("Missing required %s argument", description));
+    }
+    return argList.remove(0);
   }
 }

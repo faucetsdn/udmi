@@ -1,7 +1,8 @@
 package com.google.daq.mqtt.util;
 
+import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
+
 import com.google.common.base.Joiner;
-import com.google.udmi.util.GeneralUtils;
 import com.sun.net.httpserver.HttpServer;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -74,7 +75,7 @@ public class SimpleWebServer {
       handler.accept(params);
       return "success";
     } catch (Throwable e) {
-      return GeneralUtils.stackTraceString(e);
+      return friendlyStackTrace(e);
     }
   }
 }
