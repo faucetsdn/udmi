@@ -25,10 +25,17 @@ import com.google.bos.udmi.service.core.ReflectProcessor;
 import com.google.bos.udmi.service.core.StateProcessor;
 import com.google.bos.udmi.service.core.TargetProcessor;
 import com.google.common.collect.ImmutableSet;
+import io.etcd.jetcd.ByteSequence;
+import io.etcd.jetcd.Client;
+import io.etcd.jetcd.KV;
+import io.etcd.jetcd.KeyValue;
+import io.etcd.jetcd.kv.GetResponse;
 import java.io.File;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -124,6 +131,7 @@ public class UdmiServicePod extends ContainerBase {
    */
   public static void main(String[] args) {
     try {
+      testEtcd();
       UdmiServicePod udmiServicePod = new UdmiServicePod(args);
       Runtime.getRuntime().addShutdownHook(new Thread(udmiServicePod::shutdown));
       udmiServicePod.activate();
@@ -177,6 +185,31 @@ public class UdmiServicePod extends ContainerBase {
     boolean notSetOrEqual = config.name == null || config.name.equals(name);
     checkState(notSetOrEqual, "config name already set, was " + config.name);
     config.name = name;
+  }
+
+  private static void testEtcd() {
+    System.err.println("Testing etcd");
+    String etcdTarget =
+        "ip:///etcd-set-0.etcd-set:2379,etcd-set-1.etcd-set:2379,etcd-set-2.etcd:2379";
+    try (Client client = Client.builder().target(etcdTarget).build()) {
+      KV kvClient = client.getKVClient();
+      ByteSequence key = ByteSequence.from("test_key".getBytes());
+      ByteSequence value = ByteSequence.from("test_value".getBytes());
+
+      kvClient.put(key, value).get();
+
+      CompletableFuture<GetResponse> getFuture = kvClient.get(key);
+
+      GetResponse response = getFuture.get();
+      List<String> strings = response.getKvs().stream().map(KeyValue::getValue)
+          .map(bytes -> new String(bytes.getBytes())).toList();
+      System.err.println("etcd reply: " + CSV_JOINER.join(strings));
+
+      kvClient.delete(key).get();
+
+    } catch (Exception e) {
+      throw new RuntimeException("Exception testing etcd", e);
+    }
   }
 
   private void createAccess(String name, IotAccess config) {

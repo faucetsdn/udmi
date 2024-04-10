@@ -1,0 +1,92 @@
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: etcd-ssd
+provisioner: kubernetes.io/gce-pd
+parameters:
+  type: pd-ssd
+  zone: us-central1-f
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: etcd-client
+spec:
+  type: LoadBalancer
+  ports:
+  - name: etcd-client
+    port: 2379
+    protocol: TCP
+    targetPort: 2379
+  selector:
+    app: etcd-set
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: etcd-set
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+  - name: client
+    port: 2379
+    protocol: TCP
+    targetPort: 2379
+  - port: 2380
+    name: peer
+  selector:
+    app: etcd-set
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: etcd-set
+  labels:
+    app: etcd-set
+spec:
+  serviceName: etcd-set
+  replicas: 3
+  selector: 
+    matchLabels:
+      app: etcd-set
+  template:
+    metadata:
+      name: etcd-set
+      labels:
+        app: etcd-set
+    spec:
+      containers:
+      - name: etcd-set
+        image: quay.io/coreos/etcd:latest
+        ports:
+        - containerPort: 2379
+          name: client
+        - containerPort: 2380
+          name: peer
+        volumeMounts:
+        - name: etcd-data
+          mountPath: /var/run/etcd
+        command:
+          - /bin/sh
+          - -c
+          - |
+            PEERS="etcd-set-0=http://etcd-set-0.etcd-set:2380,etcd-set-1=http://etcd-set-1.etcd-set:2380,etcd-set-2=http://etcd-set-2.etcd-set:2380"
+            exec etcd --name ${HOSTNAME} \
+              --listen-peer-urls http://0.0.0.0:2380 \
+              --listen-client-urls http://0.0.0.0:2379 \
+              --advertise-client-urls http://${HOSTNAME}.etcd-set:2379 \
+              --initial-advertise-peer-urls http://${HOSTNAME}:2380 \
+              --initial-cluster-token etcd-cluster-1 \
+              --initial-cluster ${PEERS} \
+              --initial-cluster-state new \
+              --data-dir /var/run/etcd/default.etcd
+  volumeClaimTemplates:
+  - metadata:
+      name: etcd-data
+    spec:
+      storageClassName: etcd-ssd
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
