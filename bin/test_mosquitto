@@ -1,8 +1,7 @@
 #!/bin/bash -e
 
-UDMI_ROOT=$(dirname $0)/..
-cd $UDMI_ROOT
-source etc/shell_common.sh
+ROOT_DIR=$(dirname $0)/..
+cd $ROOT_DIR
 
 if [[ $# != 0 ]]; then
     echo Usage: $0
@@ -18,12 +17,20 @@ cloud_region=$(jq -r .cloud_region $site_config)
 registry_id=$(jq -r .registry_id $site_config)
 
 mkdir -p out
-
+PASSWORD_FILE=/etc/mosquitto/test_mosquitto.passwd
 USERNAME=scrumptus
 PASSWORD=aardvark
 
-bin/start_mosquitto $USERNAME $PASSWORD
+echo password_file ${PASSWORD_FILE} | sudo tee /etc/mosquitto/conf.d/udmi_test.conf
+sudo sed -i 's/allow_anonymous true/allow_anonymous false/' /etc/mosquitto/mosquitto.conf
+sudo sed -i 's/#listener/listener/' /etc/mosquitto/mosquitto.conf
 
+sudo touch ${PASSWORD_FILE}
+sudo mosquitto_passwd -b ${PASSWORD_FILE} ${USERNAME} ${PASSWORD}
+sudo chmod 666 ${PASSWORD_FILE}
+
+sudo systemctl restart mosquitto
+systemctl status mosquitto
 killall mosquitto_sub || true
 
 echo Subscribing to mqtt/test in the background...

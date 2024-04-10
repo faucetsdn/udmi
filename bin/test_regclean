@@ -31,7 +31,6 @@ csv_file=$site_path/out/registration_summary.csv
 pubber_config=/tmp/pubber_config.json
 serial_no=clean-$RANDOM
 device_id=AHU-1
-endpoint_json=/tmp/endpoint.json
 fake_id=ACME-2301
 fake_device=$site_path/devices/$fake_id
 fake_metadata=$fake_device/metadata.json
@@ -84,10 +83,13 @@ elif [[ -z $broker_hostname ]]; then
     broker_hostname=mqtt.googleapis.com
 fi
 
-bin/make_endpoint $endpoint_json $project_id $site_path "$registry_suffix" $device_id
-
 cat <<EOF > $pubber_config
 {
+    "endpoint": {
+      "protocol": "mqtt",
+      "client_id": "projects/$project_target/locations/$cloud_region/registries/$registry_prefix$registry_id$registry_suffix/devices/$device_id",
+      "hostname": "$broker_hostname"
+    },
     "sitePath": "$site_path",
     "deviceId": "$device_id",
     "projectId": "$project_target",
@@ -97,13 +99,6 @@ cat <<EOF > $pubber_config
     }
 }
 EOF
-
-jq --slurpfile endpoint $endpoint_json '.endpoint = $endpoint[0]' $pubber_config | sponge $pubber_config
-
-echo Using pubber_config:
-cat $pubber_config
-
-false
 
 echo Corrupting site model to check error handling...
 mkdir -p $site_path/devices/XXX-1

@@ -23,16 +23,7 @@ function usage {
     echo usage: $0 $*
     false
 }
-
-function parse_project_id {
-    project_target=x
-    cloud_region=us-central1
-    registry_prefix=z
-    registry_id=q
-    broker_hostname=yes
-    protocol=mqtt
-}
-
+    
 UDMI_JAR=$UDMI_ROOT/validator/build/libs/validator-1.0-SNAPSHOT-all.jar
 
 udmi_version=$(cd $UDMI_ROOT; git describe --dirty --always)
