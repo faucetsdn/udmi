@@ -48,6 +48,17 @@
         }
       }
     },
+    "iot_data": {
+      "type": "object",
+      "title": "Iot Data Provider",
+      "additionalProperties": false,
+      "existingJavaType": "java.util.HashMap<String, IotData>",
+      "patternProperties": {
+        "^[a-z]+$": {
+          "$ref": "file:data_iot.json"
+        }
+      }
+    },
     "distributors": {
       "type": "object",
       "title": "Distributed state managers",

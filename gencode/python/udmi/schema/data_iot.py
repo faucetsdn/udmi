@@ -1,27 +1,20 @@
-"""Generated class for common.json"""
+"""Generated class for data_iot.json"""
 
 
-class Common:
+class IotData:
   """Generated schema class"""
 
-
-  SystemMode = SystemMode
-  ProtocolFamily = ProtocolFamily
-  IotProvider = IotProvider
-  DataProvider = DataProvider
-  FeatureStage = FeatureStage
-  BlobPhase = BlobPhase
-  SystemBlobsets = SystemBlobsets
-
   def __init__(self):
-    self.family = None
+    self.name = None
+    self.provider = None
 
   @staticmethod
   def from_dict(source):
     if not source:
       return None
-    result = Common()
-    result.family = source.get('family')
+    result = IotData()
+    result.name = source.get('name')
+    result.provider = source.get('provider')
     return result
 
   @staticmethod
@@ -30,7 +23,7 @@ class Common:
       return None
     result = {}
     for key in source:
-      result[key] = Common.from_dict(source[key])
+      result[key] = IotData.from_dict(source[key])
     return result
 
   @staticmethod
@@ -42,6 +35,8 @@ class Common:
 
   def to_dict(self):
     result = {}
-    if self.family:
-      result['family'] = self.family # 5
+    if self.name:
+      result['name'] = self.name # 5
+    if self.provider:
+      result['provider'] = self.provider # 5
     return result

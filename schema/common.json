@@ -41,7 +41,7 @@
         "details"
       ]
     },
-    "provider": {
+    "iot_provider": {
       "title": "Iot Provider",
       "enum": [
         "local",
@@ -53,6 +53,12 @@
         "gbos",
         "clearblade_native",
         "clearblade"
+      ]
+    },
+    "data_provider": {
+      "title": "Data Provider",
+      "enum": [
+        "etcd"
       ]
     },
     "stage": {

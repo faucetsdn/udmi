@@ -45,6 +45,7 @@ import org.jetbrains.annotations.NotNull;
 import udmi.schema.BridgePodConfiguration;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.IotAccess;
+import udmi.schema.IotData;
 import udmi.schema.Level;
 import udmi.schema.PodConfiguration;
 import udmi.schema.SetupUdmiConfig;
@@ -75,6 +76,7 @@ public class UdmiServicePod extends ContainerBase {
     super(makePodConfiguration(args));
     try {
       ifNotNullThen(podConfiguration.distributors, dist -> dist.forEach(this::createDistributor));
+      ifNotNullThen(podConfiguration.iot_data, db -> db.forEach(this::createIotData));
       ifNotNullThen(podConfiguration.iot_access, access -> access.forEach(this::createAccess));
       ifNotNullThen(podConfiguration.flows, flows -> flows.forEach(this::createFlow));
       ifNotNullThen(podConfiguration.bridges, bridges -> bridges.forEach(this::createBridge));
@@ -82,6 +84,10 @@ public class UdmiServicePod extends ContainerBase {
     } catch (Exception e) {
       throw new RuntimeException("Fatal error instantiating pod " + CSV_JOINER.join(args), e);
     }
+  }
+
+  private void createIotData(String name, IotData iotData) {
+    // TODO: Sorting this bit out.
   }
 
   /**
@@ -131,7 +137,6 @@ public class UdmiServicePod extends ContainerBase {
    */
   public static void main(String[] args) {
     try {
-      testEtcd();
       UdmiServicePod udmiServicePod = new UdmiServicePod(args);
       Runtime.getRuntime().addShutdownHook(new Thread(udmiServicePod::shutdown));
       udmiServicePod.activate();
@@ -185,31 +190,6 @@ public class UdmiServicePod extends ContainerBase {
     boolean notSetOrEqual = config.name == null || config.name.equals(name);
     checkState(notSetOrEqual, "config name already set, was " + config.name);
     config.name = name;
-  }
-
-  private static void testEtcd() {
-    System.err.println("Testing etcd");
-    String etcdTarget =
-        "ip:///etcd-set-0.etcd-set:2379,etcd-set-1.etcd-set:2379,etcd-set-2.etcd:2379";
-    try (Client client = Client.builder().target(etcdTarget).build()) {
-      KV kvClient = client.getKVClient();
-      ByteSequence key = ByteSequence.from("test_key".getBytes());
-      ByteSequence value = ByteSequence.from("test_value".getBytes());
-
-      kvClient.put(key, value).get();
-
-      CompletableFuture<GetResponse> getFuture = kvClient.get(key);
-
-      GetResponse response = getFuture.get();
-      List<String> strings = response.getKvs().stream().map(KeyValue::getValue)
-          .map(bytes -> new String(bytes.getBytes())).toList();
-      System.err.println("etcd reply: " + CSV_JOINER.join(strings));
-
-      kvClient.delete(key).get();
-
-    } catch (Exception e) {
-      throw new RuntimeException("Exception testing etcd", e);
-    }
   }
 
   private void createAccess(String name, IotAccess config) {
