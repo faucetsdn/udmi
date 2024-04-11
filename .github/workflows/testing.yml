@@ -257,6 +257,9 @@ jobs:
         run: bin/start_etcd
       - name: bin/test_etcd
         run: bin/test_etcd
+      - name: support bundle
+        if: ${{ !cancelled() }}
+        run: bin/support ${{ github.repository_owner }}_${{ github.job }}_
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
