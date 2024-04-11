@@ -2,7 +2,7 @@ package com.google.daq.mqtt.util;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.util.NetworkFamily.NAMED_FAMILIES;
-import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_STRICT;
+import static com.google.udmi.util.GeneralUtils.catchToElse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -15,14 +15,10 @@ import static com.google.udmi.util.JsonUtil.parseJson;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
-import static org.apache.commons.io.FileUtils.readFileToString;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import org.jetbrains.annotations.NotNull;
@@ -110,15 +106,11 @@ public class ConfigManager {
    * @return JSON Object of Device Config
    */
   public Object deviceConfigJson() {
-    try {
-      if (isStaticConfig()) {
-        String staticFileContents = readStaticConfigFromFile(metadata.cloud.config.static_file);
-        return parseJson(staticFileContents);
-      } else {
-        return deviceConfig();
-      }
-    } catch (Exception e) {
-    throw new RuntimeException("While converting device config", e);
+    if (isStaticConfig()) {
+      String staticFileContents = readStaticConfigFromFile(metadata.cloud.config.static_file);
+      return parseJson(staticFileContents);
+    } else {
+      return deviceConfig();
     }
   }
 
@@ -127,6 +119,9 @@ public class ConfigManager {
    * Return a complete UDMI Config message object.
    */
   public Config generateDeviceConfig() {
+    if (metadata == null) {
+      throw new RuntimeException("config could not be generated due to metadata errors");
+    }
     Config config = new Config();
     config.timestamp = metadata.timestamp;
     config.version = metadata.version;
@@ -142,7 +137,9 @@ public class ConfigManager {
     SystemConfig system;
     system = new SystemConfig();
     system.operation = new Operation();
-    system.min_loglevel = metadata.system.min_loglevel;
+    if (catchToNull(() -> metadata.system.min_loglevel) != null) {
+      system.min_loglevel = metadata.system.min_loglevel;
+    }
     return system;
   }
 

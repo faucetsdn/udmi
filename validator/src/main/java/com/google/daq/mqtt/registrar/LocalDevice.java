@@ -174,7 +174,6 @@ class LocalDevice {
   private final List<Credential> deviceCredentials = new ArrayList<>();
   private final boolean validateMetadata;
   private ConfigManager config;
-  private Object configJson;
   private final DeviceExceptionManager exceptionManager;
   private final SiteModel siteModel;
 
@@ -184,8 +183,6 @@ class LocalDevice {
   private JsonNode baseVersion;
   private Date lastActive;
   private boolean blocked;
-  private String staticConfig;
-
   LocalDevice(
       SiteModel siteModel, String deviceId, Map<String, JsonSchema> schemas,
       String generation, boolean validateMetadata) {
@@ -335,10 +332,6 @@ class LocalDevice {
     return metadata != null && (metadata.cloud != null && isTrue(metadata.cloud.device_key));
   }
 
-  public void loadConfig() {
-    configJson = config.deviceConfigJson();
-  }
-
   public void loadCredentials() {
     try {
       deviceCredentials.clear();
@@ -451,7 +444,6 @@ class LocalDevice {
       if (metadata == null) {
         return;
       }
-
       settings.updated = config.getUpdatedTimestamp();
       settings.metadata = deviceMetadataString();
       settings.deviceNumId = ifNotNullGet(metadata.cloud, cloud -> cloud.num_id);
@@ -502,14 +494,15 @@ class LocalDevice {
   }
 
   private String deviceConfigString() {
-    if (configJson == null) {
-      return null;
+    try {
+      JsonNode configJson = OBJECT_MAPPER_STRICT.valueToTree(config.deviceConfigJson());
+      if (config.shouldBeDowngraded()) {
+        new MessageDowngrader("config", configJson).downgrade(baseVersion);
+      }
+      return compressJsonString(configJson, MAX_JSON_LENGTH);
+    } catch (Exception e) {
+      throw new RuntimeException("While converting device config", e);
     }
-    
-    if (config.shouldBeDowngraded()) {
-      new MessageDowngrader("config", configJson).downgrade(baseVersion);
-    }
-    return compressJsonString(configJson, MAX_JSON_LENGTH);
   }
 
   private String deviceMetadataString() {

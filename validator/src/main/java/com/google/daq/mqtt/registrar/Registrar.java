@@ -1090,12 +1090,6 @@ public class Registrar {
               keyName -> new LocalDevice(siteModel, deviceName, schemas, generation, doValidate));
       
       try {
-        localDevice.loadConfig();
-      } catch (Exception e) {
-        localDevice.captureError(LocalDevice.EXCEPTION_CONFIG, e);
-      }
-      
-      try {
         localDevice.loadCredentials();
       } catch (Exception e) {
         localDevice.captureError(LocalDevice.EXCEPTION_CREDENTIALS, e);
