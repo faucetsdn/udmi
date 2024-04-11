@@ -19,4 +19,10 @@ if [[ ! -d ${TARGET_DIR} ]]; then
    echo
 fi
 
-${TARGET_DIR}/etcdctl --endpoints=ip://etcd-set-0/etcd-set:2379,etcd-set-1.etcd-set:2379 "$@"
+if env | fgrep ETCD_CLIENT_; then
+    ENDPOINTS=ip://etcd-set-0/etcd-set:2379,etcd-set-1.etcd-set:2379
+else
+    ENDPOINTS=http://localhost:2379
+fi
+
+${TARGET_DIR}/etcdctl --endpoints=$ENDPOINTS "$@"
