@@ -1,51 +1,70 @@
 package com.google.bos.udmi.service.support;
 
-import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 
+import com.google.bos.udmi.service.core.DistributorPipe;
 import com.google.bos.udmi.service.pod.ContainerBase;
+import com.google.udmi.util.GeneralUtils;
 import io.etcd.jetcd.ByteSequence;
 import io.etcd.jetcd.Client;
-import io.etcd.jetcd.KV;
-import io.etcd.jetcd.KeyValue;
-import io.etcd.jetcd.kv.GetResponse;
+import io.etcd.jetcd.cluster.Member;
+import java.net.URI;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import org.jetbrains.annotations.NotNull;
 import udmi.schema.IotAccess;
 
+/**
+ * Data provider that uses etcd.
+ */
 public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
 
+  private static final long QUERY_TIMEOUT_SEC = 10;
+  private static final ByteSequence CONNECTED_KEY =
+      getByteSequence(format("clients/%s", DistributorPipe.clientId));
   private final IotAccess config;
+  private Client client;
 
   public EtcdDataProvider(IotAccess config) {
     this.config = config;
   }
 
+  @NotNull
+  private static ByteSequence getByteSequence(String input) {
+    return ByteSequence.from(input.getBytes());
+  }
+
   @Override
   public void activate() {
     super.activate();
-    warn("Testing cluster etcd");
-    String etcdTarget =
-        "ip:///etcd-set-0.etcd-set:2379,etcd-set-1.etcd-set:2379,etcd-set-2.etcd:2379";
-    try (Client client = Client.builder().target(etcdTarget).build()) {
-      KV kvClient = client.getKVClient();
-      ByteSequence key = ByteSequence.from("test_key".getBytes());
-      ByteSequence value = ByteSequence.from("test_value".getBytes());
-
-      kvClient.put(key, value).get();
-
-      CompletableFuture<GetResponse> getFuture = kvClient.get(key);
-
-      GetResponse response = getFuture.get();
-      List<String> strings = response.getKvs().stream().map(KeyValue::getValue)
-          .map(bytes -> new String(bytes.getBytes())).toList();
-      info("etcd reply: " + CSV_JOINER.join(strings));
-
-      kvClient.delete(key).get();
-
+    String target = format("ip://%s", requireNonNull(config.project_id, "undefined project_id"));
+    try (Client tmpClient = Client.builder().target(target).build()) {
+      debug("Connecting to target %s to glean client list", target);
+      List<Member> members =
+          tmpClient.getClusterClient().listMember().get(QUERY_TIMEOUT_SEC, TimeUnit.SECONDS)
+              .getMembers();
+      Set<URI> uris = members.stream().flatMap(member -> member.getClientURIs().stream())
+          .collect(Collectors.toSet());
+      String targets = uris.stream().map(URI::toString).collect(Collectors.joining(","));
+      debug("Gleaned client targets " + targets);
+      client = Client.builder().target(targets).build();
+      String timestamp = GeneralUtils.getTimestamp();
+      client.getKVClient().put(CONNECTED_KEY, getByteSequence(timestamp));
+      debug("Updated client %s at %s", CONNECTED_KEY, timestamp);
     } catch (Exception e) {
       error("Exception testing etcd: %s", friendlyStackTrace(e));
     }
+  }
+
+  @Override
+  public void shutdown() {
+    ifNotNullThen(client, () -> client.close());
+    client = null;
   }
 
 

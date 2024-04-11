@@ -80,7 +80,8 @@
   },
   "iot_data": {
     "database": {
-      "provider": "etcd"
+      "provider": "etcd",
+      "project_id": "etcd-set-0.etcd-set:2379"
     }
   },
   "bridges": {

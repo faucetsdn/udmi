@@ -203,7 +203,7 @@ public class UdmiServicePodTest {
     });
 
     LocalMessagePipe distributor =
-        new LocalMessagePipe(reverseFlow(podConfig.distributors.get("distrib")));
+        new LocalMessagePipe(reverseFlow(podConfig.flows.get("distributor")));
     Bundle distributedBundle = distributor.poll();
     assertEquals(REFLECT_BASE, distributedBundle.envelope.deviceRegistryId, "registry id");
     assertEquals(TEST_REGISTRY, distributedBundle.envelope.deviceId, "site id");

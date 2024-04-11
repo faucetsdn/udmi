@@ -1,5 +1,6 @@
 package com.google.bos.udmi.service.access;
 
+import static com.google.common.base.Preconditions.checkState;
 import static java.lang.String.format;
 
 import com.google.bos.udmi.service.pod.UdmiComponent;
@@ -30,6 +31,8 @@ public interface IotAccessProvider extends UdmiComponent {
    */
   static IotAccessProvider from(IotAccess iotAccess) {
     try {
+      checkState(PROVIDERS.containsKey(iotAccess.provider),
+          "Unknown access provider " + iotAccess.provider);
       return PROVIDERS.get(iotAccess.provider).getDeclaredConstructor(IotAccess.class)
           .newInstance(iotAccess);
     } catch (Exception e) {

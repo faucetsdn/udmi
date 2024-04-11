@@ -16,7 +16,7 @@ import udmi.schema.Envelope;
 public class DistributorPipe extends ProcessorBase {
 
   public static final String ROUTE_SEPERATOR = "/";
-  private final String clientId = makeClientId();
+  public static final String clientId = makeClientId();
 
   private static String makeClientId() {
     final String podId;
