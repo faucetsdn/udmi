@@ -1,6 +1,5 @@
 package com.google.bos.udmi.service.support;
 
-import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -28,10 +27,11 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
   private static final ByteSequence CONNECTED_KEY =
       getByteSequence(format("clients/%s", DistributorPipe.clientId));
   private final IotAccess config;
-  private Client client;
+  private final Client client;
 
-  public EtcdDataProvider(IotAccess config) {
-    this.config = config;
+  public EtcdDataProvider(IotAccess iotConfig) {
+    config = iotConfig;
+    client = initializeClient();
   }
 
   @NotNull
@@ -39,9 +39,7 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
     return ByteSequence.from(input.getBytes());
   }
 
-  @Override
-  public void activate() {
-    super.activate();
+  private Client initializeClient() {
     String target = format("ip://%s", requireNonNull(config.project_id, "undefined project_id"));
     try (Client tmpClient = Client.builder().target(target).build()) {
       debug("Connecting to target %s to glean client list", target);
@@ -52,19 +50,25 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
           .collect(Collectors.toSet());
       String targets = uris.stream().map(URI::toString).collect(Collectors.joining(","));
       debug("Gleaned client targets " + targets);
-      client = Client.builder().target(targets).build();
+      Client client = Client.builder().target(targets).build();
       String timestamp = GeneralUtils.getTimestamp();
-      client.getKVClient().put(CONNECTED_KEY, getByteSequence(timestamp));
+      client.getKVClient().put(CONNECTED_KEY, getByteSequence(timestamp))
+          .get(QUERY_TIMEOUT_SEC, TimeUnit.SECONDS);
       debug("Updated client %s at %s", CONNECTED_KEY, timestamp);
+      return client;
     } catch (Exception e) {
-      error("Exception testing etcd: %s", friendlyStackTrace(e));
+      throw new RuntimeException("While connecting initial client " + target, e);
     }
   }
 
   @Override
+  public void activate() {
+    super.activate();
+  }
+
+  @Override
   public void shutdown() {
-    ifNotNullThen(client, () -> client.close());
-    client = null;
+    ifNotNullThen(client, client::close);
   }
 
 
