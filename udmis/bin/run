@@ -8,8 +8,10 @@ fi
 POD_CONFIG=$(realpath $1)
 shift
 
-ALT_CONFIG=$(realpath $1)
-shift || true
+if [[ -n $1 ]]; then
+    ALT_CONFIG=$(realpath $1)
+    shift
+fi
 
 ROOT=$(dirname $0)/..
 cd $ROOT
