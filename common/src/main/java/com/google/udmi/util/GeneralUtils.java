@@ -20,6 +20,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.hash.Hashing;
 import com.google.daq.mqtt.util.ValidationException;
 import com.google.udmi.util.ProperPrinter.OutputFormat;
+import io.etcd.jetcd.ByteSequence;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -48,6 +49,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
+import org.jetbrains.annotations.NotNull;
 
 public class GeneralUtils {
 
@@ -76,6 +78,11 @@ public class GeneralUtils {
 
   public static String[] arrayOf(String... args) {
     return args;
+  }
+
+  @NotNull
+  public static ByteSequence bytes(String input) {
+    return ByteSequence.from(input.getBytes());
   }
 
   public static String changedLines(List<DiffEntry> nullableChanges) {

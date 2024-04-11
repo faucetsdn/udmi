@@ -1,6 +1,7 @@
 package com.google.bos.udmi.service.support;
 
 import static com.google.api.client.util.Preconditions.checkState;
+import static com.google.udmi.util.GeneralUtils.bytes;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -10,6 +11,7 @@ import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.udmi.util.GeneralUtils;
 import io.etcd.jetcd.ByteSequence;
 import io.etcd.jetcd.Client;
+import io.etcd.jetcd.KV;
 import io.etcd.jetcd.cluster.Member;
 import java.net.URI;
 import java.time.Duration;
@@ -17,7 +19,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import org.jetbrains.annotations.NotNull;
 import udmi.schema.IotAccess;
 
 /**
@@ -30,18 +31,13 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
   private static final long QUERY_TIMEOUT_SEC = 10;
   private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(QUERY_TIMEOUT_SEC);
   private static final ByteSequence CONNECTED_KEY =
-      getByteSequence(format("/clients/%s", DistributorPipe.clientId));
+      bytes(format("/clients/%s", DistributorPipe.clientId));
   private final IotAccess config;
   private final Client client;
 
   public EtcdDataProvider(IotAccess iotConfig) {
     config = iotConfig;
     client = initializeClient();
-  }
-
-  @NotNull
-  private static ByteSequence getByteSequence(String input) {
-    return ByteSequence.from(input.getBytes());
   }
 
   private Client initializeClient() {
@@ -62,8 +58,12 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
       debug("Gleaned client targets " + targets);
       Client client = Client.builder().target(targets).connectTimeout(CONNECT_TIMEOUT).build();
       String timestamp = GeneralUtils.getTimestamp();
-      client.getKVClient().put(CONNECTED_KEY, getByteSequence(timestamp))
-          .get(QUERY_TIMEOUT_SEC, TimeUnit.SECONDS);
+      KV kvClient = client.getKVClient();
+      kvClient.put(CONNECTED_KEY, bytes(timestamp)).get(QUERY_TIMEOUT_SEC, TimeUnit.SECONDS);
+      String result = new String(
+          kvClient.get(CONNECTED_KEY).get(QUERY_TIMEOUT_SEC, TimeUnit.SECONDS).getKvs().get(0)
+              .getValue().getBytes());
+      debug("Retrieved value %s", result);
       debug("Updated client %s with %s", CONNECTED_KEY, timestamp);
       return client;
     } catch (Exception e) {
