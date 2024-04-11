@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 
 ETCD_VER=v3.5.13
 DOWNLOAD_URL=https://storage.googleapis.com/etcd
