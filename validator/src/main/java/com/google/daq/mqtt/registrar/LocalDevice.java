@@ -174,7 +174,7 @@ class LocalDevice {
   private final List<Credential> deviceCredentials = new ArrayList<>();
   private final boolean validateMetadata;
   private ConfigManager config;
-  private JsonNode configJson;
+  private Object configJson;
   private final DeviceExceptionManager exceptionManager;
   private final SiteModel siteModel;
 
@@ -505,15 +505,11 @@ class LocalDevice {
     if (configJson == null) {
       return null;
     }
-
-    try {
-      if (config.canBeDowngraded()) {
-        new MessageDowngrader("config", configJson).downgrade(baseVersion);
-      }
-      return compressJsonString(configJson, MAX_JSON_LENGTH);
-    } catch (Exception e) {
-      throw new RuntimeException("While converting device config", e);
+    
+    if (config.shouldBeDowngraded()) {
+      new MessageDowngrader("config", configJson).downgrade(baseVersion);
     }
+    return compressJsonString(configJson, MAX_JSON_LENGTH);
   }
 
   private String deviceMetadataString() {

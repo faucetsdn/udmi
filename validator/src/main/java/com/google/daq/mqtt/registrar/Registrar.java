@@ -882,7 +882,7 @@ public class Registrar {
     }
   }
 
-  //TODO this is now broken if device uses a file rather than automatically generated config
+  // TODO: this is now broken if device uses a file rather than automatically generated config
   private void sendUpdateMessage(LocalDevice localDevice, SubFolder subFolder) {
     sendUpdateMessage(localDevice, MODEL_SUB_TYPE, subFolder, localDevice.getMetadata());
     sendUpdateMessage(localDevice, CONFIG_SUB_TYPE, subFolder, localDevice.deviceConfigObject());

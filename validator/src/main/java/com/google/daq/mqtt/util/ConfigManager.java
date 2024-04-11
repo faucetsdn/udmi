@@ -10,6 +10,8 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThrow;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.isoConvert;
+import static com.google.udmi.util.JsonUtil.loadFileString;
+import static com.google.udmi.util.JsonUtil.parseJson;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
@@ -53,7 +55,7 @@ public class ConfigManager {
    *
    * @param metadata Device metadata
    * @param deviceId Device ID
-   * @param siteDir Pathe to site model
+   * @param siteModel Site model
    */
   public ConfigManager(Metadata metadata, String deviceId, SiteModel siteModel) {
     this.metadata = metadata;
@@ -83,7 +85,7 @@ public class ConfigManager {
       if (!canonicalPath.startsWith(configDirPath)) {
         throw new IllegalArgumentException();
       }
-      return readFileToString(configFile, StandardCharsets.UTF_8);
+      return loadFileString(configFile);
     } catch (Exception e) {
       throw new RuntimeException(String.format("While reading config file: %s", fileName), e);
     }
@@ -98,8 +100,8 @@ public class ConfigManager {
    *
    * @return yes/no
    */
-  public boolean canBeDowngraded() {
-    return ! isStaticConfig();
+  public boolean shouldBeDowngraded() {
+    return !isStaticConfig();
   }
 
   /**
@@ -107,17 +109,16 @@ public class ConfigManager {
    *
    * @return JSON Object of Device Config
    */
-  public JsonNode deviceConfigJson() {
-    if (isStaticConfig()) {
-      String staticFileContents = readStaticConfigFromFile(metadata.cloud.config.static_file);
-      try {
-        return OBJECT_MAPPER_STRICT.readTree(staticFileContents);
-      } catch (JsonProcessingException e) {
-        throw new RuntimeException("could not parse static config JSON", e);
+  public Object deviceConfigJson() {
+    try {
+      if (isStaticConfig()) {
+        String staticFileContents = readStaticConfigFromFile(metadata.cloud.config.static_file);
+        return parseJson(staticFileContents);
+      } else {
+        return deviceConfig();
       }
-
-    } else {
-      return OBJECT_MAPPER_STRICT.valueToTree(deviceConfig());
+    } catch (Exception e) {
+    throw new RuntimeException("While converting device config", e);
     }
   }
 

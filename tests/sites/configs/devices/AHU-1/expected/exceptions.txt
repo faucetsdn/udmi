@@ -1,7 +1,9 @@
 Config
-java.lang.RuntimeException: While reading config file: non-existant.file
+java.lang.RuntimeException: While converting device config
 	REDACTED
-Caused by: java.io.FileNotFoundException: REDACTED/sites/configs/./devices/AHU-1/config/non-existant.file' does not exist
+Caused by: java.lang.RuntimeException: While reading config file: non-existant.file
+Caused by: java.lang.RuntimeException: While lREDACTED/sites/configs/./devices/AHU-1/config/non-existant.file
+Caused by: java.nio.file.NoSuchFileException: /usr/local/google/home/elsaidi/udmi/tests/sites/configs/./devices/AHU-1/config/non-existant.file
 Credential
 java.lang.RuntimeException: While loading credentials for local device AHU-1
 	REDACTED
