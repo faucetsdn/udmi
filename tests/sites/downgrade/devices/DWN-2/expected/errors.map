@@ -1,5 +1,5 @@
 Exceptions for DWN-2
   While loading device metadata for DWN-2
-    While lREDACTED/sites/downgrade/./devices/DWN-2/metadata.json
+    While lREDACTED/sites/downgrade/devices/DWN-2/metadata.json
       Unrecognized field "grumpy" (class udmi.schema.Metadata), not marked as ignorable (14 known properties: "upgraded_from", "gateway", "hash", "device_version", "discovery", "localnet", "cloud", "timestamp", "version", "description", "features", "system", "testing", "pointset"]) at [Source: (File); line: 27, column: 14] (through reference chain: udmi.schema.Metadata["grumpy"])
   Cannot read field "timestamp" because "this.metadata" is null

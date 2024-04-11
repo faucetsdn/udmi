@@ -1,0 +1,17 @@
+#!/bin/bash -e
+
+util_name=$(basename $0)
+UDMI_ROOT=$(realpath $(dirname $0)/..)
+
+source $UDMI_ROOT/etc/shell_common.sh
+
+OUT_DIR=$UDMI_ROOT/out
+mkdir -p $OUT_DIR
+rm -f $OUT_DIR/$util_name.log
+
+$UDMI_ROOT/validator/bin/build
+
+JAVA_CLASS=com.google.daq.mqtt.util.Dispatcher
+
+echo java -cp $UDMI_JAR $JAVA_CLASS $util_name "$@"
+java -cp $UDMI_JAR $JAVA_CLASS $util_name "$@" 2>&1 | tee $OUT_DIR/$util_name.log

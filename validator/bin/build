@@ -28,7 +28,7 @@ if [[ -z $check && -z $covg && -f $jarfile && $jarfile -nt $newest ]]; then
 fi
 
 if [[ -n $check ]]; then
-    rm -rf $BASE/sites/udmi_site_model/devices/XXX-*
+    (cd $BASE/sites/udmi_site_model/devices; rm -rf XXX-* ACME-*)
     $BASE/bin/clone_model
 fi
 
