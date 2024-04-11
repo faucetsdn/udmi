@@ -12,6 +12,7 @@ import udmi.schema.Envelope;
 /**
  * Simple distributor that uses an underlying message pipe.
  */
+@ComponentName("distributor")
 public class DistributorPipe extends ProcessorBase {
 
   public static final String ROUTE_SEPERATOR = "/";

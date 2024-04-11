@@ -50,8 +50,6 @@ public class CronProcessor extends ProcessorBase {
 
     ifTrueThen(HEARTBEAT_NAME.equals(config.name), () -> HEARTBEAT_SEC = config.periodic_sec);
 
-    distributorName = config.distributor;
-
     if (config.payload == null) {
       srcEnvelope = new Envelope();
       template = MUSTACHE_FACTORY.compile(new StringReader(EMPTY_JSON), "empty template");

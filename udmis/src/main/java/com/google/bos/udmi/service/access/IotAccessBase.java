@@ -192,7 +192,7 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
   public void activate() {
     super.activate();
     if (isEnabled()) {
-      distributor = UdmiServicePod.maybeGetComponent((String) options.get("distributor"));
+      distributor = UdmiServicePod.maybeGetComponent(DistributorPipe.class);
       populateRegistryRegions();
     }
   }

@@ -58,7 +58,7 @@ public class UdmiServicePod extends ContainerBase {
   private static final Map<String, UdmiComponent> COMPONENT_MAP = new ConcurrentHashMap<>();
   private static final Set<Class<? extends ProcessorBase>> PROCESSOR_CLASSES = ImmutableSet.of(
       TargetProcessor.class, ReflectProcessor.class, StateProcessor.class, ControlProcessor.class,
-      ProvisioningEngine.class, BitboxAdapter.class);
+      ProvisioningEngine.class, BitboxAdapter.class, DistributorPipe.class);
   private static final Map<String, Class<? extends ProcessorBase>> PROCESSORS =
       PROCESSOR_CLASSES.stream().collect(Collectors.toMap(ContainerBase::getName, clazz -> clazz));
 
@@ -68,7 +68,6 @@ public class UdmiServicePod extends ContainerBase {
   public UdmiServicePod(String[] args) {
     super(makePodConfiguration(args));
     try {
-      ifNotNullThen(podConfiguration.distributors, dist -> dist.forEach(this::createDistributor));
       ifNotNullThen(podConfiguration.iot_data, db -> db.forEach(this::createIotData));
       ifNotNullThen(podConfiguration.iot_access, access -> access.forEach(this::createAccess));
       ifNotNullThen(podConfiguration.flows, flows -> flows.forEach(this::createFlow));
@@ -146,6 +145,10 @@ public class UdmiServicePod extends ContainerBase {
     return config.get();
   }
 
+  public static <T> T maybeGetComponent(Class<T> clazz) {
+    return maybeGetComponent(ContainerBase.getName(clazz));
+  }
+
   @SuppressWarnings("unchecked")
   public static <T> T maybeGetComponent(String name) {
     return ifNotNullGet(name, x -> (T) COMPONENT_MAP.get(name));
@@ -207,11 +210,6 @@ public class UdmiServicePod extends ContainerBase {
   private void createCron(String name, EndpointConfiguration config) {
     setConfigName(config, name);
     putComponent(name, () -> ProcessorBase.create(CronProcessor.class, makeConfig(config)));
-  }
-
-  private void createDistributor(String name, EndpointConfiguration config) {
-    setConfigName(config, name);
-    putComponent(name, () -> ProcessorBase.create(DistributorPipe.class, makeConfig(config)));
   }
 
   private void createFlow(String name, EndpointConfiguration config) {

@@ -78,7 +78,6 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
       messageHandlerFor(Exception.class, this::exceptionHandler)
   );
   protected DistributorPipe distributor;
-  String distributorName;
 
   /**
    * Create a new configured component.
@@ -88,7 +87,6 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
     isEnabled =
         ifNotNullGet(variableSubstitution(config.enabled), enabled -> !enabled.isEmpty(), true);
     ifNotTrueThen(isEnabled, () -> debug("Processor %s is disabled", containerId));
-    distributorName = config.distributor;
     dispatcher = ifTrueGet(isEnabled, () -> MessageDispatcher.from(config));
     sidecar = ifTrueGet(isEnabled, () -> MessageDispatcher.from(makeSidecarConfig(config)));
   }
@@ -358,7 +356,7 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
   public void activate() {
     super.activate();
     iotAccess = UdmiServicePod.getComponent(IOT_ACCESS_COMPONENT);
-    distributor = UdmiServicePod.maybeGetComponent(distributorName);
+    distributor = UdmiServicePod.maybeGetComponent(DistributorPipe.class);
     if (dispatcher != null) {
       registerHandlers(baseHandlers);
       registerHandlers();
