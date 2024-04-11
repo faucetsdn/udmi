@@ -5,7 +5,7 @@ import udmi.schema.Level;
 /**
  * Simple interface for representing all containers.
  */
-public interface ContainerProvider {
+public interface UdmiComponent {
 
   void activate();
 

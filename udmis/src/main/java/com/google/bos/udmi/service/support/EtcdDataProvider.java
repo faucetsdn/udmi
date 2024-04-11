@@ -9,8 +9,31 @@ import io.etcd.jetcd.KeyValue;
 import io.etcd.jetcd.kv.GetResponse;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import udmi.schema.IotAccess;
+import udmi.schema.Level;
 
 public class EtcdDataProvider implements IotDataProvider {
+
+  public EtcdDataProvider(IotAccess config) {
+
+
+  }
+
+  @Override
+  public void activate() {
+
+  }
+
+  @Override
+  public void shutdown() {
+
+  }
+
+  @Override
+  public void output(Level level, String message) {
+
+  }
+
   private static void testEtcd() {
     System.err.println("Testing etcd");
     String etcdTarget =

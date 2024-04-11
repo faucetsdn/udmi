@@ -48,17 +48,12 @@
         "dynamic",
         "implicit",
         "pubsub",
+        "etcd",
         "jwt",
         "gcp_native",
         "gbos",
         "clearblade_native",
         "clearblade"
-      ]
-    },
-    "data_provider": {
-      "title": "Data Provider",
-      "enum": [
-        "etcd"
       ]
     },
     "stage": {

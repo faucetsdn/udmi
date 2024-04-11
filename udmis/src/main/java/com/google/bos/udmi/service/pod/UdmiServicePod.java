@@ -24,18 +24,12 @@ import com.google.bos.udmi.service.core.ProvisioningEngine;
 import com.google.bos.udmi.service.core.ReflectProcessor;
 import com.google.bos.udmi.service.core.StateProcessor;
 import com.google.bos.udmi.service.core.TargetProcessor;
+import com.google.bos.udmi.service.support.IotDataProvider;
 import com.google.common.collect.ImmutableSet;
-import io.etcd.jetcd.ByteSequence;
-import io.etcd.jetcd.Client;
-import io.etcd.jetcd.KV;
-import io.etcd.jetcd.KeyValue;
-import io.etcd.jetcd.kv.GetResponse;
 import java.io.File;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -45,7 +39,6 @@ import org.jetbrains.annotations.NotNull;
 import udmi.schema.BridgePodConfiguration;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.IotAccess;
-import udmi.schema.IotData;
 import udmi.schema.Level;
 import udmi.schema.PodConfiguration;
 import udmi.schema.SetupUdmiConfig;
@@ -62,7 +55,7 @@ public class UdmiServicePod extends ContainerBase {
   public static final String UDMI_VERSION = requireNonNull(getDeployedConfig().udmi_version);
   public static final int FATAL_ERROR_CODE = -1;
   static final File READY_INDICATOR = new File("/tmp/pod_ready.txt");
-  private static final Map<String, ContainerProvider> COMPONENT_MAP = new ConcurrentHashMap<>();
+  private static final Map<String, UdmiComponent> COMPONENT_MAP = new ConcurrentHashMap<>();
   private static final Set<Class<? extends ProcessorBase>> PROCESSOR_CLASSES = ImmutableSet.of(
       TargetProcessor.class, ReflectProcessor.class, StateProcessor.class, ControlProcessor.class,
       ProvisioningEngine.class, BitboxAdapter.class);
@@ -80,20 +73,16 @@ public class UdmiServicePod extends ContainerBase {
       ifNotNullThen(podConfiguration.iot_access, access -> access.forEach(this::createAccess));
       ifNotNullThen(podConfiguration.flows, flows -> flows.forEach(this::createFlow));
       ifNotNullThen(podConfiguration.bridges, bridges -> bridges.forEach(this::createBridge));
-      ifNotNullThen(podConfiguration.crons, dist -> dist.forEach(this::createCron));
+      ifNotNullThen(podConfiguration.crons, cron -> cron.forEach(this::createCron));
     } catch (Exception e) {
       throw new RuntimeException("Fatal error instantiating pod " + CSV_JOINER.join(args), e);
     }
   }
 
-  private void createIotData(String name, IotData iotData) {
-    // TODO: Sorting this bit out.
-  }
-
   /**
    * Loop through all the registered components and apply the given action.
    */
-  public static void forAllComponents(Consumer<ContainerProvider> action) {
+  public static void forAllComponents(Consumer<UdmiComponent> action) {
     COMPONENT_MAP.forEach((key, value) -> {
       try {
         action.accept(value);
@@ -165,9 +154,9 @@ public class UdmiServicePod extends ContainerBase {
   /**
    * Put this component into the central component registry.
    */
-  public static void putComponent(String componentName, Supplier<ContainerProvider> component) {
+  public static void putComponent(String componentName, Supplier<UdmiComponent> component) {
     try {
-      ContainerProvider container = component.get();
+      UdmiComponent container = component.get();
       ifNotNullThen(COMPONENT_MAP.put(componentName, container),
           replaced -> {
             throw new IllegalStateException(
@@ -195,6 +184,11 @@ public class UdmiServicePod extends ContainerBase {
   private void createAccess(String name, IotAccess config) {
     config.name = name;
     putComponent(name, () -> IotAccessProvider.from(config));
+  }
+
+  private void createIotData(String name, IotAccess config) {
+    config.name = name;
+    putComponent(name, () -> IotDataProvider.from(config));
   }
 
   private void createBridge(String name, BridgePodConfiguration config) {
@@ -240,7 +234,7 @@ public class UdmiServicePod extends ContainerBase {
     notice("Starting activation of container components");
     String absolutePath = READY_INDICATOR.getAbsolutePath();
     try {
-      forAllComponents(ContainerProvider::activate);
+      forAllComponents(UdmiComponent::activate);
       checkState(READY_INDICATOR.createNewFile(), "ready file already exists: " + absolutePath);
       READY_INDICATOR.deleteOnExit();
     } catch (Exception e) {
@@ -259,7 +253,7 @@ public class UdmiServicePod extends ContainerBase {
   @Override
   public void shutdown() {
     notice("Starting shutdown of container components");
-    forAllComponents(ContainerProvider::shutdown);
+    forAllComponents(UdmiComponent::shutdown);
     notice("Finished shutdown of container components");
     super.shutdown();
   }

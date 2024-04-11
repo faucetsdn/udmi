@@ -2,7 +2,7 @@ package com.google.bos.udmi.service.access;
 
 import static java.lang.String.format;
 
-import com.google.bos.udmi.service.pod.ContainerProvider;
+import com.google.bos.udmi.service.pod.UdmiComponent;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -16,7 +16,7 @@ import udmi.schema.IotAccess.IotProvider;
 /**
  * Interface for things that provide for iot-access controls for connecting to devices.
  */
-public interface IotAccessProvider extends ContainerProvider {
+public interface IotAccessProvider extends UdmiComponent {
 
   Map<IotProvider, Class<? extends IotAccessBase>> PROVIDERS = ImmutableMap.of(
       IotProvider.DYNAMIC, DynamicIotAccessProvider.class,

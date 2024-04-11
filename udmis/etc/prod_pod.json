@@ -74,6 +74,11 @@
       "options": "topic=${UDMI_PREFIX}udmi_reply"
     }
   },
+  "iot_data": {
+    "database": {
+      "provider": "etcd"
+    }
+  },
   "distributors": {
     "stately": {
       "protocol": "mqtt",

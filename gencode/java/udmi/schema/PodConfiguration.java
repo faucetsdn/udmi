@@ -68,7 +68,7 @@ public class PodConfiguration {
      * 
      */
     @JsonProperty("iot_data")
-    public HashMap<String, IotData> iot_data;
+    public HashMap<String, IotAccess> iot_data;
     /**
      * Distributed state managers
      * <p>

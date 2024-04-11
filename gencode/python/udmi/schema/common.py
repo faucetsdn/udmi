@@ -8,7 +8,6 @@ class Common:
   SystemMode = SystemMode
   ProtocolFamily = ProtocolFamily
   IotProvider = IotProvider
-  DataProvider = DataProvider
   FeatureStage = FeatureStage
   BlobPhase = BlobPhase
   SystemBlobsets = SystemBlobsets

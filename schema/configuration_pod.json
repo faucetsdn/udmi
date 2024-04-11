@@ -52,10 +52,10 @@
       "type": "object",
       "title": "Iot Data Provider",
       "additionalProperties": false,
-      "existingJavaType": "java.util.HashMap<String, IotData>",
+      "existingJavaType": "java.util.HashMap<String, IotAccess>",
       "patternProperties": {
         "^[a-z]+$": {
-          "$ref": "file:data_iot.json"
+          "$ref": "file:access_iot.json"
         }
       }
     },

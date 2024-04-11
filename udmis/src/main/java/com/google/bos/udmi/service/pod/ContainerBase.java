@@ -43,7 +43,7 @@ import udmi.schema.PodConfiguration;
  * convenience and abstraction to keep the main component code more clear.
  * TODO: Implement facilities for other loggers, including structured-to-cloud.
  */
-public abstract class ContainerBase implements ContainerProvider {
+public abstract class ContainerBase implements UdmiComponent {
 
   public static final String INITIAL_EXECUTION_CONTEXT = "xxxxxxxx";
   public static final Integer FUNCTIONS_VERSION_MIN = 12;
