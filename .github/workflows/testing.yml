@@ -240,7 +240,7 @@ jobs:
           name: udmi-support_${{ github.run_id }}-b
           path: '*_udmi-support_*.tgz'
 
-  localrun:
+  runlocal:
     name: UDMIS Local Setup
     runs-on: ubuntu-latest
     needs: pretest
