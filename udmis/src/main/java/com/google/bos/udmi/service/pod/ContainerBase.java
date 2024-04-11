@@ -198,8 +198,8 @@ public abstract class ContainerBase implements UdmiComponent {
     // The initial delay will often be slightly off the intended time due to rounding errors.
     // Add in a quick/bounded delay to the start of the next second for dynamic alignment.
     // Mostly this is just to make the output timestamps look pretty, but has no functional impact.
-    long intervalDelaySec = intervalDelaySec();
-    long secondsToAdd = intervalDelaySec < periodicSec / 2 ? intervalDelaySec : 0;
+    long initialDelay = initialDelaySec();
+    long secondsToAdd = initialDelay < periodicSec / 2 ? initialDelay : 0;
     Duration duration = Duration.ofMillis(JITTER_ADJ_MS).plusSeconds(secondsToAdd);
     safeSleep(duration.minusNanos(Instant.now().getNano()).toMillis());
   }
@@ -238,7 +238,7 @@ public abstract class ContainerBase implements UdmiComponent {
     return getClass().getSimpleName();
   }
 
-  private long intervalDelaySec() {
+  private long initialDelaySec() {
     return ifNotNullGet(executorGeneration, generation ->
         floorMod(between(instantNow(), generation).getSeconds(), periodicSec), periodicSec);
   }
@@ -256,11 +256,12 @@ public abstract class ContainerBase implements UdmiComponent {
   @Override
   public void activate() {
     info("Activating");
-    ifTrueThen(periodicSec > 0, () -> {
-      long initial = intervalDelaySec();
-      notice("Scheduling task %s execution after %ss every %ss", containerId, initial, periodicSec);
-      scheduledExecutor.scheduleAtFixedRate(this::periodicWrapper, initial, periodicSec, SECONDS);
-    });
+    ifTrueThen(periodicSec > 0, () -> periodicScheduler(initialDelaySec(), periodicSec));
+  }
+
+  private void periodicScheduler(long initialSec, long periodicSec) {
+    notice("Scheduling task %s execution after %ss every %ss", containerId, initialSec, periodicSec);
+    scheduledExecutor.scheduleAtFixedRate(this::periodicWrapper, initialSec, periodicSec, SECONDS);
   }
 
   public void debug(String format, Object... args) {

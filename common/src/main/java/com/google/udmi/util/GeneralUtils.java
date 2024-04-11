@@ -49,7 +49,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
-import org.jetbrains.annotations.NotNull;
 
 public class GeneralUtils {
 
@@ -80,9 +79,12 @@ public class GeneralUtils {
     return args;
   }
 
-  @NotNull
   public static ByteSequence bytes(String input) {
     return ByteSequence.from(input.getBytes());
+  }
+
+  public static String asString(ByteSequence input) {
+    return new String(input.getBytes());
   }
 
   public static String changedLines(List<DiffEntry> nullableChanges) {
