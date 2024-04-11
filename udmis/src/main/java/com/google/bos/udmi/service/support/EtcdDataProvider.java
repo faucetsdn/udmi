@@ -39,7 +39,7 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
       GetResponse response = getFuture.get();
       List<String> strings = response.getKvs().stream().map(KeyValue::getValue)
           .map(bytes -> new String(bytes.getBytes())).toList();
-      System.err.println("etcd reply: " + CSV_JOINER.join(strings));
+      info("etcd reply: " + CSV_JOINER.join(strings));
 
       kvClient.delete(key).get();
 
