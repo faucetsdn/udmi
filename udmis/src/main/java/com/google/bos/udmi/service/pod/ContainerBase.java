@@ -243,6 +243,11 @@ public abstract class ContainerBase implements UdmiComponent {
         floorMod(between(instantNow(), generation).getSeconds(), periodicSec), periodicSec);
   }
 
+  private void periodicScheduler(long initialSec, long periodicSec) {
+    notice("Scheduling %s execution, after %ss every %ss", containerId, initialSec, periodicSec);
+    scheduledExecutor.scheduleAtFixedRate(this::periodicWrapper, initialSec, periodicSec, SECONDS);
+  }
+
   private void periodicWrapper() {
     try {
       grabExecutionContext();
@@ -257,11 +262,6 @@ public abstract class ContainerBase implements UdmiComponent {
   public void activate() {
     info("Activating");
     ifTrueThen(periodicSec > 0, () -> periodicScheduler(initialDelaySec(), periodicSec));
-  }
-
-  private void periodicScheduler(long initialSec, long periodicSec) {
-    notice("Scheduling task %s execution after %ss every %ss", containerId, initialSec, periodicSec);
-    scheduledExecutor.scheduleAtFixedRate(this::periodicWrapper, initialSec, periodicSec, SECONDS);
   }
 
   public void debug(String format, Object... args) {

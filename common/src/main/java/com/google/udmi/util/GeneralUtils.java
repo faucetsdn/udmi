@@ -20,7 +20,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.hash.Hashing;
 import com.google.daq.mqtt.util.ValidationException;
 import com.google.udmi.util.ProperPrinter.OutputFormat;
-import io.etcd.jetcd.ByteSequence;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -77,14 +76,6 @@ public class GeneralUtils {
 
   public static String[] arrayOf(String... args) {
     return args;
-  }
-
-  public static ByteSequence bytes(String input) {
-    return ByteSequence.from(input.getBytes());
-  }
-
-  public static String asString(ByteSequence input) {
-    return new String(input.getBytes());
   }
 
   public static String changedLines(List<DiffEntry> nullableChanges) {

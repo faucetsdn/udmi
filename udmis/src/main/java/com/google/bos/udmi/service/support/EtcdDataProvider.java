@@ -3,10 +3,7 @@ package com.google.bos.udmi.service.support;
 import static com.google.api.client.util.Preconditions.checkState;
 import static com.google.bos.udmi.service.core.DistributorPipe.clientId;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
-import static com.google.udmi.util.GeneralUtils.asString;
-import static com.google.udmi.util.GeneralUtils.bytes;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
-import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static java.util.Objects.requireNonNull;
 
 import com.google.bos.udmi.service.pod.ContainerBase;
@@ -25,7 +22,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import udmi.schema.IotAccess;
@@ -52,6 +48,14 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
   public EtcdDataProvider(IotAccess iotConfig) {
     config = iotConfig;
     client = initializeClient();
+  }
+
+  private static String asString(ByteSequence input) {
+    return new String(input.getBytes());
+  }
+
+  private static ByteSequence bytes(String input) {
+    return ByteSequence.from(input.getBytes());
   }
 
   @Override
