@@ -31,7 +31,6 @@ jobs:
           bin/setup_base
           bin/clone_model
           bin/start_pubsub
-          bin/test_mosquitto
       - name: bin/run_tests all_tests
         run: bin/run_tests all_tests
       - name: all test output
@@ -257,6 +256,10 @@ jobs:
         run: bin/start_etcd
       - name: bin/test_etcd
         run: bin/test_etcd
+      - name: bin/test_mosquitto
+        run: bin/test_mosquitto
+      - name: bin/test_udmis
+        run: bin/test_udmis
       - name: support bundle
         if: ${{ !cancelled() }}
         run: bin/support ${{ github.repository_owner }}_${{ github.job }}_
