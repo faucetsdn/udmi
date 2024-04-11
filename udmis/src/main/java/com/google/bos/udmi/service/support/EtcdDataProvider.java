@@ -30,7 +30,7 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
   private static final long QUERY_TIMEOUT_SEC = 10;
   private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(QUERY_TIMEOUT_SEC);
   private static final ByteSequence CONNECTED_KEY =
-      getByteSequence(format("clients/%s", DistributorPipe.clientId));
+      getByteSequence(format("/clients/%s", DistributorPipe.clientId));
   private final IotAccess config;
   private final Client client;
 
