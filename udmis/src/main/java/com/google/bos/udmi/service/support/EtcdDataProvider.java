@@ -2,6 +2,7 @@ package com.google.bos.udmi.service.support;
 
 import static com.google.api.client.util.Preconditions.checkState;
 import static com.google.bos.udmi.service.core.DistributorPipe.clientId;
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static java.util.Objects.requireNonNull;
@@ -19,6 +20,7 @@ import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -43,11 +45,15 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
   private static final Duration CLIENT_THRESHOLD = Duration.ofMinutes(THRESHOLD_MIN);
   private final IotAccess config;
   private final Client client;
+  private final Map<String, Object> options;
+  private final boolean enabled;
   private ScheduledExecutorService scheduledExecutorService;
 
   public EtcdDataProvider(IotAccess iotConfig) {
+    options = parseOptions(iotConfig);
+    enabled = !isNullOrEmpty((String) options.get("enabled"));
     config = iotConfig;
-    client = initializeClient();
+    client = enabled ? initializeClient() : null;
   }
 
   private static String asString(ByteSequence input) {
@@ -65,7 +71,7 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
   }
 
   private Client initializeClient() {
-    String target = requireNonNull(config.project_id, "undefined project_id");
+    String target = variableSubstitution(config.project_id, "undefined project_id");
     try (Client tmpClient = Client.builder().target(target).build()) {
       debug("Connecting to target %s to glean client list", target);
       List<Member> members =
@@ -136,20 +142,25 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
   @Override
   public void activate() {
     super.activate();
-
-    // Ideally this would use the superclass scheduler, but that's not available b/c of legacy
-    // configuration mechanisms... so just do this internally for now.
-    scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
-    scheduledExecutorService
-        .scheduleAtFixedRate(this::periodicTask, HEARTBEAT_SEC, HEARTBEAT_SEC, TimeUnit.SECONDS);
+    if (enabled) {
+      // Ideally this would use the superclass scheduler, but that's not available b/c of legacy
+      // configuration mechanisms... so just do this internally for now.
+      scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+      scheduledExecutorService
+          .scheduleAtFixedRate(this::periodicTask, HEARTBEAT_SEC, HEARTBEAT_SEC, TimeUnit.SECONDS);
+    } else {
+      info("Not enabled, not activating.");
+    }
   }
 
   @Override
   public void shutdown() {
     try {
-      scheduledExecutorService.shutdown();
-      scheduledExecutorService.awaitTermination(HEARTBEAT_SEC, TimeUnit.SECONDS);
-      client.close();
+      if (enabled) {
+        scheduledExecutorService.shutdown();
+        scheduledExecutorService.awaitTermination(HEARTBEAT_SEC, TimeUnit.SECONDS);
+        client.close();
+      }
     } catch (Exception e) {
       throw new RuntimeException("While shutting down", e);
     }

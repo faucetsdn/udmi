@@ -17,6 +17,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toSet;
 
 import com.google.bos.udmi.service.core.ComponentName;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.udmi.util.JsonUtil;
 import java.io.PrintStream;
@@ -24,6 +25,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -31,10 +33,12 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.TestOnly;
 import udmi.schema.BasePodConfiguration;
 import udmi.schema.EndpointConfiguration;
+import udmi.schema.IotAccess;
 import udmi.schema.Level;
 import udmi.schema.PodConfiguration;
 
@@ -323,5 +327,15 @@ public abstract class ContainerBase implements UdmiComponent {
 
   public void warn(String format, Object... args) {
     warn(format(format, args));
+  }
+
+  protected Map<String, Object> parseOptions(IotAccess iotAccess) {
+    String options = variableSubstitution(iotAccess.options);
+    if (options == null) {
+      return ImmutableMap.of();
+    }
+    String[] parts = options.split(",");
+    return Arrays.stream(parts).map(String::trim).map(option -> option.split("=", 2))
+        .collect(Collectors.toMap(x -> x[0], x -> x.length > 1 ? x[1] : true));
   }
 }

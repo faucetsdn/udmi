@@ -19,7 +19,6 @@ import com.google.common.collect.ImmutableMap;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -308,16 +307,6 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
     public AbortLoopException(String message) {
       super(message);
     }
-  }
-
-  Map<String, Object> parseOptions(IotAccess iotAccess) {
-    String options = variableSubstitution(iotAccess.options);
-    if (options == null) {
-      return ImmutableMap.of();
-    }
-    String[] parts = options.split(",");
-    return Arrays.stream(parts).map(String::trim).map(option -> option.split("=", 2))
-        .collect(Collectors.toMap(x -> x[0], x -> x.length > 1 ? x[1] : true));
   }
 
 }
