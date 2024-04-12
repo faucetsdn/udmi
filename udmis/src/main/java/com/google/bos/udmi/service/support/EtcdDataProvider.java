@@ -49,6 +49,9 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
   private final boolean enabled;
   private ScheduledExecutorService scheduledExecutorService;
 
+  /**
+   * Create an instance of this component.
+   */
   public EtcdDataProvider(IotAccess iotConfig) {
     options = parseOptions(iotConfig);
     enabled = !isNullOrEmpty((String) options.get("enabled"));
