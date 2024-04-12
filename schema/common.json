@@ -41,13 +41,14 @@
         "details"
       ]
     },
-    "provider": {
+    "iot_provider": {
       "title": "Iot Provider",
       "enum": [
         "local",
         "dynamic",
         "implicit",
         "pubsub",
+        "etcd",
         "jwt",
         "gcp_native",
         "gbos",

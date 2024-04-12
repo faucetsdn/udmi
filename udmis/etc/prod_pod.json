@@ -8,8 +8,7 @@
     "hostname": "${GCP_PROJECT}",
     "periodic_sec": 60,
     "publish_delay_sec": 0,
-    "capacity": null,
-    "distributor": "stately"
+    "capacity": null
   },
   "crons": {
     "heartbeat": {
@@ -55,6 +54,12 @@
       "recv_id": "${BITBOX_DISCOVERY}",
       "send_id": "${UDMI_PREFIX}udmi_target",
       "enabled": "${BITBOX_DISCOVERY}"
+    },
+    "distributor": {
+      "protocol": "mqtt",
+      "transport": "tcp",
+      "hostname": "udmis-broker",
+      "port": "1883"
     }
   },
   "iot_access": {
@@ -65,8 +70,7 @@
     "clearblade-iot-core": {
       "provider": "clearblade",
       "project_id": "${CLEARBLADE_PROJECT}",
-      "profile_sec": 10,
-      "options": "distributor=stately"
+      "profile_sec": 10
     },
     "UDMI-REFLECT": {
       "provider": "pubsub",
@@ -74,12 +78,11 @@
       "options": "topic=${UDMI_PREFIX}udmi_reply"
     }
   },
-  "distributors": {
-    "stately": {
-      "protocol": "mqtt",
-      "transport": "tcp",
-      "hostname": "udmis-broker",
-      "port": "1883"
+  "iot_data": {
+    "database": {
+      "provider": "etcd",
+      "project_id": "http://${ETCD_CLUSTER}-0.${ETCD_CLUSTER}:2379",
+      "options": "enabled=${ETCD_CLUSTER}"
     }
   },
   "bridges": {

@@ -5,7 +5,7 @@ from .configuration_endpoint import EndpointConfiguration
 from .configuration_endpoint import EndpointConfiguration
 from .configuration_pod_bridge import BridgePodConfiguration
 from .access_iot import IotAccess
-from .configuration_endpoint import EndpointConfiguration
+from .access_iot import IotAccess
 
 
 class PodConfiguration:
@@ -18,7 +18,7 @@ class PodConfiguration:
     self.flows = None
     self.bridges = None
     self.iot_access = None
-    self.distributors = None
+    self.iot_data = None
 
   @staticmethod
   def from_dict(source):
@@ -31,7 +31,7 @@ class PodConfiguration:
     result.flows = EndpointConfiguration.map_from(source.get('flows'))
     result.bridges = BridgePodConfiguration.map_from(source.get('bridges'))
     result.iot_access = IotAccess.map_from(source.get('iot_access'))
-    result.distributors = EndpointConfiguration.map_from(source.get('distributors'))
+    result.iot_data = IotAccess.map_from(source.get('iot_data'))
     return result
 
   @staticmethod
@@ -64,6 +64,6 @@ class PodConfiguration:
       result['bridges'] = BridgePodConfiguration.expand_dict(self.bridges) # 2
     if self.iot_access:
       result['iot_access'] = IotAccess.expand_dict(self.iot_access) # 2
-    if self.distributors:
-      result['distributors'] = EndpointConfiguration.expand_dict(self.distributors) # 2
+    if self.iot_data:
+      result['iot_data'] = IotAccess.expand_dict(self.iot_data) # 2
     return result

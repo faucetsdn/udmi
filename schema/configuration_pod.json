@@ -48,14 +48,14 @@
         }
       }
     },
-    "distributors": {
+    "iot_data": {
       "type": "object",
-      "title": "Distributed state managers",
+      "title": "Iot Data Provider",
       "additionalProperties": false,
-      "existingJavaType": "java.util.HashMap<String, EndpointConfiguration>",
+      "existingJavaType": "java.util.HashMap<String, IotAccess>",
       "patternProperties": {
-        "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
-          "$ref": "file:configuration_endpoint.json"
+        "^[a-z]+$": {
+          "$ref": "file:access_iot.json"
         }
       }
     }
