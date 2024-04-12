@@ -8,7 +8,7 @@
       "type": "string"
     },
     "provider": {
-      "$ref": "file:common.json#/definitions/provider"
+      "$ref": "file:common.json#/definitions/iot_provider"
     },
     "project_id": {
       "type": "string"

@@ -82,6 +82,7 @@ public class IotAccess {
         DYNAMIC("dynamic"),
         IMPLICIT("implicit"),
         PUBSUB("pubsub"),
+        ETCD("etcd"),
         JWT("jwt"),
         GCP_NATIVE("gcp_native"),
         GBOS("gbos"),

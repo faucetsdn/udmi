@@ -1,0 +1,28 @@
+#!/bin/bash -e
+
+ETCD_VER=v3.5.13
+DOWNLOAD_URL=https://storage.googleapis.com/etcd
+TARGET_DIR=/tmp/etcd
+
+if [[ ! -d ${TARGET_DIR} ]]; then
+   rm -f /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz
+   rm -rf ${TARGET_DIR} && mkdir -p ${TARGET_DIR}
+
+   curl -L ${DOWNLOAD_URL}/${ETCD_VER}/etcd-${ETCD_VER}-linux-amd64.tar.gz -o /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz
+   tar xzvf /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz -C ${TARGET_DIR} --strip-components=1
+   rm -f /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz
+
+   ${TARGET_DIR}/etcdctl version
+
+   echo
+   echo Download complete.
+   echo
+fi
+
+if env | fgrep ETCD_CLIENT_; then
+    ENDPOINTS=ip://etcd-set-0/etcd-set:2379,etcd-set-1.etcd-set:2379
+else
+    ENDPOINTS=http://localhost:2379
+fi
+
+${TARGET_DIR}/etcdctl --endpoints=$ENDPOINTS "$@"

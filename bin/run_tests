@@ -13,9 +13,8 @@ where [step] is one of:
   schema_tests
   trace_tests
   registrar_tests
-  udmis_tests
   util_tests
-  all_tests (except util_tests)
+  all_tests
 EOF
   false
 }
@@ -69,19 +68,12 @@ case "$1" in
     test_wrap bin/test_registrar
     test_wrap bin/test_sites
     ;;
-  udmis_tests)
-    test_wrap bin/test_udmis
-    ;;
-  util_tests)
-    test_wrap bin/test_locate
-    ;;
   all_tests)
     run_wrap install_dependencies
     run_wrap code_tests
     run_wrap schema_tests
     run_wrap trace_tests
     run_wrap registrar_tests
-    run_wrap udmis_tests
     ;;
   *)
     usage unrecognized step $1

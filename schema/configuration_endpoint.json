@@ -83,11 +83,6 @@
       "description": "Rate for periodic task execution",
       "type": "integer"
     },
-    "distributor": {
-      "description": "processor designation for a distributor channel",
-      "type": "string",
-      "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
-    },
     "auth_provider": {
       "type": "object",
       "additionalProperties": false,

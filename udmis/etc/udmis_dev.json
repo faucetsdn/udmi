@@ -1,1 +1,8 @@
-{}
+{
+  "iot_data": {
+    "database": {
+      "provider": "etcd",
+      "project_id": "localhost:2379"
+    }
+  }
+}

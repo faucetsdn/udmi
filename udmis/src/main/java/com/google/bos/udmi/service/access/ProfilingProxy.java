@@ -4,7 +4,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static java.lang.String.format;
 
-import com.google.bos.udmi.service.pod.ContainerProvider;
+import com.google.bos.udmi.service.pod.UdmiComponent;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -21,10 +21,10 @@ import udmi.schema.Level;
 public class ProfilingProxy<T> implements InvocationHandler {
 
   private final T provider;
-  private final ContainerProvider container;
+  private final UdmiComponent container;
   private final String providerName;
 
-  private ProfilingProxy(ContainerProvider container, T provider) {
+  private ProfilingProxy(UdmiComponent container, T provider) {
     this.provider = provider;
     this.container = container;
     providerName = provider.getClass().getSimpleName();
@@ -33,7 +33,7 @@ public class ProfilingProxy<T> implements InvocationHandler {
   /**
    * Create a new profiling instance for the given actual provider object.
    */
-  public static <T> T create(ContainerProvider container, T provider, int profileSec) {
+  public static <T> T create(UdmiComponent container, T provider, int profileSec) {
     checkArgument(profileSec >= 0, "Illegal profile period " + profileSec);
     if (profileSec == 0) {
       return provider;
