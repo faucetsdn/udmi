@@ -183,6 +183,7 @@ class LocalDevice {
   private JsonNode baseVersion;
   private Date lastActive;
   private boolean blocked;
+  
   LocalDevice(
       SiteModel siteModel, String deviceId, Map<String, JsonSchema> schemas,
       String generation, boolean validateMetadata) {
