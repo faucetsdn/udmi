@@ -113,7 +113,7 @@ public class IotReflectorClient implements MessagePublisher {
     String iotProvider = ifNotNullGet(iotConfig.iot_provider, IotProvider::value,
         IotProvider.IMPLICIT.value());
     subscriptionId = format("%s/%s/%s/%s%s/%s",
-        iotProvider, projectId , cloudRegion, prefix, UDMI_REFLECT, registryId);
+        iotProvider, projectId, cloudRegion, prefix, UDMI_REFLECT, registryId);
 
     try {
       publisher = MessagePublisher.from(iotConfig, this::messageHandler, this::errorHandler);
