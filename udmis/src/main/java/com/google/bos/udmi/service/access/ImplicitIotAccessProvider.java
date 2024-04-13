@@ -1,5 +1,7 @@
 package com.google.bos.udmi.service.access;
 
+import static java.util.Optional.ofNullable;
+
 import java.util.Map.Entry;
 import udmi.schema.CloudModel;
 import udmi.schema.Envelope.SubFolder;
@@ -7,8 +9,11 @@ import udmi.schema.IotAccess;
 
 public class ImplicitIotAccessProvider extends IotAccessBase {
 
+  private final boolean enabled;
+
   public ImplicitIotAccessProvider(IotAccess iotAccess) {
     super(iotAccess);
+    enabled = !ofNullable(options.get(ENABLED_KEY)).orElse(TRUE_OPTION).isEmpty();
   }
 
   @Override
@@ -40,7 +45,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   @Override
   public boolean isEnabled() {
-    throw new RuntimeException("Not yet implemented");
+    return enabled;
   }
 
   @Override
