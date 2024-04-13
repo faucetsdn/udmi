@@ -2,9 +2,9 @@ package com.google.bos.udmi.service.support;
 
 import static com.google.api.client.util.Preconditions.checkState;
 import static com.google.bos.udmi.service.core.DistributorPipe.clientId;
-import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
+import static com.google.udmi.util.GeneralUtils.isNullOrNotEmpty;
 
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.udmi.util.GeneralUtils;
@@ -53,7 +53,7 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
    */
   public EtcdDataProvider(IotAccess iotConfig) {
     options = parseOptions(iotConfig);
-    enabled = !isNullOrEmpty(options.get(ENABLED_KEY));
+    enabled = isNullOrNotEmpty(options.get(ENABLED_KEY));
     config = iotConfig;
     client = enabled ? initializeClient() : null;
   }
