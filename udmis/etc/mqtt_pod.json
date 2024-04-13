@@ -1,0 +1,14 @@
+{
+  "include": "prod_pod.json",
+  "flow_defaults": {
+    "protocol": "mqtt",
+    "hostname": "localhost"
+  },
+  "iot_access": {
+    "UDMI-REFLECT": {
+      "provider": "mqtt",
+      "project_id": "${GCP_PROJECT}",
+      "options": "topic=${UDMI_PREFIX}udmi_reply"
+    }
+  }
+}

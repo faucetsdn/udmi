@@ -1,0 +1,4 @@
+# Basic development configuration to override production defaults.
+{
+  "include": "prod_pod.json"
+}

@@ -12,6 +12,7 @@ class PodConfiguration:
   """Generated schema class"""
 
   def __init__(self):
+    self.include = None
     self.base = None
     self.flow_defaults = None
     self.crons = None
@@ -25,6 +26,7 @@ class PodConfiguration:
     if not source:
       return None
     result = PodConfiguration()
+    result.include = source.get('include')
     result.base = BasePodConfiguration.from_dict(source.get('base'))
     result.flow_defaults = EndpointConfiguration.from_dict(source.get('flow_defaults'))
     result.crons = EndpointConfiguration.map_from(source.get('crons'))
@@ -52,6 +54,8 @@ class PodConfiguration:
 
   def to_dict(self):
     result = {}
+    if self.include:
+      result['include'] = self.include # 5
     if self.base:
       result['base'] = self.base.to_dict() # 4
     if self.flow_defaults:
