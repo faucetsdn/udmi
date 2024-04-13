@@ -2,6 +2,7 @@ package com.google.bos.iot.core.proxy;
 
 import static com.google.bos.iot.core.proxy.ProxyTarget.STATE_TOPIC;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.Common.DEFAULT_REGION;
 import static com.google.udmi.util.GeneralUtils.catchOrElse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
@@ -71,10 +72,10 @@ public class MqttPublisher implements MessagePublisher {
   private static final String CLIENT_ID_FMT = "projects/%s/locations/%s/registries/%s/devices/%s";
   private static final String DEVICE_TOPIC_FMT = "/devices/%s";
   private static final String FULL_TOPIC_FMT = "/projects/%s/registries/%s/devices/%s";
-  private static final String ATTACH_MESSAGE_FMT = "/attach";
-  private static final String CONFIG_TOPIC_FMT = "/config";
-  private static final String ERROR_TOPIC_FMT = "/errors";
-  private static final String COMMAND_TOPIC_FMT = "/commands/#";
+  private static final String ATTACH_TOPIC = "/attach";
+  private static final String CONFIG_TOPIC = "/config";
+  private static final String ERROR_TOPIC = "/errors";
+  private static final String COMMAND_TOPIC = "/commands/#";
   private static final String MESSAGE_TOPIC_FMT = "/%s";
   private static final int QOS_AT_MOST_ONCE = 0;
   private static final int QOS_AT_LEAST_ONCE = 1;
@@ -179,8 +180,8 @@ public class MqttPublisher implements MessagePublisher {
     checkNotNull(iotConfig.key_file, "missing key file in config");
     try {
       keyBytes = getFileBytes(iotConfig.key_file);
-      System.err.printf("Loaded key %s as sha256 %s%n", iotConfig.key_file,
-          sha256(keyBytes).substring(0, 16));
+      LOG.info(format("Loaded key %s as sha256 %s", iotConfig.key_file,
+          sha256(keyBytes).substring(0, 16)));
     } catch (Exception e) {
       throw new RuntimeException(
           "While loading key file " + new File(iotConfig.key_file).getAbsolutePath(), e);
@@ -344,7 +345,7 @@ public class MqttPublisher implements MessagePublisher {
   private void attachClient(String deviceId) {
     try {
       LOG.info(this.deviceId + " attaching " + deviceId);
-      String topic = format(ATTACH_MESSAGE_FMT, deviceId);
+      String topic = topicBase + ATTACH_TOPIC;
       String payload = "";
       sendMessage(topic, payload.getBytes());
     } catch (Exception e) {
@@ -466,16 +467,17 @@ public class MqttPublisher implements MessagePublisher {
   }
 
   private String getMessageTopic(String deviceId, String topic) {
-    return format(MESSAGE_TOPIC_FMT, deviceId, topic);
+    checkState(topicBase.contains("/devices/" + deviceId), "topic device id mismatch");
+    return topicBase + format(MESSAGE_TOPIC_FMT, topic);
   }
 
   private void subscribeToUpdates(String deviceId) {
-    clientSubscribe(format(CONFIG_TOPIC_FMT, deviceId), QOS_AT_MOST_ONCE);
+    clientSubscribe(CONFIG_TOPIC, QOS_AT_MOST_ONCE);
   }
 
-  private void clientSubscribe(String topic, int qos) {
+  private void clientSubscribe(String topicSuffix, int qos) {
+    String topic = topicBase + topicSuffix;
     try {
-      String useTopic = topicBase + topic;
       LOG.info("Subscribed to mqtt topic " + topic);
       mqttClient.subscribe(topic, qos);
     } catch (MqttException e) {
@@ -484,11 +486,11 @@ public class MqttPublisher implements MessagePublisher {
   }
 
   private void subscribeToErrors(String deviceId) {
-    clientSubscribe(format(ERROR_TOPIC_FMT, deviceId), QOS_AT_MOST_ONCE);
+    clientSubscribe(ERROR_TOPIC, QOS_AT_MOST_ONCE);
   }
 
   private void subscribeToCommands(String deviceId) {
-    clientSubscribe(format(COMMAND_TOPIC_FMT, deviceId), QOS_AT_LEAST_ONCE);
+    clientSubscribe(COMMAND_TOPIC, QOS_AT_LEAST_ONCE);
   }
 
   String getDeviceId() {
@@ -529,7 +531,7 @@ public class MqttPublisher implements MessagePublisher {
             .setExpiration(now.plusMillis(TOKEN_EXPIRATION_MS).toDate())
             .setAudience(projectId);
 
-    System.err.printf("Creating jwt %s key with audience %s%n", algorithm, projectId);
+    LOG.info(format("Creating jwt %s key with audience %s", algorithm, projectId));
 
     switch (algorithm) {
       case "RS256" -> {
