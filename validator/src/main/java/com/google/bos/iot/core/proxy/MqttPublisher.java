@@ -139,7 +139,7 @@ public class MqttPublisher implements MessagePublisher {
 
   private String getTopicBase() {
     return switch (iotProvider) {
-      case GBOS -> format(DEVICE_TOPIC_FMT, deviceId);
+      case GBOS, CLEARBLADE -> format(DEVICE_TOPIC_FMT, deviceId);
       case MQTT -> format(FULL_TOPIC_FMT, projectId, registryId, deviceId);
       default -> throw new RuntimeException("Unknown iotProvider " + iotProvider);
     };
