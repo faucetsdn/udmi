@@ -9,6 +9,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.sha256;
 import static com.google.udmi.util.SiteModel.DEFAULT_CLEARBLADE_HOSTNAME;
 import static com.google.udmi.util.SiteModel.DEFAULT_GBOS_HOSTNAME;
+import static com.google.udmi.util.SiteModel.LOCALHOST_HOSTNAME;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
@@ -49,6 +50,7 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+import org.jetbrains.annotations.NotNull;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,17 +67,17 @@ public class MqttPublisher implements MessagePublisher {
   public static final String EMPTY_JSON = "{}";
   static final String BRIDGE_PORT = "8883";
   private static final Logger LOG = LoggerFactory.getLogger(MqttPublisher.class);
-  private static final boolean MQTT_SHOULD_RETAIN = false;
+  private static final boolean MQTT_NO_RETAIN = false;
   private static final long STATE_RATE_LIMIT_MS = 1000 * 2;
-  private static final int MQTT_QOS = 1;
   private static final String CONFIG_UPDATE_TOPIC_FMT = "/devices/%s/config";
   private static final String ERROR_TOPIC_FMT = "/devices/%s/errors";
   private static final String COMMAND_TOPIC_FMT = "/devices/%s/commands/#";
-  private static final int COMMANDS_QOS = 0;
+  private static final int QOS_AT_MOST_ONCE = 0;
+  private static final int QOS_AT_LEAST_ONCE = 1;
   private static final String UNUSED_ACCOUNT_NAME = "unused";
   private static final int INITIALIZE_TIME_MS = 20000;
   private static final String MESSAGE_TOPIC_FORMAT = "/devices/%s/%s";
-  private static final String BROKER_URL_FORMAT = "ssl://%s:%s";
+  private static final String BROKER_URL_FORMAT = "%s://%s:%s";
   private static final String ID_FORMAT = "projects/%s/locations/%s/registries/%s/devices/%s";
   private static final int PUBLISH_THREAD_COUNT = 10;
   private static final String ATTACH_MESSAGE_FORMAT = "/devices/%s/attach";
@@ -142,6 +144,7 @@ public class MqttPublisher implements MessagePublisher {
         () -> switch (iotProvider) {
           case JWT -> requireNonNull(executionConfiguration.bridge_host, "missing bridge_host");
           case GBOS -> DEFAULT_GBOS_HOSTNAME;
+          case MQTT -> LOCALHOST_HOSTNAME;
           case CLEARBLADE -> DEFAULT_CLEARBLADE_HOSTNAME;
           default -> throw new RuntimeException("Unsupported iot provider " + iotProvider);
         }
@@ -286,7 +289,7 @@ public class MqttPublisher implements MessagePublisher {
 
   private void sendMessage(String mqttTopic, byte[] mqttMessage) throws Exception {
     LOG.debug(deviceId + " sending message to " + mqttTopic);
-    mqttClient.publish(mqttTopic, mqttMessage, MQTT_QOS, MQTT_SHOULD_RETAIN);
+    mqttClient.publish(mqttTopic, mqttMessage, QOS_AT_LEAST_ONCE, MQTT_NO_RETAIN);
     publishCounter.incrementAndGet();
   }
 
@@ -362,7 +365,7 @@ public class MqttPublisher implements MessagePublisher {
       // explicitly set this. If you don't set MQTT version, the server will immediately close its
       // connection to your device.
       mqttConnectOptions.setMqttVersion(MqttConnectOptions.MQTT_VERSION_3_1_1);
-      mqttConnectOptions.setUserName(UNUSED_ACCOUNT_NAME);
+      mqttConnectOptions.setUserName(getUserName());
       mqttConnectOptions.setMaxInflight(PUBLISH_THREAD_COUNT * 2);
       connectAndSetupMqtt();
       connectWait.release();
@@ -372,16 +375,21 @@ public class MqttPublisher implements MessagePublisher {
     }
   }
 
+  @NotNull
+  private static String getUserName() {
+    //return UNUSED_ACCOUNT_NAME;
+    return "scrumptus";
+  }
+
   private void connectAndSetupMqtt() {
     try {
       LOG.info(deviceId + " creating new jwt");
-      mqttConnectOptions.setPassword(createJwt());
+      mqttConnectOptions.setPassword(getPassword());
       mqttTokenSetTimeMs = System.currentTimeMillis();
       LOG.info(deviceId + " connecting to mqtt server " + getBrokerUrl());
       mqttClient.connect(mqttConnectOptions);
       attachedClients.clear();
       attachedClients.add(deviceId);
-      LOG.info(deviceId + " adding subscriptions");
       subscribeToUpdates(deviceId);
       subscribeToErrors(deviceId);
       subscribeToCommands(deviceId);
@@ -389,6 +397,12 @@ public class MqttPublisher implements MessagePublisher {
     } catch (Exception e) {
       throw new RuntimeException("While setting up new mqtt connection to " + deviceId, e);
     }
+  }
+
+  @NotNull
+  private char[] getPassword() {
+    //return createJwt();
+    return "aardvark".toCharArray();
   }
 
   private void maybeRefreshJwt() {
@@ -415,7 +429,12 @@ public class MqttPublisher implements MessagePublisher {
   }
 
   private String getBrokerUrl() {
-    return format(BROKER_URL_FORMAT, providerHostname, BRIDGE_PORT);
+    return format(BROKER_URL_FORMAT, getBrokerProtocol(), providerHostname, BRIDGE_PORT);
+  }
+
+  @NotNull
+  private static String getBrokerProtocol() {
+    return "tcp"; // ssl
   }
 
   private String getMessageTopic(String deviceId, String topic) {
@@ -423,30 +442,24 @@ public class MqttPublisher implements MessagePublisher {
   }
 
   private void subscribeToUpdates(String deviceId) {
-    String updateTopic = format(CONFIG_UPDATE_TOPIC_FMT, deviceId);
+    clientSubscribe(format(CONFIG_UPDATE_TOPIC_FMT, deviceId), QOS_AT_MOST_ONCE);
+  }
+
+  private void clientSubscribe(String topic, int qos) {
     try {
-      mqttClient.subscribe(updateTopic);
+      LOG.info("Subscribed to mqtt topic " + topic);
+      mqttClient.subscribe(topic, qos);
     } catch (MqttException e) {
-      throw new RuntimeException("While subscribing to MQTT topic " + updateTopic, e);
+      throw new RuntimeException("While subscribing to MQTT topic " + topic, e);
     }
   }
 
   private void subscribeToErrors(String deviceId) {
-    String updateTopic = format(ERROR_TOPIC_FMT, deviceId);
-    try {
-      mqttClient.subscribe(updateTopic);
-    } catch (MqttException e) {
-      throw new RuntimeException("While subscribing to MQTT topic " + updateTopic, e);
-    }
+    clientSubscribe(format(ERROR_TOPIC_FMT, deviceId), QOS_AT_MOST_ONCE);
   }
 
   private void subscribeToCommands(String deviceId) {
-    String updateTopic = format(COMMAND_TOPIC_FMT, deviceId);
-    try {
-      mqttClient.subscribe(updateTopic, COMMANDS_QOS);
-    } catch (MqttException e) {
-      throw new RuntimeException("While subscribing to MQTT topic " + updateTopic, e);
-    }
+    clientSubscribe(format(COMMAND_TOPIC_FMT, deviceId), QOS_AT_LEAST_ONCE);
   }
 
   String getDeviceId() {
@@ -487,18 +500,19 @@ public class MqttPublisher implements MessagePublisher {
             .setExpiration(now.plusMillis(TOKEN_EXPIRATION_MS).toDate())
             .setAudience(projectId);
 
+    System.err.printf("Creating jwt algorithm %s audience %s%n", algorithm, projectId);
+
     switch (algorithm) {
-      case "RS256": {
+      case "RS256" -> {
         PrivateKey privateKey = loadKeyBytes(privateKeyBytes, "RSA");
         return jwtBuilder.signWith(SignatureAlgorithm.RS256, privateKey).compact();
       }
-      case "ES256": {
+      case "ES256" -> {
         PrivateKey privateKey = loadKeyBytes(privateKeyBytes, "EC");
         return jwtBuilder.signWith(SignatureAlgorithm.ES256, privateKey).compact();
       }
-      default:
-        throw new IllegalArgumentException(
-            "Invalid algorithm " + algorithm + ". Should be one of 'RS256' or 'ES256'.");
+      default -> throw new IllegalArgumentException(
+          "Invalid algorithm " + algorithm + ". Should be one of 'RS256' or 'ES256'.");
     }
   }
 

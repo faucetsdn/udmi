@@ -74,7 +74,7 @@ pubber/bin/build
 rm -rf sites/udmi_site_model/out/devices/$device_id/persistent_data.json
 
 echo Publishing empty config to /$serial_no/$device_id/config
-mosquitto_pub -r -t /$serial_no/$device_id/config -u ${USERNAME} -P ${PASSWORD} -m "{}"
+mosquitto_pub -r -t /$serial_no/$device_id/config -u ${USERNAME} -P ${PASSWORD} -r -m "{}"
 
 echo Running pubber for 10s...
 timeout 10s pubber/bin/run /tmp/pubber_config.json || true
