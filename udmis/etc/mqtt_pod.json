@@ -4,11 +4,16 @@
     "protocol": "mqtt",
     "hostname": "localhost"
   },
+  "flows": {
+    "provider": {
+      "recv_id" : "${UDMI_PREFIX}udmi_target-discovery",
+      "send_id" : "${UDMI_PREFIX}udmi_reflect",
+      "side_id" : "${UDMI_PREFIX}udmi_state"
+    }
+  },
   "iot_access": {
     "UDMI-REFLECT": {
-      "provider": "mqtt",
-      "project_id": "${GCP_PROJECT}",
-      "options": "topic=${UDMI_PREFIX}udmi_reply"
+      "provider": "implicit"
     }
   }
 }
