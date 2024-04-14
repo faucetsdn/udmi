@@ -5,7 +5,7 @@
 05 too_much_state
 06 feature_enumeration
 07 valid_serial_no RESULT pass schemas device_state_beta BETA 5/5 Schema validation passed
-07 valid_serial_no RESULT pass schemas event_system_beta BETA 5/5 Schema validation passed
+07 valid_serial_no RESULT pass schemas events_system_beta BETA 5/5 Schema validation passed
 07 valid_serial_no RESULT pass schemas state_update_beta BETA 5/5 Schema validation passed
 08 writeback_success
 09 writeback_success
@@ -15,25 +15,25 @@
 13 config_logging
 14 broken_config
 15 broken_config RESULT pass schemas device_state_beta BETA 5/5 Schema validation passed
-15 broken_config RESULT pass schemas event_system_beta BETA 5/5 Schema validation passed
+15 broken_config RESULT pass schemas events_system_beta BETA 5/5 Schema validation passed
 15 broken_config RESULT pass schemas state_update_beta BETA 5/5 Schema validation passed
 16 broken_config
 17 broken_config RESULT pass schemas device_state_beta BETA 5/5 Schema validation passed
-17 broken_config RESULT pass schemas event_system_beta BETA 5/5 Schema validation passed
+17 broken_config RESULT pass schemas events_system_beta BETA 5/5 Schema validation passed
 17 broken_config RESULT pass schemas state_update_beta BETA 5/5 Schema validation passed
 18 broken_config
 19 system_last_update RESULT fail schemas state_update_stable STABLE 5/5 Schema violations found
 19 system_last_update RESULT pass schemas device_state_stable STABLE 5/5 Schema validation passed
-19 system_last_update RESULT pass schemas event_system_stable STABLE 5/5 Schema validation passed
+19 system_last_update RESULT pass schemas events_system_stable STABLE 5/5 Schema validation passed
 20 system_last_update RESULT fail schemas device_state_stable STABLE 5/5 Schema violations found
-20 system_last_update RESULT pass schemas event_system_stable STABLE 5/5 Schema validation passed
+20 system_last_update RESULT pass schemas events_system_stable STABLE 5/5 Schema validation passed
 20 system_last_update RESULT pass schemas state_update_stable STABLE 5/5 Schema validation passed
 21 state_make_model
 25 valid_serial_no
 26 system_last_update
 27 system_min_loglevel
 28 system_min_loglevel RESULT pass schemas device_state_alpha ALPHA 5/5 Schema validation passed
-28 system_min_loglevel RESULT pass schemas event_system_alpha ALPHA 5/5 Schema validation passed
+28 system_min_loglevel RESULT pass schemas events_system_alpha ALPHA 5/5 Schema validation passed
 32 gateway_proxy_events
 33 gateway_proxy_events
 37 gateway_proxy_events
