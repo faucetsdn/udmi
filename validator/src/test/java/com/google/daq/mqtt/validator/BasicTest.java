@@ -31,7 +31,7 @@ import udmi.schema.ValidationState;
  */
 public class BasicTest extends TestBase {
 
-  private static final String EVENT_SUBTYPE = "event";
+  private static final String EVENT_SUBTYPE = "events";
   private static final String CONFIG_SUBTYPE = "config";
   private static final String STATE_SUBTYPE = "state";
   private static final String POINTSET_SUBFOLDER = "pointset";

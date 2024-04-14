@@ -264,7 +264,7 @@ public class ReportingDevice {
   }
 
   public static String typeFolderPairKey(String subType, String subFolder) {
-    return String.format("%s_%s", ofNullable(subType).orElse(SubType.EVENT.value()), subFolder);
+    return String.format("%s_%s", ofNullable(subType).orElse(SubType.EVENTS.value()), subFolder);
   }
 
   /**

@@ -285,7 +285,7 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
   }
 
   private String getMapKey(SubType subType, SubFolder subFolder) {
-    return subFolder + "/" + (subType != null ? subType : SubType.EVENT);
+    return subFolder + "/" + (subType != null ? subType : SubType.EVENTS);
   }
 
   @Override

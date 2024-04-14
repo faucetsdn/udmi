@@ -517,7 +517,7 @@ class LocalDevice {
       envelope.deviceId = deviceId;
       envelope.deviceRegistryId = registryId;
       envelope.subFolder = SubFolder.POINTSET;
-      envelope.subType = SubType.EVENT;
+      envelope.subType = SubType.EVENTS;
       // Don't use actual project id because it should be abstracted away.
       envelope.projectId = fakeProjectId();
       envelope.deviceNumId = makeNumId(envelope);

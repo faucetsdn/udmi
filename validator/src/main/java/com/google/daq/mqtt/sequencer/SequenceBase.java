@@ -1678,7 +1678,7 @@ public class SequenceBase {
       case CONFIG -> trace("Ignoring echo configTransaction " + transactionId);
       // State updates are handled as a monolithic block with a state reflector update.
       case STATE -> trace("Ignoring partial state update");
-      case EVENT -> handleEventMessage(subFolder, message);
+      case EVENTS -> handleEventMessage(subFolder, message);
       default -> info("Encountered unexpected subType " + subTypeRaw);
     }
   }

@@ -134,17 +134,17 @@ public class Validator {
   private static final String STATE_UPDATE_SCHEMA = "state";
   private static final String EVENT_POINTSET_SCHEMA = "event_pointset";
   private static final String STATE_POINTSET_SCHEMA = "state_pointset";
-  private static final String UNKNOWN_TYPE_DEFAULT = "event";
+  private static final String UNKNOWN_TYPE_DEFAULT = "events";
   private static final String CONFIG_CATEGORY = "config";
   private static final Set<String> INTERESTING_TYPES = ImmutableSet.of(
-      SubType.EVENT.value(),
+      SubType.EVENTS.value(),
       SubType.STATE.value());
   private static final Map<String, Class<?>> CONTENT_VALIDATORS = ImmutableMap.of(
       STATE_UPDATE_SCHEMA, State.class,
       EVENT_POINTSET_SCHEMA, PointsetEvent.class,
       STATE_POINTSET_SCHEMA, PointsetState.class
   );
-  private static final Set<SubType> LAST_SEEN_SUBTYPES = ImmutableSet.of(SubType.EVENT,
+  private static final Set<SubType> LAST_SEEN_SUBTYPES = ImmutableSet.of(SubType.EVENTS,
       SubType.STATE);
   private static final long REPORT_INTERVAL_SEC = 15;
   private static final String EXCLUDE_DEVICE_PREFIX = "_";
