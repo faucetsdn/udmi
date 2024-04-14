@@ -15,25 +15,38 @@ shift 2
 
 config_file=$site_path/cloud_iot_config.json
 registry_id=$(jq -r .registry_id $config_file)
+key_file=$site_path/reflector/rsa_private.pkcs8
 
 partial=${project_spec#//}
 project_id=${partial#*/}
 project_id=${project_id%/*}
 protocol=${partial%%/*}
 namespace=${project_spec##*/}
+REFLECT_REGISTRY=UDMI-REFLECT
+REGISTRY_REGION=us-central1
 
-use_registry=$registry_id
-[[ -n $namespace ]] && use_registry=${namespace}~$registry_id
+[[ -n $namespace ]] && namespace_prefix=${namespace}~
+use_registry=$namespace_prefix$registry_id
 
 echo Provisioning reflector protocol $protocol project $project_id registry $use_registry
 
 if [[ $protocol == mqtt ]]; then
+    echo Adding registry $use_registry
     ETCD="$UDMI_ROOT/udmis/bin/etcdctl --endpoints localhost:2379"
     registries=$($ETCD get --print-value-only /registries)
     updated=${registries},$use_registry
     updated=${updated#,}
-    $ETCD put /registries "${updated}"
-    echo Updated registries ${updated}
+    $ETCD put /registries "$updated"
+    echo Updated registries to $updated
+
+    PASSWORD_FILE=/etc/mosquitto/test_mosquitto.passwd
+    USERNAME=$project_id/$namespace_prefix$REFLECT_REGISTRY/$use_registry
+    hash=$(sha256sum $key_file)
+    PASSWORD=${hash:0:8}
+    echo Provisioning hash-key $USERNAME $PASSWORD
+    sudo mosquitto_passwd -b ${PASSWORD_FILE} ${USERNAME} ${PASSWORD}
+    sudo systemctl restart mosquitto
+    echo Device password provisioned
 else
     fail Unable to provision protocol $protocol
 fi

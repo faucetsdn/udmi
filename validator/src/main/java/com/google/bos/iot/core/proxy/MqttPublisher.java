@@ -87,7 +87,7 @@ public class MqttPublisher implements MessagePublisher {
   private static final String TICKLE_TOPIC = "events/udmi";
   private static final long TICKLE_PERIOD_SEC = 10;
   private static final String REFLECTOR_PUBLIC_KEY = "reflector/rsa_public.pem";
-  private static final int HASH_PASSWORD_LENGTH = 16;
+  private static final int HASH_PASSWORD_LENGTH = 8;
   private static final String UNUSED_ACCOUNT_NAME = "unused";
   private static final String MQTT_USER_NAME_FMT = "%s/%s/%s";
   private final ExecutorService publisherExecutor =

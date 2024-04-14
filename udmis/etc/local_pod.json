@@ -1,0 +1,13 @@
+{
+  "include": "prod_pod.json",
+  "flow_defaults": {
+    "protocol": "mqtt",
+    "hostname": "localhost"
+  },
+  "iot_access": {
+    "implicit": {
+      "provider": "implicit",
+      "options": "enabled=${ETCD_CLUSTER}"
+    }
+  }
+}
