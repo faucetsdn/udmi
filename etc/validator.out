@@ -335,14 +335,14 @@ sites/udmi_site_model/out/devices/GAT-123/events_invalid.out
   "sub_type" : "events",
   "status" : {
     "message" : "Unknown schema subFolder 'events_invalid' for GAT-123",
-    "detail" : "events_invalid: Unknown schema subFolder 'event_invalid' for GAT-123 REDACTED_ERROR",
+    "detail" : "events_invalid: Unknown schema subFolder 'events_invalid' for GAT-123 REDACTED_ERROR",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   },
   "errors" : [ {
     "message" : "Unknown schema subFolder 'events_invalid' for GAT-123",
-    "detail" : "events_invalid: Unknown schema subFolder 'event_invalid' for GAT-123 REDACTED_ERROR",
+    "detail" : "events_invalid: Unknown schema subFolder 'events_invalid' for GAT-123 REDACTED_ERROR",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
