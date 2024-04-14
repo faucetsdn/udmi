@@ -1,4 +1,4 @@
-"""Generated class for event_pointset_point.json"""
+"""Generated class for events_pointset_point.json"""
 
 
 class PointPointsetEvent:

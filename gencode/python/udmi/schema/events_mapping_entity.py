@@ -1,4 +1,4 @@
-"""Generated class for event_mapping_entity.json"""
+"""Generated class for events_mapping_entity.json"""
 from .virtual_links import VirtualEquipmentLinks
 from .equipment_translation import BuildingConfig
 

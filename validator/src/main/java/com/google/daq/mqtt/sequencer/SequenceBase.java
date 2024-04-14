@@ -182,8 +182,8 @@ public class SequenceBase {
   private static final String CAPABILITY_FORMAT = "CPBLTY %s %s %s %s %s/%s %s";
   private static final String SCHEMA_FORMAT = "SCHEMA %s %s %s %s %s %s";
   private static final String TESTS_OUT_DIR = "tests";
-  private static final String EVENT_PREFIX = "event_";
-  private static final String SYSTEM_EVENT_MESSAGE_BASE = "event_system";
+  private static final String EVENTS_PREFIX = SubType.EVENTS + "_";
+  private static final String SYSTEM_EVENT_MESSAGE_BASE = EVENTS_PREFIX + "system";
   private static final int CONFIG_UPDATE_DELAY_MS = 8 * 1000;
   private static final int NORM_TIMEOUT_MS = 300 * 1000;
   private static final String RESULT_LOG_FILE = "RESULT.log";
@@ -600,8 +600,8 @@ public class SequenceBase {
   }
 
   private boolean isInterestingValidation(String schemaName) {
-    String targetSchema = format("event_%s", ifNotNullGet(testSchema, SubFolder::value));
-    return schemaName.equals(targetSchema) || schemaName.equals(STATE_UPDATE_MESSAGE_TYPE);
+    String eventsSchema = format("%s%s", EVENTS_PREFIX, ifNotNullGet(testSchema, SubFolder::value));
+    return schemaName.equals(eventsSchema) || schemaName.equals(STATE_UPDATE_MESSAGE_TYPE);
   }
 
   private Map.Entry<Integer, Integer> emitCapabilityResult(Capabilities capability, Exception state,
@@ -1009,7 +1009,7 @@ public class SequenceBase {
     }
 
     boolean systemEvent = messageBase.equals(SYSTEM_EVENT_MESSAGE_BASE);
-    boolean anyEvent = messageBase.startsWith(EVENT_PREFIX);
+    boolean anyEvent = messageBase.startsWith(EVENTS_PREFIX);
     boolean localUpdate = messageBase.startsWith(LOCAL_PREFIX);
     boolean updateMessage = messageBase.endsWith(UPDATE_SUBFOLDER);
     boolean configMessage = messageBase.startsWith(CONFIG_SUBTYPE);

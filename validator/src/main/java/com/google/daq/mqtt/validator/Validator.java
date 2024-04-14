@@ -132,7 +132,7 @@ public class Validator {
   private static final String DEVICE_REGISTRY_ID_KEY = "deviceRegistryId";
   private static final String UNKNOWN_FOLDER_DEFAULT = "unknown";
   private static final String STATE_UPDATE_SCHEMA = "state";
-  private static final String EVENT_POINTSET_SCHEMA = "event_pointset";
+  private static final String EVENTS_POINTSET_SCHEMA = "events_pointset";
   private static final String STATE_POINTSET_SCHEMA = "state_pointset";
   private static final String UNKNOWN_TYPE_DEFAULT = "events";
   private static final String CONFIG_CATEGORY = "config";
@@ -141,7 +141,7 @@ public class Validator {
       SubType.STATE.value());
   private static final Map<String, Class<?>> CONTENT_VALIDATORS = ImmutableMap.of(
       STATE_UPDATE_SCHEMA, State.class,
-      EVENT_POINTSET_SCHEMA, PointsetEvent.class,
+      EVENTS_POINTSET_SCHEMA, PointsetEvent.class,
       STATE_POINTSET_SCHEMA, PointsetState.class
   );
   private static final Set<SubType> LAST_SEEN_SUBTYPES = ImmutableSet.of(SubType.EVENTS,

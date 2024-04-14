@@ -20,7 +20,7 @@
       "$ref": "file:entry.json"
     },
     "entities": {
-      "$ref": "file:event_mapping_entities.json"
+      "$ref": "file:events_mapping_entities.json"
     }
   }
 }

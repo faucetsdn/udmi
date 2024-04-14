@@ -1,21 +1,17 @@
-"""Generated class for monitoring_metric.json"""
-from .events_system import SystemEvent
+"""Generated class for events_mapping_entities.json"""
 
 
-class Monitoringmetric:
+class MappingEventEntities:
   """Generated schema class"""
 
   def __init__(self):
-    self.system = None
-    self.envelope = None
+    pass
 
   @staticmethod
   def from_dict(source):
     if not source:
       return None
-    result = Monitoringmetric()
-    result.system = SystemEvent.from_dict(source.get('system'))
-    result.envelope = source.get('envelope')
+    result = MappingEventEntities()
     return result
 
   @staticmethod
@@ -24,7 +20,7 @@ class Monitoringmetric:
       return None
     result = {}
     for key in source:
-      result[key] = Monitoringmetric.from_dict(source[key])
+      result[key] = MappingEventEntities.from_dict(source[key])
     return result
 
   @staticmethod
@@ -36,8 +32,4 @@ class Monitoringmetric:
 
   def to_dict(self):
     result = {}
-    if self.system:
-      result['system'] = self.system.to_dict() # 4
-    if self.envelope:
-      result['envelope'] = self.envelope # 5
     return result

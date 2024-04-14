@@ -1,17 +1,20 @@
-"""Generated class for event_mapping_entities.json"""
+"""Generated class for commands_discovery.json"""
 
 
-class MappingEventEntities:
+class DiscoveryCommand:
   """Generated schema class"""
 
   def __init__(self):
-    pass
+    self.timestamp = None
+    self.version = None
 
   @staticmethod
   def from_dict(source):
     if not source:
       return None
-    result = MappingEventEntities()
+    result = DiscoveryCommand()
+    result.timestamp = source.get('timestamp')
+    result.version = source.get('version')
     return result
 
   @staticmethod
@@ -20,7 +23,7 @@ class MappingEventEntities:
       return None
     result = {}
     for key in source:
-      result[key] = MappingEventEntities.from_dict(source[key])
+      result[key] = DiscoveryCommand.from_dict(source[key])
     return result
 
   @staticmethod
@@ -32,4 +35,8 @@ class MappingEventEntities:
 
   def to_dict(self):
     result = {}
+    if self.timestamp:
+      result['timestamp'] = self.timestamp # 5
+    if self.version:
+      result['version'] = self.version # 5
     return result

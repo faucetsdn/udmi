@@ -1,7 +1,7 @@
-"""Generated class for event_system.json"""
+"""Generated class for events_system.json"""
 
 
-class Object214BCB0C:
+class Object9B20A16A:
   """Generated schema class"""
 
   def __init__(self):
@@ -15,7 +15,7 @@ class Object214BCB0C:
   def from_dict(source):
     if not source:
       return None
-    result = Object214BCB0C()
+    result = Object9B20A16A()
     result.mem_total_mb = source.get('mem_total_mb')
     result.mem_free_mb = source.get('mem_free_mb')
     result.store_total_mb = source.get('store_total_mb')
@@ -29,7 +29,7 @@ class Object214BCB0C:
       return None
     result = {}
     for key in source:
-      result[key] = Object214BCB0C.from_dict(source[key])
+      result[key] = Object9B20A16A.from_dict(source[key])
     return result
 
   @staticmethod
@@ -77,7 +77,7 @@ class SystemEvent:
     result.last_config = source.get('last_config')
     result.logentries = Entry.array_from(source.get('logentries'))
     result.event_count = source.get('event_count')
-    result.metrics = Object214BCB0C.from_dict(source.get('metrics'))
+    result.metrics = Object9B20A16A.from_dict(source.get('metrics'))
     return result
 
   @staticmethod

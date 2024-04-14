@@ -8,7 +8,7 @@
   "existingJavaType": "java.util.HashMap<String, MappingEventEntity>",
   "patternProperties": {
     "^[-0-9a-z]+$": {
-      "$ref": "file:event_mapping_entity.json"
+      "$ref": "file:events_mapping_entity.json"
     }
   }
 }

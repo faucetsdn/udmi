@@ -1,7 +1,7 @@
-"""Generated class for event.json"""
-from .event_system import SystemEvent
-from .event_pointset import PointsetEvent
-from .event_discovery import DiscoveryEvent
+"""Generated class for events.json"""
+from .events_system import SystemEvent
+from .events_pointset import PointsetEvent
+from .events_discovery import DiscoveryEvent
 
 
 class Event:

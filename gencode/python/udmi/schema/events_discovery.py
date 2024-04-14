@@ -1,4 +1,4 @@
-"""Generated class for event_discovery.json"""
+"""Generated class for events_discovery.json"""
 from .entry import Entry
 from .discovery_family import FamilyDiscovery
 from .model_cloud import CloudModel

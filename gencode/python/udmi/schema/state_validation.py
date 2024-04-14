@@ -52,7 +52,7 @@ class ValidationSummary:
     if self.error_devices:
       result['error_devices'] = self.error_devices # 1
     return result
-from .event_validation_device import DeviceValidationEvent
+from .events_validation_device import DeviceValidationEvent
 
 
 class ValidationState:

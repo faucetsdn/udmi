@@ -7,13 +7,13 @@
   "additionalProperties": false,
   "properties": {
     "system": {
-      "$ref": "file:event_system.json#"
+      "$ref": "file:events_system.json#"
     },
     "pointset": {
-      "$ref": "file:event_pointset.json#"
+      "$ref": "file:events_pointset.json#"
     },
     "discovery": {
-      "$ref": "file:event_discovery.json#"
+      "$ref": "file:events_discovery.json#"
     }
   }
 }

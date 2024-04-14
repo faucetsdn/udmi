@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import udmi.schema.Envelope.SubType;
 
 /**
  * Class for proxying messages from one instance to another.
@@ -146,7 +147,7 @@ public class IotCoreProxy {
     }
     try {
       if (!subFolder.equals("state") && !subFolder.equals("config")) {
-        subFolder = "event_" + subFolder;
+        subFolder = SubType.EVENTS + "_" + subFolder;
       }
       List<String> validationErrors = messageValidator.validateMessage(subFolder, data);
       if (!validationErrors.isEmpty()) {

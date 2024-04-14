@@ -1,4 +1,4 @@
-"""Generated class for event_validation.json"""
+"""Generated class for events_validation.json"""
 from .entry import Entry
 
 

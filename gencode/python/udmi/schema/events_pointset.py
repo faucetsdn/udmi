@@ -1,20 +1,27 @@
-"""Generated class for command_discovery.json"""
+"""Generated class for events_pointset.json"""
+from .events_pointset_point import PointPointsetEvent
 
 
-class DiscoveryCommand:
+class PointsetEvent:
   """Generated schema class"""
 
   def __init__(self):
     self.timestamp = None
     self.version = None
+    self.upgraded_from = None
+    self.partial_update = None
+    self.points = None
 
   @staticmethod
   def from_dict(source):
     if not source:
       return None
-    result = DiscoveryCommand()
+    result = PointsetEvent()
     result.timestamp = source.get('timestamp')
     result.version = source.get('version')
+    result.upgraded_from = source.get('upgraded_from')
+    result.partial_update = source.get('partial_update')
+    result.points = PointPointsetEvent.map_from(source.get('points'))
     return result
 
   @staticmethod
@@ -23,7 +30,7 @@ class DiscoveryCommand:
       return None
     result = {}
     for key in source:
-      result[key] = DiscoveryCommand.from_dict(source[key])
+      result[key] = PointsetEvent.from_dict(source[key])
     return result
 
   @staticmethod
@@ -39,4 +46,10 @@ class DiscoveryCommand:
       result['timestamp'] = self.timestamp # 5
     if self.version:
       result['version'] = self.version # 5
+    if self.upgraded_from:
+      result['upgraded_from'] = self.upgraded_from # 5
+    if self.partial_update:
+      result['partial_update'] = self.partial_update # 5
+    if self.points:
+      result['points'] = PointPointsetEvent.expand_dict(self.points) # 2
     return result
