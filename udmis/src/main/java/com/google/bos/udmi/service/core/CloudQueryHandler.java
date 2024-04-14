@@ -16,7 +16,7 @@ import udmi.schema.CloudModel;
 import udmi.schema.CloudQuery;
 import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.Depths.Depth;
-import udmi.schema.DiscoveryEvent;
+import udmi.schema.DiscoveryEvents;
 import udmi.schema.Envelope;
 
 /**
@@ -70,13 +70,13 @@ public class CloudQueryHandler {
     return cloudModel;
   }
 
-  private void publish(DiscoveryEvent discoveryEvent) {
+  private void publish(DiscoveryEvents discoveryEvent) {
     controller.publish(discoveryEvent);
   }
 
   private void queryAllRegistries() {
     Set<String> registries = iotAccess.getRegistries();
-    DiscoveryEvent discoveryEvent = new DiscoveryEvent();
+    DiscoveryEvents discoveryEvent = new DiscoveryEvents();
     discoveryEvent.scan_family = ProtocolFamily.IOT;
     discoveryEvent.generation = query.generation;
     discoveryEvent.registries = registries.stream()
@@ -96,7 +96,7 @@ public class CloudQueryHandler {
     String deviceRegistryId = requireNonNull(envelope.deviceRegistryId, "registry id");
     String deviceId = requireNonNull(envelope.deviceId, "device id");
 
-    DiscoveryEvent discoveryEvent = new DiscoveryEvent();
+    DiscoveryEvents discoveryEvent = new DiscoveryEvents();
     discoveryEvent.scan_family = ProtocolFamily.IOT;
     discoveryEvent.generation = query.generation;
     discoveryEvent.cloud_model = iotAccess.fetchDevice(deviceRegistryId, deviceId);
@@ -111,7 +111,7 @@ public class CloudQueryHandler {
     String deviceRegistryId = requireNonNull(envelope.deviceRegistryId, "registry id");
     CloudModel cloudModel = iotAccess.listDevices(deviceRegistryId);
 
-    DiscoveryEvent discoveryEvent = new DiscoveryEvent();
+    DiscoveryEvents discoveryEvent = new DiscoveryEvents();
     discoveryEvent.scan_family = ProtocolFamily.IOT;
     discoveryEvent.generation = query.generation;
     discoveryEvent.devices = cloudModel.device_ids.entrySet().stream().collect(Collectors.toMap(

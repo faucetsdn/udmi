@@ -91,7 +91,7 @@ public abstract class MessagePipeTestBase extends MessageTestBase {
   @NotNull
   private static Bundle makeExceptionBundle() {
     Bundle bundle = new Bundle();
-    bundle.envelope.subType = SubType.EVENT;
+    bundle.envelope.subType = SubType.EVENTS;
     bundle.envelope.subFolder = SubFolder.ERROR;
     return bundle;
   }
