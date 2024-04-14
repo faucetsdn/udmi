@@ -46,7 +46,7 @@ sites/udmi_site_model/out/devices/AHU-1/events_pointset.out
   "timestamp" : "REDACTED_TIMESTAMP",
   "version" : "1.5.1",
   "sub_folder" : "pointset",
-  "sub_type" : "event",
+  "sub_type" : "events",
   "status" : {
     "message" : "Multiple validation errors",
     "detail" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold; While converting to json node: 1 schema violations found",
@@ -79,7 +79,7 @@ sites/udmi_site_model/out/devices/AHU-1/events_system.out
   "timestamp" : "REDACTED_TIMESTAMP",
   "version" : "1.5.1",
   "sub_folder" : "system",
-  "sub_type" : "event",
+  "sub_type" : "events",
   "status" : {
     "message" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
     "detail" : "events_system: Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
@@ -204,7 +204,7 @@ sites/udmi_site_model/out/devices/AHU-22/events_pointset.out
   "timestamp" : "REDACTED_TIMESTAMP",
   "version" : "1.5.1",
   "sub_folder" : "pointset",
-  "sub_type" : "event",
+  "sub_type" : "events",
   "status" : {
     "message" : "Device has extra points: llama",
     "detail" : "events_pointset: Device has extra points: llama",
@@ -231,7 +231,7 @@ sites/udmi_site_model/out/devices/AHU-22/events_system.out
   "timestamp" : "REDACTED_TIMESTAMP",
   "version" : "1.5.1",
   "sub_folder" : "system",
-  "sub_type" : "event",
+  "sub_type" : "events",
   "status" : {
     "message" : "Successful validation",
     "category" : "validation.device.receive",
@@ -263,7 +263,7 @@ sites/udmi_site_model/out/devices/GAT-123/events_blobset.out
   "timestamp" : "REDACTED_TIMESTAMP",
   "version" : "1.5.1",
   "sub_folder" : "blobset",
-  "sub_type" : "event",
+  "sub_type" : "events",
   "status" : {
     "message" : "While converting to java.util.TreeMap",
     "detail" : "events_blobset: While converting to java.util.TreeMap; Cannot coerce empty String (\"\") to element of `java.util.TreeMap<java.lang.Object,java.lang.Object>` (but could if coercion was enabled using `CoercionConfig`)\n at [Source: (String)\"\"\"\"; line: 1, column: 1]",
@@ -286,7 +286,7 @@ sites/udmi_site_model/out/devices/GAT-123/events_discovery.out
   "timestamp" : "REDACTED_TIMESTAMP",
   "version" : "1.5.1",
   "sub_folder" : "discovery",
-  "sub_type" : "event",
+  "sub_type" : "events",
   "status" : {
     "message" : "While converting to json node: 1 schema violations found",
     "detail" : "events_discovery: While converting to json node: 1 schema violations found REDACTED_ERROR; 1 schema violations found; object has missing required properties ([\"generation\"])",
@@ -309,7 +309,7 @@ sites/udmi_site_model/out/devices/GAT-123/events_error.out
   "timestamp" : "REDACTED_TIMESTAMP",
   "version" : "1.5.1",
   "sub_folder" : "error",
-  "sub_type" : "event",
+  "sub_type" : "events",
   "status" : {
     "message" : "Error in message pipeline: While parsing json object, Unexpected character ('N' (code 78)): was expecting double-quote to start field name  at [Source: (String)\"{ NOT VALID JSON!\"; line: 1, column: 4]",
     "detail" : "events_error: Error in message pipeline: While parsing json object, Unexpected character ('N' (code 78)): was expecting double-quote to start field name  at [Source: (String)\"{ NOT VALID JSON!\"; line: 1, column: 4] REDACTED_ERROR",
@@ -332,7 +332,7 @@ sites/udmi_site_model/out/devices/GAT-123/events_invalid.out
   "timestamp" : "REDACTED_TIMESTAMP",
   "version" : "1.5.1",
   "sub_folder" : "invalid",
-  "sub_type" : "event",
+  "sub_type" : "events",
   "status" : {
     "message" : "Unknown schema subFolder 'events_invalid' for GAT-123",
     "detail" : "events_invalid: Unknown schema subFolder 'event_invalid' for GAT-123 REDACTED_ERROR",
@@ -355,7 +355,7 @@ sites/udmi_site_model/out/devices/GAT-123/events_pointset.out
   "timestamp" : "REDACTED_TIMESTAMP",
   "version" : "1.5.1",
   "sub_folder" : "pointset",
-  "sub_type" : "event",
+  "sub_type" : "events",
   "status" : {
     "message" : "Device has extra points: llama",
     "detail" : "events_pointset: Device has extra points: llama",
@@ -382,7 +382,7 @@ sites/udmi_site_model/out/devices/GAT-123/events_system.out
   "timestamp" : "REDACTED_TIMESTAMP",
   "version" : "1.5.1",
   "sub_folder" : "system",
-  "sub_type" : "event",
+  "sub_type" : "events",
   "status" : {
     "message" : "Successful validation",
     "category" : "validation.device.receive",
@@ -482,7 +482,7 @@ sites/udmi_site_model/out/devices/SNS-4/events_pointset.out
   "timestamp" : "REDACTED_TIMESTAMP",
   "version" : "1.5.1",
   "sub_folder" : "pointset",
-  "sub_type" : "event",
+  "sub_type" : "events",
   "status" : {
     "message" : "Multiple validation errors",
     "detail" : "Device has missing points: split_threshold, triangulating_axis; Device has extra points: llama",
@@ -515,7 +515,7 @@ sites/udmi_site_model/out/devices/SNS-4/events_system.out
   "timestamp" : "REDACTED_TIMESTAMP",
   "version" : "1.5.1",
   "sub_folder" : "system",
-  "sub_type" : "event",
+  "sub_type" : "events",
   "status" : {
     "message" : "Successful validation",
     "category" : "validation.device.receive",
