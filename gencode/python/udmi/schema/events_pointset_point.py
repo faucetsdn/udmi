@@ -1,7 +1,7 @@
 """Generated class for events_pointset_point.json"""
 
 
-class PointPointsetEvent:
+class PointPointsetEvents:
   """Generated schema class"""
 
   def __init__(self):
@@ -11,7 +11,7 @@ class PointPointsetEvent:
   def from_dict(source):
     if not source:
       return None
-    result = PointPointsetEvent()
+    result = PointPointsetEvents()
     result.present_value = source.get('present_value')
     return result
 
@@ -21,7 +21,7 @@ class PointPointsetEvent:
       return None
     result = {}
     for key in source:
-      result[key] = PointPointsetEvent.from_dict(source[key])
+      result[key] = PointPointsetEvents.from_dict(source[key])
     return result
 
   @staticmethod

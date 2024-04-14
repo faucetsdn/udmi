@@ -1,9 +1,9 @@
 """Generated class for events_mapping.json"""
 from .entry import Entry
-from .events_mapping_entities import MappingEventEntities
+from .events_mapping_entities import MappingEventsEntities
 
 
-class MappingEvent:
+class MappingEvents:
   """Generated schema class"""
 
   def __init__(self):
@@ -16,7 +16,7 @@ class MappingEvent:
   def from_dict(source):
     if not source:
       return None
-    result = MappingEvent()
+    result = MappingEvents()
     result.timestamp = source.get('timestamp')
     result.version = source.get('version')
     result.status = Entry.from_dict(source.get('status'))
@@ -29,7 +29,7 @@ class MappingEvent:
       return None
     result = {}
     for key in source:
-      result[key] = MappingEvent.from_dict(source[key])
+      result[key] = MappingEvents.from_dict(source[key])
     return result
 
   @staticmethod

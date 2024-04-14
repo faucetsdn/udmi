@@ -1,7 +1,7 @@
 {
   "$udmi_version": "1.5.0",
-  "title": "Pointset Event",
-  "description": "A set of points reporting telemetry data. [Pointset Event Documentation](../docs/messages/pointset.md#telemetry)",
+  "title": "Pointset Events",
+  "description": "A set of points reporting telemetry data. [Pointset Events Documentation](../docs/messages/pointset.md#telemetry)",
   "$section": "Messages",
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
@@ -28,7 +28,7 @@
     "points": {
       "description": "Collection of point names, defining the representative point set for this device.",
       "additionalProperties": false,
-      "existingJavaType": "java.util.HashMap<String, PointPointsetEvent>",
+      "existingJavaType": "java.util.HashMap<String, PointPointsetEvents>",
       "patternProperties": {
         "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
           "$ref": "file:events_pointset_point.json#"

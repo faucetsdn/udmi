@@ -1,5 +1,5 @@
 """Generated class for monitoring_metric.json"""
-from .events_system import SystemEvent
+from .events_system import SystemEvents
 
 
 class Monitoringmetric:
@@ -14,7 +14,7 @@ class Monitoringmetric:
     if not source:
       return None
     result = Monitoringmetric()
-    result.system = SystemEvent.from_dict(source.get('system'))
+    result.system = SystemEvents.from_dict(source.get('system'))
     result.envelope = source.get('envelope')
     return result
 

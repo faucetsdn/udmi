@@ -2,7 +2,7 @@
 from .entry import Entry
 
 
-class DeviceValidationEvent:
+class DeviceValidationEvents:
   """Generated schema class"""
 
   def __init__(self):
@@ -14,7 +14,7 @@ class DeviceValidationEvent:
   def from_dict(source):
     if not source:
       return None
-    result = DeviceValidationEvent()
+    result = DeviceValidationEvents()
     result.last_seen = source.get('last_seen')
     result.oldest_mark = source.get('oldest_mark')
     result.status = Entry.from_dict(source.get('status'))
@@ -26,7 +26,7 @@ class DeviceValidationEvent:
       return None
     result = {}
     for key in source:
-      result[key] = DeviceValidationEvent.from_dict(source[key])
+      result[key] = DeviceValidationEvents.from_dict(source[key])
     return result
 
   @staticmethod

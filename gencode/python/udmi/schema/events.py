@@ -1,10 +1,10 @@
 """Generated class for events.json"""
-from .events_system import SystemEvent
-from .events_pointset import PointsetEvent
-from .events_discovery import DiscoveryEvent
+from .events_system import SystemEvents
+from .events_pointset import PointsetEvents
+from .events_discovery import DiscoveryEvents
 
 
-class Event:
+class Events:
   """Generated schema class"""
 
   def __init__(self):
@@ -16,10 +16,10 @@ class Event:
   def from_dict(source):
     if not source:
       return None
-    result = Event()
-    result.system = SystemEvent.from_dict(source.get('system'))
-    result.pointset = PointsetEvent.from_dict(source.get('pointset'))
-    result.discovery = DiscoveryEvent.from_dict(source.get('discovery'))
+    result = Events()
+    result.system = SystemEvents.from_dict(source.get('system'))
+    result.pointset = PointsetEvents.from_dict(source.get('pointset'))
+    result.discovery = DiscoveryEvents.from_dict(source.get('discovery'))
     return result
 
   @staticmethod
@@ -28,7 +28,7 @@ class Event:
       return None
     result = {}
     for key in source:
-      result[key] = Event.from_dict(source[key])
+      result[key] = Events.from_dict(source[key])
     return result
 
   @staticmethod

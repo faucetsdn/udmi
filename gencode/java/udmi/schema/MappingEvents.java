@@ -11,7 +11,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Mapping Event
+ * Mapping Events
  * <p>
  * [Mapping result](../docs/specs/mapping.md) with implicit enumeration
  * 
@@ -24,7 +24,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "entities"
 })
 @Generated("jsonschema2pojo")
-public class MappingEvent {
+public class MappingEvents {
 
     /**
      * RFC 3339 timestamp the configuration was generated
@@ -49,7 +49,7 @@ public class MappingEvent {
     @JsonProperty("status")
     public Entry status;
     /**
-     * Mapping Event Entities
+     * Mapping Events Entities
      * <p>
      * Mapper output describing a group of devices by their guids
      * 
@@ -73,10 +73,10 @@ public class MappingEvent {
         if (other == this) {
             return true;
         }
-        if ((other instanceof MappingEvent) == false) {
+        if ((other instanceof MappingEvents) == false) {
             return false;
         }
-        MappingEvent rhs = ((MappingEvent) other);
+        MappingEvents rhs = ((MappingEvents) other);
         return (((((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version)))&&((this.entities == rhs.entities)||((this.entities!= null)&&this.entities.equals(rhs.entities))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
     }
 

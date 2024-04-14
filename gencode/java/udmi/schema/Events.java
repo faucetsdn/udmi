@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Event
+ * Events
  * <p>
  * Container object for all event schemas, not directly used.
  * 
@@ -21,35 +21,35 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "discovery"
 })
 @Generated("jsonschema2pojo")
-public class Event {
+public class Events {
 
     /**
-     * System Event
+     * System Events
      * <p>
      * Used for system events such as logging. [System Event Documentation](../docs/messages/system.md#event)
      * 
      */
     @JsonProperty("system")
     @JsonPropertyDescription("Used for system events such as logging. [System Event Documentation](../docs/messages/system.md#event)")
-    public SystemEvent system;
+    public SystemEvents system;
     /**
-     * Pointset Event
+     * Pointset Events
      * <p>
-     * A set of points reporting telemetry data. [Pointset Event Documentation](../docs/messages/pointset.md#telemetry)
+     * A set of points reporting telemetry data. [Pointset Events Documentation](../docs/messages/pointset.md#telemetry)
      * 
      */
     @JsonProperty("pointset")
-    @JsonPropertyDescription("A set of points reporting telemetry data. [Pointset Event Documentation](../docs/messages/pointset.md#telemetry)")
-    public PointsetEvent pointset;
+    @JsonPropertyDescription("A set of points reporting telemetry data. [Pointset Events Documentation](../docs/messages/pointset.md#telemetry)")
+    public PointsetEvents pointset;
     /**
-     * Discovery Event
+     * Discovery Events
      * <p>
      * [Discovery result](../docs/specs/discovery.md) with implicit discovery
      * 
      */
     @JsonProperty("discovery")
     @JsonPropertyDescription("[Discovery result](../docs/specs/discovery.md) with implicit discovery")
-    public DiscoveryEvent discovery;
+    public DiscoveryEvents discovery;
 
     @Override
     public int hashCode() {
@@ -65,10 +65,10 @@ public class Event {
         if (other == this) {
             return true;
         }
-        if ((other instanceof Event) == false) {
+        if ((other instanceof Events) == false) {
             return false;
         }
-        Event rhs = ((Event) other);
+        Events rhs = ((Events) other);
         return ((((this.pointset == rhs.pointset)||((this.pointset!= null)&&this.pointset.equals(rhs.pointset)))&&((this.system == rhs.system)||((this.system!= null)&&this.system.equals(rhs.system))))&&((this.discovery == rhs.discovery)||((this.discovery!= null)&&this.discovery.equals(rhs.discovery))));
     }
 

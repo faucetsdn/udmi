@@ -1,8 +1,8 @@
 """Generated class for events_pointset.json"""
-from .events_pointset_point import PointPointsetEvent
+from .events_pointset_point import PointPointsetEvents
 
 
-class PointsetEvent:
+class PointsetEvents:
   """Generated schema class"""
 
   def __init__(self):
@@ -16,12 +16,12 @@ class PointsetEvent:
   def from_dict(source):
     if not source:
       return None
-    result = PointsetEvent()
+    result = PointsetEvents()
     result.timestamp = source.get('timestamp')
     result.version = source.get('version')
     result.upgraded_from = source.get('upgraded_from')
     result.partial_update = source.get('partial_update')
-    result.points = PointPointsetEvent.map_from(source.get('points'))
+    result.points = PointPointsetEvents.map_from(source.get('points'))
     return result
 
   @staticmethod
@@ -30,7 +30,7 @@ class PointsetEvent:
       return None
     result = {}
     for key in source:
-      result[key] = PointsetEvent.from_dict(source[key])
+      result[key] = PointsetEvents.from_dict(source[key])
     return result
 
   @staticmethod
@@ -51,5 +51,5 @@ class PointsetEvent:
     if self.partial_update:
       result['partial_update'] = self.partial_update # 5
     if self.points:
-      result['points'] = PointPointsetEvent.expand_dict(self.points) # 2
+      result['points'] = PointPointsetEvents.expand_dict(self.points) # 2
     return result

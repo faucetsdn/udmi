@@ -1,6 +1,6 @@
 {
   "$udmi_version": "1.5.0",
-  "title": "Discovery Event",
+  "title": "Discovery Events",
   "description": "[Discovery result](../docs/specs/discovery.md) with implicit discovery",
   "$section": "Messages",
   "type": "object",

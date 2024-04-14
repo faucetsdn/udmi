@@ -1,10 +1,10 @@
 {
-  "deviceNumId" : "00001929965407",
+  "deviceNumId" : "00000062256946",
   "publishTime" : "1999-10-20T01:02:03Z",
   "subFolder" : "pointset",
   "deviceRegistryId" : "ZZ-TRI-FECTA",
-  "subType" : "event",
-  "msgSource" : "001_event_pointset.json",
-  "deviceId" : "AHU-22",
+  "subType" : "events",
+  "msgSource" : "003_event_pointset.json",
+  "deviceId" : "AHU-1",
   "projectId" : "playback-project"
 }

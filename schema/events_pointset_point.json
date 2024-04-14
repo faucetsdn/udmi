@@ -1,6 +1,6 @@
 {
   "$udmi_version": "1.5.0",
-  "title": "Point Pointset Event",
+  "title": "Point Pointset Events",
   "description": "Object representation for for a single point",
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",

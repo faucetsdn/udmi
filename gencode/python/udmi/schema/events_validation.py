@@ -43,7 +43,7 @@ class PointsetSummary:
     return result
 
 
-class ValidationEvent:
+class ValidationEvents:
   """Generated schema class"""
 
   def __init__(self):
@@ -59,7 +59,7 @@ class ValidationEvent:
   def from_dict(source):
     if not source:
       return None
-    result = ValidationEvent()
+    result = ValidationEvents()
     result.timestamp = source.get('timestamp')
     result.version = source.get('version')
     result.sub_folder = source.get('sub_folder')
@@ -75,7 +75,7 @@ class ValidationEvent:
       return None
     result = {}
     for key in source:
-      result[key] = ValidationEvent.from_dict(source[key])
+      result[key] = ValidationEvents.from_dict(source[key])
     return result
 
   @staticmethod

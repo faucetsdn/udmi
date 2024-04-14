@@ -26,12 +26,12 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 import udmi.schema.Entry;
 import udmi.schema.PointPointsetConfig;
-import udmi.schema.PointPointsetEvent;
+import udmi.schema.PointPointsetEvents;
 import udmi.schema.PointPointsetModel;
 import udmi.schema.PointPointsetState;
 import udmi.schema.PointPointsetState.Value_state;
 import udmi.schema.PointsetConfig;
-import udmi.schema.PointsetEvent;
+import udmi.schema.PointsetEvents;
 import udmi.schema.PointsetModel;
 import udmi.schema.PointsetState;
 import udmi.schema.PubberConfiguration;
@@ -78,8 +78,8 @@ public class PointsetManager extends ManagerBase {
     return pointMetadata;
   }
 
-  private static PointPointsetEvent extraPointsetEvent() {
-    PointPointsetEvent pointPointsetEvent = new PointPointsetEvent();
+  private static PointPointsetEvents extraPointsetEvent() {
+    PointPointsetEvents pointPointsetEvent = new PointPointsetEvents();
     pointPointsetEvent.present_value = 100;
     return pointPointsetEvent;
   }
@@ -143,7 +143,7 @@ public class PointsetManager extends ManagerBase {
     pointsetState.points.put(pointName, ifNotNullGet(managedPoints.get(pointName),
         this::getTweakedPointState, invalidPoint(pointName)));
     pointsetEvent.points.put(pointName, ifNotNullGet(managedPoints.get(pointName),
-        AbstractPoint::getData, new PointPointsetEvent()));
+        AbstractPoint::getData, new PointPointsetEvents()));
   }
 
   private PointPointsetState getTweakedPointState(AbstractPoint point) {
@@ -281,7 +281,7 @@ public class PointsetManager extends ManagerBase {
     host.publish(pointsetEvent);
   }
 
-  static class ExtraPointsetEvent extends PointsetEvent {
+  static class ExtraPointsetEvent extends PointsetEvents {
 
     // This extraField exists only to trigger schema parsing errors.
     public Object extraField;

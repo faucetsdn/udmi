@@ -55,7 +55,7 @@ class SystemDiscoveryData:
     return result
 
 
-class DiscoveryEvent:
+class DiscoveryEvents:
   """Generated schema class"""
 
   def __init__(self):
@@ -77,7 +77,7 @@ class DiscoveryEvent:
   def from_dict(source):
     if not source:
       return None
-    result = DiscoveryEvent()
+    result = DiscoveryEvents()
     result.timestamp = source.get('timestamp')
     result.version = source.get('version')
     result.generation = source.get('generation')
@@ -99,7 +99,7 @@ class DiscoveryEvent:
       return None
     result = {}
     for key in source:
-      result[key] = DiscoveryEvent.from_dict(source[key])
+      result[key] = DiscoveryEvents.from_dict(source[key])
     return result
 
   @staticmethod

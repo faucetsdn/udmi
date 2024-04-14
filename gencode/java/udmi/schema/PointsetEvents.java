@@ -11,9 +11,9 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Pointset Event
+ * Pointset Events
  * <p>
- * A set of points reporting telemetry data. [Pointset Event Documentation](../docs/messages/pointset.md#telemetry)
+ * A set of points reporting telemetry data. [Pointset Events Documentation](../docs/messages/pointset.md#telemetry)
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -25,7 +25,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "points"
 })
 @Generated("jsonschema2pojo")
-public class PointsetEvent {
+public class PointsetEvents {
 
     /**
      * RFC 3339 UTC timestamp the telemetry event was generated
@@ -64,7 +64,7 @@ public class PointsetEvent {
      */
     @JsonProperty("points")
     @JsonPropertyDescription("Collection of point names, defining the representative point set for this device.")
-    public HashMap<String, PointPointsetEvent> points;
+    public HashMap<String, PointPointsetEvents> points;
 
     @Override
     public int hashCode() {
@@ -82,10 +82,10 @@ public class PointsetEvent {
         if (other == this) {
             return true;
         }
-        if ((other instanceof PointsetEvent) == false) {
+        if ((other instanceof PointsetEvents) == false) {
             return false;
         }
-        PointsetEvent rhs = ((PointsetEvent) other);
+        PointsetEvents rhs = ((PointsetEvents) other);
         return ((((((this.partial_update == rhs.partial_update)||((this.partial_update!= null)&&this.partial_update.equals(rhs.partial_update)))&&((this.upgraded_from == rhs.upgraded_from)||((this.upgraded_from!= null)&&this.upgraded_from.equals(rhs.upgraded_from))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.points == rhs.points)||((this.points!= null)&&this.points.equals(rhs.points))));
     }
 

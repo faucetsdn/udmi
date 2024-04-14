@@ -12,7 +12,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * System Event
+ * System Events
  * <p>
  * Used for system events such as logging. [System Event Documentation](../docs/messages/system.md#event)
  * 
@@ -28,7 +28,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "metrics"
 })
 @Generated("jsonschema2pojo")
-public class SystemEvent {
+public class SystemEvents {
 
     /**
      * RFC 3339 UTC timestamp the event payload was generated
@@ -90,10 +90,10 @@ public class SystemEvent {
         if (other == this) {
             return true;
         }
-        if ((other instanceof SystemEvent) == false) {
+        if ((other instanceof SystemEvents) == false) {
             return false;
         }
-        SystemEvent rhs = ((SystemEvent) other);
+        SystemEvents rhs = ((SystemEvents) other);
         return ((((((((this.event_count == rhs.event_count)||((this.event_count!= null)&&this.event_count.equals(rhs.event_count)))&&((this.upgraded_from == rhs.upgraded_from)||((this.upgraded_from!= null)&&this.upgraded_from.equals(rhs.upgraded_from))))&&((this.metrics == rhs.metrics)||((this.metrics!= null)&&this.metrics.equals(rhs.metrics))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.last_config == rhs.last_config)||((this.last_config!= null)&&this.last_config.equals(rhs.last_config))))&&((this.logentries == rhs.logentries)||((this.logentries!= null)&&this.logentries.equals(rhs.logentries))));
     }
 

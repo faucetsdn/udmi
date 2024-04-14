@@ -10,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Device Validation Event
+ * Device Validation Events
  * <p>
  * Validation summary information for an individual device.
  * 
@@ -22,7 +22,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "status"
 })
 @Generated("jsonschema2pojo")
-public class DeviceValidationEvent {
+public class DeviceValidationEvents {
 
     /**
      * Last time any message from this device was received
@@ -61,10 +61,10 @@ public class DeviceValidationEvent {
         if (other == this) {
             return true;
         }
-        if ((other instanceof DeviceValidationEvent) == false) {
+        if ((other instanceof DeviceValidationEvents) == false) {
             return false;
         }
-        DeviceValidationEvent rhs = ((DeviceValidationEvent) other);
+        DeviceValidationEvents rhs = ((DeviceValidationEvents) other);
         return ((((this.last_seen == rhs.last_seen)||((this.last_seen!= null)&&this.last_seen.equals(rhs.last_seen)))&&((this.oldest_mark == rhs.oldest_mark)||((this.oldest_mark!= null)&&this.oldest_mark.equals(rhs.oldest_mark))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
     }
 

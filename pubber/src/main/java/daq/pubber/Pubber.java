@@ -25,7 +25,6 @@ import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.parseJson;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.stringify;
-import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static daq.pubber.MqttDevice.CONFIG_TOPIC;
 import static daq.pubber.MqttDevice.ERRORS_TOPIC;
 import static daq.pubber.MqttDevice.STATE_TOPIC;
@@ -39,9 +38,9 @@ import static udmi.schema.BlobsetConfig.SystemBlobsets.IOT_ENDPOINT_CONFIG;
 import static udmi.schema.EndpointConfiguration.Protocol.MQTT;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap.Builder;
 import com.google.daq.mqtt.util.CatchingScheduledThreadPoolExecutor;
 import com.google.udmi.util.GeneralUtils;
-import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.MessageDowngrader;
 import com.google.udmi.util.SchemaVersion;
 import com.google.udmi.util.SiteModel;
@@ -87,7 +86,7 @@ import udmi.schema.CloudModel.Auth_type;
 import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.Config;
 import udmi.schema.DevicePersistent;
-import udmi.schema.DiscoveryEvent;
+import udmi.schema.DiscoveryEvents;
 import udmi.schema.DiscoveryState;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.EndpointConfiguration.Protocol;
@@ -100,12 +99,12 @@ import udmi.schema.Level;
 import udmi.schema.LocalnetState;
 import udmi.schema.Metadata;
 import udmi.schema.Operation.SystemMode;
-import udmi.schema.PointsetEvent;
+import udmi.schema.PointsetEvents;
 import udmi.schema.PointsetState;
 import udmi.schema.PubberConfiguration;
 import udmi.schema.PubberOptions;
 import udmi.schema.State;
-import udmi.schema.SystemEvent;
+import udmi.schema.SystemEvents;
 import udmi.schema.SystemState;
 
 /**
@@ -128,15 +127,15 @@ public class Pubber extends ManagerBase implements ManagerHost {
   private static final int DEFAULT_REPORT_SEC = 10;
   private static final String SYSTEM_CATEGORY_FORMAT = "system.%s.%s";
   private static final ImmutableMap<Class<?>, String> MESSAGE_TOPIC_SUFFIX_MAP =
-      new ImmutableMap.Builder<Class<?>, String>()
-          .put(State.class, MqttDevice.STATE_TOPIC)
-          .put(ExtraSystemState.class, MqttDevice.STATE_TOPIC) // Used for badState option
-          .put(SystemEvent.class, getEventsSuffix("system"))
-          .put(PointsetEvent.class, getEventsSuffix("pointset"))
+      new Builder<Class<?>, String>()
+          .put(State.class, STATE_TOPIC)
+          .put(ExtraSystemState.class, STATE_TOPIC) // Used for badState option
+          .put(SystemEvents.class, getEventsSuffix("system"))
+          .put(PointsetEvents.class, getEventsSuffix("pointset"))
           .put(ExtraPointsetEvent.class, getEventsSuffix("pointset"))
           .put(InjectedMessage.class, getEventsSuffix("racoon"))
-          .put(InjectedState.class, MqttDevice.STATE_TOPIC)
-          .put(DiscoveryEvent.class, getEventsSuffix("discovery"))
+          .put(InjectedState.class, STATE_TOPIC)
+          .put(DiscoveryEvents.class, getEventsSuffix("discovery"))
           .build();
   private static final Map<String, String> INVALID_REPLACEMENTS = ImmutableMap.of(
       "events/blobset", "\"\"",

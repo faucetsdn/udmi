@@ -31,7 +31,7 @@ import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.Depths;
 import udmi.schema.Depths.Depth;
 import udmi.schema.DiscoveryConfig;
-import udmi.schema.DiscoveryEvent;
+import udmi.schema.DiscoveryEvents;
 import udmi.schema.DiscoveryState;
 import udmi.schema.FamilyDiscovery;
 import udmi.schema.FamilyDiscoveryConfig;
@@ -81,7 +81,7 @@ public class DiscoveryManager extends ManagerBase {
     }
     discoveryState.generation = enumerationGeneration;
     info("Discovery enumeration at " + isoConvert(enumerationGeneration));
-    DiscoveryEvent discoveryEvent = new DiscoveryEvent();
+    DiscoveryEvents discoveryEvent = new DiscoveryEvents();
     discoveryEvent.generation = enumerationGeneration;
     Depths depths = config.depths;
     discoveryEvent.points = maybeEnumerate(depths.points, () -> enumeratePoints(deviceId));

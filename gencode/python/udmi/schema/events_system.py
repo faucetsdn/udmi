@@ -54,7 +54,7 @@ class Object9B20A16A:
     return result
 
 
-class SystemEvent:
+class SystemEvents:
   """Generated schema class"""
 
   def __init__(self):
@@ -70,7 +70,7 @@ class SystemEvent:
   def from_dict(source):
     if not source:
       return None
-    result = SystemEvent()
+    result = SystemEvents()
     result.timestamp = source.get('timestamp')
     result.version = source.get('version')
     result.upgraded_from = source.get('upgraded_from')
@@ -86,7 +86,7 @@ class SystemEvent:
       return None
     result = {}
     for key in source:
-      result[key] = SystemEvent.from_dict(source[key])
+      result[key] = SystemEvents.from_dict(source[key])
     return result
 
   @staticmethod

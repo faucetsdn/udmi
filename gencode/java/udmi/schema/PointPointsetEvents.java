@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Point Pointset Event
+ * Point Pointset Events
  * <p>
  * Object representation for for a single point
  * 
@@ -19,7 +19,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "present_value"
 })
 @Generated("jsonschema2pojo")
-public class PointPointsetEvent {
+public class PointPointsetEvents {
 
     /**
      * The specific point data reading
@@ -42,10 +42,10 @@ public class PointPointsetEvent {
         if (other == this) {
             return true;
         }
-        if ((other instanceof PointPointsetEvent) == false) {
+        if ((other instanceof PointPointsetEvents) == false) {
             return false;
         }
-        PointPointsetEvent rhs = ((PointPointsetEvent) other);
+        PointPointsetEvents rhs = ((PointPointsetEvents) other);
         return ((this.present_value == rhs.present_value)||((this.present_value!= null)&&this.present_value.equals(rhs.present_value)));
     }
 

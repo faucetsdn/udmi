@@ -3,7 +3,7 @@
   "publishTime" : "1999-10-20T01:02:03Z",
   "subFolder" : "system",
   "deviceRegistryId" : "ZZ-TRI-FECTA",
-  "subType" : "event",
+  "subType" : "events",
   "msgSource" : "003_event_system.json",
   "deviceId" : "AHU-22",
   "projectId" : "playback-project"

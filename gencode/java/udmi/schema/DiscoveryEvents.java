@@ -11,7 +11,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Discovery Event
+ * Discovery Events
  * <p>
  * [Discovery result](../docs/specs/discovery.md) with implicit discovery
  * 
@@ -33,7 +33,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "system"
 })
 @Generated("jsonschema2pojo")
-public class DiscoveryEvent {
+public class DiscoveryEvents {
 
     /**
      * RFC 3339 UTC timestamp the discover telemetry event was generated
@@ -153,10 +153,10 @@ public class DiscoveryEvent {
         if (other == this) {
             return true;
         }
-        if ((other instanceof DiscoveryEvent) == false) {
+        if ((other instanceof DiscoveryEvents) == false) {
             return false;
         }
-        DiscoveryEvent rhs = ((DiscoveryEvent) other);
+        DiscoveryEvents rhs = ((DiscoveryEvents) other);
         return ((((((((((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.devices == rhs.devices)||((this.devices!= null)&&this.devices.equals(rhs.devices))))&&((this.registries == rhs.registries)||((this.registries!= null)&&this.registries.equals(rhs.registries))))&&((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.points == rhs.points)||((this.points!= null)&&this.points.equals(rhs.points))))&&((this.features == rhs.features)||((this.features!= null)&&this.features.equals(rhs.features))))&&((this.system == rhs.system)||((this.system!= null)&&this.system.equals(rhs.system))))&&((this.scan_family == rhs.scan_family)||((this.scan_family!= null)&&this.scan_family.equals(rhs.scan_family))))&&((this.cloud_model == rhs.cloud_model)||((this.cloud_model!= null)&&this.cloud_model.equals(rhs.cloud_model))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))))&&((this.scan_addr == rhs.scan_addr)||((this.scan_addr!= null)&&this.scan_addr.equals(rhs.scan_addr))));
     }
 

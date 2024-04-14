@@ -12,7 +12,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Validation Event
+ * Validation Events
  * <p>
  * Validation device result
  * 
@@ -28,7 +28,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "errors"
 })
 @Generated("jsonschema2pojo")
-public class ValidationEvent {
+public class ValidationEvents {
 
     /**
      * RFC 3339 UTC timestamp the validation event was generated
@@ -106,10 +106,10 @@ public class ValidationEvent {
         if (other == this) {
             return true;
         }
-        if ((other instanceof ValidationEvent) == false) {
+        if ((other instanceof ValidationEvents) == false) {
             return false;
         }
-        ValidationEvent rhs = ((ValidationEvent) other);
+        ValidationEvents rhs = ((ValidationEvents) other);
         return ((((((((this.sub_type == rhs.sub_type)||((this.sub_type!= null)&&this.sub_type.equals(rhs.sub_type)))&&((this.sub_folder == rhs.sub_folder)||((this.sub_folder!= null)&&this.sub_folder.equals(rhs.sub_folder))))&&((this.pointset == rhs.pointset)||((this.pointset!= null)&&this.pointset.equals(rhs.pointset))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.errors == rhs.errors)||((this.errors!= null)&&this.errors.equals(rhs.errors))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
     }
 

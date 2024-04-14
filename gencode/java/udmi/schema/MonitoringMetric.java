@@ -23,14 +23,14 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class MonitoringMetric {
 
     /**
-     * System Event
+     * System Events
      * <p>
      * Used for system events such as logging. [System Event Documentation](../docs/messages/system.md#event)
      * 
      */
     @JsonProperty("system")
     @JsonPropertyDescription("Used for system events such as logging. [System Event Documentation](../docs/messages/system.md#event)")
-    public SystemEvent system;
+    public SystemEvents system;
     /**
      * Envelope
      * <p>

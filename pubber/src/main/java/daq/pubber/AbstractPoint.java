@@ -2,7 +2,7 @@ package daq.pubber;
 
 import udmi.schema.PointDiscovery;
 import udmi.schema.PointPointsetConfig;
-import udmi.schema.PointPointsetEvent;
+import udmi.schema.PointPointsetEvents;
 import udmi.schema.PointPointsetState;
 
 /**
@@ -12,7 +12,7 @@ public interface AbstractPoint {
 
   String getName();
 
-  PointPointsetEvent getData();
+  PointPointsetEvents getData();
 
   void updateData();
 
