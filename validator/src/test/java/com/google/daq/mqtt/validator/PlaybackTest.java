@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 import org.junit.Test;
 import udmi.schema.Category;
 import udmi.schema.Level;
-import udmi.schema.ValidationEvent;
+import udmi.schema.ValidationEvents;
 import udmi.schema.ValidationState;
 
 /**
@@ -46,16 +46,16 @@ public class PlaybackTest extends TestBase {
       assertEquals("SNS-4 status", Category.VALIDATION_DEVICE_MULTIPLE,
           finalReport.devices.get("SNS-4").status.category);
 
-      List<ValidationEvent> deviceReports = reports(outputMessages, "AHU-1");
+      List<ValidationEvents> deviceReports = reports(outputMessages, "AHU-1");
 
-      ValidationEvent firstReport = deviceReports.get(0);
+      ValidationEvents firstReport = deviceReports.get(0);
       assertEquals("missing points", 1, firstReport.pointset.missing.size());
       String missingPointName = firstReport.pointset.missing.get(0);
       assertEquals("missing point", FILTER_DIFFERENTIAL_PRESSURE_SETPOINT, missingPointName);
       assertEquals("extra points", 0, firstReport.pointset.extra.size());
       assertEquals("device status", (Integer) Level.ERROR.value(), firstReport.status.level);
 
-      ValidationEvent lastReport = deviceReports.get(deviceReports.size() - 1);
+      ValidationEvents lastReport = deviceReports.get(deviceReports.size() - 1);
       assertEquals("missing points", 0, lastReport.pointset.missing.size());
       assertEquals("extra points", 0, lastReport.pointset.extra.size());
       assertEquals("device status level", (Object) INFO.value(), lastReport.status.level);
@@ -65,10 +65,10 @@ public class PlaybackTest extends TestBase {
     }
   }
 
-  private List<ValidationEvent> reports(List<OutputBundle> outputMessages, String deviceId) {
+  private List<ValidationEvents> reports(List<OutputBundle> outputMessages, String deviceId) {
     return outputMessages.stream()
         .filter(bundle -> bundle.deviceId.equals(deviceId))
-        .map(bundle -> asValidationEvent(bundle.message))
+        .map(bundle -> asValidationEvents(bundle.message))
         .collect(Collectors.toList());
   }
 
@@ -100,10 +100,10 @@ public class PlaybackTest extends TestBase {
     }
   }
 
-  private ValidationEvent asValidationEvent(TreeMap<String, Object> message) {
+  private ValidationEvents asValidationEvents(TreeMap<String, Object> message) {
     try {
       String stringValue = TestCommon.OBJECT_MAPPER.writeValueAsString(message);
-      return TestCommon.OBJECT_MAPPER.readValue(stringValue, ValidationEvent.class);
+      return TestCommon.OBJECT_MAPPER.readValue(stringValue, ValidationEvents.class);
     } catch (Exception e) {
       throw new RuntimeException("While converting message", e);
     }

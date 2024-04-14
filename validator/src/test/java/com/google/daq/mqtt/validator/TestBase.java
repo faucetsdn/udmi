@@ -7,7 +7,6 @@ import static com.google.udmi.util.JsonUtil.isoConvert;
 
 import com.google.daq.mqtt.TestCommon;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
-import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
 import java.util.Date;
@@ -16,11 +15,11 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicLong;
 import org.jetbrains.annotations.NotNull;
-import udmi.schema.PointPointsetEvent;
+import udmi.schema.PointPointsetEvents;
 import udmi.schema.PointPointsetState;
-import udmi.schema.PointsetEvent;
+import udmi.schema.PointsetEvents;
 import udmi.schema.PointsetState;
-import udmi.schema.ValidationEvent;
+import udmi.schema.ValidationEvents;
 import udmi.schema.ValidationState;
 
 /**
@@ -35,16 +34,16 @@ public class TestBase {
       "filter_differential_pressure_sensor";
   private static final File REPORT_BASE = new File(TestCommon.SITE_DIR, "/out");
   private static final File REPORT_FILE = new File(REPORT_BASE, REPORT_JSON_FILENAME);
-  private AtomicLong testTime = new AtomicLong(298374214L);
+  private final AtomicLong testTime = new AtomicLong(298374214L);
 
-  protected PointsetEvent basePointsetEvent() {
-    PointsetEvent pointsetEvent = new PointsetEvent();
+  protected PointsetEvents basePointsetEvents() {
+    PointsetEvents pointsetEvent = new PointsetEvents();
     pointsetEvent.timestamp = getDate(getTestTimestamp());
     pointsetEvent.version = TestCommon.UDMI_VERSION;
-    HashMap<String, PointPointsetEvent> points = new HashMap<>();
-    points.put(FILTER_ALARM_PRESSURE_STATUS, pointsetEventPoint(Boolean.TRUE));
-    points.put(FILTER_DIFFERENTIAL_PRESSURE_SETPOINT, pointsetEventPoint(20));
-    points.put(FILTER_DIFFERENTIAL_PRESSURE_SENSOR, pointsetEventPoint("yes"));
+    HashMap<String, PointPointsetEvents> points = new HashMap<>();
+    points.put(FILTER_ALARM_PRESSURE_STATUS, pointsetEventsPoint(Boolean.TRUE));
+    points.put(FILTER_DIFFERENTIAL_PRESSURE_SETPOINT, pointsetEventsPoint(20));
+    points.put(FILTER_DIFFERENTIAL_PRESSURE_SENSOR, pointsetEventsPoint("yes"));
     pointsetEvent.points = points;
     return pointsetEvent;
   }
@@ -66,10 +65,10 @@ public class TestBase {
   }
 
   @SuppressWarnings("ParameterName")
-  private PointPointsetEvent pointsetEventPoint(Object present_value) {
-    PointPointsetEvent pointPointsetEvent = new PointPointsetEvent();
-    pointPointsetEvent.present_value = present_value;
-    return pointPointsetEvent;
+  private PointPointsetEvents pointsetEventsPoint(Object present_value) {
+    PointPointsetEvents pointPointsetEvents = new PointPointsetEvents();
+    pointPointsetEvents.present_value = present_value;
+    return pointPointsetEvents;
   }
 
   @SuppressWarnings("unchecked")
@@ -95,11 +94,12 @@ public class TestBase {
     }
   }
 
-  protected ValidationEvent getValidationResult(String deviceId, String subType, String subFolder) {
+  protected ValidationEvents getValidationResult(String deviceId, String subType,
+      String subFolder) {
     try {
       File resultFile = new File(REPORT_BASE,
           String.format("devices/%s/%s_%s.out", deviceId, subType, subFolder));
-      return TestCommon.OBJECT_MAPPER.readValue(resultFile, ValidationEvent.class);
+      return TestCommon.OBJECT_MAPPER.readValue(resultFile, ValidationEvents.class);
     } catch (Exception e) {
       throw new RuntimeException("While reading " + REPORT_FILE.getAbsolutePath(), e);
     }

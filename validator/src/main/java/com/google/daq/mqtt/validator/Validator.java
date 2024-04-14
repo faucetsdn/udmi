@@ -95,19 +95,19 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import org.apache.commons.io.FileUtils;
 import udmi.schema.Category;
-import udmi.schema.DeviceValidationEvent;
+import udmi.schema.DeviceValidationEvents;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
 import udmi.schema.ExecutionConfiguration;
 import udmi.schema.IotAccess.IotProvider;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
-import udmi.schema.PointsetEvent;
+import udmi.schema.PointsetEvents;
 import udmi.schema.PointsetState;
 import udmi.schema.PointsetSummary;
 import udmi.schema.SetupUdmiConfig;
 import udmi.schema.State;
-import udmi.schema.ValidationEvent;
+import udmi.schema.ValidationEvents;
 import udmi.schema.ValidationState;
 import udmi.schema.ValidationSummary;
 
@@ -141,7 +141,7 @@ public class Validator {
       SubType.STATE.value());
   private static final Map<String, Class<?>> CONTENT_VALIDATORS = ImmutableMap.of(
       STATE_UPDATE_SCHEMA, State.class,
-      EVENTS_POINTSET_SCHEMA, PointsetEvent.class,
+      EVENTS_POINTSET_SCHEMA, PointsetEvents.class,
       STATE_POINTSET_SCHEMA, PointsetState.class
   );
   private static final Set<SubType> LAST_SEEN_SUBTYPES = ImmutableSet.of(SubType.EVENTS,
@@ -697,7 +697,7 @@ public class Validator {
   private void sendValidationResult(Map<String, String> origAttributes,
       ReportingDevice reportingDevice, Date now) {
     try {
-      ValidationEvent event = new ValidationEvent();
+      ValidationEvents event = new ValidationEvents();
       event.version = UDMI_VERSION;
       event.timestamp = new Date();
       String subFolder = origAttributes.get(SUBFOLDER_PROPERTY_KEY);
@@ -845,14 +845,14 @@ public class Validator {
     summary.correct_devices = new ArrayList<>();
     summary.error_devices = new ArrayList<>();
 
-    Map<String, DeviceValidationEvent> devices = new TreeMap<>();
+    Map<String, DeviceValidationEvents> devices = new TreeMap<>();
     Collection<String> targets = targetDevices.isEmpty() ? expectedDevices : targetDevices;
     for (String deviceId : reportingDevices.keySet()) {
       ReportingDevice deviceInfo = reportingDevices.get(deviceId);
       deviceInfo.expireEntries(getNow());
       boolean expected = targets.contains(deviceId);
       if (deviceInfo.hasErrors()) {
-        DeviceValidationEvent event = getValidationEvent(devices, deviceInfo);
+        DeviceValidationEvents event = getValidationEvents(devices, deviceInfo);
         event.status = ReportingDevice.getSummaryEntry(deviceInfo.getErrors(null, null));
         if (expected) {
           summary.error_devices.add(deviceId);
@@ -861,7 +861,7 @@ public class Validator {
           event.status.level = Level.WARNING.value();
         }
       } else if (deviceInfo.seenRecently(getNow())) {
-        DeviceValidationEvent event = getValidationEvent(devices, deviceInfo);
+        DeviceValidationEvents event = getValidationEvents(devices, deviceInfo);
         event.status = ReportingDevice.getSummaryEntry(deviceInfo.getErrors(null, null));
         if (expected) {
           summary.correct_devices.add(deviceId);
@@ -879,12 +879,13 @@ public class Validator {
     sendValidationReport(makeValidationReport(summary, devices));
   }
 
-  private DeviceValidationEvent getValidationEvent(Map<String, DeviceValidationEvent> devices,
+  private DeviceValidationEvents getValidationEvents(Map<String, DeviceValidationEvents> devices,
       ReportingDevice deviceInfo) {
-    DeviceValidationEvent deviceValidationEvent = devices.computeIfAbsent(deviceInfo.getDeviceId(),
-        key -> new DeviceValidationEvent());
-    deviceValidationEvent.last_seen = deviceInfo.getLastSeen();
-    return deviceValidationEvent;
+    DeviceValidationEvents deviceValidationEvents = devices.computeIfAbsent(
+        deviceInfo.getDeviceId(),
+        key -> new DeviceValidationEvents());
+    deviceValidationEvents.last_seen = deviceInfo.getLastSeen();
+    return deviceValidationEvents;
   }
 
   private Instant getNow() {
@@ -892,7 +893,7 @@ public class Validator {
   }
 
   private ValidationState makeValidationReport(ValidationSummary summary,
-      Map<String, DeviceValidationEvent> devices) {
+      Map<String, DeviceValidationEvents> devices) {
     ValidationState report = new ValidationState();
     report.version = UDMI_VERSION;
     report.timestamp = new Date();

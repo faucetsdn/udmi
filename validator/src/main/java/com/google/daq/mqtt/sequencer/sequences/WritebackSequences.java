@@ -13,7 +13,7 @@ import java.util.Objects;
 import org.junit.Before;
 import org.junit.Test;
 import udmi.schema.PointPointsetState.Value_state;
-import udmi.schema.PointsetEvent;
+import udmi.schema.PointsetEvents;
 import udmi.schema.TargetTestingModel;
 
 /**
@@ -64,8 +64,8 @@ public class WritebackSequences extends PointsetBase {
   private String presentValueIs(TargetTestingModel targetModel) {
     String pointName = targetModel.target_point;
     Object targetValue = targetModel.target_value;
-    List<PointsetEvent> messages = popReceivedEvents(PointsetEvent.class);
-    for (PointsetEvent pointsetEvent : messages) {
+    List<PointsetEvents> messages = popReceivedEvents(PointsetEvents.class);
+    for (PointsetEvents pointsetEvent : messages) {
       if (pointsetEvent.points.get(pointName) != null) {
         lastPresentValue = pointsetEvent.points.get(pointName).present_value;
         if (targetValue.equals(lastPresentValue)) {

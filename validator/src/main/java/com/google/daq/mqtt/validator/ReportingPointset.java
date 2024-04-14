@@ -9,10 +9,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import udmi.schema.Metadata;
-import udmi.schema.PointPointsetEvent;
+import udmi.schema.PointPointsetEvents;
 import udmi.schema.PointPointsetModel;
 import udmi.schema.PointPointsetState;
-import udmi.schema.PointsetEvent;
+import udmi.schema.PointsetEvents;
 import udmi.schema.PointsetState;
 import udmi.schema.State;
 
@@ -40,7 +40,7 @@ public class ReportingPointset {
     return new MetadataDiff();
   }
 
-  MetadataDiff validateMessage(PointsetEvent message) {
+  MetadataDiff validateMessage(PointsetEvents message) {
     MetadataDiff metadataDiff = validateMessage(getPoints(message).keySet());
     if (TRUE.equals(message.partial_update)) {
       metadataDiff.missingPoints = ImmutableSet.of();
@@ -63,7 +63,7 @@ public class ReportingPointset {
     return metadataDiff;
   }
 
-  Map<String, PointPointsetEvent> getPoints(PointsetEvent message) {
+  Map<String, PointPointsetEvents> getPoints(PointsetEvents message) {
     return message.points == null ? ImmutableMap.of() : message.points;
   }
 

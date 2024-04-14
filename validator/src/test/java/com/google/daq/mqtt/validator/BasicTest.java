@@ -1,4 +1,3 @@
-
 package com.google.daq.mqtt.validator;
 
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
@@ -17,13 +16,13 @@ import java.util.Date;
 import java.util.List;
 import org.junit.Test;
 import udmi.schema.Config;
-import udmi.schema.DeviceValidationEvent;
-import udmi.schema.DiscoveryEvent;
-import udmi.schema.PointPointsetEvent;
-import udmi.schema.PointsetEvent;
+import udmi.schema.DeviceValidationEvents;
+import udmi.schema.DiscoveryEvents;
+import udmi.schema.PointPointsetEvents;
+import udmi.schema.PointsetEvents;
 import udmi.schema.PointsetState;
 import udmi.schema.PointsetSummary;
-import udmi.schema.ValidationEvent;
+import udmi.schema.ValidationEvents;
 import udmi.schema.ValidationState;
 
 /**
@@ -49,7 +48,7 @@ public class BasicTest extends TestBase {
   @Test
   public void emptySystemBlock() {
     Validator.MessageBundle bundle = getMessageBundle(EVENTS_SUBTYPE, POINTSET_SUBFOLDER,
-        new PointsetEvent());
+        new PointsetEvents());
     bundle.message.remove("system");
     validator.validateMessage(bundle);
     ValidationState report = getValidationReport();
@@ -58,8 +57,9 @@ public class BasicTest extends TestBase {
   }
 
   @Test
-  public void emptyPointsetEvent() {
-    MessageBundle bundle = getMessageBundle(EVENTS_SUBTYPE, POINTSET_SUBFOLDER, new PointsetEvent());
+  public void emptyPointsetEvents() {
+    MessageBundle bundle = getMessageBundle(EVENTS_SUBTYPE, POINTSET_SUBFOLDER,
+        new PointsetEvents());
     validator.validateMessage(bundle);
     ValidationState report = getValidationReport();
     assertEquals("One error summary", 1, report.summary.error_devices.size());
@@ -67,29 +67,29 @@ public class BasicTest extends TestBase {
   }
 
   @Test
-  public void validPointsetEvent() {
-    PointsetEvent messageObject = basePointsetEvent();
+  public void validPointsetEvents() {
+    PointsetEvents messageObject = basePointsetEvents();
     MessageBundle bundle = getMessageBundle(EVENTS_SUBTYPE, POINTSET_SUBFOLDER, messageObject);
     validator.validateMessage(bundle);
     ValidationState report = getValidationReport();
     assertEquals("No error devices", 1, report.devices.size());
-    DeviceValidationEvent deviceValidationEvent = report.devices.get(TestCommon.DEVICE_ID);
+    DeviceValidationEvents deviceValidationEvents = report.devices.get(TestCommon.DEVICE_ID);
     assertEquals("report status level", (Object) INFO.value(),
-        deviceValidationEvent.status.level);
+        deviceValidationEvents.status.level);
     String expected = isoConvert(messageObject.timestamp);
-    String lastSeen = isoConvert(deviceValidationEvent.last_seen);
+    String lastSeen = isoConvert(deviceValidationEvents.last_seen);
     assertEquals("status last_seen", expected, lastSeen);
   }
 
   @Test
-  public void missingPointsetEvent() {
-    PointsetEvent messageObject = basePointsetEvent();
+  public void missingPointsetEvents() {
+    PointsetEvents messageObject = basePointsetEvents();
     messageObject.points.remove(FILTER_ALARM_PRESSURE_STATUS);
     MessageBundle bundle = getMessageBundle(EVENTS_SUBTYPE, POINTSET_SUBFOLDER, messageObject);
     validator.validateMessage(bundle);
     ValidationState report = getValidationReport();
     assertEquals("One error devices", 1, report.devices.size());
-    ValidationEvent result = getValidationResult(TestCommon.DEVICE_ID, EVENTS_SUBTYPE,
+    ValidationEvents result = getValidationResult(TestCommon.DEVICE_ID, EVENTS_SUBTYPE,
         POINTSET_SUBFOLDER);
     PointsetSummary pointset = result.pointset;
     assertEquals("Missing one point", 1, pointset.missing.size());
@@ -98,14 +98,14 @@ public class BasicTest extends TestBase {
   }
 
   @Test
-  public void additionalPointsetEvent() {
-    PointsetEvent messageObject = basePointsetEvent();
-    messageObject.points.put(FLUX_READING, new PointPointsetEvent());
+  public void additionalPointsetEvents() {
+    PointsetEvents messageObject = basePointsetEvents();
+    messageObject.points.put(FLUX_READING, new PointPointsetEvents());
     MessageBundle bundle = getMessageBundle(EVENTS_SUBTYPE, POINTSET_SUBFOLDER, messageObject);
     validator.validateMessage(bundle);
     ValidationState report = getValidationReport();
     assertEquals("No error devices", 1, report.devices.size());
-    ValidationEvent result = getValidationResult(TestCommon.DEVICE_ID, EVENTS_SUBTYPE,
+    ValidationEvents result = getValidationResult(TestCommon.DEVICE_ID, EVENTS_SUBTYPE,
         POINTSET_SUBFOLDER);
     PointsetSummary points = result.pointset;
     assertEquals("No missing points", 0, points.missing.size());
@@ -121,7 +121,7 @@ public class BasicTest extends TestBase {
     validator.validateMessage(bundle);
     ValidationState report = getValidationReport();
     assertEquals("No error devices", 1, report.devices.size());
-    ValidationEvent result = getValidationResult(TestCommon.DEVICE_ID, STATE_SUBTYPE,
+    ValidationEvents result = getValidationResult(TestCommon.DEVICE_ID, STATE_SUBTYPE,
         POINTSET_SUBFOLDER);
     List<String> missingPoints = result.pointset.missing;
     assertEquals("Missing one point", 1, missingPoints.size());
@@ -131,7 +131,7 @@ public class BasicTest extends TestBase {
   @Test
   public void lastSeenUpdate() {
     Validator.MessageBundle eventBundle = getMessageBundle(EVENTS_SUBTYPE, DISCOVERY_SUBFOLDER,
-        new DiscoveryEvent());
+        new DiscoveryEvents());
     validator.validateMessage(eventBundle);
 
     advanceClockSec(10);
@@ -142,8 +142,8 @@ public class BasicTest extends TestBase {
 
     // Only the event should update the last seen, since config is not from the device.
     ValidationState report = getValidationReport();
-    DeviceValidationEvent deviceValidationEvent = report.devices.get(TestCommon.DEVICE_ID);
-    Date lastSeen = deviceValidationEvent.last_seen;
+    DeviceValidationEvents deviceValidationEvents = report.devices.get(TestCommon.DEVICE_ID);
+    Date lastSeen = deviceValidationEvents.last_seen;
     Instant parse = getInstant((String) eventBundle.message.get(TIMESTAMP_KEY));
     assertEquals("device last seen", isoConvert(Date.from(parse)), isoConvert(lastSeen));
   }
