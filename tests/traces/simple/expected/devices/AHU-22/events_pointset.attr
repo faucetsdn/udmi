@@ -4,7 +4,7 @@
   "subFolder" : "pointset",
   "deviceRegistryId" : "ZZ-TRI-FECTA",
   "subType" : "events",
-  "msgSource" : "001_event_pointset.json",
+  "msgSource" : "001_events_pointset.json",
   "deviceId" : "AHU-22",
   "projectId" : "playback-project"
 }

@@ -4,7 +4,7 @@
   "subFolder" : "system",
   "deviceRegistryId" : "ZZ-TRI-FECTA",
   "subType" : "events",
-  "msgSource" : "003_event_system.json",
+  "msgSource" : "003_events_system.json",
   "deviceId" : "SNS-4",
   "projectId" : "playback-project"
 }

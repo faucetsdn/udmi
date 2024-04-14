@@ -4,7 +4,7 @@
   "subFolder" : "discovery",
   "deviceRegistryId" : "ZZ-TRI-FECTA",
   "subType" : "events",
-  "msgSource" : "002_event_discovery.json",
+  "msgSource" : "002_events_discovery.json",
   "deviceId" : "SNS-4",
   "projectId" : "playback-project"
 }
