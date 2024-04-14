@@ -7,6 +7,9 @@
 
 ## Messages
 * [**config**](config.html) - The config block controls a device's intended behavior. [Config Documentation](../../docs/messages/config.md)
+* [**events_discovery**](events_discovery.html) - [Discovery result](../../docs/specs/discovery.md) with implicit discovery
+* [**events_pointset**](events_pointset.html) - A set of points reporting telemetry data. [Pointset Events Documentation](../../docs/messages/pointset.md#telemetry)
+* [**events_system**](events_system.html) - Used for system events such as logging. [System Event Documentation](../../docs/messages/system.md#event)
 * [**state**](state.html) - [State](../../docs/messages/state.md) message, defined by [`state.json`]
 
 ## Site Model

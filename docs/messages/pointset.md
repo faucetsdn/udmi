@@ -34,9 +34,9 @@ The general structure of a `pointset` block exists inside of a complete metadata
 
 ## Event
 
-- **Schema Definition:** [event_pointset.json](../../schema/event_pointset.json)
- ([_🧬View_](../../gencode/docs/event_pointset.html#points))
-- [Working `event_pointset` Example](../../tests/schemas/event_pointset/example.json)
+- **Schema Definition:** [events_pointset.json](../../schema/events_pointset.json)
+ ([_🧬View_](../../gencode/docs/events_pointset.html#points))
+- [Working `events_pointset` Example](../../tests/schemas/events_pointset/example.json)
 
 A basic `pointset` event message contains
 the point data sent from a device. The message contains just the top-level `points` designator,
@@ -57,7 +57,7 @@ the representative points.
 
 Incremental updates (e.g. for COV) can send only the specific updated points as an optimization,
 while setting the top-level
-[🧬`partial_update`](../../gencode/docs/event_pointset.html#partial_update) field to `true` These
+[🧬`partial_update`](../../gencode/docs/events_pointset.html#partial_update) field to `true` These
 messages may be indiscriminately dropped by the backend systems, so a periodic full-update must
 still be sent (as per `sample_rate_sec` below). Sending an update where all expected points are not
 included, without this flag, is considered a validation error.

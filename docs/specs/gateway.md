@@ -59,7 +59,7 @@ are a large number of devices.
 Any attach errors, e.g. the gateway can not successfully attach to the target
 device, should be reported in the [`gateway` _block_](../../gencode/docs/state.html#gateway) of the [state](../messages/state.md) message
 
-A [_🧬logentry_](../../gencode/docs/event_system.html#logentries)) message should be used to detail
+A [_🧬logentry_](../../gencode/docs/events_system.html#logentries)) message should be used to detail
 the nature of the problem. If the gateway can attach successfully, any other errors, e.g. the
 inability to communicate with the device over the local network, should be indicated as part of the
 proxy device status block.
@@ -115,7 +115,7 @@ message.
 
 [Telemetry](../messages/pointset.md#telemetry) is handled similarly, with the gateway responsible for
 proxying data from local devices through to UDMI. In many cases, this would be translating specific
-device points into a [_pointset_ message](../../tests/schemas/event_pointset/example.json).
+device points into a [_pointset_ message](../../tests/schemas/events_pointset/example.json).
 
 ### metadata
 
