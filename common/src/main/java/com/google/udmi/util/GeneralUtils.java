@@ -206,6 +206,10 @@ public class GeneralUtils {
     };
   }
 
+  public static boolean isNotEmpty(String s) {
+    return !ofNullable(s).map(String::isEmpty).orElse(true);
+  }
+
   public static boolean isNullOrNotEmpty(String value) {
     return !ofNullable(value).map(String::isEmpty).orElse(false);
   }

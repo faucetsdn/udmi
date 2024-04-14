@@ -167,4 +167,18 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
       throw new RuntimeException("While shutting down", e);
     }
   }
+
+  @Override
+  public String getSystemEntry(String key) {
+    try {
+      KV kvClient = client.getKVClient();
+      GetResponse response = kvClient.get(bytes(key)).get(QUERY_TIMEOUT_SEC, TimeUnit.SECONDS);
+      if (response.getCount() == 0) {
+        return null;
+      }
+      return asString(response.getKvs().get(0).getValue());
+    } catch (Exception e) {
+      throw new RuntimeException("While getting system key " + key);
+    }
+  }
 }
