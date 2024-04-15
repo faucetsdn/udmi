@@ -12,9 +12,8 @@ import udmi.schema.EndpointConfiguration.Protocol;
 
 class SimpleMqttPipeTest extends MessagePipeTestBase {
 
-  public static final String TEST_BROKER_ENV = "MQTT_TEST_BROKER";
-  public static final int MESSAGE_SYNC_DELAY_MS = 10000;
   // Ex. broker URL: MQTT_TEST_BROKER=tcp://localhost:1883
+  private static final String TEST_BROKER_ENV = "MQTT_TEST_BROKER";
   private static final String BROKER_URL = System.getenv(TEST_BROKER_ENV);
   private static final String URL_FORMAT = "(.+)://(.+):(.+)";
   private static final Pattern URL_PATTERN = Pattern.compile(URL_FORMAT);
