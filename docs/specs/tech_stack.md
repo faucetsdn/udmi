@@ -30,7 +30,7 @@ For GCP implementations the full topic would be `/devices/{device_id}/{suffix}`
 Any backend system (in a GCP project) should adhere to the following guidelines:
 * All messages to/from the devices should conform to the UDMI schema payloads (pass validation).
 * All exchanges with the devices should go through a PubSub topic:
-  * The _state_ and _event_ messages are published to a topic configured through the IoT Core registry.
+  * The _state_ and _events_ messages are published to a topic configured through the IoT Core registry.
   * If necessary, any _config_ or _command_ messages should go through a PubSub topic, and then converted to the requisite Cloud IoT
   config write using a simple cloud function.
 

@@ -30,8 +30,8 @@ Depending on the system, this might encompass a number of different network prot
   by the `generation` timestamp (defined, not-the-same as the previous scan generation, and after the device's last start time).
 * [_start state_](../../../tests/schemas/state/discovery.json): Indicates the device is actively
   scanning, with `generation` should match that of _config_, and the `active` as `true`.
-* [_discovery event_](../../../tests/schemas/event_discovery/discovery.json): Streaming results
-  for scanned devices (keyed by matching `generation` field): one _event_ for each unique device scanned.
+* [_discovery events_](../../../tests/schemas/events_discovery/discovery.json): Streaming results
+  for scanned devices (keyed by matching `generation` field): one _events_ for each unique device scanned.
 * [_stop state_](../../../tests/schemas/state/scan_stop.json): Once complete, the _active_ field is `false`
   (or removed). Ideally the `generation` field would remain to indicate the last scan performed.
 
@@ -62,7 +62,7 @@ or transient BACnet traffic.
 * [_start config_](../../../tests/schemas/config/continuous.json): There is no `generation` marker, since
   scanning is always happening. The `scan_interval_sec` triggers the capability (see below).
 * [_start state_](../../../tests/schemas/state/continuous.json): Indicates that scanning is `active`, but no `generation`.
-* [_discovery event_](../../../tests/schemas/event_discovery/continuous.json): Events as per normal, except no `generation`.
+* [_discovery events_](../../../tests/schemas/events_discovery/continuous.json): Events as per normal, except no `generation`.
 
 For this case, there is no _stop state_ message since the scan never stops: The process silently stops when the
 `scan_interval_sec` parameter is removed from the config. Additionally, the `scan_interval_sec` field indicates the
@@ -80,11 +80,11 @@ and can be explicitly directed to enumerate itself. This also applies to all dir
   block starts the self enumeration process (rather than the `discovery` block).
 * [_start state_](../../../tests/schemas/state/enumeration.json): The `system` block indicates the `generation`
   of enumeration that is currently being processed.
-* [_discovery event_](../../../tests/schemas/event_discovery/enumeration.json): The results do not have a `family` block,
+* [_discovery events_](../../../tests/schemas/events_discovery/enumeration.json): The results do not have a `family` block,
   rather, the device id is determined from the envelope's `deviceId` field.
 
 With self enumeration there is no specific _stop state_, as the system deterministically sends a single device's
-_discovery event_ corresponding to the _config_ trigger.
+_discovery events_ corresponding to the _config_ trigger.
 
 ## Scan Enumeration
 
@@ -95,7 +95,7 @@ then automatically enumerates each device encountered.
 * [_start config_](../../../tests/schemas/config/implicit.json): Initiates the scan, along with an added
   `enumerate` field indicating that the system should enumerate each device it encounters.
 * [_start state_](../../../tests/schemas/state/discovery.json): Same as base scan case.
-* [_discovery event_](../../../tests/schemas/event_discovery/implicit.json): Same as _scan_ result, except
+* [_discovery events_](../../../tests/schemas/events_discovery/implicit.json): Same as _scan_ result, except
   includes enumeration fields (typically discovered `points`).
 * [_stop state_](../../../tests/schemas/state/scan_stop.json): Same as base scan case.
 
@@ -107,7 +107,7 @@ There's different ways to report errors, depending on the scope of the error.
 potentially affecting all _devices_ or points during a scan.
 * [_self error_](../../../tests/schemas/state/enumeration.json): Details status while processing _self_ enumeration
   that potentially affects all _points_.
-* [_point error_](../../../tests/schemas/event_discovery/point_error.json): Details how an _individual_ point error
+* [_point error_](../../../tests/schemas/events_discovery/point_error.json): Details how an _individual_ point error
   should be reported during (_self_ or _scan_) enumeration.
-* [_scan enumeration error_](../../../tests/schemas/event_discovery/scan_error.json): Details how a _scan_ enumeration
+* [_scan enumeration error_](../../../tests/schemas/events_discovery/scan_error.json): Details how a _scan_ enumeration
   error that affects all points should be reported (i.e. while trying to enumerate the scanned device).

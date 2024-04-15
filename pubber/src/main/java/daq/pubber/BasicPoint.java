@@ -6,7 +6,7 @@ import udmi.schema.Category;
 import udmi.schema.Entry;
 import udmi.schema.PointDiscovery;
 import udmi.schema.PointPointsetConfig;
-import udmi.schema.PointPointsetEvent;
+import udmi.schema.PointPointsetEvents;
 import udmi.schema.PointPointsetState;
 import udmi.schema.PointPointsetState.Value_state;
 
@@ -16,7 +16,7 @@ import udmi.schema.PointPointsetState.Value_state;
 public abstract class BasicPoint implements AbstractPoint {
 
   protected final String name;
-  protected final PointPointsetEvent data = new PointPointsetEvent();
+  protected final PointPointsetEvents data = new PointPointsetEvents();
   private final PointPointsetState state = new PointPointsetState();
   private final boolean writable;
   protected boolean written;
@@ -62,7 +62,7 @@ public abstract class BasicPoint implements AbstractPoint {
     return name;
   }
 
-  public PointPointsetEvent getData() {
+  public PointPointsetEvents getData() {
     return data;
   }
 

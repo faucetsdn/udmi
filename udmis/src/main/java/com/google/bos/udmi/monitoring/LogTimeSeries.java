@@ -31,8 +31,8 @@ public class LogTimeSeries extends TreeMap<Long, LinkedList<LogTailEntry>> {
         for (LogTailEntry log : this.get(k)) {
           Monitoring monitoring = new Monitoring();
           monitoring.metric = new MonitoringMetric();
-          monitoring.metric.event_system = new udmi.schema.SystemEvent();
-          monitoring.metric.event_system.logentries = new ArrayList<udmi.schema.Entry>();
+          monitoring.metric.system = new udmi.schema.SystemEvents();
+          monitoring.metric.system.logentries = new ArrayList<udmi.schema.Entry>();
           // TODO: Refactor the contents of Envelope to put the relevant fields somewhere not
           // associated with a Message body, which is how it is used elsewhere.
           monitoring.metric.envelope = new Envelope();
@@ -68,8 +68,8 @@ public class LogTimeSeries extends TreeMap<Long, LinkedList<LogTailEntry>> {
   }
 
   private void loadMetricFields(MonitoringMetric metric, LogTailEntry log) throws IOException {
-    metric.event_system.timestamp = Date.from(log.timestamp);
-    metric.event_system.version = "1.4.1"; // TODO: Where to get this value
+    metric.system.timestamp = Date.from(log.timestamp);
+    metric.system.version = "1.4.1"; // TODO: Where to get this value
 
     udmi.schema.Entry entry = new udmi.schema.Entry();
     entry.level = severityToLogSeverity(log.severity).getNumber();
@@ -90,7 +90,7 @@ public class LogTimeSeries extends TreeMap<Long, LinkedList<LogTailEntry>> {
       }
     }
 
-    metric.event_system.logentries.add(entry);
+    metric.system.logentries.add(entry);
   }
 
   private void loadMetricFieldsFromResourceName(MonitoringMetric metric, LogTailEntry log) {

@@ -31,7 +31,6 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableMap;
 import com.google.udmi.util.Common;
-import java.time.Instant;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -57,7 +56,7 @@ import udmi.schema.SystemState;
  */
 public class MessageDispatcherImpl extends ContainerBase implements MessageDispatcher {
 
-  private static final String DEFAULT_HANDLER = "event/null";
+  private static final String DEFAULT_HANDLER = "events/null";
   private static final String EXCEPTION_KEY = "exception_handler";
   private static final Map<String, Class<?>> SPECIAL_CLASSES = ImmutableMap.of(
       DEFAULT_HANDLER, DEFAULT_CLASS,
@@ -65,7 +64,6 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   );
   private static final Map<Class<?>, SimpleEntry<SubType, SubFolder>> CLASS_TYPES = new HashMap<>();
   private static final BiMap<String, Class<?>> TYPE_CLASSES = HashBiMap.create();
-  private static final long HANDLER_TIMEOUT_MS = 2000;
   private static final double LATENCY_WARNING_THRESHOLD = 1.0;
   private static final double SIZE_WARNING_THRESHOLD = 0.5;
 
@@ -103,7 +101,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   }
 
   private static String getMapKey(SubType subType, SubFolder subFolder) {
-    SubType useType = ofNullable(subType).orElse(SubType.EVENT);
+    SubType useType = ofNullable(subType).orElse(SubType.EVENTS);
     return format("%s/%s", useType, subFolder);
   }
 
@@ -308,7 +306,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     Bundle bundle = new Bundle(deepCopy(envelope), message);
 
     if (message instanceof Exception || message instanceof String) {
-      bundle.envelope.subType = SubType.EVENT;
+      bundle.envelope.subType = SubType.EVENTS;
       bundle.envelope.subFolder = SubFolder.ERROR;
       return bundle;
     }

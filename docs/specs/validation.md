@@ -13,12 +13,12 @@ seen, or never seen, etc...). This capability is an extension of the basic
 
 The validation agent runs autonomously, consumes messages, and injects _result_ or _report_ messages as needed.
 All validation messages are defined by the
-[validation event schema](../../schema/event_validation.json)([_🧬View_](../../gencode/docs/event_validation.html)).
+[validation event schema](../../schema/events_validation.json)([_🧬View_](../../gencode/docs/events_validation.html)).
 and
 [validation state schema](../../schema/state_validation.json)([_🧬View_](../../gencode/docs/state_validation.html)).
 schema, and are instantiated in two flavors:
 
-* _result_: Validation results for an individual device [example](../../tests/schemas/event_validation/simple_ok.json).
+* _result_: Validation results for an individual device [example](../../tests/schemas/events_validation/simple_ok.json).
 * _report_: Validation report for an entire site [example](../../tests/schemas/state_validation/report.json).
 
 ## Message Channel

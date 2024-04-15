@@ -129,7 +129,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
 
   protected Bundle makeExceptionBundle(Envelope envelope, Exception exception) {
     Bundle bundle = new Bundle(envelope, exception);
-    bundle.envelope.subType = SubType.EVENT;
+    bundle.envelope.subType = SubType.EVENTS;
     bundle.envelope.subFolder = SubFolder.ERROR;
     return bundle;
   }

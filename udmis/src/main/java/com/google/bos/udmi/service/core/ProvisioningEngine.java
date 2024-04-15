@@ -27,7 +27,7 @@ import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
 import udmi.schema.CloudModel.Resource_type;
 import udmi.schema.Common.ProtocolFamily;
-import udmi.schema.DiscoveryEvent;
+import udmi.schema.DiscoveryEvents;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
 
@@ -54,7 +54,7 @@ public class ProvisioningEngine extends ProcessorBase {
   }
 
   private void createDeviceEntry(String registryId, String expectedId, String gatewayId,
-      Envelope envelope, DiscoveryEvent discoveryEvent) {
+      Envelope envelope, DiscoveryEvents discoveryEvent) {
     CloudModel deviceModel = new CloudModel();
     deviceModel.operation = Operation.CREATE;
     deviceModel.blocked = true;
@@ -107,7 +107,7 @@ public class ProvisioningEngine extends ProcessorBase {
    * Process any discovery events floating around.
    */
   @MessageHandler
-  public void discoveryEvent(DiscoveryEvent discoveryEvent) {
+  public void discoveryEvent(DiscoveryEvents discoveryEvent) {
     try {
       Envelope envelope = getContinuation(discoveryEvent).getEnvelope();
       String registryId = envelope.deviceRegistryId;
