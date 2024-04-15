@@ -10,7 +10,7 @@ build=y
 force=n
 
 schemadir=schema
-sitesdir=tests/sites/
+sitesdir=tests/sites
 
 while getopts "d:" opt; do
     case $opt in
@@ -34,6 +34,7 @@ function redact_files {
         fi
         sed -E -i \
             -e 's-oading .*udmi/tests/-REDACTED/-' \
+            -e 's-^    .*udmi/tests/-    REDACTED/-' \
             $file
     done
 }

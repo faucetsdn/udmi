@@ -2,6 +2,7 @@ package com.google.daq.mqtt.util;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.util.NetworkFamily.NAMED_FAMILIES;
+import static com.google.udmi.util.GeneralUtils.catchToElse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -9,11 +10,15 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThrow;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.isoConvert;
+import static com.google.udmi.util.JsonUtil.loadFileString;
+import static com.google.udmi.util.JsonUtil.parseJson;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
 import com.google.common.collect.ImmutableList;
+import com.google.udmi.util.SiteModel;
+import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import org.jetbrains.annotations.NotNull;
@@ -32,25 +37,91 @@ import udmi.schema.SystemConfig;
 /**
  * Container class for working with generated UDMI configs (from device metadata).
  */
-public class ConfigGenerator {
+public class ConfigManager {
 
   public static final String GENERATED_CONFIG_JSON = "generated_config.json";
   public static final ProtocolFamily DEFAULT_FAMILY = ProtocolFamily.VENDOR;
-
+  private static final String CONFIG_DIR = "config";
   private final Metadata metadata;
+  private final String deviceId;
+  private final SiteModel siteModel;
 
-  public ConfigGenerator(Metadata metadata) {
+  /**
+   * Initiates ConfigManager for the given device at the given file location.
+   *
+   * @param metadata Device metadata
+   * @param deviceId Device ID
+   * @param siteModel Site model
+   */
+  public ConfigManager(Metadata metadata, String deviceId, SiteModel siteModel) {
     this.metadata = metadata;
+    this.deviceId = deviceId;
+    this.siteModel = siteModel;
   }
 
-  public static ConfigGenerator configFrom(Metadata metadata) {
-    return new ConfigGenerator(metadata);
+  public static ConfigManager configFrom(Metadata metadata) {
+    return new ConfigManager(metadata, null, null);
   }
+
+  public static ConfigManager configFrom(Metadata metadata, String deviceId, SiteModel siteModel) {
+    return new ConfigManager(metadata, deviceId, siteModel);
+  }
+
+  private boolean isStaticConfig() {
+    return catchToNull(() -> metadata.cloud.config.static_file) != null;
+  }
+
+  private String readStaticConfigFromFile(String fileName) {
+    try {
+      File deviceDir = siteModel.getDeviceDir(deviceId);
+      File configDir = new File(deviceDir, CONFIG_DIR);
+      File configFile = new File(configDir, fileName);
+      String canonicalPath = configFile.getCanonicalPath();
+      String configDirPath = configDir.getCanonicalPath();
+      if (!canonicalPath.startsWith(configDirPath)) {
+        throw new IllegalArgumentException();
+      }
+      return loadFileString(configFile);
+    } catch (Exception e) {
+      throw new RuntimeException(String.format("While reading config file: %s", fileName), e);
+    }
+  }
+
+  public Config deviceConfig() {
+    return generateDeviceConfig();
+  }
+
+  /**
+   * Whether the device config be downgraded.
+   *
+   * @return yes/no
+   */
+  public boolean shouldBeDowngraded() {
+    return !isStaticConfig();
+  }
+
+  /**
+   * Returns a JSON representation of the device config, allowing for any static config overrides.
+   *
+   * @return JSON Object of Device Config
+   */
+  public Object deviceConfigJson() {
+    if (isStaticConfig()) {
+      String staticFileContents = readStaticConfigFromFile(metadata.cloud.config.static_file);
+      return parseJson(staticFileContents);
+    } else {
+      return deviceConfig();
+    }
+  }
+
 
   /**
    * Return a complete UDMI Config message object.
    */
-  public Config deviceConfig() {
+  public Config generateDeviceConfig() {
+    if (metadata == null) {
+      throw new RuntimeException("config could not be generated due to metadata errors");
+    }
     Config config = new Config();
     config.timestamp = metadata.timestamp;
     config.version = metadata.version;
@@ -66,7 +137,9 @@ public class ConfigGenerator {
     SystemConfig system;
     system = new SystemConfig();
     system.operation = new Operation();
-    system.min_loglevel = metadata.system.min_loglevel;
+    if (catchToNull(() -> metadata.system.min_loglevel) != null) {
+      system.min_loglevel = metadata.system.min_loglevel;
+    }
     return system;
   }
 
@@ -203,45 +276,3 @@ public class ConfigGenerator {
   }
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

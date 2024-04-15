@@ -1,0 +1,28 @@
+{
+  "timestamp": "2020-05-01T13:39:07Z",
+  "version": "1.4.1",
+  "upgraded_from": "1",
+  "hash": "9d981fab",
+  "cloud": {
+    "auth_type": "ES256",
+    "config": {
+      "static_file": "config.json"
+    }
+  },
+  "system": {
+    "location": {
+      "section": "2-3N8C"
+    },
+    "physical_tag": {
+      "asset": {
+        "guid": "drw://TBB",
+        "site": "ZZ-TRI-FECTA",
+        "name": "GAT-123"
+      }
+    },
+    "min_loglevel": 300
+  },
+  "gateway": {
+    "proxy_ids": [ "SNS-4", "AHU-22" ]
+  }
+}
