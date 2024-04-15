@@ -16,6 +16,9 @@ import udmi.schema.CloudModel;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.IotAccess;
 
+/**
+ * Iot Access Provider that uses internal components.
+ */
 public class ImplicitIotAccessProvider extends IotAccessBase {
 
   private static final String REGISTRIES_KEY = "/registries";
