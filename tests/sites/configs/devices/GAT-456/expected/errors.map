@@ -1,0 +1,10 @@
+Exceptions for GAT-456
+  While loading credentials for local device GAT-456
+    Found 0 credentials
+  1 schema violations found
+    /system/location: object has missing required properties (["site"])
+  expected files
+    Missing files: [ec_private.pem, ec_private.pkcs8, ec_public.pem]
+  While converting device config
+    While parsing json object
+      Unrecognized token 'plain': was expecting (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false') at [Source: (String)"plain text"; line: 1, column: 6]
