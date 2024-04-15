@@ -24,7 +24,7 @@ import udmi.schema.EndpointConfiguration;
 import udmi.schema.EndpointConfiguration.Protocol;
 import udmi.schema.GatewayConfig;
 import udmi.schema.LocalnetModel;
-import udmi.schema.PointsetEvent;
+import udmi.schema.PointsetEvents;
 
 /**
  * Basic unit tests for the message dispatcher.
@@ -66,7 +66,7 @@ public class MessageDispatcherImplTest {
     dispatcher.registerHandler(GatewayConfig.class, future::complete);
     dispatcher.registerHandler(DiscoveryConfig.class, message -> {
     });
-    getReversedDispatcher().publish(new PointsetEvent());
+    getReversedDispatcher().publish(new PointsetEvents());
     getReversedDispatcher().publish(new LocalnetModel());
     getReversedDispatcher().publish(new GatewayConfig());
     assertEquals(0, devNullCapture.size());

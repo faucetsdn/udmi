@@ -17,7 +17,8 @@ import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import udmi.schema.CloudModel;
 import udmi.schema.Common.ProtocolFamily;
-import udmi.schema.DiscoveryEvent;
+import udmi.schema.DiscoveryEvents;
+import udmi.schema.DiscoveryEvents;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
 import udmi.schema.PointDiscovery;
@@ -64,21 +65,21 @@ public class BitboxAdapter extends ProcessorBase {
     ifNotNullThen(convertDiscovery(generation, defaultedMessage), continuation::publish);
   }
 
-  private DiscoveryEvent convertDiscovery(Date generation, Object defaultedMessage) {
+  private DiscoveryEvents convertDiscovery(Date generation, Object defaultedMessage) {
     Map<String, Object> map = JsonUtil.asMap(defaultedMessage);
     if (!"bitbox_bacnet".equals(map.get("type"))) {
       return null;
     }
 
     try {
-      DiscoveryEvent discoveryEvent = new DiscoveryEvent();
+      DiscoveryEvents discoveryEvent = new DiscoveryEvents();
       discoveryEvent.scan_family = ProtocolFamily.fromValue((String) map.get("protocol"));
       discoveryEvent.scan_addr = (String) map.get("id");
       discoveryEvent.generation = generation;
       discoveryEvent.points = extractPoints(map.get("data"));
       return discoveryEvent;
     } catch (Exception e) {
-      error("While converting legacy message to DiscoveryEvent: " + friendlyStackTrace(e));
+      error("While converting legacy message to DiscoveryEvents: " + friendlyStackTrace(e));
       e.printStackTrace();
       return null;
     }

@@ -131,7 +131,7 @@ import udmi.schema.Bucket;
 import udmi.schema.CapabilityValidationState;
 import udmi.schema.CapabilityValidationState.CapabilityResult;
 import udmi.schema.Config;
-import udmi.schema.DiscoveryEvent;
+import udmi.schema.DiscoveryEvents;
 import udmi.schema.Entry;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
@@ -143,13 +143,13 @@ import udmi.schema.FeatureValidationState;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.Operation;
-import udmi.schema.PointsetEvent;
+import udmi.schema.PointsetEvents;
 import udmi.schema.SchemaValidationState;
 import udmi.schema.SequenceValidationState;
 import udmi.schema.SequenceValidationState.SequenceResult;
 import udmi.schema.State;
 import udmi.schema.SystemConfig;
-import udmi.schema.SystemEvent;
+import udmi.schema.SystemEvents;
 import udmi.schema.TestingSystemConfig;
 import udmi.schema.ValidationState;
 
@@ -174,25 +174,25 @@ public class SequenceBase {
   public static final String STATUS_LEVEL_VIOLATION = "STATUS_LEVEL";
   public static final String DEVICE_STATE_SCHEMA = "device_state";
   private static final String ALL_CHANGES = "";
-  private static final int FUNCTIONS_VERSION_BETA = 12;
-  private static final int FUNCTIONS_VERSION_ALPHA = FUNCTIONS_VERSION_BETA;
+  private static final int SEQUENCER_FUNCTIONS_VERSION = Validator.TOOLS_FUNCTIONS_VERSION;
+  private static final int SEQUENCER_FUNCTIONS_ALPHA = SEQUENCER_FUNCTIONS_VERSION;
   private static final long CONFIG_BARRIER_MS = 1000;
   private static final String START_END_MARKER = "################################";
   private static final String RESULT_FORMAT = "RESULT %s %s %s %s %s/%s %s";
   private static final String CAPABILITY_FORMAT = "CPBLTY %s %s %s %s %s/%s %s";
   private static final String SCHEMA_FORMAT = "SCHEMA %s %s %s %s %s %s";
   private static final String TESTS_OUT_DIR = "tests";
-  private static final String EVENT_PREFIX = "event_";
-  private static final String SYSTEM_EVENT_MESSAGE_BASE = "event_system";
+  private static final String EVENTS_PREFIX = SubType.EVENTS + "_";
+  private static final String SYSTEM_EVENTS_MESSAGE_BASE = EVENTS_PREFIX + "system";
   private static final int CONFIG_UPDATE_DELAY_MS = 8 * 1000;
   private static final int NORM_TIMEOUT_MS = 300 * 1000;
   private static final String RESULT_LOG_FILE = "RESULT.log";
   private static final String OUT_DEVICE_FORMAT = "out/devices/%s/metadata_mod.json";
   private static final String SUMMARY_OUTPUT_FORMAT = "out/sequencer_%s.json";
   private static final Map<Class<?>, SubFolder> CLASS_SUBFOLDER_MAP = ImmutableMap.of(
-      SystemEvent.class, SubFolder.SYSTEM,
-      PointsetEvent.class, SubFolder.POINTSET,
-      DiscoveryEvent.class, SubFolder.DISCOVERY
+      SystemEvents.class, SubFolder.SYSTEM,
+      PointsetEvents.class, SubFolder.POINTSET,
+      DiscoveryEvents.class, SubFolder.DISCOVERY
   );
   private static final Map<String, Class<?>> EXPECTED_UPDATES = ImmutableMap.of(
       SubType.CONFIG.value(), Config.class,
@@ -262,7 +262,7 @@ public class SequenceBase {
 
   static {
     // Sanity check to make sure ALPHA version is increased if forced by increased BETA.
-    checkState(FUNCTIONS_VERSION_ALPHA >= FUNCTIONS_VERSION_BETA,
+    checkState(SEQUENCER_FUNCTIONS_ALPHA >= SEQUENCER_FUNCTIONS_VERSION,
         "ALPHA functions version should not be > BETA");
   }
 
@@ -393,7 +393,8 @@ public class SequenceBase {
   }
 
   private static int getRequiredFunctionsVersion() {
-    return SequenceRunner.processStage(ALPHA) ? FUNCTIONS_VERSION_ALPHA : FUNCTIONS_VERSION_BETA;
+    return SequenceRunner.processStage(ALPHA) ? SEQUENCER_FUNCTIONS_ALPHA
+        : SEQUENCER_FUNCTIONS_VERSION;
   }
 
   @VisibleForTesting
@@ -600,8 +601,8 @@ public class SequenceBase {
   }
 
   private boolean isInterestingValidation(String schemaName) {
-    String targetSchema = format("event_%s", ifNotNullGet(testSchema, SubFolder::value));
-    return schemaName.equals(targetSchema) || schemaName.equals(STATE_UPDATE_MESSAGE_TYPE);
+    String eventsSchema = format("%s%s", EVENTS_PREFIX, ifNotNullGet(testSchema, SubFolder::value));
+    return schemaName.equals(eventsSchema) || schemaName.equals(STATE_UPDATE_MESSAGE_TYPE);
   }
 
   private Map.Entry<Integer, Integer> emitCapabilityResult(Capabilities capability, Exception state,
@@ -1008,8 +1009,8 @@ public class SequenceBase {
       return;
     }
 
-    boolean systemEvent = messageBase.equals(SYSTEM_EVENT_MESSAGE_BASE);
-    boolean anyEvent = messageBase.startsWith(EVENT_PREFIX);
+    boolean systemEvents = messageBase.equals(SYSTEM_EVENTS_MESSAGE_BASE);
+    boolean anyEvent = messageBase.startsWith(EVENTS_PREFIX);
     boolean localUpdate = messageBase.startsWith(LOCAL_PREFIX);
     boolean updateMessage = messageBase.endsWith(UPDATE_SUBFOLDER);
     boolean configMessage = messageBase.startsWith(CONFIG_SUBTYPE);
@@ -1025,8 +1026,8 @@ public class SequenceBase {
         message.put(EXCEPTION_KEY, ((Exception) savedException).getMessage());
       }
       JsonUtil.OBJECT_MAPPER.writeValue(messageFile, message);
-      if (systemEvent) {
-        logSystemEvent(messageBase, message);
+      if (systemEvents) {
+        logSystemEvents(messageBase, message);
       } else {
         if (localUpdate || syntheticMessage || anyEvent) {
           trace(prefix + messageBase, message == null ? "(null)" : stringify(message));
@@ -1043,10 +1044,10 @@ public class SequenceBase {
     }
   }
 
-  private void logSystemEvent(String messageBase, Map<String, Object> message) {
+  private void logSystemEvents(String messageBase, Map<String, Object> message) {
     try {
       checkArgument(!messageBase.startsWith(LOCAL_PREFIX));
-      SystemEvent event = convertTo(SystemEvent.class, message);
+      SystemEvents event = convertTo(SystemEvents.class, message);
       String prefix = "received " + messageBase + " ";
       if (event.logentries == null || event.logentries.isEmpty()) {
         debug(prefix + "(no logs)");
@@ -1065,7 +1066,7 @@ public class SequenceBase {
         Level.fromValue(logEntry.level).name(), logEntry.category, logEntry.message);
   }
 
-  private void writeSystemLogs(SystemEvent message) {
+  private void writeSystemLogs(SystemEvents message) {
     if (message == null || message.logentries == null) {
       return;
     }
@@ -1382,7 +1383,7 @@ public class SequenceBase {
   }
 
   private void processLogMessages() {
-    List<SystemEvent> receivedEvents = popReceivedEvents(SystemEvent.class);
+    List<SystemEvents> receivedEvents = popReceivedEvents(SystemEvents.class);
     receivedEvents.forEach(systemEvent -> {
       int eventCount = ofNullable(systemEvent.event_count).orElse(previousEventCount + 1);
       if (eventCount != previousEventCount + 1) {
@@ -1673,7 +1674,7 @@ public class SequenceBase {
       case CONFIG -> trace("Ignoring echo configTransaction " + transactionId);
       // State updates are handled as a monolithic block with a state reflector update.
       case STATE -> trace("Ignoring partial state update");
-      case EVENT -> handleEventMessage(subFolder, message);
+      case EVENTS -> handleEventMessage(subFolder, message);
       default -> info("Encountered unexpected subType " + subTypeRaw);
     }
   }
@@ -1865,7 +1866,7 @@ public class SequenceBase {
   private void handleEventMessage(SubFolder subFolder, Map<String, Object> message) {
     getReceivedEvents(subFolder).add(message);
     if (SubFolder.SYSTEM.equals(subFolder)) {
-      writeSystemLogs(convertTo(SystemEvent.class, message));
+      writeSystemLogs(convertTo(SystemEvents.class, message));
     }
   }
 

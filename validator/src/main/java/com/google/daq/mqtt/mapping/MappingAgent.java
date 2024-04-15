@@ -32,7 +32,7 @@ import java.util.Set;
 import udmi.schema.CloudModel;
 import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.DiscoveryConfig;
-import udmi.schema.DiscoveryEvent;
+import udmi.schema.DiscoveryEvents;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.ExecutionConfiguration;
 import udmi.schema.FamilyDiscoveryConfig;
@@ -142,9 +142,9 @@ public class MappingAgent {
   }
 
   private Entry<String, Metadata> convertExtra(File file) {
-    DiscoveryEvent discoveryEvent = loadFileStrict(DiscoveryEvent.class,
+    DiscoveryEvents discoveryEvents = loadFileStrict(DiscoveryEvents.class,
         new File(file, "cloud_metadata/udmi_discovered_with.json"));
-    if (discoveryEvent == null) {
+    if (discoveryEvents == null) {
       return Map.entry(NO_DISCOVERY, new Metadata());
     }
     Metadata metadata = new Metadata();
@@ -153,7 +153,7 @@ public class MappingAgent {
     metadata.system = new SystemModel();
     metadata.gateway = new GatewayModel();
     metadata.gateway.gateway_id = deviceId;
-    String deviceName = (String) discoveryEvent.system.ancillary.get("device-name");
+    String deviceName = (String) discoveryEvents.system.ancillary.get("device-name");
     return Map.entry(deviceName, metadata);
   }
 

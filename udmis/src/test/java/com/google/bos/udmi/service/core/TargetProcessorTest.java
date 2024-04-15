@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
-import udmi.schema.PointsetEvent;
+import udmi.schema.PointsetEvents;
 
 class TargetProcessorTest extends ProcessorTestBase {
 
@@ -28,7 +28,7 @@ class TargetProcessorTest extends ProcessorTestBase {
     String payload = (String) command.remove("payload");
     String payloadString = GeneralUtils.decodeBase64(payload);
     assertEquals(SubFolder.POINTSET.value(), command.remove("subFolder"), "subFolder field");
-    assertEquals("event", command.remove("subType"), "subType field");
+    assertEquals("events", command.remove("subType"), "subType field");
     assertEquals(TEST_DEVICE, command.remove("deviceId"));
     assertEquals(TEST_NAMESPACE, command.remove("projectId"));
     assertEquals(TEST_REGISTRY, command.remove("deviceRegistryId"));
@@ -36,15 +36,15 @@ class TargetProcessorTest extends ProcessorTestBase {
 
   @NotNull
   private Object getTestMessage(boolean isExtra) {
-    return isExtra ? makeExtraFieldMessage() : new PointsetEvent();
+    return isExtra ? makeExtraFieldMessage() : new PointsetEvents();
   }
 
   private Bundle makeExtraFieldMessage() {
-    Map<String, Object> stringObjectMap = toMap(new PointsetEvent());
+    Map<String, Object> stringObjectMap = toMap(new PointsetEvents());
     stringObjectMap.put(EXTRA_FIELD_KEY, MONGOOSE);
     // Specify these explicitly since the sent object is a (generic) map.
     Bundle bundle = makeMessageBundle(stringObjectMap);
-    bundle.envelope.subType = SubType.EVENT;
+    bundle.envelope.subType = SubType.EVENTS;
     bundle.envelope.subFolder = SubFolder.POINTSET;
     bundle.envelope.projectId = TEST_NAMESPACE;
     return bundle;
@@ -63,7 +63,7 @@ class TargetProcessorTest extends ProcessorTestBase {
     assertTrue(captured.get(0) instanceof Map, "unexpected on-map message");
     assertEquals(0, getExceptionCount(), "exception count");
     assertEquals(1, getDefaultCount(), "default handler count");
-    assertEquals(0, getMessageCount(PointsetEvent.class), "pointset handler count");
+    assertEquals(0, getMessageCount(PointsetEvents.class), "pointset handler count");
 
     ArgumentCaptor<String> commandCaptor = ArgumentCaptor.forClass(String.class);
     verify(provider, times(1)).sendCommand(eq(REFLECT_BASE),
@@ -87,7 +87,7 @@ class TargetProcessorTest extends ProcessorTestBase {
     assertEquals(1, captured.size(), "unexpected received message count");
     assertEquals(0, getExceptionCount(), "exception count");
     assertEquals(0, getDefaultCount(), "default handler count");
-    assertEquals(1, getMessageCount(PointsetEvent.class), "pointset handler count");
+    assertEquals(1, getMessageCount(PointsetEvents.class), "pointset handler count");
 
     ArgumentCaptor<String> commandCaptor = ArgumentCaptor.forClass(String.class);
     verify(provider, times(1)).sendCommand(eq(REFLECT_BASE),

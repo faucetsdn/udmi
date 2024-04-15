@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.BiConsumer;
 import udmi.schema.Common.ProtocolFamily;
-import udmi.schema.DiscoveryEvent;
+import udmi.schema.DiscoveryEvents;
 import udmi.schema.FamilyLocalnetState;
 import udmi.schema.Metadata;
 import udmi.schema.PointDiscovery;
@@ -34,9 +34,9 @@ public class VendorProvider extends ManagerBase implements FamilyProvider {
     localnetHost = (LocalnetManager) host;
   }
 
-  private DiscoveryEvent augmentSend(Entry<String, Metadata> entry, boolean enumerate) {
+  private DiscoveryEvents augmentSend(Entry<String, Metadata> entry, boolean enumerate) {
     String addr = catchToNull(() -> entry.getValue().localnet.families.get(VENDOR).addr);
-    DiscoveryEvent event = new DiscoveryEvent();
+    DiscoveryEvents event = new DiscoveryEvents();
     event.scan_addr = addr;
     event.points = ifTrueGet(enumerate, () -> getDiscoverPoints(entry.getValue()));
     return event;
@@ -67,7 +67,7 @@ public class VendorProvider extends ManagerBase implements FamilyProvider {
   }
 
   @Override
-  public void startScan(boolean enumerate, BiConsumer<String, DiscoveryEvent> publisher) {
+  public void startScan(boolean enumerate, BiConsumer<String, DiscoveryEvents> publisher) {
     requireNonNull(selfAddr, "no local address defined for family " + VENDOR);
     siteModel.forEachMetadata(
         entry -> publisher.accept(entry.getKey(), augmentSend(entry, enumerate)));
