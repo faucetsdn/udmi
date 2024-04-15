@@ -393,7 +393,8 @@ public class SequenceBase {
   }
 
   private static int getRequiredFunctionsVersion() {
-    return SequenceRunner.processStage(ALPHA) ? SEQUENCER_FUNCTIONS_ALPHA : SEQUENCER_FUNCTIONS_VERSION;
+    return SequenceRunner.processStage(ALPHA) ? SEQUENCER_FUNCTIONS_ALPHA
+        : SEQUENCER_FUNCTIONS_VERSION;
   }
 
   @VisibleForTesting
