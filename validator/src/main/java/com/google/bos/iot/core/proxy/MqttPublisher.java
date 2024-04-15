@@ -65,9 +65,9 @@ public class MqttPublisher implements MessagePublisher {
   public static final String EMPTY_JSON = "{}";
   static final String BRIDGE_PORT = "8883";
   private static final Logger LOG = LoggerFactory.getLogger(MqttPublisher.class);
-  private static final boolean MQTT_SHOULD_RETAIN = false;
+  private static final boolean DO_NOT_RETAIN = false;
   private static final long STATE_RATE_LIMIT_MS = 1000 * 2;
-  private static final int MQTT_QOS = 1;
+  private static final int QOS_AT_LEAST_ONCE = 1;
   private static final String CONFIG_UPDATE_TOPIC_FMT = "/devices/%s/config";
   private static final String ERROR_TOPIC_FMT = "/devices/%s/errors";
   private static final String COMMAND_TOPIC_FMT = "/devices/%s/commands/#";
@@ -286,7 +286,7 @@ public class MqttPublisher implements MessagePublisher {
 
   private void sendMessage(String mqttTopic, byte[] mqttMessage) throws Exception {
     LOG.debug(deviceId + " sending message to " + mqttTopic);
-    mqttClient.publish(mqttTopic, mqttMessage, MQTT_QOS, MQTT_SHOULD_RETAIN);
+    mqttClient.publish(mqttTopic, mqttMessage, QOS_AT_LEAST_ONCE, DO_NOT_RETAIN);
     publishCounter.incrementAndGet();
   }
 

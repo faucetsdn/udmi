@@ -67,8 +67,9 @@
     "subType": {
       "enum": [
         "invalid",
-        "event",
-        "command",
+        "events",
+        "errors",
+        "commands",
         "config",
         "state",
         "query",

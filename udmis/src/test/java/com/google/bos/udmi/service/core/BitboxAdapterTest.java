@@ -14,7 +14,7 @@ import java.util.Date;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import udmi.schema.Common.ProtocolFamily;
-import udmi.schema.DiscoveryEvent;
+import udmi.schema.DiscoveryEvents;
 import udmi.schema.Envelope;
 import udmi.schema.PointDiscovery;
 
@@ -54,7 +54,7 @@ public class BitboxAdapterTest extends ProcessorTestBase {
     terminateAndWait();
 
     assertEquals(1, captured.size(), "expected only one captured event");
-    DiscoveryEvent discoveryEvent = (DiscoveryEvent) captured.get(0);
+    DiscoveryEvents discoveryEvent = (DiscoveryEvents) captured.get(0);
     assertEquals(ProtocolFamily.BACNET, discoveryEvent.scan_family, "scan_family");
     long deltaSec = abs(between(discoveryEvent.generation.toInstant(), Instant.now()).toSeconds());
     long deltaDays = deltaSec / 60 / 60 / 24;

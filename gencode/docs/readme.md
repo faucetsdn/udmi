@@ -7,9 +7,9 @@
 
 ## Messages
 * [**config**](config.html) - The config block controls a device's intended behavior. [Config Documentation](../../docs/messages/config.md)
-* [**event_discovery**](event_discovery.html) - [Discovery result](../../docs/specs/discovery.md) with implicit discovery
-* [**event_pointset**](event_pointset.html) - A set of points reporting telemetry data. [Pointset Event Documentation](../../docs/messages/pointset.md#telemetry)
-* [**event_system**](event_system.html) - Used for system events such as logging. [System Event Documentation](../../docs/messages/system.md#event)
+* [**events_discovery**](events_discovery.html) - [Discovery result](../../docs/specs/discovery.md) with implicit discovery
+* [**events_pointset**](events_pointset.html) - A set of points reporting telemetry data. [Pointset Events Documentation](../../docs/messages/pointset.md#telemetry)
+* [**events_system**](events_system.html) - Used for system events such as logging. [System Event Documentation](../../docs/messages/system.md#event)
 * [**state**](state.html) - [State](../../docs/messages/state.md) message, defined by [`state.json`]
 
 ## Site Model
@@ -20,16 +20,16 @@
 * [**configuration_endpoint**](configuration_endpoint.html) - Parameters to define a message endpoint
 
 ## Other
-* [**command_discovery**](command_discovery.html) - [Discovery command](../../docs/specs/discovery.md) for provisioning
-* [**command_mapping**](command_mapping.html) - [Mapping command](../../docs/specs/mapping.md) for provisioning
+* [**commands_discovery**](commands_discovery.html) - [Discovery command](../../docs/specs/discovery.md) for provisioning
+* [**commands_mapping**](commands_mapping.html) - [Mapping command](../../docs/specs/mapping.md) for provisioning
 * [**config_mapping**](config_mapping.html) - Configuration for [mapping](../../docs/specs/mapping.md)
 * [**configuration_execution**](configuration_execution.html) - Parameters for configuring the execution run of a UDMI tool
 * [**configuration_pod**](configuration_pod.html) - Parameters for configuring the execution run of a UDMIS pod
 * [**configuration_pubber**](configuration_pubber.html) - Parameters to define a pubber runtime instance
 * [**data_template**](data_template.html) - Information container for simple template substitution.
-* [**event**](event.html) - Container object for all event schemas, not directly used.
-* [**event_mapping**](event_mapping.html) - [Mapping result](../../docs/specs/mapping.md) with implicit enumeration
-* [**event_validation**](event_validation.html) - Validation device result
+* [**events**](events.html) - Container object for all event schemas, not directly used.
+* [**events_mapping**](events_mapping.html) - [Mapping result](../../docs/specs/mapping.md) with implicit enumeration
+* [**events_validation**](events_validation.html) - Validation device result
 * [**monitoring**](monitoring.html) - Output from UDMIS monitoring
 * [**persistent_device**](persistent_device.html) - Device persistent data
 * [**properties**](properties.html)

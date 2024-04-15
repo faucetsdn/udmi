@@ -2,7 +2,7 @@ package com.google.bos.iot.core.proxy;
 
 import static com.google.bos.iot.core.proxy.ProxyTarget.STATE_TOPIC;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.daq.mqtt.validator.Validator.REQUIRED_FUNCTION_VER;
+import static com.google.daq.mqtt.validator.Validator.TOOLS_FUNCTIONS_VERSION;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.Common.DEVICE_ID_KEY;
 import static com.google.udmi.util.Common.GATEWAY_ID_KEY;
@@ -32,7 +32,6 @@ import com.google.daq.mqtt.validator.Validator;
 import com.google.daq.mqtt.validator.Validator.ErrorContainer;
 import com.google.udmi.util.Common;
 import com.google.udmi.util.GeneralUtils;
-import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -99,8 +98,8 @@ public class IotReflectorClient implements MessagePublisher {
    * @param requiredVersion version of the functions that are required by the tools
    */
   public IotReflectorClient(ExecutionConfiguration iotConfig, int requiredVersion) {
-    Preconditions.checkState(requiredVersion >= REQUIRED_FUNCTION_VER,
-        format("Min required version %s not satisfied by tools version %s", REQUIRED_FUNCTION_VER,
+    Preconditions.checkState(requiredVersion >= TOOLS_FUNCTIONS_VERSION,
+        format("Min required version %s not satisfied by tools version %s", TOOLS_FUNCTIONS_VERSION,
             requiredVersion));
     this.requiredVersion = requiredVersion;
     registryId = SiteModel.getRegistryActual(iotConfig);

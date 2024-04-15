@@ -1,0 +1,5 @@
+{
+  "exception" : "Unexpected character ('{' (code 123)): was expecting double-quote to start field name  at [Source: (File); line: 1, column: 3]",
+  "message" : "Reading from tests/traces/simple/devices/SNS-4/002_events_discovery.json",
+  "timestamp" : "1999-10-20T01:02:03Z"
+}

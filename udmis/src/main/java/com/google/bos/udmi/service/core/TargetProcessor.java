@@ -52,10 +52,10 @@ public class TargetProcessor extends ProcessorBase {
     }
 
     if (envelope.subType == null) {
-      envelope.subType = SubType.EVENT;
+      envelope.subType = SubType.EVENTS;
     }
     SubType subType = envelope.subType;
-    if (subType != SubType.EVENT) {
+    if (subType != SubType.EVENTS) {
       debug("Dropping non-event type " + subType);
       return;
     }
@@ -70,7 +70,7 @@ public class TargetProcessor extends ProcessorBase {
 
   @Override
   protected SubType getExceptionSubType() {
-    return SubType.EVENT;
+    return SubType.EVENTS;
   }
 
   private void defaultFields(Object defaultedMessage) {

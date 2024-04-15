@@ -49,16 +49,16 @@ sequenceDiagram
 
 1. *(Fieldbus Discovery)* scan for fieldbus _device_ information from devices (e.g. BACnet, format out of scope for UDMI):
   * "I am device `78F936` with points { `room_temp`, `step_size`, and `operation_count` }"
-2. **[Discovery Events](../../tests/schemas/event_discovery/enumeration.json)** wraps the device info from the discovery
+2. **[Discovery Events](../../tests/schemas/events_discovery/enumeration.json)** wraps the device info from the discovery
    into a UDMI-normalized format, e.g.:
   * "Device `78F936` has points { }, with a public key `XYZZYZ`"
 3. **[Mapping Config](../../tests/schemas/config_mapping/mapping.json)** from the _agent_ indicates that the _mapper_ should export responses.
-3. **[Mapping Events](../../tests/schemas/event_mapping/mapping.json)** from the _mapper_ contain actual calculated point mappings:
+3. **[Mapping Events](../../tests/schemas/events_mapping/mapping.json)** from the _mapper_ contain actual calculated point mappings:
   * "Device `78F936` is an `AHU` called `AHU-183`, and `room_temp` is really a `flow_temperatue`"
-3. **[Mapping Command](../../tests/schemas/command_mapping/mapping.json)** to the _mapper_ contain results of initial provisioning:
+3. **[Mapping Command](../../tests/schemas/commands_mapping/mapping.json)** to the _mapper_ contain results of initial provisioning:
   * "Device `78F936` has a numerical id `2198372198752`
 4. *(Onboard Info)* are sent to the _pipeline_ to onboard a device (contents are defined by _pipeline_ and out of scope for UDMI).
-8. **[Telemetry Events](../../tests/schemas/event_pointset/example.json)** are data events from _device_ to _pipeline_... business as usual:
+8. **[Telemetry Events](../../tests/schemas/events_pointset/example.json)** are data events from _device_ to _pipeline_... business as usual:
   * "I am `AHU-183`, and my `room_temp` is `73`"
 
 ## Example Test Setup

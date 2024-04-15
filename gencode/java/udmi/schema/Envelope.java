@@ -172,8 +172,9 @@ public class Envelope {
     public enum SubType {
 
         INVALID("invalid"),
-        EVENT("event"),
-        COMMAND("command"),
+        EVENTS("events"),
+        ERRORS("errors"),
+        COMMANDS("commands"),
         CONFIG("config"),
         STATE("state"),
         QUERY("query"),

@@ -1,0 +1,19 @@
+{
+  "$udmi_version": "1.5.0",
+  "title": "Events",
+  "description": "Container object for all event schemas, not directly used.",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "system": {
+      "$ref": "file:events_system.json#"
+    },
+    "pointset": {
+      "$ref": "file:events_pointset.json#"
+    },
+    "discovery": {
+      "$ref": "file:events_discovery.json#"
+    }
+  }
+}

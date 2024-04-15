@@ -16,8 +16,8 @@ information about how the device is indexed in the world around it.
 information intrinsic to a device and the capabilities it provides.
 
 Backend services will receive a streaming set of
-[_discovery enumeration messages_](../../tests/schemas/event_discovery/enumeration.json) that
-follow the appropriate [_discovery event schema_](../../gencode/docs/event_discovery.html).
+[_discovery enumeration messages_](../../tests/schemas/events_discovery/enumeration.json) that
+follow the appropriate [_discovery event schema_](../../gencode/docs/events_discovery.html).
 
 ## Sequence Diagram
 
@@ -84,7 +84,7 @@ scan (_scan_ enumeration). Both report the same kind of content, but the mechani
 Within an enumeration message, there's a number of different kinds of information that can
 be reported:
   * `points`: A listing of all the data points that a device has to offer. The normal
-  `pointset` _config_/_state_/_event_ messages only operate on a curated subset of all
+  `pointset` _config_/_state_/_events_ messages only operate on a curated subset of all
   the available points, while this enumeration lists _all_ of them.
   * `blobs`: A listing of all the data blobs that a device knows how to handle. This could
   be components like firmware updates, key rotation, etc... Some blobs will be standardized

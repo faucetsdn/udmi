@@ -97,7 +97,7 @@ public class ValidationState {
     @JsonProperty("summary")
     public ValidationSummary summary;
     @JsonProperty("devices")
-    public Map<String, DeviceValidationEvent> devices;
+    public Map<String, DeviceValidationEvents> devices;
 
     @Override
     public int hashCode() {

@@ -135,8 +135,8 @@ Caused by: java.io.IOException: The Application Default Credentials are not avai
 - Ensure the validator tools are not running under `sudo`
 
 ```
-Processing device #1/12: XXX-1/event_unknown
-Unknown schema subFolder 'event_unknown' for XXX-1
+Processing device #1/12: XXX-1/events_unknown
+Unknown schema subFolder 'events_unknown' for XXX-1
 ```
 - Ensure the subscription used for the validator is to the `udmi_target` topic,
   and not the `udmi_state` topic or any others

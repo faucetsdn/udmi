@@ -25,9 +25,9 @@ import udmi.schema.EndpointConfiguration.Protocol;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
-import udmi.schema.PointPointsetEvent;
-import udmi.schema.PointsetEvent;
-import udmi.schema.SystemEvent;
+import udmi.schema.PointPointsetEvents;
+import udmi.schema.PointsetEvents;
+import udmi.schema.SystemEvents;
 
 class FileMessagePipeTest extends MessageTestCore {
 
@@ -40,7 +40,7 @@ class FileMessagePipeTest extends MessageTestCore {
   private static final String TEST_POINT = "test_point";
   private static final String VALUE_ONE = "value1";
   private static final String VALUE_TWO = "value2";
-  private static final String TEST_FILENAME = "002_event_pointset.json";
+  private static final String TEST_FILENAME = "002_events_pointset.json";
 
   private static final File DEVICES_BASE =
       new File(format("%s/%s/%s/%s", TRACE_OUT, TEST_PROJECT, TEST_REGISTRY, DEVICES_DIR_NAME));
@@ -66,13 +66,13 @@ class FileMessagePipeTest extends MessageTestCore {
   private Bundle traceOutBundle(String deviceId, Object presentValue) {
     Envelope envelope = new Envelope();
     envelope.subFolder = SubFolder.POINTSET;
-    envelope.subType = SubType.EVENT;
+    envelope.subType = SubType.EVENTS;
     envelope.deviceId = deviceId;
     envelope.deviceRegistryId = TEST_REGISTRY;
     envelope.projectId = TEST_PROJECT;
-    PointsetEvent message = new PointsetEvent();
+    PointsetEvents message = new PointsetEvents();
     message.points = new HashMap<>();
-    message.points.computeIfAbsent(TEST_POINT, key -> new PointPointsetEvent()).present_value =
+    message.points.computeIfAbsent(TEST_POINT, key -> new PointPointsetEvents()).present_value =
         presentValue;
     return new Bundle(envelope, message);
   }
@@ -93,7 +93,7 @@ class FileMessagePipeTest extends MessageTestCore {
         Arrays.stream(requireNonNull(TRACES_ONE.listFiles())).sorted().collect(Collectors.toList());
     assertEquals(2, files.size(), "expected device one trace files");
     assertEquals(TEST_FILENAME, files.get(1).getName(), "trace output filename");
-    PointsetEvent pointsetEvent = loadFileStrict(PointsetEvent.class, files.get(1));
+    PointsetEvents pointsetEvent = loadFileStrict(PointsetEvents.class, files.get(1));
     assertEquals("value2", pointsetEvent.points.get(TEST_POINT).present_value,
         "point present value");
 
@@ -120,7 +120,7 @@ class FileMessagePipeTest extends MessageTestCore {
     assertEquals(4, devices.size(), "expected devices in trace");
 
     assertEquals(SubFolder.SYSTEM, consumed.get(1).envelope.subFolder, "expecting system event");
-    SystemEvent systemEvent = JsonUtil.convertTo(SystemEvent.class, consumed.get(1).message);
+    SystemEvents systemEvent = JsonUtil.convertTo(SystemEvents.class, consumed.get(1).message);
     assertEquals("device.testing", systemEvent.logentries.get(0).category,
         "log entry category for second message");
   }

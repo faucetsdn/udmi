@@ -1,0 +1,14 @@
+{
+  "$udmi_version": "1.5.0",
+  "title": "Mapping Events Entities",
+  "description": "Mapper output describing a group of devices by their guids",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "existingJavaType": "java.util.HashMap<String, MappingEventEntity>",
+  "patternProperties": {
+    "^[-0-9a-z]+$": {
+      "$ref": "file:events_mapping_entity.json"
+    }
+  }
+}
