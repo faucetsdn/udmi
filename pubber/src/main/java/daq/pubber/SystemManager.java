@@ -38,7 +38,7 @@ import udmi.schema.PubberConfiguration;
 import udmi.schema.StateSystemHardware;
 import udmi.schema.StateSystemOperation;
 import udmi.schema.SystemConfig;
-import udmi.schema.SystemEvent;
+import udmi.schema.SystemEvents;
 import udmi.schema.SystemState;
 
 /**
@@ -150,8 +150,8 @@ public class SystemManager extends ManagerBase {
     }
   }
 
-  private SystemEvent getSystemEvent() {
-    SystemEvent systemEvent = new SystemEvent();
+  private SystemEvents getSystemEvent() {
+    SystemEvents systemEvent = new SystemEvents();
     systemEvent.last_config = systemState.last_config;
     return systemEvent;
   }
@@ -193,7 +193,7 @@ public class SystemManager extends ManagerBase {
   }
 
   private void sendSystemEvent() {
-    SystemEvent systemEvent = getSystemEvent();
+    SystemEvents systemEvent = getSystemEvent();
     systemEvent.metrics = new Metrics();
     Runtime runtime = Runtime.getRuntime();
     systemEvent.metrics.mem_free_mb = (double) runtime.freeMemory() / BYTES_PER_MEGABYTE;

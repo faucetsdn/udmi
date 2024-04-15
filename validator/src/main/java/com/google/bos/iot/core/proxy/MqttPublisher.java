@@ -111,10 +111,10 @@ public class MqttPublisher implements MessagePublisher {
   private final ScheduledFuture<?> tickler;
   private final String siteModel;
   private final IotProvider iotProvider;
+  private final String topicBase;
   private long mqttTokenSetTimeMs;
   private MqttConnectOptions mqttConnectOptions;
   private boolean shutdown;
-  private final String topicBase;
 
   MqttPublisher(ExecutionConfiguration config, byte[] actualKeyBytes, String keyAlgorithm,
       BiConsumer<String, String> onMessageCallback, Consumer<Throwable> onErrorCallback) {
@@ -135,14 +135,6 @@ public class MqttPublisher implements MessagePublisher {
     mqttClient = newMqttClient(deviceId);
     connectMqttClient(deviceId);
     tickler = scheduleTickler();
-  }
-
-  private String getTopicBase() {
-    return switch (iotProvider) {
-      case GBOS, CLEARBLADE -> format(DEVICE_TOPIC_FMT, deviceId);
-      case MQTT -> format(FULL_TOPIC_FMT, projectId, registryId, deviceId);
-      default -> throw new RuntimeException("Unknown iotProvider " + iotProvider);
-    };
   }
 
   private static ThreadFactory getDaemonThreadFactory() {
@@ -201,6 +193,14 @@ public class MqttPublisher implements MessagePublisher {
     } catch (Exception e) {
       throw new RuntimeException("While getting data from " + dataPath.toAbsolutePath(), e);
     }
+  }
+
+  private String getTopicBase() {
+    return switch (iotProvider) {
+      case GBOS, CLEARBLADE -> format(DEVICE_TOPIC_FMT, deviceId);
+      case MQTT -> format(FULL_TOPIC_FMT, projectId, registryId, deviceId);
+      default -> throw new RuntimeException("Unknown iotProvider " + iotProvider);
+    };
   }
 
   @Override

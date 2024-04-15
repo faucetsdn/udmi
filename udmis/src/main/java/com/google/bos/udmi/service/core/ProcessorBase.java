@@ -134,7 +134,7 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
     error(format("Received message exception: %s", payload));
     e.printStackTrace();
     BundleException bundleException = new BundleException(message, toStringMap(envelope), payload);
-    reflectError(SubType.EVENT, bundleException);
+    reflectError(SubType.EVENTS, bundleException);
   }
 
   protected SubType getExceptionSubType() {

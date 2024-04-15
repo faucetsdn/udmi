@@ -52,7 +52,7 @@ class ValidationSummary:
     if self.error_devices:
       result['error_devices'] = self.error_devices # 1
     return result
-from .event_validation_device import DeviceValidationEvent
+from .events_validation_device import DeviceValidationEvents
 
 
 class ValidationState:
@@ -86,7 +86,7 @@ class ValidationState:
     result.features = FeatureValidationState.map_from(source.get('features'))
     result.schemas = SchemaValidationState.map_from(source.get('schemas'))
     result.summary = ValidationSummary.from_dict(source.get('summary'))
-    result.devices = DeviceValidationEvent.map_from(source.get('devices'))
+    result.devices = DeviceValidationEvents.map_from(source.get('devices'))
     return result
 
   @staticmethod
@@ -128,5 +128,5 @@ class ValidationState:
     if self.summary:
       result['summary'] = self.summary.to_dict() # 4
     if self.devices:
-      result['devices'] = DeviceValidationEvent.expand_dict(self.devices) # 2
+      result['devices'] = DeviceValidationEvents.expand_dict(self.devices) # 2
     return result

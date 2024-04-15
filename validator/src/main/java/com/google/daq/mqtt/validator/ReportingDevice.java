@@ -22,7 +22,7 @@ import udmi.schema.Entry;
 import udmi.schema.Envelope.SubType;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
-import udmi.schema.PointsetEvent;
+import udmi.schema.PointsetEvents;
 import udmi.schema.PointsetState;
 import udmi.schema.State;
 
@@ -182,8 +182,8 @@ public class ReportingDevice {
     final MetadataDiff metadataDiff;
     if (message instanceof State) {
       metadataDiff = reportingPointset.validateMessage((State) message);
-    } else if (message instanceof PointsetEvent) {
-      metadataDiff = reportingPointset.validateMessage((PointsetEvent) message);
+    } else if (message instanceof PointsetEvents) {
+      metadataDiff = reportingPointset.validateMessage((PointsetEvents) message);
     } else if (message instanceof PointsetState) {
       metadataDiff = reportingPointset.validateMessage((PointsetState) message);
     } else {
@@ -264,7 +264,7 @@ public class ReportingDevice {
   }
 
   public static String typeFolderPairKey(String subType, String subFolder) {
-    return String.format("%s_%s", ofNullable(subType).orElse(SubType.EVENT.value()), subFolder);
+    return String.format("%s_%s", ofNullable(subType).orElse(SubType.EVENTS.value()), subFolder);
   }
 
   /**

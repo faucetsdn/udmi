@@ -1,0 +1,115 @@
+{
+  "$udmi_version": "1.5.0",
+  "title": "Discovery Events",
+  "description": "[Discovery result](../docs/specs/discovery.md) with implicit discovery",
+  "$section": "Messages",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "timestamp": {
+      "description": "RFC 3339 UTC timestamp the discover telemetry event was generated",
+      "type": "string",
+      "format": "date-time",
+      "examples": ["2019-01-17T14:02:29.364Z"]
+    },
+    "version": {
+      "description": "Version of the UDMI schema",
+      "type": "string"
+    },
+    "generation": {
+      "description": "The event's discovery scan trigger's generation timestamp",
+      "type": "string",
+      "format": "date-time",
+      "examples": ["2019-01-17T14:02:29.364Z"]
+    },
+    "status": {
+      "$ref": "file:entry.json"
+    },
+    "scan_family": {
+      "existingJavaType": "udmi.schema.Common.ProtocolFamily"
+    },
+    "scan_addr": {
+      "description": "The primary address of the device (for scan_family)",
+      "type": "string"
+    },
+    "families": {
+      "description": "Address family discovery discovery results.",
+      "type": "object",
+      "additionalProperties": false,
+      "existingJavaType": "java.util.Map<udmi.schema.Common.ProtocolFamily, FamilyDiscovery>",
+      "patternProperties": {
+        "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
+          "$ref": "file:discovery_family.json"
+        }
+      }
+    },
+    "registries": {
+      "description": "Registry discovery results.",
+      "type": "object",
+      "additionalProperties": false,
+      "existingJavaType": "java.util.Map<String, CloudModel>",
+      "patternProperties": {
+        "^[A-Z]{2,6}-[1-9][0-9]*$": {
+          "$ref": "file:model_cloud.json"
+        }
+      }
+    },
+    "devices": {
+      "description": "Device iot discovery scan results.",
+      "type": "object",
+      "additionalProperties": false,
+      "existingJavaType": "java.util.Map<String, CloudModel>",
+      "patternProperties": {
+        "^[A-Z]{2,6}-[1-9][0-9]*$": {
+          "$ref": "file:model_cloud.json"
+        }
+      }
+    },
+    "points": {
+      "description": "Collection of data points available for this device.",
+      "additionalProperties": false,
+      "existingJavaType": "java.util.Map<String, PointDiscovery>",
+      "patternProperties": {
+        "^[-_.:/a-zA-Z0-9]+$": {
+          "$ref": "file:discovery_point.json#"
+        }
+      }
+    },
+    "features": {
+      "description": "Discovery of features supported by this device.",
+      "additionalProperties": false,
+      "existingJavaType": "java.util.Map<String, FeatureDiscovery>",
+      "patternProperties": {
+        "^[._a-zA-Z]+$": {
+          "$ref": "file:discovery_feature.json"
+        }
+      }
+    },
+    "cloud_model": {
+      "$ref": "file:model_cloud.json"
+    },
+    "system": {
+      "title": "System Discovery Data",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "serial_no": {
+          "description": "The serial number of the physical device",
+          "type": "string"
+        },
+        "ancillary": {
+          "$ref": "file:ancillary_properties.json"
+        },
+        "hardware": {
+          "$ref": "file:state_system_hardware.json"
+        }
+      }
+    }
+  },
+  "required": [
+    "timestamp",
+    "version",
+    "generation"
+  ]
+}

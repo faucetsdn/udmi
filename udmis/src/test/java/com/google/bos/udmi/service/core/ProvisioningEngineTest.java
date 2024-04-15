@@ -29,7 +29,7 @@ import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
 import udmi.schema.CloudModel.Resource_type;
 import udmi.schema.Common.ProtocolFamily;
-import udmi.schema.DiscoveryEvent;
+import udmi.schema.DiscoveryEvents;
 import udmi.schema.Envelope;
 
 /**
@@ -89,9 +89,9 @@ public class ProvisioningEngineTest extends ProcessorTestBase {
     initializeProvider(provider);
   }
 
-  private DiscoveryEvent getDiscoveryScanEvent(String targetDeviceId) {
+  private DiscoveryEvents getDiscoveryScanEvent(String targetDeviceId) {
     String[] split = targetDeviceId.split("-");
-    DiscoveryEvent discoveryEvent = new DiscoveryEvent();
+    DiscoveryEvents discoveryEvent = new DiscoveryEvents();
     discoveryEvent.scan_family = ProtocolFamily.fromValue(split[0]);
     discoveryEvent.scan_addr = split[1];
     discoveryEvent.generation = SCAN_GENERATION;
