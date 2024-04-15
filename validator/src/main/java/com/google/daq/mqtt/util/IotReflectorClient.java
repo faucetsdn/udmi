@@ -65,7 +65,7 @@ public class IotReflectorClient implements IotProvider {
     SiteModel siteModel = new SiteModel(executionConfiguration.site_model);
     executionConfiguration.key_file = siteModel.validatorKey();
     messageClient = new com.google.bos.iot.core.proxy.IotReflectorClient(executionConfiguration,
-        Validator.REQUIRED_FUNCTION_VER);
+        Validator.TOOLS_FUNCTIONS_VERSION);
     executor.execute(this::processReplies);
   }
 

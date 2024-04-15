@@ -174,8 +174,8 @@ public class SequenceBase {
   public static final String STATUS_LEVEL_VIOLATION = "STATUS_LEVEL";
   public static final String DEVICE_STATE_SCHEMA = "device_state";
   private static final String ALL_CHANGES = "";
-  private static final int FUNCTIONS_VERSION_BETA = 12;
-  private static final int FUNCTIONS_VERSION_ALPHA = FUNCTIONS_VERSION_BETA;
+  private static final int SEQUENCER_FUNCTIONS_VERSION = Validator.TOOLS_FUNCTIONS_VERSION;
+  private static final int SEQUENCER_FUNCTIONS_ALPHA = SEQUENCER_FUNCTIONS_VERSION;
   private static final long CONFIG_BARRIER_MS = 1000;
   private static final String START_END_MARKER = "################################";
   private static final String RESULT_FORMAT = "RESULT %s %s %s %s %s/%s %s";
@@ -262,7 +262,7 @@ public class SequenceBase {
 
   static {
     // Sanity check to make sure ALPHA version is increased if forced by increased BETA.
-    checkState(FUNCTIONS_VERSION_ALPHA >= FUNCTIONS_VERSION_BETA,
+    checkState(SEQUENCER_FUNCTIONS_ALPHA >= SEQUENCER_FUNCTIONS_VERSION,
         "ALPHA functions version should not be > BETA");
   }
 
@@ -393,7 +393,7 @@ public class SequenceBase {
   }
 
   private static int getRequiredFunctionsVersion() {
-    return SequenceRunner.processStage(ALPHA) ? FUNCTIONS_VERSION_ALPHA : FUNCTIONS_VERSION_BETA;
+    return SequenceRunner.processStage(ALPHA) ? SEQUENCER_FUNCTIONS_ALPHA : SEQUENCER_FUNCTIONS_VERSION;
   }
 
   @VisibleForTesting

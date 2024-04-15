@@ -116,7 +116,7 @@ import udmi.schema.ValidationSummary;
  */
 public class Validator {
 
-  public static final int REQUIRED_FUNCTION_VER = 12;
+  public static final int TOOLS_FUNCTIONS_VERSION = 13;
   public static final String PROJECT_PROVIDER_PREFIX = "//";
   public static final String TIMESTAMP_ZULU_SUFFIX = "Z";
   public static final String TIMESTAMP_UTC_SUFFIX_1 = "+00:00";
@@ -473,7 +473,7 @@ public class Validator {
     String keyFile = new File(config.site_model, GCP_REFLECT_KEY_PKCS8).getAbsolutePath();
     outputLogger.info("Loading reflector key file from " + keyFile);
     config.key_file = keyFile;
-    client = new IotReflectorClient(config, REQUIRED_FUNCTION_VER);
+    client = new IotReflectorClient(config, TOOLS_FUNCTIONS_VERSION);
   }
 
   void messageLoop() {
