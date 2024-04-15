@@ -45,6 +45,7 @@ from .events_validation import ValidationEvents
 from .events_validation_device import DeviceValidationEvents
 from .metadata import Metadata
 from .model_cloud import CloudModel
+from .model_cloud_config import CloudConfigModel
 from .model_discovery import DiscoveryModel
 from .model_discovery_family import FamilyDiscoveryModel
 from .model_features import TestingModel

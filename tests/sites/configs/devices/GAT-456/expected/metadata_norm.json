@@ -1,0 +1,26 @@
+{
+  "timestamp": "2020-05-01T13:39:07Z",
+  "version": "1.4.1",
+  "upgraded_from": "1",
+  "hash": "0c2d008e",
+  "cloud": {
+    "auth_type": "ES256",
+    "config": {
+      "static_file": "notjson.txt"
+    }
+  },
+  "system": {
+    "location": {
+      "section": "2-3N8C"
+    },
+    "physical_tag": {
+      "asset": {
+        "guid": "drw://TBB",
+        "site": "ZZ-TRI-FECTA",
+        "name": "GAT-456"
+      }
+    },
+    "min_loglevel": 300
+  },
+  "gateway": { }
+}
