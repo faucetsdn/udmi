@@ -1177,11 +1177,6 @@ public class SequenceBase {
       boolean updated = !messageData.equals(sentBlockConfig);
       trace(format("updated check %s_%s: %s", CONFIG_SUBTYPE, subBlock, updated));
       if (updated) {
-        // TODO: Remove this once ClearBlade has fixed their stuff (DESK-3084).
-        if (configIsPending()) {
-          notice("Sleep for 1s to mitigate Cleablade IoT Core race condition");
-          safeSleep(ONE_SECOND_MS);
-        }
         String augmentedMessage = actualize(stringify(data));
         String topic = subBlock + "/config";
         final String transactionId =
