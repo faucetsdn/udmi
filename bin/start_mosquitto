@@ -1,0 +1,22 @@
+#!/bin/bash -e
+
+ETC_DIR=/etc/mosquitto
+CONF_FILE=$ETC_DIR/mosquitto.conf
+UDMI_FILE=$ETC_DIR/confg.d/udmi.conf
+
+PASS_FILE=/etc/mosquitto/mosquitto.passwd
+[[ -n $MQTT_USER ]] || MQTT_USER=scrumptious
+[[ -n $MQTT_PASS ]] || MQTT_PASS=aardvark
+echo Configuring MQTT user: $MQTT_USER
+
+sudo sed -i 's/allow_anonymous true/allow_anonymous false/' $CONF_FILE
+sudo sed -i 's/#listener/listener/' $CONF_FILE
+fgrep $PASS_FILE $CONF_FILE || (echo password_file ${PASS_FILE} | sudo tee -a $CONF_FILE)
+
+sudo touch ${PASS_FILE}
+sudo mosquitto_passwd -b ${PASS_FILE} ${MQTT_USER} ${MQTT_PASS}
+sudo chmod 666 ${PASS_FILE}
+
+sudo systemctl restart mosquitto
+
+systemctl status mosquitto
