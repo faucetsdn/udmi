@@ -10,6 +10,7 @@ import com.google.bos.udmi.service.access.IotAccessBase;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
@@ -152,16 +153,19 @@ public class CloudQueryHandler {
    * Process an individual cloud query.
    */
   public synchronized void process(CloudQuery newQuery) {
-    query = newQuery;
-    envelope = controller.getContinuation(newQuery).getEnvelope();
-
-    if (envelope.deviceRegistryId == null) {
-      queryAllRegistries();
-    } else if (envelope.deviceId == null) {
-      queryRegistryDevices();
-    } else {
-      queryDeviceDetails();
+    try {
+      query = newQuery;
+      envelope = controller.getContinuation(newQuery).getEnvelope();
+      if (envelope.deviceRegistryId == null) {
+        queryAllRegistries();
+      } else if (envelope.deviceId == null) {
+        queryRegistryDevices();
+      } else {
+        queryDeviceDetails();
+      }
+    } finally {
+      query = null;
+      envelope = null;
     }
-    query = null;
   }
 }
