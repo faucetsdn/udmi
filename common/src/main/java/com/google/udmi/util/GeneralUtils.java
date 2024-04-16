@@ -1,5 +1,6 @@
 package com.google.udmi.util;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Sets.symmetricDifference;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.ProperPrinter.OutputFormat.COMPRESSED;
@@ -276,6 +277,10 @@ public class GeneralUtils {
     if (value == null) {
       action.run();
     }
+  }
+
+  public static void requireNull(Object value, String description) {
+    checkState(value == null, description);
   }
 
   public static <T> void ifNotNullThrow(T value, String message) {
