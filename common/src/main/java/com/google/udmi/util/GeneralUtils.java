@@ -275,7 +275,6 @@ public class GeneralUtils {
     checkState(value == null, description);
   }
 
-
   public static <T> void ifNotNullThrow(T value, String message) {
     if (value != null) {
       throw new RuntimeException(message);
