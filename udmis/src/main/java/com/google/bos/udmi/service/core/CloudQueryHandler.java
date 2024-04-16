@@ -7,7 +7,6 @@ import static com.google.udmi.util.GeneralUtils.toDate;
 import static java.util.Objects.requireNonNull;
 
 import com.google.bos.udmi.service.access.IotAccessBase;
-import com.google.udmi.util.GeneralUtils;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -15,7 +14,6 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import udmi.schema.CloudModel;
-import udmi.schema.CloudModel.Resource_type;
 import udmi.schema.CloudQuery;
 import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.Depths.Depth;
@@ -100,7 +98,7 @@ public class CloudQueryHandler {
     List<String> active = discoveryEvent.registries.entrySet().stream()
         .filter(entry -> entry.getValue().last_event_time != null).map(Entry::getKey).toList();
 
-    debug("Found %d registries (%d active)", registries.size(), active.size());
+    debug("Project has %d registries (%d active)", registries.size(), active.size());
 
     ifTrueThen(shouldTraverseRegistries(), () -> active.forEach(this::issueModifiedRegistry));
   }
@@ -136,8 +134,8 @@ public class CloudQueryHandler {
     List<String> active = discoveryEvent.devices.entrySet().stream()
         .filter(entry -> !isTrue(entry.getValue().blocked)).map(Entry::getKey).toList();
 
-    debug("Registry %s had %d devices (%d active)", deviceRegistryId, discoveryEvent.devices.size(),
-        active.size());
+    debug("Listed registry %s with %d devices (%d active)", deviceRegistryId,
+        discoveryEvent.devices.size(), active.size());
 
     ifTrueThen(shouldDetailEntries(), () -> active.forEach(this::issueModifiedDevice));
   }
