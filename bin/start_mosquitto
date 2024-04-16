@@ -22,12 +22,18 @@ if ! fgrep -q $DYN_FILE $CONF_FILE; then
     echo plugin_opt_config_file $DYN_FILE | sudo tee -a $CONF_FILE
 fi
 
+if [[ ! -f $DYN_FILE ]]; then
+    sudo mosquitto_ctrl dynsec init $DYN_FILE $MQTT_USER -P $MQTT_PASS
+fi
+
 sudo touch $PASS_FILE $DYN_FILE
-sudo chmod 0600 $PASS_FILE $DYN_FILE
-sudo chown mosquitto $PASS_FILE $DYN_FILE $CONF_FILE
+sudo chmod 0660 $PASS_FILE $DYN_FILE
+sudo chown root $PASS_FILE
+sudo chown mosquitto $DYN_FILE $CONF_FILE
+sudo chgrp mosquitto $PASS_FILE $DYN_FILE $CONF_FILE
 
 sudo mosquitto_passwd -b ${PASS_FILE} ${MQTT_USER} ${MQTT_PASS}
 
 sudo systemctl restart mosquitto
 
-systemctl status mosquitto
+#systemctl status mosquitto
