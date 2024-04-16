@@ -2,10 +2,12 @@ package com.google.bos.udmi.service.core;
 
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
+import static com.google.udmi.util.GeneralUtils.requireNull;
 import static com.google.udmi.util.GeneralUtils.toDate;
 import static java.util.Objects.requireNonNull;
 
 import com.google.bos.udmi.service.access.IotAccessBase;
+import com.google.udmi.util.GeneralUtils;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -13,6 +15,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import udmi.schema.CloudModel;
+import udmi.schema.CloudModel.Resource_type;
 import udmi.schema.CloudQuery;
 import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.Depths.Depth;
@@ -48,8 +51,12 @@ public class CloudQueryHandler {
     controller.debug(format, args);
   }
 
-  private void issueModifiedDevice(String id) {
-    issueModifiedQuery(e -> e.deviceId = id);
+  private void issueModifiedDevice(String deviceId) {
+    requireNonNull(deviceId, "device id");
+    issueModifiedQuery(e -> {
+      e.deviceId = deviceId;
+      e.transactionId = e.transactionId + "/d/" + deviceId;
+    });
   }
 
   private void issueModifiedQuery(Consumer<Envelope> mutator) {
@@ -60,7 +67,11 @@ public class CloudQueryHandler {
   }
 
   private void issueModifiedRegistry(String registryId) {
-    issueModifiedQuery(e -> e.deviceRegistryId = registryId);
+    requireNonNull(registryId, "registry id");
+    issueModifiedQuery(e -> {
+      e.deviceRegistryId = registryId;
+      e.transactionId = e.transactionId + "/r/" + registryId;
+    });
   }
 
   private CloudModel makeCloudModel(String registryId) {
@@ -75,6 +86,8 @@ public class CloudQueryHandler {
   }
 
   private void queryAllRegistries() {
+    requireNull(envelope.deviceRegistryId, "registry id");
+    requireNull(envelope.deviceId, "device id");
     Set<String> registries = iotAccess.getRegistries();
     DiscoveryEvents discoveryEvent = new DiscoveryEvents();
     discoveryEvent.scan_family = ProtocolFamily.IOT;
@@ -109,6 +122,8 @@ public class CloudQueryHandler {
 
   private void queryRegistryDevices() {
     String deviceRegistryId = requireNonNull(envelope.deviceRegistryId, "registry id");
+    requireNull(envelope.deviceId, "device id");
+
     CloudModel cloudModel = iotAccess.listDevices(deviceRegistryId);
 
     DiscoveryEvents discoveryEvent = new DiscoveryEvents();
