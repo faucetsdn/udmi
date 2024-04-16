@@ -13,7 +13,7 @@ else
 fi
 echo Pulling from subscription $subscription
 
-tmp_file=/tmp/captured.json
+tmp_file=/tmp/message_captured.json
 pull_limit=100
 
 while true; do
@@ -21,14 +21,17 @@ while true; do
     gcloud --format=json --project=$project_id pubsub subscriptions pull $subscription --limit $pull_limit --auto-ack > $tmp_file || true
 
     for index in $(seq 0 $((pull_limit-1))); do
-        subType=$(jq -r .[$index].message.attributes.subType $tmp_file 2> /dev/null)
-        subFolder=$(jq -r .[$index].message.attributes.subFolder $tmp_file 2> /dev/null)
-        deviceId=$(jq -r .[$index].message.attributes.deviceId $tmp_file 2> /dev/null)
-        registryId=$(jq -r .[$index].message.attributes.deviceRegistryId $tmp_file 2> /dev/null)
-        timestamp=$(jq -r .[$index].message.publishTime $tmp_file 2> /dev/null)
-        raw_data=$(jq -r .[$index].message.data $tmp_file)
+        msg_file=/tmp/message_$index.json
+        raw_file=/tmp/rawdata_$index.b64
+        jq -r .[$index].message $tmp_file 2> /dev/null > $msg_file
+        subType=$(jq -r .attributes.subType $msg_file 2> /dev/null)
+        subFolder=$(jq -r .attributes.subFolder $msg_file 2> /dev/null)
+        deviceId=$(jq -r .attributes.deviceId $msg_file 2> /dev/null)
+        registryId=$(jq -r .attributes.deviceRegistryId $msg_file 2> /dev/null)
+        timestamp=$(jq -r .publishTime $msg_file 2> /dev/null)
+        raw_data=$(jq -r .data $msg_file)
         # There's two different base64 formats, so replace - with + to handle both.
-        echo $raw_data > $tmp_file.raw
+        echo $raw_data > $raw_file
         data=$(echo $raw_data | tr - + | base64 --decode)
 
         if [[ $raw_data == null || -z $raw_data ]]; then
@@ -46,9 +49,12 @@ while true; do
 
         timepath=$(echo ${timestamp%:*} | tr T: //) # Bucket messages by minute
         usetime=$(echo $timestamp | tr : x)  # Colon is not allowed on Windows!
-        out_file=$ROOT/out/registries/$registryId/devices/$deviceId/${timepath}/${usetime}_${subFolder}_${subType}.json
+        out_base=$ROOT/out/registries/$registryId/devices/$deviceId/${timepath}/${usetime}_${subFolder}_${subType}
+        out_file=${out_base}.json
         echo $out_file
         mkdir -p $(dirname $out_file)
         echo $data | jq . > $out_file
+        out_attr=${out_base}.attr
+        jq .attributes < $msg_file > $out_attr
     done
 done
