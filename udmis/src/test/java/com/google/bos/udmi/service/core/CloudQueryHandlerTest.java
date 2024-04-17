@@ -30,12 +30,12 @@ class CloudQueryHandlerTest implements MessageContinuation {
   private static final Date QUERY_GENERATION = new Date();
   private final ControlProcessor controlProcessor = mock(ControlProcessor.class);
   private final Envelope envelope = new Envelope();
-  private CloudQueryHandler queryHandler;
   private final ArgumentCaptor<Object> targetCapture = ArgumentCaptor.forClass(Object.class);
   private final ArgumentCaptor<Object> controlCapture = ArgumentCaptor.forClass(Object.class);
   private final ArgumentCaptor<Envelope> envelopeCapture = ArgumentCaptor.forClass(Envelope.class);
   private final Set<String> mockRegistries = ImmutableSet.of(TEST_REGISTRY);
   private final CloudQuery query = new CloudQuery();
+  private CloudQueryHandler queryHandler;
 
   @Override
   public Envelope getEnvelope() {
@@ -49,7 +49,7 @@ class CloudQueryHandlerTest implements MessageContinuation {
 
   @Test
   public void queryAllRegistries() {
-    queryHandler.process(query);
+    queryHandler.process();
 
     List<Object> targetMessages = targetCapture.getAllValues();
     assertEquals(1, targetMessages.size(), "published messages");
@@ -72,6 +72,9 @@ class CloudQueryHandlerTest implements MessageContinuation {
 
   @BeforeEach
   public void setupMock() {
+    query.generation = QUERY_GENERATION;
+    query.depth = Depth.ENTRIES;
+
     doReturn(this).when(controlProcessor).getContinuation(eq(query));
     doNothing().when(controlProcessor).publish(targetCapture.capture());
     doNothing().when(controlProcessor)
@@ -84,8 +87,7 @@ class CloudQueryHandlerTest implements MessageContinuation {
     TargetProcessor targetProcessor = mock(TargetProcessor.class);
     controlProcessor.targetProcessor = targetProcessor;
     doReturn(LAST_SEEN).when(targetProcessor).getLastSeen(eq(TEST_REGISTRY));
+
     queryHandler = new CloudQueryHandler(controlProcessor, query);
-    query.generation = QUERY_GENERATION;
-    query.depth = Depth.ENTRIES;
   }
 }
