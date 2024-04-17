@@ -31,6 +31,7 @@ fi
 
 sudo chown mosquitto $ETC_DIR
 
+sudo touch $PASS_FILE
 sudo mosquitto_passwd -b ${PASS_FILE} ${AUTH_USER} ${AUTH_PASS}
 
 sudo systemctl restart mosquitto
