@@ -84,7 +84,7 @@ class CloudQueryHandlerTest implements MessageContinuation {
     TargetProcessor targetProcessor = mock(TargetProcessor.class);
     controlProcessor.targetProcessor = targetProcessor;
     doReturn(LAST_SEEN).when(targetProcessor).getLastSeen(eq(TEST_REGISTRY));
-    queryHandler = new CloudQueryHandler(controlProcessor);
+    queryHandler = new CloudQueryHandler(controlProcessor, query);
     query.generation = QUERY_GENERATION;
     query.depth = Depth.ENTRIES;
   }
