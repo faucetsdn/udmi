@@ -424,6 +424,7 @@ public class MqttPublisher implements MessagePublisher {
   private void subscribeToUpdates(String deviceId) {
     String updateTopic = format(CONFIG_UPDATE_TOPIC_FMT, deviceId);
     try {
+      LOG.info("Subscribing to " + updateTopic);
       mqttClient.subscribe(updateTopic);
     } catch (MqttException e) {
       throw new RuntimeException("While subscribing to MQTT topic " + updateTopic, e);
@@ -433,6 +434,7 @@ public class MqttPublisher implements MessagePublisher {
   private void subscribeToErrors(String deviceId) {
     String updateTopic = format(ERROR_TOPIC_FMT, deviceId);
     try {
+      LOG.info("Subscribing to " + updateTopic);
       mqttClient.subscribe(updateTopic);
     } catch (MqttException e) {
       throw new RuntimeException("While subscribing to MQTT topic " + updateTopic, e);
@@ -442,6 +444,7 @@ public class MqttPublisher implements MessagePublisher {
   private void subscribeToCommands(String deviceId) {
     String updateTopic = format(COMMAND_TOPIC_FMT, deviceId);
     try {
+      LOG.info("Subscribing to " + updateTopic);
       mqttClient.subscribe(updateTopic, COMMANDS_QOS);
     } catch (MqttException e) {
       throw new RuntimeException("While subscribing to MQTT topic " + updateTopic, e);
