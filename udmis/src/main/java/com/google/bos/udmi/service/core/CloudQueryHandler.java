@@ -1,9 +1,11 @@
 package com.google.bos.udmi.service.core;
 
+import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.requireNull;
 import static com.google.udmi.util.GeneralUtils.toDate;
+import static java.lang.System.identityHashCode;
 import static java.util.Objects.requireNonNull;
 
 import com.google.bos.udmi.service.access.IotAccessBase;
@@ -58,10 +60,10 @@ public class CloudQueryHandler {
   }
 
   private void issueModifiedQuery(Consumer<Envelope> mutator) {
-    CloudQuery cloudQuery = new CloudQuery();
-    cloudQuery.generation = query.generation;
-    mutator.accept(envelope);
-    controller.sideProcess(envelope, cloudQuery);
+    Envelope mutated = deepCopy(envelope);
+    mutator.accept(mutated);
+    debug("Modified query %s, envelope %s", identityHashCode(query), identityHashCode(mutated));
+    controller.sideProcess(mutated, query);
   }
 
   private void issueModifiedRegistry(String registryId) {
@@ -155,6 +157,7 @@ public class CloudQueryHandler {
     try {
       query = newQuery;
       envelope = controller.getContinuation(newQuery).getEnvelope();
+      debug("Cloud query %s, envelope %s", identityHashCode(newQuery), identityHashCode(envelope));
       if (envelope.deviceRegistryId == null) {
         queryAllRegistries();
       } else if (envelope.deviceId == null) {
