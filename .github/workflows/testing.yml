@@ -242,7 +242,6 @@ jobs:
   runlocal:
     name: UDMIS Local Setup
     runs-on: ubuntu-latest
-    needs: pretest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4

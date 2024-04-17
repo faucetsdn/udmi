@@ -1,9 +1,12 @@
 package com.google.bos.udmi.service.core;
 
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.requireNull;
 import static com.google.udmi.util.GeneralUtils.toDate;
+import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static java.util.Objects.requireNonNull;
 
 import com.google.bos.udmi.service.access.IotAccessBase;
@@ -28,16 +31,26 @@ public class CloudQueryHandler {
   private final ControlProcessor controller;
   private final IotAccessBase iotAccess;
   private final TargetProcessor target;
-  private CloudQuery query;
-  private Envelope envelope;
+  private final CloudQuery query;
+  private final Envelope envelope;
+  private final String savedEnvelope;
+  private final String savedQuery;
 
   /**
    * Create a query handler for cloud queries.
    */
-  public CloudQueryHandler(ControlProcessor controlProcessor) {
+  public CloudQueryHandler(ControlProcessor controlProcessor, CloudQuery cloudQuery) {
     controller = controlProcessor;
     iotAccess = controller.iotAccess;
     target = controller.targetProcessor;
+    query = cloudQuery;
+    envelope = controller.getContinuation(cloudQuery).getEnvelope();
+    savedQuery = stringifyTerse(query);
+    savedEnvelope = stringifyTerse(envelope);
+  }
+
+  public static void processQuery(ControlProcessor controlProcessor, CloudQuery query) {
+    new CloudQueryHandler(controlProcessor, query).process();
   }
 
   @NotNull
@@ -58,10 +71,9 @@ public class CloudQueryHandler {
   }
 
   private void issueModifiedQuery(Consumer<Envelope> mutator) {
-    CloudQuery cloudQuery = new CloudQuery();
-    cloudQuery.generation = query.generation;
-    mutator.accept(envelope);
-    controller.sideProcess(envelope, cloudQuery);
+    Envelope mutated = deepCopy(envelope);
+    mutator.accept(mutated);
+    controller.sideProcess(mutated, query);
   }
 
   private void issueModifiedRegistry(String registryId) {
@@ -151,20 +163,15 @@ public class CloudQueryHandler {
   /**
    * Process an individual cloud query.
    */
-  public synchronized void process(CloudQuery newQuery) {
-    try {
-      query = newQuery;
-      envelope = controller.getContinuation(newQuery).getEnvelope();
-      if (envelope.deviceRegistryId == null) {
-        queryAllRegistries();
-      } else if (envelope.deviceId == null) {
-        queryRegistryDevices();
-      } else {
-        queryDeviceDetails();
-      }
-    } finally {
-      query = null;
-      envelope = null;
+  public synchronized void process() {
+    if (envelope.deviceRegistryId == null) {
+      queryAllRegistries();
+    } else if (envelope.deviceId == null) {
+      queryRegistryDevices();
+    } else {
+      queryDeviceDetails();
     }
+    checkState(savedEnvelope.equals(stringifyTerse(envelope)), "mutated envelope");
+    checkState(savedQuery.equals(stringifyTerse(query)), "mutated query");
   }
 }
