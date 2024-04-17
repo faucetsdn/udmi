@@ -259,6 +259,12 @@ jobs:
         run: bin/test_mosquitto
       - name: bin/test_udmis
         run: bin/test_udmis
+      - name: mosquitto log
+        if: ${{ !cancelled() }}
+        run: |
+          mosquitto -h | fgrep version
+          sudo ls -l /etc/mosquitto/
+          sudo cat /var/log/mosquitto/mosquitto.log
       - name: support bundle
         if: ${{ !cancelled() }}
         run: bin/support ${{ github.repository_owner }}_${{ github.job }}_
