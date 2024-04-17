@@ -3,5 +3,6 @@ kind: ConfigMap
 metadata:
   name: config
 data:
-  GCP_IOT_OPTIONS: disabled
+  BITBOX_DISCOVERY:
+  ETCD_CLUSTER:
   UDMI_NAMESPACE: @UDMI_NAMESPACE@

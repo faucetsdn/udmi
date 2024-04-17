@@ -19,7 +19,6 @@ import com.google.common.collect.ImmutableMap;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -175,9 +174,10 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
     return until;
   }
 
-  private String safeMunge(Function<String, String> munger, Entry<Long, String> configPair) {
+  private String safeMunge(Function<Entry<Long, String>, String> munger,
+      Entry<Long, String> configPair) {
     try {
-      return munger.apply(ifNotNullGet(configPair, Entry::getValue));
+      return munger.apply(configPair);
     } catch (PreviousParseException e) {
       error("Exception parsing previous config: " + friendlyStackTrace(e));
       throw e;
@@ -191,19 +191,15 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
   public void activate() {
     super.activate();
     if (isEnabled()) {
-      distributor = UdmiServicePod.maybeGetComponent((String) options.get("distributor"));
+      distributor = UdmiServicePod.maybeGetComponent(DistributorPipe.class);
       populateRegistryRegions();
     }
-  }
-
-  public Set<String> getRegistriesForRegion(String region) {
-    throw new RuntimeException("Not implemented");
   }
 
   /**
    * Return a list of all the registries.
    */
-  public Set<String> listRegistries() {
+  public Set<String> getRegistries() {
     try {
       populateRegistryRegions();
       return registryRegions.get().keySet();
@@ -212,19 +208,24 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
     }
   }
 
+  public Set<String> getRegistriesForRegion(String region) {
+    throw new RuntimeException("Not implemented");
+  }
+
   /**
    * Modify a device configuration. Return the full/complete update that was actually written.
    */
   @Override
-  public String modifyConfig(String registryId, String deviceId, Function<String, String> munger) {
+  public String modifyConfig(String registryId, String deviceId,
+      Function<Entry<Long, String>, String> munger) {
     int retryCount = CONFIG_UPDATE_MAX_RETRIES;
     try {
       while (true) {
         try {
-          Entry<Long, String> configPair = fetchConfig(registryId, deviceId);
-          debug("Fetched config version %s for %s", configPair.getKey(), deviceId);
-          Long version = ifNotNullGet(configPair, Entry::getKey);
-          return ifNotNullGet(safeMunge(munger, configPair),
+          Entry<Long, String> currentConfig = fetchConfig(registryId, deviceId);
+          debug("Fetched config version %s for %s", currentConfig.getKey(), deviceId);
+          Long version = ifNotNullGet(currentConfig, Entry::getKey);
+          return ifNotNullGet(safeMunge(munger, currentConfig),
               updated -> checkedUpdate(registryId, deviceId, version, updated));
         } catch (AbortLoopException e) {
           throw e;
@@ -306,16 +307,6 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
     public AbortLoopException(String message) {
       super(message);
     }
-  }
-
-  Map<String, Object> parseOptions(IotAccess iotAccess) {
-    String options = variableSubstitution(iotAccess.options);
-    if (options == null) {
-      return ImmutableMap.of();
-    }
-    String[] parts = options.split(",");
-    return Arrays.stream(parts).map(String::trim).map(option -> option.split("=", 2))
-        .collect(Collectors.toMap(x -> x[0], x -> x.length > 1 ? x[1] : true));
   }
 
 }

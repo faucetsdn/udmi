@@ -23,13 +23,20 @@ echo Copying cached config files to $OUT_DIR/
 cp $CONFIG_FILES $OUT_DIR/ || true
 
 site_model=
-for config in $CONFIG_FILES; do
-    if [[ -f $config && -z $site_model ]]; then
-        site_model=$(jq -r .site_model $config)
-        site_model=$(realpath --relative-to=$PWD $site_model)
+config_files=$(ls -t $OUT_DIR/*_config.json) || true
+for config in $config_files; do
+    site_model=$(jq -r .site_model $config)
+    site_model=$(realpath --relative-to=$PWD $site_model)
+    if [[ $site_model != null ]]; then
         echo Using site_model $site_model from cached $config
+        break
     fi
 done
+
+if [[ $site_model == null ]]; then
+    echo Could not determine site_model from recent configs.
+    site_model=
+fi
 
 if [[ -n $UDMI_REGISTRY_SUFFIX && -n $site_model ]]; then
     echo Relocating $site_model to $site_model${UDMI_REGISTRY_SUFFIX}

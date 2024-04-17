@@ -38,9 +38,9 @@ import org.junit.Test;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Level;
 import udmi.schema.PointPointsetConfig;
-import udmi.schema.PointPointsetEvent;
+import udmi.schema.PointPointsetEvents;
 import udmi.schema.PointPointsetState;
-import udmi.schema.PointsetEvent;
+import udmi.schema.PointsetEvents;
 
 /**
  * Validate pointset related functionality.
@@ -75,11 +75,11 @@ public class PointsetSequences extends PointsetBase {
 
       final AtomicReference<String> message = new AtomicReference<>("any received pointset event");
       waitFor("pointset event contains correct points", EVENT_WAIT_DURATION, () -> {
-        List<PointsetEvent> events = popReceivedEvents(PointsetEvent.class);
+        List<PointsetEvents> events = popReceivedEvents(PointsetEvents.class);
         ifNotNullThen(ifNotTrueGet(events.isEmpty(), () -> events.get(events.size() - 1)),
             lastEvent -> {
               debug("last event is " + stringifyTerse(lastEvent));
-              Set<Entry<String, PointPointsetEvent>> lastPoints = lastEvent.points.entrySet();
+              Set<Entry<String, PointPointsetEvents>> lastPoints = lastEvent.points.entrySet();
               Set<String> eventPoints = lastPoints.stream().filter(this::validPointEntry)
                   .map(Entry::getKey).collect(Collectors.toSet());
               Set<String> errorPoints = deviceState.pointset.points.entrySet().stream()
@@ -101,7 +101,7 @@ public class PointsetSequences extends PointsetBase {
     return isErrorState(point.getValue());
   }
 
-  private boolean validPointEntry(Entry<String, PointPointsetEvent> point) {
+  private boolean validPointEntry(Entry<String, PointPointsetEvents> point) {
     return point.getValue().present_value != null;
   }
 
@@ -118,7 +118,7 @@ public class PointsetSequences extends PointsetBase {
     deviceConfig.pointset.points.put(EXTRANEOUS_POINT, new PointPointsetConfig());
 
     try {
-      untilTrue("pointset status contains extraneous point error",
+      untilTrue("pointset state contains extraneous point error",
           () -> ifNotNullGet(deviceState.pointset.points.get(EXTRANEOUS_POINT),
               state -> state.status.category.equals(POINTSET_POINT_INVALID)
                   && state.status.level.equals(POINTSET_POINT_INVALID_VALUE)));
@@ -127,7 +127,7 @@ public class PointsetSequences extends PointsetBase {
       deviceConfig.pointset.points.remove(EXTRANEOUS_POINT);
     }
 
-    untilTrue("pointset status removes extraneous point error",
+    untilTrue("pointset state removes extraneous point error",
         () -> !deviceState.pointset.points.containsKey(EXTRANEOUS_POINT));
 
     untilPointsetSanity();
@@ -148,14 +148,14 @@ public class PointsetSequences extends PointsetBase {
     PointPointsetConfig removed = requireNonNull(deviceConfig.pointset.points.remove(name));
 
     try {
-      untilFalse("pointset status does not contain removed point",
+      untilFalse("pointset state does not contain removed point",
           () -> deviceState.pointset.points.containsKey(name));
       untilPointsetSanity();
     } finally {
       deviceConfig.pointset.points.put(name, removed);
     }
 
-    untilFalse("pointset status contains removed point",
+    untilTrue("pointset state contains restored point",
         () -> deviceState.pointset.points.containsKey(name));
 
     untilPointsetSanity();
@@ -171,7 +171,7 @@ public class PointsetSequences extends PointsetBase {
     ifNullSkipTest(deviceConfig.pointset, "no pointset found in config");
 
     untilTrue("receive a pointset event",
-        () -> (countReceivedEvents(PointsetEvent.class) > 1));
+        () -> (countReceivedEvents(PointsetEvents.class) > 1));
   }
 
   /**
@@ -205,7 +205,7 @@ public class PointsetSequences extends PointsetBase {
    * Given a list of events, sorts these in timestamp order and returns a list of the the intervals
    * between each pair of successive messages based on the in-payload timestamp.
    */
-  private List<Long> intervalFromEvents(List<PointsetEvent> receivedEvents) {
+  private List<Long> intervalFromEvents(List<PointsetEvents> receivedEvents) {
     ArrayList<Long> intervals = new ArrayList<>();
 
     if (receivedEvents.size() < 2) {
@@ -236,12 +236,12 @@ public class PointsetSequences extends PointsetBase {
     deviceConfig.pointset.sample_limit_sec = sampleRange.sampleLimit;
     deviceConfig.pointset.sample_rate_sec = sampleRange.sampleRate;
 
-    popReceivedEvents(PointsetEvent.class);
+    popReceivedEvents(PointsetEvents.class);
     untilTrue(format("receive at least %d pointset events", messagesToSample),
-        () -> (countReceivedEvents(PointsetEvent.class) > messagesToSample)
+        () -> (countReceivedEvents(PointsetEvents.class) > messagesToSample)
     );
 
-    List<PointsetEvent> receivedEvents = popReceivedEvents(PointsetEvent.class);
+    List<PointsetEvents> receivedEvents = popReceivedEvents(PointsetEvents.class);
     List<Long> intervals = intervalFromEvents(receivedEvents);
 
     if (intervalsToIgnore > 0) {

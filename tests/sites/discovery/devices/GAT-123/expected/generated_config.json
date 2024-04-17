@@ -6,7 +6,7 @@
     "metrics_rate_sec": 10
   },
   "gateway": {
-    "proxy_ids": [ "SNS-4", "AHU-22" ]
+    "proxy_ids": [ ]
   },
   "pointset": {
     "points": {

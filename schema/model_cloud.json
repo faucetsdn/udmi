@@ -37,6 +37,9 @@
         "REGISTRY"
       ]
     },
+    "config": {
+      "$ref": "file:model_cloud_config.json#"
+    },
     "blocked": {
       "type": "boolean"
     },
@@ -61,6 +64,10 @@
           }
         }
       }
+    },
+    "updated_time": {
+      "type": "string",
+      "format": "date-time"
     },
     "last_event_time": {
       "type": "string",
@@ -92,6 +99,7 @@
         "CREATE",
         "UPDATE",
         "DELETE",
+        "MODIFY",
         "BIND",
         "ALLOW",
         "BLOCK"

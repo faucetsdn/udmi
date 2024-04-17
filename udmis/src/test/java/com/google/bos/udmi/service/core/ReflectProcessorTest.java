@@ -19,6 +19,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.udmi.util.JsonUtil;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.function.Function;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,11 +40,6 @@ import udmi.schema.UdmiState;
 public class ReflectProcessorTest extends ProcessorTestBase {
 
   public final String transactionId = Long.toString(System.currentTimeMillis());
-
-  @Override
-  protected @NotNull Class<? extends ProcessorBase> getProcessorClass() {
-    return ReflectProcessor.class;
-  }
 
   private void activeTestInstance(Runnable action) {
     verify(provider, times(1)).activate();
@@ -110,7 +106,7 @@ public class ReflectProcessorTest extends ProcessorTestBase {
 
     //noinspection unchecked
     verify(provider, times(1)).modifyConfig(eq(TEST_REGISTRY), eq(TEST_DEVICE),
-        (Function<String, String>) configCaptor.capture());
+        (Function<Entry<Long, String>, String>) configCaptor.capture());
 
     @SuppressWarnings("unchecked")
     String newConfig = (String) configCaptor.getValue().apply(null);
@@ -123,7 +119,7 @@ public class ReflectProcessorTest extends ProcessorTestBase {
 
   @BeforeEach
   public void initializeInstance() {
-    initializeTestInstance();
+    initializeTestInstance(ReflectProcessor.class);
   }
 
   /**

@@ -7,9 +7,9 @@
 #   y - update the top level "version" in the files
 #   n - do not update the file
 #
-n tests/schemas/event_discovery/empty.json
-n tests/schemas/event_system/empty.json
-n tests/schemas/event_pointset/empty.json
+n tests/schemas/events_discovery/empty.json
+n tests/schemas/events_system/empty.json
+n tests/schemas/events_pointset/empty.json
 n tests/schemas/state/empty.json
 n tests/schemas/config/empty.json
 n tests/schemas/config/delta_x1_gateway.json
@@ -31,27 +31,27 @@ n tests/schemas/state/makemodel_upgrade.json # tests message upgrade from v 1
 n tests/schemas/config/errors.json
 n tests/schemas/state/errors.json # test complete message upgrade pathway
 y tests/schemas/state_validation/report.json
-y tests/schemas/event_discovery/from_bacnet.json
-y tests/schemas/event_discovery/scan_error.json
-y tests/schemas/event_discovery/point_error.json
-y tests/schemas/event_discovery/errors.json
-y tests/schemas/event_discovery/enumeration.json
-y tests/schemas/event_discovery/continuous.json
-y tests/schemas/event_discovery/discovery.json
-y tests/schemas/event_discovery/implicit.json
-y tests/schemas/event_system/metrics.json
-y tests/schemas/event_system/errors.json
-y tests/schemas/event_system/example.json
-y tests/schemas/event_system/fcu.json
-y tests/schemas/event_validation/simple_ok.json
-y tests/schemas/event_validation/simple_error.json
+y tests/schemas/events_discovery/from_bacnet.json
+y tests/schemas/events_discovery/scan_error.json
+y tests/schemas/events_discovery/point_error.json
+y tests/schemas/events_discovery/errors.json
+y tests/schemas/events_discovery/enumeration.json
+y tests/schemas/events_discovery/continuous.json
+y tests/schemas/events_discovery/discovery.json
+y tests/schemas/events_discovery/implicit.json
+y tests/schemas/events_system/metrics.json
+y tests/schemas/events_system/errors.json
+y tests/schemas/events_system/example.json
+y tests/schemas/events_system/fcu.json
+y tests/schemas/events_validation/simple_ok.json
+y tests/schemas/events_validation/simple_error.json
 y tests/schemas/config_mapping/mapping.json
-y tests/schemas/event_pointset/errors.json
-y tests/schemas/event_pointset/writeback.json
-y tests/schemas/event_pointset/example.json
-y tests/schemas/event_pointset/fcu.json
-y tests/schemas/event_pointset/smartprimus.json
-y tests/schemas/event_pointset/partial.json
+y tests/schemas/events_pointset/errors.json
+y tests/schemas/events_pointset/writeback.json
+y tests/schemas/events_pointset/example.json
+y tests/schemas/events_pointset/fcu.json
+y tests/schemas/events_pointset/smartprimus.json
+y tests/schemas/events_pointset/partial.json
 y tests/schemas/config_pointset/example.json
 y tests/schemas/state/scan_stop.json
 y tests/schemas/state/scan_error.json
@@ -87,8 +87,8 @@ y tests/schemas/config/restart.json
 y tests/schemas/config/implicit.json
 y tests/schemas/state_mapping/mapping.json
 y tests/schemas/command_discovery/provision.json
-y tests/schemas/event_mapping/mapping.json
-y tests/schemas/event_mapping/prediction.json
+y tests/schemas/events_mapping/mapping.json
+y tests/schemas/events_mapping/prediction.json
 y tests/schemas/metadata/toomany.json
 y tests/schemas/metadata/proxy.json
 y tests/schemas/metadata/example.json
@@ -100,8 +100,8 @@ n tests/schemas/configuration_execution/cloud_iot_config.json
 n tests/schemas/configuration_endpoint/gcp_iot_core.json
 n tests/schemas/configuration_endpoint/mosquitto.json
 n tests/schemas/configuration_endpoint/multiple.json
-n tests/schemas/event_discovery/features.json
-y tests/schemas/event_system/categories.json
+n tests/schemas/events_discovery/features.json
+y tests/schemas/events_system/categories.json
 y tests/schemas/metadata/nosys.json
 y tests/schemas/state/gateway_test.json
 y tests/schemas/state_validation/sequencer.json
@@ -111,31 +111,31 @@ y tests/schemas/state/networks.json
 y tests/schemas/config/easing.json
 y tests/schemas/config_pointset/easing.json
 
-y tests/traces/simple/devices/AHU-1/001_event_pointset.json
-y tests/traces/simple/devices/AHU-1/002_event_system.json
-y tests/traces/simple/devices/AHU-1/003_event_pointset.json
-n tests/traces/simple/devices/AHU-22/001_event_pointset.json # has no version field
-y tests/traces/simple/devices/AHU-22/002_event_pointset.json
-y tests/traces/simple/devices/AHU-22/003_event_system.json
-y tests/traces/simple/devices/AHU-22/004_event_pointset.json
+y tests/traces/simple/devices/AHU-1/001_events_pointset.json
+y tests/traces/simple/devices/AHU-1/002_events_system.json
+y tests/traces/simple/devices/AHU-1/003_events_pointset.json
+n tests/traces/simple/devices/AHU-22/001_events_pointset.json # has no version field
+y tests/traces/simple/devices/AHU-22/002_events_pointset.json
+y tests/traces/simple/devices/AHU-22/003_events_system.json
+y tests/traces/simple/devices/AHU-22/004_events_pointset.json
 y tests/traces/simple/devices/GAT-123/001_state_update.json
 y tests/traces/simple/devices/GAT-123/002_state_gateway.json
 n tests/traces/simple/devices/GAT-123/004_state_system.json # has no version field
-y tests/traces/simple/devices/SNS-4/001_event_pointset.json
-y tests/traces/simple/devices/SNS-4/002_event_discovery.json
-y tests/traces/simple/devices/SNS-4/003_event_system.json
+y tests/traces/simple/devices/SNS-4/001_events_pointset.json
+y tests/traces/simple/devices/SNS-4/002_events_discovery.json
+y tests/traces/simple/devices/SNS-4/003_events_system.json
 
-# The following are updated manually by running `test_traces simple` and inspecting + copying the output  
-n tests/traces/simple/expected/devices/AHU-1/event_pointset.json 
-n tests/traces/simple/expected/devices/AHU-1/event_system.json 
-n tests/traces/simple/expected/devices/AHU-22/event_pointset.json 
-n tests/traces/simple/expected/devices/AHU-22/event_system.json 
-n tests/traces/simple/expected/devices/GAT-123/state_gateway.json 
-n tests/traces/simple/expected/devices/GAT-123/state.json 
-n tests/traces/simple/expected/devices/GAT-123/state_system.json 
-n tests/traces/simple/expected/devices/SNS-4/event_discovery.json 
-n tests/traces/simple/expected/devices/SNS-4/event_pointset.json 
-n tests/traces/simple/expected/devices/SNS-4/event_system.json 
+# The following are updated manually by running `test_traces simple` and inspecting + copying the output
+n tests/traces/simple/expected/devices/AHU-1/events_pointset.json
+n tests/traces/simple/expected/devices/AHU-1/events_system.json
+n tests/traces/simple/expected/devices/AHU-22/events_pointset.json
+n tests/traces/simple/expected/devices/AHU-22/events_system.json
+n tests/traces/simple/expected/devices/GAT-123/state_gateway.json
+n tests/traces/simple/expected/devices/GAT-123/state.json
+n tests/traces/simple/expected/devices/GAT-123/state_system.json
+n tests/traces/simple/expected/devices/SNS-4/events_discovery.json
+n tests/traces/simple/expected/devices/SNS-4/events_pointset.json
+n tests/traces/simple/expected/devices/SNS-4/events_system.json
 n tests/traces/simple/expected/validation_report.json
 
 # The following are not updated because they test update/downgrade functionalities
@@ -165,7 +165,7 @@ n tests/sites/downgrade/devices/DWN-2/out/generated_config.json
 n tests/sites/downgrade/devices/DWN-2/out/metadata_norm.json
 n tests/sites/downgrade/out/registration_summary.json
 n tests/sites/downgrade/registration_summary.json
-n tests/sites/downgrade/site_metadata.json
+n tests/sites/downgrade/site_defaults.json
 
 # These files appear to be related to the downgrade testing capability
 n tests/sites/missing/cloud_iot_config.json
@@ -193,4 +193,4 @@ n tests/sites/missing/devices/SNS-4/out/generated_config.json
 n tests/sites/missing/devices/SNS-4/out/metadata_norm.json
 n tests/sites/missing/out/registration_summary.json
 n tests/sites/missing/registration_summary.json
-n tests/sites/missing/site_metadata.json
+n tests/sites/missing/site_defaultsjson

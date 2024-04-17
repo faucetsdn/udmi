@@ -17,6 +17,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toSet;
 
 import com.google.bos.udmi.service.core.ComponentName;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.udmi.util.JsonUtil;
 import java.io.PrintStream;
@@ -24,6 +25,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -31,10 +33,12 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.TestOnly;
 import udmi.schema.BasePodConfiguration;
 import udmi.schema.EndpointConfiguration;
+import udmi.schema.IotAccess;
 import udmi.schema.Level;
 import udmi.schema.PodConfiguration;
 
@@ -43,11 +47,11 @@ import udmi.schema.PodConfiguration;
  * convenience and abstraction to keep the main component code more clear.
  * TODO: Implement facilities for other loggers, including structured-to-cloud.
  */
-public abstract class ContainerBase implements ContainerProvider {
+public abstract class ContainerBase implements UdmiComponent {
 
   public static final String INITIAL_EXECUTION_CONTEXT = "xxxxxxxx";
-  public static final Integer FUNCTIONS_VERSION_MIN = 12;
-  public static final Integer FUNCTIONS_VERSION_MAX = 12;
+  public static final Integer FUNCTIONS_VERSION_MIN = 13;
+  public static final Integer FUNCTIONS_VERSION_MAX = 13;
   public static final String EMPTY_JSON = "{}";
   public static final String REFLECT_BASE = "UDMI-REFLECT";
   private static final ThreadLocal<String> executionContext = new ThreadLocal<>();
@@ -198,8 +202,8 @@ public abstract class ContainerBase implements ContainerProvider {
     // The initial delay will often be slightly off the intended time due to rounding errors.
     // Add in a quick/bounded delay to the start of the next second for dynamic alignment.
     // Mostly this is just to make the output timestamps look pretty, but has no functional impact.
-    long intervalDelaySec = intervalDelaySec();
-    long secondsToAdd = intervalDelaySec < periodicSec / 2 ? intervalDelaySec : 0;
+    long initialDelay = initialDelaySec();
+    long secondsToAdd = initialDelay < periodicSec / 2 ? initialDelay : 0;
     Duration duration = Duration.ofMillis(JITTER_ADJ_MS).plusSeconds(secondsToAdd);
     safeSleep(duration.minusNanos(Instant.now().getNano()).toMillis());
   }
@@ -238,9 +242,14 @@ public abstract class ContainerBase implements ContainerProvider {
     return getClass().getSimpleName();
   }
 
-  private long intervalDelaySec() {
+  private long initialDelaySec() {
     return ifNotNullGet(executorGeneration, generation ->
         floorMod(between(instantNow(), generation).getSeconds(), periodicSec), periodicSec);
+  }
+
+  private void periodicScheduler(long initialSec, long periodicSec) {
+    notice("Scheduling %s execution, after %ss every %ss", containerId, initialSec, periodicSec);
+    scheduledExecutor.scheduleAtFixedRate(this::periodicWrapper, initialSec, periodicSec, SECONDS);
   }
 
   private void periodicWrapper() {
@@ -256,11 +265,7 @@ public abstract class ContainerBase implements ContainerProvider {
   @Override
   public void activate() {
     info("Activating");
-    ifTrueThen(periodicSec > 0, () -> {
-      long initial = intervalDelaySec();
-      notice("Scheduling task %s execution after %ss every %ss", containerId, initial, periodicSec);
-      scheduledExecutor.scheduleAtFixedRate(this::periodicWrapper, initial, periodicSec, SECONDS);
-    });
+    ifTrueThen(periodicSec > 0, () -> periodicScheduler(initialDelaySec(), periodicSec));
   }
 
   public void debug(String format, Object... args) {
@@ -322,5 +327,15 @@ public abstract class ContainerBase implements ContainerProvider {
 
   public void warn(String format, Object... args) {
     warn(format(format, args));
+  }
+
+  protected Map<String, Object> parseOptions(IotAccess iotAccess) {
+    String options = variableSubstitution(iotAccess.options);
+    if (options == null) {
+      return ImmutableMap.of();
+    }
+    String[] parts = options.split(",");
+    return Arrays.stream(parts).map(String::trim).map(option -> option.split("=", 2))
+        .collect(Collectors.toMap(x -> x[0], x -> x.length > 1 ? x[1] : true));
   }
 }

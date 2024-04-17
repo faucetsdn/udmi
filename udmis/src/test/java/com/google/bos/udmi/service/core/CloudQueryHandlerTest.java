@@ -20,7 +20,8 @@ import org.mockito.ArgumentCaptor;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudQuery;
 import udmi.schema.Common.ProtocolFamily;
-import udmi.schema.DiscoveryEvent;
+import udmi.schema.Depths.Depth;
+import udmi.schema.DiscoveryEvents;
 import udmi.schema.Envelope;
 
 class CloudQueryHandlerTest implements MessageContinuation {
@@ -52,7 +53,7 @@ class CloudQueryHandlerTest implements MessageContinuation {
 
     List<Object> targetMessages = targetCapture.getAllValues();
     assertEquals(1, targetMessages.size(), "published messages");
-    DiscoveryEvent registryDiscovery = (DiscoveryEvent) targetMessages.get(0);
+    DiscoveryEvents registryDiscovery = (DiscoveryEvents) targetMessages.get(0);
     assertEquals(ProtocolFamily.IOT, registryDiscovery.scan_family);
     assertEquals(1, registryDiscovery.registries.size(), "discovered registries");
     assertEquals(QUERY_GENERATION, registryDiscovery.generation, "discovery generation");
@@ -77,7 +78,7 @@ class CloudQueryHandlerTest implements MessageContinuation {
         .sideProcess(envelopeCapture.capture(), controlCapture.capture());
 
     IotAccessBase iotAccess = mock(IotAccessBase.class);
-    doReturn(mockRegistries).when(iotAccess).listRegistries();
+    doReturn(mockRegistries).when(iotAccess).getRegistries();
     controlProcessor.iotAccess = iotAccess;
 
     TargetProcessor targetProcessor = mock(TargetProcessor.class);
@@ -85,5 +86,6 @@ class CloudQueryHandlerTest implements MessageContinuation {
     doReturn(LAST_SEEN).when(targetProcessor).getLastSeen(eq(TEST_REGISTRY));
     queryHandler = new CloudQueryHandler(controlProcessor);
     query.generation = QUERY_GENERATION;
+    query.depth = Depth.ENTRIES;
   }
 }

@@ -40,11 +40,18 @@ spec:
               name: config
               key: UDMI_NAMESPACE
               optional: true
-        - name: GCP_IOT_OPTIONS
+        - name: ETCD_CLUSTER
           valueFrom:
             configMapKeyRef:
               name: config
-              key: GCP_IOT_OPTIONS
+              key: ETCD_CLUSTER
+              optional: true
+        - name: BITBOX_DISCOVERY
+          valueFrom:
+            configMapKeyRef:
+              name: config
+              key: BITBOX_DISCOVERY
+              optional: true
       volumes:
       - name: secret-volume
         projected:

@@ -4,10 +4,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.registrar.Registrar.DEVICE_ERRORS_MAP;
 import static com.google.daq.mqtt.registrar.Registrar.ENVELOPE_SCHEMA_JSON;
-import static com.google.daq.mqtt.registrar.Registrar.METADATA_JSON;
 import static com.google.daq.mqtt.registrar.Registrar.METADATA_SCHEMA_JSON;
-import static com.google.daq.mqtt.registrar.Registrar.NORMALIZED_JSON;
-import static com.google.daq.mqtt.util.ConfigGenerator.configFrom;
+import static com.google.daq.mqtt.util.ConfigManager.configFrom;
 import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_STRICT;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
@@ -18,8 +16,9 @@ import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.writeString;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
-import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.MessageUpgrader.METADATA_SCHEMA;
+import static com.google.udmi.util.SiteModel.METADATA_JSON;
+import static com.google.udmi.util.SiteModel.NORMALIZED_JSON;
 import static java.lang.String.format;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -34,13 +33,12 @@ import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import com.google.daq.mqtt.util.CloudDeviceSettings;
 import com.google.daq.mqtt.util.CloudIotManager;
-import com.google.daq.mqtt.util.ConfigGenerator;
+import com.google.daq.mqtt.util.ConfigManager;
 import com.google.daq.mqtt.util.DeviceExceptionManager;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.ValidationException;
 import com.google.daq.mqtt.validator.Validator;
-import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.MessageDowngrader;
 import com.google.udmi.util.MessageUpgrader;
@@ -85,11 +83,11 @@ class LocalDevice {
   public static final String EXCEPTION_VALIDATING = "Validating";
   public static final String EXCEPTION_CONVERTING = "Converting";
   public static final String EXCEPTION_LOADING = "Loading";
-  public static final String EXCEPTION_READING = "Reading";
   public static final String EXCEPTION_WRITING = "Writing";
   public static final String EXCEPTION_FILES = "Files";
   public static final String EXCEPTION_REGISTERING = "Registering";
   public static final String EXCEPTION_CREDENTIALS = "Credential";
+  public static final String EXCEPTION_CONFIG = "Config";
   public static final String EXCEPTION_ENVELOPE = "Envelope";
   public static final String EXCEPTION_SAMPLES = "Samples";
   public static final String EXCEPTION_BINDING = "Binding";
@@ -117,6 +115,7 @@ class LocalDevice {
           ES_CERT_TYPE, ES_PRIVATE_PKCS8);
   private static final String SAMPLES_DIR = "samples";
   private static final String ADJUNCT_DIR = "adjunct";
+  private static final String CONFIG_DIR = "config";
   private static final String OUT_DIR = "out";
   private static final String EXPECTED_DIR = "expected";
   private static final String EXCEPTION_LOG_FILE = "exceptions.txt";
@@ -150,8 +149,9 @@ class LocalDevice {
           SAMPLES_DIR,
           ADJUNCT_DIR,
           EXPECTED_DIR,
+          CONFIG_DIR,
           OUT_DIR);
-  private static final String GENERATED_CONFIG_JSON = ConfigGenerator.GENERATED_CONFIG_JSON;
+  private static final String GENERATED_CONFIG_JSON = ConfigManager.GENERATED_CONFIG_JSON;
   private static final Set<String> OUT_FILES = ImmutableSet.of(
       GENERATED_CONFIG_JSON, DEVICE_ERRORS_MAP, NORMALIZED_JSON, EXCEPTION_LOG_FILE);
   private static final Set<String> ALL_KEY_FILES =
@@ -163,23 +163,19 @@ class LocalDevice {
           ES2_PUBLIC_PEM,
           ES3_PUBLIC_PEM);
   private static final Set<String> ALL_CERT_FILES = ImmutableSet.of(RSA_CERT_PEM, ES_CERT_PEM);
-  private static final String ERROR_FORMAT_INDENT = "  ";
   private static final int MAX_JSON_LENGTH = 32767;
-  private static final String UDMI_VERSION = "1.4.2";
-  // private static final String UDMI_VERSION = SchemaVersion.CURRENT.key();
   private final String deviceId;
   private final Map<String, JsonSchema> schemas;
-  private final File siteDir;
   private final File deviceDir;
   private final File outDir;
   private final Metadata metadata;
   private final ExceptionMap exceptionMap;
   private final String generation;
   private final List<Credential> deviceCredentials = new ArrayList<>();
-  private final Map<String, Object> siteMetadata;
   private final boolean validateMetadata;
-  private final ConfigGenerator config;
+  private ConfigManager config;
   private final DeviceExceptionManager exceptionManager;
+  private final SiteModel siteModel;
 
   private String deviceNumId;
 
@@ -187,33 +183,26 @@ class LocalDevice {
   private JsonNode baseVersion;
   private Date lastActive;
   private boolean blocked;
-
+  
   LocalDevice(
-      File siteDir, File devicesDir, String deviceId, Map<String, JsonSchema> schemas,
-      String generation, Metadata siteMetadata, boolean validateMetadata) {
+      SiteModel siteModel, String deviceId, Map<String, JsonSchema> schemas,
+      String generation, boolean validateMetadata) {
     try {
       this.deviceId = deviceId;
       this.schemas = schemas;
       this.generation = generation;
-      this.siteDir = siteDir;
+      this.siteModel = siteModel;
       this.validateMetadata = validateMetadata;
-      this.siteMetadata = siteMetadata == null ? null : JsonUtil.asMap(siteMetadata);
       exceptionMap = new ExceptionMap("Exceptions for " + deviceId);
-      deviceDir = new File(devicesDir, deviceId);
+      deviceDir = siteModel.getDeviceDir(deviceId);
       outDir = new File(deviceDir, OUT_DIR);
       prepareOutDir();
       metadata = readMetadata();
-      config = configFrom(metadata);
-      exceptionManager = new DeviceExceptionManager(siteDir);
+      config = configFrom(metadata, deviceId, siteModel);
+      exceptionManager = new DeviceExceptionManager(new File(siteModel.getSitePath()));
     } catch (Exception e) {
       throw new RuntimeException("While loading local device " + deviceId, e);
     }
-  }
-
-  LocalDevice(
-      File siteDir, File devicesDir, String deviceId, Map<String, JsonSchema> schemas,
-      String generation, Metadata siteMetadata) {
-    this(siteDir, devicesDir, deviceId, schemas, generation, siteMetadata, false);
   }
 
   public static void parseMetadataValidateProcessingReport(ProcessingReport report)
@@ -229,10 +218,6 @@ class LocalDevice {
     }
   }
 
-  static boolean deviceExists(File devicesDir, String deviceName) {
-    return new File(new File(devicesDir, deviceName), METADATA_JSON).isFile();
-  }
-
   private void prepareOutDir() {
     if (!outDir.exists()) {
       outDir.mkdir();
@@ -240,7 +225,7 @@ class LocalDevice {
     new File(outDir, EXCEPTION_LOG_FILE).delete();
   }
 
-  public void validateExpected() {
+  public void validateExpectedFiles() {
     ExceptionMap exceptionMap = new ExceptionMap("expected files");
 
     String[] files = deviceDir.list();
@@ -269,53 +254,34 @@ class LocalDevice {
   }
 
   private Metadata readMetadataWithValidation(boolean validate) {
-    final JsonNode instance;
+    final JsonNode deviceMetadata;
     try {
-      Metadata loadedMetadata = SiteModel.loadDeviceMetadata(siteDir.getPath(), deviceId,
-          LocalDevice.class);
+      Metadata loadedMetadata = siteModel.loadDeviceMetadata(deviceId);
       if (loadedMetadata instanceof MetadataException metadataException) {
         throw new RuntimeException("Loading " + metadataException.file.getAbsolutePath(),
             metadataException.exception);
       }
-      instance = JsonUtil.convertTo(JsonNode.class, loadedMetadata);
-      baseVersion = instance.get(VERSION_KEY);
-      new MessageUpgrader(METADATA_SCHEMA, instance).upgrade(false);
+      deviceMetadata = JsonUtil.convertTo(JsonNode.class, loadedMetadata);
+      baseVersion = deviceMetadata.get(VERSION_KEY);
+      new MessageUpgrader(METADATA_SCHEMA, deviceMetadata).upgrade(false);
     } catch (Exception exception) {
       exceptionMap.put(EXCEPTION_LOADING, exception);
       return null;
     }
 
-    JsonNode mergedMetadata = getMergedMetadata(instance);
-
-    try {
-      ProcessingReport report = schemas.get(METADATA_SCHEMA_JSON).validate(mergedMetadata);
-      if (validate) {
+    if (validate) {
+      try {
+        ProcessingReport report = schemas.get(METADATA_SCHEMA_JSON).validate(deviceMetadata);
         parseMetadataValidateProcessingReport(report);
+      } catch (ProcessingException | ValidationException e) {
+        exceptionMap.put(EXCEPTION_VALIDATING, e);
       }
-    } catch (ProcessingException | ValidationException e) {
-      exceptionMap.put(EXCEPTION_VALIDATING, e);
     }
-    Metadata converted = JsonUtil.convertTo(Metadata.class, mergedMetadata);
+    Metadata converted = JsonUtil.convertTo(Metadata.class, deviceMetadata);
     List<String> proxyIds = catchToNull(() -> converted.gateway.proxy_ids);
     ifNotNullThen(proxyIds,
         ids -> ifTrueThen(ids.isEmpty(), () -> converted.gateway.proxy_ids = null));
     return converted;
-  }
-
-  JsonNode getMergedMetadata(JsonNode instance) {
-    try {
-      String intermediary = JsonUtil.stringify(instance);
-      if (siteMetadata == null) {
-        return instance;
-      } else {
-        Map<String, Object> mergedMetadata = GeneralUtils.deepCopy(siteMetadata);
-        GeneralUtils.mergeObject(mergedMetadata, asMap(intermediary));
-        return JsonUtil.convertTo(JsonNode.class, mergedMetadata);
-      }
-    } catch (Exception e) {
-      exceptionMap.put(EXCEPTION_READING, e);
-    }
-    return null;
   }
 
   private Metadata readMetadata() {
@@ -479,7 +445,6 @@ class LocalDevice {
       if (metadata == null) {
         return;
       }
-
       settings.updated = config.getUpdatedTimestamp();
       settings.metadata = deviceMetadataString();
       settings.deviceNumId = ifNotNullGet(metadata.cloud, cloud -> cloud.num_id);
@@ -531,8 +496,10 @@ class LocalDevice {
 
   private String deviceConfigString() {
     try {
-      JsonNode configJson = OBJECT_MAPPER_STRICT.valueToTree(deviceConfigObject());
-      new MessageDowngrader("config", configJson).downgrade(baseVersion);
+      JsonNode configJson = OBJECT_MAPPER_STRICT.valueToTree(config.deviceConfigJson());
+      if (config.shouldBeDowngraded()) {
+        new MessageDowngrader("config", configJson).downgrade(baseVersion);
+      }
       return compressJsonString(configJson, MAX_JSON_LENGTH);
     } catch (Exception e) {
       throw new RuntimeException("While converting device config", e);
@@ -554,7 +521,7 @@ class LocalDevice {
       envelope.deviceId = deviceId;
       envelope.deviceRegistryId = registryId;
       envelope.subFolder = SubFolder.POINTSET;
-      envelope.subType = SubType.EVENT;
+      envelope.subType = SubType.EVENTS;
       // Don't use actual project id because it should be abstracted away.
       envelope.projectId = fakeProjectId();
       envelope.deviceNumId = makeNumId(envelope);
@@ -668,11 +635,16 @@ class LocalDevice {
     }
   }
 
+  /**
+   * Write device config to the generated_config.json file
+   */
   public void writeConfigFile() {
+    File configFile = new File(outDir, GENERATED_CONFIG_JSON);
+    configFile.delete();
+
     String config = getSettings().config;
+
     if (config != null) {
-      File configFile = new File(outDir, GENERATED_CONFIG_JSON);
-      configFile.delete();
       try (OutputStream outputStream = Files.newOutputStream(configFile.toPath())) {
         outputStream.write(config.getBytes());
       } catch (Exception e) {

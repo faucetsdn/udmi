@@ -6,6 +6,7 @@ import static com.google.udmi.util.Common.DEFAULT_REGION;
 import static com.google.udmi.util.GeneralUtils.catchOrElse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.sha256;
 import static com.google.udmi.util.SiteModel.DEFAULT_CLEARBLADE_HOSTNAME;
 import static com.google.udmi.util.SiteModel.DEFAULT_GBOS_HOSTNAME;
 import static java.lang.String.format;
@@ -64,9 +65,9 @@ public class MqttPublisher implements MessagePublisher {
   public static final String EMPTY_JSON = "{}";
   static final String BRIDGE_PORT = "8883";
   private static final Logger LOG = LoggerFactory.getLogger(MqttPublisher.class);
-  private static final boolean MQTT_SHOULD_RETAIN = false;
+  private static final boolean DO_NOT_RETAIN = false;
   private static final long STATE_RATE_LIMIT_MS = 1000 * 2;
-  private static final int MQTT_QOS = 1;
+  private static final int QOS_AT_LEAST_ONCE = 1;
   private static final String CONFIG_UPDATE_TOPIC_FMT = "/devices/%s/config";
   private static final String ERROR_TOPIC_FMT = "/devices/%s/errors";
   private static final String COMMAND_TOPIC_FMT = "/devices/%s/commands/#";
@@ -159,8 +160,9 @@ public class MqttPublisher implements MessagePublisher {
     final byte[] keyBytes;
     checkNotNull(iotConfig.key_file, "missing key file in config");
     try {
-      System.err.println("Loading key bytes from " + iotConfig.key_file);
       keyBytes = getFileBytes(iotConfig.key_file);
+      System.err.printf("Loaded key %s as sha256 %s%n", iotConfig.key_file,
+          sha256(keyBytes).substring(0, 16));
     } catch (Exception e) {
       throw new RuntimeException(
           "While loading key file " + new File(iotConfig.key_file).getAbsolutePath(), e);
@@ -173,6 +175,15 @@ public class MqttPublisher implements MessagePublisher {
     return mqttPublisher;
   }
 
+  private static byte[] getFileBytes(String dataFile) {
+    Path dataPath = Paths.get(dataFile);
+    try {
+      return Files.readAllBytes(dataPath);
+    } catch (Exception e) {
+      throw new RuntimeException("While getting data from " + dataPath.toAbsolutePath(), e);
+    }
+  }
+
   @Override
   public Credential getCredential() {
     Credential credential = new Credential();
@@ -183,15 +194,6 @@ public class MqttPublisher implements MessagePublisher {
 
   private String getReflectorPublicKeyFile() {
     return new File(siteModel, REFLECTOR_PUBLIC_KEY).getAbsolutePath();
-  }
-
-  private static byte[] getFileBytes(String dataFile) {
-    Path dataPath = Paths.get(dataFile);
-    try {
-      return Files.readAllBytes(dataPath);
-    } catch (Exception e) {
-      throw new RuntimeException("While getting data from " + dataPath.toAbsolutePath(), e);
-    }
   }
 
   private ScheduledFuture<?> scheduleTickler() {
@@ -284,7 +286,7 @@ public class MqttPublisher implements MessagePublisher {
 
   private void sendMessage(String mqttTopic, byte[] mqttMessage) throws Exception {
     LOG.debug(deviceId + " sending message to " + mqttTopic);
-    mqttClient.publish(mqttTopic, mqttMessage, MQTT_QOS, MQTT_SHOULD_RETAIN);
+    mqttClient.publish(mqttTopic, mqttMessage, QOS_AT_LEAST_ONCE, DO_NOT_RETAIN);
     publishCounter.incrementAndGet();
   }
 

@@ -1,0 +1,10 @@
+{
+  "system": {
+    "location": {
+      "site": "ZZ-TRI-FECTA"
+    }
+  },
+  "cloud": {
+    "detail": "site default for unit tests"
+  }
+}

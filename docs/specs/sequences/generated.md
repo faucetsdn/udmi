@@ -72,13 +72,12 @@ Check that the device correctly handles a broken (non-json) config message.
 1. Wait for initial state synchronized
 1. Check that initial stable_config matches last_config
 1. Wait for log category `system.config.apply` level `NOTICE` to be logged
-1. Wait for has applicable system status
-1. Check that applicable system status
+1. Wait for has significant system status
+1. Check that significant system status exists
 1. Wait for log category `system.config.receive` level `DEBUG` to be logged
 1. Wait for log category `system.config.parse` level `ERROR` to be logged
 1. Check that log category `system.config.apply` level `NOTICE` not logged
 1. Force reset config
-1. Wait for state last_config sync
 1. Wait for log category `system.config.apply` level `NOTICE` to be logged
 1. Wait for restored state synchronized
 1. Update config before last_config updated:
@@ -110,7 +109,7 @@ Check that the device MQTT-acknowledges a sent config.
 Check enumeration of nothing at all
 
 1. Update config before enumeration not active:
-    * Add `discovery` = { "enumerate": {  } }
+    * Add `discovery` = { "depths": {  } }
 1. Wait for enumeration not active
 1. Update config before matching enumeration generation:
     * Add `discovery.generation` = `generation start time`
@@ -118,9 +117,9 @@ Check enumeration of nothing at all
 1. Update config before cleared enumeration generation:
     * Remove `discovery.generation`
 1. Wait for cleared enumeration generation
-1. Check that no family enumeration
-1. Check that no feature enumeration
-1. Check that no point enumeration
+1. Check that no family enumeration exists
+1. Check that no feature enumeration exists
+1. Check that no point enumeration exists
 
 ## endpoint_connection_error (PREVIEW)
 
@@ -247,11 +246,11 @@ Check that the device correctly handles an extra out-of-schema field
     * Set `system.min_loglevel` = `100`
 1. Wait for last_config not null
 1. Wait for system operational
-1. Check that no applicable system status
+1. Check that no significant system status exists
 1. Wait for log category `system.config.receive` level `DEBUG` to be logged
 1. Wait for last_config updated
 1. Wait for system operational
-1. Check that no applicable system status
+1. Check that no significant system status exists
 1. Wait for log category `system.config.parse` level `DEBUG` to be logged
 1. Wait for log category `system.config.apply` level `NOTICE` to be logged
 1. Wait for log category `system.config.receive` level `DEBUG` to be logged
@@ -262,25 +261,25 @@ Check that the device correctly handles an extra out-of-schema field
 
 ## family_ether_addr (PREVIEW)
 
-1. Wait for localnet families available
-1. Check that device family ether address matches
+1. Wait for localnet family state ether available
+1. Check that family ether address matches
 
 ## family_ipv4_addr (PREVIEW)
 
-1. Wait for localnet families available
-1. Check that device family ipv4 address matches
+1. Wait for localnet family state ipv4 available
+1. Check that family ipv4 address matches
 
 ## family_ipv6_addr (PREVIEW)
 
-1. Wait for localnet families available
-1. Check that device family ipv6 address matches
+1. Wait for localnet family state ipv6 available
+1. Check that family ipv6 address matches
 
 ## feature_enumeration (PREVIEW)
 
 Check enumeration of device features
 
 1. Update config before enumeration not active:
-    * Add `discovery` = { "enumerate": { "features": `true` } }
+    * Add `discovery` = { "depths": { "features": `entries` } }
 1. Wait for enumeration not active
 1. Update config before matching enumeration generation:
     * Add `discovery.generation` = `generation start time`
@@ -288,10 +287,10 @@ Check enumeration of device features
 1. Update config before cleared enumeration generation:
     * Remove `discovery.generation`
 1. Wait for cleared enumeration generation
-1. Check that no family enumeration
+1. Check that no family enumeration exists
 1. Check that feature enumeration matches metadata
 1. Check that all enumerated features are official buckets
-1. Check that no point enumeration
+1. Check that no point enumeration exists
 
 ## gateway_proxy_events (BETA)
 
@@ -326,14 +325,14 @@ Check that pointset state does not report an unconfigured point
 
 1. Wait for pointset state matches config
 1. Wait for pointset event contains correct points
-1. Update config before pointset status does not contain removed point:
+1. Update config before pointset state does not contain removed point:
     * Remove `pointset.points[random_point]`
-1. Wait for pointset status does not contain removed point
+1. Wait for pointset state does not contain removed point
 1. Wait for pointset state matches config
 1. Wait for pointset event contains correct points
-1. Update config before pointset status contains removed point:
+1. Update config before pointset state contains restored point:
     * Add `pointset.points[random_point]` = point configuration
-1. Wait for pointset status contains removed point
+1. Wait for pointset state contains restored point
 1. Wait for pointset state matches config
 1. Wait for pointset event contains correct points
 
@@ -345,14 +344,14 @@ Check error when pointset configuration contains extraneous point
     * Add `pointset.sample_rate_sec` = `10`
 1. Wait for pointset state matches config
 1. Wait for pointset event contains correct points
-1. Update config before pointset status contains extraneous point error:
+1. Update config before pointset state contains extraneous point error:
     * Add `pointset.points[extraneous_point]` = point configuration
-1. Wait for pointset status contains extraneous point error
+1. Wait for pointset state contains extraneous point error
 1. Wait for pointset state matches config
 1. Wait for pointset event contains correct points
-1. Update config before pointset status removes extraneous point error:
+1. Update config before pointset state removes extraneous point error:
     * Remove `pointset.points[extraneous_point]`
-1. Wait for pointset status removes extraneous point error
+1. Wait for pointset state removes extraneous point error
 1. Wait for pointset state matches config
 1. Wait for pointset event contains correct points
 
@@ -372,13 +371,13 @@ Check that a device publishes correct software information in state messages
 
 Check that last_update state is correctly set in response to a config update.
 
-1. Wait for state last_config matches first config timestamp
+1. Wait for state last_config matches config timestamp
 1. Wait for state update complete
 1. Force config update to trigger another config update
-1. Wait for state last_config matches new config timestamp
+1. Wait for state last_config matches config timestamp
 1. Wait for state update complete
 1. Force config update to trigger another config update
-1. Wait for state last_config matches last config timestamp
+1. Wait for state last_config matches config timestamp
 1. Wait for state update complete
 
 ## valid_serial_no (BETA)

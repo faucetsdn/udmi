@@ -1,5 +1,6 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Sets.symmetricDifference;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.CleanDateFormat.cleanDate;
@@ -8,6 +9,7 @@ import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueGet;
+import static com.google.udmi.util.GeneralUtils.ifNullElse;
 import static com.google.udmi.util.GeneralUtils.joinOrNull;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
@@ -16,12 +18,12 @@ import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static udmi.schema.Bucket.DISCOVERY_SCAN;
 import static udmi.schema.Bucket.ENUMERATION;
 import static udmi.schema.Bucket.ENUMERATION_FAMILIES;
 import static udmi.schema.Bucket.ENUMERATION_FEATURES;
 import static udmi.schema.Bucket.ENUMERATION_POINTSET;
+import static udmi.schema.Depths.Depth.ENTRIES;
 import static udmi.schema.FamilyDiscoveryState.Phase.ACTIVE;
 import static udmi.schema.FamilyDiscoveryState.Phase.DONE;
 import static udmi.schema.FamilyDiscoveryState.Phase.PENDING;
@@ -49,13 +51,15 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import org.jetbrains.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import udmi.schema.Bucket;
 import udmi.schema.Common.ProtocolFamily;
+import udmi.schema.Depths;
+import udmi.schema.Depths.Depth;
 import udmi.schema.DiscoveryConfig;
-import udmi.schema.DiscoveryEvent;
-import udmi.schema.Enumerate;
+import udmi.schema.DiscoveryEvents;
 import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyDiscoveryState;
 import udmi.schema.FeatureDiscovery;
@@ -67,13 +71,20 @@ public class DiscoverySequences extends SequenceBase {
 
   public static final Duration SCAN_START_DELAY = Duration.ofSeconds(10);
   public static final int SCAN_START_DELAY_SEC = (int) SCAN_START_DELAY.getSeconds();
+  public static final int SCAN_START_JITTER_SEC = 3;
   private static final int SCAN_ITERATIONS = 2;
   private static final ProtocolFamily scanFamily = ProtocolFamily.VENDOR;
   private static final Date LONG_TIME_AGO = new Date(12897321);
   private Set<ProtocolFamily> metaFamilies;
+  private Date scanStartTime;
 
   private static boolean isActive(Entry<String, FeatureDiscovery> entry) {
     return ofNullable(entry.getValue().stage).orElse(STABLE).compareTo(BETA) >= 0;
+  }
+
+  @Nullable
+  private static Depth enumerationDepthIf(boolean shouldEnumerate) {
+    return shouldEnumerate ? ENTRIES : null;
   }
 
   @Before
@@ -81,9 +92,9 @@ public class DiscoverySequences extends SequenceBase {
     allowDeviceStateChange("discovery");
   }
 
-  private DiscoveryEvent runEnumeration(Enumerate enumerate) {
+  private DiscoveryEvents runEnumeration(Depths depths) {
     deviceConfig.discovery = new DiscoveryConfig();
-    deviceConfig.discovery.enumerate = enumerate;
+    deviceConfig.discovery.depths = depths;
     untilTrue("enumeration not active", () -> deviceState.discovery.generation == null);
 
     Date startTime = SemanticDate.describe("generation start time", cleanDate());
@@ -95,41 +106,48 @@ public class DiscoverySequences extends SequenceBase {
     deviceConfig.discovery.generation = null;
     untilTrue("cleared enumeration generation", () -> deviceState.discovery.generation == null);
 
-    List<DiscoveryEvent> allEvents = popReceivedEvents(DiscoveryEvent.class);
+    List<DiscoveryEvents> allEvents = popReceivedEvents(DiscoveryEvents.class);
     // Filter for enumeration events, since there will sometimes be lingering scan events.
-    List<DiscoveryEvent> enumEvents = allEvents.stream().filter(event -> event.scan_addr == null)
+    List<DiscoveryEvents> enumEvents = allEvents.stream().filter(event -> event.scan_addr == null)
         .toList();
     assertEquals("a single discovery event received", 1, enumEvents.size());
-    DiscoveryEvent event = enumEvents.get(0);
+    DiscoveryEvents event = enumEvents.get(0);
     info("Received discovery generation " + isoConvert(event.generation));
     assertEquals("matching event generation", startTime, event.generation);
     return event;
   }
 
-  private void checkSelfEnumeration(DiscoveryEvent event, Enumerate enumerate) {
-    if (isTrue(enumerate.families)) {
+  private void checkSelfEnumeration(DiscoveryEvents event, Depths depths) {
+    if (shouldEnumerate(depths.families)) {
       Set<ProtocolFamily> models = ofNullable(deviceMetadata.localnet)
           .map(localnet -> localnet.families.keySet()).orElse(null);
       Set<ProtocolFamily> events = ofNullable(event.families).map(Map::keySet)
           .orElse(null);
       checkThat("family enumeration matches", () -> models.size() == events.size());
     } else {
-      checkThat("no family enumeration", () -> event.families == null);
+      checkThat("no family enumeration exists", () -> event.families == null);
     }
 
-    if (isTrue(enumerate.features)) {
+    if (shouldEnumerate(depths.features)) {
       checkFeatureDiscovery(event.features);
     } else {
-      checkThat("no feature enumeration", () -> event.features == null);
+      checkThat("no feature enumeration exists", () -> event.features == null);
     }
 
-    if (isTrue(enumerate.points)) {
+    if (shouldEnumerate(depths.points)) {
       int expectedSize = ofNullable(deviceMetadata.pointset.points).map(HashMap::size)
           .orElse(0);
       checkThat("enumerated point count matches", () -> event.points.size() == expectedSize);
     } else {
-      checkThat("no point enumeration", () -> event.points == null);
+      checkThat("no point enumeration exists", () -> event.points == null);
     }
+  }
+
+  private boolean shouldEnumerate(Depth depth) {
+    return ifNullElse(depth, false, d -> switch (d) {
+      default -> false;
+      case ENTRIES, DETAILS -> true;
+    });
   }
 
   private void checkFeatureDiscovery(Map<String, FeatureDiscovery> features) {
@@ -158,8 +176,8 @@ public class DiscoverySequences extends SequenceBase {
   @Feature(bucket = ENUMERATION, stage = PREVIEW)
   @Summary("Check enumeration of nothing at all")
   public void empty_enumeration() {
-    Enumerate enumerate = new Enumerate();
-    DiscoveryEvent event = runEnumeration(enumerate);
+    Depths enumerate = new Depths();
+    DiscoveryEvents event = runEnumeration(enumerate);
     checkSelfEnumeration(event, enumerate);
   }
 
@@ -170,9 +188,9 @@ public class DiscoverySequences extends SequenceBase {
     if (!catchToFalse(() -> deviceMetadata.pointset.points != null)) {
       skipTest("No metadata pointset points defined");
     }
-    Enumerate enumerate = new Enumerate();
-    enumerate.points = true;
-    DiscoveryEvent event = runEnumeration(enumerate);
+    Depths enumerate = new Depths();
+    enumerate.points = ENTRIES;
+    DiscoveryEvents event = runEnumeration(enumerate);
     checkSelfEnumeration(event, enumerate);
   }
 
@@ -180,9 +198,9 @@ public class DiscoverySequences extends SequenceBase {
   @Feature(bucket = ENUMERATION_FEATURES, stage = PREVIEW)
   @Summary("Check enumeration of device features")
   public void feature_enumeration() {
-    Enumerate enumerate = new Enumerate();
-    enumerate.features = true;
-    DiscoveryEvent event = runEnumeration(enumerate);
+    Depths enumerate = new Depths();
+    enumerate.features = ENTRIES;
+    DiscoveryEvents event = runEnumeration(enumerate);
     checkSelfEnumeration(event, enumerate);
   }
 
@@ -190,9 +208,9 @@ public class DiscoverySequences extends SequenceBase {
   @Summary("Check enumeration of network families")
   @Feature(bucket = ENUMERATION_FAMILIES, stage = ALPHA)
   public void family_enumeration() {
-    Enumerate enumerate = new Enumerate();
-    enumerate.families = true;
-    DiscoveryEvent event = runEnumeration(enumerate);
+    Depths enumerate = new Depths();
+    enumerate.families = ENTRIES;
+    DiscoveryEvents event = runEnumeration(enumerate);
     checkSelfEnumeration(event, enumerate);
   }
 
@@ -200,12 +218,16 @@ public class DiscoverySequences extends SequenceBase {
   @Feature(bucket = ENUMERATION, stage = ALPHA)
   @Summary("Check enumeration of multiple categories")
   public void multi_enumeration() {
-    Enumerate enumerate = new Enumerate();
-    enumerate.families = isBucketEnabled(ENUMERATION_FAMILIES);
-    enumerate.features = isBucketEnabled(ENUMERATION_FEATURES);
-    enumerate.points = isBucketEnabled(ENUMERATION_POINTSET);
-    DiscoveryEvent event = runEnumeration(enumerate);
+    Depths enumerate = new Depths();
+    enumerate.families = enumerateIfBucketEnabled(ENUMERATION_FAMILIES);
+    enumerate.features = enumerateIfBucketEnabled(ENUMERATION_FEATURES);
+    enumerate.points = enumerateIfBucketEnabled(ENUMERATION_POINTSET);
+    DiscoveryEvents event = runEnumeration(enumerate);
     checkSelfEnumeration(event, enumerate);
+  }
+
+  private Depth enumerateIfBucketEnabled(Bucket bucket) {
+    return enumerationDepthIf(isBucketEnabled(bucket));
   }
 
   @Test(timeout = TWO_MINUTES_MS)
@@ -213,17 +235,13 @@ public class DiscoverySequences extends SequenceBase {
   @Summary("Check that a scan scheduled in the past never starts")
   public void single_scan_past() {
     initializeDiscovery();
-    Date startTime = LONG_TIME_AGO;
+    scanStartTime = LONG_TIME_AGO;
     boolean shouldEnumerate = false;
-    configureScan(startTime, null, shouldEnumerate);
-    waitFor("scan schedule initially complete",
-        () -> ifNotTrueGet(() -> scanComplete(startTime).test(scanFamily),
-            this::describedFamilyState));
+    configureScan(scanStartTime, null, shouldEnumerate);
+    waitFor("scan schedule initially complete", this::detailScanComplete);
     sleepFor("false start check delay", SCAN_START_DELAY);
-    waitFor("scan schedule still complete",
-        () -> ifNotTrueGet(() -> scanComplete(startTime).test(scanFamily),
-            this::describedFamilyState));
-    List<DiscoveryEvent> receivedEvents = popReceivedEvents(DiscoveryEvent.class);
+    waitFor("scan schedule still complete", this::detailScanComplete);
+    List<DiscoveryEvents> receivedEvents = popReceivedEvents(DiscoveryEvents.class);
     checkThat("there were no received discovery events", receivedEvents.isEmpty());
   }
 
@@ -232,28 +250,27 @@ public class DiscoverySequences extends SequenceBase {
   @Summary("Check results of a single scan scheduled soon")
   public void single_scan_future() {
     initializeDiscovery();
-    Date startTime = cleanInstantDate(Instant.now().plus(SCAN_START_DELAY));
+    checkState(scanStartTime == null, "scanStartTime not null");
+    scanStartTime = cleanInstantDate(Instant.now().plus(SCAN_START_DELAY));
     boolean shouldEnumerate = false;
-    configureScan(startTime, null, shouldEnumerate);
+    configureScan(scanStartTime, null, shouldEnumerate);
     Duration waitingPeriod = SCAN_START_DELAY.plus(SCAN_START_DELAY);
 
-    waitFor("scheduled scan pending", waitingPeriod,
-        () -> ifNotTrueGet(scanPending(startTime).test(scanFamily), this::describedFamilyState));
+    waitFor("scheduled scan pending", waitingPeriod, this::detailScanPending);
 
-    waitFor("scheduled scan start", waitingPeriod,
-        () -> ifNotTrueGet(scanActive(startTime).test(scanFamily), this::describedFamilyState));
+    waitFor("scheduled scan active", waitingPeriod, this::detailScanActive);
 
-    long delta = Math.abs(Duration.between(Instant.now(), startTime.toInstant()).toSeconds());
-    checkThat("scan start near expected generation time", delta <= SCAN_START_DELAY_SEC / 3,
-        format("scan start %ss different from expected %s", delta, isoConvert(startTime)));
+    long delta = Math.abs(
+        Duration.between(deviceState.timestamp.toInstant(), scanStartTime.toInstant()).toSeconds());
+    checkThat("scan start near expected generation time", delta <= SCAN_START_JITTER_SEC,
+        format("scan start %ss different from expected %s", delta, isoConvert(scanStartTime)));
 
-    waitFor("scheduled scan complete", waitingPeriod,
-        () -> ifNotTrueGet(scanComplete(startTime).test(scanFamily), this::describedFamilyState));
+    waitFor("scheduled scan complete", waitingPeriod, this::detailScanComplete);
 
-    List<DiscoveryEvent> events = popReceivedEvents(DiscoveryEvent.class);
+    List<DiscoveryEvents> events = popReceivedEvents(DiscoveryEvents.class);
 
     Date generation = deviceConfig.discovery.families.get(scanFamily).generation;
-    Function<DiscoveryEvent, String> invalidator = event -> invalidReasons(event, generation);
+    Function<DiscoveryEvents, String> invalidator = event -> invalidReasons(event, generation);
     checkThat("discovery events were received", !events.isEmpty());
     Set<String> reasons = events.stream().map(invalidator).filter(Objects::nonNull)
         .collect(Collectors.toSet());
@@ -278,7 +295,22 @@ public class DiscoverySequences extends SequenceBase {
     checkEnumeration(events, shouldEnumerate);
   }
 
-  private String invalidReasons(DiscoveryEvent discoveryEvent, Date scanGeneration) {
+  private String detailScanPending() {
+    return ifNotTrueGet(scanPending(scanStartTime).test(scanFamily),
+        format("Expected pending %s but %s", scanStartTime, describedFamilyState()));
+  }
+
+  private String detailScanActive() {
+    return ifNotTrueGet(scanActive(scanStartTime).test(scanFamily),
+        format("Expected active %s but %s", scanStartTime, describedFamilyState()));
+  }
+
+  private String detailScanComplete() {
+    return ifNotTrueGet(scanComplete(scanStartTime).test(scanFamily),
+        format("Expected complete %s but %s", isoConvert(scanStartTime), describedFamilyState()));
+  }
+
+  private String invalidReasons(DiscoveryEvents discoveryEvent, Date scanGeneration) {
     try {
       assertEquals("bad scan family", scanFamily, discoveryEvent.scan_family);
       assertEquals("bad generation", scanGeneration, discoveryEvent.generation);
@@ -297,8 +329,8 @@ public class DiscoverySequences extends SequenceBase {
     return ifNotNullGet(deviceState.discovery.families, map -> map.get(scanFamily));
   }
 
-  private void checkEnumeration(List<DiscoveryEvent> receivedEvents, boolean shouldEnumerate) {
-    Predicate<DiscoveryEvent> hasPoints = event -> event.points != null && !event.points.isEmpty();
+  private void checkEnumeration(List<DiscoveryEvents> receivedEvents, boolean shouldEnumerate) {
+    Predicate<DiscoveryEvents> hasPoints = event -> event.points != null && !event.points.isEmpty();
     if (shouldEnumerate) {
       checkThat("all events have points", receivedEvents.stream().allMatch(hasPoints));
     } else {
@@ -311,16 +343,17 @@ public class DiscoverySequences extends SequenceBase {
   @Summary("Check periodic scan on a fixed schedule amd enumeration")
   public void periodic_scan_fixed_enumerate() {
     initializeDiscovery();
-    Date startTime = cleanDate();
+    checkState(scanStartTime == null, "scanStartTime not null");
+    scanStartTime = cleanDate();
     boolean shouldEnumerate = true;
-    configureScan(startTime, SCAN_START_DELAY, shouldEnumerate);
+    configureScan(scanStartTime, SCAN_START_DELAY, shouldEnumerate);
     Instant endTime = Instant.now().plusSeconds(SCAN_START_DELAY.getSeconds() * SCAN_ITERATIONS);
     untilUntrue("scan iterations", () -> Instant.now().isBefore(endTime));
     ProtocolFamily oneFamily = metaFamilies.iterator().next();
     Date finishTime = deviceState.discovery.families.get(oneFamily).generation;
     checkThat("scan did not terminate prematurely",
         metaFamilies.stream().noneMatch(scanComplete(finishTime)));
-    List<DiscoveryEvent> receivedEvents = popReceivedEvents(DiscoveryEvent.class);
+    List<DiscoveryEvents> receivedEvents = popReceivedEvents(DiscoveryEvents.class);
     checkEnumeration(receivedEvents, shouldEnumerate);
   }
 
@@ -362,18 +395,18 @@ public class DiscoverySequences extends SequenceBase {
         () -> stateFamilies.keySet().stream().noneMatch(scanActive()));
   }
 
-  private void configureScan(Date startTime, Duration scanInterval, Boolean enumerate) {
+  private void configureScan(Date startTime, Duration scanInterval, boolean shouldEnumerate) {
     Integer intervalSec = ofNullable(scanInterval).map(Duration::getSeconds).map(Long::intValue)
         .orElse(null);
     info(format("%s configured for family %s starting at %s evey %ss",
-        isTrue(enumerate) ? "Enumeration" : "Scan", scanFamily, startTime,
+        isTrue(shouldEnumerate) ? "Enumeration" : "Scan", scanFamily, startTime,
         intervalSec));
     FamilyDiscoveryConfig configFamily = getConfigFamily(scanFamily);
     configFamily.generation = SemanticDate.describe("family generation", startTime);
-    configFamily.enumerate = enumerate;
+    configFamily.depth = enumerationDepthIf(shouldEnumerate);
     configFamily.scan_interval_sec = intervalSec;
     configFamily.scan_duration_sec = ofNullable(intervalSec).orElse(SCAN_START_DELAY_SEC);
-    popReceivedEvents(DiscoveryEvent.class);
+    popReceivedEvents(DiscoveryEvents.class);
   }
 
   private FamilyDiscoveryConfig getConfigFamily(ProtocolFamily family) {
@@ -415,7 +448,8 @@ public class DiscoverySequences extends SequenceBase {
   private Predicate<ProtocolFamily> scanComplete(Date startTime) {
     return family -> {
       FamilyDiscoveryState stateFamily = getStateFamily(family);
-      return dateEquals(stateFamily.generation, startTime)
+      return stateFamily != null
+          && dateEquals(stateFamily.generation, startTime)
           && (stateFamily.phase == DONE || stateFamily.phase == STOPPED)
           && deviceState.timestamp.after(startTime);
     };

@@ -1,13 +1,13 @@
 {
-  "pointset": {
-    "points": {
-      "globulating_globar": {
-        "units": "Bars"
-      }
-    }
+  "timestamp": "2020-05-01T13:39:07Z",
+  "version": "1",
+  "cloud": {
+    "auth_type": "ES256",
+    "credentials": []
   },
   "system": {
     "location": {
+      "site": "ZZ-TRI-FECTA",
       "section": "2-3N8C"
     },
     "physical_tag": {
@@ -16,15 +16,17 @@
         "site": "ZZ-TRI-FECTA",
         "name": "GAT-123"
       }
-    }
+    },
+    "min_loglevel": 300
   },
   "gateway": {
-    "proxy_ids": [ "SNS-4", "AHU-22" ]
+    "proxy_ids": []
   },
-  "cloud": {
-    "auth_type": "ES256"
-  },
-  "version": 1,
-  "timestamp": "2020-05-01T13:39:07Z"
-
+  "pointset": {
+    "points": {
+      "globulating_globar": {
+        "units": "Bars"
+      }
+    }
+  }
 }

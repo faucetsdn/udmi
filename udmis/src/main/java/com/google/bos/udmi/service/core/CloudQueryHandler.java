@@ -1,8 +1,8 @@
 package com.google.bos.udmi.service.core;
 
-import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
+import static com.google.udmi.util.GeneralUtils.requireNull;
 import static com.google.udmi.util.GeneralUtils.toDate;
 import static java.util.Objects.requireNonNull;
 
@@ -15,9 +15,9 @@ import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudQuery;
-import udmi.schema.CloudQuery.Depth;
 import udmi.schema.Common.ProtocolFamily;
-import udmi.schema.DiscoveryEvent;
+import udmi.schema.Depths.Depth;
+import udmi.schema.DiscoveryEvents;
 import udmi.schema.Envelope;
 
 /**
@@ -49,6 +49,14 @@ public class CloudQueryHandler {
     controller.debug(format, args);
   }
 
+  private void issueModifiedDevice(String deviceId) {
+    requireNonNull(deviceId, "device id");
+    issueModifiedQuery(e -> {
+      e.deviceId = deviceId;
+      e.transactionId = e.transactionId + "/d/" + deviceId;
+    });
+  }
+
   private void issueModifiedQuery(Consumer<Envelope> mutator) {
     CloudQuery cloudQuery = new CloudQuery();
     cloudQuery.generation = query.generation;
@@ -57,11 +65,11 @@ public class CloudQueryHandler {
   }
 
   private void issueModifiedRegistry(String registryId) {
-    issueModifiedQuery(e -> e.deviceRegistryId = registryId);
-  }
-
-  private void issueModifiedDevice(String id) {
-    issueModifiedQuery(e -> e.deviceId = id);
+    requireNonNull(registryId, "registry id");
+    issueModifiedQuery(e -> {
+      e.deviceRegistryId = registryId;
+      e.transactionId = e.transactionId + "/r/" + registryId;
+    });
   }
 
   private CloudModel makeCloudModel(String registryId) {
@@ -71,13 +79,15 @@ public class CloudQueryHandler {
     return cloudModel;
   }
 
-  private void publish(DiscoveryEvent discoveryEvent) {
+  private void publish(DiscoveryEvents discoveryEvent) {
     controller.publish(discoveryEvent);
   }
 
   private void queryAllRegistries() {
-    Set<String> registries = iotAccess.listRegistries();
-    DiscoveryEvent discoveryEvent = new DiscoveryEvent();
+    requireNull(envelope.deviceRegistryId, "registry id");
+    requireNull(envelope.deviceId, "device id");
+    Set<String> registries = iotAccess.getRegistries();
+    DiscoveryEvents discoveryEvent = new DiscoveryEvents();
     discoveryEvent.scan_family = ProtocolFamily.IOT;
     discoveryEvent.generation = query.generation;
     discoveryEvent.registries = registries.stream()
@@ -88,7 +98,7 @@ public class CloudQueryHandler {
     List<String> active = discoveryEvent.registries.entrySet().stream()
         .filter(entry -> entry.getValue().last_event_time != null).map(Entry::getKey).toList();
 
-    debug("Found %d registries (%d active)", registries.size(), active.size());
+    debug("Project has %d registries (%d active)", registries.size(), active.size());
 
     ifTrueThen(shouldTraverseRegistries(), () -> active.forEach(this::issueModifiedRegistry));
   }
@@ -97,7 +107,7 @@ public class CloudQueryHandler {
     String deviceRegistryId = requireNonNull(envelope.deviceRegistryId, "registry id");
     String deviceId = requireNonNull(envelope.deviceId, "device id");
 
-    DiscoveryEvent discoveryEvent = new DiscoveryEvent();
+    DiscoveryEvents discoveryEvent = new DiscoveryEvents();
     discoveryEvent.scan_family = ProtocolFamily.IOT;
     discoveryEvent.generation = query.generation;
     discoveryEvent.cloud_model = iotAccess.fetchDevice(deviceRegistryId, deviceId);
@@ -110,9 +120,11 @@ public class CloudQueryHandler {
 
   private void queryRegistryDevices() {
     String deviceRegistryId = requireNonNull(envelope.deviceRegistryId, "registry id");
+    requireNull(envelope.deviceId, "device id");
+
     CloudModel cloudModel = iotAccess.listDevices(deviceRegistryId);
 
-    DiscoveryEvent discoveryEvent = new DiscoveryEvent();
+    DiscoveryEvents discoveryEvent = new DiscoveryEvents();
     discoveryEvent.scan_family = ProtocolFamily.IOT;
     discoveryEvent.generation = query.generation;
     discoveryEvent.devices = cloudModel.device_ids.entrySet().stream().collect(Collectors.toMap(
@@ -122,37 +134,37 @@ public class CloudQueryHandler {
     List<String> active = discoveryEvent.devices.entrySet().stream()
         .filter(entry -> !isTrue(entry.getValue().blocked)).map(Entry::getKey).toList();
 
-    debug("Registry %s had %d devices (%d active)", deviceRegistryId, discoveryEvent.devices.size(),
-        active.size());
+    debug("Listed registry %s with %d devices (%d active)", deviceRegistryId,
+        discoveryEvent.devices.size(), active.size());
 
-    ifTrueThen(shouldDetailDevices(), () -> active.forEach(this::issueModifiedDevice));
+    ifTrueThen(shouldDetailEntries(), () -> active.forEach(this::issueModifiedDevice));
   }
 
-  private boolean shouldDetailDevices() {
+  private boolean shouldDetailEntries() {
     return Depth.DETAILS == query.depth;
   }
 
   private boolean shouldTraverseRegistries() {
-    return (Depth.DEVICES == query.depth) || shouldDetailDevices();
+    return (Depth.ENTRIES == query.depth) || shouldDetailEntries();
   }
 
   /**
    * Process an individual cloud query.
    */
   public synchronized void process(CloudQuery newQuery) {
-    query = newQuery;
-    envelope = controller.getContinuation(newQuery).getEnvelope();
-
-    // If the query.depth is not defined then default to recursing down one level.
-    if (envelope.deviceRegistryId == null) {
-      ifNullThen(newQuery.depth, () -> newQuery.depth = Depth.DEVICES);
-      queryAllRegistries();
-    } else if (envelope.deviceId == null) {
-      ifNullThen(newQuery.depth, () -> newQuery.depth = Depth.DETAILS);
-      queryRegistryDevices();
-    } else {
-      queryDeviceDetails();
+    try {
+      query = newQuery;
+      envelope = controller.getContinuation(newQuery).getEnvelope();
+      if (envelope.deviceRegistryId == null) {
+        queryAllRegistries();
+      } else if (envelope.deviceId == null) {
+        queryRegistryDevices();
+      } else {
+        queryDeviceDetails();
+      }
+    } finally {
+      query = null;
+      envelope = null;
     }
-    query = null;
   }
 }

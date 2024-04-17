@@ -1,5 +1,6 @@
 package com.google.udmi.util;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Sets.symmetricDifference;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.ProperPrinter.OutputFormat.COMPRESSED;
@@ -17,7 +18,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Sets;
 import com.google.common.hash.Hashing;
 import com.google.daq.mqtt.util.ValidationException;
 import com.google.udmi.util.ProperPrinter.OutputFormat;
@@ -53,6 +53,7 @@ import org.apache.commons.io.FileUtils;
 public class GeneralUtils {
 
   public static final Joiner CSV_JOINER = Joiner.on(", ");
+  public static final Joiner NEWLINE_JOINER = Joiner.on("\n");
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
       .enable(SerializationFeature.INDENT_OUTPUT)
       .setDateFormat(new ISO8601DateFormat())
@@ -148,6 +149,10 @@ public class GeneralUtils {
    * hopefully somewhat meaningful. Real debuggers will need to dig out the full stack trace!
    */
   public static String friendlyStackTrace(Throwable e) {
+    return CSV_JOINER.join(friendlyLineTrace(e)).replace('\n', ' ');
+  }
+
+  public static List<String> friendlyLineTrace(Throwable e) {
     List<String> messages = new ArrayList<>();
     while (e != null) {
       if (e instanceof ValidationException validationException) {
@@ -162,7 +167,7 @@ public class GeneralUtils {
       }
       e = e.getCause();
     }
-    return CSV_JOINER.join(messages).replace('\n', ' ');
+    return messages;
   }
 
   public static <T> T fromJsonFile(File path, Class<T> valueType) {
@@ -195,6 +200,11 @@ public class GeneralUtils {
     } catch (Exception e) {
       throw new RuntimeException("While converting to limited json string", e);
     }
+  }
+
+  public static Runnable ignoreValue(Object ignored) {
+    return () -> {
+    };
   }
 
   public static Date toDate(Instant lastSeen) {
@@ -247,6 +257,10 @@ public class GeneralUtils {
     return value == null ? elseResult : converter.apply(value);
   }
 
+  public static <T, V> V ifNullElse(T value, V elseResult, Function<T, V> converter) {
+    return value == null ? elseResult : converter.apply(value);
+  }
+
   public static <T, V> V ifNotNullGet(T value, Supplier<V> converter) {
     return value == null ? null : converter.get();
   }
@@ -255,6 +269,10 @@ public class GeneralUtils {
     if (value == null) {
       action.run();
     }
+  }
+
+  public static void requireNull(Object value, String description) {
+    checkState(value == null, description);
   }
 
   public static <T> void ifNotNullThrow(T value, String message) {
@@ -293,10 +311,7 @@ public class GeneralUtils {
   }
 
   public static <T> T ifTrueGet(Supplier<Boolean> conditional, Supplier<T> action) {
-    if (isTrue(conditional)) {
-      return action.get();
-    }
-    return null;
+    return isTrue(conditional) ? action.get() : null;
   }
 
   public static <T> T ifTrueGet(Object conditional, Supplier<T> action, Supplier<T> alternate) {
@@ -309,6 +324,10 @@ public class GeneralUtils {
 
   public static <T> T ifTrueGet(Object conditional, T value, Supplier<T> alternate) {
     return isTrue(conditional) ? value : alternate.get();
+  }
+
+  public static <T> T ifTrueGet(Object conditional, T value, T alternate) {
+    return isTrue(conditional) ? value : alternate;
   }
 
   public static <T> void ifTrueThen(Object conditional, Runnable action) {
@@ -327,8 +346,16 @@ public class GeneralUtils {
     return isTrue(conditional) ? null : supplier.get();
   }
 
+  public static <T> T ifNotTrueGet(Boolean conditional, T value) {
+    return isTrue(conditional) ? null : value;
+  }
+
   public static <T> T ifNotTrueGet(Supplier<Boolean> conditional, Supplier<T> supplier) {
     return isTrue(catchToNull(conditional)) ? null : supplier.get();
+  }
+
+  public static <T> T ifNotTrueGet(Supplier<Boolean> conditional, T value) {
+    return isTrue(catchToNull(conditional)) ? null : value;
   }
 
   public static boolean isNotTrue(Boolean value) {
@@ -372,6 +399,23 @@ public class GeneralUtils {
       return provider.get();
     } catch (Exception e) {
       return alternate.apply(e);
+    }
+  }
+
+  public static <T> T catchToElse(Supplier<T> provider, Consumer<Exception> alternate) {
+    try {
+      return provider.get();
+    } catch (Exception e) {
+      alternate.accept(e);
+      return null;
+    }
+  }
+
+  public static void catchToElse(Runnable provider, Consumer<Exception> alternate) {
+    try {
+      provider.run();
+    } catch (Exception e) {
+      alternate.accept(e);
     }
   }
 
@@ -554,5 +598,12 @@ public class GeneralUtils {
 
   public static String prefixedDifference(String prefix, Set<String> a, Set<String> b) {
     return joinOrNull(prefix, symmetricDifference(a, b));
+  }
+
+  public static String removeArg(List<String> argList, String description) {
+    if (argList.isEmpty()) {
+      throw new RuntimeException(format("Missing required %s argument", description));
+    }
+    return argList.remove(0);
   }
 }

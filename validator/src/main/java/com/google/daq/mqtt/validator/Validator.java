@@ -27,6 +27,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.JSON_SUFFIX;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
 import static com.google.udmi.util.JsonUtil.getInstant;
+import static com.google.udmi.util.SiteModel.DEVICES_DIR;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 
@@ -94,19 +95,19 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import org.apache.commons.io.FileUtils;
 import udmi.schema.Category;
-import udmi.schema.DeviceValidationEvent;
+import udmi.schema.DeviceValidationEvents;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
 import udmi.schema.ExecutionConfiguration;
 import udmi.schema.IotAccess.IotProvider;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
-import udmi.schema.PointsetEvent;
+import udmi.schema.PointsetEvents;
 import udmi.schema.PointsetState;
 import udmi.schema.PointsetSummary;
 import udmi.schema.SetupUdmiConfig;
 import udmi.schema.State;
-import udmi.schema.ValidationEvent;
+import udmi.schema.ValidationEvents;
 import udmi.schema.ValidationState;
 import udmi.schema.ValidationSummary;
 
@@ -115,7 +116,7 @@ import udmi.schema.ValidationSummary;
  */
 public class Validator {
 
-  public static final int REQUIRED_FUNCTION_VER = 12;
+  public static final int TOOLS_FUNCTIONS_VERSION = 13;
   public static final String PROJECT_PROVIDER_PREFIX = "//";
   public static final String TIMESTAMP_ZULU_SUFFIX = "Z";
   public static final String TIMESTAMP_UTC_SUFFIX_1 = "+00:00";
@@ -131,19 +132,19 @@ public class Validator {
   private static final String DEVICE_REGISTRY_ID_KEY = "deviceRegistryId";
   private static final String UNKNOWN_FOLDER_DEFAULT = "unknown";
   private static final String STATE_UPDATE_SCHEMA = "state";
-  private static final String EVENT_POINTSET_SCHEMA = "event_pointset";
+  private static final String EVENTS_POINTSET_SCHEMA = "events_pointset";
   private static final String STATE_POINTSET_SCHEMA = "state_pointset";
-  private static final String UNKNOWN_TYPE_DEFAULT = "event";
+  private static final String UNKNOWN_TYPE_DEFAULT = "events";
   private static final String CONFIG_CATEGORY = "config";
   private static final Set<String> INTERESTING_TYPES = ImmutableSet.of(
-      SubType.EVENT.value(),
+      SubType.EVENTS.value(),
       SubType.STATE.value());
   private static final Map<String, Class<?>> CONTENT_VALIDATORS = ImmutableMap.of(
       STATE_UPDATE_SCHEMA, State.class,
-      EVENT_POINTSET_SCHEMA, PointsetEvent.class,
+      EVENTS_POINTSET_SCHEMA, PointsetEvents.class,
       STATE_POINTSET_SCHEMA, PointsetState.class
   );
-  private static final Set<SubType> LAST_SEEN_SUBTYPES = ImmutableSet.of(SubType.EVENT,
+  private static final Set<SubType> LAST_SEEN_SUBTYPES = ImmutableSet.of(SubType.EVENTS,
       SubType.STATE);
   private static final long REPORT_INTERVAL_SEC = 15;
   private static final String EXCLUDE_DEVICE_PREFIX = "_";
@@ -399,14 +400,15 @@ public class Validator {
   }
 
   private void initializeExpectedDevices(String siteDir) {
-    File devicesDir = new File(siteDir, DEVICES_SUBDIR);
+    File devicesDir = new File(siteDir, DEVICES_DIR);
     List<String> siteDevices = SiteModel.listDevices(devicesDir);
     try {
       expectedDevices = ImmutableSet.copyOf(siteDevices);
+      SiteModel siteModel = new SiteModel(siteDir);
       for (String device : siteDevices) {
         ReportingDevice reportingDevice = new ReportingDevice(device);
         try {
-          Metadata metadata = SiteModel.loadDeviceMetadata(siteDir, device, Validator.class);
+          Metadata metadata = siteModel.loadDeviceMetadata(device);
           reportingDevice.setMetadata(metadata);
         } catch (Exception e) {
           outputLogger.error("Error while loading device %s: %s", device, e);
@@ -471,7 +473,7 @@ public class Validator {
     String keyFile = new File(config.site_model, GCP_REFLECT_KEY_PKCS8).getAbsolutePath();
     outputLogger.info("Loading reflector key file from " + keyFile);
     config.key_file = keyFile;
-    client = new IotReflectorClient(config, REQUIRED_FUNCTION_VER);
+    client = new IotReflectorClient(config, TOOLS_FUNCTIONS_VERSION);
   }
 
   void messageLoop() {
@@ -695,7 +697,7 @@ public class Validator {
   private void sendValidationResult(Map<String, String> origAttributes,
       ReportingDevice reportingDevice, Date now) {
     try {
-      ValidationEvent event = new ValidationEvent();
+      ValidationEvents event = new ValidationEvents();
       event.version = UDMI_VERSION;
       event.timestamp = new Date();
       String subFolder = origAttributes.get(SUBFOLDER_PROPERTY_KEY);
@@ -843,14 +845,14 @@ public class Validator {
     summary.correct_devices = new ArrayList<>();
     summary.error_devices = new ArrayList<>();
 
-    Map<String, DeviceValidationEvent> devices = new TreeMap<>();
+    Map<String, DeviceValidationEvents> devices = new TreeMap<>();
     Collection<String> targets = targetDevices.isEmpty() ? expectedDevices : targetDevices;
     for (String deviceId : reportingDevices.keySet()) {
       ReportingDevice deviceInfo = reportingDevices.get(deviceId);
       deviceInfo.expireEntries(getNow());
       boolean expected = targets.contains(deviceId);
       if (deviceInfo.hasErrors()) {
-        DeviceValidationEvent event = getValidationEvent(devices, deviceInfo);
+        DeviceValidationEvents event = getValidationEvents(devices, deviceInfo);
         event.status = ReportingDevice.getSummaryEntry(deviceInfo.getErrors(null, null));
         if (expected) {
           summary.error_devices.add(deviceId);
@@ -859,7 +861,7 @@ public class Validator {
           event.status.level = Level.WARNING.value();
         }
       } else if (deviceInfo.seenRecently(getNow())) {
-        DeviceValidationEvent event = getValidationEvent(devices, deviceInfo);
+        DeviceValidationEvents event = getValidationEvents(devices, deviceInfo);
         event.status = ReportingDevice.getSummaryEntry(deviceInfo.getErrors(null, null));
         if (expected) {
           summary.correct_devices.add(deviceId);
@@ -877,12 +879,13 @@ public class Validator {
     sendValidationReport(makeValidationReport(summary, devices));
   }
 
-  private DeviceValidationEvent getValidationEvent(Map<String, DeviceValidationEvent> devices,
+  private DeviceValidationEvents getValidationEvents(Map<String, DeviceValidationEvents> devices,
       ReportingDevice deviceInfo) {
-    DeviceValidationEvent deviceValidationEvent = devices.computeIfAbsent(deviceInfo.getDeviceId(),
-        key -> new DeviceValidationEvent());
-    deviceValidationEvent.last_seen = deviceInfo.getLastSeen();
-    return deviceValidationEvent;
+    DeviceValidationEvents deviceValidationEvents = devices.computeIfAbsent(
+        deviceInfo.getDeviceId(),
+        key -> new DeviceValidationEvents());
+    deviceValidationEvents.last_seen = deviceInfo.getLastSeen();
+    return deviceValidationEvents;
   }
 
   private Instant getNow() {
@@ -890,7 +893,7 @@ public class Validator {
   }
 
   private ValidationState makeValidationReport(ValidationSummary summary,
-      Map<String, DeviceValidationEvent> devices) {
+      Map<String, DeviceValidationEvents> devices) {
     ValidationState report = new ValidationState();
     report.version = UDMI_VERSION;
     report.timestamp = new Date();

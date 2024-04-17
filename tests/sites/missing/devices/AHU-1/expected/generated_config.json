@@ -6,6 +6,12 @@
     "metrics_rate_sec": 10,
     "operation": { }
   },
+  "localnet": {
+    "families": {
+      "ether": { },
+      "ipv4": { }
+    }
+  },
   "pointset": {
     "points": {
       "filter_alarm_pressure_status": {

@@ -22,8 +22,9 @@ import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.GeneralUtils.toJsonFile;
 import static com.google.udmi.util.GeneralUtils.toJsonString;
 import static com.google.udmi.util.JsonUtil.isoConvert;
+import static com.google.udmi.util.JsonUtil.parseJson;
 import static com.google.udmi.util.JsonUtil.safeSleep;
-import static com.google.udmi.util.JsonUtil.stringifyTerse;
+import static com.google.udmi.util.JsonUtil.stringify;
 import static daq.pubber.MqttDevice.CONFIG_TOPIC;
 import static daq.pubber.MqttDevice.ERRORS_TOPIC;
 import static daq.pubber.MqttDevice.STATE_TOPIC;
@@ -37,9 +38,9 @@ import static udmi.schema.BlobsetConfig.SystemBlobsets.IOT_ENDPOINT_CONFIG;
 import static udmi.schema.EndpointConfiguration.Protocol.MQTT;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap.Builder;
 import com.google.daq.mqtt.util.CatchingScheduledThreadPoolExecutor;
 import com.google.udmi.util.GeneralUtils;
-import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.MessageDowngrader;
 import com.google.udmi.util.SchemaVersion;
 import com.google.udmi.util.SiteModel;
@@ -85,7 +86,7 @@ import udmi.schema.CloudModel.Auth_type;
 import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.Config;
 import udmi.schema.DevicePersistent;
-import udmi.schema.DiscoveryEvent;
+import udmi.schema.DiscoveryEvents;
 import udmi.schema.DiscoveryState;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.EndpointConfiguration.Protocol;
@@ -98,12 +99,12 @@ import udmi.schema.Level;
 import udmi.schema.LocalnetState;
 import udmi.schema.Metadata;
 import udmi.schema.Operation.SystemMode;
-import udmi.schema.PointsetEvent;
+import udmi.schema.PointsetEvents;
 import udmi.schema.PointsetState;
 import udmi.schema.PubberConfiguration;
 import udmi.schema.PubberOptions;
 import udmi.schema.State;
-import udmi.schema.SystemEvent;
+import udmi.schema.SystemEvents;
 import udmi.schema.SystemState;
 
 /**
@@ -126,15 +127,15 @@ public class Pubber extends ManagerBase implements ManagerHost {
   private static final int DEFAULT_REPORT_SEC = 10;
   private static final String SYSTEM_CATEGORY_FORMAT = "system.%s.%s";
   private static final ImmutableMap<Class<?>, String> MESSAGE_TOPIC_SUFFIX_MAP =
-      new ImmutableMap.Builder<Class<?>, String>()
-          .put(State.class, MqttDevice.STATE_TOPIC)
-          .put(ExtraSystemState.class, MqttDevice.STATE_TOPIC) // Used for badState option
-          .put(SystemEvent.class, getEventsSuffix("system"))
-          .put(PointsetEvent.class, getEventsSuffix("pointset"))
+      new Builder<Class<?>, String>()
+          .put(State.class, STATE_TOPIC)
+          .put(ExtraSystemState.class, STATE_TOPIC) // Used for badState option
+          .put(SystemEvents.class, getEventsSuffix("system"))
+          .put(PointsetEvents.class, getEventsSuffix("pointset"))
           .put(ExtraPointsetEvent.class, getEventsSuffix("pointset"))
           .put(InjectedMessage.class, getEventsSuffix("racoon"))
-          .put(InjectedState.class, MqttDevice.STATE_TOPIC)
-          .put(DiscoveryEvent.class, getEventsSuffix("discovery"))
+          .put(InjectedState.class, STATE_TOPIC)
+          .put(DiscoveryEvents.class, getEventsSuffix("discovery"))
           .build();
   private static final Map<String, String> INVALID_REPLACEMENTS = ImmutableMap.of(
       "events/blobset", "\"\"",
@@ -434,7 +435,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
   private void writePersistentStore() {
     checkState(persistentData != null, "persistent data not defined");
     toJsonFile(getPersistentStore(), persistentData);
-    warn("Updating persistent store: " + stringifyTerse(persistentData));
+    warn("Updating persistent store:\n" + stringify(persistentData));
     deviceManager.setPersistentData(persistentData);
   }
 
@@ -726,7 +727,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
         throw new RuntimeException("Config latch timeout");
       }
     } catch (Exception e) {
-      throw new RuntimeException("While waiting for config latch", e);
+      throw new RuntimeException(format("While waiting for %s config latch", deviceId), e);
     }
   }
 
@@ -904,8 +905,8 @@ public class Pubber extends ManagerBase implements ManagerHost {
       processConfigUpdate(config);
       if (configLatch.getCount() > 0) {
         warn("Received config for config latch " + deviceId);
+        configLatch.countDown();
       }
-      configLatch.countDown();
       publisherConfigLog("apply", null, deviceId);
     } catch (Exception e) {
       publisherConfigLog("apply", e, deviceId);
@@ -982,10 +983,15 @@ public class Pubber extends ManagerBase implements ManagerHost {
     if (deviceState.blobset == null) {
       return;
     }
-    deviceState.blobset.blobs.remove(blobId.value());
+
+    if (deviceState.blobset.blobs.remove(blobId.value()) == null) {
+      return;
+    }
+
     if (deviceState.blobset.blobs.isEmpty()) {
       deviceState.blobset = null;
     }
+
     markStateDirty();
   }
 
@@ -1027,7 +1033,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
       }
     }
 
-    info("New config blob endpoint detected");
+    info("New config blob endpoint detected:\n" + stringify(parseJson(extractedSignature)));
 
     try {
       attemptedEndpoint = extractedSignature;
@@ -1036,6 +1042,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
       resetConnection(extractedSignature);
       persistEndpoint(extractedEndpoint);
       endpointState.phase = BlobPhase.FINAL;
+      markStateDirty();
     } catch (Exception e) {
       try {
         error("Reconfigure failed, attempting connection to last working endpoint", e);
@@ -1117,7 +1124,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
     } catch (Exception e) {
       EndpointConfiguration endpointConfiguration = new EndpointConfiguration();
       endpointConfiguration.error = e.toString();
-      return JsonUtil.stringify(endpointConfiguration);
+      return stringify(endpointConfiguration);
     }
   }
 
@@ -1220,7 +1227,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
         throw new RuntimeException("Timeout waiting for state send");
       }
     } catch (Exception e) {
-      throw new RuntimeException("While waiting for state send latch", e);
+      throw new RuntimeException(format("While waiting for %s state send latch", deviceId), e);
     }
   }
 

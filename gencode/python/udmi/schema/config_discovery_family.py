@@ -8,7 +8,7 @@ class FamilyDiscoveryConfig:
     self.generation = None
     self.scan_interval_sec = None
     self.scan_duration_sec = None
-    self.enumerate = None
+    self.depth = None
 
   @staticmethod
   def from_dict(source):
@@ -18,7 +18,7 @@ class FamilyDiscoveryConfig:
     result.generation = source.get('generation')
     result.scan_interval_sec = source.get('scan_interval_sec')
     result.scan_duration_sec = source.get('scan_duration_sec')
-    result.enumerate = source.get('enumerate')
+    result.depth = source.get('depth')
     return result
 
   @staticmethod
@@ -45,6 +45,6 @@ class FamilyDiscoveryConfig:
       result['scan_interval_sec'] = self.scan_interval_sec # 5
     if self.scan_duration_sec:
       result['scan_duration_sec'] = self.scan_duration_sec # 5
-    if self.enumerate:
-      result['enumerate'] = self.enumerate # 5
+    if self.depth:
+      result['depth'] = self.depth # 5
     return result

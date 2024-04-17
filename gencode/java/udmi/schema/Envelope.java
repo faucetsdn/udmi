@@ -30,6 +30,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
     "gatewayId",
     "transactionId",
     "publishTime",
+    "rawFolder",
     "subFolder",
     "subType"
 })
@@ -71,6 +72,8 @@ public class Envelope {
     public String transactionId;
     @JsonProperty("publishTime")
     public Date publishTime;
+    @JsonProperty("rawFolder")
+    public String rawFolder;
     /**
      * 
      * (Required)
@@ -87,6 +90,7 @@ public class Envelope {
         result = ((result* 31)+((this.deviceRegistryLocation == null)? 0 :this.deviceRegistryLocation.hashCode()));
         result = ((result* 31)+((this.publishTime == null)? 0 :this.publishTime.hashCode()));
         result = ((result* 31)+((this.subFolder == null)? 0 :this.subFolder.hashCode()));
+        result = ((result* 31)+((this.rawFolder == null)? 0 :this.rawFolder.hashCode()));
         result = ((result* 31)+((this.source == null)? 0 :this.source.hashCode()));
         result = ((result* 31)+((this.deviceId == null)? 0 :this.deviceId.hashCode()));
         result = ((result* 31)+((this.transactionId == null)? 0 :this.transactionId.hashCode()));
@@ -108,7 +112,7 @@ public class Envelope {
             return false;
         }
         Envelope rhs = ((Envelope) other);
-        return (((((((((((((this.deviceRegistryLocation == rhs.deviceRegistryLocation)||((this.deviceRegistryLocation!= null)&&this.deviceRegistryLocation.equals(rhs.deviceRegistryLocation)))&&((this.publishTime == rhs.publishTime)||((this.publishTime!= null)&&this.publishTime.equals(rhs.publishTime))))&&((this.subFolder == rhs.subFolder)||((this.subFolder!= null)&&this.subFolder.equals(rhs.subFolder))))&&((this.source == rhs.source)||((this.source!= null)&&this.source.equals(rhs.source))))&&((this.deviceId == rhs.deviceId)||((this.deviceId!= null)&&this.deviceId.equals(rhs.deviceId))))&&((this.transactionId == rhs.transactionId)||((this.transactionId!= null)&&this.transactionId.equals(rhs.transactionId))))&&((this.deviceNumId == rhs.deviceNumId)||((this.deviceNumId!= null)&&this.deviceNumId.equals(rhs.deviceNumId))))&&((this.payload == rhs.payload)||((this.payload!= null)&&this.payload.equals(rhs.payload))))&&((this.deviceRegistryId == rhs.deviceRegistryId)||((this.deviceRegistryId!= null)&&this.deviceRegistryId.equals(rhs.deviceRegistryId))))&&((this.subType == rhs.subType)||((this.subType!= null)&&this.subType.equals(rhs.subType))))&&((this.projectId == rhs.projectId)||((this.projectId!= null)&&this.projectId.equals(rhs.projectId))))&&((this.gatewayId == rhs.gatewayId)||((this.gatewayId!= null)&&this.gatewayId.equals(rhs.gatewayId))));
+        return ((((((((((((((this.deviceRegistryLocation == rhs.deviceRegistryLocation)||((this.deviceRegistryLocation!= null)&&this.deviceRegistryLocation.equals(rhs.deviceRegistryLocation)))&&((this.publishTime == rhs.publishTime)||((this.publishTime!= null)&&this.publishTime.equals(rhs.publishTime))))&&((this.subFolder == rhs.subFolder)||((this.subFolder!= null)&&this.subFolder.equals(rhs.subFolder))))&&((this.rawFolder == rhs.rawFolder)||((this.rawFolder!= null)&&this.rawFolder.equals(rhs.rawFolder))))&&((this.source == rhs.source)||((this.source!= null)&&this.source.equals(rhs.source))))&&((this.deviceId == rhs.deviceId)||((this.deviceId!= null)&&this.deviceId.equals(rhs.deviceId))))&&((this.transactionId == rhs.transactionId)||((this.transactionId!= null)&&this.transactionId.equals(rhs.transactionId))))&&((this.deviceNumId == rhs.deviceNumId)||((this.deviceNumId!= null)&&this.deviceNumId.equals(rhs.deviceNumId))))&&((this.payload == rhs.payload)||((this.payload!= null)&&this.payload.equals(rhs.payload))))&&((this.deviceRegistryId == rhs.deviceRegistryId)||((this.deviceRegistryId!= null)&&this.deviceRegistryId.equals(rhs.deviceRegistryId))))&&((this.subType == rhs.subType)||((this.subType!= null)&&this.subType.equals(rhs.subType))))&&((this.projectId == rhs.projectId)||((this.projectId!= null)&&this.projectId.equals(rhs.projectId))))&&((this.gatewayId == rhs.gatewayId)||((this.gatewayId!= null)&&this.gatewayId.equals(rhs.gatewayId))));
     }
 
     @Generated("jsonschema2pojo")
@@ -168,8 +172,9 @@ public class Envelope {
     public enum SubType {
 
         INVALID("invalid"),
-        EVENT("event"),
-        COMMAND("command"),
+        EVENTS("events"),
+        ERRORS("errors"),
+        COMMANDS("commands"),
         CONFIG("config"),
         STATE("state"),
         QUERY("query"),

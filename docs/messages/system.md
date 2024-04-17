@@ -15,9 +15,9 @@ Primarily used for things like logging, general status, firmware management, etc
 
 ## Event
 
-- **Schema Definition:** [event_system.json](../../schema/event_system.json)
- ([_🧬View_](../../gencode/docs/event_system.html))
-- [Working `event_system` Example](../../tests/schemas/event_system/example.json)
+- **Schema Definition:** [events_system.json](../../schema/events_system.json)
+ ([_🧬View_](../../gencode/docs/events_system.html))
+- [Working `events_system` Example](../../tests/schemas/events_system/example.json)
 
 ## Metadata
 

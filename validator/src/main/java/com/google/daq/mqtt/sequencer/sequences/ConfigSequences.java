@@ -3,9 +3,11 @@ package com.google.daq.mqtt.sequencer.sequences;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.daq.mqtt.sequencer.SequenceBase.Capabilities.LOGGING;
+import static com.google.daq.mqtt.sequencer.SequenceBase.Capabilities.MATCHING_SUBBLOCKS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.THREE_MINUTES_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
+import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static java.lang.String.format;
@@ -41,8 +43,8 @@ import udmi.schema.Level;
  */
 public class ConfigSequences extends SequenceBase {
 
-  // Delay to wait to let a device apply a new config.
-  private static final long CONFIG_THRESHOLD_SEC = 10;
+  // Delay to wait to let a device apply and log a new config.
+  private static final long CONFIG_THRESHOLD_SEC = 20;
   // Delay after receiving a parse error to ensure an apply entry has not been received.
   private static final long LOG_APPLY_DELAY_MS = 1000;
   // How frequently to send out confg queries for device config acked check.
@@ -52,15 +54,16 @@ public class ConfigSequences extends SequenceBase {
   @Feature(stage = STABLE, bucket = SYSTEM)
   @Summary("Check that last_update state is correctly set in response to a config update.")
   @ValidateSchema(SubFolder.SYSTEM)
+  @Capability(value = MATCHING_SUBBLOCKS, stage = ALPHA)
   public void system_last_update() {
-    untilTrue("state last_config matches first config timestamp", this::lastConfigUpdated);
-    untilTrue("state update complete", this::deviceStateComplete);
+    waitFor("state last_config matches config timestamp", this::lastConfigUpdated);
+    waitForCapability(MATCHING_SUBBLOCKS, "state update complete", this::stateMatchesConfig);
     forceConfigUpdate("trigger another config update");
-    untilTrue("state last_config matches new config timestamp", this::lastConfigUpdated);
-    untilTrue("state update complete", this::deviceStateComplete);
+    waitFor("state last_config matches config timestamp", this::lastConfigUpdated);
+    waitForCapability(MATCHING_SUBBLOCKS, "state update complete", this::stateMatchesConfig);
     forceConfigUpdate("trigger another config update");
-    untilTrue("state last_config matches last config timestamp", this::lastConfigUpdated);
-    untilTrue("state update complete", this::deviceStateComplete);
+    waitFor("state last_config matches config timestamp", this::lastConfigUpdated);
+    waitForCapability(MATCHING_SUBBLOCKS, "state update complete", this::stateMatchesConfig);
   }
 
   @Test(timeout = TWO_MINUTES_MS)
@@ -86,8 +89,12 @@ public class ConfigSequences extends SequenceBase {
     deviceConfig.system.min_loglevel = Level.INFO.value();
     untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
     checkNotLogged(SYSTEM_CONFIG_APPLY, Level.WARNING);
-    checkThat(format("device config resolved within %ss", CONFIG_THRESHOLD_SEC), () ->
-        Instant.now().isBefore(startTime.plusSeconds(CONFIG_THRESHOLD_SEC)));
+    Instant expectedFinish = startTime.plusSeconds(CONFIG_THRESHOLD_SEC);
+    Instant logFinished = Instant.now();
+    checkThat(format("device config resolved within %ss", CONFIG_THRESHOLD_SEC),
+        ifTrueGet(logFinished.isAfter(expectedFinish),
+            format("apply log took until %s, expected before %s", isoConvert(logFinished),
+                isoConvert(expectedFinish))));
 
     deviceConfig.system.min_loglevel = Level.WARNING.value();
     updateConfig("warning loglevel");

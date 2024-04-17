@@ -28,6 +28,9 @@
     "site_model": {
       "type": "string"
     },
+    "src_file": {
+      "type": "string"
+    },
     "registry_suffix": {
       "type": "string"
     },
@@ -41,7 +44,7 @@
       "type": "string"
     },
     "iot_provider": {
-      "$ref": "file:common.json#/definitions/provider"
+      "$ref": "file:common.json#/definitions/iot_provider"
     },
     "reflector_endpoint": {
       "$ref": "file:configuration_endpoint.json"

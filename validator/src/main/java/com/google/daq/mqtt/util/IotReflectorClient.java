@@ -27,7 +27,6 @@ import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -37,6 +36,7 @@ import org.jetbrains.annotations.Nullable;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
 import udmi.schema.Credential;
+import udmi.schema.Envelope.SubFolder;
 import udmi.schema.ExecutionConfiguration;
 import udmi.schema.SetupUdmiConfig;
 
@@ -49,7 +49,7 @@ public class IotReflectorClient implements IotProvider {
   public static final String CLOUD_MODEL_TOPIC = "cloud/model";
   public static final String REFLECTOR_PREFIX = "RC:";
   // Requires functions that support cloud device manager support.
-  private static final String UPDATE_CONFIG_TOPIC = "update/config";
+  private static final String CONFIG_TOPIC_FORMAT = "%s/config";
   private static final File ERROR_DIR = new File("out");
   private final com.google.bos.iot.core.proxy.IotReflectorClient messageClient;
   private final Map<String, CompletableFuture<Map<String, Object>>> futures =
@@ -65,7 +65,7 @@ public class IotReflectorClient implements IotProvider {
     SiteModel siteModel = new SiteModel(executionConfiguration.site_model);
     executionConfiguration.key_file = siteModel.validatorKey();
     messageClient = new com.google.bos.iot.core.proxy.IotReflectorClient(executionConfiguration,
-        Validator.REQUIRED_FUNCTION_VER);
+        Validator.TOOLS_FUNCTIONS_VERSION);
     executor.execute(this::processReplies);
   }
 
@@ -81,8 +81,8 @@ public class IotReflectorClient implements IotProvider {
   }
 
   @Override
-  public void updateConfig(String deviceId, String config) {
-    transaction(deviceId, UPDATE_CONFIG_TOPIC, config, QuerySpeed.LONG);
+  public void updateConfig(String deviceId, SubFolder subFolder, String config) {
+    transaction(deviceId, format(CONFIG_TOPIC_FORMAT, subFolder.value()), config, QuerySpeed.LONG);
   }
 
   @Override
@@ -94,7 +94,7 @@ public class IotReflectorClient implements IotProvider {
 
   @Override
   public void updateDevice(String deviceId, CloudModel device) {
-    device.operation = Operation.UPDATE;
+    device.operation = ofNullable(device.operation).orElse(Operation.UPDATE);
     cloudModelTransaction(deviceId, CLOUD_MODEL_TOPIC, device);
   }
 
@@ -143,9 +143,8 @@ public class IotReflectorClient implements IotProvider {
   }
 
   @Override
-  public Set<String> fetchDeviceIds(String forGatewayId) {
-    return ofNullable(fetchCloudModel(forGatewayId))
-        .map(model -> model.device_ids.keySet()).orElse(null);
+  public Map<String, CloudModel> fetchCloudModels(String forGatewayId) {
+    return ofNullable(fetchCloudModel(forGatewayId)).map(model -> model.device_ids).orElse(null);
   }
 
   @Nullable

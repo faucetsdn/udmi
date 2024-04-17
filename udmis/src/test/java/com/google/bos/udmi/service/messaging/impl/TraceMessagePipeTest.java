@@ -14,6 +14,7 @@ import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.udmi.util.JsonUtil;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,8 +26,8 @@ import udmi.schema.EndpointConfiguration.Protocol;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
-import udmi.schema.PointPointsetEvent;
-import udmi.schema.PointsetEvent;
+import udmi.schema.PointPointsetEvents;
+import udmi.schema.PointsetEvents;
 
 /**
  * Unit tests for a trace message pipe.
@@ -39,6 +40,7 @@ public class TraceMessagePipeTest {
   private static final String DEVICE_TWO = "two";
   private static final String VALUE_ONE = "value1";
   private static final String VALUE_TWO = "value2";
+  private static final Date FIRST_PUBLISHED = new Date(1681554607000L);
   private final List<Bundle> consumed = new ArrayList<>();
 
   @SuppressWarnings("unchecked")
@@ -63,13 +65,13 @@ public class TraceMessagePipeTest {
   private Bundle traceOutBundle(String deviceId, Object presentValue) {
     Envelope envelope = new Envelope();
     envelope.subFolder = SubFolder.POINTSET;
-    envelope.subType = SubType.EVENT;
+    envelope.subType = SubType.EVENTS;
     envelope.deviceId = deviceId;
     envelope.deviceRegistryId = TEST_REGISTRY;
     envelope.projectId = TEST_PROJECT;
-    PointsetEvent message = new PointsetEvent();
+    PointsetEvents message = new PointsetEvents();
     message.points = new HashMap<>();
-    message.points.computeIfAbsent(TEST_POINT, key -> new PointPointsetEvent()).present_value =
+    message.points.computeIfAbsent(TEST_POINT, key -> new PointPointsetEvents()).present_value =
         presentValue;
     return new Bundle(envelope, message);
   }
@@ -91,8 +93,8 @@ public class TraceMessagePipeTest {
     Envelope envelope = convertTo(Envelope.class, stringObjectMap.get("attributes"));
     assertEquals(DEVICE_ONE, envelope.deviceId, "received envelope deviceId");
 
-    PointsetEvent pointsetEvent =
-        fromString(PointsetEvent.class, decodeBase64((String) stringObjectMap.get("data")));
+    PointsetEvents pointsetEvent =
+        fromString(PointsetEvents.class, decodeBase64((String) stringObjectMap.get("data")));
     assertEquals(VALUE_TWO, pointsetEvent.points.get(TEST_POINT).present_value,
         "received point value");
   }
@@ -118,5 +120,8 @@ public class TraceMessagePipeTest {
         consumed.stream().filter(bundle -> TEST_DEVICE.equals(extractMessage(bundle).get("device")))
             .count();
     assertEquals(2, deviceCount, "expected count of device " + TEST_DEVICE);
+
+    Bundle bundle = consumed.get(0);
+    assertEquals(FIRST_PUBLISHED, bundle.envelope.publishTime, "first message publish time");
   }
 }

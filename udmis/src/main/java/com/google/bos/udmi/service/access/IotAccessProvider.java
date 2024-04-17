@@ -1,8 +1,9 @@
 package com.google.bos.udmi.service.access;
 
+import static com.google.common.base.Preconditions.checkState;
 import static java.lang.String.format;
 
-import com.google.bos.udmi.service.pod.ContainerProvider;
+import com.google.bos.udmi.service.pod.UdmiComponent;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -16,7 +17,7 @@ import udmi.schema.IotAccess.IotProvider;
 /**
  * Interface for things that provide for iot-access controls for connecting to devices.
  */
-public interface IotAccessProvider extends ContainerProvider {
+public interface IotAccessProvider extends UdmiComponent {
 
   Map<IotProvider, Class<? extends IotAccessBase>> PROVIDERS = ImmutableMap.of(
       IotProvider.DYNAMIC, DynamicIotAccessProvider.class,
@@ -30,6 +31,8 @@ public interface IotAccessProvider extends ContainerProvider {
    */
   static IotAccessProvider from(IotAccess iotAccess) {
     try {
+      checkState(PROVIDERS.containsKey(iotAccess.provider),
+          "Unknown access provider " + iotAccess.provider);
       return PROVIDERS.get(iotAccess.provider).getDeclaredConstructor(IotAccess.class)
           .newInstance(iotAccess);
     } catch (Exception e) {
@@ -49,7 +52,7 @@ public interface IotAccessProvider extends ContainerProvider {
   /**
    * Get all registries associated with this provider.
    */
-  Set<String> listRegistries();
+  Set<String> getRegistries();
 
   boolean isEnabled();
 
@@ -58,7 +61,8 @@ public interface IotAccessProvider extends ContainerProvider {
   CloudModel modelResource(String deviceRegistryId, String deviceId,
       CloudModel cloudModel);
 
-  String modifyConfig(String registryId, String deviceId, Function<String, String> munger);
+  String modifyConfig(String registryId, String deviceId,
+      Function<Entry<Long, String>, String> munger);
 
   void sendCommandBase(String registryId, String deviceId, SubFolder folder,
       String message);

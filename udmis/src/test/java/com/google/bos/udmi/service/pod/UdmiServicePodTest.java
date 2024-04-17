@@ -47,14 +47,14 @@ import udmi.schema.UdmiState;
  */
 public class UdmiServicePodTest {
 
+  public static final String EMPTY_CONFIG = "{}";
   private static final String BASE_CONFIG = "src/test/configs/base_pod.json";
   private static final String BRIDGE_CONFIG = "src/test/configs/bridge_pod.json";
   private static final String FILE_CONFIG = "src/test/configs/trace_pod.json";
-  private static final String TARGET_FILE1 = "traces/simple/devices/AHU-22/002_event_pointset.json";
-  private static final String TARGET_FILE2 = "traces/simple/devices/AHU-22/003_event_pointset.json";
+  private static final String TRACE_FILE1 = "traces/simple/devices/AHU-22/002_events_pointset.json";
+  private static final String TRACE_FILE2 = "traces/simple/devices/AHU-22/003_events_pointset.json";
   private static final long RECEIVE_TIMEOUT_SEC = 2;
   private static final long RECEIVE_TIMEOUT_MS = RECEIVE_TIMEOUT_SEC * 1000;
-  public static final String EMPTY_CONFIG = "{}";
 
   private Bundle getReflectorStateBundle() {
     HashMap<Object, Object> messageMap = new HashMap<>();
@@ -64,6 +64,13 @@ public class UdmiServicePodTest {
     bundle.envelope.deviceRegistryId = REFLECT_BASE;
     bundle.envelope.deviceId = TEST_REGISTRY;
     return bundle;
+  }
+
+  private Envelope makeTestEnvelope() {
+    Envelope envelope = new Envelope();
+    envelope.deviceId = TEST_DEVICE;
+    envelope.deviceRegistryId = TEST_REGISTRY;
+    return envelope;
   }
 
   private EndpointConfiguration reverseFlow(EndpointConfiguration flow) {
@@ -98,13 +105,6 @@ public class UdmiServicePodTest {
     LocalIotAccessProvider iotAccess = UdmiServicePod.getComponent(IOT_ACCESS_COMPONENT);
     List<String> commands = iotAccess.getCommands();
     assertEquals(3, commands.size(), "sent commands");
-  }
-
-  private Envelope makeTestEnvelope() {
-    Envelope envelope = new Envelope();
-    envelope.deviceId = TEST_DEVICE;
-    envelope.deviceRegistryId = TEST_REGISTRY;
-    return envelope;
   }
 
   @Test
@@ -142,24 +142,6 @@ public class UdmiServicePodTest {
   }
 
   @Test
-  public void podFileTest() throws Exception {
-    UdmiServicePod pod = new UdmiServicePod(arrayOf(FILE_CONFIG));
-    PodConfiguration podConfiguration = pod.getPodConfiguration();
-    File outDir = new File(podConfiguration.bridges.get("trace").from.send_id);
-    deleteDirectory(outDir);
-    File targetFile1 = new File(outDir, TARGET_FILE1);
-    File targetFile2 = new File(outDir, TARGET_FILE2);
-    assertFalse(targetFile1.exists(), "file should not exist " + targetFile1.getAbsolutePath());
-    assertFalse(targetFile2.exists(), "file should not exist " + targetFile2.getAbsolutePath());
-    pod.activate();
-    assertTrue(UdmiServicePod.READY_INDICATOR.exists(), "readiness indicator file missing");
-    Thread.sleep(RECEIVE_TIMEOUT_MS);
-    pod.shutdown();
-    boolean exists = targetFile1.exists() || targetFile2.exists();
-    assertTrue(exists, format("missing target file %s or %s", targetFile1, targetFile2));
-  }
-
-  @Test
   public void failedActivation() {
     UdmiServicePod pod = new UdmiServicePod(arrayOf(BASE_CONFIG));
     UdmiServicePod.getComponent(LocalIotAccessProvider.class).setFailureForTest();
@@ -172,6 +154,24 @@ public class UdmiServicePodTest {
     }
     assertFalse(success, "pod activation should not return");
     assertFalse(UdmiServicePod.READY_INDICATOR.exists(), "readiness indicator file exists");
+  }
+
+  @Test
+  public void podFileTest() throws Exception {
+    UdmiServicePod pod = new UdmiServicePod(arrayOf(FILE_CONFIG));
+    PodConfiguration podConfiguration = pod.getPodConfiguration();
+    File outDir = new File(podConfiguration.bridges.get("trace").from.send_id);
+    deleteDirectory(outDir);
+    File targetFile1 = new File(outDir, TRACE_FILE1);
+    File targetFile2 = new File(outDir, TRACE_FILE2);
+    assertFalse(targetFile1.exists(), "file should not exist " + targetFile1.getAbsolutePath());
+    assertFalse(targetFile2.exists(), "file should not exist " + targetFile2.getAbsolutePath());
+    pod.activate();
+    assertTrue(UdmiServicePod.READY_INDICATOR.exists(), "readiness indicator file missing");
+    Thread.sleep(RECEIVE_TIMEOUT_MS);
+    pod.shutdown();
+    boolean exists = targetFile1.exists() || targetFile2.exists();
+    assertTrue(exists, format("missing target file %s or %s", targetFile1, targetFile2));
   }
 
   @Test
@@ -203,7 +203,7 @@ public class UdmiServicePodTest {
     });
 
     LocalMessagePipe distributor =
-        new LocalMessagePipe(reverseFlow(podConfig.distributors.get("distrib")));
+        new LocalMessagePipe(reverseFlow(podConfig.flows.get("distributor")));
     Bundle distributedBundle = distributor.poll();
     assertEquals(REFLECT_BASE, distributedBundle.envelope.deviceRegistryId, "registry id");
     assertEquals(TEST_REGISTRY, distributedBundle.envelope.deviceId, "site id");

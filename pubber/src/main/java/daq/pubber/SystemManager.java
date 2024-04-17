@@ -9,6 +9,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.isoConvert;
+import static com.google.udmi.util.JsonUtil.stringify;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNullElse;
 import static java.util.Optional.ofNullable;
@@ -37,7 +38,7 @@ import udmi.schema.PubberConfiguration;
 import udmi.schema.StateSystemHardware;
 import udmi.schema.StateSystemOperation;
 import udmi.schema.SystemConfig;
-import udmi.schema.SystemEvent;
+import udmi.schema.SystemEvents;
 import udmi.schema.SystemState;
 
 /**
@@ -149,8 +150,8 @@ public class SystemManager extends ManagerBase {
     }
   }
 
-  private SystemEvent getSystemEvent() {
-    SystemEvent systemEvent = new SystemEvent();
+  private SystemEvents getSystemEvent() {
+    SystemEvents systemEvent = new SystemEvents();
     systemEvent.last_config = systemState.last_config;
     return systemEvent;
   }
@@ -192,7 +193,7 @@ public class SystemManager extends ManagerBase {
   }
 
   private void sendSystemEvent() {
-    SystemEvent systemEvent = getSystemEvent();
+    SystemEvents systemEvent = getSystemEvent();
     systemEvent.metrics = new Metrics();
     Runtime runtime = Runtime.getRuntime();
     systemEvent.metrics.mem_free_mb = (double) runtime.freeMemory() / BYTES_PER_MEGABYTE;
@@ -230,6 +231,13 @@ public class SystemManager extends ManagerBase {
   }
 
   void updateConfig(SystemConfig system, Date timestamp) {
+    Integer oldBase = catchToNull(() -> systemConfig.testing.config_base);
+    Integer newBase = catchToNull(() -> system.testing.config_base);
+    if (oldBase != null && oldBase.equals(newBase)
+        && !stringify(systemConfig).equals(stringify(system))) {
+      error("Panic! Duplicate config_base detected: " + oldBase);
+      System.exit(-22);
+    }
     systemConfig = system;
     systemState.last_config = ifNotTrueGet(options.noLastConfig, () -> timestamp);
     updateInterval(ifNotNullGet(system, config -> config.metrics_rate_sec));
@@ -317,6 +325,7 @@ public class SystemManager extends ManagerBase {
   }
 
   class ExtraSystemState extends SystemState {
+
     public String extraField;
   }
 }
