@@ -8,8 +8,12 @@ if [[ $# != 0 ]]; then
     false
 fi
 
-export MQTT_USER=scrupulous
-export MQTT_PASS=monkey
+AUTH_USER=scrumptious
+AUTH_PASS=aardvark
+MQTT_USER=rocket
+MQTT_PASS=monkey
+OTHR_USER=kiwi
+OTHR_PASS=possum
 
 bin/start_mosquitto
 
@@ -20,16 +24,28 @@ serial_no=$RANDOM
 site_config=$site_path/cloud_iot_config.json
 cloud_region=$(jq -r .cloud_region $site_config)
 registry_id=$(jq -r .registry_id $site_config)
+client_id=$registry_id/$device_id
+othr_id=$registry_id/other
+
+mosquitto_ctrl -u $AUTH_USER -P $AUTH_PASS dynsec createClient $MQTT_USER -p $MQTT_PASS -c $client_id
+mosquitto_ctrl -u $AUTH_USER -P $AUTH_PASS dynsec createClient $OTHR_USER -p $OTHR_PASS -c $othr_id
 
 killall mosquitto_sub || true
 
-echo Subscribing to mqtt/test in the background...
-mosquitto_sub -F "%t %p" -t \# -u ${MQTT_USER} -P ${MQTT_PASS} > out/mosquitto.sub &
+topic=/mqtt/test
+
+echo Subscribing to all topics in the background...
+mosquitto_sub -F "%t %p" -t '#' -u ${MQTT_USER} -P ${MQTT_PASS} -i $client_id > out/mosquitto.sub &
 
 sleep 1
 
 echo Publishing test message
-mosquitto_pub -t mqtt/test -u ${MQTT_USER} -P ${MQTT_PASS} -m "Hello MQTT"
+mosquitto_pub -t $topic -u ${OTHR_USER} -P ${OTHR_PASS} -i $othr_id -m "Hello Racket"
+
+sleep 1
+
+echo Checking received message
+fgrep Racket out/mosquitto.sub
 
 sleep 1
 
@@ -38,7 +54,7 @@ cat <<EOF > /tmp/pubber_config.json
     "endpoint": {
       "protocol": "mqtt",
       "transport": "tcp",
-      "client_id": "$registry_id/$device_id",
+      "client_id": "$client_id",
       "hostname": "127.0.0.1",
       "msg_prefix": "/$serial_no/$device_id",
       "config_sync_sec": -1,
@@ -64,7 +80,7 @@ pubber/bin/build
 rm -rf sites/udmi_site_model/out/devices/$device_id/persistent_data.json
 
 echo Publishing empty config to /$serial_no/$device_id/config
-mosquitto_pub -r -t /$serial_no/$device_id/config -u ${MQTT_USER} -P ${MQTT_PASS} -r -m "{}"
+mosquitto_pub -r -t /$serial_no/$device_id/config -u ${MQTT_USER} -P ${MQTT_PASS} -i $client_id -m "{}"
 
 echo Running pubber for 10s...
 timeout 10s pubber/bin/run /tmp/pubber_config.json || true

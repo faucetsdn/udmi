@@ -6,9 +6,9 @@ UDMI_FILE=$ETC_DIR/confg.d/udmi.conf
 PASS_FILE=$ETC_DIR/mosquitto.passwd
 DYN_FILE=$ETC_DIR/dynamic_security.json
 
-[[ -n $MQTT_USER ]] || MQTT_USER=scrumptious
-[[ -n $MQTT_PASS ]] || MQTT_PASS=aardvark
-echo Configuring MQTT user: $MQTT_USER
+AUTH_USER=scrumptious
+AUTH_PASS=aardvark
+echo Configuring MQTT user: $AUTH_USER
 
 sudo sed -i 's/allow_anonymous true/allow_anonymous false/' $CONF_FILE
 sudo sed -i 's/#listener/listener/' $CONF_FILE
@@ -23,17 +23,28 @@ if ! fgrep -q $DYN_FILE $CONF_FILE; then
 fi
 
 if [[ ! -f $DYN_FILE ]]; then
-    sudo mosquitto_ctrl dynsec init $DYN_FILE $MQTT_USER -P $MQTT_PASS
+    echo Creating new $DYN_FILE
+    sudo mosquitto_ctrl dynsec init $DYN_FILE $AUTH_USER $AUTH_PASS
+    sudo chgrp mosquitto $DYN_FILE
+    sudo chmod 0660 $DYN_FILE
 fi
 
-sudo touch $PASS_FILE $DYN_FILE
-sudo chmod 0660 $PASS_FILE $DYN_FILE
-sudo chown root $PASS_FILE
-sudo chown mosquitto $DYN_FILE $CONF_FILE
-sudo chgrp mosquitto $PASS_FILE $DYN_FILE $CONF_FILE
+sudo chown mosquitto $ETC_DIR
 
-sudo mosquitto_passwd -b ${PASS_FILE} ${MQTT_USER} ${MQTT_PASS}
+sudo mosquitto_passwd -b ${PASS_FILE} ${AUTH_USER} ${AUTH_PASS}
 
 sudo systemctl restart mosquitto
+echo
 
-#systemctl status mosquitto
+mosquitto_ctrl -u $AUTH_USER -P $AUTH_PASS dynsec setDefaultACLAccess publishClientSend allow
+mosquitto_ctrl -u $AUTH_USER -P $AUTH_PASS dynsec setDefaultACLAccess subscribe allow
+mosquitto_ctrl -u scrumptious -P aardvark dynsec getDefaultACLAccess
+
+clients=$(mosquitto_ctrl -u ${AUTH_USER} -P ${AUTH_PASS} dynsec listClients)
+if [[ $clients =~ ${AUTH_USER} ]]; then
+    echo Found expected client $AUTH_USER
+else
+    fail Improper client: $clients
+fi
+
+echo use: systemctl status mosquitto
