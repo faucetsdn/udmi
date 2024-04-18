@@ -1,4 +1,4 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 
 ETC_DIR=/etc/mosquitto
 CONF_FILE=$ETC_DIR/mosquitto.conf
@@ -35,6 +35,9 @@ sudo touch $PASS_FILE
 sudo mosquitto_passwd -b ${PASS_FILE} ${AUTH_USER} ${AUTH_PASS}
 
 sudo systemctl restart mosquitto
+
+echo
+systemctl status mosquitto
 echo
 
 mosquitto_ctrl -u $AUTH_USER -P $AUTH_PASS dynsec setDefaultACLAccess publishClientSend allow
