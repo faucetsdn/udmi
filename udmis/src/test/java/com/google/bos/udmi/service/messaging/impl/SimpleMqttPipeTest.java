@@ -17,7 +17,7 @@ class SimpleMqttPipeTest extends MessagePipeTestBase {
   private static final String BROKER_URL = System.getenv(TEST_BROKER_ENV);
   private static final String URL_FORMAT = "(.+)://(.+):(.+)";
   private static final Pattern URL_PATTERN = Pattern.compile(URL_FORMAT);
-  private static final String TEST_USERNAME = "scrumptus";
+  private static final String TEST_USERNAME = "scrumptious";
   private static final String TEST_PASSWORD = "aardvark";
 
   protected boolean environmentIsEnabled() {
