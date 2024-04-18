@@ -36,13 +36,13 @@ sudo mosquitto_passwd -b ${PASS_FILE} ${AUTH_USER} ${AUTH_PASS}
 
 sudo systemctl restart mosquitto
 
-echo
-systemctl status mosquitto
-echo
-
-mosquitto_ctrl -u $AUTH_USER -P $AUTH_PASS dynsec setDefaultACLAccess publishClientSend allow
-mosquitto_ctrl -u $AUTH_USER -P $AUTH_PASS dynsec setDefaultACLAccess subscribe allow
-mosquitto_ctrl -u scrumptious -P aardvark dynsec getDefaultACLAccess
+CTRL_CONNECT="-u $AUTH_USER -P $AUTH_PASS"
+mosquitto_ctrl $CTRL_CONNECT dynsec createRole device
+mosquitto_ctrl $CTRL_CONNECT dynsec addRoleACL device subscribePattern '/#' allow
+mosquitto_ctrl $CTRL_CONNECT dynsec addRoleACL device publishClientSend '/#' allow
+mosquitto_ctrl $CTRL_CONNECT dynsec createRole service
+mosquitto_ctrl $CTRL_CONNECT dynsec addRoleACL service subscribePattern '/#' allow
+mosquitto_ctrl $CTRL_CONNECT dynsec addRoleACL service publishClientSend '/#' allow
 
 clients=$(mosquitto_ctrl -u ${AUTH_USER} -P ${AUTH_PASS} dynsec listClients)
 if [[ $clients =~ ${AUTH_USER} ]]; then
