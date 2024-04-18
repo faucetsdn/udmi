@@ -28,7 +28,9 @@ client_id=$registry_id/$device_id
 othr_id=$registry_id/other
 
 mosquitto_ctrl -u $AUTH_USER -P $AUTH_PASS dynsec createClient $MQTT_USER -p $MQTT_PASS -c $client_id
+mosquitto_ctrl -u $AUTH_USER -P $AUTH_PASS dynsec addClientRole $MQTT_USER device
 mosquitto_ctrl -u $AUTH_USER -P $AUTH_PASS dynsec createClient $OTHR_USER -p $OTHR_PASS -c $othr_id
+mosquitto_ctrl -u $AUTH_USER -P $AUTH_PASS dynsec addClientRole $OTHR_USER service
 
 killall mosquitto_sub || true
 
