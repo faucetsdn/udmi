@@ -49,6 +49,12 @@ sleep 1
 echo Checking received message
 fgrep Racket out/mosquitto.sub
 
+DEV_USER=nobody
+hash_pass=$(sha256sum < $site_path/devices/$device_id/rsa_private.pkcs8)
+dev_pass=${hash_pass:0:8}
+mosquitto_ctrl -u $AUTH_USER -P $AUTH_PASS dynsec createClient $DEV_USER -p $dev_pass -c $client_id
+mosquitto_ctrl -u $AUTH_USER -P $AUTH_PASS dynsec addClientRole $DEV_USER device
+
 sleep 1
 
 cat <<EOF > /tmp/pubber_config.json
@@ -63,8 +69,8 @@ cat <<EOF > /tmp/pubber_config.json
       "port": 1883,
       "auth_provider": {
         "basic": {
-          "username": "$MQTT_USER",
-          "password": "$MQTT_PASS"
+          "username": "$DEV_USER",
+          "password": "$dev_pass"
         }
       }
     },
