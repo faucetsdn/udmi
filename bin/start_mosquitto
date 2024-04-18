@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash -ex
 
 ETC_DIR=/etc/mosquitto
 CONF_FILE=$ETC_DIR/mosquitto.conf
