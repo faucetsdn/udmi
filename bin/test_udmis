@@ -4,7 +4,7 @@ ROOT=$(dirname $0)/..
 cd $ROOT
 
 echo Checking for properly configured mosquitto...
-fgrep -q scrumptus /etc/mosquitto/test_mosquitto.passwd || (echo mosquitto not configured; false)
+sudo fgrep -q scrumptious /etc/mosquitto/dynamic_security.json || (echo mosquitto dynamic security not configured; false)
 
 echo Checking that mqtt broker is running
 sudo netstat -nlpa | fgrep :1883
