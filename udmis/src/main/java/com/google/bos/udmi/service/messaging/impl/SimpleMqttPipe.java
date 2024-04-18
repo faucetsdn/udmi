@@ -145,7 +145,7 @@ public class SimpleMqttPipe extends MessageBase {
 
   private MqttMessage makeMqttMessage(Bundle bundle) {
     MqttMessage message = new MqttMessage();
-    message.setPayload(bundle.payload.getBytes());
+    message.setPayload(bundle.getSendBytes());
     return message;
   }
 

@@ -15,6 +15,7 @@ import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.fromString;
 import static com.google.udmi.util.JsonUtil.parseJson;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static java.lang.String.format;
 import static java.util.Objects.isNull;
 import static java.util.Objects.requireNonNull;
@@ -524,6 +525,13 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     public Bundle(Map<String, String> attributes, Object message) {
       this.attributesMap = attributes;
       this.message = message;
+    }
+
+    public byte[] getSendBytes() {
+      checkState(message == null || payload == null, "no message or payload");
+      checkState(!(message != null && payload != null), "no message or payload");
+      String send = ifNotNullGet(message, m -> stringifyTerse(message), payload);
+      return send.getBytes();
     }
   }
 
