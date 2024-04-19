@@ -1,35 +1,52 @@
 #!/bin/bash -e
 
-if [ $# != 3 ]; then
-    echo $0 site_path project_id device_id
+if [ $# != 2 ]; then
+    echo $0 site_path project_spec
     false
 fi
 
-ROOT_DIR=$(dirname $0)/..
+UDMI_ROOT=$(realpath $(dirname $0)/..)
+source $UDMI_ROOT/etc/shell_common.sh
 
 site_path=$(realpath $1)
-project=$2
-device=$3
-shift 3
+project_spec=$2
+registry_id=$3
+shift 2
 
 config_file=$site_path/cloud_iot_config.json
-device_dir=$site_path/devices/$device 
+registry_id=$(jq -r .registry_id $config_file)
+key_file=$site_path/reflector/rsa_private.pkcs8
 
-if [ ! -d $site_path/devices/$device ]; then
-    echo Device directory $device_dir not found.
-    false
+partial=${project_spec#//}
+project_id=${partial#*/}
+project_id=${project_id%/*}
+protocol=${partial%%/*}
+namespace=${project_spec##*/}
+REFLECT_REGISTRY=UDMI-REFLECT
+REGISTRY_REGION=us-central1
+
+[[ -n $namespace ]] && namespace_prefix=${namespace}~
+use_registry=$namespace_prefix$registry_id
+
+echo Provisioning reflector protocol $protocol project $project_id registry $use_registry
+
+if [[ $protocol == mqtt ]]; then
+    echo Adding registry $use_registry
+    ETCD="$UDMI_ROOT/udmis/bin/etcdctl --endpoints localhost:2379"
+    registries=$($ETCD get --print-value-only /registries)
+    updated=${registries},$use_registry
+    updated=${updated#,}
+    $ETCD put /registries "$updated"
+    echo Updated registries to $updated
+
+    PASSWORD_FILE=/etc/mosquitto/test_mosquitto.passwd
+    USERNAME=$project_id/$namespace_prefix$REFLECT_REGISTRY/$use_registry
+    hash=$(sha256sum $key_file)
+    PASSWORD=${hash:0:8}
+    echo Provisioning hash-key $USERNAME $PASSWORD
+    sudo mosquitto_passwd -b ${PASSWORD_FILE} ${USERNAME} ${PASSWORD}
+    sudo systemctl restart mosquitto
+    echo Device password provisioned
+else
+    fail Unable to provision protocol $protocol
 fi
-
-device=AHU-1
-registry=registrar_test
-region=us-central1
-key_gen=RS256
-key_type=rsa-pem
-key_file=$device_dir/rsa_public.pem
-
-$ROOT_DIR/bin/keygen $key_gen $device_dir
-
-gcloud_opts="--device=$device --registry=$registry --region=$region --project=$project"
-yes | gcloud iot devices credentials clear $gcloud_opts
-gcloud iot devices credentials create $gcloud_opts --type=$key_type --path=$key_file
-

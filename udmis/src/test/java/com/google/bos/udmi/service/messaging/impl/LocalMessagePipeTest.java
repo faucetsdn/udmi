@@ -25,7 +25,7 @@ public class LocalMessagePipeTest extends MessagePipeTestBase {
     return JsonUtil.asMap(bundles.get(0));
   }
 
-  public void augmentConfig(EndpointConfiguration config) {
+  public void augmentConfig(EndpointConfiguration config, boolean reversed) {
     config.protocol = Protocol.LOCAL;
   }
 

@@ -1,0 +1,54 @@
+#!/bin/bash -e
+
+ETC_DIR=/etc/mosquitto
+CONF_FILE=$ETC_DIR/mosquitto.conf
+UDMI_FILE=$ETC_DIR/confg.d/udmi.conf
+PASS_FILE=$ETC_DIR/mosquitto.passwd
+DYN_FILE=$ETC_DIR/dynamic_security.json
+
+AUTH_USER=scrumptious
+AUTH_PASS=aardvark
+echo Configuring MQTT user: $AUTH_USER
+
+sudo sed -i 's/allow_anonymous true/allow_anonymous false/' $CONF_FILE
+sudo sed -i 's/#listener/listener/' $CONF_FILE
+fgrep $PASS_FILE $CONF_FILE || (echo password_file ${PASS_FILE} | sudo tee -a $CONF_FILE)
+
+if ! fgrep -q $DYN_FILE $CONF_FILE; then
+    PLUGIN_FILE=$(whereis -b mosquitto_dynamic_security.so | awk '{print $2}')
+    ls -l "$PLUGIN_FILE"
+    echo Installing dynamic security plugin $PLUGIN_FILE
+    echo plugin $PLUGIN_FILE | sudo tee -a $CONF_FILE
+    echo plugin_opt_config_file $DYN_FILE | sudo tee -a $CONF_FILE
+fi
+
+if [[ ! -f $DYN_FILE ]]; then
+    echo Creating new $DYN_FILE
+    sudo mosquitto_ctrl dynsec init $DYN_FILE $AUTH_USER $AUTH_PASS
+    sudo chgrp mosquitto $DYN_FILE
+    sudo chmod 0660 $DYN_FILE
+fi
+
+sudo chown mosquitto $ETC_DIR
+
+sudo touch $PASS_FILE
+sudo mosquitto_passwd -b ${PASS_FILE} ${AUTH_USER} ${AUTH_PASS}
+
+sudo systemctl restart mosquitto
+
+CTRL_CONNECT="-u $AUTH_USER -P $AUTH_PASS"
+mosquitto_ctrl $CTRL_CONNECT dynsec createRole device
+mosquitto_ctrl $CTRL_CONNECT dynsec addRoleACL device subscribePattern '/#' allow
+mosquitto_ctrl $CTRL_CONNECT dynsec addRoleACL device publishClientSend '/#' allow
+mosquitto_ctrl $CTRL_CONNECT dynsec createRole service
+mosquitto_ctrl $CTRL_CONNECT dynsec addRoleACL service subscribePattern '/#' allow
+mosquitto_ctrl $CTRL_CONNECT dynsec addRoleACL service publishClientSend '/#' allow
+
+clients=$(mosquitto_ctrl -u ${AUTH_USER} -P ${AUTH_PASS} dynsec listClients)
+if [[ $clients =~ ${AUTH_USER} ]]; then
+    echo Found expected client $AUTH_USER
+else
+    fail Improper client: $clients
+fi
+
+echo use: systemctl status mosquitto

@@ -10,7 +10,7 @@ import udmi.schema.EndpointConfiguration.Protocol;
 public class PubSubPipeTest extends MessagePipeTestBase {
 
   @Override
-  protected void augmentConfig(EndpointConfiguration configuration) {
+  protected void augmentConfig(EndpointConfiguration configuration, boolean reversed) {
     configuration.protocol = Protocol.PUBSUB;
   }
 

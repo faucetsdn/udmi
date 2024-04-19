@@ -65,7 +65,7 @@
   "iot_access": {
     "iot-access": {
       "provider": "dynamic",
-      "project_id": "clearblade-iot-core, UDMI-REFLECT"
+      "project_id": "clearblade-iot-core, UDMI-REFLECT, implicit"
     },
     "clearblade-iot-core": {
       "provider": "clearblade",
@@ -81,7 +81,7 @@
   "iot_data": {
     "database": {
       "provider": "etcd",
-      "project_id": "http://${ETCD_CLUSTER}-0.${ETCD_CLUSTER}:2379",
+      "project_id": "http://${ETCD_CLUSTER}:2379",
       "options": "enabled=${ETCD_CLUSTER}"
     }
   },

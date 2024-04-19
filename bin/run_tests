@@ -54,6 +54,7 @@ case "$1" in
     test_wrap bin/gencode check
     test_wrap pubber/bin/build check
     test_wrap validator/bin/build check
+    test_wrap udmis/bin/build check
     test_wrap bin/test_pylint
     ;;
   schema_tests)

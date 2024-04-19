@@ -7,6 +7,7 @@ import static com.google.udmi.util.GeneralUtils.copyFields;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThrow;
 import static com.google.udmi.util.GeneralUtils.mergeObject;
 import static com.google.udmi.util.JsonUtil.loadFileStrictRequired;
 import static com.google.udmi.util.JsonUtil.stringify;
@@ -27,11 +28,9 @@ import com.google.bos.udmi.service.core.TargetProcessor;
 import com.google.bos.udmi.service.support.IotDataProvider;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -120,6 +119,19 @@ public class UdmiServicePod extends ContainerBase {
     return udmiConfig;
   }
 
+  private static PodConfiguration loadRecursive(File loadFile) {
+    System.err.println("Loading config file " + loadFile.getAbsolutePath());
+    PodConfiguration loaded = loadFileStrictRequired(PodConfiguration.class, loadFile);
+    return ifNotNullGet(loaded.include, include -> {
+      File includeRaw = new File(include);
+      File includeFile =
+          includeRaw.isAbsolute() ? includeRaw : new File(loadFile.getParentFile(), include);
+      PodConfiguration underConfig = loadRecursive(includeFile);
+      loaded.include = null;
+      return mergeObject(underConfig, loaded);
+    }, loaded);
+  }
+
   /**
    * Instantiate and activate the service pod.
    */
@@ -136,13 +148,13 @@ public class UdmiServicePod extends ContainerBase {
   }
 
   private static PodConfiguration makePodConfiguration(String[] args) {
-    AtomicReference<PodConfiguration> config = new AtomicReference<>(new PodConfiguration());
-    Arrays.stream(args).forEach(arg -> {
-      System.err.println("Processing config file " + arg);
-      config.set(mergeObject(config.get(), loadFileStrictRequired(PodConfiguration.class, arg)));
-    });
-    System.err.println(stringify(config.get()));
-    return config.get();
+    if (args.length != 1) {
+      throw new RuntimeException("Exactly one argument expected: pod_config.json");
+    }
+    PodConfiguration config = loadRecursive(new File(args[0]));
+    System.err.println(stringify(config));
+    ifNotNullThrow(config.include, "unresolved config include directive");
+    return config;
   }
 
   public static <T> T maybeGetComponent(Class<T> clazz) {
@@ -189,11 +201,6 @@ public class UdmiServicePod extends ContainerBase {
     putComponent(name, () -> IotAccessProvider.from(config));
   }
 
-  private void createIotData(String name, IotAccess config) {
-    config.name = name;
-    putComponent(name, () -> IotDataProvider.from(config));
-  }
-
   private void createBridge(String name, BridgePodConfiguration config) {
     String enabled = variableSubstitution(config.enabled);
     if (enabled != null && enabled.isEmpty()) {
@@ -217,6 +224,11 @@ public class UdmiServicePod extends ContainerBase {
     Class<? extends ProcessorBase> clazz = PROCESSORS.get(name);
     setConfigName(config, name);
     putComponent(name, () -> ProcessorBase.create(clazz, makeConfig(config)));
+  }
+
+  private void createIotData(String name, IotAccess config) {
+    config.name = name;
+    putComponent(name, () -> IotDataProvider.from(config));
   }
 
   private EndpointConfiguration makeConfig(EndpointConfiguration defined) {

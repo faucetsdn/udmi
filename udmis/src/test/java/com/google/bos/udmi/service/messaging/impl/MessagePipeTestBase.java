@@ -23,6 +23,7 @@ import udmi.schema.LocalnetState;
 public abstract class MessagePipeTestBase extends MessageTestBase {
 
   private static final long RECEIVE_TIMEOUT_MS = 1000;
+  private static final String EXCEPTION_PAYLOAD = "";
 
   /**
    * Get a dispatcher for the given configuration.
@@ -93,6 +94,7 @@ public abstract class MessagePipeTestBase extends MessageTestBase {
     Bundle bundle = new Bundle();
     bundle.envelope.subType = SubType.EVENTS;
     bundle.envelope.subFolder = SubFolder.ERROR;
+    bundle.payload = EXCEPTION_PAYLOAD;
     return bundle;
   }
 

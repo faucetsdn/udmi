@@ -1,5 +1,6 @@
 package com.google.bos.udmi.service.access;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -48,7 +49,7 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
   private static final int CONFIG_UPDATE_MAX_RETRIES = 10;
   private static final Duration REGISTRY_REFRESH = Duration.ofMinutes(10);
   private static final Duration REGISTRY_BACKOFF = Duration.ofMinutes(1);
-  final Map<String, Object> options;
+  final Map<String, String> options;
   private final AtomicReference<Instant> lastRegistryFetch =
       new AtomicReference<>(Instant.ofEpochSecond(0));
   private CompletableFuture<Map<String, String>> registryRegions;
