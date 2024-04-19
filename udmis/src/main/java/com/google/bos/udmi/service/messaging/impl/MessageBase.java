@@ -527,6 +527,9 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
       this.message = message;
     }
 
+    /**
+     * Get the actual send bytes for this bundle, either from raw payload or message object.
+     */
     public byte[] getSendBytes() {
       checkState(message != null || payload != null, "no message or payload");
       checkState(message == null || payload == null, "both message and payload");
