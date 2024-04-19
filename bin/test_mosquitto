@@ -28,8 +28,10 @@ registry_id=$(jq -r .registry_id $site_config)
 mqtt_id=$registry_id/testing
 othr_id=$registry_id/other
 
+mosquitto_ctrl -u $AUTH_USER -P $AUTH_PASS dynsec deleteClient $MQTT_USER || true
 mosquitto_ctrl -u $AUTH_USER -P $AUTH_PASS dynsec createClient $MQTT_USER -p $MQTT_PASS -c $mqtt_id
 mosquitto_ctrl -u $AUTH_USER -P $AUTH_PASS dynsec addClientRole $MQTT_USER device
+mosquitto_ctrl -u $AUTH_USER -P $AUTH_PASS dynsec deleteClient $OTHR_USER || true
 mosquitto_ctrl -u $AUTH_USER -P $AUTH_PASS dynsec createClient $OTHR_USER -p $OTHR_PASS -c $othr_id
 mosquitto_ctrl -u $AUTH_USER -P $AUTH_PASS dynsec addClientRole $OTHR_USER service
 
@@ -54,6 +56,7 @@ DEV_USER=nobody
 hash_pass=$(sha256sum < $site_path/devices/$device_id/rsa_private.pkcs8)
 dev_pass=${hash_pass:0:8}
 dev_id=$registry_id/$device_id
+mosquitto_ctrl -u $AUTH_USER -P $AUTH_PASS dynsec deleteClient $DEV_USER || true
 mosquitto_ctrl -u $AUTH_USER -P $AUTH_PASS dynsec createClient $DEV_USER -p $dev_pass -c $dev_id
 mosquitto_ctrl -u $AUTH_USER -P $AUTH_PASS dynsec addClientRole $DEV_USER device
 
@@ -94,6 +97,9 @@ mosquitto_pub -r -t /$registry_id/$device_id/config -u ${MQTT_USER} -P ${MQTT_PA
 
 echo Running pubber for 10s...
 timeout 10s pubber/bin/run /tmp/pubber_config.json || true
+
+echo Killing background clients
+killall mosquitto_sub || true
 
 echo Received client logs:
 cat out/mosquitto.sub
