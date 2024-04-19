@@ -15,7 +15,6 @@ import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.fromString;
 import static com.google.udmi.util.JsonUtil.parseJson;
 import static com.google.udmi.util.JsonUtil.stringify;
-import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static java.lang.String.format;
 import static java.util.Objects.isNull;
 import static java.util.Objects.requireNonNull;
@@ -27,6 +26,7 @@ import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.AtomicDouble;
+import com.google.udmi.util.JsonUtil;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.AbstractMap.SimpleEntry;
@@ -528,10 +528,9 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     }
 
     public byte[] getSendBytes() {
-      checkState(message == null || payload == null, "no message or payload");
-      checkState(!(message != null && payload != null), "no message or payload");
-      String send = ifNotNullGet(message, m -> stringifyTerse(message), payload);
-      return send.getBytes();
+      checkState(message != null || payload != null, "no message or payload");
+      checkState(message == null || payload == null, "both message and payload");
+      return ofNullable(message).map(JsonUtil::stringifyTerse).orElse(payload).getBytes();
     }
   }
 

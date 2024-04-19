@@ -193,6 +193,7 @@ public class SimpleMqttPipe extends MessageBase {
     try {
       scheduledFuture.cancel(false);
       mqttClient.disconnect();
+      mqttClient.close();
     } catch (Exception e) {
       throw new RuntimeException("While shutdown of mqtt pipe", e);
     }
@@ -246,11 +247,6 @@ public class SimpleMqttPipe extends MessageBase {
   @Override
   void resetForTest() {
     super.resetForTest();
-    try {
-      mqttClient.disconnect();
-      mqttClient.close();
-    } catch (Exception e) {
-      throw new RuntimeException("While resetting mqtt client", e);
-    }
+    shutdown();
   }
 }
