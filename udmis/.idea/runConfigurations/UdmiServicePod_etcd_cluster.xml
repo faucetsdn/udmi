@@ -1,18 +1,16 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="UdmiServicePod ClearBlade" type="Application" factoryName="Application">
+  <configuration default="false" name="UdmiServicePod etcd cluster" type="Application" factoryName="Application">
     <option name="ALTERNATIVE_JRE_PATH" value="17" />
     <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
     <envs>
-      <env name="CLEARBLADE_CONFIGURATION" value="$USER_HOME$/creds/bos-platform-dev-credentials.json" />
       <env name="GCP_PROJECT" value="bos-platform-dev" />
       <env name="UDMI_PREFIX" value="peringknife~" />
-      <env name="CLEARBLADE_PROJECT" value="bos-platform-dev" />
-      <env name="BITBOX_DISCOVERY" value="prodev~udmi_target-discover" />
+      <env name="ETCD_CLUSTER" value="localhost" />
     </envs>
     <output_file path="out/console.log" is_save="true" />
     <option name="MAIN_CLASS_NAME" value="com.google.bos.udmi.service.pod.UdmiServicePod" />
     <module name="udmis" />
-    <option name="PROGRAM_PARAMETERS" value="etc/prod_pod.json etc/udmis_dev.json" />
+    <option name="PROGRAM_PARAMETERS" value="etc/dev_pod.json" />
     <extension name="coverage">
       <pattern>
         <option name="PATTERN" value="com.google.bos.udmi.service.core.*" />

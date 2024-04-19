@@ -259,6 +259,9 @@ jobs:
         run: bin/test_mosquitto
       - name: bin/test_udmis
         run: bin/test_udmis
+      - name: mosquitto debug
+        if: ${{ !cancelled() }}
+        run: sudo cat /etc/mosquitto/dynamic_security.json
       - name: support bundle
         if: ${{ !cancelled() }}
         run: bin/support ${{ github.repository_owner }}_${{ github.job }}_
