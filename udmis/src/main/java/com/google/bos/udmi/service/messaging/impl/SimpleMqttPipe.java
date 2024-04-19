@@ -3,7 +3,6 @@ package com.google.bos.udmi.service.messaging.impl;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
-import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.JsonUtil.toStringMap;
@@ -13,7 +12,6 @@ import static java.util.Optional.ofNullable;
 import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.common.base.Strings;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -145,7 +143,7 @@ public class SimpleMqttPipe extends MessageBase {
 
   private MqttMessage makeMqttMessage(Bundle bundle) {
     MqttMessage message = new MqttMessage();
-    message.setPayload(bundle.getSendBytes());
+    message.setPayload(bundle.sendBytes());
     return message;
   }
 

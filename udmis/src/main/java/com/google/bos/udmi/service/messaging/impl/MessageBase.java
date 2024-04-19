@@ -530,7 +530,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     /**
      * Get the actual send bytes for this bundle, either from raw payload or message object.
      */
-    public byte[] getSendBytes() {
+    public byte[] sendBytes() {
       checkState(message != null || payload != null, "no message or payload");
       checkState(message == null || payload == null, "both message and payload");
       return ofNullable(message).map(JsonUtil::stringifyTerse).orElse(payload).getBytes();
