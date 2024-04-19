@@ -110,7 +110,8 @@ public class CloudQueryHandler {
     List<String> active = discoveryEvent.registries.entrySet().stream()
         .filter(entry -> entry.getValue().last_event_time != null).map(Entry::getKey).toList();
 
-    debug("Project has %d registries (%d active)", registries.size(), active.size());
+    debug("Project has %d registries (%d active) %s", registries.size(), active.size(),
+        envelope.transactionId);
 
     ifTrueThen(shouldTraverseRegistries(), () -> active.forEach(this::issueModifiedRegistry));
   }
@@ -125,7 +126,7 @@ public class CloudQueryHandler {
     discoveryEvent.cloud_model = iotAccess.fetchDevice(deviceRegistryId, deviceId);
     discoveryEvent.cloud_model.operation = null;
 
-    debug("Detailed device %s/%s", deviceRegistryId, deviceId);
+    debug("Detailed device %s/%s %s", deviceRegistryId, deviceId, envelope.transactionId);
 
     publish(discoveryEvent);
   }
@@ -146,8 +147,8 @@ public class CloudQueryHandler {
     List<String> active = discoveryEvent.devices.entrySet().stream()
         .filter(entry -> !isTrue(entry.getValue().blocked)).map(Entry::getKey).toList();
 
-    debug("Listed registry %s with %d devices (%d active)", deviceRegistryId,
-        discoveryEvent.devices.size(), active.size());
+    debug("Listed registry %s with %d devices (%d active) %s", deviceRegistryId,
+        discoveryEvent.devices.size(), active.size(), envelope.transactionId);
 
     ifTrueThen(shouldDetailEntries(), () -> active.forEach(this::issueModifiedDevice));
   }
