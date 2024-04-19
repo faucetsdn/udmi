@@ -162,6 +162,7 @@ public class ConfigManager {
       });
     } else {
       throw new RuntimeException("gateway block is neither gateway nor proxied");
+      // TODO Devices can be both.
     }
     return gatewayConfig;
   }

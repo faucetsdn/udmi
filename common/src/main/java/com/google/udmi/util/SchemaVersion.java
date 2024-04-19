@@ -12,7 +12,11 @@ import java.util.Map;
 public enum SchemaVersion {
   VERSION_1_5_0("1.5.0", 105000),
   VERSION_1_4_2("1.4.2", 104020),
-  VERSION_1_4_0("1.4.0", 104000);
+  VERSION_1_4_1("1.4.1", 104010),
+  VERSION_1_4_0("1.4.0", 104000),
+  VERSION_1_3_14("1.3.14", 103014),
+  VERSION_1_3_13("1.3.13", 103013),
+  VERSION_1("1", 100000);
 
   public static final SchemaVersion CURRENT;
   private static final Map<String, SchemaVersion> CONSTANTS = new HashMap<>();

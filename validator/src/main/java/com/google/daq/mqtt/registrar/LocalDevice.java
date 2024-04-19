@@ -180,7 +180,7 @@ class LocalDevice {
   private String deviceNumId;
 
   private CloudDeviceSettings settings;
-  private JsonNode baseVersion;
+  private String baseVersion;
   private Date lastActive;
   private boolean blocked;
   
@@ -205,6 +205,9 @@ class LocalDevice {
     }
   }
 
+  // TODO: If there are multiple errors this will only ever return the first?
+  // TODO: Figure out why this is even here when using the STRICT_MAPPER results in exceptions
+  //       and nullification of the entire metadata if there are any errors
   public static void parseMetadataValidateProcessingReport(ProcessingReport report)
       throws ValidationException {
     if (report.isSuccess()) {
@@ -254,34 +257,41 @@ class LocalDevice {
   }
 
   private Metadata readMetadataWithValidation(boolean validate) {
-    final JsonNode deviceMetadata;
     try {
-      Metadata loadedMetadata = siteModel.loadDeviceMetadata(deviceId);
-      if (loadedMetadata instanceof MetadataException metadataException) {
+
+      final Metadata deviceMetadata = siteModel.loadDeviceMetadata(deviceId);
+
+      if (deviceMetadata instanceof MetadataException metadataException) {
         throw new RuntimeException("Loading " + metadataException.file.getAbsolutePath(),
             metadataException.exception);
+       }
+
+      // We need the version BEFORE update (i.e. not the metadata.version)
+      baseVersion = deviceMetadata.upgraded_from == null ? deviceMetadata.upgraded_from : deviceMetadata.version;
+
+      // TODO: In what scenarios is this triggered? All validation errors are thrown above?
+      /**
+      if (validate) {
+        try {
+          ProcessingReport report = schemas.get(METADATA_SCHEMA_JSON).validate(deviceMetadata);
+          parseMetadataValidateProcessingReport(report);
+        } catch (ProcessingException | ValidationException e) {
+          exceptionMap.put(EXCEPTION_VALIDATING, e);
+        }
       }
-      deviceMetadata = JsonUtil.convertTo(JsonNode.class, loadedMetadata);
-      baseVersion = deviceMetadata.get(VERSION_KEY);
-      new MessageUpgrader(METADATA_SCHEMA, deviceMetadata).upgrade(false);
+       **/
+
+      List<String> proxyIds = catchToNull(() -> deviceMetadata.gateway.proxy_ids);
+      ifNotNullThen(proxyIds,
+          ids -> ifTrueThen(ids.isEmpty(), () -> deviceMetadata.gateway.proxy_ids = null));
+
+      return deviceMetadata;
     } catch (Exception exception) {
       exceptionMap.put(EXCEPTION_LOADING, exception);
       return null;
     }
 
-    if (validate) {
-      try {
-        ProcessingReport report = schemas.get(METADATA_SCHEMA_JSON).validate(deviceMetadata);
-        parseMetadataValidateProcessingReport(report);
-      } catch (ProcessingException | ValidationException e) {
-        exceptionMap.put(EXCEPTION_VALIDATING, e);
-      }
-    }
-    Metadata converted = JsonUtil.convertTo(Metadata.class, deviceMetadata);
-    List<String> proxyIds = catchToNull(() -> converted.gateway.proxy_ids);
-    ifNotNullThen(proxyIds,
-        ids -> ifTrueThen(ids.isEmpty(), () -> converted.gateway.proxy_ids = null));
-    return converted;
+
   }
 
   private Metadata readMetadata() {

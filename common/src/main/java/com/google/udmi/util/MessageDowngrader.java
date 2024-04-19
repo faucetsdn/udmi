@@ -6,11 +6,13 @@ import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_RAW;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static java.lang.Boolean.TRUE;
 import static java.util.Objects.isNull;
+import static java.lang.Integer.parseInt;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
+import java.util.Iterator;
 import java.util.Map;
 import udmi.schema.Envelope.SubType;
 
@@ -22,10 +24,12 @@ public class MessageDowngrader {
   private static final TextNode LEGACY_VERSION = new TextNode("1");
   private static final JsonNode LEGACY_REPLACEMENT = new IntNode(1);
   private final ObjectNode message;
+  private final ObjectNode original;
   private final String schema;
   private int major;
   private int minor;
   private int patch;
+
 
   /**
    * Create message down-grader.
@@ -35,7 +39,8 @@ public class MessageDowngrader {
    */
   public MessageDowngrader(String schemaName, JsonNode messageJson) {
     schema = schemaName;
-    this.message = (ObjectNode) messageJson;
+    message = (ObjectNode) messageJson;
+    original = message.deepCopy();
   }
 
   /**
@@ -48,17 +53,16 @@ public class MessageDowngrader {
     this(schemaName, OBJECT_MAPPER_RAW.valueToTree(message));
   }
 
-  static String convertVersion(JsonNode versionNode) {
-    if (versionNode == null) {
+  static String convertVersion(String version) {
+    if (version == null) {
       return "1";
     }
-    if (versionNode.isTextual()) {
-      return versionNode.asText();
+    try {
+      Integer integerVersion = parseInt(version);
+      return Integer.toString(integerVersion);
+    } catch (NumberFormatException e) {
+      return version;
     }
-    if (versionNode.isIntegralNumber()) {
-      return Integer.toString(versionNode.asInt());
-    }
-    throw new IllegalStateException("Unrecognized version node " + versionNode.asText());
   }
 
   /**
@@ -69,7 +73,7 @@ public class MessageDowngrader {
    * @return downgraded object
    */
   public Map<String, Object> downgrade(SchemaVersion version) {
-    return downgrade(new TextNode(version.key()));
+    return downgrade(version.key());
   }
 
   /**
@@ -79,16 +83,16 @@ public class MessageDowngrader {
    *
    * @return downgraded object
    */
-  public Map<String, Object> downgrade(JsonNode targetVersion) {
+  public Map<String, Object> downgrade(String targetVersion) {
     return switch (schema) {
-      case "config" -> downgradeConfig(targetVersion);
+      case "config" -> downgradeConfigV2(targetVersion);
       case "state" -> downgradeState(targetVersion);
       default ->
         throw new IllegalArgumentException("Unknown downgrade schema " + schema);
     };
   }
 
-  private Map<String, Object> downgradeState(JsonNode targetVersion) {
+  private Map<String, Object> downgradeState(String targetVersion) {
     final String version = convertVersion(targetVersion);
 
     ObjectNode system = (ObjectNode) message.get("system");
@@ -103,12 +107,55 @@ public class MessageDowngrader {
     return JsonUtil.asMap(message);
   }
 
-  private Map<String, Object> downgradeConfig(JsonNode targetVersion) {
+  private Map<String, Object> downgradeConfigV2(String targetVersion) {
+    downgradeConfigRawV2(targetVersion);
+    return JsonUtil.asMap(message);
+  }
+
+  private Map<String, Object> downgradeConfig(String targetVersion) {
     downgradeConfigRaw(targetVersion);
     return JsonUtil.asMap(message);
   }
 
-  private void downgradeConfigRaw(JsonNode targetVersion) {
+  /**
+   * Returns the current version of the configuration message
+   * @return version
+   */
+  private SchemaVersion currentVersion(){
+    return SchemaVersion.fromKey(message.get(VERSION_KEY).asText());
+  }
+
+  public boolean wasDowngraded() {
+    return !original.equals(message);
+  }
+
+  private void downgradeConfigRawV2(String targetVersionString){
+    SchemaVersion targetVersion = SchemaVersion.fromKey(targetVersionString);
+
+    // downgrade to 1.4.1
+    if (currentVersion().value() > SchemaVersion.VERSION_1_4_1.value()
+      && currentVersion().value() > targetVersion.value()){
+
+      downgradeLocalnetTo_1_4_1_From_Latest();
+    }
+
+    // downgrade to 1
+    if (currentVersion().value() > SchemaVersion.VERSION_1.value()
+        && currentVersion().value() > targetVersion.value()){
+
+      downgradeLocalnetTo_1_From_1_4_1();
+    }
+
+    message.set(DOWNGRADED_FROM, original.get(VERSION_KEY));
+    if (targetVersion.equals(LEGACY_VERSION)){
+      message.put(VERSION_KEY, LEGACY_REPLACEMENT);
+    } else {
+      message.put(VERSION_KEY, targetVersion.key());
+    }
+
+  }
+
+  private void downgradeConfigRaw(String targetVersion) {
     final String version = convertVersion(targetVersion);
     String[] components = version.split("-", 2);
     String[] parts = components[0].split("\\.", 4);
@@ -120,6 +167,9 @@ public class MessageDowngrader {
       throw new IllegalArgumentException("Unexpected version " + version);
     }
 
+    // VERSION STARTS AT LATEST (currently 1.5.0)
+
+    // Downgrade to
     if (major > 1 || minor > 1 || patch > 13) {
       return;
     }
@@ -133,10 +183,45 @@ public class MessageDowngrader {
       }
     }
 
-    JsonNode useVersion = targetVersion.equals(LEGACY_VERSION) ? LEGACY_REPLACEMENT : targetVersion;
+    message.set(DOWNGRADED_FROM, original.get(VERSION_KEY));
 
-    message.set(DOWNGRADED_FROM, message.get(VERSION_KEY));
-    message.set(VERSION_KEY, useVersion);
+    if (targetVersion.equals(LEGACY_VERSION)){
+      message.put(VERSION_KEY, LEGACY_REPLACEMENT);
+    } else {
+      message.put(VERSION_KEY, targetVersion);
+    }
+
+  }
+
+  private void downgradeLocalnetTo_1_4_1_From_Latest() {
+    JsonNode localnetFamilies = message.get("localnet").get("families");
+    if (localnetFamilies == null) {
+      return;
+    }
+    Iterator<String> families = localnetFamilies.fieldNames();
+    families.forEachRemaining(item -> {
+      ObjectNode family = (ObjectNode) localnetFamilies.get(item);
+      TextNode addr = (TextNode) family.remove("addr");
+      family.put("id", addr);
+    });
+  }
+
+  private void downgradeLocalnetTo_1_From_1_4_1() {
+    ObjectNode localnet = (ObjectNode) message.get("localnet");
+    if (localnet == null) {
+      return;
+    }
+    JsonNode families = localnet.remove("families");
+    if (families != null) {
+      localnet.set("subsystem", families);
+      families.fieldNames().forEachRemaining(familyName -> {
+        ObjectNode family = (ObjectNode) families.get(familyName);
+        JsonNode removedNode = family.remove("addr");
+        if (removedNode != null) {
+          family.set("id", removedNode);
+        }
+      });
+    }
   }
 
   private void downgradeLocalnet() {

@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -46,7 +47,7 @@ public class MessageUpgrader {
     this.original = message.deepCopy();
 
     JsonNode version = message.get(VERSION_KEY);
-    originalVersion = convertVersion(version);
+    originalVersion = convertVersion(version.asText());
 
     try {
       String[] components = originalVersion.split("-", 2);
@@ -115,7 +116,7 @@ public class MessageUpgrader {
 
     if (minor == 3 && patch < 14) {
       JsonNode before = message.deepCopy();
-      upgrade_1_3_14();
+      upgradeTo_1_3_14();
       upgraded |= !before.equals(message);
       patch = 14;
     }
@@ -127,7 +128,7 @@ public class MessageUpgrader {
 
     if (minor == 4 && patch < 1) {
       JsonNode before = message.deepCopy();
-      upgrade_1_4_1();
+      upgradeTo_1_4_1();
       upgraded |= !before.equals(message);
       patch = 1;
     }
@@ -140,29 +141,29 @@ public class MessageUpgrader {
     return message;
   }
 
-  private void upgrade_1_3_14() {
+  private void upgradeTo_1_3_14() {
     if (STATE_SCHEMA.equals(schemaName)) {
-      upgrade_1_3_14_state();
+      upgradeTo_1_3_14_state();
     }
     if (STATE_SYSTEM_SCHEMA.equals(schemaName)) {
-      upgrade_1_3_14_state_system(message);
+      upgradeTo_1_3_14_state_system(message);
     }
     if (METADATA_SCHEMA.equals(schemaName)) {
-      upgrade_1_3_14_metadata();
+      upgradeTo_1_3_14_metadata();
     }
   }
 
-  private void upgrade_1_3_14_state() {
-    ifNotNullThen((ObjectNode) message.get("system"), this::upgrade_1_3_14_state_system);
+  private void upgradeTo_1_3_14_state() {
+    ifNotNullThen((ObjectNode) message.get("system"), this::upgradeTo_1_3_14_state_system);
   }
 
-  private void upgrade_1_3_14_state_system(ObjectNode system) {
+  private void upgradeTo_1_3_14_state_system(ObjectNode system) {
     upgradeMakeModel(system);
     upgradeFirmware(system);
     upgradeStatuses(system);
   }
 
-  private void upgrade_1_3_14_metadata() {
+  private void upgradeTo_1_3_14_metadata() {
     ObjectNode localnet = (ObjectNode) message.get("localnet");
     if (localnet == null) {
       return;
@@ -173,20 +174,55 @@ public class MessageUpgrader {
     }
   }
 
-  private void upgrade_1_4_1() {
+  private void upgradeTo_1_4_1() {
     if (STATE_SCHEMA.equals(schemaName)) {
-      upgrade_1_4_1_state();
+      upgradeTo_1_4_1_state();
     }
     if (STATE_SYSTEM_SCHEMA.equals(schemaName)) {
-      upgrade_1_4_1_state_system(message);
+      upgradeTo_1_4_1_state_system(message);
+    }
+    if (METADATA_SCHEMA.equals(schemaName)) {
+      upgradeTo_1_4_1_metadata();
     }
   }
 
-  private void upgrade_1_4_1_state() {
-    ifNotNullThen((ObjectNode) message.get("system"), this::upgrade_1_4_1_state_system);
+  private void upgradeTo_1_4_1_metadata() {
+    JsonNode localnetFamilies = message.get("localnet").get("families");
+    if (localnetFamilies == null) {
+      return;
+    }
+
+    // Rewrite `id` into `addr`
+    Iterator<String> families = localnetFamilies.fieldNames();
+    families.forEachRemaining(item -> {
+      ObjectNode family = (ObjectNode) localnetFamilies.get(item);
+      TextNode id = (TextNode) family.remove("id");
+      family.put("addr", id);
+    });
+
+    // Gateways at this time would be configured using the values in the `localnet` block.
+    // Gateway configuration now lives in the `gateway.target` property. At the moment these are
+    // `bacnet` (Delta, ALC) and `vendor` (MangoOS). If the `gateewy` propert
+    ObjectNode gateway = (ObjectNode) message.get("gateway");
+    if (gateway != null && gateway.has("target")){
+      return;
+    }
+
+    ObjectNode gatewayTarget = new ObjectNode(NODE_FACTORY);
+    gateway.put("target", gatewayTarget);
+
+    if (localnetFamilies.has("bacnet")) {
+      gatewayTarget.put("family", "bacnet");
+      gatewayTarget.put("addr", localnetFamilies.get("bacnet").get("addr").asText());
+    }
+
   }
 
-  private void upgrade_1_4_1_state_system(ObjectNode system) {
+  private void upgradeTo_1_4_1_state() {
+    ifNotNullThen((ObjectNode) message.get("system"), this::upgradeTo_1_4_1_state_system);
+  }
+
+  private void upgradeTo_1_4_1_state_system(ObjectNode system) {
     if (system.has("operation")) {
       return;
     }
