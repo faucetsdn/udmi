@@ -110,10 +110,12 @@ public class CloudQueryHandler {
     List<String> active = discoveryEvent.registries.entrySet().stream()
         .filter(entry -> entry.getValue().last_event_time != null).map(Entry::getKey).toList();
 
-    debug("Project has %d registries (%d active) %s", registries.size(), active.size(),
-        envelope.transactionId);
+    boolean traverse = shouldTraverseRegistries();
 
-    ifTrueThen(shouldTraverseRegistries(), () -> active.forEach(this::issueModifiedRegistry));
+    debug("Project has %d registries (%d active) traverse %s %s", registries.size(), active.size(),
+        traverse, envelope.transactionId);
+
+    ifTrueThen(traverse, () -> active.forEach(this::issueModifiedRegistry));
   }
 
   private void queryDeviceDetails() {
@@ -147,10 +149,12 @@ public class CloudQueryHandler {
     List<String> active = discoveryEvent.devices.entrySet().stream()
         .filter(entry -> !isTrue(entry.getValue().blocked)).map(Entry::getKey).toList();
 
-    debug("Listed registry %s with %d devices (%d active) %s", deviceRegistryId,
-        discoveryEvent.devices.size(), active.size(), envelope.transactionId);
+    boolean traverse = shouldDetailEntries();
 
-    ifTrueThen(shouldDetailEntries(), () -> active.forEach(this::issueModifiedDevice));
+    debug("Listed registry %s with %d devices (%d active) %s %s", deviceRegistryId,
+        discoveryEvent.devices.size(), active.size(), traverse, envelope.transactionId);
+
+    ifTrueThen(traverse, () -> active.forEach(this::issueModifiedDevice));
   }
 
   private boolean shouldDetailEntries() {
@@ -165,6 +169,8 @@ public class CloudQueryHandler {
    * Process an individual cloud query.
    */
   public synchronized void process() {
+    debug("Processing cloud query %s/%s depth %s", envelope.deviceRegistryId, envelope.deviceId,
+        query.depth);
     if (envelope.deviceRegistryId == null) {
       queryAllRegistries();
     } else if (envelope.deviceId == null) {
