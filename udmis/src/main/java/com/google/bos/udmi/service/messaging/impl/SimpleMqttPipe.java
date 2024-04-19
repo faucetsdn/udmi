@@ -3,18 +3,17 @@ package com.google.bos.udmi.service.messaging.impl;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
-import static com.google.udmi.util.JsonUtil.stringify;
-import static com.google.udmi.util.JsonUtil.toMap;
 import static com.google.udmi.util.JsonUtil.toStringMap;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.common.base.Strings;
-import com.google.udmi.util.GeneralUtils;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -33,19 +32,19 @@ import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
 
 /**
- * Simple pipe implementation that uses an mqtt broker.
+ * Simple pipe implementation that uses an MQTT broker.
  */
 public class SimpleMqttPipe extends MessageBase {
 
   private static final int INITIALIZE_TIME_MS = 1000;
   private static final int PUBLISH_THREAD_COUNT = 2;
-  private static final String TOPIC_WILDCARD = "+";
   private static final String BROKER_URL_FORMAT = "%s://%s:%s";
   private static final long RECONNECT_SEC = 10;
   private static final int DEFAULT_PORT = 8883;
   private static final Envelope EXCEPTION_ENVELOPE = makeExceptionEnvelope();
-  private static final String TOPIC_SUBSCRIPTION = "/projects/#";
-  private final String clientId = format("mqtt-%08x", System.currentTimeMillis());
+  private static final String TOPIC_SUBSCRIPTION = "/r/+/d/+/#";
+  private final String autoId = format("mqtt-%08x", System.currentTimeMillis());
+  private final String clientId;
   private final String namespace;
   private final EndpointConfiguration endpoint;
   private final MqttClient mqttClient;
@@ -58,6 +57,7 @@ public class SimpleMqttPipe extends MessageBase {
     super(config);
     namespace = config.hostname;
     endpoint = config;
+    clientId = ofNullable(config.client_id).orElse(autoId);
     mqttClient = createMqttClient();
     tryConnect(false);
     scheduledFuture = Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(
@@ -155,7 +155,7 @@ public class SimpleMqttPipe extends MessageBase {
   }
 
   private String makeTopic(Envelope envelope) {
-    return format("/projects/%s/registries/%s/devices/%s/%s/%s", envelope.projectId,
+    return format("/r/%s/d/%s/t/%s/f/%s",
         envelope.deviceRegistryId, envelope.deviceId, envelope.subType, envelope.subFolder);
   }
 
@@ -222,22 +222,35 @@ public class SimpleMqttPipe extends MessageBase {
   }
 
   private Map<String, String> parseEnvelopeTopic(String topic) {
-    // 0/1       /2      /3         /4       /5      /6     /7   [/8     ]
-    //  /projects/PROJECT/registries/REGISTRY/devices/DEVICE/TYPE[/FOLDER]
+    // 0/1/2       /3/4     /5/6   [/7/8]
+    //  /r/REGISTRY/d/DEVICE/t/TYPE[/f/FOLDER]
     String[] parts = topic.split("/", 10);
-    if (parts.length < 8 || parts.length > 9) {
+    if (parts.length < 7 || parts.length > 9) {
       throw new RuntimeException("Unexpected topic length: " + topic);
     }
     Envelope envelope = new Envelope();
     checkState(Strings.isNullOrEmpty(parts[0]), "non-empty prefix");
-    checkState("projects".equals(parts[1]), "expected projects");
-    envelope.projectId = parts[2];
-    checkState("registries".equals(parts[3]), "expected registries");
-    envelope.deviceRegistryId = parts[4];
-    checkState("devices".equals(parts[5]), "expected devices");
-    envelope.deviceId = parts[6];
-    envelope.subType = SubType.valueOf(parts[7]);
-    envelope.subFolder = parts.length < 9 ? null : SubFolder.valueOf(parts[8]);
+    checkState("r".equals(parts[1]), "expected registries");
+    envelope.deviceRegistryId = parts[2];
+    checkState("d".equals(parts[3]), "expected devices");
+    envelope.deviceId = parts[4];
+    checkState("t".equals(parts[5]), "expected type");
+    envelope.subType = SubType.fromValue(parts[6]);
+    if (parts.length >= 8) {
+      checkState("f".equals(parts[7]), "expected type");
+      envelope.subFolder = SubFolder.fromValue(parts[8]);
+    }
     return toStringMap(envelope);
+  }
+
+  @Override
+  void resetForTest() {
+    super.resetForTest();
+    try {
+      mqttClient.disconnect();
+      mqttClient.close();
+    } catch (Exception e) {
+      throw new RuntimeException("While resetting mqtt client", e);
+    }
   }
 }

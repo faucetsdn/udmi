@@ -17,8 +17,12 @@ class SimpleMqttPipeTest extends MessagePipeTestBase {
   private static final String BROKER_URL = System.getenv(TEST_BROKER_ENV);
   private static final String URL_FORMAT = "(.+)://(.+):(.+)";
   private static final Pattern URL_PATTERN = Pattern.compile(URL_FORMAT);
-  private static final String TEST_USERNAME = "scrumptious";
-  private static final String TEST_PASSWORD = "aardvark";
+  private static final String DEVICE_USERNAME = "rocket";
+  private static final String DEVICE_PASSWORD = "monkey";
+  private static final String DEVICE_CLIENT_ID = "ZZ-TRI-FECTA/testing";
+  private static final String SERVICE_USERNAME = "kiwi";
+  private static final String SERVICE_PASSWORD = "possum";
+  private static final String SERVICE_CLIENT_ID = "ZZ-TRI-FECTA/other";
 
   protected boolean environmentIsEnabled() {
     boolean environmentEnabled = !Strings.isNullOrEmpty(BROKER_URL);
@@ -28,21 +32,22 @@ class SimpleMqttPipeTest extends MessagePipeTestBase {
     return environmentEnabled;
   }
 
-  public void augmentConfig(EndpointConfiguration endpoint) {
+  public void augmentConfig(EndpointConfiguration endpoint, boolean reversed) {
     Matcher matcher = URL_PATTERN.matcher(BROKER_URL.trim());
     checkState(matcher.matches(), "Endpoint URL does not match format " + URL_FORMAT);
     endpoint.protocol = Protocol.MQTT;
     endpoint.transport = EndpointConfiguration.Transport.fromValue(matcher.group(1));
     endpoint.hostname = matcher.group(2);
     endpoint.port = Integer.parseInt(matcher.group(3));
-    endpoint.auth_provider = makeBasicAuth();
+    endpoint.auth_provider = makeBasicAuth(reversed);
+    endpoint.client_id = reversed ? SERVICE_CLIENT_ID : DEVICE_CLIENT_ID;
   }
 
-  private Auth_provider makeBasicAuth() {
+  private Auth_provider makeBasicAuth(boolean reversed) {
     Auth_provider authProvider = new Auth_provider();
     authProvider.basic = new Basic();
-    authProvider.basic.username = TEST_USERNAME;
-    authProvider.basic.password = TEST_PASSWORD;
+    authProvider.basic.username = reversed ? SERVICE_USERNAME : DEVICE_USERNAME;
+    authProvider.basic.password = reversed ? SERVICE_PASSWORD : DEVICE_PASSWORD;
     return authProvider;
   }
 
