@@ -47,7 +47,7 @@ public class MessageUpgrader {
     this.original = message.deepCopy();
 
     JsonNode version = message.get(VERSION_KEY);
-    originalVersion = convertVersion(version.asText());
+    originalVersion = (version == null ? "1" : convertVersion(version.asText()));
 
     try {
       String[] components = originalVersion.split("-", 2);
@@ -88,12 +88,7 @@ public class MessageUpgrader {
    * @param forceUpgrade true to force a complete upgrade pass irrespective of original version
    */
   public Object upgrade(boolean forceUpgrade) {
-    try {
-      return upgradeRaw(forceUpgrade);
-    } catch (Exception e) {
-      message.put(UPGRADED_FROM, friendlyStackTrace(e));
-      return message;
-    }
+    return upgradeRaw(forceUpgrade);
   }
 
   private Object upgradeRaw(boolean forceUpgrade) {
@@ -136,6 +131,11 @@ public class MessageUpgrader {
     if (upgraded && message.get(VERSION_KEY) != null) {
       message.put(UPGRADED_FROM, originalVersion);
       message.put(VERSION_KEY, String.format(TARGET_FORMAT, major, minor, patch));
+    } else {
+      // Files are now updated to Current version of UDMI
+      if(message.has(VERSION_KEY)){
+        message.put(VERSION_KEY, SchemaVersion.CURRENT.key());
+      }
     }
 
     return message;
@@ -186,36 +186,47 @@ public class MessageUpgrader {
     }
   }
 
+  private void upgradeTo_1_5_0_metadata() {
+
+  }
   private void upgradeTo_1_4_1_metadata() {
-    JsonNode localnetFamilies = message.get("localnet").get("families");
-    if (localnetFamilies == null) {
+    JsonNode localnet = message.get("localnet");
+    if (localnet == null || !localnet.has("families")) {
       return;
     }
+    ObjectNode localnetFamilies = (ObjectNode) localnet.get("families");
 
     // Rewrite `id` into `addr`
     Iterator<String> families = localnetFamilies.fieldNames();
     families.forEachRemaining(item -> {
       ObjectNode family = (ObjectNode) localnetFamilies.get(item);
-      TextNode id = (TextNode) family.remove("id");
-      family.put("addr", id);
+      if (!family.has("addr")) {
+        TextNode id = (TextNode) family.remove("id");
+        family.put("addr", id);
+      }
     });
 
-    // Gateways at this time would be configured using the values in the `localnet` block.
-    // Gateway configuration now lives in the `gateway.target` property. At the moment these are
-    // `bacnet` (Delta, ALC) and `vendor` (MangoOS). If the `gateewy` propert
+    if (!message.has("gateway")) {
+      message.put("gateway", new ObjectNode(NODE_FACTORY));
+    }
+
     ObjectNode gateway = (ObjectNode) message.get("gateway");
-    if (gateway != null && gateway.has("target")){
+    // If gateway already has "target" set (for whatever reason) - don't stomp the changes
+    if (gateway.has("target")) {
       return;
     }
 
+    // Gateways at this time would be configured using the values in the `localnet` block.
+    // Gateway configuration now lives in the `gateway.target` property. At the time it is only known
+    // that gateways which use the localnet value use either "vendor" or "bacnet"
     ObjectNode gatewayTarget = new ObjectNode(NODE_FACTORY);
     gateway.put("target", gatewayTarget);
 
     if (localnetFamilies.has("bacnet")) {
       gatewayTarget.put("family", "bacnet");
-      gatewayTarget.put("addr", localnetFamilies.get("bacnet").get("addr").asText());
+    } else if (localnetFamilies.has("vendor")) {
+      gatewayTarget.put("family", "vendor");
     }
-
   }
 
   private void upgradeTo_1_4_1_state() {

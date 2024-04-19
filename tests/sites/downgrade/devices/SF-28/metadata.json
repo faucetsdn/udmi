@@ -1,0 +1,76 @@
+{
+  "version": "1.3.14",
+  "timestamp": "2021-02-25T09:56:39Z",
+  "hash": "e5eed1a4",
+  "system": {
+    "location": {
+      "section": "L02-R16",
+      "position": {
+        "x": 8372.689495,
+        "y": 27597.80906
+      }
+    }
+  },
+  "localnet": {
+    "families": {
+      "bacnet": {
+        "id": "1010060"
+      }
+    }
+  },
+  "gateway": {
+    "gateway_id": "DDC-54"
+  },
+  "pointset": {
+    "points": {
+      "zone_air_temperature_sensor": {
+        "ref": "AI101001.Present_Value",
+        "units": "degrees-celcius"
+      },   
+      "zone_air_temperature_setpoint": {
+        "ref": "AV101022.Present_Value",
+        "units": "degrees-celcius"
+      },   
+      "zone_air_co2_concentration_sensor": {
+        "ref": "AI101004.Present_Value",
+        "units": "parts_per_million"
+      },  
+      "zone_air_co2_concentration_setpoint": {
+        "ref": "AV2.Present_Value",
+        "units": "parts_per_million"
+      },        
+      "discharge_air_temperature_sensor": {
+        "ref": "AI1104.Present_Value",
+        "units": "degrees-celcius"
+      },   
+      "discharge_fan_run_status": {
+        "ref": "BI1102.Present_Value",
+        "units": "No-units"
+      },
+      "discharge_fan_fault_status": {
+        "ref": "BI1103.Present_Value",
+        "units": "No-units"
+      },
+      "discharge_fan_percentage_speed_command": {
+        "ref": "AO1101.Present_Value",
+        "units": "percent"
+      },
+      "discharge_fan_percentage_speed_setpoint": {
+        "ref": "AV101.Present_Value",
+        "units": "percent"
+      },
+      "discharge_fan_static_pressure_status": {
+        "ref": "BI1105.Present_Value",
+        "units": "No-units"
+      },
+      "zone_occupancy_status": {
+        "ref": "BV1003.Present_Value",
+        "units": "No-units"
+      },
+      "fire_alarm_status": {
+        "ref": "BV1001.Present_Value",
+        "units": "No-units"
+      }
+    }
+  }
+}

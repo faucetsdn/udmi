@@ -31,4 +31,6 @@ public interface IotDataProvider extends UdmiComponent {
           format("While instantiating data provider type %s", iotAccess.provider), e);
     }
   }
+
+  String getSystemEntry(String regionsKey);
 }

@@ -83,6 +83,7 @@ public class IotAccess {
         IMPLICIT("implicit"),
         PUBSUB("pubsub"),
         ETCD("etcd"),
+        MQTT("mqtt"),
         JWT("jwt"),
         GCP_NATIVE("gcp_native"),
         GBOS("gbos"),

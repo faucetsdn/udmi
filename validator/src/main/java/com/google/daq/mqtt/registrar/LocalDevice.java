@@ -257,41 +257,37 @@ class LocalDevice {
   }
 
   private Metadata readMetadataWithValidation(boolean validate) {
+    final Metadata deviceMetadata;
+
     try {
-
-      final Metadata deviceMetadata = siteModel.loadDeviceMetadata(deviceId);
-
+      deviceMetadata = siteModel.loadDeviceMetadata(deviceId);
       if (deviceMetadata instanceof MetadataException metadataException) {
         throw new RuntimeException("Loading " + metadataException.file.getAbsolutePath(),
             metadataException.exception);
-       }
-
-      // We need the version BEFORE update (i.e. not the metadata.version)
-      baseVersion = deviceMetadata.upgraded_from == null ? deviceMetadata.upgraded_from : deviceMetadata.version;
-
-      // TODO: In what scenarios is this triggered? All validation errors are thrown above?
-      /**
-      if (validate) {
-        try {
-          ProcessingReport report = schemas.get(METADATA_SCHEMA_JSON).validate(deviceMetadata);
-          parseMetadataValidateProcessingReport(report);
-        } catch (ProcessingException | ValidationException e) {
-          exceptionMap.put(EXCEPTION_VALIDATING, e);
-        }
       }
-       **/
+      baseVersion = (deviceMetadata.upgraded_from == null
+          ? deviceMetadata.version : deviceMetadata.upgraded_from);
 
       List<String> proxyIds = catchToNull(() -> deviceMetadata.gateway.proxy_ids);
       ifNotNullThen(proxyIds,
           ids -> ifTrueThen(ids.isEmpty(), () -> deviceMetadata.gateway.proxy_ids = null));
 
-      return deviceMetadata;
     } catch (Exception exception) {
       exceptionMap.put(EXCEPTION_LOADING, exception);
       return null;
     }
 
+    if (validate) {
+      try {
+        JsonNode metadataObject = JsonUtil.convertTo(JsonNode.class, deviceMetadata);
+        ProcessingReport report = schemas.get(METADATA_SCHEMA_JSON).validate(metadataObject);
+        parseMetadataValidateProcessingReport(report);
+      } catch (ProcessingException | ValidationException e) {
+        exceptionMap.put(EXCEPTION_VALIDATING, e);
+      }
+    }
 
+    return deviceMetadata;
   }
 
   private Metadata readMetadata() {

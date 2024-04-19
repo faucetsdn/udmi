@@ -53,7 +53,7 @@ public abstract class MessageTestCore {
     }
   }
 
-  protected void augmentConfig(@NotNull EndpointConfiguration configuration) {
+  protected void augmentConfig(@NotNull EndpointConfiguration configuration, boolean reversed) {
     configuration.protocol = Protocol.LOCAL;
   }
 
@@ -66,7 +66,7 @@ public abstract class MessageTestCore {
     config.hostname = TEST_NAMESPACE;
     config.recv_id = reversed ? TEST_DESTINATION : TEST_SOURCE;
     config.send_id = reversed ? TEST_SOURCE : TEST_DESTINATION;
-    augmentConfig(config);
+    augmentConfig(config, reversed);
     return config;
   }
 }

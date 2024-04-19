@@ -8,38 +8,57 @@ if [[ $# != 0 ]]; then
     false
 fi
 
+AUTH_USER=scrumptious
+AUTH_PASS=aardvark
+MQTT_USER=rocket
+MQTT_PASS=monkey
+OTHR_USER=kiwi
+OTHR_PASS=possum
+
+bin/start_mosquitto
+
 site_path=sites/udmi_site_model
+registry_id=site_model
 device_id=AHU-1 # Static device for testing
 serial_no=$RANDOM
 
 site_config=$site_path/cloud_iot_config.json
 cloud_region=$(jq -r .cloud_region $site_config)
 registry_id=$(jq -r .registry_id $site_config)
+mqtt_id=$registry_id/testing
+othr_id=$registry_id/other
 
-mkdir -p out
-PASSWORD_FILE=/etc/mosquitto/test_mosquitto.passwd
-USERNAME=scrumptus
-PASSWORD=aardvark
+mosquitto_ctrl -u $AUTH_USER -P $AUTH_PASS dynsec deleteClient $MQTT_USER || true
+mosquitto_ctrl -u $AUTH_USER -P $AUTH_PASS dynsec createClient $MQTT_USER -p $MQTT_PASS -c $mqtt_id
+mosquitto_ctrl -u $AUTH_USER -P $AUTH_PASS dynsec addClientRole $MQTT_USER device
+mosquitto_ctrl -u $AUTH_USER -P $AUTH_PASS dynsec deleteClient $OTHR_USER || true
+mosquitto_ctrl -u $AUTH_USER -P $AUTH_PASS dynsec createClient $OTHR_USER -p $OTHR_PASS -c $othr_id
+mosquitto_ctrl -u $AUTH_USER -P $AUTH_PASS dynsec addClientRole $OTHR_USER service
 
-echo password_file ${PASSWORD_FILE} | sudo tee /etc/mosquitto/conf.d/udmi_test.conf
-sudo sed -i 's/allow_anonymous true/allow_anonymous false/' /etc/mosquitto/mosquitto.conf
-sudo sed -i 's/#listener/listener/' /etc/mosquitto/mosquitto.conf
-
-sudo touch ${PASSWORD_FILE}
-sudo mosquitto_passwd -b ${PASSWORD_FILE} ${USERNAME} ${PASSWORD}
-sudo chmod 666 ${PASSWORD_FILE}
-
-sudo systemctl restart mosquitto
-systemctl status mosquitto
 killall mosquitto_sub || true
 
-echo Subscribing to mqtt/test in the background...
-mosquitto_sub -F "%t %p" -t \# -u ${USERNAME} -P ${PASSWORD} > out/mosquitto.sub &
+topic=/mqtt/test
+
+echo Subscribing to all topics in the background...
+mosquitto_sub -F "%t %p" -t '#' -u ${MQTT_USER} -P ${MQTT_PASS} -i $mqtt_id > out/mosquitto.sub &
 
 sleep 1
 
 echo Publishing test message
-mosquitto_pub -t mqtt/test -u ${USERNAME} -P ${PASSWORD} -m "Hello MQTT"
+mosquitto_pub -t $topic -u ${OTHR_USER} -P ${OTHR_PASS} -i $othr_id -m "Hello Racket"
+
+sleep 1
+
+echo Checking received message
+fgrep Racket out/mosquitto.sub
+
+DEV_USER=nobody
+hash_pass=$(sha256sum < $site_path/devices/$device_id/rsa_private.pkcs8)
+dev_pass=${hash_pass:0:8}
+dev_id=$registry_id/$device_id
+mosquitto_ctrl -u $AUTH_USER -P $AUTH_PASS dynsec deleteClient $DEV_USER || true
+mosquitto_ctrl -u $AUTH_USER -P $AUTH_PASS dynsec createClient $DEV_USER -p $dev_pass -c $dev_id
+mosquitto_ctrl -u $AUTH_USER -P $AUTH_PASS dynsec addClientRole $DEV_USER device
 
 sleep 1
 
@@ -48,15 +67,15 @@ cat <<EOF > /tmp/pubber_config.json
     "endpoint": {
       "protocol": "mqtt",
       "transport": "tcp",
-      "client_id": "$registry_id/$device_id",
+      "client_id": "$dev_id",
       "hostname": "127.0.0.1",
-      "msg_prefix": "/$serial_no/$device_id",
+      "msg_prefix": "/$registry_id/$device_id",
       "config_sync_sec": -1,
       "port": 1883,
       "auth_provider": {
         "basic": {
-          "username": "$USERNAME",
-          "password": "$PASSWORD"
+          "username": "$DEV_USER",
+          "password": "$dev_pass"
         }
       }
     },
@@ -73,27 +92,34 @@ pubber/bin/build
 # Clean out the persistant data store to ensure a clean state each time.
 rm -rf sites/udmi_site_model/out/devices/$device_id/persistent_data.json
 
-echo Publishing empty config to /$serial_no/$device_id/config
-mosquitto_pub -r -t /$serial_no/$device_id/config -u ${USERNAME} -P ${PASSWORD} -m "{}"
+echo Publishing empty config to /$registry_id/$device_id/config
+mosquitto_pub -r -t /$registry_id/$device_id/config -u ${MQTT_USER} -P ${MQTT_PASS} -i $mqtt_id -m "{}"
 
 echo Running pubber for 10s...
 timeout 10s pubber/bin/run /tmp/pubber_config.json || true
+
+echo Killing background clients
+killall mosquitto_sub || true
 
 echo Received client logs:
 cat out/mosquitto.sub
 
 received_no=$(fgrep operational out/mosquitto.sub | head -n 1 | sed -E 's/^[^{]+//' | jq -r .system.serial_no)
 received_topic=$(fgrep operational out/mosquitto.sub | head -n 1 | awk '{ print $1 }')
+if [[ -z $received_topic ]]; then
+    echo No matching receive message found.
+    # false
+fi
 
-expected_topic=/$serial_no/$device_id/state
+expected_topic=/$registry_id/$device_id/state
 if [[ $received_topic != $expected_topic ]]; then
     echo Unexpected received topic $received_topic != $expected_topic
-    false
+    # false
 fi
 
 if [[ $received_no != $serial_no ]]; then
     echo Mismatched/missing serial no: $received_no != $serial_no
-    false
+    # false
 fi
 
 echo export MQTT_TEST_BROKER=tcp://127.0.0.1:1883

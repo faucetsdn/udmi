@@ -207,6 +207,14 @@ public class GeneralUtils {
     };
   }
 
+  public static boolean isNotEmpty(String s) {
+    return !ofNullable(s).map(String::isEmpty).orElse(true);
+  }
+
+  public static boolean isNullOrNotEmpty(String value) {
+    return !ofNullable(value).map(String::isEmpty).orElse(false);
+  }
+
   public static Date toDate(Instant lastSeen) {
     return ifNotNullGet(lastSeen, Date::from);
   }

@@ -48,7 +48,7 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
   private static final int CONFIG_UPDATE_MAX_RETRIES = 10;
   private static final Duration REGISTRY_REFRESH = Duration.ofMinutes(10);
   private static final Duration REGISTRY_BACKOFF = Duration.ofMinutes(1);
-  final Map<String, Object> options;
+  final Map<String, String> options;
   private final AtomicReference<Instant> lastRegistryFetch =
       new AtomicReference<>(Instant.ofEpochSecond(0));
   private CompletableFuture<Map<String, String>> registryRegions;
@@ -161,8 +161,8 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
 
   private void registryBackoffClear(String registryId, String deviceId) {
     String backoffKey = getBackoffKey(registryId, deviceId);
-    ifNotNullThen(BACKOFF_MAP.remove(backoffKey),
-        () -> debug("Released registry backoff for " + backoffKey));
+    ifNotNullThen(BACKOFF_MAP.remove(backoffKey), removed -> debug(
+        "Released registry backoff for " + backoffKey + " was " + isoConvert(removed)));
   }
 
   private Instant registryBackoffInhibit(String registryId, String deviceId) {
@@ -282,7 +282,7 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
                 backoffKey, isoConvert(until)));
       }
     } else {
-      debug("Dropping message because registry backoff for %s", backoffKey);
+      debug("Dropping message because registry backoff for %s active", backoffKey);
     }
   }
 

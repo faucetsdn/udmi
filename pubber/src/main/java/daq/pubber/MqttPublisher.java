@@ -186,9 +186,9 @@ public class MqttPublisher implements Publisher {
   private void publishCore(String deviceId, String topicSuffix, Object data, Runnable callback) {
     try {
       String payload = getMessagePayload(data);
-      String udmiTopic = getMessageTopic(topicSuffix, data);
-      debug("Sending message to " + udmiTopic);
-      sendMessage(deviceId, getSendTopic(deviceId, udmiTopic), payload.getBytes());
+      String sendTopic = getSendTopic(deviceId, getMessageTopic(topicSuffix, data));
+      info("Sending message to " + sendTopic);
+      sendMessage(deviceId, sendTopic, payload.getBytes());
       if (callback != null) {
         callback.run();
       }

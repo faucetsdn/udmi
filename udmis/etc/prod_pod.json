@@ -81,7 +81,7 @@
   "iot_data": {
     "database": {
       "provider": "etcd",
-      "project_id": "http://${ETCD_CLUSTER}-0.${ETCD_CLUSTER}:2379",
+      "project_id": "http://${ETCD_CLUSTER}:2379",
       "options": "enabled=${ETCD_CLUSTER}"
     }
   },

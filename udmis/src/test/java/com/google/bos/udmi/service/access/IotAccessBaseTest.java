@@ -20,8 +20,8 @@ class IotAccessBaseTest {
     IotAccess access = new IotAccess();
     access.options = "enable, foo=bar, x=";
     LocalIotAccessProvider localIotAccessProvider = new LocalIotAccessProvider(access);
-    ImmutableMap<String, Object> expected =
-        ImmutableMap.of("enable", true, "foo", "bar", "x", "");
+    ImmutableMap<String, String> expected =
+        ImmutableMap.of("enable", "true", "foo", "bar", "x", "");
     assertEquals(expected, localIotAccessProvider.options, "parsed options object");
   }
 }

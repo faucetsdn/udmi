@@ -19,6 +19,9 @@ public enum SchemaVersion {
   VERSION_1("1", 100000);
 
   public static final SchemaVersion CURRENT;
+
+  public static final Integer LEGACY_REPLACEMENT = 1;
+
   private static final Map<String, SchemaVersion> CONSTANTS = new HashMap<>();
 
   static {
