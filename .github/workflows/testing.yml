@@ -255,6 +255,10 @@ jobs:
         run: bin/start_etcd
       - name: bin/test_etcd
         run: bin/test_etcd
+      - name: bin/setup_certs
+        run: bin/setup_certs sites/udmi_site_model
+      - name: bin/start_mosquitto
+        run: bin/start_mosquitto sites/udmi_site_model
       - name: bin/test_mosquitto
         run: bin/test_mosquitto
       - name: bin/test_udmis

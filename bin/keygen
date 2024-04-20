@@ -1,29 +1,48 @@
 #!/bin/bash -e
 
+TYPES="{ CERT, RS256, RS256_X509, ES256, ES256_X509 }"
+
 if [ "$#" != 2 ]; then
-    echo $0 [type] [out_dir] 
+    echo $0 type out_dir
+    echo Where type is one of: $TYPES
     false
 fi
 
 type=$1
 cd $2
+shift 2
 
-if [ $type == RS256 ]; then
+if [ $type == CERT ]; then
+    if [[ -f ca.crt ]]; then
+        echo Generating self-signed cert for server admin
+        CA_DIR=$PWD
+    else
+        CA_DIR=../../reflector
+    fi
+    echo Generating self-signed cert from CA defined in $(realpath $CA_DIR)
+    CA_CRT=$CA_DIR/ca.crt
+    CA_SRL=$CA_DIR/ca.srl
+    CA_KEY=$CA_DIR/rsa_private.pem
+    echo Generating cert for device keys in $PWD
+    openssl req -new -x509 -days 3650 -key rsa_private.pem -out rsa_private.crt -subj /CN=unused
+    openssl req -new -key rsa_private.pem -out rsa_private.csr -subj /CN=unused
+    openssl x509 -req -in rsa_private.csr -CA $CA_CRT -CAkey $CA_KEY -CAcreateserial -out rsa_private.crt -days 3650
+elif [ $type == RS256 ]; then
     openssl genrsa -out rsa_private.pem 2048
     openssl rsa -in rsa_private.pem -pubout -out rsa_public.pem
 elif [ $type == RS256_X509 ]; then
     openssl genrsa -out rsa_private.pem 2048
     openssl rsa -in rsa_private.pem -pubout -out rsa_public.pem
-    openssl req -x509 -nodes -newkey rsa:2048 -keyout rsa_private.pem -days 1000000 -out rsa_cert.pem -subj "/CN=unused"
+    openssl req -x509 -nodes -newkey rsa:2048 -keyout rsa_private.pem -days 1000000 -out rsa_cert.pem -subj /CN=unused
 elif [ $type == ES256 ]; then
     openssl ecparam -genkey -name prime256v1 -noout -out ec_private.pem
     openssl ec -in ec_private.pem -pubout -out ec_public.pem
 elif [ $type == ES256_X509 ]; then
     openssl ecparam -genkey -name prime256v1 -noout -out ec_private.pem
     openssl ec -in ec_private.pem -pubout -out ec_public.pem
-    openssl req -x509 -new -key ec_private.pem -out ec_cert.pem -days 1000000 -subj "/CN=unused"
+    openssl req -x509 -new -key ec_private.pem -out ec_cert.pem -days 1000000 -subj /CN=unused
 else
-    echo Unknown key type $type. Try one of { RS256, RS256_X509, ES256, ES256_X509 }
+    echo Unknown key type $type. Try one of $TYPES
     false
 fi
 

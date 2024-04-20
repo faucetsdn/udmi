@@ -98,11 +98,19 @@ mosquitto_pub -r -t /$registry_id/$device_id/config -u ${MQTT_USER} -P ${MQTT_PA
 echo Running pubber for 10s...
 timeout 10s pubber/bin/run /tmp/pubber_config.json || true
 
+echo Publishing ending test message
+mosquitto_pub -t $topic -u ${OTHR_USER} -P ${OTHR_PASS} -i $othr_id -m "Hello Rudolph"
+
+sleep 1
+
 echo Killing background clients
 killall mosquitto_sub || true
 
 echo Received client logs:
 cat out/mosquitto.sub
+
+echo Checking received end message
+fgrep Rudolph out/mosquitto.sub
 
 received_no=$(fgrep operational out/mosquitto.sub | head -n 1 | sed -E 's/^[^{]+//' | jq -r .system.serial_no)
 received_topic=$(fgrep operational out/mosquitto.sub | head -n 1 | awk '{ print $1 }')

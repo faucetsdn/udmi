@@ -1,42 +1,60 @@
-#!/bin/bash -e
+#!/bin/bash -eu
 
+if [[ $# -ge 1 ]]; then
+    site_model=$1
+    shift
+fi
+
+GROUP=mosquitto
 ETC_DIR=/etc/mosquitto
-CONF_FILE=$ETC_DIR/mosquitto.conf
-UDMI_FILE=$ETC_DIR/confg.d/udmi.conf
+UDMI_FILE=$ETC_DIR/conf.d/udmi.conf
 PASS_FILE=$ETC_DIR/mosquitto.passwd
 DYN_FILE=$ETC_DIR/dynamic_security.json
+CERT_DIR=$ETC_DIR/certs
+CA_CERT=$CERT_DIR/ca.crt
 
 AUTH_USER=scrumptious
 AUTH_PASS=aardvark
 echo Configuring MQTT user: $AUTH_USER
 
-sudo sed -i 's/allow_anonymous true/allow_anonymous false/' $CONF_FILE
-sudo sed -i 's/#listener/listener/' $CONF_FILE
-fgrep $PASS_FILE $CONF_FILE || (echo password_file ${PASS_FILE} | sudo tee -a $CONF_FILE)
-
-if ! fgrep -q $DYN_FILE $CONF_FILE; then
+if [[ ! -f $UDMI_FILE ]]; then
+    echo Creating new $UDMI_FILE from template...
+    sudo cp etc/mosquitto_udmi.conf $UDMI_FILE
     PLUGIN_FILE=$(whereis -b mosquitto_dynamic_security.so | awk '{print $2}')
     ls -l "$PLUGIN_FILE"
-    echo Installing dynamic security plugin $PLUGIN_FILE
-    echo plugin $PLUGIN_FILE | sudo tee -a $CONF_FILE
-    echo plugin_opt_config_file $DYN_FILE | sudo tee -a $CONF_FILE
+    echo Configuring dynamic security plugin $PLUGIN_FILE
+    sudo sed -i "s%plugin dynsec%plugin $PLUGIN_FILE%" $UDMI_FILE
+    sudo sed -i "s%plugin_opt_config_file dynsec%plugin_opt_config_file $DYN_FILE%" $UDMI_FILE
 fi
 
 if [[ ! -f $DYN_FILE ]]; then
     echo Creating new $DYN_FILE
     sudo mosquitto_ctrl dynsec init $DYN_FILE $AUTH_USER $AUTH_PASS
-    sudo chgrp mosquitto $DYN_FILE
+    sudo chgrp $GROUP $DYN_FILE
     sudo chmod 0660 $DYN_FILE
 fi
 
-sudo chown mosquitto $ETC_DIR
+if [[ ! -f $CERT_DIR/ca.crt ]]; then
+    echo Importing server certs from $site_model...
+    sudo cp $site_model/reflector/ca.* $CERT_DIR/
+    sudo cp $site_model/reflector/server.* $CERT_DIR/
+    sudo chgrp -R $GROUP $CERT_DIR
+    sudo chmod 0640 $CERT_DIR/server.key
+    ls -l $CERT_DIR
+fi
 
-sudo touch $PASS_FILE
-sudo mosquitto_passwd -b ${PASS_FILE} ${AUTH_USER} ${AUTH_PASS}
+if [[ ! -f $PASS_FILE ]]; then
+    echo Creating $PASS_FILE
+    sudo touch $PASS_FILE
+    sudo chmod 0640 $PASS_FILE
+    sudo chgrp $GROUP $PASS_FILE
+    sudo mosquitto_passwd -b ${PASS_FILE} ${AUTH_USER} ${AUTH_PASS}
+fi
 
 sudo systemctl restart mosquitto
 
-CTRL_CONNECT="-u $AUTH_USER -P $AUTH_PASS"
+#--cert ~/certs/client.crt --key ~/certs/client.key
+CTRL_CONNECT="-u $AUTH_USER -P $AUTH_PASS -p 8883 --cafile $CA_CERT"
 mosquitto_ctrl $CTRL_CONNECT dynsec createRole device
 mosquitto_ctrl $CTRL_CONNECT dynsec addRoleACL device subscribePattern '/#' allow
 mosquitto_ctrl $CTRL_CONNECT dynsec addRoleACL device publishClientSend '/#' allow
