@@ -1,6 +1,5 @@
 package com.google.bos.udmi.service.access;
 
-import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -162,8 +161,8 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
 
   private void registryBackoffClear(String registryId, String deviceId) {
     String backoffKey = getBackoffKey(registryId, deviceId);
-    ifNotNullThen(BACKOFF_MAP.remove(backoffKey),
-        () -> debug("Released registry backoff for " + backoffKey));
+    ifNotNullThen(BACKOFF_MAP.remove(backoffKey), removed -> debug(
+        "Released registry backoff for " + backoffKey + " was " + isoConvert(removed)));
   }
 
   private Instant registryBackoffInhibit(String registryId, String deviceId) {
@@ -283,7 +282,7 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
                 backoffKey, isoConvert(until)));
       }
     } else {
-      debug("Dropping message because registry backoff for %s", backoffKey);
+      debug("Dropping message because registry backoff for %s active", backoffKey);
     }
   }
 
