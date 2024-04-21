@@ -408,7 +408,7 @@ public class MqttPublisher implements MessagePublisher {
       mqttClient.connect(mqttConnectOptions);
       attachedClients.clear();
       attachedClients.add(deviceId);
-      subscribeToUpdates(deviceId);
+      subscribeToConfig(deviceId);
       subscribeToErrors(deviceId);
       subscribeToCommands(deviceId);
       LOG.info(deviceId + " done with setup connection");
@@ -471,14 +471,14 @@ public class MqttPublisher implements MessagePublisher {
     return topicBase + format(MESSAGE_TOPIC_FMT, topic);
   }
 
-  private void subscribeToUpdates(String deviceId) {
-    clientSubscribe(CONFIG_TOPIC, QOS_AT_MOST_ONCE);
+  private void subscribeToConfig(String deviceId) {
+    clientSubscribe(CONFIG_TOPIC, QOS_AT_LEAST_ONCE);
   }
 
   private void clientSubscribe(String topicSuffix, int qos) {
     String topic = topicBase + topicSuffix;
     try {
-      LOG.info("Subscribed to mqtt topic " + topic);
+      LOG.info(format("Subscribing with qos %d to topic %s", qos, topic));
       mqttClient.subscribe(topic, qos);
     } catch (MqttException e) {
       throw new RuntimeException("While subscribing to MQTT topic " + topic, e);
@@ -486,11 +486,11 @@ public class MqttPublisher implements MessagePublisher {
   }
 
   private void subscribeToErrors(String deviceId) {
-    clientSubscribe(ERROR_TOPIC, QOS_AT_MOST_ONCE);
+    clientSubscribe(ERROR_TOPIC, QOS_AT_LEAST_ONCE);
   }
 
   private void subscribeToCommands(String deviceId) {
-    clientSubscribe(COMMAND_TOPIC, QOS_AT_LEAST_ONCE);
+    clientSubscribe(COMMAND_TOPIC, QOS_AT_MOST_ONCE);
   }
 
   String getDeviceId() {
