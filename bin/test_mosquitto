@@ -1,7 +1,9 @@
-#!/bin/bash -e
+#!/bin/bash -eu
 
-ROOT_DIR=$(dirname $0)/..
-cd $ROOT_DIR
+UDMI_ROOT=$(dirname $0)/..
+cd $UDMI_ROOT
+
+source $UDMI_ROOT/etc/shell_common.sh
 
 if [[ $# != 0 ]]; then
     echo Usage: $0
@@ -112,23 +114,15 @@ cat out/mosquitto.sub
 echo Checking received end message
 fgrep Rudolph out/mosquitto.sub
 
+echo Checking messages received from pubber
 received_no=$(fgrep operational out/mosquitto.sub | head -n 1 | sed -E 's/^[^{]+//' | jq -r .system.serial_no)
 received_topic=$(fgrep operational out/mosquitto.sub | head -n 1 | awk '{ print $1 }')
-if [[ -z $received_topic ]]; then
-    echo No matching receive message found.
-    # false
-fi
+[[ -z $received_topic ]] && fail No matching receive message found.
 
 expected_topic=/$registry_id/$device_id/state
-if [[ $received_topic != $expected_topic ]]; then
-    echo Unexpected received topic $received_topic != $expected_topic
-    # false
-fi
+[[ $received_topic != $expected_topic ]] && fail Unexpected received topic $received_topic != $expected_topic
 
-if [[ $received_no != $serial_no ]]; then
-    echo Mismatched/missing serial no: $received_no != $serial_no
-    # false
-fi
+[[ $received_no != $serial_no ]] && fail Mismatched/missing serial no: $received_no != $serial_no
 
 echo export MQTT_TEST_BROKER=tcp://127.0.0.1:1883
 echo Done with mosquitto pubber check.

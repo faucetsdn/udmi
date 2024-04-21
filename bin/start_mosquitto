@@ -1,5 +1,8 @@
 #!/bin/bash -eu
 
+UDMI_ROOT=$(dirname $0)/..
+source $UDMI_ROOT/etc/shell_common.sh
+
 if [[ $# -ge 1 ]]; then
     site_model=$1
     shift
@@ -53,16 +56,17 @@ fi
 
 sudo systemctl restart mosquitto
 
-#--cert ~/certs/client.crt --key ~/certs/client.key
-CTRL_CONNECT="-u $AUTH_USER -P $AUTH_PASS -p 8883 --cafile $CA_CERT"
-mosquitto_ctrl $CTRL_CONNECT dynsec createRole device
-mosquitto_ctrl $CTRL_CONNECT dynsec addRoleACL device subscribePattern '/#' allow
-mosquitto_ctrl $CTRL_CONNECT dynsec addRoleACL device publishClientSend '/#' allow
-mosquitto_ctrl $CTRL_CONNECT dynsec createRole service
-mosquitto_ctrl $CTRL_CONNECT dynsec addRoleACL service subscribePattern '/#' allow
-mosquitto_ctrl $CTRL_CONNECT dynsec addRoleACL service publishClientSend '/#' allow
+CLIENT_DIR=$site_model/reflector
 
-clients=$(mosquitto_ctrl -u ${AUTH_USER} -P ${AUTH_PASS} dynsec listClients)
+CONNECT_OPTS="-p 8883 -u $AUTH_USER -P $AUTH_PASS --insecure --cafile $CA_CERT --cert $CLIENT_DIR/rsa_private.crt --key $CLIENT_DIR/rsa_private.pem"
+mosquitto_ctrl $CONNECT_OPTS dynsec createRole device
+mosquitto_ctrl $CONNECT_OPTS dynsec addRoleACL device subscribePattern '/#' allow
+mosquitto_ctrl $CONNECT_OPTS dynsec addRoleACL device publishClientSend '/#' allow
+mosquitto_ctrl $CONNECT_OPTS dynsec createRole service
+mosquitto_ctrl $CONNECT_OPTS dynsec addRoleACL service subscribePattern '/#' allow
+mosquitto_ctrl $CONNECT_OPTS dynsec addRoleACL service publishClientSend '/#' allow
+
+clients=$(mosquitto_ctrl $CONNECT_OPTS dynsec listClients)
 if [[ $clients =~ ${AUTH_USER} ]]; then
     echo Found expected client $AUTH_USER
 else

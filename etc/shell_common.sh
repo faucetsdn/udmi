@@ -3,6 +3,10 @@
 # executing scripts.
 #
 
+# Be agressive with error handling
+set -eu
+set -o pipefail
+
 # Force consistent sort order
 export LC_ALL=C
 

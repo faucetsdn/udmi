@@ -12,20 +12,32 @@ type=$1
 cd $2
 shift 2
 
-if [ $type == CERT ]; then
-    if [[ -f ca.crt ]]; then
-        echo Generating self-signed cert for server admin
-        CA_DIR=$PWD
-    else
-        CA_DIR=../../reflector
-    fi
+if [[ $(basename $PWD) == reflector ]]; then
+    echo Generating self-signed cert for server admin
+    CA_DIR=$PWD
+    SUBJ=server
+else
+    CA_DIR=../../reflector
+    SUBJ=client
+fi
+
+CA_CRT=$CA_DIR/ca.crt
+CA_SRL=$CA_DIR/ca.srl
+CA_KEY=$CA_DIR/rsa_private.pem
+
+if [[ $type == CA ]]; then
+    CERT_SUBJ=/CN=udmi
+    echo Generating certificate authority keys in $PWD
+    openssl req -new -x509 -days 3650 -key $CA_KEY -out ca.crt --subj $CERT_SUBJ
+    openssl genrsa -out server.key 2048
+    openssl req -new -key server.key -out server.csr --subj $CERT_SUBJ
+    openssl x509 -req -in server.csr -CA ca.crt -CAkey $CA_KEY -CAcreateserial -out server.crt -days 3650
+    echo Created certificate authority keys in $PWD
+elif [ $type == CERT ]; then
     echo Generating self-signed cert from CA defined in $(realpath $CA_DIR)
-    CA_CRT=$CA_DIR/ca.crt
-    CA_SRL=$CA_DIR/ca.srl
-    CA_KEY=$CA_DIR/rsa_private.pem
     echo Generating cert for device keys in $PWD
-    openssl req -new -x509 -days 3650 -key rsa_private.pem -out rsa_private.crt -subj /CN=unused
-    openssl req -new -key rsa_private.pem -out rsa_private.csr -subj /CN=unused
+    openssl req -new -x509 -days 3650 -key rsa_private.pem -out rsa_private.crt -subj /CN=$SUBJ
+    openssl req -new -key rsa_private.pem -out rsa_private.csr -subj /CN=$SUBJ
     openssl x509 -req -in rsa_private.csr -CA $CA_CRT -CAkey $CA_KEY -CAcreateserial -out rsa_private.crt -days 3650
 elif [ $type == RS256 ]; then
     openssl genrsa -out rsa_private.pem 2048
@@ -51,3 +63,5 @@ if [ -f rsa_private.pem ]; then
 else
     openssl pkcs8 -topk8 -inform PEM -outform DER -in ec_private.pem -nocrypt > ec_private.pkcs8
 fi
+
+echo Done with keygen.
