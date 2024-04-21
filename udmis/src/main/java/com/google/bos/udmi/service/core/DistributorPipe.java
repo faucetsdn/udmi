@@ -15,7 +15,7 @@ import udmi.schema.Envelope;
 @ComponentName("distributor")
 public class DistributorPipe extends ProcessorBase {
 
-  public static final String ROUTE_SEPERATOR = "/";
+  public static final String ROUTE_SEPARATOR = "~";
   public static final String clientId = makeClientId();
 
   private static String makeClientId() {
@@ -44,7 +44,7 @@ public class DistributorPipe extends ProcessorBase {
     Envelope envelope = getContinuation(message).getEnvelope();
     debug("Handling distribution from " + stringifyTerse(envelope));
     try {
-      String[] routeId = envelope.gatewayId.split(ROUTE_SEPERATOR, 2);
+      String[] routeId = envelope.gatewayId.split(ROUTE_SEPARATOR, 2);
       if (clientId.equals(routeId[0])) {
         debug("Rejecting loopback client " + clientId);
         return;
@@ -78,6 +78,6 @@ public class DistributorPipe extends ProcessorBase {
   }
 
   public String getRouteId(String source) {
-    return format("%s%s%s", clientId, ROUTE_SEPERATOR, source);
+    return format("%s%s%s", clientId, ROUTE_SEPARATOR, source);
   }
 }

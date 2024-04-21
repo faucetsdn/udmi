@@ -46,9 +46,7 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
   private final Client client;
   private final Map<String, String> options;
   private final boolean enabled;
-  private final ScheduledExecutorService scheduledExecutorService =
-      Executors.newSingleThreadScheduledExecutor();
-
+  private ScheduledExecutorService scheduledExecutorService;
 
   /**
    * Create an instance of this component.
@@ -149,10 +147,24 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
     if (enabled) {
       // Ideally this would use the superclass scheduler, but that's not available b/c of legacy
       // configuration mechanisms... so just do this internally for now.
+      scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
       scheduledExecutorService
           .scheduleAtFixedRate(this::periodicTask, HEARTBEAT_SEC, HEARTBEAT_SEC, TimeUnit.SECONDS);
     } else {
       info("Not enabled, not activating.");
+    }
+  }
+
+  @Override
+  public void shutdown() {
+    try {
+      if (enabled) {
+        scheduledExecutorService.shutdown();
+        scheduledExecutorService.awaitTermination(HEARTBEAT_SEC, TimeUnit.SECONDS);
+        client.close();
+      }
+    } catch (Exception e) {
+      throw new RuntimeException("While shutting down", e);
     }
   }
 
@@ -167,19 +179,6 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
       return asString(response.getKvs().get(0).getValue());
     } catch (Exception e) {
       throw new RuntimeException("While getting system key " + key);
-    }
-  }
-
-  @Override
-  public void shutdown() {
-    try {
-      if (enabled) {
-        scheduledExecutorService.shutdown();
-        scheduledExecutorService.awaitTermination(HEARTBEAT_SEC, TimeUnit.SECONDS);
-        client.close();
-      }
-    } catch (Exception e) {
-      throw new RuntimeException("While shutting down", e);
     }
   }
 }

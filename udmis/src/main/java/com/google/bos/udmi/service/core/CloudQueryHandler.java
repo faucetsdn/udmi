@@ -110,12 +110,9 @@ public class CloudQueryHandler {
     List<String> active = discoveryEvent.registries.entrySet().stream()
         .filter(entry -> entry.getValue().last_event_time != null).map(Entry::getKey).toList();
 
-    boolean traverse = shouldTraverseRegistries();
+    debug("Project has %d registries (%d active)", registries.size(), active.size());
 
-    debug("Project has %d registries (%d active) traverse %s %s", registries.size(), active.size(),
-        traverse, envelope.transactionId);
-
-    ifTrueThen(traverse, () -> active.forEach(this::issueModifiedRegistry));
+    ifTrueThen(shouldTraverseRegistries(), () -> active.forEach(this::issueModifiedRegistry));
   }
 
   private void queryDeviceDetails() {
@@ -128,7 +125,7 @@ public class CloudQueryHandler {
     discoveryEvent.cloud_model = iotAccess.fetchDevice(deviceRegistryId, deviceId);
     discoveryEvent.cloud_model.operation = null;
 
-    debug("Detailed device %s/%s %s", deviceRegistryId, deviceId, envelope.transactionId);
+    debug("Detailed device %s/%s", deviceRegistryId, deviceId);
 
     publish(discoveryEvent);
   }
@@ -149,12 +146,10 @@ public class CloudQueryHandler {
     List<String> active = discoveryEvent.devices.entrySet().stream()
         .filter(entry -> !isTrue(entry.getValue().blocked)).map(Entry::getKey).toList();
 
-    boolean traverse = shouldDetailEntries();
+    debug("Listed registry %s with %d devices (%d active)", deviceRegistryId,
+        discoveryEvent.devices.size(), active.size());
 
-    debug("Listed registry %s with %d devices (%d active) %s %s", deviceRegistryId,
-        discoveryEvent.devices.size(), active.size(), traverse, envelope.transactionId);
-
-    ifTrueThen(traverse, () -> active.forEach(this::issueModifiedDevice));
+    ifTrueThen(shouldDetailEntries(), () -> active.forEach(this::issueModifiedDevice));
   }
 
   private boolean shouldDetailEntries() {
@@ -169,8 +164,6 @@ public class CloudQueryHandler {
    * Process an individual cloud query.
    */
   public synchronized void process() {
-    debug("Processing cloud query %s/%s depth %s", envelope.deviceRegistryId, envelope.deviceId,
-        query.depth);
     if (envelope.deviceRegistryId == null) {
       queryAllRegistries();
     } else if (envelope.deviceId == null) {
