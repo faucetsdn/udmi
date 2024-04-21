@@ -3,6 +3,8 @@
 UDMI_ROOT=$(dirname $0)/..
 cd $UDMI_ROOT
 
+TEST_PUBBER=${TEST_PUBBER:-}
+
 source $UDMI_ROOT/etc/shell_common.sh
 
 if [[ $# != 0 ]]; then
@@ -10,12 +12,16 @@ if [[ $# != 0 ]]; then
     false
 fi
 
+ETC_DIR=/etc/mosquitto
+CERT_DIR=$ETC_DIR/certs
+CA_CERT=$CERT_DIR/ca.crt
+
 AUTH_USER=scrumptious
 AUTH_PASS=aardvark
-MQTT_USER=rocket
-MQTT_PASS=monkey
-OTHR_USER=kiwi
-OTHR_PASS=possum
+SERV_USER=rocket
+SERV_PASS=monkey
+CLNT_USER=kiwi
+CLNT_PASS=possum
 
 bin/start_mosquitto
 
@@ -23,44 +29,55 @@ site_path=sites/udmi_site_model
 registry_id=site_model
 device_id=AHU-1 # Static device for testing
 serial_no=$RANDOM
+CLIENT_DIR=$site_path/devices/$device_id
 
 site_config=$site_path/cloud_iot_config.json
 cloud_region=$(jq -r .cloud_region $site_config)
 registry_id=$(jq -r .registry_id $site_config)
-mqtt_id=$registry_id/testing
-othr_id=$registry_id/other
+SERV_ID=$registry_id/server
+CLNT_ID=$registry_id/client
 
-mosquitto_ctrl -u $AUTH_USER -P $AUTH_PASS dynsec deleteClient $MQTT_USER || true
-mosquitto_ctrl -u $AUTH_USER -P $AUTH_PASS dynsec createClient $MQTT_USER -p $MQTT_PASS -c $mqtt_id
-mosquitto_ctrl -u $AUTH_USER -P $AUTH_PASS dynsec addClientRole $MQTT_USER device
-mosquitto_ctrl -u $AUTH_USER -P $AUTH_PASS dynsec deleteClient $OTHR_USER || true
-mosquitto_ctrl -u $AUTH_USER -P $AUTH_PASS dynsec createClient $OTHR_USER -p $OTHR_PASS -c $othr_id
-mosquitto_ctrl -u $AUTH_USER -P $AUTH_PASS dynsec addClientRole $OTHR_USER service
+sudo chmod a+r $CERT_DIR/rsa_private.*
+bin/keygen CERT $CLIENT_DIR
+
+CTRL_OPTS="-u $AUTH_USER -P $AUTH_PASS --insecure --cafile $CA_CERT --cert $CERT_DIR/rsa_private.crt --key $CERT_DIR/rsa_private.pem"
+SERVER_OPTS="-i $SERV_ID -u $SERV_USER -P $SERV_PASS --insecure --cafile $CA_CERT --cert $CERT_DIR/rsa_private.crt --key $CERT_DIR/rsa_private.pem"
+CLIENT_OPTS="-i $CLNT_ID -u $CLNT_USER -P $CLNT_PASS --insecure --cafile $CA_CERT --cert $CLIENT_DIR/rsa_private.crt --key $CLIENT_DIR/rsa_private.pem"
+
+MOSQUITTO_CTRL="sudo mosquitto_ctrl $CTRL_OPTS dynsec"
+
+$MOSQUITTO_CTRL deleteClient $SERV_USER
+$MOSQUITTO_CTRL createClient $SERV_USER -p $SERV_PASS -c $SERV_ID
+$MOSQUITTO_CTRL addClientRole $SERV_USER service
+$MOSQUITTO_CTRL deleteClient $CLNT_USER
+$MOSQUITTO_CTRL createClient $CLNT_USER -p $CLNT_PASS -c $CLNT_ID
+$MOSQUITTO_CTRL addClientRole $CLNT_USER device
 
 killall mosquitto_sub || true
 
 topic=/mqtt/test
 
+
 echo Subscribing to all topics in the background...
-mosquitto_sub -F "%t %p" -t '#' -u ${MQTT_USER} -P ${MQTT_PASS} -i $mqtt_id > out/mosquitto.sub &
+mosquitto_sub $SERVER_OPTS -F "%t %p" -t '#' > out/mosquitto.sub &
 
 sleep 1
 
 echo Publishing test message
-mosquitto_pub -t $topic -u ${OTHR_USER} -P ${OTHR_PASS} -i $othr_id -m "Hello Racket"
+mosquitto_pub $CLIENT_OPTS -t $topic -m "Hello Racket"
 
 sleep 1
 
 echo Checking received message
 fgrep Racket out/mosquitto.sub
 
-DEV_USER=nobody
+CLIENT_USER=nobody
 hash_pass=$(sha256sum < $site_path/devices/$device_id/rsa_private.pkcs8)
 dev_pass=${hash_pass:0:8}
 dev_id=$registry_id/$device_id
-mosquitto_ctrl -u $AUTH_USER -P $AUTH_PASS dynsec deleteClient $DEV_USER || true
-mosquitto_ctrl -u $AUTH_USER -P $AUTH_PASS dynsec createClient $DEV_USER -p $dev_pass -c $dev_id
-mosquitto_ctrl -u $AUTH_USER -P $AUTH_PASS dynsec addClientRole $DEV_USER device
+$MOSQUITTO_CTRL deleteClient $CLIENT_USER || true
+$MOSQUITTO_CTRL createClient $CLIENT_USER -p $dev_pass -c $dev_id
+$MOSQUITTO_CTRL addClientRole $CLIENT_USER device
 
 sleep 1
 
@@ -76,7 +93,7 @@ cat <<EOF > /tmp/pubber_config.json
       "port": 1883,
       "auth_provider": {
         "basic": {
-          "username": "$DEV_USER",
+          "username": "$CLIENT_USER",
           "password": "$dev_pass"
         }
       }
@@ -89,19 +106,23 @@ EOF
 
 kill $(pgrep -f 'java.*pubber-.*jar') || true
 
-pubber/bin/build
+if [[ -n $TEST_PUBBER ]]; then
+    pubber/bin/build
+fi
 
 # Clean out the persistant data store to ensure a clean state each time.
 rm -rf sites/udmi_site_model/out/devices/$device_id/persistent_data.json
 
 echo Publishing empty config to /$registry_id/$device_id/config
-mosquitto_pub -r -t /$registry_id/$device_id/config -u ${MQTT_USER} -P ${MQTT_PASS} -i $mqtt_id -m "{}"
+mosquitto_pub $CLIENT_OPTS -r -t /$registry_id/$device_id/config -m "{}"
 
-echo Running pubber for 10s...
-timeout 10s pubber/bin/run /tmp/pubber_config.json || true
+if [[ -n $TEST_PUBBER ]]; then
+    echo Running pubber for 10s...
+    timeout 10s pubber/bin/run /tmp/pubber_config.json || true
+fi
 
 echo Publishing ending test message
-mosquitto_pub -t $topic -u ${OTHR_USER} -P ${OTHR_PASS} -i $othr_id -m "Hello Rudolph"
+mosquitto_pub $CLIENT_OPTS -t $topic -m "Hello Rudolph"
 
 sleep 1
 
@@ -114,15 +135,17 @@ cat out/mosquitto.sub
 echo Checking received end message
 fgrep Rudolph out/mosquitto.sub
 
-echo Checking messages received from pubber
-received_no=$(fgrep operational out/mosquitto.sub | head -n 1 | sed -E 's/^[^{]+//' | jq -r .system.serial_no)
-received_topic=$(fgrep operational out/mosquitto.sub | head -n 1 | awk '{ print $1 }')
-[[ -z $received_topic ]] && fail No matching receive message found.
+if [[ -n $TEST_PUBBER ]]; then
+    echo Checking messages received from pubber
+    received_no=$(fgrep operational out/mosquitto.sub | head -n 1 | sed -E 's/^[^{]+//' | jq -r .system.serial_no)
+    received_topic=$(fgrep operational out/mosquitto.sub | head -n 1 | awk '{ print $1 }')
+    [[ -z $received_topic ]] && fail No matching receive message found.
 
-expected_topic=/$registry_id/$device_id/state
-[[ $received_topic != $expected_topic ]] && fail Unexpected received topic $received_topic != $expected_topic
+    expected_topic=/$registry_id/$device_id/state
+    [[ $received_topic != $expected_topic ]] && fail Unexpected received topic $received_topic != $expected_topic
 
-[[ $received_no != $serial_no ]] && fail Mismatched/missing serial no: $received_no != $serial_no
+    [[ $received_no != $serial_no ]] && fail Mismatched/missing serial no: $received_no != $serial_no
+fi
 
 echo export MQTT_TEST_BROKER=tcp://127.0.0.1:1883
 echo Done with mosquitto pubber check.
