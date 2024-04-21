@@ -40,9 +40,9 @@ fi
 if [[ ! -f $CERT_DIR/ca.crt ]]; then
     echo Importing server certs from $site_model...
     sudo cp $site_model/reflector/ca.* $CERT_DIR/
-    sudo cp $site_model/reflector/server.* $CERT_DIR/
+    sudo cp $site_model/reflector/rsa_private.* $CERT_DIR/
     sudo chgrp -R $GROUP $CERT_DIR
-    sudo chmod 0640 $CERT_DIR/server.key
+    sudo chmod 0640 $CERT_DIR/rsa_private.*
     ls -l $CERT_DIR
 fi
 

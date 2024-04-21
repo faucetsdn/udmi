@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-TYPES="{ CERT, RS256, RS256_X509, ES256, ES256_X509 }"
+TYPES="{ CA, CERT, RS256, RS256_X509, ES256, ES256_X509 }"
 
 if [ "$#" != 2 ]; then
     echo $0 type out_dir
@@ -26,17 +26,16 @@ CA_SRL=$CA_DIR/ca.srl
 CA_KEY=$CA_DIR/rsa_private.pem
 
 if [[ $type == CA ]]; then
-    CERT_SUBJ=/CN=udmi
-    echo Generating certificate authority keys in $PWD
-    openssl req -new -x509 -days 3650 -key $CA_KEY -out ca.crt --subj $CERT_SUBJ
+    CERT_SUBJ=/CN=ca
+    echo Generating CA and server certs in $PWD
+    openssl req -new -x509 -days 3650 -key $CA_KEY -out ca.crt -subj $CERT_SUBJ
     openssl genrsa -out server.key 2048
-    openssl req -new -key server.key -out server.csr --subj $CERT_SUBJ
+    openssl req -new -key server.key -out server.csr -subj /CN=$SUBJ
     openssl x509 -req -in server.csr -CA ca.crt -CAkey $CA_KEY -CAcreateserial -out server.crt -days 3650
     echo Created certificate authority keys in $PWD
 elif [ $type == CERT ]; then
     echo Generating self-signed cert from CA defined in $(realpath $CA_DIR)
     echo Generating cert for device keys in $PWD
-    openssl req -new -x509 -days 3650 -key rsa_private.pem -out rsa_private.crt -subj /CN=$SUBJ
     openssl req -new -key rsa_private.pem -out rsa_private.csr -subj /CN=$SUBJ
     openssl x509 -req -in rsa_private.csr -CA $CA_CRT -CAkey $CA_KEY -CAcreateserial -out rsa_private.crt -days 3650
 elif [ $type == RS256 ]; then
