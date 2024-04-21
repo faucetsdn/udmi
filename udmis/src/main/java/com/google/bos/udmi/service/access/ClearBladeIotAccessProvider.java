@@ -688,7 +688,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
           .setBinaryData(binaryData)
           .setSubfolder(subFolder)
           .build();
-      debug("SendCommandToDeviceRequest is " + request.toString());
       SendCommandToDeviceResponse response = deviceManager.sendCommandToDevice(request);
       if (response == null) {
         throw new RuntimeException("SendCommandToDevice execution failed for " + deviceName);
