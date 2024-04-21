@@ -3,11 +3,6 @@
 UDMI_ROOT=$(dirname $0)/..
 source $UDMI_ROOT/etc/shell_common.sh
 
-if [[ $# -ge 1 ]]; then
-    site_model=$1
-    shift
-fi
-
 GROUP=mosquitto
 ETC_DIR=/etc/mosquitto
 UDMI_FILE=$ETC_DIR/conf.d/udmi.conf
@@ -37,15 +32,6 @@ if [[ ! -f $DYN_FILE ]]; then
     sudo chmod 0660 $DYN_FILE
 fi
 
-if [[ ! -f $CERT_DIR/ca.crt ]]; then
-    echo Importing server certs from $site_model...
-    sudo cp $site_model/reflector/ca.* $CERT_DIR/
-    sudo cp $site_model/reflector/rsa_private.* $CERT_DIR/
-    sudo chgrp -R $GROUP $CERT_DIR
-    sudo chmod 0640 $CERT_DIR/rsa_private.*
-    ls -l $CERT_DIR
-fi
-
 if [[ ! -f $PASS_FILE ]]; then
     echo Creating $PASS_FILE
     sudo touch $PASS_FILE
@@ -56,17 +42,17 @@ fi
 
 sudo systemctl restart mosquitto
 
-CLIENT_DIR=$site_model/reflector
+CONNECT_OPTS="-p 8883 -u $AUTH_USER -P $AUTH_PASS --insecure --cafile $CA_CERT --cert $CERT_DIR/rsa_private.crt --key $CERT_DIR/rsa_private.pem"
+MOSQUITTO_CTRL="sudo mosquitto_ctrl $CONNECT_OPTS dynsec"
 
-CONNECT_OPTS="-p 8883 -u $AUTH_USER -P $AUTH_PASS --insecure --cafile $CA_CERT --cert $CLIENT_DIR/rsa_private.crt --key $CLIENT_DIR/rsa_private.pem"
-mosquitto_ctrl $CONNECT_OPTS dynsec createRole device
-mosquitto_ctrl $CONNECT_OPTS dynsec addRoleACL device subscribePattern '/#' allow
-mosquitto_ctrl $CONNECT_OPTS dynsec addRoleACL device publishClientSend '/#' allow
-mosquitto_ctrl $CONNECT_OPTS dynsec createRole service
-mosquitto_ctrl $CONNECT_OPTS dynsec addRoleACL service subscribePattern '/#' allow
-mosquitto_ctrl $CONNECT_OPTS dynsec addRoleACL service publishClientSend '/#' allow
+$MOSQUITTO_CTRL createRole device
+$MOSQUITTO_CTRL addRoleACL device subscribePattern '/#' allow
+$MOSQUITTO_CTRL addRoleACL device publishClientSend '/#' allow
+$MOSQUITTO_CTRL createRole service
+$MOSQUITTO_CTRL addRoleACL service subscribePattern '/#' allow
+$MOSQUITTO_CTRL addRoleACL service publishClientSend '/#' allow
 
-clients=$(mosquitto_ctrl $CONNECT_OPTS dynsec listClients)
+clients=$($MOSQUITTO_CTRL listClients)
 if [[ $clients =~ ${AUTH_USER} ]]; then
     echo Found expected client $AUTH_USER
 else
