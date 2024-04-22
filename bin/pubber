@@ -61,6 +61,7 @@ $UDMI_ROOT/pubber/bin/build
 
 echo Running tools version $udmi_version
 
+options_json=
 for option in $*; do
     if [[ $option == *"="* ]]; then
         k=$(echo $option | cut -d'=' -f1)
