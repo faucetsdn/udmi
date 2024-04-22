@@ -85,6 +85,10 @@ fi
 
 source venv/bin/activate
 
+quoted_namespace=null
+quoted_bridge=null
+iot_provider=null
+
 if [[ -d $site_path ]]; then
     echo Using site model directory $site_path
     site_model=$site_path
@@ -105,6 +109,7 @@ elif [[ -f $site_path ]]; then
     endpoint=`jq .reflector_endpoint $site_path`
     alt_registry=`jq .alt_registry $site_path`
     registry_suffix=`jq .registry_suffix $site_path`
+    quoted_namespace=`jq .udmi_namespace $site_path`
 else
     echo Site model $site_path not found.
     false
@@ -119,9 +124,6 @@ fi
 # Format of cmdline project_id is {//PROVIDER/}PROJECT (optional PROVIDER)
 # e.g. bos-testing-dev or //gcp/bos-testing-dev
 
-quoted_namespace=null
-quoted_bridge=null
-iot_provider=null
 if [[ $project_id =~ ^// ]]; then
     no_prefix=${project_id#//}
     iot_provider=\"${no_prefix%%/*}\"
