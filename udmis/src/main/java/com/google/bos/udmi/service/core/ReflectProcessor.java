@@ -86,7 +86,7 @@ public class ReflectProcessor extends ProcessorBase {
         Envelope envelope = extractMessageEnvelope(objectMap);
         reflection.transactionId = firstNonNull(envelope.transactionId, reflection.transactionId,
             ReflectProcessor::makeTransactionId);
-        ifNotNullThen(payload, p -> processReflection(reflection, envelope, payload));
+        processReflection(reflection, envelope, payload);
       }
     } catch (Exception e) {
       processException(reflection, objectMap, e);
@@ -102,6 +102,13 @@ public class ReflectProcessor extends ProcessorBase {
       return false;
     }
     return lastConfig.after(START_TIME) && !lastConfigAck.before(lastConfig);
+  }
+
+  private ModelUpdate extractDeviceModel(CloudModel request) {
+    return ifNotNullGet(request.metadata,
+        metadata -> ofNullable(metadata.get(MetadataMapKeys.UDMI_METADATA))
+            .map(modelString -> fromStringStrict(ModelUpdate.class, modelString))
+            .orElse(null));
   }
 
   private Envelope extractMessageEnvelope(Object message) {
@@ -124,21 +131,26 @@ public class ReflectProcessor extends ProcessorBase {
 
   private CloudModel getReflectionResult(Envelope attributes, Map<String, Object> payload) {
     try {
-      switch (attributes.subType) {
-        case QUERY:
-          return reflectQuery(attributes, payload);
-        case MODEL:
-          return reflectModel(attributes, convertToStrict(CloudModel.class, payload));
-        default:
-          return reflectPropagate(attributes, ofNullable(payload).orElseGet(HashMap::new));
-      }
+      SubType subType = ofNullable(attributes.subType).orElse(SubType.EVENTS);
+      return switch (subType) {
+        case QUERY -> reflectQuery(attributes, payload);
+        case MODEL -> reflectModel(attributes, convertToStrict(CloudModel.class, payload));
+        default -> reflectPropagate(attributes, ofNullable(payload).orElseGet(HashMap::new));
+      };
     } catch (Exception e) {
       throw new RuntimeException("While processing reflect message type " + attributes.subType, e);
     }
   }
 
+  private void handleAwareness(Envelope envelope, UdmiState toolState) {
+    ifNotNullThen(distributor, d -> catchToElse(() -> d.publish(envelope, toolState, containerId),
+        e -> error("Error handling awareness: " + friendlyStackTrace(e))));
+    updateAwareness(envelope, toolState);
+  }
+
   private void processException(Envelope reflection, Map<String, Object> objectMap, Exception e) {
-    String transactionId = (String) objectMap.get(TRANSACTION_KEY);
+    String transactionId =
+        ofNullable((String) objectMap.get(TRANSACTION_KEY)).orElse(reflection.transactionId);
     String stackMessage = friendlyStackTrace(e);
     String detailString = multiTrim(stackTraceString(e), CONDENSER_STRING);
     warn("Processing exception %s: %s", transactionId, stackMessage);
@@ -200,13 +212,6 @@ public class ReflectProcessor extends ProcessorBase {
     return iotAccess.modelResource(attributes.deviceRegistryId, attributes.deviceId, request);
   }
 
-  private ModelUpdate extractDeviceModel(CloudModel request) {
-    return ifNotNullGet(request.metadata,
-        metadata -> ofNullable(metadata.get(MetadataMapKeys.UDMI_METADATA))
-            .map(modelString -> fromStringStrict(ModelUpdate.class, modelString))
-            .orElse(null));
-  }
-
   private CloudModel reflectPropagate(Envelope attributes, Map<String, Object> payload) {
     if (requireNonNull(attributes.subType) == SubType.CONFIG) {
       processConfigChange(attributes, payload, null);
@@ -249,12 +254,6 @@ public class ReflectProcessor extends ProcessorBase {
     String contents = stringifyTerse(configMap);
     debug("Setting reflector config %s %s: %s", registryId, deviceId, contents);
     iotAccess.modifyConfig(registryId, deviceId, previous -> contents);
-  }
-
-  private void handleAwareness(Envelope envelope, UdmiState toolState) {
-    ifNotNullThen(distributor, d -> catchToElse(() -> d.publish(envelope, toolState, containerId),
-        e -> error("Error handling awareness: " + friendlyStackTrace(e))));
-    updateAwareness(envelope, toolState);
   }
 
   private void reflectStateUpdate(Envelope attributes, String state) {
