@@ -199,6 +199,7 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
     attributesMap.computeIfAbsent("publishTime",
         key -> isoConvert(ofEpochSecond(message.getPublishTime().getSeconds())));
     attributesMap.computeIfAbsent(Common.TRANSACTION_KEY, key -> PS_TXN_PREFIX + messageId);
+    debug("Handling transation " + attributesMap.get(Common.TRANSACTION_KEY));
     receiveMessage(attributesMap, message.getData().toStringUtf8());
   }
 
