@@ -213,7 +213,7 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private CloudModel reflectPropagate(Envelope attributes, Map<String, Object> payload) {
-    if (requireNonNull(attributes.subType) == SubType.CONFIG) {
+    if (attributes.subType == SubType.CONFIG) {
       processConfigChange(attributes, payload, null);
     }
     Class<?> messageClass = getMessageClassFor(attributes, true);

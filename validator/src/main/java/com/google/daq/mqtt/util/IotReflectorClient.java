@@ -83,7 +83,6 @@ public class IotReflectorClient implements IotProvider {
   @Override
   public void updateConfig(String deviceId, SubFolder subFolder, String config) {
     try {
-      System.err.printf("Update config %s/%s: %s%n", deviceId, subFolder, config);
       transaction(deviceId, format(CONFIG_TOPIC_FORMAT, subFolder.value()), config,
           QuerySpeed.LONG);
     } catch (Exception e) {
@@ -220,17 +219,16 @@ public class IotReflectorClient implements IotProvider {
           throw new RuntimeException("UDMIS processing exception", exception);
         }
 
-        String error = (String) messageBundle.message.get(ERROR_KEY);
-        if (error != null) {
-          throw new RuntimeException(
-              format("UDMIS pipeline error %s: %s", messageBundle.attributes.get(
-                  TRANSACTION_KEY), error));
-        }
-
         String transactionId = messageBundle.attributes.get(TRANSACTION_KEY);
         CompletableFuture<Map<String, Object>> future = ifNotNullGet(transactionId,
             futures::remove);
         ifNotNullThen(future, f -> f.complete(messageBundle.message));
+
+        String error = (String) messageBundle.message.get(ERROR_KEY);
+        if (error != null) {
+          throw new RuntimeException(format("UDMIS pipeline error %s: %s", transactionId, error));
+        }
+
         if (future == null && transactionId != null
             && transactionId.startsWith(REFLECTOR_PREFIX)) {
           throw new RuntimeException("Received unexpected reply message " + transactionId);
