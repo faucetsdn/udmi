@@ -91,8 +91,9 @@ if [[ -n ${UDMI_REGISTRY_SUFFIX:-} ]]; then
 fi
 
 if [[ -n ${UDMI_ALT_REGISTRY:-} ]]; then
-    echo Using alt registry $UDMI_ALT_REGISTRY$UDMI_REGISTRY_SUFFIX
-    jq ".alt_registry = \"$UDMI_ALT_REGISTRY$UDMI_REGISTRY_SUFFIX\"" $iot_config | sponge $iot_config
+    alt_registry=$UDMI_ALT_REGISTRY${UDMI_REGISTRY_SUFFIX:-}
+    echo Using alt registry $alt_registry
+    jq ".alt_registry = \"$alt_registry\"" $iot_config | sponge $iot_config
 fi
 
 bin/reset_config $site_path $project_id $device_id
