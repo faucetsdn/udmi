@@ -11,8 +11,10 @@ import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.json.JsonReadFeature;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.node.MissingNode;
 import java.io.File;
 import java.nio.file.Files;
 import java.time.Instant;
@@ -325,7 +327,8 @@ public abstract class JsonUtil {
    */
   public static Object parseJson(String message) {
     try {
-      return OBJECT_MAPPER.readTree(message);
+      JsonNode jsonNode = OBJECT_MAPPER.readTree(message);
+      return jsonNode instanceof MissingNode ? null : jsonNode;
     } catch (Exception e) {
       throw new RuntimeException("While parsing json object", e);
     }
