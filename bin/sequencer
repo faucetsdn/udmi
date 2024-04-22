@@ -187,7 +187,7 @@ egrep 'RESULT |CPBLTY ' $SEQUENCER_LOG | fgrep NOTICE | sort -k 6 | \
 
 # Sort by test name (3th field)
 fgrep RESULT $site_model/out/devices/$device_id/RESULT.log | \
-    fgrep ' schemas ' | sort -k 3 | tee $SCHEMA_OUT
+    fgrep ' schemas ' | sort -k 3 | tee $SCHEMA_OUT || true
 more $site_model/out/devices/$device_id/RESULT.log $SCHEMA_OUT | cat
 
 bin/sequencer_report $site_model $device_id
