@@ -82,7 +82,14 @@ public class IotReflectorClient implements IotProvider {
 
   @Override
   public void updateConfig(String deviceId, SubFolder subFolder, String config) {
-    transaction(deviceId, format(CONFIG_TOPIC_FORMAT, subFolder.value()), config, QuerySpeed.LONG);
+    try {
+      System.err.printf("Update config %s/%s: %s%n", deviceId, subFolder, config);
+      transaction(deviceId, format(CONFIG_TOPIC_FORMAT, subFolder.value()), config,
+          QuerySpeed.LONG);
+    } catch (Exception e) {
+      System.err.println("Exception handling config update: " + friendlyStackTrace(e));
+      throw e;
+    }
   }
 
   @Override
@@ -215,7 +222,9 @@ public class IotReflectorClient implements IotProvider {
 
         String error = (String) messageBundle.message.get(ERROR_KEY);
         if (error != null) {
-          System.err.println("UDMIS error: " + error);
+          throw new RuntimeException(
+              format("UDMIS pipeline error %s: %s", messageBundle.attributes.get(
+                  TRANSACTION_KEY), error));
         }
 
         String transactionId = messageBundle.attributes.get(TRANSACTION_KEY);
