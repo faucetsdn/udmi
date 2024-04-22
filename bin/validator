@@ -17,8 +17,9 @@ if [[ -n $1 ]]; then
     shift
 fi
 
+subscription=null
 if [[ -n $1 && ! $1 =~ ^- ]]; then
-    subscription=$1
+    subscription=\"$1\"
     shift
 fi
 
@@ -64,7 +65,7 @@ elif [[ -n $project_id ]]; then
   "bridge_host": $quoted_bridge,
   "udmi_namespace": $quoted_namespace,
   "site_model": "$site_path",
-  "feed_name": "$subscription"
+  "feed_name": ${subscription}
 }
 EOF
 else
