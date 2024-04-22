@@ -4,7 +4,7 @@ UDMI_ROOT=$(realpath $(dirname $0)/..)
 source $UDMI_ROOT/etc/shell_common.sh
 
 function cleanup {
-    if [[ -n $PUB_PID && -d /proc/$PUB_PID ]]; then
+    if [[ -n ${PUB_PID:-} && -d /proc/$PUB_PID ]]; then
         echo Killing pubber runner $PUB_PID
         kill $PUB_PID
     fi
@@ -46,7 +46,7 @@ else
     jq -r .device_endpoint $config_file > /tmp/endpoint.json
 fi
 
-if [[ -n $UDMI_REGISTRY_SUFFIX ]]; then
+if [[ -n ${UDMI_REGISTRY_SUFFIX:-} ]]; then
     echo Using registry suffix $UDMI_REGISTRY_SUFFIX
     registry_suffix=$UDMI_REGISTRY_SUFFIX
 else
