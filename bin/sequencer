@@ -175,7 +175,7 @@ validator/bin/build
 
 echo $JAVA_CMD
 result=0
-$JAVA_CMD 2>&1 | tee $SEQUENCER_LOG
+$JAVA_CMD 2>&1 | tee $SEQUENCER_LOG || true
 
 echo
 echo Extracting sequence results:
