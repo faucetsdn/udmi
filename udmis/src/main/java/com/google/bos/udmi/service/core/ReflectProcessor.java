@@ -274,7 +274,6 @@ public class ReflectProcessor extends ProcessorBase {
   private void sendReflectCommand(Envelope reflection, Envelope message, Object payload) {
     String reflectRegistry = reflection.deviceRegistryId;
     String deviceRegistry = reflection.deviceId;
-    debug("Sending command " + stringifyTerse(payload));
     message.payload = encodeBase64(stringify(payload));
     iotAccess.sendCommand(reflectRegistry, deviceRegistry, SubFolder.UDMI, stringify(message));
   }
