@@ -205,11 +205,11 @@ public class ReflectProcessor extends ProcessorBase {
   private ModelUpdate extractDeviceModel(CloudModel request) {
     return ifNotNullGet(request.metadata,
         metadata -> ofNullable(metadata.get(MetadataMapKeys.UDMI_METADATA))
-            .map(ReflectProcessor::ignoreNonModelUpdates)
+            .map(ReflectProcessor::asModelUpdate)
             .orElse(null));
   }
 
-  private static ModelUpdate ignoreNonModelUpdates(String modelString) {
+  private static ModelUpdate asModelUpdate(String modelString) {
     // If it's not a valid JSON object, then fall back to a string description alternate.
     if (modelString == null || !modelString.startsWith(JsonUtil.JSON_OBJECT_PREFIX)) {
       ModelUpdate modelUpdate = new ModelUpdate();
