@@ -40,6 +40,8 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import javax.net.SocketFactory;
+import javax.net.ssl.SSLSocketFactory;
 import org.apache.http.ConnectionClosedException;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
@@ -370,7 +372,12 @@ public class MqttPublisher implements Publisher {
     }
   }
 
+  private SocketFactory getSocketFactory(String deviceId) {
+    return SSLSocketFactory.getDefault();
+  }
+
   private void configureAuth(MqttConnectOptions options) throws Exception {
+    options.setSocketFactory(getSocketFactory(deviceId));
     if (configuration.endpoint.auth_provider == null) {
       info("No endpoint auth_provider found, using gcp defaults");
       configureAuth(options, (Jwt) null);
