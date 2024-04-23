@@ -107,7 +107,7 @@ public abstract class JsonUtil {
     try {
       return message == null ? null : fromStringStrict(targetClass, stringify(message));
     } catch (Exception e) {
-      throw new RuntimeException("While converting to " + targetClass.getName(), e);
+      throw new RuntimeException("While converting strict to " + targetClass.getName(), e);
     }
   }
 
@@ -116,7 +116,7 @@ public abstract class JsonUtil {
     try {
       return OBJECT_MAPPER.readValue(messageString, checkNotNull(targetClass, "target class"));
     } catch (Exception e) {
-      throw new RuntimeException("While converting to " + targetClass.getName(), e);
+      throw new RuntimeException("While converting string to " + targetClass.getName(), e);
     }
   }
 
@@ -125,10 +125,11 @@ public abstract class JsonUtil {
     try {
       return STRICT_MAPPER.readValue(messageString, checkNotNull(targetClass, "target class"));
     } catch (Exception e) {
-      throw new RuntimeException("While converting to " + targetClass.getName(), e);
+      throw new RuntimeException("While converting string/string to " + targetClass.getName(), e);
     }
   }
 
+  @SuppressWarnings("unchecked")
   public static Map<String, Object> getAsMap(Map<String, Object> map, String key) {
     return (Map<String, Object>) map.get(key);
   }

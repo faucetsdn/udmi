@@ -27,6 +27,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.JSON_SUFFIX;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
 import static com.google.udmi.util.JsonUtil.getInstant;
+import static com.google.udmi.util.JsonUtil.mapCast;
 import static com.google.udmi.util.SiteModel.DEVICES_DIR;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
@@ -511,13 +512,13 @@ public class Validator {
   }
 
   protected synchronized void validateMessage(MessageBundle nullable) {
-    ifNotNullThen(nullable, bundle -> validateMessage(bundle.message, bundle.attributes));
+    ifNotNullThen(nullable, bundle -> {
+      Object object = ofNullable((Object) bundle.message).orElse(bundle.rawMessage);
+      validateMessage(object, bundle.attributes);
+    });
   }
 
-  private void validateMessage(
-      Map<String, Object> message,
-      Map<String, String> attributes) {
-
+  private void validateMessage(Object msgObject, Map<String, String> attributes) {
     String deviceId = attributes.get("deviceId");
     if (deviceId != null && reportingDevices.containsKey(deviceId)) {
       processedDevices.add(deviceId);
@@ -526,6 +527,13 @@ public class Validator {
     if (!shouldConsiderMessage(attributes)) {
       return;
     }
+
+    if (msgObject instanceof String) {
+      System.err.printf("Skipping validation of string message %s %s/%s%n", deviceId,
+          attributes.get(SUBTYPE_PROPERTY_KEY), attributes.get(SUBFOLDER_PROPERTY_KEY));
+      return;
+    }
+    Map<String, Object> message = mapCast(msgObject);
 
     if (traceDir != null) {
       writeMessageCapture(message, attributes);
@@ -662,7 +670,7 @@ public class Validator {
     }
 
     try {
-      validateMessage(schemaMap.get(ENVELOPE_SCHEMA_ID), attributes);
+      validateMessage(schemaMap.get(ENVELOPE_SCHEMA_ID), (Object) attributes);
     } catch (Exception e) {
       outputLogger.error("Error validating attributes: " + friendlyStackTrace(e));
       device.addError(e, attributes, Category.VALIDATION_DEVICE_RECEIVE);
