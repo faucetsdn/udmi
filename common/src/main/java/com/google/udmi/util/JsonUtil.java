@@ -411,16 +411,23 @@ public abstract class JsonUtil {
    * Convert the string to a valid Java object.
    */
   public static Object toObject(String message) {
-    if (message.length() == 0) {
-      throw new RuntimeException("Invalid empty JSON representation");
-    }
-    if (message.startsWith(JSON_OBJECT_LEADER)) {
+    if (message != null && message.startsWith(JSON_OBJECT_LEADER)) {
       return fromString(TreeMap.class, message);
+    }
+    return unquoteJson(message);
+  }
+
+  /**
+   * Extract the underlying string representation from a JSON encoded message.
+   */
+  public static String unquoteJson(String message) {
+    if (message == null || message.isEmpty() || message.startsWith(JSON_OBJECT_LEADER)) {
+      return message;
     }
     if (message.startsWith(JSON_STRING_LEADER)) {
       return message.substring(1, message.length() - 1);
     }
-    throw new RuntimeException("Unrecognized JSON encoding: " + message.charAt(0));
+    throw new RuntimeException("Unrecognized JSON start encoding: " + message.charAt(0));
   }
 
   /**
