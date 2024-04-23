@@ -27,6 +27,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.JSON_SUFFIX;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
 import static com.google.udmi.util.JsonUtil.getInstant;
+import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.mapCast;
 import static com.google.udmi.util.SiteModel.DEVICES_DIR;
 import static java.lang.String.format;
@@ -528,22 +529,16 @@ public class Validator {
       return;
     }
 
-    if (msgObject instanceof String) {
-      System.err.printf("Skipping validation of string message %s %s/%s%n", deviceId,
-          attributes.get(SUBTYPE_PROPERTY_KEY), attributes.get(SUBFOLDER_PROPERTY_KEY));
-      return;
-    }
-    Map<String, Object> message = mapCast(msgObject);
-
     if (traceDir != null) {
-      writeMessageCapture(message, attributes);
+      writeMessageCapture(msgObject, attributes);
     }
 
     if (simulatedMessages) {
-      mockNow = getInstant((String) message.get(TIMESTAMP_KEY));
+      mockNow = getMessageInstant(msgObject, attributes);
       ReportingDevice.setMockNow(mockNow);
     }
-    ReportingDevice reportingDevice = validateMessageCore(message, attributes);
+
+    ReportingDevice reportingDevice = validateMessageCore(msgObject, attributes);
     if (reportingDevice != null) {
       Date now = simulatedMessages ? Date.from(mockNow) : new Date();
       sendValidationResult(attributes, reportingDevice, now);
@@ -551,6 +546,14 @@ public class Validator {
     if (simulatedMessages) {
       processValidationReport();
     }
+  }
+
+  private Instant getMessageInstant(Object msgObject, Map<String, String> attributes) {
+    if (msgObject instanceof Map) {
+      Map<String, Object> mapped = mapCast(msgObject);
+      return getInstant((String) mapped.get(TIMESTAMP_KEY));
+    }
+    return getInstant(attributes.get(PUBLISH_TIME_KEY));
   }
 
   private void validateMessage(JsonSchema schema, Object message) {
@@ -561,9 +564,7 @@ public class Validator {
     }
   }
 
-  private ReportingDevice validateMessageCore(
-      Map<String, Object> message,
-      Map<String, String> attributes) {
+  private ReportingDevice validateMessageCore(Object message, Map<String, String> attributes) {
 
     String deviceId = attributes.get("deviceId");
     if (deviceId == null) {
@@ -601,12 +602,22 @@ public class Validator {
   /**
    * Validate a device message against the core schema.
    */
-  public void validateDeviceMessage(ReportingDevice device, Map<String, Object> message,
+  public void validateDeviceMessage(ReportingDevice device, Object baseMsg,
       Map<String, String> attributes) {
     String deviceId = attributes.get("deviceId");
     device.clearMessageEntries();
     String schemaName = messageSchema(attributes);
 
+    if (baseMsg instanceof String) {
+      String message = format("Raw string message for %s %s/%s", deviceId,
+          attributes.get(SUBTYPE_PROPERTY_KEY), attributes.get(SUBFOLDER_PROPERTY_KEY));
+      outputLogger.error(message);
+      IllegalArgumentException exception = new IllegalArgumentException(message);
+      device.addError(exception, attributes, Category.VALIDATION_DEVICE_RECEIVE);
+      return;
+    }
+
+    Map<String, Object> message = mapCast(baseMsg);
     if (message.get(EXCEPTION_KEY) instanceof Exception exception) {
       outputLogger.error("Pipeline exception " + deviceId + ": " + getExceptionMessage(exception));
       device.addError(exception, attributes, Category.VALIDATION_DEVICE_RECEIVE);
@@ -744,7 +755,7 @@ public class Validator {
     }
   }
 
-  private void writeMessageCapture(Map<String, Object> message, Map<String, String> attributes) {
+  private void writeMessageCapture(Object message, Map<String, String> attributes) {
     String deviceId = attributes.get("deviceId");
     String type = attributes.getOrDefault(SUBTYPE_PROPERTY_KEY, UNKNOWN_TYPE_DEFAULT);
     String folder = attributes.get(SUBFOLDER_PROPERTY_KEY);
@@ -756,7 +767,7 @@ public class Validator {
     File messageFile = new File(deviceDir, filename);
     try {
       deviceDir.mkdir();
-      String timestamp = (String) message.get(TIMESTAMP_KEY);
+      String timestamp = isoConvert(getMessageInstant(message, attributes));
       outputLogger.debug("Capture %s at %s for %s", filename, timestamp, deviceId);
       OBJECT_MAPPER.writeValue(messageFile, message);
     } catch (Exception e) {
@@ -792,22 +803,23 @@ public class Validator {
     return !CONFIG_CATEGORY.equals(category) && isInteresting;
   }
 
-  private void writeDeviceOutDir(
-      Map<String, Object> message,
-      Map<String, String> attributes,
-      String deviceId,
-      String schemaName)
-      throws IOException {
+  private void writeDeviceOutDir(Object message, Map<String, String> attributes, String deviceId,
+      String schemaName) throws IOException {
 
     File deviceDir = makeDeviceDir(deviceId);
 
     File messageFile = new File(deviceDir, format(MESSAGE_FILE_FORMAT, schemaName));
 
-    // OBJECT_MAPPER can't handle an Exception class object, so do a swap-and-restore.
-    Exception saved = (Exception) message.get(EXCEPTION_KEY);
-    message.put(EXCEPTION_KEY, ifNotNullGet(saved, GeneralUtils::friendlyStackTrace));
-    OBJECT_MAPPER.writeValue(messageFile, message);
-    message.put(EXCEPTION_KEY, saved);
+    if (message instanceof Map) {
+      Map<String, Object> messageMap = mapCast(message);
+      // OBJECT_MAPPER can't handle an Exception class object, so do a swap-and-restore.
+      Exception saved = (Exception) messageMap.get(EXCEPTION_KEY);
+      messageMap.put(EXCEPTION_KEY, ifNotNullGet(saved, GeneralUtils::friendlyStackTrace));
+      OBJECT_MAPPER.writeValue(messageFile, messageMap);
+      messageMap.put(EXCEPTION_KEY, saved);
+    } else {
+      OBJECT_MAPPER.writeValue(messageFile, message);
+    }
 
     File attributesFile = new File(deviceDir, format(ATTRIBUTE_FILE_FORMAT, schemaName));
     OBJECT_MAPPER.writeValue(attributesFile, attributes);
