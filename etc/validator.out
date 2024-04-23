@@ -265,15 +265,15 @@ sites/udmi_site_model/out/devices/GAT-123/events_blobset.out
   "sub_folder" : "blobset",
   "sub_type" : "events",
   "status" : {
-    "message" : "Raw string message for GAT-123 events/blobset",
-    "detail" : "events_blobset: Raw string message for GAT-123 events/blobset REDACTED_ERROR",
+    "message" : "Raw string message for GAT-123 events_blobset",
+    "detail" : "events_blobset: Raw string message for GAT-123 events_blobset REDACTED_ERROR",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   },
   "errors" : [ {
-    "message" : "Raw string message for GAT-123 events/blobset",
-    "detail" : "events_blobset: Raw string message for GAT-123 events/blobset REDACTED_ERROR",
+    "message" : "Raw string message for GAT-123 events_blobset",
+    "detail" : "events_blobset: Raw string message for GAT-123 events_blobset REDACTED_ERROR",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
