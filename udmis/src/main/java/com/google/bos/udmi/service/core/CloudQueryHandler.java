@@ -107,12 +107,9 @@ public class CloudQueryHandler {
 
     publish(discoveryEvent);
 
-    List<String> active = discoveryEvent.registries.entrySet().stream()
-        .filter(entry -> entry.getValue().last_event_time != null).map(Entry::getKey).toList();
+    debug("Project has %d registries", registries.size());
 
-    debug("Project has %d registries (%d active)", registries.size(), active.size());
-
-    ifTrueThen(shouldTraverseRegistries(), () -> active.forEach(this::issueModifiedRegistry));
+    ifTrueThen(shouldTraverseRegistries(), () -> registries.forEach(this::issueModifiedRegistry));
   }
 
   private void queryDeviceDetails() {
