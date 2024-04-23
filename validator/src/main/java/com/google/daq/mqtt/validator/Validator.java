@@ -548,20 +548,20 @@ public class Validator {
     }
   }
 
-  private Instant getMessageInstant(Object msgObject, Map<String, String> attributes) {
-    if (msgObject instanceof Map) {
-      Map<String, Object> mapped = mapCast(msgObject);
-      return getInstant((String) mapped.get(TIMESTAMP_KEY));
-    }
-    return getInstant(attributes.get(PUBLISH_TIME_KEY));
-  }
-
   private void validateMessage(JsonSchema schema, Object message) {
     try {
       validateJsonNode(schema, OBJECT_MAPPER.valueToTree(message));
     } catch (Exception e) {
       throw new RuntimeException("While converting to json node: " + e.getMessage(), e);
     }
+  }
+
+  private Instant getMessageInstant(Object msgObject, Map<String, String> attributes) {
+    if (msgObject instanceof Map) {
+      Map<String, Object> mapped = mapCast(msgObject);
+      return getInstant((String) mapped.get(TIMESTAMP_KEY));
+    }
+    return getInstant(attributes.get(PUBLISH_TIME_KEY));
   }
 
   private ReportingDevice validateMessageCore(Object message, Map<String, String> attributes) {
@@ -609,8 +609,7 @@ public class Validator {
     String schemaName = messageSchema(attributes);
 
     if (baseMsg instanceof String) {
-      String message = format("Raw string message for %s %s/%s", deviceId,
-          attributes.get(SUBTYPE_PROPERTY_KEY), attributes.get(SUBFOLDER_PROPERTY_KEY));
+      String message = format("Raw string message for %s %s", deviceId, schemaName);
       outputLogger.error(message);
       IllegalArgumentException exception = new IllegalArgumentException(message);
       device.addError(exception, attributes, Category.VALIDATION_DEVICE_RECEIVE);
