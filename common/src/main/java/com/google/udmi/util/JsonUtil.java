@@ -41,6 +41,8 @@ public abstract class JsonUtil {
       .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
   public static final ObjectMapper TERSE_MAPPER = OBJECT_MAPPER.copy()
       .disable(SerializationFeature.INDENT_OUTPUT);
+  private static final String JSON_OBJECT_LEADER = "{";
+  private static final String JSON_STRING_LEADER = "\"";
 
   /**
    * Convert the json string to a generic map object.
@@ -327,8 +329,10 @@ public abstract class JsonUtil {
    */
   public static Object parseJson(String message) {
     try {
-      JsonNode jsonNode = OBJECT_MAPPER.readTree(message);
-      return jsonNode instanceof MissingNode ? null : jsonNode;
+      if (message != null && message.startsWith(JSON_OBJECT_LEADER)) {
+        return OBJECT_MAPPER.readTree(message);
+      }
+      return message;
     } catch (Exception e) {
       throw new RuntimeException("While parsing json object", e);
     }
@@ -399,6 +403,26 @@ public abstract class JsonUtil {
     return map;
   }
 
+  /**
+   * Convert the string to a valid Java object.
+   */
+  public static Object toObject(String message) {
+    if (message.length() == 0) {
+      throw new RuntimeException("Invalid empty JSON representation");
+    }
+    if (message.startsWith(JSON_OBJECT_LEADER)) {
+      return fromString(TreeMap.class, message);
+    }
+    if (message.startsWith(JSON_STRING_LEADER)) {
+      return message.substring(1, message.length() - 1);
+    }
+    throw new RuntimeException("Unrecognized JSON encoding: " + message.charAt(0));
+  }
+
+  @SuppressWarnings("unchecked")
+  public static Map<String, Object> mapCast(Object object) {
+    return (Map<String, Object>) object;
+  }
   /**
    * Convert the pojo to a mapped representation of strings only.
    *

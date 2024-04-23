@@ -172,7 +172,7 @@ public class IotReflectorClient implements IotProvider {
     // TODO: Publish should return future to avoid race conditions.
     String transactionId = messageClient.publish(deviceId, topic, message);
     Map<String, Object> objectMap = waitForReply(transactionId, speed);
-    String error = (String) objectMap.get(ERROR_KEY);
+    String error = (String) ofNullable(objectMap).map(x -> x.get(ERROR_KEY)).orElse(null);
     if (error != null) {
       writeErrorDetail(transactionId, error, (String) objectMap.get(DETAIL_KEY));
       throw new RuntimeException(format("UDMIS error %s: %s", transactionId, error));
@@ -213,20 +213,23 @@ public class IotReflectorClient implements IotProvider {
         if (messageBundle == null) {
           continue;
         }
-        Exception exception = (Exception) messageBundle.message.get(EXCEPTION_KEY);
-        if (exception != null) {
-          exception.printStackTrace();
-          throw new RuntimeException("UDMIS processing exception", exception);
-        }
 
         String transactionId = messageBundle.attributes.get(TRANSACTION_KEY);
         CompletableFuture<Map<String, Object>> future = ifNotNullGet(transactionId,
             futures::remove);
         ifNotNullThen(future, f -> f.complete(messageBundle.message));
 
-        String error = (String) messageBundle.message.get(ERROR_KEY);
-        if (error != null) {
-          throw new RuntimeException(format("UDMIS pipeline error %s: %s", transactionId, error));
+        if (messageBundle.message != null) {
+          Exception exception = (Exception) messageBundle.message.get(EXCEPTION_KEY);
+          if (exception != null) {
+            exception.printStackTrace();
+            throw new RuntimeException("UDMIS processing exception", exception);
+          }
+
+          String error = (String) messageBundle.message.get(ERROR_KEY);
+          if (error != null) {
+            throw new RuntimeException(format("UDMIS pipeline error %s: %s", transactionId, error));
+          }
         }
 
         if (future == null && transactionId != null

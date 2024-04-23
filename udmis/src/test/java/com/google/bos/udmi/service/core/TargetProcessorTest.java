@@ -1,5 +1,6 @@
 package com.google.bos.udmi.service.core;
 
+import static com.google.bos.udmi.service.core.ReflectProcessor.PAYLOAD_KEY;
 import static com.google.bos.udmi.service.pod.ContainerBase.REFLECT_BASE;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -25,8 +26,6 @@ class TargetProcessorTest extends ProcessorTestBase {
 
   private static void verifyCommand(ArgumentCaptor<String> commandCaptor, boolean isError) {
     Map<String, Object> command = toMap(commandCaptor.getValue());
-    String payload = (String) command.remove("payload");
-    String payloadString = GeneralUtils.decodeBase64(payload);
     assertEquals(SubFolder.POINTSET.value(), command.remove("subFolder"), "subFolder field");
     assertEquals("events", command.remove("subType"), "subType field");
     assertEquals(TEST_DEVICE, command.remove("deviceId"));

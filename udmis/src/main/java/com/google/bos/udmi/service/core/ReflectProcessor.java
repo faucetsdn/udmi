@@ -24,9 +24,11 @@ import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.fromString;
 import static com.google.udmi.util.JsonUtil.fromStringStrict;
 import static com.google.udmi.util.JsonUtil.isoConvert;
+import static com.google.udmi.util.JsonUtil.mapCast;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static com.google.udmi.util.JsonUtil.toMap;
+import static com.google.udmi.util.JsonUtil.toObject;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
@@ -82,7 +84,7 @@ public class ReflectProcessor extends ProcessorBase {
       } else if (message instanceof UdmiState distributedUpdate) {
         updateAwareness(reflection, distributedUpdate);
       } else {
-        Map<String, Object> payload = extractMessagePayload(objectMap);
+        Object payload = extractMessagePayload(objectMap);
         Envelope envelope = extractMessageEnvelope(objectMap);
         reflection.transactionId = firstNonNull(envelope.transactionId, reflection.transactionId,
             ReflectProcessor::makeTransactionId);
@@ -115,9 +117,9 @@ public class ReflectProcessor extends ProcessorBase {
     return convertToStrict(Envelope.class, message);
   }
 
-  private Map<String, Object> extractMessagePayload(Map<String, Object> message) {
+  private Object extractMessagePayload(Map<String, Object> message) {
     String payload = (String) message.remove(PAYLOAD_KEY);
-    return ifNotNullGet(payload, data -> toMap(decodeBase64(data)));
+    return ifNotNullGet(payload, data -> toObject(decodeBase64(data)));
   }
 
   private UdmiState extractUdmiState(Object message) {
@@ -129,13 +131,13 @@ public class ReflectProcessor extends ProcessorBase {
     return udmiState;
   }
 
-  private CloudModel getReflectionResult(Envelope attributes, Map<String, Object> payload) {
+  private CloudModel getReflectionResult(Envelope attributes, Object payload) {
     try {
       SubType subType = ofNullable(attributes.subType).orElse(SubType.EVENTS);
       return switch (subType) {
-        case QUERY -> reflectQuery(attributes, payload);
+        case QUERY -> reflectQuery(attributes, mapCast(payload));
         case MODEL -> reflectModel(attributes, convertToStrict(CloudModel.class, payload));
-        default -> reflectPropagate(attributes, ofNullable(payload).orElseGet(HashMap::new));
+        default -> reflectProcess(attributes, payload);
       };
     } catch (Exception e) {
       throw new RuntimeException("While processing reflect message type " + attributes.subType, e);
@@ -166,7 +168,7 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private void processReflection(Envelope reflection, Envelope envelope,
-      Map<String, Object> payload) {
+      Object payload) {
     debug("Processing reflection %s/%s %s %s", envelope.subType, envelope.subFolder,
         isoConvert(envelope.publishTime), envelope.transactionId);
     CloudModel result = getReflectionResult(envelope, payload);
@@ -212,9 +214,15 @@ public class ReflectProcessor extends ProcessorBase {
     return iotAccess.modelResource(attributes.deviceRegistryId, attributes.deviceId, request);
   }
 
-  private CloudModel reflectPropagate(Envelope attributes, Map<String, Object> payload) {
+  private CloudModel reflectProcess(Envelope attributes, Object payload) {
+    if (payload == null) {
+      return null;
+    }
     if (attributes.subType == SubType.CONFIG) {
       processConfigChange(attributes, payload, null);
+    }
+    if (payload instanceof String) {
+      return null;
     }
     Class<?> messageClass = getMessageClassFor(attributes, true);
     debug("Propagating message %s: %s", attributes.transactionId, messageClass.getSimpleName());
@@ -266,6 +274,7 @@ public class ReflectProcessor extends ProcessorBase {
   private void sendReflectCommand(Envelope reflection, Envelope message, Object payload) {
     String reflectRegistry = reflection.deviceRegistryId;
     String deviceRegistry = reflection.deviceId;
+    debug("Sending command " + stringifyTerse(payload));
     message.payload = encodeBase64(stringify(payload));
     iotAccess.sendCommand(reflectRegistry, deviceRegistry, SubFolder.UDMI, stringify(message));
   }

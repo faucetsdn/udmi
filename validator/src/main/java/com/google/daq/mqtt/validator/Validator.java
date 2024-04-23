@@ -1086,6 +1086,7 @@ public class Validator {
   public static class MessageBundle {
 
     public Map<String, Object> message;
+    public String rawMessage;
     public Map<String, String> attributes;
     public String timestamp;
   }
