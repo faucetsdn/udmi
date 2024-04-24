@@ -39,7 +39,7 @@ public abstract class JsonUtil {
       .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
   public static final ObjectMapper TERSE_MAPPER = OBJECT_MAPPER.copy()
       .disable(SerializationFeature.INDENT_OUTPUT);
-  private static final String JSON_OBJECT_LEADER = "{";
+  public static final String JSON_OBJECT_LEADER = "{";
   private static final String JSON_STRING_LEADER = "\"";
 
   /**
