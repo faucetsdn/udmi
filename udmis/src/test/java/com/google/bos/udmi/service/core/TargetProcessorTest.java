@@ -9,7 +9,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
-import com.google.udmi.util.GeneralUtils;
 import java.util.Map;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
@@ -25,8 +24,6 @@ class TargetProcessorTest extends ProcessorTestBase {
 
   private static void verifyCommand(ArgumentCaptor<String> commandCaptor, boolean isError) {
     Map<String, Object> command = toMap(commandCaptor.getValue());
-    String payload = (String) command.remove("payload");
-    String payloadString = GeneralUtils.decodeBase64(payload);
     assertEquals(SubFolder.POINTSET.value(), command.remove("subFolder"), "subFolder field");
     assertEquals("events", command.remove("subType"), "subType field");
     assertEquals(TEST_DEVICE, command.remove("deviceId"));
