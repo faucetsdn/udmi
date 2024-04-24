@@ -102,13 +102,18 @@ public class SiteModel {
     }
     specMatcher = (specIsFile || specSupplier == null) ? null : extractSpec(specSupplier.get());
     exeConfig = loadSiteConfig();
-    String siteDir = ofNullable(exeConfig.site_model).orElse(specFile.getParent());
-    sitePath = specIsFile ? siteDir : specFile.getPath();
-    exeConfig.site_model = new File(
-        ofNullable(exeConfig.site_model).orElse(sitePath)).getAbsolutePath();
+    sitePath = ofNullable(exeConfig.site_model).map(f -> maybeRelativeTo(f, exeConfig.src_file)).orElse(specFile.getParent());
+    exeConfig.site_model = new File(sitePath).getAbsolutePath();
     siteDefaults = ofNullable(
         asMap(loadFileStrict(Metadata.class, getSubdirectory(SITE_DEFAULTS_FILE))))
         .orElseGet(HashMap::new);
+  }
+
+  private String maybeRelativeTo(String siteDir, String srcFile) {
+    if ((srcFile == null) || (new File(siteDir).isAbsolute())) {
+      return siteDir;
+    }
+    return new File(new File(srcFile).getParentFile(), siteDir).getPath();
   }
 
   public SiteModel(String toolName, List<String> argList) {
