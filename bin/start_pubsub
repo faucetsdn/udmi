@@ -33,7 +33,7 @@ sudo apt-get install apt-transport-https ca-certificates gnupg
 
 curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
 
-sudo apt-get update || true
+sudo apt-get update
 
 #
 # Second step is to actually try the apt-get install. If that fails, then try the gcloud components version.
