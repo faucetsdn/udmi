@@ -1,3 +1,3 @@
 {
-  "include": "local_pod.json"
+  "include": "prod_pod.json"
 }

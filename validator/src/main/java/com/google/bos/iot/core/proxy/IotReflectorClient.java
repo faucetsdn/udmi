@@ -13,14 +13,17 @@ import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.Common.TRANSACTION_KEY;
 import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.Common.getNamespacePrefix;
+import static com.google.udmi.util.GeneralUtils.decodeBase64;
 import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.getDate;
 import static com.google.udmi.util.JsonUtil.isoConvert;
+import static com.google.udmi.util.JsonUtil.mapCast;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
+import static com.google.udmi.util.JsonUtil.toObject;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
@@ -256,9 +259,7 @@ public class IotReflectorClient implements MessagePublisher {
     }
     Map<String, String> attributes = extractAttributes(messageMap);
     String payload = (String) messageMap.remove("payload");
-    String decoded = GeneralUtils.decodeBase64(payload);
-    Map<String, Object> message = asMap(decoded);
-    handleReceivedMessage(attributes, message);
+    handleReceivedMessage(attributes, toObject(decodeBase64(payload)));
   }
 
   @NotNull
@@ -271,11 +272,14 @@ public class IotReflectorClient implements MessagePublisher {
     return attributes;
   }
 
-  private void handleReceivedMessage(Map<String, String> attributes,
-      Map<String, Object> message) {
+  private void handleReceivedMessage(Map<String, String> attributes, Object message) {
     Validator.MessageBundle messageBundle = new Validator.MessageBundle();
     messageBundle.attributes = attributes;
-    messageBundle.message = message;
+    if (message instanceof String stringMessage) {
+      messageBundle.rawMessage = stringMessage;
+    } else {
+      messageBundle.message = mapCast(message);
+    }
     messages.offer(messageBundle);
   }
 
