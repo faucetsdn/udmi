@@ -102,18 +102,12 @@ public class SiteModel {
     }
     specMatcher = (specIsFile || specSupplier == null) ? null : extractSpec(specSupplier.get());
     exeConfig = loadSiteConfig();
-    sitePath = ofNullable(exeConfig.site_model).map(f -> maybeRelativeTo(f, exeConfig.src_file)).orElse(specFile.getParent());
+    sitePath = ofNullable(exeConfig.site_model).map(f -> maybeRelativeTo(f, exeConfig.src_file))
+        .orElse(siteConf.getParent());
     exeConfig.site_model = new File(sitePath).getAbsolutePath();
     siteDefaults = ofNullable(
         asMap(loadFileStrict(Metadata.class, getSubdirectory(SITE_DEFAULTS_FILE))))
         .orElseGet(HashMap::new);
-  }
-
-  private String maybeRelativeTo(String siteDir, String srcFile) {
-    if ((srcFile == null) || (new File(siteDir).isAbsolute())) {
-      return siteDir;
-    }
-    return new File(new File(srcFile).getParentFile(), siteDir).getPath();
   }
 
   public SiteModel(String toolName, List<String> argList) {
@@ -263,6 +257,13 @@ public class SiteModel {
     }
   }
 
+  private String maybeRelativeTo(String siteDir, String srcFile) {
+    if ((srcFile == null) || (new File(siteDir).isAbsolute())) {
+      return siteDir;
+    }
+    return new File(new File(srcFile).getParentFile(), siteDir).getPath();
+  }
+
   public EndpointConfiguration makeEndpointConfig(String iotProject, String deviceId) {
     return makeEndpointConfig(iotProject, exeConfig, deviceId);
   }
@@ -270,7 +271,8 @@ public class SiteModel {
   private Set<String> getDeviceIds() {
     checkState(sitePath != null, "sitePath not defined");
     File devicesFile = new File(new File(sitePath), "devices");
-    File[] files = Objects.requireNonNull(devicesFile.listFiles(), "no files in site devices/");
+    File[] files = Objects.requireNonNull(devicesFile.listFiles(),
+        "no files in " + devicesFile.getAbsolutePath());
     return Arrays.stream(files).map(File::getName).filter(SiteModel::validDeviceDirectory)
         .collect(Collectors.toSet());
   }
