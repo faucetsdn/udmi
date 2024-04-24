@@ -205,9 +205,6 @@ class LocalDevice {
     }
   }
 
-  // TODO: If there are multiple errors this will only ever return the first?
-  // TODO: Figure out why this is even here when using the STRICT_MAPPER results in exceptions
-  //       and nullification of the entire metadata if there are any errors
   public static void parseMetadataValidateProcessingReport(ProcessingReport report)
       throws ValidationException {
     if (report.isSuccess()) {
