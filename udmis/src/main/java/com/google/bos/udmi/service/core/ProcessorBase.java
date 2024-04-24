@@ -1,6 +1,7 @@
 package com.google.bos.udmi.service.core;
 
 import static com.google.bos.udmi.service.access.IotAccessBase.MAX_CONFIG_LENGTH;
+import static com.google.bos.udmi.service.core.ReflectProcessor.PAYLOAD_KEY;
 import static com.google.bos.udmi.service.messaging.MessageDispatcher.messageHandlerFor;
 import static com.google.bos.udmi.service.pod.UdmiServicePod.UDMI_VERSION;
 import static com.google.common.base.Preconditions.checkState;
@@ -24,6 +25,7 @@ import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.getAsMap;
 import static com.google.udmi.util.JsonUtil.getDate;
 import static com.google.udmi.util.JsonUtil.isoConvert;
+import static com.google.udmi.util.JsonUtil.mapCast;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toStringMap;
 import static java.lang.String.format;
@@ -69,6 +71,7 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
   private static final String EXTRA_FIELD_KEY = "extra_field";
   private static final String BROKEN_CONFIG_JSON =
       format("{ broken by %s == %s", EXTRA_FIELD_KEY, BREAK_CONFIG_VALUE);
+  private static final String JSON_EMPTY_STRING = "\"\"";
   protected final MessageDispatcher dispatcher;
   private final MessageDispatcher sidecar;
   private final boolean isEnabled;
@@ -141,8 +144,7 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
     return null;
   }
 
-  protected void processConfigChange(Envelope envelope, Map<String, Object> payload,
-      Date newLastStart) {
+  protected void processConfigChange(Envelope envelope, Object payload, Date newLastStart) {
     // TODO: This should really be pushed down to ReflectProcessor, not sure why it's here.
     SubFolder subFolder = envelope.subFolder;
     debug(format("Modifying device config %s/%s/%s %s", envelope.deviceRegistryId,
@@ -187,7 +189,7 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
     errorMessage.data = encodeBase64(bundle.payload);
     errorMessage.version = UdmiServicePod.getDeployedConfig().udmi_version;
     errorMessage.timestamp = isoConvert();
-    errorMap.put("payload", encodeBase64(stringify(errorMessage)));
+    errorMap.put(PAYLOAD_KEY, encodeBase64(stringify(errorMessage)));
     error(format("Reflecting error %s/%s for %s", errorMap.get(SUBTYPE_PROPERTY_KEY),
         errorMap.get(SUBFOLDER_PROPERTY_KEY),
         errorMap.get(DEVICE_ID_KEY)));
@@ -203,7 +205,8 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
 
     try {
       checkState(envelope.payload == null, "envelope payload is not null");
-      envelope.payload = encodeBase64(message);
+      String jsonEncoded = message.isEmpty() ? JSON_EMPTY_STRING : message;
+      envelope.payload = encodeBase64(jsonEncoded);
       reflectString(deviceRegistryId, stringify(envelope));
     } catch (Exception e) {
       error(format("Message reflection error %s", friendlyStackTrace(e)));
@@ -268,7 +271,11 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
   }
 
   private String updateConfig(Entry<Long, String> previous, Envelope attributes,
-      Map<String, Object> updatePayload, Date newLastStart) {
+      Object rawPayload, Date newLastStart) {
+    if (rawPayload instanceof String stringPayload) {
+      return stringPayload;
+    }
+    Map<String, Object> updatePayload = mapCast(rawPayload);
     Object extraField = ifNotNullGet(updatePayload, p -> p.remove(EXTRA_FIELD_KEY));
     boolean resetConfig = RESET_CONFIG_VALUE.equals(extraField);
     boolean breakConfig = BREAK_CONFIG_VALUE.equals(extraField);
