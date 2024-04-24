@@ -39,6 +39,7 @@ public abstract class JsonUtil {
       .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
   public static final ObjectMapper TERSE_MAPPER = OBJECT_MAPPER.copy()
       .disable(SerializationFeature.INDENT_OUTPUT);
+  public static final String JSON_OBJECT_PREFIX = "{";
 
   /**
    * Convert the json string to a generic map object.
