@@ -165,7 +165,6 @@ class LocalDevice {
           ES3_PUBLIC_PEM);
   private static final Set<String> ALL_CERT_FILES = ImmutableSet.of(RSA_CERT_PEM, ES_CERT_PEM);
   private static final int MAX_JSON_LENGTH = 32767;
-  private static final String STRING_MARKER = "\"";
   private final String deviceId;
   private final Map<String, JsonSchema> schemas;
   private final File deviceDir;
@@ -499,8 +498,8 @@ class LocalDevice {
   private String deviceConfigString() {
     try {
       Object fromValue = config.deviceConfigJson();
-      if (fromValue instanceof String) {
-        return STRING_MARKER + fromValue + STRING_MARKER;
+      if (fromValue instanceof String stringValue) {
+        return stringValue;
       }
       JsonNode configJson = OBJECT_MAPPER_STRICT.valueToTree(fromValue);
       if (config.shouldBeDowngraded()) {
