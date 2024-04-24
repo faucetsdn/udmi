@@ -141,8 +141,10 @@ public class ReflectProcessor extends ProcessorBase {
     String transactionId = (String) objectMap.get(TRANSACTION_KEY);
     String stackMessage = friendlyStackTrace(e);
     String detailString = multiTrim(stackTraceString(e), CONDENSER_STRING);
-    warn("Processing exception %s: %s", transactionId, stackMessage);
-    debug("Stack trace details %s: %s", transactionId, detailString);
+    String registryId = reflection.deviceRegistryId;
+    String deviceId = reflection.deviceId;
+    warn("Processing exception %s/%s %s: %s", registryId, deviceId, transactionId, stackMessage);
+    debug("Stack trace details %s/%s %s: %s", registryId, deviceId, transactionId, detailString);
     Map<String, Object> message = new HashMap<>();
     message.put(ERROR_KEY, stackMessage);
     message.put(DETAIL_KEY, detailString);
@@ -203,8 +205,18 @@ public class ReflectProcessor extends ProcessorBase {
   private ModelUpdate extractDeviceModel(CloudModel request) {
     return ifNotNullGet(request.metadata,
         metadata -> ofNullable(metadata.get(MetadataMapKeys.UDMI_METADATA))
-            .map(modelString -> fromStringStrict(ModelUpdate.class, modelString))
+            .map(ReflectProcessor::asModelUpdate)
             .orElse(null));
+  }
+
+  private static ModelUpdate asModelUpdate(String modelString) {
+    // If it's not a valid JSON object, then fall back to a string description alternate.
+    if (modelString == null || !modelString.startsWith(JsonUtil.JSON_OBJECT_PREFIX)) {
+      ModelUpdate modelUpdate = new ModelUpdate();
+      modelUpdate.description = modelString;
+      return modelUpdate;
+    }
+    return fromStringStrict(ModelUpdate.class, modelString);
   }
 
   private CloudModel reflectPropagate(Envelope attributes, Map<String, Object> payload) {
