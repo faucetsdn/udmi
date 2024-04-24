@@ -16,6 +16,7 @@ import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.writeString;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
+import static com.google.udmi.util.JsonUtil.unquoteJson;
 import static com.google.udmi.util.MessageUpgrader.METADATA_SCHEMA;
 import static com.google.udmi.util.SiteModel.METADATA_JSON;
 import static com.google.udmi.util.SiteModel.NORMALIZED_JSON;
@@ -496,7 +497,11 @@ class LocalDevice {
 
   private String deviceConfigString() {
     try {
-      JsonNode configJson = OBJECT_MAPPER_STRICT.valueToTree(config.deviceConfigJson());
+      Object fromValue = config.deviceConfigJson();
+      if (fromValue instanceof String stringValue) {
+        return stringValue;
+      }
+      JsonNode configJson = OBJECT_MAPPER_STRICT.valueToTree(fromValue);
       if (config.shouldBeDowngraded()) {
         new MessageDowngrader("config", configJson).downgrade(baseVersion);
       }
@@ -642,7 +647,7 @@ class LocalDevice {
     File configFile = new File(outDir, GENERATED_CONFIG_JSON);
     configFile.delete();
 
-    String config = getSettings().config;
+    String config = unquoteJson(getSettings().config);
 
     if (config != null) {
       try (OutputStream outputStream = Files.newOutputStream(configFile.toPath())) {

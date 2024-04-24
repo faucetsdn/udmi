@@ -265,15 +265,15 @@ sites/udmi_site_model/out/devices/GAT-123/events_blobset.out
   "sub_folder" : "blobset",
   "sub_type" : "events",
   "status" : {
-    "message" : "While converting to java.util.TreeMap",
-    "detail" : "events_blobset: While converting to java.util.TreeMap; Cannot coerce empty String (\"\") to element of `java.util.TreeMap<java.lang.Object,java.lang.Object>` (but could if coercion was enabled using `CoercionConfig`)\n at [Source: (String)\"\"\"\"; line: 1, column: 1]",
+    "message" : "Raw string message for GAT-123 events_blobset",
+    "detail" : "events_blobset: Raw string message for GAT-123 events_blobset REDACTED_ERROR",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   },
   "errors" : [ {
-    "message" : "While converting to java.util.TreeMap",
-    "detail" : "events_blobset: While converting to java.util.TreeMap; Cannot coerce empty String (\"\") to element of `java.util.TreeMap<java.lang.Object,java.lang.Object>` (but could if coercion was enabled using `CoercionConfig`)\n at [Source: (String)\"\"\"\"; line: 1, column: 1]",
+    "message" : "Raw string message for GAT-123 events_blobset",
+    "detail" : "events_blobset: Raw string message for GAT-123 events_blobset REDACTED_ERROR",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
