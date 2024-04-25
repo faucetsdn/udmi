@@ -90,10 +90,14 @@ public class SiteModel {
   private Map<String, CloudModel> allDevices;
 
   public SiteModel(String specPath) {
-    this(specPath, (Supplier<String>) null);
+    this(specPath, null, null);
   }
 
-  public SiteModel(String specPath, Supplier<String> specSupplier) {
+  public SiteModel(String sitePath, ExecutionConfiguration config) {
+    this(sitePath, null, config);
+  }
+
+  public SiteModel(String specPath, Supplier<String> specSupplier, ExecutionConfiguration overrides) {
     File specFile = new File(requireNonNull(specPath, "site model not defined"));
     boolean specIsFile = specFile.isFile();
     siteConf = specIsFile ? specFile : cloudConfigPath(specFile);
@@ -108,10 +112,15 @@ public class SiteModel {
     siteDefaults = ofNullable(
         asMap(loadFileStrict(Metadata.class, getSubdirectory(SITE_DEFAULTS_FILE))))
         .orElseGet(HashMap::new);
+    if (overrides != null && overrides.project_id != null) {
+      exeConfig.iot_provider = overrides.iot_provider;
+      exeConfig.project_id = overrides.project_id;
+      exeConfig.udmi_namespace = overrides.udmi_namespace;
+    }
   }
 
   public SiteModel(String toolName, List<String> argList) {
-    this(removeArg(argList, "site_model"), projectSpecSupplier(argList));
+    this(removeArg(argList, "site_model"), projectSpecSupplier(argList), null);
     ExecutionConfiguration executionConfiguration = getExecutionConfiguration();
     File outFile = new File(CONFIG_OUT_DIR, format("%s_conf.json", toolName));
     System.err.println("Writing reconciled configuration file to " + outFile.getAbsolutePath());
@@ -403,8 +412,6 @@ public class SiteModel {
 
   /**
    * Get the site registry name.
-   *
-   * @return site registry
    */
   public String getRegistryId() {
     return getRegistryActual(exeConfig);
