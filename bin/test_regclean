@@ -125,9 +125,9 @@ jq ".project_id = \"$project_id\"" $full_config | sponge $full_config
 jq ".udmi_namespace = $quoted_namespace" $full_config | sponge $full_config
 
 # And corrupt the default model, to make sure cmdline overrides work
-jq '.iot_provider = "foot"' $iot_config | sponge $iot_config
+jq '.iot_provider = "dynamic"' $iot_config | sponge $iot_config
 jq '.project_id = "this-is-not-right"' $iot_config | sponge $iot_config
-jq '.udmi_namespace = "bunny"' $full_config | sponge $iot_config
+jq '.udmi_namespace = "bunny"' $iot_config | sponge $iot_config
 
 echo Clean out the registry to make sure devices get removed...
 echo bin/registrar $site_args -d -x
