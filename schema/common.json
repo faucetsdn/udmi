@@ -49,6 +49,7 @@
         "implicit",
         "pubsub",
         "etcd",
+        "mqtt",
         "jwt",
         "gcp_native",
         "gbos",

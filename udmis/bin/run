@@ -1,17 +1,12 @@
 #!/bin/bash -e
 
-if [[ $# != 1 && $# != 2 ]]; then
-    echo Usage: $0 pod_config [update_config]
+if [[ $# != 1 ]]; then
+    echo Usage: $0 pod_config
     false
 fi
 
 POD_CONFIG=$(realpath $1)
 shift
-
-if [[ -n $1 ]]; then
-    ALT_CONFIG=$(realpath $1)
-    shift
-fi
 
 ROOT=$(dirname $0)/..
 cd $ROOT
@@ -21,7 +16,7 @@ echo Initial env:
 env
 echo
 
-more /etc/os-release $POD_CONFIG $ALT_CONFIG | cat
+more /etc/os-release $POD_CONFIG | cat
 
 java -version
 
@@ -84,4 +79,4 @@ env
 echo
 
 # Run with exec to replace shell so java receives SIGTERM signal.
-exec java -jar $POD_JAR $POD_CONFIG $ALT_CONFIG
+exec java -jar $POD_JAR $POD_CONFIG

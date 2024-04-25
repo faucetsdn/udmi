@@ -242,7 +242,6 @@ jobs:
   runlocal:
     name: UDMIS Local Setup
     runs-on: ubuntu-latest
-    needs: pretest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
@@ -260,6 +259,9 @@ jobs:
         run: bin/test_mosquitto
       - name: bin/test_udmis
         run: bin/test_udmis
+      - name: mosquitto debug
+        if: ${{ !cancelled() }}
+        run: sudo cat /etc/mosquitto/dynamic_security.json
       - name: support bundle
         if: ${{ !cancelled() }}
         run: bin/support ${{ github.repository_owner }}_${{ github.job }}_

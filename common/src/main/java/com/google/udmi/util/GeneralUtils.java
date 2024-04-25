@@ -73,6 +73,7 @@ public class GeneralUtils {
 
   private static final String SEPARATOR = "\n  ";
   private static final Joiner INDENTED_LINES = Joiner.on(SEPARATOR);
+  private static final String NULL_STRING = "null";
   private static Duration clockSkew = Duration.ZERO;
 
   public static String[] arrayOf(String... args) {
@@ -205,6 +206,18 @@ public class GeneralUtils {
   public static Runnable ignoreValue(Object ignored) {
     return () -> {
     };
+  }
+
+  public static boolean isNotEmpty(String s) {
+    return !ofNullable(s).map(String::isEmpty).orElse(true);
+  }
+
+  public static boolean isNullOrNotEmpty(String value) {
+    return !ofNullable(value).map(String::isEmpty).orElse(false);
+  }
+
+  public static String nullAsNull(String part) {
+    return NULL_STRING.equals(part) ? null : part;
   }
 
   public static Date toDate(Instant lastSeen) {

@@ -8,7 +8,7 @@ source etc/shell_common.sh
 solo_arg=
 
 if [[ $# -lt 1 ]]; then
-    echo Usage: $0 PROJECT_ID[@BROKER]
+    echo Usage: $0 PROJECT_SPEC[@BROKER]
     false
 fi
 
@@ -17,7 +17,7 @@ if [[ $1 == solo ]]; then
     shift
 fi
 
-project_id=$1
+project_spec=$1
 shift
 
 [[ -n $GITHUB_RUN_NUMBER ]] && echo "Workflow run number $GITHUB_RUN_NUMBER" || true
@@ -26,6 +26,7 @@ echo "export UDMI_REGISTRY_SUFFIX=$UDMI_REGISTRY_SUFFIX"
 echo "export UDMI_ALT_REGISTRY=$UDMI_ALT_REGISTRY"
 
 site_path=sites/udmi_site_model
+iot_config=$site_path/cloud_iot_config.json
 output_file=$site_path/out/registration_summary.json
 csv_file=$site_path/out/registration_summary.csv
 pubber_config=/tmp/pubber_config.json
@@ -46,38 +47,44 @@ mkdir -p out
 if [[ -n $UDMI_REGISTRY_SUFFIX ]]; then
     echo Using registry suffix $UDMI_REGISTRY_SUFFIX
     registry_suffix=$UDMI_REGISTRY_SUFFIX
-    registry_arg="-e $UDMI_REGISTRY_SUFFIX"
+    registrar_opts="-e $UDMI_REGISTRY_SUFFIX"
 else
     registry_suffix=
-    registry_arg=
+    registrar_opts=
 fi
 
-registry_id=`jq -r .registry_id $site_path/cloud_iot_config.json`
-cloud_region=`jq -r .cloud_region $site_path/cloud_iot_config.json`
+registry_id=`jq -r .registry_id $iot_config`
+cloud_region=`jq -r .cloud_region $iot_config`
+full_config=$(realpath $site_path)/full_config.json
 
-site_args="$site_path $project_id $registry_arg"
+site_args="$site_path $project_spec $registrar_opts"
+full_args="$full_config $registrar_opts"
 
+iot_provider=null
 registry_prefix=
-project_target=${project_id##*/}
-if [[ $project_id =~ ^// ]]; then
-    no_prefix=${project_id#//}
-    iot_provider=${no_prefix%%/*}
+project_id=${project_spec##*/}
+udmi_namespace=
+quoted_namespace=null
+if [[ $project_spec =~ ^// ]]; then
+    no_prefix=${project_spec#//}
+    iot_provider=\"${no_prefix%%/*}\"
     no_provider=${no_prefix#*/}
-    project_target=${no_provider%/*}
-    udmi_namespace=${no_provider#$project_target}
+    project_id=${no_provider%/*}
+    udmi_namespace=${no_provider#$project_id}
     [[ -n $udmi_namespace ]] && registry_prefix=${udmi_namespace#/}~
-elif [[ $project_id =~ @ ]]; then
+    [[ -n $udmi_namespace ]] && quoted_namespace=\"${udmi_namespace#/}\"
+elif [[ $project_spec =~ @ ]]; then
     iot_provider=\"jwt\"
-    broker_hostname=${project_id#*@}
-    project_id=${project_id%@*}
-    project_target=${project_id}
+    broker_hostname=${project_spec#*@}
+    project_id=${project_spec%@*}
+    project_id=${project_id}
 else
-    iot_provider=gcp
+    iot_provider=\"gcp\"
 fi
 
-if [[ $iot_provider == clearblade ]]; then
+if [[ $iot_provider == \"clearblade\" ]]; then
     broker_hostname=${cloud_region}-mqtt.clearblade.com
-elif [[ $iot_provider == gbos ]]; then
+elif [[ $iot_provider == \"gbos\" ]]; then
     broker_hostname=mqtt.bos.goog
 elif [[ -z $broker_hostname ]]; then
     broker_hostname=mqtt.googleapis.com
@@ -87,12 +94,12 @@ cat <<EOF > $pubber_config
 {
     "endpoint": {
       "protocol": "mqtt",
-      "client_id": "projects/$project_target/locations/$cloud_region/registries/$registry_prefix$registry_id$registry_suffix/devices/$device_id",
+      "client_id": "projects/$project_id/locations/$cloud_region/registries/$registry_prefix$registry_id$registry_suffix/devices/$device_id",
       "hostname": "$broker_hostname"
     },
     "sitePath": "$site_path",
     "deviceId": "$device_id",
-    "projectId": "$project_target",
+    "projectId": "$project_id",
     "serialNo": "$serial_no",
     "options": {
       "smokeCheck": true
@@ -111,6 +118,16 @@ rm -rf $fake_device && cp -a $clone_device $fake_device
 
 # Adjust discovery address so discovery sequence tests work properly.
 jq ".localnet.families.vendor.addr = \"2183213\"" $fake_metadata | sponge $fake_metadata
+
+# Construct a fullly specified configuration to test alternate forms.
+jq ".iot_provider = $iot_provider" $iot_config > $full_config
+jq ".project_id = \"$project_id\"" $full_config | sponge $full_config
+jq ".udmi_namespace = $quoted_namespace" $full_config | sponge $full_config
+
+# And corrupt the default model, to make sure cmdline overrides work
+jq '.iot_provider = "dynamic"' $iot_config | sponge $iot_config
+jq '.project_id = "this-is-not-right"' $iot_config | sponge $iot_config
+jq '.udmi_namespace = "bunny"' $iot_config | sponge $iot_config
 
 echo Clean out the registry to make sure devices get removed...
 echo bin/registrar $site_args -d -x
@@ -132,7 +149,9 @@ bin/registrar $site_args
 
 echo Remove fake device from site model, so it will be blocked
 rm -rf $fake_device
-bin/registrar $site_args -b
+echo $UDMI_ROOT/bin/registrar $full_args -b
+# Test from other-directory for proper path handling
+(cd /tmp; $UDMI_ROOT/bin/registrar $full_args -b)
 
 echo Check $device_id again, but this time with success...
 echo pubber/bin/run $pubber_config

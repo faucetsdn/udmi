@@ -39,6 +39,8 @@ public abstract class JsonUtil {
       .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
   public static final ObjectMapper TERSE_MAPPER = OBJECT_MAPPER.copy()
       .disable(SerializationFeature.INDENT_OUTPUT);
+  public static final String JSON_OBJECT_LEADER = "{";
+  private static final String JSON_STRING_LEADER = "\"";
 
   /**
    * Convert the json string to a generic map object.
@@ -105,7 +107,7 @@ public abstract class JsonUtil {
     try {
       return message == null ? null : fromStringStrict(targetClass, stringify(message));
     } catch (Exception e) {
-      throw new RuntimeException("While converting to " + targetClass.getName(), e);
+      throw new RuntimeException("While converting strict to " + targetClass.getName(), e);
     }
   }
 
@@ -114,7 +116,7 @@ public abstract class JsonUtil {
     try {
       return OBJECT_MAPPER.readValue(messageString, checkNotNull(targetClass, "target class"));
     } catch (Exception e) {
-      throw new RuntimeException("While converting to " + targetClass.getName(), e);
+      throw new RuntimeException("While converting string to " + targetClass.getName(), e);
     }
   }
 
@@ -123,10 +125,11 @@ public abstract class JsonUtil {
     try {
       return STRICT_MAPPER.readValue(messageString, checkNotNull(targetClass, "target class"));
     } catch (Exception e) {
-      throw new RuntimeException("While converting to " + targetClass.getName(), e);
+      throw new RuntimeException("While converting string/string to " + targetClass.getName(), e);
     }
   }
 
+  @SuppressWarnings("unchecked")
   public static Map<String, Object> getAsMap(Map<String, Object> map, String key) {
     return (Map<String, Object>) map.get(key);
   }
@@ -320,12 +323,20 @@ public abstract class JsonUtil {
     return map;
   }
 
+  @SuppressWarnings("unchecked")
+  public static Map<String, Object> mapCast(Object object) {
+    return (Map<String, Object>) object;
+  }
+
   /**
    * Parse and get as any Java object from json.
    */
   public static Object parseJson(String message) {
     try {
-      return OBJECT_MAPPER.readTree(message);
+      if (message != null && message.startsWith(JSON_OBJECT_LEADER)) {
+        return OBJECT_MAPPER.readTree(message);
+      }
+      return message;
     } catch (Exception e) {
       throw new RuntimeException("While parsing json object", e);
     }
@@ -394,6 +405,29 @@ public abstract class JsonUtil {
     @SuppressWarnings("unchecked")
     Map<String, Object> map = fromString(TreeMap.class, message);
     return map;
+  }
+
+  /**
+   * Convert the string to a valid Java object.
+   */
+  public static Object toObject(String message) {
+    if (message != null && message.startsWith(JSON_OBJECT_LEADER)) {
+      return fromString(TreeMap.class, message);
+    }
+    return unquoteJson(message);
+  }
+
+  /**
+   * Extract the underlying string representation from a JSON encoded message.
+   */
+  public static String unquoteJson(String message) {
+    if (message == null || message.isEmpty() || message.startsWith(JSON_OBJECT_LEADER)) {
+      return message;
+    }
+    if (message.startsWith(JSON_STRING_LEADER)) {
+      return message.substring(1, message.length() - 1);
+    }
+    throw new RuntimeException("Unrecognized JSON start encoding: " + message.charAt(0));
   }
 
   /**

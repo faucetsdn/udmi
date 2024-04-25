@@ -7,6 +7,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.instantNow;
+import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static java.lang.Math.floorMod;
 import static java.lang.String.format;
@@ -19,6 +20,7 @@ import static java.util.stream.Collectors.toSet;
 import com.google.bos.udmi.service.core.ComponentName;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import java.io.PrintStream;
 import java.time.Duration;
@@ -58,6 +60,8 @@ public abstract class ContainerBase implements UdmiComponent {
   private static final Pattern VARIABLE_PATTERN = Pattern.compile("\\$\\{([A-Z_]+)}");
   private static final Pattern MULTI_PATTERN = Pattern.compile("!\\{([,a-zA-Z_]+)}");
   private static final int JITTER_ADJ_MS = 1000; // Empirically determined to be good.
+  public static final String ENABLED_KEY = "enabled";
+  public static final String TRUE_OPTION = "true";
   protected static String reflectRegistry = REFLECT_BASE;
   private static BasePodConfiguration basePodConfig = new BasePodConfiguration();
   protected final PodConfiguration podConfiguration;
@@ -259,6 +263,7 @@ public abstract class ContainerBase implements UdmiComponent {
       periodicTask();
     } catch (Exception e) {
       error("Exception executing periodic task: " + friendlyStackTrace(e));
+      error("Task exception details: " + stackTraceString(e));
     }
   }
 
@@ -329,13 +334,13 @@ public abstract class ContainerBase implements UdmiComponent {
     warn(format(format, args));
   }
 
-  protected Map<String, Object> parseOptions(IotAccess iotAccess) {
+  protected Map<String, String> parseOptions(IotAccess iotAccess) {
     String options = variableSubstitution(iotAccess.options);
     if (options == null) {
       return ImmutableMap.of();
     }
     String[] parts = options.split(",");
     return Arrays.stream(parts).map(String::trim).map(option -> option.split("=", 2))
-        .collect(Collectors.toMap(x -> x[0], x -> x.length > 1 ? x[1] : true));
+        .collect(Collectors.toMap(x -> x[0], x -> x.length > 1 ? x[1] : TRUE_OPTION));
   }
 }

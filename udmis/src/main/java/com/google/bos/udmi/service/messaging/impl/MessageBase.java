@@ -26,6 +26,7 @@ import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.AtomicDouble;
+import com.google.udmi.util.JsonUtil;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.AbstractMap.SimpleEntry;
@@ -524,6 +525,15 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     public Bundle(Map<String, String> attributes, Object message) {
       this.attributesMap = attributes;
       this.message = message;
+    }
+
+    /**
+     * Get the actual send bytes for this bundle, either from raw payload or message object.
+     */
+    public byte[] sendBytes() {
+      checkState(message != null || payload != null, "no message or payload");
+      checkState(message == null || payload == null, "both message and payload");
+      return ofNullable(message).map(JsonUtil::stringifyTerse).orElse(payload).getBytes();
     }
   }
 

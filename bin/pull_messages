@@ -53,7 +53,7 @@ while true; do
         out_file=${out_base}.json
         echo $out_file
         mkdir -p $(dirname $out_file)
-        echo $data | jq . > $out_file
+        echo $data | jq . > $out_file || echo $data > $out_file
         out_attr=${out_base}.attr
         jq .attributes < $msg_file > $out_attr
     done

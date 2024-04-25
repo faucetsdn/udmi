@@ -13,5 +13,6 @@ $UDMI_ROOT/validator/bin/build
 
 JAVA_CLASS=com.google.daq.mqtt.util.Dispatcher
 
+echo udmi version $UDMI_TOOLS
 echo java -cp $UDMI_JAR $JAVA_CLASS $util_name "$@"
 java -cp $UDMI_JAR $JAVA_CLASS $util_name "$@" 2>&1 | tee $OUT_DIR/$util_name.log

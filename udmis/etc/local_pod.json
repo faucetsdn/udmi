@@ -1,0 +1,20 @@
+{
+  "include": "prod_pod.json",
+  "flow_defaults": {
+    "protocol": "mqtt",
+    "transport": "tcp",
+    "hostname": "localhost",
+    "auth_provider": {
+      "basic": {
+        "username": "registrar",
+        "password": "registrar"
+      }
+    }
+  },
+  "iot_access": {
+    "implicit": {
+      "provider": "implicit",
+      "options": "enabled=${ETCD_CLUSTER}"
+    }
+  }
+}

@@ -57,9 +57,11 @@ import udmi.schema.SystemState;
 public class MessageDispatcherImpl extends ContainerBase implements MessageDispatcher {
 
   private static final String DEFAULT_HANDLER = "events/null";
+  private static final String ERROR_KEY = "events/error";
   private static final String EXCEPTION_KEY = "exception_handler";
   private static final Map<String, Class<?>> SPECIAL_CLASSES = ImmutableMap.of(
       DEFAULT_HANDLER, DEFAULT_CLASS,
+      ERROR_KEY, EXCEPTION_CLASS,
       EXCEPTION_KEY, EXCEPTION_CLASS
   );
   private static final Map<Class<?>, SimpleEntry<SubType, SubFolder>> CLASS_TYPES = new HashMap<>();
