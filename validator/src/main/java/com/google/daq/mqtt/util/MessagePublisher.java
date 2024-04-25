@@ -3,6 +3,7 @@ package com.google.daq.mqtt.util;
 import static com.google.udmi.util.Common.getNamespacePrefix;
 import static java.util.Optional.ofNullable;
 import static udmi.schema.IotAccess.IotProvider.IMPLICIT;
+import static udmi.schema.IotAccess.IotProvider.JWT;
 import static udmi.schema.IotAccess.IotProvider.PUBSUB;
 
 import com.google.bos.iot.core.proxy.MqttPublisher;
@@ -33,7 +34,7 @@ public interface MessagePublisher {
    */
   static MessagePublisher from(ExecutionConfiguration iotConfig,
       BiConsumer<String, String> messageHandler, Consumer<Throwable> errorHandler) {
-    IotAccess.IotProvider iotProvider = ofNullable(iotConfig.iot_provider).orElse(IMPLICIT);
+    IotAccess.IotProvider iotProvider = ofNullable(iotConfig.iot_provider).orElse(JWT);
     if (iotConfig.reflector_endpoint != null && iotProvider != IMPLICIT) {
       iotConfig.reflector_endpoint = null;
     }

@@ -28,6 +28,8 @@ function usage {
     false
 }
 
+UDMI_ROOT=$(realpath $UDMI_ROOT)
+
 UDMI_JAR=$UDMI_ROOT/validator/build/libs/validator-1.0-SNAPSHOT-all.jar
 
 udmi_version=$(cd $UDMI_ROOT; git describe --dirty --always)
