@@ -7,6 +7,7 @@ import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.daq.mqtt.registrar.Registrar;
+import com.google.daq.mqtt.validator.Validator;
 import java.lang.reflect.Method;
 import java.util.Map;
 
@@ -17,6 +18,7 @@ public abstract class Dispatcher {
 
   private static final Map<String, Class<?>> UTILITIES = ImmutableMap.of(
       "diagnoser", Diagnoser.class,
+      "validator", Validator.class,
       "registrar", Registrar.class
   );
   private static final int BAD_USAGE_ERROR_CODE = -2;

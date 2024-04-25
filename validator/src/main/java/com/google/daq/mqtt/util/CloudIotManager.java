@@ -10,6 +10,7 @@ import static com.google.udmi.util.GeneralUtils.mergeObject;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
+import static udmi.schema.IotAccess.IotProvider.GBOS;
 import static udmi.schema.IotAccess.IotProvider.GCP_NATIVE;
 import static udmi.schema.IotAccess.IotProvider.IMPLICIT;
 
@@ -103,7 +104,7 @@ public class CloudIotManager {
           config.src_file == null ? mergeObject(readExeConfig(baseConfig), config) : config;
       executionConfiguration = validate(newConfig, this.projectId);
       executionConfiguration.iot_provider = ofNullable(executionConfiguration.iot_provider).orElse(
-          IMPLICIT);
+          GBOS);
       executionConfiguration.site_model = siteModel.getAbsolutePath();
       String udmiNamespace = executionConfiguration.udmi_namespace;
       String targetRegistry = ofNullable(newConfig.alt_registry).orElse(newConfig.registry_id);
