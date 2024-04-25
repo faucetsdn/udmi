@@ -104,7 +104,7 @@ public class CronProcessor extends ProcessorBase {
   }
 
   private boolean isAmGroot() {
-    if (srcEnvelope.gatewayId == null || srcEnvelope.subFolder == null) {
+    if (srcEnvelope.gatewayId == null || srcEnvelope.subFolder == null || TRACKER.isEmpty()) {
       return false;
     }
     debug("Received %s is groot: %s", TRACKER.firstKey(), CSV_JOINER.join(TRACKER.keySet()));
