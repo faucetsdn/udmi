@@ -107,19 +107,19 @@ public class SequenceRunner {
     final String deviceId = params.remove(WebServerRunner.DEVICE_PARAM);
     final String testMode = params.remove(WebServerRunner.TEST_PARAM);
 
-    SiteModel siteModel = new SiteModel(sitePath);
-    siteModel.initialize();
-
     ExecutionConfiguration config = new ExecutionConfiguration();
     config.project_id = projectId;
     config.site_model = sitePath;
     config.device_id = deviceId;
-    config.key_file = siteModel.validatorKey();
     config.serial_no = Optional.ofNullable(serialNo).orElse(SequenceBase.SERIAL_NO_MISSING);
     config.log_level = Level.INFO.name();
     config.udmi_version = Common.getUdmiVersion();
     config.udmi_root = TOOL_ROOT;
     config.alt_project = testMode; // Sekrit hack for enabling mock components.
+
+    SiteModel siteModel = new SiteModel(sitePath, config);
+    siteModel.initialize();
+    config.key_file = siteModel.validatorKey();
 
     failures.clear();
     allTestResults.clear();
@@ -177,8 +177,11 @@ public class SequenceRunner {
     try {
       System.err.println("Reading config file " + configFile.getAbsolutePath());
       ExecutionConfiguration exeConfig = ConfigUtil.readValidatorConfig(configFile);
-      SiteModel model = new SiteModel(exeConfig.site_model);
+      String udmiNamespace = exeConfig.udmi_namespace;
+      exeConfig.udmi_namespace = null; // Prevent having this processed twice.
+      SiteModel model = new SiteModel(exeConfig.site_model, exeConfig);
       model.initialize();
+      exeConfig.udmi_namespace = udmiNamespace;
       reportLoadingErrors(model, exeConfig.device_id);
       exeConfig.cloud_region = ofNullable(exeConfig.cloud_region)
           .orElse(model.getCloudRegion());

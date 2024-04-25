@@ -181,7 +181,18 @@ public class Reflector {
       File cloudConfig = new File(siteDir, "cloud_iot_config.json");
       ExecutionConfiguration siteConfig = CloudIotManager.validate(
           ConfigUtil.readExeConfig(cloudConfig), executionConfiguration.project_id);
-      executionConfiguration = mergeObject(executionConfiguration, siteConfig);
+
+      // These parameters should always be taken from the site_model.
+      executionConfiguration.registry_id = siteConfig.registry_id;
+      executionConfiguration.cloud_region = siteConfig.cloud_region;
+      executionConfiguration.site_name = siteConfig.site_name;
+
+      // Only use the site_model values for project_spec if not otherwise specified.
+      if (executionConfiguration.project_id == null) {
+        executionConfiguration.iot_provider = siteConfig.iot_provider;
+        executionConfiguration.project_id = siteConfig.project_id;
+        executionConfiguration.udmi_namespace = siteConfig.udmi_namespace;
+      }
     }
   }
 }
