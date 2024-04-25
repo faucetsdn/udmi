@@ -159,7 +159,7 @@ public class MappingAgent {
 
   private void initialize() {
     cloudIotManager = new CloudIotManager(executionConfiguration);
-    siteModel = new SiteModel(cloudIotManager.getSiteDir());
+    siteModel = new SiteModel(cloudIotManager.getSiteDir(), executionConfiguration);
     siteModel.initialize();
   }
 
