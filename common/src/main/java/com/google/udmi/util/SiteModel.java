@@ -244,9 +244,6 @@ public class SiteModel {
 
   private static void augmentConfig(ExecutionConfiguration exeConfig, Matcher specMatcher) {
     try {
-      checkState(exeConfig.iot_provider == null, "config file iot_provider should be null");
-      checkState(exeConfig.project_id == null, "config file project_id should be null");
-      checkState(exeConfig.udmi_namespace == null, "config file udmi_namespace should be null");
       String iotProvider = specMatcher.group(SPEC_PROVIDER_GROUP);
       exeConfig.iot_provider = ifNotNullGet(iotProvider, IotProvider::fromValue);
       exeConfig.project_id = specMatcher.group(SPEC_PROJECT_GROUP);
