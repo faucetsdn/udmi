@@ -26,6 +26,7 @@ import static com.google.udmi.util.JsonUtil.toMap;
 import static com.google.udmi.util.JsonUtil.toObject;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
+import static java.util.Optional.ofNullable;
 
 import com.google.api.client.util.Base64;
 import com.google.common.base.Preconditions;
@@ -107,15 +108,14 @@ public class IotReflectorClient implements MessagePublisher {
     this.requiredVersion = requiredVersion;
     registryId = SiteModel.getRegistryActual(iotConfig);
     projectId = iotConfig.project_id;
-    udmiVersion = Optional.ofNullable(iotConfig.udmi_version).orElseGet(Common::getUdmiVersion);
+    udmiVersion = ofNullable(iotConfig.udmi_version).orElseGet(Common::getUdmiVersion);
     updateTo = iotConfig.update_to;
-    String cloudRegion = Optional.ofNullable(iotConfig.reflect_region)
+    String cloudRegion = ofNullable(iotConfig.reflect_region)
         .orElse(iotConfig.cloud_region);
     String prefix = getNamespacePrefix(iotConfig.udmi_namespace);
-    String iotProvider = ifNotNullGet(iotConfig.iot_provider, IotProvider::value,
-        IotProvider.IMPLICIT.value());
+    iotConfig.iot_provider = ofNullable(iotConfig.iot_provider).orElse(IotProvider.GBOS);
     subscriptionId = format("%s/%s/%s/%s%s/%s",
-        iotProvider, projectId, cloudRegion, prefix, UDMI_REFLECT, registryId);
+        iotConfig.iot_provider, projectId, cloudRegion, prefix, UDMI_REFLECT, registryId);
 
     try {
       publisher = MessagePublisher.from(iotConfig, this::messageHandler, this::errorHandler);
@@ -163,7 +163,7 @@ public class IotReflectorClient implements MessagePublisher {
     reflectConfiguration.project_id = iotConfig.project_id;
     reflectConfiguration.bridge_host = iotConfig.bridge_host;
     reflectConfiguration.reflector_endpoint = iotConfig.reflector_endpoint;
-    reflectConfiguration.cloud_region = Optional.ofNullable(iotConfig.reflect_region)
+    reflectConfiguration.cloud_region = ofNullable(iotConfig.reflect_region)
         .orElse(iotConfig.cloud_region);
 
     reflectConfiguration.site_model = iotConfig.site_model;
@@ -298,13 +298,13 @@ public class IotReflectorClient implements MessagePublisher {
         System.err.println("UDMI using LEGACY config format, function install upgrade required");
         reflectorConfig = new UdmiConfig();
         Map<String, Object> udmisMessage = toMap(message.get("udmis"));
-        SetupUdmiConfig udmis = Optional.ofNullable(
+        SetupUdmiConfig udmis = ofNullable(
                 convertTo(SetupUdmiConfig.class, udmisMessage))
             .orElseGet(SetupUdmiConfig::new);
         reflectorConfig.last_state = getDate((String) udmisMessage.get("last_state"));
         reflectorConfig.setup = udmis;
       } else {
-        reflectorConfig = Optional.ofNullable(
+        reflectorConfig = ofNullable(
                 convertTo(UdmiConfig.class, message.get(SubFolder.UDMI.value())))
             .orElseGet(UdmiConfig::new);
       }
