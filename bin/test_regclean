@@ -119,9 +119,9 @@ rm -rf $fake_device && cp -a $clone_device $fake_device
 jq ".localnet.families.vendor.addr = \"2183213\"" $fake_metadata | sponge $fake_metadata
 
 # Construct a fullly specified configuration to test alternate forms.
-jq ".iot_provider = $iot_provider" $site_path/cloud_iot_config.json > $full_args
-jq ".project_id = \"$project_id\"" $full_args | sponge $full_args
-jq ".udmi_namespace = $quoted_namespace" $full_args | sponge $full_args
+jq ".iot_provider = $iot_provider" $site_path/cloud_iot_config.json > $full_config
+jq ".project_id = \"$project_id\"" $full_config | sponge $full_config
+jq ".udmi_namespace = $quoted_namespace" $full_config | sponge $full_config
 
 echo Clean out the registry to make sure devices get removed...
 echo bin/registrar $site_args -d -x
