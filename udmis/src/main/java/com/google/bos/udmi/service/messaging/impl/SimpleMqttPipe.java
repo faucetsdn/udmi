@@ -2,10 +2,13 @@ package com.google.bos.udmi.service.messaging.impl;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.nullAsNull;
+import static com.google.udmi.util.JsonUtil.getNowInstant;
+import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.toStringMap;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
@@ -240,6 +243,7 @@ public class SimpleMqttPipe extends MessageBase {
     public void messageArrived(String topic, MqttMessage message) {
       try {
         Map<String, String> envelopeMap = parseEnvelopeTopic(topic);
+        envelopeMap.put(PUBLISH_TIME_KEY, isoConvert());
         receiveMessage(envelopeMap, new String(message.getPayload()));
       } catch (Exception e) {
         error("Exception receiving message on %s: %s", clientId, friendlyStackTrace(e));
