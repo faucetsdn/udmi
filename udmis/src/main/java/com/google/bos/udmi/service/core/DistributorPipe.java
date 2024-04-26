@@ -80,4 +80,10 @@ public class DistributorPipe extends ProcessorBase {
   public String getRouteId(String source) {
     return format("%s%s%s", clientId, ROUTE_SEPARATOR, source);
   }
+
+  @Override
+  public void activate() {
+    super.activate();
+    info("Distributing as client " + clientId);
+  }
 }
