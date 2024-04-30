@@ -134,7 +134,7 @@ public class MessageUpgrader {
     } else {
       // Even if the message was not modified, it is now conformant to the current version
       // of UDMI, so update the version property if it exists
-      if(message.has(VERSION_KEY)){
+      if (message.has(VERSION_KEY)){
         message.put(VERSION_KEY, SchemaVersion.CURRENT.key());
       }
     }
@@ -187,9 +187,6 @@ public class MessageUpgrader {
     }
   }
 
-  private void upgradeTo_1_5_0_metadata() {
-
-  }
   private void upgradeTo_1_4_1_metadata() {
     JsonNode localnet = message.get("localnet");
     if (localnet == null || !localnet.has("families")) {
