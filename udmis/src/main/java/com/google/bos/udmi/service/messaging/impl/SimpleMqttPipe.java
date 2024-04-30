@@ -2,9 +2,13 @@ package com.google.bos.udmi.service.messaging.impl;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
+import static com.google.udmi.util.GeneralUtils.nullAsNull;
+import static com.google.udmi.util.JsonUtil.getNowInstant;
+import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.toStringMap;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
@@ -167,18 +171,18 @@ public class SimpleMqttPipe extends MessageBase {
     Envelope envelope = new Envelope();
     checkState(Strings.isNullOrEmpty(parts[0]), "non-empty prefix");
     checkState("r".equals(parts[1]), "expected registries");
-    envelope.deviceRegistryId = parts[2];
+    envelope.deviceRegistryId = nullAsNull(parts[2]);
     checkState("d".equals(parts[3]), "expected devices");
-    envelope.deviceId = parts[4];
+    envelope.deviceId = nullAsNull(parts[4]);
     checkState("t".equals(parts[5]), "expected type");
-    envelope.subType = SubType.fromValue(parts[6]);
+    envelope.subType = ofNullable(nullAsNull(parts[6])).map(SubType::fromValue).orElse(null);
     if (parts.length >= 8) {
       checkState("f".equals(parts[7]), "expected type");
-      envelope.subFolder = SubFolder.fromValue(parts[8]);
+      envelope.subFolder = ofNullable(nullAsNull(parts[8])).map(SubFolder::fromValue).orElse(null);
     }
     if (parts.length >= 10) {
       checkState("g".equals(parts[9]), "expected gateway");
-      envelope.gatewayId = parts[10];
+      envelope.gatewayId = nullAsNull(parts[10]);
     }
     return toStringMap(envelope);
   }
@@ -239,6 +243,7 @@ public class SimpleMqttPipe extends MessageBase {
     public void messageArrived(String topic, MqttMessage message) {
       try {
         Map<String, String> envelopeMap = parseEnvelopeTopic(topic);
+        envelopeMap.put(PUBLISH_TIME_KEY, isoConvert());
         receiveMessage(envelopeMap, new String(message.getPayload()));
       } catch (Exception e) {
         error("Exception receiving message on %s: %s", clientId, friendlyStackTrace(e));

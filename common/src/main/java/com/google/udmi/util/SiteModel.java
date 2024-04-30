@@ -94,10 +94,14 @@ public class SiteModel {
   private Map<String, CloudModel> allDevices;
 
   public SiteModel(String specPath) {
-    this(specPath, (Supplier<String>) null);
+    this(specPath, null, null);
   }
 
-  public SiteModel(String specPath, Supplier<String> specSupplier) {
+  public SiteModel(String sitePath, ExecutionConfiguration config) {
+    this(sitePath, null, config);
+  }
+
+  public SiteModel(String specPath, Supplier<String> specSupplier, ExecutionConfiguration overrides) {
     File specFile = new File(requireNonNull(specPath, "site model not defined"));
     boolean specIsFile = specFile.isFile();
     siteConf = specIsFile ? specFile : cloudConfigPath(specFile);
@@ -106,17 +110,21 @@ public class SiteModel {
     }
     specMatcher = (specIsFile || specSupplier == null) ? null : extractSpec(specSupplier.get());
     exeConfig = loadSiteConfig();
-    String siteDir = ofNullable(exeConfig.site_model).orElse(specFile.getParent());
-    sitePath = specIsFile ? siteDir : specFile.getPath();
-    exeConfig.site_model = new File(
-        ofNullable(exeConfig.site_model).orElse(sitePath)).getAbsolutePath();
+    sitePath = ofNullable(exeConfig.site_model).map(f -> maybeRelativeTo(f, exeConfig.src_file))
+        .orElse(siteConf.getParent());
+    exeConfig.site_model = new File(sitePath).getAbsolutePath();
     siteDefaults = ofNullable(
         asMap(loadFileStrict(Metadata.class, getSubdirectory(SITE_DEFAULTS_FILE))))
         .orElseGet(HashMap::new);
+    if (overrides != null && overrides.project_id != null) {
+      exeConfig.iot_provider = overrides.iot_provider;
+      exeConfig.project_id = overrides.project_id;
+      exeConfig.udmi_namespace = overrides.udmi_namespace;
+    }
   }
 
   public SiteModel(String toolName, List<String> argList) {
-    this(removeArg(argList, "site_model"), projectSpecSupplier(argList));
+    this(removeArg(argList, "site_model"), projectSpecSupplier(argList), null);
     ExecutionConfiguration executionConfiguration = getExecutionConfiguration();
     File outFile = new File(CONFIG_OUT_DIR, format("%s_conf.json", toolName));
     System.err.println("Writing reconciled configuration file to " + outFile.getAbsolutePath());
@@ -241,9 +249,6 @@ public class SiteModel {
 
   private static void augmentConfig(ExecutionConfiguration exeConfig, Matcher specMatcher) {
     try {
-      checkState(exeConfig.iot_provider == null, "config file iot_provider should be null");
-      checkState(exeConfig.project_id == null, "config file project_id should be null");
-      checkState(exeConfig.udmi_namespace == null, "config file udmi_namespace should be null");
       String iotProvider = specMatcher.group(SPEC_PROVIDER_GROUP);
       exeConfig.iot_provider = ifNotNullGet(iotProvider, IotProvider::fromValue);
       exeConfig.project_id = specMatcher.group(SPEC_PROJECT_GROUP);
@@ -254,6 +259,13 @@ public class SiteModel {
     }
   }
 
+  private String maybeRelativeTo(String siteDir, String srcFile) {
+    if ((srcFile == null) || (new File(siteDir).isAbsolute())) {
+      return siteDir;
+    }
+    return new File(new File(srcFile).getParentFile(), siteDir).getPath();
+  }
+
   public EndpointConfiguration makeEndpointConfig(String iotProject, String deviceId) {
     return makeEndpointConfig(iotProject, exeConfig, deviceId);
   }
@@ -261,7 +273,8 @@ public class SiteModel {
   private Set<String> getDeviceIds() {
     checkState(sitePath != null, "sitePath not defined");
     File devicesFile = new File(new File(sitePath), "devices");
-    File[] files = Objects.requireNonNull(devicesFile.listFiles(), "no files in site devices/");
+    File[] files = Objects.requireNonNull(devicesFile.listFiles(),
+        "no files in " + devicesFile.getAbsolutePath());
     return Arrays.stream(files).map(File::getName).filter(SiteModel::validDeviceDirectory)
         .collect(Collectors.toSet());
   }
@@ -414,8 +427,6 @@ public class SiteModel {
 
   /**
    * Get the site registry name.
-   *
-   * @return site registry
    */
   public String getRegistryId() {
     return getRegistryActual(exeConfig);

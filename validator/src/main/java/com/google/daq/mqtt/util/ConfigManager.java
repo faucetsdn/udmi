@@ -2,7 +2,6 @@ package com.google.daq.mqtt.util;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.util.NetworkFamily.NAMED_FAMILIES;
-import static com.google.udmi.util.GeneralUtils.catchToElse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -11,7 +10,6 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullThrow;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.loadFileString;
-import static com.google.udmi.util.JsonUtil.parseJson;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
@@ -41,8 +39,9 @@ import udmi.schema.SystemConfig;
 public class ConfigManager {
 
   public static final String GENERATED_CONFIG_JSON = "generated_config.json";
-  public static final ProtocolFamily DEFAULT_FAMILY = ProtocolFamily.VENDOR;
+  private static final ProtocolFamily DEFAULT_FAMILY = ProtocolFamily.VENDOR;
   private static final String CONFIG_DIR = "config";
+  private static final String JSON_STRING_FMT = "\"%s\"";
   private final Metadata metadata;
   private final String deviceId;
   private final SiteModel siteModel;
@@ -50,8 +49,8 @@ public class ConfigManager {
   /**
    * Initiates ConfigManager for the given device at the given file location.
    *
-   * @param metadata Device metadata
-   * @param deviceId Device ID
+   * @param metadata  Device metadata
+   * @param deviceId  Device ID
    * @param siteModel Site model
    */
   public ConfigManager(Metadata metadata, String deviceId, SiteModel siteModel) {
@@ -108,8 +107,7 @@ public class ConfigManager {
    */
   public Object deviceConfigJson() {
     if (isStaticConfig()) {
-      String staticFileContents = readStaticConfigFromFile(metadata.cloud.config.static_file);
-      return parseJson(staticFileContents);
+      return format(JSON_STRING_FMT, readStaticConfigFromFile(metadata.cloud.config.static_file));
     } else {
       return deviceConfig();
     }

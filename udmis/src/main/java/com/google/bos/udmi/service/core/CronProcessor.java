@@ -31,11 +31,12 @@ public class CronProcessor extends ProcessorBase {
 
   private static final String PAYLOAD_SEPARATOR = ":";
   private static final String PATH_SEPARATOR = "/";
+  private static final String ID_SEPARATOR = "~";
   private static final long CUTOFF_INTERVALS = 3;
   private static final DefaultMustacheFactory MUSTACHE_FACTORY = new DefaultMustacheFactory();
   private static final SortedMap<String, Instant> TRACKER = new ConcurrentSkipListMap<>();
   private static final String HEARTBEAT_NAME = "heartbeat";
-  private static final String HEARTBEAT_SUFFIX = PATH_SEPARATOR + HEARTBEAT_NAME;
+  private static final String HEARTBEAT_SUFFIX = ID_SEPARATOR + HEARTBEAT_NAME;
   private static Integer HEARTBEAT_SEC;
   private final Envelope srcEnvelope;
   private final Mustache template;
@@ -104,7 +105,7 @@ public class CronProcessor extends ProcessorBase {
   }
 
   private boolean isAmGroot() {
-    if (srcEnvelope.gatewayId == null || srcEnvelope.subFolder == null) {
+    if (srcEnvelope.gatewayId == null || srcEnvelope.subFolder == null || TRACKER.isEmpty()) {
       return false;
     }
     debug("Received %s is groot: %s", TRACKER.firstKey(), CSV_JOINER.join(TRACKER.keySet()));

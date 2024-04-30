@@ -13,16 +13,20 @@ import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.Common.TRANSACTION_KEY;
 import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.Common.getNamespacePrefix;
+import static com.google.udmi.util.GeneralUtils.decodeBase64;
 import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.getDate;
 import static com.google.udmi.util.JsonUtil.isoConvert;
+import static com.google.udmi.util.JsonUtil.mapCast;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
+import static com.google.udmi.util.JsonUtil.toObject;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
+import static java.util.Optional.ofNullable;
 
 import com.google.api.client.util.Base64;
 import com.google.common.base.Preconditions;
@@ -40,7 +44,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.TreeMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
@@ -104,15 +107,14 @@ public class IotReflectorClient implements MessagePublisher {
     this.requiredVersion = requiredVersion;
     registryId = SiteModel.getRegistryActual(iotConfig);
     projectId = iotConfig.project_id;
-    udmiVersion = Optional.ofNullable(iotConfig.udmi_version).orElseGet(Common::getUdmiVersion);
+    udmiVersion = ofNullable(iotConfig.udmi_version).orElseGet(Common::getUdmiVersion);
     updateTo = iotConfig.update_to;
-    String cloudRegion = Optional.ofNullable(iotConfig.reflect_region)
+    String cloudRegion = ofNullable(iotConfig.reflect_region)
         .orElse(iotConfig.cloud_region);
     String prefix = getNamespacePrefix(iotConfig.udmi_namespace);
-    String iotProvider = ifNotNullGet(iotConfig.iot_provider, IotProvider::value,
-        IotProvider.IMPLICIT.value());
+    iotConfig.iot_provider = ofNullable(iotConfig.iot_provider).orElse(IotProvider.GBOS);
     subscriptionId = format("%s/%s/%s/%s%s/%s",
-        iotProvider, projectId, cloudRegion, prefix, UDMI_REFLECT, registryId);
+        iotConfig.iot_provider, projectId, cloudRegion, prefix, UDMI_REFLECT, registryId);
 
     try {
       publisher = MessagePublisher.from(iotConfig, this::messageHandler, this::errorHandler);
@@ -160,7 +162,7 @@ public class IotReflectorClient implements MessagePublisher {
     reflectConfiguration.project_id = iotConfig.project_id;
     reflectConfiguration.bridge_host = iotConfig.bridge_host;
     reflectConfiguration.reflector_endpoint = iotConfig.reflector_endpoint;
-    reflectConfiguration.cloud_region = Optional.ofNullable(iotConfig.reflect_region)
+    reflectConfiguration.cloud_region = ofNullable(iotConfig.reflect_region)
         .orElse(iotConfig.cloud_region);
 
     reflectConfiguration.site_model = iotConfig.site_model;
@@ -256,9 +258,7 @@ public class IotReflectorClient implements MessagePublisher {
     }
     Map<String, String> attributes = extractAttributes(messageMap);
     String payload = (String) messageMap.remove("payload");
-    String decoded = GeneralUtils.decodeBase64(payload);
-    Map<String, Object> message = asMap(decoded);
-    handleReceivedMessage(attributes, message);
+    handleReceivedMessage(attributes, toObject(decodeBase64(payload)));
   }
 
   @NotNull
@@ -271,11 +271,14 @@ public class IotReflectorClient implements MessagePublisher {
     return attributes;
   }
 
-  private void handleReceivedMessage(Map<String, String> attributes,
-      Map<String, Object> message) {
+  private void handleReceivedMessage(Map<String, String> attributes, Object message) {
     Validator.MessageBundle messageBundle = new Validator.MessageBundle();
     messageBundle.attributes = attributes;
-    messageBundle.message = message;
+    if (message instanceof String stringMessage) {
+      messageBundle.rawMessage = stringMessage;
+    } else {
+      messageBundle.message = mapCast(message);
+    }
     messages.offer(messageBundle);
   }
 
@@ -294,13 +297,13 @@ public class IotReflectorClient implements MessagePublisher {
         System.err.println("UDMI using LEGACY config format, function install upgrade required");
         reflectorConfig = new UdmiConfig();
         Map<String, Object> udmisMessage = toMap(message.get("udmis"));
-        SetupUdmiConfig udmis = Optional.ofNullable(
+        SetupUdmiConfig udmis = ofNullable(
                 convertTo(SetupUdmiConfig.class, udmisMessage))
             .orElseGet(SetupUdmiConfig::new);
         reflectorConfig.last_state = getDate((String) udmisMessage.get("last_state"));
         reflectorConfig.setup = udmis;
       } else {
-        reflectorConfig = Optional.ofNullable(
+        reflectorConfig = ofNullable(
                 convertTo(UdmiConfig.class, message.get(SubFolder.UDMI.value())))
             .orElseGet(UdmiConfig::new);
       }

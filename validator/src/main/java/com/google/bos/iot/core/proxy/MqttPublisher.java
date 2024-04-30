@@ -120,7 +120,7 @@ public class MqttPublisher implements MessagePublisher {
       BiConsumer<String, String> onMessageCallback, Consumer<Throwable> onErrorCallback) {
     onMessage = onMessageCallback;
     onError = onErrorCallback;
-    iotProvider = config.iot_provider;
+    iotProvider = ofNullable(config.iot_provider).orElse(IotProvider.GBOS);
     projectId = config.project_id;
     cloudRegion = ofNullable(config.cloud_region).orElse(DEFAULT_REGION);
     registryId = MessagePublisher.getRegistryId(config);
@@ -197,7 +197,7 @@ public class MqttPublisher implements MessagePublisher {
 
   private String getTopicBase() {
     return switch (iotProvider) {
-      case GBOS, CLEARBLADE -> format(DEVICE_TOPIC_FMT, deviceId);
+      case IMPLICIT, GBOS, CLEARBLADE -> format(DEVICE_TOPIC_FMT, deviceId);
       case MQTT -> format(FULL_TOPIC_FMT, projectId, registryId, deviceId);
       default -> throw new RuntimeException("Unknown iotProvider " + iotProvider);
     };
