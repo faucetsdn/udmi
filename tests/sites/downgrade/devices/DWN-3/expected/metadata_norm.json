@@ -2,7 +2,7 @@
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.4.1",
   "upgraded_from": "1",
-  "hash": "63cc9801",
+  "hash": "82199b21",
   "cloud": {
     "auth_type": "RS256"
   },
@@ -49,6 +49,7 @@
         "units": "Degrees-Celsius",
         "ref": "AV12.present_value"
       }
-    }
+    },
+    "exclude_units_from_config": true
   }
 }
