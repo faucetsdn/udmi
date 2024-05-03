@@ -1,5 +1,6 @@
 {
   "pointset": {
+    "exclude_units_from_config": true,
     "points": {
       "filter_alarm_pressure_status": {
         "units": "No-units",
@@ -24,16 +25,16 @@
     }
   },
   "localnet": {
-    "families": {
+    "subsystem": {
       "vendor": {
-        "addr": "0x65"
+        "id": "0x65"
       }
     }
   },
   "cloud": {
     "auth_type": "RS256"
   },
-  "version": 1,
+  "version": "1.5.0",
   "timestamp": "2020-05-01T13:39:07Z",
   "hash": "da852d15"
 }

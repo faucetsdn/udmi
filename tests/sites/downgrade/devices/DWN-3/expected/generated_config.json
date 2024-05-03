@@ -19,15 +19,11 @@
   "pointset": {
     "points": {
       "filter_alarm_pressure_status": {
-        "ref": "BV11.present_value",
-        "units": "No-units"
+        "ref": "BV11.present_value"
       },
-      "filter_differential_pressure": {
-        "units": "Bars"
-      },
+      "filter_differential_pressure": { },
       "filter_differential_pressure_sensor": {
-        "ref": "AV12.present_value",
-        "units": "Degrees-Celsius"
+        "ref": "AV12.present_value"
       }
     }
   },
