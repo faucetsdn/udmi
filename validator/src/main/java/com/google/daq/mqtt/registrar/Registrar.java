@@ -184,6 +184,10 @@ public class Registrar {
     return cloudModel;
   }
 
+  private static String defaultToolRoot() {
+    return UDMI_ROOT.getAbsolutePath();
+  }
+
   Registrar processArgs(List<String> argListRaw) {
     List<String> argList = new ArrayList<>(argListRaw);
     if (argList.size() == 1 && new File(argList.get(0)).isDirectory()) {
@@ -301,10 +305,6 @@ public class Registrar {
     } finally {
       shutdown();
     }
-  }
-
-  private static String defaultToolRoot() {
-    return UDMI_ROOT.getAbsolutePath();
   }
 
   private void createRegistries() {
@@ -481,22 +481,25 @@ public class Registrar {
         }
       }
 
-      Set<String> operatives = explicitDevices != null ? explicitDevices : localDevices.keySet();
-      Set<String> oldDevices = operatives.stream().filter(this::alreadyRegistered)
+      boolean isTargeted = explicitDevices != null;
+      Set<String> targetDevices = isTargeted ? explicitDevices : localDevices.keySet();
+      Map<String, LocalDevice> targetLocals = targetDevices.stream()
+          .collect(Collectors.toMap(key -> key, key -> localDevices.get(key)));
+      Set<String> oldDevices = targetDevices.stream().filter(this::alreadyRegistered)
           .collect(Collectors.toSet());
-      Set<String> newDevices = difference(operatives, oldDevices);
+      Set<String> newDevices = difference(targetDevices, oldDevices);
       System.err.printf("Processing %d new devices...%n", newDevices.size());
       int total = processLocalDevices(newDevices);
       System.err.printf("Updating %d existing devices...%n", oldDevices.size());
       total += processLocalDevices(oldDevices);
-      System.err.printf("Finished registering %d/%d devices.%n", total, operatives.size());
+      System.err.printf("Finished registering %d/%d devices.%n", total, targetDevices.size());
 
       if (updateCloudIoT) {
-        bindGatewayDevices(localDevices);
+        bindGatewayDevices(targetLocals);
       }
 
-      if (cloudModels != null) {
-        extraDevices = processExtraDevices(difference(cloudModels.keySet(), operatives));
+      if (cloudModels != null && !isTargeted) {
+        extraDevices = processExtraDevices(difference(cloudModels.keySet(), targetDevices));
       }
     } catch (Exception e) {
       throw new RuntimeException("While processing devices", e);
@@ -1088,7 +1091,7 @@ public class Registrar {
           localDevices.computeIfAbsent(
               deviceName,
               keyName -> new LocalDevice(siteModel, deviceName, schemas, generation, doValidate));
-      
+
       try {
         localDevice.loadCredentials();
       } catch (Exception e) {

@@ -52,7 +52,7 @@ public abstract class Common {
   public static final String COMMANDS_CATEGORY = "commands";
   public static final String CATEGORY_PROPERTY_KEY = "category";
   private static final String PREFIX_SEPARATOR = "~";
-  private static final String UDMI_VERSION_ENV = "UDMI_VERSION";
+  private static final String UDMI_VERSION_ENV = "UDMI_TOOLS";
 
   /**
    * Remove the next item from the list in an exception-safe way.

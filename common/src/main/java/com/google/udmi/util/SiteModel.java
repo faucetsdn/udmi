@@ -251,7 +251,8 @@ public class SiteModel {
     try {
       String iotProvider = specMatcher.group(SPEC_PROVIDER_GROUP);
       exeConfig.iot_provider = ifNotNullGet(iotProvider, IotProvider::fromValue);
-      exeConfig.project_id = specMatcher.group(SPEC_PROJECT_GROUP);
+      String matchedId = specMatcher.group(SPEC_PROJECT_GROUP);
+      exeConfig.project_id = NO_SITE.equals(matchedId) ? null : matchedId;
       exeConfig.udmi_namespace = specMatcher.group(SPEC_NAMESPACE_GROUP);
     } catch (Exception e) {
       throw new RuntimeException(
@@ -500,9 +501,6 @@ public class SiteModel {
   }
 
   private Matcher extractSpec(String projectSpec) {
-    if (NO_SITE.equals(projectSpec)) {
-      return null;
-    }
     Matcher matcher = SPEC_PATTERN.matcher(projectSpec);
     if (!matcher.matches()) {
       throw new RuntimeException(
