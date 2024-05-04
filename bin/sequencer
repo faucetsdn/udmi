@@ -19,7 +19,6 @@ SCHEMA_OUT=$OUT_DIR/schema.out
 DEFAULT_SERIAL=//
 log_level=INFO
 min_stage=PREVIEW
-export UDMI_VERSION=$udmi_version
 
 rm -f $SEQUENCER_LOG $SEQUENCER_OUT $SCHEMA_OUT
 
