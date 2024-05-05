@@ -97,7 +97,7 @@ public class MqttPublisher implements Publisher {
   private final Map<String, Instant> reauthTimes = new ConcurrentHashMap<>();
   private final Map<String, String> topicPrefixMap = new HashMap<>();
 
-  private final ExecutorService publisherExecutor =
+  private ExecutorService publisherExecutor =
       Executors.newFixedThreadPool(PUBLISH_THREAD_COUNT);
 
   private final PubberConfiguration configuration;
@@ -164,6 +164,9 @@ public class MqttPublisher implements Publisher {
     Object marked =
         topicSuffix.startsWith(EVENT_MARK_PREFIX) ? decorateMessage(topicSuffix, data) : data;
     try {
+      if (!isActive()) {
+        publisherExecutor = Executors.newFixedThreadPool(PUBLISH_THREAD_COUNT);
+      }
       publisherExecutor.submit(() -> publishCore(deviceId, topicSuffix, marked, callback));
     } catch (Exception e) {
       throw new RuntimeException("While publishing to topic suffix " + topicSuffix, e);
