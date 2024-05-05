@@ -47,11 +47,16 @@ public class CertManager {
     this.siteModel = siteModel;
     File reflectorDir = siteModel.getReflectorDir();
     caCrtFile = new File(reflectorDir, "ca.crt").getPath();
-    crtFile = new File(reflectorDir, "rsa_private.crt").getPath();
-    keyFile = siteModel.getDeviceFile(configuration.deviceId, "rsa_private.pem").getPath();
+    File deviceDir = siteModel.getDeviceDir(configuration.deviceId);
+    crtFile = new File(deviceDir, "rsa_private.crt").getPath();
+    keyFile = new File(deviceDir, "rsa_private.pem").getPath();
     String keyPassword = GeneralUtils.sha256((byte[]) configuration.keyBytes).substring(0, 8);
-    System.err.println("Configured with client password " + keyPassword);
     password = keyPassword.toCharArray();
+
+    System.err.println("CA cert file: " + caCrtFile);
+    System.err.println("Device cert file: " + crtFile);
+    System.err.println("Private key file: " + keyFile);
+    System.err.println("Client password " + keyPassword);
   }
 
   public SocketFactory getSocketFactory() {
