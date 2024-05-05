@@ -376,7 +376,8 @@ public class MqttPublisher implements Publisher {
   }
 
   private SocketFactory getSocketFactory() {
-    return certManager.getSocketFactory();
+    return ofNullable(certManager).map(CertManager::getSocketFactory)
+        .orElse(SSLSocketFactory.getDefault());
   }
 
   private void configureAuth(MqttConnectOptions options) throws Exception {
@@ -556,8 +557,8 @@ public class MqttPublisher implements Publisher {
 
   private void checkAuthentication(String targetId) {
     String authId = ofNullable(getGatewayId(targetId)).orElse(targetId);
-    Instant reauthTime = reauthTimes.get(authId);
-    if (reauthTime == null || (reauthTime != null && Instant.now().isBefore(reauthTime))) {
+    Instant reAuthTime = reauthTimes.get(authId);
+    if (reAuthTime == null || Instant.now().isBefore(reAuthTime)) {
       return;
     }
     warn("Authentication retry time reached for " + authId);
