@@ -24,6 +24,10 @@ fi
 CA_CRT=$CA_DIR/ca.crt
 CA_SRL=$CA_DIR/ca.srl
 CA_KEY=$CA_DIR/rsa_private.pem
+OPTS_509=/tmp/x509opts.txt
+
+echo "subjectAltName=DNS:localhost, IP:127.0.0.1" > $OPTS_509
+x509opts="-days 3650 -extfile $OPTS_509"
 
 if [[ $type == CA ]]; then
     CERT_SUBJ=/CN=ca
@@ -31,13 +35,13 @@ if [[ $type == CA ]]; then
     openssl req -new -x509 -days 3650 -key $CA_KEY -out ca.crt -subj $CERT_SUBJ
     openssl genrsa -out server.key 2048
     openssl req -new -key server.key -out server.csr -subj /CN=$SUBJ
-    openssl x509 -req -in server.csr -CA ca.crt -CAkey $CA_KEY -CAcreateserial -out server.crt -days 3650
+    openssl x509 -req -in server.csr -CA ca.crt -CAkey $CA_KEY -CAcreateserial -out server.crt $x509opts
     echo Created certificate authority keys in $PWD
 elif [ $type == CERT ]; then
     echo Generating self-signed cert from CA defined in $(realpath $CA_DIR)
     echo Generating cert for device keys in $PWD
     openssl req -new -key rsa_private.pem -out rsa_private.csr -subj /CN=$SUBJ
-    openssl x509 -req -in rsa_private.csr -CA $CA_CRT -CAkey $CA_KEY -CAcreateserial -out rsa_private.crt -days 3650
+    openssl x509 -req -in rsa_private.csr -CA $CA_CRT -CAkey $CA_KEY -CAcreateserial -out rsa_private.crt $x509opts
 elif [ $type == RS256 ]; then
     openssl genrsa -out rsa_private.pem 2048
     openssl rsa -in rsa_private.pem -pubout -out rsa_public.pem

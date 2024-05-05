@@ -3,8 +3,6 @@
 UDMI_ROOT=$(dirname $0)/..
 cd $UDMI_ROOT
 
-TEST_PUBBER=${TEST_PUBBER:-}
-
 source $UDMI_ROOT/etc/shell_common.sh
 
 if [[ $# != 0 ]]; then
@@ -100,15 +98,16 @@ cat <<EOF > /tmp/pubber_config.json
     },
     "sitePath": "$site_path",
     "deviceId": "$device_id",
-    "serialNo": "$serial_no"
+    "serialNo": "$serial_no",
+    "options": {
+      "smokeCheck": true
+    }
 }
 EOF
 
 kill $(pgrep -f 'java.*pubber-.*jar') || true
 
-if [[ -n $TEST_PUBBER ]]; then
-    pubber/bin/build
-fi
+pubber/bin/build
 
 # Clean out the persistant data store to ensure a clean state each time.
 rm -rf sites/udmi_site_model/out/devices/$device_id/persistent_data.json
@@ -116,10 +115,8 @@ rm -rf sites/udmi_site_model/out/devices/$device_id/persistent_data.json
 echo Publishing empty config to /$registry_id/$device_id/config
 mosquitto_pub $CLIENT_OPTS -r -t /$registry_id/$device_id/config -m "{}"
 
-if [[ -n $TEST_PUBBER ]]; then
-    echo Running pubber for 10s...
-    timeout 10s pubber/bin/run /tmp/pubber_config.json || true
-fi
+echo Running pubber smoke check
+pubber/bin/run /tmp/pubber_config.json
 
 echo Publishing ending test message
 mosquitto_pub $CLIENT_OPTS -t $topic -m "Hello Rudolph"
@@ -135,17 +132,15 @@ cat out/mosquitto.sub
 echo Checking received end message
 fgrep Rudolph out/mosquitto.sub
 
-if [[ -n $TEST_PUBBER ]]; then
-    echo Checking messages received from pubber
-    received_no=$(fgrep operational out/mosquitto.sub | head -n 1 | sed -E 's/^[^{]+//' | jq -r .system.serial_no)
-    received_topic=$(fgrep operational out/mosquitto.sub | head -n 1 | awk '{ print $1 }')
-    [[ -z $received_topic ]] && fail No matching receive message found.
+echo Checking messages received from pubber
+received_no=$(fgrep operational out/mosquitto.sub | head -n 1 | sed -E 's/^[^{]+//' | jq -r .system.serial_no)
+received_topic=$(fgrep operational out/mosquitto.sub | head -n 1 | awk '{ print $1 }')
+[[ -z $received_topic ]] && fail No matching receive message found.
 
-    expected_topic=/$registry_id/$device_id/state
-    [[ $received_topic != $expected_topic ]] && fail Unexpected received topic $received_topic != $expected_topic
+expected_topic=/$registry_id/$device_id/state
+[[ $received_topic != $expected_topic ]] && fail Unexpected received topic $received_topic != $expected_topic
 
-    [[ $received_no != $serial_no ]] && fail Mismatched/missing serial no: $received_no != $serial_no
-fi
+[[ $received_no != $serial_no ]] && fail Mismatched/missing serial no: $received_no != $serial_no
 
 echo export MQTT_TEST_BROKER=tcp://127.0.0.1:1883
 echo Done with mosquitto pubber check.
