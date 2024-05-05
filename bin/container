@@ -1,12 +1,16 @@
 #!/bin/bash -e
 
 UDMI_ROOT=$(dirname $0)/..
+source ${UDMI_ROOT}/etc/shell_common.sh
+
+if [[ $# -lt 2 ]]; then
+    usage target { prep, build, push, apply } [--no-check] [repo]
+fi
 
 target=$1
 cmd=$2
-shift 2 || usage target { prep, build, push, apply } [--no-check] [repo]
+shift 2
 
-source ${UDMI_ROOT}/etc/shell_common.sh
 cd ${UDMI_ROOT}/${target}
 
 git_branch=$(git rev-parse --abbrev-ref HEAD)
@@ -20,15 +24,11 @@ GCP_PROJECT=$(gcloud config get project)
 REPOSITORY=ghcr.io/${git_repo}
 TEMPLATES=$(cd etc; ls k8s_*.yaml)
 
-if [[ $1 == "--no-check" ]]; then
-    NOCHECK=1
-    shift
-fi
+NOCHECK=
+[[ ${1:-} == "--no-check" ]] && NOCHECK=1 && shift
 
-if [[ -n $1 ]]; then
-    PUSH_TAG=$1
-    shift
-fi
+PUSH_TAG=
+[[ -n ${1:-} ]] && PUSH_TAG=$1 && shift
 
 if [[ $# != 0 ]]; then
     echo unknown arguments: $*
@@ -50,7 +50,13 @@ if [[ -z $NOCHECK ]]; then
 fi
 
 echo Using GCP project $GCP_PROJECT
-echo Using udmi namespace $UDMI_NAMESPACE
+
+if [[ -n ${UDMI_NAMESPACE:-} ]]; then
+    echo Using udmi namespace $UDMI_NAMESPACE
+else
+    echo Using udmi namespace [none]
+    UDMI_NAMESPACE=
+fi
 
 current_user=$USER@$HOSTNAME
 

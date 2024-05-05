@@ -20,10 +20,10 @@ fi
 project_spec=$1
 shift
 
-[[ -n $GITHUB_RUN_NUMBER ]] && echo "Workflow run number $GITHUB_RUN_NUMBER" || true
-echo "export TARGET_PROJECT=$TARGET_PROJECT"
-echo "export UDMI_REGISTRY_SUFFIX=$UDMI_REGISTRY_SUFFIX"
-echo "export UDMI_ALT_REGISTRY=$UDMI_ALT_REGISTRY"
+[[ -n ${GITHUB_RUN_NUMBER:-} ]] && echo "Workflow run number $GITHUB_RUN_NUMBER" || true
+echo "export TARGET_PROJECT=${TARGET_PROJECT:-}"
+echo "export UDMI_REGISTRY_SUFFIX=${UDMI_REGISTRY_SUFFIX:-}"
+echo "export UDMI_ALT_REGISTRY=${UDMI_ALT_REGISTRY:-}"
 
 site_path=sites/udmi_site_model
 iot_config=$site_path/cloud_iot_config.json
@@ -44,7 +44,7 @@ echo Clean site out/ directory...
 rm -rf $site_path/out
 mkdir -p out
 
-if [[ -n $UDMI_REGISTRY_SUFFIX ]]; then
+if [[ -n ${UDMI_REGISTRY_SUFFIX:-} ]]; then
     echo Using registry suffix $UDMI_REGISTRY_SUFFIX
     registry_suffix=$UDMI_REGISTRY_SUFFIX
     registrar_opts="-e $UDMI_REGISTRY_SUFFIX"

@@ -9,15 +9,16 @@ if [[ $# != 1 ]]; then
     echo Usage: $0 PROJECT_ID
     false
 fi
+
 project_id=$1
 shift
 
-echo "export TARGET_PROJECT=$project_id"
-echo "export UDMI_REGISTRY_SUFFIX=$UDMI_REGISTRY_SUFFIX"
-echo "export UDMI_ALT_REGISTRY=$UDMI_ALT_REGISTRY"
-
-[[ -n $GITHUB_RUN_NUMBER ]] && echo "Workflow run number $GITHUB_RUN_NUMBER" || true
+[[ -n ${GITHUB_RUN_NUMBER:-} ]] && echo "Workflow run number $GITHUB_RUN_NUMBER" || true
 echo 'Using target project:' $project_id
+
+echo "export TARGET_PROJECT=$project_id"
+echo "export UDMI_REGISTRY_SUFFIX=${UDMI_REGISTRY_SUFFIX:-}"
+echo "export UDMI_ALT_REGISTRY=${UDMI_ALT_REGISTRY:-}"
 
 site_path=sites/udmi_site_model
 output_file=$site_path/out/validation_report.json

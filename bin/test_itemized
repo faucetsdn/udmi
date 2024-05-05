@@ -11,7 +11,7 @@ if [[ $# != 1 && $# != 2 ]]; then
 fi
 PROJECT_ID=$1
 shift 1
-TARGET_INDEX=$1
+TARGET_INDEX=${1-}
 
 SITE_PATH=sites/udmi_site_model
 DEVICE_ID=AHU-1
@@ -30,10 +30,10 @@ mkdir -p out
 echo > $AUGMENT_OPTS
 
 echo "export TARGET_PROJECT=$PROJECT_ID"
-echo "export UDMI_REGISTRY_SUFFIX=$UDMI_REGISTRY_SUFFIX"
-echo "export UDMI_ALT_REGISTRY=$UDMI_ALT_REGISTRY"
-echo "export MATRIX_SHARD_COUNT=$MATRIX_SHARD_COUNT"
-echo "export MATRIX_SHARD_INDEX=$MATRIX_SHARD_INDEX"
+echo "export UDMI_REGISTRY_SUFFIX=${UDMI_REGISTRY_SUFFIX:-}"
+echo "export UDMI_ALT_REGISTRY=${UDMI_ALT_REGISTRY:-}"
+echo "export MATRIX_SHARD_COUNT=${MATRIX_SHARD_COUNT:-}"
+echo "export MATRIX_SHARD_INDEX=${MATRIX_SHARD_INDEX:-}"
 
 pubber/bin/build
 validator/bin/build
@@ -62,7 +62,7 @@ while read -u 7 action test_name pubber_opts; do
         false
     fi
 
-    if [[ -z $MATRIX_SHARD_COUNT || $((test_index % MATRIX_SHARD_COUNT)) == $MATRIX_SHARD_INDEX ]]; then
+    if [[ -z ${MATRIX_SHARD_COUNT:-} || $((test_index % MATRIX_SHARD_COUNT)) == $MATRIX_SHARD_INDEX ]]; then
         echo Executing $test_name shard test index $test_marker
     else
         echo Skipping $test_name non-shard test index $test_marker
@@ -132,7 +132,7 @@ sed -E -i $RESULTS_OUT \
     -e 's/(Pipeline type event error: While processing message ).*/\1REDACTED/' \
     -e 's/ 202[-0-9T:]+Z / TIMESTAMP /g'
 
-if [[ -z $TARGET_INDEX && -z $MATRIX_SHARD_COUNT ]]; then
+if [[ -z $TARGET_INDEX && -z ${MATRIX_SHARD_COUNT:-} ]]; then
     bin/test_itemcheck
 else
     echo Checking for correctness of completed tests in $GOLDEN_FILE...

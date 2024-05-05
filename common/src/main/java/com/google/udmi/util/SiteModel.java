@@ -59,6 +59,7 @@ public class SiteModel {
   public static final String MOCK_PROJECT = "mock-project";
   public static final String LOCALHOST_HOSTNAME = "localhost";
   public static final String DEVICES_DIR = "devices";
+  public static final String REFLECTOR_DIR = "reflector";
   public static final String METADATA_JSON = "metadata.json";
   public static final String EXTRA_DEVICES_BASE = "extras";
   public static final String EXTRA_DEVICES_FORMAT = EXTRA_DEVICES_BASE + "/%s";
@@ -508,6 +509,10 @@ public class SiteModel {
               SPEC_PATTERN.pattern()));
     }
     return matcher;
+  }
+
+  public File getReflectorDir() {
+    return getSubdirectory(REFLECTOR_DIR);
   }
 
   public static class MetadataException extends Metadata {

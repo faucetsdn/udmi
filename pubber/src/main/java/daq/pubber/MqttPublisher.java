@@ -40,6 +40,8 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import javax.net.SocketFactory;
+import javax.net.ssl.SSLSocketFactory;
 import org.apache.http.ConnectionClosedException;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
@@ -108,10 +110,13 @@ public class MqttPublisher implements Publisher {
   private final Map<String, Class<Object>> handlersType = new ConcurrentHashMap<>();
   private final Consumer<Exception> onError;
   private final String deviceId;
+  private final CertManager certManager;
   private CountDownLatch connectionLatch;
 
-  MqttPublisher(PubberConfiguration configuration, Consumer<Exception> onError) {
+  MqttPublisher(PubberConfiguration configuration, Consumer<Exception> onError,
+      CertManager certManager) {
     this.configuration = configuration;
+    this.certManager = certManager;
     if (isGcpIotCore(configuration)) {
       ClientInfo clientIdParts = SiteModel.parseClientId(configuration.endpoint.client_id);
       this.projectId = clientIdParts.iotProject;
@@ -370,7 +375,13 @@ public class MqttPublisher implements Publisher {
     }
   }
 
+  private SocketFactory getSocketFactory() {
+    return ofNullable(certManager).map(CertManager::getSocketFactory)
+        .orElse(SSLSocketFactory.getDefault());
+  }
+
   private void configureAuth(MqttConnectOptions options) throws Exception {
+    options.setSocketFactory(getSocketFactory());
     if (configuration.endpoint.auth_provider == null) {
       info("No endpoint auth_provider found, using gcp defaults");
       configureAuth(options, (Jwt) null);
@@ -546,8 +557,8 @@ public class MqttPublisher implements Publisher {
 
   private void checkAuthentication(String targetId) {
     String authId = ofNullable(getGatewayId(targetId)).orElse(targetId);
-    Instant reauthTime = reauthTimes.get(authId);
-    if (reauthTime == null || (reauthTime != null && Instant.now().isBefore(reauthTime))) {
+    Instant reAuthTime = reauthTimes.get(authId);
+    if (reAuthTime == null || Instant.now().isBefore(reAuthTime)) {
       return;
     }
     warn("Authentication retry time reached for " + authId);
