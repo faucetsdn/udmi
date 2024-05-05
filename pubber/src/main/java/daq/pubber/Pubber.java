@@ -769,7 +769,8 @@ public class Pubber extends ManagerBase implements ManagerHost {
     }
     checkState(deviceTarget == null, "mqttPublisher already defined");
     ensureKeyBytes();
-    deviceTarget = new MqttDevice(configuration, this::publisherException);
+    CertManager certManager = new CertManager(siteModel, configuration);
+    deviceTarget = new MqttDevice(configuration, this::publisherException, certManager);
     registerMessageHandlers();
     publishDirtyState();
   }

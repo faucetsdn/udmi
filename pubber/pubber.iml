@@ -57,6 +57,7 @@
     <orderEntry type="library" name="Gradle: joda-time:joda-time:2.10.10" level="project" />
     <orderEntry type="library" name="Gradle: org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5" level="project" />
     <orderEntry type="library" name="Gradle: org.slf4j:slf4j-simple:1.7.30" level="project" />
+    <orderEntry type="library" name="Gradle: org.bouncycastle:bcpkix-jdk15on:1.64" level="project" />
     <orderEntry type="library" name="Gradle: javax.activation:javax.activation-api:1.2.0" level="project" />
     <orderEntry type="library" name="Gradle: com.sun.xml.bind:jaxb-core:3.0.1" level="project" />
     <orderEntry type="library" name="Gradle: com.google.api.grpc:proto-google-cloud-logging-v2:0.88.2" level="project" />
@@ -104,6 +105,7 @@
     <orderEntry type="library" name="Gradle: io.netty:netty-resolver:4.1.59.Final" level="project" />
     <orderEntry type="library" name="Gradle: io.netty:netty-common:4.1.59.Final" level="project" />
     <orderEntry type="library" name="Gradle: com.h2database:h2-mvstore:1.4.199" level="project" />
+    <orderEntry type="library" name="Gradle: org.bouncycastle:bcprov-jdk15on:1.64" level="project" />
     <orderEntry type="library" name="Gradle: jakarta.xml.bind:jakarta.xml.bind-api:3.0.1" level="project" />
     <orderEntry type="library" name="Gradle: com.sun.activation:jakarta.activation:2.0.1" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: com.google.android:annotations:4.1.1.4" level="project" />

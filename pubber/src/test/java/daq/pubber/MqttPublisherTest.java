@@ -52,7 +52,7 @@ public class MqttPublisherTest extends TestBase {
 
     public MockPublisher(PubberConfiguration configuration,
         Consumer<Exception> onError) {
-      super(configuration, onError);
+      super(configuration, onError, null);
     }
 
     MqttClient getMqttClient(String clientId, String brokerUrl) throws MqttException {

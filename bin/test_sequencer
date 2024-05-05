@@ -12,33 +12,33 @@ pubber_opts=
 suffix=
 out_check=y
 
-if [[ $1 == 'clean' ]]; then
+if [[ ${1:-} == 'clean' ]]; then
     shift
     clean_cache=y
 fi
 
-if [[ $1 == 'alpha' ]]; then
+if [[ ${1:-} == 'alpha' ]]; then
     shift
     seq_opts=-x
 fi
 
-if [[ $1 == 'nostate' ]]; then
+if [[ ${1:-} == 'nostate' ]]; then
     shift
     pubber_opts+=" noState"
     suffix=_nostate
 fi
 
-if [[ $1 == 'nocheck' ]]; then
+if [[ ${1:-} == 'nocheck' ]]; then
     shift
     out_check=
 fi
 
-if [[ $1 == 'full' ]]; then
+if [[ ${1:-} == 'full' ]]; then
     shift
     debug_opts=
 fi
 
-if [[ $1 == 'debug' ]]; then
+if [[ ${1:-} == 'debug' ]]; then
     shift
     debug_opts=-vv
 fi
@@ -51,12 +51,12 @@ project_id=$1
 shift
 targets=$*
 
-[[ -n $GITHUB_RUN_NUMBER ]] && echo "Workflow run number $GITHUB_RUN_NUMBER" || true
+[[ -n ${GITHUB_RUN_NUMBER:-} ]] && echo "Workflow run number $GITHUB_RUN_NUMBER" || true
 echo "export TARGET_PROJECT=$project_id"
-echo "export UDMI_REGISTRY_SUFFIX=$UDMI_REGISTRY_SUFFIX"
-echo "export UDMI_ALT_REGISTRY=$UDMI_ALT_REGISTRY"
-echo "export MATRIX_SHARD_COUNT=$MATRIX_SHARD_COUNT"
-echo "export MATRIX_SHARD_INDEX=$MATRIX_SHARD_INDEX"
+echo "export UDMI_REGISTRY_SUFFIX=${UDMI_REGISTRY_SUFFIX:-}"
+echo "export UDMI_ALT_REGISTRY=${UDMI_ALT_REGISTRY:-}"
+echo "export MATRIX_SHARD_COUNT=${MATRIX_SHARD_COUNT:-}"
+echo "export MATRIX_SHARD_INDEX=${MATRIX_SHARD_INDEX:-}"
 
 site_path=sites/udmi_site_model
 iot_config=$site_path/cloud_iot_config.json
@@ -77,7 +77,7 @@ echo Using pubber with serial $serial_no
 
 PUBBER_LOG=out/pubber.log
 
-pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
+pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'` || true
 if [[ -n $pids ]]; then
     echo Killing pubber pids $pids
     kill $pids
@@ -85,14 +85,15 @@ fi
 
 bin/clone_model # Clone, and check that version is correct.
 
-if [[ -n $UDMI_REGISTRY_SUFFIX ]]; then
+if [[ -n ${UDMI_REGISTRY_SUFFIX:-} ]]; then
     echo Using registry suffix $UDMI_REGISTRY_SUFFIX
     jq ".registry_suffix = \"$UDMI_REGISTRY_SUFFIX\"" $iot_config | sponge $iot_config
 fi
 
-if [[ -n $UDMI_ALT_REGISTRY ]]; then
-    echo Using alt registry $UDMI_ALT_REGISTRY$UDMI_REGISTRY_SUFFIX
-    jq ".alt_registry = \"$UDMI_ALT_REGISTRY$UDMI_REGISTRY_SUFFIX\"" $iot_config | sponge $iot_config
+if [[ -n ${UDMI_ALT_REGISTRY:-} ]]; then
+    alt_registry=$UDMI_ALT_REGISTRY${UDMI_REGISTRY_SUFFIX:-}
+    echo Using alt registry $alt_registry
+    jq ".alt_registry = \"$alt_registry\"" $iot_config | sponge $iot_config
 fi
 
 bin/reset_config $site_path $project_id $device_id
