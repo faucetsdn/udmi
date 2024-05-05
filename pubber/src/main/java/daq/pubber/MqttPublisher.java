@@ -110,10 +110,13 @@ public class MqttPublisher implements Publisher {
   private final Map<String, Class<Object>> handlersType = new ConcurrentHashMap<>();
   private final Consumer<Exception> onError;
   private final String deviceId;
+  private final CertManager certManager;
   private CountDownLatch connectionLatch;
 
-  MqttPublisher(PubberConfiguration configuration, Consumer<Exception> onError) {
+  MqttPublisher(PubberConfiguration configuration, Consumer<Exception> onError,
+      CertManager certManager) {
     this.configuration = configuration;
+    this.certManager = certManager;
     if (isGcpIotCore(configuration)) {
       ClientInfo clientIdParts = SiteModel.parseClientId(configuration.endpoint.client_id);
       this.projectId = clientIdParts.iotProject;
@@ -372,12 +375,12 @@ public class MqttPublisher implements Publisher {
     }
   }
 
-  private SocketFactory getSocketFactory(String deviceId) {
-    return SSLSocketFactory.getDefault();
+  private SocketFactory getSocketFactory() {
+    return certManager.getSocketFactory();
   }
 
   private void configureAuth(MqttConnectOptions options) throws Exception {
-    options.setSocketFactory(getSocketFactory(deviceId));
+    options.setSocketFactory(getSocketFactory());
     if (configuration.endpoint.auth_provider == null) {
       info("No endpoint auth_provider found, using gcp defaults");
       configureAuth(options, (Jwt) null);
