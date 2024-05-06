@@ -1,6 +1,7 @@
 package com.google.udmi.util;
 
 import static com.google.udmi.util.GeneralUtils.sha256;
+import static java.lang.String.format;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -8,14 +9,17 @@ import java.io.FileInputStream;
 import java.io.FileReader;
 import java.security.KeyPair;
 import java.security.KeyStore;
+import java.security.PrivateKey;
 import java.security.Security;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.function.Consumer;
 import javax.net.SocketFactory;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManagerFactory;
+import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMDecryptorProvider;
 import org.bouncycastle.openssl.PEMEncryptedKeyPair;
@@ -25,7 +29,6 @@ import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.bouncycastle.openssl.jcajce.JcePEMDecryptorProviderBuilder;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.EndpointConfiguration.Transport;
-import udmi.schema.PubberConfiguration;
 
 /**
  * Manager class for CA-signed SSL certificates.
@@ -45,7 +48,7 @@ public class CertManager {
   private final File keyFile;
   private final File crtFile;
   private final char[] password;
-  private final EndpointConfiguration endpoint;
+  private final boolean isSsl;
 
   {
     Security.addProvider(new BouncyCastleProvider());
@@ -54,31 +57,24 @@ public class CertManager {
   /**
    * Create a new cert manager for the given site model and configuration.
    */
-  public CertManager(File caCrtFile, File clientDir, EndpointConfiguration endpoint) {
-    this.endpoint = endpoint;
+  public CertManager(File caCrtFile, File clientDir, EndpointConfiguration endpoint,
+      Consumer<String> logging) {
     this.caCrtFile = caCrtFile;
-    crtFile = new File(clientDir, "rsa_private.crt");
-    keyFile = new File(clientDir, "rsa_private.pem");
-    String keyPassword = sha256((byte[]) endpoint.auth_provider.key_bytes).substring(0, 8);
-    password = keyPassword.toCharArray();
+    isSsl = Transport.SSL.equals(endpoint.transport);
 
-    System.err.println("CA cert file: " + caCrtFile);
-    System.err.println("Device cert file: " + crtFile);
-    System.err.println("Private key file: " + keyFile);
-    System.err.println("Client password " + keyPassword);
-  }
-
-  /**
-   * Get a socket factory appropriate for the configuration.
-   */
-  public SocketFactory getSocketFactory() {
-    try {
-      if (!Transport.SSL.equals(endpoint.transport)) {
-        return SSLSocketFactory.getDefault();
-      }
-      return getCertSocketFactory();
-    } catch (Exception e) {
-      throw new RuntimeException("While creating SSL socket factory", e);
+    if (isSsl) {
+      crtFile = new File(clientDir, "rsa_private.crt");
+      keyFile = new File(clientDir, "rsa_private.pem");
+      String keyPassword = sha256((byte[]) endpoint.auth_provider.key_bytes).substring(0, 8);
+      password = keyPassword.toCharArray();
+      logging.accept("CA cert file: " + caCrtFile);
+      logging.accept("Device cert file: " + crtFile);
+      logging.accept("Private key file: " + keyFile);
+      logging.accept("Client password " + keyPassword);
+    } else {
+      crtFile = null;
+      keyFile = null;
+      password = null;
     }
   }
 
@@ -98,14 +94,19 @@ public class CertManager {
       clientCert = (X509Certificate) certFactory.generateCertificate(bis);
     }
 
-    final KeyPair key;
+    final PrivateKey privateKey;
     try (PEMParser pemParser = new PEMParser(new FileReader(keyFile))) {
       Object pemObject = pemParser.readObject();
-      if (pemObject instanceof PEMEncryptedKeyPair) {
+      if (pemObject instanceof PEMEncryptedKeyPair keyPair) {
         PEMDecryptorProvider decProv = new JcePEMDecryptorProviderBuilder().build(password);
-        key = converter.getKeyPair(((PEMEncryptedKeyPair) pemObject).decryptKeyPair(decProv));
+        privateKey = converter.getKeyPair(keyPair.decryptKeyPair(decProv)).getPrivate();
+      } else if (pemObject instanceof PEMKeyPair keyPair) {
+        privateKey = converter.getKeyPair(keyPair).getPrivate();
+      } else if (pemObject instanceof PrivateKeyInfo keyPair) {
+        privateKey = converter.getPrivateKey(keyPair);
       } else {
-        key = converter.getKeyPair((PEMKeyPair) pemObject);
+        throw new RuntimeException(format("Unknown pem file type %s from %s",
+            pemObject.getClass().getSimpleName(), keyFile.getAbsolutePath()));
       }
     }
 
@@ -118,8 +119,8 @@ public class CertManager {
     KeyStore clientKeyStore = KeyStore.getInstance(KeyStore.getDefaultType());
     clientKeyStore.load(null, null);
     clientKeyStore.setCertificateEntry(CLIENT_CERT_ALIAS, clientCert);
-    clientKeyStore.setKeyEntry(PRIVATE_KEY_ALIAS, key.getPrivate(), password,
-        new java.security.cert.Certificate[]{clientCert});
+    clientKeyStore.setKeyEntry(PRIVATE_KEY_ALIAS, privateKey, password,
+        new java.security.cert.Certificate[] {clientCert});
     KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(
         KeyManagerFactory.getDefaultAlgorithm());
     keyManagerFactory.init(clientKeyStore, password);
@@ -128,5 +129,19 @@ public class CertManager {
     context.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), null);
 
     return context.getSocketFactory();
+  }
+
+  /**
+   * Get a socket factory appropriate for the configuration.
+   */
+  public SocketFactory getSocketFactory() {
+    try {
+      if (!isSsl) {
+        return SSLSocketFactory.getDefault();
+      }
+      return getCertSocketFactory();
+    } catch (Exception e) {
+      throw new RuntimeException("While creating SSL socket factory", e);
+    }
   }
 }

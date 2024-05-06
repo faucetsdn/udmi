@@ -6,8 +6,8 @@
     "hostname": "localhost",
     "auth_provider": {
       "basic": {
-        "username": "registrar",
-        "password": "registrar"
+        "username": "rocket",
+        "password": "monkey"
       }
     }
   },

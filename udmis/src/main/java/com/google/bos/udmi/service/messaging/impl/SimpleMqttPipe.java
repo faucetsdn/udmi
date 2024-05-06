@@ -18,7 +18,6 @@ import static java.util.Optional.ofNullable;
 import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.common.base.Strings;
 import com.google.udmi.util.CertManager;
-import com.google.udmi.util.GeneralUtils;
 import java.io.File;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -46,6 +45,7 @@ import udmi.schema.Envelope.SubType;
  */
 public class SimpleMqttPipe extends MessageBase {
 
+  public static final String KEY_FILE = "rsa_private.pkcs8";
   private static final int INITIALIZE_TIME_MS = 1000;
   private static final int PUBLISH_THREAD_COUNT = 2;
   private static final String BROKER_URL_FORMAT = "%s://%s:%s";
@@ -55,7 +55,6 @@ public class SimpleMqttPipe extends MessageBase {
   private static final String TOPIC_SUBSCRIPTION = "/r/+/d/+/#";
   private static final String SSL_SECRETS_DIR = System.getenv("SSL_SECRETS_DIR");
   private static final String CA_CERT_FILE = "ca.crt";
-  public static final String KEY_FILE = "rsa_private.pkcs8";
   private final String autoId = format("mqtt-%08x", System.currentTimeMillis());
   private final String clientId;
   private final String namespace;
@@ -75,20 +74,11 @@ public class SimpleMqttPipe extends MessageBase {
     File secretsDir = ifTrueGet(isNotEmpty(SSL_SECRETS_DIR), () -> new File(SSL_SECRETS_DIR));
     ifNotNullGet(secretsDir, secrets -> endpoint.auth_provider.key_bytes = loadKeyBytes(secrets));
     certManager = ifNotNullGet(secretsDir,
-        secrets -> new CertManager(new File(secrets, CA_CERT_FILE), secrets, endpoint));
+        secrets -> new CertManager(new File(secrets, CA_CERT_FILE), secrets, endpoint, this::info));
     mqttClient = createMqttClient();
     tryConnect(false);
     scheduledFuture = Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(
         () -> SimpleMqttPipe.this.tryConnect(true), 0, RECONNECT_SEC, TimeUnit.SECONDS);
-  }
-
-  private byte[] loadKeyBytes(File secrets) {
-    File file = new File(secrets, KEY_FILE);
-    try {
-      return FileUtils.readFileToByteArray(file);
-    } catch (Exception e) {
-      throw new RuntimeException("While loading key bytes from " + file.getAbsolutePath(), e);
-    }
   }
 
   public static MessagePipe fromConfig(EndpointConfiguration config) {
@@ -168,6 +158,15 @@ public class SimpleMqttPipe extends MessageBase {
   private SocketFactory getSocketFactory() {
     return ofNullable(certManager).map(CertManager::getSocketFactory)
         .orElse(SSLSocketFactory.getDefault());
+  }
+
+  private byte[] loadKeyBytes(File secrets) {
+    File file = new File(secrets, KEY_FILE);
+    try {
+      return FileUtils.readFileToByteArray(file);
+    } catch (Exception e) {
+      throw new RuntimeException("While loading key bytes from " + file.getAbsolutePath(), e);
+    }
   }
 
   private String makeBrokerUrl(EndpointConfiguration endpoint) {

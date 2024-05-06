@@ -117,6 +117,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
   public static final String PERSISTENT_STORE_FILE = "persistent_data.json";
   public static final String PERSISTENT_TMP_FORMAT = "/tmp/pubber_%s_" + PERSISTENT_STORE_FILE;
   public static final String DATA_URL_JSON_BASE64 = "data:application/json;base64,";
+  public static final String CA_CRT = "ca.crt";
   static final String UDMI_VERSION = SchemaVersion.CURRENT.key();
   static final Logger LOG = LoggerFactory.getLogger(Pubber.class);
   static final Date DEVICE_START_TIME = getRoundedStartTime();
@@ -770,8 +771,8 @@ public class Pubber extends ManagerBase implements ManagerHost {
     }
     checkState(deviceTarget == null, "mqttPublisher already defined");
     configuration.endpoint.auth_provider.key_bytes = ensureKeyBytes();
-    CertManager certManager = new CertManager(siteModel.getReflectorDir(),
-        siteModel.getDeviceDir(configuration.deviceId), configuration.endpoint);
+    CertManager certManager = new CertManager(new File(siteModel.getReflectorDir(), CA_CRT),
+        siteModel.getDeviceDir(configuration.deviceId), configuration.endpoint, this::info);
     deviceTarget = new MqttDevice(configuration, this::publisherException, certManager);
     registerMessageHandlers();
     publishDirtyState();
