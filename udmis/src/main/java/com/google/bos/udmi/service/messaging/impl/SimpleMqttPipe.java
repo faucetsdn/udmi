@@ -213,7 +213,7 @@ public class SimpleMqttPipe extends MessageBase {
       info("No recv_id defined, not subscribing for component " + endpoint.name);
       return;
     }
-    String subscribeTopic = format(SUB_BASE_FORMAT, namespace, recvId);
+    String subscribeTopic = format(SUB_BASE_FORMAT, recvId);
     try {
       synchronized (mqttClient) {
         boolean connected = mqttClient.isConnected();

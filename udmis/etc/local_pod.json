@@ -13,7 +13,7 @@
   },
   "flows": {
     "state": {
-      "recv_id": "${UDMI_PREFIX}state"
+      "recv_id": "state"
     },
     "distributor": {
       "enabled": "false"
