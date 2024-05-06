@@ -50,10 +50,6 @@ class SimpleMqttPipeTest extends MessagePipeTestBase {
     return authProvider;
   }
 
-  private Map<String, String> parseEnvelopeTopic(String topic) {
-    return SimpleMqttPipe.parseEnvelopeTopic(topic);
-  }
-
   public void augmentConfig(EndpointConfiguration endpoint, boolean reversed) {
     Matcher matcher = URL_PATTERN.matcher(BROKER_URL.trim());
     checkState(matcher.matches(), "Endpoint URL does not match format " + URL_FORMAT);
@@ -65,8 +61,12 @@ class SimpleMqttPipeTest extends MessagePipeTestBase {
     endpoint.client_id = reversed ? SERVICE_CLIENT_ID : DEVICE_CLIENT_ID;
   }
 
+  private Map<String, String> parseEnvelopeTopic(String topic) {
+    return SimpleMqttPipe.parseEnvelopeTopic(topic);
+  }
+
   @Test
-  public void parseEnvelopeTopic() {
+  public void staticEnvelopeTopic() {
     assertThrows(Exception.class, () -> parseEnvelopeTopic("garbage"));
     assertThrows(Exception.class, () -> parseEnvelopeTopic("/f/reg/d/dev/events"));
     assertThrows(Exception.class, () -> parseEnvelopeTopic("/r/registry"));
