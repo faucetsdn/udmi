@@ -53,11 +53,11 @@ $MOSQUITTO_CTRL addClientRole $CLNT_USER device
 
 killall mosquitto_sub || true
 
-topic=/mqtt/test
+topic=/r/mqtt/d/test
 
 
 echo Subscribing to all topics in the background...
-mosquitto_sub $SERVER_OPTS -F "%t %p" -t '#' > out/mosquitto.sub &
+mosquitto_sub $SERVER_OPTS -F "%t %p" -t '/r/+/d/+/#' > out/mosquitto.sub &
 
 sleep 1
 
@@ -72,7 +72,7 @@ fgrep Racket out/mosquitto.sub
 CLIENT_USER=nobody
 hash_pass=$(sha256sum < $site_path/devices/$device_id/rsa_private.pkcs8)
 dev_pass=${hash_pass:0:8}
-dev_id=$registry_id/$device_id
+dev_id=/r/$registry_id/d/$device_id
 $MOSQUITTO_CTRL deleteClient $CLIENT_USER || true
 $MOSQUITTO_CTRL createClient $CLIENT_USER -p $dev_pass -c $dev_id
 $MOSQUITTO_CTRL addClientRole $CLIENT_USER device

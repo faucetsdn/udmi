@@ -187,15 +187,15 @@ public class SimpleMqttPipe extends MessageBase {
   }
 
   private String makeTopic(Envelope envelope) {
-    return format("/r/%s/d/%s/t/%s/f/%s/g/%s", envelope.deviceRegistryId, envelope.deviceId,
+    return format("/r/%s/d/%s/%s/%s/%s", envelope.deviceRegistryId, envelope.deviceId,
         envelope.subType, envelope.subFolder, envelope.gatewayId);
   }
 
-  private Map<String, String> parseEnvelopeTopic(String topic) {
-    // 0/1/2       /3/4     /5/6   [/7/8     [/9/10     ]]
-    //  /r/REGISTRY/d/DEVICE/t/TYPE[/f/FOLDER[/g/GATEWAY]]
+  static Map<String, String> parseEnvelopeTopic(String topic) {
+    // 0/1/2       /3/4     /5   [/6     [/7      ]]
+    //  /r/REGISTRY/d/DEVICE/TYPE[/FOLDER[/GATEWAY]]
     String[] parts = topic.split("/", 12);
-    if (parts.length < 7 || parts.length > 11) {
+    if (parts.length < 6 || parts.length > 8) {
       throw new RuntimeException("Unexpected topic length: " + topic);
     }
     Envelope envelope = new Envelope();
@@ -204,15 +204,12 @@ public class SimpleMqttPipe extends MessageBase {
     envelope.deviceRegistryId = nullAsNull(parts[2]);
     checkState("d".equals(parts[3]), "expected devices");
     envelope.deviceId = nullAsNull(parts[4]);
-    checkState("t".equals(parts[5]), "expected type");
-    envelope.subType = ofNullable(nullAsNull(parts[6])).map(SubType::fromValue).orElse(null);
-    if (parts.length >= 8) {
-      checkState("f".equals(parts[7]), "expected type");
-      envelope.subFolder = ofNullable(nullAsNull(parts[8])).map(SubFolder::fromValue).orElse(null);
+    envelope.subType = ofNullable(nullAsNull(parts[5])).map(SubType::fromValue).orElse(null);
+    if (parts.length > 6) {
+      envelope.subFolder = ofNullable(nullAsNull(parts[6])).map(SubFolder::fromValue).orElse(null);
     }
-    if (parts.length >= 10) {
-      checkState("g".equals(parts[9]), "expected gateway");
-      envelope.gatewayId = nullAsNull(parts[10]);
+    if (parts.length > 7) {
+      envelope.gatewayId = nullAsNull(parts[7]);
     }
     return toStringMap(envelope);
   }
