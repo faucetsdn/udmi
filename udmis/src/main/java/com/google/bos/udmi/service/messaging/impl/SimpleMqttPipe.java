@@ -4,10 +4,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
+import static com.google.udmi.util.GeneralUtils.isNotEmpty;
 import static com.google.udmi.util.GeneralUtils.nullAsNull;
-import static com.google.udmi.util.JsonUtil.getNowInstant;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.toStringMap;
 import static java.lang.String.format;
@@ -15,11 +17,17 @@ import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.common.base.Strings;
+import com.google.udmi.util.CertManager;
+import com.google.udmi.util.GeneralUtils;
+import java.io.File;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import javax.net.SocketFactory;
+import javax.net.ssl.SSLSocketFactory;
+import org.apache.commons.io.FileUtils;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttClient;
@@ -45,12 +53,16 @@ public class SimpleMqttPipe extends MessageBase {
   private static final int DEFAULT_PORT = 8883;
   private static final Envelope EXCEPTION_ENVELOPE = makeExceptionEnvelope();
   private static final String TOPIC_SUBSCRIPTION = "/r/+/d/+/#";
+  private static final String SSL_SECRETS_DIR = System.getenv("SSL_SECRETS_DIR");
+  private static final String CA_CERT_FILE = "ca.crt";
+  public static final String KEY_FILE = "rsa_private.pkcs8";
   private final String autoId = format("mqtt-%08x", System.currentTimeMillis());
   private final String clientId;
   private final String namespace;
   private final EndpointConfiguration endpoint;
   private final MqttClient mqttClient;
   private final ScheduledFuture<?> scheduledFuture;
+  private final CertManager certManager;
 
   /**
    * Create new pipe instance for the given config.
@@ -60,10 +72,23 @@ public class SimpleMqttPipe extends MessageBase {
     namespace = config.hostname;
     endpoint = config;
     clientId = ofNullable(config.client_id).orElse(autoId);
+    File secretsDir = ifTrueGet(isNotEmpty(SSL_SECRETS_DIR), () -> new File(SSL_SECRETS_DIR));
+    ifNotNullGet(secretsDir, secrets -> endpoint.auth_provider.key_bytes = loadKeyBytes(secrets));
+    certManager = ifNotNullGet(secretsDir,
+        secrets -> new CertManager(new File(secrets, CA_CERT_FILE), secrets, endpoint));
     mqttClient = createMqttClient();
     tryConnect(false);
     scheduledFuture = Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(
         () -> SimpleMqttPipe.this.tryConnect(true), 0, RECONNECT_SEC, TimeUnit.SECONDS);
+  }
+
+  private byte[] loadKeyBytes(File secrets) {
+    File file = new File(secrets, KEY_FILE);
+    try {
+      return FileUtils.readFileToByteArray(file);
+    } catch (Exception e) {
+      throw new RuntimeException("While loading key bytes from " + file.getAbsolutePath(), e);
+    }
   }
 
   public static MessagePipe fromConfig(EndpointConfiguration config) {
@@ -101,6 +126,7 @@ public class SimpleMqttPipe extends MessageBase {
         options.setConnectionTimeout(INITIALIZE_TIME_MS);
 
         ifNotNullThen(endpoint.auth_provider, provider -> {
+          options.setSocketFactory(getSocketFactory());
           Basic basicAuth = checkNotNull(provider.basic, "basic auth not defined");
           options.setUserName(checkNotNull(basicAuth.username, "MQTT username not defined"));
           options.setPassword(
@@ -137,6 +163,11 @@ public class SimpleMqttPipe extends MessageBase {
     } catch (Exception e) {
       error("Exception during forced disconnect %s: %s", clientId, friendlyStackTrace(e));
     }
+  }
+
+  private SocketFactory getSocketFactory() {
+    return ofNullable(certManager).map(CertManager::getSocketFactory)
+        .orElse(SSLSocketFactory.getDefault());
   }
 
   private String makeBrokerUrl(EndpointConfiguration endpoint) {

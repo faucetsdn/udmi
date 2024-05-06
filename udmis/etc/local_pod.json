@@ -2,13 +2,18 @@
   "include": "prod_pod.json",
   "flow_defaults": {
     "protocol": "mqtt",
-    "transport": "tcp",
+    "transport": "ssl",
     "hostname": "localhost",
     "auth_provider": {
       "basic": {
         "username": "registrar",
         "password": "registrar"
       }
+    }
+  },
+  "flows": {
+    "distributor": {
+      "enabled": "false"
     }
   },
   "iot_access": {

@@ -41,9 +41,9 @@ public class CertManager {
   private static final String CA_CERT_ALIAS = "ca-certificate";
   private static final String CLIENT_CERT_ALIAS = "certificate";
   private static final String PRIVATE_KEY_ALIAS = "private-key";
-  private final String caCrtFile;
-  private final String keyFile;
-  private final String crtFile;
+  private final File caCrtFile;
+  private final File keyFile;
+  private final File crtFile;
   private final char[] password;
   private final EndpointConfiguration endpoint;
 
@@ -54,11 +54,11 @@ public class CertManager {
   /**
    * Create a new cert manager for the given site model and configuration.
    */
-  public CertManager(File serverDir, File clientDir, EndpointConfiguration endpoint) {
+  public CertManager(File caCrtFile, File clientDir, EndpointConfiguration endpoint) {
     this.endpoint = endpoint;
-    caCrtFile = new File(serverDir, "ca.crt").getPath();
-    crtFile = new File(clientDir, "rsa_private.crt").getPath();
-    keyFile = new File(clientDir, "rsa_private.pem").getPath();
+    this.caCrtFile = caCrtFile;
+    crtFile = new File(clientDir, "rsa_private.crt");
+    keyFile = new File(clientDir, "rsa_private.pem");
     String keyPassword = sha256((byte[]) endpoint.auth_provider.key_bytes).substring(0, 8);
     password = keyPassword.toCharArray();
 
