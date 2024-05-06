@@ -73,7 +73,7 @@ public class CertManager {
    */
   public SocketFactory getSocketFactory() {
     try {
-      if (!Transport.SSL.equals(configuration.endpoint.transport)) {
+      if (!Transport.SSL.equals(endpoint.transport)) {
         return SSLSocketFactory.getDefault();
       }
       return getCertSocketFactory();
