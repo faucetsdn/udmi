@@ -1,7 +1,7 @@
 package com.google.udmi.util;
 
-import com.google.udmi.util.GeneralUtils;
-import com.google.udmi.util.SiteModel;
+import static com.google.udmi.util.GeneralUtils.sha256;
+
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -23,6 +23,7 @@ import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.bouncycastle.openssl.jcajce.JcePEMDecryptorProviderBuilder;
+import udmi.schema.EndpointConfiguration;
 import udmi.schema.EndpointConfiguration.Transport;
 import udmi.schema.PubberConfiguration;
 
@@ -40,11 +41,11 @@ public class CertManager {
   private static final String CA_CERT_ALIAS = "ca-certificate";
   private static final String CLIENT_CERT_ALIAS = "certificate";
   private static final String PRIVATE_KEY_ALIAS = "private-key";
-  private final PubberConfiguration configuration;
   private final String caCrtFile;
   private final String keyFile;
   private final String crtFile;
   private final char[] password;
+  private final EndpointConfiguration endpoint;
 
   {
     Security.addProvider(new BouncyCastleProvider());
@@ -53,14 +54,12 @@ public class CertManager {
   /**
    * Create a new cert manager for the given site model and configuration.
    */
-  public CertManager(SiteModel siteModel, PubberConfiguration configuration) {
-    this.configuration = configuration;
-    File reflectorDir = siteModel.getReflectorDir();
-    caCrtFile = new File(reflectorDir, "ca.crt").getPath();
-    File deviceDir = siteModel.getDeviceDir(configuration.deviceId);
-    crtFile = new File(deviceDir, "rsa_private.crt").getPath();
-    keyFile = new File(deviceDir, "rsa_private.pem").getPath();
-    String keyPassword = GeneralUtils.sha256((byte[]) configuration.keyBytes).substring(0, 8);
+  public CertManager(File serverDir, File clientDir, EndpointConfiguration endpoint) {
+    this.endpoint = endpoint;
+    caCrtFile = new File(serverDir, "ca.crt").getPath();
+    crtFile = new File(clientDir, "rsa_private.crt").getPath();
+    keyFile = new File(clientDir, "rsa_private.pem").getPath();
+    String keyPassword = sha256((byte[]) endpoint.auth_provider.key_bytes).substring(0, 8);
     password = keyPassword.toCharArray();
 
     System.err.println("CA cert file: " + caCrtFile);

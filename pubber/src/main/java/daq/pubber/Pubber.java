@@ -769,8 +769,9 @@ public class Pubber extends ManagerBase implements ManagerHost {
       configuration.keyFile = siteModel.getDeviceKeyFile(configuration.deviceId);
     }
     checkState(deviceTarget == null, "mqttPublisher already defined");
-    ensureKeyBytes();
-    CertManager certManager = new CertManager(siteModel, configuration);
+    configuration.endpoint.auth_provider.key_bytes = ensureKeyBytes();
+    CertManager certManager = new CertManager(siteModel.getReflectorDir(),
+        siteModel.getDeviceDir(configuration.deviceId), configuration.endpoint);
     deviceTarget = new MqttDevice(configuration, this::publisherException, certManager);
     registerMessageHandlers();
     publishDirtyState();
@@ -794,14 +795,14 @@ public class Pubber extends ManagerBase implements ManagerHost {
     return new MqttDevice(proxyId, deviceTarget);
   }
 
-  private void ensureKeyBytes() {
-    if (configuration.keyBytes != null) {
-      return;
+  private byte[] ensureKeyBytes() {
+    if (configuration.keyBytes == null) {
+      checkNotNull(configuration.keyFile, "configuration keyFile not defined");
+      info("Loading device key bytes from " + configuration.keyFile);
+      configuration.keyBytes = getFileBytes(configuration.keyFile);
+      configuration.keyFile = null;
     }
-    checkNotNull(configuration.keyFile, "configuration keyFile not defined");
-    info("Loading device key bytes from " + configuration.keyFile);
-    configuration.keyBytes = getFileBytes(configuration.keyFile);
-    configuration.keyFile = null;
+    return (byte[]) configuration.keyBytes;
   }
 
   private void connect() {
