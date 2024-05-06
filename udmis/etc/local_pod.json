@@ -4,7 +4,6 @@
     "protocol": "mqtt",
     "transport": "ssl",
     "hostname": "localhost",
-    "client_id": "ZZ-TRI-FECTA/server",
     "auth_provider": {
       "basic": {
         "username": "rocket",

@@ -13,7 +13,6 @@ import static com.google.udmi.util.GeneralUtils.nullAsNull;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.toStringMap;
 import static java.lang.String.format;
-import static java.util.Optional.empty;
 import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.messaging.MessagePipe;
@@ -56,7 +55,7 @@ public class SimpleMqttPipe extends MessageBase {
   private static final String TOPIC_SUBSCRIPTION = "/r/+/d/+/#";
   private static final String SSL_SECRETS_DIR = System.getenv("SSL_SECRETS_DIR");
   private static final String CA_CERT_FILE = "ca.crt";
-  private final String autoId = format("mqtt-%08x", System.currentTimeMillis());
+  private final String autoId = format("mqtt-%08x", (long) (Math.random() * 0x100000000L));
   private final String clientId;
   private final String namespace;
   private final EndpointConfiguration endpoint;

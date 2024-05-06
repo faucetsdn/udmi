@@ -45,7 +45,7 @@ CLIENT_OPTS="-i $CLNT_ID -u $CLNT_USER -P $CLNT_PASS --cafile $CA_CERT --cert $C
 MOSQUITTO_CTRL="sudo mosquitto_ctrl $CTRL_OPTS dynsec"
 
 $MOSQUITTO_CTRL deleteClient $SERV_USER
-$MOSQUITTO_CTRL createClient $SERV_USER -p $SERV_PASS -c $SERV_ID
+$MOSQUITTO_CTRL createClient $SERV_USER -p $SERV_PASS # No client_id to allow multiple backend connections.
 $MOSQUITTO_CTRL addClientRole $SERV_USER service
 $MOSQUITTO_CTRL deleteClient $CLNT_USER
 $MOSQUITTO_CTRL createClient $CLNT_USER -p $CLNT_PASS -c $CLNT_ID
