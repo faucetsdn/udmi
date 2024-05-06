@@ -86,7 +86,7 @@ cat <<EOF > /tmp/pubber_config.json
       "transport": "ssl",
       "client_id": "$dev_id",
       "hostname": "127.0.0.1",
-      "msg_prefix": "/$registry_id/$device_id",
+      "msg_prefix": "/r/$registry_id/d/$device_id",
       "config_sync_sec": -1,
       "port": 8883,
       "auth_provider": {
@@ -112,8 +112,8 @@ pubber/bin/build
 # Clean out the persistant data store to ensure a clean state each time.
 rm -rf sites/udmi_site_model/out/devices/$device_id/persistent_data.json
 
-echo Publishing empty config to /$registry_id/$device_id/config
-mosquitto_pub $CLIENT_OPTS -r -t /$registry_id/$device_id/config -m "{}"
+echo Publishing empty config to /r/$registry_id/d/$device_id/config
+mosquitto_pub $CLIENT_OPTS -r -t /r/$registry_id/d/$device_id/config -m "{}"
 
 echo Running pubber smoke check
 # TODO: Replace this with proper smoke check when backend is working.
@@ -138,7 +138,7 @@ received_no=$(fgrep operational out/mosquitto.sub | head -n 1 | sed -E 's/^[^{]+
 received_topic=$(fgrep operational out/mosquitto.sub | head -n 1 | awk '{ print $1 }')
 [[ -z $received_topic ]] && fail No matching receive message found.
 
-expected_topic=/$registry_id/$device_id/state
+expected_topic=/r/$registry_id/d/$device_id/state
 [[ $received_topic != $expected_topic ]] && fail Unexpected received topic $received_topic != $expected_topic
 
 [[ $received_no != $serial_no ]] && fail Mismatched/missing serial no: $received_no != $serial_no

@@ -12,6 +12,10 @@
     }
   },
   "flows": {
+    "state": {
+      "recv_id": "/r/{registryId}/d/{deviceId}/state",
+      "send_id": "/r/{registryId}/d/{deviceId}/{subType}/{subFolder}"
+    },
     "distributor": {
       "enabled": "false"
     }
