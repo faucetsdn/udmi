@@ -26,7 +26,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocketFactory;
-import org.apache.commons.io.FileUtils;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttClient;
@@ -162,15 +161,6 @@ public class SimpleMqttPipe extends MessageBase {
   private SocketFactory getSocketFactory() {
     return ofNullable(certManager).map(CertManager::getSocketFactory)
         .orElse(SSLSocketFactory.getDefault());
-  }
-
-  private byte[] loadKeyBytes(File secrets) {
-    File file = new File(secrets, KEY_FILE);
-    try {
-      return FileUtils.readFileToByteArray(file);
-    } catch (Exception e) {
-      throw new RuntimeException("While loading key bytes from " + file.getAbsolutePath(), e);
-    }
   }
 
   private String makeBrokerUrl(EndpointConfiguration endpoint) {
