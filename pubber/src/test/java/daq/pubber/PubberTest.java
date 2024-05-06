@@ -53,7 +53,7 @@ public class PubberTest extends TestBase {
     private HashMap<PubberUnderTestFeatures, Boolean> testFeatures = new HashMap<>();
 
     private void setOptionsNoPersist(boolean value) {
-      configuration.options.noPersist = value;
+      config.options.noPersist = value;
     }
 
     @Override
@@ -235,7 +235,7 @@ public class PubberTest extends TestBase {
 
     // Prepare test.
     testPersistentData.endpoint = null;
-    Pubber.configuration.endpoint = null;
+    pubber.config.endpoint = null;
 
     // Now test.
     testFeatures.put(PubberUnderTestFeatures.noInitializePersistentStore, false);
@@ -245,8 +245,7 @@ public class PubberTest extends TestBase {
   @Test
   public void initializePersistentStoreFromConfigTest() {
     // Initialize the test Pubber.
-    HashMap<PubberUnderTestFeatures, Boolean> testFeatures = new HashMap<
-        PubberUnderTestFeatures, Boolean>();
+    HashMap<PubberUnderTestFeatures, Boolean> testFeatures = new HashMap<>();
     testFeatures.put(PubberUnderTestFeatures.noInitializePersistentStore, true);
     pubber = new PubberUnderTest(TEST_PROJECT, TEST_SITE, TEST_DEVICE, SERIAL_NO, testFeatures);
     pubber.initialize();
@@ -256,7 +255,7 @@ public class PubberTest extends TestBase {
 
     // Prepare test.
     testPersistentData.endpoint = null;
-    Pubber.configuration.endpoint = getEndpointConfiguration("from_config");
+    pubber.config.endpoint = getEndpointConfiguration("from_config");
 
     // Now test.
     testFeatures.put(PubberUnderTestFeatures.noInitializePersistentStore, false);
@@ -276,12 +275,12 @@ public class PubberTest extends TestBase {
 
     // Prepare test.
     testPersistentData.endpoint = getEndpointConfiguration("persistent");
-    Pubber.configuration.endpoint = null;
+    pubber.config.endpoint = null;
 
     // Now test.
     testFeatures.put(PubberUnderTestFeatures.noInitializePersistentStore, false);
     pubber.initializePersistentStore();
     assertEquals(pubber.persistentData.endpoint.hostname, "persistent");
-    assertEquals(Pubber.configuration.endpoint.hostname, "persistent");
+    assertEquals(pubber.config.endpoint.hostname, "persistent");
   }
 }
