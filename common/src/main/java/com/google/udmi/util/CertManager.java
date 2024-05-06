@@ -7,7 +7,6 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
-import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.Security;
@@ -58,19 +57,18 @@ public class CertManager {
    * Create a new cert manager for the given site model and configuration.
    */
   public CertManager(File caCrtFile, File clientDir, EndpointConfiguration endpoint,
-      Consumer<String> logging) {
+      String passString, Consumer<String> logging) {
     this.caCrtFile = caCrtFile;
     isSsl = Transport.SSL.equals(endpoint.transport);
 
     if (isSsl) {
       crtFile = new File(clientDir, "rsa_private.crt");
       keyFile = new File(clientDir, "rsa_private.pem");
-      String keyPassword = sha256((byte[]) endpoint.auth_provider.key_bytes).substring(0, 8);
-      password = keyPassword.toCharArray();
+      this.password = passString.toCharArray();
       logging.accept("CA cert file: " + caCrtFile);
       logging.accept("Device cert file: " + crtFile);
       logging.accept("Private key file: " + keyFile);
-      logging.accept("Client password " + keyPassword);
+      logging.accept("Password sha256 " + sha256(passString).substring(0, 8));
     } else {
       crtFile = null;
       keyFile = null;

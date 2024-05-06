@@ -1,11 +1,10 @@
 """Generated class for configuration_endpoint.json"""
 
 
-class Object2EF68150:
+class ObjectA90DCC28:
   """Generated schema class"""
 
   def __init__(self):
-    self.key_bytes = None
     self.basic = None
     self.jwt = None
 
@@ -13,8 +12,7 @@ class Object2EF68150:
   def from_dict(source):
     if not source:
       return None
-    result = Object2EF68150()
-    result.key_bytes = source.get('key_bytes')
+    result = ObjectA90DCC28()
     result.basic = source.get('basic')
     result.jwt = source.get('jwt')
     return result
@@ -25,7 +23,7 @@ class Object2EF68150:
       return None
     result = {}
     for key in source:
-      result[key] = Object2EF68150.from_dict(source[key])
+      result[key] = ObjectA90DCC28.from_dict(source[key])
     return result
 
   @staticmethod
@@ -37,8 +35,6 @@ class Object2EF68150:
 
   def to_dict(self):
     result = {}
-    if self.key_bytes:
-      result['key_bytes'] = self.key_bytes # 5
     if self.basic:
       result['basic'] = self.basic # 5
     if self.jwt:
@@ -92,7 +88,7 @@ class EndpointConfiguration:
     result.capacity = source.get('capacity')
     result.publish_delay_sec = source.get('publish_delay_sec')
     result.periodic_sec = source.get('periodic_sec')
-    result.auth_provider = Object2EF68150.from_dict(source.get('auth_provider'))
+    result.auth_provider = ObjectA90DCC28.from_dict(source.get('auth_provider'))
     result.generation = source.get('generation')
     return result
 

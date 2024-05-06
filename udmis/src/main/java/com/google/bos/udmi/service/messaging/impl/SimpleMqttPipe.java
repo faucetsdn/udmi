@@ -13,6 +13,7 @@ import static com.google.udmi.util.GeneralUtils.nullAsNull;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.toStringMap;
 import static java.lang.String.format;
+import static java.util.Optional.empty;
 import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.messaging.MessagePipe;
@@ -72,9 +73,9 @@ public class SimpleMqttPipe extends MessageBase {
     endpoint = config;
     clientId = ofNullable(config.client_id).orElse(autoId);
     File secretsDir = ifTrueGet(isNotEmpty(SSL_SECRETS_DIR), () -> new File(SSL_SECRETS_DIR));
-    ifNotNullGet(secretsDir, secrets -> endpoint.auth_provider.key_bytes = loadKeyBytes(secrets));
     certManager = ifNotNullGet(secretsDir,
-        secrets -> new CertManager(new File(secrets, CA_CERT_FILE), secrets, endpoint, this::info));
+        secrets -> new CertManager(new File(secrets, CA_CERT_FILE), secrets, endpoint,
+            endpoint.auth_provider.basic.password, this::info));
     mqttClient = createMqttClient();
     tryConnect(false);
     scheduledFuture = Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(

@@ -38,9 +38,9 @@ CLNT_ID=$registry_id/client
 sudo chmod a+r $CERT_DIR/rsa_private.*
 bin/keygen CERT $CLIENT_DIR
 
-CTRL_OPTS="-u $AUTH_USER -P $AUTH_PASS --insecure --cafile $CA_CERT --cert $CERT_DIR/rsa_private.crt --key $CERT_DIR/rsa_private.pem"
-SERVER_OPTS="-i $SERV_ID -u $SERV_USER -P $SERV_PASS --insecure --cafile $CA_CERT --cert $CERT_DIR/rsa_private.crt --key $CERT_DIR/rsa_private.pem"
-CLIENT_OPTS="-i $CLNT_ID -u $CLNT_USER -P $CLNT_PASS --insecure --cafile $CA_CERT --cert $CLIENT_DIR/rsa_private.crt --key $CLIENT_DIR/rsa_private.pem"
+CTRL_OPTS="-u $AUTH_USER -P $AUTH_PASS --cafile $CA_CERT --cert $CERT_DIR/rsa_private.crt --key $CERT_DIR/rsa_private.pem"
+SERVER_OPTS="-i $SERV_ID -u $SERV_USER -P $SERV_PASS --cafile $CA_CERT --cert $CERT_DIR/rsa_private.crt --key $CERT_DIR/rsa_private.pem"
+CLIENT_OPTS="-i $CLNT_ID -u $CLNT_USER -P $CLNT_PASS --cafile $CA_CERT --cert $CLIENT_DIR/rsa_private.crt --key $CLIENT_DIR/rsa_private.pem"
 
 MOSQUITTO_CTRL="sudo mosquitto_ctrl $CTRL_OPTS dynsec"
 
