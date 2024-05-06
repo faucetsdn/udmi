@@ -4,7 +4,6 @@
     "protocol": "mqtt",
     "transport": "ssl",
     "hostname": "localhost",
-    "msg_prefix": "/r/{registryId}/d/{deviceId}/",
     "auth_provider": {
       "basic": {
         "username": "rocket",
@@ -14,8 +13,7 @@
   },
   "flows": {
     "state": {
-      "recv_id": "state",
-      "send_id": "state/{subFolder}"
+      "recv_id": "${UDMI_PREFIX}state"
     },
     "distributor": {
       "enabled": "false"

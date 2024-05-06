@@ -12,6 +12,7 @@
   },
   "crons": {
     "heartbeat": {
+      "send_id": "${UDMI_PREFIX}heartbeat",
       "periodic_sec": 10
     },
     "reglist": {
@@ -56,6 +57,7 @@
       "enabled": "${BITBOX_DISCOVERY}"
     },
     "distributor": {
+      "recv_id": "#",
       "protocol": "mqtt",
       "transport": "tcp",
       "hostname": "udmis-broker",

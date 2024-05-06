@@ -42,17 +42,6 @@ class SimpleMqttPipeTest extends MessagePipeTestBase {
     return environmentEnabled;
   }
 
-  public void augmentConfig(EndpointConfiguration endpoint, boolean reversed) {
-    Matcher matcher = URL_PATTERN.matcher(BROKER_URL.trim());
-    checkState(matcher.matches(), "Endpoint URL does not match format " + URL_FORMAT);
-    endpoint.protocol = Protocol.MQTT;
-    endpoint.transport = EndpointConfiguration.Transport.fromValue(matcher.group(1));
-    endpoint.hostname = matcher.group(2);
-    endpoint.port = Integer.parseInt(matcher.group(3));
-    endpoint.auth_provider = makeBasicAuth(reversed);
-    endpoint.client_id = reversed ? SERVICE_CLIENT_ID : DEVICE_CLIENT_ID;
-  }
-
   private Auth_provider makeBasicAuth(boolean reversed) {
     Auth_provider authProvider = new Auth_provider();
     authProvider.basic = new Basic();
@@ -63,6 +52,17 @@ class SimpleMqttPipeTest extends MessagePipeTestBase {
 
   private Map<String, String> parseEnvelopeTopic(String topic) {
     return SimpleMqttPipe.parseEnvelopeTopic(topic);
+  }
+
+  public void augmentConfig(EndpointConfiguration endpoint, boolean reversed) {
+    Matcher matcher = URL_PATTERN.matcher(BROKER_URL.trim());
+    checkState(matcher.matches(), "Endpoint URL does not match format " + URL_FORMAT);
+    endpoint.protocol = Protocol.MQTT;
+    endpoint.transport = EndpointConfiguration.Transport.fromValue(matcher.group(1));
+    endpoint.hostname = matcher.group(2);
+    endpoint.port = Integer.parseInt(matcher.group(3));
+    endpoint.auth_provider = makeBasicAuth(reversed);
+    endpoint.client_id = reversed ? SERVICE_CLIENT_ID : DEVICE_CLIENT_ID;
   }
 
   @Test
@@ -79,7 +79,7 @@ class SimpleMqttPipeTest extends MessagePipeTestBase {
     assertEquals("events", basicEvent.get(SUBTYPE_PROPERTY_KEY));
     assertNull(basicEvent.get(SUBFOLDER_PROPERTY_KEY));
     assertEquals(3, basicEvent.keySet().size());
-    Map<String, String> pointsetEvent = parseEnvelopeTopic("/r/registry/d/dev/events/pointset");
+    Map<String, String> pointsetEvent = parseEnvelopeTopic("/r/reg/d/dev/events/pointset");
     assertEquals("pointset", pointsetEvent.get(SUBFOLDER_PROPERTY_KEY));
     assertNull(pointsetEvent.get(GATEWAY_ID_KEY));
     assertEquals(4, pointsetEvent.keySet().size());

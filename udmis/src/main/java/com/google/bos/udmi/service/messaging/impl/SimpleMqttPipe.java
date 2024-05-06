@@ -52,9 +52,10 @@ public class SimpleMqttPipe extends MessageBase {
   private static final long RECONNECT_SEC = 10;
   private static final int DEFAULT_PORT = 8883;
   private static final Envelope EXCEPTION_ENVELOPE = makeExceptionEnvelope();
-  private static final String TOPIC_SUBSCRIPTION = "/r/+/d/+/#";
+  private static final String SUB_BASE_FORMAT = "/r/+/d/+/%s";
   private static final String SSL_SECRETS_DIR = System.getenv("SSL_SECRETS_DIR");
   private static final String CA_CERT_FILE = "ca.crt";
+  private static final String DEFAULT_NAMESPACE = "default";
   private final String autoId = format("mqtt-%08x", (long) (Math.random() * 0x100000000L));
   private final String clientId;
   private final String namespace;
@@ -62,14 +63,17 @@ public class SimpleMqttPipe extends MessageBase {
   private final MqttClient mqttClient;
   private final ScheduledFuture<?> scheduledFuture;
   private final CertManager certManager;
+  private final String recvId;
 
   /**
    * Create new pipe instance for the given config.
    */
   public SimpleMqttPipe(EndpointConfiguration config) {
     super(config);
-    namespace = config.hostname;
     endpoint = config;
+    String namespaceRaw = variableSubstitution(endpoint.msg_prefix);
+    namespace = ifTrueGet(isNotEmpty(namespaceRaw), namespaceRaw, DEFAULT_NAMESPACE);
+    recvId = variableSubstitution(endpoint.recv_id);
     clientId = ofNullable(config.client_id).orElse(autoId);
     File secretsDir = ifTrueGet(isNotEmpty(SSL_SECRETS_DIR), () -> new File(SSL_SECRETS_DIR));
     certManager = ifNotNullGet(secretsDir,
@@ -215,17 +219,22 @@ public class SimpleMqttPipe extends MessageBase {
   }
 
   private void subscribeToMessages() {
+    if (endpoint.recv_id == null) {
+      info("No recv_id defined, not subscribing for component " + endpoint.name);
+      return;
+    }
+    String subscribeTopic = format(SUB_BASE_FORMAT, namespace, recvId);
     try {
       synchronized (mqttClient) {
         boolean connected = mqttClient.isConnected();
         trace("Subscribing %s, active=%s connected=%s", clientId, isActive(), connected);
         if (isActive() && connected) {
-          mqttClient.subscribe(TOPIC_SUBSCRIPTION);
-          info("Subscribed %s to topic %s", clientId, TOPIC_SUBSCRIPTION);
+          mqttClient.subscribe(subscribeTopic);
+          info("Subscribed %s to topic %s", clientId, subscribeTopic);
         }
       }
     } catch (Exception e) {
-      throw new RuntimeException("While subscribing to mqtt topic: " + TOPIC_SUBSCRIPTION, e);
+      throw new RuntimeException("While subscribing to mqtt topic: " + subscribeTopic, e);
     }
   }
 
