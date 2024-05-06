@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="UdmiServicePod etcd cluster" type="Application" factoryName="Application">
+  <configuration default="false" name="UdmiServicePod Local" type="Application" factoryName="Application">
     <option name="ALTERNATIVE_JRE_PATH" value="17" />
     <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
     <envs>
@@ -10,7 +10,7 @@
     <output_file path="out/console.log" is_save="true" />
     <option name="MAIN_CLASS_NAME" value="com.google.bos.udmi.service.pod.UdmiServicePod" />
     <module name="udmis" />
-    <option name="PROGRAM_PARAMETERS" value="etc/dev_pod.json" />
+    <option name="PROGRAM_PARAMETERS" value="etc/local_pod.json" />
     <extension name="coverage">
       <pattern>
         <option name="PATTERN" value="com.google.bos.udmi.service.core.*" />

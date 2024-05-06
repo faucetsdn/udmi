@@ -1,4 +1,4 @@
-package daq.pubber;
+package com.google.udmi.util;
 
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.SiteModel;

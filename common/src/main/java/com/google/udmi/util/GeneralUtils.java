@@ -216,6 +216,14 @@ public class GeneralUtils {
     return !ofNullable(value).map(String::isEmpty).orElse(false);
   }
 
+  public static boolean isNullOrTruthy(String value) {
+    return ofNullable(value).map(GeneralUtils::isTruthy).orElse(true);
+  }
+
+  private static boolean isTruthy(String value) {
+    return value != null && !value.isEmpty() && !"false".equals(value);
+  }
+
   public static String nullAsNull(String part) {
     return NULL_STRING.equals(part) ? null : part;
   }

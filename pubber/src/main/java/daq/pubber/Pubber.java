@@ -40,6 +40,7 @@ import static udmi.schema.EndpointConfiguration.Protocol.MQTT;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 import com.google.daq.mqtt.util.CatchingScheduledThreadPoolExecutor;
+import com.google.udmi.util.CertManager;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.MessageDowngrader;
 import com.google.udmi.util.SchemaVersion;
