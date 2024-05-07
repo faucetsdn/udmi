@@ -1,5 +1,6 @@
 package com.google.bos.udmi.service.core;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
@@ -72,7 +73,9 @@ public class CronProcessor extends ProcessorBase {
   }
 
   private static String getContainerId(Envelope envelope) {
-    return envelope.gatewayId.split(PATH_SEPARATOR, 2)[0];
+    String[] split = envelope.gatewayId.split(ID_SEPARATOR, 2);
+    checkState(split.length == 2, "malformed container id");
+    return split[0];
   }
 
   @Override
