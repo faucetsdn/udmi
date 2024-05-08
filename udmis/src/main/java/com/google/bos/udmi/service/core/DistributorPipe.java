@@ -56,6 +56,7 @@ public class DistributorPipe extends ProcessorBase {
       } else {
         throw new RuntimeException("Unknown component class " + component.getClass().getName());
       }
+      debug("Returned result from " + component.getClass().getSimpleName());
     } catch (Exception e) {
       throw new RuntimeException("While handling distribution", e);
     }

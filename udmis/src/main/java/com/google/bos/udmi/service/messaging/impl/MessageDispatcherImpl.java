@@ -199,6 +199,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   }
 
   private void processMessageBundle(Bundle bundle) {
+    debug("Processing message bundle");
     Envelope envelope = Preconditions.checkNotNull(bundle.envelope, "bundle envelope is null");
     Object message = bundle.message;
     if (bundle.payload != null) {
@@ -215,8 +216,9 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
       if (messageObject instanceof Map) {
         handlerType = Object.class;
       }
-      trace("Processing %s from %s in %s", handlerType.getSimpleName(), messagePipe, this);
+      debug("Processing %s from %s in %s", handlerType.getSimpleName(), messagePipe, this);
       processHandler(envelope, handlerType, messageObject);
+      debug("Processing message complete");
     } catch (Exception e) {
       throw new RuntimeException("While processing message " + stringify(envelope), e);
     }

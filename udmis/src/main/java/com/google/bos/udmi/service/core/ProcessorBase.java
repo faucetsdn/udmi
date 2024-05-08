@@ -381,7 +381,9 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
 
   @Override
   public void processMessage(Envelope envelope, Object message) {
+    debug("Dispatching result");
     ((MessageDispatcherImpl) dispatcher).processMessage(envelope, message);
+    debug("Dispatching returned");
   }
 
   /**
