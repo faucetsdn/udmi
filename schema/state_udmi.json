@@ -38,6 +38,9 @@
         "update_to": {
           "type": "string",
           "description": "Optional version for a udmis update trigger"
+        },
+        "transaction_id": {
+          "type": "string"
         }
       }
     }

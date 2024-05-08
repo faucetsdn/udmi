@@ -116,6 +116,7 @@ public class UdmiServicePod extends ContainerBase {
     udmiConfig.setup.udmi_version = UDMI_VERSION;
     udmiConfig.setup.functions_min = ContainerBase.FUNCTIONS_VERSION_MIN;
     udmiConfig.setup.functions_max = ContainerBase.FUNCTIONS_VERSION_MAX;
+    udmiConfig.setup.transaction_id = toolState.setup.transaction_id;
     return udmiConfig;
   }
 
