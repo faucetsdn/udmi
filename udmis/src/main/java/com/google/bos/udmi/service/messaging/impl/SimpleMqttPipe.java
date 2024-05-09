@@ -4,10 +4,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
+import static com.google.udmi.util.GeneralUtils.isNotEmpty;
 import static com.google.udmi.util.GeneralUtils.nullAsNull;
-import static com.google.udmi.util.JsonUtil.getNowInstant;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.toStringMap;
 import static java.lang.String.format;
@@ -15,11 +17,15 @@ import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.common.base.Strings;
+import com.google.udmi.util.CertManager;
+import java.io.File;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import javax.net.SocketFactory;
+import javax.net.ssl.SSLSocketFactory;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttClient;
@@ -38,28 +44,40 @@ import udmi.schema.Envelope.SubType;
  */
 public class SimpleMqttPipe extends MessageBase {
 
+  public static final String KEY_FILE = "rsa_private.pkcs8";
   private static final int INITIALIZE_TIME_MS = 1000;
   private static final int PUBLISH_THREAD_COUNT = 2;
   private static final String BROKER_URL_FORMAT = "%s://%s:%s";
   private static final long RECONNECT_SEC = 10;
   private static final int DEFAULT_PORT = 8883;
   private static final Envelope EXCEPTION_ENVELOPE = makeExceptionEnvelope();
-  private static final String TOPIC_SUBSCRIPTION = "/r/+/d/+/#";
-  private final String autoId = format("mqtt-%08x", System.currentTimeMillis());
+  private static final String SUB_BASE_FORMAT = "/r/+/d/+/%s";
+  private static final String SSL_SECRETS_DIR = System.getenv("SSL_SECRETS_DIR");
+  private static final String CA_CERT_FILE = "ca.crt";
+  private static final String DEFAULT_NAMESPACE = "default";
+  private final String autoId = format("mqtt-%08x", (long) (Math.random() * 0x100000000L));
   private final String clientId;
   private final String namespace;
   private final EndpointConfiguration endpoint;
   private final MqttClient mqttClient;
   private final ScheduledFuture<?> scheduledFuture;
+  private final CertManager certManager;
+  private final String recvId;
 
   /**
    * Create new pipe instance for the given config.
    */
   public SimpleMqttPipe(EndpointConfiguration config) {
     super(config);
-    namespace = config.hostname;
     endpoint = config;
+    String namespaceRaw = variableSubstitution(endpoint.msg_prefix);
+    namespace = ifTrueGet(isNotEmpty(namespaceRaw), namespaceRaw, DEFAULT_NAMESPACE);
+    recvId = variableSubstitution(endpoint.recv_id);
     clientId = ofNullable(config.client_id).orElse(autoId);
+    File secretsDir = ifTrueGet(isNotEmpty(SSL_SECRETS_DIR), () -> new File(SSL_SECRETS_DIR));
+    certManager = ifNotNullGet(secretsDir,
+        secrets -> new CertManager(new File(secrets, CA_CERT_FILE), secrets, endpoint,
+            endpoint.auth_provider.basic.password, this::info));
     mqttClient = createMqttClient();
     tryConnect(false);
     scheduledFuture = Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(
@@ -101,6 +119,7 @@ public class SimpleMqttPipe extends MessageBase {
         options.setConnectionTimeout(INITIALIZE_TIME_MS);
 
         ifNotNullThen(endpoint.auth_provider, provider -> {
+          options.setSocketFactory(getSocketFactory());
           Basic basicAuth = checkNotNull(provider.basic, "basic auth not defined");
           options.setUserName(checkNotNull(basicAuth.username, "MQTT username not defined"));
           options.setPassword(
@@ -139,6 +158,11 @@ public class SimpleMqttPipe extends MessageBase {
     }
   }
 
+  private SocketFactory getSocketFactory() {
+    return ofNullable(certManager).map(CertManager::getSocketFactory)
+        .orElse(SSLSocketFactory.getDefault());
+  }
+
   private String makeBrokerUrl(EndpointConfiguration endpoint) {
     Transport transport = ofNullable(endpoint.transport).orElse(Transport.SSL);
     int port = ofNullable(endpoint.port).orElse(DEFAULT_PORT);
@@ -157,15 +181,15 @@ public class SimpleMqttPipe extends MessageBase {
   }
 
   private String makeTopic(Envelope envelope) {
-    return format("/r/%s/d/%s/t/%s/f/%s/g/%s", envelope.deviceRegistryId, envelope.deviceId,
+    return format("/r/%s/d/%s/%s/%s/%s", envelope.deviceRegistryId, envelope.deviceId,
         envelope.subType, envelope.subFolder, envelope.gatewayId);
   }
 
-  private Map<String, String> parseEnvelopeTopic(String topic) {
-    // 0/1/2       /3/4     /5/6   [/7/8     [/9/10     ]]
-    //  /r/REGISTRY/d/DEVICE/t/TYPE[/f/FOLDER[/g/GATEWAY]]
+  static Map<String, String> parseEnvelopeTopic(String topic) {
+    // 0/1/2       /3/4     /5   [/6     [/7      ]]
+    //  /r/REGISTRY/d/DEVICE/TYPE[/FOLDER[/GATEWAY]]
     String[] parts = topic.split("/", 12);
-    if (parts.length < 7 || parts.length > 11) {
+    if (parts.length < 6 || parts.length > 8) {
       throw new RuntimeException("Unexpected topic length: " + topic);
     }
     Envelope envelope = new Envelope();
@@ -174,31 +198,33 @@ public class SimpleMqttPipe extends MessageBase {
     envelope.deviceRegistryId = nullAsNull(parts[2]);
     checkState("d".equals(parts[3]), "expected devices");
     envelope.deviceId = nullAsNull(parts[4]);
-    checkState("t".equals(parts[5]), "expected type");
-    envelope.subType = ofNullable(nullAsNull(parts[6])).map(SubType::fromValue).orElse(null);
-    if (parts.length >= 8) {
-      checkState("f".equals(parts[7]), "expected type");
-      envelope.subFolder = ofNullable(nullAsNull(parts[8])).map(SubFolder::fromValue).orElse(null);
+    envelope.subType = ofNullable(nullAsNull(parts[5])).map(SubType::fromValue).orElse(null);
+    if (parts.length > 6) {
+      envelope.subFolder = ofNullable(nullAsNull(parts[6])).map(SubFolder::fromValue).orElse(null);
     }
-    if (parts.length >= 10) {
-      checkState("g".equals(parts[9]), "expected gateway");
-      envelope.gatewayId = nullAsNull(parts[10]);
+    if (parts.length > 7) {
+      envelope.gatewayId = nullAsNull(parts[7]);
     }
     return toStringMap(envelope);
   }
 
   private void subscribeToMessages() {
+    if (endpoint.recv_id == null) {
+      info("No recv_id defined, not subscribing for component " + endpoint.name);
+      return;
+    }
+    String subscribeTopic = format(SUB_BASE_FORMAT, recvId);
     try {
       synchronized (mqttClient) {
         boolean connected = mqttClient.isConnected();
         trace("Subscribing %s, active=%s connected=%s", clientId, isActive(), connected);
         if (isActive() && connected) {
-          mqttClient.subscribe(TOPIC_SUBSCRIPTION);
-          info("Subscribed %s to topic %s", clientId, TOPIC_SUBSCRIPTION);
+          mqttClient.subscribe(subscribeTopic);
+          info("Subscribed %s to topic %s", clientId, subscribeTopic);
         }
       }
     } catch (Exception e) {
-      throw new RuntimeException("While subscribing to mqtt topic: " + TOPIC_SUBSCRIPTION, e);
+      throw new RuntimeException("While subscribing to mqtt topic: " + subscribeTopic, e);
     }
   }
 

@@ -101,7 +101,8 @@ public class CronProcessor extends ProcessorBase {
       Object message = fromStringStrict(messageClass, stringWriter.toString());
 
       ifTrueThen(isAmGroot(), () -> processGroot(message));
-      distributor.publish(srcEnvelope, message, containerId);
+      ifTrueThen(distributor.isEnabled(),
+          () -> distributor.publish(srcEnvelope, message, containerId));
     } catch (Exception e) {
       throw new RuntimeException("While executing cron task", e);
     }
