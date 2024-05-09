@@ -39,6 +39,11 @@
       "description": "Version of schema supported by the device",
       "type": "string"
     },
+    "tags":{
+      "description": "Free from text entry for a tag associated with the device",
+      "type": "string",
+      "examples": ["green", "electric,total,lighting,building"]
+    },
     "cloud": {
       "$ref": "file:model_cloud.json#"
     },

@@ -12,6 +12,8 @@ class PointPointsetModel:
     self.baseline_state = None
     self.cov_increment = None
     self.ref = None
+    self.translation = None
+    self.tags = None
 
   @staticmethod
   def from_dict(source):
@@ -25,6 +27,8 @@ class PointPointsetModel:
     result.baseline_state = source.get('baseline_state')
     result.cov_increment = source.get('cov_increment')
     result.ref = source.get('ref')
+    result.translation = source.get('translation')
+    result.tags = source.get('tags')
     return result
 
   @staticmethod
@@ -59,4 +63,8 @@ class PointPointsetModel:
       result['cov_increment'] = self.cov_increment # 5
     if self.ref:
       result['ref'] = self.ref # 5
+    if self.translation:
+      result['translation'] = self.translation # 5
+    if self.tags:
+      result['tags'] = self.tags # 5
     return result

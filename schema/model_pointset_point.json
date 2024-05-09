@@ -42,6 +42,16 @@
       "description": "Mapping for the point to an internal resource (e.g. BACnet object reference)",
       "type": "string",
       "examples": ["AI3", "400070"]
+    },
+    "translation": {
+      "description": "An ontological translation for the point",
+      "type": "string",
+      "examples": ["return_air_temperature_sensor"]
+    },
+    "tags": {
+      "description": "Descriptor for the point",
+      "type": "string",
+      "examples": ["lighting", "lighting,building"]
     }
   }
 }

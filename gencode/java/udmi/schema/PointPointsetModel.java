@@ -26,7 +26,9 @@ import com.fasterxml.jackson.annotation.JsonValue;
     "baseline_tolerance",
     "baseline_state",
     "cov_increment",
-    "ref"
+    "ref",
+    "translation",
+    "tags"
 })
 @Generated("jsonschema2pojo")
 public class PointPointsetModel {
@@ -80,6 +82,20 @@ public class PointPointsetModel {
     @JsonProperty("ref")
     @JsonPropertyDescription("Mapping for the point to an internal resource (e.g. BACnet object reference)")
     public String ref;
+    /**
+     * An ontological translation for the point
+     * 
+     */
+    @JsonProperty("translation")
+    @JsonPropertyDescription("An ontological translation for the point")
+    public String translation;
+    /**
+     * Descriptor for the point
+     * 
+     */
+    @JsonProperty("tags")
+    @JsonPropertyDescription("Descriptor for the point")
+    public String tags;
 
     @Override
     public int hashCode() {
@@ -87,10 +103,12 @@ public class PointPointsetModel {
         result = ((result* 31)+((this.ref == null)? 0 :this.ref.hashCode()));
         result = ((result* 31)+((this.baseline_value == null)? 0 :this.baseline_value.hashCode()));
         result = ((result* 31)+((this.baseline_state == null)? 0 :this.baseline_state.hashCode()));
+        result = ((result* 31)+((this.translation == null)? 0 :this.translation.hashCode()));
         result = ((result* 31)+((this.units == null)? 0 :this.units.hashCode()));
         result = ((result* 31)+((this.baseline_tolerance == null)? 0 :this.baseline_tolerance.hashCode()));
         result = ((result* 31)+((this.cov_increment == null)? 0 :this.cov_increment.hashCode()));
         result = ((result* 31)+((this.writable == null)? 0 :this.writable.hashCode()));
+        result = ((result* 31)+((this.tags == null)? 0 :this.tags.hashCode()));
         return result;
     }
 
@@ -103,7 +121,7 @@ public class PointPointsetModel {
             return false;
         }
         PointPointsetModel rhs = ((PointPointsetModel) other);
-        return ((((((((this.ref == rhs.ref)||((this.ref!= null)&&this.ref.equals(rhs.ref)))&&((this.baseline_value == rhs.baseline_value)||((this.baseline_value!= null)&&this.baseline_value.equals(rhs.baseline_value))))&&((this.baseline_state == rhs.baseline_state)||((this.baseline_state!= null)&&this.baseline_state.equals(rhs.baseline_state))))&&((this.units == rhs.units)||((this.units!= null)&&this.units.equals(rhs.units))))&&((this.baseline_tolerance == rhs.baseline_tolerance)||((this.baseline_tolerance!= null)&&this.baseline_tolerance.equals(rhs.baseline_tolerance))))&&((this.cov_increment == rhs.cov_increment)||((this.cov_increment!= null)&&this.cov_increment.equals(rhs.cov_increment))))&&((this.writable == rhs.writable)||((this.writable!= null)&&this.writable.equals(rhs.writable))));
+        return ((((((((((this.ref == rhs.ref)||((this.ref!= null)&&this.ref.equals(rhs.ref)))&&((this.baseline_value == rhs.baseline_value)||((this.baseline_value!= null)&&this.baseline_value.equals(rhs.baseline_value))))&&((this.baseline_state == rhs.baseline_state)||((this.baseline_state!= null)&&this.baseline_state.equals(rhs.baseline_state))))&&((this.translation == rhs.translation)||((this.translation!= null)&&this.translation.equals(rhs.translation))))&&((this.units == rhs.units)||((this.units!= null)&&this.units.equals(rhs.units))))&&((this.baseline_tolerance == rhs.baseline_tolerance)||((this.baseline_tolerance!= null)&&this.baseline_tolerance.equals(rhs.baseline_tolerance))))&&((this.cov_increment == rhs.cov_increment)||((this.cov_increment!= null)&&this.cov_increment.equals(rhs.cov_increment))))&&((this.writable == rhs.writable)||((this.writable!= null)&&this.writable.equals(rhs.writable))))&&((this.tags == rhs.tags)||((this.tags!= null)&&this.tags.equals(rhs.tags))));
     }
 
 
