@@ -26,7 +26,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "built_at",
     "built_by",
     "deployed_at",
-    "deployed_by"
+    "deployed_by",
+    "transaction_id"
 })
 @Generated("jsonschema2pojo")
 public class SetupUdmiConfig {
@@ -66,10 +67,13 @@ public class SetupUdmiConfig {
     public Date deployed_at;
     @JsonProperty("deployed_by")
     public String deployed_by;
+    @JsonProperty("transaction_id")
+    public String transaction_id;
 
     @Override
     public int hashCode() {
         int result = 1;
+        result = ((result* 31)+((this.transaction_id == null)? 0 :this.transaction_id.hashCode()));
         result = ((result* 31)+((this.hostname == null)? 0 :this.hostname.hashCode()));
         result = ((result* 31)+((this.udmi_ref == null)? 0 :this.udmi_ref.hashCode()));
         result = ((result* 31)+((this.udmi_version == null)? 0 :this.udmi_version.hashCode()));
@@ -92,7 +96,7 @@ public class SetupUdmiConfig {
             return false;
         }
         SetupUdmiConfig rhs = ((SetupUdmiConfig) other);
-        return (((((((((((this.hostname == rhs.hostname)||((this.hostname!= null)&&this.hostname.equals(rhs.hostname)))&&((this.udmi_ref == rhs.udmi_ref)||((this.udmi_ref!= null)&&this.udmi_ref.equals(rhs.udmi_ref))))&&((this.udmi_version == rhs.udmi_version)||((this.udmi_version!= null)&&this.udmi_version.equals(rhs.udmi_version))))&&((this.built_at == rhs.built_at)||((this.built_at!= null)&&this.built_at.equals(rhs.built_at))))&&((this.functions_min == rhs.functions_min)||((this.functions_min!= null)&&this.functions_min.equals(rhs.functions_min))))&&((this.deployed_at == rhs.deployed_at)||((this.deployed_at!= null)&&this.deployed_at.equals(rhs.deployed_at))))&&((this.functions_max == rhs.functions_max)||((this.functions_max!= null)&&this.functions_max.equals(rhs.functions_max))))&&((this.built_by == rhs.built_by)||((this.built_by!= null)&&this.built_by.equals(rhs.built_by))))&&((this.deployed_by == rhs.deployed_by)||((this.deployed_by!= null)&&this.deployed_by.equals(rhs.deployed_by))))&&((this.udmi_timever == rhs.udmi_timever)||((this.udmi_timever!= null)&&this.udmi_timever.equals(rhs.udmi_timever))));
+        return ((((((((((((this.transaction_id == rhs.transaction_id)||((this.transaction_id!= null)&&this.transaction_id.equals(rhs.transaction_id)))&&((this.hostname == rhs.hostname)||((this.hostname!= null)&&this.hostname.equals(rhs.hostname))))&&((this.udmi_ref == rhs.udmi_ref)||((this.udmi_ref!= null)&&this.udmi_ref.equals(rhs.udmi_ref))))&&((this.udmi_version == rhs.udmi_version)||((this.udmi_version!= null)&&this.udmi_version.equals(rhs.udmi_version))))&&((this.built_at == rhs.built_at)||((this.built_at!= null)&&this.built_at.equals(rhs.built_at))))&&((this.functions_min == rhs.functions_min)||((this.functions_min!= null)&&this.functions_min.equals(rhs.functions_min))))&&((this.deployed_at == rhs.deployed_at)||((this.deployed_at!= null)&&this.deployed_at.equals(rhs.deployed_at))))&&((this.functions_max == rhs.functions_max)||((this.functions_max!= null)&&this.functions_max.equals(rhs.functions_max))))&&((this.built_by == rhs.built_by)||((this.built_by!= null)&&this.built_by.equals(rhs.built_by))))&&((this.deployed_by == rhs.deployed_by)||((this.deployed_by!= null)&&this.deployed_by.equals(rhs.deployed_by))))&&((this.udmi_timever == rhs.udmi_timever)||((this.udmi_timever!= null)&&this.udmi_timever.equals(rhs.udmi_timever))));
     }
 
 }
