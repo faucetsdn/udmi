@@ -98,7 +98,7 @@ public class MqttPublisher implements Publisher {
   private final Map<String, MqttClient> mqttClients = new ConcurrentHashMap<>();
   private final Map<String, Instant> reauthTimes = new ConcurrentHashMap<>();
 
-  private ExecutorService publisherExecutor =
+  private final ExecutorService publisherExecutor =
       Executors.newFixedThreadPool(PUBLISH_THREAD_COUNT);
 
   private final PubberConfiguration configuration;
@@ -166,9 +166,6 @@ public class MqttPublisher implements Publisher {
     Object marked =
         topicSuffix.startsWith(EVENT_MARK_PREFIX) ? decorateMessage(topicSuffix, data) : data;
     try {
-      if (!isActive()) {
-        publisherExecutor = Executors.newFixedThreadPool(PUBLISH_THREAD_COUNT);
-      }
       publisherExecutor.submit(() -> publishCore(deviceId, topicSuffix, marked, callback));
     } catch (Exception e) {
       throw new RuntimeException("While publishing to topic suffix " + topicSuffix, e);
@@ -273,10 +270,16 @@ public class MqttPublisher implements Publisher {
   public void close() {
     try {
       warn("Closing publisher connection");
-      publisherExecutor.shutdown();
       mqttClients.keySet().forEach(this::closeMqttClient);
     } catch (Exception e) {
       error("While closing publisher", deviceId, null, "close", e);
+    }
+  }
+
+  @Override
+  public void shutdown() {
+    if (isActive()) {
+      publisherExecutor.shutdown();
     }
   }
 
