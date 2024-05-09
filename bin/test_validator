@@ -47,6 +47,8 @@ for device in AHU-1 AHU-22 GAT-123; do
     bin/reset_config $site_path $project_id $device
 done
 
+touch $site_path/out/validator_start.nop
+
 echo Starting validator, output in $VALIDATOR_LOG, trace in $TRACE_DIR
 rm -rf $TRACE_DIR
 echo bin/validator $site_path $project_id -w $TRACE_DIR
@@ -140,3 +142,9 @@ sed -E < $VALIDATOR_OUT.raw >> $VALIDATOR_OUT \
 echo diff -u $VALIDATOR_OUT $GOLDEN_OUT
 diff -u $VALIDATOR_OUT $GOLDEN_OUT ||
     fail Mismatch from golden file comparison: $VALIDATOR_OUT $GOLDEN_OUT
+
+echo Checking periodic udmi_config distribution
+[[ $site_path/out/udmi_config.json -nt $site_path/out/validator_start.nop ]] ||
+    fail UdmiConfig update not received after validator start
+
+echo Done with validator validation

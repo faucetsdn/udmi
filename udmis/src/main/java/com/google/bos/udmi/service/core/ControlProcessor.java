@@ -1,12 +1,15 @@
 package com.google.bos.udmi.service.core;
 
+import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringify;
 
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import udmi.schema.CloudQuery;
 import udmi.schema.EndpointConfiguration;
+import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
+import udmi.schema.Envelope.SubType;
 import udmi.schema.UdmiConfig;
 
 /**
@@ -45,10 +48,13 @@ public class ControlProcessor extends ProcessorBase {
       UdmiConfig udmiConfig = UdmiServicePod.getUdmiConfig(null);
       config.setup = udmiConfig.setup;
       publish(config);
-      String configString = stringify(config);
+      Envelope message = new Envelope();
+      message.payload = encodeBase64(stringify(config));
+      message.subType = SubType.CONFIG;
+      message.subFolder = SubFolder.UDMI;
       iotAccess.getActiveConnections().forEach(entry -> {
         debug("Propagate UdmiConfig to " + entry);
-          iotAccess.sendCommand(entry.getKey(), entry.getValue(), SubFolder.UDMI, configString));
+        iotAccess.sendCommand(entry.getKey(), entry.getValue(), SubFolder.UDMI, stringify(message));
       });
     }
   }
