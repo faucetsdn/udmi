@@ -15,6 +15,7 @@ class SetupUdmiConfig:
     self.built_by = None
     self.deployed_at = None
     self.deployed_by = None
+    self.transaction_id = None
 
   @staticmethod
   def from_dict(source):
@@ -31,6 +32,7 @@ class SetupUdmiConfig:
     result.built_by = source.get('built_by')
     result.deployed_at = source.get('deployed_at')
     result.deployed_by = source.get('deployed_by')
+    result.transaction_id = source.get('transaction_id')
     return result
 
   @staticmethod
@@ -71,6 +73,8 @@ class SetupUdmiConfig:
       result['deployed_at'] = self.deployed_at # 5
     if self.deployed_by:
       result['deployed_by'] = self.deployed_by # 5
+    if self.transaction_id:
+      result['transaction_id'] = self.transaction_id # 5
     return result
 
 
