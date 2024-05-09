@@ -515,18 +515,9 @@ public class Validator {
     }
   }
 
-  protected synchronized void validateMessage(MessageBundle nullable) {
-    ifNotNullThen(nullable, bundle -> {
-      Object object = ofNullable((Object) bundle.message).orElse(bundle.rawMessage);
-      if (!handleSystemMessage(bundle.attributes, object)) {
-        validateMessage(object, bundle.attributes);
-      }
-    });
-  }
-
   private boolean handleSystemMessage(Map<String, String> attributes, Object object) {
-    if (SubFolder.UDMI.value().equals(attributes.get(SUBFOLDER_PROPERTY_KEY)) &&
-        SubType.CONFIG.value().equals(attributes.get(SUBTYPE_PROPERTY_KEY))) {
+    if (SubFolder.UDMI.value().equals(attributes.get(SUBFOLDER_PROPERTY_KEY))
+        && SubType.CONFIG.value().equals(attributes.get(SUBTYPE_PROPERTY_KEY))) {
       handleUdmiConfig(convertTo(UdmiConfig.class, object));
       return true;
     }
@@ -535,6 +526,15 @@ public class Validator {
 
   private void handleUdmiConfig(UdmiConfig udmiConfig) {
     JsonUtil.writeFile(udmiConfig, new File(outBaseDir, UDMI_CONFIG_JSON_FILE));
+  }
+
+  protected synchronized void validateMessage(MessageBundle nullable) {
+    ifNotNullThen(nullable, bundle -> {
+      Object object = ofNullable((Object) bundle.message).orElse(bundle.rawMessage);
+      if (!handleSystemMessage(bundle.attributes, object)) {
+        validateMessage(object, bundle.attributes);
+      }
+    });
   }
 
   private void validateMessage(Object msgObject, Map<String, String> attributes) {
