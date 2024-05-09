@@ -3,11 +3,17 @@
   "version": 1,
   "system": {
     "min_loglevel": 300,
-    "metrics_rate_sec": 10
+    "metrics_rate_sec": 10,
+    "operation": { }
+  },
+  "gateway": {
+    "proxy_ids": [ ]
   },
   "localnet": {
     "subsystem": {
-      "vendor": { }
+      "vendor": {
+        "id": "0x65"
+      }
     }
   },
   "pointset": {
@@ -25,5 +31,5 @@
       }
     }
   },
-  "downgraded_from": "1.4.1"
+  "downgraded_from": "1.5.0"
 }

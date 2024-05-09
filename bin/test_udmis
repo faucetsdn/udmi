@@ -7,11 +7,13 @@ echo Checking for properly configured mosquitto...
 sudo fgrep -q scrumptious /etc/mosquitto/dynamic_security.json || (echo mosquitto dynamic security not configured; false)
 
 echo Checking that mqtt broker is running
-sudo netstat -nlpa | fgrep :1883
+BROKER=$(sudo netstat -nlpa | fgrep :1883) || true
 
-# This is the local address of the previously configured MQTT broker
-export MQTT_TEST_BROKER=tcp://localhost:1883
-echo Using MQTT broker at $MQTT_TEST_BROKER
+if [[ -n $BROKER ]]; then
+    # This is the local address of the previously configured MQTT broker
+    export MQTT_TEST_BROKER=tcp://localhost:1883
+    echo Using MQTT broker at $MQTT_TEST_BROKER
+fi
 
 # This is the local address for PubSub emulation, created by bin/start_pubsub
 source out/pubsub.env || true

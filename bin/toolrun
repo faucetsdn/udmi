@@ -1,4 +1,6 @@
-#!/bin/bash -e
+#!/bin/bash -eu
+
+set -o pipefail
 
 util_name=$(basename $0)
 UDMI_ROOT=$(realpath $(dirname $0)/..)
@@ -14,5 +16,7 @@ $UDMI_ROOT/validator/bin/build
 JAVA_CLASS=com.google.daq.mqtt.util.Dispatcher
 
 echo udmi version $UDMI_TOOLS
+echo starting run at $(date --utc --iso=s)
+
 echo java -cp $UDMI_JAR $JAVA_CLASS $util_name "$@"
 java -cp $UDMI_JAR $JAVA_CLASS $util_name "$@" 2>&1 | tee $OUT_DIR/$util_name.log

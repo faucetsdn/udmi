@@ -2,7 +2,7 @@
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.4.1",
   "upgraded_from": "1",
-  "hash": "729482fe",
+  "hash": "63cc9801",
   "cloud": {
     "auth_type": "RS256"
   },
@@ -23,6 +23,11 @@
       }
     },
     "min_loglevel": 300
+  },
+  "gateway": {
+    "target": {
+      "family": "vendor"
+    }
   },
   "localnet": {
     "families": {

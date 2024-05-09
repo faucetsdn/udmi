@@ -4,13 +4,17 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.Common.NO_SITE;
 import static com.google.udmi.util.Common.getNamespacePrefix;
+import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_RAW;
+import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.removeArg;
 import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
+import static com.google.udmi.util.JsonUtil.loadFileRequired;
 import static com.google.udmi.util.JsonUtil.loadFileStrict;
+import static com.google.udmi.util.MessageUpgrader.METADATA_SCHEMA;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
@@ -19,10 +23,10 @@ import static java.util.stream.Collectors.toMap;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -55,6 +59,7 @@ public class SiteModel {
   public static final String MOCK_PROJECT = "mock-project";
   public static final String LOCALHOST_HOSTNAME = "localhost";
   public static final String DEVICES_DIR = "devices";
+  public static final String REFLECTOR_DIR = "reflector";
   public static final String METADATA_JSON = "metadata.json";
   public static final String EXTRA_DEVICES_BASE = "extras";
   public static final String EXTRA_DEVICES_FORMAT = EXTRA_DEVICES_BASE + "/%s";
@@ -230,14 +235,6 @@ public class SiteModel {
     return !(dirName.startsWith(".") || dirName.endsWith("~"));
   }
 
-  private static Metadata captureLoadErrors(File deviceMetadataFile) {
-    try {
-      return loadFileStrict(Metadata.class, deviceMetadataFile);
-    } catch (Exception e) {
-      return new MetadataException(deviceMetadataFile, e);
-    }
-  }
-
   public static String getRegistryActual(ExecutionConfiguration iotConfig) {
     return getRegistryActual(iotConfig.udmi_namespace, iotConfig.registry_id,
         iotConfig.registry_suffix);
@@ -255,7 +252,8 @@ public class SiteModel {
     try {
       String iotProvider = specMatcher.group(SPEC_PROVIDER_GROUP);
       exeConfig.iot_provider = ifNotNullGet(iotProvider, IotProvider::fromValue);
-      exeConfig.project_id = specMatcher.group(SPEC_PROJECT_GROUP);
+      String matchedId = specMatcher.group(SPEC_PROJECT_GROUP);
+      exeConfig.project_id = NO_SITE.equals(matchedId) ? null : matchedId;
       exeConfig.udmi_namespace = specMatcher.group(SPEC_NAMESPACE_GROUP);
     } catch (Exception e) {
       throw new RuntimeException(
@@ -283,6 +281,54 @@ public class SiteModel {
         .collect(Collectors.toSet());
   }
 
+  public Metadata loadDeviceMetadata(String deviceId, boolean safeLoading, boolean upgradeMetadata){
+
+    try {
+      File deviceDir = getDeviceDir(deviceId);
+      File deviceMetadataFile = new File(deviceDir, METADATA_JSON);
+
+      ObjectNode rawMetadata = loadFileRequired(ObjectNode.class, deviceMetadataFile);
+      Map<String, Object> mergedMetadata = GeneralUtils.deepCopy(siteDefaults);
+      GeneralUtils.mergeObject(mergedMetadata, JsonUtil.asMap(rawMetadata));
+
+      ObjectNode metadataObject = OBJECT_MAPPER_RAW.valueToTree(mergedMetadata);
+
+      // We must upgrade before converting to Metadata, otherwise data is lost
+      // The empty array fix (below) needs a Metadata typed metadata object
+      // So upgrade if applicable, convert, apply the fixes
+      // But, the `baseVersion` aka `upgraded from` is required for config downgrading
+      // There is an `upgraded_from` - but this is where the upgrade errors are put
+      if (upgradeMetadata) {
+        try {
+          new MessageUpgrader(METADATA_SCHEMA, metadataObject).upgrade(false);
+        } catch (Exception e) {
+          throw new RuntimeException("Error upgrading message " + friendlyStackTrace(e), e);
+        }
+      }
+
+      Metadata metadata = convertToStrict(Metadata.class, metadataObject);
+
+      // Missing arrays are automatically parsed to an empty list, which is not what
+      // we want, so hacky go through and convert an empty list to null.
+      if (metadata.gateway != null && metadata.gateway.proxy_ids.isEmpty()) {
+        metadata.gateway.proxy_ids = null;
+      }
+
+      return metadata;
+
+    } catch (Exception e) {
+
+      if (safeLoading) {
+        // Adds safety by returning an exception rather than throwing it.
+        return new MetadataException(getDeviceFile(deviceId, METADATA_JSON), e);
+      } else {
+        throw new RuntimeException("While loading device metadata for " + deviceId, e);
+      }
+
+    }
+
+  }
+
   private void loadAllDeviceMetadata() {
     Set<String> deviceIds = getDeviceIds();
     allMetadata = deviceIds.stream().collect(toMap(key -> key, this::loadDeviceMetadataSafe));
@@ -294,40 +340,11 @@ public class SiteModel {
   }
 
   public Metadata loadDeviceMetadataSafe(String deviceId) {
-    try {
-      return loadDeviceMetadata(deviceId);
-    } catch (Exception e) {
-      return new MetadataException(getDeviceFile(deviceId, METADATA_JSON), e);
-    }
+    return loadDeviceMetadata(deviceId, true, true);
   }
 
   public Metadata loadDeviceMetadata(String deviceId) {
-    try {
-      checkState(sitePath != null, "sitePath not defined");
-      File deviceDir = getDeviceDir(deviceId);
-      File deviceMetadataFile = new File(deviceDir, "metadata.json");
-      if (!deviceMetadataFile.exists()) {
-        return new MetadataException(deviceMetadataFile, new FileNotFoundException());
-      }
-      Metadata rawMetadata = requireNonNull(captureLoadErrors(deviceMetadataFile), "bad metadata");
-
-      if (rawMetadata instanceof MetadataException metadataException) {
-        throw metadataException.exception;
-      }
-
-      // Missing arrays are automatically parsed to an empty list, which is not what
-      // we want, so hacky go through and convert an empty list to null.
-      if (rawMetadata.gateway != null && rawMetadata.gateway.proxy_ids.isEmpty()) {
-        rawMetadata.gateway.proxy_ids = null;
-      }
-
-      Map<String, Object> mergedMetadata = GeneralUtils.deepCopy(siteDefaults);
-      GeneralUtils.mergeObject(mergedMetadata, JsonUtil.asMap(rawMetadata));
-
-      return convertToStrict(Metadata.class, mergedMetadata);
-    } catch (Exception e) {
-      throw new RuntimeException("While loading device metadata for " + deviceId, e);
-    }
+    return loadDeviceMetadata(deviceId, false, true);
   }
 
   public File getDeviceDir(String deviceId) {
@@ -485,9 +502,6 @@ public class SiteModel {
   }
 
   private Matcher extractSpec(String projectSpec) {
-    if (NO_SITE.equals(projectSpec)) {
-      return null;
-    }
     Matcher matcher = SPEC_PATTERN.matcher(projectSpec);
     if (!matcher.matches()) {
       throw new RuntimeException(
@@ -495,6 +509,10 @@ public class SiteModel {
               SPEC_PATTERN.pattern()));
     }
     return matcher;
+  }
+
+  public File getReflectorDir() {
+    return getSubdirectory(REFLECTOR_DIR);
   }
 
   public static class MetadataException extends Metadata {

@@ -19,7 +19,6 @@ SCHEMA_OUT=$OUT_DIR/schema.out
 DEFAULT_SERIAL=//
 log_level=INFO
 min_stage=PREVIEW
-export UDMI_VERSION=$udmi_version
 
 rm -f $SEQUENCER_LOG $SEQUENCER_OUT $SCHEMA_OUT
 
@@ -177,7 +176,7 @@ validator/bin/build
 
 echo $JAVA_CMD
 result=0
-$JAVA_CMD 2>&1 | tee $SEQUENCER_LOG
+$JAVA_CMD 2>&1 | tee $SEQUENCER_LOG || true
 
 echo
 echo Extracting sequence results:
@@ -189,7 +188,7 @@ egrep 'RESULT |CPBLTY ' $SEQUENCER_LOG | fgrep NOTICE | sort -k 6 | \
 
 # Sort by test name (3th field)
 fgrep RESULT $site_model/out/devices/$device_id/RESULT.log | \
-    fgrep ' schemas ' | sort -k 3 | tee $SCHEMA_OUT
+    fgrep ' schemas ' | sort -k 3 | tee $SCHEMA_OUT || true
 more $site_model/out/devices/$device_id/RESULT.log $SCHEMA_OUT | cat
 
 bin/sequencer_report $site_model $device_id

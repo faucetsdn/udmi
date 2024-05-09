@@ -346,8 +346,29 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
               .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
       collect.putAll(responseMap);
       pageToken = response.getNextPageToken();
+      debug(format("fetchDevices %s found %d total %d more %s", deviceRegistryId,
+          responseMap.size(), collect.size(), pageToken != null));
     } while (pageToken != null);
     return collect;
+  }
+
+  private List<String> findGateways(String registryId, Device proxyDevice) {
+    CloudModel cloudModel = listDevices(registryId);
+    List<String> gateways =
+        cloudModel.device_ids.entrySet().stream().filter(entry ->
+            entry.getValue().resource_type == GATEWAY).map(Entry::getKey).toList();
+    return gateways;
+  }
+
+  private CloudModel findUnbindAndDelete(String registryId, Device device) {
+    List<String> allGateways = findGateways(registryId, device);
+    if (allGateways.isEmpty()) {
+      throw new RuntimeException("Was expecting at least one bound gateway!");
+    }
+    String deviceId = device.toBuilder().getId();
+    info("Unbinding %s/%s from gateways: " + registryId, deviceId, CSV_JOINER.join(allGateways));
+    allGateways.forEach(gatewayId -> unbindDevice(registryId, gatewayId, deviceId));
+    return unbindAndDeleteCore(registryId, device);
   }
 
   private String getDeviceName(String registryId, String deviceId) {
@@ -436,6 +457,17 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     }
   }
 
+  private CloudModel modifyDevice(String registryId, Device device) {
+    Device.Builder builder = device.toBuilder();
+    String deviceId = builder.getId();
+    CloudModel model = fetchDevice(registryId, deviceId);
+    model.metadata.putAll(builder.getMetadata());
+    builder.setMetadata(model.metadata);
+    CloudModel cloudModel = updateDevice(registryId, builder.build(), METADATA_FIELD_MASK);
+    cloudModel.operation = Operation.MODIFY;
+    return cloudModel;
+  }
+
   private StateNotificationConfig stateNotificationConfig() {
     String topicName = getScopedTopic(UDMI_STATE_TOPIC);
     return StateNotificationConfig.newBuilder().setPubsubTopicName(topicName).build();
@@ -485,25 +517,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     }
   }
 
-  private CloudModel findUnbindAndDelete(String registryId, Device device) {
-    List<String> allGateways = findGateways(registryId, device);
-    if (allGateways.isEmpty()) {
-      throw new RuntimeException("Was expecting at least one bound gateway!");
-    }
-    String deviceId = device.toBuilder().getId();
-    info("Unbinding %s/%s from gateways: " + registryId, deviceId, CSV_JOINER.join(allGateways));
-    allGateways.forEach(gatewayId -> unbindDevice(registryId, gatewayId, deviceId));
-    return unbindAndDeleteCore(registryId, device);
-  }
-
-  private List<String> findGateways(String registryId, Device proxyDevice) {
-    CloudModel cloudModel = listDevices(registryId);
-    List<String> gateways =
-        cloudModel.device_ids.entrySet().stream().filter(entry ->
-            entry.getValue().resource_type == GATEWAY).map(Entry::getKey).toList();
-    return gateways;
-  }
-
   private void unbindGatewayDevices(String registryId, Device gatewayDevice) {
     String gatewayId = gatewayDevice.toBuilder().getId();
     CloudModel cloudModel = listRegistryDevices(registryId, gatewayId);
@@ -513,17 +526,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       ifNotNullThen(cloudModel.device_ids, ids -> ids.keySet()
           .forEach(id -> unbindDevice(registryId, gatewayId, id)));
     }
-  }
-
-  private CloudModel modifyDevice(String registryId, Device device) {
-    Device.Builder builder = device.toBuilder();
-    String deviceId = builder.getId();
-    CloudModel model = fetchDevice(registryId, deviceId);
-    model.metadata.putAll(builder.getMetadata());
-    builder.setMetadata(model.metadata);
-    CloudModel cloudModel = updateDevice(registryId, builder.build(), METADATA_FIELD_MASK);
-    cloudModel.operation = Operation.MODIFY;
-    return cloudModel;
   }
 
   private CloudModel updateDevice(String registryId, Device device) {

@@ -1,7 +1,7 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
-  "version": "1.4.1",
-  "hash": "3979d18f",
+  "version": "1.5.0",
+  "hash": "fb7395cf",
   "cloud": {
     "detail": "site default for unit tests"
   },

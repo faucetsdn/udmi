@@ -17,7 +17,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "user",
-    "update_to"
+    "update_to",
+    "transaction_id"
 })
 @Generated("jsonschema2pojo")
 public class SetupUdmiState {
@@ -36,11 +37,14 @@ public class SetupUdmiState {
     @JsonProperty("update_to")
     @JsonPropertyDescription("Optional version for a udmis update trigger")
     public String update_to;
+    @JsonProperty("transaction_id")
+    public String transaction_id;
 
     @Override
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.update_to == null)? 0 :this.update_to.hashCode()));
+        result = ((result* 31)+((this.transaction_id == null)? 0 :this.transaction_id.hashCode()));
         result = ((result* 31)+((this.user == null)? 0 :this.user.hashCode()));
         return result;
     }
@@ -54,7 +58,7 @@ public class SetupUdmiState {
             return false;
         }
         SetupUdmiState rhs = ((SetupUdmiState) other);
-        return (((this.update_to == rhs.update_to)||((this.update_to!= null)&&this.update_to.equals(rhs.update_to)))&&((this.user == rhs.user)||((this.user!= null)&&this.user.equals(rhs.user))));
+        return ((((this.update_to == rhs.update_to)||((this.update_to!= null)&&this.update_to.equals(rhs.update_to)))&&((this.transaction_id == rhs.transaction_id)||((this.transaction_id!= null)&&this.transaction_id.equals(rhs.transaction_id))))&&((this.user == rhs.user)||((this.user!= null)&&this.user.equals(rhs.user))));
     }
 
 }

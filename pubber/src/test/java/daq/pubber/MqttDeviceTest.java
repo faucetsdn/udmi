@@ -14,7 +14,8 @@ public class MqttDeviceTest extends TestBase {
   @Test
   public void publishTopicPrefix() throws InterruptedException {
     final CountDownLatch sent = new CountDownLatch(1);
-    MqttDevice mqttDevice = new MqttDevice(getTestConfiguration(), exception -> sent.countDown());
+    MqttDevice mqttDevice = new MqttDevice(getTestConfiguration(), exception -> sent.countDown(),
+        null);
 
     mqttDevice.publish(TEST_DEVICE, TEST_TOPIC, TEST_MESSAGE, sent::countDown);
     sent.await();
