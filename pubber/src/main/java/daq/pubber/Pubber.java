@@ -759,6 +759,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
   private void disconnectMqtt() {
     if (deviceTarget != null) {
       captureExceptions("closing mqtt publisher", deviceTarget::close);
+      captureExceptions("shutting down mqtt publisher executor", deviceTarget::shutdown);
       deviceTarget = null;
     }
   }
