@@ -58,6 +58,7 @@
     <orderEntry type="library" name="Gradle: com.google.protobuf:protobuf-java-util:3.21.12" level="project" />
     <orderEntry type="library" name="Gradle: com.google.guava:guava:31.1-jre" level="project" />
     <orderEntry type="library" name="Gradle: org.jetbrains:annotations:20.1.0" level="project" />
+    <orderEntry type="library" name="Gradle: org.bouncycastle:bcpkix-jdk15on:1.64" level="project" />
     <orderEntry type="library" name="Gradle: org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5" level="project" />
     <orderEntry type="library" name="Gradle: org.yaml:snakeyaml:1.27" level="project" />
     <orderEntry type="library" name="Gradle: com.google.api.grpc:proto-google-cloud-logging-v2:0.103.9" level="project" />
@@ -93,6 +94,7 @@
     <orderEntry type="library" name="Gradle: org.apache.httpcomponents:httpcore:4.4.16" level="project" />
     <orderEntry type="library" name="Gradle: org.jspecify:jspecify:0.2.0" level="project" />
     <orderEntry type="library" name="Gradle: com.googlecode.json-simple:json-simple:1.1.1" level="project" />
+    <orderEntry type="library" name="Gradle: org.bouncycastle:bcprov-jdk15on:1.64" level="project" />
     <orderEntry type="library" name="Gradle: org.slf4j:slf4j-api:1.7.32" level="project" />
     <orderEntry type="library" name="Gradle: net.jodah:failsafe:2.4.4" level="project" />
     <orderEntry type="library" name="Gradle: com.google.auto.service:auto-service-annotations:1.0.1" level="project" />

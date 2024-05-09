@@ -16,6 +16,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.base.Preconditions;
 import com.google.common.hash.Hashing;
+import com.google.udmi.util.CertManager;
 import com.google.udmi.util.NanSerializer;
 import com.google.udmi.util.SiteModel;
 import com.google.udmi.util.SiteModel.ClientInfo;

@@ -55,7 +55,7 @@ public class GatewayManager extends ManagerBase {
       ifNotNullThen(noProxyId, id -> warn(format("Not proxying device %s", noProxyId)));
       proxyIds.forEach(id -> {
         if (!id.equals(noProxyId)) {
-          devices.put(id, new ProxyDevice(host, id));
+          devices.put(id, new ProxyDevice(host, id, config));
         }
       });
     }
@@ -86,7 +86,7 @@ public class GatewayManager extends ManagerBase {
   }
 
   ProxyDevice makeExtraDevice() {
-    return new ProxyDevice(host, EXTRA_PROXY_DEVICE);
+    return new ProxyDevice(host, EXTRA_PROXY_DEVICE, config);
   }
 
   /**

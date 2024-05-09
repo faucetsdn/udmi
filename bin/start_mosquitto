@@ -46,11 +46,11 @@ CONNECT_OPTS="-p 8883 -u $AUTH_USER -P $AUTH_PASS --cafile $CA_CERT --cert $CERT
 MOSQUITTO_CTRL="sudo mosquitto_ctrl $CONNECT_OPTS dynsec"
 
 $MOSQUITTO_CTRL createRole device
-$MOSQUITTO_CTRL addRoleACL device subscribePattern '/#' allow
-$MOSQUITTO_CTRL addRoleACL device publishClientSend '/#' allow
+$MOSQUITTO_CTRL addRoleACL device subscribePattern '/r/+/d/+/#' allow
+$MOSQUITTO_CTRL addRoleACL device publishClientSend '/r/+/d/+/#' allow
 $MOSQUITTO_CTRL createRole service
-$MOSQUITTO_CTRL addRoleACL service subscribePattern '/#' allow
-$MOSQUITTO_CTRL addRoleACL service publishClientSend '/#' allow
+$MOSQUITTO_CTRL addRoleACL service subscribePattern '/r/+/d/+/#' allow
+$MOSQUITTO_CTRL addRoleACL service publishClientSend '/r/+/d/+/#' allow
 
 clients=$($MOSQUITTO_CTRL listClients)
 if [[ $clients =~ ${AUTH_USER} ]]; then
