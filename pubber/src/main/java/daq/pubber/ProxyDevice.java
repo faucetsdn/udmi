@@ -2,7 +2,6 @@ package daq.pubber;
 
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
-import static daq.pubber.Pubber.configuration;
 import static java.lang.String.format;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -16,22 +15,22 @@ import udmi.schema.PubberConfiguration;
  */
 public class ProxyDevice extends ManagerBase implements ManagerHost {
 
-  public final DeviceManager deviceManager;
-  public final Pubber pubberHost;
-  private AtomicBoolean active = new AtomicBoolean();
+  final DeviceManager deviceManager;
+  final Pubber pubberHost;
+  private final AtomicBoolean active = new AtomicBoolean();
 
   /**
    * New instance.
    */
-  public ProxyDevice(ManagerHost host, String id) {
-    super(host, makeProxyConfiguration(id));
+  public ProxyDevice(ManagerHost host, String id, PubberConfiguration config) {
+    super(host, makeProxyConfiguration(id, config));
     // Simple shortcut to get access to some foundational mechanisms inside of Pubber.
     pubberHost = (Pubber) host;
-    deviceManager = new DeviceManager(this, makeProxyConfiguration(id));
+    deviceManager = new DeviceManager(this, makeProxyConfiguration(id, config));
   }
 
-  private static PubberConfiguration makeProxyConfiguration(String id) {
-    PubberConfiguration proxyConfiguration = deepCopy(configuration);
+  private static PubberConfiguration makeProxyConfiguration(String id, PubberConfiguration config) {
+    PubberConfiguration proxyConfiguration = deepCopy(config);
     proxyConfiguration.deviceId = id;
     return proxyConfiguration;
   }

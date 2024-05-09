@@ -21,6 +21,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
+import static com.google.udmi.util.GeneralUtils.isNullOrTruthy;
 import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.getAsMap;
 import static com.google.udmi.util.JsonUtil.getDate;
@@ -46,6 +47,7 @@ import com.google.bos.udmi.service.pod.SimpleHandler;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.Common;
+import com.google.udmi.util.GeneralUtils;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
@@ -87,8 +89,7 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
    */
   public ProcessorBase(EndpointConfiguration config) {
     super(config);
-    isEnabled =
-        ifNotNullGet(variableSubstitution(config.enabled), enabled -> !enabled.isEmpty(), true);
+    isEnabled = isNullOrTruthy(variableSubstitution(config.enabled));
     ifNotTrueThen(isEnabled, () -> debug("Processor %s is disabled", containerId));
     dispatcher = ifTrueGet(isEnabled, () -> MessageDispatcher.from(config));
     sidecar = ifTrueGet(isEnabled, () -> MessageDispatcher.from(makeSidecarConfig(config)));
