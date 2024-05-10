@@ -43,7 +43,7 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
   public static final int MAX_CONFIG_LENGTH = 262144;
   protected static final String EMPTY_JSON = "{}";
   private static final long REGISTRY_COMMAND_BACKOFF_SEC = 60;
-  private static final Map<String, Instant> BACKOFF_MAP = new ConcurrentHashMap<>();
+  private static final Map<Entry<String, String>, Instant> BACKOFF_MAP = new ConcurrentHashMap<>();
   private static final long CONFIG_UPDATE_BACKOFF_MS = 1000;
   private static final int CONFIG_UPDATE_MAX_RETRIES = 10;
   private static final Duration REGISTRY_REFRESH = Duration.ofMinutes(10);
@@ -63,8 +63,8 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
     return BACKOFF_MAP.get(getBackoffKey(registryId, deviceId));
   }
 
-  private static String getBackoffKey(String registryId, String deviceId) {
-    return format("%s/%s", registryId, deviceId);
+  private static Entry<String, String> getBackoffKey(String registryId, String deviceId) {
+    return Map.entry(registryId, deviceId);
   }
 
   protected Map<String, String> fetchRegistryRegions() {
@@ -160,8 +160,9 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
   }
 
   private void registryBackoffClear(String registryId, String deviceId) {
-    String backoffKey = getBackoffKey(registryId, deviceId);
-    ifNotNullThen(BACKOFF_MAP.remove(backoffKey), removed -> debug(
+    Entry<String, String> backoffKey = getBackoffKey(registryId, deviceId);
+    Instant inThePast = Instant.now().minusSeconds(1);
+    ifNotNullThen(BACKOFF_MAP.put(backoffKey, inThePast), removed -> debug(
         "Released registry backoff for " + backoffKey + " was " + isoConvert(removed)));
   }
 
@@ -194,6 +195,10 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
       distributor = UdmiServicePod.maybeGetComponent(DistributorPipe.class);
       populateRegistryRegions();
     }
+  }
+
+  public Set<Entry<String, String>> getActiveConnections() {
+    return BACKOFF_MAP.keySet();
   }
 
   /**
@@ -263,7 +268,7 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
    */
   public final void sendCommand(String registryId, String deviceId, SubFolder folder,
       String message) {
-    String backoffKey = getBackoffKey(registryId, deviceId);
+    Entry<String, String> backoffKey = getBackoffKey(registryId, deviceId);
     if (registryBackoffCheck(registryId, deviceId)) {
       try {
         Map<String, Object> messageMap = toMap(message);
