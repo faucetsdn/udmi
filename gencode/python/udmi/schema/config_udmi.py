@@ -82,6 +82,8 @@ class UdmiConfig:
   """Generated schema class"""
 
   def __init__(self):
+    self.timestamp = None
+    self.version = None
     self.last_state = None
     self.setup = None
 
@@ -90,6 +92,8 @@ class UdmiConfig:
     if not source:
       return None
     result = UdmiConfig()
+    result.timestamp = source.get('timestamp')
+    result.version = source.get('version')
     result.last_state = source.get('last_state')
     result.setup = SetupUdmiConfig.from_dict(source.get('setup'))
     return result
@@ -112,6 +116,10 @@ class UdmiConfig:
 
   def to_dict(self):
     result = {}
+    if self.timestamp:
+      result['timestamp'] = self.timestamp # 5
+    if self.version:
+      result['version'] = self.version # 5
     if self.last_state:
       result['last_state'] = self.last_state # 5
     if self.setup:
