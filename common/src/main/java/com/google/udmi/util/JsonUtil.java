@@ -457,12 +457,12 @@ public abstract class JsonUtil {
   /**
    * Write json representation to a file.
    *
-   * @param target object to write
+   * @param theThing object to write
    * @param file output file
    */
-  public static void writeFile(Object target, File file) {
+  public static void writeFile(Object theThing, File file) {
     try {
-      OBJECT_MAPPER.writeValue(file, target);
+      OBJECT_MAPPER.writeValue(file, theThing);
     } catch (Exception e) {
       throw new RuntimeException("While writing " + file.getAbsolutePath(), e);
     }
