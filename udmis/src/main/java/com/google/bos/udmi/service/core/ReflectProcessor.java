@@ -78,7 +78,7 @@ public class ReflectProcessor extends ProcessorBase {
     Envelope reflection = continuation.getEnvelope();
 
     boolean validFolder = reflection.subFolder == null || reflection.subFolder == SubFolder.UDMI;
-    if (!validFolder || !UDMI_REFLECT.equals(reflection.deviceRegistryId)) {
+    if (!validFolder || !reflection.deviceRegistryId.endsWith(UDMI_REFLECT)) {
       return;
     }
 
