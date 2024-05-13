@@ -27,6 +27,7 @@ import static com.google.udmi.util.JsonUtil.getDate;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.mapCast;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static com.google.udmi.util.JsonUtil.toStringMap;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
@@ -380,6 +381,7 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
 
   @Override
   public void processMessage(Envelope envelope, Object message) {
+    debug(format("Process message %s %s", stringifyTerse(envelope), stringifyTerse(message)));
     ((MessageDispatcherImpl) dispatcher).processMessage(envelope, message);
   }
 

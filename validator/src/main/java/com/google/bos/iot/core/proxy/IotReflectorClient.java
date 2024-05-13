@@ -71,7 +71,7 @@ public class IotReflectorClient implements MessagePublisher {
   static final String REFLECTOR_KEY_ALGORITHM = "RS256";
   private static final String MOCK_DEVICE_NUM_ID = "123456789101112";
   private static final String UDMI_TOPIC = "events/" + UDMI_FOLDER;
-  private static final long CONFIG_TIMEOUT_SEC = 10;
+  private static final long CONFIG_TIMEOUT_SEC = 20;
   private static final int UPDATE_RETRIES = 6;
   private static final Collection<String> COPY_IDS = ImmutableSet.of(DEVICE_ID_KEY, GATEWAY_ID_KEY,
       SUBTYPE_PROPERTY_KEY, SUBFOLDER_PROPERTY_KEY, TRANSACTION_KEY, PUBLISH_TIME_KEY);

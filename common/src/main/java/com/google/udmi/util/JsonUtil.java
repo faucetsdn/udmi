@@ -3,6 +3,7 @@ package com.google.udmi.util;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_STRICT;
 import static com.google.udmi.util.GeneralUtils.fromJsonString;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.toJsonString;
 import static java.util.Objects.requireNonNull;
 
@@ -188,7 +189,7 @@ public abstract class JsonUtil {
   }
 
   public static String isoConvert(Instant timestamp) {
-    return isoConvert(Date.from(timestamp));
+    return isoConvert(ifNotNullGet(timestamp, Date::from));
   }
 
   public static String isoConvert(Date timestamp) {

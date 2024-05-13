@@ -78,7 +78,7 @@ public class MqttPublisher implements Publisher {
   // Indicate if this message should be a MQTT 'retained' message.
   private static final boolean DO_NOT_RETAIN = false;
   private static final String UNUSED_ACCOUNT_NAME = "unused";
-  private static final int INITIALIZE_TIME_MS = 20000;
+  private static final int INITIALIZE_TIME_MS = 10000;
   private static final String BROKER_URL_FORMAT = "%s://%s:%s";
   private static final int PUBLISH_THREAD_COUNT = 10;
   private static final String HANDLER_KEY_FORMAT = "%s/%s";
