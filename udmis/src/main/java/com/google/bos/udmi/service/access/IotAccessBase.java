@@ -162,8 +162,8 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
   private void registryBackoffClear(String registryId, String deviceId) {
     Entry<String, String> backoffKey = getBackoffKey(registryId, deviceId);
     Instant inThePast = Instant.now().minusSeconds(1);
-    ifNotNullThen(BACKOFF_MAP.put(backoffKey, inThePast), removed -> debug(
-        "Released registry backoff for " + backoffKey + " was " + isoConvert(removed)));
+    Instant previous = BACKOFF_MAP.put(backoffKey, inThePast);
+    debug("Cleared registry backoff for " + backoffKey + " was " + isoConvert(previous));
   }
 
   private Instant registryBackoffInhibit(String registryId, String deviceId) {
