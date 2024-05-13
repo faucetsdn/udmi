@@ -26,7 +26,6 @@ import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.bouncycastle.openssl.jcajce.JcePEMDecryptorProviderBuilder;
-import udmi.schema.EndpointConfiguration;
 import udmi.schema.EndpointConfiguration.Transport;
 
 /**
@@ -43,6 +42,7 @@ public class CertManager {
   private static final String CA_CERT_ALIAS = "ca-certificate";
   private static final String CLIENT_CERT_ALIAS = "certificate";
   private static final String PRIVATE_KEY_ALIAS = "private-key";
+  public static final String CA_CERT_FILE = "ca.crt";
   private final File caCrtFile;
   private final File keyFile;
   private final File crtFile;
@@ -56,10 +56,10 @@ public class CertManager {
   /**
    * Create a new cert manager for the given site model and configuration.
    */
-  public CertManager(File caCrtFile, File clientDir, EndpointConfiguration endpoint,
+  public CertManager(File caCrtFile, File clientDir, Transport transport,
       String passString, Consumer<String> logging) {
     this.caCrtFile = caCrtFile;
-    isSsl = Transport.SSL.equals(endpoint.transport);
+    isSsl = Transport.SSL.equals(transport);
 
     if (isSsl) {
       crtFile = new File(clientDir, "rsa_private.crt");

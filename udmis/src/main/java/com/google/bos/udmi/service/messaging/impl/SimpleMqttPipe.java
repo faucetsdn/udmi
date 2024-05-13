@@ -45,7 +45,6 @@ import udmi.schema.Envelope.SubType;
  */
 public class SimpleMqttPipe extends MessageBase {
 
-  public static final String KEY_FILE = "rsa_private.pkcs8";
   private static final int INITIALIZE_TIME_MS = 1000;
   private static final int PUBLISH_THREAD_COUNT = 2;
   private static final String BROKER_URL_FORMAT = "%s://%s:%s";
@@ -54,7 +53,6 @@ public class SimpleMqttPipe extends MessageBase {
   private static final Envelope EXCEPTION_ENVELOPE = makeExceptionEnvelope();
   private static final String SUB_BASE_FORMAT = "/r/+/d/+/%s";
   private static final String SSL_SECRETS_DIR = System.getenv("SSL_SECRETS_DIR");
-  private static final String CA_CERT_FILE = "ca.crt";
   private static final String DEFAULT_NAMESPACE = "default";
   private final String autoId = format("mqtt-%08x", (long) (Math.random() * 0x100000000L));
   private final String clientId;
@@ -77,8 +75,8 @@ public class SimpleMqttPipe extends MessageBase {
     clientId = ofNullable(config.client_id).orElse(autoId);
     File secretsDir = ifTrueGet(isNotEmpty(SSL_SECRETS_DIR), () -> new File(SSL_SECRETS_DIR));
     certManager = ifNotNullGet(secretsDir,
-        secrets -> new CertManager(new File(secrets, CA_CERT_FILE), secrets, endpoint,
-            endpoint.auth_provider.basic.password, this::info));
+        secrets -> new CertManager(new File(secrets, CertManager.CA_CERT_FILE), secrets,
+            endpoint.transport, endpoint.auth_provider.basic.password, this::info));
     mqttClient = createMqttClient();
     tryConnect(false);
     scheduledFuture = Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(
