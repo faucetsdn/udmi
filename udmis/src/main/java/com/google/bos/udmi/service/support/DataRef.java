@@ -3,14 +3,18 @@ package com.google.bos.udmi.service.support;
 import static com.google.common.base.Preconditions.checkState;
 import static java.lang.String.format;
 
+/**
+ * Container reference class for a database entry.
+ */
 public class DataRef {
-
-
   private final String key;
   private final IotDataProvider provider;
   private String registryId;
   private String deviceId;
 
+  /**
+   * New container for the given key.
+   */
   public DataRef(IotDataProvider dataProvider, String key) {
     this.provider = dataProvider;
     this.key = sanitize(key);
@@ -23,12 +27,18 @@ public class DataRef {
     return key;
   }
 
+  /**
+   * Add a registry specification.
+   */
   public DataRef forRegistry(String newRegistryId) {
     checkState(registryId == null, "registryId already defined");
     registryId = sanitize(newRegistryId);
     return this;
   }
 
+  /**
+   * Add a device specification.
+   */
   public DataRef forDevice(String newDeviceId) {
     checkState(deviceId == null, "deviceId already defined");
     deviceId = sanitize(newDeviceId);

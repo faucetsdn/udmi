@@ -84,7 +84,8 @@ public class ReflectProcessor extends ProcessorBase {
 
     Map<String, Object> objectMap = toMap(message);
     try {
-      if (reflection.subFolder == null && (reflection.subType == null || reflection.subType == SubType.STATE)) {
+      boolean maybeState = reflection.subType == null || reflection.subType == SubType.STATE;
+      if (reflection.subFolder == null && maybeState) {
         reflectStateHandler(reflection, extractUdmiState(message));
       } else if (message instanceof UdmiState distributedUpdate) {
         updateAwareness(reflection, distributedUpdate);
