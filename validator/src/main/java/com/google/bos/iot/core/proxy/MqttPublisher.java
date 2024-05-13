@@ -7,8 +7,8 @@ import static com.google.udmi.util.CertManager.CA_CERT_FILE;
 import static com.google.udmi.util.Common.DEFAULT_REGION;
 import static com.google.udmi.util.GeneralUtils.catchOrElse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
-import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.sha256;
 import static com.google.udmi.util.SiteModel.DEFAULT_CLEARBLADE_HOSTNAME;
 import static com.google.udmi.util.SiteModel.DEFAULT_GBOS_HOSTNAME;
@@ -140,13 +140,18 @@ public class MqttPublisher implements MessagePublisher {
     topicBase = getTopicBase();
     clientId = catchToNull(() -> config.reflector_endpoint.client_id);
     LOG.info(deviceId + " token expiration sec " + TOKEN_EXPIRATION_SEC);
-    File reflectorDir = new SiteModel(siteModel).getReflectorDir();
-    certManager = ifNotNullGet(reflectorDir,
-        secrets -> new CertManager(new File(secrets, CA_CERT_FILE), secrets, Transport.SSL,
-            new String(getHashPassword(null)), LOG::info));
+    certManager = getCertManager();
     mqttClient = newMqttClient(deviceId);
     connectMqttClient(deviceId);
     tickler = scheduleTickler();
+  }
+
+  private CertManager getCertManager() {
+    boolean needCerts = iotProvider.equals(IotProvider.MQTT);
+    File reflector = new SiteModel(siteModel).getReflectorDir();
+    return ifTrueGet(needCerts && reflector != null,
+        () -> new CertManager(new File(reflector, CA_CERT_FILE), reflector, Transport.SSL,
+            new String(getHashPassword(null)), LOG::info));
   }
 
   private static ThreadFactory getDaemonThreadFactory() {
