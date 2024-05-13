@@ -75,7 +75,8 @@ public class MqttPublisher implements MessagePublisher {
   private static final Logger LOG = LoggerFactory.getLogger(MqttPublisher.class);
   private static final boolean MQTT_NO_RETAIN = false;
   private static final long STATE_RATE_LIMIT_MS = 1000 * 2;
-  private static final String CLIENT_ID_FMT = "projects/%s/locations/%s/registries/%s/devices/%s";
+  private static final String LONG_ID_FMT = "projects/%s/locations/%s/registries/%s/devices/%s";
+  private static final String SHORT_ID_FMT = "/r/%s/d/%s";
   private static final String DEVICE_TOPIC_FMT = "/devices/%s";
   private static final String FULL_TOPIC_FMT = "/r/%s/d/%s";
   private static final String ATTACH_TOPIC = "/attach";
@@ -464,8 +465,14 @@ public class MqttPublisher implements MessagePublisher {
   }
 
   String getClientId(String deviceId) {
-    return ofNullable(clientId).orElse(
-        format(CLIENT_ID_FMT, projectId, cloudRegion, registryId, deviceId));
+    if (clientId != null) {
+      return clientId;
+    }
+    return switch (iotProvider) {
+      case GBOS, CLEARBLADE -> format(LONG_ID_FMT, projectId, cloudRegion, registryId, deviceId);
+      case MQTT -> format(SHORT_ID_FMT, registryId, deviceId);
+      default -> throw new RuntimeException("Provider not supported " + iotProvider);
+    };
   }
 
   private String getBrokerUrl() {
@@ -480,7 +487,7 @@ public class MqttPublisher implements MessagePublisher {
   }
 
   private String getMessageTopic(String deviceId, String topic) {
-    checkState(topicBase.contains("/devices/" + deviceId), "topic device id mismatch");
+    checkState(topicBase.endsWith("/" + deviceId), "topic device id mismatch");
     return topicBase + format(MESSAGE_TOPIC_FMT, topic);
   }
 

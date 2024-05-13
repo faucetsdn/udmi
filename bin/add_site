@@ -1,0 +1,31 @@
+#!/bin/bash -eu
+
+UDMI_ROOT=$(dirname $0)/..
+cd $UDMI_ROOT
+
+source $UDMI_ROOT/etc/shell_common.sh
+
+if [[ $# != 1 ]]; then
+    echo Usage: $0 site_model
+    false
+fi
+
+site_path=$1
+shift
+
+source $UDMI_ROOT/etc/mosquitto_ctrl.sh
+
+site_config=$site_path/cloud_iot_config.json
+registry_id=$(jq -r .registry_id $site_config)
+
+hash_pass=$(sha256sum < $site_path/reflector/rsa_private.pkcs8)
+SERV_PASS=${hash_pass:0:8}
+SERV_USER=/r/UDMI-REFLECT/d/$registry_id
+SERV_ID=$SERV_USER
+
+$MOSQUITTO_CTRL deleteClient $SERV_USER
+$MOSQUITTO_CTRL createClient $SERV_USER -p $SERV_PASS -c $SERV_ID
+$MOSQUITTO_CTRL addClientRole $SERV_USER service
+
+echo Registered sites:
+$MOSQUITTO_CTRL listClients | fgrep /r/UDMI-REFLECT/d/

@@ -10,12 +10,10 @@ if [[ $# != 0 ]]; then
     false
 fi
 
-ETC_DIR=/etc/mosquitto
-CERT_DIR=$ETC_DIR/certs
-CA_CERT=$CERT_DIR/ca.crt
+source $UDMI_ROOT/etc/mosquitto_ctrl.sh
 
-AUTH_USER=scrumptious
-AUTH_PASS=aardvark
+SERV_USER=rocket
+SERV_PASS=monkey
 CLNT_USER=kiwi
 CLNT_PASS=possum
 
@@ -29,22 +27,15 @@ CLIENT_DIR=$site_path/devices/$device_id
 site_config=$site_path/cloud_iot_config.json
 cloud_region=$(jq -r .cloud_region $site_config)
 registry_id=$(jq -r .registry_id $site_config)
-CLNT_ID=$registry_id/client
 
-hash_pass=$(sha256sum < $site_path/reflector/rsa_private.pkcs8)
-SERV_PASS=${hash_pass:0:8}
-SERV_USER=/r/UDMI-REFLECT/d/$registry_id
+CLNT_ID=$registry_id/client
 SERV_ID=$registry_id/server
-echo Using admin server $SERV_USER with password $SERV_PASS
 
 sudo chmod a+r $CERT_DIR/rsa_private.*
 bin/keygen CERT $CLIENT_DIR
 
-CTRL_OPTS="-u $AUTH_USER -P $AUTH_PASS --cafile $CA_CERT --cert $CERT_DIR/rsa_private.crt --key $CERT_DIR/rsa_private.pem"
 SERVER_OPTS="-i $SERV_ID -u $SERV_USER -P $SERV_PASS --cafile $CA_CERT --cert $CERT_DIR/rsa_private.crt --key $CERT_DIR/rsa_private.pem"
 CLIENT_OPTS="-i $CLNT_ID -u $CLNT_USER -P $CLNT_PASS --cafile $CA_CERT --cert $CLIENT_DIR/rsa_private.crt --key $CLIENT_DIR/rsa_private.pem"
-
-MOSQUITTO_CTRL="sudo mosquitto_ctrl $CTRL_OPTS dynsec"
 
 $MOSQUITTO_CTRL deleteClient $SERV_USER
 $MOSQUITTO_CTRL createClient $SERV_USER -p $SERV_PASS # No client_id to allow multiple backend connections.
