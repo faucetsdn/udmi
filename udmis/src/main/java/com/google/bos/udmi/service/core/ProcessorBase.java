@@ -15,7 +15,7 @@ import static com.google.udmi.util.GeneralUtils.compressJsonString;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
-import static com.google.udmi.util.GeneralUtils.getSubMap;
+import static com.google.udmi.util.GeneralUtils.getSubMapNull;
 import static com.google.udmi.util.GeneralUtils.getSubMapDefault;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
@@ -23,7 +23,6 @@ import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.isNullOrTruthy;
 import static com.google.udmi.util.JsonUtil.asMap;
-import static com.google.udmi.util.JsonUtil.getAsMap;
 import static com.google.udmi.util.JsonUtil.getDate;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.mapCast;
@@ -47,7 +46,6 @@ import com.google.bos.udmi.service.pod.SimpleHandler;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.Common;
-import com.google.udmi.util.GeneralUtils;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
@@ -329,7 +327,7 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
 
   private void augmentPayload(Map<String, Object> payload, String transactionId, Long version) {
     try {
-      Map<String, Object> asMap = getAsMap(getAsMap(payload, "system"), "testing");
+      Map<String, Object> asMap = getSubMapNull(getSubMapNull(payload, "system"), "testing");
       ifNotNullThen(asMap, map -> map.put("transaction_id", transactionId));
       ifNotNullThen(asMap, map -> map.put("config_base", version));
     } catch (Exception e) {
@@ -338,8 +336,8 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
   }
 
   private String updateWithLastStart(Map<String, Object> oldPayload, Date newLastStart) {
-    Map<String, Object> oldSystem = getSubMap(oldPayload, "system");
-    Map<String, Object> oldOperation = getSubMap(oldSystem, "operation");
+    Map<String, Object> oldSystem = getSubMapNull(oldPayload, "system");
+    Map<String, Object> oldOperation = getSubMapNull(oldSystem, "operation");
     if (oldOperation == null) {
       return null;
     }
@@ -429,12 +427,12 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
     dispatcher.registerHandler(clazz, handler);
   }
 
-  MessageContinuation getContinuation(Object message) {
+  public MessageContinuation getContinuation(Object message) {
     return dispatcher.getContinuation(message);
   }
 
   @TestOnly
-  MessageDispatcher getDispatcher() {
+  public MessageDispatcher getDispatcher() {
     return dispatcher;
   }
 

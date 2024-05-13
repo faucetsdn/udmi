@@ -5,6 +5,7 @@ import static com.google.bos.udmi.service.core.DistributorPipe.clientId;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.isNullOrNotEmpty;
+import static java.lang.String.format;
 
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.udmi.util.GeneralUtils;
@@ -169,16 +170,19 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
   }
 
   @Override
-  public String getSystemEntry(String key) {
+  public String getEntry(String key) {
     try {
       KV kvClient = client.getKVClient();
       GetResponse response = kvClient.get(bytes(key)).get(QUERY_TIMEOUT_SEC, TimeUnit.SECONDS);
       if (response.getCount() == 0) {
         return null;
       }
+      if (response.getCount() > 1) {
+        throw new IllegalStateException("Unexpected key return count " + response.getCount());
+      }
       return asString(response.getKvs().get(0).getValue());
     } catch (Exception e) {
-      throw new RuntimeException("While getting system key " + key);
+      throw new RuntimeException("While getting db entry " + key);
     }
   }
 }

@@ -143,5 +143,5 @@ expected_topic=/r/$registry_id/d/$device_id/state
 
 [[ $received_no != $serial_no ]] && fail Mismatched/missing serial no: $received_no != $serial_no
 
-echo export MQTT_TEST_BROKER=tcp://127.0.0.1:1883
+echo export MQTT_TEST_BROKER=tcp://localhost:8883
 echo Done with mosquitto pubber check.

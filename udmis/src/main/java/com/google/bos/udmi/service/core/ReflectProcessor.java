@@ -67,7 +67,7 @@ public class ReflectProcessor extends ProcessorBase {
     super(config);
   }
 
-  private static String makeTransactionId() {
+  public static String makeTransactionId() {
     return format("RP:%08x", Objects.hash(System.currentTimeMillis(), Thread.currentThread()));
   }
 

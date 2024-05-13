@@ -20,6 +20,9 @@
     }
   },
   "iot_access": {
+    "iot-access": {
+      "project_id": "implicit, UDMI-REFLECT"
+    },
     "implicit": {
       "provider": "implicit",
       "options": "enabled=${ETCD_CLUSTER}"
