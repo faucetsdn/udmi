@@ -44,6 +44,8 @@ $MOSQUITTO_CTRL addRoleACL device publishClientSend '/r/+/d/+/#' allow
 $MOSQUITTO_CTRL createRole service
 $MOSQUITTO_CTRL addRoleACL service subscribePattern '/r/+/d/+/#' allow
 $MOSQUITTO_CTRL addRoleACL service publishClientSend '/r/+/d/+/#' allow
+$MOSQUITTO_CTRL addRoleACL service subscribePattern '/reflect/+/#' allow
+$MOSQUITTO_CTRL addRoleACL service publishClientSend '/reflect/+/#' allow
 
 clients=$($MOSQUITTO_CTRL listClients)
 if [[ $clients =~ ${AUTH_USER} ]]; then

@@ -21,6 +21,7 @@ import com.google.common.base.Strings;
 import com.google.udmi.util.CertManager;
 import java.io.File;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -54,6 +55,7 @@ public class SimpleMqttPipe extends MessageBase {
   private static final String SUB_BASE_FORMAT = "/r/+/d/+/%s";
   private static final String SSL_SECRETS_DIR = System.getenv("SSL_SECRETS_DIR");
   private static final String DEFAULT_NAMESPACE = "default";
+  private static final long CONNECT_TIMEOUT_SEC = 10;
   private final String autoId = format("mqtt-%08x", (long) (Math.random() * 0x100000000L));
   private final String clientId;
   private final String namespace;
@@ -62,6 +64,7 @@ public class SimpleMqttPipe extends MessageBase {
   private final ScheduledFuture<?> scheduledFuture;
   private final CertManager certManager;
   private final String recvId;
+  private final CountDownLatch connectLatch = new CountDownLatch(1);
 
   /**
    * Create new pipe instance for the given config.
@@ -92,6 +95,29 @@ public class SimpleMqttPipe extends MessageBase {
     envelope.subFolder = SubFolder.ERROR;
     envelope.subType = SubType.INVALID;
     return envelope;
+  }
+
+  static Map<String, String> parseEnvelopeTopic(String topic) {
+    // 0/1/2       /3/4     /5   [/6     [/7      ]]
+    //  /r/REGISTRY/d/DEVICE/TYPE[/FOLDER[/GATEWAY]]
+    String[] parts = topic.split("/", 12);
+    if (parts.length < 6 || parts.length > 8) {
+      throw new RuntimeException("Unexpected topic length: " + topic);
+    }
+    Envelope envelope = new Envelope();
+    checkState(Strings.isNullOrEmpty(parts[0]), "non-empty prefix");
+    checkState("r".equals(parts[1]), "expected registries");
+    envelope.deviceRegistryId = nullAsNull(parts[2]);
+    checkState("d".equals(parts[3]), "expected devices");
+    envelope.deviceId = nullAsNull(parts[4]);
+    envelope.subType = ofNullable(nullAsNull(parts[5])).map(SubType::fromValue).orElse(null);
+    if (parts.length > 6) {
+      envelope.subFolder = ofNullable(nullAsNull(parts[6])).map(SubFolder::fromValue).orElse(null);
+    }
+    if (parts.length > 7) {
+      envelope.gatewayId = nullAsNull(parts[7]);
+    }
+    return toStringMap(envelope);
   }
 
   @Override
@@ -180,31 +206,21 @@ public class SimpleMqttPipe extends MessageBase {
   }
 
   private String makeTopic(Envelope envelope) {
-    return format("/r/%s/d/%s/%s/%s/%s", envelope.deviceRegistryId, envelope.deviceId,
-        envelope.subType, envelope.subFolder, envelope.gatewayId);
+    String topic = "";
+    if (envelope.gatewayId != null) {
+      topic = "/" + envelope.gatewayId + topic;
+    }
+    if (envelope.subFolder != null || !topic.isEmpty()) {
+      topic = "/" + envelope.subFolder + topic;
+    }
+    if (envelope.subType != null || !topic.isEmpty()) {
+      topic = "/" + envelope.subType + topic;
+    }
+    return format("/r/%s/d/%s", envelope.deviceRegistryId, envelope.deviceId) + topic;
   }
 
-  static Map<String, String> parseEnvelopeTopic(String topic) {
-    // 0/1/2       /3/4     /5   [/6     [/7      ]]
-    //  /r/REGISTRY/d/DEVICE/TYPE[/FOLDER[/GATEWAY]]
-    String[] parts = topic.split("/", 12);
-    if (parts.length < 6 || parts.length > 8) {
-      throw new RuntimeException("Unexpected topic length: " + topic);
-    }
-    Envelope envelope = new Envelope();
-    checkState(Strings.isNullOrEmpty(parts[0]), "non-empty prefix");
-    checkState("r".equals(parts[1]), "expected registries");
-    envelope.deviceRegistryId = nullAsNull(parts[2]);
-    checkState("d".equals(parts[3]), "expected devices");
-    envelope.deviceId = nullAsNull(parts[4]);
-    envelope.subType = ofNullable(nullAsNull(parts[5])).map(SubType::fromValue).orElse(null);
-    if (parts.length > 6) {
-      envelope.subFolder = ofNullable(nullAsNull(parts[6])).map(SubFolder::fromValue).orElse(null);
-    }
-    if (parts.length > 7) {
-      envelope.gatewayId = nullAsNull(parts[7]);
-    }
-    return toStringMap(envelope);
+  private String makeTransactionId() {
+    return format("MP:%08x", (long) (Math.random() * 0x100000000L));
   }
 
   private void subscribeToMessages() {
@@ -230,6 +246,7 @@ public class SimpleMqttPipe extends MessageBase {
   private void tryConnect(boolean forceDisconnect) {
     try {
       connect(forceDisconnect);
+      connectLatch.countDown();
     } catch (Exception e) {
       error("While attempting scheduled connect for %s: %s", clientId, friendlyStackTrace(e));
     }
@@ -238,6 +255,11 @@ public class SimpleMqttPipe extends MessageBase {
   @Override
   public void activate(Consumer<Bundle> bundleConsumer) {
     super.activate(bundleConsumer);
+    try {
+      checkState(connectLatch.await(CONNECT_TIMEOUT_SEC, TimeUnit.SECONDS), "connect timeout");
+    } catch (Exception e) {
+      throw new RuntimeException("Failed initial connection attempt", e);
+    }
     subscribeToMessages();
   }
 
@@ -275,10 +297,6 @@ public class SimpleMqttPipe extends MessageBase {
         error("Exception receiving message on %s: %s", clientId, friendlyStackTrace(e));
       }
     }
-  }
-
-  private String makeTransactionId() {
-    return format("MP:%08x", (long) (Math.random() * 0x100000000L));
   }
 
   @Override

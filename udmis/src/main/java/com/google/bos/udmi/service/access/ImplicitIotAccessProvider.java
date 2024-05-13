@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 import udmi.schema.CloudModel;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
+import udmi.schema.Envelope.SubType;
 import udmi.schema.IotAccess;
 
 /**
@@ -111,6 +112,11 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   @Override
   public String updateConfig(String registryId, String deviceId, String config, Long version) {
-    throw new RuntimeException("updateConfig not yet implemented");
+    Envelope envelope = new Envelope();
+    envelope.deviceRegistryId = registryId;
+    envelope.deviceId = deviceId;
+    envelope.subType = SubType.CONFIG;
+    reflect.getDispatcher().withEnvelope(envelope).publish(asMap(config));
+    return config;
   }
 }

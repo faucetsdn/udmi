@@ -62,6 +62,7 @@ public class ReflectProcessor extends ProcessorBase {
 
   public static final String PAYLOAD_KEY = "payload";
   private static final Date START_TIME = new Date();
+  private static final String UDMI_REFLECT = "UDMI-REFLECT";
 
   public ReflectProcessor(EndpointConfiguration config) {
     super(config);
@@ -75,20 +76,26 @@ public class ReflectProcessor extends ProcessorBase {
   protected void defaultHandler(Object message) {
     MessageContinuation continuation = getContinuation(message);
     Envelope reflection = continuation.getEnvelope();
+
+    boolean validFolder = reflection.subFolder == null || reflection.subFolder == SubFolder.UDMI;
+    if (!validFolder || !UDMI_REFLECT.equals(reflection.deviceRegistryId)) {
+      return;
+    }
+
     Map<String, Object> objectMap = toMap(message);
     try {
-      if (reflection.subFolder == null) {
+      if (reflection.subFolder == null && (reflection.subType == null || reflection.subType == SubType.STATE)) {
         reflectStateHandler(reflection, extractUdmiState(message));
-      } else if (reflection.subFolder != SubFolder.UDMI) {
-        throw new IllegalStateException("Unexpected reflect subfolder " + reflection.subFolder);
       } else if (message instanceof UdmiState distributedUpdate) {
         updateAwareness(reflection, distributedUpdate);
-      } else {
+      } else if (reflection.subType != SubType.CONFIG) {
         Object payload = extractMessagePayload(objectMap);
         Envelope envelope = extractMessageEnvelope(objectMap);
         reflection.transactionId = firstNonNull(envelope.transactionId, reflection.transactionId,
             ReflectProcessor::makeTransactionId);
         processReflection(reflection, envelope, payload);
+      } else {
+        debug(format("Some other kind of message %s/%s", reflection.subType, reflection.subFolder));
       }
     } catch (Exception e) {
       processException(reflection, objectMap, e);

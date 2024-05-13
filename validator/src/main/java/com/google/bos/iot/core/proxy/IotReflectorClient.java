@@ -353,11 +353,25 @@ public class IotReflectorClient implements MessagePublisher {
 
   private List<String> parseMessageTopic(String topic) {
     List<String> parts = new ArrayList<>(Arrays.asList(topic.substring(1).split("/")));
-    checkState("devices".equals(parts.remove(0)), "unknown parsed path field: " + topic);
-    // Next field is registry, not device, since the reflector device holds the site registry.
-    String parsedId = parts.remove(0);
-    checkState(registryId.equals(parsedId),
-        format("registry id %s does not match expected %s", parsedId, registryId));
+    String leader = parts.remove(0);
+    if ("devices".equals(leader)) {
+      // Next field is registry, not device, since the reflector device id is the site registry.
+      String deviceId = parts.remove(0);
+      checkState(registryId.equals(deviceId),
+          format("device id %s does not match expected %s", deviceId, registryId));
+    } else if ("r".equals(leader)) {
+      // Next field is registry, not device, since the reflector device id is the site registry.
+      String parsedReg = parts.remove(0);
+      checkState(UDMI_REFLECT.equals(parsedReg),
+          format("registry id %s does not match expected %s", parsedReg, UDMI_REFLECT));
+      String devSep = parts.remove(0);
+      checkState("d".equals(devSep), format("unexpected dev separator %s", devSep));
+      String deviceId = parts.remove(0);
+      checkState(registryId.equals(deviceId),
+          format("registry id %s does not match expected %s", deviceId, registryId));
+    } else {
+      throw new RuntimeException("Unknown topic string " + topic);
+    }
     return parts;
   }
 

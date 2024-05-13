@@ -12,6 +12,9 @@
     }
   },
   "flows": {
+    "reflect": {
+      "recv_id": "#"
+    },
     "state": {
       "recv_id": "state"
     },
