@@ -35,7 +35,6 @@ import java.security.PrivateKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -78,7 +77,7 @@ public class MqttPublisher implements MessagePublisher {
   private static final long STATE_RATE_LIMIT_MS = 1000 * 2;
   private static final String CLIENT_ID_FMT = "projects/%s/locations/%s/registries/%s/devices/%s";
   private static final String DEVICE_TOPIC_FMT = "/devices/%s";
-  private static final String FULL_TOPIC_FMT = "/projects/%s/registries/%s/devices/%s";
+  private static final String FULL_TOPIC_FMT = "/r/%s/d/%s";
   private static final String ATTACH_TOPIC = "/attach";
   private static final String CONFIG_TOPIC = "/config";
   private static final String ERROR_TOPIC = "/errors";
@@ -210,7 +209,7 @@ public class MqttPublisher implements MessagePublisher {
   private String getTopicBase() {
     return switch (iotProvider) {
       case IMPLICIT, GBOS, CLEARBLADE -> format(DEVICE_TOPIC_FMT, deviceId);
-      case MQTT -> format(FULL_TOPIC_FMT, projectId, registryId, deviceId);
+      case MQTT -> format(FULL_TOPIC_FMT, registryId, deviceId);
       default -> throw new RuntimeException("Unknown iotProvider " + iotProvider);
     };
   }
