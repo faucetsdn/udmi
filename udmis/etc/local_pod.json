@@ -24,7 +24,7 @@
   },
   "iot_access": {
     "iot-access": {
-      "project_id": "implicit, UDMI-REFLECT"
+      "project_id": "implicit"
     },
     "implicit": {
       "provider": "implicit",
