@@ -333,6 +333,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
         RegistryName.of(projectId, location, deviceRegistryId).getRegistryFullName();
     String pageToken = null;
     HashMap<String, CloudModel> collect = new HashMap<>();
+    int queryCount = 0;
     do {
       DevicesListRequest request = DevicesListRequest.Builder.newBuilder().setParent(
               registryFullName)
@@ -346,8 +347,9 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
               .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
       collect.putAll(responseMap);
       pageToken = response.getNextPageToken();
-      debug(format("fetchDevices %s found %d total %d more %s", deviceRegistryId,
-          responseMap.size(), collect.size(), pageToken != null));
+      queryCount++;
+      debug(format("fetchDevices %s #%d found %d total %d more %s", deviceRegistryId,
+          queryCount, responseMap.size(), collect.size(), pageToken != null));
     } while (pageToken != null);
     return collect;
   }
