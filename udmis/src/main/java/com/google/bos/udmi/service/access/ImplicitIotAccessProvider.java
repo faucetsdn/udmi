@@ -107,6 +107,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     envelope.deviceRegistryId = registryId;
     envelope.deviceId = deviceId;
     envelope.subFolder = folder;
+    envelope.subType = SubType.COMMANDS;
     reflect.getDispatcher().withEnvelope(envelope).publish(asMap(message));
   }
 

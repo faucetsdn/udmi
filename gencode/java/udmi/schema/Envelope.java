@@ -172,6 +172,7 @@ public class Envelope {
     public enum SubType {
 
         INVALID("invalid"),
+        UDMI("udmi"),
         EVENTS("events"),
         ERRORS("errors"),
         COMMANDS("commands"),

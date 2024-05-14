@@ -76,27 +76,22 @@ public class ReflectProcessor extends ProcessorBase {
   protected void defaultHandler(Object message) {
     MessageContinuation continuation = getContinuation(message);
     Envelope reflection = continuation.getEnvelope();
-
-    boolean validFolder = reflection.subFolder == null || reflection.subFolder == SubFolder.UDMI;
-    if (!validFolder || !reflection.deviceRegistryId.endsWith(UDMI_REFLECT)) {
-      return;
-    }
-
     Map<String, Object> objectMap = toMap(message);
     try {
-      boolean maybeState = reflection.subType == null || reflection.subType == SubType.STATE;
-      if (reflection.subFolder == null && maybeState) {
+      boolean isCommand = objectMap.containsKey(PAYLOAD_KEY);
+      if (reflection.subFolder == null && !isCommand) {
         reflectStateHandler(reflection, extractUdmiState(message));
+      } else if (reflection.subFolder != SubFolder.UDMI && reflection.subType != SubType.UDMI) {
+        throw new IllegalStateException(format("Neither type %s nor folder %s is udmi",
+            reflection.subType, reflection.subFolder));
       } else if (message instanceof UdmiState distributedUpdate) {
         updateAwareness(reflection, distributedUpdate);
-      } else if (reflection.subType != SubType.CONFIG) {
+      } else {
         Object payload = extractMessagePayload(objectMap);
         Envelope envelope = extractMessageEnvelope(objectMap);
         reflection.transactionId = firstNonNull(envelope.transactionId, reflection.transactionId,
             ReflectProcessor::makeTransactionId);
         processReflection(reflection, envelope, payload);
-      } else {
-        debug(format("Some other kind of message %s/%s", reflection.subType, reflection.subFolder));
       }
     } catch (Exception e) {
       processException(reflection, objectMap, e);

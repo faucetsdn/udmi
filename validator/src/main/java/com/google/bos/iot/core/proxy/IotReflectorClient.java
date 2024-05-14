@@ -87,6 +87,7 @@ public class IotReflectorClient implements MessagePublisher {
   private final String registryId;
   private final String projectId;
   private final String updateTo;
+  private final IotProvider iotProvider;
   private Date reflectorStateTimestamp;
   private boolean isInstallValid;
   private boolean active;
@@ -112,7 +113,8 @@ public class IotReflectorClient implements MessagePublisher {
     String cloudRegion = ofNullable(iotConfig.reflect_region)
         .orElse(iotConfig.cloud_region);
     String prefix = getNamespacePrefix(iotConfig.udmi_namespace);
-    iotConfig.iot_provider = ofNullable(iotConfig.iot_provider).orElse(IotProvider.GBOS);
+    iotProvider = ofNullable(iotConfig.iot_provider).orElse(IotProvider.GBOS);
+    iotConfig.iot_provider = iotProvider;
     subscriptionId = format("%s/%s/%s/%s%s/%s",
         iotConfig.iot_provider, projectId, cloudRegion, prefix, UDMI_REFLECT, registryId);
 
@@ -212,7 +214,21 @@ public class IotReflectorClient implements MessagePublisher {
 
     System.err.println("UDMI setting reflectorState: " + stringify(map));
 
-    publisher.publish(registryId, STATE_TOPIC, stringify(map));
+    publisher.publish(registryId, getReflectorTopic(), stringify(map));
+  }
+
+  private String getReflectorTopic() {
+    return switch (iotProvider) {
+      case MQTT -> UDMI_FOLDER;
+      default -> STATE_TOPIC;
+    };
+  }
+
+  private String getPublishTopic() {
+    return switch (iotProvider) {
+      case MQTT -> UDMI_FOLDER;
+      default -> UDMI_TOPIC;
+    };
   }
 
   @Override
@@ -415,7 +431,7 @@ public class IotReflectorClient implements MessagePublisher {
     String transactionId = getNextTransactionId();
     envelope.transactionId = transactionId;
     envelope.publishTime = new Date();
-    publisher.publish(registryId, UDMI_TOPIC, stringify(envelope));
+    publisher.publish(registryId, getPublishTopic(), stringify(envelope));
     return transactionId;
   }
 

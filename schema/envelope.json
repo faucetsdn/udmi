@@ -67,6 +67,7 @@
     "subType": {
       "enum": [
         "invalid",
+        "udmi",
         "events",
         "errors",
         "commands",

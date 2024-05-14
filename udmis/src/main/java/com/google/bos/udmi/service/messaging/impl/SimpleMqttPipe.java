@@ -98,26 +98,31 @@ public class SimpleMqttPipe extends MessageBase {
   }
 
   static Map<String, String> parseEnvelopeTopic(String topic) {
-    // 0/1/2       /3/4     /5   [/6     [/7      ]]
-    //  /r/REGISTRY/d/DEVICE/TYPE[/FOLDER[/GATEWAY]]
-    String[] parts = topic.split("/", 12);
-    if (parts.length < 6 || parts.length > 8) {
-      throw new RuntimeException("Unexpected topic length: " + topic);
+    try {
+      // 0/1/2       /3/4     /5   [/6     [/7      ]]
+      //  /r/REGISTRY/d/DEVICE/TYPE[/FOLDER[/GATEWAY]]
+      String[] parts = topic.split("/", 12);
+      if (parts.length < 6 || parts.length > 8) {
+        throw new RuntimeException("Unexpected topic length: " + topic);
+      }
+      Envelope envelope = new Envelope();
+      checkState(Strings.isNullOrEmpty(parts[0]), "non-empty prefix");
+      checkState("r".equals(parts[1]), "expected registries");
+      envelope.deviceRegistryId = nullAsNull(parts[2]);
+      checkState("d".equals(parts[3]), "expected devices");
+      envelope.deviceId = nullAsNull(parts[4]);
+      envelope.subType = ofNullable(nullAsNull(parts[5])).map(SubType::fromValue).orElse(null);
+      if (parts.length > 6) {
+        envelope.subFolder =
+            ofNullable(nullAsNull(parts[6])).map(SubFolder::fromValue).orElse(null);
+      }
+      if (parts.length > 7) {
+        envelope.gatewayId = nullAsNull(parts[7]);
+      }
+      return toStringMap(envelope);
+    } catch (Exception e) {
+      throw new RuntimeException("While parsing envelope topic " + topic, e);
     }
-    Envelope envelope = new Envelope();
-    checkState(Strings.isNullOrEmpty(parts[0]), "non-empty prefix");
-    checkState("r".equals(parts[1]), "expected registries");
-    envelope.deviceRegistryId = nullAsNull(parts[2]);
-    checkState("d".equals(parts[3]), "expected devices");
-    envelope.deviceId = nullAsNull(parts[4]);
-    envelope.subType = ofNullable(nullAsNull(parts[5])).map(SubType::fromValue).orElse(null);
-    if (parts.length > 6) {
-      envelope.subFolder = ofNullable(nullAsNull(parts[6])).map(SubFolder::fromValue).orElse(null);
-    }
-    if (parts.length > 7) {
-      envelope.gatewayId = nullAsNull(parts[7]);
-    }
-    return toStringMap(envelope);
   }
 
   @Override
@@ -197,7 +202,12 @@ public class SimpleMqttPipe extends MessageBase {
   private MqttMessage makeMqttMessage(Bundle bundle) {
     MqttMessage message = new MqttMessage();
     message.setPayload(bundle.sendBytes());
+    message.setRetained(shouldRetainMessage(bundle));
     return message;
+  }
+
+  private boolean shouldRetainMessage(Bundle bundle) {
+    return bundle.envelope.subType == SubType.CONFIG;
   }
 
   private String makeMqttTopic(Bundle bundle) {
