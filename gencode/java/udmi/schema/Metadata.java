@@ -2,12 +2,15 @@
 package udmi.schema;
 
 import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 
 /**
@@ -82,12 +85,13 @@ public class Metadata {
     @JsonPropertyDescription("Version of schema supported by the device")
     public java.lang.String device_version;
     /**
-     * Free from text entry for a tag associated with the device
+     * Tags assosciated with the device
      * 
      */
     @JsonProperty("tags")
-    @JsonPropertyDescription("Free from text entry for a tag associated with the device")
-    public java.lang.String tags;
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    @JsonPropertyDescription("Tags assosciated with the device")
+    public Set<Object> tags = new LinkedHashSet<Object>();
     /**
      * Cloud Model
      * <p>

@@ -40,9 +40,13 @@
       "type": "string"
     },
     "tags":{
-      "description": "Free from text entry for a tag associated with the device",
-      "type": "string",
-      "examples": ["green", "electric,total,lighting,building"]
+      "description": "Tags assosciated with the device",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "pattern": "^[A-Za-z0-9]+$"
+      },
+      "examples": [["lighting"], ["energy", "building"]]
     },
     "cloud": {
       "$ref": "file:model_cloud.json#"

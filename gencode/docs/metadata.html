@@ -258,19 +258,52 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#tags" onclick="anchorLink('tags')">tags</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
-<span class="description"><p>Free from text entry for a tag associated with the device</p>
+    <a href="#tags" onclick="anchorLink('tags')">tags</a></div><span class="badge badge-dark value-type">Type: array</span><br/>
+<span class="description"><p>Tags assosciated with the device</p>
 </span>
             
 
             
             
 
-            <br/>
+            <p><span class="badge badge-light restriction unique-items-restriction" id="tags_uniqueItems">All items must be unique</span></p><h4>Each item of this array must be:</h4>
+    <div class="card">
+        <div class="card-body items-definition" id="tags_items">
+            
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#tags" onclick="anchorLink('tags')">tags</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#tags_items" onclick="anchorLink('tags_items')">tags items</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="pattern-value" id="tags_items_pattern">Must match regular expression: <code>^[A-Za-z0-9]+$</code></span>
+            
+
+            
+            
+
+            
+        </div>
+    </div><br/>
 <div class="badge badge-secondary">Examples:</div>
-<br/><div id="tags_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;green&quot;</span>
+<br/><div id="tags_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="p">[</span>
+<span class="w">    </span><span class="s2">&quot;lighting&quot;</span>
+<span class="p">]</span>
 </pre></div>
-</div><div id="tags_ex2" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;electric,total,lighting,building&quot;</span>
+</div><div id="tags_ex2" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="p">[</span>
+<span class="w">    </span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;building&quot;</span>
+<span class="p">]</span>
 </pre></div>
 </div>
             </div>
@@ -4109,18 +4142,18 @@
         </div>
     </div>
 </div>
-<div class="accordion" id="accordionpointset_points_pattern1_translation">
+<div class="accordion" id="accordionpointset_points_pattern1_mapping">
     <div class="card">
-        <div class="card-header" id="headingpointset_points_pattern1_translation">
+        <div class="card-header" id="headingpointset_points_pattern1_mapping">
             <h2 class="mb-0">
-                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#pointset_points_pattern1_translation"
-                        aria-expanded="" aria-controls="pointset_points_pattern1_translation" onclick="setAnchor('#pointset_points_pattern1_translation')"><span class="property-name">translation</span></button>
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#pointset_points_pattern1_mapping"
+                        aria-expanded="" aria-controls="pointset_points_pattern1_mapping" onclick="setAnchor('#pointset_points_pattern1_mapping')"><span class="property-name">mapping</span></button>
             </h2>
         </div>
 
-        <div id="pointset_points_pattern1_translation"
-             class="collapse property-definition-div" aria-labelledby="headingpointset_points_pattern1_translation"
-             data-parent="#accordionpointset_points_pattern1_translation">
+        <div id="pointset_points_pattern1_mapping"
+             class="collapse property-definition-div" aria-labelledby="headingpointset_points_pattern1_mapping"
+             data-parent="#accordionpointset_points_pattern1_mapping">
             <div class="card-body pl-5">
 
     <div class="breadcrumbs">root
@@ -4151,79 +4184,78 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#pointset_points_pattern1_translation" onclick="anchorLink('pointset_points_pattern1_translation')">translation</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
-<span class="description"><p>An ontological translation for the point</p>
+    <a href="#pointset_points_pattern1_mapping" onclick="anchorLink('pointset_points_pattern1_mapping')">mapping</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>Information about a specific point name of the device.</p>
 </span>
+
+     <span class="badge badge-info no-additional">No Additional Properties</span>
             
 
             
             
 
-            <br/>
-<div class="badge badge-secondary">Example:</div>
-<br/><div id="pointset_points_pattern1_translation_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;return_air_temperature_sensor&quot;</span>
-</pre></div>
-</div>
+            
+<div class="accordion" id="accordionpointset_points_pattern1_mapping_name">
+    <div class="card">
+        <div class="card-header" id="headingpointset_points_pattern1_mapping_name">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#pointset_points_pattern1_mapping_name"
+                        aria-expanded="" aria-controls="pointset_points_pattern1_mapping_name" onclick="setAnchor('#pointset_points_pattern1_mapping_name')"><span class="property-name">name</span></button>
+            </h2>
+        </div>
+
+        <div id="pointset_points_pattern1_mapping_name"
+             class="collapse property-definition-div" aria-labelledby="headingpointset_points_pattern1_mapping_name"
+             data-parent="#accordionpointset_points_pattern1_mapping_name">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset" onclick="anchorLink('pointset')">pointset</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset_points" onclick="anchorLink('pointset_points')">points</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset_points_pattern1" onclick="anchorLink('pointset_points_pattern1')">Point Pointset Model</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset_points_pattern1_mapping" onclick="anchorLink('pointset_points_pattern1_mapping')">mapping</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset_points_pattern1_mapping_name" onclick="anchorLink('pointset_points_pattern1_mapping_name')">name</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>Name of mapping for the point</p>
+</span><span class="pattern-value" id="pointset_points_pattern1_mapping_name_pattern">Must match regular expression: <code>^[a-z][a-z0-9]*(_[a-z0-9]+)*$</code></span>
+            
+
+            
+            
+
+            
             </div>
         </div>
     </div>
-</div>
-<div class="accordion" id="accordionpointset_points_pattern1_tags">
-    <div class="card">
-        <div class="card-header" id="headingpointset_points_pattern1_tags">
-            <h2 class="mb-0">
-                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#pointset_points_pattern1_tags"
-                        aria-expanded="" aria-controls="pointset_points_pattern1_tags" onclick="setAnchor('#pointset_points_pattern1_tags')"><span class="property-name">tags</span></button>
-            </h2>
-        </div>
-
-        <div id="pointset_points_pattern1_tags"
-             class="collapse property-definition-div" aria-labelledby="headingpointset_points_pattern1_tags"
-             data-parent="#accordionpointset_points_pattern1_tags">
-            <div class="card-body pl-5">
-
-    <div class="breadcrumbs">root
-        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-            <path
-                fill-rule="evenodd"
-                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
-            />
-        </svg>
-    <a href="#pointset" onclick="anchorLink('pointset')">pointset</a>
-        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-            <path
-                fill-rule="evenodd"
-                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
-            />
-        </svg>
-    <a href="#pointset_points" onclick="anchorLink('pointset_points')">points</a>
-        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-            <path
-                fill-rule="evenodd"
-                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
-            />
-        </svg>
-    <a href="#pointset_points_pattern1" onclick="anchorLink('pointset_points_pattern1')">Point Pointset Model</a>
-        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-            <path
-                fill-rule="evenodd"
-                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
-            />
-        </svg>
-    <a href="#pointset_points_pattern1_tags" onclick="anchorLink('pointset_points_pattern1_tags')">tags</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
-<span class="description"><p>Descriptor for the point</p>
-</span>
-            
-
-            
-            
-
-            <br/>
-<div class="badge badge-secondary">Examples:</div>
-<br/><div id="pointset_points_pattern1_tags_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;lighting&quot;</span>
-</pre></div>
-</div><div id="pointset_points_pattern1_tags_ex2" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;lighting,building&quot;</span>
-</pre></div>
 </div>
             </div>
         </div>

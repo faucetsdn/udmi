@@ -82,7 +82,7 @@ class Metadata:
     if self.device_version:
       result['device_version'] = self.device_version # 5
     if self.tags:
-      result['tags'] = self.tags # 5
+      result['tags'] = self.tags # 1
     if self.cloud:
       result['cloud'] = self.cloud.to_dict() # 4
     if self.system:

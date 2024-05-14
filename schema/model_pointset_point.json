@@ -43,15 +43,8 @@
       "type": "string",
       "examples": ["AI3", "400070"]
     },
-    "translation": {
-      "description": "An ontological translation for the point",
-      "type": "string",
-      "examples": ["return_air_temperature_sensor"]
-    },
-    "tags": {
-      "description": "Descriptor for the point",
-      "type": "string",
-      "examples": ["lighting", "lighting,building"]
+    "mapping": {
+      "$ref": "file:model_pointset_point_mapping.json#"
     }
   }
 }
