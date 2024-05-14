@@ -62,7 +62,7 @@ public class ReflectProcessor extends ProcessorBase {
 
   public static final String PAYLOAD_KEY = "payload";
   private static final Date START_TIME = new Date();
-  private static final String UDMI_REFLECT = "UDMI-REFLECT";
+  static final String UDMI_REFLECT = "UDMI-REFLECT";
 
   public ReflectProcessor(EndpointConfiguration config) {
     super(config);
