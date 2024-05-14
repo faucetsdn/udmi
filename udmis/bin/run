@@ -11,7 +11,7 @@ shift
 ROOT=$(dirname $0)/..
 cd $ROOT
 
-PROFILE_BASE=profile/
+PROFILE_BASE=/tmp/profile/
 mkdir -p $PROFILE_BASE
 
 echo
