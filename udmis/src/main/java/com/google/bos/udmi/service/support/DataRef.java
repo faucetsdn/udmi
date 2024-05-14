@@ -57,6 +57,10 @@ public class DataRef {
   }
 
   public String get() {
-    return provider.getEntry(getKey());
+    return provider.get(getKey());
+  }
+
+  public void put(String value) {
+    provider.put(getKey(), value);
   }
 }

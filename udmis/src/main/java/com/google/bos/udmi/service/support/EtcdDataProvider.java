@@ -4,6 +4,7 @@ import static com.google.api.client.util.Preconditions.checkState;
 import static com.google.bos.udmi.service.core.DistributorPipe.clientId;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.isNullOrNotEmpty;
 import static java.lang.String.format;
 
@@ -45,6 +46,7 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
   private static final Duration CLIENT_THRESHOLD = Duration.ofMinutes(THRESHOLD_MIN);
   private final IotAccess config;
   private final Client client;
+  private final KV kvClient;
   private final Map<String, String> options;
   private final boolean enabled;
   private ScheduledExecutorService scheduledExecutorService;
@@ -57,6 +59,7 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
     enabled = isNullOrNotEmpty(options.get(ENABLED_KEY));
     config = iotConfig;
     client = enabled ? initializeClient() : null;
+    kvClient = ifNotNullGet(client, Client::getKVClient);
   }
 
   private static String asString(ByteSequence input) {
@@ -170,9 +173,8 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
   }
 
   @Override
-  public String getEntry(String key) {
+  public String get(String key) {
     try {
-      KV kvClient = client.getKVClient();
       GetResponse response = kvClient.get(bytes(key)).get(QUERY_TIMEOUT_SEC, TimeUnit.SECONDS);
       if (response.getCount() == 0) {
         return null;
@@ -183,6 +185,15 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
       return asString(response.getKvs().get(0).getValue());
     } catch (Exception e) {
       throw new RuntimeException("While getting db entry " + key);
+    }
+  }
+
+  @Override
+  public void put(String key, String value) {
+    try {
+      kvClient.put(bytes(key), bytes(value)).get(QUERY_TIMEOUT_SEC, TimeUnit.SECONDS);
+    } catch (Exception e) {
+      throw new RuntimeException("While putting db entry " + key);
     }
   }
 }
