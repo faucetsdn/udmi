@@ -51,10 +51,12 @@ public class IotReflectorClient implements IotProvider {
   // Requires functions that support cloud device manager support.
   private static final String CONFIG_TOPIC_FORMAT = "%s/config";
   private static final File ERROR_DIR = new File("out");
+  public static final double SLOW_QUERY_THRESHOLD = 10000;
   private final com.google.bos.iot.core.proxy.IotReflectorClient messageClient;
   private final Map<String, CompletableFuture<Map<String, Object>>> futures =
       new ConcurrentHashMap<>();
   private final ExecutorService executor = Executors.newSingleThreadExecutor();
+  private final boolean isSlow;
 
   /**
    * Create a new client.
@@ -67,6 +69,11 @@ public class IotReflectorClient implements IotProvider {
     messageClient = new com.google.bos.iot.core.proxy.IotReflectorClient(executionConfiguration,
         Validator.TOOLS_FUNCTIONS_VERSION);
     executor.execute(this::processReplies);
+    isSlow = siteModel.getDeviceIds().size() > SLOW_QUERY_THRESHOLD;
+    if (isSlow) {
+      // TODO: Replace this with a dynamic mechanism that gets incremental progress from UDMIS.
+      System.err.println("Using very long list devices timeout because of large number of devices");
+    }
   }
 
   @Override
@@ -156,8 +163,8 @@ public class IotReflectorClient implements IotProvider {
   @Nullable
   private CloudModel fetchCloudModel(String deviceId) {
     try {
-      Map<String, Object> message = transaction(deviceId, CLOUD_QUERY_TOPIC, EMPTY_MESSAGE,
-          QuerySpeed.ETERNITY);
+      QuerySpeed speed = isSlow ? QuerySpeed.ETERNITY : QuerySpeed.SLOW;
+      Map<String, Object> message = transaction(deviceId, CLOUD_QUERY_TOPIC, EMPTY_MESSAGE, speed);
       return convertTo(CloudModel.class, message);
     } catch (Exception e) {
       if (e.getMessage().contains("NOT_FOUND")) {

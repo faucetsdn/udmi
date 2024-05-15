@@ -78,7 +78,8 @@ public interface MessagePublisher {
     QUICK(1),
     SHORT(15),
     LONG(30),
-    ETERNITY(90);
+    SLOW(90),
+    ETERNITY(600);
 
     private final int seconds;
 
