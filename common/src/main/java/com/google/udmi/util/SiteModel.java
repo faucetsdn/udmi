@@ -272,7 +272,7 @@ public class SiteModel {
     return makeEndpointConfig(iotProject, exeConfig, deviceId);
   }
 
-  private Set<String> getDeviceIds() {
+  public Set<String> getDeviceIds() {
     checkState(sitePath != null, "sitePath not defined");
     File devicesFile = new File(new File(sitePath), "devices");
     File[] files = Objects.requireNonNull(devicesFile.listFiles(),
