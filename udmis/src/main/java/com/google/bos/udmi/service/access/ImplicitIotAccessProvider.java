@@ -2,14 +2,9 @@ package com.google.bos.udmi.service.access;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.Common.DEFAULT_REGION;
-import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.isNullOrNotEmpty;
-import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.asMap;
-import static com.google.udmi.util.JsonUtil.getDate;
 import static com.google.udmi.util.JsonUtil.isoConvert;
-import static com.google.udmi.util.JsonUtil.toStringMap;
-import static com.google.udmi.util.MetadataMapKeys.UDMI_UPDATED;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static java.util.function.Predicate.not;
@@ -19,8 +14,6 @@ import static udmi.schema.CloudModel.Resource_type.DEVICE;
 import static udmi.schema.CloudModel.Resource_type.GATEWAY;
 import static udmi.schema.CloudModel.Resource_type.REGISTRY;
 
-import com.clearblade.cloud.iot.v1.devicetypes.Device;
-import com.clearblade.cloud.iot.v1.utils.LogLevel;
 import com.google.bos.udmi.service.core.ReflectProcessor;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.bos.udmi.service.support.DataRef;
@@ -33,7 +26,6 @@ import java.util.AbstractMap.SimpleEntry;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import udmi.schema.CloudModel;
@@ -51,9 +43,9 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   public static final String CONFIG_VER_KEY = "config_ver";
   public static final String LAST_CONFIG_KEY = "last_config";
+  public static final String DEVICES_COLLECTION = "devices";
   private static final String REGISTRIES_KEY = "registries";
   private static final String IMPLICIT_DATABASE_COMPONENT = "database";
-  public static final String DEVICES_COLLECTION = "devices";
   private final boolean enabled;
   private IotDataProvider database;
   private ReflectProcessor reflect;
@@ -61,6 +53,66 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   public ImplicitIotAccessProvider(IotAccess iotAccess) {
     super(iotAccess);
     enabled = isNullOrNotEmpty(options.get(ENABLED_KEY));
+  }
+
+  private CloudModel bindDevicesToGateway(String registryId, String deviceId, CloudModel model) {
+    CloudModel reply = new CloudModel();
+    reply.operation = BIND;
+    return reply;
+  }
+
+  private CloudModel blockDevice(String registryId, String deviceId, CloudModel cloudModel) {
+    throw new RuntimeException("blockDevice not yet implemented");
+  }
+
+  private CloudModel createDevice(String registryId, String deviceId, CloudModel cloudModel) {
+    Map<String, String> map = toDeviceMap(cloudModel);
+    DataRef devices = database.ref().registry(registryId).device(deviceId);
+    Set<String> existing = devices.entries().keySet();
+    map.forEach(devices::put);
+    existing.stream().filter(not(map::containsKey)).forEach(devices::delete);
+    CloudModel reply = new CloudModel();
+    reply.operation = CREATE;
+    return reply;
+  }
+
+  private CloudModel modelDevice(String registryId, String deviceId, CloudModel cloudModel) {
+    Operation operation = cloudModel.operation;
+    Resource_type type = ofNullable(cloudModel.resource_type).orElse(Resource_type.DEVICE);
+    checkState(type == DEVICE || type == GATEWAY, "unexpected resource type " + type);
+    try {
+      return switch (operation) {
+        case CREATE -> createDevice(registryId, deviceId, cloudModel);
+        case UPDATE -> updateDevice(registryId, deviceId, cloudModel);
+        case MODIFY -> modifyDevice(registryId, deviceId, cloudModel);
+        case DELETE -> unbindAndDelete(registryId, deviceId, cloudModel);
+        case BIND -> bindDevicesToGateway(registryId, deviceId, cloudModel);
+        case BLOCK -> blockDevice(registryId, deviceId, cloudModel);
+        default -> throw new RuntimeException("Unknown device operation " + operation);
+      };
+    } catch (Exception e) {
+      throw new RuntimeException(format("While %sing %s/%s", operation, registryId, deviceId), e);
+    }
+  }
+
+  private CloudModel modelRegistry(String registryId, String deviceId, CloudModel cloudModel) {
+    throw new RuntimeException("modelRegistry not yet implemented");
+  }
+
+  private CloudModel modifyDevice(String registryId, String deviceId, CloudModel cloudModel) {
+    throw new RuntimeException("modifyDevice not yet implemented");
+  }
+
+  private Map<String, String> toDeviceMap(CloudModel cloudModel) {
+    return ImmutableMap.of("created_at", isoConvert());
+  }
+
+  private CloudModel unbindAndDelete(String registryId, String deviceId, CloudModel cloudModel) {
+    throw new RuntimeException("unbindAndDelete not yet implemented");
+  }
+
+  private CloudModel updateDevice(String registryId, String deviceId, CloudModel cloudModel) {
+    throw new RuntimeException("updateDevice not yet implemented");
   }
 
   @Override
@@ -81,7 +133,8 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   @Override
   public CloudModel fetchDevice(String deviceRegistryId, String deviceId) {
-    Map<String, String> entries = database.ref().registry(deviceRegistryId).device(deviceId).entries();
+    Map<String, String> entries =
+        database.ref().registry(deviceRegistryId).device(deviceId).entries();
     return JsonUtil.convertTo(CloudModel.class, entries);
   }
 
@@ -129,66 +182,6 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
       return modelRegistry(registryId, deviceId, cloudModel);
     }
     return modelDevice(registryId, deviceId, cloudModel);
-  }
-
-  private CloudModel modelDevice(String registryId, String deviceId, CloudModel cloudModel) {
-    Operation operation = cloudModel.operation;
-    Resource_type type = ofNullable(cloudModel.resource_type).orElse(Resource_type.DEVICE);
-    checkState(type == DEVICE || type == GATEWAY, "unexpected resource type " + type);
-    try {
-      return switch (operation) {
-        case CREATE -> createDevice(registryId, deviceId, cloudModel);
-        case UPDATE -> updateDevice(registryId, deviceId, cloudModel);
-        case MODIFY -> modifyDevice(registryId, deviceId, cloudModel);
-        case DELETE -> unbindAndDelete(registryId, deviceId, cloudModel);
-        case BIND -> bindDevicesToGateway(registryId, deviceId, cloudModel);
-        case BLOCK -> blockDevice(registryId, deviceId, cloudModel);
-        default -> throw new RuntimeException("Unknown device operation " + operation);
-      };
-    } catch (Exception e) {
-      throw new RuntimeException(format("While %sing %s/%s", operation, registryId, deviceId), e);
-    }
-  }
-
-  private CloudModel blockDevice(String registryId, String deviceId, CloudModel cloudModel) {
-    throw new RuntimeException("blockDevice not yet implemented");
-  }
-
-  private CloudModel bindDevicesToGateway(String registryId, String deviceId, CloudModel model) {
-    CloudModel reply = new CloudModel();
-    reply.operation = BIND;
-    return reply;
-  }
-
-  private CloudModel unbindAndDelete(String registryId, String deviceId, CloudModel cloudModel) {
-    throw new RuntimeException("unbindAndDelete not yet implemented");
-  }
-
-  private CloudModel modifyDevice(String registryId, String deviceId, CloudModel cloudModel) {
-    throw new RuntimeException("modifyDevice not yet implemented");
-  }
-
-  private CloudModel updateDevice(String registryId, String deviceId, CloudModel cloudModel) {
-    throw new RuntimeException("updateDevice not yet implemented");
-  }
-
-  private CloudModel createDevice(String registryId, String deviceId, CloudModel cloudModel) {
-    Map<String, String> map = toDeviceMap(cloudModel);
-    DataRef devices = database.ref().registry(registryId).device(deviceId);
-    Set<String> existing = devices.entries().keySet();
-    map.forEach(devices::put);
-    existing.stream().filter(not(map::containsKey)).forEach(devices::delete);
-    CloudModel reply = new CloudModel();
-    reply.operation = CREATE;
-    return reply;
-  }
-
-  private Map<String, String> toDeviceMap(CloudModel cloudModel) {
-    return ImmutableMap.of("created_at", isoConvert());
-  }
-
-  private CloudModel modelRegistry(String registryId, String deviceId, CloudModel cloudModel) {
-    throw new RuntimeException("modelRegistry not yet implemented");
   }
 
   @Override
