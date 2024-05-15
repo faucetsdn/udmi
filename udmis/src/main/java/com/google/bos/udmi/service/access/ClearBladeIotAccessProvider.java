@@ -124,6 +124,9 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   private final String projectId;
   private final DeviceManagerInterface deviceManager;
 
+  /**
+   * Core test function for listing the devices in a registry.
+   */
   public static void main(String[] args) {
     requireNonNull(System.getenv(CONFIG_ENV), CONFIG_ENV + " not defined");
     IotAccess iotAccess = new IotAccess();
@@ -131,7 +134,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       System.err.println("Usage: registry_id");
       return;
     }
-    String registryId = args[0];
+    final String registryId = args[0];
     Map<String, Object> stringObjectMap = JsonUtil.loadMap(System.getenv(CONFIG_ENV));
     iotAccess.project_id = (String) requireNonNull(stringObjectMap.get("project"));
     System.err.println("Extracted project from ClearBlade config file: " + iotAccess.project_id);
