@@ -51,7 +51,7 @@ public class IotReflectorClient implements IotProvider {
   // Requires functions that support cloud device manager support.
   private static final String CONFIG_TOPIC_FORMAT = "%s/config";
   private static final File ERROR_DIR = new File("out");
-  public static final double SLOW_QUERY_THRESHOLD = 1000;
+  public static final double SLOW_QUERY_THRESHOLD = 10000;
   private final com.google.bos.iot.core.proxy.IotReflectorClient messageClient;
   private final Map<String, CompletableFuture<Map<String, Object>>> futures =
       new ConcurrentHashMap<>();
@@ -72,7 +72,7 @@ public class IotReflectorClient implements IotProvider {
     isSlow = siteModel.getDeviceIds().size() > SLOW_QUERY_THRESHOLD;
     if (isSlow) {
       // TODO: Replace this with a dynamic mechanism that gets incremental progress from UDMIS.
-      System.err.println("Using very long timeout because of large number of devices");
+      System.err.println("Using very long list devices timeout because of large number of devices");
     }
   }
 
