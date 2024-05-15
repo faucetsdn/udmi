@@ -1,13 +1,19 @@
 package com.google.bos.udmi.service.access;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.Common.DEFAULT_REGION;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.isNullOrNotEmpty;
 import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.getDate;
 import static com.google.udmi.util.MetadataMapKeys.UDMI_UPDATED;
+import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
+import static udmi.schema.CloudModel.Resource_type.DEVICE;
+import static udmi.schema.CloudModel.Resource_type.GATEWAY;
+import static udmi.schema.CloudModel.Resource_type.REGISTRY;
 
+import com.clearblade.cloud.iot.v1.devicetypes.Device;
 import com.google.bos.udmi.service.core.ReflectProcessor;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.bos.udmi.service.support.IotDataProvider;
@@ -21,6 +27,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 import udmi.schema.CloudModel;
+import udmi.schema.CloudModel.Operation;
+import udmi.schema.CloudModel.Resource_type;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
@@ -106,8 +114,59 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public CloudModel modelResource(String deviceRegistryId, String deviceId, CloudModel cloudModel) {
-    throw new RuntimeException("modelResource not yet implemented");
+  public CloudModel modelResource(String registryId, String deviceId, CloudModel cloudModel) {
+    if (cloudModel.resource_type == REGISTRY) {
+      return modelRegistry(registryId, deviceId, cloudModel);
+    }
+    return modelDevice(registryId, deviceId, cloudModel);
+  }
+
+  private CloudModel modelDevice(String registryId, String deviceId, CloudModel cloudModel) {
+    Operation operation = cloudModel.operation;
+    Resource_type type = ofNullable(cloudModel.resource_type).orElse(Resource_type.DEVICE);
+    checkState(type == DEVICE || type == GATEWAY, "unexpected resource type " + type);
+    try {
+      Entry<String, CloudModel> device = Map.entry(deviceId, cloudModel);
+      return switch (operation) {
+        case CREATE -> createDevice(registryId, device);
+        case UPDATE -> updateDevice(registryId, device);
+        case MODIFY -> modifyDevice(registryId, device);
+        case DELETE -> unbindAndDelete(registryId, device);
+        case BIND -> bindDevicesToGateway(registryId, deviceId, cloudModel);
+        case BLOCK -> blockDevice(registryId, device);
+        default -> throw new RuntimeException("Unknown device operation " + operation);
+      };
+    } catch (Exception e) {
+      throw new RuntimeException(format("While %sing %s/%s", operation, registryId, deviceId), e);
+    }
+  }
+
+  private CloudModel blockDevice(String registryId, Entry<String, CloudModel> device) {
+    throw new RuntimeException("blockDevice not yet implemented");
+  }
+
+  private CloudModel bindDevicesToGateway(String registryId, String deviceId, CloudModel cloudModel) {
+    throw new RuntimeException("bindDevicesToGateway not yet implemented");
+  }
+
+  private CloudModel unbindAndDelete(String registryId, Entry<String, CloudModel> device) {
+    throw new RuntimeException("unbindAndDelete not yet implemented");
+  }
+
+  private CloudModel modifyDevice(String registryId, Entry<String, CloudModel> device) {
+    throw new RuntimeException("modifyDevice not yet implemented");
+  }
+
+  private CloudModel updateDevice(String registryId, Entry<String, CloudModel> device) {
+    throw new RuntimeException("updateDevice not yet implemented");
+  }
+
+  private CloudModel createDevice(String registryId, Entry<String, CloudModel> device) {
+    throw new RuntimeException("createDevice not yet implemented");
+  }
+
+  private CloudModel modelRegistry(String registryId, String deviceId, CloudModel cloudModel) {
+    throw new RuntimeException("modelRegistry not yet implemented");
   }
 
   @Override
