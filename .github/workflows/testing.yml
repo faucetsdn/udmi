@@ -250,7 +250,10 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
       - name: base setup
-        run: bin/run_tests install_dependencies
+        run: |
+          bin/setup_base
+          bin/clone_model
+          bin/registrar sites/udmi_site_model
       - name: bin/start_etcd
         run: bin/start_etcd
       - name: bin/test_etcd
