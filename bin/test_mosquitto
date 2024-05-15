@@ -23,6 +23,7 @@ site_path=sites/udmi_site_model
 device_id=AHU-1 # Static device for testing
 serial_no=$RANDOM
 CLIENT_DIR=$site_path/devices/$device_id
+DEV_CONF=$site_path/devices/$device_id/out/generated_config.json
 
 site_config=$site_path/cloud_iot_config.json
 cloud_region=$(jq -r .cloud_region $site_config)
@@ -105,8 +106,8 @@ pubber/bin/build
 # Clean out the persistant data store to ensure a clean state each time.
 rm -rf sites/udmi_site_model/out/devices/$device_id/persistent_data.json
 
-echo Publishing empty config to /r/$registry_id/d/$device_id/config
-mosquitto_pub $CLIENT_OPTS -r -t /r/$registry_id/d/$device_id/config -m "{}"
+echo Publishing config to /r/$registry_id/d/$device_id/config
+mosquitto_pub $CLIENT_OPTS -r -t /r/$registry_id/d/$device_id/config -f $DEV_CONF
 
 echo Running pubber smoke check
 # TODO: Replace this with proper smoke check when backend is working.
