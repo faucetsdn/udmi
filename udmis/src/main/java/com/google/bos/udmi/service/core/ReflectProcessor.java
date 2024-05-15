@@ -81,7 +81,7 @@ public class ReflectProcessor extends ProcessorBase {
       boolean isCommand = objectMap.containsKey(PAYLOAD_KEY);
       if (reflection.subFolder == null && !isCommand) {
         reflectStateHandler(reflection, extractUdmiState(message));
-      } else if (reflection.subFolder != SubFolder.UDMI && reflection.subType != SubType.UDMI) {
+      } else if (reflection.subFolder != SubFolder.UDMI && reflection.subType != SubType.REFLECT) {
         throw new IllegalStateException(format("Neither type %s nor folder %s is udmi",
             reflection.subType, reflection.subFolder));
       } else if (message instanceof UdmiState distributedUpdate) {

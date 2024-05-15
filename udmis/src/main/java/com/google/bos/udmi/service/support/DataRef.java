@@ -1,24 +1,18 @@
 package com.google.bos.udmi.service.support;
 
 import static com.google.common.base.Preconditions.checkState;
-import static java.lang.String.format;
+
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Container reference class for a database entry.
  */
-public class DataRef {
-  private final String key;
-  private final IotDataProvider provider;
-  private String registryId;
-  private String deviceId;
+public abstract class DataRef {
 
-  /**
-   * New container for the given key.
-   */
-  public DataRef(IotDataProvider dataProvider, String key) {
-    this.provider = dataProvider;
-    this.key = sanitize(key);
-  }
+  protected String collection;
+  protected String deviceId;
+  protected String registryId;
 
   private static String sanitize(String key) {
     if (key == null || key.contains("/") || key.contains(":")) {
@@ -27,40 +21,31 @@ public class DataRef {
     return key;
   }
 
-  /**
-   * Add a registry specification.
-   */
-  public DataRef forRegistry(String newRegistryId) {
-    checkState(registryId == null, "registryId already defined");
-    registryId = sanitize(newRegistryId);
+  public DataRef collection(String collection) {
+    this.collection = sanitize(collection);
     return this;
   }
 
   /**
    * Add a device specification.
    */
-  public DataRef forDevice(String newDeviceId) {
-    checkState(deviceId == null, "deviceId already defined");
-    deviceId = sanitize(newDeviceId);
+  public DataRef device(String deviceId) {
+    this.deviceId = sanitize(deviceId);
     return this;
   }
 
-  private String getKey() {
-    if (registryId == null) {
-      checkState(deviceId == null, "deviceId supplied without registry");
-      return format("/s:%s", key);
-    } else if (deviceId == null) {
-      return format("/r/%s:%s", registryId, key);
-    } else {
-      return format("/r/%s/d/%s:%s", registryId, deviceId, key);
-    }
+  /**
+   * Add a registry specification.
+   */
+  public DataRef registry(String registryId) {
+    this.registryId = sanitize(registryId);
+    return this;
   }
 
-  public String get() {
-    return provider.get(getKey());
-  }
+  public abstract Map<String, String> entries();
 
-  public void put(String value) {
-    provider.put(getKey(), value);
-  }
+  public abstract String get(String key);
+
+  public abstract void put(String key, String value);
+
 }

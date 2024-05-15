@@ -1,7 +1,6 @@
 package com.google.daq.mqtt.util;
 
 import static com.google.api.client.util.Preconditions.checkNotNull;
-import static com.google.bos.iot.core.proxy.IotReflectorClient.UDMI_FOLDER;
 import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.getTimestamp;
@@ -297,7 +296,7 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
       }
       Map<String, String> attributesMap = Map.of(
           "projectId", projectId,
-          "subFolder", UDMI_FOLDER
+          "subFolder", SubFolder.UDMI.toString()
       );
       Envelope envelopedData = makeReflectorMessage(deviceId, topic, data);
       PubsubMessage message = PubsubMessage.newBuilder()

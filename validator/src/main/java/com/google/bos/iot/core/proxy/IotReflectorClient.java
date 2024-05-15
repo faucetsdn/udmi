@@ -66,11 +66,10 @@ import udmi.schema.UdmiState;
  */
 public class IotReflectorClient implements MessagePublisher {
 
-  public static final String UDMI_FOLDER = "udmi";
   public static final String UDMI_REFLECT = "UDMI-REFLECT";
   static final String REFLECTOR_KEY_ALGORITHM = "RS256";
   private static final String MOCK_DEVICE_NUM_ID = "123456789101112";
-  private static final String UDMI_TOPIC = "events/" + UDMI_FOLDER;
+  private static final String UDMI_TOPIC = "events/" + SubFolder.UDMI;
   private static final long CONFIG_TIMEOUT_SEC = 20;
   private static final int UPDATE_RETRIES = 6;
   private static final Collection<String> COPY_IDS = ImmutableSet.of(DEVICE_ID_KEY, GATEWAY_ID_KEY,
@@ -219,14 +218,14 @@ public class IotReflectorClient implements MessagePublisher {
 
   private String getReflectorTopic() {
     return switch (iotProvider) {
-      case MQTT -> UDMI_FOLDER;
+      case MQTT -> SubType.REFLECT.toString();
       default -> STATE_TOPIC;
     };
   }
 
   private String getPublishTopic() {
     return switch (iotProvider) {
-      case MQTT -> UDMI_FOLDER;
+      case MQTT -> SubType.REFLECT.toString();
       default -> UDMI_TOPIC;
     };
   }

@@ -13,7 +13,7 @@
   },
   "flows": {
     "reflect": {
-      "recv_id": "udmi"
+      "recv_id": "reflect"
     },
     "state": {
       "recv_id": "state"

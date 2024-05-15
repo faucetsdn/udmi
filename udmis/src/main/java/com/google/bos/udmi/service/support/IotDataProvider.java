@@ -32,11 +32,5 @@ public interface IotDataProvider extends UdmiComponent {
     }
   }
 
-  default DataRef key(String key) {
-    return new DataRef(this, key);
-  }
-
-  String get(String key);
-
-  void put(String key, String value);
+  DataRef ref();
 }

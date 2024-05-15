@@ -1,8 +1,11 @@
 package com.google.bos.udmi.service.access;
 
 import static com.google.udmi.util.Common.DEFAULT_REGION;
+import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.isNullOrNotEmpty;
 import static com.google.udmi.util.JsonUtil.asMap;
+import static com.google.udmi.util.JsonUtil.getDate;
+import static com.google.udmi.util.MetadataMapKeys.UDMI_UPDATED;
 import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.core.ReflectProcessor;
@@ -10,8 +13,10 @@ import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.bos.udmi.service.support.IotDataProvider;
 import com.google.common.collect.ImmutableSet;
 import com.google.udmi.util.GeneralUtils;
+import com.google.udmi.util.JsonUtil;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -30,6 +35,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   public static final String LAST_CONFIG_KEY = "last_config";
   private static final String REGISTRIES_KEY = "registries";
   private static final String IMPLICIT_DATABASE_COMPONENT = "database";
+  public static final String DEVICES_COLLECTION = "devices";
   private final boolean enabled;
   private IotDataProvider database;
   private ReflectProcessor reflect;
@@ -49,20 +55,21 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   @Override
   public Entry<Long, String> fetchConfig(String registryId, String deviceId) {
     // TODO: Implement lease for atomic transaction.
-    String config = database.key(LAST_CONFIG_KEY).forRegistry(registryId).forDevice(deviceId).get();
-    String version = database.key(CONFIG_VER_KEY).forRegistry(registryId).forDevice(deviceId).get();
+    String config = database.ref().registry(registryId).device(deviceId).get(LAST_CONFIG_KEY);
+    String version = database.ref().registry(registryId).device(deviceId).get(CONFIG_VER_KEY);
     Long versionLong = ofNullable(version).map(Long::parseLong).orElse(null);
     return new SimpleEntry<>(versionLong, ofNullable(config).orElse(EMPTY_JSON));
   }
 
   @Override
   public CloudModel fetchDevice(String deviceRegistryId, String deviceId) {
-    throw new RuntimeException("fetchDevice not yet implemented");
+    Map<String, String> entries = database.ref().registry(deviceRegistryId).device(deviceId).entries();
+    return JsonUtil.convertTo(CloudModel.class, entries);
   }
 
   @Override
   public String fetchRegistryMetadata(String registryId, String metadataKey) {
-    return database.key(metadataKey).forRegistry(registryId).get();
+    return database.ref().registry(registryId).get(metadataKey);
   }
 
   @Override
@@ -78,7 +85,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     if (!region.equals(DEFAULT_REGION)) {
       return ImmutableSet.of();
     }
-    String regionsString = ofNullable(database.key(REGISTRIES_KEY).get()).orElse("");
+    String regionsString = ofNullable(database.ref().get(REGISTRIES_KEY)).orElse("");
     return Arrays.stream(regionsString.split(",")).map(String::trim)
         .filter(GeneralUtils::isNotEmpty).collect(Collectors.toSet());
   }
@@ -89,8 +96,13 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public CloudModel listDevices(String deviceRegistryId) {
-    throw new RuntimeException("listDevices not yet implemented");
+  public CloudModel listDevices(String registryId) {
+    Map<String, String> entries = database.ref().registry(registryId).collection(
+        DEVICES_COLLECTION).entries();
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.device_ids = entries.keySet().stream().collect(
+        Collectors.toMap(id -> id, id -> fetchDevice(registryId, id)));
+    return cloudModel;
   }
 
   @Override
@@ -118,15 +130,15 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     reflect.getDispatcher().withEnvelope(envelope).publish(asMap(config));
 
     // TODO: Implement lease for atomic transaction.
-    String prev = database.key(CONFIG_VER_KEY).forRegistry(registryId).forDevice(deviceId).get();
+    String prev = database.ref().registry(registryId).device(deviceId).get(CONFIG_VER_KEY);
     if (version != null && !version.toString().equals(prev)) {
       throw new RuntimeException("Config version update mismatch");
     }
 
-    database.key(LAST_CONFIG_KEY).forRegistry(registryId).forDevice(deviceId).put(config);
+    database.ref().registry(registryId).device(deviceId).put(LAST_CONFIG_KEY, config);
     String update = ofNullable(version).map(v -> v + 1)
         .orElseGet(() -> ofNullable(prev).map(Long::parseLong).orElse(1L)).toString();
-    database.key(CONFIG_VER_KEY).forRegistry(registryId).forDevice(deviceId).put(update);
+    database.ref().registry(registryId).device(deviceId).put(CONFIG_VER_KEY, update);
 
     return config;
   }
