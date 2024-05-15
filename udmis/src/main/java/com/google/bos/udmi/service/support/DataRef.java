@@ -1,9 +1,6 @@
 package com.google.bos.udmi.service.support;
 
-import static com.google.common.base.Preconditions.checkState;
-
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Container reference class for a database entry.
@@ -26,6 +23,8 @@ public abstract class DataRef {
     return this;
   }
 
+  public abstract void delete(String key);
+
   /**
    * Add a device specification.
    */
@@ -34,6 +33,12 @@ public abstract class DataRef {
     return this;
   }
 
+  public abstract Map<String, String> entries();
+
+  public abstract String get(String key);
+
+  public abstract void put(String key, String value);
+
   /**
    * Add a registry specification.
    */
@@ -41,11 +46,5 @@ public abstract class DataRef {
     this.registryId = sanitize(registryId);
     return this;
   }
-
-  public abstract Map<String, String> entries();
-
-  public abstract String get(String key);
-
-  public abstract void put(String key, String value);
 
 }

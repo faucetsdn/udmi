@@ -76,6 +76,25 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
     reapConnectedKeys(client);
   }
 
+  private void deleteEntry(String key) {
+    try {
+      kvClient.delete(bytes(key)).get(QUERY_TIMEOUT_SEC, TimeUnit.SECONDS);
+    } catch (Exception e) {
+      throw new RuntimeException("While deleting key " + key, e);
+    }
+  }
+
+  private Map<String, String> getEntries(String keyPath) {
+    try {
+      GetResponse response =
+          kvClient.get(bytes(keyPath), LIST_OPT).get(QUERY_TIMEOUT_SEC, TimeUnit.SECONDS);
+      return response.getKvs().stream().collect(
+          Collectors.toMap(kv -> asString(kv.getKey()), kv -> asString(kv.getValue())));
+    } catch (Exception e) {
+      throw new RuntimeException("While listing db keys " + keyPath, e);
+    }
+  }
+
   private String getKey(String key) {
     try {
       GetResponse response = kvClient.get(bytes(key)).get(QUERY_TIMEOUT_SEC, TimeUnit.SECONDS);
@@ -123,17 +142,6 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
     } catch (Exception e) {
       warn("Bad key value " + value + ", considering stale: " + friendlyStackTrace(e));
       return true;
-    }
-  }
-
-  private Map<String, String> getEntries(String keyPath) {
-    try {
-      GetResponse response =
-          kvClient.get(bytes(keyPath), LIST_OPT).get(QUERY_TIMEOUT_SEC, TimeUnit.SECONDS);
-      return response.getKvs().stream().collect(
-          Collectors.toMap(kv -> asString(kv.getKey()), kv -> asString(kv.getValue())));
-    } catch (Exception e) {
-      throw new RuntimeException("While listing db keys " + keyPath, e);
     }
   }
 
@@ -227,12 +235,17 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
           + KEY_SEPARATOR + key;
     }
 
-    public String get(String key) {
-      return getKey(getKeyPath(key));
+    @Override
+    public void delete(String key) {
+      deleteEntry(key);
     }
 
     public Map<String, String> entries() {
       return getEntries(getKeyPath(""));
+    }
+
+    public String get(String key) {
+      return getKey(getKeyPath(key));
     }
 
     public void put(String key, String value) {
