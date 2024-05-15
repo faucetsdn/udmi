@@ -67,7 +67,9 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.udmi.util.JsonUtil;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Base64;
 import java.util.Date;
@@ -95,7 +97,8 @@ import udmi.schema.IotAccess;
 public class ClearBladeIotAccessProvider extends IotAccessBase {
 
   public static final String REGISTRIES_FIELD_MASK = "id,name";
-  private static final Set<String> CLOUD_REGIONS = ImmutableSet.of("us-central1");
+  public static final String DEFAULT_REGION = "us-central1";
+  private static final Set<String> CLOUD_REGIONS = ImmutableSet.of(DEFAULT_REGION);
   private static final String EMPTY_JSON = "{}";
   private static final BiMap<Key_format, PublicKeyFormat> AUTH_TYPE_MAP = ImmutableBiMap.of(
       Key_format.RS_256, PublicKeyFormat.RSA_PEM,
@@ -117,8 +120,27 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   private static final String UDMI_STATE_TOPIC = "udmi_state"; // TODO: Make this not hardcoded.
   private static final String TOPIC_NAME_FORMAT = "projects/%s/topics/%s";
   private static final CharSequence BOUND_TO_GATEWAY_MARKER = " it's associated ";
+  public static final String CONFIG_ENV = "CLEARBLADE_CONFIGURATION";
   private final String projectId;
   private final DeviceManagerInterface deviceManager;
+
+  public static void main(String[] args) {
+    requireNonNull(System.getenv(CONFIG_ENV), CONFIG_ENV + " not defined");
+    IotAccess iotAccess = new IotAccess();
+    if (args.length != 1) {
+      System.err.println("Usage: registry_id");
+      return;
+    }
+    String registryId = args[0];
+    Map<String, Object> stringObjectMap = JsonUtil.loadMap(System.getenv(CONFIG_ENV));
+    iotAccess.project_id = (String) requireNonNull(stringObjectMap.get("project"));
+    System.err.println("Extracted project from ClearBlade config file: " + iotAccess.project_id);
+    ClearBladeIotAccessProvider clearBladeIotAccessProvider =
+        new ClearBladeIotAccessProvider(iotAccess);
+    clearBladeIotAccessProvider.populateRegistryRegions();
+    CloudModel cloudModel = clearBladeIotAccessProvider.listDevices(registryId);
+    System.err.printf("Found %d results%n", cloudModel.device_ids.size());
+  }
 
   /**
    * Create a new instance for interfacing with GCP IoT Core.
