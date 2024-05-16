@@ -41,10 +41,7 @@
       "return_air_temperature_sensor": {
         "units": "Degrees-Celsius",
         "baseline_value": 20,
-        "baseline_tolerance": 2,
-        "mapping": {
-          "translation": "return_air_temperature_sensor"
-        }
+        "baseline_tolerance": 2
       },
       "room_setpoint": {
         "writable": true,

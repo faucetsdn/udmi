@@ -42,9 +42,6 @@
       "description": "Mapping for the point to an internal resource (e.g. BACnet object reference)",
       "type": "string",
       "examples": ["AI3", "400070"]
-    },
-    "mapping": {
-      "$ref": "file:model_pointset_point_mapping.json#"
     }
   }
 }

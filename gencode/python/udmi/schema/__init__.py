@@ -54,7 +54,6 @@ from .model_localnet import LocalnetModel
 from .model_localnet_family import FamilyLocalnetModel
 from .model_pointset import PointsetModel
 from .model_pointset_point import PointPointsetModel
-from .model_pointset_point_mapping import PointMappingModel
 from .model_system import SystemModel
 from .model_system_hardware import SystemHardware
 from .model_testing import TestingModel

@@ -1,5 +1,4 @@
 """Generated class for model_pointset_point.json"""
-from .model_pointset_point_mapping import PointMappingModel
 
 
 class PointPointsetModel:
@@ -13,7 +12,6 @@ class PointPointsetModel:
     self.baseline_state = None
     self.cov_increment = None
     self.ref = None
-    self.mapping = None
 
   @staticmethod
   def from_dict(source):
@@ -27,7 +25,6 @@ class PointPointsetModel:
     result.baseline_state = source.get('baseline_state')
     result.cov_increment = source.get('cov_increment')
     result.ref = source.get('ref')
-    result.mapping = PointMappingModel.from_dict(source.get('mapping'))
     return result
 
   @staticmethod
@@ -62,6 +59,4 @@ class PointPointsetModel:
       result['cov_increment'] = self.cov_increment # 5
     if self.ref:
       result['ref'] = self.ref # 5
-    if self.mapping:
-      result['mapping'] = self.mapping.to_dict() # 4
     return result

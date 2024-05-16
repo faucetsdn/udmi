@@ -26,8 +26,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
     "baseline_tolerance",
     "baseline_state",
     "cov_increment",
-    "ref",
-    "mapping"
+    "ref"
 })
 @Generated("jsonschema2pojo")
 public class PointPointsetModel {
@@ -81,21 +80,11 @@ public class PointPointsetModel {
     @JsonProperty("ref")
     @JsonPropertyDescription("Mapping for the point to an internal resource (e.g. BACnet object reference)")
     public String ref;
-    /**
-     * Point Mapping Model
-     * <p>
-     * Information about a specific point name of the device.
-     * 
-     */
-    @JsonProperty("mapping")
-    @JsonPropertyDescription("Information about a specific point name of the device.")
-    public PointMappingModel mapping;
 
     @Override
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.ref == null)? 0 :this.ref.hashCode()));
-        result = ((result* 31)+((this.mapping == null)? 0 :this.mapping.hashCode()));
         result = ((result* 31)+((this.baseline_value == null)? 0 :this.baseline_value.hashCode()));
         result = ((result* 31)+((this.baseline_state == null)? 0 :this.baseline_state.hashCode()));
         result = ((result* 31)+((this.units == null)? 0 :this.units.hashCode()));
@@ -114,7 +103,7 @@ public class PointPointsetModel {
             return false;
         }
         PointPointsetModel rhs = ((PointPointsetModel) other);
-        return (((((((((this.ref == rhs.ref)||((this.ref!= null)&&this.ref.equals(rhs.ref)))&&((this.mapping == rhs.mapping)||((this.mapping!= null)&&this.mapping.equals(rhs.mapping))))&&((this.baseline_value == rhs.baseline_value)||((this.baseline_value!= null)&&this.baseline_value.equals(rhs.baseline_value))))&&((this.baseline_state == rhs.baseline_state)||((this.baseline_state!= null)&&this.baseline_state.equals(rhs.baseline_state))))&&((this.units == rhs.units)||((this.units!= null)&&this.units.equals(rhs.units))))&&((this.baseline_tolerance == rhs.baseline_tolerance)||((this.baseline_tolerance!= null)&&this.baseline_tolerance.equals(rhs.baseline_tolerance))))&&((this.cov_increment == rhs.cov_increment)||((this.cov_increment!= null)&&this.cov_increment.equals(rhs.cov_increment))))&&((this.writable == rhs.writable)||((this.writable!= null)&&this.writable.equals(rhs.writable))));
+        return ((((((((this.ref == rhs.ref)||((this.ref!= null)&&this.ref.equals(rhs.ref)))&&((this.baseline_value == rhs.baseline_value)||((this.baseline_value!= null)&&this.baseline_value.equals(rhs.baseline_value))))&&((this.baseline_state == rhs.baseline_state)||((this.baseline_state!= null)&&this.baseline_state.equals(rhs.baseline_state))))&&((this.units == rhs.units)||((this.units!= null)&&this.units.equals(rhs.units))))&&((this.baseline_tolerance == rhs.baseline_tolerance)||((this.baseline_tolerance!= null)&&this.baseline_tolerance.equals(rhs.baseline_tolerance))))&&((this.cov_increment == rhs.cov_increment)||((this.cov_increment!= null)&&this.cov_increment.equals(rhs.cov_increment))))&&((this.writable == rhs.writable)||((this.writable!= null)&&this.writable.equals(rhs.writable))));
     }
 
 
