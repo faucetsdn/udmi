@@ -1,7 +1,8 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.5.0",
-  "hash": "004dae42",
+  "hash": "63e6f4e3",
+  "tags": [ ],
   "cloud": {
     "auth_type": "ES256"
   },
