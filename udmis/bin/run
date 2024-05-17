@@ -40,7 +40,6 @@ elif [[ -n $gce_project ]]; then
     export GCP_PROJECT=$gce_project
 else
     echo No GCP_PROJECT, gcloud, or GCE project defined.
-    false
 fi
 
 export UDMI_PREFIX=

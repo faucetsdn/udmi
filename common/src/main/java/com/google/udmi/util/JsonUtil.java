@@ -18,8 +18,10 @@ import java.io.File;
 import java.nio.file.Files;
 import java.time.Instant;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.function.Function;
 
 /**
  * Collection of utilities for working with json things.
@@ -28,6 +30,7 @@ public abstract class JsonUtil {
 
   public static final String JSON_EXT = "json";
   public static final String JSON_SUFFIX = ".json";
+  public static final String JSON_OBJECT_LEADER = "{";
   private static final ObjectMapper STRICT_MAPPER = new ObjectMapper()
       .enable(Feature.ALLOW_COMMENTS)
       .enable(SerializationFeature.INDENT_OUTPUT)
@@ -40,7 +43,6 @@ public abstract class JsonUtil {
       .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
   public static final ObjectMapper TERSE_MAPPER = OBJECT_MAPPER.copy()
       .disable(SerializationFeature.INDENT_OUTPUT);
-  public static final String JSON_OBJECT_LEADER = "{";
   private static final String JSON_STRING_LEADER = "\"";
 
   /**
@@ -128,11 +130,6 @@ public abstract class JsonUtil {
     } catch (Exception e) {
       throw new RuntimeException("While converting string/string to " + targetClass.getName(), e);
     }
-  }
-
-  @SuppressWarnings("unchecked")
-  public static Map<String, Object> getAsMap(Map<String, Object> map, String key) {
-    return (Map<String, Object>) map.get(key);
   }
 
   /**
@@ -419,19 +416,6 @@ public abstract class JsonUtil {
   }
 
   /**
-   * Extract the underlying string representation from a JSON encoded message.
-   */
-  public static String unquoteJson(String message) {
-    if (message == null || message.isEmpty() || message.startsWith(JSON_OBJECT_LEADER)) {
-      return message;
-    }
-    if (message.startsWith(JSON_STRING_LEADER)) {
-      return message.substring(1, message.length() - 1);
-    }
-    throw new RuntimeException("Unrecognized JSON start encoding: " + message.charAt(0));
-  }
-
-  /**
    * Convert the pojo to a mapped representation of strings only.
    *
    * @param message input object to convert
@@ -453,6 +437,19 @@ public abstract class JsonUtil {
     @SuppressWarnings("unchecked")
     Map<String, String> map = fromString(TreeMap.class, message);
     return map;
+  }
+
+  /**
+   * Extract the underlying string representation from a JSON encoded message.
+   */
+  public static String unquoteJson(String message) {
+    if (message == null || message.isEmpty() || message.startsWith(JSON_OBJECT_LEADER)) {
+      return message;
+    }
+    if (message.startsWith(JSON_STRING_LEADER)) {
+      return message.substring(1, message.length() - 1);
+    }
+    throw new RuntimeException("Unrecognized JSON start encoding: " + message.charAt(0));
   }
 
   /**
