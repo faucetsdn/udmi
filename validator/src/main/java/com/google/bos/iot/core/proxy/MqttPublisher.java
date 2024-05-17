@@ -3,10 +3,12 @@ package com.google.bos.iot.core.proxy;
 import static com.google.bos.iot.core.proxy.ProxyTarget.STATE_TOPIC;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.udmi.util.CertManager.CA_CERT_FILE;
 import static com.google.udmi.util.Common.DEFAULT_REGION;
 import static com.google.udmi.util.GeneralUtils.catchOrElse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.sha256;
 import static com.google.udmi.util.SiteModel.DEFAULT_CLEARBLADE_HOSTNAME;
 import static com.google.udmi.util.SiteModel.DEFAULT_GBOS_HOSTNAME;
@@ -19,6 +21,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.validator.Validator;
+import com.google.udmi.util.CertManager;
 import com.google.udmi.util.SiteModel;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
@@ -44,6 +47,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import javax.net.SocketFactory;
+import javax.net.ssl.SSLSocketFactory;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttClient;
@@ -56,6 +61,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import udmi.schema.Credential;
 import udmi.schema.Credential.Key_format;
+import udmi.schema.EndpointConfiguration.Transport;
 import udmi.schema.ExecutionConfiguration;
 import udmi.schema.IotAccess.IotProvider;
 
@@ -69,9 +75,10 @@ public class MqttPublisher implements MessagePublisher {
   private static final Logger LOG = LoggerFactory.getLogger(MqttPublisher.class);
   private static final boolean MQTT_NO_RETAIN = false;
   private static final long STATE_RATE_LIMIT_MS = 1000 * 2;
-  private static final String CLIENT_ID_FMT = "projects/%s/locations/%s/registries/%s/devices/%s";
+  private static final String LONG_ID_FMT = "projects/%s/locations/%s/registries/%s/devices/%s";
+  private static final String SHORT_ID_FMT = "/r/%s/d/%s";
   private static final String DEVICE_TOPIC_FMT = "/devices/%s";
-  private static final String FULL_TOPIC_FMT = "/projects/%s/registries/%s/devices/%s";
+  private static final String FULL_TOPIC_FMT = "/r/%s/d/%s";
   private static final String ATTACH_TOPIC = "/attach";
   private static final String CONFIG_TOPIC = "/config";
   private static final String ERROR_TOPIC = "/errors";
@@ -89,7 +96,7 @@ public class MqttPublisher implements MessagePublisher {
   private static final String REFLECTOR_PUBLIC_KEY = "reflector/rsa_public.pem";
   private static final int HASH_PASSWORD_LENGTH = 8;
   private static final String UNUSED_ACCOUNT_NAME = "unused";
-  private static final String MQTT_USER_NAME_FMT = "%s/%s/%s";
+  private static final String MQTT_USER_NAME_FMT = "/r/%s/d/%s";
   private final ExecutorService publisherExecutor =
       Executors.newFixedThreadPool(PUBLISH_THREAD_COUNT);
   private final Semaphore connectWait = new Semaphore(0);
@@ -112,6 +119,7 @@ public class MqttPublisher implements MessagePublisher {
   private final String siteModel;
   private final IotProvider iotProvider;
   private final String topicBase;
+  private final CertManager certManager;
   private long mqttTokenSetTimeMs;
   private MqttConnectOptions mqttConnectOptions;
   private boolean shutdown;
@@ -132,9 +140,18 @@ public class MqttPublisher implements MessagePublisher {
     topicBase = getTopicBase();
     clientId = catchToNull(() -> config.reflector_endpoint.client_id);
     LOG.info(deviceId + " token expiration sec " + TOKEN_EXPIRATION_SEC);
+    certManager = getCertManager();
     mqttClient = newMqttClient(deviceId);
     connectMqttClient(deviceId);
     tickler = scheduleTickler();
+  }
+
+  private CertManager getCertManager() {
+    boolean needCerts = iotProvider.equals(IotProvider.MQTT);
+    File reflector = new SiteModel(siteModel).getReflectorDir();
+    return ifTrueGet(needCerts && reflector != null,
+        () -> new CertManager(new File(reflector, CA_CERT_FILE), reflector, Transport.SSL,
+            new String(getHashPassword(null)), LOG::info));
   }
 
   private static ThreadFactory getDaemonThreadFactory() {
@@ -198,7 +215,7 @@ public class MqttPublisher implements MessagePublisher {
   private String getTopicBase() {
     return switch (iotProvider) {
       case IMPLICIT, GBOS, CLEARBLADE -> format(DEVICE_TOPIC_FMT, deviceId);
-      case MQTT -> format(FULL_TOPIC_FMT, projectId, registryId, deviceId);
+      case MQTT -> format(FULL_TOPIC_FMT, registryId, deviceId);
       default -> throw new RuntimeException("Unknown iotProvider " + iotProvider);
     };
   }
@@ -377,9 +394,7 @@ public class MqttPublisher implements MessagePublisher {
       mqttClient.setManualAcks(false);
 
       mqttConnectOptions = new MqttConnectOptions();
-      // Note that the the Google Cloud IoT only supports MQTT 3.1.1, and Paho requires that we
-      // explicitly set this. If you don't set MQTT version, the server will immediately close its
-      // connection to your device.
+      mqttConnectOptions.setSocketFactory(getSocketFactory());
       mqttConnectOptions.setMqttVersion(MqttConnectOptions.MQTT_VERSION_3_1_1);
       mqttConnectOptions.setUserName(getUserName());
       mqttConnectOptions.setMaxInflight(PUBLISH_THREAD_COUNT * 2);
@@ -391,10 +406,15 @@ public class MqttPublisher implements MessagePublisher {
     }
   }
 
+  private SocketFactory getSocketFactory() {
+    return ofNullable(certManager).map(CertManager::getSocketFactory)
+        .orElse(SSLSocketFactory.getDefault());
+  }
+
   private String getUserName() {
     return switch (iotProvider) {
       case GBOS, CLEARBLADE -> UNUSED_ACCOUNT_NAME;
-      case MQTT -> format(MQTT_USER_NAME_FMT, projectId, registryId, deviceId);
+      case MQTT -> format(MQTT_USER_NAME_FMT, registryId, deviceId);
       default -> throw new RuntimeException("Unsupported iot provider " + iotProvider);
     };
   }
@@ -450,8 +470,14 @@ public class MqttPublisher implements MessagePublisher {
   }
 
   String getClientId(String deviceId) {
-    return ofNullable(clientId).orElse(
-        format(CLIENT_ID_FMT, projectId, cloudRegion, registryId, deviceId));
+    if (clientId != null) {
+      return clientId;
+    }
+    return switch (iotProvider) {
+      case GBOS, CLEARBLADE -> format(LONG_ID_FMT, projectId, cloudRegion, registryId, deviceId);
+      case MQTT -> format(SHORT_ID_FMT, registryId, deviceId);
+      default -> throw new RuntimeException("Provider not supported " + iotProvider);
+    };
   }
 
   private String getBrokerUrl() {
@@ -460,14 +486,13 @@ public class MqttPublisher implements MessagePublisher {
 
   private String getBrokerProtocol() {
     return switch (iotProvider) {
-      case MQTT -> "tcp";
-      case GBOS, CLEARBLADE -> "ssl";
+      case MQTT, GBOS, CLEARBLADE -> "ssl";
       default -> throw new RuntimeException("Provider not supported " + iotProvider);
     };
   }
 
   private String getMessageTopic(String deviceId, String topic) {
-    checkState(topicBase.contains("/devices/" + deviceId), "topic device id mismatch");
+    checkState(topicBase.endsWith("/" + deviceId), "topic device id mismatch");
     return topicBase + format(MESSAGE_TOPIC_FMT, topic);
   }
 
