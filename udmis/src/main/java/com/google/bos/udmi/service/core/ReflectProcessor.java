@@ -108,7 +108,7 @@ public class ReflectProcessor extends ProcessorBase {
 
   private ModelUpdate extractDeviceModel(CloudModel request) {
     return ifNotNullGet(request.metadata,
-        //NES This fails because site metadata is not udmi_metadata structure
+        //NES This fails because site metadata is nnot udmi_metadata structure
         metadata -> ofNullable(metadata.get(MetadataMapKeys.UDMI_METADATA))
             .map(ReflectProcessor::asModelUpdate)
             .orElse(null));
@@ -137,7 +137,7 @@ public class ReflectProcessor extends ProcessorBase {
       SubType subType = ofNullable(attributes.subType).orElse(SubType.EVENTS);
       return switch (subType) {
         case QUERY -> reflectQuery(attributes, mapCast(payload));
-        case MODEL -> reflectModel(attributes, payload);
+        case MODEL -> reflectModel(attributes, convertToStrict(CloudModel.class, payload));
         default -> reflectProcess(attributes, payload);
       };
     } catch (Exception e) {
@@ -210,21 +210,29 @@ public class ReflectProcessor extends ProcessorBase {
     } catch (Exception e) {
       throw new RuntimeException("While querying device state " + attributes.deviceId, e);
     }
+
   }
 
   private CloudModel reflectDeviceModel(Envelope attributes, CloudModel request) {
     ifNotNullThen(extractDeviceModel(request), model -> publish(attributes, model));
-    return iotAccess.modelResource(attributes.deviceRegistryId, attributes.deviceId, request);
+    return iotAccess.deviceModelResource(attributes.deviceRegistryId, request);
   }
 
   private CloudModel reflectRegistryModeleModel(Envelope attributes, CloudModel request) {
-
+    ifNotNullThen(extractRegistryModel(request), model -> publish(attributes, model));
+    return iotAccess.registryModelResource(attributes.deviceRegistryId, attributes.deviceId, request);
   }
+
   private CloudModel reflectModel(Envelope attributes, CloudModel request) {
-    ifNotNullThen(extractDeviceModel(request), model -> publish(attributes, model));
-    return iotAccess.modelResource(attributes.deviceRegistryId, attributes.deviceId, request);
+    if attributes.deviceId == null && attributes.deviceRegistryId != null{
+      reflectRegistryModel(...);
+    } else if (attributes.deviceId != null && attributes.deviceRegistryId != null) {
+      reflectDeviceModel(...);
+    } else {
+      throw new RuntimeException()
+    }
   }
-
+  
   private static ModelUpdate asModelUpdate(String modelString) {
     // If it's not a valid JSON object, then fall back to a string description alternate.
     if (modelString == null || !modelString.startsWith(JsonUtil.JSON_OBJECT_LEADER)) {
