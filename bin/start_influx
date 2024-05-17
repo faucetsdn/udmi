@@ -1,0 +1,15 @@
+#!/bin/bash -e
+
+# https://lucassardois.medium.com/handling-iot-data-with-mqtt-telegraf-influxdb-and-grafana-5a431480217
+
+docker run --name influxdb \
+       -v $PWD/influxdb-data:/var/lib/influxdb \
+       influxdb
+
+docker run --rm --name telegraf \
+       -v $PWD/telegraf.conf:/etc/telegraf/telegraf.conf:ro \
+       telegraf
+  
+docker run -d -p 3000:3000 --name grafana \
+       -v $PWD/grafana-data:/var/lib/grafana \
+       grafana/grafana

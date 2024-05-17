@@ -82,6 +82,7 @@ fi
 # Format of cmdline project_id is {//PROVIDER/}PROJECT[@BROKER] (optional PROVIDER and BROKER)
 # e.g. bos-testing-dev or //gcp/bos-testing-dev or bos-platform-dev@mqtt.bos.goog
 project_target=${project_id##*/}
+udmi_prefix=
 
 if [[ -z $project_id ]]; then
     true using config file based configuration

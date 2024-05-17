@@ -3,17 +3,12 @@
 UDMI_ROOT=$(dirname $0)/..
 source $UDMI_ROOT/etc/shell_common.sh
 
+source $UDMI_ROOT/etc/mosquitto_ctrl.sh
+
 GROUP=mosquitto
-ETC_DIR=/etc/mosquitto
 UDMI_FILE=$ETC_DIR/conf.d/udmi.conf
 PASS_FILE=$ETC_DIR/mosquitto.passwd
 DYN_FILE=$ETC_DIR/dynamic_security.json
-CERT_DIR=$ETC_DIR/certs
-CA_CERT=$CERT_DIR/ca.crt
-
-AUTH_USER=scrumptious
-AUTH_PASS=aardvark
-echo Configuring MQTT user: $AUTH_USER
 
 if [[ ! -f $UDMI_FILE ]]; then
     echo Creating new $UDMI_FILE from template...
@@ -27,6 +22,7 @@ fi
 
 if [[ ! -f $DYN_FILE ]]; then
     echo Creating new $DYN_FILE
+    echo Configuring MQTT user: $AUTH_USER
     sudo mosquitto_ctrl dynsec init $DYN_FILE $AUTH_USER $AUTH_PASS
     sudo chgrp $GROUP $DYN_FILE
     sudo chmod 0660 $DYN_FILE
@@ -41,9 +37,6 @@ if [[ ! -f $PASS_FILE ]]; then
 fi
 
 sudo systemctl restart mosquitto
-
-CONNECT_OPTS="-p 8883 -u $AUTH_USER -P $AUTH_PASS --cafile $CA_CERT --cert $CERT_DIR/rsa_private.crt --key $CERT_DIR/rsa_private.pem"
-MOSQUITTO_CTRL="sudo mosquitto_ctrl $CONNECT_OPTS dynsec"
 
 $MOSQUITTO_CTRL createRole device
 $MOSQUITTO_CTRL addRoleACL device subscribePattern '/r/+/d/+/#' allow

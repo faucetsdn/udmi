@@ -12,6 +12,9 @@
     }
   },
   "flows": {
+    "reflect": {
+      "recv_id": "reflect"
+    },
     "state": {
       "recv_id": "state"
     },
@@ -20,6 +23,9 @@
     }
   },
   "iot_access": {
+    "iot-access": {
+      "project_id": "implicit"
+    },
     "implicit": {
       "provider": "implicit",
       "options": "enabled=${ETCD_CLUSTER}"
