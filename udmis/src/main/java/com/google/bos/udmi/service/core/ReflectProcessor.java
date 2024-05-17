@@ -108,6 +108,7 @@ public class ReflectProcessor extends ProcessorBase {
 
   private ModelUpdate extractDeviceModel(CloudModel request) {
     return ifNotNullGet(request.metadata,
+        //NES This fails because site metadata is not udmi_metadata structure
         metadata -> ofNullable(metadata.get(MetadataMapKeys.UDMI_METADATA))
             .map(ReflectProcessor::asModelUpdate)
             .orElse(null));
@@ -136,7 +137,7 @@ public class ReflectProcessor extends ProcessorBase {
       SubType subType = ofNullable(attributes.subType).orElse(SubType.EVENTS);
       return switch (subType) {
         case QUERY -> reflectQuery(attributes, mapCast(payload));
-        case MODEL -> reflectModel(attributes, convertToStrict(CloudModel.class, payload));
+        case MODEL -> reflectModel(attributes, payload);
         default -> reflectProcess(attributes, payload);
       };
     } catch (Exception e) {
@@ -211,6 +212,14 @@ public class ReflectProcessor extends ProcessorBase {
     }
   }
 
+  private CloudModel reflectDeviceModel(Envelope attributes, CloudModel request) {
+    ifNotNullThen(extractDeviceModel(request), model -> publish(attributes, model));
+    return iotAccess.modelResource(attributes.deviceRegistryId, attributes.deviceId, request);
+  }
+
+  private CloudModel reflectRegistryModeleModel(Envelope attributes, CloudModel request) {
+
+  }
   private CloudModel reflectModel(Envelope attributes, CloudModel request) {
     ifNotNullThen(extractDeviceModel(request), model -> publish(attributes, model));
     return iotAccess.modelResource(attributes.deviceRegistryId, attributes.deviceId, request);
