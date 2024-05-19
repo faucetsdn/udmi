@@ -68,10 +68,14 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   private CloudModel createDevice(String registryId, String deviceId, CloudModel cloudModel) {
     Map<String, String> map = toDeviceMap(cloudModel);
-    DataRef devices = database.ref().registry(registryId).device(deviceId);
-    Set<String> existing = devices.entries().keySet();
-    map.forEach(devices::put);
-    existing.stream().filter(not(map::containsKey)).forEach(devices::delete);
+
+    DataRef properties = database.ref().registry(registryId).device(deviceId);
+    Set<String> existing = properties.entries().keySet();
+    map.forEach(properties::put);
+    existing.stream().filter(not(map::containsKey)).forEach(properties::delete);
+
+    registryDevicesRef(registryId).put(deviceId, isoConvert());
+
     CloudModel reply = new CloudModel();
     reply.operation = CREATE;
     reply.num_id = ofNullable(cloudModel.num_id)
@@ -178,12 +182,16 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   @Override
   public CloudModel listDevices(String registryId) {
-    Map<String, String> entries = database.ref().registry(registryId).collection(
-        DEVICES_COLLECTION).entries();
+    Map<String, String> entries = registryDevicesRef(registryId).entries();
     CloudModel cloudModel = new CloudModel();
     cloudModel.device_ids = entries.keySet().stream().collect(
         Collectors.toMap(id -> id, id -> fetchDevice(registryId, id)));
     return cloudModel;
+  }
+
+  private DataRef registryDevicesRef(String registryId) {
+    return database.ref().registry(registryId).collection(
+        DEVICES_COLLECTION);
   }
 
   @Override

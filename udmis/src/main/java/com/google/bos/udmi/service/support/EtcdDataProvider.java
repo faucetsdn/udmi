@@ -88,8 +88,8 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
     try {
       GetResponse response =
           kvClient.get(bytes(keyPath), LIST_OPT).get(QUERY_TIMEOUT_SEC, TimeUnit.SECONDS);
-      return response.getKvs().stream().collect(
-          Collectors.toMap(kv -> asString(kv.getKey()), kv -> asString(kv.getValue())));
+      return response.getKvs().stream().collect(Collectors.toMap(
+          kv -> asString(kv.getKey()).substring(keyPath.length()), kv -> asString(kv.getValue())));
     } catch (Exception e) {
       throw new RuntimeException("While listing db keys " + keyPath, e);
     }

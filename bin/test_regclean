@@ -86,6 +86,8 @@ if [[ $iot_provider == \"clearblade\" ]]; then
     broker_hostname=${cloud_region}-mqtt.clearblade.com
 elif [[ $iot_provider == \"gbos\" ]]; then
     broker_hostname=mqtt.bos.goog
+elif [[ $iot_provider == \"mqtt\" ]]; then
+    broker_hostname=$project_id
 elif [[ -z $broker_hostname ]]; then
     broker_hostname=mqtt.googleapis.com
 fi

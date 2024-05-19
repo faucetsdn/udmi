@@ -2,4 +2,9 @@
 
 rm -f /tmp/pod_ready.txt
 
-sudo ETCD_CLUSTER=localhost SSL_SECRETS_DIR=/etc/mosquitto/certs udmis/bin/run udmis/etc/local_pod.json
+udmis/bin/build
+
+sudo \
+    ETCD_CLUSTER=localhost\
+    SSL_SECRETS_DIR=/etc/mosquitto/certs\
+    udmis/bin/run udmis/etc/local_pod.json
