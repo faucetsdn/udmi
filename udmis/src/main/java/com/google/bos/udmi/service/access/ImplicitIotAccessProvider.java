@@ -26,6 +26,7 @@ import java.util.AbstractMap.SimpleEntry;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import udmi.schema.CloudModel;
@@ -73,7 +74,16 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     existing.stream().filter(not(map::containsKey)).forEach(devices::delete);
     CloudModel reply = new CloudModel();
     reply.operation = CREATE;
+    reply.num_id = ofNullable(cloudModel.num_id)
+        .orElseGet(() -> hashedDeviceId(registryId, deviceId));
     return reply;
+  }
+
+  /**
+   * Create pseudo device numerical id that can be used for operation verification.
+   */
+  private String hashedDeviceId(String registryId, String deviceId) {
+    return String.valueOf(Objects.hash(registryId, deviceId));
   }
 
   private CloudModel modelDevice(String registryId, String deviceId, CloudModel cloudModel) {

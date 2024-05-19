@@ -3,7 +3,6 @@
     <option name="ALTERNATIVE_JRE_PATH" value="17" />
     <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
     <envs>
-      <env name="UDMI_PREFIX" value="peringknife~" />
       <env name="ETCD_CLUSTER" value="localhost" />
       <env name="SSL_SECRETS_DIR" value="../sites/udmi_site_model/reflector" />
     </envs>
