@@ -237,7 +237,7 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
 
     @Override
     public void delete(String key) {
-      deleteEntry(key);
+      deleteEntry(getKeyPath(key));
     }
 
     public Map<String, String> entries() {
