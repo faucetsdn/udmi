@@ -88,6 +88,11 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   }
 
   @Override
+  public CloudModel modelResource(String deviceRegistryId, CloudModel cloudModel) {
+    throw new RuntimeException("Not yet implemented");
+  }
+
+  @Override
   public void sendCommandBase(String registryId, String deviceId, SubFolder folder,
       String message) {
     throw new RuntimeException("Not yet implemented");

@@ -464,6 +464,8 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
 
   private CloudModel modelRegistry(String registryId, String deviceId, CloudModel cloudModel) {
     String registryActual = registryId + deviceId;
+    // WHEN IS DEVICEID POPULATED??
+    // LOOKS LIKE ITS MAKING A
     if (!deviceId.isEmpty()) {
       CloudModel deviceModel = deepCopy(cloudModel);
       deviceModel.resource_type = DEVICE;
@@ -697,10 +699,12 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   }
 
   @Override
+  public CloudModel modelResource(String registryId, CloudModel cloudModel) {
+    return modelRegistry(registryId, cloudModel);
+  }
+
+  @Override
   public CloudModel modelResource(String registryId, String deviceId, CloudModel cloudModel) {
-    if (cloudModel.resource_type == REGISTRY) {
-      return modelRegistry(registryId, deviceId, cloudModel);
-    }
     return modelDevice(registryId, deviceId, cloudModel);
   }
 

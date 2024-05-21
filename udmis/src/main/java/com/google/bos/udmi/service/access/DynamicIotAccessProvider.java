@@ -140,6 +140,11 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   @Override
+  public CloudModel modelResource(String deviceRegistryId, CloudModel cloudModel) {
+    return getProviderFor(deviceRegistryId).modelResource(deviceRegistryId, cloudModel);
+  }
+
+  @Override
   public String modifyConfig(String registryId, String deviceId,
       Function<Entry<Long, String>, String> munger) {
     return getProviderFor(registryId).modifyConfig(registryId, deviceId, munger);

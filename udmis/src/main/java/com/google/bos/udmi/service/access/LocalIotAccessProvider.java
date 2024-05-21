@@ -91,6 +91,11 @@ public class LocalIotAccessProvider extends IotAccessBase {
   }
 
   @Override
+  public CloudModel modelResource(String deviceRegistryId, CloudModel cloudModel) {
+    throw new RuntimeException("Not yet implemented");
+  }
+
+  @Override
   public void sendCommandBase(String registryId, String deviceId, SubFolder folder,
       String message) {
     sentCommands.add(format("%s/%s/%s:%s", registryId, deviceId, folder, message));

@@ -132,6 +132,11 @@ public class PubSubIotAccessProvider extends IotAccessBase {
   }
 
   @Override
+  public CloudModel modelResource(String deviceRegistryId, CloudModel cloudModel) {
+    throw new RuntimeException("modelDevice not implemented for PubSub");
+  }
+
+  @Override
   public String fetchRegistryMetadata(String registryId, String metadataKey) {
     // Metadata is not supported by PubSub, so just pretend there is none.
     return null;

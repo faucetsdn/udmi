@@ -11,9 +11,6 @@
     "capacity": null
   },
   "crons": {
-    "heartbeat": {
-      "periodic_sec": 10
-    },
     "reglist": {
       "periodic_sec": 3600,
       "payload": "query/cloud:{\"generation\":\"{{timestamp}}\", \"depth\":\"registries\"}",
@@ -61,6 +58,7 @@
       "enabled": "${BITBOX_DISCOVERY}"
     },
     "distributor": {
+      "enabled": "false",
       "recv_id": "#",
       "protocol": "mqtt",
       "transport": "tcp",
