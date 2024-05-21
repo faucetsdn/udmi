@@ -13,6 +13,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.getDate;
+import static com.google.udmi.util.JsonUtil.writeFile;
 import static com.google.udmi.util.MetadataMapKeys.UDMI_UPDATED;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -67,9 +68,9 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.udmi.util.JsonUtil;
+import java.io.File;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Base64;
 import java.util.Date;
@@ -130,19 +131,37 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   public static void main(String[] args) {
     requireNonNull(System.getenv(CONFIG_ENV), CONFIG_ENV + " not defined");
     IotAccess iotAccess = new IotAccess();
-    if (args.length != 1) {
-      System.err.println("Usage: registry_id");
+    if (args.length < 1 || args.length > 2) {
+      System.err.println("Usage: registry_id [device_id]");
       return;
     }
     final String registryId = args[0];
+    final String deviceId = args.length > 1 ? args[1] : null;
+
     Map<String, Object> stringObjectMap = JsonUtil.loadMap(System.getenv(CONFIG_ENV));
     iotAccess.project_id = (String) requireNonNull(stringObjectMap.get("project"));
     System.err.println("Extracted project from ClearBlade config file: " + iotAccess.project_id);
     ClearBladeIotAccessProvider clearBladeIotAccessProvider =
         new ClearBladeIotAccessProvider(iotAccess);
     clearBladeIotAccessProvider.populateRegistryRegions();
-    CloudModel cloudModel = clearBladeIotAccessProvider.listDevices(registryId);
-    System.err.printf("Found %d results%n", cloudModel.device_ids.size());
+
+    if (deviceId == null) {
+      CloudModel cloudModel = clearBladeIotAccessProvider.listDevices(registryId);
+      System.err.printf("Found %d devices in %s%n", cloudModel.device_ids.size(), registryId);
+    } else {
+      CloudModel cloudModel = clearBladeIotAccessProvider.fetchDevice(registryId, deviceId);
+      System.err.printf("Fetched %s/%s num_id %s%n", registryId, deviceId, cloudModel.num_id);
+
+      File deviceFile = new File(format("%s_%s_device.json", registryId, deviceId));
+      writeFile(cloudModel, deviceFile);
+      System.err.printf("Wrote device info file to %s%n", deviceFile.getAbsoluteFile());
+
+      Entry<Long, String> configInfo =
+          clearBladeIotAccessProvider.fetchConfig(registryId, deviceId);
+      File configFile = new File(format("%s_%s_config.json", registryId, deviceId));
+      writeFile(configInfo.getValue(), configFile);
+      System.err.printf("Wrote device config file to %s%n", configFile.getAbsoluteFile());
+    }
   }
 
   /**
