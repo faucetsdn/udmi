@@ -226,7 +226,7 @@ public class ReflectProcessor extends ProcessorBase {
 
     }
       ifNotNullThen(extractDeviceModel(request), model -> publish(attributes, model));
-    return iotAccess.modelResource(attributes.deviceRegistryId, attributes.deviceId, request);
+    return iotAccess.modelDevice(attributes.deviceRegistryId, attributes.deviceId, request);
   }
 
   private static ModelUpdate asModelUpdate(String modelString) {

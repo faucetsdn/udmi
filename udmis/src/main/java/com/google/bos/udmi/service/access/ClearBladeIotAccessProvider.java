@@ -441,7 +441,8 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     }
   }
 
-  private CloudModel modelDevice(String registryId, String deviceId, CloudModel cloudModel) {
+  @Override
+  public CloudModel modelDevice(String registryId, String deviceId, CloudModel cloudModel) {
     String devicePath = getDeviceName(registryId, deviceId);
     Operation operation = cloudModel.operation;
     Resource_type type = ofNullable(cloudModel.resource_type).orElse(Resource_type.DEVICE);
@@ -462,7 +463,8 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     }
   }
 
-  private CloudModel modelRegistry(String registryId, String deviceId, CloudModel cloudModel) {
+  @Override
+  public CloudModel modelRegistry(String registryId, String deviceId, CloudModel cloudModel) {
     String registryActual = registryId + deviceId;
     // WHEN IS DEVICEID POPULATED??
     // LOOKS LIKE ITS MAKING A
@@ -696,16 +698,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   @Override
   public CloudModel listDevices(String deviceRegistryId) {
     return listRegistryDevices(deviceRegistryId, null);
-  }
-
-  @Override
-  public CloudModel modelResource(String registryId, CloudModel cloudModel) {
-    return modelRegistry(registryId, cloudModel);
-  }
-
-  @Override
-  public CloudModel modelResource(String registryId, String deviceId, CloudModel cloudModel) {
-    return modelDevice(registryId, deviceId, cloudModel);
   }
 
   @Override
