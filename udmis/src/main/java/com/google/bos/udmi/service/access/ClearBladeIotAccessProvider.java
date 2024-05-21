@@ -466,23 +466,21 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
 
   @Override
   public CloudModel modelRegistry(String registryId, String deviceId, CloudModel cloudModel) {
-    String registryActual = registryId + deviceId;
-    if (!deviceId.isEmpty()) {
-      CloudModel deviceModel = deepCopy(cloudModel);
-      deviceModel.resource_type = DEVICE;
-      modelDevice(reflectRegistry, registryActual, deviceModel);
-    }
-    Operation operation = cloudModel.operation;
-    Resource_type type = ofNullable(cloudModel.resource_type).orElse(Resource_type.DEVICE);
-    checkState(type == REGISTRY, "unexpected resource type " + type);
     try {
-      Device device = convert(cloudModel, deviceId);
-      if (operation == CREATE) {
-        return createRegistry(registryActual, device);
-      } else if (operation == UPDATE) {
+      String registryActual = registryId + deviceId;
+      if (operation == UPDATE) {
         // Do nothing
         return cloudModel;
-
+      } else if (operation == CREATE) {
+        if (deviceId != null && !deviceId.isEmpty()) {
+          CloudModel deviceModel = deepCopy(cloudModel);
+          deviceModel.resource_type = DEVICE;
+          modelDevice(reflectRegistry, registryActual, deviceModel);
+        }
+        Resource_type type = ofNullable(cloudModel.resource_type).orElse(Resource_type.DEVICE);
+        checkState(type == REGISTRY, "unexpected resource type " + type);
+        Device device = convert(cloudModel, deviceId);
+        return createRegistry(registryActual, device);
       } else {
         throw new RuntimeException("Unsupported operation " + operation);
       }
