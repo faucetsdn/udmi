@@ -305,7 +305,7 @@ public class IotReflectorClient implements MessagePublisher {
         return false;
       }
 
-      // Check for LEGACY UDMIS folder, and use that instead for backwards compatability. Once
+      // Check for LEGACY UDMIS folder, and use that instead for backwards compatibility. Once
       // UDMI version 1.4.2+ is firmly established, this can be simplified to just UDMI.
       boolean legacyConfig = message.containsKey("udmis");
       final UdmiConfig reflectorConfig;
