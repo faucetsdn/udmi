@@ -67,6 +67,7 @@
     "subType": {
       "enum": [
         "invalid",
+        "reflect",
         "events",
         "errors",
         "commands",

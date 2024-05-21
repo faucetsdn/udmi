@@ -62,12 +62,13 @@ public class ReflectProcessor extends ProcessorBase {
 
   public static final String PAYLOAD_KEY = "payload";
   private static final Date START_TIME = new Date();
+  static final String UDMI_REFLECT = "UDMI-REFLECT";
 
   public ReflectProcessor(EndpointConfiguration config) {
     super(config);
   }
 
-  private static String makeTransactionId() {
+  public static String makeTransactionId() {
     return format("RP:%08x", Objects.hash(System.currentTimeMillis(), Thread.currentThread()));
   }
 
@@ -77,10 +78,12 @@ public class ReflectProcessor extends ProcessorBase {
     Envelope reflection = continuation.getEnvelope();
     Map<String, Object> objectMap = toMap(message);
     try {
-      if (reflection.subFolder == null) {
+      boolean isCommand = objectMap.containsKey(PAYLOAD_KEY);
+      if (reflection.subFolder == null && !isCommand) {
         reflectStateHandler(reflection, extractUdmiState(message));
-      } else if (reflection.subFolder != SubFolder.UDMI) {
-        throw new IllegalStateException("Unexpected reflect subfolder " + reflection.subFolder);
+      } else if (reflection.subFolder != SubFolder.UDMI && reflection.subType != SubType.REFLECT) {
+        throw new IllegalStateException(format("Neither type %s nor folder %s is udmi",
+            reflection.subType, reflection.subFolder));
       } else if (message instanceof UdmiState distributedUpdate) {
         updateAwareness(reflection, distributedUpdate);
       } else {
