@@ -1,0 +1,23 @@
+#!/bin/bash -e
+
+ROOT=$(dirname $0)/..
+cd $ROOT
+mkdir -p out
+cd out
+
+podprefix=udmis-pods-
+
+pods=$(kubectl get pods | fgrep $podprefix | awk '{print $1}')
+echo Getting logs for pods $pods
+
+rm -f ${podprefix}*.log
+
+for pod in $pods; do
+  kubectl logs $pod | sed "s/.*/$pod &/" > $pod.log &
+done
+
+wait
+
+cat ${podprefix}*.log | fgrep "Z " | sort -k 2 > pods.log
+
+echo Combined logs available in $(realpath pods.log)

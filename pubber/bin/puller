@@ -1,0 +1,32 @@
+#!/bin/bash -e
+
+INSTANCES=${PUBBER_INSTANCES:-5}
+JVM_FLAGS=-Xmx64m
+
+echo Running $INSTANCES pubber instances.
+
+if [[ -z $GCP_PROJECT ]]; then
+    echo Checking GCP metadata...
+    GCP_PROJECT=$(curl "http://metadata.google.internal/computeMetadata/v1/project/project-id" \
+                       -H "Metadata-Flavor: Google" 2>/dev/null) || true
+fi
+
+if [[ -z $GCP_PROJECT ]]; then
+    echo Checking gcloud config...
+    GCP_PROJECT=$(gcloud config get-value project) || true
+fi
+
+if [[ -z $GCP_PROJECT ]]; then
+    echo Could not determine GCP_PROJECT.
+    false
+fi
+
+echo Using GCP project $GCP_PROJECT
+
+ROOT_DIR=$(realpath $(dirname $0)/..)
+
+java -XX:+PrintFlagsFinal -version | fgrep ' MaxHeapSize'
+
+java $JVM_FLAGS -Dorg.slf4j.simpleLogger.showThreadName=false \
+     -jar $ROOT_DIR/build/libs/pubber-1.0-SNAPSHOT-all.jar \
+     $GCP_PROJECT PubSub swarm-feed $INSTANCES

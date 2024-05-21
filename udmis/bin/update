@@ -1,0 +1,20 @@
+#!/bin/bash -e
+
+if [[ $# != 1 ]]; then
+    echo Usage: $0 project_id[/namespace]
+    false
+fi
+
+full_id=$1
+shift
+
+CMD=$(basename $0)
+ROOT=$(dirname $0)/..
+cd $ROOT
+
+bin/setup $full_id
+
+bin/container build
+bin/container $CMD
+sleep 10
+kubectl get pods
