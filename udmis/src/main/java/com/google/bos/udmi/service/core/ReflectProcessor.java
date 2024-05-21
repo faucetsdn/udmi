@@ -19,6 +19,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.multiTrim;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
+import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.fromString;
@@ -109,14 +110,8 @@ public class ReflectProcessor extends ProcessorBase {
     return lastConfig.after(START_TIME) && !lastConfigAck.before(lastConfig);
   }
 
-  private ModelUpdate extractDeviceModel(CloudModel request) {
-    return ifNotNullGet(request.metadata,
-        metadata -> ofNullable(metadata.get(MetadataMapKeys.UDMI_METADATA))
-            .map(ReflectProcessor::asModelUpdate)
-            .orElse(null));
-  }
 
-  private ModelUpdate extractDeviceModel(CloudModel request) {
+  private ModelUpdate extractModel(CloudModel request) {
     return ifNotNullGet(request.metadata,
         metadata -> ofNullable(metadata.get(MetadataMapKeys.UDMI_METADATA))
             .map(ReflectProcessor::asModelUpdate)
@@ -133,7 +128,7 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private UdmiState extractUdmiState(Object message) {
-    Map<String, Object> stringObjectMap = JsonUtil.asMap(message);
+    Map<String, Object> stringObjectMap = asMap(message);
     UdmiState udmiState =
         convertToStrict(UdmiState.class, stringObjectMap.get(SubFolder.UDMI.value()));
     requireNonNull(udmiState, "reflector state update missing udmi subfolder");
@@ -222,14 +217,15 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private CloudModel reflectModel(Envelope attributes, CloudModel request) {
-    // Reflect the update ,,
-    ifNotNullThen(extractDeviceModel(request), model -> publish(attributes, model));
-    switch(request.resource_type){
-      case DEVICE:
-
+    ifNotNullThen(extractModel(request), model -> publish(attributes, model));
+    switch (request.resource_type) {
+      case DEVICE, GATEWAY:
+        return iotAccess.modelDevice(attributes.deviceRegistryId, attributes.deviceId, request);
+      case REGISTRY:
+        return iotAccess.modelRegistry(attributes.deviceRegistryId, attributes.deviceId, request);
+      default:
+        throw new RuntimeException("invalid resource type");
     }
-      ifNotNullThen(extractDeviceModel(request), model -> publish(attributes, model));
-    return iotAccess.modelDevice(attributes.deviceRegistryId, attributes.deviceId, request);
   }
 
   private static ModelUpdate asModelUpdate(String modelString) {
@@ -239,7 +235,7 @@ public class ReflectProcessor extends ProcessorBase {
       modelUpdate.description = modelString;
       return modelUpdate;
     }
-    return fromStringStrict(ModelUpdate.class, modelString);
+    return fromString(ModelUpdate.class, modelString);
   }
 
   private CloudModel reflectProcess(Envelope attributes, Object payload) {

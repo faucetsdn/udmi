@@ -19,6 +19,7 @@ import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static udmi.schema.CloudModel.Operation.CREATE;
 import static udmi.schema.CloudModel.Operation.DELETE;
+import static udmi.schema.CloudModel.Operation.UPDATE;
 import static udmi.schema.CloudModel.Resource_type.DEVICE;
 import static udmi.schema.CloudModel.Resource_type.GATEWAY;
 import static udmi.schema.CloudModel.Resource_type.REGISTRY;
@@ -466,8 +467,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   @Override
   public CloudModel modelRegistry(String registryId, String deviceId, CloudModel cloudModel) {
     String registryActual = registryId + deviceId;
-    // WHEN IS DEVICEID POPULATED??
-    // LOOKS LIKE ITS MAKING A
     if (!deviceId.isEmpty()) {
       CloudModel deviceModel = deepCopy(cloudModel);
       deviceModel.resource_type = DEVICE;
@@ -480,6 +479,10 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       Device device = convert(cloudModel, deviceId);
       if (operation == CREATE) {
         return createRegistry(registryActual, device);
+      } else if (operation == UPDATE) {
+        // Do nothing
+        return cloudModel;
+
       } else {
         throw new RuntimeException("Unsupported operation " + operation);
       }
@@ -561,7 +564,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
 
   private CloudModel updateDevice(String registryId, Device device) {
     CloudModel cloudModel = updateDevice(registryId, device, UPDATE_FIELD_MASK);
-    cloudModel.operation = Operation.UPDATE;
+    cloudModel.operation = UPDATE;
     return cloudModel;
   }
 

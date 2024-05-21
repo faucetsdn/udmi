@@ -76,7 +76,8 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     return reply;
   }
 
-  private CloudModel modelDevice(String registryId, String deviceId, CloudModel cloudModel) {
+  @Override
+  public CloudModel modelDevice(String registryId, String deviceId, CloudModel cloudModel) {
     Operation operation = cloudModel.operation;
     Resource_type type = ofNullable(cloudModel.resource_type).orElse(Resource_type.DEVICE);
     checkState(type == DEVICE || type == GATEWAY, "unexpected resource type " + type);
@@ -95,11 +96,12 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     }
   }
 
-  private CloudModel modelRegistry(String registryId, String deviceId, CloudModel cloudModel) {
+ @Override
+  public CloudModel modelRegistry(String registryId, String deviceId, CloudModel cloudModel) {
     throw new RuntimeException("modelRegistry not yet implemented");
   }
-
-  private CloudModel modifyDevice(String registryId, String deviceId, CloudModel cloudModel) {
+  
+  public CloudModel modifyDevice(String registryId, String deviceId, CloudModel cloudModel) {
     throw new RuntimeException("modifyDevice not yet implemented");
   }
 
@@ -175,15 +177,6 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
         Collectors.toMap(id -> id, id -> fetchDevice(registryId, id)));
     return cloudModel;
   }
-
-  @Override
-  public CloudModel modelDevice(String deviceRegistryId, String deviceId, CloudModel cloudModel) {
-    return modelRegistry(registryId, deviceId, cloudModel)
-  }
-
-  @Override
-  public CloudModel modelRegistry(String deviceRegistryId, String deviceId, CloudModel cloudModel) {
-    return modelDevice(registryId, deviceId, cloudModel);
 
   @Override
   public void sendCommandBase(String registryId, String deviceId, SubFolder folder,
