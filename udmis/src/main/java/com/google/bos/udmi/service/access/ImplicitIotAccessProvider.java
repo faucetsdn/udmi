@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.Common.DEFAULT_REGION;
 import static com.google.udmi.util.GeneralUtils.booleanString;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThrow;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.isNullOrNotEmpty;
 import static com.google.udmi.util.JsonUtil.asMap;
@@ -156,7 +157,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     Map<String, String> properties = new HashMap<>();
     ifNotNullThen(createdAt, x -> properties.put(CREATED_AT_PROPERTY, createdAt));
     properties.put(BLOCKED_PROPERTY, booleanString(cloudModel.blocked));
-    properties.put(NUM_ID_PROPERTY, cloudModel.num_id);
+    ifNotNullThen(cloudModel.num_id, id -> properties.put(NUM_ID_PROPERTY, id));
     return properties;
   }
 
