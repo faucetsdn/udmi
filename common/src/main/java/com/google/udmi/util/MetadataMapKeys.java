@@ -4,7 +4,6 @@ public class MetadataMapKeys {
 
   public static final String UDMI_PREFIX = "udmi_";
   public static final String UDMI_METADATA = "udmi_metadata";
-  public static final String UDMI_SITE_METADATA = "udmi_site_metadata";
   public static final String UDMI_CONFIG = "udmi_config";
   public static final String UDMI_GENERATION = "udmi_generation";
   public static final String UDMI_UPDATED = "udmi_updated";
