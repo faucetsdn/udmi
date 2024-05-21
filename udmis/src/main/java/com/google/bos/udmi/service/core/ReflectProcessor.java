@@ -217,6 +217,10 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private CloudModel reflectModel(Envelope attributes, CloudModel request) {
+    // Figure out a way to make this generic "model" or split up and add seperate calls for
+    // extractDeviceModel and extractRegistryModel. Basically this is needed because the subfolder
+    // Is assigned based on the class of the object
+    // >> registerMessageClass(SubType.MODEL, SubFolder.UPDATE, ModelUpdate.class);
     ifNotNullThen(extractModel(request), model -> publish(attributes, model));
     switch (request.resource_type) {
       case DEVICE, GATEWAY:
