@@ -466,8 +466,9 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
 
   @Override
   public CloudModel modelRegistry(String registryId, String deviceId, CloudModel cloudModel) {
+    Operation operation = cloudModel.operation;
+    String registryActual = registryId + deviceId;
     try {
-      String registryActual = registryId + deviceId;
       if (operation == UPDATE) {
         // Do nothing
         return cloudModel;
