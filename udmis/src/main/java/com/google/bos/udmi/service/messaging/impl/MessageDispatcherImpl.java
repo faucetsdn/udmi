@@ -41,7 +41,6 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.TestOnly;
 import org.jetbrains.annotations.VisibleForTesting;
@@ -78,7 +77,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   }
 
   private final MessagePipe messagePipe;
-  private final Map<Object, Envelope> messageEnvelopes = new ConcurrentHashMap<>();
+  private final Map<Integer, Envelope> messageEnvelopes = new ConcurrentHashMap<>();
   private final Map<Class<?>, Consumer<Object>> handlers = new ConcurrentHashMap<>();
   private final Map<Class<?>, AtomicInteger> handlerCounts = new ConcurrentHashMap<>();
   private final String projectId;
@@ -126,10 +125,13 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     return TYPE_CLASSES.getOrDefault(mapKey, SPECIAL_CLASSES.getOrDefault(mapKey, DEFAULT_CLASS));
   }
 
-  @NotNull
   private static SimpleEntry<SubType, SubFolder> getTypeFolderEntry(SubType type,
       SubFolder folder) {
     return new SimpleEntry<>(type, folder);
+  }
+
+  private static Integer messageKey(Object message) {
+    return System.identityHashCode(message);
   }
 
   private static void registerHandlerType(SubType type, SubFolder folder) {
@@ -258,7 +260,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
 
   @Override
   public MessageContinuation getContinuation(Object message) {
-    Envelope messageEnvelope = messageEnvelopes.get(message);
+    Envelope messageEnvelope = messageEnvelopes.get(messageKey(message));
     Envelope envelope = messageEnvelope == null ? getThreadEnvelope() : messageEnvelope;
     final Envelope continuationEnvelope =
         requireNonNull(deepCopy(envelope), "missing message envelope");
@@ -415,12 +417,12 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   @VisibleForTesting
   public void withEnvelopeFor(Envelope envelope, Object message, Runnable run) {
     try {
-      messageEnvelopes.put(message, envelope);
+      messageEnvelopes.put(messageKey(message), envelope);
       setThreadEnvelope(envelope);
       run.run();
     } finally {
       setThreadEnvelope(null);
-      requireNonNull(messageEnvelopes.remove(message), "missing remove envelope");
+      requireNonNull(messageEnvelopes.remove(messageKey(message)), "missing remove envelope");
     }
     debug("TAP messageEnvelopes is size " + messageEnvelopes.size());
   }
