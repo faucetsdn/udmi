@@ -417,8 +417,8 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
       setThreadEnvelope(envelope);
       run.run();
     } finally {
-      messageEnvelopes.remove(message);
       setThreadEnvelope(null);
+      requireNonNull(messageEnvelopes.remove(message), "missing remove envelope");
     }
   }
 
