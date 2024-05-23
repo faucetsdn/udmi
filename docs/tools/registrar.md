@@ -37,6 +37,8 @@ The registrar tool can be run locally to just validate the metadata, or with an 
 be used to specific specific device(s) to register (rather than all).
 
 ```
+Usage:
+
 bin/registrar site_path [project_id] [options] [devices...]
 
 bin/registrar config_file
