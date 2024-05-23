@@ -36,14 +36,33 @@ The registrar tool can be run locally to just validate the metadata, or with an 
 `project_id` to specify a target GCP project. Additional command-line arguments can
 be used to specific specific device(s) to register (rather than all).
 
-Usage: `bin/registrar site_path [project_id] [options] [devices...]`
+```
+bin/registrar site_path [project_id] [options] [devices...]
 
+bin/registrar config_file
+```
+
+* `config_file`: Path to a configuration file which contains configuration options;
 * `site_path`: The _directory_ containing the site model, or a model-with-project _file_ directly.
-* `project_id`: The (optional) GCP project ID that contains the target registry. This information
-  can also be included in the specified site model.
-* `options`: Various options to impact behavior. Typically `-u` for _update_ and `-d` for _delete_.
+* `project_id`: The project ID that contains the target registry. The project ID can be prepended with iot_provider:
+  * `//clearblade/PROJECT_ID` for a public Clearblade project.
+  * `//gbos/PROJECT_ID` for a Google operated Clearblade project.
+* `options`: Various options to impact behavior:
+  * `-u` Update.
+  * `-d` Delete all devices.
+  * `-b` Block unknown devices.
+  * `-x` Delete unknown devices.
+  * `-n` Number of thread counts.
 * `devices`: Multiple device entries for limited registration. Can be just the device name
-(`AHU-12`), or path to device (`site/devices/AHU-12`) for use with file-name glob.
+  (`AHU-12`), or path to device (`site/devices/AHU-12`) for use with file-name glob.
+
+Examples:
+
+```
+bin/registrar sites/UK-LON-ABC //gbos/bos-platform-testing 
+bin/registrar sites/UK-LON-ABC/cloud_iot_config.json
+```
+
 
 Running the tool will create some output files for each device, and also a top-level
 `registration_summary.json` file with summary results. Detailed error reports (if any)
