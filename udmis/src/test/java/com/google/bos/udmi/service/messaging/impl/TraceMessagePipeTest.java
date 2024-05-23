@@ -7,6 +7,7 @@ import static com.google.bos.udmi.service.messaging.impl.MessageTestCore.TEST_RE
 import static com.google.udmi.util.GeneralUtils.decodeBase64;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.fromString;
+import static com.google.udmi.util.JsonUtil.safeSleep;
 import static org.apache.commons.io.FileUtils.deleteDirectory;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -86,7 +87,7 @@ public class TraceMessagePipeTest {
     fileMessagePipe.publish(traceOutBundle(DEVICE_TWO, VALUE_ONE));
 
     DirectoryTraverser directoryTraverser = new DirectoryTraverser(TRACE_OUT);
-    List<File> messages = directoryTraverser.stream().collect(Collectors.toList());
+    List<File> messages = directoryTraverser.stream().toList();
     assertEquals(3, messages.size(), "traced messages");
 
     Map<String, Object> stringObjectMap = JsonUtil.loadMap(messages.get(1));
@@ -104,6 +105,8 @@ public class TraceMessagePipeTest {
     TraceMessagePipe fileMessagePipe = new TraceMessagePipe(getTraceInConfig());
     fileMessagePipe.activate(consumed::add);
     fileMessagePipe.awaitShutdown();
+
+    safeSleep(1000); // Stability delay
 
     assertEquals(89, consumed.size(), "playback messages");
 
