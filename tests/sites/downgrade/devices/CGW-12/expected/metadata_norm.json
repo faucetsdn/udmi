@@ -2,7 +2,8 @@
   "timestamp": "2018-08-26T21:39:29Z",
   "version": "1.4.1",
   "upgraded_from": "1.3.14",
-  "hash": "e5804319",
+  "hash": "d7db447c",
+  "tags": [ ],
   "cloud": {
     "auth_type": "RS256"
   },
@@ -39,40 +40,52 @@
   "pointset": {
     "points": {
       "chiller_fault_status": {
-        "units": "no_units"
+        "units": "no_units",
+        "tags": [ ]
       },
       "chiller_run_status": {
-        "units": "no_units"
+        "units": "no_units",
+        "tags": [ ]
       },
       "cooling_water_primary_return_temperature_sensor": {
-        "units": "degrees-celcius"
+        "units": "degrees-celcius",
+        "tags": [ ]
       },
       "cooling_water_primary_supply_temperature_sensor": {
-        "units": "degrees-celcius"
+        "units": "degrees-celcius",
+        "tags": [ ]
       },
       "cooling_water_secondary_pump_differential_pressure_status": {
-        "units": "no_units"
+        "units": "no_units",
+        "tags": [ ]
       },
       "cooling_water_secondary_pump_fault_status_1": {
-        "units": "no_units"
+        "units": "no_units",
+        "tags": [ ]
       },
       "cooling_water_secondary_pump_fault_status_2": {
-        "units": "no_units"
+        "units": "no_units",
+        "tags": [ ]
       },
       "cooling_water_secondary_pump_run_command_1": {
-        "units": "no_units"
+        "units": "no_units",
+        "tags": [ ]
       },
       "cooling_water_secondary_pump_run_command_2": {
-        "units": "no_units"
+        "units": "no_units",
+        "tags": [ ]
       },
       "cooling_water_secondary_return_temperature_sensor": {
-        "units": "degrees-celcius"
+        "units": "degrees-celcius",
+        "tags": [ ]
       },
       "cooling_water_secondary_supply_temperature_sensor": {
-        "units": "degrees-celcius"
+        "units": "degrees-celcius",
+        "tags": [ ]
       },
       "cooling_water_system_pressurization_unit_status": {
-        "units": "no_units"
+        "units": "no_units",
+        "tags": [ ]
       }
     }
   }

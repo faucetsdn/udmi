@@ -6,5 +6,4 @@ data:
   BITBOX_DISCOVERY: prodev~udmi_target-discover
   ETCD_CLUSTER: etcd-set-0.etcd-set
   PROFILE_SEC: "10"
-  CLOUD_QUERY_LOOPS: "3"
   UDMI_NAMESPACE: @UDMI_NAMESPACE@

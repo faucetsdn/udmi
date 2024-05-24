@@ -2,7 +2,9 @@
 package udmi.schema;
 
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -10,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 
 /**
@@ -26,7 +29,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
     "baseline_tolerance",
     "baseline_state",
     "cov_increment",
-    "ref"
+    "ref",
+    "tags"
 })
 @Generated("jsonschema2pojo")
 public class PointPointsetModel {
@@ -80,6 +84,14 @@ public class PointPointsetModel {
     @JsonProperty("ref")
     @JsonPropertyDescription("Mapping for the point to an internal resource (e.g. BACnet object reference)")
     public String ref;
+    /**
+     * Tags assosciated with the point
+     * 
+     */
+    @JsonProperty("tags")
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    @JsonPropertyDescription("Tags assosciated with the point")
+    public Set<Object> tags = new LinkedHashSet<Object>();
 
     @Override
     public int hashCode() {
@@ -91,6 +103,7 @@ public class PointPointsetModel {
         result = ((result* 31)+((this.baseline_tolerance == null)? 0 :this.baseline_tolerance.hashCode()));
         result = ((result* 31)+((this.cov_increment == null)? 0 :this.cov_increment.hashCode()));
         result = ((result* 31)+((this.writable == null)? 0 :this.writable.hashCode()));
+        result = ((result* 31)+((this.tags == null)? 0 :this.tags.hashCode()));
         return result;
     }
 
@@ -103,7 +116,7 @@ public class PointPointsetModel {
             return false;
         }
         PointPointsetModel rhs = ((PointPointsetModel) other);
-        return ((((((((this.ref == rhs.ref)||((this.ref!= null)&&this.ref.equals(rhs.ref)))&&((this.baseline_value == rhs.baseline_value)||((this.baseline_value!= null)&&this.baseline_value.equals(rhs.baseline_value))))&&((this.baseline_state == rhs.baseline_state)||((this.baseline_state!= null)&&this.baseline_state.equals(rhs.baseline_state))))&&((this.units == rhs.units)||((this.units!= null)&&this.units.equals(rhs.units))))&&((this.baseline_tolerance == rhs.baseline_tolerance)||((this.baseline_tolerance!= null)&&this.baseline_tolerance.equals(rhs.baseline_tolerance))))&&((this.cov_increment == rhs.cov_increment)||((this.cov_increment!= null)&&this.cov_increment.equals(rhs.cov_increment))))&&((this.writable == rhs.writable)||((this.writable!= null)&&this.writable.equals(rhs.writable))));
+        return (((((((((this.ref == rhs.ref)||((this.ref!= null)&&this.ref.equals(rhs.ref)))&&((this.baseline_value == rhs.baseline_value)||((this.baseline_value!= null)&&this.baseline_value.equals(rhs.baseline_value))))&&((this.baseline_state == rhs.baseline_state)||((this.baseline_state!= null)&&this.baseline_state.equals(rhs.baseline_state))))&&((this.units == rhs.units)||((this.units!= null)&&this.units.equals(rhs.units))))&&((this.baseline_tolerance == rhs.baseline_tolerance)||((this.baseline_tolerance!= null)&&this.baseline_tolerance.equals(rhs.baseline_tolerance))))&&((this.cov_increment == rhs.cov_increment)||((this.cov_increment!= null)&&this.cov_increment.equals(rhs.cov_increment))))&&((this.writable == rhs.writable)||((this.writable!= null)&&this.writable.equals(rhs.writable))))&&((this.tags == rhs.tags)||((this.tags!= null)&&this.tags.equals(rhs.tags))));
     }
 
 

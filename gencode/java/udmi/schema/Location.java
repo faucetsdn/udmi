@@ -18,6 +18,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "section",
     "room",
     "floor",
+    "floor_seq",
     "position",
     "coordinates"
 })
@@ -38,6 +39,13 @@ public class Location {
     public String room;
     @JsonProperty("floor")
     public String floor;
+    /**
+     * Sequential integer representation for a floor, primiarly for comparisons when non integer floors are used, e.g. 1 and 1M
+     * 
+     */
+    @JsonProperty("floor_seq")
+    @JsonPropertyDescription("Sequential integer representation for a floor, primiarly for comparisons when non integer floors are used, e.g. 1 and 1M")
+    public Integer floor_seq;
     @JsonProperty("position")
     public Position position;
     @JsonProperty("coordinates")
@@ -47,6 +55,7 @@ public class Location {
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.site == null)? 0 :this.site.hashCode()));
+        result = ((result* 31)+((this.floor_seq == null)? 0 :this.floor_seq.hashCode()));
         result = ((result* 31)+((this.coordinates == null)? 0 :this.coordinates.hashCode()));
         result = ((result* 31)+((this.section == null)? 0 :this.section.hashCode()));
         result = ((result* 31)+((this.position == null)? 0 :this.position.hashCode()));
@@ -64,7 +73,7 @@ public class Location {
             return false;
         }
         Location rhs = ((Location) other);
-        return (((((((this.site == rhs.site)||((this.site!= null)&&this.site.equals(rhs.site)))&&((this.coordinates == rhs.coordinates)||((this.coordinates!= null)&&this.coordinates.equals(rhs.coordinates))))&&((this.section == rhs.section)||((this.section!= null)&&this.section.equals(rhs.section))))&&((this.position == rhs.position)||((this.position!= null)&&this.position.equals(rhs.position))))&&((this.floor == rhs.floor)||((this.floor!= null)&&this.floor.equals(rhs.floor))))&&((this.room == rhs.room)||((this.room!= null)&&this.room.equals(rhs.room))));
+        return ((((((((this.site == rhs.site)||((this.site!= null)&&this.site.equals(rhs.site)))&&((this.floor_seq == rhs.floor_seq)||((this.floor_seq!= null)&&this.floor_seq.equals(rhs.floor_seq))))&&((this.coordinates == rhs.coordinates)||((this.coordinates!= null)&&this.coordinates.equals(rhs.coordinates))))&&((this.section == rhs.section)||((this.section!= null)&&this.section.equals(rhs.section))))&&((this.position == rhs.position)||((this.position!= null)&&this.position.equals(rhs.position))))&&((this.floor == rhs.floor)||((this.floor!= null)&&this.floor.equals(rhs.floor))))&&((this.room == rhs.room)||((this.room!= null)&&this.room.equals(rhs.room))));
     }
 
 }
