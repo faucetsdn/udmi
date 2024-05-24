@@ -2,7 +2,7 @@
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.4.1",
   "upgraded_from": "1",
-  "hash": "5f777a92",
+  "hash": "e6633afb",
   "tags": [ ],
   "cloud": {
     "auth_type": "RS256"
@@ -41,14 +41,17 @@
     "points": {
       "filter_alarm_pressure_status": {
         "units": "No-units",
-        "ref": "BV11.present_value"
+        "ref": "BV11.present_value",
+        "tags": [ ]
       },
       "filter_differential_pressure": {
-        "units": "Bars"
+        "units": "Bars",
+        "tags": [ ]
       },
       "filter_differential_pressure_sensor": {
         "units": "Degrees-Celsius",
-        "ref": "AV12.present_value"
+        "ref": "AV12.present_value",
+        "tags": [ ]
       }
     },
     "exclude_units_from_config": true

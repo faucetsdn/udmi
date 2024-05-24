@@ -1,7 +1,7 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.5.0",
-  "hash": "c9d2b4b9",
+  "hash": "a7430a84",
   "tags": [ ],
   "system": {
     "location": {
@@ -37,15 +37,18 @@
     "points": {
       "filter_alarm_pressure_status": {
         "units": "No-units",
-        "ref": "MCN8.present_value"
+        "ref": "MCN8.present_value",
+        "tags": [ ]
       },
       "filter_differential_pressure": {
         "units": "Bars",
-        "ref": "AI2.differential"
+        "ref": "AI2.differential",
+        "tags": [ ]
       },
       "filter_differential_pressure_sensor": {
         "units": "Degrees-Celsius",
-        "ref": "AI1.present_value"
+        "ref": "AI1.present_value",
+        "tags": [ ]
       }
     }
   }

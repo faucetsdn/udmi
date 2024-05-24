@@ -1,7 +1,7 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.5.0",
-  "hash": "e3c6cfce",
+  "hash": "b5ab954f",
   "tags": [ ],
   "cloud": {
     "detail": "site default for unit tests"
@@ -41,15 +41,18 @@
     "points": {
       "filter_alarm_pressure_status": {
         "units": "No-units",
-        "ref": "MCN8.present_value"
+        "ref": "MCN8.present_value",
+        "tags": [ ]
       },
       "filter_differential_pressure": {
         "units": "Bars",
-        "ref": "AI2.differential"
+        "ref": "AI2.differential",
+        "tags": [ ]
       },
       "filter_differential_pressure_sensor": {
         "units": "Degrees-Celsius",
-        "ref": "FAXLE12.present_value"
+        "ref": "FAXLE12.present_value",
+        "tags": [ ]
       }
     }
   }
