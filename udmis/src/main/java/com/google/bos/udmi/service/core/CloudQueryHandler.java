@@ -46,7 +46,7 @@ public class CloudQueryHandler {
     target = controller.targetProcessor;
     query = cloudQuery;
     envelope = controller.getContinuation(cloudQuery).getEnvelope();
-    debug("TAP Starting CloudQuery for %s/%s %s", envelope.deviceRegistryId, envelope.deviceId,
+    debug("Starting CloudQuery for %s/%s %s", envelope.deviceRegistryId, envelope.deviceId,
         envelope.transactionId);
     savedQuery = stringifyTerse(query);
     savedEnvelope = stringifyTerse(envelope);

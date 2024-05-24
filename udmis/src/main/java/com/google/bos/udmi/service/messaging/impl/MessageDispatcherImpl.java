@@ -7,6 +7,7 @@ import static com.google.udmi.util.Common.RAWFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.requireNull;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
@@ -339,10 +340,8 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
 
   @Override
   public void publish(Object message) {
-    MessageContinuation continuation = getContinuation(message);
-    debug("TAP Publishing to continuation " + continuation.getEnvelope().deviceRegistryId);
     Bundle messageBundle = message instanceof Bundle ? (Bundle) message : makeMessageBundle(
-        requireNonNull(continuation, "no continuation found for message").getEnvelope(),
+        requireNonNull(getContinuation(message), "no continuation found for message").getEnvelope(),
         message);
     publishBundle(messageBundle);
   }
@@ -416,13 +415,14 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
    */
   @VisibleForTesting
   public void withEnvelopeFor(Envelope envelope, Object message, Runnable run) {
+    Integer messageKey = messageKey(message);
     try {
-      messageEnvelopes.put(messageKey(message), envelope);
+      requireNull(messageEnvelopes.put(messageKey, envelope), "duplicate remove envelope");
       setThreadEnvelope(envelope);
       run.run();
     } finally {
       setThreadEnvelope(null);
-      requireNonNull(messageEnvelopes.remove(messageKey(message)), "missing remove envelope");
+      requireNonNull(messageEnvelopes.remove(messageKey), "missing remove envelope");
     }
   }
 
