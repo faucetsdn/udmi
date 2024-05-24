@@ -18,6 +18,7 @@ import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.multiTrim;
+import static com.google.udmi.util.GeneralUtils.requireNull;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
@@ -86,13 +87,14 @@ public class ReflectProcessor extends ProcessorBase {
       } else if (message instanceof UdmiState distributedUpdate) {
         updateAwareness(reflection, distributedUpdate);
       } else {
+        Object payload = extractMessagePayload(objectMap);
         Envelope envelope = extractMessageEnvelope(objectMap);
+        requireNull(envelope.payload, "payload not extracted from message envelope");
         checkState(reflection.deviceId.equals(envelope.deviceRegistryId),
             format("envelope registryId %s does not match reflector deviceId %s",
                 envelope.deviceRegistryId, reflection.deviceId));
         reflection.transactionId = firstNonNull(envelope.transactionId, reflection.transactionId,
             ReflectProcessor::makeTransactionId);
-        Object payload = extractMessagePayload(objectMap);
         processReflection(reflection, envelope, payload);
       }
     } catch (Exception e) {
