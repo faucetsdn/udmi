@@ -12,7 +12,6 @@ import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static com.google.udmi.util.JsonUtil.toStringMap;
 import static java.lang.String.format;
-import static java.util.Objects.checkIndex;
 import static java.util.Objects.isNull;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
