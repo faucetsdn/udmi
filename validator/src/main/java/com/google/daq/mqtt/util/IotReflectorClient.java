@@ -96,7 +96,7 @@ public class IotReflectorClient implements IotProvider {
       System.err.println("Exception handling config update: " + friendlyStackTrace(e));
       throw e;
     }
-   }
+  }
 
   @Override
   public void setBlocked(String deviceId, boolean blocked) {
@@ -109,6 +109,12 @@ public class IotReflectorClient implements IotProvider {
   public void updateDevice(String deviceId, CloudModel device) {
     device.operation = ofNullable(device.operation).orElse(Operation.UPDATE);
     cloudModelTransaction(deviceId, CLOUD_MODEL_TOPIC, device);
+  }
+
+  @Override
+  public void updateRegistry(CloudModel registry) {
+    registry.operation = ofNullable(registry.operation).orElse(Operation.UPDATE);
+    cloudModelTransaction(null, CLOUD_MODEL_TOPIC, registry);
   }
 
   @Override

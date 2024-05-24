@@ -38,6 +38,13 @@ public interface IotProvider {
   void updateDevice(String deviceId, CloudModel device);
 
   /**
+   * Updates current registry's metadata.
+   *
+   * @param registry registry to update
+   */
+  void updateRegistry(CloudModel registry);
+
+  /**
    * Create a new device entry.
    *
    * @param deviceId   device id to create

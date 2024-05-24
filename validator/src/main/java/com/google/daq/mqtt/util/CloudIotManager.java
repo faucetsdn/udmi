@@ -8,6 +8,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.mergeObject;
+import static com.google.udmi.util.GeneralUtils.toJsonString;
 import static com.google.udmi.util.MetadataMapKeys.UDMI_METADATA;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -398,13 +399,20 @@ public class CloudIotManager {
     return requireNonNull(settings.num_id, "Missing registry name in reply");
   }
 
+  /**
+   * Publish a site metadata update for the current registry.
+   *
+   * @param siteMetadata site metadata object.
+   */
   public void updateRegistry(SiteMetadata siteMetadata) {
     CloudModel registryModel = new CloudModel();
     registryModel.resource_type = Resource_type.REGISTRY;
     registryModel.operation = Operation.UPDATE;
     registryModel.metadata = new HashMap<>();
-    registryModel.metadata.put(MetadataMapKeys.UDMI_METADATA, compressJsonString(siteMetadata, 256000));
-    iotProvider.updateDevice(null, registryModel);
+    registryModel.metadata.put(
+        MetadataMapKeys.UDMI_METADATA, toJsonString(siteMetadata)
+    );
+    iotProvider.updateRegistry(registryModel);
   }
 
   public String getSiteDir() {

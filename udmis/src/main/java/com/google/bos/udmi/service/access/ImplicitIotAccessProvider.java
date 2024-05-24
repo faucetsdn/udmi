@@ -96,7 +96,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     }
   }
 
- @Override
+  @Override
   public CloudModel modelRegistry(String registryId, String deviceId, CloudModel cloudModel) {
     throw new RuntimeException("modelRegistry not yet implemented");
   }

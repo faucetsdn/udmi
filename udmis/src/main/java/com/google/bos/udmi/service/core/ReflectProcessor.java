@@ -123,7 +123,7 @@ public class ReflectProcessor extends ProcessorBase {
 
   private Object extractModel(CloudModel request) {
     String metadata = request.metadata.get(MetadataMapKeys.UDMI_METADATA);
-    if (metadata == null){
+    if (metadata == null) {
       return null;
     } else if (request.resource_type == REGISTRY) {
       return asSiteMetadataUpdate(metadata);
@@ -254,7 +254,7 @@ public class ReflectProcessor extends ProcessorBase {
       modelUpdate.description = modelString;
       return modelUpdate;
     }
-    // Not strict because registrar may could pass a strict-failing metadata
+    // Not strict because registrar could publish a metadata which fails strictly
     return fromString(ModelUpdate.class, modelString);
   }
 
