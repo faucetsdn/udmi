@@ -85,6 +85,7 @@ fi
 client_id=\"projects/$project_id/locations/$cloud_region/registries/$registry_prefix$registry_id$registry_suffix/devices/$device_id\"
 msg_prefix=null
 auth_provider=null
+transport=null
 
 if [[ $iot_provider == \"clearblade\" ]]; then
     broker_hostname=${cloud_region}-mqtt.clearblade.com
@@ -95,6 +96,7 @@ elif [[ $iot_provider == \"mqtt\" ]]; then
     client_id=\"/r/$registry_prefix$registry_id$registry_suffix/d/$device_id\"
     msg_prefix=$client_id
     auth_provider='{ "basic": { "username": "nobody", "password": "38269d11" }}'
+    transport=\"ssl\"
 elif [[ -z $broker_hostname ]]; then
     broker_hostname=mqtt.googleapis.com
 fi
@@ -103,7 +105,7 @@ cat <<EOF > $pubber_config
 {
     "endpoint": {
       "protocol": "mqtt",
-      "transport": "ssl",
+      "transport": $transport,
       "client_id": $client_id,
       "mst_prefix": $msg_prefix,
       "auth_provider": $auth_provider,
