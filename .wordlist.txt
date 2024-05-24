@@ -19,6 +19,7 @@ buildingsiot
 centric
 CLA
 CLI
+Clearblade
 CloudRun
 CoAP
 comms

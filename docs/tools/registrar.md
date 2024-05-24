@@ -6,7 +6,7 @@ The `registrar` is a utility program that registers and updates devices in Cloud
 Running `bin/registrar` will validate local metadata and (optionally) register devices
 in a cloud project.
 
-See the [setup docs](setup.md) for common setup required for running this tool.
+See the [setup docs](setup.m d) for common setup required for running this tool.
 
 The [site model](../specs/site_model.md) documentation covers the basic structure of the
 site-specific configuration. Ideally, this directory would be placed under
@@ -51,9 +51,9 @@ bin/registrar config_file
   * `//gbos/PROJECT_ID` for a Google operated Clearblade project.
 * `options`: Various options to impact behavior:
   * `-u` Update.
-  * `-d` Delete all devices.
+  * `-d` Delete all device in the site model from the registry (combine with `-x` to delete all devices from the registry)
   * `-b` Block unknown devices.
-  * `-x` Delete unknown devices.
+  * `-x` Delete unknown devices from the registry.
   * `-n` Number of thread counts.
 * `devices`: Multiple device entries for limited registration. Can be just the device name
   (`AHU-12`), or path to device (`site/devices/AHU-12`) for use with file-name glob.
