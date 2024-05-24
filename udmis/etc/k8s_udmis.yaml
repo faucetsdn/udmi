@@ -46,12 +46,6 @@ spec:
               name: config
               key: ETCD_CLUSTER
               optional: true
-        - name: CLOUD_QUERY_LOOPS
-          valueFrom:
-            configMapKeyRef:
-              name: config
-              key: CLOUD_QUERY_LOOPS
-              optional: true
         - name: PROFILE_SEC
           valueFrom:
             configMapKeyRef:

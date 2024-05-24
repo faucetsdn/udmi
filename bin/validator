@@ -12,7 +12,7 @@ echo $(date --utc +%Y%m%d-%H%M%S) $0 $@ >> $OUT_DIR/cmd_history.log
 site_path=$(realpath $1)
 shift
 
-if [[ -n $1 ]]; then
+if [[ -n ${1:-} ]]; then
     project_id=$1
     shift
 fi

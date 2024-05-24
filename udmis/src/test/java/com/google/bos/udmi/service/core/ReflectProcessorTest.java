@@ -2,6 +2,7 @@ package com.google.bos.udmi.service.core;
 
 import static com.google.bos.udmi.service.core.ProcessorBase.FUNCTIONS_VERSION_MAX;
 import static com.google.bos.udmi.service.core.ProcessorBase.FUNCTIONS_VERSION_MIN;
+import static com.google.bos.udmi.service.messaging.impl.MessagePipeTestBase.REFLECT_REGISTRY;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.stringify;
@@ -23,7 +24,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Function;
 import org.jetbrains.annotations.NotNull;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -41,7 +41,6 @@ import udmi.schema.UdmiState;
  */
 public class ReflectProcessorTest extends ProcessorTestBase {
 
-  private static final String TARGET_REGISTRY = "UDMI-REFLECT";
   public final String transactionId = Long.toString(System.currentTimeMillis());
 
   private void activeTestInstance(Runnable action) {
@@ -59,8 +58,8 @@ public class ReflectProcessorTest extends ProcessorTestBase {
     envelope.subType = subType;
     envelope.subFolder = subFolder;
     envelope.projectId = TEST_NAMESPACE;
-    envelope.deviceId = TEST_DEVICE;
-    envelope.deviceRegistryId = TARGET_REGISTRY;
+    envelope.deviceId = TEST_REGISTRY;
+    envelope.deviceRegistryId = REFLECT_REGISTRY;
     return envelope;
   }
 
@@ -108,7 +107,7 @@ public class ReflectProcessorTest extends ProcessorTestBase {
     ArgumentCaptor<Function> configCaptor = ArgumentCaptor.forClass(Function.class);
 
     //noinspection unchecked
-    verify(provider, times(1)).modifyConfig(eq(TARGET_REGISTRY), eq(TEST_DEVICE),
+    verify(provider, times(1)).modifyConfig(eq(REFLECT_REGISTRY), eq(TEST_REGISTRY),
         (Function<Entry<Long, String>, String>) configCaptor.capture());
 
     @SuppressWarnings("unchecked")
@@ -120,15 +119,14 @@ public class ReflectProcessorTest extends ProcessorTestBase {
     validateUdmiConfig(udmi);
   }
 
+  /**
+   * Initialize a reflector instance, using the appropriate reflection registry.
+   */
   @BeforeEach
   public void initializeInstance() {
-    MessagePipeTestBase.useRegistry = TARGET_REGISTRY;
+    MessagePipeTestBase.useReflectRegistry = true;
     initializeTestInstance(ReflectProcessor.class);
-  }
-
-  @AfterEach
-  public void restoreHackyRegistry() {
-    MessagePipeTestBase.useRegistry = TEST_REGISTRY;
+    MessagePipeTestBase.useReflectRegistry = false;
   }
 
   /**
@@ -157,12 +155,12 @@ public class ReflectProcessorTest extends ProcessorTestBase {
     CloudModel requestModel = new CloudModel();
     requestModel.operation = Operation.BIND;
     activeTestInstance(() -> getReverseDispatcher().publish(makeModelBundle(requestModel)));
-    verify(provider, times(1)).modelResource(eq(TARGET_REGISTRY), eq(TEST_DEVICE),
+    verify(provider, times(1)).modelResource(eq(TEST_REGISTRY), eq(TEST_DEVICE),
         eq(requestModel));
 
     ArgumentCaptor<String> commandCaptor = ArgumentCaptor.forClass(String.class);
-    verify(provider, times(1)).sendCommand(eq(TARGET_REGISTRY), eq(TEST_DEVICE), eq(SubFolder.UDMI),
-        commandCaptor.capture());
+    verify(provider, times(1)).sendCommand(eq(REFLECT_REGISTRY), eq(TEST_REGISTRY),
+        eq(SubFolder.UDMI), commandCaptor.capture());
     Envelope envelope = JsonUtil.fromStringStrict(Envelope.class, commandCaptor.getValue());
     assertEquals(transactionId, envelope.transactionId);
   }
