@@ -3,10 +3,12 @@ package com.google.daq.mqtt.util;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.util.ConfigUtil.readExeConfig;
+import static com.google.udmi.util.GeneralUtils.compressJsonString;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.mergeObject;
+import static com.google.udmi.util.MetadataMapKeys.UDMI_METADATA;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
@@ -33,7 +35,9 @@ import udmi.schema.Credential.Key_format;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.ExecutionConfiguration;
 import udmi.schema.IotAccess;
+import udmi.schema.Metadata;
 import udmi.schema.SetupUdmiConfig;
+import udmi.schema.SiteMetadata;
 
 /**
  * Encapsulation of all Cloud IoT interaction functions.
@@ -390,6 +394,15 @@ public class CloudIotManager {
     settings.credentials = List.of(iotProvider.getCredential());
     iotProvider.createResource(suffix, settings);
     return requireNonNull(settings.num_id, "Missing registry name in reply");
+  }
+
+  public void updateRegistry(SiteMetadata siteMetadata) {
+    CloudModel registryModel = new CloudModel();
+    registryModel.resource_type = Resource_type.REGISTRY;
+    registryModel.operation = Operation.UPDATE;
+    registryModel.metadata = new HashMap<>();
+    registryModel.metadata.put(MetadataMapKeys.UDMI_METADATA, compressJsonString(siteMetadata, 256000));
+    iotProvider.updateDevice(null, registryModel);
   }
 
   public String getSiteDir() {

@@ -96,7 +96,7 @@ public class IotReflectorClient implements IotProvider {
       System.err.println("Exception handling config update: " + friendlyStackTrace(e));
       throw e;
     }
-  }
+   }
 
   @Override
   public void setBlocked(String deviceId, boolean blocked) {
