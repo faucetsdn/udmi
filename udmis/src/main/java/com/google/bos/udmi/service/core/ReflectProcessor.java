@@ -18,6 +18,7 @@ import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.multiTrim;
+import static com.google.udmi.util.GeneralUtils.requireNull;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
@@ -62,7 +63,6 @@ public class ReflectProcessor extends ProcessorBase {
 
   public static final String PAYLOAD_KEY = "payload";
   private static final Date START_TIME = new Date();
-  static final String UDMI_REFLECT = "UDMI-REFLECT";
 
   public ReflectProcessor(EndpointConfiguration config) {
     super(config);
@@ -89,6 +89,10 @@ public class ReflectProcessor extends ProcessorBase {
       } else {
         Object payload = extractMessagePayload(objectMap);
         Envelope envelope = extractMessageEnvelope(objectMap);
+        requireNull(envelope.payload, "payload not extracted from message envelope");
+        checkState(reflection.deviceId.equals(envelope.deviceRegistryId),
+            format("envelope registryId %s does not match reflector deviceId %s",
+                envelope.deviceRegistryId, reflection.deviceId));
         reflection.transactionId = firstNonNull(envelope.transactionId, reflection.transactionId,
             ReflectProcessor::makeTransactionId);
         processReflection(reflection, envelope, payload);

@@ -16,6 +16,14 @@
       "description": "Version of the UDMI schema",
       "type": "string"
     },
+    "connection_type": {
+      "description": "Connection type for connecting to cloud",
+      "enum": [
+        "GATEWAY",
+        "DIRECT",
+        "PROXIED"
+      ]
+    },
     "auth_type": {
       "description": "The key type used for cloud communication.",
       "enum": [

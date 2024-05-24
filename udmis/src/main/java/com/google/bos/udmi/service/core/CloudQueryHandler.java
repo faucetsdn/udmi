@@ -8,7 +8,6 @@ import static com.google.udmi.util.GeneralUtils.requireNull;
 import static com.google.udmi.util.GeneralUtils.toDate;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static java.util.Objects.requireNonNull;
-import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.access.IotAccessBase;
 import java.util.HashSet;
@@ -37,8 +36,6 @@ public class CloudQueryHandler {
   private final Envelope envelope;
   private final String savedEnvelope;
   private final String savedQuery;
-  private final int fetchCount =
-      Integer.parseInt(ofNullable(System.getenv("CLOUD_QUERY_LOOPS")).orElse("1"));
 
   /**
    * Create a query handler for cloud queries.
@@ -49,6 +46,8 @@ public class CloudQueryHandler {
     target = controller.targetProcessor;
     query = cloudQuery;
     envelope = controller.getContinuation(cloudQuery).getEnvelope();
+    debug("Starting CloudQuery for %s/%s %s", envelope.deviceRegistryId, envelope.deviceId,
+        envelope.transactionId);
     savedQuery = stringifyTerse(query);
     savedEnvelope = stringifyTerse(envelope);
   }
@@ -135,14 +134,11 @@ public class CloudQueryHandler {
     String deviceRegistryId = requireNonNull(envelope.deviceRegistryId, "registry id");
     requireNull(envelope.deviceId, "device id");
 
-    // TODO: Remove hacky workaround once ClearBlade API is known to return consistent results.
-    Set<Entry<String, CloudModel>> deviceSet = new HashSet<>();
-    for (int loop = 1; loop <= fetchCount; loop++) {
-      CloudModel cloudModel = iotAccess.listDevices(deviceRegistryId);
-      deviceSet.addAll(cloudModel.device_ids.entrySet());
-      debug("Queried registry %s #%d for %d totaling %d",
-          envelope.deviceRegistryId, loop, cloudModel.device_ids.size(), deviceSet.size());
-    }
+    CloudModel cloudModel = iotAccess.listDevices(deviceRegistryId);
+    Set<Entry<String, CloudModel>> deviceSet = new HashSet<>(cloudModel.device_ids.entrySet());
+    debug("Queried registry %s for %d totaling %d %s",
+        envelope.deviceRegistryId, cloudModel.device_ids.size(), deviceSet.size(),
+        envelope.transactionId);
 
     DiscoveryEvents discoveryEvent = new DiscoveryEvents();
     discoveryEvent.scan_family = ProtocolFamily.IOT;
