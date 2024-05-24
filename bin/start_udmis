@@ -1,10 +1,24 @@
 #!/bin/bash -e
 
+OLD_PID=$(ps ax | fgrep java | fgrep local_pod.json | awk '{print $1}')
+if [[ -n $OLD_PID ]]; then
+    echo Killing old udmis process $OLD_PID
+    sudo kill $OLD_PID
+    sleep 2
+fi
+
 rm -f /tmp/pod_ready.txt
 
 udmis/bin/build
 
+LOGFILE=out/udmis.log
+
 sudo \
     ETCD_CLUSTER=localhost\
     SSL_SECRETS_DIR=/etc/mosquitto/certs\
-    udmis/bin/run udmis/etc/local_pod.json
+    udmis/bin/run udmis/etc/local_pod.json > $LOGFILE 2>&1 &
+
+PID=$!
+
+
+echo udmis running in the background, pid $PID log in $(realpath $LOGFILE)
