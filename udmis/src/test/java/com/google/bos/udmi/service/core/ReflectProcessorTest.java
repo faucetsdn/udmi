@@ -107,7 +107,7 @@ public class ReflectProcessorTest extends ProcessorTestBase {
     ArgumentCaptor<Function> configCaptor = ArgumentCaptor.forClass(Function.class);
 
     //noinspection unchecked
-    verify(provider, times(1)).modifyConfig(eq(TARGET_REGISTRY), eq(TEST_REGISTRY),
+    verify(provider, times(1)).modifyConfig(eq(REFLECT_REGISTRY), eq(TEST_REGISTRY),
         (Function<Entry<Long, String>, String>) configCaptor.capture());
 
     @SuppressWarnings("unchecked")
@@ -155,7 +155,6 @@ public class ReflectProcessorTest extends ProcessorTestBase {
     CloudModel requestModel = new CloudModel();
     requestModel.operation = Operation.BIND;
     activeTestInstance(() -> getReverseDispatcher().publish(makeModelBundle(requestModel)));
-
     verify(provider, times(1)).modelDevice(eq(TEST_REGISTRY), eq(TEST_DEVICE),
         eq(requestModel));
 
