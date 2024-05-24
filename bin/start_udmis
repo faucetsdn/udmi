@@ -20,5 +20,8 @@ sudo \
 
 PID=$!
 
+sleep 10
+
+tail $LOGFILE
 
 echo udmis running in the background, pid $PID log in $(realpath $LOGFILE)
