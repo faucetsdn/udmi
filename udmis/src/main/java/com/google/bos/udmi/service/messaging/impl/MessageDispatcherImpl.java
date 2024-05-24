@@ -165,7 +165,6 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
       synchronized (handlerCounts) {
         handlerCounts.computeIfAbsent(handlerType, key -> new AtomicInteger()).incrementAndGet();
         handlerCounts.notify();
-        debug("TAP handlerCounts is size " + handlerCounts.size());
       }
     } catch (Exception e) {
       throw new RuntimeException("While evaluating handler type " + handlerType.getSimpleName(), e);
@@ -215,7 +214,6 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
         notice("Defaulting messages of type/folder " + key.getName());
         return handlers.getOrDefault(DEFAULT_CLASS, this::devNullHandler);
       });
-      debug("TAP handlers is size " + handlers.size());
       Object messageObject = isException ? message : convertStrictOrObject(handlerType, message);
       if (messageObject instanceof Map) {
         handlerType = Object.class;
@@ -427,7 +425,6 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
       setThreadEnvelope(null);
       requireNonNull(messageEnvelopes.remove(messageKey(message)), "missing remove envelope");
     }
-    debug("TAP messageEnvelopes is size " + messageEnvelopes.size());
   }
 
 }
