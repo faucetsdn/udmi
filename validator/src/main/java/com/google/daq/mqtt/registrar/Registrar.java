@@ -6,6 +6,7 @@ import static com.google.common.collect.Sets.intersection;
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_ROOT;
 import static com.google.udmi.util.Common.CLOUD_VERSION_KEY;
 import static com.google.udmi.util.Common.NO_SITE;
+import static com.google.udmi.util.Common.SITE_METADATA_KEY;
 import static com.google.udmi.util.Common.UDMI_VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
@@ -49,6 +50,7 @@ import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.PubSubPusher;
+import com.google.protobuf.MapEntry;
 import com.google.udmi.util.Common;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
@@ -93,6 +95,7 @@ import udmi.schema.ExecutionConfiguration;
 import udmi.schema.IotAccess.IotProvider;
 import udmi.schema.Metadata;
 import udmi.schema.SetupUdmiConfig;
+import udmi.schema.SiteMetadata;
 
 /**
  * Validate devices' static metadata and register them in the cloud.
@@ -294,6 +297,7 @@ public class Registrar {
       if (createRegistries >= 0) {
         createRegistries();
       } else {
+        processSiteMetadata();
         processDevices();
       }
       writeErrors();
@@ -304,6 +308,14 @@ public class Registrar {
       throw new RuntimeException("main exception", ex);
     } finally {
       shutdown();
+    }
+  }
+
+  private void processSiteMetadata() {
+    SiteMetadata siteMetadata = siteModel.loadSiteMetadata();
+
+    if (siteMetadata != null && updateCloudIoT) {
+      cloudIotManager.updateRegistry(siteMetadata);
     }
   }
 
@@ -319,6 +331,8 @@ public class Registrar {
       }
     }
   }
+
+
 
   private void createRegistrySuffix(String suffix) {
     String registry = cloudIotManager.createRegistry(suffix);
@@ -356,11 +370,7 @@ public class Registrar {
     return lastErrorSummary;
   }
 
-  private void writeErrors() throws Exception {
-    if (localDevices == null) {
-      return;
-    }
-
+  private void writeErrors() throws RuntimeException {
     Map<String, Object> errorSummary = new TreeMap<>();
     localDevices.values().forEach(LocalDevice::writeErrors);
     localDevices.values().forEach(device -> {
@@ -384,9 +394,17 @@ public class Registrar {
     errorSummary.forEach((key, value) -> System.err.println(
         "  Device " + key + ": " + getErrorSummaryDetail(value)));
     System.err.println("Out of " + localDevices.size() + " total.");
+    // WARNING! entries inserted into `errorSummary` ABOVE this comment must have a map value ^^^^^^
     errorSummary.put(CLOUD_VERSION_KEY, getCloudVersionInfo());
     lastErrorSummary = errorSummary;
     errorSummary.put(UDMI_VERSION_KEY, Common.getUdmiVersion());
+    errorSummary.put(
+        SITE_METADATA_KEY,
+        siteModel.siteMetadataExceptionMap.stream()
+            .map(Map.Entry::getValue)
+            .map(Exception::getMessage)
+            .collect(Collectors.toList())
+    );
     summarizers.forEach(summarizer -> {
       File outFile = summarizer.outFile;
       try {

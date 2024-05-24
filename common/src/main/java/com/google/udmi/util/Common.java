@@ -32,6 +32,7 @@ public abstract class Common {
   public static final String UPGRADED_FROM = "upgraded_from";
   public static final String DOWNGRADED_FROM = "downgraded_from";
   public static final String CLOUD_VERSION_KEY = "cloud_version";
+  public static final String SITE_METADATA_KEY = "site_metadata";
   public static final String UDMI_VERSION_KEY = "udmi_version";
   public static final String SUBTYPE_PROPERTY_KEY = "subType";
   public static final String RAWFOLDER_PROPERTY_KEY = "rawFolder";
