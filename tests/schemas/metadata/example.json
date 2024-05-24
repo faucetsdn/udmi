@@ -41,7 +41,8 @@
       "return_air_temperature_sensor": {
         "units": "Degrees-Celsius",
         "baseline_value": 20,
-        "baseline_tolerance": 2
+        "baseline_tolerance": 2,
+        "tags": ["hvac"]
       },
       "room_setpoint": {
         "writable": true,

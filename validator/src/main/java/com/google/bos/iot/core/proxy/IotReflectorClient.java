@@ -66,12 +66,11 @@ import udmi.schema.UdmiState;
  */
 public class IotReflectorClient implements MessagePublisher {
 
-  public static final String UDMI_FOLDER = "udmi";
   public static final String UDMI_REFLECT = "UDMI-REFLECT";
   static final String REFLECTOR_KEY_ALGORITHM = "RS256";
   private static final String MOCK_DEVICE_NUM_ID = "123456789101112";
-  private static final String UDMI_TOPIC = "events/" + UDMI_FOLDER;
-  private static final long CONFIG_TIMEOUT_SEC = 10;
+  private static final String UDMI_TOPIC = "events/" + SubFolder.UDMI;
+  private static final long CONFIG_TIMEOUT_SEC = 20;
   private static final int UPDATE_RETRIES = 6;
   private static final Collection<String> COPY_IDS = ImmutableSet.of(DEVICE_ID_KEY, GATEWAY_ID_KEY,
       SUBTYPE_PROPERTY_KEY, SUBFOLDER_PROPERTY_KEY, TRANSACTION_KEY, PUBLISH_TIME_KEY);
@@ -87,6 +86,7 @@ public class IotReflectorClient implements MessagePublisher {
   private final String registryId;
   private final String projectId;
   private final String updateTo;
+  private final IotProvider iotProvider;
   private Date reflectorStateTimestamp;
   private boolean isInstallValid;
   private boolean active;
@@ -112,7 +112,8 @@ public class IotReflectorClient implements MessagePublisher {
     String cloudRegion = ofNullable(iotConfig.reflect_region)
         .orElse(iotConfig.cloud_region);
     String prefix = getNamespacePrefix(iotConfig.udmi_namespace);
-    iotConfig.iot_provider = ofNullable(iotConfig.iot_provider).orElse(IotProvider.GBOS);
+    iotProvider = ofNullable(iotConfig.iot_provider).orElse(IotProvider.GBOS);
+    iotConfig.iot_provider = iotProvider;
     subscriptionId = format("%s/%s/%s/%s%s/%s",
         iotConfig.iot_provider, projectId, cloudRegion, prefix, UDMI_REFLECT, registryId);
 
@@ -212,7 +213,21 @@ public class IotReflectorClient implements MessagePublisher {
 
     System.err.println("UDMI setting reflectorState: " + stringify(map));
 
-    publisher.publish(registryId, STATE_TOPIC, stringify(map));
+    publisher.publish(registryId, getReflectorTopic(), stringify(map));
+  }
+
+  private String getReflectorTopic() {
+    return switch (iotProvider) {
+      case MQTT -> SubType.REFLECT.toString();
+      default -> STATE_TOPIC;
+    };
+  }
+
+  private String getPublishTopic() {
+    return switch (iotProvider) {
+      case MQTT -> SubType.REFLECT.toString();
+      default -> UDMI_TOPIC;
+    };
   }
 
   @Override
@@ -353,11 +368,25 @@ public class IotReflectorClient implements MessagePublisher {
 
   private List<String> parseMessageTopic(String topic) {
     List<String> parts = new ArrayList<>(Arrays.asList(topic.substring(1).split("/")));
-    checkState("devices".equals(parts.remove(0)), "unknown parsed path field: " + topic);
-    // Next field is registry, not device, since the reflector device holds the site registry.
-    String parsedId = parts.remove(0);
-    checkState(registryId.equals(parsedId),
-        format("registry id %s does not match expected %s", parsedId, registryId));
+    String leader = parts.remove(0);
+    if ("devices".equals(leader)) {
+      // Next field is registry, not device, since the reflector device id is the site registry.
+      String deviceId = parts.remove(0);
+      checkState(registryId.equals(deviceId),
+          format("device id %s does not match expected %s", deviceId, registryId));
+    } else if ("r".equals(leader)) {
+      // Next field is registry, not device, since the reflector device id is the site registry.
+      String parsedReg = parts.remove(0);
+      checkState(UDMI_REFLECT.equals(parsedReg),
+          format("registry id %s does not match expected %s", parsedReg, UDMI_REFLECT));
+      String devSep = parts.remove(0);
+      checkState("d".equals(devSep), format("unexpected dev separator %s", devSep));
+      String deviceId = parts.remove(0);
+      checkState(registryId.equals(deviceId),
+          format("registry id %s does not match expected %s", deviceId, registryId));
+    } else {
+      throw new RuntimeException("Unknown topic string " + topic);
+    }
     return parts;
   }
 
@@ -401,7 +430,7 @@ public class IotReflectorClient implements MessagePublisher {
     String transactionId = getNextTransactionId();
     envelope.transactionId = transactionId;
     envelope.publishTime = new Date();
-    publisher.publish(registryId, UDMI_TOPIC, stringify(envelope));
+    publisher.publish(registryId, getPublishTopic(), stringify(envelope));
     return transactionId;
   }
 

@@ -18,7 +18,7 @@ if [[ -n $1 ]]; then
 fi
 
 subscription=null
-if [[ -n $1 && ! $1 =~ ^- ]]; then
+if [[ -n ${1:-} && ! $1 =~ ^- ]]; then
     subscription=\"$1\"
     shift
 fi

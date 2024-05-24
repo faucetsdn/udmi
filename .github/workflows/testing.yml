@@ -44,7 +44,7 @@ jobs:
         run: more out/test_pubber+bin+build+check
       - name: udmis test output
         if: ${{ !cancelled() }}
-        run: more out/test_bin+test_udmis
+        run: more out/test_udmis+bin+build+check
       - name: site test output
         if: ${{ !cancelled() }}
         run: more out/test_bin+test_sites
@@ -250,7 +250,10 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
       - name: base setup
-        run: bin/run_tests install_dependencies
+        run: |
+          bin/setup_base
+          bin/clone_model
+          bin/registrar sites/udmi_site_model
       - name: bin/start_etcd
         run: bin/start_etcd
       - name: bin/test_etcd

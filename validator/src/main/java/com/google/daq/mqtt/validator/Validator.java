@@ -26,6 +26,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.JSON_SUFFIX;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
+import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.getInstant;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.mapCast;
@@ -109,6 +110,7 @@ import udmi.schema.PointsetState;
 import udmi.schema.PointsetSummary;
 import udmi.schema.SetupUdmiConfig;
 import udmi.schema.State;
+import udmi.schema.UdmiConfig;
 import udmi.schema.ValidationEvents;
 import udmi.schema.ValidationState;
 import udmi.schema.ValidationSummary;
@@ -156,6 +158,7 @@ public class Validator {
   private static final String POINTSET_SUBFOLDER = "pointset";
   private static final Date START_TIME = new Date();
   private static final int TIMESTAMP_JITTER_SEC = 60;
+  private static final String UDMI_CONFIG_JSON_FILE = "udmi_config.json";
   private final Map<String, ReportingDevice> reportingDevices = new TreeMap<>();
   private final Set<String> extraDevices = new TreeSet<>();
   private final Set<String> processedDevices = new TreeSet<>();
@@ -512,10 +515,25 @@ public class Validator {
     }
   }
 
+  private boolean handleSystemMessage(Map<String, String> attributes, Object object) {
+    if (SubFolder.UDMI.value().equals(attributes.get(SUBFOLDER_PROPERTY_KEY))
+        && SubType.CONFIG.value().equals(attributes.get(SUBTYPE_PROPERTY_KEY))) {
+      handleUdmiConfig(convertTo(UdmiConfig.class, object));
+      return true;
+    }
+    return false;
+  }
+
+  private void handleUdmiConfig(UdmiConfig udmiConfig) {
+    JsonUtil.writeFile(udmiConfig, new File(outBaseDir, UDMI_CONFIG_JSON_FILE));
+  }
+
   protected synchronized void validateMessage(MessageBundle nullable) {
     ifNotNullThen(nullable, bundle -> {
       Object object = ofNullable((Object) bundle.message).orElse(bundle.rawMessage);
-      validateMessage(object, bundle.attributes);
+      if (!handleSystemMessage(bundle.attributes, object)) {
+        validateMessage(object, bundle.attributes);
+      }
     });
   }
 

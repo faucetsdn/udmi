@@ -261,6 +261,11 @@ public class GeneralUtils {
 
   public static Map<String, Object> getSubMap(Map<String, Object> input, String field) {
     //noinspection unchecked
+    return (Map<String, Object>) input.get(field);
+  }
+
+  public static Map<String, Object> getSubMapNull(Map<String, Object> input, String field) {
+    //noinspection unchecked
     return ifNotNullGet(input, map -> (Map<String, Object>) map.get(field));
   }
 

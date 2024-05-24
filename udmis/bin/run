@@ -11,7 +11,7 @@ shift
 ROOT=$(dirname $0)/..
 cd $ROOT
 
-PROFILE_BASE=profile/
+PROFILE_BASE=/tmp/profile/
 mkdir -p $PROFILE_BASE
 
 echo
@@ -40,7 +40,6 @@ elif [[ -n $gce_project ]]; then
     export GCP_PROJECT=$gce_project
 else
     echo No GCP_PROJECT, gcloud, or GCE project defined.
-    false
 fi
 
 export UDMI_PREFIX=

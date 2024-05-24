@@ -195,7 +195,7 @@ if [[ -n $solo_arg ]]; then
     echo Done with solo update test for $solo_arg
 fi
 
-if [[ -n $UDMI_ALT_REGISTRY ]]; then
+if [[ -n ${UDMI_ALT_REGISTRY:-} ]]; then
     echo Registering alt registry $UDMI_ALT_REGISTRY...
     echo bin/registrar $site_args -a $UDMI_ALT_REGISTRY
     bin/registrar $site_args -a $UDMI_ALT_REGISTRY

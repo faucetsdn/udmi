@@ -8,8 +8,10 @@ import static com.google.udmi.util.GeneralUtils.requireNull;
 import static com.google.udmi.util.GeneralUtils.toDate;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static java.util.Objects.requireNonNull;
+import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.access.IotAccessBase;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -35,6 +37,8 @@ public class CloudQueryHandler {
   private final Envelope envelope;
   private final String savedEnvelope;
   private final String savedQuery;
+  private final int fetchCount =
+      Integer.parseInt(ofNullable(System.getenv("CLOUD_QUERY_LOOPS")).orElse("1"));
 
   /**
    * Create a query handler for cloud queries.
@@ -131,12 +135,19 @@ public class CloudQueryHandler {
     String deviceRegistryId = requireNonNull(envelope.deviceRegistryId, "registry id");
     requireNull(envelope.deviceId, "device id");
 
-    CloudModel cloudModel = iotAccess.listDevices(deviceRegistryId);
+    // TODO: Remove hacky workaround once ClearBlade API is known to return consistent results.
+    Set<Entry<String, CloudModel>> deviceSet = new HashSet<>();
+    for (int loop = 1; loop <= fetchCount; loop++) {
+      CloudModel cloudModel = iotAccess.listDevices(deviceRegistryId);
+      deviceSet.addAll(cloudModel.device_ids.entrySet());
+      debug("Queried registry %s #%d for %d totaling %d",
+          envelope.deviceRegistryId, loop, cloudModel.device_ids.size(), deviceSet.size());
+    }
 
     DiscoveryEvents discoveryEvent = new DiscoveryEvents();
     discoveryEvent.scan_family = ProtocolFamily.IOT;
     discoveryEvent.generation = query.generation;
-    discoveryEvent.devices = cloudModel.device_ids.entrySet().stream().collect(Collectors.toMap(
+    discoveryEvent.devices = deviceSet.stream().collect(Collectors.toMap(
         Entry::getKey, entry -> convertDeviceEntry(entry.getValue())));
     publish(discoveryEvent);
 
