@@ -62,7 +62,7 @@ public class CloudIotManager {
     checkNotNull(projectId, "project id undefined");
     this.siteModel = checkNotNull(siteDir, "site directory undefined");
     checkState(siteDir.isDirectory(), "not a directory " + siteDir.getAbsolutePath());
-    this.useReflectClient = iotProvider != null;
+    this.useReflectClient = iotProvider != null && iotProvider != GCP_NATIVE;
     this.projectId = projectId;
     File cloudConfig = new File(siteDir, CLOUD_IOT_CONFIG_JSON);
     try {
@@ -174,7 +174,6 @@ public class CloudIotManager {
     }
   }
 
-  @NotNull
   private IotProvider makeIotProvider() {
     if (projectId.equals(SiteModel.MOCK_PROJECT)) {
       System.err.println("Using mock iot client for special client " + projectId);
@@ -183,6 +182,9 @@ public class CloudIotManager {
     if (useReflectClient) {
       System.err.println("Using reflector iot client");
       return new IotReflectorClient(executionConfiguration);
+    }
+    if (executionConfiguration.iot_provider == GCP_NATIVE) {
+      return null;
     }
     throw new RuntimeException("Unknown IoT Core selection strategy");
   }
