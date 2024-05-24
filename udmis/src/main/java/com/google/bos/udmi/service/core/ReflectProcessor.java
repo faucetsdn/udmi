@@ -87,10 +87,12 @@ public class ReflectProcessor extends ProcessorBase {
       } else if (message instanceof UdmiState distributedUpdate) {
         updateAwareness(reflection, distributedUpdate);
       } else {
-        Object payload = extractMessagePayload(objectMap);
         Envelope envelope = extractMessageEnvelope(objectMap);
+        checkState(reflection.deviceRegistryId.equals(envelope.deviceRegistryId),
+            "envelope registryId does not match reflector registryId");
         reflection.transactionId = firstNonNull(envelope.transactionId, reflection.transactionId,
             ReflectProcessor::makeTransactionId);
+        Object payload = extractMessagePayload(objectMap);
         processReflection(reflection, envelope, payload);
       }
     } catch (Exception e) {

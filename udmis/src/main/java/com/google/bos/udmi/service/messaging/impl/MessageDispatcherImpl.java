@@ -12,6 +12,7 @@ import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static com.google.udmi.util.JsonUtil.toStringMap;
 import static java.lang.String.format;
+import static java.util.Objects.checkIndex;
 import static java.util.Objects.isNull;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
@@ -341,8 +342,10 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
 
   @Override
   public void publish(Object message) {
+    MessageContinuation continuation = getContinuation(message);
+    debug("TAP Publishing to continuation " + continuation.getEnvelope().deviceRegistryId);
     Bundle messageBundle = message instanceof Bundle ? (Bundle) message : makeMessageBundle(
-        requireNonNull(getContinuation(message), "no continuation found for message").getEnvelope(),
+        requireNonNull(continuation, "no continuation found for message").getEnvelope(),
         message);
     publishBundle(messageBundle);
   }

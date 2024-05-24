@@ -8,7 +8,6 @@ import static com.google.udmi.util.GeneralUtils.requireNull;
 import static com.google.udmi.util.GeneralUtils.toDate;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static java.util.Objects.requireNonNull;
-import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.access.IotAccessBase;
 import java.util.HashSet;
@@ -47,6 +46,8 @@ public class CloudQueryHandler {
     target = controller.targetProcessor;
     query = cloudQuery;
     envelope = controller.getContinuation(cloudQuery).getEnvelope();
+    debug("TAP Starting CloudQuery for %s/%s %s", envelope.deviceRegistryId, envelope.deviceId,
+        envelope.transactionId);
     savedQuery = stringifyTerse(query);
     savedEnvelope = stringifyTerse(envelope);
   }
@@ -135,8 +136,9 @@ public class CloudQueryHandler {
 
     CloudModel cloudModel = iotAccess.listDevices(deviceRegistryId);
     Set<Entry<String, CloudModel>> deviceSet = new HashSet<>(cloudModel.device_ids.entrySet());
-    debug("Queried registry %s for %d totaling %d",
-        envelope.deviceRegistryId, cloudModel.device_ids.size(), deviceSet.size());
+    debug("Queried registry %s for %d totaling %d %s",
+        envelope.deviceRegistryId, cloudModel.device_ids.size(), deviceSet.size(),
+        envelope.transactionId);
 
     DiscoveryEvents discoveryEvent = new DiscoveryEvents();
     discoveryEvent.scan_family = ProtocolFamily.IOT;
