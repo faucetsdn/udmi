@@ -88,8 +88,9 @@ public class ReflectProcessor extends ProcessorBase {
         updateAwareness(reflection, distributedUpdate);
       } else {
         Envelope envelope = extractMessageEnvelope(objectMap);
-        checkState(reflection.deviceRegistryId.equals(envelope.deviceRegistryId),
-            "envelope registryId does not match reflector registryId");
+        checkState(reflection.deviceId.equals(envelope.deviceRegistryId),
+            format("envelope registryId %s does not match reflector deviceId %s",
+                envelope.deviceRegistryId, reflection.deviceId));
         reflection.transactionId = firstNonNull(envelope.transactionId, reflection.transactionId,
             ReflectProcessor::makeTransactionId);
         Object payload = extractMessagePayload(objectMap);
