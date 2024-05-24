@@ -30,6 +30,10 @@
           "pattern": "^[A-Z0-9-]+$",
           "examples": ["1", "1A", "G", "B1M", "RF"]
         },
+        "floor_seq": {
+          "type": "integer",
+          "description": "Sequential integer representation for a floor, primiarly for comparisons when non integer floors are used, e.g. 1 and 1M"
+        },
         "position": {
           "type": "object",
           "additionalProperties": false,
@@ -58,6 +62,10 @@
             },
             "long": {
               "description": "The `longitude` coordinate of the device in the WGS84 coordinate system",
+              "type": "number"
+            },
+            "alt_m": {
+              "description": "The `altitude` coordinate of the device in meters",
               "type": "number"
             }
           }

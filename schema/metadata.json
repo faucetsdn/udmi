@@ -39,6 +39,15 @@
       "description": "Version of schema supported by the device",
       "type": "string"
     },
+    "tags":{
+      "description": "Tags assosciated with the device",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "pattern": "^[a-z0-9]+$"
+      },
+      "examples": [["lighting"], ["energy", "building"]]
+    },
     "cloud": {
       "$ref": "file:model_cloud.json#"
     },
