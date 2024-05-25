@@ -4,8 +4,8 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.Common.DEFAULT_REGION;
 import static com.google.udmi.util.GeneralUtils.booleanString;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
-import static com.google.udmi.util.GeneralUtils.ifNotNullThrow;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isNullOrNotEmpty;
 import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.isoConvert;
@@ -29,7 +29,6 @@ import com.google.udmi.util.JsonUtil;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -38,6 +37,8 @@ import java.util.stream.Collectors;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
 import udmi.schema.CloudModel.Resource_type;
+import udmi.schema.Credential;
+import udmi.schema.Credential.Key_format;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
@@ -57,6 +58,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   private static final String NUM_ID_PROPERTY = "num_id";
   private static final String IMPLICIT_DATABASE_COMPONENT = "database";
   private static final String CLIENT_ID_FORMAT = "/r/%s/d/%s";
+  private static final String AUTH_PASSWORD_PROPERTY = "auth_pass";
   private final boolean enabled;
   private IotDataProvider database;
   private ReflectProcessor reflect;
@@ -80,7 +82,12 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   }
 
   private CloudModel blockDevice(String registryId, String deviceId, CloudModel cloudModel) {
+    database.auth().revoke(clientId(registryId, deviceId));
     throw new RuntimeException("blockDevice not yet implemented");
+  }
+
+  private String clientId(String registryId, String deviceId) {
+    return format(CLIENT_ID_FORMAT, registryId, deviceId);
   }
 
   private void createDevice(String registryId, String deviceId, CloudModel cloudModel) {
@@ -98,10 +105,6 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     properties.entries().keySet().forEach(properties::delete);
     registryDevicesCollection(registryId).delete(deviceId);
     database.auth().revoke(clientId(registryId, deviceId));
-  }
-
-  private String clientId(String registryId, String deviceId) {
-    return format(CLIENT_ID_FORMAT, registryId, deviceId);
   }
 
   private CloudModel getReply(String registryId, String deviceId, CloudModel request,
@@ -148,6 +151,10 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     DataRef properties = registryDeviceRef(registryId, deviceId);
     map.forEach((key, value) ->
         ifNotNullThen(value, v -> properties.put(key, value), () -> properties.delete(key)));
+
+    if (map.containsKey(AUTH_PASSWORD_PROPERTY)) {
+      database.auth().authorize(clientId(registryId, deviceId), map.get(AUTH_PASSWORD_PROPERTY));
+    }
     return properties;
   }
 
@@ -165,6 +172,13 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     ifNotNullThen(createdAt, x -> properties.put(CREATED_AT_PROPERTY, createdAt));
     properties.put(BLOCKED_PROPERTY, booleanString(cloudModel.blocked));
     ifNotNullThen(cloudModel.num_id, id -> properties.put(NUM_ID_PROPERTY, id));
+    ifTrueThen(!cloudModel.credentials.isEmpty(), () -> {
+      checkState(cloudModel.credentials.size() == 1, "only one credential supported");
+      Credential cred = cloudModel.credentials.get(0);
+      checkState(cred.key_format == Key_format.PASSWORD,
+          "key type not supported: " + cred.key_format);
+      properties.put(AUTH_PASSWORD_PROPERTY, cred.key_data);
+    });
     return properties;
   }
 

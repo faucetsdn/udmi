@@ -11,6 +11,7 @@ public class MosquittoAuthProvider implements AuthRef {
   private static final String UDMI_ROOT = System.getenv("UDMI_ROOT");
   private static final String MOSQUCTL_FMT = UDMI_ROOT + "/bin/mosquctl_client %s %s";
   private static final long EXEC_TIMEOUT_SEC = 10;
+  public static final String REVOKE_PASSWORD = "--";
   private final ContainerBase container;
 
   public MosquittoAuthProvider(ContainerBase container) {
@@ -19,7 +20,12 @@ public class MosquittoAuthProvider implements AuthRef {
 
   @Override
   public void revoke(String clientId) {
-    mosquctl(clientId, "--");
+    mosquctl(clientId, REVOKE_PASSWORD);
+  }
+
+  @Override
+  public void authorize(String clientId, String clientPass) {
+    mosquctl(clientId, clientPass);
   }
 
   private void mosquctl(String clientId, String clientPass) {
