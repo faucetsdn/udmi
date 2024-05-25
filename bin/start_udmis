@@ -13,6 +13,10 @@ udmis/bin/build
 
 LOGFILE=out/udmis.log
 
+echo TAP
+which java
+sudo which java
+
 sudo \
     ETCD_CLUSTER=localhost\
     SSL_SECRETS_DIR=/etc/mosquitto/certs\

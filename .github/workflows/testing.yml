@@ -254,6 +254,10 @@ jobs:
           bin/setup_base
           bin/clone_model
           bin/registrar sites/udmi_site_model
+          which java
+          java --version
+          sudo which java
+          sudo java --version
       - name: bin/start_etcd
         run: bin/start_etcd
       - name: bin/test_etcd
@@ -263,11 +267,7 @@ jobs:
       - name: bin/test_mosquitto
         run: bin/test_mosquitto
       - name: bin/start_udmis
-        run: |
-          java --version
-          javac --version
-          udmis/gradlew --version
-          bin/start_udmis
+        run: bin/start_udmis
       - name: bin/test_regclean
         run: |
           bin/add_site sites/udmi_site_model/
