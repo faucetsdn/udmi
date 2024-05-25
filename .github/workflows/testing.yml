@@ -263,7 +263,11 @@ jobs:
       - name: bin/test_mosquitto
         run: bin/test_mosquitto
       - name: bin/start_udmis
-        run: bin/start_udmis
+        run: |
+          java --version
+          javac --version
+          udmis/gradlew --version
+          bin/start_udmis
       - name: bin/test_regclean
         run: |
           bin/add_site sites/udmi_site_model/
