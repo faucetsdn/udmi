@@ -19,5 +19,7 @@ source $UDMI_ROOT/etc/mosquitto_ctrl.sh
 client_user=$client_id
 
 $MOSQUITTO_CTRL deleteClient $client_user || true
-$MOSQUITTO_CTRL createClient $client_user -p $client_pass -c $client_id
-$MOSQUITTO_CTRL addClientRole $client_user device
+if [[ $client_pass != "--" ]]; then
+    $MOSQUITTO_CTRL createClient $client_user -p $client_pass -c $client_id
+    $MOSQUITTO_CTRL addClientRole $client_user device
+fi
