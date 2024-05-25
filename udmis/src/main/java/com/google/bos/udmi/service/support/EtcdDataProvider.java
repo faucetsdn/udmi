@@ -49,6 +49,7 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
   private final KV kvClient;
   private final Map<String, String> options;
   private final boolean enabled;
+  private final AuthRef authProvider = new MosquittoAuthProvider(this);
   private ScheduledExecutorService scheduledExecutorService;
 
   /**
@@ -88,8 +89,8 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
     try {
       GetResponse response =
           kvClient.get(bytes(keyPath), LIST_OPT).get(QUERY_TIMEOUT_SEC, TimeUnit.SECONDS);
-      return response.getKvs().stream().collect(
-          Collectors.toMap(kv -> asString(kv.getKey()), kv -> asString(kv.getValue())));
+      return response.getKvs().stream().collect(Collectors.toMap(
+          kv -> asString(kv.getKey()).substring(keyPath.length()), kv -> asString(kv.getValue())));
     } catch (Exception e) {
       throw new RuntimeException("While listing db keys " + keyPath, e);
     }
@@ -202,6 +203,11 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
   }
 
   @Override
+  public AuthRef auth() {
+    return authProvider;
+  }
+
+  @Override
   public DataRef ref() {
     return new EtcdDataRef();
   }
@@ -237,7 +243,7 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
 
     @Override
     public void delete(String key) {
-      deleteEntry(key);
+      deleteEntry(getKeyPath(key));
     }
 
     public Map<String, String> entries() {

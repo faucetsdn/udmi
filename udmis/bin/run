@@ -11,9 +11,6 @@ shift
 ROOT=$(dirname $0)/..
 cd $ROOT
 
-PROFILE_BASE=/tmp/profile/
-mkdir -p $PROFILE_BASE
-
 echo
 echo Initial env:
 env
@@ -79,25 +76,6 @@ echo
 echo Final java env:
 env
 echo
-
-JSTACK=$(dirname $(realpath `which java`))/jstack
-if [[ -n $PROFILE_SEC ]]; then
-    # BASHPID will be replaced with the java process becasue of the exec below
-    TPID=$BASHPID
-
-    echo Profiling java process $TPID usage every ${PROFILE_SEC}s
-    (
-        cd $PROFILE_BASE
-        while [[ -d /proc/$TPID ]]; do
-            sleep $PROFILE_SEC
-            outfile=stack_$(printf %08d $SECONDS).txt
-            echo Writing stack profile to $outfile
-            $JSTACK $TPID > $outfile
-            stale_files=$(ls -rt | head -n -1000)
-            [[ -n $stale_files ]] && rm $stale_files
-        done
-    ) &
-fi
 
 # Run with exec to replace shell so java receives SIGTERM signal.
 exec java -jar $POD_JAR $POD_CONFIG

@@ -82,10 +82,23 @@ else
     iot_provider=\"gcp\"
 fi
 
+client_id=\"projects/$project_id/locations/$cloud_region/registries/$registry_prefix$registry_id$registry_suffix/devices/$device_id\"
+msg_prefix=null
+auth_provider=null
+transport=null
+
 if [[ $iot_provider == \"clearblade\" ]]; then
     broker_hostname=${cloud_region}-mqtt.clearblade.com
 elif [[ $iot_provider == \"gbos\" ]]; then
     broker_hostname=mqtt.bos.goog
+elif [[ $iot_provider == \"mqtt\" ]]; then
+    broker_hostname=$project_id
+    client_id=\"/r/$registry_prefix$registry_id$registry_suffix/d/$device_id\"
+    hash_pass=$(sha256sum < $site_path/devices/$device_id/rsa_private.pkcs8)
+    client_pass=${hash_pass:0:8}
+    msg_prefix=$client_id
+    auth_provider="{ \"basic\": { \"username\": $client_id, \"password\": \"$client_pass\" }}"
+    transport=\"ssl\"
 elif [[ -z $broker_hostname ]]; then
     broker_hostname=mqtt.googleapis.com
 fi
@@ -94,7 +107,10 @@ cat <<EOF > $pubber_config
 {
     "endpoint": {
       "protocol": "mqtt",
-      "client_id": "projects/$project_id/locations/$cloud_region/registries/$registry_prefix$registry_id$registry_suffix/devices/$device_id",
+      "transport": $transport,
+      "client_id": $client_id,
+      "msg_prefix": $msg_prefix,
+      "auth_provider": $auth_provider,
       "hostname": "$broker_hostname"
     },
     "sitePath": "$site_path",
@@ -141,7 +157,9 @@ cat $pubber_config
 
 echo Check for failure in running pubber...
 echo pubber/bin/run $pubber_config
-! pubber/bin/run $pubber_config
+result=0
+timeout 20s pubber/bin/run $pubber_config || result=$?
+[[ $result == 255 ]] || fail Improper pubber failure code $result
 
 echo Now recreate the registry from scratch!
 echo bin/registrar $site_args
@@ -155,7 +173,9 @@ echo $UDMI_ROOT/bin/registrar $full_args -b
 
 echo Check $device_id again, but this time with success...
 echo pubber/bin/run $pubber_config
-pubber/bin/run $pubber_config
+result=0
+timeout 20s pubber/bin/run $pubber_config || result=$?
+[[ $result == 0 ]] || fail Improper pubber failure code $result
 
 echo Successful pubber check passed on clean registry.
 

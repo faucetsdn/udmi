@@ -88,7 +88,6 @@ class LocalDevice {
   public static final String EXCEPTION_FILES = "Files";
   public static final String EXCEPTION_REGISTERING = "Registering";
   public static final String EXCEPTION_CREDENTIALS = "Credential";
-  public static final String EXCEPTION_CONFIG = "Config";
   public static final String EXCEPTION_ENVELOPE = "Envelope";
   public static final String EXCEPTION_SAMPLES = "Samples";
   public static final String EXCEPTION_BINDING = "Binding";
