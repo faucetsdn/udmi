@@ -260,14 +260,14 @@ jobs:
         run: bin/test_etcd
       - name: bin/setup_ca
         run: bin/setup_ca sites/udmi_site_model
-      - name: bin/start_mosquitto
-        run: bin/start_mosquitto
       - name: bin/test_mosquitto
         run: bin/test_mosquitto
       - name: bin/start_udmis
         run: bin/start_udmis
       - name: bin/test_regclean
-        run: bin/test_regclean //mqtt/localhost
+        run: |
+          bin/add_site sites/udmi_site_model/
+          bin/test_regclean //mqtt/localhost
       - name: bin/test_udmis
         run: bin/test_udmis
       - name: mosquitto debug
