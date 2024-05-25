@@ -107,7 +107,7 @@ cat <<EOF > $pubber_config
       "protocol": "mqtt",
       "transport": $transport,
       "client_id": $client_id,
-      "mst_prefix": $msg_prefix,
+      "msg_prefix": $msg_prefix,
       "auth_provider": $auth_provider,
       "hostname": "$broker_hostname"
     },
