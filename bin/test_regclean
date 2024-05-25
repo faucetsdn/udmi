@@ -155,7 +155,9 @@ cat $pubber_config
 
 echo Check for failure in running pubber...
 echo pubber/bin/run $pubber_config
-! pubber/bin/run $pubber_config
+result=0
+timeout 20s pubber/bin/run $pubber_config || result=$?
+[[ $result == 255 ]] || fail Improper pubber failure code $result
 
 echo Now recreate the registry from scratch!
 echo bin/registrar $site_args
@@ -169,7 +171,9 @@ echo $UDMI_ROOT/bin/registrar $full_args -b
 
 echo Check $device_id again, but this time with success...
 echo pubber/bin/run $pubber_config
-pubber/bin/run $pubber_config
+result=0
+timeout 20s pubber/bin/run $pubber_config || result=$?
+[[ $result == 0 ]] || fail Improper pubber failure code $result
 
 echo Successful pubber check passed on clean registry.
 
