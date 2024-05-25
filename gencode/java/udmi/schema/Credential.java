@@ -57,6 +57,7 @@ public class Credential {
     @Generated("jsonschema2pojo")
     public enum Key_format {
 
+        PASSWORD("PASSWORD"),
         ES_256("ES256"),
         ES_256_X_509("ES256_X509"),
         RS_256("RS256"),

@@ -61,6 +61,7 @@
           "key_format": {
             "description": "The key type used for cloud communication.",
             "enum": [
+              "PASSWORD",
               "ES256",
               "ES256_X509",
               "RS256",
