@@ -253,8 +253,10 @@ jobs:
         run: |
           env | fgrep PATH
           which java
+          sudo env | fgrep PATH
           sudo -E env | fgrep PATH
-          sudo -E which java
+          sudo PATH=$PATH -E env | fgrep PATH
+          sudo PATH=$PATH -E which java
           bin/setup_base
           bin/clone_model
           bin/registrar sites/udmi_site_model
