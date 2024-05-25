@@ -12,6 +12,10 @@ fi
 
 rm -f /tmp/pod_ready.txt
 
+if [[ ${1:-} == stop ]]; then
+    exit 0
+fi
+
 bin/container udmis prep --no-check
 
 LOGFILE=out/udmis.log

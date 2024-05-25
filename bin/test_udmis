@@ -3,6 +3,9 @@
 ROOT=$(dirname $0)/..
 cd $ROOT
 
+echo Stopping any running udmis process...
+bin/start_udmis stop
+
 echo Checking for properly configured mosquitto...
 sudo fgrep -q scrumptious /etc/mosquitto/dynamic_security.json || (echo mosquitto dynamic security not configured; false)
 
