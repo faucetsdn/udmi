@@ -251,15 +251,11 @@ jobs:
           java-version: '17'
       - name: base setup
         run: |
-          env | fgrep PATH
-          which java
-          sudo env | fgrep PATH
-          sudo -E env | fgrep PATH
-          sudo PATH=$PATH -E env | fgrep PATH
-          sudo PATH=$PATH -E which java
           bin/setup_base
           bin/clone_model
           bin/registrar sites/udmi_site_model
+      - name: bin/start_udmis
+        run: bin/start_udmis
       - name: bin/start_etcd
         run: bin/start_etcd
       - name: bin/test_etcd
@@ -268,8 +264,6 @@ jobs:
         run: bin/setup_ca sites/udmi_site_model
       - name: bin/test_mosquitto
         run: bin/test_mosquitto
-      - name: bin/start_udmis
-        run: bin/start_udmis
       - name: bin/test_regclean
         run: |
           bin/add_site sites/udmi_site_model/
