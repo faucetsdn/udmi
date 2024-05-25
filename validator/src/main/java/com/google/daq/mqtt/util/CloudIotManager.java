@@ -3,6 +3,7 @@ package com.google.daq.mqtt.util;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.util.ConfigUtil.readExeConfig;
+import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
@@ -13,8 +14,10 @@ import static java.util.Optional.ofNullable;
 import static udmi.schema.IotAccess.IotProvider.GBOS;
 import static udmi.schema.IotAccess.IotProvider.GCP_NATIVE;
 import static udmi.schema.IotAccess.IotProvider.IMPLICIT;
+import static udmi.schema.IotAccess.IotProvider.MQTT;
 
 import com.google.common.collect.ImmutableList;
+import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.MetadataMapKeys;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
@@ -53,6 +56,7 @@ public class CloudIotManager {
   private final File siteModel;
   private final boolean useReflectClient;
   private IotProvider iotProvider;
+  private boolean usePasswords;
 
   /**
    * Create a new CloudIoTManager.
@@ -175,17 +179,22 @@ public class CloudIotManager {
   }
 
   private IotProvider makeIotProvider() {
+    usePasswords = executionConfiguration.iot_provider == MQTT;
+
     if (projectId.equals(SiteModel.MOCK_PROJECT)) {
       System.err.println("Using mock iot client for special client " + projectId);
       return new IotMockProvider(executionConfiguration);
     }
+
     if (useReflectClient) {
       System.err.println("Using reflector iot client");
       return new IotReflectorClient(executionConfiguration);
     }
+
     if (executionConfiguration.iot_provider == GCP_NATIVE) {
       return null;
     }
+
     throw new RuntimeException("Unknown IoT Core selection strategy");
   }
 
@@ -199,6 +208,9 @@ public class CloudIotManager {
   public boolean registerDevice(String deviceId, CloudDeviceSettings settings) {
     ExceptionMap exceptions = new ExceptionMap("registering");
     CloudModel device = getRegisteredDevice(deviceId);
+    if (usePasswords) {
+      coerceCredentialsToPassword(settings);
+    }
     if (device == null) {
       exceptions.capture("creating", () -> createDevice(deviceId, settings));
     } else {
@@ -211,6 +223,13 @@ public class CloudIotManager {
 
     exceptions.throwIfNotEmpty();
     return device == null;
+  }
+
+  private void coerceCredentialsToPassword(CloudDeviceSettings settings) {
+    settings.credentials.forEach(credential -> {
+      credential.key_format = Key_format.PASSWORD;
+      credential.key_data = makePassword(credential.key_data);
+    });
   }
 
   public CloudModel getRegisteredDevice(String deviceId) {
@@ -247,8 +266,7 @@ public class CloudIotManager {
       metadataMap.remove(MetadataMapKeys.KEY_BYTES_KEY);
       metadataMap.remove(MetadataMapKeys.KEY_ALGORITHM_KEY);
     } else {
-      String keyBase64 = Base64.getEncoder().encodeToString(settings.keyBytes);
-      metadataMap.put(MetadataMapKeys.KEY_BYTES_KEY, keyBase64);
+      metadataMap.put(MetadataMapKeys.KEY_BYTES_KEY, encodeBase64(settings.keyBytes));
       metadataMap.put(MetadataMapKeys.KEY_ALGORITHM_KEY, settings.keyAlgorithm);
     }
     CloudModel cloudModel = new CloudModel();
@@ -257,6 +275,10 @@ public class CloudIotManager {
     cloudModel.metadata = metadataMap;
     cloudModel.num_id = settings.deviceNumId;
     return cloudModel;
+  }
+
+  private String makePassword(String keyBytes) {
+    return GeneralUtils.sha256(keyBytes).substring(0, 8);
   }
 
   private List<Credential> getCredentials(CloudDeviceSettings settings) {

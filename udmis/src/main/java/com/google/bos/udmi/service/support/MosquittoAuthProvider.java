@@ -4,6 +4,8 @@ import static com.google.common.base.Preconditions.checkState;
 import static java.lang.String.format;
 
 import com.google.bos.udmi.service.pod.ContainerBase;
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.util.concurrent.TimeUnit;
 
 public class MosquittoAuthProvider implements AuthRef {
@@ -30,14 +32,18 @@ public class MosquittoAuthProvider implements AuthRef {
 
   private void mosquctl(String clientId, String clientPass) {
     String cmd = format(MOSQUCTL_FMT, clientId, clientPass);
-    try {
-      container.info("Executing command %s", cmd);
-      Process exec = Runtime.getRuntime().exec(cmd);
-      exec.waitFor(EXEC_TIMEOUT_SEC, TimeUnit.SECONDS);
-      int exitValue = exec.exitValue();
-      checkState(exitValue == 0, "exit return code " + exitValue);
-    } catch (Exception e) {
-      throw new RuntimeException("While executing " + cmd, e);
+    synchronized (MosquittoAuthProvider.class) {
+      try {
+        container.info("Executing command %s", cmd);
+        Process exec = Runtime.getRuntime().exec(cmd);
+        exec.waitFor(EXEC_TIMEOUT_SEC, TimeUnit.SECONDS);
+        exec.errorReader().lines().forEach(container::info);
+        exec.inputReader().lines().forEach(container::info);
+        int exitValue = exec.exitValue();
+        checkState(exitValue == 0, "exit return code " + exitValue);
+      } catch (Exception e) {
+        throw new RuntimeException("While executing " + cmd, e);
+      }
     }
   }
 }

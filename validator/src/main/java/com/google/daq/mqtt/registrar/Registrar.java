@@ -138,7 +138,6 @@ public class Registrar {
   private File siteDir;
   private boolean deleteDevices;
   private boolean expungeDevices;
-  private IotProvider iotProvider;
   private int createRegistries = -1;
   private int runnerThreads = 5;
   private ExecutorService executor;
@@ -274,7 +273,6 @@ public class Registrar {
   private void processProfile(ExecutionConfiguration config) {
     config.site_model = new File(siteModel.getSitePath()).getAbsolutePath();
     setSitePath(config.site_model);
-    iotProvider = config.iot_provider;
     setProjectId(config.project_id);
     if (config.project_id != null) {
       setUpdateFlag(true);
