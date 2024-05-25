@@ -251,13 +251,11 @@ jobs:
           java-version: '17'
       - name: base setup
         run: |
+          which java
+          sudo -E which java
           bin/setup_base
           bin/clone_model
           bin/registrar sites/udmi_site_model
-          which java
-          java --version
-          sudo which java
-          sudo java --version
       - name: bin/start_etcd
         run: bin/start_etcd
       - name: bin/test_etcd

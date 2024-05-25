@@ -18,8 +18,6 @@ echo
 
 more /etc/os-release $POD_CONFIG | cat
 
-echo TAP
-which java
 java -version
 
 POD_JAR=build/libs/udmis-1.0-SNAPSHOT-all.jar
