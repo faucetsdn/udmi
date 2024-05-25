@@ -251,7 +251,9 @@ jobs:
           java-version: '17'
       - name: base setup
         run: |
+          env | fgrep PATH
           which java
+          sudo -E env | fgrep PATH
           sudo -E which java
           bin/setup_base
           bin/clone_model
