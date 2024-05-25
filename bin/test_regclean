@@ -94,8 +94,10 @@ elif [[ $iot_provider == \"gbos\" ]]; then
 elif [[ $iot_provider == \"mqtt\" ]]; then
     broker_hostname=$project_id
     client_id=\"/r/$registry_prefix$registry_id$registry_suffix/d/$device_id\"
+    hash_pass=$(sha256sum < $site_path/devices/$device_id/rsa_private.pkcs8)
+    client_pass=${hash_pass:0:8}
     msg_prefix=$client_id
-    auth_provider='{ "basic": { "username": "nobody", "password": "38269d11" }}'
+    auth_provider="{ \"basic\": { \"username\": $client_id, \"password\": \"$client_pass\" }}"
     transport=\"ssl\"
 elif [[ -z $broker_hostname ]]; then
     broker_hostname=mqtt.googleapis.com

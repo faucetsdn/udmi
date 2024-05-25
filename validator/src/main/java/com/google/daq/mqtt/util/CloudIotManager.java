@@ -9,11 +9,11 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.mergeObject;
 import static java.lang.String.format;
+import static java.nio.file.Files.readAllBytes;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static udmi.schema.IotAccess.IotProvider.GBOS;
 import static udmi.schema.IotAccess.IotProvider.GCP_NATIVE;
-import static udmi.schema.IotAccess.IotProvider.IMPLICIT;
 import static udmi.schema.IotAccess.IotProvider.MQTT;
 
 import com.google.common.collect.ImmutableList;
@@ -21,13 +21,11 @@ import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.MetadataMapKeys;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import org.jetbrains.annotations.NotNull;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
 import udmi.schema.CloudModel.Resource_type;
@@ -47,6 +45,7 @@ public class CloudIotManager {
   public static final int METADATA_SIZE_LIMIT = 32767;
   public static final String REDACTED_MESSAGE = "REDACTED DUE TO SIZE LIMIT";
   public static final String EMPTY_CONFIG = "{}";
+  private static final String DEVICE_PRIVATE_KEY_BYTES_FMT = "devices/%s/rsa_private.pkcs8";
   public final ExecutionConfiguration executionConfiguration;
 
   private final String registryId;
@@ -209,7 +208,7 @@ public class CloudIotManager {
     ExceptionMap exceptions = new ExceptionMap("registering");
     CloudModel device = getRegisteredDevice(deviceId);
     if (usePasswords) {
-      coerceCredentialsToPassword(settings);
+      coerceCredentialsToPassword(deviceId, settings);
     }
     if (device == null) {
       exceptions.capture("creating", () -> createDevice(deviceId, settings));
@@ -225,10 +224,16 @@ public class CloudIotManager {
     return device == null;
   }
 
-  private void coerceCredentialsToPassword(CloudDeviceSettings settings) {
+  private void coerceCredentialsToPassword(String deviceId, CloudDeviceSettings settings) {
+    // TODO: Make this less ugly/hacky. Ick.
     settings.credentials.forEach(credential -> {
-      credential.key_format = Key_format.PASSWORD;
-      credential.key_data = makePassword(credential.key_data);
+      try {
+        credential.key_format = Key_format.PASSWORD;
+        File privateKey = new File(siteModel, format(DEVICE_PRIVATE_KEY_BYTES_FMT, deviceId));
+        credential.key_data = makePassword(readAllBytes(privateKey.toPath()));
+      } catch (Exception e) {
+        throw new RuntimeException("While coercing credential for " + deviceId, e);
+      }
     });
   }
 
@@ -277,7 +282,7 @@ public class CloudIotManager {
     return cloudModel;
   }
 
-  private String makePassword(String keyBytes) {
+  private String makePassword(byte[] keyBytes) {
     return GeneralUtils.sha256(keyBytes).substring(0, 8);
   }
 
