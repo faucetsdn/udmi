@@ -9,7 +9,7 @@ fi
 
 rm -f /tmp/pod_ready.txt
 
-bin/container udmis build --no-check
+bin/container udmis prep --no-check
 
 LOGFILE=out/udmis.log
 
