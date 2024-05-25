@@ -1,5 +1,8 @@
 #!/bin/bash -e
 
+UDMI_ROOT=$(dirname $0)/..
+source $UDMI_ROOT/etc/shell_common.sh
+
 OLD_PID=$(ps ax | fgrep java | fgrep local_pod.json | awk '{print $1}')
 if [[ -n $OLD_PID ]]; then
     echo Killing old udmis process $OLD_PID
@@ -21,8 +24,10 @@ sudo PATH=$PATH -E udmis/bin/run udmis/etc/local_pod.json > $LOGFILE 2>&1 &
 PID=$!
 
 echo udmis started as pid $PID, waiting for stability...
-sleep 10
+sleep 15
 
 tail $LOGFILE
+
+[[ -f /tmp/pod_ready.txt ]] || fail pod_ready.txt not found.
 
 echo udmis running in the background, pid $PID log in $(realpath $LOGFILE)
