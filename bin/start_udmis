@@ -1,9 +1,9 @@
-#!/bin/bash -e
+#!/bin/bash -ex
 
 UDMI_ROOT=$(dirname $0)/..
 source $UDMI_ROOT/etc/shell_common.sh
 
-OLD_PID=$(ps ax | fgrep java | fgrep local_pod.json | awk '{print $1}')
+OLD_PID=$(ps ax | fgrep java | fgrep local_pod.json | awk '{print $1}') || true
 if [[ -n $OLD_PID ]]; then
     echo Killing old udmis process $OLD_PID
     sudo kill $OLD_PID
