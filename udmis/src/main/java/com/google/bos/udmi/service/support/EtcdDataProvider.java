@@ -49,6 +49,7 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
   private final KV kvClient;
   private final Map<String, String> options;
   private final boolean enabled;
+  private final AuthRef authProvider = new MosquittoAuthProvider();
   private ScheduledExecutorService scheduledExecutorService;
 
   /**
@@ -199,6 +200,11 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
     } else {
       info("Not enabled, not activating.");
     }
+  }
+
+  @Override
+  public AuthRef auth() {
+    return authProvider;
   }
 
   @Override

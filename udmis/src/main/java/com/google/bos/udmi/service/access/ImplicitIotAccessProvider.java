@@ -29,6 +29,7 @@ import com.google.udmi.util.JsonUtil;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -55,6 +56,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   private static final String REGISTRIES_KEY = "registries";
   private static final String NUM_ID_PROPERTY = "num_id";
   private static final String IMPLICIT_DATABASE_COMPONENT = "database";
+  private static final String CLIENT_ID_FORMAT = "/r/%s/d/%s";
   private final boolean enabled;
   private IotDataProvider database;
   private ReflectProcessor reflect;
@@ -95,6 +97,11 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     DataRef properties = registryDeviceRef(registryId, deviceId);
     properties.entries().keySet().forEach(properties::delete);
     registryDevicesCollection(registryId).delete(deviceId);
+    database.auth().revoke(clientId(registryId, deviceId));
+  }
+
+  private String clientId(String registryId, String deviceId) {
+    return format(CLIENT_ID_FORMAT, registryId, deviceId);
   }
 
   private CloudModel getReply(String registryId, String deviceId, CloudModel request,

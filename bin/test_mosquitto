@@ -20,7 +20,7 @@ CLNT_PASS=possum
 bin/start_mosquitto
 
 site_path=sites/udmi_site_model
-device_id=AHU-1 # Static device for testing
+device_id=AHU-1
 serial_no=$RANDOM
 CLIENT_DIR=$site_path/devices/$device_id
 DEV_CONF=$site_path/devices/$device_id/out/generated_config.json
@@ -63,13 +63,10 @@ sleep 1
 echo Checking received message
 fgrep Racket out/mosquitto.sub
 
-CLIENT_USER=nobody
 hash_pass=$(sha256sum < $site_path/devices/$device_id/rsa_private.pkcs8)
 dev_pass=${hash_pass:0:8}
 dev_id=/r/$registry_id/d/$device_id
-$MOSQUITTO_CTRL deleteClient $CLIENT_USER || true
-$MOSQUITTO_CTRL createClient $CLIENT_USER -p $dev_pass -c $dev_id
-$MOSQUITTO_CTRL addClientRole $CLIENT_USER device
+bin/mosquctl_client $dev_id $dev_pass
 
 sleep 1
 
@@ -85,7 +82,7 @@ cat <<EOF > /tmp/pubber_config.json
       "port": 8883,
       "auth_provider": {
         "basic": {
-          "username": "$CLIENT_USER",
+          "username": "$dev_id",
           "password": "$dev_pass"
         }
       }

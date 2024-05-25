@@ -266,7 +266,7 @@ jobs:
         run: bin/start_udmis
       - name: bin/test_regclean
         run: |
-          bin/add_site sites/udmi_site_model/
+          bin/mosquctl_site sites/udmi_site_model/
           bin/test_regclean //mqtt/localhost
       - name: bin/test_udmis
         run: bin/test_udmis
