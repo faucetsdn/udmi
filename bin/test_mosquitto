@@ -115,8 +115,9 @@ mosquitto_pub $CLIENT_OPTS -t $topic -m "Hello Rudolph"
 
 sleep 1
 
-echo Killing background clients
+echo Cleanup subscribers and clients...
 killall mosquitto_sub || true
+bin/mosquctl_client $dev_id --
 
 echo Received messages:
 cat out/mosquitto.sub | cut -c -120

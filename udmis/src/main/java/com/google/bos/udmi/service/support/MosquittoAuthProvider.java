@@ -4,10 +4,11 @@ import static com.google.common.base.Preconditions.checkState;
 import static java.lang.String.format;
 
 import com.google.bos.udmi.service.pod.ContainerBase;
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Provider that links directly to a mosquitto broker.
+ */
 public class MosquittoAuthProvider implements AuthRef {
 
   private static final String UDMI_ROOT = System.getenv("UDMI_ROOT");
