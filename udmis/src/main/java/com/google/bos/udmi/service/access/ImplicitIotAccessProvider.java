@@ -75,15 +75,13 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     return String.valueOf(Math.abs(Objects.hash(registryId, deviceId)));
   }
 
-  private CloudModel bindDevice(String registryId, String deviceId, CloudModel model) {
-    CloudModel reply = new CloudModel();
-    reply.operation = BIND;
-    return reply;
+  private void bindDevice(String registryId, String deviceId, CloudModel model) {
+    // Binding is a nop, so silently do nothing!
   }
 
-  private CloudModel blockDevice(String registryId, String deviceId, CloudModel cloudModel) {
+  private void blockDevice(String registryId, String deviceId, CloudModel cloudModel) {
     database.auth().revoke(clientId(registryId, deviceId));
-    throw new RuntimeException("blockDevice not yet implemented");
+    registryDeviceRef(registryId, deviceId).put(BLOCKED_PROPERTY, booleanString(true));
   }
 
   private String clientId(String registryId, String deviceId) {
