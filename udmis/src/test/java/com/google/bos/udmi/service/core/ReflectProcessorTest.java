@@ -29,6 +29,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
+import udmi.schema.CloudModel.Resource_type;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
@@ -150,10 +151,12 @@ public class ReflectProcessorTest extends ProcessorTestBase {
   public void modelDeviceTest() {
     CloudModel returnModel = new CloudModel();
     returnModel.operation = Operation.CREATE;
+    returnModel.resource_type = Resource_type.DEVICE;
     when(provider.modelDevice(anyString(), anyString(), notNull())).thenReturn(returnModel);
 
     CloudModel requestModel = new CloudModel();
     requestModel.operation = Operation.BIND;
+    requestModel.resource_type = Resource_type.DEVICE;
     activeTestInstance(() -> getReverseDispatcher().publish(makeModelBundle(requestModel)));
     verify(provider, times(1)).modelDevice(eq(TEST_REGISTRY), eq(TEST_DEVICE),
         eq(requestModel));

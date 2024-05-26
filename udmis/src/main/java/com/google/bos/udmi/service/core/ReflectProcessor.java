@@ -56,6 +56,7 @@ import java.util.stream.Collectors;
 import org.bouncycastle.crypto.engines.SM2Engine.Mode;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
+import udmi.schema.CloudModel.Resource_type;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
@@ -122,7 +123,7 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private Object extractModel(CloudModel request) {
-    String metadata = request.metadata.get(MetadataMapKeys.UDMI_METADATA);
+    String metadata = catchToNull(() -> request.metadata.get(MetadataMapKeys.UDMI_METADATA));
     if (metadata == null) {
       return null;
     } else if (request.resource_type == REGISTRY) {
@@ -236,6 +237,7 @@ public class ReflectProcessor extends ProcessorBase {
 
   private CloudModel reflectModel(Envelope attributes, CloudModel request) {
     ifNotNullThen(extractModel(request), model -> publish(attributes, model));
+
     switch (request.resource_type) {
       case DEVICE, GATEWAY:
         return iotAccess.modelDevice(attributes.deviceRegistryId, attributes.deviceId, request);
@@ -246,7 +248,6 @@ public class ReflectProcessor extends ProcessorBase {
     }
   }
 
-  //NES - return the right object type here .. either ModelUpdate or RegistryModelUpdate
   private static ModelUpdate asModelUpdate(String modelString) {
     // If it's not a valid JSON object, then fall back to a string description alternate.
     if (modelString == null || !modelString.startsWith(JsonUtil.JSON_OBJECT_LEADER)) {
