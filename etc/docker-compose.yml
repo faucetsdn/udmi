@@ -1,0 +1,51 @@
+version: "3.8"
+
+services:
+  mosquitto:
+    image: eclipse-mosquitto:latest
+    restart: always
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    networks:
+      - iot
+  
+  influxdb:
+    image: influxdb
+    restart: always
+    ports:
+      - "8086:8086"
+    networks:
+      - iot
+    volumes:
+      - influxdb-data:/var/lib/influxdb
+  
+  telegraf:
+    image: telegraf
+    restart: always
+    volumes:
+      - ./telegraf.conf:/etc/telegraf/telegraf.conf:ro
+    depends_on:
+      - mosquitto
+      - influxdb
+    networks:
+      - iot
+  
+  grafana:
+    image: grafana/grafana
+    restart: always
+    ports:
+      - "3000:3000"
+    networks:
+      - iot
+    volumes:
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - influxdb
+
+networks:
+  iot:
+
+volumes:
+  influxdb-data:
+  grafana-data:
