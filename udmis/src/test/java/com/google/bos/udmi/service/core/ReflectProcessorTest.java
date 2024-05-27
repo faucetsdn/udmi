@@ -8,6 +8,7 @@ import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.notNull;
@@ -166,5 +167,15 @@ public class ReflectProcessorTest extends ProcessorTestBase {
         eq(SubFolder.UDMI), commandCaptor.capture());
     Envelope envelope = JsonUtil.fromStringStrict(Envelope.class, commandCaptor.getValue());
     assertEquals(transactionId, envelope.transactionId);
+  }
+
+  @Test
+  public void modelRegistryUpdateTest() {
+    CloudModel requestModel = new CloudModel();
+    requestModel.operation = Operation.UPDATE;
+    requestModel.resource_type = Resource_type.REGISTRY;
+    activeTestInstance(() -> getReverseDispatcher().publish(makeModelBundle(requestModel)));
+    verify(provider, times(1)).modelRegistry(eq(TEST_REGISTRY), any(),
+        eq(requestModel));
   }
 }
