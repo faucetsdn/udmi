@@ -80,6 +80,10 @@ public class GeneralUtils {
     return args;
   }
 
+  public static String booleanString(Boolean bool) {
+    return ifNotNullGet(bool, value -> Boolean.toString(bool));
+  }
+
   public static String changedLines(List<DiffEntry> nullableChanges) {
     List<DiffEntry> changes = ofNullable(nullableChanges).orElse(ImmutableList.of());
     String terminator = changes.size() == 0 ? "." : ":";

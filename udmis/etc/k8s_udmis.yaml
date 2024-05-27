@@ -46,12 +46,6 @@ spec:
               name: config
               key: ETCD_CLUSTER
               optional: true
-        - name: PROFILE_SEC
-          valueFrom:
-            configMapKeyRef:
-              name: config
-              key: PROFILE_SEC
-              optional: true
         - name: BITBOX_DISCOVERY
           valueFrom:
             configMapKeyRef:
