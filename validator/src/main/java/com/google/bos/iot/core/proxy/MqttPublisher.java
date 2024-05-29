@@ -89,7 +89,7 @@ public class MqttPublisher implements MessagePublisher {
   private static final int INITIALIZE_TIME_MS = 20000;
   private static final String BROKER_URL_FORMAT = "%s://%s:%s";
   private static final int PUBLISH_THREAD_COUNT = 10;
-  private static final int TOKEN_EXPIRATION_SEC = 60 * 60;
+  private static final int TOKEN_EXPIRATION_SEC = 120;
   private static final int TOKEN_EXPIRATION_MS = TOKEN_EXPIRATION_SEC * 1000;
   private static final String TICKLE_TOPIC = "events/udmi";
   private static final long TICKLE_PERIOD_SEC = 10;
