@@ -96,6 +96,8 @@ public class ReflectProcessor extends ProcessorBase {
             reflect.subType, reflect.subFolder));
       } else if (message instanceof UdmiState distributedUpdate) {
         updateAwareness(reflect, distributedUpdate);
+      } else if (objectMap.isEmpty()) {
+        // Ignore empty messages, used as keep-alive messages.
       } else {
         Object payload = extractMessagePayload(objectMap);
         Envelope envelope = extractMessageEnvelope(objectMap);
