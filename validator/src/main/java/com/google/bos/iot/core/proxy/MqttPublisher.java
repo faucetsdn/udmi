@@ -62,6 +62,7 @@ import org.slf4j.LoggerFactory;
 import udmi.schema.Credential;
 import udmi.schema.Credential.Key_format;
 import udmi.schema.EndpointConfiguration.Transport;
+import udmi.schema.Envelope;
 import udmi.schema.ExecutionConfiguration;
 import udmi.schema.IotAccess.IotProvider;
 
@@ -120,6 +121,7 @@ public class MqttPublisher implements MessagePublisher {
   private final IotProvider iotProvider;
   private final String topicBase;
   private final CertManager certManager;
+  private final Envelope savedState = new Envelope();
   private long mqttTokenSetTimeMs;
   private MqttConnectOptions mqttConnectOptions;
   private boolean shutdown;
@@ -144,14 +146,6 @@ public class MqttPublisher implements MessagePublisher {
     mqttClient = newMqttClient(deviceId);
     connectMqttClient(deviceId);
     tickler = scheduleTickler();
-  }
-
-  private CertManager getCertManager() {
-    boolean needCerts = iotProvider.equals(IotProvider.MQTT);
-    File reflector = new SiteModel(siteModel).getReflectorDir();
-    return ifTrueGet(needCerts && reflector != null,
-        () -> new CertManager(new File(reflector, CA_CERT_FILE), reflector, Transport.SSL,
-            new String(getHashPassword(null)), LOG::info));
   }
 
   private static ThreadFactory getDaemonThreadFactory() {
@@ -210,6 +204,14 @@ public class MqttPublisher implements MessagePublisher {
     } catch (Exception e) {
       throw new RuntimeException("While getting data from " + dataPath.toAbsolutePath(), e);
     }
+  }
+
+  private CertManager getCertManager() {
+    boolean needCerts = iotProvider.equals(IotProvider.MQTT);
+    File reflector = new SiteModel(siteModel).getReflectorDir();
+    return ifTrueGet(needCerts && reflector != null,
+        () -> new CertManager(new File(reflector, CA_CERT_FILE), reflector, Transport.SSL,
+            new String(getHashPassword(null)), LOG::info));
   }
 
   private String getTopicBase() {
@@ -281,13 +283,15 @@ public class MqttPublisher implements MessagePublisher {
       if (!mqttClient.isConnected()) {
         throw new RuntimeException("MQTT Client not connected");
       }
+      if (STATE_TOPIC.equals(topic)) {
+        savedState.payload = payload;
+        savedState.deviceId = deviceId;
+        delayStateUpdate(deviceId);
+      }
       maybeRefreshJwt();
       if (!attachedClients.contains(deviceId)) {
         attachedClients.add(deviceId);
         attachClient(deviceId);
-      }
-      if (STATE_TOPIC.equals(topic)) {
-        delayStateUpdate(deviceId);
       }
       sendMessage(getMessageTopic(deviceId, topic), payload.getBytes());
       LOG.debug(this.deviceId + " publishing complete " + registryId + "/" + deviceId);
@@ -463,10 +467,16 @@ public class MqttPublisher implements MessagePublisher {
         long disconnectTime = System.currentTimeMillis() - currentTimeMillis;
         LOG.debug(deviceId + " disconnect took " + disconnectTime);
         connectAndSetupMqtt();
+        resendState();
       } catch (Exception e) {
         throw new RuntimeException("While processing disconnect", e);
       }
     }
+  }
+
+  private void resendState() {
+    ifNotNullThen(savedState.payload,
+        payload -> publish(savedState.deviceId, STATE_TOPIC, payload));
   }
 
   String getClientId(String deviceId) {
