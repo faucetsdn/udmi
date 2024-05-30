@@ -68,6 +68,16 @@ public class ReflectProcessor extends ProcessorBase {
     super(config);
   }
 
+  private static ModelUpdate asModelUpdate(String modelString) {
+    // If it's not a valid JSON object, then fall back to a string description alternate.
+    if (modelString == null || !modelString.startsWith(JsonUtil.JSON_OBJECT_LEADER)) {
+      ModelUpdate modelUpdate = new ModelUpdate();
+      modelUpdate.description = modelString;
+      return modelUpdate;
+    }
+    return fromStringStrict(ModelUpdate.class, modelString);
+  }
+
   public static String makeTransactionId() {
     return format("RP:%08x", Objects.hash(System.currentTimeMillis(), Thread.currentThread()));
   }
@@ -75,30 +85,35 @@ public class ReflectProcessor extends ProcessorBase {
   @Override
   protected void defaultHandler(Object message) {
     MessageContinuation continuation = getContinuation(message);
-    Envelope reflection = continuation.getEnvelope();
+    Envelope reflect = continuation.getEnvelope();
     Map<String, Object> objectMap = toMap(message);
     try {
       boolean isCommand = objectMap.containsKey(PAYLOAD_KEY);
-      if (reflection.subFolder == null && !isCommand) {
-        reflectStateHandler(reflection, extractUdmiState(message));
-      } else if (reflection.subFolder != SubFolder.UDMI && reflection.subType != SubType.REFLECT) {
+      if (reflect.subFolder == null && !isCommand) {
+        reflectStateHandler(reflect, extractUdmiState(message));
+      } else if (reflect.subFolder != SubFolder.UDMI && reflect.subType != SubType.REFLECT) {
         throw new IllegalStateException(format("Neither type %s nor folder %s is udmi",
-            reflection.subType, reflection.subFolder));
+            reflect.subType, reflect.subFolder));
       } else if (message instanceof UdmiState distributedUpdate) {
-        updateAwareness(reflection, distributedUpdate);
+        updateAwareness(reflect, distributedUpdate);
+      } else if (objectMap.isEmpty()) {
+        // Ignore empty messages, used as keep-alive messages.
       } else {
         Object payload = extractMessagePayload(objectMap);
         Envelope envelope = extractMessageEnvelope(objectMap);
         requireNull(envelope.payload, "payload not extracted from message envelope");
-        checkState(reflection.deviceId.equals(envelope.deviceRegistryId),
-            format("envelope registryId %s does not match reflector deviceId %s",
-                envelope.deviceRegistryId, reflection.deviceId));
-        reflection.transactionId = firstNonNull(envelope.transactionId, reflection.transactionId,
+        if (!reflect.deviceId.equals(envelope.deviceRegistryId)) {
+          debug("TAP offending message: " + stringifyTerse(objectMap));
+        }
+        checkState(reflect.deviceId.equals(envelope.deviceRegistryId),
+            format("envelope %s/%s registryId %s does not match expected reflector deviceId %s",
+                envelope.subType, envelope.subFolder, envelope.deviceRegistryId, reflect.deviceId));
+        reflect.transactionId = firstNonNull(envelope.transactionId, reflect.transactionId,
             ReflectProcessor::makeTransactionId);
-        processReflection(reflection, envelope, payload);
+        processReflection(reflect, envelope, payload);
       }
     } catch (Exception e) {
-      processException(reflection, objectMap, e);
+      processException(reflect, objectMap, e);
     }
   }
 
@@ -221,16 +236,6 @@ public class ReflectProcessor extends ProcessorBase {
   private CloudModel reflectModel(Envelope attributes, CloudModel request) {
     ifNotNullThen(extractDeviceModel(request), model -> publish(attributes, model));
     return iotAccess.modelResource(attributes.deviceRegistryId, attributes.deviceId, request);
-  }
-
-  private static ModelUpdate asModelUpdate(String modelString) {
-    // If it's not a valid JSON object, then fall back to a string description alternate.
-    if (modelString == null || !modelString.startsWith(JsonUtil.JSON_OBJECT_LEADER)) {
-      ModelUpdate modelUpdate = new ModelUpdate();
-      modelUpdate.description = modelString;
-      return modelUpdate;
-    }
-    return fromStringStrict(ModelUpdate.class, modelString);
   }
 
   private CloudModel reflectProcess(Envelope attributes, Object payload) {
