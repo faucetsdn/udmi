@@ -3,6 +3,9 @@
 UDMI_ROOT=$(dirname $0)/..
 source $UDMI_ROOT/etc/shell_common.sh
 
+# Something to just trigger password entry early on in the process
+sudo touch /dev/null
+
 OLD_PID=$(ps ax | fgrep java | fgrep local_pod.json | awk '{print $1}') || true
 if [[ -n $OLD_PID ]]; then
     echo Killing old udmis process $OLD_PID
