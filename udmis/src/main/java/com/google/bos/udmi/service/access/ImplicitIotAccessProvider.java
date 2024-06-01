@@ -13,7 +13,6 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.function.Predicate.not;
-import static udmi.schema.CloudModel.Operation.BIND;
 import static udmi.schema.CloudModel.Operation.DELETE;
 import static udmi.schema.CloudModel.Resource_type.DEVICE;
 import static udmi.schema.CloudModel.Resource_type.GATEWAY;
@@ -51,6 +50,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   private static final String CONFIG_VER_KEY = "config_ver";
   private static final String LAST_CONFIG_KEY = "last_config";
+  private static final String LAST_STATE_KEY = "last_state";
   private static final String DEVICES_COLLECTION = "devices";
   private static final String BLOCKED_PROPERTY = "blocked";
   private static final String CREATED_AT_PROPERTY = "created_at";
@@ -221,8 +221,13 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public String fetchState(String deviceRegistryId, String deviceId) {
-    throw new RuntimeException("fetchState not yet implemented");
+  public String fetchState(String registryId, String deviceId) {
+    return registryDeviceRef(registryId, deviceId).get(LAST_STATE_KEY);
+  }
+
+  @Override
+  public void saveState(String registryId, String deviceId, String stateBlob) {
+    registryDeviceRef(registryId, deviceId).put(LAST_STATE_KEY, stateBlob);
   }
 
   @Override

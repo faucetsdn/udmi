@@ -264,6 +264,13 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
   }
 
   /**
+   * Saves state update message for later retrieval. Should be overridden by implementations
+   * that don't implicitly save state when it's received.
+   */
+  public void saveState(String registryId, String deviceId, String stateBlob) {
+  }
+
+  /**
    * Send a command to a device.
    */
   public final void sendCommand(String registryId, String deviceId, SubFolder folder,
