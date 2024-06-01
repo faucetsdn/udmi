@@ -83,6 +83,7 @@ fi
 # e.g. bos-testing-dev or //gcp/bos-testing-dev or bos-platform-dev@mqtt.bos.goog
 project_target=${project_id##*/}
 udmi_prefix=
+broker_hostname=
 
 if [[ -z $project_id ]]; then
     true using config file based configuration
@@ -101,22 +102,37 @@ else
     iot_provider=gcp
 fi
 
+[[ $registry_id == null ]] && fail registry_id not defined
+registry_actual=${udmi_prefix}${registry_id}${registry_suffix}
+client_id=\"projects/$project_target/locations/$cloud_region/registries/$registry_actual/devices/$device_id\"
+msg_prefix=null
+auth_provider=null
+transport=null
+
 if [[ $iot_provider == clearblade ]]; then
     broker_hostname=${cloud_region}-mqtt.clearblade.com
 elif [[ $iot_provider == gbos ]]; then
     broker_hostname=mqtt.bos.goog
+elif [[ $iot_provider == mqtt ]]; then
+    broker_hostname=$project_id
+    client_id=\"/r/$registry_actual/d/$device_id\"
+    hash_pass=$(sha256sum < $site_model/devices/$device_id/rsa_private.pkcs8)
+    client_pass=${hash_pass:0:8}
+    msg_prefix=$client_id
+    auth_provider="{ \"basic\": { \"username\": $client_id, \"password\": \"$client_pass\" }}"
+    transport=\"ssl\"
 elif [[ -z $broker_hostname ]]; then
     broker_hostname=mqtt.googleapis.com
 fi
 
-[[ $registry_id == null ]] && fail registry_id not defined
-
-registry_actual=${udmi_prefix}${registry_id}${registry_suffix}
-
 if [[ ! -f /tmp/endpoint.json ]]; then
     cat <<EOF > /tmp/endpoint.json
 {
-    "client_id": "projects/$project_target/locations/$cloud_region/registries/$registry_actual/devices/$device_id",
+    "protocol": "mqtt",
+    "transport": $transport,
+    "client_id": $client_id,
+    "msg_prefix": $msg_prefix,
+    "auth_provider": $auth_provider,
     "hostname": "$broker_hostname"
 }
 EOF

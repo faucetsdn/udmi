@@ -24,13 +24,13 @@ rm -f $SEQUENCER_LOG $SEQUENCER_OUT $SCHEMA_OUT
 
 # Shortcut to run sequencer with a fixed config and cmd-line tests.
 # TODO: Make this a better (more standard) command line format in-line with other tools.
-if [[ $1 == -- ]]; then
+if [[ ${1-} == -- ]]; then
     shift
     $JAVA_CMD $@
     exit 0
 fi
 
-while [[ $1 =~ ^- ]]; do
+while [[ ${1-} =~ ^- ]]; do
     if [[ $1 == '-a' ]]; then
         min_stage=ALPHA
     elif [[ $1 == '-x' ]]; then
@@ -47,7 +47,7 @@ while [[ $1 =~ ^- ]]; do
 done
 
 if [[ $# == 0 ]]; then
-    usage [-v] [-vv] [-a] [-x] SITE_MODEL PROJECT_ID DEVICE_ID [SERIAL_NO] [TEST_NAMES...]
+    usage [-v] [-vv] [-a] [-x] SITE_MODEL PROJECT_SPEC DEVICE_ID [SERIAL_NO] [TEST_NAMES...]
 fi
 
 site_path=$(realpath $1)
