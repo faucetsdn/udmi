@@ -114,7 +114,7 @@ if [[ $iot_provider == clearblade ]]; then
 elif [[ $iot_provider == gbos ]]; then
     broker_hostname=mqtt.bos.goog
 elif [[ $iot_provider == mqtt ]]; then
-    broker_hostname=$project_id
+    broker_hostname=$project_target
     client_id=\"/r/$registry_actual/d/$device_id\"
     hash_pass=$(sha256sum < $site_model/devices/$device_id/rsa_private.pkcs8)
     client_pass=${hash_pass:0:8}
