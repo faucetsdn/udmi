@@ -21,6 +21,7 @@ import static udmi.schema.CloudModel.Resource_type.REGISTRY;
 import com.google.bos.udmi.service.core.ReflectProcessor;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.bos.udmi.service.support.DataRef;
+import com.google.bos.udmi.service.support.DataRef.DataLock;
 import com.google.bos.udmi.service.support.IotDataProvider;
 import com.google.common.collect.ImmutableSet;
 import com.google.udmi.util.GeneralUtils;
@@ -201,11 +202,16 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   @Override
   public Entry<Long, String> fetchConfig(String registryId, String deviceId) {
-    // TODO: Implement lease for atomic transaction.
-    String config = registryDeviceRef(registryId, deviceId).get(LAST_CONFIG_KEY);
-    String version = registryDeviceRef(registryId, deviceId).get(CONFIG_VER_KEY);
-    Long versionLong = ofNullable(version).map(Long::parseLong).orElse(null);
-    return new SimpleEntry<>(versionLong, ofNullable(config).orElse(EMPTY_JSON));
+    DataRef dataRef = registryDeviceRef(registryId, deviceId);
+    try (AutoCloseable locked = dataRef.lock()) {
+      String config = dataRef.get(LAST_CONFIG_KEY);
+      String version = dataRef.get(CONFIG_VER_KEY);
+      Long versionLong = ofNullable(version).map(Long::parseLong).orElse(null);
+      return new SimpleEntry<>(versionLong, ofNullable(config).orElse(EMPTY_JSON));
+    } catch (Exception e) {
+      throw new RuntimeException(
+          format("While handling fetchConfig %s/%s", registryId, deviceId), e);
+    }
   }
 
   @Override
@@ -223,11 +229,6 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   @Override
   public String fetchState(String registryId, String deviceId) {
     return registryDeviceRef(registryId, deviceId).get(LAST_STATE_KEY);
-  }
-
-  @Override
-  public void saveState(String registryId, String deviceId, String stateBlob) {
-    registryDeviceRef(registryId, deviceId).put(LAST_STATE_KEY, stateBlob);
   }
 
   @Override
@@ -263,6 +264,11 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
       return modelRegistry(registryId, deviceId, cloudModel);
     }
     return modelDevice(registryId, deviceId, cloudModel);
+  }
+
+  @Override
+  public void saveState(String registryId, String deviceId, String stateBlob) {
+    registryDeviceRef(registryId, deviceId).put(LAST_STATE_KEY, stateBlob);
   }
 
   @Override

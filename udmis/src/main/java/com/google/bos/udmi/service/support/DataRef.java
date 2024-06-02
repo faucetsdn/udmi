@@ -37,6 +37,8 @@ public abstract class DataRef {
 
   public abstract String get(String key);
 
+  public abstract AutoCloseable lock();
+
   public abstract void put(String key, String value);
 
   /**
