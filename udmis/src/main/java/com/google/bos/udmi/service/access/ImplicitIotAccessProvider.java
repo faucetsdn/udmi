@@ -21,7 +21,6 @@ import static udmi.schema.CloudModel.Resource_type.REGISTRY;
 import com.google.bos.udmi.service.core.ReflectProcessor;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.bos.udmi.service.support.DataRef;
-import com.google.bos.udmi.service.support.DataRef.DataLock;
 import com.google.bos.udmi.service.support.IotDataProvider;
 import com.google.common.collect.ImmutableSet;
 import com.google.udmi.util.GeneralUtils;
@@ -206,6 +205,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     try (AutoCloseable locked = dataRef.lock()) {
       String config = dataRef.get(LAST_CONFIG_KEY);
       String version = dataRef.get(CONFIG_VER_KEY);
+      info("Fetched config %s #%s", dataRef, version);
       Long versionLong = ofNullable(version).map(Long::parseLong).orElse(null);
       return new SimpleEntry<>(versionLong, ofNullable(config).orElse(EMPTY_JSON));
     } catch (Exception e) {
@@ -283,26 +283,35 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public String updateConfig(String registryId, String deviceId, String config, Long version) {
+  public String updateConfig(String registryId, String deviceId, String config, Long prevVersion) {
+    DataRef dataRef = registryDeviceRef(registryId, deviceId);
+    try (AutoCloseable dataLock = dataRef.lock()) {
+      String prev = dataRef.get(CONFIG_VER_KEY);
+      if (prevVersion != null && !prevVersion.toString().equals(prev)) {
+        throw new RuntimeException("Config version update mismatch");
+      }
+
+      dataRef.put(LAST_CONFIG_KEY, config);
+      String update = ofNullable(prevVersion).map(v -> v + 1)
+          .orElseGet(() -> ofNullable(prev).map(Long::parseLong).orElse(1L)).toString();
+      dataRef.put(CONFIG_VER_KEY, update);
+      info("Updated config %s #%s to #%s", dataRef, prev, update);
+
+      sendConfigUpdate(registryId, deviceId, config);
+    } catch (Exception e) {
+      throw new RuntimeException(
+          format("While updating config for %s/%s", registryId, deviceId), e);
+    }
+
+    return config;
+  }
+
+  private void sendConfigUpdate(String registryId, String deviceId, String config) {
     Envelope envelope = new Envelope();
     envelope.deviceRegistryId = registryId;
     envelope.deviceId = deviceId;
     envelope.subType = SubType.CONFIG;
     reflect.getDispatcher().withEnvelope(envelope).publish(asMap(config));
-
-    // TODO: Implement lease for atomic transaction.
-    String prev = registryDeviceRef(registryId, deviceId).get(CONFIG_VER_KEY);
-    if (version != null && !version.toString().equals(prev)) {
-      throw new RuntimeException("Config version update mismatch");
-    }
-
-    registryDeviceRef(registryId, deviceId).put(LAST_CONFIG_KEY, config);
-    String update = ofNullable(version).map(v -> v + 1)
-        .orElseGet(() -> ofNullable(prev).map(Long::parseLong).orElse(1L)).toString();
-    registryDeviceRef(registryId, deviceId).put(CONFIG_VER_KEY, update);
-
-    return config;
   }
-
 
 }

@@ -154,7 +154,7 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
     try {
       long leaseId = client.getLeaseClient().grant(10).get().getID();
       ByteSequence lockKey = lockClient.lock(bytes(lockName), leaseId).get().getKey();
-      info("Locked %s with lease %x as %x", lockName, leaseId, encodeBase64(asString(lockKey)));
+      info("Locked %s with lease %x as %s", lockName, leaseId, encodeBase64(asString(lockKey)));
       return new LockCloser(lockName, leaseId, lockKey);
     } catch (Exception e) {
       throw new RuntimeException("While acquiring etcd lock", e);
@@ -295,7 +295,7 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
     public void close() throws Exception {
       client.getLockClient().unlock(lockKey).get();
       client.getLeaseClient().revoke(leaseId).get();
-      info("Released %s with lease %x as %x", lockName, leaseId, encodeBase64(asString(lockKey)));
+      info("Released %s with lease %x as %s", lockName, leaseId, encodeBase64(asString(lockKey)));
     }
   }
 }
