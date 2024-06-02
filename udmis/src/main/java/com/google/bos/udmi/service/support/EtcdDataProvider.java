@@ -299,4 +299,4 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
     }
   }
 }
-}
+
