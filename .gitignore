@@ -42,6 +42,7 @@ __pycache__/
 /udmi_*.log
 
 .vscode
+.class
 
 # Terraform authentication and template files.
 cloud/gcp/terraform.tfvars
