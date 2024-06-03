@@ -316,7 +316,11 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
       return bundle;
     }
 
-    if (!(message instanceof Map)) {
+    if (message instanceof RawString rawString) {
+      requireNonNull(bundle.envelope.subType, "subType not defined for raw string");
+      bundle.payload = rawString.rawString;
+      bundle.message = null;
+    } else if (!(message instanceof Map)) {
       SimpleEntry<SubType, SubFolder> messageType = CLASS_TYPES.get(message.getClass());
       requireNonNull(messageType, "unknown message type for " + message.getClass());
       bundle.envelope.subType = messageType.getKey();

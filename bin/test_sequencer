@@ -154,7 +154,7 @@ if [[ -n $out_check && -z $targets ]]; then
     fi
 
     bin/test_sequcheck $suffix
-elif [[ -n $MATRIX_SHARD_COUNT ]]; then
+elif [[ -n ${MATRIX_SHARD_COUNT:-} ]]; then
     echo Copying results to out-seq for matrix reconciliation...
     mkdir -p $site_path/out-seq
     rsync -ah $site_path/out/ $site_path/out-seq/
