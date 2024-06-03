@@ -77,16 +77,6 @@ public class ReflectProcessor extends ProcessorBase {
     super(config);
   }
 
-  private static ModelUpdate asModelUpdate(String modelString) {
-    // If it's not a valid JSON object, then fall back to a string description alternate.
-    if (modelString == null || !modelString.startsWith(JsonUtil.JSON_OBJECT_LEADER)) {
-      ModelUpdate modelUpdate = new ModelUpdate();
-      modelUpdate.description = modelString;
-      return modelUpdate;
-    }
-    return fromStringStrict(ModelUpdate.class, modelString);
-  }
-
   public static String makeTransactionId() {
     return format("RP:%08x", Objects.hash(System.currentTimeMillis(), Thread.currentThread()));
   }
