@@ -44,7 +44,8 @@ public class TargetProcessor extends ProcessorBase {
 
     defaultFields(defaultedMessage);
 
-    publish(defaultedMessage);
+    // TODO: Why is this here?
+    //publish(defaultedMessage);
 
     if (deviceId == null) {
       notice("Dropping message with no deviceId: " + stringifyTerse(envelope));

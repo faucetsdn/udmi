@@ -47,7 +47,7 @@ import udmi.schema.Envelope.SubType;
 public class SimpleMqttPipe extends MessageBase {
 
   private static final int INITIALIZE_TIME_MS = 1000;
-  private static final int PUBLISH_THREAD_COUNT = 2;
+  public static final int MAX_INFLIGHT = 10;
   private static final String BROKER_URL_FORMAT = "%s://%s:%s";
   private static final long RECONNECT_SEC = 10;
   private static final int DEFAULT_PORT = 8883;
@@ -131,6 +131,7 @@ public class SimpleMqttPipe extends MessageBase {
       String topic = makeMqttTopic(bundle);
       MqttMessage message = makeMqttMessage(bundle);
       mqttClient.publish(topic, message);
+      debug("Client has %d inFlight tokens with %s", mqttClient.getPendingDeliveryTokens().length, topic);
     } catch (Exception e) {
       throw new RuntimeException("While publishing to mqtt client " + clientId, e);
     }
@@ -145,7 +146,7 @@ public class SimpleMqttPipe extends MessageBase {
         debug("Attempting connection of mqtt client %s", clientId);
         MqttConnectOptions options = new MqttConnectOptions();
         options.setMqttVersion(MqttConnectOptions.MQTT_VERSION_3_1_1);
-        options.setMaxInflight(PUBLISH_THREAD_COUNT * 2);
+        options.setMaxInflight(MAX_INFLIGHT);
         options.setConnectionTimeout(INITIALIZE_TIME_MS);
 
         ifNotNullThen(endpoint.auth_provider, provider -> {
@@ -155,6 +156,8 @@ public class SimpleMqttPipe extends MessageBase {
           options.setPassword(
               checkNotNull(basicAuth.password, "MQTT password not defined").toCharArray());
         });
+
+        debug("TAP starting maxInFlight is %d", options.getMaxInflight());
 
         mqttClient.connect(options);
         info("Connection established to mqtt server as " + clientId);
