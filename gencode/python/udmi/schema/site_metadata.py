@@ -54,6 +54,7 @@ class SiteMetadata:
     self.version = None
     self.site = None
     self.name = None
+    self.tags = None
     self.location = None
 
   @staticmethod
@@ -65,6 +66,7 @@ class SiteMetadata:
     result.version = source.get('version')
     result.site = source.get('site')
     result.name = source.get('name')
+    result.tags = source.get('tags')
     result.location = Object7BC6817A.from_dict(source.get('location'))
     return result
 
@@ -94,6 +96,8 @@ class SiteMetadata:
       result['site'] = self.site # 5
     if self.name:
       result['name'] = self.name # 5
+    if self.tags:
+      result['tags'] = self.tags # 1
     if self.location:
       result['location'] = self.location.to_dict() # 4
     return result
