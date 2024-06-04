@@ -46,8 +46,8 @@ import udmi.schema.Envelope.SubType;
  */
 public class SimpleMqttPipe extends MessageBase {
 
-  private static final int INITIALIZE_TIME_MS = 1000;
   public static final int MAX_INFLIGHT = 10;
+  private static final int INITIALIZE_TIME_MS = 1000;
   private static final String BROKER_URL_FORMAT = "%s://%s:%s";
   private static final long RECONNECT_SEC = 10;
   private static final int DEFAULT_PORT = 8883;
@@ -131,7 +131,8 @@ public class SimpleMqttPipe extends MessageBase {
       String topic = makeMqttTopic(bundle);
       MqttMessage message = makeMqttMessage(bundle);
       mqttClient.publish(topic, message);
-      debug("Client has %d inFlight tokens with %s", mqttClient.getPendingDeliveryTokens().length, topic);
+      debug("Client has %d inFlight tokens with %s", mqttClient.getPendingDeliveryTokens().length,
+          topic);
     } catch (Exception e) {
       throw new RuntimeException("While publishing to mqtt client " + clientId, e);
     }
@@ -209,10 +210,6 @@ public class SimpleMqttPipe extends MessageBase {
     return message;
   }
 
-  private boolean shouldRetainMessage(Bundle bundle) {
-    return bundle.envelope.subType == SubType.CONFIG;
-  }
-
   private String makeMqttTopic(Bundle bundle) {
     Envelope envelope = bundle.envelope;
     return envelope == null ? makeTopic(EXCEPTION_ENVELOPE) : makeTopic(envelope);
@@ -234,6 +231,10 @@ public class SimpleMqttPipe extends MessageBase {
 
   private String makeTransactionId() {
     return format("MP:%08x", (long) (Math.random() * 0x100000000L));
+  }
+
+  private boolean shouldRetainMessage(Bundle bundle) {
+    return bundle.envelope.subType == SubType.CONFIG;
   }
 
   private void subscribeToMessages() {
