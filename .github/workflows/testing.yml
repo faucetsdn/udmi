@@ -269,7 +269,7 @@ jobs:
           bin/mosquctl_site sites/udmi_site_model/
           bin/test_regclean //mqtt/localhost
       - name: bin/test_sequencer
-        run: bin/test_sequencer full //mqtt/localhost
+        run: bin/test_sequencer local full //mqtt/localhost
       - name: bin/test_udmis
         run: bin/test_udmis
       - name: mosquitto debug

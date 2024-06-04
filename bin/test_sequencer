@@ -28,6 +28,11 @@ if [[ ${1:-} == 'nostate' ]]; then
     suffix=_nostate
 fi
 
+if [[ ${1:-} == 'local' ]]; then
+    shift
+    suffix=_local
+fi
+
 if [[ ${1:-} == 'nocheck' ]]; then
     shift
     out_check=
