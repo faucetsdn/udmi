@@ -56,7 +56,8 @@ class TargetProcessorTest extends ProcessorTestBase {
     getReverseDispatcher().publish(getTestMessage(true));
     terminateAndWait();
 
-    assertEquals(0, captured.size(), "unexpected received message count");
+    assertEquals(1, captured.size(), "unexpected received message count");
+    assertTrue(captured.get(0) instanceof Map, "unexpected on-map message");
     assertEquals(0, getExceptionCount(), "exception count");
     assertEquals(1, getDefaultCount(), "default handler count");
     assertEquals(0, getMessageCount(PointsetEvents.class), "pointset handler count");
@@ -80,7 +81,7 @@ class TargetProcessorTest extends ProcessorTestBase {
     getReverseDispatcher().publish(getTestMessage(false));
     terminateAndWait();
 
-    assertEquals(0, captured.size(), "unexpected received message count");
+    assertEquals(1, captured.size(), "unexpected received message count");
     assertEquals(0, getExceptionCount(), "exception count");
     assertEquals(0, getDefaultCount(), "default handler count");
     assertEquals(1, getMessageCount(PointsetEvents.class), "pointset handler count");
