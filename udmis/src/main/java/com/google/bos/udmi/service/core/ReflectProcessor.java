@@ -10,6 +10,7 @@ import static com.google.udmi.util.Common.ERROR_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.Common.TRANSACTION_KEY;
 import static com.google.udmi.util.GeneralUtils.catchToElse;
+import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.decodeBase64;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
@@ -20,6 +21,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.multiTrim;
 import static com.google.udmi.util.GeneralUtils.requireNull;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
+import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.fromString;
@@ -33,21 +35,28 @@ import static com.google.udmi.util.JsonUtil.toObject;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
+import static udmi.schema.CloudModel.Resource_type.GATEWAY;
+import static udmi.schema.CloudModel.Resource_type.REGISTRY;
 import static udmi.schema.Envelope.SubFolder.UPDATE;
 
 import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.ModelUpdate;
+import com.google.bos.udmi.service.messaging.SiteMetadataUpdate;
 import com.google.bos.udmi.service.messaging.StateUpdate;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
+import com.google.common.base.Supplier;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.MetadataMapKeys;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
+import org.bouncycastle.crypto.engines.SM2Engine.Mode;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
+import udmi.schema.CloudModel.Resource_type;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
@@ -66,16 +75,6 @@ public class ReflectProcessor extends ProcessorBase {
 
   public ReflectProcessor(EndpointConfiguration config) {
     super(config);
-  }
-
-  private static ModelUpdate asModelUpdate(String modelString) {
-    // If it's not a valid JSON object, then fall back to a string description alternate.
-    if (modelString == null || !modelString.startsWith(JsonUtil.JSON_OBJECT_LEADER)) {
-      ModelUpdate modelUpdate = new ModelUpdate();
-      modelUpdate.description = modelString;
-      return modelUpdate;
-    }
-    return fromStringStrict(ModelUpdate.class, modelString);
   }
 
   public static String makeTransactionId() {
@@ -128,11 +127,19 @@ public class ReflectProcessor extends ProcessorBase {
     return lastConfig.after(START_TIME) && !lastConfigAck.before(lastConfig);
   }
 
-  private ModelUpdate extractDeviceModel(CloudModel request) {
-    return ifNotNullGet(request.metadata,
-        metadata -> ofNullable(metadata.get(MetadataMapKeys.UDMI_METADATA))
-            .map(ReflectProcessor::asModelUpdate)
-            .orElse(null));
+  private Object extractModel(CloudModel request) {
+    String metadata = catchToNull(() -> request.metadata.get(MetadataMapKeys.UDMI_METADATA));
+    if (metadata == null) {
+      return null;
+    } else if (request.resource_type == REGISTRY) {
+      return asSiteMetadataUpdate(metadata);
+    } else {
+      return asModelUpdate(metadata);
+    }
+  }
+
+  private SiteMetadataUpdate asSiteMetadataUpdate(String metadataString) {
+    return fromString(SiteMetadataUpdate.class, metadataString);
   }
 
   private Envelope extractMessageEnvelope(Object message) {
@@ -145,7 +152,7 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private UdmiState extractUdmiState(Object message) {
-    Map<String, Object> stringObjectMap = JsonUtil.asMap(message);
+    Map<String, Object> stringObjectMap = asMap(message);
     UdmiState udmiState =
         convertToStrict(UdmiState.class, stringObjectMap.get(SubFolder.UDMI.value()));
     requireNonNull(udmiState, "reflector state update missing udmi subfolder");
@@ -234,8 +241,23 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private CloudModel reflectModel(Envelope attributes, CloudModel request) {
-    ifNotNullThen(extractDeviceModel(request), model -> publish(attributes, model));
-    return iotAccess.modelResource(attributes.deviceRegistryId, attributes.deviceId, request);
+    ifNotNullThen(extractModel(request), model -> publish(attributes, model));
+    if (request.resource_type != null && request.resource_type == REGISTRY) {
+      return iotAccess.modelRegistry(attributes.deviceRegistryId, attributes.deviceId, request);
+    } else {
+      return iotAccess.modelDevice(attributes.deviceRegistryId, attributes.deviceId, request);
+    }
+  }
+
+  private static ModelUpdate asModelUpdate(String modelString) {
+    // If it's not a valid JSON object, then fall back to a string description alternate.
+    if (modelString == null || !modelString.startsWith(JsonUtil.JSON_OBJECT_LEADER)) {
+      ModelUpdate modelUpdate = new ModelUpdate();
+      modelUpdate.description = modelString;
+      return modelUpdate;
+    }
+    // Not strict because registrar could publish a metadata which fails strictly
+    return fromString(ModelUpdate.class, modelString);
   }
 
   private CloudModel reflectProcess(Envelope attributes, Object payload) {
