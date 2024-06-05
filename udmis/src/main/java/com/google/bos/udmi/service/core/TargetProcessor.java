@@ -4,6 +4,7 @@ import static com.google.bos.udmi.service.pod.UdmiServicePod.UDMI_VERSION;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static java.lang.String.format;
@@ -27,10 +28,12 @@ import udmi.schema.Envelope.SubType;
 @ComponentName("target")
 public class TargetProcessor extends ProcessorBase {
 
+  private final boolean publishMessages;
   Map<String, Instant> lastSeen = new ConcurrentHashMap<>();
 
   public TargetProcessor(EndpointConfiguration config) {
     super(config);
+    publishMessages = config.send_id != null;
   }
 
   @Override
@@ -44,8 +47,7 @@ public class TargetProcessor extends ProcessorBase {
 
     defaultFields(defaultedMessage);
 
-    // TODO: Why is this here?
-    //publish(defaultedMessage);
+    ifTrueThen(publishMessages, () -> publish(defaultedMessage));
 
     if (deviceId == null) {
       notice("Dropping message with no deviceId: " + stringifyTerse(envelope));
