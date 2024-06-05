@@ -97,4 +97,20 @@ public interface MessageDispatcher {
       dispatcher.registerHandler((Class<T>) getKey(), (Consumer<T>) getValue());
     }
   }
+
+  static RawString rawString(String rawString) {
+    return new RawString(rawString);
+  }
+
+  /**
+   * Marker class to indicate a string that should be applied/sent directly with no JSON or
+   * map interpretation.
+   */
+  class RawString {
+    public final String rawString;
+
+    private RawString(String rawString) {
+      this.rawString = rawString;
+    }
+  }
 }

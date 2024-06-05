@@ -15,6 +15,9 @@
     "reflect": {
       "recv_id": "reflect"
     },
+    "target": {
+      "recv_id": "events/#"
+    },
     "state": {
       "recv_id": "state"
     },

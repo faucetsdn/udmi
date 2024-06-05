@@ -3,6 +3,7 @@ package com.google.bos.udmi.service.support;
 import static com.google.api.client.util.Preconditions.checkState;
 import static com.google.bos.udmi.service.core.DistributorPipe.clientId;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
+import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.isNullOrNotEmpty;
@@ -13,6 +14,7 @@ import io.etcd.jetcd.ByteSequence;
 import io.etcd.jetcd.Client;
 import io.etcd.jetcd.KV;
 import io.etcd.jetcd.KeyValue;
+import io.etcd.jetcd.Lock;
 import io.etcd.jetcd.cluster.Member;
 import io.etcd.jetcd.kv.GetResponse;
 import io.etcd.jetcd.options.GetOption;
@@ -47,6 +49,7 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
   private final IotAccess config;
   private final Client client;
   private final KV kvClient;
+  private final Lock lockClient;
   private final Map<String, String> options;
   private final boolean enabled;
   private final AuthRef authProvider = new MosquittoAuthProvider(this);
@@ -61,6 +64,7 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
     config = iotConfig;
     client = enabled ? initializeClient() : null;
     kvClient = ifNotNullGet(client, Client::getKVClient);
+    lockClient = ifNotNullGet(client, Client::getLockClient);
   }
 
   private static String asString(ByteSequence input) {
@@ -143,6 +147,17 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
     } catch (Exception e) {
       warn("Bad key value " + value + ", considering stale: " + friendlyStackTrace(e));
       return true;
+    }
+  }
+
+  private AutoCloseable lockRef(String lockName) {
+    try {
+      long leaseId = client.getLeaseClient().grant(10).get().getID();
+      ByteSequence lockKey = lockClient.lock(bytes(lockName), leaseId).get().getKey();
+      info("Locked %s with lease %x as %s", lockName, leaseId, encodeBase64(asString(lockKey)));
+      return new LockCloser(lockName, leaseId, lockKey);
+    } catch (Exception e) {
+      throw new RuntimeException("While acquiring etcd lock", e);
     }
   }
 
@@ -254,8 +269,34 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
       return getKey(getKeyPath(key));
     }
 
+    @Override
+    public AutoCloseable lock() {
+      return lockRef(getKeyPath(""));
+    }
+
     public void put(String key, String value) {
       putKey(getKeyPath(key), value);
     }
   }
+
+  private class LockCloser implements AutoCloseable {
+
+    private final long leaseId;
+    private final ByteSequence lockKey;
+    private final String lockName;
+
+    public LockCloser(String lockName, long leaseId, ByteSequence lockKey) {
+      this.lockName = lockName;
+      this.leaseId = leaseId;
+      this.lockKey = lockKey;
+    }
+
+    @Override
+    public void close() throws Exception {
+      client.getLockClient().unlock(lockKey).get();
+      client.getLeaseClient().revoke(leaseId).get();
+      info("Released %s with lease %x as %s", lockName, leaseId, encodeBase64(asString(lockKey)));
+    }
+  }
 }
+

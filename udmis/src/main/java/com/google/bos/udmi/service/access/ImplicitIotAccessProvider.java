@@ -1,8 +1,10 @@
 package com.google.bos.udmi.service.access;
 
+import static com.google.bos.udmi.service.messaging.MessageDispatcher.rawString;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.Common.DEFAULT_REGION;
 import static com.google.udmi.util.GeneralUtils.booleanString;
+import static com.google.udmi.util.GeneralUtils.catchToElse;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
@@ -13,13 +15,14 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.function.Predicate.not;
-import static udmi.schema.CloudModel.Operation.BIND;
 import static udmi.schema.CloudModel.Operation.DELETE;
 import static udmi.schema.CloudModel.Resource_type.DEVICE;
 import static udmi.schema.CloudModel.Resource_type.GATEWAY;
 import static udmi.schema.CloudModel.Resource_type.REGISTRY;
 
 import com.google.bos.udmi.service.core.ReflectProcessor;
+import com.google.bos.udmi.service.messaging.MessageDispatcher;
+import com.google.bos.udmi.service.messaging.MessageDispatcher.RawString;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.bos.udmi.service.support.DataRef;
 import com.google.bos.udmi.service.support.IotDataProvider;
@@ -51,6 +54,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   private static final String CONFIG_VER_KEY = "config_ver";
   private static final String LAST_CONFIG_KEY = "last_config";
+  private static final String LAST_STATE_KEY = "last_state";
   private static final String DEVICES_COLLECTION = "devices";
   private static final String BLOCKED_PROPERTY = "blocked";
   private static final String CREATED_AT_PROPERTY = "created_at";
@@ -203,11 +207,17 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   @Override
   public Entry<Long, String> fetchConfig(String registryId, String deviceId) {
-    // TODO: Implement lease for atomic transaction.
-    String config = registryDeviceRef(registryId, deviceId).get(LAST_CONFIG_KEY);
-    String version = registryDeviceRef(registryId, deviceId).get(CONFIG_VER_KEY);
-    Long versionLong = ofNullable(version).map(Long::parseLong).orElse(null);
-    return new SimpleEntry<>(versionLong, ofNullable(config).orElse(EMPTY_JSON));
+    DataRef dataRef = registryDeviceRef(registryId, deviceId);
+    try (AutoCloseable locked = dataRef.lock()) {
+      String config = dataRef.get(LAST_CONFIG_KEY);
+      String version = dataRef.get(CONFIG_VER_KEY);
+      info("Fetched config %s #%s", dataRef, version);
+      Long versionLong = ofNullable(version).map(Long::parseLong).orElse(null);
+      return new SimpleEntry<>(versionLong, ofNullable(config).orElse(EMPTY_JSON));
+    } catch (Exception e) {
+      throw new RuntimeException(
+          format("While handling fetchConfig %s/%s", registryId, deviceId), e);
+    }
   }
 
   @Override
@@ -223,8 +233,8 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public String fetchState(String deviceRegistryId, String deviceId) {
-    throw new RuntimeException("fetchState not yet implemented");
+  public String fetchState(String registryId, String deviceId) {
+    return registryDeviceRef(registryId, deviceId).get(LAST_STATE_KEY);
   }
 
   @Override
@@ -255,6 +265,11 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   }
 
   @Override
+  public void saveState(String registryId, String deviceId, String stateBlob) {
+    registryDeviceRef(registryId, deviceId).put(LAST_STATE_KEY, stateBlob);
+  }
+
+  @Override
   public void sendCommandBase(String registryId, String deviceId, SubFolder folder,
       String message) {
     Envelope envelope = new Envelope();
@@ -266,26 +281,35 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public String updateConfig(String registryId, String deviceId, String config, Long version) {
-    Envelope envelope = new Envelope();
-    envelope.deviceRegistryId = registryId;
-    envelope.deviceId = deviceId;
-    envelope.subType = SubType.CONFIG;
-    reflect.getDispatcher().withEnvelope(envelope).publish(asMap(config));
+  public String updateConfig(String registryId, String deviceId, String config, Long prevVersion) {
+    DataRef dataRef = registryDeviceRef(registryId, deviceId);
+    try (AutoCloseable dataLock = dataRef.lock()) {
+      String prev = dataRef.get(CONFIG_VER_KEY);
+      if (prevVersion != null && !prevVersion.toString().equals(prev)) {
+        throw new RuntimeException("Config version update mismatch");
+      }
 
-    // TODO: Implement lease for atomic transaction.
-    String prev = registryDeviceRef(registryId, deviceId).get(CONFIG_VER_KEY);
-    if (version != null && !version.toString().equals(prev)) {
-      throw new RuntimeException("Config version update mismatch");
+      dataRef.put(LAST_CONFIG_KEY, config);
+      String update = ofNullable(prevVersion).map(v -> v + 1)
+          .orElseGet(() -> ofNullable(prev).map(Long::parseLong).orElse(1L)).toString();
+      dataRef.put(CONFIG_VER_KEY, update);
+      info("Updated config %s #%s to #%s", dataRef, prev, update);
+
+      sendConfigUpdate(registryId, deviceId, config);
+    } catch (Exception e) {
+      throw new RuntimeException(
+          format("While updating config for %s/%s", registryId, deviceId), e);
     }
-
-    registryDeviceRef(registryId, deviceId).put(LAST_CONFIG_KEY, config);
-    String update = ofNullable(version).map(v -> v + 1)
-        .orElseGet(() -> ofNullable(prev).map(Long::parseLong).orElse(1L)).toString();
-    registryDeviceRef(registryId, deviceId).put(CONFIG_VER_KEY, update);
 
     return config;
   }
 
+  private void sendConfigUpdate(String registryId, String deviceId, String config) {
+    Envelope envelope = new Envelope();
+    envelope.deviceRegistryId = registryId;
+    envelope.deviceId = deviceId;
+    envelope.subType = SubType.CONFIG;
+    reflect.getDispatcher().withEnvelope(envelope).publish(rawString(config));
+  }
 
 }
