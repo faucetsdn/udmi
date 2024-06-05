@@ -242,7 +242,7 @@ jobs:
   runlocal:
     name: UDMIS Local Setup
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -269,7 +269,7 @@ jobs:
           bin/mosquctl_site sites/udmi_site_model/
           bin/test_regclean //mqtt/localhost
       - name: bin/test_sequencer
-        run: bin/test_sequencer local full //mqtt/localhost
+        run: bin/test_sequencer local full //mqtt/localhost $(< etc/local_tests.txt)
       - name: bin/test_udmis
         run: bin/test_udmis
       - name: mosquitto debug
