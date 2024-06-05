@@ -277,10 +277,7 @@ jobs:
         run: sudo cat /etc/mosquitto/dynamic_security.json
       - name: udmis log
         if: ${{ !cancelled() }}
-        run: |
-          pwd
-          ls -l out || true
-          cat out/udmis.log
+        run: cat out/udmis_local.log
       - name: support bundle
         if: ${{ !cancelled() }}
         run: bin/support ${{ github.repository_owner }}_${{ github.job }}_
