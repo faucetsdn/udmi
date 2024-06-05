@@ -65,6 +65,7 @@ public class SimpleMqttPipe extends MessageBase {
   private final CertManager certManager;
   private final String recvId;
   private final CountDownLatch connectLatch = new CountDownLatch(1);
+  private final boolean publishMessages;
 
   /**
    * Create new pipe instance for the given config.
@@ -75,6 +76,8 @@ public class SimpleMqttPipe extends MessageBase {
     String namespaceRaw = variableSubstitution(endpoint.msg_prefix);
     namespace = ifTrueGet(isNotEmpty(namespaceRaw), namespaceRaw, DEFAULT_NAMESPACE);
     recvId = variableSubstitution(endpoint.recv_id);
+
+    publishMessages = endpoint.send_id != null;
     clientId = ofNullable(config.client_id).orElse(autoId);
     File secretsDir = ifTrueGet(isNotEmpty(SSL_SECRETS_DIR), () -> new File(SSL_SECRETS_DIR));
     certManager = ifNotNullGet(secretsDir,
@@ -127,6 +130,10 @@ public class SimpleMqttPipe extends MessageBase {
 
   @Override
   protected void publishRaw(Bundle bundle) {
+    if (!publishMessages) {
+      trace("Dropping message because no send_id");
+      return;
+    }
     try {
       String topic = makeMqttTopic(bundle);
       MqttMessage message = makeMqttMessage(bundle);

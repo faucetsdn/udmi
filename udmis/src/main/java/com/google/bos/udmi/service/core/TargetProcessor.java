@@ -28,12 +28,10 @@ import udmi.schema.Envelope.SubType;
 @ComponentName("target")
 public class TargetProcessor extends ProcessorBase {
 
-  private final boolean publishMessages;
   Map<String, Instant> lastSeen = new ConcurrentHashMap<>();
 
   public TargetProcessor(EndpointConfiguration config) {
     super(config);
-    publishMessages = config.send_id != null;
   }
 
   @Override
@@ -47,7 +45,7 @@ public class TargetProcessor extends ProcessorBase {
 
     defaultFields(defaultedMessage);
 
-    ifTrueThen(publishMessages, () -> publish(defaultedMessage));
+    publish(defaultedMessage);
 
     if (deviceId == null) {
       notice("Dropping message with no deviceId: " + stringifyTerse(envelope));
