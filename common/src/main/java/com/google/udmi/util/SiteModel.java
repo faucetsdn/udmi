@@ -3,6 +3,7 @@ package com.google.udmi.util;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.Common.NO_SITE;
+import static com.google.udmi.util.Common.SITE_METADATA_KEY;
 import static com.google.udmi.util.Common.getNamespacePrefix;
 import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_RAW;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
@@ -11,7 +12,9 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.removeArg;
 import static com.google.udmi.util.JsonUtil.asMap;
+import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
+import static com.google.udmi.util.JsonUtil.loadFile;
 import static com.google.udmi.util.JsonUtil.loadFileRequired;
 import static com.google.udmi.util.JsonUtil.loadFileStrict;
 import static com.google.udmi.util.MessageUpgrader.METADATA_SCHEMA;
@@ -21,11 +24,14 @@ import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.collect.ImmutableList;
+
+import com.google.daq.mqtt.util.ExceptionMap;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
@@ -50,6 +56,7 @@ import udmi.schema.ExecutionConfiguration;
 import udmi.schema.GatewayModel;
 import udmi.schema.IotAccess.IotProvider;
 import udmi.schema.Metadata;
+import udmi.schema.SiteMetadata;
 
 public class SiteModel {
 
@@ -67,6 +74,7 @@ public class SiteModel {
   public static final String SITE_DEFAULTS_FILE = "site_defaults.json";
   public static final String REGISTRATION_SUMMARY_BASE = "out/registration_summary";
   public static final String LEGACY_METADATA_FILE = "site_metadata.json";
+  public static final String SITE_METADATA_FILE = "site_metadata.json";
   public static final String METADATA_DIR = "cloud_metadata";
   public static final String CLOUD_MODEL_FILE = "cloud_model.json";
   private static final String ID_FORMAT = "projects/%s/locations/%s/registries/%s/devices/%s";
@@ -93,6 +101,7 @@ public class SiteModel {
   private final Matcher specMatcher;
   private Map<String, Metadata> allMetadata;
   private Map<String, CloudModel> allDevices;
+  public ExceptionMap siteMetadataExceptionMap;
 
   public SiteModel(String specPath) {
     this(specPath, null, null);
@@ -279,6 +288,24 @@ public class SiteModel {
         "no files in " + devicesFile.getAbsolutePath());
     return Arrays.stream(files).map(File::getName).filter(SiteModel::validDeviceDirectory)
         .collect(Collectors.toSet());
+  }
+
+
+  public SiteMetadata loadSiteMetadata(){
+    ObjectNode siteMetadataObject = null;
+    File siteMetadataFile = new File(new File(sitePath), SITE_METADATA_FILE);
+    siteMetadataExceptionMap = new ExceptionMap(SITE_METADATA_KEY);
+    try {
+       siteMetadataObject= loadFileRequired(ObjectNode.class, siteMetadataFile);
+       return convertToStrict(SiteMetadata.class, siteMetadataObject);
+    } catch (Exception e) {
+      siteMetadataExceptionMap.put(SITE_METADATA_KEY, e);
+      if (e instanceof JsonMappingException) {
+        return convertTo(SiteMetadata.class, siteMetadataObject);
+      }
+    }
+
+    return null;
   }
 
   public Metadata loadDeviceMetadata(String deviceId, boolean safeLoading, boolean upgradeMetadata){

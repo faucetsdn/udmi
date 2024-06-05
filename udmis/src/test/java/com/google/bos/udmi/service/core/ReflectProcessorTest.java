@@ -8,6 +8,7 @@ import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.notNull;
@@ -29,6 +30,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
+import udmi.schema.CloudModel.Resource_type;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
@@ -147,15 +149,17 @@ public class ReflectProcessorTest extends ProcessorTestBase {
   }
 
   @Test
-  public void modelDevice() {
+  public void modelDeviceTest() {
     CloudModel returnModel = new CloudModel();
     returnModel.operation = Operation.CREATE;
-    when(provider.modelResource(anyString(), anyString(), notNull())).thenReturn(returnModel);
+    returnModel.resource_type = Resource_type.DEVICE;
+    when(provider.modelDevice(anyString(), anyString(), notNull())).thenReturn(returnModel);
 
     CloudModel requestModel = new CloudModel();
     requestModel.operation = Operation.BIND;
+    requestModel.resource_type = Resource_type.DEVICE;
     activeTestInstance(() -> getReverseDispatcher().publish(makeModelBundle(requestModel)));
-    verify(provider, times(1)).modelResource(eq(TEST_REGISTRY), eq(TEST_DEVICE),
+    verify(provider, times(1)).modelDevice(eq(TEST_REGISTRY), eq(TEST_DEVICE),
         eq(requestModel));
 
     ArgumentCaptor<String> commandCaptor = ArgumentCaptor.forClass(String.class);
@@ -163,5 +167,15 @@ public class ReflectProcessorTest extends ProcessorTestBase {
         eq(SubFolder.UDMI), commandCaptor.capture());
     Envelope envelope = JsonUtil.fromStringStrict(Envelope.class, commandCaptor.getValue());
     assertEquals(transactionId, envelope.transactionId);
+  }
+
+  @Test
+  public void modelRegistryUpdateTest() {
+    CloudModel requestModel = new CloudModel();
+    requestModel.operation = Operation.UPDATE;
+    requestModel.resource_type = Resource_type.REGISTRY;
+    activeTestInstance(() -> getReverseDispatcher().publish(makeModelBundle(requestModel)));
+    verify(provider, times(1)).modelRegistry(eq(TEST_REGISTRY), any(),
+        eq(requestModel));
   }
 }

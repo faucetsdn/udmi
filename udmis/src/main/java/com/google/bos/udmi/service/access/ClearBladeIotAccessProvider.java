@@ -21,6 +21,7 @@ import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static udmi.schema.CloudModel.Operation.CREATE;
 import static udmi.schema.CloudModel.Operation.DELETE;
+import static udmi.schema.CloudModel.Operation.UPDATE;
 import static udmi.schema.CloudModel.Resource_type.DEVICE;
 import static udmi.schema.CloudModel.Resource_type.GATEWAY;
 import static udmi.schema.CloudModel.Resource_type.REGISTRY;
@@ -468,7 +469,8 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     }
   }
 
-  private CloudModel modelDevice(String registryId, String deviceId, CloudModel cloudModel) {
+  @Override
+  public CloudModel modelDevice(String registryId, String deviceId, CloudModel cloudModel) {
     String devicePath = getDeviceName(registryId, deviceId);
     Operation operation = cloudModel.operation;
     Resource_type type = ofNullable(cloudModel.resource_type).orElse(Resource_type.DEVICE);
@@ -489,19 +491,23 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     }
   }
 
-  private CloudModel modelRegistry(String registryId, String deviceId, CloudModel cloudModel) {
-    String registryActual = registryId + deviceId;
-    if (!deviceId.isEmpty()) {
-      CloudModel deviceModel = deepCopy(cloudModel);
-      deviceModel.resource_type = DEVICE;
-      modelDevice(reflectRegistry, registryActual, deviceModel);
-    }
+  @Override
+  public CloudModel modelRegistry(String registryId, String deviceId, CloudModel cloudModel) {
     Operation operation = cloudModel.operation;
-    Resource_type type = ofNullable(cloudModel.resource_type).orElse(Resource_type.DEVICE);
-    checkState(type == REGISTRY, "unexpected resource type " + type);
+    String registryActual = registryId + deviceId;
     try {
-      Device device = convert(cloudModel, deviceId);
-      if (operation == CREATE) {
+      if (operation == UPDATE) {
+        // Do nothing
+        return cloudModel;
+      } else if (operation == CREATE) {
+        if (deviceId != null && !deviceId.isEmpty()) {
+          CloudModel deviceModel = deepCopy(cloudModel);
+          deviceModel.resource_type = DEVICE;
+          modelDevice(reflectRegistry, registryActual, deviceModel);
+        }
+        Resource_type type = ofNullable(cloudModel.resource_type).orElse(Resource_type.DEVICE);
+        checkState(type == REGISTRY, "unexpected resource type " + type);
+        Device device = convert(cloudModel, deviceId);
         return createRegistry(registryActual, device);
       } else {
         throw new RuntimeException("Unsupported operation " + operation);
@@ -584,7 +590,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
 
   private CloudModel updateDevice(String registryId, Device device) {
     CloudModel cloudModel = updateDevice(registryId, device, UPDATE_FIELD_MASK);
-    cloudModel.operation = Operation.UPDATE;
+    cloudModel.operation = UPDATE;
     return cloudModel;
   }
 
@@ -721,14 +727,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   @Override
   public CloudModel listDevices(String deviceRegistryId) {
     return listRegistryDevices(deviceRegistryId, null);
-  }
-
-  @Override
-  public CloudModel modelResource(String registryId, String deviceId, CloudModel cloudModel) {
-    if (cloudModel.resource_type == REGISTRY) {
-      return modelRegistry(registryId, deviceId, cloudModel);
-    }
-    return modelDevice(registryId, deviceId, cloudModel);
   }
 
   @Override
