@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash -ex
 
 UDMI_ROOT=$(dirname $0)/..
 source ${UDMI_ROOT}/etc/shell_common.sh
@@ -14,8 +14,8 @@ shift 2
 cd ${UDMI_ROOT}/${target}
 
 git_branch=$(git rev-parse --abbrev-ref HEAD)
-git_remote=$(git config --get branch.$git_branch.remote) || fail missing git remote
-git_url=$(git config --get remote.$git_remote.url)
+git_remote=$(git config --get branch.$git_branch.remote) || echo missing git remote
+git_url=$(git config --get remote.$git_remote.url) || git_url=unknown
 git_prefix=${git_url%.*}
 git_prefix=${git_prefix#*.com/}
 git_repo=${git_prefix#*.com:}
