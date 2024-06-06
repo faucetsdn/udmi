@@ -151,7 +151,7 @@ public class SimpleMqttPipe extends MessageBase {
         if (mqttClient.isConnected()) {
           return;
         }
-        debug("Attempting connection of mqtt client %s", clientId);
+
         MqttConnectOptions options = new MqttConnectOptions();
         options.setMqttVersion(MqttConnectOptions.MQTT_VERSION_3_1_1);
         options.setMaxInflight(MAX_INFLIGHT);
@@ -163,8 +163,10 @@ public class SimpleMqttPipe extends MessageBase {
           options.setUserName(checkNotNull(basicAuth.username, "MQTT username not defined"));
           options.setPassword(
               checkNotNull(basicAuth.password, "MQTT password not defined").toCharArray());
+          debug("Set MQTT basic auth username/password as %s/%s", basicAuth.username, basicAuth.password);
         });
 
+        debug("Attempting connection of mqtt client %s", clientId);
         mqttClient.connect(options);
         info("Connection established to mqtt server as " + clientId);
         subscribeToMessages();

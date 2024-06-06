@@ -14,11 +14,27 @@ if [[ ! $project_spec =~ ^//mqtt/ ]]; then
     echo Not a local setup, doing nothing!
     exit 0
 fi
-    
-bin/setup_ca sites/udmi_site_model
-bin/mosquctl_site sites/udmi_site_model/
-bin/start_mosquitto
+
+site_model=sites/udmi_site_model
+site_config=sites/udmi_site_model/cloud_iot_config.json
+registry_id=$(jq -r .registry_id $site_config)
+
 bin/start_etcd
+
+bin/setup_ca $site_model
+bin/start_mosquitto
+
+source $UDMI_ROOT/etc/mosquitto_ctrl.sh
+SERV_USER=rocket
+SERV_PASS=monkey
+SERV_ID=$registry_id/server
+SERVER_OPTS="-i $SERV_ID -u $SERV_USER -P $SERV_PASS --cafile $CA_CERT --cert $CERT_DIR/rsa_private.crt --key $CERT_DIR/rsa_private.pem"
+$MOSQUITTO_CTRL deleteClient $SERV_USER
+$MOSQUITTO_CTRL createClient $SERV_USER -p $SERV_PASS # No client_id to allow multiple backend connections.
+$MOSQUITTO_CTRL addClientRole $SERV_USER service
+
+bin/mosquctl_site $site_model
+
 bin/start_udmis
 
 echo Done with local server setup.

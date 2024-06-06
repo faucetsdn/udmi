@@ -12,8 +12,6 @@ fi
 
 source $UDMI_ROOT/etc/mosquitto_ctrl.sh
 
-SERV_USER=rocket
-SERV_PASS=monkey
 CLNT_USER=kiwi
 CLNT_PASS=possum
 
@@ -28,17 +26,12 @@ cloud_region=$(jq -r .cloud_region $site_config)
 registry_id=$(jq -r .registry_id $site_config)
 
 CLNT_ID=$registry_id/client
-SERV_ID=$registry_id/server
 
 sudo chmod a+r $CERT_DIR/rsa_private.*
 bin/keygen CERT $CLIENT_DIR
 
-SERVER_OPTS="-i $SERV_ID -u $SERV_USER -P $SERV_PASS --cafile $CA_CERT --cert $CERT_DIR/rsa_private.crt --key $CERT_DIR/rsa_private.pem"
 CLIENT_OPTS="-i $CLNT_ID -u $CLNT_USER -P $CLNT_PASS --cafile $CA_CERT --cert $CLIENT_DIR/rsa_private.crt --key $CLIENT_DIR/rsa_private.pem"
 
-$MOSQUITTO_CTRL deleteClient $SERV_USER
-$MOSQUITTO_CTRL createClient $SERV_USER -p $SERV_PASS # No client_id to allow multiple backend connections.
-$MOSQUITTO_CTRL addClientRole $SERV_USER service
 $MOSQUITTO_CTRL deleteClient $CLNT_USER
 $MOSQUITTO_CTRL createClient $CLNT_USER -p $CLNT_PASS -c $CLNT_ID
 $MOSQUITTO_CTRL addClientRole $CLNT_USER device
