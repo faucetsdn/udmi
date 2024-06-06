@@ -25,7 +25,6 @@ import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.fromString;
-import static com.google.udmi.util.JsonUtil.fromStringStrict;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.mapCast;
 import static com.google.udmi.util.JsonUtil.stringify;
@@ -35,7 +34,6 @@ import static com.google.udmi.util.JsonUtil.toObject;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
-import static udmi.schema.CloudModel.Resource_type.GATEWAY;
 import static udmi.schema.CloudModel.Resource_type.REGISTRY;
 import static udmi.schema.Envelope.SubFolder.UPDATE;
 
@@ -44,19 +42,15 @@ import com.google.bos.udmi.service.messaging.ModelUpdate;
 import com.google.bos.udmi.service.messaging.SiteMetadataUpdate;
 import com.google.bos.udmi.service.messaging.StateUpdate;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
-import com.google.common.base.Supplier;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.MetadataMapKeys;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.TreeMap;
 import java.util.stream.Collectors;
-import org.bouncycastle.crypto.engines.SM2Engine.Mode;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
-import udmi.schema.CloudModel.Resource_type;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
@@ -168,12 +162,6 @@ public class ReflectProcessor extends ProcessorBase {
     } catch (Exception e) {
       throw new RuntimeException("While processing reflect message type " + attributes.subType, e);
     }
-  }
-
-  private void handleAwareness(Envelope envelope, UdmiState toolState) {
-    ifNotNullThen(distributor, d -> catchToElse(() -> d.publish(envelope, toolState, containerId),
-        e -> error("Error handling awareness: " + friendlyStackTrace(e))));
-    updateAwareness(envelope, toolState);
   }
 
   private void processException(Envelope reflection, Map<String, Object> objectMap, Exception e) {
@@ -295,7 +283,12 @@ public class ReflectProcessor extends ProcessorBase {
     final String registryId = envelope.deviceRegistryId;
     final String deviceId = envelope.deviceId;
 
-    handleAwareness(envelope, toolState);
+    // Awareness update distribution uses the gatewayId to indicate the source.
+    envelope.gatewayId = envelope.source;
+
+    ifNotNullThen(distributor, d -> catchToElse(() -> d.publish(envelope, toolState, containerId),
+        e -> error("Error handling awareness: " + friendlyStackTrace(e))));
+    updateAwareness(envelope, toolState);
 
     UdmiConfig udmiConfig = UdmiServicePod.getUdmiConfig(toolState);
 
@@ -341,8 +334,8 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   void updateAwareness(Envelope envelope, UdmiState toolState) {
-    debug("Processing UdmiState for %s/%s: %s", envelope.deviceRegistryId, envelope.deviceId,
-        stringifyTerse(toolState));
+    debug("Processing UdmiState for %s/%s from %s: %s", envelope.deviceRegistryId,
+        envelope.deviceId, envelope.gatewayId, stringifyTerse(toolState));
     ifNotNullThen(toolState.setup, setup -> updateProviderAffinity(envelope, envelope.source));
     ifNotNullThen(toolState.regions, this::updateRegistryRegions);
   }
