@@ -29,7 +29,8 @@
         "site": "ZZ-TRI-FECTA",
         "name": "AHU-22"
       }
-    }
+    },
+    "metrics_rate_sec": 300
   },
   "gateway": {
     "gateway_id": "GAT-123",
