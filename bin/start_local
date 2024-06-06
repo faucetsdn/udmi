@@ -1,0 +1,23 @@
+#!/bin/bash -e
+
+UDMI_ROOT=$(dirname $0)/..
+cd $UDMI_ROOT
+
+source $UDMI_ROOT/etc/shell_common.sh
+
+[[ $# == 1 ]] || fail Usage: $0 project_spec
+
+project_spec=$1
+shift
+
+if [[ ! $project_spec =~ ^//mqtt/ ]]; then
+    echo Not a local setup, doing nothing!
+    exit 0
+fi
+    
+bin/setup_ca sites/udmi_site_model
+bin/start_mosquitto
+bin/start_etcd
+bin/start_udmis
+
+echo Done with local server setup.

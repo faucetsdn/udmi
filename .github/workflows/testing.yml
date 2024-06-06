@@ -160,6 +160,8 @@ jobs:
           java-version: '17'
       - name: base setup
         run: bin/run_tests install_dependencies
+      - name: local setup
+        run: bin/start_local $TARGET_PROJECT
       - name: registrar clean
         run: bin/test_regclean $TARGET_PROJECT
       - name: sequence tests clean
@@ -212,6 +214,8 @@ jobs:
           java-version: '17'
       - name: base setup
         run: bin/run_tests install_dependencies
+      - name: local setup
+        run: bin/start_local $TARGET_PROJECT
       - name: registrar clean
         run: bin/test_regclean solo $TARGET_PROJECT
       - name: telemetry validator
@@ -254,16 +258,12 @@ jobs:
           bin/setup_base
           bin/clone_model
           bin/registrar sites/udmi_site_model
-      - name: bin/start_etcd
-        run: bin/start_etcd
+      - name: local setup
+        run: bin/start_local //mqtt/localhost
       - name: bin/test_etcd
         run: bin/test_etcd
-      - name: bin/setup_ca
-        run: bin/setup_ca sites/udmi_site_model
       - name: bin/test_mosquitto
         run: bin/test_mosquitto
-      - name: bin/start_udmis
-        run: bin/start_udmis
       - name: bin/test_regclean
         run: |
           bin/mosquctl_site sites/udmi_site_model/

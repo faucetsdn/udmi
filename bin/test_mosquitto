@@ -17,8 +17,6 @@ SERV_PASS=monkey
 CLNT_USER=kiwi
 CLNT_PASS=possum
 
-bin/start_mosquitto
-
 site_path=sites/udmi_site_model
 device_id=AHU-1
 serial_no=$RANDOM
