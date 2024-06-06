@@ -10,11 +10,6 @@ if [[ $# != 0 ]]; then
     false
 fi
 
-source $UDMI_ROOT/etc/mosquitto_ctrl.sh
-
-CLNT_USER=kiwi
-CLNT_PASS=possum
-
 site_path=sites/udmi_site_model
 device_id=AHU-1
 serial_no=$RANDOM
@@ -25,6 +20,10 @@ site_config=$site_path/cloud_iot_config.json
 cloud_region=$(jq -r .cloud_region $site_config)
 registry_id=$(jq -r .registry_id $site_config)
 
+source $UDMI_ROOT/etc/mosquitto_ctrl.sh
+
+CLNT_USER=kiwi
+CLNT_PASS=possum
 CLNT_ID=$registry_id/client
 
 sudo chmod a+r $CERT_DIR/rsa_private.*

@@ -25,10 +25,7 @@ bin/setup_ca $site_model
 bin/start_mosquitto
 
 source $UDMI_ROOT/etc/mosquitto_ctrl.sh
-SERV_USER=rocket
-SERV_PASS=monkey
-SERV_ID=$registry_id/server
-SERVER_OPTS="-i $SERV_ID -u $SERV_USER -P $SERV_PASS --cafile $CA_CERT --cert $CERT_DIR/rsa_private.crt --key $CERT_DIR/rsa_private.pem"
+
 $MOSQUITTO_CTRL deleteClient $SERV_USER
 $MOSQUITTO_CTRL createClient $SERV_USER -p $SERV_PASS # No client_id to allow multiple backend connections.
 $MOSQUITTO_CTRL addClientRole $SERV_USER service
