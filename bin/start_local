@@ -15,9 +15,11 @@ if [[ ! $project_spec =~ ^//mqtt/ ]]; then
     exit 0
 fi
 
+echo "export UDMI_REGISTRY_SUFFIX=${UDMI_REGISTRY_SUFFIX:-}"
+
 site_model=sites/udmi_site_model
 site_config=sites/udmi_site_model/cloud_iot_config.json
-registry_id=$(jq -r .registry_id $site_config)
+registry_id=$(jq -r .registry_id $site_config)${UDMI_REGISTRY_SUFFIX:-}
 
 bin/start_etcd
 

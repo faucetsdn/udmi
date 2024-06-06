@@ -20,8 +20,10 @@ registry_id=$(jq -r .registry_id $site_config)
 
 hash_pass=$(sha256sum < $site_path/reflector/rsa_private.pkcs8)
 SERV_PASS=${hash_pass:0:8}
-SERV_USER=/r/UDMI-REFLECT/d/$registry_id
+SERV_USER=/r/UDMI-REFLECT/d/$registry_id${UDMI_REGISTRY_SUFFIX:-}
 SERV_ID=$SERV_USER
+
+echo Configuring registry $SERV_ID
 
 $MOSQUITTO_CTRL deleteClient $SERV_USER
 $MOSQUITTO_CTRL createClient $SERV_USER -p $SERV_PASS -c $SERV_ID
