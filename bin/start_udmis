@@ -31,13 +31,13 @@ sudo PATH=$PATH -E udmis/bin/run udmis/etc/local_pod.json > $LOGFILE 2>&1 &
 
 PID=$!
 
-WAITING=10
+WAITING=30
 for i in `seq 1 $WAITING`; do
     if [[ -f $POD_READY ]]; then
         break
     fi
     echo Waiting for udmis startup $((WAITING - i))...
-    sleep 2
+    sleep 1
 done
 
 tail -n 30 $LOGFILE
