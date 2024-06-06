@@ -182,6 +182,9 @@ jobs:
       - name: pubber logs
         if: ${{ !cancelled() }}
         run: more out/pubber.log* pubber/out/*.json | cat
+      - name: udmis log
+        if: ${{ !cancelled() }}
+        run: cat out/udmis*.log
       - name: itemized test post-process
         if: ${{ !cancelled() }}
         run: egrep ' test .* after .*s ' out/sequencer.log-* | tee out/timing_itemized.out
