@@ -35,7 +35,10 @@ device_id=AHU-1
 fake_id=ACME-2301
 fake_device=$site_path/devices/$fake_id
 fake_metadata=$fake_device/metadata.json
-clone_device=$site_path/devices/$device_id
+device_dir=$site_path/devices/$device_id
+
+echo bin/keygen CERT $device_dir
+bin/keygen CERT $device_dir || true
 
 pubber/bin/build
 validator/bin/build
@@ -130,7 +133,7 @@ mkdir -p $site_path/devices/XXX-2/out
 echo hello > $site_path/devices/XXX-2/out/exceptions.txt
 
 echo Create fake device for testing blocked device case.
-rm -rf $fake_device && cp -a $clone_device $fake_device
+rm -rf $fake_device && cp -a $device_dir $fake_device
 
 # Adjust discovery address so discovery sequence tests work properly.
 jq ".localnet.families.vendor.addr = \"2183213\"" $fake_metadata | sponge $fake_metadata
