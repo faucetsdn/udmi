@@ -1,7 +1,7 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.5.0",
-  "hash": "a7430a84",
+  "hash": "745b5111",
   "tags": [ ],
   "system": {
     "location": {
@@ -18,7 +18,8 @@
         "name": "AHU-22"
       }
     },
-    "min_loglevel": 300
+    "min_loglevel": 300,
+    "metrics_rate_sec": 300
   },
   "gateway": {
     "gateway_id": "GAT-123",

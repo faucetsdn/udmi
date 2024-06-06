@@ -138,6 +138,12 @@
       "minimum": 100,
       "maximum": 800,
       "default": 300
+    },
+    "metrics_rate_sec": {
+      "description": "The rate at which the system should send system event updates. 0 indicates no updates.",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 86400
     }
   }
 }
