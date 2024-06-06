@@ -10,12 +10,14 @@ source $UDMI_ROOT/etc/shell_common.sh
 project_spec=$1
 shift
 
+echo "export TARGET_PROJECT=${project_spec:-}"
+echo "export UDMI_REGISTRY_SUFFIX=${UDMI_REGISTRY_SUFFIX:-}"
+echo "export UDMI_ALT_REGISTRY=${UDMI_ALT_REGISTRY:-}"
+
 if [[ ! $project_spec =~ ^//mqtt/ ]]; then
     echo Not a local setup, doing nothing!
     exit 0
 fi
-
-echo "export UDMI_REGISTRY_SUFFIX=${UDMI_REGISTRY_SUFFIX:-}"
 
 site_model=sites/udmi_site_model
 site_config=sites/udmi_site_model/cloud_iot_config.json
@@ -33,6 +35,10 @@ $MOSQUITTO_CTRL createClient $SERV_USER -p $SERV_PASS # No client_id to allow mu
 $MOSQUITTO_CTRL addClientRole $SERV_USER service
 
 bin/mosquctl_site $site_model
+
+if [[ -n ${UDMI_ALT_REGISTRY:-} ]]; then
+    bin/mosquctl_site $site_model $UDMI_ALT_REGISTRY
+fi
 
 bin/start_udmis
 

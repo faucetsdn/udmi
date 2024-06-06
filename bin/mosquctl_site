@@ -5,8 +5,8 @@ cd $UDMI_ROOT
 
 source $UDMI_ROOT/etc/shell_common.sh
 
-if [[ $# != 1 ]]; then
-    echo Usage: $0 site_model
+if [[ $# != 1 && $# != 2 ]]; then
+    echo Usage: $0 site_model [registry_id]
     false
 fi
 
@@ -16,7 +16,13 @@ shift
 source $UDMI_ROOT/etc/mosquitto_ctrl.sh
 
 site_config=$site_path/cloud_iot_config.json
-registry_id=$(jq -r .registry_id $site_config)
+
+if [[ $# == 1 ]]; then
+    registry_id=$1
+    shift
+else
+    registry_id=$(jq -r .registry_id $site_config)
+fi
 
 hash_pass=$(sha256sum < $site_path/reflector/rsa_private.pkcs8)
 SERV_PASS=${hash_pass:0:8}
