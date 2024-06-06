@@ -16,6 +16,7 @@ if [[ ! $project_spec =~ ^//mqtt/ ]]; then
 fi
     
 bin/setup_ca sites/udmi_site_model
+bin/mosquctl_site sites/udmi_site_model/
 bin/start_mosquitto
 bin/start_etcd
 bin/start_udmis
