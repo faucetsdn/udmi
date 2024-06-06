@@ -165,8 +165,6 @@ public class SimpleMqttPipe extends MessageBase {
               checkNotNull(basicAuth.password, "MQTT password not defined").toCharArray());
         });
 
-        debug("TAP starting maxInFlight is %d", options.getMaxInflight());
-
         mqttClient.connect(options);
         info("Connection established to mqtt server as " + clientId);
         subscribeToMessages();
