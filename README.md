@@ -120,6 +120,6 @@ An interactive view of the schema is available at [gencode/docs/](gencode/docs/)
 ### Metadata Registration and Validation
 
 Using UDMI on a project entails not only the base device and server implementations, but also
-properly registering and validating device configuration. The [registrar](docs/tools/registrar)
-tool and [validator](docs/tools/validator) tool provide a means to configure and check site
+properly registering and validating device configuration. The [registrar](docs/tools/registrar.md)
+tool and [validator](docs/tools/validator.md) tool provide a means to configure and check site
 installations, respectively.
