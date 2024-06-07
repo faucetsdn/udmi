@@ -115,11 +115,11 @@ A device client implementation will typically only be aware of the _state_, _con
 one or more _telemetry_ messages (e.g. _pointset_), while all others are meant for the supporting
 infrastructure.
 
-An interactive view of the schema is available on [https://faucetsdn.github.io/udmi/gencode/docs/](https://faucetsdn.github.io/udmi/gencode/docs/).
+An interactive view of the schema is available at [gencode/docs/](gencode/docs/).
 
 ### Metadata Registration and Validation
 
 Using UDMI on a project entails not only the base device and server implementations, but also
-properly registering and validating device configuration. The [registrar](https://faucetsdn.github.io/udmi/docs/tools/registrar)
-tool and [validator](https://faucetsdn.github.io/udmi/docs/tools/validator) tool provide a means to configure and check site
+properly registering and validating device configuration. The [registrar](docs/tools/registrar)
+tool and [validator](docs/tools/validator) tool provide a means to configure and check site
 installations, respectively.
