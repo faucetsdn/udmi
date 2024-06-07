@@ -1,7 +1,8 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
-  "version": "1.4.1",
-  "hash": "b1c3827a",
+  "version": "1.5.0",
+  "hash": "745b5111",
+  "tags": [ ],
   "system": {
     "location": {
       "section": "2-3N8C",
@@ -17,7 +18,8 @@
         "name": "AHU-22"
       }
     },
-    "min_loglevel": 300
+    "min_loglevel": 300,
+    "metrics_rate_sec": 300
   },
   "gateway": {
     "gateway_id": "GAT-123",
@@ -36,15 +38,18 @@
     "points": {
       "filter_alarm_pressure_status": {
         "units": "No-units",
-        "ref": "MCN8.present_value"
+        "ref": "MCN8.present_value",
+        "tags": [ ]
       },
       "filter_differential_pressure": {
         "units": "Bars",
-        "ref": "AI2.differential"
+        "ref": "AI2.differential",
+        "tags": [ ]
       },
       "filter_differential_pressure_sensor": {
         "units": "Degrees-Celsius",
-        "ref": "AI1.present_value"
+        "ref": "AI1.present_value",
+        "tags": [ ]
       }
     }
   }

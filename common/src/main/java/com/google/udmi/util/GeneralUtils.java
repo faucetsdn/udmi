@@ -80,6 +80,10 @@ public class GeneralUtils {
     return args;
   }
 
+  public static String booleanString(Boolean bool) {
+    return ifNotNullGet(bool, value -> Boolean.toString(bool));
+  }
+
   public static String changedLines(List<DiffEntry> nullableChanges) {
     List<DiffEntry> changes = ofNullable(nullableChanges).orElse(ImmutableList.of());
     String terminator = changes.size() == 0 ? "." : ":";
@@ -216,6 +220,14 @@ public class GeneralUtils {
     return !ofNullable(value).map(String::isEmpty).orElse(false);
   }
 
+  public static boolean isNullOrTruthy(String value) {
+    return ofNullable(value).map(GeneralUtils::isTruthy).orElse(true);
+  }
+
+  private static boolean isTruthy(String value) {
+    return value != null && !value.isEmpty() && !"false".equals(value);
+  }
+
   public static String nullAsNull(String part) {
     return NULL_STRING.equals(part) ? null : part;
   }
@@ -252,6 +264,11 @@ public class GeneralUtils {
   }
 
   public static Map<String, Object> getSubMap(Map<String, Object> input, String field) {
+    //noinspection unchecked
+    return (Map<String, Object>) input.get(field);
+  }
+
+  public static Map<String, Object> getSubMapNull(Map<String, Object> input, String field) {
     //noinspection unchecked
     return ifNotNullGet(input, map -> (Map<String, Object>) map.get(field));
   }

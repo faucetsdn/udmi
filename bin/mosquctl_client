@@ -1,0 +1,25 @@
+#!/bin/bash -e
+
+UDMI_ROOT=$(dirname $0)/..
+cd $UDMI_ROOT
+
+source $UDMI_ROOT/etc/shell_common.sh
+
+if [[ $# != 2 ]]; then
+    echo Usage: $0 client_id client_pass
+    false
+fi
+
+client_id=$1
+client_pass=$2
+shift 2
+
+source $UDMI_ROOT/etc/mosquitto_ctrl.sh
+
+client_user=$client_id
+
+$MOSQUITTO_CTRL deleteClient $client_user || true
+if [[ $client_pass != "--" ]]; then
+    $MOSQUITTO_CTRL createClient $client_user -p $client_pass -c $client_id
+    $MOSQUITTO_CTRL addClientRole $client_user device
+fi

@@ -14,7 +14,7 @@ public class BacnetFamily implements NetworkFamily {
   // TODO: Make something that validates a bacnet addr against a decimal integer.
 
   // TODO: Fix this so it can include all the different forms.
-  private static final Pattern BACNET_REF = Pattern.compile("([A-Z]{2,4})([0-9]+)\\.([a-z_]+)");
+  private static final Pattern BACNET_REF = Pattern.compile("([A-Z]{2,4})([0-9]+)\\.([A-Za-z_]+)");
 
   @Override
   public ProtocolFamily familyKey() {

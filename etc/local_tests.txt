@@ -1,0 +1,5 @@
+broken_config
+endpoint_connection_retry
+pointset_publish_interval
+extra_config
+system_last_update

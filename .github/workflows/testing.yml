@@ -44,7 +44,7 @@ jobs:
         run: more out/test_pubber+bin+build+check
       - name: udmis test output
         if: ${{ !cancelled() }}
-        run: more out/test_bin+test_udmis
+        run: more out/test_udmis+bin+build+check
       - name: site test output
         if: ${{ !cancelled() }}
         run: more out/test_bin+test_sites
@@ -242,7 +242,7 @@ jobs:
   runlocal:
     name: UDMIS Local Setup
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -250,18 +250,34 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
       - name: base setup
-        run: bin/run_tests install_dependencies
+        run: |
+          bin/setup_base
+          bin/clone_model
+          bin/registrar sites/udmi_site_model
       - name: bin/start_etcd
         run: bin/start_etcd
       - name: bin/test_etcd
         run: bin/test_etcd
+      - name: bin/setup_ca
+        run: bin/setup_ca sites/udmi_site_model
       - name: bin/test_mosquitto
         run: bin/test_mosquitto
+      - name: bin/start_udmis
+        run: bin/start_udmis
+      - name: bin/test_regclean
+        run: |
+          bin/mosquctl_site sites/udmi_site_model/
+          bin/test_regclean //mqtt/localhost
+      - name: bin/test_sequencer
+        run: bin/test_sequencer local full //mqtt/localhost $(< etc/local_tests.txt)
       - name: bin/test_udmis
         run: bin/test_udmis
       - name: mosquitto debug
         if: ${{ !cancelled() }}
         run: sudo cat /etc/mosquitto/dynamic_security.json
+      - name: udmis log
+        if: ${{ !cancelled() }}
+        run: cat out/udmis_local.log
       - name: support bundle
         if: ${{ !cancelled() }}
         run: bin/support ${{ github.repository_owner }}_${{ github.job }}_

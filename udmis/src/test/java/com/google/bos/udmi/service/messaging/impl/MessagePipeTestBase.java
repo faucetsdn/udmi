@@ -24,6 +24,8 @@ public abstract class MessagePipeTestBase extends MessageTestBase {
 
   private static final long RECEIVE_TIMEOUT_MS = 1000;
   private static final String EXCEPTION_PAYLOAD = "";
+  public static final String REFLECT_REGISTRY = "UDMI-REFLECT";
+  public static boolean useReflectRegistry;
 
   /**
    * Get a dispatcher for the given configuration.
@@ -40,9 +42,14 @@ public abstract class MessagePipeTestBase extends MessageTestBase {
    */
   public static Envelope makeTestEnvelope() {
     Envelope envelope = new Envelope();
-    envelope.deviceId = TEST_DEVICE;
-    envelope.deviceRegistryId = TEST_REGISTRY;
     envelope.projectId = TEST_NAMESPACE;
+    if (useReflectRegistry) {
+      envelope.deviceId = TEST_REGISTRY;
+      envelope.deviceRegistryId = REFLECT_REGISTRY;
+    } else {
+      envelope.deviceId = TEST_DEVICE;
+      envelope.deviceRegistryId = TEST_REGISTRY;
+    }
     return envelope;
   }
 

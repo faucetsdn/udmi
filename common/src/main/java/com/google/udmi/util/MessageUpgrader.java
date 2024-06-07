@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -46,7 +47,7 @@ public class MessageUpgrader {
     this.original = message.deepCopy();
 
     JsonNode version = message.get(VERSION_KEY);
-    originalVersion = convertVersion(version);
+    originalVersion = (version == null ? "1" : convertVersion(version.asText()));
 
     try {
       String[] components = originalVersion.split("-", 2);
@@ -87,12 +88,7 @@ public class MessageUpgrader {
    * @param forceUpgrade true to force a complete upgrade pass irrespective of original version
    */
   public Object upgrade(boolean forceUpgrade) {
-    try {
-      return upgradeRaw(forceUpgrade);
-    } catch (Exception e) {
-      message.put(UPGRADED_FROM, friendlyStackTrace(e));
-      return message;
-    }
+    return upgradeRaw(forceUpgrade);
   }
 
   private Object upgradeRaw(boolean forceUpgrade) {
@@ -115,7 +111,7 @@ public class MessageUpgrader {
 
     if (minor == 3 && patch < 14) {
       JsonNode before = message.deepCopy();
-      upgrade_1_3_14();
+      upgradeTo_1_3_14();
       upgraded |= !before.equals(message);
       patch = 14;
     }
@@ -127,7 +123,7 @@ public class MessageUpgrader {
 
     if (minor == 4 && patch < 1) {
       JsonNode before = message.deepCopy();
-      upgrade_1_4_1();
+      upgradeTo_1_4_1();
       upgraded |= !before.equals(message);
       patch = 1;
     }
@@ -135,34 +131,40 @@ public class MessageUpgrader {
     if (upgraded && message.get(VERSION_KEY) != null) {
       message.put(UPGRADED_FROM, originalVersion);
       message.put(VERSION_KEY, String.format(TARGET_FORMAT, major, minor, patch));
+    } else {
+      // Even if the message was not modified, it is now conformant to the current version
+      // of UDMI, so update the version property if it exists
+      if (message.has(VERSION_KEY)){
+        message.put(VERSION_KEY, SchemaVersion.CURRENT.key());
+      }
     }
 
     return message;
   }
 
-  private void upgrade_1_3_14() {
+  private void upgradeTo_1_3_14() {
     if (STATE_SCHEMA.equals(schemaName)) {
-      upgrade_1_3_14_state();
+      upgradeTo_1_3_14_state();
     }
     if (STATE_SYSTEM_SCHEMA.equals(schemaName)) {
-      upgrade_1_3_14_state_system(message);
+      upgradeTo_1_3_14_state_system(message);
     }
     if (METADATA_SCHEMA.equals(schemaName)) {
-      upgrade_1_3_14_metadata();
+      upgradeTo_1_3_14_metadata();
     }
   }
 
-  private void upgrade_1_3_14_state() {
-    ifNotNullThen((ObjectNode) message.get("system"), this::upgrade_1_3_14_state_system);
+  private void upgradeTo_1_3_14_state() {
+    ifNotNullThen((ObjectNode) message.get("system"), this::upgradeTo_1_3_14_state_system);
   }
 
-  private void upgrade_1_3_14_state_system(ObjectNode system) {
+  private void upgradeTo_1_3_14_state_system(ObjectNode system) {
     upgradeMakeModel(system);
     upgradeFirmware(system);
     upgradeStatuses(system);
   }
 
-  private void upgrade_1_3_14_metadata() {
+  private void upgradeTo_1_3_14_metadata() {
     ObjectNode localnet = (ObjectNode) message.get("localnet");
     if (localnet == null) {
       return;
@@ -173,20 +175,63 @@ public class MessageUpgrader {
     }
   }
 
-  private void upgrade_1_4_1() {
+  private void upgradeTo_1_4_1() {
     if (STATE_SCHEMA.equals(schemaName)) {
-      upgrade_1_4_1_state();
+      upgradeTo_1_4_1_state();
     }
     if (STATE_SYSTEM_SCHEMA.equals(schemaName)) {
-      upgrade_1_4_1_state_system(message);
+      upgradeTo_1_4_1_state_system(message);
+    }
+    if (METADATA_SCHEMA.equals(schemaName)) {
+      upgradeTo_1_4_1_metadata();
     }
   }
 
-  private void upgrade_1_4_1_state() {
-    ifNotNullThen((ObjectNode) message.get("system"), this::upgrade_1_4_1_state_system);
+  private void upgradeTo_1_4_1_metadata() {
+    JsonNode localnet = message.get("localnet");
+    if (localnet == null || !localnet.has("families")) {
+      return;
+    }
+    ObjectNode localnetFamilies = (ObjectNode) localnet.get("families");
+
+    // Rewrite `id` into `addr`
+    Iterator<String> families = localnetFamilies.fieldNames();
+    families.forEachRemaining(item -> {
+      ObjectNode family = (ObjectNode) localnetFamilies.get(item);
+      if (!family.has("addr")) {
+        TextNode id = (TextNode) family.remove("id");
+        family.put("addr", id);
+      }
+    });
+
+    if (!message.has("gateway")) {
+      message.put("gateway", new ObjectNode(NODE_FACTORY));
+    }
+
+    ObjectNode gateway = (ObjectNode) message.get("gateway");
+    // If gateway already has "target" set (for whatever reason) - don't stomp the changes
+    if (gateway.has("target")) {
+      return;
+    }
+
+    // Gateways at this time would be configured using the values in the `localnet` block.
+    // Gateway configuration now lives in the `gateway.target` property. At the time it is only known
+    // that gateways which use the localnet value use either "vendor" or "bacnet"
+    ObjectNode gatewayTarget = new ObjectNode(NODE_FACTORY);
+    gateway.put("target", gatewayTarget);
+
+    if (localnetFamilies.has("bacnet")) {
+      gatewayTarget.put("family", "bacnet");
+    } else if (localnetFamilies.has("vendor")) {
+      gatewayTarget.put("family", "vendor");
+    }
   }
 
-  private void upgrade_1_4_1_state_system(ObjectNode system) {
+  private void upgradeTo_1_4_1_state() {
+    ifNotNullThen((ObjectNode) message.get("system"), this::upgradeTo_1_4_1_state_system);
+  }
+
+  private void upgradeTo_1_4_1_state_system(ObjectNode system) {
     if (system.has("operation")) {
       return;
     }

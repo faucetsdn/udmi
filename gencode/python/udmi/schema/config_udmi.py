@@ -15,6 +15,7 @@ class SetupUdmiConfig:
     self.built_by = None
     self.deployed_at = None
     self.deployed_by = None
+    self.transaction_id = None
 
   @staticmethod
   def from_dict(source):
@@ -31,6 +32,7 @@ class SetupUdmiConfig:
     result.built_by = source.get('built_by')
     result.deployed_at = source.get('deployed_at')
     result.deployed_by = source.get('deployed_by')
+    result.transaction_id = source.get('transaction_id')
     return result
 
   @staticmethod
@@ -71,6 +73,8 @@ class SetupUdmiConfig:
       result['deployed_at'] = self.deployed_at # 5
     if self.deployed_by:
       result['deployed_by'] = self.deployed_by # 5
+    if self.transaction_id:
+      result['transaction_id'] = self.transaction_id # 5
     return result
 
 
@@ -78,6 +82,8 @@ class UdmiConfig:
   """Generated schema class"""
 
   def __init__(self):
+    self.timestamp = None
+    self.version = None
     self.last_state = None
     self.setup = None
 
@@ -86,6 +92,8 @@ class UdmiConfig:
     if not source:
       return None
     result = UdmiConfig()
+    result.timestamp = source.get('timestamp')
+    result.version = source.get('version')
     result.last_state = source.get('last_state')
     result.setup = SetupUdmiConfig.from_dict(source.get('setup'))
     return result
@@ -108,6 +116,10 @@ class UdmiConfig:
 
   def to_dict(self):
     result = {}
+    if self.timestamp:
+      result['timestamp'] = self.timestamp # 5
+    if self.version:
+      result['version'] = self.version # 5
     if self.last_state:
       result['last_state'] = self.last_state # 5
     if self.setup:

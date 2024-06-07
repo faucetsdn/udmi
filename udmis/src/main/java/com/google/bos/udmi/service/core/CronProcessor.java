@@ -1,5 +1,6 @@
 package com.google.bos.udmi.service.core;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
@@ -31,11 +32,12 @@ public class CronProcessor extends ProcessorBase {
 
   private static final String PAYLOAD_SEPARATOR = ":";
   private static final String PATH_SEPARATOR = "/";
+  private static final String ID_SEPARATOR = "~";
   private static final long CUTOFF_INTERVALS = 3;
   private static final DefaultMustacheFactory MUSTACHE_FACTORY = new DefaultMustacheFactory();
   private static final SortedMap<String, Instant> TRACKER = new ConcurrentSkipListMap<>();
   private static final String HEARTBEAT_NAME = "heartbeat";
-  private static final String HEARTBEAT_SUFFIX = PATH_SEPARATOR + HEARTBEAT_NAME;
+  private static final String HEARTBEAT_SUFFIX = ID_SEPARATOR + HEARTBEAT_NAME;
   private static Integer HEARTBEAT_SEC;
   private final Envelope srcEnvelope;
   private final Mustache template;
@@ -71,7 +73,9 @@ public class CronProcessor extends ProcessorBase {
   }
 
   private static String getContainerId(Envelope envelope) {
-    return envelope.gatewayId.split(PATH_SEPARATOR, 2)[0];
+    String[] split = envelope.gatewayId.split(ID_SEPARATOR, 2);
+    checkState(split.length == 2, "malformed container id");
+    return split[0];
   }
 
   @Override
@@ -97,7 +101,8 @@ public class CronProcessor extends ProcessorBase {
       Object message = fromStringStrict(messageClass, stringWriter.toString());
 
       ifTrueThen(isAmGroot(), () -> processGroot(message));
-      distributor.publish(srcEnvelope, message, containerId);
+      ifTrueThen(distributor.isEnabled(),
+          () -> distributor.publish(srcEnvelope, message, containerId));
     } catch (Exception e) {
       throw new RuntimeException("While executing cron task", e);
     }

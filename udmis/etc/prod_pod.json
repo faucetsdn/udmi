@@ -25,6 +25,11 @@
       "payload": "query/cloud:{\"generation\":\"{{timestamp}}\", \"depth\":\"entries\"}",
       "send_id": "${UDMI_PREFIX}udmi_control",
       "generation": "2024-03-06T00:15:00Z"
+    },
+    "sendgroot": {
+      "periodic_sec": 60,
+      "payload": "config/udmi:{\"timestamp\":\"{{timestamp}}\"}",
+      "send_id": "${UDMI_PREFIX}udmi_control"
     }
   },
   "flows": {
@@ -56,6 +61,7 @@
       "enabled": "${BITBOX_DISCOVERY}"
     },
     "distributor": {
+      "recv_id": "#",
       "protocol": "mqtt",
       "transport": "tcp",
       "hostname": "udmis-broker",

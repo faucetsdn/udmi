@@ -3,8 +3,10 @@
 UDMI_ROOT=$(realpath $(dirname $0)/..)
 source $UDMI_ROOT/etc/shell_common.sh
 
+ENDPOINT_TMP=/tmp/endpoint.json
+
 function cleanup {
-    if [[ -n $PUB_PID && -d /proc/$PUB_PID ]]; then
+    if [[ -n ${PUB_PID:-} && -d /proc/$PUB_PID ]]; then
         echo Killing pubber runner $PUB_PID
         kill $PUB_PID
     fi
@@ -14,9 +16,11 @@ trap cleanup EXIT
 [[ $# == 0 ]] && usage SITE_{PATH/FILE} [PROJECT_ID] [DEVICE_ID] [SERIAL_NO] [options] ...
 
 config_file=$(realpath $1)
+serial_no=NA
+project_id=--
 shift
 
-rm -f /tmp/endpoint.json
+rm -f $ENDPOINT_TMP
 if [[ -d $config_file ]]; then
     echo Constructing pubber config from command line args.
     (( $# >= 3 )) || fail missing project etc... with site model dir
@@ -33,7 +37,7 @@ elif [[ ! -f $config_file ]]; then
     fail Missing config file $(realpath $config_file)
 elif [[ $(jq -r .deviceId $config_file) != null ]]; then
     echo Using pubber configuration file direct.
-    jq -r .endpoint $config_file > /tmp/endpoint.json
+    jq -r .endpoint $config_file > $ENDPOINT_TMP
 elif [[ $(jq -r .device_id $config_file) == null ]]; then
     fail Neither deviceId nor device_id defined in config file.
 else
@@ -43,10 +47,10 @@ else
     serial_no=$(jq -r .serial_no $config_file)
     site_model=$(jq -r .site_model $config_file)
     [[ $site_model = /* ]] || site_model=$(dirname $config_file)/$site_model
-    jq -r .device_endpoint $config_file > /tmp/endpoint.json
+    jq -r .device_endpoint $config_file > $ENDPOINT_TMP
 fi
 
-if [[ -n $UDMI_REGISTRY_SUFFIX ]]; then
+if [[ -n ${UDMI_REGISTRY_SUFFIX:-} ]]; then
     echo Using registry suffix $UDMI_REGISTRY_SUFFIX
     registry_suffix=$UDMI_REGISTRY_SUFFIX
 else
@@ -61,6 +65,7 @@ $UDMI_ROOT/pubber/bin/build
 
 echo Running tools version $udmi_version
 
+options_json=
 for option in $*; do
     if [[ $option == *"="* ]]; then
         k=$(echo $option | cut -d'=' -f1)
@@ -81,6 +86,8 @@ fi
 # Format of cmdline project_id is {//PROVIDER/}PROJECT[@BROKER] (optional PROVIDER and BROKER)
 # e.g. bos-testing-dev or //gcp/bos-testing-dev or bos-platform-dev@mqtt.bos.goog
 project_target=${project_id##*/}
+udmi_prefix=
+broker_hostname=
 
 if [[ -z $project_id ]]; then
     true using config file based configuration
@@ -99,29 +106,46 @@ else
     iot_provider=gcp
 fi
 
+if [[ ! -f $ENDPOINT_TMP ]]; then
+    [[ ${registry_id:-null} == null ]] && fail registry_id not defined
+    registry_actual=${udmi_prefix}${registry_id}${registry_suffix}
+    client_id=\"projects/$project_target/locations/$cloud_region/registries/$registry_actual/devices/$device_id\"
+fi
+msg_prefix=null
+auth_provider=null
+transport=null
+
 if [[ $iot_provider == clearblade ]]; then
     broker_hostname=${cloud_region}-mqtt.clearblade.com
 elif [[ $iot_provider == gbos ]]; then
     broker_hostname=mqtt.bos.goog
+elif [[ $iot_provider == mqtt ]]; then
+    broker_hostname=$project_target
+    client_id=\"/r/$registry_actual/d/$device_id\"
+    hash_pass=$(sha256sum < $site_model/devices/$device_id/rsa_private.pkcs8)
+    client_pass=${hash_pass:0:8}
+    msg_prefix=$client_id
+    auth_provider="{ \"basic\": { \"username\": $client_id, \"password\": \"$client_pass\" }}"
+    transport=\"ssl\"
 elif [[ -z $broker_hostname ]]; then
     broker_hostname=mqtt.googleapis.com
 fi
 
-[[ $registry_id == null ]] && fail registry_id not defined
-
-registry_actual=${udmi_prefix}${registry_id}${registry_suffix}
-
-if [[ ! -f /tmp/endpoint.json ]]; then
-    cat <<EOF > /tmp/endpoint.json
+if [[ ! -f $ENDPOINT_TMP ]]; then
+    cat <<EOF > $ENDPOINT_TMP
 {
-    "client_id": "projects/$project_target/locations/$cloud_region/registries/$registry_actual/devices/$device_id",
+    "protocol": "mqtt",
+    "transport": $transport,
+    "client_id": $client_id,
+    "msg_prefix": $msg_prefix,
+    "auth_provider": $auth_provider,
     "hostname": "$broker_hostname"
 }
 EOF
 fi
 
 tmp_config=/tmp/pubber_config.json
-if [[ -n $site_model ]]; then
+if [[ -n ${site_model:-} ]]; then
     cat <<EOF > $tmp_config
 {
     "sitePath": "$site_model",
@@ -139,7 +163,7 @@ else
     [[ $config_file != $tmp_config ]] && cp $config_file $tmp_config
 fi
 
-jq --slurpfile endpoint /tmp/endpoint.json '.endpoint = $endpoint[0]' $tmp_config | sponge $tmp_config
+jq --slurpfile endpoint $ENDPOINT_TMP '.endpoint = $endpoint[0]' $tmp_config | sponge $tmp_config
 
 # Run in the background to force new process group and get PID
 $UDMI_ROOT/pubber/bin/run $tmp_config &

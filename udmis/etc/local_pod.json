@@ -2,16 +2,33 @@
   "include": "prod_pod.json",
   "flow_defaults": {
     "protocol": "mqtt",
-    "transport": "tcp",
+    "transport": "ssl",
     "hostname": "localhost",
     "auth_provider": {
       "basic": {
-        "username": "registrar",
-        "password": "registrar"
+        "username": "rocket",
+        "password": "monkey"
       }
     }
   },
+  "flows": {
+    "reflect": {
+      "recv_id": "reflect"
+    },
+    "target": {
+      "recv_id": "events/#"
+    },
+    "state": {
+      "recv_id": "state"
+    },
+    "distributor": {
+      "enabled": "false"
+    }
+  },
   "iot_access": {
+    "iot-access": {
+      "project_id": "implicit"
+    },
     "implicit": {
       "provider": "implicit",
       "options": "enabled=${ETCD_CLUSTER}"

@@ -10,6 +10,7 @@ import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static java.util.Objects.requireNonNull;
 
 import com.google.bos.udmi.service.access.IotAccessBase;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -45,6 +46,8 @@ public class CloudQueryHandler {
     target = controller.targetProcessor;
     query = cloudQuery;
     envelope = controller.getContinuation(cloudQuery).getEnvelope();
+    debug("Starting CloudQuery for %s/%s %s", envelope.deviceRegistryId, envelope.deviceId,
+        envelope.transactionId);
     savedQuery = stringifyTerse(query);
     savedEnvelope = stringifyTerse(envelope);
   }
@@ -132,11 +135,15 @@ public class CloudQueryHandler {
     requireNull(envelope.deviceId, "device id");
 
     CloudModel cloudModel = iotAccess.listDevices(deviceRegistryId);
+    Set<Entry<String, CloudModel>> deviceSet = new HashSet<>(cloudModel.device_ids.entrySet());
+    debug("Queried registry %s for %d totaling %d %s",
+        envelope.deviceRegistryId, cloudModel.device_ids.size(), deviceSet.size(),
+        envelope.transactionId);
 
     DiscoveryEvents discoveryEvent = new DiscoveryEvents();
     discoveryEvent.scan_family = ProtocolFamily.IOT;
     discoveryEvent.generation = query.generation;
-    discoveryEvent.devices = cloudModel.device_ids.entrySet().stream().collect(Collectors.toMap(
+    discoveryEvent.devices = deviceSet.stream().collect(Collectors.toMap(
         Entry::getKey, entry -> convertDeviceEntry(entry.getValue())));
     publish(discoveryEvent);
 

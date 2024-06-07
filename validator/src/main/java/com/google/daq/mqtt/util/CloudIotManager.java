@@ -3,28 +3,31 @@ package com.google.daq.mqtt.util;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.util.ConfigUtil.readExeConfig;
+import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.mergeObject;
+import static com.google.udmi.util.GeneralUtils.toJsonString;
+import static com.google.udmi.util.MetadataMapKeys.UDMI_METADATA;
 import static java.lang.String.format;
+import static java.nio.file.Files.readAllBytes;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static udmi.schema.IotAccess.IotProvider.GBOS;
 import static udmi.schema.IotAccess.IotProvider.GCP_NATIVE;
-import static udmi.schema.IotAccess.IotProvider.IMPLICIT;
+import static udmi.schema.IotAccess.IotProvider.MQTT;
 
 import com.google.common.collect.ImmutableList;
+import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.MetadataMapKeys;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import org.jetbrains.annotations.NotNull;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
 import udmi.schema.CloudModel.Resource_type;
@@ -33,7 +36,9 @@ import udmi.schema.Credential.Key_format;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.ExecutionConfiguration;
 import udmi.schema.IotAccess;
+import udmi.schema.Metadata;
 import udmi.schema.SetupUdmiConfig;
+import udmi.schema.SiteMetadata;
 
 /**
  * Encapsulation of all Cloud IoT interaction functions.
@@ -44,6 +49,7 @@ public class CloudIotManager {
   public static final int METADATA_SIZE_LIMIT = 32767;
   public static final String REDACTED_MESSAGE = "REDACTED DUE TO SIZE LIMIT";
   public static final String EMPTY_CONFIG = "{}";
+  private static final String DEVICE_PRIVATE_KEY_BYTES_FMT = "devices/%s/rsa_private.pkcs8";
   public final ExecutionConfiguration executionConfiguration;
 
   private final String registryId;
@@ -53,6 +59,7 @@ public class CloudIotManager {
   private final File siteModel;
   private final boolean useReflectClient;
   private IotProvider iotProvider;
+  private boolean usePasswords;
 
   /**
    * Create a new CloudIoTManager.
@@ -62,7 +69,7 @@ public class CloudIotManager {
     checkNotNull(projectId, "project id undefined");
     this.siteModel = checkNotNull(siteDir, "site directory undefined");
     checkState(siteDir.isDirectory(), "not a directory " + siteDir.getAbsolutePath());
-    this.useReflectClient = iotProvider != null;
+    this.useReflectClient = iotProvider != null && iotProvider != GCP_NATIVE;
     this.projectId = projectId;
     File cloudConfig = new File(siteDir, CLOUD_IOT_CONFIG_JSON);
     try {
@@ -174,16 +181,23 @@ public class CloudIotManager {
     }
   }
 
-  @NotNull
   private IotProvider makeIotProvider() {
+    usePasswords = executionConfiguration.iot_provider == MQTT;
+
     if (projectId.equals(SiteModel.MOCK_PROJECT)) {
       System.err.println("Using mock iot client for special client " + projectId);
       return new IotMockProvider(executionConfiguration);
     }
+
     if (useReflectClient) {
       System.err.println("Using reflector iot client");
       return new IotReflectorClient(executionConfiguration);
     }
+
+    if (executionConfiguration.iot_provider == GCP_NATIVE) {
+      return null;
+    }
+
     throw new RuntimeException("Unknown IoT Core selection strategy");
   }
 
@@ -197,6 +211,9 @@ public class CloudIotManager {
   public boolean registerDevice(String deviceId, CloudDeviceSettings settings) {
     ExceptionMap exceptions = new ExceptionMap("registering");
     CloudModel device = getRegisteredDevice(deviceId);
+    if (usePasswords) {
+      coerceCredentialsToPassword(deviceId, settings);
+    }
     if (device == null) {
       exceptions.capture("creating", () -> createDevice(deviceId, settings));
     } else {
@@ -209,6 +226,19 @@ public class CloudIotManager {
 
     exceptions.throwIfNotEmpty();
     return device == null;
+  }
+
+  private void coerceCredentialsToPassword(String deviceId, CloudDeviceSettings settings) {
+    // TODO: Make this less ugly/hacky. Ick.
+    settings.credentials.forEach(credential -> {
+      try {
+        credential.key_format = Key_format.PASSWORD;
+        File privateKey = new File(siteModel, format(DEVICE_PRIVATE_KEY_BYTES_FMT, deviceId));
+        credential.key_data = makePassword(readAllBytes(privateKey.toPath()));
+      } catch (Exception e) {
+        throw new RuntimeException("While coercing credential for " + deviceId, e);
+      }
+    });
   }
 
   public CloudModel getRegisteredDevice(String deviceId) {
@@ -245,8 +275,7 @@ public class CloudIotManager {
       metadataMap.remove(MetadataMapKeys.KEY_BYTES_KEY);
       metadataMap.remove(MetadataMapKeys.KEY_ALGORITHM_KEY);
     } else {
-      String keyBase64 = Base64.getEncoder().encodeToString(settings.keyBytes);
-      metadataMap.put(MetadataMapKeys.KEY_BYTES_KEY, keyBase64);
+      metadataMap.put(MetadataMapKeys.KEY_BYTES_KEY, encodeBase64(settings.keyBytes));
       metadataMap.put(MetadataMapKeys.KEY_ALGORITHM_KEY, settings.keyAlgorithm);
     }
     CloudModel cloudModel = new CloudModel();
@@ -255,6 +284,10 @@ public class CloudIotManager {
     cloudModel.metadata = metadataMap;
     cloudModel.num_id = settings.deviceNumId;
     return cloudModel;
+  }
+
+  private String makePassword(byte[] keyBytes) {
+    return GeneralUtils.sha256(keyBytes).substring(0, 8);
   }
 
   private List<Credential> getCredentials(CloudDeviceSettings settings) {
@@ -390,6 +423,22 @@ public class CloudIotManager {
     settings.credentials = List.of(iotProvider.getCredential());
     iotProvider.createResource(suffix, settings);
     return requireNonNull(settings.num_id, "Missing registry name in reply");
+  }
+
+  /**
+   * Publish a site metadata update for the current registry.
+   *
+   * @param siteMetadata site metadata object.
+   */
+  public void updateRegistry(SiteMetadata siteMetadata) {
+    CloudModel registryModel = new CloudModel();
+    registryModel.resource_type = Resource_type.REGISTRY;
+    registryModel.operation = Operation.UPDATE;
+    registryModel.metadata = new HashMap<>();
+    registryModel.metadata.put(
+        MetadataMapKeys.UDMI_METADATA, toJsonString(siteMetadata)
+    );
+    iotProvider.updateRegistry(registryModel);
   }
 
   public String getSiteDir() {

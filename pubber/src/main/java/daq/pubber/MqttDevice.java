@@ -1,5 +1,6 @@
 package daq.pubber;
 
+import com.google.udmi.util.CertManager;
 import java.util.function.Consumer;
 import udmi.schema.PubberConfiguration;
 
@@ -17,8 +18,11 @@ public class MqttDevice {
 
   private final String deviceId;
   private final Publisher publisher;
+  private final CertManager certManager;
 
-  MqttDevice(PubberConfiguration configuration, Consumer<Exception> onError) {
+  MqttDevice(PubberConfiguration configuration, Consumer<Exception> onError,
+      CertManager certManager) {
+    this.certManager = certManager;
     deviceId = configuration.deviceId;
     publisher = getPublisher(configuration, onError);
     if (configuration.endpoint.msg_prefix != null) {
@@ -29,12 +33,13 @@ public class MqttDevice {
   MqttDevice(String deviceId, MqttDevice target) {
     this.deviceId = deviceId;
     publisher = target.publisher;
+    certManager = null;
   }
 
   Publisher getPublisher(PubberConfiguration configuration,
       Consumer<Exception> onError) {
     return TEST_PROJECT.equals(configuration.iotProject) ? new ListPublisher(configuration, onError)
-        : new MqttPublisher(configuration, onError);
+        : new MqttPublisher(configuration, onError, certManager);
   }
 
   public <T> void registerHandler(String topicSuffix, Consumer<T> handler, Class<T> messageType) {

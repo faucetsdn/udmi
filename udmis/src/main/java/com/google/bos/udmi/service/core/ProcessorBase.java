@@ -15,18 +15,19 @@ import static com.google.udmi.util.GeneralUtils.compressJsonString;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
-import static com.google.udmi.util.GeneralUtils.getSubMap;
 import static com.google.udmi.util.GeneralUtils.getSubMapDefault;
+import static com.google.udmi.util.GeneralUtils.getSubMapNull;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
+import static com.google.udmi.util.GeneralUtils.isNullOrTruthy;
 import static com.google.udmi.util.JsonUtil.asMap;
-import static com.google.udmi.util.JsonUtil.getAsMap;
 import static com.google.udmi.util.JsonUtil.getDate;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.mapCast;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static com.google.udmi.util.JsonUtil.toStringMap;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
@@ -87,8 +88,7 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
    */
   public ProcessorBase(EndpointConfiguration config) {
     super(config);
-    isEnabled =
-        ifNotNullGet(variableSubstitution(config.enabled), enabled -> !enabled.isEmpty(), true);
+    isEnabled = isNullOrTruthy(variableSubstitution(config.enabled));
     ifNotTrueThen(isEnabled, () -> debug("Processor %s is disabled", containerId));
     dispatcher = ifTrueGet(isEnabled, () -> MessageDispatcher.from(config));
     sidecar = ifTrueGet(isEnabled, () -> MessageDispatcher.from(makeSidecarConfig(config)));
@@ -328,7 +328,7 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
 
   private void augmentPayload(Map<String, Object> payload, String transactionId, Long version) {
     try {
-      Map<String, Object> asMap = getAsMap(getAsMap(payload, "system"), "testing");
+      Map<String, Object> asMap = getSubMapNull(getSubMapNull(payload, "system"), "testing");
       ifNotNullThen(asMap, map -> map.put("transaction_id", transactionId));
       ifNotNullThen(asMap, map -> map.put("config_base", version));
     } catch (Exception e) {
@@ -337,8 +337,8 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
   }
 
   private String updateWithLastStart(Map<String, Object> oldPayload, Date newLastStart) {
-    Map<String, Object> oldSystem = getSubMap(oldPayload, "system");
-    Map<String, Object> oldOperation = getSubMap(oldSystem, "operation");
+    Map<String, Object> oldSystem = getSubMapNull(oldPayload, "system");
+    Map<String, Object> oldOperation = getSubMapNull(oldSystem, "operation");
     if (oldOperation == null) {
       return null;
     }
@@ -381,6 +381,7 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
 
   @Override
   public void processMessage(Envelope envelope, Object message) {
+    debug(format("Process message %s %s", stringifyTerse(envelope), stringifyTerse(message)));
     ((MessageDispatcherImpl) dispatcher).processMessage(envelope, message);
   }
 
@@ -428,12 +429,12 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
     dispatcher.registerHandler(clazz, handler);
   }
 
-  MessageContinuation getContinuation(Object message) {
+  public MessageContinuation getContinuation(Object message) {
     return dispatcher.getContinuation(message);
   }
 
   @TestOnly
-  MessageDispatcher getDispatcher() {
+  public MessageDispatcher getDispatcher() {
     return dispatcher;
   }
 

@@ -1,8 +1,11 @@
 package com.google.bos.udmi.service.core;
 
+import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.convertTo;
+import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static com.google.udmi.util.MessageUpgrader.STATE_SCHEMA;
 import static udmi.schema.Envelope.SubFolder.UPDATE;
@@ -47,7 +50,7 @@ public class StateProcessor extends ProcessorBase {
 
     Object upgradedMessage = new MessageUpgrader(STATE_SCHEMA, originalMessage).upgrade();
     StateUpdate stateMessage = convertTo(StateUpdate.class, upgradedMessage);
-    shardStateUpdate(continuation, envelope, stateMessage);
+    processStateUpdate(continuation, envelope, stateMessage);
 
     updateLastStart(getContinuation(originalMessage).getEnvelope(), stateMessage);
   }
@@ -57,13 +60,14 @@ public class StateProcessor extends ProcessorBase {
     return SubType.STATE;
   }
 
-  private void shardStateUpdate(MessageContinuation continuation, Envelope envelope,
+  private void processStateUpdate(MessageContinuation continuation, Envelope envelope,
       StateUpdate message) {
+    iotAccess.saveState(envelope.deviceRegistryId, envelope.deviceId, stringifyTerse(message));
     continuation.publish(message);
-    String originalTransaction = envelope.transactionId;
+    String origTxnId = envelope.transactionId;
     AtomicInteger txnSuffix = new AtomicInteger();
-    info("Sharding state message for %s/%s %s", envelope.deviceRegistryId, envelope.deviceId,
-        originalTransaction);
+    info("Sharding state message for %s/%s %s last_config %s", envelope.deviceRegistryId,
+        envelope.deviceId, origTxnId, isoConvert(catchToNull(() -> message.system.last_config)));
     Arrays.stream(State.class.getFields()).forEach(field -> {
       try {
         if (STATE_SUB_FOLDERS.contains(field.getName())) {
@@ -72,7 +76,7 @@ public class StateProcessor extends ProcessorBase {
             stringObjectMap.put("version", message.version);
             stringObjectMap.put("timestamp", message.timestamp);
             envelope.subFolder = SubFolder.fromValue(field.getName());
-            envelope.transactionId = originalTransaction + "-" + txnSuffix.getAndIncrement();
+            envelope.transactionId = origTxnId + "-" + txnSuffix.getAndIncrement();
             debug("Sharding state %s %s", envelope.subFolder, envelope.transactionId);
             reflectMessage(envelope, stringify(stringObjectMap));
             continuation.publish(stringObjectMap);
@@ -92,7 +96,7 @@ public class StateProcessor extends ProcessorBase {
     MessageContinuation continuation = getContinuation(message);
     Envelope envelope = continuation.getEnvelope();
     reflectMessage(envelope, stringify(message));
-    shardStateUpdate(continuation, envelope, message);
+    processStateUpdate(continuation, envelope, message);
   }
 
 }

@@ -1,16 +1,17 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="UdmiServicePod etcd cluster" type="Application" factoryName="Application">
+  <configuration default="false" name="UdmiServicePod Local" type="Application" factoryName="Application">
     <option name="ALTERNATIVE_JRE_PATH" value="17" />
     <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
     <envs>
-      <env name="GCP_PROJECT" value="bos-platform-dev" />
-      <env name="UDMI_PREFIX" value="peringknife~" />
       <env name="ETCD_CLUSTER" value="localhost" />
+      <env name="SSL_SECRETS_DIR" value="../sites/udmi_site_model/reflector" />
+      <env name="UDMI_ROOT" value="$PROJECT_DIR$/.." />
+      <env name="SUDO_ASKPASS" value="/usr/bin/ssh-askpass" />
     </envs>
     <output_file path="out/console.log" is_save="true" />
     <option name="MAIN_CLASS_NAME" value="com.google.bos.udmi.service.pod.UdmiServicePod" />
     <module name="udmis" />
-    <option name="PROGRAM_PARAMETERS" value="etc/dev_pod.json" />
+    <option name="PROGRAM_PARAMETERS" value="etc/local_pod.json" />
     <extension name="coverage">
       <pattern>
         <option name="PATTERN" value="com.google.bos.udmi.service.core.*" />

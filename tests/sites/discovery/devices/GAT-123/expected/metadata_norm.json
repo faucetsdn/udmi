@@ -1,8 +1,8 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
-  "version": "1.4.1",
-  "upgraded_from": "1",
-  "hash": "33035c1a",
+  "version": "1.5.0",
+  "hash": "92bd1560",
+  "tags": [ ],
   "cloud": {
     "auth_type": "ES256"
   },
@@ -24,7 +24,8 @@
   "pointset": {
     "points": {
       "globulating_globar": {
-        "units": "Bars"
+        "units": "Bars",
+        "tags": [ ]
       }
     }
   }

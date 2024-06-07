@@ -88,7 +88,6 @@ class LocalDevice {
   public static final String EXCEPTION_FILES = "Files";
   public static final String EXCEPTION_REGISTERING = "Registering";
   public static final String EXCEPTION_CREDENTIALS = "Credential";
-  public static final String EXCEPTION_CONFIG = "Config";
   public static final String EXCEPTION_ENVELOPE = "Envelope";
   public static final String EXCEPTION_SAMPLES = "Samples";
   public static final String EXCEPTION_BINDING = "Binding";
@@ -181,7 +180,7 @@ class LocalDevice {
   private String deviceNumId;
 
   private CloudDeviceSettings settings;
-  private JsonNode baseVersion;
+  private String baseVersion;
   private Date lastActive;
   private boolean blocked;
   
@@ -255,16 +254,21 @@ class LocalDevice {
   }
 
   private Metadata readMetadataWithValidation(boolean validate) {
-    final JsonNode deviceMetadata;
+    final Metadata deviceMetadata;
+
     try {
-      Metadata loadedMetadata = siteModel.loadDeviceMetadata(deviceId);
-      if (loadedMetadata instanceof MetadataException metadataException) {
+      deviceMetadata = siteModel.loadDeviceMetadata(deviceId);
+      if (deviceMetadata instanceof MetadataException metadataException) {
         throw new RuntimeException("Loading " + metadataException.file.getAbsolutePath(),
             metadataException.exception);
       }
-      deviceMetadata = JsonUtil.convertTo(JsonNode.class, loadedMetadata);
-      baseVersion = deviceMetadata.get(VERSION_KEY);
-      new MessageUpgrader(METADATA_SCHEMA, deviceMetadata).upgrade(false);
+      baseVersion = (deviceMetadata.upgraded_from == null
+          ? deviceMetadata.version : deviceMetadata.upgraded_from);
+
+      List<String> proxyIds = catchToNull(() -> deviceMetadata.gateway.proxy_ids);
+      ifNotNullThen(proxyIds,
+          ids -> ifTrueThen(ids.isEmpty(), () -> deviceMetadata.gateway.proxy_ids = null));
+
     } catch (Exception exception) {
       exceptionMap.put(EXCEPTION_LOADING, exception);
       return null;
@@ -272,17 +276,15 @@ class LocalDevice {
 
     if (validate) {
       try {
-        ProcessingReport report = schemas.get(METADATA_SCHEMA_JSON).validate(deviceMetadata);
+        JsonNode metadataObject = JsonUtil.convertTo(JsonNode.class, deviceMetadata);
+        ProcessingReport report = schemas.get(METADATA_SCHEMA_JSON).validate(metadataObject);
         parseMetadataValidateProcessingReport(report);
       } catch (ProcessingException | ValidationException e) {
         exceptionMap.put(EXCEPTION_VALIDATING, e);
       }
     }
-    Metadata converted = JsonUtil.convertTo(Metadata.class, deviceMetadata);
-    List<String> proxyIds = catchToNull(() -> converted.gateway.proxy_ids);
-    ifNotNullThen(proxyIds,
-        ids -> ifTrueThen(ids.isEmpty(), () -> converted.gateway.proxy_ids = null));
-    return converted;
+
+    return deviceMetadata;
   }
 
   private Metadata readMetadata() {

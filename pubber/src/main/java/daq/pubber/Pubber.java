@@ -18,6 +18,7 @@ import static com.google.udmi.util.GeneralUtils.isGetTrue;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.optionsString;
 import static com.google.udmi.util.GeneralUtils.setClockSkew;
+import static com.google.udmi.util.GeneralUtils.sha256;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.GeneralUtils.toJsonFile;
 import static com.google.udmi.util.GeneralUtils.toJsonString;
@@ -40,6 +41,7 @@ import static udmi.schema.EndpointConfiguration.Protocol.MQTT;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 import com.google.daq.mqtt.util.CatchingScheduledThreadPoolExecutor;
+import com.google.udmi.util.CertManager;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.MessageDowngrader;
 import com.google.udmi.util.SchemaVersion;
@@ -116,6 +118,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
   public static final String PERSISTENT_STORE_FILE = "persistent_data.json";
   public static final String PERSISTENT_TMP_FORMAT = "/tmp/pubber_%s_" + PERSISTENT_STORE_FILE;
   public static final String DATA_URL_JSON_BASE64 = "data:application/json;base64,";
+  public static final String CA_CRT = "ca.crt";
   static final String UDMI_VERSION = SchemaVersion.CURRENT.key();
   static final Logger LOG = LoggerFactory.getLogger(Pubber.class);
   static final Date DEVICE_START_TIME = getRoundedStartTime();
@@ -153,7 +156,6 @@ public class Pubber extends ManagerBase implements ManagerHost {
   private static final Duration CLOCK_SKEW = Duration.ofMinutes(30);
   private static final Duration SMOKE_CHECK_TIME = Duration.ofMinutes(5);
   private static final int STATE_SPAM_SEC = 5; // Expected config-state response time.
-  static PubberConfiguration configuration;
   final State deviceState = new State();
   final Config deviceConfig = new Config();
   private final File outDir;
@@ -186,7 +188,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
     super(null, loadConfiguration(configPath));
     setClockSkew(isTrue(options.skewClock) ? CLOCK_SKEW : Duration.ZERO);
     Protocol protocol = requireNonNullElse(
-        ifNotNullGet(configuration.endpoint, endpoint -> endpoint.protocol), MQTT);
+        ifNotNullGet(config.endpoint, endpoint -> endpoint.protocol), MQTT);
     checkArgument(MQTT.equals(protocol), "protocol mismatch");
     outDir = new File(PUBBER_OUT);
     ifTrueThen(options.spamState, () -> schedulePeriodic(STATE_SPAM_SEC, this::markStateDirty));
@@ -214,8 +216,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
   private static PubberConfiguration loadConfiguration(String configPath) {
     File configFile = new File(configPath);
     try {
-      configuration = sanitizeConfiguration(fromJsonFile(configFile, PubberConfiguration.class));
-      return configuration;
+      return sanitizeConfiguration(fromJsonFile(configFile, PubberConfiguration.class));
     } catch (Exception e) {
       throw new RuntimeException("While configuring from " + configFile.getAbsolutePath(), e);
     }
@@ -223,7 +224,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
 
   private static PubberConfiguration makeExplicitConfiguration(String iotProject, String sitePath,
       String deviceId, String serialNo) {
-    configuration = new PubberConfiguration();
+    PubberConfiguration configuration = new PubberConfiguration();
     configuration.iotProject = iotProject;
     configuration.sitePath = sitePath;
     configuration.deviceId = deviceId;
@@ -366,32 +367,32 @@ public class Pubber extends ManagerBase implements ManagerHost {
   }
 
   private void initializeDevice() {
-    deviceManager = new DeviceManager(this, configuration);
+    deviceManager = new DeviceManager(this, config);
 
-    if (configuration.sitePath != null) {
-      SupportedFeatures.writeFeatureFile(configuration.sitePath, deviceManager);
-      siteModel = new SiteModel(configuration.sitePath);
+    if (config.sitePath != null) {
+      SupportedFeatures.writeFeatureFile(config.sitePath, deviceManager);
+      siteModel = new SiteModel(config.sitePath);
       siteModel.initialize();
-      if (configuration.endpoint == null) {
-        configuration.endpoint = siteModel.makeEndpointConfig(configuration.iotProject, deviceId);
+      if (config.endpoint == null) {
+        config.endpoint = siteModel.makeEndpointConfig(config.iotProject, deviceId);
       }
-      if (!siteModel.allDeviceIds().contains(configuration.deviceId)) {
+      if (!siteModel.allDeviceIds().contains(config.deviceId)) {
         throw new IllegalArgumentException(
-            "Device ID " + configuration.deviceId + " not found in site model");
+            "Device ID " + config.deviceId + " not found in site model");
       }
-      Metadata metadata = siteModel.getMetadata(configuration.deviceId);
+      Metadata metadata = siteModel.getMetadata(config.deviceId);
       processDeviceMetadata(metadata);
       deviceManager.setSiteModel(siteModel);
     } else if (pubSubClient != null) {
       pullDeviceMessage();
     }
 
-    SupportedFeatures.setFeatureSwap(configuration.options.featureEnableSwap);
+    SupportedFeatures.setFeatureSwap(config.options.featureEnableSwap);
     initializePersistentStore();
 
     info(format("Starting pubber %s, serial %s, mac %s, gateway %s, options %s",
-        configuration.deviceId, configuration.serialNo, configuration.macAddr,
-        configuration.gatewayId, optionsString(configuration.options)));
+        config.deviceId, config.serialNo, config.macAddr,
+        config.gatewayId, optionsString(config.options)));
 
     markStateDirty();
   }
@@ -404,7 +405,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
     checkState(persistentData == null, "persistent data already loaded");
     File persistentStore = getPersistentStore();
 
-    if (isTrue(configuration.options.noPersist)) {
+    if (isTrue(config.options.noPersist)) {
       info("Resetting persistent store " + persistentStore.getAbsolutePath());
       persistentData = newDevicePersistent();
     } else {
@@ -420,10 +421,10 @@ public class Pubber extends ManagerBase implements ManagerHost {
     // Otherwise, use the endpoint configuration that came from the Pubber config file on start.
     if (persistentData.endpoint != null) {
       info("Loading endpoint from persistent data");
-      configuration.endpoint = persistentData.endpoint;
-    } else if (configuration.endpoint != null) {
+      config.endpoint = persistentData.endpoint;
+    } else if (config.endpoint != null) {
       info("Loading endpoint into persistent data from configuration");
-      persistentData.endpoint = configuration.endpoint;
+      persistentData.endpoint = config.endpoint;
     } else {
       error(
           "Neither configuration nor persistent data supplies endpoint configuration");
@@ -544,10 +545,10 @@ public class Pubber extends ManagerBase implements ManagerHost {
   }
 
   private void processSwarmConfig(SwarmMessage swarm, Envelope attributes) {
-    configuration.deviceId = checkNotNull(attributes.deviceId, "deviceId");
-    configuration.keyBytes = Base64.getDecoder()
+    config.deviceId = checkNotNull(attributes.deviceId, "deviceId");
+    config.keyBytes = Base64.getDecoder()
         .decode(checkNotNull(swarm.key_base64, "key_base64"));
-    configuration.endpoint = SiteModel.makeEndpointConfig(attributes);
+    config.endpoint = SiteModel.makeEndpointConfig(attributes);
     processDeviceMetadata(
         checkNotNull(swarm.device_metadata, "device_metadata"));
   }
@@ -561,20 +562,20 @@ public class Pubber extends ManagerBase implements ManagerHost {
     ifNotNullThen(targetSchema, version -> warn("Emulating UDMI version " + version.key()));
 
     if (metadata.cloud != null) {
-      configuration.algorithm = catchToNull(() -> metadata.cloud.auth_type.value());
+      config.algorithm = catchToNull(() -> metadata.cloud.auth_type.value());
     }
 
     if (metadata.gateway != null) {
-      configuration.gatewayId = metadata.gateway.gateway_id;
-      if (configuration.gatewayId != null) {
-        Auth_type authType = siteModel.getAuthType(configuration.gatewayId);
+      config.gatewayId = metadata.gateway.gateway_id;
+      if (config.gatewayId != null) {
+        Auth_type authType = siteModel.getAuthType(config.gatewayId);
         if (authType != null) {
-          configuration.algorithm = authType.value();
+          config.algorithm = authType.value();
         }
       }
     }
 
-    info("Configured with auth_type " + configuration.algorithm);
+    info("Configured with auth_type " + config.algorithm);
 
     isGatewayDevice = catchToFalse(() -> metadata.gateway.proxy_ids != null);
 
@@ -596,7 +597,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
   }
 
   private void checkSmokyFailure() {
-    if (isTrue(configuration.options.smokeCheck)
+    if (isTrue(config.options.smokeCheck)
         && Instant.now().minus(SMOKE_CHECK_TIME).isAfter(DEVICE_START_TIME.toInstant())) {
       error(format("Smoke check failed after %sm, terminating run.",
           SMOKE_CHECK_TIME.getSeconds() / 60));
@@ -612,7 +613,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
    */
   private void sendEmptyMissingBadEvents() {
     int phase = deviceUpdateCount % MESSAGE_REPORT_INTERVAL;
-    if (!isTrue(configuration.options.emptyMissing)
+    if (!isTrue(config.options.emptyMissing)
         || (phase >= INVALID_REPLACEMENTS.size() + 2)) {
       return;
     }
@@ -719,7 +720,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
 
   private void configLatchWait() {
     try {
-      int waitTimeSec = ofNullable(configuration.endpoint.config_sync_sec)
+      int waitTimeSec = ofNullable(config.endpoint.config_sync_sec)
           .orElse(DEFAULT_CONFIG_WAIT_SEC);
       int useWaitTime = waitTimeSec == 0 ? DEFAULT_CONFIG_WAIT_SEC : waitTimeSec;
       warn(format("Start waiting %ds for config latch for %s", useWaitTime, deviceId));
@@ -763,20 +764,23 @@ public class Pubber extends ManagerBase implements ManagerHost {
   }
 
   private void initializeMqtt() {
-    checkNotNull(configuration.deviceId, "configuration deviceId not defined");
-    if (siteModel != null && configuration.keyFile != null) {
-      configuration.keyFile = siteModel.getDeviceKeyFile(configuration.deviceId);
+    checkNotNull(config.deviceId, "configuration deviceId not defined");
+    if (siteModel != null && config.keyFile != null) {
+      config.keyFile = siteModel.getDeviceKeyFile(config.deviceId);
     }
     checkState(deviceTarget == null, "mqttPublisher already defined");
-    ensureKeyBytes();
-    deviceTarget = new MqttDevice(configuration, this::publisherException);
+    String keyPassword = sha256(ensureKeyBytes()).substring(0, 8);
+    CertManager certManager = new CertManager(new File(siteModel.getReflectorDir(), CA_CRT),
+        siteModel.getDeviceDir(config.deviceId), config.endpoint.transport, keyPassword,
+        this::info);
+    deviceTarget = new MqttDevice(config, this::publisherException, certManager);
     registerMessageHandlers();
     publishDirtyState();
   }
 
   private void registerMessageHandlers() {
     deviceTarget.registerHandler(CONFIG_TOPIC, this::configHandler, Config.class);
-    String gatewayId = getGatewayId(deviceId, configuration);
+    String gatewayId = getGatewayId(deviceId, config);
     if (isGatewayDevice) {
       // In this case, this is the gateway so register the appropriate error handler directly.
       deviceTarget.registerHandler(ERRORS_TOPIC, this::errorHandler, GatewayError.class);
@@ -792,14 +796,14 @@ public class Pubber extends ManagerBase implements ManagerHost {
     return new MqttDevice(proxyId, deviceTarget);
   }
 
-  private void ensureKeyBytes() {
-    if (configuration.keyBytes != null) {
-      return;
+  private byte[] ensureKeyBytes() {
+    if (config.keyBytes == null) {
+      checkNotNull(config.keyFile, "configuration keyFile not defined");
+      info("Loading device key bytes from " + config.keyFile);
+      config.keyBytes = getFileBytes(config.keyFile);
+      config.keyFile = null;
     }
-    checkNotNull(configuration.keyFile, "configuration keyFile not defined");
-    info("Loading device key bytes from " + configuration.keyFile);
-    configuration.keyBytes = getFileBytes(configuration.keyFile);
-    configuration.keyFile = null;
+    return (byte[]) config.keyBytes;
   }
 
   private void connect() {
@@ -808,7 +812,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
       configLatch = new CountDownLatch(1);
       deviceTarget.connect();
       info("Connection complete.");
-      workingEndpoint = toJsonString(configuration.endpoint);
+      workingEndpoint = toJsonString(config.endpoint);
     } catch (Exception e) {
       throw new RuntimeException("Connection error", e);
     }
@@ -838,7 +842,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
   private void publisherHandler(String type, String phase, Throwable cause, String targetId) {
     if (cause != null) {
       error("Error receiving message " + type, cause);
-      if (isTrue(configuration.options.barfConfig)) {
+      if (isTrue(config.options.barfConfig)) {
         error("Restarting system because of restart-on-error configuration setting");
         deviceManager.systemLifecycle(SystemMode.RESTART);
       }
@@ -862,7 +866,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
    * this case appropriately.
    */
   private void publishConfigStateUpdate() {
-    if (isTrue(configuration.options.configStateDelay)) {
+    if (isTrue(config.options.configStateDelay)) {
       delayNextStateUpdate();
     }
     publishAsynchronousState();
@@ -914,24 +918,24 @@ public class Pubber extends ManagerBase implements ManagerHost {
     publishConfigStateUpdate();
   }
 
-  private void gatewayHandler(Config config) {
-    warn("Ignoring configuration for gateway " + getGatewayId(deviceId, configuration));
+  private void gatewayHandler(Config gatewayConfig) {
+    warn("Ignoring configuration for gateway " + getGatewayId(deviceId, config));
   }
 
   private void errorHandler(GatewayError error) {
     warn(format("%s for %s: %s", error.error_type, error.device_id, error.description));
   }
 
-  void configPreprocess(String targetId, Config config) {
-    String gatewayId = getGatewayId(targetId, configuration);
+  void configPreprocess(String targetId, Config configMsg) {
+    String gatewayId = getGatewayId(targetId, config);
     String suffix = ifNotNullGet(gatewayId, x -> "_" + targetId, "");
     String deviceType = ifNotNullGet(gatewayId, x -> "Proxy", "Device");
     info(format("%s %s config handler", deviceType, targetId));
     File configOut = new File(outDir, format("%s.json", traceTimestamp("config" + suffix)));
-    toJsonFile(configOut, config);
+    toJsonFile(configOut, configMsg);
   }
 
-  private void processConfigUpdate(Config config) {
+  private void processConfigUpdate(Config configMsg) {
     try {
       // Grab this to make state-after-config updates monolithic.
       stateLock.lock();
@@ -940,14 +944,14 @@ public class Pubber extends ManagerBase implements ManagerHost {
     }
 
     try {
-      if (config != null) {
-        if (config.system == null && isTrue(configuration.options.barfConfig)) {
+      if (configMsg != null) {
+        if (configMsg.system == null && isTrue(config.options.barfConfig)) {
           error("Empty config system block and configured to restart on bad config!");
           deviceManager.systemLifecycle(SystemMode.RESTART);
         }
-        GeneralUtils.copyFields(config, deviceConfig, true);
-        info(format("%s received config %s", getTimestamp(), isoConvert(config.timestamp)));
-        deviceManager.updateConfig(config);
+        GeneralUtils.copyFields(configMsg, deviceConfig, true);
+        info(format("%s received config %s", getTimestamp(), isoConvert(configMsg.timestamp)));
+        deviceManager.updateConfig(configMsg);
         extractEndpointBlobConfig();
       } else {
         info(getTimestamp() + " defaulting empty config");
@@ -996,8 +1000,8 @@ public class Pubber extends ManagerBase implements ManagerHost {
   }
 
   void maybeRedirectEndpoint() {
-    String redirectRegistry = configuration.options.redirectRegistry;
-    String currentSignature = toJsonString(configuration.endpoint);
+    String redirectRegistry = config.options.redirectRegistry;
+    String currentSignature = toJsonString(config.endpoint);
     String extractedSignature =
         redirectRegistry == null ? toJsonString(extractedEndpoint)
             : redirectedEndpoint(redirectRegistry);
@@ -1066,7 +1070,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
 
   private String redirectedEndpoint(String redirectRegistry) {
     try {
-      EndpointConfiguration endpoint = deepCopy(configuration.endpoint);
+      EndpointConfiguration endpoint = deepCopy(config.endpoint);
       endpoint.client_id = getClientId(redirectRegistry);
       return toJsonString(endpoint);
     } catch (Exception e) {
@@ -1076,7 +1080,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
 
   private void resetConnection(String targetEndpoint) {
     try {
-      configuration.endpoint = fromJsonString(targetEndpoint,
+      config.endpoint = fromJsonString(targetEndpoint,
           EndpointConfiguration.class);
       disconnectMqtt();
       initializeMqtt();
@@ -1105,8 +1109,8 @@ public class Pubber extends ManagerBase implements ManagerHost {
   }
 
   private String getClientId(String forRegistry) {
-    String cloudRegion = SiteModel.parseClientId(configuration.endpoint.client_id).cloudRegion;
-    return SiteModel.getClientId(configuration.iotProject, cloudRegion, forRegistry, deviceId);
+    String cloudRegion = SiteModel.parseClientId(config.endpoint.client_id).cloudRegion;
+    return SiteModel.getClientId(config.iotProject, cloudRegion, forRegistry, deviceId);
   }
 
   private String extractConfigBlob(String blobName) {
@@ -1232,7 +1236,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
   }
 
   private boolean shouldSendState() {
-    return !isGetTrue(() -> configuration.options.noState);
+    return !isGetTrue(() -> config.options.noState);
   }
 
   private void publishDeviceMessage(Object message) {
@@ -1264,7 +1268,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
     Object downgraded = downgradeMessage(message);
     deviceTarget.publish(targetId, topicSuffix, downgraded, callback);
     String messageBase = topicSuffix.replace("/", "_");
-    String gatewayId = getGatewayId(targetId, configuration);
+    String gatewayId = getGatewayId(targetId, config);
     String suffix = ifNotNullGet(gatewayId, x -> "_" + targetId, "");
     File messageOut = new File(outDir, format("%s.json", traceTimestamp(messageBase + suffix)));
     try {
@@ -1283,7 +1287,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
     int serial = MESSAGE_COUNTS.computeIfAbsent(messageBase, key -> new AtomicInteger())
         .incrementAndGet();
     String timestamp = getTimestamp().replace("Z", format(".%03dZ", serial));
-    return messageBase + (isTrue(configuration.options.messageTrace) ? ("_" + timestamp) : "");
+    return messageBase + (isTrue(config.options.messageTrace) ? ("_" + timestamp) : "");
   }
 
   private void cloudLog(String message, Level level) {

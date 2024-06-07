@@ -12,13 +12,15 @@ echo $(date --utc +%Y%m%d-%H%M%S) $0 $@ >> $OUT_DIR/cmd_history.log
 site_path=$(realpath $1)
 shift
 
-if [[ -n $1 ]]; then
+project_id=
+if [[ -n ${1:-} ]]; then
     project_id=$1
     shift
 fi
 
-if [[ -n $1 && ! $1 =~ ^- ]]; then
-    subscription=$1
+subscription=null
+if [[ -n ${1:-} && ! $1 =~ ^- ]]; then
+    subscription=\"$1\"
     shift
 fi
 
@@ -64,7 +66,7 @@ elif [[ -n $project_id ]]; then
   "bridge_host": $quoted_bridge,
   "udmi_namespace": $quoted_namespace,
   "site_model": "$site_path",
-  "feed_name": "$subscription"
+  "feed_name": ${subscription}
 }
 EOF
 else

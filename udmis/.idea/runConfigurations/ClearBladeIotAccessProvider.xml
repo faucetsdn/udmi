@@ -1,0 +1,19 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="ClearBladeIotAccessProvider" type="Application" factoryName="Application" nameIsGenerated="true">
+    <envs>
+      <env name="CLEARBLADE_CONFIGURATION" value="$USER_HOME$/creds/bos-platform-prod-credentials.json" />
+    </envs>
+    <option name="MAIN_CLASS_NAME" value="com.google.bos.udmi.service.access.ClearBladeIotAccessProvider" />
+    <module name="udmis" />
+    <option name="PROGRAM_PARAMETERS" value="US-MTV-1842 bacnet-2710212" />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="com.google.bos.udmi.service.access.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

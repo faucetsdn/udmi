@@ -6,6 +6,7 @@ import static com.google.common.collect.Sets.intersection;
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_ROOT;
 import static com.google.udmi.util.Common.CLOUD_VERSION_KEY;
 import static com.google.udmi.util.Common.NO_SITE;
+import static com.google.udmi.util.Common.SITE_METADATA_KEY;
 import static com.google.udmi.util.Common.UDMI_VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
@@ -49,6 +50,7 @@ import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.PubSubPusher;
+import com.google.protobuf.MapEntry;
 import com.google.udmi.util.Common;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
@@ -93,6 +95,7 @@ import udmi.schema.ExecutionConfiguration;
 import udmi.schema.IotAccess.IotProvider;
 import udmi.schema.Metadata;
 import udmi.schema.SetupUdmiConfig;
+import udmi.schema.SiteMetadata;
 
 /**
  * Validate devices' static metadata and register them in the cloud.
@@ -138,7 +141,6 @@ public class Registrar {
   private File siteDir;
   private boolean deleteDevices;
   private boolean expungeDevices;
-  private IotProvider iotProvider;
   private int createRegistries = -1;
   private int runnerThreads = 5;
   private ExecutorService executor;
@@ -182,6 +184,10 @@ public class Registrar {
   private static CloudModel augmentModel(CloudModel cloudModel) {
     cloudModel.operation = ifTrueGet(cloudModel.blocked, Operation.BLOCK, Operation.ALLOW);
     return cloudModel;
+  }
+
+  private static String defaultToolRoot() {
+    return UDMI_ROOT.getAbsolutePath();
   }
 
   Registrar processArgs(List<String> argListRaw) {
@@ -270,7 +276,6 @@ public class Registrar {
   private void processProfile(ExecutionConfiguration config) {
     config.site_model = new File(siteModel.getSitePath()).getAbsolutePath();
     setSitePath(config.site_model);
-    iotProvider = config.iot_provider;
     setProjectId(config.project_id);
     if (config.project_id != null) {
       setUpdateFlag(true);
@@ -290,6 +295,7 @@ public class Registrar {
       if (createRegistries >= 0) {
         createRegistries();
       } else {
+        processSiteMetadata();
         processDevices();
       }
       writeErrors();
@@ -303,8 +309,12 @@ public class Registrar {
     }
   }
 
-  private static String defaultToolRoot() {
-    return UDMI_ROOT.getAbsolutePath();
+  private void processSiteMetadata() {
+    SiteMetadata siteMetadata = siteModel.loadSiteMetadata();
+
+    if (siteMetadata != null && updateCloudIoT) {
+      cloudIotManager.updateRegistry(siteMetadata);
+    }
   }
 
   private void createRegistries() {
@@ -319,6 +329,8 @@ public class Registrar {
       }
     }
   }
+
+
 
   private void createRegistrySuffix(String suffix) {
     String registry = cloudIotManager.createRegistry(suffix);
@@ -356,11 +368,7 @@ public class Registrar {
     return lastErrorSummary;
   }
 
-  private void writeErrors() throws Exception {
-    if (localDevices == null) {
-      return;
-    }
-
+  private void writeErrors() throws RuntimeException {
     Map<String, Object> errorSummary = new TreeMap<>();
     localDevices.values().forEach(LocalDevice::writeErrors);
     localDevices.values().forEach(device -> {
@@ -384,9 +392,17 @@ public class Registrar {
     errorSummary.forEach((key, value) -> System.err.println(
         "  Device " + key + ": " + getErrorSummaryDetail(value)));
     System.err.println("Out of " + localDevices.size() + " total.");
+    // WARNING! entries inserted into `errorSummary` ABOVE this comment must have a map value ^^^^^^
     errorSummary.put(CLOUD_VERSION_KEY, getCloudVersionInfo());
     lastErrorSummary = errorSummary;
     errorSummary.put(UDMI_VERSION_KEY, Common.getUdmiVersion());
+    errorSummary.put(
+        SITE_METADATA_KEY,
+        siteModel.siteMetadataExceptionMap.stream()
+            .map(Map.Entry::getValue)
+            .map(Exception::getMessage)
+            .collect(Collectors.toList())
+    );
     summarizers.forEach(summarizer -> {
       File outFile = summarizer.outFile;
       try {
@@ -481,22 +497,25 @@ public class Registrar {
         }
       }
 
-      Set<String> operatives = explicitDevices != null ? explicitDevices : localDevices.keySet();
-      Set<String> oldDevices = operatives.stream().filter(this::alreadyRegistered)
+      boolean isTargeted = explicitDevices != null;
+      Set<String> targetDevices = isTargeted ? explicitDevices : localDevices.keySet();
+      Map<String, LocalDevice> targetLocals = targetDevices.stream()
+          .collect(Collectors.toMap(key -> key, key -> localDevices.get(key)));
+      Set<String> oldDevices = targetDevices.stream().filter(this::alreadyRegistered)
           .collect(Collectors.toSet());
-      Set<String> newDevices = difference(operatives, oldDevices);
+      Set<String> newDevices = difference(targetDevices, oldDevices);
       System.err.printf("Processing %d new devices...%n", newDevices.size());
       int total = processLocalDevices(newDevices);
       System.err.printf("Updating %d existing devices...%n", oldDevices.size());
       total += processLocalDevices(oldDevices);
-      System.err.printf("Finished registering %d/%d devices.%n", total, operatives.size());
+      System.err.printf("Finished registering %d/%d devices.%n", total, targetDevices.size());
 
       if (updateCloudIoT) {
-        bindGatewayDevices(localDevices);
+        bindGatewayDevices(targetLocals);
       }
 
-      if (cloudModels != null) {
-        extraDevices = processExtraDevices(difference(cloudModels.keySet(), operatives));
+      if (cloudModels != null && !isTargeted) {
+        extraDevices = processExtraDevices(difference(cloudModels.keySet(), targetDevices));
       }
     } catch (Exception e) {
       throw new RuntimeException("While processing devices", e);
@@ -1088,7 +1107,7 @@ public class Registrar {
           localDevices.computeIfAbsent(
               deviceName,
               keyName -> new LocalDevice(siteModel, deviceName, schemas, generation, doValidate));
-      
+
       try {
         localDevice.loadCredentials();
       } catch (Exception e) {

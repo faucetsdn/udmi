@@ -50,7 +50,7 @@ public class ProvisioningEngine extends ProcessorBase {
     model.operation = BIND;
     model.device_ids = new HashMap<>();
     model.device_ids.put(proxyId, new CloudModel());
-    iotAccess.modelResource(registryId, gatewayId, model);
+    iotAccess.modelDevice(registryId, gatewayId, model);
   }
 
   private void createDeviceEntry(String registryId, String expectedId, String gatewayId,
@@ -63,7 +63,7 @@ public class ProvisioningEngine extends ProcessorBase {
     deviceModel.metadata.put(UDMI_DISCOVERED_WITH, stringifyTerse(discoveryEvent));
     deviceModel.metadata.put(UDMI_UPDATED, isoConvert());
     deviceModel.metadata.put(UDMI_GENERATION, isoConvert(discoveryEvent.generation));
-    catchToElse(ignoreValue(iotAccess.modelResource(registryId, expectedId, deviceModel)),
+    catchToElse(ignoreValue(iotAccess.modelDevice(registryId, expectedId, deviceModel)),
         e -> error("Error creating device (exists but not bound?): " + friendlyStackTrace(e)));
     bindDeviceToGateway(registryId, expectedId, gatewayId);
   }

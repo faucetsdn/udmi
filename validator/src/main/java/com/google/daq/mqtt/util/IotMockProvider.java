@@ -7,6 +7,7 @@ import static com.google.daq.mqtt.util.IotMockProvider.ActionType.CONFIG_DEVICE_
 import static com.google.daq.mqtt.util.IotMockProvider.ActionType.CREATE_DEVICE_ACTION;
 import static com.google.daq.mqtt.util.IotMockProvider.ActionType.DELETE_DEVICE_ACTION;
 import static com.google.daq.mqtt.util.IotMockProvider.ActionType.UPDATE_DEVICE_ACTION;
+import static com.google.daq.mqtt.util.IotMockProvider.ActionType.UPDATE_REGISTRY_ACTION;
 import static udmi.schema.CloudModel.Resource_type.GATEWAY;
 
 import com.google.udmi.util.SiteModel;
@@ -76,6 +77,12 @@ public class IotMockProvider implements IotProvider {
     checkArgument(cloudDevices.containsKey(deviceId), "missing device");
     device.num_id = populateCloudModel(deviceId).num_id;
     mockAction(UPDATE_DEVICE_ACTION, deviceId, device, null);
+  }
+
+  @Override
+  public void updateRegistry(CloudModel registry) {
+    registry.num_id = populateCloudModel("registry_id").num_id;
+    mockAction(UPDATE_REGISTRY_ACTION, null, registry, null);
   }
 
   @Override
@@ -168,7 +175,8 @@ public class IotMockProvider implements IotProvider {
     DELETE_DEVICE_ACTION,
     BIND_DEVICE_ACTION,
     CONFIG_DEVICE_ACTION,
-    CREATE_DEVICE_ACTION
+    CREATE_DEVICE_ACTION,
+    UPDATE_REGISTRY_ACTION
   }
 
   /**

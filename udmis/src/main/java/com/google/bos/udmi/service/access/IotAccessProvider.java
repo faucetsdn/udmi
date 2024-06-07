@@ -59,8 +59,10 @@ public interface IotAccessProvider extends UdmiComponent {
 
   CloudModel listDevices(String deviceRegistryId);
 
-  CloudModel modelResource(String deviceRegistryId, String deviceId,
+  CloudModel modelDevice(String deviceRegistryId, String deviceId,
       CloudModel cloudModel);
+  
+  CloudModel modelRegistry(String deviceRegistryId, String deviceId, CloudModel cloudModel);
 
   String modifyConfig(String registryId, String deviceId,
       Function<Entry<Long, String>, String> munger);

@@ -2,6 +2,7 @@ package com.google.udmi.util;
 
 import static java.lang.Boolean.TRUE;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -46,20 +47,17 @@ public class MessageDowngraderTest {
   }
 
   @Test
-  public void noMolestar() {
+  public void downgradeToFutureVersion() {
     JsonNode simpleConfig = getSimpleTestConfig(LOCALNET_CONFIG_FILE);
     MessageDowngrader downgrader = new MessageDowngrader(CONFIG_SCHEMA, simpleConfig);
-    downgrader.downgrade(new TextNode(FUTURE_VERSION));
-    assertEquals("version node", simpleConfig.get("version"), new TextNode(LOCALNET_VERSION));
-    assertTrue("families", simpleConfig.get("localnet").has("families"));
-    assertTrue("subsystem", !simpleConfig.get("localnet").has("subsystem"));
+    assertThrows(IllegalStateException.class, () -> downgrader.downgrade(FUTURE_VERSION));
   }
 
   @Test
   public void families() {
     JsonNode simpleConfig = getSimpleTestConfig(LOCALNET_CONFIG_FILE);
     MessageDowngrader downgrader = new MessageDowngrader(CONFIG_SCHEMA, simpleConfig);
-    downgrader.downgrade(OLD_VERSION);
+    downgrader.downgrade(OLD_VERSION.asText());
     assertEquals("version node", simpleConfig.get("version"), OLD_VERSION);
     assertTrue("families", !simpleConfig.get("localnet").has("families"));
     assertTrue("subsystem", simpleConfig.get("localnet").has("subsystem"));

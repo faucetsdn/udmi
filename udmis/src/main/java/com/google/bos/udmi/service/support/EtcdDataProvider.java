@@ -3,7 +3,9 @@ package com.google.bos.udmi.service.support;
 import static com.google.api.client.util.Preconditions.checkState;
 import static com.google.bos.udmi.service.core.DistributorPipe.clientId;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
+import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.isNullOrNotEmpty;
 
 import com.google.bos.udmi.service.pod.ContainerBase;
@@ -12,6 +14,7 @@ import io.etcd.jetcd.ByteSequence;
 import io.etcd.jetcd.Client;
 import io.etcd.jetcd.KV;
 import io.etcd.jetcd.KeyValue;
+import io.etcd.jetcd.Lock;
 import io.etcd.jetcd.cluster.Member;
 import io.etcd.jetcd.kv.GetResponse;
 import io.etcd.jetcd.options.GetOption;
@@ -42,10 +45,14 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
   private static final int THRESHOLD_MIN = 10;
   private static final int HEARTBEAT_SEC = THRESHOLD_MIN * 60 / 4;
   private static final Duration CLIENT_THRESHOLD = Duration.ofMinutes(THRESHOLD_MIN);
+  private static final GetOption LIST_OPT = GetOption.newBuilder().isPrefix(true).build();
   private final IotAccess config;
   private final Client client;
+  private final KV kvClient;
+  private final Lock lockClient;
   private final Map<String, String> options;
   private final boolean enabled;
+  private final AuthRef authProvider = new MosquittoAuthProvider(this);
   private ScheduledExecutorService scheduledExecutorService;
 
   /**
@@ -56,6 +63,8 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
     enabled = isNullOrNotEmpty(options.get(ENABLED_KEY));
     config = iotConfig;
     client = enabled ? initializeClient() : null;
+    kvClient = ifNotNullGet(client, Client::getKVClient);
+    lockClient = ifNotNullGet(client, Client::getLockClient);
   }
 
   private static String asString(ByteSequence input) {
@@ -70,6 +79,40 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
   protected void periodicTask() {
     updateConnectedKey(client);
     reapConnectedKeys(client);
+  }
+
+  private void deleteEntry(String key) {
+    try {
+      kvClient.delete(bytes(key)).get(QUERY_TIMEOUT_SEC, TimeUnit.SECONDS);
+    } catch (Exception e) {
+      throw new RuntimeException("While deleting key " + key, e);
+    }
+  }
+
+  private Map<String, String> getEntries(String keyPath) {
+    try {
+      GetResponse response =
+          kvClient.get(bytes(keyPath), LIST_OPT).get(QUERY_TIMEOUT_SEC, TimeUnit.SECONDS);
+      return response.getKvs().stream().collect(Collectors.toMap(
+          kv -> asString(kv.getKey()).substring(keyPath.length()), kv -> asString(kv.getValue())));
+    } catch (Exception e) {
+      throw new RuntimeException("While listing db keys " + keyPath, e);
+    }
+  }
+
+  private String getKey(String key) {
+    try {
+      GetResponse response = kvClient.get(bytes(key)).get(QUERY_TIMEOUT_SEC, TimeUnit.SECONDS);
+      if (response.getCount() == 0) {
+        return null;
+      }
+      if (response.getCount() > 1) {
+        throw new IllegalStateException("Unexpected key return count " + response.getCount());
+      }
+      return asString(response.getKvs().get(0).getValue());
+    } catch (Exception e) {
+      throw new RuntimeException("While getting db entry " + key, e);
+    }
   }
 
   private Client initializeClient() {
@@ -104,6 +147,25 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
     } catch (Exception e) {
       warn("Bad key value " + value + ", considering stale: " + friendlyStackTrace(e));
       return true;
+    }
+  }
+
+  private AutoCloseable lockRef(String lockName) {
+    try {
+      long leaseId = client.getLeaseClient().grant(10).get().getID();
+      ByteSequence lockKey = lockClient.lock(bytes(lockName), leaseId).get().getKey();
+      info("Locked %s with lease %x as %s", lockName, leaseId, encodeBase64(asString(lockKey)));
+      return new LockCloser(lockName, leaseId, lockKey);
+    } catch (Exception e) {
+      throw new RuntimeException("While acquiring etcd lock", e);
+    }
+  }
+
+  private void putKey(String key, String value) {
+    try {
+      kvClient.put(bytes(key), bytes(value)).get(QUERY_TIMEOUT_SEC, TimeUnit.SECONDS);
+    } catch (Exception e) {
+      throw new RuntimeException("While putting db entry " + key, e);
     }
   }
 
@@ -156,6 +218,16 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
   }
 
   @Override
+  public AuthRef auth() {
+    return authProvider;
+  }
+
+  @Override
+  public DataRef ref() {
+    return new EtcdDataRef();
+  }
+
+  @Override
   public void shutdown() {
     try {
       if (enabled) {
@@ -168,17 +240,63 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
     }
   }
 
-  @Override
-  public String getSystemEntry(String key) {
-    try {
-      KV kvClient = client.getKVClient();
-      GetResponse response = kvClient.get(bytes(key)).get(QUERY_TIMEOUT_SEC, TimeUnit.SECONDS);
-      if (response.getCount() == 0) {
-        return null;
-      }
-      return asString(response.getKvs().get(0).getValue());
-    } catch (Exception e) {
-      throw new RuntimeException("While getting system key " + key);
+  class EtcdDataRef extends DataRef {
+
+    private static final String PATH_SEPARATOR = "/";
+    private static final String KEY_SEPARATOR = ":";
+    private static final String REGISTRY_PATH = PATH_SEPARATOR + "r" + PATH_SEPARATOR;
+    private static final String DEVICE_PATH = PATH_SEPARATOR + "d" + PATH_SEPARATOR;
+    private static final String COLLECT_PATH = PATH_SEPARATOR + "c" + PATH_SEPARATOR;
+
+    private String getKeyPath(String key) {
+      checkState(deviceId == null || registryId != null, "device without registry");
+      return ifNotNullGet(registryId, id -> REGISTRY_PATH + id, "")
+          + ifNotNullGet(deviceId, id -> DEVICE_PATH + id, "")
+          + ifNotNullGet(collection, id -> COLLECT_PATH + id, "")
+          + KEY_SEPARATOR + key;
+    }
+
+    @Override
+    public void delete(String key) {
+      deleteEntry(getKeyPath(key));
+    }
+
+    public Map<String, String> entries() {
+      return getEntries(getKeyPath(""));
+    }
+
+    public String get(String key) {
+      return getKey(getKeyPath(key));
+    }
+
+    @Override
+    public AutoCloseable lock() {
+      return lockRef(getKeyPath(""));
+    }
+
+    public void put(String key, String value) {
+      putKey(getKeyPath(key), value);
+    }
+  }
+
+  private class LockCloser implements AutoCloseable {
+
+    private final long leaseId;
+    private final ByteSequence lockKey;
+    private final String lockName;
+
+    public LockCloser(String lockName, long leaseId, ByteSequence lockKey) {
+      this.lockName = lockName;
+      this.leaseId = leaseId;
+      this.lockKey = lockKey;
+    }
+
+    @Override
+    public void close() throws Exception {
+      client.getLockClient().unlock(lockKey).get();
+      client.getLeaseClient().revoke(leaseId).get();
+      info("Released %s with lease %x as %s", lockName, leaseId, encodeBase64(asString(lockKey)));
     }
   }
 }
+

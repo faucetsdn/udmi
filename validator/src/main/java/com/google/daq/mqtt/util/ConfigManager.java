@@ -15,6 +15,7 @@ import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
 import com.google.common.collect.ImmutableList;
+import com.google.udmi.util.SchemaVersion;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
 import java.util.HashMap;
@@ -122,7 +123,7 @@ public class ConfigManager {
     }
     Config config = new Config();
     config.timestamp = metadata.timestamp;
-    config.version = metadata.version;
+    config.version = SchemaVersion.CURRENT.key();
     config.system = getSystemConfig();
     config.gateway = getGatewayConfig();
     config.pointset = getDevicePointsetConfig();
@@ -138,6 +139,9 @@ public class ConfigManager {
     if (catchToNull(() -> metadata.system.min_loglevel) != null) {
       system.min_loglevel = metadata.system.min_loglevel;
     }
+    if (catchToNull(() -> metadata.system.metrics_rate_sec) != null) {
+      system.metrics_rate_sec = metadata.system.metrics_rate_sec;
+    }
     return system;
   }
 
@@ -151,16 +155,15 @@ public class ConfigManager {
     gatewayConfig.proxy_ids = null;
     if (isGateway()) {
       gatewayConfig.proxy_ids = getProxyDevicesList();
-    } else if (isProxied()) {
-      final GatewayConfig configVar = gatewayConfig;
-      ifNotNullThen(metadata.gateway.target, target -> {
-        ifNotNullThrow(target.addr, "metadata.gateway.target.addr should not be defined");
-        configVar.target = deepCopy(target);
-        configVar.target.addr = ifNotNullGet(target.family, this::getLocalnetAddr);
-      });
-    } else {
-      throw new RuntimeException("gateway block is neither gateway nor proxied");
     }
+
+    final GatewayConfig configVar = gatewayConfig;
+    ifNotNullThen(metadata.gateway.target, target -> {
+      ifNotNullThrow(target.addr, "metadata.gateway.target.addr should not be defined");
+      configVar.target = deepCopy(target);
+      configVar.target.addr = ifNotNullGet(target.family, this::getLocalnetAddr);
+    });
+
     return gatewayConfig;
   }
 

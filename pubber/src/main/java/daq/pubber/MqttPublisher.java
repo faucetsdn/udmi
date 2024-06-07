@@ -16,6 +16,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.base.Preconditions;
 import com.google.common.hash.Hashing;
+import com.google.udmi.util.CertManager;
 import com.google.udmi.util.NanSerializer;
 import com.google.udmi.util.SiteModel;
 import com.google.udmi.util.SiteModel.ClientInfo;
@@ -40,6 +41,8 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import javax.net.SocketFactory;
+import javax.net.ssl.SSLSocketFactory;
 import org.apache.http.ConnectionClosedException;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
@@ -75,7 +78,7 @@ public class MqttPublisher implements Publisher {
   // Indicate if this message should be a MQTT 'retained' message.
   private static final boolean DO_NOT_RETAIN = false;
   private static final String UNUSED_ACCOUNT_NAME = "unused";
-  private static final int INITIALIZE_TIME_MS = 20000;
+  private static final int INITIALIZE_TIME_MS = 10000;
   private static final String BROKER_URL_FORMAT = "%s://%s:%s";
   private static final int PUBLISH_THREAD_COUNT = 10;
   private static final String HANDLER_KEY_FORMAT = "%s/%s";
@@ -87,6 +90,7 @@ public class MqttPublisher implements Publisher {
   private static final String GCP_CLIENT_PREFIX = "projects/";
   private static final Integer DEFAULT_MQTT_PORT = 8883;
   private static final long ATTACH_DELAY_MS = 1000;
+  private static final String LOCAL_MQTT_PREFIX = "/r/";
 
   private final Semaphore connectionLock = new Semaphore(1);
 
@@ -108,10 +112,13 @@ public class MqttPublisher implements Publisher {
   private final Map<String, Class<Object>> handlersType = new ConcurrentHashMap<>();
   private final Consumer<Exception> onError;
   private final String deviceId;
+  private final CertManager certManager;
   private CountDownLatch connectionLatch;
 
-  MqttPublisher(PubberConfiguration configuration, Consumer<Exception> onError) {
+  MqttPublisher(PubberConfiguration configuration, Consumer<Exception> onError,
+      CertManager certManager) {
     this.configuration = configuration;
+    this.certManager = certManager;
     if (isGcpIotCore(configuration)) {
       ClientInfo clientIdParts = SiteModel.parseClientId(configuration.endpoint.client_id);
       this.projectId = clientIdParts.iotProject;
@@ -370,7 +377,13 @@ public class MqttPublisher implements Publisher {
     }
   }
 
+  private SocketFactory getSocketFactory() {
+    return ofNullable(certManager).map(CertManager::getSocketFactory)
+        .orElse(SSLSocketFactory.getDefault());
+  }
+
   private void configureAuth(MqttConnectOptions options) throws Exception {
+    options.setSocketFactory(getSocketFactory());
     if (configuration.endpoint.auth_provider == null) {
       info("No endpoint auth_provider found, using gcp defaults");
       configureAuth(options, (Jwt) null);
@@ -483,12 +496,16 @@ public class MqttPublisher implements Publisher {
 
   private String getMessageType(String topic) {
     // {site}/devices/{device}/{type}
-    return topic.split("/")[3];
+    // /r/{registry}/d/{device}/{type}
+    int splitIndex = topic.startsWith(LOCAL_MQTT_PREFIX) ? 5 : 3;
+    return topic.split("/")[splitIndex];
   }
 
   private String getDeviceId(String topic) {
     // {site}/devices/{device}/{type}
-    return topic.split("/")[2];
+    // /r/{registry}/d/{device}/{type}
+    int splitIndex = topic.startsWith(LOCAL_MQTT_PREFIX) ? 4 : 2;
+    return topic.split("/")[splitIndex];
   }
 
   public void connect(String targetId, boolean clean) {
@@ -546,8 +563,8 @@ public class MqttPublisher implements Publisher {
 
   private void checkAuthentication(String targetId) {
     String authId = ofNullable(getGatewayId(targetId)).orElse(targetId);
-    Instant reauthTime = reauthTimes.get(authId);
-    if (reauthTime == null || (reauthTime != null && Instant.now().isBefore(reauthTime))) {
+    Instant reAuthTime = reauthTimes.get(authId);
+    if (reAuthTime == null || Instant.now().isBefore(reAuthTime)) {
       return;
     }
     warn("Authentication retry time reached for " + authId);

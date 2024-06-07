@@ -2,11 +2,13 @@ package com.google.bos.udmi.service.core;
 
 import static com.google.bos.udmi.service.core.ProcessorBase.FUNCTIONS_VERSION_MAX;
 import static com.google.bos.udmi.service.core.ProcessorBase.FUNCTIONS_VERSION_MIN;
+import static com.google.bos.udmi.service.messaging.impl.MessagePipeTestBase.REFLECT_REGISTRY;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.notNull;
@@ -15,6 +17,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
+import com.google.bos.udmi.service.messaging.impl.MessagePipeTestBase;
 import com.google.common.collect.ImmutableMap;
 import com.google.udmi.util.JsonUtil;
 import java.util.List;
@@ -27,6 +30,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
+import udmi.schema.CloudModel.Resource_type;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
@@ -56,8 +60,8 @@ public class ReflectProcessorTest extends ProcessorTestBase {
     envelope.subType = subType;
     envelope.subFolder = subFolder;
     envelope.projectId = TEST_NAMESPACE;
-    envelope.deviceId = TEST_DEVICE;
-    envelope.deviceRegistryId = TEST_REGISTRY;
+    envelope.deviceId = TEST_REGISTRY;
+    envelope.deviceRegistryId = REFLECT_REGISTRY;
     return envelope;
   }
 
@@ -105,7 +109,7 @@ public class ReflectProcessorTest extends ProcessorTestBase {
     ArgumentCaptor<Function> configCaptor = ArgumentCaptor.forClass(Function.class);
 
     //noinspection unchecked
-    verify(provider, times(1)).modifyConfig(eq(TEST_REGISTRY), eq(TEST_DEVICE),
+    verify(provider, times(1)).modifyConfig(eq(REFLECT_REGISTRY), eq(TEST_REGISTRY),
         (Function<Entry<Long, String>, String>) configCaptor.capture());
 
     @SuppressWarnings("unchecked")
@@ -117,9 +121,14 @@ public class ReflectProcessorTest extends ProcessorTestBase {
     validateUdmiConfig(udmi);
   }
 
+  /**
+   * Initialize a reflector instance, using the appropriate reflection registry.
+   */
   @BeforeEach
   public void initializeInstance() {
+    MessagePipeTestBase.useReflectRegistry = true;
     initializeTestInstance(ReflectProcessor.class);
+    MessagePipeTestBase.useReflectRegistry = false;
   }
 
   /**
@@ -140,20 +149,33 @@ public class ReflectProcessorTest extends ProcessorTestBase {
   }
 
   @Test
-  public void modelDevice() {
+  public void modelDeviceTest() {
     CloudModel returnModel = new CloudModel();
     returnModel.operation = Operation.CREATE;
-    when(provider.modelResource(anyString(), anyString(), notNull())).thenReturn(returnModel);
+    returnModel.resource_type = Resource_type.DEVICE;
+    when(provider.modelDevice(anyString(), anyString(), notNull())).thenReturn(returnModel);
 
     CloudModel requestModel = new CloudModel();
     requestModel.operation = Operation.BIND;
+    requestModel.resource_type = Resource_type.DEVICE;
     activeTestInstance(() -> getReverseDispatcher().publish(makeModelBundle(requestModel)));
-    verify(provider, times(1)).modelResource(eq(TEST_REGISTRY), eq(TEST_DEVICE), eq(requestModel));
+    verify(provider, times(1)).modelDevice(eq(TEST_REGISTRY), eq(TEST_DEVICE),
+        eq(requestModel));
 
     ArgumentCaptor<String> commandCaptor = ArgumentCaptor.forClass(String.class);
-    verify(provider, times(1)).sendCommand(eq(TEST_REGISTRY), eq(TEST_DEVICE), eq(SubFolder.UDMI),
-        commandCaptor.capture());
+    verify(provider, times(1)).sendCommand(eq(REFLECT_REGISTRY), eq(TEST_REGISTRY),
+        eq(SubFolder.UDMI), commandCaptor.capture());
     Envelope envelope = JsonUtil.fromStringStrict(Envelope.class, commandCaptor.getValue());
     assertEquals(transactionId, envelope.transactionId);
+  }
+
+  @Test
+  public void modelRegistryUpdateTest() {
+    CloudModel requestModel = new CloudModel();
+    requestModel.operation = Operation.UPDATE;
+    requestModel.resource_type = Resource_type.REGISTRY;
+    activeTestInstance(() -> getReverseDispatcher().publish(makeModelBundle(requestModel)));
+    verify(provider, times(1)).modelRegistry(eq(TEST_REGISTRY), any(),
+        eq(requestModel));
   }
 }
