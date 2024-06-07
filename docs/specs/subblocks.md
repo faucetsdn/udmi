@@ -13,24 +13,24 @@ The basic mode of this interface is a "read only" subscription to a PubSub topic
 This level of visibility should be sufficient to completely mirror the
 visible state of the system (barring issues like loss-of-message etc...).
 
-Messages are typed by their _subType_ and _subFolder_ (named thusly because of legacy integrations).
+Messages are typed by their _subType_ and _subFolder_ (named so because of legacy integrations).
 The _subType_ field specifies generic message semantics, while the _subFolder_ specifies the
 semantic interpretation.
 
 ## _subType_ attribute values
 
-Seval main _subType_ values cover normal system operations. Other values not specified here should
+Several main _subType_ values cover normal system operations. Other values not specified here should
 be ignored if received. If the _subType_ field is missing then it should default to `event`.
 
 * `event`: Streaming telemetry from the device, representing changes to metrics or other values
-  that are nominally intended to be stored in a TSDB or similar.
-  See [pointset event](../../tests/schemas/events_pointset/example.json)) as example. Messages
+  that change frequently.
+  (See [pointset event](../../tests/schemas/events_pointset/example.json) as an example.) Messages
   with a defaulted `event` type represent raw telemetry from the device, while an explicit `event`
   type means the messages has been processed by the intermediate pipeline in some form.
 * `state`: Device state for this subblock. Unlike a
   [comprehensive device state message](../../tests/schemas/state/example.json)
   this message contains information _only_ for a single subblock. Used for reporting any 'sticky'
-  state from a device that has been processed and separated out by the UDMIS pipeline. A specical
+  state from a device that has been processed and separated out by the UDMIS pipeline. A special
   _subFolder_ of `update` indicates a complete state message and should generally be ignored by
   consuming applications.
 * `config`: A confirmed device config update for this subblock. Unlike a
@@ -46,14 +46,14 @@ be ignored if received. If the _subType_ field is missing then it should default
 ## _subFolder_ attribute values
 
 The _subFolder_ attribute describes the semantic category for the message. There's many potential
-values for this enum (and it can be easily extended), but there are some primary values commonly
+values for this field (and it can be easily extended), but there are some primary values commonly
 of interest (and values not relevant to any given application should be ignored).
 
 * [`system`](../messages/system.md): High level information about a device as an overall entity,
   independent of specific functional blocks.
 * [`pointset`](../messages/pointset.md): Relating to point (value reading) telemetry and values.
-* `gateway`: How devices are connected together in a logical structure to proxy information from
+* [`gateway`](gateway.md): How devices are connected together in a logical structure to proxy information from
   legacy (non-UDMI) fieldbus protocols.
-* `discovery`: Raw information from on-prem discovery about on-prem configuration and setup.
+* [`discovery`](discovery.md): Raw information from on-prem discovery about on-prem configuration and setup.
 * `cloud`: How a device is represented or connects to cloud infrastructure (e.g. the authentication
   key type).
