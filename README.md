@@ -19,7 +19,7 @@ By design, this schema is intended to be:
 * **M**anagement: Focus on device _management_, rather than command & control.
 * **I**nterface: Define an interface specification, rather than a client-library or RPC mechanism.
 
-See the associated [UDMI Tech Stack](docs/specs/tech_stack) for details about transport mechanism
+See the associated [UDMI Tech Stack](docs/specs/tech_stack.md) for details about transport mechanism
 outside of the core schema definition. Nominally meant for use with
 [Google's Cloud IoT Core](https://cloud.google.com/iot/docs/), it can be applied to any set
 of data or hosting setup.
@@ -40,7 +40,7 @@ manual operation (aren't automated), and increase the security exposure of the s
 
 UDMI is intended to support a few primary use-cases:
 * _Telemetry Ingestion_: Ingest device data points in a standardized format.
-* [_Gateway Proxy_](docs/specs/gateway): Proxy data/connection for non-UDMI devices,
+* [_Gateway Proxy_](docs/specs/gateway.md): Proxy data/connection for non-UDMI devices,
 allowing adaptation to legacy systems.
 * _On-Prem Actuation_: Ability to effect on-prem device behavior.
 * _Device Testability_: e.g. Trigger a fake alarm to test reporting mechanisms.
@@ -83,10 +83,10 @@ very large structures or high-bandwidth streams.
 UDMI provides a means to multiplex multiple functional subsystems through the same shared
 communication channel. There are a number of subsystems that make up the core UDMI spec:
 
-* Core [_system_](docs/messages/system) messages about the base device itself.
-* Device [_pointset_](docs/messages/pointset) for device telemetry organized by points.
-* Optional [_gateway_](docs/specs/gateway) functionality for proxying device/MQTT connections.
-* Local [_discover_](docs/specs/discovery) for discovering device and network capabilities.
+* Core [_system_](docs/messages/system.md) messages about the base device itself.
+* Device [_pointset_](docs/messages/pointset.md) for device telemetry organized by points.
+* Optional [_gateway_](docs/specs/gateway.md) functionality for proxying device/MQTT connections.
+* Local [_discover_](docs/specs/discovery.md) for discovering device and network capabilities.
 
 ## Schema Structure
 
