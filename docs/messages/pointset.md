@@ -10,7 +10,7 @@ Specific `point_names` within a `pointset` should be specified in _snake_case_ a
 data ontology for the device (stipulated and verified outside of UDMI, e.g. [Digital Buildings Ontology](https://github.com/google/digitalbuildings/tree/master/ontology)).
 
 
-Pointset is represented in four locations
+Pointset is represented in four locations:
 - [Metadata](#metadata)
 - [Event](#event)
 - [State](#state)
