@@ -17,7 +17,6 @@ import com.google.bos.udmi.service.access.IotAccessBase;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.time.Duration;
-import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -110,7 +109,7 @@ public class ProvisioningEngineTest extends ProcessorTestBase {
 
     ArgumentCaptor<String> deviceCaptor = ArgumentCaptor.forClass(String.class);
     ArgumentCaptor<CloudModel> modelCaptor = ArgumentCaptor.forClass(CloudModel.class);
-    verify(provider, times(2)).modelResource(eq(TEST_REGISTRY), deviceCaptor.capture(),
+    verify(provider, times(2)).modelDevice(eq(TEST_REGISTRY), deviceCaptor.capture(),
         modelCaptor.capture());
     List<String> devices = deviceCaptor.getAllValues();
     List<CloudModel> models = modelCaptor.getAllValues();
@@ -132,6 +131,6 @@ public class ProvisioningEngineTest extends ProcessorTestBase {
         .publish(getDiscoveryScanEvent(TEST_DEVICE));
     terminateAndWait();
     verify(provider, times(1)).fetchDevice(eq(TEST_REGISTRY), eq(TEST_GATEWAY));
-    verify(provider, never()).modelResource(eq(TEST_REGISTRY), any(), any());
+    verify(provider, never()).modelDevice(eq(TEST_REGISTRY), any(), any());
   }
 }

@@ -139,6 +139,9 @@ public class ConfigManager {
     if (catchToNull(() -> metadata.system.min_loglevel) != null) {
       system.min_loglevel = metadata.system.min_loglevel;
     }
+    if (catchToNull(() -> metadata.system.metrics_rate_sec) != null) {
+      system.metrics_rate_sec = metadata.system.metrics_rate_sec;
+    }
     return system;
   }
 

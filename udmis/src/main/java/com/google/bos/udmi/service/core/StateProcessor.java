@@ -5,6 +5,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static com.google.udmi.util.MessageUpgrader.STATE_SCHEMA;
 import static udmi.schema.Envelope.SubFolder.UPDATE;
@@ -49,7 +50,7 @@ public class StateProcessor extends ProcessorBase {
 
     Object upgradedMessage = new MessageUpgrader(STATE_SCHEMA, originalMessage).upgrade();
     StateUpdate stateMessage = convertTo(StateUpdate.class, upgradedMessage);
-    shardStateUpdate(continuation, envelope, stateMessage);
+    processStateUpdate(continuation, envelope, stateMessage);
 
     updateLastStart(getContinuation(originalMessage).getEnvelope(), stateMessage);
   }
@@ -59,8 +60,9 @@ public class StateProcessor extends ProcessorBase {
     return SubType.STATE;
   }
 
-  private void shardStateUpdate(MessageContinuation continuation, Envelope envelope,
+  private void processStateUpdate(MessageContinuation continuation, Envelope envelope,
       StateUpdate message) {
+    iotAccess.saveState(envelope.deviceRegistryId, envelope.deviceId, stringifyTerse(message));
     continuation.publish(message);
     String origTxnId = envelope.transactionId;
     AtomicInteger txnSuffix = new AtomicInteger();
@@ -94,7 +96,7 @@ public class StateProcessor extends ProcessorBase {
     MessageContinuation continuation = getContinuation(message);
     Envelope envelope = continuation.getEnvelope();
     reflectMessage(envelope, stringify(message));
-    shardStateUpdate(continuation, envelope, message);
+    processStateUpdate(continuation, envelope, message);
   }
 
 }

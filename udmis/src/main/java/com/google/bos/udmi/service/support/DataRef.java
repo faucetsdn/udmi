@@ -1,5 +1,7 @@
 package com.google.bos.udmi.service.support;
 
+import static java.lang.String.format;
+
 import java.util.Map;
 
 /**
@@ -7,9 +9,9 @@ import java.util.Map;
  */
 public abstract class DataRef {
 
-  protected String collection;
-  protected String deviceId;
   protected String registryId;
+  protected String deviceId;
+  protected String collection;
 
   private static String sanitize(String key) {
     if (key == null || key.contains("/") || key.contains(":")) {
@@ -37,6 +39,8 @@ public abstract class DataRef {
 
   public abstract String get(String key);
 
+  public abstract AutoCloseable lock();
+
   public abstract void put(String key, String value);
 
   /**
@@ -47,4 +51,7 @@ public abstract class DataRef {
     return this;
   }
 
+  public String toString() {
+    return format("r/%s/d/%s/c/%s", registryId, deviceId, collection);
+  }
 }

@@ -23,6 +23,7 @@ import com.google.bos.udmi.service.messaging.MessageDispatcher;
 import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.bos.udmi.service.messaging.MessagePipe.PipeStats;
 import com.google.bos.udmi.service.messaging.ModelUpdate;
+import com.google.bos.udmi.service.messaging.SiteMetadataUpdate;
 import com.google.bos.udmi.service.messaging.StateUpdate;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.BundleException;
@@ -72,9 +73,11 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   static {
     Arrays.stream(SubType.values()).forEach(type -> Arrays.stream(SubFolder.values())
         .forEach(folder -> registerHandlerType(type, folder)));
+    // Note - If the class is an instance of map, the assigned type and folder are ignored.
     registerMessageClass(SubType.STATE, SubFolder.UPDATE, StateUpdate.class);
     registerMessageClass(SubType.CONFIG, SubFolder.UPDATE, ConfigUpdate.class);
     registerMessageClass(SubType.MODEL, SubFolder.UPDATE, ModelUpdate.class);
+    registerMessageClass(SubType.MODEL, SubFolder.UPDATE, SiteMetadataUpdate.class);
   }
 
   private final MessagePipe messagePipe;
@@ -316,7 +319,11 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
       return bundle;
     }
 
-    if (!(message instanceof Map)) {
+    if (message instanceof RawString rawString) {
+      requireNonNull(bundle.envelope.subType, "subType not defined for raw string");
+      bundle.payload = rawString.rawString;
+      bundle.message = null;
+    } else if (!(message instanceof Map)) {
       SimpleEntry<SubType, SubFolder> messageType = CLASS_TYPES.get(message.getClass());
       requireNonNull(messageType, "unknown message type for " + message.getClass());
       bundle.envelope.subType = messageType.getKey();

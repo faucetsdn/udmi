@@ -90,6 +90,7 @@ public class MqttPublisher implements Publisher {
   private static final String GCP_CLIENT_PREFIX = "projects/";
   private static final Integer DEFAULT_MQTT_PORT = 8883;
   private static final long ATTACH_DELAY_MS = 1000;
+  private static final String LOCAL_MQTT_PREFIX = "/r/";
 
   private final Semaphore connectionLock = new Semaphore(1);
 
@@ -495,12 +496,16 @@ public class MqttPublisher implements Publisher {
 
   private String getMessageType(String topic) {
     // {site}/devices/{device}/{type}
-    return topic.split("/")[3];
+    // /r/{registry}/d/{device}/{type}
+    int splitIndex = topic.startsWith(LOCAL_MQTT_PREFIX) ? 5 : 3;
+    return topic.split("/")[splitIndex];
   }
 
   private String getDeviceId(String topic) {
     // {site}/devices/{device}/{type}
-    return topic.split("/")[2];
+    // /r/{registry}/d/{device}/{type}
+    int splitIndex = topic.startsWith(LOCAL_MQTT_PREFIX) ? 4 : 2;
+    return topic.split("/")[splitIndex];
   }
 
   public void connect(String targetId, boolean clean) {

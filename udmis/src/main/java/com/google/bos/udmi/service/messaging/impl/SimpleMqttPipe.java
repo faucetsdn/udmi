@@ -46,8 +46,8 @@ import udmi.schema.Envelope.SubType;
  */
 public class SimpleMqttPipe extends MessageBase {
 
+  public static final int MAX_INFLIGHT = 10;
   private static final int INITIALIZE_TIME_MS = 1000;
-  private static final int PUBLISH_THREAD_COUNT = 2;
   private static final String BROKER_URL_FORMAT = "%s://%s:%s";
   private static final long RECONNECT_SEC = 10;
   private static final int DEFAULT_PORT = 8883;
@@ -65,6 +65,7 @@ public class SimpleMqttPipe extends MessageBase {
   private final CertManager certManager;
   private final String recvId;
   private final CountDownLatch connectLatch = new CountDownLatch(1);
+  private final boolean publishMessages;
 
   /**
    * Create new pipe instance for the given config.
@@ -75,6 +76,8 @@ public class SimpleMqttPipe extends MessageBase {
     String namespaceRaw = variableSubstitution(endpoint.msg_prefix);
     namespace = ifTrueGet(isNotEmpty(namespaceRaw), namespaceRaw, DEFAULT_NAMESPACE);
     recvId = variableSubstitution(endpoint.recv_id);
+
+    publishMessages = endpoint.send_id != null;
     clientId = ofNullable(config.client_id).orElse(autoId);
     File secretsDir = ifTrueGet(isNotEmpty(SSL_SECRETS_DIR), () -> new File(SSL_SECRETS_DIR));
     certManager = ifNotNullGet(secretsDir,
@@ -127,10 +130,16 @@ public class SimpleMqttPipe extends MessageBase {
 
   @Override
   protected void publishRaw(Bundle bundle) {
+    if (!publishMessages) {
+      trace("Dropping message because no send_id");
+      return;
+    }
     try {
       String topic = makeMqttTopic(bundle);
       MqttMessage message = makeMqttMessage(bundle);
       mqttClient.publish(topic, message);
+      debug("Client has %d inFlight tokens with %s", mqttClient.getPendingDeliveryTokens().length,
+          topic);
     } catch (Exception e) {
       throw new RuntimeException("While publishing to mqtt client " + clientId, e);
     }
@@ -145,7 +154,7 @@ public class SimpleMqttPipe extends MessageBase {
         debug("Attempting connection of mqtt client %s", clientId);
         MqttConnectOptions options = new MqttConnectOptions();
         options.setMqttVersion(MqttConnectOptions.MQTT_VERSION_3_1_1);
-        options.setMaxInflight(PUBLISH_THREAD_COUNT * 2);
+        options.setMaxInflight(MAX_INFLIGHT);
         options.setConnectionTimeout(INITIALIZE_TIME_MS);
 
         ifNotNullThen(endpoint.auth_provider, provider -> {
@@ -155,6 +164,8 @@ public class SimpleMqttPipe extends MessageBase {
           options.setPassword(
               checkNotNull(basicAuth.password, "MQTT password not defined").toCharArray());
         });
+
+        debug("TAP starting maxInFlight is %d", options.getMaxInflight());
 
         mqttClient.connect(options);
         info("Connection established to mqtt server as " + clientId);
@@ -206,10 +217,6 @@ public class SimpleMqttPipe extends MessageBase {
     return message;
   }
 
-  private boolean shouldRetainMessage(Bundle bundle) {
-    return bundle.envelope.subType == SubType.CONFIG;
-  }
-
   private String makeMqttTopic(Bundle bundle) {
     Envelope envelope = bundle.envelope;
     return envelope == null ? makeTopic(EXCEPTION_ENVELOPE) : makeTopic(envelope);
@@ -231,6 +238,10 @@ public class SimpleMqttPipe extends MessageBase {
 
   private String makeTransactionId() {
     return format("MP:%08x", (long) (Math.random() * 0x100000000L));
+  }
+
+  private boolean shouldRetainMessage(Bundle bundle) {
+    return bundle.envelope.subType == SubType.CONFIG;
   }
 
   private void subscribeToMessages() {
