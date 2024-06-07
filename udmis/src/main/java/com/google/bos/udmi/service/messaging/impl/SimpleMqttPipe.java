@@ -167,9 +167,9 @@ public class SimpleMqttPipe extends MessageBase {
               basicAuth.password);
         });
 
-        debug("Attempting connection of mqtt client %s", clientId);
+        debug("Attempting mqtt connection as %s", clientId);
         mqttClient.connect(options);
-        info("Connection established to mqtt server as " + clientId);
+        info("Established mqtt connection as %s", clientId);
         subscribeToMessages();
       }
     } catch (Exception e) {
