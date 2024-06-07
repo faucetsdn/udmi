@@ -184,7 +184,7 @@ jobs:
         run: more out/pubber.log* pubber/out/*.json | cat
       - name: udmis log
         if: ${{ !cancelled() }}
-        run: cat out/udmis*.log
+        run: cat out/udmis*.log || true
       - name: itemized test post-process
         if: ${{ !cancelled() }}
         run: egrep ' test .* after .*s ' out/sequencer.log-* | tee out/timing_itemized.out
