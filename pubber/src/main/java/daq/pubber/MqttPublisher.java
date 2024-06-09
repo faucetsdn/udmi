@@ -352,7 +352,6 @@ public class MqttPublisher implements Publisher {
         throw new RuntimeException("Timeout waiting for connection lock");
       }
       MqttClient mqttClient = newMqttClient(deviceId);
-      info("Attempting connection to " + getClientId(deviceId));
 
       mqttClient.setCallback(new MqttCallbackHandler(deviceId));
       mqttClient.setTimeToWait(INITIALIZE_TIME_MS);
@@ -366,6 +365,7 @@ public class MqttPublisher implements Publisher {
       reauthTimes.put(deviceId, Instant.now().plusSeconds(TOKEN_EXPIRY_MINUTES * 60 / 2));
       connectionLatch = new CountDownLatch(1);
 
+      info("Attempting connection to " + getClientId(deviceId));
       mqttClient.connect(options);
 
       subscribeToUpdates(mqttClient, deviceId);

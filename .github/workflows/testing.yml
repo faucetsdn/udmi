@@ -160,6 +160,8 @@ jobs:
           java-version: '17'
       - name: base setup
         run: bin/run_tests install_dependencies
+      - name: local setup
+        run: bin/start_local $TARGET_PROJECT
       - name: registrar clean
         run: bin/test_regclean $TARGET_PROJECT
       - name: sequence tests clean
@@ -180,6 +182,9 @@ jobs:
       - name: pubber logs
         if: ${{ !cancelled() }}
         run: more out/pubber.log* pubber/out/*.json | cat
+      - name: udmis log
+        if: ${{ !cancelled() }}
+        run: cat out/udmis*.log || true
       - name: itemized test post-process
         if: ${{ !cancelled() }}
         run: egrep ' test .* after .*s ' out/sequencer.log-* | tee out/timing_itemized.out
@@ -212,6 +217,8 @@ jobs:
           java-version: '17'
       - name: base setup
         run: bin/run_tests install_dependencies
+      - name: local setup
+        run: bin/start_local $TARGET_PROJECT
       - name: registrar clean
         run: bin/test_regclean solo $TARGET_PROJECT
       - name: telemetry validator
@@ -254,20 +261,14 @@ jobs:
           bin/setup_base
           bin/clone_model
           bin/registrar sites/udmi_site_model
-      - name: bin/start_etcd
-        run: bin/start_etcd
+      - name: local setup
+        run: bin/start_local //mqtt/localhost
       - name: bin/test_etcd
         run: bin/test_etcd
-      - name: bin/setup_ca
-        run: bin/setup_ca sites/udmi_site_model
       - name: bin/test_mosquitto
         run: bin/test_mosquitto
-      - name: bin/start_udmis
-        run: bin/start_udmis
       - name: bin/test_regclean
-        run: |
-          bin/mosquctl_site sites/udmi_site_model/
-          bin/test_regclean //mqtt/localhost
+        run: bin/test_regclean //mqtt/localhost
       - name: bin/test_sequencer
         run: bin/test_sequencer local full //mqtt/localhost $(< etc/local_tests.txt)
       - name: bin/test_udmis
@@ -277,7 +278,7 @@ jobs:
         run: sudo cat /etc/mosquitto/dynamic_security.json
       - name: udmis log
         if: ${{ !cancelled() }}
-        run: cat out/udmis_local.log
+        run: cat out/udmis*.log
       - name: support bundle
         if: ${{ !cancelled() }}
         run: bin/support ${{ github.repository_owner }}_${{ github.job }}_

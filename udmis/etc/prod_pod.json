@@ -62,6 +62,7 @@
     },
     "distributor": {
       "recv_id": "#",
+      "send_id": "distribute",
       "protocol": "mqtt",
       "transport": "tcp",
       "hostname": "udmis-broker",

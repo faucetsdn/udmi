@@ -13,7 +13,8 @@ if [[ -n $OLD_PID ]]; then
     sleep 2
 fi
 
-rm -f /tmp/pod_ready.txt
+POD_READY=/tmp/pod_ready.txt
+rm -f $POD_READY
 
 if [[ ${1:-} == stop ]]; then
     exit 0
@@ -30,11 +31,17 @@ sudo PATH=$PATH -E udmis/bin/run udmis/etc/local_pod.json > $LOGFILE 2>&1 &
 
 PID=$!
 
-echo udmis started as pid $PID, waiting for stability...
-sleep 15
+WAITING=30
+for i in `seq 1 $WAITING`; do
+    if [[ -f $POD_READY ]]; then
+        break
+    fi
+    echo Waiting for udmis startup $((WAITING - i))...
+    sleep 1
+done
 
-tail $LOGFILE
+tail -n 30 $LOGFILE
 
-[[ -f /tmp/pod_ready.txt ]] || fail pod_ready.txt not found.
+[[ -f $POD_READY ]] || fail pod_ready.txt not found.
 
 echo udmis running in the background, pid $PID log in $(realpath $LOGFILE)
