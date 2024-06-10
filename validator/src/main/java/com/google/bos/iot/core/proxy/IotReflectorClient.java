@@ -49,6 +49,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.jetbrains.annotations.NotNull;
 import udmi.schema.Credential;
 import udmi.schema.Envelope;
@@ -74,7 +75,8 @@ public class IotReflectorClient implements MessagePublisher {
   private static final int UPDATE_RETRIES = 6;
   private static final Collection<String> COPY_IDS = ImmutableSet.of(DEVICE_ID_KEY, GATEWAY_ID_KEY,
       SUBTYPE_PROPERTY_KEY, SUBFOLDER_PROPERTY_KEY, TRANSACTION_KEY, PUBLISH_TIME_KEY);
-  private static String prevTransactionId;
+  private static final String sessionId = format("%06x", (int) (Math.random() * 0x1000000L));
+  private static final AtomicInteger sessionCounter = new AtomicInteger();
   private final String udmiVersion;
   private final CountDownLatch initialConfigReceived = new CountDownLatch(1);
   private final CountDownLatch initializedStateSent = new CountDownLatch(1);
@@ -181,12 +183,7 @@ public class IotReflectorClient implements MessagePublisher {
    * @return new unique transaction id
    */
   public static synchronized String getNextTransactionId() {
-    String transactionId;
-    do {
-      transactionId = "RC:" + System.currentTimeMillis();
-    } while (transactionId.equals(prevTransactionId));
-    prevTransactionId = transactionId;
-    return transactionId;
+    return format("RC:%s.%04d", sessionId, sessionCounter.incrementAndGet());
   }
 
   private void initializeReflectorState() {

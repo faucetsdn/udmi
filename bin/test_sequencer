@@ -72,7 +72,7 @@ device_out_base=$site_out/devices/$device_id
 tests_out_base=$device_out_base/tests
 
 if [[ -n $clean_cache ]]; then
-    rm -rf out/ $site_path/out-seq $site_out
+    rm -rf $site_path/out-seq $site_out
 fi
 
 mkdir -p out/ $tests_out_base/

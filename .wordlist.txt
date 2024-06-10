@@ -67,6 +67,7 @@ http
 https
 IAM
 idToken
+integrations
 invoker
 io
 iot
