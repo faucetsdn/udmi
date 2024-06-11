@@ -2,14 +2,14 @@
   "timestamp": "2024-06-11T08:31:32Z",
   "version": "1.4.1",
   "upgraded_from": "1.4.0",
-  "hash": "31e5940c",
+  "hash": "4a67fd1c",
   "tags": [ ],
   "cloud": {
     "auth_type": "RS256"
   },
   "system": {
     "location": {
-      "site": "UK-LON-6PS",
+      "site": "US-SFO-XYY",
       "section": "L06-SW",
       "position": {
         "x": 10.0,
@@ -20,7 +20,7 @@
     "physical_tag": {
       "asset": {
         "guid": "guid://65c244b3-f6ec-49bc-8d68-df1f2946be08",
-        "site": "UK-LON-6PS",
+        "site": "US-SFO-XYY",
         "name": "CGW-1"
       }
     },
