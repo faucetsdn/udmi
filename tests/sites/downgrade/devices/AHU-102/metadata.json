@@ -1,0 +1,130 @@
+{
+  "version": "1.4.0",
+  "timestamp": "2024-06-11T08:31:26.000Z",
+  "system": {
+    "location": {
+      "site": "US-SFO-XYY",
+      "section": "L01-NW",
+      "position": {
+        "x": 10,
+        "y": 10,
+        "z": 10
+      }
+    },
+    "physical_tag": {
+      "asset": {
+        "guid": "guid://bbfe8b4b-e9e5-424b-9a4e-2234b61c41bf",
+        "site": "US-SFO-XYY",
+        "name": "AHU-102"
+      }
+    }
+  },
+  "localnet": {
+    "families": {
+      "bacnet": {
+        "addr": "11052"
+      }
+    }
+  },
+  "gateway": {
+    "family": "bacnet",
+    "gateway_id": "CGW-1"
+  },
+  "pointset": {
+    "points": {
+      "supply_filter_differential_pressure_sensor": {
+        "ref": "AI1.Present_Value",
+        "units": "pascals"
+      }, 
+      "supply_fan_speed_percentage_sensor": {
+        "ref": "AI2.Present_Value",
+        "units": "percent"       
+      },   
+      "supply_air_static_pressure_sensor": {
+        "ref": "AI3.Present_Value",
+        "units": "pascals"
+      }, 
+      "exhaust_filter_differential_pressure_sensor": {
+        "ref": "AI4.Present_Value",
+        "units": "pascals"
+      }, 
+      "exhaust_fan_speed_percentage_sensor": {
+        "ref": "AI5.Present_Value",
+        "units": "percent"       
+      },   
+      "exhaust_air_static_pressure_sensor": {
+        "ref": "AI6.Present_Value",
+        "units": "pascals"
+      }, 
+     "cooling_water_valve_percentage_sensor": {
+        "ref": "AI9.Present_Value",
+        "units": "percent"       
+      },
+      "heating_water_valve_percentage_sensor": {
+        "ref": "AI10.Present_Value",
+        "units": "percent"       
+      },	  	  
+      "supply_air_temperature_sensor": {
+        "ref": "AI12.Present_Value",
+        "units": "degrees-celcius"       
+      },	  
+      "return_air_temperature_sensor": {
+        "ref": "AI3.Present_Value",
+        "units": "degrees-celcius"
+      },
+
+      "supply_air_temperature_setpoint": {
+        "ref": "AI20.Present_Value",
+        "units": "degrees-celcius"       
+      },
+      "outside_air_temperature_sensor": {
+        "ref": "AI17.Present_Value",
+        "units": "degrees-celcius"       
+      },
+	  "fire_alarm": {
+        "ref": "BI3.Present_Value",
+        "units": "No-units"
+      },	
+      "supply_fan_speed_percentage_command": {
+        "ref": "AO4.Present_Value",
+        "units": "percent"       
+      },  	 
+      "exhaust_fan_speed_percentage_command": {
+        "ref": "AO6.Present_Value",
+        "units": "percent"       
+      },  	 
+      "cooling_water_valve_percentage_command": {
+        "ref": "AO10.Present_Value",
+        "units": "percent"       
+      }, 
+      "heating_water_valve_percentage_command": {
+        "ref": "AO9.Present_Value",
+        "units": "percent"       
+      },	  
+      "supply_air_damper_command": {
+        "ref": "BO1.Present_Value",
+        "units": "No-units"       
+      },	  
+      "exhaust_air_damper_command": {
+        "ref": "BO2.Present_Value",
+        "units": "No-units"       
+      },	  	  
+      "supply_fan_run_command": {
+        "ref": "BO3.Present_Value",
+        "units": "No-units"       
+      },	  
+      "exhaust_fan_run_command": {
+        "ref": "BO5.Present_Value",
+        "units": "No-units"       
+      },	
+      "supply_fan_speed_percentage_setpoint": {
+        "ref": "AV2.Present_Value",
+        "units": "percent" 
+	  },
+      "exhaust_fan_speed_percentage_setpoint": {
+        "ref": "AV3.Present_Value",
+        "units": "percent" 
+	  }
+    }
+  }
+}
