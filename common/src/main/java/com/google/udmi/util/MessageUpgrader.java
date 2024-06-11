@@ -220,10 +220,20 @@ public class MessageUpgrader {
     ObjectNode gatewayTarget = new ObjectNode(NODE_FACTORY);
     gateway.put("target", gatewayTarget);
 
-    if (localnetFamilies.has("bacnet")) {
-      gatewayTarget.put("family", "bacnet");
+    final String targetFamily;
+    if (gateway.has("family")) {
+      targetFamily =  gateway.remove("family").asText();
+    } else if (localnetFamilies.has("bacnet")) {
+      // Prioritise "bacnet" over any other value
+      targetFamily = "bacnet";
     } else if (localnetFamilies.has("vendor")) {
-      gatewayTarget.put("family", "vendor");
+      targetFamily = "vendor";
+    } else {
+      targetFamily = null;
+    }
+
+    if (targetFamily != null) {
+      gatewayTarget.put("family", targetFamily);
     }
   }
 
