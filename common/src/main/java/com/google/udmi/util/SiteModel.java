@@ -2,6 +2,7 @@ package com.google.udmi.util;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.udmi.util.Common.DEFAULT_REGION;
 import static com.google.udmi.util.Common.NO_SITE;
 import static com.google.udmi.util.Common.SITE_METADATA_KEY;
 import static com.google.udmi.util.Common.getNamespacePrefix;
@@ -14,7 +15,6 @@ import static com.google.udmi.util.GeneralUtils.removeArg;
 import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
-import static com.google.udmi.util.JsonUtil.loadFile;
 import static com.google.udmi.util.JsonUtil.loadFileRequired;
 import static com.google.udmi.util.JsonUtil.loadFileStrict;
 import static com.google.udmi.util.MessageUpgrader.METADATA_SCHEMA;
@@ -83,8 +83,9 @@ public class SiteModel {
       .enable(SerializationFeature.INDENT_OUTPUT)
       .setDateFormat(new ISO8601DateFormat())
       .setSerializationInclusion(JsonInclude.Include.NON_NULL);
-  private static final Pattern ID_PATTERN = Pattern.compile(
+  private static final Pattern IOT_CORE_PATTERN = Pattern.compile(
       "projects/(.*)/locations/(.*)/registries/(.*)/devices/(.*)");
+  private static final Pattern MQTT_PATTERN = Pattern.compile("/r/(.*)/d/(.*)");
   private static final String EXTRAS_DIR = "extras";
   private static final String CLOUD_IOT_CONFIG_JSON = "cloud_iot_config.json";
   private static final Pattern SPEC_PATTERN = Pattern.compile(
@@ -218,17 +219,29 @@ public class SiteModel {
     if (clientId == null) {
       throw new IllegalArgumentException("client_id not specified");
     }
-    Matcher matcher = ID_PATTERN.matcher(clientId);
-    if (!matcher.matches()) {
-      throw new IllegalArgumentException(
-          format("client_id %s does not match pattern %s", clientId, ID_PATTERN.pattern()));
+
+    Matcher iotCoreMatcher = IOT_CORE_PATTERN.matcher(clientId);
+    if (iotCoreMatcher.matches()) {
+      ClientInfo clientInfo = new ClientInfo();
+      clientInfo.iotProject = iotCoreMatcher.group(1);
+      clientInfo.cloudRegion = iotCoreMatcher.group(2);
+      clientInfo.registryId = iotCoreMatcher.group(3);
+      clientInfo.deviceId = iotCoreMatcher.group(4);
+      return clientInfo;
     }
-    ClientInfo clientInfo = new ClientInfo();
-    clientInfo.iotProject = matcher.group(1);
-    clientInfo.cloudRegion = matcher.group(2);
-    clientInfo.registryId = matcher.group(3);
-    clientInfo.deviceId = matcher.group(4);
-    return clientInfo;
+
+    Matcher mqttMatcher = MQTT_PATTERN.matcher(clientId);
+    if (mqttMatcher.matches()) {
+      ClientInfo clientInfo = new ClientInfo();
+      clientInfo.iotProject = LOCALHOST_HOSTNAME;
+      clientInfo.cloudRegion = DEFAULT_REGION;
+      clientInfo.registryId = mqttMatcher.group(1);
+      clientInfo.deviceId = mqttMatcher.group(2);
+      return clientInfo;
+    }
+
+    throw new IllegalArgumentException(format("client_id %s does not match pattern %s or %s",
+        clientId, IOT_CORE_PATTERN.pattern(), MQTT_PATTERN.pattern()));
   }
 
   public static List<String> listDevices(File devicesDir) {

@@ -1080,7 +1080,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
       endpoint.client_id = getClientId(redirectRegistry);
       return toJsonString(endpoint);
     } catch (Exception e) {
-      throw new RuntimeException("While getting redirected endpoint");
+      throw new RuntimeException("While getting redirected endpoint", e);
     }
   }
 
