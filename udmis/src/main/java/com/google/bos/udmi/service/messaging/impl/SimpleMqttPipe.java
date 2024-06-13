@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
 import static com.google.udmi.util.Common.TRANSACTION_KEY;
+import static com.google.udmi.util.GeneralUtils.catchToElse;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
@@ -40,13 +41,16 @@ import udmi.schema.EndpointConfiguration.Transport;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
+import udmi.schema.IotAccess.IotProvider;
 
 /**
  * Simple pipe implementation that uses an MQTT broker.
  */
 public class SimpleMqttPipe extends MessageBase {
 
-  public static final int MAX_INFLIGHT = 10;
+  private static final int MAX_INFLIGHT = 10;
+  private static final String IMPLICIT_CHANNEL = IotProvider.IMPLICIT.value();
+  private static final String SEND_CHANNEL_PREFIX = "c/";
   private static final int INITIALIZE_TIME_MS = 1000;
   private static final String BROKER_URL_FORMAT = "%s://%s:%s";
   private static final long RECONNECT_SEC = 10;
@@ -66,6 +70,7 @@ public class SimpleMqttPipe extends MessageBase {
   private final String recvId;
   private final CountDownLatch connectLatch = new CountDownLatch(1);
   private final boolean publishMessages;
+  private final String sendTopicChannel;
 
   /**
    * Create new pipe instance for the given config.
@@ -73,11 +78,15 @@ public class SimpleMqttPipe extends MessageBase {
   public SimpleMqttPipe(EndpointConfiguration config) {
     super(config);
     endpoint = config;
-    String namespaceRaw = variableSubstitution(endpoint.msg_prefix);
+    String namespaceRaw = variableSubstitution(endpoint.topic_prefix);
     namespace = ifTrueGet(isNotEmpty(namespaceRaw), namespaceRaw, DEFAULT_NAMESPACE);
     recvId = variableSubstitution(endpoint.recv_id);
 
     publishMessages = endpoint.send_id != null;
+    String sendId = variableSubstitution(endpoint.send_id);
+    sendTopicChannel =
+        (publishMessages && sendId.startsWith(SEND_CHANNEL_PREFIX)) ? ("/" + sendId) : "";
+
     clientId = ofNullable(config.client_id).orElse(autoId);
     File secretsDir = ifTrueGet(isNotEmpty(SSL_SECRETS_DIR), () -> new File(SSL_SECRETS_DIR));
     certManager = ifNotNullGet(secretsDir,
@@ -87,6 +96,16 @@ public class SimpleMqttPipe extends MessageBase {
     tryConnect(false);
     scheduledFuture = Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(
         () -> SimpleMqttPipe.this.tryConnect(true), 0, RECONNECT_SEC, TimeUnit.SECONDS);
+  }
+
+  private static SubFolder convertSubFolder(String part) {
+    return catchToElse(() -> ofNullable(nullAsNull(part)).map(SubFolder::fromValue).orElse(null),
+        SubFolder.INVALID);
+  }
+
+  private static SubType convertSubType(String part) {
+    return catchToElse(() -> ofNullable(nullAsNull(part))
+        .map(SubType::fromValue).orElse(null), SubType.INVALID);
   }
 
   public static MessagePipe fromConfig(EndpointConfiguration config) {
@@ -105,7 +124,7 @@ public class SimpleMqttPipe extends MessageBase {
       // 0/1/2       /3/4     /5   [/6     [/7      ]]
       //  /r/REGISTRY/d/DEVICE/TYPE[/FOLDER[/GATEWAY]]
       String[] parts = topic.split("/", 12);
-      if (parts.length < 6 || parts.length > 8) {
+      if (parts.length < 6 || parts.length > 10) {
         throw new RuntimeException("Unexpected topic length: " + topic);
       }
       Envelope envelope = new Envelope();
@@ -114,13 +133,19 @@ public class SimpleMqttPipe extends MessageBase {
       envelope.deviceRegistryId = nullAsNull(parts[2]);
       checkState("d".equals(parts[3]), "expected devices");
       envelope.deviceId = nullAsNull(parts[4]);
-      envelope.subType = ofNullable(nullAsNull(parts[5])).map(SubType::fromValue).orElse(null);
-      if (parts.length > 6) {
-        envelope.subFolder =
-            ofNullable(nullAsNull(parts[6])).map(SubFolder::fromValue).orElse(null);
+      int base = parts[5].equals("c") ? 2 : 0;
+      if (base > 0) {
+        envelope.source = parts[6];
       }
-      if (parts.length > 7) {
-        envelope.gatewayId = nullAsNull(parts[7]);
+      envelope.subType = convertSubType(parts[base + 5]);
+      if (parts.length > base + 6) {
+        envelope.subFolder = convertSubFolder(parts[base + 6]);
+      }
+      if (parts.length > base + 7) {
+        envelope.gatewayId = nullAsNull(parts[base + 7]);
+      }
+      if (parts.length > base + 8) {
+        throw new RuntimeException("Unrecognized extra topic arguments: " + parts[base + 8]);
       }
       return toStringMap(envelope);
     } catch (Exception e) {
@@ -234,7 +259,8 @@ public class SimpleMqttPipe extends MessageBase {
     if (envelope.subType != null || !topic.isEmpty()) {
       topic = "/" + envelope.subType + topic;
     }
-    return format("/r/%s/d/%s", envelope.deviceRegistryId, envelope.deviceId) + topic;
+    String channel = IMPLICIT_CHANNEL.equals(envelope.source) ? "" : sendTopicChannel;
+    return format("/r/%s/d/%s%s%s", envelope.deviceRegistryId, envelope.deviceId, channel, topic);
   }
 
   private String makeTransactionId() {

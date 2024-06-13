@@ -14,10 +14,9 @@ public class TestBase {
 
   protected static final String TEST_TOPIC = "test_topic";
   protected static final Object TEST_MESSAGE = new DiscoveryCommand();
-  protected static final String TEST_PREFIX = "test_prefix";
   protected static final String TEST_DEVICE = "test_device";
-  protected static final String EXPECTED_TOPIC = String.format(
-      "%s/%s/%s", TEST_PREFIX, TEST_DEVICE, TEST_TOPIC);
+  protected static final String TEST_PREFIX = "test_prefix/" + TEST_DEVICE;
+  protected static final String EXPECTED_TOPIC = String.format("%s/%s", TEST_PREFIX, TEST_TOPIC);
 
   protected static String EXPECTED_MESSAGE_STRING = getMessageString(
       TEST_DEVICE, EXPECTED_TOPIC, TEST_MESSAGE);
@@ -27,7 +26,7 @@ public class TestBase {
     configuration.iotProject = MqttDevice.TEST_PROJECT;
     configuration.deviceId = TEST_DEVICE;
     configuration.endpoint = new EndpointConfiguration();
-    configuration.endpoint.msg_prefix = TEST_PREFIX;
+    configuration.endpoint.topic_prefix = TEST_PREFIX;
     configuration.options = new PubberOptions();
     return configuration;
   }

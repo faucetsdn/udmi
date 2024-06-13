@@ -179,7 +179,7 @@ public class SiteModel {
           region -> format(DEFAULT_CLEARBLADE_HOSTNAME_FORMAT, region),
           DEFAULT_CLEARBLADE_HOSTNAME);
       case GBOS -> DEFAULT_GBOS_HOSTNAME;
-      case IMPLICIT -> LOCALHOST_HOSTNAME;
+      case IMPLICIT, DYNAMIC -> LOCALHOST_HOSTNAME;
       default -> throw new RuntimeException("Unsupported iot_provider " + iotProvider);
     };
   }

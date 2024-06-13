@@ -307,6 +307,10 @@ jobs:
           java-version: '17'
       - name: base setup
         run: bin/run_tests install_dependencies
+      - name: local setup
+        run: bin/start_local $TARGET_PROJECT
+      - name: regclean
+        run: bin/test_regclean $TARGET_PROJECT
       - name: bin/test_proxy
         if: ${{ env.MQTT_PROXY_HOST != '' }}
         run: bin/test_proxy $TARGET_PROJECT $MQTT_PROXY_HOST

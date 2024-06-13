@@ -97,7 +97,7 @@ public class TargetProcessor extends ProcessorBase {
             field.set(defaultedMessage, defaultValue);
           }
         } catch (IllegalAccessException iae) {
-          debug("No timestamp field access for " + defaultedMessage.getClass().getName());
+          debug("No field access for %s:%s", defaultedMessage.getClass().getName(), fieldName);
         }
       });
     } catch (NoSuchFieldException nfe) {

@@ -86,7 +86,7 @@ else
 fi
 
 client_id=\"projects/$project_id/locations/$cloud_region/registries/$registry_prefix$registry_id$registry_suffix/devices/$device_id\"
-msg_prefix=null
+topic_prefix=null
 auth_provider=null
 transport=null
 
@@ -99,7 +99,7 @@ elif [[ $iot_provider == \"mqtt\" ]]; then
     client_id=\"/r/$registry_prefix$registry_id$registry_suffix/d/$device_id\"
     hash_pass=$(sha256sum < $site_path/devices/$device_id/rsa_private.pkcs8)
     client_pass=${hash_pass:0:8}
-    msg_prefix=$client_id
+    topic_prefix=$client_id
     auth_provider="{ \"basic\": { \"username\": $client_id, \"password\": \"$client_pass\" }}"
     transport=\"ssl\"
 elif [[ -z $broker_hostname ]]; then
@@ -112,7 +112,7 @@ cat <<EOF > $pubber_config
       "protocol": "mqtt",
       "transport": $transport,
       "client_id": $client_id,
-      "msg_prefix": $msg_prefix,
+      "topic_prefix": $topic_prefix,
       "auth_provider": $auth_provider,
       "hostname": "$broker_hostname"
     },

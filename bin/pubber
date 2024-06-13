@@ -111,7 +111,7 @@ if [[ ! -f $ENDPOINT_TMP ]]; then
     registry_actual=${udmi_prefix}${registry_id}${registry_suffix}
     client_id=\"projects/$project_target/locations/$cloud_region/registries/$registry_actual/devices/$device_id\"
 fi
-msg_prefix=null
+topic_prefix=null
 auth_provider=null
 transport=null
 
@@ -121,12 +121,19 @@ elif [[ $iot_provider == gbos ]]; then
     broker_hostname=mqtt.bos.goog
 elif [[ $iot_provider == mqtt ]]; then
     broker_hostname=$project_target
-    client_id=\"/r/$registry_actual/d/$device_id\"
-    hash_pass=$(sha256sum < $site_model/devices/$device_id/rsa_private.pkcs8)
+    gateway_id=$(jq -r .gateway.gateway_id $site_model/devices/$device_id/metadata.json) || true
+    echo Attached to gateway $gateway_id
+    target_id=$device_id
+    [[ $gateway_id == null ]] || target_id=$gateway_id
+    echo Target is $target_id
+    client_id=\"/r/$registry_actual/d/$target_id\"
+    key_file=$site_model/devices/$target_id/*_private.pkcs8
+    echo Extracting hashed password from key file $key_file
+    hash_pass=$(sha256sum < $key_file)
     client_pass=${hash_pass:0:8}
-    msg_prefix=$client_id
     auth_provider="{ \"basic\": { \"username\": $client_id, \"password\": \"$client_pass\" }}"
     transport=\"ssl\"
+    topic_prefix=\"/r/$registry_actual/d/$device_id\"
 elif [[ -z $broker_hostname ]]; then
     broker_hostname=mqtt.googleapis.com
 fi
@@ -137,7 +144,7 @@ if [[ ! -f $ENDPOINT_TMP ]]; then
     "protocol": "mqtt",
     "transport": $transport,
     "client_id": $client_id,
-    "msg_prefix": $msg_prefix,
+    "topic_prefix": $topic_prefix,
     "auth_provider": $auth_provider,
     "hostname": "$broker_hostname"
 }

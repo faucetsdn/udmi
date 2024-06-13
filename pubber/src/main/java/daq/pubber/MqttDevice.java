@@ -1,5 +1,7 @@
 package daq.pubber;
 
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+
 import com.google.udmi.util.CertManager;
 import java.util.function.Consumer;
 import udmi.schema.PubberConfiguration;
@@ -25,9 +27,8 @@ public class MqttDevice {
     this.certManager = certManager;
     deviceId = configuration.deviceId;
     publisher = getPublisher(configuration, onError);
-    if (configuration.endpoint.msg_prefix != null) {
-      publisher.setDeviceTopicPrefix(deviceId, configuration.endpoint.msg_prefix);
-    }
+    ifNotNullThen(configuration.endpoint.topic_prefix,
+        prefix -> publisher.setDeviceTopicPrefix(deviceId, prefix));
   }
 
   MqttDevice(String deviceId, MqttDevice target) {

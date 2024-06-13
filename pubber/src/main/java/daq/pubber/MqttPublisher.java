@@ -1,6 +1,7 @@
 package daq.pubber;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
@@ -67,7 +68,7 @@ public class MqttPublisher implements Publisher {
 
   public static final String EMPTY_STRING = "";
   static final int DEFAULT_CONFIG_WAIT_SEC = 10;
-  private static final String TOPIC_PREFIX_FMT = "/devices/%s";
+  private static final String DEFAULT_TOPIC_PREFIX = "/devices/";
   private static final Logger LOG = LoggerFactory.getLogger(MqttPublisher.class);
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
       .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
@@ -96,7 +97,6 @@ public class MqttPublisher implements Publisher {
 
   private final Map<String, MqttClient> mqttClients = new ConcurrentHashMap<>();
   private final Map<String, Instant> reauthTimes = new ConcurrentHashMap<>();
-  private final Map<String, String> topicPrefixMap = new HashMap<>();
 
   private final ExecutorService publisherExecutor =
       Executors.newFixedThreadPool(PUBLISH_THREAD_COUNT);
@@ -114,6 +114,7 @@ public class MqttPublisher implements Publisher {
   private final String deviceId;
   private final CertManager certManager;
   private CountDownLatch connectionLatch;
+  private String topicPrefixPrefix;
 
   MqttPublisher(PubberConfiguration configuration, Consumer<Exception> onError,
       CertManager certManager) {
@@ -187,7 +188,8 @@ public class MqttPublisher implements Publisher {
 
   @Override
   public void setDeviceTopicPrefix(String deviceId, String topicPrefix) {
-    topicPrefixMap.put(deviceId, topicPrefix);
+    checkState(topicPrefix.endsWith(deviceId), "topic prefix does not end with device id");
+    topicPrefixPrefix = topicPrefix.substring(0, topicPrefix.length() - deviceId.length());
   }
 
   private void publishCore(String deviceId, String topicSuffix, Object data, Runnable callback) {
@@ -215,9 +217,7 @@ public class MqttPublisher implements Publisher {
   }
 
   private String getMessageTopic(String deviceId, String topic) {
-    return
-        topicPrefixMap.computeIfAbsent(deviceId, key -> format(TOPIC_PREFIX_FMT, deviceId))
-            + "/" + topic;
+    return ofNullable(topicPrefixPrefix).orElse(DEFAULT_TOPIC_PREFIX) + deviceId + "/" + topic;
   }
 
   @SuppressWarnings("unchecked")
