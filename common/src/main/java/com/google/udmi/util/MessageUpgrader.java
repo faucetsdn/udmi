@@ -27,6 +27,7 @@ public class MessageUpgrader {
   public static final String STATE_SYSTEM_SCHEMA = "state_system";
   public static final String METADATA_SCHEMA = "metadata";
   private static final String TARGET_FORMAT = "%d.%d.%d";
+  private static final String RAW_GIT_VERSION = "git";
   private final ObjectNode message;
   private final JsonNode original;
   private final String schemaName;
@@ -55,6 +56,12 @@ public class MessageUpgrader {
       if (parts.length >= 4) {
         throw new IllegalArgumentException("More than 3 version components");
       }
+
+      if (RAW_GIT_VERSION.equals(parts[0])) {
+        major = 0;
+        return;
+      }
+
       try {
         major = Integer.parseInt(parts[0]);
         minor = parts.length >= 2 ? Integer.parseInt(parts[1]) : -1;
@@ -92,6 +99,10 @@ public class MessageUpgrader {
   }
 
   private Object upgradeRaw(boolean forceUpgrade) {
+    if (major == 0) {
+      return message;
+    }
+
     if (major != 1) {
       throw new IllegalArgumentException("Starting major version " + major);
     }

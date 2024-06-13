@@ -88,17 +88,16 @@ public class MessageDowngrader {
   }
 
   private Map<String, Object> downgradeState(String targetVersion) {
-    final String version = convertVersion(targetVersion);
+    SchemaVersion schemaVersion = SchemaVersion.fromKey(convertVersion(targetVersion));
 
-    ObjectNode system = (ObjectNode) message.get("system");
-    if (version.equals(VERSION_1_4_0.key())) {
+    if (schemaVersion.equals(VERSION_1_4_0)) {
+      ObjectNode system = (ObjectNode) message.get("system");
       ifNotNullThen(system, map -> {
         JsonNode operation = map.remove("operation");
         ifNotNullThen(operation, src -> map.set("operational", src.get("operational")));
       });
-    } else {
-      throw new RuntimeException("Unknown target legacy version " + version);
     }
+
     return JsonUtil.asMap(message);
   }
 

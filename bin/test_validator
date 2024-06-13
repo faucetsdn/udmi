@@ -21,6 +21,7 @@ echo "export UDMI_REGISTRY_SUFFIX=${UDMI_REGISTRY_SUFFIX:-}"
 echo "export UDMI_ALT_REGISTRY=${UDMI_ALT_REGISTRY:-}"
 
 site_path=sites/udmi_site_model
+iot_config=$site_path/cloud_iot_config.json
 output_file=$site_path/out/validation_report.json
 mkdir -p out
 
@@ -29,13 +30,16 @@ VALIDATOR_LOG=out/validator.log
 VALIDATOR_OUT=out/validator.out
 GOLDEN_OUT=etc/validator.out
 TRACE_DIR=out/validator_trace
-WAITING=10
+WAITING=20
 
 echo Killing running pubber/validator instances...
 ps ax | fgrep pubber | fgrep java | awk '{print $1}' | xargs -r kill || true
 ps ax | fgrep validator | fgrep java | awk '{print $1}' | xargs -r kill || true
 
 rm -rf $site_path/out/devices
+
+# Sanitize the site_path because some other testing scripts might have corrupted it...
+jq 'del(.udmi_namespace)' $iot_config | sponge $iot_config
 
 # Run explicitly so that it's not done in the background when the program is launched.
 validator/bin/build
@@ -57,14 +61,13 @@ vpid=$!
 echo Started validator pid $vpid
 
 echo Waiting for validator to startup...
-sleep 10
 
 for i in `seq 1 $WAITING`; do
     if fgrep "Entering message loop" $VALIDATOR_LOG; then
         break
     fi
     echo Waiting for validator startup $((WAITING - i))...
-    sleep 2
+    sleep 1
 done
 
 if [[ $i -eq $WAITING ]]; then
@@ -77,12 +80,18 @@ echo Checking reported cloud version info
 jq .cloud_version.udmi_ref $output_file
 
 function pubber_bg {
-    did=$1
+    device_id=$1
     shift
-    outfile=$PUBBER_LOG.$did
+    outfile=$PUBBER_LOG.$device_id
     serial_no=validator-$RANDOM
+
+    device_dir=$site_path/devices/$device_id
+
+    echo bin/keygen CERT $device_dir
+    bin/keygen CERT $device_dir || true
+
     echo Writing pubber output to $outfile, serial no $serial_no
-    cmd="bin/pubber $site_path $project_id $did $serial_no $@"
+    cmd="bin/pubber $site_path $project_id $device_id $serial_no $@"
     echo $cmd
 
     date > $outfile
@@ -90,14 +99,13 @@ function pubber_bg {
     $cmd >> $outfile 2>&1 &
 
     # Give a little bit of time to settle before deterministic check
-    sleep 10
 
     for i in `seq 1 $WAITING`; do
         if fgrep "Connection complete" $outfile; then
             break
         fi
         echo Waiting for pubber startup $((WAITING - i))...
-        sleep 2
+        sleep 1
     done
 
     if [[ $i -eq $WAITING ]]; then

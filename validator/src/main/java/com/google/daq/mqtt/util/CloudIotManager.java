@@ -9,7 +9,6 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.mergeObject;
 import static com.google.udmi.util.GeneralUtils.toJsonString;
-import static com.google.udmi.util.MetadataMapKeys.UDMI_METADATA;
 import static java.lang.String.format;
 import static java.nio.file.Files.readAllBytes;
 import static java.util.Objects.requireNonNull;
@@ -36,7 +35,6 @@ import udmi.schema.Credential.Key_format;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.ExecutionConfiguration;
 import udmi.schema.IotAccess;
-import udmi.schema.Metadata;
 import udmi.schema.SetupUdmiConfig;
 import udmi.schema.SiteMetadata;
 
@@ -49,7 +47,7 @@ public class CloudIotManager {
   public static final int METADATA_SIZE_LIMIT = 32767;
   public static final String REDACTED_MESSAGE = "REDACTED DUE TO SIZE LIMIT";
   public static final String EMPTY_CONFIG = "{}";
-  private static final String DEVICE_PRIVATE_KEY_BYTES_FMT = "devices/%s/rsa_private.pkcs8";
+  private static final String PRIVATE_KEY_BYTES_FMT = "devices/%s/%s_private.pkcs8";
   public final ExecutionConfiguration executionConfiguration;
 
   private final String registryId;
@@ -232,13 +230,22 @@ public class CloudIotManager {
     // TODO: Make this less ugly/hacky. Ick.
     settings.credentials.forEach(credential -> {
       try {
+        String prefix = getCredentialPrefix(credential.key_format);
         credential.key_format = Key_format.PASSWORD;
-        File privateKey = new File(siteModel, format(DEVICE_PRIVATE_KEY_BYTES_FMT, deviceId));
+        File privateKey = new File(siteModel, format(PRIVATE_KEY_BYTES_FMT, deviceId, prefix));
         credential.key_data = makePassword(readAllBytes(privateKey.toPath()));
       } catch (Exception e) {
         throw new RuntimeException("While coercing credential for " + deviceId, e);
       }
     });
+  }
+
+  private String getCredentialPrefix(Key_format keyFormat) {
+    return switch (keyFormat) {
+      case ES_256, ES_256_X_509 -> "ec";
+      case RS_256, RS_256_X_509 -> "rsa";
+      default -> throw new RuntimeException("Unsupported key format conversion " + keyFormat);
+    };
   }
 
   public CloudModel getRegisteredDevice(String deviceId) {

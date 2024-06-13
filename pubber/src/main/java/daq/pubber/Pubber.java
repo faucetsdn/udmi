@@ -770,12 +770,18 @@ public class Pubber extends ManagerBase implements ManagerHost {
     }
     checkState(deviceTarget == null, "mqttPublisher already defined");
     String keyPassword = sha256(ensureKeyBytes()).substring(0, 8);
+    String targetDeviceId = getTargetDeviceId(siteModel, config.deviceId);
     CertManager certManager = new CertManager(new File(siteModel.getReflectorDir(), CA_CRT),
-        siteModel.getDeviceDir(config.deviceId), config.endpoint.transport, keyPassword,
+        siteModel.getDeviceDir(targetDeviceId), config.endpoint.transport, keyPassword,
         this::info);
     deviceTarget = new MqttDevice(config, this::publisherException, certManager);
     registerMessageHandlers();
     publishDirtyState();
+  }
+
+  private String getTargetDeviceId(SiteModel siteModel, String deviceId) {
+    Metadata metadata = siteModel.getMetadata(deviceId);
+    return ofNullable(catchToNull(() -> metadata.gateway.gateway_id)).orElse(deviceId);
   }
 
   private void registerMessageHandlers() {

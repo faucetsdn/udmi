@@ -55,7 +55,7 @@ class EndpointConfiguration:
     self.port = None
     self.config_sync_sec = None
     self.client_id = None
-    self.msg_prefix = None
+    self.topic_prefix = None
     self.recv_id = None
     self.send_id = None
     self.side_id = None
@@ -80,7 +80,7 @@ class EndpointConfiguration:
     result.port = source.get('port')
     result.config_sync_sec = source.get('config_sync_sec')
     result.client_id = source.get('client_id')
-    result.msg_prefix = source.get('msg_prefix')
+    result.topic_prefix = source.get('topic_prefix')
     result.recv_id = source.get('recv_id')
     result.send_id = source.get('send_id')
     result.side_id = source.get('side_id')
@@ -128,8 +128,8 @@ class EndpointConfiguration:
       result['config_sync_sec'] = self.config_sync_sec # 5
     if self.client_id:
       result['client_id'] = self.client_id # 5
-    if self.msg_prefix:
-      result['msg_prefix'] = self.msg_prefix # 5
+    if self.topic_prefix:
+      result['topic_prefix'] = self.topic_prefix # 5
     if self.recv_id:
       result['recv_id'] = self.recv_id # 5
     if self.send_id:

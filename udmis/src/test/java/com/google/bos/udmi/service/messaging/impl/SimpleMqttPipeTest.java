@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.Common.DEVICE_ID_KEY;
 import static com.google.udmi.util.Common.GATEWAY_ID_KEY;
 import static com.google.udmi.util.Common.REGISTRY_ID_PROPERTY_KEY;
+import static com.google.udmi.util.Common.SOURCE_KEY;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -73,6 +74,7 @@ class SimpleMqttPipeTest extends MessagePipeTestBase {
     assertThrows(Exception.class, () -> parseEnvelopeTopic("/r/registry/d"));
     assertThrows(Exception.class, () -> parseEnvelopeTopic("/r/registry/x/dev/events"));
     assertThrows(Exception.class, () -> parseEnvelopeTopic("/r/registry/d/dev/t/f/g/x"));
+    assertThrows(Exception.class, () -> parseEnvelopeTopic("/r/registry/d/dev/c/d/t/f/g/x"));
     Map<String, String> basicEvent = parseEnvelopeTopic("/r/registry/d/dev/events");
     assertEquals("registry", basicEvent.get(REGISTRY_ID_PROPERTY_KEY));
     assertEquals("dev", basicEvent.get(DEVICE_ID_KEY));
@@ -90,5 +92,13 @@ class SimpleMqttPipeTest extends MessagePipeTestBase {
     assertEquals("pointset", gatewayState.get(SUBFOLDER_PROPERTY_KEY));
     assertEquals("gateway", gatewayState.get(GATEWAY_ID_KEY));
     assertEquals(5, gatewayState.keySet().size());
+    Map<String, String> channelState = parseEnvelopeTopic("/r/reg/d/dev/c/control/state/p/g");
+    assertEquals("reg", channelState.get(REGISTRY_ID_PROPERTY_KEY));
+    assertEquals("dev", channelState.get(DEVICE_ID_KEY));
+    assertEquals("state", channelState.get(SUBTYPE_PROPERTY_KEY));
+    assertEquals("invalid", channelState.get(SUBFOLDER_PROPERTY_KEY));
+    assertEquals("g", channelState.get(GATEWAY_ID_KEY));
+    assertEquals("control", channelState.get(SOURCE_KEY));
+    assertEquals(6, channelState.keySet().size());
   }
 }

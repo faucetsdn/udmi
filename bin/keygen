@@ -40,8 +40,10 @@ if [[ $type == CA ]]; then
 elif [ $type == CERT ]; then
     echo Generating self-signed cert from CA defined in $(realpath $CA_DIR)
     echo Generating cert for device keys in $PWD
-    openssl req -new -key rsa_private.pem -out rsa_private.csr -subj /CN=$SUBJ
-    openssl x509 -req -in rsa_private.csr -CA $CA_CRT -CAkey $CA_KEY -CAcreateserial -out rsa_private.crt $x509opts
+    private_key=$(ls *.pkcs8)
+    key_prefix=${private_key%%_*}
+    openssl req -new -key ${key_prefix}_private.pem -out ${key_prefix}_private.csr -subj /CN=$SUBJ
+    openssl x509 -req -in ${key_prefix}_private.csr -CA $CA_CRT -CAkey $CA_KEY -CAcreateserial -out ${key_prefix}_private.crt $x509opts
 elif [ $type == RS256 ]; then
     openssl genrsa -out rsa_private.pem 2048
     openssl rsa -in rsa_private.pem -pubout -out rsa_public.pem

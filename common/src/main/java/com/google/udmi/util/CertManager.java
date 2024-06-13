@@ -62,8 +62,10 @@ public class CertManager {
     isSsl = Transport.SSL.equals(transport);
 
     if (isSsl) {
-      crtFile = new File(clientDir, "rsa_private.crt");
-      keyFile = new File(clientDir, "rsa_private.pem");
+      File rsaCrtFile = new File(clientDir, "rsa_private.crt");
+      String prefix = rsaCrtFile.exists() ? "rsa" : "ec";
+      crtFile = new File(clientDir, prefix + "_private.crt");
+      keyFile = new File(clientDir, prefix + "_private.pem");
       this.password = passString.toCharArray();
       logging.accept("CA cert file: " + caCrtFile);
       logging.accept("Device cert file: " + crtFile);

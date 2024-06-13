@@ -42,7 +42,7 @@ public abstract class Common {
   public static final String DEFAULT_REGION = "us-central1";
   public static final String DEVICE_ID_KEY = "deviceId";
   public static final String GATEWAY_ID_KEY = "gatewayId";
-  public static final String MESSAGE_SOURCE_PROPERTY_KEY = "source";
+  public static final String SOURCE_KEY = "source";
   public static final String NO_SITE = "--";
   public static final String GCP_REFLECT_KEY_PKCS8 = "reflector/rsa_private.pkcs8";
   public static final String CONDENSER_STRING = "^^";

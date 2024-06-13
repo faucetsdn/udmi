@@ -1,5 +1,6 @@
 package daq.pubber;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 
 import com.google.api.client.util.ArrayMap;
@@ -30,7 +31,7 @@ public class ListPublisher implements Publisher {
 
   public ListPublisher(PubberConfiguration configuration, Consumer<Exception> onError) {
     this.configuration = configuration;
-    usePrefix = configuration.endpoint.msg_prefix;
+    usePrefix = configuration.endpoint.topic_prefix;
   }
 
   static String getMessageString(String deviceId, String topic, Object message) {
@@ -50,7 +51,8 @@ public class ListPublisher implements Publisher {
 
   @Override
   public void setDeviceTopicPrefix(String deviceId, String topicPrefix) {
-    usePrefix = topicPrefix + "/" + deviceId;
+    checkState(topicPrefix.endsWith(deviceId), "topic prefix does not end with device id");
+    usePrefix = topicPrefix;
   }
 
   @Override
