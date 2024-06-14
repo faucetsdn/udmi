@@ -248,7 +248,7 @@ public class SequenceBase {
   protected static IotReflectorClient altClient;
   protected static String serialNo;
   protected static SiteModel siteModel;
-  static ExecutionConfiguration exeConfig;
+  public static ExecutionConfiguration exeConfig;
   private static Validator messageValidator;
   private static ValidationState validationState;
   private static int logLevel;

@@ -5,6 +5,7 @@ import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.sha256;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static java.lang.String.format;
 import static org.junit.Assert.assertNotEquals;
 import static udmi.schema.Bucket.ENDPOINT_CONFIG;
 import static udmi.schema.Bucket.SYSTEM_MODE;
@@ -29,8 +30,10 @@ import udmi.schema.BlobsetConfig;
 import udmi.schema.BlobsetConfig.SystemBlobsets;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.EndpointConfiguration.Protocol;
+import udmi.schema.EndpointConfiguration.Transport;
 import udmi.schema.Entry;
 import udmi.schema.Envelope.SubFolder;
+import udmi.schema.IotAccess.IotProvider;
 import udmi.schema.Level;
 import udmi.schema.Operation.SystemMode;
 
@@ -44,9 +47,13 @@ public class BlobsetSequences extends SequenceBase {
   public static final String JSON_MIME_TYPE = "application/json";
   public static final String DATA_URL_FORMAT = "data:%s;base64,%s";
   public static final String IOT_BLOB_KEY = SystemBlobsets.IOT_ENDPOINT_CONFIG.value();
-  private static final String ENDPOINT_CONFIG_CLIENT_ID =
-      "projects/%s/locations/%s/registries/%s/devices/%s";
+  private static final String IOT_CORE_CLIENT_ID_FMT = "projects/%s/locations/%s/registries/%s/devices/%s";
+  private static final String LOCAL_CLIENT_ID_FMT = "/r/%s/d/%s";
   private static final String BOGUS_ENDPOINT_HOSTNAME = "twiddily.fiddily.fog";
+
+  private static boolean isMqttProvider() {
+    return exeConfig.iot_provider == IotProvider.MQTT;
+  }
 
   @Before
   public void setupExpectedParameters() {
@@ -54,17 +61,14 @@ public class BlobsetSequences extends SequenceBase {
   }
 
   private String generateEndpointConfigClientId(String registryId) {
-    return String.format(
-        ENDPOINT_CONFIG_CLIENT_ID,
-        projectId,
-        cloudRegion,
-        registryId,
-        getDeviceId());
+    return isMqttProvider() ? format(LOCAL_CLIENT_ID_FMT, registryId, getDeviceId())
+        : format(IOT_CORE_CLIENT_ID_FMT, projectId, cloudRegion, registryId, getDeviceId());
   }
 
   private String endpointConfigPayload(String hostname, String registryId) {
     EndpointConfiguration endpointConfiguration = new EndpointConfiguration();
     endpointConfiguration.protocol = Protocol.MQTT;
+    endpointConfiguration.transport = isMqttProvider() ? Transport.SSL : null;
     endpointConfiguration.hostname = hostname;
     endpointConfiguration.client_id = generateEndpointConfigClientId(registryId);
     return stringify(endpointConfiguration);
@@ -81,7 +85,7 @@ public class BlobsetSequences extends SequenceBase {
     if (blobPhase == BlobPhase.APPLY) {
       mirrorToOtherConfig();
     }
-    untilTrue(String.format("blobset phase is %s and stateStatus is null", blobPhase), () -> {
+    untilTrue(format("blobset phase is %s and stateStatus is null", blobPhase), () -> {
       BlobBlobsetState blobBlobsetState = deviceState.blobset.blobs.get(IOT_BLOB_KEY);
       BlobBlobsetConfig blobBlobsetConfig = deviceConfig.blobset.blobs.get(IOT_BLOB_KEY);
       // Successful reconnect sends a state message with empty Entry.
@@ -129,7 +133,7 @@ public class BlobsetSequences extends SequenceBase {
   }
 
   private String generateEndpointConfigDataUrl(String payload) {
-    return String.format(DATA_URL_FORMAT, JSON_MIME_TYPE, encodeBase64(payload));
+    return format(DATA_URL_FORMAT, JSON_MIME_TYPE, encodeBase64(payload));
   }
 
   @Feature(stage = PREVIEW, bucket = ENDPOINT_CONFIG)
