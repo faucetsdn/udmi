@@ -7,6 +7,7 @@ import static com.google.udmi.util.Common.NO_SITE;
 import static com.google.udmi.util.Common.SITE_METADATA_KEY;
 import static com.google.udmi.util.Common.getNamespacePrefix;
 import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_RAW;
+import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.getFileBytes;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -560,9 +561,12 @@ public class SiteModel {
   }
 
   public String getDevicePassword(String deviceId) {
-    File rsaKeyFile = getDeviceFile(deviceId, RSA_PRIVATE_KEY);
-    File ecKeyFile = getDeviceFile(deviceId, EC_PRIVATE_KEY);
-    return sha256(getFileBytes(ecKeyFile.exists() ? ecKeyFile : rsaKeyFile)).substring(0, 8);
+    String gatewayId = catchToNull(() -> getMetadata(deviceId).gateway.gateway_id);
+    String targetId = ofNullable(gatewayId).orElse(deviceId);
+    File rsaKeyFile = getDeviceFile(targetId, RSA_PRIVATE_KEY);
+    File ecKeyFile = getDeviceFile(targetId, EC_PRIVATE_KEY);
+    File keyFile = ecKeyFile.exists() ? ecKeyFile : rsaKeyFile;
+    return sha256(getFileBytes(keyFile)).substring(0, 8);
   }
 
   public static class MetadataException extends Metadata {
