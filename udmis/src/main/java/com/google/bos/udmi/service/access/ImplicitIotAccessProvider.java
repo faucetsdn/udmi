@@ -4,6 +4,7 @@ import static com.google.bos.udmi.service.messaging.MessageDispatcher.rawString;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.Common.DEFAULT_REGION;
 import static com.google.udmi.util.GeneralUtils.booleanString;
+import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
@@ -60,6 +61,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   private static final String IMPLICIT_DATABASE_COMPONENT = "database";
   private static final String CLIENT_ID_FORMAT = "/r/%s/d/%s";
   private static final String AUTH_PASSWORD_PROPERTY = "auth_pass";
+  private static final String LAST_CONFIG_ACKED = "last_config_ack";
   private final boolean enabled;
   private IotDataProvider database;
   private ReflectProcessor reflect;
@@ -294,6 +296,9 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
       info("Updated config %s #%s to #%s", dataRef, prev, update);
 
       sendConfigUpdate(registryId, deviceId, config);
+
+      // Implementation doesn't support config-message ack checking, so just assume acked.
+      dataRef.put(LAST_CONFIG_ACKED, getTimestamp());
     } catch (Exception e) {
       throw new RuntimeException(
           format("While updating config for %s/%s", registryId, deviceId), e);

@@ -49,7 +49,8 @@ public class BlobsetSequences extends SequenceBase {
   public static final String JSON_MIME_TYPE = "application/json";
   public static final String DATA_URL_FORMAT = "data:%s;base64,%s";
   public static final String IOT_BLOB_KEY = SystemBlobsets.IOT_ENDPOINT_CONFIG.value();
-  private static final String IOT_CORE_CLIENT_ID_FMT = "projects/%s/locations/%s/registries/%s/devices/%s";
+  private static final String IOT_CORE_CLIENT_ID_FMT =
+      "projects/%s/locations/%s/registries/%s/devices/%s";
   private static final String LOCAL_CLIENT_ID_FMT = "/r/%s/d/%s";
   private static final String BOGUS_ENDPOINT_HOSTNAME = "twiddily.fiddily.fog";
 
