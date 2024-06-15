@@ -44,11 +44,11 @@ public interface IotAccessProvider extends UdmiComponent {
 
   Entry<Long, String> fetchConfig(String registryId, String deviceId);
 
-  CloudModel fetchDevice(String deviceRegistryId, String deviceId);
+  CloudModel fetchDevice(String registryId, String deviceId);
 
   String fetchRegistryMetadata(String registryId, String metadataKey);
 
-  String fetchState(String deviceRegistryId, String deviceId);
+  String fetchState(String registryId, String deviceId);
 
   /**
    * Get all registries associated with this provider.
@@ -57,15 +57,17 @@ public interface IotAccessProvider extends UdmiComponent {
 
   boolean isEnabled();
 
-  CloudModel listDevices(String deviceRegistryId);
+  CloudModel listDevices(String registryId);
 
-  CloudModel modelDevice(String deviceRegistryId, String deviceId,
+  CloudModel modelDevice(String registryId, String deviceId,
       CloudModel cloudModel);
-  
-  CloudModel modelRegistry(String deviceRegistryId, String deviceId, CloudModel cloudModel);
+
+  CloudModel modelRegistry(String registryId, String deviceId, CloudModel cloudModel);
 
   String modifyConfig(String registryId, String deviceId,
       Function<Entry<Long, String>, String> munger);
+
+  void saveState(String registryId, String deviceId, String stateBlob);
 
   void sendCommandBase(String registryId, String deviceId, SubFolder folder,
       String message);

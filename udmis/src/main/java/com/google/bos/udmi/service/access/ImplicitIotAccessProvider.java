@@ -233,9 +233,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   @Override
   public String fetchState(String registryId, String deviceId) {
-    String stateBlob = registryDeviceRef(registryId, deviceId).get(LAST_STATE_KEY);
-    debug("TAP Fetching state %s/%s %s", registryId, deviceId, stateBlob);
-    return stateBlob;
+    return registryDeviceRef(registryId, deviceId).get(LAST_STATE_KEY);
   }
 
   @Override
@@ -267,7 +265,6 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   @Override
   public void saveState(String registryId, String deviceId, String stateBlob) {
-    debug("TAP Saving state %s/%s %s", registryId, deviceId, stateBlob);
     registryDeviceRef(registryId, deviceId).put(LAST_STATE_KEY, stateBlob);
   }
 
