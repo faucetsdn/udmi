@@ -9,6 +9,7 @@ import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.fromJsonFile;
 import static com.google.udmi.util.GeneralUtils.fromJsonString;
+import static com.google.udmi.util.GeneralUtils.getFileBytes;
 import static com.google.udmi.util.GeneralUtils.getNow;
 import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -56,9 +57,6 @@ import daq.pubber.SystemManager.ExtraSystemState;
 import java.io.File;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -768,8 +766,9 @@ public class Pubber extends ManagerBase implements ManagerHost {
     if (siteModel != null && config.keyFile != null) {
       config.keyFile = siteModel.getDeviceKeyFile(config.deviceId);
     }
+    ensureKeyBytes();
     checkState(deviceTarget == null, "mqttPublisher already defined");
-    String keyPassword = sha256(ensureKeyBytes()).substring(0, 8);
+    String keyPassword = siteModel.getDevicePassword(config.deviceId);
     String targetDeviceId = getTargetDeviceId(siteModel, config.deviceId);
     CertManager certManager = new CertManager(new File(siteModel.getReflectorDir(), CA_CRT),
         siteModel.getDeviceDir(targetDeviceId), config.endpoint.transport, keyPassword,
@@ -1135,15 +1134,6 @@ public class Pubber extends ManagerBase implements ManagerHost {
       EndpointConfiguration endpointConfiguration = new EndpointConfiguration();
       endpointConfiguration.error = e.toString();
       return stringify(endpointConfiguration);
-    }
-  }
-
-  private byte[] getFileBytes(String dataFile) {
-    Path dataPath = Paths.get(dataFile);
-    try {
-      return Files.readAllBytes(dataPath);
-    } catch (Exception e) {
-      throw new RuntimeException("While getting data from " + dataPath.toAbsolutePath(), e);
     }
   }
 

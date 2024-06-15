@@ -23,6 +23,8 @@ import java.util.Date;
 import java.util.HashMap;
 import org.junit.Before;
 import org.junit.Test;
+import udmi.schema.Auth_provider;
+import udmi.schema.Basic;
 import udmi.schema.BlobBlobsetConfig;
 import udmi.schema.BlobBlobsetConfig.BlobPhase;
 import udmi.schema.BlobBlobsetState;
@@ -68,9 +70,17 @@ public class BlobsetSequences extends SequenceBase {
   private String endpointConfigPayload(String hostname, String registryId) {
     EndpointConfiguration endpointConfiguration = new EndpointConfiguration();
     endpointConfiguration.protocol = Protocol.MQTT;
-    endpointConfiguration.transport = isMqttProvider() ? Transport.SSL : null;
     endpointConfiguration.hostname = hostname;
     endpointConfiguration.client_id = generateEndpointConfigClientId(registryId);
+    if (isMqttProvider()) {
+      endpointConfiguration.topic_prefix = endpointConfiguration.client_id;
+      endpointConfiguration.transport = Transport.SSL;
+      Auth_provider authProvider = new Auth_provider();
+      endpointConfiguration.auth_provider = authProvider;
+      authProvider.basic = new Basic();
+      authProvider.basic.username = endpointConfiguration.client_id;
+      authProvider.basic.password = siteModel.getDevicePassword(getDeviceId());
+    }
     return stringify(endpointConfiguration);
   }
 

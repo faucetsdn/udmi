@@ -8,10 +8,12 @@ import static com.google.udmi.util.Common.SITE_METADATA_KEY;
 import static com.google.udmi.util.Common.getNamespacePrefix;
 import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_RAW;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
+import static com.google.udmi.util.GeneralUtils.getFileBytes;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.removeArg;
+import static com.google.udmi.util.GeneralUtils.sha256;
 import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
@@ -94,6 +96,7 @@ public class SiteModel {
   private static final int SPEC_PROJECT_GROUP = 3;
   private static final int SPEC_NAMESPACE_GROUP = 5;
   private static final File CONFIG_OUT_DIR = new File("out/");
+  private static final String RSA_PRIVATE_KEY = "rsa_private.pkcs8";
 
   private final String sitePath;
   private final Map<String, Object> siteDefaults;
@@ -553,6 +556,10 @@ public class SiteModel {
 
   public File getReflectorDir() {
     return getSubdirectory(REFLECTOR_DIR);
+  }
+
+  public String getDevicePassword(String deviceId) {
+    return sha256(getFileBytes(getDeviceFile(deviceId, RSA_PRIVATE_KEY))).substring(0, 8);
   }
 
   public static class MetadataException extends Metadata {

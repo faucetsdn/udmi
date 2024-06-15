@@ -31,6 +31,9 @@ import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -635,5 +638,18 @@ public class GeneralUtils {
       throw new RuntimeException(format("Missing required %s argument", description));
     }
     return argList.remove(0);
+  }
+
+  public static byte[] getFileBytes(String dataFile) {
+    Path dataPath = Paths.get(dataFile);
+    try {
+      return Files.readAllBytes(dataPath);
+    } catch (Exception e) {
+      throw new RuntimeException("While getting data from " + dataPath.toAbsolutePath(), e);
+    }
+  }
+
+  public static byte[] getFileBytes(File dataFile) {
+    return getFileBytes(dataFile.getPath());
   }
 }
