@@ -97,6 +97,7 @@ public class SiteModel {
   private static final int SPEC_NAMESPACE_GROUP = 5;
   private static final File CONFIG_OUT_DIR = new File("out/");
   private static final String RSA_PRIVATE_KEY = "rsa_private.pkcs8";
+  private static final String EC_PRIVATE_KEY = "ec_private.pkcs8";
 
   private final String sitePath;
   private final Map<String, Object> siteDefaults;
@@ -559,7 +560,9 @@ public class SiteModel {
   }
 
   public String getDevicePassword(String deviceId) {
-    return sha256(getFileBytes(getDeviceFile(deviceId, RSA_PRIVATE_KEY))).substring(0, 8);
+    File rsaKeyFile = getDeviceFile(deviceId, RSA_PRIVATE_KEY);
+    File ecKeyFile = getDeviceFile(deviceId, EC_PRIVATE_KEY);
+    return sha256(getFileBytes(ecKeyFile.exists() ? ecKeyFile : rsaKeyFile)).substring(0, 8);
   }
 
   public static class MetadataException extends Metadata {
