@@ -21,8 +21,10 @@ import static udmi.schema.CloudModel.Resource_type.GATEWAY;
 
 import com.google.bos.udmi.service.core.ReflectProcessor;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
+import com.google.bos.udmi.service.support.AuthRef;
 import com.google.bos.udmi.service.support.DataRef;
 import com.google.bos.udmi.service.support.IotDataProvider;
+import com.google.bos.udmi.service.support.MosquittoAuthProvider;
 import com.google.common.collect.ImmutableSet;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
@@ -65,6 +67,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   private final boolean enabled;
   private IotDataProvider database;
   private ReflectProcessor reflect;
+  private final AuthRef authProvider = new MosquittoAuthProvider(this);
 
   public ImplicitIotAccessProvider(IotAccess iotAccess) {
     super(iotAccess);
@@ -83,7 +86,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   }
 
   private void blockDevice(String registryId, String deviceId, CloudModel cloudModel) {
-    database.auth().revoke(clientId(registryId, deviceId));
+    authProvider.revoke(clientId(registryId, deviceId));
     registryDeviceRef(registryId, deviceId).put(BLOCKED_PROPERTY, booleanString(true));
   }
 
@@ -105,7 +108,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     DataRef properties = registryDeviceRef(registryId, deviceId);
     properties.entries().keySet().forEach(properties::delete);
     registryDevicesCollection(registryId).delete(deviceId);
-    database.auth().revoke(clientId(registryId, deviceId));
+    authProvider.revoke(clientId(registryId, deviceId));
   }
 
   private CloudModel getReply(String registryId, String deviceId, CloudModel request,
@@ -156,7 +159,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
         ifNotNullThen(value, v -> properties.put(key, value), () -> properties.delete(key)));
 
     if (map.containsKey(AUTH_PASSWORD_PROPERTY)) {
-      database.auth().authorize(clientId(registryId, deviceId), map.get(AUTH_PASSWORD_PROPERTY));
+      authProvider.authorize(clientId(registryId, deviceId), map.get(AUTH_PASSWORD_PROPERTY));
     }
     return properties;
   }
