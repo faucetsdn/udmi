@@ -72,7 +72,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   private IotDataProvider database;
   private ReflectProcessor reflect;
   private final ConnectionBroker broker = new MosquittoBroker(this);
-  private final Future<Boolean> connLogger;
+  private final Future<Void> connLogger;
 
   /**
    * Create an access provider with implicit internal resources.

@@ -10,14 +10,15 @@ public interface ConnectionBroker {
 
   void authorize(String clientId, String password);
 
-  Future<Boolean> addEventListener(String clientPrefix, Consumer<ConnectionEvent> eventConsumer);
+  Future<Void> addEventListener(String clientPrefix, Consumer<ConnectionEvent> eventConsumer);
 
   /**
    * Simple event for connection broker happenings.
    */
   class ConnectionEvent {
-    String clientId;
-    String operation;
-    String flow;
+    public String clientId;
+    public String operation;
+    public String flow;
+    public String detail;
   }
 }

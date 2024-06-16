@@ -1,10 +1,14 @@
 package com.google.bos.udmi.service.support;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.pod.ContainerBase;
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -13,7 +17,7 @@ import java.util.function.Consumer;
 /**
  * Provider that links directly to a mosquitto broker.
  */
-public class MosquittoBroker implements ConnectionBroker {
+public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
 
   private static final String UDMI_ROOT = System.getenv("UDMI_ROOT");
   private static final String MOSQUCTL_FMT = UDMI_ROOT + "/bin/mosquctl_client %s %s";
@@ -32,9 +36,29 @@ public class MosquittoBroker implements ConnectionBroker {
   }
 
   @Override
-  public Future<Boolean> addEventListener(String clientPrefix,
+  public Future<Void> addEventListener(String clientPrefix,
       Consumer<ConnectionEvent> eventConsumer) {
-    return new CompletableFuture<>();
+    return CompletableFuture.runAsync(() -> consumeLogs(clientPrefix, eventConsumer));
+  }
+
+  private void consumeLogs(String clientPrefix, Consumer<ConnectionEvent> eventConsumer) {
+    info("Starting log consumer for " + MOSQUITTO_LOG);
+    try (BufferedReader logReader = new BufferedReader(new FileReader(MOSQUITTO_LOG))) {
+      logReader.lines().forEach(line -> ifNotNullThen(parseLogLine(line), eventConsumer));
+    } catch (Exception e) {
+      error("While processing log consumer for %s: %s", MOSQUITTO_LOG, friendlyStackTrace(e));
+      ConnectionEvent event = new ConnectionEvent();
+      event.detail = e.getMessage();
+      eventConsumer.accept(event);
+    } finally {
+      info("Done with log consumer for " + MOSQUITTO_LOG);
+    }
+  }
+
+  private ConnectionEvent parseLogLine(String line) {
+    ConnectionEvent connectionEvent = new ConnectionEvent();
+    connectionEvent.detail = line;
+    return connectionEvent;
   }
 
   private void mosquctl(String clientId, String clientPass) {
