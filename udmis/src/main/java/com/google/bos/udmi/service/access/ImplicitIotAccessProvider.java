@@ -11,6 +11,7 @@ import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isNullOrNotEmpty;
 import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.isoConvert;
+import static com.google.udmi.util.JsonUtil.stringify;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
@@ -21,10 +22,11 @@ import static udmi.schema.CloudModel.Resource_type.GATEWAY;
 
 import com.google.bos.udmi.service.core.ReflectProcessor;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
-import com.google.bos.udmi.service.support.AuthRef;
+import com.google.bos.udmi.service.support.ConnectionBroker;
+import com.google.bos.udmi.service.support.ConnectionBroker.ConnectionEvent;
 import com.google.bos.udmi.service.support.DataRef;
 import com.google.bos.udmi.service.support.IotDataProvider;
-import com.google.bos.udmi.service.support.MosquittoAuthProvider;
+import com.google.bos.udmi.service.support.MosquittoBroker;
 import com.google.common.collect.ImmutableSet;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
@@ -35,6 +37,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
@@ -62,16 +65,23 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   private static final String NUM_ID_PROPERTY = "num_id";
   private static final String IMPLICIT_DATABASE_COMPONENT = "database";
   private static final String CLIENT_ID_FORMAT = "/r/%s/d/%s";
+  private static final String CLIENT_PREFIX = "/r";
   private static final String AUTH_PASSWORD_PROPERTY = "auth_pass";
   private static final String LAST_CONFIG_ACKED = "last_config_ack";
   private final boolean enabled;
   private IotDataProvider database;
   private ReflectProcessor reflect;
-  private final AuthRef authProvider = new MosquittoAuthProvider(this);
+  private final ConnectionBroker broker = new MosquittoBroker(this);
+  private final Future<Boolean> connLogger;
 
   public ImplicitIotAccessProvider(IotAccess iotAccess) {
     super(iotAccess);
     enabled = isNullOrNotEmpty(options.get(ENABLED_KEY));
+    connLogger = broker.addEventListener(CLIENT_PREFIX, this::connectionEvent);
+  }
+
+  private void connectionEvent(ConnectionEvent connectionEvent) {
+    debug("Connection event received: " + stringify(connectionEvent));
   }
 
   /**
@@ -86,7 +96,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   }
 
   private void blockDevice(String registryId, String deviceId, CloudModel cloudModel) {
-    authProvider.revoke(clientId(registryId, deviceId));
+    broker.authorize(clientId(registryId, deviceId), null);
     registryDeviceRef(registryId, deviceId).put(BLOCKED_PROPERTY, booleanString(true));
   }
 
@@ -108,7 +118,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     DataRef properties = registryDeviceRef(registryId, deviceId);
     properties.entries().keySet().forEach(properties::delete);
     registryDevicesCollection(registryId).delete(deviceId);
-    authProvider.revoke(clientId(registryId, deviceId));
+    broker.authorize(clientId(registryId, deviceId), null);
   }
 
   private CloudModel getReply(String registryId, String deviceId, CloudModel request,
@@ -159,7 +169,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
         ifNotNullThen(value, v -> properties.put(key, value), () -> properties.delete(key)));
 
     if (map.containsKey(AUTH_PASSWORD_PROPERTY)) {
-      authProvider.authorize(clientId(registryId, deviceId), map.get(AUTH_PASSWORD_PROPERTY));
+      broker.authorize(clientId(registryId, deviceId), map.get(AUTH_PASSWORD_PROPERTY));
     }
     return properties;
   }
@@ -205,6 +215,12 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     database = UdmiServicePod.getComponent(IMPLICIT_DATABASE_COMPONENT);
     reflect = UdmiServicePod.getComponent(ReflectProcessor.class);
     super.activate();
+  }
+
+  @Override
+  public void shutdown() {
+    connLogger.cancel(true);
+    super.shutdown();
   }
 
   @Override
