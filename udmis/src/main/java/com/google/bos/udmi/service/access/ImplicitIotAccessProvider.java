@@ -74,6 +74,9 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   private final ConnectionBroker broker = new MosquittoBroker(this);
   private final Future<Boolean> connLogger;
 
+  /**
+   * Create an access provider with implicit internal resources.
+   */
   public ImplicitIotAccessProvider(IotAccess iotAccess) {
     super(iotAccess);
     enabled = isNullOrNotEmpty(options.get(ENABLED_KEY));

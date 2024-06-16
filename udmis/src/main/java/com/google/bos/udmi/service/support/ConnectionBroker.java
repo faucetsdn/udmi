@@ -12,6 +12,9 @@ public interface ConnectionBroker {
 
   Future<Boolean> addEventListener(String clientPrefix, Consumer<ConnectionEvent> eventConsumer);
 
+  /**
+   * Simple event for connection broker happenings.
+   */
   class ConnectionEvent {
     String clientId;
     String operation;

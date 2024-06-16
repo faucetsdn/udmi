@@ -5,7 +5,10 @@ import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.pod.ContainerBase;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 /**
  * Provider that links directly to a mosquitto broker.
@@ -26,6 +29,12 @@ public class MosquittoBroker implements ConnectionBroker {
   @Override
   public void authorize(String clientId, String password) {
     mosquctl(clientId, ofNullable(password).orElse(REVOKE_PASSWORD));
+  }
+
+  @Override
+  public Future<Boolean> addEventListener(String clientPrefix,
+      Consumer<ConnectionEvent> eventConsumer) {
+    return new CompletableFuture<>();
   }
 
   private void mosquctl(String clientId, String clientPass) {
