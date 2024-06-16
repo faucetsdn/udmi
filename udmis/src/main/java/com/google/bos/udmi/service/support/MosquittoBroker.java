@@ -44,7 +44,9 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
   private void consumeLogs(String clientPrefix, Consumer<ConnectionEvent> eventConsumer) {
     info("Starting log consumer for " + MOSQUITTO_LOG);
     try (BufferedReader logReader = new BufferedReader(new FileReader(MOSQUITTO_LOG))) {
-      logReader.lines().forEach(line -> ifNotNullThen(parseLogLine(clientPrefix, line), eventConsumer));
+      while (true) {
+        ifNotNullThen(parseLogLine(clientPrefix, logReader.readLine()), eventConsumer);
+      }
     } catch (Exception e) {
       error("While processing log consumer for %s: %s", MOSQUITTO_LOG, friendlyStackTrace(e));
       ConnectionEvent event = new ConnectionEvent();
