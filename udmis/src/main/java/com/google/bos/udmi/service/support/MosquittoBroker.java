@@ -1,14 +1,10 @@
 package com.google.bos.udmi.service.support;
 
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
-import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.pod.ContainerBase;
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -20,10 +16,10 @@ import java.util.function.Consumer;
 public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
 
   private static final String UDMI_ROOT = System.getenv("UDMI_ROOT");
-  private static final String MOSQUCTL_FMT = UDMI_ROOT + "/bin/mosquctl_client %s %s";
-  private static final String MOSQUITTO_LOG = "/var/log/mosquitto/mosquitto.log";
+  private static final String MOSQUCTL_CLIENT_FMT = UDMI_ROOT + "/bin/mosquctl_client %s %s";
+  private static final String MOSQUCTL_LOG_FMT = UDMI_ROOT + "/bin/mosquctl_log %s";
   private static final long EXEC_TIMEOUT_SEC = 10;
-  public static final String REVOKE_PASSWORD = "--";
+  private static final String REVOKE_PASSWORD = "--";
   private final ContainerBase container;
 
   public MosquittoBroker(ContainerBase container) {
@@ -32,7 +28,7 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
 
   @Override
   public void authorize(String clientId, String password) {
-    mosquctl(clientId, ofNullable(password).orElse(REVOKE_PASSWORD));
+    mosquctlClient(clientId, ofNullable(password).orElse(REVOKE_PASSWORD));
   }
 
   @Override
@@ -42,30 +38,21 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
   }
 
   private void consumeLogs(String clientPrefix, Consumer<ConnectionEvent> eventConsumer) {
-    info("Starting log consumer for " + MOSQUITTO_LOG);
-    try (BufferedReader logReader = new BufferedReader(new FileReader(MOSQUITTO_LOG))) {
-      while (true) {
-        ifNotNullThen(parseLogLine(clientPrefix, logReader.readLine()), eventConsumer);
-      }
-    } catch (Exception e) {
-      error("While processing log consumer for %s: %s", MOSQUITTO_LOG, friendlyStackTrace(e));
-      ConnectionEvent event = new ConnectionEvent();
-      event.detail = e.getMessage();
-      eventConsumer.accept(event);
-    } finally {
-      info("Done with log consumer for " + MOSQUITTO_LOG);
-    }
+    info("Starting log consumer for " + clientPrefix);
   }
 
   private ConnectionEvent parseLogLine(String clientPrefix, String line) {
+    if (line == null) {
+      return null;
+    }
     ConnectionEvent connectionEvent = new ConnectionEvent();
     connectionEvent.clientId = clientPrefix;
     connectionEvent.detail = line;
     return connectionEvent;
   }
 
-  private void mosquctl(String clientId, String clientPass) {
-    String cmd = format(MOSQUCTL_FMT, clientId, clientPass);
+  private void mosquctlClient(String clientId, String clientPass) {
+    String cmd = format(MOSQUCTL_CLIENT_FMT, clientId, clientPass);
     synchronized (MosquittoBroker.class) {
       try {
         container.info("Executing command %s", cmd);
