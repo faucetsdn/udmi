@@ -15,7 +15,6 @@ import static com.google.udmi.util.CleanDateFormat.cleanDate;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.Common.DEVICE_ID_KEY;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
-import static com.google.udmi.util.Common.GATEWAY_ID_KEY;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.catchToElse;
 import static com.google.udmi.util.GeneralUtils.changedLines;
@@ -41,6 +40,7 @@ import static java.lang.String.format;
 import static java.nio.file.Files.newOutputStream;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
@@ -307,6 +307,7 @@ public class SequenceBase {
   private Description testDescription;
   private SubFolder testSchema;
   private int lastStatusLevel;
+  private CaptureMap otherEvents = new CaptureMap();
 
   private static void setupSequencer() {
     exeConfig = SequenceRunner.ensureExecutionConfig();
@@ -512,7 +513,7 @@ public class SequenceBase {
       Map.Entry<FeatureStage, List<SequenceValidationState>> entry) {
     List<SequenceValidationState> values = entry.getValue();
     Set<SequenceValidationState> failures = values.stream()
-        .filter(state -> state.result != PASS).collect(Collectors.toSet());
+        .filter(state -> state.result != PASS).collect(toSet());
 
     Entry logEntry = new Entry();
     logEntry.category = VALIDATION_FEATURE_SCHEMA;
@@ -1587,7 +1588,6 @@ public class SequenceBase {
 
   private void processMessage(Map<String, String> attributes, Map<String, Object> message) {
     String deviceId = attributes.get(DEVICE_ID_KEY);
-    String gatewayId = attributes.get(GATEWAY_ID_KEY);
     String subFolderRaw = attributes.get("subFolder");
     String subTypeRaw = attributes.get("subType");
     String transactionId = attributes.get("transactionId");
@@ -1596,7 +1596,7 @@ public class SequenceBase {
     trace("received command " + commandSignature);
 
     boolean targetDevice = getDeviceId().equals(deviceId);
-    boolean proxiedDevice = getDeviceId().equals(gatewayId);
+    boolean proxiedDevice = !targetDevice && receivedEvents.containsKey(deviceId);
 
     if (!targetDevice && !proxiedDevice) {
       return;
@@ -2209,7 +2209,12 @@ public class SequenceBase {
   }
 
   public Set<String> getReceivedDevices() {
-    return receivedEvents.keySet();
+    return receivedEvents.entrySet().stream().filter(entry -> !entry.getValue().isEmpty())
+        .map(Map.Entry::getKey).collect(toSet());
+  }
+
+  protected void captureReceivedEventsFor(Set<String> proxyDevices) {
+    proxyDevices.forEach(proxyId -> receivedEvents.put(proxyId, new CaptureMap()));
   }
 
   public List<Map<String, Object>> getReceivedEvents(String deviceId, SubFolder subFolder) {
@@ -2225,11 +2230,13 @@ public class SequenceBase {
   }
 
   public CaptureMap getReceivedEvents(String deviceId) {
-    return receivedEvents.computeIfAbsent(deviceId, key -> new CaptureMap());
+    return ofNullable(receivedEvents.get(deviceId)).orElse(otherEvents);
   }
 
   private void clearReceivedEvents() {
     receivedEvents.clear();
+    receivedEvents.put(getDeviceId(), new CaptureMap());
+    otherEvents.clear();
   }
 
   public Map<String, Object> getReceivedUpdates() {

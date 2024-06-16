@@ -56,6 +56,7 @@ public class GatewaySequences extends SequenceBase {
   @Test(timeout = TWO_MINUTES_MS)
   public void gateway_proxy_events() {
     Set<String> remaining = new HashSet<>(deviceMetadata.gateway.proxy_ids);
+    captureReceivedEventsFor(remaining);
     Set<String> original = ImmutableSet.copyOf(remaining);
 
     untilTrue("All proxy devices received data", () -> {
