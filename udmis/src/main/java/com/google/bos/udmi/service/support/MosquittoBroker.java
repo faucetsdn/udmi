@@ -1,10 +1,14 @@
 package com.google.bos.udmi.service.support;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
+import static com.google.udmi.util.JsonUtil.safeSleep;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.pod.ContainerBase;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -39,6 +43,7 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
 
   private void consumeLogs(String clientPrefix, Consumer<ConnectionEvent> eventConsumer) {
     info("Starting log consumer for " + clientPrefix);
+    mosquctlLog(clientPrefix);
   }
 
   private ConnectionEvent parseLogLine(String clientPrefix, String line) {
@@ -51,11 +56,42 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
     return connectionEvent;
   }
 
+  private void mosquctlLog(String clientPrefix) {
+    String cmd = format(MOSQUCTL_LOG_FMT, clientPrefix);
+    synchronized (MosquittoBroker.class) {
+      try {
+        info("Starting log consumer %s", cmd);
+        Process exec = Runtime.getRuntime().exec(cmd);
+        consumeStream(exec.errorReader(), line -> warn("log error: " + line));
+        consumeStream(exec.inputReader(), line -> debug("log output: " + line));
+        exec.waitFor();
+      } catch (Exception e) {
+        throw new RuntimeException("While executing " + cmd, e);
+      } finally {
+        info("Completed log consumer");
+      }
+    }
+  }
+
+  private void consumeStream(BufferedReader reader, Consumer<String> consumer) {
+    new Thread(() -> {
+      String line;
+      try {
+        while ((line = reader.readLine()) != null) {
+          consumer.accept(line);
+        }
+      } catch (Exception e) {
+        warn("Exception consuming stream: " + friendlyStackTrace(e));
+        consumer.accept(e.getMessage());
+      }
+    }).start();
+  }
+
   private void mosquctlClient(String clientId, String clientPass) {
     String cmd = format(MOSQUCTL_CLIENT_FMT, clientId, clientPass);
     synchronized (MosquittoBroker.class) {
       try {
-        container.info("Executing command %s", cmd);
+        info("Executing command %s", cmd);
         Process exec = Runtime.getRuntime().exec(cmd);
         exec.waitFor(EXEC_TIMEOUT_SEC, TimeUnit.SECONDS);
         exec.errorReader().lines().forEach(container::info);

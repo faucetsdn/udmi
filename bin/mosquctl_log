@@ -15,4 +15,8 @@ fi
 prefix=$1
 shift
 
-tail -f $LOG_FILE | egrep " (from|to|as|Client) $prefix"
+echo $(date +%s): Starting MONITOR Client $prefix of $LOG_FILE
+
+tail -f $LOG_FILE | stdbuf -oL egrep " (from|to|as|Client) $prefix"
+
+echo $(date +%s): Finished MONITOR Client $prefix of $LOG_FILE
