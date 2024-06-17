@@ -1,0 +1,18 @@
+#!/bin/bash -e
+
+UDMI_ROOT=$(dirname $0)/..
+cd $UDMI_ROOT
+
+LOG_FILE=/var/log/mosquitto/mosquitto.log
+
+source $UDMI_ROOT/etc/shell_common.sh
+
+if [[ $# != 1 ]]; then
+    echo Usage: $0 client_id_prefix
+    false
+fi
+
+prefix=$1
+shift
+
+tail -f $LOG_FILE | egrep " (from|to|as|Client) $prefix"
