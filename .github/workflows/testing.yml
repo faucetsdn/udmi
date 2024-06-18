@@ -283,6 +283,7 @@ jobs:
         if: ${{ !cancelled() }}
         run: |
           mosquitto -h
+          more /etc/mosquitto/mosquitto.conf /etc/mosquitto/conf.d/*
           cat /var/log/mosquitto/mosquitto.log || true
       - name: support bundle
         if: ${{ !cancelled() }}
