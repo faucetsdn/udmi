@@ -20,7 +20,7 @@ htmlmin==0.1.12
 httplib2==0.20.4
 idna==3.7
 isort==5.11.3
-Jinja2==3.1.3
+Jinja2==3.1.4
 json-schema-for-humans==0.40
 lazy-object-proxy==1.8.0
 markdown2==2.4.2
@@ -40,7 +40,7 @@ pylint==2.15.9
 pyparsing==3.0.7
 pytz==2021.3
 PyYAML==6.0
-requests==2.31.0
+requests==2.32.0
 requests-oauthlib==1.3.1
 rsa==4.8
 six==1.16.0
@@ -49,5 +49,5 @@ tomlkit==0.11.6
 typing-inspect==0.7.1
 typing_extensions==4.0.1
 uritemplate==4.1.1
-urllib3==1.26.18
+urllib3==1.26.19
 wrapt==1.14.1
