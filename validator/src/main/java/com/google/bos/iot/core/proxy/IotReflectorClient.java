@@ -16,6 +16,7 @@ import static com.google.udmi.util.Common.getNamespacePrefix;
 import static com.google.udmi.util.GeneralUtils.decodeBase64;
 import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.getDate;
@@ -89,6 +90,7 @@ public class IotReflectorClient implements MessagePublisher {
   private final String projectId;
   private final String updateTo;
   private final IotProvider iotProvider;
+  private final boolean enforceUdmiVersion;
   private Date reflectorStateTimestamp;
   private boolean isInstallValid;
   private boolean active;
@@ -107,6 +109,7 @@ public class IotReflectorClient implements MessagePublisher {
         format("Min required version %s not satisfied by tools version %s", TOOLS_FUNCTIONS_VERSION,
             requiredVersion));
     this.requiredVersion = requiredVersion;
+    this.enforceUdmiVersion = isTrue(iotConfig.enforce_version);
     registryId = SiteModel.getRegistryActual(iotConfig);
     projectId = iotConfig.project_id;
     udmiVersion = ofNullable(iotConfig.udmi_version).orElseGet(Common::getUdmiVersion);
@@ -332,6 +335,7 @@ public class IotReflectorClient implements MessagePublisher {
       if (timestampMatch && versionMatch) {
         if (!udmiVersion.equals(udmiInfo.udmi_version)) {
           System.err.println("UDMI version mismatch: " + udmiVersion);
+          checkState(!enforceUdmiVersion, "Strict UDMI version matching enabled");
         }
 
         System.err.printf("UDMI functions support versions %s:%s (required %s)%n",

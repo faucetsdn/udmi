@@ -33,6 +33,4 @@ public interface IotDataProvider extends UdmiComponent {
   }
 
   DataRef ref();
-
-  AuthRef auth();
 }

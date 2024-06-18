@@ -52,7 +52,7 @@ public class LocalIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public CloudModel fetchDevice(String deviceRegistryId, String deviceId) {
+  public CloudModel fetchDevice(String registryId, String deviceId) {
     throw new RuntimeException("Not yet implemented");
   }
 
@@ -62,7 +62,7 @@ public class LocalIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public String fetchState(String deviceRegistryId, String deviceId) {
+  public String fetchState(String registryId, String deviceId) {
     throw new RuntimeException("Not yet implemented");
   }
 
@@ -81,17 +81,17 @@ public class LocalIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public CloudModel listDevices(String deviceRegistryId) {
+  public CloudModel listDevices(String registryId) {
     throw new RuntimeException("Not yet implemented");
   }
 
   @Override
-  public CloudModel modelDevice(String deviceRegistryId, String deviceId, CloudModel cloudModel) {
+  public CloudModel modelDevice(String registryId, String deviceId, CloudModel cloudModel) {
     throw new RuntimeException("Not yet implemented");
   }
 
   @Override
-  public CloudModel modelRegistry(String deviceRegistryId, String deviceId, CloudModel cloudModel) {
+  public CloudModel modelRegistry(String registryId, String deviceId, CloudModel cloudModel) {
     throw new RuntimeException("Not yet implemented");
   }
 

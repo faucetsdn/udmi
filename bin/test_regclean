@@ -148,6 +148,16 @@ jq '.iot_provider = "dynamic"' $iot_config | sponge $iot_config
 jq '.project_id = "this-is-not-right"' $iot_config | sponge $iot_config
 jq '.udmi_namespace = "bunny"' $iot_config | sponge $iot_config
 
+echo Create one device to test that it works...
+echo bin/registrar $site_args $device_id
+bin/registrar $site_args $device_id
+
+echo Check $device_id to make sure that it works...
+echo pubber/bin/run $pubber_config
+result=0
+timeout 20s pubber/bin/run $pubber_config || result=$?
+[[ $result == 0 ]] || fail Improper pubber failure code $result
+
 echo Clean out the registry to make sure devices get removed...
 echo bin/registrar $site_args -d -x
 bin/registrar $site_args -d -x

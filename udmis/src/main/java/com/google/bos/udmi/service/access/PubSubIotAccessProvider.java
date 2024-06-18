@@ -118,27 +118,27 @@ public class PubSubIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public CloudModel fetchDevice(String deviceRegistryId, String deviceId) {
+  public CloudModel fetchDevice(String registryId, String deviceId) {
     throw new RuntimeException("fetchDevice not implemented for PubSub");
   }
 
   @Override
-  public String fetchState(String deviceRegistryId, String deviceId) {
+  public String fetchState(String registryId, String deviceId) {
     throw new RuntimeException("fetchState not implemented for PubSub");
   }
 
   @Override
-  public CloudModel listDevices(String deviceRegistryId) {
+  public CloudModel listDevices(String registryId) {
     throw new RuntimeException("listDevices not implemented for PubSub");
   }
 
   @Override
-  public CloudModel modelDevice(String deviceRegistryId, String deviceId, CloudModel cloudModel) {
+  public CloudModel modelDevice(String registryId, String deviceId, CloudModel cloudModel) {
     throw new RuntimeException("modelDevice not implemented for PubSub");
   }
 
   @Override
-  public CloudModel modelRegistry(String deviceRegistryId, String deviceId, CloudModel cloudModel) {
+  public CloudModel modelRegistry(String registryId, String deviceId, CloudModel cloudModel) {
     throw new RuntimeException("modelDevice not implemented for PubSub");
   }
 
