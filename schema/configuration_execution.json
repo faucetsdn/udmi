@@ -76,6 +76,9 @@
     "udmi_version": {
       "type": "string"
     },
+    "enforce_version": {
+      "type": "boolean"
+    },
     "udmi_root": {
       "type": "string"
     },
