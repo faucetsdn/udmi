@@ -1,5 +1,6 @@
 package com.google.bos.udmi.service.support;
 
+import java.util.Date;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
@@ -10,15 +11,29 @@ public interface ConnectionBroker {
 
   void authorize(String clientId, String password);
 
-  Future<Void> addEventListener(String clientPrefix, Consumer<ConnectionEvent> eventConsumer);
+  Future<Void> addEventListener(String clientPrefix, Consumer<BrokerEvent> eventConsumer);
 
   /**
    * Simple event for connection broker happenings.
    */
-  class ConnectionEvent {
+  class BrokerEvent {
     public String clientId;
-    public String operation;
-    public String flow;
+    public Operation operation;
+    public Date timestamp;
+    public int mesageId;
     public String detail;
+    public Direction direction;
+  }
+
+  enum Operation {
+    UNKNOWN,
+    EXCEPTION,
+    PUBLISH,
+    PUBACK
+  }
+
+  enum Direction {
+    Sending,
+    Received
   }
 }
