@@ -36,7 +36,7 @@ import udmi.schema.IotAccess;
 public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
 
   public static final GetOption PREFIXED_OPTION = GetOption.newBuilder().isPrefix(true).build();
-  private static final String    EXPECTED_PREFIX = "http://";
+  private static final String EXPECTED_PREFIX = "http://";
   private static final String RESULTING_PREFIX = "ip:///";
   private static final long QUERY_TIMEOUT_SEC = 10;
   private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(QUERY_TIMEOUT_SEC);
