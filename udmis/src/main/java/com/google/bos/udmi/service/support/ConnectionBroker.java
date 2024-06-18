@@ -25,6 +25,9 @@ public interface ConnectionBroker {
     public Direction direction;
   }
 
+  /**
+   * Enum representing the broker event.
+   */
   enum Operation {
     UNKNOWN,
     EXCEPTION,
@@ -32,6 +35,9 @@ public interface ConnectionBroker {
     PUBACK
   }
 
+  /**
+   * Direction of the transaction.
+   */
   enum Direction {
     Sending,
     Received
