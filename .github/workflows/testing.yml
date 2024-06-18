@@ -279,6 +279,9 @@ jobs:
       - name: udmis log
         if: ${{ !cancelled() }}
         run: cat out/udmis*.log
+      - name: mosquitto logs
+        if: ${{ !cancelled() }}
+        run: cat /var/log/mosquitto/mosquitto.log || true
       - name: support bundle
         if: ${{ !cancelled() }}
         run: bin/support ${{ github.repository_owner }}_${{ github.job }}_
