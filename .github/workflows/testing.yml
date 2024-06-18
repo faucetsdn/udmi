@@ -275,16 +275,15 @@ jobs:
         run: bin/test_udmis
       - name: mosquitto debug
         if: ${{ !cancelled() }}
-        run: sudo cat /etc/mosquitto/dynamic_security.json
+        run: |
+          mosquitto -h || true
+          sudo more /etc/mosquitto/* /etc/mosquitto/conf.d/* || true
       - name: udmis log
         if: ${{ !cancelled() }}
         run: cat out/udmis*.log
       - name: mosquitto logs
         if: ${{ !cancelled() }}
-        run: |
-          mosquitto -h || true
-          more /etc/mosquitto/mosquitto.conf /etc/mosquitto/conf.d/* || true
-          cat /var/log/mosquitto/mosquitto.log || true
+        run: cat /var/log/mosquitto/mosquitto.log || true
       - name: support bundle
         if: ${{ !cancelled() }}
         run: bin/support ${{ github.repository_owner }}_${{ github.job }}_
