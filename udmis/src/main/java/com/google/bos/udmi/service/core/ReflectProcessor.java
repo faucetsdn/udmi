@@ -55,9 +55,9 @@ import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
+import udmi.schema.SystemModel;
 import udmi.schema.UdmiConfig;
 import udmi.schema.UdmiState;
-import udmi.schema.;
 
 /**
  * Handle the reflector processor stream for UDMI utility tool clients.
