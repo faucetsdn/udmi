@@ -139,6 +139,14 @@ public class MessageUpgrader {
       patch = 1;
     }
 
+    if (minor < 5) {
+      JsonNode before = message.deepCopy();
+      upgradeTo_1_5_0();
+      upgraded |= !before.equals(message);
+      patch = 0;
+      minor = 5;
+    }
+
     if (upgraded && message.get(VERSION_KEY) != null) {
       message.put(UPGRADED_FROM, originalVersion);
       message.put(VERSION_KEY, String.format(TARGET_FORMAT, major, minor, patch));
@@ -195,6 +203,19 @@ public class MessageUpgrader {
     }
     if (METADATA_SCHEMA.equals(schemaName)) {
       upgradeTo_1_4_1_metadata();
+    }
+  }
+
+   private void upgradeTo_1_5_0() {
+    if (STATE_SCHEMA.equals(schemaName)) {
+      upgradeTo_1_5_0_state();
+    }
+  }
+
+  private void upgradeTo_1_5_0_state() {
+    ObjectNode gateway = (ObjectNode) message.get("gateway");
+    if (gateway != null && gateway.has("devices")) {
+      gateway.remove("devices");
     }
   }
 
