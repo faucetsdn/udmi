@@ -2,9 +2,9 @@
   "timestamp": "2024-06-11T08:31:26Z",
   "version": "1.4.1",
   "upgraded_from": "1.4.0",
-  "hash": "fd811951",
-  "tags": [ ],
+  "hash": "c621e305",
   "system": {
+    "tags": [ ],
     "location": {
       "site": "US-SFO-XYY",
       "section": "L01-NW",

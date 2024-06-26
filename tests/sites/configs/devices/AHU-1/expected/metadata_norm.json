@@ -1,8 +1,7 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.5.0",
-  "hash": "a6ac2151",
-  "tags": [ ],
+  "hash": "8e08fcc9",
   "cloud": {
     "auth_type": "RS256",
     "config": {
@@ -10,6 +9,7 @@
     }
   },
   "system": {
+    "tags": [ ],
     "location": {
       "site": "ZZ-TRI-FECTA-AHU",
       "section": "2-3N8C",

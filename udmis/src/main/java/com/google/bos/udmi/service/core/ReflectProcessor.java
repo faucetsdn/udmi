@@ -55,6 +55,7 @@ import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
+import udmi.schema.SystemModel;
 import udmi.schema.UdmiConfig;
 import udmi.schema.UdmiState;
 
@@ -238,7 +239,8 @@ public class ReflectProcessor extends ProcessorBase {
     // If it's not a valid JSON object, then fall back to a string description alternate.
     if (modelString == null || !modelString.startsWith(JsonUtil.JSON_OBJECT_LEADER)) {
       ModelUpdate modelUpdate = new ModelUpdate();
-      modelUpdate.description = modelString;
+      modelUpdate.system = new SystemModel();
+      modelUpdate.system.description = modelString;
       return modelUpdate;
     }
     // Not strict because registrar could publish a metadata which fails strictly

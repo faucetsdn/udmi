@@ -26,10 +26,6 @@
       "description": "Original version of the UDMI schema for this file",
       "type": "string"
     },
-    "description": {
-      "description": "Generic human-readable text describing the device",
-      "type": "string"
-    },
     "hash": {
       "description": "Automatically generated field that contains the hash of file contents.",
       "type": "string",
@@ -38,15 +34,6 @@
     "device_version": {
       "description": "Version of schema supported by the device",
       "type": "string"
-    },
-    "tags":{
-      "description": "Tags assosciated with the device",
-      "type": "array",
-      "uniqueItems": true,
-      "items": {
-        "pattern": "^[a-z0-9]+$"
-      },
-      "examples": [["lighting"], ["energy", "building"]]
     },
     "cloud": {
       "$ref": "file:model_cloud.json#"
