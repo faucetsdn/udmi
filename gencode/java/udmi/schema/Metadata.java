@@ -21,7 +21,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "timestamp",
     "version",
     "upgraded_from",
-    "description",
     "hash",
     "device_version",
     "cloud",
@@ -59,13 +58,6 @@ public class Metadata {
     @JsonProperty("upgraded_from")
     @JsonPropertyDescription("Original version of the UDMI schema for this file")
     public java.lang.String upgraded_from;
-    /**
-     * Generic human-readable text describing the device
-     * 
-     */
-    @JsonProperty("description")
-    @JsonPropertyDescription("Generic human-readable text describing the device")
-    public java.lang.String description;
     /**
      * Automatically generated field that contains the hash of file contents.
      * 
@@ -159,7 +151,6 @@ public class Metadata {
         int result = 1;
         result = ((result* 31)+((this.device_version == null)? 0 :this.device_version.hashCode()));
         result = ((result* 31)+((this.testing == null)? 0 :this.testing.hashCode()));
-        result = ((result* 31)+((this.description == null)? 0 :this.description.hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
         result = ((result* 31)+((this.cloud == null)? 0 :this.cloud.hashCode()));
         result = ((result* 31)+((this.features == null)? 0 :this.features.hashCode()));
@@ -183,7 +174,7 @@ public class Metadata {
             return false;
         }
         Metadata rhs = ((Metadata) other);
-        return (((((((((((((((this.device_version == rhs.device_version)||((this.device_version!= null)&&this.device_version.equals(rhs.device_version)))&&((this.testing == rhs.testing)||((this.testing!= null)&&this.testing.equals(rhs.testing))))&&((this.description == rhs.description)||((this.description!= null)&&this.description.equals(rhs.description))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.cloud == rhs.cloud)||((this.cloud!= null)&&this.cloud.equals(rhs.cloud))))&&((this.features == rhs.features)||((this.features!= null)&&this.features.equals(rhs.features))))&&((this.system == rhs.system)||((this.system!= null)&&this.system.equals(rhs.system))))&&((this.discovery == rhs.discovery)||((this.discovery!= null)&&this.discovery.equals(rhs.discovery))))&&((this.upgraded_from == rhs.upgraded_from)||((this.upgraded_from!= null)&&this.upgraded_from.equals(rhs.upgraded_from))))&&((this.pointset == rhs.pointset)||((this.pointset!= null)&&this.pointset.equals(rhs.pointset))))&&((this.hash == rhs.hash)||((this.hash!= null)&&this.hash.equals(rhs.hash))))&&((this.gateway == rhs.gateway)||((this.gateway!= null)&&this.gateway.equals(rhs.gateway))))&&((this.localnet == rhs.localnet)||((this.localnet!= null)&&this.localnet.equals(rhs.localnet))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
+        return ((((((((((((((this.device_version == rhs.device_version)||((this.device_version!= null)&&this.device_version.equals(rhs.device_version)))&&((this.testing == rhs.testing)||((this.testing!= null)&&this.testing.equals(rhs.testing))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.cloud == rhs.cloud)||((this.cloud!= null)&&this.cloud.equals(rhs.cloud))))&&((this.features == rhs.features)||((this.features!= null)&&this.features.equals(rhs.features))))&&((this.system == rhs.system)||((this.system!= null)&&this.system.equals(rhs.system))))&&((this.discovery == rhs.discovery)||((this.discovery!= null)&&this.discovery.equals(rhs.discovery))))&&((this.upgraded_from == rhs.upgraded_from)||((this.upgraded_from!= null)&&this.upgraded_from.equals(rhs.upgraded_from))))&&((this.pointset == rhs.pointset)||((this.pointset!= null)&&this.pointset.equals(rhs.pointset))))&&((this.hash == rhs.hash)||((this.hash!= null)&&this.hash.equals(rhs.hash))))&&((this.gateway == rhs.gateway)||((this.gateway!= null)&&this.gateway.equals(rhs.gateway))))&&((this.localnet == rhs.localnet)||((this.localnet!= null)&&this.localnet.equals(rhs.localnet))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
     }
 
 }

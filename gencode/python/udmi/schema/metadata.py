@@ -16,7 +16,6 @@ class Metadata:
     self.timestamp = None
     self.version = None
     self.upgraded_from = None
-    self.description = None
     self.hash = None
     self.device_version = None
     self.cloud = None
@@ -36,7 +35,6 @@ class Metadata:
     result.timestamp = source.get('timestamp')
     result.version = source.get('version')
     result.upgraded_from = source.get('upgraded_from')
-    result.description = source.get('description')
     result.hash = source.get('hash')
     result.device_version = source.get('device_version')
     result.cloud = CloudModel.from_dict(source.get('cloud'))
@@ -73,8 +71,6 @@ class Metadata:
       result['version'] = self.version # 5
     if self.upgraded_from:
       result['upgraded_from'] = self.upgraded_from # 5
-    if self.description:
-      result['description'] = self.description # 5
     if self.hash:
       result['hash'] = self.hash # 5
     if self.device_version:
