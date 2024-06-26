@@ -1,12 +1,15 @@
 
 package udmi.schema;
 
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 
 /**
@@ -17,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "tags",
     "location",
     "hardware",
     "software",
@@ -28,6 +32,14 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @Generated("jsonschema2pojo")
 public class SystemModel {
 
+    /**
+     * Tags assosciated with the device
+     * 
+     */
+    @JsonProperty("tags")
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    @JsonPropertyDescription("Tags assosciated with the device")
+    public Set<Object> tags = new LinkedHashSet<Object>();
     /**
      * Properties the expected physical location of the device.
      * 
@@ -84,6 +96,7 @@ public class SystemModel {
         result = ((result* 31)+((this.location == null)? 0 :this.location.hashCode()));
         result = ((result* 31)+((this.physical_tag == null)? 0 :this.physical_tag.hashCode()));
         result = ((result* 31)+((this.adjunct == null)? 0 :this.adjunct.hashCode()));
+        result = ((result* 31)+((this.tags == null)? 0 :this.tags.hashCode()));
         result = ((result* 31)+((this.hardware == null)? 0 :this.hardware.hashCode()));
         return result;
     }
@@ -97,7 +110,7 @@ public class SystemModel {
             return false;
         }
         SystemModel rhs = ((SystemModel) other);
-        return ((((((((this.software == rhs.software)||((this.software!= null)&&this.software.equals(rhs.software)))&&((this.min_loglevel == rhs.min_loglevel)||((this.min_loglevel!= null)&&this.min_loglevel.equals(rhs.min_loglevel))))&&((this.metrics_rate_sec == rhs.metrics_rate_sec)||((this.metrics_rate_sec!= null)&&this.metrics_rate_sec.equals(rhs.metrics_rate_sec))))&&((this.location == rhs.location)||((this.location!= null)&&this.location.equals(rhs.location))))&&((this.physical_tag == rhs.physical_tag)||((this.physical_tag!= null)&&this.physical_tag.equals(rhs.physical_tag))))&&((this.adjunct == rhs.adjunct)||((this.adjunct!= null)&&this.adjunct.equals(rhs.adjunct))))&&((this.hardware == rhs.hardware)||((this.hardware!= null)&&this.hardware.equals(rhs.hardware))));
+        return (((((((((this.software == rhs.software)||((this.software!= null)&&this.software.equals(rhs.software)))&&((this.min_loglevel == rhs.min_loglevel)||((this.min_loglevel!= null)&&this.min_loglevel.equals(rhs.min_loglevel))))&&((this.metrics_rate_sec == rhs.metrics_rate_sec)||((this.metrics_rate_sec!= null)&&this.metrics_rate_sec.equals(rhs.metrics_rate_sec))))&&((this.location == rhs.location)||((this.location!= null)&&this.location.equals(rhs.location))))&&((this.physical_tag == rhs.physical_tag)||((this.physical_tag!= null)&&this.physical_tag.equals(rhs.physical_tag))))&&((this.adjunct == rhs.adjunct)||((this.adjunct!= null)&&this.adjunct.equals(rhs.adjunct))))&&((this.tags == rhs.tags)||((this.tags!= null)&&this.tags.equals(rhs.tags))))&&((this.hardware == rhs.hardware)||((this.hardware!= null)&&this.hardware.equals(rhs.hardware))));
     }
 
 }

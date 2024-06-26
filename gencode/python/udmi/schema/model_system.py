@@ -276,6 +276,7 @@ class SystemModel:
   """Generated schema class"""
 
   def __init__(self):
+    self.tags = None
     self.location = None
     self.hardware = None
     self.software = None
@@ -289,6 +290,7 @@ class SystemModel:
     if not source:
       return None
     result = SystemModel()
+    result.tags = source.get('tags')
     result.location = ObjectC15AACEE.from_dict(source.get('location'))
     result.hardware = SystemHardware.from_dict(source.get('hardware'))
     result.software = source.get('software')
@@ -316,6 +318,8 @@ class SystemModel:
 
   def to_dict(self):
     result = {}
+    if self.tags:
+      result['tags'] = self.tags # 1
     if self.location:
       result['location'] = self.location.to_dict() # 4
     if self.hardware:

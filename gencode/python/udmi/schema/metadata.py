@@ -19,7 +19,6 @@ class Metadata:
     self.description = None
     self.hash = None
     self.device_version = None
-    self.tags = None
     self.cloud = None
     self.system = None
     self.gateway = None
@@ -40,7 +39,6 @@ class Metadata:
     result.description = source.get('description')
     result.hash = source.get('hash')
     result.device_version = source.get('device_version')
-    result.tags = source.get('tags')
     result.cloud = CloudModel.from_dict(source.get('cloud'))
     result.system = SystemModel.from_dict(source.get('system'))
     result.gateway = GatewayModel.from_dict(source.get('gateway'))
@@ -81,8 +79,6 @@ class Metadata:
       result['hash'] = self.hash # 5
     if self.device_version:
       result['device_version'] = self.device_version # 5
-    if self.tags:
-      result['tags'] = self.tags # 1
     if self.cloud:
       result['cloud'] = self.cloud.to_dict() # 4
     if self.system:
