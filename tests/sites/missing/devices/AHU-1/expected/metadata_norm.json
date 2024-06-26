@@ -1,13 +1,13 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.5.0",
-  "hash": "7d7623d7",
-  "tags": [ ],
+  "hash": "edcdce25",
   "cloud": {
     "auth_type": "RS256",
     "detail": "site default for unit tests"
   },
   "system": {
+    "tags": [ ],
     "location": {
       "site": "ZZ-TRI-FECTA-AHU",
       "section": "2-3N8C",
