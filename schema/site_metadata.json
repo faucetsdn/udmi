@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.5.0",
+  "$udmi_version": "1.5.1",
   "title": "Site Metadata",
   "$section": "Site Model",
   "type": "object",
