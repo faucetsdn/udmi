@@ -4,9 +4,9 @@
 04 pointset_remove_point
 05 too_much_state
 06 feature_enumeration
-07 valid_serial_no RESULT pass schemas device_state_beta BETA 5/5 Schema validation passed
-07 valid_serial_no RESULT pass schemas events_system_beta BETA 5/5 Schema validation passed
-07 valid_serial_no RESULT pass schemas state_update_beta BETA 5/5 Schema validation passed
+07 valid_serial_no RESULT pass schemas device_state_beta valid_serial_no 5/5 Schema validation passed
+07 valid_serial_no RESULT pass schemas events_system_beta valid_serial_no 5/5 Schema validation passed
+07 valid_serial_no RESULT pass schemas state_update_beta valid_serial_no 5/5 Schema validation passed
 08 writeback_success
 09 writeback_success
 10 writeback_success
@@ -14,13 +14,13 @@
 12 system_mode_restart
 13 config_logging
 14 broken_config
-15 broken_config RESULT pass schemas device_state_beta BETA 5/5 Schema validation passed
-15 broken_config RESULT pass schemas events_system_beta BETA 5/5 Schema validation passed
-15 broken_config RESULT pass schemas state_update_beta BETA 5/5 Schema validation passed
+15 broken_config RESULT pass schemas device_state_beta STABLE 5/5 Schema validation passed
+15 broken_config RESULT pass schemas events_system_beta STABLE 5/5 Schema validation passed
+15 broken_config RESULT pass schemas state_update_beta STABLE 5/5 Schema validation passed
 16 broken_config
-17 broken_config RESULT pass schemas device_state_beta BETA 5/5 Schema validation passed
-17 broken_config RESULT pass schemas events_system_beta BETA 5/5 Schema validation passed
-17 broken_config RESULT pass schemas state_update_beta BETA 5/5 Schema validation passed
+17 broken_config RESULT pass schemas device_state_beta STABLE 5/5 Schema validation passed
+17 broken_config RESULT pass schemas events_system_beta STABLE 5/5 Schema validation passed
+17 broken_config RESULT pass schemas state_update_beta STABLE 5/5 Schema validation passed
 18 broken_config
 19 system_last_update RESULT fail schemas state_update_stable STABLE 5/5 Schema violations found
 19 system_last_update RESULT pass schemas device_state_stable STABLE 5/5 Schema validation passed

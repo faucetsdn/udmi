@@ -8,7 +8,7 @@
 08 RESULT fail writeback writeback_success ALPHA 0/5 Because point filter_differential_pressure_setpoint is applied, expected null
 09 RESULT fail writeback writeback_success ALPHA 0/5 Because point filter_differential_pressure_setpoint is null, expected applied
 10 RESULT fail writeback writeback_success ALPHA 0/5 Because point filter_differential_pressure_setpoint is null, expected applied
-11 RESULT fail pointset pointset_publish_interval BETA 0/5 Failed check that time period between successive pointset events is between 5 and 8 seconds
+11 RESULT fail pointset pointset_publish_interval STABLE 0/5 Failed check that time period between successive pointset events is between 5 and 8 seconds
 12 RESULT fail system.mode system_mode_restart ALPHA 0/5 Failed check that restart count increased by one
 13 RESULT fail system config_logging STABLE 0/5 Bad message version string 1.4.
 14 CPBLTY pass system broken_config.logging ALPHA 1/1 Capability supported
