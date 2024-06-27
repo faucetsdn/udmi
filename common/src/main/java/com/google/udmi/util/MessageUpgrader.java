@@ -150,14 +150,14 @@ public class MessageUpgrader {
     if (upgraded && message.get(VERSION_KEY) != null) {
       message.put(UPGRADED_FROM, originalVersion);
       message.put(VERSION_KEY, String.format(TARGET_FORMAT, major, minor, patch));
-    } else {
-      // Even if the message was not modified, it is now conformant to the current version
-      // of UDMI, so update the version property if it exists
-      if (message.has(VERSION_KEY)){
-        message.put(VERSION_KEY, SchemaVersion.CURRENT.key());
-      }
-    }
+    } 
 
+    // Even if the message was not modified, it is now conformant to the current version
+    // of UDMI, so update the version property if it exists
+    if (message.has(VERSION_KEY)){
+      message.put(VERSION_KEY, SchemaVersion.CURRENT.key());
+    }
+    
     return message;
   }
 
