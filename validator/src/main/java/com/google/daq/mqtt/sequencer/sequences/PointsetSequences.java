@@ -18,6 +18,7 @@ import static udmi.schema.Bucket.POINTSET;
 import static udmi.schema.Category.POINTSET_POINT_INVALID;
 import static udmi.schema.Category.POINTSET_POINT_INVALID_VALUE;
 import static udmi.schema.FeatureDiscovery.FeatureStage.BETA;
+import static udmi.schema.FeatureDiscovery.FeatureStage.STABLE;
 
 import com.google.common.collect.Sets;
 import com.google.daq.mqtt.sequencer.Feature;

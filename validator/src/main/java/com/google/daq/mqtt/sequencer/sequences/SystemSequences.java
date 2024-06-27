@@ -6,6 +6,7 @@ import static java.lang.String.format;
 import static udmi.schema.Bucket.SYSTEM;
 import static udmi.schema.FeatureDiscovery.FeatureStage.ALPHA;
 import static udmi.schema.FeatureDiscovery.FeatureStage.BETA;
+import static udmi.schema.FeatureDiscovery.FeatureStage.STABLE;
 
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
