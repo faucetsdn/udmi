@@ -100,7 +100,7 @@ fi
 
 # Check files in upversion list still exist
 while read action file comment; do
-    if [[ $action =~ "^[?!# ]" ]] && ! [[ -f $file ]]; then
+    if [[ $action =~ ^[yn]$ ]] && [[ ! -f $file ]]; then
         err_stale_file=1
         echo $file
     fi
@@ -109,7 +109,6 @@ if [[ -n $err_stale_file ]]; then
     touch $ERROR_MARKER
     echo ERROR .. above files $UPVERSION_LIST no longer exist
 fi
-
 
 # Check files have exactly 1 matched version fields to avoid unexpected 
 # updates. Uses indents to try and match the top level field

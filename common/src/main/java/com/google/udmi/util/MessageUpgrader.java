@@ -16,6 +16,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import udmi.schema.SystemModel;
 
 /**
  * Container class for upgrading UDMI messages from older versions.
@@ -147,17 +148,25 @@ public class MessageUpgrader {
       minor = 5;
     }
 
+    if (minor == 5 && patch == 0) {
+      JsonNode before = message.deepCopy();
+      upgradeTo_1_5_1();
+      upgraded |= !before.equals(message);
+      patch = 1;
+      minor = 5;
+    }
+
     if (upgraded && message.get(VERSION_KEY) != null) {
       message.put(UPGRADED_FROM, originalVersion);
       message.put(VERSION_KEY, String.format(TARGET_FORMAT, major, minor, patch));
-    } else {
-      // Even if the message was not modified, it is now conformant to the current version
-      // of UDMI, so update the version property if it exists
-      if (message.has(VERSION_KEY)){
-        message.put(VERSION_KEY, SchemaVersion.CURRENT.key());
-      }
-    }
+    } 
 
+    // Even if the message was not modified, it is now conformant to the current version
+    // of UDMI, so update the version property if it exists
+    if (message.has(VERSION_KEY)){
+      message.put(VERSION_KEY, SchemaVersion.CURRENT.key());
+    }
+    
     return message;
   }
 
@@ -206,6 +215,25 @@ public class MessageUpgrader {
     }
   }
 
+  private void upgradeTo_1_5_1() {
+    if (METADATA_SCHEMA.equals(schemaName)) {
+      upgradeTo_1_5_1_metadata();
+    }
+  }
+
+  private void upgradeTo_1_5_1_metadata() {
+    JsonNode tags = message.remove("tags");
+    if (tags == null) {
+      return;
+    }
+
+    if (!message.has("system")) {
+      message.put("system", new ObjectNode(NODE_FACTORY));
+    }
+
+    ObjectNode system = (ObjectNode) message.get("system");
+    system.put("tags", tags);
+  }
    private void upgradeTo_1_5_0() {
     if (STATE_SCHEMA.equals(schemaName)) {
       upgradeTo_1_5_0_state();

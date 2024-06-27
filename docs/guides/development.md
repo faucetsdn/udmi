@@ -42,12 +42,19 @@ which are preceded by a `y` in `upversion.txt` will have their version upgraded.
 
 `bin/upgrade_version` does not update any generated files (e.g. for CI testing).
 
+An entry for the new version must be added manually in `util/SchemaVersion.java`
+
 The below files need to be updated. Do not blindly copy! Inspect all diffs and confirm they are expected
 * After `bin/test_trace simple`, contents of `sites/udmi_site_model/sites/out`
   into `tests/traces/simple/expected` 
-* After `bin/test_validator`, `/tmp/validator.out` into `/etc/validator.out` (reset any changes to sites/udmi_site_model before running but run `bin/registrar`) 
+* After `bin/test_validator`, `/tmp/validator.out` into `/etc/validator.out` (reset any changes to sites/udmi_site_model first and and run `bin/registrar`) 
 * After `bin/test_registrar && bin/test_sites`, the `out` directory for each device in `tests/downgrade.site/devices/` into the `expected` subdirectory
   (note these files are ignored by git, but must still be committed)
+
+**Useful commands**
+
+* `rm -rf tests/sites/*/**/*/out && rm -rf tests/sites/*/out` to remove out files from `bin/test_registrar`
+
 
 ## Configuring Cloud CI Tests
 
