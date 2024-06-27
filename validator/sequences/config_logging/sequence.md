@@ -1,5 +1,5 @@
 
-## config_logging (BETA)
+## config_logging (STABLE)
 
 Check that the device publishes minimum required log entries when receiving config
 

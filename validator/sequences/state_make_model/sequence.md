@@ -1,5 +1,5 @@
 
-## state_make_model (BETA)
+## state_make_model (STABLE)
 
 Check that a device publishes correct make and model information in state messages
 

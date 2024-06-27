@@ -1,5 +1,5 @@
 
-## pointset_publish_interval (BETA)
+## pointset_publish_interval (STABLE)
 
 Check handling of sample_rate_sec and sample_limit_sec
 
