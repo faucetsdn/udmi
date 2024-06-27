@@ -1,0 +1,32 @@
+{
+    "timestamp": "2024-06-26T09:23:53Z",
+    "version": "1.4.2",
+    "system": {
+      "last_config": "2024-06-07T03:27:41Z",
+      "operation": {
+        "operational": true
+      },
+      "serial_no": "RT644001PQ",
+      "hardware": {
+        "make": "ACME",
+        "model": "Device"
+      },
+      "software": {
+        "firmware": "108.04.20053"
+      },
+      "status": {
+        "message": "Applied a config message",
+        "category": "system.config.apply",
+        "timestamp": "2024-06-26T09:23:53Z",
+        "level": 300
+      }
+    },
+    "gateway": {
+      "devices": {
+        "AHU-101": null
+      }
+    },
+    "pointset": {
+      "points": {}
+    }
+  }

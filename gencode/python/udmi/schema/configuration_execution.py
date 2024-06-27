@@ -30,6 +30,7 @@ class ExecutionConfiguration:
     self.log_level = None
     self.min_stage = None
     self.udmi_version = None
+    self.enforce_version = None
     self.udmi_root = None
     self.update_to = None
     self.alt_project = None
@@ -65,6 +66,7 @@ class ExecutionConfiguration:
     result.log_level = source.get('log_level')
     result.min_stage = source.get('min_stage')
     result.udmi_version = source.get('udmi_version')
+    result.enforce_version = source.get('enforce_version')
     result.udmi_root = source.get('udmi_root')
     result.update_to = source.get('update_to')
     result.alt_project = source.get('alt_project')
@@ -137,6 +139,8 @@ class ExecutionConfiguration:
       result['min_stage'] = self.min_stage # 5
     if self.udmi_version:
       result['udmi_version'] = self.udmi_version # 5
+    if self.enforce_version:
+      result['enforce_version'] = self.enforce_version # 5
     if self.udmi_root:
       result['udmi_root'] = self.udmi_root # 5
     if self.update_to:

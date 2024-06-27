@@ -99,8 +99,8 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public CloudModel fetchDevice(String deviceRegistryId, String deviceId) {
-    return getProviderFor(deviceRegistryId).fetchDevice(deviceRegistryId, deviceId);
+  public CloudModel fetchDevice(String registryId, String deviceId) {
+    return getProviderFor(registryId).fetchDevice(registryId, deviceId);
   }
 
   @Override
@@ -109,8 +109,13 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public String fetchState(String deviceRegistryId, String deviceId) {
-    return getProviderFor(deviceRegistryId).fetchState(deviceRegistryId, deviceId);
+  public String fetchState(String registryId, String deviceId) {
+    return getProviderFor(registryId).fetchState(registryId, deviceId);
+  }
+
+  @Override
+  public void saveState(String registryId, String deviceId, String stateBlob) {
+    getProviderFor(registryId).saveState(registryId, deviceId, stateBlob);
   }
 
   @Override
@@ -130,18 +135,18 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public CloudModel listDevices(String deviceRegistryId) {
-    return getProviderFor(deviceRegistryId).listDevices(deviceRegistryId);
+  public CloudModel listDevices(String registryId) {
+    return getProviderFor(registryId).listDevices(registryId);
   }
 
   @Override
-  public CloudModel modelDevice(String deviceRegistryId, String deviceId, CloudModel cloudModel) {
-    return getProviderFor(deviceRegistryId).modelDevice(deviceRegistryId, deviceId, cloudModel);
+  public CloudModel modelDevice(String registryId, String deviceId, CloudModel cloudModel) {
+    return getProviderFor(registryId).modelDevice(registryId, deviceId, cloudModel);
   }
 
   @Override
-  public CloudModel modelRegistry(String deviceRegistryId, String deviceId, CloudModel cloudModel) {
-    return getProviderFor(deviceRegistryId).modelRegistry(deviceRegistryId, deviceId, cloudModel);
+  public CloudModel modelRegistry(String registryId, String deviceId, CloudModel cloudModel) {
+    return getProviderFor(registryId).modelRegistry(registryId, deviceId, cloudModel);
   }
 
   @Override

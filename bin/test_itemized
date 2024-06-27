@@ -38,6 +38,11 @@ echo "export MATRIX_SHARD_INDEX=${MATRIX_SHARD_INDEX:-}"
 pubber/bin/build
 validator/bin/build
 
+for device_id in AHU-1 GAT-123; do
+    echo bin/keygen CERT $SITE_PATH/devices/$device_id
+    bin/keygen CERT $SITE_PATH/devices/$device_id || true
+done
+
 test_index=1
 while read -u 7 action test_name pubber_opts; do
     test_marker=$(printf %02d $test_index)

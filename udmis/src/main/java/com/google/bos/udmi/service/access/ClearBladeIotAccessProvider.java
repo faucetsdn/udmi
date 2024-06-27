@@ -645,18 +645,18 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public CloudModel fetchDevice(String deviceRegistryId, String deviceId) {
-    String devicePath = getDeviceName(deviceRegistryId, deviceId);
+  public CloudModel fetchDevice(String registryId, String deviceId) {
+    String devicePath = getDeviceName(registryId, deviceId);
     try {
-      String location = getRegistryLocation(deviceRegistryId);
-      DeviceName name = DeviceName.of(projectId, location, deviceRegistryId, deviceId);
+      String location = getRegistryLocation(registryId);
+      DeviceName name = DeviceName.of(projectId, location, registryId, deviceId);
       GetDeviceRequest request = GetDeviceRequest.Builder.newBuilder().setName(name)
           .setFieldMask(FieldMask.newBuilder().build()).build();
       Device device = deviceManager.getDevice(request);
       requireNonNull(device, "GetDeviceRequest failed");
       CloudModel cloudModel = convertFull(device);
       cloudModel.operation = Operation.FETCH;
-      cloudModel.device_ids = listRegistryDevices(deviceRegistryId, deviceId).device_ids;
+      cloudModel.device_ids = listRegistryDevices(registryId, deviceId).device_ids;
       return cloudModel;
     } catch (Exception e) {
       throw new RuntimeException("While fetching device " + devicePath, e);
@@ -676,11 +676,11 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public String fetchState(String deviceRegistryId, String deviceId) {
-    String devicePath = getDeviceName(deviceRegistryId, deviceId);
+  public String fetchState(String registryId, String deviceId) {
+    String devicePath = getDeviceName(registryId, deviceId);
     try {
-      String location = getRegistryLocation(deviceRegistryId);
-      DeviceName name = DeviceName.of(projectId, location, deviceRegistryId, deviceId);
+      String location = getRegistryLocation(registryId);
+      DeviceName name = DeviceName.of(projectId, location, registryId, deviceId);
 
       ListDeviceStatesRequest request = ListDeviceStatesRequest.Builder.newBuilder()
           .setName(name.toString())
@@ -725,8 +725,8 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public CloudModel listDevices(String deviceRegistryId) {
-    return listRegistryDevices(deviceRegistryId, null);
+  public CloudModel listDevices(String registryId) {
+    return listRegistryDevices(registryId, null);
   }
 
   @Override

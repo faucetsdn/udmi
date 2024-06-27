@@ -1,0 +1,158 @@
+{
+  "timestamp": "2024-06-11T08:31:26Z",
+  "version": "1.5.0",
+  "upgraded_from": "1.4.0",
+  "hash": "fb9a66c5",
+  "system": {
+    "tags": [ ],
+    "location": {
+      "site": "US-SFO-XYY",
+      "section": "L01-NW",
+      "position": {
+        "x": 10.0,
+        "y": 10.0,
+        "z": 10.0
+      }
+    },
+    "physical_tag": {
+      "asset": {
+        "guid": "guid://bbfe8b4b-e9e5-424b-9a4e-2234b61c41bf",
+        "site": "US-SFO-XYY",
+        "name": "AHU-102"
+      }
+    },
+    "min_loglevel": 300
+  },
+  "gateway": {
+    "gateway_id": "CGW-1",
+    "target": {
+      "family": "bacnet"
+    }
+  },
+  "localnet": {
+    "families": {
+      "bacnet": {
+        "addr": "11052"
+      }
+    }
+  },
+  "pointset": {
+    "points": {
+      "cooling_water_valve_percentage_command": {
+        "units": "percent",
+        "ref": "AO10.Present_Value",
+        "tags": [ ]
+      },
+      "cooling_water_valve_percentage_sensor": {
+        "units": "percent",
+        "ref": "AI9.Present_Value",
+        "tags": [ ]
+      },
+      "exhaust_air_damper_command": {
+        "units": "No-units",
+        "ref": "BO2.Present_Value",
+        "tags": [ ]
+      },
+      "exhaust_air_static_pressure_sensor": {
+        "units": "pascals",
+        "ref": "AI6.Present_Value",
+        "tags": [ ]
+      },
+      "exhaust_fan_run_command": {
+        "units": "No-units",
+        "ref": "BO5.Present_Value",
+        "tags": [ ]
+      },
+      "exhaust_fan_speed_percentage_command": {
+        "units": "percent",
+        "ref": "AO6.Present_Value",
+        "tags": [ ]
+      },
+      "exhaust_fan_speed_percentage_sensor": {
+        "units": "percent",
+        "ref": "AI5.Present_Value",
+        "tags": [ ]
+      },
+      "exhaust_fan_speed_percentage_setpoint": {
+        "units": "percent",
+        "ref": "AV3.Present_Value",
+        "tags": [ ]
+      },
+      "exhaust_filter_differential_pressure_sensor": {
+        "units": "pascals",
+        "ref": "AI4.Present_Value",
+        "tags": [ ]
+      },
+      "fire_alarm": {
+        "units": "No-units",
+        "ref": "BI3.Present_Value",
+        "tags": [ ]
+      },
+      "heating_water_valve_percentage_command": {
+        "units": "percent",
+        "ref": "AO9.Present_Value",
+        "tags": [ ]
+      },
+      "heating_water_valve_percentage_sensor": {
+        "units": "percent",
+        "ref": "AI10.Present_Value",
+        "tags": [ ]
+      },
+      "outside_air_temperature_sensor": {
+        "units": "degrees-celcius",
+        "ref": "AI17.Present_Value",
+        "tags": [ ]
+      },
+      "return_air_temperature_sensor": {
+        "units": "degrees-celcius",
+        "ref": "AI3.Present_Value",
+        "tags": [ ]
+      },
+      "supply_air_damper_command": {
+        "units": "No-units",
+        "ref": "BO1.Present_Value",
+        "tags": [ ]
+      },
+      "supply_air_static_pressure_sensor": {
+        "units": "pascals",
+        "ref": "AI3.Present_Value",
+        "tags": [ ]
+      },
+      "supply_air_temperature_sensor": {
+        "units": "degrees-celcius",
+        "ref": "AI12.Present_Value",
+        "tags": [ ]
+      },
+      "supply_air_temperature_setpoint": {
+        "units": "degrees-celcius",
+        "ref": "AI20.Present_Value",
+        "tags": [ ]
+      },
+      "supply_fan_run_command": {
+        "units": "No-units",
+        "ref": "BO3.Present_Value",
+        "tags": [ ]
+      },
+      "supply_fan_speed_percentage_command": {
+        "units": "percent",
+        "ref": "AO4.Present_Value",
+        "tags": [ ]
+      },
+      "supply_fan_speed_percentage_sensor": {
+        "units": "percent",
+        "ref": "AI2.Present_Value",
+        "tags": [ ]
+      },
+      "supply_fan_speed_percentage_setpoint": {
+        "units": "percent",
+        "ref": "AV2.Present_Value",
+        "tags": [ ]
+      },
+      "supply_filter_differential_pressure_sensor": {
+        "units": "pascals",
+        "ref": "AI1.Present_Value",
+        "tags": [ ]
+      }
+    }
+  }
+}

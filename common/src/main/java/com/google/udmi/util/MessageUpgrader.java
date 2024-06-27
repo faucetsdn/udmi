@@ -27,6 +27,7 @@ public class MessageUpgrader {
   public static final String STATE_SYSTEM_SCHEMA = "state_system";
   public static final String METADATA_SCHEMA = "metadata";
   private static final String TARGET_FORMAT = "%d.%d.%d";
+  private static final String RAW_GIT_VERSION = "git";
   private final ObjectNode message;
   private final JsonNode original;
   private final String schemaName;
@@ -55,6 +56,12 @@ public class MessageUpgrader {
       if (parts.length >= 4) {
         throw new IllegalArgumentException("More than 3 version components");
       }
+
+      if (RAW_GIT_VERSION.equals(parts[0])) {
+        major = 0;
+        return;
+      }
+
       try {
         major = Integer.parseInt(parts[0]);
         minor = parts.length >= 2 ? Integer.parseInt(parts[1]) : -1;
@@ -92,6 +99,10 @@ public class MessageUpgrader {
   }
 
   private Object upgradeRaw(boolean forceUpgrade) {
+    if (major == 0) {
+      return message;
+    }
+
     if (major != 1) {
       throw new IllegalArgumentException("Starting major version " + major);
     }
@@ -126,6 +137,14 @@ public class MessageUpgrader {
       upgradeTo_1_4_1();
       upgraded |= !before.equals(message);
       patch = 1;
+    }
+
+    if (minor < 5) {
+      JsonNode before = message.deepCopy();
+      upgradeTo_1_5_0();
+      upgraded |= !before.equals(message);
+      patch = 0;
+      minor = 5;
     }
 
     if (upgraded && message.get(VERSION_KEY) != null) {
@@ -187,6 +206,19 @@ public class MessageUpgrader {
     }
   }
 
+   private void upgradeTo_1_5_0() {
+    if (STATE_SCHEMA.equals(schemaName)) {
+      upgradeTo_1_5_0_state();
+    }
+  }
+
+  private void upgradeTo_1_5_0_state() {
+    ObjectNode gateway = (ObjectNode) message.get("gateway");
+    if (gateway != null && gateway.has("devices")) {
+      gateway.remove("devices");
+    }
+  }
+
   private void upgradeTo_1_4_1_metadata() {
     JsonNode localnet = message.get("localnet");
     if (localnet == null || !localnet.has("families")) {
@@ -220,10 +252,20 @@ public class MessageUpgrader {
     ObjectNode gatewayTarget = new ObjectNode(NODE_FACTORY);
     gateway.put("target", gatewayTarget);
 
-    if (localnetFamilies.has("bacnet")) {
-      gatewayTarget.put("family", "bacnet");
+    final String targetFamily;
+    if (gateway.has("family")) {
+      targetFamily =  gateway.remove("family").asText();
+    } else if (localnetFamilies.has("bacnet")) {
+      // Prioritise "bacnet" over any other value
+      targetFamily = "bacnet";
     } else if (localnetFamilies.has("vendor")) {
-      gatewayTarget.put("family", "vendor");
+      targetFamily = "vendor";
+    } else {
+      targetFamily = null;
+    }
+
+    if (targetFamily != null) {
+      gatewayTarget.put("family", targetFamily);
     }
   }
 

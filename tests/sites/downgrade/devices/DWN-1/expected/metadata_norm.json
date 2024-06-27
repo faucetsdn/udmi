@@ -1,13 +1,13 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "upgraded_from": "1",
-  "hash": "5552d167",
-  "tags": [ ],
+  "hash": "98f3ddb1",
   "cloud": {
     "auth_type": "RS256"
   },
   "system": {
+    "tags": [ ],
     "location": {
       "site": "US-SFO-XYY",
       "section": "2-3N8C",

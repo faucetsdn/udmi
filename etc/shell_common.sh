@@ -32,7 +32,11 @@ UDMI_ROOT=$(realpath $UDMI_ROOT)
 
 UDMI_JAR=$UDMI_ROOT/validator/build/libs/validator-1.0-SNAPSHOT-all.jar
 
-udmi_version=$(cd $UDMI_ROOT; git describe --dirty --always)
+udmi_version=$(cd $UDMI_ROOT; git describe --dirty) || true
+
+if [[ -z $udmi_version ]]; then
+    udmi_version=git-$(cd $UDMI_ROOT; git describe --dirty --always)
+fi
 
 export UDMI_ROOT
 export UDMI_TOOLS=$udmi_version

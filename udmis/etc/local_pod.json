@@ -13,7 +13,8 @@
   },
   "flows": {
     "reflect": {
-      "recv_id": "reflect"
+      "recv_id": "reflect",
+      "send_id": "c/control"
     },
     "target": {
       "recv_id": "events/#"
@@ -21,8 +22,16 @@
     "state": {
       "recv_id": "state"
     },
+    "control": {
+      "recv_id": "c/control/#"
+    },
     "distributor": {
       "enabled": "false"
+    }
+  },
+  "crons": {
+    "sendgroot": {
+      "send_id": "c/control"
     }
   },
   "iot_access": {

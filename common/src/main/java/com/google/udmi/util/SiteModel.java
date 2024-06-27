@@ -2,19 +2,22 @@ package com.google.udmi.util;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.udmi.util.Common.DEFAULT_REGION;
 import static com.google.udmi.util.Common.NO_SITE;
 import static com.google.udmi.util.Common.SITE_METADATA_KEY;
 import static com.google.udmi.util.Common.getNamespacePrefix;
 import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_RAW;
+import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
+import static com.google.udmi.util.GeneralUtils.getFileBytes;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.removeArg;
+import static com.google.udmi.util.GeneralUtils.sha256;
 import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
-import static com.google.udmi.util.JsonUtil.loadFile;
 import static com.google.udmi.util.JsonUtil.loadFileRequired;
 import static com.google.udmi.util.JsonUtil.loadFileStrict;
 import static com.google.udmi.util.MessageUpgrader.METADATA_SCHEMA;
@@ -83,8 +86,9 @@ public class SiteModel {
       .enable(SerializationFeature.INDENT_OUTPUT)
       .setDateFormat(new ISO8601DateFormat())
       .setSerializationInclusion(JsonInclude.Include.NON_NULL);
-  private static final Pattern ID_PATTERN = Pattern.compile(
+  private static final Pattern IOT_CORE_PATTERN = Pattern.compile(
       "projects/(.*)/locations/(.*)/registries/(.*)/devices/(.*)");
+  private static final Pattern MQTT_PATTERN = Pattern.compile("/r/(.*)/d/(.*)");
   private static final String EXTRAS_DIR = "extras";
   private static final String CLOUD_IOT_CONFIG_JSON = "cloud_iot_config.json";
   private static final Pattern SPEC_PATTERN = Pattern.compile(
@@ -93,6 +97,8 @@ public class SiteModel {
   private static final int SPEC_PROJECT_GROUP = 3;
   private static final int SPEC_NAMESPACE_GROUP = 5;
   private static final File CONFIG_OUT_DIR = new File("out/");
+  private static final String RSA_PRIVATE_KEY = "rsa_private.pkcs8";
+  private static final String EC_PRIVATE_KEY = "ec_private.pkcs8";
 
   private final String sitePath;
   private final Map<String, Object> siteDefaults;
@@ -179,7 +185,7 @@ public class SiteModel {
           region -> format(DEFAULT_CLEARBLADE_HOSTNAME_FORMAT, region),
           DEFAULT_CLEARBLADE_HOSTNAME);
       case GBOS -> DEFAULT_GBOS_HOSTNAME;
-      case IMPLICIT -> LOCALHOST_HOSTNAME;
+      case IMPLICIT, DYNAMIC -> LOCALHOST_HOSTNAME;
       default -> throw new RuntimeException("Unsupported iot_provider " + iotProvider);
     };
   }
@@ -218,17 +224,29 @@ public class SiteModel {
     if (clientId == null) {
       throw new IllegalArgumentException("client_id not specified");
     }
-    Matcher matcher = ID_PATTERN.matcher(clientId);
-    if (!matcher.matches()) {
-      throw new IllegalArgumentException(
-          format("client_id %s does not match pattern %s", clientId, ID_PATTERN.pattern()));
+
+    Matcher iotCoreMatcher = IOT_CORE_PATTERN.matcher(clientId);
+    if (iotCoreMatcher.matches()) {
+      ClientInfo clientInfo = new ClientInfo();
+      clientInfo.iotProject = iotCoreMatcher.group(1);
+      clientInfo.cloudRegion = iotCoreMatcher.group(2);
+      clientInfo.registryId = iotCoreMatcher.group(3);
+      clientInfo.deviceId = iotCoreMatcher.group(4);
+      return clientInfo;
     }
-    ClientInfo clientInfo = new ClientInfo();
-    clientInfo.iotProject = matcher.group(1);
-    clientInfo.cloudRegion = matcher.group(2);
-    clientInfo.registryId = matcher.group(3);
-    clientInfo.deviceId = matcher.group(4);
-    return clientInfo;
+
+    Matcher mqttMatcher = MQTT_PATTERN.matcher(clientId);
+    if (mqttMatcher.matches()) {
+      ClientInfo clientInfo = new ClientInfo();
+      clientInfo.iotProject = LOCALHOST_HOSTNAME;
+      clientInfo.cloudRegion = DEFAULT_REGION;
+      clientInfo.registryId = mqttMatcher.group(1);
+      clientInfo.deviceId = mqttMatcher.group(2);
+      return clientInfo;
+    }
+
+    throw new IllegalArgumentException(format("client_id %s does not match pattern %s or %s",
+        clientId, IOT_CORE_PATTERN.pattern(), MQTT_PATTERN.pattern()));
   }
 
   public static List<String> listDevices(File devicesDir) {
@@ -540,6 +558,15 @@ public class SiteModel {
 
   public File getReflectorDir() {
     return getSubdirectory(REFLECTOR_DIR);
+  }
+
+  public String getDevicePassword(String deviceId) {
+    String gatewayId = catchToNull(() -> getMetadata(deviceId).gateway.gateway_id);
+    String targetId = ofNullable(gatewayId).orElse(deviceId);
+    File rsaKeyFile = getDeviceFile(targetId, RSA_PRIVATE_KEY);
+    File ecKeyFile = getDeviceFile(targetId, EC_PRIVATE_KEY);
+    File keyFile = ecKeyFile.exists() ? ecKeyFile : rsaKeyFile;
+    return sha256(getFileBytes(keyFile)).substring(0, 8);
   }
 
   public static class MetadataException extends Metadata {

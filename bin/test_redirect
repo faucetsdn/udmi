@@ -51,7 +51,7 @@ log Running pubber with redirectRegistry on timeout
 timeout 1m unbuffer bin/pubber $site_path $project_spec $device_id $serial_no redirectRegistry=missing > $PUBBER_LOG.1 2>&1 || true
 
 log Checks that a redirect happened and failed...
-egrep -q 'registries/(.*~)?ZZ-TRI-FECTA(_.*)?/devices' $PUBBER_LOG.1 || bin/fail no ZZ-TRI-FECTA registry reference
+egrep -q '/r(egistries)?/(.*~)?ZZ-TRI-FECTA(_.*)?/d(evices)?/' $PUBBER_LOG.1 || bin/fail no ZZ-TRI-FECTA registry reference
 fgrep -q registries/missing/devices $PUBBER_LOG.1 || bin/fail no missing registry reference
 fgrep -q 'While waiting for connection start: Connection error' $PUBBER_LOG.1 || bin/fail no connection error
 fgrep -q 'Endpoint connection restored to last working endpoint' $PUBBER_LOG.1 || bin/fail no restore log message
@@ -66,7 +66,7 @@ cat <<EOF > out/endpoint.json
 {
   "protocol": "mqtt",
   "client_id": "projects/$project_id/locations/$cloud_region/registries/reconfigure/devices/$device_id",
-  "msg_prefix": "/devices/$device_id",
+  "topic_prefix": "/devices/$device_id",
   "hostname": "mqtt.googleapis.com",
   "auth_provider": {
     "jwt": {
@@ -146,7 +146,7 @@ instances=$(ps ax | fgrep pubber | fgrep java | awk '{print $1}' | wc -l)
 [[ $instances -eq 0 ]] || fail Unexpected lingering pubber instances found.
 
 log Check basic redirect-by-config setup...
-egrep -q 'registries/(.*~)?ZZ-TRI-FECTA(_.*)?/devices' $PUBBER_LOG.2 || bin/fail no ZZ-TRI-FECTA registry reference
+egrep -q '/r(egistries)?/(.*~)?ZZ-TRI-FECTA(_.*)?/d(evices)?/' $PUBBER_LOG.2 || bin/fail no ZZ-TRI-FECTA registry reference
 fgrep -q 'registries/reconfigure/devices' $PUBBER_LOG.2 || bin/fail no reconfigure registry reference
 fgrep -q 'While waiting for connection start: Connection error' $PUBBER_LOG.2 || bin/fail no connection error
 fgrep -q 'Endpoint connection restored to last working endpoint' $PUBBER_LOG.2 || bin/fail no connection restore

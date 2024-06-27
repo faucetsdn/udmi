@@ -47,8 +47,8 @@
     "client_id": {
       "type": "string"
     },
-    "msg_prefix": {
-      "description": "Prefix for message topics/addresses",
+    "topic_prefix": {
+      "description": "Prefix for message topics",
       "type": "string",
       "pattern": "^[-_/a-zA-Z0-9]+$"
     },

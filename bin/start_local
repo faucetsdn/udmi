@@ -40,6 +40,9 @@ if [[ -n ${UDMI_ALT_REGISTRY:-} ]]; then
     bin/mosquctl_site $site_model $UDMI_ALT_REGISTRY
 fi
 
+# Global access to logs for connection tracking by UDMIS.
+sudo chmod a+r /var/log/mosquitto/mosquitto.log
+
 bin/start_udmis
 
 echo Done with local server setup.

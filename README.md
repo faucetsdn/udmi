@@ -7,7 +7,7 @@ management and operation of physical IoT systems. This data is typically exchang
 with a cloud entity that can maintain a "digital twin" or "shadow device" in the cloud.
 
 * [Core UDMI documentation](docs/) for tools and specifications
-* [Message schema definition](https://github.com/faucetsdn/udmi/tree/master/schema) with ([_🧬Interactive Viewer_](http://faucetsdn.github.io/udmi/gencode/docs/)))
+* [Message schema definition](https://github.com/faucetsdn/udmi/tree/master/schema) with ([_🧬Interactive Viewer_](http://faucetsdn.github.io/udmi/gencode/docs/))
 * [udmi-discuss@googlegroups.com](https://groups.google.com/forum/#!forum/udmi-discuss) email discussion list
 * Bi-weekly _UDMI Discuss_ video meeting open to all (join the mailing list to get an invite)
 
