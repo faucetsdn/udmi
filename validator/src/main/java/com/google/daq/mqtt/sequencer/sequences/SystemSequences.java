@@ -28,7 +28,7 @@ public class SystemSequences extends SequenceBase {
    * Simple check that device contains appropriate make/model descriptions.
    */
   @Test(timeout = TWO_MINUTES_MS)
-  @Feature(stage = BETA, bucket = SYSTEM)
+  @Feature(stage = STABLE, bucket = SYSTEM)
   @Summary("Check that a device publishes correct make and model information in state messages")
   public void state_make_model() {
 
@@ -56,7 +56,7 @@ public class SystemSequences extends SequenceBase {
    *  (2) match
    */
   @Test(timeout = TWO_MINUTES_MS)
-  @Feature(stage = BETA, bucket = SYSTEM)
+  @Feature(stage = STABLE, bucket = SYSTEM)
   @Summary("Check that a device publishes correct software information in state messages")
   public void state_software() {
 

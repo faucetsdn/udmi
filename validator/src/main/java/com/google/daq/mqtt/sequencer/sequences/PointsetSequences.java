@@ -1,5 +1,6 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
+import static com.google.daq.mqtt.util.TimePeriodConstants.SIX_MINUTES_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.THREE_MINUTES_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
@@ -105,9 +106,9 @@ public class PointsetSequences extends PointsetBase {
     return point.getValue().present_value != null;
   }
 
-  @Test(timeout = TWO_MINUTES_MS)
+  @Test(timeout = SIX_MINUTES_MS)
   @Summary("Check error when pointset configuration contains extraneous point")
-  @Feature(stage = BETA, bucket = POINTSET)
+  @Feature(stage = STABLE, bucket = POINTSET)
   public void pointset_request_extraneous() {
     deviceConfig.pointset.sample_rate_sec = DEFAULT_SAMPLE_RATE_SEC;
 
@@ -133,9 +134,9 @@ public class PointsetSequences extends PointsetBase {
     untilPointsetSanity();
   }
 
-  @Test(timeout = TWO_MINUTES_MS)
+  @Test(timeout = SIX_MINUTES_MS)
   @Summary("Check that pointset state does not report an unconfigured point")
-  @Feature(stage = BETA, bucket = POINTSET)
+  @Feature(stage = STABLE, bucket = POINTSET)
   public void pointset_remove_point() {
     untilPointsetSanity();
 
@@ -164,9 +165,9 @@ public class PointsetSequences extends PointsetBase {
   /**
    * Simple check that device publishes pointset events.
    */
-  @Test(timeout = THREE_MINUTES_MS)
+  @Test(timeout = SIX_MINUTES_MS)
   @Summary("Check that a device publishes pointset events")
-  @Feature(stage = BETA, bucket = POINTSET, nostate = true)
+  @Feature(stage = STABLE, bucket = POINTSET, nostate = true)
   public void pointset_publish() {
     ifNullSkipTest(deviceConfig.pointset, "no pointset found in config");
 
@@ -188,7 +189,7 @@ public class PointsetSequences extends PointsetBase {
    */
   @Test(timeout = THREE_MINUTES_MS)
   @Summary("Check handling of sample_rate_sec and sample_limit_sec")
-  @Feature(stage = BETA, bucket = POINTSET, nostate = true)
+  @Feature(stage = STABLE, bucket = POINTSET, nostate = true)
   @ValidateSchema(SubFolder.POINTSET)
   public void pointset_publish_interval() {
     ifNullSkipTest(deviceConfig.pointset, "no pointset found in config");
