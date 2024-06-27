@@ -67,7 +67,7 @@ public class ConfigSequences extends SequenceBase {
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Feature(stage = BETA, bucket = SYSTEM)
+  @Feature(stage = STABLE, bucket = SYSTEM)
   @ValidateSchema(SubFolder.SYSTEM)
   public void valid_serial_no() {
     ifNullSkipTest(serialNo, "No test serial number provided");
