@@ -1,5 +1,5 @@
 
-## state_software (BETA)
+## state_software (STABLE)
 
 Check that a device publishes correct software information in state messages
 

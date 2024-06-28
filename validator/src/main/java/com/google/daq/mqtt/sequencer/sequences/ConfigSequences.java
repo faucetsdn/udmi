@@ -67,7 +67,7 @@ public class ConfigSequences extends SequenceBase {
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Feature(stage = BETA, bucket = SYSTEM)
+  @Feature(stage = STABLE, bucket = SYSTEM)
   @ValidateSchema(SubFolder.SYSTEM)
   public void valid_serial_no() {
     ifNullSkipTest(serialNo, "No test serial number provided");
@@ -107,7 +107,7 @@ public class ConfigSequences extends SequenceBase {
   }
 
   @Test(timeout = THREE_MINUTES_MS)
-  @Feature(stage = BETA, bucket = SYSTEM)
+  @Feature(stage = STABLE, bucket = SYSTEM)
   @Summary("Check that the device MQTT-acknowledges a sent config.")
   public void device_config_acked() {
     ifTrueSkipTest(catchToFalse(() -> !isNullOrEmpty(deviceMetadata.gateway.gateway_id)),
@@ -130,7 +130,7 @@ public class ConfigSequences extends SequenceBase {
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Feature(stage = BETA, bucket = SYSTEM, score = 4)
+  @Feature(stage = STABLE, bucket = SYSTEM, score = 4)
   @Capability(value = LOGGING, stage = ALPHA)
   @Summary("Check that the device correctly handles a broken (non-json) config message.")
   @ValidateSchema(SubFolder.SYSTEM)
@@ -192,7 +192,7 @@ public class ConfigSequences extends SequenceBase {
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Feature(stage = BETA, bucket = SYSTEM)
+  @Feature(stage = STABLE, bucket = SYSTEM)
   @Summary("Check that the device correctly handles an extra out-of-schema field")
   public void extra_config() {
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
@@ -219,7 +219,7 @@ public class ConfigSequences extends SequenceBase {
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Feature(stage = BETA, bucket = SYSTEM)
+  @Feature(stage = STABLE, bucket = SYSTEM)
   @Summary("Check that the device publishes minimum required log entries when receiving config")
   public void config_logging() {
     deviceConfig.system.min_loglevel = Level.DEBUG.value();

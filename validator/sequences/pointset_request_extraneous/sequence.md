@@ -1,5 +1,5 @@
 
-## pointset_request_extraneous (BETA)
+## pointset_request_extraneous (STABLE)
 
 Check error when pointset configuration contains extraneous point
 

@@ -26,6 +26,7 @@ template `etc/schema_readme_template.md`, and must match (case sensitive) the
 value of `$section`, otherwise the schema entry is inserted under the `Other`
 section
 
+
 ## Releases
 
 The `bin/upgrade_version` tool updates :
