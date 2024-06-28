@@ -4,9 +4,9 @@
 04 pointset_remove_point
 05 too_much_state
 06 feature_enumeration
-07 valid_serial_no RESULT pass schemas device_state_stable 5/5 Schema validation passed
-07 valid_serial_no RESULT pass schemas events_system_stable 5/5 Schema validation passed
-07 valid_serial_no RESULT pass schemas state_update_stable 5/5 Schema validation passed
+07 valid_serial_no RESULT pass schemas device_state_stable STABLE 5/5 Schema validation passed
+07 valid_serial_no RESULT pass schemas events_system_stable STABLE 5/5 Schema validation passed
+07 valid_serial_no RESULT pass schemas state_update_stable STABLE 5/5 Schema validation passed
 08 writeback_success
 09 writeback_success
 10 writeback_success

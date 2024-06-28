@@ -26,10 +26,6 @@ template `etc/schema_readme_template.md`, and must match (case sensitive) the
 value of `$section`, otherwise the schema entry is inserted under the `Other`
 section
 
-## Changing Feature Stages
-
-1. Change the annotation in the Java source
-2. Upload the 
 
 ## Releases
 

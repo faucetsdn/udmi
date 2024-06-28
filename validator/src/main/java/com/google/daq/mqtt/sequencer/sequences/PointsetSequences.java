@@ -1,6 +1,5 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
-import static com.google.daq.mqtt.util.TimePeriodConstants.SIX_MINUTES_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.THREE_MINUTES_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
@@ -107,7 +106,7 @@ public class PointsetSequences extends PointsetBase {
     return point.getValue().present_value != null;
   }
 
-  @Test(timeout = SIX_MINUTES_MS)
+  @Test(timeout = TWO_MINUTES_MS)
   @Summary("Check error when pointset configuration contains extraneous point")
   @Feature(stage = STABLE, bucket = POINTSET)
   public void pointset_request_extraneous() {
@@ -135,7 +134,7 @@ public class PointsetSequences extends PointsetBase {
     untilPointsetSanity();
   }
 
-  @Test(timeout = SIX_MINUTES_MS)
+  @Test(timeout = THREE_MINUTES_MS)
   @Summary("Check that pointset state does not report an unconfigured point")
   @Feature(stage = STABLE, bucket = POINTSET)
   public void pointset_remove_point() {
@@ -166,7 +165,7 @@ public class PointsetSequences extends PointsetBase {
   /**
    * Simple check that device publishes pointset events.
    */
-  @Test(timeout = SIX_MINUTES_MS)
+  @Test(timeout = TWO_MINUTES_MS)
   @Summary("Check that a device publishes pointset events")
   @Feature(stage = STABLE, bucket = POINTSET, nostate = true)
   public void pointset_publish() {
