@@ -270,10 +270,16 @@ public class MqttPublisher implements Publisher {
   public void close() {
     try {
       warn("Closing publisher connection");
-      publisherExecutor.shutdown();
       mqttClients.keySet().forEach(this::closeMqttClient);
     } catch (Exception e) {
       error("While closing publisher", deviceId, null, "close", e);
+    }
+  }
+
+  @Override
+  public void shutdown() {
+    if (isActive()) {
+      publisherExecutor.shutdown();
     }
   }
 
