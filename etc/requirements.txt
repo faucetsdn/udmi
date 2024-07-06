@@ -1,7 +1,7 @@
 astroid==2.12.13
 avro==1.11.3
 cachetools==5.0.0
-certifi==2023.7.22
+certifi==2024.7.4
 charset-normalizer==2.0.11
 click==8.0.3
 dataclasses-json==0.5.6
