@@ -96,9 +96,13 @@ public class ReflectProcessor extends ProcessorBase {
         Object payload = extractMessagePayload(objectMap);
         Envelope envelope = extractMessageEnvelope(objectMap);
         requireNull(envelope.payload, "payload not extracted from message envelope");
-        checkState(reflect.deviceId.equals(envelope.deviceRegistryId),
-            format("envelope %s/%s registryId %s does not match expected reflector deviceId %s",
-                envelope.subType, envelope.subFolder, envelope.deviceRegistryId, reflect.deviceId));
+        // If the device came from a reflector device and was not directly published into Pub/Sub
+        // Check the registry ID matches
+        if (reflect.deviceId != null) {
+          checkState(reflect.deviceId.equals(envelope.deviceRegistryId),
+              format("envelope %s/%s registryId %s does not match expected reflector deviceId %s",
+                  envelope.subType, envelope.subFolder, envelope.deviceRegistryId, reflect.deviceId));
+        }
         reflect.transactionId = firstNonNull(envelope.transactionId, reflect.transactionId,
             ReflectProcessor::makeTransactionId);
         processReflection(reflect, envelope, payload);
