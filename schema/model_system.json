@@ -10,6 +10,13 @@
       "description": "Generic human-readable text describing the device",
       "type": "string"
     },
+    "device_type":{
+      "description": "Type of device",
+      "enum": [
+        "SERIAL",
+        "IP"
+      ]
+    },
     "tags":{
       "description": "Tags assosciated with the device",
       "type": "array",
