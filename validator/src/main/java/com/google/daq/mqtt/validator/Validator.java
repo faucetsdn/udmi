@@ -479,6 +479,7 @@ public class Validator {
     outputLogger.info("Loading reflector key file from " + keyFile);
     config.key_file = keyFile;
     client = new IotReflectorClient(config, TOOLS_FUNCTIONS_VERSION);
+    dataSinks.add(client);
   }
 
   void messageLoop() {
