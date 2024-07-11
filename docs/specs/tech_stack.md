@@ -8,7 +8,7 @@ technology stack for compliant IoT devices.
 # Core Requirements
 
 * MQTT broker or bridge
-  * Availabile with a local setup using the standard `mosquitto`
+  * Available with a local setup using the standard `mosquitto`
   * Cloud-based solutions such as [ClearBlade IoT Core](https://www.clearblade.com/iot-core/)
   * Anything else that works... (it's OSS so go crazy!)
 * Utilizes the MQTT Topic table listed below (can be customized)
