@@ -19,13 +19,6 @@ model. It's important for system testing to isolate the setup from anything exte
 if Pubber doesn't work then there's something wrong with the code or GCP configuration,
 otherwise it indicates a problem with the real/actual device.
 
-## IoT Core
-
-[IoT Core](https://cloud.google.com/iot/docs/) is the externally-facing endpoint for on-prem devices.
-It organizes a particular device into a {&nbsp;_project_, _registry_&nbsp;} grouping. The important
-configuration parameters for a given _registry_ are the _Default telemetry_ and _Device state_ topic
-types, which should be set to _udmi\_target_ and _udmi\_state_, respectively.
-
 ## PubSub Topics
 
 [PubSub](https://cloud.google.com/pubsub/docs/) is used as the primary communication mechanism for

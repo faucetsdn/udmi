@@ -7,11 +7,11 @@ technology stack for compliant IoT devices.
 
 # Core Requirements
 
-* [Google Cloud's MQTT Protocol Bridge](https://cloud.google.com/iot/docs/how-tos/mqtt-bridge).
-  * This is _not_ the same as a generic MQTT Broker, but it is compatible with standard client-side libraries.
-  * Other transports (non-Google MQTT, CoAP, etc...) are acceptable with prior approval.
-  * Connected to a specific Cloud IoT Registry designated for each site-specific project.
-* Utilizes the MQTT Topic table listed below.
+* MQTT broker or bridge
+  * Availabile with a local setup using the standard `mosquitto`
+  * Cloud-based solutions such as [ClearBlade IoT Core](https://www.clearblade.com/iot-core/)
+  * Anything else that works... (it's OSS so go crazy!)
+* Utilizes the MQTT Topic table listed below (can be customized)
 * JSON encoding following the core schema definition, specifying the semantic structure of the data.
 
 # MQTT Topic Suffix Table
@@ -23,11 +23,11 @@ technology stack for compliant IoT devices.
 | pointset | event    | pointset  | `{topic_prefix}/events/pointset` | pointset.json |
 | system   | event    | system    | `{topic_prefix}/events/system`   | system.json   |
 
-For GCP implementations the full topic would be `/devices/{device_id}/{suffix}`
+For many implementations the full topic would be `/devices/{device_id}/{suffix}`
 
 # Backend Systems
 
-Any backend system (in a GCP project) should adhere to the following guidelines:
+Any backend system should adhere to the following guidelines:
 * All messages to/from the devices should conform to the UDMI schema payloads (pass validation).
 * All exchanges with the devices should go through a PubSub topic:
   * The _state_ and _events_ messages are published to a topic configured through the IoT Core registry.
@@ -44,19 +44,3 @@ gcloud pubsub topics publish target \
 
 The reason for the redirection of any data through a PubSub topic is so that the Cloud IoT registry, if necessary,
 can be housed in a different cloud project from the backend applications.
-
-## Types and Topics
-
-When using the
-[GCP Cloud IoT Core MQTT Bridge](https://cloud.google.com/iot/docs/how-tos/mqtt-bridge#publishing_telemetry_events)
-there are multiple ways the specific schema used during validation is chosen.
-* All messages have their attributes validated against the `.../attributes.json` schema. These attributes are
-automatically defined server-side by the MQTT Client ID and Topic, and are not explicitly included in any message payload.
-* A [device event message](https://cloud.google.com/iot/docs/how-tos/mqtt-bridge#publishing_telemetry_events)
-is validated against the sub-schema indicated by the MQTT topic `subFolder`. E.g., the MQTT
-topic `/devices/{device-id}/events/pointset` will be validated against `.../pointset.json`.
-* [Device state messages](https://cloud.google.com/iot/docs/how-tos/config/getting-state#reporting_device_state)
-are validated against the `.../state.json` schema on `/devices/{device-id}/state` MQTT topic.
-* (There currently is no stream validation of
-[device config messages](https://cloud.google.com/iot/docs/how-tos/config/configuring-devices#mqtt), which are sent on the
-`/devices/{device-id}/config` topic.)

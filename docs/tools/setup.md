@@ -2,12 +2,6 @@
 
 # UDMI Tools Setup
 
-## Baseline Requirements
-
-Most interactions work with [Cloud IoT Core](https://cloud.google.com/iot/docs/) 
-and [PubSub](https://cloud.google.com/pubsub/docs), so a familiarity with those 
-topics is assumed throughout the UDMI documentation.
-
 ## Software Prerequisites
 
 As a minimum, to run or deploy the included tools, the following software will need 

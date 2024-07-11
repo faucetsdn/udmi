@@ -7,12 +7,6 @@ or traditional devices that do not communicate directly to the cloud using
 a MQTT/UDMI connection. For example, an older [BACnet](http://www.bacnet.org/)
 based system could use a gateway to translate on-prem communications into UDMI.
 
-The
-[Google Cloud IoT Core Gateway Documentation](https://cloud.google.com/iot/docs/how-tos/gateways)
-provides an overview of the cloud-side implementation of a gateway. UDMI, then,
-specifies an additional layer of specification around the associated
-message formats.
-
 Conceptually, there are two types of
 entities involved: the _gateway device_, and the _proxied device_. Both of
 these are 'devices' in the sense that they have an entry in a cloud registry
