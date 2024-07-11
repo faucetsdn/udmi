@@ -15,7 +15,7 @@ them to work out-of-the-box without a deeper understanding of what's going on!
 
 `gcloud --project=$project_id functions logs read udmi_config --sort-by=time_utc --limit=1000`
 
-# Update a device's GCP IoT Core configuration
+# Update a device's configuration
 
 `bin/reset_config`
 

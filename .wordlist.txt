@@ -18,8 +18,8 @@ breakpoint
 buildingsiot
 centric
 CLA
+ClearBlade
 CLI
-Clearblade
 CloudRun
 CoAP
 comms
@@ -99,6 +99,7 @@ nterface
 OIDC
 onboarding
 Onboarding
+OSS
 pagent
 parameterization
 parsers

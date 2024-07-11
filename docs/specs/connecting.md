@@ -26,7 +26,7 @@ On-prem             Cloud
   * **Cloud**: The logical cloud representation of that device
 * _Prem-to-Cloud Connectivity_ (ascii `*` in the diagram)
   * **Network**: Basic IP network connectivity, but could be whatever works
-  * **Transport**: Typically MQTT & GCP IoT Core, but could be something else
+  * **Transport**: Typically MQTT, but could be something else
 
 ## Connection Models
 

@@ -11,8 +11,8 @@ A [guide is given for using sequencer for complete device testing.](../guides/de
 
 # Sequencer Setup
 
-1.  Ensure you have [deployed the necessary cloud functions](../cloud/gcp/udmis.md) to your GCP project
-2.  Add a new GCP IoT Core registry with a registry ID of `UDMI-REFLECT`.
+1.  Ensure you have a suitable MQTT broker setup.
+2.  Add a new registry with a registry ID of `UDMI-REFLECT`.
     *   Use `udmi_reflect` as the Pub/Sub topic for both the  **device telemetry and **device state**
     *   This serves as a _reflector_ of the MAIN IoT registry combining all messages
         published into a single stream.

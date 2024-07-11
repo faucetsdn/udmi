@@ -47,8 +47,8 @@ bin/registrar config_file
 * `config_file`: Path to a configuration file which contains configuration options;
 * `site_path`: The _directory_ containing the site model, or a model-with-project _file_ directly.
 * `project_id`: The project ID that contains the target registry. The project ID can be prepended with iot_provider:
-  * `//clearblade/PROJECT_ID` for a public Clearblade project.
-  * `//gbos/PROJECT_ID` for a Google operated Clearblade project.
+  * `//clearblade/PROJECT_ID` for a public ClearBlade project.
+  * `//gbos/PROJECT_ID` for a Google operated ClearBlade project.
 * `options`: Various options to impact behavior:
   * `-u` Update.
   * `-d` Delete all device in the site model from the registry (combine with `-x` to delete all devices from the registry)

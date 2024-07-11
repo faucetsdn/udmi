@@ -143,19 +143,6 @@ INFO daq.pubber.Pubber - 2022-05-24T15:26:23Z State update:
 INFO daq.pubber.Pubber - 2022-05-24T15:26:32Z 2022-05-24T15:26:32Z sending test message #0
 ```
 
-
-## Cloud Setup
-
-To use Pubber, there needs to be a cloud-side device entry configured in a GCP project configured to
-use [Cloud IoT](https://cloud.google.com/iot/docs/). The
-[Creating or Editing a Device](https://cloud.google.com/iot/docs/how-tos/devices#creating_or_editing_a_device)
-section of the documentation describe how to create a simple device and key-pair (see next section for
-a helper script). You can/should substitute the relevant values in the configuration below for your
-specific setup. The relevant bits of configuration are the information in the <code>local/pubber.json</code>
-file (see above), and the generated public key (also see above).
-
-Alternatively, you can use the [registrar tool](registrar.md) to automate device registration.
-
 ## Troubleshooting
 
 When using the `messageTrace` option to pubber and running the sequence tester it will include the sequence

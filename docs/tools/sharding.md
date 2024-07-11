@@ -25,7 +25,7 @@ a system with a registry suffix setting of `_A` would show:
 
 ## Setup
 
-- Manual creation of GCP IoT Core registries:
+- Manual creation of registries:
   - Create shadow site_model registry (e.g. registry `ZZ-TRI-FECTA_A`).
   - Create shadow alternate registry (e.g. registry `ZZ-REDIRECT-NA_A`).
   - Create shadow reflector device entry (e.g. device `ZZ-TRI-FECTA_A` in the `UDMI-REFLECT` registry).
