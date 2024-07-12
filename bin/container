@@ -110,6 +110,11 @@ EOF
 fi
 
 if [[ -n $build ]]; then
+    echo Cleaning old images...
+    docker rmi $target:latest || true
+    images=$(docker images | fgrep $REPOSITORY | awk '{print $3}') || true
+    [[ -n $images ]] && docker rmi $images
+
     echo Building Dockerfile.$target
     docker build -f Dockerfile.$target -t $target .
     docker tag $target $udmi_ref

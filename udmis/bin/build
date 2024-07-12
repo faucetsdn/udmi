@@ -19,6 +19,10 @@ ROOT=$(dirname $0)/..
 BASE=..
 cd $ROOT
 
+echo Mirroring udmi/bin...
+rm -rf sbin
+cp -a ../bin/ sbin/
+
 jarfile=build/libs/udmis-1.0-SNAPSHOT-all.jar
 
 newer_files=$([[ -f $jarfile ]] && find src/ $BASE/gencode/java -type f -newer $jarfile || echo missing)
