@@ -4,14 +4,16 @@ WORKDIR /root
 
 RUN apk add bash openjdk17 gcompat curl jq sudo
 
+ADD bin/ bin/
+
+ADD sbin/ bin/
+
+RUN bin/etcdctl version
+
 # Workaround for https://github.com/grpc/grpc-java/issues/8751
 ENV LD_PRELOAD=/lib/libgcompat.so.0
 
 ADD build/libs/udmis-1.0-SNAPSHOT-all.jar build/libs/udmis-1.0-SNAPSHOT-all.jar
-
-ADD bin/ bin/
-
-ADD sbin/ bin/
 
 ADD var/ var/
 
