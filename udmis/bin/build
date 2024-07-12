@@ -19,9 +19,10 @@ ROOT=$(dirname $0)/..
 BASE=..
 cd $ROOT
 
-echo Mirroring udmi/bin...
-rm -rf sbin
+echo Mirroring bin/ and etc/...
+rm -rf sbin/
 cp -a ../bin/ sbin/
+cp ../etc/*.sh var/
 
 jarfile=build/libs/udmis-1.0-SNAPSHOT-all.jar
 

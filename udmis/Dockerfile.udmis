@@ -2,7 +2,7 @@ FROM alpine:latest
 
 WORKDIR /root
 
-RUN apk add bash openjdk17 gcompat curl jq
+RUN apk add bash openjdk17 gcompat curl jq sudo
 
 # Workaround for https://github.com/grpc/grpc-java/issues/8751
 ENV LD_PRELOAD=/lib/libgcompat.so.0

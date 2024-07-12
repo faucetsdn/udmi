@@ -3,6 +3,12 @@
 UDMI_ROOT=$(dirname $0)/..
 cd $UDMI_ROOT
 
+if [[ ! -d etc/ ]]; then
+    echo Migrating support scripts to etc...
+    mkdir etc/
+    mv var/*.sh etc/
+fi
+
 source $UDMI_ROOT/etc/shell_common.sh
 
 [[ $# == 1 ]] || fail Usage: $0 project_spec
