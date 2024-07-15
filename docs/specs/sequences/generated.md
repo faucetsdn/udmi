@@ -32,9 +32,9 @@ Some caveats:
 
 <!-- START GENERATED, do not edit anything after this line! -->
 * [bad_target_family](#bad_target_family-preview): Error handling for badly formed target address family
-* [broken_config](#broken_config-beta): Check that the device correctly handles a broken (non-json) config message.
-* [config_logging](#config_logging-beta): Check that the device publishes minimum required log entries when receiving config
-* [device_config_acked](#device_config_acked-beta): Check that the device MQTT-acknowledges a sent config.
+* [broken_config](#broken_config-stable): Check that the device correctly handles a broken (non-json) config message.
+* [config_logging](#config_logging-stable): Check that the device publishes minimum required log entries when receiving config
+* [device_config_acked](#device_config_acked-stable): Check that the device MQTT-acknowledges a sent config.
 * [empty_enumeration](#empty_enumeration-preview): Check enumeration of nothing at all
 * [endpoint_connection_error](#endpoint_connection_error-preview): Push endpoint config message to device that results in a connection error.
 * [endpoint_connection_retry](#endpoint_connection_retry-preview): Check repeated endpoint with same information gets retried.
@@ -42,20 +42,20 @@ Some caveats:
 * [endpoint_connection_success_reconnect](#endpoint_connection_success_reconnect-preview): Check a successful reconnect to the same endpoint.
 * [endpoint_failure_and_restart](#endpoint_failure_and_restart-preview)
 * [endpoint_redirect_and_restart](#endpoint_redirect_and_restart-preview)
-* [extra_config](#extra_config-beta): Check that the device correctly handles an extra out-of-schema field
+* [extra_config](#extra_config-stable): Check that the device correctly handles an extra out-of-schema field
 * [family_ether_addr](#family_ether_addr-preview)
 * [family_ipv4_addr](#family_ipv4_addr-preview)
 * [family_ipv6_addr](#family_ipv6_addr-preview)
 * [feature_enumeration](#feature_enumeration-preview): Check enumeration of device features
 * [gateway_proxy_events](#gateway_proxy_events-beta): Check that a gateway proxies pointset events for indicated devices
-* [pointset_publish](#pointset_publish-beta): Check that a device publishes pointset events
-* [pointset_publish_interval](#pointset_publish_interval-beta): Check handling of sample_rate_sec and sample_limit_sec
-* [pointset_remove_point](#pointset_remove_point-beta): Check that pointset state does not report an unconfigured point
-* [pointset_request_extraneous](#pointset_request_extraneous-beta): Check error when pointset configuration contains extraneous point
-* [state_make_model](#state_make_model-beta): Check that a device publishes correct make and model information in state messages
-* [state_software](#state_software-beta): Check that a device publishes correct software information in state messages
+* [pointset_publish](#pointset_publish-stable): Check that a device publishes pointset events
+* [pointset_publish_interval](#pointset_publish_interval-stable): Check handling of sample_rate_sec and sample_limit_sec
+* [pointset_remove_point](#pointset_remove_point-stable): Check that pointset state does not report an unconfigured point
+* [pointset_request_extraneous](#pointset_request_extraneous-stable): Check error when pointset configuration contains extraneous point
+* [state_make_model](#state_make_model-stable): Check that a device publishes correct make and model information in state messages
+* [state_software](#state_software-stable): Check that a device publishes correct software information in state messages
 * [system_last_update](#system_last_update-stable): Check that last_update state is correctly set in response to a config update.
-* [valid_serial_no](#valid_serial_no-beta)
+* [valid_serial_no](#valid_serial_no-stable)
 
 ## bad_target_family (PREVIEW)
 
@@ -63,7 +63,7 @@ Error handling for badly formed target address family
 
 1. Test skipped: Not a proxied device
 
-## broken_config (BETA)
+## broken_config (STABLE)
 
 Check that the device correctly handles a broken (non-json) config message.
 
@@ -87,7 +87,7 @@ Check that the device correctly handles a broken (non-json) config message.
 1. Check that log category `system.config.receive` level `DEBUG` not logged
 1. Check that log category `system.config.parse` level `DEBUG` not logged
 
-## config_logging (BETA)
+## config_logging (STABLE)
 
 Check that the device publishes minimum required log entries when receiving config
 
@@ -98,7 +98,7 @@ Check that the device publishes minimum required log entries when receiving conf
 1. Wait for log category `system.config.parse` level `DEBUG` to be logged
 1. Wait for log category `system.config.apply` level `NOTICE` to be logged
 
-## device_config_acked (BETA)
+## device_config_acked (STABLE)
 
 Check that the device MQTT-acknowledges a sent config.
 
@@ -238,7 +238,7 @@ Check a successful reconnect to the same endpoint.
     * Remove `blobset.blobs._iot_endpoint_config`
 1. Wait for endpoint config blobset state not defined
 
-## extra_config (BETA)
+## extra_config (STABLE)
 
 Check that the device correctly handles an extra out-of-schema field
 
@@ -298,13 +298,13 @@ Check that a gateway proxies pointset events for indicated devices
 
 1. Test skipped: Not a gateway
 
-## pointset_publish (BETA)
+## pointset_publish (STABLE)
 
 Check that a device publishes pointset events
 
 1. Wait for receive a pointset event
 
-## pointset_publish_interval (BETA)
+## pointset_publish_interval (STABLE)
 
 Check handling of sample_rate_sec and sample_limit_sec
 
@@ -319,7 +319,7 @@ Check handling of sample_rate_sec and sample_limit_sec
 1. Wait for receive at least 4 pointset events
 1. Check that time period between successive pointset events is between 15 and 18 seconds
 
-## pointset_remove_point (BETA)
+## pointset_remove_point (STABLE)
 
 Check that pointset state does not report an unconfigured point
 
@@ -336,7 +336,7 @@ Check that pointset state does not report an unconfigured point
 1. Wait for pointset state matches config
 1. Wait for pointset event contains correct points
 
-## pointset_request_extraneous (BETA)
+## pointset_request_extraneous (STABLE)
 
 Check error when pointset configuration contains extraneous point
 
@@ -355,13 +355,13 @@ Check error when pointset configuration contains extraneous point
 1. Wait for pointset state matches config
 1. Wait for pointset event contains correct points
 
-## state_make_model (BETA)
+## state_make_model (STABLE)
 
 Check that a device publishes correct make and model information in state messages
 
 1. Check that make and model in state matches make in metadata
 
-## state_software (BETA)
+## state_software (STABLE)
 
 Check that a device publishes correct software information in state messages
 
@@ -380,6 +380,6 @@ Check that last_update state is correctly set in response to a config update.
 1. Wait for state last_config matches config timestamp
 1. Wait for state update complete
 
-## valid_serial_no (BETA)
+## valid_serial_no (STABLE)
 
 1. Wait for received serial number matches

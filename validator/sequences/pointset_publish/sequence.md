@@ -1,5 +1,5 @@
 
-## pointset_publish (BETA)
+## pointset_publish (STABLE)
 
 Check that a device publishes pointset events
 

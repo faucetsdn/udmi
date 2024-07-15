@@ -1,0 +1,362 @@
+{
+    "timestamp": "2024-05-29T11:04:23Z",
+    "version": "1.5.0",
+    "tags": [],
+    "cloud": {
+      "resource_type": "DEVICE",
+      "credentials": []
+    },
+    "system": {
+      "location": {
+        "site": "US-SJC-EBKW122"
+      },
+      "min_loglevel": 300
+    },
+    "gateway": {
+      "gateway_id": "HLI-1"
+    },
+    "localnet": {
+      "families": {
+        "iot": {
+          "addr": "EM-3"
+        }
+      }
+    },
+    "testing": {
+      "nostate": true,
+      "targets": {
+        "failure": {
+          "target_point": "em_3_points_spf_r3_voltage_l1_to_l2",
+          "target_value": 99
+        },
+        "invalid": {
+          "target_point": "em_3_points_spf_r3_voltage_l1_to_l2",
+          "target_value": []
+        }
+      }
+    },
+    "features": {
+      "pointset": {
+        "stage": "beta"
+      },
+      "system": {
+        "stage": "beta"
+      },
+      "writeback": {
+        "stage": "alpha"
+      }
+    },
+    "pointset": {
+      "points": {
+        "em_3_points_spf_r1_ac_voltage_l_to_lvg1": {
+          "units": "",
+          "writable": false,
+          "ref": "4838",
+          "tags": []
+        },
+        "em_3_points_spf_r1_current_ch1": {
+          "units": "",
+          "writable": false,
+          "ref": "4831",
+          "tags": []
+        },
+        "em_3_points_spf_r1_current_ch2": {
+          "units": "",
+          "writable": false,
+          "ref": "4832",
+          "tags": []
+        },
+        "em_3_points_spf_r1_current_ch3": {
+          "units": "",
+          "writable": false,
+          "ref": "4833",
+          "tags": []
+        },
+        "em_3_points_spf_r1_exported_energy_sum": {
+          "units": "",
+          "writable": false,
+          "ref": "4847",
+          "tags": []
+        },
+        "em_3_points_spf_r1_line_frequency1": {
+          "units": "",
+          "writable": false,
+          "ref": "4842",
+          "tags": []
+        },
+        "em_3_points_spf_r1_power_ch1": {
+          "units": "",
+          "writable": false,
+          "ref": "4844",
+          "tags": []
+        },
+        "em_3_points_spf_r1_power_ch2": {
+          "units": "",
+          "writable": false,
+          "ref": "4845",
+          "tags": []
+        },
+        "em_3_points_spf_r1_power_ch3": {
+          "units": "",
+          "writable": false,
+          "ref": "4846",
+          "tags": []
+        },
+        "em_3_points_spf_r1_power_sum": {
+          "units": "",
+          "writable": false,
+          "ref": "4843",
+          "tags": []
+        },
+        "em_3_points_spf_r1_voltage_l1_to_l2": {
+          "units": "",
+          "writable": false,
+          "ref": "4839",
+          "tags": []
+        },
+        "em_3_points_spf_r1_voltage_l1_to_n": {
+          "units": "",
+          "writable": false,
+          "ref": "4835",
+          "tags": []
+        },
+        "em_3_points_spf_r1_voltage_l2_to_l3": {
+          "units": "",
+          "writable": false,
+          "ref": "4840",
+          "tags": []
+        },
+        "em_3_points_spf_r1_voltage_l2_to_n": {
+          "units": "",
+          "writable": false,
+          "ref": "4836",
+          "tags": []
+        },
+        "em_3_points_spf_r1_voltage_l3_to_l1": {
+          "units": "",
+          "writable": false,
+          "ref": "4841",
+          "tags": []
+        },
+        "em_3_points_spf_r1_voltage_l3_to_n": {
+          "units": "",
+          "writable": false,
+          "ref": "4837",
+          "tags": []
+        },
+        "em_3_points_spf_r1_voltage_l_to_nvg1": {
+          "units": "",
+          "writable": false,
+          "ref": "4834",
+          "tags": []
+        },
+        "em_3_points_spf_r2_ac_voltage_l_to_lvg": {
+          "units": "",
+          "writable": false,
+          "ref": "4804",
+          "tags": []
+        },
+        "em_3_points_spf_r2_current_ch1": {
+          "units": "",
+          "writable": false,
+          "ref": "4797",
+          "tags": []
+        },
+        "em_3_points_spf_r2_current_ch2": {
+          "units": "",
+          "writable": false,
+          "ref": "4798",
+          "tags": []
+        },
+        "em_3_points_spf_r2_current_ch3": {
+          "units": "",
+          "writable": false,
+          "ref": "4799",
+          "tags": []
+        },
+        "em_3_points_spf_r2_exported_energy_sum": {
+          "units": "",
+          "writable": false,
+          "ref": "4813",
+          "tags": []
+        },
+        "em_3_points_spf_r2_line_frequency": {
+          "units": "",
+          "writable": false,
+          "ref": "4808",
+          "tags": []
+        },
+        "em_3_points_spf_r2_power_ch1": {
+          "units": "",
+          "writable": false,
+          "ref": "4810",
+          "tags": []
+        },
+        "em_3_points_spf_r2_power_ch2": {
+          "units": "",
+          "writable": false,
+          "ref": "4811",
+          "tags": []
+        },
+        "em_3_points_spf_r2_power_ch3": {
+          "units": "",
+          "writable": false,
+          "ref": "4812",
+          "tags": []
+        },
+        "em_3_points_spf_r2_power_sum": {
+          "units": "",
+          "writable": false,
+          "ref": "4809",
+          "tags": []
+        },
+        "em_3_points_spf_r2_voltage_l1_to_l2": {
+          "units": "",
+          "writable": false,
+          "ref": "4805",
+          "tags": []
+        },
+        "em_3_points_spf_r2_voltage_l1_to_n": {
+          "units": "",
+          "writable": false,
+          "ref": "4801",
+          "tags": []
+        },
+        "em_3_points_spf_r2_voltage_l2_to_l3": {
+          "units": "",
+          "writable": false,
+          "ref": "4806",
+          "tags": []
+        },
+        "em_3_points_spf_r2_voltage_l2_to_n": {
+          "units": "",
+          "writable": false,
+          "ref": "4802",
+          "tags": []
+        },
+        "em_3_points_spf_r2_voltage_l3_to_l1": {
+          "units": "",
+          "writable": false,
+          "ref": "4807",
+          "tags": []
+        },
+        "em_3_points_spf_r2_voltage_l3_to_n": {
+          "units": "",
+          "writable": false,
+          "ref": "4803",
+          "tags": []
+        },
+        "em_3_points_spf_r2_voltage_l_to_nvg": {
+          "units": "",
+          "writable": false,
+          "ref": "4800",
+          "tags": []
+        },
+        "em_3_points_spf_r3_ac_voltage_l_to_lvg1": {
+          "units": "",
+          "writable": false,
+          "ref": "4821",
+          "tags": []
+        },
+        "em_3_points_spf_r3_current_ch1": {
+          "units": "",
+          "writable": false,
+          "ref": "4814",
+          "tags": []
+        },
+        "em_3_points_spf_r3_current_ch2": {
+          "units": "",
+          "writable": false,
+          "ref": "4815",
+          "tags": []
+        },
+        "em_3_points_spf_r3_current_ch3": {
+          "units": "",
+          "writable": false,
+          "ref": "4816",
+          "tags": []
+        },
+        "em_3_points_spf_r3_exported_energy_sum": {
+          "units": "",
+          "writable": false,
+          "ref": "4830",
+          "tags": []
+        },
+        "em_3_points_spf_r3_line_frequency1": {
+          "units": "",
+          "writable": false,
+          "ref": "4825",
+          "tags": []
+        },
+        "em_3_points_spf_r3_power_ch1": {
+          "units": "",
+          "writable": false,
+          "ref": "4827",
+          "tags": []
+        },
+        "em_3_points_spf_r3_power_ch2": {
+          "units": "",
+          "writable": false,
+          "ref": "4828",
+          "tags": []
+        },
+        "em_3_points_spf_r3_power_ch3": {
+          "units": "",
+          "writable": false,
+          "ref": "4829",
+          "tags": []
+        },
+        "em_3_points_spf_r3_power_sum": {
+          "units": "",
+          "writable": false,
+          "ref": "4826",
+          "tags": []
+        },
+        "em_3_points_spf_r3_voltage_l1_to_l2": {
+          "units": "",
+          "writable": false,
+          "ref": "4822",
+          "tags": []
+        },
+        "em_3_points_spf_r3_voltage_l1_to_n": {
+          "units": "",
+          "writable": false,
+          "ref": "4818",
+          "tags": []
+        },
+        "em_3_points_spf_r3_voltage_l2_to_l3": {
+          "units": "",
+          "writable": false,
+          "ref": "4823",
+          "tags": []
+        },
+        "em_3_points_spf_r3_voltage_l2_to_n": {
+          "units": "",
+          "writable": false,
+          "ref": "4819",
+          "tags": []
+        },
+        "em_3_points_spf_r3_voltage_l3_to_l1": {
+          "units": "",
+          "writable": false,
+          "ref": "4824",
+          "tags": []
+        },
+        "em_3_points_spf_r3_voltage_l3_to_n": {
+          "units": "",
+          "writable": false,
+          "ref": "4820",
+          "tags": []
+        },
+        "em_3_points_spf_r3_voltage_l_to_nvg1": {
+          "units": "",
+          "writable": false,
+          "ref": "4817",
+          "tags": []
+        }
+      },
+      "sample_limit_sec": 300,
+      "sample_rate_sec": 300
+    }
+  }
+  

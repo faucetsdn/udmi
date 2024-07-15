@@ -5,15 +5,8 @@
 **Schema Definition:** [config.json](../../schema/config.json)
  ([_🧬View_](../../gencode/docs/config.html))
 
-The UDMI config block specifies the
-[Cloud IoT Core Config](https://cloud.google.com/iot/docs/how-tos/config/configuring-devices)
-block that controls a device's intended behavior.
-
-Unless a config message has an [expiry](../specs/sequences/writeback.md#value-expiration), the latest
-config message is always considered present.
-
+The UDMI config block specifies information that controls a device's intended behavior.
 It is composed of specific sub-entries for each sub-system { _system_, _pointset_, _gateway_, etc... }.
-
 This [working example](../../tests/schemas/config/example.json) shows how a typical `config` message
 is constructed.
 

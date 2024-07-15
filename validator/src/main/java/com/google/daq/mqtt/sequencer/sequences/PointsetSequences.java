@@ -17,6 +17,7 @@ import static udmi.schema.Bucket.POINTSET;
 import static udmi.schema.Category.POINTSET_POINT_INVALID;
 import static udmi.schema.Category.POINTSET_POINT_INVALID_VALUE;
 import static udmi.schema.FeatureDiscovery.FeatureStage.BETA;
+import static udmi.schema.FeatureDiscovery.FeatureStage.STABLE;
 
 import com.google.common.collect.Sets;
 import com.google.daq.mqtt.sequencer.Feature;
@@ -107,7 +108,7 @@ public class PointsetSequences extends PointsetBase {
 
   @Test(timeout = TWO_MINUTES_MS)
   @Summary("Check error when pointset configuration contains extraneous point")
-  @Feature(stage = BETA, bucket = POINTSET)
+  @Feature(stage = STABLE, bucket = POINTSET)
   public void pointset_request_extraneous() {
     deviceConfig.pointset.sample_rate_sec = DEFAULT_SAMPLE_RATE_SEC;
 
@@ -133,9 +134,9 @@ public class PointsetSequences extends PointsetBase {
     untilPointsetSanity();
   }
 
-  @Test(timeout = TWO_MINUTES_MS)
+  @Test(timeout = THREE_MINUTES_MS)
   @Summary("Check that pointset state does not report an unconfigured point")
-  @Feature(stage = BETA, bucket = POINTSET)
+  @Feature(stage = STABLE, bucket = POINTSET)
   public void pointset_remove_point() {
     untilPointsetSanity();
 
@@ -164,9 +165,9 @@ public class PointsetSequences extends PointsetBase {
   /**
    * Simple check that device publishes pointset events.
    */
-  @Test(timeout = THREE_MINUTES_MS)
+  @Test(timeout = TWO_MINUTES_MS)
   @Summary("Check that a device publishes pointset events")
-  @Feature(stage = BETA, bucket = POINTSET, nostate = true)
+  @Feature(stage = STABLE, bucket = POINTSET, nostate = true)
   public void pointset_publish() {
     ifNullSkipTest(deviceConfig.pointset, "no pointset found in config");
 
@@ -188,7 +189,7 @@ public class PointsetSequences extends PointsetBase {
    */
   @Test(timeout = THREE_MINUTES_MS)
   @Summary("Check handling of sample_rate_sec and sample_limit_sec")
-  @Feature(stage = BETA, bucket = POINTSET, nostate = true)
+  @Feature(stage = STABLE, bucket = POINTSET, nostate = true)
   @ValidateSchema(SubFolder.POINTSET)
   public void pointset_publish_interval() {
     ifNullSkipTest(deviceConfig.pointset, "no pointset found in config");

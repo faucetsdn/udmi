@@ -86,14 +86,12 @@ y tests/schemas/config/smartprimus.json
 y tests/schemas/config/restart.json
 y tests/schemas/config/implicit.json
 y tests/schemas/state_mapping/mapping.json
-y tests/schemas/command_discovery/provision.json
 y tests/schemas/events_mapping/mapping.json
 y tests/schemas/events_mapping/prediction.json
 y tests/schemas/metadata/toomany.json
 y tests/schemas/metadata/proxy.json
 y tests/schemas/metadata/example.json
 y tests/schemas/metadata/gateway.json
-y tests/schemas/command_mapping/mapping.json
 y tests/schemas/metadata/errors.json
 y tests/schemas/config/blobset_final.json
 n tests/schemas/configuration_execution/cloud_iot_config.json
@@ -103,7 +101,6 @@ n tests/schemas/configuration_endpoint/multiple.json
 n tests/schemas/events_discovery/features.json
 y tests/schemas/events_system/categories.json
 y tests/schemas/metadata/nosys.json
-y tests/schemas/state/gateway_test.json
 y tests/schemas/state_validation/sequencer.json
 n tests/schemas/configuration_pubber/mosquitto.json
 y tests/schemas/metadata/network.json
@@ -156,14 +153,7 @@ n tests/sites/downgrade/cloud_iot_config.json
 n tests/sites/downgrade/devices/DWN-1/expected/generated_config.json
 n tests/sites/downgrade/devices/DWN-1/expected/metadata_norm.json
 n tests/sites/downgrade/devices/DWN-1/metadata.json
-n tests/sites/downgrade/devices/DWN-1/out/errors.json
-n tests/sites/downgrade/devices/DWN-1/out/generated_config.json
-n tests/sites/downgrade/devices/DWN-1/out/metadata_norm.json
 n tests/sites/downgrade/devices/DWN-2/metadata.json
-n tests/sites/downgrade/devices/DWN-2/out/errors.json
-n tests/sites/downgrade/devices/DWN-2/out/generated_config.json
-n tests/sites/downgrade/devices/DWN-2/out/metadata_norm.json
-n tests/sites/downgrade/out/registration_summary.json
 n tests/sites/downgrade/registration_summary.json
 n tests/sites/downgrade/site_defaults.json
 
@@ -172,25 +162,58 @@ n tests/sites/missing/cloud_iot_config.json
 n tests/sites/missing/devices/AHU-1/expected/generated_config.json
 n tests/sites/missing/devices/AHU-1/expected/metadata_norm.json
 n tests/sites/missing/devices/AHU-1/metadata.json
-n tests/sites/missing/devices/AHU-1/out/errors.json
-n tests/sites/missing/devices/AHU-1/out/generated_config.json
-n tests/sites/missing/devices/AHU-1/out/metadata_norm.json
-n tests/sites/missing/devices/AHU-22/expected/generated_config.json
 n tests/sites/missing/devices/AHU-22/expected/metadata_norm.json
 n tests/sites/missing/devices/AHU-22/metadata.json
-n tests/sites/missing/devices/AHU-22/out/generated_config.json
-n tests/sites/missing/devices/AHU-22/out/metadata_norm.json
 n tests/sites/missing/devices/GAT-123/expected/generated_config.json
 n tests/sites/missing/devices/GAT-123/expected/metadata_norm.json
 n tests/sites/missing/devices/GAT-123/metadata.json
-n tests/sites/missing/devices/GAT-123/out/errors.json
-n tests/sites/missing/devices/GAT-123/out/generated_config.json
-n tests/sites/missing/devices/GAT-123/out/metadata_norm.json
 n tests/sites/missing/devices/SNS-4/expected/generated_config.json
 n tests/sites/missing/devices/SNS-4/expected/metadata_norm.json
 n tests/sites/missing/devices/SNS-4/metadata.json
-n tests/sites/missing/devices/SNS-4/out/generated_config.json
-n tests/sites/missing/devices/SNS-4/out/metadata_norm.json
-n tests/sites/missing/out/registration_summary.json
+n tests/sites/missing/site_defaults.json
 n tests/sites/missing/registration_summary.json
-n tests/sites/missing/site_defaultsjson
+
+n tests/sites/configs/cloud_iot_config.json
+y tests/sites/configs/devices/AHU-1/expected/metadata_norm.json
+y tests/sites/configs/devices/AHU-1/metadata.json
+y tests/sites/configs/devices/AHU-22/expected/generated_config.json
+y tests/sites/configs/devices/AHU-22/expected/metadata_norm.json
+y tests/sites/configs/devices/AHU-22/metadata.json
+n tests/sites/configs/devices/GAT-123/config/config.json # static config 
+n tests/sites/configs/devices/GAT-123/expected/generated_config.json # static config
+y tests/sites/configs/devices/GAT-123/expected/metadata_norm.json
+y tests/sites/configs/devices/GAT-123/metadata.json
+n tests/sites/configs/devices/GAT-456/expected/generated_config.json # static config
+y tests/sites/configs/devices/GAT-456/expected/metadata_norm.json
+y tests/sites/configs/devices/GAT-456/metadata.json
+n tests/sites/configs/registration_summary.json
+n tests/sites/discovery/cloud_iot_config.json
+y tests/sites/discovery/devices/GAT-123/expected/generated_config.json
+y tests/sites/discovery/devices/GAT-123/expected/metadata_norm.json
+y tests/sites/discovery/devices/GAT-123/metadata.json
+n tests/sites/discovery/registration_summary.json
+n tests/sites/downgrade/devices/AHU-102/expected/generated_config.json
+n tests/sites/downgrade/devices/AHU-102/expected/metadata_norm.json
+n tests/sites/downgrade/devices/AHU-102/metadata.json
+n tests/sites/downgrade/devices/CGW-1/expected/generated_config.json # downgraded config
+n tests/sites/downgrade/devices/CGW-1/expected/metadata_norm.json
+n tests/sites/downgrade/devices/CGW-1/metadata.json
+n tests/sites/downgrade/devices/CGW-12/expected/generated_config.json # downgraded config
+n tests/sites/downgrade/devices/CGW-12/expected/metadata_norm.json
+n tests/sites/downgrade/devices/CGW-12/metadata.json
+n tests/sites/downgrade/devices/DDC-54/expected/generated_config.json # downgraded config
+n tests/sites/downgrade/devices/DDC-54/expected/metadata_norm.json
+n tests/sites/downgrade/devices/DDC-54/metadata.json
+n tests/sites/downgrade/devices/DWN-3/expected/generated_config.json # downgraded config
+n tests/sites/downgrade/devices/DWN-3/expected/metadata_norm.json
+n tests/sites/downgrade/devices/DWN-3/metadata.json
+n tests/sites/downgrade/devices/DWN-4/metadata.json
+n tests/sites/downgrade/devices/SF-28/expected/generated_config.json # downgraded config
+n tests/sites/downgrade/devices/SF-28/expected/metadata_norm.json
+n tests/sites/downgrade/devices/SF-28/metadata.json
+
+# These files do not have versions in them
+n tests/sites/mapping/cloud_iot_config.json
+n tests/sites/mapping/devices/GAT-123/expected/metadata_norm.json
+n tests/sites/mapping/devices/GAT-123/metadata.json
+n tests/sites/mapping/registration_summary.json
