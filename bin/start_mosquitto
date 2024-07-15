@@ -1,9 +1,14 @@
-#!/bin/bash -eu
+#!/bin/bash -eux
 
 UDMI_ROOT=$(dirname $0)/..
 source $UDMI_ROOT/etc/shell_common.sh
 
 source $UDMI_ROOT/etc/mosquitto_ctrl.sh
+
+# This is not already set-up when running inside of docker...
+if [[ ! -f $ETC_DIR/mosquitto.conf ]]; then
+    cp var/mosquitto.conf $ETC_DIR/
+fi
 
 GROUP=mosquitto
 UDMI_FILE=$ETC_DIR/conf.d/udmi.conf
@@ -12,8 +17,10 @@ DYN_FILE=$ETC_DIR/dynamic_security.json
 
 if [[ ! -f $UDMI_FILE ]]; then
     echo Creating new $UDMI_FILE from template...
+    mkdir -p $(dirname $UDMI_FILE)
     sudo cp etc/mosquitto_udmi.conf $UDMI_FILE
-    PLUGIN_FILE=$(whereis -b mosquitto_dynamic_security.so | awk '{print $2}')
+    PLUGIN_FILE=/usr/lib/mosquitto_dynamic_security.so
+    [[ -f $PLUGIN_FILE ]] || PLUGIN_FILE=$(whereis -b mosquitto_dynamic_security.so | awk '{print $2}')
     ls -l "$PLUGIN_FILE"
     echo Configuring dynamic security plugin $PLUGIN_FILE
     sudo sed -i "s%plugin dynsec%plugin $PLUGIN_FILE%" $UDMI_FILE

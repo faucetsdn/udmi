@@ -23,6 +23,10 @@ echo Mirroring bin/ and etc/...
 rm -rf sbin/
 cp -a ../bin/ sbin/
 cp ../etc/*.sh var/
+cp ../etc/*.conf var/
+
+echo Copying mosquitto config files...
+cp /etc/mosquitto/mosquitto.conf var/
 
 jarfile=build/libs/udmis-1.0-SNAPSHOT-all.jar
 

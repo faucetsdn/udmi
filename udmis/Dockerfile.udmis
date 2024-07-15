@@ -2,7 +2,7 @@ FROM alpine:latest
 
 WORKDIR /root
 
-RUN apk add bash openjdk17 gcompat curl jq sudo git mosquitto mosquitto-clients
+RUN apk add bash openjdk17 gcompat curl jq sudo git mosquitto mosquitto-clients openssl
 
 ADD bin/ bin/
 
