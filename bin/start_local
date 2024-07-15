@@ -1,6 +1,16 @@
 #!/bin/bash -e
 
 UDMI_ROOT=$(dirname $0)/..
+
+if [[ ! -d $UDMI_ROOT/etc/ ]]; then
+    echo Migrating support scripts to etc...
+    (
+        cd $UDMI_ROOT
+        mkdir etc/
+        mv var/*.sh etc/
+    )
+fi
+
 source $UDMI_ROOT/etc/shell_common.sh
 
 [[ $# == 2 ]] || fail Usage: $0 site_model project_spec
@@ -15,12 +25,6 @@ echo "export UDMI_ALT_REGISTRY=${UDMI_ALT_REGISTRY:-}"
 
 cd $UDMI_ROOT
 
-if [[ ! -d etc/ ]]; then
-    echo Migrating support scripts to etc...
-    mkdir etc/
-    mv var/*.sh etc/
-fi
-
 if [[ ! $project_spec =~ ^//mqtt/ ]]; then
     echo Not a local setup, doing nothing!
     exit 0
@@ -29,7 +33,7 @@ fi
 site_config=$site_model/cloud_iot_config.json
 registry_id=$(jq -r .registry_id $site_config)${UDMI_REGISTRY_SUFFIX:-}
 
-bin/start_etcd
+bin/start_etcd 2>&1 > etcd.log &
 
 bin/setup_ca $site_model
 bin/start_mosquitto

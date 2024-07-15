@@ -36,7 +36,7 @@ udmi_version=$(cd $UDMI_ROOT; git describe --dirty) || true
 
 [[ -z $udmi_version ]] && udmi_version=git-$(cd $UDMI_ROOT; git describe --dirty --always) || true
 
-[[ -z $udmi_version ]] && udmi_version=unknown
+[[ $udmi_version == git- ]] && udmi_version=unknown
 
 export UDMI_ROOT
 export UDMI_TOOLS=$udmi_version
