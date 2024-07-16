@@ -161,7 +161,7 @@ jobs:
       - name: base setup
         run: bin/run_tests install_dependencies
       - name: local setup
-        run: bin/start_local $TARGET_PROJECT
+        run: bin/start_local sites/udmi_site_model $TARGET_PROJECT
       - name: registrar clean
         run: bin/test_regclean $TARGET_PROJECT
       - name: sequence tests clean
@@ -218,7 +218,7 @@ jobs:
       - name: base setup
         run: bin/run_tests install_dependencies
       - name: local setup
-        run: bin/start_local $TARGET_PROJECT
+        run: bin/start_local sites/udmi_site_model $TARGET_PROJECT
       - name: registrar clean
         run: bin/test_regclean solo $TARGET_PROJECT
       - name: telemetry validator
@@ -262,7 +262,7 @@ jobs:
           bin/clone_model
           bin/registrar sites/udmi_site_model
       - name: local setup
-        run: bin/start_local //mqtt/localhost
+        run: bin/start_local sites/udmi_site_model //mqtt/localhost
       - name: bin/test_etcd
         run: bin/test_etcd
       - name: bin/test_mosquitto
@@ -313,7 +313,7 @@ jobs:
       - name: base setup
         run: bin/run_tests install_dependencies
       - name: local setup
-        run: bin/start_local $TARGET_PROJECT
+        run: bin/start_local sites/udmi_site_model $TARGET_PROJECT
       - name: regclean
         run: bin/test_regclean $TARGET_PROJECT
       - name: bin/test_proxy

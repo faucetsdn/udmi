@@ -23,8 +23,11 @@ credentials.json
 /udmis/build/
 /udmis/out/
 /udmis/var/
+/udmis/sbin/
 /udmis/profile/
 /udmis/.idea/libraries/
+/udmis/udmi_bin/
+/udmis/udmi_etc/
 /selfie/build/
 /pubber/build/
 /pubber/out/
