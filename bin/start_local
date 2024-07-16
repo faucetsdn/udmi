@@ -7,7 +7,7 @@ if [[ ! -d $UDMI_ROOT/etc/ ]]; then
     (
         cd $UDMI_ROOT
         mkdir etc/
-        mv var/*.sh var/*.conf etc/
+        cp var/*.sh var/*.conf etc/
     )
 fi
 
@@ -33,14 +33,13 @@ fi
 site_config=$site_model/cloud_iot_config.json
 registry_id=$(jq -r .registry_id $site_config)${UDMI_REGISTRY_SUFFIX:-}
 
-bin/start_etcd 2&>1 > etcd.log &
+bin/start_etcd >etcd.log 2>&1 &
 
 source $UDMI_ROOT/etc/mosquitto_ctrl.sh
 mkdir -p $CERT_DIR
 
 bin/setup_ca $site_model
 bin/start_mosquitto
-
 
 $MOSQUITTO_CTRL deleteClient $SERV_USER
 $MOSQUITTO_CTRL createClient $SERV_USER -p $SERV_PASS # No client_id to allow multiple backend connections.

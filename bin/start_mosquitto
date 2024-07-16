@@ -1,4 +1,4 @@
-#!/bin/bash -eux
+#!/bin/bash -eu
 
 UDMI_ROOT=$(dirname $0)/..
 source $UDMI_ROOT/etc/shell_common.sh
@@ -15,6 +15,8 @@ UDMI_FILE=$ETC_DIR/conf.d/udmi.conf
 PASS_FILE=$ETC_DIR/mosquitto.passwd
 DYN_FILE=$ETC_DIR/dynamic_security.json
 
+mkdir -p /var/log/mosquitto/
+
 if [[ ! -f $UDMI_FILE ]]; then
     echo Creating new $UDMI_FILE from template...
     mkdir -p $(dirname $UDMI_FILE)
@@ -25,13 +27,14 @@ if [[ ! -f $UDMI_FILE ]]; then
     echo Configuring dynamic security plugin $PLUGIN_FILE
     sudo sed -i "s%plugin dynsec%plugin $PLUGIN_FILE%" $UDMI_FILE
     sudo sed -i "s%plugin_opt_config_file dynsec%plugin_opt_config_file $DYN_FILE%" $UDMI_FILE
+    [[ $(whoami) == root ]] && echo user root >> $UDMI_FILE
 fi
 
 if [[ ! -f $DYN_FILE ]]; then
     echo Creating new $DYN_FILE
     echo Configuring MQTT user: $AUTH_USER
     sudo mosquitto_ctrl dynsec init $DYN_FILE $AUTH_USER $AUTH_PASS
-    sudo chgrp $GROUP $DYN_FILE
+    [[ $(whoami) != root ]] && sudo chgrp $GROUP $DYN_FILE
     sudo chmod 0660 $DYN_FILE
 fi
 
@@ -39,11 +42,19 @@ if [[ ! -f $PASS_FILE ]]; then
     echo Creating $PASS_FILE
     sudo touch $PASS_FILE
     sudo chmod 0640 $PASS_FILE
-    sudo chgrp $GROUP $PASS_FILE
+    [[ $(whoami) != root ]] && sudo chgrp $GROUP $PASS_FILE
     sudo mosquitto_passwd -b ${PASS_FILE} ${AUTH_USER} ${AUTH_PASS}
 fi
 
-sudo systemctl restart mosquitto
+if [[ -n $(which systemctl) ]]; then
+    sudo systemctl restart mosquitto
+else
+    echo Starting mosquitto in the background...
+    mosquitto -c /etc/mosquitto/mosquitto.conf > mosquitto.log 2>&1 &
+    MOSQUITTO_PID=$!
+    sleep 10
+    [[ -d /proc/$MOSQUITTO_PID ]] || (cat mosquitto.log && fail starting mosquitto)
+fi
 
 $MOSQUITTO_CTRL createRole device
 $MOSQUITTO_CTRL addRoleACL device subscribePattern '/r/+/d/+/#' allow
