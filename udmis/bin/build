@@ -28,7 +28,7 @@ cp -a ../etc udmi_etc/
 
 echo Copying default mosquitto config files...
 mkdir -p var/
-cp /etc/mosquitto/mosquitto.conf var/
+cp /etc/mosquitto/mosquitto.conf var/ || true
 
 jarfile=build/libs/udmis-1.0-SNAPSHOT-all.jar
 
