@@ -1,5 +1,6 @@
 package com.google.udmi.util;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.sha256;
 import static java.lang.String.format;
 
@@ -34,6 +35,7 @@ import udmi.schema.EndpointConfiguration.Transport;
 public class CertManager {
 
   public static final String TLS_1_2_PROTOCOL = "TLSv1.2";
+  public static final String CA_CERT_FILE = "ca.crt";
   private static final String BOUNCY_CASTLE_PROVIDER = "BC";
   private static final String X509_FACTORY = "X.509";
   private static final String X509_ALGORITHM = "X509";
@@ -42,7 +44,6 @@ public class CertManager {
   private static final String CA_CERT_ALIAS = "ca-certificate";
   private static final String CLIENT_CERT_ALIAS = "certificate";
   private static final String PRIVATE_KEY_ALIAS = "private-key";
-  public static final String CA_CERT_FILE = "ca.crt";
   private final File caCrtFile;
   private final File keyFile;
   private final File crtFile;
@@ -62,8 +63,7 @@ public class CertManager {
     isSsl = Transport.SSL.equals(transport);
 
     if (isSsl) {
-      File rsaCrtFile = new File(clientDir, "rsa_private.crt");
-      String prefix = rsaCrtFile.exists() ? "rsa" : "ec";
+      String prefix = keyPrefix(clientDir);
       crtFile = new File(clientDir, prefix + "_private.crt");
       keyFile = new File(clientDir, prefix + "_private.pem");
       this.password = passString.toCharArray();
@@ -76,6 +76,14 @@ public class CertManager {
       keyFile = null;
       password = null;
     }
+  }
+
+  private String keyPrefix(File clientDir) {
+    File rsaCrtFile = new File(clientDir, "rsa_private.crt");
+    File ecCrtFile = new File(clientDir, "ec_private.crt");
+    checkState(rsaCrtFile.exists() || ecCrtFile.exists(),
+        "no .crt found for device in " + clientDir.getAbsolutePath());
+    return rsaCrtFile.exists() ? "rsa" : "ec";
   }
 
   /**
@@ -120,7 +128,7 @@ public class CertManager {
     clientKeyStore.load(null, null);
     clientKeyStore.setCertificateEntry(CLIENT_CERT_ALIAS, clientCert);
     clientKeyStore.setKeyEntry(PRIVATE_KEY_ALIAS, privateKey, password,
-        new java.security.cert.Certificate[] {clientCert});
+        new java.security.cert.Certificate[]{clientCert});
     KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(
         KeyManagerFactory.getDefaultAlgorithm());
     keyManagerFactory.init(clientKeyStore, password);

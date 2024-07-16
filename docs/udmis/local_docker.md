@@ -15,6 +15,7 @@
 * Register your site with the server
   * `bin/registrar ${site_model} //mqtt/localhost`
 * Optionally test with pubber instance
+  * `sudo bin/keygen CERT ${site_model}/devices/${device_id}/`
   * `bin/pubber ${site_model} //mqtt/localhost ${device_id} ${serial_no}`
 
 # Container build
