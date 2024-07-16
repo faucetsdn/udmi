@@ -3,7 +3,12 @@
 UDMI_ROOT=$(dirname $0)/..
 source $UDMI_ROOT/etc/shell_common.sh
 
-[[ $# == 2 ]] || fail Usage: $0 site_model project_spec
+if [[ ${1:-} == block ]]; then
+    block=$1
+    shift
+fi
+
+[[ $# == 2 ]] || usage [block] site_model project_spec
 
 site_model=$(realpath $1)
 project_spec=$2
@@ -52,5 +57,5 @@ sudo chmod a+r /var/log/mosquitto/mosquitto.log
 bin/start_udmis
 
 echo Done with local server setup.
-echo Blocking until termination.
-tail -f /dev/null
+
+[[ -n $block ]] && echo Blocking until termination. && tail -f /dev/null

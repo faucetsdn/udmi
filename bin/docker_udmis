@@ -12,15 +12,24 @@ cd $UDMI_ROOT
 
 docker rm udmis || true
 
+[[ -f $site_model/cloud_iot_config.json ]] || fail missing $site_model/cloud_iot_config.json
+
 cmd="docker run -d --name udmis -p 8883:8883 \
        -v $site_model:/root/site \
        -v $PWD/var/etcd:/root/default.etcd \
        -v $PWD/var/mosquitto:/etc/mosquitto \
-       udmis:latest udmi/bin/start_local site //mqtt/localhost"
+       udmis:latest udmi/bin/start_local block site/ //mqtt/localhost"
 
 echo exec: $cmd
 $cmd
 
-echo
+echo Waiting 30s for container startup...
+sleep 30
 
+echo :::::::::::::: docker logs udmis
+docker logs udmis
+
+echo :::::::::::::: docker ps
 docker ps
+
+echo ::::::::::::::

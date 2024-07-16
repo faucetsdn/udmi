@@ -45,6 +45,7 @@ for i in `seq 1 $WAITING`; do
     sleep 1
 done
 
+echo ::::::::: tail $LOGFILE
 tail -n 30 $LOGFILE
 
 [[ -f $POD_READY ]] || fail pod_ready.txt not found.
