@@ -8,10 +8,14 @@
     * `site_model=sites/udmi_site_model`
     * `device_id=AHU-1`
     * `serial_no=21874812`
-* docker run `bin/docker_udmis ${site_model}`
-* db files `ls -l var/`
-* registrar `bin/registrar ${site_model} //mqtt/localhost`
-* pubber `bin/pubber ${site_model} //mqtt/localhost ${device_id}`
+* Run the standard docker image:
+  * `bin/docker_udmis ${site_model}`
+* Persistant DB files are mapped locally
+  * `ls -l var/etcd var/mosquitto`
+* Register your site with the server
+  * `bin/registrar ${site_model} //mqtt/localhost`
+* Optionally test with pubber instance
+  * `bin/pubber ${site_model} //mqtt/localhost ${device_id} ${serial_no}`
 
 # Container build
 
