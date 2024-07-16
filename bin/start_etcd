@@ -12,4 +12,12 @@ udmis/bin/etcdctl version || ../bin/etcdctl version
 $BINDIR/etcd -version
 
 $BINDIR/etcd -listen-client-urls=http://0.0.0.0:2379 \
-             -advertise-client-urls=http://127.0.0.1:2379
+             -advertise-client-urls=http://127.0.0.1:2379 \
+             > etcd.log 2>&1 &
+ETCD_PID=$!
+
+echo Waiting 10s for etcd to start...
+sleep 10
+[[ -d /proc/$ETCD_PID ]] || (cat etcd.log && fail starting etcd)
+
+echo Completed etcd startup.

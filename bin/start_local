@@ -28,7 +28,7 @@ fi
 site_config=$site_model/cloud_iot_config.json
 registry_id=$(jq -r .registry_id $site_config)${UDMI_REGISTRY_SUFFIX:-}
 
-bin/start_etcd > etcd.log 2>&1 &
+bin/start_etcd
 
 source $UDMI_ROOT/etc/mosquitto_ctrl.sh
 mkdir -p $CERT_DIR
@@ -52,3 +52,5 @@ sudo chmod a+r /var/log/mosquitto/mosquitto.log
 bin/start_udmis
 
 echo Done with local server setup.
+echo Blocking until termination.
+tail -f /dev/null

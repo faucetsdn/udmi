@@ -49,11 +49,12 @@ fi
 if [[ -n $(which systemctl) ]]; then
     sudo systemctl restart mosquitto
 else
-    echo Starting mosquitto in the background...
     mosquitto -c /etc/mosquitto/mosquitto.conf > mosquitto.log 2>&1 &
     MOSQUITTO_PID=$!
+    echo Waiting 10s for background mosquitto to start...
     sleep 10
     [[ -d /proc/$MOSQUITTO_PID ]] || (cat mosquitto.log && fail starting mosquitto)
+    echo Completed mosquitto startup.
 fi
 
 $MOSQUITTO_CTRL createRole device
@@ -69,5 +70,3 @@ if [[ $clients =~ ${AUTH_USER} ]]; then
 else
     fail Improper client: $clients
 fi
-
-echo use: systemctl status mosquitto
