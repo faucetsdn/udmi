@@ -1,16 +1,6 @@
 #!/bin/bash -e
 
 UDMI_ROOT=$(dirname $0)/..
-
-if [[ ! -d $UDMI_ROOT/etc/ ]]; then
-    echo Migrating support scripts to etc...
-    (
-        cd $UDMI_ROOT
-        mkdir etc/
-        cp var/*.sh var/*.conf etc/
-    )
-fi
-
 source $UDMI_ROOT/etc/shell_common.sh
 
 [[ $# == 2 ]] || fail Usage: $0 site_model project_spec
@@ -23,6 +13,11 @@ echo "export TARGET_PROJECT=${project_spec:-}"
 echo "export UDMI_REGISTRY_SUFFIX=${UDMI_REGISTRY_SUFFIX:-}"
 echo "export UDMI_ALT_REGISTRY=${UDMI_ALT_REGISTRY:-}"
 
+# Check for missing etc/ dir for docker execution.
+if [[ -d var/ && ! -d etc/ ]]; then
+    ln -s var etc
+fi
+
 cd $UDMI_ROOT
 
 if [[ ! $project_spec =~ ^//mqtt/ ]]; then
@@ -33,7 +28,7 @@ fi
 site_config=$site_model/cloud_iot_config.json
 registry_id=$(jq -r .registry_id $site_config)${UDMI_REGISTRY_SUFFIX:-}
 
-bin/start_etcd >etcd.log 2>&1 &
+bin/start_etcd > etcd.log 2>&1 &
 
 source $UDMI_ROOT/etc/mosquitto_ctrl.sh
 mkdir -p $CERT_DIR

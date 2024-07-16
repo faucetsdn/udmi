@@ -6,7 +6,7 @@ RUN apk add bash openjdk17 gcompat curl jq sudo git mosquitto mosquitto-clients 
 
 ADD bin/ bin/
 
-ADD sbin/ bin/
+ADD udmi_bin/ udmi/bin/
 
 RUN bin/etcdctl version
 
@@ -16,6 +16,8 @@ ENV LD_PRELOAD=/lib/libgcompat.so.0
 ADD build/libs/udmis-1.0-SNAPSHOT-all.jar build/libs/udmis-1.0-SNAPSHOT-all.jar
 
 ADD var/ var/
+
+ADD udmi_etc/ udmi/etc/
 
 ENV CLEARBLADE_CONFIGURATION=/udmi/clearblade.json
 ENV SHUNT_CONFIGURATION=/udmi/shunt-config.json

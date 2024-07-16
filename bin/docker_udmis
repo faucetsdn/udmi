@@ -11,7 +11,9 @@ cmd="docker run -d --name udmis \
        -v $PWD/sites/udmi_site_model:/root/site \
        -v $PWD/var/etcd:/root/default.etcd \
        -v $PWD/var/mosquitto:/etc/mosquitto \
-       udmis:latest bin/start_mosquitto site/ //mqtt/localhost"
+       udmis:latest tail -f /dev/null"
+
+#bin/start_local site/ //mqtt/localhost"
 
 echo exec: $cmd
 $cmd

@@ -5,7 +5,9 @@ BINDIR=/tmp/etcd
 
 #docker run -v /usr/share/ca-certificates/:/etc/ssl/certs \
 
-udmis/bin/etcdctl version || bin/etcdctl version
+echo pwd: $(pwd)
+
+udmis/bin/etcdctl version || ../bin/etcdctl version
 
 $BINDIR/etcd -version
 

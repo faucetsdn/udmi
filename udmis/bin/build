@@ -19,11 +19,12 @@ ROOT=$(dirname $0)/..
 BASE=..
 cd $ROOT
 
-echo Mirroring bin/ and etc/...
-rm -rf sbin/
-cp -a ../bin/ sbin/
-cp ../etc/*.sh var/
-cp ../etc/*.conf var/
+echo Mirroring udim/bin to udmi_bin...
+rm -rf udmi_bin/
+cp -a ../bin/ udmi_bin/
+echo Mirroring udmi/etc to udmi_etc...
+rm -rf udmi_etc/
+cp -a ../etc udmi_etc/
 
 echo Copying mosquitto config files...
 cp /etc/mosquitto/mosquitto.conf var/
