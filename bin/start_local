@@ -59,4 +59,4 @@ bin/start_udmis
 
 echo Done with local server setup.
 
-[[ -n $block ]] && echo Blocking until termination. && tail -f /dev/null
+[[ -z $block ]] || (echo Blocking until termination. && tail -f /dev/null)
