@@ -10,7 +10,7 @@
     * `serial_no=21874812`
 * Run the standard docker image:
   * `bin/docker_udmis ${site_model}`
-* Persistant DB files are mapped locally
+* Persistent DB files are mapped locally
   * `ls -l var/etcd var/mosquitto`
 * Register your site with the server
   * `bin/registrar ${site_model} //mqtt/localhost`

@@ -3,6 +3,7 @@
 UDMI_ROOT=$(dirname $0)/..
 source $UDMI_ROOT/etc/shell_common.sh
 
+block=
 if [[ ${1:-} == block ]]; then
     block=$1
     shift
