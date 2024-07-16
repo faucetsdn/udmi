@@ -7,7 +7,8 @@ source $UDMI_ROOT/etc/mosquitto_ctrl.sh
 
 # This is not already set-up when running inside of docker...
 if [[ ! -f $ETC_DIR/mosquitto.conf ]]; then
-    cp var/mosquitto.conf $ETC_DIR/
+    echo Installing base mosquitto.conf
+    cp ../var/mosquitto.conf $ETC_DIR/
 fi
 
 GROUP=mosquitto
@@ -49,7 +50,8 @@ fi
 if [[ -n $(which systemctl) ]]; then
     sudo systemctl restart mosquitto
 else
-    mosquitto -c /etc/mosquitto/mosquitto.conf > mosquitto.log 2>&1 &
+    # Raw mode for running (e.g.) in a docker container
+    mosquitto -c $ETC_DIR/mosquitto.conf > mosquitto.log 2>&1 &
     MOSQUITTO_PID=$!
     echo Waiting 10s for background mosquitto to start...
     sleep 10
