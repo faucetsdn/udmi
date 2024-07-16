@@ -26,7 +26,8 @@ echo Mirroring udmi/etc to udmi_etc...
 rm -rf udmi_etc/
 cp -a ../etc udmi_etc/
 
-echo Copying mosquitto config files...
+echo Copying default mosquitto config files...
+mkdir -p var/
 cp /etc/mosquitto/mosquitto.conf var/
 
 jarfile=build/libs/udmis-1.0-SNAPSHOT-all.jar
