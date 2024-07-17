@@ -91,7 +91,7 @@ if [[ -n $prep ]]; then
     rm -rf var tmp && mkdir -p var tmp
 
     cp -f etc/*.json var/ || true
-    cp -a ../schema tmp/
+    cp -a ../schema build/
 
     bin/build
 

@@ -11,10 +11,14 @@ ENV PATH=$PATH:/root/google-cloud-sdk/bin
 # Workaround for https://github.com/grpc/grpc-java/issues/8751
 ENV LD_PRELOAD=/lib/libgcompat.so.0
 
-ADD tmp/schema/ schema/
-
-ADD build/ validator/build/
-
 ADD bin/ validator/bin/
+
+ADD build/schema/ schema/
+
+ADD build/libs validator/build/libs/
+
+ADD build/udmi_etc/ etc/
+
+ADD build/udmi_bin/ bin/
 
 CMD ["/root/validator/bin/automate"]

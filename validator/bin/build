@@ -23,8 +23,10 @@ echo Cleaning $ROOT/build/
 rm -rf build/
 mkdir build/
 
-echo Importing udmi/bin...
+echo Mirroring udim files...
 cp -a ../bin build/udmi_bin/
+cp -a ../etc build/udmi_etc/
+cp -a ../schema build/schema/
 
 jarfile=build/libs/validator-1.0-SNAPSHOT-all.jar
 
