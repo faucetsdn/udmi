@@ -1,7 +1,6 @@
 sites/udmi_site_model/out/devices/AHU-1/config.json
 sites/udmi_site_model/out/devices/AHU-1/events_pointset.json
 sites/udmi_site_model/out/devices/AHU-1/events_system.json
-sites/udmi_site_model/out/devices/AHU-1/events_validation.json
 sites/udmi_site_model/out/devices/AHU-1/persistent_data.json
 sites/udmi_site_model/out/devices/AHU-1/state.json
 sites/udmi_site_model/out/devices/AHU-1/state_localnet.json
@@ -9,7 +8,6 @@ sites/udmi_site_model/out/devices/AHU-1/state_pointset.json
 sites/udmi_site_model/out/devices/AHU-1/state_system.json
 sites/udmi_site_model/out/devices/AHU-22/events_pointset.json
 sites/udmi_site_model/out/devices/AHU-22/events_system.json
-sites/udmi_site_model/out/devices/AHU-22/events_validation.json
 sites/udmi_site_model/out/devices/GAT-123/config.json
 sites/udmi_site_model/out/devices/GAT-123/events_blobset.json
 sites/udmi_site_model/out/devices/GAT-123/events_discovery.json
@@ -17,7 +15,6 @@ sites/udmi_site_model/out/devices/GAT-123/events_error.json
 sites/udmi_site_model/out/devices/GAT-123/events_invalid.json
 sites/udmi_site_model/out/devices/GAT-123/events_pointset.json
 sites/udmi_site_model/out/devices/GAT-123/events_system.json
-sites/udmi_site_model/out/devices/GAT-123/events_validation.json
 sites/udmi_site_model/out/devices/GAT-123/persistent_data.json
 sites/udmi_site_model/out/devices/GAT-123/state.json
 sites/udmi_site_model/out/devices/GAT-123/state_gateway.json
@@ -26,7 +23,6 @@ sites/udmi_site_model/out/devices/GAT-123/state_pointset.json
 sites/udmi_site_model/out/devices/GAT-123/state_system.json
 sites/udmi_site_model/out/devices/SNS-4/events_pointset.json
 sites/udmi_site_model/out/devices/SNS-4/events_system.json
-sites/udmi_site_model/out/devices/SNS-4/events_validation.json
 ::::::::::::::
 sites/udmi_site_model/out/devices/AHU-1/config.out
 ::::::::::::::
@@ -98,22 +94,6 @@ sites/udmi_site_model/out/devices/AHU-1/events_system.out
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   } ]
-}
-::::::::::::::
-sites/udmi_site_model/out/devices/AHU-1/events_validation.out
-::::::::::::::
-{
-  "timestamp" : "REDACTED_TIMESTAMP",
-  "version" : "1.5.1",
-  "sub_folder" : "validation",
-  "sub_type" : "events",
-  "status" : {
-    "message" : "Successful validation",
-    "category" : "validation.device.receive",
-    "timestamp" : "REDACTED_TIMESTAMP",
-    "level" : 200
-  },
-  "errors" : [ ]
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/AHU-1/state.out
@@ -251,22 +231,6 @@ sites/udmi_site_model/out/devices/AHU-22/events_system.out
   "timestamp" : "REDACTED_TIMESTAMP",
   "version" : "1.5.1",
   "sub_folder" : "system",
-  "sub_type" : "events",
-  "status" : {
-    "message" : "Successful validation",
-    "category" : "validation.device.receive",
-    "timestamp" : "REDACTED_TIMESTAMP",
-    "level" : 200
-  },
-  "errors" : [ ]
-}
-::::::::::::::
-sites/udmi_site_model/out/devices/AHU-22/events_validation.out
-::::::::::::::
-{
-  "timestamp" : "REDACTED_TIMESTAMP",
-  "version" : "1.5.1",
-  "sub_folder" : "validation",
   "sub_type" : "events",
   "status" : {
     "message" : "Successful validation",
@@ -428,22 +392,6 @@ sites/udmi_site_model/out/devices/GAT-123/events_system.out
   "errors" : [ ]
 }
 ::::::::::::::
-sites/udmi_site_model/out/devices/GAT-123/events_validation.out
-::::::::::::::
-{
-  "timestamp" : "REDACTED_TIMESTAMP",
-  "version" : "1.5.1",
-  "sub_folder" : "validation",
-  "sub_type" : "events",
-  "status" : {
-    "message" : "Successful validation",
-    "category" : "validation.device.receive",
-    "timestamp" : "REDACTED_TIMESTAMP",
-    "level" : 200
-  },
-  "errors" : [ ]
-}
-::::::::::::::
 sites/udmi_site_model/out/devices/GAT-123/state.out
 ::::::::::::::
 {
@@ -567,22 +515,6 @@ sites/udmi_site_model/out/devices/SNS-4/events_system.out
   "timestamp" : "REDACTED_TIMESTAMP",
   "version" : "1.5.1",
   "sub_folder" : "system",
-  "sub_type" : "events",
-  "status" : {
-    "message" : "Successful validation",
-    "category" : "validation.device.receive",
-    "timestamp" : "REDACTED_TIMESTAMP",
-    "level" : 200
-  },
-  "errors" : [ ]
-}
-::::::::::::::
-sites/udmi_site_model/out/devices/SNS-4/events_validation.out
-::::::::::::::
-{
-  "timestamp" : "REDACTED_TIMESTAMP",
-  "version" : "1.5.1",
-  "sub_folder" : "validation",
   "sub_type" : "events",
   "status" : {
     "message" : "Successful validation",
