@@ -1,0 +1,11 @@
+FROM alpine:latest
+
+WORKDIR /root
+
+RUN apk add openjdk17 bash gcompat curl jq python3 git
+
+ADD build/ pubber/build/
+
+ADD bin/ pubber/bin/
+
+CMD ["/root/pubber/bin/run"]

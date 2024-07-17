@@ -22,7 +22,7 @@ git_repo=${git_prefix#*.com:}
 
 GCP_PROJECT=$(gcloud config get project)
 REPOSITORY=ghcr.io/${git_repo}
-TEMPLATES=$(cd etc; ls k8s_*.yaml)
+TEMPLATES=$(cd etc; ls k8s_*.yaml) || true
 
 NOCHECK=
 [[ ${1:-} == "--no-check" ]] && NOCHECK=1 && shift
