@@ -34,9 +34,9 @@ UDMI_JAR=$UDMI_ROOT/validator/build/libs/validator-1.0-SNAPSHOT-all.jar
 
 udmi_version=$(cd $UDMI_ROOT; git describe --dirty) || true
 
-if [[ -z $udmi_version ]]; then
-    udmi_version=git-$(cd $UDMI_ROOT; git describe --dirty --always)
-fi
+[[ -z $udmi_version ]] && udmi_version=git-$(cd $UDMI_ROOT; git describe --dirty --always) || true
+
+[[ $udmi_version == git- ]] && udmi_version=unknown
 
 export UDMI_ROOT
 export UDMI_TOOLS=$udmi_version

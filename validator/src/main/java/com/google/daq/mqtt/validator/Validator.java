@@ -517,12 +517,19 @@ public class Validator {
   }
 
   private boolean handleSystemMessage(Map<String, String> attributes, Object object) {
-    if (SubFolder.UDMI.value().equals(attributes.get(SUBFOLDER_PROPERTY_KEY))
-        && SubType.CONFIG.value().equals(attributes.get(SUBTYPE_PROPERTY_KEY))) {
+
+    String subFolderRaw = attributes.get(SUBFOLDER_PROPERTY_KEY);
+    String subTypeRaw = attributes.get(SUBTYPE_PROPERTY_KEY);
+
+    if (SubFolder.UDMI.value().equals(subFolderRaw) && SubType.CONFIG.value().equals(subTypeRaw)) {
       handleUdmiConfig(convertTo(UdmiConfig.class, object));
       return true;
     }
-    return false;
+
+    // Don't validate validation messages. Not really a problem, but sometimes validation messages
+    // aren't reflected back (when not using PubSub), so for consistency just reject everything.
+    return SubFolder.VALIDATION.value().equals(subFolderRaw)
+        && SubType.EVENTS.value().equals(subTypeRaw);
   }
 
   private void handleUdmiConfig(UdmiConfig udmiConfig) {

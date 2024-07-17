@@ -1,34 +1,46 @@
 #!/bin/bash -e
 
 UDMI_ROOT=$(dirname $0)/..
-cd $UDMI_ROOT
-
 source $UDMI_ROOT/etc/shell_common.sh
 
-[[ $# == 1 ]] || fail Usage: $0 project_spec
+block=
+if [[ ${1:-} == block ]]; then
+    block=$1
+    shift
+fi
 
-project_spec=$1
+[[ $# == 2 ]] || usage [block] site_model project_spec
+
+site_model=$(realpath $1)
+project_spec=$2
 shift
 
 echo "export TARGET_PROJECT=${project_spec:-}"
 echo "export UDMI_REGISTRY_SUFFIX=${UDMI_REGISTRY_SUFFIX:-}"
 echo "export UDMI_ALT_REGISTRY=${UDMI_ALT_REGISTRY:-}"
 
+# Check for missing etc/ dir for docker execution.
+if [[ -d var/ && ! -d etc/ ]]; then
+    ln -s var etc
+fi
+
+cd $UDMI_ROOT
+
 if [[ ! $project_spec =~ ^//mqtt/ ]]; then
     echo Not a local setup, doing nothing!
     exit 0
 fi
 
-site_model=sites/udmi_site_model
-site_config=sites/udmi_site_model/cloud_iot_config.json
+site_config=$site_model/cloud_iot_config.json
 registry_id=$(jq -r .registry_id $site_config)${UDMI_REGISTRY_SUFFIX:-}
 
 bin/start_etcd
 
+source $UDMI_ROOT/etc/mosquitto_ctrl.sh
+mkdir -p $CERT_DIR
+
 bin/setup_ca $site_model
 bin/start_mosquitto
-
-source $UDMI_ROOT/etc/mosquitto_ctrl.sh
 
 $MOSQUITTO_CTRL deleteClient $SERV_USER
 $MOSQUITTO_CTRL createClient $SERV_USER -p $SERV_PASS # No client_id to allow multiple backend connections.
@@ -46,3 +58,5 @@ sudo chmod a+r /var/log/mosquitto/mosquitto.log
 bin/start_udmis
 
 echo Done with local server setup.
+
+[[ -z $block ]] || (echo Blocking until termination. && tail -f /dev/null)
