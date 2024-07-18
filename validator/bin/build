@@ -23,7 +23,7 @@ echo Cleaning $ROOT/build/
 rm -rf build/
 mkdir build/
 
-echo Mirroring udim files...
+echo Mirroring udmi files...
 cp -a ../bin build/udmi_bin/
 cp -a ../etc build/udmi_etc/
 cp -a ../schema build/schema/

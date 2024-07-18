@@ -61,7 +61,7 @@ echo Cleaning output directory $UDMI_ROOT/pubber/out/$serial_no
 rm -rf $UDMI_ROOT/pubber/out/$serial_no
 
 echo Building pubber...
-$UDMI_ROOT/pubber/bin/build
+[[ ! -d $UDMI_ROOT/pubber/src ]] || $UDMI_ROOT/pubber/bin/build
 
 echo Running tools version $udmi_version
 

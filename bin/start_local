@@ -25,20 +25,25 @@ if [[ -d var/ && ! -d etc/ ]]; then
 fi
 
 cd $UDMI_ROOT
+UDMIS_LOG=out/udmis.log
+mkdir -p out
+date > $UDMIS_LOG
 
 if [[ ! $project_spec =~ ^//mqtt/ ]]; then
-    echo Not a local setup, doing nothing!
+    echo Not a local setup, doing nothing! || tee -a $UDMIS_LOG
     exit 0
 fi
 
 site_config=$site_model/cloud_iot_config.json
 registry_id=$(jq -r .registry_id $site_config)${UDMI_REGISTRY_SUFFIX:-}
 
+echo Starting etcd... | tee -a $UDMIS_LOG
 bin/start_etcd
 
 source $UDMI_ROOT/etc/mosquitto_ctrl.sh
 mkdir -p $CERT_DIR
 
+echo Starting mosquitto... | tee -a $UDMIS_LOG
 bin/setup_ca $site_model
 bin/start_mosquitto
 
@@ -46,6 +51,7 @@ $MOSQUITTO_CTRL deleteClient $SERV_USER
 $MOSQUITTO_CTRL createClient $SERV_USER -p $SERV_PASS # No client_id to allow multiple backend connections.
 $MOSQUITTO_CTRL addClientRole $SERV_USER service
 
+echo Starting initializing site $site_model | tee -a $UDMIS_LOG
 bin/mosquctl_site $site_model
 
 if [[ -n ${UDMI_ALT_REGISTRY:-} ]]; then
@@ -55,6 +61,7 @@ fi
 # Global access to logs for connection tracking by UDMIS.
 sudo chmod a+r /var/log/mosquitto/mosquitto.log
 
+echo Starting udmis proper... | tee -a $UDMIS_LOG
 bin/start_udmis
 
 echo Done with local server setup.
