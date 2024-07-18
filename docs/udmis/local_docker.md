@@ -2,6 +2,27 @@
 
 # Local docker UDMIS setup and execution
 
+* `docker network create udminet`
+* `newgrp docker`
+
+```
+site_model=$PWD/sites/udmi_site_model
+```
+
+```
+docker run -d --rm --net udminet --name udmis -p 8883:8883 \
+    -v $site_model:/root/site \
+    -v $PWD/var/etcd:/root/default.etcd \
+    -v $PWD/var/mosquitto:/etc/mosquitto \
+    ghcr.io/faucetsdn/udmi:udmis-latest udmi/bin/start_local block site/ //mqtt/localhost
+```
+
+```
+docker run --rm --net udminet --name validator \
+    -v $site_model:/root/site \
+    ghcr.io/faucetsdn/udmi:validator-latest bin/registrar site/ //mqtt/udmis
+```
+
 * Identify a site model and parameters
   * For default reference udmi site model:
     * `bin/clone_model`
@@ -22,6 +43,10 @@
 
 General notes on how to build/push the upstream docker image.
 
-* `bin/container udmis push`
-* `docker tag udmis:latest ghcr.io/faucetsdn/udmi:latest`
-* `docker push ghcr.io/faucetsdn/udmi:latest`
+```
+for image in udmis validator pubber; do
+  bin/container $image push
+  docker tag $image:latest ghcr.io/faucetsdn/udmi:$image-latest
+  docker push ghcr.io/faucetsdn/udmi:$image-latest
+done
+```
