@@ -174,9 +174,9 @@ jq --slurpfile endpoint $ENDPOINT_TMP '.endpoint = $endpoint[0]' $tmp_config | s
 
 if [[ -f ${site_model:-}/reflector/ca.crt ]]; then
     echo Checking for signed device certificate...
-    certs=(sites/udmi_site_model/devices/${device_id}/*.crt) || true
+    certs=(${site_model}/devices/${device_id}/*.crt) || true
     [[ -f $certs ]] || $UDMI_ROOT/bin/keygen CERT ${site_model}/devices/${device_id}/
-    ls -l sites/udmi_site_model/devices/${device_id}/*.crt
+    ls -l ${site_model}/devices/${device_id}/*.crt
 fi
 
 # Run in the background to force new process group and get PID

@@ -15,14 +15,19 @@ echo Ready for site ${site_model} device ${device_id} serial ${serial_no}
 ```
 docker run -d --rm --net udminet --name udmis -p 8883:8883 \
     -v ${site_model}:/root/site \
+    -v $PWD/var/tmp:/tmp \
     -v $PWD/var/etcd:/root/udmi/default.etcd \
     -v $PWD/var/mosquitto:/etc/mosquitto \
     ghcr.io/faucetsdn/udmi:udmis-latest udmi/bin/start_local block site/ //mqtt/localhost
 ```
 
 ```
-docker exec udmis cat udmi/out/udmis.log
+docker logs udmis | tail
+docker exec udmis tail udmi/out/udmis.log
+ls -l var/tmp/pod_ready.txt
 ```
+
+[sample diagnostic output](udmis_output.md)
 
 
 ```
@@ -39,21 +44,7 @@ docker run --rm --net udminet --name pubber \
     ghcr.io/faucetsdn/udmi:pubber-latest bin/pubber site/ //mqtt/udmis AHU-1 ${serial_no}
 ```
 
-* Identify a site model and parameters
-  * For default reference udmi site model:
-    * `bin/clone_model`
-    * `site_model=sites/udmi_site_model`
-    * `device_id=AHU-1`
-    * `serial_no=21874812`
-* Run the standard docker image:
-  * `bin/docker_udmis ${site_model}`
-* Persistent DB files are mapped locally
-  * `ls -l var/etcd var/mosquitto`
-* Register your site with the server
-  * `bin/registrar ${site_model} //mqtt/localhost`
-* Optionally test with pubber instance
-  * `sudo bin/keygen CERT ${site_model}/devices/${device_id}/`
-  * `bin/pubber ${site_model} //mqtt/localhost ${device_id} ${serial_no}`
+[sample pubber_output](pubber_output.md)
 
 # Container Build
 
