@@ -22,8 +22,8 @@ docker run -d --rm --net udminet --name udmis -p 8883:8883 \
 ```
 
 ```
-docker logs udmis | tail
-docker exec udmis tail udmi/out/udmis.log
+docker logs udmis 2>&1 | fgrep udmis
+docker exec udmis fgrep pod_ready udmi/out/udmis.log
 ls -l var/tmp/pod_ready.txt
 ```
 
