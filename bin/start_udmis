@@ -22,8 +22,7 @@ fi
 
 bin/container udmis prep --no-check || true
 
-mkdir -p out
-LOGFILE=out/udmis.log
+LOGFILE=/tmp/udmis.log
 date > $LOGFILE
 
 export ETCD_CLUSTER=localhost

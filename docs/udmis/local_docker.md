@@ -13,17 +13,18 @@ echo Ready for site ${site_model} device ${device_id} serial ${serial_no}
 ```
 
 ```
+sudo rm -f var/tmp/pod_ready.txt
 docker run -d --rm --net udminet --name udmis -p 8883:8883 \
     -v ${site_model}:/root/site \
     -v $PWD/var/tmp:/tmp \
     -v $PWD/var/etcd:/root/udmi/default.etcd \
     -v $PWD/var/mosquitto:/etc/mosquitto \
-    ghcr.io/faucetsdn/udmi:udmis-latest udmi/bin/start_local block site/ //mqtt/localhost
+    ghcr.io/faucetsdn/udmi:udmis-latest udmi/bin/start_local block site/ //mqtt/udmis
 ```
 
 ```
 docker logs udmis 2>&1 | fgrep udmis
-docker exec udmis fgrep pod_ready udmi/out/udmis.log
+fgrep pod_ready var/tmp/udmis.log
 ls -l var/tmp/pod_ready.txt
 ```
 

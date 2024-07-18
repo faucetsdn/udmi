@@ -25,7 +25,7 @@ if [[ -d var/ && ! -d etc/ ]]; then
 fi
 
 cd $UDMI_ROOT
-UDMIS_LOG=out/udmis.log
+UDMIS_LOG=/tmp/udmis.log
 mkdir -p out
 date > $UDMIS_LOG
 
@@ -44,7 +44,7 @@ bin/start_etcd
 source $UDMI_ROOT/etc/mosquitto_ctrl.sh
 mkdir -p $CERT_DIR
 
-echo Starting mosquitto... | tee -a $UDMIS_LOG
+echo Starting mosquitto on server $project_target | tee -a $UDMIS_LOG
 bin/setup_ca $site_model $project_target
 bin/start_mosquitto
 
