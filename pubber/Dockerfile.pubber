@@ -2,7 +2,7 @@ FROM alpine:latest
 
 WORKDIR /root
 
-RUN apk add openjdk17 bash gcompat curl jq python3 git moreutils openssl
+RUN apk add openjdk17 bash sudo gcompat curl jq python3 git moreutils openssl
 
 ADD build/libs pubber/build/libs/
 

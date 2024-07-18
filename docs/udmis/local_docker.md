@@ -53,8 +53,8 @@ From within a working udmi install, the following can be used to build/push all 
 
 ```
 for image in udmis validator pubber; do
-  bin/container $image push
-  docker tag $image:latest ghcr.io/faucetsdn/udmi:$image-latest
-  docker push ghcr.io/faucetsdn/udmi:$image-latest
+  bin/container $image push \
+  && docker tag $image:latest ghcr.io/faucetsdn/udmi:$image-latest \
+  && docker push ghcr.io/faucetsdn/udmi:$image-latest
 done
 ```

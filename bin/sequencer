@@ -77,13 +77,6 @@ fi
     
 cd $UDMI_ROOT
 
-if ! bin/which_venv_pip3; then
-    echo ERROR venv pip3 not installed, please run bin/setup_base and try again
-    false
-fi
-
-source venv/bin/activate
-
 quoted_namespace=null
 quoted_bridge=null
 iot_provider=null
@@ -172,7 +165,7 @@ fi
 
 cat $SEQUENCER_CONFIG
 
-validator/bin/build
+[[ ! -d $UDMI_ROOT/validator/src ]] || $UDMI_ROOT/validator/bin/build
 
 echo $JAVA_CMD
 result=0
@@ -192,5 +185,3 @@ fgrep RESULT $site_model/out/devices/$device_id/RESULT.log | \
 more $site_model/out/devices/$device_id/RESULT.log $SCHEMA_OUT | cat
 
 bin/sequencer_report $site_model $device_id
-
-bin/check_version
