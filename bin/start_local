@@ -34,6 +34,7 @@ if [[ ! $project_spec =~ ^//mqtt/ ]]; then
     exit 0
 fi
 
+project_target=${project_spec##*/}
 site_config=$site_model/cloud_iot_config.json
 registry_id=$(jq -r .registry_id $site_config)${UDMI_REGISTRY_SUFFIX:-}
 
@@ -44,7 +45,7 @@ source $UDMI_ROOT/etc/mosquitto_ctrl.sh
 mkdir -p $CERT_DIR
 
 echo Starting mosquitto... | tee -a $UDMIS_LOG
-bin/setup_ca $site_model
+bin/setup_ca $site_model $project_target
 bin/start_mosquitto
 
 $MOSQUITTO_CTRL deleteClient $SERV_USER

@@ -172,10 +172,10 @@ fi
 
 jq --slurpfile endpoint $ENDPOINT_TMP '.endpoint = $endpoint[0]' $tmp_config | sponge $tmp_config
 
-if [[ -f ${site_model:-}/reflector/ca.crt ]]; then
+if [[ -f ${site_model:-}/reflector/ca.crt && -n ${project_target:-} ]]; then
     echo Checking for signed device certificate...
     certs=(${site_model}/devices/${device_id}/*.crt) || true
-    [[ -f $certs ]] || $UDMI_ROOT/bin/keygen CERT ${site_model}/devices/${device_id}/
+    [[ -f $certs ]] || $UDMI_ROOT/bin/keygen CERT/${project_target} ${site_model}/devices/${device_id}/
     ls -l ${site_model}/devices/${device_id}/*.crt
 fi
 

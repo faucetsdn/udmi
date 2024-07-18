@@ -3,7 +3,7 @@
 # Local docker UDMIS setup and execution
 
 ```
-docker inspect -f ok udminet || docker network create udminet
+docker inspect -f ok udminet || docker network create udminet --subnet 192.168.99.0/24
 set -u
 [[ -d udmi_site_model ]] || git clone https://github.com/faucetsdn/udmi_site_model.git
 site_model=$PWD/udmi_site_model

@@ -6,14 +6,15 @@ source $UDMI_ROOT/etc/shell_common.sh
 CERT_DIR=/etc/mosquitto/certs/
 sudo rm -f $CERT_DIR/*
 
-[[ $# != 1 ]] && fail $0 site_model
+[[ $# != 2 ]] && fail $0 site_model hostname
 
 site_model=$(realpath $1)
+target=$2
 
 cd $UDMI_ROOT
 
-bin/keygen CA $site_model/reflector
-bin/keygen CERT $site_model/reflector
+bin/keygen CA/$target $site_model/reflector
+bin/keygen CERT/$target $site_model/reflector
 
 echo Importing server certs from $site_model...
 sudo cp $site_model/reflector/ca.* $CERT_DIR/
@@ -21,7 +22,3 @@ sudo cp $site_model/reflector/rsa_private.* $CERT_DIR/
 sudo chgrp -R mosquitto $CERT_DIR
 sudo chmod 0640 $CERT_DIR/rsa_private.*
 ls -l $CERT_DIR
-
-
-
-

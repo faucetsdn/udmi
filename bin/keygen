@@ -21,12 +21,19 @@ else
     SUBJ=client
 fi
 
+TARGET_HOST=localhost
+if [[ $type =~ ^CERT/ || $type =~ ^CA/ ]]; then
+    TARGET_HOST=${type#*/}
+    type=${type%/*}
+    echo Generating $type with altname $TARGET_HOST
+fi
+
 CA_CRT=$CA_DIR/ca.crt
 CA_SRL=$CA_DIR/ca.srl
 CA_KEY=$CA_DIR/rsa_private.pem
 OPTS_509=/tmp/x509opts.txt
 
-echo "subjectAltName=DNS:localhost, IP:127.0.0.1" > $OPTS_509
+echo "subjectAltName=DNS:${TARGET_HOST}, IP:127.0.0.1, DNS:localhost" > $OPTS_509
 x509opts="-days 3650 -extfile $OPTS_509"
 
 if [[ $type == CA ]]; then
