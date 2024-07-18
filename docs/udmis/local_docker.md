@@ -32,20 +32,23 @@ ls -l var/tmp/pod_ready.txt
 
 
 ```
-docker run --rm --net udminet --name validator \
-    -v ${site_model}:/root/site \
+docker run --rm --net udminet --name registrar -v ${site_model}:/root/site \
     ghcr.io/faucetsdn/udmi:validator-latest bin/registrar site/ //mqtt/udmis
 ```
 
 [sample registrar output](registrar_output.md)
 
 ```
-docker run --rm --net udminet --name pubber \
-    -v ${site_model}:/root/site \
-    ghcr.io/faucetsdn/udmi:pubber-latest bin/pubber site/ //mqtt/udmis AHU-1 ${serial_no}
+docker run --rm --net udminet --name pubber -v ${site_model}:/root/site \
+    ghcr.io/faucetsdn/udmi:pubber-latest bin/pubber site/ //mqtt/udmis ${device_id} ${serial_no}
 ```
 
 [sample pubber_output](pubber_output.md)
+
+```
+docker run --rm --net udminet --name sequencer -v ${site_model}:/root/site \
+    ghcr.io/faucetsdn/udmi:validator-latest bin/sequencer site/ //mqtt/udmis ${device_id} ${serial_no}
+```
 
 # Container Build
 
