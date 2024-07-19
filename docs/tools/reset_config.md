@@ -2,7 +2,7 @@
 
 The `reset_config` tool can be used to send a configuration message to a specific device.
 
-The `reset_config` message can be invoked from the `udmi` folder in the following way:
+The `reset_config` command can be invoked from the `udmi` folder in the following way:
 
 ```
 bin/reset_config SITE_DIR PROJECT_ID DEVICE_ID [CONFIG_FILE]
