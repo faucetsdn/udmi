@@ -6,4 +6,7 @@ public interface ProtocolFamily {
   String IPV_4 = "ipv4";
   String IPV_6 = "ipv6";
   String ETHER = "ether";
+  String IOT = "iot";
+  String BACNET = "bacnet";
+  String MODBUS = "modbus";
 }
