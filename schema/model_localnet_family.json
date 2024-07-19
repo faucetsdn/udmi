@@ -12,7 +12,7 @@
       "examples": ["0x414889"]
     },
     "family": {
-      "existingJavaType": "udmi.schema.Common.ProtocolFamily"
+      "type": "string"
     }
   }
 }

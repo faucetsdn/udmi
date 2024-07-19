@@ -83,7 +83,6 @@ import udmi.schema.BlobsetConfig.SystemBlobsets;
 import udmi.schema.BlobsetState;
 import udmi.schema.Category;
 import udmi.schema.CloudModel.Auth_type;
-import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.Config;
 import udmi.schema.DevicePersistent;
 import udmi.schema.DiscoveryEvents;
@@ -360,7 +359,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
   }
 
   @Override
-  public FamilyProvider getLocalnetProvider(ProtocolFamily family) {
+  public FamilyProvider getLocalnetProvider(String family) {
     return deviceManager.getLocalnetProvider(family);
   }
 

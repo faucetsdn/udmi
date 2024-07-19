@@ -1,7 +1,5 @@
 package daq.pubber;
 
-import udmi.schema.Common.ProtocolFamily;
-
 /**
  * Collection of methods for how a manager can/should interface with it's host class.
  */
@@ -18,5 +16,5 @@ public interface ManagerHost {
 
   void publish(Object message);
 
-  FamilyProvider getLocalnetProvider(ProtocolFamily family);
+  FamilyProvider getLocalnetProvider(String family);
 }

@@ -6,7 +6,6 @@ import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import udmi.schema.Common.ProtocolFamily;
 
 
 /**
@@ -23,7 +22,7 @@ import udmi.schema.Common.ProtocolFamily;
 public class DiscoveryModel {
 
     @JsonProperty("families")
-    public HashMap<ProtocolFamily, FamilyDiscoveryModel> families;
+    public HashMap<String, FamilyDiscoveryModel> families;
 
     @Override
     public int hashCode() {

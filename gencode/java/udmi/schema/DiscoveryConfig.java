@@ -8,7 +8,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import udmi.schema.Common.ProtocolFamily;
 
 
 /**
@@ -46,7 +45,7 @@ public class DiscoveryConfig {
      */
     @JsonProperty("families")
     @JsonPropertyDescription("Address family config for a scan.")
-    public HashMap<ProtocolFamily, FamilyDiscoveryConfig> families;
+    public HashMap<String, FamilyDiscoveryConfig> families;
 
     @Override
     public int hashCode() {
