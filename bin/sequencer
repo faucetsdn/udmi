@@ -77,6 +77,13 @@ fi
     
 cd $UDMI_ROOT
 
+if ! bin/which_venv_pip3; then
+    echo ERROR venv pip3 not installed, please run bin/setup_base and try again
+    false
+fi
+
+source venv/bin/activate
+
 quoted_namespace=null
 quoted_bridge=null
 iot_provider=null
@@ -184,5 +191,4 @@ fgrep RESULT $site_model/out/devices/$device_id/RESULT.log | \
     fgrep ' schemas ' | sort -k 3 | tee $SCHEMA_OUT || true
 more $site_model/out/devices/$device_id/RESULT.log $SCHEMA_OUT | cat
 
-[[ ! -f venv/bin/activate ]] || source venv/bin/activate
 bin/sequencer_report $site_model $device_id
