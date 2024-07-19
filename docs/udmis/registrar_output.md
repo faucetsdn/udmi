@@ -1,7 +1,21 @@
+[**UDMI**](../../) / [**Docs**](../) / [UDMIS](.) / [Registrar Output](#)
+
 ```
-peringknife@peringknife:~$ docker run --rm --net udminet --name validator \
-    -v $site_model:/root/site \
+testuser@testuser:~$ docker run --rm --net udminet --name registrar -v $(realpath $site_model):/root/site \
     ghcr.io/faucetsdn/udmi:validator-latest bin/registrar site/ //mqtt/udmis
+Unable to find image 'ghcr.io/faucetsdn/udmi:validator-latest' locally
+validator-latest: Pulling from faucetsdn/udmi
+ec99f8b99825: Already exists 
+8abafddf1ae3: Pull complete 
+f9eaaae8e4dc: Pull complete 
+5a2589c2150b: Pull complete 
+08b6c630112a: Pull complete 
+0a5909cd013c: Pull complete 
+eec9bf907dcf: Pull complete 
+93a71d99e987: Pull complete 
+31d56e6becc1: Pull complete 
+Digest: sha256:af97be37493df358aec09650715ed9f11c649cfb7bebcee0529ee1ecf00b8dca
+Status: Downloaded newer image for ghcr.io/faucetsdn/udmi:validator-latest
 fatal: not a git repository (or any of the parent directories): .git
 fatal: not a git repository (or any of the parent directories): .git
 udmi version unknown
@@ -50,46 +64,50 @@ Using reflector iot client
 Subscribed to mqtt/udmis/us-central1/UDMI-REFLECT/ZZ-TRI-FECTA
 Starting initial UDMI setup process
 Ignoring initial config received timeout (config likely empty)
-Setting state version unknown timestamp 2024-07-18T16:14:28Z
+Setting state version unknown timestamp 2024-07-19T04:20:12Z
 UDMI setting reflectorState: {
   "version" : "unknown",
   "udmi" : {
     "setup" : {
-      "transaction_id" : "RC:630d13.0001"
+      "transaction_id" : "RC:d22034.0001"
     }
   },
-  "timestamp" : "2024-07-18T16:14:28Z"
+  "timestamp" : "2024-07-19T04:20:12Z"
 }
 UDMI received reflectorConfig: {
-  "last_state" : "2024-07-18T16:14:28Z",
+  "last_state" : "2024-07-19T04:20:12Z",
   "setup" : {
-    "hostname" : "18be490d700b",
+    "hostname" : "3d18e014852d",
     "functions_min" : 13,
     "functions_max" : 13,
-    "udmi_version" : "1.4.2-236-g99e8308b-dirty",
-    "udmi_ref" : "ghcr.io/grafnu/udmi:udmis-g99e8308be",
-    "built_at" : "2024-07-18T16:10:00Z",
-    "built_by" : "peringknife@peringknife",
-    "transaction_id" : "RC:630d13.0001"
+    "udmi_version" : "1.4.2-248-gfeb3779c",
+    "udmi_ref" : "ghcr.io/grafnu/udmi:udmis-gfeb3779cf",
+    "built_at" : "2024-07-19T04:12:00Z",
+    "built_by" : "testuser@testuser",
+    "transaction_id" : "RC:d22034.0001"
   }
 }
-UDMI matching against expected state timestamp 2024-07-18T16:14:28Z
+UDMI matching against expected state timestamp 2024-07-19T04:20:12Z
 UDMI version mismatch: unknown
 UDMI functions support versions 13:13 (required 13)
 Created service for project udmis
 Working with project udmis registry us-central1/ZZ-TRI-FECTA
 Loading site_defaults.json
 Finished loading 4 local devices.
+Writing normalized /root/site/devices/GAT-123/out/metadata_norm.json
+Writing normalized /root/site/devices/AHU-22/out/metadata_norm.json
+Writing normalized /root/site/devices/AHU-1/out/metadata_norm.json
+Writing normalized /root/site/devices/SNS-4/out/metadata_norm.json
 Fetching devices from registry ZZ-TRI-FECTA...
 Fetched 0 device models from cloud registry
 Processing 4 new devices...
 Waiting for device processing...
 Waiting 61s for 4 tasks to complete...
-Processed SNS-4 (2/4) in 0.049s (add)
-Processed AHU-22 (3/4) in 0.050s (add)
-Processed GAT-123 (1/4) in 0.094s (add)
-Processed AHU-1 (4/4) in 0.162s (add)
-Processed 4 (skipped 0) devices in 0.815s, 0.203s/d
+Processed SNS-4 (4/4) in 0.045s (add)
+Processed AHU-22 (3/4) in 0.046s (add)
+Processed GAT-123 (1/4) in 0.091s (add)
+Processed AHU-1 (2/4) in 0.160s (add)
+Processed 4 (skipped 0) devices in 0.805s, 0.201s/d
 Updating 0 existing devices...
 Waiting for device processing...
 Processed 0 (skipped 0) devices in 0.000s, 0.000s/d
@@ -98,16 +116,14 @@ Binding devices to GAT-123, already bound:
 Binding 2 unbound devices to 1 gateways...
 Waiting for device binding...
 Binding AHU-22 to GAT-123 (1/2)
-Binding SNS-4 to GAT-123 (2/2)
 Waiting 61s for 2 tasks to complete...
-Finished binding gateways in 0.179
-Updating site/devices/GAT-123/out/errors.map
+Binding SNS-4 to GAT-123 (2/2)
+Finished binding gateways in 0.175
 Updating site/devices/AHU-1/out/errors.map
 
 Summary:
-  Device Clean: 2
+  Device Clean: 3
   Device Envelope: 1
-  Device Files: 2
   Device Validating: 1
 Out of 4 total.
 Registration summary available in /root/site/out/registration_summary.json
