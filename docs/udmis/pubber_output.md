@@ -151,3 +151,4 @@ WARN daq.pubber.Pubber - 2024-07-19T04:21:03Z Starting AHU-1 Pubber sender with 
 INFO daq.pubber.Pubber - 2024-07-19T04:21:03Z State update defer -1721362861989ms
 INFO daq.pubber.Pubber - 2024-07-19T04:21:03Z Update state 2024-07-19T04:21:03Z last_config 2024-07-19T04:20:13Z
 ```
+_...output continues indefinitely..._
