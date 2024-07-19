@@ -7,7 +7,6 @@ import com.google.common.collect.ImmutableMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.Test;
-import udmi.schema.Common.ProtocolFamily;
 
 /**
  * Basic interface parsing tests for pubber.
@@ -68,9 +67,9 @@ public class IpManagerTest {
 
   @Test
   public void testGetInterfaceAddresses() {
-    Map<ProtocolFamily, String> interfaceAddresses = IpProvider.getInterfaceAddressesStatic(
+    Map<String, String> interfaceAddresses = IpProvider.getInterfaceAddressesStatic(
         INTERFACE_STRINGS_DEBIAN);
-    ImmutableMap<ProtocolFamily, String> expectedInterfaces = ImmutableMap.of(
+    ImmutableMap<String, String> expectedInterfaces = ImmutableMap.of(
         ProtocolFamily.ETHER, "8c:8c:aa:50:bc:72",
         ProtocolFamily.IPV_4, "192.168.8.3",
         ProtocolFamily.IPV_6, "fe80::11a9:496f:6596:b455"
@@ -82,9 +81,9 @@ public class IpManagerTest {
   public void testAlternateInputs() {
     String defaultInterface = IpProvider.getDefaultInterfaceStatic(IP_ROUTE_ALTERNATE);
     assertEquals("expected alternate default interface", "ethX", defaultInterface);
-    Map<ProtocolFamily, String> interfaceAddresses = IpProvider.getInterfaceAddressesStatic(
+    Map<String, String> interfaceAddresses = IpProvider.getInterfaceAddressesStatic(
         IP_ADDR_ALTERNATE);
-    ImmutableMap<ProtocolFamily, String> expectedInterfaces = ImmutableMap.of(
+    ImmutableMap<String, String> expectedInterfaces = ImmutableMap.of(
         ProtocolFamily.IPV_4, "192.168.1.141",
         ProtocolFamily.IPV_6, "fe80::c452:1b85:69eb:bc7b"
     );

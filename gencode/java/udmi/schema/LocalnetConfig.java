@@ -7,7 +7,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import udmi.schema.Common.ProtocolFamily;
 
 
 /**
@@ -29,7 +28,7 @@ public class LocalnetConfig {
      */
     @JsonProperty("families")
     @JsonPropertyDescription("Address family config for reporting.")
-    public HashMap<ProtocolFamily, FamilyLocalnetConfig> families;
+    public HashMap<String, FamilyLocalnetConfig> families;
 
     @Override
     public int hashCode() {

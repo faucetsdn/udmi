@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import udmi.schema.Common.ProtocolFamily;
 
 
 /**
@@ -31,7 +30,7 @@ public class FamilyLocalnetModel {
     @JsonPropertyDescription("The address of a device on the fieldbus/local network")
     public String addr;
     @JsonProperty("family")
-    public ProtocolFamily family;
+    public String family;
 
     @Override
     public int hashCode() {
