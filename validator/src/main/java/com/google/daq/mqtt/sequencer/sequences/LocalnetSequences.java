@@ -8,9 +8,9 @@ import static udmi.schema.FeatureDiscovery.FeatureStage.PREVIEW;
 
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
+import daq.pubber.ProtocolFamily;
 import java.util.HashMap;
 import org.junit.Test;
-import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.FamilyLocalnetState;
 
 /**
@@ -18,11 +18,11 @@ import udmi.schema.FamilyLocalnetState;
  */
 public class LocalnetSequences extends SequenceBase {
 
-  private void familyAddr(ProtocolFamily family) {
+  private void familyAddr(String family) {
     final String expected = ifNullSkipTest(
         catchToNull(() -> deviceMetadata.localnet.families.get(family).addr),
         format("No %s address defined in metadata", family));
-    HashMap<ProtocolFamily, FamilyLocalnetState> families = deviceState.localnet.families;
+    HashMap<String, FamilyLocalnetState> families = deviceState.localnet.families;
     waitFor(format("localnet family state %s available", family),
         () -> families.containsKey(family) ? null
             : format("family %s not in %s", family, CSV_JOINER.join(families.keySet())));

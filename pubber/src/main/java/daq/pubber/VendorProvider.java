@@ -3,15 +3,14 @@ package daq.pubber;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
+import static daq.pubber.ProtocolFamily.VENDOR;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toMap;
-import static udmi.schema.Common.ProtocolFamily.VENDOR;
 
 import com.google.udmi.util.SiteModel;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.BiConsumer;
-import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.DiscoveryEvents;
 import udmi.schema.FamilyLocalnetState;
 import udmi.schema.Metadata;
@@ -28,7 +27,7 @@ public class VendorProvider extends ManagerBase implements FamilyProvider {
   private SiteModel siteModel;
   private String selfAddr;
 
-  public VendorProvider(ManagerHost host, ProtocolFamily family,
+  public VendorProvider(ManagerHost host, String family,
       PubberConfiguration pubberConfiguration) {
     super(host, pubberConfiguration);
     localnetHost = (LocalnetManager) host;

@@ -16,7 +16,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import udmi.schema.CloudModel;
-import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.DiscoveryEvents;
 import udmi.schema.DiscoveryEvents;
 import udmi.schema.EndpointConfiguration;
@@ -73,7 +72,7 @@ public class BitboxAdapter extends ProcessorBase {
 
     try {
       DiscoveryEvents discoveryEvent = new DiscoveryEvents();
-      discoveryEvent.scan_family = ProtocolFamily.fromValue((String) map.get("protocol"));
+      discoveryEvent.scan_family = (String) map.get("protocol");
       discoveryEvent.scan_addr = (String) map.get("id");
       discoveryEvent.generation = generation;
       discoveryEvent.points = extractPoints(map.get("data"));

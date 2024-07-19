@@ -26,7 +26,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
 import udmi.schema.CloudModel.Resource_type;
-import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.DiscoveryEvents;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
@@ -122,7 +121,7 @@ public class ProvisioningEngine extends ProcessorBase {
         info("Scan device %s/%s provisioning disabled", registryId, gatewayId);
         return;
       }
-      ProtocolFamily family = requireNonNull(discoveryEvent.scan_family, "missing scan_family");
+      String family = requireNonNull(discoveryEvent.scan_family, "missing scan_family");
       String addr = requireNonNull(discoveryEvent.scan_addr, "missing scan_addr");
       String expectedId = format(EXPECTED_DEVICE_FORMAT, family, addr);
       if (deviceIds.containsKey(expectedId)) {
