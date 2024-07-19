@@ -73,13 +73,19 @@ docker run -d --rm --net udminet --name pubber -v $(realpath $site_model):/root/
     ghcr.io/faucetsdn/udmi:pubber-latest bin/pubber site/ //mqtt/udmis ${device_id} ${serial_no}
 ```
 
-## Sequencer Tests
+## Sequencer Testing
 
 Sequencer can be run directly as per normal too. See the [sample sequencer output](sequencer_output.md)
 for what the beginning of a successful run looks like.
 ```
 docker run --rm --net udminet --name sequencer -v $(realpath $site_model):/root/site \
     ghcr.io/faucetsdn/udmi:validator-latest bin/sequencer site/ //mqtt/udmis ${device_id} ${serial_no}
+```
+
+The resulting output can be extracted from the site model, See the [sample report output](report_output.md)
+for what this should look like.
+```
+head ${site_model}/out/devices/${device_id}/results.md 
 ```
 
 # Container Build

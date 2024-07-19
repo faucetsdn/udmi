@@ -143,4 +143,23 @@ No alternate registry configured, disabling
 2024-07-19T04:22:50Z INFO Initial state #001:       "ipv4" : {
 2024-07-19T04:22:50Z INFO Initial state #001:         "addr" : "192.168.99.3"
 ```
-_...output continues until sequence testing complete..._
+
+...this will go on for quite some time, until ultimately it should end with something like:
+```
+Missing reference file: validator/sequences/pointset_publish/sequence.md
+Missing reference file: validator/sequences/pointset_publish_interval/sequence.md
+Missing reference file: validator/sequences/pointset_remove_point/sequence.md
+Missing reference file: validator/sequences/pointset_request_extraneous/sequence.md
+Missing reference file: validator/sequences/broken_config/sequence.md
+Missing reference file: validator/sequences/config_logging/sequence.md
+Missing reference file: validator/sequences/device_config_acked/sequence.md
+Missing reference file: validator/sequences/extra_config/sequence.md
+Missing reference file: validator/sequences/family_ether_addr/sequence.md
+Missing reference file: validator/sequences/family_ipv4_addr/sequence.md
+Missing reference file: validator/sequences/family_ipv6_addr/sequence.md
+Missing reference file: validator/sequences/state_make_model/sequence.md
+Missing reference file: validator/sequences/state_software/sequence.md
+Missing reference file: validator/sequences/system_last_update/sequence.md
+Missing reference file: validator/sequences/valid_serial_no/sequence.md
+Report saved to: /root/site/out/devices/AHU-1/results.md
+```
