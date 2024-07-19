@@ -30,7 +30,7 @@ docker run -d --rm --net udminet --name udmis -p 8883:8883 \
 
 ## UDMIS Startup Diagnostics
 
-[sample udmis output](udmis_output.md)
+[sample UDMIS output](udmis_output.md)
 
 ```
 docker logs udmis 2>&1 | fgrep udmis
