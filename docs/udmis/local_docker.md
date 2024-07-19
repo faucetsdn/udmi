@@ -56,7 +56,7 @@ ls -l var/tmp/pod_ready.txt
 ## Registrar Run
 
 After startup, the site model needs to be registered as per standard UDMI practice. This only
-needs to be done once per site model (or after any signficant changes). The
+needs to be done once per site model (or after any significant changes). The
 [sample registrar output](registrar_output.md) shows what a successful run looks like.
 ```
 docker run --rm --net udminet --name registrar -v $(realpath $site_model):/root/site \
