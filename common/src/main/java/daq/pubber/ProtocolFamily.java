@@ -9,4 +9,5 @@ public interface ProtocolFamily {
   String IOT = "iot";
   String BACNET = "bacnet";
   String MODBUS = "modbus";
+  String INVALID = "invalid";
 }

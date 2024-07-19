@@ -9,13 +9,15 @@ import static udmi.schema.Category.GATEWAY_PROXY_TARGET;
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.PointsetBase;
 import com.google.daq.mqtt.sequencer.Summary;
+import daq.pubber.ProtocolFamily;
 import org.junit.Test;
 import udmi.schema.Bucket;
-import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.FamilyLocalnetModel;
 import udmi.schema.FeatureDiscovery.FeatureStage;
 import udmi.schema.GatewayConfig;
 import udmi.schema.Level;
+
+;
 
 /**
  * Validate pointset related functionality for proxied devices.
