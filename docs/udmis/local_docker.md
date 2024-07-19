@@ -2,23 +2,26 @@
 
 # Local docker UDMIS setup and execution
 
+## Configuration Setup
+
+```
+site_model=udmi_site_model
+device_id=AHU-1
+serial_no=8127324
+```
+
 ## Environment Setup
 
 ```
 docker inspect -f ok udminet || docker network create udminet --subnet 192.168.99.0/24
-[[ -d udmi_site_model ]] || git clone https://github.com/faucetsdn/udmi_site_model.git
-site_model=$PWD/udmi_site_model
-serial_no=8127324
-device_id=AHU-1
-echo Ready for site ${site_model} device ${device_id} serial ${serial_no}
+[[ -d ${site_model} ]] || git clone https://github.com/faucetsdn/${site_model}.git
 ```
 
 ## UDMIS Container Startup
 
 ```
-sudo rm -f var/tmp/pod_ready.txt
 docker run -d --rm --net udminet --name udmis -p 8883:8883 \
-    -v ${site_model}:/root/site \
+    -v $(realpath $site_model):/root/site \
     -v $PWD/var/tmp:/tmp \
     -v $PWD/var/etcd:/root/udmi/default.etcd \
     -v $PWD/var/mosquitto:/etc/mosquitto \
@@ -40,7 +43,7 @@ ls -l var/tmp/pod_ready.txt
 [sample registrar output](registrar_output.md)
 
 ```
-docker run --rm --net udminet --name registrar -v ${site_model}:/root/site \
+docker run --rm --net udminet --name registrar -v $(realpath $site_model):/root/site \
     ghcr.io/faucetsdn/udmi:validator-latest bin/registrar site/ //mqtt/udmis
 ```
 
@@ -49,7 +52,7 @@ docker run --rm --net udminet --name registrar -v ${site_model}:/root/site \
 [sample pubber output](pubber_output.md)
 
 ```
-docker run --rm --net udminet --name pubber -v ${site_model}:/root/site \
+docker run --rm --net udminet --name pubber -v $(realpath $site_model):/root/site \
     ghcr.io/faucetsdn/udmi:pubber-latest bin/pubber site/ //mqtt/udmis ${device_id} ${serial_no}
 ```
 
@@ -58,7 +61,7 @@ docker run --rm --net udminet --name pubber -v ${site_model}:/root/site \
 [sample sequencer output](sequencer_output.md)
 
 ```
-docker run --rm --net udminet --name sequencer -v ${site_model}:/root/site \
+docker run --rm --net udminet --name sequencer -v $(realpath $site_model):/root/site \
     ghcr.io/faucetsdn/udmi:validator-latest bin/sequencer site/ //mqtt/udmis ${device_id} ${serial_no}
 ```
 
