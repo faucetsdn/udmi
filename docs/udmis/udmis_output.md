@@ -1,6 +1,14 @@
-peringknife@peringknife:~$ docker logs udmis 2>&1 | fgrep udmis
+[**UDMI**](../../) / [**Docs**](../) / [UDMIS](.) / [UDMIS Output](#)
+
+Commands to test if the UDMIS container is running properly:
+```
+docker logs udmis 2>&1 | fgrep udmis
 fgrep pod_ready var/tmp/udmis.log
 ls -l var/tmp/pod_ready.txt
+```
+
+Sample output:
+```
 export TARGET_PROJECT=//mqtt/udmis
 bin/start_etcd: line 9: udmis/bin/etcdctl: No such file or directory
 Starting mosquitto on server udmis
@@ -17,3 +25,4 @@ Waiting for udmis startup 25...
 udmis running in the background, pid 198 log in /tmp/udmis.log
 2024-07-19T04:18:40Z xxxxxxxx N: UdmiServicePod Finished activation of container components, created /tmp/pod_ready.txt
 -rw-r--r-- 1 root root 0 Jul 18 21:18 var/tmp/pod_ready.txt
+```

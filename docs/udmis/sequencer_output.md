@@ -1,8 +1,13 @@
 [**UDMI**](../../) / [**Docs**](../) / [UDMIS](.) / [Sequencer Output](#)
 
+Command for running sequencer in a docker container:
 ```
-testuser@testuser:~$ docker run --rm --net udminet --name sequencer -v $(realpath $site_model):/root/site \
+docker run --rm --net udminet --name sequencer -v $(realpath $site_model):/root/site \
     ghcr.io/faucetsdn/udmi:validator-latest bin/sequencer site/ //mqtt/udmis ${device_id} ${serial_no}
+```
+
+Sample output:
+```
 fatal: not a git repository (or any of the parent directories): .git
 fatal: not a git repository (or any of the parent directories): .git
 Using site model directory /root/site

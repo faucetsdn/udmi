@@ -1,8 +1,13 @@
 [**UDMI**](../../) / [**Docs**](../) / [UDMIS](.) / [Registrar Output](#)
 
+Command for running registrar in a docker container:
 ```
-testuser@testuser:~$ docker run --rm --net udminet --name registrar -v $(realpath $site_model):/root/site \
+docker run --rm --net udminet --name registrar -v $(realpath $site_model):/root/site \
     ghcr.io/faucetsdn/udmi:validator-latest bin/registrar site/ //mqtt/udmis
+```
+
+Sample output:
+```
 Unable to find image 'ghcr.io/faucetsdn/udmi:validator-latest' locally
 validator-latest: Pulling from faucetsdn/udmi
 ec99f8b99825: Already exists 
