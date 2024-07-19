@@ -2,11 +2,11 @@
 
 Sample command to run pubber in a docker container:
 ```
-docker run --rm --net udminet --name pubber -v $(realpath $site_model):/root/site \
+docker run -d --rm --net udminet --name pubber -v $(realpath $site_model):/root/site \
     ghcr.io/faucetsdn/udmi:pubber-latest bin/pubber site/ //mqtt/udmis ${device_id} ${serial_no}
 ```
 
-Sample output:
+`docker logs pubber` sample output:
 ```
 Unable to find image 'ghcr.io/faucetsdn/udmi:pubber-latest' locally
 pubber-latest: Pulling from faucetsdn/udmi

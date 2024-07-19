@@ -34,7 +34,7 @@ it works), so see the next section for some sample diagnostic commands. It will 
 (less than 30s) to get up and going before the other commands will work.
 ```
 docker run -d --rm --net udminet --name udmis -p 8883:8883 \
-    -v $(realpath site_model):/root/site \
+    -v $(realpath $site_model):/root/site \
     -v $PWD/var/tmp:/tmp \
     -v $PWD/var/etcd:/root/udmi/default.etcd \
     -v $PWD/var/mosquitto:/etc/mosquitto \
@@ -69,16 +69,14 @@ For initial install testing, it's recommended to try first with the standard _pu
 See the [sample pubber output](pubber_output.md) for the beginning of what this run looks like.
 
 ```
-docker run --rm --net udminet --name pubber -v $(realpath $site_model):/root/site \
+docker run -d --rm --net udminet --name pubber -v $(realpath $site_model):/root/site \
     ghcr.io/faucetsdn/udmi:pubber-latest bin/pubber site/ //mqtt/udmis ${device_id} ${serial_no}
 ```
 
 ## Sequencer Tests
 
 Sequencer can be run directly as per normal too. See the [sample sequencer output](sequencer_output.md)
-for what the beginning of a successful run looks like. If using _pubber_ this will need to be run
-in a separate shell, and if so make sure to initialize the shell variables again!
-
+for what the beginning of a successful run looks like.
 ```
 docker run --rm --net udminet --name sequencer -v $(realpath $site_model):/root/site \
     ghcr.io/faucetsdn/udmi:validator-latest bin/sequencer site/ //mqtt/udmis ${device_id} ${serial_no}
