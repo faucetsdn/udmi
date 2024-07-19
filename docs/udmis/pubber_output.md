@@ -1,4 +1,4 @@
-[**UDMI**](../../) / [**Docs**](../) / [UDMIS](.) / [Pubber Output](#)
+[**UDMI**](../../) / [**Docs**](../) / [**UDMIS**](.) / [Pubber Output](#)
 
 Sample command to run pubber in a docker container:
 ```

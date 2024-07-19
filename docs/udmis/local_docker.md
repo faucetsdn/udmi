@@ -1,4 +1,4 @@
-[**UDMI**](../../) / [**Docs**](../) / [UDMIS](.) / [Local Docker](#)
+[**UDMI**](../../) / [**Docs**](../) / [**UDMIS**](.) / [Local Docker](#)
 
 # Local docker UDMIS setup and execution
 

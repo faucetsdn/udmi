@@ -1,4 +1,4 @@
-[**UDMI**](../../) / [**Docs**](../) / [UDMIS](.) / [UDMIS Output](#)
+[**UDMI**](../../) / [**Docs**](../) / [**UDMIS**](.) / [UDMIS Output](#)
 
 Commands to test if the UDMIS container is running properly:
 ```

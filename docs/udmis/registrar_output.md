@@ -1,4 +1,4 @@
-[**UDMI**](../../) / [**Docs**](../) / [UDMIS](.) / [Registrar Output](#)
+[**UDMI**](../../) / [**Docs**](../) / [**UDMIS**](.) / [Registrar Output](#)
 
 Command for running registrar in a docker container:
 ```

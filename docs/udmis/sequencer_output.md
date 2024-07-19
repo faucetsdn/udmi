@@ -1,4 +1,4 @@
-[**UDMI**](../../) / [**Docs**](../) / [UDMIS](.) / [Sequencer Output](#)
+[**UDMI**](../../) / [**Docs**](../) / [**UDMIS**](.) / [Sequencer Output](#)
 
 Command for running sequencer in a docker container:
 ```
