@@ -15,9 +15,9 @@ GROUP=mosquitto
 UDMI_FILE=$ETC_DIR/conf.d/udmi.conf
 PASS_FILE=$ETC_DIR/mosquitto.passwd
 DYN_FILE=$ETC_DIR/dynamic_security.json
-MOSQUITTO_LOG=/tmp/mosquitto.log
+MOSQUITTO_LOG=/var/log/mosquitto/mosquitto.log
 
-mkdir -p /var/log/mosquitto/
+sudo mkdir -p $(dirname $MOSQUITTO_LOG)
 
 if [[ ! -f $UDMI_FILE ]]; then
     echo Creating new $UDMI_FILE from template...
