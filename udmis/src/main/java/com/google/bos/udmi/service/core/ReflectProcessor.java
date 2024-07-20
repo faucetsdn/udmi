@@ -295,7 +295,7 @@ public class ReflectProcessor extends ProcessorBase {
     envelope.gatewayId = envelope.source;
 
     ifNotNullThen(distributor, d -> catchToElse(() -> d.publish(envelope, toolState, containerId),
-        e -> error("Error handling awareness: " + friendlyStackTrace(e))));
+        e -> error("Error handling update: %s %s", friendlyStackTrace(e), envelope.transactionId)));
     updateAwareness(envelope, toolState);
 
     UdmiConfig udmiConfig = UdmiServicePod.getUdmiConfig(toolState);

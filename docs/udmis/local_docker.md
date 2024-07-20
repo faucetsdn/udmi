@@ -24,7 +24,7 @@ serial_no=8127324
 One-time setup pieces to setup docker and a test site model, if necessary.
 ```
 docker inspect -f ok udminet || docker network create udminet --subnet 192.168.99.0/24
-[[ -d ${site_model} ]] || git clone https://github.com/faucetsdn/${site_model}.git
+[[ ${site_model} != udmi_site_model ]] || git clone https://github.com/faucetsdn/udmi_site_model.git
 ```
 
 ## UDMIS Container Startup
@@ -94,6 +94,7 @@ For development purposes, the following command will build (and push) the requis
 requires a full UDMI install and appropriate permissions (to push).
 ```
 for image in udmis validator pubber; do
+  docker rmi ghcr.io/faucetsdn/udmi:$image-latest; \
   bin/container $image push \
   && docker tag $image:latest ghcr.io/faucetsdn/udmi:$image-latest \
   && docker push ghcr.io/faucetsdn/udmi:$image-latest

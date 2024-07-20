@@ -66,6 +66,10 @@ public class DistributorPipe extends ProcessorBase {
    */
   public void publish(Envelope rawEnvelope, Object message, String source) {
     try {
+      if (!isEnabled()) {
+        warn("Not publishing to disabled distributor");
+        return;
+      }
       Envelope envelope = deepCopy(rawEnvelope);
       String routeId = getRouteId(source);
       debug("Distributing %s for %s/%s as %s", message.getClass().getSimpleName(),
