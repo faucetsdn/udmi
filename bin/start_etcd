@@ -17,6 +17,6 @@ ETCD_PID=$!
 
 echo Waiting 10s for etcd to start, log in $ETCD_LOG
 sleep 10
-[[ -d /proc/$ETCD_PID ]] || (cat $ETCD_LOG && fail starting etcd)
+[[ -d /proc/$ETCD_PID ]] || (cat $ETCD_LOG && echo error starting etcd && false)
 
 echo Completed etcd startup.
