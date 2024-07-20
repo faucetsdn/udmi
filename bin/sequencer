@@ -172,7 +172,7 @@ fi
 
 cat $SEQUENCER_CONFIG
 
-validator/bin/build
+[[ ! -d $UDMI_ROOT/validator/src ]] || $UDMI_ROOT/validator/bin/build
 
 echo $JAVA_CMD
 result=0
@@ -192,5 +192,3 @@ fgrep RESULT $site_model/out/devices/$device_id/RESULT.log | \
 more $site_model/out/devices/$device_id/RESULT.log $SCHEMA_OUT | cat
 
 bin/sequencer_report $site_model $device_id
-
-bin/check_version

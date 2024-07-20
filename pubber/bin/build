@@ -18,6 +18,14 @@ done
 rundir=$(dirname $0)
 cd $rundir/..
 
+echo Cleaning build/
+rm -rf build/
+mkdir build/
+
+echo Mirroring udmi files...
+cp -a ../bin build/udmi_bin/
+cp -a ../etc build/udmi_etc/
+
 newest=$(ls -rt `find src/ ../gencode/java -type f` | tail -n 1)
 jarfile=build/libs/pubber-1.0-SNAPSHOT-all.jar
 if [[ -z $check && -z $covg && -f $jarfile && $jarfile -nt $newest ]]; then
@@ -26,8 +34,6 @@ if [[ -z $check && -z $covg && -f $jarfile && $jarfile -nt $newest ]]; then
 fi
 
 echo Building pubber in $PWD
-
-rm -rf build
 ./gradlew shadow $check $covg
 
 ls -l $jarfile

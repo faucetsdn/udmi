@@ -11,7 +11,7 @@ OUT_DIR=$UDMI_ROOT/out
 mkdir -p $OUT_DIR
 rm -f $OUT_DIR/$util_name.log
 
-$UDMI_ROOT/validator/bin/build
+[[ ! -d $UDMI_ROOT/validator/src ]] || $UDMI_ROOT/validator/bin/build
 
 JAVA_CLASS=com.google.daq.mqtt.util.Dispatcher
 

@@ -1,0 +1,15 @@
+FROM alpine:latest
+
+WORKDIR /root
+
+RUN apk add openjdk17 bash sudo gcompat curl jq python3 git moreutils openssl
+
+ADD build/libs pubber/build/libs/
+
+ADD bin/ pubber/bin/
+
+ADD build/udmi_etc/ etc/
+
+ADD build/udmi_bin/ bin/
+
+CMD ["/root/pubber/bin/run"]

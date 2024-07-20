@@ -19,12 +19,14 @@ ROOT=$(dirname $0)/..
 BASE=..
 cd $ROOT
 
-echo Mirroring udim/bin to udmi_bin...
-rm -rf udmi_bin/
-cp -a ../bin/ udmi_bin/
-echo Mirroring udmi/etc to udmi_etc...
-rm -rf udmi_etc/
-cp -a ../etc udmi_etc/
+echo Cleaning $ROOT/build/
+rm -rf build
+mkdir build
+
+echo Mirroring udim files...
+cp -a ../bin/ build/udmi_bin/
+cp -a ../etc/ build/udmi_etc/
+cp -a ../schema build/schema/
 
 echo Copying default mosquitto config files...
 mkdir -p var/
@@ -43,7 +45,6 @@ export JAVA_HOME=$JAVA_HOME_11_X64
 
 echo Building udmis in $PWD
 
-rm -rf build
 ./gradlew shadow $check $covg $*
 
 ls -l $jarfile

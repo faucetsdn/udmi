@@ -61,7 +61,7 @@ echo Cleaning output directory $UDMI_ROOT/pubber/out/$serial_no
 rm -rf $UDMI_ROOT/pubber/out/$serial_no
 
 echo Building pubber...
-$UDMI_ROOT/pubber/bin/build
+[[ ! -d $UDMI_ROOT/pubber/src ]] || $UDMI_ROOT/pubber/bin/build
 
 echo Running tools version $udmi_version
 
@@ -171,6 +171,13 @@ else
 fi
 
 jq --slurpfile endpoint $ENDPOINT_TMP '.endpoint = $endpoint[0]' $tmp_config | sponge $tmp_config
+
+if [[ -f ${site_model:-}/reflector/ca.crt && -n ${project_target:-} ]]; then
+    echo Checking for signed device certificate...
+    certs=(${site_model}/devices/${target_id}/*.crt) || true
+    [[ -f $certs ]] || $UDMI_ROOT/bin/keygen CERT/${project_target} ${site_model}/devices/${target_id}/
+    ls -l ${site_model}/devices/${target_id}/*.crt
+fi
 
 # Run in the background to force new process group and get PID
 $UDMI_ROOT/pubber/bin/run $tmp_config &

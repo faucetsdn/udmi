@@ -79,5 +79,3 @@ cat $site_file
 echo Running tools version $udmi_version
 
 $UDMI_ROOT/validator/bin/validate $site_file $* 2>&1 | tee $OUT_DIR/validator.log
-
-bin/check_version

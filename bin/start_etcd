@@ -2,6 +2,7 @@
 
 IMAGE=quay.io/coreos/etcd:v3.5.13
 BINDIR=/tmp/etcd
+ETCD_LOG=/tmp/etcd.log
 
 echo pwd: $(pwd)
 
@@ -11,11 +12,11 @@ $BINDIR/etcd -version
 
 $BINDIR/etcd -listen-client-urls=http://0.0.0.0:2379 \
              -advertise-client-urls=http://127.0.0.1:2379 \
-             > etcd.log 2>&1 &
+             > $ETCD_LOG 2>&1 &
 ETCD_PID=$!
 
-echo Waiting 10s for etcd to start...
+echo Waiting 10s for etcd to start, log in $ETCD_LOG
 sleep 10
-[[ -d /proc/$ETCD_PID ]] || (cat etcd.log && fail starting etcd)
+[[ -d /proc/$ETCD_PID ]] || (cat $ETCD_LOG && echo error starting etcd && false)
 
 echo Completed etcd startup.

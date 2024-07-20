@@ -19,6 +19,15 @@ ROOT=$(dirname $0)/..
 BASE=..
 cd $ROOT
 
+echo Cleaning $ROOT/build/
+rm -rf build/
+mkdir build/
+
+echo Mirroring udmi files...
+cp -a ../bin build/udmi_bin/
+cp -a ../etc build/udmi_etc/
+cp -a ../schema build/schema/
+
 jarfile=build/libs/validator-1.0-SNAPSHOT-all.jar
 
 newest=$(ls -rt `find src/ $BASE/gencode/java -type f` | tail -n 1)
@@ -36,7 +45,6 @@ echo Java version $(java --version)
 
 echo Building validator in $PWD
 
-rm -rf build
 ./gradlew shadow $check $covg $*
 
 ls -l $jarfile

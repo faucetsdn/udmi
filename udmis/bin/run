@@ -21,6 +21,7 @@ more /etc/os-release $POD_CONFIG | cat
 java -version
 
 POD_JAR=build/libs/udmis-1.0-SNAPSHOT-all.jar
+DEBUG_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
 
 gcloud_project=$(gcloud config get project || true)
 if [[ -z $GCP_PROJECT && -z $gcloud_project ]]; then
@@ -78,4 +79,4 @@ env
 echo
 
 # Run with exec to replace shell so java receives SIGTERM signal.
-exec java -jar $POD_JAR $POD_CONFIG
+exec java $DEBUG_OPTS -jar $POD_JAR $POD_CONFIG
