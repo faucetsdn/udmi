@@ -11,6 +11,7 @@ import static com.google.udmi.util.Common.UDMI_VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThrow;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
@@ -86,6 +87,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.VisibleForTesting;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
 import udmi.schema.CloudModel.Resource_type;
@@ -283,6 +285,11 @@ public class Registrar {
   }
 
   void execute() {
+    execute(null);
+  }
+
+  @VisibleForTesting
+  protected void execute(Consumer<SiteModel> siteModelMunger) {
     try {
       if (projectId != null) {
         initializeCloudProject();
@@ -296,6 +303,7 @@ public class Registrar {
         createRegistries();
       } else {
         processSiteMetadata();
+        ifNotNullThen(siteModelMunger, munger -> munger.accept(siteModel));
         processDevices();
       }
       writeErrors();

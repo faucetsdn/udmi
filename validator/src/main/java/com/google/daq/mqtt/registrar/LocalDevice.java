@@ -6,7 +6,9 @@ import static com.google.daq.mqtt.registrar.Registrar.DEVICE_ERRORS_MAP;
 import static com.google.daq.mqtt.registrar.Registrar.ENVELOPE_SCHEMA_JSON;
 import static com.google.daq.mqtt.registrar.Registrar.METADATA_SCHEMA_JSON;
 import static com.google.daq.mqtt.util.ConfigManager.configFrom;
-import static com.google.udmi.util.Common.VERSION_KEY;
+import static com.google.udmi.util.Common.DEVICE_ID_ALLOWABLE_PATTERN;
+import static com.google.udmi.util.Common.POINT_NAME_ALLOWABLE_PATTERN;
+import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_STRICT;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.compressJsonString;
@@ -17,7 +19,6 @@ import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.writeString;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
 import static com.google.udmi.util.JsonUtil.unquoteJson;
-import static com.google.udmi.util.MessageUpgrader.METADATA_SCHEMA;
 import static com.google.udmi.util.SiteModel.METADATA_JSON;
 import static com.google.udmi.util.SiteModel.NORMALIZED_JSON;
 import static java.lang.String.format;
@@ -38,11 +39,11 @@ import com.google.daq.mqtt.util.ConfigManager;
 import com.google.daq.mqtt.util.DeviceExceptionManager;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
+import com.google.daq.mqtt.util.ValidationError;
 import com.google.daq.mqtt.util.ValidationException;
 import com.google.daq.mqtt.validator.Validator;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.MessageDowngrader;
-import com.google.udmi.util.MessageUpgrader;
 import com.google.udmi.util.SiteModel;
 import com.google.udmi.util.SiteModel.MetadataException;
 import java.io.File;
@@ -67,6 +68,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import org.apache.commons.io.IOUtils;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Auth_type;
@@ -193,6 +195,10 @@ class LocalDevice {
       this.generation = generation;
       this.siteModel = siteModel;
       this.validateMetadata = validateMetadata;
+      if (!DEVICE_ID_ALLOWABLE_PATTERN.matcher(deviceId).matches()) {
+        throw new ValidationError(format("Device id does not match allowable pattern %s",
+            DEVICE_ID_ALLOWABLE_PATTERN.pattern()));
+      }
       exceptionMap = new ExceptionMap("Exceptions for " + deviceId);
       deviceDir = siteModel.getDeviceDir(deviceId);
       outDir = new File(deviceDir, OUT_DIR);
@@ -279,12 +285,23 @@ class LocalDevice {
         JsonNode metadataObject = JsonUtil.convertTo(JsonNode.class, deviceMetadata);
         ProcessingReport report = schemas.get(METADATA_SCHEMA_JSON).validate(metadataObject);
         parseMetadataValidateProcessingReport(report);
+        extraValidation(deviceMetadata);
       } catch (ProcessingException | ValidationException e) {
         exceptionMap.put(EXCEPTION_VALIDATING, e);
       }
     }
 
     return deviceMetadata;
+  }
+
+  private void extraValidation(Metadata metadataObject) {
+    Set<String> pointNameErrors = metadataObject.pointset.points.keySet().stream()
+        .filter(key -> !POINT_NAME_ALLOWABLE_PATTERN.matcher(key).matches()).collect(
+            Collectors.toSet());
+    if (!pointNameErrors.isEmpty()) {
+      throw new ValidationError(format("Found point names not matching allowed pattern %s: %s",
+          POINT_NAME_ALLOWABLE_PATTERN.pattern(), CSV_JOINER.join(pointNameErrors)));
+    }
   }
 
   private Metadata readMetadata() {

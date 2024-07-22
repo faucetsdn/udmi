@@ -1,6 +1,7 @@
 package com.google.daq.mqtt.registrar;
 
 import static com.google.daq.mqtt.TestCommon.ALT_REGISTRY;
+import static com.google.daq.mqtt.TestCommon.MOCK_SITE;
 import static com.google.daq.mqtt.TestCommon.REGISTRY_ID;
 import static com.google.daq.mqtt.TestCommon.SITE_DIR;
 import static com.google.daq.mqtt.TestCommon.SITE_REGION;
@@ -63,7 +64,7 @@ public class RegistrarTest {
   private Registrar getRegistrar(List<String> args) {
     try {
       List<String> registrarArgs = new ArrayList<>();
-      registrarArgs.add(SITE_DIR);
+      registrarArgs.add(MOCK_SITE);
       registrarArgs.add(MOCK_PROJECT);
       ifNotNullThen(args, () -> registrarArgs.addAll(args));
       return new Registrar().processArgs(registrarArgs);
