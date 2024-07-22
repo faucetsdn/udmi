@@ -51,7 +51,6 @@ import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.PubSubPusher;
-import com.google.protobuf.MapEntry;
 import com.google.udmi.util.Common;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
@@ -94,7 +93,6 @@ import udmi.schema.CloudModel.Resource_type;
 import udmi.schema.Credential;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.ExecutionConfiguration;
-import udmi.schema.IotAccess.IotProvider;
 import udmi.schema.Metadata;
 import udmi.schema.SetupUdmiConfig;
 import udmi.schema.SiteMetadata;
@@ -289,7 +287,7 @@ public class Registrar {
   }
 
   @VisibleForTesting
-  protected void execute(Consumer<SiteModel> siteModelMunger) {
+  protected void execute(Runnable modelMunger) {
     try {
       if (projectId != null) {
         initializeCloudProject();
@@ -303,8 +301,7 @@ public class Registrar {
         createRegistries();
       } else {
         processSiteMetadata();
-        ifNotNullThen(siteModelMunger, munger -> munger.accept(siteModel));
-        processDevices();
+        processDevices(modelMunger);
       }
       writeErrors();
     } catch (ExceptionMap em) {
@@ -315,6 +312,11 @@ public class Registrar {
     } finally {
       shutdown();
     }
+  }
+
+  @VisibleForTesting
+  protected Map<String, LocalDevice> getLocalDevices() {
+    return localDevices;
   }
 
   private void processSiteMetadata() {
@@ -337,8 +339,6 @@ public class Registrar {
       }
     }
   }
-
-
 
   private void createRegistrySuffix(String suffix) {
     String registry = cloudIotManager.createRegistry(suffix);
@@ -487,10 +487,11 @@ public class Registrar {
     }
   }
 
-  private void processDevices() {
+  private void processDevices(Runnable modelMunger) {
     Set<String> explicitDevices = getExplicitDevices();
     try {
       localDevices = loadLocalDevices(explicitDevices);
+      ifNotNullThen(modelMunger, Runnable::run);
       cloudModels = ifNotNullGet(fetchCloudModels(), devices -> new HashMap<>(devices));
       if (deleteDevices || expungeDevices) {
         deleteCloudDevices();

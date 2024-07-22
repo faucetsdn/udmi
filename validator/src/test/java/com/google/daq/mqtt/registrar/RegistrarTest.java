@@ -1,6 +1,7 @@
 package com.google.daq.mqtt.registrar;
 
 import static com.google.daq.mqtt.TestCommon.ALT_REGISTRY;
+import static com.google.daq.mqtt.TestCommon.DEVICE_ID;
 import static com.google.daq.mqtt.TestCommon.MOCK_SITE;
 import static com.google.daq.mqtt.TestCommon.REGISTRY_ID;
 import static com.google.daq.mqtt.TestCommon.SITE_DIR;
@@ -12,6 +13,7 @@ import static com.google.daq.mqtt.util.IotMockProvider.ActionType.CREATE_DEVICE_
 import static com.google.daq.mqtt.util.IotMockProvider.ActionType.DELETE_DEVICE_ACTION;
 import static com.google.daq.mqtt.util.IotMockProvider.ActionType.UPDATE_DEVICE_ACTION;
 import static com.google.daq.mqtt.util.IotMockProvider.MOCK_DEVICE_ID;
+import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.SiteModel.MOCK_PROJECT;
@@ -22,12 +24,16 @@ import static org.junit.Assert.fail;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
+import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.IotMockProvider;
 import com.google.daq.mqtt.util.IotMockProvider.ActionType;
 import com.google.daq.mqtt.util.IotMockProvider.MockAction;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.Test;
 import udmi.schema.CloudModel;
@@ -38,6 +44,10 @@ import udmi.schema.CloudModel;
 public class RegistrarTest {
 
   public static final String REGISTRY_SUFFIX = "%X";
+  private static final String BAD_DEVICE_ID = "bacnet_/291324";
+
+  private static final Set<String> ALLOWED_DEVICE_IDS = ImmutableSet.of("bacnet_29314", "bacnet-29138", "BACnet.213214");
+  private static final Set<String> ILLEGAL_DEVICE_IDS = ImmutableSet.of("bacnet/293124", "AHU-2523");
 
   @SuppressWarnings("unchecked")
   private static double getValidatingSize(Map<String, Object> summary) {
@@ -113,6 +123,25 @@ public class RegistrarTest {
         .filter(client -> !client.equals(mockClientString))
         .collect(Collectors.toList());
     assertEquals("clients not matching " + mockClientString, ImmutableList.of(), mismatchItems);
+  }
+
+  @Test
+  public void checkAllowedDeviceIds() {
+    Set<String> okAddedIds = new HashSet<>();
+    Set<String> TRIAL_DEVICE_IDS = Sets.union(ILLEGAL_DEVICE_IDS, ALLOWED_DEVICE_IDS);
+    TRIAL_DEVICE_IDS.forEach(deviceId -> {
+      try {
+        Registrar registrar = getRegistrar(ImmutableList.of());
+        registrar.execute(() -> {
+          Map<String, LocalDevice> localDevices = registrar.getLocalDevices();
+          localDevices.put(deviceId, localDevices.get(DEVICE_ID).duplicate(deviceId));
+        });
+        okAddedIds.add(deviceId);
+      } catch (Exception e) {
+        System.err.println("Failed: " + deviceId + " because " + friendlyStackTrace(e));
+      }
+    });
+    assertEquals("set of allowed device ids", ALLOWED_DEVICE_IDS, okAddedIds);
   }
 
   @Test

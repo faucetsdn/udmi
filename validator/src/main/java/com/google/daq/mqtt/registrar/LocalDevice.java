@@ -777,6 +777,17 @@ class LocalDevice {
     this.blocked = blocked;
   }
 
+  public LocalDevice duplicate(String newId) {
+    LocalDevice device = new LocalDevice(siteModel, newId, schemas, generation, validateMetadata);
+    device.ensureDeviceDir();
+    return device;
+  }
+
+  private void ensureDeviceDir() {
+    File deviceDir = siteModel.getDeviceDir(deviceId);
+    deviceDir.mkdir();
+  }
+
   public enum DeviceStatus {
     CLEAN,
     ERRORS,
