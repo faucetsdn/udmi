@@ -1,4 +1,6 @@
-## Send a configuration message to a specific device
+[**UDMI**](../../) / [**Docs**](../) / [**Tools**](./) / [Reset Config](#)
+
+# Send a configuration message to a specific device
 
 The `reset_config` tool can be used to send a configuration message to a specific device.
 
