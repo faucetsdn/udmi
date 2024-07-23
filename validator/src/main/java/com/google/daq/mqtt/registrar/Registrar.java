@@ -51,6 +51,7 @@ import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.PubSubPusher;
+import com.google.daq.mqtt.util.ValidationError;
 import com.google.udmi.util.Common;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
@@ -1124,6 +1125,8 @@ public class Registrar {
       try {
         localDevice.initialize();
         localDevice.loadCredentials();
+      } catch (ValidationError error) {
+        throw new RuntimeException("While initializing device", error);
       } catch (Exception e) {
         localDevice.captureError(LocalDevice.EXCEPTION_CREDENTIALS, e);
       }

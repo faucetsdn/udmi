@@ -268,10 +268,10 @@ class LocalDevice {
 
   private void validateMetadata() {
     try {
+      extraValidation(metadata);
       JsonNode metadataObject = JsonUtil.convertTo(JsonNode.class, metadata);
       ProcessingReport report = schemas.get(METADATA_SCHEMA_JSON).validate(metadataObject);
       parseMetadataValidateProcessingReport(report);
-      extraValidation(metadata);
     } catch (ProcessingException | ValidationException e) {
       exceptionMap.put(EXCEPTION_VALIDATING, e);
     }
