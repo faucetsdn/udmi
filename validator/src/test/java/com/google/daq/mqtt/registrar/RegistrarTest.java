@@ -141,7 +141,7 @@ public class RegistrarTest {
           Map<String, LocalDevice> localDevices = registrar.getLocalDevices();
           localDevices.put(deviceId, localDevices.get(DEVICE_ID).duplicate(deviceId));
         });
-        okAddedIds.add(deviceId);
+        okAddedIds.add(deviceId); // Record devices that don't throw an exception.
       } catch (Exception e) {
         System.err.println("Failed: " + deviceId + " because " + friendlyStackTrace(e));
       }
@@ -161,7 +161,7 @@ public class RegistrarTest {
           Metadata metadata = localDevices.get(DEVICE_ID).getMetadata();
           metadata.pointset.points.put(pointName, new PointPointsetModel());
         });
-        okAddedNames.add(pointName);
+        okAddedNames.add(pointName); // Record names that don't throw an exception.
       } catch (Exception e) {
         e.printStackTrace();
         System.err.println("Failed: " + pointName + " because " + friendlyStackTrace(e));
