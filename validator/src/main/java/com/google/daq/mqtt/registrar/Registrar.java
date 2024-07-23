@@ -1108,14 +1108,11 @@ public class Registrar {
   }
 
   private Map<String, LocalDevice> loadDevices(List<String> devices) {
-    HashMap<String, LocalDevice> localDevices = new HashMap<>();
     Set<String> actual = devices.stream()
         .filter(deviceName -> siteModel.deviceExists(deviceName)).collect(Collectors.toSet());
-    actual.forEach(deviceName -> {
-      LocalDevice localDevice =
-          localDevices.computeIfAbsent(
-              deviceName,
-              keyName -> new LocalDevice(siteModel, deviceName, schemas, generation, doValidate));
+    localDevices = actual.stream().collect(Collectors.toMap(name -> name, name -> {
+      LocalDevice localDevice = new LocalDevice(siteModel, name, schemas, generation,
+          doValidate);
 
       try {
         localDevice.loadCredentials();
@@ -1132,7 +1129,8 @@ public class Registrar {
               new RuntimeException("While validating envelope", e));
         }
       }
-    });
+      return localDevice;
+    }));
     System.err.printf("Finished loading %d local devices.%n", actual.size());
     return localDevices;
   }

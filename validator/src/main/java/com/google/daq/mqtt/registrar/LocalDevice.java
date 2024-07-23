@@ -60,6 +60,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -78,6 +79,7 @@ import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
 import udmi.schema.Metadata;
+import udmi.schema.PointPointsetModel;
 
 class LocalDevice {
 
@@ -181,7 +183,7 @@ class LocalDevice {
 
   private String deviceNumId;
 
-  private CloudDe,viceSettings settings;
+  private CloudDeviceSettings settings;
   private String baseVersion;
   private Date lastActive;
   private boolean blocked;
@@ -295,10 +297,10 @@ class LocalDevice {
   }
 
   private void extraValidation(Metadata metadataObject) {
-    Set<String> pointNameErrors = metadataObject.pointset.points.keySet().stream()
-        .filter(key -> !POINT_NAME_ALLOWABLE.matcher(key).matches()).collect(
-            Collectors.toSet());
-    if (!pointNameErrors.isEmpty()) {
+    HashMap<String, PointPointsetModel> points = catchToNull(() -> metadataObject.pointset.points);
+    Set<String> pointNameErrors = ifNotNullGet(points, p -> p.keySet().stream()
+        .filter(key -> !POINT_NAME_ALLOWABLE.matcher(key).matches()).collect(Collectors.toSet()));
+    if (pointNameErrors != null && !pointNameErrors.isEmpty()) {
       throw new ValidationError(format("Found point names not matching allowed pattern %s: %s",
           POINT_NAME_ALLOWABLE.pattern(), CSV_JOINER.join(pointNameErrors)));
     }
