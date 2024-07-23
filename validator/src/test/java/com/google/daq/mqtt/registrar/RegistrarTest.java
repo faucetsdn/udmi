@@ -133,8 +133,8 @@ public class RegistrarTest {
   @Test
   public void checkAllowedDeviceIds() {
     Set<String> okAddedIds = new HashSet<>();
-    Set<String> TRIAL_DEVICE_IDS = Sets.union(ILLEGAL_DEVICE_IDS, ALLOWED_DEVICE_IDS);
-    TRIAL_DEVICE_IDS.forEach(deviceId -> {
+    Set<String> trialDeviceIds = Sets.union(ILLEGAL_DEVICE_IDS, ALLOWED_DEVICE_IDS);
+    trialDeviceIds.forEach(deviceId -> {
       try {
         Registrar registrar = getRegistrar(ImmutableList.of());
         registrar.execute(() -> {
@@ -152,8 +152,8 @@ public class RegistrarTest {
   @Test
   public void checkAllowedPointNames() {
     Set<String> okAddedNames = new HashSet<>();
-    Set<String> TRIAL_POINT_NAMES = Sets.union(ILLEGAL_POINT_NAMES, ALLOWED_POINT_NAMES);
-    TRIAL_POINT_NAMES.forEach(pointName -> {
+    Set<String> trialPointNames = Sets.union(ILLEGAL_POINT_NAMES, ALLOWED_POINT_NAMES);
+    trialPointNames.forEach(pointName -> {
       try {
         Registrar registrar = getRegistrar(ImmutableList.of());
         registrar.execute(() -> {

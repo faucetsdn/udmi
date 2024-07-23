@@ -1107,7 +1107,7 @@ public class Registrar {
     Set<String> actual = devices.stream()
         .filter(deviceName -> siteModel.deviceExists(deviceName)).collect(Collectors.toSet());
     return actual.stream().collect(Collectors.toMap(name -> name, name ->
-            new LocalDevice(siteModel, name, schemas, generation, doValidate)));
+        new LocalDevice(siteModel, name, schemas, generation, doValidate)));
   }
 
   private void initializeLocalDevices() {
@@ -1239,15 +1239,15 @@ public class Registrar {
     siteModel.getExecutionConfiguration().alt_registry = null;
   }
 
-class RelativeDownloader implements URIDownloader {
+  class RelativeDownloader implements URIDownloader {
 
-  @Override
-  public InputStream fetch(URI source) {
-    try {
-      return Files.newInputStream(new File(schemaBase, source.getSchemeSpecificPart()).toPath());
-    } catch (Exception e) {
-      throw new RuntimeException("While loading sub-schema " + source, e);
+    @Override
+    public InputStream fetch(URI source) {
+      try {
+        return Files.newInputStream(new File(schemaBase, source.getSchemeSpecificPart()).toPath());
+      } catch (Exception e) {
+        throw new RuntimeException("While loading sub-schema " + source, e);
+      }
     }
   }
-}
 }
