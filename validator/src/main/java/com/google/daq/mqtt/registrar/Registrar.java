@@ -492,6 +492,7 @@ public class Registrar {
     try {
       localDevices = loadLocalDevices(explicitDevices);
       ifNotNullThen(modelMunger, Runnable::run);
+      initializeLocalDevices();
       cloudModels = ifNotNullGet(fetchCloudModels(), devices -> new HashMap<>(devices));
       if (deleteDevices || expungeDevices) {
         deleteCloudDevices();
@@ -1037,13 +1038,7 @@ public class Registrar {
     }
 
     List<String> deviceList = getDeviceList(specifiedDevices, devicesDir);
-    Map<String, LocalDevice> localDevices = loadDevices(deviceList);
-    initializeSettings(localDevices);
-    writeNormalized(localDevices);
-    validateKeys(localDevices);
-    validateExpected(localDevices);
-    validateSamples(localDevices);
-    return localDevices;
+    return loadDevices(deviceList);
   }
 
   private List<String> getDeviceList(Set<String> specifiedDevices, File devicesDir) {
@@ -1110,10 +1105,22 @@ public class Registrar {
   private Map<String, LocalDevice> loadDevices(List<String> devices) {
     Set<String> actual = devices.stream()
         .filter(deviceName -> siteModel.deviceExists(deviceName)).collect(Collectors.toSet());
-    localDevices = actual.stream().collect(Collectors.toMap(name -> name, name -> {
-      LocalDevice localDevice = new LocalDevice(siteModel, name, schemas, generation,
-          doValidate);
+    return actual.stream().collect(Collectors.toMap(name -> name, name ->
+            new LocalDevice(siteModel, name, schemas, generation, doValidate)));
+  }
 
+  private void initializeLocalDevices() {
+    System.err.printf("Initializing %d local devices...%n", localDevices.size());
+    initializeDevices(localDevices);
+    initializeSettings(localDevices);
+    writeNormalized(localDevices);
+    validateExpected(localDevices);
+    validateSamples(localDevices);
+    validateKeys(localDevices);
+  }
+
+  private void initializeDevices(Map<String, LocalDevice> localDevices) {
+    localDevices.values().forEach(localDevice -> {
       try {
         localDevice.initialize();
         localDevice.loadCredentials();
@@ -1130,10 +1137,7 @@ public class Registrar {
               new RuntimeException("While validating envelope", e));
         }
       }
-      return localDevice;
-    }));
-    System.err.printf("Finished loading %d local devices.%n", actual.size());
-    return localDevices;
+    });
   }
 
   protected void setProjectId(String projectId) {
@@ -1232,15 +1236,15 @@ public class Registrar {
     siteModel.getExecutionConfiguration().alt_registry = null;
   }
 
-  class RelativeDownloader implements URIDownloader {
+class RelativeDownloader implements URIDownloader {
 
-    @Override
-    public InputStream fetch(URI source) {
-      try {
-        return Files.newInputStream(new File(schemaBase, source.getSchemeSpecificPart()).toPath());
-      } catch (Exception e) {
-        throw new RuntimeException("While loading sub-schema " + source, e);
-      }
+  @Override
+  public InputStream fetch(URI source) {
+    try {
+      return Files.newInputStream(new File(schemaBase, source.getSchemeSpecificPart()).toPath());
+    } catch (Exception e) {
+      throw new RuntimeException("While loading sub-schema " + source, e);
     }
   }
+}
 }

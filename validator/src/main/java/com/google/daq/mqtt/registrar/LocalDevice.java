@@ -66,7 +66,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -207,6 +206,7 @@ class LocalDevice {
       deviceDir = siteModel.getDeviceDir(deviceId);
       outDir = new File(deviceDir, OUT_DIR);
       exceptionManager = new DeviceExceptionManager(new File(siteModel.getSitePath()));
+      metadata = readMetadata();
     } catch (Exception e) {
       throw new RuntimeException("While loading local device " + deviceId, e);
     }
@@ -214,7 +214,7 @@ class LocalDevice {
 
   public void initialize() {
     prepareOutDir();
-    metadata = ofNullable(metadata).orElseGet(this::readMetadata);
+    ifTrueThen(validateMetadata, this::validateMetadata);
     config = configFrom(metadata, deviceId, siteModel);
   }
 
@@ -266,39 +266,15 @@ class LocalDevice {
     exceptionMap.throwIfNotEmpty();
   }
 
-  private Metadata readMetadataWithValidation(boolean validate) {
-    final Metadata deviceMetadata;
-
+  private void validateMetadata() {
     try {
-      deviceMetadata = siteModel.loadDeviceMetadata(deviceId);
-      if (deviceMetadata instanceof MetadataException metadataException) {
-        throw new RuntimeException("Loading " + metadataException.file.getAbsolutePath(),
-            metadataException.exception);
-      }
-      baseVersion = (deviceMetadata.upgraded_from == null
-          ? deviceMetadata.version : deviceMetadata.upgraded_from);
-
-      List<String> proxyIds = catchToNull(() -> deviceMetadata.gateway.proxy_ids);
-      ifNotNullThen(proxyIds,
-          ids -> ifTrueThen(ids.isEmpty(), () -> deviceMetadata.gateway.proxy_ids = null));
-
-    } catch (Exception exception) {
-      exceptionMap.put(EXCEPTION_LOADING, exception);
-      return null;
+      JsonNode metadataObject = JsonUtil.convertTo(JsonNode.class, metadata);
+      ProcessingReport report = schemas.get(METADATA_SCHEMA_JSON).validate(metadataObject);
+      parseMetadataValidateProcessingReport(report);
+      extraValidation(metadata);
+    } catch (ProcessingException | ValidationException e) {
+      exceptionMap.put(EXCEPTION_VALIDATING, e);
     }
-
-    if (validate) {
-      try {
-        JsonNode metadataObject = JsonUtil.convertTo(JsonNode.class, deviceMetadata);
-        ProcessingReport report = schemas.get(METADATA_SCHEMA_JSON).validate(metadataObject);
-        parseMetadataValidateProcessingReport(report);
-        extraValidation(deviceMetadata);
-      } catch (ProcessingException | ValidationException e) {
-        exceptionMap.put(EXCEPTION_VALIDATING, e);
-      }
-    }
-
-    return deviceMetadata;
   }
 
   private void extraValidation(Metadata metadataObject) {
@@ -312,11 +288,23 @@ class LocalDevice {
   }
 
   private Metadata readMetadata() {
-    Metadata deviceMetadata = readMetadataWithValidation(validateMetadata);
-    if (deviceMetadata instanceof MetadataException metadataException) {
-      exceptionMap.put(EXCEPTION_CONVERTING, metadataException.exception);
+    try {
+      Metadata deviceMetadata = siteModel.loadDeviceMetadata(deviceId);
+      if (deviceMetadata instanceof MetadataException metadataException) {
+        throw new RuntimeException("Loading " + metadataException.file.getAbsolutePath(),
+            metadataException.exception);
+      }
+      baseVersion = (deviceMetadata.upgraded_from == null
+          ? deviceMetadata.version : deviceMetadata.upgraded_from);
+
+      List<String> proxyIds = catchToNull(() -> deviceMetadata.gateway.proxy_ids);
+      ifNotNullThen(proxyIds,
+          ids -> ifTrueThen(ids.isEmpty(), () -> deviceMetadata.gateway.proxy_ids = null));
+      return deviceMetadata;
+    } catch (Exception exception) {
+      exceptionMap.put(EXCEPTION_LOADING, exception);
+      return null;
     }
-    return deviceMetadata;
   }
 
   private Metadata readNormalized() {
@@ -448,11 +436,11 @@ class LocalDevice {
   }
 
   boolean isGateway() {
-    return config.isGateway();
+    return config != null && config.isGateway();
   }
 
   boolean isProxied() {
-    return config.isProxied();
+    return config != null && config.isProxied();
   }
 
   boolean isDirectConnect() {
