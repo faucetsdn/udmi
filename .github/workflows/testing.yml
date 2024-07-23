@@ -117,7 +117,7 @@ jobs:
         run: |
           revhash=$(git log -n 1 --pretty=format:"%h" udmis)
           IMAGE_TAG=U${revhash:0:9}
-          PUSH_REPO=$PUSH_REGISTRY/${{ github.repository }}
+          PUSH_REPO=$PUSH_REGISTRY/${IMAGE_NAME,,}
           PUSH_TAG=$PUSH_REPO:udmis-$IMAGE_TAG
           echo PUSH_TAG=$PUSH_TAG >> $GITHUB_ENV
           bin/container udmis prep --no-check $PUSH_TAG
