@@ -6,12 +6,19 @@ ETCD_LOG=/tmp/etcd.log
 
 echo pwd: $(pwd)
 
+old_pid=$(ps ax | fgrep /tmp/etcd/etcd | fgrep listen | awk '{print $1}') || true
+if [[ -n $old_pid ]]; then
+    echo Killing existing etcd pid $old_pid...
+    kill $old_pid
+fi
+
 udmis/bin/etcdctl version || ../bin/etcdctl version
 
 $BINDIR/etcd -version
 
 $BINDIR/etcd -listen-client-urls=http://0.0.0.0:2379 \
              -advertise-client-urls=http://127.0.0.1:2379 \
+             --data-dir var/etcd \
              > $ETCD_LOG 2>&1 &
 ETCD_PID=$!
 
