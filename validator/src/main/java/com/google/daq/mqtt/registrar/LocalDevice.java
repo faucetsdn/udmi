@@ -22,6 +22,7 @@ import static com.google.udmi.util.JsonUtil.unquoteJson;
 import static com.google.udmi.util.SiteModel.METADATA_JSON;
 import static com.google.udmi.util.SiteModel.NORMALIZED_JSON;
 import static java.lang.String.format;
+import static java.util.Optional.ofNullable;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
@@ -65,6 +66,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -172,7 +174,7 @@ class LocalDevice {
   private final Map<String, JsonSchema> schemas;
   private final File deviceDir;
   private final File outDir;
-  private final Metadata metadata;
+  private Metadata metadata;
   private final ExceptionMap exceptionMap;
   private final String generation;
   private final List<Credential> deviceCredentials = new ArrayList<>();
@@ -204,13 +206,16 @@ class LocalDevice {
       exceptionMap = new ExceptionMap("Exceptions for " + deviceId);
       deviceDir = siteModel.getDeviceDir(deviceId);
       outDir = new File(deviceDir, OUT_DIR);
-      prepareOutDir();
-      metadata = readMetadata();
-      config = configFrom(metadata, deviceId, siteModel);
       exceptionManager = new DeviceExceptionManager(new File(siteModel.getSitePath()));
     } catch (Exception e) {
       throw new RuntimeException("While loading local device " + deviceId, e);
     }
+  }
+
+  public void initialize() {
+    prepareOutDir();
+    metadata = ofNullable(metadata).orElseGet(this::readMetadata);
+    config = configFrom(metadata, deviceId, siteModel);
   }
 
   public static void parseMetadataValidateProcessingReport(ProcessingReport report)
@@ -780,8 +785,7 @@ class LocalDevice {
   }
 
   public LocalDevice duplicate(String newId) {
-    LocalDevice device = new LocalDevice(siteModel, newId, schemas, generation, validateMetadata);
-    return device;
+    return new LocalDevice(siteModel, newId, schemas, generation, validateMetadata);
   }
 
   public enum DeviceStatus {

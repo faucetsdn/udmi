@@ -1115,6 +1115,7 @@ public class Registrar {
           doValidate);
 
       try {
+        localDevice.initialize();
         localDevice.loadCredentials();
       } catch (Exception e) {
         localDevice.captureError(LocalDevice.EXCEPTION_CREDENTIALS, e);
