@@ -126,7 +126,6 @@ public class Envelope {
         DISCOVERY("discovery"),
         MAPPING("mapping"),
         SYSTEM("system"),
-        SITE("site"),
         GATEWAY("gateway"),
         SWARM("swarm"),
         LOCALNET("localnet"),
