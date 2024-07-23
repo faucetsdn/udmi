@@ -185,7 +185,7 @@ class LocalDevice {
   private String baseVersion;
   private Date lastActive;
   private boolean blocked;
-  
+
   LocalDevice(
       SiteModel siteModel, String deviceId, Map<String, JsonSchema> schemas,
       String generation, boolean validateMetadata) {
@@ -226,7 +226,7 @@ class LocalDevice {
 
   private void prepareOutDir() {
     if (!outDir.exists()) {
-      outDir.mkdir();
+      outDir.mkdirs();
     }
     new File(outDir, EXCEPTION_LOG_FILE).delete();
   }
@@ -779,13 +779,7 @@ class LocalDevice {
 
   public LocalDevice duplicate(String newId) {
     LocalDevice device = new LocalDevice(siteModel, newId, schemas, generation, validateMetadata);
-    device.ensureDeviceDir();
     return device;
-  }
-
-  private void ensureDeviceDir() {
-    File deviceDir = siteModel.getDeviceDir(deviceId);
-    deviceDir.mkdir();
   }
 
   public enum DeviceStatus {

@@ -44,10 +44,9 @@ import udmi.schema.CloudModel;
 public class RegistrarTest {
 
   public static final String REGISTRY_SUFFIX = "%X";
-  private static final String BAD_DEVICE_ID = "bacnet_/291324";
-
-  private static final Set<String> ALLOWED_DEVICE_IDS = ImmutableSet.of("bacnet_29314", "bacnet-29138", "BACnet.213214");
-  private static final Set<String> ILLEGAL_DEVICE_IDS = ImmutableSet.of("bacnet/293124", "AHU-2523");
+  private static final Set<String> ALLOWED_DEVICE_IDS = ImmutableSet.of("bacnet_29314",
+      "bacnet-29138", "BACnet.213214", "AHU-0001");
+  private static final Set<String> ILLEGAL_DEVICE_IDS = ImmutableSet.of("bacnet/293124");
 
   @SuppressWarnings("unchecked")
   private static double getValidatingSize(Map<String, Object> summary) {
@@ -138,6 +137,7 @@ public class RegistrarTest {
         });
         okAddedIds.add(deviceId);
       } catch (Exception e) {
+        e.printStackTrace();
         System.err.println("Failed: " + deviceId + " because " + friendlyStackTrace(e));
       }
     });
