@@ -37,6 +37,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.Test;
 import udmi.schema.CloudModel;
+import udmi.schema.Metadata;
+import udmi.schema.PointPointsetModel;
 
 /**
  * Test suite for basic registrar functionality.
@@ -47,6 +49,10 @@ public class RegistrarTest {
   private static final Set<String> ALLOWED_DEVICE_IDS = ImmutableSet.of("bacnet_29314",
       "bacnet-29138", "BACnet.213214", "AHU-0001");
   private static final Set<String> ILLEGAL_DEVICE_IDS = ImmutableSet.of("bacnet/293124");
+  private static final Set<String> ALLOWED_POINT_NAMES = ImmutableSet.of("kWh", "Current",
+      "analogValue_13", "analogValue-13", "AV.13", "Electric_L_OrchesTra");
+  private static final Set<String> ILLEGAL_POINT_NAMES = ImmutableSet.of("av/13", "av%13", "23,11",
+      "IB#12");
 
   @SuppressWarnings("unchecked")
   private static double getValidatingSize(Map<String, Object> summary) {
@@ -137,11 +143,31 @@ public class RegistrarTest {
         });
         okAddedIds.add(deviceId);
       } catch (Exception e) {
-        e.printStackTrace();
         System.err.println("Failed: " + deviceId + " because " + friendlyStackTrace(e));
       }
     });
     assertEquals("set of allowed device ids", ALLOWED_DEVICE_IDS, okAddedIds);
+  }
+
+  @Test
+  public void checkAllowedPointNames() {
+    Set<String> okAddedNames = new HashSet<>();
+    Set<String> TRIAL_POINT_NAMES = Sets.union(ILLEGAL_POINT_NAMES, ALLOWED_POINT_NAMES);
+    TRIAL_POINT_NAMES.forEach(pointName -> {
+      try {
+        Registrar registrar = getRegistrar(ImmutableList.of());
+        registrar.execute(() -> {
+          Map<String, LocalDevice> localDevices = registrar.getLocalDevices();
+          Metadata metadata = localDevices.get(DEVICE_ID).getMetadata();
+          metadata.pointset.points.put(pointName, new PointPointsetModel());
+        });
+        okAddedNames.add(pointName);
+      } catch (Exception e) {
+        e.printStackTrace();
+        System.err.println("Failed: " + pointName + " because " + friendlyStackTrace(e));
+      }
+    });
+    assertEquals("set of allowed point names", ALLOWED_POINT_NAMES, okAddedNames);
   }
 
   @Test

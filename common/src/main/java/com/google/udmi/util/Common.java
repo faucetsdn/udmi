@@ -53,10 +53,8 @@ public abstract class Common {
   public static final String CONFIG_CATEGORY = "config";
   public static final String COMMANDS_CATEGORY = "commands";
   public static final String CATEGORY_PROPERTY_KEY = "category";
-  public static final Pattern POINT_NAME_ALLOWABLE_PATTERN =
-      Pattern.compile("^[a-z][a-z0-9]*(_[a-z0-9]+)*$");
-  public static final Pattern DEVICE_ID_ALLOWABLE_PATTERN =
-      Pattern.compile("^[-_.a-zA-Z0-9]+$");
+  public static final Pattern DEVICE_ID_ALLOWABLE = Pattern.compile("^[-_.a-zA-Z0-9]+$");
+  public static final Pattern POINT_NAME_ALLOWABLE = DEVICE_ID_ALLOWABLE;
 
   private static final String PREFIX_SEPARATOR = "~";
   private static final String UDMI_VERSION_ENV = "UDMI_TOOLS";

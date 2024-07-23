@@ -6,8 +6,8 @@ import static com.google.daq.mqtt.registrar.Registrar.DEVICE_ERRORS_MAP;
 import static com.google.daq.mqtt.registrar.Registrar.ENVELOPE_SCHEMA_JSON;
 import static com.google.daq.mqtt.registrar.Registrar.METADATA_SCHEMA_JSON;
 import static com.google.daq.mqtt.util.ConfigManager.configFrom;
-import static com.google.udmi.util.Common.DEVICE_ID_ALLOWABLE_PATTERN;
-import static com.google.udmi.util.Common.POINT_NAME_ALLOWABLE_PATTERN;
+import static com.google.udmi.util.Common.DEVICE_ID_ALLOWABLE;
+import static com.google.udmi.util.Common.POINT_NAME_ALLOWABLE;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_STRICT;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
@@ -181,7 +181,7 @@ class LocalDevice {
 
   private String deviceNumId;
 
-  private CloudDeviceSettings settings;
+  private CloudDe,viceSettings settings;
   private String baseVersion;
   private Date lastActive;
   private boolean blocked;
@@ -195,9 +195,9 @@ class LocalDevice {
       this.generation = generation;
       this.siteModel = siteModel;
       this.validateMetadata = validateMetadata;
-      if (!DEVICE_ID_ALLOWABLE_PATTERN.matcher(deviceId).matches()) {
+      if (!DEVICE_ID_ALLOWABLE.matcher(deviceId).matches()) {
         throw new ValidationError(format("Device id does not match allowable pattern %s",
-            DEVICE_ID_ALLOWABLE_PATTERN.pattern()));
+            DEVICE_ID_ALLOWABLE.pattern()));
       }
       exceptionMap = new ExceptionMap("Exceptions for " + deviceId);
       deviceDir = siteModel.getDeviceDir(deviceId);
@@ -296,11 +296,11 @@ class LocalDevice {
 
   private void extraValidation(Metadata metadataObject) {
     Set<String> pointNameErrors = metadataObject.pointset.points.keySet().stream()
-        .filter(key -> !POINT_NAME_ALLOWABLE_PATTERN.matcher(key).matches()).collect(
+        .filter(key -> !POINT_NAME_ALLOWABLE.matcher(key).matches()).collect(
             Collectors.toSet());
     if (!pointNameErrors.isEmpty()) {
       throw new ValidationError(format("Found point names not matching allowed pattern %s: %s",
-          POINT_NAME_ALLOWABLE_PATTERN.pattern(), CSV_JOINER.join(pointNameErrors)));
+          POINT_NAME_ALLOWABLE.pattern(), CSV_JOINER.join(pointNameErrors)));
     }
   }
 
