@@ -58,6 +58,13 @@ for subset in $subsets; do
     mkdir -p $devicesdir
     devices=$(cd $devicesdir; ls -d *)
 
+    # Clean up some stuff that might be left over from unit testing.
+    for device in $devices; do
+        if [[ ! -f $devicesdir/$device/metadata.json ]]; then
+            rm -rf $devicesdir/$device
+        fi
+    done
+
     # Test the direct config-file variant of registrar.
     bin/registrar $site_dir/cloud_iot_config.json
 
