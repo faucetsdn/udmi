@@ -55,6 +55,7 @@
         "discovery",
         "mapping",
         "system",
+        "site",
         "gateway",
         "swarm",
         "localnet",

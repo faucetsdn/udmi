@@ -50,7 +50,6 @@ import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.PubSubPusher;
-import com.google.protobuf.MapEntry;
 import com.google.udmi.util.Common;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
@@ -92,7 +91,6 @@ import udmi.schema.CloudModel.Resource_type;
 import udmi.schema.Credential;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.ExecutionConfiguration;
-import udmi.schema.IotAccess.IotProvider;
 import udmi.schema.Metadata;
 import udmi.schema.SetupUdmiConfig;
 import udmi.schema.SiteMetadata;
@@ -310,7 +308,8 @@ public class Registrar {
   }
 
   private void processSiteMetadata() {
-    SiteMetadata siteMetadata = siteModel.loadSiteMetadata();
+    SiteMetadata siteMetadata = ofNullable(siteModel.loadSiteMetadata()).orElseGet(
+        SiteMetadata::new);
 
     if (siteMetadata != null && updateCloudIoT) {
       cloudIotManager.updateRegistry(siteMetadata);
@@ -329,7 +328,6 @@ public class Registrar {
       }
     }
   }
-
 
 
   private void createRegistrySuffix(String suffix) {

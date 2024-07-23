@@ -234,7 +234,7 @@ public class ReflectProcessor extends ProcessorBase {
 
   private CloudModel reflectModel(Envelope attributes, CloudModel request) {
     ifNotNullThen(extractModel(request), model -> publish(attributes, model));
-    if (request.resource_type != null && request.resource_type == REGISTRY) {
+    if (request.resource_type == REGISTRY) {
       return iotAccess.modelRegistry(attributes.deviceRegistryId, attributes.deviceId, request);
     } else {
       return iotAccess.modelDevice(attributes.deviceRegistryId, attributes.deviceId, request);
