@@ -7,7 +7,6 @@ gcp_reflect_key.pkcs8
 workspace.xml
 codegen/
 .DS_Store
-default.etcd/
 tmp/
 var/
 .gradle/
