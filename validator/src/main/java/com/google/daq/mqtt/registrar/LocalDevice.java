@@ -214,7 +214,7 @@ class LocalDevice {
 
   public void initialize() {
     prepareOutDir();
-    ifTrueThen(validateMetadata, this::validateMetadata);
+    ifTrueThen(validateMetadata && metadata != null, this::validateMetadata);
     config = configFrom(metadata, deviceId, siteModel);
   }
 
@@ -268,7 +268,7 @@ class LocalDevice {
 
   private void validateMetadata() {
     try {
-      extraValidation(metadata);
+      extraValidation(metadata);  // Do this first so it will always be called.
       JsonNode metadataObject = JsonUtil.convertTo(JsonNode.class, metadata);
       ProcessingReport report = schemas.get(METADATA_SCHEMA_JSON).validate(metadataObject);
       parseMetadataValidateProcessingReport(report);
@@ -667,7 +667,6 @@ class LocalDevice {
       try (OutputStream outputStream = Files.newOutputStream(configFile.toPath())) {
         outputStream.write(config.getBytes());
       } catch (Exception e) {
-        e.printStackTrace();
         throw new RuntimeException("While writing " + configFile.getAbsolutePath(), e);
       }
     }
