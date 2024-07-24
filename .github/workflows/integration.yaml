@@ -11,6 +11,7 @@ concurrency:
   group: it-${{ github.repository }}
   cancel-in-progress: true
 
+jobs:
   images:
     name: Pre-test Setup
     runs-on: ubuntu-latest
