@@ -6,6 +6,7 @@
 - [pagent](pagent.md) - a tool for automated cloud provisioning of devices (GCP)
 - [pubber](pubber.md) - a sample implementation of a client-side 'device' that implements the UDMI schema
 - [registrar](registrar.md) - a utility to register and updates devices in Cloud IoT Core (GCP)
+- [reset_config](reset_config.md) - a utility to send a config messages to devices
 - [sequencer](sequencer.md) - a utility to validate device [sequences](../specs/sequences/) (GCP)
 - [validator](validator.md) - a utility for validating messages (GCP)
 - [gittools](gittools.md) - collection of utilities for working with git branches
