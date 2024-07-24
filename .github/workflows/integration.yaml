@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   images:
-    name: Pre-test Setup
+    name: Build Docker Images
     runs-on: ubuntu-latest
     permissions:
       contents: read
