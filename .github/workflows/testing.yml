@@ -61,24 +61,9 @@ jobs:
           config_path: .spellcheck.yml
           task_name: Markdown
 
-  pretest:
-    name: Pre-test Setup
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    timeout-minutes: 5
-    if: vars.TARGET_PROJECT != ''
-    steps:
-      - name: sanity check
-        run: |
-          [[ -n $UDMI_ALT_REGISTRY ]]
-          [[ -n $TARGET_PROJECT ]]
-
   sequencer:
     name: Sequencer Tests
     runs-on: ubuntu-latest
-    needs: pretest
     timeout-minutes: 20
     strategy:
       fail-fast: false
@@ -142,7 +127,6 @@ jobs:
   baseline:
     name: Baseline Tests
     runs-on: ubuntu-latest
-    needs: pretest
     timeout-minutes: 15
     if: vars.TARGET_PROJECT != ''
     env:
@@ -236,7 +220,7 @@ jobs:
   redirect:
     name: Endpoint Redirection
     runs-on: ubuntu-latest
-    needs: [ pretest, baseline ]
+    needs: baseline
     timeout-minutes: 15
     if: vars.TARGET_PROJECT != ''
     env:
