@@ -492,6 +492,14 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     }
   }
 
+  private CloudModel getReply(String registryId, String deviceId, CloudModel request,
+      String numId) {
+    CloudModel reply = new CloudModel();
+    reply.operation = requireNonNull(request.operation, "missing operation");
+    reply.num_id = requireNonNull(numId, "missing num_id");
+    return reply;
+  }
+
   @Override
   public CloudModel modelRegistry(String registryId, String deviceId, CloudModel cloudModel) {
     Operation operation = cloudModel.operation;
@@ -499,7 +507,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     try {
       if (operation == UPDATE) {
         // TODO: This should update the metadata of the registry.
-        return cloudModel;
+        return getReply(registryId, deviceId, cloudModel, "registry");
       } else if (operation == CREATE) {
         if (deviceId != null && !deviceId.isEmpty()) {
           CloudModel deviceModel = deepCopy(cloudModel);
