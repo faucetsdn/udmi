@@ -6,6 +6,9 @@ import static com.google.daq.mqtt.registrar.Registrar.DEVICE_ERRORS_MAP;
 import static com.google.daq.mqtt.registrar.Registrar.ENVELOPE_SCHEMA_JSON;
 import static com.google.daq.mqtt.registrar.Registrar.METADATA_SCHEMA_JSON;
 import static com.google.daq.mqtt.util.ConfigManager.configFrom;
+import static com.google.udmi.util.Common.DEVICE_ID_ALLOWABLE;
+import static com.google.udmi.util.Common.POINT_NAME_ALLOWABLE;
+import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_STRICT;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.compressJsonString;
@@ -19,6 +22,7 @@ import static com.google.udmi.util.JsonUtil.unquoteJson;
 import static com.google.udmi.util.SiteModel.METADATA_JSON;
 import static com.google.udmi.util.SiteModel.NORMALIZED_JSON;
 import static java.lang.String.format;
+import static java.util.Optional.ofNullable;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
@@ -36,6 +40,7 @@ import com.google.daq.mqtt.util.ConfigManager;
 import com.google.daq.mqtt.util.DeviceExceptionManager;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
+import com.google.daq.mqtt.util.ValidationError;
 import com.google.daq.mqtt.util.ValidationException;
 import com.google.daq.mqtt.validator.Validator;
 import com.google.udmi.util.JsonUtil;
@@ -56,6 +61,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -64,6 +70,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import org.apache.commons.io.IOUtils;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Auth_type;
@@ -73,6 +80,7 @@ import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
 import udmi.schema.Metadata;
+import udmi.schema.PointPointsetModel;
 
 class LocalDevice {
 
@@ -165,7 +173,7 @@ class LocalDevice {
   private final Map<String, JsonSchema> schemas;
   private final File deviceDir;
   private final File outDir;
-  private final Metadata metadata;
+  private Metadata metadata;
   private final ExceptionMap exceptionMap;
   private final String generation;
   private final List<Credential> deviceCredentials = new ArrayList<>();
@@ -180,7 +188,7 @@ class LocalDevice {
   private String baseVersion;
   private Date lastActive;
   private boolean blocked;
-  
+
   LocalDevice(
       SiteModel siteModel, String deviceId, Map<String, JsonSchema> schemas,
       String generation, boolean validateMetadata) {
@@ -190,16 +198,24 @@ class LocalDevice {
       this.generation = generation;
       this.siteModel = siteModel;
       this.validateMetadata = validateMetadata;
+      if (!DEVICE_ID_ALLOWABLE.matcher(deviceId).matches()) {
+        throw new ValidationError(format("Device id does not match allowable pattern %s",
+            DEVICE_ID_ALLOWABLE.pattern()));
+      }
       exceptionMap = new ExceptionMap("Exceptions for " + deviceId);
       deviceDir = siteModel.getDeviceDir(deviceId);
       outDir = new File(deviceDir, OUT_DIR);
-      prepareOutDir();
-      metadata = readMetadata();
-      config = configFrom(metadata, deviceId, siteModel);
       exceptionManager = new DeviceExceptionManager(new File(siteModel.getSitePath()));
+      metadata = readMetadata();
     } catch (Exception e) {
       throw new RuntimeException("While loading local device " + deviceId, e);
     }
+  }
+
+  public void initialize() {
+    prepareOutDir();
+    ifTrueThen(validateMetadata && metadata != null, this::validateMetadata);
+    config = configFrom(metadata, deviceId, siteModel);
   }
 
   public static void parseMetadataValidateProcessingReport(ProcessingReport report)
@@ -217,7 +233,7 @@ class LocalDevice {
 
   private void prepareOutDir() {
     if (!outDir.exists()) {
-      outDir.mkdir();
+      outDir.mkdirs();
     }
     new File(outDir, EXCEPTION_LOG_FILE).delete();
   }
@@ -250,11 +266,30 @@ class LocalDevice {
     exceptionMap.throwIfNotEmpty();
   }
 
-  private Metadata readMetadataWithValidation(boolean validate) {
-    final Metadata deviceMetadata;
-
+  private void validateMetadata() {
     try {
-      deviceMetadata = siteModel.loadDeviceMetadata(deviceId);
+      extraValidation(metadata);  // Do this first so it will always be called.
+      JsonNode metadataObject = JsonUtil.convertTo(JsonNode.class, metadata);
+      ProcessingReport report = schemas.get(METADATA_SCHEMA_JSON).validate(metadataObject);
+      parseMetadataValidateProcessingReport(report);
+    } catch (ProcessingException | ValidationException e) {
+      exceptionMap.put(EXCEPTION_VALIDATING, e);
+    }
+  }
+
+  private void extraValidation(Metadata metadataObject) {
+    HashMap<String, PointPointsetModel> points = catchToNull(() -> metadataObject.pointset.points);
+    Set<String> pointNameErrors = ifNotNullGet(points, p -> p.keySet().stream()
+        .filter(key -> !POINT_NAME_ALLOWABLE.matcher(key).matches()).collect(Collectors.toSet()));
+    if (pointNameErrors != null && !pointNameErrors.isEmpty()) {
+      throw new ValidationError(format("Found point names not matching allowed pattern %s: %s",
+          POINT_NAME_ALLOWABLE.pattern(), CSV_JOINER.join(pointNameErrors)));
+    }
+  }
+
+  private Metadata readMetadata() {
+    try {
+      Metadata deviceMetadata = siteModel.loadDeviceMetadata(deviceId);
       if (deviceMetadata instanceof MetadataException metadataException) {
         throw new RuntimeException("Loading " + metadataException.file.getAbsolutePath(),
             metadataException.exception);
@@ -265,31 +300,11 @@ class LocalDevice {
       List<String> proxyIds = catchToNull(() -> deviceMetadata.gateway.proxy_ids);
       ifNotNullThen(proxyIds,
           ids -> ifTrueThen(ids.isEmpty(), () -> deviceMetadata.gateway.proxy_ids = null));
-
+      return deviceMetadata;
     } catch (Exception exception) {
       exceptionMap.put(EXCEPTION_LOADING, exception);
       return null;
     }
-
-    if (validate) {
-      try {
-        JsonNode metadataObject = JsonUtil.convertTo(JsonNode.class, deviceMetadata);
-        ProcessingReport report = schemas.get(METADATA_SCHEMA_JSON).validate(metadataObject);
-        parseMetadataValidateProcessingReport(report);
-      } catch (ProcessingException | ValidationException e) {
-        exceptionMap.put(EXCEPTION_VALIDATING, e);
-      }
-    }
-
-    return deviceMetadata;
-  }
-
-  private Metadata readMetadata() {
-    Metadata deviceMetadata = readMetadataWithValidation(validateMetadata);
-    if (deviceMetadata instanceof MetadataException metadataException) {
-      exceptionMap.put(EXCEPTION_CONVERTING, metadataException.exception);
-    }
-    return deviceMetadata;
   }
 
   private Metadata readNormalized() {
@@ -421,11 +436,11 @@ class LocalDevice {
   }
 
   boolean isGateway() {
-    return config.isGateway();
+    return config != null && config.isGateway();
   }
 
   boolean isProxied() {
-    return config.isProxied();
+    return config != null && config.isProxied();
   }
 
   boolean isDirectConnect() {
@@ -652,7 +667,6 @@ class LocalDevice {
       try (OutputStream outputStream = Files.newOutputStream(configFile.toPath())) {
         outputStream.write(config.getBytes());
       } catch (Exception e) {
-        e.printStackTrace();
         throw new RuntimeException("While writing " + configFile.getAbsolutePath(), e);
       }
     }
@@ -755,6 +769,10 @@ class LocalDevice {
 
   public void setBlocked(boolean blocked) {
     this.blocked = blocked;
+  }
+
+  public LocalDevice duplicate(String newId) {
+    return new LocalDevice(siteModel, newId, schemas, generation, validateMetadata);
   }
 
   public enum DeviceStatus {

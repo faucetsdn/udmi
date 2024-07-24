@@ -36,7 +36,7 @@ it works), so see the next section for some sample diagnostic commands. It will 
 docker run -d --rm --net udminet --name udmis -p 8883:8883 \
     -v $(realpath $site_model):/root/site \
     -v $PWD/var/tmp:/tmp \
-    -v $PWD/var/etcd:/root/udmi/default.etcd \
+    -v $PWD/var/etcd:/root/udmi/var/etcd \
     -v $PWD/var/mosquitto:/etc/mosquitto \
     ghcr.io/faucetsdn/udmi:udmis-latest udmi/bin/start_local block site/ //mqtt/udmis
 ```

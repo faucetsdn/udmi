@@ -535,8 +535,8 @@ public class Validator {
     JsonUtil.writeFile(udmiConfig, new File(outBaseDir, UDMI_CONFIG_JSON_FILE));
   }
 
-  protected synchronized void validateMessage(MessageBundle nullable) {
-    ifNotNullThen(nullable, bundle -> {
+  protected synchronized void validateMessage(MessageBundle message) {
+    ifNotNullThen(message, bundle -> {
       Object object = ofNullable((Object) bundle.message).orElse(bundle.rawMessage);
       if (!handleSystemMessage(bundle.attributes, object)) {
         validateMessage(object, bundle.attributes);

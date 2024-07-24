@@ -1,6 +1,8 @@
 package com.google.daq.mqtt.registrar;
 
 import static com.google.daq.mqtt.TestCommon.ALT_REGISTRY;
+import static com.google.daq.mqtt.TestCommon.DEVICE_ID;
+import static com.google.daq.mqtt.TestCommon.MOCK_SITE;
 import static com.google.daq.mqtt.TestCommon.REGISTRY_ID;
 import static com.google.daq.mqtt.TestCommon.SITE_DIR;
 import static com.google.daq.mqtt.TestCommon.SITE_REGION;
@@ -11,6 +13,7 @@ import static com.google.daq.mqtt.util.IotMockProvider.ActionType.CREATE_DEVICE_
 import static com.google.daq.mqtt.util.IotMockProvider.ActionType.DELETE_DEVICE_ACTION;
 import static com.google.daq.mqtt.util.IotMockProvider.ActionType.UPDATE_DEVICE_ACTION;
 import static com.google.daq.mqtt.util.IotMockProvider.MOCK_DEVICE_ID;
+import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.SiteModel.MOCK_PROJECT;
@@ -21,15 +24,21 @@ import static org.junit.Assert.fail;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
+import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.IotMockProvider;
 import com.google.daq.mqtt.util.IotMockProvider.ActionType;
 import com.google.daq.mqtt.util.IotMockProvider.MockAction;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.Test;
 import udmi.schema.CloudModel;
+import udmi.schema.Metadata;
+import udmi.schema.PointPointsetModel;
 
 /**
  * Test suite for basic registrar functionality.
@@ -37,6 +46,13 @@ import udmi.schema.CloudModel;
 public class RegistrarTest {
 
   public static final String REGISTRY_SUFFIX = "%X";
+  private static final Set<String> ALLOWED_DEVICE_IDS = ImmutableSet.of("bacnet_29314",
+      "bacnet-29138", "BACnet.213214", "AHU-0001");
+  private static final Set<String> ILLEGAL_DEVICE_IDS = ImmutableSet.of("bacnet/293124");
+  private static final Set<String> ALLOWED_POINT_NAMES = ImmutableSet.of("kWh", "Current",
+      "analogValue_13", "analogValue-13", "AV.13", "Electric_L_OrchesTra");
+  private static final Set<String> ILLEGAL_POINT_NAMES = ImmutableSet.of("av/13", "av%13", "23,11",
+      "IB#12");
 
   @SuppressWarnings("unchecked")
   private static double getValidatingSize(Map<String, Object> summary) {
@@ -63,7 +79,7 @@ public class RegistrarTest {
   private Registrar getRegistrar(List<String> args) {
     try {
       List<String> registrarArgs = new ArrayList<>();
-      registrarArgs.add(SITE_DIR);
+      registrarArgs.add(MOCK_SITE);
       registrarArgs.add(MOCK_PROJECT);
       ifNotNullThen(args, () -> registrarArgs.addAll(args));
       return new Registrar().processArgs(registrarArgs);
@@ -112,6 +128,46 @@ public class RegistrarTest {
         .filter(client -> !client.equals(mockClientString))
         .collect(Collectors.toList());
     assertEquals("clients not matching " + mockClientString, ImmutableList.of(), mismatchItems);
+  }
+
+  @Test
+  public void checkAllowedDeviceIds() {
+    Set<String> okAddedIds = new HashSet<>();
+    Set<String> trialDeviceIds = Sets.union(ILLEGAL_DEVICE_IDS, ALLOWED_DEVICE_IDS);
+    trialDeviceIds.forEach(deviceId -> {
+      try {
+        Registrar registrar = getRegistrar(ImmutableList.of());
+        registrar.execute(() -> {
+          Map<String, LocalDevice> localDevices = registrar.getLocalDevices();
+          localDevices.put(deviceId, localDevices.get(DEVICE_ID).duplicate(deviceId));
+        });
+        okAddedIds.add(deviceId); // Record devices that don't throw an exception.
+      } catch (Exception e) {
+        System.err.println("Failed: " + deviceId + " because " + friendlyStackTrace(e));
+      }
+    });
+    assertEquals("set of allowed device ids", ALLOWED_DEVICE_IDS, okAddedIds);
+  }
+
+  @Test
+  public void checkAllowedPointNames() {
+    Set<String> okAddedNames = new HashSet<>();
+    Set<String> trialPointNames = Sets.union(ILLEGAL_POINT_NAMES, ALLOWED_POINT_NAMES);
+    trialPointNames.forEach(pointName -> {
+      try {
+        Registrar registrar = getRegistrar(ImmutableList.of());
+        registrar.execute(() -> {
+          Map<String, LocalDevice> localDevices = registrar.getLocalDevices();
+          Metadata metadata = localDevices.get(DEVICE_ID).getMetadata();
+          metadata.pointset.points.put(pointName, new PointPointsetModel());
+        });
+        okAddedNames.add(pointName); // Record names that don't throw an exception.
+      } catch (Exception e) {
+        e.printStackTrace();
+        System.err.println("Failed: " + pointName + " because " + friendlyStackTrace(e));
+      }
+    });
+    assertEquals("set of allowed point names", ALLOWED_POINT_NAMES, okAddedNames);
   }
 
   @Test

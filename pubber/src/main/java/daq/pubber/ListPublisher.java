@@ -3,7 +3,6 @@ package daq.pubber;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 
-import com.google.api.client.util.ArrayMap;
 import com.google.udmi.util.JsonUtil;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
@@ -16,7 +15,6 @@ import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import udmi.schema.Config;
 import udmi.schema.PubberConfiguration;
-import udmi.schema.SystemConfig;
 
 /**
  * Publishes message to an in-memory list.
@@ -78,11 +76,18 @@ public class ListPublisher implements Publisher {
 
   @Override
   public boolean isActive() {
-    return false;
+    return !publisherExecutor.isShutdown();
   }
 
   @Override
   public void close() {
 
+  }
+
+  @Override
+  public void shutdown() {
+    if (isActive()) {
+      publisherExecutor.shutdown();
+    }
   }
 }

@@ -37,4 +37,6 @@ interface Publisher {
   boolean isActive();
 
   void close();
+
+  void shutdown();
 }
