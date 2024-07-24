@@ -2,10 +2,8 @@ FROM alpine:latest
 
 WORKDIR /root
 
-RUN apk add openjdk17 bash sudo gcompat curl jq git python3 moreutils openssl
-RUN apk add openjdk17 bash sudo gcompat curl jq git mosquitto mosquitto-clients openssl
-
-RUN curl -sSL https://sdk.cloud.google.com | bash
+RUN apk add --no-cache openjdk17 bash sudo gcompat curl jq git python3 moreutils mosquitto mosquitto-clients openssl \
+    && curl -sSL https://sdk.cloud.google.com | bash
 
 ENV PATH=$PATH:/root/google-cloud-sdk/bin
 
