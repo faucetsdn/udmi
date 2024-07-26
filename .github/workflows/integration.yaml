@@ -59,7 +59,7 @@ jobs:
           bin/container $CONTAINER prep --no-check $PUSH_TAG
           echo Will push built container as $PUSH_TAG | tee -a $GITHUB_STEP_SUMMARY
       - name: Build container image
-        run: bin/container $CONTAINER build --no-check
+        run: bin/container $CONTAINER push --no-check $PUSH_TAG
       - name: Build and push docker image
         if: ${{ github.event_name == 'push' }}
         uses: docker/build-push-action@v5
