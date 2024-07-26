@@ -63,15 +63,7 @@ jobs:
           bin/clone_model
           $CONTAINER/bin/build check
           bin/container $CONTAINER push --no-check $PUSH_TAG
-      - name: Build and push docker image
-        if: ${{ github.event_name == 'push' }}
-        uses: docker/build-push-action@v5
-        with:
-          file: ${{ env.CONTAINER }}/Dockerfile.${{ env.CONTAINER }}
-          context: udmis
-          push: true
-          tags: ${{ env.PUSH_TAG }},${{ env.TAG_BASE }}-latest,${{ env.TAG_BASE }}-${{ github.ref_name }}
-      - name: Docker images
+      - name: Docker images summary
         run: |
           docker images
           echo
