@@ -47,20 +47,25 @@ jobs:
       - name: Setup udmis container build
         run: |
           revhash=$(git log -n 1 --pretty=format:"%h" $CONTAINER)
-          IMAGE_TAG=U${revhash:0:9}
+          IMAGE_HASH=U${revhash:0:9}
           PUSH_REPO=$PUSH_REGISTRY/${IMAGE_NAME,,}
-          PUSH_TAG=$PUSH_REPO:$CONTAINER-$IMAGE_TAG
+
+          TAG_BASE=$PUSH_REPO:$CONTAINER
+          echo TAG_BASE=$TAG_BASE >> $GITHUB_ENV
+
+          PUSH_TAG=${TAG_BASE}-$IMAGE_HASH
           echo PUSH_TAG=$PUSH_TAG >> $GITHUB_ENV
+
           bin/container $CONTAINER prep --no-check $PUSH_TAG
           echo Will push built container as $PUSH_TAG | tee -a $GITHUB_STEP_SUMMARY
       - name: Build and push docker image
         if: ${{ github.event_name == 'push' }}
         uses: docker/build-push-action@v5
         with:
-          file: ${{ matrix.container }}/Dockerfile.${{ env.CONTAINER }}
+          file: ${{ env.CONTAINER }}/Dockerfile.${{ env.CONTAINER }}
           context: udmis
           push: true
-          tags: ${{ env.PUSH_TAG }}
+          tags: ${{ env.PUSH_TAG }},${{ env.TAG_BASE }}-latest,${{ env.TAG_BASE }}-${{ github.ref_name }}
   udmif:
     name: UDMIF unit tests
     runs-on: ubuntu-latest
