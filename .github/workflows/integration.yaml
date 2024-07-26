@@ -44,25 +44,26 @@ jobs:
           registry: ${{ env.PUSH_REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Setup udmis container build
+      - name: Container build and push
         run: |
           revhash=$(git log -n 1 --pretty=format:"%h")
-          IMAGE_HASH=g${revhash:0:9}
+          IMAGE_HASH=g${revhash:0:8}
           PUSH_REPO=$PUSH_REGISTRY/${IMAGE_NAME,,}
 
           TAG_BASE=$PUSH_REPO:$CONTAINER
-          echo TAG_BASE=$TAG_BASE >> $GITHUB_ENV
-
           PUSH_TAG=${TAG_BASE}-$IMAGE_HASH
           echo PUSH_TAG=$PUSH_TAG >> $GITHUB_ENV
 
-          bin/container $CONTAINER prep --no-check $PUSH_TAG
-          echo Will push built container as $PUSH_TAG | tee -a $GITHUB_STEP_SUMMARY
-      - name: Build container image
-        run: |
           bin/clone_model
           $CONTAINER/bin/build check
           bin/container $CONTAINER push --no-check $PUSH_TAG
+
+          docker tag $CONTAINER:latest $TAG_BASE-latest
+          docker push $TAG_BASE-latest
+          docker tag $CONTAINER:latest $TAG_BASE-${{ github.ref_name }}
+          docker push $TAG_BASE-${{ github.ref_name }}
+          
+          echo Pushed built $CONTAINER container as $PUSH_TAG | tee -a $GITHUB_STEP_SUMMARY
       - name: Docker images summary
         run: |
           docker images
