@@ -18,14 +18,12 @@ jobs:
       contents: read
       packages: write
     timeout-minutes: 5
-    if: vars.TARGET_PROJECT != ''
     strategy:
       fail-fast: false
       matrix:
         container: [ "udmis", "validator", "pubber" ]
     env:
       PUSH_REGISTRY: ghcr.io
-      TARGET_PROJECT: ${{ vars.TARGET_PROJECT }}
       IMAGE_NAME: ${{ github.repository }}
       GITHUB_REF: ${{ github.ref }}
       CONTAINER: ${{ matrix.container }}
@@ -62,13 +60,40 @@ jobs:
           docker push $TAG_BASE-latest
           docker tag $CONTAINER:latest $TAG_BASE-${{ github.ref_name }}
           docker push $TAG_BASE-${{ github.ref_name }}
-          
+
           echo Pushed built $CONTAINER container as $PUSH_TAG | tee -a $GITHUB_STEP_SUMMARY
       - name: Docker images summary
         run: |
           docker images
           echo
           docker history ${{ env.PUSH_TAG }}
+  simple:
+    name: Simple sequence test
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: images
+    env:
+      IMAGE_NAME: ${{ github.repository }}
+      GITHUB_REF: ${{ github.ref }}
+    steps:
+      - name: Setup Environment
+        run: |
+          git clone https://github.com/faucetsdn/udmi_site_model.git
+          ln -s udmi_site_model/ site_model
+          docker network create udminet --subnet 192.168.99.0/24
+      - name: Start UDMIS
+        run: docker run -d --net udminet --name udmis -p 8883:8883 \
+            -v $(realpath site_model):/root/site \
+            -v $PWD/var/tmp:/tmp \
+            -v $PWD/var/etcd:/root/udmi/var/etcd \
+            -v $PWD/var/mosquitto:/etc/mosquitto \
+            ghcr.io/$IMAGE_NAME/udmi:udmis-$GITHUB_REF udmi/bin/start_local block site/cloud_iot_config.json
+      - name: Check status
+        run: while ! ls -l var/tmp/pod_ready.txt; do echo waiting... && sleep 1; done
+      - name: Docker logs
+        if: ${{ !cancelled() }}
+        run: docker logs udmis
+
   udmif:
     name: UDMIF unit tests
     runs-on: ubuntu-latest
@@ -84,4 +109,3 @@ jobs:
         run: echo Disabled udmif/web/runTests due to dependency integration problems
       - name: api tests
         run: echo Disabled udmif/api/runTests due to dependency integration problems
-

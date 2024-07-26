@@ -11,19 +11,13 @@ _Note:_ This is still in 'alpha' form. It works, but there's likely going to be 
 
 ## Configuration Setup
 
-These setup variables can be customized for any particular setup. It's recommended to first
-get everything working with the built-in _pubber_ as shown, and then try with a real device after!
+The system requires a valid `site_model` to run. This overview uses the default `udmi_site_model`, but
+any valid site model will work. To setup the model to use, create a link from `site_model` in the working
+directory to the model of choice. Also need to create
 ```
-ln -s udmi_site_model site_model
-```
-
-## Environment Setup
-
-One-time setup pieces to setup docker and a test site model, if necessary.
-```
+git clone https://github.com/faucetsdn/udmi_site_model.git
+ln -s udmi_site_model/ site_model
 docker inspect -f ok udminet || docker network create udminet --subnet 192.168.99.0/24
-real_site_model=$(realpath site_model) && site_base=$(basename $real_site_model)
-[[ ${site_base} != udmi_site_model || -d ${real_site_model} ]] || git clone https://github.com/faucetsdn/udmi_site_model.git
 ```
 
 ## UDMIS Container Startup
