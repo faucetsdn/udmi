@@ -81,6 +81,7 @@ jobs:
           docker network create udminet --subnet 192.168.99.0/24
       - name: Start UDMIS container
         run: |
+          cat udmi_site_model/cloud_iot_config.json
           docker run -d --net udminet --name udmis -p 8883:8883 \
             -v $(realpath site_model):/root/site \
             -v $PWD/var/tmp:/tmp \
@@ -94,7 +95,9 @@ jobs:
           ls -l var/tmp/pod_ready.txt
       - name: Docker logs
         if: ${{ !cancelled() }}
-        run: docker logs udmis
+        run: |
+          docker images
+          docker logs udmis
 
   udmif:
     name: UDMIF unit tests
