@@ -3,7 +3,7 @@ name: UDMI Integration Suite
 on:
   push:
     tags:
-      - '*'
+      - '**'
   workflow_dispatch:
 
 concurrency:

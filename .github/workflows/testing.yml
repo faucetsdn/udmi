@@ -2,8 +2,8 @@ name: UDMI Test Suite
 
 on:
   push:
-    tags-ignore:
-      - '*'
+    branches:
+      - '**'
   workflow_dispatch:
   pull_request:
   schedule:
