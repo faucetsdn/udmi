@@ -9,15 +9,15 @@ if [[ ${1:-} == block ]]; then
     shift
 fi
 
-[[ $# == 2 ]] || usage [block] site_model project_spec
+[[ $# == 1 ]] || usage [block] site_config.json
 
-site_model=$(realpath $1)
-project_spec=$2
+site_config=$(realpath $1)
 shift
 
-echo "export TARGET_PROJECT=${project_spec:-}"
-echo "export UDMI_REGISTRY_SUFFIX=${UDMI_REGISTRY_SUFFIX:-}"
-echo "export UDMI_ALT_REGISTRY=${UDMI_ALT_REGISTRY:-}"
+if [[ ! -f $site_config ]]; then
+    fail local startup requires explicit site path file.
+fi
+site_model=$(dirname $site_config)
 
 # Check for missing etc/ dir for docker execution.
 if [[ -d var/ && ! -d etc/ ]]; then
@@ -29,13 +29,13 @@ UDMIS_LOG=/tmp/udmis.log
 mkdir -p out
 date > $UDMIS_LOG
 
-if [[ ! $project_spec =~ ^//mqtt/ ]]; then
-    echo Not a local setup, doing nothing! || tee -a $UDMIS_LOG
+iot_provider=$(jq -r .iot_provider $site_config)
+if [[ $iot_provider != mqtt ]]; then
+    echo Provider type $iot_provider is not a local setup, doing nothing.
     exit 0
 fi
 
-project_target=${project_spec##*/}
-site_config=$site_model/cloud_iot_config.json
+project_target=$(jq -r .project_id $site_config)
 registry_id=$(jq -r .registry_id $site_config)${UDMI_REGISTRY_SUFFIX:-}
 
 echo Starting etcd... | tee -a $UDMIS_LOG

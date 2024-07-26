@@ -9,6 +9,7 @@ ADD build/udmi_bin/ bin/
 ADD build/udmi_etc/ etc/
 ADD build/schema/ schema/
 
+ENV NO_CACHE_DIR=true
 RUN bin/setup_base
 
 ADD bin/ validator/bin/
