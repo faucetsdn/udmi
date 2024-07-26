@@ -20,7 +20,7 @@ jobs:
     timeout-minutes: 5
     if: vars.TARGET_PROJECT != ''
     strategy:
-      fail-fase: false
+      fail-fast: false
       matrix:
         container: [ "udmis", "validator", "pubber" ]
     env:
