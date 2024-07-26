@@ -46,8 +46,8 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Setup udmis container build
         run: |
-          revhash=$(git log -n 1 --pretty=format:"%h" $CONTAINER)
-          IMAGE_HASH=U${revhash:0:9}
+          revhash=$(git log -n 1 --pretty=format:"%h")
+          IMAGE_HASH=g${revhash:0:9}
           PUSH_REPO=$PUSH_REGISTRY/${IMAGE_NAME,,}
 
           TAG_BASE=$PUSH_REPO:$CONTAINER
