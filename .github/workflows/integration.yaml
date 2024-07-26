@@ -58,6 +58,8 @@ jobs:
 
           bin/container $CONTAINER prep --no-check $PUSH_TAG
           echo Will push built container as $PUSH_TAG | tee -a $GITHUB_STEP_SUMMARY
+      - name: Build container image
+        run: bin/container $CONTAINER build --no-check
       - name: Build and push docker image
         if: ${{ github.event_name == 'push' }}
         uses: docker/build-push-action@v5
@@ -66,6 +68,11 @@ jobs:
           context: udmis
           push: true
           tags: ${{ env.PUSH_TAG }},${{ env.TAG_BASE }}-latest,${{ env.TAG_BASE }}-${{ github.ref_name }}
+      - name: Docker images
+        run: |
+          docker images
+          echo
+          docker history ${{ env.PUSH_TAG }}
   udmif:
     name: UDMIF unit tests
     runs-on: ubuntu-latest
