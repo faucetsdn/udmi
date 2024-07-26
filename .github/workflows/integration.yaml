@@ -91,8 +91,9 @@ jobs:
           for count in `seq 0 30`; do
             echo Waiting for UDMIS startup $((30 - count))
             [[ ! -f var/tmp/pod_ready.txt ]] || break
+            (docker ps | fgrep udmis) || break
           done
-          ls -l var/tmp/pod_ready.txt
+          ls -l var/tmp/pod_ready.txt 2>&1
       - name: Docker logs
         if: ${{ !cancelled() }}
         run: |
