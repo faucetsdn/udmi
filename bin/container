@@ -121,6 +121,7 @@ fi
 
 if [[ -n $push ]]; then
     docker push $udmi_ref
+    docker images
     hash=$(docker images --digests ${udmi_ref%:*} | fgrep $udmi_tag | awk '{print $3}')
     ihash=$udmi_ref@$hash
     for file in $TEMPLATES; do
