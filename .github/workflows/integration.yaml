@@ -83,11 +83,11 @@ jobs:
         run: |
           cat udmi_site_model/cloud_iot_config.json
           docker run -d --net udminet --name udmis -p 8883:8883 \
-            -v $(realpath site_model):/root/site \
+            -v $(realpath site_model):/root/site_model \
             -v $PWD/var/tmp:/tmp \
             -v $PWD/var/etcd:/root/udmi/var/etcd \
             -v $PWD/var/mosquitto:/etc/mosquitto \
-            ghcr.io/$IMAGE_NAME:udmis-${{ github.ref_name }} udmi/bin/start_local block site/cloud_iot_config.json
+            ghcr.io/$IMAGE_NAME:udmis-${{ github.ref_name }} udmi/bin/start_local block site_model/cloud_iot_config.json
           for count in `seq 0 30`; do
             echo Waiting for UDMIS startup $((30 - count))
             [[ ! -f var/tmp/pod_ready.txt ]] || break
