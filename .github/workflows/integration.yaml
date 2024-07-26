@@ -2,10 +2,9 @@ name: UDMI Integration Suite
 
 on:
   push:
+    tags:
+      - '*'
   workflow_dispatch:
-  pull_request:
-  schedule:
-    - cron: '0 20 * * *'
 
 concurrency:
   group: it-${{ github.repository }}
