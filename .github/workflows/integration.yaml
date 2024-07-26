@@ -25,7 +25,6 @@ jobs:
     env:
       PUSH_REGISTRY: ghcr.io
       IMAGE_NAME: ${{ github.repository }}
-      GITHUB_REF: ${{ github.ref_name }}
       CONTAINER: ${{ matrix.container }}
     steps:
       - uses: actions/checkout@v4
@@ -44,8 +43,6 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Container build and push
         run: |
-          echo $GITHUB_REF ${{ github.ref_name }}
-
           revhash=$(git log -n 1 --pretty=format:"%h")
           IMAGE_HASH=g${revhash:0:8}
           PUSH_REPO=$PUSH_REGISTRY/${IMAGE_NAME,,}
@@ -76,7 +73,6 @@ jobs:
     needs: images
     env:
       IMAGE_NAME: ${{ github.repository }}
-      GITHUB_REF: ${{ github.ref_name }}
     steps:
       - name: Setup Environment
         run: |
@@ -85,14 +81,12 @@ jobs:
           docker network create udminet --subnet 192.168.99.0/24
       - name: Start UDMIS
         run: |
-          echo $IMAGE_NAME
-          echo $GITHUB_REF ${{ github.ref_name }}
           echo docker run -d --net udminet --name udmis -p 8883:8883 \
             -v $(realpath site_model):/root/site \
             -v $PWD/var/tmp:/tmp \
             -v $PWD/var/etcd:/root/udmi/var/etcd \
             -v $PWD/var/mosquitto:/etc/mosquitto \
-            ghcr.io/$IMAGE_NAME:udmis-$GITHUB_REF udmi/bin/start_local block site/cloud_iot_config.json
+            ghcr.io/$IMAGE_NAME:udmis-${{ github.ref_name }} udmi/bin/start_local block site/cloud_iot_config.json
       - name: Check status
         run: while ! ls -l var/tmp/pod_ready.txt; do echo waiting... && sleep 1; done
       - name: Docker logs
