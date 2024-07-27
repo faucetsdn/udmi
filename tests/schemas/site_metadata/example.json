@@ -1,0 +1,11 @@
+{
+    "version": "1.5.0",
+    "timestamp": "2024-01-01T01:02:03Z",
+    "site": "ZZ-TRI-FECTA",
+    "tags": ["hq"],
+    "location":{
+        "address": "1600 Amphitheatre Parkway Mountain View, CA 94043",
+        "lat": 	37.422,
+        "long": 122.084
+    }
+}

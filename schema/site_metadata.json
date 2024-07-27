@@ -32,6 +32,15 @@
       "type": "string",
       "examples": ["Cheesegrater", "Mountain View"]
     },
+    "tags":{
+      "description": "Tags assosciated with the site",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "pattern": "^[a-z0-9]+$"
+      },
+      "examples": [["lighting"], ["energy", "building"]]
+    },
     "location": {
       "type": "object",
       "additionalProperties": false,
