@@ -95,11 +95,24 @@ jobs:
             sleep 1
           done
           ls -l var/tmp/pod_ready.txt 2>&1
+      - name: Registrar run
+        run: |
+          docker run --net udminet --name registrar -v $(realpath site_model):/root/site \
+            ghcr.io/faucetsdn/udmi:validator-latest bin/registrar site/cloud_iot_config.json
+      - name: Pubber background run
+        run: |
+          docker run -d --net udminet --name pubber -v $(realpath site_model):/root/site \
+            ghcr.io/faucetsdn/udmi:pubber-latest bin/pubber site/cloud_iot_config.json
+          sleep 10
       - name: Docker UDMIS logs
         if: ${{ !cancelled() }}
-        run: |
-          docker history ghcr.io/$IMAGE_NAME:udmis-${{ github.ref_name }}
-          docker logs udmis
+        run: docker logs udmis
+      - name: Docker Registrar logs
+        if: ${{ !cancelled() }}
+        run: docker logs registrar
+      - name: Docker Pubber logs
+        if: ${{ !cancelled() }}
+        run: docker logs pubber
 
   udmif:
     name: UDMIF unit tests
