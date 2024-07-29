@@ -120,7 +120,7 @@ import udmi.schema.ValidationSummary;
  */
 public class Validator {
 
-  public static final int TOOLS_FUNCTIONS_VERSION = 13;
+  public static final int TOOLS_FUNCTIONS_VERSION = 14;
   public static final String PROJECT_PROVIDER_PREFIX = "//";
   public static final String TIMESTAMP_ZULU_SUFFIX = "Z";
   public static final String TIMESTAMP_UTC_SUFFIX_1 = "+00:00";
@@ -132,7 +132,6 @@ public class Validator {
   private static final String MESSAGE_FILE_FORMAT = "%s.json";
   private static final String SCHEMA_SKIP_FORMAT = "Unknown schema subFolder '%s' for %s";
   private static final String ENVELOPE_SCHEMA_ID = "envelope";
-  private static final String DEVICES_SUBDIR = "devices";
   private static final String DEVICE_REGISTRY_ID_KEY = "deviceRegistryId";
   private static final String UNKNOWN_FOLDER_DEFAULT = "unknown";
   private static final String STATE_UPDATE_SCHEMA = "state";
