@@ -44,8 +44,11 @@ else
     echo Constructing pubber configuration from site config.
     project_id=$(jq -r .project_id $config_file)
     device_id=$(jq -r .device_id $config_file)
+    registry_id=$(jq -r .registry_id $config_file)
     serial_no=$(jq -r .serial_no $config_file)
     site_model=$(jq -r .site_model $config_file)
+    iot_provider=$(jq -r .iot_provider $config_file)
+    [[ $site_model != null ]] || site_model=$(dirname $config_file)
     [[ $site_model = /* ]] || site_model=$(dirname $config_file)/$site_model
     jq -r .device_endpoint $config_file > $ENDPOINT_TMP
 fi
@@ -102,15 +105,16 @@ elif [[ $project_id =~ @ ]]; then
     iot_provider=jwt
     broker_hostname=${project_id#*@}
     project_target=${project_id%@*}
-else
-    iot_provider=gcp
+elif [[ -z $iot_provider ]]; then
+    false no iot_provider provided.
 fi
 
+[[ ${registry_id:-null} == null ]] && fail registry_id not defined
+registry_actual=${udmi_prefix}${registry_id}${registry_suffix}
 if [[ ! -f $ENDPOINT_TMP ]]; then
-    [[ ${registry_id:-null} == null ]] && fail registry_id not defined
-    registry_actual=${udmi_prefix}${registry_id}${registry_suffix}
     client_id=\"projects/$project_target/locations/$cloud_region/registries/$registry_actual/devices/$device_id\"
 fi
+
 topic_prefix=null
 auth_provider=null
 transport=null
@@ -124,7 +128,7 @@ elif [[ $iot_provider == mqtt ]]; then
     gateway_id=$(jq -r .gateway.gateway_id $site_model/devices/$device_id/metadata.json) || true
     echo Attached to gateway $gateway_id
     target_id=$device_id
-    [[ $gateway_id == null ]] || target_id=$gateway_id
+    [[ -z $gateway_id || $gateway_id == null ]] || target_id=$gateway_id
     echo Target is $target_id
     client_id=\"/r/$registry_actual/d/$target_id\"
     key_file=$site_model/devices/$target_id/*_private.pkcs8
