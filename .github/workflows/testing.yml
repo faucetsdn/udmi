@@ -87,7 +87,7 @@ jobs:
       - name: base setup
         run: bin/run_tests install_dependencies
       - name: local setup
-        run: bin/start_local sites/udmi_site_model/cloud_iot_config.json
+        run: bin/start_local sites/udmi_site_model $TARGET_PROJECT
       - name: registrar clean
         run: bin/test_regclean $TARGET_PROJECT
       - name: sequence tests clean
