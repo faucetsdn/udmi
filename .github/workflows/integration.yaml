@@ -95,10 +95,10 @@ jobs:
             sleep 1
           done
           ls -l var/tmp/pod_ready.txt 2>&1
-      - name: Docker logs
+      - name: Docker UDMIS logs
         if: ${{ !cancelled() }}
         run: |
-          docker images
+          docker history ghcr.io/$IMAGE_NAME:udmis-${{ github.ref_name }}
           docker logs udmis
 
   udmif:
