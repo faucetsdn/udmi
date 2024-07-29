@@ -19,7 +19,6 @@
     "version": {
       "description": "Version of the UDMI schema",
       "type": "string"
-      
     },
     "site": {
       "description": "Identifier for the site or building",
@@ -31,6 +30,15 @@
       "description": "Name of the site or building",
       "type": "string",
       "examples": ["Cheesegrater", "Mountain View"]
+    },
+    "tags":{
+      "description": "Tags associated with the site",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "pattern": "^[a-z0-9]+$"
+      },
+      "examples": [["new_construction"], ["existing", "brownfield"]]
     },
     "location": {
       "type": "object",
@@ -50,6 +58,42 @@
             "type": "number"
         }
       }
+    },
+    "area": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "m2": {
+            "description": "Area of the site in square meters",
+            "type": "number",
+            "examples": [1234, 256, 998765]
+        },
+        "sqf": {
+            "description": "Area of the site in square feet",
+            "type": "number",
+            "examples": [13282.67, 2755.56, 10750617]
+        }
+      }
+    },
+    "site_folder": {
+      "description": "Folder where the UDMI site model is stored",
+      "type": "string",
+      "examples": ["/home/user/udmi_site_model", "https://drive.google.com/corp/drive/folders/iamadrivelocation"]
+    },
+    "source_repo": {
+      "description": "Source repository where the UDMI site model is stored",
+      "type": "string",
+      "examples": ["https://github.com/faucetsdn/udmi_site_model", "git@github.com:faucetsdn/udmi_site_model.git"]
+    },
+    "device_count": {
+            "description": "Number of devices in the UDMI site model",
+            "type": "number",
+            "examples": [32, 245]
+    },
+    "validated_count": {
+            "description": "Number of validated devices in the UDMI site model",
+            "type": "number",
+            "examples": [19, 142]
     }
   }
 }
