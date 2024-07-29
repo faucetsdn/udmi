@@ -20,9 +20,8 @@ By design, this schema is intended to be:
 * **I**nterface: Define an interface specification, rather than a client-library or RPC mechanism.
 
 See the associated [UDMI Tech Stack](docs/specs/tech_stack.md) for details about transport mechanism
-outside of the core schema definition. Nominally meant for use with
-[Google's Cloud IoT Core](https://cloud.google.com/iot/docs/), it can be applied to any set
-of data or hosting setup.
+outside of the core schema definition. Nominally meant for cloud-based MQTT-bridge providers, it can
+also work locally with standard docker-hosted local MQTT brokers.
 
 ## Recommended Workflow
 
