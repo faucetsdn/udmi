@@ -17,6 +17,7 @@ trap cleanup EXIT
 
 config_file=$(realpath $1)
 serial_no=NA
+cloud_region=us-central1
 project_id=--
 shift
 
@@ -42,6 +43,7 @@ elif [[ $(jq -r .device_id $config_file) == null ]]; then
     fail Neither deviceId nor device_id defined in config file.
 else
     echo Constructing pubber configuration from site config.
+    cat $config_file
     project_id=$(jq -r .project_id $config_file)
     device_id=$(jq -r .device_id $config_file)
     registry_id=$(jq -r .registry_id $config_file)
@@ -50,7 +52,11 @@ else
     iot_provider=$(jq -r .iot_provider $config_file)
     [[ $site_model != null ]] || site_model=$(dirname $config_file)
     [[ $site_model = /* ]] || site_model=$(dirname $config_file)/$site_model
-    jq -r .device_endpoint $config_file > $ENDPOINT_TMP
+    device_endpoint=$(jq -r .device_endpoint $config_file)
+    [[ $device_endpoint == null ]] || (
+        echo Extracting configuration to $ENDPOINT_TMP
+        echo $device_endpoint > $ENDPOINT_TMP
+    )
 fi
 
 if [[ -n ${UDMI_REGISTRY_SUFFIX:-} ]]; then
@@ -143,6 +149,7 @@ elif [[ -z $broker_hostname ]]; then
 fi
 
 if [[ ! -f $ENDPOINT_TMP ]]; then
+    echo Constructing new $ENDPOINT_TMP
     cat <<EOF > $ENDPOINT_TMP
 {
     "protocol": "mqtt",
