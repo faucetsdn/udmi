@@ -9,7 +9,8 @@ source $UDMI_ROOT/etc/mosquitto_ctrl.sh
 if [[ ! -f $ETC_DIR/mosquitto.conf ]]; then
     echo Installing default base mosquitto.conf
     cp ../var/mosquitto.conf $ETC_DIR/ ||
-        cp ../etc/mosquitto.conf $ETC_DIR/
+        cp etc/mosquitto.conf $ETC_DIR/ ||
+        fail fallback mosquitto.conf file not found.
 fi
 
 GROUP=mosquitto
