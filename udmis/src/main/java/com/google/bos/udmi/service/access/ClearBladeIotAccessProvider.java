@@ -365,6 +365,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
           .setParent(LocationName.of(projectId, location).toString())
           .setDeviceRegistry(registry.build()).build();
       deviceManager.createDeviceRegistry(request);
+      // TODO: This should also add the metadata for the device.
     } catch (ApplicationException applicationException) {
       if (!applicationException.getMessage().contains("ALREADY_EXISTS")) {
         throw applicationException;
@@ -491,14 +492,22 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     }
   }
 
+  private CloudModel getReply(String registryId, String deviceId, CloudModel request,
+      String numId) {
+    CloudModel reply = new CloudModel();
+    reply.operation = requireNonNull(request.operation, "missing operation");
+    reply.num_id = requireNonNull(numId, "missing num_id");
+    return reply;
+  }
+
   @Override
   public CloudModel modelRegistry(String registryId, String deviceId, CloudModel cloudModel) {
     Operation operation = cloudModel.operation;
     String registryActual = registryId + deviceId;
     try {
       if (operation == UPDATE) {
-        // Do nothing
-        return cloudModel;
+        // TODO: This should update the metadata of the registry.
+        return getReply(registryId, deviceId, cloudModel, "registry");
       } else if (operation == CREATE) {
         if (deviceId != null && !deviceId.isEmpty()) {
           CloudModel deviceModel = deepCopy(cloudModel);
