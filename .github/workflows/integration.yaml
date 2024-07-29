@@ -94,6 +94,7 @@ jobs:
             (docker ps | fgrep -q udmis) || break
             sleep 1
           done
+          ls -l var/tmp/pod_ready.txt 2>&1
       - name: Registrar run
         run: |
           docker run --net udminet --name registrar -v $(realpath site_model):/root/site \
@@ -108,6 +109,7 @@ jobs:
             echo Waiting for pubber startup $((30 - count))...
             sleep 1
           done
+          docker logs pubber | fgrep "Connection complete"
       - name: Docker UDMIS logs
         if: ${{ !cancelled() }}
         run: docker logs udmis
