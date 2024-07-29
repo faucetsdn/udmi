@@ -2,7 +2,7 @@ FROM alpine:latest
 
 WORKDIR /root
 
-RUN apk add openjdk17 bash sudo gcompat curl jq python3 git moreutils openssl
+RUN apk add --no-cache bash openjdk17 gcompat curl jq sudo git python3 moreutils mosquitto mosquitto-clients openssl coreutils
 
 ADD build/libs pubber/build/libs/
 

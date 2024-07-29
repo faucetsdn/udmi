@@ -47,12 +47,13 @@ public class RegistrarTest {
 
   public static final String REGISTRY_SUFFIX = "%X";
   private static final Set<String> ALLOWED_DEVICE_IDS = ImmutableSet.of("bacnet_29314",
-      "bacnet-29138", "BACnet.213214", "AHU-0001");
-  private static final Set<String> ILLEGAL_DEVICE_IDS = ImmutableSet.of("bacnet/293124");
+      "bacnet-29138", "AHU-0001");
+  private static final Set<String> ILLEGAL_DEVICE_IDS = ImmutableSet.of("bacnet/293124",
+      "BACnet.213214");
   private static final Set<String> ALLOWED_POINT_NAMES = ImmutableSet.of("kWh", "Current",
-      "analogValue_13", "analogValue-13", "AV.13", "Electric_L_OrchesTra");
+      "analogValue_13", "analogValue-13", "AV_-13", "Electric_L_OrchesTra");
   private static final Set<String> ILLEGAL_POINT_NAMES = ImmutableSet.of("av/13", "av%13", "23,11",
-      "IB#12");
+      "IB#12", "qoduwqdwq.jdiwqd");
 
   @SuppressWarnings("unchecked")
   private static double getValidatingSize(Map<String, Object> summary) {
