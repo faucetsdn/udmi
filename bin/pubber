@@ -1,4 +1,4 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 
 UDMI_ROOT=$(realpath $(dirname $0)/..)
 source $UDMI_ROOT/etc/shell_common.sh
@@ -182,6 +182,8 @@ if [[ -f ${site_model:-}/reflector/ca.crt && -n ${project_target:-} ]]; then
     [[ -f $certs ]] || $UDMI_ROOT/bin/keygen CERT/${project_target} ${site_model}/devices/${target_id}/
     ls -l ${site_model}/devices/${target_id}/*.crt
 fi
+
+cat $tmp_config
 
 # Run in the background to force new process group and get PID
 $UDMI_ROOT/pubber/bin/run $tmp_config &

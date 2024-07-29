@@ -103,6 +103,8 @@ jobs:
             ghcr.io/$IMAGE_NAME:validator-$REF_NAME bin/registrar site/cloud_iot_config.json
       - name: Pubber background run
         run: |
+          echo docker run -d --net udminet --name pubber -v $(realpath site_model):/root/site \
+            ghcr.io/$IMAGE_NAME:pubber-$REF_NAME bin/pubber site/cloud_iot_config.json
           docker run -d --net udminet --name pubber -v $(realpath site_model):/root/site \
             ghcr.io/$IMAGE_NAME:pubber-$REF_NAME bin/pubber site/cloud_iot_config.json
           for count in `seq 0 30`; do
