@@ -58,16 +58,15 @@ jobs:
 
           docker tag $CONTAINER:latest $TAG_BASE-latest
           docker push $TAG_BASE-latest
-          docker tag $CONTAINER:latest $TAG_BASE-${{ github.ref_name }}
-          docker push $TAG_BASE-${{ github.ref_name }}
+          docker tag $CONTAINER:latest $TAG_BASE-$REF_NAME
+          docker push $TAG_BASE-$REF_NAME
 
-          echo Ref-name is: ${{ github.ref_name }} $REF_NAME
           echo Pushed built $CONTAINER container as $PUSH_TAG | tee -a $GITHUB_STEP_SUMMARY
       - name: Docker images summary
         run: |
           docker images
           echo
-          docker history ${{ env.PUSH_TAG }}
+          docker history $PUSH_TAG
   simple:
     name: Simple sequence test
     runs-on: ubuntu-latest
@@ -75,6 +74,7 @@ jobs:
     needs: images
     env:
       IMAGE_NAME: ${{ github.repository }}
+      REF_NAME: ${{ github.ref_name }}
     steps:
       - name: Setup Environment
         run: |
@@ -89,7 +89,7 @@ jobs:
             -v $PWD/var/tmp:/tmp \
             -v $PWD/var/etcd:/root/udmi/var/etcd \
             -v $PWD/var/mosquitto:/etc/mosquitto \
-            ghcr.io/$IMAGE_NAME:udmis-${{ github.ref_name }} udmi/bin/start_local block site_model/cloud_iot_config.json
+            ghcr.io/$IMAGE_NAME:udmis-$REF_NAME udmi/bin/start_local block site_model/cloud_iot_config.json
           for count in `seq 0 30`; do
             echo Waiting for UDMIS startup $((30 - count))
             [[ ! -f var/tmp/pod_ready.txt ]] || break
@@ -100,11 +100,11 @@ jobs:
       - name: Registrar run
         run: |
           docker run --net udminet --name registrar -v $(realpath site_model):/root/site \
-            ghcr.io/faucetsdn/udmi:validator-${{ github.ref_name }} bin/registrar site/cloud_iot_config.json
+            ghcr.io/$IMAGE_NAME:validator-$REF_NAME bin/registrar site/cloud_iot_config.json
       - name: Pubber background run
         run: |
           docker run -d --net udminet --name pubber -v $(realpath site_model):/root/site \
-            ghcr.io/faucetsdn/udmi:pubber-${{ github.ref_name }} bin/pubber site/cloud_iot_config.json
+            ghcr.io/$IMAGE_NAME:pubber-$REF_NAME bin/pubber site/cloud_iot_config.json
           for count in `seq 0 30`; do
             (docker ps | fgrep -q pubber) || break
             docker logs pubber | fgrep -q -v "Connection complete" || break
