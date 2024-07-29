@@ -9,10 +9,16 @@ if [[ ${1:-} == block ]]; then
     shift
 fi
 
-[[ $# == 1 ]] || usage [block] site_config.json
+[[ $# == 1 || $# == 2 ]] || usage '[block] ([site_config.json] || [site_model] [project_spec])'
 
-site_config=$(realpath $1)
-shift
+if [[ $# == 1 ]]; then
+    site_config=$(realpath $1)
+    shift
+else
+    site_config=$(realpath $1)/cloud_iot_config.json
+    project_spec=$2
+    shift 2
+fi
 
 if [[ ! -f $site_config ]]; then
     fail local startup requires explicit site path file.
@@ -30,12 +36,18 @@ mkdir -p out
 date > $UDMIS_LOG
 
 iot_provider=$(jq -r .iot_provider $site_config)
+if [[ -n ${project_spec:-} ]]; then
+    project_target=${project_spec##*/}
+    iot_provider=${project_spec%/*}
+    iot_provider=${iot_provider#//}
+fi
+
 if [[ $iot_provider != mqtt ]]; then
     echo Provider type $iot_provider is not a local setup, doing nothing.
     exit 0
 fi
 
-project_target=$(jq -r .project_id $site_config)
+[[ -n ${project_target:-} ]] || project_target=$(jq -r .project_id $site_config)
 registry_id=$(jq -r .registry_id $site_config)${UDMI_REGISTRY_SUFFIX:-}
 
 echo Starting etcd... | tee -a $UDMIS_LOG
