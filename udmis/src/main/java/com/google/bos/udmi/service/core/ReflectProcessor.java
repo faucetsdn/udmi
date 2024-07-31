@@ -68,6 +68,7 @@ public class ReflectProcessor extends ProcessorBase {
 
   public static final String PAYLOAD_KEY = "payload";
   private static final Date START_TIME = new Date();
+  private static final String LEGACY_METADATA_STRING = "{ }";
 
   public ReflectProcessor(EndpointConfiguration config) {
     super(config);
@@ -140,8 +141,11 @@ public class ReflectProcessor extends ProcessorBase {
   private SiteMetadataUpdate asSiteMetadataUpdate(String metadataString) {
     SiteMetadataUpdate siteMetadataUpdate =
         fromStringDynamic(SiteMetadataUpdate.class, metadataString);
-    requireNonNull(siteMetadataUpdate.site, "missing metadata site");
-    requireNonNull(siteMetadataUpdate.timestamp, "missing timestamp in site metadata");
+    info("TAP1 " + metadataString);
+    // TODO: Remove the LEGACY_METADATA_STRING check once tool deployments have matured.
+    if (!LEGACY_METADATA_STRING.equals(metadataString)) {
+      requireNonNull(siteMetadataUpdate.name, "missing site model name");
+    }
     return siteMetadataUpdate;
   }
 
@@ -265,6 +269,7 @@ public class ReflectProcessor extends ProcessorBase {
       return modelUpdate;
     }
     ModelUpdate modelUpdate = fromStringDynamic(ModelUpdate.class, modelString);
+    info("TAP2 " + modelUpdate);
     requireNonNull(modelUpdate.timestamp, "missing timestamp in model message");
     return modelUpdate;
   }
