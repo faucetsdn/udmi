@@ -163,8 +163,9 @@ public class SimpleMqttPipe extends MessageBase {
       String topic = makeMqttTopic(bundle);
       MqttMessage message = makeMqttMessage(bundle);
       mqttClient.publish(topic, message);
-      debug("Client has %d inFlight tokens with %s", mqttClient.getPendingDeliveryTokens().length,
-          topic);
+      int tokens = mqttClient.getPendingDeliveryTokens().length;
+      ifTrueThen(tokens > 2, () ->
+          debug("Client has %d inFlight tokens, from %s", tokens, topic));
     } catch (Exception e) {
       throw new RuntimeException("While publishing to mqtt client " + clientId, e);
     }

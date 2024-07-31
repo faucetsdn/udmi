@@ -14,6 +14,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.writeString;
 import static com.google.udmi.util.JsonUtil.getDate;
+import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.writeFile;
 import static com.google.udmi.util.MetadataMapKeys.UDMI_UPDATED;
 import static java.lang.String.format;
@@ -81,6 +82,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
@@ -336,9 +338,10 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       CreateDeviceRequest request =
           CreateDeviceRequest.Builder.newBuilder().setParent(parent).setDevice(device)
               .build();
-      requireNonNull(deviceManager.createDevice(request),
-          "create device failed for " + parent);
-      cloudModel.num_id = hashedDeviceId(registryId, device.toBuilder().getId());
+      requireNonNull(deviceManager.createDevice(request), "create device failed for " + parent);
+      String numId = device.toBuilder().getNumId();
+      cloudModel.num_id =
+          ofNullable(numId).orElseGet(() -> hashedDeviceId(registryId, device.toBuilder().getId()));
       return cloudModel;
     } catch (ApplicationException applicationException) {
       if (applicationException.getMessage().contains("ALREADY_EXISTS")) {
@@ -612,6 +615,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       UpdateDeviceRequest request =
           UpdateDeviceRequest.Builder.newBuilder().setDevice(fullDevice).setName(name)
               .setUpdateMask(updateFieldMask).build();
+      debug("Update %s num_id %s", deviceId, device.toBuilder().getNumId());
       requireNonNull(deviceManager.updateDevice(request), "Invalid RPC response");
       CloudModel cloudModel = new CloudModel();
       cloudModel.num_id = hashedDeviceId(registryId, deviceId);

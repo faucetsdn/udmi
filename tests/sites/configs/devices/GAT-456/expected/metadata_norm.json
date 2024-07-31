@@ -1,7 +1,7 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
-  "version": "1.5.1",
-  "hash": "b6395332",
+  "version": "1.5.2",
+  "hash": "cb9873c7",
   "cloud": {
     "auth_type": "ES256",
     "config": {
@@ -20,7 +20,8 @@
         "name": "GAT-456"
       }
     },
-    "min_loglevel": 300
+    "min_loglevel": 300,
+    "testing_test": 3
   },
   "gateway": { }
 }

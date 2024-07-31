@@ -1,7 +1,7 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
-  "version": "1.5.1",
-  "hash": "c473f844",
+  "version": "1.5.2",
+  "hash": "977497ab",
   "cloud": {
     "auth_type": "RS256",
     "detail": "site default for unit tests"
@@ -23,7 +23,8 @@
         "name": "AHU-1"
       }
     },
-    "min_loglevel": 300
+    "min_loglevel": 300,
+    "testing_test": 3
   },
   "discovery": {
     "families": {

@@ -1,7 +1,7 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
-  "version": "1.5.1",
-  "hash": "156ef646",
+  "version": "1.5.2",
+  "hash": "823f801b",
   "system": {
     "tags": [ ],
     "location": {
@@ -19,6 +19,7 @@
       }
     },
     "min_loglevel": 300,
+    "testing_test": 3,
     "metrics_rate_sec": 300
   },
   "gateway": {

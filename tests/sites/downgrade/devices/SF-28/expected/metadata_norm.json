@@ -1,8 +1,8 @@
 {
   "timestamp": "2021-02-25T09:56:39Z",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "upgraded_from": "1.3.14",
-  "hash": "53363f5e",
+  "hash": "c89ffda7",
   "system": {
     "tags": [ ],
     "location": {
@@ -20,7 +20,8 @@
         "name": "AHU-1"
       }
     },
-    "min_loglevel": 300
+    "min_loglevel": 300,
+    "testing_test": 3
   },
   "gateway": {
     "gateway_id": "DDC-54",

@@ -137,6 +137,7 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private SiteMetadataUpdate asSiteMetadataUpdate(String metadataString) {
+    // TODO: Make this log a warning if strict mode fails.
     return fromString(SiteMetadataUpdate.class, metadataString);
   }
 
@@ -249,7 +250,7 @@ public class ReflectProcessor extends ProcessorBase {
       modelUpdate.system.description = modelString;
       return modelUpdate;
     }
-    // Not strict because registrar could publish a metadata which fails strictly
+    // TODO: Make this log a warning when strict parsing doesn't work.
     return fromString(ModelUpdate.class, modelString);
   }
 
