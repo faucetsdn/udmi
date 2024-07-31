@@ -978,22 +978,6 @@ public class SequenceBase {
     return implicit == UNKNOWN_DEFAULT ? explicit : implicit;
   }
 
-  private void recordRawMessage(Envelope attributes, Map<String, Object> message) {
-    if (testName == null || !recordMessages) {
-      return;
-    }
-
-    String messageBase = makeMessageBase(attributes);
-    String timestamp = message == null ? getTimestamp() : (String) message.get("timestamp");
-    if (traceLogLevel()) {
-      messageBase = messageBase + "_" + timestamp;
-    }
-
-    ifTrueThen(message.containsKey(EXCEPTION_KEY), () -> unwrapException(message, attributes));
-    recordRawMessage(message, messageBase);
-    recordMessageAttributes(attributes, messageBase);
-  }
-
   private void recordMessageAttributes(Envelope attributes, String messageBase) {
     File file = new File(testDir, format(ATTRIBUTE_FILE_FORMAT, messageBase));
     try {
@@ -1008,6 +992,22 @@ public class SequenceBase {
     attributes.payload = ifTrueGet(ex instanceof Exception,
         (Supplier<String>) () -> ((Exception) ex).getMessage(),
         (Supplier<String>) () -> (String) ex);
+  }
+
+  private void recordRawMessage(Envelope attributes, Map<String, Object> message) {
+    if (testName == null || !recordMessages) {
+      return;
+    }
+
+    String messageBase = makeMessageBase(attributes);
+    String timestamp = message == null ? getTimestamp() : (String) message.get("timestamp");
+    if (traceLogLevel()) {
+      messageBase = messageBase + "_" + timestamp;
+    }
+
+    ifTrueThen(message.containsKey(EXCEPTION_KEY), () -> unwrapException(message, attributes));
+    recordRawMessage(message, messageBase);
+    recordMessageAttributes(attributes, messageBase);
   }
 
   private void recordRawMessage(Object message, String messageBase) {
