@@ -2,7 +2,7 @@
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.5.1",
   "upgraded_from": "1",
-  "hash": "265d7b4d",
+  "hash": "65701fef",
   "system": {
     "tags": [ ],
     "location": {
@@ -16,8 +16,7 @@
         "name": "SNS-4"
       }
     },
-    "min_loglevel": 300,
-    "testing_test": 3
+    "min_loglevel": 300
   },
   "gateway": {
     "gateway_id": "GAT-123"

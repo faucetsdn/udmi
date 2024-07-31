@@ -2,7 +2,7 @@
   "timestamp": "2024-06-11T08:31:26Z",
   "version": "1.5.1",
   "upgraded_from": "1.4.0",
-  "hash": "a5e5d862",
+  "hash": "8b6464c6",
   "system": {
     "tags": [ ],
     "location": {
@@ -21,8 +21,7 @@
         "name": "AHU-102"
       }
     },
-    "min_loglevel": 300,
-    "testing_test": 3
+    "min_loglevel": 300
   },
   "gateway": {
     "gateway_id": "CGW-1",

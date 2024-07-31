@@ -2,7 +2,7 @@
   "timestamp": "2024-06-11T08:31:32Z",
   "version": "1.5.1",
   "upgraded_from": "1.4.0",
-  "hash": "e1f8f2e7",
+  "hash": "0355f2c5",
   "cloud": {
     "auth_type": "RS256"
   },
@@ -24,8 +24,7 @@
         "name": "CGW-1"
       }
     },
-    "min_loglevel": 300,
-    "testing_test": 3
+    "min_loglevel": 300
   },
   "gateway": {
     "target": {

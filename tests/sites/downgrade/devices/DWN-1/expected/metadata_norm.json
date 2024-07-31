@@ -2,7 +2,7 @@
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.5.1",
   "upgraded_from": "1",
-  "hash": "f618e5e4",
+  "hash": "f5492890",
   "cloud": {
     "auth_type": "RS256"
   },
@@ -23,8 +23,7 @@
         "name": "AHU-1"
       }
     },
-    "min_loglevel": 300,
-    "testing_test": 3
+    "min_loglevel": 300
   },
   "gateway": {
     "target": {
