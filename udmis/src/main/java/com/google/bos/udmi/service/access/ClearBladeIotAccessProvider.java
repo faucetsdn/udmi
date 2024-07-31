@@ -613,7 +613,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       UpdateDeviceRequest request =
           UpdateDeviceRequest.Builder.newBuilder().setDevice(fullDevice).setName(name)
               .setUpdateMask(updateFieldMask).build();
-      debug("Update %s num_id %s", deviceId, device.toBuilder().getNumId());
       requireNonNull(deviceManager.updateDevice(request), "Invalid RPC response");
       CloudModel cloudModel = new CloudModel();
       cloudModel.num_id = hashedDeviceId(registryId, deviceId);
