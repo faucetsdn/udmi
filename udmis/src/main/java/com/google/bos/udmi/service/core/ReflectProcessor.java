@@ -141,7 +141,6 @@ public class ReflectProcessor extends ProcessorBase {
   private SiteMetadataUpdate asSiteMetadataUpdate(String metadataString) {
     SiteMetadataUpdate siteMetadataUpdate =
         fromStringDynamic(SiteMetadataUpdate.class, metadataString);
-    info("TAP1 " + metadataString);
     // TODO: Remove the LEGACY_METADATA_STRING check once tool deployments have matured.
     if (!LEGACY_METADATA_STRING.equals(metadataString)) {
       requireNonNull(siteMetadataUpdate.name, "missing site model name");
@@ -269,8 +268,7 @@ public class ReflectProcessor extends ProcessorBase {
       return modelUpdate;
     }
     ModelUpdate modelUpdate = fromStringDynamic(ModelUpdate.class, modelString);
-    info("TAP2 " + modelUpdate);
-    requireNonNull(modelUpdate.timestamp, "missing timestamp in model message");
+    requireNonNull(modelUpdate.system, "missing system block in model message");
     return modelUpdate;
   }
 
