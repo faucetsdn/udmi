@@ -1,8 +1,8 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
-  "version": "1.5.2",
+  "version": "1.5.1",
   "upgraded_from": "1",
-  "hash": "82cbd025",
+  "hash": "f618e5e4",
   "cloud": {
     "auth_type": "RS256"
   },

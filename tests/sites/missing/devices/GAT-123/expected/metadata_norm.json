@@ -1,7 +1,7 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
-  "version": "1.5.2",
-  "hash": "ca288889",
+  "version": "1.5.1",
+  "hash": "fea4a3aa",
   "cloud": {
     "auth_type": "ES256",
     "detail": "site default for unit tests"
