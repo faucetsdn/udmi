@@ -25,6 +25,7 @@ import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.fromString;
+import static com.google.udmi.util.JsonUtil.fromStringStrict;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.mapCast;
 import static com.google.udmi.util.JsonUtil.stringify;
@@ -137,8 +138,17 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private SiteMetadataUpdate asSiteMetadataUpdate(String metadataString) {
-    // TODO: Make this log a warning if strict mode fails.
-    return fromString(SiteMetadataUpdate.class, metadataString);
+    return fromStringDynamic(SiteMetadataUpdate.class, metadataString);
+  }
+
+  private <T> T fromStringDynamic(Class<T> targetClass, String metadataString) {
+    try {
+      return fromStringStrict(targetClass, metadataString);
+    } catch (Exception e) {
+      warn("String parse failed, trying again with relaxed conversion: ",
+          friendlyStackTrace(e));
+      return fromString(targetClass, metadataString);
+    }
   }
 
   private Envelope extractMessageEnvelope(Object message) {
@@ -242,7 +252,7 @@ public class ReflectProcessor extends ProcessorBase {
     }
   }
 
-  private static ModelUpdate asModelUpdate(String modelString) {
+  private ModelUpdate asModelUpdate(String modelString) {
     // If it's not a valid JSON object, then fall back to a string description alternate.
     if (modelString == null || !modelString.startsWith(JsonUtil.JSON_OBJECT_LEADER)) {
       ModelUpdate modelUpdate = new ModelUpdate();
@@ -250,8 +260,7 @@ public class ReflectProcessor extends ProcessorBase {
       modelUpdate.system.description = modelString;
       return modelUpdate;
     }
-    // TODO: Make this log a warning when strict parsing doesn't work.
-    return fromString(ModelUpdate.class, modelString);
+    return fromStringDynamic(ModelUpdate.class, modelString);
   }
 
   private CloudModel reflectProcess(Envelope attributes, Object payload) {
