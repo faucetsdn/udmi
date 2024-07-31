@@ -284,7 +284,6 @@ class SystemModel:
     self.physical_tag = None
     self.adjunct = None
     self.min_loglevel = None
-    self.testing_test = None
     self.metrics_rate_sec = None
 
   @staticmethod
@@ -300,7 +299,6 @@ class SystemModel:
     result.physical_tag = Object30AFA53A.from_dict(source.get('physical_tag'))
     result.adjunct = Object734A44BA.from_dict(source.get('adjunct'))
     result.min_loglevel = source.get('min_loglevel')
-    result.testing_test = source.get('testing_test')
     result.metrics_rate_sec = source.get('metrics_rate_sec')
     return result
 
@@ -338,8 +336,6 @@ class SystemModel:
       result['adjunct'] = self.adjunct.to_dict() # 4
     if self.min_loglevel:
       result['min_loglevel'] = self.min_loglevel # 5
-    if self.testing_test:
-      result['testing_test'] = self.testing_test # 5
     if self.metrics_rate_sec:
       result['metrics_rate_sec'] = self.metrics_rate_sec # 5
     return result

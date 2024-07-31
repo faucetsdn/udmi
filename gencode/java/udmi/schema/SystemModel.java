@@ -28,7 +28,6 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
     "physical_tag",
     "adjunct",
     "min_loglevel",
-    "testing_test",
     "metrics_rate_sec"
 })
 @Generated("jsonschema2pojo")
@@ -88,8 +87,6 @@ public class SystemModel {
     @JsonProperty("min_loglevel")
     @JsonPropertyDescription("The minimum loglevel for reporting log messages below which log entries should not be sent. Default to 300.")
     public Integer min_loglevel = 300;
-    @JsonProperty("testing_test")
-    public Integer testing_test = 3;
     /**
      * The rate at which the system should send system event updates. 0 indicates no updates.
      * 
@@ -103,7 +100,6 @@ public class SystemModel {
         int result = 1;
         result = ((result* 31)+((this.software == null)? 0 :this.software.hashCode()));
         result = ((result* 31)+((this.min_loglevel == null)? 0 :this.min_loglevel.hashCode()));
-        result = ((result* 31)+((this.testing_test == null)? 0 :this.testing_test.hashCode()));
         result = ((result* 31)+((this.metrics_rate_sec == null)? 0 :this.metrics_rate_sec.hashCode()));
         result = ((result* 31)+((this.description == null)? 0 :this.description.hashCode()));
         result = ((result* 31)+((this.location == null)? 0 :this.location.hashCode()));
@@ -123,7 +119,7 @@ public class SystemModel {
             return false;
         }
         SystemModel rhs = ((SystemModel) other);
-        return (((((((((((this.software == rhs.software)||((this.software!= null)&&this.software.equals(rhs.software)))&&((this.min_loglevel == rhs.min_loglevel)||((this.min_loglevel!= null)&&this.min_loglevel.equals(rhs.min_loglevel))))&&((this.testing_test == rhs.testing_test)||((this.testing_test!= null)&&this.testing_test.equals(rhs.testing_test))))&&((this.metrics_rate_sec == rhs.metrics_rate_sec)||((this.metrics_rate_sec!= null)&&this.metrics_rate_sec.equals(rhs.metrics_rate_sec))))&&((this.description == rhs.description)||((this.description!= null)&&this.description.equals(rhs.description))))&&((this.location == rhs.location)||((this.location!= null)&&this.location.equals(rhs.location))))&&((this.physical_tag == rhs.physical_tag)||((this.physical_tag!= null)&&this.physical_tag.equals(rhs.physical_tag))))&&((this.adjunct == rhs.adjunct)||((this.adjunct!= null)&&this.adjunct.equals(rhs.adjunct))))&&((this.tags == rhs.tags)||((this.tags!= null)&&this.tags.equals(rhs.tags))))&&((this.hardware == rhs.hardware)||((this.hardware!= null)&&this.hardware.equals(rhs.hardware))));
+        return ((((((((((this.software == rhs.software)||((this.software!= null)&&this.software.equals(rhs.software)))&&((this.min_loglevel == rhs.min_loglevel)||((this.min_loglevel!= null)&&this.min_loglevel.equals(rhs.min_loglevel))))&&((this.metrics_rate_sec == rhs.metrics_rate_sec)||((this.metrics_rate_sec!= null)&&this.metrics_rate_sec.equals(rhs.metrics_rate_sec))))&&((this.description == rhs.description)||((this.description!= null)&&this.description.equals(rhs.description))))&&((this.location == rhs.location)||((this.location!= null)&&this.location.equals(rhs.location))))&&((this.physical_tag == rhs.physical_tag)||((this.physical_tag!= null)&&this.physical_tag.equals(rhs.physical_tag))))&&((this.adjunct == rhs.adjunct)||((this.adjunct!= null)&&this.adjunct.equals(rhs.adjunct))))&&((this.tags == rhs.tags)||((this.tags!= null)&&this.tags.equals(rhs.tags))))&&((this.hardware == rhs.hardware)||((this.hardware!= null)&&this.hardware.equals(rhs.hardware))));
     }
 
 }

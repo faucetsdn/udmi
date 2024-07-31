@@ -138,7 +138,11 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private SiteMetadataUpdate asSiteMetadataUpdate(String metadataString) {
-    return fromStringDynamic(SiteMetadataUpdate.class, metadataString);
+    SiteMetadataUpdate siteMetadataUpdate =
+        fromStringDynamic(SiteMetadataUpdate.class, metadataString);
+    requireNonNull(siteMetadataUpdate.site, "missing metadata site");
+    requireNonNull(siteMetadataUpdate.timestamp, "missing timestamp in site metadata");
+    return siteMetadataUpdate;
   }
 
   private <T> T fromStringDynamic(Class<T> targetClass, String metadataString) {
@@ -260,7 +264,9 @@ public class ReflectProcessor extends ProcessorBase {
       modelUpdate.system.description = modelString;
       return modelUpdate;
     }
-    return fromStringDynamic(ModelUpdate.class, modelString);
+    ModelUpdate modelUpdate = fromStringDynamic(ModelUpdate.class, modelString);
+    requireNonNull(modelUpdate.timestamp, "missing timestamp in model message");
+    return modelUpdate;
   }
 
   private CloudModel reflectProcess(Envelope attributes, Object payload) {
