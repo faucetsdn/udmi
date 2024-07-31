@@ -38,7 +38,6 @@ import static java.util.Optional.ofNullable;
 import static udmi.schema.CloudModel.Resource_type.REGISTRY;
 import static udmi.schema.Envelope.SubFolder.UPDATE;
 
-import com.fasterxml.jackson.core.JsonParseException;
 import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.ModelUpdate;
 import com.google.bos.udmi.service.messaging.SiteMetadataUpdate;
@@ -153,7 +152,7 @@ public class ReflectProcessor extends ProcessorBase {
     try {
       return fromStringStrict(targetClass, metadataString);
     } catch (Exception e) {
-      warn("String/object conversion failed, trying again with relaxed conversion: ",
+      warn("String conversion failed, trying again with relaxed conversion: ",
           friendlyStackTrace(e));
       return fromString(targetClass, metadataString);
     }
