@@ -125,11 +125,11 @@ public class Validator {
   public static final String TIMESTAMP_ZULU_SUFFIX = "Z";
   public static final String TIMESTAMP_UTC_SUFFIX_1 = "+00:00";
   public static final String TIMESTAMP_UTC_SUFFIX_2 = "+0000";
+  public static final String ATTRIBUTE_FILE_FORMAT = "%s.attr";
+  public static final String MESSAGE_FILE_FORMAT = "%s.json";
   private static final String SCHEMA_VALIDATION_FORMAT = "Validating %d schemas";
   private static final String TARGET_VALIDATION_FORMAT = "Validating %d files against %s";
   private static final String DEVICE_FILE_FORMAT = "devices/%s";
-  private static final String ATTRIBUTE_FILE_FORMAT = "%s.attr";
-  private static final String MESSAGE_FILE_FORMAT = "%s.json";
   private static final String SCHEMA_SKIP_FORMAT = "Unknown schema subFolder '%s' for %s";
   private static final String ENVELOPE_SCHEMA_ID = "envelope";
   private static final String DEVICE_REGISTRY_ID_KEY = "deviceRegistryId";

@@ -11,13 +11,17 @@ import static com.google.daq.mqtt.util.CloudIotManager.EMPTY_CONFIG;
 import static com.google.daq.mqtt.util.ConfigManager.configFrom;
 import static com.google.daq.mqtt.util.IotReflectorClient.REFLECTOR_PREFIX;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
+import static com.google.daq.mqtt.validator.Validator.ATTRIBUTE_FILE_FORMAT;
+import static com.google.daq.mqtt.validator.Validator.MESSAGE_FILE_FORMAT;
 import static com.google.udmi.util.CleanDateFormat.cleanDate;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.Common.DEVICE_ID_KEY;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
+import static com.google.udmi.util.Common.MESSAGE_KEY;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.catchToElse;
 import static com.google.udmi.util.GeneralUtils.changedLines;
+import static com.google.udmi.util.GeneralUtils.decodeBase64;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -28,6 +32,7 @@ import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
+import static com.google.udmi.util.GeneralUtils.writeString;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.getNowInstant;
 import static com.google.udmi.util.JsonUtil.isoConvert;
@@ -984,15 +989,25 @@ public class SequenceBase {
       messageBase = messageBase + "_" + timestamp;
     }
 
+    ifTrueThen(message.containsKey(EXCEPTION_KEY), () -> unwrapException(message, attributes));
     recordRawMessage(message, messageBase);
+    recordMessageAttributes(attributes, messageBase);
+  }
 
-    File attributeFile = new File(testDir, messageBase + ".attr");
+  private void recordMessageAttributes(Envelope attributes, String messageBase) {
+    File file = new File(testDir, format(ATTRIBUTE_FILE_FORMAT, messageBase));
     try {
-      JsonUtil.OBJECT_MAPPER.writeValue(attributeFile, attributes);
+      JsonUtil.OBJECT_MAPPER.writeValue(file, attributes);
     } catch (Exception e) {
-      throw new RuntimeException("While writing attributes to " + attributeFile.getAbsolutePath(),
-          e);
+      throw new RuntimeException("While writing attributes to " + file.getAbsolutePath(), e);
     }
+  }
+
+  private void unwrapException(Map<String, Object> message, Envelope attributes) {
+    Object ex = message.get(EXCEPTION_KEY);
+    attributes.payload = ifTrueGet(ex instanceof Exception,
+        (Supplier<String>) () -> ((Exception) ex).getMessage(),
+        (Supplier<String>) () -> (String) ex);
   }
 
   private void recordRawMessage(Object message, String messageBase) {
@@ -1019,7 +1034,15 @@ public class SequenceBase {
     boolean syntheticMessage = (configMessage || stateMessage) && !updateMessage;
 
     String prefix = localUpdate ? "local " : "received ";
-    File messageFile = new File(testDir, messageBase + ".json");
+    File messageFile = new File(testDir, format(MESSAGE_FILE_FORMAT, messageBase));
+
+    if (message.containsKey(EXCEPTION_KEY)) {
+      String exceptionMessage = (String) message.get(MESSAGE_KEY);
+      Envelope exceptionWrapper = JsonUtil.fromString(Envelope.class, exceptionMessage);
+      writeString(messageFile, decodeBase64(exceptionWrapper.payload));
+      return;
+    }
+
     Object savedException = message == null ? null : message.get(EXCEPTION_KEY);
     try {
       // An actual exception here will cause the JSON serializer to barf, so temporarily sanitize.

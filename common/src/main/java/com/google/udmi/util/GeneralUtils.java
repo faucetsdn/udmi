@@ -596,11 +596,11 @@ public class GeneralUtils {
     return variable;
   }
 
-  public static void writeString(File metadataFile, String metadataString) {
+  public static void writeString(File file, String string) {
     try {
-      FileUtils.write(metadataFile, metadataString, Charset.defaultCharset());
+      FileUtils.write(file, string, Charset.defaultCharset());
     } catch (IOException e) {
-      throw new RuntimeException("While writing output file " + metadataFile.getAbsolutePath(), e);
+      throw new RuntimeException("While writing output file " + file.getAbsolutePath(), e);
     }
   }
 
