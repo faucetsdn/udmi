@@ -28,10 +28,6 @@ cp -a ../bin/ build/udmi_bin/
 cp -a ../etc/ build/udmi_etc/
 cp -a ../schema build/schema/
 
-echo Copying default mosquitto config files...
-mkdir -p var/
-cp /etc/mosquitto/mosquitto.conf var/ || true
-
 jarfile=build/libs/udmis-1.0-SNAPSHOT-all.jar
 
 newer_files=$([[ -f $jarfile ]] && find src/ $BASE/gencode/java -type f -newer $jarfile || echo missing)

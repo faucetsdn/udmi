@@ -336,9 +336,10 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       CreateDeviceRequest request =
           CreateDeviceRequest.Builder.newBuilder().setParent(parent).setDevice(device)
               .build();
-      requireNonNull(deviceManager.createDevice(request),
-          "create device failed for " + parent);
-      cloudModel.num_id = hashedDeviceId(registryId, device.toBuilder().getId());
+      requireNonNull(deviceManager.createDevice(request), "create device failed for " + parent);
+      String numId = device.toBuilder().getNumId();
+      cloudModel.num_id =
+          ofNullable(numId).orElseGet(() -> hashedDeviceId(registryId, device.toBuilder().getId()));
       return cloudModel;
     } catch (ApplicationException applicationException) {
       if (applicationException.getMessage().contains("ALREADY_EXISTS")) {

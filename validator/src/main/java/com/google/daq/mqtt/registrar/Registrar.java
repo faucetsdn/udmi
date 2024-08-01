@@ -323,8 +323,8 @@ public class Registrar {
   private void processSiteMetadata() {
     SiteMetadata siteMetadata = ofNullable(siteModel.loadSiteMetadata()).orElseGet(
         SiteMetadata::new);
-
-    if (siteMetadata != null && updateCloudIoT) {
+    siteMetadata.name = ofNullable(siteMetadata.name).orElse(siteModel.getSiteName());
+    if (updateCloudIoT) {
       cloudIotManager.updateRegistry(siteMetadata);
     }
   }
