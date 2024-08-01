@@ -1,0 +1,16 @@
+#!/bin/bash -e
+
+UDMI_ROOT=$(dirname $0)/..
+cd $UDMI_ROOT
+
+source etc/shell_common.sh
+
+[[ $# == 1 ]] || usage PROJECT_SPEC
+
+project_spec=$1
+shift
+
+pubber_bg AHU-1
+
+# TODO: Test broken_config sequence in trace mode and verify that the result includes the bad json
+false

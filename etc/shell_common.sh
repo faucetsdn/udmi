@@ -28,6 +28,43 @@ function usage {
     false
 }
 
+PUBBER_LOG=out/pubber.log
+function pubber_bg {
+    device_id=$1
+    shift
+    outfile=$PUBBER_LOG.$device_id
+    serial_no=validator-$RANDOM
+
+    device_dir=$site_path/devices/$device_id
+
+    echo bin/keygen CERT $device_dir
+    bin/keygen CERT $device_dir || true
+
+    echo Writing pubber output to $outfile, serial no $serial_no
+    cmd="bin/pubber $site_path $project_id $device_id $serial_no $@"
+    echo $cmd
+
+    date > $outfile
+    echo $cmd >> $outfile
+    $cmd >> $outfile 2>&1 &
+
+    # Give a little bit of time to settle before deterministic check
+
+    for i in `seq 1 $WAITING`; do
+        if fgrep "Connection complete" $outfile; then
+            break
+        fi
+        echo Waiting for pubber startup $((WAITING - i))...
+        sleep 1
+    done
+
+    if [[ $i -eq $WAITING ]]; then
+        echo pubber startup failed:
+        cat $outfile
+        return 1
+    fi
+}
+
 UDMI_ROOT=$(realpath $UDMI_ROOT)
 
 UDMI_JAR=$UDMI_ROOT/validator/build/libs/validator-1.0-SNAPSHOT-all.jar
