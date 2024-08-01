@@ -6,17 +6,17 @@ cd $UDMI_ROOT
 source etc/shell_common.sh
 
 if [[ $# != 1 ]]; then
-    echo Usage: $0 PROJECT_ID
+    echo Usage: $0 PROJECT_SPEC
     false
 fi
 
-project_id=$1
+project_spec=$1
 shift
 
 [[ -n ${GITHUB_RUN_NUMBER:-} ]] && echo "Workflow run number $GITHUB_RUN_NUMBER" || true
-echo 'Using target project:' $project_id
+echo 'Using target project:' $project_spec
 
-echo "export TARGET_PROJECT=$project_id"
+echo "export TARGET_PROJECT=$project_spec"
 echo "export UDMI_REGISTRY_SUFFIX=${UDMI_REGISTRY_SUFFIX:-}"
 echo "export UDMI_ALT_REGISTRY=${UDMI_ALT_REGISTRY:-}"
 
@@ -29,7 +29,7 @@ VALIDATOR_LOG=out/validator.log
 VALIDATOR_OUT=out/validator.out
 GOLDEN_OUT=etc/validator.out
 TRACE_DIR=out/validator_trace
-WAITING=20
+VALIDATOR_WAIT=20
 
 echo Killing running pubber/validator instances...
 ps ax | fgrep pubber | fgrep java | awk '{print $1}' | xargs -r kill || true
@@ -46,30 +46,30 @@ pubber/bin/build
 
 # Have to reset pubber configs before running validator to avoid reflector registry conflict
 for device in AHU-1 AHU-22 GAT-123; do
-    echo bin/reset_config $site_path $project_id $device
-    bin/reset_config $site_path $project_id $device
+    echo bin/reset_config $site_path $project_spec $device
+    bin/reset_config $site_path $project_spec $device
 done
 
 touch $site_path/out/validator_start.nop
 
 echo Starting validator, output in $VALIDATOR_LOG, trace in $TRACE_DIR
 rm -rf $TRACE_DIR
-echo bin/validator $site_path $project_id -w $TRACE_DIR
-bin/validator $site_path $project_id -w $TRACE_DIR > $VALIDATOR_LOG 2>&1 &
+echo bin/validator $site_path $project_spec -w $TRACE_DIR
+bin/validator $site_path $project_spec -w $TRACE_DIR > $VALIDATOR_LOG 2>&1 &
 vpid=$!
 echo Started validator pid $vpid
 
 echo Waiting for validator to startup...
 
-for i in `seq 1 $WAITING`; do
+for i in `seq 1 $VALIDATOR_WAIT`; do
     if fgrep "Entering message loop" $VALIDATOR_LOG; then
         break
     fi
-    echo Waiting for validator startup $((WAITING - i))...
+    echo Waiting for validator startup $((VALIDATOR_WAIT - i))...
     sleep 1
 done
 
-if [[ $i -eq $WAITING ]]; then
+if [[ $i -eq $VALIDATOR_WAIT ]]; then
     echo validator startup failed:
     cat $VALIDATOR_LOG
     false

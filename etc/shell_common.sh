@@ -29,11 +29,12 @@ function usage {
 }
 
 PUBBER_LOG=out/pubber.log
+PUBBER_WAIT=30
 function pubber_bg {
     device_id=$1
     shift
     outfile=$PUBBER_LOG.$device_id
-    serial_no=validator-$RANDOM
+    serial_no=pubber-$RANDOM
 
     device_dir=$site_path/devices/$device_id
 
@@ -41,7 +42,7 @@ function pubber_bg {
     bin/keygen CERT $device_dir || true
 
     echo Writing pubber output to $outfile, serial no $serial_no
-    cmd="bin/pubber $site_path $project_id $device_id $serial_no $@"
+    cmd="bin/pubber $site_path $project_spec $device_id $serial_no $@"
     echo $cmd
 
     date > $outfile
@@ -50,15 +51,15 @@ function pubber_bg {
 
     # Give a little bit of time to settle before deterministic check
 
-    for i in `seq 1 $WAITING`; do
+    for count in `seq 0 $PUBBER_WAIT`; do
         if fgrep "Connection complete" $outfile; then
             break
         fi
-        echo Waiting for pubber startup $((WAITING - i))...
+        echo Waiting for pubber startup $((PUBBER_WAIT - count))...
         sleep 1
     done
 
-    if [[ $i -eq $WAITING ]]; then
+    if [[ $count -eq $PUBBER_WAIT ]]; then
         echo pubber startup failed:
         cat $outfile
         return 1

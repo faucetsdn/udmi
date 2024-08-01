@@ -9,8 +9,16 @@ source etc/shell_common.sh
 
 project_spec=$1
 shift
+site_path=sites/udmi_site_model
+device_id=AHU-1
+serial_no=192842
+device_out=$site_path/out/devices/$device_id
 
-pubber_bg AHU-1
+pubber_bg $device_id
 
-# TODO: Test broken_config sequence in trace mode and verify that the result includes the bad json
-false
+rm -rf $device_out
+
+# Run with trace enabled to capture all intermediate messages
+bin/sequencer -vv $site_path $project_spec $device_id $serial_no broken_config
+
+find $device_out -name \*.json

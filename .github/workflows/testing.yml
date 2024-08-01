@@ -146,6 +146,9 @@ jobs:
         run: bin/start_local sites/udmi_site_model $TARGET_PROJECT
       - name: registrar clean
         run: bin/test_regclean solo $TARGET_PROJECT
+      - name: special sequences
+        if: ${{ !cancelled() }}
+        run: bin/test_special $TARGET_PROJECT
       - name: telemetry validator
         if: ${{ !cancelled() }}
         run: bin/test_validator $TARGET_PROJECT
@@ -161,9 +164,6 @@ jobs:
       - name: nostate sequences
         if: ${{ !cancelled() }}
         run: bin/test_sequencer nostate full $TARGET_PROJECT
-      - name: special sequences
-        if: ${{ !cancelled() }}
-        run: bin/test_special $TARGET_PROJECT
       - name: support bundle
         if: ${{ !cancelled() }}
         run: UDMI_REGISTRY_SUFFIX=_b bin/support ${{ github.repository_owner }}_${{ github.job }}_

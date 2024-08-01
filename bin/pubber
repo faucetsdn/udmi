@@ -124,6 +124,7 @@ fi
 topic_prefix=null
 auth_provider=null
 transport=null
+target_id=$device_id
 
 if [[ $iot_provider == clearblade ]]; then
     broker_hostname=${cloud_region}-mqtt.clearblade.com
@@ -133,7 +134,6 @@ elif [[ $iot_provider == mqtt ]]; then
     broker_hostname=$project_target
     gateway_id=$(jq -r .gateway.gateway_id $site_model/devices/$device_id/metadata.json) || true
     echo Attached to gateway $gateway_id
-    target_id=$device_id
     [[ -z $gateway_id || $gateway_id == null ]] || target_id=$gateway_id
     echo Target is $target_id
     client_id=\"/r/$registry_actual/d/$target_id\"
