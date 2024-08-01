@@ -314,7 +314,7 @@ public class SiteModel {
     File siteMetadataFile = new File(new File(sitePath), SITE_METADATA_FILE);
     siteMetadataExceptionMap = new ExceptionMap(SITE_METADATA_KEY);
     try {
-       siteMetadataObject= loadFileRequired(ObjectNode.class, siteMetadataFile);
+       siteMetadataObject = loadFileRequired(ObjectNode.class, siteMetadataFile);
        return convertToStrict(SiteMetadata.class, siteMetadataObject);
     } catch (Exception e) {
       siteMetadataExceptionMap.put(SITE_METADATA_KEY, e);
@@ -567,6 +567,10 @@ public class SiteModel {
     File ecKeyFile = getDeviceFile(targetId, EC_PRIVATE_KEY);
     File keyFile = ecKeyFile.exists() ? ecKeyFile : rsaKeyFile;
     return sha256(getFileBytes(keyFile)).substring(0, 8);
+  }
+
+  public String getSiteName() {
+    return exeConfig.site_name;
   }
 
   public static class MetadataException extends Metadata {

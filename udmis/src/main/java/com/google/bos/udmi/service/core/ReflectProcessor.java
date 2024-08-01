@@ -25,6 +25,7 @@ import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.fromString;
+import static com.google.udmi.util.JsonUtil.fromStringStrict;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.mapCast;
 import static com.google.udmi.util.JsonUtil.stringify;
@@ -67,6 +68,7 @@ public class ReflectProcessor extends ProcessorBase {
 
   public static final String PAYLOAD_KEY = "payload";
   private static final Date START_TIME = new Date();
+  private static final String LEGACY_METADATA_STRING = "{ }";
 
   public ReflectProcessor(EndpointConfiguration config) {
     super(config);
@@ -137,7 +139,23 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private SiteMetadataUpdate asSiteMetadataUpdate(String metadataString) {
-    return fromString(SiteMetadataUpdate.class, metadataString);
+    SiteMetadataUpdate siteMetadataUpdate =
+        fromStringDynamic(SiteMetadataUpdate.class, metadataString);
+    // TODO: Remove the LEGACY_METADATA_STRING check once tool deployments have matured.
+    if (!LEGACY_METADATA_STRING.equals(metadataString)) {
+      requireNonNull(siteMetadataUpdate.name, "missing site model name");
+    }
+    return siteMetadataUpdate;
+  }
+
+  private <T> T fromStringDynamic(Class<T> targetClass, String metadataString) {
+    try {
+      return fromStringStrict(targetClass, metadataString);
+    } catch (Exception e) {
+      warn("String conversion failed, trying again with relaxed conversion: ",
+          friendlyStackTrace(e));
+      return fromString(targetClass, metadataString);
+    }
   }
 
   private Envelope extractMessageEnvelope(Object message) {
@@ -241,7 +259,7 @@ public class ReflectProcessor extends ProcessorBase {
     }
   }
 
-  private static ModelUpdate asModelUpdate(String modelString) {
+  private ModelUpdate asModelUpdate(String modelString) {
     // If it's not a valid JSON object, then fall back to a string description alternate.
     if (modelString == null || !modelString.startsWith(JsonUtil.JSON_OBJECT_LEADER)) {
       ModelUpdate modelUpdate = new ModelUpdate();
@@ -249,8 +267,9 @@ public class ReflectProcessor extends ProcessorBase {
       modelUpdate.system.description = modelString;
       return modelUpdate;
     }
-    // Not strict because registrar could publish a metadata which fails strictly
-    return fromString(ModelUpdate.class, modelString);
+    ModelUpdate modelUpdate = fromStringDynamic(ModelUpdate.class, modelString);
+    requireNonNull(modelUpdate.system, "missing system block in model message");
+    return modelUpdate;
   }
 
   private CloudModel reflectProcess(Envelope attributes, Object payload) {
