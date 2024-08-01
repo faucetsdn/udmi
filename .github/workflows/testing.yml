@@ -146,6 +146,9 @@ jobs:
         run: bin/start_local sites/udmi_site_model $TARGET_PROJECT
       - name: registrar clean
         run: bin/test_regclean solo $TARGET_PROJECT
+      - name: special sequences
+        if: ${{ !cancelled() }}
+        run: bin/test_special $TARGET_PROJECT
       - name: telemetry validator
         if: ${{ !cancelled() }}
         run: bin/test_validator $TARGET_PROJECT

@@ -52,8 +52,8 @@ After startup, the site model needs to be registered as per standard UDMI practi
 needs to be done once per site model (or after any significant changes). The
 [sample registrar output](registrar_output.md) shows what a successful run looks like.
 ```
-docker run --rm --net udminet --name registrar -v $(realpath site_model):/root/site \
-    ghcr.io/faucetsdn/udmi:validator-latest bin/registrar site/cloud_iot_config.json
+docker run --rm --net udminet --name registrar -v $(realpath site_model):/root/site_model \
+    ghcr.io/faucetsdn/udmi:validator-latest bin/registrar site_model/cloud_iot_config.json
 ```
 
 ## Pubber Instance
@@ -62,8 +62,8 @@ For initial install testing, it's recommended to try first with the standard _pu
 See the [sample pubber output](pubber_output.md) for the beginning of what this run looks like.
 
 ```
-docker run -d --rm --net udminet --name pubber -v $(realpath site_model):/root/site \
-    ghcr.io/faucetsdn/udmi:pubber-latest bin/pubber site/cloud_iot_config.json
+docker run -d --rm --net udminet --name pubber -v $(realpath site_model):/root/site_model \
+    ghcr.io/faucetsdn/udmi:pubber-latest bin/pubber site_model/cloud_iot_config.json
 ```
 
 ## Sequencer Testing
@@ -71,8 +71,8 @@ docker run -d --rm --net udminet --name pubber -v $(realpath site_model):/root/s
 Sequencer can be run directly as per normal too. See the [sample sequencer output](sequencer_output.md)
 for what the beginning of a successful run looks like.
 ```
-docker run --rm --net udminet --name sequencer -v $(realpath $site_model):/root/site \
-    ghcr.io/faucetsdn/udmi:validator-latest bin/sequencer site/cloud_iot_config.json
+docker run --rm --net udminet --name sequencer -v $(realpath $site_model):/root/site_model \
+    ghcr.io/faucetsdn/udmi:validator-latest bin/sequencer site_model/cloud_iot_config.json
 ```
 
 The resulting output can be extracted from the site model, See the [sample report output](report_output.md)
