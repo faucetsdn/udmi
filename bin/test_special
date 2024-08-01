@@ -22,6 +22,8 @@ rm -rf $device_out
 bin/sequencer -vv $site_path $project_spec $device_id $serial_no broken_config
 
 # Check that the message captures for broken_config contain the raw (extracted) message payload"
+echo
+echo Checking broken_config capture results...
 fgrep "RESULT pass system broken_config" $device_out/RESULT.log
 find $device_out -name \*.attr | xargs fgrep "While converting string"
 find $device_out -name \*.json | xargs egrep "^{ broken by"
