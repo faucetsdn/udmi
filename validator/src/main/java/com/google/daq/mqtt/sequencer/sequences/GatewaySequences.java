@@ -68,16 +68,17 @@ public class GatewaySequences extends SequenceBase {
 
     waitFor("All proxy devices received event and state", MESSAGE_WAIT_DURATION,
         () -> {
-      Set<String> remainingState = difference(proxyIds, receivedDevices(proxyIds, UPDATE));
-      String stateMessage =
-          remainingState.isEmpty() ? "" : "Missing state from " + CSV_JOINER.join(remainingState);
-      Set<String> remainingEvents = difference(proxyIds, receivedDevices(proxyIds, POINTSET));
-      String eventsMessage = remainingEvents.isEmpty() ? ""
-          : "Missing events from " + CSV_JOINER.join(remainingEvents);
-      boolean hasBoth = !(stateMessage.isBlank() || eventsMessage.isBlank());
-      String totalMessage = stateMessage + (hasBoth ? "; " : "") + eventsMessage;
-      return totalMessage.isBlank() ? null : totalMessage;
-    });
+          Set<String> remainingState = difference(proxyIds, receivedDevices(proxyIds, UPDATE));
+          String stateMessage =
+              remainingState.isEmpty() ? ""
+                  : "Missing state from " + CSV_JOINER.join(remainingState);
+          Set<String> remainingEvents = difference(proxyIds, receivedDevices(proxyIds, POINTSET));
+          String eventsMessage = remainingEvents.isEmpty() ? ""
+              : "Missing events from " + CSV_JOINER.join(remainingEvents);
+          boolean hasBoth = !(stateMessage.isBlank() || eventsMessage.isBlank());
+          String totalMessage = stateMessage + (hasBoth ? "; " : "") + eventsMessage;
+          return totalMessage.isBlank() ? null : totalMessage;
+        });
 
     Set<String> receivedDevices = getReceivedDevices();
     SetView<String> difference = difference(difference(receivedDevices, proxyIds),

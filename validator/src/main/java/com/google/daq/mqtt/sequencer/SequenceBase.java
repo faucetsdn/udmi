@@ -2325,6 +2325,9 @@ public class SequenceBase {
     }
   }
 
+  /**
+   * Map of captured messages for a device, grouped by SubFolder.
+   */
   protected static class CaptureMap extends HashMap<SubFolder, List<Map<String, Object>>> {
 
   }
