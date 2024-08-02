@@ -1,0 +1,68 @@
+
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>UDMI test results for gateways and direct devices</title>
+        <link href="https://unpkg.com/tabulator-tables@5.5.1/dist/css/tabulator.min.css" rel="stylesheet">
+        <script type="text/javascript" src="https://unpkg.com/tabulator-tables@5.5.1/dist/js/tabulator.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.5/purify.min.js"></script>
+        <style>
+          table { 
+            border-collapse: collapse; 
+            font-family: sans-serif; 
+          }
+          th, td { border: 1px solid black; padding: 5px; }
+          body, h1, ul, li {
+            font-family: sans-serif; 
+          }
+          .tabulator .tabulator-row .tabulator-cell .tabulator-header {
+            font-family: sans-serif; 
+          }
+        </style>
+      </head>
+      <body>
+        <h1>UDMI test results for gateways and direct devices</h1>
+        <ul>
+          <li>Date: 2024-08-02T18:33:18.920Z</li>
+          <li>UDMI version: 1.5.1-19-g375c7313</li>
+        </ul>
+        <div id="testing-table"></div>
+        <script>
+          
+
+          var cellFormatter = function(cell, formatterParams){
+            var value = cell.getValue();
+            if (value.startsWith("img")) {
+              return "<img src='" + cell.getValue() + "' width='100' />";
+            }
+            if (value == "Pass" || value == "Yes"){
+                return "<img src='img/yes.png'/>";
+            } else if (value == "Fail" || value == "No") {
+              return "<img src='img/no.png'/>";
+            } else if (value == "Skip") {
+              return "<img src='img/skip.png'/>";
+            } else {
+                cell.getElement().style.whiteSpace = "pre-wrap";
+	              return this.emptyToSpace(DOMPurify.sanitize(value));
+            }
+          }
+
+          const tabledata = [{"Bucket":"image","Feature":"","Stage":"","DDC-1":"img/products/FW-14.png","DDC-9":"img/products/FS-32.png","DDC-3":"img/products/O3-DIN-CPU.png","DDC-4":"img/products/eBCON-2.png","DDC-5":"img/products/Mango_os.png","DDC-10":"img/products/LROC_400.png","DDC-12":"img/products/ALC_OFHI.png","DDC-7":"img/products/distech_apex.jpg","DDC-2":"img/products/tridium_jace-8000.jpg","DDC-13":"img/products/tyrrell.jpg","CGW-1":"img/products/enlighted.png"},{"Bucket":"make","Feature":"","Stage":"","DDC-1":"JCI","DDC-9":"JCI","DDC-3":"Delta Controls Inc.","DDC-4":"Delta Controls","DDC-5":"RadixIoT","DDC-10":"LOYTEC electronics","DDC-12":"Automated Logic Corporation","DDC-7":"Distech","DDC-2":"Tridium","DDC-13":"Tyrrell Systems","CGW-1":"Enlighted"},{"Bucket":"model","Feature":"","Stage":"","DDC-1":"FW14/08/28","DDC-9":"FS32/20","DDC-3":"O3-DIN-CPU","DDC-4":"eBCON2","DDC-5":"Mango","DDC-10":"LROC-400","DDC-12":"OFHI","DDC-7":"Apex","DDC-2":"JACE8000 + UDMI driver","DDC-13":"eBMS/Iot Control","CGW-1":"EN-EDGE"},{"Bucket":"firmware","Feature":"","Stage":"","DDC-1":"v1.0b23_GS","DDC-9":"V3.0b61a_GS","DDC-3":"4.13.1.1017 (4130-001)","DDC-4":"4.14.0.2116 (4141-001)","DDC-5":"5.1.1-beta.2","DDC-10":"8.2.0","DDC-12":"108.04.20042","DDC-7":"2.3.14","DDC-2":"V4.13","DDC-13":"N4.13","CGW-1":""},{"Bucket":"test_date","Feature":"","Stage":"","DDC-1":"2024-02-14T09:12:47Z","DDC-9":"2024-02-15T14:00:51Z","DDC-3":"2024-02-26T13:46:12Z","DDC-4":"2024-02-15T16:17:51Z","DDC-5":"2024-02-12T09:02:59Z","DDC-10":"2024-01-30T19:02:54Z","DDC-12":"2024-02-28T17:08:52Z","DDC-7":"2024-06-27T15:36:58Z","DDC-2":"2024-07-30T13:31:45Z","DDC-13":"2024-06-11T14:57:13Z","CGW-1":"2024-06-13T15:46:13Z"},{"Bucket":"manual","Feature":"is_iotcore_gateway","Stage":"-","DDC-1":"Yes","DDC-9":"Yes","DDC-3":"Yes","DDC-4":"Yes","DDC-5":"Yes","DDC-10":"No","DDC-12":"Yes","DDC-7":"No","DDC-2":"Yes","DDC-13":"Yes","CGW-1":"Yes"},{"Bucket":"manual","Feature":"udmi.native","Stage":"-","DDC-1":"No","DDC-9":"No","DDC-3":"Yes","DDC-4":"Yes","DDC-5":"Yes","DDC-10":"Yes","DDC-12":"Yes","DDC-7":"Yes","DDC-2":"No","DDC-13":"Yes","CGW-1":"No"},{"Bucket":"manual","Feature":"endpoint.manual","Stage":"-","DDC-1":"Pass","DDC-9":"Pass","DDC-3":"Pass","DDC-4":"Pass","DDC-5":"Pass","DDC-10":"Pass","DDC-12":"Pass","DDC-7":"Pass","DDC-2":"Pass","DDC-13":"Pass","CGW-1":"Pass"},{"Bucket":"manual","Feature":"endpoint.clearblade_connected","Stage":"-","DDC-1":"Pass","DDC-9":"Pass","DDC-3":"Pass","DDC-4":"Pass","DDC-5":"Pass","DDC-10":"Pass","DDC-12":"Pass","DDC-7":"Pass","DDC-2":"Pass","DDC-13":"Pass","CGW-1":"Pass"},{"Bucket":"manual","Feature":"endpoint.mqtt.mqtt_311","Stage":"-","DDC-1":"Pass","DDC-9":"Pass","DDC-3":"Pass","DDC-4":"Pass","DDC-5":"Pass","DDC-10":"Pass","DDC-12":"Pass","DDC-7":"Pass","DDC-2":"Pass","DDC-13":"Pass","CGW-1":"Pass"},{"Bucket":"manual","Feature":"endpoint.mqtt.mqtt_tls","Stage":"-","DDC-1":"Pass","DDC-9":"Pass","DDC-3":"Pass","DDC-4":"Pass","DDC-5":"Pass","DDC-10":"Pass","DDC-12":"Pass","DDC-7":"Pass","DDC-2":"Pass","DDC-13":"Pass","CGW-1":"Pass"},{"Bucket":"manual","Feature":"endpoint.mqtt.mqtt_sustained","Stage":"-","DDC-1":"Pass","DDC-9":"Pass","DDC-3":"Pass","DDC-4":"Pass","DDC-5":"Pass","DDC-10":"Pass","DDC-12":"Pass","DDC-7":"Pass","DDC-2":"Pass","DDC-13":"Pass","CGW-1":"Pass"},{"Bucket":"manual","Feature":"endpoint.mqtt.mqtt_reconnect","Stage":"-","DDC-1":"Pass","DDC-9":"Pass","DDC-3":"Pass","DDC-4":"Pass","DDC-5":"Pass","DDC-10":"Pass","DDC-12":"Pass","DDC-7":"Pass","DDC-2":"Pass","DDC-13":"Pass","CGW-1":"Pass"},{"Bucket":"manual","Feature":"endpoint.mqtt.mqtt_exponential_backoff","Stage":"-","DDC-1":"Fail","DDC-9":"Fail","DDC-3":"Fail","DDC-4":"Fail","DDC-5":"Pass","DDC-10":"Fail","DDC-12":"Fail","DDC-7":"Fail","DDC-2":"Fail","DDC-13":"Fail","CGW-1":"Skip"},{"Bucket":"manual","Feature":"endpoint.mqtt.mqtt_auth_jwt","Stage":"-","DDC-1":"Pass","DDC-9":"Pass","DDC-3":"Pass","DDC-4":"Pass","DDC-5":"Pass","DDC-10":"Pass","DDC-12":"Pass","DDC-7":"Pass","DDC-2":"Pass","DDC-13":"Pass","CGW-1":"Pass"},{"Bucket":"manual","Feature":"datapoint_mapping","Stage":"-","DDC-1":"Fail","DDC-9":"Fail","DDC-3":"Pass","DDC-4":"Pass","DDC-5":"Pass","DDC-10":"Pass","DDC-12":"Pass","DDC-7":"Pass","DDC-2":"Fail","DDC-13":"Fail","CGW-1":"Pass"},{"Bucket":"manual","Feature":"time_utc_format","Stage":"-","DDC-1":"Pass","DDC-9":"Pass","DDC-3":"Pass","DDC-4":"Pass","DDC-5":"Pass","DDC-10":"Pass","DDC-12":"Pass","DDC-7":"Pass","DDC-2":"Fail","DDC-13":"Pass","CGW-1":"Pass"},{"Bucket":"pointset","Feature":"pointset_publish","Stage":"beta","DDC-1":"Pass","DDC-9":"Pass","DDC-3":"Pass","DDC-4":"Pass","DDC-5":"Pass","DDC-10":"Pass","DDC-12":"Skip","DDC-7":"Pass","DDC-2":"Fail","DDC-13":"Pass","CGW-1":"Skip"},{"Bucket":"pointset","Feature":"pointset_publish_interval","Stage":"beta","DDC-1":"Pass","DDC-9":"Pass","DDC-3":"Pass","DDC-4":"Pass","DDC-5":"Pass","DDC-10":"Pass","DDC-12":"Skip","DDC-7":"Pass","DDC-2":"Fail","DDC-13":"Pass","CGW-1":"Skip"},{"Bucket":"pointset","Feature":"pointset_remove_point","Stage":"beta","DDC-1":"Fail","DDC-9":"Fail","DDC-3":"Fail","DDC-4":"Fail","DDC-5":"Pass","DDC-10":"Pass","DDC-12":"Skip","DDC-7":"Pass","DDC-2":"Fail","DDC-13":"Fail","CGW-1":"Skip"},{"Bucket":"pointset","Feature":"pointset_request_extraneous","Stage":"beta","DDC-1":"Fail","DDC-9":"Fail","DDC-3":"Fail","DDC-4":"Fail","DDC-5":"Pass","DDC-10":"Fail","DDC-12":"Skip","DDC-7":"Pass","DDC-2":"Fail","DDC-13":"Fail","CGW-1":"Skip"},{"Bucket":"pointset","Feature":"pointset_sample_rate","Stage":"beta","DDC-1":"Pass","DDC-9":"Pass","DDC-3":"Fail","DDC-4":"Fail","DDC-5":"Pass","DDC-10":"Pass","DDC-12":"Skip","DDC-7":"Pass","DDC-2":"Fail","DDC-13":"Pass","CGW-1":"Skip"},{"Bucket":"system","Feature":"broken_config","Stage":"beta","DDC-1":"Pass","DDC-9":"Pass","DDC-3":"Pass","DDC-4":"Pass","DDC-5":"Pass","DDC-10":"Pass","DDC-12":"Fail","DDC-7":"Pass","DDC-2":"Fail","DDC-13":"Pass","CGW-1":"Fail"},{"Bucket":"system","Feature":"config_logging.receive","Stage":"beta","DDC-1":"Fail","DDC-9":"Fail","DDC-3":"Fail","DDC-4":"Fail","DDC-5":"Pass","DDC-10":"Fail","DDC-12":"Fail","DDC-7":"Pass","DDC-2":"Fail","DDC-13":"Fail","CGW-1":"Pass"},{"Bucket":"system","Feature":"config_logging.parse","Stage":"beta","DDC-1":"Fail","DDC-9":"Fail","DDC-3":"Fail","DDC-4":"Fail","DDC-5":"Pass","DDC-10":"Fail","DDC-12":"Pass","DDC-7":"Pass","DDC-2":"Fail","DDC-13":"Fail","CGW-1":"Pass"},{"Bucket":"system","Feature":"config_logging.apply","Stage":"beta","DDC-1":"Pass","DDC-9":"Pass","DDC-3":"Fail","DDC-4":"Fail","DDC-5":"Pass","DDC-10":"Fail","DDC-12":"Pass","DDC-7":"Pass","DDC-2":"Fail","DDC-13":"Pass","CGW-1":"Pass"},{"Bucket":"system","Feature":"device_config_acked","Stage":"beta","DDC-1":"Pass","DDC-9":"Pass","DDC-3":"Pass","DDC-4":"Pass","DDC-5":"Pass","DDC-10":"Pass","DDC-12":"Pass","DDC-7":"Pass","DDC-2":"Pass","DDC-13":"Pass","CGW-1":"Pass"},{"Bucket":"system","Feature":"extra_config","Stage":"beta","DDC-1":"Pass","DDC-9":"Pass","DDC-3":"Pass","DDC-4":"Pass","DDC-5":"Pass","DDC-10":"Pass","DDC-12":"Pass","DDC-7":"Pass","DDC-2":"Fail","DDC-13":"Pass","CGW-1":"Pass"},{"Bucket":"system","Feature":"state_make_model","Stage":"beta","DDC-1":"Pass","DDC-9":"Pass","DDC-3":"Pass","DDC-4":"Pass","DDC-5":"Pass","DDC-10":"Pass","DDC-12":"Pass","DDC-7":"Pass","DDC-2":"Fail","DDC-13":"Pass","CGW-1":"Pass"},{"Bucket":"system","Feature":"state_software","Stage":"beta","DDC-1":"Pass","DDC-9":"Pass","DDC-3":"Pass","DDC-4":"Pass","DDC-5":"Pass","DDC-10":"Pass","DDC-12":"Pass","DDC-7":"Pass","DDC-2":"Fail","DDC-13":"Pass","CGW-1":"Pass"},{"Bucket":"system","Feature":"system_last_update","Stage":"stable","DDC-1":"Pass","DDC-9":"Pass","DDC-3":"Pass","DDC-4":"Pass","DDC-5":"Pass","DDC-10":"Pass","DDC-12":"Pass","DDC-7":"Pass","DDC-2":"Pass","DDC-13":"Pass","CGW-1":"Pass"},{"Bucket":"system","Feature":"valid_serial_no","Stage":"beta","DDC-1":"Pass","DDC-9":"Pass","DDC-3":"Pass","DDC-4":"Pass","DDC-5":"Pass","DDC-10":"Pass","DDC-12":"Pass","DDC-7":"Pass","DDC-2":"Fail","DDC-13":"Pass","CGW-1":"Pass"},{"Bucket":"system","Feature":"family_ether_addr","Stage":"alpha","DDC-1":"Fail","DDC-9":"Fail","DDC-3":"Fail","DDC-4":"Fail","DDC-5":"Pass","DDC-10":"Fail","DDC-12":"Fail","DDC-7":"Fail","DDC-2":"Fail","DDC-13":"Fail","CGW-1":"Skip"},{"Bucket":"system","Feature":"family_ipv4_addr","Stage":"alpha","DDC-1":"Fail","DDC-9":"Fail","DDC-3":"Fail","DDC-4":"Fail","DDC-5":"Pass","DDC-10":"Fail","DDC-12":"Fail","DDC-7":"Fail","DDC-2":"Fail","DDC-13":"Fail","CGW-1":"Skip"},{"Bucket":"notes","Feature":"","Stage":"","DDC-1":"Not UDMI native device\nas UDMI configuration\nis done using web interface\nof the device.\n\nNew UDMI\nspecification requires\nlog entry at DEBUG level for config_logging.receive and config_logging.parse..","DDC-9":"Not UDMI native device\nas UDMI configuration\nis done using web interface\nof the device.\n\nNew UDMI\nspecification requires\nlog entry at DEBUG level for config_logging.receive and config_logging.parse..","DDC-3":"Publish telemetry frequency is the same for the gateway and the proxied device.\n\nDevice is publishing\npartial state messages\nafter config.\n\nDevice does not parse\nminimum config.","DDC-4":"Publish telemetry frequency is the same for the gateway and the proxied device.\n\nDevice is publishing\npartial state messages\nafter config.\n\nDevice does not parse\nminimum config.","DDC-5":"Proxied device does not\npublish state message.","DDC-10":"","DDC-12":"","DDC-7":"Device is not UDMI Gateway","DDC-2":"","DDC-13":"","CGW-1":"Device is hosted on Enlighted cloud - no access to configuration"}];
+          const columns = [{"title":"Bucket","field":"Bucket",formatter:cellFormatter},{"title":"Feature","field":"Feature",formatter:cellFormatter},{"title":"Stage","field":"Stage",formatter:cellFormatter},{"title":"DDC-1","field":"DDC-1",formatter:cellFormatter},{"title":"DDC-9","field":"DDC-9",formatter:cellFormatter},{"title":"DDC-3","field":"DDC-3",formatter:cellFormatter},{"title":"DDC-4","field":"DDC-4",formatter:cellFormatter},{"title":"DDC-5","field":"DDC-5",formatter:cellFormatter},{"title":"DDC-10","field":"DDC-10",formatter:cellFormatter},{"title":"DDC-12","field":"DDC-12",formatter:cellFormatter},{"title":"DDC-7","field":"DDC-7",formatter:cellFormatter},{"title":"DDC-2","field":"DDC-2",formatter:cellFormatter},{"title":"DDC-13","field":"DDC-13",formatter:cellFormatter},{"title":"CGW-1","field":"CGW-1",formatter:cellFormatter}]
+
+          
+          new Tabulator("#testing-table", {
+            data: tabledata,
+            columns: columns,
+            layout:"fitColumns", 
+            resizableRows:true, 
+            cellVertAlign:"top",
+            resizableRows:true,
+            wrapCells: true,
+            responsiveLayout:"hide",
+            height:"100%",
+          });
+        </script>
+      </body>
+    </html>
+  
