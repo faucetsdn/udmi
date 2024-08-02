@@ -4,6 +4,7 @@ import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static org.junit.Assert.assertTrue;
 import static udmi.schema.Envelope.SubFolder.POINTSET;
+import static udmi.schema.Envelope.SubFolder.UPDATE;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -59,8 +60,11 @@ public class GatewaySequences extends SequenceBase {
     captureReceivedEventsFor(remaining);
     Set<String> original = ImmutableSet.copyOf(remaining);
 
-    untilTrue("All proxy devices received data", () -> {
-      remaining.stream().filter(this::hasReceivedPointset).toList().forEach(remaining::remove);
+    untilTrue("All proxy devices received event and state", () -> {
+      remaining.stream()
+          .filter(this::hasReceivedPointset)
+          .filter(this::hasReceivedState)
+          .toList().forEach(remaining::remove);
       return remaining.isEmpty();
     }, () -> "Missing data from " + CSV_JOINER.join(remaining));
 
@@ -68,6 +72,10 @@ public class GatewaySequences extends SequenceBase {
     SetView<String> difference =
         Sets.difference(Sets.difference(receivedDevices, original), ImmutableSet.of(getDeviceId()));
     assertTrue("unexpected proxy device: " + CSV_JOINER.join(difference), difference.isEmpty());
+  }
+
+  private boolean hasReceivedState(String deviceId  ) {
+    return !getReceivedEvents(deviceId, UPDATE).isEmpty();
   }
 
   private boolean hasReceivedPointset(String deviceId) {

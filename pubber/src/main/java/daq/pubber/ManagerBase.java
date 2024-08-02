@@ -49,7 +49,7 @@ public abstract class ManagerBase {
   }
 
   protected void updateState(Object state) {
-    host.update(state);
+    host.updateState(state);
   }
 
   protected ScheduledFuture<?> scheduleFuture(Date futureTime, Runnable futureTask) {

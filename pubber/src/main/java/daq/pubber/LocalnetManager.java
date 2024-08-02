@@ -66,7 +66,7 @@ public class LocalnetManager extends ManagerBase implements ManagerHost {
   }
 
   @Override
-  public void update(Object update) {
+  public void updateState(Object update) {
     throw new RuntimeException("Not yet implemented");
   }
 

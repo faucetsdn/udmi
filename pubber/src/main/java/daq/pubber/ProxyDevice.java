@@ -76,12 +76,12 @@ public class ProxyDevice extends ManagerBase implements ManagerHost {
   }
 
   @Override
-  public void update(Object update) {
+  public void updateState(Object update) {
     Pubber.updateStateHolder(deviceState, update);
     stateDirty.set(true);
   }
 
-  public void publishDirtyState() {
+  private void publishDirtyState() {
     if (stateDirty.getAndSet(false)) {
       pubberHost.publish(deviceId, deviceState);
     }

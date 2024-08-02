@@ -54,6 +54,7 @@ import static udmi.schema.Bucket.UNKNOWN_DEFAULT;
 import static udmi.schema.Category.VALIDATION_FEATURE_CAPABILITY;
 import static udmi.schema.Category.VALIDATION_FEATURE_SCHEMA;
 import static udmi.schema.Category.VALIDATION_FEATURE_SEQUENCE;
+import static udmi.schema.Envelope.SubFolder.UPDATE;
 import static udmi.schema.FeatureDiscovery.FeatureStage.ALPHA;
 import static udmi.schema.FeatureDiscovery.FeatureStage.PREVIEW;
 import static udmi.schema.FeatureDiscovery.FeatureStage.STABLE;
@@ -205,7 +206,7 @@ public class SequenceBase {
   );
   private static final Map<String, AtomicInteger> UPDATE_COUNTS = new HashMap<>();
   private static final String LOCAL_PREFIX = "local_";
-  private static final String UPDATE_SUBFOLDER = SubFolder.UPDATE.value();
+  private static final String UPDATE_SUBFOLDER = UPDATE.value();
   private static final String STATE_SUBTYPE = SubType.STATE.value();
   private static final String CONFIG_SUBTYPE = SubType.CONFIG.value();
   private static final String LOCAL_CONFIG_UPDATE = LOCAL_PREFIX + UPDATE_SUBFOLDER;
@@ -1179,9 +1180,9 @@ public class SequenceBase {
     } else {
       if (force) {
         debug("Forcing config update");
-        sentConfig.remove(SubFolder.UPDATE);
+        sentConfig.remove(UPDATE);
       }
-      updateConfig(SubFolder.UPDATE, deviceConfig);
+      updateConfig(UPDATE, deviceConfig);
     }
 
     if (configIsPending()) {
@@ -1645,7 +1646,7 @@ public class SequenceBase {
 
       if (proxiedDevice) {
         handleProxyMessage(deviceId, envelope, message);
-      } else if (SubFolder.UPDATE.value().equals(subFolderRaw)) {
+      } else if (UPDATE.value().equals(subFolderRaw)) {
         handleUpdateMessage(subTypeRaw, message, transactionId);
       } else {
         handleDeviceMessage(message, subTypeRaw, subFolderRaw, transactionId);
