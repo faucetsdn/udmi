@@ -56,8 +56,6 @@ project_id=$1
 shift
 targets=$*
 
-ls -l out/validator.out
-
 [[ -n ${GITHUB_RUN_NUMBER:-} ]] && echo "Workflow run number $GITHUB_RUN_NUMBER" || true
 echo "export TARGET_PROJECT=$project_id"
 echo "export UDMI_REGISTRY_SUFFIX=${UDMI_REGISTRY_SUFFIX:-}"
@@ -65,6 +63,7 @@ echo "export UDMI_ALT_REGISTRY=${UDMI_ALT_REGISTRY:-}"
 echo "export MATRIX_SHARD_COUNT=${MATRIX_SHARD_COUNT:-}"
 echo "export MATRIX_SHARD_INDEX=${MATRIX_SHARD_INDEX:-}"
 
+[[ -z $suffix ]] || suffix_start=out/.$suffix.start
 site_path=sites/udmi_site_model
 iot_config=$site_path/cloud_iot_config.json
 device_id=AHU-1
@@ -73,13 +72,13 @@ output_file=$site_out/sequencer_$device_id.json
 device_out_base=$site_out/devices/$device_id
 tests_out_base=$device_out_base/tests
 
+[[ -n $suffix_start ]] && touch $suffix_start
+
 if [[ -n $clean_cache ]]; then
     rm -rf $site_path/out-seq $site_out
 fi
 
 mkdir -p out/ $tests_out_base/
-
-ls -l out/validator.out
 
 serial_no=sequencer-$RANDOM
 echo Using pubber with serial $serial_no
@@ -92,7 +91,6 @@ if [[ -n $pids ]]; then
     kill $pids
 fi
 
-ls -l out/validator.out
 bin/clone_model # Clone, and check that version is correct.
 
 if [[ -n ${UDMI_REGISTRY_SUFFIX:-} ]]; then
@@ -108,13 +106,11 @@ fi
 
 bin/reset_config $site_path $project_id $device_id
 
-ls -l out/validator.out
 # Clean out the persistant data store to ensure a clean state each time.
 rm -rf $site_out/devices/${device_id}/persistent_data.json
 
 pubber/bin/build
 
-ls -l out/validator.out
 echo Writing pubber output to $PUBBER_LOG
 echo bin/pubber $site_path $project_id $device_id $serial_no $pubber_opts
 bin/pubber $site_path $project_id $device_id $serial_no $pubber_opts > $PUBBER_LOG 2>&1 &
@@ -127,7 +123,6 @@ for i in `seq 1 $WAITING`; do
     echo Waiting for pubber startup $((WAITING - i))...
     sleep 2
 done
-ls -l out/validator.out
 
 if [[ $i -eq $WAITING ]]; then
     echo Pubber log $PUBBER_LOG:
@@ -138,15 +133,12 @@ fi
 # Augment the device metadata to that tests know what to expect...
 bin/augment_metadata $site_path $device_id $pubber_opts
 
-ls -l out/validator.out
-
 # Run in debug mode for fail-fast when things go wrong!
 echo bin/sequencer $debug_opts $seq_opts $site_path $project_id $device_id $serial_no $targets
 seq_fail=0
 bin/sequencer $debug_opts $seq_opts $site_path $project_id $device_id $serial_no $targets || seq_fail=$?
 echo Completed execution of sequencer test run, exit code $seq_fail
 
-ls -l out/validator.out
 echo Reported cloud version info: $(jq .cloud_version.udmi_ref $output_file)
 
 echo Combining partial-run output files...
@@ -155,6 +147,7 @@ echo Combining partial-run output files...
     files=$(ls -1 *.out *.log)
     echo Merging $files
     for file in $files; do
+        [[ $file -nt ../$suffix_start ]] || continue
         nfile=$(echo $file | sed -E -r "s/\.(.*)\$/$suffix.\1/")
         [[ $file != $nfile ]] && mv $file $nfile && echo Renamed $file to $nfile
         cp $nfile $nfile.save
@@ -162,7 +155,6 @@ echo Combining partial-run output files...
         cp $nfile.combined $nfile
     done
 )
-ls -l out/validator.out
 
 if [[ -n $out_check && -z $targets ]]; then
     if [[ -n $clean_cache ]]; then
@@ -180,7 +172,6 @@ fi
 
 [[ $seq_fail == 0 ]] || fail Primary squencer run exited with errors, aborting.
 
-ls -l out/validator.out
 pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
 if [[ -n $pids ]]; then
     echo Killing pubber pids $pids
@@ -195,7 +186,6 @@ result_count=$(fgrep RESULT out/sequencer$suffix.out.save | wc -l)
 if [[ $target_count != $result_count ]]; then
     fail Only $result_count results found for expected $target_count targets.
 fi
-ls -l out/validator.out
 
 GOLDEN_FILE=etc/sequencer${suffix}.out
 echo Checking for correctness of completed tests in $GOLDEN_FILE...
@@ -203,5 +193,4 @@ while read result; do
     fgrep "$result" $GOLDEN_FILE || fail Expected result not found for $result
 done < out/sequencer${suffix}.out.save
 
-ls -l out/validator.out
 echo Done with $suffix test_sequencer run.
