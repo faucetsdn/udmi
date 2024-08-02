@@ -152,18 +152,26 @@ jobs:
       - name: telemetry validator
         if: ${{ !cancelled() }}
         run: bin/test_validator $TARGET_PROJECT
+      - name: validator.out
+        run: ls -l out/validator.out
       - name: validator result
         if: ${{ !cancelled() }}
         run: more out/validator.out* || true
+      - name: validator.out
+        run: ls -l out/validator.out
       - name: message captures
         if: ${{ !cancelled() }}
         run: |
           cd sites/udmi_site_model/out
           find . -type f | sort | xargs ls -l
           find . -type f | sort | xargs more | cat
+      - name: validator.out
+        run: ls -l out/validator.out
       - name: nostate sequences
         if: ${{ !cancelled() }}
         run: bin/test_sequencer nostate full $TARGET_PROJECT
+      - name: validator.out
+        run: ls -l out/validator.out
       - name: support bundle
         if: ${{ !cancelled() }}
         run: |
