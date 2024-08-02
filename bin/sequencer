@@ -3,6 +3,7 @@
 # Command line wrapper to create a config file, and pass off
 # to sequence looper for complete sequence run.
 #
+ls -l out/validator.out
 
 UDMI_ROOT=$(realpath $(dirname $0)/..)
 source $UDMI_ROOT/etc/shell_common.sh
@@ -20,7 +21,9 @@ DEFAULT_SERIAL=//
 log_level=INFO
 min_stage=PREVIEW
 
+ls -l out/validator.out
 rm -f $SEQUENCER_LOG $SEQUENCER_OUT $SCHEMA_OUT
+ls -l out/validator.out
 
 # Shortcut to run sequencer with a fixed config and cmd-line tests.
 # TODO: Make this a better (more standard) command line format in-line with other tools.
@@ -30,6 +33,7 @@ if [[ ${1-} == -- ]]; then
     exit 0
 fi
 
+ls -l out/validator.out
 while [[ ${1-} =~ ^- ]]; do
     if [[ $1 == '-a' ]]; then
         min_stage=ALPHA
@@ -46,6 +50,7 @@ while [[ ${1-} =~ ^- ]]; do
     shift
 done
 
+ls -l out/validator.out
 if [[ $# == 0 ]]; then
     usage [-v] [-vv] [-a] [-x] SITE_MODEL PROJECT_SPEC DEVICE_ID [SERIAL_NO] [TEST_NAMES...]
 fi
@@ -62,6 +67,7 @@ if [[ -d $site_path ]]; then
     shift || true
 fi
 
+ls -l out/validator.out
 registry_suffix=null
 alt_registry=null
 
@@ -74,6 +80,7 @@ if [[ -n $sequences ]]; then
 else
     sequences=null
 fi
+ls -l out/validator.out
     
 cd $UDMI_ROOT
 
@@ -82,6 +89,7 @@ if ! bin/which_venv_pip3; then
     false
 fi
 
+ls -l out/validator.out
 source venv/bin/activate
 
 quoted_namespace=null
@@ -115,6 +123,7 @@ else
     false
 fi
 
+ls -l out/validator.out
 if [[ $project_id == -- ]]; then
     echo Configuring for mock project use...
     project_id=mock-project
@@ -143,6 +152,7 @@ else
     quoted_id=null
 fi
 
+ls -l out/validator.out
 export SEQUENCER_CONFIG=/tmp/sequencer_config.json
 
 if [[ ! $site_path -ef $SEQUENCER_CONFIG ]]; then
@@ -178,6 +188,7 @@ cat $SEQUENCER_CONFIG
 echo $JAVA_CMD
 result=0
 $JAVA_CMD 2>&1 | tee $SEQUENCER_LOG || true
+ls -l out/validator.out
 
 echo
 echo Extracting sequence results:
@@ -187,9 +198,12 @@ egrep 'RESULT |CPBLTY ' $SEQUENCER_LOG | fgrep NOTICE | sort -k 6 | \
 
 [[ -s $SEQUENCER_OUT ]] || fail No test results found.
 
+ls -l out/validator.out
 # Sort by test name (3th field)
 fgrep RESULT $site_model/out/devices/$device_id/RESULT.log | \
     fgrep ' schemas ' | sort -k 3 | tee $SCHEMA_OUT || true
 more $site_model/out/devices/$device_id/RESULT.log $SCHEMA_OUT | cat
+ls -l out/validator.out
 
 bin/sequencer_report $site_model $device_id
+ls -l out/validator.out
