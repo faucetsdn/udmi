@@ -15,14 +15,23 @@ import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.Summary;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Test;
 import udmi.schema.Bucket;
+import udmi.schema.Config;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.FeatureDiscovery.FeatureStage;
+import udmi.schema.PointsetConfig;
+import udmi.schema.PointsetState;
+import udmi.schema.State;
+import udmi.schema.SystemConfig;
+import udmi.schema.SystemState;
 
 /**
  * Specific tests for logical gateway devices. This is not the same as proxied devices (devices that
@@ -31,6 +40,8 @@ import udmi.schema.FeatureDiscovery.FeatureStage;
 public class GatewaySequences extends SequenceBase {
 
   private static final Duration MESSAGE_WAIT_DURATION = Duration.of(30, ChronoUnit.SECONDS);
+  private static final int POINTSET_SAMPLE_RATE_SEC = 10;
+  private Map<String, Config> proxyConfigs = new HashMap<>();
 
   @Before
   public void setupExpectedParameters() {
@@ -63,27 +74,45 @@ public class GatewaySequences extends SequenceBase {
   @Summary("Check that a gateway proxies pointset events for indicated devices")
   @Test(timeout = TWO_MINUTES_MS)
   public void gateway_proxy_events() {
+    waitForProxyMessages(POINTSET);
+  }
+
+  @Feature(stage = FeatureStage.PREVIEW, bucket = Bucket.GATEWAY, nostate = true)
+  @Summary("Check that a gateway proxies state updates for indicated devices")
+  @Test(timeout = TWO_MINUTES_MS)
+  public void gateway_proxy_state() {
+    waitForProxyMessages(UPDATE);
+  }
+
+  private void waitForProxyMessages(SubFolder subFolder) {
     Set<String> proxyIds = ImmutableSet.copyOf(deviceMetadata.gateway.proxy_ids);
     captureReceivedEventsFor(proxyIds);
 
+    proxyIds.forEach(this::updateProxyConfig);
+
     waitFor("All proxy devices received event and state", MESSAGE_WAIT_DURATION,
         () -> {
-          Set<String> remainingState = difference(proxyIds, receivedDevices(proxyIds, UPDATE));
-          String stateMessage =
-              remainingState.isEmpty() ? ""
-                  : "Missing state from " + CSV_JOINER.join(remainingState);
-          Set<String> remainingEvents = difference(proxyIds, receivedDevices(proxyIds, POINTSET));
-          String eventsMessage = remainingEvents.isEmpty() ? ""
-              : "Missing events from " + CSV_JOINER.join(remainingEvents);
-          boolean hasBoth = !(stateMessage.isBlank() || eventsMessage.isBlank());
-          String totalMessage = stateMessage + (hasBoth ? "; " : "") + eventsMessage;
-          return totalMessage.isBlank() ? null : totalMessage;
+          Set<String> remainingEvents = difference(proxyIds, receivedDevices(proxyIds, subFolder));
+          return remainingEvents.isEmpty() ? null : "Missing events from " + CSV_JOINER.join(remainingEvents);
         });
 
     Set<String> receivedDevices = getReceivedDevices();
     SetView<String> difference = difference(difference(receivedDevices, proxyIds),
         ImmutableSet.of(getDeviceId()));
     assertTrue("unexpected proxy device: " + CSV_JOINER.join(difference), difference.isEmpty());
+  }
+
+  private void updateProxyConfig(String proxyId) {
+    Config config = proxyConfigs.computeIfAbsent(proxyId, this::makeDefaultConfig);
+    config.timestamp = new Date();
+    config.pointset.sample_rate_sec = POINTSET_SAMPLE_RATE_SEC;
+    updateProxyConfig(proxyId, config);
+  }
+
+  private Config makeDefaultConfig(String id) {
+    Config config = new Config();
+    config.pointset = new PointsetConfig();
+    return config;
   }
 
   private Set<String> receivedDevices(Set<String> proxyIds, SubFolder subFolder) {

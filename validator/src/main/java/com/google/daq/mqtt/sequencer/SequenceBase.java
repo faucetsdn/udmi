@@ -1220,6 +1220,11 @@ public class SequenceBase {
     }
   }
 
+  protected void updateProxyConfig(String proxyId, Config proxyConfig) {
+    String configMessage = stringify(proxyConfig);
+    client.publish(proxyId, Common.UPDATE_CONFIG_TOPIC, configMessage);
+  }
+
   private void captureConfigChange(String reason) {
     try {
       String suffix = reason == null ? "" : (" " + reason);
