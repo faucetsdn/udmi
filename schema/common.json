@@ -23,16 +23,7 @@
     },
     "family": {
       "title": "Protocol Family",
-      "enum": [
-        "invalid",
-        "vendor",
-        "iot",
-        "ether",
-        "ipv4",
-        "ipv6",
-        "bacnet",
-        "modbus"
-      ]
+      "type": "string"
     },
     "depth": {
       "enum": [

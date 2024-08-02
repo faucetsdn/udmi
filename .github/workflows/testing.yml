@@ -1,7 +1,9 @@
-name: UDMI test suite
+name: UDMI Test Suite
 
 on:
   push:
+    branches:
+      - '**'
   workflow_dispatch:
   pull_request:
   schedule:
@@ -61,85 +63,9 @@ jobs:
           config_path: .spellcheck.yml
           task_name: Markdown
 
-  udmif:
-    name: UDMIF unit tests
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20.9.0
-      - name: Install Angular CLI
-        run: npm install -g @angular/cli
-      - name: web tests
-        run: echo Disabled udmif/web/runTests due to dependency integration problems
-      - name: api tests
-        run: echo Disabled udmif/api/runTests due to dependency integration problems
-
-  pretest:
-    name: Pre-test Setup
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    timeout-minutes: 5
-    if: vars.TARGET_PROJECT != ''
-    env:
-      PUSH_REGISTRY: ghcr.io
-      TARGET_PROJECT: ${{ vars.TARGET_PROJECT }}
-      UDMI_ALT_REGISTRY: ZZ-REDIRECT-NA
-      UDMI_UPDATE_UDMIS: ${{ vars.UDMI_UPDATE_UDMIS }}
-      IMAGE_NAME: ${{ github.repository }}
-      GITHUB_REF: ${{ github.ref }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          fetch-tags: true
-      - uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-      - name: sanity check
-        run: |
-          [[ -n $UDMI_ALT_REGISTRY ]]
-          [[ -n $TARGET_PROJECT ]]
-      - name: Log in to the github registry
-        if: ${{ github.event_name == 'push' }}
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.PUSH_REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Setup udmis container build
-        if: ${{ github.event_name == 'push' }}
-        run: |
-          revhash=$(git log -n 1 --pretty=format:"%h" udmis)
-          IMAGE_TAG=U${revhash:0:9}
-          PUSH_REPO=$PUSH_REGISTRY/${{ github.repository }}
-          PUSH_TAG=$PUSH_REPO:udmis-$IMAGE_TAG
-          echo PUSH_TAG=$PUSH_TAG >> $GITHUB_ENV
-          bin/container udmis prep --no-check $PUSH_TAG
-          echo Pushing built container as $PUSH_TAG | tee -a $GITHUB_STEP_SUMMARY
-      - name: Build and push docker image
-        if: ${{ github.event_name == 'push' }}
-        uses: docker/build-push-action@v5
-        with:
-          file: udmis/Dockerfile.udmis
-          context: udmis
-          push: true
-          tags: ${{ env.PUSH_TAG }}
-      - name: Update udmis deployment
-        if: ${{ env.UDMI_UPDATE_UDMIS != '' }}
-        run: |
-          bin/clone_model
-          bin/update_udmis sites/udmi_site_model/ $TARGET_PROJECT $PUSH_TAG
-
   sequencer:
     name: Sequencer Tests
     runs-on: ubuntu-latest
-    needs: pretest
     timeout-minutes: 20
     strategy:
       fail-fast: false
@@ -161,7 +87,7 @@ jobs:
       - name: base setup
         run: bin/run_tests install_dependencies
       - name: local setup
-        run: bin/start_local $TARGET_PROJECT
+        run: bin/start_local sites/udmi_site_model $TARGET_PROJECT
       - name: registrar clean
         run: bin/test_regclean $TARGET_PROJECT
       - name: sequence tests clean
@@ -184,7 +110,7 @@ jobs:
         run: more out/pubber.log* pubber/out/*.json | cat
       - name: udmis log
         if: ${{ !cancelled() }}
-        run: cat out/udmis*.log || true
+        run: cat /tmp/udmis.log || true
       - name: itemized test post-process
         if: ${{ !cancelled() }}
         run: egrep ' test .* after .*s ' out/sequencer.log-* | tee out/timing_itemized.out
@@ -203,8 +129,7 @@ jobs:
   baseline:
     name: Baseline Tests
     runs-on: ubuntu-latest
-    needs: pretest
-    timeout-minutes: 10
+    timeout-minutes: 15
     if: vars.TARGET_PROJECT != ''
     env:
       TARGET_PROJECT: ${{ vars.TARGET_PROJECT }}
@@ -218,9 +143,12 @@ jobs:
       - name: base setup
         run: bin/run_tests install_dependencies
       - name: local setup
-        run: bin/start_local $TARGET_PROJECT
+        run: bin/start_local sites/udmi_site_model $TARGET_PROJECT
       - name: registrar clean
         run: bin/test_regclean solo $TARGET_PROJECT
+      - name: special sequences
+        if: ${{ !cancelled() }}
+        run: bin/test_special $TARGET_PROJECT
       - name: telemetry validator
         if: ${{ !cancelled() }}
         run: bin/test_validator $TARGET_PROJECT
@@ -262,7 +190,7 @@ jobs:
           bin/clone_model
           bin/registrar sites/udmi_site_model
       - name: local setup
-        run: bin/start_local //mqtt/localhost
+        run: bin/start_local sites/udmi_site_model //mqtt/localhost
       - name: bin/test_etcd
         run: bin/test_etcd
       - name: bin/test_mosquitto
@@ -280,7 +208,7 @@ jobs:
           sudo more /etc/mosquitto/* /etc/mosquitto/conf.d/* || true
       - name: udmis log
         if: ${{ !cancelled() }}
-        run: cat out/udmis*.log
+        run: cat /tmp/udmis.log
       - name: mosquitto logs
         if: ${{ !cancelled() }}
         run: cat /var/log/mosquitto/mosquitto.log || true
@@ -297,8 +225,8 @@ jobs:
   redirect:
     name: Endpoint Redirection
     runs-on: ubuntu-latest
-    needs: [ pretest, baseline ]
-    timeout-minutes: 10
+    needs: baseline
+    timeout-minutes: 15
     if: vars.TARGET_PROJECT != ''
     env:
       TARGET_PROJECT: ${{ vars.TARGET_PROJECT }}
@@ -313,7 +241,7 @@ jobs:
       - name: base setup
         run: bin/run_tests install_dependencies
       - name: local setup
-        run: bin/start_local $TARGET_PROJECT
+        run: bin/start_local sites/udmi_site_model $TARGET_PROJECT
       - name: regclean
         run: bin/test_regclean $TARGET_PROJECT
       - name: bin/test_proxy

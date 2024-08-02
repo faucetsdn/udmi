@@ -20,26 +20,31 @@ if [[ ${1:-} == stop ]]; then
     exit 0
 fi
 
-bin/container udmis prep --no-check
+bin/container udmis prep --no-check || true
 
-LOGFILE=out/udmis.log
+LOGFILE=/tmp/udmis.log
+date > $LOGFILE
 
 export ETCD_CLUSTER=localhost
 export SSL_SECRETS_DIR=/etc/mosquitto/certs
 
-sudo PATH=$PATH -E udmis/bin/run udmis/etc/local_pod.json > $LOGFILE 2>&1 &
+UDMIS_DIR=udmis
+[[ -d $UDMIS_DIR ]] || UDMIS_DIR=..
+
+sudo PATH=$PATH -E $UDMIS_DIR/bin/run $UDMIS_DIR/etc/local_pod.json >> $LOGFILE 2>&1 &
 
 PID=$!
 
 WAITING=30
 for i in `seq 1 $WAITING`; do
-    if [[ -f $POD_READY ]]; then
+    if [[ -f $POD_READY || ! -d /proc/$PID ]]; then
         break
     fi
     echo Waiting for udmis startup $((WAITING - i))...
     sleep 1
 done
 
+echo ::::::::: tail $LOGFILE
 tail -n 30 $LOGFILE
 
 [[ -f $POD_READY ]] || fail pod_ready.txt not found.

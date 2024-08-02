@@ -3,12 +3,21 @@
 ROOT_DIR=$(realpath $(dirname $0)/..)
 cd $ROOT_DIR
 
-sudo apt-get install -y moreutils expect mosquitto mosquitto-clients
+if [[ -n $(which apt-get) ]]; then
+    update_cmd="apt-get install -y"
+    extra_packages=""
+else
+    update_cmd="apk add"
+    # Some extra packages are necessary for alpine based docker builds.
+    extra_packages="${NO_CACHE_DIR:+--no-cache} linux-headers g++ gcc"
+fi
+
+sudo $update_cmd $extra_packages moreutils expect python3-dev mosquitto mosquitto-clients
 
 python3 --version
 python3 -m venv venv
 
 venv_pip3=$($(dirname $0)/which_venv_pip3)
-${venv_pip3} install -r etc/requirements.txt
+${venv_pip3} install ${NO_CACHE_DIR:+--no-cache-dir} -r etc/requirements.txt
 
 java -version

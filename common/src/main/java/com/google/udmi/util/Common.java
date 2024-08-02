@@ -13,6 +13,7 @@ import java.util.MissingFormatArgumentException;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -52,6 +53,9 @@ public abstract class Common {
   public static final String CONFIG_CATEGORY = "config";
   public static final String COMMANDS_CATEGORY = "commands";
   public static final String CATEGORY_PROPERTY_KEY = "category";
+  public static final Pattern DEVICE_ID_ALLOWABLE = Pattern.compile("^[-_a-zA-Z0-9]+$");
+  public static final Pattern POINT_NAME_ALLOWABLE = DEVICE_ID_ALLOWABLE;
+
   private static final String PREFIX_SEPARATOR = "~";
   private static final String UDMI_VERSION_ENV = "UDMI_TOOLS";
 

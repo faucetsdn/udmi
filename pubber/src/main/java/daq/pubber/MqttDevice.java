@@ -67,6 +67,10 @@ public class MqttDevice {
     publisher.close();
   }
 
+  public void shutdown() {
+    publisher.shutdown();
+  }
+
   public ListPublisher getMockPublisher() {
     return (ListPublisher) publisher;
   }

@@ -21,7 +21,7 @@
     </extension>
     <method v="2">
       <option name="Make" enabled="true" />
-      <option name="ToolBeforeRunTask" enabled="true" actionId="Tool_External Tools_clear run lock" />
+      <option name="ToolBeforeRunTask" enabled="true" actionId="Tool_External Tools_Remove pod_ready" />
     </method>
   </configuration>
 </component>

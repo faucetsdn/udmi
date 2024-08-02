@@ -3,8 +3,8 @@ package com.google.daq.mqtt.util;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
+import daq.pubber.ProtocolFamily;
 import java.util.regex.Pattern;
-import udmi.schema.Common.ProtocolFamily;
 
 /**
  * General family of bacnet addresses.
@@ -17,7 +17,7 @@ public class BacnetFamily implements NetworkFamily {
   private static final Pattern BACNET_REF = Pattern.compile("([A-Z]{2,4})([0-9]+)\\.([A-Za-z_]+)");
 
   @Override
-  public ProtocolFamily familyKey() {
+  public String familyKey() {
     return ProtocolFamily.BACNET;
   }
 

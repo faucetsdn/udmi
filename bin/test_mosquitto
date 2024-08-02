@@ -26,7 +26,7 @@ CLNT_USER=kiwi
 CLNT_PASS=possum
 CLNT_ID=$registry_id/client
 
-sudo chmod a+r $CERT_DIR/rsa_private.*
+sudo chmod a+r $CERT_DIR/rsa_private.* || true
 bin/keygen CERT $CLIENT_DIR
 
 CLIENT_OPTS="-i $CLNT_ID -u $CLNT_USER -P $CLNT_PASS --cafile $CA_CERT --cert $CLIENT_DIR/rsa_private.crt --key $CLIENT_DIR/rsa_private.pem"
@@ -51,7 +51,7 @@ mosquitto_pub $CLIENT_OPTS -t $topic -m "Hello Racket"
 sleep 1
 
 echo Checking received message
-fgrep Racket out/mosquitto.sub
+fgrep Racket out/mosquitto.sub || fail did not find expected message
 
 hash_pass=$(sha256sum < $site_path/devices/$device_id/rsa_private.pkcs8)
 dev_pass=${hash_pass:0:8}
@@ -113,7 +113,7 @@ echo Received messages:
 cat out/mosquitto.sub | cut -c -120
 
 echo Checking received end message
-fgrep Rudolph out/mosquitto.sub
+fgrep Rudolph out/mosquitto.sub || fail did not find expected message
 
 echo Checking messages for matching serial no $serial_no
 received_no=$(fgrep operational out/mosquitto.sub | head -n 1 | sed -E 's/^[^{]+//' | jq -r .system.serial_no)

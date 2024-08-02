@@ -1,7 +1,6 @@
 package daq.pubber;
 
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
-import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
 
 import com.google.common.collect.ImmutableMap;
@@ -9,7 +8,6 @@ import com.google.udmi.util.SiteModel;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
-import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.FamilyDiscovery;
 import udmi.schema.FamilyLocalnetState;
 import udmi.schema.LocalnetConfig;
@@ -21,14 +19,14 @@ import udmi.schema.PubberConfiguration;
  */
 public class LocalnetManager extends ManagerBase implements ManagerHost {
 
-  private static final Map<ProtocolFamily, Class<? extends FamilyProvider>> LOCALNET_PROVIDERS =
+  private static final Map<String, Class<? extends FamilyProvider>> LOCALNET_PROVIDERS =
       ImmutableMap.of(
           ProtocolFamily.VENDOR, VendorProvider.class,
           ProtocolFamily.IPV_4, IpProvider.class,
           ProtocolFamily.IPV_6, IpProvider.class,
           ProtocolFamily.ETHER, IpProvider.class);
   private final LocalnetState localnetState;
-  private final Map<ProtocolFamily, FamilyProvider> localnetProviders;
+  private final Map<String, FamilyProvider> localnetProviders;
   private LocalnetConfig localnetConfig;
 
   /**
@@ -42,28 +40,28 @@ public class LocalnetManager extends ManagerBase implements ManagerHost {
         .keySet().stream().collect(Collectors.toMap(family -> family, this::instantiateProvider));
   }
 
-  private FamilyProvider instantiateProvider(ProtocolFamily family) {
+  private FamilyProvider instantiateProvider(String family) {
     try {
       return LOCALNET_PROVIDERS.get(family).getDeclaredConstructor(
-              ManagerHost.class, ProtocolFamily.class, PubberConfiguration.class)
+              ManagerHost.class, String.class, PubberConfiguration.class)
           .newInstance(this, family, config);
     } catch (Exception e) {
       throw new RuntimeException("While creating instance of " + LOCALNET_PROVIDERS.get(family), e);
     }
   }
 
-  Map<ProtocolFamily, FamilyDiscovery> enumerateFamilies() {
+  Map<String, FamilyDiscovery> enumerateFamilies() {
     return localnetState.families.keySet().stream()
         .collect(toMap(key -> key, this::makeFamilyDiscovery));
   }
 
-  private FamilyDiscovery makeFamilyDiscovery(ProtocolFamily key) {
+  private FamilyDiscovery makeFamilyDiscovery(String key) {
     FamilyDiscovery familyDiscovery = new FamilyDiscovery();
     familyDiscovery.addr = localnetState.families.get(key).addr;
     return familyDiscovery;
   }
 
-  public FamilyProvider getLocalnetProvider(ProtocolFamily family) {
+  public FamilyProvider getLocalnetProvider(String family) {
     return localnetProviders.get(family);
   }
 
@@ -72,7 +70,7 @@ public class LocalnetManager extends ManagerBase implements ManagerHost {
     throw new RuntimeException("Not yet implemented");
   }
 
-  protected void update(ProtocolFamily family, FamilyLocalnetState stateEntry) {
+  protected void update(String family, FamilyLocalnetState stateEntry) {
     localnetState.families.put(family, stateEntry);
     updateState();
   }

@@ -2,16 +2,24 @@ FROM alpine:latest
 
 WORKDIR /root
 
-RUN apk add bash openjdk17 gcompat curl jq
+# Ideally shared with validator and pubber to amortize build differences.
+RUN apk add --no-cache bash openjdk17 gcompat curl jq sudo git python3 moreutils mosquitto mosquitto-clients openssl coreutils
 
 # Workaround for https://github.com/grpc/grpc-java/issues/8751
+# Only necessary for running on GKE -- won't show up with docker!
 ENV LD_PRELOAD=/lib/libgcompat.so.0
 
-ADD build/libs/udmis-1.0-SNAPSHOT-all.jar build/libs/udmis-1.0-SNAPSHOT-all.jar
+ADD build/udmi_bin/ udmi/bin/
 
 ADD bin/ bin/
 
+RUN bin/etcdctl version
+
+ADD build/libs/udmis-1.0-SNAPSHOT-all.jar build/libs/udmis-1.0-SNAPSHOT-all.jar
+
 ADD var/ var/
+
+ADD build/udmi_etc/ udmi/etc/
 
 ENV CLEARBLADE_CONFIGURATION=/udmi/clearblade.json
 ENV SHUNT_CONFIGURATION=/udmi/shunt-config.json

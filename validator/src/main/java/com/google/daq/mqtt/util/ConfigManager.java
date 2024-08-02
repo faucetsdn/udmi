@@ -17,11 +17,11 @@ import static java.util.Optional.ofNullable;
 import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.SchemaVersion;
 import com.google.udmi.util.SiteModel;
+import daq.pubber.ProtocolFamily;
 import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import org.jetbrains.annotations.NotNull;
-import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.Config;
 import udmi.schema.FamilyLocalnetConfig;
 import udmi.schema.GatewayConfig;
@@ -39,7 +39,7 @@ import udmi.schema.SystemConfig;
 public class ConfigManager {
 
   public static final String GENERATED_CONFIG_JSON = "generated_config.json";
-  private static final ProtocolFamily DEFAULT_FAMILY = ProtocolFamily.VENDOR;
+  private static final String DEFAULT_FAMILY = ProtocolFamily.VENDOR;
   private static final String CONFIG_DIR = "config";
   private static final String JSON_STRING_FMT = "\"%s\"";
   private final Metadata metadata;
@@ -167,11 +167,10 @@ public class ConfigManager {
     return gatewayConfig;
   }
 
-  private String getLocalnetAddr(ProtocolFamily rawFamily) {
-    ProtocolFamily family = ofNullable(rawFamily).orElse(DEFAULT_FAMILY);
+  private String getLocalnetAddr(String rawFamily) {
+    String family = ofNullable(rawFamily).orElse(DEFAULT_FAMILY);
     String address = catchToNull(() -> metadata.localnet.families.get(family).addr);
-    return requireNonNull(address,
-        format("metadata.localnet.families[%s].addr undefined", family.value()));
+    return requireNonNull(address, format("metadata.localnet.families[%s].addr undefined", family));
   }
 
   private PointsetConfig getDevicePointsetConfig() {
@@ -217,8 +216,8 @@ public class ConfigManager {
 
   private String pointConfigRef(PointPointsetModel model) {
     String pointRef = model.ref;
-    ProtocolFamily rawFamily = catchToNull(() -> metadata.gateway.target.family);
-    ProtocolFamily family = ofNullable(rawFamily).orElse(DEFAULT_FAMILY);
+    String rawFamily = catchToNull(() -> metadata.gateway.target.family);
+    String family = ofNullable(rawFamily).orElse(DEFAULT_FAMILY);
 
     if (!isProxied()) {
       return pointRef;

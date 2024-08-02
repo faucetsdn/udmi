@@ -4,6 +4,7 @@ import static com.google.bos.udmi.service.messaging.MessageDispatcher.rawString;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.Common.DEFAULT_REGION;
 import static com.google.udmi.util.GeneralUtils.booleanString;
+import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
@@ -15,10 +16,14 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.function.Predicate.not;
+import static udmi.schema.CloudModel.Operation.CREATE;
 import static udmi.schema.CloudModel.Operation.DELETE;
+import static udmi.schema.CloudModel.Operation.UPDATE;
 import static udmi.schema.CloudModel.Resource_type.DEVICE;
 import static udmi.schema.CloudModel.Resource_type.GATEWAY;
+import static udmi.schema.CloudModel.Resource_type.REGISTRY;
 
+import com.clearblade.cloud.iot.v1.devicetypes.Device;
 import com.google.bos.udmi.service.core.ReflectProcessor;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.bos.udmi.service.support.ConnectionBroker;
@@ -306,7 +311,13 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   @Override
   public CloudModel modelRegistry(String registryId, String deviceId, CloudModel cloudModel) {
-    throw new RuntimeException("modelRegistry not yet implemented");
+    Operation operation = cloudModel.operation;
+    try {
+      // TODO: Make this update the saved metadata for the registry.
+      return getReply(registryId, deviceId, cloudModel, "registry");
+    } catch (Exception e) {
+      throw new RuntimeException("While " + operation + "ing registry " + registryId, e);
+    }
   }
 
   public CloudModel modifyDevice(String registryId, String deviceId, CloudModel cloudModel) {

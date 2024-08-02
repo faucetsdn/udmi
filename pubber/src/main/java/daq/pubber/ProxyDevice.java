@@ -5,7 +5,6 @@ import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static java.lang.String.format;
 
 import java.util.concurrent.atomic.AtomicBoolean;
-import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.Config;
 import udmi.schema.Metadata;
 import udmi.schema.PubberConfiguration;
@@ -79,7 +78,7 @@ public class ProxyDevice extends ManagerBase implements ManagerHost {
   }
 
   @Override
-  public FamilyProvider getLocalnetProvider(ProtocolFamily family) {
+  public FamilyProvider getLocalnetProvider(String family) {
     return host.getLocalnetProvider(family);
   }
 

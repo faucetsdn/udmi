@@ -349,7 +349,7 @@ public class IotReflectorClient implements MessagePublisher {
         }
         if (requiredVersion > udmiInfo.functions_max) {
           throw new RuntimeException(
-              format("%s: max supported %s. Please update cloud UDMI install.",
+              format("%s: max supported %s. Please update cloud UDMIS install.",
                   baseError, udmiInfo.functions_max));
         }
         isInstallValid = true;

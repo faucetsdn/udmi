@@ -8,7 +8,7 @@
   "properties": {
     "families": {
       "description": "Address family config for reporting.",
-      "existingJavaType": "java.util.HashMap<udmi.schema.Common.ProtocolFamily, FamilyLocalnetConfig>",
+      "existingJavaType": "java.util.HashMap<String, FamilyLocalnetConfig>",
       "additionalProperties": false,
       "patternProperties": {
         "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {

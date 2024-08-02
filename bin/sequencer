@@ -104,7 +104,8 @@ elif [[ -f $site_path ]]; then
     device_id=`jq -r .device_id $site_path`
     [[ $device_id == null ]] && fail Parameter device_id not defined in config file.
     serial_no=`jq -r .serial_no $site_path`
-    [[ $serial_no == null ]] && serial_no=$DEFAULT_SERIAL
+    [[ $serial_no != null ]] || serial_no=$DEFAULT_SERIAL
+    iot_provider=`jq .iot_provider $site_path`
     endpoint=`jq .reflector_endpoint $site_path`
     alt_registry=`jq .alt_registry $site_path`
     registry_suffix=`jq .registry_suffix $site_path`
@@ -172,7 +173,7 @@ fi
 
 cat $SEQUENCER_CONFIG
 
-validator/bin/build
+[[ ! -d $UDMI_ROOT/validator/src ]] || $UDMI_ROOT/validator/bin/build
 
 echo $JAVA_CMD
 result=0
@@ -192,5 +193,3 @@ fgrep RESULT $site_model/out/devices/$device_id/RESULT.log | \
 more $site_model/out/devices/$device_id/RESULT.log $SCHEMA_OUT | cat
 
 bin/sequencer_report $site_model $device_id
-
-bin/check_version

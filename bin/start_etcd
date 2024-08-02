@@ -1,13 +1,29 @@
 #!/bin/bash -e
 
 IMAGE=quay.io/coreos/etcd:v3.5.13
+BINDIR=/tmp/etcd
+ETCD_LOG=/tmp/etcd.log
 
-docker kill etcd || true
+echo pwd: $(pwd)
 
-docker run -v /usr/share/ca-certificates/:/etc/ssl/certs \
-       -p 2379:2379 --rm --name etcd ${IMAGE} etcd --version
+old_pid=$(ps ax | fgrep /tmp/etcd/etcd | fgrep listen | awk '{print $1}') || true
+if [[ -n $old_pid ]]; then
+    echo Killing existing etcd pid $old_pid...
+    kill $old_pid
+fi
 
-docker run -d -v /usr/share/ca-certificates/:/etc/ssl/certs \
-       -p 2379:2379 --rm --name etcd ${IMAGE} etcd \
-       -listen-client-urls=http://0.0.0.0:2379 \
-       -advertise-client-urls=http://127.0.0.1:2379
+udmis/bin/etcdctl version || ../bin/etcdctl version
+
+$BINDIR/etcd -version
+
+$BINDIR/etcd -listen-client-urls=http://0.0.0.0:2379 \
+             -advertise-client-urls=http://127.0.0.1:2379 \
+             --data-dir var/etcd \
+             > $ETCD_LOG 2>&1 &
+ETCD_PID=$!
+
+echo Waiting 10s for etcd to start, log in $ETCD_LOG
+sleep 10
+[[ -d /proc/$ETCD_PID ]] || (cat $ETCD_LOG && echo error starting etcd && false)
+
+echo Completed etcd startup.

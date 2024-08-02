@@ -1,0 +1,19 @@
+FROM alpine:latest
+
+WORKDIR /root
+
+RUN apk add --no-cache bash openjdk17 gcompat curl jq sudo git python3 moreutils mosquitto mosquitto-clients openssl coreutils
+
+# Workaround for https://github.com/grpc/grpc-java/issues/8751
+# Only necessary for running on GKE -- won't show up with docker!
+ENV LD_PRELOAD=/lib/libgcompat.so.0
+
+ADD build/libs pubber/build/libs/
+
+ADD bin/ pubber/bin/
+
+ADD build/udmi_etc/ etc/
+
+ADD build/udmi_bin/ bin/
+
+CMD ["/root/pubber/bin/run"]

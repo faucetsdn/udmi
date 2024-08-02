@@ -16,7 +16,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.Config;
 import udmi.schema.Entry;
 import udmi.schema.GatewayConfig;
@@ -105,7 +104,7 @@ public class GatewayManager extends ManagerBase {
 
     if (gateway.proxy_ids == null || gateway.target != null) {
       try {
-        ProtocolFamily family = validateGatewayFamily(catchToNull(() -> gateway.target.family));
+        String family = validateGatewayFamily(catchToNull(() -> gateway.target.family));
         setGatewayStatus(GATEWAY_PROXY_TARGET, Level.DEBUG, "gateway target family " + family);
       } catch (Exception e) {
         setGatewayStatus(GATEWAY_PROXY_TARGET, Level.ERROR, e.getMessage());
@@ -126,7 +125,7 @@ public class GatewayManager extends ManagerBase {
     updateState(ofNullable((Object) gatewayState).orElse(GatewayState.class));
   }
 
-  private ProtocolFamily validateGatewayFamily(ProtocolFamily family) {
+  private String validateGatewayFamily(String family) {
     if (family == null) {
       return null;
     }

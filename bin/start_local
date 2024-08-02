@@ -1,39 +1,70 @@
 #!/bin/bash -e
 
 UDMI_ROOT=$(dirname $0)/..
-cd $UDMI_ROOT
-
 source $UDMI_ROOT/etc/shell_common.sh
 
-[[ $# == 1 ]] || fail Usage: $0 project_spec
+block=
+if [[ ${1:-} == block ]]; then
+    block=$1
+    shift
+fi
 
-project_spec=$1
-shift
+[[ $# == 1 || $# == 2 ]] || usage '[block] ([site_config.json] || [site_model] [project_spec])'
 
-echo "export TARGET_PROJECT=${project_spec:-}"
-echo "export UDMI_REGISTRY_SUFFIX=${UDMI_REGISTRY_SUFFIX:-}"
-echo "export UDMI_ALT_REGISTRY=${UDMI_ALT_REGISTRY:-}"
+if [[ $# == 1 ]]; then
+    site_config=$(realpath $1)
+    shift
+else
+    site_config=$(realpath $1)/cloud_iot_config.json
+    project_spec=$2
+    shift 2
+fi
 
-if [[ ! $project_spec =~ ^//mqtt/ ]]; then
-    echo Not a local setup, doing nothing!
+if [[ ! -f $site_config ]]; then
+    fail local startup requires explicit site path file.
+fi
+site_model=$(dirname $site_config)
+
+# Check for missing etc/ dir for docker execution.
+if [[ -d var/ && ! -d etc/ ]]; then
+    ln -s var etc
+fi
+
+cd $UDMI_ROOT
+UDMIS_LOG=/tmp/udmis.log
+mkdir -p out
+date > $UDMIS_LOG
+
+iot_provider=$(jq -r .iot_provider $site_config)
+if [[ -n ${project_spec:-} ]]; then
+    project_target=${project_spec##*/}
+    iot_provider=${project_spec%/*}
+    iot_provider=${iot_provider#//}
+fi
+
+if [[ $iot_provider != mqtt ]]; then
+    echo Provider type $iot_provider is not a local setup, doing nothing.
     exit 0
 fi
 
-site_model=sites/udmi_site_model
-site_config=sites/udmi_site_model/cloud_iot_config.json
+[[ -n ${project_target:-} ]] || project_target=$(jq -r .project_id $site_config)
 registry_id=$(jq -r .registry_id $site_config)${UDMI_REGISTRY_SUFFIX:-}
 
+echo Starting etcd... | tee -a $UDMIS_LOG
 bin/start_etcd
 
-bin/setup_ca $site_model
-bin/start_mosquitto
-
 source $UDMI_ROOT/etc/mosquitto_ctrl.sh
+mkdir -p $CERT_DIR
+
+echo Starting mosquitto on server $project_target | tee -a $UDMIS_LOG
+bin/setup_ca $site_model $project_target
+bin/start_mosquitto
 
 $MOSQUITTO_CTRL deleteClient $SERV_USER
 $MOSQUITTO_CTRL createClient $SERV_USER -p $SERV_PASS # No client_id to allow multiple backend connections.
 $MOSQUITTO_CTRL addClientRole $SERV_USER service
 
+echo Starting initializing site $site_model | tee -a $UDMIS_LOG
 bin/mosquctl_site $site_model
 
 if [[ -n ${UDMI_ALT_REGISTRY:-} ]]; then
@@ -43,6 +74,9 @@ fi
 # Global access to logs for connection tracking by UDMIS.
 sudo chmod a+r /var/log/mosquitto/mosquitto.log
 
+echo Starting udmis proper... | tee -a $UDMIS_LOG
 bin/start_udmis
 
 echo Done with local server setup.
+
+[[ -z $block ]] || (echo Blocking until termination. && tail -f /dev/null)

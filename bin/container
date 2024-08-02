@@ -22,7 +22,7 @@ git_repo=${git_prefix#*.com:}
 
 GCP_PROJECT=$(gcloud config get project)
 REPOSITORY=ghcr.io/${git_repo}
-TEMPLATES=$(cd etc; ls k8s_*.yaml)
+TEMPLATES=$(cd etc; ls k8s_*.yaml) || true
 
 NOCHECK=
 [[ ${1:-} == "--no-check" ]] && NOCHECK=1 && shift
@@ -91,7 +91,7 @@ if [[ -n $prep ]]; then
     rm -rf var tmp && mkdir -p var tmp
 
     cp -f etc/*.json var/ || true
-    cp -a ../schema tmp/
+    cp -a ../schema build/
 
     bin/build
 
@@ -110,6 +110,10 @@ EOF
 fi
 
 if [[ -n $build ]]; then
+    echo Cleaning old images...
+    images=$(docker images | fgrep $REPOSITORY | awk '{print $1":"$2}' | fgrep -v '<none>') || true
+    [[ -n $images ]] && docker rmi $images
+
     echo Building Dockerfile.$target
     docker build -f Dockerfile.$target -t $target .
     docker tag $target $udmi_ref
@@ -117,7 +121,9 @@ fi
 
 if [[ -n $push ]]; then
     docker push $udmi_ref
-    hash=$(docker images --digests ${udmi_ref%:*} | fgrep $udmi_tag | awk '{print $3}')
+    docker images
+    docker images --digests ${udmi_ref%:*} || true
+    hash=$(docker images --digests ${udmi_ref%:*} | fgrep $udmi_tag | awk '{print $3}') || true
     ihash=$udmi_ref@$hash
     for file in $TEMPLATES; do
         out_file=tmp/$file

@@ -32,7 +32,7 @@
     },
     "families": {
       "description": "Address family config for a scan.",
-      "existingJavaType": "java.util.HashMap<udmi.schema.Common.ProtocolFamily, FamilyDiscoveryConfig>",
+      "existingJavaType": "java.util.HashMap<String, FamilyDiscoveryConfig>",
       "additionalProperties": false,
       "patternProperties": {
         "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {

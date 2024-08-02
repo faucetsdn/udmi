@@ -39,6 +39,7 @@ import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.Summary;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
+import daq.pubber.ProtocolFamily;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
@@ -55,7 +56,6 @@ import org.jetbrains.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import udmi.schema.Bucket;
-import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.Depths;
 import udmi.schema.Depths.Depth;
 import udmi.schema.DiscoveryConfig;
@@ -73,9 +73,9 @@ public class DiscoverySequences extends SequenceBase {
   public static final int SCAN_START_DELAY_SEC = (int) SCAN_START_DELAY.getSeconds();
   public static final int SCAN_START_JITTER_SEC = 3;
   private static final int SCAN_ITERATIONS = 2;
-  private static final ProtocolFamily scanFamily = ProtocolFamily.VENDOR;
+  private static final String scanFamily = ProtocolFamily.VENDOR;
   private static final Date LONG_TIME_AGO = new Date(12897321);
-  private Set<ProtocolFamily> metaFamilies;
+  private Set<String> metaFamilies;
   private Date scanStartTime;
 
   private static boolean isActive(Entry<String, FeatureDiscovery> entry) {
@@ -119,9 +119,9 @@ public class DiscoverySequences extends SequenceBase {
 
   private void checkSelfEnumeration(DiscoveryEvents event, Depths depths) {
     if (shouldEnumerate(depths.families)) {
-      Set<ProtocolFamily> models = ofNullable(deviceMetadata.localnet)
+      Set<String> models = ofNullable(deviceMetadata.localnet)
           .map(localnet -> localnet.families.keySet()).orElse(null);
-      Set<ProtocolFamily> events = ofNullable(event.families).map(Map::keySet)
+      Set<String> events = ofNullable(event.families).map(Map::keySet)
           .orElse(null);
       checkThat("family enumeration matches", () -> models.size() == events.size());
     } else {
@@ -349,7 +349,7 @@ public class DiscoverySequences extends SequenceBase {
     configureScan(scanStartTime, SCAN_START_DELAY, shouldEnumerate);
     Instant endTime = Instant.now().plusSeconds(SCAN_START_DELAY.getSeconds() * SCAN_ITERATIONS);
     untilUntrue("scan iterations", () -> Instant.now().isBefore(endTime));
-    ProtocolFamily oneFamily = metaFamilies.iterator().next();
+    String oneFamily = metaFamilies.iterator().next();
     Date finishTime = deviceState.discovery.families.get(oneFamily).generation;
     checkThat("scan did not terminate prematurely",
         metaFamilies.stream().noneMatch(scanComplete(finishTime)));
@@ -386,8 +386,8 @@ public class DiscoverySequences extends SequenceBase {
     deviceConfig.discovery = new DiscoveryConfig();
     deviceConfig.discovery.families = new HashMap<>();
     untilTrue("discovery families defined", () -> deviceState.discovery.families != null);
-    HashMap<ProtocolFamily, FamilyDiscoveryConfig> configFamilies = deviceConfig.discovery.families;
-    HashMap<ProtocolFamily, FamilyDiscoveryState> stateFamilies = deviceState.discovery.families;
+    HashMap<String, FamilyDiscoveryConfig> configFamilies = deviceConfig.discovery.families;
+    HashMap<String, FamilyDiscoveryState> stateFamilies = deviceState.discovery.families;
     waitFor("discovery family keys match", () -> joinOrNull("mismatch: ",
         symmetricDifference(configFamilies.keySet(), stateFamilies.keySet())
     ));
@@ -409,24 +409,24 @@ public class DiscoverySequences extends SequenceBase {
     popReceivedEvents(DiscoveryEvents.class);
   }
 
-  private FamilyDiscoveryConfig getConfigFamily(ProtocolFamily family) {
+  private FamilyDiscoveryConfig getConfigFamily(String family) {
     return deviceConfig.discovery.families.computeIfAbsent(family,
         adding -> new FamilyDiscoveryConfig());
   }
 
-  private Date getStateFamilyGeneration(ProtocolFamily family) {
+  private Date getStateFamilyGeneration(String family) {
     return catchToNull(() -> getStateFamily(family).generation);
   }
 
-  private FamilyDiscoveryState getStateFamily(ProtocolFamily family) {
+  private FamilyDiscoveryState getStateFamily(String family) {
     return deviceState.discovery.families.get(family);
   }
 
-  private Predicate<ProtocolFamily> scanAbsent() {
+  private Predicate<String> scanAbsent() {
     return family -> getStateFamily(family) == null;
   }
 
-  private Predicate<ProtocolFamily> scanPending(Date startTime) {
+  private Predicate<String> scanPending(Date startTime) {
     return family -> {
       FamilyDiscoveryState stateFamily = getStateFamily(family);
       return stateFamily != null
@@ -436,16 +436,16 @@ public class DiscoverySequences extends SequenceBase {
     };
   }
 
-  private Predicate<ProtocolFamily> scanActive() {
+  private Predicate<String> scanActive() {
     return family -> getStateFamily(family).phase == ACTIVE;
   }
 
-  private Predicate<ProtocolFamily> scanActive(Date startTime) {
+  private Predicate<String> scanActive(Date startTime) {
     return family -> dateEquals(getStateFamily(family).generation, startTime)
         && getStateFamily(family).phase == ACTIVE;
   }
 
-  private Predicate<ProtocolFamily> scanComplete(Date startTime) {
+  private Predicate<String> scanComplete(Date startTime) {
     return family -> {
       FamilyDiscoveryState stateFamily = getStateFamily(family);
       return stateFamily != null

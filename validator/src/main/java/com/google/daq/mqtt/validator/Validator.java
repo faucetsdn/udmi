@@ -120,19 +120,18 @@ import udmi.schema.ValidationSummary;
  */
 public class Validator {
 
-  public static final int TOOLS_FUNCTIONS_VERSION = 13;
+  public static final int TOOLS_FUNCTIONS_VERSION = 14;
   public static final String PROJECT_PROVIDER_PREFIX = "//";
   public static final String TIMESTAMP_ZULU_SUFFIX = "Z";
   public static final String TIMESTAMP_UTC_SUFFIX_1 = "+00:00";
   public static final String TIMESTAMP_UTC_SUFFIX_2 = "+0000";
+  public static final String ATTRIBUTE_FILE_FORMAT = "%s.attr";
+  public static final String MESSAGE_FILE_FORMAT = "%s.json";
   private static final String SCHEMA_VALIDATION_FORMAT = "Validating %d schemas";
   private static final String TARGET_VALIDATION_FORMAT = "Validating %d files against %s";
   private static final String DEVICE_FILE_FORMAT = "devices/%s";
-  private static final String ATTRIBUTE_FILE_FORMAT = "%s.attr";
-  private static final String MESSAGE_FILE_FORMAT = "%s.json";
   private static final String SCHEMA_SKIP_FORMAT = "Unknown schema subFolder '%s' for %s";
   private static final String ENVELOPE_SCHEMA_ID = "envelope";
-  private static final String DEVICES_SUBDIR = "devices";
   private static final String DEVICE_REGISTRY_ID_KEY = "deviceRegistryId";
   private static final String UNKNOWN_FOLDER_DEFAULT = "unknown";
   private static final String STATE_UPDATE_SCHEMA = "state";
@@ -517,20 +516,27 @@ public class Validator {
   }
 
   private boolean handleSystemMessage(Map<String, String> attributes, Object object) {
-    if (SubFolder.UDMI.value().equals(attributes.get(SUBFOLDER_PROPERTY_KEY))
-        && SubType.CONFIG.value().equals(attributes.get(SUBTYPE_PROPERTY_KEY))) {
+
+    String subFolderRaw = attributes.get(SUBFOLDER_PROPERTY_KEY);
+    String subTypeRaw = attributes.get(SUBTYPE_PROPERTY_KEY);
+
+    if (SubFolder.UDMI.value().equals(subFolderRaw) && SubType.CONFIG.value().equals(subTypeRaw)) {
       handleUdmiConfig(convertTo(UdmiConfig.class, object));
       return true;
     }
-    return false;
+
+    // Don't validate validation messages. Not really a problem, but sometimes validation messages
+    // aren't reflected back (when not using PubSub), so for consistency just reject everything.
+    return SubFolder.VALIDATION.value().equals(subFolderRaw)
+        && SubType.EVENTS.value().equals(subTypeRaw);
   }
 
   private void handleUdmiConfig(UdmiConfig udmiConfig) {
     JsonUtil.writeFile(udmiConfig, new File(outBaseDir, UDMI_CONFIG_JSON_FILE));
   }
 
-  protected synchronized void validateMessage(MessageBundle nullable) {
-    ifNotNullThen(nullable, bundle -> {
+  protected synchronized void validateMessage(MessageBundle message) {
+    ifNotNullThen(message, bundle -> {
       Object object = ofNullable((Object) bundle.message).orElse(bundle.rawMessage);
       if (!handleSystemMessage(bundle.attributes, object)) {
         validateMessage(object, bundle.attributes);

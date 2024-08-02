@@ -16,6 +16,7 @@ import static org.mockito.Mockito.when;
 import com.google.bos.udmi.service.access.IotAccessBase;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import daq.pubber.ProtocolFamily;
 import java.time.Duration;
 import java.util.Date;
 import java.util.HashMap;
@@ -27,7 +28,6 @@ import org.mockito.ArgumentCaptor;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
 import udmi.schema.CloudModel.Resource_type;
-import udmi.schema.Common.ProtocolFamily;
 import udmi.schema.DiscoveryEvents;
 import udmi.schema.Envelope;
 
@@ -37,7 +37,7 @@ import udmi.schema.Envelope;
 public class ProvisioningEngineTest extends ProcessorTestBase {
 
   private static final String SCAN_ADDR = "19273821";
-  private static final ProtocolFamily SCAN_FAMILY = ProtocolFamily.VENDOR;
+  private static final String SCAN_FAMILY = ProtocolFamily.VENDOR;
   private static final String TARGET_DEVICE = format("%s-%s", SCAN_FAMILY, SCAN_ADDR);
   private static final Date SCAN_GENERATION = new Date();
   private static final Duration PROVISIONING_WINDOW = Duration.ofMinutes(5);
@@ -91,7 +91,7 @@ public class ProvisioningEngineTest extends ProcessorTestBase {
   private DiscoveryEvents getDiscoveryScanEvent(String targetDeviceId) {
     String[] split = targetDeviceId.split("-");
     DiscoveryEvents discoveryEvent = new DiscoveryEvents();
-    discoveryEvent.scan_family = ProtocolFamily.fromValue(split[0]);
+    discoveryEvent.scan_family = split[0];
     discoveryEvent.scan_addr = split[1];
     discoveryEvent.generation = SCAN_GENERATION;
     return discoveryEvent;

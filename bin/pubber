@@ -17,6 +17,7 @@ trap cleanup EXIT
 
 config_file=$(realpath $1)
 serial_no=NA
+cloud_region=us-central1
 project_id=--
 shift
 
@@ -42,12 +43,20 @@ elif [[ $(jq -r .device_id $config_file) == null ]]; then
     fail Neither deviceId nor device_id defined in config file.
 else
     echo Constructing pubber configuration from site config.
+    cat $config_file
     project_id=$(jq -r .project_id $config_file)
     device_id=$(jq -r .device_id $config_file)
+    registry_id=$(jq -r .registry_id $config_file)
     serial_no=$(jq -r .serial_no $config_file)
     site_model=$(jq -r .site_model $config_file)
+    iot_provider=$(jq -r .iot_provider $config_file)
+    [[ $site_model != null ]] || site_model=$(dirname $config_file)
     [[ $site_model = /* ]] || site_model=$(dirname $config_file)/$site_model
-    jq -r .device_endpoint $config_file > $ENDPOINT_TMP
+    device_endpoint=$(jq -r .device_endpoint $config_file)
+    [[ $device_endpoint == null ]] || (
+        echo Extracting configuration to $ENDPOINT_TMP
+        echo $device_endpoint > $ENDPOINT_TMP
+    )
 fi
 
 if [[ -n ${UDMI_REGISTRY_SUFFIX:-} ]]; then
@@ -61,7 +70,7 @@ echo Cleaning output directory $UDMI_ROOT/pubber/out/$serial_no
 rm -rf $UDMI_ROOT/pubber/out/$serial_no
 
 echo Building pubber...
-$UDMI_ROOT/pubber/bin/build
+[[ ! -d $UDMI_ROOT/pubber/src ]] || $UDMI_ROOT/pubber/bin/build
 
 echo Running tools version $udmi_version
 
@@ -102,18 +111,20 @@ elif [[ $project_id =~ @ ]]; then
     iot_provider=jwt
     broker_hostname=${project_id#*@}
     project_target=${project_id%@*}
-else
-    iot_provider=gcp
+elif [[ -z $iot_provider ]]; then
+    false no iot_provider provided.
 fi
 
+[[ ${registry_id:-null} == null ]] && fail registry_id not defined
+registry_actual=${udmi_prefix}${registry_id}${registry_suffix}
 if [[ ! -f $ENDPOINT_TMP ]]; then
-    [[ ${registry_id:-null} == null ]] && fail registry_id not defined
-    registry_actual=${udmi_prefix}${registry_id}${registry_suffix}
     client_id=\"projects/$project_target/locations/$cloud_region/registries/$registry_actual/devices/$device_id\"
 fi
+
 topic_prefix=null
 auth_provider=null
 transport=null
+target_id=$device_id
 
 if [[ $iot_provider == clearblade ]]; then
     broker_hostname=${cloud_region}-mqtt.clearblade.com
@@ -123,8 +134,7 @@ elif [[ $iot_provider == mqtt ]]; then
     broker_hostname=$project_target
     gateway_id=$(jq -r .gateway.gateway_id $site_model/devices/$device_id/metadata.json) || true
     echo Attached to gateway $gateway_id
-    target_id=$device_id
-    [[ $gateway_id == null ]] || target_id=$gateway_id
+    [[ -z $gateway_id || $gateway_id == null ]] || target_id=$gateway_id
     echo Target is $target_id
     client_id=\"/r/$registry_actual/d/$target_id\"
     key_file=$site_model/devices/$target_id/*_private.pkcs8
@@ -139,6 +149,7 @@ elif [[ -z $broker_hostname ]]; then
 fi
 
 if [[ ! -f $ENDPOINT_TMP ]]; then
+    echo Constructing new $ENDPOINT_TMP
     cat <<EOF > $ENDPOINT_TMP
 {
     "protocol": "mqtt",
@@ -171,6 +182,15 @@ else
 fi
 
 jq --slurpfile endpoint $ENDPOINT_TMP '.endpoint = $endpoint[0]' $tmp_config | sponge $tmp_config
+
+if [[ -f ${site_model:-}/reflector/ca.crt && -n ${project_target:-} ]]; then
+    echo Checking for signed device certificate...
+    certs=(${site_model}/devices/${target_id}/*.crt) || true
+    [[ -f $certs ]] || $UDMI_ROOT/bin/keygen CERT/${project_target} ${site_model}/devices/${target_id}/
+    ls -l ${site_model}/devices/${target_id}/*.crt
+fi
+
+cat $tmp_config
 
 # Run in the background to force new process group and get PID
 $UDMI_ROOT/pubber/bin/run $tmp_config &
