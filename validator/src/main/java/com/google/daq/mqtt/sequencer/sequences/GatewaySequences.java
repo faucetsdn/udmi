@@ -3,6 +3,7 @@ package com.google.daq.mqtt.sequencer.sequences;
 import static com.google.common.collect.Sets.difference;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
+import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static org.junit.Assert.assertTrue;
 import static udmi.schema.Envelope.SubFolder.POINTSET;
@@ -28,10 +29,6 @@ import udmi.schema.Config;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.FeatureDiscovery.FeatureStage;
 import udmi.schema.PointsetConfig;
-import udmi.schema.PointsetState;
-import udmi.schema.State;
-import udmi.schema.SystemConfig;
-import udmi.schema.SystemState;
 
 /**
  * Specific tests for logical gateway devices. This is not the same as proxied devices (devices that
@@ -90,11 +87,12 @@ public class GatewaySequences extends SequenceBase {
 
     proxyIds.forEach(this::updateProxyConfig);
 
-    waitFor("All proxy devices received event and state", MESSAGE_WAIT_DURATION,
-        () -> {
-          Set<String> remainingEvents = difference(proxyIds, receivedDevices(proxyIds, subFolder));
-          return remainingEvents.isEmpty() ? null : "Missing events from " + CSV_JOINER.join(remainingEvents);
-        });
+    String description = format("All proxy devices received %s", subFolder.value());
+    waitFor(description, MESSAGE_WAIT_DURATION, () -> {
+      Set<String> remainingTargets = difference(proxyIds, receivedDevices(proxyIds, subFolder));
+      return remainingTargets.isEmpty() ? null
+          : format("Missing %s from %s", subFolder.value(), CSV_JOINER.join(remainingTargets));
+    });
 
     Set<String> receivedDevices = getReceivedDevices();
     SetView<String> difference = difference(difference(receivedDevices, proxyIds),
