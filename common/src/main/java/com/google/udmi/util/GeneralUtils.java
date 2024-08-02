@@ -56,6 +56,7 @@ import org.apache.commons.io.FileUtils;
 public class GeneralUtils {
 
   public static final Joiner CSV_JOINER = Joiner.on(", ");
+  public static final Joiner SEMI_JOINER = Joiner.on("; ");
   public static final Joiner NEWLINE_JOINER = Joiner.on("\n");
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
       .enable(SerializationFeature.INDENT_OUTPUT)

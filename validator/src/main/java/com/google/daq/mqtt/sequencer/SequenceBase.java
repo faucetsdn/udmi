@@ -2325,7 +2325,7 @@ public class SequenceBase {
     }
   }
 
-  static class CaptureMap extends HashMap<SubFolder, List<Map<String, Object>>> {
+  protected static class CaptureMap extends HashMap<SubFolder, List<Map<String, Object>>> {
 
   }
 

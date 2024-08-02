@@ -1,29 +1,36 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
+import static com.google.common.collect.Sets.difference;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
+import static java.util.Optional.ofNullable;
 import static org.junit.Assert.assertTrue;
 import static udmi.schema.Envelope.SubFolder.POINTSET;
 import static udmi.schema.Envelope.SubFolder.UPDATE;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.Summary;
-import java.util.HashSet;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Test;
 import udmi.schema.Bucket;
+import udmi.schema.Envelope.SubFolder;
 import udmi.schema.FeatureDiscovery.FeatureStage;
 
 /**
- * Specific tests for logical gateway devices. This is not the same as proxied
- * devices (devices that are proxied through a gateway).
+ * Specific tests for logical gateway devices. This is not the same as proxied devices (devices that
+ * are proxied through a gateway).
  */
 public class GatewaySequences extends SequenceBase {
+
+  private static final Duration MESSAGE_WAIT_DURATION = Duration.of(30, ChronoUnit.SECONDS);
 
   @Before
   public void setupExpectedParameters() {
@@ -56,30 +63,32 @@ public class GatewaySequences extends SequenceBase {
   @Summary("Check that a gateway proxies pointset events for indicated devices")
   @Test(timeout = TWO_MINUTES_MS)
   public void gateway_proxy_events() {
-    Set<String> remaining = new HashSet<>(deviceMetadata.gateway.proxy_ids);
-    captureReceivedEventsFor(remaining);
-    Set<String> original = ImmutableSet.copyOf(remaining);
+    Set<String> proxyIds = ImmutableSet.copyOf(deviceMetadata.gateway.proxy_ids);
+    captureReceivedEventsFor(proxyIds);
 
-    untilTrue("All proxy devices received event and state", () -> {
-      remaining.stream()
-          .filter(this::hasReceivedPointset)
-          .filter(this::hasReceivedState)
-          .toList().forEach(remaining::remove);
-      return remaining.isEmpty();
-    }, () -> "Missing data from " + CSV_JOINER.join(remaining));
+    waitFor("All proxy devices received event and state", MESSAGE_WAIT_DURATION,
+        () -> {
+      Set<String> remainingState = difference(proxyIds, receivedDevices(proxyIds, UPDATE));
+      String stateMessage =
+          remainingState.isEmpty() ? "" : "Missing state from " + CSV_JOINER.join(remainingState);
+      Set<String> remainingEvents = difference(proxyIds, receivedDevices(proxyIds, POINTSET));
+      String eventsMessage = remainingEvents.isEmpty() ? ""
+          : "Missing events from " + CSV_JOINER.join(remainingEvents);
+      boolean hasBoth = !(stateMessage.isBlank() || eventsMessage.isBlank());
+      String totalMessage = stateMessage + (hasBoth ? "; " : "") + eventsMessage;
+      return totalMessage.isBlank() ? null : totalMessage;
+    });
 
     Set<String> receivedDevices = getReceivedDevices();
-    SetView<String> difference =
-        Sets.difference(Sets.difference(receivedDevices, original), ImmutableSet.of(getDeviceId()));
+    SetView<String> difference = difference(difference(receivedDevices, proxyIds),
+        ImmutableSet.of(getDeviceId()));
     assertTrue("unexpected proxy device: " + CSV_JOINER.join(difference), difference.isEmpty());
   }
 
-  private boolean hasReceivedState(String deviceId  ) {
-    return !getReceivedEvents(deviceId, UPDATE).isEmpty();
+  private Set<String> receivedDevices(Set<String> proxyIds, SubFolder subFolder) {
+    return proxyIds.stream().filter(deviceId -> {
+      CaptureMap receivedEvents = getReceivedEvents(deviceId);
+      return !ofNullable(receivedEvents.get(subFolder)).map(List::isEmpty).orElse(true);
+    }).collect(Collectors.toSet());
   }
-
-  private boolean hasReceivedPointset(String deviceId) {
-    return !getReceivedEvents(deviceId, POINTSET).isEmpty();
-  }
-
 }
