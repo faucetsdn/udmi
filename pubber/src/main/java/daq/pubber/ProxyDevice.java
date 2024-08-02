@@ -4,6 +4,7 @@ import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static java.lang.String.format;
 
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import udmi.schema.Config;
 import udmi.schema.Metadata;
@@ -14,6 +15,7 @@ import udmi.schema.PubberConfiguration;
  */
 public class ProxyDevice extends ManagerBase implements ManagerHost {
 
+  private static final long STATE_INTERVAL_MS = 1000;
   final DeviceManager deviceManager;
   final Pubber pubberHost;
   private final AtomicBoolean active = new AtomicBoolean();
@@ -26,6 +28,8 @@ public class ProxyDevice extends ManagerBase implements ManagerHost {
     // Simple shortcut to get access to some foundational mechanisms inside of Pubber.
     pubberHost = (Pubber) host;
     deviceManager = new DeviceManager(this, makeProxyConfiguration(id, config));
+    executor.scheduleAtFixedRate(this::publishDirtyState, STATE_INTERVAL_MS, STATE_INTERVAL_MS,
+        TimeUnit.MILLISECONDS);
   }
 
   private static PubberConfiguration makeProxyConfiguration(String id, PubberConfiguration config) {
@@ -73,8 +77,14 @@ public class ProxyDevice extends ManagerBase implements ManagerHost {
 
   @Override
   public void update(Object update) {
-    String simpleName = update.getClass().getSimpleName();
-    warn(format("Ignoring proxy device %s update for %s", deviceId, simpleName));
+    Pubber.updateStateHolder(deviceState, update);
+    stateDirty.set(true);
+  }
+
+  public void publishDirtyState() {
+    if (stateDirty.getAndSet(false)) {
+      pubberHost.publish(deviceId, deviceState);
+    }
   }
 
   @Override

@@ -12,9 +12,12 @@ import java.util.Date;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import udmi.schema.Config;
 import udmi.schema.PubberConfiguration;
 import udmi.schema.PubberOptions;
+import udmi.schema.State;
 
 /**
  * Base class for Pubber subsystem managers.
@@ -27,7 +30,10 @@ public abstract class ManagerBase {
   protected final AtomicInteger sendRateSec = new AtomicInteger(DEFAULT_REPORT_SEC);
   protected final PubberOptions options;
   protected final ManagerHost host;
-  private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
+  final Config deviceConfig = new Config();
+  final State deviceState = new State();
+  protected final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
+  protected final AtomicBoolean stateDirty = new AtomicBoolean();
   final String deviceId;
   final PubberConfiguration config;
   protected ScheduledFuture<?> periodicSender;
@@ -92,7 +98,7 @@ public abstract class ManagerBase {
     int intervalSec = ofNullable(options.fixedSampleRate).orElse(reportInterval);
     if (intervalSec < DISABLED_INTERVAL) {
       error(format("Dropping update interval, sample rate %ds is less then DISABLED_INTERVAL",
-              intervalSec));
+          intervalSec));
       return;
     }
     if (periodicSender == null || intervalSec != sendRateSec.get()) {
@@ -112,7 +118,7 @@ public abstract class ManagerBase {
     checkState(periodicSender == null);
     int sec = sendRateSec.get();
     warn(format("Starting %s %s sender with delay %ds",
-            deviceId, this.getClass().getSimpleName(), sec));
+        deviceId, this.getClass().getSimpleName(), sec));
     if (sec != 0) {
       periodicUpdate(); // To this now to synchronously raise any obvious exceptions.
       periodicSender = schedulePeriodic(sec, this::periodicUpdate);

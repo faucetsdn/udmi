@@ -153,11 +153,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
   private static final Duration CLOCK_SKEW = Duration.ofMinutes(30);
   private static final Duration SMOKE_CHECK_TIME = Duration.ofMinutes(5);
   private static final int STATE_SPAM_SEC = 5; // Expected config-state response time.
-  final State deviceState = new State();
-  final Config deviceConfig = new Config();
   private final File outDir;
-  private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
-  private final AtomicBoolean stateDirty = new AtomicBoolean();
   private final ReentrantLock stateLock = new ReentrantLock();
   public PrintStream logPrintWriter;
   protected DevicePersistent persistentData;
@@ -471,6 +467,18 @@ public class Pubber extends ManagerBase implements ManagerHost {
 
   @Override
   public void update(Object update) {
+    if (update == this) {
+      publishSynchronousState();
+      return;
+    }
+    updateStateHolder(deviceState, update);
+    markStateDirty();
+    if (update instanceof SystemState) {
+      ifTrueThen(options.dupeState, this::sendPartialState);
+    }
+  }
+
+  protected static void updateStateHolder(State state, Object update) {
     requireNonNull(update, "null update message");
     boolean markerClass = update instanceof Class<?>;
     final Object checkValue = markerClass ? null : update;
@@ -480,27 +488,23 @@ public class Pubber extends ManagerBase implements ManagerHost {
     } catch (Exception e) {
       throw new RuntimeException("Could not create marker instance of class " + update.getClass());
     }
-    if (checkTarget == this) {
-      publishSynchronousState();
-    } else if (checkTarget instanceof SystemState) {
-      deviceState.system = (SystemState) checkValue;
-      ifTrueThen(options.dupeState, this::sendDupeState);
+    if (checkTarget instanceof SystemState) {
+      state.system = (SystemState) checkValue;
     } else if (checkTarget instanceof PointsetState) {
-      deviceState.pointset = (PointsetState) checkValue;
+      state.pointset = (PointsetState) checkValue;
     } else if (checkTarget instanceof LocalnetState) {
-      deviceState.localnet = (LocalnetState) checkValue;
+      state.localnet = (LocalnetState) checkValue;
     } else if (checkTarget instanceof GatewayState) {
-      deviceState.gateway = (GatewayState) checkValue;
+      state.gateway = (GatewayState) checkValue;
     } else if (checkTarget instanceof DiscoveryState) {
-      deviceState.discovery = (DiscoveryState) checkValue;
+      state.discovery = (DiscoveryState) checkValue;
     } else {
       throw new RuntimeException(
           "Unrecognized update type " + checkTarget.getClass().getSimpleName());
     }
-    markStateDirty();
   }
 
-  private void sendDupeState() {
+  private void sendPartialState() {
     State dupeState = new State();
     dupeState.system = deviceState.system;
     dupeState.timestamp = deviceState.timestamp;
