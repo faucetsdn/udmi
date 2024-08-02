@@ -4,7 +4,7 @@ package daq.pubber;
  * Collection of methods for how a manager can/should interface with it's host class.
  */
 public interface ManagerHost {
-  void updateState(Object update);
+  void update(Object update);
 
   void debug(String message);
 

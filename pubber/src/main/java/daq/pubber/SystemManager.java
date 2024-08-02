@@ -189,7 +189,7 @@ public class SystemManager extends ManagerBase {
   }
 
   private void updateState() {
-    host.updateState(systemState);
+    host.update(systemState);
   }
 
   private void sendSystemEvent() {
@@ -213,7 +213,7 @@ public class SystemManager extends ManagerBase {
   void systemLifecycle(SystemMode mode) {
     systemState.operation.mode = mode;
     try {
-      host.updateState(null);
+      host.update(null);
     } catch (Exception e) {
       error("Squashing error publishing state while shutting down", e);
     }

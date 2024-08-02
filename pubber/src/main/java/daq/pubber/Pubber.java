@@ -466,7 +466,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
   }
 
   @Override
-  public void updateState(Object update) {
+  public void update(Object update) {
     if (update == null) {
       publishSynchronousState();
       return;
