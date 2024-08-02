@@ -154,7 +154,7 @@ jobs:
         run: bin/test_validator $TARGET_PROJECT
       - name: validator result
         if: ${{ !cancelled() }}
-        run: cat /tmp/validator.out || true
+        run: more out/validator.out* || true
       - name: message captures
         if: ${{ !cancelled() }}
         run: |
@@ -166,7 +166,9 @@ jobs:
         run: bin/test_sequencer nostate full $TARGET_PROJECT
       - name: support bundle
         if: ${{ !cancelled() }}
-        run: UDMI_REGISTRY_SUFFIX=_b bin/support ${{ github.repository_owner }}_${{ github.job }}_
+        run: |
+          ls -l out/
+          UDMI_REGISTRY_SUFFIX=_b bin/support ${{ github.repository_owner }}_${{ github.job }}_
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
