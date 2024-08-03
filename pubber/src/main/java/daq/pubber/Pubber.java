@@ -532,8 +532,8 @@ public class Pubber extends ManagerBase implements ManagerHost {
 
     config.gatewayId = catchToNull(() -> metadata.gateway.gateway_id);
 
-    config.algorithm = config.gatewayId == null ?
-        catchToNull(() -> metadata.cloud.auth_type.value())
+    config.algorithm = config.gatewayId == null
+        ? catchToNull(() -> metadata.cloud.auth_type.value())
         : catchToNull(() -> siteModel.getAuthType(config.gatewayId).value());
 
     info("Configured with auth_type " + config.algorithm);
