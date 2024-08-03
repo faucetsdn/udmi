@@ -166,9 +166,7 @@ jobs:
         run: bin/test_sequencer nostate full $TARGET_PROJECT
       - name: support bundle
         if: ${{ !cancelled() }}
-        run: |
-          ls -l out/
-          UDMI_REGISTRY_SUFFIX=_b bin/support ${{ github.repository_owner }}_${{ github.job }}_
+        run: UDMI_REGISTRY_SUFFIX=_b bin/support ${{ github.repository_owner }}_${{ github.job }}_
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
