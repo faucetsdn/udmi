@@ -36,7 +36,7 @@ import udmi.schema.PointsetConfig;
  */
 public class GatewaySequences extends SequenceBase {
 
-  private static final Duration MESSAGE_WAIT_DURATION = Duration.of(30, ChronoUnit.SECONDS);
+  private static final Duration MESSAGE_WAIT_DURATION = Duration.of(45, ChronoUnit.SECONDS);
   private static final int POINTSET_SAMPLE_RATE_SEC = 10;
   private Map<String, Config> proxyConfigs = new HashMap<>();
 
