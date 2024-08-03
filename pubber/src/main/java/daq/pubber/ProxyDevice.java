@@ -1,5 +1,6 @@
 package daq.pubber;
 
+import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static java.lang.String.format;
@@ -23,18 +24,21 @@ public class ProxyDevice extends ManagerBase implements ManagerHost {
   /**
    * New instance.
    */
-  public ProxyDevice(ManagerHost host, String id, PubberConfiguration config) {
-    super(host, makeProxyConfiguration(id, config));
+  public ProxyDevice(ManagerHost host, String id, PubberConfiguration pubberConfig) {
+    super(host, makeProxyConfiguration(host, id, pubberConfig));
     // Simple shortcut to get access to some foundational mechanisms inside of Pubber.
     pubberHost = (Pubber) host;
-    deviceManager = new DeviceManager(this, makeProxyConfiguration(id, config));
+    deviceManager = new DeviceManager(this, makeProxyConfiguration(host, id, pubberConfig));
     executor.scheduleAtFixedRate(this::publishDirtyState, STATE_INTERVAL_MS, STATE_INTERVAL_MS,
         TimeUnit.MILLISECONDS);
   }
 
-  private static PubberConfiguration makeProxyConfiguration(String id, PubberConfiguration config) {
+  private static PubberConfiguration makeProxyConfiguration(ManagerHost host, String id,
+      PubberConfiguration config) {
     PubberConfiguration proxyConfiguration = deepCopy(config);
     proxyConfiguration.deviceId = id;
+    Metadata metadata = ((Pubber) host).getMetadata(id);
+    proxyConfiguration.serialNo = catchToNull(() -> metadata.system.serial_no);
     return proxyConfiguration;
   }
 
@@ -77,7 +81,7 @@ public class ProxyDevice extends ManagerBase implements ManagerHost {
 
   @Override
   public void update(Object update) {
-    Pubber.updateStateHolder(deviceState, update);
+    updateStateHolder(deviceState, update);
     stateDirty.set(true);
   }
 

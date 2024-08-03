@@ -100,9 +100,7 @@ public class SystemManager extends ManagerBase {
 
     systemState.operation.operational = true;
     systemState.operation.mode = SystemMode.INITIAL;
-    if (host instanceof Pubber) {
-      systemState.serial_no = configuration.serialNo;
-    }
+    systemState.serial_no = configuration.serialNo;
     systemState.last_config = new Date(0);
 
     ifNotNullThen(options.extraField, value -> systemState.extraField = value);

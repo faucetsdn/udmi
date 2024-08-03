@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
     "description",
     "tags",
     "location",
+    "serial_no",
     "hardware",
     "software",
     "physical_tag",
@@ -55,6 +56,13 @@ public class SystemModel {
     @JsonProperty("location")
     @JsonPropertyDescription("Properties the expected physical location of the device.")
     public Location location;
+    /**
+     * The serial number of the physical device
+     * 
+     */
+    @JsonProperty("serial_no")
+    @JsonPropertyDescription("The serial number of the physical device")
+    public java.lang.String serial_no;
     /**
      * SystemHardware
      * <p>
@@ -105,6 +113,7 @@ public class SystemModel {
         result = ((result* 31)+((this.location == null)? 0 :this.location.hashCode()));
         result = ((result* 31)+((this.physical_tag == null)? 0 :this.physical_tag.hashCode()));
         result = ((result* 31)+((this.adjunct == null)? 0 :this.adjunct.hashCode()));
+        result = ((result* 31)+((this.serial_no == null)? 0 :this.serial_no.hashCode()));
         result = ((result* 31)+((this.tags == null)? 0 :this.tags.hashCode()));
         result = ((result* 31)+((this.hardware == null)? 0 :this.hardware.hashCode()));
         return result;
@@ -119,7 +128,7 @@ public class SystemModel {
             return false;
         }
         SystemModel rhs = ((SystemModel) other);
-        return ((((((((((this.software == rhs.software)||((this.software!= null)&&this.software.equals(rhs.software)))&&((this.min_loglevel == rhs.min_loglevel)||((this.min_loglevel!= null)&&this.min_loglevel.equals(rhs.min_loglevel))))&&((this.metrics_rate_sec == rhs.metrics_rate_sec)||((this.metrics_rate_sec!= null)&&this.metrics_rate_sec.equals(rhs.metrics_rate_sec))))&&((this.description == rhs.description)||((this.description!= null)&&this.description.equals(rhs.description))))&&((this.location == rhs.location)||((this.location!= null)&&this.location.equals(rhs.location))))&&((this.physical_tag == rhs.physical_tag)||((this.physical_tag!= null)&&this.physical_tag.equals(rhs.physical_tag))))&&((this.adjunct == rhs.adjunct)||((this.adjunct!= null)&&this.adjunct.equals(rhs.adjunct))))&&((this.tags == rhs.tags)||((this.tags!= null)&&this.tags.equals(rhs.tags))))&&((this.hardware == rhs.hardware)||((this.hardware!= null)&&this.hardware.equals(rhs.hardware))));
+        return (((((((((((this.software == rhs.software)||((this.software!= null)&&this.software.equals(rhs.software)))&&((this.min_loglevel == rhs.min_loglevel)||((this.min_loglevel!= null)&&this.min_loglevel.equals(rhs.min_loglevel))))&&((this.metrics_rate_sec == rhs.metrics_rate_sec)||((this.metrics_rate_sec!= null)&&this.metrics_rate_sec.equals(rhs.metrics_rate_sec))))&&((this.description == rhs.description)||((this.description!= null)&&this.description.equals(rhs.description))))&&((this.location == rhs.location)||((this.location!= null)&&this.location.equals(rhs.location))))&&((this.physical_tag == rhs.physical_tag)||((this.physical_tag!= null)&&this.physical_tag.equals(rhs.physical_tag))))&&((this.adjunct == rhs.adjunct)||((this.adjunct!= null)&&this.adjunct.equals(rhs.adjunct))))&&((this.serial_no == rhs.serial_no)||((this.serial_no!= null)&&this.serial_no.equals(rhs.serial_no))))&&((this.tags == rhs.tags)||((this.tags!= null)&&this.tags.equals(rhs.tags))))&&((this.hardware == rhs.hardware)||((this.hardware!= null)&&this.hardware.equals(rhs.hardware))));
     }
 
 }
