@@ -14,12 +14,12 @@ import static com.google.udmi.util.GeneralUtils.getNow;
 import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifNullElse;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isGetTrue;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.optionsString;
 import static com.google.udmi.util.GeneralUtils.setClockSkew;
-import static com.google.udmi.util.GeneralUtils.sha256;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.GeneralUtils.toJsonFile;
 import static com.google.udmi.util.GeneralUtils.toJsonString;
@@ -33,7 +33,6 @@ import static daq.pubber.MqttDevice.STATE_TOPIC;
 import static daq.pubber.MqttPublisher.DEFAULT_CONFIG_WAIT_SEC;
 import static daq.pubber.SystemManager.LOG_MAP;
 import static java.lang.String.format;
-import static java.util.Objects.requireNonNull;
 import static java.util.Objects.requireNonNullElse;
 import static java.util.Optional.ofNullable;
 import static udmi.schema.BlobsetConfig.SystemBlobsets.IOT_ENDPOINT_CONFIG;
@@ -41,7 +40,6 @@ import static udmi.schema.EndpointConfiguration.Protocol.MQTT;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
-import com.google.daq.mqtt.util.CatchingScheduledThreadPoolExecutor;
 import com.google.udmi.util.CertManager;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.MessageDowngrader;
@@ -67,12 +65,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import org.apache.http.ConnectionClosedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,20 +83,16 @@ import udmi.schema.CloudModel.Auth_type;
 import udmi.schema.Config;
 import udmi.schema.DevicePersistent;
 import udmi.schema.DiscoveryEvents;
-import udmi.schema.DiscoveryState;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.EndpointConfiguration.Protocol;
 import udmi.schema.Entry;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
-import udmi.schema.GatewayState;
 import udmi.schema.Level;
-import udmi.schema.LocalnetState;
 import udmi.schema.Metadata;
 import udmi.schema.Operation.SystemMode;
 import udmi.schema.PointsetEvents;
-import udmi.schema.PointsetState;
 import udmi.schema.PubberConfiguration;
 import udmi.schema.PubberOptions;
 import udmi.schema.State;
@@ -153,11 +146,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
   private static final Duration CLOCK_SKEW = Duration.ofMinutes(30);
   private static final Duration SMOKE_CHECK_TIME = Duration.ofMinutes(5);
   private static final int STATE_SPAM_SEC = 5; // Expected config-state response time.
-  final State deviceState = new State();
-  final Config deviceConfig = new Config();
   private final File outDir;
-  private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
-  private final AtomicBoolean stateDirty = new AtomicBoolean();
   private final ReentrantLock stateLock = new ReentrantLock();
   public PrintStream logPrintWriter;
   protected DevicePersistent persistentData;
@@ -471,36 +460,18 @@ public class Pubber extends ManagerBase implements ManagerHost {
 
   @Override
   public void update(Object update) {
-    requireNonNull(update, "null update message");
-    boolean markerClass = update instanceof Class<?>;
-    final Object checkValue = markerClass ? null : update;
-    final Object checkTarget;
-    try {
-      checkTarget = markerClass ? ((Class<?>) update).getConstructor().newInstance() : update;
-    } catch (Exception e) {
-      throw new RuntimeException("Could not create marker instance of class " + update.getClass());
-    }
-    if (checkTarget == this) {
+    if (update == null) {
       publishSynchronousState();
-    } else if (checkTarget instanceof SystemState) {
-      deviceState.system = (SystemState) checkValue;
-      ifTrueThen(options.dupeState, this::sendDupeState);
-    } else if (checkTarget instanceof PointsetState) {
-      deviceState.pointset = (PointsetState) checkValue;
-    } else if (checkTarget instanceof LocalnetState) {
-      deviceState.localnet = (LocalnetState) checkValue;
-    } else if (checkTarget instanceof GatewayState) {
-      deviceState.gateway = (GatewayState) checkValue;
-    } else if (checkTarget instanceof DiscoveryState) {
-      deviceState.discovery = (DiscoveryState) checkValue;
-    } else {
-      throw new RuntimeException(
-          "Unrecognized update type " + checkTarget.getClass().getSimpleName());
+      return;
     }
+    updateStateHolder(deviceState, update);
     markStateDirty();
+    if (update instanceof SystemState) {
+      ifTrueThen(options.dupeState, this::sendPartialState);
+    }
   }
 
-  private void sendDupeState() {
+  private void sendPartialState() {
     State dupeState = new State();
     dupeState.system = deviceState.system;
     dupeState.timestamp = deviceState.timestamp;
@@ -546,8 +517,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
     config.keyBytes = Base64.getDecoder()
         .decode(checkNotNull(swarm.key_base64, "key_base64"));
     config.endpoint = SiteModel.makeEndpointConfig(attributes);
-    processDeviceMetadata(
-        checkNotNull(swarm.device_metadata, "device_metadata"));
+    processDeviceMetadata(checkNotNull(swarm.device_metadata, "device_metadata"));
   }
 
   private void processDeviceMetadata(Metadata metadata) {
@@ -558,19 +528,13 @@ public class Pubber extends ManagerBase implements ManagerHost {
     targetSchema = ifNotNullGet(metadata.device_version, SchemaVersion::fromKey);
     ifNotNullThen(targetSchema, version -> warn("Emulating UDMI version " + version.key()));
 
-    if (metadata.cloud != null) {
-      config.algorithm = catchToNull(() -> metadata.cloud.auth_type.value());
-    }
+    config.serialNo = catchToNull(() -> metadata.system.serial_no);
 
-    if (metadata.gateway != null) {
-      config.gatewayId = metadata.gateway.gateway_id;
-      if (config.gatewayId != null) {
-        Auth_type authType = siteModel.getAuthType(config.gatewayId);
-        if (authType != null) {
-          config.algorithm = authType.value();
-        }
-      }
-    }
+    config.gatewayId = catchToNull(() -> metadata.gateway.gateway_id);
+
+    config.algorithm = config.gatewayId == null
+        ? catchToNull(() -> metadata.cloud.auth_type.value())
+        : catchToNull(() -> siteModel.getAuthType(config.gatewayId).value());
 
     info("Configured with auth_type " + config.algorithm);
 
@@ -1343,4 +1307,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
     deviceManager.localLog(message, Level.TRACE, getTimestamp(), stackTraceString(e));
   }
 
+  public Metadata getMetadata(String id) {
+    return siteModel.getMetadata(id);
+  }
 }

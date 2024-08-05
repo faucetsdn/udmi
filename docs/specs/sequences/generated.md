@@ -48,6 +48,7 @@ Some caveats:
 * [family_ipv6_addr](#family_ipv6_addr-preview)
 * [feature_enumeration](#feature_enumeration-preview): Check enumeration of device features
 * [gateway_proxy_events](#gateway_proxy_events-beta): Check that a gateway proxies pointset events for indicated devices
+* [gateway_proxy_state](#gateway_proxy_state-preview): Check that a gateway proxies state updates for indicated devices
 * [pointset_publish](#pointset_publish-stable): Check that a device publishes pointset events
 * [pointset_publish_interval](#pointset_publish_interval-stable): Check handling of sample_rate_sec and sample_limit_sec
 * [pointset_remove_point](#pointset_remove_point-stable): Check that pointset state does not report an unconfigured point
@@ -295,6 +296,12 @@ Check enumeration of device features
 ## gateway_proxy_events (BETA)
 
 Check that a gateway proxies pointset events for indicated devices
+
+1. Test skipped: Not a gateway
+
+## gateway_proxy_state (PREVIEW)
+
+Check that a gateway proxies state updates for indicated devices
 
 1. Test skipped: Not a gateway
 
