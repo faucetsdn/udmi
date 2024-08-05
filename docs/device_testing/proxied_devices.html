@@ -1,0 +1,68 @@
+
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>UDMI test results for proxied devices</title>
+        <link href="https://unpkg.com/tabulator-tables@5.5.1/dist/css/tabulator.min.css" rel="stylesheet">
+        <script type="text/javascript" src="https://unpkg.com/tabulator-tables@5.5.1/dist/js/tabulator.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.5/purify.min.js"></script>
+        <style>
+          table { 
+            border-collapse: collapse; 
+            font-family: sans-serif; 
+          }
+          th, td { border: 1px solid black; padding: 5px; }
+          body, h1, ul, li {
+            font-family: sans-serif; 
+          }
+          .tabulator .tabulator-row .tabulator-cell .tabulator-header {
+            font-family: sans-serif; 
+          }
+        </style>
+      </head>
+      <body>
+        <h1>UDMI test results for proxied devices</h1>
+        <ul>
+          <li>Date: 2024-08-02T18:35:13.738Z</li>
+          <li>UDMI version: 1.5.1-19-g375c7313</li>
+        </ul>
+        <div id="testing-table"></div>
+        <script>
+          
+
+          var cellFormatter = function(cell, formatterParams){
+            var value = cell.getValue();
+            if (value.startsWith("img")) {
+              return "<img src='" + cell.getValue() + "' width='100' />";
+            }
+            if (value == "Pass" || value == "Yes"){
+                return "<img src='img/yes.png'/>";
+            } else if (value == "Fail" || value == "No") {
+              return "<img src='img/no.png'/>";
+            } else if (value == "Skip") {
+              return "<img src='img/skip.png'/>";
+            } else {
+                cell.getElement().style.whiteSpace = "pre-wrap";
+	              return this.emptyToSpace(DOMPurify.sanitize(value));
+            }
+          }
+
+          const tabledata = [{"Bucket":"image","Feature":"","Stage":"","TEST‑101":"img/products/FW-14.png","TEST‑901":"img/products/FS-32.png","TEST‑301":"img/products/O3-DIN-CPU.png","TEST‑401":"img/products/eBCON-2.png","TEST‑501":"img/products/Mango_os.png","TEST‑121":"img/products/ALC_OFHI.png","TEST-201":"img/products/tridium_jace-8000.jpg","DDC-131":"img/products/tyrrell.jpg","LTMTS-32519":"img/products/enlighted.png"},{"Bucket":"make","Feature":"","Stage":"","TEST‑101":"JCI","TEST‑901":"JCI","TEST‑301":"Delta Controls Inc.","TEST‑401":"Delta Controls","TEST‑501":"RadixIoT","TEST‑121":"Automated Logic Corporation","TEST-201":"Tridium","DDC-131":"Tyrrell Systems","LTMTS-32519":"Enlighted"},{"Bucket":"model","Feature":"","Stage":"","TEST‑101":"FW14/08/28","TEST‑901":"FS32/20","TEST‑301":"O3-DIN-CPU","TEST‑401":"eBCON2","TEST‑501":"Mango","TEST‑121":"OFHI","TEST-201":"JACE8000 + UDMI driver","DDC-131":"eBMS/Iot Control","LTMTS-32519":"EN-EDGE"},{"Bucket":"firmware","Feature":"","Stage":"","TEST‑101":"v1.0b23_GS","TEST‑901":"V3.0b61a_GS","TEST‑301":"4.13.1.1017 (4130-001)","TEST‑401":"4.14.0.2116 (4141-001)","TEST‑501":"5.1.1-beta.2","TEST‑121":"108.04.20042","TEST-201":"V4.13","DDC-131":"N4.13","LTMTS-32519":""},{"Bucket":"test_date","Feature":"","Stage":"","TEST‑101":"2024-02-14T09:12:47Z","TEST‑901":"2024-02-15T14:00:51Z","TEST‑301":"2024-02-26T13:46:12Z","TEST‑401":"2024-02-15T16:17:51Z","TEST‑501":"2024‑02‑12T09:02:59Z","TEST‑121":"2024‑02‑28T17:08:52Z","TEST-201":"2024-07-30T13:31:45Z","DDC-131":"2024-06-11T14:57:13Z","LTMTS-32519":"2024-06-13T14:39:08Z"},{"Bucket":"manual","Feature":"datapoint_mapping","Stage":"-","TEST‑101":"Fail","TEST‑901":"Fail","TEST‑301":"Pass","TEST‑401":"Pass","TEST‑501":"Pass","TEST‑121":"Pass","TEST-201":"Fail","DDC-131":"Pass","LTMTS-32519":"Skip"},{"Bucket":"manual","Feature":"time_utc_format","Stage":"-","TEST‑101":"Pass","TEST‑901":"Pass","TEST‑301":"Pass","TEST‑401":"Pass","TEST‑501":"Pass","TEST‑121":"Pass","TEST-201":"Fail","DDC-131":"Pass","LTMTS-32519":"Skip"},{"Bucket":"pointset","Feature":"pointset_publish","Stage":"beta","TEST‑101":"Pass","TEST‑901":"Pass","TEST‑301":"Pass","TEST‑401":"Pass","TEST‑501":"Pass","TEST‑121":"Pass","TEST-201":"Pass","DDC-131":"Pass","LTMTS-32519":"Pass"},{"Bucket":"pointset","Feature":"pointset_publish_interval","Stage":"beta","TEST‑101":"Pass","TEST‑901":"Pass","TEST‑301":"Fail","TEST‑401":"Fail","TEST‑501":"Pass","TEST‑121":"Pass","TEST-201":"Pass","DDC-131":"Pass","LTMTS-32519":"Pass"},{"Bucket":"pointset","Feature":"pointset_remove_point","Stage":"beta","TEST‑101":"Fail","TEST‑901":"Fail","TEST‑301":"Fail","TEST‑401":"Fail","TEST‑501":"Pass","TEST‑121":"Pass","TEST-201":"Fail","DDC-131":"Fail","LTMTS-32519":"Pass"},{"Bucket":"pointset","Feature":"pointset_request_extraneous","Stage":"beta","TEST‑101":"Fail","TEST‑901":"Fail","TEST‑301":"Fail","TEST‑401":"Fail","TEST‑501":"Pass","TEST‑121":"Pass","TEST-201":"Fail","DDC-131":"Fail","LTMTS-32519":"Fail"},{"Bucket":"pointset","Feature":"pointset_sample_rate","Stage":"beta","TEST‑101":"Pass","TEST‑901":"Pass","TEST‑301":"Fail","TEST‑401":"Fail","TEST‑501":"Pass","TEST‑121":"Pass","TEST-201":"Fail","DDC-131":"Pass","LTMTS-32519":"Pass"},{"Bucket":"system","Feature":"broken_config","Stage":"beta","TEST‑101":"Pass","TEST‑901":"Pass","TEST‑301":"Pass","TEST‑401":"Pass","TEST‑501":"Fail","TEST‑121":"Fail","TEST-201":"Fail","DDC-131":"Pass","LTMTS-32519":"Pass"},{"Bucket":"system","Feature":"config_logging.receive","Stage":"beta","TEST‑101":"Fail","TEST‑901":"Fail","TEST‑301":"Fail","TEST‑401":"Fail","TEST‑501":"Pass","TEST‑121":"Pass","TEST-201":"Fail","DDC-131":"Pass","LTMTS-32519":"Pass"},{"Bucket":"system","Feature":"config_logging.parse","Stage":"beta","TEST‑101":"Fail","TEST‑901":"Fail","TEST‑301":"Fail","TEST‑401":"Fail","TEST‑501":"Pass","TEST‑121":"Pass","TEST-201":"Fail","DDC-131":"Pass","LTMTS-32519":"Pass"},{"Bucket":"system","Feature":"config_logging.apply","Stage":"beta","TEST‑101":"Pass","TEST‑901":"Pass","TEST‑301":"Fail","TEST‑401":"Fail","TEST‑501":"Pass","TEST‑121":"Pass","TEST-201":"Fail","DDC-131":"Pass","LTMTS-32519":"Pass"},{"Bucket":"system","Feature":"extra_config","Stage":"beta","TEST‑101":"Pass","TEST‑901":"Pass","TEST‑301":"Pass","TEST‑401":"Pass","TEST‑501":"Fail","TEST‑121":"Pass","TEST-201":"Fail","DDC-131":"Pass","LTMTS-32519":"Pass"},{"Bucket":"system","Feature":"state_make_model","Stage":"beta","TEST‑101":"Pass","TEST‑901":"Pass","TEST‑301":"Pass","TEST‑401":"Pass","TEST‑501":"Fail","TEST‑121":"Pass","TEST-201":"Fail","DDC-131":"Pass","LTMTS-32519":"Pass"},{"Bucket":"system","Feature":"state_software","Stage":"beta","TEST‑101":"Pass","TEST‑901":"Pass","TEST‑301":"Pass","TEST‑401":"Pass","TEST‑501":"Fail","TEST‑121":"Pass","TEST-201":"Fail","DDC-131":"Pass","LTMTS-32519":"Pass"},{"Bucket":"system","Feature":"system_last_update","Stage":"stable","TEST‑101":"Pass","TEST‑901":"Pass","TEST‑301":"Pass","TEST‑401":"Pass","TEST‑501":"Fail","TEST‑121":"Pass","TEST-201":"Pass","DDC-131":"Pass","LTMTS-32519":"Pass"},{"Bucket":"system","Feature":"valid_serial_no","Stage":"beta","TEST‑101":"Pass","TEST‑901":"Pass","TEST‑301":"Pass","TEST‑401":"Pass","TEST‑501":"Fail","TEST‑121":"Pass","TEST-201":"Fail","DDC-131":"Pass","LTMTS-32519":"Pass"},{"Bucket":"system","Feature":"family_ether_addr","Stage":"alpha","TEST‑101":"Fail","TEST‑901":"Fail","TEST‑301":"Fail","TEST‑401":"Fail","TEST‑501":"Fail","TEST‑121":"Pass","TEST-201":"Fail","DDC-131":"Fail","LTMTS-32519":"Skip"},{"Bucket":"system","Feature":"family_ipv4_addr","Stage":"alpha","TEST‑101":"Fail","TEST‑901":"Fail","TEST‑301":"Fail","TEST‑401":"Fail","TEST‑501":"Fail","TEST‑121":"Pass","TEST-201":"Fail","DDC-131":"Fail","LTMTS-32519":"Skip"},{"Bucket":"notes","Feature":"","Stage":"","TEST‑101":"Not UDMI native device\nas UDMI configuration\nis done using web interface\nof the device.\n\nNew UDMI\nspecification requires\nlog entry at DEBUG level for config_logging.receive and config_logging.parse..","TEST‑901":"Not UDMI native device\nas UDMI configuration\nis done using web interface\nof the device.\n\nNew UDMI\nspecification requires\nlog entry at DEBUG level for config_logging.receive and config_logging.parse..","TEST‑301":"Publish telemetry frequency is the same for the gateway and the proxied device.\n\nDevice is publishing\npartial state messages\nafter config.\n\nDevice does not parse\nminimum config.","TEST‑401":"Publish telemetry frequency is the same for the gateway and the proxied device.\n\nDevice is publishing\npartial state messages\nafter config.\n\nDevice does not parse\nminimum config.","TEST‑501":"Proxied device does not\npublish state message.","TEST‑121":"","TEST-201":"","DDC-131":"","LTMTS-32519":"Device is hosted on Enlighted cloud - no access to configuration"}];
+          const columns = [{"title":"Bucket","field":"Bucket",formatter:cellFormatter},{"title":"Feature","field":"Feature",formatter:cellFormatter},{"title":"Stage","field":"Stage",formatter:cellFormatter},{"title":"TEST‑101","field":"TEST‑101",formatter:cellFormatter},{"title":"TEST‑901","field":"TEST‑901",formatter:cellFormatter},{"title":"TEST‑301","field":"TEST‑301",formatter:cellFormatter},{"title":"TEST‑401","field":"TEST‑401",formatter:cellFormatter},{"title":"TEST‑501","field":"TEST‑501",formatter:cellFormatter},{"title":"TEST‑121","field":"TEST‑121",formatter:cellFormatter},{"title":"TEST-201","field":"TEST-201",formatter:cellFormatter},{"title":"DDC-131","field":"DDC-131",formatter:cellFormatter},{"title":"LTMTS-32519","field":"LTMTS-32519",formatter:cellFormatter}]
+
+          
+          new Tabulator("#testing-table", {
+            data: tabledata,
+            columns: columns,
+            layout:"fitColumns", 
+            resizableRows:true, 
+            cellVertAlign:"top",
+            resizableRows:true,
+            wrapCells: true,
+            responsiveLayout:"hide",
+            height:"100%",
+          });
+        </script>
+      </body>
+    </html>
+  
