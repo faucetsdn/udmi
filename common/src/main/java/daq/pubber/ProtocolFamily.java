@@ -1,5 +1,8 @@
 package daq.pubber;
 
+import com.google.common.collect.ImmutableSet;
+import java.util.Set;
+
 public interface ProtocolFamily {
 
   String VENDOR = "vendor";
@@ -10,4 +13,6 @@ public interface ProtocolFamily {
   String BACNET = "bacnet";
   String MODBUS = "modbus";
   String INVALID = "invalid";
+
+  Set<String> FAMILIES = ImmutableSet.of(VENDOR, IPV_4, IPV_6, ETHER, IOT, BACNET, MODBUS);
 }
