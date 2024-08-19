@@ -19,6 +19,7 @@ RESULT pass enumeration.pointset pointset_enumeration ALPHA 5/5 Sequence complet
 RESULT skip gateway bad_target_family PREVIEW 0/0 Not a proxied device
 RESULT skip gateway gateway_attach_handling ALPHA 0/0 Not a gateway
 RESULT skip gateway gateway_proxy_events BETA 0/0 Not a gateway
+RESULT skip gateway gateway_proxy_state PREVIEW 0/0 Not a gateway
 RESULT pass pointset pointset_publish STABLE 5/5 Sequence complete
 RESULT pass pointset pointset_publish_interval STABLE 5/5 Sequence complete
 RESULT pass pointset pointset_remove_point STABLE 5/5 Sequence complete

@@ -63,6 +63,7 @@ echo "export UDMI_ALT_REGISTRY=${UDMI_ALT_REGISTRY:-}"
 echo "export MATRIX_SHARD_COUNT=${MATRIX_SHARD_COUNT:-}"
 echo "export MATRIX_SHARD_INDEX=${MATRIX_SHARD_INDEX:-}"
 
+sequencer_start=out/.sequencer.start
 site_path=sites/udmi_site_model
 iot_config=$site_path/cloud_iot_config.json
 device_id=AHU-1
@@ -70,6 +71,8 @@ site_out=$site_path/out
 output_file=$site_out/sequencer_$device_id.json
 device_out_base=$site_out/devices/$device_id
 tests_out_base=$device_out_base/tests
+
+touch $sequencer_start
 
 if [[ -n $clean_cache ]]; then
     rm -rf $site_path/out-seq $site_out
@@ -144,6 +147,7 @@ echo Combining partial-run output files...
     files=$(ls -1 *.out *.log)
     echo Merging $files
     for file in $files; do
+        [[ $file -nt ../$sequencer_start ]] || continue
         nfile=$(echo $file | sed -E -r "s/\.(.*)\$/$suffix.\1/")
         [[ $file != $nfile ]] && mv $file $nfile && echo Renamed $file to $nfile
         cp $nfile $nfile.save

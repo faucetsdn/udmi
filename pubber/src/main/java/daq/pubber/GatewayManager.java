@@ -1,6 +1,8 @@
 package daq.pubber;
 
 import static com.google.udmi.util.GeneralUtils.catchToNull;
+import static com.google.udmi.util.GeneralUtils.deepCopy;
+import static com.google.udmi.util.GeneralUtils.getNow;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
@@ -12,6 +14,7 @@ import static java.util.Optional.ofNullable;
 import static udmi.schema.Category.GATEWAY_PROXY_TARGET;
 
 import com.google.udmi.util.SiteModel;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -119,6 +122,7 @@ public class GatewayManager extends ManagerBase {
     gatewayState.status.category = category;
     gatewayState.status.level = level.value();
     gatewayState.status.message = message;
+    gatewayState.status.timestamp = getNow();
   }
 
   private void updateState() {
