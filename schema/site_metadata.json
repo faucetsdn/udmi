@@ -86,15 +86,31 @@
         }
       }
     },
-    "device_count": {
-            "description": "Number of devices in the UDMI site model",
-            "type": "number",
-            "examples": [32, 245]
-    },
-    "validated_count": {
-            "description": "Number of validated devices in the UDMI site model",
-            "type": "number",
-            "examples": [19, 142]
+    "count": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "modeled": {
+          "description": "Count of modeled devices",
+          "type": "number",
+          "examples": [42]
+        },
+        "validated": {
+          "description": "Count of validated devices",
+          "type": "number",
+          "examples": [42]
+        },
+        "registered": {
+          "description": "Count of registered devices",
+          "type": "number",
+          "examples": [42]
+        },
+        "discovered": {
+          "description": "Count of discovered devices",
+          "type": "number",
+          "examples": [42]
+        }
+      }
     }
   }
 }
