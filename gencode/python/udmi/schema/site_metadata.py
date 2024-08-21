@@ -46,20 +46,18 @@ class Object7BC6817A:
     return result
 
 
-class Object482237BC:
+class Object1CD88248:
   """Generated schema class"""
 
   def __init__(self):
     self.m2 = None
-    self.sqf = None
 
   @staticmethod
   def from_dict(source):
     if not source:
       return None
-    result = Object482237BC()
+    result = Object1CD88248()
     result.m2 = source.get('m2')
-    result.sqf = source.get('sqf')
     return result
 
   @staticmethod
@@ -68,7 +66,7 @@ class Object482237BC:
       return None
     result = {}
     for key in source:
-      result[key] = Object482237BC.from_dict(source[key])
+      result[key] = Object1CD88248.from_dict(source[key])
     return result
 
   @staticmethod
@@ -82,8 +80,96 @@ class Object482237BC:
     result = {}
     if self.m2:
       result['m2'] = self.m2 # 5
-    if self.sqf:
-      result['sqf'] = self.sqf # 5
+    return result
+
+
+class ObjectE4340764:
+  """Generated schema class"""
+
+  def __init__(self):
+    self.folder = None
+    self.repo = None
+
+  @staticmethod
+  def from_dict(source):
+    if not source:
+      return None
+    result = ObjectE4340764()
+    result.folder = source.get('folder')
+    result.repo = source.get('repo')
+    return result
+
+  @staticmethod
+  def map_from(source):
+    if not source:
+      return None
+    result = {}
+    for key in source:
+      result[key] = ObjectE4340764.from_dict(source[key])
+    return result
+
+  @staticmethod
+  def expand_dict(input):
+    result = {}
+    for property in input:
+      result[property] = input[property].to_dict() if input[property] else {}
+    return result
+
+  def to_dict(self):
+    result = {}
+    if self.folder:
+      result['folder'] = self.folder # 5
+    if self.repo:
+      result['repo'] = self.repo # 5
+    return result
+
+
+class Object837C4A52:
+  """Generated schema class"""
+
+  def __init__(self):
+    self.modeled = None
+    self.validated = None
+    self.registered = None
+    self.discovered = None
+
+  @staticmethod
+  def from_dict(source):
+    if not source:
+      return None
+    result = Object837C4A52()
+    result.modeled = source.get('modeled')
+    result.validated = source.get('validated')
+    result.registered = source.get('registered')
+    result.discovered = source.get('discovered')
+    return result
+
+  @staticmethod
+  def map_from(source):
+    if not source:
+      return None
+    result = {}
+    for key in source:
+      result[key] = Object837C4A52.from_dict(source[key])
+    return result
+
+  @staticmethod
+  def expand_dict(input):
+    result = {}
+    for property in input:
+      result[property] = input[property].to_dict() if input[property] else {}
+    return result
+
+  def to_dict(self):
+    result = {}
+    if self.modeled:
+      result['modeled'] = self.modeled # 5
+    if self.validated:
+      result['validated'] = self.validated # 5
+    if self.registered:
+      result['registered'] = self.registered # 5
+    if self.discovered:
+      result['discovered'] = self.discovered # 5
     return result
 
 
@@ -98,10 +184,8 @@ class SiteMetadata:
     self.tags = None
     self.location = None
     self.area = None
-    self.site_folder = None
-    self.source_repo = None
-    self.device_count = None
-    self.validated_count = None
+    self.source = None
+    self.count = None
 
   @staticmethod
   def from_dict(source):
@@ -114,11 +198,9 @@ class SiteMetadata:
     result.name = source.get('name')
     result.tags = source.get('tags')
     result.location = Object7BC6817A.from_dict(source.get('location'))
-    result.area = Object482237BC.from_dict(source.get('area'))
-    result.site_folder = source.get('site_folder')
-    result.source_repo = source.get('source_repo')
-    result.device_count = source.get('device_count')
-    result.validated_count = source.get('validated_count')
+    result.area = Object1CD88248.from_dict(source.get('area'))
+    result.source = ObjectE4340764.from_dict(source.get('source'))
+    result.count = Object837C4A52.from_dict(source.get('count'))
     return result
 
   @staticmethod
@@ -153,12 +235,8 @@ class SiteMetadata:
       result['location'] = self.location.to_dict() # 4
     if self.area:
       result['area'] = self.area.to_dict() # 4
-    if self.site_folder:
-      result['site_folder'] = self.site_folder # 5
-    if self.source_repo:
-      result['source_repo'] = self.source_repo # 5
-    if self.device_count:
-      result['device_count'] = self.device_count # 5
-    if self.validated_count:
-      result['validated_count'] = self.validated_count # 5
+    if self.source:
+      result['source'] = self.source.to_dict() # 4
+    if self.count:
+      result['count'] = self.count.to_dict() # 4
     return result
