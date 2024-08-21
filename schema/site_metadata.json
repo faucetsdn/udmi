@@ -70,15 +70,21 @@
         }
       }
     },
-    "site_folder": {
-      "description": "Folder where the UDMI site model is stored",
-      "type": "string",
-      "examples": ["/home/user/udmi_site_model", "https://drive.google.com/corp/drive/folders/iamadrivelocation"]
-    },
-    "source_repo": {
-      "description": "Source repository where the UDMI site model is stored",
-      "type": "string",
-      "examples": ["https://github.com/faucetsdn/udmi_site_model", "git@github.com:faucetsdn/udmi_site_model.git"]
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "folder": {
+          "description": "Folder where the UDMI site model is stored",
+          "type": "string",
+          "examples": ["/home/user/udmi_site_model", "https://drive.google.com/corp/drive/folders/iamadrivelocation"]
+        },
+        "repo": {
+          "description": "Source repository where the UDMI site model is stored",
+          "type": "string",
+          "examples": ["https://github.com/faucetsdn/udmi_site_model", "git@github.com:faucetsdn/udmi_site_model.git"]
+        }
+      }
     },
     "device_count": {
             "description": "Number of devices in the UDMI site model",
