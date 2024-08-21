@@ -67,11 +67,6 @@
             "description": "Area of the site in square meters",
             "type": "number",
             "examples": [1234, 256, 998765]
-        },
-        "sqf": {
-            "description": "Area of the site in square feet",
-            "type": "number",
-            "examples": [13282.67, 2755.56, 10750617]
         }
       }
     },
