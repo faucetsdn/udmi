@@ -32,14 +32,29 @@ public class ProxiedSequences extends PointsetBase {
   }
 
   @Feature(stage = FeatureStage.PREVIEW, bucket = Bucket.GATEWAY)
-  @Summary("Error handling for badly formed target address family")
+  @Summary("Error handling for badly formed gateway target family")
   @Test(timeout = TWO_MINUTES_MS)
   public void bad_target_family() {
     cleanStatusCheck();
     GatewayConfig gatewayConfig = deviceConfig.gateway;
     final FamilyLocalnetModel savedTarget = deepCopy(gatewayConfig.target);
     ifNullThen(gatewayConfig.target, () -> gatewayConfig.target = new FamilyLocalnetModel());
-    gatewayConfig.target.family = ProtocolFamily.INVALID;
+    gatewayConfig.target.family = getRandomFamily();
+    untilTrue("gateway status has target error", this::hasTargetError);
+    gatewayConfig.target = savedTarget;
+    untilFalse("restored original target config", this::hasGatewayStatus);
+  }
+
+  @Feature(stage = FeatureStage.PREVIEW, bucket = Bucket.GATEWAY)
+  @Summary("Error handling for badly formed gateway target address")
+  @Test(timeout = TWO_MINUTES_MS)
+  public void bad_target_address() {
+    cleanStatusCheck();
+    GatewayConfig gatewayConfig = deviceConfig.gateway;
+    final FamilyLocalnetModel savedTarget = deepCopy(gatewayConfig.target);
+    ifNullSkipTest()
+    ifNullThen(gatewayConfig.target, () -> gatewayConfig.target = new FamilyLocalnetModel());
+    gatewayConfig.target.addr = getRandomFamily();
     untilTrue("gateway status has target error", this::hasTargetError);
     gatewayConfig.target = savedTarget;
     untilFalse("restored original target config", this::hasGatewayStatus);
