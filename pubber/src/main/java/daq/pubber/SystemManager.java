@@ -244,6 +244,7 @@ public class SystemManager extends ManagerBase {
 
   void publishLogMessage(Entry report) {
     if (shouldLogLevel(report.level)) {
+      report.level = 0;
       logentries.add(report);
     }
   }
