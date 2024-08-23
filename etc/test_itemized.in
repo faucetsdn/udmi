@@ -19,6 +19,7 @@ TEST broken_config badCategory
 TEST broken_config badLevel
 TEST system_last_update extraField=fnooz
 TEST system_last_update dupeState
+TEST system_last_update badLevel
 TEST state_make_model badState
 
 # Test with various device metadata.json options

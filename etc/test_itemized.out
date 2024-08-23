@@ -27,7 +27,9 @@
 20 RESULT pass system system_last_update STABLE 6/6 Sequence complete
 21 CPBLTY pass system system_last_update.subblocks ALPHA 1/1 Capability supported
 21 RESULT pass system system_last_update STABLE 6/6 Sequence complete
-22 RESULT fail system state_make_model STABLE 0/5 Failed check that no significant system status exists; deviceState.system not defined
+22 CPBLTY pass system system_last_update.subblocks ALPHA 1/1 Capability supported
+22 RESULT pass system system_last_update STABLE 6/6 Sequence complete
+23 RESULT fail system state_make_model STABLE 0/5 Failed check that no significant system status exists; deviceState.system not defined
 26 RESULT skip system valid_serial_no STABLE 0/0 State testing disabled
 27 CPBLTY skip system system_last_update.subblocks ALPHA 0/0 Never executed
 27 RESULT skip system system_last_update STABLE 0/0 State testing disabled

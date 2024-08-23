@@ -29,7 +29,10 @@
 21 system_last_update RESULT fail schemas device_state_stable STABLE 5/5 Schema violations found
 21 system_last_update RESULT pass schemas events_system_stable STABLE 5/5 Schema validation passed
 21 system_last_update RESULT pass schemas state_update_stable STABLE 5/5 Schema validation passed
-22 state_make_model
+22 system_last_update RESULT fail schemas device_state_stable STABLE 5/5 Schema violations found
+22 system_last_update RESULT pass schemas events_system_stable STABLE 5/5 Schema validation passed
+22 system_last_update RESULT pass schemas state_update_stable STABLE 5/5 Schema validation passed
+23 state_make_model
 26 valid_serial_no
 27 system_last_update
 28 system_min_loglevel
