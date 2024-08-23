@@ -5,7 +5,7 @@ cd $UDMI_ROOT
 
 source etc/shell_common.sh
 
-debug_opts=-v
+debug_opts=-vv
 seq_opts=
 clean_cache=
 pubber_opts=
