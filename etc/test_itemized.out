@@ -30,17 +30,17 @@
 22 CPBLTY pass system system_last_update.subblocks ALPHA 1/1 Capability supported
 22 RESULT pass system system_last_update STABLE 6/6 Sequence complete
 23 RESULT fail system state_make_model STABLE 0/5 Failed check that no significant system status exists; deviceState.system not defined
-26 RESULT skip system valid_serial_no STABLE 0/0 State testing disabled
-27 CPBLTY skip system system_last_update.subblocks ALPHA 0/0 Never executed
-27 RESULT skip system system_last_update STABLE 0/0 State testing disabled
-28 RESULT fail system system_min_loglevel ALPHA 0/5 Received state update with no-state device
-29 RESULT pass system system_min_loglevel ALPHA 5/5 Sequence complete
-33 RESULT fail gateway gateway_proxy_events BETA 0/5 Because Missing pointset from SNS-4
-34 RESULT fail gateway gateway_proxy_events BETA 0/5 Because Missing pointset from AHU-22
-35 RESULT pass gateway gateway_proxy_state PREVIEW 5/5 Sequence complete
+27 RESULT skip system valid_serial_no STABLE 0/0 State testing disabled
+28 CPBLTY skip system system_last_update.subblocks ALPHA 0/0 Never executed
+28 RESULT skip system system_last_update STABLE 0/0 State testing disabled
+29 RESULT fail system system_min_loglevel ALPHA 0/5 Received state update with no-state device
+30 RESULT pass system system_min_loglevel ALPHA 5/5 Sequence complete
+34 RESULT fail gateway gateway_proxy_events BETA 0/5 Because Missing pointset from SNS-4
+35 RESULT fail gateway gateway_proxy_events BETA 0/5 Because Missing pointset from AHU-22
 36 RESULT pass gateway gateway_proxy_state PREVIEW 5/5 Sequence complete
-40 RESULT pass gateway gateway_proxy_events BETA 5/5 Sequence complete
-41 RESULT fail gateway gateway_proxy_events BETA 0/5 Received state update with no-state device
-42 RESULT pass gateway gateway_proxy_state PREVIEW 5/5 Sequence complete
-46 RESULT skip system device_config_acked STABLE 0/0 No config check for proxy device
-47 RESULT pass gateway bad_target_family PREVIEW 5/5 Sequence complete
+37 RESULT pass gateway gateway_proxy_state PREVIEW 5/5 Sequence complete
+41 RESULT pass gateway gateway_proxy_events BETA 5/5 Sequence complete
+42 RESULT fail gateway gateway_proxy_events BETA 0/5 Received state update with no-state device
+43 RESULT pass gateway gateway_proxy_state PREVIEW 5/5 Sequence complete
+47 RESULT skip system device_config_acked STABLE 0/0 No config check for proxy device
+48 RESULT pass gateway bad_target_family PREVIEW 5/5 Sequence complete

@@ -29,21 +29,21 @@
 21 system_last_update RESULT fail schemas device_state_stable STABLE 5/5 Schema violations found
 21 system_last_update RESULT pass schemas events_system_stable STABLE 5/5 Schema validation passed
 21 system_last_update RESULT pass schemas state_update_stable STABLE 5/5 Schema validation passed
-22 system_last_update RESULT fail schemas device_state_stable STABLE 5/5 Schema violations found
-22 system_last_update RESULT pass schemas events_system_stable STABLE 5/5 Schema validation passed
-22 system_last_update RESULT pass schemas state_update_stable STABLE 5/5 Schema validation passed
+22 system_last_update RESULT fail schemas events_system_stable STABLE 5/5 Schema violations found
+22 system_last_update RESULT fail schemas state_update_stable STABLE 5/5 Schema violations found
+22 system_last_update RESULT pass schemas device_state_stable STABLE 5/5 Schema validation passed
 23 state_make_model
-26 valid_serial_no
-27 system_last_update
-28 system_min_loglevel
-29 system_min_loglevel RESULT pass schemas device_state_alpha ALPHA 5/5 Schema validation passed
-29 system_min_loglevel RESULT pass schemas events_system_alpha ALPHA 5/5 Schema validation passed
-33 gateway_proxy_events
+27 valid_serial_no
+28 system_last_update
+29 system_min_loglevel
+30 system_min_loglevel RESULT pass schemas device_state_alpha ALPHA 5/5 Schema validation passed
+30 system_min_loglevel RESULT pass schemas events_system_alpha ALPHA 5/5 Schema validation passed
 34 gateway_proxy_events
-35 gateway_proxy_state
+35 gateway_proxy_events
 36 gateway_proxy_state
-40 gateway_proxy_events
+37 gateway_proxy_state
 41 gateway_proxy_events
-42 gateway_proxy_state
-46 device_config_acked
-47 bad_target_family
+42 gateway_proxy_events
+43 gateway_proxy_state
+47 device_config_acked
+48 bad_target_family
