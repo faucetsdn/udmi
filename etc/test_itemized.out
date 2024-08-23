@@ -21,6 +21,8 @@
 17 RESULT pass system broken_config STABLE 4/5 Sequence complete
 18 CPBLTY fail system broken_config.logging ALPHA 0/1 While log category `system.config.receive` level `DEBUG` to be logged
 18 RESULT fail system broken_config STABLE 0/5 expected:<system.config.[parse]> but was:<system.config.[apply]>
+19 CPBLTY pass system broken_config.logging ALPHA 1/1 Capability supported
+19 RESULT fail system broken_config STABLE 0/5 Because no status to report
 19 CPBLTY pass system system_last_update.subblocks ALPHA 1/1 Capability supported
 19 RESULT pass system system_last_update STABLE 6/6 Sequence complete
 20 CPBLTY pass system system_last_update.subblocks ALPHA 1/1 Capability supported

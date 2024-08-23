@@ -7,6 +7,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringify;
@@ -244,7 +245,7 @@ public class SystemManager extends ManagerBase {
 
   void publishLogMessage(Entry report) {
     if (shouldLogLevel(report.level)) {
-      report.level = 0;
+      ifTrueThen(options.badLevel, () -> report.level = 0);
       logentries.add(report);
     }
   }
