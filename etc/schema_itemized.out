@@ -22,24 +22,28 @@
 17 broken_config RESULT pass schemas events_system_stable STABLE 5/5 Schema validation passed
 17 broken_config RESULT pass schemas state_update_stable STABLE 5/5 Schema validation passed
 18 broken_config
-19 system_last_update RESULT fail schemas state_update_stable STABLE 5/5 Schema violations found
-19 system_last_update RESULT pass schemas device_state_stable STABLE 5/5 Schema validation passed
-19 system_last_update RESULT pass schemas events_system_stable STABLE 5/5 Schema validation passed
-20 system_last_update RESULT fail schemas device_state_stable STABLE 5/5 Schema violations found
+19 broken_config
+20 system_last_update RESULT fail schemas state_update_stable STABLE 5/5 Schema violations found
+20 system_last_update RESULT pass schemas device_state_stable STABLE 5/5 Schema validation passed
 20 system_last_update RESULT pass schemas events_system_stable STABLE 5/5 Schema validation passed
-20 system_last_update RESULT pass schemas state_update_stable STABLE 5/5 Schema validation passed
-21 state_make_model
-25 valid_serial_no
-26 system_last_update
-27 system_min_loglevel
-28 system_min_loglevel RESULT pass schemas device_state_alpha ALPHA 5/5 Schema validation passed
-28 system_min_loglevel RESULT pass schemas events_system_alpha ALPHA 5/5 Schema validation passed
-32 gateway_proxy_events
-33 gateway_proxy_events
-34 gateway_proxy_state
-35 gateway_proxy_state
-39 gateway_proxy_events
-40 gateway_proxy_events
-41 gateway_proxy_state
-45 device_config_acked
-46 bad_target_family
+21 system_last_update RESULT fail schemas device_state_stable STABLE 5/5 Schema violations found
+21 system_last_update RESULT pass schemas events_system_stable STABLE 5/5 Schema validation passed
+21 system_last_update RESULT pass schemas state_update_stable STABLE 5/5 Schema validation passed
+22 system_last_update RESULT fail schemas events_system_stable STABLE 5/5 Schema violations found
+22 system_last_update RESULT fail schemas state_update_stable STABLE 5/5 Schema violations found
+22 system_last_update RESULT pass schemas device_state_stable STABLE 5/5 Schema validation passed
+23 state_make_model
+27 valid_serial_no
+28 system_last_update
+29 system_min_loglevel
+30 system_min_loglevel RESULT pass schemas device_state_alpha ALPHA 5/5 Schema validation passed
+30 system_min_loglevel RESULT pass schemas events_system_alpha ALPHA 5/5 Schema validation passed
+34 gateway_proxy_events
+35 gateway_proxy_events
+36 gateway_proxy_state
+37 gateway_proxy_state
+41 gateway_proxy_events
+42 gateway_proxy_events
+43 gateway_proxy_state
+47 device_config_acked
+48 bad_target_family

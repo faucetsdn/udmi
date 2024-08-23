@@ -73,6 +73,9 @@
     "noState": {
       "type": "boolean"
     },
+    "badLevel": {
+      "type": "boolean"
+    },
     "spamState": {
       "type": "boolean"
     },
