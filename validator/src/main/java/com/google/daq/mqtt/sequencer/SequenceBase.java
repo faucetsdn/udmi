@@ -506,7 +506,7 @@ public class SequenceBase {
           Map.Entry::getKey, SequenceBase::summarizeSchemaResults));
 
       schemaResult.stages.forEach((stage, entry) -> {
-        SequenceResult result = RESULT_LEVEL_MAP.inverse().get(Level.fromValue(entry.level));
+        SequenceResult result = RESULT_LEVEL_MAP.inverse().get(levelFromValue(entry.level));
         String stageValue = stage.value();
         String schemaStage = schema + "_" + stageValue;
         emitSequenceResult(result, SCHEMA_BUCKET, schemaStage, stageValue.toUpperCase(),
@@ -1088,7 +1088,7 @@ public class SequenceBase {
 
   private String entryMessage(Entry logEntry) {
     return format("%s %s %s: %s", isoConvert(logEntry.timestamp),
-        Level.fromValue(logEntry.level).name(), logEntry.category, logEntry.message);
+        levelFromValue(logEntry.level).name(), logEntry.category, logEntry.message);
   }
 
   private void writeSystemLogs(SystemEvents message) {
@@ -1109,12 +1109,16 @@ public class SequenceBase {
       throw new RuntimeException("log entry timestamp is null");
     }
     String messageStr = format("%s %s %s", isoConvert(logEntry.timestamp),
-        Level.fromValue(logEntry.level), logEntry.message);
+        levelFromValue(logEntry.level).name(), logEntry.message);
 
     PrintWriter output = ofNullable(printWriter).orElse(new PrintWriter(System.err));
     output.println(messageStr);
     output.flush();
     return messageStr;
+  }
+
+  private static Level levelFromValue(Integer level) {
+    return catchToElse(() -> Level.fromValue(level), Level.INVALID);
   }
 
   private boolean stateTransactionPending() {
