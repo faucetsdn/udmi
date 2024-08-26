@@ -58,6 +58,20 @@ public class ProxiedSequences extends PointsetBase {
     untilFalse("restored original target config", this::hasGatewayStatus);
   }
 
+  @Feature(stage = FeatureStage.PREVIEW, bucket = Bucket.GATEWAY)
+  @Summary("Error handling for badly formed gateway point ref")
+  @Test(timeout = TWO_MINUTES_MS)
+  public void bad_point_ref() {
+    cleanStatusCheck();
+    GatewayConfig gatewayConfig = deviceConfig.gateway;
+    final FamilyLocalnetModel savedTarget = deepCopy(gatewayConfig.target);
+    ifNullThen(gatewayConfig.target, () -> gatewayConfig.target = new FamilyLocalnetModel());
+    gatewayConfig.target.addr = getRandomCode("addr");
+    untilTrue("gateway status has target error", this::hasTargetError);
+    gatewayConfig.target = savedTarget;
+    untilFalse("restored original target config", this::hasGatewayStatus);
+  }
+
   private void cleanStatusCheck() {
     checkNotThat("gateway state with significant status", this::hasGatewayStatus);
   }
