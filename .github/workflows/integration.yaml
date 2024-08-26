@@ -80,8 +80,11 @@ jobs:
       - name: Setup Environment
         run: |
           sudo apt-get install moreutils
+          echo IMAGE_NAME is $IMAGE_NAME
+          echo REF_NAME is $REF_NAME
           git clone https://github.com/faucetsdn/udmi_site_model.git
           ln -s udmi_site_model/ site_model
+          (cd site_model; git log -n 1)
           jq ".device_id = \"$DEVICE_ID\"" site_model/cloud_iot_config.json | sponge site_model/cloud_iot_config.json
           jq . site_model/cloud_iot_config.json
           docker network create udminet --subnet 192.168.99.0/24
