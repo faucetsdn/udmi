@@ -83,6 +83,7 @@ jobs:
     steps:
       - name: Setup Environment
         run: |
+          sudo apt-get install moreutils
           git clone https://github.com/faucetsdn/udmi_site_model.git
           ln -s udmi_site_model/ site_model
           jq \'.device_id = \"$DEVICE_ID\"\' site_model/cloud_iot_config.json | sponge site_model/cloud_iot_config.json
