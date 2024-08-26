@@ -80,8 +80,6 @@ jobs:
       - name: Setup Environment
         run: |
           sudo apt-get install moreutils
-          echo IMAGE_NAME is $IMAGE_NAME
-          echo REF_NAME is $REF_NAME
           git clone https://github.com/faucetsdn/udmi_site_model.git
           ln -s udmi_site_model/ site_model
           (cd site_model; git log -n 1)
