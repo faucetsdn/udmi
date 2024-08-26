@@ -116,9 +116,10 @@ jobs:
           docker logs pubber 2>&1 | fgrep "Connection complete"
       - name: Sequencer run
         run: |
+          [[ $REF_NAME =~ test- ]] && SPECIFIC_TEST=${REF_NAME#test-}
           docker run --net udminet --name sequencer -v $(realpath site_model):/root/site_model \
             ghcr.io/$IMAGE_NAME:validator-$REF_NAME bin/sequencer site_model/cloud_iot_config.json \
-            broken_config extra_config device_config_acked
+            broken_config extra_config device_config_acked ${SPECIFIC_TEST}
       - name: Sequencer results
         run: |
           cat site_model/out/devices/AHU-1/results.md
