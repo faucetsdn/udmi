@@ -12,6 +12,7 @@ import com.google.daq.mqtt.sequencer.Summary;
 import java.util.HashMap;
 import org.junit.Test;
 import udmi.schema.Bucket;
+import udmi.schema.Entry;
 import udmi.schema.FamilyLocalnetModel;
 import udmi.schema.FeatureDiscovery.FeatureStage;
 import udmi.schema.GatewayConfig;
@@ -37,58 +38,75 @@ public class ProxiedSequences extends PointsetBase {
   @Summary("Error handling for badly formed gateway target family")
   @Test(timeout = TWO_MINUTES_MS)
   public void bad_target_family() {
-    cleanStatusCheck();
+    cleanStatusCheck(null);
     GatewayConfig gatewayConfig = deviceConfig.gateway;
     final FamilyLocalnetModel savedTarget = deepCopy(gatewayConfig.target);
     ifNullThen(gatewayConfig.target, () -> gatewayConfig.target = new FamilyLocalnetModel());
     gatewayConfig.target.family = getRandomCode("family");
-    untilTrue("gateway status has target error", this::hasTargetError);
+    untilTrue("gateway status has target family error", this::hasGatewayStatusError);
     gatewayConfig.target = savedTarget;
-    untilFalse("restored original target config", this::hasGatewayStatus);
+    untilFalse("gateway status has no error", this::hasGatewayStatusDirty);
   }
 
   @Feature(stage = FeatureStage.PREVIEW, bucket = Bucket.GATEWAY)
   @Summary("Error handling for badly formed gateway target address")
   @Test(timeout = TWO_MINUTES_MS)
   public void bad_target_address() {
-    cleanStatusCheck();
+    cleanStatusCheck(null);
     GatewayConfig gatewayConfig = deviceConfig.gateway;
     final FamilyLocalnetModel savedTarget = deepCopy(gatewayConfig.target);
     ifNullThen(gatewayConfig.target, () -> gatewayConfig.target = new FamilyLocalnetModel());
     gatewayConfig.target.addr = getRandomCode("addr");
-    untilTrue("gateway status has target error", this::hasTargetError);
+    untilTrue("gateway status has target addr error", this::hasGatewayStatusError);
     gatewayConfig.target = savedTarget;
-    untilFalse("restored original target config", this::hasGatewayStatus);
+    untilFalse("gateway status has no error", this::hasGatewayStatusDirty);
   }
 
   @Feature(stage = FeatureStage.PREVIEW, bucket = Bucket.GATEWAY)
   @Summary("Error handling for badly formed gateway point ref")
   @Test(timeout = TWO_MINUTES_MS)
   public void bad_point_ref() {
-    TargetTestingModel target = getTarget(TWEAKED_REF);
-    cleanStatusCheck();
+    String targetPoint = getTarget(TWEAKED_REF).target_point;
+    cleanStatusCheck(targetPoint);
     HashMap<String, PointPointsetConfig> points = deviceConfig.pointset.points;
-    PointPointsetConfig pointPointsetConfig = points.get(target.target_point);
+    PointPointsetConfig pointPointsetConfig = points.get(targetPoint);
     PointPointsetConfig savedTarget = deepCopy(pointPointsetConfig);
     pointPointsetConfig.ref = getRandomCode("ref");
-    untilTrue("point status has target error", this::hasTargetError);
-    points.put(target.target_point, savedTarget);
-    untilFalse("restored original target config", this::hasGatewayStatus);
+    untilTrue("point status has target error", this::hasPointStatusError);
+    points.put(targetPoint, savedTarget);
+    untilFalse("no more pointset error", this::hasPointStatusDirty);
   }
 
-  private void cleanStatusCheck() {
-    checkNotThat("gateway state with significant status", this::hasGatewayStatus);
+  private void cleanStatusCheck(String targetPoint) {
+    checkNotThat("gateway state with significant status", this::hasGatewayStatusDirty);
+    if (targetPoint != null) {
+      checkNotThat("pointset state with significant status", this::hasPointStatusDirty);
+    }
   }
 
-  private boolean hasGatewayStatus() {
+  private boolean hasGatewayStatusDirty() {
     Integer level = catchToElse(() -> deviceState.gateway.status.level, Level.INFO.value());
     return level > Level.INFO.value();
   }
 
-  private boolean hasTargetError() {
-    return hasGatewayStatus()
+  private boolean hasGatewayStatusError() {
+    return hasGatewayStatusDirty()
         && GATEWAY_PROXY_TARGET.equals(deviceState.gateway.status.category)
         && Level.ERROR == Level.fromValue(deviceState.gateway.status.level);
+  }
+
+  private boolean hasPointStatusDirty() {
+    String targetPoint = getTarget(TWEAKED_REF).target_point;
+    Entry status = deviceState.pointset.points.get(targetPoint).status;
+    return catchToElse(() -> status.level, Level.INFO.value()) > Level.INFO.value();
+  }
+
+  private boolean hasPointStatusError() {
+    String targetPoint = getTarget(TWEAKED_REF).target_point;
+    Entry status = deviceState.pointset.points.get(targetPoint).status;
+    return hasGatewayStatusDirty()
+        && GATEWAY_PROXY_TARGET.equals(status.category)
+        && Level.ERROR == Level.fromValue(status.level);
   }
 
   private String getRandomCode(String prefix) {
