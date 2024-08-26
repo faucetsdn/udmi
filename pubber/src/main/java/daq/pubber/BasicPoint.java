@@ -1,12 +1,16 @@
 package daq.pubber;
 
+import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.getNow;
+import static com.google.udmi.util.GeneralUtils.isTrue;
 
+import java.util.Objects;
 import udmi.schema.Category;
 import udmi.schema.Entry;
 import udmi.schema.PointDiscovery;
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetEvents;
+import udmi.schema.PointPointsetModel;
 import udmi.schema.PointPointsetState;
 import udmi.schema.PointPointsetState.Value_state;
 
@@ -19,21 +23,19 @@ public abstract class BasicPoint implements AbstractPoint {
   protected final PointPointsetEvents data = new PointPointsetEvents();
   private final PointPointsetState state = new PointPointsetState();
   private final boolean writable;
+  private final String pointRef;
   protected boolean written;
   private boolean dirty;
 
   /**
    * Construct a maybe writable point.
-   *
-   * @param name     Point name
-   * @param writable True if writable
-   * @param units    Units for the point
    */
-  public BasicPoint(String name, boolean writable, String units) {
+  public BasicPoint(String name, PointPointsetModel pointModel) {
     this.name = name;
-    this.writable = writable;
-    state.units = units;
+    writable = isTrue(pointModel.writable);
+    state.units = pointModel.units;
     dirty = true;
+    pointRef = pointModel.ref;
   }
 
   protected abstract Object getValue();
@@ -72,14 +74,26 @@ public abstract class BasicPoint implements AbstractPoint {
    * @param config Configuration to set
    */
   public void setConfig(PointPointsetConfig config) {
-    Value_state previous = state.value_state;
+    Value_state previousValueState = state.value_state;
+    Entry previousStatus = deepCopy(state.status);
+    updateStateConfig(config);
+    dirty = dirty
+        || state.value_state != previousValueState
+        || !Objects.equals(state.status, previousStatus);
+  }
+
+  public void updateStateConfig(PointPointsetConfig config) {
     state.status = null;
+
+    if (config != null && !Objects.equals(pointRef, config.ref)) {
+      state.status = createEntryFrom(Category.POINTSET_POINT_FAILURE, "Invalid point ref");
+      return;
+    }
 
     if (config == null || config.set_value == null) {
       written = false;
       state.value_state = null;
       updateData();
-      dirty = state.value_state != previous;
       return;
     }
 
@@ -88,20 +102,17 @@ public abstract class BasicPoint implements AbstractPoint {
         state.status = createEntryFrom(Category.POINTSET_POINT_INVALID,
             "Written value is not valid");
         state.value_state = Value_state.INVALID;
-        dirty = state.value_state != previous;
         return;
       }
     } catch (Exception ex) {
       state.status = createEntryFrom(Category.POINTSET_POINT_FAILURE, ex.getMessage());
       state.value_state = Value_state.FAILURE;
-      dirty = state.value_state != previous;
       return;
     }
 
     if (!writable) {
       state.status = createEntryFrom(Category.POINTSET_POINT_FAILURE, "Point is not writable");
       state.value_state = Value_state.FAILURE;
-      dirty = state.value_state != previous;
       return;
     }
 
@@ -113,7 +124,6 @@ public abstract class BasicPoint implements AbstractPoint {
       state.status = createEntryFrom(Category.POINTSET_POINT_FAILURE, ex.getMessage());
       state.value_state = Value_state.FAILURE;
     }
-    dirty = state.value_state != previous;
   }
 
   @Override

@@ -5,6 +5,7 @@ import static com.google.udmi.util.GeneralUtils.catchToElse;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static udmi.schema.Category.GATEWAY_PROXY_TARGET;
+import static udmi.schema.Category.POINTSET_POINT_FAILURE;
 
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.PointsetBase;
@@ -104,8 +105,8 @@ public class ProxiedSequences extends PointsetBase {
   private boolean hasPointStatusError() {
     String targetPoint = getTarget(TWEAKED_REF).target_point;
     Entry status = deviceState.pointset.points.get(targetPoint).status;
-    return hasGatewayStatusDirty()
-        && GATEWAY_PROXY_TARGET.equals(status.category)
+    return hasPointStatusDirty()
+        && POINTSET_POINT_FAILURE.equals(status.category)
         && Level.ERROR == Level.fromValue(status.level);
   }
 
