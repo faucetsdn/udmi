@@ -9,7 +9,6 @@ import static udmi.schema.Category.GATEWAY_PROXY_TARGET;
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.PointsetBase;
 import com.google.daq.mqtt.sequencer.Summary;
-import daq.pubber.ProtocolFamily;
 import org.junit.Test;
 import udmi.schema.Bucket;
 import udmi.schema.FamilyLocalnetModel;
@@ -39,7 +38,7 @@ public class ProxiedSequences extends PointsetBase {
     GatewayConfig gatewayConfig = deviceConfig.gateway;
     final FamilyLocalnetModel savedTarget = deepCopy(gatewayConfig.target);
     ifNullThen(gatewayConfig.target, () -> gatewayConfig.target = new FamilyLocalnetModel());
-    gatewayConfig.target.family = getRandomFamily();
+    gatewayConfig.target.family = getRandomCode("family");
     untilTrue("gateway status has target error", this::hasTargetError);
     gatewayConfig.target = savedTarget;
     untilFalse("restored original target config", this::hasGatewayStatus);
@@ -53,7 +52,7 @@ public class ProxiedSequences extends PointsetBase {
     GatewayConfig gatewayConfig = deviceConfig.gateway;
     final FamilyLocalnetModel savedTarget = deepCopy(gatewayConfig.target);
     ifNullThen(gatewayConfig.target, () -> gatewayConfig.target = new FamilyLocalnetModel());
-    gatewayConfig.target.addr = getRandomFamily();
+    gatewayConfig.target.addr = getRandomCode("addr");
     untilTrue("gateway status has target error", this::hasTargetError);
     gatewayConfig.target = savedTarget;
     untilFalse("restored original target config", this::hasGatewayStatus);
@@ -74,7 +73,7 @@ public class ProxiedSequences extends PointsetBase {
         && Level.ERROR == Level.fromValue(deviceState.gateway.status.level);
   }
 
-  private String getRandomFamily() {
-    return "family-" + String.format("%04x", (int) Math.floor(Math.random() * 0x10000));
+  private String getRandomCode(String prefix) {
+    return String.format("%s-%04x", prefix, (int) Math.floor(Math.random() * 0x10000));
   }
 }
