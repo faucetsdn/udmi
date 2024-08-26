@@ -1,5 +1,6 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
+import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.describe;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.GeneralUtils.catchToElse;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
@@ -46,7 +47,7 @@ public class ProxiedSequences extends PointsetBase {
     ifNullThen(gatewayConfig.target, () -> gatewayConfig.target = new FamilyLocalnetModel());
     gatewayConfig.target.family = getRandomCode("family");
     untilTrue("gateway status has target family error", this::hasGatewayStatusError);
-    gatewayConfig.target = SemanticValue.describe("original family", savedTarget);
+    gatewayConfig.target.family = describe("original family", savedTarget.family);
     untilFalse("gateway status has no error", this::hasGatewayStatusDirty);
   }
 
@@ -60,7 +61,7 @@ public class ProxiedSequences extends PointsetBase {
     ifNullThen(gatewayConfig.target, () -> gatewayConfig.target = new FamilyLocalnetModel());
     gatewayConfig.target.addr = getRandomCode("addr");
     untilTrue("gateway status has target addr error", this::hasGatewayStatusError);
-    gatewayConfig.target = SemanticValue.describe("original addr", savedTarget);
+    gatewayConfig.target.addr = describe("original addr", savedTarget.addr);
     untilFalse("gateway status has no error", this::hasGatewayStatusDirty);
   }
 
@@ -74,7 +75,7 @@ public class ProxiedSequences extends PointsetBase {
     String savedRef = pointPointsetConfig.ref;
     pointPointsetConfig.ref = getRandomCode("ref");
     untilTrue("point status has target error", this::hasPointStatusError);
-    pointPointsetConfig.ref = SemanticValue.describe("original ref", savedRef);
+    pointPointsetConfig.ref = describe("original ref", savedRef);
     untilFalse("no more pointset error", this::hasPointStatusDirty);
   }
 
@@ -111,7 +112,7 @@ public class ProxiedSequences extends PointsetBase {
   }
 
   private String getRandomCode(String prefix) {
-    SemanticValue.describe("random " + prefix,
+    describe("random " + prefix,
         String.format("%s-%04x", prefix, (int) Math.floor(Math.random() * 0x10000)));
   }
 }
