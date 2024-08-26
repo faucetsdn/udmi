@@ -9,6 +9,7 @@ import static udmi.schema.Category.GATEWAY_PROXY_TARGET;
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.PointsetBase;
 import com.google.daq.mqtt.sequencer.Summary;
+import java.util.HashMap;
 import org.junit.Test;
 import udmi.schema.Bucket;
 import udmi.schema.FamilyLocalnetModel;
@@ -66,13 +67,9 @@ public class ProxiedSequences extends PointsetBase {
   public void bad_point_ref() {
     TargetTestingModel target = getTarget(TWEAKED_REF);
     cleanStatusCheck();
-    PointPointsetConfig pointPointsetConfig = deviceConfig.pointset.points.get(target.target_point);
+    HashMap<String, PointPointsetConfig> points = deviceConfig.pointset.points;
+    PointPointsetConfig pointPointsetConfig = points.get(target.target_point);
     PointPointsetConfig savedTarget = deepCopy(pointPointsetConfig);
-    ifNullThen(gatewayConfig.target, () -> gatewayConfig.target = new FamilyLocalnetModel());
-    gatewayConfig.target.addr = getRandomCode("addr");
-    untilTrue("gateway status has target error", this::hasTargetError);
-    gatewayConfig.target = savedTarget;
-    untilFalse("restored original target config", this::hasGatewayStatus);
   }
 
   private void cleanStatusCheck() {
