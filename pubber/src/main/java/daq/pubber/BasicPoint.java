@@ -82,6 +82,9 @@ public abstract class BasicPoint implements AbstractPoint {
         || !Objects.equals(state.status, previousStatus);
   }
 
+  /**
+   * Update the state of this point based off of a new config.
+   */
   public void updateStateConfig(PointPointsetConfig config) {
     state.status = null;
 
