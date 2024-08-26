@@ -52,7 +52,6 @@ public class ProxiedSequences extends PointsetBase {
     cleanStatusCheck();
     GatewayConfig gatewayConfig = deviceConfig.gateway;
     final FamilyLocalnetModel savedTarget = deepCopy(gatewayConfig.target);
-    ifNullSkipTest()
     ifNullThen(gatewayConfig.target, () -> gatewayConfig.target = new FamilyLocalnetModel());
     gatewayConfig.target.addr = getRandomFamily();
     untilTrue("gateway status has target error", this::hasTargetError);
