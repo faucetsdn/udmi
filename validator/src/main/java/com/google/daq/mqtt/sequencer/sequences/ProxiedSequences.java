@@ -15,6 +15,8 @@ import udmi.schema.FamilyLocalnetModel;
 import udmi.schema.FeatureDiscovery.FeatureStage;
 import udmi.schema.GatewayConfig;
 import udmi.schema.Level;
+import udmi.schema.PointPointsetConfig;
+import udmi.schema.TargetTestingModel;
 
 ;
 
@@ -62,9 +64,10 @@ public class ProxiedSequences extends PointsetBase {
   @Summary("Error handling for badly formed gateway point ref")
   @Test(timeout = TWO_MINUTES_MS)
   public void bad_point_ref() {
+    TargetTestingModel target = getTarget(TWEAKED_REF);
     cleanStatusCheck();
-    GatewayConfig gatewayConfig = deviceConfig.gateway;
-    final FamilyLocalnetModel savedTarget = deepCopy(gatewayConfig.target);
+    PointPointsetConfig pointPointsetConfig = deviceConfig.pointset.points.get(target.target_point);
+    PointPointsetConfig savedTarget = deepCopy(pointPointsetConfig);
     ifNullThen(gatewayConfig.target, () -> gatewayConfig.target = new FamilyLocalnetModel());
     gatewayConfig.target.addr = getRandomCode("addr");
     untilTrue("gateway status has target error", this::hasTargetError);
