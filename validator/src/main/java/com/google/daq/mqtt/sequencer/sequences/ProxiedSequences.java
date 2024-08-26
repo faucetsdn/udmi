@@ -12,8 +12,6 @@ import static udmi.schema.Category.POINTSET_POINT_FAILURE;
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.PointsetBase;
 import com.google.daq.mqtt.sequencer.Summary;
-import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
-import java.util.HashMap;
 import org.junit.Test;
 import udmi.schema.Bucket;
 import udmi.schema.Entry;
@@ -22,7 +20,6 @@ import udmi.schema.FeatureDiscovery.FeatureStage;
 import udmi.schema.GatewayConfig;
 import udmi.schema.Level;
 import udmi.schema.PointPointsetConfig;
-import udmi.schema.TargetTestingModel;
 
 ;
 
