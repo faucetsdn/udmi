@@ -126,8 +126,16 @@ jobs:
             broken_config extra_config device_config_acked ${SPECIFIC_TEST}
       - name: Sequencer results
         run: |
-          cat site_model/out/devices/AHU-1/results.md
-          [[ $(cat site_model/out/devices/AHU-1/results.md | fgrep 'stable | pass' | wc -l) == 3 ]]
+          cat site_model/out/devices/$DEVICE_ID/results.md
+          [[ $(cat site_model/out/devices/$DEVICE_ID/results.md | fgrep 'stable | pass' | wc -l) == 3 ]]
+      - name: Specific test results
+        if: ${{ !cancelled() }}
+        run: |
+          [[ $REF_NAME =~ test- ]] && (
+            SPECIFIC_TEST=${REF_NAME#test-}
+            cd site_model/out/devices/$DEVICE_ID/tests/$SPECIFIC_TEST
+            more sequence.md sequencer.log
+          )
       - name: UDMIS logs
         if: ${{ !cancelled() }}
         run: docker logs udmis
