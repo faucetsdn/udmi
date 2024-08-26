@@ -5,6 +5,7 @@ import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.GeneralUtils.catchToElse;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
+import static java.lang.String.format;
 import static udmi.schema.Category.GATEWAY_PROXY_TARGET;
 import static udmi.schema.Category.POINTSET_POINT_FAILURE;
 
@@ -113,6 +114,6 @@ public class ProxiedSequences extends PointsetBase {
 
   private String getRandomCode(String prefix) {
     describe("random " + prefix,
-        String.format("%s-%04x", prefix, (int) Math.floor(Math.random() * 0x10000)));
+        format("%s-%04x", prefix, (int) Math.floor(Math.random() * 0x10000)));
   }
 }
