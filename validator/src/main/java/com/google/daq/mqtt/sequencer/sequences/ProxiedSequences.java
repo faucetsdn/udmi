@@ -110,7 +110,7 @@ public class ProxiedSequences extends PointsetBase {
   }
 
   private String getRandomCode(String prefix) {
-    describe("random " + prefix,
+    return describe("random " + prefix,
         format("%s-%04x", prefix, (int) Math.floor(Math.random() * 0x10000)));
   }
 }
