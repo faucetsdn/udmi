@@ -10,6 +10,7 @@ import static udmi.schema.Category.POINTSET_POINT_FAILURE;
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.PointsetBase;
 import com.google.daq.mqtt.sequencer.Summary;
+import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
 import java.util.HashMap;
 import org.junit.Test;
 import udmi.schema.Bucket;
@@ -45,7 +46,7 @@ public class ProxiedSequences extends PointsetBase {
     ifNullThen(gatewayConfig.target, () -> gatewayConfig.target = new FamilyLocalnetModel());
     gatewayConfig.target.family = getRandomCode("family");
     untilTrue("gateway status has target family error", this::hasGatewayStatusError);
-    gatewayConfig.target = savedTarget;
+    gatewayConfig.target = SemanticValue.describe("original family", savedTarget);
     untilFalse("gateway status has no error", this::hasGatewayStatusDirty);
   }
 
@@ -59,7 +60,7 @@ public class ProxiedSequences extends PointsetBase {
     ifNullThen(gatewayConfig.target, () -> gatewayConfig.target = new FamilyLocalnetModel());
     gatewayConfig.target.addr = getRandomCode("addr");
     untilTrue("gateway status has target addr error", this::hasGatewayStatusError);
-    gatewayConfig.target = savedTarget;
+    gatewayConfig.target = SemanticValue.describe("original addr", savedTarget);
     untilFalse("gateway status has no error", this::hasGatewayStatusDirty);
   }
 
@@ -69,12 +70,11 @@ public class ProxiedSequences extends PointsetBase {
   public void bad_point_ref() {
     String targetPoint = getTarget(TWEAKED_REF).target_point;
     cleanStatusCheck(targetPoint);
-    HashMap<String, PointPointsetConfig> points = deviceConfig.pointset.points;
-    PointPointsetConfig pointPointsetConfig = points.get(targetPoint);
-    PointPointsetConfig savedTarget = deepCopy(pointPointsetConfig);
+    PointPointsetConfig pointPointsetConfig = deviceConfig.pointset.points.get(targetPoint);
+    String savedRef = pointPointsetConfig.ref;
     pointPointsetConfig.ref = getRandomCode("ref");
     untilTrue("point status has target error", this::hasPointStatusError);
-    points.put(targetPoint, savedTarget);
+    pointPointsetConfig.ref = SemanticValue.describe("original ref", savedRef);
     untilFalse("no more pointset error", this::hasPointStatusDirty);
   }
 
@@ -111,6 +111,7 @@ public class ProxiedSequences extends PointsetBase {
   }
 
   private String getRandomCode(String prefix) {
-    return String.format("%s-%04x", prefix, (int) Math.floor(Math.random() * 0x10000));
+    SemanticValue.describe("random " + prefix,
+        String.format("%s-%04x", prefix, (int) Math.floor(Math.random() * 0x10000)));
   }
 }
