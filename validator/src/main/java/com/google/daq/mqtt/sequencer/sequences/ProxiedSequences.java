@@ -70,6 +70,10 @@ public class ProxiedSequences extends PointsetBase {
     HashMap<String, PointPointsetConfig> points = deviceConfig.pointset.points;
     PointPointsetConfig pointPointsetConfig = points.get(target.target_point);
     PointPointsetConfig savedTarget = deepCopy(pointPointsetConfig);
+    pointPointsetConfig.ref = getRandomCode("ref");
+    untilTrue("point status has target error", this::hasTargetError);
+    points.put(target.target_point, savedTarget);
+    untilFalse("restored original target config", this::hasGatewayStatus);
   }
 
   private void cleanStatusCheck() {
