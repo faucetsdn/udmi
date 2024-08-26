@@ -120,22 +120,20 @@ jobs:
           docker logs pubber 2>&1 | fgrep "Connection complete"
       - name: Sequencer run
         run: |
-          [[ $REF_NAME =~ test- ]] && SPECIFIC_TEST=${REF_NAME#test-}
+          SEQUENCER_TESTS="broken_config extra_config device_config_acked"
+          [[ $REF_NAME =~ test- ]] && SEQUENCER_TESTS=${REF_NAME#test-}
           docker run --net udminet --name sequencer -v $(realpath site_model):/root/site_model \
             ghcr.io/$IMAGE_NAME:validator-$REF_NAME bin/sequencer site_model/cloud_iot_config.json \
-            broken_config extra_config device_config_acked ${SPECIFIC_TEST}
+            $SEQUENCER_TESTS
       - name: Sequencer results
         run: |
           cat site_model/out/devices/$DEVICE_ID/results.md
-          [[ $(cat site_model/out/devices/$DEVICE_ID/results.md | fgrep 'stable | pass' | wc -l) == 3 ]]
-      - name: Specific test results
-        if: ${{ !cancelled() }}
-        run: |
-          [[ $REF_NAME =~ test- ]] && (
+          if [[ $REF_NAME =~ test- ]]; then
             SPECIFIC_TEST=${REF_NAME#test-}
-            cd site_model/out/devices/$DEVICE_ID/tests/$SPECIFIC_TEST
-            more sequence.md sequencer.log
-          )
+            more site_model/out/devices/$DEVICE_ID/tests/$SPECIFIC_TEST/sequencer.md
+          else
+            [[ $(cat site_model/out/devices/$DEVICE_ID/results.md | fgrep 'stable | pass' | wc -l) == 3 ]]
+          fi
       - name: UDMIS logs
         if: ${{ !cancelled() }}
         run: docker logs udmis
