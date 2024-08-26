@@ -31,7 +31,9 @@ Some caveats:
 -->
 
 <!-- START GENERATED, do not edit anything after this line! -->
-* [bad_target_family](#bad_target_family-preview): Error handling for badly formed target address family
+* [bad_point_ref](#bad_point_ref-preview): Error handling for badly formed gateway point ref
+* [bad_target_address](#bad_target_address-preview): Error handling for badly formed gateway target address
+* [bad_target_family](#bad_target_family-preview): Error handling for badly formed gateway target family
 * [broken_config](#broken_config-stable): Check that the device correctly handles a broken (non-json) config message.
 * [config_logging](#config_logging-stable): Check that the device publishes minimum required log entries when receiving config
 * [device_config_acked](#device_config_acked-stable): Check that the device MQTT-acknowledges a sent config.
@@ -58,9 +60,21 @@ Some caveats:
 * [system_last_update](#system_last_update-stable): Check that last_update state is correctly set in response to a config update.
 * [valid_serial_no](#valid_serial_no-stable)
 
+## bad_point_ref (PREVIEW)
+
+Error handling for badly formed gateway point ref
+
+1. Test skipped: Not a proxied device
+
+## bad_target_address (PREVIEW)
+
+Error handling for badly formed gateway target address
+
+1. Test skipped: Not a proxied device
+
 ## bad_target_family (PREVIEW)
 
-Error handling for badly formed target address family
+Error handling for badly formed gateway target family
 
 1. Test skipped: Not a proxied device
 
