@@ -83,7 +83,7 @@ jobs:
           sudo apt-get install moreutils
           git clone https://github.com/faucetsdn/udmi_site_model.git
           ln -s udmi_site_model/ site_model
-          jq \'.device_id = \"$DEVICE_ID\"\' site_model/cloud_iot_config.json | sponge site_model/cloud_iot_config.json
+          jq ".device_id = \"$DEVICE_ID\"" site_model/cloud_iot_config.json | sponge site_model/cloud_iot_config.json
           jq . site_model/cloud_iot_config.json
           docker network create udminet --subnet 192.168.99.0/24
       - name: Start UDMIS container
