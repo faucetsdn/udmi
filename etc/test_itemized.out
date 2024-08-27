@@ -44,3 +44,5 @@
 43 RESULT pass gateway gateway_proxy_state PREVIEW 5/5 Sequence complete
 47 RESULT skip system device_config_acked STABLE 0/0 No config check for proxy device
 48 RESULT pass gateway bad_target_family PREVIEW 5/5 Sequence complete
+49 RESULT pass gateway bad_target_address PREVIEW 5/5 Sequence complete
+50 RESULT skip gateway bad_point_ref PREVIEW 0/0 No testing target defined for 'tweaked_ref'

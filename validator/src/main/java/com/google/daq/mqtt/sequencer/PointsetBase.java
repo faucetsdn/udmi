@@ -54,11 +54,11 @@ public abstract class PointsetBase extends SequenceBase {
   protected TargetTestingModel getTarget(String target) {
     TargetTestingModel testingMetadata = ifNullSkipTest(
         catchToNull(() -> deviceMetadata.testing.targets.get(target)),
-        "no testing target defined for '" + target + "'");
+        "No testing target defined for '" + target + "'");
     PointPointsetModel pointPointsetModel = catchToNull(
         () -> deviceMetadata.pointset.points.get(testingMetadata.target_point));
     ifNullSkipTest(pointPointsetModel,
-        "no pointset model for target point " + testingMetadata.target_point);
+        "No pointset model for target point " + testingMetadata.target_point);
     return testingMetadata;
   }
 }
