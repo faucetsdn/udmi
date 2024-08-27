@@ -46,3 +46,4 @@ TEST gateway_proxy_state noState
 WITH AHU-22
 TEST device_config_acked
 TEST bad_target_family
+TEST bad_target_addr
