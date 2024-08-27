@@ -47,3 +47,6 @@
 43 gateway_proxy_state
 47 device_config_acked
 48 bad_target_family
+49 bad_target_address
+50 bad_point_ref
+54 bad_point_ref
