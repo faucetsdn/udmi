@@ -1,0 +1,20 @@
+{
+  "version": "1.5.1",
+  "timestamp": "2018-08-26T21:39:29.364Z",
+  "system": {
+    "min_loglevel": 500
+  },
+  "gateway": {
+    "target": {
+      "family": "vendor",
+      "addr": "2803104"
+    }
+  },
+  "pointset": {
+    "points": {
+      "temperature_sensor": {
+        "ref": "afb0afbo"
+      }
+    }
+  }
+}
