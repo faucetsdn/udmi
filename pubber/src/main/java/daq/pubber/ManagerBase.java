@@ -154,7 +154,7 @@ public abstract class ManagerBase {
     warn(format("Starting %s %s sender with delay %ds",
         deviceId, this.getClass().getSimpleName(), sec));
     if (sec != 0) {
-      periodicUpdate(); // To this now to synchronously raise any obvious exceptions.
+      periodicUpdate(); // Do this now to synchronously raise any obvious exceptions.
       periodicSender = schedulePeriodic(sec, this::periodicUpdate);
     }
   }

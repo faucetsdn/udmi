@@ -46,3 +46,9 @@ TEST gateway_proxy_state noState
 WITH AHU-22
 TEST device_config_acked
 TEST bad_target_family
+TEST bad_target_address
+TEST bad_point_ref
+
+# Test a proxy device with a different configuration
+WITH SNS-4
+TEST bad_point_ref
