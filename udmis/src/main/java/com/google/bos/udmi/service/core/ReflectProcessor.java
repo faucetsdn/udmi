@@ -137,7 +137,8 @@ public class ReflectProcessor extends ProcessorBase {
     entry.message = message;
     entry.timestamp = new Date();
     events.logentries = ImmutableList.of(entry);
-    getDispatcher().withEnvelope(attributes).publish(events);
+    debug("TAP reflecting progress %s", message);
+    reflectMessage(attributes, stringify(events));
   }
 
   private Object extractModel(CloudModel request) {
