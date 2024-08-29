@@ -43,6 +43,7 @@ import com.google.bos.udmi.service.messaging.ModelUpdate;
 import com.google.bos.udmi.service.messaging.SiteMetadataUpdate;
 import com.google.bos.udmi.service.messaging.StateUpdate;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
+import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.MetadataMapKeys;
 import java.util.Date;
@@ -53,9 +54,11 @@ import java.util.stream.Collectors;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
 import udmi.schema.EndpointConfiguration;
+import udmi.schema.Entry;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
+import udmi.schema.SystemEvents;
 import udmi.schema.SystemModel;
 import udmi.schema.UdmiConfig;
 import udmi.schema.UdmiState;
@@ -118,7 +121,7 @@ public class ReflectProcessor extends ProcessorBase {
 
   private Boolean checkConfigAckTime(Envelope attributes, StateUpdate stateUpdate) {
     CloudModel cloudModel = iotAccess.fetchDevice(attributes.deviceRegistryId, attributes.deviceId,
-        progress -> debug("TAP Fetched %d devices", progress));
+        progress -> sendProgressUpdate(attributes, format("Fetched %d devices...", progress)));
     Date lastConfigAck = cleanDate(cloudModel.last_config_ack);
     Date lastConfig = cleanDate(ifNotNullGet(stateUpdate.system, system -> system.last_config));
     debug("Check last config ack %s >= %s", isoConvert(lastConfigAck), isoConvert(lastConfig));
@@ -126,6 +129,15 @@ public class ReflectProcessor extends ProcessorBase {
       return false;
     }
     return lastConfig.after(START_TIME) && !lastConfigAck.before(lastConfig);
+  }
+
+  private void sendProgressUpdate(Envelope attributes, String message) {
+    SystemEvents events = new SystemEvents();
+    Entry entry = new Entry();
+    entry.message = message;
+    entry.timestamp = new Date();
+    events.logentries = ImmutableList.of(entry);
+    getDispatcher().withEnvelope(attributes).publish(events);
   }
 
   private Object extractModel(CloudModel request) {
