@@ -8,6 +8,7 @@ import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import udmi.schema.CloudModel;
 import udmi.schema.Envelope.SubFolder;
@@ -44,7 +45,7 @@ public interface IotAccessProvider extends UdmiComponent {
 
   Entry<Long, String> fetchConfig(String registryId, String deviceId);
 
-  CloudModel fetchDevice(String registryId, String deviceId);
+  CloudModel fetchDevice(String registryId, String deviceId, Consumer<Integer> progress);
 
   String fetchRegistryMetadata(String registryId, String metadataKey);
 

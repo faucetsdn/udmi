@@ -17,7 +17,6 @@ import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import udmi.schema.CloudModel;
 import udmi.schema.DiscoveryEvents;
-import udmi.schema.DiscoveryEvents;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
 import udmi.schema.PointDiscovery;
@@ -91,7 +90,7 @@ public class BitboxAdapter extends ProcessorBase {
   }
 
   private Date getProvisioningGeneration(String registryId, String deviceId) {
-    CloudModel cloudModel = iotAccess.fetchDevice(registryId, deviceId);
+    CloudModel cloudModel = iotAccess.fetchDevice(registryId, deviceId, null);
     return getDate(
         catchToNull(() -> cloudModel.metadata.get(MetadataMapKeys.UDMI_PROVISION_GENERATION)));
   }

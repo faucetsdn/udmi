@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -74,12 +75,14 @@ public class ProvisioningEngineTest extends ProcessorTestBase {
 
     when(provider.listDevices(eq(TEST_REGISTRY))).thenReturn(registryModel);
 
-    when(provider.fetchDevice(eq(TEST_REGISTRY), any())).thenAnswer(query -> {
+    when(provider.fetchDevice(eq(TEST_REGISTRY), any(), isNull())).thenAnswer(query -> {
       String deviceId = query.getArgument(1);
       throw new RuntimeException("No such device " + deviceId);
     });
-    when(provider.fetchDevice(eq(TEST_REGISTRY), eq(TEST_DEVICE))).thenReturn(deviceModel);
-    when(provider.fetchDevice(eq(TEST_REGISTRY), eq(TEST_GATEWAY))).thenReturn(gatewayModel);
+    when(provider.fetchDevice(eq(TEST_REGISTRY), eq(TEST_DEVICE), isNull())).thenReturn(
+        deviceModel);
+    when(provider.fetchDevice(eq(TEST_REGISTRY), eq(TEST_GATEWAY), isNull())).thenReturn(
+        gatewayModel);
   }
 
   protected void initializeTestInstance() {
@@ -105,7 +108,7 @@ public class ProvisioningEngineTest extends ProcessorTestBase {
         .publish(getDiscoveryScanEvent(TARGET_DEVICE));
     terminateAndWait();
 
-    verify(provider, times(1)).fetchDevice(eq(TEST_REGISTRY), eq(TEST_GATEWAY));
+    verify(provider, times(1)).fetchDevice(eq(TEST_REGISTRY), eq(TEST_GATEWAY), isNull());
 
     ArgumentCaptor<String> deviceCaptor = ArgumentCaptor.forClass(String.class);
     ArgumentCaptor<CloudModel> modelCaptor = ArgumentCaptor.forClass(CloudModel.class);
@@ -130,7 +133,7 @@ public class ProvisioningEngineTest extends ProcessorTestBase {
         .withEnvelope(getScanEnvelope())
         .publish(getDiscoveryScanEvent(TEST_DEVICE));
     terminateAndWait();
-    verify(provider, times(1)).fetchDevice(eq(TEST_REGISTRY), eq(TEST_GATEWAY));
+    verify(provider, times(1)).fetchDevice(eq(TEST_REGISTRY), eq(TEST_GATEWAY), isNull());
     verify(provider, never()).modelDevice(eq(TEST_REGISTRY), any(), any());
   }
 }

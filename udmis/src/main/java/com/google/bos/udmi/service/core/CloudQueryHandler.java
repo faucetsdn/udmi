@@ -122,7 +122,7 @@ public class CloudQueryHandler {
     DiscoveryEvents discoveryEvent = new DiscoveryEvents();
     discoveryEvent.scan_family = ProtocolFamily.IOT;
     discoveryEvent.generation = query.generation;
-    discoveryEvent.cloud_model = iotAccess.fetchDevice(deviceRegistryId, deviceId);
+    discoveryEvent.cloud_model = iotAccess.fetchDevice(deviceRegistryId, deviceId, null);
     discoveryEvent.cloud_model.operation = null;
 
     debug("Detailed device %s/%s", deviceRegistryId, deviceId);

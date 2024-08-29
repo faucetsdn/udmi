@@ -117,7 +117,8 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private Boolean checkConfigAckTime(Envelope attributes, StateUpdate stateUpdate) {
-    CloudModel cloudModel = iotAccess.fetchDevice(attributes.deviceRegistryId, attributes.deviceId);
+    CloudModel cloudModel = iotAccess.fetchDevice(attributes.deviceRegistryId, attributes.deviceId,
+        progress -> debug("TAP Fetched %d devices", progress));
     Date lastConfigAck = cleanDate(cloudModel.last_config_ack);
     Date lastConfig = cleanDate(ifNotNullGet(stateUpdate.system, system -> system.last_config));
     debug("Check last config ack %s >= %s", isoConvert(lastConfigAck), isoConvert(lastConfig));
@@ -225,7 +226,7 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private CloudModel queryCloudDevice(Envelope attributes) {
-    return iotAccess.fetchDevice(attributes.deviceRegistryId, attributes.deviceId);
+    return iotAccess.fetchDevice(attributes.deviceRegistryId, attributes.deviceId, null);
   }
 
   private CloudModel queryCloudRegistry(Envelope attributes) {

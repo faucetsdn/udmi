@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import udmi.schema.CloudModel;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.IotAccess;
@@ -118,7 +119,7 @@ public class PubSubIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public CloudModel fetchDevice(String registryId, String deviceId) {
+  public CloudModel fetchDevice(String registryId, String deviceId, Consumer<Integer> progress) {
     throw new RuntimeException("fetchDevice not implemented for PubSub");
   }
 
