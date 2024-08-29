@@ -12,6 +12,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static udmi.schema.CloudModel.Operation.BIND;
@@ -228,6 +229,7 @@ public class IotReflectorClient implements IotProvider {
         }
 
         String transactionId = messageBundle.attributes.get(TRANSACTION_KEY);
+        System.err.println("TAP received " + stringifyTerse(messageBundle.attributes));
         CompletableFuture<Map<String, Object>> future = ifNotNullGet(transactionId,
             futures::remove);
         ifNotNullThen(future, f -> f.complete(messageBundle.message));

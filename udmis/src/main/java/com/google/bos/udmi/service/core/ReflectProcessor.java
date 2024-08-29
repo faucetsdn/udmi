@@ -58,6 +58,7 @@ import udmi.schema.Entry;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
+import udmi.schema.Level;
 import udmi.schema.SystemEvents;
 import udmi.schema.SystemModel;
 import udmi.schema.UdmiConfig;
@@ -138,6 +139,7 @@ public class ReflectProcessor extends ProcessorBase {
     SystemEvents events = new SystemEvents();
     Entry entry = new Entry();
     entry.message = message;
+    entry.level = Level.INFO.value();
     entry.timestamp = new Date();
     events.logentries = ImmutableList.of(entry);
     debug("Reflecting progress %s %s", message, stringify(logging));
