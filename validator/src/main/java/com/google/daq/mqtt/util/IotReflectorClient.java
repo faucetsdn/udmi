@@ -229,7 +229,6 @@ public class IotReflectorClient implements IotProvider {
         }
 
         String transactionId = messageBundle.attributes.get(TRANSACTION_KEY);
-        System.err.println("TAP received " + stringifyTerse(messageBundle.attributes));
         CompletableFuture<Map<String, Object>> future = ifNotNullGet(transactionId,
             futures::remove);
         ifNotNullThen(future, f -> f.complete(messageBundle.message));

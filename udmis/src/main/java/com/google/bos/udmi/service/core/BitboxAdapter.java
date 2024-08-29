@@ -90,7 +90,7 @@ public class BitboxAdapter extends ProcessorBase {
   }
 
   private Date getProvisioningGeneration(String registryId, String deviceId) {
-    CloudModel cloudModel = iotAccess.fetchDevice(registryId, deviceId, null);
+    CloudModel cloudModel = iotAccess.fetchDevice(registryId, deviceId);
     return getDate(
         catchToNull(() -> cloudModel.metadata.get(MetadataMapKeys.UDMI_PROVISION_GENERATION)));
   }

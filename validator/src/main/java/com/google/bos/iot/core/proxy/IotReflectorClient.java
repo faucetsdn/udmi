@@ -60,6 +60,7 @@ import udmi.schema.ExecutionConfiguration;
 import udmi.schema.IotAccess.IotProvider;
 import udmi.schema.SetupUdmiConfig;
 import udmi.schema.SetupUdmiState;
+import udmi.schema.SystemEvents;
 import udmi.schema.UdmiConfig;
 import udmi.schema.UdmiState;
 
@@ -70,6 +71,7 @@ public class IotReflectorClient implements MessagePublisher {
 
   public static final String UDMI_REFLECT = "UDMI-REFLECT";
   static final String REFLECTOR_KEY_ALGORITHM = "RS256";
+  private static final String SYSTEM_SUBFOLDER = "system";
   private static final String MOCK_DEVICE_NUM_ID = "123456789101112";
   private static final String UDMI_TOPIC = "events/" + SubFolder.UDMI;
   private static final long CONFIG_TIMEOUT_SEC = 20;
@@ -295,7 +297,25 @@ public class IotReflectorClient implements MessagePublisher {
     } else {
       messageBundle.message = mapCast(message);
     }
-    messages.offer(messageBundle);
+    if (SubType.EVENTS.value().equals(attributes.get(SUBTYPE_PROPERTY_KEY))) {
+      processEvent(messageBundle);
+    } else {
+      messages.offer(messageBundle);
+    }
+  }
+
+  private void processEvent(Validator.MessageBundle messageBundle) {
+    String subFolder = messageBundle.attributes.get(SUBFOLDER_PROPERTY_KEY);
+    switch (subFolder) {
+      case SYSTEM_SUBFOLDER -> processSystemEvent(messageBundle.message);
+      default -> throw new RuntimeException("Unexpected received event " + subFolder);
+    }
+  }
+
+  private void processSystemEvent(Map<String, Object> message) {
+    SystemEvents events = convertTo(SystemEvents.class, message);
+    events.logentries.forEach(
+        entry -> System.err.printf("%s %s%n", isoConvert(entry.timestamp), entry.message));
   }
 
   private boolean ensureCloudSync(Map<String, Object> message) {
@@ -314,13 +334,13 @@ public class IotReflectorClient implements MessagePublisher {
         reflectorConfig = new UdmiConfig();
         Map<String, Object> udmisMessage = toMap(message.get("udmis"));
         SetupUdmiConfig udmis = ofNullable(
-                convertTo(SetupUdmiConfig.class, udmisMessage))
+            convertTo(SetupUdmiConfig.class, udmisMessage))
             .orElseGet(SetupUdmiConfig::new);
         reflectorConfig.last_state = getDate((String) udmisMessage.get("last_state"));
         reflectorConfig.setup = udmis;
       } else {
         reflectorConfig = ofNullable(
-                convertTo(UdmiConfig.class, message.get(SubFolder.UDMI.value())))
+            convertTo(UdmiConfig.class, message.get(SubFolder.UDMI.value())))
             .orElseGet(UdmiConfig::new);
       }
       System.err.println("UDMI received reflectorConfig: " + stringify(reflectorConfig));

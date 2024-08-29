@@ -119,7 +119,7 @@ public class PubSubIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public CloudModel fetchDevice(String registryId, String deviceId, Consumer<Integer> progress) {
+  public CloudModel fetchDevice(String registryId, String deviceId) {
     throw new RuntimeException("fetchDevice not implemented for PubSub");
   }
 
@@ -129,7 +129,7 @@ public class PubSubIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public CloudModel listDevices(String registryId) {
+  public CloudModel listDevices(String registryId, Consumer<Integer> progress) {
     throw new RuntimeException("listDevices not implemented for PubSub");
   }
 

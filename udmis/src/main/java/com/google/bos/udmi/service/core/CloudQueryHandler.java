@@ -122,7 +122,7 @@ public class CloudQueryHandler {
     DiscoveryEvents discoveryEvent = new DiscoveryEvents();
     discoveryEvent.scan_family = ProtocolFamily.IOT;
     discoveryEvent.generation = query.generation;
-    discoveryEvent.cloud_model = iotAccess.fetchDevice(deviceRegistryId, deviceId, null);
+    discoveryEvent.cloud_model = iotAccess.fetchDevice(deviceRegistryId, deviceId);
     discoveryEvent.cloud_model.operation = null;
 
     debug("Detailed device %s/%s", deviceRegistryId, deviceId);
@@ -134,7 +134,7 @@ public class CloudQueryHandler {
     String deviceRegistryId = requireNonNull(envelope.deviceRegistryId, "registry id");
     requireNull(envelope.deviceId, "device id");
 
-    CloudModel cloudModel = iotAccess.listDevices(deviceRegistryId);
+    CloudModel cloudModel = iotAccess.listDevices(deviceRegistryId, null);
     Set<Entry<String, CloudModel>> deviceSet = new HashSet<>(cloudModel.device_ids.entrySet());
     debug("Queried registry %s for %d totaling %d %s",
         envelope.deviceRegistryId, cloudModel.device_ids.size(), deviceSet.size(),

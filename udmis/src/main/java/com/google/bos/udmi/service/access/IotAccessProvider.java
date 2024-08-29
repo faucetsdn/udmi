@@ -45,7 +45,7 @@ public interface IotAccessProvider extends UdmiComponent {
 
   Entry<Long, String> fetchConfig(String registryId, String deviceId);
 
-  CloudModel fetchDevice(String registryId, String deviceId, Consumer<Integer> progress);
+  CloudModel fetchDevice(String registryId, String deviceId);
 
   String fetchRegistryMetadata(String registryId, String metadataKey);
 
@@ -58,7 +58,7 @@ public interface IotAccessProvider extends UdmiComponent {
 
   boolean isEnabled();
 
-  CloudModel listDevices(String registryId);
+  CloudModel listDevices(String registryId, Consumer<Integer> progress);
 
   CloudModel modelDevice(String registryId, String deviceId,
       CloudModel cloudModel);

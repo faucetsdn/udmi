@@ -237,10 +237,9 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public CloudModel fetchDevice(String registryId, String deviceId, Consumer<Integer> progress) {
+  public CloudModel fetchDevice(String registryId, String deviceId) {
     touchDeviceEntry(registryId, deviceId);
     Map<String, String> properties = registryDeviceRef(registryId, deviceId).entries();
-    ifNotNullThen(progress, p -> p.accept(properties.size()));
     return JsonUtil.convertTo(CloudModel.class, properties);
   }
 
@@ -273,11 +272,12 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public CloudModel listDevices(String registryId) {
+  public CloudModel listDevices(String registryId, Consumer<Integer> progress) {
     Map<String, String> entries = registryDevicesCollection(registryId).entries();
+    ifNotNullThen(progress, p -> p.accept(entries.size()));
     CloudModel cloudModel = new CloudModel();
     cloudModel.device_ids = entries.keySet().stream().collect(
-        Collectors.toMap(id -> id, id -> fetchDevice(registryId, id, null)));
+        Collectors.toMap(id -> id, id -> fetchDevice(registryId, id)));
     return cloudModel;
   }
 

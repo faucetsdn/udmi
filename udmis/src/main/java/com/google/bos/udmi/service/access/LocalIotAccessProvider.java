@@ -53,7 +53,7 @@ public class LocalIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public CloudModel fetchDevice(String registryId, String deviceId, Consumer<Integer> progress) {
+  public CloudModel fetchDevice(String registryId, String deviceId) {
     throw new RuntimeException("Not yet implemented");
   }
 
@@ -82,7 +82,7 @@ public class LocalIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public CloudModel listDevices(String registryId) {
+  public CloudModel listDevices(String registryId, Consumer<Integer> progress) {
     throw new RuntimeException("Not yet implemented");
   }
 

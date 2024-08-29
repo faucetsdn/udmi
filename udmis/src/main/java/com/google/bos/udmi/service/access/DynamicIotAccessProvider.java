@@ -100,8 +100,8 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public CloudModel fetchDevice(String registryId, String deviceId, Consumer<Integer> progress) {
-    return getProviderFor(registryId).fetchDevice(registryId, deviceId, progress);
+  public CloudModel fetchDevice(String registryId, String deviceId) {
+    return getProviderFor(registryId).fetchDevice(registryId, deviceId);
   }
 
   @Override
@@ -136,8 +136,8 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public CloudModel listDevices(String registryId) {
-    return getProviderFor(registryId).listDevices(registryId);
+  public CloudModel listDevices(String registryId, Consumer<Integer> progress) {
+    return getProviderFor(registryId).listDevices(registryId, progress);
   }
 
   @Override

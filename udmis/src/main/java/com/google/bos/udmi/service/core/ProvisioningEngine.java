@@ -79,7 +79,7 @@ public class ProvisioningEngine extends ProcessorBase {
       cloudModel.timestamp = generation;
       cloudModel.device_ids = null;
       CloudModel fetchedModel =
-          catchToNull(() -> iotAccess.fetchDevice(deviceRegistryId, gatewayId, null));
+          catchToNull(() -> iotAccess.fetchDevice(deviceRegistryId, gatewayId));
       if (fetchedModel == null) {
         warn("Scan device %s/%s not found, ignoring results", deviceRegistryId, gatewayId);
         return null;

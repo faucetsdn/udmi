@@ -55,7 +55,7 @@ class ClearBladeIotAccessProviderTest extends MessageTestCore {
     ClearBladeIotAccessProvider provider = getProvider();
     when(mockClient.listDevices(Mockito.any(DevicesListRequest.class))).thenAnswer(
         this::makeDevicesListResponse);
-    CloudModel cloudModel = provider.listDevices(TEST_REGISTRY);
+    CloudModel cloudModel = provider.listDevices(TEST_REGISTRY, null);
     assertEquals(1, cloudModel.device_ids.size(), "number of listed devices");
     assertTrue(cloudModel.device_ids.containsKey(TEST_DEVICE), "listed device name");
   }
