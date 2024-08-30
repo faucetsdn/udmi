@@ -350,14 +350,15 @@ public class IotReflectorClient implements MessagePublisher {
       }
       System.err.println("UDMI received reflectorConfig: " + stringify(reflectorConfig));
       Date lastState = reflectorConfig.last_state;
-      System.err.println("UDMI matching against expected state timestamp "
-          + isoConvert(reflectorStateTimestamp));
+      System.err.printf("UDMI matching last_state %s against expected %s%n",
+          isoConvert(lastState), isoConvert(reflectorStateTimestamp));
 
-      udmiInfo = reflectorConfig.setup;
       boolean timestampMatch = dateEquals(lastState, reflectorStateTimestamp);
-      boolean versionMatch = ifNotNullGet(updateTo, to -> to.equals(udmiInfo.udmi_ref), true);
+      boolean versionMatch = ifNotNullGet(updateTo, to -> to.equals(reflectorConfig.setup.udmi_ref),
+          true);
 
       if (timestampMatch && versionMatch) {
+        udmiInfo = reflectorConfig.setup;
         if (!udmiVersion.equals(udmiInfo.udmi_version)) {
           System.err.println("UDMI version mismatch: " + udmiVersion);
           checkState(!enforceUdmiVersion, "Strict UDMI version matching enabled");
