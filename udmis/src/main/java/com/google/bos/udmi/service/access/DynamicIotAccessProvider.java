@@ -19,6 +19,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import udmi.schema.CloudModel;
@@ -135,8 +136,8 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public CloudModel listDevices(String registryId) {
-    return getProviderFor(registryId).listDevices(registryId);
+  public CloudModel listDevices(String registryId, Consumer<Integer> progress) {
+    return getProviderFor(registryId).listDevices(registryId, progress);
   }
 
   @Override
