@@ -59,9 +59,9 @@ import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
 import udmi.schema.Level;
-import udmi.schema.SystemEvents;
 import udmi.schema.SystemModel;
 import udmi.schema.UdmiConfig;
+import udmi.schema.UdmiEvents;
 import udmi.schema.UdmiState;
 
 /**
@@ -131,15 +131,15 @@ public class ReflectProcessor extends ProcessorBase {
     return lastConfig.after(START_TIME) && !lastConfigAck.before(lastConfig);
   }
 
-  private void sendProgressUpdate(Envelope attributes, String message) {
+  private void reflectUdmiLog(Envelope attributes, String message) {
     Envelope logging = deepCopy(attributes);
     logging.subType = SubType.EVENTS;
-    logging.subFolder = SubFolder.SYSTEM;
+    logging.subFolder = SubFolder.UDMI;
     Entry entry = new Entry();
     entry.message = message;
     entry.level = Level.INFO.value();
     entry.timestamp = new Date();
-    SystemEvents events = new SystemEvents();
+    UdmiEvents events = new UdmiEvents();
     events.logentries = ImmutableList.of(entry);
     reflectMessage(logging, stringify(events));
   }
@@ -247,7 +247,7 @@ public class ReflectProcessor extends ProcessorBase {
 
   private CloudModel queryCloudRegistry(Envelope attributes) {
     return iotAccess.listDevices(attributes.deviceRegistryId,
-        progress -> sendProgressUpdate(attributes, format("Fetched %d devices...", progress)));
+        progress -> reflectUdmiLog(attributes, format("Fetched %d devices...", progress)));
   }
 
   private CloudModel queryDeviceState(Envelope attributes) {

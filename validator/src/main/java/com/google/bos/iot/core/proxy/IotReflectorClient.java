@@ -60,8 +60,8 @@ import udmi.schema.ExecutionConfiguration;
 import udmi.schema.IotAccess.IotProvider;
 import udmi.schema.SetupUdmiConfig;
 import udmi.schema.SetupUdmiState;
-import udmi.schema.SystemEvents;
 import udmi.schema.UdmiConfig;
+import udmi.schema.UdmiEvents;
 import udmi.schema.UdmiState;
 
 /**
@@ -72,6 +72,8 @@ public class IotReflectorClient implements MessagePublisher {
   public static final String UDMI_REFLECT = "UDMI-REFLECT";
   static final String REFLECTOR_KEY_ALGORITHM = "RS256";
   private static final String SYSTEM_SUBFOLDER = "system";
+  private static final String UDMIS_SOURCE = "udmis";
+  private static final String EVENTS_TYPE = "events";
   private static final String MOCK_DEVICE_NUM_ID = "123456789101112";
   private static final String UDMI_TOPIC = "events/" + SubFolder.UDMI;
   private static final long CONFIG_TIMEOUT_SEC = 20;
@@ -297,23 +299,24 @@ public class IotReflectorClient implements MessagePublisher {
     } else {
       messageBundle.message = mapCast(message);
     }
-    if (SubType.EVENTS.value().equals(attributes.get(SUBTYPE_PROPERTY_KEY))) {
-      processEvent(messageBundle);
+    if (SubFolder.UDMI.value().equals(attributes.get(SUBFOLDER_PROPERTY_KEY))) {
+      processUdmiMessage(messageBundle);
     } else {
       messages.offer(messageBundle);
     }
   }
 
-  private void processEvent(Validator.MessageBundle messageBundle) {
-    String subFolder = messageBundle.attributes.get(SUBFOLDER_PROPERTY_KEY);
-    switch (subFolder) {
-      case SYSTEM_SUBFOLDER -> processSystemEvent(messageBundle.message);
-      default -> throw new RuntimeException("Unexpected received event " + subFolder);
+  private void processUdmiMessage(Validator.MessageBundle messageBundle) {
+    String subType = messageBundle.attributes.get(SUBTYPE_PROPERTY_KEY);
+    if (SubType.EVENTS.value().equals(subType)) {
+      processUdmiEvent(messageBundle.message);
+    } else {
+      throw new RuntimeException("Unexpected receive type " + subType);
     }
   }
 
-  private void processSystemEvent(Map<String, Object> message) {
-    SystemEvents events = convertTo(SystemEvents.class, message);
+  private void processUdmiEvent(Map<String, Object> message) {
+    UdmiEvents events = convertTo(UdmiEvents.class, message);
     events.logentries.forEach(
         entry -> System.err.printf("%s %s%n", isoConvert(entry.timestamp), entry.message));
   }
