@@ -344,9 +344,8 @@ public class IotReflectorClient implements MessagePublisher {
         reflectorConfig.last_state = getDate((String) udmisMessage.get("last_state"));
         reflectorConfig.setup = udmis;
       } else {
-        reflectorConfig = ofNullable(
-            convertTo(UdmiConfig.class, message.get(SubFolder.UDMI.value())))
-            .orElseGet(UdmiConfig::new);
+        reflectorConfig = convertTo(UdmiConfig.class,
+            ofNullable(message.get(SubFolder.UDMI.value())).orElse(message));
       }
       System.err.println("UDMI received reflectorConfig: " + stringify(reflectorConfig));
       Date lastState = reflectorConfig.last_state;
