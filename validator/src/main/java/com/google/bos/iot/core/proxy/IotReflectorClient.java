@@ -310,6 +310,8 @@ public class IotReflectorClient implements MessagePublisher {
     String subType = messageBundle.attributes.get(SUBTYPE_PROPERTY_KEY);
     if (SubType.EVENTS.value().equals(subType)) {
       processUdmiEvent(messageBundle.message);
+    } else if (SubType.CONFIG.value().equals(subType)) {
+      ensureCloudSync(messageBundle.message);
     } else {
       throw new RuntimeException("Unexpected receive type " + subType);
     }
