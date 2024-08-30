@@ -299,22 +299,25 @@ public class IotReflectorClient implements MessagePublisher {
     } else {
       messageBundle.message = mapCast(message);
     }
-    if (SubFolder.UDMI.value().equals(attributes.get(SUBFOLDER_PROPERTY_KEY))) {
-      processUdmiMessage(messageBundle);
-    } else {
-      messages.offer(messageBundle);
+    if (SubFolder.UDMI.value().equals(attributes.get(SUBFOLDER_PROPERTY_KEY))
+        && processUdmiMessage(messageBundle)) {
+      return;
     }
+
+    messages.offer(messageBundle);
   }
 
-  private void processUdmiMessage(Validator.MessageBundle messageBundle) {
+  private boolean processUdmiMessage(Validator.MessageBundle messageBundle) {
     String subType = messageBundle.attributes.get(SUBTYPE_PROPERTY_KEY);
     if (SubType.EVENTS.value().equals(subType)) {
       processUdmiEvent(messageBundle.message);
+      return true;
     } else if (SubType.CONFIG.value().equals(subType)) {
       ensureCloudSync(messageBundle.message);
     } else {
       throw new RuntimeException("Unexpected receive type " + subType);
     }
+    return false;
   }
 
   private void processUdmiEvent(Map<String, Object> message) {
