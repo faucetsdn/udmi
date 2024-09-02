@@ -1,11 +1,11 @@
 package com.google.daq.mqtt.sequencer;
 
-import com.google.daq.mqtt.sequencer.sequences.WritebackSequences;
 import java.util.HashMap;
 import java.util.Optional;
 import org.junit.AssumptionViolatedException;
 import org.junit.Before;
 import udmi.schema.PointPointsetConfig;
+import udmi.schema.PointPointsetModel;
 import udmi.schema.PointsetConfig;
 import udmi.schema.TargetTestingModel;
 
@@ -13,6 +13,11 @@ import udmi.schema.TargetTestingModel;
  * Class used for testing sequences with points.
  */
 public abstract class PointsetBase extends SequenceBase {
+
+  public static final String INVALID_STATE = "invalid";
+  public static final String FAILURE_STATE = "failure";
+  public static final String APPLIED_STATE = "applied";
+  public static final String TWEAKED_REF = "tweaked_ref";
 
   @Override
   public void setUp() {
@@ -29,9 +34,9 @@ public abstract class PointsetBase extends SequenceBase {
     deviceConfig.pointset.points = Optional.ofNullable(deviceConfig.pointset.points)
         .orElse(new HashMap<>());
     try {
-      ensurePointConfig(WritebackSequences.INVALID_STATE);
-      ensurePointConfig(WritebackSequences.FAILURE_STATE);
-      ensurePointConfig(WritebackSequences.APPLIED_STATE);
+      ensurePointConfig(INVALID_STATE);
+      ensurePointConfig(FAILURE_STATE);
+      ensurePointConfig(APPLIED_STATE);
     } catch (AssumptionViolatedException skipTest) {
       info("Not setting config points: " + skipTest.getMessage());
     }
@@ -49,14 +54,11 @@ public abstract class PointsetBase extends SequenceBase {
   protected TargetTestingModel getTarget(String target) {
     TargetTestingModel testingMetadata = ifNullSkipTest(
         catchToNull(() -> deviceMetadata.testing.targets.get(target)),
-        "no testing target defined for '" + target + "'");
-    if (deviceMetadata.pointset == null || deviceMetadata.pointset.points == null) {
-      info("No metadata pointset points defined, I hope you know what you're doing");
-    } else if (!deviceMetadata.pointset.points.containsKey(testingMetadata.target_point)) {
-      throw new RuntimeException(
-          String.format("Testing target %s point '%s' not defined in pointset metadata",
-              target, testingMetadata.target_point));
-    }
+        "No testing target defined for '" + target + "'");
+    PointPointsetModel pointPointsetModel = catchToNull(
+        () -> deviceMetadata.pointset.points.get(testingMetadata.target_point));
+    ifNullSkipTest(pointPointsetModel,
+        "No pointset model for target point " + testingMetadata.target_point);
     return testingMetadata;
   }
 }

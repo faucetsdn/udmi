@@ -8,13 +8,22 @@ import static java.util.Optional.ofNullable;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import com.google.daq.mqtt.util.CatchingScheduledThreadPoolExecutor;
+import com.google.udmi.util.SchemaVersion;
 import java.util.Date;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import udmi.schema.Config;
+import udmi.schema.DiscoveryState;
+import udmi.schema.GatewayState;
+import udmi.schema.LocalnetState;
+import udmi.schema.PointsetState;
 import udmi.schema.PubberConfiguration;
 import udmi.schema.PubberOptions;
+import udmi.schema.State;
+import udmi.schema.SystemState;
 
 /**
  * Base class for Pubber subsystem managers.
@@ -27,7 +36,10 @@ public abstract class ManagerBase {
   protected final AtomicInteger sendRateSec = new AtomicInteger(DEFAULT_REPORT_SEC);
   protected final PubberOptions options;
   protected final ManagerHost host;
-  private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
+  final Config deviceConfig = new Config();
+  final State deviceState = new State();
+  protected final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
+  protected final AtomicBoolean stateDirty = new AtomicBoolean();
   final String deviceId;
   final PubberConfiguration config;
   protected ScheduledFuture<?> periodicSender;
@@ -40,6 +52,34 @@ public abstract class ManagerBase {
     options = configuration.options;
     deviceId = requireNonNull(configuration.deviceId, "device id not defined");
     this.host = host;
+  }
+
+  protected static void updateStateHolder(State state, Object update) {
+    requireNonNull(update, "null update message");
+    state.timestamp = getNow();
+    state.version = SchemaVersion.CURRENT.key();
+    boolean markerClass = update instanceof Class<?>;
+    final Object checkValue = markerClass ? null : update;
+    final Object checkTarget;
+    try {
+      checkTarget = markerClass ? ((Class<?>) update).getConstructor().newInstance() : update;
+    } catch (Exception e) {
+      throw new RuntimeException("Could not create marker instance of class " + update.getClass());
+    }
+    if (checkTarget instanceof SystemState) {
+      state.system = (SystemState) checkValue;
+    } else if (checkTarget instanceof PointsetState) {
+      state.pointset = (PointsetState) checkValue;
+    } else if (checkTarget instanceof LocalnetState) {
+      state.localnet = (LocalnetState) checkValue;
+    } else if (checkTarget instanceof GatewayState) {
+      state.gateway = (GatewayState) checkValue;
+    } else if (checkTarget instanceof DiscoveryState) {
+      state.discovery = (DiscoveryState) checkValue;
+    } else {
+      throw new RuntimeException(
+          "Unrecognized update type " + checkTarget.getClass().getSimpleName());
+    }
   }
 
   protected void updateState(Object state) {
@@ -92,7 +132,7 @@ public abstract class ManagerBase {
     int intervalSec = ofNullable(options.fixedSampleRate).orElse(reportInterval);
     if (intervalSec < DISABLED_INTERVAL) {
       error(format("Dropping update interval, sample rate %ds is less then DISABLED_INTERVAL",
-              intervalSec));
+          intervalSec));
       return;
     }
     if (periodicSender == null || intervalSec != sendRateSec.get()) {
@@ -112,9 +152,9 @@ public abstract class ManagerBase {
     checkState(periodicSender == null);
     int sec = sendRateSec.get();
     warn(format("Starting %s %s sender with delay %ds",
-            deviceId, this.getClass().getSimpleName(), sec));
+        deviceId, this.getClass().getSimpleName(), sec));
     if (sec != 0) {
-      periodicUpdate(); // To this now to synchronously raise any obvious exceptions.
+      periodicUpdate(); // Do this now to synchronously raise any obvious exceptions.
       periodicSender = schedulePeriodic(sec, this::periodicUpdate);
     }
   }

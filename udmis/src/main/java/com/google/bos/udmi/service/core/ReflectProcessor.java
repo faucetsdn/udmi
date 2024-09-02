@@ -43,6 +43,7 @@ import com.google.bos.udmi.service.messaging.ModelUpdate;
 import com.google.bos.udmi.service.messaging.SiteMetadataUpdate;
 import com.google.bos.udmi.service.messaging.StateUpdate;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
+import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.MetadataMapKeys;
 import java.util.Date;
@@ -53,11 +54,14 @@ import java.util.stream.Collectors;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
 import udmi.schema.EndpointConfiguration;
+import udmi.schema.Entry;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
+import udmi.schema.Level;
 import udmi.schema.SystemModel;
 import udmi.schema.UdmiConfig;
+import udmi.schema.UdmiEvents;
 import udmi.schema.UdmiState;
 
 /**
@@ -125,6 +129,19 @@ public class ReflectProcessor extends ProcessorBase {
       return false;
     }
     return lastConfig.after(START_TIME) && !lastConfigAck.before(lastConfig);
+  }
+
+  private void reflectUdmiLog(Envelope attributes, String message) {
+    Envelope logging = deepCopy(attributes);
+    logging.subType = SubType.EVENTS;
+    logging.subFolder = SubFolder.UDMI;
+    Entry entry = new Entry();
+    entry.message = message;
+    entry.level = Level.INFO.value();
+    entry.timestamp = new Date();
+    UdmiEvents events = new UdmiEvents();
+    events.logentries = ImmutableList.of(entry);
+    reflectMessage(logging, stringify(events));
   }
 
   private Object extractModel(CloudModel request) {
@@ -229,7 +246,8 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private CloudModel queryCloudRegistry(Envelope attributes) {
-    return iotAccess.listDevices(attributes.deviceRegistryId);
+    return iotAccess.listDevices(attributes.deviceRegistryId,
+        progress -> reflectUdmiLog(attributes, format("Fetched %d devices...", progress)));
   }
 
   private CloudModel queryDeviceState(Envelope attributes) {

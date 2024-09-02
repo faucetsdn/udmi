@@ -283,19 +283,19 @@ public class GeneralUtils {
   }
 
   public static <T, V> V ifNotNullGet(T value, Function<T, V> converter) {
-    return ifNotNullGet(value, converter, null);
+    return ifNotNullGet(value, converter, (V) null);
   }
 
   public static <T, V> V ifNotNullGet(T value, Function<T, V> converter, V elseResult) {
     return value == null ? elseResult : converter.apply(value);
   }
 
-  public static <T, V> V ifNullElse(T value, V elseResult, Function<T, V> converter) {
-    return value == null ? elseResult : converter.apply(value);
-  }
-
   public static <T, V> V ifNotNullGet(T value, Supplier<V> converter) {
     return value == null ? null : converter.get();
+  }
+
+  public static <T, V> V ifNullElse(T value, V elseResult, Function<T, V> converter) {
+    return value == null ? elseResult : converter.apply(value);
   }
 
   public static void ifNullThen(Object value, Runnable action) {

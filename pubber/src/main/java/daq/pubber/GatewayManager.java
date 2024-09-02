@@ -1,6 +1,7 @@
 package daq.pubber;
 
 import static com.google.udmi.util.GeneralUtils.catchToNull;
+import static com.google.udmi.util.GeneralUtils.getNow;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
@@ -9,13 +10,13 @@ import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
+import static java.util.function.Predicate.not;
 import static udmi.schema.Category.GATEWAY_PROXY_TARGET;
 
 import com.google.udmi.util.SiteModel;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import udmi.schema.Config;
 import udmi.schema.Entry;
 import udmi.schema.GatewayConfig;
@@ -48,16 +49,12 @@ public class GatewayManager extends ManagerBase {
     }
 
     Map<String, ProxyDevice> devices = new HashMap<>();
-    if (!proxyIds.isEmpty()) {
-      String firstId = proxyIds.stream().sorted().findFirst().orElseThrow();
-      String noProxyId = ifTrueGet(isTrue(options.noProxy), () -> firstId);
-      ifNotNullThen(noProxyId, id -> warn(format("Not proxying device %s", noProxyId)));
-      proxyIds.forEach(id -> {
-        if (!id.equals(noProxyId)) {
-          devices.put(id, new ProxyDevice(host, id, config));
-        }
-      });
-    }
+
+    String firstId = proxyIds.stream().sorted().findFirst().orElse(null);
+    String noProxyId = ifTrueGet(isTrue(options.noProxy), () -> firstId);
+    ifNotNullThen(noProxyId, id -> warn(format("Not proxying device %s", noProxyId)));
+    proxyIds.stream().filter(not(id -> id.equals(noProxyId)))
+        .forEach(id -> devices.put(id, new ProxyDevice(host, id, config)));
 
     ifTrueThen(options.extraDevice, () -> devices.put(EXTRA_PROXY_DEVICE, makeExtraDevice()));
 
@@ -89,7 +86,9 @@ public class GatewayManager extends ManagerBase {
   }
 
   /**
-   * Update gateway operation based off of a gateway configuration block.
+   * Update gateway operation based off of a gateway configuration block. This happens in two
+   * slightly different forms, one for the gateway proper (primarily indicating what devices
+   * should be proxy targets), and the other for the proxy devices themselves.
    */
   public void updateConfig(GatewayConfig gateway) {
     if (gateway == null) {
@@ -104,7 +103,10 @@ public class GatewayManager extends ManagerBase {
 
     if (gateway.proxy_ids == null || gateway.target != null) {
       try {
-        String family = validateGatewayFamily(catchToNull(() -> gateway.target.family));
+        String addr = catchToNull(() -> gateway.target.addr);
+        String family = ofNullable(catchToNull(() -> gateway.target.family))
+            .orElse(ProtocolFamily.VENDOR);
+        validateGatewayFamily(family, addr);
         setGatewayStatus(GATEWAY_PROXY_TARGET, Level.DEBUG, "gateway target family " + family);
       } catch (Exception e) {
         setGatewayStatus(GATEWAY_PROXY_TARGET, Level.ERROR, e.getMessage());
@@ -119,20 +121,24 @@ public class GatewayManager extends ManagerBase {
     gatewayState.status.category = category;
     gatewayState.status.level = level.value();
     gatewayState.status.message = message;
+    gatewayState.status.timestamp = getNow();
   }
 
   private void updateState() {
     updateState(ofNullable((Object) gatewayState).orElse(GatewayState.class));
   }
 
-  private String validateGatewayFamily(String family) {
-    if (family == null) {
-      return null;
+  private void validateGatewayFamily(String family, String addr) {
+    if (!ProtocolFamily.FAMILIES.contains(family)) {
+      throw new IllegalArgumentException("Unrecognized address family " + family);
     }
-    debug("Validating gateway family " + family);
-    Objects.requireNonNull(catchToNull(() -> metadata.localnet.families.get(family).addr),
-        format("Address family %s addr is null or undefined", family));
-    return family;
+
+    String expectedAddr = catchToNull(() -> metadata.localnet.families.get(family).addr);
+
+    if (expectedAddr != null && !expectedAddr.equals(addr)) {
+      throw new IllegalStateException(
+          format("Family address was %s, expected %s", addr, expectedAddr));
+    }
   }
 
   private void configExtraDevice() {

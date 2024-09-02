@@ -134,7 +134,7 @@ public class CloudQueryHandler {
     String deviceRegistryId = requireNonNull(envelope.deviceRegistryId, "registry id");
     requireNull(envelope.deviceId, "device id");
 
-    CloudModel cloudModel = iotAccess.listDevices(deviceRegistryId);
+    CloudModel cloudModel = iotAccess.listDevices(deviceRegistryId, null);
     Set<Entry<String, CloudModel>> deviceSet = new HashSet<>(cloudModel.device_ids.entrySet());
     debug("Queried registry %s for %d totaling %d %s",
         envelope.deviceRegistryId, cloudModel.device_ids.size(), deviceSet.size(),

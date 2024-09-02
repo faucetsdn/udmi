@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 public abstract class Common {
 
   public static final String UPDATE_QUERY_TOPIC = "update/query";
+  public static final String UPDATE_CONFIG_TOPIC = "update/config";
   public static final String EXCEPTION_KEY = "exception";
   public static final String ERROR_KEY = "error";
   public static final String DETAIL_KEY = "detail";
