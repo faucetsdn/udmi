@@ -91,11 +91,12 @@ class Object88B5177A:
     return result
 
 
-class Object2CA76C23:
+class ObjectA0D63CB9:
   """Generated schema class"""
 
   def __init__(self):
     self.site = None
+    self.panel = None
     self.section = None
     self.room = None
     self.floor = None
@@ -107,8 +108,9 @@ class Object2CA76C23:
   def from_dict(source):
     if not source:
       return None
-    result = ObjectC15AACEE()
+    result = Object9396614F()
     result.site = source.get('site')
+    result.panel = source.get('panel')
     result.section = source.get('section')
     result.room = source.get('room')
     result.floor = source.get('floor')
@@ -123,7 +125,7 @@ class Object2CA76C23:
       return None
     result = {}
     for key in source:
-      result[key] = ObjectC15AACEE.from_dict(source[key])
+      result[key] = Object9396614F.from_dict(source[key])
     return result
 
   @staticmethod
@@ -137,6 +139,8 @@ class Object2CA76C23:
     result = {}
     if self.site:
       result['site'] = self.site # 5
+    if self.panel:
+      result['panel'] = self.panel # 5
     if self.section:
       result['section'] = self.section # 5
     if self.room:
@@ -277,6 +281,10 @@ class SystemModel:
 
   def __init__(self):
     self.description = None
+    self.device_version = None
+    self.device_type = None
+    self.parent = None
+    self.zone = None
     self.tags = None
     self.location = None
     self.hardware = None
@@ -292,8 +300,12 @@ class SystemModel:
       return None
     result = SystemModel()
     result.description = source.get('description')
+    result.device_version = source.get('device_version')
+    result.device_type = source.get('device_type')
+    result.parent = source.get('parent')
+    result.zone = source.get('zone')
     result.tags = source.get('tags')
-    result.location = ObjectC15AACEE.from_dict(source.get('location'))
+    result.location = Object9396614F.from_dict(source.get('location'))
     result.hardware = SystemHardware.from_dict(source.get('hardware'))
     result.software = source.get('software')
     result.physical_tag = Object30AFA53A.from_dict(source.get('physical_tag'))
@@ -322,6 +334,14 @@ class SystemModel:
     result = {}
     if self.description:
       result['description'] = self.description # 5
+    if self.device_version:
+      result['device_version'] = self.device_version # 5
+    if self.device_type:
+      result['device_type'] = self.device_type # 5
+    if self.parent:
+      result['parent'] = self.parent # 5
+    if self.zone:
+      result['zone'] = self.zone # 5
     if self.tags:
       result['tags'] = self.tags # 1
     if self.location:

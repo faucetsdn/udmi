@@ -31,10 +31,6 @@
       "type": "string",
       "pattern": "^[0-9a-z]{8}$"
     },
-    "device_version": {
-      "description": "Version of schema supported by the device",
-      "type": "string"
-    },
     "cloud": {
       "$ref": "file:model_cloud.json#"
     },
