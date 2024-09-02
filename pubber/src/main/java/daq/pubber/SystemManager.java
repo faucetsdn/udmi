@@ -7,6 +7,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringify;
@@ -100,9 +101,7 @@ public class SystemManager extends ManagerBase {
 
     systemState.operation.operational = true;
     systemState.operation.mode = SystemMode.INITIAL;
-    if (host instanceof Pubber) {
-      systemState.serial_no = configuration.serialNo;
-    }
+    systemState.serial_no = configuration.serialNo;
     systemState.last_config = new Date(0);
 
     ifNotNullThen(options.extraField, value -> systemState.extraField = value);
@@ -213,7 +212,7 @@ public class SystemManager extends ManagerBase {
   void systemLifecycle(SystemMode mode) {
     systemState.operation.mode = mode;
     try {
-      host.update(host);
+      host.update(null);
     } catch (Exception e) {
       error("Squashing error publishing state while shutting down", e);
     }
@@ -246,6 +245,7 @@ public class SystemManager extends ManagerBase {
 
   void publishLogMessage(Entry report) {
     if (shouldLogLevel(report.level)) {
+      ifTrueThen(options.badLevel, () -> report.level = 0);
       logentries.add(report);
     }
   }

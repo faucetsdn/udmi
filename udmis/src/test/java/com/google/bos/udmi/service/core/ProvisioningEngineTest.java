@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -72,14 +73,16 @@ public class ProvisioningEngineTest extends ProcessorTestBase {
 
     when(provider.getRegistries()).thenReturn(ImmutableSet.of(TEST_REGISTRY));
 
-    when(provider.listDevices(eq(TEST_REGISTRY))).thenReturn(registryModel);
+    when(provider.listDevices(eq(TEST_REGISTRY), isNull())).thenReturn(registryModel);
 
     when(provider.fetchDevice(eq(TEST_REGISTRY), any())).thenAnswer(query -> {
       String deviceId = query.getArgument(1);
       throw new RuntimeException("No such device " + deviceId);
     });
-    when(provider.fetchDevice(eq(TEST_REGISTRY), eq(TEST_DEVICE))).thenReturn(deviceModel);
-    when(provider.fetchDevice(eq(TEST_REGISTRY), eq(TEST_GATEWAY))).thenReturn(gatewayModel);
+    when(provider.fetchDevice(eq(TEST_REGISTRY), eq(TEST_DEVICE))).thenReturn(
+        deviceModel);
+    when(provider.fetchDevice(eq(TEST_REGISTRY), eq(TEST_GATEWAY))).thenReturn(
+        gatewayModel);
   }
 
   protected void initializeTestInstance() {

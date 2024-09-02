@@ -6,10 +6,6 @@ on:
       - '**'
   workflow_dispatch:
 
-concurrency:
-  group: it-${{ github.repository }}
-  cancel-in-progress: true
-
 jobs:
   images:
     name: Build Docker Images
@@ -72,14 +68,23 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     needs: images
+    strategy:
+      fail-fast: false
+      matrix:
+        device_id: [ "AHU-1", "AHU-22", "GAT-123" ]
     env:
       IMAGE_NAME: ${{ github.repository }}
       REF_NAME: ${{ github.ref_name }}
+      DEVICE_ID: ${{ matrix.device_id }}
     steps:
       - name: Setup Environment
         run: |
+          sudo apt-get install moreutils
           git clone https://github.com/faucetsdn/udmi_site_model.git
           ln -s udmi_site_model/ site_model
+          (cd site_model; git log -n 1)
+          jq ".device_id = \"$DEVICE_ID\"" site_model/cloud_iot_config.json | sponge site_model/cloud_iot_config.json
+          jq . site_model/cloud_iot_config.json
           docker network create udminet --subnet 192.168.99.0/24
       - name: Start UDMIS container
         run: |
@@ -116,16 +121,25 @@ jobs:
           docker logs pubber 2>&1 | fgrep "Connection complete"
       - name: Sequencer run
         run: |
+          SEQUENCER_TESTS="broken_config extra_config device_config_acked"
+          [[ $REF_NAME =~ test- ]] && SEQUENCER_TESTS=${REF_NAME#test-}
           docker run --net udminet --name sequencer -v $(realpath site_model):/root/site_model \
             ghcr.io/$IMAGE_NAME:validator-$REF_NAME bin/sequencer site_model/cloud_iot_config.json \
-            broken_config extra_config device_config_acked
+            $SEQUENCER_TESTS
       - name: Sequencer results
         run: |
-          cat site_model/out/devices/AHU-1/results.md
-          [[ $(cat site_model/out/devices/AHU-1/results.md | fgrep 'stable | pass' | wc -l) == 3 ]]
+          cat site_model/out/devices/$DEVICE_ID/results.md
+          if [[ $REF_NAME =~ test- ]]; then
+            SPECIFIC_TEST=${REF_NAME#test-}
+            more site_model/out/devices/$DEVICE_ID/tests/$SPECIFIC_TEST/*
+          else
+            [[ $(cat site_model/out/devices/$DEVICE_ID/results.md | egrep 'stable \| (pass|skip)' | wc -l) == 3 ]]
+          fi
       - name: UDMIS logs
         if: ${{ !cancelled() }}
-        run: docker logs udmis
+        run: |
+          docker logs udmis
+          more var/tmp/udmis.log
       - name: Registrar logs
         if: ${{ !cancelled() }}
         run: docker logs registrar

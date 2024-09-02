@@ -31,7 +31,9 @@ Some caveats:
 -->
 
 <!-- START GENERATED, do not edit anything after this line! -->
-* [bad_target_family](#bad_target_family-preview): Error handling for badly formed target address family
+* [bad_point_ref](#bad_point_ref-preview): Error handling for badly formed gateway point ref
+* [bad_target_address](#bad_target_address-preview): Error handling for badly formed gateway target address
+* [bad_target_family](#bad_target_family-preview): Error handling for badly formed gateway target family
 * [broken_config](#broken_config-stable): Check that the device correctly handles a broken (non-json) config message.
 * [config_logging](#config_logging-stable): Check that the device publishes minimum required log entries when receiving config
 * [device_config_acked](#device_config_acked-stable): Check that the device MQTT-acknowledges a sent config.
@@ -48,6 +50,7 @@ Some caveats:
 * [family_ipv6_addr](#family_ipv6_addr-preview)
 * [feature_enumeration](#feature_enumeration-preview): Check enumeration of device features
 * [gateway_proxy_events](#gateway_proxy_events-beta): Check that a gateway proxies pointset events for indicated devices
+* [gateway_proxy_state](#gateway_proxy_state-preview): Check that a gateway proxies state updates for indicated devices
 * [pointset_publish](#pointset_publish-stable): Check that a device publishes pointset events
 * [pointset_publish_interval](#pointset_publish_interval-stable): Check handling of sample_rate_sec and sample_limit_sec
 * [pointset_remove_point](#pointset_remove_point-stable): Check that pointset state does not report an unconfigured point
@@ -57,9 +60,21 @@ Some caveats:
 * [system_last_update](#system_last_update-stable): Check that last_update state is correctly set in response to a config update.
 * [valid_serial_no](#valid_serial_no-stable)
 
+## bad_point_ref (PREVIEW)
+
+Error handling for badly formed gateway point ref
+
+1. Test skipped: Not a proxied device
+
+## bad_target_address (PREVIEW)
+
+Error handling for badly formed gateway target address
+
+1. Test skipped: Not a proxied device
+
 ## bad_target_family (PREVIEW)
 
-Error handling for badly formed target address family
+Error handling for badly formed gateway target family
 
 1. Test skipped: Not a proxied device
 
@@ -295,6 +310,12 @@ Check enumeration of device features
 ## gateway_proxy_events (BETA)
 
 Check that a gateway proxies pointset events for indicated devices
+
+1. Test skipped: Not a gateway
+
+## gateway_proxy_state (PREVIEW)
+
+Check that a gateway proxies state updates for indicated devices
 
 1. Test skipped: Not a gateway
 

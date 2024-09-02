@@ -154,7 +154,7 @@ jobs:
         run: bin/test_validator $TARGET_PROJECT
       - name: validator result
         if: ${{ !cancelled() }}
-        run: cat /tmp/validator.out || true
+        run: more out/validator.out || true
       - name: message captures
         if: ${{ !cancelled() }}
         run: |
