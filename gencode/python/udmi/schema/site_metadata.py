@@ -46,47 +46,6 @@ class Object936F7B6D:
     return result
 
 
-class ObjectF4A22829:
-  """Generated schema class"""
-
-  def __init__(self):
-    self.net_occupied_area_m2 = None
-    self.gross_internal_area_m2 = None
-
-  @staticmethod
-  def from_dict(source):
-    if not source:
-      return None
-    result = ObjectF4A22829()
-    result.net_occupied_area_m2 = source.get('net_occupied_area_m2')
-    result.gross_internal_area_m2 = source.get('gross_internal_area_m2')
-    return result
-
-  @staticmethod
-  def map_from(source):
-    if not source:
-      return None
-    result = {}
-    for key in source:
-      result[key] = ObjectF4A22829.from_dict(source[key])
-    return result
-
-  @staticmethod
-  def expand_dict(input):
-    result = {}
-    for property in input:
-      result[property] = input[property].to_dict() if input[property] else {}
-    return result
-
-  def to_dict(self):
-    result = {}
-    if self.net_occupied_area_m2:
-      result['net_occupied_area_m2'] = self.net_occupied_area_m2 # 5
-    if self.gross_internal_area_m2:
-      result['gross_internal_area_m2'] = self.gross_internal_area_m2 # 5
-    return result
-
-
 class ObjectAEC3F93C:
   """Generated schema class"""
 
@@ -182,6 +141,129 @@ class Object837C4A52:
       result['registered'] = self.registered # 5
     if self.discovered:
       result['discovered'] = self.discovered # 5
+    return result
+
+
+class Object50EC8CBF:
+  """Generated schema class"""
+
+  def __init__(self):
+    self.value = None
+    self.unit = None
+
+  @staticmethod
+  def from_dict(source):
+    if not source:
+      return None
+    result = Object50EC8CBF()
+    result.value = source.get('value')
+    result.unit = source.get('unit')
+    return result
+
+  @staticmethod
+  def map_from(source):
+    if not source:
+      return None
+    result = {}
+    for key in source:
+      result[key] = Object50EC8CBF.from_dict(source[key])
+    return result
+
+  @staticmethod
+  def expand_dict(input):
+    result = {}
+    for property in input:
+      result[property] = input[property].to_dict() if input[property] else {}
+    return result
+
+  def to_dict(self):
+    result = {}
+    if self.value:
+      result['value'] = self.value # 5
+    if self.unit:
+      result['unit'] = self.unit # 5
+    return result
+
+
+class Object20F38E2A:
+  """Generated schema class"""
+
+  def __init__(self):
+    self.value = None
+    self.unit = None
+
+  @staticmethod
+  def from_dict(source):
+    if not source:
+      return None
+    result = Object20F38E2A()
+    result.value = source.get('value')
+    result.unit = source.get('unit')
+    return result
+
+  @staticmethod
+  def map_from(source):
+    if not source:
+      return None
+    result = {}
+    for key in source:
+      result[key] = Object20F38E2A.from_dict(source[key])
+    return result
+
+  @staticmethod
+  def expand_dict(input):
+    result = {}
+    for property in input:
+      result[property] = input[property].to_dict() if input[property] else {}
+    return result
+
+  def to_dict(self):
+    result = {}
+    if self.value:
+      result['value'] = self.value # 5
+    if self.unit:
+      result['unit'] = self.unit # 5
+    return result
+
+
+class Object952CABE2:
+  """Generated schema class"""
+
+  def __init__(self):
+    self.net_occupied_area = None
+    self.gross_internal_area = None
+
+  @staticmethod
+  def from_dict(source):
+    if not source:
+      return None
+    result = Object37781B36()
+    result.net_occupied_area = Object50EC8CBF.from_dict(source.get('net_occupied_area'))
+    result.gross_internal_area = Object20F38E2A.from_dict(source.get('gross_internal_area'))
+    return result
+
+  @staticmethod
+  def map_from(source):
+    if not source:
+      return None
+    result = {}
+    for key in source:
+      result[key] = Object37781B36.from_dict(source[key])
+    return result
+
+  @staticmethod
+  def expand_dict(input):
+    result = {}
+    for property in input:
+      result[property] = input[property].to_dict() if input[property] else {}
+    return result
+
+  def to_dict(self):
+    result = {}
+    if self.net_occupied_area:
+      result['net_occupied_area'] = self.net_occupied_area.to_dict() # 4
+    if self.gross_internal_area:
+      result['gross_internal_area'] = self.gross_internal_area.to_dict() # 4
     return result
 
 
@@ -509,10 +591,11 @@ class Object812CE457:
     return result
 
 
-class Object322F1777:
+class ObjectE4D4B0DB:
   """Generated schema class"""
 
   def __init__(self):
+    self.area = None
     self.electricity = None
     self.gas = None
     self.water = None
@@ -521,7 +604,8 @@ class Object322F1777:
   def from_dict(source):
     if not source:
       return None
-    result = Object36EC44DB()
+    result = Object8E5DCD5C()
+    result.area = Object37781B36.from_dict(source.get('area'))
     result.electricity = ObjectC1B53851.from_dict(source.get('electricity'))
     result.gas = ObjectE0D2C919.from_dict(source.get('gas'))
     result.water = ObjectD9A728BA.from_dict(source.get('water'))
@@ -533,7 +617,7 @@ class Object322F1777:
       return None
     result = {}
     for key in source:
-      result[key] = Object36EC44DB.from_dict(source[key])
+      result[key] = Object8E5DCD5C.from_dict(source[key])
     return result
 
   @staticmethod
@@ -545,6 +629,8 @@ class Object322F1777:
 
   def to_dict(self):
     result = {}
+    if self.area:
+      result['area'] = self.area.to_dict() # 4
     if self.electricity:
       result['electricity'] = self.electricity.to_dict() # 4
     if self.gas:
@@ -564,7 +650,6 @@ class SiteMetadata:
     self.name = None
     self.tags = None
     self.location = None
-    self.area = None
     self.links = None
     self.counts = None
     self.parameters = None
@@ -580,10 +665,9 @@ class SiteMetadata:
     result.name = source.get('name')
     result.tags = source.get('tags')
     result.location = Object936F7B6D.from_dict(source.get('location'))
-    result.area = ObjectF4A22829.from_dict(source.get('area'))
     result.links = ObjectAEC3F93C.from_dict(source.get('links'))
     result.counts = Object837C4A52.from_dict(source.get('counts'))
-    result.parameters = Object36EC44DB.from_dict(source.get('parameters'))
+    result.parameters = Object8E5DCD5C.from_dict(source.get('parameters'))
     return result
 
   @staticmethod
@@ -616,8 +700,6 @@ class SiteMetadata:
       result['tags'] = self.tags # 1
     if self.location:
       result['location'] = self.location.to_dict() # 4
-    if self.area:
-      result['area'] = self.area.to_dict() # 4
     if self.links:
       result['links'] = self.links.to_dict() # 4
     if self.counts:

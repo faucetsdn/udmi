@@ -62,22 +62,6 @@
         }
       }
     },
-    "area": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "net_occupied_area_m2": {
-            "description": "Net Occupied Area of the site in square meters",
-            "type": "number",
-            "examples": [1234, 256, 997765]
-        },
-        "gross_internal_area_m2": {
-            "description": "Gross internal Area of the site in square meters",
-            "type": "number",
-            "examples": [1278, 290, 998999]
-        }
-      }
-    },
     "links": {
       "type": "object",
       "additionalProperties": false,
@@ -134,6 +118,44 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
+        "area": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "net_occupied_area": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "value": {
+                  "description": "Net Occupied Area of the site",
+                  "type": "number",
+                  "examples": [1234, 256, 997765]
+                },
+                "unit": {
+                  "description": "Unit used for carbon the Net Occupied Area",
+                  "type": "string",
+                  "examples": ["m2", "sqf"]
+                }
+              }
+            },
+            "gross_internal_area": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "value": {
+                  "description": "Gross internal Area of the site",
+                  "type": "number",
+                  "examples": [1278, 290, 998999]
+                },
+                "unit": {
+                  "description": "Unit used for carbon the Gross internal Area",
+                  "type": "string",
+                  "examples": ["m2", "sqf"]
+                }
+              }
+            }
+          }
+        },
         "electricity": {
           "type": "object",
           "additionalProperties": false,

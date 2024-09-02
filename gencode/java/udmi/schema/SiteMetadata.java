@@ -26,7 +26,6 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
     "name",
     "tags",
     "location",
-    "area",
     "links",
     "counts",
     "parameters"
@@ -74,8 +73,6 @@ public class SiteMetadata {
     public Set<Object> tags = new LinkedHashSet<Object>();
     @JsonProperty("location")
     public Location location;
-    @JsonProperty("area")
-    public Area area;
     @JsonProperty("links")
     public Links links;
     @JsonProperty("counts")
@@ -86,7 +83,6 @@ public class SiteMetadata {
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.area == null)? 0 :this.area.hashCode()));
         result = ((result* 31)+((this.site == null)? 0 :this.site.hashCode()));
         result = ((result* 31)+((this.counts == null)? 0 :this.counts.hashCode()));
         result = ((result* 31)+((this.name == null)? 0 :this.name.hashCode()));
@@ -108,7 +104,7 @@ public class SiteMetadata {
             return false;
         }
         SiteMetadata rhs = ((SiteMetadata) other);
-        return (((((((((((this.area == rhs.area)||((this.area!= null)&&this.area.equals(rhs.area)))&&((this.site == rhs.site)||((this.site!= null)&&this.site.equals(rhs.site))))&&((this.counts == rhs.counts)||((this.counts!= null)&&this.counts.equals(rhs.counts))))&&((this.name == rhs.name)||((this.name!= null)&&this.name.equals(rhs.name))))&&((this.location == rhs.location)||((this.location!= null)&&this.location.equals(rhs.location))))&&((this.links == rhs.links)||((this.links!= null)&&this.links.equals(rhs.links))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.parameters == rhs.parameters)||((this.parameters!= null)&&this.parameters.equals(rhs.parameters))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.tags == rhs.tags)||((this.tags!= null)&&this.tags.equals(rhs.tags))));
+        return ((((((((((this.site == rhs.site)||((this.site!= null)&&this.site.equals(rhs.site)))&&((this.counts == rhs.counts)||((this.counts!= null)&&this.counts.equals(rhs.counts))))&&((this.name == rhs.name)||((this.name!= null)&&this.name.equals(rhs.name))))&&((this.location == rhs.location)||((this.location!= null)&&this.location.equals(rhs.location))))&&((this.links == rhs.links)||((this.links!= null)&&this.links.equals(rhs.links))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.parameters == rhs.parameters)||((this.parameters!= null)&&this.parameters.equals(rhs.parameters))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.tags == rhs.tags)||((this.tags!= null)&&this.tags.equals(rhs.tags))));
     }
 
 }

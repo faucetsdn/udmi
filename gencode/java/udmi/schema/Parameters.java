@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "area",
     "electricity",
     "gas",
     "water"
@@ -15,6 +16,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @Generated("jsonschema2pojo")
 public class Parameters {
 
+    @JsonProperty("area")
+    public Area area;
     @JsonProperty("electricity")
     public Electricity electricity;
     @JsonProperty("gas")
@@ -25,6 +28,7 @@ public class Parameters {
     @Override
     public int hashCode() {
         int result = 1;
+        result = ((result* 31)+((this.area == null)? 0 :this.area.hashCode()));
         result = ((result* 31)+((this.gas == null)? 0 :this.gas.hashCode()));
         result = ((result* 31)+((this.electricity == null)? 0 :this.electricity.hashCode()));
         result = ((result* 31)+((this.water == null)? 0 :this.water.hashCode()));
@@ -40,7 +44,7 @@ public class Parameters {
             return false;
         }
         Parameters rhs = ((Parameters) other);
-        return ((((this.gas == rhs.gas)||((this.gas!= null)&&this.gas.equals(rhs.gas)))&&((this.electricity == rhs.electricity)||((this.electricity!= null)&&this.electricity.equals(rhs.electricity))))&&((this.water == rhs.water)||((this.water!= null)&&this.water.equals(rhs.water))));
+        return (((((this.area == rhs.area)||((this.area!= null)&&this.area.equals(rhs.area)))&&((this.gas == rhs.gas)||((this.gas!= null)&&this.gas.equals(rhs.gas))))&&((this.electricity == rhs.electricity)||((this.electricity!= null)&&this.electricity.equals(rhs.electricity))))&&((this.water == rhs.water)||((this.water!= null)&&this.water.equals(rhs.water))));
     }
 
 }
