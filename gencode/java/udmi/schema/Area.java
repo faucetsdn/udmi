@@ -9,23 +9,32 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "m2"
+    "net_occupied_area_m2",
+    "gross_internal_area_m2"
 })
 @Generated("jsonschema2pojo")
 public class Area {
 
     /**
-     * Area of the site in square meters
+     * Net Occupied Area of the site in square meters
      * 
      */
-    @JsonProperty("m2")
-    @JsonPropertyDescription("Area of the site in square meters")
-    public Double m2;
+    @JsonProperty("net_occupied_area_m2")
+    @JsonPropertyDescription("Net Occupied Area of the site in square meters")
+    public Double net_occupied_area_m2;
+    /**
+     * Gross internal Area of the site in square meters
+     * 
+     */
+    @JsonProperty("gross_internal_area_m2")
+    @JsonPropertyDescription("Gross internal Area of the site in square meters")
+    public Double gross_internal_area_m2;
 
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.m2 == null)? 0 :this.m2 .hashCode()));
+        result = ((result* 31)+((this.gross_internal_area_m2 == null)? 0 :this.gross_internal_area_m2 .hashCode()));
+        result = ((result* 31)+((this.net_occupied_area_m2 == null)? 0 :this.net_occupied_area_m2 .hashCode()));
         return result;
     }
 
@@ -38,7 +47,7 @@ public class Area {
             return false;
         }
         Area rhs = ((Area) other);
-        return ((this.m2 == rhs.m2)||((this.m2 != null)&&this.m2 .equals(rhs.m2)));
+        return (((this.gross_internal_area_m2 == rhs.gross_internal_area_m2)||((this.gross_internal_area_m2 != null)&&this.gross_internal_area_m2 .equals(rhs.gross_internal_area_m2)))&&((this.net_occupied_area_m2 == rhs.net_occupied_area_m2)||((this.net_occupied_area_m2 != null)&&this.net_occupied_area_m2 .equals(rhs.net_occupied_area_m2))));
     }
 
 }

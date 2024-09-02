@@ -15,7 +15,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "discovered"
 })
 @Generated("jsonschema2pojo")
-public class Count {
+public class Counts {
 
     /**
      * Count of modeled devices
@@ -61,10 +61,10 @@ public class Count {
         if (other == this) {
             return true;
         }
-        if ((other instanceof Count) == false) {
+        if ((other instanceof Counts) == false) {
             return false;
         }
-        Count rhs = ((Count) other);
+        Counts rhs = ((Counts) other);
         return (((((this.modeled == rhs.modeled)||((this.modeled!= null)&&this.modeled.equals(rhs.modeled)))&&((this.registered == rhs.registered)||((this.registered!= null)&&this.registered.equals(rhs.registered))))&&((this.discovered == rhs.discovered)||((this.discovered!= null)&&this.discovered.equals(rhs.discovered))))&&((this.validated == rhs.validated)||((this.validated!= null)&&this.validated.equals(rhs.validated))));
     }
 

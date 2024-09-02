@@ -37,14 +37,19 @@ public class Location {
     public String section;
     @JsonProperty("room")
     public String room;
+    /**
+     * Name of floor level
+     * 
+     */
     @JsonProperty("floor")
+    @JsonPropertyDescription("Name of floor level")
     public String floor;
     /**
-     * Sequential integer representation for a floor, primiarly for comparisons when non integer floors are used, e.g. 1 and 1M
+     * Sequential integer representation for a floor, primarily for comparisons when non integer floors are used, e.g. 1 and 1M
      * 
      */
     @JsonProperty("floor_seq")
-    @JsonPropertyDescription("Sequential integer representation for a floor, primiarly for comparisons when non integer floors are used, e.g. 1 and 1M")
+    @JsonPropertyDescription("Sequential integer representation for a floor, primarily for comparisons when non integer floors are used, e.g. 1 and 1M")
     public Integer floor_seq;
     @JsonProperty("position")
     public Position position;

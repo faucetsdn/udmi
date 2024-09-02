@@ -27,19 +27,20 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
     "tags",
     "location",
     "area",
-    "source",
-    "count"
+    "links",
+    "counts",
+    "parameters"
 })
 @Generated("jsonschema2pojo")
 public class SiteMetadata {
 
     /**
-     * RFC 3339 timestamp the site metadata was last updated
+     * RFC 3339 timestamp when the site metadata was last updated
      * (Required)
      * 
      */
     @JsonProperty("timestamp")
-    @JsonPropertyDescription("RFC 3339 timestamp the site metadata was last updated")
+    @JsonPropertyDescription("RFC 3339 timestamp when the site metadata was last updated")
     public Date timestamp;
     /**
      * Version of the UDMI schema
@@ -75,21 +76,24 @@ public class SiteMetadata {
     public Location location;
     @JsonProperty("area")
     public Area area;
-    @JsonProperty("source")
-    public Source source;
-    @JsonProperty("count")
-    public Count count;
+    @JsonProperty("links")
+    public Links links;
+    @JsonProperty("counts")
+    public Counts counts;
+    @JsonProperty("parameters")
+    public Parameters parameters;
 
     @Override
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.area == null)? 0 :this.area.hashCode()));
         result = ((result* 31)+((this.site == null)? 0 :this.site.hashCode()));
+        result = ((result* 31)+((this.counts == null)? 0 :this.counts.hashCode()));
         result = ((result* 31)+((this.name == null)? 0 :this.name.hashCode()));
-        result = ((result* 31)+((this.count == null)? 0 :this.count.hashCode()));
         result = ((result* 31)+((this.location == null)? 0 :this.location.hashCode()));
-        result = ((result* 31)+((this.source == null)? 0 :this.source.hashCode()));
+        result = ((result* 31)+((this.links == null)? 0 :this.links.hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
+        result = ((result* 31)+((this.parameters == null)? 0 :this.parameters.hashCode()));
         result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
         result = ((result* 31)+((this.tags == null)? 0 :this.tags.hashCode()));
         return result;
@@ -104,7 +108,7 @@ public class SiteMetadata {
             return false;
         }
         SiteMetadata rhs = ((SiteMetadata) other);
-        return ((((((((((this.area == rhs.area)||((this.area!= null)&&this.area.equals(rhs.area)))&&((this.site == rhs.site)||((this.site!= null)&&this.site.equals(rhs.site))))&&((this.name == rhs.name)||((this.name!= null)&&this.name.equals(rhs.name))))&&((this.count == rhs.count)||((this.count!= null)&&this.count.equals(rhs.count))))&&((this.location == rhs.location)||((this.location!= null)&&this.location.equals(rhs.location))))&&((this.source == rhs.source)||((this.source!= null)&&this.source.equals(rhs.source))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.tags == rhs.tags)||((this.tags!= null)&&this.tags.equals(rhs.tags))));
+        return (((((((((((this.area == rhs.area)||((this.area!= null)&&this.area.equals(rhs.area)))&&((this.site == rhs.site)||((this.site!= null)&&this.site.equals(rhs.site))))&&((this.counts == rhs.counts)||((this.counts!= null)&&this.counts.equals(rhs.counts))))&&((this.name == rhs.name)||((this.name!= null)&&this.name.equals(rhs.name))))&&((this.location == rhs.location)||((this.location!= null)&&this.location.equals(rhs.location))))&&((this.links == rhs.links)||((this.links!= null)&&this.links.equals(rhs.links))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.parameters == rhs.parameters)||((this.parameters!= null)&&this.parameters.equals(rhs.parameters))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.tags == rhs.tags)||((this.tags!= null)&&this.tags.equals(rhs.tags))));
     }
 
 }
