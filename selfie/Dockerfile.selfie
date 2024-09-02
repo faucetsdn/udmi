@@ -2,9 +2,10 @@ FROM alpine:latest
 
 WORKDIR /root
 
-RUN apk add bash gcompat mosquitto-clients curl python3 jq moreutils
+RUN apk add --no-cache bash openjdk17 gcompat curl jq sudo git python3 moreutils mosquitto mosquitto-clients openssl coreutils
 
 # Workaround for https://github.com/grpc/grpc-java/issues/8751
+# Only necessary for running on GKE -- won't show up with docker!
 ENV LD_PRELOAD=/lib/libgcompat.so.0
 
 RUN curl -sSL https://sdk.cloud.google.com | bash

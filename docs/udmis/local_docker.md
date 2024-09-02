@@ -11,20 +11,13 @@ _Note:_ This is still in 'alpha' form. It works, but there's likely going to be 
 
 ## Configuration Setup
 
-These setup variables can be customized for any particular setup. It's recommended to first
-get everything working with the built-in _pubber_ as shown, and then try with a real device after!
+The system requires a valid `site_model` to run. This overview uses the default `udmi_site_model`, but
+any valid site model will work. To setup the model to use, create a link from `site_model` in the working
+directory to the model of choice. Also need to create
 ```
-site_model=udmi_site_model
-device_id=AHU-1
-serial_no=8127324
-```
-
-## Environment Setup
-
-One-time setup pieces to setup docker and a test site model, if necessary.
-```
+git clone https://github.com/faucetsdn/udmi_site_model.git
+ln -s udmi_site_model/ site_model
 docker inspect -f ok udminet || docker network create udminet --subnet 192.168.99.0/24
-[[ ${site_model} != udmi_site_model ]] || git clone https://github.com/faucetsdn/udmi_site_model.git
 ```
 
 ## UDMIS Container Startup
@@ -34,11 +27,11 @@ it works), so see the next section for some sample diagnostic commands. It will 
 (less than 30s) to get up and going before the other commands will work.
 ```
 docker run -d --rm --net udminet --name udmis -p 8883:8883 \
-    -v $(realpath $site_model):/root/site \
+    -v $(realpath site_model):/root/site_model \
     -v $PWD/var/tmp:/tmp \
-    -v $PWD/var/etcd:/root/udmi/default.etcd \
+    -v $PWD/var/etcd:/root/udmi/var/etcd \
     -v $PWD/var/mosquitto:/etc/mosquitto \
-    ghcr.io/faucetsdn/udmi:udmis-latest udmi/bin/start_local block site/ //mqtt/udmis
+    ghcr.io/faucetsdn/udmi:udmis-latest udmi/bin/start_local block site_model/cloud_iot_config.json
 ```
 
 ## UDMIS Startup Diagnostics
@@ -59,8 +52,8 @@ After startup, the site model needs to be registered as per standard UDMI practi
 needs to be done once per site model (or after any significant changes). The
 [sample registrar output](registrar_output.md) shows what a successful run looks like.
 ```
-docker run --rm --net udminet --name registrar -v $(realpath $site_model):/root/site \
-    ghcr.io/faucetsdn/udmi:validator-latest bin/registrar site/ //mqtt/udmis
+docker run --rm --net udminet --name registrar -v $(realpath site_model):/root/site_model \
+    ghcr.io/faucetsdn/udmi:validator-latest bin/registrar site_model/cloud_iot_config.json
 ```
 
 ## Pubber Instance
@@ -69,8 +62,8 @@ For initial install testing, it's recommended to try first with the standard _pu
 See the [sample pubber output](pubber_output.md) for the beginning of what this run looks like.
 
 ```
-docker run -d --rm --net udminet --name pubber -v $(realpath $site_model):/root/site \
-    ghcr.io/faucetsdn/udmi:pubber-latest bin/pubber site/ //mqtt/udmis ${device_id} ${serial_no}
+docker run -d --rm --net udminet --name pubber -v $(realpath site_model):/root/site_model \
+    ghcr.io/faucetsdn/udmi:pubber-latest bin/pubber site_model/cloud_iot_config.json
 ```
 
 ## Sequencer Testing
@@ -78,14 +71,14 @@ docker run -d --rm --net udminet --name pubber -v $(realpath $site_model):/root/
 Sequencer can be run directly as per normal too. See the [sample sequencer output](sequencer_output.md)
 for what the beginning of a successful run looks like.
 ```
-docker run --rm --net udminet --name sequencer -v $(realpath $site_model):/root/site \
-    ghcr.io/faucetsdn/udmi:validator-latest bin/sequencer site/ //mqtt/udmis ${device_id} ${serial_no}
+docker run --rm --net udminet --name sequencer -v $(realpath site_model):/root/site_model \
+    ghcr.io/faucetsdn/udmi:validator-latest bin/sequencer site_model/cloud_iot_config.json
 ```
 
 The resulting output can be extracted from the site model, See the [sample report output](report_output.md)
 for what this should look like.
 ```
-head ${site_model}/out/devices/${device_id}/results.md 
+head site_model/out/devices/*/results.md 
 ```
 
 # Container Build

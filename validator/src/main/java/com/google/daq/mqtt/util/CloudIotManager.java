@@ -433,7 +433,7 @@ public class CloudIotManager {
   }
 
   /**
-   * Publish a site metadata update for the current registry.
+   * Update the cloud site metadata for the current registry.
    *
    * @param siteMetadata site metadata object.
    */

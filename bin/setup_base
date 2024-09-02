@@ -9,7 +9,7 @@ if [[ -n $(which apt-get) ]]; then
 else
     update_cmd="apk add"
     # Some extra packages are necessary for alpine based docker builds.
-    extra_packages="linux-headers g++ gcc"
+    extra_packages="${NO_CACHE_DIR:+--no-cache} linux-headers g++ gcc"
 fi
 
 sudo $update_cmd $extra_packages moreutils expect python3-dev mosquitto mosquitto-clients
@@ -18,6 +18,6 @@ python3 --version
 python3 -m venv venv
 
 venv_pip3=$($(dirname $0)/which_venv_pip3)
-${venv_pip3} install -r etc/requirements.txt
+${venv_pip3} install ${NO_CACHE_DIR:+--no-cache-dir} -r etc/requirements.txt
 
 java -version

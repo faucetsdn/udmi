@@ -42,7 +42,6 @@ import udmi.schema.PubberConfiguration;
 public class PointsetManager extends ManagerBase {
 
   private static final Set<String> BOOLEAN_UNITS = ImmutableSet.of("No-units");
-  private static final double DEFAULT_BASELINE_VALUE = 50;
 
   private static final Map<String, PointPointsetModel> DEFAULT_POINTS = ImmutableMap.of(
       "recalcitrant_angle", makePointPointsetModel(true, 50, 50, "Celsius"),
@@ -85,29 +84,11 @@ public class PointsetManager extends ManagerBase {
   }
 
   private AbstractPoint makePoint(String name, PointPointsetModel point) {
-    boolean writable = point.writable != null && point.writable;
     if (BOOLEAN_UNITS.contains(point.units)) {
-      return new RandomBoolean(name, writable);
+      return new RandomBoolean(name, point);
     } else {
-      double baselineValue = convertValue(point.baseline_value, DEFAULT_BASELINE_VALUE);
-      double baselineTolerance = convertValue(point.baseline_tolerance, baselineValue);
-      double min = baselineValue - baselineTolerance;
-      double max = baselineValue + baselineTolerance;
-      return new RandomPoint(name, writable, min, max, point.units);
+      return new RandomPoint(name, point);
     }
-  }
-
-  private double convertValue(Object baselineValue, double defaultBaselineValue) {
-    if (baselineValue == null) {
-      return defaultBaselineValue;
-    }
-    if (baselineValue instanceof Double) {
-      return (double) baselineValue;
-    }
-    if (baselineValue instanceof Integer) {
-      return (double) (int) baselineValue;
-    }
-    throw new RuntimeException("Unknown value type " + baselineValue.getClass());
   }
 
   public void setExtraField(String extraField) {

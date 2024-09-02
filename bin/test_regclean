@@ -29,6 +29,7 @@ site_path=sites/udmi_site_model
 iot_config=$site_path/cloud_iot_config.json
 output_file=$site_path/out/registration_summary.json
 csv_file=$site_path/out/registration_summary.csv
+expected_num_id=1234567890
 pubber_config=/tmp/pubber_config.json
 serial_no=clean-$RANDOM
 device_id=AHU-1
@@ -36,6 +37,21 @@ fake_id=ACME-2301
 fake_device=$site_path/devices/$fake_id
 fake_metadata=$fake_device/metadata.json
 device_dir=$site_path/devices/$device_id
+
+function check_csv_file {
+    expected=$1
+    more $csv_file | cat
+
+    fake_state=`fgrep $fake_id $csv_file | cut -d, -f3`
+    [[ ${fake_state# } == $expected ]] || fail Device $fake_id not $expected
+    [[ `fgrep BLOCK $csv_file | wc -l` -le 1 ]] || fail More than one blocked device
+
+    device_num_id=`fgrep AHU-22 $csv_file | cut -d, -f2`
+    [[ $(echo $device_num_id) == $expected_num_id ]] || fail Device num_id $device_num_id does not match expected $expected_num_id
+
+    sns_line=`fgrep -n SNS-4 $csv_file | cut -d: -f1`
+    [[ $sns_line == 6 ]] || fail Device SNS-4 not found on expected output csv line, was $sns_line expected 6
+}
 
 echo bin/keygen CERT $device_dir
 bin/keygen CERT $device_dir || true
@@ -171,18 +187,22 @@ cat $pubber_config
 echo Check for failure in running pubber...
 echo pubber/bin/run $pubber_config
 result=0
-timeout 20s pubber/bin/run $pubber_config || result=$?
+timeout 30s pubber/bin/run $pubber_config || result=$?
 [[ $result == 255 ]] || fail Improper pubber failure code $result
 
 echo Now recreate the registry from scratch!
 echo bin/registrar $site_args
 bin/registrar $site_args
 
+check_csv_file ERRORS
+
 echo Remove fake device from site model, so it will be blocked
 rm -rf $fake_device
 echo $UDMI_ROOT/bin/registrar $full_args -b
 # Test from other-directory for proper path handling
 (cd /tmp; $UDMI_ROOT/bin/registrar $full_args -b)
+
+check_csv_file BLOCK
 
 echo Check $device_id again, but this time with success...
 echo pubber/bin/run $pubber_config
@@ -191,20 +211,6 @@ timeout 20s pubber/bin/run $pubber_config || result=$?
 [[ $result == 0 ]] || fail Improper pubber failure code $result
 
 echo Successful pubber check passed on clean registry.
-
-more sites/udmi_site_model/out/registration_summary.csv | cat
-
-fake_state=`fgrep $fake_id $csv_file | cut -d, -f3`
-[[ ${fake_state# } == BLOCK ]] || fail Device $fake_id not blocked
-[[ `fgrep BLOCK $csv_file | wc -l` == 1 ]] || fail More than one blocked device
-
-expected_num_id=1234567890
-device_num_id=`fgrep AHU-22 $csv_file | cut -d, -f2`
-device_num_id=`echo $device_num_id`
-[[ $device_num_id == $expected_num_id ]] || warn Device num_id $device_num_id does not match expected $expected_num_id
-
-sns_line=`fgrep -n SNS-4 sites/udmi_site_model/out/registration_summary.csv | cut -d: -f1`
-[[ $sns_line == 6 ]] || fail Device SNS-4 not found on expected output line, was $sns_line expected 6
 
 if [[ -n $solo_arg ]]; then
     echo Deleting singular entry $solo_arg...

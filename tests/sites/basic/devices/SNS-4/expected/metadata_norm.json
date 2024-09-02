@@ -1,0 +1,37 @@
+{
+  "timestamp": "2020-05-01T13:39:07Z",
+  "version": "1.5.1",
+  "upgraded_from": "1",
+  "hash": "65701fef",
+  "system": {
+    "tags": [ ],
+    "location": {
+      "site": "ZZ-TRI-FECTA",
+      "section": "2-3N8C"
+    },
+    "physical_tag": {
+      "asset": {
+        "guid": "drw://TBA",
+        "site": "ZZ-TRI-FECTA",
+        "name": "SNS-4"
+      }
+    },
+    "min_loglevel": 300
+  },
+  "gateway": {
+    "gateway_id": "GAT-123"
+  },
+  "pointset": {
+    "points": {
+      "split_threshold": {
+        "units": "Imperial-gallons-per-minute",
+        "tags": [ ]
+      },
+      "triangulating_axis": {
+        "units": "Degrees-phase",
+        "tags": [ ]
+      }
+    },
+    "exclude_points_from_config": true
+  }
+}

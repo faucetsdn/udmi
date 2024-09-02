@@ -21,9 +21,6 @@ import udmi.schema.TargetTestingModel;
  */
 public class WritebackSequences extends PointsetBase {
 
-  public static final String INVALID_STATE = "invalid";
-  public static final String FAILURE_STATE = "failure";
-  public static final String APPLIED_STATE = "applied";
   public static final String DEFAULT_STATE = null;
   private Object lastPresentValue;
 

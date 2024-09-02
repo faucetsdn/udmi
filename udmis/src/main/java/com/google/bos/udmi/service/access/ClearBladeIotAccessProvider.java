@@ -82,6 +82,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -194,7 +195,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     clearBladeIotAccessProvider.populateRegistryRegions();
 
     if (deviceId == null) {
-      CloudModel cloudModel = clearBladeIotAccessProvider.listDevices(registryId);
+      CloudModel cloudModel = clearBladeIotAccessProvider.listDevices(registryId, null);
       System.err.printf("Found %d devices in %s%n", cloudModel.device_ids.size(), registryId);
     } else {
       CloudModel cloudModel = clearBladeIotAccessProvider.fetchDevice(registryId, deviceId);
@@ -336,9 +337,10 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       CreateDeviceRequest request =
           CreateDeviceRequest.Builder.newBuilder().setParent(parent).setDevice(device)
               .build();
-      requireNonNull(deviceManager.createDevice(request),
-          "create device failed for " + parent);
-      cloudModel.num_id = hashedDeviceId(registryId, device.toBuilder().getId());
+      requireNonNull(deviceManager.createDevice(request), "create device failed for " + parent);
+      String numId = device.toBuilder().getNumId();
+      cloudModel.num_id =
+          ofNullable(numId).orElseGet(() -> hashedDeviceId(registryId, device.toBuilder().getId()));
       return cloudModel;
     } catch (ApplicationException applicationException) {
       if (applicationException.getMessage().contains("ALREADY_EXISTS")) {
@@ -365,6 +367,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
           .setParent(LocationName.of(projectId, location).toString())
           .setDeviceRegistry(registry.build()).build();
       deviceManager.createDeviceRegistry(request);
+      // TODO: This should also add the metadata for the device.
     } catch (ApplicationException applicationException) {
       if (!applicationException.getMessage().contains("ALREADY_EXISTS")) {
         throw applicationException;
@@ -379,7 +382,8 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   }
 
   @NotNull
-  private HashMap<String, CloudModel> fetchDevices(String deviceRegistryId, String gatewayId) {
+  private HashMap<String, CloudModel> fetchDevices(String deviceRegistryId, String gatewayId,
+      Consumer<Integer> progress) {
     String location = getRegistryLocation(deviceRegistryId);
     GatewayListOptions gatewayListOptions = ifNotNullGet(gatewayId, this::getGatewayListOptions);
     String registryFullName =
@@ -401,6 +405,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       collect.putAll(responseMap);
       pageToken = response.getNextPageToken();
       queryCount++;
+      ifNotNullThen(progress, p -> p.accept(collect.size()));
       debug(format("fetchDevices %s #%d found %d total %d more %s", deviceRegistryId,
           queryCount, responseMap.size(), collect.size(), pageToken != null));
     } while (pageToken != null);
@@ -408,11 +413,9 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   }
 
   private List<String> findGateways(String registryId, Device proxyDevice) {
-    CloudModel cloudModel = listDevices(registryId);
-    List<String> gateways =
-        cloudModel.device_ids.entrySet().stream().filter(entry ->
-            entry.getValue().resource_type == GATEWAY).map(Entry::getKey).toList();
-    return gateways;
+    CloudModel cloudModel = listDevices(registryId, null);
+    return cloudModel.device_ids.entrySet().stream().filter(entry ->
+        entry.getValue().resource_type == GATEWAY).map(Entry::getKey).toList();
   }
 
   private CloudModel findUnbindAndDelete(String registryId, Device device) {
@@ -457,10 +460,11 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     return String.valueOf(Objects.hash(registryId, deviceId));
   }
 
-  private CloudModel listRegistryDevices(String deviceRegistryId, String gatewayId) {
+  private CloudModel listRegistryDevices(String deviceRegistryId, String gatewayId,
+      Consumer<Integer> progress) {
     try {
       CloudModel cloudModel = new CloudModel();
-      cloudModel.device_ids = fetchDevices(deviceRegistryId, gatewayId);
+      cloudModel.device_ids = fetchDevices(deviceRegistryId, gatewayId, progress);
       ifNotNullThen(gatewayId, options -> debug(format("Gateway %s has %d bound devices",
           gatewayId, cloudModel.device_ids.size())));
       return cloudModel;
@@ -491,14 +495,22 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     }
   }
 
+  private CloudModel getReply(String registryId, String deviceId, CloudModel request,
+      String numId) {
+    CloudModel reply = new CloudModel();
+    reply.operation = requireNonNull(request.operation, "missing operation");
+    reply.num_id = requireNonNull(numId, "missing num_id");
+    return reply;
+  }
+
   @Override
   public CloudModel modelRegistry(String registryId, String deviceId, CloudModel cloudModel) {
     Operation operation = cloudModel.operation;
     String registryActual = registryId + deviceId;
     try {
       if (operation == UPDATE) {
-        // Do nothing
-        return cloudModel;
+        // TODO: This should update the metadata of the registry.
+        return getReply(registryId, deviceId, cloudModel, "registry");
       } else if (operation == CREATE) {
         if (deviceId != null && !deviceId.isEmpty()) {
           CloudModel deviceModel = deepCopy(cloudModel);
@@ -579,7 +591,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
 
   private void unbindGatewayDevices(String registryId, Device gatewayDevice) {
     String gatewayId = gatewayDevice.toBuilder().getId();
-    CloudModel cloudModel = listRegistryDevices(registryId, gatewayId);
+    CloudModel cloudModel = listRegistryDevices(registryId, gatewayId, null);
     if (!cloudModel.device_ids.isEmpty()) {
       debug(format("Unbinding from %s/%s: %s", registryId, gatewayId,
           CSV_JOINER.join(cloudModel.device_ids.keySet())));
@@ -656,7 +668,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       requireNonNull(device, "GetDeviceRequest failed");
       CloudModel cloudModel = convertFull(device);
       cloudModel.operation = Operation.FETCH;
-      cloudModel.device_ids = listRegistryDevices(registryId, deviceId).device_ids;
+      cloudModel.device_ids = listRegistryDevices(registryId, deviceId, null).device_ids;
       return cloudModel;
     } catch (Exception e) {
       throw new RuntimeException("While fetching device " + devicePath, e);
@@ -725,8 +737,8 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public CloudModel listDevices(String registryId) {
-    return listRegistryDevices(registryId, null);
+  public CloudModel listDevices(String registryId, Consumer<Integer> progress) {
+    return listRegistryDevices(registryId, null, progress);
   }
 
   @Override

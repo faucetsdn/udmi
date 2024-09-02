@@ -2,6 +2,7 @@
 \#*
 
 /udmi-support_*/
+/site_model
 udmi_site_model/
 gcp_reflect_key.pkcs8
 workspace.xml

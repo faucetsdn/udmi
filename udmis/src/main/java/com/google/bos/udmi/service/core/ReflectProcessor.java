@@ -25,6 +25,7 @@ import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.fromString;
+import static com.google.udmi.util.JsonUtil.fromStringStrict;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.mapCast;
 import static com.google.udmi.util.JsonUtil.stringify;
@@ -42,6 +43,7 @@ import com.google.bos.udmi.service.messaging.ModelUpdate;
 import com.google.bos.udmi.service.messaging.SiteMetadataUpdate;
 import com.google.bos.udmi.service.messaging.StateUpdate;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
+import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.MetadataMapKeys;
 import java.util.Date;
@@ -52,11 +54,14 @@ import java.util.stream.Collectors;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
 import udmi.schema.EndpointConfiguration;
+import udmi.schema.Entry;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
+import udmi.schema.Level;
 import udmi.schema.SystemModel;
 import udmi.schema.UdmiConfig;
+import udmi.schema.UdmiEvents;
 import udmi.schema.UdmiState;
 
 /**
@@ -67,6 +72,7 @@ public class ReflectProcessor extends ProcessorBase {
 
   public static final String PAYLOAD_KEY = "payload";
   private static final Date START_TIME = new Date();
+  private static final String LEGACY_METADATA_STRING = "{ }";
 
   public ReflectProcessor(EndpointConfiguration config) {
     super(config);
@@ -125,6 +131,19 @@ public class ReflectProcessor extends ProcessorBase {
     return lastConfig.after(START_TIME) && !lastConfigAck.before(lastConfig);
   }
 
+  private void reflectUdmiLog(Envelope attributes, String message) {
+    Envelope logging = deepCopy(attributes);
+    logging.subType = SubType.EVENTS;
+    logging.subFolder = SubFolder.UDMI;
+    Entry entry = new Entry();
+    entry.message = message;
+    entry.level = Level.INFO.value();
+    entry.timestamp = new Date();
+    UdmiEvents events = new UdmiEvents();
+    events.logentries = ImmutableList.of(entry);
+    reflectMessage(logging, stringify(events));
+  }
+
   private Object extractModel(CloudModel request) {
     String metadata = catchToNull(() -> request.metadata.get(MetadataMapKeys.UDMI_METADATA));
     if (metadata == null) {
@@ -137,7 +156,23 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private SiteMetadataUpdate asSiteMetadataUpdate(String metadataString) {
-    return fromString(SiteMetadataUpdate.class, metadataString);
+    SiteMetadataUpdate siteMetadataUpdate =
+        fromStringDynamic(SiteMetadataUpdate.class, metadataString);
+    // TODO: Remove the LEGACY_METADATA_STRING check once tool deployments have matured.
+    if (!LEGACY_METADATA_STRING.equals(metadataString)) {
+      requireNonNull(siteMetadataUpdate.name, "missing site model name");
+    }
+    return siteMetadataUpdate;
+  }
+
+  private <T> T fromStringDynamic(Class<T> targetClass, String metadataString) {
+    try {
+      return fromStringStrict(targetClass, metadataString);
+    } catch (Exception e) {
+      warn("String conversion failed, trying again with relaxed conversion: ",
+          friendlyStackTrace(e));
+      return fromString(targetClass, metadataString);
+    }
   }
 
   private Envelope extractMessageEnvelope(Object message) {
@@ -211,7 +246,8 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private CloudModel queryCloudRegistry(Envelope attributes) {
-    return iotAccess.listDevices(attributes.deviceRegistryId);
+    return iotAccess.listDevices(attributes.deviceRegistryId,
+        progress -> reflectUdmiLog(attributes, format("Fetched %d devices...", progress)));
   }
 
   private CloudModel queryDeviceState(Envelope attributes) {
@@ -234,14 +270,14 @@ public class ReflectProcessor extends ProcessorBase {
 
   private CloudModel reflectModel(Envelope attributes, CloudModel request) {
     ifNotNullThen(extractModel(request), model -> publish(attributes, model));
-    if (request.resource_type != null && request.resource_type == REGISTRY) {
+    if (request.resource_type == REGISTRY) {
       return iotAccess.modelRegistry(attributes.deviceRegistryId, attributes.deviceId, request);
     } else {
       return iotAccess.modelDevice(attributes.deviceRegistryId, attributes.deviceId, request);
     }
   }
 
-  private static ModelUpdate asModelUpdate(String modelString) {
+  private ModelUpdate asModelUpdate(String modelString) {
     // If it's not a valid JSON object, then fall back to a string description alternate.
     if (modelString == null || !modelString.startsWith(JsonUtil.JSON_OBJECT_LEADER)) {
       ModelUpdate modelUpdate = new ModelUpdate();
@@ -249,8 +285,9 @@ public class ReflectProcessor extends ProcessorBase {
       modelUpdate.system.description = modelString;
       return modelUpdate;
     }
-    // Not strict because registrar could publish a metadata which fails strictly
-    return fromString(ModelUpdate.class, modelString);
+    ModelUpdate modelUpdate = fromStringDynamic(ModelUpdate.class, modelString);
+    requireNonNull(modelUpdate.system, "missing system block in model message");
+    return modelUpdate;
   }
 
   private CloudModel reflectProcess(Envelope attributes, Object payload) {

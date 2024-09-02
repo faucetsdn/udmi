@@ -11,6 +11,7 @@ import static com.google.udmi.util.Common.UDMI_VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThrow;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
@@ -50,7 +51,7 @@ import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.PubSubPusher;
-import com.google.protobuf.MapEntry;
+import com.google.daq.mqtt.util.ValidationError;
 import com.google.udmi.util.Common;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
@@ -86,13 +87,13 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.VisibleForTesting;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
 import udmi.schema.CloudModel.Resource_type;
 import udmi.schema.Credential;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.ExecutionConfiguration;
-import udmi.schema.IotAccess.IotProvider;
 import udmi.schema.Metadata;
 import udmi.schema.SetupUdmiConfig;
 import udmi.schema.SiteMetadata;
@@ -283,6 +284,11 @@ public class Registrar {
   }
 
   void execute() {
+    execute(null);
+  }
+
+  @VisibleForTesting
+  protected void execute(Runnable modelMunger) {
     try {
       if (projectId != null) {
         initializeCloudProject();
@@ -296,7 +302,7 @@ public class Registrar {
         createRegistries();
       } else {
         processSiteMetadata();
-        processDevices();
+        processDevices(modelMunger);
       }
       writeErrors();
     } catch (ExceptionMap em) {
@@ -309,10 +315,16 @@ public class Registrar {
     }
   }
 
-  private void processSiteMetadata() {
-    SiteMetadata siteMetadata = siteModel.loadSiteMetadata();
+  @VisibleForTesting
+  protected Map<String, LocalDevice> getLocalDevices() {
+    return localDevices;
+  }
 
-    if (siteMetadata != null && updateCloudIoT) {
+  private void processSiteMetadata() {
+    SiteMetadata siteMetadata = ofNullable(siteModel.loadSiteMetadata()).orElseGet(
+        SiteMetadata::new);
+    siteMetadata.name = ofNullable(siteMetadata.name).orElse(siteModel.getSiteName());
+    if (updateCloudIoT) {
       cloudIotManager.updateRegistry(siteMetadata);
     }
   }
@@ -329,8 +341,6 @@ public class Registrar {
       }
     }
   }
-
-
 
   private void createRegistrySuffix(String suffix) {
     String registry = cloudIotManager.createRegistry(suffix);
@@ -479,10 +489,12 @@ public class Registrar {
     }
   }
 
-  private void processDevices() {
+  private void processDevices(Runnable modelMunger) {
     Set<String> explicitDevices = getExplicitDevices();
     try {
       localDevices = loadLocalDevices(explicitDevices);
+      ifNotNullThen(modelMunger, Runnable::run);
+      initializeLocalDevices();
       cloudModels = ifNotNullGet(fetchCloudModels(), devices -> new HashMap<>(devices));
       if (deleteDevices || expungeDevices) {
         deleteCloudDevices();
@@ -1028,13 +1040,7 @@ public class Registrar {
     }
 
     List<String> deviceList = getDeviceList(specifiedDevices, devicesDir);
-    Map<String, LocalDevice> localDevices = loadDevices(deviceList);
-    initializeSettings(localDevices);
-    writeNormalized(localDevices);
-    validateKeys(localDevices);
-    validateExpected(localDevices);
-    validateSamples(localDevices);
-    return localDevices;
+    return loadDevices(deviceList);
   }
 
   private List<String> getDeviceList(Set<String> specifiedDevices, File devicesDir) {
@@ -1099,17 +1105,29 @@ public class Registrar {
   }
 
   private Map<String, LocalDevice> loadDevices(List<String> devices) {
-    HashMap<String, LocalDevice> localDevices = new HashMap<>();
     Set<String> actual = devices.stream()
         .filter(deviceName -> siteModel.deviceExists(deviceName)).collect(Collectors.toSet());
-    actual.forEach(deviceName -> {
-      LocalDevice localDevice =
-          localDevices.computeIfAbsent(
-              deviceName,
-              keyName -> new LocalDevice(siteModel, deviceName, schemas, generation, doValidate));
+    return actual.stream().collect(Collectors.toMap(name -> name, name ->
+        new LocalDevice(siteModel, name, schemas, generation, doValidate)));
+  }
 
+  private void initializeLocalDevices() {
+    System.err.printf("Initializing %d local devices...%n", localDevices.size());
+    initializeDevices(localDevices);
+    initializeSettings(localDevices);
+    writeNormalized(localDevices);
+    validateExpected(localDevices);
+    validateSamples(localDevices);
+    validateKeys(localDevices);
+  }
+
+  private void initializeDevices(Map<String, LocalDevice> localDevices) {
+    localDevices.values().forEach(localDevice -> {
       try {
+        localDevice.initialize();
         localDevice.loadCredentials();
+      } catch (ValidationError error) {
+        throw new RuntimeException("While initializing device", error);
       } catch (Exception e) {
         localDevice.captureError(LocalDevice.EXCEPTION_CREDENTIALS, e);
       }
@@ -1124,8 +1142,6 @@ public class Registrar {
         }
       }
     });
-    System.err.printf("Finished loading %d local devices.%n", actual.size());
-    return localDevices;
   }
 
   protected void setProjectId(String projectId) {

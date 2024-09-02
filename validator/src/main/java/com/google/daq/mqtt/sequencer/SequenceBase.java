@@ -11,13 +11,17 @@ import static com.google.daq.mqtt.util.CloudIotManager.EMPTY_CONFIG;
 import static com.google.daq.mqtt.util.ConfigManager.configFrom;
 import static com.google.daq.mqtt.util.IotReflectorClient.REFLECTOR_PREFIX;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
+import static com.google.daq.mqtt.validator.Validator.ATTRIBUTE_FILE_FORMAT;
+import static com.google.daq.mqtt.validator.Validator.MESSAGE_FILE_FORMAT;
 import static com.google.udmi.util.CleanDateFormat.cleanDate;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.Common.DEVICE_ID_KEY;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
+import static com.google.udmi.util.Common.MESSAGE_KEY;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.catchToElse;
 import static com.google.udmi.util.GeneralUtils.changedLines;
+import static com.google.udmi.util.GeneralUtils.decodeBase64;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -28,6 +32,7 @@ import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
+import static com.google.udmi.util.GeneralUtils.writeString;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.getNowInstant;
 import static com.google.udmi.util.JsonUtil.isoConvert;
@@ -49,6 +54,7 @@ import static udmi.schema.Bucket.UNKNOWN_DEFAULT;
 import static udmi.schema.Category.VALIDATION_FEATURE_CAPABILITY;
 import static udmi.schema.Category.VALIDATION_FEATURE_SCHEMA;
 import static udmi.schema.Category.VALIDATION_FEATURE_SEQUENCE;
+import static udmi.schema.Envelope.SubFolder.UPDATE;
 import static udmi.schema.FeatureDiscovery.FeatureStage.ALPHA;
 import static udmi.schema.FeatureDiscovery.FeatureStage.PREVIEW;
 import static udmi.schema.FeatureDiscovery.FeatureStage.STABLE;
@@ -200,7 +206,7 @@ public class SequenceBase {
   );
   private static final Map<String, AtomicInteger> UPDATE_COUNTS = new HashMap<>();
   private static final String LOCAL_PREFIX = "local_";
-  private static final String UPDATE_SUBFOLDER = SubFolder.UPDATE.value();
+  private static final String UPDATE_SUBFOLDER = UPDATE.value();
   private static final String STATE_SUBTYPE = SubType.STATE.value();
   private static final String CONFIG_SUBTYPE = SubType.CONFIG.value();
   private static final String LOCAL_CONFIG_UPDATE = LOCAL_PREFIX + UPDATE_SUBFOLDER;
@@ -500,7 +506,7 @@ public class SequenceBase {
           Map.Entry::getKey, SequenceBase::summarizeSchemaResults));
 
       schemaResult.stages.forEach((stage, entry) -> {
-        SequenceResult result = RESULT_LEVEL_MAP.inverse().get(Level.fromValue(entry.level));
+        SequenceResult result = RESULT_LEVEL_MAP.inverse().get(levelFromValue(entry.level));
         String stageValue = stage.value();
         String schemaStage = schema + "_" + stageValue;
         emitSequenceResult(result, SCHEMA_BUCKET, schemaStage, stageValue.toUpperCase(),
@@ -973,6 +979,22 @@ public class SequenceBase {
     return implicit == UNKNOWN_DEFAULT ? explicit : implicit;
   }
 
+  private void recordMessageAttributes(Envelope attributes, String messageBase) {
+    File file = new File(testDir, format(ATTRIBUTE_FILE_FORMAT, messageBase));
+    try {
+      JsonUtil.OBJECT_MAPPER.writeValue(file, attributes);
+    } catch (Exception e) {
+      throw new RuntimeException("While writing attributes to " + file.getAbsolutePath(), e);
+    }
+  }
+
+  private void unwrapException(Map<String, Object> message, Envelope attributes) {
+    Object ex = message.get(EXCEPTION_KEY);
+    attributes.payload = ifTrueGet(ex instanceof Exception,
+        (Supplier<String>) () -> ((Exception) ex).getMessage(),
+        (Supplier<String>) () -> (String) ex);
+  }
+
   private void recordRawMessage(Envelope attributes, Map<String, Object> message) {
     if (testName == null || !recordMessages) {
       return;
@@ -984,15 +1006,9 @@ public class SequenceBase {
       messageBase = messageBase + "_" + timestamp;
     }
 
+    ifTrueThen(message.containsKey(EXCEPTION_KEY), () -> unwrapException(message, attributes));
     recordRawMessage(message, messageBase);
-
-    File attributeFile = new File(testDir, messageBase + ".attr");
-    try {
-      JsonUtil.OBJECT_MAPPER.writeValue(attributeFile, attributes);
-    } catch (Exception e) {
-      throw new RuntimeException("While writing attributes to " + attributeFile.getAbsolutePath(),
-          e);
-    }
+    recordMessageAttributes(attributes, messageBase);
   }
 
   private void recordRawMessage(Object message, String messageBase) {
@@ -1019,7 +1035,15 @@ public class SequenceBase {
     boolean syntheticMessage = (configMessage || stateMessage) && !updateMessage;
 
     String prefix = localUpdate ? "local " : "received ";
-    File messageFile = new File(testDir, messageBase + ".json");
+    File messageFile = new File(testDir, format(MESSAGE_FILE_FORMAT, messageBase));
+
+    if (message.containsKey(EXCEPTION_KEY)) {
+      String exceptionMessage = (String) message.get(MESSAGE_KEY);
+      Envelope exceptionWrapper = JsonUtil.fromString(Envelope.class, exceptionMessage);
+      writeString(messageFile, decodeBase64(exceptionWrapper.payload));
+      return;
+    }
+
     Object savedException = message == null ? null : message.get(EXCEPTION_KEY);
     try {
       // An actual exception here will cause the JSON serializer to barf, so temporarily sanitize.
@@ -1064,7 +1088,7 @@ public class SequenceBase {
 
   private String entryMessage(Entry logEntry) {
     return format("%s %s %s: %s", isoConvert(logEntry.timestamp),
-        Level.fromValue(logEntry.level).name(), logEntry.category, logEntry.message);
+        levelFromValue(logEntry.level).name(), logEntry.category, logEntry.message);
   }
 
   private void writeSystemLogs(SystemEvents message) {
@@ -1085,12 +1109,16 @@ public class SequenceBase {
       throw new RuntimeException("log entry timestamp is null");
     }
     String messageStr = format("%s %s %s", isoConvert(logEntry.timestamp),
-        Level.fromValue(logEntry.level), logEntry.message);
+        levelFromValue(logEntry.level).name(), logEntry.message);
 
     PrintWriter output = ofNullable(printWriter).orElse(new PrintWriter(System.err));
     output.println(messageStr);
     output.flush();
     return messageStr;
+  }
+
+  private static Level levelFromValue(Integer level) {
+    return catchToElse(() -> Level.fromValue(level), Level.INVALID);
   }
 
   private boolean stateTransactionPending() {
@@ -1156,9 +1184,9 @@ public class SequenceBase {
     } else {
       if (force) {
         debug("Forcing config update");
-        sentConfig.remove(SubFolder.UPDATE);
+        sentConfig.remove(UPDATE);
       }
-      updateConfig(SubFolder.UPDATE, deviceConfig);
+      updateConfig(UPDATE, deviceConfig);
     }
 
     if (configIsPending()) {
@@ -1194,6 +1222,11 @@ public class SequenceBase {
     } catch (Exception e) {
       throw new RuntimeException("While updating config block " + subBlock, e);
     }
+  }
+
+  protected void updateProxyConfig(String proxyId, Config proxyConfig) {
+    String configMessage = stringify(proxyConfig);
+    client.publish(proxyId, Common.UPDATE_CONFIG_TOPIC, configMessage);
   }
 
   private void captureConfigChange(String reason) {
@@ -1622,7 +1655,7 @@ public class SequenceBase {
 
       if (proxiedDevice) {
         handleProxyMessage(deviceId, envelope, message);
-      } else if (SubFolder.UPDATE.value().equals(subFolderRaw)) {
+      } else if (UPDATE.value().equals(subFolderRaw)) {
         handleUpdateMessage(subTypeRaw, message, transactionId);
       } else {
         handleDeviceMessage(message, subTypeRaw, subFolderRaw, transactionId);
@@ -2301,7 +2334,10 @@ public class SequenceBase {
     }
   }
 
-  static class CaptureMap extends HashMap<SubFolder, List<Map<String, Object>>> {
+  /**
+   * Map of captured messages for a device, grouped by SubFolder.
+   */
+  protected static class CaptureMap extends HashMap<SubFolder, List<Map<String, Object>>> {
 
   }
 

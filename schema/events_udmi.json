@@ -1,0 +1,27 @@
+{
+  "$udmi_version": "1.5.1",
+  "title": "Udmi Events",
+  "description": "Used for udmi events such as logging.",
+  "$section": "Messages",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "timestamp": {
+      "description": "RFC 3339 UTC timestamp the event payload was generated",
+      "type": "string",
+      "format": "date-time",
+      "examples": ["2019-01-17T14:02:29.364Z"]
+    },
+    "version": {
+      "description": "Version of the UDMI schema",
+      "type": "string"
+    },
+    "logentries": {
+      "type": "array",
+      "items": {
+        "$ref": "file:entry.json"
+      }
+    }
+  }
+}

@@ -41,6 +41,7 @@ from .events_mapping_entity import MappingEventEntity
 from .events_pointset import PointsetEvents
 from .events_pointset_point import PointPointsetEvents
 from .events_system import SystemEvents
+from .events_udmi import UdmiEvents
 from .events_validation import ValidationEvents
 from .events_validation_device import DeviceValidationEvents
 from .metadata import Metadata

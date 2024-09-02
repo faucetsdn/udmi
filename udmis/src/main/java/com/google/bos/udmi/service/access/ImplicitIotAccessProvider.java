@@ -39,8 +39,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
@@ -273,8 +272,9 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public CloudModel listDevices(String registryId) {
+  public CloudModel listDevices(String registryId, Consumer<Integer> progress) {
     Map<String, String> entries = registryDevicesCollection(registryId).entries();
+    ifNotNullThen(progress, p -> p.accept(entries.size()));
     CloudModel cloudModel = new CloudModel();
     cloudModel.device_ids = entries.keySet().stream().collect(
         Collectors.toMap(id -> id, id -> fetchDevice(registryId, id)));
@@ -306,7 +306,13 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   @Override
   public CloudModel modelRegistry(String registryId, String deviceId, CloudModel cloudModel) {
-    throw new RuntimeException("modelRegistry not yet implemented");
+    Operation operation = cloudModel.operation;
+    try {
+      // TODO: Make this update the saved metadata for the registry.
+      return getReply(registryId, deviceId, cloudModel, "registry");
+    } catch (Exception e) {
+      throw new RuntimeException("While " + operation + "ing registry " + registryId, e);
+    }
   }
 
   public CloudModel modifyDevice(String registryId, String deviceId, CloudModel cloudModel) {
