@@ -122,6 +122,11 @@
         "site"
       ]
     },
+    "serial_no": {
+      "description": "The serial number of the physical device",
+      "type": "string",
+      "examples": ["A1B2C3D4", "00001"]
+    },
     "hardware": {
       "$ref": "file:model_system_hardware.json"
     },

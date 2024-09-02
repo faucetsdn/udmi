@@ -287,6 +287,7 @@ class SystemModel:
     self.zone = None
     self.tags = None
     self.location = None
+    self.serial_no = None
     self.hardware = None
     self.software = None
     self.physical_tag = None
@@ -306,6 +307,7 @@ class SystemModel:
     result.zone = source.get('zone')
     result.tags = source.get('tags')
     result.location = Object9396614F.from_dict(source.get('location'))
+    result.serial_no = source.get('serial_no')
     result.hardware = SystemHardware.from_dict(source.get('hardware'))
     result.software = source.get('software')
     result.physical_tag = Object30AFA53A.from_dict(source.get('physical_tag'))
@@ -346,6 +348,8 @@ class SystemModel:
       result['tags'] = self.tags # 1
     if self.location:
       result['location'] = self.location.to_dict() # 4
+    if self.serial_no:
+      result['serial_no'] = self.serial_no # 5
     if self.hardware:
       result['hardware'] = self.hardware.to_dict() # 4
     if self.software:
