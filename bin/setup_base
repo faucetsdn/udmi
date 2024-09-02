@@ -14,8 +14,8 @@ fi
 
 sudo $update_cmd $extra_packages moreutils expect python3-dev mosquitto mosquitto-clients
 
-python3.10 --version
-python3.10 -m venv venv
+python --version
+python -m venv venv
 
 venv_pip3=$($(dirname $0)/which_venv_pip3)
 ${venv_pip3} install ${NO_CACHE_DIR:+--no-cache-dir} -r etc/requirements.txt
