@@ -8,6 +8,7 @@ import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import udmi.schema.CloudModel;
 import udmi.schema.Envelope.SubFolder;
@@ -57,7 +58,7 @@ public interface IotAccessProvider extends UdmiComponent {
 
   boolean isEnabled();
 
-  CloudModel listDevices(String registryId);
+  CloudModel listDevices(String registryId, Consumer<Integer> progress);
 
   CloudModel modelDevice(String registryId, String deviceId,
       CloudModel cloudModel);

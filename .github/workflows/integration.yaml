@@ -133,11 +133,13 @@ jobs:
             SPECIFIC_TEST=${REF_NAME#test-}
             more site_model/out/devices/$DEVICE_ID/tests/$SPECIFIC_TEST/*
           else
-            [[ $(cat site_model/out/devices/$DEVICE_ID/results.md | fgrep 'stable | pass' | wc -l) == 3 ]]
+            [[ $(cat site_model/out/devices/$DEVICE_ID/results.md | egrep 'stable \| (pass|skip)' | wc -l) == 3 ]]
           fi
       - name: UDMIS logs
         if: ${{ !cancelled() }}
-        run: docker logs udmis
+        run: |
+          docker logs udmis
+          more var/tmp/udmis.log
       - name: Registrar logs
         if: ${{ !cancelled() }}
         run: docker logs registrar

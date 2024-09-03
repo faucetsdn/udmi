@@ -52,8 +52,8 @@ import udmi.schema.PodConfiguration;
 public abstract class ContainerBase implements UdmiComponent {
 
   public static final String INITIAL_EXECUTION_CONTEXT = "xxxxxxxx";
-  public static final Integer FUNCTIONS_VERSION_MIN = 13;
-  public static final Integer FUNCTIONS_VERSION_MAX = 14;
+  public static final Integer FUNCTIONS_VERSION_MIN = 15;
+  public static final Integer FUNCTIONS_VERSION_MAX = 15;
   public static final String EMPTY_JSON = "{}";
   public static final String REFLECT_BASE = "UDMI-REFLECT";
   private static final ThreadLocal<String> executionContext = new ThreadLocal<>();

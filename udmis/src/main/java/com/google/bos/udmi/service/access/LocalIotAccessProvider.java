@@ -16,6 +16,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.function.Consumer;
 import org.jetbrains.annotations.TestOnly;
 import org.jetbrains.annotations.VisibleForTesting;
 import udmi.schema.CloudModel;
@@ -81,7 +82,7 @@ public class LocalIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public CloudModel listDevices(String registryId) {
+  public CloudModel listDevices(String registryId, Consumer<Integer> progress) {
     throw new RuntimeException("Not yet implemented");
   }
 

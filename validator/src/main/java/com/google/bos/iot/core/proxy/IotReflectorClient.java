@@ -61,6 +61,7 @@ import udmi.schema.IotAccess.IotProvider;
 import udmi.schema.SetupUdmiConfig;
 import udmi.schema.SetupUdmiState;
 import udmi.schema.UdmiConfig;
+import udmi.schema.UdmiEvents;
 import udmi.schema.UdmiState;
 
 /**
@@ -70,6 +71,9 @@ public class IotReflectorClient implements MessagePublisher {
 
   public static final String UDMI_REFLECT = "UDMI-REFLECT";
   static final String REFLECTOR_KEY_ALGORITHM = "RS256";
+  private static final String SYSTEM_SUBFOLDER = "system";
+  private static final String UDMIS_SOURCE = "udmis";
+  private static final String EVENTS_TYPE = "events";
   private static final String MOCK_DEVICE_NUM_ID = "123456789101112";
   private static final String UDMI_TOPIC = "events/" + SubFolder.UDMI;
   private static final long CONFIG_TIMEOUT_SEC = 20;
@@ -295,7 +299,31 @@ public class IotReflectorClient implements MessagePublisher {
     } else {
       messageBundle.message = mapCast(message);
     }
+    if (SubFolder.UDMI.value().equals(attributes.get(SUBFOLDER_PROPERTY_KEY))
+        && processUdmiMessage(messageBundle)) {
+      return;
+    }
+
     messages.offer(messageBundle);
+  }
+
+  private boolean processUdmiMessage(Validator.MessageBundle messageBundle) {
+    String subType = messageBundle.attributes.get(SUBTYPE_PROPERTY_KEY);
+    if (SubType.EVENTS.value().equals(subType)) {
+      processUdmiEvent(messageBundle.message);
+      return true;
+    } else if (SubType.CONFIG.value().equals(subType)) {
+      ensureCloudSync(messageBundle.message);
+    } else {
+      throw new RuntimeException("Unexpected receive type " + subType);
+    }
+    return false;
+  }
+
+  private void processUdmiEvent(Map<String, Object> message) {
+    UdmiEvents events = convertTo(UdmiEvents.class, message);
+    events.logentries.forEach(
+        entry -> System.err.printf("%s %s%n", isoConvert(entry.timestamp), entry.message));
   }
 
   private boolean ensureCloudSync(Map<String, Object> message) {
@@ -314,25 +342,25 @@ public class IotReflectorClient implements MessagePublisher {
         reflectorConfig = new UdmiConfig();
         Map<String, Object> udmisMessage = toMap(message.get("udmis"));
         SetupUdmiConfig udmis = ofNullable(
-                convertTo(SetupUdmiConfig.class, udmisMessage))
+            convertTo(SetupUdmiConfig.class, udmisMessage))
             .orElseGet(SetupUdmiConfig::new);
         reflectorConfig.last_state = getDate((String) udmisMessage.get("last_state"));
         reflectorConfig.setup = udmis;
       } else {
-        reflectorConfig = ofNullable(
-                convertTo(UdmiConfig.class, message.get(SubFolder.UDMI.value())))
-            .orElseGet(UdmiConfig::new);
+        reflectorConfig = convertTo(UdmiConfig.class,
+            ofNullable(message.get(SubFolder.UDMI.value())).orElse(message));
       }
       System.err.println("UDMI received reflectorConfig: " + stringify(reflectorConfig));
       Date lastState = reflectorConfig.last_state;
-      System.err.println("UDMI matching against expected state timestamp "
-          + isoConvert(reflectorStateTimestamp));
+      System.err.printf("UDMI matching last_state %s against expected %s%n",
+          isoConvert(lastState), isoConvert(reflectorStateTimestamp));
 
-      udmiInfo = reflectorConfig.setup;
       boolean timestampMatch = dateEquals(lastState, reflectorStateTimestamp);
-      boolean versionMatch = ifNotNullGet(updateTo, to -> to.equals(udmiInfo.udmi_ref), true);
+      boolean versionMatch = ifNotNullGet(updateTo, to -> to.equals(reflectorConfig.setup.udmi_ref),
+          true);
 
       if (timestampMatch && versionMatch) {
+        udmiInfo = reflectorConfig.setup;
         if (!udmiVersion.equals(udmiInfo.udmi_version)) {
           System.err.println("UDMI version mismatch: " + udmiVersion);
           checkState(!enforceUdmiVersion, "Strict UDMI version matching enabled");
