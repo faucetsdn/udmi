@@ -3,7 +3,7 @@ from .entry import Entry
 from .discovery_family import FamilyDiscovery
 from .model_cloud import CloudModel
 from .model_cloud import CloudModel
-from .discovery_point import PointDiscovery
+from .discovery_ref import RefDiscovery
 from .discovery_feature import FeatureDiscovery
 from .model_cloud import CloudModel
 from .ancillary_properties import AncillaryProperties
@@ -68,7 +68,7 @@ class DiscoveryEvents:
     self.families = None
     self.registries = None
     self.devices = None
-    self.points = None
+    self.refs = None
     self.features = None
     self.cloud_model = None
     self.system = None
@@ -87,7 +87,7 @@ class DiscoveryEvents:
     result.families = FamilyDiscovery.map_from(source.get('families'))
     result.registries = CloudModel.map_from(source.get('registries'))
     result.devices = CloudModel.map_from(source.get('devices'))
-    result.points = PointDiscovery.map_from(source.get('points'))
+    result.refs = RefDiscovery.map_from(source.get('refs'))
     result.features = FeatureDiscovery.map_from(source.get('features'))
     result.cloud_model = CloudModel.from_dict(source.get('cloud_model'))
     result.system = SystemDiscoveryData.from_dict(source.get('system'))
@@ -129,8 +129,8 @@ class DiscoveryEvents:
       result['registries'] = CloudModel.expand_dict(self.registries) # 2
     if self.devices:
       result['devices'] = CloudModel.expand_dict(self.devices) # 2
-    if self.points:
-      result['points'] = PointDiscovery.expand_dict(self.points) # 2
+    if self.refs:
+      result['refs'] = RefDiscovery.expand_dict(self.refs) # 2
     if self.features:
       result['features'] = FeatureDiscovery.expand_dict(self.features) # 2
     if self.cloud_model:

@@ -4,7 +4,7 @@
   "scan_addr": "5005",
   "refs": {
     "AI1094": {
-      "name": "discharge_air_velocity_pressure",
+      "point": "discharge_air_velocity_pressure",
       "units": "inchesOfWater",
       "description": "Discharge Air Velocity Pressure",
       "ancillary": {

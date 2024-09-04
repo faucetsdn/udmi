@@ -27,7 +27,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "families",
     "registries",
     "devices",
-    "points",
+    "refs",
     "features",
     "cloud_model",
     "system"
@@ -98,12 +98,12 @@ public class DiscoveryEvents {
     @JsonPropertyDescription("Device iot discovery scan results.")
     public Map<String, CloudModel> devices;
     /**
-     * Collection of data points available for this device.
+     * Collection of point references discovered
      * 
      */
-    @JsonProperty("points")
-    @JsonPropertyDescription("Collection of data points available for this device.")
-    public Map<String, PointDiscovery> points;
+    @JsonProperty("refs")
+    @JsonPropertyDescription("Collection of point references discovered")
+    public Map<String, RefDiscovery> refs;
     /**
      * Discovery of features supported by this device.
      * 
@@ -137,9 +137,9 @@ public class DiscoveryEvents {
         result = ((result* 31)+((this.registries == null)? 0 :this.registries.hashCode()));
         result = ((result* 31)+((this.families == null)? 0 :this.families.hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
-        result = ((result* 31)+((this.points == null)? 0 :this.points.hashCode()));
         result = ((result* 31)+((this.features == null)? 0 :this.features.hashCode()));
         result = ((result* 31)+((this.system == null)? 0 :this.system.hashCode()));
+        result = ((result* 31)+((this.refs == null)? 0 :this.refs.hashCode()));
         result = ((result* 31)+((this.scan_family == null)? 0 :this.scan_family.hashCode()));
         result = ((result* 31)+((this.cloud_model == null)? 0 :this.cloud_model.hashCode()));
         result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
@@ -157,7 +157,7 @@ public class DiscoveryEvents {
             return false;
         }
         DiscoveryEvents rhs = ((DiscoveryEvents) other);
-        return ((((((((((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.devices == rhs.devices)||((this.devices!= null)&&this.devices.equals(rhs.devices))))&&((this.registries == rhs.registries)||((this.registries!= null)&&this.registries.equals(rhs.registries))))&&((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.points == rhs.points)||((this.points!= null)&&this.points.equals(rhs.points))))&&((this.features == rhs.features)||((this.features!= null)&&this.features.equals(rhs.features))))&&((this.system == rhs.system)||((this.system!= null)&&this.system.equals(rhs.system))))&&((this.scan_family == rhs.scan_family)||((this.scan_family!= null)&&this.scan_family.equals(rhs.scan_family))))&&((this.cloud_model == rhs.cloud_model)||((this.cloud_model!= null)&&this.cloud_model.equals(rhs.cloud_model))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))))&&((this.scan_addr == rhs.scan_addr)||((this.scan_addr!= null)&&this.scan_addr.equals(rhs.scan_addr))));
+        return ((((((((((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.devices == rhs.devices)||((this.devices!= null)&&this.devices.equals(rhs.devices))))&&((this.registries == rhs.registries)||((this.registries!= null)&&this.registries.equals(rhs.registries))))&&((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.features == rhs.features)||((this.features!= null)&&this.features.equals(rhs.features))))&&((this.system == rhs.system)||((this.system!= null)&&this.system.equals(rhs.system))))&&((this.refs == rhs.refs)||((this.refs!= null)&&this.refs.equals(rhs.refs))))&&((this.scan_family == rhs.scan_family)||((this.scan_family!= null)&&this.scan_family.equals(rhs.scan_family))))&&((this.cloud_model == rhs.cloud_model)||((this.cloud_model!= null)&&this.cloud_model.equals(rhs.cloud_model))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))))&&((this.scan_addr == rhs.scan_addr)||((this.scan_addr!= null)&&this.scan_addr.equals(rhs.scan_addr))));
     }
 
 }

@@ -1,17 +1,17 @@
-"""Generated class for discovery_point.json"""
+"""Generated class for discovery_ref.json"""
 from .entry import Entry
 from .ancillary_properties import AncillaryProperties
 
 
-class PointDiscovery:
+class RefDiscovery:
   """Generated schema class"""
 
   def __init__(self):
+    self.point = None
     self.name = None
     self.possible_values = None
     self.units = None
     self.type = None
-    self.ref = None
     self.writable = None
     self.description = None
     self.status = None
@@ -21,12 +21,12 @@ class PointDiscovery:
   def from_dict(source):
     if not source:
       return None
-    result = PointDiscovery()
+    result = RefDiscovery()
+    result.point = source.get('point')
     result.name = source.get('name')
     result.possible_values = source.get('possible_values')
     result.units = source.get('units')
     result.type = source.get('type')
-    result.ref = source.get('ref')
     result.writable = source.get('writable')
     result.description = source.get('description')
     result.status = Entry.from_dict(source.get('status'))
@@ -39,7 +39,7 @@ class PointDiscovery:
       return None
     result = {}
     for key in source:
-      result[key] = PointDiscovery.from_dict(source[key])
+      result[key] = RefDiscovery.from_dict(source[key])
     return result
 
   @staticmethod
@@ -51,6 +51,8 @@ class PointDiscovery:
 
   def to_dict(self):
     result = {}
+    if self.point:
+      result['point'] = self.point # 5
     if self.name:
       result['name'] = self.name # 5
     if self.possible_values:
@@ -59,8 +61,6 @@ class PointDiscovery:
       result['units'] = self.units # 5
     if self.type:
       result['type'] = self.type # 5
-    if self.ref:
-      result['ref'] = self.ref # 5
     if self.writable:
       result['writable'] = self.writable # 5
     if self.description:
