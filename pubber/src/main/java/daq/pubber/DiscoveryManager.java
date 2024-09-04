@@ -38,9 +38,9 @@ import udmi.schema.FamilyDiscoveryState;
 import udmi.schema.FamilyDiscoveryState.Phase;
 import udmi.schema.FamilyLocalnetModel;
 import udmi.schema.Metadata;
-import udmi.schema.PointDiscovery;
 import udmi.schema.PointPointsetModel;
 import udmi.schema.PubberConfiguration;
+import udmi.schema.RefDiscovery;
 import udmi.schema.SystemDiscoveryData;
 
 /**
@@ -63,8 +63,8 @@ public class DiscoveryManager extends ManagerBase {
 
   private static boolean shouldEnumerateTo(Depth depth) {
     return ifNullElse(depth, false, d -> switch (d) {
-      default -> false;
       case ENTRIES, DETAILS -> true;
+      default -> false;
     });
   }
 
@@ -83,7 +83,7 @@ public class DiscoveryManager extends ManagerBase {
     DiscoveryEvents discoveryEvent = new DiscoveryEvents();
     discoveryEvent.generation = enumerationGeneration;
     Depths depths = config.depths;
-    discoveryEvent.points = maybeEnumerate(depths.points, () -> enumeratePoints(deviceId));
+    discoveryEvent.refs = maybeEnumerate(depths.refs, () -> enumerateRefs(deviceId));
     discoveryEvent.features = maybeEnumerate(depths.features, SupportedFeatures::getFeatures);
     discoveryEvent.families = maybeEnumerate(depths.families, deviceManager::enumerateFamilies);
     host.publish(discoveryEvent);
@@ -255,24 +255,24 @@ public class DiscoveryManager extends ManagerBase {
     return isGetTrue(() -> condition) ? supplier.get() : null;
   }
 
-  private Map<String, PointDiscovery> enumeratePoints(String deviceId) {
+  private Map<String, RefDiscovery> enumerateRefs(String deviceId) {
     return siteModel.getMetadata(deviceId).pointset.points.entrySet().stream().collect(
-        Collectors.toMap(this::getPointUniqKey, this::getPointDiscovery));
+        Collectors.toMap(this::getRefValue, this::getRefDiscovery));
   }
 
-  private String getPointUniqKey(Map.Entry<String, PointPointsetModel> entry) {
-    return format("%08x", entry.getKey().hashCode());
+  private String getRefValue(Map.Entry<String, PointPointsetModel> entry) {
+    return ofNullable(entry.getValue().ref).orElseGet(
+        () -> format("%08x", entry.getKey().hashCode()));
   }
 
-  private PointDiscovery getPointDiscovery(
+  private RefDiscovery getRefDiscovery(
       Map.Entry<String, PointPointsetModel> entry) {
-    PointDiscovery pointDiscovery = new PointDiscovery();
+    RefDiscovery refDiscovery = new RefDiscovery();
     PointPointsetModel model = entry.getValue();
-    pointDiscovery.writable = model.writable;
-    pointDiscovery.units = model.units;
-    pointDiscovery.ref = model.ref;
-    pointDiscovery.name = entry.getKey();
-    return pointDiscovery;
+    refDiscovery.writable = model.writable;
+    refDiscovery.units = model.units;
+    refDiscovery.point = entry.getKey();
+    return refDiscovery;
   }
 
   private void updateState() {

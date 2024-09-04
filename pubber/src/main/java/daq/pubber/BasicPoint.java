@@ -7,12 +7,12 @@ import static com.google.udmi.util.GeneralUtils.isTrue;
 import java.util.Objects;
 import udmi.schema.Category;
 import udmi.schema.Entry;
-import udmi.schema.PointDiscovery;
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetEvents;
 import udmi.schema.PointPointsetModel;
 import udmi.schema.PointPointsetState;
 import udmi.schema.PointPointsetState.Value_state;
+import udmi.schema.RefDiscovery;
 
 /**
  * Abstract representation of a basic data point.
@@ -130,8 +130,8 @@ public abstract class BasicPoint implements AbstractPoint {
   }
 
   @Override
-  public PointDiscovery enumerate() {
-    PointDiscovery point = new PointDiscovery();
+  public RefDiscovery enumerate() {
+    RefDiscovery point = new RefDiscovery();
     point.description = getClass().getSimpleName() + " " + getName();
     point.writable = writable ? true : null;
     populateEnumeration(point);
@@ -148,5 +148,5 @@ public abstract class BasicPoint implements AbstractPoint {
     return entry;
   }
 
-  protected abstract void populateEnumeration(PointDiscovery point);
+  protected abstract void populateEnumeration(RefDiscovery point);
 }
