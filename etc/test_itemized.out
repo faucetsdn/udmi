@@ -5,6 +5,7 @@
 05 RESULT fail system too_much_state ALPHA 0/5 Failed check that No more than 6 state updates in 60s
 06 RESULT fail enumeration.features feature_enumeration PREVIEW 0/5 Failed check that feature enumeration matches metadata; missing { enumeration }, extra { unknown }
 07 RESULT pass system valid_serial_no STABLE 5/5 Sequence complete
+08 RESULT pass system valid_serial_no STABLE 5/5 Sequence complete
 08 RESULT fail writeback writeback_success ALPHA 0/5 Because point filter_differential_pressure_setpoint is applied, expected null
 09 RESULT fail writeback writeback_success ALPHA 0/5 Because point filter_differential_pressure_setpoint is null, expected applied
 10 RESULT fail writeback writeback_success ALPHA 0/5 Because point filter_differential_pressure_setpoint is null, expected applied
