@@ -3,7 +3,6 @@ package com.google.udmi.util;
 import static com.google.udmi.util.Common.UPGRADED_FROM;
 import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_RAW;
-import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.MessageDowngrader.convertVersion;
 
@@ -14,9 +13,7 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
-import udmi.schema.SystemModel;
 
 /**
  * Container class for upgrading UDMI messages from older versions.
@@ -41,9 +38,15 @@ public class MessageUpgrader {
    * Create basic container for message upgrading.
    *
    * @param schemaName schema name to work with
-   * @param message    message to be upgraded
+   * @param message message to be upgraded
    */
   public MessageUpgrader(String schemaName, JsonNode message) {
+    if (!(message instanceof ObjectNode)) {
+      String text = message.asText();
+      throw new RuntimeException("Target upgrade message is not an object: " + text.substring(0,
+          Math.min(text.length(), 20)));
+    }
+
     this.message = (ObjectNode) message;
     this.schemaName = schemaName;
     this.original = message.deepCopy();
@@ -159,14 +162,14 @@ public class MessageUpgrader {
     if (upgraded && message.get(VERSION_KEY) != null) {
       message.put(UPGRADED_FROM, originalVersion);
       message.put(VERSION_KEY, String.format(TARGET_FORMAT, major, minor, patch));
-    } 
+    }
 
     // Even if the message was not modified, it is now conformant to the current version
     // of UDMI, so update the version property if it exists
-    if (message.has(VERSION_KEY)){
+    if (message.has(VERSION_KEY)) {
       message.put(VERSION_KEY, SchemaVersion.CURRENT.key());
     }
-    
+
     return message;
   }
 
@@ -234,7 +237,8 @@ public class MessageUpgrader {
     ObjectNode system = (ObjectNode) message.get("system");
     system.put("tags", tags);
   }
-   private void upgradeTo_1_5_0() {
+
+  private void upgradeTo_1_5_0() {
     if (STATE_SCHEMA.equals(schemaName)) {
       upgradeTo_1_5_0_state();
     }
@@ -282,7 +286,7 @@ public class MessageUpgrader {
 
     final String targetFamily;
     if (gateway.has("family")) {
-      targetFamily =  gateway.remove("family").asText();
+      targetFamily = gateway.remove("family").asText();
     } else if (localnetFamilies.has("bacnet")) {
       // Prioritise "bacnet" over any other value
       targetFamily = "bacnet";
