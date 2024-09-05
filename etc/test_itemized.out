@@ -6,7 +6,7 @@
 1 RESULT fail enumeration.features feature_enumeration PREVIEW 0/5 Failed check that feature enumeration matches metadata; missing { enumeration }, extra { unknown }
 1 RESULT pass system valid_serial_no STABLE 5/5 Sequence complete
 1 RESULT fail system valid_serial_no STABLE 0/5 missing subFolder
-0 RESULT fail writeback writeback_success ALPHA 0/5 Because point filter_differential_pressure_setpoint is applied, expected null
+1 RESULT fail writeback writeback_success ALPHA 0/5 Because point filter_differential_pressure_setpoint is applied, expected null
 1 RESULT fail writeback writeback_success ALPHA 0/5 Because point filter_differential_pressure_setpoint is null, expected applied
 1 RESULT fail writeback writeback_success ALPHA 0/5 Because point filter_differential_pressure_setpoint is null, expected applied
 1 RESULT fail pointset pointset_publish_interval STABLE 0/5 Failed check that time period between successive pointset events is between 5 and 8 seconds
