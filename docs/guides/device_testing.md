@@ -28,7 +28,7 @@ This is because the [sequencer](../tools/sequencer.md) tool will reset the confi
 
 ```json
 "testing": {
-	"noState":	true
+	"nostate":	true
 }
 ```
 
