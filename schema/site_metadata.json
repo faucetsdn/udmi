@@ -88,32 +88,6 @@
         }
       }
     },
-    "counts": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "modeled": {
-          "description": "Count of modeled devices",
-          "type": "number",
-          "examples": [42]
-        },
-        "validated": {
-          "description": "Count of validated devices",
-          "type": "number",
-          "examples": [42]
-        },
-        "registered": {
-          "description": "Count of registered devices",
-          "type": "number",
-          "examples": [42]
-        },
-        "discovered": {
-          "description": "Count of discovered devices",
-          "type": "number",
-          "examples": [42]
-        }
-      }
-    },
     "parameters": {
       "type": "object",
       "additionalProperties": false,
@@ -123,36 +97,12 @@
           "additionalProperties": false,
           "properties": {
             "net_occupied_area": {
-              "type": "object",
-              "additionalProperties": false,
-              "properties": {
-                "value": {
-                  "description": "Net Occupied Area of the site",
-                  "type": "number",
-                  "examples": [1234, 256, 997765]
-                },
-                "unit": {
-                  "description": "Unit used for carbon the Net Occupied Area",
-                  "type": "string",
-                  "examples": ["m2", "sqf"]
-                }
-              }
+              "description": "Net Occupied Area of the site",
+              "$ref": "file:parameter.json"
             },
             "gross_internal_area": {
-              "type": "object",
-              "additionalProperties": false,
-              "properties": {
-                "value": {
-                  "description": "Gross internal Area of the site",
-                  "type": "number",
-                  "examples": [1278, 290, 998999]
-                },
-                "unit": {
-                  "description": "Unit used for carbon the Gross internal Area",
-                  "type": "string",
-                  "examples": ["m2", "sqf"]
-                }
-              }
+              "description": "Gross internal Area of the site",
+              "$ref": "file:parameter.json"
             }
           }
         },
@@ -161,36 +111,12 @@
           "additionalProperties": false,
           "properties": {
             "carbon_factor": {
-              "type": "object",
-              "additionalProperties": false,
-              "properties": {
-                "value": {
-                  "description": "Carbon dioxide factor for electricity consumption",
-                  "type": "number",
-                  "examples": [0.3]
-                },
-                "unit": {
-                  "description": "Unit used for carbon dioxide factor for electricity consumption",
-                  "type": "string",
-                  "examples": ["kgCO2e/kWh"]
-                }
-              }
+              "description": "Carbon dioxide factor for electricity consumption",
+              "$ref": "file:parameter.json"
             },
             "unit_cost": {
-              "type": "object",
-              "additionalProperties": false,
-              "properties": {
-                "value": {
-                  "description": "Unit cost for electricity consumption",
-                  "type": "number",
-                  "examples": [0.14]
-                },
-                "unit": {
-                  "description": "Unit used for measuring the unit cost of electricity consumption",
-                  "type": "string",
-                  "examples": ["£/kWh", "$/kWh"]
-                }
-              }
+              "description": "Unit cost for electricity consumption",
+              "$ref": "file:parameter.json"
             }
           }
         },
@@ -199,36 +125,12 @@
           "additionalProperties": false,
           "properties": {
             "carbon_factor": {
-              "type": "object",
-              "additionalProperties": false,
-              "properties": {
-                "value": {
-                  "description": "Carbon dioxide factor for gas consumption",
-                  "type": "number",
-                  "examples": [0.18]
-                },
-                "unit": {
-                  "description": "Unit used for carbon dioxide factor for gas consumption",
-                  "type": "string",
-                  "examples": ["kgCO2e/kWh"]
-                }
-              }
+              "description": "Carbon dioxide factor for gas consumption",
+              "$ref": "file:parameter.json"
             },
             "unit_cost": {
-              "type": "object",
-              "additionalProperties": false,
-              "properties": {
-                "value": {
-                  "description": "Unit cost for gas consumption",
-                  "type": "number",
-                  "examples": [1.03]
-                },
-                "unit": {
-                  "description": "Unit used for measuring the unit cost of gas consumption",
-                  "type": "string",
-                  "examples": ["£/kWh", "$/kWh"]
-                }
-              }
+              "description": "Unit cost for gas consumption",
+              "$ref": "file:parameter.json"
             }
           }
         },
@@ -237,20 +139,8 @@
           "additionalProperties": false,
           "properties": {
             "unit_cost": {
-              "type": "object",
-              "additionalProperties": false,
-              "properties": {
-                "value": {
-                  "description": "Unit cost for water consumption",
-                  "type": "number",
-                  "examples": [1.8]
-                },
-                "unit": {
-                  "description": "Unit used for measuring the unit cost of water consumption",
-                  "type": "string",
-                  "examples": ["£/m3", "$/gal"]
-                }
-              }
+              "description": "Unit cost for water consumption",
+              "$ref": "file:parameter.json"
             }
           }
         }
