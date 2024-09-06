@@ -1,9 +1,10 @@
 {
   "generation": "2022-06-21T17:19:49.191023+00:00",
-  "points": {
-    "5005/1094": {
-      "ref": "org/building/5005/analogInput/1094",
-      "name": "discharge_air_velocity_pressure",
+  "scan_family": "bacnet",
+  "scan_addr": "5005",
+  "refs": {
+    "AI1094": {
+      "point": "discharge_air_velocity_pressure",
       "units": "inchesOfWater",
       "description": "Discharge Air Velocity Pressure",
       "ancillary": {
@@ -54,8 +55,7 @@
         "topic": "org/building/5005/analogInput/1094"
       }
     },
-    "org_building_5005_analogInput_1101": {
-      "ref": "org/building/5005/analogInput/1101",
+    "AI1101": {
       "units": "partsPerMillion",
       "description": "Zone Quality",
       "ancillary": {
@@ -109,11 +109,9 @@
   },
   "families": {
     "iot": {
-      "addr": "5005"
+      "addr": "VAV-CO2"
     }
   },
-  "scan_family": "iot",
-  "scan_addr": "5005",
   "version": "1.5.1",
   "timestamp": "2022-06-21T17:19:49.191183+00:00",
   "system": {

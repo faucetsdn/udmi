@@ -1,0 +1,12 @@
+{
+  "generation" : "2024-09-04T16:58:23Z",
+  "scan_addr" : "28179023",
+  "scan_family" : "vendor",
+  "system" : {
+    "ancillary" : {
+      "device-name" : "AHU-1"
+    }
+  },
+  "timestamp" : "2024-09-04T16:58:23Z",
+  "version" : "1.5.1"
+}

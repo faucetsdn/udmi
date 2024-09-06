@@ -12,26 +12,33 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Point Discovery
+ * Ref Discovery
  * <p>
- * Object representation for for a single point discovery
+ * Object representation for for a single point reference discovery
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "point",
     "name",
     "possible_values",
     "units",
     "type",
-    "ref",
     "writable",
     "description",
     "status",
     "ancillary"
 })
 @Generated("jsonschema2pojo")
-public class PointDiscovery {
+public class RefDiscovery {
 
+    /**
+     * Point descriptor for this point
+     * 
+     */
+    @JsonProperty("point")
+    @JsonPropertyDescription("Point descriptor for this point")
+    public java.lang.String point;
     /**
      * Friendly name for the point, if known
      * 
@@ -60,13 +67,6 @@ public class PointDiscovery {
     @JsonProperty("type")
     @JsonPropertyDescription("Current or default type for this point")
     public java.lang.String type;
-    /**
-     * Reference parameter for this point (e.g. BACnet object)
-     * 
-     */
-    @JsonProperty("ref")
-    @JsonPropertyDescription("Reference parameter for this point (e.g. BACnet object)")
-    public java.lang.String ref;
     /**
      * Indicates if this point is writable or not
      * 
@@ -102,13 +102,13 @@ public class PointDiscovery {
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.ref == null)? 0 :this.ref.hashCode()));
         result = ((result* 31)+((this.possible_values == null)? 0 :this.possible_values.hashCode()));
         result = ((result* 31)+((this.name == null)? 0 :this.name.hashCode()));
         result = ((result* 31)+((this.description == null)? 0 :this.description.hashCode()));
         result = ((result* 31)+((this.units == null)? 0 :this.units.hashCode()));
         result = ((result* 31)+((this.type == null)? 0 :this.type.hashCode()));
         result = ((result* 31)+((this.ancillary == null)? 0 :this.ancillary.hashCode()));
+        result = ((result* 31)+((this.point == null)? 0 :this.point.hashCode()));
         result = ((result* 31)+((this.writable == null)? 0 :this.writable.hashCode()));
         result = ((result* 31)+((this.status == null)? 0 :this.status.hashCode()));
         return result;
@@ -119,11 +119,11 @@ public class PointDiscovery {
         if (other == this) {
             return true;
         }
-        if ((other instanceof PointDiscovery) == false) {
+        if ((other instanceof RefDiscovery) == false) {
             return false;
         }
-        PointDiscovery rhs = ((PointDiscovery) other);
-        return ((((((((((this.ref == rhs.ref)||((this.ref!= null)&&this.ref.equals(rhs.ref)))&&((this.possible_values == rhs.possible_values)||((this.possible_values!= null)&&this.possible_values.equals(rhs.possible_values))))&&((this.name == rhs.name)||((this.name!= null)&&this.name.equals(rhs.name))))&&((this.description == rhs.description)||((this.description!= null)&&this.description.equals(rhs.description))))&&((this.units == rhs.units)||((this.units!= null)&&this.units.equals(rhs.units))))&&((this.type == rhs.type)||((this.type!= null)&&this.type.equals(rhs.type))))&&((this.ancillary == rhs.ancillary)||((this.ancillary!= null)&&this.ancillary.equals(rhs.ancillary))))&&((this.writable == rhs.writable)||((this.writable!= null)&&this.writable.equals(rhs.writable))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
+        RefDiscovery rhs = ((RefDiscovery) other);
+        return ((((((((((this.possible_values == rhs.possible_values)||((this.possible_values!= null)&&this.possible_values.equals(rhs.possible_values)))&&((this.name == rhs.name)||((this.name!= null)&&this.name.equals(rhs.name))))&&((this.description == rhs.description)||((this.description!= null)&&this.description.equals(rhs.description))))&&((this.units == rhs.units)||((this.units!= null)&&this.units.equals(rhs.units))))&&((this.type == rhs.type)||((this.type!= null)&&this.type.equals(rhs.type))))&&((this.ancillary == rhs.ancillary)||((this.ancillary!= null)&&this.ancillary.equals(rhs.ancillary))))&&((this.point == rhs.point)||((this.point!= null)&&this.point.equals(rhs.point))))&&((this.writable == rhs.writable)||((this.writable!= null)&&this.writable.equals(rhs.writable))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
     }
 
 }
