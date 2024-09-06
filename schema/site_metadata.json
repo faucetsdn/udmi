@@ -98,11 +98,11 @@
           "properties": {
             "net_occupied_area": {
               "description": "Net Occupied Area of the site",
-              "$ref": "file:parameter.json"
+              "$ref": "file:dimension.json"
             },
             "gross_internal_area": {
               "description": "Gross internal Area of the site",
-              "$ref": "file:parameter.json"
+              "$ref": "file:dimension.json"
             }
           }
         },
@@ -112,11 +112,11 @@
           "properties": {
             "carbon_factor": {
               "description": "Carbon dioxide factor for electricity consumption",
-              "$ref": "file:parameter.json"
+              "$ref": "file:dimension.json"
             },
             "unit_cost": {
               "description": "Unit cost for electricity consumption",
-              "$ref": "file:parameter.json"
+              "$ref": "file:dimension.json"
             }
           }
         },
@@ -126,11 +126,11 @@
           "properties": {
             "carbon_factor": {
               "description": "Carbon dioxide factor for gas consumption",
-              "$ref": "file:parameter.json"
+              "$ref": "file:dimension.json"
             },
             "unit_cost": {
               "description": "Unit cost for gas consumption",
-              "$ref": "file:parameter.json"
+              "$ref": "file:dimension.json"
             }
           }
         },
@@ -140,7 +140,7 @@
           "properties": {
             "unit_cost": {
               "description": "Unit cost for water consumption",
-              "$ref": "file:parameter.json"
+              "$ref": "file:dimension.json"
             }
           }
         }

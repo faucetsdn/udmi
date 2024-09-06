@@ -1,7 +1,7 @@
 {
     "$udmi_version": "1.5.1",
-    "title": "Parameter",
-    "description": "Parameter with a value and a unit",
+    "title": "Dimension",
+    "description": "Dimensions with a value and a unit",
     "type": "object",
     "$schema": "http://json-schema.org/draft-07/schema#",
     "additionalProperties": false,
