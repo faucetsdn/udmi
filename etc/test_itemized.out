@@ -36,7 +36,7 @@
 0 RESULT skip system system_last_update STABLE 0/0 State testing disabled
 1 RESULT fail system system_min_loglevel ALPHA 0/5 Received state update with no-state device
 1 RESULT pass system system_min_loglevel ALPHA 5/5 Sequence complete
-4 RESULT fail gateway gateway_proxy_events BETA 0/5 Because Missing pointset from SNS-4
+4 RESULT pass gateway gateway_proxy_events BETA 5/5 Sequence complete
 1 RESULT fail gateway gateway_proxy_events BETA 0/5 Because Missing pointset from AHU-22
 1 RESULT pass gateway gateway_proxy_state PREVIEW 5/5 Sequence complete
 1 RESULT pass gateway gateway_proxy_state PREVIEW 5/5 Sequence complete
