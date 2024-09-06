@@ -4,6 +4,7 @@ package udmi.schema;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -13,8 +14,15 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @Generated("jsonschema2pojo")
 public class Water {
 
+    /**
+     * Dimension
+     * <p>
+     * Dimensions with a value and a unit
+     * 
+     */
     @JsonProperty("unit_cost")
-    public Unit_cost unit_cost;
+    @JsonPropertyDescription("Dimensions with a value and a unit")
+    public Dimension unit_cost;
 
     @Override
     public int hashCode() {

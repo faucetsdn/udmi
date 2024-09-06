@@ -4,6 +4,7 @@ package udmi.schema;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -14,10 +15,24 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @Generated("jsonschema2pojo")
 public class Area {
 
+    /**
+     * Dimension
+     * <p>
+     * Dimensions with a value and a unit
+     * 
+     */
     @JsonProperty("net_occupied_area")
-    public Net_occupied_area net_occupied_area;
+    @JsonPropertyDescription("Dimensions with a value and a unit")
+    public Dimension net_occupied_area;
+    /**
+     * Dimension
+     * <p>
+     * Dimensions with a value and a unit
+     * 
+     */
     @JsonProperty("gross_internal_area")
-    public Gross_internal_area gross_internal_area;
+    @JsonPropertyDescription("Dimensions with a value and a unit")
+    public Dimension gross_internal_area;
 
     @Override
     public int hashCode() {

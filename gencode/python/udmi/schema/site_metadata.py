@@ -93,140 +93,11 @@ class ObjectAEC3F93C:
     if self.repo:
       result['repo'] = self.repo # 5
     return result
+from .dimension import Dimension
+from .dimension import Dimension
 
 
-class Object837C4A52:
-  """Generated schema class"""
-
-  def __init__(self):
-    self.modeled = None
-    self.validated = None
-    self.registered = None
-    self.discovered = None
-
-  @staticmethod
-  def from_dict(source):
-    if not source:
-      return None
-    result = Object837C4A52()
-    result.modeled = source.get('modeled')
-    result.validated = source.get('validated')
-    result.registered = source.get('registered')
-    result.discovered = source.get('discovered')
-    return result
-
-  @staticmethod
-  def map_from(source):
-    if not source:
-      return None
-    result = {}
-    for key in source:
-      result[key] = Object837C4A52.from_dict(source[key])
-    return result
-
-  @staticmethod
-  def expand_dict(input):
-    result = {}
-    for property in input:
-      result[property] = input[property].to_dict() if input[property] else {}
-    return result
-
-  def to_dict(self):
-    result = {}
-    if self.modeled:
-      result['modeled'] = self.modeled # 5
-    if self.validated:
-      result['validated'] = self.validated # 5
-    if self.registered:
-      result['registered'] = self.registered # 5
-    if self.discovered:
-      result['discovered'] = self.discovered # 5
-    return result
-
-
-class Object50EC8CBF:
-  """Generated schema class"""
-
-  def __init__(self):
-    self.value = None
-    self.unit = None
-
-  @staticmethod
-  def from_dict(source):
-    if not source:
-      return None
-    result = Object50EC8CBF()
-    result.value = source.get('value')
-    result.unit = source.get('unit')
-    return result
-
-  @staticmethod
-  def map_from(source):
-    if not source:
-      return None
-    result = {}
-    for key in source:
-      result[key] = Object50EC8CBF.from_dict(source[key])
-    return result
-
-  @staticmethod
-  def expand_dict(input):
-    result = {}
-    for property in input:
-      result[property] = input[property].to_dict() if input[property] else {}
-    return result
-
-  def to_dict(self):
-    result = {}
-    if self.value:
-      result['value'] = self.value # 5
-    if self.unit:
-      result['unit'] = self.unit # 5
-    return result
-
-
-class Object20F38E2A:
-  """Generated schema class"""
-
-  def __init__(self):
-    self.value = None
-    self.unit = None
-
-  @staticmethod
-  def from_dict(source):
-    if not source:
-      return None
-    result = Object20F38E2A()
-    result.value = source.get('value')
-    result.unit = source.get('unit')
-    return result
-
-  @staticmethod
-  def map_from(source):
-    if not source:
-      return None
-    result = {}
-    for key in source:
-      result[key] = Object20F38E2A.from_dict(source[key])
-    return result
-
-  @staticmethod
-  def expand_dict(input):
-    result = {}
-    for property in input:
-      result[property] = input[property].to_dict() if input[property] else {}
-    return result
-
-  def to_dict(self):
-    result = {}
-    if self.value:
-      result['value'] = self.value # 5
-    if self.unit:
-      result['unit'] = self.unit # 5
-    return result
-
-
-class Object952CABE2:
+class Object124EB07C:
   """Generated schema class"""
 
   def __init__(self):
@@ -237,9 +108,9 @@ class Object952CABE2:
   def from_dict(source):
     if not source:
       return None
-    result = Object37781B36()
-    result.net_occupied_area = Object50EC8CBF.from_dict(source.get('net_occupied_area'))
-    result.gross_internal_area = Object20F38E2A.from_dict(source.get('gross_internal_area'))
+    result = Object124EB07C()
+    result.net_occupied_area = Dimension.from_dict(source.get('net_occupied_area'))
+    result.gross_internal_area = Dimension.from_dict(source.get('gross_internal_area'))
     return result
 
   @staticmethod
@@ -248,7 +119,7 @@ class Object952CABE2:
       return None
     result = {}
     for key in source:
-      result[key] = Object37781B36.from_dict(source[key])
+      result[key] = Object124EB07C.from_dict(source[key])
     return result
 
   @staticmethod
@@ -265,91 +136,11 @@ class Object952CABE2:
     if self.gross_internal_area:
       result['gross_internal_area'] = self.gross_internal_area.to_dict() # 4
     return result
+from .dimension import Dimension
+from .dimension import Dimension
 
 
-class Object5C910670:
-  """Generated schema class"""
-
-  def __init__(self):
-    self.value = None
-    self.unit = None
-
-  @staticmethod
-  def from_dict(source):
-    if not source:
-      return None
-    result = Object5C910670()
-    result.value = source.get('value')
-    result.unit = source.get('unit')
-    return result
-
-  @staticmethod
-  def map_from(source):
-    if not source:
-      return None
-    result = {}
-    for key in source:
-      result[key] = Object5C910670.from_dict(source[key])
-    return result
-
-  @staticmethod
-  def expand_dict(input):
-    result = {}
-    for property in input:
-      result[property] = input[property].to_dict() if input[property] else {}
-    return result
-
-  def to_dict(self):
-    result = {}
-    if self.value:
-      result['value'] = self.value # 5
-    if self.unit:
-      result['unit'] = self.unit # 5
-    return result
-
-
-class Object49115991:
-  """Generated schema class"""
-
-  def __init__(self):
-    self.value = None
-    self.unit = None
-
-  @staticmethod
-  def from_dict(source):
-    if not source:
-      return None
-    result = Object49115991()
-    result.value = source.get('value')
-    result.unit = source.get('unit')
-    return result
-
-  @staticmethod
-  def map_from(source):
-    if not source:
-      return None
-    result = {}
-    for key in source:
-      result[key] = Object49115991.from_dict(source[key])
-    return result
-
-  @staticmethod
-  def expand_dict(input):
-    result = {}
-    for property in input:
-      result[property] = input[property].to_dict() if input[property] else {}
-    return result
-
-  def to_dict(self):
-    result = {}
-    if self.value:
-      result['value'] = self.value # 5
-    if self.unit:
-      result['unit'] = self.unit # 5
-    return result
-
-
-class Object1A1F27A1:
+class Object7DEA8A3A:
   """Generated schema class"""
 
   def __init__(self):
@@ -360,9 +151,9 @@ class Object1A1F27A1:
   def from_dict(source):
     if not source:
       return None
-    result = ObjectC1B53851()
-    result.carbon_factor = Object5C910670.from_dict(source.get('carbon_factor'))
-    result.unit_cost = Object49115991.from_dict(source.get('unit_cost'))
+    result = Object7DEA8A3A()
+    result.carbon_factor = Dimension.from_dict(source.get('carbon_factor'))
+    result.unit_cost = Dimension.from_dict(source.get('unit_cost'))
     return result
 
   @staticmethod
@@ -371,7 +162,7 @@ class Object1A1F27A1:
       return None
     result = {}
     for key in source:
-      result[key] = ObjectC1B53851.from_dict(source[key])
+      result[key] = Object7DEA8A3A.from_dict(source[key])
     return result
 
   @staticmethod
@@ -388,91 +179,11 @@ class Object1A1F27A1:
     if self.unit_cost:
       result['unit_cost'] = self.unit_cost.to_dict() # 4
     return result
+from .dimension import Dimension
+from .dimension import Dimension
 
 
-class Object2723B780:
-  """Generated schema class"""
-
-  def __init__(self):
-    self.value = None
-    self.unit = None
-
-  @staticmethod
-  def from_dict(source):
-    if not source:
-      return None
-    result = Object2723B780()
-    result.value = source.get('value')
-    result.unit = source.get('unit')
-    return result
-
-  @staticmethod
-  def map_from(source):
-    if not source:
-      return None
-    result = {}
-    for key in source:
-      result[key] = Object2723B780.from_dict(source[key])
-    return result
-
-  @staticmethod
-  def expand_dict(input):
-    result = {}
-    for property in input:
-      result[property] = input[property].to_dict() if input[property] else {}
-    return result
-
-  def to_dict(self):
-    result = {}
-    if self.value:
-      result['value'] = self.value # 5
-    if self.unit:
-      result['unit'] = self.unit # 5
-    return result
-
-
-class Object3612E6C4:
-  """Generated schema class"""
-
-  def __init__(self):
-    self.value = None
-    self.unit = None
-
-  @staticmethod
-  def from_dict(source):
-    if not source:
-      return None
-    result = Object3612E6C4()
-    result.value = source.get('value')
-    result.unit = source.get('unit')
-    return result
-
-  @staticmethod
-  def map_from(source):
-    if not source:
-      return None
-    result = {}
-    for key in source:
-      result[key] = Object3612E6C4.from_dict(source[key])
-    return result
-
-  @staticmethod
-  def expand_dict(input):
-    result = {}
-    for property in input:
-      result[property] = input[property].to_dict() if input[property] else {}
-    return result
-
-  def to_dict(self):
-    result = {}
-    if self.value:
-      result['value'] = self.value # 5
-    if self.unit:
-      result['unit'] = self.unit # 5
-    return result
-
-
-class ObjectEBF51015:
+class ObjectE4FBC3D1:
   """Generated schema class"""
 
   def __init__(self):
@@ -483,9 +194,9 @@ class ObjectEBF51015:
   def from_dict(source):
     if not source:
       return None
-    result = ObjectE0D2C919()
-    result.carbon_factor = Object2723B780.from_dict(source.get('carbon_factor'))
-    result.unit_cost = Object3612E6C4.from_dict(source.get('unit_cost'))
+    result = ObjectE4FBC3D1()
+    result.carbon_factor = Dimension.from_dict(source.get('carbon_factor'))
+    result.unit_cost = Dimension.from_dict(source.get('unit_cost'))
     return result
 
   @staticmethod
@@ -494,7 +205,7 @@ class ObjectEBF51015:
       return None
     result = {}
     for key in source:
-      result[key] = ObjectE0D2C919.from_dict(source[key])
+      result[key] = ObjectE4FBC3D1.from_dict(source[key])
     return result
 
   @staticmethod
@@ -511,50 +222,10 @@ class ObjectEBF51015:
     if self.unit_cost:
       result['unit_cost'] = self.unit_cost.to_dict() # 4
     return result
+from .dimension import Dimension
 
 
-class ObjectD5EDEA73:
-  """Generated schema class"""
-
-  def __init__(self):
-    self.value = None
-    self.unit = None
-
-  @staticmethod
-  def from_dict(source):
-    if not source:
-      return None
-    result = ObjectD5EDEA73()
-    result.value = source.get('value')
-    result.unit = source.get('unit')
-    return result
-
-  @staticmethod
-  def map_from(source):
-    if not source:
-      return None
-    result = {}
-    for key in source:
-      result[key] = ObjectD5EDEA73.from_dict(source[key])
-    return result
-
-  @staticmethod
-  def expand_dict(input):
-    result = {}
-    for property in input:
-      result[property] = input[property].to_dict() if input[property] else {}
-    return result
-
-  def to_dict(self):
-    result = {}
-    if self.value:
-      result['value'] = self.value # 5
-    if self.unit:
-      result['unit'] = self.unit # 5
-    return result
-
-
-class Object812CE457:
+class Object1917D71C:
   """Generated schema class"""
 
   def __init__(self):
@@ -564,8 +235,8 @@ class Object812CE457:
   def from_dict(source):
     if not source:
       return None
-    result = ObjectD9A728BA()
-    result.unit_cost = ObjectD5EDEA73.from_dict(source.get('unit_cost'))
+    result = Object1917D71C()
+    result.unit_cost = Dimension.from_dict(source.get('unit_cost'))
     return result
 
   @staticmethod
@@ -574,7 +245,7 @@ class Object812CE457:
       return None
     result = {}
     for key in source:
-      result[key] = ObjectD9A728BA.from_dict(source[key])
+      result[key] = Object1917D71C.from_dict(source[key])
     return result
 
   @staticmethod
@@ -591,7 +262,7 @@ class Object812CE457:
     return result
 
 
-class ObjectE4D4B0DB:
+class Object100792F9:
   """Generated schema class"""
 
   def __init__(self):
@@ -604,11 +275,11 @@ class ObjectE4D4B0DB:
   def from_dict(source):
     if not source:
       return None
-    result = Object8E5DCD5C()
-    result.area = Object37781B36.from_dict(source.get('area'))
-    result.electricity = ObjectC1B53851.from_dict(source.get('electricity'))
-    result.gas = ObjectE0D2C919.from_dict(source.get('gas'))
-    result.water = ObjectD9A728BA.from_dict(source.get('water'))
+    result = ObjectBB16A108()
+    result.area = Object124EB07C.from_dict(source.get('area'))
+    result.electricity = Object7DEA8A3A.from_dict(source.get('electricity'))
+    result.gas = ObjectE4FBC3D1.from_dict(source.get('gas'))
+    result.water = Object1917D71C.from_dict(source.get('water'))
     return result
 
   @staticmethod
@@ -617,7 +288,7 @@ class ObjectE4D4B0DB:
       return None
     result = {}
     for key in source:
-      result[key] = Object8E5DCD5C.from_dict(source[key])
+      result[key] = ObjectBB16A108.from_dict(source[key])
     return result
 
   @staticmethod
@@ -651,7 +322,6 @@ class SiteMetadata:
     self.tags = None
     self.location = None
     self.links = None
-    self.counts = None
     self.parameters = None
 
   @staticmethod
@@ -666,8 +336,7 @@ class SiteMetadata:
     result.tags = source.get('tags')
     result.location = Object936F7B6D.from_dict(source.get('location'))
     result.links = ObjectAEC3F93C.from_dict(source.get('links'))
-    result.counts = Object837C4A52.from_dict(source.get('counts'))
-    result.parameters = Object8E5DCD5C.from_dict(source.get('parameters'))
+    result.parameters = ObjectBB16A108.from_dict(source.get('parameters'))
     return result
 
   @staticmethod
@@ -702,8 +371,6 @@ class SiteMetadata:
       result['location'] = self.location.to_dict() # 4
     if self.links:
       result['links'] = self.links.to_dict() # 4
-    if self.counts:
-      result['counts'] = self.counts.to_dict() # 4
     if self.parameters:
       result['parameters'] = self.parameters.to_dict() # 4
     return result

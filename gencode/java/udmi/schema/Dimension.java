@@ -4,30 +4,26 @@ package udmi.schema;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
+
+/**
+ * Dimension
+ * <p>
+ * Dimensions with a value and a unit
+ * 
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "value",
     "unit"
 })
 @Generated("jsonschema2pojo")
-public class Net_occupied_area {
+public class Dimension {
 
-    /**
-     * Net Occupied Area of the site
-     * 
-     */
     @JsonProperty("value")
-    @JsonPropertyDescription("Net Occupied Area of the site")
     public Double value;
-    /**
-     * Unit used for carbon the Net Occupied Area
-     * 
-     */
     @JsonProperty("unit")
-    @JsonPropertyDescription("Unit used for carbon the Net Occupied Area")
     public String unit;
 
     @Override
@@ -43,10 +39,10 @@ public class Net_occupied_area {
         if (other == this) {
             return true;
         }
-        if ((other instanceof Net_occupied_area) == false) {
+        if ((other instanceof Dimension) == false) {
             return false;
         }
-        Net_occupied_area rhs = ((Net_occupied_area) other);
+        Dimension rhs = ((Dimension) other);
         return (((this.value == rhs.value)||((this.value!= null)&&this.value.equals(rhs.value)))&&((this.unit == rhs.unit)||((this.unit!= null)&&this.unit.equals(rhs.unit))));
     }
 

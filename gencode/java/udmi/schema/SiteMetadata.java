@@ -27,7 +27,6 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
     "tags",
     "location",
     "links",
-    "counts",
     "parameters"
 })
 @Generated("jsonschema2pojo")
@@ -75,8 +74,6 @@ public class SiteMetadata {
     public Location location;
     @JsonProperty("links")
     public Links links;
-    @JsonProperty("counts")
-    public Counts counts;
     @JsonProperty("parameters")
     public Parameters parameters;
 
@@ -84,7 +81,6 @@ public class SiteMetadata {
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.site == null)? 0 :this.site.hashCode()));
-        result = ((result* 31)+((this.counts == null)? 0 :this.counts.hashCode()));
         result = ((result* 31)+((this.name == null)? 0 :this.name.hashCode()));
         result = ((result* 31)+((this.location == null)? 0 :this.location.hashCode()));
         result = ((result* 31)+((this.links == null)? 0 :this.links.hashCode()));
@@ -104,7 +100,7 @@ public class SiteMetadata {
             return false;
         }
         SiteMetadata rhs = ((SiteMetadata) other);
-        return ((((((((((this.site == rhs.site)||((this.site!= null)&&this.site.equals(rhs.site)))&&((this.counts == rhs.counts)||((this.counts!= null)&&this.counts.equals(rhs.counts))))&&((this.name == rhs.name)||((this.name!= null)&&this.name.equals(rhs.name))))&&((this.location == rhs.location)||((this.location!= null)&&this.location.equals(rhs.location))))&&((this.links == rhs.links)||((this.links!= null)&&this.links.equals(rhs.links))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.parameters == rhs.parameters)||((this.parameters!= null)&&this.parameters.equals(rhs.parameters))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.tags == rhs.tags)||((this.tags!= null)&&this.tags.equals(rhs.tags))));
+        return (((((((((this.site == rhs.site)||((this.site!= null)&&this.site.equals(rhs.site)))&&((this.name == rhs.name)||((this.name!= null)&&this.name.equals(rhs.name))))&&((this.location == rhs.location)||((this.location!= null)&&this.location.equals(rhs.location))))&&((this.links == rhs.links)||((this.links!= null)&&this.links.equals(rhs.links))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.parameters == rhs.parameters)||((this.parameters!= null)&&this.parameters.equals(rhs.parameters))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.tags == rhs.tags)||((this.tags!= null)&&this.tags.equals(rhs.tags))));
     }
 
 }
