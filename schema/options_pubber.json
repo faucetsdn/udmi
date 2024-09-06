@@ -88,6 +88,9 @@
     "badState": {
       "type": "boolean"
     },
+    "baseState": {
+      "type": "boolean"
+    },
     "dupeState": {
       "type": "boolean"
     },
