@@ -29,7 +29,7 @@ from .configuration_pubber import PubberConfiguration
 from .data_template import MessageTemplateData
 from .discovery_family import FamilyDiscovery
 from .discovery_feature import FeatureDiscovery
-from .discovery_point import PointDiscovery
+from .discovery_ref import RefDiscovery
 from .entry import Entry
 from .envelope import Envelope
 from .equipment_translation import BuildingConfig

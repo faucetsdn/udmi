@@ -3,6 +3,7 @@
 while [[ $# -gt 0 ]]; do
   if [[ "$1" == "check" ]]; then
     check=check
+    [[ ! -f /tmp/pod_ready.txt ]] || sudo rm /tmp/pod_ready.txt
     shift
   elif [[ "$1" == "debug" ]]; then
     check="check -i"

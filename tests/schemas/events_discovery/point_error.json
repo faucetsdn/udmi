@@ -17,7 +17,7 @@
       "addr": "872849"
     }
   },
-  "points": {
+  "refs": {
     "sup_flow_actual_avo_1": {
       "status": {
         "message": "Timeout during point communication",

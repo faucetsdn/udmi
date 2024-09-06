@@ -4,14 +4,14 @@
       "phase" : "final",
       "status" : {
         "message" : "java.lang.RuntimeException: Blob data hash mismatch",
-        "detail" : "java.lang.RuntimeException: java.lang.RuntimeException: Blob data hash mismatch\n\tat daq.pubber.Pubber.maybeRedirectEndpoint(Pubber.java:1023)\n\tat daq.pubber.Pubber.deferredConfigActions(Pubber.java:664)\n\tat daq.pubber.Pubber.periodicUpdate(Pubber.java:588)\n\tat java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539)\n\tat java.base/java.util.concurrent.FutureTask.runAndReset(FutureTask.java:305)\n\tat java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:305)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)\n\tat java.base/java.lang.Thread.run(Thread.java:840)\n",
+        "detail" : "java.lang.RuntimeException: java.lang.RuntimeException: Blob data hash mismatch\n\tat daq.pubber.Pubber.maybeRedirectEndpoint(Pubber.java:1002)\n\tat daq.pubber.Pubber.deferredConfigActions(Pubber.java:627)\n\tat daq.pubber.Pubber.periodicUpdate(Pubber.java:551)\n\tat java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539)\n\tat java.base/java.util.concurrent.FutureTask.runAndReset(FutureTask.java:305)\n\tat java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:305)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)\n\tat java.base/java.lang.Thread.run(Thread.java:840)\n",
         "category" : "blobset.blob.apply",
-        "timestamp" : "2024-03-22T19:22:24Z",
+        "timestamp" : "2024-09-04T16:57:30Z",
         "level" : 500
       },
-      "generation" : "2024-03-22T19:22:16Z"
+      "generation" : "2024-09-04T16:57:24Z"
     }
   },
-  "timestamp" : "2024-03-22T19:22:53Z",
-  "version" : "1.5.0"
+  "timestamp" : "2024-09-04T16:57:49Z",
+  "version" : "1.5.1"
 }

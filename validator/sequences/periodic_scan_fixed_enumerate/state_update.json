@@ -2,31 +2,33 @@
   "discovery" : {
     "families" : {
       "vendor" : {
-        "generation" : "2024-03-17T16:38:46Z",
+        "generation" : "2024-09-04T16:56:21Z",
         "phase" : "active",
-        "record_count" : 2
+        "record_count" : 3
       }
     }
   },
   "localnet" : {
     "families" : {
+      "ether" : {
+        "addr" : "00:0d:3a:60:a4:ac"
+      },
       "ipv4" : {
-        "addr" : "10.1.0.18"
+        "addr" : "10.1.0.11"
+      },
+      "ipv6" : {
+        "addr" : "fe80::20d:3aff:fe60:a4ac"
       },
       "vendor" : {
         "addr" : "28179023"
-      },
-      "ether" : {
-        "addr" : "00:0d:3a:32:e1:a2"
-      },
-      "ipv6" : {
-        "addr" : "fe80::20d:3aff:fe32:e1a2"
       }
     }
   },
   "pointset" : {
     "points" : {
-      "filter_alarm_pressure_status" : { },
+      "filter_alarm_pressure_status" : {
+        "units" : "No-units"
+      },
       "filter_differential_pressure_setpoint" : {
         "units" : "Bars",
         "value_state" : "applied"
@@ -37,14 +39,14 @@
     }
   },
   "system" : {
-    "last_config" : "2024-03-17T16:38:28Z",
+    "last_config" : "2024-09-04T16:56:03Z",
     "operation" : {
       "operational" : true,
-      "last_start" : "2024-03-17T16:37:42Z",
+      "last_start" : "2024-09-04T16:55:28Z",
       "restart_count" : 1,
       "mode" : "initial"
     },
-    "serial_no" : "sequencer-18883",
+    "serial_no" : "sequencer-5663",
     "hardware" : {
       "make" : "BOS",
       "model" : "pubber"
@@ -55,10 +57,10 @@
     "status" : {
       "message" : "success",
       "category" : "system.config.apply",
-      "timestamp" : "2024-03-17T16:38:28Z",
+      "timestamp" : "2024-09-04T16:56:03Z",
       "level" : 300
     }
   },
-  "timestamp" : "2024-03-17T16:38:48Z",
-  "version" : "1.5.0"
+  "timestamp" : "2024-09-04T16:56:23Z",
+  "version" : "1.5.1"
 }

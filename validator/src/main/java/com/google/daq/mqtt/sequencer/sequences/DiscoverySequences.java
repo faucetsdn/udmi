@@ -134,12 +134,12 @@ public class DiscoverySequences extends SequenceBase {
       checkThat("no feature enumeration exists", () -> event.features == null);
     }
 
-    if (shouldEnumerate(depths.points)) {
+    if (shouldEnumerate(depths.refs)) {
       int expectedSize = ofNullable(deviceMetadata.pointset.points).map(HashMap::size)
           .orElse(0);
-      checkThat("enumerated point count matches", () -> event.points.size() == expectedSize);
+      checkThat("enumerated point count matches", () -> event.refs.size() == expectedSize);
     } else {
-      checkThat("no point enumeration exists", () -> event.points == null);
+      checkThat("no point enumeration exists", () -> event.refs == null);
     }
   }
 
@@ -189,7 +189,7 @@ public class DiscoverySequences extends SequenceBase {
       skipTest("No metadata pointset points defined");
     }
     Depths enumerate = new Depths();
-    enumerate.points = ENTRIES;
+    enumerate.refs = ENTRIES;
     DiscoveryEvents event = runEnumeration(enumerate);
     checkSelfEnumeration(event, enumerate);
   }
@@ -221,7 +221,7 @@ public class DiscoverySequences extends SequenceBase {
     Depths enumerate = new Depths();
     enumerate.families = enumerateIfBucketEnabled(ENUMERATION_FAMILIES);
     enumerate.features = enumerateIfBucketEnabled(ENUMERATION_FEATURES);
-    enumerate.points = enumerateIfBucketEnabled(ENUMERATION_POINTSET);
+    enumerate.refs = enumerateIfBucketEnabled(ENUMERATION_POINTSET);
     DiscoveryEvents event = runEnumeration(enumerate);
     checkSelfEnumeration(event, enumerate);
   }
@@ -330,11 +330,11 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   private void checkEnumeration(List<DiscoveryEvents> receivedEvents, boolean shouldEnumerate) {
-    Predicate<DiscoveryEvents> hasPoints = event -> event.points != null && !event.points.isEmpty();
+    Predicate<DiscoveryEvents> hasRefs = event -> event.refs != null && !event.refs.isEmpty();
     if (shouldEnumerate) {
-      checkThat("all events have points", receivedEvents.stream().allMatch(hasPoints));
+      checkThat("all events have discovered refs", receivedEvents.stream().allMatch(hasRefs));
     } else {
-      checkThat("no events have points", receivedEvents.stream().noneMatch(hasPoints));
+      checkThat("no events have discovered refs", receivedEvents.stream().noneMatch(hasRefs));
     }
   }
 
