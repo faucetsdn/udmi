@@ -27,6 +27,7 @@ from .configuration_pod_base import BasePodConfiguration
 from .configuration_pod_bridge import BridgePodConfiguration
 from .configuration_pubber import PubberConfiguration
 from .data_template import MessageTemplateData
+from .dimension import Dimension
 from .discovery_family import FamilyDiscovery
 from .discovery_feature import FeatureDiscovery
 from .discovery_ref import RefDiscovery

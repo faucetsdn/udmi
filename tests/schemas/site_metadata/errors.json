@@ -1,0 +1,21 @@
+{
+  "version": "1.5.0",
+  "tags": ["hq"],
+  "location":{
+      "address": "1600 Amphitheatre Parkway Mountain View, CA 94043",
+      "lat": 	37.422,
+      "long": 122.084
+  },
+  "parameters":{
+    "area":{
+      "net_occupied_area":{
+        "value": 123,
+        "unit": "badunit"
+      },
+      "extra":{
+        "value": 123,
+        "unit": "sqf"
+      }
+    }
+  }
+}
