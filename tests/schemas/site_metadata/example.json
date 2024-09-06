@@ -1,0 +1,49 @@
+{
+  "version": "1.5.0",
+  "timestamp": "2024-01-01T01:02:03Z",
+  "site": "ZZ-TRI-FECTA",
+  "tags": ["hq"],
+  "location":{
+      "address": "1600 Amphitheatre Parkway Mountain View, CA 94043",
+      "lat": 	37.422,
+      "long": 122.084
+  },
+  "parameters":{
+    "area":{
+      "net_occupied_area":{
+        "value": 123,
+        "unit": "m2"
+      },
+      "gross_internal_area":{
+        "value": 123,
+        "unit": "sqf"
+      }
+    },
+    "electricity":{
+      "carbon_factor": {
+        "value": 123,
+        "unit": "kgCO2e/kWh"
+      },
+      "unit_cost": {
+        "value": 123,
+        "unit": "£/kWh"
+      }
+    },
+    "gas":{
+      "carbon_factor": {
+        "value": 123,
+        "unit": "kgCO2e/kWh"
+      },
+      "unit_cost": {
+        "value": 123,
+        "unit": "$/kWh"
+      }
+    },
+    "water":{
+      "unit_cost": {
+        "value": 123,
+        "unit": "$/gal"
+      }
+    }
+  }
+}

@@ -40,12 +40,13 @@
         },
         "floor": {
           "type": "string",
+          "description": "Name of floor level",
           "pattern": "^[A-Z0-9-]+$",
           "examples": ["1", "1A", "G", "B1M", "RF"]
         },
         "floor_seq": {
           "type": "integer",
-          "description": "Sequential integer representation for a floor, primiarly for comparisons when non integer floors are used, e.g. 1 and 1M"
+          "description": "Sequential integer representation for a floor, primarily for comparisons when non integer floors are used, e.g. 1 and 1M"
         },
         "position": {
           "type": "object",
