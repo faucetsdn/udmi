@@ -1,11 +1,16 @@
 {
   "$udmi_version": "1.5.1",
-  "title": "Point Discovery",
-  "description": "Object representation for for a single point discovery",
+  "title": "Ref Discovery",
+  "description": "Object representation for for a single point reference discovery",
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "properties": {
+    "point": {
+      "description": "Point descriptor for this point",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
+    },
     "name": {
       "description": "Friendly name for the point, if known",
       "type": "string"
@@ -23,10 +28,6 @@
     },
     "type": {
       "description": "Current or default type for this point",
-      "type": "string"
-    },
-    "ref": {
-      "description": "Reference parameter for this point (e.g. BACnet object)",
       "type": "string"
     },
     "writable": {

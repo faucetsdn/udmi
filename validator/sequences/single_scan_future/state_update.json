@@ -2,7 +2,7 @@
   "discovery" : {
     "families" : {
       "vendor" : {
-        "generation" : "2024-03-22T19:23:07Z",
+        "generation" : "2024-09-04T16:58:23Z",
         "phase" : "done",
         "record_count" : 3
       }
@@ -10,23 +10,25 @@
   },
   "localnet" : {
     "families" : {
+      "ether" : {
+        "addr" : "60:45:bd:4a:fa:90"
+      },
       "ipv4" : {
-        "addr" : "10.1.0.212"
+        "addr" : "10.1.0.22"
+      },
+      "ipv6" : {
+        "addr" : "fe80::6245:bdff:fe4a:fa90"
       },
       "vendor" : {
         "addr" : "28179023"
-      },
-      "ether" : {
-        "addr" : "60:45:bd:cc:6f:6e"
-      },
-      "ipv6" : {
-        "addr" : "fe80::6245:bdff:fecc:6f6e"
       }
     }
   },
   "pointset" : {
     "points" : {
-      "filter_alarm_pressure_status" : { },
+      "filter_alarm_pressure_status" : {
+        "units" : "No-units"
+      },
       "filter_differential_pressure_setpoint" : {
         "units" : "Bars",
         "value_state" : "applied"
@@ -37,14 +39,14 @@
     }
   },
   "system" : {
-    "last_config" : "2024-03-22T19:22:59Z",
+    "last_config" : "2024-09-04T16:58:15Z",
     "operation" : {
       "operational" : true,
-      "last_start" : "2024-03-22T19:21:52Z",
+      "last_start" : "2024-09-04T16:56:49Z",
       "restart_count" : 1,
       "mode" : "initial"
     },
-    "serial_no" : "sequencer-24201",
+    "serial_no" : "sequencer-31306",
     "hardware" : {
       "make" : "BOS",
       "model" : "pubber"
@@ -55,10 +57,10 @@
     "status" : {
       "message" : "success",
       "category" : "system.config.apply",
-      "timestamp" : "2024-03-22T19:22:59Z",
+      "timestamp" : "2024-09-04T16:58:15Z",
       "level" : 300
     }
   },
-  "timestamp" : "2024-03-22T19:23:17Z",
-  "version" : "1.5.0"
+  "timestamp" : "2024-09-04T16:58:33Z",
+  "version" : "1.5.1"
 }

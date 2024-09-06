@@ -3,7 +3,15 @@
     "depths" : {
       "families" : "entries",
       "features" : "entries",
-      "points" : "entries"
+      "refs" : "entries"
+    }
+  },
+  "localnet" : {
+    "families" : {
+      "ether" : { },
+      "ipv4" : { },
+      "ipv6" : { },
+      "vendor" : { }
     }
   },
   "pointset" : {
@@ -26,12 +34,14 @@
     "metrics_rate_sec" : 10,
     "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2024-03-17T16:39:16Z"
+      "last_start" : "2024-09-04T16:54:50Z"
     },
     "testing" : {
-      "sequence_name" : "multi_enumeration"
+      "config_base" : 41,
+      "sequence_name" : "multi_enumeration",
+      "transaction_id" : "RC:3c7f58.0013"
     }
   },
-  "timestamp" : "2024-03-17T16:39:43Z",
-  "version" : "1.5.0-53-g394a976f9"
+  "timestamp" : "2024-09-04T16:55:33Z",
+  "version" : "git-34706de"
 }

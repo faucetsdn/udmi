@@ -1,0 +1,88 @@
+{
+  "timestamp": "2022-06-21T17:19:49.191023+00:00",
+  "version": "1.5.2",
+  "generation": "2022-06-21T17:19:49.191023+00:00",
+  "scan_family": "vendor",
+  "scan_addr": "2803104",
+  "refs": {
+    "afb0afbo": {
+      "name":"temperature_sensor",
+      "ancillary": {
+        "xid":"DP_2803104_ANALOGUE_VALUE_1",
+        "enabled":true,
+        "loggingType":"INTERVAL",
+        "intervalLoggingPeriodType":"MINUTES",
+        "intervalLoggingType":"AVERAGE",
+        "purgeType":"YEARS",
+        "pointLocator":{
+          "dataType":"NUMERIC",
+          "objectType":"ANALOGUE_VALUE",
+          "propertyIdentifier":"present-value",
+          "additive":0.0,
+          "multiplier":1.0,
+          "objectInstanceNumber":1,
+          "remoteDeviceInstanceNumber":2803104,
+          "settable":false,
+          "useCovSubscription":true,
+          "writePriority":16
+        },
+        "eventDetectors":[
+        ],
+        "plotType":"SPLINE",
+        "rollup":"NONE",
+        "unit":"",
+        "simplifyType":"NONE",
+        "chartColour":"",
+        "data":null,
+        "dataSourceXid":"DS_BACNET",
+        "defaultCacheSize":1,
+        "deviceName":"HTR-1",
+        "discardExtremeValues":false,
+        "discardHighLimit":1.7976931348623157E308,
+        "discardLowLimit":-1.7976931348623157E308,
+        "editPermission":[
+        ],
+        "intervalLoggingPeriod":1,
+        "intervalLoggingSampleWindowSize":0,
+        "overrideIntervalLoggingSamples":false,
+        "preventSetExtremeValues":false,
+        "purgeOverride":false,
+        "purgePeriod":1,
+        "readPermission":[
+        ],
+        "setExtremeHighLimit":1.7976931348623157E308,
+        "setExtremeLowLimit":-1.7976931348623157E308,
+        "setPermission":[
+        ],
+        "tags":{
+          "BACnetDeviceName":"TEST-521",
+          "BACnetObjectName":"temperature_sensor",
+          "BACnetPropertyName":"ANALOGUE_VALUE",
+          "BACnetObjectDescription":""
+        },
+        "textRenderer":{
+          "type":"ANALOG",
+          "useUnitAsSuffix":false,
+          "suffix":"",
+          "format":"0.00"
+        },
+        "tolerance":0.0
+      }
+    }
+  },
+  "system": {
+    "ancillary": {
+      "networkNumber": 0,
+      "vendor": "Radix",
+      "systemStatus": "operational",
+      "name": "DDC-7",
+      "model": "Mango",
+      "instanceNumber": 10107,
+      "ip": "192.168.1.103:47808"
+    },
+    "hardware": {
+      "make": "Distech-Controls, Inc.",
+      "model": "ECY-APEX-BI"
+    }
+  }
+}

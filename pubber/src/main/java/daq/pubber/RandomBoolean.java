@@ -1,7 +1,7 @@
 package daq.pubber;
 
-import udmi.schema.PointDiscovery;
 import udmi.schema.PointPointsetModel;
+import udmi.schema.RefDiscovery;
 
 /**
  * Represents a random boolean point.
@@ -28,7 +28,7 @@ public class RandomBoolean extends BasicPoint implements AbstractPoint {
   }
 
   @Override
-  protected void populateEnumeration(PointDiscovery point) {
+  protected void populateEnumeration(RefDiscovery point) {
     point.type = "multistate";
     point.possible_values = null; // Need multi-state values here
   }

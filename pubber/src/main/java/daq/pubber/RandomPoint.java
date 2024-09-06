@@ -1,7 +1,7 @@
 package daq.pubber;
 
-import udmi.schema.PointDiscovery;
 import udmi.schema.PointPointsetModel;
+import udmi.schema.RefDiscovery;
 
 /**
  * Represents a randomly generated numerical point.
@@ -62,7 +62,7 @@ public class RandomPoint extends BasicPoint implements AbstractPoint {
   }
 
   @Override
-  protected void populateEnumeration(PointDiscovery point) {
+  protected void populateEnumeration(RefDiscovery point) {
     point.units = units;
   }
 }

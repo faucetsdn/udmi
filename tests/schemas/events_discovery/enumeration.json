@@ -7,11 +7,11 @@
   "version": "1.5.1",
   "timestamp": "2018-08-26T21:42:12.237Z",
   "generation": "2018-08-26T21:37:12Z",
-  "points": {
+  "refs": {
     // Numerical value with an articulated unit
-    "sup_flow_actual_avo_1": {
+    "analog-value_29": {  // Internal reference used on-prem (e.g. reference to bacnet property)
+      "point": "sup_flow_actual_avo_1",
       "units": "percent",  // with units, type typically defaults to 'number'
-      "ref": "analog-value_29",  // Internal reference used on-prem (e.g. reference to bacnet property)
       "writable": true,
       "description": "Basic value reading"
     },
@@ -32,7 +32,7 @@
     },
     // Representation of a point with unknown/arbitrary parameters
     "NClass_1": {
-      "ref": "notification-class_1",
+      "point": "notification_class",
       // 'notificaiton-class' is not a UDMI-defined type, so can't be exported outside of object-type
       "ancillary": {  // arbitrary json not codifed with a UDMI schema
         "object-type": "notification-class",
