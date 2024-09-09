@@ -15,14 +15,14 @@ SCHEMA_GLD=out/schema_itemized.raw
 failures=
 
 echo Converting $RESULTS_RAW to $RESULTS_GLD
-awk 'NR == 1 { prev = 0 } 
+awk 'NR == 1 { prev = 0 }
      NR >= 1 { prev = $1 + prev; printf "%02d", prev; for (i=2; i<=NF; i++) printf " "$i; print "" }' $RESULTS_RAW > $RESULTS_GLD
 
 echo Comparing diff $RESULTS_OUT $RESULTS_GLD
 diff -bu $RESULTS_OUT $RESULTS_GLD || failures+="results "
 
 echo Converting $SCHEMA_RAW to $SCHEMA_GLD
-awk 'NR == 1 { prev = 0 } 
+awk 'NR == 1 { prev = 0 }
      NR >= 1 { prev = $1 + prev; printf "%02d", prev; for (i=2; i<=NF; i++) printf " "$i; print "" }' $SCHEMA_RAW > $SCHEMA_GLD
 
 echo Comparing diff $SCHEMA_OUT $SCHEMA_GLD
