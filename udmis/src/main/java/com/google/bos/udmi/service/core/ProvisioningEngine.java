@@ -36,7 +36,7 @@ import udmi.schema.Envelope;
 @ComponentName("provision")
 public class ProvisioningEngine extends ProcessorBase {
 
-  private static final String EXPECTED_DEVICE_FORMAT = "%s-%s";
+  private static final String IMPLICIT_DEVICE_ID_FORMAT = "%s-%s";
 
   private final Map<String, CloudModel> scanAgent = new ConcurrentHashMap<>();
 
@@ -68,7 +68,7 @@ public class ProvisioningEngine extends ProcessorBase {
   }
 
   private CloudModel getCloudModel(String deviceRegistryId, String gatewayId) {
-    String gatewayKey = format(EXPECTED_DEVICE_FORMAT, deviceRegistryId, gatewayId);
+    String gatewayKey = format(IMPLICIT_DEVICE_ID_FORMAT, deviceRegistryId, gatewayId);
     return scanAgent.computeIfAbsent(gatewayKey, key -> new CloudModel());
   }
 
@@ -123,7 +123,7 @@ public class ProvisioningEngine extends ProcessorBase {
       }
       String family = requireNonNull(discoveryEvent.scan_family, "missing scan_family");
       String addr = requireNonNull(discoveryEvent.scan_addr, "missing scan_addr");
-      String expectedId = format(EXPECTED_DEVICE_FORMAT, family, addr);
+      String expectedId = format(IMPLICIT_DEVICE_ID_FORMAT, family, addr);
       if (deviceIds.containsKey(expectedId)) {
         debug("Scan device %s/%s target %s already registered", registryId, gatewayId, expectedId);
       } else {

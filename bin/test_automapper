@@ -1,0 +1,15 @@
+#!/bin/bash -e
+
+UDMI_ROOT=$(dirname $0)/..
+cd $UDMI_ROOT
+
+source etc/shell_common.sh
+
+if [[ $# != 1 ]]; then
+   usage PROJECT_SPEC
+fi
+
+project_spec=$1
+shift
+
+echo Time to test!

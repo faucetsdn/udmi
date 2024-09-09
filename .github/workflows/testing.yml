@@ -302,3 +302,38 @@ jobs:
       - name: Itemized validation
         if: ${{ !cancelled() }}
         run: bin/test_itemcheck
+
+  automapping:
+    name: Automapping capability
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - name: base setup
+        run: |
+          bin/setup_base
+          bin/clone_model
+          bin/registrar sites/udmi_site_model
+      - name: local setup
+        run: bin/start_local sites/udmi_site_model //mqtt/localhost
+      - name: bin/test_automapper
+        run: bin/test_automapper //mqtt/localhost
+      - name: udmis log
+        if: ${{ !cancelled() }}
+        run: cat /tmp/udmis.log
+      - name: mosquitto logs
+        if: ${{ !cancelled() }}
+        run: cat /var/log/mosquitto/mosquitto.log || true
+      - name: support bundle
+        if: ${{ !cancelled() }}
+        run: bin/support ${{ github.repository_owner }}_${{ github.job }}_
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          if-no-files-found: error
+          name: udmi-support_${{ github.run_id }}-l
+          path: '*_udmi-support_*.tgz'
