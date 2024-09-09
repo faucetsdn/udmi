@@ -325,9 +325,6 @@ jobs:
       - name: udmis log
         if: ${{ !cancelled() }}
         run: cat /tmp/udmis.log
-      - name: mosquitto logs
-        if: ${{ !cancelled() }}
-        run: cat /var/log/mosquitto/mosquitto.log || true
       - name: support bundle
         if: ${{ !cancelled() }}
         run: bin/support ${{ github.repository_owner }}_${{ github.job }}_
@@ -335,5 +332,5 @@ jobs:
         if: ${{ !cancelled() }}
         with:
           if-no-files-found: error
-          name: udmi-support_${{ github.run_id }}-l
+          name: udmi-support_${{ github.run_id }}-m
           path: '*_udmi-support_*.tgz'

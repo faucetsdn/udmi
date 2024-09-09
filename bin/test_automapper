@@ -12,4 +12,14 @@ fi
 project_spec=$1
 shift
 
-echo Time to test!
+site_path=sites/udmi_site_model
+
+bin/registrar $site_path $project_spec -d
+
+bin/registrar $site_path $project_spec GAT-123
+
+more $site_path/out/registration_summary.csv
+
+pubber_bg GAT-123
+
+bin/mapper GAT-123 discover

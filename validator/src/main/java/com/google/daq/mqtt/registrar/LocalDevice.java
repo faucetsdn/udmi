@@ -102,12 +102,16 @@ class LocalDevice {
   private static final String RSA_CERT_PEM = "rsa_cert.pem";
   private static final String RSA_PRIVATE_PEM = "rsa_private.pem";
   private static final String RSA_PRIVATE_PKCS8 = "rsa_private.pkcs8";
+  private static final String RSA_PRIVATE_CRT = "rsa_private.crt";
+  private static final String RSA_PRIVATE_CSR = "rsa_private.csr";
   private static final String ES_PUBLIC_PEM = "ec_public.pem";
   private static final String ES2_PUBLIC_PEM = "ec2_public.pem";
   private static final String ES3_PUBLIC_PEM = "ec3_public.pem";
   private static final String ES_CERT_PEM = "ec_cert.pem";
   private static final String ES_PRIVATE_PEM = "ec_private.pem";
   private static final String ES_PRIVATE_PKCS8 = "ec_private.pkcs8";
+  private static final String EC_PRIVATE_CRT = "ec_private.crt";
+  private static final String EC_PRIVATE_CSR = "ec_private.csr";
   private static final String RSA_AUTH_TYPE = Auth_type.RS_256.toString();
   private static final String RSA_CERT_TYPE = Auth_type.RS_256_X_509.toString();
   private static final String ES_AUTH_TYPE = Auth_type.ES_256.toString();
@@ -147,8 +151,12 @@ class LocalDevice {
           ES_CERT_TYPE, ES_CERT_PEM);
   private static final Set<String> OPTIONAL_FILES =
       ImmutableSet.of(
+          RSA_PRIVATE_CRT,
+          RSA_PRIVATE_CSR,
           RSA2_PUBLIC_PEM,
           RSA3_PUBLIC_PEM,
+          EC_PRIVATE_CRT,
+          EC_PRIVATE_CSR,
           ES2_PUBLIC_PEM,
           ES3_PUBLIC_PEM,
           SAMPLES_DIR,

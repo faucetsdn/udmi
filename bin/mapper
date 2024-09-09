@@ -3,14 +3,17 @@
 UDMI_ROOT=$(dirname $0)/..
 source $UDMI_ROOT/etc/shell_common.sh
 
-in_file=/tmp/registrar_config.json
-out_file=/tmp/mapper_config.json
+in_file=out/registrar_conf.json
+out_file=out/mapper_conf.json
+
+if [[ $# != 2 ]]; then
+    usage device_id command
+fi
 
 device_id=$1
 command=$2
-shift 2 || fail $0 device_id command
+shift 2
 
 jq .device_id=\"$device_id\" $in_file > $out_file
-
 
 java -cp $UDMI_JAR com.google.daq.mqtt.mapping.MappingAgent $out_file $command
