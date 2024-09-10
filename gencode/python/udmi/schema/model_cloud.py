@@ -59,6 +59,7 @@ class CloudModel:
     self.num_id = None
     self.operation = None
     self.metadata = None
+    self.metadata_str = None
     self.device_ids = None
 
   @staticmethod
@@ -85,6 +86,7 @@ class CloudModel:
     result.num_id = source.get('num_id')
     result.operation = source.get('operation')
     result.metadata = source.get('metadata')
+    result.metadata_str = source.get('metadata_str')
     result.device_ids = Object18ECC5EE.map_from(source.get('device_ids'))
     return result
 
@@ -144,6 +146,8 @@ class CloudModel:
       result['operation'] = self.operation # 5
     if self.metadata:
       result['metadata'] = self.metadata # 1
+    if self.metadata_str:
+      result['metadata_str'] = self.metadata_str # 5
     if self.device_ids:
       result['device_ids'] = Object18ECC5EE.expand_dict(self.device_ids) # 2
     return result

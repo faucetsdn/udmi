@@ -124,6 +124,10 @@
         }
       }
     },
+    "metadata_str": {
+      "type": "string",
+      "description": "Strigified version of the metadata object, used for internal backend processing"
+    },
     "device_ids": {
       "description": "If operating on the entire registry, then this manifests as a map of devices not just one device.",
       "existingJavaType": "java.util.Map<String, CloudModel>",

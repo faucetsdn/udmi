@@ -99,8 +99,8 @@ public class GeneralUtils {
    * the target class is "final" but the fields themselves need to be updated.
    *
    * @param from source object
-   * @param to   target object
-   * @param <T>  type of object
+   * @param to target object
+   * @param <T> type of object
    */
   public static <T> void copyFields(T from, T to, boolean includeNull) {
     Field[] fields = from.getClass().getDeclaredFields();
@@ -283,11 +283,16 @@ public class GeneralUtils {
   }
 
   public static <T, V> V ifNotNullGet(T value, Function<T, V> converter) {
-    return ifNotNullGet(value, converter, (V) null);
+    return ifNotNullGet(value, converter, null);
   }
 
   public static <T, V> V ifNotNullGet(T value, Function<T, V> converter, V elseResult) {
     return value == null ? elseResult : converter.apply(value);
+  }
+
+  public static <T, V> V ifNotNullGetElse(T value, Function<T, V> converter,
+      Supplier<V> elseResult) {
+    return value == null ? elseResult.get() : converter.apply(value);
   }
 
   public static <T, V> V ifNotNullGet(T value, Supplier<V> converter) {
