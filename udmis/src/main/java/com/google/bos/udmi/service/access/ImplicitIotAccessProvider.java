@@ -321,7 +321,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     }
   }
 
-  public void modifyDevice(String registryId, String deviceId, CloudModel cloudModel) {
+  private void modifyDevice(String registryId, String deviceId, CloudModel cloudModel) {
     CloudModel model = fetchDevice(registryId, deviceId);
     Map<String, String> metadataMap = ifNotNullGetElse(model.metadata_str, JsonUtil::toStringMapStr,
         HashMap::new);
