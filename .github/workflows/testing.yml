@@ -325,6 +325,9 @@ jobs:
       - name: udmis log
         if: ${{ !cancelled() }}
         run: cat /tmp/udmis.log
+      - name: pubber log
+        if: ${{ !cancelled() }}
+        run: cat out/pubber.log.GAT-123
       - name: support bundle
         if: ${{ !cancelled() }}
         run: bin/support ${{ github.repository_owner }}_${{ github.job }}_
