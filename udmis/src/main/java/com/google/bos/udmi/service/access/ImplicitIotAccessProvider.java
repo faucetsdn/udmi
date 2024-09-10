@@ -5,7 +5,6 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.Common.DEFAULT_REGION;
 import static com.google.udmi.util.GeneralUtils.booleanString;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
-import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGetElse;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
@@ -14,7 +13,6 @@ import static com.google.udmi.util.GeneralUtils.isNullOrNotEmpty;
 import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringify;
-import static com.google.udmi.util.JsonUtil.toStringMap;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
@@ -77,6 +75,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   private static final String LAST_CONFIG_ACKED = "last_config_ack";
   private static final String CONFIG_SUFFIX = "/config";
   private static final String METADATA_STR_KEY = "metadata_str";
+  private static final String RESOURCE_TYPE_PROPERTY = "resource_type";
   private final boolean enabled;
   private final ConnectionBroker broker = new MosquittoBroker(this);
   private final Future<Void> connLogger;
@@ -196,6 +195,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   private Map<String, String> toDeviceMap(CloudModel cloudModel, String createdAt) {
     Map<String, String> properties = new HashMap<>();
     ifNotNullThen(createdAt, x -> properties.put(CREATED_AT_PROPERTY, createdAt));
+    properties.put(RESOURCE_TYPE_PROPERTY, cloudModel.resource_type.toString());
     properties.put(BLOCKED_PROPERTY, booleanString(cloudModel.blocked));
     ifNotNullThen(cloudModel.num_id, id -> properties.put(NUM_ID_PROPERTY, id));
     ifTrueThen(!cloudModel.credentials.isEmpty(), () -> {
