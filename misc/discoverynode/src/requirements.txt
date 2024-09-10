@@ -1,0 +1,25 @@
+BAC0==23.7.3
+bacpypes==0.18.7
+cffi==1.16.0
+colorama==0.4.6
+cryptography==43.0.0
+et-xmlfile==1.1.0
+iniconfig==2.0.0
+numpy==2.0.1
+openpyxl==3.1.5
+packaging==24.1
+paho-mqtt==2.1.0
+pandas==2.2.2
+pd==0.0.4
+pluggy==1.5.0
+prometheus_client==0.20.0
+pycparser==2.22
+PyJWT==2.9.0
+pyOpenSSL==24.2.1
+pytest==8.3.2
+python-dateutil==2.9.0.post0
+pytz==2024.1
+scapy==2.5.0
+six==1.16.0
+tzdata==2024.1
+pyasyncore; python_version>'3.11'
