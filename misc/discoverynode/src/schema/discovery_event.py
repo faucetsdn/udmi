@@ -4,6 +4,7 @@ import schema.util
 import dataclasses
 import json
 import collections
+import copy
 
 @dataclasses.dataclass
 class DiscoverySystemSoftware:
@@ -39,6 +40,6 @@ class DiscoveryEvent:
   def to_json(self) -> str:
     as_dict = dataclasses.asdict(self)
     as_dict["timestamp"] = datetime.datetime.now()
+    as_dict = schema.util.deep_remove(copy.deepcopy(as_dict), None, [{}, None])
     return json.dumps(as_dict, default=schema.util.json_serializer, indent=4)
   
-
