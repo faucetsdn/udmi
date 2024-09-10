@@ -22,4 +22,6 @@ more $site_path/out/registration_summary.csv
 
 pubber_bg GAT-123
 
+bin/mapper GAT-123 provision
+
 bin/mapper GAT-123 discover
