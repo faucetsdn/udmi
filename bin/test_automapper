@@ -25,3 +25,10 @@ pubber_bg GAT-123
 bin/mapper GAT-123 provision
 
 bin/mapper GAT-123 discover
+
+echo ####### udmis provision logs
+fgrep -i provision /tmp/udmis.log
+
+echo ####### etcd dump
+
+etcdctl get /r/ZZ-TRI-FECTA/d/GAT-123 /r/ZZ-TRI-FECTA/d/GAT-124
