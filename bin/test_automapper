@@ -31,4 +31,4 @@ fgrep -i provision /tmp/udmis.log
 
 echo ####### etcd dump
 
-etcdctl get /r/ZZ-TRI-FECTA/d/GAT-123 /r/ZZ-TRI-FECTA/d/GAT-124
+udmis/bin/etcdctl get /r/ZZ-TRI-FECTA/d/GAT-123 /r/ZZ-TRI-FECTA/d/GAT-124
