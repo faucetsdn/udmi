@@ -1,17 +1,14 @@
 
 package udmi.schema;
 
-import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import javax.annotation.processing.Generated;
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 
@@ -25,8 +22,6 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 @JsonPropertyOrder({
     "description",
     "device_version",
-    "device_type",
-    "parent",
     "zone",
     "tags",
     "location",
@@ -55,20 +50,6 @@ public class SystemModel {
     @JsonProperty("device_version")
     @JsonPropertyDescription("Version of schema supported by the device")
     public java.lang.String device_version;
-    /**
-     * Type of device
-     * 
-     */
-    @JsonProperty("device_type")
-    @JsonPropertyDescription("Type of device")
-    public SystemModel.Device_type device_type;
-    /**
-     * Parent device to which the device is physically connected
-     * 
-     */
-    @JsonProperty("parent")
-    @JsonPropertyDescription("Parent device to which the device is physically connected")
-    public java.lang.String parent;
     /**
      * Aggregation of spaces, partial spaces or other zones that the device is serving
      * 
@@ -142,11 +123,9 @@ public class SystemModel {
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.device_version == null)? 0 :this.device_version.hashCode()));
-        result = ((result* 31)+((this.parent == null)? 0 :this.parent.hashCode()));
         result = ((result* 31)+((this.software == null)? 0 :this.software.hashCode()));
         result = ((result* 31)+((this.metrics_rate_sec == null)? 0 :this.metrics_rate_sec.hashCode()));
         result = ((result* 31)+((this.description == null)? 0 :this.description.hashCode()));
-        result = ((result* 31)+((this.device_type == null)? 0 :this.device_type.hashCode()));
         result = ((result* 31)+((this.physical_tag == null)? 0 :this.physical_tag.hashCode()));
         result = ((result* 31)+((this.tags == null)? 0 :this.tags.hashCode()));
         result = ((result* 31)+((this.zone == null)? 0 :this.zone.hashCode()));
@@ -167,54 +146,7 @@ public class SystemModel {
             return false;
         }
         SystemModel rhs = ((SystemModel) other);
-        return (((((((((((((((this.device_version == rhs.device_version)||((this.device_version!= null)&&this.device_version.equals(rhs.device_version)))&&((this.parent == rhs.parent)||((this.parent!= null)&&this.parent.equals(rhs.parent))))&&((this.software == rhs.software)||((this.software!= null)&&this.software.equals(rhs.software))))&&((this.metrics_rate_sec == rhs.metrics_rate_sec)||((this.metrics_rate_sec!= null)&&this.metrics_rate_sec.equals(rhs.metrics_rate_sec))))&&((this.description == rhs.description)||((this.description!= null)&&this.description.equals(rhs.description))))&&((this.device_type == rhs.device_type)||((this.device_type!= null)&&this.device_type.equals(rhs.device_type))))&&((this.physical_tag == rhs.physical_tag)||((this.physical_tag!= null)&&this.physical_tag.equals(rhs.physical_tag))))&&((this.tags == rhs.tags)||((this.tags!= null)&&this.tags.equals(rhs.tags))))&&((this.zone == rhs.zone)||((this.zone!= null)&&this.zone.equals(rhs.zone))))&&((this.min_loglevel == rhs.min_loglevel)||((this.min_loglevel!= null)&&this.min_loglevel.equals(rhs.min_loglevel))))&&((this.location == rhs.location)||((this.location!= null)&&this.location.equals(rhs.location))))&&((this.adjunct == rhs.adjunct)||((this.adjunct!= null)&&this.adjunct.equals(rhs.adjunct))))&&((this.serial_no == rhs.serial_no)||((this.serial_no!= null)&&this.serial_no.equals(rhs.serial_no))))&&((this.hardware == rhs.hardware)||((this.hardware!= null)&&this.hardware.equals(rhs.hardware))));
-    }
-
-
-    /**
-     * Type of device
-     * 
-     */
-    @Generated("jsonschema2pojo")
-    public enum Device_type {
-
-        IP("IP"),
-        GROUP("GROUP"),
-        SERIAL("SERIAL"),
-        VIRTUAL("VIRTUAL");
-        private final java.lang.String value;
-        private final static Map<java.lang.String, SystemModel.Device_type> CONSTANTS = new HashMap<java.lang.String, SystemModel.Device_type>();
-
-        static {
-            for (SystemModel.Device_type c: values()) {
-                CONSTANTS.put(c.value, c);
-            }
-        }
-
-        Device_type(java.lang.String value) {
-            this.value = value;
-        }
-
-        @Override
-        public java.lang.String toString() {
-            return this.value;
-        }
-
-        @JsonValue
-        public java.lang.String value() {
-            return this.value;
-        }
-
-        @JsonCreator
-        public static SystemModel.Device_type fromValue(java.lang.String value) {
-            SystemModel.Device_type constant = CONSTANTS.get(value);
-            if (constant == null) {
-                throw new IllegalArgumentException(value);
-            } else {
-                return constant;
-            }
-        }
-
+        return (((((((((((((this.device_version == rhs.device_version)||((this.device_version!= null)&&this.device_version.equals(rhs.device_version)))&&((this.software == rhs.software)||((this.software!= null)&&this.software.equals(rhs.software))))&&((this.metrics_rate_sec == rhs.metrics_rate_sec)||((this.metrics_rate_sec!= null)&&this.metrics_rate_sec.equals(rhs.metrics_rate_sec))))&&((this.description == rhs.description)||((this.description!= null)&&this.description.equals(rhs.description))))&&((this.physical_tag == rhs.physical_tag)||((this.physical_tag!= null)&&this.physical_tag.equals(rhs.physical_tag))))&&((this.tags == rhs.tags)||((this.tags!= null)&&this.tags.equals(rhs.tags))))&&((this.zone == rhs.zone)||((this.zone!= null)&&this.zone.equals(rhs.zone))))&&((this.min_loglevel == rhs.min_loglevel)||((this.min_loglevel!= null)&&this.min_loglevel.equals(rhs.min_loglevel))))&&((this.location == rhs.location)||((this.location!= null)&&this.location.equals(rhs.location))))&&((this.adjunct == rhs.adjunct)||((this.adjunct!= null)&&this.adjunct.equals(rhs.adjunct))))&&((this.serial_no == rhs.serial_no)||((this.serial_no!= null)&&this.serial_no.equals(rhs.serial_no))))&&((this.hardware == rhs.hardware)||((this.hardware!= null)&&this.hardware.equals(rhs.hardware))));
     }
 
 }

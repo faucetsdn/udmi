@@ -5,6 +5,7 @@ import java.util.HashMap;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
@@ -16,11 +17,19 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "parent",
     "families"
 })
 @Generated("jsonschema2pojo")
 public class LocalnetModel {
 
+    /**
+     * Parent device to which the device is physically connected
+     * 
+     */
+    @JsonProperty("parent")
+    @JsonPropertyDescription("Parent device to which the device is physically connected")
+    public Parent parent;
     /**
      * 
      * (Required)
@@ -33,6 +42,7 @@ public class LocalnetModel {
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.families == null)? 0 :this.families.hashCode()));
+        result = ((result* 31)+((this.parent == null)? 0 :this.parent.hashCode()));
         return result;
     }
 
@@ -45,7 +55,7 @@ public class LocalnetModel {
             return false;
         }
         LocalnetModel rhs = ((LocalnetModel) other);
-        return ((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families)));
+        return (((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families)))&&((this.parent == rhs.parent)||((this.parent!= null)&&this.parent.equals(rhs.parent))));
     }
 
 }

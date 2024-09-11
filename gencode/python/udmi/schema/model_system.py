@@ -282,8 +282,6 @@ class SystemModel:
   def __init__(self):
     self.description = None
     self.device_version = None
-    self.device_type = None
-    self.parent = None
     self.zone = None
     self.tags = None
     self.location = None
@@ -302,8 +300,6 @@ class SystemModel:
     result = SystemModel()
     result.description = source.get('description')
     result.device_version = source.get('device_version')
-    result.device_type = source.get('device_type')
-    result.parent = source.get('parent')
     result.zone = source.get('zone')
     result.tags = source.get('tags')
     result.location = Object9396614F.from_dict(source.get('location'))
@@ -338,10 +334,6 @@ class SystemModel:
       result['description'] = self.description # 5
     if self.device_version:
       result['device_version'] = self.device_version # 5
-    if self.device_type:
-      result['device_type'] = self.device_type # 5
-    if self.parent:
-      result['parent'] = self.parent # 5
     if self.zone:
       result['zone'] = self.zone # 5
     if self.tags:
