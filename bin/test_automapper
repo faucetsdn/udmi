@@ -14,7 +14,7 @@ shift
 
 site_path=sites/udmi_site_model
 
-bin/registrar $site_path $project_spec -d
+bin/registrar $site_path $project_spec -x -d
 
 bin/registrar $site_path $project_spec GAT-123
 
