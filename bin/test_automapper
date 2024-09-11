@@ -17,7 +17,8 @@ site_path=sites/udmi_site_model
 bin/registrar $site_path $project_spec -x -d
 
 # Initialize the system to have no proxied devices present
-jq '.gateway.proxy_ids = []' $site_path/devices/GAT-123/metadata.json
+metadata=$site_path/devices/GAT-123/metadata.json
+jq '.gateway.proxy_ids = []' $metadata | sponge $metadata
 
 bin/registrar $site_path $project_spec GAT-123
 
