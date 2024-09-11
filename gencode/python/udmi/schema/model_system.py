@@ -91,7 +91,7 @@ class Object88B5177A:
     return result
 
 
-class ObjectF7EF0790:
+class Object466A2796:
   """Generated schema class"""
 
   def __init__(self):
@@ -108,7 +108,7 @@ class ObjectF7EF0790:
   def from_dict(source):
     if not source:
       return None
-    result = ObjectC9D7C7E6()
+    result = Object8B23C514()
     result.site = source.get('site')
     result.panel = source.get('panel')
     result.section = source.get('section')
@@ -125,7 +125,7 @@ class ObjectF7EF0790:
       return None
     result = {}
     for key in source:
-      result[key] = ObjectC9D7C7E6.from_dict(source[key])
+      result[key] = Object8B23C514.from_dict(source[key])
     return result
 
   @staticmethod
@@ -302,7 +302,7 @@ class SystemModel:
     result.device_version = source.get('device_version')
     result.zone = source.get('zone')
     result.tags = source.get('tags')
-    result.location = ObjectC9D7C7E6.from_dict(source.get('location'))
+    result.location = Object8B23C514.from_dict(source.get('location'))
     result.serial_no = source.get('serial_no')
     result.hardware = SystemHardware.from_dict(source.get('hardware'))
     result.software = source.get('software')
