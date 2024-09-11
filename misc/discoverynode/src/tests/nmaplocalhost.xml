@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE nmaprun>
+<?xml-stylesheet href="file:///usr/bin/../share/nmap/nmap.xsl" type="text/xsl"?>
+<!-- Nmap 7.94SVN scan initiated Tue Aug 13 14:38:03 2024 as: /usr/bin/nmap -&#45;script banner -oX nmaplocalhost.xml -&#45;stats-every 5s -p 22 127.0.0.1 -->
+<nmaprun scanner="nmap" args="/usr/bin/nmap -&#45;script banner -oX nmaplocalhost.xml -&#45;stats-every 5s -p 22 127.0.0.1" start="1723556283" startstr="Tue Aug 13 14:38:03 2024" version="7.94SVN" xmloutputversion="1.05">
+<scaninfo type="syn" protocol="tcp" numservices="1" services="22"/>
+<verbose level="0"/>
+<debugging level="0"/>
+<host starttime="1723556283" endtime="1723556283"><status state="up" reason="localhost-response" reason_ttl="0"/>
+<address addr="127.0.0.1" addrtype="ipv4"/>
+<hostnames>
+<hostname name="localhost" type="PTR"/>
+</hostnames>
+<ports><port protocol="tcp" portid="22"><state state="open" reason="syn-ack" reason_ttl="64"/><service name="ssh" method="table" conf="3"/><script id="banner" output="SSH-2.0-OpenSSH_9.8 metadata-inspection GoogleMDI-4.0 AAAAIKIF9&#xa;XFUfDT3Dr8hNqEsh2En+9VlXf+ZyelLOm/S1P4sAAAAIO4WSRvQGw0fbyDOuemkd4xd+...&#xa;"/></port>
+</ports>
+<times srtt="44" rttvar="5000" to="100000"/>
+</host>
+<runstats><finished time="1723556283" timestr="Tue Aug 13 14:38:03 2024" summary="Nmap done at Tue Aug 13 14:38:03 2024; 1 IP address (1 host up) scanned in 0.12 seconds" elapsed="0.12" exit="success"/><hosts up="1" down="0" total="1"/>
+</runstats>
+</nmaprun>
