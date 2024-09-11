@@ -22,7 +22,8 @@ jq '.gateway.proxy_ids = []' $metadata | sponge $metadata
 
 bin/registrar $site_path $project_spec GAT-123
 
-! fgrep vendor- $site_path/out/registration_summary.csv
+entries=$(wc -l $site_path/out/registration_summary.csv)
+[[ $entries == 1 ]] || fail Unexpected registered entries, found $entries
 
 pubber_bg GAT-123
 
@@ -36,11 +37,11 @@ sleep 20
 echo Extracting results at $(date -u -Is)
 bin/registrar $site_path $project_spec
 
-status=$(fgrep vendor-281 $site_path/out/registration_summary.csv | awk '{print $3}') || fail no vendor device found
+status=$(fgrep discovered_vendor-281 $site_path/out/registration_summary.csv | awk '{print $3}')
 echo vendor device status is $status
 [[ $status == BLOCK, ]] || fail Vendor device status should be BLOCK
 
-type=$(jq -r .resource_type sites/udmi_site_model/extras/vendor-20231/cloud_model.json)
+type=$(jq -r .resource_type sites/udmi_site_model/extras/discovered_vendor-20231/cloud_model.json)
 echo vendor extracted device type $type
 [[ $type == DEVICE ]] || fail Vendor device type should be DEVICE
 
