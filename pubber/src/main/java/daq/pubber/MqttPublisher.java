@@ -487,9 +487,11 @@ public class MqttPublisher implements Publisher {
     String mqttTopic = getMessageTopic(deviceId, mqttSuffix);
     String handlerKey = getHandlerKey(mqttTopic);
     if (handler == null) {
+      info(format("Removing handler %s", handlerKey));
       handlers.remove(handlerKey);
       handlersType.remove(handlerKey);
     } else if (handlers.put(handlerKey, (Consumer<Object>) handler) == null) {
+      info(format("Registered handler for %s as %s", handlerKey, messageType.getSimpleName()));
       handlersType.put(handlerKey, (Class<Object>) messageType);
     } else {
       throw new IllegalStateException("Overwriting existing handler " + handlerKey);
@@ -704,7 +706,7 @@ public class MqttPublisher implements Publisher {
       Consumer<Object> handler = handlers.get(handlerKey);
       Class<Object> type = handlersType.get(handlerKey);
       if (handler == null) {
-        error("Missing handler", deviceId, messageType, "receive",
+        error("Missing handler " + handlerKey, deviceId, messageType, "receive",
             new RuntimeException("No registered handler for topic " + topic));
         handlersType.put(handlerKey, Object.class);
         handlers.put(handlerKey, this::ignoringHandler);

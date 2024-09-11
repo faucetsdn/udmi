@@ -45,12 +45,12 @@ public class ProxyDevice extends ManagerBase implements ManagerHost {
   protected void activate() {
     try {
       active.set(false);
+      info("Activating proxy device " + deviceId);
       MqttDevice mqttDevice = pubberHost.getMqttDevice(deviceId);
       mqttDevice.registerHandler(MqttDevice.CONFIG_TOPIC, this::configHandler, Config.class);
       mqttDevice.connect(deviceId);
       deviceManager.activate();
       active.set(true);
-      info("Activated proxy device " + deviceId);
     } catch (Exception e) {
       error(format("Could not connect proxy device %s: %s", deviceId, friendlyStackTrace(e)));
     }
