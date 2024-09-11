@@ -29,10 +29,6 @@ bin/mapper GAT-123 discover
 echo ####### udmis provision logs
 fgrep -i provision /tmp/udmis.log
 
-echo ####### etcd dump
-
-udmis/bin/etcdctl get /r/ZZ-TRI-FECTA/d/GAT-123 /r/ZZ-TRI-FECTA/d/GAT-124
-
 bin/registrar $site_path $project_spec
 
 status=$(fgrep _vendor-281 $site_path/out/registration_summary.csv | awk '{print $3}') || fail no vendor device found

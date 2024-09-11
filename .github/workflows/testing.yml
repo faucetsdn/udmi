@@ -306,7 +306,11 @@ jobs:
   automapping:
     name: Automapping capability
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    needs: redirect
+    timeout-minutes: 10
+    if: vars.TARGET_PROJECT != ''
+    env:
+      TARGET_PROJECT: ${{ vars.TARGET_PROJECT }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -319,9 +323,9 @@ jobs:
           bin/clone_model
           bin/registrar sites/udmi_site_model
       - name: local setup
-        run: bin/start_local sites/udmi_site_model //mqtt/localhost
+        run: bin/start_local sites/udmi_site_model $TARGET_PROJECT
       - name: bin/test_automapper
-        run: bin/test_automapper //mqtt/localhost
+        run: bin/test_automapper $TARGET_PROJECT
       - name: udmis log
         if: ${{ !cancelled() }}
         run: cat /tmp/udmis.log
