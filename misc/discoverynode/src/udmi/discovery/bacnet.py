@@ -12,10 +12,10 @@ import time
 from typing import Any, Callable
 import xml.etree.ElementTree
 import BAC0
-import discovery
-import schema.discovery_event
-from schema.discovery_event import DiscoveryEvent
-import schema.state
+import udmi.discovery.discovery as discovery
+import udmi.schema.discovery_event
+from udmi.schema.discovery_event import DiscoveryEvent
+import udmi.schema.state
 
 
 BAC0.log_level(log_file=None, stdout=None, stderr=None)
@@ -29,7 +29,7 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
 
   def __init__(
       self,
-      state: schema.state.LocalnetFamily,
+      state: udmi.schema.state.LocalnetFamily,
       publisher: Callable[[DiscoveryEvent], None],
       *,
       bacnet_ip: str = None,
@@ -80,13 +80,13 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
               )
           )
 
-          event = schema.discovery_event.DiscoveryEvent(
+          event = udmi.schema.discovery_event.DiscoveryEvent(
               generation=self.config.generation,
               scan_family=self.scan_family,
-              scan_addr=id,
+              scan_addr=str(id),
           )
 
-          event.families["ipv4"] = schema.discovery_event.DiscoveryFamily(
+          event.families["ipv4"] = udmi.schema.discovery_event.DiscoveryFamily(
               addr=address
           )
           event.system.hardware.make = vendor_name

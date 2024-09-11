@@ -1,10 +1,11 @@
-import discovery
-import time
-import threading
-from schema.discovery_event import DiscoveryEvent, DiscoveryFamily
 import concurrent.futures
-import logging
 import itertools
+import logging
+import threading
+import time
+import udmi.discovery.discovery as discovery
+from udmi.schema.discovery_event import DiscoveryEvent, DiscoveryFamily
+
 
 class NumberDiscovery(discovery.DiscoveryController):
 
@@ -17,7 +18,9 @@ class NumberDiscovery(discovery.DiscoveryController):
 
   def start_discovery(self):
     self.cancelled = False
-    self.task_thread = threading.Thread(target=self.discoverer, args=[], daemon=True)
+    self.task_thread = threading.Thread(
+        target=self.discoverer, args=[], daemon=True
+    )
     self.task_thread.start()
 
   @discovery.catch_exceptions_to_state
@@ -26,7 +29,9 @@ class NumberDiscovery(discovery.DiscoveryController):
     for i in itertools.count():
       if self.cancelled:
         return
-      result = DiscoveryEvent(generation="generation", scan_family = self.scan_family, scan_addr=i)
+      result = DiscoveryEvent(
+          generation="generation", scan_family=self.scan_family, scan_addr=i
+      )
       self.publisher(result)
       time.sleep(1)
 

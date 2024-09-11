@@ -15,9 +15,10 @@ from typing import Callable
 import jwt
 import paho.mqtt.client
 import paho.mqtt.enums
+import udmi.publishers.publisher
 
 
-class MQTTClient:
+class MQTT(udmi.publishers.publisher.Publisher):
 
   def __init__(
       self,
@@ -157,20 +158,19 @@ class MQTTClient:
     #
 
   def on_pre_connect(self, client, userdata):
-    """
-    Paho preconnect callback. This is a blocking call made just before a
-    PAHO makes a connection is made. 
-    
+    """Paho preconnect callback.
+
+    This is a blocking call made just before a PAHO makes a connection is made.
+
     Used to set JWT for the connection
-    
+
     Args:
       client: the client instance for this callback
-      userdata: the private user data as set in Client() or user_data_set() 
+      userdata: the private user data as set in Client() or user_data_set()
     """
     del userdata  # Unused, part of callback API.
 
     client.username_pw_set(username="unused", password=self._create_jwt())
-
 
   def on_message(
       self,
@@ -183,7 +183,7 @@ class MQTTClient:
     Args:
       client: the client instance for this callback
       userdata: the private user data as set in Client() or user_data_set()
-      message :the received message. This is a class with members topic,
+        message :the received message. This is a class with members topic,
         payload, qos, retain.
     """
     del client, userdata  # Unused, part of callback API.
@@ -223,6 +223,6 @@ class MQTTClient:
 
   def set_config_callback(self, callback: Callable[[str], None]):
     self.config_callback = callback
-    
+
   def publish_message(self, topic, message):
     return self.client.publish(topic, message)

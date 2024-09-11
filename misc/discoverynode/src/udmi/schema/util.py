@@ -1,19 +1,25 @@
+import dataclasses
 import datetime
 import json
-import dataclasses
 from typing import Any
+
 
 def current_time_utc():
   """Returns the current timestamp in UTC."""
   return datetime.datetime.now(tz=datetime.timezone.utc)
 
+
 def datetime_serializer(timestamp: datetime.datetime):
-  return datetime.datetime.astimezone(timestamp, datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+  return datetime.datetime.astimezone(
+      timestamp, datetime.timezone.utc
+  ).strftime("%Y-%m-%dT%H:%M:%SZ")
+
 
 def json_serializer(obj: Any):
   if isinstance(obj, datetime.datetime):
     return datetime_serializer(obj)
   raise TypeError(f"Type {type(obj)} is not serializable")
+
 
 def deep_remove(
     target: dict,

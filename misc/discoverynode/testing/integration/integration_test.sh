@@ -28,6 +28,8 @@ docker run -it --rm\
   --name discoverynode-blah \
   --network=test-network \
   --mount type=bind,source=$ROOT_DIR/docker_config.json,target=/usr/src/app/docker_config.json \
-  test-discovery_node
+  test-discovery_node || error=1
 
 docker ps -a | grep "discoverynode-test-" | awk '{print $1}' | xargs docker stop
+echo error=$error
+exit $error

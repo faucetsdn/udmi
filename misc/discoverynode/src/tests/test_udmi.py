@@ -1,11 +1,12 @@
 import pytest
-import udmi
+import collections
+import udmi.core
 from unittest import mock
 import time
 
 def test_state_monitor():
   mock_publisher = mock.MagicMock()
-  udmi_client = udmi.UDMI(mock_publisher)
+  udmi_client = udmi.core.UDMI(publisher = mock_publisher, topic_prefix = "prefix", config = mock.MagicMock())
   udmi_client.state.system = "forcechange"
   time.sleep(1)
   udmi_client.state.discovery =  "blah"
@@ -13,7 +14,7 @@ def test_state_monitor():
   assert mock_publisher.call_count == 3 # first state is published
 
 def test_config_router():
-  router = discovery.config_router.ConfigRouter()
+  router = udmi.config_router.ConfigRouter()
   mock_object = mock.MagicMock()
   router.add_config_route(lambda x : x == {"test":"pass"}, mock_object)
   router.received_config({"test": "fail"})
