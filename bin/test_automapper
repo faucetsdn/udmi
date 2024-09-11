@@ -30,6 +30,10 @@ bin/mapper GAT-123 provision
 
 bin/mapper GAT-123 discover
 
+echo Waiting for discovery...
+sleep 20
+
+echo Extracting results at $(date -u -Is)
 bin/registrar $site_path $project_spec
 
 status=$(fgrep _vendor-281 $site_path/out/registration_summary.csv | awk '{print $3}') || fail no vendor device found

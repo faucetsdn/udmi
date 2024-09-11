@@ -36,7 +36,7 @@ import udmi.schema.Envelope;
 @ComponentName("provision")
 public class ProvisioningEngine extends ProcessorBase {
 
-  private static final String IMPLICIT_DEVICE_ID_FORMAT = "_%s-%s";
+  private static final String IMPLICIT_DEVICE_ID_FORMAT = "%s-%s";
   private static final String GATEWAY_KEY_FORMAT = "%s-%s";
 
   private final Map<String, CloudModel> scanAgent = new ConcurrentHashMap<>();
