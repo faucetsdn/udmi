@@ -1,0 +1,49 @@
+#!/bin/bash -e
+
+UDMI_ROOT=$(dirname $0)/..
+cd $UDMI_ROOT
+
+source etc/shell_common.sh
+
+if [[ $# != 1 ]]; then
+   usage PROJECT_SPEC
+fi
+
+project_spec=$1
+shift
+
+site_path=sites/udmi_site_model
+
+bin/registrar $site_path $project_spec -x -d
+
+# Initialize the system to have no proxied devices present
+metadata=$site_path/devices/GAT-123/metadata.json
+jq '.gateway.proxy_ids = []' $metadata | sponge $metadata
+
+bin/registrar $site_path $project_spec GAT-123
+
+entries=$(wc -l < $site_path/out/registration_summary.csv)
+[[ $entries == 2 ]] || fail Unexpected registered entries, found $entries
+
+pubber_bg GAT-123
+
+bin/mapper GAT-123 provision
+
+bin/mapper GAT-123 discover
+
+echo Waiting for discovery...
+sleep 20
+
+echo Extracting results at $(date -u -Is)
+bin/registrar $site_path $project_spec
+
+status=$(fgrep discovered_vendor-281 $site_path/out/registration_summary.csv | awk '{print $3}') || true
+echo vendor device status is $status
+[[ $status == BLOCK, ]] || fail Vendor device status should be BLOCK
+
+type=$(jq -r .resource_type sites/udmi_site_model/extras/discovered_vendor-20231/cloud_model.json) || true
+echo vendor extracted device type $type
+[[ $type == DEVICE ]] || fail Vendor device type should be DEVICE
+
+echo
+echo Done with automapper test

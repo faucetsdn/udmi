@@ -440,6 +440,18 @@ public abstract class JsonUtil {
   }
 
   /**
+   * Convert the pojo to a mapped representation of strings only.
+   *
+   * @param message input object to convert
+   * @return object-as-map
+   */
+  public static Map<String, String> toStringMapStr(String message) {
+    @SuppressWarnings("unchecked")
+    Map<String, String> map = fromString(TreeMap.class, message);
+    return map;
+  }
+
+  /**
    * Extract the underlying string representation from a JSON encoded message.
    */
   public static String unquoteJson(String message) {

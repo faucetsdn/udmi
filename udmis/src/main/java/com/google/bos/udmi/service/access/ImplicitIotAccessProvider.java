@@ -3,14 +3,17 @@ package com.google.bos.udmi.service.access;
 import static com.google.bos.udmi.service.messaging.MessageDispatcher.rawString;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.Common.DEFAULT_REGION;
+import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.booleanString;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isNullOrNotEmpty;
 import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.isoConvert;
+import static com.google.udmi.util.JsonUtil.stringify;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
@@ -27,12 +30,14 @@ import com.google.bos.udmi.service.support.ConnectionBroker.Direction;
 import com.google.bos.udmi.service.support.DataRef;
 import com.google.bos.udmi.service.support.IotDataProvider;
 import com.google.bos.udmi.service.support.MosquittoBroker;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -60,7 +65,8 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   private static final String CONFIG_VER_KEY = "config_ver";
   private static final String LAST_CONFIG_KEY = "last_config";
   private static final String LAST_STATE_KEY = "last_state";
-  private static final String DEVICES_COLLECTION = "devices";
+  private static final String DEVICES_ACTIVE = "active";
+  private static final String BOUND_TO_KEY = "bound_to";
   private static final String BLOCKED_PROPERTY = "blocked";
   private static final String CREATED_AT_PROPERTY = "created_at";
   private static final String REGISTRIES_KEY = "registries";
@@ -71,12 +77,14 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   private static final String AUTH_PASSWORD_PROPERTY = "auth_pass";
   private static final String LAST_CONFIG_ACKED = "last_config_ack";
   private static final String CONFIG_SUFFIX = "/config";
+  private static final String METADATA_STR_KEY = "metadata_str";
+  private static final String RESOURCE_TYPE_PROPERTY = "resource_type";
   private final boolean enabled;
   private final ConnectionBroker broker = new MosquittoBroker(this);
   private final Future<Void> connLogger;
   private IotDataProvider database;
   private ReflectProcessor reflect;
-  private Map<String, Integer> configPublished = new ConcurrentHashMap<>();
+  private final Map<String, Integer> configPublished = new ConcurrentHashMap<>();
 
   /**
    * Create an access provider with implicit internal resources.
@@ -94,8 +102,10 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     return String.valueOf(Math.abs(Objects.hash(registryId, deviceId)));
   }
 
-  private void bindDevice(String registryId, String deviceId, CloudModel model) {
-    // Binding is a nop, so silently do nothing!
+  private void bindDevicesToGateway(String registryId, String gatewayId, CloudModel cloudModel) {
+    Set<String> deviceIds = cloudModel.device_ids.keySet();
+    deviceIds.forEach(
+        deviceId -> registryDeviceRef(registryId, deviceId).put(BOUND_TO_KEY, gatewayId));
   }
 
   private void blockDevice(String registryId, String deviceId, CloudModel cloudModel) {
@@ -144,7 +154,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   private void deleteDevice(String registryId, String deviceId, CloudModel cloudModel) {
     DataRef properties = registryDeviceRef(registryId, deviceId);
     properties.entries().keySet().forEach(properties::delete);
-    registryDevicesCollection(registryId).delete(deviceId);
+    registryDevicesRef(registryId).delete(deviceId);
     broker.authorize(clientId(registryId, deviceId), null);
   }
 
@@ -173,9 +183,8 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     return database.ref().registry(registryId).device(deviceId);
   }
 
-  private DataRef registryDevicesCollection(String registryId) {
-    return database.ref().registry(registryId).collection(
-        DEVICES_COLLECTION);
+  private DataRef registryDevicesRef(String registryId) {
+    return database.ref().registry(registryId).collection(DEVICES_ACTIVE);
   }
 
   private void sendConfigUpdate(String registryId, String deviceId, String config) {
@@ -190,6 +199,8 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   private Map<String, String> toDeviceMap(CloudModel cloudModel, String createdAt) {
     Map<String, String> properties = new HashMap<>();
     ifNotNullThen(createdAt, x -> properties.put(CREATED_AT_PROPERTY, createdAt));
+    properties.put(RESOURCE_TYPE_PROPERTY,
+        ofNullable(cloudModel.resource_type).orElse(DEVICE).toString());
     properties.put(BLOCKED_PROPERTY, booleanString(cloudModel.blocked));
     ifNotNullThen(cloudModel.num_id, id -> properties.put(NUM_ID_PROPERTY, id));
     ifTrueThen(!cloudModel.credentials.isEmpty(), () -> {
@@ -204,7 +215,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   private String touchDeviceEntry(String registryId, String deviceId) {
     String timestamp = isoConvert();
-    registryDevicesCollection(registryId).put(deviceId, timestamp);
+    registryDevicesRef(registryId).put(deviceId, timestamp);
     return timestamp;
   }
 
@@ -240,7 +251,15 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   public CloudModel fetchDevice(String registryId, String deviceId) {
     touchDeviceEntry(registryId, deviceId);
     Map<String, String> properties = registryDeviceRef(registryId, deviceId).entries();
-    return JsonUtil.convertTo(CloudModel.class, properties);
+    if (properties == null) {
+      return null;
+    }
+    CloudModel cloudModel = requireNonNull(JsonUtil.convertTo(CloudModel.class, properties));
+    cloudModel.metadata = ifNotNullGet(cloudModel.metadata_str, JsonUtil::toStringMapStr);
+    cloudModel.metadata_str = null;
+
+    cloudModel.device_ids = listBoundDevices(registryId, deviceId);
+    return cloudModel;
   }
 
   @Override
@@ -273,12 +292,25 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   @Override
   public CloudModel listDevices(String registryId, Consumer<Integer> progress) {
-    Map<String, String> entries = registryDevicesCollection(registryId).entries();
+    Map<String, String> entries = registryDevicesRef(registryId).entries();
     ifNotNullThen(progress, p -> p.accept(entries.size()));
     CloudModel cloudModel = new CloudModel();
     cloudModel.device_ids = entries.keySet().stream().collect(
         Collectors.toMap(id -> id, id -> fetchDevice(registryId, id)));
     return cloudModel;
+  }
+
+  private Map<String, CloudModel> listBoundDevices(String registryId, String gatewayId) {
+    Set<String> deviceIds = registryDevicesRef(registryId).entries().keySet();
+    Map<String, CloudModel> devices = deviceIds.stream().filter(deviceId -> {
+      String boundTo = registryDeviceRef(registryId, deviceId).get(BOUND_TO_KEY);
+      return gatewayId.equals(boundTo);
+    }).collect(Collectors.toMap(id -> id, id -> fetchDevice(registryId, id)));
+    List<CloudModel> gateways = devices.values().stream()
+        .filter(model -> GATEWAY.equals(model.resource_type)).toList();
+    checkState(gateways.isEmpty(),
+        format("Gateways found in gateway lookup of %s: %s", gatewayId, CSV_JOINER.join(gateways)));
+    return devices;
   }
 
   @Override
@@ -294,7 +326,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
         case UPDATE -> updateDevice(registryId, deviceId, cloudModel);
         case MODIFY -> modifyDevice(registryId, deviceId, cloudModel);
         case DELETE -> deleteDevice(registryId, deviceId, cloudModel);
-        case BIND -> bindDevice(registryId, deviceId, cloudModel);
+        case BIND -> bindDevicesToGateway(registryId, deviceId, cloudModel);
         case BLOCK -> blockDevice(registryId, deviceId, cloudModel);
         default -> throw new RuntimeException("Unknown device operation " + operation);
       }
@@ -315,8 +347,11 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     }
   }
 
-  public CloudModel modifyDevice(String registryId, String deviceId, CloudModel cloudModel) {
-    throw new RuntimeException("modifyDevice not yet implemented");
+  private void modifyDevice(String registryId, String deviceId, CloudModel cloudModel) {
+    CloudModel fetchedModel = fetchDevice(registryId, deviceId);
+    Map<String, String> metadataMap = ofNullable(fetchedModel.metadata).orElseGet(HashMap::new);
+    metadataMap.putAll(cloudModel.metadata);
+    mungeDevice(registryId, deviceId, ImmutableMap.of(METADATA_STR_KEY, stringify(metadataMap)));
   }
 
   @Override

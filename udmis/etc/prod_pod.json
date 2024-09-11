@@ -53,7 +53,7 @@
       "recv_id": "${UDMI_PREFIX}udmi_target-discovery",
       "send_id": "${UDMI_PREFIX}udmi_target",
       "side_id": "${UDMI_PREFIX}udmi_control",
-      "enabled": "${BITBOX_DISCOVERY}"
+      "enabled": "true"
     },
     "bitbox": {
       "recv_id": "${BITBOX_DISCOVERY}",

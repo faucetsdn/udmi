@@ -8,6 +8,7 @@ import static com.google.udmi.util.JsonUtil.loadFileStrict;
 import static com.google.udmi.util.JsonUtil.loadFileStrictRequired;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.writeFile;
+import static com.google.udmi.util.MetadataMapKeys.UDMI_PROVISION_ENABLE;
 import static com.google.udmi.util.MetadataMapKeys.UDMI_PROVISION_GENERATION;
 import static com.google.udmi.util.SiteModel.METADATA_JSON;
 import static java.util.Objects.requireNonNull;
@@ -87,11 +88,18 @@ public class MappingAgent {
     while (!argsList.isEmpty()) {
       String mappingCommand = removeNextArg(argsList, "mapping command");
       switch (mappingCommand) {
+        case "provision" -> setupProvision();
         case "discover" -> initiateDiscover();
         case "reconcile" -> reconcileDiscovery();
         default -> throw new RuntimeException("Unknown mapping command " + mappingCommand);
       }
     }
+  }
+
+  private void setupProvision() {
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.metadata = ImmutableMap.of(UDMI_PROVISION_ENABLE, "true");
+    cloudIotManager.modifyDevice(deviceId, cloudModel);
   }
 
   private void initiateDiscover() {

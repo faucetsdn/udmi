@@ -7,13 +7,12 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ignoreValue;
-import static com.google.udmi.util.JsonUtil.getDate;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static com.google.udmi.util.MetadataMapKeys.UDMI_DISCOVERED_FROM;
 import static com.google.udmi.util.MetadataMapKeys.UDMI_DISCOVERED_WITH;
 import static com.google.udmi.util.MetadataMapKeys.UDMI_GENERATION;
-import static com.google.udmi.util.MetadataMapKeys.UDMI_PROVISION_GENERATION;
+import static com.google.udmi.util.MetadataMapKeys.UDMI_PROVISION_ENABLE;
 import static com.google.udmi.util.MetadataMapKeys.UDMI_UPDATED;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -36,7 +35,8 @@ import udmi.schema.Envelope;
 @ComponentName("provision")
 public class ProvisioningEngine extends ProcessorBase {
 
-  private static final String EXPECTED_DEVICE_FORMAT = "%s-%s";
+  private static final String DISCOVERED_DEVICE_FORMAT = "discovered_%s-%s";
+  private static final String GATEWAY_KEY_FORMAT = "%s-%s";
 
   private final Map<String, CloudModel> scanAgent = new ConcurrentHashMap<>();
 
@@ -67,14 +67,14 @@ public class ProvisioningEngine extends ProcessorBase {
     bindDeviceToGateway(registryId, expectedId, gatewayId);
   }
 
-  private CloudModel getCloudModel(String deviceRegistryId, String gatewayId) {
-    String gatewayKey = format(EXPECTED_DEVICE_FORMAT, deviceRegistryId, gatewayId);
+  private CloudModel getCachedModel(String deviceRegistryId, String gatewayId) {
+    String gatewayKey = format(GATEWAY_KEY_FORMAT, deviceRegistryId, gatewayId);
     return scanAgent.computeIfAbsent(gatewayKey, key -> new CloudModel());
   }
 
   private synchronized Map<String, CloudModel> refreshModelDevices(String deviceRegistryId,
       String gatewayId, Date generation) {
-    CloudModel cloudModel = getCloudModel(deviceRegistryId, gatewayId);
+    CloudModel cloudModel = getCachedModel(deviceRegistryId, gatewayId);
     if (!generation.equals(cloudModel.timestamp)) {
       cloudModel.timestamp = generation;
       cloudModel.device_ids = null;
@@ -97,9 +97,7 @@ public class ProvisioningEngine extends ProcessorBase {
   }
 
   private boolean shouldProvision(Date generation, CloudModel cloudModel) {
-    Date provisioningGeneration = getDate(
-        ifNotNullGet(cloudModel.metadata, m -> m.get(UDMI_PROVISION_GENERATION)));
-    return generation.equals(provisioningGeneration);
+    return TRUE_OPTION.equals(ifNotNullGet(cloudModel.metadata, m -> m.get(UDMI_PROVISION_ENABLE)));
   }
 
   /**
@@ -123,7 +121,7 @@ public class ProvisioningEngine extends ProcessorBase {
       }
       String family = requireNonNull(discoveryEvent.scan_family, "missing scan_family");
       String addr = requireNonNull(discoveryEvent.scan_addr, "missing scan_addr");
-      String expectedId = format(EXPECTED_DEVICE_FORMAT, family, addr);
+      String expectedId = format(DISCOVERED_DEVICE_FORMAT, family, addr);
       if (deviceIds.containsKey(expectedId)) {
         debug("Scan device %s/%s target %s already registered", registryId, gatewayId, expectedId);
       } else {
