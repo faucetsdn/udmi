@@ -18,7 +18,7 @@ bin/registrar $site_path $project_spec -x -d
 
 bin/registrar $site_path $project_spec GAT-123
 
-more $site_path/out/registration_summary.csv
+! fgrep _vendor $site_path/out/registration_summary.csv
 
 pubber_bg GAT-123
 
@@ -32,3 +32,16 @@ fgrep -i provision /tmp/udmis.log
 echo ####### etcd dump
 
 udmis/bin/etcdctl get /r/ZZ-TRI-FECTA/d/GAT-123 /r/ZZ-TRI-FECTA/d/GAT-124
+
+bin/registrar $site_path $project_spec
+
+status=$(fgrep _vendor-281 $site_path/out/registration_summary.csv | awk '{print $3}') || fail no vendor device found
+echo vendor device status is $status
+[[ $status == BLOCK, ]] || fail Vendor device status should be BLOCK
+
+type=$(jq -r .resource_type sites/udmi_site_model/extras/_vendor-20231/cloud_model.json)
+echo vendor extracted device type $type
+[[ $type == DEVICE ]] || fail Vendor device type should be DEVICE
+
+echo
+echo Done with automapper test
