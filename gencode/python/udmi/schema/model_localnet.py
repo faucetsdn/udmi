@@ -1,19 +1,19 @@
 """Generated class for model_localnet.json"""
 
 
-class Object9E9EA944:
+class Object14E07FCF:
   """Generated schema class"""
 
   def __init__(self):
-    self.id = None
+    self.target = None
     self.family = None
 
   @staticmethod
   def from_dict(source):
     if not source:
       return None
-    result = Object9E9EA944()
-    result.id = source.get('id')
+    result = Object14E07FCF()
+    result.target = source.get('target')
     result.family = source.get('family')
     return result
 
@@ -23,7 +23,7 @@ class Object9E9EA944:
       return None
     result = {}
     for key in source:
-      result[key] = Object9E9EA944.from_dict(source[key])
+      result[key] = Object14E07FCF.from_dict(source[key])
     return result
 
   @staticmethod
@@ -35,8 +35,8 @@ class Object9E9EA944:
 
   def to_dict(self):
     result = {}
-    if self.id:
-      result['id'] = self.id # 5
+    if self.target:
+      result['target'] = self.target # 5
     if self.family:
       result['family'] = self.family # 5
     return result
@@ -55,7 +55,7 @@ class LocalnetModel:
     if not source:
       return None
     result = LocalnetModel()
-    result.parent = Object9E9EA944.from_dict(source.get('parent'))
+    result.parent = Object14E07FCF.from_dict(source.get('parent'))
     result.families = FamilyLocalnetModel.map_from(source.get('families'))
     return result
 

@@ -14,7 +14,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "id",
+    "target",
     "family"
 })
 @Generated("jsonschema2pojo")
@@ -24,9 +24,9 @@ public class Parent {
      * ID of the parent device to which the device is physically connected
      * 
      */
-    @JsonProperty("id")
+    @JsonProperty("target")
     @JsonPropertyDescription("ID of the parent device to which the device is physically connected")
-    public String id;
+    public String target;
     /**
      * Connection family/protocol of the parent device to which the device is physically connected
      * 
@@ -39,7 +39,7 @@ public class Parent {
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.family == null)? 0 :this.family.hashCode()));
-        result = ((result* 31)+((this.id == null)? 0 :this.id.hashCode()));
+        result = ((result* 31)+((this.target == null)? 0 :this.target.hashCode()));
         return result;
     }
 
@@ -52,7 +52,7 @@ public class Parent {
             return false;
         }
         Parent rhs = ((Parent) other);
-        return (((this.family == rhs.family)||((this.family!= null)&&this.family.equals(rhs.family)))&&((this.id == rhs.id)||((this.id!= null)&&this.id.equals(rhs.id))));
+        return (((this.family == rhs.family)||((this.family!= null)&&this.family.equals(rhs.family)))&&((this.target == rhs.target)||((this.target!= null)&&this.target.equals(rhs.target))));
     }
 
 }
