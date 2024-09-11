@@ -17,7 +17,6 @@ class Metadata:
     self.version = None
     self.upgraded_from = None
     self.hash = None
-    self.device_version = None
     self.cloud = None
     self.system = None
     self.gateway = None
@@ -36,7 +35,6 @@ class Metadata:
     result.version = source.get('version')
     result.upgraded_from = source.get('upgraded_from')
     result.hash = source.get('hash')
-    result.device_version = source.get('device_version')
     result.cloud = CloudModel.from_dict(source.get('cloud'))
     result.system = SystemModel.from_dict(source.get('system'))
     result.gateway = GatewayModel.from_dict(source.get('gateway'))
@@ -73,8 +71,6 @@ class Metadata:
       result['upgraded_from'] = self.upgraded_from # 5
     if self.hash:
       result['hash'] = self.hash # 5
-    if self.device_version:
-      result['device_version'] = self.device_version # 5
     if self.cloud:
       result['cloud'] = self.cloud.to_dict() # 4
     if self.system:
