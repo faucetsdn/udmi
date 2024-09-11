@@ -45,6 +45,10 @@
     }
   },
   "localnet": {
+    "parent": {
+      "target": "GAT-324",
+      "family": "inet"
+    },
     "families": {
       "inet": {
         "addr": "192.168.2.1"

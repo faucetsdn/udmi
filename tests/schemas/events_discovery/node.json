@@ -1,0 +1,21 @@
+{
+  "generation": "2024-09-11T12:45:42Z",
+  "scan_family": "bacnet",
+  "scan_addr": "3002",
+  "version": "1.5.1",
+  "timestamp": "2024-09-11T12:45:42Z",
+  "families": {
+      "ipv4": {
+          "addr": "192.168.8.3"
+      }
+  },
+  "system": {
+      "hardware": {
+          "make": "SERVISYS inc.",
+          "model": "BAC0 Scripting Tool"
+      },
+      "software": {
+          "firmware": "3.11.9 (main, Sep  5 2024, 00:16:19) [GCC 12.2.0]"
+      }
+  }
+}

@@ -526,7 +526,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
       throw new RuntimeException("While processing metadata file " + metadataException.file,
           metadataException.exception);
     }
-    targetSchema = ifNotNullGet(metadata.device_version, SchemaVersion::fromKey);
+    targetSchema = ifNotNullGet(metadata.system.device_version, SchemaVersion::fromKey);
     ifNotNullThen(targetSchema, version -> warn("Emulating UDMI version " + version.key()));
 
     config.serialNo = catchToNull(() -> metadata.system.serial_no);
