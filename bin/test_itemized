@@ -45,6 +45,8 @@ done
 
 test_index=1
 while read -u 7 action test_name pubber_opts; do
+    echo
+    echo =============================================================
     test_marker=$(printf %02d $test_index)
     ((test_index++)) || true
 
