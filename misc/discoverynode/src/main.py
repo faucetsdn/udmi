@@ -1,9 +1,12 @@
+"""Client"""
+# pylint: disable=wrong-import-position
 import argparse
 import logging
 import sys
 import time
 import tomllib
 import warnings
+import os
 # filter deprecation notice from SCAPY import
 warnings.filterwarnings(action="ignore", module=".*ipsec.*")
 

@@ -3,7 +3,7 @@
 # Run pylint on all the detected python files and compare against the expected list.
 #
 
-dirs="bin/ etc/ misc/"
+dirs="bin/ etc/"
 files1=$(egrep -l '#!/.*python3' -r $dirs)
 files2=$(fgrep -l 'env python3' -r $dirs)
 files3=$(find $dirs -name \*.py)

@@ -1,3 +1,4 @@
+"""Sample for triggering passive scan directly."""
 import discovery_passive
 from unittest import mock
 import time
