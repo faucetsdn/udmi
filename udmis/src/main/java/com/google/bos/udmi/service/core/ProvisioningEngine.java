@@ -7,7 +7,6 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ignoreValue;
-import static com.google.udmi.util.JsonUtil.getDate;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static com.google.udmi.util.MetadataMapKeys.UDMI_DISCOVERED_FROM;
@@ -36,7 +35,7 @@ import udmi.schema.Envelope;
 @ComponentName("provision")
 public class ProvisioningEngine extends ProcessorBase {
 
-  private static final String IMPLICIT_DEVICE_ID_FORMAT = "%s-%s";
+  private static final String DISCOVERED_DEVICE_FORMAT = "discovered_%s-%s";
   private static final String GATEWAY_KEY_FORMAT = "%s-%s";
 
   private final Map<String, CloudModel> scanAgent = new ConcurrentHashMap<>();
@@ -122,7 +121,7 @@ public class ProvisioningEngine extends ProcessorBase {
       }
       String family = requireNonNull(discoveryEvent.scan_family, "missing scan_family");
       String addr = requireNonNull(discoveryEvent.scan_addr, "missing scan_addr");
-      String expectedId = format(IMPLICIT_DEVICE_ID_FORMAT, family, addr);
+      String expectedId = format(DISCOVERED_DEVICE_FORMAT, family, addr);
       if (deviceIds.containsKey(expectedId)) {
         debug("Scan device %s/%s target %s already registered", registryId, gatewayId, expectedId);
       } else {

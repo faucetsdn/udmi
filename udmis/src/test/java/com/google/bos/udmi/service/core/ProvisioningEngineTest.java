@@ -41,6 +41,7 @@ public class ProvisioningEngineTest extends ProcessorTestBase {
   private static final String SCAN_ADDR = "19273821";
   private static final String SCAN_FAMILY = ProtocolFamily.VENDOR;
   private static final String TARGET_DEVICE = format("%s-%s", SCAN_FAMILY, SCAN_ADDR);
+  private static final String DISCOVERED_DEVICE = "discovered_" + TARGET_DEVICE;
   private static final Date SCAN_GENERATION = new Date();
 
   private static Map<String, String> getGatewayMetadata() {
@@ -68,7 +69,7 @@ public class ProvisioningEngineTest extends ProcessorTestBase {
     if (alreadyProvisioned) {
       CloudModel provisionedModel = new CloudModel();
       provisionedModel.resource_type = Resource_type.DEVICE;
-      registryModel.device_ids.put(TARGET_DEVICE, provisionedModel);
+      registryModel.device_ids.put(DISCOVERED_DEVICE, provisionedModel);
     }
 
     CloudModel gatewayModel = new CloudModel();
@@ -77,7 +78,7 @@ public class ProvisioningEngineTest extends ProcessorTestBase {
     gatewayModel.device_ids = new HashMap<>();
     gatewayModel.device_ids.put(TEST_DEVICE, new CloudModel());
     ifTrueThen(alreadyProvisioned, () ->
-        gatewayModel.device_ids.put(TARGET_DEVICE, new CloudModel()));
+        gatewayModel.device_ids.put(DISCOVERED_DEVICE, new CloudModel()));
     gatewayModel.metadata = getGatewayMetadata();
 
     when(provider.getRegistries()).thenReturn(ImmutableSet.of(TEST_REGISTRY));
@@ -126,13 +127,13 @@ public class ProvisioningEngineTest extends ProcessorTestBase {
     List<String> devices = deviceCaptor.getAllValues();
     List<CloudModel> models = modelCaptor.getAllValues();
 
-    assertEquals(TARGET_DEVICE, devices.get(0), "created device id");
+    assertEquals(DISCOVERED_DEVICE, devices.get(0), "created device id");
     assertEquals(Operation.CREATE, models.get(0).operation, "operation mismatch");
     assertTrue(models.get(0).blocked, "device blocked");
 
     assertEquals(TEST_GATEWAY, devices.get(1), "scanning gateway id");
     assertEquals(Operation.BIND, models.get(1).operation, "operation mismatch");
-    assertNotNull(models.get(1).device_ids.get(TARGET_DEVICE), "binding device entry");
+    assertNotNull(models.get(1).device_ids.get(DISCOVERED_DEVICE), "binding device entry");
   }
 
   @Test
