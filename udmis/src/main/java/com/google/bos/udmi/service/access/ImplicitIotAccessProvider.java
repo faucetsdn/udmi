@@ -66,7 +66,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   private static final String LAST_CONFIG_KEY = "last_config";
   private static final String LAST_STATE_KEY = "last_state";
   private static final String DEVICES_ACTIVE = "active";
-  private static final String BOUND_COLLECTION = "bound";
+  private static final String BOUND_TO_KEY = "bound_to";
   private static final String BLOCKED_PROPERTY = "blocked";
   private static final String CREATED_AT_PROPERTY = "created_at";
   private static final String REGISTRIES_KEY = "registries";
@@ -104,8 +104,8 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   private void bindDevicesToGateway(String registryId, String gatewayId, CloudModel cloudModel) {
     Set<String> deviceIds = cloudModel.device_ids.keySet();
-    DataRef dataRef = registryBoundCollection(registryId);
-    deviceIds.forEach(id -> dataRef.put(id, gatewayId));
+    deviceIds.forEach(
+        deviceId -> registryDeviceRef(registryId, deviceId).entries().put(BOUND_TO_KEY, gatewayId));
   }
 
   private void blockDevice(String registryId, String deviceId, CloudModel cloudModel) {
@@ -154,8 +154,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   private void deleteDevice(String registryId, String deviceId, CloudModel cloudModel) {
     DataRef properties = registryDeviceRef(registryId, deviceId);
     properties.entries().keySet().forEach(properties::delete);
-    registryActiveCollection(registryId).delete(deviceId);
-    registryBoundCollection(registryId).delete(deviceId);
+    registryDevicesRef(registryId).delete(deviceId);
     broker.authorize(clientId(registryId, deviceId), null);
   }
 
@@ -184,12 +183,8 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     return database.ref().registry(registryId).device(deviceId);
   }
 
-  private DataRef registryActiveCollection(String registryId) {
+  private DataRef registryDevicesRef(String registryId) {
     return database.ref().registry(registryId).collection(DEVICES_ACTIVE);
-  }
-
-  private DataRef registryBoundCollection(String registryId) {
-    return database.ref().registry(registryId).collection(BOUND_COLLECTION);
   }
 
   private void sendConfigUpdate(String registryId, String deviceId, String config) {
@@ -220,7 +215,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   private String touchDeviceEntry(String registryId, String deviceId) {
     String timestamp = isoConvert();
-    registryActiveCollection(registryId).put(deviceId, timestamp);
+    registryDevicesRef(registryId).put(deviceId, timestamp);
     return timestamp;
   }
 
@@ -297,7 +292,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   @Override
   public CloudModel listDevices(String registryId, Consumer<Integer> progress) {
-    Map<String, String> entries = registryActiveCollection(registryId).entries();
+    Map<String, String> entries = registryDevicesRef(registryId).entries();
     ifNotNullThen(progress, p -> p.accept(entries.size()));
     CloudModel cloudModel = new CloudModel();
     cloudModel.device_ids = entries.keySet().stream().collect(
@@ -306,10 +301,11 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   }
 
   private Map<String, CloudModel> listBoundDevices(String registryId, String gatewayId) {
-    Map<String, String> entries = registryBoundCollection(registryId).entries();
-    Map<String, CloudModel> devices = entries.entrySet().stream()
-        .filter(entry -> entry.getValue().equals(gatewayId))
-        .collect(Collectors.toMap(Entry::getValue, e -> fetchDevice(registryId, e.getKey())));
+    Set<String> deviceIds = registryDevicesRef(registryId).entries().keySet();
+    Map<String, CloudModel> devices = deviceIds.stream().filter(deviceId -> {
+      String boundTo = registryDeviceRef(registryId, deviceId).get(BOUND_TO_KEY);
+      return gatewayId.equals(boundTo);
+    }).collect(Collectors.toMap(id -> id, id -> fetchDevice(registryId, id)));
     List<CloudModel> gateways = devices.values().stream()
         .filter(model -> GATEWAY.equals(model.resource_type)).toList();
     checkState(gateways.isEmpty(),
