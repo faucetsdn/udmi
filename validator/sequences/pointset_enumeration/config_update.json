@@ -1,7 +1,7 @@
 {
   "discovery" : {
-    "enumerate" : {
-      "points" : true
+    "depths" : {
+      "refs" : "entries"
     }
   },
   "localnet" : {
@@ -32,12 +32,14 @@
     "metrics_rate_sec" : 10,
     "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2024-03-21T16:41:36Z"
+      "last_start" : "2024-09-04T16:54:35Z"
     },
     "testing" : {
-      "sequence_name" : "pointset_enumeration"
+      "config_base" : 32,
+      "sequence_name" : "pointset_enumeration",
+      "transaction_id" : "RC:714498.0013"
     }
   },
-  "timestamp" : "2024-03-21T16:42:05Z",
-  "version" : "1.5.0-55-g604ba10b1"
+  "timestamp" : "2024-09-04T16:55:07Z",
+  "version" : "git-34706de"
 }

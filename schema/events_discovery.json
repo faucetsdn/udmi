@@ -66,13 +66,13 @@
         }
       }
     },
-    "points": {
-      "description": "Collection of data points available for this device.",
+    "refs": {
+      "description": "Collection of point references discovered",
       "additionalProperties": false,
-      "existingJavaType": "java.util.Map<String, PointDiscovery>",
+      "existingJavaType": "java.util.Map<String, RefDiscovery>",
       "patternProperties": {
         "^[-_.:/a-zA-Z0-9]+$": {
-          "$ref": "file:discovery_point.json#"
+          "$ref": "file:discovery_ref.json#"
         }
       }
     },

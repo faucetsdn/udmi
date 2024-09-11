@@ -19,7 +19,7 @@ import udmi.schema.CloudModel;
 import udmi.schema.DiscoveryEvents;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
-import udmi.schema.PointDiscovery;
+import udmi.schema.RefDiscovery;
 
 /**
  * Adapter class for consuming raw bitbox (non-UDMI format) messages and rejiggering them to conform
@@ -74,7 +74,7 @@ public class BitboxAdapter extends ProcessorBase {
       discoveryEvent.scan_family = (String) map.get("protocol");
       discoveryEvent.scan_addr = (String) map.get("id");
       discoveryEvent.generation = generation;
-      discoveryEvent.points = extractPoints(map.get("data"));
+      discoveryEvent.refs = extractRefs(map.get("data"));
       return discoveryEvent;
     } catch (Exception e) {
       error("While converting legacy message to DiscoveryEvents: " + friendlyStackTrace(e));
@@ -83,7 +83,7 @@ public class BitboxAdapter extends ProcessorBase {
     }
   }
 
-  private Map<String, PointDiscovery> extractPoints(Object data) {
+  private Map<String, RefDiscovery> extractRefs(Object data) {
     Map<String, Object> map = JsonUtil.asMap(data);
     return map.entrySet().stream().map(this::pointMapper)
         .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
@@ -95,13 +95,17 @@ public class BitboxAdapter extends ProcessorBase {
         catchToNull(() -> cloudModel.metadata.get(MetadataMapKeys.UDMI_PROVISION_GENERATION)));
   }
 
-  private Entry<String, PointDiscovery> pointMapper(Entry<String, Object> rawInput) {
-    String ref = rawInput.getKey();
+  private Entry<String, RefDiscovery> pointMapper(Entry<String, Object> rawInput) {
+    String ref = createBacnetRef(rawInput);
     Map<String, String> pointMap = JsonUtil.toStringMap(rawInput.getValue());
-    String pointName = ofNullable(pointMap.get("object-name")).orElse(ref);
-    PointDiscovery pointDiscovery = new PointDiscovery();
-    pointDiscovery.ref = ref;
-    pointDiscovery.ancillary = JsonUtil.toMap(rawInput.getValue());
-    return Map.entry(pointName, pointDiscovery);
+    RefDiscovery refDiscovery = new RefDiscovery();
+    refDiscovery.point = ofNullable(pointMap.get("object-name")).orElse(ref);
+    refDiscovery.ancillary = JsonUtil.toMap(rawInput.getValue());
+    return Map.entry(ref, refDiscovery);
+  }
+
+  private static String createBacnetRef(Entry<String, Object> rawInput) {
+    // TODO: Need some logic to convert this to a proper canonical bacnet ref.
+    return rawInput.getKey();
   }
 }

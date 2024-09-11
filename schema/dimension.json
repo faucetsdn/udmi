@@ -1,0 +1,25 @@
+{
+    "$udmi_version": "1.5.1",
+    "title": "Dimension",
+    "description": "Dimensions with a value and a unit",
+    "type": "object",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "additionalProperties": false,
+    "properties": {
+      "value": {
+        "type": "number"
+      },
+      "unit": {
+        "type": "string",
+        "oneOf": [
+            {"title": "m2", "pattern": "^m2$"},
+            {"title": "sqf", "pattern": "^sqf$"},
+            {"title": "kgCO2e/kWh", "pattern": "^kgCO2e\/kWh"},
+            {"title": "£/m3", "pattern": "^£\/m3$"},
+            {"title": "$/gal", "pattern": "^\\$\/gal"},
+            {"title": "£/kWh", "pattern": "^£\/kWh$"},
+            {"title": "$/kWh", "pattern": "^\\$\/kWh$"}
+        ]
+    }
+  }
+}

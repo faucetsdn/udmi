@@ -18,4 +18,4 @@ Check results of a single scan scheduled soon
 1. Check that discovery events were valid
 1. Check that all scan addresses are unique
 1. Check that all expected addresses were found
-1. Check that no events have points
+1. Check that no events have discovered refs

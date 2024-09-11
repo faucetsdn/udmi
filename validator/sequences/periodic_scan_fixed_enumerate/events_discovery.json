@@ -1,0 +1,23 @@
+{
+  "generation" : "2024-09-04T16:56:21Z",
+  "refs" : {
+    "filter_alarm_pressure_status" : {
+      "possible_values" : [ ]
+    },
+    "filter_differential_pressure_setpoint" : {
+      "possible_values" : [ ]
+    },
+    "filter_differential_pressure_sensor" : {
+      "possible_values" : [ ]
+    }
+  },
+  "scan_addr" : "28179023",
+  "scan_family" : "vendor",
+  "system" : {
+    "ancillary" : {
+      "device-name" : "AHU-1"
+    }
+  },
+  "timestamp" : "2024-09-04T16:56:21Z",
+  "version" : "1.5.1"
+}

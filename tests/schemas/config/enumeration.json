@@ -10,7 +10,7 @@
     "depths": {
       "families": "entries",
       "features": "registries",
-      "points": "details"
+      "refs": "details"
     }
   }
 }

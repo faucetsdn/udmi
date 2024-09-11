@@ -1,19 +1,18 @@
 #!/bin/bash -e
 
-ROOT_DIR=$(realpath $(dirname $0)/..)
-cd $ROOT_DIR
+UDMI_ROOT=$(realpath $(dirname $0))/..
+source $UDMI_ROOT/etc/shell_common.sh
 
-SEQUENCE_MD=docs/specs/sequences/generated.md
+SEQUENCE_MD=$UDMI_ROOT/docs/specs/sequences/generated.md
 
 # Create doc of generated sequence steps
 prefix=sites/udmi_site_model/out/devices/AHU-1/tests
-altfix=validator/sequences/
+altfix=$UDMI_ROOT/validator/sequences/
 
 # Remove test runs that are from unit testing
 rm -rf $prefix/test_*
 
 echo Updating $SEQUENCE_MD:
-
 
 # Clear out existing generated sequences
 sed -i '/<!-- START GENERATED,/q' $SEQUENCE_MD

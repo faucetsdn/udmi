@@ -146,6 +146,8 @@ public class Pubber extends ManagerBase implements ManagerHost {
   private static final Duration CLOCK_SKEW = Duration.ofMinutes(30);
   private static final Duration SMOKE_CHECK_TIME = Duration.ofMinutes(5);
   private static final int STATE_SPAM_SEC = 5; // Expected config-state response time.
+  private static final String SYSTEM_EVENT_TOPIC = "events/system";
+  private static final String RAW_EVENT_TOPIC = "events";
   private final File outDir;
   private final ReentrantLock stateLock = new ReentrantLock();
   public PrintStream logPrintWriter;
@@ -233,9 +235,8 @@ public class Pubber extends ManagerBase implements ManagerHost {
    * Start a pubber instance with command line args.
    *
    * @param args The usual
-   * @throws Exception When something is wrong...
    */
-  public static void main(String[] args) throws Exception {
+  public static void main(String[] args) {
     try {
       boolean swarm = args.length > 1 && PUBSUB_SITE.equals(args[1]);
       if (swarm) {
@@ -1208,6 +1209,11 @@ public class Pubber extends ManagerBase implements ManagerHost {
   }
 
   private void publishDeviceMessage(String targetId, Object message, Runnable callback) {
+    if (deviceTarget == null) {
+      error("publisher not active");
+      return;
+    }
+
     String topicSuffix = MESSAGE_TOPIC_SUFFIX_MAP.get(message.getClass());
     if (topicSuffix == null) {
       error("Unknown message class " + message.getClass());
@@ -1219,9 +1225,8 @@ public class Pubber extends ManagerBase implements ManagerHost {
       return;
     }
 
-    if (deviceTarget == null) {
-      error("publisher not active");
-      return;
+    if (isTrue(options.noFolder) && topicSuffix.equals(SYSTEM_EVENT_TOPIC)) {
+      topicSuffix = RAW_EVENT_TOPIC;
     }
 
     augmentDeviceMessage(message, getNow(), isTrue(options.badVersion));
