@@ -56,8 +56,6 @@ public class SiteMetadata {
     @JsonPropertyDescription("Identifier for the site or building")
     public String site;
     /**
-     * 
-     * <p>
      * Name of the site or building
      * 
      */
