@@ -1,7 +1,7 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.5.1",
-  "hash": "156ef646",
+  "hash": "530d6c90",
   "system": {
     "tags": [ ],
     "location": {
@@ -42,7 +42,7 @@
         "tags": [ ]
       },
       "filter_differential_pressure": {
-        "units": "Bars",
+        "units": "Baré",
         "ref": "AI2.differential",
         "tags": [ ]
       },
