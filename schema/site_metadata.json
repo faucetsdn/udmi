@@ -28,7 +28,6 @@
       "examples": ["UK-LON-ABC", "US-NYC-DEF2"]
     },
     "name": {
-      "title": "",
       "description": "Name of the site or building",
       "type": "string",
       "examples": ["Cheesegrater", "Colosseum"]
