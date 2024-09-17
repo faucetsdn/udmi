@@ -4,7 +4,8 @@ WORKDIR /usr/src/app
 
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
-
+RUN apt update && apt install -y tcpdump
 COPY . .
 
-CMD [ "python", "-m", "pytest", "-s", "tests/test_integration.py"]
+# ENTRYPOINT ["sh", "/usr/src/app/entrypoint.sh"]
+CMD ["python3", "main.py", "config.toml"]

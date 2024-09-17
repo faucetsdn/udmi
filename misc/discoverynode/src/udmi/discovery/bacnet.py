@@ -73,10 +73,10 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
 
           # if depths ...
           # Get make and model
-          object_name, vendor_name, firmware_version, model_name = (
+          object_name, vendor_name, firmware_version, model_name, serial_number = (
               self.bacnet.readMultiple(
                   f"{address} device {id} objectName vendorName"
-                  " firmwareRevision modelName"
+                  " firmwareRevision modelName serialNumber"
               )
           )
 
@@ -88,7 +88,8 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
 
           event.families["ipv4"] = udmi.schema.discovery_event.DiscoveryFamily(
               addr=address
-          )
+          ) 
+          event.system.serial_no = serial_number
           event.system.hardware.make = vendor_name
           event.system.hardware.model = model_name
           event.system.software.firmware = firmware_version

@@ -9,7 +9,7 @@ from udmi.schema.discovery_event import DiscoveryEvent, DiscoveryFamily
 
 class NumberDiscovery(discovery.DiscoveryController):
 
-  scan_family = "number"
+  scan_family = "vendor"
 
   def __init__(self, state, publisher):
     self.cancelled = None

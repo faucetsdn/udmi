@@ -43,7 +43,19 @@ def test_bacnet_integration():
     )
 
     time.sleep(15)
-
+    udmi_client.config_handler(
+        json.dumps({
+            "timestamp": 123,
+            "discovery": {
+                "families": {
+                    "bacnet": {},
+                    "ipv4": {},
+                }
+            },
+        })
+    )
+    time.sleep(5)
+    
     for message in messages:
       print(message.to_json())
       print("----")

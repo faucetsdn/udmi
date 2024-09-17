@@ -1,9 +1,10 @@
+"""Sample for calling BACnet scan directly"""
 import logging
 import multiprocessing
 import sys
 import time
 from unittest import mock
-import discovery_bacnet
+import udmi.discovery.bacnet
 
 
 def main():
@@ -19,7 +20,9 @@ def main():
   )
   logging.root.setLevel(logging.INFO)
   state = mock.MagicMock()
-  a = discovery_bacnet.GlobalBacnetDiscovery(state, print)
+  a = udmi.discovery.bacnet.GlobalBacnetDiscovery(
+      state, print, bacnet_ip=None
+  )
   a.controller({"discovery": {"families": {"bacnet": {"generation": "123"}}}})
   while True:
     time.sleep(1)

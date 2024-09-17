@@ -36,8 +36,7 @@ def get_arguments():
   parser.add_argument(
       "config_file",
       type=str,
-      help="path to config file",
-      **or_required_from_env("CONFIG_FILE"),
+      help="path to config file"
   )
   return parser.parse_args()
 
@@ -80,7 +79,7 @@ def main():
 
   udmi_client = udmi.core.UDMI(
       publisher=mclient,
-      topic_prefix=f'/devices/{config["mqtt"]["device_id"]}/',
+      topic_prefix=f'/devices/{config["mqtt"]["device_id"]}',
       config=config,
   )
 

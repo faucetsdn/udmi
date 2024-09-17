@@ -225,4 +225,5 @@ class MQTT(udmi.publishers.publisher.Publisher):
     self.config_callback = callback
 
   def publish_message(self, topic, message):
+    logging.info("publishing to: %s", topic)
     return self.client.publish(topic, message)
