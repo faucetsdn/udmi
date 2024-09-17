@@ -115,8 +115,8 @@ class UDMI:
 
     self.components["number_discovery"] = number_discovery
 
-    return
-    """ bacnet_discovery = udmi.discovery.bacnet.GlobalBacnetDiscovery(
+    
+    bacnet_discovery = udmi.discovery.bacnet.GlobalBacnetDiscovery(
         self.state,
         self.publish_discovery,
         bacnet_ip=self.config["bacnet"]["ip"],
@@ -128,16 +128,17 @@ class UDMI:
         bacnet_discovery,
     )
 
-    self.components["bacnet_discovery"] = passive_discovery"""
+    passive_discovery = udmi.discovery.passive.PassiveNetworkDiscovery(
+        self.state, self.publish_discovery
+    )
+
+    self.components["bacnet_discovery"] = passive_discovery
 
     # THESE TWO USE THE SAME SCAN_FAMILY
     # THEIR `states` IN THE OVERALL STATE CLASHES
     # because both set state.discovery.families.SCAN_FAMILY = self.state
 
-    passive_discovery = udmi.discovery.passive.PassiveNetworkDiscovery(
-        self.state, self.publish_discovery
-    )
-
+  
     self.add_config_route(
         lambda x: passive_discovery.scan_family
         in x.get("discovery", {}).get("families", {}),

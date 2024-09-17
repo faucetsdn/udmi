@@ -26,16 +26,19 @@ for device in $test_devices; do
 
 done
 
-echo starting discovery node
-
-docker run --rm\
+docker run -d --rm\
   --name discoverytest-node \
   --network=discovery-network \
   --mount type=bind,source=$ROOT_DIR/docker_config.json,target=/usr/src/app/docker_config.json \
+  --mount type=bind,source=$ROOT_DIR/sequencer_config.toml,target=/usr/src/app/config.toml \
+  --mount type=bind,source=sites/udmi_site_model/devices/AHU-1/rsa_private.pem,target=/usr/src/app/rsa_private.pem \
   -v  $PWD/pcap:/pcap \
-  test-discovery_node \
-  python3 -m pytest -s --log-cli-level=INFO tests/test_integration.py || error=1
+  test-discovery_node python3 main.py config.toml || error=1
+
+cat ~/udmi/sites/udmi_site_model/devices/AHU-1/metadata.json | jq '.discovery.families={"bacnet":{},"ipv4":{}}'
+
+bin/sequencer sites/udmi_site_model //gbos/bos-platform-testing AHU-1 123 single_scan_past || true
 
 docker ps -a | grep "discoverytest" | awk '{print $1}' | xargs docker stop
-echo error=$error
-exit $error
+
+tail -n 30 out/sequencer.log 

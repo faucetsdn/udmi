@@ -15,6 +15,7 @@ import time
 import copy
 import datetime
 
+MAX_THRESHOLD_GENERATION = -10 # [5s]
 RUNNER_LOOP_INTERVAL = 0.1
 ACTION_START = 1
 ACTION_STOP = -1
@@ -81,10 +82,6 @@ class states(enum.StrEnum):
 
 class DiscoveryController(abc.ABC):
   
-  # Thi
-  MAX_THRESHOLD_GENERATION = -10 # [5s]
-
-
   @property
   @abc.abstractmethod
   def scan_family(self):
@@ -283,7 +280,7 @@ class DiscoveryController(abc.ABC):
       time_delta_from_now = generation - datetime.datetime.now(tz=datetime.timezone.utc)
       seconds_from_now = time_delta_from_now.total_seconds()
 
-      if seconds_from_now < self.MAX_THRESHOLD_GENERATION:
+      if seconds_from_now < MAX_THRESHOLD_GENERATION:
         raise RuntimeError(f"generation start time ({seconds_from_now} from now exceeds allowable threshold {self.MAX_THRESHOLD_GENERATION})")
       logging.info(f"discovery {config} starts in {seconds_from_now} seconds")
 

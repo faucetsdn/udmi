@@ -158,22 +158,23 @@ class PassiveNetworkDiscovery(discovery.DiscoveryController):
         if scapy.layers.inet.IP in item:
           self.ip_packets_seen += 1
 
-          if scapy.layers.inet.UDP in item and (
-              item[scapy.layers.inet.UDP].dport == 47808
-              or item[scapy.layers.inet.UDP].sport == 47808
-          ):
-            # Treat packet as a BACnet packet
-            payload = bytes(item[scapy.layers.inet.UDP].payload)
-            if payload[0:1] == BACNET_BVLC_MARKER:
-              if (index := payload.find(BACNET_APDU_I_AM_START, 0, 18)) > 0:
-                object_identifier = int.from_bytes(
-                    payload[index + 3 : index + 3 + 4]
-                )
-                instance_number = object_identifier & 0x3FFFF
-                print(f"bacnet: {instance_number}")
-
           # A packet "sees" two devices - the source and the destination
           for x in ["src", "dst"]:
+
+            if x == "src":
+              if scapy.layers.inet.UDP in item and (
+                      item[scapy.layers.inet.UDP].dport == 47808
+                      or item[scapy.layers.inet.UDP].sport == 47808
+                  ):
+                    # Treat packet as a BACnet packet
+                    payload = bytes(item[scapy.layers.inet.UDP].payload)
+                    if payload[0:1] == BACNET_BVLC_MARKER:
+                      if (index := payload.find(BACNET_APDU_I_AM_START, 0, 10)) > 0:
+                        object_identifier = int.from_bytes(
+                            payload[index + 3 : index + 3 + 4]
+                        )
+                        instance_number = object_identifier & 0x3FFFF
+                        logging.info(f"maybe bacnet addr {instance_number} at {getattr(item[scapy.layers.inet.IP], x)}")
             # Not all packets have IP addresses, but this scan requires an IP Address
             if (
                 (ip := getattr(item[scapy.layers.inet.IP], x))
