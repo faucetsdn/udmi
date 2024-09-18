@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-JVERSION=1.1.1
+JVERSION=1.2.1
 JBASENAME=jsonschema2pojo
 
 ROOT_DIR=$(realpath $(dirname $0)/..)
@@ -37,22 +37,32 @@ $JARBIN $JOPTS --source . --target $OUTDIR
 echo Copying shared constants $ROOT_DIR/etc/*.java
 cp -u $ROOT_DIR/etc/*.java $OUTDIR/udmi/schema/
 
-echo Cleaning up __ classes...
+echo Pruning dangling __ classes...
+dups=$(find $OUTDIR -name \*__\*.java)
+for file in $dups; do
+    class=${file##*/}
+    class=${class%.java}
+    matches=$(fgrep -l $class -r $OUTDIR | fgrep -v $class.java) || true
+    [[ -n $matches ]] || rm $file
+done
+
+echo Cleaning up references to __ classes...
 fgrep -l __ -r $OUTDIR | xargs -n 1 sed -E -i \
                                -e 's/__[0-9]+ \./\./g' \
                                -e 's/__[0-9]+//g'
 
-echo Checking for duplicate class names...
+echo Checking for mismatching class signatures...
 MARKER=/tmp/.gencode_fail
 rm -f $MARKER
-dups=$(find $OUTDIR -name \*__1.java)
+dups=$(find $OUTDIR -name \*__\*.java)
 for file in $dups; do
     root=${file%__1.java}
-    versions=$(sha256sum ${root}* | awk '{print $1}' | uniq | wc -l)
+    versions=$(sha256sum ${root}* | sort | awk '{print $1}' | uniq | wc -l)
     [[ $versions == 1 ]] || (touch $MARKER && echo $versions of $root)
 done
 [[ ! -f $MARKER ]]
 
+echo Pruning all __ classes...
 find $OUTDIR -name \*__\*.java | xargs rm
 
 echo Done with java code generation.

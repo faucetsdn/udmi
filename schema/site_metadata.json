@@ -42,6 +42,7 @@
       "examples": [["new_construction"], ["existing", "brownfield"]]
     },
     "location": {
+      "title": "Site Location",
       "type": "object",
       "additionalProperties": false,
       "properties": {
@@ -63,6 +64,7 @@
       }
     },
     "links": {
+      "title": "Site Links",
       "type": "object",
       "additionalProperties": false,
       "properties": {
