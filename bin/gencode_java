@@ -42,6 +42,7 @@ fgrep -l __ -r $OUTDIR | xargs -n 1 sed -E -i \
                                -e 's/__[0-9]+ \./\./g' \
                                -e 's/__[0-9]+//g'
 
+echo Checking for duplicate class names...
 MARKER=/tmp/.gencode_fail
 rm -f $MARKER
 dups=$(find $OUTDIR -name \*__1.java)
@@ -50,7 +51,7 @@ for file in $dups; do
     versions=$(sha256sum ${root}* | awk '{print $1}' | uniq | wc -l)
     [[ $versions == 1 ]] || (touch $MARKER && echo $versions of $root)
 done
-#[[ ! -f $MARKER ]]
+[[ ! -f $MARKER ]]
 
 find $OUTDIR -name \*__\*.java | xargs rm
 
