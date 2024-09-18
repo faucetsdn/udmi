@@ -1,7 +1,7 @@
 """Generated class for site_metadata.json"""
 
 
-class Object936F7B6D:
+class SiteLocation:
   """Generated schema class"""
 
   def __init__(self):
@@ -13,7 +13,7 @@ class Object936F7B6D:
   def from_dict(source):
     if not source:
       return None
-    result = Object936F7B6D()
+    result = SiteLocation()
     result.address = source.get('address')
     result.lat = source.get('lat')
     result.long = source.get('long')
@@ -25,7 +25,7 @@ class Object936F7B6D:
       return None
     result = {}
     for key in source:
-      result[key] = Object936F7B6D.from_dict(source[key])
+      result[key] = SiteLocation.from_dict(source[key])
     return result
 
   @staticmethod
@@ -46,7 +46,7 @@ class Object936F7B6D:
     return result
 
 
-class ObjectAEC3F93C:
+class SiteLinks:
   """Generated schema class"""
 
   def __init__(self):
@@ -59,7 +59,7 @@ class ObjectAEC3F93C:
   def from_dict(source):
     if not source:
       return None
-    result = ObjectAEC3F93C()
+    result = SiteLinks()
     result.docs = source.get('docs')
     result.folder = source.get('folder')
     result.image = source.get('image')
@@ -72,7 +72,7 @@ class ObjectAEC3F93C:
       return None
     result = {}
     for key in source:
-      result[key] = ObjectAEC3F93C.from_dict(source[key])
+      result[key] = SiteLinks.from_dict(source[key])
     return result
 
   @staticmethod
@@ -334,8 +334,8 @@ class SiteMetadata:
     result.site = source.get('site')
     result.name = source.get('name')
     result.tags = source.get('tags')
-    result.location = Object936F7B6D.from_dict(source.get('location'))
-    result.links = ObjectAEC3F93C.from_dict(source.get('links'))
+    result.location = SiteLocation.from_dict(source.get('location'))
+    result.links = SiteLinks.from_dict(source.get('links'))
     result.parameters = ObjectBB16A108.from_dict(source.get('parameters'))
     return result
 

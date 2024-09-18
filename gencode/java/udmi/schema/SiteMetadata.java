@@ -70,10 +70,22 @@ public class SiteMetadata {
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
     @JsonPropertyDescription("Tags associated with the site")
     public Set<Object> tags = new LinkedHashSet<Object>();
+    /**
+     * Site Location
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("location")
-    public Location location;
+    public SiteLocation location;
+    /**
+     * Site Links
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("links")
-    public Links links;
+    public SiteLinks links;
     @JsonProperty("parameters")
     public Parameters parameters;
 
