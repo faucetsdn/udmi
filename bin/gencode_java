@@ -58,7 +58,11 @@ dups=$(find $OUTDIR -name \*__\*.java)
 for file in $dups; do
     root=${file%__1.java}
     versions=$(sha256sum ${root}* | sort | awk '{print $1}' | uniq | wc -l)
-    [[ $versions == 1 ]] || (touch $MARKER && echo $versions of $root)
+    [[ $versions == 1 ]] || (
+        touch $MARKER
+        echo $versions of $root
+        diff $root*
+    )
 done
 [[ ! -f $MARKER ]]
 
