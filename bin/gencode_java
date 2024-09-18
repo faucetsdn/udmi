@@ -5,6 +5,7 @@ export LC_ALL=en_US.UTF-8
 
 JVERSION=1.2.1
 JBASENAME=jsonschema2pojo
+MARKER=/tmp/.gencode_mark
 
 ROOT_DIR=$(realpath $(dirname $0)/..)
 cd $ROOT_DIR
@@ -40,15 +41,18 @@ $JARBIN $JOPTS --source . --target $OUTDIR
 echo Copying shared constants $ROOT_DIR/etc/*.java
 cp -u $ROOT_DIR/etc/*.java $OUTDIR/udmi/schema/
 
-echo Pruning dangling __ classes...
-dups=$(find $OUTDIR -name \*__\*.java)
-for file in $dups; do
-    class=${file##*/}
-    class=${class%.java}
-    matches=$(fgrep -l $class -r $OUTDIR | fgrep -v $class.java) || true
-    echo $class in $matches
-    [[ -n $matches ]] || rm $file
-    # TODO: If a file is removed, then the scan should be done again for transitive uses
+rm -f $MARKER
+while [[ ! -f $MARKER ]]; do
+    touch $MARKER
+    echo Pruning dangling __ classes...
+    dups=$(find $OUTDIR -name \*__\*.java)
+    for file in $dups; do
+        class=${file##*/}
+        class=${class%.java}
+        matches=$(fgrep -l $class -r $OUTDIR | fgrep -v $class.java) || true
+        echo $class in $matches
+        [[ -n $matches ]] || rm -f $file $MARKER
+    done
 done
 
 echo Cleaning up references to __ classes...
@@ -57,7 +61,6 @@ fgrep -l __ -r $OUTDIR | xargs -n 1 sed -E -i \
                                -e 's/__[0-9]+//g'
 
 echo Checking for mismatching class signatures...
-MARKER=/tmp/.gencode_fail
 rm -f $MARKER
 dups=$(find $OUTDIR -name \*__\*.java)
 for file in $dups; do
