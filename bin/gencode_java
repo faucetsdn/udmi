@@ -61,7 +61,9 @@ for file in $dups; do
     [[ $versions == 1 ]] || (
         touch $MARKER
         echo $versions of $root
+        ls -l $root*
         diff $root*
+        fgrep __ -r $OUTDIR
     )
 done
 [[ ! -f $MARKER ]]
