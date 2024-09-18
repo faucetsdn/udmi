@@ -1,5 +1,8 @@
 #!/bin/bash -e
 
+# Force consistent sort order and other processing things
+export LC_ALL=en_US.UTF-8
+
 JVERSION=1.2.1
 JBASENAME=jsonschema2pojo
 
