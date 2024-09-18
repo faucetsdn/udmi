@@ -43,6 +43,7 @@ for file in $dups; do
     class=${file##*/}
     class=${class%.java}
     matches=$(fgrep -l $class -r $OUTDIR | fgrep -v $class.java) || true
+    echo $class in $matches
     [[ -n $matches ]] || rm $file
 done
 
