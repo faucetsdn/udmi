@@ -9,8 +9,8 @@ sites/udmi_site_model/out/devices/AHU-1/state_system.json
 sites/udmi_site_model/out/devices/AHU-22/config.json
 sites/udmi_site_model/out/devices/AHU-22/events_pointset.json
 sites/udmi_site_model/out/devices/AHU-22/events_system.json
-sites/udmi_site_model/out/devices/AHU-22/state.json
 sites/udmi_site_model/out/devices/AHU-22/state_gateway.json
+sites/udmi_site_model/out/devices/AHU-22/state.json
 sites/udmi_site_model/out/devices/AHU-22/state_localnet.json
 sites/udmi_site_model/out/devices/AHU-22/state_pointset.json
 sites/udmi_site_model/out/devices/AHU-22/state_system.json
@@ -22,16 +22,16 @@ sites/udmi_site_model/out/devices/GAT-123/events_invalid.json
 sites/udmi_site_model/out/devices/GAT-123/events_pointset.json
 sites/udmi_site_model/out/devices/GAT-123/events_system.json
 sites/udmi_site_model/out/devices/GAT-123/persistent_data.json
-sites/udmi_site_model/out/devices/GAT-123/state.json
 sites/udmi_site_model/out/devices/GAT-123/state_gateway.json
+sites/udmi_site_model/out/devices/GAT-123/state.json
 sites/udmi_site_model/out/devices/GAT-123/state_localnet.json
 sites/udmi_site_model/out/devices/GAT-123/state_pointset.json
 sites/udmi_site_model/out/devices/GAT-123/state_system.json
 sites/udmi_site_model/out/devices/SNS-4/config.json
 sites/udmi_site_model/out/devices/SNS-4/events_pointset.json
 sites/udmi_site_model/out/devices/SNS-4/events_system.json
-sites/udmi_site_model/out/devices/SNS-4/state.json
 sites/udmi_site_model/out/devices/SNS-4/state_gateway.json
+sites/udmi_site_model/out/devices/SNS-4/state.json
 sites/udmi_site_model/out/devices/SNS-4/state_pointset.json
 sites/udmi_site_model/out/devices/SNS-4/state_system.json
 ::::::::::::::
@@ -107,6 +107,29 @@ sites/udmi_site_model/out/devices/AHU-1/events_system.out
   } ]
 }
 ::::::::::::::
+sites/udmi_site_model/out/devices/AHU-1/state_localnet.out
+::::::::::::::
+{
+  "timestamp" : "REDACTED_TIMESTAMP",
+  "version" : "1.5.1",
+  "sub_folder" : "localnet",
+  "sub_type" : "state",
+  "status" : {
+    "message" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
+    "detail" : "state_localnet: Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
+    "category" : "validation.device.schema",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 500
+  },
+  "errors" : [ {
+    "message" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
+    "detail" : "state_localnet: Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
+    "category" : "validation.device.schema",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 500
+  } ]
+}
+::::::::::::::
 sites/udmi_site_model/out/devices/AHU-1/state.out
 ::::::::::::::
 {
@@ -130,29 +153,6 @@ sites/udmi_site_model/out/devices/AHU-1/state.out
   }, {
     "message" : "While converting to json node: 1 schema violations found",
     "detail" : "state_update: While converting to json node: 1 schema violations found REDACTED_ERROR; 1 schema violations found; /system: object instance has properties which are not allowed by the schema: [\"extraField\"]",
-    "category" : "validation.device.schema",
-    "timestamp" : "REDACTED_TIMESTAMP",
-    "level" : 500
-  } ]
-}
-::::::::::::::
-sites/udmi_site_model/out/devices/AHU-1/state_localnet.out
-::::::::::::::
-{
-  "timestamp" : "REDACTED_TIMESTAMP",
-  "version" : "1.5.1",
-  "sub_folder" : "localnet",
-  "sub_type" : "state",
-  "status" : {
-    "message" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
-    "detail" : "state_localnet: Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
-    "category" : "validation.device.schema",
-    "timestamp" : "REDACTED_TIMESTAMP",
-    "level" : 500
-  },
-  "errors" : [ {
-    "message" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
-    "detail" : "state_localnet: Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
@@ -268,22 +268,6 @@ sites/udmi_site_model/out/devices/AHU-22/events_system.out
   "errors" : [ ]
 }
 ::::::::::::::
-sites/udmi_site_model/out/devices/AHU-22/state.out
-::::::::::::::
-{
-  "timestamp" : "REDACTED_TIMESTAMP",
-  "version" : "1.5.1",
-  "sub_folder" : "update",
-  "sub_type" : "state",
-  "status" : {
-    "message" : "Successful validation",
-    "category" : "validation.device.receive",
-    "timestamp" : "REDACTED_TIMESTAMP",
-    "level" : 200
-  },
-  "errors" : [ ]
-}
-::::::::::::::
 sites/udmi_site_model/out/devices/AHU-22/state_gateway.out
 ::::::::::::::
 {
@@ -306,6 +290,22 @@ sites/udmi_site_model/out/devices/AHU-22/state_localnet.out
   "timestamp" : "REDACTED_TIMESTAMP",
   "version" : "1.5.1",
   "sub_folder" : "localnet",
+  "sub_type" : "state",
+  "status" : {
+    "message" : "Successful validation",
+    "category" : "validation.device.receive",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 200
+  },
+  "errors" : [ ]
+}
+::::::::::::::
+sites/udmi_site_model/out/devices/AHU-22/state.out
+::::::::::::::
+{
+  "timestamp" : "REDACTED_TIMESTAMP",
+  "version" : "1.5.1",
+  "sub_folder" : "update",
   "sub_type" : "state",
   "status" : {
     "message" : "Successful validation",
@@ -503,22 +503,6 @@ sites/udmi_site_model/out/devices/GAT-123/events_system.out
   "errors" : [ ]
 }
 ::::::::::::::
-sites/udmi_site_model/out/devices/GAT-123/state.out
-::::::::::::::
-{
-  "timestamp" : "REDACTED_TIMESTAMP",
-  "version" : "1.5.1",
-  "sub_folder" : "update",
-  "sub_type" : "state",
-  "status" : {
-    "message" : "Successful validation",
-    "category" : "validation.device.receive",
-    "timestamp" : "REDACTED_TIMESTAMP",
-    "level" : 200
-  },
-  "errors" : [ ]
-}
-::::::::::::::
 sites/udmi_site_model/out/devices/GAT-123/state_gateway.out
 ::::::::::::::
 {
@@ -541,6 +525,22 @@ sites/udmi_site_model/out/devices/GAT-123/state_localnet.out
   "timestamp" : "REDACTED_TIMESTAMP",
   "version" : "1.5.1",
   "sub_folder" : "localnet",
+  "sub_type" : "state",
+  "status" : {
+    "message" : "Successful validation",
+    "category" : "validation.device.receive",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 200
+  },
+  "errors" : [ ]
+}
+::::::::::::::
+sites/udmi_site_model/out/devices/GAT-123/state.out
+::::::::::::::
+{
+  "timestamp" : "REDACTED_TIMESTAMP",
+  "version" : "1.5.1",
+  "sub_folder" : "update",
   "sub_type" : "state",
   "status" : {
     "message" : "Successful validation",
@@ -652,6 +652,22 @@ sites/udmi_site_model/out/devices/SNS-4/events_system.out
   "errors" : [ ]
 }
 ::::::::::::::
+sites/udmi_site_model/out/devices/SNS-4/state_gateway.out
+::::::::::::::
+{
+  "timestamp" : "REDACTED_TIMESTAMP",
+  "version" : "1.5.1",
+  "sub_folder" : "gateway",
+  "sub_type" : "state",
+  "status" : {
+    "message" : "Successful validation",
+    "category" : "validation.device.receive",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 200
+  },
+  "errors" : [ ]
+}
+::::::::::::::
 sites/udmi_site_model/out/devices/SNS-4/state.out
 ::::::::::::::
 {
@@ -673,22 +689,6 @@ sites/udmi_site_model/out/devices/SNS-4/state.out
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   } ]
-}
-::::::::::::::
-sites/udmi_site_model/out/devices/SNS-4/state_gateway.out
-::::::::::::::
-{
-  "timestamp" : "REDACTED_TIMESTAMP",
-  "version" : "1.5.1",
-  "sub_folder" : "gateway",
-  "sub_type" : "state",
-  "status" : {
-    "message" : "Successful validation",
-    "category" : "validation.device.receive",
-    "timestamp" : "REDACTED_TIMESTAMP",
-    "level" : 200
-  },
-  "errors" : [ ]
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/SNS-4/state_pointset.out
