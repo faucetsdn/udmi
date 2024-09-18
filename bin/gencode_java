@@ -35,7 +35,7 @@ $JARBIN $JOPTS --source . --target $OUTDIR
 
 # There is no way to specify enum constants in generated code, so just hack it in manually.
 echo Copying shared constants $ROOT_DIR/etc/*.java
-cp --update=none $ROOT_DIR/etc/*.java $OUTDIR/udmi/schema/
+cp -n $ROOT_DIR/etc/*.java $OUTDIR/udmi/schema/
 
 echo Cleaning up __ classes...
 fgrep -l __ -r $OUTDIR | xargs -n 1 sed -E -i \
