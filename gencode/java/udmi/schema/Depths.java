@@ -3,7 +3,6 @@ package udmi.schema;
 
 import java.util.HashMap;
 import java.util.Map;
-import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -22,7 +21,6 @@ import com.fasterxml.jackson.annotation.JsonValue;
     "refs",
     "features"
 })
-@Generated("jsonschema2pojo")
 public class Depths {
 
     @JsonProperty("families")
@@ -56,7 +54,6 @@ public class Depths {
         return (((((this.features == rhs.features)||((this.features!= null)&&this.features.equals(rhs.features)))&&((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families))))&&((this.devices == rhs.devices)||((this.devices!= null)&&this.devices.equals(rhs.devices))))&&((this.refs == rhs.refs)||((this.refs!= null)&&this.refs.equals(rhs.refs))));
     }
 
-    @Generated("jsonschema2pojo")
     public enum Depth {
 
         REGISTRIES("registries"),

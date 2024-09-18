@@ -3,7 +3,6 @@ package udmi.schema;
 
 import java.util.HashMap;
 import java.util.Map;
-import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -25,7 +24,6 @@ import com.fasterxml.jackson.annotation.JsonValue;
     "profile_sec",
     "options"
 })
-@Generated("jsonschema2pojo")
 public class IotAccess {
 
     @JsonProperty("name")
@@ -75,7 +73,6 @@ public class IotAccess {
      * 
      * 
      */
-    @Generated("jsonschema2pojo")
     public enum IotProvider {
 
         LOCAL("local"),

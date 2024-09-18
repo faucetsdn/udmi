@@ -2,7 +2,6 @@
 package udmi.schema;
 
 import java.util.Map;
-import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -18,7 +17,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder({
     "sequences"
 })
-@Generated("jsonschema2pojo")
 public class FeatureValidationState {
 
     @JsonProperty("sequences")

@@ -3,7 +3,6 @@ package udmi.schema;
 
 import java.util.HashMap;
 import java.util.Map;
-import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -22,7 +21,6 @@ import com.fasterxml.jackson.annotation.JsonValue;
 @JsonPropertyOrder({
     "stage"
 })
-@Generated("jsonschema2pojo")
 public class FeatureDiscovery {
 
     /**
@@ -61,7 +59,6 @@ public class FeatureDiscovery {
      * Stage of a feature implemenation
      * 
      */
-    @Generated("jsonschema2pojo")
     public enum FeatureStage {
 
         DISABLED("disabled"),

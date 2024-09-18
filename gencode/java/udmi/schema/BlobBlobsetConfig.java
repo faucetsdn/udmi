@@ -4,7 +4,6 @@ package udmi.schema;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -26,7 +25,6 @@ import com.fasterxml.jackson.annotation.JsonValue;
     "sha256",
     "generation"
 })
-@Generated("jsonschema2pojo")
 public class BlobBlobsetConfig {
 
     /**
@@ -92,7 +90,6 @@ public class BlobBlobsetConfig {
      * Phase for the management of a configuration blob.
      * 
      */
-    @Generated("jsonschema2pojo")
     public enum BlobPhase {
 
         APPLY("apply"),

@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
-import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -32,7 +31,6 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
     "ref",
     "tags"
 })
-@Generated("jsonschema2pojo")
 public class PointPointsetModel {
 
     /**
@@ -124,7 +122,6 @@ public class PointPointsetModel {
      * Expected state when `baseline_value` is set as the `set_value` for this point the config message
      * 
      */
-    @Generated("jsonschema2pojo")
     public enum Baseline_state {
 
         APPLIED("applied"),

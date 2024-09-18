@@ -1,12 +1,18 @@
 
 package udmi.schema;
 
-import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
+
+/**
+ * Site Links
+ * <p>
+ * 
+ * 
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "docs",
@@ -14,8 +20,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "image",
     "repo"
 })
-@Generated("jsonschema2pojo")
-public class Links {
+public class SiteLinks {
 
     /**
      * Folder where the project documentation is stored
@@ -61,10 +66,10 @@ public class Links {
         if (other == this) {
             return true;
         }
-        if ((other instanceof Links) == false) {
+        if ((other instanceof SiteLinks) == false) {
             return false;
         }
-        Links rhs = ((Links) other);
+        SiteLinks rhs = ((SiteLinks) other);
         return (((((this.image == rhs.image)||((this.image!= null)&&this.image.equals(rhs.image)))&&((this.folder == rhs.folder)||((this.folder!= null)&&this.folder.equals(rhs.folder))))&&((this.docs == rhs.docs)||((this.docs!= null)&&this.docs.equals(rhs.docs))))&&((this.repo == rhs.repo)||((this.repo!= null)&&this.repo.equals(rhs.repo))));
     }
 

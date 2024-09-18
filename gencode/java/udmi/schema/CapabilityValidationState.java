@@ -3,7 +3,6 @@ package udmi.schema;
 
 import java.util.HashMap;
 import java.util.Map;
-import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -27,7 +26,6 @@ import com.fasterxml.jackson.annotation.JsonValue;
     "score",
     "total"
 })
-@Generated("jsonschema2pojo")
 public class CapabilityValidationState {
 
     @JsonProperty("summary")
@@ -93,7 +91,6 @@ public class CapabilityValidationState {
      * 
      * 
      */
-    @Generated("jsonschema2pojo")
     public enum CapabilityResult {
 
         PASS("pass"),

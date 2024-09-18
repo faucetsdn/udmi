@@ -3,7 +3,6 @@ package udmi.schema;
 
 import java.util.HashMap;
 import java.util.Map;
-import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -16,7 +15,6 @@ import com.fasterxml.jackson.annotation.JsonValue;
     "key_format",
     "key_data"
 })
-@Generated("jsonschema2pojo")
 public class Credential {
 
     /**
@@ -54,7 +52,6 @@ public class Credential {
      * The key type used for cloud communication.
      * 
      */
-    @Generated("jsonschema2pojo")
     public enum Key_format {
 
         PASSWORD("PASSWORD"),
