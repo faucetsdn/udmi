@@ -7,7 +7,7 @@ DEVICE_CONFIGS=$ROOT_DIR/docker_config.json
 bash $ROOT_DIR/../docker/bacnet_device/build.sh
 bash $ROOT_DIR/../docker/discovery_node/build.sh
 
-docker network create --internal --ip-range=192.168.16.0/24 --subnet=192.168.16.0/24  discovery-network || true
+docker network create --ip-range=192.168.16.0/24 --subnet=192.168.16.0/24  discovery-network || true
 
 test_devices=$(jq -r 'keys[]' $DEVICE_CONFIGS)
 for device in $test_devices; do
