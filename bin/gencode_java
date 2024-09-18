@@ -48,6 +48,7 @@ for file in $dups; do
     matches=$(fgrep -l $class -r $OUTDIR | fgrep -v $class.java) || true
     echo $class in $matches
     [[ -n $matches ]] || rm $file
+    # TODO: If a file is removed, then the scan should be done again for transitive uses
 done
 
 echo Cleaning up references to __ classes...
