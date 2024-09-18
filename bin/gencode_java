@@ -63,7 +63,7 @@ for file in $dups; do
         echo $versions of $root
         ls -l $root*
         diff $root*
-        fgrep __ -r $OUTDIR
+        fgrep ${root}__ -r $OUTDIR
     )
 done
 [[ ! -f $MARKER ]]
