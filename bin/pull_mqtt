@@ -10,24 +10,28 @@ source $UDMI_ROOT/etc/shell_common.sh
 registry_id=$1
 shift
 
-tmp_file=/tmp/message_stream.txt
 msg_file=/tmp/message_captured.json
 
 source $UDMI_ROOT/etc/mosquitto_ctrl.sh
 
-sudo mosquitto_sub $SERVER_OPTS -R -F "%J" -t "/r/${registry_id}/d/+/#" |
-    while read mqtt_message; do
+sudo mosquitto_sub $SERVER_OPTS -R -F "%j" -t "/r/${registry_id}/d/+/#" | \
+    while read -r mqtt_message; do
         echo $mqtt_message > $msg_file
-        topic=$(jq -r .topic $msg_file)
+        topic=$(jq -r .topic <<< "$mqtt_message")
         payload=$(jq -r .payload $msg_file)
         timestamp=$(jq -r .tst $msg_file)
-
+        json=$(jq . <<< "$payload")
+        
         readarray -d '/' -t array <<< "${topic}/"
         registryId=${array[2]}
         deviceId=${array[4]}
         subType=${array[5]}
         subFolder=${array[6]}
-        echo $topic _${registryId}_${deviceId}_${subType}_${subFolder}_
+
+        # Trim whitespace
+        subFolder=$(echo $subFolder | xargs)
+        
+        [[ -n ${subFolder% } ]] || subFolder=update
 
         if [[ $subType == null ]]; then
             subType=events
@@ -37,9 +41,9 @@ sudo mosquitto_sub $SERVER_OPTS -R -F "%J" -t "/r/${registry_id}/d/+/#" |
         usetime=$(echo $timestamp | tr : x)  # Colon is not allowed on Windows!
         out_base=$UDMI_ROOT/out/registries/$registryId/devices/$deviceId/${timepath}/${usetime}_${subFolder}_${subType}
         out_file=${out_base}.json
-        echo $out_file
+        echo $topic $out_file
         mkdir -p $(dirname $out_file)
-        echo $payload | jq . > $out_file
+        echo $json > $out_file
         out_attr=${out_base}.attr
         echo {} | jq ".deviceRegistryId=\"$registryId\" | \
              .subFolder=\"$subFolder\" |
