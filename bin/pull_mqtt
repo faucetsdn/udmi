@@ -52,3 +52,5 @@ sudo mosquitto_sub $SERVER_OPTS -R -F "%j" -t "/r/${registry_id}/d/+/#" | \
              .subType=\"$subType\" |
              .deviceId=\"$deviceId\"" > $out_attr
     done
+
+echo Finished mqtt message capture at $(date -u -Is)
