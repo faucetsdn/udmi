@@ -50,7 +50,7 @@
       "side_id": "${UDMI_PREFIX}udmi_control"
     },
     "provision": {
-      "recv_id": "${UDMI_PREFIX}udmi_target-discovery",
+      "recv_id": "${UDMI_PREFIX}udmi_target-provision",
       "send_id": "${UDMI_PREFIX}udmi_target",
       "enabled": "true"
     },

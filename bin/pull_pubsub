@@ -44,7 +44,7 @@ while true; do
         fi
 
         if [[ $subType == null ]]; then
-            subType=event
+            subType=events
         fi
 
         timepath=$(echo ${timestamp%:*} | tr T: //) # Bucket messages by minute
