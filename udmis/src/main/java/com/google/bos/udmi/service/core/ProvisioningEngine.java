@@ -80,8 +80,8 @@ public class ProvisioningEngine extends ProcessorBase {
     publish(modelEnvelope, pointsetModel);
   }
 
-  private Map<String, PointPointsetModel> extractPoints(DiscoveryEvents discoveryEvent) {
-    Map<String, PointPointsetModel> points = new HashMap<>();
+  private HashMap<String, PointPointsetModel> extractPoints(DiscoveryEvents discoveryEvent) {
+    HashMap<String, PointPointsetModel> points = new HashMap<>();
     return points;
   }
 

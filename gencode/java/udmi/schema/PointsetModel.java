@@ -1,7 +1,7 @@
 
 package udmi.schema;
 
-import java.util.Map;
+import java.util.HashMap;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -33,7 +33,7 @@ public class PointsetModel {
      */
     @JsonProperty("points")
     @JsonPropertyDescription("Information about a specific point name of the device.")
-    public Map<String, PointPointsetModel> points;
+    public HashMap<String, PointPointsetModel> points;
     @JsonProperty("exclude_units_from_config")
     public Boolean exclude_units_from_config;
     @JsonProperty("exclude_points_from_config")
