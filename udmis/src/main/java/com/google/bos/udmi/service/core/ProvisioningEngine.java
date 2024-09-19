@@ -73,6 +73,11 @@ public class ProvisioningEngine extends ProcessorBase {
         (Consumer<Exception>) e -> error(
             "Error creating device (exists but not bound?): " + friendlyStackTrace(e)));
     bindDeviceToGateway(registryId, expectedId, gatewayId);
+    Envelope modelEnvelope = new Envelope();
+    modelEnvelope.deviceRegistryId = registryId;
+    modelEnvelope.deviceId = expectedId;
+    publish(modelEnvelope, cloudModel);
+    publish(modelEnvelope, pointsetModel);
   }
 
   private Map<String, PointPointsetModel> extractPoints(DiscoveryEvents discoveryEvent) {
