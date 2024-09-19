@@ -3,10 +3,8 @@ package com.google.bos.udmi.service.core;
 import static com.google.udmi.util.GeneralUtils.catchToElse;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
-import static com.google.udmi.util.GeneralUtils.ifNotNullGetElse;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
-import static com.google.udmi.util.GeneralUtils.ignoreValue;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static com.google.udmi.util.MetadataMapKeys.UDMI_DISCOVERED_FROM;
@@ -22,6 +20,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
 import udmi.schema.CloudModel.Resource_type;
@@ -49,12 +49,7 @@ public class ProvisioningEngine extends ProcessorBase {
     model.operation = BIND;
     model.device_ids = new HashMap<>();
     model.device_ids.put(proxyId, new CloudModel());
-    modelDevice(registryId, gatewayId, model);
-  }
-
-  private CloudModel modelDevice(String registryId, String gatewayId, CloudModel model) {
-    return ifNotNullGetElse(model, m -> iotAccess.modelDevice(registryId, gatewayId, m),
-        () -> iotAccess.fetchDevice(registryId, gatewayId));
+    iotAccess.modelDevice(registryId, gatewayId, model);
   }
 
   private void createDeviceEntry(String registryId, String expectedId, String gatewayId,
@@ -67,8 +62,10 @@ public class ProvisioningEngine extends ProcessorBase {
     deviceModel.metadata.put(UDMI_DISCOVERED_WITH, stringifyTerse(discoveryEvent));
     deviceModel.metadata.put(UDMI_UPDATED, isoConvert());
     deviceModel.metadata.put(UDMI_GENERATION, isoConvert(discoveryEvent.generation));
-    catchToElse(ignoreValue(modelDevice(registryId, expectedId, deviceModel)),
-        e -> error("Error creating device (exists but not bound?): " + friendlyStackTrace(e)));
+    catchToElse(
+        (Supplier<CloudModel>) () -> iotAccess.modelDevice(registryId, expectedId, deviceModel),
+        (Consumer<Exception>) e -> error(
+            "Error creating device (exists but not bound?): " + friendlyStackTrace(e)));
     bindDeviceToGateway(registryId, expectedId, gatewayId);
   }
 
@@ -83,7 +80,7 @@ public class ProvisioningEngine extends ProcessorBase {
     if (!generation.equals(cloudModel.timestamp)) {
       cloudModel.timestamp = generation;
       cloudModel.device_ids = null;
-      CloudModel fetchedModel = modelDevice(deviceRegistryId, gatewayId, null);
+      CloudModel fetchedModel = iotAccess.fetchDevice(deviceRegistryId, gatewayId);
       if (fetchedModel == null) {
         warn("Scan device %s/%s not found, ignoring results", deviceRegistryId, gatewayId);
         return null;
