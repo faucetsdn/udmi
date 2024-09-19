@@ -10,18 +10,18 @@
       "bacnet_id": 3002
   },
   "device3": {
-      "image": "test-bacnet-device",
-      "ethmac": "00:00:aa:bb:cc:03",
-      "bacnet_id": 3003
+    "image": "test-bacnet-device",
+    "ethmac": "00:00:aa:bb:cc:03",
+    "bacnet_id": 3003
   },
   "device4": {
-      "image": "test-bacnet-device",
-      "ethmac": "00:00:aa:bb:cc:04",
-      "bacnet_id": 3004
+    "image": "test-bacnet-device",
+    "ethmac": "00:00:aa:bb:cc:04",
+    "bacnet_id": 3004
   },
   "device5": {
-      "image": "test-bacnet-device",
-      "ethmac": "00:00:aa:bb:cc:05",
-      "bacnet_id": 3005
-  }  
+    "image": "test-bacnet-device",
+    "ethmac": "00:00:aa:bb:cc:05",
+    "bacnet_id": 3005
+  }
 }

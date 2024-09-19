@@ -3,14 +3,26 @@ import ipaddress
 import logging
 import queue
 import socket
+import struct
 import threading
 import time
 import scapy.all
 import scapy.layers.inet
 import scapy.sendrecv
+import scapy.utils
 import udmi.discovery.discovery as discovery
 import udmi.schema.discovery_event
 import udmi.schema.state
+
+BACNET_BVLC_MARKER = b"\x81"
+BACNET_APDU_I_AM_START = b"\x10\x00\xc4"
+PRIVATE_IP_BPC_FILTER = (
+    "ip and "
+    "("
+    "src net 10.0.0.0/8 or src net 172.16.0.0/12 or src net 192.168.0.0/16 or "
+    "dst net 10.0.0.0/8 or dst net 172.16.0.0/12 or dst net 192.168.0.0/16"
+    ")"
+)
 
 
 @dataclasses.dataclass(eq=True, frozen=True)
@@ -25,24 +37,37 @@ class PassiveNetworkDiscovery(discovery.DiscoveryController):
 
   scan_family = "ipv4"
 
-  def __init__(self, state, publisher):
+  def __init__(self, state, publisher, *, interface=None):
 
-    self.queue_log_interval = 5000
     self.queue = queue.SimpleQueue()
-
+    self.interface = interface
     self.addresses_seen = set()
     self.device_records = set()
     self.devices_records_published = set()
-    self.scan_interval = 120
     self.publish_interval = 5
     self.cancel_threads = threading.Event()
 
     # Configure Scapy
-    scapy.all.conf.layers.filter(
-        [scapy.layers.inet.Ether, scapy.layers.inet.IP, scapy.layers.inet.ICMP]
-    )
+    scapy.all.conf.layers.filter([
+        scapy.layers.inet.Ether,
+        scapy.layers.inet.IP,
+        scapy.layers.inet.ICMP,
+        scapy.layers.inet.UDP,
+    ])
 
     super().__init__(state, publisher)
+
+  def _get_packet_counter_total(self):
+    try:
+      with open(f"/sys/class/net/{self.interface}/statistics/rx_packets") as f:
+        rx = int(f.read())
+
+      with open(f"/sys/class/net/{self.interface}/statistics/tx_packets") as f:
+        tx = int(f.read())
+
+      return rx + tx
+    except FileNotFoundError:
+      return
 
   def start_discovery(self):
     # Queue processor uses a threading event for enabling/disabling
@@ -66,33 +91,29 @@ class PassiveNetworkDiscovery(discovery.DiscoveryController):
     )
     self.service_thread.start()
 
-    self.sniffer = scapy.sendrecv.AsyncSniffer(prn=self.queue.put, store=False)
+    self.sniffer = scapy.sendrecv.AsyncSniffer(
+        prn=self.queue.put, store=False, iface=self.interface, filter=PRIVATE_IP_BPC_FILTER
+    )
     self.sniffer.start()
 
-    """with open("/sys/class/net/wlp0s20f3/statistics/rx_packets") as f:
-      rx = int(f.read())
-  
-    with open("/sys/class/net/wlp0s20f3/statistics/tx_packets") as f:
-      tx = int(f.read())
-
-    self.packet_count_start = rx + tx"""
+    self.packet_count_start = self._get_packet_counter_total()
 
   def stop_discovery(self):
     self.sniffer.stop()
     self.sniffer.join()
 
-    """
-    with open("/sys/class/net/wlp0s20f3/statistics/rx_packets") as f:
-      rx = int(f.read())
-    with open("/sys/class/net/wlp0s20f3/statistics/tx_packets") as f:
-      tx = int(f.read())
-    self.packet_count_end = rx + tx
-    """
+    packet_count_end = self._get_packet_counter_total()
+
     self.cancel_threads.set()
     self.queue_thread.join()
     self.service_thread.join()
 
-    # logging.info(f"actual packets: %d, seen by scapy: %d", self.packet_count_end - self.packet_count_start, self.packets_seen)
+    if self.interface:
+      logging.info(
+          f"packets seen by scapy: %d, packets seen by interface: %d",
+          self.packets_seen,
+          packet_count_end - self.packet_count_start,
+      )
     logging.info("devices seen: %d ", len(self.addresses_seen))
 
   def discovery_service(self):
@@ -126,16 +147,34 @@ class PassiveNetworkDiscovery(discovery.DiscoveryController):
       return None
 
   def queue_worker(self):
+    """Takes sniffer packets from the queue and processes them."""
     self.packets_seen = 0
     self.ip_packets_seen = 0
+    self.bacnet_packets_seen = 0
     while True:
       try:
         item = self.queue.get(True, 1)
         self.packets_seen += 1
         if scapy.layers.inet.IP in item:
           self.ip_packets_seen += 1
+
           # A packet "sees" two devices - the source and the destination
           for x in ["src", "dst"]:
+
+            if x == "src":
+              if scapy.layers.inet.UDP in item and (
+                      item[scapy.layers.inet.UDP].dport == 47808
+                      or item[scapy.layers.inet.UDP].sport == 47808
+                  ):
+                    # Treat packet as a BACnet packet
+                    payload = bytes(item[scapy.layers.inet.UDP].payload)
+                    if payload[0:1] == BACNET_BVLC_MARKER:
+                      if (index := payload.find(BACNET_APDU_I_AM_START, 0, 10)) > 0:
+                        object_identifier = int.from_bytes(
+                            payload[index + 3 : index + 3 + 4]
+                        )
+                        instance_number = object_identifier & 0x3FFFF
+                        logging.info(f"maybe bacnet addr {instance_number} at {getattr(item[scapy.layers.inet.IP], x)}")
             # Not all packets have IP addresses, but this scan requires an IP Address
             if (
                 (ip := getattr(item[scapy.layers.inet.IP], x))

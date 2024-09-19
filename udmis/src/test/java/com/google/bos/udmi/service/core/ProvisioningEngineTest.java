@@ -1,7 +1,6 @@
 package com.google.bos.udmi.service.core;
 
-import static com.google.udmi.util.GeneralUtils.ifTrueThen;
-import static com.google.udmi.util.MetadataMapKeys.UDMI_PROVISION_ENABLE;
+import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.MetadataMapKeys.UDMI_PROVISION_GENERATION;
 import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -18,8 +17,8 @@ import static org.mockito.Mockito.when;
 import com.google.bos.udmi.service.access.IotAccessBase;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.udmi.util.JsonUtil;
 import daq.pubber.ProtocolFamily;
+import java.time.Duration;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -41,13 +40,11 @@ public class ProvisioningEngineTest extends ProcessorTestBase {
   private static final String SCAN_ADDR = "19273821";
   private static final String SCAN_FAMILY = ProtocolFamily.VENDOR;
   private static final String TARGET_DEVICE = format("%s-%s", SCAN_FAMILY, SCAN_ADDR);
-  private static final String DISCOVERED_DEVICE = "discovered_" + TARGET_DEVICE;
   private static final Date SCAN_GENERATION = new Date();
+  private static final Duration PROVISIONING_WINDOW = Duration.ofMinutes(5);
 
   private static Map<String, String> getGatewayMetadata() {
-    return ImmutableMap.of(
-        UDMI_PROVISION_ENABLE, "true",
-        UDMI_PROVISION_GENERATION, JsonUtil.isoConvert());
+    return ImmutableMap.of(UDMI_PROVISION_GENERATION, isoConvert(SCAN_GENERATION));
   }
 
   @NotNull
@@ -58,27 +55,20 @@ public class ProvisioningEngineTest extends ProcessorTestBase {
     return envelope;
   }
 
-  static void initializeProvider(IotAccessBase provider, boolean alreadyProvisioned) {
+  static void initializeProvider(IotAccessBase provider) {
     CloudModel registryModel = new CloudModel();
     registryModel.device_ids = new HashMap<>();
 
     CloudModel deviceModel = new CloudModel();
-    deviceModel.resource_type = Resource_type.DEVICE;
+    registryModel.device_ids.put(TARGET_DEVICE, deviceModel);
     registryModel.device_ids.put(TEST_DEVICE, deviceModel);
-
-    if (alreadyProvisioned) {
-      CloudModel provisionedModel = new CloudModel();
-      provisionedModel.resource_type = Resource_type.DEVICE;
-      registryModel.device_ids.put(DISCOVERED_DEVICE, provisionedModel);
-    }
+    deviceModel.resource_type = Resource_type.DEVICE;
 
     CloudModel gatewayModel = new CloudModel();
     registryModel.device_ids.put(TEST_GATEWAY, gatewayModel);
     gatewayModel.resource_type = Resource_type.GATEWAY;
     gatewayModel.device_ids = new HashMap<>();
     gatewayModel.device_ids.put(TEST_DEVICE, new CloudModel());
-    ifTrueThen(alreadyProvisioned, () ->
-        gatewayModel.device_ids.put(DISCOVERED_DEVICE, new CloudModel()));
     gatewayModel.metadata = getGatewayMetadata();
 
     when(provider.getRegistries()).thenReturn(ImmutableSet.of(TEST_REGISTRY));
@@ -95,10 +85,10 @@ public class ProvisioningEngineTest extends ProcessorTestBase {
         gatewayModel);
   }
 
-  protected void initializeTestInstance(boolean alreadyProvisioned) {
+  protected void initializeTestInstance() {
     initializeTestInstance(ProvisioningEngine.class);
 
-    initializeProvider(provider, alreadyProvisioned);
+    initializeProvider(provider);
   }
 
   private DiscoveryEvents getDiscoveryScanEvent(String targetDeviceId) {
@@ -112,7 +102,7 @@ public class ProvisioningEngineTest extends ProcessorTestBase {
 
   @Test
   public void discoveryEventCreate() {
-    initializeTestInstance(false);
+    initializeTestInstance();
     getReverseDispatcher()
         .withEnvelope(getScanEnvelope())
         .publish(getDiscoveryScanEvent(TARGET_DEVICE));
@@ -127,22 +117,21 @@ public class ProvisioningEngineTest extends ProcessorTestBase {
     List<String> devices = deviceCaptor.getAllValues();
     List<CloudModel> models = modelCaptor.getAllValues();
 
-    assertEquals(DISCOVERED_DEVICE, devices.get(0), "created device id");
+    assertEquals(TARGET_DEVICE, devices.get(0), "created device id");
     assertEquals(Operation.CREATE, models.get(0).operation, "operation mismatch");
     assertTrue(models.get(0).blocked, "device blocked");
 
     assertEquals(TEST_GATEWAY, devices.get(1), "scanning gateway id");
     assertEquals(Operation.BIND, models.get(1).operation, "operation mismatch");
-    assertNotNull(models.get(1).device_ids.get(DISCOVERED_DEVICE), "binding device entry");
+    assertNotNull(models.get(1).device_ids.get(TARGET_DEVICE), "binding device entry");
   }
 
   @Test
   public void discoveryEventExisting() {
-    initializeTestInstance(true);
+    initializeTestInstance();
     getReverseDispatcher()
         .withEnvelope(getScanEnvelope())
-        .publish(getDiscoveryScanEvent(TARGET_DEVICE));
-
+        .publish(getDiscoveryScanEvent(TEST_DEVICE));
     terminateAndWait();
     verify(provider, times(1)).fetchDevice(eq(TEST_REGISTRY), eq(TEST_GATEWAY));
     verify(provider, never()).modelDevice(eq(TEST_REGISTRY), any(), any());

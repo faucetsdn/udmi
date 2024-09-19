@@ -1,3 +1,5 @@
+# pylint: disable=protected-access
+
 """Test discovery controller's logic"""
 from unittest import mock
 from typing import Callable

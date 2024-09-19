@@ -91,12 +91,11 @@ class Object88B5177A:
     return result
 
 
-class Object466A2796:
+class ObjectF7EF0790:
   """Generated schema class"""
 
   def __init__(self):
     self.site = None
-    self.panel = None
     self.section = None
     self.room = None
     self.floor = None
@@ -108,9 +107,8 @@ class Object466A2796:
   def from_dict(source):
     if not source:
       return None
-    result = Object8B23C514()
+    result = ObjectC9D7C7E6()
     result.site = source.get('site')
-    result.panel = source.get('panel')
     result.section = source.get('section')
     result.room = source.get('room')
     result.floor = source.get('floor')
@@ -125,7 +123,7 @@ class Object466A2796:
       return None
     result = {}
     for key in source:
-      result[key] = Object8B23C514.from_dict(source[key])
+      result[key] = ObjectC9D7C7E6.from_dict(source[key])
     return result
 
   @staticmethod
@@ -139,8 +137,6 @@ class Object466A2796:
     result = {}
     if self.site:
       result['site'] = self.site # 5
-    if self.panel:
-      result['panel'] = self.panel # 5
     if self.section:
       result['section'] = self.section # 5
     if self.room:
@@ -281,8 +277,6 @@ class SystemModel:
 
   def __init__(self):
     self.description = None
-    self.device_version = None
-    self.zone = None
     self.tags = None
     self.location = None
     self.serial_no = None
@@ -299,10 +293,8 @@ class SystemModel:
       return None
     result = SystemModel()
     result.description = source.get('description')
-    result.device_version = source.get('device_version')
-    result.zone = source.get('zone')
     result.tags = source.get('tags')
-    result.location = Object8B23C514.from_dict(source.get('location'))
+    result.location = ObjectC9D7C7E6.from_dict(source.get('location'))
     result.serial_no = source.get('serial_no')
     result.hardware = SystemHardware.from_dict(source.get('hardware'))
     result.software = source.get('software')
@@ -332,10 +324,6 @@ class SystemModel:
     result = {}
     if self.description:
       result['description'] = self.description # 5
-    if self.device_version:
-      result['device_version'] = self.device_version # 5
-    if self.zone:
-      result['zone'] = self.zone # 5
     if self.tags:
       result['tags'] = self.tags # 1
     if self.location:

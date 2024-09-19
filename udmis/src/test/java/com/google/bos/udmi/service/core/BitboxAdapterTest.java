@@ -33,7 +33,7 @@ public class BitboxAdapterTest extends ProcessorTestBase {
 
   protected void initializeTestInstance() {
     initializeTestInstance(BitboxAdapter.class);
-    ProvisioningEngineTest.initializeProvider(provider, false);
+    ProvisioningEngineTest.initializeProvider(provider);
   }
 
   private Envelope getLegacyEnvelope() {
