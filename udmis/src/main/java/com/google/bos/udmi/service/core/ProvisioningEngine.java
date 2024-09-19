@@ -10,7 +10,6 @@ import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static com.google.udmi.util.MetadataMapKeys.UDMI_DISCOVERED_FROM;
 import static com.google.udmi.util.MetadataMapKeys.UDMI_DISCOVERED_WITH;
 import static com.google.udmi.util.MetadataMapKeys.UDMI_GENERATION;
-import static com.google.udmi.util.MetadataMapKeys.UDMI_POINTSET_MODEL;
 import static com.google.udmi.util.MetadataMapKeys.UDMI_PROVISION_ENABLE;
 import static com.google.udmi.util.MetadataMapKeys.UDMI_UPDATED;
 import static java.lang.String.format;
@@ -29,8 +28,6 @@ import udmi.schema.CloudModel.Resource_type;
 import udmi.schema.DiscoveryEvents;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
-import udmi.schema.PointPointsetModel;
-import udmi.schema.PointsetModel;
 
 /**
  * Simple agent to process discovery events and provisionally provisions the iot provider.
@@ -57,8 +54,6 @@ public class ProvisioningEngine extends ProcessorBase {
 
   private void createDeviceEntry(String registryId, String expectedId, String gatewayId,
       Envelope envelope, DiscoveryEvents discoveryEvent) {
-    PointsetModel pointsetModel = new PointsetModel();
-    pointsetModel.points = extractPoints(discoveryEvent);
     CloudModel cloudModel = new CloudModel();
     cloudModel.operation = Operation.CREATE;
     cloudModel.blocked = true;
@@ -67,22 +62,16 @@ public class ProvisioningEngine extends ProcessorBase {
     cloudModel.metadata.put(UDMI_DISCOVERED_WITH, stringifyTerse(discoveryEvent));
     cloudModel.metadata.put(UDMI_UPDATED, isoConvert());
     cloudModel.metadata.put(UDMI_GENERATION, isoConvert(discoveryEvent.generation));
-    cloudModel.metadata.put(UDMI_POINTSET_MODEL, stringifyTerse(pointsetModel));
     catchToElse(
         (Supplier<CloudModel>) () -> iotAccess.modelDevice(registryId, expectedId, cloudModel),
         (Consumer<Exception>) e -> error(
             "Error creating device (exists but not bound?): " + friendlyStackTrace(e)));
     bindDeviceToGateway(registryId, expectedId, gatewayId);
     Envelope modelEnvelope = new Envelope();
+
     modelEnvelope.deviceRegistryId = registryId;
     modelEnvelope.deviceId = expectedId;
     publish(modelEnvelope, cloudModel);
-    publish(modelEnvelope, pointsetModel);
-  }
-
-  private HashMap<String, PointPointsetModel> extractPoints(DiscoveryEvents discoveryEvent) {
-    HashMap<String, PointPointsetModel> points = new HashMap<>();
-    return points;
   }
 
   private CloudModel getCachedModel(String deviceRegistryId, String gatewayId) {
