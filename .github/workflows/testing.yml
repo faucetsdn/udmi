@@ -130,6 +130,7 @@ jobs:
     name: Baseline Tests
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    needs: automapping
     if: vars.TARGET_PROJECT != ''
     env:
       TARGET_PROJECT: ${{ vars.TARGET_PROJECT }}
@@ -225,7 +226,6 @@ jobs:
   automapping:
     name: Automapping capability
     runs-on: ubuntu-latest
-    needs: baseline
     timeout-minutes: 10
     if: ${{ vars.TARGET_PROJECT != '' && !cancelled() }}
     env:
@@ -255,8 +255,7 @@ jobs:
       - name: captured messages
         if: ${{ !cancelled() }}
         run: |
-          killall mosquitto_sub
-          sleep 10
+          sudo killall mosquitto_sub
           cat /tmp/message_capture.log
           find out/registries/ZZ-TRI-FECTA/devices/AHU-1 -type f | sort | xargs more
       - name: support bundle
@@ -272,7 +271,7 @@ jobs:
   redirect:
     name: Endpoint Redirection
     runs-on: ubuntu-latest
-    needs: automapping
+    needs: baseline
     timeout-minutes: 15
     if: ${{ vars.TARGET_PROJECT != '' && !cancelled() }}
     env:
