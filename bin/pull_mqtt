@@ -14,6 +14,8 @@ msg_file=/tmp/message_captured.json
 
 source $UDMI_ROOT/etc/mosquitto_ctrl.sh
 
+echo Starting mqtt message capture at $(date -u -Is)
+
 sudo mosquitto_sub $SERVER_OPTS -R -F "%j" -t "/r/${registry_id}/d/+/#" | \
     while read -r mqtt_message; do
         echo $mqtt_message > $msg_file
