@@ -243,9 +243,7 @@ jobs:
       - name: local setup
         run: bin/start_local sites/udmi_site_model $TARGET_PROJECT
       - name: message capture
-        run: |
-          bin/pull_mqtt ZZ-TRI-FECTA &
-          sleep 10
+        run: bin/pull_mqtt ZZ-TRI-FECTA > /tmp/message_capture.log &
       - name: bin/test_automapper
         run: bin/test_automapper $TARGET_PROJECT
       - name: udmis log
@@ -255,8 +253,11 @@ jobs:
         if: ${{ !cancelled() }}
         run: cat out/pubber.log.GAT-123
       - name: captured messages
+        if: ${{ !cancelled() }}
         run: |
+          killall mosquitto_sub
           sleep 10
+          cat /tmp/message_capture.log
           find out/registries/ZZ-TRI-FECTA/devices/AHU-1 -type f | sort | xargs more
       - name: support bundle
         if: ${{ !cancelled() }}
