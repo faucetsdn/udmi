@@ -255,9 +255,10 @@ jobs:
       - name: captured messages
         if: ${{ !cancelled() }}
         run: |
-          sudo killall mosquitto_sub
+          sudo killall mosquitto_sub && sleep 1
           cat /tmp/message_capture.log
-          find out/registries/ZZ-TRI-FECTA/devices/AHU-1 -type f | sort | xargs more
+          cd out/registries/ZZ-TRI-FECTA/
+          find . -type f | sort | xargs more
       - name: support bundle
         if: ${{ !cancelled() }}
         run: bin/support ${{ github.repository_owner }}_${{ github.job }}_
