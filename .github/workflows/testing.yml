@@ -247,7 +247,7 @@ jobs:
       - name: bin/test_automapper
         run: bin/test_automapper $TARGET_PROJECT
       - name: extra devices
-        run: find sites/udmi_site_model/extras/ -type f | more
+        run: find sites/udmi_site_model/extras/ -type f | xargs more
       - name: udmis log
         if: ${{ !cancelled() }}
         run: cat /tmp/udmis.log
