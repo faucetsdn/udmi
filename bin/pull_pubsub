@@ -1,15 +1,19 @@
 #!/bin/bash -e
 
-ROOT=$(realpath $(dirname $0)/..)
+UDMI_ROOT=$(dirname $0)/..
+cd $UDMI_ROOT
+
+source $UDMI_ROOT/etc/shell_common.sh
+
+[[ $# -le 2 ]] || usage project_spec suffix
+
+project_spec=$1
+suffix=$2
+shift 2 || true
 
 kubectl config current-context | tr _ ' ' > /tmp/namespace_tmp
 # Result is something like: gke bos-platform-dev us-central1 main grafnu
 read < /tmp/namespace_tmp gcp project_id region cluster namespace
-
-[[ $# -le 2 ]] || usage project_spec suffix
-project_spec=$1
-suffix=$2
-shift 2 || true
 
 if [[ -n $project_spec ]]; then
     expected=//gbos/$project_id/$namespace
