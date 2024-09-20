@@ -260,7 +260,7 @@ jobs:
         if: ${{ !cancelled() }}
         run: |
           cat /tmp/message_capture.log
-          cd out/registries/ZZ-TRI-FECTA/
+          cd out/registries/
           find . -type f | sort | xargs more
       - name: support bundle
         if: ${{ !cancelled() }}
