@@ -817,7 +817,7 @@ public class Registrar {
   }
 
   private void reapExtraDevices(Set<String> current) {
-    File extrasDir = new File(siteDir, SiteModel.EXTRA_DEVICES_BASE);
+    File extrasDir = new File(siteDir, SiteModel.EXTRAS_DIR);
     String[] existing = ofNullable(extrasDir.list()).orElse(new String[0]);
     Set<String> previous = Arrays.stream(existing).collect(Collectors.toSet());
     difference(previous, current).forEach(expired -> {

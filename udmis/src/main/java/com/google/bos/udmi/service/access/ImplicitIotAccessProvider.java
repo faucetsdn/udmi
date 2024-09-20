@@ -11,9 +11,11 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isNullOrNotEmpty;
+import static com.google.udmi.util.GeneralUtils.requireNull;
 import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
@@ -201,6 +203,8 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     ifNotNullThen(createdAt, x -> properties.put(CREATED_AT_PROPERTY, createdAt));
     properties.put(RESOURCE_TYPE_PROPERTY,
         ofNullable(cloudModel.resource_type).orElse(DEVICE).toString());
+    requireNull(cloudModel.metadata_str, "unexpected metadata_str content");
+    properties.put(METADATA_STR_KEY, stringifyTerse(cloudModel.metadata));
     properties.put(BLOCKED_PROPERTY, booleanString(cloudModel.blocked));
     ifNotNullThen(cloudModel.num_id, id -> properties.put(NUM_ID_PROPERTY, id));
     ifTrueThen(!cloudModel.credentials.isEmpty(), () -> {
