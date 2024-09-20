@@ -1,0 +1,20 @@
+#!/bin/bash -e
+
+UDMI_ROOT=$(dirname $0)/..
+cd $UDMI_ROOT
+
+source $UDMI_ROOT/etc/shell_common.sh
+
+[[ $# == 2 ]] || usage project_spec suffix
+
+project_spec=$1
+suffix=$2
+shift
+
+if [[ $project_spec =~ //mqtt/ ]]; then
+    bin/pull_mqtt $project_spec $suffix
+elif [[ $project_spec =~ //gbos/ ]]; then
+    bin/pull_pubsub $project_spec $suffix
+else
+    fail unknown project spec type $project_spec
+fi

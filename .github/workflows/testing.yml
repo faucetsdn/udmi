@@ -241,9 +241,9 @@ jobs:
           bin/setup_base
           bin/clone_model
       - name: local setup
-        run: bin/start_local sites/udmi_site_model $TARGET_PROJECT
-      - name: message capture
-        run: bin/pull_mqtt ZZ-TRI-FECTA > /tmp/message_capture.log &
+        run: |
+          bin/start_local sites/udmi_site_model $TARGET_PROJECT
+          bin/pull_messages $TARGET_PROJECT ZZ-TRI-FECTA > /tmp/message_capture.log &
       - name: bin/test_automapper
         run: bin/test_automapper $TARGET_PROJECT
       - name: extra devices
