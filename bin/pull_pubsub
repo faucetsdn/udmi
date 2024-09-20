@@ -7,34 +7,39 @@ source $UDMI_ROOT/etc/shell_common.sh
 
 [[ $# -le 2 ]] || usage project_spec suffix
 
-project_spec=$1
-suffix=$2
+project_spec=${1:-}
+suffix=${2:-}
 shift 2 || true
 
-kubectl config current-context | tr _ ' ' > /tmp/namespace_tmp
-# Result is something like: gke bos-platform-dev us-central1 main grafnu
-read < /tmp/namespace_tmp gcp project_id region cluster namespace
+TMP_FILE=/tmp/pull_pubsub.tmp
 
-if [[ -n $project_spec ]]; then
-    expected=//gbos/$project_id/$namespace
-    [[ $project_spec == $expected ]] || fail project spec $project_spec does not match expected $expected
+if [[ -z $project_spec ]]; then
+    kubectl config current-context | tr _ ' ' > $TMP_FILE
+    # Result is something like: gke bos-platform-dev us-central1 main grafnu
+    read < $TMP_FILE scheme project_id region cluster namespace
+else
+    echo $project_spec | tr / ' ' > $TMP_FILE
+    read < $TMP_FILE schema project_id namespace
 fi
+
+[[ -n $namespace ]] || namespace=default
+
+echo Using project $project_id namespace $namespace
 
 [[ -n $suffix ]] || suffix=debug
 subscription=$namespace~${suffix}
 echo Pulling from subscription $subscription
 
-tmp_file=/tmp/message_captured.json
 pull_limit=100
 
 while true; do
     date
-    gcloud --format=json --project=$project_id pubsub subscriptions pull $subscription --limit $pull_limit --auto-ack > $tmp_file || true
+    gcloud --format=json --project=$project_id pubsub subscriptions pull $subscription --limit $pull_limit --auto-ack > $TMP_FILE || true
 
     for index in $(seq 0 $((pull_limit-1))); do
         msg_file=/tmp/message_$index.json
         raw_file=/tmp/rawdata_$index.b64
-        jq -r .[$index].message $tmp_file 2> /dev/null > $msg_file
+        jq -r .[$index].message $TMP_FILE 2> /dev/null > $msg_file
         subType=$(jq -r .attributes.subType $msg_file 2> /dev/null)
         subFolder=$(jq -r .attributes.subFolder $msg_file 2> /dev/null)
         deviceId=$(jq -r .attributes.deviceId $msg_file 2> /dev/null)
