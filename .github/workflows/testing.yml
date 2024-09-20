@@ -246,6 +246,8 @@ jobs:
         run: bin/pull_mqtt ZZ-TRI-FECTA > /tmp/message_capture.log &
       - name: bin/test_automapper
         run: bin/test_automapper $TARGET_PROJECT
+      - name: extra devices
+        run: find sites/udmi_site_model/extras/ -type f | more
       - name: udmis log
         if: ${{ !cancelled() }}
         run: cat /tmp/udmis.log
