@@ -10,7 +10,7 @@ import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static com.google.udmi.util.MetadataMapKeys.UDMI_DISCOVERED_FROM;
 import static com.google.udmi.util.MetadataMapKeys.UDMI_DISCOVERED_WITH;
-import static com.google.udmi.util.MetadataMapKeys.UDMI_DISCOVERED_GENERATION;
+import static com.google.udmi.util.MetadataMapKeys.UDMI_GENERATION;
 import static com.google.udmi.util.MetadataMapKeys.UDMI_PROVISION_ENABLE;
 import static com.google.udmi.util.MetadataMapKeys.UDMI_UPDATED;
 import static java.lang.String.format;
@@ -62,7 +62,7 @@ public class ProvisioningEngine extends ProcessorBase {
     cloudModel.metadata.put(UDMI_DISCOVERED_FROM, stringifyTerse(envelope));
     cloudModel.metadata.put(UDMI_DISCOVERED_WITH, stringifyTerse(discoveryEvent));
     cloudModel.metadata.put(UDMI_UPDATED, isoConvert());
-    cloudModel.metadata.put(UDMI_DISCOVERED_GENERATION, isoConvert(discoveryEvent.generation));
+    cloudModel.metadata.put(UDMI_GENERATION, isoConvert(discoveryEvent.generation));
     catchToElse(
         (Supplier<CloudModel>) () -> iotAccess.modelDevice(registryId, expectedId, cloudModel),
         (Consumer<Exception>) e -> error(
