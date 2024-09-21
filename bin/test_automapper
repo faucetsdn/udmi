@@ -43,15 +43,15 @@ bin/registrar $site_path $project_spec
 
 status=$(fgrep discovered_vendor-281 $site_path/out/registration_summary.csv | awk '{print $3}') || true
 echo Checking vendor device status is $status
-[[ $status == BLOCK, ]] || fail Vendor device status should be BLOCK
+[[ $status == BLOCK, ]] || fail Vendor device status should be BLOCK, was $status
 
 type=$(jq -r .resource_type $site_path/extras/discovered_vendor-20231/cloud_model.json) || true
 echo Checking vendor extracted device type $type
-[[ $type == DEVICE ]] || fail Vendor device type should be DEVICE
+[[ $type == DEVICE ]] || fail Vendor device type should be DEVICE, was $type
 
 echo Checking discovered device metadata
-addr=$(jq -r .scan_addr $site_path/extras/discovered_vendor-20231/cloud_metadata/udmi_discovered_from.json)
-[[ $type == 20231 ]] || fail Vendor device addr should be 20231
+addr=$(jq -r .scan_addr $site_path/extras/discovered_vendor-20231/cloud_metadata/udmi_discovered_with.json)
+[[ $addr == 20231 ]] || fail Vendor device addr should be 20231, was $addr
 
 echo
 echo Done with automapper test
