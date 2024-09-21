@@ -45,12 +45,13 @@ status=$(fgrep discovered_vendor-281 $site_path/out/registration_summary.csv | a
 echo Checking vendor device status is $status
 [[ $status == BLOCK, ]] || fail Vendor device status should be BLOCK
 
-type=$(jq -r .resource_type ${site_path}/extras/discovered_vendor-20231/cloud_model.json) || true
+type=$(jq -r .resource_type $site_path/extras/discovered_vendor-20231/cloud_model.json) || true
 echo Checking vendor extracted device type $type
 [[ $type == DEVICE ]] || fail Vendor device type should be DEVICE
 
-echo Checking descivered device metadata
-jq -r . ${site_path}/extras/discovered_vendor-20231/cloud_metadata/udmi_discovered_from.json
+echo Checking discovered device metadata
+addr=$(jq -r .scan_addr $site_path/extras/discovered_vendor-20231/cloud_metadata/udmi_discovered_from.json)
+[[ $type == 20231 ]] || fail Vendor device addr should be 20231
 
 echo
 echo Done with automapper test
