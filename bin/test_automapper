@@ -17,6 +17,9 @@ site_path=sites/udmi_site_model
 echo Clear out the registries to start from scratch.
 bin/registrar $site_path $project_spec -x -d
 
+echo Temporary sleep debug TAP
+sleep 10
+
 echo "Munge the model to have just the gateway (no proxied devices)"
 metadata=$site_path/devices/GAT-123/metadata.json
 jq '.gateway.proxy_ids = []' $metadata | sponge $metadata
