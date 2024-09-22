@@ -6,7 +6,6 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static daq.pubber.ProtocolFamily.VENDOR;
 import static java.util.Objects.requireNonNull;
-import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
 
 import com.google.udmi.util.SiteModel;
@@ -16,7 +15,6 @@ import java.util.function.BiConsumer;
 import udmi.schema.DiscoveryEvents;
 import udmi.schema.FamilyLocalnetState;
 import udmi.schema.Metadata;
-import udmi.schema.PointPointsetModel;
 import udmi.schema.PubberConfiguration;
 import udmi.schema.RefDiscovery;
 
@@ -45,7 +43,7 @@ public class VendorProvider extends ManagerBase implements FamilyProvider {
 
   private Map<String, RefDiscovery> getDiscoveredRefs(Metadata entry) {
     return entry.pointset.points.entrySet().stream()
-        .collect(toMap(DiscoveryManager::getVendorRefKey, DiscoveryManager::getVendorRefDiscovery));
+        .collect(toMap(DiscoveryManager::getVendorRefKey, DiscoveryManager::getVendorRefValue));
   }
 
   private void updateStateAddress() {

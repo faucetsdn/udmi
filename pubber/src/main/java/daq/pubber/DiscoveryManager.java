@@ -14,6 +14,7 @@ import static java.lang.Math.floorMod;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static java.util.function.Predicate.not;
+import static java.util.stream.Collectors.toMap;
 import static udmi.schema.FamilyDiscoveryState.Phase.ACTIVE;
 import static udmi.schema.FamilyDiscoveryState.Phase.DONE;
 import static udmi.schema.FamilyDiscoveryState.Phase.PENDING;
@@ -27,7 +28,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import udmi.schema.Depths;
 import udmi.schema.Depths.Depth;
 import udmi.schema.DiscoveryConfig;
@@ -70,10 +70,10 @@ public class DiscoveryManager extends ManagerBase {
   }
 
   static String getVendorRefKey(Map.Entry<String, PointPointsetModel> entry) {
-    return format("%08x", entry.getKey().hashCode());
+    return ofNullable(entry.getValue().ref).orElse(entry.getKey());
   }
 
-  static RefDiscovery getVendorRefDiscovery(Map.Entry<String, PointPointsetModel> entry) {
+  static RefDiscovery getVendorRefValue(Map.Entry<String, PointPointsetModel> entry) {
     RefDiscovery refDiscovery = new RefDiscovery();
     refDiscovery.possible_values = null;
     PointPointsetModel model = entry.getValue();
@@ -271,8 +271,8 @@ public class DiscoveryManager extends ManagerBase {
   }
 
   private Map<String, RefDiscovery> enumerateRefs(String deviceId) {
-    return siteModel.getMetadata(deviceId).pointset.points.entrySet().stream().collect(
-        Collectors.toMap(this::getVendorRefKey, DiscoveryManager::getVendorRefDiscovery));
+    return siteModel.getMetadata(deviceId).pointset.points.entrySet().stream()
+        .collect(toMap(DiscoveryManager::getVendorRefKey, DiscoveryManager::getVendorRefValue));
   }
 
   private void updateState() {
