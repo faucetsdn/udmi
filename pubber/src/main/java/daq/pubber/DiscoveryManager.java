@@ -69,7 +69,11 @@ public class DiscoveryManager extends ManagerBase {
     });
   }
 
-  static RefDiscovery getRefDiscovery(Map.Entry<String, PointPointsetModel> entry) {
+  static String getVendorRefKey(Map.Entry<String, PointPointsetModel> entry) {
+    return format("%08x", entry.getKey().hashCode());
+  }
+
+  static RefDiscovery getVendorRefDiscovery(Map.Entry<String, PointPointsetModel> entry) {
     RefDiscovery refDiscovery = new RefDiscovery();
     refDiscovery.possible_values = null;
     PointPointsetModel model = entry.getValue();
@@ -268,11 +272,7 @@ public class DiscoveryManager extends ManagerBase {
 
   private Map<String, RefDiscovery> enumerateRefs(String deviceId) {
     return siteModel.getMetadata(deviceId).pointset.points.entrySet().stream().collect(
-        Collectors.toMap(this::getRefValue, DiscoveryManager::getRefDiscovery));
-  }
-
-  private String getRefValue(Map.Entry<String, PointPointsetModel> entry) {
-    return ofNullable(entry.getValue().ref).orElse(entry.getKey());
+        Collectors.toMap(this::getVendorRefKey, DiscoveryManager::getVendorRefDiscovery));
   }
 
   private void updateState() {

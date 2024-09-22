@@ -45,11 +45,7 @@ public class VendorProvider extends ManagerBase implements FamilyProvider {
 
   private Map<String, RefDiscovery> getDiscoveredRefs(Metadata entry) {
     return entry.pointset.points.entrySet().stream()
-        .collect(toMap(this::makeRefKey, DiscoveryManager::getRefDiscovery));
-  }
-
-  private String makeRefKey(Entry<String, PointPointsetModel> entry) {
-    return ofNullable(entry.getValue().ref).orElse(entry.getKey());
+        .collect(toMap(DiscoveryManager::getVendorRefKey, DiscoveryManager::getVendorRefDiscovery));
   }
 
   private void updateStateAddress() {
