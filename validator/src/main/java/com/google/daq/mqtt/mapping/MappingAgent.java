@@ -32,6 +32,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import udmi.schema.CloudModel;
+import udmi.schema.Depths;
+import udmi.schema.Depths.Depth;
 import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvents;
 import udmi.schema.Envelope.SubFolder;
@@ -113,6 +115,7 @@ public class MappingAgent {
 
     FamilyDiscoveryConfig familyDiscoveryConfig = new FamilyDiscoveryConfig();
     familyDiscoveryConfig.generation = JsonUtil.getDate(generation);
+    familyDiscoveryConfig.depth = Depth.DETAILS;
     DiscoveryConfig discoveryConfig = new DiscoveryConfig();
     discoveryConfig.families = new HashMap<>();
     discoveryConfig.families.put(ProtocolFamily.VENDOR, familyDiscoveryConfig);

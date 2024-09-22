@@ -1,10 +1,12 @@
 package daq.pubber;
 
 import static com.google.udmi.util.GeneralUtils.catchToNull;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static daq.pubber.ProtocolFamily.VENDOR;
 import static java.util.Objects.requireNonNull;
+import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
 
 import com.google.udmi.util.SiteModel;
@@ -43,11 +45,11 @@ public class VendorProvider extends ManagerBase implements FamilyProvider {
 
   private Map<String, RefDiscovery> getDiscoveredRefs(Metadata entry) {
     return entry.pointset.points.entrySet().stream()
-        .collect(toMap(Entry::getKey, this::makeRefDiscovery));
+        .collect(toMap(this::makeRefKey, DiscoveryManager::getRefDiscovery));
   }
 
-  private RefDiscovery makeRefDiscovery(Entry<String, PointPointsetModel> entry) {
-    return new RefDiscovery();
+  private String makeRefKey(Entry<String, PointPointsetModel> entry) {
+    return ofNullable(entry.getValue().ref).orElse(entry.getKey());
   }
 
   private void updateStateAddress() {

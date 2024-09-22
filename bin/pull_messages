@@ -5,16 +5,16 @@ cd $UDMI_ROOT
 
 source $UDMI_ROOT/etc/shell_common.sh
 
-[[ $# == 2 ]] || usage project_spec suffix
+[[ $# == 2 ]] || usage project_spec registry_id
 
 project_spec=$1
-suffix=$2
+registry_id=$2
 shift
 
 if [[ $project_spec =~ //mqtt/ ]]; then
-    bin/pull_mqtt $project_spec $suffix
+    bin/pull_mqtt $project_spec $registry_id
 elif [[ $project_spec =~ //gbos/ ]]; then
-    bin/pull_pubsub $project_spec $suffix
+    bin/pull_pubsub $project_spec $registry_id
 else
     fail unknown project spec type $project_spec
 fi

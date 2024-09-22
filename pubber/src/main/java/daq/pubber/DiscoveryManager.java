@@ -1,6 +1,7 @@
 package daq.pubber;
 
 import static com.google.udmi.util.GeneralUtils.catchToNull;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNullElse;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
@@ -66,6 +67,16 @@ public class DiscoveryManager extends ManagerBase {
       case ENTRIES, DETAILS -> true;
       default -> false;
     });
+  }
+
+  static RefDiscovery getRefDiscovery(Map.Entry<String, PointPointsetModel> entry) {
+    RefDiscovery refDiscovery = new RefDiscovery();
+    refDiscovery.possible_values = null;
+    PointPointsetModel model = entry.getValue();
+    refDiscovery.writable = model.writable;
+    refDiscovery.units = model.units;
+    refDiscovery.point = ifNotNullGet(model.ref, entry::getKey);
+    return refDiscovery;
   }
 
   private void updateDiscoveryEnumeration(DiscoveryConfig config) {
@@ -257,22 +268,11 @@ public class DiscoveryManager extends ManagerBase {
 
   private Map<String, RefDiscovery> enumerateRefs(String deviceId) {
     return siteModel.getMetadata(deviceId).pointset.points.entrySet().stream().collect(
-        Collectors.toMap(this::getRefValue, this::getRefDiscovery));
+        Collectors.toMap(this::getRefValue, DiscoveryManager::getRefDiscovery));
   }
 
   private String getRefValue(Map.Entry<String, PointPointsetModel> entry) {
-    return ofNullable(entry.getValue().ref).orElseGet(
-        () -> format("%08x", entry.getKey().hashCode()));
-  }
-
-  private RefDiscovery getRefDiscovery(
-      Map.Entry<String, PointPointsetModel> entry) {
-    RefDiscovery refDiscovery = new RefDiscovery();
-    PointPointsetModel model = entry.getValue();
-    refDiscovery.writable = model.writable;
-    refDiscovery.units = model.units;
-    refDiscovery.point = entry.getKey();
-    return refDiscovery;
+    return ofNullable(entry.getValue().ref).orElse(entry.getKey());
   }
 
   private void updateState() {
