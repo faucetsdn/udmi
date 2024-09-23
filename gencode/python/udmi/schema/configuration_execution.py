@@ -23,6 +23,7 @@ class ExecutionConfiguration:
     self.reflector_endpoint = None
     self.device_endpoint = None
     self.project_id = None
+    self.user_name = None
     self.udmi_namespace = None
     self.bridge_host = None
     self.key_file = None
@@ -59,6 +60,7 @@ class ExecutionConfiguration:
     result.reflector_endpoint = EndpointConfiguration.from_dict(source.get('reflector_endpoint'))
     result.device_endpoint = EndpointConfiguration.from_dict(source.get('device_endpoint'))
     result.project_id = source.get('project_id')
+    result.user_name = source.get('user_name')
     result.udmi_namespace = source.get('udmi_namespace')
     result.bridge_host = source.get('bridge_host')
     result.key_file = source.get('key_file')
@@ -125,6 +127,8 @@ class ExecutionConfiguration:
       result['device_endpoint'] = self.device_endpoint.to_dict() # 4
     if self.project_id:
       result['project_id'] = self.project_id # 5
+    if self.user_name:
+      result['user_name'] = self.user_name # 5
     if self.udmi_namespace:
       result['udmi_namespace'] = self.udmi_namespace # 5
     if self.bridge_host:

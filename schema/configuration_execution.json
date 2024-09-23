@@ -55,6 +55,9 @@
     "project_id": {
       "type": "string"
     },
+    "user_name": {
+      "type": "string"
+    },
     "udmi_namespace": {
       "type": "string"
     },

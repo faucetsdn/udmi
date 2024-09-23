@@ -281,6 +281,7 @@ public class SiteModel {
       exeConfig.iot_provider = ifNotNullGet(iotProvider, IotProvider::fromValue);
       String matchedId = specMatcher.group(SPEC_PROJECT_GROUP);
       exeConfig.project_id = NO_SITE.equals(matchedId) ? null : matchedId;
+      exeConfig.user_name = specMatcher.group(SPEC_USER_GROUP);
       exeConfig.udmi_namespace = specMatcher.group(SPEC_NAMESPACE_GROUP);
     } catch (Exception e) {
       throw new RuntimeException(
