@@ -25,7 +25,7 @@ rm -rf out $sites_out
 mkdir -p out $sites_out
 
 if [[ ${archive}\$ =~ '.tgz$' ]]; then
-    tar -xzvf $archive
+    tar -xzvf "$archive"
     echo Extracted singular archive $archive
     exit 0
 fi
