@@ -1,6 +1,7 @@
 package daq.pubber;
 
 import static com.google.udmi.util.GeneralUtils.catchToNull;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNullElse;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
@@ -13,6 +14,7 @@ import static java.lang.Math.floorMod;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static java.util.function.Predicate.not;
+import static java.util.stream.Collectors.toMap;
 import static udmi.schema.FamilyDiscoveryState.Phase.ACTIVE;
 import static udmi.schema.FamilyDiscoveryState.Phase.DONE;
 import static udmi.schema.FamilyDiscoveryState.Phase.PENDING;
@@ -26,7 +28,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import udmi.schema.Depths;
 import udmi.schema.Depths.Depth;
 import udmi.schema.DiscoveryConfig;
@@ -66,6 +67,20 @@ public class DiscoveryManager extends ManagerBase {
       case ENTRIES, DETAILS -> true;
       default -> false;
     });
+  }
+
+  static String getVendorRefKey(Map.Entry<String, PointPointsetModel> entry) {
+    return ofNullable(entry.getValue().ref).orElse(entry.getKey());
+  }
+
+  static RefDiscovery getVendorRefValue(Map.Entry<String, PointPointsetModel> entry) {
+    RefDiscovery refDiscovery = new RefDiscovery();
+    refDiscovery.possible_values = null;
+    PointPointsetModel model = entry.getValue();
+    refDiscovery.writable = model.writable;
+    refDiscovery.units = model.units;
+    refDiscovery.point = ifNotNullGet(model.ref, entry::getKey);
+    return refDiscovery;
   }
 
   private void updateDiscoveryEnumeration(DiscoveryConfig config) {
@@ -256,23 +271,8 @@ public class DiscoveryManager extends ManagerBase {
   }
 
   private Map<String, RefDiscovery> enumerateRefs(String deviceId) {
-    return siteModel.getMetadata(deviceId).pointset.points.entrySet().stream().collect(
-        Collectors.toMap(this::getRefValue, this::getRefDiscovery));
-  }
-
-  private String getRefValue(Map.Entry<String, PointPointsetModel> entry) {
-    return ofNullable(entry.getValue().ref).orElseGet(
-        () -> format("%08x", entry.getKey().hashCode()));
-  }
-
-  private RefDiscovery getRefDiscovery(
-      Map.Entry<String, PointPointsetModel> entry) {
-    RefDiscovery refDiscovery = new RefDiscovery();
-    PointPointsetModel model = entry.getValue();
-    refDiscovery.writable = model.writable;
-    refDiscovery.units = model.units;
-    refDiscovery.point = entry.getKey();
-    return refDiscovery;
+    return siteModel.getMetadata(deviceId).pointset.points.entrySet().stream()
+        .collect(toMap(DiscoveryManager::getVendorRefKey, DiscoveryManager::getVendorRefValue));
   }
 
   private void updateState() {

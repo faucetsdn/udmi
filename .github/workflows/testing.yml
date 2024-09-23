@@ -110,7 +110,7 @@ jobs:
         run: more out/pubber.log* pubber/out/*.json | cat
       - name: udmis log
         if: ${{ !cancelled() }}
-        run: cat /tmp/udmis.log || true
+        run: cat /tmp/udmis.log
       - name: itemized test post-process
         if: ${{ !cancelled() }}
         run: egrep ' test .* after .*s ' out/sequencer.log-* | tee out/timing_itemized.out
@@ -130,6 +130,7 @@ jobs:
     name: Baseline Tests
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    needs: automapping
     if: vars.TARGET_PROJECT != ''
     env:
       TARGET_PROJECT: ${{ vars.TARGET_PROJECT }}
@@ -225,7 +226,6 @@ jobs:
   automapping:
     name: Automapping capability
     runs-on: ubuntu-latest
-    needs: baseline
     timeout-minutes: 10
     if: ${{ vars.TARGET_PROJECT != '' && !cancelled() }}
     env:
@@ -241,15 +241,27 @@ jobs:
           bin/setup_base
           bin/clone_model
       - name: local setup
-        run: bin/start_local sites/udmi_site_model $TARGET_PROJECT
+        run: |
+          bin/start_local sites/udmi_site_model $TARGET_PROJECT
+          bin/pull_messages $TARGET_PROJECT ZZ-TRI-FECTA > /tmp/message_capture.log 2>&1 &
       - name: bin/test_automapper
         run: bin/test_automapper $TARGET_PROJECT
+      - name: extra devices
+        run: |
+          find sites/udmi_site_model/extras/ -type f | xargs sed -i '$a\'
+          find sites/udmi_site_model/extras/ -type f | xargs more
       - name: udmis log
         if: ${{ !cancelled() }}
         run: cat /tmp/udmis.log
       - name: pubber log
         if: ${{ !cancelled() }}
         run: cat out/pubber.log.GAT-123
+      - name: captured messages
+        if: ${{ !cancelled() }}
+        run: |
+          cat /tmp/message_capture.log
+          mkdir -p out/registries && cd out/registries/
+          find . -type f | sort | xargs more
       - name: support bundle
         if: ${{ !cancelled() }}
         run: bin/support ${{ github.repository_owner }}_${{ github.job }}_
@@ -263,7 +275,7 @@ jobs:
   redirect:
     name: Endpoint Redirection
     runs-on: ubuntu-latest
-    needs: automapping
+    needs: baseline
     timeout-minutes: 15
     if: ${{ vars.TARGET_PROJECT != '' && !cancelled() }}
     env:
