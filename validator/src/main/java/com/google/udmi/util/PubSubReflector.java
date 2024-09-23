@@ -143,7 +143,8 @@ public class PubSubReflector implements MessagePublisher {
     String registryId = MessagePublisher.getRegistryId(reflectorConfig);
     String namespacePrefix = getNamespacePrefix(iotConfig.udmi_namespace);
     String topicId = namespacePrefix + UDMI_REFLECT_TOPIC;
-    String bridgeHost = requireNonNull(iotConfig.bridge_host, "missing bridge_host as subscription suffix");
+    String bridgeHost = requireNonNull(iotConfig.bridge_host,
+        "missing bridge_host as subscription suffix");
     String subscriptionId = namespacePrefix + UDMI_REPLY_TOPIC + "-" + bridgeHost;
 
     PubSubReflector reflector = new PubSubReflector(projectId, registryId, topicId, subscriptionId);
