@@ -28,7 +28,6 @@
     "provision": {
       "recv_id": "events/discovery",
       "send_id": "events",
-      "side_id": "c/control",
       "enabled": "yes"
     },
     "distributor": {

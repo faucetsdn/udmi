@@ -33,7 +33,8 @@ fi
 cd $UDMI_ROOT
 UDMIS_LOG=/tmp/udmis.log
 mkdir -p out
-date > $UDMIS_LOG
+# Do sudo now to prefetch incase it's needed later...
+echo Starting local services at $(sudo date -u -Is) | tee $UDMIS_LOG
 
 iot_provider=$(jq -r .iot_provider $site_config)
 if [[ -n ${project_spec:-} ]]; then
@@ -43,7 +44,7 @@ if [[ -n ${project_spec:-} ]]; then
 fi
 
 if [[ $iot_provider != mqtt ]]; then
-    echo Provider type $iot_provider is not a local setup, doing nothing.
+    echo Provider type $iot_provider is not a local setup, doing nothing | tee -a $UDMIS_LOG
     exit 0
 fi
 

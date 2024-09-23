@@ -61,14 +61,13 @@ public class GeneralUtils {
       .enable(SerializationFeature.INDENT_OUTPUT)
       .setDateFormat(new ISO8601DateFormat())
       .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-      .setSerializationInclusion(JsonInclude.Include.NON_NULL);
+      .setSerializationInclusion(Include.NON_NULL);
   public static final ObjectMapper OBJECT_MAPPER_RAW =
       OBJECT_MAPPER.copy()
           .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
           .enable(Feature.ALLOW_TRAILING_COMMA)
           .enable(Feature.STRICT_DUPLICATE_DETECTION)
-          .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-          .setSerializationInclusion(Include.NON_NULL);
+          .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
   public static final ObjectMapper OBJECT_MAPPER_STRICT =
       OBJECT_MAPPER_RAW.copy()
           .enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)

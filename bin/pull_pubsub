@@ -1,0 +1,76 @@
+#!/bin/bash -e
+
+UDMI_ROOT=$(dirname $0)/..
+cd $UDMI_ROOT
+
+source $UDMI_ROOT/etc/shell_common.sh
+
+[[ $# -le 2 ]] || usage project_spec suffix
+
+project_spec=${1:-}
+suffix=${2:-}
+shift 2 || true
+
+TMP_FILE=/tmp/pull_pubsub.tmp
+
+if [[ -z $project_spec ]]; then
+    kubectl config current-context | tr _ ' ' > $TMP_FILE
+    # Result is something like: gke bos-platform-dev us-central1 main grafnu
+    read < $TMP_FILE scheme project_id region cluster namespace
+else
+    echo $project_spec | tr / ' ' > $TMP_FILE
+    read < $TMP_FILE schema project_id namespace
+fi
+
+[[ -n $namespace ]] || namespace=default
+
+echo Using project $project_id namespace $namespace
+
+[[ -n $suffix ]] || suffix=debug
+subscription=$namespace~${suffix}
+echo Pulling from subscription $subscription
+
+pull_limit=100
+
+while true; do
+    date
+    gcloud --format=json --project=$project_id pubsub subscriptions pull $subscription --limit $pull_limit --auto-ack > $TMP_FILE || true
+
+    for index in $(seq 0 $((pull_limit-1))); do
+        msg_file=/tmp/message_$index.json
+        raw_file=/tmp/rawdata_$index.b64
+        jq -r .[$index].message $TMP_FILE 2> /dev/null > $msg_file
+        subType=$(jq -r .attributes.subType $msg_file 2> /dev/null)
+        subFolder=$(jq -r .attributes.subFolder $msg_file 2> /dev/null)
+        deviceId=$(jq -r .attributes.deviceId $msg_file 2> /dev/null)
+        registryId=$(jq -r .attributes.deviceRegistryId $msg_file 2> /dev/null)
+        timestamp=$(jq -r .publishTime $msg_file 2> /dev/null)
+        raw_data=$(jq -r .data $msg_file)
+        # There's two different base64 formats, so replace - with + to handle both.
+        echo $raw_data > $raw_file
+        data=$(echo $raw_data | tr - + | base64 --decode)
+
+        if [[ $raw_data == null || -z $raw_data ]]; then
+            break
+        fi
+
+        if [[ -z $data ]]; then
+            echo Bad/empty message data: $raw_data
+            continue
+        fi
+
+        if [[ $subType == null ]]; then
+            subType=events
+        fi
+
+        timepath=$(echo ${timestamp%:*} | tr T: //) # Bucket messages by minute
+        usetime=$(echo $timestamp | tr : x)  # Colon is not allowed on Windows!
+        out_base=out/registries/$registryId/devices/$deviceId/${timepath}/${usetime}_${subFolder}_${subType}
+        out_file=${out_base}.json
+        echo $out_file
+        mkdir -p $(dirname $out_file)
+        echo $data | jq . > $out_file || echo $data > $out_file
+        out_attr=${out_base}.attr
+        jq .attributes < $msg_file > $out_attr
+    done
+done

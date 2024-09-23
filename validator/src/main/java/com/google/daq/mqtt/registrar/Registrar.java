@@ -6,6 +6,7 @@ import static com.google.common.collect.Sets.intersection;
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_ROOT;
 import static com.google.udmi.util.Common.CLOUD_VERSION_KEY;
 import static com.google.udmi.util.Common.NO_SITE;
+import static com.google.udmi.util.Common.SEC_TO_MS;
 import static com.google.udmi.util.Common.SITE_METADATA_KEY;
 import static com.google.udmi.util.Common.UDMI_VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
@@ -121,6 +122,7 @@ public class Registrar {
       ".json", Summarizer.JsonSummarizer.class,
       ".csv", Summarizer.CsvSummarizer.class);
   private static final String TOOL_NAME = "registrar";
+  private static final long DELETE_FLUSH_DELAY_MS = 10 * SEC_TO_MS;
   private final Map<String, JsonSchema> schemas = new HashMap<>();
   private final String generation = getGenerationString();
   private final Set<Summarizer> summarizers = new HashSet<>();
@@ -147,6 +149,7 @@ public class Registrar {
   private ExecutorService executor;
   private List<Future<?>> executing = new ArrayList<>();
   private SiteModel siteModel;
+  private boolean queryOnly;
 
   /**
    * Main entry point for registrar.
@@ -217,6 +220,7 @@ public class Registrar {
         case "-b" -> setBlockUnknown(true);
         case "-l" -> setIdleLimit(argList.remove(0));
         case "-t" -> setValidateMetadata(false);
+        case "-q" -> setQueryOnly(true);
         case "-d" -> setDeleteDevices(true);
         case "-x" -> setExpungeDevices(true);
         case "-n" -> setRunnerThreads(argList.remove(0));
@@ -237,6 +241,10 @@ public class Registrar {
       }
     }
     return this;
+  }
+
+  private void setQueryOnly(boolean queryOnly) {
+    this.queryOnly = queryOnly;
   }
 
   private void setBlockUnknown(boolean block) {
@@ -516,6 +524,12 @@ public class Registrar {
       Set<String> oldDevices = targetDevices.stream().filter(this::alreadyRegistered)
           .collect(Collectors.toSet());
       Set<String> newDevices = difference(targetDevices, oldDevices);
+
+      if (queryOnly) {
+        System.err.println("Skipping registration because query-only mode...");
+        return;
+      }
+
       System.err.printf("Processing %d new devices...%n", newDevices.size());
       int total = processLocalDevices(newDevices);
       System.err.printf("Updating %d existing devices...%n", oldDevices.size());
@@ -580,10 +594,15 @@ public class Registrar {
       synchronizedDelete(gateways);
       synchronizedDelete(others);
 
+      // There is a hidden race-condition in the Clearblade IoT API that will report a device
+      // as deleted (not listed in the registry), but still complain with an "already exists"
+      // error if it's attempted to be created. Just as a hack, add a sleep in here to make
+      // sure the backend is cleared out.
+      safeSleep(DELETE_FLUSH_DELAY_MS);
+
       Duration between = Duration.between(start, Instant.now());
       double seconds = between.getSeconds() + between.getNano() / 1e9;
-      System.err.printf("Deleted %d devices in %.03fs%n",
-          (gateways.size() + others.size()), seconds);
+      System.err.printf("Deleted %d devices in %.03fs%n", deviceSet.size(), seconds);
 
       Set<String> deviceIds = fetchCloudModels().keySet();
       Set<String> remaining = intersection(deviceIds, deviceSet);
@@ -817,7 +836,7 @@ public class Registrar {
   }
 
   private void reapExtraDevices(Set<String> current) {
-    File extrasDir = new File(siteDir, SiteModel.EXTRA_DEVICES_BASE);
+    File extrasDir = new File(siteDir, SiteModel.EXTRAS_DIR);
     String[] existing = ofNullable(extrasDir.list()).orElse(new String[0]);
     Set<String> previous = Arrays.stream(existing).collect(Collectors.toSet());
     difference(previous, current).forEach(expired -> {

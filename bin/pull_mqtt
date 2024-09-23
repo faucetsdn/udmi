@@ -1,0 +1,59 @@
+#!/bin/bash -e
+
+UDMI_ROOT=$(dirname $0)/..
+cd $UDMI_ROOT
+
+source $UDMI_ROOT/etc/shell_common.sh
+
+[[ $# == 2 ]] || usage project_spec registry_id
+
+project_spec=$1
+registry_id=$2
+shift 2
+
+msg_file=/tmp/message_captured.json
+
+source $UDMI_ROOT/etc/mosquitto_ctrl.sh
+
+topic_filter="/r/${registry_id}/d/+/#"
+
+echo Starting mqtt message capture at $(date -u -Is) on topic $topic_filter
+
+sudo mosquitto_sub $SERVER_OPTS -R -F "%j" -t $topic_filter |
+    while read -r mqtt_message; do
+        echo $mqtt_message > $msg_file
+        topic=$(jq -r .topic <<< "$mqtt_message")
+        payload=$(jq -r .payload $msg_file)
+        timestamp=$(jq -r .tst $msg_file)
+        json=$(jq . <<< "$payload")
+        
+        readarray -d '/' -t array <<< "${topic}/"
+        registryId=${array[2]}
+        deviceId=${array[4]}
+        subType=${array[5]}
+        subFolder=${array[6]}
+
+        # Trim whitespace
+        subFolder=$(echo $subFolder | xargs)
+        
+        [[ -n ${subFolder% } ]] || subFolder=update
+
+        if [[ $subType == null ]]; then
+            subType=events
+        fi
+
+        timepath=$(echo ${timestamp%:*} | tr T: //) # Bucket messages by minute
+        usetime=$(echo $timestamp | tr : x)  # Colon is not allowed on Windows!
+        out_base=$UDMI_ROOT/out/registries/$registryId/devices/$deviceId/${timepath}/${usetime}_${subFolder}_${subType}
+        out_file=${out_base}.json
+        echo $topic $out_file
+        mkdir -p $(dirname $out_file)
+        echo $json > $out_file
+        out_attr=${out_base}.attr
+        echo {} | jq ".deviceRegistryId=\"$registryId\" | \
+             .subFolder=\"$subFolder\" |
+             .subType=\"$subType\" |
+             .deviceId=\"$deviceId\"" > $out_attr
+    done
+
+echo Finished mqtt message capture at $(date -u -Is)

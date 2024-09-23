@@ -14,6 +14,10 @@ device_id=$1
 command=$2
 shift 2
 
+[[ ! -d $UDMI_ROOT/validator/src ]] ||
+    up_to_date $UDMI_JAR $UDMI_ROOT/validator/src ||
+    $UDMI_ROOT/validator/bin/build
+
 jq .device_id=\"$device_id\" $in_file > $out_file
 
 java -cp $UDMI_JAR com.google.daq.mqtt.mapping.MappingAgent $out_file $command

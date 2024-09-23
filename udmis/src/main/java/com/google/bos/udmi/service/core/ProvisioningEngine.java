@@ -6,7 +6,6 @@ import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
-import static com.google.udmi.util.GeneralUtils.ignoreValue;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static com.google.udmi.util.MetadataMapKeys.UDMI_DISCOVERED_FROM;
@@ -22,6 +21,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
 import udmi.schema.CloudModel.Resource_type;
@@ -54,17 +55,24 @@ public class ProvisioningEngine extends ProcessorBase {
 
   private void createDeviceEntry(String registryId, String expectedId, String gatewayId,
       Envelope envelope, DiscoveryEvents discoveryEvent) {
-    CloudModel deviceModel = new CloudModel();
-    deviceModel.operation = Operation.CREATE;
-    deviceModel.blocked = true;
-    ifNullThen(deviceModel.metadata, () -> deviceModel.metadata = new HashMap<>());
-    deviceModel.metadata.put(UDMI_DISCOVERED_FROM, stringifyTerse(envelope));
-    deviceModel.metadata.put(UDMI_DISCOVERED_WITH, stringifyTerse(discoveryEvent));
-    deviceModel.metadata.put(UDMI_UPDATED, isoConvert());
-    deviceModel.metadata.put(UDMI_GENERATION, isoConvert(discoveryEvent.generation));
-    catchToElse(ignoreValue(iotAccess.modelDevice(registryId, expectedId, deviceModel)),
-        e -> error("Error creating device (exists but not bound?): " + friendlyStackTrace(e)));
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.operation = Operation.CREATE;
+    cloudModel.blocked = true;
+    ifNullThen(cloudModel.metadata, () -> cloudModel.metadata = new HashMap<>());
+    cloudModel.metadata.put(UDMI_DISCOVERED_FROM, stringifyTerse(envelope));
+    cloudModel.metadata.put(UDMI_DISCOVERED_WITH, stringifyTerse(discoveryEvent));
+    cloudModel.metadata.put(UDMI_UPDATED, isoConvert());
+    cloudModel.metadata.put(UDMI_GENERATION, isoConvert(discoveryEvent.generation));
+    catchToElse(
+        (Supplier<CloudModel>) () -> iotAccess.modelDevice(registryId, expectedId, cloudModel),
+        (Consumer<Exception>) e -> error(
+            "Error creating device (exists but not bound?): " + friendlyStackTrace(e)));
     bindDeviceToGateway(registryId, expectedId, gatewayId);
+    Envelope modelEnvelope = new Envelope();
+
+    modelEnvelope.deviceRegistryId = registryId;
+    modelEnvelope.deviceId = expectedId;
+    publish(modelEnvelope, cloudModel);
   }
 
   private CloudModel getCachedModel(String deviceRegistryId, String gatewayId) {

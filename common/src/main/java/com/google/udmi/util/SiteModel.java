@@ -33,7 +33,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.collect.ImmutableList;
-
 import com.google.daq.mqtt.util.ExceptionMap;
 import java.io.File;
 import java.util.Arrays;
@@ -71,8 +70,8 @@ public class SiteModel {
   public static final String DEVICES_DIR = "devices";
   public static final String REFLECTOR_DIR = "reflector";
   public static final String METADATA_JSON = "metadata.json";
-  public static final String EXTRA_DEVICES_BASE = "extras";
-  public static final String EXTRA_DEVICES_FORMAT = EXTRA_DEVICES_BASE + "/%s";
+  public static final String EXTRAS_DIR = "extras";
+  public static final String EXTRA_DEVICES_FORMAT = EXTRAS_DIR + "/%s";
   public static final String NORMALIZED_JSON = "metadata_norm.json";
   public static final String SITE_DEFAULTS_FILE = "site_defaults.json";
   public static final String REGISTRATION_SUMMARY_BASE = "out/registration_summary";
@@ -89,7 +88,6 @@ public class SiteModel {
   private static final Pattern IOT_CORE_PATTERN = Pattern.compile(
       "projects/(.*)/locations/(.*)/registries/(.*)/devices/(.*)");
   private static final Pattern MQTT_PATTERN = Pattern.compile("/r/(.*)/d/(.*)");
-  private static final String EXTRAS_DIR = "extras";
   private static final String CLOUD_IOT_CONFIG_JSON = "cloud_iot_config.json";
   private static final Pattern SPEC_PATTERN = Pattern.compile(
       "(//([a-z]+)/)?([a-z-]+)(/([a-z0-9]+))?");
