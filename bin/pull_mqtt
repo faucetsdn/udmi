@@ -12,10 +12,10 @@ shift
 
 msg_file=/tmp/message_captured.json
 
-source $UDMI_ROOT/etc/mosquitto_ctrl.sh
-
 registry_id=${project_spec##*%}
-[[ -n $registry_id ]] || fail Missing %registry_id suffix.
+[[ $registry_id != $project_spec ]] || fail Missing project_spec %registry_id suffix.
+
+source $UDMI_ROOT/etc/mosquitto_ctrl.sh
 
 topic_filter="/r/${registry_id}/d/+/#"
 
