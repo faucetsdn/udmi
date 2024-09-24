@@ -66,6 +66,8 @@ public class PubSubReflector implements MessagePublisher {
   private static final String WAS_BASE_64 = "wasBase64";
   public static final String UDMI_REFLECT_TOPIC = "udmi_reflect";
   private static final String UDMI_REPLY_TOPIC = "udmi_reply";
+  public static final String USER_NAME_SEPARATOR = "%";
+  public static final String USER_NAME_DEFAULT = "debug";
 
   private final AtomicBoolean active = new AtomicBoolean();
   private final long startTimeSec = System.currentTimeMillis() / 1000;
@@ -102,8 +104,7 @@ public class PubSubReflector implements MessagePublisher {
    * @param reset          if the connection should be reset before use
    */
   public PubSubReflector(String projectId, String registryId, String updateTopic,
-      String subscriptionId,
-      boolean reset) {
+      String subscriptionId, boolean reset) {
     try {
       this.projectId = checkNotNull(projectId, "project id not defined");
       this.registryId = registryId;
@@ -143,9 +144,8 @@ public class PubSubReflector implements MessagePublisher {
     String registryId = MessagePublisher.getRegistryId(reflectorConfig);
     String namespacePrefix = getNamespacePrefix(iotConfig.udmi_namespace);
     String topicId = namespacePrefix + UDMI_REFLECT_TOPIC;
-    String bridgeHost = requireNonNull(iotConfig.bridge_host,
-        "missing bridge_host as subscription suffix");
-    String subscriptionId = namespacePrefix + UDMI_REPLY_TOPIC + "-" + bridgeHost;
+    String userName = ofNullable(iotConfig.user_name).orElse(USER_NAME_DEFAULT);
+    String subscriptionId = namespacePrefix + UDMI_REPLY_TOPIC + USER_NAME_SEPARATOR + userName;
 
     PubSubReflector reflector = new PubSubReflector(projectId, registryId, topicId, subscriptionId);
     reflector.activate(messageHandler, errorHandler);
