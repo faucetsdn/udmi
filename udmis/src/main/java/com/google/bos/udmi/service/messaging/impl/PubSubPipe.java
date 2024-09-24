@@ -8,6 +8,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static java.lang.String.format;
 import static java.time.Instant.ofEpochSecond;
@@ -59,6 +60,8 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
   public static final String GCP_HOST = "gcp";
   public static final String PS_TXN_PREFIX = "PS:";
   public static final int MS_PER_SEC = 1000;
+  public static final String SOURCE_KEY = "source";
+  public static final String PUB_SUB_SOURCE = "PubSub";
   private final Publisher publisher;
   private final String projectId;
   private final String topicId;

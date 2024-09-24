@@ -16,6 +16,10 @@
       "description": "Version of the UDMI schema",
       "type": "string"
     },
+    "source": {
+      "description": "Indicator of where this source update came from",
+      "type": "string"
+    },
     "regions": {
       "title": "Regions Udmi State",
       "type": "object",

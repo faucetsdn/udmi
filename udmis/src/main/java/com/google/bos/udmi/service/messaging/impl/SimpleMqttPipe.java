@@ -50,7 +50,8 @@ public class SimpleMqttPipe extends MessageBase {
 
   private static final int MAX_INFLIGHT = 10;
   private static final String IMPLICIT_CHANNEL = IotProvider.IMPLICIT.value();
-  private static final String SEND_CHANNEL_PREFIX = "c/";
+  private static final String SEND_CHANNEL_DESIGNATOR = "c";
+  private static final String SEND_CHANNEL_PREFIX = SEND_CHANNEL_DESIGNATOR + "/";
   private static final int INITIALIZE_TIME_MS = 1000;
   private static final String BROKER_URL_FORMAT = "%s://%s:%s";
   private static final long RECONNECT_SEC = 10;
@@ -133,7 +134,7 @@ public class SimpleMqttPipe extends MessageBase {
       envelope.deviceRegistryId = nullAsNull(parts[2]);
       checkState("d".equals(parts[3]), "expected devices");
       envelope.deviceId = nullAsNull(parts[4]);
-      int base = parts[5].equals("c") ? 2 : 0;
+      int base = parts[5].equals(SEND_CHANNEL_DESIGNATOR) ? 2 : 0;
       if (base > 0) {
         envelope.source = parts[6];
       }
