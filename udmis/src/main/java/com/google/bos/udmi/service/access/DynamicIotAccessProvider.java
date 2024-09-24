@@ -59,6 +59,7 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   private IotAccessProvider getProviderFor(String registryId) {
     IotAccessProvider provider =
         getProviders().get(registryProviders.computeIfAbsent(registryId, this::determineProvider));
+    debug("TAP provider for %s is %s", registryId, provider.getClass().getSimpleName());
     return requireNonNull(provider, "could not determine provider for " + registryId);
   }
 
