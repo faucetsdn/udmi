@@ -1,4 +1,10 @@
 {
   "timestamp": "2024-04-02T17:30:04Z",
-  "hash": "0001d237"
+  "hash": "0001d237",
+  "discovery": {
+    "families": {
+      "vendor": {
+      }
+    }
+  }
 }
