@@ -108,7 +108,7 @@ public class MappingAgent {
     Set<String> families = catchToNull(
         () -> siteModel.getMetadata(deviceId).discovery.families.keySet());
     checkNotNull(families, "No discovery families defined");
-    families.forEach(this::initiateDiscover());
+    families.forEach(this::initiateDiscover);
   }
 
   private void initiateDiscover(String family) {
