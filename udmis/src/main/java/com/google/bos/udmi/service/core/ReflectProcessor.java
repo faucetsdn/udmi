@@ -89,7 +89,6 @@ public class ReflectProcessor extends ProcessorBase {
     Map<String, Object> objectMap = toMap(message);
     try {
       boolean isCommand = objectMap.containsKey(PAYLOAD_KEY);
-      debug("TAP handling %s %s %s", reflect.subFolder, !isCommand, message.getClass().getSimpleName());
       if (reflect.subFolder == null && !isCommand) {
         reflectStateHandler(reflect, extractUdmiState(message));
       } else if (reflect.subFolder != SubFolder.UDMI && reflect.subType != SubType.REFLECT) {
@@ -332,7 +331,7 @@ public class ReflectProcessor extends ProcessorBase {
     // Awareness update distribution uses the gatewayId to indicate the source.
     envelope.gatewayId = envelope.source;
 
-    debug("TAP distributing " + stringifyTerse(envelope));
+    debug("TAP handling %s: %s", stringifyTerse(envelope), stringify(toolState));
     ifNotNullThen(distributor, d -> catchToElse(() -> d.publish(envelope, toolState, containerId),
         e -> error("Error handling update: %s %s", friendlyStackTrace(e), envelope.transactionId)));
     updateAwareness(envelope, toolState);
