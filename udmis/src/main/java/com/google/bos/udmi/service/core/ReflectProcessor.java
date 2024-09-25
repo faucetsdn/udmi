@@ -358,7 +358,8 @@ public class ReflectProcessor extends ProcessorBase {
     message.source = reflection.source;
 
     String deviceRegistry = reflection.deviceId;
-    iotAccess.sendCommand(makeReflectEnvelope(deviceRegistry), SubFolder.UDMI, stringify(message));
+    iotAccess.sendCommand(makeReflectEnvelope(deviceRegistry, reflection.source), SubFolder.UDMI,
+        stringify(message));
   }
 
   private void updateProviderAffinity(Envelope envelope, String source) {

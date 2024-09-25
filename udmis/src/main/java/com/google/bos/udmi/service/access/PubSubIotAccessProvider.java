@@ -12,6 +12,7 @@ import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.isNotEmpty;
+import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
@@ -100,24 +101,26 @@ public class PubSubIotAccessProvider extends IotAccessBase {
 
   private void publish(Envelope envelope, String category, SubFolder folder, String data) {
     String topicNameString = publisher.getTopicNameString();
+    Map<String, String> stringMap = new HashMap<>();
     try {
-      Map<String, String> stringMap = new HashMap<>();
       stringMap.put(REGISTRY_ID_PROPERTY_KEY, envelope.deviceRegistryId);
       stringMap.put(DEVICE_ID_KEY, envelope.deviceId);
       stringMap.put(CATEGORY_PROPERTY_KEY, category);
       String userPart = ifNotNullGet(envelope.source, s -> s.split("@", 2)[0]);
       debug("TAP extracting source %s from source %s", userPart, envelope.source);
-      stringMap.put(SOURCE_KEY, userPart);
+      ifNotNullThen(userPart, () -> stringMap.put(SOURCE_KEY, userPart));
       ifNotNullThen(folder, () -> stringMap.put(SUBFOLDER_PROPERTY_KEY, folder.value()));
       PubsubMessage message = PubsubMessage.newBuilder()
           .putAllAttributes(stringMap)
           .setData(ByteString.copyFromUtf8(data))
           .build();
+      debug("TAP publishing to " + stringifyTerse(stringMap));
       ApiFuture<String> publish = publisher.publish(message);
       String publishedId = publish.get();
       debug(format("Reflected PubSub %s/%s to %s as %s", category, folder, topicNameString,
           publishedId));
     } catch (Exception e) {
+      e.printStackTrace();
       throw new RuntimeException("While publishing message to " + topicNameString, e);
     }
   }

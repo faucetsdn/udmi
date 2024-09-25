@@ -267,14 +267,15 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
 
   private void reflectString(String deviceRegistryId, String commandString) {
     ifNotNullThen(iotAccess, () ->
-        iotAccess.sendCommand(makeReflectEnvelope(deviceRegistryId), SubFolder.UDMI,
+        iotAccess.sendCommand(makeReflectEnvelope(deviceRegistryId, null), SubFolder.UDMI,
             commandString));
   }
 
-  protected Envelope makeReflectEnvelope(String registryId) {
+  protected Envelope makeReflectEnvelope(String registryId, String source) {
     Envelope envelope = new Envelope();
     envelope.deviceRegistryId = reflectRegistry;
     envelope.deviceId = registryId;
+    envelope.source = source;
     return envelope;
   }
 
