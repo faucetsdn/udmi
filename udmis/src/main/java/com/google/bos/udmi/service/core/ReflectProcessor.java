@@ -341,7 +341,7 @@ public class ReflectProcessor extends ProcessorBase {
     configMap.put(SubFolder.UDMI.value(), udmiConfig);
     configMap.put(TIMESTAMP_KEY, isoConvert());
     String contents = stringifyTerse(configMap);
-    debug("Setting reflector config %s %s: %s", registryId, deviceId, contents);
+    debug("TAP Setting reflector config %s %s: %s", registryId, deviceId, contents);
     iotAccess.modifyConfig(registryId, deviceId, previous -> contents);
   }
 
@@ -353,9 +353,12 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private void sendReflectCommand(Envelope reflection, Envelope message, Object payload) {
-    String reflectRegistry = reflection.deviceRegistryId;
-    String deviceRegistry = reflection.deviceId;
     message.payload = encodeBase64(stringify(payload));
+    debug("TAP reflecting source %s <- %s", message.source, reflection.source);
+    message.source = reflection.source;
+
+    String deviceRegistry = reflection.deviceId;
+    String reflectRegistry = reflection.deviceRegistryId;
     iotAccess.sendCommand(reflectRegistry, deviceRegistry, SubFolder.UDMI, stringify(message));
   }
 

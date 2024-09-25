@@ -1,7 +1,6 @@
 package com.google.udmi.util;
 
 import static com.google.api.client.util.Preconditions.checkNotNull;
-import static com.google.bos.iot.core.proxy.IotReflectorClient.UDMI_REFLECT;
 import static com.google.bos.iot.core.proxy.ProxyTarget.STATE_TOPIC;
 import static com.google.udmi.util.Common.CATEGORY_PROPERTY_KEY;
 import static com.google.udmi.util.Common.DEVICE_ID_KEY;
@@ -91,7 +90,7 @@ public class PubSubReflector implements MessagePublisher {
    */
   public PubSubReflector(String projectId, String registryId, String updateTopic,
       String subscriptionId) {
-    this(projectId, registryId, updateTopic, subscriptionId, true);
+    this(projectId, registryId, updateTopic, userName, subscriptionId, true);
   }
 
   /**
@@ -100,11 +99,12 @@ public class PubSubReflector implements MessagePublisher {
    * @param projectId      target project id
    * @param registryId     target registry id
    * @param updateTopic    output PubSub topic for updates (else null)
+   * @param userName
    * @param subscriptionId target subscription name
    * @param reset          if the connection should be reset before use
    */
   public PubSubReflector(String projectId, String registryId, String updateTopic,
-      String subscriptionId, boolean reset) {
+      String userName, String subscriptionId, boolean reset) {
     try {
       this.projectId = checkNotNull(projectId, "project id not defined");
       this.registryId = registryId;
@@ -233,7 +233,7 @@ public class PubSubReflector implements MessagePublisher {
       envelope.deviceId = deviceId;
       envelope.deviceRegistryId = registryId;
       envelope.projectId = projectId;
-      envelope.source = UDMI_REFLECT;
+      envelope.source = userName;
       envelope.subFolder = STATE_TOPIC.equals(topic) ? null : SubFolder.UDMI;
       Map<String, String> map = toStringMap(envelope);
       PubsubMessage message = PubsubMessage.newBuilder()

@@ -12,6 +12,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static udmi.schema.CloudModel.Operation.BIND;
@@ -247,7 +248,8 @@ public class IotReflectorClient implements IotProvider {
 
         if (future == null && transactionId != null
             && transactionId.startsWith(REFLECTOR_PREFIX)) {
-          throw new RuntimeException("Received unexpected reply message " + transactionId);
+          throw new RuntimeException(
+              "Received unexpected reply message " + stringifyTerse(messageBundle.attributes));
         }
       } catch (Exception e) {
         System.err.printf("Exception handling message: %s%n", friendlyStackTrace(e));
