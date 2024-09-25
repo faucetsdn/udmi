@@ -46,7 +46,7 @@ public class MessageDispatcherImplTest {
 
   private MessageDispatcher getReversedDispatcher() {
     MessageDispatcherImpl messageDispatcher = new MessageDispatcherImpl(getConfiguration(true));
-    messageDispatcher.setThreadEnvelope(makeTestEnvelope());
+    messageDispatcher.setThreadEnvelope(makeTestEnvelope(false));
     return messageDispatcher;
   }
 
@@ -85,7 +85,7 @@ public class MessageDispatcherImplTest {
 
     public TestingDispatcher() {
       super(getConfiguration(false));
-      setThreadEnvelope(makeTestEnvelope());
+      setThreadEnvelope(makeTestEnvelope(false));
     }
 
     @Override

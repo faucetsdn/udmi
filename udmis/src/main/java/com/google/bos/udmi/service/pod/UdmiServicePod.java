@@ -180,8 +180,8 @@ public class UdmiServicePod extends ContainerBase {
                 format("Conflicting objects for component %s: %s replacing %s",
                     componentName, component.getClass(), replaced.getClass()));
           });
-      container.output(Level.DEBUG, format("Added component %s of type %s",
-          componentName, container.getClass().getSimpleName()));
+      // container.output(Level.DEBUG, format("Added component %s of type %s",
+      //     componentName, container.getClass().getSimpleName()));
     } catch (Exception e) {
       throw new RuntimeException("While creating component " + componentName, e);
     }

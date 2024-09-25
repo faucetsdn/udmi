@@ -33,16 +33,16 @@ public abstract class MessagePipeTestBase extends MessageTestBase {
   @NotNull
   public static MessageDispatcherImpl getDispatcherFor(EndpointConfiguration reversedTarget) {
     MessageDispatcherImpl from = (MessageDispatcherImpl) MessageDispatcher.from(reversedTarget);
-    from.setThreadEnvelope(makeTestEnvelope());
+    from.setThreadEnvelope(makeTestEnvelope(false));
     return from;
   }
 
   /**
    * Make a message envelope suitable for testing.
    */
-  public static Envelope makeTestEnvelope() {
+  public static Envelope makeTestEnvelope(boolean includeProject) {
     Envelope envelope = new Envelope();
-    envelope.projectId = TEST_NAMESPACE;
+    envelope.projectId = includeProject ? TEST_NAMESPACE : null;
     if (useReflectRegistry) {
       envelope.deviceId = TEST_REGISTRY;
       envelope.deviceRegistryId = REFLECT_REGISTRY;

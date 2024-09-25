@@ -130,13 +130,13 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
     }
   }
 
-  private String checkedUpdate(String registryId, String deviceId, Long version, String updated) {
+  private String checkedUpdate(Envelope envelope, Long version, String updated) {
     int configLength = updated.length();
     if (configLength > MAX_CONFIG_LENGTH) {
       throw new AbortLoopException(
           format("Config length %d exceeds maximum %d", configLength, MAX_CONFIG_LENGTH));
     }
-    return updateConfig(registryId, deviceId, updated, version);
+    return updateConfig(envelope, updated, version);
   }
 
   private void disseminateDifference(Map<String, String> previousRegions,
@@ -221,9 +221,10 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
    * Modify a device configuration. Return the full/complete update that was actually written.
    */
   @Override
-  public String modifyConfig(String registryId, String deviceId,
-      Function<Entry<Long, String>, String> munger) {
+  public String modifyConfig(Envelope envelope, Function<Entry<Long, String>, String> munger) {
     int retryCount = CONFIG_UPDATE_MAX_RETRIES;
+    String registryId = envelope.deviceRegistryId;
+    String deviceId = envelope.deviceId;
     try {
       while (true) {
         try {
@@ -231,7 +232,7 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
           Long version = ifNotNullGet(currentConfig, Entry::getKey);
           debug("Retrieved config %s/%s #%d", registryId, deviceId, version);
           String updatedConfig = ifNotNullGet(safeMunge(munger, currentConfig),
-              updated -> checkedUpdate(registryId, deviceId, version, updated));
+              updated -> checkedUpdate(envelope, version, updated));
           debug("Applied config %s/%s #%d", registryId, deviceId, version);
           return updatedConfig;
         } catch (AbortLoopException e) {
@@ -275,8 +276,9 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
   /**
    * Send a command to a device.
    */
-  public final void sendCommand(String registryId, String deviceId, SubFolder folder,
-      String message) {
+  public final void sendCommand(Envelope envelope, SubFolder folder, String message) {
+    String registryId = envelope.deviceRegistryId;
+    String deviceId = envelope.deviceId;
     Entry<String, String> backoffKey = getBackoffKey(registryId, deviceId);
     if (registryBackoffCheck(registryId, deviceId)) {
       try {
@@ -288,7 +290,7 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
             registryId, deviceId, folder, transactionId);
         requireNonNull(registryId, "registry not defined");
         requireNonNull(deviceId, "device not defined");
-        sendCommandBase(registryId, deviceId, folder, message);
+        sendCommandBase(envelope, folder, message);
       } catch (Exception e) {
         error("Exception sending command to %s: %s", backoffKey, friendlyStackTrace(e));
         ifNotNullThen(registryBackoffInhibit(registryId, deviceId),

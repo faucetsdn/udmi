@@ -150,8 +150,8 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
     debug(format("Modifying device config %s/%s/%s %s", envelope.deviceRegistryId,
         envelope.deviceId, subFolder, envelope.transactionId));
 
-    String configUpdate = iotAccess.modifyConfig(envelope.deviceRegistryId,
-        envelope.deviceId, previous -> updateConfig(previous, envelope, payload, newLastStart));
+    String configUpdate = iotAccess.modifyConfig(
+        envelope, previous -> updateConfig(previous, envelope, payload, newLastStart));
 
     if (configUpdate == null) {
       return;
@@ -267,7 +267,15 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
 
   private void reflectString(String deviceRegistryId, String commandString) {
     ifNotNullThen(iotAccess, () ->
-        iotAccess.sendCommand(reflectRegistry, deviceRegistryId, SubFolder.UDMI, commandString));
+        iotAccess.sendCommand(makeReflectEnvelope(deviceRegistryId), SubFolder.UDMI,
+            commandString));
+  }
+
+  protected Envelope makeReflectEnvelope(String registryId) {
+    Envelope envelope = new Envelope();
+    envelope.deviceRegistryId = reflectRegistry;
+    envelope.deviceId = registryId;
+    return envelope;
   }
 
   private String updateConfig(Entry<Long, String> previous, Envelope attributes,

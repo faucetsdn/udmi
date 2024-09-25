@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import udmi.schema.CloudModel;
+import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.IotAccess;
 import udmi.schema.IotAccess.IotProvider;
@@ -65,16 +66,13 @@ public interface IotAccessProvider extends UdmiComponent {
 
   CloudModel modelRegistry(String registryId, String deviceId, CloudModel cloudModel);
 
-  String modifyConfig(String registryId, String deviceId,
-      Function<Entry<Long, String>, String> munger);
+  String modifyConfig(Envelope envelope, Function<Entry<Long, String>, String> munger);
 
   void saveState(String registryId, String deviceId, String stateBlob);
 
-  void sendCommandBase(String registryId, String deviceId, SubFolder folder,
-      String message);
+  void sendCommandBase(Envelope envelope, SubFolder folder, String message);
 
-  String updateConfig(String registryId, String deviceId, String config,
-      Long version);
+  String updateConfig(Envelope envelope, String config, Long version);
 
   void updateRegistryRegions(Map<String, String> regions);
 }

@@ -2,6 +2,7 @@ package com.google.bos.udmi.service.pod;
 
 import static com.google.bos.udmi.service.core.StateProcessor.IOT_ACCESS_COMPONENT;
 import static com.google.bos.udmi.service.messaging.impl.MessageBase.combineConfig;
+import static com.google.bos.udmi.service.messaging.impl.MessagePipeTestBase.REFLECT_REGISTRY;
 import static com.google.bos.udmi.service.messaging.impl.MessageTestCore.TEST_DEVICE;
 import static com.google.bos.udmi.service.messaging.impl.MessageTestCore.TEST_REGISTRY;
 import static com.google.bos.udmi.service.pod.ContainerBase.REFLECT_BASE;
@@ -179,7 +180,7 @@ public class UdmiServicePodTest {
     UdmiServicePod pod = new UdmiServicePod(arrayOf(BASE_CONFIG));
 
     IotAccessBase iotAccess = UdmiServicePod.getComponent(IOT_ACCESS_COMPONENT);
-    iotAccess.modifyConfig(TEST_REGISTRY, TEST_DEVICE, oldConfig -> EMPTY_CONFIG);
+    iotAccess.modifyConfig(makeTestEnvelope(), oldConfig -> EMPTY_CONFIG);
 
     PodConfiguration podConfig = pod.getPodConfiguration();
 
@@ -196,7 +197,7 @@ public class UdmiServicePodTest {
     List<String> commands = iotAccessProvider.getCommands();
     assertEquals(0, commands.size(), "expected sent device commands");
 
-    iotAccess.modifyConfig(REFLECT_BASE, TEST_REGISTRY, oldConfig -> {
+    iotAccess.modifyConfig(makeReflectEnvelope(), oldConfig -> {
       // TODO: Check that this conforms to the actual expected reflector config bundle.
       assertNotEquals(EMPTY_CONFIG, oldConfig, "updated device config");
       return null;
@@ -209,6 +210,13 @@ public class UdmiServicePodTest {
     assertEquals(TEST_REGISTRY, distributedBundle.envelope.deviceId, "site id");
     // TODO: Check bundle message to make sure it conforms.
     assertNull(distributor.poll(), "unexpected distribution message");
+  }
+
+  private Envelope makeReflectEnvelope() {
+    Envelope envelope = new Envelope();
+    envelope.deviceRegistryId = REFLECT_REGISTRY;
+    envelope.deviceId = TEST_REGISTRY;
+    return envelope;
   }
 
   /**

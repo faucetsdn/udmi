@@ -20,6 +20,7 @@ import java.util.function.Consumer;
 import org.jetbrains.annotations.TestOnly;
 import org.jetbrains.annotations.VisibleForTesting;
 import udmi.schema.CloudModel;
+import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.IotAccess;
 
@@ -97,9 +98,9 @@ public class LocalIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public void sendCommandBase(String registryId, String deviceId, SubFolder folder,
-      String message) {
-    sentCommands.add(format("%s/%s/%s:%s", registryId, deviceId, folder, message));
+  public void sendCommandBase(Envelope envelope, SubFolder folder, String message) {
+    sentCommands.add(
+        format("%s/%s/%s:%s", envelope.deviceRegistryId, envelope.deviceId, folder, message));
   }
 
   @TestOnly
@@ -113,7 +114,8 @@ public class LocalIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public String updateConfig(String registryId, String deviceId, String config, Long version) {
+  public String updateConfig(Envelope envelope, String config, Long version) {
+    String deviceId = envelope.deviceId;
     Entry<Long, String> entry = DEVICE_CONFIGS.get(deviceId);
     if (version != null && !entry.getKey().equals(version)) {
       throw new IllegalStateException("Config version mismatch");

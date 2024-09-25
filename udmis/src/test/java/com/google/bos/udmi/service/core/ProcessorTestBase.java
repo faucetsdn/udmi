@@ -1,6 +1,7 @@
 package com.google.bos.udmi.service.core;
 
 import static com.google.bos.udmi.service.core.StateProcessor.IOT_ACCESS_COMPONENT;
+import static com.google.bos.udmi.service.messaging.impl.MessagePipeTestBase.REFLECT_REGISTRY;
 import static com.google.udmi.util.JsonUtil.writeFile;
 import static org.apache.commons.io.FileUtils.deleteDirectory;
 import static org.mockito.Mockito.mock;
@@ -75,11 +76,19 @@ public abstract class ProcessorTestBase extends MessageTestBase {
   }
 
   protected Bundle makeMessageBundle(Object message) {
-    return new Bundle(makeTestEnvelope(), message);
+    return new Bundle(makeTestEnvelope(false), message);
   }
 
-  protected Envelope makeTestEnvelope() {
-    return MessagePipeTestBase.makeTestEnvelope();
+  protected Envelope makeReflectEnvelope(boolean includeProject) {
+    Envelope envelope = new Envelope();
+    envelope.deviceRegistryId = REFLECT_REGISTRY;
+    envelope.deviceId = TEST_REGISTRY;
+    envelope.projectId = includeProject ? TEST_NAMESPACE : null;
+    return envelope;
+  }
+
+  protected Envelope makeTestEnvelope(boolean includeProject) {
+    return MessagePipeTestBase.makeTestEnvelope(false);
   }
 
   protected void terminateAndWait() {

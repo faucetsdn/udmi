@@ -5,6 +5,7 @@ import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringify;
 
 import com.google.bos.udmi.service.pod.UdmiServicePod;
+import java.util.Map.Entry;
 import udmi.schema.CloudQuery;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
@@ -54,8 +55,15 @@ public class ControlProcessor extends ProcessorBase {
       message.subFolder = SubFolder.UDMI;
       iotAccess.getActiveConnections().forEach(entry -> {
         debug("Propagate UdmiConfig to " + entry);
-        iotAccess.sendCommand(entry.getKey(), entry.getValue(), SubFolder.UDMI, stringify(message));
+        iotAccess.sendCommand(makeEntryEnvelope(entry), SubFolder.UDMI, stringify(message));
       });
     }
+  }
+
+  private Envelope makeEntryEnvelope(Entry<String, String> entry) {
+    Envelope envelope = new Envelope();
+    envelope.deviceRegistryId = entry.getKey();
+    envelope.deviceId = entry.getValue();
+    return envelope;
   }
 }

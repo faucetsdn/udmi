@@ -66,7 +66,7 @@ public class ReflectProcessorTest extends ProcessorTestBase {
   }
 
   private Bundle makeModelBundle(CloudModel model) {
-    Envelope reflect = makeTestEnvelope();
+    Envelope reflect = makeTestEnvelope(false);
     reflect.transactionId = transactionId;
     reflect.subType = SubType.MODEL;
     reflect.payload = encodeBase64(stringify(model));
@@ -109,10 +109,11 @@ public class ReflectProcessorTest extends ProcessorTestBase {
     ArgumentCaptor<Function> configCaptor = ArgumentCaptor.forClass(Function.class);
 
     //noinspection unchecked
-    verify(provider, times(1)).modifyConfig(eq(REFLECT_REGISTRY), eq(TEST_REGISTRY),
+    verify(provider, times(1)).modifyConfig(
+        eq(makeReflectEnvelope(true)),
         (Function<Entry<Long, String>, String>) configCaptor.capture());
 
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     String newConfig = (String) configCaptor.getValue().apply(null);
 
     Map<String, Object> stringObjectMap = toMap(newConfig);
@@ -140,7 +141,7 @@ public class ReflectProcessorTest extends ProcessorTestBase {
     activeTestInstance(() -> getReverseDispatcher().publish(makeUdmiStateBundle(true)));
 
     ArgumentCaptor<String> commandCaptor = ArgumentCaptor.forClass(String.class);
-    verify(provider, times(1)).sendCommand(anyString(), anyString(), eq(SubFolder.UDMI),
+    verify(provider, times(1)).sendCommand(any(Envelope.class), eq(SubFolder.UDMI),
         commandCaptor.capture());
     List<String> allValues = commandCaptor.getAllValues();
     assertEquals(1, allValues.size(), "Expected one sent commands");
@@ -163,8 +164,8 @@ public class ReflectProcessorTest extends ProcessorTestBase {
         eq(requestModel));
 
     ArgumentCaptor<String> commandCaptor = ArgumentCaptor.forClass(String.class);
-    verify(provider, times(1)).sendCommand(eq(REFLECT_REGISTRY), eq(TEST_REGISTRY),
-        eq(SubFolder.UDMI), commandCaptor.capture());
+    verify(provider, times(1)).sendCommand(
+        eq(makeReflectEnvelope(false)), eq(SubFolder.UDMI), commandCaptor.capture());
     Envelope envelope = JsonUtil.fromStringStrict(Envelope.class, commandCaptor.getValue());
     assertEquals(transactionId, envelope.transactionId);
   }

@@ -1,6 +1,5 @@
 package com.google.bos.udmi.service.core;
 
-import static com.google.bos.udmi.service.pod.ContainerBase.REFLECT_BASE;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -27,7 +26,8 @@ class TargetProcessorTest extends ProcessorTestBase {
     assertEquals(SubFolder.POINTSET.value(), command.remove("subFolder"), "subFolder field");
     assertEquals("events", command.remove("subType"), "subType field");
     assertEquals(TEST_DEVICE, command.remove("deviceId"));
-    assertEquals(TEST_NAMESPACE, command.remove("projectId"));
+    String expectedNamespace = !isError ? null : TEST_NAMESPACE;
+    assertEquals(expectedNamespace, command.remove("projectId"));
     assertEquals(TEST_REGISTRY, command.remove("deviceRegistryId"));
   }
 
@@ -63,8 +63,8 @@ class TargetProcessorTest extends ProcessorTestBase {
     assertEquals(0, getMessageCount(PointsetEvents.class), "pointset handler count");
 
     ArgumentCaptor<String> commandCaptor = ArgumentCaptor.forClass(String.class);
-    verify(provider, times(1)).sendCommand(eq(REFLECT_BASE),
-        eq(TEST_REGISTRY), eq(SubFolder.UDMI), commandCaptor.capture());
+    verify(provider, times(1)).sendCommand(
+        eq(makeReflectEnvelope(false)), eq(SubFolder.UDMI), commandCaptor.capture());
     verifyCommand(commandCaptor, true);
   }
 
@@ -87,8 +87,8 @@ class TargetProcessorTest extends ProcessorTestBase {
     assertEquals(1, getMessageCount(PointsetEvents.class), "pointset handler count");
 
     ArgumentCaptor<String> commandCaptor = ArgumentCaptor.forClass(String.class);
-    verify(provider, times(1)).sendCommand(eq(REFLECT_BASE),
-        eq(TEST_REGISTRY), eq(SubFolder.UDMI), commandCaptor.capture());
+    verify(provider, times(1)).sendCommand(
+        eq(makeReflectEnvelope(false)), eq(SubFolder.UDMI), commandCaptor.capture());
     verifyCommand(commandCaptor, false);
   }
 

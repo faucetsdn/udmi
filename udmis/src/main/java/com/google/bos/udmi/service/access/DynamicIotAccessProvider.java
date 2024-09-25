@@ -24,6 +24,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import udmi.schema.CloudModel;
+import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.IotAccess;
 
@@ -55,6 +56,10 @@ public class DynamicIotAccessProvider extends IotAccessBase {
     String providerId = sortedMap.lastEntry().getValue();
     debug("Registry affinity mapping for " + registryId + " is " + providerId);
     return providerId;
+  }
+
+  private IotAccessProvider getProviderFor(Envelope envelope) {
+    return getProviderFor(envelope.deviceRegistryId);
   }
 
   private IotAccessProvider getProviderFor(String registryId) {
@@ -154,15 +159,14 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public String modifyConfig(String registryId, String deviceId,
-      Function<Entry<Long, String>, String> munger) {
-    return getProviderFor(registryId).modifyConfig(registryId, deviceId, munger);
+  public String modifyConfig(Envelope envelope, Function<Entry<Long, String>, String> munger) {
+    return getProviderFor(envelope).modifyConfig(envelope, munger);
   }
 
   @Override
-  public void sendCommandBase(String registryId, String deviceId, SubFolder folder,
+  public void sendCommandBase(Envelope envelope, SubFolder folder,
       String message) {
-    getProviderFor(registryId).sendCommandBase(registryId, deviceId, folder, message);
+    getProviderFor(envelope).sendCommandBase(envelope, folder, message);
   }
 
   @Override
@@ -179,7 +183,7 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public String updateConfig(String registryId, String deviceId, String config, Long version) {
+  public String updateConfig(Envelope envelope, String config, Long version) {
     throw new RuntimeException("Shouldn't be called for dynamic provider");
   }
 

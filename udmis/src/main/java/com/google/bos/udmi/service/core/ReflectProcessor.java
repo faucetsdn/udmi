@@ -342,7 +342,7 @@ public class ReflectProcessor extends ProcessorBase {
     configMap.put(TIMESTAMP_KEY, isoConvert());
     String contents = stringifyTerse(configMap);
     debug("TAP Setting reflector config %s %s: %s", registryId, deviceId, contents);
-    iotAccess.modifyConfig(registryId, deviceId, previous -> contents);
+    iotAccess.modifyConfig(envelope, previous -> contents);
   }
 
   private void reflectStateUpdate(Envelope attributes, String state) {
@@ -358,8 +358,7 @@ public class ReflectProcessor extends ProcessorBase {
     message.source = reflection.source;
 
     String deviceRegistry = reflection.deviceId;
-    String reflectRegistry = reflection.deviceRegistryId;
-    iotAccess.sendCommand(reflectRegistry, deviceRegistry, SubFolder.UDMI, stringify(message));
+    iotAccess.sendCommand(makeReflectEnvelope(deviceRegistry), SubFolder.UDMI, stringify(message));
   }
 
   private void updateProviderAffinity(Envelope envelope, String source) {

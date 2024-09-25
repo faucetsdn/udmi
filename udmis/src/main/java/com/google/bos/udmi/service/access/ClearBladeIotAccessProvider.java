@@ -91,6 +91,7 @@ import udmi.schema.CloudModel.Operation;
 import udmi.schema.CloudModel.Resource_type;
 import udmi.schema.Credential;
 import udmi.schema.Credential.Key_format;
+import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.IotAccess;
 
@@ -742,9 +743,11 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public void sendCommandBase(String registryId, String deviceId, SubFolder folder,
+  public void sendCommandBase(Envelope envelope, SubFolder folder,
       String message) {
     String subFolder = ifNotNullGet(folder, SubFolder::value);
+    String registryId = envelope.deviceRegistryId;
+    String deviceId = envelope.deviceId;
     try {
       ByteString binaryData = new ByteString(encodeBase64(message));
       String location = getRegistryLocation(registryId);
@@ -765,7 +768,9 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public String updateConfig(String registryId, String deviceId, String config, Long version) {
+  public String updateConfig(Envelope envelope, String config, Long version) {
+    String registryId = envelope.deviceRegistryId;
+    String deviceId = envelope.deviceId;
     try {
       String updateVersion = ifNotNullGet(version, v -> Long.toString(version));
       ByteString binaryData = new ByteString(encodeBase64(config));
