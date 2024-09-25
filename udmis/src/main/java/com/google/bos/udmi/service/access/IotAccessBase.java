@@ -304,10 +304,6 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
     registryBackoffClear(registryId, deviceId);
   }
 
-  public String getProviderAffinity(String registryId, String deviceId) {
-    return containerId;
-  }
-
   /**
    * Update the cached registry regions with any incremental updates.
    */

@@ -177,11 +177,6 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public String getProviderAffinity(String registryId, String deviceId) {
-    return registryProviders.get(registryId);
-  }
-
-  @Override
   public String updateConfig(String registryId, String deviceId, String config, Long version) {
     throw new RuntimeException("Shouldn't be called for dynamic provider");
   }
