@@ -41,7 +41,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -62,8 +61,7 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
   public static final String PS_TXN_PREFIX = "PS:";
   public static final int MS_PER_SEC = 1000;
   public static final String SOURCE_KEY = "source";
-  public static final String PUB_SUB_SOURCE = "PubSub";
-  public static final CharSequence SOURCE_SEPARATOR = "@";
+  public static final String PUBSUB_SOURCE = "pubsub";
   private final Publisher publisher;
   private final String projectId;
   private final String topicId;
@@ -208,8 +206,9 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
     String source = attributesMap.get(SOURCE_KEY);
     checkState(source == null || !source.contains(SOURCE_SEPARATOR),
         "Source contains premature separator " + SOURCE_SEPARATOR);
-    source = ofNullable(source).orElse("") + SOURCE_SEPARATOR + PUB_SUB_SOURCE;
-    attributesMap.put(source, SOURCE_KEY);
+    String full = ofNullable(source).orElse("") + SOURCE_SEPARATOR + PUBSUB_SOURCE;
+    attributesMap.put(SOURCE_KEY, full);
+    debug("TAP received source %s, mapped to %s", source, full);
 
     receiveMessage(attributesMap, message.getData().toStringUtf8());
   }

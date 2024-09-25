@@ -77,6 +77,7 @@ public class PubSubReflector implements MessagePublisher {
   private final Subscriber subscriber;
   private final Publisher publisher;
   private final boolean flushSubscription;
+  private final String userName;
   private BiConsumer<String, String> messageHandler;
   private Consumer<Throwable> errorHandler;
 
@@ -86,10 +87,11 @@ public class PubSubReflector implements MessagePublisher {
    * @param projectId      target project id
    * @param registryId     target registry id
    * @param updateTopic    output PubSub topic for updates (else null)
+   * @param userName       user id running this operation
    * @param subscriptionId target subscription name
    */
   public PubSubReflector(String projectId, String registryId, String updateTopic,
-      String subscriptionId) {
+      String userName, String subscriptionId) {
     this(projectId, registryId, updateTopic, userName, subscriptionId, true);
   }
 
@@ -99,7 +101,7 @@ public class PubSubReflector implements MessagePublisher {
    * @param projectId      target project id
    * @param registryId     target registry id
    * @param updateTopic    output PubSub topic for updates (else null)
-   * @param userName
+   * @param userName       user id running this operation
    * @param subscriptionId target subscription name
    * @param reset          if the connection should be reset before use
    */
@@ -115,6 +117,7 @@ public class PubSubReflector implements MessagePublisher {
         resetSubscription(subscriptionName);
       }
       subscriber = Subscriber.newBuilder(subscriptionName, new MessageProcessor()).build();
+      this.userName = userName;
 
       if (updateTopic != null) {
         ProjectTopicName topicName = ProjectTopicName.of(projectId, updateTopic);
@@ -147,7 +150,8 @@ public class PubSubReflector implements MessagePublisher {
     String userName = ofNullable(iotConfig.user_name).orElse(USER_NAME_DEFAULT);
     String subscriptionId = namespacePrefix + UDMI_REPLY_TOPIC + USER_NAME_SEPARATOR + userName;
 
-    PubSubReflector reflector = new PubSubReflector(projectId, registryId, topicId, subscriptionId);
+    PubSubReflector reflector = new PubSubReflector(projectId, registryId, topicId, userName,
+        subscriptionId);
     reflector.activate(messageHandler, errorHandler);
     return reflector;
   }
