@@ -3,7 +3,6 @@ package udmi.schema;
 
 import java.util.Date;
 import java.util.HashMap;
-import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -25,7 +24,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "status",
     "translation"
 })
-@Generated("jsonschema2pojo")
 public class MappingCommand {
 
     /**

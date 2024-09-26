@@ -25,7 +25,7 @@
       },
       "filter_differential_pressure": {
         "ref": "AI2.differential",
-        "units": "Bars"
+        "units": "Baré"
       },
       "filter_differential_pressure_sensor": {
         "ref": "AI1.present_value",

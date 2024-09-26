@@ -1,7 +1,8 @@
 #!/bin/bash -e
 
-JVERSION=1.1.1
+JVERSION=1.2.1
 JBASENAME=jsonschema2pojo
+MARKER=/tmp/.gencode_mark
 
 ROOT_DIR=$(realpath $(dirname $0)/..)
 cd $ROOT_DIR
@@ -35,13 +36,44 @@ $JARBIN $JOPTS --source . --target $OUTDIR
 
 # There is no way to specify enum constants in generated code, so just hack it in manually.
 echo Copying shared constants $ROOT_DIR/etc/*.java
-cp -n $ROOT_DIR/etc/*.java $OUTDIR/udmi/schema/
+cp -u $ROOT_DIR/etc/*.java $OUTDIR/udmi/schema/
 
-echo Cleaning up __ classes...
+rm -f $MARKER
+while [[ ! -f $MARKER ]]; do
+    touch $MARKER
+    echo Pruning dangling __ classes...
+    dups=$(find $OUTDIR -name \*__\*.java)
+    for file in $dups; do
+        class=${file##*/}
+        class=${class%.java}
+        matches=$(fgrep -l $class -r $OUTDIR | fgrep -v $class.java) || true
+        echo $class in $matches
+        [[ -n $matches ]] || rm -f $file $MARKER
+    done
+done
+
+echo Cleaning up references to __ classes...
+fgrep -l __ -r $OUTDIR | xargs -n 1 sed -E -i \
+                               -e 's/__[0-9]+ \./\./g' \
+                               -e 's/__[0-9]+//g'
+
+echo Checking for mismatching class signatures...
+rm -f $MARKER
+dups=$(find $OUTDIR -name \*__\*.java)
+for file in $dups; do
+    root=${file%__1.java}
+    versions=$(sha256sum ${root}* | sort | awk '{print $1}' | uniq | wc -l)
+    [[ $versions == 1 ]] || (
+        touch $MARKER
+        echo $versions of $root
+        ls -l $root*
+        diff $root*
+        fgrep ${root}__ -r $OUTDIR
+    )
+done
+[[ ! -f $MARKER ]]
+
+echo Pruning all __ classes...
 find $OUTDIR -name \*__\*.java | xargs rm
-fgrep -l __ -r $OUTDIR | xargs -n 1 sed -E -i s/__[0-9]+//
-
-cd $ROOT_DIR
-find gencode/java -type f | sort
 
 echo Done with java code generation.

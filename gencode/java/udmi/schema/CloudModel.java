@@ -6,7 +6,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -45,7 +44,6 @@ import com.fasterxml.jackson.annotation.JsonValue;
     "metadata_str",
     "device_ids"
 })
-@Generated("jsonschema2pojo")
 public class CloudModel {
 
     /**
@@ -182,7 +180,6 @@ public class CloudModel {
      * The key type used for cloud communication.
      * 
      */
-    @Generated("jsonschema2pojo")
     public enum Auth_type {
 
         ES_256("ES256"),
@@ -229,7 +226,6 @@ public class CloudModel {
      * Connection type for connecting to cloud
      * 
      */
-    @Generated("jsonschema2pojo")
     public enum Connection_type {
 
         GATEWAY("GATEWAY"),
@@ -270,7 +266,6 @@ public class CloudModel {
 
     }
 
-    @Generated("jsonschema2pojo")
     public enum Operation {
 
         ERROR("ERROR"),
@@ -322,7 +317,6 @@ public class CloudModel {
      * The resource type of this model
      * 
      */
-    @Generated("jsonschema2pojo")
     public enum Resource_type {
 
         DEVICE("DEVICE"),
