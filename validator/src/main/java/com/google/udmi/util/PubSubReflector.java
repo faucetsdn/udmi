@@ -6,6 +6,7 @@ import static com.google.udmi.util.Common.CATEGORY_PROPERTY_KEY;
 import static com.google.udmi.util.Common.DEVICE_ID_KEY;
 import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
 import static com.google.udmi.util.Common.SOURCE_KEY;
+import static com.google.udmi.util.Common.SOURCE_SEPARATOR;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.getNamespacePrefix;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
@@ -313,7 +314,8 @@ public class PubSubReflector implements MessagePublisher {
             attributes.get(CATEGORY_PROPERTY_KEY),
             suffix);
         String messageSource = attributes.get(SOURCE_KEY);
-        if (!userName.equals(messageSource)) {
+        String userMatch = userName + SOURCE_SEPARATOR;
+        if (!userMatch.equals(messageSource)) {
           ifNullThen(messageSource, () -> System.err.println(
               "Discarding message with null source: " + stringifyTerse(attributes)));
           return;

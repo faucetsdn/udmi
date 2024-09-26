@@ -8,6 +8,7 @@ import static com.google.udmi.util.Common.COMMANDS_CATEGORY;
 import static com.google.udmi.util.Common.CONFIG_CATEGORY;
 import static com.google.udmi.util.Common.DEVICE_ID_KEY;
 import static com.google.udmi.util.Common.REGISTRY_ID_PROPERTY_KEY;
+import static com.google.udmi.util.Common.SOURCE_SEPARATOR;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
@@ -24,6 +25,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.ProjectTopicName;
 import com.google.pubsub.v1.PubsubMessage;
+import com.google.udmi.util.Common;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.HashMap;
 import java.util.Map;
@@ -106,9 +108,9 @@ public class PubSubIotAccessProvider extends IotAccessBase {
       stringMap.put(REGISTRY_ID_PROPERTY_KEY, envelope.deviceRegistryId);
       stringMap.put(DEVICE_ID_KEY, envelope.deviceId);
       stringMap.put(CATEGORY_PROPERTY_KEY, category);
-      String userPart = ifNotNullGet(envelope.source, s -> s.split("@", 2)[0]);
+      String userPart = ifNotNullGet(envelope.source, s -> s.split(Common.SOURCE_SEPARATOR, 2)[0]);
       debug("TAP extracting source %s from source %s", userPart, envelope.source);
-      ifNotNullThen(userPart, () -> stringMap.put(SOURCE_KEY, userPart));
+      ifNotNullThen(userPart, () -> stringMap.put(SOURCE_KEY, userPart + SOURCE_SEPARATOR));
       ifNotNullThen(folder, () -> stringMap.put(SUBFOLDER_PROPERTY_KEY, folder.value()));
       PubsubMessage message = PubsubMessage.newBuilder()
           .putAllAttributes(stringMap)
