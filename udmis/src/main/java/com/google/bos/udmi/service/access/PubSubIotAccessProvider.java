@@ -13,8 +13,6 @@ import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.isNotEmpty;
-import static com.google.udmi.util.JsonUtil.stringify;
-import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
@@ -26,7 +24,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.ProjectTopicName;
 import com.google.pubsub.v1.PubsubMessage;
-import com.google.udmi.util.Common;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.HashMap;
 import java.util.Map;
@@ -110,7 +107,7 @@ public class PubSubIotAccessProvider extends IotAccessBase {
       stringMap.put(DEVICE_ID_KEY, envelope.deviceId);
       stringMap.put(CATEGORY_PROPERTY_KEY, category);
 
-      int index = envelope.source == null ? -1 :envelope.source.indexOf(SOURCE_SEPARATOR);
+      int index = envelope.source == null ? -1 : envelope.source.indexOf(SOURCE_SEPARATOR);
       String userPart = ifNotNullGet(envelope.source, s -> s.substring(index + 1));
       ifNotNullThen(userPart, () -> stringMap.put(SOURCE_KEY, SOURCE_SEPARATOR + userPart));
 
