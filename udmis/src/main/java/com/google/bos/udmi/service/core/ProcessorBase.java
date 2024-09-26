@@ -177,7 +177,8 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
 
     // If the error comes from the reflect registry, then don't use the registry as the device,
     // so revert the default behavior (otherwise the message goes nowhere!).
-    if (reflectRegistry.equals(errorMap.get(REGISTRY_ID_PROPERTY_KEY))) {
+    String registryId = errorMap.get(REGISTRY_ID_PROPERTY_KEY);
+    if (reflectRegistry.equals(registryId)) {
       errorMap.put(REGISTRY_ID_PROPERTY_KEY, errorMap.get(DEVICE_ID_KEY));
       errorMap.put(DEVICE_ID_KEY, null);
     }
@@ -193,7 +194,7 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
     error(format("Reflecting error %s/%s for %s", errorMap.get(SUBTYPE_PROPERTY_KEY),
         errorMap.get(SUBFOLDER_PROPERTY_KEY),
         errorMap.get(DEVICE_ID_KEY)));
-    reflectString(errorMap.get(REGISTRY_ID_PROPERTY_KEY), stringify(errorMap));
+    reflectString(makeReflectEnvelope(registryId, null), stringify(errorMap));
   }
 
   protected void reflectMessage(Envelope envelope, String message) {
@@ -207,7 +208,7 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
       checkState(envelope.payload == null, "envelope payload is not null");
       String jsonEncoded = message.isEmpty() ? JSON_EMPTY_STRING : message;
       envelope.payload = encodeBase64(jsonEncoded);
-      reflectString(deviceRegistryId, stringify(envelope));
+      reflectString(makeReflectEnvelope(deviceRegistryId, envelope.source), stringify(envelope));
     } catch (Exception e) {
       error(format("Message reflection error %s", friendlyStackTrace(e)));
     } finally {
@@ -262,13 +263,12 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
         envelopeMap.get(SUBFOLDER_PROPERTY_KEY), envelopeMap.get(DEVICE_ID_KEY), invalid));
     String deviceRegistryId = envelopeMap.get(REGISTRY_ID_PROPERTY_KEY);
     envelopeMap.put("payload", encodeBase64(bundleException.bundle.payload));
-    reflectString(deviceRegistryId, stringify(envelopeMap));
+    reflectString(makeReflectEnvelope(deviceRegistryId, null), stringify(envelopeMap));
   }
 
-  private void reflectString(String deviceRegistryId, String commandString) {
+  private void reflectString(Envelope envelope, String commandString) {
     ifNotNullThen(iotAccess, () ->
-        iotAccess.sendCommand(makeReflectEnvelope(deviceRegistryId, null), SubFolder.UDMI,
-            commandString));
+        iotAccess.sendCommand(envelope, SubFolder.UDMI, commandString));
   }
 
   protected Envelope makeReflectEnvelope(String registryId, String source) {

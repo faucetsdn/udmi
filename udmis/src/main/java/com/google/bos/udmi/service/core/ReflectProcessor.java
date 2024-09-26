@@ -111,6 +111,7 @@ public class ReflectProcessor extends ProcessorBase {
                   reflect.deviceId));
         }
 
+        envelope.source = reflect.source;
         reflect.transactionId = firstNonNull(envelope.transactionId, reflect.transactionId,
             ReflectProcessor::makeTransactionId);
         processReflection(reflect, envelope, payload);

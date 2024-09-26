@@ -8,6 +8,7 @@ import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
 import static com.google.udmi.util.Common.SOURCE_KEY;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.getNamespacePrefix;
+import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
@@ -311,10 +312,10 @@ public class PubSubReflector implements MessagePublisher {
         String topic = format("/devices/%s/%s%s", attributes.get(DEVICE_ID_KEY),
             attributes.get(CATEGORY_PROPERTY_KEY),
             suffix);
-        if (!userName.equals(attributes.get(SOURCE_KEY))) {
-          System.err.println(
-              "Discarding message for user source " + attributes.get(SOURCE_KEY) + ": "
-                  + stringifyTerse(attributes));
+        String messageSource = attributes.get(SOURCE_KEY);
+        if (!userName.equals(messageSource)) {
+          ifNullThen(messageSource, () -> System.err.println(
+              "Discarding message with null source: " + stringifyTerse(attributes)));
           return;
         }
         messageHandler.accept(topic, stringify(messageBundle.message));
