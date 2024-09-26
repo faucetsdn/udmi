@@ -320,8 +320,6 @@ public class SiteModel {
       siteMetadataExceptionMap.put(SITE_METADATA_KEY, e);
       return convertTo(SiteMetadata.class, siteMetadataObject);
     }
-
-    return null;
   }
 
   public Metadata loadDeviceMetadata(String deviceId, boolean safeLoading, boolean upgradeMetadata){
