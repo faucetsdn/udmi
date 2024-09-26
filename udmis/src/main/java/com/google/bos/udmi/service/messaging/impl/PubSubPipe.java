@@ -204,11 +204,9 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
     attributesMap.computeIfAbsent(Common.TRANSACTION_KEY, key -> PS_TXN_PREFIX + messageId);
 
     String source = attributesMap.get(SOURCE_KEY);
-    debug("TAP Received %s from %s", source, messageId);
     String fullSource =
         (source != null && source.startsWith(SOURCE_SEPARATOR)) ? PUBSUB_SOURCE + source : source;
     attributesMap.put(SOURCE_KEY, fullSource);
-    debug("TAP received source %s, mapped to %s", source, fullSource);
 
     receiveMessage(attributesMap, message.getData().toStringUtf8());
   }

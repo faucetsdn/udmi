@@ -109,16 +109,16 @@ public class PubSubIotAccessProvider extends IotAccessBase {
       stringMap.put(REGISTRY_ID_PROPERTY_KEY, envelope.deviceRegistryId);
       stringMap.put(DEVICE_ID_KEY, envelope.deviceId);
       stringMap.put(CATEGORY_PROPERTY_KEY, category);
+
       int index = envelope.source == null ? -1 :envelope.source.indexOf(SOURCE_SEPARATOR);
       String userPart = ifNotNullGet(envelope.source, s -> s.substring(index + 1));
-      debug("TAP extracting source %s from source %s", userPart, envelope.source);
       ifNotNullThen(userPart, () -> stringMap.put(SOURCE_KEY, SOURCE_SEPARATOR + userPart));
+
       ifNotNullThen(folder, () -> stringMap.put(SUBFOLDER_PROPERTY_KEY, folder.value()));
       PubsubMessage message = PubsubMessage.newBuilder()
           .putAllAttributes(stringMap)
           .setData(ByteString.copyFromUtf8(data))
           .build();
-      debug("TAP publishing to " + stringifyTerse(stringMap));
       ApiFuture<String> publish = publisher.publish(message);
       String publishedId = publish.get();
       debug(format("Reflected PubSub %s/%s to %s as %s", category, folder, topicNameString,

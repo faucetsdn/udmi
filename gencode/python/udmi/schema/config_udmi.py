@@ -13,6 +13,7 @@ class SetupUdmiConfig:
     self.udmi_timever = None
     self.built_at = None
     self.built_by = None
+    self.msg_source = None
     self.deployed_at = None
     self.deployed_by = None
     self.transaction_id = None
@@ -30,6 +31,7 @@ class SetupUdmiConfig:
     result.udmi_timever = source.get('udmi_timever')
     result.built_at = source.get('built_at')
     result.built_by = source.get('built_by')
+    result.msg_source = source.get('msg_source')
     result.deployed_at = source.get('deployed_at')
     result.deployed_by = source.get('deployed_by')
     result.transaction_id = source.get('transaction_id')
@@ -69,6 +71,8 @@ class SetupUdmiConfig:
       result['built_at'] = self.built_at # 5
     if self.built_by:
       result['built_by'] = self.built_by # 5
+    if self.msg_source:
+      result['msg_source'] = self.msg_source # 5
     if self.deployed_at:
       result['deployed_at'] = self.deployed_at # 5
     if self.deployed_by:

@@ -65,7 +65,6 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   private IotAccessProvider getProviderFor(String registryId) {
     String providerKey = registryProviders.computeIfAbsent(registryId, this::determineProvider);
     IotAccessProvider provider = getProviders().get(providerKey);
-    debug("TAP provider for %s is %s", registryId, provider.getClass().getSimpleName());
     return requireNonNull(provider, "could not determine provider for " + registryId);
   }
 
@@ -177,7 +176,7 @@ public class DynamicIotAccessProvider extends IotAccessBase {
       String affinity = providerId.substring(0, index < 0 ? providerId.length() : index);
       String previous = registryProviders.put(registryId, affinity);
       if (!providerId.equals(previous)) {
-        debug(format("TAP Switching registry affinity for %s from %s -> %s", registryId, previous,
+        debug(format("Switching registry affinity for %s from %s -> %s", registryId, previous,
             affinity));
       }
     }

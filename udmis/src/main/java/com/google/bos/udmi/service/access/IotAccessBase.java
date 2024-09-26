@@ -280,7 +280,6 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
   public final void sendCommand(Envelope envelope, SubFolder folder, String message) {
     String registryId = envelope.deviceRegistryId;
     String deviceId = envelope.deviceId;
-    debug("TAP sending command as " + stringifyTerse(envelope));
     Entry<String, String> backoffKey = getBackoffKey(registryId, deviceId);
     if (registryBackoffCheck(registryId, deviceId)) {
       try {
@@ -300,7 +299,7 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
                 backoffKey, isoConvert(until)));
       }
     } else {
-      debug("TAP Dropping message because registry backoff for %s active", backoffKey);
+      debug("Dropping message because registry backoff for %s active", backoffKey);
     }
   }
 

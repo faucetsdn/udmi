@@ -52,6 +52,9 @@
         "built_by": {
           "type": "string"
         },
+        "msg_source": {
+          "type": "string"
+        },
         "deployed_at": {
           "type": "string",
           "format": "date-time"
