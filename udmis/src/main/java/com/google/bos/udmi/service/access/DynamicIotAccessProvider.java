@@ -9,7 +9,7 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
-import com.google.bos.udmi.service.messaging.impl.MessageBase;
+import com.google.udmi.util.Common;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -173,7 +173,7 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   @Override
   public void setProviderAffinity(String registryId, String deviceId, String providerId) {
     if (providerId != null) {
-      String affinity = providerId.substring(providerId.indexOf(MessageBase.SOURCE_SEPARATOR) + 1);
+      String affinity = providerId.substring(providerId.indexOf(Common.SOURCE_SEPARATOR) + 1);
       String previous = registryProviders.put(registryId, affinity);
       if (!providerId.equals(previous)) {
         debug(format("TAP Switching registry affinity for %s from %s -> %s", registryId, previous,

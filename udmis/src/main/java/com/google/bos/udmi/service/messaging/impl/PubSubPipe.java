@@ -1,6 +1,6 @@
 package com.google.bos.udmi.service.messaging.impl;
 
-import static com.google.api.client.util.Preconditions.checkState;
+import static com.google.udmi.util.Common.SOURCE_SEPARATOR;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
@@ -204,11 +204,11 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
     attributesMap.computeIfAbsent(Common.TRANSACTION_KEY, key -> PS_TXN_PREFIX + messageId);
 
     String source = attributesMap.get(SOURCE_KEY);
-    checkState(source == null || !source.contains(SOURCE_SEPARATOR),
-        "Source contains premature separator " + SOURCE_SEPARATOR);
-    String full = ofNullable(source).orElse("") + SOURCE_SEPARATOR + PUBSUB_SOURCE;
-    attributesMap.put(SOURCE_KEY, full);
-    debug("TAP received source %s, mapped to %s", source, full);
+    debug("TAP Received %s from %s", source, messageId);
+    String fullSource =
+        (source != null && source.endsWith(SOURCE_SEPARATOR)) ? source + PUBSUB_SOURCE : source;
+    attributesMap.put(SOURCE_KEY, fullSource);
+    debug("TAP received source %s, mapped to %s", source, fullSource);
 
     receiveMessage(attributesMap, message.getData().toStringUtf8());
   }

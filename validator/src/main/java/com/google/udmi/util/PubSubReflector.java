@@ -240,7 +240,7 @@ public class PubSubReflector implements MessagePublisher {
       envelope.deviceId = deviceId;
       envelope.deviceRegistryId = registryId;
       envelope.projectId = projectId;
-      envelope.source = userName;
+      envelope.source = userName + Common.SOURCE_SEPARATOR;
       envelope.subFolder = STATE_TOPIC.equals(topic) ? null : SubFolder.UDMI;
       Map<String, String> map = toStringMap(envelope);
       PubsubMessage message = PubsubMessage.newBuilder()

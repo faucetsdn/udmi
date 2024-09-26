@@ -66,7 +66,6 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   public static final String RECEIVE_STATS = "receive";
   public static final double MESSAGE_WARN_THRESHOLD_SEC = 1.0;
   public static final double QUEUE_THROTTLE_MARK = 0.6;
-  public static final String SOURCE_SEPARATOR = "@";
   static final String TERMINATE_MARKER = "terminate";
   private static final String DEFAULT_NAMESPACE = "default-namespace";
   private static final Set<Object> HANDLED_QUEUES = new HashSet<>();
