@@ -13,6 +13,7 @@ import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.isNotEmpty;
+import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -108,9 +109,10 @@ public class PubSubIotAccessProvider extends IotAccessBase {
       stringMap.put(REGISTRY_ID_PROPERTY_KEY, envelope.deviceRegistryId);
       stringMap.put(DEVICE_ID_KEY, envelope.deviceId);
       stringMap.put(CATEGORY_PROPERTY_KEY, category);
-      String userPart = ifNotNullGet(envelope.source, s -> s.split(Common.SOURCE_SEPARATOR, 2)[0]);
+      int index = envelope.source == null ? -1 :envelope.source.indexOf(SOURCE_SEPARATOR);
+      String userPart = ifNotNullGet(envelope.source, s -> s.substring(index + 1));
       debug("TAP extracting source %s from source %s", userPart, envelope.source);
-      ifNotNullThen(userPart, () -> stringMap.put(SOURCE_KEY, userPart + SOURCE_SEPARATOR));
+      ifNotNullThen(userPart, () -> stringMap.put(SOURCE_KEY, SOURCE_SEPARATOR + userPart));
       ifNotNullThen(folder, () -> stringMap.put(SUBFOLDER_PROPERTY_KEY, folder.value()));
       PubsubMessage message = PubsubMessage.newBuilder()
           .putAllAttributes(stringMap)

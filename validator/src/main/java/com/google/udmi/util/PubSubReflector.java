@@ -69,7 +69,6 @@ public class PubSubReflector implements MessagePublisher {
   private static final String WAS_BASE_64 = "wasBase64";
   public static final String UDMI_REFLECT_TOPIC = "udmi_reflect";
   private static final String UDMI_REPLY_TOPIC = "udmi_reply";
-  public static final String USER_NAME_SEPARATOR = "%";
   public static final String USER_NAME_DEFAULT = "debug";
 
   private final AtomicBoolean active = new AtomicBoolean();
@@ -152,7 +151,7 @@ public class PubSubReflector implements MessagePublisher {
     String namespacePrefix = getNamespacePrefix(iotConfig.udmi_namespace);
     String topicId = namespacePrefix + UDMI_REFLECT_TOPIC;
     String userName = ofNullable(iotConfig.user_name).orElse(USER_NAME_DEFAULT);
-    String subscriptionId = namespacePrefix + UDMI_REPLY_TOPIC + USER_NAME_SEPARATOR + userName;
+    String subscriptionId = namespacePrefix + UDMI_REPLY_TOPIC + SOURCE_SEPARATOR + userName;
 
     PubSubReflector reflector = new PubSubReflector(projectId, registryId, topicId, userName,
         subscriptionId);
@@ -241,7 +240,7 @@ public class PubSubReflector implements MessagePublisher {
       envelope.deviceId = deviceId;
       envelope.deviceRegistryId = registryId;
       envelope.projectId = projectId;
-      envelope.source = userName + Common.SOURCE_SEPARATOR;
+      envelope.source = Common.SOURCE_SEPARATOR + userName;
       envelope.subFolder = STATE_TOPIC.equals(topic) ? null : SubFolder.UDMI;
       Map<String, String> map = toStringMap(envelope);
       PubsubMessage message = PubsubMessage.newBuilder()
@@ -314,7 +313,7 @@ public class PubSubReflector implements MessagePublisher {
             attributes.get(CATEGORY_PROPERTY_KEY),
             suffix);
         String messageSource = attributes.get(SOURCE_KEY);
-        String userMatch = userName + SOURCE_SEPARATOR;
+        String userMatch = SOURCE_SEPARATOR + userName;
         if (!userMatch.equals(messageSource)) {
           ifNullThen(messageSource, () -> System.err.println(
               "Discarding message with null source: " + stringifyTerse(attributes)));

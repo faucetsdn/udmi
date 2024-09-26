@@ -90,7 +90,7 @@ public class SiteModel {
   private static final Pattern MQTT_PATTERN = Pattern.compile("/r/(.*)/d/(.*)");
   private static final String CLOUD_IOT_CONFIG_JSON = "cloud_iot_config.json";
   private static final Pattern SPEC_PATTERN = Pattern.compile(
-      "(//([a-z]+)/)?(([a-z-]+))(/([a-z0-9]+))?(%([a-z0-9-]+))?");
+      "(//([a-z]+)/)?(([a-z-]+))(/([a-z0-9]+))?(\\+([a-z0-9-]+))?");
   private static final int SPEC_PROVIDER_GROUP = 2;
   private static final int SPEC_PROJECT_GROUP = SPEC_PROVIDER_GROUP + 2;
   private static final int SPEC_NAMESPACE_GROUP = SPEC_PROJECT_GROUP + 2;
