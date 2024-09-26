@@ -5,10 +5,12 @@ import static com.google.bos.iot.core.proxy.ProxyTarget.STATE_TOPIC;
 import static com.google.udmi.util.Common.CATEGORY_PROPERTY_KEY;
 import static com.google.udmi.util.Common.DEVICE_ID_KEY;
 import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
+import static com.google.udmi.util.Common.SOURCE_KEY;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.getNamespacePrefix;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static com.google.udmi.util.JsonUtil.toStringMap;
 import static java.lang.String.format;
 import static java.time.Instant.ofEpochSecond;
@@ -300,12 +302,21 @@ public class PubSubReflector implements MessagePublisher {
       try {
         consumer.ack();
         MessageBundle messageBundle = processMessage(message);
+        if (messageBundle == null) {
+          return;
+        }
         Map<String, String> attributes = messageBundle.attributes;
         String subFolder = attributes.get(SUBFOLDER_PROPERTY_KEY);
         String suffix = ofNullable(subFolder).map(folder -> "/" + folder).orElse("");
         String topic = format("/devices/%s/%s%s", attributes.get(DEVICE_ID_KEY),
             attributes.get(CATEGORY_PROPERTY_KEY),
             suffix);
+        if (!userName.equals(attributes.get(SOURCE_KEY))) {
+          System.err.println(
+              "Discarding message for user source " + attributes.get(SOURCE_KEY) + ": "
+                  + stringifyTerse(attributes));
+          return;
+        }
         messageHandler.accept(topic, stringify(messageBundle.message));
       } catch (Exception e) {
         errorHandler.accept(e);
