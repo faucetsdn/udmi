@@ -27,7 +27,6 @@ import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -317,12 +316,8 @@ public class SiteModel {
        return convertToStrict(SiteMetadata.class, siteMetadataObject);
     } catch (Exception e) {
       siteMetadataExceptionMap.put(SITE_METADATA_KEY, e);
-      if (e instanceof JsonMappingException) {
-        return convertTo(SiteMetadata.class, siteMetadataObject);
-      }
+      return convertTo(SiteMetadata.class, siteMetadataObject);
     }
-
-    return null;
   }
 
   public Metadata loadDeviceMetadata(String deviceId, boolean safeLoading, boolean upgradeMetadata){
