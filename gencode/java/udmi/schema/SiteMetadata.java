@@ -4,7 +4,6 @@ package udmi.schema;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -29,7 +28,6 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
     "links",
     "parameters"
 })
-@Generated("jsonschema2pojo")
 public class SiteMetadata {
 
     /**

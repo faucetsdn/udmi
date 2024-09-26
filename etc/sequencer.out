@@ -12,9 +12,9 @@ RESULT pass endpoint.config endpoint_connection_success_reconnect PREVIEW 5/5 Se
 RESULT pass endpoint.config endpoint_failure_and_restart PREVIEW 5/5 Sequence complete
 RESULT pass endpoint.config endpoint_redirect_and_restart PREVIEW 5/5 Sequence complete
 RESULT pass enumeration empty_enumeration PREVIEW 5/5 Sequence complete
-RESULT pass enumeration multi_enumeration ALPHA 5/5 Sequence complete
 RESULT pass enumeration.families family_enumeration ALPHA 5/5 Sequence complete
 RESULT pass enumeration.features feature_enumeration PREVIEW 5/5 Sequence complete
+RESULT pass enumeration multi_enumeration ALPHA 5/5 Sequence complete
 RESULT pass enumeration.pointset pointset_enumeration ALPHA 5/5 Sequence complete
 RESULT skip gateway bad_point_ref PREVIEW 0/0 Not a proxied device
 RESULT skip gateway bad_target_address PREVIEW 0/0 Not a proxied device
@@ -34,6 +34,7 @@ RESULT pass system extra_config STABLE 5/5 Sequence complete
 RESULT pass system family_ether_addr PREVIEW 5/5 Sequence complete
 RESULT pass system family_ipv4_addr PREVIEW 5/5 Sequence complete
 RESULT pass system family_ipv6_addr PREVIEW 5/5 Sequence complete
+RESULT pass system.mode system_mode_restart ALPHA 5/5 Sequence complete
 RESULT pass system state_make_model STABLE 5/5 Sequence complete
 RESULT pass system state_software STABLE 5/5 Sequence complete
 RESULT pass system system_last_update STABLE 6/6 Sequence complete
@@ -41,7 +42,6 @@ CPBLTY pass system system_last_update.subblocks ALPHA 1/1 Capability supported
 RESULT pass system system_min_loglevel ALPHA 5/5 Sequence complete
 RESULT pass system too_much_state ALPHA 5/5 Sequence complete
 RESULT pass system valid_serial_no STABLE 5/5 Sequence complete
-RESULT pass system.mode system_mode_restart ALPHA 5/5 Sequence complete
 RESULT pass writeback writeback_failure ALPHA 5/5 Sequence complete
 RESULT pass writeback writeback_invalid ALPHA 5/5 Sequence complete
 RESULT pass writeback writeback_success ALPHA 5/5 Sequence complete

@@ -4,7 +4,6 @@ package udmi.schema;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -26,7 +25,6 @@ import com.fasterxml.jackson.annotation.JsonValue;
     "record_count",
     "status"
 })
-@Generated("jsonschema2pojo")
 public class FamilyDiscoveryState {
 
     /**
@@ -86,7 +84,6 @@ public class FamilyDiscoveryState {
      * Current phase of the discovery process
      * 
      */
-    @Generated("jsonschema2pojo")
     public enum Phase {
 
         PENDING("pending"),

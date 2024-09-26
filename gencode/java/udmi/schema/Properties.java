@@ -3,7 +3,6 @@ package udmi.schema;
 
 import java.util.HashMap;
 import java.util.Map;
-import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -24,7 +23,6 @@ import com.fasterxml.jackson.annotation.JsonValue;
     "version",
     "connect"
 })
-@Generated("jsonschema2pojo")
 public class Properties {
 
     /**
@@ -71,7 +69,6 @@ public class Properties {
         return ((((this.key_type == rhs.key_type)||((this.key_type!= null)&&this.key_type.equals(rhs.key_type)))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.connect == rhs.connect)||((this.connect!= null)&&this.connect.equals(rhs.connect))));
     }
 
-    @Generated("jsonschema2pojo")
     public enum Connect {
 
         DIRECT("direct");
@@ -110,7 +107,6 @@ public class Properties {
 
     }
 
-    @Generated("jsonschema2pojo")
     public enum Key_type {
 
         RSA_PEM("RSA_PEM"),

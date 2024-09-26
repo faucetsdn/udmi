@@ -3,7 +3,6 @@ package udmi.schema;
 
 import java.util.HashMap;
 import java.util.Map;
-import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -24,7 +23,6 @@ import com.fasterxml.jackson.annotation.JsonValue;
     "value_state",
     "status"
 })
-@Generated("jsonschema2pojo")
 public class PointPointsetState {
 
     /**
@@ -76,7 +74,6 @@ public class PointPointsetState {
      * State of the individual point
      * 
      */
-    @Generated("jsonschema2pojo")
     public enum Value_state {
 
         INITIALIZING("initializing"),
