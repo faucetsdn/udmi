@@ -326,7 +326,7 @@ public class IotReflectorClient implements MessagePublisher {
 
   private boolean shouldIgnoreMessage(Validator.MessageBundle messageBundle) {
     String transactionId = messageBundle.attributes.get(TRANSACTION_KEY);
-    return !transactionId.startsWith(sessionPrefix);
+    return transactionId != null && !transactionId.startsWith(sessionPrefix);
   }
 
   private void processUdmiEvent(Map<String, Object> message) {
