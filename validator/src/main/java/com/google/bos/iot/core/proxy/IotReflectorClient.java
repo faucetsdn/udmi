@@ -81,6 +81,8 @@ public class IotReflectorClient implements MessagePublisher {
   private static final Collection<String> COPY_IDS = ImmutableSet.of(DEVICE_ID_KEY, GATEWAY_ID_KEY,
       SUBTYPE_PROPERTY_KEY, SUBFOLDER_PROPERTY_KEY, TRANSACTION_KEY, PUBLISH_TIME_KEY);
   private static final String sessionId = format("%06x", (int) (Math.random() * 0x1000000L));
+  private static final String TRANSACTION_ID_PREFIX = "RC:";
+  private static final String sessionPrefix = TRANSACTION_ID_PREFIX + sessionId + ".";
   private static final AtomicInteger sessionCounter = new AtomicInteger();
   private final String udmiVersion;
   private final CountDownLatch initialConfigReceived = new CountDownLatch(1);
@@ -190,7 +192,7 @@ public class IotReflectorClient implements MessagePublisher {
    * @return new unique transaction id
    */
   public static synchronized String getNextTransactionId() {
-    return format("RC:%s.%04d", sessionId, sessionCounter.incrementAndGet());
+    return format("%s%04d", sessionPrefix, sessionCounter.incrementAndGet());
   }
 
   private void initializeReflectorState() {
@@ -309,7 +311,9 @@ public class IotReflectorClient implements MessagePublisher {
 
   private boolean processUdmiMessage(Validator.MessageBundle messageBundle) {
     String subType = messageBundle.attributes.get(SUBTYPE_PROPERTY_KEY);
-    if (SubType.EVENTS.value().equals(subType)) {
+    if (shouldIgnoreMessage(messageBundle)) {
+      return true;
+    } else if (SubType.EVENTS.value().equals(subType)) {
       processUdmiEvent(messageBundle.message);
       return true;
     } else if (SubType.CONFIG.value().equals(subType)) {
@@ -318,6 +322,11 @@ public class IotReflectorClient implements MessagePublisher {
       throw new RuntimeException("Unexpected receive type " + subType);
     }
     return false;
+  }
+
+  private boolean shouldIgnoreMessage(Validator.MessageBundle messageBundle) {
+    String transactionId = messageBundle.attributes.get(TRANSACTION_KEY);
+    return !transactionId.startsWith(sessionPrefix);
   }
 
   private void processUdmiEvent(Map<String, Object> message) {
