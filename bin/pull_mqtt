@@ -5,13 +5,15 @@ cd $UDMI_ROOT
 
 source $UDMI_ROOT/etc/shell_common.sh
 
-[[ $# == 2 ]] || usage project_spec registry_id
+[[ $# == 1 ]] || usage project_spec
 
 project_spec=$1
-registry_id=$2
-shift 2
+shift
 
 msg_file=/tmp/message_captured.json
+
+registry_id=${project_spec##*%}
+[[ $registry_id != $project_spec ]] || registry_id=+
 
 source $UDMI_ROOT/etc/mosquitto_ctrl.sh
 

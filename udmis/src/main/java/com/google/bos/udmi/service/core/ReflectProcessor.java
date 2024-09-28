@@ -107,10 +107,11 @@ public class ReflectProcessor extends ProcessorBase {
         if (reflect.deviceId != null) {
           checkState(reflect.deviceId.equals(envelope.deviceRegistryId),
               format("envelope %s/%s registryId %s does not match expected reflector deviceId %s",
-                  envelope.subType, envelope.subFolder, envelope.deviceRegistryId, 
+                  envelope.subType, envelope.subFolder, envelope.deviceRegistryId,
                   reflect.deviceId));
         }
 
+        envelope.source = reflect.source;
         reflect.transactionId = firstNonNull(envelope.transactionId, reflect.transactionId,
             ReflectProcessor::makeTransactionId);
         processReflection(reflect, envelope, payload);
@@ -328,8 +329,8 @@ public class ReflectProcessor extends ProcessorBase {
     final String registryId = envelope.deviceRegistryId;
     final String deviceId = envelope.deviceId;
 
-    // Awareness update distribution uses the gatewayId to indicate the source.
-    envelope.gatewayId = envelope.source;
+    // Ensure source is encoded in the distribution (not always send in some mechanisms).
+    toolState.source = envelope.source;
 
     ifNotNullThen(distributor, d -> catchToElse(() -> d.publish(envelope, toolState, containerId),
         e -> error("Error handling update: %s %s", friendlyStackTrace(e), envelope.transactionId)));
@@ -342,7 +343,7 @@ public class ReflectProcessor extends ProcessorBase {
     configMap.put(TIMESTAMP_KEY, isoConvert());
     String contents = stringifyTerse(configMap);
     debug("Setting reflector config %s %s: %s", registryId, deviceId, contents);
-    iotAccess.modifyConfig(registryId, deviceId, previous -> contents);
+    iotAccess.modifyConfig(envelope, previous -> contents);
   }
 
   private void reflectStateUpdate(Envelope attributes, String state) {
@@ -353,10 +354,12 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private void sendReflectCommand(Envelope reflection, Envelope message, Object payload) {
-    String reflectRegistry = reflection.deviceRegistryId;
-    String deviceRegistry = reflection.deviceId;
     message.payload = encodeBase64(stringify(payload));
-    iotAccess.sendCommand(reflectRegistry, deviceRegistry, SubFolder.UDMI, stringify(message));
+    message.source = reflection.source;
+
+    String deviceRegistry = reflection.deviceId;
+    iotAccess.sendCommand(makeReflectEnvelope(deviceRegistry, reflection.source), SubFolder.UDMI,
+        stringify(message));
   }
 
   private void updateProviderAffinity(Envelope envelope, String source) {
@@ -379,9 +382,9 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   void updateAwareness(Envelope envelope, UdmiState toolState) {
-    debug("Processing UdmiState for %s/%s from %s: %s", envelope.deviceRegistryId,
-        envelope.deviceId, envelope.gatewayId, stringifyTerse(toolState));
-    ifNotNullThen(toolState.setup, setup -> updateProviderAffinity(envelope, envelope.source));
+    debug("Processing UdmiState for %s/%s: %s", envelope.deviceRegistryId, envelope.deviceId,
+        stringifyTerse(toolState));
+    ifNotNullThen(toolState.setup, setup -> updateProviderAffinity(envelope, toolState.source));
     ifNotNullThen(toolState.regions, this::updateRegistryRegions);
   }
 }

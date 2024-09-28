@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.Common.DEFAULT_REGION;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.booleanString;
+import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
@@ -364,11 +365,8 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public void sendCommandBase(String registryId, String deviceId, SubFolder folder,
-      String message) {
-    Envelope envelope = new Envelope();
-    envelope.deviceRegistryId = registryId;
-    envelope.deviceId = deviceId;
+  public void sendCommandBase(Envelope baseEnvelope, SubFolder folder, String message) {
+    Envelope envelope = deepCopy(baseEnvelope);
     envelope.subFolder = folder;
     envelope.subType = SubType.COMMANDS;
     envelope.source = IotProvider.IMPLICIT.value();
@@ -382,7 +380,9 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public String updateConfig(String registryId, String deviceId, String config, Long prevVersion) {
+  public String updateConfig(Envelope envelope, String config, Long prevVersion) {
+    String registryId = envelope.deviceRegistryId;
+    String deviceId = envelope.deviceId;
     DataRef dataRef = registryDeviceRef(registryId, deviceId);
     try (AutoCloseable dataLock = dataRef.lock()) {
       String prev = dataRef.get(CONFIG_VER_KEY);

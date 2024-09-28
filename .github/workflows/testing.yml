@@ -243,7 +243,7 @@ jobs:
       - name: local setup
         run: |
           bin/start_local sites/udmi_site_model $TARGET_PROJECT
-          bin/pull_messages $TARGET_PROJECT ZZ-TRI-FECTA > /tmp/message_capture.log 2>&1 &
+          bin/pull_messages ${TARGET_PROJECT}%ZZ-TRI-FECTA > /tmp/message_capture.log 2>&1 &
       - name: bin/test_automapper
         run: bin/test_automapper $TARGET_PROJECT
       - name: extra devices

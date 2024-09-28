@@ -1,13 +1,16 @@
 package com.google.bos.udmi.service.access;
 
 import static com.google.bos.udmi.service.messaging.impl.PubSubPipe.GCP_HOST;
+import static com.google.bos.udmi.service.messaging.impl.PubSubPipe.SOURCE_KEY;
 import static com.google.bos.udmi.service.messaging.impl.PubSubPipe.getTransportChannelProvider;
 import static com.google.udmi.util.Common.CATEGORY_PROPERTY_KEY;
 import static com.google.udmi.util.Common.COMMANDS_CATEGORY;
 import static com.google.udmi.util.Common.CONFIG_CATEGORY;
 import static com.google.udmi.util.Common.DEVICE_ID_KEY;
 import static com.google.udmi.util.Common.REGISTRY_ID_PROPERTY_KEY;
+import static com.google.udmi.util.Common.SOURCE_SEPARATOR;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.isNotEmpty;
 import static java.lang.String.format;
@@ -29,6 +32,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import udmi.schema.CloudModel;
+import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.IotAccess;
 
@@ -71,14 +75,13 @@ public class PubSubIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public void sendCommandBase(String registryId, String deviceId, SubFolder folder,
-      String message) {
-    publish(registryId, deviceId, COMMANDS_CATEGORY, folder, message);
+  public void sendCommandBase(Envelope envelope, SubFolder folder, String message) {
+    publish(envelope, COMMANDS_CATEGORY, folder, message);
   }
 
   @Override
-  public String updateConfig(String registryId, String deviceId, String config, Long version) {
-    publish(registryId, deviceId, CONFIG_CATEGORY, null, config);
+  public String updateConfig(Envelope envelope, String config, Long version) {
+    publish(envelope, CONFIG_CATEGORY, null, config);
     return config;
   }
 
@@ -96,14 +99,18 @@ public class PubSubIotAccessProvider extends IotAccessBase {
     }
   }
 
-  private void publish(String registryId, String deviceId, String category, SubFolder folder,
-      String data) {
+  private void publish(Envelope envelope, String category, SubFolder folder, String data) {
     String topicNameString = publisher.getTopicNameString();
+    Map<String, String> stringMap = new HashMap<>();
     try {
-      Map<String, String> stringMap = new HashMap<>();
-      stringMap.put(REGISTRY_ID_PROPERTY_KEY, registryId);
-      stringMap.put(DEVICE_ID_KEY, deviceId);
+      stringMap.put(REGISTRY_ID_PROPERTY_KEY, envelope.deviceRegistryId);
+      stringMap.put(DEVICE_ID_KEY, envelope.deviceId);
       stringMap.put(CATEGORY_PROPERTY_KEY, category);
+
+      int index = envelope.source == null ? -1 : envelope.source.indexOf(SOURCE_SEPARATOR);
+      String userPart = ifNotNullGet(envelope.source, s -> s.substring(index + 1));
+      ifNotNullThen(userPart, () -> stringMap.put(SOURCE_KEY, SOURCE_SEPARATOR + userPart));
+
       ifNotNullThen(folder, () -> stringMap.put(SUBFOLDER_PROPERTY_KEY, folder.value()));
       PubsubMessage message = PubsubMessage.newBuilder()
           .putAllAttributes(stringMap)
@@ -114,6 +121,7 @@ public class PubSubIotAccessProvider extends IotAccessBase {
       debug(format("Reflected PubSub %s/%s to %s as %s", category, folder, topicNameString,
           publishedId));
     } catch (Exception e) {
+      e.printStackTrace();
       throw new RuntimeException("While publishing message to " + topicNameString, e);
     }
   }

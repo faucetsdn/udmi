@@ -95,8 +95,8 @@ public class StateProcessorTest extends ProcessorTestBase {
     ArgumentCaptor<Function> configCaptor = ArgumentCaptor.forClass(Function.class);
 
     //noinspection unchecked
-    verify(provider, times(1)).modifyConfig(eq(TEST_REGISTRY), eq(TEST_DEVICE),
-        (Function<Entry<Long, String>, String>) configCaptor.capture());
+    verify(provider, times(1)).modifyConfig(
+        eq(makeTestEnvelope(true)), (Function<Entry<Long, String>, String>) configCaptor.capture());
 
     //noinspection unchecked
     Function<Entry<Long, String>, String> configMunger = configCaptor.getValue();
@@ -178,7 +178,7 @@ public class StateProcessorTest extends ProcessorTestBase {
     assertEquals(0, getExceptionCount(), "exception count");
     assertEquals(1, getDefaultCount(), "default handler count");
 
-    verify(provider, never()).modifyConfig(any(), any(), any());
+    verify(provider, never()).modifyConfig(eq(makeTestEnvelope(false)), any());
   }
 
   /**

@@ -57,6 +57,7 @@ public abstract class Common {
   public static final Pattern DEVICE_ID_ALLOWABLE = Pattern.compile("^[-_a-zA-Z0-9]+$");
   public static final Pattern POINT_NAME_ALLOWABLE = DEVICE_ID_ALLOWABLE;
   public static final int SEC_TO_MS = 1000;
+  public static final String SOURCE_SEPARATOR = "+";
 
   private static final String PREFIX_SEPARATOR = "~";
   private static final String UDMI_VERSION_ENV = "UDMI_TOOLS";

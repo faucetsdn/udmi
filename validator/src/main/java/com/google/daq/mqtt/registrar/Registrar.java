@@ -211,20 +211,20 @@ public class Registrar {
       String option = argList.remove(0);
       switch (option) {
         case "-r" -> setToolRoot(removeArg(argList, "tool root"));
-        case "-p" -> setProjectId(argList.remove(0));
-        case "-s" -> setSitePath(argList.remove(0));
+        case "-p" -> setProjectId(removeArg(argList, "project id"));
+        case "-s" -> setSitePath(removeArg(argList, "site path"));
         case "-a" -> setTargetRegistry(removeArg(argList, "alt registry"));
         case "-e" -> setRegistrySuffix(removeArg(argList, "registry suffix"));
-        case "-f" -> setFeedTopic(argList.remove(0));
+        case "-f" -> setFeedTopic(removeArg(argList, "feed topic"));
         case "-u" -> setUpdateFlag(true);
         case "-b" -> setBlockUnknown(true);
-        case "-l" -> setIdleLimit(argList.remove(0));
+        case "-l" -> setIdleLimit(removeArg(argList, "idle limit"));
         case "-t" -> setValidateMetadata(false);
         case "-q" -> setQueryOnly(true);
         case "-d" -> setDeleteDevices(true);
         case "-x" -> setExpungeDevices(true);
-        case "-n" -> setRunnerThreads(argList.remove(0));
-        case "-c" -> setCreateRegistries(argList.remove(0));
+        case "-n" -> setRunnerThreads(removeArg(argList, "runner threads"));
+        case "-c" -> setCreateRegistries(removeArg(argList, "create registries"));
         case "--" -> {
           setDeviceList(argList);
           return this;

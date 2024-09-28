@@ -1,15 +1,18 @@
 package com.google.udmi.util;
 
 import static com.google.api.client.util.Preconditions.checkNotNull;
-import static com.google.bos.iot.core.proxy.IotReflectorClient.UDMI_REFLECT;
 import static com.google.bos.iot.core.proxy.ProxyTarget.STATE_TOPIC;
 import static com.google.udmi.util.Common.CATEGORY_PROPERTY_KEY;
 import static com.google.udmi.util.Common.DEVICE_ID_KEY;
 import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
+import static com.google.udmi.util.Common.SOURCE_KEY;
+import static com.google.udmi.util.Common.SOURCE_SEPARATOR;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.getNamespacePrefix;
+import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static com.google.udmi.util.JsonUtil.toStringMap;
 import static java.lang.String.format;
 import static java.time.Instant.ofEpochSecond;
@@ -66,6 +69,7 @@ public class PubSubReflector implements MessagePublisher {
   private static final String WAS_BASE_64 = "wasBase64";
   public static final String UDMI_REFLECT_TOPIC = "udmi_reflect";
   private static final String UDMI_REPLY_TOPIC = "udmi_reply";
+  public static final String USER_NAME_DEFAULT = "debug";
 
   private final AtomicBoolean active = new AtomicBoolean();
   private final long startTimeSec = System.currentTimeMillis() / 1000;
@@ -76,6 +80,7 @@ public class PubSubReflector implements MessagePublisher {
   private final Subscriber subscriber;
   private final Publisher publisher;
   private final boolean flushSubscription;
+  private final String userName;
   private BiConsumer<String, String> messageHandler;
   private Consumer<Throwable> errorHandler;
 
@@ -85,11 +90,12 @@ public class PubSubReflector implements MessagePublisher {
    * @param projectId      target project id
    * @param registryId     target registry id
    * @param updateTopic    output PubSub topic for updates (else null)
+   * @param userName       user id running this operation
    * @param subscriptionId target subscription name
    */
   public PubSubReflector(String projectId, String registryId, String updateTopic,
-      String subscriptionId) {
-    this(projectId, registryId, updateTopic, subscriptionId, true);
+      String userName, String subscriptionId) {
+    this(projectId, registryId, updateTopic, userName, subscriptionId, true);
   }
 
   /**
@@ -98,12 +104,12 @@ public class PubSubReflector implements MessagePublisher {
    * @param projectId      target project id
    * @param registryId     target registry id
    * @param updateTopic    output PubSub topic for updates (else null)
+   * @param userName       user id running this operation
    * @param subscriptionId target subscription name
    * @param reset          if the connection should be reset before use
    */
   public PubSubReflector(String projectId, String registryId, String updateTopic,
-      String subscriptionId,
-      boolean reset) {
+      String userName, String subscriptionId, boolean reset) {
     try {
       this.projectId = checkNotNull(projectId, "project id not defined");
       this.registryId = registryId;
@@ -114,6 +120,7 @@ public class PubSubReflector implements MessagePublisher {
         resetSubscription(subscriptionName);
       }
       subscriber = Subscriber.newBuilder(subscriptionName, new MessageProcessor()).build();
+      this.userName = userName;
 
       if (updateTopic != null) {
         ProjectTopicName topicName = ProjectTopicName.of(projectId, updateTopic);
@@ -143,10 +150,11 @@ public class PubSubReflector implements MessagePublisher {
     String registryId = MessagePublisher.getRegistryId(reflectorConfig);
     String namespacePrefix = getNamespacePrefix(iotConfig.udmi_namespace);
     String topicId = namespacePrefix + UDMI_REFLECT_TOPIC;
-    String bridgeHost = requireNonNull(iotConfig.bridge_host, "missing bridge_host");
-    String subscriptionId = namespacePrefix + UDMI_REPLY_TOPIC + "-" + bridgeHost;
+    String userName = ofNullable(iotConfig.user_name).orElse(USER_NAME_DEFAULT);
+    String subscriptionId = namespacePrefix + UDMI_REPLY_TOPIC + SOURCE_SEPARATOR + userName;
 
-    PubSubReflector reflector = new PubSubReflector(projectId, registryId, topicId, subscriptionId);
+    PubSubReflector reflector = new PubSubReflector(projectId, registryId, topicId, userName,
+        subscriptionId);
     reflector.activate(messageHandler, errorHandler);
     return reflector;
   }
@@ -232,7 +240,7 @@ public class PubSubReflector implements MessagePublisher {
       envelope.deviceId = deviceId;
       envelope.deviceRegistryId = registryId;
       envelope.projectId = projectId;
-      envelope.source = UDMI_REFLECT;
+      envelope.source = Common.SOURCE_SEPARATOR + userName;
       envelope.subFolder = STATE_TOPIC.equals(topic) ? null : SubFolder.UDMI;
       Map<String, String> map = toStringMap(envelope);
       PubsubMessage message = PubsubMessage.newBuilder()
@@ -295,12 +303,22 @@ public class PubSubReflector implements MessagePublisher {
       try {
         consumer.ack();
         MessageBundle messageBundle = processMessage(message);
+        if (messageBundle == null) {
+          return;
+        }
         Map<String, String> attributes = messageBundle.attributes;
         String subFolder = attributes.get(SUBFOLDER_PROPERTY_KEY);
         String suffix = ofNullable(subFolder).map(folder -> "/" + folder).orElse("");
         String topic = format("/devices/%s/%s%s", attributes.get(DEVICE_ID_KEY),
             attributes.get(CATEGORY_PROPERTY_KEY),
             suffix);
+        String messageSource = attributes.get(SOURCE_KEY);
+        String userMatch = SOURCE_SEPARATOR + userName;
+        if (!userMatch.equals(messageSource)) {
+          ifNullThen(messageSource, () -> System.err.println(
+              "Discarding message with null source: " + stringifyTerse(attributes)));
+          return;
+        }
         messageHandler.accept(topic, stringify(messageBundle.message));
       } catch (Exception e) {
         errorHandler.accept(e);

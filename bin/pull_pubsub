@@ -5,29 +5,26 @@ cd $UDMI_ROOT
 
 source $UDMI_ROOT/etc/shell_common.sh
 
-[[ $# -le 2 ]] || usage project_spec suffix
+[[ $# -le 2 ]] || usage project_spec
 
 project_spec=${1:-}
-suffix=${2:-}
-shift 2 || true
+shift || true
 
 TMP_FILE=/tmp/pull_pubsub.tmp
 
-if [[ -z $project_spec ]]; then
-    kubectl config current-context | tr _ ' ' > $TMP_FILE
-    # Result is something like: gke bos-platform-dev us-central1 main grafnu
-    read < $TMP_FILE scheme project_id region cluster namespace
-else
-    echo $project_spec | tr / ' ' > $TMP_FILE
-    read < $TMP_FILE schema project_id namespace
-fi
+echo $project_spec | tr / ' ' > $TMP_FILE
+read < $TMP_FILE schema project_id namespace
+echo schema:$schema project_id:$project_id namespace:$namespace
+suffix=${namespace#*%}
+[[ $suffix != $namespace ]] || suffix=
+namespace=${namespace%%%*}
 
-[[ -n $namespace ]] || namespace=default
+[[ -n $suffix ]] || suffix=$USER
 
-echo Using project $project_id namespace $namespace
+echo Using project $project_id namespace $namespace, suffix ${suffix}
 
-[[ -n $suffix ]] || suffix=debug
-subscription=$namespace~${suffix}
+[[ ! -n $namespace ]] || namespace=${namespace}~
+subscription=${namespace}udmi_target%${suffix}
 echo Pulling from subscription $subscription
 
 pull_limit=100

@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="UdmiServicePod Clearblade" type="Application" factoryName="Application">
+  <configuration default="false" name="UdmiServicePod Dev" type="Application" factoryName="Application">
     <option name="ALTERNATIVE_JRE_PATH" value="17" />
     <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
     <envs>
@@ -7,7 +7,6 @@
       <env name="GCP_PROJECT" value="bos-platform-dev" />
       <env name="UDMI_PREFIX" value="peringknife~" />
       <env name="CLEARBLADE_PROJECT" value="bos-platform-dev" />
-      <env name="BITBOX_DISCOVERY" value="prodev~udmi_target-discover" />
     </envs>
     <output_file path="out/console.log" is_save="true" />
     <option name="MAIN_CLASS_NAME" value="com.google.bos.udmi.service.pod.UdmiServicePod" />

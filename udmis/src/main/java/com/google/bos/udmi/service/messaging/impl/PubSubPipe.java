@@ -1,5 +1,6 @@
 package com.google.bos.udmi.service.messaging.impl;
 
+import static com.google.udmi.util.Common.SOURCE_SEPARATOR;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
@@ -11,6 +12,7 @@ import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static java.lang.String.format;
 import static java.time.Instant.ofEpochSecond;
+import static java.util.Optional.ofNullable;
 
 import com.google.api.core.AbstractApiService;
 import com.google.api.core.ApiFuture;
@@ -39,7 +41,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -59,6 +60,8 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
   public static final String GCP_HOST = "gcp";
   public static final String PS_TXN_PREFIX = "PS:";
   public static final int MS_PER_SEC = 1000;
+  public static final String SOURCE_KEY = "source";
+  public static final String PUBSUB_SOURCE = "pubsub";
   private final Publisher publisher;
   private final String projectId;
   private final String topicId;
@@ -138,7 +141,7 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
     throttleQueue();
     try {
       publisherQueueSize.incrementAndGet();
-      Envelope envelope = Optional.ofNullable(bundle.envelope).orElse(new Envelope());
+      Envelope envelope = ofNullable(bundle.envelope).orElse(new Envelope());
       Map<String, String> stringMap = toMap(envelope).entrySet().stream()
           .collect(Collectors.toMap(Entry::getKey, entry -> (String) entry.getValue()));
       PubsubMessage message = PubsubMessage.newBuilder()
@@ -199,6 +202,12 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
     attributesMap.computeIfAbsent("publishTime",
         key -> isoConvert(ofEpochSecond(message.getPublishTime().getSeconds())));
     attributesMap.computeIfAbsent(Common.TRANSACTION_KEY, key -> PS_TXN_PREFIX + messageId);
+
+    String source = attributesMap.get(SOURCE_KEY);
+    String fullSource =
+        (source != null && source.startsWith(SOURCE_SEPARATOR)) ? PUBSUB_SOURCE + source : source;
+    attributesMap.put(SOURCE_KEY, fullSource);
+
     receiveMessage(attributesMap, message.getData().toStringUtf8());
   }
 
@@ -215,7 +224,7 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
       String emu = getEmulatorHost();
       ifNotNullThen(emu, host -> builder.setChannelProvider(getTransportChannelProvider(host)));
       ifNotNullThen(emu, host -> builder.setCredentialsProvider(NoCredentialsProvider.create()));
-      info(format("Publisher %s to %s:%s", containerId, Optional.ofNullable(emu).orElse(GCP_HOST),
+      info(format("Publisher %s to %s:%s", containerId, ofNullable(emu).orElse(GCP_HOST),
           projectTopicName));
       return builder.build();
     } catch (Exception e) {
@@ -236,7 +245,7 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
       ifNotNullThen(emu, host -> builder.setChannelProvider(getTransportChannelProvider(host)));
       ifNotNullThen(emu, host -> builder.setCredentialsProvider(NoCredentialsProvider.create()));
       Subscriber built = builder.build();
-      info(format("Subscriber %s:%s", Optional.ofNullable(emu).orElse(GCP_HOST), subscriptionName));
+      info(format("Subscriber %s:%s", ofNullable(emu).orElse(GCP_HOST), subscriptionName));
       built.addListener(new Listener() {
         @Override
         public void failed(State from, Throwable failure) {

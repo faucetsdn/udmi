@@ -32,7 +32,7 @@ public abstract class MessageTestBase extends MessageTestCore {
     getTestDispatcher();  // Ensure that the main pipe exists before doing the reverse.
     reverse = Optional.ofNullable(reverse).orElseGet(() -> {
       MessageDispatcherImpl testDispatcher = getTestDispatcher(true);
-      testDispatcher.setThreadEnvelope(makeTestEnvelope());
+      testDispatcher.setThreadEnvelope(makeTestEnvelope(false));
       return testDispatcher;
     });
     return reverse;
@@ -41,7 +41,7 @@ public abstract class MessageTestBase extends MessageTestCore {
   protected MessageDispatcherImpl getTestDispatcher() {
     dispatcher = Optional.ofNullable(dispatcher).orElseGet(() -> {
       MessageDispatcherImpl testDispatcher = getTestDispatcher(false);
-      testDispatcher.setThreadEnvelope(makeTestEnvelope());
+      testDispatcher.setThreadEnvelope(makeTestEnvelope(false));
       return testDispatcher;
     });
     return dispatcher;

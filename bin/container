@@ -46,7 +46,7 @@ if [[ -z $NOCHECK ]]; then
         echo Kubernetes context $CONTEXT does not match gcloud project $GCP_PROJECT
         false
     fi
-    UDMI_NAMESPACE=${CONTEXT_ARGS[4]}
+    UDMI_NAMESPACE=${CONTEXT_ARGS[4]:-}
 fi
 
 echo Using GCP project $GCP_PROJECT
