@@ -38,6 +38,9 @@ jobs:
       - name: all test output
         if: ${{ !cancelled() }}
         run: more out/test_*
+      - name: gencode test output
+        if: ${{ !cancelled() }}
+        run: more out/test_bin+gencode+check
       - name: validator test output
         if: ${{ !cancelled() }}
         run: more out/test_validator+bin+build+check
