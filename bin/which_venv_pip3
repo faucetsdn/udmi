@@ -1,4 +1,5 @@
 #!/bin/bash -e
+
 for f in venv/bin/pip3 $HOME/venv/bin/pip3; do
   if [[ -x "$f" ]]; then
     echo "$f"
