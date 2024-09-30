@@ -20,6 +20,7 @@ grpcio-status==1.65.1
 htmlmin==0.1.12
 httplib2==0.20.4
 idna==3.7
+importlib_metadata==8.4.0
 isort==5.11.3
 Jinja2==3.1.4
 json-schema-for-humans==0.40
@@ -52,3 +53,4 @@ typing_extensions==4.0.1
 uritemplate==4.1.1
 urllib3==1.26.19
 wrapt==1.14.1
+zipp==3.20.2
