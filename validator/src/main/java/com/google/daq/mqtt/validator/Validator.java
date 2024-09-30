@@ -613,7 +613,16 @@ public class Validator {
       }
 
       writeDeviceOutDir(message, attributes, deviceId, schemaName);
-      validateDeviceMessage(device, message, attributes);
+
+      if (message instanceof String) {
+        String detail = format("Raw string message for %s %s", deviceId, schemaName);
+        outputLogger.error(detail);
+        IllegalArgumentException exception = new IllegalArgumentException(detail);
+        device.addError(exception, attributes, Category.VALIDATION_DEVICE_RECEIVE);
+        return device;
+      }
+
+      validateDeviceMessage(device, mapCast(message), attributes);
 
       if (!device.hasErrors()) {
         outputLogger.info("Validation clean %s/%s", deviceId, schemaName);
@@ -628,21 +637,12 @@ public class Validator {
   /**
    * Validate a device message against the core schema.
    */
-  public void validateDeviceMessage(ReportingDevice device, Object baseMsg,
+  public void validateDeviceMessage(ReportingDevice device, Map<String, Object> message,
       Map<String, String> attributes) {
     String deviceId = attributes.get("deviceId");
     device.clearMessageEntries();
     String schemaName = messageSchema(attributes);
 
-    if (baseMsg instanceof String) {
-      String message = format("Raw string message for %s %s", deviceId, schemaName);
-      outputLogger.error(message);
-      IllegalArgumentException exception = new IllegalArgumentException(message);
-      device.addError(exception, attributes, Category.VALIDATION_DEVICE_RECEIVE);
-      return;
-    }
-
-    Map<String, Object> message = mapCast(baseMsg);
     if (message.get(EXCEPTION_KEY) instanceof Exception exception) {
       outputLogger.error("Pipeline exception " + deviceId + ": " + getExceptionMessage(exception));
       device.addError(exception, attributes, Category.VALIDATION_DEVICE_RECEIVE);
