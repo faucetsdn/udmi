@@ -601,6 +601,7 @@ public class Validator {
     try {
       String schemaName = messageSchema(attributes);
       if (!device.markMessageType(schemaName, getNow())) {
+        outputLogger.info("Ignoring %s/%s because ???", deviceId, schemaName);
         return null;
       }
 
@@ -659,41 +660,7 @@ public class Validator {
 
     upgradeMessage(schemaName, message);
 
-    String timestampRaw = (String) message.get("timestamp");
-    Instant timestamp = ifNotNullGet(timestampRaw, JsonUtil::getInstant);
-    String publishRaw = attributes.get(PUBLISH_TIME_KEY);
-    Instant publishTime = ifNotNullGet(publishRaw, JsonUtil::getInstant);
-    try {
-      // TODO: Validate message contests to make sure state sub-blocks don't also have timestamp.
-
-      String subTypeRaw = ofNullable(attributes.get(SUBTYPE_PROPERTY_KEY))
-          .orElse(UNKNOWN_TYPE_DEFAULT);
-      boolean lastSeenValid = LAST_SEEN_SUBTYPES.contains(SubType.fromValue(subTypeRaw));
-      if (lastSeenValid) {
-        if (publishTime != null) {
-          device.updateLastSeen(Date.from(publishTime));
-        }
-        if (timestamp == null) {
-          throw new RuntimeException("Missing message timestamp");
-        }
-        if (publishTime != null) {
-          if (!timestampRaw.endsWith(TIMESTAMP_ZULU_SUFFIX)
-              && !timestampRaw.endsWith(TIMESTAMP_UTC_SUFFIX_1)
-              && !timestampRaw.endsWith(TIMESTAMP_UTC_SUFFIX_2)) {
-            throw new RuntimeException("Invalid timestamp timezone " + timestampRaw);
-          }
-          long between = Duration.between(publishTime, timestamp).getSeconds();
-          if (between > TIMESTAMP_JITTER_SEC || between < -TIMESTAMP_JITTER_SEC) {
-            throw new RuntimeException(format(
-                "Timestamp jitter %ds (%s to %s) exceeds %ds threshold",
-                between, publishRaw, timestampRaw, TIMESTAMP_JITTER_SEC));
-          }
-        }
-      }
-    } catch (Exception e) {
-      outputLogger.error("Timestamp validation error: " + friendlyStackTrace(e));
-      device.addError(e, attributes, Category.VALIDATION_DEVICE_CONTENT);
-    }
+    validateTimestamp(device, message, attributes);
 
     try {
       if (!schemaMap.containsKey(schemaName)) {
@@ -726,7 +693,7 @@ public class Validator {
       try {
         ifNotNullThen(CONTENT_VALIDATORS.get(schemaName), targetClass -> {
           Object messageObject = OBJECT_MAPPER.convertValue(message, targetClass);
-          device.validateMessageType(messageObject, JsonUtil.getDate(publishRaw), attributes);
+          device.validateMessageType(messageObject, attributes);
         });
       } catch (Exception e) {
         outputLogger.error("Error validating contents: " + friendlyStackTrace(e));
@@ -734,6 +701,46 @@ public class Validator {
       }
     } else {
       extraDevices.add(deviceId);
+    }
+  }
+
+  private void validateTimestamp(ReportingDevice device, Map<String, Object> message,
+      Map<String, String> attributes) {
+    String timestampRaw = (String) message.get("timestamp");
+    Instant timestamp = ifNotNullGet(timestampRaw, JsonUtil::getInstant);
+    String publishRaw = attributes.get(PUBLISH_TIME_KEY);
+    Instant publishTime = ifNotNullGet(publishRaw, JsonUtil::getInstant);
+    try {
+      // TODO: Validate message contests to make sure state sub-blocks don't also have timestamp.
+
+      String subTypeRaw = ofNullable(attributes.get(SUBTYPE_PROPERTY_KEY))
+          .orElse(UNKNOWN_TYPE_DEFAULT);
+      boolean lastSeenValid = LAST_SEEN_SUBTYPES.contains(SubType.fromValue(subTypeRaw));
+      if (lastSeenValid) {
+        if (publishTime != null) {
+          device.updateLastSeen(Date.from(publishTime));
+        }
+        if (timestamp == null) {
+          throw new RuntimeException("Missing message timestamp");
+        }
+        if (timestampRaw != null
+            && !timestampRaw.endsWith(TIMESTAMP_ZULU_SUFFIX)
+            && !timestampRaw.endsWith(TIMESTAMP_UTC_SUFFIX_1)
+            && !timestampRaw.endsWith(TIMESTAMP_UTC_SUFFIX_2)) {
+          throw new RuntimeException("Invalid timestamp timezone " + timestampRaw);
+        }
+        if (publishTime != null) {
+          long between = Duration.between(publishTime, timestamp).getSeconds();
+          if (between > TIMESTAMP_JITTER_SEC || between < -TIMESTAMP_JITTER_SEC) {
+            throw new RuntimeException(format(
+                "Timestamp jitter %ds (%s to %s) exceeds %ds threshold",
+                between, publishRaw, timestampRaw, TIMESTAMP_JITTER_SEC));
+          }
+        }
+      }
+    } catch (Exception e) {
+      outputLogger.error("Timestamp validation error: " + friendlyStackTrace(e));
+      device.addError(e, attributes, Category.VALIDATION_DEVICE_CONTENT);
     }
   }
 
