@@ -21,7 +21,7 @@ venv_pip3=$(bin/which_venv_pip3)
 $venv_pip3 --version
 $venv_pip3 freeze > $tmpfile
 if ! diff $tmpfile etc/requirements.txt; then
-    echo venv sanity check failed: diff \$\($venv_pip3 freeze) etc/requirements.txt
+    echo venv sanity check failed: diff \$\($venv_pip3 freeze\) etc/requirements.txt
     echo please run bin/setup_base
     false
 fi
