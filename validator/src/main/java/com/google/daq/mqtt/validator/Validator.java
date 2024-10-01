@@ -589,7 +589,7 @@ public class Validator {
     return getInstant(attributes.get(PUBLISH_TIME_KEY));
   }
 
-  private ReportingDevice validateMessageCore(Object message, Map<String, String> attributes) {
+  private ReportingDevice validateMessageCore(Object messageObj, Map<String, String> attributes) {
 
     String deviceId = attributes.get("deviceId");
     if (deviceId == null) {
@@ -601,7 +601,23 @@ public class Validator {
     try {
       String schemaName = messageSchema(attributes);
 
-      if (message instanceof String) {
+      if (!device.markMessageType(schemaName, getMessageInstant(messageObj, attributes))) {
+        outputLogger.trace("Ignoring device %s/%s (too soon)", deviceId, schemaName);
+        return null;
+      }
+
+      writeDeviceOutDir(messageObj, attributes, deviceId, schemaName);
+
+      try {
+        if (!schemaMap.containsKey(schemaName)) {
+          throw new IllegalArgumentException(format(SCHEMA_SKIP_FORMAT, schemaName, deviceId));
+        }
+      } catch (Exception e) {
+        outputLogger.error("Missing schema entry " + schemaName);
+        device.addError(e, attributes, Category.VALIDATION_DEVICE_RECEIVE);
+      }
+
+      if (messageObj instanceof String) {
         String detail = format("Raw string message for %s %s", deviceId, schemaName);
         outputLogger.error(detail);
         IllegalArgumentException exception = new IllegalArgumentException(detail);
@@ -609,25 +625,16 @@ public class Validator {
         return device;
       }
 
-      Map<String, Object> messageMap = mapCast(message);
-      validateTimestamp(device, messageMap, attributes);
-
-      Instant messageTime = getMessageInstant(message, attributes);
-      if (!device.markMessageType(schemaName, messageTime)) {
-        outputLogger.info("Ignoring %s/%s because ???", deviceId, schemaName);
-        return null;
-      }
-
-      outputLogger.info("Processing device #%d/%d: %s/%s", processedDevices.size(),
-          reportingDevices.size(), deviceId, schemaName);
+      outputLogger.info("Processing device %s/%s as #%d/%d", deviceId, schemaName,
+          processedDevices.size(), reportingDevices.size());
 
       if ("true".equals(attributes.get("wasBase64"))) {
         base64Devices.add(deviceId);
       }
 
-      writeDeviceOutDir(message, attributes, deviceId, schemaName);
-
-      validateDeviceMessage(device, messageMap, attributes);
+      Map<String, Object> message = mapCast(messageObj);
+      validateDeviceMessage(device, message, attributes);
+      validateTimestamp(device, message, attributes);
 
       if (!device.hasErrors()) {
         outputLogger.info("Validation clean %s/%s", deviceId, schemaName);
@@ -664,15 +671,6 @@ public class Validator {
     }
 
     upgradeMessage(schemaName, message);
-
-    try {
-      if (!schemaMap.containsKey(schemaName)) {
-        throw new IllegalArgumentException(format(SCHEMA_SKIP_FORMAT, schemaName, deviceId));
-      }
-    } catch (Exception e) {
-      outputLogger.error("Missing schema entry " + schemaName);
-      device.addError(e, attributes, Category.VALIDATION_DEVICE_RECEIVE);
-    }
 
     try {
       validateMessage(schemaMap.get(ENVELOPE_SCHEMA_ID), (Object) attributes);
@@ -736,13 +734,14 @@ public class Validator {
           long between = Duration.between(publishTime, timestamp).getSeconds();
           if (between > TIMESTAMP_JITTER_SEC || between < -TIMESTAMP_JITTER_SEC) {
             throw new RuntimeException(format(
-                "Timestamp jitter %ds (%s to %s) exceeds %ds threshold",
+                "Timestamp skew %ds (%s to %s) exceeds %ds threshold",
                 between, publishRaw, timestampRaw, TIMESTAMP_JITTER_SEC));
           }
         }
       }
     } catch (Exception e) {
-      outputLogger.error("Timestamp validation error: " + friendlyStackTrace(e));
+      outputLogger.error(format("Timestamp validation error for %s: %s", device.getDeviceId(),
+          friendlyStackTrace(e)));
       device.addError(e, attributes, Category.VALIDATION_DEVICE_CONTENT);
     }
   }
