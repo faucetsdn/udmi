@@ -12,8 +12,7 @@ else
     extra_packages="${NO_CACHE_DIR:+--no-cache} linux-headers g++ gcc"
 fi
 
-sudo apt update
-sudo $update_cmd $extra_packages moreutils expect python3-dev mosquitto mosquitto-clients python3-setuptools
+sudo $update_cmd $extra_packages moreutils expect python3-dev mosquitto mosquitto-clients
 
 python3 --version
 python3 -m venv venv
