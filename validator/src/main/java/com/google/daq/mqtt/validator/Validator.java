@@ -604,7 +604,10 @@ public class Validator {
     try {
       String schemaName = messageSchema(attributes);
 
-      if (!device.markMessageType(schemaName, getMessageInstant(messageObj, attributes))) {
+      Map<String, Object> message = mapCast(messageObj);
+      validateTimestamp(device, message, attributes);
+
+      if (!device.processMessageSchema(schemaName, getMessageInstant(messageObj, attributes))) {
         outputLogger.trace("Ignoring device %s/%s (too soon)", deviceId, schemaName);
         return null;
       }
@@ -638,12 +641,10 @@ public class Validator {
         base64Devices.add(deviceId);
       }
 
-      Map<String, Object> message = mapCast(messageObj);
       if (processExceptions(attributes, deviceId, device, message)) {
         return device;
       }
       validateDeviceMessage(device, message, attributes);
-      validateTimestamp(device, message, attributes);
 
       if (!device.hasErrors()) {
         outputLogger.info("Validation clean %s/%s", deviceId, schemaName);

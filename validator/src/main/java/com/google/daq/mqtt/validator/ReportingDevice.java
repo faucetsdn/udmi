@@ -319,9 +319,16 @@ public class ReportingDevice {
     return Date.from(now.minusSeconds(THRESHOLD_SEC));
   }
 
-  public boolean markMessageType(String schemaName, Instant now) {
-    Date previous = messageMarks.put(schemaName, getTimestamp());
-    return previous == null || previous.before(getThreshold(now));
+  /**
+   * Check if a message schema should be processed, to filter out too frequent processing.
+   */
+  public boolean processMessageSchema(String schemaName, Instant now) {
+    Date previous = messageMarks.get(schemaName);
+    if (previous == null || previous.before(getThreshold(now))) {
+      messageMarks.put(schemaName, Date.from(now));
+      return true;
+    }
+    return false;
   }
 
   public Date getLastSeen() {
