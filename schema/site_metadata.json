@@ -68,6 +68,11 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
+        "dashboard": {
+          "description": "Site dashboard link",
+          "type": "string",
+          "examples": ["https://example.com/dashboard"]
+        },
         "docs": {
           "description": "Folder where the project documentation is stored",
           "type": "string",

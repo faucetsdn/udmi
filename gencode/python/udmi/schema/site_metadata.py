@@ -50,6 +50,7 @@ class SiteLinks:
   """Generated schema class"""
 
   def __init__(self):
+    self.dashboard = None
     self.docs = None
     self.folder = None
     self.image = None
@@ -60,6 +61,7 @@ class SiteLinks:
     if not source:
       return None
     result = SiteLinks()
+    result.dashboard = source.get('dashboard')
     result.docs = source.get('docs')
     result.folder = source.get('folder')
     result.image = source.get('image')
@@ -84,6 +86,8 @@ class SiteLinks:
 
   def to_dict(self):
     result = {}
+    if self.dashboard:
+      result['dashboard'] = self.dashboard # 5
     if self.docs:
       result['docs'] = self.docs # 5
     if self.folder:
