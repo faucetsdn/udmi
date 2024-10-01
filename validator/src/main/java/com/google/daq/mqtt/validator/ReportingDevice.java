@@ -14,7 +14,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import udmi.schema.Category;
@@ -172,10 +171,9 @@ public class ReportingDevice {
    * Validate a message against specific message-type expectations (outside of base schema).
    *
    * @param message    Message to validate
-   * @param timestamp  message timestamp string (rather than pull from typed object)
    * @param attributes message attributes
    */
-  public void validateMessageType(Object message, Date timestamp, Map<String, String> attributes) {
+  public void validateMessageType(Object message, Map<String, String> attributes) {
     if (reportingPointset == null) {
       return;
     }
