@@ -31,7 +31,7 @@ import udmi.schema.State;
 public class ReportingDevice {
 
   private static final char DETAIL_REPLACE_CHAR = ',';
-  private static final long THRESHOLD_SEC = 10;
+  private static final long THRESHOLD_SEC = 60 * 60;
   private static final String CATEGORY_MISSING_MESSAGE
       = "instance failed to match exactly one schema (matched 0 out of ";
   private static final String CATEGORY_MISSING_REPLACEMENT
