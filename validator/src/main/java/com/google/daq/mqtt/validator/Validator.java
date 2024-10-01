@@ -99,6 +99,7 @@ import java.util.stream.StreamSupport;
 import org.apache.commons.io.FileUtils;
 import udmi.schema.Category;
 import udmi.schema.DeviceValidationEvents;
+import udmi.schema.Entry;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
 import udmi.schema.ExecutionConfiguration;
@@ -142,6 +143,8 @@ public class Validator {
   private static final Set<String> INTERESTING_TYPES = ImmutableSet.of(
       SubType.EVENTS.value(),
       SubType.STATE.value());
+  private static final Set<String> IGNORE_FOLDERS = ImmutableSet.of(
+      SubFolder.ERROR.value());
   private static final Map<String, Class<?>> CONTENT_VALIDATORS = ImmutableMap.of(
       STATE_UPDATE_SCHEMA, State.class,
       EVENTS_POINTSET_SCHEMA, PointsetEvents.class,
@@ -550,7 +553,7 @@ public class Validator {
       processedDevices.add(deviceId);
     }
 
-    if (!shouldConsiderMessage(attributes)) {
+    if (!shouldProcessMessage(attributes)) {
       return;
     }
 
@@ -597,6 +600,7 @@ public class Validator {
     }
 
     ReportingDevice device = reportingDevices.computeIfAbsent(deviceId, ReportingDevice::new);
+    device.clearMessageEntries();
 
     try {
       String schemaName = messageSchema(attributes);
@@ -608,8 +612,11 @@ public class Validator {
 
       writeDeviceOutDir(messageObj, attributes, deviceId, schemaName);
 
+      String subFolder = attributes.get(SUBFOLDER_PROPERTY_KEY);
+      boolean processSchema = !IGNORE_FOLDERS.contains(subFolder);
+
       try {
-        if (!schemaMap.containsKey(schemaName)) {
+        if (processSchema && !schemaMap.containsKey(schemaName)) {
           throw new IllegalArgumentException(format(SCHEMA_SKIP_FORMAT, schemaName, deviceId));
         }
       } catch (Exception e) {
@@ -633,6 +640,9 @@ public class Validator {
       }
 
       Map<String, Object> message = mapCast(messageObj);
+      if (processExceptions(attributes, deviceId, device, message)) {
+        return device;
+      }
       validateDeviceMessage(device, message, attributes);
       validateTimestamp(device, message, attributes);
 
@@ -646,19 +656,12 @@ public class Validator {
     return device;
   }
 
-  /**
-   * Validate a device message against the core schema.
-   */
-  public void validateDeviceMessage(ReportingDevice device, Map<String, Object> message,
-      Map<String, String> attributes) {
-    String deviceId = attributes.get("deviceId");
-    device.clearMessageEntries();
-    String schemaName = messageSchema(attributes);
-
+  private boolean processExceptions(Map<String, String> attributes, String deviceId, ReportingDevice device,
+      Map<String, Object> message) {
     if (message.get(EXCEPTION_KEY) instanceof Exception exception) {
       outputLogger.error("Pipeline exception " + deviceId + ": " + getExceptionMessage(exception));
       device.addError(exception, attributes, Category.VALIDATION_DEVICE_RECEIVE);
-      return;
+      return true;
     }
 
     if (message.containsKey(ERROR_KEY)) {
@@ -667,8 +670,18 @@ public class Validator {
       IllegalArgumentException exception = new IllegalArgumentException(
           "Error in message pipeline: " + error);
       device.addError(exception, attributes, Category.VALIDATION_DEVICE_RECEIVE);
-      return;
+      return true;
     }
+    return false;
+  }
+
+  /**
+   * Validate a device message against the core schema.
+   */
+  public void validateDeviceMessage(ReportingDevice device, Map<String, Object> message,
+      Map<String, String> attributes) {
+    String deviceId = attributes.get("deviceId");
+    String schemaName = messageSchema(attributes);
 
     upgradeMessage(schemaName, message);
 
@@ -756,9 +769,8 @@ public class Validator {
       event.sub_folder = subFolder;
       String subType = origAttributes.get(SUBTYPE_PROPERTY_KEY);
       event.sub_type = ofNullable(subType).orElse(UNKNOWN_TYPE_DEFAULT);
-      event.status = ReportingDevice.getSummaryEntry(reportingDevice.getMessageEntries());
-      String prefix = format("%s:", typeFolderPairKey(subType, subFolder));
-      event.errors = reportingDevice.getErrors(now, prefix);
+      event.errors = reportingDevice.getMessageEntries();
+      event.status = ReportingDevice.getSummaryEntry(event.errors);
       if (POINTSET_SUBFOLDER.equals(subFolder)) {
         PointsetSummary pointsSummary = new PointsetSummary();
         pointsSummary.missing = arrayIfNotNull(reportingDevice.getMissingPoints());
@@ -808,7 +820,7 @@ public class Validator {
     }
   }
 
-  private boolean shouldConsiderMessage(Map<String, String> attributes) {
+  private boolean shouldProcessMessage(Map<String, String> attributes) {
     String registryId = attributes.get(DEVICE_REGISTRY_ID_KEY);
 
     if (!registryId.equals(getRegistryId())) {
@@ -830,10 +842,10 @@ public class Validator {
     String subType = attributes.get(SUBTYPE_PROPERTY_KEY);
     String subFolder = attributes.get(SUBFOLDER_PROPERTY_KEY);
     String category = attributes.get("category");
-    boolean isInteresting = subType == null
+    boolean process = subType == null
         || INTERESTING_TYPES.contains(subType)
         || SubFolder.UPDATE.value().equals(subFolder);
-    return !CONFIG_CATEGORY.equals(category) && isInteresting;
+    return process && !CONFIG_CATEGORY.equals(category);
   }
 
   private void writeDeviceOutDir(Object message, Map<String, String> attributes, String deviceId,

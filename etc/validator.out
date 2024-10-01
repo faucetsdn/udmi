@@ -435,12 +435,6 @@ sites/udmi_site_model/out/devices/GAT-123/events_error.out
     "level" : 500
   },
   "errors" : [ {
-    "message" : "Unknown schema subFolder 'events_error' for GAT-123",
-    "detail" : "events_error: Unknown schema subFolder 'events_error' for GAT-123 REDACTED_ERROR",
-    "category" : "validation.device.schema",
-    "timestamp" : "REDACTED_TIMESTAMP",
-    "level" : 500
-  }, {
     "message" : "Error in message pipeline: While parsing json object, Unexpected character ('N' (code 78)): was expecting double-quote to start field name  at [Source: (String)\"{ NOT VALID JSON!\"; line: 1, column: 4]",
     "detail" : "events_error: Error in message pipeline: While parsing json object, Unexpected character ('N' (code 78)): was expecting double-quote to start field name  at [Source: (String)\"{ NOT VALID JSON!\"; line: 1, column: 4] REDACTED_ERROR",
     "category" : "validation.device.schema",
@@ -457,10 +451,11 @@ sites/udmi_site_model/out/devices/GAT-123/events_invalid.out
   "sub_folder" : "invalid",
   "sub_type" : "events",
   "status" : {
-    "message" : "Successful validation",
-    "category" : "validation.device.receive",
+    "message" : "Unknown schema subFolder 'events_invalid' for GAT-123",
+    "detail" : "events_invalid: Unknown schema subFolder 'events_invalid' for GAT-123 REDACTED_ERROR",
+    "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
-    "level" : 200
+    "level" : 500
   },
   "errors" : [ {
     "message" : "Unknown schema subFolder 'events_invalid' for GAT-123",
