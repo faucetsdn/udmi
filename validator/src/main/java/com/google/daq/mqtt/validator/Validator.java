@@ -743,7 +743,7 @@ public class Validator {
             && !timestampRaw.endsWith(TIMESTAMP_UTC_SUFFIX_2)) {
           throw new RuntimeException("Invalid timestamp timezone " + timestampRaw);
         }
-        if (publishTime != null) {
+        if (publishTime != null && timestamp != null) {
           long between = Duration.between(publishTime, timestamp).getSeconds();
           if (between > TIMESTAMP_JITTER_SEC || between < -TIMESTAMP_JITTER_SEC) {
             throw new RuntimeException(format(
