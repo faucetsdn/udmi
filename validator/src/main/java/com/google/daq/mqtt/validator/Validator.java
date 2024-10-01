@@ -603,8 +603,9 @@ public class Validator {
 
     try {
       String schemaName = messageSchema(attributes);
+      boolean isString = messageObj instanceof String;
 
-      Map<String, Object> message = mapCast(messageObj);
+      Map<String, Object> message = isString ? null : mapCast(messageObj);
       validateTimestamp(device, message, attributes);
 
       if (!device.processMessageSchema(schemaName, getMessageInstant(messageObj, attributes))) {
@@ -626,7 +627,7 @@ public class Validator {
         device.addError(e, attributes, Category.VALIDATION_DEVICE_RECEIVE);
       }
 
-      if (messageObj instanceof String) {
+      if (isString) {
         String detail = format("Raw string message for %s %s", deviceId, schemaName);
         outputLogger.error(detail);
         IllegalArgumentException exception = new IllegalArgumentException(detail);
@@ -719,7 +720,7 @@ public class Validator {
 
   private void validateTimestamp(ReportingDevice device, Map<String, Object> message,
       Map<String, String> attributes) {
-    String timestampRaw = (String) message.get("timestamp");
+    String timestampRaw = ifNotNullGet(message, m -> (String) m.get("timestamp"));
     Instant timestamp = ifNotNullGet(timestampRaw, JsonUtil::getInstant);
     String publishRaw = attributes.get(PUBLISH_TIME_KEY);
     Instant publishTime = ifNotNullGet(publishRaw, JsonUtil::getInstant);
@@ -733,7 +734,7 @@ public class Validator {
         if (publishTime != null) {
           device.updateLastSeen(Date.from(publishTime));
         }
-        if (timestamp == null) {
+        if (message != null && timestamp == null) {
           throw new RuntimeException("Missing message timestamp");
         }
         if (timestampRaw != null
