@@ -85,7 +85,7 @@ public class PlaybackTest extends TestBase {
       assertEquals("extra devices", 0, finalReport.summary.extra_devices.size());
       assertEquals("missing devices", 3, finalReport.summary.missing_devices.size());
       assertEquals("error devices", 0, finalReport.summary.error_devices.size());
-      assertEquals("device summaries", 0, finalReport.devices.size());
+      assertEquals("device summaries", 1, finalReport.devices.size());
     } catch (Throwable e) {
       outputMessages.forEach(message -> System.err.println(JsonUtil.stringify(message)));
       throw e;

@@ -600,7 +600,20 @@ public class Validator {
 
     try {
       String schemaName = messageSchema(attributes);
-      if (!device.markMessageType(schemaName, getNow())) {
+
+      if (message instanceof String) {
+        String detail = format("Raw string message for %s %s", deviceId, schemaName);
+        outputLogger.error(detail);
+        IllegalArgumentException exception = new IllegalArgumentException(detail);
+        device.addError(exception, attributes, Category.VALIDATION_DEVICE_RECEIVE);
+        return device;
+      }
+
+      Map<String, Object> messageMap = mapCast(message);
+      validateTimestamp(device, messageMap, attributes);
+
+      Instant messageTime = getMessageInstant(message, attributes);
+      if (!device.markMessageType(schemaName, messageTime)) {
         outputLogger.info("Ignoring %s/%s because ???", deviceId, schemaName);
         return null;
       }
@@ -614,15 +627,7 @@ public class Validator {
 
       writeDeviceOutDir(message, attributes, deviceId, schemaName);
 
-      if (message instanceof String) {
-        String detail = format("Raw string message for %s %s", deviceId, schemaName);
-        outputLogger.error(detail);
-        IllegalArgumentException exception = new IllegalArgumentException(detail);
-        device.addError(exception, attributes, Category.VALIDATION_DEVICE_RECEIVE);
-        return device;
-      }
-
-      validateDeviceMessage(device, mapCast(message), attributes);
+      validateDeviceMessage(device, messageMap, attributes);
 
       if (!device.hasErrors()) {
         outputLogger.info("Validation clean %s/%s", deviceId, schemaName);
@@ -659,8 +664,6 @@ public class Validator {
     }
 
     upgradeMessage(schemaName, message);
-
-    validateTimestamp(device, message, attributes);
 
     try {
       if (!schemaMap.containsKey(schemaName)) {
