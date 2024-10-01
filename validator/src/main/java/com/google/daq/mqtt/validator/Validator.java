@@ -601,7 +601,6 @@ public class Validator {
     try {
       String schemaName = messageSchema(attributes);
       if (!device.markMessageType(schemaName, getNow())) {
-        outputLogger.info("Ignoring %s/%s because ???", deviceId, schemaName);
         return null;
       }
 
