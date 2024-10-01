@@ -1,0 +1,10 @@
+{
+  "deviceNumId" : "00000062256946",
+  "publishTime" : "2022-07-19T05:04:36+0000",
+  "subFolder" : "system",
+  "deviceRegistryId" : "ZZ-TRI-FECTA",
+  "subType" : "events",
+  "msgSource" : "002_events_system.json",
+  "deviceId" : "AHU-1",
+  "projectId" : "playback-project"
+}
