@@ -99,7 +99,6 @@ import java.util.stream.StreamSupport;
 import org.apache.commons.io.FileUtils;
 import udmi.schema.Category;
 import udmi.schema.DeviceValidationEvents;
-import udmi.schema.Entry;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
 import udmi.schema.ExecutionConfiguration;
@@ -656,8 +655,8 @@ public class Validator {
     return device;
   }
 
-  private boolean processExceptions(Map<String, String> attributes, String deviceId, ReportingDevice device,
-      Map<String, Object> message) {
+  private boolean processExceptions(Map<String, String> attributes, String deviceId,
+      ReportingDevice device, Map<String, Object> message) {
     if (message.get(EXCEPTION_KEY) instanceof Exception exception) {
       outputLogger.error("Pipeline exception " + deviceId + ": " + getExceptionMessage(exception));
       device.addError(exception, attributes, Category.VALIDATION_DEVICE_RECEIVE);
@@ -680,9 +679,7 @@ public class Validator {
    */
   public void validateDeviceMessage(ReportingDevice device, Map<String, Object> message,
       Map<String, String> attributes) {
-    String deviceId = attributes.get("deviceId");
     String schemaName = messageSchema(attributes);
-
     upgradeMessage(schemaName, message);
 
     try {
@@ -701,6 +698,7 @@ public class Validator {
       }
     }
 
+    String deviceId = attributes.get("deviceId");
     if (expectedDevices == null || expectedDevices.isEmpty()) {
       // No devices configured, so don't consider check metadata or consider extra.
     } else if (expectedDevices.contains(deviceId)) {
