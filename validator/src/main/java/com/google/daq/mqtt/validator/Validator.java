@@ -601,7 +601,6 @@ public class Validator {
     try {
       String schemaName = messageSchema(attributes);
       if (!device.markMessageType(schemaName, getNow())) {
-        outputLogger.info("Ignoring %s/%s because ???", deviceId, schemaName);
         return null;
       }
 
@@ -613,16 +612,7 @@ public class Validator {
       }
 
       writeDeviceOutDir(message, attributes, deviceId, schemaName);
-
-      if (message instanceof String) {
-        String detail = format("Raw string message for %s %s", deviceId, schemaName);
-        outputLogger.error(detail);
-        IllegalArgumentException exception = new IllegalArgumentException(detail);
-        device.addError(exception, attributes, Category.VALIDATION_DEVICE_RECEIVE);
-        return device;
-      }
-
-      validateDeviceMessage(device, mapCast(message), attributes);
+      validateDeviceMessage(device, message, attributes);
 
       if (!device.hasErrors()) {
         outputLogger.info("Validation clean %s/%s", deviceId, schemaName);
@@ -637,12 +627,21 @@ public class Validator {
   /**
    * Validate a device message against the core schema.
    */
-  public void validateDeviceMessage(ReportingDevice device, Map<String, Object> message,
+  public void validateDeviceMessage(ReportingDevice device, Object baseMsg,
       Map<String, String> attributes) {
     String deviceId = attributes.get("deviceId");
     device.clearMessageEntries();
     String schemaName = messageSchema(attributes);
 
+    if (baseMsg instanceof String) {
+      String message = format("Raw string message for %s %s", deviceId, schemaName);
+      outputLogger.error(message);
+      IllegalArgumentException exception = new IllegalArgumentException(message);
+      device.addError(exception, attributes, Category.VALIDATION_DEVICE_RECEIVE);
+      return;
+    }
+
+    Map<String, Object> message = mapCast(baseMsg);
     if (message.get(EXCEPTION_KEY) instanceof Exception exception) {
       outputLogger.error("Pipeline exception " + deviceId + ": " + getExceptionMessage(exception));
       device.addError(exception, attributes, Category.VALIDATION_DEVICE_RECEIVE);
@@ -660,7 +659,41 @@ public class Validator {
 
     upgradeMessage(schemaName, message);
 
-    validateTimestamp(device, message, attributes);
+    String timestampRaw = (String) message.get("timestamp");
+    Instant timestamp = ifNotNullGet(timestampRaw, JsonUtil::getInstant);
+    String publishRaw = attributes.get(PUBLISH_TIME_KEY);
+    Instant publishTime = ifNotNullGet(publishRaw, JsonUtil::getInstant);
+    try {
+      // TODO: Validate message contests to make sure state sub-blocks don't also have timestamp.
+
+      String subTypeRaw = ofNullable(attributes.get(SUBTYPE_PROPERTY_KEY))
+          .orElse(UNKNOWN_TYPE_DEFAULT);
+      boolean lastSeenValid = LAST_SEEN_SUBTYPES.contains(SubType.fromValue(subTypeRaw));
+      if (lastSeenValid) {
+        if (publishTime != null) {
+          device.updateLastSeen(Date.from(publishTime));
+        }
+        if (timestamp == null) {
+          throw new RuntimeException("Missing message timestamp");
+        }
+        if (publishTime != null) {
+          if (!timestampRaw.endsWith(TIMESTAMP_ZULU_SUFFIX)
+              && !timestampRaw.endsWith(TIMESTAMP_UTC_SUFFIX_1)
+              && !timestampRaw.endsWith(TIMESTAMP_UTC_SUFFIX_2)) {
+            throw new RuntimeException("Invalid timestamp timezone " + timestampRaw);
+          }
+          long between = Duration.between(publishTime, timestamp).getSeconds();
+          if (between > TIMESTAMP_JITTER_SEC || between < -TIMESTAMP_JITTER_SEC) {
+            throw new RuntimeException(format(
+                "Timestamp jitter %ds (%s to %s) exceeds %ds threshold",
+                between, publishRaw, timestampRaw, TIMESTAMP_JITTER_SEC));
+          }
+        }
+      }
+    } catch (Exception e) {
+      outputLogger.error("Timestamp validation error: " + friendlyStackTrace(e));
+      device.addError(e, attributes, Category.VALIDATION_DEVICE_CONTENT);
+    }
 
     try {
       if (!schemaMap.containsKey(schemaName)) {
@@ -693,7 +726,7 @@ public class Validator {
       try {
         ifNotNullThen(CONTENT_VALIDATORS.get(schemaName), targetClass -> {
           Object messageObject = OBJECT_MAPPER.convertValue(message, targetClass);
-          device.validateMessageType(messageObject, attributes);
+          device.validateMessageType(messageObject, JsonUtil.getDate(publishRaw), attributes);
         });
       } catch (Exception e) {
         outputLogger.error("Error validating contents: " + friendlyStackTrace(e));
@@ -701,46 +734,6 @@ public class Validator {
       }
     } else {
       extraDevices.add(deviceId);
-    }
-  }
-
-  private void validateTimestamp(ReportingDevice device, Map<String, Object> message,
-      Map<String, String> attributes) {
-    String timestampRaw = (String) message.get("timestamp");
-    Instant timestamp = ifNotNullGet(timestampRaw, JsonUtil::getInstant);
-    String publishRaw = attributes.get(PUBLISH_TIME_KEY);
-    Instant publishTime = ifNotNullGet(publishRaw, JsonUtil::getInstant);
-    try {
-      // TODO: Validate message contests to make sure state sub-blocks don't also have timestamp.
-
-      String subTypeRaw = ofNullable(attributes.get(SUBTYPE_PROPERTY_KEY))
-          .orElse(UNKNOWN_TYPE_DEFAULT);
-      boolean lastSeenValid = LAST_SEEN_SUBTYPES.contains(SubType.fromValue(subTypeRaw));
-      if (lastSeenValid) {
-        if (publishTime != null) {
-          device.updateLastSeen(Date.from(publishTime));
-        }
-        if (timestamp == null) {
-          throw new RuntimeException("Missing message timestamp");
-        }
-        if (timestampRaw != null
-            && !timestampRaw.endsWith(TIMESTAMP_ZULU_SUFFIX)
-            && !timestampRaw.endsWith(TIMESTAMP_UTC_SUFFIX_1)
-            && !timestampRaw.endsWith(TIMESTAMP_UTC_SUFFIX_2)) {
-          throw new RuntimeException("Invalid timestamp timezone " + timestampRaw);
-        }
-        if (publishTime != null) {
-          long between = Duration.between(publishTime, timestamp).getSeconds();
-          if (between > TIMESTAMP_JITTER_SEC || between < -TIMESTAMP_JITTER_SEC) {
-            throw new RuntimeException(format(
-                "Timestamp jitter %ds (%s to %s) exceeds %ds threshold",
-                between, publishRaw, timestampRaw, TIMESTAMP_JITTER_SEC));
-          }
-        }
-      }
-    } catch (Exception e) {
-      outputLogger.error("Timestamp validation error: " + friendlyStackTrace(e));
-      device.addError(e, attributes, Category.VALIDATION_DEVICE_CONTENT);
     }
   }
 
