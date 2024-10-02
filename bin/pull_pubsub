@@ -62,6 +62,10 @@ while true; do
             continue
         fi
 
+        if [[ $deviceId == "" ]]; then
+            deviceId=empty
+        fi
+
         if [[ $subType == null ]]; then
             subType=events
         fi
