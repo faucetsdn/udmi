@@ -1,5 +1,6 @@
 package com.google.daq.mqtt.validator;
 
+import static com.google.api.client.util.Preconditions.checkState;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.daq.mqtt.registrar.Registrar.BASE_DIR;
@@ -66,6 +67,7 @@ import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.MessageUpgrader;
 import com.google.udmi.util.SiteModel;
+import io.opencensus.stats.Aggregation.Count;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -89,11 +91,15 @@ import java.util.Scanner;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -162,6 +168,7 @@ public class Validator {
   private static final int TIMESTAMP_JITTER_SEC = 60;
   private static final String UDMI_CONFIG_JSON_FILE = "udmi_config.json";
   private static final String TOOL_NAME = "validator";
+  private static final long THREAD_JOIN_MS = 1000;
   private final Map<String, ReportingDevice> reportingDevices = new TreeMap<>();
   private final Set<String> extraDevices = new TreeSet<>();
   private final Set<String> processedDevices = new TreeSet<>();
@@ -170,6 +177,7 @@ public class Validator {
   private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
   private final Map<String, AtomicInteger> deviceMessageIndex = new HashMap<>();
   private final List<MessagePublisher> dataSinks = new ArrayList<>();
+  private final CountDownLatch messageLoopStarted = new CountDownLatch(1);
   private Set<String> targetDevices;
   private final LoggingHandler outputLogger;
   private ImmutableSet<String> expectedDevices;
@@ -231,6 +239,8 @@ public class Validator {
     if (client == null) {
       validateReflector();
     }
+    checkState(client != null, "no validator client specified");
+    messageLoop();
   }
 
   /**
@@ -253,6 +263,9 @@ public class Validator {
     System.exit(0);
   }
 
+  /**
+   * Legacy main.
+   */
   public static void main_orig(String[] args) {
     try {
       Validator validator = new Validator(Arrays.asList(args));
@@ -372,12 +385,12 @@ public class Validator {
     File adjustedPath = model.isAbsolute() ? model :
         new File(profilePath.getParentFile(), siteModel);
     exeConfig.site_model = adjustedPath.getAbsolutePath();
-    setSiteDir(adjustedPath.getAbsolutePath());
     processProfile(exeConfig);
   }
 
   private void processProfile(ExecutionConfiguration exeConfig) {
     config = exeConfig;
+    setSiteDir(exeConfig.site_model);
   }
 
   MessageReadingClient getMessageReadingClient() {

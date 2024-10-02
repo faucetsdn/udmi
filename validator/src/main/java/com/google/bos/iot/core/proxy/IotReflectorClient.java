@@ -120,19 +120,17 @@ public class IotReflectorClient implements MessagePublisher {
     projectId = iotConfig.project_id;
     udmiVersion = ofNullable(iotConfig.udmi_version).orElseGet(Common::getUdmiVersion);
     updateTo = iotConfig.update_to;
-    String cloudRegion = ofNullable(iotConfig.reflect_region)
-        .orElse(iotConfig.cloud_region);
     String prefix = getNamespacePrefix(iotConfig.udmi_namespace);
     iotProvider = ofNullable(iotConfig.iot_provider).orElse(IotProvider.GBOS);
     iotConfig.iot_provider = iotProvider;
-    subscriptionId = format("%s/%s/%s/%s%s/%s",
-        iotConfig.iot_provider, projectId, cloudRegion, prefix, UDMI_REFLECT, registryId);
-
+    String clientId = format("//%s/%s/%s %s", iotProvider, projectId, prefix, registryId);
     try {
+      System.err.println("Instantiating reflector client " + clientId);
       publisher = MessagePublisher.from(iotConfig, this::messageHandler, this::errorHandler);
-    } catch (Exception e1) {
-      throw new RuntimeException("While creating client " + subscriptionId, e1);
+    } catch (Exception e) {
+      throw new RuntimeException("While creating reflector client " + clientId, e);
     }
+    subscriptionId = publisher.getSubscriptionId();
     System.err.println("Subscribed to " + subscriptionId);
 
     try {
