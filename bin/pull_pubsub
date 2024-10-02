@@ -51,7 +51,7 @@ while true; do
         raw_data=$(jq -r .data $msg_file)
         # There's two different base64 formats, so replace - with + to handle both.
         echo $raw_data > $raw_file
-        data=$(echo $raw_data | tr - + | base64 --decode)
+        data=$(echo $raw_data | tr _- ++ | base64 --decode)
 
         if [[ $raw_data == null || -z $raw_data ]]; then
             break
