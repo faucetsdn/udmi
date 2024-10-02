@@ -15,16 +15,22 @@ TMP_FILE=/tmp/pull_pubsub.tmp
 echo $project_spec | tr / ' ' > $TMP_FILE
 read < $TMP_FILE schema project_id namespace
 echo schema:$schema project_id:$project_id namespace:$namespace
-suffix=${namespace#*%}
+
+if [[ -z $namespace ]]; then
+    suffix=${project_id#*+}
+    project_id=${project_id%+*}
+fi
+
+suffix=${namespace#*+}
 [[ $suffix != $namespace ]] || suffix=
-namespace=${namespace%%%*}
+namespace=${namespace%%+*}
 
 [[ -n $suffix ]] || suffix=$USER
 
 echo Using project $project_id namespace $namespace, suffix ${suffix}
 
 [[ ! -n $namespace ]] || namespace=${namespace}~
-subscription=${namespace}udmi_target%${suffix}
+subscription=${namespace}udmi_target+${suffix}
 echo Pulling from subscription $subscription
 
 pull_limit=100
@@ -45,7 +51,7 @@ while true; do
         raw_data=$(jq -r .data $msg_file)
         # There's two different base64 formats, so replace - with + to handle both.
         echo $raw_data > $raw_file
-        data=$(echo $raw_data | tr - + | base64 --decode)
+        data=$(echo $raw_data | tr _- ++ | base64 --decode)
 
         if [[ $raw_data == null || -z $raw_data ]]; then
             break
