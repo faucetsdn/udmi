@@ -15,6 +15,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "dashboard",
     "docs",
     "folder",
     "image",
@@ -22,6 +23,13 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 })
 public class SiteLinks {
 
+    /**
+     * Site dashboard link
+     * 
+     */
+    @JsonProperty("dashboard")
+    @JsonPropertyDescription("Site dashboard link")
+    public String dashboard;
     /**
      * Folder where the project documentation is stored
      * 
@@ -57,6 +65,7 @@ public class SiteLinks {
         result = ((result* 31)+((this.image == null)? 0 :this.image.hashCode()));
         result = ((result* 31)+((this.folder == null)? 0 :this.folder.hashCode()));
         result = ((result* 31)+((this.docs == null)? 0 :this.docs.hashCode()));
+        result = ((result* 31)+((this.dashboard == null)? 0 :this.dashboard.hashCode()));
         result = ((result* 31)+((this.repo == null)? 0 :this.repo.hashCode()));
         return result;
     }
@@ -70,7 +79,7 @@ public class SiteLinks {
             return false;
         }
         SiteLinks rhs = ((SiteLinks) other);
-        return (((((this.image == rhs.image)||((this.image!= null)&&this.image.equals(rhs.image)))&&((this.folder == rhs.folder)||((this.folder!= null)&&this.folder.equals(rhs.folder))))&&((this.docs == rhs.docs)||((this.docs!= null)&&this.docs.equals(rhs.docs))))&&((this.repo == rhs.repo)||((this.repo!= null)&&this.repo.equals(rhs.repo))));
+        return ((((((this.image == rhs.image)||((this.image!= null)&&this.image.equals(rhs.image)))&&((this.folder == rhs.folder)||((this.folder!= null)&&this.folder.equals(rhs.folder))))&&((this.docs == rhs.docs)||((this.docs!= null)&&this.docs.equals(rhs.docs))))&&((this.dashboard == rhs.dashboard)||((this.dashboard!= null)&&this.dashboard.equals(rhs.dashboard))))&&((this.repo == rhs.repo)||((this.repo!= null)&&this.repo.equals(rhs.repo))));
     }
 
 }
