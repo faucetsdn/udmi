@@ -28,7 +28,7 @@ sudo mosquitto_sub $SERVER_OPTS -R -F "%j" -t $topic_filter |
         payload=$(jq -r .payload $msg_file)
         timestamp=$(jq -r .tst $msg_file)
         json=$(jq . <<< "$payload")
-        
+
         readarray -d '/' -t array <<< "${topic}/"
         registryId=${array[2]}
         deviceId=${array[4]}
@@ -37,8 +37,12 @@ sudo mosquitto_sub $SERVER_OPTS -R -F "%j" -t $topic_filter |
 
         # Trim whitespace
         subFolder=$(echo $subFolder | xargs)
-        
+
         [[ -n ${subFolder% } ]] || subFolder=update
+
+        if [[ $deviceId == "" ]]; then
+            deviceId=empty
+        fi
 
         if [[ $subType == null ]]; then
             subType=events
