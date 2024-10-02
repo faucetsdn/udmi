@@ -61,6 +61,7 @@ public abstract class Common {
 
   private static final String PREFIX_SEPARATOR = "~";
   private static final String UDMI_VERSION_ENV = "UDMI_TOOLS";
+  public static final int EXIT_CODE_ERROR = 1;
 
   /**
    * Remove the next item from the list in an exception-safe way.

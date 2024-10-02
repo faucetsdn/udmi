@@ -117,7 +117,6 @@ public class Registrar {
   private static final String MODEL_SUB_TYPE = "model";
   private static final boolean DEFAULT_BLOCK_UNKNOWN = false;
   private static final int EACH_ITEM_TIMEOUT_SEC = 60;
-  private static final int EXIT_CODE_ERROR = 1;
   private static final Map<String, Class<? extends Summarizer>> SUMMARIZERS = ImmutableMap.of(
       ".json", Summarizer.JsonSummarizer.class,
       ".csv", Summarizer.CsvSummarizer.class);
@@ -161,7 +160,7 @@ public class Registrar {
     } catch (Exception e) {
       System.err.println("Exception in main: " + friendlyStackTrace(e));
       e.printStackTrace();
-      System.exit(EXIT_CODE_ERROR);
+      System.exit(Common.EXIT_CODE_ERROR);
     }
 
     // Force exist because PubSub Subscriber in PubSubReflector does not shut down properly.

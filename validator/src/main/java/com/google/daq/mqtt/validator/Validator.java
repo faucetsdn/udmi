@@ -10,6 +10,7 @@ import static com.google.daq.mqtt.util.ConfigUtil.readExeConfig;
 import static com.google.daq.mqtt.validator.ReportingDevice.typeFolderPairKey;
 import static com.google.udmi.util.Common.ERROR_KEY;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
+import static com.google.udmi.util.Common.EXIT_CODE_ERROR;
 import static com.google.udmi.util.Common.GCP_REFLECT_KEY_PKCS8;
 import static com.google.udmi.util.Common.MESSAGE_KEY;
 import static com.google.udmi.util.Common.NO_SITE;
@@ -30,6 +31,7 @@ import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.getInstant;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.mapCast;
+import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.SiteModel.DEVICES_DIR;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
@@ -52,7 +54,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.CloudIotManager;
-import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.FileDataSink;
@@ -160,6 +161,7 @@ public class Validator {
   private static final Date START_TIME = new Date();
   private static final int TIMESTAMP_JITTER_SEC = 60;
   private static final String UDMI_CONFIG_JSON_FILE = "udmi_config.json";
+  private static final String TOOL_NAME = "validator";
   private final Map<String, ReportingDevice> reportingDevices = new TreeMap<>();
   private final Set<String> extraDevices = new TreeSet<>();
   private final Set<String> processedDevices = new TreeSet<>();
@@ -168,7 +170,7 @@ public class Validator {
   private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
   private final Map<String, AtomicInteger> deviceMessageIndex = new HashMap<>();
   private final List<MessagePublisher> dataSinks = new ArrayList<>();
-  private final Set<String> targetDevices;
+  private Set<String> targetDevices;
   private final LoggingHandler outputLogger;
   private ImmutableSet<String> expectedDevices;
   private File outBaseDir;
@@ -181,6 +183,7 @@ public class Validator {
   private boolean simulatedMessages;
   private Instant mockNow = null;
   private boolean forceUpgrade;
+  private SiteModel siteModel;
 
   /**
    * Create a simplistic validator for encapsulated use.
@@ -202,22 +205,55 @@ public class Validator {
     outputLogger = new LoggingHandler();
     List<String> listCopy = new ArrayList<>(argList);
     parseArgs(listCopy);
-
-    if (schemaMap == null) {
-      setSchemaSpec("schema");
-    }
     if (client == null) {
       validateReflector();
     }
     targetDevices = Set.copyOf(listCopy);
   }
 
+  public Validator() {
+    outputLogger = new LoggingHandler();
+  }
+
+  Validator processArgs(List<String> argListRaw) {
+    List<String> argList = new ArrayList<>(argListRaw);
+    siteModel = new SiteModel(TOOL_NAME, argList);
+    processProfile(siteModel.getExecutionConfiguration());
+    postProcessArgs(argList);
+    targetDevices = Set.copyOf(argList);
+    return this;
+  }
+
+  void execute() {
+    if (!Strings.isNullOrEmpty(config.feed_name)) {
+      validatePubSub(config.feed_name);
+    }
+    if (client == null) {
+      validateReflector();
+    }
+  }
+
   /**
-   * Let's go.
-   *
-   * @param args Arguments for program execution
-   */
+     * Let's go.
+     *
+     * @param args Arguments for program execution
+     */
   public static void main(String[] args) {
+    ArrayList<String> argList = new ArrayList<>(List.of(args));
+    try {
+      new Validator().processArgs(argList).execute();
+    } catch (Exception e) {
+      System.err.println("Exception in main: " + friendlyStackTrace(e));
+      e.printStackTrace();
+      System.exit(EXIT_CODE_ERROR);
+    }
+
+    // Force exist because PubSub Subscriber in PubSubReflector does not shut down properly.
+    safeSleep(2000);
+    System.exit(0);
+  }
+
+  public static void main_orig(String[] args) {
     try {
       Validator validator = new Validator(Arrays.asList(args));
       validator.messageLoop();
@@ -267,48 +303,40 @@ public class Validator {
     } else {
       config = new ExecutionConfiguration();
     }
-    while (!argList.isEmpty()) {
-      String option = removeNextArg(argList);
-      try {
-        switch (option) {
-          case "-p":
-            setProjectId(removeNextArg(argList));
-            break;
-          case "-s":
-            setSiteDir(removeNextArg(argList));
-            break;
-          case "-a":
-            setSchemaSpec(removeNextArg(argList));
-            break;
-          case "-t":
-            validatePubSub(removeNextArg(argList));
-            break;
-          case "-f":
-            validateFilesOutput(removeNextArg(argList));
-            break;
-          case "-u":
-            forceUpgrade = true;
-            break;
-          case "-r":
-            validateMessageTrace(removeNextArg(argList));
-            break;
-          case "-n":
-            client = new NullPublisher();
-            break;
-          case "-w":
-            setMessageTraceDir(removeNextArg(argList));
-            break;
-          case "--":
-            // All remaining arguments remain in the return list.
-            return argList;
-          default:
-            throw new RuntimeException("Unknown cmdline option " + option);
+    return postProcessArgs(argList);
+  }
+
+  private List<String> postProcessArgs(List<String> argList) {
+    try {
+      while (!argList.isEmpty()) {
+        String option = removeNextArg(argList);
+        try {
+          switch (option) {
+            case "-p" -> setProjectId(removeNextArg(argList));
+            case "-s" -> setSiteDir(removeNextArg(argList));
+            case "-a" -> setSchemaSpec(removeNextArg(argList));
+            case "-t" -> validatePubSub(removeNextArg(argList));
+            case "-f" -> validateFilesOutput(removeNextArg(argList));
+            case "-u" -> forceUpgrade = true;
+            case "-r" -> validateMessageTrace(removeNextArg(argList));
+            case "-n" -> client = new NullPublisher();
+            case "-w" -> setMessageTraceDir(removeNextArg(argList));
+            case "--" -> {
+              // All remaining arguments remain in the return list.
+              return argList;
+            }
+            default -> throw new RuntimeException("Unknown cmdline option " + option);
+          }
+        } catch (MissingFormatArgumentException e) {
+          throw new RuntimeException("For command line option " + option, e);
         }
-      } catch (MissingFormatArgumentException e) {
-        throw new RuntimeException("For command line option " + option, e);
+      }
+      return argList;
+    } finally {
+      if (schemaMap == null) {
+        setSchemaSpec("schema");
       }
     }
-    return argList;
   }
 
   private void setProjectId(String projectId) {
@@ -338,16 +366,18 @@ public class Validator {
   }
 
   private void processProfile(File profilePath) {
-    config = ConfigUtil.readExeConfig(profilePath);
-    String siteModel = ofNullable(config.site_model).orElse(BASE_DIR.getName());
+    ExecutionConfiguration exeConfig = readExeConfig(profilePath);
+    String siteModel = ofNullable(exeConfig.site_model).orElse(BASE_DIR.getName());
     File model = new File(siteModel);
     File adjustedPath = model.isAbsolute() ? model :
         new File(profilePath.getParentFile(), siteModel);
-    config.site_model = adjustedPath.getAbsolutePath();
+    exeConfig.site_model = adjustedPath.getAbsolutePath();
     setSiteDir(adjustedPath.getAbsolutePath());
-    if (!Strings.isNullOrEmpty(config.feed_name)) {
-      validatePubSub(config.feed_name);
-    }
+    processProfile(exeConfig);
+  }
+
+  private void processProfile(ExecutionConfiguration exeConfig) {
+    config = exeConfig;
   }
 
   MessageReadingClient getMessageReadingClient() {
