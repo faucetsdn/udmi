@@ -42,8 +42,8 @@
         "etcd",
         "mqtt",
         "jwt",
-        "gcp_native",
         "gbos",
+        "geflect",
         "clearblade_native",
         "clearblade"
       ]

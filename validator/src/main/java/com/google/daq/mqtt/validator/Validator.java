@@ -367,7 +367,7 @@ public class Validator {
     Preconditions.checkArgument(parts.length <= 2, "Too many parts in pubsub path " + pubSubCombo);
     String instName = parts[0];
     CloudIotManager cloudIotManager = new CloudIotManager(config.project_id,
-        new File(config.site_model), null, config.registry_suffix, IotProvider.GCP_NATIVE);
+        new File(config.site_model), null, config.registry_suffix, IotProvider.PUBSUB);
     String registryId = getRegistryId();
     String updateTopic = parts.length > 1 ? parts[1] : cloudIotManager.getUpdateTopic();
     client = new PubSubClient(config.project_id, registryId, instName, updateTopic);

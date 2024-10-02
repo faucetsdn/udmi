@@ -82,8 +82,8 @@ public class IotAccess {
         ETCD("etcd"),
         MQTT("mqtt"),
         JWT("jwt"),
-        GCP_NATIVE("gcp_native"),
         GBOS("gbos"),
+        GEFLECT("geflect"),
         CLEARBLADE_NATIVE("clearblade_native"),
         CLEARBLADE("clearblade");
         private final String value;
