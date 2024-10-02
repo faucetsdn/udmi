@@ -115,7 +115,8 @@ public class IotReflectorClient implements IotProvider {
   @Override
   public void updateRegistry(CloudModel registry) {
     registry.operation = ofNullable(registry.operation).orElse(Operation.UPDATE);
-    cloudModelTransaction(null, CLOUD_MODEL_TOPIC, registry);
+    // TODO: Change this back to null when CB-IA is fixed.
+    cloudModelTransaction("", CLOUD_MODEL_TOPIC, registry);
   }
 
   @Override
