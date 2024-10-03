@@ -13,7 +13,7 @@ function cleanup {
 }
 trap cleanup EXIT
 
-[[ $# == 0 ]] && usage SITE_{PATH/FILE} [PROJECT_ID] [DEVICE_ID] [SERIAL_NO] [options] ...
+[[ $# == 0 ]] && usage SITE_{PATH/FILE} [PROJECT_SPEC] [DEVICE_ID] [SERIAL_NO] [options] ...
 
 config_file=$(realpath $1)
 serial_no=NA

@@ -4,7 +4,7 @@ import static com.google.udmi.util.Common.getNamespacePrefix;
 import static java.util.Optional.ofNullable;
 import static udmi.schema.IotAccess.IotProvider.IMPLICIT;
 import static udmi.schema.IotAccess.IotProvider.JWT;
-import static udmi.schema.IotAccess.IotProvider.PUBSUB;
+import static udmi.schema.IotAccess.IotProvider.PREF;
 
 import com.google.bos.iot.core.proxy.MqttPublisher;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
@@ -38,7 +38,7 @@ public interface MessagePublisher {
     if (iotConfig.reflector_endpoint != null && iotProvider != IMPLICIT) {
       iotConfig.reflector_endpoint = null;
     }
-    if (PUBSUB == iotConfig.iot_provider) {
+    if (iotProvider == PREF) {
       return PubSubReflector.from(iotConfig, messageHandler, errorHandler);
     }
     return MqttPublisher.from(iotConfig, messageHandler, errorHandler);
