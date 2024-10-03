@@ -7,6 +7,8 @@ import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.Common.DEVICE_ID_KEY;
 import static com.google.udmi.util.Common.GATEWAY_ID_KEY;
 import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
+import static com.google.udmi.util.Common.SOURCE_KEY;
+import static com.google.udmi.util.Common.SOURCE_SEPARATOR_REGEX;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
@@ -16,6 +18,7 @@ import static com.google.udmi.util.Common.getNamespacePrefix;
 import static com.google.udmi.util.GeneralUtils.decodeBase64;
 import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.convertTo;
@@ -25,6 +28,7 @@ import static com.google.udmi.util.JsonUtil.mapCast;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static com.google.udmi.util.JsonUtil.toObject;
+import static com.google.udmi.util.PubSubReflector.USER_NAME_DEFAULT;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
@@ -51,6 +55,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import org.jetbrains.annotations.NotNull;
 import udmi.schema.Credential;
 import udmi.schema.Envelope;
@@ -97,6 +102,8 @@ public class IotReflectorClient implements MessagePublisher {
   private final String updateTo;
   private final IotProvider iotProvider;
   private final boolean enforceUdmiVersion;
+  private final Function<Map<String, Object>, Boolean> messageFilter;
+  private final String userName;
   private Date reflectorStateTimestamp;
   private boolean isInstallValid;
   private boolean active;
@@ -111,17 +118,24 @@ public class IotReflectorClient implements MessagePublisher {
    * @param requiredVersion version of the functions that are required by the tools
    */
   public IotReflectorClient(ExecutionConfiguration iotConfig, int requiredVersion) {
+    this(iotConfig, requiredVersion, null);
+  }
+
+  public IotReflectorClient(ExecutionConfiguration iotConfig, int requiredVersion,
+      Function<Map<String, Object>, Boolean> messageFilter) {
     Preconditions.checkState(requiredVersion >= TOOLS_FUNCTIONS_VERSION,
         format("Min required version %s not satisfied by tools version %s", TOOLS_FUNCTIONS_VERSION,
             requiredVersion));
     this.requiredVersion = requiredVersion;
     this.enforceUdmiVersion = isTrue(iotConfig.enforce_version);
+    this.messageFilter = ofNullable(messageFilter).orElse(this::userMessageFilter);
     registryId = SiteModel.getRegistryActual(iotConfig);
     projectId = iotConfig.project_id;
     udmiVersion = ofNullable(iotConfig.udmi_version).orElseGet(Common::getUdmiVersion);
     updateTo = iotConfig.update_to;
     String prefix = getNamespacePrefix(iotConfig.udmi_namespace);
     iotProvider = ofNullable(iotConfig.iot_provider).orElse(IotProvider.GBOS);
+    userName = ofNullable(iotConfig.user_name).orElse(USER_NAME_DEFAULT);
     iotConfig.iot_provider = iotProvider;
     String clientId = format("//%s/%s/%s %s", iotProvider, projectId, prefix, registryId);
     try {
@@ -157,6 +171,11 @@ public class IotReflectorClient implements MessagePublisher {
       publisher.close();
       throw new RuntimeException("Waiting for initial config", e);
     }
+  }
+
+  private boolean userMessageFilter(Map<String, Object> messageMap) {
+    String source = (String) messageMap.get(SOURCE_KEY);
+    return source == null || userName.equals(source);
   }
 
   /**
@@ -252,15 +271,15 @@ public class IotReflectorClient implements MessagePublisher {
     Map<String, Object> messageMap = asMap(
         new String(base64 ? Base64.decodeBase64(rawData) : rawData));
     try {
-      List<String> parts = parseMessageTopic(topic);
-      String category = parts.get(0);
-
-      if (Common.CONFIG_CATEGORY.equals(category)) {
+      Envelope envelope = parseMessageTopic(topic);
+      ifNotNullThen(envelope.source, source -> messageMap.put(SOURCE_KEY, source),
+          () -> messageMap.remove(SOURCE_KEY));
+      if (SubType.CONFIG == envelope.subType) {
         ensureCloudSync(messageMap);
-      } else if (Common.COMMANDS_CATEGORY.equals(category)) {
+      } else if (SubType.COMMANDS == envelope.subType) {
         handleCommandEnvelope(messageMap);
       } else {
-        throw new RuntimeException("Unknown message category " + category);
+        throw new RuntimeException("Unknown message category " + envelope.subType);
       }
     } catch (Exception e) {
       if (isInstallValid) {
@@ -273,7 +292,7 @@ public class IotReflectorClient implements MessagePublisher {
   }
 
   private void handleCommandEnvelope(Map<String, Object> messageMap) {
-    if (!isInstallValid) {
+    if (!isInstallValid || !messageFilter.apply(messageMap)) {
       return;
     }
     Map<String, String> attributes = extractAttributes(messageMap);
@@ -402,7 +421,7 @@ public class IotReflectorClient implements MessagePublisher {
     return false;
   }
 
-  private List<String> parseMessageTopic(String topic) {
+  private Envelope parseMessageTopic(String topic) {
     List<String> parts = new ArrayList<>(Arrays.asList(topic.substring(1).split("/")));
     String leader = parts.remove(0);
     if ("devices".equals(leader)) {
@@ -423,7 +442,12 @@ public class IotReflectorClient implements MessagePublisher {
     } else {
       throw new RuntimeException("Unknown topic string " + topic);
     }
-    return parts;
+
+    Envelope envelope = new Envelope();
+    String[] bits = parts.get(0).split(SOURCE_SEPARATOR_REGEX);
+    envelope.subType = SubType.fromValue(bits[0]);
+    envelope.source = bits.length > 1 ? bits[1] : null;
+    return envelope;
   }
 
   private void errorHandler(Throwable throwable) {
