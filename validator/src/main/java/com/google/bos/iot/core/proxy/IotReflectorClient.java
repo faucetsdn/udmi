@@ -26,6 +26,7 @@ import static com.google.udmi.util.JsonUtil.getDate;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.mapCast;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static com.google.udmi.util.JsonUtil.toObject;
 import static com.google.udmi.util.PubSubReflector.USER_NAME_DEFAULT;
@@ -102,7 +103,7 @@ public class IotReflectorClient implements MessagePublisher {
   private final String updateTo;
   private final IotProvider iotProvider;
   private final boolean enforceUdmiVersion;
-  private final Function<Map<String, Object>, Boolean> messageFilter;
+  private final Function<Envelope, Boolean> messageFilter;
   private final String userName;
   private Date reflectorStateTimestamp;
   private boolean isInstallValid;
@@ -122,7 +123,7 @@ public class IotReflectorClient implements MessagePublisher {
   }
 
   public IotReflectorClient(ExecutionConfiguration iotConfig, int requiredVersion,
-      Function<Map<String, Object>, Boolean> messageFilter) {
+      Function<Envelope, Boolean> messageFilter) {
     Preconditions.checkState(requiredVersion >= TOOLS_FUNCTIONS_VERSION,
         format("Min required version %s not satisfied by tools version %s", TOOLS_FUNCTIONS_VERSION,
             requiredVersion));
@@ -173,9 +174,8 @@ public class IotReflectorClient implements MessagePublisher {
     }
   }
 
-  private boolean userMessageFilter(Map<String, Object> messageMap) {
-    String source = (String) messageMap.get(SOURCE_KEY);
-    return source == null || userName.equals(source);
+  private boolean userMessageFilter(Envelope envelope) {
+    return envelope.source == null || userName.equals(envelope.source);
   }
 
   /**
@@ -277,7 +277,7 @@ public class IotReflectorClient implements MessagePublisher {
       if (SubType.CONFIG == envelope.subType) {
         ensureCloudSync(messageMap);
       } else if (SubType.COMMANDS == envelope.subType) {
-        handleCommandEnvelope(messageMap);
+        handleEncapsulatedMessage(envelope, messageMap);
       } else {
         throw new RuntimeException("Unknown message category " + envelope.subType);
       }
@@ -291,8 +291,8 @@ public class IotReflectorClient implements MessagePublisher {
     }
   }
 
-  private void handleCommandEnvelope(Map<String, Object> messageMap) {
-    if (!isInstallValid || !messageFilter.apply(messageMap)) {
+  private void handleEncapsulatedMessage(Envelope envelope, Map<String, Object> messageMap) {
+    if (!isInstallValid || !messageFilter.apply(envelope)) {
       return;
     }
     Map<String, String> attributes = extractAttributes(messageMap);
@@ -443,10 +443,20 @@ public class IotReflectorClient implements MessagePublisher {
       throw new RuntimeException("Unknown topic string " + topic);
     }
 
+    System.err.printf("Envelope conversion from %s%n", topic);
     Envelope envelope = new Envelope();
-    String[] bits = parts.get(0).split(SOURCE_SEPARATOR_REGEX);
-    envelope.subType = SubType.fromValue(bits[0]);
-    envelope.source = bits.length > 1 ? bits[1] : null;
+    String[] bits1 = parts.remove(0).split(SOURCE_SEPARATOR_REGEX);
+    checkState(parts.isEmpty() || bits1.length == 1, "Malformed topic: " + topic);
+    envelope.subType = SubType.fromValue(bits1[0]);
+    if (parts.isEmpty()) {
+      envelope.source = bits1.length > 1 ? bits1[1] : null;
+    } else {
+      String[] bits2 = parts.remove(0).split(SOURCE_SEPARATOR_REGEX);
+      envelope.subFolder = SubFolder.fromValue(bits2[0]);
+      envelope.source = bits2.length > 1 ? bits2[1] : null;
+    }
+    checkState(parts.isEmpty());
+    System.err.printf("Envelope conversion from %s as %s%n", topic, stringifyTerse(envelope));
     return envelope;
   }
 
