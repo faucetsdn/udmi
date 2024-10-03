@@ -15,7 +15,6 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import udmi.schema.Envelope.SubType;
 
 /**
  * Collection of common constants and minor utilities.
@@ -52,8 +51,6 @@ public abstract class Common {
   public static final char DETAIL_SEPARATOR_CHAR = ';';
   public static final String DETAIL_SEPARATOR = DETAIL_SEPARATOR_CHAR + " ";
   public static final Joiner DETAIL_JOINER = Joiner.on(DETAIL_SEPARATOR);
-  public static final String CONFIG_CATEGORY = SubType.CONFIG.value();
-  public static final String COMMANDS_CATEGORY = SubType.COMMANDS.value();
   public static final String CATEGORY_PROPERTY_KEY = "category";
   public static final Pattern DEVICE_ID_ALLOWABLE = Pattern.compile("^[-_a-zA-Z0-9]+$");
   public static final Pattern POINT_NAME_ALLOWABLE = DEVICE_ID_ALLOWABLE;

@@ -122,6 +122,9 @@ public class IotReflectorClient implements MessagePublisher {
     this(iotConfig, requiredVersion, null);
   }
 
+  /**
+   * Basic client that accepts a custom message filter.
+   */
   public IotReflectorClient(ExecutionConfiguration iotConfig, int requiredVersion,
       Function<Envelope, Boolean> messageFilter) {
     Preconditions.checkState(requiredVersion >= TOOLS_FUNCTIONS_VERSION,
@@ -134,10 +137,10 @@ public class IotReflectorClient implements MessagePublisher {
     projectId = iotConfig.project_id;
     udmiVersion = ofNullable(iotConfig.udmi_version).orElseGet(Common::getUdmiVersion);
     updateTo = iotConfig.update_to;
-    String prefix = getNamespacePrefix(iotConfig.udmi_namespace);
     iotProvider = ofNullable(iotConfig.iot_provider).orElse(IotProvider.GBOS);
     userName = ofNullable(iotConfig.user_name).orElse(USER_NAME_DEFAULT);
     iotConfig.iot_provider = iotProvider;
+    String prefix = getNamespacePrefix(iotConfig.udmi_namespace);
     String clientId = format("//%s/%s/%s %s", iotProvider, projectId, prefix, registryId);
     try {
       System.err.println("Instantiating reflector client " + clientId);

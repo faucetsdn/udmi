@@ -4,8 +4,6 @@ import static com.google.bos.udmi.service.messaging.impl.PubSubPipe.GCP_HOST;
 import static com.google.bos.udmi.service.messaging.impl.PubSubPipe.SOURCE_KEY;
 import static com.google.bos.udmi.service.messaging.impl.PubSubPipe.getTransportChannelProvider;
 import static com.google.udmi.util.Common.CATEGORY_PROPERTY_KEY;
-import static com.google.udmi.util.Common.COMMANDS_CATEGORY;
-import static com.google.udmi.util.Common.CONFIG_CATEGORY;
 import static com.google.udmi.util.Common.DEVICE_ID_KEY;
 import static com.google.udmi.util.Common.REGISTRY_ID_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SOURCE_SEPARATOR;
@@ -34,6 +32,7 @@ import java.util.function.Consumer;
 import udmi.schema.CloudModel;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
+import udmi.schema.Envelope.SubType;
 import udmi.schema.IotAccess;
 
 /**
@@ -76,12 +75,12 @@ public class PubSubIotAccessProvider extends IotAccessBase {
 
   @Override
   public void sendCommandBase(Envelope envelope, SubFolder folder, String message) {
-    publish(envelope, COMMANDS_CATEGORY, folder, message);
+    publish(envelope, SubType.COMMANDS.value(), folder, message);
   }
 
   @Override
   public String updateConfig(Envelope envelope, String config, Long version) {
-    publish(envelope, CONFIG_CATEGORY, null, config);
+    publish(envelope, SubType.CONFIG.value(), null, config);
     return config;
   }
 
