@@ -443,8 +443,9 @@ public class IotReflectorClient implements MessagePublisher {
       throw new RuntimeException("Unknown topic string " + topic);
     }
 
-    System.err.printf("Envelope conversion from %s%n", topic);
     Envelope envelope = new Envelope();
+    envelope.deviceRegistryId = registryId;
+
     String[] bits1 = parts.remove(0).split(SOURCE_SEPARATOR_REGEX);
     checkState(parts.isEmpty() || bits1.length == 1, "Malformed topic: " + topic);
     envelope.subType = SubType.fromValue(bits1[0]);
@@ -456,7 +457,7 @@ public class IotReflectorClient implements MessagePublisher {
       envelope.source = bits2.length > 1 ? bits2[1] : null;
     }
     checkState(parts.isEmpty());
-    System.err.printf("Envelope conversion from %s as %s%n", topic, stringifyTerse(envelope));
+
     return envelope;
   }
 

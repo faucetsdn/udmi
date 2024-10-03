@@ -106,6 +106,7 @@ import java.util.stream.StreamSupport;
 import org.apache.commons.io.FileUtils;
 import udmi.schema.Category;
 import udmi.schema.DeviceValidationEvents;
+import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
 import udmi.schema.ExecutionConfiguration;
@@ -522,8 +523,12 @@ public class Validator {
     String keyFile = new File(config.site_model, GCP_REFLECT_KEY_PKCS8).getAbsolutePath();
     outputLogger.info("Loading reflector key file from " + keyFile);
     config.key_file = keyFile;
-    client = new IotReflectorClient(config, TOOLS_FUNCTIONS_VERSION);
+    client = new IotReflectorClient(config, TOOLS_FUNCTIONS_VERSION, this::messageFilter);
     dataSinks.add(client);
+  }
+
+  private boolean messageFilter(Envelope envelope) {
+    return true;
   }
 
   void messageLoop() {
