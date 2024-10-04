@@ -40,6 +40,8 @@ import udmi.schema.IotAccess;
  */
 public class PubSubIotAccessProvider extends IotAccessBase {
 
+  private static final String COMMAND_SUBTYPE = SubType.COMMANDS.value();
+  private static final String CONFIG_SUBTYPE = SubType.CONFIG.value();
   private final String projectId;
   private final String topic;
   private final Publisher publisher;
@@ -75,12 +77,12 @@ public class PubSubIotAccessProvider extends IotAccessBase {
 
   @Override
   public void sendCommandBase(Envelope envelope, SubFolder folder, String message) {
-    publish(envelope, SubType.COMMANDS.value(), folder, message);
+    publish(envelope, COMMAND_SUBTYPE, folder, message);
   }
 
   @Override
   public String updateConfig(Envelope envelope, String config, Long version) {
-    publish(envelope, SubType.CONFIG.value(), null, config);
+    publish(envelope, CONFIG_SUBTYPE, null, config);
     return config;
   }
 
