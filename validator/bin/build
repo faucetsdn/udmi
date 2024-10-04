@@ -16,8 +16,16 @@ while [[ $# -gt 0 ]]; do
 done
 
 ROOT=$(dirname $0)/..
-BASE=..
+UDMI_ROOT=..
 cd $ROOT
+
+jarfile=build/libs/validator-1.0-SNAPSHOT-all.jar
+
+newest=$(ls -rt `find src/ $UDMI_ROOT/gencode/java -type f` | tail -n 1)
+if [[ -z $check && -z $covg && -f $jarfile && $jarfile -nt $newest ]]; then
+    echo $jarfile up-to-date, skipping build.
+    exit 0
+fi
 
 echo Cleaning $ROOT/build/
 rm -rf build/
@@ -28,17 +36,9 @@ cp -a ../bin build/udmi_bin/
 cp -a ../etc build/udmi_etc/
 cp -a ../schema build/schema/
 
-jarfile=build/libs/validator-1.0-SNAPSHOT-all.jar
-
-newest=$(ls -rt `find src/ $BASE/gencode/java -type f` | tail -n 1)
-if [[ -z $check && -z $covg && -f $jarfile && $jarfile -nt $newest ]]; then
-    echo $jarfile up-to-date, skipping build.
-    exit 0
-fi
-
 if [[ -n $check ]]; then
-    (cd $BASE/sites/udmi_site_model/devices; rm -rf XXX-* ACME-*)
-    $BASE/bin/clone_model
+    (cd $UDMI_ROOT/sites/udmi_site_model/devices; rm -rf XXX-* ACME-*)
+    $UDMI_ROOT/bin/clone_model
 fi
 
 echo Java version $(java --version)
