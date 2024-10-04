@@ -8,6 +8,7 @@ import static com.google.daq.mqtt.sequencer.SequenceBase.EMPTY_MESSAGE;
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_TOOLS;
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_VERSION;
 import static com.google.daq.mqtt.util.ConfigUtil.readExeConfig;
+import static com.google.daq.mqtt.util.PubSubClient.getFeedInfo;
 import static com.google.daq.mqtt.validator.ReportingDevice.typeFolderPairKey;
 import static com.google.udmi.util.Common.ERROR_KEY;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
@@ -36,6 +37,7 @@ import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.SiteModel.DEVICES_DIR;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
+import static udmi.schema.IotAccess.IotProvider.PUBSUB;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -49,6 +51,7 @@ import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
 import com.google.bos.iot.core.proxy.NullPublisher;
+import com.google.cloud.Tuple;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -231,7 +234,11 @@ public class Validator {
 
   void execute() {
     if (!Strings.isNullOrEmpty(config.feed_name)) {
-      validatePubSub(config.feed_name);
+      validatePubSub(config.feed_name, true);
+    }
+    if (config.iot_provider == PUBSUB) {
+      Tuple<String, String> tuple = getFeedInfo(config);
+      validatePubSub(format("%s/%s", tuple.x(), tuple.y()), false);
     }
     if (client == null) {
       validateReflector();
@@ -308,7 +315,7 @@ public class Validator {
             case "-p" -> setProjectId(removeNextArg(argList));
             case "-s" -> setSiteDir(removeNextArg(argList));
             case "-a" -> setSchemaSpec(removeNextArg(argList));
-            case "-t" -> validatePubSub(removeNextArg(argList));
+            case "-t" -> validatePubSub(removeNextArg(argList), true);
             case "-f" -> validateFilesOutput(removeNextArg(argList));
             case "-u" -> forceUpgrade = true;
             case "-r" -> validateMessageTrace(removeNextArg(argList));
@@ -342,15 +349,15 @@ public class Validator {
     config.project_id = parts[1];
   }
 
-  private void validatePubSub(String pubSubCombo) {
+  private void validatePubSub(String pubSubCombo, boolean reflect) {
     String[] parts = pubSubCombo.split("/");
     Preconditions.checkArgument(parts.length <= 2, "Too many parts in pubsub path " + pubSubCombo);
-    String instName = parts[0];
+    String subscriptionId = parts[0];
     CloudIotManager cloudIotManager = new CloudIotManager(config.project_id,
-        new File(config.site_model), null, config.registry_suffix, IotProvider.PUBSUB);
+        new File(config.site_model), null, config.registry_suffix, PUBSUB);
     String registryId = getRegistryId();
     String updateTopic = parts.length > 1 ? parts[1] : cloudIotManager.getUpdateTopic();
-    client = new PubSubClient(config.project_id, registryId, instName, updateTopic);
+    client = new PubSubClient(config.project_id, registryId, subscriptionId, updateTopic, reflect);
     if (updateTopic == null) {
       outputLogger.warn("Not sending to update topic because PubSub update_topic not defined");
     } else {
@@ -850,8 +857,8 @@ public class Validator {
   private boolean shouldProcessMessage(Map<String, String> attributes) {
     String registryId = attributes.get(DEVICE_REGISTRY_ID_KEY);
 
-    if (!registryId.equals(getRegistryId())) {
-      if (ignoredRegistries.add(registryId)) {
+    if (registryId == null || !registryId.equals(getRegistryId())) {
+      if (registryId != null && ignoredRegistries.add(registryId)) {
         outputLogger.warn("Ignoring data for not-configured registry " + registryId);
       }
       return false;

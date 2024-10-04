@@ -4,10 +4,12 @@ import static com.google.api.client.util.Preconditions.checkNotNull;
 import static com.google.udmi.util.Common.NAMESPACE_SEPARATOR;
 import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
 import static com.google.udmi.util.Common.SOURCE_SEPARATOR;
-import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.getTimestamp;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThrow;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static com.google.udmi.util.JsonUtil.toStringMap;
 import static com.google.udmi.util.PubSubReflector.USER_NAME_DEFAULT;
 import static java.lang.String.format;
 import static java.time.Instant.ofEpochSecond;
@@ -21,6 +23,7 @@ import com.google.api.client.util.Base64;
 import com.google.api.core.ApiFuture;
 import com.google.api.gax.rpc.NotFoundException;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
+import com.google.cloud.Tuple;
 import com.google.cloud.pubsub.v1.AckReplyConsumer;
 import com.google.cloud.pubsub.v1.MessageReceiver;
 import com.google.cloud.pubsub.v1.Publisher;
@@ -38,6 +41,7 @@ import com.google.pubsub.v1.ProjectTopicName;
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.pubsub.v1.SeekRequest;
 import com.google.udmi.util.Common;
+import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Arrays;
@@ -86,6 +90,7 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
   private final Map<String, HandlerConsumer<Object>> handlers = new HashMap<>();
   private final BiMap<String, Class<?>> typeClasses = HashBiMap.create();
   private final Map<Class<?>, SimpleEntry<SubType, SubFolder>> classTypes = new HashMap<>();
+  private final boolean useReflector;
 
   /**
    * Create a simple proxy instance.
@@ -94,7 +99,7 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
    * @param subscription target subscription name
    */
   public PubSubClient(String projectId, String subscription) {
-    this(projectId, null, subscription, null);
+    this(projectId, null, subscription, null, false, false);
   }
 
   /**
@@ -104,10 +109,11 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
    * @param registryId   target registry id
    * @param subscription target subscription name
    * @param updateTopic  output PubSub topic for updates (else null)
+   * @param reflect      if output messages should be encapsulated
    */
   public PubSubClient(String projectId, String registryId, String subscription,
-      String updateTopic) {
-    this(projectId, registryId, subscription, updateTopic, true);
+      String updateTopic, boolean reflect) {
+    this(projectId, registryId, subscription, updateTopic, reflect, true);
   }
 
   /**
@@ -117,13 +123,15 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
    * @param registryId   target registry id
    * @param subscription target subscription name
    * @param updateTopic  output PubSub topic for updates (else null)
+   * @param reflect      if output messages should be encapsulated
    * @param reset        if the connection should be reset before use
    */
   public PubSubClient(String projectId, String registryId, String subscription, String updateTopic,
-      boolean reset) {
+      boolean reflect, boolean reset) {
     try {
       this.projectId = checkNotNull(projectId, "project id not defined");
       this.registryId = registryId;
+      this.useReflector = reflect;
       ProjectSubscriptionName subscriptionName = ProjectSubscriptionName.of(projectId,
           subscription);
       this.flushSubscription = reset;
@@ -154,13 +162,19 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
    */
   public static MessagePublisher from(ExecutionConfiguration iotConfig,
       BiConsumer<String, String> messageHandler, Consumer<Throwable> errorHandler) {
-    String registryId = iotConfig.registry_id;
+    ifNotNullThrow(messageHandler, "message handler should be null");
+    ifNotNullThrow(errorHandler, "error handler should be null");
+    Tuple<String, String> t = getFeedInfo(iotConfig);
+    return new PubSubClient(iotConfig.project_id, iotConfig.registry_id, t.x(), t.y(), false);
+  }
+
+  public static Tuple<String, String> getFeedInfo(ExecutionConfiguration iotConfig) {
     String namespace = ofNullable(iotConfig.udmi_namespace).map(p -> p + NAMESPACE_SEPARATOR)
         .orElse("");
     String topic = namespace + SUBSCRIPTION_ROOT;
     String userName = SOURCE_SEPARATOR + ofNullable(iotConfig.user_name).orElse(USER_NAME_DEFAULT);
     String subscription = topic + userName;
-    return new PubSubClient(iotConfig.project_id, registryId, subscription, topic);
+    return Tuple.of(subscription, topic);
   }
 
   private void initializeHandlerTypes() {
@@ -311,6 +325,31 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
 
   @Override
   public String publish(String deviceId, String topic, String data) {
+    return useReflector ? publishReflector(deviceId, topic, data)
+        : publishDirect(deviceId, topic, data);
+  }
+
+  private String publishDirect(String deviceId, String topic, String data) {
+    try {
+      if (deviceId == null) {
+        System.err.printf("Refusing to publish to %s due to unspecified device%n", topic);
+        return null;
+      }
+      Envelope envelopedData = makeReflectorMessage(deviceId, topic, null);
+      PubsubMessage message = PubsubMessage.newBuilder()
+          .setData(ByteString.copyFromUtf8(data))
+          .putAllAttributes(toStringMap(envelopedData))
+          .build();
+      ApiFuture<String> publish = publisher.publish(message);
+      publish.get(); // Wait for publish to complete.
+      System.err.printf("Published to %s/%s/%s%n", registryId, deviceId, topic);
+      return null;
+    } catch (Exception e) {
+      throw new RuntimeException("While publishing direct message", e);
+    }
+  }
+
+  private String publishReflector(String deviceId, String topic, String data) {
     try {
       if (deviceId == null) {
         System.err.printf("Refusing to publish to %s due to unspecified device%n", topic);
@@ -330,7 +369,7 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
       System.err.printf("Published to %s/%s/%s%n", registryId, deviceId, topic);
       return null;
     } catch (Exception e) {
-      throw new RuntimeException("While publishing message", e);
+      throw new RuntimeException("While publishing reflector message", e);
     }
   }
 
@@ -338,7 +377,7 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
     Envelope envelope = new Envelope();
     envelope.deviceRegistryId = checkNotNull(registryId, "registry id not defined");
     envelope.deviceId = deviceId;
-    envelope.payload = encodeBase64(data);
+    envelope.payload = ifNotNullGet(data, GeneralUtils::encodeBase64);
     String[] parts = topic.split("/");
     envelope.subFolder = SubFolder.fromValue(parts[0]);
     envelope.subType = SubType.fromValue(parts[1]);
