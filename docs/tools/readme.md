@@ -1,6 +1,9 @@
 [**UDMI**](../../) / [**Docs**](../) / [Tools](#)
 
-Most tools take a [project spec](project_spec.md) as an argument.
+# Common Arguments
+
+Most tools take a [site model](../side_model.md) as the first argument.
+Many tools take a [project spec](project_spec.md) as the second argument.
 
 # Tools
 
