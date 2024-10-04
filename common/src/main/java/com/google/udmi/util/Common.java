@@ -56,7 +56,7 @@ public abstract class Common {
   public static final Pattern POINT_NAME_ALLOWABLE = DEVICE_ID_ALLOWABLE;
   public static final int SEC_TO_MS = 1000;
   public static final String SOURCE_SEPARATOR = "+";
-  public static final String SOURCE_SEPARATOR_REGEX = "\\" +SOURCE_SEPARATOR;
+  public static final String SOURCE_SEPARATOR_REGEX = "\\" + SOURCE_SEPARATOR;
 
   private static final String PREFIX_SEPARATOR = "~";
   private static final String UDMI_VERSION_ENV = "UDMI_TOOLS";

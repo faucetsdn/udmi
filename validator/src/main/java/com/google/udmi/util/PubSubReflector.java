@@ -11,7 +11,6 @@ import static com.google.udmi.util.Common.SOURCE_SEPARATOR_REGEX;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.getNamespacePrefix;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
-import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
