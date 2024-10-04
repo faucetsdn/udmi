@@ -46,7 +46,7 @@ if [ "$build" == y ]; then
 fi
 
 jarfile=$(realpath validator/build/libs/validator-1.0-SNAPSHOT-all.jar)
-javarun="java -Dnashorn.args=--no-deprecation-warning -cp $jarfile com.google.daq.mqtt.validator.SchemaTester"
+javarun="java -cp $jarfile com.google.daq.mqtt.validator.SchemaTester"
 
 if [[ -z $subsets ]]; then
     subsets=$(cd $testdir; ls -d *)
