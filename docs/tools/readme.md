@@ -1,5 +1,10 @@
 [**UDMI**](../../) / [**Docs**](../) / [Tools](#)
 
+# Common Arguments
+
+Most tools take a [site model](../specs/site_model.md) as the first argument.
+Many tools take a [project spec](project_spec.md) as the second argument.
+
 # Tools
 
 - [keygen](keygen.md) - a script to generate an RSA or ES key for single devices

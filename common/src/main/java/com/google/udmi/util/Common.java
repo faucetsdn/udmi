@@ -58,7 +58,7 @@ public abstract class Common {
   public static final String SOURCE_SEPARATOR = "+";
   public static final String SOURCE_SEPARATOR_REGEX = "\\" + SOURCE_SEPARATOR;
 
-  private static final String PREFIX_SEPARATOR = "~";
+  public static final String NAMESPACE_SEPARATOR = "~";
   private static final String UDMI_VERSION_ENV = "UDMI_TOOLS";
   public static final int EXIT_CODE_ERROR = 1;
 
@@ -179,6 +179,6 @@ public abstract class Common {
   }
 
   public static String getNamespacePrefix(String udmiNamespace) {
-    return Strings.isNullOrEmpty(udmiNamespace) ? "" : udmiNamespace + PREFIX_SEPARATOR;
+    return Strings.isNullOrEmpty(udmiNamespace) ? "" : udmiNamespace + NAMESPACE_SEPARATOR;
   }
 }
