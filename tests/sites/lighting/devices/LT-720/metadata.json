@@ -1,0 +1,31 @@
+{
+  "system": {
+    "location": {
+      "site": "TW-NTC-TPKD",
+      "section": "NTC-TPKD",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    "physical_tag": {
+      "asset": {
+        "site": "TW-NTC-TPKD",
+        "name": "LT-720",
+        "guid": "uuid://01386550-8924-4157-8b26-e975a19850dd"
+      }
+    }
+  },
+  "pointset": {
+    "points": {
+      "dimmer_percentage_command": {
+        "units": "Percent"
+      }
+    }
+  },
+  "gateway": {
+    "gateway_id": "LTGW-28"
+  },
+  "version": 1,
+  "timestamp": "2021-10-13T14:32:46.9184909+01:00"
+}

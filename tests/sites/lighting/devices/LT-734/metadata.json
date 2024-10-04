@@ -1,0 +1,31 @@
+{
+  "system": {
+    "location": {
+      "site": "TW-NTC-TPKD",
+      "section": "NTC-TPKD",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    "physical_tag": {
+      "asset": {
+        "site": "TW-NTC-TPKD",
+        "name": "LT-734",
+        "guid": "uuid://8990e7a0-77fc-45b5-9ab4-5d28cbe31b78"
+      }
+    }
+  },
+  "pointset": {
+    "points": {
+      "dimmer_percentage_command": {
+        "units": "Percent"
+      }
+    }
+  },
+  "gateway": {
+    "gateway_id": "LTGW-28"
+  },
+  "version": 1,
+  "timestamp": "2021-10-13T14:32:46.9196363+01:00"
+}

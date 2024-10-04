@@ -1,0 +1,31 @@
+{
+  "system": {
+    "location": {
+      "site": "TW-NTC-TPKD",
+      "section": "NTC-TPKD",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    "physical_tag": {
+      "asset": {
+        "site": "TW-NTC-TPKD",
+        "name": "LT-839",
+        "guid": "uuid://a9890c24-d6d8-4239-b565-470140580acb"
+      }
+    }
+  },
+  "pointset": {
+    "points": {
+      "dimmer_percentage_command": {
+        "units": "Percent"
+      }
+    }
+  },
+  "gateway": {
+    "gateway_id": "LTGW-28"
+  },
+  "version": 1,
+  "timestamp": "2021-10-13T14:32:46.9335835+01:00"
+}
