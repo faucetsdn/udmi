@@ -470,6 +470,8 @@ public class Registrar {
         cloudIotManager.getCloudRegion(),
         cloudIotManager.getRegistryId());
 
+    cloudIotManager.ensureCanUpdateCloud();
+
     if (cloudIotManager.getUpdateTopic() != null) {
       updatePusher = new PubSubPusher(projectId, cloudIotManager.getUpdateTopic());
     }

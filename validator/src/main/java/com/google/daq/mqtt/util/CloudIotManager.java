@@ -173,7 +173,9 @@ public class CloudIotManager {
   private void initializeIotProvider() {
     try {
       iotProvider = makeIotProvider();
-      System.err.println("Created service for project " + projectId);
+      System.err.printf(
+          "Instantiated iot provider %s as %s%n", executionConfiguration.iot_provider,
+          ofNullable(iotProvider).map(p -> p.getClass().getSimpleName()).orElse("undefined"));
     } catch (Exception e) {
       throw new RuntimeException("While initializing Cloud IoT project " + projectId, e);
     }
@@ -217,7 +219,7 @@ public class CloudIotManager {
     } else {
       exceptions.capture("updating", () -> updateDevice(deviceId, settings, device));
     }
- 
+
     if (settings.config != null) {
       exceptions.capture("configuring", () -> writeDeviceConfig(deviceId, settings.config));
     }
@@ -254,11 +256,11 @@ public class CloudIotManager {
   }
 
   private void writeDeviceConfig(String deviceId, String config) {
-    iotProvider.updateConfig(deviceId, SubFolder.UPDATE, config);
+    getIotProvider().updateConfig(deviceId, SubFolder.UPDATE, config);
   }
 
   public void modifyConfig(String deviceId, SubFolder subFolder, String config) {
-    iotProvider.updateConfig(deviceId, subFolder, config);
+    getIotProvider().updateConfig(deviceId, subFolder, config);
   }
 
   /**
@@ -268,7 +270,7 @@ public class CloudIotManager {
    * @param blocked  should this device be blocked?
    */
   public void blockDevice(String deviceId, boolean blocked) {
-    iotProvider.setBlocked(deviceId, blocked);
+    getIotProvider().setBlocked(deviceId, blocked);
   }
 
   private CloudModel makeDevice(CloudDeviceSettings settings, CloudModel oldDevice) {
@@ -304,14 +306,14 @@ public class CloudIotManager {
   private void createDevice(String deviceId, CloudDeviceSettings settings) {
     CloudModel newDevice = makeDevice(settings, null);
     limitValueSizes(newDevice.metadata);
-    iotProvider.createResource(deviceId, newDevice);
+    getIotProvider().createResource(deviceId, newDevice);
     deviceMap.put(deviceId, newDevice);
   }
 
   private void updateDevice(String deviceId, CloudDeviceSettings settings, CloudModel oldDevice) {
     CloudModel device = makeDevice(settings, oldDevice);
     limitValueSizes(device.metadata);
-    iotProvider.updateDevice(deviceId, device);
+    getIotProvider().updateDevice(deviceId, device);
   }
 
   /**
@@ -320,7 +322,7 @@ public class CloudIotManager {
   public void modifyDevice(String deviceId, CloudModel update) {
     limitValueSizes(update.metadata);
     update.operation = Operation.MODIFY;
-    iotProvider.updateDevice(deviceId, update);
+    getIotProvider().updateDevice(deviceId, update);
   }
 
   private void limitValueSizes(Map<String, String> metadata) {
@@ -330,7 +332,7 @@ public class CloudIotManager {
   }
 
   public SetupUdmiConfig getVersionInformation() {
-    return iotProvider.getVersionInformation();
+    return getIotProvider().getVersionInformation();
   }
 
   /**
@@ -339,7 +341,7 @@ public class CloudIotManager {
    * @return registered device list
    */
   public Map<String, CloudModel> fetchCloudModels() {
-    return iotProvider.fetchCloudModels(null);
+    return getIotProvider().fetchCloudModels(null);
   }
 
   /**
@@ -348,7 +350,7 @@ public class CloudIotManager {
    * @return registered device list
    */
   public Set<String> fetchBoundDevices(String gatewayId) {
-    return ifNotNullGet(iotProvider.fetchCloudModels(gatewayId), Map::keySet);
+    return ifNotNullGet(getIotProvider().fetchCloudModels(gatewayId), Map::keySet);
   }
 
   public CloudModel fetchDevice(String deviceId) {
@@ -356,7 +358,7 @@ public class CloudIotManager {
   }
 
   private CloudModel fetchDeviceRaw(String deviceId) {
-    return iotProvider.fetchDevice(deviceId);
+    return getIotProvider().fetchDevice(deviceId);
   }
 
   /**
@@ -405,19 +407,19 @@ public class CloudIotManager {
   }
 
   public void bindDevice(String proxyDeviceId, String gatewayDeviceId) {
-    iotProvider.bindDeviceToGateway(proxyDeviceId, gatewayDeviceId);
+    getIotProvider().bindDeviceToGateway(proxyDeviceId, gatewayDeviceId);
   }
 
   public List<Object> getMockActions() {
-    return iotProvider.getMockActions();
+    return getIotProvider().getMockActions();
   }
 
   public void shutdown() {
-    iotProvider.shutdown();
+    ifNotNullThen(iotProvider, IotProvider::shutdown);
   }
 
   public void deleteDevice(String deviceId) {
-    iotProvider.deleteDevice(deviceId);
+    getIotProvider().deleteDevice(deviceId);
     deviceMap.remove(deviceId);
   }
 
@@ -427,8 +429,8 @@ public class CloudIotManager {
   public String createRegistry(String suffix) {
     CloudModel settings = new CloudModel();
     settings.resource_type = Resource_type.REGISTRY;
-    settings.credentials = List.of(iotProvider.getCredential());
-    iotProvider.createResource(suffix, settings);
+    settings.credentials = List.of(getIotProvider().getCredential());
+    getIotProvider().createResource(suffix, settings);
     return requireNonNull(settings.num_id, "Missing registry name in reply");
   }
 
@@ -445,10 +447,18 @@ public class CloudIotManager {
     registryModel.metadata.put(
         MetadataMapKeys.UDMI_METADATA, toJsonString(siteMetadata)
     );
-    iotProvider.updateRegistry(registryModel);
+    getIotProvider().updateRegistry(registryModel);
   }
 
   public String getSiteDir() {
     return executionConfiguration.site_model;
+  }
+
+  private IotProvider getIotProvider() {
+    return checkNotNull(iotProvider, "iot provider not properly initialized");
+  }
+
+  public void ensureCanUpdateCloud() {
+    checkNotNull(iotProvider, "iot provider not properly initialized, can not update cloud");
   }
 }
