@@ -3,9 +3,13 @@ package com.google.daq.mqtt.validator;
 import com.google.daq.mqtt.util.ExceptionMap;
 import java.util.Arrays;
 
+/**
+ * Variant that uses the validator core to test schema examples from files.
+ */
 public class SchemaTester {
 
   /**
+   * Let's go.
    */
   public static void main(String[] args) {
     try {
