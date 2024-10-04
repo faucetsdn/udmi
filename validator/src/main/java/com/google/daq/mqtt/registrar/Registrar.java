@@ -1,6 +1,7 @@
 package com.google.daq.mqtt.registrar;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Sets.difference;
 import static com.google.common.collect.Sets.intersection;
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_ROOT;
@@ -42,7 +43,6 @@ import com.github.fge.jsonschema.core.load.download.URIDownloader;
 import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -470,7 +470,8 @@ public class Registrar {
         cloudIotManager.getCloudRegion(),
         cloudIotManager.getRegistryId());
 
-    cloudIotManager.ensureCanUpdateCloud();
+    checkState(cloudIotManager.canUpdateCloud(),
+        "iot provider not properly initialized, can not update cloud");
 
     if (cloudIotManager.getUpdateTopic() != null) {
       updatePusher = new PubSubPusher(projectId, cloudIotManager.getUpdateTopic());
@@ -1013,7 +1014,7 @@ public class Registrar {
     System.err.printf("Binding devices to %s, already bound: %s%n",
         gatewayId, JOIN_CSV.join(boundDevices));
     int total = cloudModels.size() != 0 ? cloudModels.size() : localDevices.size();
-    Preconditions.checkState(boundDevices.size() != total,
+    checkState(boundDevices.size() != total,
         "all devices including the gateway can't be bound to one gateway!");
     return localDevice.getSettings().proxyDevices.stream()
         .filter(proxyDevice -> deviceSet == null || deviceSet.contains(proxyDevice))

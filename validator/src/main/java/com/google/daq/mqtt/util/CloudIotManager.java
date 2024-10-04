@@ -458,7 +458,7 @@ public class CloudIotManager {
     return checkNotNull(iotProvider, "iot provider not properly initialized");
   }
 
-  public void ensureCanUpdateCloud() {
-    checkNotNull(iotProvider, "iot provider not properly initialized, can not update cloud");
+  public boolean canUpdateCloud() {
+    return iotProvider != null;
   }
 }
