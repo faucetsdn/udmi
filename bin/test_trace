@@ -36,9 +36,9 @@ export UDMI_TOOLS=test_trace
 
 # Clean things out, including some potentially corrupt state.
 rm -rf $site_out $site_model/devices/XXX-1
-echo java -jar validator/build/libs/validator-1.0-SNAPSHOT-all.jar -p -- -s /home/peringknife/udmi/sites/udmi_site_model -r tests/traces/simple --
-echo $javarun -p -- -s $site_model -r $trace_in --
-$javarun -p -- -s $site_model -r $trace_in --
+cmd="$javarun -p -- -s $site_model -r $trace_in --"
+echo $cmd
+$cmd
 
 echo Redacting output files...
 for file in `find $site_out -type f`; do redact; done
