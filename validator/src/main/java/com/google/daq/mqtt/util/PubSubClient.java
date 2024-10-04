@@ -168,6 +168,9 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
     return new PubSubClient(iotConfig.project_id, iotConfig.registry_id, t.x(), t.y(), false);
   }
 
+  /**
+   * Get the information for pubsub subscription and topic, extracted from the configuration.
+   */
   public static Tuple<String, String> getFeedInfo(ExecutionConfiguration iotConfig) {
     String namespace = ofNullable(iotConfig.udmi_namespace).map(p -> p + NAMESPACE_SEPARATOR)
         .orElse("");
