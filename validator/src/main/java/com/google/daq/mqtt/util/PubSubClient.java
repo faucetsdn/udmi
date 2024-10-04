@@ -44,9 +44,11 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
+import udmi.schema.ExecutionConfiguration;
 import udmi.schema.SetupUdmiConfig;
 import udmi.schema.SystemState;
 
@@ -139,6 +141,10 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
     } catch (Exception e) {
       throw new RuntimeException(String.format(CONNECT_ERROR_FORMAT, projectId), e);
     }
+  }
+
+  public static MessagePublisher from(ExecutionConfiguration iotConfig,
+      BiConsumer<String, String> messageHandler, Consumer<Throwable> errorHandler) {
   }
 
   private void initializeHandlerTypes() {

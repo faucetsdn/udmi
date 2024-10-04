@@ -2,24 +2,16 @@ package com.google.daq.mqtt.util;
 
 import static com.google.udmi.util.Common.getNamespacePrefix;
 import static java.util.Optional.ofNullable;
-import static udmi.schema.IotAccess.IotProvider.GBOS;
 import static udmi.schema.IotAccess.IotProvider.IMPLICIT;
 import static udmi.schema.IotAccess.IotProvider.JWT;
-import static udmi.schema.IotAccess.IotProvider.MQTT;
-import static udmi.schema.IotAccess.IotProvider.PREF;
-import static udmi.schema.IotAccess.IotProvider.PUBSUB;
 
 import com.google.bos.iot.core.proxy.MqttPublisher;
-import com.google.common.collect.ImmutableMap;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
-import com.google.udmi.util.PubSubPublisher;
 import com.google.udmi.util.PubSubReflector;
-import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import udmi.schema.Credential;
 import udmi.schema.ExecutionConfiguration;
-import udmi.schema.IotAccess;
 import udmi.schema.IotAccess.IotProvider;
 import udmi.schema.SetupUdmiConfig;
 
@@ -48,7 +40,7 @@ public interface MessagePublisher {
     return switch (iotProvider) {
       case PREF -> PubSubReflector.from(iotConfig, messageHandler, errorHandler);
       case MQTT, JWT, GBOS -> MqttPublisher.from(iotConfig, messageHandler, errorHandler);
-      case PUBSUB -> PubSubPublisher.from(iotConfig, messageHandler, errorHandler);
+      case PUBSUB -> PubSubClient.from(iotConfig, messageHandler, errorHandler);
       default -> throw new RuntimeException("Unsupported iot provider " + iotProvider);
     };
   }
