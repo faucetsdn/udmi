@@ -12,10 +12,10 @@ google-api-python-client==2.37.0
 google-auth==2.14.1
 google-auth-httplib2==0.1.0
 google-auth-oauthlib==0.4.6
-google-cloud-pubsub==2.12.1
+google-cloud-pubsub==2.25.2
 google-cloud-trace==1.13.5
 googleapis-common-protos==1.65.0
-grpc-google-iam-v1==0.12.3
+grpc-google-iam-v1==0.13.1
 grpcio==1.65.1
 grpcio-status==1.65.1
 htmlmin==0.1.12
