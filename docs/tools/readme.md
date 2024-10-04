@@ -2,7 +2,7 @@
 
 # Common Arguments
 
-Most tools take a [site model](../side_model.md) as the first argument.
+Most tools take a [site model](../specs/site_model.md) as the first argument.
 Many tools take a [project spec](project_spec.md) as the second argument.
 
 # Tools
