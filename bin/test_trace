@@ -19,6 +19,8 @@ function redact() {
         -e 's/\\n.*\.java:[0-9]+\)/\\tREDACTED\\n/g'
 }
 
+jarfile=$(realpath validator/build/libs/validator-1.0-SNAPSHOT-all.jar)
+javarun="java -Dnashorn.args=--no-deprecation-warning -cp $jarfile com.google.daq.mqtt.validator.SchemaTester"
 
 trace_in=tests/traces/${trace_name}
 trace_out=$trace_in/expected/
@@ -33,7 +35,7 @@ export UDMI_TOOLS=test_trace
 
 # Clean things out, including some potentially corrupt state.
 rm -rf $site_out $site_model/devices/XXX-1
-validator/bin/validate -- schema trace $trace_in $site_model
+$javarun -- schema trace $trace_in $site_model
 
 echo Redacting output files...
 for file in `find $site_out -type f`; do redact; done
