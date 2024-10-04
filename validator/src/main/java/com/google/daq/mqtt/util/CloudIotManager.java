@@ -19,6 +19,7 @@ import static udmi.schema.IotAccess.IotProvider.PUBSUB;
 
 import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.GeneralUtils;
+import com.google.udmi.util.IotProvider;
 import com.google.udmi.util.MetadataMapKeys;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
