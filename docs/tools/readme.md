@@ -1,5 +1,7 @@
 [**UDMI**](../../) / [**Docs**](../) / [Tools](#)
 
+Most tools take a [project spec](project_spec.md) as an argument.
+
 # Tools
 
 - [keygen](keygen.md) - a script to generate an RSA or ES key for single devices
