@@ -10,6 +10,7 @@ import static com.google.daq.mqtt.util.IotMockProvider.ActionType.UPDATE_DEVICE_
 import static com.google.daq.mqtt.util.IotMockProvider.ActionType.UPDATE_REGISTRY_ACTION;
 import static udmi.schema.CloudModel.Resource_type.GATEWAY;
 
+import com.google.udmi.util.IotProvider;
 import com.google.udmi.util.SiteModel;
 import java.util.ArrayList;
 import java.util.HashMap;

@@ -4,7 +4,6 @@ import static com.google.udmi.util.Common.getNamespacePrefix;
 import static java.util.Optional.ofNullable;
 import static udmi.schema.IotAccess.IotProvider.IMPLICIT;
 import static udmi.schema.IotAccess.IotProvider.JWT;
-import static udmi.schema.IotAccess.IotProvider.PREF;
 
 import com.google.bos.iot.core.proxy.MqttPublisher;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
@@ -13,7 +12,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import udmi.schema.Credential;
 import udmi.schema.ExecutionConfiguration;
-import udmi.schema.IotAccess;
+import udmi.schema.IotAccess.IotProvider;
 import udmi.schema.SetupUdmiConfig;
 
 /**
@@ -34,14 +33,16 @@ public interface MessagePublisher {
    */
   static MessagePublisher from(ExecutionConfiguration iotConfig,
       BiConsumer<String, String> messageHandler, Consumer<Throwable> errorHandler) {
-    IotAccess.IotProvider iotProvider = ofNullable(iotConfig.iot_provider).orElse(JWT);
+    IotProvider iotProvider = ofNullable(iotConfig.iot_provider).orElse(JWT);
     if (iotConfig.reflector_endpoint != null && iotProvider != IMPLICIT) {
       iotConfig.reflector_endpoint = null;
     }
-    if (iotProvider == PREF) {
-      return PubSubReflector.from(iotConfig, messageHandler, errorHandler);
-    }
-    return MqttPublisher.from(iotConfig, messageHandler, errorHandler);
+    return switch (iotProvider) {
+      case PREF -> PubSubReflector.from(iotConfig, messageHandler, errorHandler);
+      case MQTT, JWT, GBOS -> MqttPublisher.from(iotConfig, messageHandler, errorHandler);
+      case PUBSUB -> PubSubClient.from(iotConfig, messageHandler, errorHandler);
+      default -> throw new RuntimeException("Unsupported iot provider " + iotProvider);
+    };
   }
 
   String publish(String deviceId, String topic, String data);

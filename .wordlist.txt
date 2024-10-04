@@ -93,6 +93,7 @@ md
 modbus
 MQTT
 mydomain
+namespace
 niversal
 npm
 nterface
@@ -118,6 +119,7 @@ proxying
 PUBACKs
 pubber
 PubSub
+pubsub
 QoS
 Readme
 repo

@@ -22,6 +22,7 @@ import com.google.common.base.Preconditions;
 import com.google.daq.mqtt.util.MessagePublisher.QuerySpeed;
 import com.google.daq.mqtt.validator.Validator;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
+import com.google.udmi.util.IotProvider;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
 import java.io.PrintWriter;
